@@ -1,4 +1,5 @@
 import styles from "./page.module.css";
+import ImageGallery from "./ImageGallery";
 
 export default function ContributeStories() {
   return (
@@ -119,6 +120,218 @@ export default function ContributeStories() {
             </tr>
           </tbody>
         </table>
+
+        {/* ── Story Elements ─────────────────────────────────────── */}
+        <h2 className={styles.sectionHeading}>Story Elements</h2>
+
+        <p className={styles.body}>
+          Every addon submitted to The Wudlands is made up of three core elements: images that give scenes a visual
+          presence, a JSON file that defines the structure and flow of the story, and at least one worked example
+          that proves the addon is complete and playable. All three must be present before an addon can be reviewed
+          for publication.
+        </p>
+
+        {/* 1 — Images */}
+        <h3 className={styles.subHeading}>1. Images</h3>
+
+        <p className={styles.body}>
+          Each scene in your addon may reference one image. Images are not required for every scene, but they strongly
+          reinforce atmosphere and help players orient themselves within the world. The image is displayed above the
+          scene text when the player enters that scene.
+        </p>
+
+        <p className={styles.body}>
+          Images must be submitted as <span className={styles.code}>.jpg</span> or <span className={styles.code}>.webp</span> files,
+          at a minimum resolution of <span className={styles.code}>1024 × 576 px</span> (16:9 landscape).
+          Portrait or square crops are accepted but landscape is preferred as it fills the scene frame without letterboxing.
+          File size should not exceed <span className={styles.code}>400 KB</span> per image — compress before submitting.
+          Name each file after its scene id, for example <span className={styles.code}>ruined-gate.jpg</span> for a scene
+          with id <span className={styles.code}>ruined-gate</span>. This makes the link between scene and image unambiguous.
+        </p>
+
+        <p className={styles.body}>
+          Images should match the tone of the world: dark, painterly, atmospheric. Avoid bright, saturated modern renders
+          or photographs. Pencil illustrations, oil-style digital paintings, and desaturated fantasy art all work well.
+          The platform applies a subtle grayscale pulse and vignette overlay to all scene images at runtime, so images
+          that already lean dark and moody will read best. Avoid images with embedded text — all text is handled by the
+          scene content, not the image.
+        </p>
+
+        <table className={styles.fieldTable}>
+          <thead>
+            <tr><th>Property</th><th>Value</th><th>Notes</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>Format</td><td>.jpg / .webp</td><td>PNG accepted but not preferred — file sizes are larger.</td></tr>
+            <tr><td>Min resolution</td><td>1024 × 576 px</td><td>16:9 landscape is the native display ratio.</td></tr>
+            <tr><td>Max resolution</td><td>1200 × 700 px</td><td>Images larger than this will be scaled down by the engine.</td></tr>
+            <tr><td>Max file size</td><td>400 KB</td><td>Compress before submitting. Large files slow scene loading.</td></tr>
+            <tr><td>Naming</td><td>scene-id.jpg</td><td>Must match the scene id in your JSON exactly.</td></tr>
+            <tr><td>Style</td><td>Dark fantasy art</td><td>Painterly, desaturated, atmospheric. No embedded text.</td></tr>
+            <tr><td>Required</td><td>No</td><td>Images are optional per scene but at least one is strongly recommended.</td></tr>
+          </tbody>
+        </table>
+
+        {/* 2 — Storyline in JSON */}
+        <h3 className={styles.subHeading}>2. Storyline in JSON</h3>
+
+        <p className={styles.body}>
+          The story itself is defined in a single JSON file. This file describes every scene, every choice, every
+          connection between scenes, and the metadata the engine needs to run the addon correctly. The file must be
+          valid JSON and must pass the platform schema validation before it can be published. Below is the full
+          structure with all available fields.
+        </p>
+
+        <code className={styles.codeBlock}>{`{
+  "id":            "string  — unique addon id, lowercase, hyphens only. e.g. the-black-tower",
+  "title":         "string  — display name shown to players",
+  "author":        "string  — your name or handle",
+  "version":       "string  — semver format, e.g. 1.0.0",
+  "eth_address":   "string  — optional. your ETH address for revenue share",
+  "adult":          false,   // boolean — true if addon contains adult content",
+  "tags":          ["array of strings — e.g. dungeon, horror, romance, survival"],
+  "requires":      ["array of addon ids, one must be completed before this one is accessible"],
+  "unlocks":       ["array of addon ids that become accessible after this one is completed"],
+
+  "default_entry": "string  — scene id used as start point AND missing-scene fallback",
+  "escape_route":  "string  — scene id of the retreat / fallback ending",
+
+  "scenes": {
+    "<scene_id>": {
+      "title":   "string  — optional short label for the scene",
+      "text":    "string  — narrative prose shown to the player. Supports \\n for line breaks.",
+      "image":   "string  — optional. filename of the scene image, e.g. ruined-gate.jpg",
+      "image_style": "string  — optional. display preset applied to the image. available styles:",
+               //   origin        — no filter, image shown as-is (default when field is omitted)",
+               //   darkened      — heavy shadow, very gloomy atmosphere",
+               //   pitchblack    — near total darkness, only outlines remain",
+               //   bright        — lifted and warmed, rare daylight or hope",
+               //   blackwhite    — full desaturation, all colour removed",
+               //   vintage       — aged, parchment-like tone",
+               //   deepsepia     — full sepia burn, old photograph feel",
+               //   cold          — icy blue shift, ghostly and frozen",
+               //   moonlight     — deep cold contrast, pale silver light",
+               //   crimson       — dark blood-red wash, dread and danger",
+               //   copper        — warm metallic orange, firelit scenes",
+               //   deepocean     — submerged blue-green darkness",
+               //   poison        — sickly green hue, cursed or toxic places",
+               //   infrared      — alien colour inversion, heat-map look",
+               //   goldenhour    — warm amber sunset glow",
+               //   apocalypse    — scorched high-contrast ruin",
+               //   neonsurge     — blown-out electric colour overload",
+               //   inverted      — full colour inversion, uncanny and unsettling",
+               //   xray          — white-on-black skeletal exposure",
+               //   dream         — soft blur with lifted saturation",
+               //   mirror        — horizontally flipped image",
+               //   mirrordark    — flipped and heavily darkened",
+               //   mirrorcrimson — flipped with crimson blood-red wash",
+               //   scanlines     — soft horizontal scanline overlay",
+               //   scanlinesdark — scanlines over darkened image",
+               //   verticalstrips — soft vertical strip overlay",
+               //   emerge        — animated: fades in from black to full brightness",
+               //   colorpulse    — animated: cycles between greyscale and full colour (6s)",
+               //   flicker       — animated: erratic rapid brightness flicker",
+               //   heat          — animated: slow hue and saturation pulse (2s)",
+      "ending":   false,   // boolean — true marks this as a terminal scene (no choices needed)",
+      "choices": [
+        {
+          "text": "string  — the choice label the player sees",
+          "to":   "string  — target scene id"
+        }
+      ]
+    }
+  }
+}`}</code>
+
+        <p className={styles.body}>
+          A few rules that apply across the whole file:
+          the <span className={styles.code}>default_entry</span> scene must exist in <span className={styles.code}>scenes</span> and
+          must have at least one choice that eventually leads to the <span className={styles.code}>escape_route</span>.
+          The <span className={styles.code}>escape_route</span> scene must be marked <span className={styles.code}>{`"ending": true`}</span>.
+          Every <span className={styles.code}>to</span> value in a choice must reference a valid scene id within the same addon —
+          cross-addon jumps are handled through <span className={styles.code}>unlocks</span>, not through choices.
+          Scene ids must be lowercase and may only contain letters, digits, and hyphens.
+        </p>
+
+        {/* 2b — CSS Style Preview */}
+        <h3 className={styles.subHeading}>CSS Image Style Preview</h3>
+
+        <p className={styles.body}>
+          The following gallery shows all available <span className={styles.code}>image_style</span> presets
+          applied to a sample set of scene images. Click any image to enlarge it. Click again to close.
+        </p>
+
+        <ImageGallery />
+
+        {/* 3 — Example */}
+        <h3 className={styles.subHeading}>3. Example</h3>
+
+        <p className={styles.body}>
+          Below is a complete minimal addon with three scenes. It demonstrates a starting scene with two choices,
+          a deeper scene that leads either forward or back, and an escape route marked as a terminal ending.
+          This structure is the smallest valid addon the platform will accept.
+        </p>
+
+        <code className={styles.codeBlock}>{`{
+  "id":            "the-ruined-gate",
+  "title":         "The Ruined Gate",
+  "author":        "Grimwald of Ashfen",
+  "version":       "1.0.0",
+  "eth_address":   "",
+  "adult":          false,
+  "tags":          ["dungeon", "ruins", "solo"],
+  "requires":      [],
+  "unlocks":       [],
+
+  "default_entry": "approach",
+  "escape_route":  "forest-retreat",
+
+  "scenes": {
+
+    "approach": {
+      "title":       "The Gate",
+      "text":        "You stand before a shattered arch of black stone.\\nMoss chokes the carved serpents above the lintel.\\nThe darkness beyond the gate breathes cold air onto your face.\\nYou hear nothing. That is worse than hearing something.",
+      "image":       "approach.jpg",
+      "image_style": "moonlight",
+      "ending":       false,
+      "choices": [
+        { "text": "Step through the gate",          "to": "inner-court" },
+        { "text": "Retreat into the forest",        "to": "forest-retreat" }
+      ]
+    },
+
+    "inner-court": {
+      "title":       "The Inner Court",
+      "text":        "Cracked flagstones. A dry fountain. Something has scratched marks into every surface —\\nnot writing you recognise, but deliberate. Repeated. Urgent.\\nAt the far end, a door stands ajar. Light moves behind it.",
+      "image":       "inner-court.jpg",
+      "image_style": "scanlines",
+      "ending":       false,
+      "choices": [
+        { "text": "Approach the moving light",      "to": "inner-court" },
+        { "text": "This was a mistake — run",       "to": "forest-retreat" }
+      ]
+    },
+
+    "forest-retreat": {
+      "title":       "The Forest Road",
+      "text":        "You turn and walk back into the trees.\\nThe gate watches you leave. You do not look back.\\nWhatever is inside the ruin, it is not yours to face today.\\nThe forest road is long, but it is safe. You are still alive.",
+      "image":       "forest-retreat.jpg",
+      "image_style": "origin",
+      "ending":       true,
+      "choices": []
+    }
+
+  }
+}`}</code>
+
+        <p className={styles.body}>
+          This example is intentionally spare. A published addon will typically contain between sixty and five hundred scenes,
+          with multiple branching paths, several dead ends that loop back to earlier scenes, and at least two or three
+          distinct endings depending on the choices the player made. The escape route should always be reachable from
+          any scene within no more than three choices. If a player cannot find the exit within a handful of steps,
+          the story is too deep without a safety net.
+        </p>
+
       </section>
     </div>
   );

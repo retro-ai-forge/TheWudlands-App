@@ -16,10 +16,12 @@ export default function AGB() {
 
         <p className={styles.body}>
           When you submit an adventure, story, scene, encounter, character, or any other content to The Wudlands,
-          you grant The Wudlands an irrevocable, worldwide, royalty-free licence to use, reproduce, modify, adapt,
+          you grant The Wudlands an irrevocable, worldwide, royalty-free license to use, reproduce, modify, adapt,
           translate, publish, distribute, and display that content in any form, through any medium, at any time,
           without restriction and without further notice to you. This includes but is not limited to use within
-          the game itself, promotional material, derived works, and future versions of the platform.
+          the game itself, promotional material, derived works, and future versions of the platform. Contributors 
+          retain ownership of their original content and can also redistribute it or commercialize it but acknowledge 
+          that The Wudlands has the right to use it in any way. 
         </p>
 
         <p className={styles.body}>
