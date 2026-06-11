@@ -106,14 +106,14 @@ export default function Home() {
         <>
           <p className={styles.status}>{status}</p>
           <button className={styles.btn} onClick={joinGame} disabled={joining}>
-            [ JOIN GAME ]
+            [ ENTER WUDLANDS ]
           </button>
         </>
       )}
 
       {view === "game" && (
         <button className={styles.btn} onClick={leaveGame}>
-          [ LEAVE GAME ]
+          [ LEAVE WUDLANDS ]
         </button>
       )}
 
