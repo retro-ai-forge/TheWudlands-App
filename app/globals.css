@@ -1,0 +1,53 @@
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+@keyframes colorPulse {
+  0%, 100% { filter: grayscale(0); }
+  50%       { filter: grayscale(1); }
+}
+
+
+body {
+  background: #0a0a0a;
+  color: #d4c9a8;
+  font-family: "Courier New", Courier, monospace;
+  min-height: 100vh;
+  position: relative;
+}
+
+/* Background image — grayscale pulse + flicker */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  background: url("/images/banner-wudlands-v01.jpg") center center / cover no-repeat;
+  animation: colorPulse 12s ease-in-out infinite;
+  z-index: -2;
+}
+
+@keyframes vignettePulse {
+  0%, 100% { opacity: 1;    }
+  50%       { opacity: 0.4; }
+}
+
+/* Vignette + scanlines */
+body::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  background:
+    repeating-linear-gradient(
+      to bottom,
+      transparent            0px,
+      transparent            2px,
+      rgba(0, 0, 0, 0.18)   2px,
+      rgba(0, 0, 0, 0.18)   4px
+    ),
+    radial-gradient(ellipse at center, transparent 40%, rgba(0, 0, 0, 0.85) 100%);
+  animation: vignettePulse 9s ease-in-out infinite;
+  pointer-events: none;
+  z-index: -1;
+}

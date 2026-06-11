@@ -1,0 +1,47 @@
+.screen {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  padding-bottom: 8vh;
+  min-height: 100vh;
+}
+
+.status {
+  margin-bottom: 1.5rem;
+  font-size: 0.9rem;
+  color: #c07a3a;
+  min-height: 1.2em;
+  text-align: center;
+}
+
+.btn {
+  background: #1a1a1a;
+  color: #d4c9a8;
+  border: 2px solid #7a6a3a;
+  padding: 0.75rem 2.5rem;
+  font-family: "Courier New", Courier, monospace;
+  font-size: 1rem;
+  letter-spacing: 0.15em;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+
+.btn:hover {
+  background: #7a6a3a;
+  color: #0a0a0a;
+}
+
+.btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.playerId {
+  position: fixed;
+  bottom: 1rem;
+  left: 1rem;
+  font-size: 0.75rem;
+  color: #7a6a3a;
+  letter-spacing: 0.1em;
+}
