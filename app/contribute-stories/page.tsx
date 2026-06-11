@@ -27,11 +27,22 @@ export default function ContributeStories() {
 
         <p className={styles.body}>
           Stories in the Wudlands do not have to be linear. Addon creators are encouraged to build branching paths,
-          narrative loops, and N:m relationships between scenes and outcomes. A single choice may open into several possible
+          narrative loops, and N:M relationships between scenes and outcomes. A single choice may open into several possible
           scenes. Several entirely different choices may converge back to the same location, encounter, or conclusion.
           Players may revisit places, retrace steps, or circle back through the world in ways that feel natural rather than forced.
           What matters is that the story remains clear and playable at every point — no dead ends, no broken loops,
           no scenes that leave the player stranded without any path forward.
+        </p>
+
+        <p className={styles.body}>
+          Adventures in The Wudlands can depend on one another. An addon creator may declare that their adventure
+          requires one or more other adventures to have been completed first — and that completing a given adventure
+          opens the way to one specific continuation or branches into several, depending on how the player reached the end.
+          This means a player may need to finish an earlier story before a later one becomes accessible to them.
+          Creators are responsible for declaring these dependencies clearly when submitting their addon.
+          Where an adventure requires a prerequisite, that prerequisite must be reasonably completable on its own terms —
+          it cannot exist solely as a gate. The chain of adventures should feel like a natural progression through the world,
+          not an artificial lock. Dependencies between addons are resolved by the platform and presented to players before they begin.
         </p>
 
         <p className={styles.body}>
@@ -45,8 +56,8 @@ export default function ContributeStories() {
         <p className={styles.body}>
           The engine that runs addon stories is built to handle missing or undefined scenes gracefully. If a requested node,
           scene, or encounter cannot be found in the addon data, the system will not crash or break the session.
-          Instead it falls back to the addon&apos;s defined default entry point, which must redirect the player toward the
-          escape route or a stable fallback path. Addon creators are responsible for defining this default entry and ensuring
+          Instead it falls back to the addon&apos;s defined default exit point, which must redirect the player toward the
+          escape route or a stable fallback path. Addon creators are responsible for defining this default exit and ensuring
           it leads somewhere meaningful. A robust story is one that stays playable no matter what the engine encounters.
         </p>
 
@@ -76,7 +87,11 @@ export default function ContributeStories() {
             </tr>
             <tr>
               <td>Story Structure</td>
-              <td>Branching paths, loops, and N:m scene relationships are allowed and encouraged. Stories do not need to be linear.</td>
+              <td>Branching paths, loops, and N:M scene relationships are allowed and encouraged. Stories do not need to be linear.</td>
+            </tr>
+            <tr>
+              <td>Adventure Dependencies</td>
+              <td>Addons may require other adventures to be completed first. Finishing one adventure can unlock one or more others, as declared by the creator.</td>
             </tr>
             <tr>
               <td>Escape Route</td>

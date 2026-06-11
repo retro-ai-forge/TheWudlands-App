@@ -33,7 +33,7 @@ export default function AGB() {
         <h3 className={styles.subheading}>2. Romantic Storyline &amp; Minne</h3>
 
         <img
-          src="/images/agb/agb.jpg"
+          src="/images/agb/agb-minne.jpg"
           alt="A knight kneels before a noble lady in a candlelit castle hall — courtly love in the tradition of Minne."
           className={styles.sectionImage}
         />
@@ -176,6 +176,20 @@ export default function AGB() {
         </p>
 
         <p className={styles.body}>
+          Contributors must only submit original content that they have the right to share. Submitting stolen,
+          plagiarised, or otherwise copied text, artwork, or images is strictly prohibited.
+          The use of <span className={styles.highlight}>generative AI tools and large language model (LLM) output</span> is
+          permitted — AI-assisted writing, AI-generated imagery, and LLM-produced text are all acceptable contributions,
+          provided the contributor holds the necessary rights or the content is otherwise freely usable.
+          However, reproducing or adapting content from the <span className={styles.highlight}>Fighting Fantasy</span> gamebook
+          series — including stories, characters, place names, game mechanics, and artwork from those books — is
+          <span className={styles.highlight}> expressly forbidden</span>. Fighting Fantasy is a protected intellectual
+          property. Submissions that incorporate Fighting Fantasy material will be removed immediately, and the contributor
+          may be permanently excluded from the platform. This restriction applies regardless of how heavily the source
+          material is paraphrased or adapted.
+        </p>
+
+        <p className={styles.body}>
           The Wudlands is a living platform. The game experience — including story content, available addons,
           mechanics, reward structures, and platform features — <span className={styles.highlight}>may change at any time
           without prior notice</span>. Addons may be modified, rebalanced, retired, or removed. New content
@@ -242,6 +256,10 @@ export default function AGB() {
             <tr>
               <td>Dark Themes</td>
               <td>Horror, cruelty, and moral ambiguity are allowed when they serve the story. Gratuitous shock content without purpose is not.</td>
+            </tr>
+            <tr>
+              <td>Original Content</td>
+              <td>Stolen or plagiarised text and images are forbidden. AI-generated content is permitted. Fighting Fantasy material is strictly prohibited due to copyright.</td>
             </tr>
             <tr>
               <td>Changing Experience</td>
