@@ -21,11 +21,17 @@ body {
 /* Background image — grayscale pulse + flicker */
 body::before {
   content: "";
-  position: fixed;
+  position: absolute;
   inset: 0;
   background: url("/images/banner-wudlands-v01.jpg") center center / cover no-repeat;
   animation: colorPulse 12s ease-in-out infinite;
   z-index: -2;
+}
+
+@media (max-width: 768px) {
+  body::before {
+    bottom: 60%;
+  }
 }
 
 @keyframes vignettePulse {
@@ -33,21 +39,35 @@ body::before {
   50%       { opacity: 0.4; }
 }
 
-/* Vignette + scanlines */
+/* Vignette */
 body::after {
   content: "";
   position: fixed;
   inset: 0;
-  background:
-    repeating-linear-gradient(
-      to bottom,
-      transparent            0px,
-      transparent            2px,
-      rgba(0, 0, 0, 0.18)   2px,
-      rgba(0, 0, 0, 0.18)   4px
-    ),
-    radial-gradient(ellipse at center, transparent 40%, rgba(0, 0, 0, 0.85) 100%);
+  background: radial-gradient(ellipse at center, transparent 40%, rgba(0, 0, 0, 0.85) 100%);
   animation: vignettePulse 9s ease-in-out infinite;
+  pointer-events: none;
+  z-index: -1;
+}
+
+@keyframes scanlineFade {
+  0%, 100% { opacity: 0; }
+  50%       { opacity: 1; }
+}
+
+/* Scanlines — visible only when image is grayscale */
+.scanlines {
+  content: "";
+  position: fixed;
+  inset: 0;
+  background: repeating-linear-gradient(
+    to bottom,
+    transparent          0px,
+    transparent          2px,
+    rgba(0, 0, 0, 0.35) 2px,
+    rgba(0, 0, 0, 0.35) 5px
+  );
+  animation: scanlineFade 12s ease-in-out infinite;
   pointer-events: none;
   z-index: -1;
 }
