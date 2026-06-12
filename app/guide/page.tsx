@@ -43,6 +43,65 @@ export default function Guide() {
           pay the fee once more and your count is restored. The road is always open to those willing to walk it again.
         </p>
 
+        <h2 className={styles.sectionHeading}>Love, Admiration &amp; the Art of Minne</h2>
+
+        <p className={styles.body}>
+          Gold buys a bed for the night. Scars prove you survived. But neither will get you through a locked gate
+          when the woman who holds the key has decided she is not interested. There are things in this world that
+          cannot be taken by force or purchased at a market stall — the regard of someone who has no reason to
+          give it, the warmth of a fire you were not supposed to sit beside, a name spoken well in a room you
+          will never enter. If you have ever wanted more than survival — if you have wondered what it would feel
+          like to be admired, sought after, remembered — then you already understand what drives half the
+          wanderers on these roads.
+        </p>
+
+        <p className={styles.body}>
+          They call it <strong>Minne</strong>. The old poets gave it that name — the Minnesingers who sang of
+          knights who crossed mountains and fought monsters not for treasure but for a single moment of favour
+          from a woman who probably would not even be watching. You know the feeling, even if you have never
+          heard the word. You have done something difficult and thought of a specific face while doing it.
+          That is Minne. It does not care whether she is a noble lady behind a castle wall, a matriarch who
+          runs a merchant city with a calm that frightens her rivals, a wizard who has lived three hundred years
+          and finds most people tedious, or an elven enchantress who has not given anyone a second glance in
+          longer than your grandfather has been in the ground. They are all unreachable in their own way.
+          That is the point. The reaching is the thing.
+        </p>
+
+        <img
+          src="/images/guide/fame.jpg"
+          alt="Famous and infamous names written on a wall, some in gold and some in blood."
+          className={styles.sectionImage}
+        />
+
+        <p className={styles.body}>
+          Do not expect doors to open simply because you knocked. Women of wealth and power have seen wanderers
+          before. They have watched a great many of them try, and they remember every one who wasted their time.
+          What opens a door is a name that arrived before you did — a deed someone thought worth repeating,
+          a problem solved quietly, a moment where you stood between something dangerous and someone who mattered.
+          Your fame tells them what kind of person is standing on their step. Your notoriety tells them
+          whether to call for wine or call for the guard. The infamous are sought after in their own right —
+          not merely tolerated but actively pursued by those who understand that a dangerous name, properly
+          courted, is worth more than a loyal one. A matriarch does not send for someone fearsome because
+          she has no choice. She sends for them because she wants to be the one they owe a favour to.
+          Merchants go out of their way to be seen as generous before you have asked for anything. Lords make
+          offers unprompted. There is a particular kind of attention that only infamy earns — people working
+          to get ahead of you, to be remembered well by you, to place themselves on the right side before
+          the wrong side becomes obvious. It is not so different from being admired. It simply arrives with
+          better wine and more nervous smiles.
+        </p>
+
+        <p className={styles.body}>
+          What follows once you are inside is yours to navigate. Flirtation, jealousy, courtly games, seduction,
+          the particular silence of someone who is making you wait to see what you will do with the waiting —
+          all of it is part of this world, and none of it is simple. A gesture of devotion earned through
+          three nights of real danger in someone&apos;s name will land differently than one offered at the
+          first drink. These connections leave marks. A lady&apos;s favour can open a city gate, call in a
+          debt that has been owed for years, or hand your enemies exactly the leverage they needed.
+          The world pays attention to who you are devoted to. It forms opinions.
+          What you pursue and how far you take it is entirely your choice —
+          but the choice, once made, belongs to the story.
+        </p>
+
         <table className={styles.table}>
           <thead>
             <tr>

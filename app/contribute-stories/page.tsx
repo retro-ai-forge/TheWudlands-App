@@ -26,6 +26,12 @@ export default function ContributeStories() {
           busywork disconnected from the plot.
         </p>
 
+         <img
+          src="/images/contribute-stories/createstory.jpg"
+          alt="A magic book with a glowing red cover, open to a page with a quill pen poised above it. The text on the page reads: 'Create your own story in the Wudlands.'"
+          className={styles.sectionImage}
+        />
+
         <p className={styles.body}>
           Stories in the Wudlands do not have to be linear. Addon creators are encouraged to build branching paths,
           narrative loops, and N:M relationships between scenes and outcomes. A single choice may open into several possible
@@ -34,6 +40,7 @@ export default function ContributeStories() {
           What matters is that the story remains clear and playable at every point — no dead ends, no broken loops,
           no scenes that leave the player stranded without any path forward.
         </p>
+
 
         <p className={styles.body}>
           Adventures in The Wudlands can depend on one another. An addon creator may declare that their adventure
@@ -163,6 +170,7 @@ export default function ContributeStories() {
   "unlocks":       ["array of addon ids that become accessible after this one is completed"],
 
   "default_entry": "string  — scene id used as start point AND missing-scene fallback",
+  "emergency_exit": "string  — scene id used on errors to lead to the escape route",
   "escape_route":  "string  — scene id of the retreat / fallback ending",
 
   "scenes": {
@@ -192,14 +200,17 @@ export default function ContributeStories() {
                //   neonsurge      — blown-out electric colour overload",
                //   inverted       — full colour inversion, uncanny and unsettling",
                //   xray           — white-on-black skeletal exposure",
-               //   dream          — soft blur with lifted saturation",
+               //   drunk          — soft blur with lifted saturation",
+               //   fog            — pale mist veil, washed-out and desaturated",
+               //   rain           — animated diagonal rain streaks, cold blue-grey wash",
+               //   drunk          — animated: slow irregular sway and rotation (5s)",
+               //   emerge         —  emerges once from black to full brightness",
+               //   colorpulse     — animated: cycles between greyscale and full colour (6s)",
+               //   heat           — animated: slow hue and saturation pulse (2s)",
                //   scanlines      — soft horizontal scanline overlay",
                //   scanlinesdark  — scanlines over darkened image",
                //   verticalstrips — soft vertical strip overlay",
-               //   emerge         —  emerges once from black to full brightness",
-               //   colorpulse     — animated: cycles between greyscale and full colour (6s)",
                //   flicker        — animated: erratic rapid brightness flicker",
-               //   heat           — animated: slow hue and saturation pulse (2s)",
       "ending":   false,   // boolean — true marks this as a terminal scene (no choices needed)",
       "choices": [
         {
@@ -214,8 +225,10 @@ export default function ContributeStories() {
         <p className={styles.body}>
           A few rules that apply across the whole file:
           the <span className={styles.code}>default_entry</span> scene must exist in <span className={styles.code}>scenes</span> and
-          must have at least one choice that eventually leads to the <span className={styles.code}>escape_route</span>.
-          The <span className={styles.code}>escape_route</span> scene must be marked <span className={styles.code}>{`"ending": true`}</span>.
+          must have at least one choice that eventually leads to the <span className={styles.code}>escape_route</span>. 
+          The <span className={styles.code}>escape_route</span> scene must be marked <span className={styles.code}>{`"ending": true`}</span>. 
+          The <span className={styles.code}>emergency_exit</span> scene must be provided to recover from errors, it must lead to the 
+          <span className={styles.code}>escape_route</span>. 
           Every <span className={styles.code}>to</span> value in a choice must reference a valid scene id within the same addon —
           cross-addon jumps are handled through <span className={styles.code}>unlocks</span>, not through choices.
           Scene ids must be lowercase and may only contain letters, digits, and hyphens.
@@ -296,6 +309,7 @@ export default function ContributeStories() {
   "unlocks":       [],
 
   "default_entry": "approach",
+  "emergency_exit": "broken-ceiling",
   "escape_route":  "forest-retreat",
 
   "scenes": {
@@ -339,11 +353,9 @@ export default function ContributeStories() {
         <p className={styles.body}>
           This example is intentionally spare. A published addon will typically contain between sixty and five hundred scenes,
           with multiple branching paths, several dead ends that loop back to earlier scenes, and at least two or three
-          distinct endings depending on the choices the player made. The escape route should always be reachable from
-          any scene within no more than three choices. If a player cannot find the exit within a handful of steps,
-          the story is too deep without a safety net.
+          distinct endings depending on the choices the player made. The escape route will always be reachable from
+          any scene. The escape route might be a short story in itself.
         </p>
-
       </section>
     </div>
   );

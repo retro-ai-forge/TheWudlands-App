@@ -34,12 +34,6 @@ export default function AGB() {
 
         <h3 className={styles.subheading}>2. Romantic Storyline &amp; Minne</h3>
 
-        <img
-          src="/images/agb/agb-minne.jpg"
-          alt="A knight kneels before a noble lady in a candlelit castle hall — courtly love in the tradition of Minne."
-          className={styles.sectionImage}
-        />
-
         <p className={styles.body}>
           The Wudlands draws deep inspiration from the fantasy literature and interactive fiction of the 1980s and 1990s —
           an era defined by the pulp paperbacks of Fighting Fantasy, the early Dungeons &amp; Dragons modules, and the illustrated
@@ -49,6 +43,12 @@ export default function AGB() {
           Players returning to this style of adventure will recognise them. They are part of what makes the experience
           feel authentic to its roots.
         </p>
+
+        <img
+          src="/images/agb/agb-minne.jpg"
+          alt="A knight kneels before a noble lady in a candlelit castle hall — courtly love in the tradition of Minne."
+          className={styles.sectionImage}
+        />
 
         <p className={styles.body}>
           Central to medieval fantasy — and to the literature that inspired it — is the concept of
@@ -182,6 +182,12 @@ export default function AGB() {
           non-consensual scenarios appear, must handle them with appropriate weight and consequence. Gratuitous
           or exploitative depictions are not permitted.
         </p>
+
+        <img
+          src="/images/guide/affection.jpg"
+          alt="Doorways to lead to various adventures, in the middle a noble woman hugging her favorite hero."
+          className={styles.sectionImage}
+        />
 
         <p className={styles.body}>
           Contributors must only submit original content that they have the right to share. Submitting stolen,

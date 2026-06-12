@@ -97,7 +97,7 @@ const SETS: SetConfig[] = [
     filter: "sepia(1) hue-rotate(330deg) saturate(2.5) brightness(0.85)",
   },
   {
-    name: "Deep Ocean",
+    name: "DeepOcean",
     meta: "css hue-rotate(180deg) saturate(1.8) brightness(0.8) contrast(1.2)",
     filter: "hue-rotate(180deg) saturate(1.8) brightness(0.8) contrast(1.2)",
   },
@@ -112,7 +112,7 @@ const SETS: SetConfig[] = [
     filter: "hue-rotate(140deg) saturate(2.5) contrast(1.2) brightness(0.9)",
   },
   {
-    name: "Golden Hour",
+    name: "GoldenHour",
     meta: "css sepia(0.4) saturate(2.5) brightness(1.15) hue-rotate(350deg)",
     filter: "sepia(0.4) saturate(2.5) brightness(1.15) hue-rotate(350deg)",
   },
@@ -123,7 +123,7 @@ const SETS: SetConfig[] = [
     filter: "sepia(0.9) contrast(1.6) brightness(0.65)",
   },
   {
-    name: "Neon Surge",
+    name: "NeonSurge",
     meta: "css brightness(1.5) contrast(2.5) saturate(4)",
     filter: "brightness(1.5) contrast(2.5) saturate(4)",
   },
@@ -136,28 +136,6 @@ const SETS: SetConfig[] = [
     name: "XRay",
     meta: "css invert(1) grayscale(1) contrast(1.15) brightness(1.05)",
     filter: "invert(1) grayscale(1) contrast(1.15) brightness(1.05)",
-  },
-  {
-    name: "Dream",
-    meta: "css blur(0.8px) brightness(1.15) saturate(1.4) contrast(0.85)",
-    filter: "blur(0.8px) brightness(1.15) saturate(1.4) contrast(0.85)",
-  },
-  // ── Overlay sets ─────────────────────────────────────
-  {
-    name: "Scanlines",
-    meta: "overlay — horizontal scanlines every 5px",
-    overlay: "overlayScanlines",
-  },
-  {
-    name: "Scanlines Dark",
-    meta: "overlay scanlines + css brightness(0.5)",
-    filter: "brightness(0.5)",
-    overlay: "overlayScanlines",
-  },
-  {
-    name: "Vertical Strips",
-    meta: "overlay — vertical strips every 7px",
-    overlay: "overlayStrips",
   },
   // ── Animated sets ─────────────────────────────────────
   {
@@ -172,14 +150,49 @@ const SETS: SetConfig[] = [
     animClass: "animPulse",
   },
   {
-    name: "Flicker",
-    meta: "warning in adventure description required, animation — erratic brightness flicker",
-    animClass: "animFlicker",
-  },
-  {
     name: "Heat",
     meta: "animation — hue shift + saturation pulse, 2s cycle",
     animClass: "animHeat",
+  },
+  // ── Overlay sets ─────────────────────────────────────
+  {
+    name: "Fog",
+    meta: "overlay — radial mist veil + brightness(1.1) contrast(0.72) saturate(0.55)",
+    filter: "brightness(1.1) contrast(0.72) saturate(0.55)",
+    overlay: "overlayFog",
+  },
+  {
+    name: "Rain",
+    meta: "overlay — animated diagonal rain streaks + brightness(0.8) saturate(0.65)",
+    filter: "brightness(0.8) saturate(0.65)",
+    overlay: "overlayRain",
+  },
+  {
+    name: "Scanlines",
+    meta: "overlay — horizontal scanlines every 5px",
+    overlay: "overlayScanlines",
+  },
+  {
+    name: "ScanlinesDark",
+    meta: "overlay scanlines + css brightness(0.5)",
+    filter: "brightness(0.5)",
+    overlay: "overlayScanlines",
+  },
+  {
+    name: "VerticalStrips",
+    meta: "overlay — vertical strips every 7px",
+    overlay: "overlayStrips",
+  },
+  {
+    name: "Drunk",
+    meta: "css blur(0.6px) brightness(1.15) saturate(1.4) contrast(0.85)",
+    filter: "blur(0.6px) brightness(1.15) saturate(1.4) contrast(0.85)",
+    animClass: "animDrunk",
+  },
+  {
+    name: "Flicker",
+    meta: "warning in adventure description required, animation — erratic brightness flicker",
+    animClass: "animFlicker",
   },
 ];
 

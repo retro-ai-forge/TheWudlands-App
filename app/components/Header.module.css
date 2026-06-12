@@ -36,6 +36,11 @@
   color: #0a0a0a;
 }
 
+.linkActive {
+  color: #c07a3a;
+  font-weight: bold;
+}
+
 @media (max-width: 768px) {
   .link {
     font-size: 0.72rem;
