@@ -118,13 +118,7 @@ export default function ContributeStories() {
               <td>Survival</td>
               <td>Hunger, thirst, exhaustion, wounds, disease, and harsh weather may be used to deepen tension. They must serve the story.</td>
             </tr>
-            <tr>
-              <td>Building</td>
-              <td>No permanent player-owned structures are available at the beta stage. Temporary camps, shelters, and story-driven locations are allowed. 
-                The Wudlands might add locations that can be claimed as possible homes. Those have to be found in storylines. A place where the 
-                adventurer can retreat. 
-              </td>
-            </tr>
+
             <tr>
               <td>Addon Freedom</td>
               <td>Creators may invent anything — monsters, factions, magic systems, strange worlds — as long as it serves the adventure.</td>
@@ -177,35 +171,35 @@ export default function ContributeStories() {
       "text":    "string  — narrative prose shown to the player. Supports \\n for line breaks.",
       "image":   "string  — optional. filename of the scene image, e.g. ruined-gate.jpg",
       "image_style": "string  — optional. display preset applied to the image. available styles:",
-               //   origin        — no filter, image shown as-is (default when field is omitted)",
-               //   darkened      — heavy shadow, very gloomy atmosphere",
-               //   pitchblack    — near total darkness, only outlines remain",
-               //   bright        — lifted and warmed, rare daylight or hope",
-               //   blackwhite    — full desaturation, all colour removed",
-               //   vintage       — aged, parchment-like tone",
-               //   deepsepia     — full sepia burn, old photograph feel",
-               //   cold          — icy blue shift, ghostly and frozen",
-               //   moonlight     — deep cold contrast, pale silver light",
-               //   crimson       — dark blood-red wash, dread and danger",
-               //   copper        — warm metallic orange, firelit scenes",
-               //   deepocean     — submerged blue-green darkness",
-               //   poison        — sickly green hue, cursed or toxic places",
-               //   infrared      — alien colour inversion, heat-map look",
-               //   goldenhour    — warm amber sunset glow",
-               //   apocalypse    — scorched high-contrast ruin",
-               //   neonsurge     — blown-out electric colour overload",
-               //   inverted      — full colour inversion, uncanny and unsettling",
-               //   xray          — white-on-black skeletal exposure",
-               //   dream         — soft blur with lifted saturation",
-               //   mirror        — horizontally flipped image",
-               //   mirrorcrimson — flipped with crimson blood-red wash",
-               //   scanlines     — soft horizontal scanline overlay",
-               //   scanlinesdark — scanlines over darkened image",
+               //   origin         — no filter, image shown as-is (default when field is omitted)",
+               //   mirrorh        — horizontally flipped image",
+               //   mirrorv        — vertically flipped image",
+               //   darkened       — heavy shadow, very gloomy atmosphere",
+               //   pitchblack     — near total darkness, only outlines remain",
+               //   bright         — lifted and warmed, rare daylight or hope",
+               //   blackwhite     — full desaturation, all colour removed",
+               //   vintage        — aged, parchment-like tone",
+               //   deepsepia      — full sepia burn, old photograph feel",
+               //   cold           — icy blue shift, ghostly and frozen",
+               //   moonlight      — deep cold contrast, pale silver light",
+               //   crimson        — dark blood-red wash, dread and danger",
+               //   copper         — warm metallic orange, firelit scenes",
+               //   deepocean      — submerged blue-green darkness",
+               //   poison         — sickly green hue, cursed or toxic places",
+               //   infrared       — alien colour inversion, heat-map look",
+               //   goldenhour     — warm amber sunset glow",
+               //   apocalypse     — scorched high-contrast ruin",
+               //   neonsurge      — blown-out electric colour overload",
+               //   inverted       — full colour inversion, uncanny and unsettling",
+               //   xray           — white-on-black skeletal exposure",
+               //   dream          — soft blur with lifted saturation",
+               //   scanlines      — soft horizontal scanline overlay",
+               //   scanlinesdark  — scanlines over darkened image",
                //   verticalstrips — soft vertical strip overlay",
-               //   emerge        — animated: fades in from black to full brightness",
-               //   colorpulse    — animated: cycles between greyscale and full colour (6s)",
-               //   flicker       — animated: erratic rapid brightness flicker",
-               //   heat          — animated: slow hue and saturation pulse (2s)",
+               //   emerge         —  emerges once from black to full brightness",
+               //   colorpulse     — animated: cycles between greyscale and full colour (6s)",
+               //   flicker        — animated: erratic rapid brightness flicker",
+               //   heat           — animated: slow hue and saturation pulse (2s)",
       "ending":   false,   // boolean — true marks this as a terminal scene (no choices needed)",
       "choices": [
         {

@@ -72,7 +72,7 @@ const SETS: SetConfig[] = [
     filter: "sepia(0.55) contrast(1.1)",
   },
   {
-    name: "Deep Sepia",
+    name: "DeepSepia",
     meta: "css sepia(1) contrast(1.2)",
     filter: "sepia(1) contrast(1.2)",
   },
@@ -133,7 +133,7 @@ const SETS: SetConfig[] = [
     filter: "invert(1)",
   },
   {
-    name: "X-Ray",
+    name: "XRay",
     meta: "css invert(1) grayscale(1) contrast(1.15) brightness(1.05)",
     filter: "invert(1) grayscale(1) contrast(1.15) brightness(1.05)",
   },
