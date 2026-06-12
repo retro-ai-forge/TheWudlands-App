@@ -87,6 +87,14 @@ export default function ContributeStories() {
               <td>Every significant decision must lead to real consequences. Choices that change nothing undermine the experience.</td>
             </tr>
             <tr>
+              <td>Fame</td>
+              <td>Fame is a measure of the path the adventurer has chosen — not merely of deeds done, but of how the world chooses to remember them. It runs in two directions. A famed hero earns the warmth of crowds, the trust of strangers, and the kind of stories that are told in daylight: ballads, toasts, whispered admiration in the market square. An infamous wanderer earns something else — a darker renown that makes even kings lower their voices before sending for them. Courts still negotiate with the infamous; they simply bolt their doors afterwards. Creators are encouraged to let fame shape how NPCs react, what doors open, and what rumours follow the adventurer into the next town. The stories of the famed are told openly, embellished with honour. The stories of the infamous are told at night, around the campfire, by those who survived knowing them.</td>
+            </tr>
+            <tr>
+              <td>Notoriety</td>
+              <td>Where fame measures the nature of an adventurer&apos;s reputation, notoriety measures its reach — how far the tales have travelled, how many ears they have found. A wanderer of low notoriety may be celebrated or feared within a single village, yet step one valley over and be a complete stranger. High notoriety means the name has crossed borders: merchants recognise it, gatekeepers have heard the stories, and even distant lords know whether to set an extra place at the table or double the guard. Creators may use notoriety to determine what a character already knows about the adventurer before they speak a word, and how far ahead of the player their reputation walks.</td>
+            </tr>
+            <tr>
               <td>Story Structure</td>
               <td>Branching paths, loops, and N:M scene relationships are allowed and encouraged. Stories do not need to be linear.</td>
             </tr>
@@ -94,13 +102,17 @@ export default function ContributeStories() {
               <td>Adventure Dependencies</td>
               <td>Addons may require other adventures to be completed first. Finishing one adventure can unlock one or more others, as declared by the creator.</td>
             </tr>
+             <tr>
+              <td>Combat Scenes</td>
+              <td>Combat scenes may disable the escape route only when the story has clearly forewarned the player of the danger — through audible warnings, environmental cues, or an explicit threat of ambush. The player must always have a fair opportunity to prepare or withdraw before the fight begins. In all other combat scenes the escape route remains available, though the author may impose consequences — injury, lost items, narrative fallout — for choosing to flee.</td>
+            </tr>
             <tr>
               <td>Escape Route</td>
               <td>Every addon must include a default ending or fallback route. Players must always have a way to retreat, recover, or conclude.</td>
             </tr>
             <tr>
               <td>Missing Scene Fallback</td>
-              <td>If a scene cannot be found, the engine redirects to the addon&apos;s default entry. That entry must lead toward the escape path.</td>
+              <td>If a scene cannot be found, the engine redirects to the addon&apos;s default exit. That exit must lead toward the escape path.</td>
             </tr>
             <tr>
               <td>Survival</td>
@@ -108,7 +120,10 @@ export default function ContributeStories() {
             </tr>
             <tr>
               <td>Building</td>
-              <td>No permanent player-owned structures. Temporary camps, shelters, and story-driven locations are allowed.</td>
+              <td>No permanent player-owned structures are available at the beta stage. Temporary camps, shelters, and story-driven locations are allowed. 
+                The Wudlands might add locations that can be claimed as possible homes. Those have to be found in storylines. A place where the 
+                adventurer can retreat. 
+              </td>
             </tr>
             <tr>
               <td>Addon Freedom</td>
@@ -116,7 +131,7 @@ export default function ContributeStories() {
             </tr>
             <tr>
               <td>Rule of Thumb</td>
-              <td>If it does not strengthen the story, the tension, or the atmosphere, it should not be in the addon.</td>
+              <td>If it does not strengthen the story, the tension, or the atmosphere, it should not be in the contribution.</td>
             </tr>
           </tbody>
         </table>
@@ -125,55 +140,15 @@ export default function ContributeStories() {
         <h2 className={styles.sectionHeading}>Story Elements</h2>
 
         <p className={styles.body}>
-          Every addon submitted to The Wudlands is made up of three core elements: images that give scenes a visual
-          presence, a JSON file that defines the structure and flow of the story, and at least one worked example
-          that proves the addon is complete and playable. All three must be present before an addon can be reviewed
-          for publication.
+          Every addon submitted to The Wudlands is made up of two core elements: JSON file that defines the structure and 
+          flow of the story, images that give scenes a visual presence. Those addons will be listed as 
+          unapproved until they meet the platform requirements and pass the validation checks. Once approved, they 
+          become available to players worldwide. Below are the detailed specifications for each element, 
+          along with an example of a complete addon at the end.
         </p>
 
-        {/* 1 — Images */}
-        <h3 className={styles.subHeading}>1. Images</h3>
-
-        <p className={styles.body}>
-          Each scene in your addon may reference one image. Images are not required for every scene, but they strongly
-          reinforce atmosphere and help players orient themselves within the world. The image is displayed above the
-          scene text when the player enters that scene.
-        </p>
-
-        <p className={styles.body}>
-          Images must be submitted as <span className={styles.code}>.jpg</span> or <span className={styles.code}>.webp</span> files,
-          at a minimum resolution of <span className={styles.code}>1024 × 576 px</span> (16:9 landscape).
-          Portrait or square crops are accepted but landscape is preferred as it fills the scene frame without letterboxing.
-          File size should not exceed <span className={styles.code}>400 KB</span> per image — compress before submitting.
-          Name each file after its scene id, for example <span className={styles.code}>ruined-gate.jpg</span> for a scene
-          with id <span className={styles.code}>ruined-gate</span>. This makes the link between scene and image unambiguous.
-        </p>
-
-        <p className={styles.body}>
-          Images should match the tone of the world: dark, painterly, atmospheric. Avoid bright, saturated modern renders
-          or photographs. Pencil illustrations, oil-style digital paintings, and desaturated fantasy art all work well.
-          The platform applies a subtle grayscale pulse and vignette overlay to all scene images at runtime, so images
-          that already lean dark and moody will read best. Avoid images with embedded text — all text is handled by the
-          scene content, not the image.
-        </p>
-
-        <table className={styles.fieldTable}>
-          <thead>
-            <tr><th>Property</th><th>Value</th><th>Notes</th></tr>
-          </thead>
-          <tbody>
-            <tr><td>Format</td><td>.jpg / .webp</td><td>PNG accepted but not preferred — file sizes are larger.</td></tr>
-            <tr><td>Min resolution</td><td>1024 × 576 px</td><td>16:9 landscape is the native display ratio.</td></tr>
-            <tr><td>Max resolution</td><td>1200 × 700 px</td><td>Images larger than this will be scaled down by the engine.</td></tr>
-            <tr><td>Max file size</td><td>400 KB</td><td>Compress before submitting. Large files slow scene loading.</td></tr>
-            <tr><td>Naming</td><td>scene-id.jpg</td><td>Must match the scene id in your JSON exactly.</td></tr>
-            <tr><td>Style</td><td>Dark fantasy art</td><td>Painterly, desaturated, atmospheric. No embedded text.</td></tr>
-            <tr><td>Required</td><td>No</td><td>Images are optional per scene but at least one is strongly recommended.</td></tr>
-          </tbody>
-        </table>
-
-        {/* 2 — Storyline in JSON */}
-        <h3 className={styles.subHeading}>2. Storyline in JSON</h3>
+        {/* 1 — Storyline in JSON */}
+        <h3 className={styles.subHeading}>1. Storyline in JSON</h3>
 
         <p className={styles.body}>
           The story itself is defined in a single JSON file. This file describes every scene, every choice, every
@@ -223,7 +198,6 @@ export default function ContributeStories() {
                //   xray          — white-on-black skeletal exposure",
                //   dream         — soft blur with lifted saturation",
                //   mirror        — horizontally flipped image",
-               //   mirrordark    — flipped and heavily darkened",
                //   mirrorcrimson — flipped with crimson blood-red wash",
                //   scanlines     — soft horizontal scanline overlay",
                //   scanlinesdark — scanlines over darkened image",
@@ -253,12 +227,56 @@ export default function ContributeStories() {
           Scene ids must be lowercase and may only contain letters, digits, and hyphens.
         </p>
 
+        {/* 2 — Images */}
+        <h3 className={styles.subHeading}>2. Images</h3>
+
+        <p className={styles.body}>
+          Each scene in your addon may reference one image. Images are not required for every scene and can be used 
+          for several scenes, but they strongly reinforce atmosphere and help players orient themselves within the 
+          world. The image is displayed above the scene text when the player enters that scene. 
+        </p>
+
+        <p className={styles.body}>
+          Images must be submitted as <span className={styles.code}>.jpg</span> or <span className={styles.code}>.webp</span> files,
+          at a minimum resolution of <span className={styles.code}>1024 × 576 px</span> (16:9 landscape).
+          Portrait or square crops are accepted but landscape is preferred as it fills the scene frame without letterboxing.
+          File size should not exceed <span className={styles.code}>400 KB</span> per image — compress before submitting.
+          Name each file after its scene id, for example <span className={styles.code}>ruined-gate.jpg</span> for a scene
+          with id <span className={styles.code}>ruined-gate</span>. This makes the link between scene and image unambiguous.
+        </p>
+
+        <p className={styles.body}>
+          Images should match the tone of the world: dark, painterly, atmospheric. Avoid bright, saturated modern renders
+          or photographs. Pencil illustrations, oil-style digital paintings, and desaturated fantasy art all work well.
+          The platform applies a subtle grayscale pulse and vignette overlay to all scene images at runtime, so images
+          that already lean dark and moody will read best. Avoid images with embedded text — all text is handled by the
+          scene content, not the image.
+        </p>
+
+        <table className={styles.fieldTable}>
+          <thead>
+            <tr><th>Property</th><th>Value</th><th>Notes</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>Format</td><td>.jpg / .webp</td><td>PNG accepted but not preferred — file sizes are larger.</td></tr>
+            <tr><td>Min resolution</td><td>1024 × 576 px</td><td>16:9 landscape is the native display ratio.</td></tr>
+            <tr><td>Max resolution</td><td>1200 × 700 px</td><td>Images larger than this will be scaled down by the engine.</td></tr>
+            <tr><td>Max file size</td><td>400 KB</td><td>Compress before submitting. Large files slow scene loading.</td></tr>
+            <tr><td>Naming</td><td>scene-id.jpg</td><td>Must match the scene id in your JSON exactly.</td></tr>
+            <tr><td>Style</td><td>Dark fantasy art</td><td>Painterly, desaturated, atmospheric. No embedded text.</td></tr>
+            <tr><td>Required</td><td>No</td><td>Images are optional per scene but at least one is strongly recommended.</td></tr>
+          </tbody>
+        </table>
+
+
         {/* 2b — CSS Style Preview */}
         <h3 className={styles.subHeading}>CSS Image Style Preview</h3>
 
         <p className={styles.body}>
           The following gallery shows all available <span className={styles.code}>image_style</span> presets
-          applied to a sample set of scene images. Click any image to enlarge it. Click again to close.
+          applied to a sample set of scene images. Click any image to enlarge it. Click again to close. Use the 
+          images filters below sparingly and intentionally to create mood and tone. A well-chosen image can make 
+          a scene memorable, while a poorly chosen one can feel out of place or even break immersion.
         </p>
 
         <ImageGallery />

@@ -94,9 +94,15 @@ export default function AGB() {
 
         <p className={styles.body}>
           The Wudlands may, at its discretion, offer contributors a share of revenue generated when adventurers
-          explore their stories. This share, if offered, is entirely voluntary and represents a goodwill gesture
-          from The Wudlands toward its creator community. It does not constitute payment for services rendered,
-          does not create an employment or contractor relationship, and carries no legally enforceable entitlement.
+          explore their stories. Where such a share is offered, adventure revenue is split 40% to the contributor
+          and 60% to The Wudlands. This share is entirely voluntary and represents a goodwill gesture from The
+          Wudlands toward its creator community. It does not constitute payment for services rendered, does not
+          create an employment or contractor relationship, and carries no legally enforceable entitlement. 
+          The revenue is an essencial part of the platform to pay server costs and transaction fees. It is not 
+          guaranteed, may be changed or removed at any time. The contributor may suggest a a price tag for their 
+          adventure, but The Wudlands reserves the right to set or change the price as it sees fit. Each adventure 
+          has a maximum try of exploration, suggested are 3. The counter can be reset by adventurers by paying 
+          the full price again.
         </p>
 
         <p className={styles.body}>

@@ -34,16 +34,26 @@ const SETS: SetConfig[] = [
     name: "Original",
     meta: "no filter applied",
   },
+  {
+    name: "MirrorH",
+    meta: "css transform scaleX(-1)",
+    transform: "scaleX(-1)",
+  },
+  {
+    name: "MirrorV",
+    meta: "css transform scale(-1)",
+    transform: "scaleY(-1)",
+  },
   // ── Brightness / Darkness ─────────────────────────────
   {
     name: "Darkened",
-    meta: "css brightness(0.45)",
-    filter: "brightness(0.45)",
+    meta: "css brightness(0.55)",
+    filter: "brightness(0.55)",
   },
   {
     name: "Pitch Black",
-    meta: "css brightness(0.2) contrast(1.2)",
-    filter: "brightness(0.2) contrast(1.2)",
+    meta: "css brightness(0.35) contrast(1.2)",
+    filter: "brightness(0.35) contrast(1.2)",
   },
   {
     name: "Bright",
@@ -124,31 +134,13 @@ const SETS: SetConfig[] = [
   },
   {
     name: "X-Ray",
-    meta: "css invert(1) grayscale(1) contrast(1.5) brightness(1.3)",
-    filter: "invert(1) grayscale(1) contrast(1.5) brightness(1.3)",
+    meta: "css invert(1) grayscale(1) contrast(1.15) brightness(1.05)",
+    filter: "invert(1) grayscale(1) contrast(1.15) brightness(1.05)",
   },
   {
     name: "Dream",
     meta: "css blur(0.8px) brightness(1.15) saturate(1.4) contrast(0.85)",
     filter: "blur(0.8px) brightness(1.15) saturate(1.4) contrast(0.85)",
-  },
-  // ── Mirror / Transform ────────────────────────────────
-  {
-    name: "Mirror",
-    meta: "css transform scaleX(-1)",
-    transform: "scaleX(-1)",
-  },
-  {
-    name: "Mirror Dark",
-    meta: "css transform scaleX(-1) + brightness(0.45) contrast(1.3)",
-    filter: "brightness(0.45) contrast(1.3)",
-    transform: "scaleX(-1)",
-  },
-  {
-    name: "Mirror Crimson",
-    meta: "css transform scaleX(-1) + sepia(1) hue-rotate(-50deg) saturate(3)",
-    filter: "sepia(1) hue-rotate(-50deg) saturate(3) brightness(0.8)",
-    transform: "scaleX(-1)",
   },
   // ── Overlay sets ─────────────────────────────────────
   {
@@ -170,7 +162,7 @@ const SETS: SetConfig[] = [
   // ── Animated sets ─────────────────────────────────────
   {
     name: "Emerge",
-    meta: "animation — brightness(0) → brightness(1), looping",
+    meta: "looping preview but one-time ingame, animation — brightness(0) → brightness(1)",
     animClass: "animEmerge",
     lightboxAnimClass: "animEmergeOnce",
   },
@@ -181,7 +173,7 @@ const SETS: SetConfig[] = [
   },
   {
     name: "Flicker",
-    meta: "animation — erratic brightness flicker",
+    meta: "warning in adventure description required, animation — erratic brightness flicker",
     animClass: "animFlicker",
   },
   {
