@@ -1,4 +1,5 @@
 import styles from "./page.module.css";
+import WalletGuide from "./WalletGuide";
 
 export default function Guide() {
   return (
@@ -14,6 +15,20 @@ export default function Guide() {
           of your passing are entirely yours to shape.
         </p>
 
+        <img
+          src="/images/guide/groupline.jpg"
+          alt="A line of adventurers marching through a dark and weathered landscape."
+          className={styles.sectionImage}
+        />
+
+        <p className={styles.body}>
+          To step into the Wudlands, you will need a <strong>Polkadot wallet</strong> for login and to track your on-chain character progression.
+          The following wallet extensions are supported:  <strong>Nova Wallet</strong>, <strong>Polkadot.js</strong>, <strong>Talisman</strong>, and <strong>SubWallet</strong>.
+          Install one of these compatible wallets on your <strong>mobile phone</strong> or browser to begin your adventure.
+        </p>
+
+        <WalletGuide />
+
         <p className={styles.body}>
           The Wudlands is made up of adventures — self-contained stories written by contributors from across the world.
           Each adventure is its own corner of the Wudlands: a haunted tower, a cursed merchant road, a court intrigue,
@@ -21,12 +36,6 @@ export default function Guide() {
           opening scene, and from that moment every decision is yours. Where you go, who you trust, when you run —
           all of it matters. The world does not forget what you choose.
         </p>
-
-        <img
-          src="/images/guide/groupline.jpg"
-          alt="A line of adventurers marching through a dark and weathered landscape."
-          className={styles.sectionImage}
-        />
 
         <p className={styles.body}>
           Some adventures are locked when you first arrive. A story may require that you have already survived another
@@ -37,8 +46,8 @@ export default function Guide() {
         </p>
 
         <p className={styles.body}>
-          Entering an adventure requires a small coin — a fee that grants you the right to explore it again and again,
-          up to three times by default. Think of it less as a toll and more as the price
+          Entering an adventure requires a small coin — an on-chain fee that grants you the right to explore it again and again,
+          up to three times by default. Each adventure costs approximately $0.80 for three exploration attempts. Think of it less as a toll and more as the price
           of a seat at the storyteller&apos;s fire. If you have exhausted your plays and wish to return, you may
           pay the fee once more and your count is restored. The road is always open to those willing to walk it again.
         </p>
@@ -102,13 +111,6 @@ export default function Guide() {
           but the choice, once made, belongs to the story.
         </p>
 
-        <p className={styles.body}>
-          Addons include three free plays per purchase: the entry fee grants up to three
-          attempts (retries) to explore an adventure and test branching paths. When those three
-          plays are used, the player may pay the entry fee again to reset the play counter and
-          retry the adventure. This mirrors the platform&apos;s terms for replay limits and purchases.
-        </p>
-
         <table className={styles.table}>
           <thead>
             <tr>
@@ -155,7 +157,7 @@ export default function Guide() {
             </tr>
             <tr>
               <td>Plays &amp; Entry Fee</td>
-              <td>Each adventure requires a small fee to enter. That fee grants you the right to experience it up to three times — enough to find different paths, try different choices, and see what the story holds from another angle. If your count runs out and you wish to return, pay the fee again and your plays are restored. The Wudlands does not close its doors to those who want to walk the same road twice.</td>
+              <td>Each adventure requires a small on-chain fee to enter (approximately $0.80 for three attempts). That fee grants you the right to experience it up to three times — enough to find different paths, try different choices, and see what the story holds from another angle. If your count runs out and you wish to return, pay the fee again and your plays are restored. The Wudlands does not close its doors to those who want to walk the same road twice.</td>
             </tr>
           </tbody>
         </table>
@@ -230,7 +232,7 @@ export default function Guide() {
               <td>Your character starts at an age you choose. Every adventure adds one month to their life by default. Old age accumulates and eventually makes itself known. Life potions exist that can restore some measure of youth — but they must be found, and nothing in the Wudlands comes without a cost.</td>
             </tr>
             <tr>
-              <td>Carrying &amp; Equipment</td>
+              <td>Carrying Equipment</td>
               <td>What you can carry has limits, though they are not rigid walls. Riding dogs and backpacks extend what you can bring into the field. Exceed your soft limit and the weight will tell — slower movement, quicker exhaustion, choices made harder by the burden on your back. Carry what you need. Leave behind what you can afford to lose.</td>
             </tr>
           </tbody>

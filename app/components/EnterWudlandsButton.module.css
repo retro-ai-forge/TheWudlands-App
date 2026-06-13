@@ -12,20 +12,27 @@
   font-weight: bold;
   letter-spacing: 0.15em;
   text-transform: uppercase;
-  color: #d4c9a8;
-  background: transparent;
-  border: 2px solid #d4c9a8;
-  border-radius: 0;
+  color: #2a1c0a;
+  background: linear-gradient(180deg, #e6a55a 0%, #c07a3a 52%, #9a5e28 100%);
+  border: 2px solid #7a6a3a;
+  border-radius: 999px;
   cursor: pointer;
   transition: all 0.3s ease;
-  box-shadow: 0 0 20px rgba(212, 201, 168, 0.3);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 240, 215, 0.75),
+    inset 0 -3px 6px rgba(90, 50, 15, 0.45),
+    0 3px 8px rgba(0, 0, 0, 0.45);
 }
 
 .enterButton:hover:not(:disabled) {
-  background: #7a6a3a;
-  box-shadow: 0 0 30px rgba(212, 201, 168, 0.6);
-  color: #0a0a0a;
-  border-color: #0a0a0a;
+  background: linear-gradient(180deg, #e6a55a 0%, #c07a3a 52%, #9a5e28 100%);
+  color: #2a1c0a;
+  border-color: #7a6a3a;
+  filter: brightness(1.08) saturate(1.1);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 240, 215, 0.85),
+    inset 0 -3px 6px rgba(90, 50, 15, 0.45),
+    0 4px 12px rgba(192, 122, 58, 0.5);
 }
 
 .enterButton:active:not(:disabled) {
@@ -39,6 +46,35 @@
 }
 
 /* No wallet connected: match the header Connect button's glossy amber "jelly" look */
+.enterButtonConnected {
+  color: #1a3d1a;
+  background: linear-gradient(180deg, #4caf50 0%, #45a049 52%, #3d8b40 100%);
+  border: 2px solid #2e7d32;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.2),
+    inset 0 -3px 6px rgba(30, 60, 30, 0.3),
+    0 3px 8px rgba(0, 0, 0, 0.45);
+}
+
+.enterButtonConnected:hover:not(:disabled) {
+  background: linear-gradient(180deg, #5cbf60 0%, #54b559 52%, #4a9950 100%);
+  color: #1a3d1a;
+  border-color: #2e7d32;
+  filter: brightness(1.05);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.3),
+    inset 0 -3px 6px rgba(30, 60, 30, 0.3),
+    0 4px 12px rgba(76, 175, 80, 0.5);
+}
+
+.enterButtonConnected:active:not(:disabled) {
+  transform: translateY(1px) scale(0.99);
+  filter: brightness(0.95);
+  box-shadow:
+    inset 0 2px 5px rgba(30, 60, 30, 0.4),
+    0 1px 3px rgba(0, 0, 0, 0.4);
+}
+
 .enterButtonJelly {
   color: #2a1c0a;
   background: linear-gradient(180deg, #e6a55a 0%, #c07a3a 52%, #9a5e28 100%);
@@ -76,6 +112,23 @@
   letter-spacing: 0.08em;
   line-height: 1.2;
   white-space: normal;
+}
+
+.verifiedDot {
+  display: inline-block;
+  width: 0.5rem;
+  height: 0.5rem;
+  margin-right: 0.4rem;
+  border-radius: 50%;
+  background: #5fd06a;
+  box-shadow: 0 0 6px #5fd06a;
+  vertical-align: middle;
+  animation: verifiedPulse 2s ease-in-out infinite;
+}
+
+@keyframes verifiedPulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
 }
 
 .walletContainer {

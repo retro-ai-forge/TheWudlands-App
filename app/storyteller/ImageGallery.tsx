@@ -198,15 +198,89 @@ const SETS: SetConfig[] = [
 
 export default function ImageGallery() {
   const [lightbox, setLightbox] = useState<{ src: string; filter?: string; transform?: string; overlay?: keyof typeof styles; animClass?: keyof typeof styles; lightboxAnimClass?: keyof typeof styles } | null>(null);
+  const [collapsedSets, setCollapsedSets] = useState<Set<string>>(new Set(SETS.map((s) => s.name)));
+  const [expandAll, setExpandAll] = useState(false);
+
+  const toggleSet = (setName: string) => {
+    const newCollapsed = new Set(collapsedSets);
+    if (newCollapsed.has(setName)) {
+      newCollapsed.delete(setName);
+    } else {
+      newCollapsed.add(setName);
+    }
+    setCollapsedSets(newCollapsed);
+  };
+
+  const handleExpandAll = () => {
+    if (expandAll) {
+      setCollapsedSets(new Set(SETS.map((s) => s.name)));
+    } else {
+      setCollapsedSets(new Set());
+    }
+    setExpandAll(!expandAll);
+  };
 
   return (
     <div className={styles.previewSection}>
+      <div style={{ marginBottom: "1.5rem" }}>
+        <button
+          onClick={handleExpandAll}
+          style={{
+            padding: "0.5rem 1rem",
+            background: "#1a1a1a",
+            color: "#d4c9a8",
+            border: "1px solid #7a6a3a",
+            cursor: "pointer",
+            fontSize: "0.85rem",
+            letterSpacing: "0.1em",
+            transition: "all 0.2s",
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.background = "#7a6a3a";
+            e.currentTarget.style.color = "#0a0a0a";
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.background = "#1a1a1a";
+            e.currentTarget.style.color = "#d4c9a8";
+          }}
+        >
+          {expandAll ? "[ COLLAPSE ALL ]" : "[ EXPAND ALL ]"}
+        </button>
+      </div>
+
       {SETS.map((set) => (
         <div key={set.name} className={styles.previewSet}>
+          <button
+            onClick={() => toggleSet(set.name)}
+            style={{
+              width: "100%",
+              padding: "0.75rem 1rem",
+              background: "#0f0f0f",
+              color: "#c07a3a",
+              border: "1px solid #7a6a3a",
+              cursor: "pointer",
+              textAlign: "left",
+              transition: "all 0.2s",
+              marginBottom: collapsedSets.has(set.name) ? "0" : "1rem",
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.background = "#1a1208";
+              e.currentTarget.style.borderColor = "#c07a3a";
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.background = "#0f0f0f";
+              e.currentTarget.style.borderColor = "#7a6a3a";
+            }}
+          >
+            <span style={{ marginRight: "0.5rem", fontSize: "0.8rem" }}>
+              {collapsedSets.has(set.name) ? "▶" : "▼"}
+            </span>
+            <span style={{ fontSize: "0.9rem", letterSpacing: "0.12em" }}>{set.name}</span>
+          </button>
           <p className={styles.previewSetTitle}>{set.name}</p>
           <p className={styles.previewSetMeta}>({set.meta})</p>
 
-          <div className={styles.previewGrid}>
+          <div className={styles.previewGrid} style={{ display: collapsedSets.has(set.name) ? "none" : "grid" }}>
             {IMAGES.map((img) => {
               const src = `/images/preview-css/${img}`;
               const alt = img.replace("css-", "").replace(/\.(jpg|webp)$/, "");

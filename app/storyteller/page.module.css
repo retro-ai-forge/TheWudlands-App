@@ -132,24 +132,15 @@
 }
 
 .previewSet {
-  margin-bottom: 2.5rem;
+  margin-bottom: 0.5rem;
 }
 
 .previewSetTitle {
-  font-family: "Courier New", Courier, monospace;
-  font-size: 0.82rem;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: #c07a3a;
-  margin-bottom: 0.2rem;
+  display: none;
 }
 
 .previewSetMeta {
-  font-family: "Courier New", Courier, monospace;
-  font-size: 0.72rem;
-  color: #5a4a2a;
-  margin-bottom: 0.75rem;
-  letter-spacing: 0.06em;
+  display: none;
 }
 
 .previewGrid {

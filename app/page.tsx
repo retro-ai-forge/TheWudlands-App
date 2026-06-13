@@ -1,9 +1,10 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import Link from "next/link";
 import styles from "./page.module.css";
-import { EnterWudlandsButton } from "./components/EnterWudlandsButton";
+import { useWallet } from "./components/WalletProvider";
+import { LandingView } from "./components/LandingView";
+import { WelcomeView } from "./components/WelcomeView";
 
 const HEARTBEAT_MS = 5 * 60 * 1000;
 
@@ -11,11 +12,14 @@ type View = "join" | "game";
 
 export default function Home() {
   const [view, setView] = useState<View>("join");
+  const [restoring, setRestoring] = useState(true);
   const [status, setStatus] = useState("Ready.");
   const [userId, setUserId] = useState<number | null>(null);
   const [joining, setJoining] = useState(false);
   const [playerAddress, setPlayerAddress] = useState<string | null>(null);
   const heartbeatRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const { verified, account, logout } = useWallet();
+  const wasVerified = useRef(false);
 
   function stopHeartbeat() {
     if (heartbeatRef.current) {
@@ -39,9 +43,13 @@ export default function Home() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ user_id: id }),
       });
-      if (!res.ok) resetToJoin("Session expired. Please join again.");
+      if (!res.ok) {
+        logout();
+        window.location.href = '/';
+      }
     } catch {
-      resetToJoin("Connection lost. Please join again.");
+      logout();
+      window.location.href = '/';
     }
   }
 
@@ -58,7 +66,7 @@ export default function Home() {
     startHeartbeat(id);
   }
 
-  async function joinGame() {
+  async function _joinGame() {
     setJoining(true);
     setStatus("Joining...");
     try {
@@ -76,12 +84,14 @@ export default function Home() {
     }
   }
 
-  function leaveGame() {
+  // Tear down the in-game session (heartbeat, view, server-side leave).
+  // Triggered when the user logs out (verified -> false) from the header chip
+  // or the on-page Sign Out button. Wallet/session/verified state is cleared
+  // separately by the context's logout().
+  function endGameSession() {
     const id = userId;
-    resetToJoin("You have left the game.");
+    resetToJoin("You have signed out.");
     setPlayerAddress(null);
-    localStorage.removeItem("session_token");
-    localStorage.removeItem("player_address");
     if (id !== null) {
       fetch("/api/game/leave", {
         method: "POST",
@@ -90,6 +100,26 @@ export default function Home() {
       }).catch(() => { /* fire-and-forget, ignore errors */ });
     }
   }
+
+  // Primary: tear down the game session when verified drops to false.
+  useEffect(() => {
+    if (wasVerified.current && !verified) {
+      endGameSession();
+    }
+    wasVerified.current = verified;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [verified]);
+
+  // Safety net for mobile: some browsers don't reliably fire the effect above
+  // when context state changes. Watching account (goes null on logout) gives a
+  // second trigger. wasVerified guards against firing during session restore
+  // (where account is null but wasVerified is false from the start).
+  useEffect(() => {
+    if (!account && view === "game" && wasVerified.current) {
+      endGameSession();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [account]);
 
   async function joinGameAfterAuth(address: string) {
     setJoining(true);
@@ -128,7 +158,7 @@ export default function Home() {
   // Restore session on page reload
   useEffect(() => {
     const stored = sessionStorage.getItem("user_id");
-    if (!stored) return;
+    if (!stored) { setRestoring(false); return; }
     const id = parseInt(stored, 10);
     fetch("/api/game/heartbeat", {
       method: "POST",
@@ -136,44 +166,33 @@ export default function Home() {
       body: JSON.stringify({ user_id: id }),
     }).then((res) => {
       if (res.ok) enterGame(id);
+      else { logout(); sessionStorage.removeItem("user_id"); }
+    }).catch(() => {
+      logout(); sessionStorage.removeItem("user_id");
+    }).finally(() => {
+      setRestoring(false);
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  if (restoring) return <main className={styles.restoring} />;
+
   return (
     <main className={view === "game" ? styles.welcomeScreen : styles.screen}>
       {view === "join" && (
-        <>
-          <p className={styles.status}>{status}</p>
-          <EnterWudlandsButton
-            onEnter={handleEnterWudlands}
-            onError={handleAuthError}
-            disabled={joining}
-          />
-        </>
+        <LandingView
+          status={status}
+          joining={joining}
+          onEnter={handleEnterWudlands}
+          onError={handleAuthError}
+        />
       )}
 
       {view === "game" && (
-        <>
-          <div className={styles.welcomeBody}>
-            <h1 className={styles.welcomeHeadline}>Welcome to Wudlands</h1>
-            <p className={styles.welcomeMessage}>
-              Thanks for signing in — please read the{" "}
-              <Link href="/guide" className={styles.welcomeLink}>guide</Link>{" "}
-              on how to continue.
-            </p>
-          </div>
-          <button className={styles.btn} onClick={leaveGame}>
-            [ SIGN OUT ]
-          </button>
-        </>
-      )}
-
-      {userId !== null && (
-        <span className={styles.playerId}>#{userId}</span>
-      )}
-      {playerAddress !== null && (
-        <span className={styles.playerAddress}>{playerAddress.slice(0, 10)}...</span>
+        <WelcomeView
+          userId={userId}
+          playerAddress={playerAddress}
+        />
       )}
     </main>
   );

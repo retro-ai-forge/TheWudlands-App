@@ -1,0 +1,24 @@
+version: '3.9'
+
+services:
+  wudlands:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"  # Next.js frontend
+      - "8000:8000"  # FastAPI backend
+    environment:
+      - NODE_ENV=production
+      - NEXT_PUBLIC_API_URL=http://localhost:8000
+    env_file:
+      - .env
+    volumes:
+      - ./add-ons:/app/add-ons  # Optional: mount for dynamic content
+    restart: unless-stopped
+    networks:
+      - wudlands-network
+
+networks:
+  wudlands-network:
+    driver: bridge

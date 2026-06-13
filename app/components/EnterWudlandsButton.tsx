@@ -29,8 +29,9 @@ export function EnterWudlandsButton({
   onError,
   disabled = false,
 }: EnterWudlandsButtonProps) {
-  const { account, isConnecting, connectError, connect } = useWallet();
+  const { account, availableAccounts, isConnecting, connectError, connect, setVerified, verified } = useWallet();
   const [isSigning, setIsSigning] = useState(false);
+  const [selectedAddress, setSelectedAddress] = useState<string | null>(null);
 
   /** Offline signing request -> backend verify -> enter the game. */
   const signAndEnter = async (acct: WalletAccount) => {
@@ -49,7 +50,8 @@ export function EnterWudlandsButton({
 
       // 2. Offline signature proving private-key ownership (no transaction).
       const signer = await getSignerForAddress(acct.address);
-      const { signature } = await signer.signRaw({
+      const signerObj = signer as { signRaw: (payload: { address: string; data: string; type: string }) => Promise<{ signature: string }> };
+      const { signature } = await signerObj.signRaw({
         address: acct.address,
         data: message,
         type: 'bytes',
@@ -67,12 +69,14 @@ export function EnterWudlandsButton({
       }
       const { session_token } = await verifyRes.json();
 
-      // 4. Save session and enter the game.
+      // 4. Save session, flag the account as verified, and enter the game.
       localStorage.setItem('session_token', session_token);
       localStorage.setItem('player_address', acct.address);
+      setVerified(true);
       onEnter?.(acct.address);
-    } catch (err: any) {
-      onError?.(err?.message || 'Authentication failed');
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Authentication failed';
+      onError?.(message);
     } finally {
       setIsSigning(false);
     }
@@ -95,8 +99,17 @@ export function EnterWudlandsButton({
     }
   };
 
+  const handleSelectAddress = async (address: string) => {
+    const selected = availableAccounts.find(acc => acc.address === address);
+    if (selected) {
+      setSelectedAddress(address);
+      await signAndEnter(selected);
+    }
+  };
+
   const notConnected = !account;
   const showHint = !!connectError && notConnected && !isConnecting && !isSigning;
+  const showAddressSelector = account && availableAccounts.length > 1 && !verified && !isSigning;
 
   const label = isSigning
     ? '[ SIGNING… ]'
@@ -104,19 +117,53 @@ export function EnterWudlandsButton({
     ? '[ CONNECTING… ]'
     : showHint
     ? 'Select wallet in extension'
+    : verified
+    ? '[ ENTERING… ]'
     : '[ ENTER WUDLANDS ]';
 
   return (
     <div className={styles.container}>
+      {showAddressSelector && (
+        <div style={{ marginBottom: '12px' }}>
+          <label style={{ display: 'block', marginBottom: '6px', fontSize: '12px', fontWeight: 'bold' }}>
+            Select Address:
+          </label>
+          <select
+            value={selectedAddress || account.address}
+            onChange={(e) => handleSelectAddress(e.target.value)}
+            disabled={isSigning}
+            style={{
+              width: '100%',
+              padding: '8px',
+              fontSize: '12px',
+              borderRadius: '4px',
+              border: '1px solid #ccc',
+              fontFamily: 'monospace',
+            }}
+          >
+            {availableAccounts.map((acc) => (
+              <option key={acc.address} value={acc.address}>
+                {acc.address.substring(0, 10)}...{acc.address.substring(acc.address.length - 8)}
+              </option>
+            ))}
+          </select>
+        </div>
+      )}
       <button
-        className={`${styles.enterButton} ${notConnected ? styles.enterButtonJelly : ''} ${
-          showHint ? styles.enterButtonError : ''
-        }`}
+        className={`${styles.enterButton} ${
+          notConnected ? styles.enterButtonJelly : styles.enterButtonConnected
+        } ${showHint ? styles.enterButtonError : ''}`}
         onClick={handleClick}
         disabled={disabled || isSigning || isConnecting}
         title={notConnected ? 'Connect your wallet to enter' : 'Sign to enter The Wudlands'}
       >
-        {label}
+        {verified && !notConnected && !showHint ? (
+          <>
+            <span className={styles.verifiedDot} />✓
+          </>
+        ) : (
+          label
+        )}
       </button>
     </div>
   );

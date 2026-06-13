@@ -21,17 +21,11 @@ body {
 /* Background image — grayscale pulse + flicker */
 body::before {
   content: "";
-  position: absolute;
+  position: fixed;
   inset: 0;
   background: url("/images/banner-wudlands-v01.jpg") center center / cover no-repeat;
   animation: colorPulse 12s ease-in-out infinite;
   z-index: -2;
-}
-
-@media (max-width: 768px) {
-  body::before {
-    bottom: 60%;
-  }
 }
 
 @keyframes vignettePulse {

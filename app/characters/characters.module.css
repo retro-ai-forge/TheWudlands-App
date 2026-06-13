@@ -1,0 +1,320 @@
+.screen {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 5rem 1.5rem 8vh;
+  background: #0a0a0a;
+}
+
+.header {
+  text-align: center;
+  margin-bottom: 3rem;
+}
+
+.title {
+  font-size: 1.4rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: #c07a3a;
+  margin-bottom: 1.25rem;
+}
+
+.divider {
+  color: #7a6a3a;
+  letter-spacing: 0.05em;
+  font-size: 0.85rem;
+  margin-bottom: 0;
+}
+
+.intro {
+  max-width: 38rem;
+  text-align: center;
+  margin-bottom: 3.5rem;
+}
+
+.introText {
+  font-size: 0.95rem;
+  line-height: 1.75;
+  color: #d4c9a8;
+  margin-bottom: 0.75rem;
+}
+
+.introText + .introText {
+  color: #d4c9a8;
+}
+
+.panels {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  max-width: 38rem;
+  width: 100%;
+  margin-bottom: 3rem;
+}
+
+.panel {
+  border: 1px solid #7a6a3a;
+  padding: 1.5rem 2rem;
+  background: #0f0f0f;
+}
+
+.panelLabel {
+  font-size: 0.7rem;
+  letter-spacing: 0.25em;
+  text-transform: uppercase;
+  color: #7a6a3a;
+  margin-bottom: 0.6rem;
+}
+
+.panelTitle {
+  font-size: 1rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #c07a3a;
+  margin-bottom: 0.75rem;
+}
+
+.panelText {
+  font-size: 0.88rem;
+  line-height: 1.65;
+  color: #d4c9a8;
+}
+
+.panelNote {
+  margin-top: 0.6rem;
+  font-size: 0.8rem;
+  color: #7a6a3a;
+  font-style: italic;
+}
+
+.section {
+  max-width: 56rem;
+  width: 100%;
+  margin-bottom: 3rem;
+}
+
+.sectionTitle {
+  font-size: 1.1rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: #c07a3a;
+  margin-bottom: 0.6rem;
+}
+
+.sectionDivider {
+  color: #7a6a3a;
+  font-size: 0.8rem;
+  letter-spacing: 0.05em;
+  margin-bottom: 1.25rem;
+}
+
+.sectionIntro {
+  font-size: 0.9rem;
+  line-height: 1.7;
+  color: #d4c9a8;
+  margin-bottom: 1.75rem;
+  max-width: 44rem;
+}
+
+.tableWrap {
+  overflow-x: auto;
+  border: 1px solid #7a6a3a;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.82rem;
+}
+
+.table thead tr {
+  background: #1a1208;
+}
+
+.table th {
+  padding: 0.6rem 1rem;
+  text-align: left;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  font-size: 0.72rem;
+  color: #c07a3a;
+  border-bottom: 1px solid #7a6a3a;
+  white-space: nowrap;
+}
+
+.table td {
+  padding: 0.55rem 1rem;
+  color: #d4c9a8;
+  vertical-align: top;
+  border-bottom: 1px solid #1e1a10;
+  line-height: 1.5;
+}
+
+.table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.table tbody tr:nth-child(odd) {
+  background: #0d0d0d;
+}
+
+.table tbody tr:nth-child(even) {
+  background: #0a0a0a;
+}
+
+.table tbody tr:hover td {
+  background: #141008;
+  color: #d4c9a8;
+}
+
+.statName {
+  color: #c07a3a;
+  white-space: nowrap;
+}
+
+.opposed {
+  color: #7a6a3a;
+  font-style: italic;
+  white-space: nowrap;
+}
+
+.table tbody tr:nth-child(2n) td {
+  border-bottom: 2px solid #3a3a2a;
+}
+
+.racesGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr));
+  gap: 1rem;
+  max-width: 56rem;
+  width: 100%;
+}
+
+.raceCard {
+  border: 2px solid #7a6a3a;
+  padding: 1.25rem;
+  background: #0a0a0a;
+  transition: all 0.2s;
+  text-align: center;
+}
+
+.raceCard:hover {
+  border-color: #c07a3a;
+  background: #0f0a06;
+}
+
+.raceName {
+  font-size: 0.95rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #c07a3a;
+  margin-bottom: 0.5rem;
+}
+
+.raceDescription {
+  font-size: 0.8rem;
+  line-height: 1.5;
+  color: #d4c9a8;
+}
+
+.professionsGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr));
+  gap: 1rem;
+  max-width: 56rem;
+  width: 100%;
+}
+
+.professionCard {
+  border: 2px solid #7a6a3a;
+  padding: 1.25rem;
+  background: #0a0a0a;
+  transition: all 0.2s;
+  text-align: center;
+  min-height: 8rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.professionCard:hover {
+  border-color: #c07a3a;
+  background: #0f0a06;
+}
+
+.professionName {
+  font-size: 0.9rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #c07a3a;
+  margin-bottom: 0.4rem;
+}
+
+.professionDescription {
+  font-size: 0.75rem;
+  line-height: 1.4;
+  color: #d4c9a8;
+}
+
+.footer {
+  color: #7a6a3a;
+  font-size: 0.75rem;
+  letter-spacing: 0.1em;
+  text-align: center;
+}
+
+.genderGrid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1.25rem;
+  max-width: 44rem;
+  width: 100%;
+}
+
+.genderCard {
+  border: 2px solid #7a6a3a;
+  padding: 1.75rem 1.25rem;
+  background: #0a0a0a;
+  transition: all 0.2s;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.genderCard:hover {
+  border-color: #c07a3a;
+  background: #0f0a06;
+}
+
+.genderSymbol {
+  font-size: 1.6rem;
+  color: #7a6a3a;
+  line-height: 1;
+  transition: color 0.2s;
+}
+
+.genderCard:hover .genderSymbol {
+  color: #c07a3a;
+}
+
+.genderName {
+  font-size: 0.85rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: #c07a3a;
+}
+
+.genderDescription {
+  font-size: 0.78rem;
+  line-height: 1.55;
+  color: #d4c9a8;
+}
+
+@media (max-width: 600px) {
+  .genderGrid {
+    grid-template-columns: 1fr;
+  }
+}

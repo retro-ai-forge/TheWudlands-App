@@ -12,20 +12,18 @@
  * - Clean error handling
  */
 
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import {
   enableWalletExtension,
   getAccounts,
   getSignerForAddress,
-  createSignerAdapter,
   resetWalletState,
   type WalletAccount,
-  type ExternalSignerAdapter,
 } from '@/lib/wallet';
 
 export interface WalletConnectProps {
   dappName?: string;
-  onAccountSelected?: (account: WalletAccount, signer: any) => void;
+  onAccountSelected?: (account: WalletAccount, signer: unknown) => void;
   onError?: (error: string) => void;
   showSourceLabel?: boolean;
 }
@@ -41,7 +39,6 @@ export function WalletConnect({
   const [selectedAddress, setSelectedAddress] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [adapter, setAdapter] = useState<ExternalSignerAdapter | null>(null);
 
   /**
    * Connect to wallet extension and fetch available accounts.
@@ -68,16 +65,12 @@ export function WalletConnect({
       const firstAccount = fetchedAccounts[0];
       setSelectedAddress(firstAccount.address);
 
-      // Create and store adapter for first account
-      const signerAdapter = await createSignerAdapter(firstAccount.address);
-      setAdapter(signerAdapter);
-
       if (onAccountSelected) {
         const signer = await getSignerForAddress(firstAccount.address);
         onAccountSelected(firstAccount, signer);
       }
-    } catch (err: any) {
-      const errorMsg = err?.message || 'Failed to connect wallet';
+    } catch (err: unknown) {
+      const errorMsg = err instanceof Error ? err.message : 'Failed to connect wallet';
       setError(errorMsg);
       setIsConnected(false);
 
@@ -97,7 +90,6 @@ export function WalletConnect({
     setIsConnected(false);
     setAccounts([]);
     setSelectedAddress(null);
-    setAdapter(null);
     setError(null);
   };
 
@@ -111,18 +103,16 @@ export function WalletConnect({
     try {
       setSelectedAddress(address);
 
-      // Get signer and create adapter for new address
+      // Get signer for new address
       const signer = await getSignerForAddress(address);
-      const signerAdapter = await createSignerAdapter(address);
-      setAdapter(signerAdapter);
 
       // Find and notify about selected account
       const selected = accounts.find((acc) => acc.address === address);
       if (selected && onAccountSelected) {
         onAccountSelected(selected, signer);
       }
-    } catch (err: any) {
-      const errorMsg = err?.message || 'Failed to select account';
+    } catch (err: unknown) {
+      const errorMsg = err instanceof Error ? err.message : 'Failed to select account';
       setError(errorMsg);
 
       if (onError) {

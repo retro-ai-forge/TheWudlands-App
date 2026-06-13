@@ -1,3 +1,13 @@
+.externalLink {
+  color: #c07a3a;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.externalLink:hover {
+  color: #e6a55a;
+}
+
 .page {
   min-height: 100vh;
   background: #0a0a0a;
@@ -84,6 +94,59 @@
   border: 1px solid #7a6a3a;
   margin-bottom: 1.75rem;
   filter: sepia(0.2) brightness(0.9);
+}
+
+.wudSection {
+  max-width: 860px;
+  margin: 3rem auto 3rem;
+  text-align: center;
+}
+
+.wudTitle {
+  font-size: 0.75rem;
+  letter-spacing: 0.2em;
+  color: #7a6a3a;
+  margin-bottom: 1.5rem;
+}
+
+.wudGrid {
+  display: flex;
+  justify-content: center;
+  gap: 2rem;
+  flex-wrap: wrap;
+}
+
+.wudCard {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  text-decoration: none;
+}
+
+.wudIcon {
+  width: 130px;
+  height: 130px;
+  object-fit: cover;
+  border-radius: 50%;
+  border: 2px solid #7a6a3a;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.wudCard:hover .wudIcon {
+  border-color: #c07a3a;
+  box-shadow: 0 0 0.5rem rgba(192, 122, 58, 0.4);
+}
+
+.wudName {
+  font-size: 0.7rem;
+  letter-spacing: 0.08em;
+  color: #7a6a3a;
+  transition: color 0.2s;
+}
+
+.wudCard:hover .wudName {
+  color: #c07a3a;
 }
 
 @media (max-width: 768px) {

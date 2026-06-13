@@ -9,17 +9,144 @@ export default function DevSection() {
         <h2 className={styles.heading}>Developer Overview</h2>
 
         <p className={styles.body}>
-          The Wudlands is an open, contributor-driven dark fantasy adventure platform. At its core it is a
+          The Wudlands is an open source, contributor-driven dark fantasy adventure platform. At its core it is a
           story engine — a system that loads externally authored adventure addons and runs them as live,
           interactive sessions for players. The platform is designed to be extended by two distinct groups:
           story contributors who write the adventures, and software developers who build and maintain the
           engine, tooling, and infrastructure that makes those adventures run.
         </p>
 
-        <ClickableImage
-          src="/images/dev-section/engine.jpg"
-          alt="Software architecture diagram showing the relationship between the core engine and the story add-ons. The engine is a central hub that loads and runs the add-ons, which are separate modules containing story content and assets."
-        />
+        <p className={styles.body}>
+          Connect with us and explore the project on our community platforms:
+        </p>
+
+        <div className={styles.socialLinks}>
+          <div className={styles.socialItem}>
+            <div className={styles.socialLabel}>Main repo<br />The Wudlands App</div>
+            <a href="https://github.com/retro-ai-forge/TheWudlands-App" target="_blank" rel="noopener noreferrer">
+              <img src="/icons/github-icon.webp" alt="GitHub" className={styles.socialIcon} />
+            </a>
+          </div>
+          <div className={styles.socialItem}>
+            <div className={styles.socialLabel}>News<br />FAQ channel</div>
+            <a href="https://t.me/+GNokB3Y-FllhNjBi" target="_blank" rel="noopener noreferrer">
+              <img src="/icons/telegram-icon.webp" alt="Telegram" className={styles.socialIcon} />
+            </a>
+          </div>
+          <div className={styles.socialItem}>
+            <div className={styles.socialLabel}>EVRLOOT<br />Porting repo</div>
+            <a href="https://github.com/retro-ai-forge/TheWudlands-EVRLOOT-nfts" target="_blank" rel="noopener noreferrer">
+              <img src="/icons/github-icon.webp" alt="GitHub NFTs" className={styles.socialIcon} />
+            </a>
+          </div>
+        </div>
+
+        <div id="roadmap" className={styles.roadmapSection}>
+          <h3 className={styles.roadmapTitle}>Development Roadmap</h3>
+
+          <div className={styles.timelineContainer}>
+            <div className={styles.timelineLine}></div>
+
+            <div className={styles.roadmapPhases}>
+              <div className={styles.roadmapPhase}>
+                <div className={styles.phaseName}>Beta 1.0 August 2026</div>
+                <ul className={styles.phaseDetails}>
+                  <li>Landing page review collection</li>
+                  <li>Reward for constructive feedback</li>
+                  <li>Wallet integration</li>
+                  <li>No character creation</li>
+                  <li>No persistent data storage</li>
+                  <li>Fixed (selectable) characters</li>
+                  <li>Complete session reset after logout</li>
+                  <li>No stories in Beta &lt; 1.0 </li>
+                  <li>Limited adventure content</li>
+                  <li>Single-player mode</li>
+                  <li>Free to play</li>
+                </ul>
+              </div>
+
+              <div className={styles.roadmapPhase}>
+                <div className={styles.phaseName}>Beta 2.0 October 2026</div>
+                <ul className={styles.phaseDetails}>
+                  <li>Progress <strong><span style={{fontSize: '1.3em'}}>loss</span></strong> on major upgrades!</li>
+                  <li>Character creation system</li>
+                  <li>Race selection</li>
+                  <li>Character progress</li>
+                  <li>First adventure addons</li>
+                  <li>Off-chain database storage</li>
+                  <li>Data migration to Alpha not guaranteed</li>
+                  <li>Wallet connection integration</li>
+                  <li>Free to play</li>
+                </ul>
+              </div>
+
+              <div className={styles.roadmapPhase}>
+                <div className={styles.phaseName}>Alpha 1.0 February 2027</div>
+                <ul className={styles.phaseDetails}>
+                  <li>DOT / WUD token payments</li>
+                  <li>In-game currency system</li>
+                  <li>Adventure entry fees</li>
+                  <li>On-chain character progression</li>
+                  <li>Persistent wallet integration</li>
+                  <li>Character classes & professions</li>
+                  <li>Production-grade data security</li>
+                  <li>Revenue share distribution</li>
+                </ul>
+              </div>
+
+              <div className={styles.roadmapPhase}>
+                <div className={styles.phaseName}>Alpha 2.0 end of 2027</div>
+                <ul className={styles.phaseDetails}>
+                  <li>Group-player mode</li>
+                  <li>The Wudlands NFT</li>
+                  <li>WUD Universe show corner</li>
+                  <li>Market for Wudland NFTs</li>
+                  <li>Wudlands Mobile App</li>
+                  <li>Ranking</li>
+                </ul>
+              </div>
+
+            </div>
+          </div>
+        </div>
+
+        <h2 className={styles.sectionHeading}>Call for Contributors</h2>
+
+        <p className={styles.body}>
+          The Wudlands is built by the community, for the community. We&apos;re actively recruiting contributors across multiple disciplines to help bring this dark fantasy world to life. Whether you&apos;re a writer, artist, developer, or designer, there are roles that match your skills and passion.
+        </p>
+
+        <p className={styles.body}>
+          <strong>Story Writers</strong> craft the adventures that drive the platform. Your narratives are the foundation of player experiences — branching storylines, rich dialogue, and dark fantasy atmospheres that immerse players in the Wudlands universe.
+        </p>
+
+        <p className={styles.body}>
+          <strong>Image Generators &amp; Visual Artists</strong> create the visual identity of every scene. From atmospheric character portraits to haunting environment artwork, your images bring the world to life and define the aesthetic of each adventure addon.
+        </p>
+
+        <p className={styles.body}>
+          <strong>Creative Directors &amp; Game Designers</strong> shape the overall experience. You define the visual style, pacing, tone, and design language that unites all adventures into a cohesive dark fantasy world. Your vision sets the standard for quality and immersion.
+        </p>
+
+        <p className={styles.body}>
+          <strong>Backend &amp; Engine Developers</strong> build and maintain the engine that powers the platform. You work on session management, addon validation, blockchain integration, player routing, and the infrastructure that keeps adventures running smoothly at scale.
+        </p>
+
+        <p className={styles.body}>
+          <strong>Automation &amp; Tools Developers</strong> write tools and scripts that convert raw story content into playable scene-based adventures. You bridge the gap between narrative and engine, building the pipelines that allow non-technical contributors to publish their work.
+        </p>
+
+        <p className={styles.body}>
+          <strong>Frontend &amp; UI/UX Developers</strong> design and implement the player-facing interface. You work on scene rendering, choice presentation, wallet integration, and the smooth interactions that players encounter during every adventure.
+        </p>
+
+        <p className={styles.body}>
+          <strong>Audio Designers &amp; Composers</strong> add sonic depth to the experience. Sound effects, ambient music, and voice assets transform adventures from silent text into immersive multisensory journeys.
+        </p>
+
+        <p className={styles.body}>
+          <strong>Community &amp; Content Managers</strong> foster collaboration and quality. You review submissions, provide feedback to contributors, moderate community discussions, and ensure the addon ecosystem stays vibrant and on-brand.
+        </p>
 
         {/* ── Section 1: Story Contributors ─────────────────── */}
         <h2 className={styles.sectionHeading}>1. For Story Contributors</h2>
@@ -34,7 +161,7 @@ export default function DevSection() {
         <p className={styles.body}>
           Everything you need to know about the addon format, image specifications, style presets, scene
           structure, dependencies, and submission requirements is documented in the{" "}
-          <Link href="/contribute-stories" className={styles.code}>Contribute Stories</Link> section. Start there.
+          <Link href="/storyteller" className={styles.code}>Storyteller</Link> section. Start there.
         </p>
 
         <p className={styles.body}>        
@@ -52,6 +179,11 @@ export default function DevSection() {
           interference — each session is isolated, stateful, and independently routed through its addon&apos;s
           scene graph.
         </p>
+
+         <ClickableImage
+          src="/images/dev-section/engine.jpg"
+          alt="Software architecture diagram showing the relationship between the core engine and the story add-ons. The engine is a central hub that loads and runs the add-ons, which are separate modules containing story content and assets."
+        />
 
         <h3 className={styles.subHeading}>The Addon Engine</h3>
 

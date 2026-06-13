@@ -1,7 +1,11 @@
+"use client";
+
+import { useState } from "react";
 import styles from "./page.module.css";
 import ImageGallery from "./ImageGallery";
 
-export default function ContributeStories() {
+export default function Storyteller() {
+  const [showImageDimensionsPopup, setShowImageDimensionsPopup] = useState(false);
   return (
     <div className={styles.page}>
       <section className={styles.guidelines}>
@@ -13,8 +17,15 @@ export default function ContributeStories() {
           Anyone can contribute an adventure addon — a self-contained story that players can enter, explore, and struggle through.
           Addon creators are free to shape their own corner of the Wudlands: invent monsters, ancient ruins, secret factions,
           forbidden magic, cursed artefacts, weather-battered wilderness, and whatever strange wonders or horrors they imagine.
-          The only rule is that everything must serve the story.
+          The only rule is that everything must serve the story. In the future we will add more content like Sci-Fi, Cthulhu 
+          1920 horror, and more, but for now we are focused on the core fantasy experience.
         </p>
+
+         <img
+          src="/images/storyteller/createstory.jpg"
+          alt="A magic book with a glowing red cover, open to a page with a quill pen poised above it. The text on the page reads: &apos;Create your own story in the Wudlands.&apos;"
+          className={styles.sectionImage}
+        />
 
         <p className={styles.body}>
           The Wudlands is not a sandbox. There is no base-building, no permanent home, no safe corner of the world to retreat to.
@@ -25,12 +36,6 @@ export default function ContributeStories() {
           as long as they create tension, push decisions, and deepen the sense of danger rather than functioning as mechanical
           busywork disconnected from the plot.
         </p>
-
-         <img
-          src="/images/contribute-stories/createstory.jpg"
-          alt="A magic book with a glowing red cover, open to a page with a quill pen poised above it. The text on the page reads: &apos;Create your own story in the Wudlands.&apos;"
-          className={styles.sectionImage}
-        />
 
         <p className={styles.body}>
           Stories in the Wudlands do not have to be linear. Addon creators are encouraged to build branching paths,
@@ -134,7 +139,8 @@ export default function ContributeStories() {
               <td>Escape Route</td>
               <td>Every addon must include one default retreat route. 
                 Characters must always have a chance to run away, recover, or conclude. The escape route can be a short 
-                adventure in itself. Though there is not escape route from here. Dangerous content should be avoided.</td>
+                adventure in itself. When the next scene does have a disabled escape button the player must be warned 
+                in the current scene!</td>
             </tr>
             <tr>
               <td>Survival</td>
@@ -166,7 +172,7 @@ export default function ContributeStories() {
         </p>
 
         <img
-          src="/images/agb/agb-minne.jpg"
+          src="/images/storyteller/minne.jpg"
           alt="A knight kneels before a noble lady in a candlelit castle hall — courtly love in the tradition of Minne."
           className={styles.sectionImage}
         />
@@ -198,7 +204,7 @@ export default function ContributeStories() {
           Romantic storylines in addons may include flirtation, seduction, courtly intrigue, jealousy, unrequited devotion,
           and morally ambiguous power dynamics between characters — all common tropes of the genre.
           These may appear in text, dialogue, and branching choices. In adult-flagged addons, romantic storylines
-          may extend into explicit erotic territory under the rules described in Section 5 of the AGBs.
+          may extend into explicit erotic territory under the rules described in Section Content Standards of the GTCs.
           Where romance is present, creators are encouraged to give it weight and consequence within the story —
           a kiss earned through three nights of danger means more than one handed out freely.
           Romantic and erotic elements should feel like part of the world, not tacked-on rewards.
@@ -233,15 +239,17 @@ export default function ContributeStories() {
         </p>
 
         <code className={styles.codeBlock}>{`{
-  "id":            "string  — unique addon id, lowercase, hyphens only. e.g. the-black-tower",
-  "title":         "string  — display name shown to players",
-  "author":        "string  — your name or handle",
-  "version":       "string  — semver format, e.g. 1.0.0",
-  "eth_address":   "string  — optional. your ETH address for revenue share",
-  "adult":          false,   // boolean — true if addon contains adult content",
-  "tags":          ["array of strings — e.g. dungeon, horror, romance, survival"],
-  "requires":      ["array of addon ids, one must be completed before this one is accessible"],
-  "unlocks":       ["array of addon ids that become accessible after this one is completed"],
+  "id":               "string  — unique addon id, lowercase, hyphens only. e.g. the-black-tower",
+  "title":            "string  — display name shown to players",
+  "author":           "string  — your name or handle",
+  "version":          "string  — semver format, e.g. 1.0.0",
+  "Polkadot_address": "string  — optional. your Polkadot address for revenue share",
+  "eth_address":      "string  — optional. your ETH address for revenue share",
+  "adult":            false,   // boolean — true if addon contains adult content",
+  "require":          ["array or requirements to enter - e.g. m, d, f, solo],
+  "tags":             ["array of strings — e.g. dungeon, horror, romance, survival"],
+  "requires":         ["array of addon ids, one must be completed before this one is accessible"],
+  "unlocks":          ["array of addon ids that become accessible after this one is completed"],
 
   "default_entry": "string  — scene id used as start point AND missing-scene fallback",
   "emergency_exit": "string  — scene id used on errors to lead to the escape route",
@@ -285,9 +293,9 @@ export default function ContributeStories() {
                //   scanlinesdark  — scanlines over darkened image",
                //   verticalstrips — soft vertical strip overlay",
                //   flicker        — animated: erratic rapid brightness flicker",
-      "ending":   true, // marks this as a terminal scene — reaching it counts as completing the addon."  
-                        // false is also a terminal scene, but does not deduct from the 3 playthroughs."
-                        // normal or entry scene do not have this field.
+      "ending":   true, // 'ending' marks this as a terminal scene — deducts from the 3 playthroughs."  
+                        // 'false' is also a terminal scene, but does not deduct from the 3 playthroughs."
+                        // default_entry must not be marked as an ending! 
       "choices": [
         {
           "text": "string  — the choice label the player sees",
@@ -314,9 +322,128 @@ export default function ContributeStories() {
         <h3 className={styles.subHeading}>2. Images</h3>
 
         <p className={styles.body}>
-          Each scene in your addon may reference one image. Images are not required for every scene and can be used 
-          for several scenes, but they strongly reinforce atmosphere and help players orient themselves within the 
-          world. The image is displayed above the scene text when the player enters that scene. 
+          Each scene in your addon may reference one image. Images are not required for every scene and can be used
+          for several scenes, but they strongly reinforce atmosphere and help players orient themselves within the
+          world. The image is displayed above the scene text when the player enters that scene.
+        </p>
+
+        <h3 className={styles.subHeading}>Image Dimensions and Story Design</h3>
+
+        <p className={styles.body}>
+          The aspect ratio of your image directly affects how much space remains on the screen for story text, choices,
+          and interactive buttons. Choose your image dimensions strategically based on the pacing and focus of each scene.
+        </p>
+
+        <button
+          onClick={() => setShowImageDimensionsPopup(true)}
+          style={{
+            marginBottom: "1.5rem",
+            padding: "0.75rem 1.5rem",
+            background: "#1a1a1a",
+            color: "#d4c9a8",
+            border: "2px solid #7a6a3a",
+            cursor: "pointer",
+            fontSize: "0.9rem",
+            letterSpacing: "0.1em",
+            transition: "all 0.2s",
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.background = "#7a6a3a";
+            e.currentTarget.style.color = "#0a0a0a";
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.background = "#1a1a1a";
+            e.currentTarget.style.color = "#d4c9a8";
+          }}
+        >
+          View image dimension preview
+        </button>
+
+        {showImageDimensionsPopup && (
+          <div
+            style={{
+              position: "fixed",
+              top: 0,
+              left: 0,
+              width: "100%",
+              height: "100%",
+              background: "rgba(0, 0, 0, 0.85)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              zIndex: 1000,
+              cursor: "pointer",
+            }}
+            onClick={() => setShowImageDimensionsPopup(false)}
+          >
+            <div
+              style={{
+                background: "#0a0a0a",
+                padding: "2rem",
+                maxWidth: "90%",
+                maxHeight: "90vh",
+                overflow: "auto",
+                border: "2px solid #c07a3a",
+                cursor: "pointer",
+              }}
+              onClick={() => setShowImageDimensionsPopup(false)}
+            >
+              <img
+                src="/images/storyteller/ScreenImageSizes.jpg"
+                alt="Diagram showing five different mobile phone screen layouts with different image aspect ratios: 16:9 (landscape), 3:2, 1:1 (square), 2:3 (portrait), and 4:5 (tall portrait). Green areas represent image space, gray areas represent space available for text and buttons."
+                style={{ maxWidth: "100%", height: "auto" }}
+              />
+              <p
+                style={{
+                  textAlign: "center",
+                  marginTop: "1rem",
+                  color: "#7a6a3a",
+                  fontSize: "0.8rem",
+                  letterSpacing: "0.1em",
+                }}
+              >
+                click to close
+              </p>
+            </div>
+          </div>
+        )}
+
+        <p className={styles.body}>
+          <span className={styles.highlight}>16:9 Landscape (Wide)</span> — Minimal text space. The image dominates the screen.
+          Use this for overland travel scenes, vast vistas, and moments where the visual landscape tells most of the story.
+          These scenes work best with few choices or simple decision points. Ideal for establishing shots and atmosphere.
+        </p>
+
+        <p className={styles.body}>
+          <span className={styles.highlight}>3:2 Ratio</span> — Moderate text space. Balanced between image and content.
+          Works well for most general scenes where image and narrative share equal weight. Good for exploration, discovery,
+          and scenes that need both visual context and detailed description.
+        </p>
+
+        <p className={styles.body}>
+          <span className={styles.highlight}>1:1 Square</span> — Significant text space. The image becomes a portrait or
+          symbol rather than a landscape. Use for NPC encounters, close-up character moments, and scenes where the visual
+          focus is narrow and the text dialogue must carry more weight.
+        </p>
+
+        <p className={styles.body}>
+          <span className={styles.highlight}>2:3 Portrait (Tall)</span> — Ample text space for complex choices. Ideal for
+          market scenes with many vendors, tavern encounters with multiple NPCs, or any scene where players need to read
+          and compare several options. Portrait images work well for character close-ups and intricate indoor spaces.
+        </p>
+
+        <p className={styles.body}>
+          <span className={styles.highlight}>4:5 Portrait (Very Tall)</span> — Maximum text space. Use when story complexity
+          demands it: branching dialogue, multi-step decisions, or detailed descriptions of crafting, trading, or negotiation.
+          These scenes prioritize reading and decision-making over visual spectacle. Avoid using this ratio unless your narrative
+          truly requires the extra space.
+        </p>
+
+        <p className={styles.body}>
+          <strong>Best Practice:</strong> Design your scenes with a clear visual hierarchy. Overland travel and exploration
+          scenes benefit from wide, immersive landscapes. Intimate moments, trade sequences, and dialogue-heavy scenes work
+          better with portrait ratios that leave room for text. Vary your aspect ratios throughout your addon to pace the
+          visual rhythm — wide scenes for wonder, narrow scenes for intimacy.
         </p>
 
         <p className={styles.body}>
@@ -374,92 +501,117 @@ export default function ContributeStories() {
         </p>
 
         <code className={styles.codeBlock}>{`{
-  "id":            "the-ruined-gate",
-  "title":         "The Ruined Gate",
-  "author":        "Grimwald of Ashfen",
-  "version":       "1.0.0",
-  "eth_address":   "",
-  "adult":          false,
-  "tags":          ["dungeon", "ruins", "solo"],
-  "requires":      [],
-  "unlocks":       [],
+  "id":                "the-ruined-gate",
+  "title":             "The Ruined Gate",
+  "author":            "Grimwald of Ashfen",
+  "version":           "1.0.0",
+  "Poldkadot_address": "",
+  "eth_address":       "",
+  "adult":             false,
+  "require":           ["m", "d", "f", "solo"],
+  "tags":              ["dungeon", "ruins"],
+  "requires":          [],
+  "unlocks":           [],
 
-  "default_entry": "approach",
-  "emergency_exit": "broken-ceiling",
-  "escape_route":  "forest-retreat",
+  "default_entry":     "approach",
+  "emergency_exit":    "broken_ceiling",
+  "escape_route":      "run_away",
 
   "scenes": {
 
     "approach": {
       "title":       "Collapsing Mouth",
-      "text":        "You stand at the lip of a yawning sinkhole, the air below smelling of 
-                      damp stone and old rot.\\nA narrow staircase carved into the rock 
-                      descends into the dark — a cold draft sighs up from the depths.\\nLoose 
-                      pebbles skitter underfoot. Far below, something moves that is not the 
+      "text":        "After a few hours of travel, you stand at the lip of a yawning sinkhole, 
+                      the air below smelling of damp stone and old rot. <br>
+                      You claimed down carefully into the pit, but the ground beneath you 
+                      crumbles and gives way. You fall a short distance,
+                      scraping your arms and legs on the jagged rock. <br>
+                      At the bottom you see a narrow staircase carved into the rock 
+                      descends into the dark — a cold draft sighs up from the depths. <br>
+                      Loose pebbles skitter underfoot. Far below, something moves that is not the 
                       wind.",
       "image":       "approach.jpg",
       "image_style": "deepocean",
       "choices": [
-        { "text": "Descend the carved steps",       "to": "inner-court" },
-        { "text": "Climb back to the surface",      "to": "forest-retreat" }
+        { "text": "Descend the carved steps",                  "to": "inner-court" },
+        { "text": "You don't feel ready for this. Climb out",  "to": "forest-retreat" }
       ]}
     },
 
     "inner-court": {
       "title":       "The Lower Vault",
       "text":        "You step into a vaulted cavern where moulded pillars hold a ceiling 
-                      low with mineral veins.\\nWater drips in slow, musical patterns. 
+                      low with mineral veins.<br>
+                      Water drips in slow, musical patterns. 
                       Ancient scratches mark a path toward a half-buried gate carved 
-                      with symbols.\\nFrom somewhere deeper comes a metallic, distant clank.",
+                      with symbols. The gate is broken and some metal pieces hang loose.<br>
+                      From somewhere deeper comes a metallic, distant clank.",
       "image":       "inner-court.jpg",
       "image_style": "scanlines",
       "choices": [
         { "text": "Follow the scratched path",              "to": "inner-court" },
-        { "text": "Grab a rusty metal bar and return home", "to": "travel-home" },
-        { "text": "Flee upward toward the light",           "to": "forest-retreat" }
+        { "text": "Grab a rusty metal bar and return home", "to": "return-home" },
+        { "text": "Leave to get better equippment",         "to": "forest-retreat" }
       ]
     },
 
-      "forest-retreat": {
+    # Remark: Every adventure must have at least one terminal ending scene, marked with "ending": true.
+    "return-home": {
+      "title":       "Run home with trophy",
+      "text":        "With effort, you grab one of the rusty metal poles and wrench it free. 
+                      Clutching the dusty metal bar, you quickly run back to the surface and 
+                      climb out of the sinkhole. The sun is warm on your face as you emerge, 
+                      though the air tastes of dust and earth.<br>
+                      Still, you feel lucky to have returned with your prize.",
+      "image":       "peaceful-forest.jpg",
+      "image_style": "origin",
+      "ending":       true,
+    },
+
+    "forest-retreat": {
+      "title":       "Getting equippment",
+      "text":        "You claw your way back to the surface and emerge from the sinkhole 
+                      into a quiet forest. Sunlight filters through the canopy above, and 
+                      the air is crisp with the scent of pine and earth.<br>
+                      You make your way home, vowing to return better equipped and 
+                      ready to claim what the depths have guarded.",
+      "image":       "forest-path.jpg",
+      "image_style": "origin",
+      "ending":       true,
+    }
+
+    # Remark: This is the mandatory emergency_exit. It is scene fallback in case of 
+    #         a broken reference. It is not reachable through normal play and does 
+    #         not count against the 3 reruns.
+    "broken-ceiling": {
+      "title":       "Broken Ceiling",
+      "text":        "Suddenly an earthquake shakes the caverns. Dust falls like rain and a 
+                      thunder of collapsing stone drowns the sound of your breath.<br>
+                      A fissure opens, dropping you into a fractured passage; rubble blocks 
+                      the way you came. You must fight your way through the shifting dark 
+                      toward any route that leads upward.<br>
+                      Debris underfoot threatens to give; the air tastes of iron and panic.",
+      "image":       "broken-ceiling.jpg",
+      "image_style": "apocalypse",
+      "ending":       false,
+    }
+
+    # Remark: This is the standard escape_route, it is marked as a true ending. 
+    #         The escape route can be accessed from any scene by pressing the 'escape' 
+    #         button in the UI when it is green. In cases where the 'escape' button is 
+    #         disabled, it is colored red.
+    "run_away": {
       "title":       "Climb to Daylight",
-      "text":        "You scramble up a narrow shaft and find a ragged slit of sky.\\nThe 
-                      surface is a maze of broken earth and toppled root, but above you, 
-                      the world is open and the air warm.\\nYou make your way back to the 
-                      light, lungs burning and pockets full of dust, alive and changed.",
+      "text":        "You scramble up a narrow shaft and find a ragged slit of sky. <br>
+                      The surface is a maze of broken earth and toppled root, but above you, 
+                      the world is open and the air warm. <br>
+                      You make your way back to the light, lungs burning and pockets 
+                      full of dust, alive and changed.",
       "image":       "forest-retreat.jpg",
       "image_style": "origin",
       "ending":       true,
       "choices": []
     },
-
-      "return-home": {
-      "title":       "Run home with trophy",
-      "text":        "You quickly run back to the surface and climb out of the sinkhole, 
-                      clutching the rusty metal bar you found in the vault. \\nThe sun 
-                      is warm on your face, but the air tastes of dust and regret.\\nYou",
-      "image":       "peaceful-forest.jpg",
-      "image_style": "origin",
-      "ending":       true,
-      "choices": []
-    },
-
-    "broken-ceiling": {
-      "title":       "Broken Ceiling",
-      "text":        "Suddenly an earthquake shakes the caverns. Dust falls like rain and a 
-                      thunder of collapsing stone drowns the sound of your breath.\\nA fissure 
-                      opens, dropping you into a fractured passage; rubble blocks the way you 
-                      came. You must fight your way through the shifting dark toward any route 
-                      that leads upward.\\nDebris underfoot threatens to give; the air tastes of 
-                      iron and panic. Move quickly. Finally you reach the fresh air and walk home, 
-                      shaken but alive.",
-      "image":       "broken-ceiling.jpg",
-      "image_style": "apocalypse",
-      "ending":       false,
-      "choices": [
-        { "text": "Clamber toward the faint light above", "to": "forest-retreat" },
-        { "text": "Wedge yourself into a narrow crevice and wait it out", "to": "inner-court" }
-      ]
-    }
 
   }
 }`}</code>

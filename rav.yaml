@@ -1,0 +1,121 @@
+scripts:
+  # ═══════════════════════════════════════════════════════════════════════════
+  # Setup & Installation
+  # ═══════════════════════════════════════════════════════════════════════════
+  install_python: python -m pip install --upgrade pip && pip install -r requirements.txt
+  install_node: npm install
+  install_all:
+    - rav run install_python
+    - rav run install_node
+
+  # ═══════════════════════════════════════════════════════════════════════════
+  # Backend (FastAPI)
+  # ═══════════════════════════════════════════════════════════════════════════
+  backend_dev: python -m uvicorn backend.main:app --reload --host 0.0.0.0 --port 8000
+  backend_prod: python -m uvicorn backend.main:app --host 0.0.0.0 --port 8000
+
+  # ═══════════════════════════════════════════════════════════════════════════
+  # Frontend (Next.js)
+  # ═══════════════════════════════════════════════════════════════════════════
+  frontend_dev: npm run dev
+  frontend_build: npm run build
+  frontend_start: npm start
+  frontend_lint: npm run lint
+  frontend_type_check: npm run type-check
+
+  # ═══════════════════════════════════════════════════════════════════════════
+  # Development
+  # ═══════════════════════════════════════════════════════════════════════════
+  dev_backend: rav run backend_dev
+  dev_frontend: rav run frontend_dev
+  dev:
+    - echo "Starting Wudlands development environment..."
+    - echo "Backend will run on http://localhost:8000"
+    - echo "Frontend will run on http://localhost:3000"
+    - echo "Open two terminals and run:"
+    - echo "  rav run dev_backend"
+    - echo "  rav run dev_frontend"
+
+  # ═══════════════════════════════════════════════════════════════════════════
+  # Docker Operations
+  # ═══════════════════════════════════════════════════════════════════════════
+  docker_build: docker build -f Dockerfile -t thewudlands:latest .
+  docker_run: docker run -p 3000:3000 -p 8000:8000 --env-file .env --rm --name thewudlands -it thewudlands:latest
+  docker_shell: docker exec -it thewudlands /bin/sh
+  docker_compose_up: docker-compose up -d
+  docker_compose_down: docker-compose down
+  docker_compose_logs: docker-compose logs -f
+  docker_compose_rebuild: docker-compose up -d --build
+  docker_compose_shell: docker-compose exec wudlands sh
+
+  # ═══════════════════════════════════════════════════════════════════════════
+  # Build & Production
+  # ═══════════════════════════════════════════════════════════════════════════
+  build:
+    - rav run frontend_build
+    - rav run docker_build
+
+  build_run:
+    - rav run docker_build
+    - rav run docker_run
+
+  # ═══════════════════════════════════════════════════════════════════════════
+  # Quality Checks
+  # ═══════════════════════════════════════════════════════════════════════════
+  lint: npm run lint
+  type_check: npm run type-check
+  quality:
+    - rav run lint
+    - rav run type_check
+
+  # ═══════════════════════════════════════════════════════════════════════════
+  # Utilities
+  # ═══════════════════════════════════════════════════════════════════════════
+  clean:
+    - rm -rf node_modules
+    - rm -rf .next
+    - rm -rf __pycache__
+    - find . -type d -name ".pytest_cache" -exec rm -rf {} +
+
+  clean_build:
+    - rav run clean
+    - rav run install_all
+    - rav run build
+
+  env_setup: cp .env-example .env && echo "Created .env file - please update with your values"
+
+  # ═══════════════════════════════════════════════════════════════════════════
+  # Health Checks
+  # ═══════════════════════════════════════════════════════════════════════════
+  check_backend: curl -s http://localhost:8000/docs
+  check_frontend: curl -s http://localhost:3000
+  check_all:
+    - rav run check_backend
+    - rav run check_frontend
+
+  # ═══════════════════════════════════════════════════════════════════════════
+  # GCP Deployment (requires gcloud CLI and authentication)
+  # ═══════════════════════════════════════════════════════════════════════════
+  gcp_auth: gcloud auth configure-docker europe-west1-docker.pkg.dev
+
+  gcp_create_repo: gcloud artifacts repositories create serverless-wudlands-repo --repository-format=docker --location=europe-west1 --project=thewudlands
+
+  gcp_build: docker build --platform=linux/amd64 -f Dockerfile -t serverless-wudlands-amd64 .
+
+  gcp_tag: docker tag serverless-wudlands-amd64 europe-west1-docker.pkg.dev/thewudlands/serverless-wudlands-repo/serverless-wudlands:latest
+
+  gcp_push:
+    - rav run gcp_build
+    - rav run gcp_tag
+    - docker push europe-west1-docker.pkg.dev/thewudlands/serverless-wudlands-repo/serverless-wudlands --all-tags
+
+  gcp_deploy: gcloud run deploy serverless-wudlands --image=europe-west1-docker.pkg.dev/thewudlands/serverless-wudlands-repo/serverless-wudlands:latest --allow-unauthenticated --region=europe-west1 --project=thewudlands --port=3000
+
+  gcp_setup_secrets: gcloud secrets add-iam-policy-binding py_env_file --member='serviceAccount:60927173241-compute@developer.gserviceaccount.com' --role='roles/secretmanager.secretAccessor' --project=thewudlands
+
+  gcp_remove_secrets: gcloud secrets remove-iam-policy-binding py_env_file --member='serviceAccount:60927173241-compute@developer.gserviceaccount.com' --role='roles/secretmanager.secretAccessor' --project=thewudlands
+
+  gcp_full_deploy:
+    - rav run gcp_auth
+    - rav run gcp_push
+    - rav run gcp_deploy

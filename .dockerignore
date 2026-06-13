@@ -1,0 +1,17 @@
+node_modules
+.next
+.git
+.venv
+.env
+.env-example
+.gitignore
+.vscode
+.python-version
+README.md
+SETUP.md
+LICENSE
+CLAUDE.md
+POLKADOT_AUTH_GUIDE.md
+TheWudlands.code-workspace
+.DS_Store
+*.md

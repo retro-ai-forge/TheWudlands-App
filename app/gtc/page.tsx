@@ -1,20 +1,43 @@
+import Image from "next/image";
+import Link from "next/link";
 import styles from "./page.module.css";
 
-export default function AGB() {
+export default function GTC() {
   return (
     <div className={styles.page}>
       <section className={styles.guidelines}>
         <h2 className={styles.heading}>Terms &amp; Conditions</h2>
 
         <p className={styles.body}>
-          The Wudlands is an old-school round-based Fighting Fantasy-style adventure game inspired by UltraQuest, 
-          Lone Wolf Saga, EverQuest, books from Steve Jackson, Ian Livingstone, and the 
-          GAVUN WUD meme, built as a browser-based fantasy RPG with scene-driven 
+          The Wudlands is an old-school round-based <Link href="https://www.fightingfantasy.com/" target="_blank" rel="noopener noreferrer" className={styles.externalLink}>Fighting Fantasy</Link>-style adventure game inspired by <Link href="https://boardgamegeek.com/boardgame/199723/ultraquest-gold-ruhm-und-ehre" target="_blank" rel="noopener noreferrer" className={styles.externalLink}>UltraQuest</Link>,{" "}
+          <Link href="https://www.projectaon.org/en/Main/Home" target="_blank" rel="noopener noreferrer" className={styles.externalLink}>Lone Wolf Saga</Link>, <Link href="https://www.everquest.com/home" target="_blank" rel="noopener noreferrer" className={styles.externalLink}>EverQuest</Link>, <Link href="https://goodman-games.com/dungeon-crawl-classics-rpg/" target="_blank" rel="noopener noreferrer" className={styles.externalLink}>Dungeon Crawl Classic</Link>, books from <Link href="https://en.wikipedia.org/wiki/Steve_Jackson_(British_game_designer)" target="_blank" rel="noopener noreferrer" className={styles.externalLink}>Steve Jackson</Link>, <Link href="https://en.wikipedia.org/wiki/Ian_Livingstone" target="_blank" rel="noopener noreferrer" className={styles.externalLink}>Ian Livingstone</Link>, and the{" "}
+          <Link href="https://linktr.ee/gavunwud" target="_blank" rel="noopener noreferrer" className={styles.externalLink}>GAVUN WUD meme</Link>, built as a browser-based fantasy RPG with scene-driven
           gameplay, pixel-art, ascii-art, narrative-driven adventures, and onchain 
           character progression. The game will be built using a modular, plugin-based 
           architecture that allows for easy extension and modification. 
         </p>
 
+      <section className={styles.wudSection}>
+        <p className={styles.wudTitle}>— The Wud Legends —</p>
+        <div className={styles.wudGrid}>
+          <Link href="https://gavunwud.xyz//" target="_blank" rel="noopener noreferrer" className={styles.wudCard}>
+            <Image src="/images/gtc/gavun-wud-black.png" alt="Gavun the Wud" width={80} height={80} className={styles.wudIcon} />
+            <span className={styles.wudName}>Gavun of Wud</span>
+          </Link>
+          <Link href="https://x.com/gavunwud" target="_blank" rel="noopener noreferrer" className={styles.wudCard}>
+            <Image src="/images/gtc/20260609_084229.jpg" alt="Dark Lord of Polkadut" width={80} height={80} className={styles.wudIcon} />
+            <span className={styles.wudName}>Slayer of Polkadut</span>
+          </Link>
+          <Link href="https://linktr.ee/gavunwud" target="_blank" rel="noopener noreferrer" className={styles.wudCard}>
+            <Image src="/images/gtc/20260609_084240.jpg" alt="The Beyr Slayr" width={80} height={80} className={styles.wudIcon} />
+            <span className={styles.wudName}>The Beyr Slayr</span>
+          </Link>
+          <Link href="https://www.youtube.com/@gavunwud" target="_blank" rel="noopener noreferrer" className={styles.wudCard}>
+            <Image src="/images/gtc/20260609_084257.jpg" alt="Warlord of the Wud" width={80} height={80} className={styles.wudIcon} />
+            <span className={styles.wudName}>Warlord of the Wud</span>
+          </Link>
+        </div>
+      </section>
 
         <p className={styles.body}>
           By submitting an adventure addon to The Wudlands, you agree to the terms set out on this page in full.
@@ -147,10 +170,12 @@ export default function AGB() {
           or exploitative depictions are not permitted.
         </p>
 
-        <img
-          src="/images/guide/affection.jpg"
+        <Image
+          src="/images/gtc/affection.jpg"
           alt="Doorways to lead to various adventures, in the middle a noble woman hugging her favorite hero."
           className={styles.sectionImage}
+          width={600}
+          height={400}
         />
 
         <p className={styles.body}>
@@ -250,6 +275,7 @@ export default function AGB() {
           </tbody>
         </table>
       </section>
+
     </div>
   );
 }
