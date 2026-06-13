@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import Link from "next/link";
 import styles from "./page.module.css";
 import { EnterWudlandsButton } from "./components/EnterWudlandsButton";
 
@@ -140,7 +141,7 @@ export default function Home() {
   }, []);
 
   return (
-    <main className={styles.screen}>
+    <main className={view === "game" ? styles.welcomeScreen : styles.screen}>
       {view === "join" && (
         <>
           <p className={styles.status}>{status}</p>
@@ -153,9 +154,19 @@ export default function Home() {
       )}
 
       {view === "game" && (
-        <button className={styles.btn} onClick={leaveGame}>
-          [ LEAVE WUDLANDS ]
-        </button>
+        <>
+          <div className={styles.welcomeBody}>
+            <h1 className={styles.welcomeHeadline}>Welcome to Wudlands</h1>
+            <p className={styles.welcomeMessage}>
+              Thanks for signing in — please read the{" "}
+              <Link href="/guide" className={styles.welcomeLink}>guide</Link>{" "}
+              on how to continue.
+            </p>
+          </div>
+          <button className={styles.btn} onClick={leaveGame}>
+            [ SIGN OUT ]
+          </button>
+        </>
       )}
 
       {userId !== null && (
