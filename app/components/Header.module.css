@@ -5,13 +5,17 @@
   background: rgba(10, 10, 10, 0.88);
   border-bottom: 1px solid #7a6a3a;
   backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
 }
 
 .nav {
   display: flex;
   flex-wrap: wrap;
   gap: 0;
-  justify-content: center;
+  justify-content: flex-start;
+  flex: 1;
 }
 
 .link {
@@ -41,10 +45,76 @@
   font-weight: bold;
 }
 
+.walletButton {
+  padding: 0.65rem 1.25rem;
+  margin-right: 1rem;
+  font-family: "Courier New", Courier, monospace;
+  font-size: 0.8rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #3a3a3a;
+  background: #6b6b6b;
+  border: 1px solid #5a5a5a;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+  font-weight: 500;
+}
+
+.walletButton:hover {
+  background: #7a7a7a;
+  color: #2a2a2a;
+  border-color: #6a6a6a;
+}
+
+.walletButton:active {
+  background: #5b5b5b;
+  color: #4a4a4a;
+}
+
+.walletButtonConnected {
+  background: transparent;
+  color: #c07a3a;
+  border: 1px solid #7a6a3a;
+  text-transform: none;
+  letter-spacing: 0;
+  font-weight: normal;
+  padding: 0.65rem 1rem;
+}
+
+.walletButtonConnected:hover {
+  background: rgba(122, 106, 58, 0.3);
+  color: #d4c9a8;
+  border-color: #9a8a5a;
+}
+
+.walletButtonConnected:active {
+  background: rgba(122, 106, 58, 0.5);
+  color: #d4c9a8;
+}
+
+.walletModal {
+  position: absolute;
+  top: 100%;
+  right: 1rem;
+  margin-top: 0.5rem;
+  background: rgba(10, 10, 10, 0.95);
+  border: 1px solid #7a6a3a;
+  border-radius: 8px;
+  z-index: 1000;
+  backdrop-filter: blur(4px);
+}
+
 @media (max-width: 768px) {
   .link {
     font-size: 0.72rem;
     padding: 0.55rem 0.75rem;
     letter-spacing: 0.06em;
+  }
+
+  .walletButton {
+    padding: 0.55rem 0.75rem;
+    font-size: 0.72rem;
+    margin-right: 0.75rem;
   }
 }
