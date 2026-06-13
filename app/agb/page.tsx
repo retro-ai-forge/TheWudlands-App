@@ -7,6 +7,16 @@ export default function AGB() {
         <h2 className={styles.heading}>Terms &amp; Conditions</h2>
 
         <p className={styles.body}>
+          The Wudlands is an old-school round-based Fighting Fantasy-style adventure game inspired by UltraQuest, 
+          Lone Wolf Saga, EverQuest, books from Steve Jackson, Ian Livingstone, and the 
+          GAVUN WUD meme, built as a browser-based fantasy RPG with scene-driven 
+          gameplay, pixel-art, ascii-art, narrative-driven adventures, and onchain 
+          character progression. The game will be built using a modular, plugin-based 
+          architecture that allows for easy extension and modification. 
+        </p>
+
+
+        <p className={styles.body}>
           By submitting an adventure addon to The Wudlands, you agree to the terms set out on this page in full.
           Please read carefully before contributing any content. These terms exist to keep The Wudlands running,
           growing, and free to evolve as the project develops. If you do not agree, please do not submit content.
@@ -35,74 +45,26 @@ export default function AGB() {
         <h3 className={styles.subheading}>2. Romantic Storyline &amp; Minne</h3>
 
         <p className={styles.body}>
-          The Wudlands draws deep inspiration from the fantasy literature and interactive fiction of the 1980s and 1990s —
-          an era defined by the pulp paperbacks of Fighting Fantasy, the early Dungeons &amp; Dragons modules, and the illustrated
-          gamebooks that shaped a generation of adventurers. That tradition is vivid, atmospheric, and full of imagination.
-          It is also a product of its time. The storytelling conventions of that era carried with them the gender roles,
-          social assumptions, and romantic archetypes that were commonplace in popular fiction of the period.
-          Players returning to this style of adventure will recognise them. They are part of what makes the experience
-          feel authentic to its roots.
-        </p>
-
-        <img
-          src="/images/agb/agb-minne.jpg"
-          alt="A knight kneels before a noble lady in a candlelit castle hall — courtly love in the tradition of Minne."
-          className={styles.sectionImage}
-        />
-
-        <p className={styles.body}>
-          Central to medieval fantasy — and to the literature that inspired it — is the concept of
-          <span className={styles.highlight}> Minne</span>: the courtly love tradition of the German-speaking world,
-          rooted in the poetry of the Minnesingers and the chivalric romances of the high Middle Ages.
-          In this tradition, a knight or wandering hero pledges his service and devotion to a noble lady —
-          often unattainable, often of higher station — and undertakes trials, quests, and feats of courage
-          in her name. The lady holds power not through force but through honour, favour, and the withholding or granting
-          of affection. This dynamic — the devoted wanderer and the compelling, unreachable figure — recurs throughout
-          The Wudlands in NPC relationships, quest structures, and story rewards.
-          It is intended as atmosphere, not instruction.
-        </p>
-
-        <p className={styles.body}>
-          Some content in The Wudlands and its addons may reflect the gender dynamics, stereotypes, and romantic conventions
-          common to 80s and 90s fantasy fiction. Female characters may be depicted as mysterious, seductive, or as objects
-          of chivalric pursuit. Male characters may be portrayed through the lens of the classic lone adventurer archetype.
-          Power imbalances rooted in social class, beauty, or magical allure may appear as narrative devices.
-          These elements are presented as <span className={styles.highlight}>vintage atmosphere</span> — the deliberate aesthetic
-          of a genre that carries both charm and the limitations of its era.
-          They do not reflect the personal values of The Wudlands team, nor are they intended as endorsements of
-          real-world attitudes toward gender, relationships, or social hierarchy.
-        </p>
-
-        <p className={styles.body}>
-          Romantic storylines in addons may include flirtation, seduction, courtly intrigue, jealousy, unrequited devotion,
-          and morally ambiguous power dynamics between characters — all common tropes of the genre.
-          These may appear in text, dialogue, and branching choices. In adult-flagged addons, romantic storylines
-          may extend into explicit erotic territory under the rules described in Section 5.
-          Where romance is present, creators are encouraged to give it weight and consequence within the story —
-          a kiss earned through three nights of danger means more than one handed out freely.
-          Romantic and erotic elements should feel like part of the world, not tacked-on rewards.
-        </p>
-
-        <p className={styles.body}>
-          Players who prefer to avoid romantic or courtly love storylines entirely are free to do so —
-          no addon is required to contain them. If a specific story carries significant romantic themes,
-          creators are asked to indicate this clearly in the addon description so players can make informed choices
-          before entering.
+          The Wudlands uses courtly-love tropes (historically called &quot;Minne&quot;) as a deliberate, genre-specific
+          narrative device: structured NPC-affection mechanics, quest triggers tied to social status, and
+          consequence-bearing reward paths. These conventions are retained for aesthetic fidelity to legacy
+          fantasy gamebooks, but are implemented as optional mechanics and not prescriptive social guidance.
+          Creators must label significant romantic content in addon metadata; explicit romance must comply with
+          platform content policies (see Section 5).
         </p>
 
         <h3 className={styles.subheading}>3. Revenue Share</h3>
 
         <p className={styles.body}>
           The Wudlands may, at its discretion, offer contributors a share of revenue generated when adventurers
-          explore their stories. Where such a share is offered, adventure revenue is split 40% to the contributor
-          and 60% to The Wudlands. This share is entirely voluntary and represents a goodwill gesture from The
+          explore their stories. Where such a share is offered, adventure revenue is split 80% to the contributor
+          and 20% to The Wudlands. This share is entirely voluntary and represents a goodwill gesture from The
           Wudlands toward its creator community. It does not constitute payment for services rendered, does not
           create an employment or contractor relationship, and carries no legally enforceable entitlement. 
           The revenue is an essencial part of the platform to pay server costs and transaction fees. It is not 
-          guaranteed, may be changed or removed at any time. The contributor may suggest a a price tag for their 
+          guaranteed, may be changed or removed at any time. The contributor may suggest a price tag for their 
           adventure, but The Wudlands reserves the right to set or change the price as it sees fit. Each adventure 
-          has a maximum try of exploration, suggested are 3. The counter can be reset by adventurers by paying 
-          the full price again.
+          has a maximum try of 3 explorations. The counter can be reset by paying the full price again.
         </p>
 
         <p className={styles.body}>
@@ -173,6 +135,8 @@ export default function AGB() {
           content that crosses this line without warning or appeal.
         </p>
 
+        <h3 className={styles.subheading}>6. Erotic Content</h3>
+
         <p className={styles.body}>
           Erotic content is permitted exclusively in addons that have been explicitly flagged as adult content
           by the creator and reviewed by The Wudlands. All characters involved in any erotic scene must be
@@ -213,7 +177,7 @@ export default function AGB() {
           mechanic, reward, or feature across platform updates.
         </p>
 
-        <h3 className={styles.subheading}>6. Summary</h3>
+        <h3 className={styles.subheading}>7. Summary</h3>
 
         <table className={styles.table}>
           <thead>

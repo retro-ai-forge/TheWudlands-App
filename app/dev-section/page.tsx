@@ -103,7 +103,8 @@ export default function DevSection() {
           Addons are loaded from storage on session initialisation and cached for the duration of active
           sessions using that addon. The engine validates every loaded addon against the platform schema
           before making it available to players. Validation checks include: presence of all required fields,
-          existence of the <code className={styles.code}>default_entry</code> and{" "}
+          existence of the <code className={styles.code}>default_entry</code>,{" "}
+          <code className={styles.code}>emergency_exit</code>, and{" "}
           <code className={styles.code}>escape_route</code> scenes within the scene map, validity of all{" "}
           <code className={styles.code}>to</code> targets in choice arrays, and correct boolean typing on{" "}
           <code className={styles.code}>ending</code> flags. Addons that fail validation are not published.
@@ -167,7 +168,7 @@ export default function DevSection() {
             </tr>
             <tr>
               <td>Addon Engine</td>
-              <td>Stateless per-request scene lookup. Falls back to default_entry on missing scene. Each player session is independently routed with no shared in-memory state.</td>
+              <td>Stateless per-request scene lookup. Falls back to <code className={styles.code}>emergency_exit</code> on missing scene. Each player session is independently routed with no shared in-memory state.</td>
             </tr>
             <tr>
               <td>Scene Graph</td>
@@ -187,7 +188,7 @@ export default function DevSection() {
             </tr>
             <tr>
               <td>Revenue Share</td>
-              <td>Applied at transaction time. 80% to the contributor's declared wallet address, 20% to the platform. Polkadot primary, Ethereum fallback.</td>
+              <td>Applied at transaction time. 80% to the contributor&apos;s declared wallet address, 20% to the platform. Polkadot primary, Ethereum fallback.</td>
             </tr>
             <tr>
               <td>Blockchain</td>

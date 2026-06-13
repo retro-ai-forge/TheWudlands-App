@@ -20,7 +20,7 @@ export default function Header() {
     <header className={styles.header}>
       <nav className={styles.nav}>
         {NAV.map(({ label, href }) => {
-          const isActive = href === "/" ? pathname === "/" : pathname.startsWith(href);
+          const isActive = href === "/" ? pathname === "/" : (pathname ? pathname.startsWith(href) : false);
           return (
             <Link
               key={href}

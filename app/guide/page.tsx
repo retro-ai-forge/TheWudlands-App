@@ -94,12 +94,19 @@ export default function Guide() {
           What follows once you are inside is yours to navigate. Flirtation, jealousy, courtly games, seduction,
           the particular silence of someone who is making you wait to see what you will do with the waiting —
           all of it is part of this world, and none of it is simple. A gesture of devotion earned through
-          three nights of real danger in someone&apos;s name will land differently than one offered at the
+          two nights of real danger in someone&apos;s name will land differently than one offered at the
           first drink. These connections leave marks. A lady&apos;s favour can open a city gate, call in a
           debt that has been owed for years, or hand your enemies exactly the leverage they needed.
           The world pays attention to who you are devoted to. It forms opinions.
           What you pursue and how far you take it is entirely your choice —
           but the choice, once made, belongs to the story.
+        </p>
+
+        <p className={styles.body}>
+          Addons include three free plays per purchase: the entry fee grants up to three
+          attempts (retries) to explore an adventure and test branching paths. When those three
+          plays are used, the player may pay the entry fee again to reset the play counter and
+          retry the adventure. This mirrors the platform&apos;s terms for replay limits and purchases.
         </p>
 
         <table className={styles.table}>
@@ -140,7 +147,11 @@ export default function Guide() {
             </tr>
             <tr>
               <td>Escape Route</td>
-              <td>Every adventure in the Wudlands has a way out. No matter how deep in the dark you find yourself — overwhelmed, lost, out of resources — there is always a path that leads somewhere you can call an end. It may not be the ending you wanted. It may cost you something to reach it. But it is there. You will never be stranded without a road home.</td>
+              <td>Every adventure in the Wudlands has a way out. No matter how deep in the dark you find yourself — overwhelmed, 
+                lost, out of resources — there is always a path that leads somewhere you can call an end. 
+                It may not be the ending you wanted. It may cost you something to reach it. But it is there. 
+                You will never be stranded without a road home. Using an <span className={styles.code}>escape_route</span> on 
+                your own term, does count as a playthrough and does consume one of the three replays.</td>
             </tr>
             <tr>
               <td>Plays &amp; Entry Fee</td>
@@ -212,7 +223,7 @@ export default function Guide() {
             </tr>
             <tr>
               <td>Marching Order</td>
-              <td>The formation your party travels in determines who faces what first. The front takes the brunt of head-on threats. The rear is exposed to anything that follows. The middle is not safe either — attacks from hidden positions, aerial threats, or ambushes from the flanks strike wherever the story demands. Set your order with care and revisit it when the terrain changes.</td>
+              <td>The formation your party travels in determines who faces what first. The front takes the brunt of head-on threats. The rear is exposed to anything that sneaks up from behind. The middle is not safe either — attacks from hidden positions, aerial threats, or ambushes from the flanks strike wherever the story demands. Set your order with care and revisit it when the terrain changes.</td>
             </tr>
             <tr>
               <td>Age &amp; Time</td>

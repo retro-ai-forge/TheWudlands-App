@@ -28,7 +28,7 @@ export default function ContributeStories() {
 
          <img
           src="/images/contribute-stories/createstory.jpg"
-          alt="A magic book with a glowing red cover, open to a page with a quill pen poised above it. The text on the page reads: 'Create your own story in the Wudlands.'"
+          alt="A magic book with a glowing red cover, open to a page with a quill pen poised above it. The text on the page reads: &apos;Create your own story in the Wudlands.&apos;"
           className={styles.sectionImage}
         />
 
@@ -64,9 +64,17 @@ export default function ContributeStories() {
         <p className={styles.body}>
           The engine that runs addon stories is built to handle missing or undefined scenes gracefully. If a requested node,
           scene, or encounter cannot be found in the addon data, the system will not crash or break the session.
-          Instead it falls back to the addon&apos;s defined default exit point, which must redirect the player toward the
-          escape route or a stable fallback path. Addon creators are responsible for defining this default exit and ensuring
-          it leads somewhere meaningful. A robust story is one that stays playable no matter what the engine encounters.
+          Instead it falls back to the addon&apos;s <span className={styles.code}>emergency_exit</span> scene — a dedicated
+          error-recovery scene that must lead the player toward the <span className={styles.code}>escape_route</span>. 
+          The description of the emergency scene should contain a description of something unusual, unforeseen, blocking
+          the way forward — a collapsed tunnel, a sudden rockfall, an ambush by bandits,
+          a magical trap, or any other narrative obstacle that fits the tone of the story. 
+          Addon creators are responsible for defining this scene and ensuring it leads somewhere meaningful.
+          A play through only counts 
+          against the limit of 3 replays, if any scene with <span className={styles.code}>ending: true</span> was encountered. 
+          Several endings should be available. Being redirected to the escape route through 
+          the <span className={styles.code}>emergency_exit</span> does not count 
+          as a playthrough, and does not consume one of the three replays.
         </p>
 
         <table className={styles.table}>
@@ -114,12 +122,19 @@ export default function ContributeStories() {
               <td>Combat scenes may disable the escape route only when the story has clearly forewarned the player of the danger — through audible warnings, environmental cues, or an explicit threat of ambush. The player must always have a fair opportunity to prepare or withdraw before the fight begins. In all other combat scenes the escape route remains available, though the author may impose consequences — injury, lost items, narrative fallout — for choosing to flee.</td>
             </tr>
             <tr>
-              <td>Escape Route</td>
-              <td>Every addon must include a default ending or fallback route. Players must always have a way to retreat, recover, or conclude.</td>
+              <td>Default Entry</td>
+              <td>The <span className={styles.code}>default_entry</span> is the scene id where every new session begins. It also acts as the non-error fallback when a requested scene cannot be resolved under normal conditions. It must exist in the scene map and must provide a path toward the escape route.</td>
             </tr>
             <tr>
               <td>Missing Scene Fallback</td>
-              <td>If a scene cannot be found, the engine redirects to the addon&apos;s default exit. That exit must lead toward the escape path.</td>
+              <td>If a scene cannot be found, the engine redirects to the addon&apos;s <span className={styles.code}>emergency_exit</span> scene. That scene must lead toward 
+              the <span className={styles.code}>escape_route</span>. Only one scene of this should be provided.</td>
+            </tr>
+            <tr>
+              <td>Escape Route</td>
+              <td>Every addon must include one default retreat route. 
+                Characters must always have a chance to run away, recover, or conclude. The escape route can be a short 
+                adventure in itself. Though there is not escape route from here. Dangerous content should be avoided.</td>
             </tr>
             <tr>
               <td>Survival</td>
@@ -136,6 +151,65 @@ export default function ContributeStories() {
             </tr>
           </tbody>
         </table>
+
+        {/* ── Story Elements ─────────────────────────────────────── */}
+        <h2 className={styles.sectionHeading}>Romantic Storyline &amp; Minne</h2>
+
+        <p className={styles.body}>
+          The Wudlands draws deep inspiration from the fantasy literature and interactive fiction of the 1980s and 1990s —
+          an era defined by the pulp paperbacks of Fighting Fantasy, the early Dungeons &amp; Dragons modules, and the illustrated
+          gamebooks that shaped a generation of adventurers. That tradition is vivid, atmospheric, and full of imagination.
+          It is also a product of its time. The storytelling conventions of that era carried with them the gender roles,
+          social assumptions, and romantic archetypes that were commonplace in popular fiction of the period.
+          Players returning to this style of adventure will recognise them. They are part of what makes the experience
+          feel authentic to its roots.
+        </p>
+
+        <img
+          src="/images/agb/agb-minne.jpg"
+          alt="A knight kneels before a noble lady in a candlelit castle hall — courtly love in the tradition of Minne."
+          className={styles.sectionImage}
+        />
+
+        <p className={styles.body}>
+          Central to medieval fantasy — and to the literature that inspired it — is the concept of
+          <span className={styles.highlight}> Minne</span>: the courtly love tradition of the German-speaking world,
+          rooted in the poetry of the Minnesingers and the chivalric romances of the high Middle Ages.
+          In this tradition, a knight or wandering hero pledges his service and devotion to a noble lady —
+          often unattainable, often of higher station — and undertakes trials, quests, and feats of courage
+          in her name. The lady holds power not through force but through honour, favour, and the withholding or granting
+          of affection. This dynamic — the devoted wanderer and the compelling, unreachable figure — recurs throughout
+          The Wudlands in NPC relationships, quest structures, and story rewards.
+          It is intended as atmosphere, not instruction.
+        </p>
+
+        <p className={styles.body}>
+          Some content in The Wudlands and its addons can reflect the gender dynamics, stereotypes, and romantic conventions
+          common to 80s and 90s fantasy fiction. Female characters may be depicted as mysterious, seductive, or as objects
+          of chivalric pursuit. Male characters may be portrayed through the lens of the classic lone adventurer archetype.
+          Power imbalances rooted in social class, beauty, or magical allure may appear as narrative devices.
+          These elements can be presented as <span className={styles.highlight}>vintage atmosphere</span> — the deliberate aesthetic
+          of a genre that carries both charm and the limitations of its era.
+          They do not reflect the personal values of The Wudlands team, nor are they intended as endorsements of
+          real-world attitudes toward gender, relationships, or social hierarchy.
+        </p>
+
+        <p className={styles.body}>
+          Romantic storylines in addons may include flirtation, seduction, courtly intrigue, jealousy, unrequited devotion,
+          and morally ambiguous power dynamics between characters — all common tropes of the genre.
+          These may appear in text, dialogue, and branching choices. In adult-flagged addons, romantic storylines
+          may extend into explicit erotic territory under the rules described in Section 5 of the AGBs.
+          Where romance is present, creators are encouraged to give it weight and consequence within the story —
+          a kiss earned through three nights of danger means more than one handed out freely.
+          Romantic and erotic elements should feel like part of the world, not tacked-on rewards.
+        </p>
+
+        <p className={styles.body}>
+          Writers who prefer to avoid romantic or courtly love storylines entirely are free to do so —
+          no addon is required to contain them. If a specific story carries significant romantic themes,
+          creators are asked to indicate this clearly in the addon description so players can make informed choices
+          before entering.
+        </p>
 
         {/* ── Story Elements ─────────────────────────────────────── */}
         <h2 className={styles.sectionHeading}>Story Elements</h2>
@@ -211,11 +285,13 @@ export default function ContributeStories() {
                //   scanlinesdark  — scanlines over darkened image",
                //   verticalstrips — soft vertical strip overlay",
                //   flicker        — animated: erratic rapid brightness flicker",
-      "ending":   false,   // boolean — true marks this as a terminal scene (no choices needed)",
+      "ending":   true, // marks this as a terminal scene — reaching it counts as completing the addon."  
+                        // false is also a terminal scene, but does not deduct from the 3 playthroughs."
+                        // normal or entry scene do not have this field.
       "choices": [
         {
           "text": "string  — the choice label the player sees",
-          "to":   "string  — target scene id"
+          "to":   "string  — target <scene id>"
         }
       ]
     }
@@ -227,8 +303,8 @@ export default function ContributeStories() {
           the <span className={styles.code}>default_entry</span> scene must exist in <span className={styles.code}>scenes</span> and
           must have at least one choice that eventually leads to the <span className={styles.code}>escape_route</span>. 
           The <span className={styles.code}>escape_route</span> scene must be marked <span className={styles.code}>{`"ending": true`}</span>. 
-          The <span className={styles.code}>emergency_exit</span> scene must be provided to recover from errors, it must lead to the 
-          <span className={styles.code}>escape_route</span>. 
+          The <span className={styles.code}>emergency_exit</span> scene must be provided to recover from errors, it must lead to 
+          the <span className={styles.code}>escape_route</span>. 
           Every <span className={styles.code}>to</span> value in a choice must reference a valid scene id within the same addon —
           cross-addon jumps are handled through <span className={styles.code}>unlocks</span>, not through choices.
           Scene ids must be lowercase and may only contain letters, digits, and hyphens.
@@ -315,36 +391,74 @@ export default function ContributeStories() {
   "scenes": {
 
     "approach": {
-      "title":       "The Gate",
-      "text":        "You stand before a shattered arch of black stone.\\nMoss chokes the carved serpents above the lintel.\\nThe darkness beyond the gate breathes cold air onto your face.\\nYou hear nothing. That is worse than hearing something.",
+      "title":       "Collapsing Mouth",
+      "text":        "You stand at the lip of a yawning sinkhole, the air below smelling of 
+                      damp stone and old rot.\\nA narrow staircase carved into the rock 
+                      descends into the dark — a cold draft sighs up from the depths.\\nLoose 
+                      pebbles skitter underfoot. Far below, something moves that is not the 
+                      wind.",
       "image":       "approach.jpg",
-      "image_style": "moonlight",
-      "ending":       false,
+      "image_style": "deepocean",
       "choices": [
-        { "text": "Step through the gate",          "to": "inner-court" },
-        { "text": "Retreat into the forest",        "to": "forest-retreat" }
-      ]
+        { "text": "Descend the carved steps",       "to": "inner-court" },
+        { "text": "Climb back to the surface",      "to": "forest-retreat" }
+      ]}
     },
 
     "inner-court": {
-      "title":       "The Inner Court",
-      "text":        "Cracked flagstones. A dry fountain. Something has scratched marks into every surface —\\nnot writing you recognise, but deliberate. Repeated. Urgent.\\nAt the far end, a door stands ajar. Light moves behind it.",
+      "title":       "The Lower Vault",
+      "text":        "You step into a vaulted cavern where moulded pillars hold a ceiling 
+                      low with mineral veins.\\nWater drips in slow, musical patterns. 
+                      Ancient scratches mark a path toward a half-buried gate carved 
+                      with symbols.\\nFrom somewhere deeper comes a metallic, distant clank.",
       "image":       "inner-court.jpg",
       "image_style": "scanlines",
-      "ending":       false,
       "choices": [
-        { "text": "Approach the moving light",      "to": "inner-court" },
-        { "text": "This was a mistake — run",       "to": "forest-retreat" }
+        { "text": "Follow the scratched path",              "to": "inner-court" },
+        { "text": "Grab a rusty metal bar and return home", "to": "travel-home" },
+        { "text": "Flee upward toward the light",           "to": "forest-retreat" }
       ]
     },
 
-    "forest-retreat": {
-      "title":       "The Forest Road",
-      "text":        "You turn and walk back into the trees.\\nThe gate watches you leave. You do not look back.\\nWhatever is inside the ruin, it is not yours to face today.\\nThe forest road is long, but it is safe. You are still alive.",
+      "forest-retreat": {
+      "title":       "Climb to Daylight",
+      "text":        "You scramble up a narrow shaft and find a ragged slit of sky.\\nThe 
+                      surface is a maze of broken earth and toppled root, but above you, 
+                      the world is open and the air warm.\\nYou make your way back to the 
+                      light, lungs burning and pockets full of dust, alive and changed.",
       "image":       "forest-retreat.jpg",
       "image_style": "origin",
       "ending":       true,
       "choices": []
+    },
+
+      "return-home": {
+      "title":       "Run home with trophy",
+      "text":        "You quickly run back to the surface and climb out of the sinkhole, 
+                      clutching the rusty metal bar you found in the vault. \\nThe sun 
+                      is warm on your face, but the air tastes of dust and regret.\\nYou",
+      "image":       "peaceful-forest.jpg",
+      "image_style": "origin",
+      "ending":       true,
+      "choices": []
+    },
+
+    "broken-ceiling": {
+      "title":       "Broken Ceiling",
+      "text":        "Suddenly an earthquake shakes the caverns. Dust falls like rain and a 
+                      thunder of collapsing stone drowns the sound of your breath.\\nA fissure 
+                      opens, dropping you into a fractured passage; rubble blocks the way you 
+                      came. You must fight your way through the shifting dark toward any route 
+                      that leads upward.\\nDebris underfoot threatens to give; the air tastes of 
+                      iron and panic. Move quickly. Finally you reach the fresh air and walk home, 
+                      shaken but alive.",
+      "image":       "broken-ceiling.jpg",
+      "image_style": "apocalypse",
+      "ending":       false,
+      "choices": [
+        { "text": "Clamber toward the faint light above", "to": "forest-retreat" },
+        { "text": "Wedge yourself into a narrow crevice and wait it out", "to": "inner-court" }
+      ]
     }
 
   }
