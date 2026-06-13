@@ -1,8 +1,12 @@
 from contextlib import asynccontextmanager
 from fastapi import FastAPI, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 import asyncio
 import time
+
+# Import auth routes
+from backend.auth_routes import router as auth_router
 
 MAX_USERS = 100
 TIMEOUT_SECONDS = 30 * 60  # 30 minutes
@@ -35,6 +39,18 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(title="TheWudlands API", lifespan=lifespan)
+
+# Add CORS middleware for frontend-backend communication
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:3000", "http://localhost:3001"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+# Include authentication router
+app.include_router(auth_router)
 
 
 class UserRequest(BaseModel):

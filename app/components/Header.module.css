@@ -45,33 +45,58 @@
   font-weight: bold;
 }
 
-.walletButton {
-  padding: 0.65rem 1.25rem;
+.walletArea {
+  position: relative;
   margin-right: 1rem;
+  display: flex;
+}
+
+.walletButton {
+  box-sizing: border-box;
+  min-width: 6rem;
+  height: 2rem;
+  margin: 0.4rem 0;
+  padding: 0 0.9rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  white-space: nowrap;
   font-family: "Courier New", Courier, monospace;
-  font-size: 0.8rem;
-  letter-spacing: 0.12em;
+  font-size: 0.72rem;
+  letter-spacing: 0.1em;
   text-transform: uppercase;
-  color: #3a3a3a;
-  background: #6b6b6b;
-  border: 1px solid #5a5a5a;
-  border-radius: 4px;
+  font-weight: 700;
+  color: #2a1c0a;
+  /* Glossy "jelly" amber in the site palette: bright sheen on top, deeper amber below */
+  background: linear-gradient(180deg, #e6a55a 0%, #c07a3a 52%, #9a5e28 100%);
+  border: 1px solid #7a6a3a;
+  border-radius: 999px;
   cursor: pointer;
-  transition: background 0.15s, color 0.15s, border-color 0.15s;
-  font-weight: 500;
+  text-shadow: 0 1px 0 rgba(255, 230, 190, 0.45);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 240, 215, 0.75),
+    inset 0 -2px 4px rgba(90, 50, 15, 0.45),
+    0 2px 5px rgba(0, 0, 0, 0.45);
+  transition: filter 0.15s, transform 0.1s, box-shadow 0.15s;
 }
 
 .walletButton:hover {
-  background: #7a7a7a;
-  color: #2a2a2a;
-  border-color: #6a6a6a;
+  filter: brightness(1.08) saturate(1.1);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 240, 215, 0.85),
+    inset 0 -2px 4px rgba(90, 50, 15, 0.45),
+    0 3px 8px rgba(192, 122, 58, 0.5);
 }
 
 .walletButton:active {
-  background: #5b5b5b;
-  color: #4a4a4a;
+  transform: translateY(1px);
+  filter: brightness(0.95);
+  box-shadow:
+    inset 0 2px 4px rgba(90, 50, 15, 0.55),
+    0 1px 2px rgba(0, 0, 0, 0.4);
 }
 
+/* Connected: subtle amber outline, drops the glossy jelly fill */
 .walletButtonConnected {
   background: transparent;
   color: #c07a3a;
@@ -79,30 +104,36 @@
   text-transform: none;
   letter-spacing: 0;
   font-weight: normal;
-  padding: 0.65rem 1rem;
+  /* Smaller font keeps the address on one line at the same button size */
+  font-size: 0.72rem;
+  text-shadow: none;
+  box-shadow: none;
 }
 
 .walletButtonConnected:hover {
   background: rgba(122, 106, 58, 0.3);
   color: #d4c9a8;
   border-color: #9a8a5a;
+  filter: none;
+  box-shadow: none;
 }
 
 .walletButtonConnected:active {
   background: rgba(122, 106, 58, 0.5);
   color: #d4c9a8;
+  transform: none;
+  filter: none;
+  box-shadow: none;
 }
 
-.walletModal {
-  position: absolute;
-  top: 100%;
-  right: 1rem;
-  margin-top: 0.5rem;
-  background: rgba(10, 10, 10, 0.95);
-  border: 1px solid #7a6a3a;
-  border-radius: 8px;
-  z-index: 1000;
-  backdrop-filter: blur(4px);
+/* Failure state: longer label, smaller letters, wraps within the same button size */
+.walletButtonError {
+  font-size: 0.55rem;
+  letter-spacing: 0.04em;
+  line-height: 1.15;
+  white-space: normal;
+  color: #2a1c0a;
+  border-color: #7a6a3a;
 }
 
 @media (max-width: 768px) {
@@ -112,9 +143,18 @@
     letter-spacing: 0.06em;
   }
 
-  .walletButton {
-    padding: 0.55rem 0.75rem;
-    font-size: 0.72rem;
+  .walletArea {
     margin-right: 0.75rem;
+  }
+
+  .walletButton {
+    min-width: 5.5rem;
+    height: 1.9rem;
+    padding: 0 0.7rem;
+    font-size: 0.66rem;
+  }
+
+  .walletButtonConnected {
+    font-size: 0.66rem;
   }
 }

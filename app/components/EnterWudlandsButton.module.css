@@ -1,0 +1,177 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+}
+
+.enterButton {
+  padding: 1rem 2rem;
+  font-family: "Courier New", Courier, monospace;
+  font-size: 1.2rem;
+  font-weight: bold;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: #d4c9a8;
+  background: transparent;
+  border: 2px solid #d4c9a8;
+  border-radius: 0;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 0 20px rgba(212, 201, 168, 0.3);
+}
+
+.enterButton:hover:not(:disabled) {
+  background: #7a6a3a;
+  box-shadow: 0 0 30px rgba(212, 201, 168, 0.6);
+  color: #0a0a0a;
+  border-color: #0a0a0a;
+}
+
+.enterButton:active:not(:disabled) {
+  transform: scale(0.98);
+  box-shadow: 0 0 15px rgba(212, 201, 168, 0.4);
+}
+
+.enterButton:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* No wallet connected: match the header Connect button's glossy amber "jelly" look */
+.enterButtonJelly {
+  color: #2a1c0a;
+  background: linear-gradient(180deg, #e6a55a 0%, #c07a3a 52%, #9a5e28 100%);
+  border: 2px solid #7a6a3a;
+  border-radius: 999px;
+  text-shadow: 0 1px 0 rgba(255, 230, 190, 0.45);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 240, 215, 0.75),
+    inset 0 -3px 6px rgba(90, 50, 15, 0.45),
+    0 3px 8px rgba(0, 0, 0, 0.45);
+}
+
+.enterButtonJelly:hover:not(:disabled) {
+  background: linear-gradient(180deg, #e6a55a 0%, #c07a3a 52%, #9a5e28 100%);
+  color: #2a1c0a;
+  border-color: #7a6a3a;
+  filter: brightness(1.08) saturate(1.1);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 240, 215, 0.85),
+    inset 0 -3px 6px rgba(90, 50, 15, 0.45),
+    0 4px 12px rgba(192, 122, 58, 0.5);
+}
+
+.enterButtonJelly:active:not(:disabled) {
+  transform: translateY(1px) scale(0.99);
+  filter: brightness(0.95);
+  box-shadow:
+    inset 0 2px 5px rgba(90, 50, 15, 0.55),
+    0 1px 3px rgba(0, 0, 0, 0.4);
+}
+
+/* Connect failed: shorter "select wallet in extension" hint at a smaller size */
+.enterButtonError {
+  font-size: 0.85rem;
+  letter-spacing: 0.08em;
+  line-height: 1.2;
+  white-space: normal;
+}
+
+.walletContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  padding: 2rem;
+  background: rgba(10, 10, 10, 0.9);
+  border: 2px solid #7a6a3a;
+  border-radius: 8px;
+  max-width: 500px;
+  width: 100%;
+  box-shadow: 0 0 20px rgba(122, 106, 58, 0.3);
+}
+
+.walletHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.walletHeader h3 {
+  margin: 0;
+  color: #c07a3a;
+  font-family: "Courier New", Courier, monospace;
+  font-size: 1rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.closeButton {
+  background: none;
+  border: none;
+  color: #d4c9a8;
+  font-size: 1.5rem;
+  cursor: pointer;
+  transition: color 0.2s;
+  padding: 0;
+  width: 2rem;
+  height: 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.closeButton:hover {
+  color: #c07a3a;
+}
+
+.error {
+  color: #ff5630;
+  font-size: 0.9rem;
+  padding: 0.75rem;
+  background: rgba(255, 86, 48, 0.1);
+  border: 1px solid #ff5630;
+  border-radius: 4px;
+  font-family: "Courier New", Courier, monospace;
+}
+
+.signingStatus {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 1rem;
+  background: rgba(192, 122, 58, 0.1);
+  border: 1px solid #c07a3a;
+  border-radius: 4px;
+  text-align: center;
+}
+
+.signingStatus p {
+  margin: 0;
+  color: #c07a3a;
+  font-family: "Courier New", Courier, monospace;
+  font-size: 0.9rem;
+}
+
+.signingHint {
+  font-size: 0.8rem;
+  color: #a06a30;
+  font-style: italic;
+}
+
+@media (max-width: 768px) {
+  .enterButton {
+    padding: 0.8rem 1.5rem;
+    font-size: 1rem;
+  }
+
+  .walletContainer {
+    padding: 1.5rem;
+    max-width: 100%;
+  }
+
+  .walletHeader h3 {
+    font-size: 0.9rem;
+  }
+}
