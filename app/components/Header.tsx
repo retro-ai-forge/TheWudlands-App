@@ -2,10 +2,8 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useState } from "react";
 import styles from "./Header.module.css";
-import { WalletConnect } from "./WalletConnect";
-import type { WalletAccount } from "@/lib/wallet";
+import { useWallet } from "./WalletProvider";
 
 const NAV = [
   { label: "The Wudlands",       href: "/" },
@@ -23,22 +21,15 @@ function shortenAddress(address: string): string {
 
 export default function Header() {
   const pathname = usePathname();
-  const [showWalletModal, setShowWalletModal] = useState(false);
-  const [connectedAccount, setConnectedAccount] = useState<WalletAccount | null>(null);
-
-  const handleAccountSelected = (account: WalletAccount, signer: any) => {
-    setConnectedAccount(account);
-    setShowWalletModal(false);
-  };
+  const { account: connectedAccount, isConnecting, connectError, connect, disconnect } =
+    useWallet();
 
   const handleButtonClick = () => {
+    if (isConnecting) return;
     if (connectedAccount) {
-      // If connected, clicking the address button disconnects and returns to wallet state
-      setConnectedAccount(null);
-      setShowWalletModal(true);
+      disconnect();
     } else {
-      // If not connected, toggle modal
-      setShowWalletModal(!showWalletModal);
+      connect();
     }
   };
 
@@ -58,23 +49,24 @@ export default function Header() {
           );
         })}
       </nav>
-      <button
-        className={`${styles.walletButton} ${connectedAccount ? styles.walletButtonConnected : ""}`}
-        onClick={handleButtonClick}
-      >
-        {connectedAccount ? shortenAddress(connectedAccount.address) : "Wallet"}
-      </button>
-      {showWalletModal && !connectedAccount && (
-        <div className={styles.walletModal}>
-          <WalletConnect
-            dappName="TheWudlands"
-            onAccountSelected={handleAccountSelected}
-            onError={(error) => {
-              console.error(error);
-            }}
-          />
-        </div>
-      )}
+      <div className={styles.walletArea}>
+        <button
+          className={`${styles.walletButton} ${connectedAccount ? styles.walletButtonConnected : ""} ${
+            connectError && !connectedAccount && !isConnecting ? styles.walletButtonError : ""
+          }`}
+          onClick={handleButtonClick}
+          disabled={isConnecting}
+          title={connectedAccount ? "Click to disconnect" : "Connect wallet"}
+        >
+          {connectedAccount
+            ? shortenAddress(connectedAccount.address)
+            : isConnecting
+            ? "Connecting…"
+            : connectError
+            ? connectError
+            : "Connect"}
+        </button>
+      </div>
     </header>
   );
 }

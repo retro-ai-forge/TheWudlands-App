@@ -45,3 +45,13 @@
   color: #7a6a3a;
   letter-spacing: 0.1em;
 }
+
+.playerAddress {
+  position: fixed;
+  bottom: 1rem;
+  right: 1rem;
+  font-size: 0.75rem;
+  color: #7a6a3a;
+  letter-spacing: 0.05em;
+  font-family: "Courier New", Courier, monospace;
+}

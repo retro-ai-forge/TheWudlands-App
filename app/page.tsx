@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import styles from "./page.module.css";
+import { EnterWudlandsButton } from "./components/EnterWudlandsButton";
 
 const HEARTBEAT_MS = 5 * 60 * 1000;
 
@@ -12,6 +13,7 @@ export default function Home() {
   const [status, setStatus] = useState("Ready.");
   const [userId, setUserId] = useState<number | null>(null);
   const [joining, setJoining] = useState(false);
+  const [playerAddress, setPlayerAddress] = useState<string | null>(null);
   const heartbeatRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   function stopHeartbeat() {
@@ -76,6 +78,9 @@ export default function Home() {
   function leaveGame() {
     const id = userId;
     resetToJoin("You have left the game.");
+    setPlayerAddress(null);
+    localStorage.removeItem("session_token");
+    localStorage.removeItem("player_address");
     if (id !== null) {
       fetch("/api/game/leave", {
         method: "POST",
@@ -83,6 +88,40 @@ export default function Home() {
         body: JSON.stringify({ user_id: id }),
       }).catch(() => { /* fire-and-forget, ignore errors */ });
     }
+  }
+
+  async function joinGameAfterAuth(address: string) {
+    setJoining(true);
+    setStatus("Joining game...");
+    try {
+      const sessionToken = localStorage.getItem("session_token");
+      const res = await fetch("/api/game/join", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${sessionToken}`,
+        },
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setStatus(data.detail ?? "Could not join.");
+        setJoining(false);
+        return;
+      }
+      setPlayerAddress(address);
+      enterGame(data.user_id);
+    } catch {
+      setStatus("Error: could not reach the server.");
+      setJoining(false);
+    }
+  }
+
+  function handleEnterWudlands(address: string) {
+    joinGameAfterAuth(address);
+  }
+
+  function handleAuthError(error: string) {
+    setStatus(`Auth error: ${error}`);
   }
 
   // Restore session on page reload
@@ -105,9 +144,11 @@ export default function Home() {
       {view === "join" && (
         <>
           <p className={styles.status}>{status}</p>
-          <button className={styles.btn} onClick={joinGame} disabled={joining}>
-            [ ENTER WUDLANDS ]
-          </button>
+          <EnterWudlandsButton
+            onEnter={handleEnterWudlands}
+            onError={handleAuthError}
+            disabled={joining}
+          />
         </>
       )}
 
@@ -119,6 +160,9 @@ export default function Home() {
 
       {userId !== null && (
         <span className={styles.playerId}>#{userId}</span>
+      )}
+      {playerAddress !== null && (
+        <span className={styles.playerAddress}>{playerAddress.slice(0, 10)}...</span>
       )}
     </main>
   );

@@ -65,8 +65,11 @@ Run all commands from the **project root** (`TheWudlands/`).
 ```bash
 cd /path/to/TheWudlands
 source .venv/bin/activate
-uvicorn backend.main:app --reload
+uvicorn backend.main:app --reload   # http://localhost:8000
 ```
+
+Once it's running, open the Swagger UI at
+[http://localhost:8000/docs](http://localhost:8000/docs).
 
 ### Terminal 2 — Frontend (Next.js)
 
