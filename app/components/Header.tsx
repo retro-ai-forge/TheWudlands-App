@@ -21,13 +21,18 @@ function shortenAddress(address: string): string {
 
 export default function Header() {
   const pathname = usePathname();
-  const { account: connectedAccount, isConnecting, connectError, connect, disconnect } =
+  const { account: connectedAccount, isConnecting, connectError, verified, connect, disconnect, logout } =
     useWallet();
 
   const handleButtonClick = () => {
     if (isConnecting) return;
     if (connectedAccount) {
-      disconnect();
+      // Green chip (verified) -> full logout; amber chip -> just disconnect.
+      if (verified) {
+        logout();
+      } else {
+        disconnect();
+      }
     } else {
       connect();
     }
@@ -51,20 +56,38 @@ export default function Header() {
       </nav>
       <div className={styles.walletArea}>
         <button
-          className={`${styles.walletButton} ${connectedAccount ? styles.walletButtonConnected : ""} ${
-            connectError && !connectedAccount && !isConnecting ? styles.walletButtonError : ""
-          }`}
+          className={`${styles.walletButton} ${
+            connectedAccount
+              ? verified
+                ? styles.walletButtonVerified
+                : styles.walletButtonConnected
+              : ""
+          } ${connectError && !connectedAccount && !isConnecting ? styles.walletButtonError : ""}`}
           onClick={handleButtonClick}
           disabled={isConnecting}
-          title={connectedAccount ? "Click to disconnect" : "Connect wallet"}
+          title={
+            connectedAccount
+              ? verified
+                ? "Verified — click to disconnect"
+                : "Click to disconnect"
+              : "Connect wallet"
+          }
         >
-          {connectedAccount
-            ? shortenAddress(connectedAccount.address)
-            : isConnecting
-            ? "Connecting…"
-            : connectError
-            ? connectError
-            : "Connect"}
+          {connectedAccount ? (
+            verified ? (
+              <>
+                <span className={styles.verifiedDot} />✓ {shortenAddress(connectedAccount.address)}
+              </>
+            ) : (
+              shortenAddress(connectedAccount.address)
+            )
+          ) : isConnecting ? (
+            "Connecting…"
+          ) : connectError ? (
+            connectError
+          ) : (
+            "Connect"
+          )}
         </button>
       </div>
     </header>

@@ -19,9 +19,14 @@ interface WalletContextValue {
   account: WalletAccount | null;
   isConnecting: boolean;
   connectError: string | null;
+  /** True once the user has signed the challenge and the backend verified it. */
+  verified: boolean;
+  setVerified: (value: boolean) => void;
   /** Attempts to connect; resolves with the account on success, or null on failure. */
   connect: () => Promise<WalletAccount | null>;
   disconnect: () => void;
+  /** Full sign-out: disconnects the wallet and clears the verified session. */
+  logout: () => void;
 }
 
 const WalletContext = createContext<WalletContextValue | null>(null);
@@ -30,6 +35,7 @@ export function WalletProvider({ children }: { children: ReactNode }) {
   const [account, setAccount] = useState<WalletAccount | null>(null);
   const [isConnecting, setIsConnecting] = useState(false);
   const [connectError, setConnectError] = useState<string | null>(null);
+  const [verified, setVerified] = useState(false);
 
   const connect = async (): Promise<WalletAccount | null> => {
     setIsConnecting(true);
@@ -57,11 +63,20 @@ export function WalletProvider({ children }: { children: ReactNode }) {
     resetWalletState();
     setAccount(null);
     setConnectError(null);
+    setVerified(false);
+  };
+
+  const logout = () => {
+    disconnect();
+    if (typeof window !== "undefined") {
+      localStorage.removeItem("session_token");
+      localStorage.removeItem("player_address");
+    }
   };
 
   return (
     <WalletContext.Provider
-      value={{ account, isConnecting, connectError, connect, disconnect }}
+      value={{ account, isConnecting, connectError, verified, setVerified, connect, disconnect, logout }}
     >
       {children}
     </WalletContext.Provider>

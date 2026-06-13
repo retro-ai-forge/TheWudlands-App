@@ -126,6 +126,52 @@
   box-shadow: none;
 }
 
+/* Verified / signed-in: green chip with a glow */
+.walletButtonVerified {
+  background: rgba(40, 90, 50, 0.18);
+  color: #7fd089;
+  border: 1px solid #3f8a4c;
+  text-transform: none;
+  letter-spacing: 0;
+  font-weight: normal;
+  font-size: 0.72rem;
+  text-shadow: none;
+  box-shadow: 0 0 8px rgba(90, 200, 110, 0.35);
+}
+
+.walletButtonVerified:hover {
+  background: rgba(60, 160, 80, 0.25);
+  color: #b6f0bb;
+  border-color: #5aa861;
+  filter: none;
+  box-shadow: 0 0 12px rgba(90, 200, 110, 0.5);
+}
+
+.walletButtonVerified:active {
+  background: rgba(60, 160, 80, 0.35);
+  color: #b6f0bb;
+  transform: none;
+  filter: none;
+}
+
+/* Pulsing "online" dot shown before the verified address */
+.verifiedDot {
+  display: inline-block;
+  width: 0.5rem;
+  height: 0.5rem;
+  margin-right: 0.4rem;
+  border-radius: 50%;
+  background: #5fd06a;
+  box-shadow: 0 0 6px #5fd06a;
+  vertical-align: middle;
+  animation: verifiedPulse 2s ease-in-out infinite;
+}
+
+@keyframes verifiedPulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+
 /* Failure state: longer label, smaller letters, wraps within the same button size */
 .walletButtonError {
   font-size: 0.55rem;

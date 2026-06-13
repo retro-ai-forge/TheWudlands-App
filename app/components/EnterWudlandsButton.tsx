@@ -29,7 +29,7 @@ export function EnterWudlandsButton({
   onError,
   disabled = false,
 }: EnterWudlandsButtonProps) {
-  const { account, isConnecting, connectError, connect } = useWallet();
+  const { account, isConnecting, connectError, connect, setVerified } = useWallet();
   const [isSigning, setIsSigning] = useState(false);
 
   /** Offline signing request -> backend verify -> enter the game. */
@@ -67,9 +67,10 @@ export function EnterWudlandsButton({
       }
       const { session_token } = await verifyRes.json();
 
-      // 4. Save session and enter the game.
+      // 4. Save session, flag the account as verified, and enter the game.
       localStorage.setItem('session_token', session_token);
       localStorage.setItem('player_address', acct.address);
+      setVerified(true);
       onEnter?.(acct.address);
     } catch (err: any) {
       onError?.(err?.message || 'Authentication failed');

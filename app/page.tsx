@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import styles from "./page.module.css";
 import { EnterWudlandsButton } from "./components/EnterWudlandsButton";
+import { useWallet } from "./components/WalletProvider";
 
 const HEARTBEAT_MS = 5 * 60 * 1000;
 
@@ -16,6 +17,8 @@ export default function Home() {
   const [joining, setJoining] = useState(false);
   const [playerAddress, setPlayerAddress] = useState<string | null>(null);
   const heartbeatRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const { verified, logout } = useWallet();
+  const wasVerified = useRef(false);
 
   function stopHeartbeat() {
     if (heartbeatRef.current) {
@@ -76,12 +79,14 @@ export default function Home() {
     }
   }
 
-  function leaveGame() {
+  // Tear down the in-game session (heartbeat, view, server-side leave).
+  // Triggered when the user logs out (verified -> false) from the header chip
+  // or the on-page Sign Out button. Wallet/session/verified state is cleared
+  // separately by the context's logout().
+  function endGameSession() {
     const id = userId;
-    resetToJoin("You have left the game.");
+    resetToJoin("You have signed out.");
     setPlayerAddress(null);
-    localStorage.removeItem("session_token");
-    localStorage.removeItem("player_address");
     if (id !== null) {
       fetch("/api/game/leave", {
         method: "POST",
@@ -90,6 +95,17 @@ export default function Home() {
       }).catch(() => { /* fire-and-forget, ignore errors */ });
     }
   }
+
+  // Run the game teardown whenever verification is cleared (a logout action).
+  // Only fires on a true -> false transition, so a fresh page load (verified
+  // starts false) doesn't wipe a restored session.
+  useEffect(() => {
+    if (wasVerified.current && !verified) {
+      endGameSession();
+    }
+    wasVerified.current = verified;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [verified]);
 
   async function joinGameAfterAuth(address: string) {
     setJoining(true);
@@ -163,7 +179,7 @@ export default function Home() {
               on how to continue.
             </p>
           </div>
-          <button className={styles.btn} onClick={leaveGame}>
+          <button className={styles.btn} onClick={logout}>
             [ SIGN OUT ]
           </button>
         </>
