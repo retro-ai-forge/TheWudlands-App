@@ -179,9 +179,6 @@ export default function Home() {
               on how to continue.
             </p>
           </div>
-          <button className={styles.btn} onClick={logout}>
-            [ SIGN OUT ]
-          </button>
         </>
       )}
 

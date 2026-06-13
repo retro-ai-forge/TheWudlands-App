@@ -8,7 +8,7 @@ export default function AGB() {
 
         <p className={styles.body}>
           The Wudlands is an old-school round-based Fighting Fantasy-style adventure game inspired by UltraQuest, 
-          Lone Wolf Saga, EverQuest, books from Steve Jackson, Ian Livingstone, and the 
+          Lone Wolf Saga, EverQuest, Dungeon Crawl Classic, books from Steve Jackson, Ian Livingstone, and the 
           GAVUN WUD meme, built as a browser-based fantasy RPG with scene-driven 
           gameplay, pixel-art, ascii-art, narrative-driven adventures, and onchain 
           character progression. The game will be built using a modular, plugin-based 

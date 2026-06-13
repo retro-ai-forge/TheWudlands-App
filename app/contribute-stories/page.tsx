@@ -13,7 +13,8 @@ export default function ContributeStories() {
           Anyone can contribute an adventure addon — a self-contained story that players can enter, explore, and struggle through.
           Addon creators are free to shape their own corner of the Wudlands: invent monsters, ancient ruins, secret factions,
           forbidden magic, cursed artefacts, weather-battered wilderness, and whatever strange wonders or horrors they imagine.
-          The only rule is that everything must serve the story.
+          The only rule is that everything must serve the story. In the future we will add more content like Sci-Fi, Cthulhu 
+          1920 horror, and more, but for now we are focused on the core fantasy experience.
         </p>
 
         <p className={styles.body}>
