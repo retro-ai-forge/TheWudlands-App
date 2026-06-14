@@ -1,0 +1,149 @@
+.feedbackContainer {
+  display: flex;
+  justify-content: center;
+  padding: 2rem 1.5rem;
+  width: 100%;
+}
+
+.feedbackSection {
+  width: 100%;
+  max-width: 600px;
+  background: linear-gradient(to bottom, #141210 0%, #0a0a0a 50%, #070605 100%);
+  border: 2px solid #7a6a3a;
+  border-radius: 4px;
+  padding: 2rem;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.1),
+    0 4px 8px rgba(0, 0, 0, 0.8),
+    0 8px 16px rgba(0, 0, 0, 0.6);
+}
+
+.title {
+  font-family: "Courier New", Courier, monospace;
+  font-size: 1rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #c07a3a;
+  margin-bottom: 1rem;
+  margin-top: 0;
+}
+
+.rewardInfo {
+  font-family: "Courier New", Courier, monospace;
+  font-size: 0.85rem;
+  line-height: 1.6;
+  color: #d4c9a8;
+  margin-bottom: 1.5rem;
+}
+
+.highlight {
+  color: #c07a3a;
+  font-weight: bold;
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.textarea {
+  font-family: "Courier New", Courier, monospace;
+  font-size: 0.85rem;
+  background: #0a0a0a;
+  border: 1px solid #7a6a3a;
+  color: #d4c9a8;
+  padding: 0.75rem;
+  border-radius: 2px;
+  resize: vertical;
+  line-height: 1.6;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.textarea::placeholder {
+  color: #7a6a3a;
+}
+
+.textarea:focus {
+  outline: none;
+  border-color: #c07a3a;
+  box-shadow: 0 0 0 2px rgba(192, 122, 58, 0.2);
+}
+
+.textarea:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.submitButton {
+  font-family: "Courier New", Courier, monospace;
+  font-size: 0.85rem;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  background: linear-gradient(to bottom, #2a2a22 0%, #1a1a12 100%);
+  color: #c07a3a;
+  border: 1px solid #7a6a3a;
+  padding: 0.75rem 1.5rem;
+  cursor: pointer;
+  border-radius: 2px;
+  transition: all 0.2s;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.05),
+    0 2px 4px rgba(0, 0, 0, 0.5);
+}
+
+.submitButton:hover:not(:disabled) {
+  background: linear-gradient(to bottom, #3a3a2a 0%, #2a2a1a 100%);
+  border-color: #c07a3a;
+  color: #e8956f;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.1),
+    0 4px 8px rgba(192, 122, 58, 0.2);
+}
+
+.submitButton:active:not(:disabled) {
+  transform: translateY(1px);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.05),
+    0 1px 2px rgba(0, 0, 0, 0.5);
+}
+
+.submitButton:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.statusMessage {
+  font-family: "Courier New", Courier, monospace;
+  font-size: 0.85rem;
+  padding: 0.75rem;
+  border-radius: 2px;
+  text-align: center;
+  margin: 0;
+}
+
+.statusMessage.success {
+  background: rgba(100, 160, 100, 0.2);
+  color: #a8d4a8;
+  border: 1px solid #7a9a7a;
+}
+
+.statusMessage.error {
+  background: rgba(192, 122, 58, 0.2);
+  color: #e8956f;
+  border: 1px solid #c07a3a;
+}
+
+@media (max-width: 600px) {
+  .feedbackSection {
+    padding: 1.5rem;
+  }
+
+  .title {
+    font-size: 0.9rem;
+  }
+
+  .rewardInfo {
+    font-size: 0.8rem;
+  }
+}

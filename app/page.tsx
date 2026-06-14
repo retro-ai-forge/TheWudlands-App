@@ -5,6 +5,7 @@ import Link from "next/link";
 import styles from "./page.module.css";
 import { EnterWudlandsButton } from "./components/EnterWudlandsButton";
 import { useWallet } from "./components/WalletProvider";
+import { FeedbackForm } from "./components/FeedbackForm";
 
 const HEARTBEAT_MS = 5 * 60 * 1000;
 
@@ -179,6 +180,8 @@ export default function Home() {
               on how to continue.
             </p>
           </div>
+
+          <FeedbackForm />
         </>
       )}
 
