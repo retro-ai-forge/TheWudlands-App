@@ -1,11 +1,10 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import Link from "next/link";
 import styles from "./page.module.css";
-import { EnterWudlandsButton } from "./components/EnterWudlandsButton";
 import { useWallet } from "./components/WalletProvider";
-import { FeedbackForm } from "./components/FeedbackForm";
+import { LandingView } from "./components/LandingView";
+import { WelcomeView } from "./components/WelcomeView";
 
 const HEARTBEAT_MS = 5 * 60 * 1000;
 
@@ -160,36 +159,19 @@ export default function Home() {
   return (
     <main className={view === "game" ? styles.welcomeScreen : styles.screen}>
       {view === "join" && (
-        <>
-          <p className={styles.status}>{status}</p>
-          <EnterWudlandsButton
-            onEnter={handleEnterWudlands}
-            onError={handleAuthError}
-            disabled={joining}
-          />
-        </>
+        <LandingView
+          status={status}
+          joining={joining}
+          onEnter={handleEnterWudlands}
+          onError={handleAuthError}
+        />
       )}
 
       {view === "game" && (
-        <>
-          <div className={styles.welcomeBody}>
-            <h1 className={styles.welcomeHeadline}>Welcome to Wudlands</h1>
-            <p className={styles.welcomeMessage}>
-              Thanks for signing in — please read the{" "}
-              <Link href="/guide" className={styles.welcomeLink}>guide</Link>{" "}
-              on how to continue.
-            </p>
-          </div>
-
-          <FeedbackForm />
-        </>
-      )}
-
-      {userId !== null && (
-        <span className={styles.playerId}>#{userId}</span>
-      )}
-      {playerAddress !== null && (
-        <span className={styles.playerAddress}>{playerAddress.slice(0, 10)}...</span>
+        <WelcomeView
+          userId={userId}
+          playerAddress={playerAddress}
+        />
       )}
     </main>
   );

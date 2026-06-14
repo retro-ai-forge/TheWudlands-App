@@ -49,7 +49,7 @@ export function FeedbackForm() {
       <div className={styles.feedbackSection}>
         <h2 className={styles.title}>Player Feedback &amp; Reviews</h2>
         <p className={styles.rewardInfo}>
-          <span className={styles.highlight}>Constructive feedback will be rewarded with in-game currency.</span>
+          <span className={styles.highlight}>Constructive feedback will be rewarded with in-game.</span>
           {" "}Help shape The Wudlands by sharing your thoughts, suggestions, and reviews.
         </p>
 
