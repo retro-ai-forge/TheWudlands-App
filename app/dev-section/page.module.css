@@ -379,6 +379,229 @@
   font-size: 0.76rem;
 }
 
+/* ── Roadmap Timeline ──────────────────────────────── */
+.roadmapSection {
+  margin: 3rem 0;
+  padding: 1.5rem;
+  background: linear-gradient(to bottom, #16140f 0%, #0e0e0b 45%, #0a0a07 100%);
+  border: 1px solid #7a6a3a;
+  border-left: 3px solid #c07a3a;
+  box-shadow:
+    0 1px 2px rgba(0,0,0,0.4),
+    inset 0 1px 0 rgba(255,255,255,0.08),
+    inset 0 -2px 3px rgba(0,0,0,0.3);
+  position: relative;
+}
+
+
+.roadmapTitle {
+  font-family: "Courier New", Courier, monospace;
+  font-size: 0.95rem;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: #c07a3a;
+  margin-bottom: 2rem;
+}
+
+.timelineContainer {
+  position: relative;
+  padding: 2rem 0;
+  display: flex;
+  gap: 2rem;
+}
+
+.timelineLine {
+  position: absolute;
+  left: 50%;
+  top: 0;
+  bottom: 0;
+  width: 3px;
+  background: linear-gradient(to bottom, #7a6a3a 0%, #c07a3a 45%, #7a6a3a 100%);
+  transform: translateX(-50%);
+  box-shadow:
+    0 0 4px rgba(192,122,58,0.3),
+    inset 1px 0 1px rgba(255,255,255,0.1),
+    inset -1px 0 1px rgba(0,0,0,0.5);
+}
+
+.roadmapPhases {
+  width: 100%;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.roadmapPhase {
+  width: 45%;
+  background: linear-gradient(to bottom, #141210 0%, #0a0a0a 50%, #070605 100%);
+  border: 1px solid #3a3020;
+  box-shadow:
+    0 2px 4px rgba(0,0,0,0.5),
+    inset 0 1px 0 rgba(255,255,255,0.05),
+    inset 0 -1px 2px rgba(0,0,0,0.4);
+  padding: 1.5rem;
+  position: relative;
+  transition: box-shadow 0.1s ease, transform 0.1s ease, border-color 0.2s ease;
+  cursor: pointer;
+}
+
+.roadmapPhase:hover {
+  border-color: #9a7a3a;
+  box-shadow:
+    0 3px 6px rgba(0,0,0,0.6),
+    inset 0 1px 0 rgba(255,255,255,0.08),
+    inset 0 -1px 2px rgba(0,0,0,0.5);
+}
+
+.roadmapPhase:active {
+  transform: translateY(1px);
+  box-shadow:
+    0 1px 2px rgba(0,0,0,0.5),
+    inset 0 1px 0 rgba(255,255,255,0.05),
+    inset 0 2px 4px rgba(0,0,0,0.6);
+}
+
+.roadmapPhase:nth-child(1) {
+  margin-left: 0;
+  margin-right: auto;
+  text-align: left;
+  margin-top: 0;
+}
+
+.roadmapPhase:nth-child(2) {
+  margin-left: auto;
+  margin-right: 0;
+  text-align: left;
+  margin-top: -10rem;
+}
+
+.roadmapPhase:nth-child(3) {
+  margin-left: 0;
+  margin-right: auto;
+  text-align: left;
+  margin-top: -7rem;
+}
+
+.roadmapPhase:nth-child(4) {
+  margin-left: auto;
+  margin-right: 0;
+  text-align: left;
+  margin-top: -5rem;
+}
+
+.roadmapPhase::before {
+  content: "";
+  position: absolute;
+  width: 0;
+  height: 0;
+  top: 1.5rem;
+  border-style: solid;
+  transition: box-shadow 0.15s ease, transform 0.15s ease, filter 0.15s ease;
+}
+
+/* Left-pointing arrow for right-side phases (Beta 2.0, Alpha 2.0) */
+.roadmapPhase:nth-child(2)::before,
+.roadmapPhase:nth-child(4)::before {
+  left: -28px;
+  border-width: 8px 14px 8px 0;
+  border-color: transparent #c07a3a transparent transparent;
+  filter: drop-shadow(0 2px 4px rgba(0,0,0,0.6)) drop-shadow(inset 1px 1px 2px rgba(255,255,255,0.2));
+}
+
+/* Right-pointing arrow for left-side phases (Beta 1.0, Alpha 1.0) */
+.roadmapPhase:nth-child(1)::before,
+.roadmapPhase:nth-child(3)::before {
+  right: -28px;
+  border-width: 8px 0 8px 14px;
+  border-color: transparent transparent transparent #c07a3a;
+  filter: drop-shadow(0 2px 4px rgba(0,0,0,0.6)) drop-shadow(inset -1px 1px 2px rgba(255,255,255,0.2));
+}
+
+.roadmapPhase:hover::before {
+  filter: drop-shadow(0 3px 6px rgba(0,0,0,0.7)) drop-shadow(0 0 8px rgba(192,122,58,0.5));
+  transform: scale(1.15);
+}
+
+
+.phaseName {
+  font-family: "Courier New", Courier, monospace;
+  font-size: 0.9rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #c07a3a;
+  margin-bottom: 0.75rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid #3a3020;
+  text-shadow:
+    0 1px 0 rgba(255,255,255,0.1),
+    0 -1px 0 rgba(0,0,0,0.5);
+}
+
+.phaseDetails {
+  font-family: "Courier New", Courier, monospace;
+  font-size: 0.78rem;
+  line-height: 1.7;
+  color: #d4c9a8;
+  text-shadow: 0 1px 0 rgba(0,0,0,0.3);
+}
+
+.phaseDetails li {
+  margin-bottom: 0.45rem;
+  margin-left: 1rem;
+}
+
+.phaseDetails ul {
+  list-style: none;
+  padding: 0;
+}
+
+.phaseDetails li::before {
+  content: "▸ ";
+  color: #7a6a3a;
+  margin-right: 0.35rem;
+  margin-left: -0.9rem;
+}
+
+.leftRemark {
+  font-family: "Courier New", Courier, monospace;
+  font-size: 0.75rem;
+  color: #7a6a3a;
+  padding: 0.5rem;
+  margin: 0.5rem 0;
+  line-height: 1.6;
+}
+
+.rightRemark {
+  font-family: "Courier New", Courier, monospace;
+  font-size: 0.75rem;
+  color: #7a6a3a;
+  padding: 0.5rem;
+  margin: 0.5rem 0;
+  line-height: 1.6;
+  text-align: right;
+}
+
+@media (max-width: 1024px) {
+  .roadmapPhases {
+    grid-template-columns: 1fr;
+    gap: 2.5rem;
+  }
+
+  .roadmapPhase::before {
+    top: -18px;
+  }
+
+  .timelineLabelsLeft,
+  .timelineLabelsRight {
+    display: none;
+  }
+
+  .roadmapSection {
+    padding: 1.5rem 1rem;
+  }
+}
+
 @media (max-width: 768px) {
   .page {
     padding: 2rem 1rem 3rem;

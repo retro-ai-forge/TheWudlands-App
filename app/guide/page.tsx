@@ -15,6 +15,12 @@ export default function Guide() {
         </p>
 
         <p className={styles.body}>
+          To step into the Wudlands, you will need a <strong>Polkadot wallet</strong> for login and to track your on-chain character progression.
+          The following wallet extensions are supported: <strong>Polkadot.js</strong>, <strong>Nova Wallet</strong>, <strong>Talisman</strong>, and <strong>SubWallet</strong>.
+          Install one of these compatible wallets in your browser to begin your adventure.
+        </p>
+
+        <p className={styles.body}>
           The Wudlands is made up of adventures — self-contained stories written by contributors from across the world.
           Each adventure is its own corner of the Wudlands: a haunted tower, a cursed merchant road, a court intrigue,
           a dungeon that has swallowed three expeditions before yours. You choose which adventure to enter, read the
@@ -37,8 +43,8 @@ export default function Guide() {
         </p>
 
         <p className={styles.body}>
-          Entering an adventure requires a small coin — a fee that grants you the right to explore it again and again,
-          up to three times by default. Think of it less as a toll and more as the price
+          Entering an adventure requires a small coin — an on-chain fee that grants you the right to explore it again and again,
+          up to three times by default. Each adventure costs approximately $0.80 for three exploration attempts. Think of it less as a toll and more as the price
           of a seat at the storyteller&apos;s fire. If you have exhausted your plays and wish to return, you may
           pay the fee once more and your count is restored. The road is always open to those willing to walk it again.
         </p>
@@ -103,8 +109,8 @@ export default function Guide() {
         </p>
 
         <p className={styles.body}>
-          Addons include three free plays per purchase: the entry fee grants up to three
-          attempts (retries) to explore an adventure and test branching paths. When those three
+          Addons require a small on-chain fee: approximately $0.80 per adventure grants you three
+          attempts (retries) to explore and test branching paths. When those three
           plays are used, the player may pay the entry fee again to reset the play counter and
           retry the adventure. This mirrors the platform&apos;s terms for replay limits and purchases.
         </p>
@@ -155,7 +161,7 @@ export default function Guide() {
             </tr>
             <tr>
               <td>Plays &amp; Entry Fee</td>
-              <td>Each adventure requires a small fee to enter. That fee grants you the right to experience it up to three times — enough to find different paths, try different choices, and see what the story holds from another angle. If your count runs out and you wish to return, pay the fee again and your plays are restored. The Wudlands does not close its doors to those who want to walk the same road twice.</td>
+              <td>Each adventure requires a small on-chain fee to enter (approximately $0.80 for three attempts). That fee grants you the right to experience it up to three times — enough to find different paths, try different choices, and see what the story holds from another angle. If your count runs out and you wish to return, pay the fee again and your plays are restored. The Wudlands does not close its doors to those who want to walk the same road twice.</td>
             </tr>
           </tbody>
         </table>
