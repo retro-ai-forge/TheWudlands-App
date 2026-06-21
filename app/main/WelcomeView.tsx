@@ -13,15 +13,18 @@ export function WelcomeView({ userId, playerAddress }: WelcomeViewProps) {
       <div className={styles.welcomeBody}>
         <h1 className={styles.welcomeHeadline}>Welcome to The Wudlands</h1>
         <p className={styles.welcomeMessage}>
-          Thanks for signing in! This is a <strong>beta</strong> version of The Wudlands. The app engine is still in development as we gather ideas on how to structure and develop it. Check out our{" "}
-          <Link href="/dev-section#roadmap" className={styles.welcomeLink}>roadmap in the dev-section</Link>{" "}
-          to see what&apos;s planned.
+          Thanks for signing in! This is a <strong>beta</strong> version of 
+          The Wudlands. There is no game yet! 
+          Our app engine is still in development as we gather 
+          ideas on how to structure and develop it. Check our{" "}
+          <Link href="/dev-section#roadmap" className={styles.welcomeLink}>roadmap</Link>{" "} 
+          in the dev-section to see what&apos;s planned.
         </p>
         <br/>
         <p className={styles.welcomeMessage}>
-          We&apos;d love your feedback and ideas! Submit them using the email form below, or clone the repository 
-          to contribute and be listed as a contributor. Communication happens on 
-          Telegram, where new releases will be announced. 
+          We&apos;d love your feedback and ideas! 
+          Submit them in the template below, or clone the repository 
+          to contribute. For FAQ and release notes please join Telegram.
         </p>
         <br/>
         <p className={styles.welcomeMessage}>

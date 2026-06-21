@@ -323,17 +323,17 @@
   color: #d4c9a8;
 }
 
-@media (max-width: 768px) {
+@media (max-width: 900px) {
   .genderGrid {
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(2, 1fr);
   }
 
   .racesGrid {
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(2, 1fr);
   }
 
   .professionsGrid {
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(2, 1fr);
   }
 }
 
