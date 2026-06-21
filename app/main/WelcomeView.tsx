@@ -7,7 +7,7 @@ interface WelcomeViewProps {
   playerAddress: string | null;
 }
 
-export function WelcomeView({ userId, playerAddress }: WelcomeViewProps) {
+export function WelcomeView({ userId }: WelcomeViewProps) {
   return (
     <>
       <div className={styles.welcomeBody}>

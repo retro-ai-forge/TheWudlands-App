@@ -1,5 +1,4 @@
 import Image from "next/image";
-import Link from "next/link";
 import styles from "./page.module.css";
 
 export default function GTC() {
@@ -7,37 +6,6 @@ export default function GTC() {
     <div className={styles.page}>
       <section className={styles.guidelines}>
         <h2 className={styles.heading}>Terms &amp; Conditions</h2>
-
-        <p className={styles.body}>
-          The Wudlands is an old-school round-based <Link href="https://www.fightingfantasy.com/" target="_blank" rel="noopener noreferrer" className={styles.externalLink}>Fighting Fantasy</Link>-style adventure game inspired by <Link href="https://boardgamegeek.com/boardgame/199723/ultraquest-gold-ruhm-und-ehre" target="_blank" rel="noopener noreferrer" className={styles.externalLink}>UltraQuest</Link>,{" "}
-          <Link href="https://www.projectaon.org/en/Main/Home" target="_blank" rel="noopener noreferrer" className={styles.externalLink}>Lone Wolf Saga</Link>, <Link href="https://www.everquest.com/home" target="_blank" rel="noopener noreferrer" className={styles.externalLink}>EverQuest</Link>, <Link href="https://goodman-games.com/dungeon-crawl-classics-rpg/" target="_blank" rel="noopener noreferrer" className={styles.externalLink}>Dungeon Crawl Classic</Link>, books from <Link href="https://en.wikipedia.org/wiki/Steve_Jackson_(British_game_designer)" target="_blank" rel="noopener noreferrer" className={styles.externalLink}>Steve Jackson</Link>, <Link href="https://en.wikipedia.org/wiki/Ian_Livingstone" target="_blank" rel="noopener noreferrer" className={styles.externalLink}>Ian Livingstone</Link>, and the{" "}
-          <Link href="https://linktr.ee/gavunwud" target="_blank" rel="noopener noreferrer" className={styles.externalLink}>GAVUN WUD meme</Link>, built as a browser-based fantasy RPG with scene-driven
-          gameplay, pixel-art, ascii-art, narrative-driven adventures, and onchain 
-          character progression. The game will be built using a modular, plugin-based 
-          architecture that allows for easy extension and modification. 
-        </p>
-
-      <section className={styles.wudSection}>
-        <p className={styles.wudTitle}>— The Wud Legends —</p>
-        <div className={styles.wudGrid}>
-          <Link href="https://gavunwud.xyz//" target="_blank" rel="noopener noreferrer" className={styles.wudCard}>
-            <Image src="/images/gtc/gavun-wud-black.png" alt="Gavun the Wud" width={80} height={80} className={styles.wudIcon} />
-            <span className={styles.wudName}>Gavun of Wud</span>
-          </Link>
-          <Link href="https://x.com/gavunwud" target="_blank" rel="noopener noreferrer" className={styles.wudCard}>
-            <Image src="/images/gtc/20260609_084229.jpg" alt="Dark Lord of Polkadut" width={80} height={80} className={styles.wudIcon} />
-            <span className={styles.wudName}>Slayer of Polkadut</span>
-          </Link>
-          <Link href="https://linktr.ee/gavunwud" target="_blank" rel="noopener noreferrer" className={styles.wudCard}>
-            <Image src="/images/gtc/20260609_084240.jpg" alt="The Beyr Slayr" width={80} height={80} className={styles.wudIcon} />
-            <span className={styles.wudName}>The Beyr Slayr</span>
-          </Link>
-          <Link href="https://www.youtube.com/@gavunwud" target="_blank" rel="noopener noreferrer" className={styles.wudCard}>
-            <Image src="/images/gtc/20260609_084257.jpg" alt="Warlord of the Wud" width={80} height={80} className={styles.wudIcon} />
-            <span className={styles.wudName}>Warlord of the Wud</span>
-          </Link>
-        </div>
-      </section>
 
         <p className={styles.body}>
           By submitting an adventure addon to The Wudlands, you agree to the terms set out on this page in full.
@@ -79,40 +47,19 @@ export default function GTC() {
         <h3 className={styles.subheading}>3. Revenue Share</h3>
 
         <p className={styles.body}>
-          The Wudlands may, at its discretion, offer contributors a share of revenue generated when adventurers
-          explore their stories. Where such a share is offered, adventure revenue is split 80% to the contributor
-          and 20% to The Wudlands. This share is entirely voluntary and represents a goodwill gesture from The
-          Wudlands toward its creator community. It does not constitute payment for services rendered, does not
-          create an employment or contractor relationship, and carries no legally enforceable entitlement. 
-          The revenue is an essencial part of the platform to pay server costs and transaction fees. It is not 
-          guaranteed, may be changed or removed at any time. The contributor may suggest a price tag for their 
-          adventure, but The Wudlands reserves the right to set or change the price as it sees fit. Each adventure 
-          has a maximum try of 3 explorations. The counter can be reset by paying the full price again.
+          The Wudlands may offer an 80/20 revenue split with contributors (80% to contributor, 20% to platform).
+          This is entirely voluntary, not guaranteed, and does not create any employment relationship or legal entitlement.
+          Revenue may be changed or discontinued at any time. Contributors may suggest a price, but The Wudlands
+          reserves final say on pricing. Each adventure allows 3 plays; further plays require paying the fee again.
         </p>
 
-        <p className={styles.body}>
-          The amount, timing, method, and continuation of any revenue share is decided solely by The Wudlands
-          and may be changed, suspended, or discontinued at any time without prior notice. Contributors may not
-          claim any legal right to compensation, revenue sharing, or financial benefit of any kind based on their
-          submission or the use of their content.
-        </p>
-
-        <h3 className={styles.subheading}>4. Blockchain &amp; Polkadot & ETH Address Storage</h3>
+        <h3 className={styles.subheading}>4. Blockchain &amp; Wallet Addresses</h3>
 
         <p className={styles.body}>
-          The Wudlands currently operates on a blockchain environment. However, the platform may at any point in the future
-          migrate to a different blockchain network if technical, economic, or strategic reasons make this necessary or desirable.
-          By contributing content and providing a secondary fallback ETH wallet address, you acknowledge and accept that such a migration may occur
-          and that your address and any associated data may be transferred or adapted as part of that process.
-        </p>
-
-        <p className={styles.body}>
-          If you choose to provide a Polkadot and optional Ethereum (ETH) wallet address as part of your contributor profile or submission,
-          that address will be stored securely by The Wudlands for the purpose of potential revenue distribution
-          and identity association within the platform. You are not required to provide a wallet address.
-          Providing one does not guarantee any payment will be made to it. The Wudlands will not sell or share
-          your ETH address with third parties outside of what is technically required to operate the platform. 
-          It may be visible in smart contracts.
+          The Wudlands currently uses Polkadot with optional Ethereum addresses for revenue distribution.
+          The platform may migrate to a different blockchain at any time. Wallet addresses are stored securely
+          and used only for payment purposes; they are not sold or shared with third parties. Providing an address
+          does not guarantee any payment, and you may see your address reflected in smart contracts.
         </p>
 
         <h3 className={styles.subheading}>5. Content Standards, Age Restrictions &amp; Player Warnings</h3>
@@ -208,69 +155,37 @@ export default function GTC() {
           <thead>
             <tr>
               <th>Topic</th>
-              <th>What It Means</th>
+              <th>Summary</th>
             </tr>
           </thead>
           <tbody>
             <tr>
               <td>Content Rights</td>
-              <td>Submitted content belongs to The Wudlands to use, change, or remove in any way it sees fit.</td>
-            </tr>
-            <tr>
-              <td>Modifications</td>
-              <td>The Wudlands may rewrite, restructure, or edit your adventure without asking permission.</td>
-            </tr>
-            <tr>
-              <td>Romantic / Minne</td>
-              <td>Vintage 80s/90s fantasy gender dynamics and courtly love tropes are part of the aesthetic. They do not reflect the team&apos;s values.</td>
+              <td>The Wudlands may use, modify, or remove your content at will.</td>
             </tr>
             <tr>
               <td>Revenue Share</td>
-              <td>Any share of revenue is voluntary and optional. It creates no legal entitlement or obligation.</td>
+              <td>80/20 split is voluntary, not guaranteed, and can change anytime.</td>
             </tr>
             <tr>
-              <td>No Guarantee</td>
-              <td>Contributing content does not guarantee any compensation, credit, or continued presence on the platform.</td>
+              <td>No Legal Entitlement</td>
+              <td>Submitting does not guarantee compensation, credit, or continued presence.</td>
             </tr>
             <tr>
-              <td>Blockchain Migration</td>
-              <td>The platform may move to a different blockchain at any time. You accept this when contributing.</td>
+              <td>Age Ratings</td>
+              <td>16+ general, 18+ for adult content. Users confirm eligibility.</td>
             </tr>
             <tr>
-              <td>ETH Address</td>
-              <td>Stored if provided, used only for platform purposes. Not required. Does not guarantee any payment.</td>
+              <td>Prohibited Content</td>
+              <td>Zero tolerance: minors in sexual content, glorified violence, hate speech.</td>
             </tr>
             <tr>
-              <td>Age Rating</td>
-              <td>16+ general. 18+ for adult-flagged content. Users confirm they meet the requirement by playing.</td>
+              <td>Original Work</td>
+              <td>No plagiarism or stolen content. Fighting Fantasy material forbidden. AI-generated OK.</td>
             </tr>
             <tr>
-              <td>Content Warnings</td>
-              <td>The game contains violence, horror, death, disturbing themes, and potentially erotic material.</td>
-            </tr>
-            <tr>
-              <td>Zero Tolerance</td>
-              <td>Sexual content involving minors, glorified violence against innocents, and hate content are immediately removed and result in a permanent ban.</td>
-            </tr>
-            <tr>
-              <td>Erotic Content</td>
-              <td>Permitted only in adult-flagged addons. All characters must be unambiguously adult. Must be handled responsibly.</td>
-            </tr>
-            <tr>
-              <td>Dark Themes</td>
-              <td>Horror, cruelty, and moral ambiguity are allowed when they serve the story. Gratuitous shock content without purpose is not.</td>
-            </tr>
-            <tr>
-              <td>Original Content</td>
-              <td>Stolen or plagiarised text and images are forbidden. AI-generated content is permitted. Fighting Fantasy material is strictly prohibited due to copyright.</td>
-            </tr>
-            <tr>
-              <td>Changing Experience</td>
-              <td>Content, mechanics, and features may change at any time. No continuity of any specific element is guaranteed.</td>
-            </tr>
-            <tr>
-              <td>Agreement</td>
-              <td>Submitting content means you have read and accepted these terms in full.</td>
+              <td>Platform Changes</td>
+              <td>Content, mechanics, and features may change anytime without notice.</td>
             </tr>
           </tbody>
         </table>

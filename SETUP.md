@@ -69,7 +69,9 @@ gcloud config get-value project
 gcloud auth configure-docker europe-west1-docker.pkg.dev
 gcloud auth application-default set-quota-project thewudlands
 gcloud artifacts repositories list --location=europe-west1
-# this worked...
+
+# Auth error, fix for access token!
+gcloud auth login
 gcloud auth print-access-token | docker login -u oauth2accesstoken --password-stdin https://europe-west1-docker.pkg.dev
  
 gcloud config list
