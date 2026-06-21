@@ -16,7 +16,7 @@
 }
 
 .title {
-  font-size: 1.4rem;
+  font-size: 1.55rem;
   letter-spacing: 0.2em;
   text-transform: uppercase;
   color: #c07a3a;
@@ -39,7 +39,7 @@
 }
 
 .introText {
-  font-size: 0.95rem;
+  font-size: 1rem;
   line-height: 1.75;
   color: #d4c9a8;
   margin-bottom: 0.75rem;
@@ -64,7 +64,7 @@
 }
 
 .panelLabel {
-  font-size: 0.7rem;
+  font-size: 0.8rem;
   letter-spacing: 0.25em;
   text-transform: uppercase;
   color: #7a6a3a;
@@ -73,7 +73,7 @@
 }
 
 .panelTitle {
-  font-size: 1rem;
+  font-size: 1.1rem;
   letter-spacing: 0.12em;
   text-transform: uppercase;
   color: #c07a3a;
@@ -82,7 +82,7 @@
 }
 
 .panelText {
-  font-size: 0.88rem;
+  font-size: 1rem;
   line-height: 1.65;
   color: #d4c9a8;
   text-align: center;
@@ -119,7 +119,7 @@
 }
 
 .sectionIntro {
-  font-size: 0.9rem;
+  font-size: 1rem;
   line-height: 1.7;
   color: #d4c9a8;
   margin-bottom: 1.75rem;
@@ -135,7 +135,7 @@
 .table {
   width: 100%;
   border-collapse: collapse;
-  font-size: 0.82rem;
+  font-size: 1rem;
 }
 
 .table thead tr {
@@ -223,7 +223,7 @@
 }
 
 .raceDescription {
-  font-size: 0.8rem;
+  font-size: 1rem;
   line-height: 1.5;
   color: #d4c9a8;
 }
@@ -262,7 +262,7 @@
 }
 
 .professionDescription {
-  font-size: 0.75rem;
+  font-size: 1rem;
   line-height: 1.4;
   color: #d4c9a8;
 }
@@ -318,7 +318,7 @@
 }
 
 .genderDescription {
-  font-size: 0.78rem;
+  font-size: 1rem;
   line-height: 1.55;
   color: #d4c9a8;
 }

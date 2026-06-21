@@ -106,7 +106,7 @@ export default function Characters() {
               fontSize: "0.85rem",
               letterSpacing: "0.15em",
               textTransform: "uppercase",
-              color: "#7a6a3a",
+              color: "#a89968",
               marginBottom: "1rem",
               textAlign: "center",
             }}>
@@ -136,7 +136,7 @@ export default function Characters() {
               fontSize: "0.85rem",
               letterSpacing: "0.15em",
               textTransform: "uppercase",
-              color: "#7a6a3a",
+              color: "#a89968",
               marginBottom: "1rem",
               textAlign: "center",
             }}>
