@@ -30,70 +30,12 @@
   margin-bottom: 2rem;
 }
 
-.subheading {
-  font-family: "Courier New", Courier, monospace;
-  font-size: 0.88rem;
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
-  color: #7a6a3a;
-  margin-top: 2.5rem;
-  margin-bottom: 0.75rem;
-}
-
 .body {
   font-family: "Courier New", Courier, monospace;
   font-size: 1rem;
   line-height: 1.8;
   color: #d4c9a8;
   margin-bottom: 1.25rem;
-}
-
-.highlight {
-  color: #c07a3a;
-}
-
-.table {
-  width: 100%;
-  border-collapse: collapse;
-  font-family: "Courier New", Courier, monospace;
-  font-size: 1rem;
-  margin-top: 2.5rem;
-}
-
-.table th {
-  background: #1a1a1a;
-  color: #c07a3a;
-  text-transform: uppercase;
-  letter-spacing: 0.15em;
-  padding: 0.65rem 1rem;
-  border: 1px solid #7a6a3a;
-  text-align: left;
-}
-
-.table td {
-  color: #d4c9a8;
-  padding: 0.6rem 1rem;
-  border: 1px solid #3a3020;
-  vertical-align: top;
-}
-
-.table td:first-child {
-  color: #c07a3a;
-  white-space: nowrap;
-  width: 1%;
-}
-
-.table tr:hover td {
-  background: #111108;
-}
-
-.sectionImage {
-  width: 100%;
-  height: auto;
-  display: block;
-  border: 1px solid #7a6a3a;
-  margin-bottom: 1.75rem;
-  filter: sepia(0.2) brightness(0.9);
 }
 
 .wudSection {
@@ -152,9 +94,5 @@
 @media (max-width: 768px) {
   .page {
     padding: 2rem 1rem 3rem;
-  }
-
-  .table td:first-child {
-    white-space: normal;
   }
 }

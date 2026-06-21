@@ -5,6 +5,8 @@ import styles from "./page.module.css";
 import { useWallet } from "./main/WalletProvider";
 import { LandingView } from "./main/LandingView";
 import { WelcomeView } from "./main/WelcomeView";
+import BannerSlideshow from "./main/BannerSlideshow";
+import HomeBackground from "./main/HomeBackground";
 
 const HEARTBEAT_MS = 5 * 60 * 1000;
 
@@ -64,24 +66,6 @@ export default function Home() {
     setJoining(false);
     setView("game");
     startHeartbeat(id);
-  }
-
-  async function _joinGame() {
-    setJoining(true);
-    setStatus("Joining...");
-    try {
-      const res = await fetch("/api/game/join", { method: "POST" });
-      const data = await res.json();
-      if (!res.ok) {
-        setStatus(data.detail ?? "Could not join.");
-        setJoining(false);
-        return;
-      }
-      enterGame(data.user_id);
-    } catch {
-      setStatus("Error: could not reach the server.");
-      setJoining(false);
-    }
   }
 
   // Tear down the in-game session (heartbeat, view, server-side leave).
@@ -180,12 +164,16 @@ export default function Home() {
   return (
     <main className={view === "game" ? styles.welcomeScreen : styles.screen}>
       {view === "join" && (
-        <LandingView
-          status={status}
-          joining={joining}
-          onEnter={handleEnterWudlands}
-          onError={handleAuthError}
-        />
+        <>
+          <HomeBackground />
+          <BannerSlideshow />
+          <LandingView
+            status={status}
+            joining={joining}
+            onEnter={handleEnterWudlands}
+            onError={handleAuthError}
+          />
+        </>
       )}
 
       {view === "game" && (

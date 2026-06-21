@@ -117,14 +117,6 @@ export default function GTC() {
           or exploitative depictions are not permitted.
         </p>
 
-        <Image
-          src="/images/gtc/affection.jpg"
-          alt="Doorways to lead to various adventures, in the middle a noble woman hugging her favorite hero."
-          className={styles.sectionImage}
-          width={600}
-          height={400}
-        />
-
         <p className={styles.body}>
           Contributors must only submit original content that they have the right to share. Submitting stolen,
           plagiarised, or otherwise copied text, artwork, or images is strictly prohibited.

@@ -75,12 +75,11 @@ export function WalletProvider({ children }: { children: ReactNode }) {
       // Store all unique accounts for selection, and set first as default.
       setAvailableAccounts(accounts);
       setAccount(accounts[0]);
-      // Clear the error only on success, so a failed retry keeps toggling.
       setConnectError(null);
       return accounts[0];
     } catch {
-      // Toggle the label on each failed attempt: Connect -> hint -> Connect ...
-      setConnectError((prev) => (prev ? null : "Select wallet in extension"));
+      // Always set the error message on failure (not toggle).
+      setConnectError("Select wallet in extension");
       return null;
     } finally {
       setIsConnecting(false);

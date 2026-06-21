@@ -4,11 +4,14 @@
   padding: 0;
 }
 
-@keyframes colorPulse {
-  0%, 100% { filter: grayscale(0); }
-  50%       { filter: grayscale(1); }
+/* On desktop (nav bar visible) give every page a top breathing room so
+   headings and images start below the nav edge, not flush against it.
+   The breakpoint matches the hamburger ↔ desktop-nav switch in Header. */
+@media (min-width: 1000px) {
+  .pageContent {
+    padding-top: 2rem;
+  }
 }
-
 
 body {
   background: #0a0a0a;
@@ -18,15 +21,6 @@ body {
   position: relative;
 }
 
-/* Background image — grayscale pulse + flicker */
-body::before {
-  content: "";
-  position: fixed;
-  inset: 0;
-  background: url("/images/banner-wudlands-v01.jpg") center center / cover no-repeat;
-  animation: colorPulse 12s ease-in-out infinite;
-  z-index: -2;
-}
 
 @keyframes vignettePulse {
   0%, 100% { opacity: 1;    }

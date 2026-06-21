@@ -4,7 +4,7 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 5rem 1.5rem 8vh;
+  padding: 1rem 1.5rem 8vh;
   background: #0a0a0a;
   box-sizing: border-box;
   overflow-x: hidden;
@@ -97,8 +97,14 @@
 }
 
 .section {
-  max-width: 56rem;
+  max-width: 100%;
   margin: 0 auto 3rem auto;
+}
+
+@media (min-width: 900px) {
+  .section {
+    max-width: 56rem;
+  }
 }
 
 .sectionTitle {
@@ -122,8 +128,8 @@
   font-size: 1rem;
   line-height: 1.7;
   color: #d4c9a8;
-  margin-bottom: 1.75rem;
-  max-width: 44rem;
+  margin: 0 auto 1.75rem auto;
+  max-width: 90%;
   text-align: center;
 }
 
@@ -159,6 +165,7 @@
   vertical-align: top;
   border-bottom: 1px solid #1e1a10;
   line-height: 1.5;
+  white-space: pre-wrap;
 }
 
 .table tbody tr:last-child td {
@@ -193,12 +200,67 @@
   border-bottom: 2px solid #3a3a2a;
 }
 
+.scrollContainer {
+  display: flex;
+  gap: 1rem;
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding: 0.5rem 0 0.5rem 1rem;
+  padding-right: calc(45vw - 1rem);
+  scroll-behavior: smooth;
+  -webkit-overflow-scrolling: touch;
+  flex-wrap: nowrap;
+  user-select: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+}
+
+@media (min-width: 600px) {
+  .scrollContainer {
+    padding-right: calc(45vw - 1rem);
+  }
+}
+
+@media (min-width: 900px) {
+  .scrollContainer {
+    padding-right: calc(45vw - 1rem);
+  }
+}
+
+@media (min-width: 1200px) {
+  .scrollContainer {
+    padding-right: calc(50vw - 1rem);
+  }
+}
+
+.scrollContainer::-webkit-scrollbar {
+  height: 6px;
+}
+
+.scrollContainer::-webkit-scrollbar-track {
+  background: #0a0a0a;
+}
+
+.scrollContainer::-webkit-scrollbar-thumb {
+  background: #7a6a3a;
+  border-radius: 3px;
+}
+
+.scrollContainer::-webkit-scrollbar-thumb:hover {
+  background: #c07a3a;
+}
+
+
 .racesGrid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr));
   gap: 1rem;
   max-width: 56rem;
   margin: 0 auto;
+  overflow: hidden;
+  mask-image: linear-gradient(to right, transparent, black 2rem, black calc(100% - 2rem), transparent);
+  transition: transform 0.3s ease;
 }
 
 .raceCard {
@@ -207,6 +269,8 @@
   background: #0a0a0a;
   transition: all 0.2s;
   text-align: center;
+  flex: 0 0 16rem;
+  min-width: 16rem;
 }
 
 .raceCard:hover {
@@ -234,6 +298,9 @@
   gap: 1rem;
   max-width: 56rem;
   margin: 0 auto;
+  overflow: hidden;
+  mask-image: linear-gradient(to right, transparent, black 2rem, black calc(100% - 2rem), transparent);
+  transition: transform 0.3s ease;
 }
 
 .professionCard {
@@ -246,6 +313,8 @@
   display: flex;
   flex-direction: column;
   justify-content: center;
+  flex: 0 0 16rem;
+  min-width: 16rem;
 }
 
 .professionCard:hover {
@@ -280,6 +349,9 @@
   gap: 1.25rem;
   max-width: 44rem;
   width: 100%;
+  overflow: hidden;
+  mask-image: linear-gradient(to right, transparent, black 2rem, black calc(100% - 2rem), transparent);
+  transition: transform 0.3s ease;
 }
 
 .genderCard {
@@ -292,6 +364,15 @@
   flex-direction: column;
   align-items: center;
   gap: 0.5rem;
+  flex: 0 0 16rem;
+  min-width: 16rem;
+}
+
+@media (min-width: 600px) {
+  .genderCard {
+    flex: 0 0 20rem;
+    min-width: 20rem;
+  }
 }
 
 .genderCard:hover {

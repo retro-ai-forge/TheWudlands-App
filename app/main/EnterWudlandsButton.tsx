@@ -13,7 +13,7 @@
  *    ownership of the private key, verifies it on the backend, then enters.
  */
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useWallet } from './WalletProvider';
 import { getSignerForAddress, type WalletAccount } from '@/lib/wallet';
 import styles from './EnterWudlandsButton.module.css';
@@ -29,9 +29,23 @@ export function EnterWudlandsButton({
   onError,
   disabled = false,
 }: EnterWudlandsButtonProps) {
-  const { account, availableAccounts, isConnecting, connectError, connect, setVerified, verified } = useWallet();
+  const { account, isConnecting, connectError, connect, setVerified, verified } = useWallet();
   const [isSigning, setIsSigning] = useState(false);
-  const [selectedAddress, setSelectedAddress] = useState<string | null>(null);
+  const [showErrorHint, setShowErrorHint] = useState(false);
+  const [attemptKey, setAttemptKey] = useState(0);
+
+  // Auto-dismiss the error hint after 2 seconds.
+  // Depend on attemptKey so the effect re-triggers on each new attempt even if
+  // connectError is the same string both times.
+  useEffect(() => {
+    if (connectError) {
+      setShowErrorHint(true);
+      const timer = setTimeout(() => setShowErrorHint(false), 2000);
+      return () => clearTimeout(timer);
+    } else {
+      setShowErrorHint(false);
+    }
+  }, [connectError, attemptKey]);
 
   /** Offline signing request -> backend verify -> enter the game. */
   const signAndEnter = async (acct: WalletAccount) => {
@@ -85,6 +99,9 @@ export function EnterWudlandsButton({
   const handleClick = async () => {
     if (isSigning || isConnecting) return;
 
+    // Increment attemptKey so the effect re-runs even if connectError is the same.
+    setAttemptKey(k => k + 1);
+
     // Already connected -> go straight to offline signing.
     if (account) {
       await signAndEnter(account);
@@ -92,24 +109,16 @@ export function EnterWudlandsButton({
     }
 
     // Not connected -> try to connect (this also updates the header button).
-    // On failure, connect() toggles connectError and we show the hint.
+    // On failure, connect() sets connectError and the effect will show the hint.
     const connected = await connect();
     if (connected) {
       await signAndEnter(connected);
     }
   };
 
-  const handleSelectAddress = async (address: string) => {
-    const selected = availableAccounts.find(acc => acc.address === address);
-    if (selected) {
-      setSelectedAddress(address);
-      await signAndEnter(selected);
-    }
-  };
 
   const notConnected = !account;
-  const showHint = !!connectError && notConnected && !isConnecting && !isSigning;
-  const showAddressSelector = account && availableAccounts.length > 1 && !verified && !isSigning;
+  const showHint = showErrorHint && notConnected && !isConnecting && !isSigning;
 
   const label = isSigning
     ? '[ SIGNING… ]'
@@ -123,32 +132,6 @@ export function EnterWudlandsButton({
 
   return (
     <div className={styles.container}>
-      {showAddressSelector && (
-        <div style={{ marginBottom: '12px' }}>
-          <label style={{ display: 'block', marginBottom: '6px', fontSize: '12px', fontWeight: 'bold' }}>
-            Select Address:
-          </label>
-          <select
-            value={selectedAddress || account.address}
-            onChange={(e) => handleSelectAddress(e.target.value)}
-            disabled={isSigning}
-            style={{
-              width: '100%',
-              padding: '8px',
-              fontSize: '12px',
-              borderRadius: '4px',
-              border: '1px solid #ccc',
-              fontFamily: 'monospace',
-            }}
-          >
-            {availableAccounts.map((acc) => (
-              <option key={acc.address} value={acc.address}>
-                {acc.address.substring(0, 10)}...{acc.address.substring(acc.address.length - 8)}
-              </option>
-            ))}
-          </select>
-        </div>
-      )}
       <button
         className={`${styles.enterButton} ${
           notConnected ? styles.enterButtonJelly : styles.enterButtonConnected

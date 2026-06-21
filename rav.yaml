@@ -102,8 +102,10 @@ scripts:
 
   gcp_build: docker build --platform=linux/amd64 -f Dockerfile -t serverless-wudlands-amd64 .
 
-  gcp_tag: docker tag serverless-wudlands-amd64 europe-west1-docker.pkg.dev/thewudlands/serverless-wudlands-repo/serverless-wudlands:latest
-
+  gcp_tag: 
+    - docker tag serverless-wudlands-amd64 europe-west1-docker.pkg.dev/thewudlands/serverless-wudlands-repo/serverless-wudlands:latest
+    - docker tag serverless-wudlands-amd64 europe-west1-docker.pkg.dev/thewudlands/serverless-wudlands-repo/serverless-wudlands:beta-0.22
+  
   gcp_push:
     - rav run gcp_build
     - rav run gcp_tag

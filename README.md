@@ -11,53 +11,6 @@ This repository contains the efforts to port artwork and smart contracts from th
 
 While this will add nice graphics to The Wudlands, there's a tradeoff: it might draw focus away from story telling and game mechanics. For now, this is considered low priority.
 
-## Development Roadmap
-
-### Beta 1.0 — August 2026
-- Single-player mode
-- Wallet login
-- Gathering feedback
-- Rewards for participation
-- Fixed characters
-- No character creation
-- No persistent data storage
-- Limited adventure content
-- Starting in Beta > 1.0
-- Reset after logout
-- Free to play
-
-### Beta 2.0 — October 2026
-- **Progress loss on major upgrades!**
-- Character creation system
-- Gender selection
-- Race selection
-- Profession selection
-- Character progress
-- First adventure addons
-- Off-chain database storage
-- Data migration to Alpha not guaranteed
-- Free to play
-
-### Alpha 1.0 — February 2027
-- DOT / WUD token payments
-- In-game currency system
-- Adventure entry fees
-- Revenue share distribution
-- On-chain character progression
-- Persistent wallet integration
-- Character classes via stories
-- Adventure statistics - ranking
-
-### Alpha 2.0 — End of 2027
-- Adventure group mode
-- Adventure multiplayer
-- The Wudlands NFT
-- WUD Universe show corner
-- Market for Wudland items (nft)
-- Party Member Rentals
-- Wudlands Mobile App
-- Ranking
-
 ## Call for Contributors
 
 The Wudlands is built by the community, for the community. We're actively recruiting contributors across multiple disciplines to help bring this dark fantasy world to life. Whether you're a writer, artist, developer, or designer, there are roles that match your skills and passion.

@@ -14,7 +14,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <div className="scanlines" />
         <WalletProvider>
           <Header />
-          {children}
+          <div className="pageContent">{children}</div>
           <VersionBadge />
         </WalletProvider>
       </body>

@@ -212,11 +212,6 @@ export default function ImageGallery() {
   };
 
   const handleExpandAll = () => {
-    if (expandAll) {
-      setCollapsedSets(new Set(SETS.map((s) => s.name)));
-    } else {
-      setCollapsedSets(new Set());
-    }
     setExpandAll(!expandAll);
   };
 
@@ -226,12 +221,13 @@ export default function ImageGallery() {
         <button
           onClick={handleExpandAll}
           style={{
-            padding: "0.5rem 1rem",
+            marginBottom: "1.5rem",
+            padding: "0.75rem 1.5rem",
             background: "#1a1a1a",
             color: "#d4c9a8",
-            border: "1px solid #7a6a3a",
+            border: "2px solid #7a6a3a",
             cursor: "pointer",
-            fontSize: "0.85rem",
+            fontSize: "0.9rem",
             letterSpacing: "0.1em",
             transition: "all 0.2s",
           }}
@@ -244,12 +240,12 @@ export default function ImageGallery() {
             e.currentTarget.style.color = "#d4c9a8";
           }}
         >
-          {expandAll ? "[ COLLAPSE ALL ]" : "[ EXPAND ALL ]"}
+          {expandAll ? "[ HIDE IMAGE STYLES ]" : "[ VIEW IMAGE STYLES ]"}
         </button>
       </div>
 
       {SETS.map((set) => (
-        <div key={set.name} className={styles.previewSet}>
+        <div key={set.name} className={styles.previewSet} style={{ display: expandAll ? "block" : "none" }}>
           <button
             onClick={() => toggleSet(set.name)}
             style={{
@@ -273,7 +269,7 @@ export default function ImageGallery() {
             }}
           >
             <span style={{ marginRight: "0.5rem", fontSize: "0.8rem" }}>
-              {collapsedSets.has(set.name) ? "▶" : "▼"}
+              {(expandAll || !collapsedSets.has(set.name)) ? "▼" : "▶"}
             </span>
             <span style={{ fontSize: "0.9rem", letterSpacing: "0.12em" }}>{set.name}</span>
           </button>

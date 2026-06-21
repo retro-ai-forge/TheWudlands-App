@@ -1,6 +1,25 @@
+"use client";
+
+import { useState } from "react";
 import styles from "./characters.module.css";
 
 export default function Characters() {
+  const [expandedSections, setExpandedSections] = useState<{ [key: string]: boolean }>({
+    gender: false,
+    race: false,
+    profession: false,
+    impact: false,
+    classes: false,
+  });
+
+  const toggleSection = (section: string) => {
+    setExpandedSections(prev => ({
+      ...prev,
+      [section]: !prev[section]
+    }));
+  };
+
+
   return (
     <main className={styles.screen}>
       <header className={styles.header}>
@@ -68,9 +87,28 @@ export default function Characters() {
       </div>
 
       <div className={styles.section}>
-        <p className={styles.sectionTitle}>[ Gender ]</p>
-        <p className={styles.sectionDivider}>— — — — — — — — — — — — — — — — —</p>
-        <p className={styles.sectionIntro}>
+        <button
+          onClick={() => toggleSection("gender")}
+          style={{
+            background: "none",
+            border: "none",
+            cursor: "pointer",
+            padding: 0,
+            width: "100%",
+            textAlign: "center",
+          }}
+        >
+          <p className={styles.sectionTitle}>
+            {expandedSections.gender ? "▼" : "▶"} [ Gender ]
+          </p>
+          <p className={styles.sectionDivider}>— — — — — — — — — — — — — — — — —</p>
+        </button>
+        {expandedSections.gender && (
+          <>
+            <p style={{ fontSize: "0.95rem", color: "#d4c9a8", textAlign: "center", marginBottom: "1rem" }}>
+              Choose how the world reads you before you speak a single word.
+            </p>
+            <p className={styles.sectionIntro}>
           Love is not a side note in the Wudlands — it is one of its deepest currents.
           You may lose your heart to a warlord who should be your enemy. A noblewoman
           may risk her title for a single night in your company. A bond forged in
@@ -83,7 +121,7 @@ export default function Characters() {
           or <strong>F</strong> and <strong>D</strong> alike. Some, rarer ones, are written
           for a single kind. What you carry here shapes every story that reaches for you.
         </p>
-        <div className={styles.genderGrid}>
+        <div className={styles.scrollContainer}>
           {GENDERS.map((g) => (
             <div
               key={g.id}
@@ -95,11 +133,32 @@ export default function Characters() {
             </div>
           ))}
         </div>
+          </>
+        )}
       </div>
 
       <div className={styles.section}>
-        <p className={styles.sectionTitle}>[ Race ]</p>
-        <p className={styles.sectionDivider}>— — — — — — — — — — — — — — — — —</p>
+        <button
+          onClick={() => toggleSection("race")}
+          style={{
+            background: "none",
+            border: "none",
+            cursor: "pointer",
+            padding: 0,
+            width: "100%",
+            textAlign: "center",
+          }}
+        >
+          <p className={styles.sectionTitle}>
+            {expandedSections.race ? "▼" : "▶"} [ Race ]
+          </p>
+          <p className={styles.sectionDivider}>— — — — — — — — — — — — — — — — —</p>
+        </button>
+        {expandedSections.race && (
+          <>
+            <p style={{ fontSize: "0.95rem", color: "#d4c9a8", textAlign: "center", marginBottom: "1rem" }}>
+              Your blood marks you — choose the foundation of who you are.
+            </p>
         {Object.entries(racesByCategory).map(([category, races]) => (
           <div key={category} style={{ marginBottom: "2rem" }}>
             <p style={{
@@ -112,7 +171,7 @@ export default function Characters() {
             }}>
               {category}
             </p>
-            <div className={styles.racesGrid}>
+            <div className={styles.scrollContainer}>
               {races.map((race) => (
                 <div
                   key={race.id}
@@ -125,11 +184,32 @@ export default function Characters() {
             </div>
           </div>
         ))}
+          </>
+        )}
       </div>
 
       <div className={styles.section}>
-        <p className={styles.sectionTitle}>[ Profession ]</p>
-        <p className={styles.sectionDivider}>— — — — — — — — — — — — — — — — —</p>
+        <button
+          onClick={() => toggleSection("profession")}
+          style={{
+            background: "none",
+            border: "none",
+            cursor: "pointer",
+            padding: 0,
+            width: "100%",
+            textAlign: "center",
+          }}
+        >
+          <p className={styles.sectionTitle}>
+            {expandedSections.profession ? "▼" : "▶"} [ Profession ]
+          </p>
+          <p className={styles.sectionDivider}>— — — — — — — — — — — — — — — — —</p>
+        </button>
+        {expandedSections.profession && (
+          <>
+            <p style={{ fontSize: "0.95rem", color: "#d4c9a8", textAlign: "center", marginBottom: "1rem" }}>
+              Your craft and upbringing shape what comes naturally to you.
+            </p>
         {Object.entries(professionsByCategory).map(([category, professions]) => (
           <div key={category} style={{ marginBottom: "2rem" }}>
             <p style={{
@@ -142,7 +222,7 @@ export default function Characters() {
             }}>
               {category}
             </p>
-            <div className={styles.professionsGrid}>
+            <div className={styles.scrollContainer}>
               {professions.map((profession) => (
                 <div
                   key={profession.id}
@@ -155,12 +235,33 @@ export default function Characters() {
             </div>
           </div>
         ))}
+          </>
+        )}
       </div>
 
       <div className={styles.section}>
-        <p className={styles.sectionTitle}>[ Story Impact ]</p>
-        <p className={styles.sectionDivider}>— — — — — — — — — — — — — — — — —</p>
-        <p className={styles.sectionIntro}>
+        <button
+          onClick={() => toggleSection("impact")}
+          style={{
+            background: "none",
+            border: "none",
+            cursor: "pointer",
+            padding: 0,
+            width: "100%",
+            textAlign: "center",
+          }}
+        >
+          <p className={styles.sectionTitle}>
+            {expandedSections.impact ? "▼" : "▶"} [ Story Impact ]
+          </p>
+          <p className={styles.sectionDivider}>— — — — — — — — — — — — — — — — —</p>
+        </button>
+        {expandedSections.impact && (
+          <>
+            <p style={{ fontSize: "0.95rem", color: "#d4c9a8", textAlign: "center", marginBottom: "1rem" }}>
+              Every decision leaves a mark that shapes how the world reads you.
+            </p>
+            <p className={styles.sectionIntro}>
           Your stats are not numbers on a sheet — they are the reputation you
           build, the bonds you forge, and the enemies you make. Every decision
           in the Wudlands leaves a mark. These marks accumulate into social
@@ -189,12 +290,33 @@ export default function Characters() {
             </tbody>
           </table>
         </div>
+          </>
+        )}
       </div>
 
       <div className={styles.section}>
-        <p className={styles.sectionTitle}>[ Classes ]</p>
-        <p className={styles.sectionDivider}>— — — — — — — — — — — — — — — — —</p>
-        <p className={styles.sectionIntro}>
+        <button
+          onClick={() => toggleSection("classes")}
+          style={{
+            background: "none",
+            border: "none",
+            cursor: "pointer",
+            padding: 0,
+            width: "100%",
+            textAlign: "center",
+          }}
+        >
+          <p className={styles.sectionTitle}>
+            {expandedSections.classes ? "▼" : "▶"} [ Classes ]
+          </p>
+          <p className={styles.sectionDivider}>— — — — — — — — — — — — — — — — —</p>
+        </button>
+        {expandedSections.classes && (
+          <>
+            <p style={{ fontSize: "0.95rem", color: "#d4c9a8", textAlign: "center", marginBottom: "1rem" }}>
+              A class is not given—it is earned through stories and recognition.
+            </p>
+            <p className={styles.sectionIntro}>
           You begin with craft. Your hands know stone, or fire, or steel, or words. But craft 
           alone does not make you a Master of those hands. A blacksmith swinging a hammer for thirty 
           years is still a blacksmith. A farmer tilling the same fields their whole life is still 
@@ -217,9 +339,11 @@ export default function Characters() {
           something greater depends on the world choosing to witness it, and that choice 
           belongs to those who tell the stories the Wudlands lives by.
         </p>
+          </>
+        )}
       </div>
 
-      <p className={styles.footer}>— character creation coming soon in beta 1.0 —</p>
+      <p className={styles.footer}>— character creation in beta 1.0 —</p>
     </main>
   );
 }
@@ -329,19 +453,19 @@ const STORY_STATS = [
   { stat: "Fame",                  description: "Known as a hero — trusted, admired, celebrated",    storyUse: "Nobility welcomes you with honor, strangers offer aid", opposed: "Infamous" },
   { stat: "Infamous",              description: "Feared by the powerful — a weapon in the shadows",   storyUse: "Noble houses employ you for dark deeds, finest vintage wines flow freely", opposed: "Fame" },
   { stat: "Faith",                 description: "Devoted to a god or cosmic force, earning divine favour", storyUse: "Temples offer shelter, clergy grant healing, holy orders call on you", opposed: "Heresy / Corruption" },
-  { stat: "Heresy / Corruption",   description: "Denounced by the faithful, touched by forbidden powers", storyUse: "Inquisitors hunt you, holy temples bar entry, but dark shrines grant power to the condemned", opposed: "Faith" },
+  { stat: "Heresy\nCorruption",   description: "Denounced by the faithful, touched by forbidden powers", storyUse: "Inquisitors hunt you, holy temples bar entry, but dark shrines grant power to the condemned", opposed: "Faith" },
   { stat: "Notoriety",             description: "Bards sing your legend in every tavern and kingdom", storyUse: "Doors open without asking, nobles and merchants gift you gold", opposed: "Obscurity" },
   { stat: "Obscurity",             description: "Unknown, forgotten, walking unseen through the world", storyUse: "Slip past guards unnoticed, enemies cannot find you", opposed: "Notoriety" },
-  { stat: "Love / Affection",      description: "Bonds of loyalty and deep romance",        storyUse: "Allies risk their lives for you, secret aid flows freely", opposed: "Hatred / Resentment" },
-  { stat: "Hatred / Resentment",   description: "Scorned lovers and betrayed allies",       storyUse: "Ambushed by those who once knew you, reputation poisoned", opposed: "Love / Affection" },
-  { stat: "Respect / Honor",       description: "Esteemed by peers for integrity and strength", storyUse: "Duels avoided through reputation, lead honor guard", opposed: "Infamy / Disdain" },
-  { stat: "Infamy / Disdain",      description: "Scorned and disrespected by worthy foes",  storyUse: "Challenged constantly, betrayed by allies",      opposed: "Respect / Honor" },
+  { stat: "Love\nAffection",      description: "Bonds of loyalty and deep romance",        storyUse: "Allies risk their lives for you, secret aid flows freely", opposed: "Hatred / Resentment" },
+  { stat: "Hatred\nResentment",   description: "Scorned lovers and betrayed allies",       storyUse: "Ambushed by those who once knew you, reputation poisoned", opposed: "Love / Affection" },
+  { stat: "Respect\nHonor",       description: "Esteemed by peers for integrity and strength", storyUse: "Duels avoided through reputation, lead honor guard", opposed: "Infamy / Disdain" },
+  { stat: "Infamy\nDisdain",      description: "Scorned and disrespected by worthy foes",  storyUse: "Challenged constantly, betrayed by allies",      opposed: "Respect / Honor" },
   { stat: "Persuasion",            description: "Words that sway hearts and minds",           storyUse: "Enemies lay down arms, merchants offer discounts", opposed: "Intimidation" },
   { stat: "Intimidation",          description: "Rule through fear and force of will",      storyUse: "Enemies flee in terror, merchants comply quickly", opposed: "Persuasion" },
   { stat: "Guild Membership",      description: "Belonging to a guild or secret order",      storyUse: "Call for aid, access guild safehouse",          opposed: "Guild Outcast" },
   { stat: "Guild Outcast",         description: "Exiled or ostracized from organized groups", storyUse: "Former allies hunt you, no refuge",             opposed: "Guild Membership" },
-  { stat: "Wealth / Prosperity",   description: "Gold, treasures, and assets accumulated",  storyUse: "Buy out rivals, commission grand works",        opposed: "Debt / Obligation" },
-  { stat: "Debt / Obligation",     description: "Owe gold or favors to powerful forces",    storyUse: "Creditors demand payment in blood",              opposed: "Wealth / Prosperity" },
+  { stat: "Wealth\nProsperity",   description: "Gold, treasures, and assets accumulated",  storyUse: "Buy out rivals, commission grand works",        opposed: "Debt\nObligation" },
+  { stat: "Debt\nObligation",     description: "Owe gold or favors to powerful forces",    storyUse: "Creditors demand payment in blood",              opposed: "Wealth\nProsperity" },
   { stat: "Manipulation",          description: "Master of deception and cunning schemes",   storyUse: "Turn enemies against each other, blackmail nobles", opposed: "Sincerity" },
   { stat: "Sincerity",             description: "Known for truth and unwavering honor",      storyUse: "Enemies trust your word, easier treaties",       opposed: "Manipulation" },
 ];

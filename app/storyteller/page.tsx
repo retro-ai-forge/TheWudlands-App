@@ -6,6 +6,8 @@ import ImageGallery from "./ImageGallery";
 
 export default function Storyteller() {
   const [showImageDimensionsPopup, setShowImageDimensionsPopup] = useState(false);
+  const [expandSchema, setExpandSchema] = useState(false);
+  const [expandExample, setExpandExample] = useState(false);
   return (
     <div className={styles.page}>
       <section className={styles.guidelines}>
@@ -238,7 +240,32 @@ export default function Storyteller() {
           structure with all available fields.
         </p>
 
-        <code className={styles.codeBlock}>{`{
+        <button
+          onClick={() => setExpandSchema(!expandSchema)}
+          style={{
+            marginBottom: "1.5rem",
+            padding: "0.75rem 1.5rem",
+            background: "#1a1a1a",
+            color: "#d4c9a8",
+            border: "2px solid #7a6a3a",
+            cursor: "pointer",
+            fontSize: "0.9rem",
+            letterSpacing: "0.1em",
+            transition: "all 0.2s",
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.background = "#7a6a3a";
+            e.currentTarget.style.color = "#0a0a0a";
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.background = "#1a1a1a";
+            e.currentTarget.style.color = "#d4c9a8";
+          }}
+        >
+          {expandSchema ? "[ HIDE JSON SCHEMA ]" : "[ SHOW JSON SCHEMA ]"}
+        </button>
+        {expandSchema && (
+          <code className={styles.codeBlock}>{`{
   "id":               "string  — unique addon id, lowercase, hyphens only. e.g. the-black-tower",
   "title":            "string  — display name shown to players",
   "author":           "string  — your name or handle",
@@ -293,9 +320,9 @@ export default function Storyteller() {
                //   scanlinesdark  — scanlines over darkened image",
                //   verticalstrips — soft vertical strip overlay",
                //   flicker        — animated: erratic rapid brightness flicker",
-      "ending":   true, // 'ending' marks this as a terminal scene — deducts from the 3 playthroughs."  
+      "ending":   true, // 'ending' marks this as a terminal scene — deducts from the 3 playthroughs."
                         // 'false' is also a terminal scene, but does not deduct from the 3 playthroughs."
-                        // default_entry must not be marked as an ending! 
+                        // default_entry must not be marked as an ending!
       "choices": [
         {
           "text": "string  — the choice label the player sees",
@@ -305,6 +332,7 @@ export default function Storyteller() {
     }
   }
 }`}</code>
+        )}
 
         <p className={styles.body}>
           A few rules that apply across the whole file:
@@ -356,7 +384,7 @@ export default function Storyteller() {
             e.currentTarget.style.color = "#d4c9a8";
           }}
         >
-          View image dimension preview
+          [ View image dimension preview ]
         </button>
 
         {showImageDimensionsPopup && (
@@ -500,7 +528,32 @@ export default function Storyteller() {
           This structure is the smallest valid addon the platform will accept.
         </p>
 
-        <code className={styles.codeBlock}>{`{
+        <button
+          onClick={() => setExpandExample(!expandExample)}
+          style={{
+            marginBottom: "1.5rem",
+            padding: "0.75rem 1.5rem",
+            background: "#1a1a1a",
+            color: "#d4c9a8",
+            border: "2px solid #7a6a3a",
+            cursor: "pointer",
+            fontSize: "0.9rem",
+            letterSpacing: "0.1em",
+            transition: "all 0.2s",
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.background = "#7a6a3a";
+            e.currentTarget.style.color = "#0a0a0a";
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.background = "#1a1a1a";
+            e.currentTarget.style.color = "#d4c9a8";
+          }}
+        >
+          {expandExample ? "[ HIDE EXAMPLE JSON ]" : "[ SHOW EXAMPLE JSON ]"}
+        </button>
+        {expandExample && (
+          <code className={styles.codeBlock}>{`{
   "id":                "the-ruined-gate",
   "title":             "The Ruined Gate",
   "author":            "Grimwald of Ashfen",
@@ -521,14 +574,14 @@ export default function Storyteller() {
 
     "approach": {
       "title":       "Collapsing Mouth",
-      "text":        "After a few hours of travel, you stand at the lip of a yawning sinkhole, 
+      "text":        "After a few hours of travel, you stand at the lip of a yawning sinkhole,
                       the air below smelling of damp stone and old rot. <br>
-                      You claimed down carefully into the pit, but the ground beneath you 
+                      You claimed down carefully into the pit, but the ground beneath you
                       crumbles and gives way. You fall a short distance,
                       scraping your arms and legs on the jagged rock. <br>
-                      At the bottom you see a narrow staircase carved into the rock 
+                      At the bottom you see a narrow staircase carved into the rock
                       descends into the dark — a cold draft sighs up from the depths. <br>
-                      Loose pebbles skitter underfoot. Far below, something moves that is not the 
+                      Loose pebbles skitter underfoot. Far below, something moves that is not the
                       wind.",
       "image":       "approach.jpg",
       "image_style": "deepocean",
@@ -540,10 +593,10 @@ export default function Storyteller() {
 
     "inner-court": {
       "title":       "The Lower Vault",
-      "text":        "You step into a vaulted cavern where moulded pillars hold a ceiling 
+      "text":        "You step into a vaulted cavern where moulded pillars hold a ceiling
                       low with mineral veins.<br>
-                      Water drips in slow, musical patterns. 
-                      Ancient scratches mark a path toward a half-buried gate carved 
+                      Water drips in slow, musical patterns.
+                      Ancient scratches mark a path toward a half-buried gate carved
                       with symbols. The gate is broken and some metal pieces hang loose.<br>
                       From somewhere deeper comes a metallic, distant clank.",
       "image":       "inner-court.jpg",
@@ -555,66 +608,59 @@ export default function Storyteller() {
       ]
     },
 
-    # Remark: Every adventure must have at least one terminal ending scene, marked with "ending": true.
     "return-home": {
       "title":       "Run home with trophy",
-      "text":        "With effort, you grab one of the rusty metal poles and wrench it free. 
-                      Clutching the dusty metal bar, you quickly run back to the surface and 
-                      climb out of the sinkhole. The sun is warm on your face as you emerge, 
+      "text":        "With effort, you grab one of the rusty metal poles and wrench it free.
+                      Clutching the dusty metal bar, you quickly run back to the surface and
+                      climb out of the sinkhole. The sun is warm on your face as you emerge,
                       though the air tastes of dust and earth.<br>
                       Still, you feel lucky to have returned with your prize.",
       "image":       "peaceful-forest.jpg",
       "image_style": "origin",
-      "ending":       true,
+      "ending":       true
     },
 
     "forest-retreat": {
       "title":       "Getting equippment",
-      "text":        "You claw your way back to the surface and emerge from the sinkhole 
-                      into a quiet forest. Sunlight filters through the canopy above, and 
+      "text":        "You claw your way back to the surface and emerge from the sinkhole
+                      into a quiet forest. Sunlight filters through the canopy above, and
                       the air is crisp with the scent of pine and earth.<br>
-                      You make your way home, vowing to return better equipped and 
+                      You make your way home, vowing to return better equipped and
                       ready to claim what the depths have guarded.",
       "image":       "forest-path.jpg",
       "image_style": "origin",
-      "ending":       true,
-    }
+      "ending":       true
+    },
 
-    # Remark: This is the mandatory emergency_exit. It is scene fallback in case of 
-    #         a broken reference. It is not reachable through normal play and does 
-    #         not count against the 3 reruns.
     "broken-ceiling": {
       "title":       "Broken Ceiling",
-      "text":        "Suddenly an earthquake shakes the caverns. Dust falls like rain and a 
+      "text":        "Suddenly an earthquake shakes the caverns. Dust falls like rain and a
                       thunder of collapsing stone drowns the sound of your breath.<br>
-                      A fissure opens, dropping you into a fractured passage; rubble blocks 
-                      the way you came. You must fight your way through the shifting dark 
+                      A fissure opens, dropping you into a fractured passage; rubble blocks
+                      the way you came. You must fight your way through the shifting dark
                       toward any route that leads upward.<br>
                       Debris underfoot threatens to give; the air tastes of iron and panic.",
       "image":       "broken-ceiling.jpg",
       "image_style": "apocalypse",
-      "ending":       false,
-    }
+      "ending":       false
+    },
 
-    # Remark: This is the standard escape_route, it is marked as a true ending. 
-    #         The escape route can be accessed from any scene by pressing the 'escape' 
-    #         button in the UI when it is green. In cases where the 'escape' button is 
-    #         disabled, it is colored red.
     "run_away": {
       "title":       "Climb to Daylight",
       "text":        "You scramble up a narrow shaft and find a ragged slit of sky. <br>
-                      The surface is a maze of broken earth and toppled root, but above you, 
+                      The surface is a maze of broken earth and toppled root, but above you,
                       the world is open and the air warm. <br>
-                      You make your way back to the light, lungs burning and pockets 
+                      You make your way back to the light, lungs burning and pockets
                       full of dust, alive and changed.",
       "image":       "forest-retreat.jpg",
       "image_style": "origin",
       "ending":       true,
       "choices": []
-    },
+    }
 
   }
 }`}</code>
+        )}
 
         <p className={styles.body}>
           This example is intentionally spare. A published addon will typically contain between sixty and five hundred scenes,

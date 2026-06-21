@@ -1,3 +1,4 @@
+import Link from "next/link";
 import styles from "./page.module.css";
 import WalletGuide from "./WalletGuide";
 
@@ -8,48 +9,8 @@ export default function Guide() {
         <h2 className={styles.heading}>The Adventurer&apos;s Guide</h2>
 
         <p className={styles.body}>
-          The Wudlands is not a place that welcomes the faint of heart. It is a world of dark forests,
-          crumbling dungeons, desperate choices, and things older than memory that do not wish to be disturbed.
-          You will enter it as a wanderer with little more than your wits and whatever courage you can muster —
-          and the world will test both without mercy. What you find, what you survive, and what stories are told
-          of your passing are entirely yours to shape.
-        </p>
-
-        <img
-          src="/images/guide/groupline.jpg"
-          alt="A line of adventurers marching through a dark and weathered landscape."
-          className={styles.sectionImage}
-        />
-
-        <p className={styles.body}>
-          To step into the Wudlands, you will need a <strong>Polkadot wallet</strong> for login and to track your on-chain character progression.
-          The following wallet extensions are supported:  <strong>Nova Wallet</strong>, <strong>Polkadot.js</strong>, <strong>Talisman</strong>, and <strong>SubWallet</strong>.
-          Install one of these compatible wallets on your <strong>mobile phone</strong> or browser to begin your adventure.
-        </p>
-
-        <WalletGuide />
-
-        <p className={styles.body}>
-          The Wudlands is made up of adventures — self-contained stories written by contributors from across the world.
-          Each adventure is its own corner of the Wudlands: a haunted tower, a cursed merchant road, a court intrigue,
-          a dungeon that has swallowed three expeditions before yours. You choose which adventure to enter, read the
-          opening scene, and from that moment every decision is yours. Where you go, who you trust, when you run —
-          all of it matters. The world does not forget what you choose.
-        </p>
-
-        <p className={styles.body}>
-          Some adventures are locked when you first arrive. A story may require that you have already survived another
-          before its gates will open to you. This is not an obstacle — it is the shape of the world. Certain ruins
-          cannot be understood without knowing what fell in the war that built them. Certain factions will not speak
-          to you until you carry a name they recognise. Complete what lies before you, and the deeper roads will open.
-          The platform will tell you plainly what stands between you and the next chapter.
-        </p>
-
-        <p className={styles.body}>
-          Entering an adventure requires a small coin — an on-chain fee that grants you the right to explore it again and again,
-          up to three times by default. Each adventure costs approximately $0.80 for three exploration attempts. Think of it less as a toll and more as the price
-          of a seat at the storyteller&apos;s fire. If you have exhausted your plays and wish to return, you may
-          pay the fee once more and your count is restored. The road is always open to those willing to walk it again.
+          This guide explains how the Wudlands works — the systems, mechanics, and rules that shape your experience.
+          For information about the world itself, how to get started, and the story behind the Wudlands, visit the <Link href="/about" className={styles.externalLink}>About</Link> section.
         </p>
 
         <h2 className={styles.sectionHeading}>Love, Admiration &amp; the Art of Minne</h2>
@@ -172,6 +133,12 @@ export default function Guide() {
           their own history, their own burdens, and their own quiet advantages. Choose carefully. You will wear
           this choice for the rest of your time in the world.
         </p>
+
+        <img
+          src="/images/guide/affection.jpg"
+          alt="Famous and infamous names written on a wall, some in gold and some in blood."
+          className={styles.sectionImage}
+        />
 
         <p className={styles.body}>
           You begin without a class. The Wudlands does not hand you a title on the first day — you must earn
