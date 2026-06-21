@@ -68,7 +68,7 @@ export default function Characters() {
       </div>
 
       <div className={styles.section}>
-        <p className={styles.sectionTitle}>[ Choose Your Gender ]</p>
+        <p className={styles.sectionTitle}>[ Gender ]</p>
         <p className={styles.sectionDivider}>— — — — — — — — — — — — — — — — —</p>
         <p className={styles.sectionIntro}>
           Love is not a side note in the Wudlands — it is one of its deepest currents.
@@ -98,7 +98,7 @@ export default function Characters() {
       </div>
 
       <div className={styles.section}>
-        <p className={styles.sectionTitle}>[ Choose Your Race ]</p>
+        <p className={styles.sectionTitle}>[ Race ]</p>
         <p className={styles.sectionDivider}>— — — — — — — — — — — — — — — — —</p>
         {Object.entries(racesByCategory).map(([category, races]) => (
           <div key={category} style={{ marginBottom: "2rem" }}>
@@ -108,6 +108,7 @@ export default function Characters() {
               textTransform: "uppercase",
               color: "#7a6a3a",
               marginBottom: "1rem",
+              textAlign: "center",
             }}>
               {category}
             </p>
@@ -127,7 +128,7 @@ export default function Characters() {
       </div>
 
       <div className={styles.section}>
-        <p className={styles.sectionTitle}>[ Choose Your Former Profession ]</p>
+        <p className={styles.sectionTitle}>[ Profession ]</p>
         <p className={styles.sectionDivider}>— — — — — — — — — — — — — — — — —</p>
         {Object.entries(professionsByCategory).map(([category, professions]) => (
           <div key={category} style={{ marginBottom: "2rem" }}>
@@ -137,6 +138,7 @@ export default function Characters() {
               textTransform: "uppercase",
               color: "#7a6a3a",
               marginBottom: "1rem",
+              textAlign: "center",
             }}>
               {category}
             </p>
@@ -190,7 +192,7 @@ export default function Characters() {
       </div>
 
       <div className={styles.section}>
-        <p className={styles.sectionTitle}>[ Classes: Mastery Without Stories ]</p>
+        <p className={styles.sectionTitle}>[ Classes ]</p>
         <p className={styles.sectionDivider}>— — — — — — — — — — — — — — — — —</p>
         <p className={styles.sectionIntro}>
           You begin with craft. Your hands know stone, or fire, or steel, or words. But craft 
