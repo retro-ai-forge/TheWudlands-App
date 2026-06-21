@@ -51,16 +51,16 @@ export default function DevSection() {
               <div className={styles.roadmapPhase}>
                 <div className={styles.phaseName}>Beta 1.0 August 2026</div>
                 <ul className={styles.phaseDetails}>
-                  <li>Landing page review collection</li>
-                  <li>Reward for constructive feedback</li>
-                  <li>Wallet integration</li>
+                  <li>Single-player mode</li>
+                  <li>Wallet login</li>
+                  <li>Gathering feedback</li>
+                  <li>Rewards for participation</li>
+                  <li>Fixed characters</li>
                   <li>No character creation</li>
                   <li>No persistent data storage</li>
-                  <li>Fixed (selectable) characters</li>
-                  <li>Complete session reset after logout</li>
-                  <li>No stories in Beta &lt; 1.0 </li>
                   <li>Limited adventure content</li>
-                  <li>Single-player mode</li>
+                  <li>Starting in Beta &gt; 1.0 </li>
+                  <li>Reset after logout</li>
                   <li>Free to play</li>
                 </ul>
               </div>
@@ -68,14 +68,15 @@ export default function DevSection() {
               <div className={styles.roadmapPhase}>
                 <div className={styles.phaseName}>Beta 2.0 October 2026</div>
                 <ul className={styles.phaseDetails}>
-                  <li>Progress <strong><span style={{fontSize: '1.3em'}}>loss</span></strong> on major upgrades!</li>
+                  <li>Progress <strong><span style={{fontSize: '1.2em'}}>loss</span></strong> on major upgrades!</li>
                   <li>Character creation system</li>
+                  <li>Gender selection</li>
                   <li>Race selection</li>
+                  <li>Profession selection</li>
                   <li>Character progress</li>
                   <li>First adventure addons</li>
                   <li>Off-chain database storage</li>
                   <li>Data migration to Alpha not guaranteed</li>
-                  <li>Wallet connection integration</li>
                   <li>Free to play</li>
                 </ul>
               </div>
@@ -86,21 +87,23 @@ export default function DevSection() {
                   <li>DOT / WUD token payments</li>
                   <li>In-game currency system</li>
                   <li>Adventure entry fees</li>
+                  <li>Revenue share distribution</li>
                   <li>On-chain character progression</li>
                   <li>Persistent wallet integration</li>
-                  <li>Character classes & professions</li>
-                  <li>Production-grade data security</li>
-                  <li>Revenue share distribution</li>
+                  <li>Character classes via stories</li>
+                  <li>Adventure statistics - ranking</li>
                 </ul>
               </div>
 
               <div className={styles.roadmapPhase}>
                 <div className={styles.phaseName}>Alpha 2.0 end of 2027</div>
                 <ul className={styles.phaseDetails}>
-                  <li>Group-player mode</li>
+                  <li>Adventure group mode</li>
+                  <li>Adventure multiplayer</li>
                   <li>The Wudlands NFT</li>
                   <li>WUD Universe show corner</li>
-                  <li>Market for Wudland NFTs</li>
+                  <li>Market for Wudland items (nft)</li>
+                  <li>Party Member Rentals</li>
                   <li>Wudlands Mobile App</li>
                   <li>Ranking</li>
                 </ul>
@@ -116,36 +119,24 @@ export default function DevSection() {
           The Wudlands is built by the community, for the community. We&apos;re actively recruiting contributors across multiple disciplines to help bring this dark fantasy world to life. Whether you&apos;re a writer, artist, developer, or designer, there are roles that match your skills and passion.
         </p>
 
+        <h3 className={styles.subHeading}>1. Narrative Architects</h3>
         <p className={styles.body}>
-          <strong>Story Writers</strong> craft the adventures that drive the platform. Your narratives are the foundation of player experiences — branching storylines, rich dialogue, and dark fantasy atmospheres that immerse players in the Wudlands universe.
+          Write the stories and decide how the adventures should feel. You create branching storylines, rich dialogue, and set the mood for the entire dark fantasy world. Work together with other writers to weave The Wudlands' emerging main storyline — your adventures connect and bring players deeper into the world's larger tale. You define the style, pacing, and tone that brings everything together into one amazing experience.
         </p>
 
+        <h3 className={styles.subHeading}>2. Visual &amp; Audio Creators</h3>
         <p className={styles.body}>
-          <strong>Image Generators &amp; Visual Artists</strong> create the visual identity of every scene. From atmospheric character portraits to haunting environment artwork, your images bring the world to life and define the aesthetic of each adventure addon.
+          Paint the world with images and sounds. Create character portraits, spooky environments, sound effects, and music that makes adventures come alive. Your art and audio turn words on a screen into something players can see and hear.
         </p>
 
+        <h3 className={styles.subHeading}>3. Platform Engineers</h3>
         <p className={styles.body}>
-          <strong>Creative Directors &amp; Game Designers</strong> shape the overall experience. You define the visual style, pacing, tone, and design language that unites all adventures into a cohesive dark fantasy world. Your vision sets the standard for quality and immersion.
+          Build the machine that runs everything. You create the engine that loads adventures, handles player choices, displays scenes on screen, and keeps everything running smoothly. You also write tools that help story writers turn their ideas into playable adventures without needing to code.
         </p>
 
+        <h3 className={styles.subHeading}>4. Community Stewards</h3>
         <p className={styles.body}>
-          <strong>Backend &amp; Engine Developers</strong> build and maintain the engine that powers the platform. You work on session management, addon validation, blockchain integration, player routing, and the infrastructure that keeps adventures running smoothly at scale.
-        </p>
-
-        <p className={styles.body}>
-          <strong>Automation &amp; Tools Developers</strong> write tools and scripts that convert raw story content into playable scene-based adventures. You bridge the gap between narrative and engine, building the pipelines that allow non-technical contributors to publish their work.
-        </p>
-
-        <p className={styles.body}>
-          <strong>Frontend &amp; UI/UX Developers</strong> design and implement the player-facing interface. You work on scene rendering, choice presentation, wallet integration, and the smooth interactions that players encounter during every adventure.
-        </p>
-
-        <p className={styles.body}>
-          <strong>Audio Designers &amp; Composers</strong> add sonic depth to the experience. Sound effects, ambient music, and voice assets transform adventures from silent text into immersive multisensory journeys.
-        </p>
-
-        <p className={styles.body}>
-          <strong>Community &amp; Content Managers</strong> foster collaboration and quality. You review submissions, provide feedback to contributors, moderate community discussions, and ensure the addon ecosystem stays vibrant and on-brand.
+          Keep the community happy and the quality high. You review what people make, give helpful feedback, answer questions, and make sure everything stays fun and fair for everyone.
         </p>
 
         {/* ── Section 1: Story Contributors ─────────────────── */}
@@ -198,14 +189,13 @@ export default function DevSection() {
 
         <p className={styles.body}>
           The scene graph is an addressable map of scene objects keyed by id. The engine looks up the
-          requested scene id in that map on every player action. The adventure starts at the 
-          <code className={styles.code}>default_entry</code>, which serves as the normal session starting point.
-          If the scene exists, it is returned and rendered. If it does not exist — because of a broken link 
+          requested scene id in that map on every player action. The adventure starts at
+           the <code className={styles.code}>default_entry</code>, which serves as the normal session starting point.
+          If a scene exists, it is returned and rendered. If it does not exist — because of a broken link 
           in the addon, a missing node, or any
           other fault — the engine does not error or crash the session. Instead it falls back to the
           addon&apos;s <code className={styles.code}>emergency_exit</code> scene, a dedicated error-recovery
-          scene required by schema to exist and to lead the player toward the addon&apos;s{" "}
-          <code className={styles.code}>escape_route</code>. The session remains intact, the player 
+          scene required by schema to exist. The session remains intact, the player 
           can exit gracefully, and the fault is logged server-side for the addon author to review. 
         </p>
 
@@ -224,9 +214,10 @@ export default function DevSection() {
         <p className={styles.body}>
           Play counts are tracked per player per addon. When a player enters an adventure, the engine checks
           their remaining play count for that addon. If the count is zero, entry is refused until the player
-          resets by paying the entry fee again. Play count decrements happen at session start, not at session
-          end — a session that is abandoned mid-adventure still consumes a play. This mirrors the real-world
-          model of paying for the seat, not the outcome.
+          resets by paying the entry fee again. Play count decrements happens 
+          when the player reaches a scene with <code className={styles.code}>ending: true</code> or using 
+          an <code className={styles.code}>escape_route</code>. 
+          This mirrors the real-world model of paying for the seat, not the outcome.
         </p>
 
         <h3 className={styles.subHeading}>Addon Loading &amp; Validation</h3>
@@ -239,7 +230,7 @@ export default function DevSection() {
           <code className={styles.code}>emergency_exit</code>, and{" "}
           <code className={styles.code}>escape_route</code> scenes within the scene map, validity of all{" "}
           <code className={styles.code}>to</code> targets in choice arrays, and correct boolean typing on{" "}
-          <code className={styles.code}>ending</code> flags. Addons that fail validation are not published.
+          <code className={styles.code}>ending</code> scene flags. Addons that fail validation are not published.
           Addons that were published and subsequently become invalid due to a platform schema update are
           flagged for review and removed from active rotation until corrected.
         </p>
@@ -262,24 +253,23 @@ export default function DevSection() {
 
         <p className={styles.body}>
           The platform operates on a blockchain environment, currently targeting Polkadot with an optional
-          Ethereum fallback address per contributor. When a player pays the entry fee for an adventure, the
+          Ethereum fallback address per contributor. Please mark that Nova Wallets already feature both 
+          addresses with a single seed. When a player pays the entry fee for an adventure, the
           revenue split is applied at transaction time: 80% is routed to the wallet address declared in the
-          addon&apos;s <code className={styles.code}>eth_address</code> field, and 20% is retained by the
-          platform. If no wallet address is declared, the full amount is held by the platform until the
-          contributor registers one. All contributor addresses and payout records are stored in a
-          migration-safe format to support a potential future chain migration.
+          addon&apos;s <code className={styles.code}>polkadot_address</code> field, and 20% is retained by the
+          platform.
         </p>
 
         <h3 className={styles.subHeading}>Image Rendering &amp; Style Presets</h3>
 
         <p className={styles.body}>
-          Each scene may reference a single image by filename. At runtime, the frontend loads the image
-          from the addon&apos;s asset directory and applies the CSS filter and transform defined by the
-          scene&apos;s <code className={styles.code}>image_style</code> preset. Presets are resolved
-          client-side from a static lookup table — no server involvement is needed for filter application.
-          Animated presets use CSS keyframe animations applied as class names. Overlay presets use
-          positioned <code className={styles.code}>::after</code> pseudo-elements on the image wrapper.
-          All presets are documented and previewed in the Story Contributor guidelines.
+          Each scene may reference a single image by filename. At runtime, the frontend loads the 
+          next scene as html site and applies CSS filters to the image based on the scene&apos;s 
+          declared style preset. The scene text is displayed. Buttons will be rendered for each choice, 
+          and the player can click checkboxes and radio buttons for extra interactivity. There will be 
+          an escape button in the corner of the screen, backpack, character sheet and numbers of story 
+          dependent stats like health, sanity, and gold. The exact layout and design of the UI is 
+          still being iterated on, but the core functionality will be in place for Beta 1.0.
         </p>
 
         <table className={styles.table}>
@@ -304,7 +294,9 @@ export default function DevSection() {
             </tr>
             <tr>
               <td>Scene Graph</td>
-              <td>An id-keyed map of scene objects defined in the addon JSON. Traversed by player choice. N:M relationships, loops, and branches are all valid structures.</td>
+              <td>An id-keyed map of scene objects defined in the addon JSON. Traversed by player choice. Any relationships, loops, and branches are all valid structures. 
+                Endless loops or completely separated story sections should be avoided and only used if the story calls for it. 
+              </td>
             </tr>
             <tr>
               <td>Session State</td>
@@ -312,7 +304,7 @@ export default function DevSection() {
             </tr>
             <tr>
               <td>Addon Validation</td>
-              <td>Schema-checked on load. Required fields, scene existence, choice targets, and ending flags are all verified before an addon is made available to players.</td>
+              <td>Schema-checked on contribution. Required fields, scene existence, choice targets, and ending flags are all verified before an addon is made available to players.</td>
             </tr>
             <tr>
               <td>Dependencies</td>
@@ -324,7 +316,7 @@ export default function DevSection() {
             </tr>
             <tr>
               <td>Blockchain</td>
-              <td>Currently Polkadot. Migration to another chain is supported; contributor addresses and payout records are migration-safe.</td>
+              <td>Currently Polkadot. Migration to another chain might happen.</td>
             </tr>
           </tbody>
         </table>

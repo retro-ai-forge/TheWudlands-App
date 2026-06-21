@@ -28,11 +28,14 @@ export function WelcomeView({ userId, playerAddress }: WelcomeViewProps) {
         </p>
         <br/>
         <p className={styles.welcomeMessage}>
-          Nova wallet and Polkadot.js extension haven been tested. Metamask, Talisman, and SubWallet should work but haven&apos;t been tested yet. If you have any issues with wallet connection, please let us know.
+          Nova wallet and Polkadot.js extension have been tested. 
+          Metamask, Talisman, and SubWallet should work but 
+          haven&apos;t been tested yet. If you have any issues 
+          with wallet connection, please let us know.
         </p>
         <br/>
         <p className={styles.welcomeMessage}>
-          No coins or assets can be spend in beta &lt;2.0 or alpha version.
+          No coins or assets can be spend before alpha version.
         </p>
 
       </div>
