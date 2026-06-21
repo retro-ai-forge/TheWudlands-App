@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 import "./globals.css";
-import Header from "./components/Header";
-import { WalletProvider } from "./components/WalletProvider";
-import { VersionBadge } from "./components/VersionBadge";
+import Header from "./main/Header";
+import { WalletProvider } from "./main/WalletProvider";
+import { VersionBadge } from "./main/VersionBadge";
 export const metadata: Metadata = {
   title: "The Wudlands",
 };

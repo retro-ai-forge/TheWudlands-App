@@ -2,9 +2,9 @@
 
 import { useEffect, useRef, useState } from "react";
 import styles from "./page.module.css";
-import { useWallet } from "./components/WalletProvider";
-import { LandingView } from "./components/LandingView";
-import { WelcomeView } from "./components/WelcomeView";
+import { useWallet } from "./main/WalletProvider";
+import { LandingView } from "./main/LandingView";
+import { WelcomeView } from "./main/WelcomeView";
 
 const HEARTBEAT_MS = 5 * 60 * 1000;
 
