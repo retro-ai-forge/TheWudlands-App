@@ -21,6 +21,10 @@ const SLIDES = [
   "/images/banner/slide14.jpg",
   "/images/banner/slide15.jpg",
   "/images/banner/slide16.jpg",
+  "/images/banner/slide17.jpg",
+  "/images/banner/slide18.jpg",
+  "/images/banner/slide19.jpg",
+  "/images/banner/slide20.jpg",
 ];
 
 export default function BannerSlideshow() {

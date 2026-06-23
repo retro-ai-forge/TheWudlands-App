@@ -11,7 +11,41 @@ export default function Storyteller() {
   return (
     <div className={styles.page}>
       <section className={styles.guidelines}>
-        <h2 className={styles.heading}>Story &amp; Adventure Addon Guidelines</h2>
+        <h2 className={styles.heading}>Create an Adventure</h2>
+
+        <p className={styles.authorIntro}>
+          <strong>You don&apos;t need to code or use GitHub to add an adventure.</strong> If you can
+          write a branching story and gather a few images, you can build a playable adventure for
+          the Wudlands. Everything below is reference material — open a section when you need it.
+        </p>
+
+        <ol className={styles.steps}>
+          <li className={styles.step}>
+            <span className={styles.stepNum}>1</span>
+            <span className={styles.stepText}>
+              <strong>Write your scenes as choices.</strong> Describe each scene and the choices that
+              lead out of it — branching paths, loops, and dead ends that circle back.
+            </span>
+          </li>
+          <li className={styles.step}>
+            <span className={styles.stepNum}>2</span>
+            <span className={styles.stepText}>
+              <strong>Add images.</strong> Give scenes a dark, atmospheric picture. Optional, but
+              they bring the world to life.
+            </span>
+          </li>
+          <li className={styles.step}>
+            <span className={styles.stepNum}>3</span>
+            <span className={styles.stepText}>
+              <strong>Submit for review.</strong> Send in your story and images. Once validated and
+              approved, your adventure goes live to players worldwide.
+            </span>
+          </li>
+        </ol>
+
+        <details className={styles.group}>
+          <summary className={styles.groupSummary}>[ Story Guidelines ]</summary>
+          <div className={styles.groupBody}>
 
         <p className={styles.body}>
           The Wudlands is a dark, story-driven fantasy adventure rooted in the tradition of Fighting Fantasy gamebooks
@@ -160,6 +194,13 @@ export default function Storyteller() {
           </tbody>
         </table>
 
+          </div>
+        </details>
+
+        <details className={styles.group}>
+          <summary className={styles.groupSummary}>[ Romance &amp; Minne ]</summary>
+          <div className={styles.groupBody}>
+
         {/* ── Story Elements ─────────────────────────────────────── */}
         <h2 className={styles.sectionHeading}>Romantic Storyline &amp; Minne</h2>
 
@@ -218,6 +259,13 @@ export default function Storyteller() {
           creators are asked to indicate this clearly in the addon description so players can make informed choices
           before entering.
         </p>
+
+          </div>
+        </details>
+
+        <details className={styles.group}>
+          <summary className={styles.groupSummary}>[ 1. Writing your story (JSON) ]</summary>
+          <div className={styles.groupBody}>
 
         {/* ── Story Elements ─────────────────────────────────────── */}
         <h2 className={styles.sectionHeading}>Story Elements</h2>
@@ -345,6 +393,13 @@ export default function Storyteller() {
           cross-addon jumps are handled through <span className={styles.code}>unlocks</span>, not through choices.
           Scene ids must be lowercase and may only contain letters, digits, and hyphens.
         </p>
+
+          </div>
+        </details>
+
+        <details className={styles.group}>
+          <summary className={styles.groupSummary}>[ 2. Images &amp; style presets ]</summary>
+          <div className={styles.groupBody}>
 
         {/* 2 — Images */}
         <h3 className={styles.subHeading}>2. Images</h3>
@@ -519,6 +574,13 @@ export default function Storyteller() {
 
         <ImageGallery />
 
+          </div>
+        </details>
+
+        <details className={styles.group}>
+          <summary className={styles.groupSummary}>[ 3. Full example ]</summary>
+          <div className={styles.groupBody}>
+
         {/* 3 — Example */}
         <h3 className={styles.subHeading}>3. Example</h3>
 
@@ -668,6 +730,10 @@ export default function Storyteller() {
           distinct endings depending on the choices the player made. The escape route will always be reachable from
           any scene. The escape route might be a short story in itself.
         </p>
+
+          </div>
+        </details>
+
       </section>
     </div>
   );

@@ -19,8 +19,9 @@ export default function WalletGuide() {
 
   return (
     <>
-      <details className={styles.walletGuide}>
-        <summary className={styles.walletGuideSummary}>[ Nova Wallet Setup Guide ]</summary>
+      <p className={styles.body}>To play use Nova wallet.</p>
+      <details id="wallet-guide" className={styles.walletGuide}>
+        <summary className={styles.walletGuideSummary}>[ Walkthrough ]</summary>
         <div className={styles.walletGuideGrid}>
           {STEPS.map((item) => (
             <figure

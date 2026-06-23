@@ -1,6 +1,29 @@
 import Link from "next/link";
 import styles from "./page.module.css";
 import WalletGuide from "./WalletGuide";
+import CharacterOrigins from "../characters/CharacterOrigins";
+import GuideTable from "./GuideTable";
+
+const WORLD_ROWS = [
+  { key: "Choices", value: "Every decision you make carries weight. A door left unopened, an offer refused, a stranger left to their fate — the story remembers. Do not expect choices to be decorative. Some will save you. Some will cost you dearly. A few you will regret for the rest of the adventure." },
+  { key: "Fame", value: "Your reputation is a living thing that walks the roads ahead of you. It runs in two directions. Choose the path of the honourable and people will speak your name in daylight — ballads at the inn, a farmer who offers you his barn without being asked, a city gate that opens just a little faster. Choose the other road and you earn something darker: a name that kings lower their voices to say before they send for you, that innkeepers write down after you leave, that mothers use to hush their children. Both kinds of fame open doors. They are simply not the same doors." },
+  { key: "Notoriety", value: "Fame tells the world what kind of wanderer you are. Notoriety tells it how far that word has travelled. A fresh adventurer may be known and feared in a single valley — cross the next ridge and you are a stranger again. As your deeds accumulate and your name spreads, it moves ahead of you: merchants in distant towns who have never met you will have heard something, gatekeepers will pause before they speak, lords will have already decided whether to receive you before you reach the hall. The higher your notoriety, the fewer introductions you need — and the fewer surprises you can afford." },
+  { key: "Adventure Dependencies", value: "Some roads in the Wudlands are closed until you have walked the ones before them. A sealed vault may require you to have recovered the key in a previous adventure. A faction leader may refuse to speak until you carry the proof of an earlier deed. These dependencies are shown clearly before you attempt an adventure — you will never find yourself locked out without warning. Each prerequisite adventure stands on its own and is worth completing for its own sake. The chain of stories is meant to feel like a natural journey through the world, not a series of gates." },
+  { key: "Survival", value: "Hunger, thirst, exhaustion, disease, and cold are not abstractions in the Wudlands. Some adventures will track them. Push too hard without rest and your hands will shake at the wrong moment. Ignore a wound and it will slow you down before it kills you. These things exist not to punish you but to make every decision — do I press on or make camp, do I spend the last of my rations now or save them — carry real stakes." },
+  { key: "Combat", value: "Not every fight is one you are meant to win. Knowing when to run is as valuable a skill as knowing when to stand. In most encounters you will have the option to flee — though retreat rarely comes without a price. Your pride, your purse, or a piece of your equipment may not follow you out the door. There are moments, however, when the story has already cornered you — when the ambush was sprung before you realised it was coming. In those scenes, there is no stepping back. Read the road carefully. Sounds heard through a door, a companion's warning, a wrongness in the air — these are not decoration. They are the story telling you to be ready." },
+  { key: "Shelter & Refuge", value: "The Wudlands offers no permanent home — not yet. You cannot plant a flag and call a ruin yours. What you can find are places to endure: a cave to wait out the storm, a barricaded inn to hold through the night, a collapsed watchtower that keeps the wind off long enough to dress your wounds. These shelters exist within the story and belong to it, not to you. That said, some adventures hide something rarer — a place that might, if you earn it, become a retreat. A room above a tavern whose owner owes you a debt. A forgotten hermitage deep in the forest that no one else has found. These must be discovered through the stories themselves. The Wudlands does not hand out homes. It lets you find them." },
+  { key: "Escape Route", value: (<>Every adventure in the Wudlands has a way out. No matter how deep in the dark you find yourself — overwhelmed, lost, out of resources — there is always a path that leads somewhere you can call an end. It may not be the ending you wanted. It may cost you something to reach it. But it is there. You will never be stranded without a road home. Using an <span className={styles.code}>escape_route</span> on your own term, does count as a playthrough and does consume one of the three replays.</>) },
+  { key: "Plays & Entry Fee", value: "Each adventure requires a small on-chain fee to enter (approximately $0.80 for three attempts). That fee grants you the right to experience it up to three times — enough to find different paths, try different choices, and see what the story holds from another angle. If your count runs out and you wish to return, pay the fee again and your plays are restored. The Wudlands does not close its doors to those who want to walk the same road twice." },
+];
+
+const CHARACTER_ROWS = [
+  { key: "Race", value: "Several races are available at character creation. Each carries its own strengths, history, and the way the world reacts to your face. Your choice is permanent — the Wudlands does not let you be someone else." },
+  { key: "Class", value: "You begin classless. Classes become available in the alpha release, chosen only after you have gathered enough experience and skill to earn one. Some may require you to find a teacher willing to take you on — they will not all be easy to find, and not all of them will find you worthy on the first meeting." },
+  { key: "Party Size", value: "Up to four adventurers may travel together. A party is only as strong as the decisions it makes as a group — and the first decision is the marching order." },
+  { key: "Marching Order", value: "The formation your party travels in determines who faces what first. The front takes the brunt of head-on threats. The rear is exposed to anything that sneaks up from behind. The middle is not safe either — attacks from hidden positions, aerial threats, or ambushes from the flanks strike wherever the story demands. Set your order with care and revisit it when the terrain changes." },
+  { key: "Age & Time", value: "Your character starts at an age you choose. Every adventure adds one month to their life by default. Old age accumulates and eventually makes itself known. Life potions exist that can restore some measure of youth — but they must be found, and nothing in the Wudlands comes without a cost." },
+  { key: "Carrying Equipment", value: "What you can carry has limits, though they are not rigid walls. Riding dogs and backpacks extend what you can bring into the field. Exceed your soft limit and the weight will tell — slower movement, quicker exhaustion, choices made harder by the burden on your back. Carry what you need. Leave behind what you can afford to lose." },
+];
 
 export default function Guide() {
   return (
@@ -10,8 +33,14 @@ export default function Guide() {
 
         <p className={styles.body}>
           This guide explains how the Wudlands works — the systems, mechanics, and rules that shape your experience.
-          For information about the world itself, how to get started, and the story behind the Wudlands, visit the <Link href="/about" className={styles.externalLink}>About</Link> section.
+          For information about the world itself, how to get started, and the story behind the Wudlands, visit the <Link href="/about" className={styles.externalLink}>The World</Link> section.
         </p>
+
+        <p className={styles.body}>
+          To log in and store your adventure progress forever on the decentralized ledger, you will need to connect a wallet. This ensures your character, deeds, and choices are permanently recorded on the blockchain.
+        </p>
+
+        <WalletGuide />
 
         <h2 className={styles.sectionHeading}>Love, Admiration &amp; the Art of Minne</h2>
 
@@ -72,56 +101,7 @@ export default function Guide() {
           but the choice, once made, belongs to the story.
         </p>
 
-        <table className={styles.table}>
-          <thead>
-            <tr>
-              <th>What to Know</th>
-              <th>How It Works in the Wudlands</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td>Choices</td>
-              <td>Every decision you make carries weight. A door left unopened, an offer refused, a stranger left to their fate — the story remembers. Do not expect choices to be decorative. Some will save you. Some will cost you dearly. A few you will regret for the rest of the adventure.</td>
-            </tr>
-            <tr>
-              <td>Fame</td>
-              <td>Your reputation is a living thing that walks the roads ahead of you. It runs in two directions. Choose the path of the honourable and people will speak your name in daylight — ballads at the inn, a farmer who offers you his barn without being asked, a city gate that opens just a little faster. Choose the other road and you earn something darker: a name that kings lower their voices to say before they send for you, that innkeepers write down after you leave, that mothers use to hush their children. Both kinds of fame open doors. They are simply not the same doors.</td>
-            </tr>
-            <tr>
-              <td>Notoriety</td>
-              <td>Fame tells the world what kind of wanderer you are. Notoriety tells it how far that word has travelled. A fresh adventurer may be known and feared in a single valley — cross the next ridge and you are a stranger again. As your deeds accumulate and your name spreads, it moves ahead of you: merchants in distant towns who have never met you will have heard something, gatekeepers will pause before they speak, lords will have already decided whether to receive you before you reach the hall. The higher your notoriety, the fewer introductions you need — and the fewer surprises you can afford.</td>
-            </tr>
-            <tr>
-              <td>Adventure Dependencies</td>
-              <td>Some roads in the Wudlands are closed until you have walked the ones before them. A sealed vault may require you to have recovered the key in a previous adventure. A faction leader may refuse to speak until you carry the proof of an earlier deed. These dependencies are shown clearly before you attempt an adventure — you will never find yourself locked out without warning. Each prerequisite adventure stands on its own and is worth completing for its own sake. The chain of stories is meant to feel like a natural journey through the world, not a series of gates.</td>
-            </tr>
-            <tr>
-              <td>Survival</td>
-              <td>Hunger, thirst, exhaustion, disease, and cold are not abstractions in the Wudlands. Some adventures will track them. Push too hard without rest and your hands will shake at the wrong moment. Ignore a wound and it will slow you down before it kills you. These things exist not to punish you but to make every decision — do I press on or make camp, do I spend the last of my rations now or save them — carry real stakes.</td>
-            </tr>
-            <tr>
-              <td>Combat</td>
-              <td>Not every fight is one you are meant to win. Knowing when to run is as valuable a skill as knowing when to stand. In most encounters you will have the option to flee — though retreat rarely comes without a price. Your pride, your purse, or a piece of your equipment may not follow you out the door. There are moments, however, when the story has already cornered you — when the ambush was sprung before you realised it was coming. In those scenes, there is no stepping back. Read the road carefully. Sounds heard through a door, a companion&apos;s warning, a wrongness in the air — these are not decoration. They are the story telling you to be ready.</td>
-            </tr>
-            <tr>
-              <td>Shelter &amp; Refuge</td>
-              <td>The Wudlands offers no permanent home — not yet. You cannot plant a flag and call a ruin yours. What you can find are places to endure: a cave to wait out the storm, a barricaded inn to hold through the night, a collapsed watchtower that keeps the wind off long enough to dress your wounds. These shelters exist within the story and belong to it, not to you. That said, some adventures hide something rarer — a place that might, if you earn it, become a retreat. A room above a tavern whose owner owes you a debt. A forgotten hermitage deep in the forest that no one else has found. These must be discovered through the stories themselves. The Wudlands does not hand out homes. It lets you find them.</td>
-            </tr>
-            <tr>
-              <td>Escape Route</td>
-              <td>Every adventure in the Wudlands has a way out. No matter how deep in the dark you find yourself — overwhelmed, 
-                lost, out of resources — there is always a path that leads somewhere you can call an end. 
-                It may not be the ending you wanted. It may cost you something to reach it. But it is there. 
-                You will never be stranded without a road home. Using an <span className={styles.code}>escape_route</span> on 
-                your own term, does count as a playthrough and does consume one of the three replays.</td>
-            </tr>
-            <tr>
-              <td>Plays &amp; Entry Fee</td>
-              <td>Each adventure requires a small on-chain fee to enter (approximately $0.80 for three attempts). That fee grants you the right to experience it up to three times — enough to find different paths, try different choices, and see what the story holds from another angle. If your count runs out and you wish to return, pay the fee again and your plays are restored. The Wudlands does not close its doors to those who want to walk the same road twice.</td>
-            </tr>
-          </tbody>
-        </table>
+        <GuideTable rows={WORLD_ROWS} />
 
         {/* ── Character & Party ───────────────────────────────── */}
         <h2 className={styles.sectionHeading}>Character &amp; Party</h2>
@@ -170,40 +150,25 @@ export default function Guide() {
           Whether you find one, afford one, or trust whoever is selling it is another matter entirely.
         </p>
 
-        <table className={styles.table}>
-          <thead>
-            <tr>
-              <th>What to Know</th>
-              <th>How It Works in the Wudlands</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td>Race</td>
-              <td>Several races are available at character creation. Each carries its own strengths, history, and the way the world reacts to your face. Your choice is permanent — the Wudlands does not let you be someone else.</td>
-            </tr>
-            <tr>
-              <td>Class</td>
-              <td>You begin classless. Classes become available in the alpha release, chosen only after you have gathered enough experience and skill to earn one. Some may require you to find a teacher willing to take you on — they will not all be easy to find, and not all of them will find you worthy on the first meeting.</td>
-            </tr>
-            <tr>
-              <td>Party Size</td>
-              <td>Up to four adventurers may travel together. A party is only as strong as the decisions it makes as a group — and the first decision is the marching order.</td>
-            </tr>
-            <tr>
-              <td>Marching Order</td>
-              <td>The formation your party travels in determines who faces what first. The front takes the brunt of head-on threats. The rear is exposed to anything that sneaks up from behind. The middle is not safe either — attacks from hidden positions, aerial threats, or ambushes from the flanks strike wherever the story demands. Set your order with care and revisit it when the terrain changes.</td>
-            </tr>
-            <tr>
-              <td>Age &amp; Time</td>
-              <td>Your character starts at an age you choose. Every adventure adds one month to their life by default. Old age accumulates and eventually makes itself known. Life potions exist that can restore some measure of youth — but they must be found, and nothing in the Wudlands comes without a cost.</td>
-            </tr>
-            <tr>
-              <td>Carrying Equipment</td>
-              <td>What you can carry has limits, though they are not rigid walls. Riding dogs and backpacks extend what you can bring into the field. Exceed your soft limit and the weight will tell — slower movement, quicker exhaustion, choices made harder by the burden on your back. Carry what you need. Leave behind what you can afford to lose.</td>
-            </tr>
-          </tbody>
-        </table>
+        <GuideTable rows={CHARACTER_ROWS} />
+
+        {/* ── Character & Origins (folded; full page at /characters) ───────── */}
+        <h2 className={styles.sectionHeading}>Character &amp; Origins</h2>
+
+        <p className={styles.body}>
+          Who you are before the road — your gender, race, former profession, the
+          marks your deeds leave, and the classes you can grow into. Expand the
+          section below, or open the full{" "}
+          <Link href="/characters" className={styles.externalLink}>character creation</Link>{" "}
+          page.
+        </p>
+
+        <details className={styles.originsGuide}>
+          <summary className={styles.originsSummary}>[ Character &amp; Origins ]</summary>
+          <div className={styles.originsBody}>
+            <CharacterOrigins />
+          </div>
+        </details>
 
       </section>
     </div>

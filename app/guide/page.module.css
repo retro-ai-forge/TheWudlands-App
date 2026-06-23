@@ -340,6 +340,49 @@
 }
 
 /* ── Wallet Setup Accordion ────────────────────────── */
+/* Character & Origins foldable — embeds the full /characters content,
+   collapsed by default so it does not clutter the Guide's first view. */
+.originsGuide {
+  border: 1px solid #7a6a3a;
+  background: #0d0d0a;
+  margin-bottom: 1.75rem;
+}
+
+.originsSummary {
+  font-family: "Courier New", Courier, monospace;
+  font-size: 0.82rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: #c07a3a;
+  padding: 0.75rem 1rem;
+  cursor: pointer;
+  user-select: none;
+  list-style: none;
+}
+
+.originsSummary::-webkit-details-marker {
+  display: none;
+}
+
+.originsSummary::before {
+  content: "▶ ";
+  font-size: 0.65rem;
+  vertical-align: middle;
+}
+
+.originsGuide[open] .originsSummary::before {
+  content: "▼ ";
+}
+
+.originsSummary:hover {
+  color: #d4a060;
+  background: #111108;
+}
+
+.originsBody {
+  padding: 1rem 0 0.5rem;
+}
+
 .walletGuide {
   border: 1px solid #7a6a3a;
   background: #0d0d0a;

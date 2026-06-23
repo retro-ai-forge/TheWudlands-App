@@ -7,6 +7,10 @@
 /* On desktop (nav bar visible) give every page a top breathing room so
    headings and images start below the nav edge, not flush against it.
    The breakpoint matches the hamburger ↔ desktop-nav switch in Header. */
+.pageContent {
+  background: #0a0a0a;
+}
+
 @media (min-width: 1000px) {
   .pageContent {
     padding-top: 2rem;
@@ -19,6 +23,13 @@ body {
   font-family: "Courier New", Courier, monospace;
   min-height: 100vh;
   position: relative;
+  overflow-x: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.pageContent {
+  flex: 1;
 }
 
 

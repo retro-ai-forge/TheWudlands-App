@@ -1,0 +1,91 @@
+/* Desktop table — hidden on mobile */
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-family: "Courier New", Courier, monospace;
+  font-size: 1rem;
+  margin-top: 2.5rem;
+}
+
+.table th {
+  background: #1a1a1a;
+  color: #c07a3a;
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+  padding: 0.65rem 1rem;
+  border: 1px solid #7a6a3a;
+  text-align: left;
+}
+
+.table td {
+  color: #d4c9a8;
+  padding: 0.6rem 1rem;
+  border: 1px solid #3a3020;
+  vertical-align: top;
+}
+
+.key {
+  color: #c07a3a;
+  white-space: nowrap;
+  width: 1%;
+}
+
+.table tr:hover td {
+  background: #111108;
+}
+
+/* Mobile collapsible list — hidden on desktop */
+.list {
+  display: none;
+}
+
+@media (max-width: 600px) {
+  .table {
+    display: none;
+  }
+
+  .list {
+    display: block;
+    margin-top: 2rem;
+  }
+
+  .item {
+    border: 1px solid #3a3020;
+    margin-bottom: 0.4rem;
+  }
+
+  .term {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.65rem 1rem;
+    background: #1a1a1a;
+    color: #c07a3a;
+    font-family: "Courier New", Courier, monospace;
+    font-size: 0.9rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    cursor: pointer;
+    user-select: none;
+  }
+
+  .term:hover {
+    background: #222215;
+  }
+
+  .chevron {
+    font-size: 0.7rem;
+    color: #7a6a3a;
+  }
+
+  .desc {
+    margin: 0;
+    padding: 0.75rem 1rem;
+    background: #0d0d0a;
+    color: #d4c9a8;
+    font-family: "Courier New", Courier, monospace;
+    font-size: 0.88rem;
+    line-height: 1.7;
+    border-top: 1px solid #3a3020;
+  }
+}

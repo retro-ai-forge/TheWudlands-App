@@ -1,11 +1,11 @@
 .slideshow {
-  position: fixed;
-  inset: 0;
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
   z-index: -1;
   background: #0a0a0a;
-  display: flex;
-  align-items: flex-start;
-  justify-content: center;
   overflow: hidden;
 }
 
@@ -14,7 +14,7 @@
   top: 0;
   left: 0;
   width: 100%;
-  height: auto;
+  height: 100%;
   object-fit: contain;
   object-position: top center;
   opacity: 0;
@@ -30,9 +30,10 @@
   inset: 0;
   background: linear-gradient(
     to bottom,
-    rgba(10, 10, 10, 0.35) 0%,
-    rgba(10, 10, 10, 0.1) 50%,
-    rgba(10, 10, 10, 0.75) 100%
+    rgba(10, 10, 10, 0.2) 0%,
+    rgba(10, 10, 10, 0.05) 45%,
+    rgba(10, 10, 10, 0.5) 85%,
+    rgba(10, 10, 10, 0.7) 100%
   );
 }
 
@@ -43,16 +44,17 @@
   z-index: 9999;
 }
 
+/* Join view is now a scrollable landing; the hero provides the first-screen
+   fill, the sections below flow normally over the fixed backdrop. */
 .screen {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  min-height: 100vh;
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  background: #0a0a0a;
 }
 
 .status {
-  margin-bottom: 1.5rem;
+  margin-bottom: 0.4rem;
   font-size: 0.9rem;
   color: #c07a3a;
   min-height: 1.2em;
@@ -133,15 +135,208 @@
   letter-spacing: 0.1em;
 }
 
-.bottomGroup {
-  position: fixed;
-  bottom: 2.5rem;
-  left: 0;
-  right: 0;
+/* ── Landing funnel ─────────────────────────────────────── */
+.landing {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+}
+
+/* 1 — Hero (above the fold) */
+.hero {
+  min-height: 100vh;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 0.75rem;
+  justify-content: flex-end;
+  text-align: center;
+  padding: 4rem 1.5rem 1.5rem;
+  gap: 1.25rem;
+}
+
+@media (min-width: 720px) {
+  .hero {
+    padding-bottom: 4.5rem;
+  }
+}
+
+.heroHeadline {
+  font-size: 1.85rem;
+  line-height: 1.25;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #d4c9a8;
+  text-shadow: 0 2px 12px rgba(0, 0, 0, 0.9), 0 0 30px rgba(0, 0, 0, 0.7);
+}
+
+.heroSubhead {
+  font-size: 0.95rem;
+  letter-spacing: 0.1em;
+  color: #c07a3a;
+  max-width: 30rem;
+  text-shadow: 0 1px 8px rgba(0, 0, 0, 0.9);
+}
+
+.ctaGroup {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.4rem;
+  margin-top: 0.5rem;
+}
+
+.heroCta {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.4rem;
+  background: radial-gradient(ellipse at center, rgba(10,10,10,1) 20%, rgba(10,10,10,0.7) 50%, rgba(10,10,10,0.1) 75%, rgba(10,10,10,0) 90%);
+  padding: 3rem 5vw;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.scrollHint {
+  margin-top: 0.25rem;
+  font-size: 0.7rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: #d4c9a8;
+  animation: scrollHintPulse 2.5s ease-in-out infinite;
+}
+
+@keyframes scrollHintPulse {
+  0%, 100% { opacity: 0.4; transform: translateY(0); }
+  50%       { opacity: 1.0; transform: translateY(3px); }
+}
+
+/* 2 & 3 — Content sections (scrim for legibility over the backdrop) */
+.section {
+  padding: 2.5rem 1.5rem;
+  text-align: center;
+  background: rgba(10, 10, 10, 0.95);
+  border-top: 1px solid #1c1a10;
+}
+
+.sectionHeading {
+  font-size: 1.1rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: #c07a3a;
+  margin-bottom: 1.25rem;
+}
+
+.sectionBody {
+  max-width: 40rem;
+  margin: 0 auto 1rem;
+  font-size: 0.95rem;
+  line-height: 1.7;
+  color: #d4c9a8;
+}
+
+/* How it works — three steps */
+.steps {
+  list-style: none;
+  max-width: 46rem;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.step {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 1.5rem 1.25rem;
+  border: 1px solid #3a3020;
+  background: rgba(0, 0, 0, 0.4);
+}
+
+.stepNum {
+  width: 2.2rem;
+  height: 2.2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid #7a6a3a;
+  border-radius: 50%;
+  color: #e6a55a;
+  font-size: 1.1rem;
+  font-weight: bold;
+}
+
+.stepTitle {
+  font-size: 0.95rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #c07a3a;
+}
+
+.stepText {
+  font-size: 0.88rem;
+  line-height: 1.6;
+  color: #d4c9a8;
+  max-width: 30rem;
+}
+
+/* 4 — Trust / status strip */
+.trust {
+  padding: 2.5rem 1.5rem;
+  text-align: center;
+  background: rgba(10, 10, 10, 0.95);
+  border-top: 1px solid #1c1a10;
+}
+
+.trustLine {
+  font-size: 0.8rem;
+  letter-spacing: 0.08em;
+  color: #a89968;
+  margin-bottom: 0.75rem;
+}
+
+.trustLink {
+  font-size: 0.8rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #c07a3a;
+  text-decoration: none;
+  border-bottom: 1px solid #7a6a3a;
+  padding-bottom: 2px;
+  transition: color 0.15s;
+}
+
+.trustLink:hover {
+  color: #e6a55a;
+}
+
+/* 5 — Final CTA — solid background so the banner never shows through; the
+   solid footer below it carries the dark down to the lower edge. */
+.finalCta {
+  padding: 3rem 1.5rem 2rem;
+  text-align: center;
+  background: #0a0a0a;
+  border-top: 1px solid #1c1a10;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.25rem;
+}
+
+@media (min-width: 720px) {
+  .heroHeadline {
+    font-size: 2.6rem;
+  }
+
+  .steps {
+    flex-direction: row;
+    align-items: stretch;
+  }
+
+  .step {
+    flex: 1;
+  }
 }
 
 

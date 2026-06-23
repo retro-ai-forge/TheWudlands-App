@@ -4,9 +4,12 @@
 }
 
 .bg {
-  position: fixed;
-  inset: 0;
-  background: url("/images/banner/slide00.jpg") center center / cover no-repeat;
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: url("/images/banner/slide00.jpg") top center / contain no-repeat;
   animation: colorPulse 12s ease-in-out infinite;
   z-index: -2;
   pointer-events: none;

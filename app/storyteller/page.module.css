@@ -1,5 +1,4 @@
 .page {
-  min-height: 100vh;
   background: #0a0a0a;
   padding: 0 1.5rem 4rem;
 }
@@ -387,5 +386,109 @@
   .fieldTable td:first-child,
   .fieldTable td:nth-child(2) {
     white-space: normal;
+  }
+}
+
+/* ── Author intro: welcoming 3-step overview for non-technical writers ── */
+.authorIntro {
+  font-family: "Courier New", Courier, monospace;
+  font-size: 1rem;
+  line-height: 1.8;
+  color: #d4c9a8;
+  margin-bottom: 1.5rem;
+}
+
+.steps {
+  list-style: none;
+  margin: 0 0 2.5rem;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.step {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.9rem;
+  padding: 1rem 1.25rem;
+  border: 1px solid #3a3020;
+  background: #0d0d0a;
+}
+
+.stepNum {
+  flex: 0 0 auto;
+  width: 1.9rem;
+  height: 1.9rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid #7a6a3a;
+  border-radius: 50%;
+  color: #e6a55a;
+  font-family: "Courier New", Courier, monospace;
+  font-weight: bold;
+}
+
+.stepText {
+  font-family: "Courier New", Courier, monospace;
+  font-size: 0.95rem;
+  line-height: 1.55;
+  color: #d4c9a8;
+}
+
+.stepText strong {
+  color: #c07a3a;
+}
+
+/* ── Top-level collapsible groups (progressive disclosure) ───────────── */
+.group {
+  border: 1px solid #7a6a3a;
+  background: #0d0d0a;
+  margin-bottom: 1.25rem;
+}
+
+.groupSummary {
+  font-family: "Courier New", Courier, monospace;
+  font-size: 0.95rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: #c07a3a;
+  padding: 1rem 1.25rem;
+  cursor: pointer;
+  user-select: none;
+  list-style: none;
+}
+
+.groupSummary::-webkit-details-marker {
+  display: none;
+}
+
+.groupSummary::before {
+  content: "▶ ";
+  font-size: 0.7rem;
+  vertical-align: middle;
+}
+
+.group[open] .groupSummary::before {
+  content: "▼ ";
+}
+
+.groupSummary:hover {
+  color: #d4a060;
+  background: #111108;
+}
+
+.groupBody {
+  padding: 0.5rem 1.25rem 1.5rem;
+}
+
+@media (min-width: 720px) {
+  .steps {
+    flex-direction: row;
+  }
+
+  .step {
+    flex: 1;
   }
 }

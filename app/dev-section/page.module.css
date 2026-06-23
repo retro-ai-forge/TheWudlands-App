@@ -28,6 +28,17 @@
   margin-bottom: 1.25rem;
 }
 
+.link {
+  color: #c07a3a;
+  text-decoration: none;
+  border-bottom: 1px solid #7a6a3a;
+  transition: color 0.15s;
+}
+
+.link:hover {
+  color: #e6a55a;
+}
+
 .table {
   width: 100%;
   border-collapse: collapse;
@@ -688,18 +699,18 @@
   }
 
   .socialIcon {
-    width: 70px;
-    height: 70px;
+    width: 48px;
+    height: 48px;
   }
 
   .socialLinks {
-    flex-direction: column;
-    gap: 2.5rem;
-    padding: 1.5rem 0;
+    flex-direction: row;
+    gap: 1rem;
+    padding: 0.75rem 0;
   }
 
   .socialLabel {
-    font-size: 0.8rem;
-    max-width: 120px;
+    font-size: 0.7rem;
+    max-width: 100px;
   }
 }

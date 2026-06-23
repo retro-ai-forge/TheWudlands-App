@@ -7,13 +7,10 @@ import styles from "./Header.module.css";
 import { useWallet } from "./WalletProvider";
 
 const NAV = [
-  { label: "The Wudlands",   href: "/" },
-  { label: "About",          href: "/about" },
-  { label: "Guide",          href: "/guide" },
-  { label: "Characters",     href: "/characters" },
-  { label: "Storyteller",    href: "/storyteller" },
-  { label: "Dev Section",    href: "/dev-section" },
-  { label: "GTC",            href: "/gtc" },
+  { label: "Play",       href: "/" },
+  { label: "The World",  href: "/about" },
+  { label: "Guide",      href: "/guide" },
+  { label: "Create",     href: "/storyteller" },
 ];
 
 function shortenAddress(address: string): string {
@@ -52,7 +49,7 @@ export default function Header() {
 
   const startIdle = useCallback(() => {
     clearIdle();
-    if (!menuOpenRef.current) {
+    if (!menuOpenRef.current && window.scrollY > 0) {
       idleTimer.current = setTimeout(() => setFaded(true), 4000);
     }
   }, [clearIdle]);
@@ -76,11 +73,22 @@ export default function Header() {
   useEffect(() => {
     lastScrollY.current = window.scrollY;
 
+    // At top on load → stay visible without idle timer
+    if (window.scrollY === 0) {
+      setFaded(false);
+    } else {
+      startIdle();
+    }
+
     const handleScroll = () => {
       const currentY = window.scrollY;
       const delta = currentY - lastScrollY.current;
       if (Math.abs(delta) < 5) return;
-      if (delta > 0) {
+      if (currentY === 0) {
+        // At the very top → always keep visible, no idle timer
+        setFaded(false);
+        clearIdle();
+      } else if (delta > 0) {
         // Scrolling down → fade out
         setFaded(true);
         clearIdle();
@@ -94,7 +102,6 @@ export default function Header() {
     window.addEventListener("scroll", handleScroll, { passive: true });
     window.addEventListener("mousemove", show, { passive: true });
     window.addEventListener("touchstart", show, { passive: true });
-    startIdle();
 
     return () => {
       window.removeEventListener("scroll", handleScroll);

@@ -4,14 +4,18 @@ export default function DevSection() {
   return (
     <div className={styles.page}>
       <section className={styles.guidelines}>
-        <h2 className={styles.heading}>Developer Overview</h2>
+        <h2 className={styles.heading}>Developers</h2>
 
         <p className={styles.body}>
-          The Wudlands is an open source, contributor-driven dark fantasy adventure platform. At its core it is a
-          story engine — a system that loads externally authored adventure addons and runs them as live,
-          interactive sessions for players. The platform is designed to be extended by two distinct groups:
-          story contributors who write the adventures, and software developers who build and maintain the
-          engine, tooling, and infrastructure that makes those adventures run.
+          The Wudlands is open source. Full technical docs live in the{" "}
+          <a
+            href="https://github.com/retro-ai-forge/TheWudlands-App#readme"
+            target="_blank"
+            rel="noopener noreferrer"
+            className={styles.link}
+          >
+            GitHub README
+          </a>.
         </p>
 
         <p className={styles.body}>

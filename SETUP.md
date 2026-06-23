@@ -64,10 +64,14 @@ https://www.codingforentrepreneurs.com/blog/google-cloud-cli-and-sdk-setup
 gcloud --version
 gcloud auth login
 
+# if you cannot set quota
+gcloud auth application-default login
+gcloud auth application-default set-quota-project thewudlands
+
 gcloud config set project thewudlands
 gcloud config get-value project
-gcloud auth configure-docker europe-west1-docker.pkg.dev
 gcloud auth application-default set-quota-project thewudlands
+gcloud auth configure-docker europe-west1-docker.pkg.dev
 gcloud artifacts repositories list --location=europe-west1
 
 # Auth error, fix for access token!
@@ -86,7 +90,8 @@ Run all commands from the **project root** (`TheWudlands/`).
 ```bash
 cd /path/to/TheWudlands
 source .venv/bin/activate
-uvicorn backend.main:app --reload   # http://localhost:8000
+uvicorn backend.main:app --reload
+# http://localhost:8000
 ```
 
 Once it's running, open the Swagger UI at
@@ -97,6 +102,8 @@ Once it's running, open the Swagger UI at
 ```bash
 cd /path/to/TheWudlands
 npm install   # first time only
+# not always needed, TODO check when
+# npm run build 
 npm run dev
 ```
 
@@ -308,8 +315,13 @@ git push --tags
 
 # build stuff
 npm run build
-rav run build
-rav run gcp_build
+
+gcloud auth login
+gcloud auth print-access-token | docker login -u oauth2accesstoken --password-stdin https://europe-west1-docker.pkg.dev
+gcloud config list
+
+# docker
+rav run gcp_push
 rav run gcp_deploy
 
 Check browser

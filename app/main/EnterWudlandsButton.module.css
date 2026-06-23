@@ -8,7 +8,8 @@
 .enterButton {
   padding: 1rem 2rem;
   font-family: "Courier New", Courier, monospace;
-  font-size: 1.2rem;
+  font-size: 1rem;
+  white-space: nowrap;
   font-weight: bold;
   letter-spacing: 0.15em;
   text-transform: uppercase;
@@ -108,10 +109,34 @@
 
 /* Connect failed: shorter "select wallet in extension" hint at a smaller size */
 .enterButtonError {
-  font-size: 0.85rem;
-  letter-spacing: 0.08em;
+  font-size: 0.65rem;
+  letter-spacing: 0.06em;
   line-height: 1.2;
   white-space: normal;
+}
+
+/* One-line wallet explanation, revealed only after the player taps Enter.
+   Benefit-led copy; links to the detailed setup guide. */
+.walletNote {
+  max-width: 24rem;
+  margin: 0;
+  font-family: "Courier New", Courier, monospace;
+  font-size: 0.78rem;
+  line-height: 1.5;
+  color: #a89968;
+  text-align: center;
+}
+
+.walletNoteLink {
+  color: #c07a3a;
+  text-decoration: none;
+  border-bottom: 1px solid #7a6a3a;
+  white-space: nowrap;
+  transition: color 0.15s;
+}
+
+.walletNoteLink:hover {
+  color: #e6a55a;
 }
 
 .verifiedDot {
@@ -213,7 +238,7 @@
   font-style: italic;
 }
 
-@media (max-width: 768px) {
+@media (max-width: 420px) {
   .enterButton {
     padding: 0.8rem 1.5rem;
     font-size: 1rem;

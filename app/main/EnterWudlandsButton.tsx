@@ -14,6 +14,7 @@
  */
 
 import { useEffect, useState } from 'react';
+import Link from 'next/link';
 import { useWallet } from './WalletProvider';
 import { getSignerForAddress, type WalletAccount } from '@/lib/wallet';
 import styles from './EnterWudlandsButton.module.css';
@@ -21,12 +22,14 @@ import styles from './EnterWudlandsButton.module.css';
 export interface EnterWudlandsButtonProps {
   onEnter?: (address: string) => void;
   onError?: (error: string) => void;
+  onNoWallet?: () => void;
   disabled?: boolean;
 }
 
 export function EnterWudlandsButton({
   onEnter,
   onError,
+  onNoWallet,
   disabled = false,
 }: EnterWudlandsButtonProps) {
   const { account, isConnecting, connectError, connect, setVerified, verified } = useWallet();
@@ -108,6 +111,9 @@ export function EnterWudlandsButton({
       return;
     }
 
+    // First tap without a wallet connected -> notify parent to show wallet hint.
+    onNoWallet?.();
+
     // Not connected -> try to connect (this also updates the header button).
     // On failure, connect() sets connectError and the effect will show the hint.
     const connected = await connect();
@@ -128,7 +134,7 @@ export function EnterWudlandsButton({
     ? 'Select wallet in extension'
     : verified
     ? '[ ENTERING… ]'
-    : '[ ENTER WUDLANDS ]';
+    : '[ ENTER THE WUDLANDS ]';
 
   return (
     <div className={styles.container}>
@@ -138,7 +144,7 @@ export function EnterWudlandsButton({
         } ${showHint ? styles.enterButtonError : ''}`}
         onClick={handleClick}
         disabled={disabled || isSigning || isConnecting}
-        title={notConnected ? 'Connect your wallet to enter' : 'Sign to enter The Wudlands'}
+        title={notConnected ? 'Begin — your progress is saved forever' : 'Sign to enter The Wudlands'}
       >
         {verified && !notConnected && !showHint ? (
           <>
@@ -148,6 +154,7 @@ export function EnterWudlandsButton({
           label
         )}
       </button>
+
     </div>
   );
 }
