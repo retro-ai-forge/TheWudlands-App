@@ -295,11 +295,31 @@ docker-compose up -d --build
 docker-compose exec wudlands sh
 ```
 
-## git tags
+## Create new app version:
 
 Remove local tags
 ```bash
+Enter new tag in app/main/VersionBadge.tsx
+Enter new tag in rav.yaml gcp_tag second line
+Commit
+Create
+git tag -a <tagname> -m "message"
 git push --tags
+
+# build stuff
+npm run build
+rav run build
+rav run gcp_build
+rav run gcp_deploy
+
+Check browser
+
+-----
+Delete remote tag
+git push origin :<tagname>
+
+Delete all local tags and pull remote
 git tag -l | xargs git tag -d
 git fetch --tags
 ```
+
