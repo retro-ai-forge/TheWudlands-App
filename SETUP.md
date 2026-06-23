@@ -295,4 +295,11 @@ docker-compose up -d --build
 docker-compose exec wudlands sh
 ```
 
+## git tags
 
+Remove local tags
+```bash
+git push --tags
+git tag -l | xargs git tag -d
+git fetch --tags
+```
