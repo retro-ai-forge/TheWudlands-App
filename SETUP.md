@@ -42,11 +42,11 @@ pyenv install 3.11.4
    pyenv exec python -m venv .venv
    ```
 3. Activate the environment:
-   * **Linux / macOS**:
+   **Linux / macOS**:
      ```bash
      source .venv/bin/activate
      ```
-   * **Windows (Git-Bash)**:
+   **Windows (Git-Bash)**:
      ```bash
      source .venv/Scripts/activate
      ```
@@ -56,30 +56,8 @@ pyenv install 3.11.4
    pip install -r requirements.txt
    ```
 
-## Create .env file
-
-## Gloud setup
-https://www.codingforentrepreneurs.com/blog/google-cloud-cli-and-sdk-setup
-
-gcloud --version
-gcloud auth login
-
-# if you cannot set quota
-gcloud auth application-default login
-gcloud auth application-default set-quota-project thewudlands
-
-gcloud config set project thewudlands
-gcloud config get-value project
-gcloud auth application-default set-quota-project thewudlands
-gcloud auth configure-docker europe-west1-docker.pkg.dev
-gcloud artifacts repositories list --location=europe-west1
-
-# Auth error, fix for access token!
-gcloud auth login
-gcloud auth print-access-token | docker login -u oauth2accesstoken --password-stdin https://europe-west1-docker.pkg.dev
- 
-gcloud config list
-
+## Create .env file for email credentials
+see .env-example
 
 ## 2. Run the App on linux two terminals
 
@@ -114,8 +92,33 @@ npm run dev
 | [http://localhost:8000/redoc](http://localhost:8000/redoc) | ReDoc (alternative API docs) |
 
 
-## 3. Docker & group
+## 3. Cloud setup
+https://www.codingforentrepreneurs.com/blog/google-cloud-cli-and-sdk-setup
 
+```bash
+gcloud --version
+gcloud auth login
+
+# if you cannot set quota
+gcloud auth application-default login
+gcloud auth application-default set-quota-project thewudlands
+
+gcloud config set project thewudlands
+gcloud config get-value project
+gcloud auth application-default set-quota-project thewudlands
+gcloud auth configure-docker europe-west1-docker.pkg.dev
+gcloud artifacts repositories list --location=europe-west1
+
+# Auth error, fix for access token!
+gcloud auth login
+gcloud auth print-access-token | docker login -u oauth2accesstoken --password-stdin https://europe-west1-docker.pkg.dev
+ 
+gcloud config list
+```
+
+## 4. Docker & group
+
+```bash
 pip install rav
 
 Docker isn't installed. Here's what you need:
@@ -128,32 +131,29 @@ sudo systemctl start docker
 sudo usermod -aG docker $USER  # Run Docker without sudo
 
 
-# 1. Clean Node.js/npm
+### a Clean Node.js/npm
 rm -rf node_modules package-lock.json
 npm cache clean --force
 
-# 2. Reinstall all dependencies
+### b Reinstall all dependencies
 npm install
 
-# 3. Clean Next.js build cache
+### c Clean Next.js build cache
 rm -rf .next
 
-# 4. Verify everything
+### d Verify everything
 npm run type-check
 npm run build
 If you want a FULL reset (including global packages):
 
-
-# Clear npm cache globally
+### Clear npm cache globally
 npm cache clean --force
 
-# Update npm itself
+### Update npm itself
 npm install -g npm@latest
 
-# Then do the above steps
+### Then do the above steps
 If still having issues, check your Node.js version:
-
-
 node --version
 npm --version
 Your other laptop probably has the same or compatible versions. Make sure you have:
@@ -161,13 +161,12 @@ Your other laptop probably has the same or compatible versions. Make sure you ha
 Node.js 18+ (ideally 20.x)
 npm 9+
 If you want to match your other laptop exactly:
+```
 
-
+```bash
 # On working laptop:
 node --version
 npm --version
-
-
 
 # rav docker... may produce error, setup up docker group for linux
 sudo docker ps
@@ -207,7 +206,8 @@ rav run docker_build    # Rebuild from scratch
 
 # on polkadot dependency error
 npm list @substrate/connect
-
+```
+```bash
 # webpack error
 # The Docker build is failing because the package-lock.json is out of sync with package.json. Docker is running npm ci (clean install from lockfile), but the lockfile is missing dependencies like @next/swc.
 # Since you just modified package.json (removed @substrate/connect), the lockfile needs to be regenerated.
@@ -255,11 +255,9 @@ docker ps
 
 # List all containers (including stopped ones)
 docker ps -a
+```
 
-
-## still needed?
-
-## 4. Run with Docker
+## 5. Run with Docker
 
 ### Prerequisites
 - [Docker](https://docs.docker.com/get-docker/) installed
@@ -320,7 +318,7 @@ npm run build
 # after changing login email:
 gcloud auth application-default login
 gcloud auth list
- gcloud config set account <email>
+gcloud config set account <email>
 gcloud auth application-default set-quota-project thewudlands
 gcloud config set project thewudlands
 gcloud config list
