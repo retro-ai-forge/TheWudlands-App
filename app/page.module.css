@@ -144,18 +144,19 @@
 
 /* 1 — Hero (above the fold) */
 .hero {
-  min-height: 100vh;
+  min-height: 90vh;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: flex-end;
   text-align: center;
-  padding: 4rem 1.5rem 1.5rem;
+  padding: 0.25rem 1.5rem 1.5rem;
   gap: 1.25rem;
 }
 
 @media (min-width: 720px) {
   .hero {
+    min-height: 100vh;
     padding-bottom: 4.5rem;
   }
 }

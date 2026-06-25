@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import styles from "../page.module.css";
 import { EnterWudlandsButton } from "./EnterWudlandsButton";
 
@@ -29,17 +29,7 @@ const STEPS = [
 ];
 
 export function LandingView({ status, joining, onEnter, onError }: LandingViewProps) {
-  const [heroOpacity, setHeroOpacity] = useState(1);
   const [showWalletHint, setShowWalletHint] = useState(false);
-
-  useEffect(() => {
-    const handleScroll = () => {
-      const opacity = Math.max(0, 1 - window.scrollY / 400);
-      setHeroOpacity(opacity);
-    };
-    window.addEventListener("scroll", handleScroll, { passive: true });
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, []);
 
   const statusLine = showWalletHint ? (
     <p className={styles.status}>
@@ -60,7 +50,7 @@ export function LandingView({ status, joining, onEnter, onError }: LandingViewPr
     <div className={styles.landing}>
       {/* 1 — HERO (above the fold) */}
       <section className={styles.hero}>
-        <div className={styles.heroCta} style={{ opacity: heroOpacity, transition: "opacity 0.1s" }}>
+        <div className={styles.heroCta}>
           {cta}
           <span className={styles.scrollHint}>▾ what is the wudlands</span>
         </div>
