@@ -316,12 +316,12 @@ npm run build
 
 # gcloud auth login
 # after changing login email:
-gcloud auth application-default login
 gcloud auth list
+gcloud config list
 gcloud config set account <email>
+gcloud auth application-default login
 gcloud auth application-default set-quota-project thewudlands
 gcloud config set project thewudlands
-gcloud config list
 gcloud auth print-access-token | docker login -u oauth2accesstoken --password-stdin https://europe-west1-docker.pkg.dev
 
 # docker
