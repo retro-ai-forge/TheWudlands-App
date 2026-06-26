@@ -311,8 +311,6 @@ Create
 git tag -a <tagname> -m "message"
 git push --tags
 
-# build stuff
-npm run build
 
 # gcloud auth login
 # after changing login email:
@@ -324,6 +322,8 @@ gcloud auth application-default set-quota-project thewudlands
 gcloud config set project thewudlands
 gcloud auth print-access-token | docker login -u oauth2accesstoken --password-stdin https://europe-west1-docker.pkg.dev
 
+# build stuff
+npm run build
 # docker
 rav run gcp_push
 rav run gcp_deploy
