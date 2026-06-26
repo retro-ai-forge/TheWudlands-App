@@ -11,7 +11,7 @@
   background: #0a0a0a;
 }
 
-@media (min-width: 1000px) {
+@media (min-width: 750px) {
   .pageContent {
     padding-top: 2rem;
   }

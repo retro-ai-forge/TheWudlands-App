@@ -369,7 +369,7 @@
   font-size: 0.76rem;
 }
 
-@media (max-width: 768px) {
+@media (max-width: 749px) {
   .page {
     padding: 2rem 1rem 3rem;
   }

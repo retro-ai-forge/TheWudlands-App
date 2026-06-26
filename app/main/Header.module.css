@@ -281,7 +281,7 @@
 }
 
 /* ── Breakpoint: hamburger on, desktop nav off ─────── */
-@media (max-width: 999px) {
+@media (max-width: 749px) {
   .nav {
     display: none;
   }
@@ -314,33 +314,20 @@
   }
 }
 
-@media (min-width: 1000px) {
+@media (min-width: 750px) {
   .hamburger,
   .mobilePageTitle,
   .mobileMenu {
     display: none !important;
   }
-}
 
-@media (max-width: 768px) {
-  .link {
-    font-size: 0.72rem;
-    padding: 0.55rem 0.75rem;
-    letter-spacing: 0.06em;
+  .nav {
+    display: flex;
   }
 
   .walletArea {
-    margin-right: 0.75rem;
-  }
-
-  .walletButton {
-    min-width: 5.5rem;
-    height: 1.9rem;
-    padding: 0 0.7rem;
-    font-size: 0.66rem;
-  }
-
-  .walletButtonConnected {
-    font-size: 0.66rem;
+    position: static;
+    margin-right: auto;
   }
 }
+

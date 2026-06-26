@@ -458,7 +458,7 @@
   white-space: pre-line;
 }
 
-@media (max-width: 768px) {
+@media (max-width: 749px) {
   .page {
     padding: 2rem 1rem 3rem;
   }
