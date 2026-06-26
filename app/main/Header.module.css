@@ -18,6 +18,7 @@
   align-items: center;
   justify-content: space-between;
   flex-wrap: wrap;
+  padding-right: 0.5rem;
 }
 
 
@@ -67,7 +68,7 @@
 
 .walletArea {
   position: relative;
-  margin-right: 1rem;
+  margin-right: 1.5rem;
   display: flex;
 }
 

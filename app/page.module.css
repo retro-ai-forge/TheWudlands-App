@@ -53,6 +53,12 @@
   background: #0a0a0a;
 }
 
+@media (min-width: 750px) {
+  .screen {
+    padding-top: 2rem;
+  }
+}
+
 .status {
   margin-bottom: 0.4rem;
   font-size: 0.9rem;
