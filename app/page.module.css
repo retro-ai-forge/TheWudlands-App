@@ -210,6 +210,14 @@
   text-transform: uppercase;
   color: #d4c9a8;
   animation: scrollHintPulse 2.5s ease-in-out infinite;
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+
+.scrollTriangle {
+  font-size: 1.5rem;
+  line-height: 1;
 }
 
 @keyframes scrollHintPulse {

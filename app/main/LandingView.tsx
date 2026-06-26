@@ -52,7 +52,7 @@ export function LandingView({ status, joining, onEnter, onError }: LandingViewPr
       <section className={styles.hero}>
         <div className={styles.heroCta}>
           {cta}
-          <span className={styles.scrollHint}>▾ what is the wudlands</span>
+          <span className={styles.scrollHint}><span className={styles.scrollTriangle}>▾</span> what is the wudlands</span>
         </div>
       </section>
 
