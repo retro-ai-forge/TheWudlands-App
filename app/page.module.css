@@ -1,9 +1,9 @@
 .slideshow {
-  position: absolute;
+  position: fixed;
   top: 0;
   left: 0;
-  width: 100vw;
-  height: 100vh;
+  right: 0;
+  height: 100%;
   z-index: -1;
   background: #0a0a0a;
   overflow: hidden;
@@ -50,6 +50,7 @@
   position: relative;
   z-index: 1;
   width: 100%;
+  overflow-x: hidden;
   background: #0a0a0a;
 }
 
