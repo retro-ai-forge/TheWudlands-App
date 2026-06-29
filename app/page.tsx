@@ -6,7 +6,6 @@ import { useWallet } from "./main/WalletProvider";
 import { LandingView } from "./main/LandingView";
 import { WelcomeView } from "./main/WelcomeView";
 import BannerSlideshow from "./main/BannerSlideshow";
-import HomeBackground from "./main/HomeBackground";
 
 const HEARTBEAT_MS = 5 * 60 * 1000;
 
@@ -165,7 +164,6 @@ export default function Home() {
     <main className={view === "game" ? styles.welcomeScreen : styles.screen}>
       {view === "join" && (
         <>
-          <HomeBackground />
           <BannerSlideshow />
           <LandingView
             status={status}

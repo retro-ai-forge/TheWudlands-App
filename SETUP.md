@@ -306,8 +306,8 @@ Remove local tags
 ```bash
 Enter new tag in app/main/VersionBadge.tsx
 Enter new tag in rav.yaml gcp_tag second line
-Commit
-Create
+Commit and push
+Create tag
 git tag -a <tagname> -m "message"
 git push --tags
 
