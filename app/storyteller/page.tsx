@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import styles from "./page.module.css";
 import ImageGallery from "./ImageGallery";
 
@@ -8,6 +8,29 @@ export default function Storyteller() {
   const [showImageDimensionsPopup, setShowImageDimensionsPopup] = useState(false);
   const [expandSchema, setExpandSchema] = useState(false);
   const [expandExample, setExpandExample] = useState(false);
+  const [openSection, setOpenSection] = useState<string | null>(null);
+
+  const guidelinesRef = useRef<HTMLDetailsElement>(null);
+  const romanceRef = useRef<HTMLDetailsElement>(null);
+  const writingRef = useRef<HTMLDetailsElement>(null);
+  const imagesRef = useRef<HTMLDetailsElement>(null);
+  const exampleRef = useRef<HTMLDetailsElement>(null);
+
+  useEffect(() => {
+    const refs: { [key: string]: React.RefObject<HTMLDetailsElement | null> } = {
+      guidelines: guidelinesRef,
+      romance: romanceRef,
+      writing: writingRef,
+      images: imagesRef,
+      example: exampleRef,
+    };
+
+    if (openSection && refs[openSection]?.current) {
+      setTimeout(() => {
+        refs[openSection]?.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+      }, 0);
+    }
+  }, [openSection]);
   return (
     <div className={styles.page}>
       <section className={styles.guidelines}>
@@ -43,8 +66,11 @@ export default function Storyteller() {
           </li>
         </ol>
 
-        <details className={styles.group}>
-          <summary className={styles.groupSummary}>[ Story Guidelines ]</summary>
+        <details ref={guidelinesRef} className={styles.group} open={openSection === "guidelines"}>
+          <summary className={styles.groupSummary} onClick={(e) => {
+            e.preventDefault();
+            setOpenSection(openSection === "guidelines" ? null : "guidelines");
+          }}>[ Story Guidelines ]</summary>
           <div className={styles.groupBody}>
 
         <p className={styles.body}>
@@ -197,12 +223,14 @@ export default function Storyteller() {
           </div>
         </details>
 
-        <details className={styles.group}>
-          <summary className={styles.groupSummary}>[ Romance &amp; Minne ]</summary>
+        <details ref={romanceRef} className={styles.group} open={openSection === "romance"}>
+          <summary className={styles.groupSummary} onClick={(e) => {
+            e.preventDefault();
+            setOpenSection(openSection === "romance" ? null : "romance");
+          }}>[ Romance &amp; Minne ]</summary>
           <div className={styles.groupBody}>
 
         {/* ── Story Elements ─────────────────────────────────────── */}
-        <h2 className={styles.sectionHeading}>Romantic Storyline &amp; Minne</h2>
 
         <p className={styles.body}>
           The Wudlands draws deep inspiration from the fantasy literature and interactive fiction of the 1980s and 1990s —
@@ -263,12 +291,14 @@ export default function Storyteller() {
           </div>
         </details>
 
-        <details className={styles.group}>
-          <summary className={styles.groupSummary}>[ 1. Writing your story (JSON) ]</summary>
+        <details ref={writingRef} className={styles.group} open={openSection === "writing"}>
+          <summary className={styles.groupSummary} onClick={(e) => {
+            e.preventDefault();
+            setOpenSection(openSection === "writing" ? null : "writing");
+          }}>[ Story as JSON ]</summary>
           <div className={styles.groupBody}>
 
         {/* ── Story Elements ─────────────────────────────────────── */}
-        <h2 className={styles.sectionHeading}>Story Elements</h2>
 
         <p className={styles.body}>
           Every addon submitted to The Wudlands is made up of two core elements: JSON file that defines the structure and 
@@ -277,9 +307,6 @@ export default function Storyteller() {
           become available to players worldwide. Below are the detailed specifications for each element, 
           along with an example of a complete addon at the end.
         </p>
-
-        {/* 1 — Storyline in JSON */}
-        <h3 className={styles.subHeading}>1. Storyline in JSON</h3>
 
         <p className={styles.body}>
           The story itself is defined in a single JSON file. This file describes every scene, every choice, every
@@ -397,12 +424,12 @@ export default function Storyteller() {
           </div>
         </details>
 
-        <details className={styles.group}>
-          <summary className={styles.groupSummary}>[ 2. Images &amp; style presets ]</summary>
+        <details ref={imagesRef} className={styles.group} open={openSection === "images"}>
+          <summary className={styles.groupSummary} onClick={(e) => {
+            e.preventDefault();
+            setOpenSection(openSection === "images" ? null : "images");
+          }}>[ Images &amp; styles ]</summary>
           <div className={styles.groupBody}>
-
-        {/* 2 — Images */}
-        <h3 className={styles.subHeading}>2. Images</h3>
 
         <p className={styles.body}>
           Each scene in your addon may reference one image. Images are not required for every scene and can be used
@@ -492,46 +519,25 @@ export default function Storyteller() {
         )}
 
         <p className={styles.body}>
-          <span className={styles.highlight}>16:9 Landscape (Wide)</span> — Minimal text space. The image dominates the screen.
-          Use this for overland travel scenes, vast vistas, and moments where the visual landscape tells most of the story.
-          These scenes work best with few choices or simple decision points. Ideal for establishing shots and atmosphere.
+          <span className={styles.highlight}>Landscape images (16:9, 3:2)</span> are best for deep immersion and longer narrative passages.
+          The wide frame lets you display substantial story text, complex choice sets, and detailed descriptions.
+          Use landscape dimensions when you just want to give a glimpse or overland journeys, vast vistas, establishing moments.
         </p>
 
         <p className={styles.body}>
-          <span className={styles.highlight}>3:2 Ratio</span> — Moderate text space. Balanced between image and content.
-          Works well for most general scenes where image and narrative share equal weight. Good for exploration, discovery,
-          and scenes that need both visual context and detailed description.
+          <span className={styles.highlight}>Portrait images (1:1 Square, 2:3, 4:5)</span> prioritize the image itself.
+          Portrait dimensions leave less room for story text and choice buttons, so the visual impression carries more weight.
+          Use portrait dimensions for character moments, close-ups, intimate encounters, or when the image is the focal point and text is secondary.
         </p>
 
         <p className={styles.body}>
-          <span className={styles.highlight}>1:1 Square</span> — Significant text space. The image becomes a portrait or
-          symbol rather than a landscape. Use for NPC encounters, close-up character moments, and scenes where the visual
-          focus is narrow and the text dialogue must carry more weight.
-        </p>
-
-        <p className={styles.body}>
-          <span className={styles.highlight}>2:3 Portrait (Tall)</span> — Ample text space for complex choices. Ideal for
-          market scenes with many vendors, tavern encounters with multiple NPCs, or any scene where players need to read
-          and compare several options. Portrait images work well for character close-ups and intricate indoor spaces.
-        </p>
-
-        <p className={styles.body}>
-          <span className={styles.highlight}>4:5 Portrait (Very Tall)</span> — Maximum text space. Use when story complexity
-          demands it: branching dialogue, multi-step decisions, or detailed descriptions of crafting, trading, or negotiation.
-          These scenes prioritize reading and decision-making over visual spectacle. Avoid using this ratio unless your narrative
-          truly requires the extra space.
-        </p>
-
-        <p className={styles.body}>
-          <strong>Best Practice:</strong> Design your scenes with a clear visual hierarchy. Overland travel and exploration
-          scenes benefit from wide, immersive landscapes. Intimate moments, trade sequences, and dialogue-heavy scenes work
-          better with portrait ratios that leave room for text. Vary your aspect ratios throughout your addon to pace the
-          visual rhythm — wide scenes for wonder, narrow scenes for intimacy.
+          Vary your aspect ratios throughout your addon to pace the visual and narrative rhythm — wide scenes create a sense of wonder and exploration,
+          narrow scenes draw focus to character and emotion.
         </p>
 
         <p className={styles.body}>
           Images must be submitted as <span className={styles.code}>.jpg</span> or <span className={styles.code}>.webp</span> files,
-          at a minimum resolution of <span className={styles.code}>1024 × 576 px</span> (16:9 landscape).
+          at a minimum resolution of <span className={styles.code}>600 × 340 px</span> (16:9 landscape).
           Portrait or square crops are accepted but landscape is preferred as it fills the scene frame without letterboxing.
           File size should not exceed <span className={styles.code}>400 KB</span> per image — compress before submitting.
           Name each file after its scene id, for example <span className={styles.code}>ruined-gate.jpg</span> for a scene
@@ -551,12 +557,12 @@ export default function Storyteller() {
             <tr><th>Property</th><th>Value</th><th>Notes</th></tr>
           </thead>
           <tbody>
-            <tr><td>Format</td><td>.jpg / .webp</td><td>PNG accepted but not preferred — file sizes are larger.</td></tr>
-            <tr><td>Min resolution</td><td>1024 × 576 px</td><td>16:9 landscape is the native display ratio.</td></tr>
-            <tr><td>Max resolution</td><td>1200 × 700 px</td><td>Images larger than this will be scaled down by the engine.</td></tr>
-            <tr><td>Max file size</td><td>400 KB</td><td>Compress before submitting. Large files slow scene loading.</td></tr>
-            <tr><td>Naming</td><td>scene-id.jpg</td><td>Must match the scene id in your JSON exactly.</td></tr>
-            <tr><td>Style</td><td>Dark fantasy art</td><td>Painterly, desaturated, atmospheric. No embedded text.</td></tr>
+            <tr><td>Format</td><td>.jpg / .webp / .gif</td><td>Other types not supported</td></tr>
+            <tr><td>Min res.</td><td>600 × 340 px</td><td>16:9 landscape</td></tr>
+            <tr><td>Max res.</td><td>1000 × 1250 px</td><td>4:5 portrait</td></tr>
+            <tr><td>Max file size</td><td>400 KB</td><td>Compress before submitting</td></tr>
+            <tr><td>Naming</td><td>scene.jpg / id.jpg</td><td>Must match the scene / id in your JSON.</td></tr>
+            <tr><td>Style</td><td>Dark fantasy art</td><td>Painterly, desaturated, atmospheric</td></tr>
             <tr><td>Required</td><td>No</td><td>Images are optional per scene but at least one is strongly recommended.</td></tr>
           </tbody>
         </table>
@@ -577,12 +583,12 @@ export default function Storyteller() {
           </div>
         </details>
 
-        <details className={styles.group}>
-          <summary className={styles.groupSummary}>[ 3. Full example ]</summary>
+        <details ref={exampleRef} className={styles.group} open={openSection === "example"}>
+          <summary className={styles.groupSummary} onClick={(e) => {
+            e.preventDefault();
+            setOpenSection(openSection === "example" ? null : "example");
+          }}>[ Full example ]</summary>
           <div className={styles.groupBody}>
-
-        {/* 3 — Example */}
-        <h3 className={styles.subHeading}>3. Example</h3>
 
         <p className={styles.body}>
           Below is a complete minimal addon with three scenes. It demonstrates a starting scene with two choices,
