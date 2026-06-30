@@ -468,6 +468,13 @@
   color: #d4c9a8;
 }
 
+@media (max-width: 550px) {
+  .table th:nth-child(3),
+  .table td:nth-child(3) {
+    display: none;
+  }
+}
+
 @media (max-width: 900px) {
   .genderGrid {
     grid-template-columns: repeat(2, 1fr);
