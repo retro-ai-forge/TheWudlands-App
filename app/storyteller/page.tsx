@@ -170,11 +170,11 @@ export default function Storyteller() {
             </tr>
             <tr>
               <td>Fame</td>
-              <td>Fame is a measure of the path the adventurer has chosen — not merely of deeds done, but of how the world chooses to remember them. It runs in two directions. A famed hero earns the warmth of crowds, the trust of strangers, and the kind of stories that are told in daylight: ballads, toasts, whispered admiration in the market square. An infamous wanderer earns something else — a darker renown that makes even kings lower their voices before sending for them. Courts still negotiate with the infamous; they simply bolt their doors afterwards. Creators are encouraged to let fame shape how NPCs react, what doors open, and what rumours follow the adventurer into the next town. The stories of the famed are told openly, embellished with honour. The stories of the infamous are told at night, around the campfire, by those who survived knowing them.</td>
+              <td>The adventurer&apos;s reputation — famed heroes earn trust and open doors, while infamous wanderers earn darker renown. Use fame to shape how NPCs react, what they know, and what stories follow the adventurer.</td>
             </tr>
             <tr>
               <td>Notoriety</td>
-              <td>Where fame measures the nature of an adventurer&apos;s reputation, notoriety measures its reach — how far the tales have travelled, how many ears they have found. A wanderer of low notoriety may be celebrated or feared within a single village, yet step one valley over and be a complete stranger. High notoriety means the name has crossed borders: merchants recognise it, gatekeepers have heard the stories, and even distant lords know whether to set an extra place at the table or double the guard. Creators may use notoriety to determine what a character already knows about the adventurer before they speak a word, and how far ahead of the player their reputation walks.</td>
+              <td>How far the adventurer&apos;s reputation has travelled. Low notoriety means renown is local; high notoriety means even distant lands have heard the tales. Creators use this to determine what NPCs already know.</td>
             </tr>
             <tr>
               <td>Story Structure</td>
@@ -557,13 +557,13 @@ export default function Storyteller() {
             <tr><th>Property</th><th>Value</th><th>Notes</th></tr>
           </thead>
           <tbody>
-            <tr><td>Format</td><td>.jpg / .webp / .gif</td><td>Other types not supported</td></tr>
-            <tr><td>Min res.</td><td>600 × 340 px</td><td>16:9 landscape</td></tr>
-            <tr><td>Max res.</td><td>1000 × 1250 px</td><td>4:5 portrait</td></tr>
+            <tr><td>Format</td><td>.jpg / .webp</td><td>PNG accepted but larger files</td></tr>
+            <tr><td>Min res.</td><td>1024 × 576 px</td><td>16:9 landscape preferred</td></tr>
+            <tr><td>Max res.</td><td>1200 × 700 px</td><td>Scaled down if larger</td></tr>
             <tr><td>Max file size</td><td>400 KB</td><td>Compress before submitting</td></tr>
-            <tr><td>Naming</td><td>scene.jpg / id.jpg</td><td>Must match the scene / id in your JSON.</td></tr>
-            <tr><td>Style</td><td>Dark fantasy art</td><td>Painterly, desaturated, atmospheric</td></tr>
-            <tr><td>Required</td><td>No</td><td>Images are optional per scene but at least one is strongly recommended.</td></tr>
+            <tr><td>Naming</td><td>scene-id.jpg</td><td>Match scene id in JSON</td></tr>
+            <tr><td>Style</td><td>Dark fantasy art</td><td>Painterly, atmospheric</td></tr>
+            <tr><td>Required</td><td>No</td><td>Optional but recommended</td></tr>
           </tbody>
         </table>
 

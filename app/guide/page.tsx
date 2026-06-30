@@ -1,7 +1,6 @@
 import Link from "next/link";
 import styles from "./page.module.css";
 import WalletGuide from "./WalletGuide";
-import CharacterOrigins from "../characters/CharacterOrigins";
 import GuideTable from "./GuideTable";
 
 const WORLD_ROWS = [

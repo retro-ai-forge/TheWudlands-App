@@ -492,3 +492,11 @@
     flex: 1;
   }
 }
+
+@media (max-width: 500px) {
+  .table, .table thead, .table tbody, .table tr, .table th, .table td { display: block; width: 100%; }
+  .table thead { display: none; }
+  .table tr { margin-bottom: 1.5rem; border: 1px solid #7a6a3a; padding: 1rem; background: #0d0d0a; }
+  .table td { padding: 0.5rem 0; border: none; color: #d4c9a8; }
+  .table td:first-child { color: #c07a3a; font-weight: bold; font-size: 0.95rem; margin-bottom: 0.75rem; display: block; white-space: nowrap; }
+}
