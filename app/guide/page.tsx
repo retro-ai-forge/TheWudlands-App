@@ -100,7 +100,7 @@ export default function Guide() {
           but the choice, once made, belongs to the story.
         </p>
 
-        <GuideTable rows={WORLD_ROWS} />
+        <GuideTable rows={WORLD_ROWS} accordion />
 
         {/* ── Character & Party ───────────────────────────────── */}
         <h2 className={styles.sectionHeading}>Character &amp; Party</h2>
@@ -149,7 +149,7 @@ export default function Guide() {
           Whether you find one, afford one, or trust whoever is selling it is another matter entirely.
         </p>
 
-        <GuideTable rows={CHARACTER_ROWS} />
+        <GuideTable rows={CHARACTER_ROWS} accordion />
 
         {/* ── Character & Origins (folded; full page at /characters) ───────── */}
         <h2 className={styles.sectionHeading}>Character &amp; Origins</h2>
@@ -161,13 +161,6 @@ export default function Guide() {
           <Link href="/characters" className={styles.externalLink}>character creation</Link>{" "}
           page.
         </p>
-
-        <details className={styles.originsGuide}>
-          <summary className={styles.originsSummary}>[ Character &amp; Origins ]</summary>
-          <div className={styles.originsBody}>
-            <CharacterOrigins />
-          </div>
-        </details>
 
       </section>
     </div>

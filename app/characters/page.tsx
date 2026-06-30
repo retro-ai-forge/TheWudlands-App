@@ -4,19 +4,13 @@ import { useState } from "react";
 import styles from "./characters.module.css";
 
 export default function Characters() {
-  const [expandedSections, setExpandedSections] = useState<{ [key: string]: boolean }>({
-    gender: false,
-    race: false,
-    profession: false,
-    impact: false,
-    classes: false,
-  });
+  const [openSection, setOpenSection] = useState<string | null>(null);
+  const [openRaceCategory, setOpenRaceCategory] = useState<string | null>(null);
+  const [openProfessionCategory, setOpenProfessionCategory] = useState<string | null>(null);
+  const [openGender, setOpenGender] = useState<string | null>(null);
 
-  const toggleSection = (section: string) => {
-    setExpandedSections(prev => ({
-      ...prev,
-      [section]: !prev[section]
-    }));
+  const toggleSection = (id: string) => {
+    setOpenSection(prev => (prev === id ? null : id));
   };
 
   return (
@@ -85,261 +79,219 @@ export default function Characters() {
         </div>
       </div>
 
-      <div className={styles.section}>
-        <button
-          onClick={() => toggleSection("gender")}
-          style={{
-            background: "none",
-            border: "none",
-            cursor: "pointer",
-            padding: 0,
-            width: "100%",
-            textAlign: "center",
-          }}
-        >
-          <p className={styles.sectionTitle}>
-            {expandedSections.gender ? "▼" : "▶"} [ Gender ]
-          </p>
-          <p className={styles.sectionDivider}>— — — — — — — — — — — — — — — — —</p>
-        </button>
-        {expandedSections.gender && (
-          <>
-            <p style={{ fontSize: "0.95rem", color: "#d4c9a8", textAlign: "center", marginBottom: "1rem" }}>
-              Choose how the world reads you before you speak a single word.
-            </p>
-            <p className={styles.sectionIntro}>
-          Love is not a side note in the Wudlands — it is one of its deepest currents.
-          You may lose your heart to a warlord who should be your enemy. A noblewoman
-          may risk her title for a single night in your company. A bond forged in
-          darkness may outlast every sword and oath. These are not small things.
-          They are the moments that define a life in the Wudlands.
-          Gender is the key that unlocks them. It is what the world reads before you
-          have spoken a word — and what story writers use to craft immersive, believable
-          relationships that feel earned. A great love story needs to know who it is written
-          for. Most adventures are crafted to welcome <strong>M</strong> and <strong>D</strong>,
-          or <strong>F</strong> and <strong>D</strong> alike. Some, rarer ones, are written
-          for a single kind. What you carry here shapes every story that reaches for you.
-        </p>
-        <div className={styles.scrollContainer}>
-          {GENDERS.map((g) => (
-            <div
-              key={g.id}
-              className={styles.genderCard}
-            >
-              <p className={styles.genderSymbol}>{g.symbol}</p>
-              <p className={styles.genderName}>{g.name}</p>
-              <p className={styles.genderDescription}>{g.description}</p>
-            </div>
-          ))}
-        </div>
-          </>
-        )}
-      </div>
+      <div className={styles.sectionWrap}>
 
-      <div className={styles.section}>
-        <button
-          onClick={() => toggleSection("race")}
-          style={{
-            background: "none",
-            border: "none",
-            cursor: "pointer",
-            padding: 0,
-            width: "100%",
-            textAlign: "center",
-          }}
-        >
-          <p className={styles.sectionTitle}>
-            {expandedSections.race ? "▼" : "▶"} [ Race ]
-          </p>
-          <p className={styles.sectionDivider}>— — — — — — — — — — — — — — — — —</p>
-        </button>
-        {expandedSections.race && (
-          <>
-            <p style={{ fontSize: "0.95rem", color: "#d4c9a8", textAlign: "center", marginBottom: "1rem" }}>
-              Your blood marks you — choose the foundation of who you are.
-            </p>
-        {Object.entries(racesByCategory).map(([category, races]) => (
-          <div key={category} style={{ marginBottom: "2rem" }}>
-            <p style={{
-              fontSize: "0.85rem",
-              letterSpacing: "0.15em",
-              textTransform: "uppercase",
-              color: "#a89968",
-              marginBottom: "1rem",
-              textAlign: "center",
-            }}>
-              {category}
-            </p>
-            <div className={styles.scrollContainer}>
-              {races.map((race) => (
-                <div
-                  key={race.id}
-                  className={styles.raceCard}
-                >
-                  <p className={styles.raceName}>{race.name}</p>
-                  <p className={styles.raceDescription}>{race.description}</p>
+        {/* ── Gender ─────────────────────────────────────────── */}
+        <div className={styles.accordionItem}>
+          <button
+            className={styles.accordionHeader}
+            onClick={() => toggleSection("gender")}
+          >
+            <span>[ Gender ]</span>
+            <span className={styles.accordionChevron}>{openSection === "gender" ? "▴" : "▾"}</span>
+          </button>
+          {openSection === "gender" && (
+            <div className={styles.accordionBody}>
+              <p className={styles.sectionIntro}>
+                Love is not a side note in the Wudlands — it is one of its deepest currents.
+                You may lose your heart to a warlord who should be your enemy. A noblewoman
+                may risk her title for a single night in your company. A bond forged in
+                darkness may outlast every sword and oath. These are not small things.
+                They are the moments that define a life in the Wudlands.
+                Gender is the key that unlocks them. It is what the world reads before you
+                have spoken a word — and what story writers use to craft immersive, believable
+                relationships that feel earned. A great love story needs to know who it is written
+                for. Most adventures are crafted to welcome <strong>M</strong> and <strong>D</strong>,
+                or <strong>F</strong> and <strong>D</strong> alike. Some, rarer ones, are written
+                for a single kind. What you carry here shapes every story that reaches for you.
+              </p>
+              {GENDERS.map((g) => (
+                <div key={g.id} className={styles.subAccordionItem}>
+                  <button
+                    className={styles.subAccordionHeader}
+                    onClick={() => setOpenGender(openGender === g.id ? null : g.id)}
+                  >
+                    <span>{g.symbol} {g.name}</span>
+                    <span className={styles.accordionChevron}>{openGender === g.id ? "▴" : "▾"}</span>
+                  </button>
+                  {openGender === g.id && (
+                    <div className={styles.subAccordionBody}>
+                      <div className={styles.raceEntry}>
+                        <p className={styles.raceDescription}>{g.description}</p>
+                      </div>
+                    </div>
+                  )}
                 </div>
               ))}
             </div>
-          </div>
-        ))}
-          </>
-        )}
-      </div>
+          )}
+        </div>
 
-      <div className={styles.section}>
-        <button
-          onClick={() => toggleSection("profession")}
-          style={{
-            background: "none",
-            border: "none",
-            cursor: "pointer",
-            padding: 0,
-            width: "100%",
-            textAlign: "center",
-          }}
-        >
-          <p className={styles.sectionTitle}>
-            {expandedSections.profession ? "▼" : "▶"} [ Profession ]
-          </p>
-          <p className={styles.sectionDivider}>— — — — — — — — — — — — — — — — —</p>
-        </button>
-        {expandedSections.profession && (
-          <>
-            <p style={{ fontSize: "0.95rem", color: "#d4c9a8", textAlign: "center", marginBottom: "1rem" }}>
-              Your craft and upbringing shape what comes naturally to you.
-            </p>
-        {Object.entries(professionsByCategory).map(([category, professions]) => (
-          <div key={category} style={{ marginBottom: "2rem" }}>
-            <p style={{
-              fontSize: "0.85rem",
-              letterSpacing: "0.15em",
-              textTransform: "uppercase",
-              color: "#a89968",
-              marginBottom: "1rem",
-              textAlign: "center",
-            }}>
-              {category}
-            </p>
-            <div className={styles.scrollContainer}>
-              {professions.map((profession) => (
-                <div
-                  key={profession.id}
-                  className={styles.professionCard}
-                >
-                  <p className={styles.professionName}>{profession.name}</p>
-                  <p className={styles.professionDescription}>{profession.description}</p>
+        {/* ── Race ───────────────────────────────────────────── */}
+        <div className={styles.accordionItem}>
+          <button
+            className={styles.accordionHeader}
+            onClick={() => toggleSection("race")}
+          >
+            <span>[ Race ]</span>
+            <span className={styles.accordionChevron}>{openSection === "race" ? "▴" : "▾"}</span>
+          </button>
+          {openSection === "race" && (
+            <div className={styles.accordionBody}>
+              <p className={styles.sectionIntro}>
+                Your blood marks you — choose the foundation of who you are.
+              </p>
+              {Object.entries(racesByCategory).map(([category, races]) => (
+                <div key={category} className={styles.subAccordionItem}>
+                  <button
+                    className={styles.subAccordionHeader}
+                    onClick={() => setOpenRaceCategory(openRaceCategory === category ? null : category)}
+                  >
+                    <span>{category}</span>
+                    <span className={styles.accordionChevron}>{openRaceCategory === category ? "▴" : "▾"}</span>
+                  </button>
+                  {openRaceCategory === category && (
+                    <div className={styles.subAccordionBody}>
+                      {races.map((race) => (
+                        <div key={race.id} className={styles.raceEntry}>
+                          <p className={styles.raceName}>{race.name}</p>
+                          <p className={styles.raceDescription}>{race.description}</p>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
               ))}
             </div>
-          </div>
-        ))}
-          </>
-        )}
-      </div>
-
-      <div className={styles.section}>
-        <button
-          onClick={() => toggleSection("impact")}
-          style={{
-            background: "none",
-            border: "none",
-            cursor: "pointer",
-            padding: 0,
-            width: "100%",
-            textAlign: "center",
-          }}
-        >
-          <p className={styles.sectionTitle}>
-            {expandedSections.impact ? "▼" : "▶"} [ Story Impact ]
-          </p>
-          <p className={styles.sectionDivider}>— — — — — — — — — — — — — — — — —</p>
-        </button>
-        {expandedSections.impact && (
-          <>
-            <p style={{ fontSize: "0.95rem", color: "#d4c9a8", textAlign: "center", marginBottom: "1rem" }}>
-              Every decision leaves a mark that shapes how the world reads you.
-            </p>
-            <p className={styles.sectionIntro}>
-          Your stats are not numbers on a sheet — they are the reputation you
-          build, the bonds you forge, and the enemies you make. Every decision
-          in the Wudlands leaves a mark. These marks accumulate into social
-          forces that open doors, close them, or kick them off their hinges.
-          Most stats come with an opposing force: push too hard in one direction
-          and the other diminishes into your shadow.
-        </p>
-
-        <div className={styles.tableWrap}>
-          <table className={styles.table}>
-            <thead>
-              <tr>
-                <th>Stat</th>
-                <th>Description</th>
-                <th>In-game Story Use</th>
-              </tr>
-            </thead>
-            <tbody>
-              {STORY_STATS.map((row) => (
-                <tr key={row.stat}>
-                  <td className={styles.statName}>{row.stat}</td>
-                  <td>{row.description}</td>
-                  <td>{row.storyUse}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+          )}
         </div>
-          </>
-        )}
-      </div>
 
-      <div className={styles.section}>
-        <button
-          onClick={() => toggleSection("classes")}
-          style={{
-            background: "none",
-            border: "none",
-            cursor: "pointer",
-            padding: 0,
-            width: "100%",
-            textAlign: "center",
-          }}
-        >
-          <p className={styles.sectionTitle}>
-            {expandedSections.classes ? "▼" : "▶"} [ Classes ]
-          </p>
-          <p className={styles.sectionDivider}>— — — — — — — — — — — — — — — — —</p>
-        </button>
-        {expandedSections.classes && (
-          <>
-            <p style={{ fontSize: "0.95rem", color: "#d4c9a8", textAlign: "center", marginBottom: "1rem" }}>
-              A class is not given—it is earned through stories and recognition.
-            </p>
-            <p className={styles.sectionIntro}>
-          You begin with craft. Your hands know stone, or fire, or steel, or words. But craft
-          alone does not make you a Master of those hands. A blacksmith swinging a hammer for thirty
-          years is still a blacksmith. A farmer tilling the same fields their whole life is still
-          a farmer. To reach a class—Paladin, Ranger, Rogue, Cleric—you need something more than
-          skill. You need <strong>a story that recognizes your growth.</strong>
-        </p>
-        <p className={styles.sectionIntro}>
-          Every class begins when someone notices you. A guild master sees the way you move.
-          A wandering mentor hears your name in taverns and comes looking. A god or calling
-          speaks and you answer. But being noticed requires a story. Without stories woven into
-          the Wudlands — without <strong>story writers and narrators building the world
-          around you</strong> — no one ever notices. No guilds exist to find you. No mentors
-          come. No miracles happen. You remain what you were at birth: skilled hands,
-          capable mind, a person living a life.
-        </p>
-        <p className={styles.sectionIntro}>
-          The path to mastery requires doors to open. And doors only open when someone writes
-          them. This is why we need story writers. Without them, there are only craftspeople,
-          not classes. Without narrative, there is only skill, not destiny. Your journey to
-          something greater depends on the world choosing to witness it, and that choice
-          belongs to those who tell the stories the Wudlands lives by.
-        </p>
-          </>
-        )}
+        {/* ── Profession ─────────────────────────────────────── */}
+        <div className={styles.accordionItem}>
+          <button
+            className={styles.accordionHeader}
+            onClick={() => toggleSection("profession")}
+          >
+            <span>[ Profession ]</span>
+            <span className={styles.accordionChevron}>{openSection === "profession" ? "▴" : "▾"}</span>
+          </button>
+          {openSection === "profession" && (
+            <div className={styles.accordionBody}>
+              <p className={styles.sectionIntro}>
+                Your craft and upbringing shape what comes naturally to you.
+              </p>
+              {Object.entries(professionsByCategory).map(([category, professions]) => (
+                <div key={category} className={styles.subAccordionItem}>
+                  <button
+                    className={styles.subAccordionHeader}
+                    onClick={() => setOpenProfessionCategory(openProfessionCategory === category ? null : category)}
+                  >
+                    <span>{category}</span>
+                    <span className={styles.accordionChevron}>{openProfessionCategory === category ? "▴" : "▾"}</span>
+                  </button>
+                  {openProfessionCategory === category && (
+                    <div className={styles.subAccordionBody}>
+                      {professions.map((profession) => (
+                        <div key={profession.id} className={styles.raceEntry}>
+                          <p className={styles.raceName}>{profession.name}</p>
+                          <p className={styles.raceDescription}>{profession.description}</p>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* ── Story Impact ───────────────────────────────────── */}
+        <div className={styles.accordionItem}>
+          <button
+            className={styles.accordionHeader}
+            onClick={() => toggleSection("impact")}
+          >
+            <span>[ Story Impact ]</span>
+            <span className={styles.accordionChevron}>{openSection === "impact" ? "▴" : "▾"}</span>
+          </button>
+          {openSection === "impact" && (
+            <div className={styles.accordionBody}>
+              <p className={styles.sectionIntro}>
+                Every decision leaves a mark that shapes how the world reads you.
+              </p>
+              <p className={styles.sectionIntro}>
+                Your stats are not numbers on a sheet — they are the reputation you
+                build, the bonds you forge, and the enemies you make. Every decision
+                in the Wudlands leaves a mark. These marks accumulate into social
+                forces that open doors, close them, or kick them off their hinges.
+                Most stats come with an opposing force: push too hard in one direction
+                and the other diminishes into your shadow.
+              </p>
+              <div className={styles.tableWrap}>
+                <table className={styles.table}>
+                  <thead>
+                    <tr>
+                      <th>Stat</th>
+                      <th>Description</th>
+                      <th>In-game Story Use</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {STORY_STATS.map((row) => (
+                      <tr key={row.stat}>
+                        <td className={styles.statName}>{row.stat}</td>
+                        <td>{row.description}</td>
+                        <td>{row.storyUse}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* ── Classes ────────────────────────────────────────── */}
+        <div className={styles.accordionItem}>
+          <button
+            className={styles.accordionHeader}
+            onClick={() => toggleSection("classes")}
+          >
+            <span>[ Classes ]</span>
+            <span className={styles.accordionChevron}>{openSection === "classes" ? "▴" : "▾"}</span>
+          </button>
+          {openSection === "classes" && (
+            <div className={styles.accordionBody}>
+              <p className={styles.sectionIntro}>
+                A class is not given — it is earned through stories and recognition.
+              </p>
+              <p className={styles.sectionIntro}>
+                You begin with craft. Your hands know stone, or fire, or steel, or words. But craft
+                alone does not make you a Master of those hands. A blacksmith swinging a hammer for thirty
+                years is still a blacksmith. A farmer tilling the same fields their whole life is still
+                a farmer. To reach a class—Paladin, Ranger, Rogue, Cleric—you need something more than
+                skill. You need <strong>a story that recognizes your growth.</strong>
+              </p>
+              <p className={styles.sectionIntro}>
+                Every class begins when someone notices you. A guild master sees the way you move.
+                A wandering mentor hears your name in taverns and comes looking. A god or calling
+                speaks and you answer. But being noticed requires a story. Without stories woven into
+                the Wudlands — without <strong>story writers and narrators building the world
+                around you</strong> — no one ever notices. No guilds exist to find you. No mentors
+                come. No miracles happen. You remain what you were at birth: skilled hands,
+                capable mind, a person living a life.
+              </p>
+              <p className={styles.sectionIntro}>
+                The path to mastery requires doors to open. And doors only open when someone writes
+                them. This is why we need story writers. Without them, there are only craftspeople,
+                not classes. Without narrative, there is only skill, not destiny. Your journey to
+                something greater depends on the world choosing to witness it, and that choice
+                belongs to those who tell the stories the Wudlands lives by.
+              </p>
+            </div>
+          )}
+        </div>
+
       </div>
 
       <p className={styles.footer}>— character creation in beta 1.0 —</p>

@@ -10,17 +10,26 @@ interface Row {
 
 interface GuideTableProps {
   rows: Row[];
+  accordion?: boolean;
 }
 
-export default function GuideTable({ rows }: GuideTableProps) {
+export default function GuideTable({ rows, accordion = false }: GuideTableProps) {
   const [open, setOpen] = useState<Set<number>>(new Set());
+  const [openSingle, setOpenSingle] = useState<number | null>(null);
 
-  const toggle = (i: number) =>
-    setOpen((prev) => {
-      const next = new Set(prev);
-      next.has(i) ? next.delete(i) : next.add(i);
-      return next;
-    });
+  const toggle = (i: number) => {
+    if (accordion) {
+      setOpenSingle(prev => prev === i ? null : i);
+    } else {
+      setOpen((prev) => {
+        const next = new Set(prev);
+        next.has(i) ? next.delete(i) : next.add(i);
+        return next;
+      });
+    }
+  };
+
+  const isOpen = (i: number) => accordion ? openSingle === i : open.has(i);
 
   return (
     <>
@@ -49,12 +58,12 @@ export default function GuideTable({ rows }: GuideTableProps) {
             <dt
               className={styles.term}
               onClick={() => toggle(i)}
-              aria-expanded={open.has(i)}
+              aria-expanded={isOpen(i)}
             >
               <span>{row.key}</span>
-              <span className={styles.chevron}>{open.has(i) ? "▴" : "▾"}</span>
+              <span className={styles.chevron}>{isOpen(i) ? "▴" : "▾"}</span>
             </dt>
-            {open.has(i) && <dd className={styles.desc}>{row.value}</dd>}
+            {isOpen(i) && <dd className={styles.desc}>{row.value}</dd>}
           </div>
         ))}
       </dl>

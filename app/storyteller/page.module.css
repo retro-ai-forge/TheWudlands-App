@@ -443,18 +443,22 @@
 
 /* ── Top-level collapsible groups (progressive disclosure) ───────────── */
 .group {
-  border: 1px solid #7a6a3a;
+  border: 1px solid #3a3020;
   background: #0d0d0a;
-  margin-bottom: 1.25rem;
+  margin-bottom: 0.4rem;
 }
 
 .groupSummary {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
   font-family: "Courier New", Courier, monospace;
-  font-size: 0.95rem;
-  letter-spacing: 0.16em;
+  font-size: 0.9rem;
+  letter-spacing: 0.1em;
   text-transform: uppercase;
   color: #c07a3a;
-  padding: 1rem 1.25rem;
+  background: #1a1a1a;
+  padding: 0.65rem 1rem;
   cursor: pointer;
   user-select: none;
   list-style: none;
@@ -464,23 +468,25 @@
   display: none;
 }
 
-.groupSummary::before {
-  content: "▶ ";
+.groupSummary::after {
+  content: "▾";
   font-size: 0.7rem;
-  vertical-align: middle;
+  color: #7a6a3a;
 }
 
-.group[open] .groupSummary::before {
-  content: "▼ ";
+.group[open] .groupSummary::after {
+  content: "▴";
 }
 
 .groupSummary:hover {
   color: #d4a060;
-  background: #111108;
+  background: #222215;
 }
 
 .groupBody {
-  padding: 0.5rem 1.25rem 1.5rem;
+  padding: 0.75rem 1rem;
+  border-top: 1px solid #3a3020;
+  background: #0d0d0a;
 }
 
 @media (min-width: 720px) {
