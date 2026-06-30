@@ -61,6 +61,17 @@
   }
 }
 
+@media (max-width: 650px) {
+  .slideshow {
+    height: unset;
+    aspect-ratio: 1006 / 1563;
+  }
+
+  .slide {
+    max-width: 100%;
+  }
+}
+
 
 .status {
   margin-bottom: 0.4rem;
