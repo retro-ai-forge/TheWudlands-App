@@ -81,7 +81,7 @@ export default function About() {
           Install one of these compatible wallets on your <strong>mobile phone</strong> or browser to begin your adventure.
         </p>
 
-        <h2 className={styles.heading}>The World</h2>
+        <h2 className={styles.heading}>The Wudlands Await</h2>
 
         <p className={styles.body}>
           The Wudlands is not a place that welcomes the faint of heart. It is a world of dark forests,
@@ -116,20 +116,28 @@ export default function About() {
           pay the fee once more and your count is restored. The road is always open to those willing to walk it again.
         </p>
 
-        <h2 className={styles.heading}>Availability</h2>
+        <h2 className={styles.heading}>Character Availability</h2>
 
         <p className={styles.body}>
           See what each character is up to at a glance in the character list: <span className={styles.statusReady}>ready</span>, <StatusWithCountdown status="working" initialSeconds={67} />, <StatusWithCountdown status="travelling" initialSeconds={280} showDays />, <StatusWithCountdown status="imprisoned" initialSeconds={576} showDays /> — each with a countdown timer showing when you are ready to continue your journeys. This status is purely about your current availability and does not impact adventure content.
         </p>
 
-        <h2 className={styles.heading}>Story</h2>
+        <h2 className={styles.heading}>Story Effects</h2>
         <p className={styles.body}>
           Temporary Status Effects apply only within the current adventure. Hunger, thirst, minor illness, cold, strength buffs, regeneration, and other temporary conditions fade completely when you leave and move to your next adventure. These are the moment-to-moment challenges that push your decisions during play.
         </p>
 
-        <h2 className={styles.heading}>Onchain Data</h2>
+        <h2 className={styles.heading}>The Eternal Record</h2>
         <p className={styles.body}>
-          Onchain Status is permanent and recorded forever on the blockchain. These states follow you across every adventure you enter and shape how the world reacts to you. Your age — adult, middleaged, seasoned, elder, venerable, ancient — advances with each passing month and can be reversed. Your vital status — <span className={styles.statusAlive}>alive</span>, <span className={styles.statusDead}>dead</span>, <span className={styles.statusVampire}>vampire</span>, <span className={styles.statusSoulless}>soulless</span>, <span className={styles.statusMagicless}>magicless</span>, <span className={styles.statusCursed}>cursed</span>, or <span className={styles.statusIncorporal}>incorporal</span> persist until a future adventure offers a path to redemption. These states are depicted with icons and can determine whether you are allowed to enter certain stories or how characters within them will respond to you.
+          What the world writes of you does not fade. Every mark you leave — every choice, every scar, every name whispered in taverns — is recorded in the eternal ledger. These tales follow you from one adventure to the next, shaping how the world reads you before you have even spoken.
+        </p>
+
+        <p className={styles.body}>
+          Your <strong>origin</strong> — the blood that runs through your veins, the craft your hands learned, the gender the world perceives — is written at your birth and does not change (see the <Link href="/characters?section=story-impact" className={styles.externalLink}>Decision Impact Table</Link> to understand how your nature shapes the stories that find you). Your <strong>age</strong> advances with every passing month and cannot be stopped, though there are whispers of remedies — life potions hidden in ruins, boons from those who remember older magics. Some say age can be turned back, if you know where to look and what price to pay.
+        </p>
+
+        <p className={styles.body}>
+          Your <strong>vital status</strong> — whether you walk as <span className={styles.statusAlive}>alive</span>, return as <span className={styles.statusDead}>dead</span>, hunger as a <span className={styles.statusVampire}>vampire</span>, exist without a soul as <span className={styles.statusSoulless}>soulless</span>, stripped of magic as <span className={styles.statusMagicless}>magicless</span>, cursed by forces unseen as <span className={styles.statusCursed}>cursed</span>, or drift unanchored as <span className={styles.statusIncorporal}>incorporal</span> — is the deepest mark. These conditions persist until a future adventure offers redemption, and they determine which doors open to you and which ones slam shut. The world knows what you are. The question is what YOU do about it.
         </p>
 
       </section>

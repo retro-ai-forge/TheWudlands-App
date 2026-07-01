@@ -1,13 +1,28 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useSearchParams } from "next/navigation";
 import styles from "./characters.module.css";
 
 export default function Characters() {
+  const searchParams = useSearchParams();
   const [openSection, setOpenSection] = useState<string | null>(null);
   const [openRaceCategory, setOpenRaceCategory] = useState<string | null>(null);
   const [openProfessionCategory, setOpenProfessionCategory] = useState<string | null>(null);
   const [openGender, setOpenGender] = useState<string | null>(null);
+
+  useEffect(() => {
+    const section = searchParams.get("section");
+    if (section === "story-impact") {
+      setOpenSection("impact");
+      setTimeout(() => {
+        const element = document.getElementById("story-impact");
+        if (element) {
+          element.scrollIntoView({ behavior: "smooth", block: "start" });
+        }
+      }, 100);
+    }
+  }, [searchParams]);
 
   const toggleSection = (id: string) => {
     setOpenSection(prev => (prev === id ? null : id));
@@ -215,7 +230,7 @@ export default function Characters() {
             <span className={styles.accordionChevron}>{openSection === "impact" ? "▴" : "▾"}</span>
           </button>
           {openSection === "impact" && (
-            <div className={styles.accordionBody}>
+            <div className={styles.accordionBody} id="story-impact">
               <p className={styles.sectionIntro}>
                 Every decision leaves a mark that shapes how the world reads you.
               </p>
