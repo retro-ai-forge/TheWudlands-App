@@ -186,23 +186,20 @@ export default function Storyteller() {
             </tr>
              <tr>
               <td>Combat Scenes</td>
-              <td>Combat scenes may disable the escape route only when the story has clearly forewarned the player of the danger — through audible warnings, environmental cues, or an explicit threat of ambush. The player must always have a fair opportunity to prepare or withdraw before the fight begins. In all other combat scenes the escape route remains available, though the author may impose consequences — injury, lost items, narrative fallout — for choosing to flee.</td>
+              <td>In all combat scenes the escape route remains available by default, though the author may impose consequences — injury, lost items, narrative fallout — for choosing to flee. The escape route may be disabled when the story has clearly forewarned the player of the danger through warnings, environmental cues, or an explicit threat of ambush. The player must always have a fair opportunity to prepare or withdraw before the fight begins.</td>
             </tr>
             <tr>
               <td>Default Entry</td>
               <td>The <span className={styles.code}>default_entry</span> is the scene id where every new session begins. It also acts as the non-error fallback when a requested scene cannot be resolved under normal conditions. It must exist in the scene map and must provide a path toward the escape route.</td>
             </tr>
             <tr>
-              <td>Missing Scene Fallback</td>
-              <td>If a scene cannot be found, the engine redirects to the addon&apos;s <span className={styles.code}>emergency_exit</span> scene. That scene must lead toward 
-              the <span className={styles.code}>escape_route</span>. Only one scene of this should be provided.</td>
+              <td>Escape Route</td>
+              <td>The <span className={styles.code}>default_exit</span> is the primary retreat ending. It must be marked <span className={styles.code}>{`"ending": true`}</span>. Players must always have a path to escape or recover. Warn in the current scene if the next scene disables the escape button.</td>
             </tr>
             <tr>
-              <td>Escape Route</td>
-              <td>Every addon must include one default retreat route. 
-                Characters must always have a chance to run away, recover, or conclude. The escape route can be a short 
-                adventure in itself. When the next scene does have a disabled escape button the player must be warned 
-                in the current scene!</td>
+              <td>Missing Scene Fallback</td>
+              <td>If a scene cannot be found, the engine redirects to the addon&apos;s <span className={styles.code}>emergency_exit</span> scene. That scene must lead toward
+              the <span className={styles.code}>escape_route</span>. Only one scene of this should be provided.</td>
             </tr>
             <tr>
               <td>Survival</td>

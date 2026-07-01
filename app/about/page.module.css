@@ -91,6 +91,83 @@
   color: #c07a3a;
 }
 
+.statusReady {
+  color: #7cb342;
+  font-weight: bold;
+}
+
+.statusWorking {
+  color: #ffa726;
+  font-weight: bold;
+}
+
+.statusTravelling {
+  color: #29b6f6;
+  font-weight: bold;
+}
+
+.statusImprisoned {
+  color: #ef5350;
+  font-weight: bold;
+}
+
+.statusAlive {
+  color: #66bb6a;
+  font-weight: bold;
+}
+
+.statusDead {
+  color: #000000;
+  background-color: #ffffff;
+  font-weight: bold;
+  padding: 0.1em 0.3em;
+  border-radius: 2px;
+}
+
+.statusVampire {
+  color: #ab47bc;
+  font-weight: bold;
+}
+
+.statusCursed {
+  color: #ec407a;
+  font-weight: bold;
+}
+
+.statusSoulless {
+  color: #b71c1c;
+  font-weight: bold;
+}
+
+.statusMagicless {
+  color: #7c4dff;
+  font-weight: bold;
+}
+
+.statusVampire {
+  color: #757575;
+  font-weight: bold;
+}
+
+@keyframes fadeInOut {
+  0% {
+    opacity: 0.1;
+  }
+  50% {
+    opacity: 0.8;
+  }
+  100% {
+    opacity: 0.1;
+  }
+}
+
+.statusIncorporal {
+  color: #d4c9a8;
+  font-weight: bold;
+  font-style: italic;
+  animation: fadeInOut 4s ease-in-out infinite;
+}
+
 @media (max-width: 749px) {
   .page {
     padding: 2rem 1rem 3rem;

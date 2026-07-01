@@ -1,6 +1,40 @@
+"use client";
+
 import Image from "next/image";
 import Link from "next/link";
+import { useState, useEffect } from "react";
 import styles from "./page.module.css";
+
+const StatusWithCountdown = ({ status, initialSeconds, showDays = false }: { status: string; initialSeconds: number; showDays?: boolean }) => {
+  const [remaining, setRemaining] = useState(initialSeconds);
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setRemaining((prev) => (prev > 0 ? prev - 1 : 0));
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, []);
+
+  if (remaining === 0) {
+    return <span className={styles.statusReady}>ready</span>;
+  }
+
+  const statusClass = status === 'working' ? styles.statusWorking : status === 'travelling' ? styles.statusTravelling : styles.statusImprisoned;
+  const days = Math.floor(remaining / 86400);
+  const hours = Math.floor((remaining % 86400) / 3600);
+  const minutes = Math.floor((remaining % 3600) / 60);
+  const seconds = remaining % 60;
+
+  return (
+    <span className={statusClass}>
+      {status} [<span style={{ fontVariantNumeric: "tabular-nums" }}>
+        {(showDays || days > 0) && `${String(days).padStart(2, "0")}d `}
+        {String(hours).padStart(2, "0")}:{String(minutes).padStart(2, "0")}:{String(seconds).padStart(2, "0")}
+      </span>]
+    </span>
+  );
+};
 
 export default function About() {
   return (
@@ -39,6 +73,14 @@ export default function About() {
           </div>
         </section>
 
+        <h2 className={styles.heading}>Getting Started</h2>
+
+        <p className={styles.body}>
+          To step into the Wudlands, you will need a <strong>Polkadot wallet</strong> for login and to track your on-chain character progression.
+          The following wallet extensions are supported: <strong>Nova Wallet</strong>, <strong>Polkadot.js</strong>, <strong>Talisman</strong>, and <strong>SubWallet</strong>.
+          Install one of these compatible wallets on your <strong>mobile phone</strong> or browser to begin your adventure.
+        </p>
+
         <h2 className={styles.heading}>The World</h2>
 
         <p className={styles.body}>
@@ -47,14 +89,6 @@ export default function About() {
           You will enter it as a wanderer with little more than your wits and whatever courage you can muster —
           and the world will test both without mercy. What you find, what you survive, and what stories are told
           of your passing are entirely yours to shape.
-        </p>
-
-        <h2 className={styles.heading}>Getting Started</h2>
-
-        <p className={styles.body}>
-          To step into the Wudlands, you will need a <strong>Polkadot wallet</strong> for login and to track your on-chain character progression.
-          The following wallet extensions are supported: <strong>Nova Wallet</strong>, <strong>Polkadot.js</strong>, <strong>Talisman</strong>, and <strong>SubWallet</strong>.
-          Install one of these compatible wallets on your <strong>mobile phone</strong> or browser to begin your adventure.
         </p>
 
         <h2 className={styles.heading}>Adventures</h2>
@@ -77,9 +111,25 @@ export default function About() {
 
         <p className={styles.body}>
           Entering an adventure requires a small coin — an on-chain fee that grants you the right to explore it again and again,
-          up to three times by default. Each adventure costs approximately $0.80 for three exploration attempts. Think of it less as a toll and more as the price
+          up to three times by default. Each adventure costs approximately $1 for three exploration attempts. Think of it less as a toll and more as the price
           of a seat at the storyteller&apos;s fire. If you have exhausted your plays and wish to return, you may
           pay the fee once more and your count is restored. The road is always open to those willing to walk it again.
+        </p>
+
+        <h2 className={styles.heading}>Availability</h2>
+
+        <p className={styles.body}>
+          See what each character is up to at a glance in the character list: <span className={styles.statusReady}>ready</span>, <StatusWithCountdown status="working" initialSeconds={67} />, <StatusWithCountdown status="travelling" initialSeconds={280} showDays />, <StatusWithCountdown status="imprisoned" initialSeconds={576} showDays /> — each with a countdown timer showing when you are ready to continue your journeys. This status is purely about your current availability and does not impact adventure content.
+        </p>
+
+        <h2 className={styles.heading}>Story</h2>
+        <p className={styles.body}>
+          Temporary Status Effects apply only within the current adventure. Hunger, thirst, minor illness, cold, strength buffs, regeneration, and other temporary conditions fade completely when you leave and move to your next adventure. These are the moment-to-moment challenges that push your decisions during play.
+        </p>
+
+        <h2 className={styles.heading}>Onchain Data</h2>
+        <p className={styles.body}>
+          Onchain Status is permanent and recorded forever on the blockchain. These states follow you across every adventure you enter and shape how the world reacts to you. Your age — adult, middleaged, seasoned, elder, venerable, ancient — advances with each passing month and can be reversed. Your vital status — <span className={styles.statusAlive}>alive</span>, <span className={styles.statusDead}>dead</span>, <span className={styles.statusVampire}>vampire</span>, <span className={styles.statusSoulless}>soulless</span>, <span className={styles.statusMagicless}>magicless</span>, <span className={styles.statusCursed}>cursed</span>, or <span className={styles.statusIncorporal}>incorporal</span> persist until a future adventure offers a path to redemption. These states are depicted with icons and can determine whether you are allowed to enter certain stories or how characters within them will respond to you.
         </p>
 
       </section>
