@@ -12,6 +12,7 @@ export default function Storyteller() {
 
   const guidelinesRef = useRef<HTMLDetailsElement>(null);
   const romanceRef = useRef<HTMLDetailsElement>(null);
+  const lovehateRef = useRef<HTMLDetailsElement>(null);
   const writingRef = useRef<HTMLDetailsElement>(null);
   const imagesRef = useRef<HTMLDetailsElement>(null);
   const exampleRef = useRef<HTMLDetailsElement>(null);
@@ -20,6 +21,7 @@ export default function Storyteller() {
     const refs: { [key: string]: React.RefObject<HTMLDetailsElement | null> } = {
       guidelines: guidelinesRef,
       romance: romanceRef,
+      lovehate: lovehateRef,
       writing: writingRef,
       images: imagesRef,
       example: exampleRef,
@@ -283,6 +285,24 @@ export default function Storyteller() {
           no addon is required to contain them. If a specific story carries significant romantic themes,
           creators are asked to indicate this clearly in the addon description so players can make informed choices
           before entering.
+        </p>
+
+          </div>
+        </details>
+
+        <details ref={lovehateRef} className={styles.group} open={openSection === "lovehate"}>
+          <summary className={styles.groupSummary} onClick={(e) => {
+            e.preventDefault();
+            setOpenSection(openSection === "lovehate" ? null : "lovehate");
+          }}>[ Love &amp; Hate ]</summary>
+          <div className={styles.groupBody}>
+
+        <p className={styles.body}>
+          <strong>Love &amp; Hate ratings</strong> earned in previous adventures persist across the entire campaign. When your story introduces a <strong>powerful person</strong> — a lord, a villain, a temptress, a betrayer — you have a choice as creator. Name them specifically and they begin as a stranger, their opinion of the player starting at zero. Or leave the role <strong>generic</strong> — &ldquo;the Duke,&rdquo; &ldquo;the High Priest,&rdquo; &ldquo;the Merchant Queen&rdquo; — and the platform will reach back into the player&apos;s history. If they have already charmed, scorned, saved, or wronged someone of that standing, those old feelings carry forward into your story. A generic powerful figure is not a blank slate — they arrive with a relationship already written.
+        </p>
+
+        <p className={styles.body}>
+          Use this deliberately. A powerful figure who adores the player may offer shelter that should not exist, whisper secrets that change the shape of a scene, or step into danger on their behalf. One who despises them may close doors before they are reached, poison reputations, or arrive at the worst possible moment. If you want your story to feel connected to the broader world, lean on generic roles and let the player&apos;s history do the work. If you want a clean slate with no inherited baggage, name your character.
         </p>
 
           </div>
@@ -554,13 +574,14 @@ export default function Storyteller() {
             <tr><th>Property</th><th>Value</th><th>Notes</th></tr>
           </thead>
           <tbody>
-            <tr><td>Format</td><td>.jpg / .webp</td><td>PNG accepted but larger files</td></tr>
-            <tr><td>Min res.</td><td>1024 × 576 px</td><td>16:9 landscape preferred</td></tr>
-            <tr><td>Max res.</td><td>1200 × 700 px</td><td>Scaled down if larger</td></tr>
+            <tr><td>Format</td><td>.jpg / .webp / .gif</td><td>Other types not supported</td></tr>
+            <tr><td>Min res.</td><td>600 × 340 px</td><td>16:9 landscape</td></tr>
+            <tr><td>Max res.</td><td>1000 × 1250 px</td><td>4:5 portrait</td></tr>
             <tr><td>Max file size</td><td>400 KB</td><td>Compress before submitting</td></tr>
-            <tr><td>Naming</td><td>scene-id.jpg</td><td>Match scene id in JSON</td></tr>
-            <tr><td>Style</td><td>Dark fantasy art</td><td>Painterly, atmospheric</td></tr>
-            <tr><td>Required</td><td>No</td><td>Optional but recommended</td></tr>
+            <tr><td>Naming</td><td>scene.jpg / id.jpg</td><td>Must match the scene / id in your JSON.</td></tr>
+            <tr><td>Style</td><td>Dark fantasy art</td><td>Painterly, desaturated, atmospheric</td></tr>
+            <tr><td>Required</td><td>No</td><td>Images are optional per scene but at least one is strongly recommended.</td></tr>
+
           </tbody>
         </table>
 

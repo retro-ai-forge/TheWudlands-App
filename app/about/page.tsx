@@ -140,6 +140,10 @@ export default function About() {
           Your <strong>vital status</strong> — whether you walk as <span className={styles.statusAlive}>alive</span>, return as <span className={styles.statusDead}>dead</span>, hunger as a <span className={styles.statusVampire}>vampire</span> without aging, exist without a soul as <span className={styles.statusSoulless}>soulless</span>, stripped of magic as <span className={styles.statusMagicless}>magicless</span>, cursed by forces unseen as <span className={styles.statusCursed}>cursed</span>, or drift unanchored as <span className={styles.statusIncorporal}>incorporal</span> — is the deepest mark. These conditions persist until a future adventure offers redemption, and they determine which doors open to you and which ones slam shut. The world knows what you are. The question is what YOU do about it.
         </p>
 
+        <p className={styles.body}>
+          <strong>Love &amp; Hate</strong> — your relationship ratings with every significant person you have met, charmed, scorned, or loved — are part of the eternal record and carry forward into every adventure that follows.
+        </p>
+
       </section>
     </div>
   );

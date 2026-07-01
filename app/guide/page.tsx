@@ -138,15 +138,6 @@ export default function Guide() {
           who you put where. It may save their life. It may cost them one.
         </p>
 
-        <p className={styles.body}>
-          Every character begins at an age you choose. The Wudlands tracks time. Each adventure, by default,
-          adds one month to your character&apos;s life — and those months do not come back. Old age is not a
-          distant abstraction; it is a horizon that moves toward you with every story you enter. As the years
-          accumulate, their weight will be felt. There are those who have found ways to hold it off — life
-          potions rumoured to restore something of what time has taken, to push the horizon back a little further.
-          Whether you find one, afford one, or trust whoever is selling it is another matter entirely.
-        </p>
-
         <GuideTable rows={CHARACTER_ROWS} accordion />
 
         {/* ── Character & Origins (folded; full page at /characters) ───────── */}
@@ -154,8 +145,7 @@ export default function Guide() {
 
         <p className={styles.body}>
           Who you are before the road — your gender, race, former profession, the
-          marks your deeds leave, and the classes you can grow into. Expand the
-          section below, or open the full{" "}
+          marks your deeds leave, and the classes you can grow into. More details on the{" "}
           <Link href="/characters" className={styles.externalLink}>character creation</Link>{" "}
           page.
         </p>
