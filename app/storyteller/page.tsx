@@ -305,6 +305,69 @@ export default function Storyteller() {
           Use this deliberately. A powerful figure who adores the player may offer shelter that should not exist, whisper secrets that change the shape of a scene, or step into danger on their behalf. One who despises them may close doors before they are reached, poison reputations, or arrive at the worst possible moment. If you want your story to feel connected to the broader world, lean on generic roles and let the player&apos;s history do the work. If you want a clean slate with no inherited baggage, name your character.
         </p>
 
+        <p className={styles.body}>
+          Allowing a person from a previous adventure to be reused is done by defining <strong>matching requirements</strong> — a set of criteria the known person must satisfy before the platform considers them a valid match. Each criterion can be stated as a requirement (<span className={styles.code}>Standing: Legendary</span> means the character must know someone of exactly that level) or as an exclusion (<span className={styles.code}>!Shadow</span> means that affiliation is ruled out, so the match may be Spiritual or Power but not Shadow). You decide how many criteria must fit and how strict each one is. The more requirements you define, the more specific the match — the fewer, the broader the net. <strong>Any criterion left undefined accepts all values.</strong> A role with no requirements at all will match the first relevant person in the character&apos;s history regardless of their standing, affiliation, or faith. If no match is found, the role is treated as a new person and added to the character&apos;s list — ready to carry weight in adventures that follow.
+        </p>
+
+        <table className={styles.table}>
+          <thead>
+            <tr>
+              <th>Topic</th>
+              <th>Levels</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Standing</td>
+              <td>
+                <strong>Commoner</strong> — local reach only.<br />
+                <strong>Notable</strong> — guild officer, merchant, local lord; leverage across a town or province.<br />
+                <strong>Legendary</strong> — noble, warlord, high clergy, royalty; their word reshapes the world.
+              </td>
+            </tr>
+            <tr>
+              <td>Affiliation</td>
+              <td>
+                <strong>Spiritual</strong> — church, arcane order, cult; wields faith and sacred authority.<br />
+                <strong>Power</strong> — court, military, crown; commands soldiers, law, and political favour.<br />
+                <strong>Shadow</strong> — guild, merchant network, criminal fraternity; controls trade, information, and coin.
+              </td>
+            </tr>
+            <tr>
+              <td>Gender</td>
+              <td>
+                <strong>Male</strong> — chivalric rivalry, martial honour, political alliance through strength.<br />
+                <strong>Female</strong> — courtly love, inheritance intrigue, social manipulation.<br />
+                <strong>Other</strong> — ambiguous, magical, or outside convention; the world does not read them easily.
+              </td>
+            </tr>
+            <tr>
+              <td>Wealth</td>
+              <td>
+                <strong>Poor</strong> — no material leverage; harm or help is personal and direct.<br />
+                <strong>Comfortable</strong> — coin, shelter, skilled allies, minor bribes.<br />
+                <strong>Rich</strong> — funds enemies, buys witnesses, hires soldiers, changes the player&apos;s circumstances entirely.
+              </td>
+            </tr>
+            <tr>
+              <td>Faith</td>
+              <td>
+                <strong>Secular</strong> — religion plays no part in how they love or hate.<br />
+                <strong>Observant</strong> — faith shapes judgement; doctrine justifies the feeling.<br />
+                <strong>Fanatical</strong> — faith defines everything; can grant absolution or call for trial, exile, and holy war.
+              </td>
+            </tr>
+            <tr>
+              <td>Morality</td>
+              <td>
+                <strong>Corrupt</strong> — love and hate are tools; acts only when it profits them.<br />
+                <strong>Pragmatic</strong> — the feeling is real but so is caution; acts when the moment is right.<br />
+                <strong>Bound</strong> — feeling translates directly into action; driven by code, oath, or unbreakable conviction.
+              </td>
+            </tr>
+          </tbody>
+        </table>
+
           </div>
         </details>
 
@@ -571,7 +634,7 @@ export default function Storyteller() {
 
         <table className={styles.fieldTable}>
           <thead>
-            <tr><th>Property</th><th>Value</th><th>Notes</th></tr>
+            <tr><th>Type</th><th>Value</th><th>Notes</th></tr>
           </thead>
           <tbody>
             <tr><td>Format</td><td>.jpg / .webp / .gif</td><td>Other types not supported</td></tr>
