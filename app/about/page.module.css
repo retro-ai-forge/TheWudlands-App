@@ -92,7 +92,12 @@
 }
 
 .statusReady {
-  color: #7cb342;
+  color: #5a8c2a;
+  font-weight: bold;
+}
+
+.statusFree {
+  color: #a1d82e;
   font-weight: bold;
 }
 

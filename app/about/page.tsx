@@ -119,7 +119,7 @@ export default function About() {
         <h2 className={styles.heading}>Character Availability</h2>
 
         <p className={styles.body}>
-          See what each character is up to at a glance in the character list: <span className={styles.statusReady}>ready</span>, <StatusWithCountdown status="working" initialSeconds={67} />, <StatusWithCountdown status="travelling" initialSeconds={280} showDays />, <StatusWithCountdown status="imprisoned" initialSeconds={576} showDays /> — each with a countdown timer showing when you are ready to continue your journeys. This status is purely about your current availability and does not impact adventure content.
+          See what each character is up to at a glance in the character list: <span className={styles.statusFree}>free</span>, <span className={styles.statusReady}>ready</span>, <StatusWithCountdown status="working" initialSeconds={67} />, <StatusWithCountdown status="travelling" initialSeconds={280} showDays />, <StatusWithCountdown status="imprisoned" initialSeconds={576} showDays /> — each with a countdown timer showing when you are ready to continue your journeys. This status is purely about your current availability and does not impact adventure content.
         </p>
 
         <h2 className={styles.heading}>Story Effects</h2>
@@ -133,11 +133,11 @@ export default function About() {
         </p>
 
         <p className={styles.body}>
-          Your <strong>origin</strong> — the blood that runs through your veins, the craft your hands learned, the gender the world perceives — is written at your birth and does not change (see the <Link href="/characters?section=story-impact" className={styles.externalLink}>Decision Impact Table</Link> to understand how your nature shapes the stories that find you). Your <strong>age</strong> advances with every passing month and cannot be stopped, though there are whispers of remedies — life potions hidden in ruins, boons from those who remember older magics. Some say age can be turned back, if you know where to look and what price to pay.
+          Your <strong>origin</strong> — the blood that runs through your veins, the craft your hands learned, the gender the world perceives — is written at your birth and does not change (see the <Link href="/characters?section=story-impact" className={styles.externalLink}>Decision Impact Table</Link> to understand how your nature shapes the stories that find you). Your <strong>age</strong> advances with every passing month — a horizon that moves toward you with every adventure you enter, and those months do not come back.
         </p>
 
         <p className={styles.body}>
-          Your <strong>vital status</strong> — whether you walk as <span className={styles.statusAlive}>alive</span>, return as <span className={styles.statusDead}>dead</span>, hunger as a <span className={styles.statusVampire}>vampire</span>, exist without a soul as <span className={styles.statusSoulless}>soulless</span>, stripped of magic as <span className={styles.statusMagicless}>magicless</span>, cursed by forces unseen as <span className={styles.statusCursed}>cursed</span>, or drift unanchored as <span className={styles.statusIncorporal}>incorporal</span> — is the deepest mark. These conditions persist until a future adventure offers redemption, and they determine which doors open to you and which ones slam shut. The world knows what you are. The question is what YOU do about it.
+          Your <strong>vital status</strong> — whether you walk as <span className={styles.statusAlive}>alive</span>, return as <span className={styles.statusDead}>dead</span>, hunger as a <span className={styles.statusVampire}>vampire</span> without aging, exist without a soul as <span className={styles.statusSoulless}>soulless</span>, stripped of magic as <span className={styles.statusMagicless}>magicless</span>, cursed by forces unseen as <span className={styles.statusCursed}>cursed</span>, or drift unanchored as <span className={styles.statusIncorporal}>incorporal</span> — is the deepest mark. These conditions persist until a future adventure offers redemption, and they determine which doors open to you and which ones slam shut. The world knows what you are. The question is what YOU do about it.
         </p>
 
       </section>
