@@ -1,10 +1,10 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import styles from "./characters.module.css";
 
-export default function Characters() {
+function CharactersInner() {
   const searchParams = useSearchParams();
   const [openSection, setOpenSection] = useState<string | null>(null);
   const [openRaceCategory, setOpenRaceCategory] = useState<string | null>(null);
@@ -221,7 +221,7 @@ export default function Characters() {
         </div>
 
         {/* ── Story Impact ───────────────────────────────────── */}
-        <div className={styles.accordionItem}>
+        <div id="story-impact" className={styles.accordionItem} style={{ scrollMarginTop: "1rem" }}>
           <button
             className={styles.accordionHeader}
             onClick={() => toggleSection("impact")}
@@ -230,7 +230,7 @@ export default function Characters() {
             <span className={styles.accordionChevron}>{openSection === "impact" ? "▴" : "▾"}</span>
           </button>
           {openSection === "impact" && (
-            <div className={styles.accordionBody} id="story-impact">
+            <div className={styles.accordionBody}>
               <p className={styles.sectionIntro}>
                 Every decision leaves a mark that shapes how the world reads you.
               </p>
@@ -311,6 +311,14 @@ export default function Characters() {
 
       <p className={styles.footer}>— character creation in beta 1.0 —</p>
     </main>
+  );
+}
+
+export default function Characters() {
+  return (
+    <Suspense>
+      <CharactersInner />
+    </Suspense>
   );
 }
 

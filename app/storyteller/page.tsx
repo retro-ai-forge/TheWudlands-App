@@ -18,6 +18,12 @@ export default function Storyteller() {
   const exampleRef = useRef<HTMLDetailsElement>(null);
 
   useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const section = params.get("section");
+    if (section) setOpenSection(section);
+  }, []);
+
+  useEffect(() => {
     const refs: { [key: string]: React.RefObject<HTMLDetailsElement | null> } = {
       guidelines: guidelinesRef,
       romance: romanceRef,
@@ -68,7 +74,7 @@ export default function Storyteller() {
           </li>
         </ol>
 
-        <details ref={guidelinesRef} className={styles.group} open={openSection === "guidelines"}>
+        <details ref={guidelinesRef} className={styles.group} style={{ scrollMarginTop: "1rem" }} open={openSection === "guidelines"}>
           <summary className={styles.groupSummary} onClick={(e) => {
             e.preventDefault();
             setOpenSection(openSection === "guidelines" ? null : "guidelines");
@@ -222,7 +228,7 @@ export default function Storyteller() {
           </div>
         </details>
 
-        <details ref={romanceRef} className={styles.group} open={openSection === "romance"}>
+        <details ref={romanceRef} className={styles.group} style={{ scrollMarginTop: "1rem" }} open={openSection === "romance"}>
           <summary className={styles.groupSummary} onClick={(e) => {
             e.preventDefault();
             setOpenSection(openSection === "romance" ? null : "romance");
@@ -290,7 +296,7 @@ export default function Storyteller() {
           </div>
         </details>
 
-        <details ref={lovehateRef} className={styles.group} open={openSection === "lovehate"}>
+        <details id="love-hate" ref={lovehateRef} className={styles.group} open={openSection === "lovehate"} style={{ scrollMarginTop: "1rem" }}>
           <summary className={styles.groupSummary} onClick={(e) => {
             e.preventDefault();
             setOpenSection(openSection === "lovehate" ? null : "lovehate");
@@ -371,7 +377,7 @@ export default function Storyteller() {
           </div>
         </details>
 
-        <details ref={writingRef} className={styles.group} open={openSection === "writing"}>
+        <details ref={writingRef} className={styles.group} style={{ scrollMarginTop: "1rem" }} open={openSection === "writing"}>
           <summary className={styles.groupSummary} onClick={(e) => {
             e.preventDefault();
             setOpenSection(openSection === "writing" ? null : "writing");
@@ -504,7 +510,7 @@ export default function Storyteller() {
           </div>
         </details>
 
-        <details ref={imagesRef} className={styles.group} open={openSection === "images"}>
+        <details ref={imagesRef} className={styles.group} style={{ scrollMarginTop: "1rem" }} open={openSection === "images"}>
           <summary className={styles.groupSummary} onClick={(e) => {
             e.preventDefault();
             setOpenSection(openSection === "images" ? null : "images");
@@ -664,7 +670,7 @@ export default function Storyteller() {
           </div>
         </details>
 
-        <details ref={exampleRef} className={styles.group} open={openSection === "example"}>
+        <details ref={exampleRef} className={styles.group} style={{ scrollMarginTop: "1rem" }} open={openSection === "example"}>
           <summary className={styles.groupSummary} onClick={(e) => {
             e.preventDefault();
             setOpenSection(openSection === "example" ? null : "example");

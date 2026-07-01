@@ -1,7 +1,32 @@
+"use client";
+
 import Link from "next/link";
+import { useState, useEffect } from "react";
 import styles from "./page.module.css";
 import WalletGuide from "./WalletGuide";
 import GuideTable from "./GuideTable";
+
+const StatusWithCountdown = ({ status, initialSeconds, showDays = false }: { status: string; initialSeconds: number; showDays?: boolean }) => {
+  const [remaining, setRemaining] = useState(initialSeconds);
+  useEffect(() => {
+    const timer = setInterval(() => setRemaining((prev) => (prev > 0 ? prev - 1 : 0)), 1000);
+    return () => clearInterval(timer);
+  }, []);
+  if (remaining === 0) return <span className={styles.statusReady}>ready</span>;
+  const statusClass = status === "working" ? styles.statusWorking : status === "travelling" ? styles.statusTravelling : styles.statusImprisoned;
+  const days = Math.floor(remaining / 86400);
+  const hours = Math.floor((remaining % 86400) / 3600);
+  const minutes = Math.floor((remaining % 3600) / 60);
+  const seconds = remaining % 60;
+  return (
+    <span className={statusClass}>
+      {status} [<span style={{ fontVariantNumeric: "tabular-nums" }}>
+        {(showDays || days > 0) && `${String(days).padStart(2, "0")}d `}
+        {String(hours).padStart(2, "0")}:{String(minutes).padStart(2, "0")}:{String(seconds).padStart(2, "0")}
+      </span>]
+    </span>
+  );
+};
 
 const WORLD_ROWS = [
   { key: "Choices", value: "Every decision you make carries weight. A door left unopened, an offer refused, a stranger left to their fate — the story remembers. Do not expect choices to be decorative. Some will save you. Some will cost you dearly. A few you will regret for the rest of the adventure." },
@@ -139,6 +164,20 @@ export default function Guide() {
         </p>
 
         <GuideTable rows={CHARACTER_ROWS} accordion />
+
+        {/* ── Character Availability ──────────────────────────────────────── */}
+        <h2 className={styles.sectionHeading}>Character Availability</h2>
+
+        <p className={styles.body}>
+          See what each character is up to at a glance in the character list: <span className={styles.statusFree}>free</span>, <span className={styles.statusReady}>ready</span>, <StatusWithCountdown status="working" initialSeconds={67} />, <StatusWithCountdown status="travelling" initialSeconds={280} showDays />, <StatusWithCountdown status="imprisoned" initialSeconds={576} showDays /> — each with a countdown timer showing when you are ready to continue your journeys. This status is purely about your current availability and does not impact adventure content.
+        </p>
+
+        {/* ── Story Effects ───────────────────────────────────────────────── */}
+        <h2 className={styles.sectionHeading}>Story Effects</h2>
+
+        <p className={styles.body}>
+          Temporary Status Effects apply only within the current adventure. Hunger, thirst, minor illness, cold, strength buffs, regeneration, and other temporary conditions fade completely when you leave and move to your next adventure. These are the moment-to-moment challenges that push your decisions during play.
+        </p>
 
         {/* ── Character & Origins (folded; full page at /characters) ───────── */}
         <h2 className={styles.sectionHeading}>Character &amp; Origins</h2>

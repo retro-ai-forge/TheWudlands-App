@@ -1,40 +1,6 @@
-"use client";
-
 import Image from "next/image";
 import Link from "next/link";
-import { useState, useEffect } from "react";
 import styles from "./page.module.css";
-
-const StatusWithCountdown = ({ status, initialSeconds, showDays = false }: { status: string; initialSeconds: number; showDays?: boolean }) => {
-  const [remaining, setRemaining] = useState(initialSeconds);
-
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setRemaining((prev) => (prev > 0 ? prev - 1 : 0));
-    }, 1000);
-
-    return () => clearInterval(timer);
-  }, []);
-
-  if (remaining === 0) {
-    return <span className={styles.statusReady}>ready</span>;
-  }
-
-  const statusClass = status === 'working' ? styles.statusWorking : status === 'travelling' ? styles.statusTravelling : styles.statusImprisoned;
-  const days = Math.floor(remaining / 86400);
-  const hours = Math.floor((remaining % 86400) / 3600);
-  const minutes = Math.floor((remaining % 3600) / 60);
-  const seconds = remaining % 60;
-
-  return (
-    <span className={statusClass}>
-      {status} [<span style={{ fontVariantNumeric: "tabular-nums" }}>
-        {(showDays || days > 0) && `${String(days).padStart(2, "0")}d `}
-        {String(hours).padStart(2, "0")}:{String(minutes).padStart(2, "0")}:{String(seconds).padStart(2, "0")}
-      </span>]
-    </span>
-  );
-};
 
 export default function About() {
   return (
@@ -116,33 +82,37 @@ export default function About() {
           pay the fee once more and your count is restored. The road is always open to those willing to walk it again.
         </p>
 
-        <h2 className={styles.heading}>Character Availability</h2>
-
-        <p className={styles.body}>
-          See what each character is up to at a glance in the character list: <span className={styles.statusFree}>free</span>, <span className={styles.statusReady}>ready</span>, <StatusWithCountdown status="working" initialSeconds={67} />, <StatusWithCountdown status="travelling" initialSeconds={280} showDays />, <StatusWithCountdown status="imprisoned" initialSeconds={576} showDays /> — each with a countdown timer showing when you are ready to continue your journeys. This status is purely about your current availability and does not impact adventure content.
-        </p>
-
-        <h2 className={styles.heading}>Story Effects</h2>
-        <p className={styles.body}>
-          Temporary Status Effects apply only within the current adventure. Hunger, thirst, minor illness, cold, strength buffs, regeneration, and other temporary conditions fade completely when you leave and move to your next adventure. These are the moment-to-moment challenges that push your decisions during play.
-        </p>
-
         <h2 className={styles.heading}>The Eternal Record</h2>
         <p className={styles.body}>
           What the world writes of you does not fade. Every mark you leave — every choice, every scar, every name whispered in taverns — is recorded in the eternal ledger. These tales follow you from one adventure to the next, shaping how the world reads you before you have even spoken.
         </p>
 
-        <p className={styles.body}>
-          Your <strong>origin</strong> — the blood that runs through your veins, the craft your hands learned, the gender the world perceives — is written at your birth and does not change (see the <Link href="/characters?section=story-impact" className={styles.externalLink}>Decision Impact Table</Link> to understand how your nature shapes the stories that find you). Your <strong>age</strong> advances with every passing month — a horizon that moves toward you with every adventure you enter, and those months do not come back.
-        </p>
+        <details className={styles.accordion}>
+          <summary className={styles.accordionSummary}>Origin &amp; Age</summary>
+          <div className={styles.accordionBody}>
+            <p className={styles.body}>
+              Your <strong>origin</strong> — the blood that runs through your veins, the craft your hands learned, the gender the world perceives — is written at your birth and does not change (see the <Link href="/characters?section=story-impact" className={styles.externalLink}>Decision Impact Table</Link> to understand how your nature shapes the stories that find you). Your <strong>age</strong> advances with every passing month — a horizon that moves toward you with every adventure you enter, and those months do not come back.
+            </p>
+          </div>
+        </details>
 
-        <p className={styles.body}>
-          Your <strong>vital status</strong> — whether you walk as <span className={styles.statusAlive}>alive</span>, return as <span className={styles.statusDead}>dead</span>, hunger as a <span className={styles.statusVampire}>vampire</span> without aging, exist without a soul as <span className={styles.statusSoulless}>soulless</span>, stripped of magic as <span className={styles.statusMagicless}>magicless</span>, cursed by forces unseen as <span className={styles.statusCursed}>cursed</span>, or drift unanchored as <span className={styles.statusIncorporal}>incorporal</span> — is the deepest mark. These conditions persist until a future adventure offers redemption, and they determine which doors open to you and which ones slam shut. The world knows what you are. The question is what YOU do about it.
-        </p>
+        <details className={styles.accordion}>
+          <summary className={styles.accordionSummary}>Vital Status</summary>
+          <div className={styles.accordionBody}>
+            <p className={styles.body}>
+              Your <strong>vital status</strong> — whether you walk as <span className={styles.statusAlive}>alive</span>, return as <span className={styles.statusDead}>dead</span>, hunger as a <span className={styles.statusVampire}>vampire</span> without aging, exist without a soul as <span className={styles.statusSoulless}>soulless</span>, stripped of magic as <span className={styles.statusMagicless}>magicless</span>, cursed by forces unseen as <span className={styles.statusCursed}>cursed</span>, or drift unanchored as <span className={styles.statusIncorporal}>incorporal</span> — is the deepest mark. These conditions persist until a future adventure offers redemption, and they determine which doors open to you and which ones slam shut. The world knows what you are. The question is what YOU do about it.
+            </p>
+          </div>
+        </details>
 
-        <p className={styles.body}>
-          <strong>Love &amp; Hate</strong> — your relationship ratings with every significant person you have met, charmed, scorned, or loved — are part of the eternal record and carry forward into every adventure that follows.
-        </p>
+        <details className={styles.accordion}>
+          <summary className={styles.accordionSummary}>Love &amp; Hate</summary>
+          <div className={styles.accordionBody}>
+            <p className={styles.body}>
+              Your relationship ratings with every significant person you have met, charmed, scorned, or loved are part of the eternal record and carry forward into every adventure that follows. See the <Link href="/storyteller?section=lovehate" className={styles.externalLink}>Love &amp; Hate</Link> section in Create for details on how writers use this system.
+            </p>
+          </div>
+        </details>
 
       </section>
     </div>
