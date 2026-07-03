@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import { useState } from "react";
 import styles from "../page.module.css";
 import { EnterWudlandsButton } from "./EnterWudlandsButton";
@@ -13,16 +14,19 @@ interface LandingViewProps {
 const STEPS = [
   {
     num: "1",
+    icon: "/icons/front-1.jpg",
     title: "Pick an adventure",
     text: "Choose a self-contained story — a haunted tower, a cursed merchant road, a dungeon that swallowed three expeditions before yours.",
   },
   {
     num: "2",
+    icon: "/icons/front-2.jpg",
     title: "Make choices that matter",
     text: "Read the scene, then decide. Where you go, who you trust, when you run — every choice has consequences, and the world does not forget.",
   },
   {
     num: "3",
+    icon: "/icons/front-3.jpg",
     title: "Your deeds are saved forever",
     text: "Your character and the legend you build are kept and carried with you — your progress is yours to keep, adventure after adventure.",
   },
@@ -75,7 +79,7 @@ export function LandingView({ status, joining, onEnter, onError }: LandingViewPr
         <ol className={styles.steps}>
           {STEPS.map((s) => (
             <li key={s.num} className={styles.step}>
-              <span className={styles.stepNum}>{s.num}</span>
+              <Image src={s.icon} alt={s.title} width={160} height={160} className={styles.stepIcon} />
               <span className={styles.stepTitle}>{s.title}</span>
               <span className={styles.stepText}>{s.text}</span>
             </li>

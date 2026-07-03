@@ -38,6 +38,14 @@
   margin-bottom: 1.25rem;
 }
 
+.sectionImage {
+  max-width: 860px;
+  margin: 2rem auto;
+  padding: 1.5rem 1.25rem;
+  border: 1px solid #3a3020;
+  background: rgba(0, 0, 0, 0.4);
+}
+
 .wudSection {
   max-width: 860px;
   margin: 3rem auto 3rem;

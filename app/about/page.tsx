@@ -47,6 +47,17 @@ export default function About() {
           Install one of these compatible wallets on your <strong>mobile phone</strong> or browser to begin your adventure.
         </p>
 
+        <div className={styles.sectionImage}>
+          <Image
+            src="/images/about/the-world-awaits.jpg"
+            alt="The Wudlands Await"
+            width={860}
+            height={480}
+            priority
+            style={{ width: "100%", height: "auto", display: "block" }}
+          />
+        </div>
+
         <h2 className={styles.heading}>The Wudlands Await</h2>
 
         <p className={styles.body}>
@@ -56,6 +67,17 @@ export default function About() {
           and the world will test both without mercy. What you find, what you survive, and what stories are told
           of your passing are entirely yours to shape.
         </p>
+
+        <div className={styles.sectionImage}>
+          <Image
+            src="/images/about/the-world-adventures.jpg"
+            alt="The Wudlands Adventures"
+            width={860}
+            height={480}
+            priority
+            style={{ width: "100%", height: "auto", display: "block" }}
+          />
+        </div>
 
         <h2 className={styles.heading}>Adventures</h2>
 
@@ -67,6 +89,19 @@ export default function About() {
           all of it matters. The world does not forget what you choose.
         </p>
 
+        <div className={styles.sectionImage}>
+          <Image
+            src="/images/about/the-world-locked.jpg"
+            alt="The Wudlands Locked Gates"
+            width={860}
+            height={480}
+            priority
+            style={{ width: "100%", height: "auto", display: "block" }}
+          />
+        </div>
+
+        <h2 className={styles.heading}>Locked Gates</h2>
+
         <p className={styles.body}>
           Some adventures are locked when you first arrive. A story may require that you have already survived another
           before its gates will open to you. This is not an obstacle — it is the shape of the world. Certain ruins
@@ -75,12 +110,36 @@ export default function About() {
           The platform will tell you plainly what stands between you and the next chapter.
         </p>
 
+        <div className={styles.sectionImage}>
+          <Image
+            src="/images/about/the-world-price.jpg"
+            alt="The Wudlands Price of Play"
+            width={860}
+            height={480}
+            priority
+            style={{ width: "100%", height: "auto", display: "block" }}
+          />
+        </div>
+
+        <h2 className={styles.heading}>The Price of Play</h2>
+
         <p className={styles.body}>
           Entering an adventure requires a small coin — an on-chain fee that grants you the right to explore it again and again,
           up to three times by default. Each adventure costs approximately $1 for three exploration attempts. Think of it less as a toll and more as the price
           of a seat at the storyteller&apos;s fire. If you have exhausted your plays and wish to return, you may
           pay the fee once more and your count is restored. The road is always open to those willing to walk it again.
         </p>
+
+        <div className={styles.sectionImage}>
+          <Image
+            src="/images/about/the-world-eternal.jpg"
+            alt="The Wudlands Eternal Record"
+            width={860}
+            height={480}
+            priority
+            style={{ width: "100%", height: "auto", display: "block" }}
+          />
+        </div>
 
         <h2 className={styles.heading}>The Eternal Record</h2>
         <p className={styles.body}>
@@ -109,7 +168,11 @@ export default function About() {
           <summary className={styles.accordionSummary}>Love &amp; Hate</summary>
           <div className={styles.accordionBody}>
             <p className={styles.body}>
-              Your relationship ratings with every significant person you have met, charmed, scorned, or loved are part of the eternal record and carry forward into every adventure that follows. See the <Link href="/storyteller?section=lovehate" className={styles.externalLink}>Love &amp; Hate</Link> section in Create for details on how writers use this system.
+              Your relationship ratings with every significant person you have met, 
+              charmed, scorned, or loved are part of the eternal record 
+              and carry forward into every adventure that follows. 
+              See the <Link href="/storyteller?section=lovehate" className={styles.externalLink}>Love &amp; Hate</Link> section in Create for 
+              details on how writers use this system.
             </p>
           </div>
         </details>

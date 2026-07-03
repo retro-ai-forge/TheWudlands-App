@@ -268,6 +268,15 @@
   gap: 1.5rem;
 }
 
+/* Front icons image with border */
+.frontImage {
+  max-width: 46rem;
+  margin: 0 auto;
+  padding: 1.5rem 1.25rem;
+  border: 1px solid #3a3020;
+  background: rgba(0, 0, 0, 0.4);
+}
+
 .step {
   display: flex;
   flex-direction: column;
@@ -276,6 +285,19 @@
   padding: 1.5rem 1.25rem;
   border: 1px solid #3a3020;
   background: rgba(0, 0, 0, 0.4);
+}
+
+.stepIcon {
+  width: 220px;
+  height: 220px;
+  object-fit: contain;
+}
+
+@media (max-width: 369px) {
+  .stepIcon {
+    width: 60vw;
+    height: 60vw;
+  }
 }
 
 .stepNum {
