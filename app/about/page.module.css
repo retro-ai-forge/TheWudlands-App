@@ -12,6 +12,8 @@
   min-height: 100vh;
   background: #0a0a0a;
   padding: 0 1.5rem 4rem;
+  max-width: 100%;
+  margin: 0 auto;
 }
 
 .guidelines {
@@ -39,11 +41,14 @@
 }
 
 .sectionImage {
-  max-width: 860px;
+  max-width: min(95vw, 700px);
   margin: 2rem auto;
-  padding: 1.5rem 1.25rem;
+  margin-left: 50%;
+  transform: translateX(-50%);
+  padding: 0.75rem;
   border: 1px solid #3a3020;
   background: rgba(0, 0, 0, 0.4);
+  width: min(95vw, 700px);
 }
 
 .wudSection {
