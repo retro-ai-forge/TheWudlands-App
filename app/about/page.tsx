@@ -141,7 +141,12 @@ export default function About() {
           <summary className={styles.accordionSummary}>Origin &amp; Age</summary>
           <div className={styles.accordionBody}>
             <p className={styles.body}>
-              Your <strong>origin</strong> — the blood that runs through your veins, the craft your hands learned, the gender the world perceives — is written at your birth and does not change (see the <Link href="/characters?section=story-impact" className={styles.externalLink}>Decision Impact Table</Link> to understand how your nature shapes the stories that find you). Your <strong>age</strong> advances with every passing month — a horizon that moves toward you with every adventure you enter, and those months do not come back.
+              Your <strong>origin</strong> — the blood that runs through your veins, the craft 
+              your hands learned, the gender the world perceives — is written at your birth and does not change, 
+              see the {" "}<Link href="/characters" className={styles.externalLink}>Character Creation</Link>{" "}
+              page. To understand how your nature shapes the stories that find you, refer to the <Link href="/characters?section=story-impact" className={styles.externalLink}>Decision Impact Table</Link>. 
+              Your <strong>age</strong> advances with every passing month — a horizon that moves 
+              toward you with every adventure you enter, and those months do not come back.
             </p>
           </div>
         </details>
