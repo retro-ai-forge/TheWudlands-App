@@ -429,7 +429,7 @@ const STORY_STATS = [
   { stat: "Faith",                 description: "Devoted to a god or cosmic force, earning divine favour", storyUse: "Temples offer shelter, clergy grant healing, holy orders call on you", opposed: "Heresy / Corruption" },
   { stat: "Heresy\nCorruption",   description: "Denounced by the faithful, touched by forbidden powers", storyUse: "Inquisitors hunt you, holy temples bar entry, but dark shrines grant power to the condemned", opposed: "Faith" },
   { stat: "Notoriety",             description: "Bards sing your legend in every tavern and kingdom", storyUse: "Doors open without asking, nobles and merchants gift you gold", opposed: "Obscurity" },
-  { stat: "Obscurity",             description: "Unknown, forgotten, walking unseen through the world", storyUse: "Slip past guards unnoticed, enemies cannot find you", opposed: "Notoriety" },
+  { stat: "Obscurity",             description: "Unknown, hidden, forgotten, walking unseen through the world", storyUse: "Slip past guards unnoticed, enemies cannot find you", opposed: "Notoriety" },
   { stat: "Love\nAffection",      description: "Bonds of loyalty and deep romance",        storyUse: "Allies risk their lives for you, secret aid flows freely", opposed: "Hatred / Resentment" },
   { stat: "Hatred\nResentment",   description: "Scorned lovers and betrayed allies",       storyUse: "Ambushed by those who once knew you, reputation poisoned", opposed: "Love / Affection" },
   { stat: "Respect\nHonor",       description: "Esteemed by peers for integrity and strength", storyUse: "Duels avoided through reputation, lead honor guard", opposed: "Infamy / Disdain" },

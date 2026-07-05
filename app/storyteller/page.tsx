@@ -324,6 +324,38 @@ export default function Storyteller() {
           </thead>
           <tbody>
             <tr>
+              <td>Relationship</td>
+              <td>
+                <strong>Love</strong> — romantic devotion; shapes decisions through emotion and personal connection.<br />
+                <strong>Magic</strong> — arcane knowledge and mystical power; rare, potent, and transformative in action.<br />
+                <strong>Warfare</strong> — martial skill and combat proficiency; earned through shared battles and tested valor.
+              </td>
+            </tr>
+            <tr>
+              <td>Gender</td>
+              <td>
+                <strong>Male</strong> — chivalric rivalry, martial honour, political alliance through strength.<br />
+                <strong>Female</strong> — courtly love, inheritance intrigue, social manipulation.<br />
+                <strong>Other</strong> — ambiguous, magical, or outside convention; the world does not read them easily.
+              </td>
+            </tr>
+            <tr>
+              <td>Morality</td>
+              <td>
+                <strong>Corrupt</strong> — love and hate are tools; acts only when it profits them.<br />
+                <strong>Pragmatic</strong> — the feeling is real but so is caution; acts when the moment is right.<br />
+                <strong>Bound</strong> — feeling translates directly into action; driven by code, oath, or unbreakable conviction.
+              </td>
+            </tr>
+            <tr>
+              <td>Wealth</td>
+              <td>
+                <strong>Poor</strong> — no material leverage; harm or help is personal and direct.<br />
+                <strong>Comfortable</strong> — coin, shelter, skilled allies, minor bribes.<br />
+                <strong>Rich</strong> — funds enemies, buys witnesses, hires soldiers, changes the player&apos;s circumstances entirely.
+              </td>
+            </tr>
+            <tr>
               <td>Standing</td>
               <td>
                 <strong>Commoner</strong> — local reach only.<br />
@@ -340,35 +372,11 @@ export default function Storyteller() {
               </td>
             </tr>
             <tr>
-              <td>Gender</td>
-              <td>
-                <strong>Male</strong> — chivalric rivalry, martial honour, political alliance through strength.<br />
-                <strong>Female</strong> — courtly love, inheritance intrigue, social manipulation.<br />
-                <strong>Other</strong> — ambiguous, magical, or outside convention; the world does not read them easily.
-              </td>
-            </tr>
-            <tr>
-              <td>Wealth</td>
-              <td>
-                <strong>Poor</strong> — no material leverage; harm or help is personal and direct.<br />
-                <strong>Comfortable</strong> — coin, shelter, skilled allies, minor bribes.<br />
-                <strong>Rich</strong> — funds enemies, buys witnesses, hires soldiers, changes the player&apos;s circumstances entirely.
-              </td>
-            </tr>
-            <tr>
               <td>Faith</td>
               <td>
                 <strong>Secular</strong> — religion plays no part in how they love or hate.<br />
                 <strong>Observant</strong> — faith shapes judgement; doctrine justifies the feeling.<br />
                 <strong>Fanatical</strong> — faith defines everything; can grant absolution or call for trial, exile, and holy war.
-              </td>
-            </tr>
-            <tr>
-              <td>Morality</td>
-              <td>
-                <strong>Corrupt</strong> — love and hate are tools; acts only when it profits them.<br />
-                <strong>Pragmatic</strong> — the feeling is real but so is caution; acts when the moment is right.<br />
-                <strong>Bound</strong> — feeling translates directly into action; driven by code, oath, or unbreakable conviction.
               </td>
             </tr>
           </tbody>

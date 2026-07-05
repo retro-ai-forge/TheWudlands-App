@@ -5,12 +5,6 @@ An old-school round-based Fighting Fantasy-style adventure game inspired by Ultr
 
 This repo is the core engine to host and run several adventures in parallel for users. It tracks the current position of an adventurer, game specific variables and status.
 
-## Porting onchain EVRLOOT content
-
-This repository contains the efforts to port artwork and smart contracts from the legacy EVRLOOT game. We're integrating the visual assets and on-chain mechanics to enhance The Wudlands with established NFT infrastructure and proven game graphics. The progress can be monitored in the repo: **retro-ai-forge/TheWudlands-EVRLOOT-nfts**
-
-While this will add nice graphics to The Wudlands, there's a tradeoff: it might draw focus away from story telling and game mechanics. For now, this is considered low priority.
-
 ## Call for Contributors
 
 The Wudlands is built by the community, for the community. We're actively recruiting contributors across multiple disciplines to help bring this dark fantasy world to life. Whether you're a writer, artist, developer, or designer, there are roles that match your skills and passion.

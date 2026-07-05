@@ -24,21 +24,15 @@ export default function DevSection() {
 
         <div className={styles.socialLinks}>
           <div className={styles.socialItem}>
-            <div className={styles.socialLabel}>Main repo<br />The Wudlands App</div>
+            <div className={styles.socialLabel}>The Wudlands repo</div>
             <a href="https://github.com/retro-ai-forge/TheWudlands-App" target="_blank" rel="noopener noreferrer">
               <img src="/icons/github-icon.webp" alt="GitHub" className={styles.socialIcon} />
             </a>
           </div>
           <div className={styles.socialItem}>
-            <div className={styles.socialLabel}>News<br />FAQ channel</div>
+            <div className={styles.socialLabel}>TG FAQ channel</div>
             <a href="https://t.me/+GNokB3Y-FllhNjBi" target="_blank" rel="noopener noreferrer">
               <img src="/icons/telegram-icon.webp" alt="Telegram" className={styles.socialIcon} />
-            </a>
-          </div>
-          <div className={styles.socialItem}>
-            <div className={styles.socialLabel}>EVRLOOT<br />Porting repo</div>
-            <a href="https://github.com/retro-ai-forge/TheWudlands-EVRLOOT-nfts" target="_blank" rel="noopener noreferrer">
-              <img src="/icons/github-icon.webp" alt="GitHub NFTs" className={styles.socialIcon} />
             </a>
           </div>
         </div>

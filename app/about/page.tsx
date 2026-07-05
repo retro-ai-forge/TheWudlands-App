@@ -58,8 +58,6 @@ export default function About() {
           />
         </div>
 
-        <h2 className={styles.heading}>The Wudlands Await</h2>
-
         <p className={styles.body}>
           The Wudlands is not a place that welcomes the faint of heart. It is a world of dark forests,
           crumbling dungeons, desperate choices, and things older than memory that do not wish to be disturbed.
@@ -78,8 +76,6 @@ export default function About() {
             style={{ width: "100%", height: "auto", display: "block" }}
           />
         </div>
-
-        <h2 className={styles.heading}>Adventures</h2>
 
         <p className={styles.body}>
           The Wudlands is made up of adventures — self-contained stories written by contributors from across the world.
@@ -100,8 +96,6 @@ export default function About() {
           />
         </div>
 
-        <h2 className={styles.heading}>Locked Gates</h2>
-
         <p className={styles.body}>
           Some adventures are locked when you first arrive. A story may require that you have already survived another
           before its gates will open to you. This is not an obstacle — it is the shape of the world. Certain ruins
@@ -121,8 +115,6 @@ export default function About() {
           />
         </div>
 
-        <h2 className={styles.heading}>The Price of Play</h2>
-
         <p className={styles.body}>
           Entering an adventure requires a small coin — an on-chain fee that grants you the right to explore it again and again,
           up to three times by default. Each adventure costs approximately $1 for three exploration attempts. Think of it less as a toll and more as the price
@@ -141,7 +133,6 @@ export default function About() {
           />
         </div>
 
-        <h2 className={styles.heading}>The Eternal Record</h2>
         <p className={styles.body}>
           What the world writes of you does not fade. Every mark you leave — every choice, every scar, every name whispered in taverns — is recorded in the eternal ledger. These tales follow you from one adventure to the next, shaping how the world reads you before you have even spoken.
         </p>
