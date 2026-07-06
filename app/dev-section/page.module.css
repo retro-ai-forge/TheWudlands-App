@@ -283,6 +283,20 @@
   pointer-events: none;
 }
 
+@media (max-width: 768px) {
+  .overlayRain::after {
+    background: repeating-linear-gradient(
+      108deg,
+      transparent                0px,
+      transparent                3px,
+      rgba(160, 190, 215, 0.155) 3px,
+      rgba(160, 190, 215, 0.155) 4px,
+      transparent                4px,
+      transparent               10px
+    );
+  }
+}
+
 /* ── Animated sets ─────────────────────────────────── */
 @keyframes emergeFromBlack {
   0%   { filter: brightness(0); }

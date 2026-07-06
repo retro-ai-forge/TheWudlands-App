@@ -4,6 +4,27 @@ import { useState, useRef, useEffect } from "react";
 import styles from "./page.module.css";
 import ImageGallery from "./ImageGallery";
 
+const STORY_STATS = [
+  { stat: "Fame",                  description: "Known as a hero — trusted, admired, celebrated",    storyUse: "Nobility welcomes you with honor, strangers offer aid", opposed: "Infamous" },
+  { stat: "Infamous",              description: "Feared by the powerful — a weapon in the shadows",   storyUse: "Noble houses employ you for dark deeds, finest vintage wines flow freely", opposed: "Fame" },
+  { stat: "Faith",                 description: "Devoted to a god or cosmic force, earning divine favour", storyUse: "Temples offer shelter, clergy grant healing, holy orders call on you", opposed: "Heresy / Corruption" },
+  { stat: "Heresy\nCorruption",   description: "Denounced by the faithful, touched by forbidden powers", storyUse: "Inquisitors hunt you, holy temples bar entry, but dark shrines grant power to the condemned", opposed: "Faith" },
+  { stat: "Notoriety",             description: "Bards sing your legend in every tavern and kingdom", storyUse: "Doors open without asking, nobles and merchants gift you gold", opposed: "Obscurity" },
+  { stat: "Obscurity",             description: "Unknown, hidden, forgotten, walking unseen through the world", storyUse: "Slip past guards unnoticed, enemies cannot find you", opposed: "Notoriety" },
+  { stat: "Love\nAffection",      description: "Bonds of loyalty and deep romance",        storyUse: "Allies risk their lives for you, secret aid flows freely", opposed: "Hatred / Resentment" },
+  { stat: "Hatred\nResentment",   description: "Scorned lovers and betrayed allies",       storyUse: "Ambushed by those who once knew you, reputation poisoned", opposed: "Love / Affection" },
+  { stat: "Respect\nHonor",       description: "Esteemed by peers for integrity and strength", storyUse: "Duels avoided through reputation, lead honor guard", opposed: "Infamy / Disdain" },
+  { stat: "Infamy\nDisdain",      description: "Scorned and disrespected by worthy foes",  storyUse: "Challenged constantly, betrayed by allies",      opposed: "Respect / Honor" },
+  { stat: "Persuasion",            description: "Words that sway hearts and minds",           storyUse: "Enemies lay down arms, merchants offer discounts", opposed: "Intimidation" },
+  { stat: "Intimidation",          description: "Rule through fear and force of will",      storyUse: "Enemies flee in terror, merchants comply quickly", opposed: "Persuasion" },
+  { stat: "Guild Membership",      description: "Belonging to a guild or secret order",      storyUse: "Call for aid, access guild safehouse",          opposed: "Guild Outcast" },
+  { stat: "Guild Outcast",         description: "Exiled or ostracized from organized groups", storyUse: "Former allies hunt you, no refuge",             opposed: "Guild Membership" },
+  { stat: "Wealth\nProsperity",   description: "Gold, treasures, and assets accumulated",  storyUse: "Buy out rivals, commission grand works",        opposed: "Debt\nObligation" },
+  { stat: "Debt\nObligation",     description: "Owe gold or favors to powerful forces",    storyUse: "Creditors demand payment in blood",              opposed: "Wealth\nProsperity" },
+  { stat: "Manipulation",          description: "Master of deception and cunning schemes",   storyUse: "Turn enemies against each other, blackmail nobles", opposed: "Sincerity" },
+  { stat: "Sincerity",             description: "Known for truth and unwavering honor",      storyUse: "Enemies trust your word, easier treaties",       opposed: "Manipulation" },
+];
+
 export default function Storyteller() {
   const [showImageDimensionsPopup, setShowImageDimensionsPopup] = useState(false);
   const [expandSchema, setExpandSchema] = useState(false);
@@ -13,6 +34,7 @@ export default function Storyteller() {
   const guidelinesRef = useRef<HTMLDetailsElement>(null);
   const romanceRef = useRef<HTMLDetailsElement>(null);
   const lovehateRef = useRef<HTMLDetailsElement>(null);
+  const storyimpactRef = useRef<HTMLDetailsElement>(null);
   const writingRef = useRef<HTMLDetailsElement>(null);
   const imagesRef = useRef<HTMLDetailsElement>(null);
   const exampleRef = useRef<HTMLDetailsElement>(null);
@@ -28,6 +50,7 @@ export default function Storyteller() {
       guidelines: guidelinesRef,
       romance: romanceRef,
       lovehate: lovehateRef,
+      storyimpact: storyimpactRef,
       writing: writingRef,
       images: imagesRef,
       example: exampleRef,
@@ -45,10 +68,19 @@ export default function Storyteller() {
         <h2 className={styles.heading}>Create an Adventure</h2>
 
         <p className={styles.authorIntro}>
-          <strong>You don&apos;t need to code or use GitHub to add an adventure.</strong> If you can
-          write a branching story and gather a few images, you can build a playable adventure for
-          the Wudlands. Everything below is reference material — open a section when you need it.
+          <strong>Imagine a world.</strong> Set its mood, sketch its dangers, map the choices that lead through it.
+          Gather the images that bring it to life. Feed your vision into the Wudlands engine — and watch it transform
+          into a playable adventure that thousands of wanderers will enter, explore, and carry with them forever.
+          Everything you need to know is below. Open a section when you&apos;re ready.
         </p>
+
+        <div className={styles.imageFrame}>
+          <img
+            src="/images/create/wudland-engine.jpg"
+            alt="The Wudlands Engine"
+            className={styles.sectionImage}
+          />
+        </div>
 
         <ol className={styles.steps}>
           <li className={styles.step}>
@@ -92,7 +124,7 @@ export default function Storyteller() {
         </p>
 
          <img
-          src="/images/storyteller/createstory.jpg"
+          src="/images/create/createstory.jpg"
           alt="A magic book with a glowing red cover, open to a page with a quill pen poised above it. The text on the page reads: &apos;Create your own story in the Wudlands.&apos;"
           className={styles.sectionImage}
         />
@@ -248,7 +280,7 @@ export default function Storyteller() {
         </p>
 
         <img
-          src="/images/storyteller/minne.jpg"
+          src="/images/create/minne.jpg"
           alt="A knight kneels before a noble lady in a candlelit castle hall — courtly love in the tradition of Minne."
           className={styles.sectionImage}
         />
@@ -340,6 +372,15 @@ export default function Storyteller() {
               </td>
             </tr>
             <tr>
+              <td>Race</td>
+              <td>
+                <strong>Common Peoples</strong> — the foundational races that walk between civilization and wilderness alike.<br />
+                <strong>Mystical</strong> — touched by magic and ancient forces, bearing gifts and curses beyond mortal ken.<br />
+                <strong>Mixed Heritage</strong> — born between worlds, carrying conflicting legacies that define and complicate existence.<br />
+                <strong>Giants &amp; Kin</strong> — towering beings whose very size shapes how the world reacts to their presence.
+              </td>
+            </tr>
+            <tr>
               <td>Morality</td>
               <td>
                 <strong>Corrupt</strong> — love and hate are tools; acts only when it profits them.<br />
@@ -379,6 +420,39 @@ export default function Storyteller() {
                 <strong>Fanatical</strong> — faith defines everything; can grant absolution or call for trial, exile, and holy war.
               </td>
             </tr>
+          </tbody>
+        </table>
+
+          </div>
+        </details>
+
+        <details id="the-legend" ref={storyimpactRef} className={styles.group} style={{ scrollMarginTop: "1rem" }} open={openSection === "storyimpact"}>
+          <summary className={styles.groupSummary} onClick={(e) => {
+            e.preventDefault();
+            setOpenSection(openSection === "storyimpact" ? null : "storyimpact");
+          }}>[ Your Legend ]</summary>
+          <div className={styles.groupBody}>
+
+        <p className={styles.body}>
+          Every decision leaves a mark that shapes how the world reads you. Your stats are not numbers on a sheet — they are the reputation players build, the bonds they forge, and the enemies they make. Every choice in your adventure leaves a mark. These marks accumulate into social forces that open doors, close them, or kick them off their hinges. Most stats come with an opposing force: push too hard in one direction and the other diminishes into shadow.
+        </p>
+
+        <table className={styles.table}>
+          <thead>
+            <tr>
+              <th>Stat</th>
+              <th>Description</th>
+              <th>In-story Use</th>
+            </tr>
+          </thead>
+          <tbody>
+            {STORY_STATS.map((row, index) => (
+              <tr key={row.stat} data-pair={Math.floor(index / 2)} className={styles.statRow}>
+                <td className={styles.statName}>{row.stat}</td>
+                <td>{row.description}</td>
+                <td>{row.storyUse}</td>
+              </tr>
+            ))}
           </tbody>
         </table>
 
@@ -593,7 +667,7 @@ export default function Storyteller() {
               onClick={() => setShowImageDimensionsPopup(false)}
             >
               <img
-                src="/images/storyteller/ScreenImageSizes.jpg"
+                src="/images/create/ScreenImageSizes.jpg"
                 alt="Diagram showing five different mobile phone screen layouts with different image aspect ratios: 16:9 (landscape), 3:2, 1:1 (square), 2:3 (portrait), and 4:5 (tall portrait). Green areas represent image space, gray areas represent space available for text and buttons."
                 style={{ maxWidth: "100%", height: "auto" }}
               />

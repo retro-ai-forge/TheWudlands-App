@@ -21,19 +21,19 @@ export default function About() {
           <p className={styles.wudTitle}>— The Wud Legends —</p>
           <div className={styles.wudGrid}>
             <Link href="https://gavunwud.xyz//" target="_blank" rel="noopener noreferrer" className={styles.wudCard}>
-              <Image src="/images/about/gavun-wud-black.png" alt="Gavun the Wud" width={80} height={80} className={styles.wudIcon} />
+              <Image src="/images/theworld/gavun-wud-black.png" alt="Gavun the Wud" width={80} height={80} className={styles.wudIcon} />
               <span className={styles.wudName}>Gavun of Wud</span>
             </Link>
             <Link href="https://x.com/gavunwud" target="_blank" rel="noopener noreferrer" className={styles.wudCard}>
-              <Image src="/images/about/20260609_084229.jpg" alt="Dark Lord of Polkadut" width={80} height={80} className={styles.wudIcon} />
+              <Image src="/images/theworld/20260609_084229.jpg" alt="Dark Lord of Polkadut" width={80} height={80} className={styles.wudIcon} />
               <span className={styles.wudName}>Slayer of Polkadut</span>
             </Link>
             <Link href="https://linktr.ee/gavunwud" target="_blank" rel="noopener noreferrer" className={styles.wudCard}>
-              <Image src="/images/about/20260609_084240.jpg" alt="The Beyr Slayr" width={80} height={80} className={styles.wudIcon} />
+              <Image src="/images/theworld/20260609_084240.jpg" alt="The Beyr Slayr" width={80} height={80} className={styles.wudIcon} />
               <span className={styles.wudName}>The Beyr Slayr</span>
             </Link>
             <Link href="https://www.youtube.com/@gavunwud" target="_blank" rel="noopener noreferrer" className={styles.wudCard}>
-              <Image src="/images/about/20260609_084257.jpg" alt="Warlord of the Wud" width={80} height={80} className={styles.wudIcon} />
+              <Image src="/images/theworld/20260609_084257.jpg" alt="Warlord of the Wud" width={80} height={80} className={styles.wudIcon} />
               <span className={styles.wudName}>Warlord of the Wud</span>
             </Link>
           </div>
@@ -49,7 +49,7 @@ export default function About() {
 
         <div className={styles.sectionImage}>
           <Image
-            src="/images/about/the-world-awaits.jpg"
+            src="/images/theworld/the-world-awaits.jpg"
             alt="The Wudlands Await"
             width={860}
             height={480}
@@ -68,7 +68,7 @@ export default function About() {
 
         <div className={styles.sectionImage}>
           <Image
-            src="/images/about/the-world-adventures.jpg"
+            src="/images/theworld/the-world-adventures.jpg"
             alt="The Wudlands Adventures"
             width={860}
             height={480}
@@ -87,7 +87,7 @@ export default function About() {
 
         <div className={styles.sectionImage}>
           <Image
-            src="/images/about/the-world-locked.jpg"
+            src="/images/theworld/the-world-locked.jpg"
             alt="The Wudlands Locked Gates"
             width={860}
             height={480}
@@ -106,7 +106,7 @@ export default function About() {
 
         <div className={styles.sectionImage}>
           <Image
-            src="/images/about/the-world-price.jpg"
+            src="/images/theworld/the-world-price.jpg"
             alt="The Wudlands Price of Play"
             width={860}
             height={480}
@@ -124,7 +124,7 @@ export default function About() {
 
         <div className={styles.sectionImage}>
           <Image
-            src="/images/about/the-world-eternal.jpg"
+            src="/images/theworld/the-world-eternal.jpg"
             alt="The Wudlands Eternal Record"
             width={860}
             height={480}
@@ -144,7 +144,7 @@ export default function About() {
               Your <strong>origin</strong> — the blood that runs through your veins, the craft 
               your hands learned, the gender the world perceives — is written at your birth and does not change, 
               see the {" "}<Link href="/characters" className={styles.externalLink}>Character Creation</Link>{" "}
-              page. To understand how your nature shapes the stories that find you, refer to the <Link href="/characters?section=story-impact" className={styles.externalLink}>Decision Impact Table</Link>. 
+              page. To understand how your nature shapes the stories that find you, refer to <Link href="/create?section=storyimpact" className={styles.externalLink}>Your Legend</Link> section in Create. 
               Your <strong>age</strong> advances with every passing month — a horizon that moves 
               toward you with every adventure you enter, and those months do not come back.
             </p>
@@ -167,7 +167,7 @@ export default function About() {
               Your relationship ratings with every significant person you have met, 
               charmed, scorned, or loved are part of the eternal record 
               and carry forward into every adventure that follows. 
-              See the <Link href="/storyteller?section=lovehate" className={styles.externalLink}>Love &amp; Hate</Link> section in Create for 
+              See the <Link href="/create?section=lovehate" className={styles.externalLink}>Love &amp; Hate</Link> section in Create for 
               details on how writers use this system.
             </p>
           </div>

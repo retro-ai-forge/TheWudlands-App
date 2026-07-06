@@ -8,9 +8,9 @@ import { useWallet } from "./WalletProvider";
 
 const NAV = [
   { label: "Play",       href: "/" },
-  { label: "The World",  href: "/about" },
+  { label: "The World",  href: "/theworld" },
   { label: "Guide",      href: "/guide" },
-  { label: "Create",     href: "/storyteller" },
+  { label: "Create",     href: "/create" },
 ];
 
 function shortenAddress(address: string): string {

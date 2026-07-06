@@ -62,6 +62,110 @@
   background: #111108;
 }
 
+/* Desktop: Golden boundary around opposing stat pairs (900px and up) */
+@media (min-width: 900px) {
+  /* First row of each pair: golden top border on all cells */
+  .statRow:nth-child(odd) td {
+    border-top: 1px solid #c07a3a;
+  }
+
+  .statRow:nth-child(odd) td:first-child {
+    border-left: 1px solid #c07a3a;
+  }
+
+  .statRow:nth-child(odd) td:last-child {
+    border-right: 1px solid #c07a3a;
+  }
+
+  /* Second row of each pair: golden bottom border on all cells */
+  .statRow:nth-child(even) td {
+    border-bottom: 1px solid #c07a3a;
+  }
+
+  .statRow:nth-child(even) td:first-child {
+    border-left: 1px solid #c07a3a;
+  }
+
+  .statRow:nth-child(even) td:last-child {
+    border-right: 1px solid #c07a3a;
+  }
+
+  /* Middle columns: keep vertical lines */
+  .statRow td:not(:first-child):not(:last-child) {
+    border-left: 1px solid #3a3020;
+    border-right: 1px solid #3a3020;
+  }
+}
+
+/* Mobile and Tablet: Pairs stacked vertically in one box (below 900px) */
+@media (max-width: 899px) {
+  .table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+
+  .table thead {
+    display: none;
+  }
+
+  .table tbody {
+    display: block;
+  }
+
+  /* First row of each pair: top with border */
+  .statRow:nth-child(odd) {
+    display: block;
+    width: 100%;
+    border: 1px solid #c07a3a;
+    border-bottom: none;
+    padding: 1rem;
+    box-sizing: border-box;
+    margin: 0;
+  }
+
+  /* Second row of each pair: bottom, with normal color divider line */
+  .statRow:nth-child(even) {
+    display: block;
+    width: 100%;
+    border: 1px solid #c07a3a;
+    border-top: 1px solid #3a3020;
+    padding: 1rem;
+    box-sizing: border-box;
+    margin: 0 0 1.5rem 0;
+  }
+
+  /* Hide in-story use column */
+  .statRow td:nth-child(3) {
+    display: none !important;
+  }
+
+  /* Stat name as heading */
+  .statRow td:first-child {
+    display: block;
+    width: 100%;
+    border: none !important;
+    padding: 0;
+    margin-bottom: 0.5rem;
+    color: #c07a3a;
+    font-weight: bold;
+  }
+
+  /* Description as body text */
+  .statRow td:nth-child(2) {
+    display: block;
+    width: 100%;
+    border: none !important;
+    padding: 0;
+    color: #d4c9a8;
+  }
+
+  .statRow td {
+    border: none !important;
+    padding: 0;
+    display: block;
+  }
+}
+
 .sectionHeading {
   font-family: "Courier New", Courier, monospace;
   font-size: 1rem;
@@ -106,6 +210,17 @@
   overflow-x: auto;
   white-space: pre;
   margin-bottom: 1.5rem;
+}
+
+.imageFrame {
+  max-width: min(95vw, 750px);
+  margin: 2rem auto;
+  margin-left: 50%;
+  transform: translateX(-50%);
+  padding: 0.75rem;
+  border: 1px solid #3a3020;
+  background: rgba(0, 0, 0, 0.4);
+  width: min(95vw, 750px);
 }
 
 .sectionImage {
@@ -259,6 +374,121 @@
     transparent               10px
   );
   animation: rainFall 0.22s linear infinite;
+  pointer-events: none;
+}
+
+@media (max-width: 768px) {
+  .overlayRain::after {
+    background: repeating-linear-gradient(
+      108deg,
+      transparent                0px,
+      transparent                3px,
+      rgba(160, 190, 215, 0.155) 3px,
+      rgba(160, 190, 215, 0.155) 4px,
+      transparent                4px,
+      transparent               10px
+    );
+  }
+}
+
+@keyframes snowFall {
+  0%   { background-position: 0 0; }
+  100% { background-position: 0 200px; }
+}
+
+.overlaySnow::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image:
+    radial-gradient(circle at 13% 10%, rgba(255, 255, 255, 0.6) 2.5px, transparent 2.5px),
+    radial-gradient(circle at 29% 15%, rgba(255, 255, 255, 0.5) 2px, transparent 2px),
+    radial-gradient(circle at 47% 20%, rgba(255, 255, 255, 0.65) 2px, transparent 2px),
+    radial-gradient(circle at 67% 35%, rgba(255, 255, 255, 0.55) 2.5px, transparent 2.5px),
+    radial-gradient(circle at 83% 25%, rgba(255, 255, 255, 0.6) 2px, transparent 2px),
+    radial-gradient(circle at 9% 50%, rgba(255, 255, 255, 0.5) 2.5px, transparent 2.5px),
+    radial-gradient(circle at 19% 65%, rgba(255, 255, 255, 0.65) 2px, transparent 2px),
+    radial-gradient(circle at 37% 55%, rgba(255, 255, 255, 0.55) 2px, transparent 2px),
+    radial-gradient(circle at 51% 75%, rgba(255, 255, 255, 0.6) 2.5px, transparent 2.5px),
+    radial-gradient(circle at 67% 45%, rgba(255, 255, 255, 0.5) 2px, transparent 2px),
+    radial-gradient(circle at 81% 85%, rgba(255, 255, 255, 0.65) 2px, transparent 2px),
+    radial-gradient(circle at 97% 30%, rgba(255, 255, 255, 0.55) 2.5px, transparent 2.5px),
+    radial-gradient(circle at 11% 40%, rgba(255, 255, 255, 0.6) 2px, transparent 2px),
+    radial-gradient(circle at 27% 70%, rgba(255, 255, 255, 0.5) 2px, transparent 2px),
+    radial-gradient(circle at 41% 55%, rgba(255, 255, 255, 0.65) 2.5px, transparent 2.5px),
+    radial-gradient(circle at 57% 22%, rgba(255, 255, 255, 0.55) 2px, transparent 2px),
+    radial-gradient(circle at 71% 90%, rgba(255, 255, 255, 0.6) 2px, transparent 2px),
+    radial-gradient(circle at 87% 38%, rgba(255, 255, 255, 0.5) 2.5px, transparent 2.5px),
+    radial-gradient(circle at 1% 60%, rgba(255, 255, 255, 0.55) 2px, transparent 2px),
+    radial-gradient(circle at 73% 18%, rgba(255, 255, 255, 0.65) 2px, transparent 2px),
+    radial-gradient(circle at 33% 28%, rgba(255, 255, 255, 0.6) 2.5px, transparent 2.5px),
+    radial-gradient(circle at 47% 80%, rgba(255, 255, 255, 0.5) 2px, transparent 2px),
+    radial-gradient(circle at 5% 12%, rgba(255, 255, 255, 0.55) 2px, transparent 2px),
+    radial-gradient(circle at 63% 42%, rgba(255, 255, 255, 0.65) 2.5px, transparent 2.5px),
+    radial-gradient(circle at 79% 72%, rgba(255, 255, 255, 0.6) 2px, transparent 2px),
+    radial-gradient(circle at 23% 58%, rgba(255, 255, 255, 0.5) 2.5px, transparent 2.5px),
+    radial-gradient(circle at 91% 32%, rgba(255, 255, 255, 0.65) 2px, transparent 2px),
+    radial-gradient(circle at 15% 8%, rgba(255, 255, 255, 0.55) 2px, transparent 2px),
+    radial-gradient(circle at 69% 48%, rgba(255, 255, 255, 0.6) 2.5px, transparent 2.5px),
+    radial-gradient(circle at 39% 95%, rgba(255, 255, 255, 0.5) 2px, transparent 2px),
+    radial-gradient(circle at 21% 35%, rgba(255, 255, 255, 0.6) 2px, transparent 2px),
+    radial-gradient(circle at 55% 8%, rgba(255, 255, 255, 0.55) 2.5px, transparent 2.5px),
+    radial-gradient(circle at 75% 52%, rgba(255, 255, 255, 0.65) 2px, transparent 2px),
+    radial-gradient(circle at 3% 75%, rgba(255, 255, 255, 0.5) 2px, transparent 2px),
+    radial-gradient(circle at 43% 38%, rgba(255, 255, 255, 0.6) 2.5px, transparent 2.5px),
+    radial-gradient(circle at 61% 65%, rgba(255, 255, 255, 0.55) 2px, transparent 2px),
+    radial-gradient(circle at 85% 15%, rgba(255, 255, 255, 0.65) 2px, transparent 2px),
+    radial-gradient(circle at 31% 88%, rgba(255, 255, 255, 0.5) 2.5px, transparent 2.5px),
+    radial-gradient(circle at 53% 42%, rgba(255, 255, 255, 0.6) 2px, transparent 2px),
+    radial-gradient(circle at 7% 28%, rgba(255, 255, 255, 0.55) 2px, transparent 2px),
+    radial-gradient(circle at 77% 5%, rgba(255, 255, 255, 0.65) 2.5px, transparent 2.5px),
+    radial-gradient(circle at 35% 68%, rgba(255, 255, 255, 0.5) 2px, transparent 2px),
+    radial-gradient(circle at 89% 62%, rgba(255, 255, 255, 0.6) 2px, transparent 2px),
+    radial-gradient(circle at 25% 12%, rgba(255, 255, 255, 0.55) 2.5px, transparent 2.5px),
+    radial-gradient(circle at 59% 78%, rgba(255, 255, 255, 0.65) 2px, transparent 2px),
+    radial-gradient(circle at 17% 52%, rgba(255, 255, 255, 0.5) 2px, transparent 2px),
+    radial-gradient(circle at 45% 5%, rgba(255, 255, 255, 0.6) 2.5px, transparent 2.5px),
+    radial-gradient(circle at 65% 88%, rgba(255, 255, 255, 0.55) 2px, transparent 2px),
+    radial-gradient(circle at 93% 45%, rgba(255, 255, 255, 0.65) 2px, transparent 2px),
+    radial-gradient(circle at 37% 18%, rgba(255, 255, 255, 0.5) 2.5px, transparent 2.5px),
+    radial-gradient(circle at 71% 62%, rgba(255, 255, 255, 0.6) 2px, transparent 2px);
+  background-size: 100% 200px;
+  background-repeat: repeat-y;
+  animation: snowFall 6s linear infinite;
+  pointer-events: none;
+}
+
+/* lightning overlay */
+@keyframes lightningFlash {
+  0%   { background-color: transparent; }
+  43%  { background-color: transparent; }
+  44%  { background-color: rgba(255, 255, 255, 0.9); }
+  45%  { background-color: transparent; }
+  46%  { background-color: rgba(255, 255, 255, 0.9); }
+  47%  { background-color: rgba(255, 255, 255, 0.6); }
+  71%  { background-color: rgba(255, 255, 255, 0.1); }
+  86%  { background-color: transparent; }
+  100% { background-color: transparent; }
+}
+
+@keyframes lightningFlash {
+  0%   { background-color: transparent; }
+  43%  { background-color: transparent; }
+  44%  { background-color: rgba(255, 255, 255, 1); }
+  45%  { background-color: rgba(255, 255, 255, 0.6); }
+  46%  { background-color: rgba(255, 255, 255, 1); }
+  47%  { background-color: rgba(255, 255, 255, 0.8); }
+  71%  { background-color: rgba(255, 255, 255, 0.2); }
+  86%  { background-color: transparent; }
+  100% { background-color: transparent; }
+}
+
+.overlayLightning::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-color: transparent;
+  animation: lightningFlash 7s ease-in-out infinite;
   pointer-events: none;
 }
 

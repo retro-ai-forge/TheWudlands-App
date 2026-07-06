@@ -261,18 +261,33 @@
 /* How it works — three steps */
 .steps {
   list-style: none;
-  max-width: 100%;
   margin: 0 auto;
   display: flex;
   flex-direction: column;
   gap: 1.5rem;
+  width: 100%;
 }
 
-@media (min-width: 750px) {
+@media (max-width: 899px) {
+  .steps {
+    flex-direction: column;
+  }
+}
+
+@media (min-width: 900px) {
+  .section {
+    max-width: 900px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+
   .steps {
     flex-direction: row;
     justify-content: center;
-    max-width: none;
+  }
+
+  .step {
+    flex: 1;
   }
 }
 
@@ -381,11 +396,6 @@
 @media (min-width: 720px) {
   .heroHeadline {
     font-size: 2.6rem;
-  }
-
-  .steps {
-    flex-direction: row;
-    align-items: stretch;
   }
 
   .step {

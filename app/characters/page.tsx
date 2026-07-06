@@ -220,52 +220,6 @@ function CharactersInner() {
           )}
         </div>
 
-        {/* ── Story Impact ───────────────────────────────────── */}
-        <div id="story-impact" className={styles.accordionItem} style={{ scrollMarginTop: "1rem" }}>
-          <button
-            className={styles.accordionHeader}
-            onClick={() => toggleSection("impact")}
-          >
-            <span>[ Story Impact ]</span>
-            <span className={styles.accordionChevron}>{openSection === "impact" ? "▴" : "▾"}</span>
-          </button>
-          {openSection === "impact" && (
-            <div className={styles.accordionBody}>
-              <p className={styles.sectionIntro}>
-                Every decision leaves a mark that shapes how the world reads you.
-              </p>
-              <p className={styles.sectionIntro}>
-                Your stats are not numbers on a sheet — they are the reputation you
-                build, the bonds you forge, and the enemies you make. Every decision
-                in the Wudlands leaves a mark. These marks accumulate into social
-                forces that open doors, close them, or kick them off their hinges.
-                Most stats come with an opposing force: push too hard in one direction
-                and the other diminishes into your shadow.
-              </p>
-              <div className={styles.tableWrap}>
-                <table className={styles.table}>
-                  <thead>
-                    <tr>
-                      <th>Stat</th>
-                      <th>Description</th>
-                      <th>In-game Story Use</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {STORY_STATS.map((row) => (
-                      <tr key={row.stat}>
-                        <td className={styles.statName}>{row.stat}</td>
-                        <td>{row.description}</td>
-                        <td>{row.storyUse}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          )}
-        </div>
-
         {/* ── Classes ────────────────────────────────────────── */}
         <div className={styles.accordionItem}>
           <button

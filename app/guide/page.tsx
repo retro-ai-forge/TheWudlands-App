@@ -41,10 +41,10 @@ const WORLD_ROWS = [
 const CHARACTER_ROWS = [
   { key: "Race", value: "Several races are available at character creation. Each carries its own strengths, history, and the way the world reacts to your face. Your choice is permanent — the Wudlands does not let you be someone else." },
   { key: "Class", value: "You begin classless. Classes become available in the alpha release, chosen only after you have gathered enough experience and skill to earn one. Some may require you to find a teacher willing to take you on — they will not all be easy to find, and not all of them will find you worthy on the first meeting." },
-  { key: "Party Size", value: "Up to four adventurers may travel together. A party is only as strong as the decisions it makes as a group — and the first decision is the marching order." },
-  { key: "Marching Order", value: "The formation your party travels in determines who faces what first. The front takes the brunt of head-on threats. The rear is exposed to anything that sneaks up from behind. The middle is not safe either — attacks from hidden positions, aerial threats, or ambushes from the flanks strike wherever the story demands. Set your order with care and revisit it when the terrain changes." },
   { key: "Age & Time", value: "Your character starts at an age you choose. Every adventure adds one month to their life by default. Old age accumulates and eventually makes itself known. Life potions exist that can restore some measure of youth — but they must be found, and nothing in the Wudlands comes without a cost." },
   { key: "Carrying Equipment", value: "What you can carry has limits, though they are not rigid walls. Riding dogs and backpacks extend what you can bring into the field. Exceed your soft limit and the weight will tell — slower movement, quicker exhaustion, choices made harder by the burden on your back. Carry what you need. Leave behind what you can afford to lose." },
+  { key: "Party Size", value: "Up to four adventurers may travel together. A party is only as strong as the decisions it makes as a group — and the first decision is the marching order." },
+  { key: "Marching Order", value: "The formation your party travels in determines who faces what first. The front takes the brunt of head-on threats. The rear is exposed to anything that sneaks up from behind. The middle is not safe either — attacks from hidden positions, aerial threats, or ambushes from the flanks strike wherever the story demands. Set your order with care and revisit it when the terrain changes." },
 ];
 
 export default function Guide() {
@@ -55,8 +55,16 @@ export default function Guide() {
 
         <p className={styles.body}>
           This guide explains how the Wudlands works — the systems, mechanics, and rules that shape your experience.
-          For information about the world itself, how to get started, and the story behind the Wudlands, visit the <Link href="/about" className={styles.externalLink}>The World</Link> section.
+          For information about the world itself, how to get started, and the story behind the Wudlands, visit the <Link href="/theworld" className={styles.externalLink}>The World</Link> section.
         </p>
+
+        <div className={styles.imageFrame}>
+          <img
+            src="/images/guide/adventurer-guide.jpg"
+            alt="The Adventurer's Guide"
+            className={styles.sectionImage}
+          />
+        </div>
 
         <p className={styles.body}>
           To log in and store your adventure progress forever on the decentralized ledger, you will need to connect a wallet. This ensures your character, deeds, and choices are permanently recorded on the blockchain.

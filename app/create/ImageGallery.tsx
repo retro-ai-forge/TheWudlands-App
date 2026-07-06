@@ -168,6 +168,17 @@ const SETS: SetConfig[] = [
     overlay: "overlayRain",
   },
   {
+    name: "Snow",
+    meta: "overlay — animated falling snowflakes + brightness(0.95) saturate(0.8)",
+    filter: "brightness(0.95) saturate(0.8)",
+    overlay: "overlaySnow",
+  },
+  {
+    name: "Lightning",
+    meta: "overlay — periodic lightning flashes, overexpose and fade",
+    overlay: "overlayLightning",
+  },
+  {
     name: "Scanlines",
     meta: "overlay — horizontal scanlines every 5px",
     overlay: "overlayScanlines",
