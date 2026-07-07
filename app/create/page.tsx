@@ -4,6 +4,20 @@ import { useState, useRef, useEffect } from "react";
 import styles from "./page.module.css";
 import ImageGallery from "./ImageGallery";
 
+function randomizeText(text: string): string {
+  return text.replace(/\{([^}]+)\}/g, (match) => {
+    const options = match.slice(1, -1).split(' | ');
+    return options[Math.floor(Math.random() * options.length)];
+  });
+}
+
+const FLIRT_LINES = [
+  "Isolde wears a {crimson | deep wine | blood-red} {silk gown | satin robe | velvet dress}, pooled around her like {rose petals | spilled wine | liquid shadow}.",
+  "The fabric flows like liquid, unbuttoned at the throat, and {rose petals | scattered silk scarves | perfumed oils} surround her.",
+  "A {gold | silver | pearl} pendant rests at her collarbone, catching light from {multiple candles | brazier flames | hanging lanterns}.",
+  "Her hair cascades {unbound | loosely braided | tumbling past her shoulders}, intertwined with {silk ribbons | golden threads | fresh flowers}."
+];
+
 const STORY_STATS = [
   { stat: "Fame",                  description: "Known as a hero — trusted, admired, celebrated",    storyUse: "Nobility welcomes you with honor, strangers offer aid", opposed: "Infamous" },
   { stat: "Infamous",              description: "Feared by the powerful — a weapon in the shadows",   storyUse: "Noble houses employ you for dark deeds, finest vintage wines flow freely", opposed: "Fame" },
@@ -29,7 +43,22 @@ export default function Storyteller() {
   const [showImageDimensionsPopup, setShowImageDimensionsPopup] = useState(false);
   const [expandSchema, setExpandSchema] = useState(false);
   const [expandExample, setExpandExample] = useState(false);
+  const [expandNPC, setExpandNPC] = useState(false);
+  const [expandUsage, setExpandUsage] = useState(false);
   const [openSection, setOpenSection] = useState<string | null>(null);
+
+  const [randomFlirtLine, setRandomFlirtLine] = useState("");
+
+  useEffect(() => {
+    const generateRandomLine = () => {
+      const randomIndex = Math.floor(Math.random() * FLIRT_LINES.length);
+      setRandomFlirtLine(randomizeText(FLIRT_LINES[randomIndex]));
+    };
+
+    generateRandomLine();
+    const interval = setInterval(generateRandomLine, 10000);
+    return () => clearInterval(interval);
+  }, []);
 
   const guidelinesRef = useRef<HTMLDetailsElement>(null);
   const romanceRef = useRef<HTMLDetailsElement>(null);
@@ -360,7 +389,11 @@ export default function Storyteller() {
               <td>
                 <strong>Love</strong> — romantic devotion; shapes decisions through emotion and personal connection.<br />
                 <strong>Magic</strong> — arcane knowledge and mystical power; rare, potent, and transformative in action.<br />
-                <strong>Warfare</strong> — martial skill and combat proficiency; earned through shared battles and tested valor.
+                <strong>Warfare</strong> — martial skill and combat proficiency; earned through shared battles and tested valor.<br />
+                <strong>Economic</strong> — money moves mountains; convert riches into influence and exclusive paths.<br />
+                <strong>Bloodline</strong> — family ties and hereditary bonds; legacy and blood obligation run deeper than choice.<br />
+                <strong>Prophecy</strong> — bound by fate itself; a shared prophecy or mystical connection ties your futures together.<br />
+                <strong>Knowledge</strong> — information, secrets, and insight; shapes decisions through understanding and foresight.
               </td>
             </tr>
             <tr>
@@ -374,10 +407,10 @@ export default function Storyteller() {
             <tr>
               <td>Race</td>
               <td>
-                <strong>Common Peoples</strong> — the foundational races that walk between civilization and wilderness alike.<br />
+                <strong>Common</strong> — the foundational races that walk between civilization and wilderness alike.<br />
                 <strong>Mystical</strong> — touched by magic and ancient forces, bearing gifts and curses beyond mortal ken.<br />
-                <strong>Mixed Heritage</strong> — born between worlds, carrying conflicting legacies that define and complicate existence.<br />
-                <strong>Giants &amp; Kin</strong> — towering beings whose very size shapes how the world reacts to their presence.
+                <strong>Mixed</strong> — born between worlds, carrying conflicting legacies that define and complicate existence.<br />
+                <strong>Giants</strong> — towering beings whose very size shapes how the world reacts to their presence.
               </td>
             </tr>
             <tr>
@@ -422,6 +455,249 @@ export default function Storyteller() {
             </tr>
           </tbody>
         </table>
+
+        <h3 className={styles.subHeading}>NPC Example: Lady Isolde</h3>
+
+        <p className={styles.body}>
+          Below is a complete example of an important NPC character defined in JSON. Lady Isolde represents a <span className={styles.highlight}>Minne courtly love</span> —
+          a noble woman whose affection must be earned through deeds, not words. Her matching requirements ensure she only appears to players 
+          who have previously encountered a notable female noble, creating continuity across adventures. Fallback parameters will be used in 
+          case no match is found in the character history. Allowing her to enter as a new person in the history of the player. 
+          The fallback entry is <strong>mandatory</strong> for negated entries or missing stats. Visuals are optional, but recommended to give 
+          the player a sense of her appearance and presence in the world.
+        </p>
+
+        <button
+          onClick={() => setExpandNPC(!expandNPC)}
+          style={{
+            marginBottom: "1.5rem",
+            padding: "0.75rem 1.5rem",
+            background: "#1a1a1a",
+            color: "#d4c9a8",
+            border: "2px solid #7a6a3a",
+            cursor: "pointer",
+            fontSize: "0.9rem",
+            letterSpacing: "0.1em",
+            transition: "all 0.2s",
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.background = "#7a6a3a";
+            e.currentTarget.style.color = "#0a0a0a";
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.background = "#1a1a1a";
+            e.currentTarget.style.color = "#d4c9a8";
+          }}
+        >
+          {expandNPC ? "[ HIDE NPC EXAMPLE ]" : "[ SHOW NPC EXAMPLE ]"}
+        </button>
+        {expandNPC && (
+          <code className={styles.codeBlock}>{`
+          { 
+            // identifier for this NPC, used in the story to reference them
+            "id": "lady-isolde",
+            "pattern": {
+              "relationship": "Love",
+              "gender": "Female",
+              "race": "Common",
+              // morality is not defined, any is accepted
+              // wealth is negated, so any poor person will be excluded from matching
+              "wealth": "!Poor", 
+              // standing is negated, so any commoner will be excluded from matching
+              "standing": "!Commoner",
+              "affiliation": "Power",
+              "faith": "Observant"
+            },
+            // in case no match is found, use this complete fallback entries to create a new person
+            "fallback": {
+              // in case no match is found, this is the default race to use for the new NPC 
+              "name": "Lady Isolde of Ashenvale",
+              "relationship": "Love",
+              "race": "Elf",
+              "morality": "Pragmatic",
+              "wealth": "Rich",
+              "standing": "Notable",
+              "affiliation": "Power",
+              "faith": "Observant",
+              // the default starting love/hate rating for this NPC if no match is found
+              "rating_npc": 0,
+              // visuals for the new person
+              "visuals": {
+                "formal_1": "She wears a {royal blue | deep purple | midnight black} {brocade gown | formal dress | coronet robe} adorned with intricate {gold | silver | bronze} embroidery.",
+                "formal_2": "Multiple {gemstones | pearls | jewels} are woven into the fabric, and she carries a {ceremonial fan | formal scepter | ornate staff} as a symbol of her station.",
+                "formal_3": "Her hair is swept into an elaborate {upswept style | jeweled crown | ornate headdress}, held with {gold pins | pearl clasps | silver combs}.",
+                "formal_4": "She sits upon a {high-backed chair | throne | dais}, surrounded by the {tapestries | heraldic banners | ceremonial symbols} of her house.",
+
+                "walk_1": "She wears a severe travelling coat of {charcoal | rust-brown | slate grey}, a {wooden staff | iron-tipped walking staff | carved walking stick} in her hand.",
+                "walk_2": "Her feet are shod in {leather riding boots | heavy wool boots | weathered travel boots}, and a {leather satchel | canvas pack | travel bag} rests across her shoulder.",
+                "walk_3": "Her hair is bound in a {tight braid | high knot | austere twist}.",
+                "walk_4": "She wears no jewelry, only a {rope belt | leather belt | cord cincher} at her waist.",
+  
+                "dinner_1": "She wears a {simple linen gown | understated silk shift | modest wool dress} in {grey-blue | ash grey | pale dove}, seated at a table before a {goblet of wine | cup of mead | plate of bread}.",
+                "dinner_2": "The fabric carries minimal embroidery—a few threads at the cuffs—and a {silver spoon | bronze knife | pewter fork} rests beside her plate.",
+                "dinner_3": "Her hair is bound in a {tight braid | high knot | severe twist}.",
+                "dinner_4": "Candlelight flickers across her face from {tallow candles | oil lamps | wax candles} on the table.",
+
+                "flirt_1": "She wears a {crimson | deep wine | blood-red} {silk gown | satin robe | velvet dress}, pooled around her like {rose petals | spilled wine | liquid shadow}.",
+                "flirt_2": "The fabric flows like liquid, unbuttoned at the throat, and {rose petals | scattered silk scarves | perfumed oils} surround her.",
+                "flirt_3": "A {gold | silver | pearl} pendant rests at her collarbone, catching light from {multiple candles | brazier flames | hanging lanterns}.",
+                "flirt_4": "Her hair cascades {unbound | loosely braided | tumbling past her shoulders}, intertwined with {silk ribbons | golden threads | fresh flowers}.",
+
+                "sleep_1": "She wears a {dark wool | heavy linen | midnight blue} travelling cloak, lying upon a {straw mattress | bedroll | fur pelt}.",
+                "sleep_2": "Beside her rest a {dagger | short sword | hunting knife} and a {waterskin | clay jug | leather flask}.",
+                "sleep_3": "Her hair is loosely bound with a single cord, spread across a {stuffed pillow | cloth bag | rolled cloak}.",
+                "sleep_4": "A {dying fire | oil lamp | single candle} casts long shadows across her sleeping form.",
+
+                "battle_1": "She wears a {deep emerald | rich sapphire | midnight purple} {velvet gown | brocade dress | silk robe}, now stained with {dust | ash | dried blood}.",
+                "battle_2": "{Gold | Silver | Bronze}-threaded accents run along the sleeves, and a {sword | longsword | curved blade} is clasped in her hands.",
+                "battle_3": "Her hair is loose, falling freely past her shoulders, tangled with {sweat | debris | battle-dust}.",
+                "battle_4": "A {silver | gold | pearl-set} circlet rests upon her brow, dented from combat.",
+              }
+            }
+          }
+          `}</code>
+        )}
+
+        <h3 className={styles.subHeading}>Using NPCs in Your Story</h3>
+
+        <p className={styles.body}>
+          To reference an NPC in your story scenes, use the NPC's identifier in your scene text or choices. The platform will look up the NPC definition, apply matching criteria, and display the appropriate visuals and relationship state.
+        </p>
+
+        <button
+          onClick={() => setExpandUsage(!expandUsage)}
+          style={{
+            marginBottom: "1.5rem",
+            padding: "0.75rem 1.5rem",
+            background: "#1a1a1a",
+            color: "#d4c9a8",
+            border: "2px solid #7a6a3a",
+            cursor: "pointer",
+            fontSize: "0.9rem",
+            letterSpacing: "0.1em",
+            transition: "all 0.2s",
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.background = "#7a6a3a";
+            e.currentTarget.style.color = "#0a0a0a";
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.background = "#1a1a1a";
+            e.currentTarget.style.color = "#d4c9a8";
+          }}
+        >
+          {expandUsage ? "[ HIDE USAGE EXAMPLE ]" : "[ SHOW USAGE EXAMPLE ]"}
+        </button>
+        {expandUsage && (
+          <code className={styles.codeBlock}>{`{
+  "scenes": {
+    "camp-night": {
+      "text": "You find her by the dying embers of the campfire. {id-isolde:sleep}<br>
+               She sleeps fitfully, her hand resting on a dagger nearby.<br>
+               The night is cold and quiet around you.",
+      "image": "camp-night.jpg",
+      "choices": [
+        { "text": "Watch over her until dawn", "to": "isolde-awakening" },
+        { "text": "Return to your own bedroll", "to": "camp-morning" }
+      ]
+    },
+    "isolde-awakening": {
+      "text": "As the first light touches the camp, her eyes open.<br>
+               She sees you watching and rises slowly, her expression shifting<br>
+               from vulnerability to something deeper. {id-isolde:flirt}<br>
+               She moves closer, and for a moment, the world holds still.",
+      "image": "camp-dawn.jpg",
+      "rating_npc": { "lady-isolde": 20 },
+        { "text": "Reach for her hand", "to": "isolde-hand" },
+        { "text": "Step back respectfully", "to": "camp-morning" }
+    }
+  }
+          `}</code>
+        )}
+
+        <h3 className={styles.subHeading}>Scene Preview</h3>
+
+        <div style={{
+          border: "2px solid #7a6a3a",
+          background: "#1a1a1a",
+          padding: "2rem",
+          maxWidth: "500px",
+          color: "#d4c9a8",
+          fontFamily: "Georgia, serif",
+          lineHeight: "1.8",
+          marginTop: "1.5rem"
+        }}>
+          <img
+            src="/images/create/isolde.jpg"
+            alt="Lady Isolde"
+            style={{
+              width: "100%",
+              marginBottom: "1.5rem",
+              border: "1px solid #7a6a3a"
+            }}
+          />
+
+          <p style={{ marginBottom: "1rem" }}>As the first light touches the camp, her eyes open. She sees you watching and rises slowly, her expression shifting from vulnerability to something deeper.</p>
+
+          <p style={{
+            background: "rgba(192,122,58,0.15)",
+            borderLeft: "3px solid #c07a3a",
+            padding: "1rem",
+            margin: "1rem 0",
+            fontStyle: "italic",
+            fontSize: "0.95rem"
+          }}>
+            {randomFlirtLine}
+          </p>
+
+          <p style={{ marginBottom: "1.5rem" }}>She moves closer, and for a moment, the world holds still.</p>
+
+          <div style={{ display: "flex", gap: "1rem" }}>
+            <button
+              onMouseEnter={(e) => {
+                e.currentTarget.style.background = "#7a6a3a";
+                e.currentTarget.style.color = "#0a0a0a";
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.background = "#2a2a2a";
+                e.currentTarget.style.color = "#d4c9a8";
+              }}
+              style={{
+                flex: 1,
+                padding: "1rem",
+                background: "#2a2a2a",
+                border: "2px solid #7a6a3a",
+                color: "#d4c9a8",
+                cursor: "pointer",
+                fontFamily: "Georgia, serif",
+                fontSize: "0.95rem",
+                transition: "all 0.2s"
+              }}
+            >Reach for her hand</button>
+
+            <button
+              onMouseEnter={(e) => {
+                e.currentTarget.style.background = "#7a6a3a";
+                e.currentTarget.style.color = "#0a0a0a";
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.background = "#2a2a2a";
+                e.currentTarget.style.color = "#d4c9a8";
+              }}
+              style={{
+                flex: 1,
+                padding: "1rem",
+                background: "#2a2a2a",
+                border: "2px solid #7a6a3a",
+                color: "#d4c9a8",
+                cursor: "pointer",
+                fontFamily: "Georgia, serif",
+                fontSize: "0.95rem",
+                transition: "all 0.2s"
+              }}
+            >Step back respectfully</button>
+          </div>
+        </div>
 
           </div>
         </details>
@@ -527,9 +803,8 @@ export default function Storyteller() {
 
   "scenes": {
     "<scene_id>": {
-      "title":   "string  — optional short label for the scene",
-      "text":    "string  — narrative prose shown to the player. Supports \\n for line breaks.",
       "image":   "string  — optional. filename of the scene image, e.g. ruined-gate.jpg",
+      "text":    "string  — narrative prose shown to the player. Supports \\n for line breaks.",
       "image_style": "string  — optional. display preset applied to the image. available styles:",
                //   origin         — no filter, image shown as-is (default when field is omitted)",
                //   mirrorh        — horizontally flipped image",
@@ -810,7 +1085,8 @@ export default function Storyteller() {
   "scenes": {
 
     "approach": {
-      "title":       "Collapsing Mouth",
+      "image":       "approach.jpg",
+      "image_style": "deepocean",
       "text":        "After a few hours of travel, you stand at the lip of a yawning sinkhole,
                       the air below smelling of damp stone and old rot. <br>
                       You claimed down carefully into the pit, but the ground beneath you
@@ -820,8 +1096,6 @@ export default function Storyteller() {
                       descends into the dark — a cold draft sighs up from the depths. <br>
                       Loose pebbles skitter underfoot. Far below, something moves that is not the
                       wind.",
-      "image":       "approach.jpg",
-      "image_style": "deepocean",
       "choices": [
         { "text": "Descend the carved steps",                  "to": "inner-court" },
         { "text": "You don't feel ready for this. Climb out",  "to": "forest-retreat" }
@@ -829,15 +1103,14 @@ export default function Storyteller() {
     },
 
     "inner-court": {
-      "title":       "The Lower Vault",
+      "image":       "inner-court.jpg",
+      "image_style": "scanlines",
       "text":        "You step into a vaulted cavern where moulded pillars hold a ceiling
                       low with mineral veins.<br>
                       Water drips in slow, musical patterns.
                       Ancient scratches mark a path toward a half-buried gate carved
                       with symbols. The gate is broken and some metal pieces hang loose.<br>
                       From somewhere deeper comes a metallic, distant clank.",
-      "image":       "inner-court.jpg",
-      "image_style": "scanlines",
       "choices": [
         { "text": "Follow the scratched path",              "to": "inner-court" },
         { "text": "Grab a rusty metal bar and return home", "to": "return-home" },
@@ -846,53 +1119,45 @@ export default function Storyteller() {
     },
 
     "return-home": {
-      "title":       "Run home with trophy",
+      "image":       "peaceful-forest.jpg",
       "text":        "With effort, you grab one of the rusty metal poles and wrench it free.
                       Clutching the dusty metal bar, you quickly run back to the surface and
                       climb out of the sinkhole. The sun is warm on your face as you emerge,
                       though the air tastes of dust and earth.<br>
                       Still, you feel lucky to have returned with your prize.",
-      "image":       "peaceful-forest.jpg",
-      "image_style": "origin",
       "ending":       true
     },
 
     "forest-retreat": {
-      "title":       "Getting equippment",
+      "image":       "forest-path.jpg",
       "text":        "You claw your way back to the surface and emerge from the sinkhole
                       into a quiet forest. Sunlight filters through the canopy above, and
                       the air is crisp with the scent of pine and earth.<br>
                       You make your way home, vowing to return better equipped and
                       ready to claim what the depths have guarded.",
-      "image":       "forest-path.jpg",
-      "image_style": "origin",
       "ending":       true
     },
 
     "broken-ceiling": {
-      "title":       "Broken Ceiling",
+      "image":       "broken-ceiling.jpg",
+      "image_style": "apocalypse",
       "text":        "Suddenly an earthquake shakes the caverns. Dust falls like rain and a
                       thunder of collapsing stone drowns the sound of your breath.<br>
                       A fissure opens, dropping you into a fractured passage; rubble blocks
                       the way you came. You must fight your way through the shifting dark
                       toward any route that leads upward.<br>
                       Debris underfoot threatens to give; the air tastes of iron and panic.",
-      "image":       "broken-ceiling.jpg",
-      "image_style": "apocalypse",
       "ending":       false
     },
 
     "run_away": {
-      "title":       "Climb to Daylight",
+      "image":       "forest-retreat.jpg",
       "text":        "You scramble up a narrow shaft and find a ragged slit of sky. <br>
                       The surface is a maze of broken earth and toppled root, but above you,
                       the world is open and the air warm. <br>
                       You make your way back to the light, lungs burning and pockets
                       full of dust, alive and changed.",
-      "image":       "forest-retreat.jpg",
-      "image_style": "origin",
-      "ending":       true,
-      "choices": []
+      "ending":       true
     }
 
   }
