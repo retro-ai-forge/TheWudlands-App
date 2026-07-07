@@ -186,6 +186,19 @@
   animation: fadeInOut 4s ease-in-out infinite;
 }
 
+.statusPetrified {
+  color: #9a9a9a;
+  font-weight: bold;
+  background: repeating-linear-gradient(
+    45deg,
+    transparent,
+    transparent 2px,
+    rgba(154, 154, 154, 0.2) 2px,
+    rgba(154, 154, 154, 0.2) 4px
+  );
+  padding: 0.05em 0.2em;
+}
+
 .accordion {
   border: 1px solid #3a3020;
   margin-bottom: 0.5rem;
@@ -200,26 +213,20 @@
   padding: 0.65rem 1rem;
   cursor: pointer;
   user-select: none;
-  list-style: none;
-}
-
-.accordionSummary::-webkit-details-marker {
-  display: none;
-}
-
-.accordionSummary::before {
-  content: "▶ ";
-  font-size: 0.65rem;
-  vertical-align: middle;
-}
-
-.accordion[open] .accordionSummary::before {
-  content: "▼ ";
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
 }
 
 .accordionSummary:hover {
   color: #d4a060;
   background: #111108;
+}
+
+.chevron {
+  font-size: 0.65rem;
+  flex-shrink: 0;
 }
 
 .accordionBody {

@@ -1,8 +1,17 @@
+"use client";
+
+import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import styles from "./page.module.css";
 
 export default function About() {
+  const [openSection, setOpenSection] = useState<string | null>(null);
+
+  const toggleSection = (section: string) => {
+    setOpenSection(openSection === section ? null : section);
+  };
+
   return (
     <div className={styles.page}>
       <section className={styles.guidelines}>
@@ -137,41 +146,94 @@ export default function About() {
           What the world writes of you does not fade. Every mark you leave — every choice, every scar, every name whispered in taverns — is recorded in the eternal ledger. These tales follow you from one adventure to the next, shaping how the world reads you before you have even spoken.
         </p>
 
-        <details className={styles.accordion}>
-          <summary className={styles.accordionSummary}>Origin &amp; Age</summary>
-          <div className={styles.accordionBody}>
-            <p className={styles.body}>
-              Your <strong>origin</strong> — the blood that runs through your veins, the craft 
-              your hands learned, the gender the world perceives — is written at your birth and does not change, 
-              see the {" "}<Link href="/characters" className={styles.externalLink}>Character Creation</Link>{" "}
-              page. To understand how your nature shapes the stories that find you, refer to <Link href="/create?section=storyimpact" className={styles.externalLink}>Your Legend</Link> section in Create. 
-              Your <strong>age</strong> advances with every passing month — a horizon that moves 
-              toward you with every adventure you enter, and those months do not come back.
-            </p>
+        <div className={styles.accordion}>
+          <div
+            className={styles.accordionSummary}
+            onClick={() => toggleSection("origin")}
+            role="button"
+            tabIndex={0}
+            aria-expanded={openSection === "origin"}
+          >
+            <span>Origin &amp; Age</span>
+            <span className={styles.chevron}>{openSection === "origin" ? "▼" : "▶"}</span>
           </div>
-        </details>
+          {openSection === "origin" && (
+            <div className={styles.accordionBody}>
+              <p className={styles.body}>
+                Your <strong>origin</strong> — the blood that runs through your veins, the craft
+                your hands learned, the gender the world perceives — is written at your birth and does not change,
+                see the {" "}<Link href="/characters" className={styles.externalLink}>Character Creation</Link>{" "}
+                page. To understand how your nature shapes the stories that find you, refer to <Link href="/create?section=storyimpact" className={styles.externalLink}>Your Legend</Link> section in Create.
+                Your <strong>age</strong> advances with every passing month — a horizon that moves
+                toward you with every adventure you enter, and those months do not come back.
+              </p>
+            </div>
+          )}
+        </div>
 
-        <details className={styles.accordion}>
-          <summary className={styles.accordionSummary}>Vital Status</summary>
-          <div className={styles.accordionBody}>
-            <p className={styles.body}>
-              Your <strong>vital status</strong> — whether you walk as <span className={styles.statusAlive}>alive</span>, return as <span className={styles.statusDead}>dead</span>, hunger as a <span className={styles.statusVampire}>vampire</span> without aging, exist without a soul as <span className={styles.statusSoulless}>soulless</span>, stripped of magic as <span className={styles.statusMagicless}>magicless</span>, cursed by forces unseen as <span className={styles.statusCursed}>cursed</span>, or drift unanchored as <span className={styles.statusIncorporal}>incorporal</span> — is the deepest mark. These conditions persist until a future adventure offers redemption, and they determine which doors open to you and which ones slam shut. The world knows what you are. The question is what YOU do about it.
-            </p>
+        <div className={styles.accordion}>
+          <div
+            className={styles.accordionSummary}
+            onClick={() => toggleSection("vital")}
+            role="button"
+            tabIndex={0}
+            aria-expanded={openSection === "vital"}
+          >
+            <span>Vital Status</span>
+            <span className={styles.chevron}>{openSection === "vital" ? "▼" : "▶"}</span>
           </div>
-        </details>
+          {openSection === "vital" && (
+            <div className={styles.accordionBody}>
+              <p className={styles.body}>
+                Your <strong>vital status</strong> — whether you walk as <span className={styles.statusAlive}>alive</span>, return as <span className={styles.statusDead}>dead</span>, hunger as a <span className={styles.statusVampire}>vampire</span> without aging, exist without a soul as <span className={styles.statusSoulless}>soulless</span>, stripped of magic as <span className={styles.statusMagicless}>magicless</span>, cursed by forces unseen as <span className={styles.statusCursed}>cursed</span>, trapped in stone as <span className={styles.statusPetrified}>⚡ petrified</span>, or drift unanchored as <span className={styles.statusIncorporal}>incorporal</span> — is the deepest mark. These conditions persist until a future adventure offers redemption, and they determine which doors open to you and which ones slam shut. The world knows what you are. The question is what YOU do about it.
+              </p>
+            </div>
+          )}
+        </div>
 
-        <details className={styles.accordion}>
-          <summary className={styles.accordionSummary}>Love &amp; Hate</summary>
-          <div className={styles.accordionBody}>
-            <p className={styles.body}>
-              Your relationship ratings with every significant person you have met, 
-              charmed, scorned, or loved are part of the eternal record 
-              and carry forward into every adventure that follows. 
-              See the <Link href="/create?section=lovehate" className={styles.externalLink}>Love &amp; Hate</Link> section in Create for 
-              details on how writers use this system.
-            </p>
+        <div className={styles.accordion}>
+          <div
+            className={styles.accordionSummary}
+            onClick={() => toggleSection("lovehate")}
+            role="button"
+            tabIndex={0}
+            aria-expanded={openSection === "lovehate"}
+          >
+            <span>Love &amp; Hate</span>
+            <span className={styles.chevron}>{openSection === "lovehate" ? "▼" : "▶"}</span>
           </div>
-        </details>
+          {openSection === "lovehate" && (
+            <div className={styles.accordionBody}>
+              <p className={styles.body}>
+                Your relationship ratings with every significant person you have met,
+                charmed, scorned, or loved are part of the eternal record
+                and carry forward into every adventure that follows.
+                See the <Link href="/create?section=lovehate" className={styles.externalLink}>Love &amp; Hate</Link> section in Create for
+                details on how writers use this system.
+              </p>
+            </div>
+          )}
+        </div>
+
+        <div className={styles.accordion}>
+          <div
+            className={styles.accordionSummary}
+            onClick={() => toggleSection("teamwork")}
+            role="button"
+            tabIndex={0}
+            aria-expanded={openSection === "teamwork"}
+          >
+            <span>Forged Together</span>
+            <span className={styles.chevron}>{openSection === "teamwork" ? "▼" : "▶"}</span>
+          </div>
+          {openSection === "teamwork" && (
+            <div className={styles.accordionBody}>
+              <p className={styles.body}>
+                Some of the greatest deeds cannot be accomplished alone. Building a bridge across the chasm, crafting a sky vessel, or building a sailship requires many hands working together — gathering stone and timber, forging steel, binding magical essence, mixing mortar and mystic compounds. These multi-hour undertakings demand cooperation, trust, and shared purpose. Only <strong>builders</strong> who have proven themselves through such feats gain access to these creations, allowing them to continue future adventures with the legendary works your fellowship has constructed together.
+              </p>
+            </div>
+          )}
+        </div>
 
       </section>
     </div>

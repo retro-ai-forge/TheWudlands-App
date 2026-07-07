@@ -322,15 +322,18 @@ gcloud auth application-default set-quota-project thewudlands
 gcloud config set project thewudlands
 gcloud auth print-access-token | docker login -u oauth2accesstoken --password-stdin https://europe-west1-docker.pkg.dev
 
+# full build and deploy
+rav run gcp_full
+
+# or step by step
 # build stuff
 npm run build
 # docker
 rav run gcp_push
 rav run gcp_deploy
-
 Check browser
 
------
+--- tags ---
 Delete remote tag
 git push origin :<tagname>
 

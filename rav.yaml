@@ -113,6 +113,11 @@ scripts:
 
   gcp_deploy: gcloud run deploy serverless-wudlands --image=europe-west1-docker.pkg.dev/thewudlands/serverless-wudlands-repo/serverless-wudlands:latest --allow-unauthenticated --region=europe-west1 --project=thewudlands --port=3000
 
+  gcp_full:
+    - rav run frontend_build
+    - rav run clean_build
+    - rav run gcp_deploy
+
   gcp_setup_secrets: gcloud secrets add-iam-policy-binding py_env_file --member='serviceAccount:60927173241-compute@developer.gserviceaccount.com' --role='roles/secretmanager.secretAccessor' --project=thewudlands
 
   gcp_remove_secrets: gcloud secrets remove-iam-policy-binding py_env_file --member='serviceAccount:60927173241-compute@developer.gserviceaccount.com' --role='roles/secretmanager.secretAccessor' --project=thewudlands
