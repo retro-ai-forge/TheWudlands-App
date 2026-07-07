@@ -194,21 +194,21 @@ export default function About() {
         <div className={styles.accordion}>
           <div
             className={styles.accordionSummary}
-            onClick={() => toggleSection("lovehate")}
+            onClick={() => toggleSection("echoes")}
             role="button"
             tabIndex={0}
-            aria-expanded={openSection === "lovehate"}
+            aria-expanded={openSection === "echoes"}
           >
-            <span>Love &amp; Hate</span>
-            <span className={styles.chevron}>{openSection === "lovehate" ? "▼" : "▶"}</span>
+            <span>Echoes of the past</span>
+            <span className={styles.chevron}>{openSection === "echoes" ? "▼" : "▶"}</span>
           </div>
-          {openSection === "lovehate" && (
+          {openSection === "echoes" && (
             <div className={styles.accordionBody}>
               <p className={styles.body}>
                 Your relationship ratings with every significant person you have met,
                 charmed, scorned, or loved are part of the eternal record
                 and carry forward into every adventure that follows.
-                See the <Link href="/create?section=lovehate" className={styles.externalLink}>Love &amp; Hate</Link> section in Create for
+                Listen to the <Link href="/create?section=echoes" className={styles.externalLink}>Echoes</Link> for
                 details on how writers use this system.
               </p>
             </div>

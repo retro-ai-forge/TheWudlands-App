@@ -51,7 +51,7 @@ const SETS: SetConfig[] = [
     filter: "brightness(0.55)",
   },
   {
-    name: "Pitch Black",
+    name: "PitchBlack",
     meta: "css brightness(0.35) contrast(1.2)",
     filter: "brightness(0.35) contrast(1.2)",
   },

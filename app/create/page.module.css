@@ -24,7 +24,7 @@
   font-size: 1rem;
   line-height: 1.8;
   color: #d4c9a8;
-  margin-bottom: 1.25rem;
+  margin-bottom: 0.75rem;
 }
 
 .table {
@@ -230,6 +230,24 @@
   border: 1px solid #7a6a3a;
   margin-top: 0.5rem;
   margin-bottom: 1.75rem;
+  filter: sepia(0.2) brightness(0.9);
+}
+
+.imageFrameClean {
+  max-width: min(85vw, 750px);
+  margin: 2rem auto 0.5rem auto;
+  margin-left: 50%;
+  transform: translateX(-50%);
+  padding: 0;
+  width: min(85vw, 750px);
+}
+
+.sectionImageClean {
+  width: 100%;
+  height: auto;
+  display: block;
+  border: 1px solid #7a6a3a;
+  margin-bottom: 0.75rem;
   filter: sepia(0.2) brightness(0.9);
 }
 
@@ -714,7 +732,7 @@
 }
 
 .groupBody {
-  padding: 0.75rem 1rem;
+  padding: 0.35rem 0.5rem;
   border-top: 1px solid #3a3020;
   background: #0d0d0a;
 }

@@ -24,6 +24,19 @@ function CharactersInner() {
     }
   }, [searchParams]);
 
+  useEffect(() => {
+    const hash = window.location.hash.slice(1);
+    if (hash === "race") {
+      setOpenSection("race");
+      setTimeout(() => {
+        const element = document.getElementById("race");
+        if (element) {
+          element.scrollIntoView({ behavior: "smooth", block: "start" });
+        }
+      }, 100);
+    }
+  }, []);
+
   const toggleSection = (id: string) => {
     setOpenSection(prev => (prev === id ? null : id));
   };
@@ -143,7 +156,7 @@ function CharactersInner() {
         </div>
 
         {/* ── Race ───────────────────────────────────────────── */}
-        <div className={styles.accordionItem}>
+        <div className={styles.accordionItem} id="race">
           <button
             className={styles.accordionHeader}
             onClick={() => toggleSection("race")}
@@ -298,24 +311,24 @@ const GENDERS = [
 ];
 
 const RACES = [
-  { id: "human", name: "Human", category: "Common Peoples", description: "Adaptable and ambitious. Masters of trade and politics. No innate gift, but boundless potential." },
-  { id: "elf", name: "Elf", category: "Common Peoples", description: "Long-lived and graceful. Affinity for magic and the wild. Time is your advantage." },
-  { id: "dwarf", name: "Dwarf", category: "Common Peoples", description: "Sturdy and skilled in stone and metal. Natural resistance to harm and magic. Built to last." },
-  { id: "halfling", name: "Halfling", category: "Common Peoples", description: "Quick-witted and nimble. Lucky by nature. Small body, sharp mind." },
-  { id: "orc", name: "Orc", category: "Common Peoples", description: "Strong and fierce. Feared for strength but often misjudged. Scarred honor runs deep." },
-  { id: "gnome", name: "Gnome", category: "Common Peoples", description: "Inventive and curious. Affinity for magic and artifice. Your mind works differently." },
-  { id: "goblin", name: "Goblin", category: "Common Peoples", description: "Small, industrious, and clever. Often underestimated. Trade and tinkering are in your blood." },
-  { id: "minotaur", name: "Minotaur", category: "Common Peoples", description: "Bull-headed and strong-willed. Labyrinth-dweller seeking a place in the world. Loyalty runs deep." },
+  { id: "human", name: "Human", category: "Common", description: "Adaptable and ambitious. Masters of trade and politics. No innate gift, but boundless potential." },
+  { id: "elf", name: "Elf", category: "Common", description: "Long-lived and graceful. Affinity for magic and the wild. Time is your advantage." },
+  { id: "dwarf", name: "Dwarf", category: "Common", description: "Sturdy and skilled in stone and metal. Natural resistance to harm and magic. Built to last." },
+  { id: "halfling", name: "Halfling", category: "Common", description: "Quick-witted and nimble. Lucky by nature. Small body, sharp mind." },
+  { id: "orc", name: "Orc", category: "Common", description: "Strong and fierce. Feared for strength but often misjudged. Scarred honor runs deep." },
+  { id: "gnome", name: "Gnome", category: "Common", description: "Inventive and curious. Affinity for magic and artifice. Your mind works differently." },
+  { id: "goblin", name: "Goblin", category: "Common", description: "Small, industrious, and clever. Often underestimated. Trade and tinkering are in your blood." },
+  { id: "minotaur", name: "Minotaur", category: "Common", description: "Bull-headed and strong-willed. Labyrinth-dweller seeking a place in the world. Loyalty runs deep." },
   { id: "tiefling", name: "Tiefling", category: "Mystical", description: "Marked by infernal blood. Charismatic but often distrusted. Magic flows through you." },
   { id: "dragonborn", name: "Dragonborn", category: "Mystical", description: "Descended from dragons. Breath as a weapon, scales as armor. Ancient legacy in your blood." },
   { id: "lizardfolk", name: "Lizardfolk", category: "Mystical", description: "Cold-blooded and alien. Survivor's instinct runs deep. Excellent hunters and scouts. Tribal honor matters most." },
   { id: "beastfolk", name: "Beastfolk", category: "Mystical", description: "Touched by animal blood. Part human, part beast. Instinct wars with reason. Fierce and unpredictable." },
-  { id: "halfelf", name: "Half-Elf", category: "Mixed Heritage", description: "Between two worlds. Flexible and diplomatic. Neither fully one thing nor another—both and neither." },
-  { id: "halforc", name: "Half-Orc", category: "Mixed Heritage", description: "Strength and grace collide. Caught between two heritages. You are more than the prejudice that follows you." },
-  { id: "elder", name: "Elder", category: "Mixed Heritage", description: "Born in the First Age from a union of an ancient race and something unknowable. You remember fragments of a world before this one. Immortal blood runs thin, but it runs deep." },
-  { id: "ogre", name: "Ogre", category: "Giants & Kin", description: "Brutish and powerful. Often enslaved or cast out. Strength is all you have—make it count." },
-  { id: "goliath", name: "Goliath", category: "Giants & Kin", description: "Enormous and athletic. Built for the mountains and the sky. Strength defines your place in the world." },
-  { id: "giant", name: "Giant", category: "Giants & Kin", description: "Towering and ancient. The world was made for smaller folk. Your size is both gift and curse." },
+  { id: "halfelf", name: "HalfElf", category: "Mixed", description: "Between two worlds. Flexible and diplomatic. Neither fully one thing nor another—both and neither." },
+  { id: "halforc", name: "HalfOrc", category: "Mixed", description: "Strength and grace collide. Caught between two heritages. You are more than the prejudice that follows you." },
+  { id: "elder", name: "Elder", category: "Mixed", description: "Born in the First Age from a union of an ancient race and something unknowable. You remember fragments of a world before this one. Immortal blood runs thin, but it runs deep." },
+  { id: "ogre", name: "Ogre", category: "Giants", description: "Brutish and powerful. Often enslaved or cast out. Strength is all you have—make it count." },
+  { id: "goliath", name: "Goliath", category: "Giants", description: "Enormous and athletic. Built for the mountains and the sky. Strength defines your place in the world." },
+  { id: "giant", name: "Giant", category: "Giants", description: "Towering and ancient. The world was made for smaller folk. Your size is both gift and curse." },
 ];
 
 const racesByCategory = RACES.reduce((acc, race) => {

@@ -320,10 +320,3 @@ async def get_profile(address: str = Depends(get_current_address)):
         "username": f"user_{address[:6]}",
         "joinedAt": datetime.utcnow().isoformat(),
     }
-
-
-# Health check
-@router.get("/health")
-async def health_check():
-    """Health check endpoint."""
-    return {"status": "ok", "service": "authentication"}

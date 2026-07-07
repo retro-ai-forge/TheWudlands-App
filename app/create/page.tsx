@@ -12,31 +12,31 @@ function randomizeText(text: string): string {
 }
 
 const FLIRT_LINES = [
-  "Isolde wears a {crimson | deep wine | blood-red} {silk gown | satin robe | velvet dress}, pooled around her like {rose petals | spilled wine | liquid shadow}.",
-  "The fabric flows like liquid, unbuttoned at the throat, and {rose petals | scattered silk scarves | perfumed oils} surround her.",
-  "A {gold | silver | pearl} pendant rests at her collarbone, catching light from {multiple candles | brazier flames | hanging lanterns}.",
-  "Her hair cascades {unbound | loosely braided | tumbling past her shoulders}, intertwined with {silk ribbons | golden threads | fresh flowers}."
+  "She wears a {crimson | deep wine | blood-red} {silk gown | satin robe | velvet dress} that clings to her skin like {rose petals | spilled wine | liquid shadow}, each breath she takes demanding the fabric's surrender.",
+  "The fabric drapes loose and deliberate, unbuttoned at the throat to reveal the curve of her collarbone, while the scent of {rose petals | scattered silk scarves | perfumed oils} mingles with the warmth radiating from her skin.",
+  "A {gold | silver | pearl} pendant hangs low at her collarbone, catching light from {multiple candles | brazier flames | hanging lanterns} and drawing your eye to where her pulse quickens.",
+  "Her hair falls {unbound | loosely braided | tumbling past her shoulders}, damp at the nape, intertwined with {silk ribbons | golden threads | fresh flowers} that frame her face like an invitation."
 ];
 
 const STORY_STATS = [
-  { stat: "Fame",                  description: "Known as a hero — trusted, admired, celebrated",    storyUse: "Nobility welcomes you with honor, strangers offer aid", opposed: "Infamous" },
-  { stat: "Infamous",              description: "Feared by the powerful — a weapon in the shadows",   storyUse: "Noble houses employ you for dark deeds, finest vintage wines flow freely", opposed: "Fame" },
-  { stat: "Faith",                 description: "Devoted to a god or cosmic force, earning divine favour", storyUse: "Temples offer shelter, clergy grant healing, holy orders call on you", opposed: "Heresy / Corruption" },
-  { stat: "Heresy\nCorruption",   description: "Denounced by the faithful, touched by forbidden powers", storyUse: "Inquisitors hunt you, holy temples bar entry, but dark shrines grant power to the condemned", opposed: "Faith" },
-  { stat: "Notoriety",             description: "Bards sing your legend in every tavern and kingdom", storyUse: "Doors open without asking, nobles and merchants gift you gold", opposed: "Obscurity" },
-  { stat: "Obscurity",             description: "Unknown, hidden, forgotten, walking unseen through the world", storyUse: "Slip past guards unnoticed, enemies cannot find you", opposed: "Notoriety" },
-  { stat: "Love\nAffection",      description: "Bonds of loyalty and deep romance",        storyUse: "Allies risk their lives for you, secret aid flows freely", opposed: "Hatred / Resentment" },
-  { stat: "Hatred\nResentment",   description: "Scorned lovers and betrayed allies",       storyUse: "Ambushed by those who once knew you, reputation poisoned", opposed: "Love / Affection" },
-  { stat: "Respect\nHonor",       description: "Esteemed by peers for integrity and strength", storyUse: "Duels avoided through reputation, lead honor guard", opposed: "Infamy / Disdain" },
-  { stat: "Infamy\nDisdain",      description: "Scorned and disrespected by worthy foes",  storyUse: "Challenged constantly, betrayed by allies",      opposed: "Respect / Honor" },
-  { stat: "Persuasion",            description: "Words that sway hearts and minds",           storyUse: "Enemies lay down arms, merchants offer discounts", opposed: "Intimidation" },
-  { stat: "Intimidation",          description: "Rule through fear and force of will",      storyUse: "Enemies flee in terror, merchants comply quickly", opposed: "Persuasion" },
-  { stat: "Guild Membership",      description: "Belonging to a guild or secret order",      storyUse: "Call for aid, access guild safehouse",          opposed: "Guild Outcast" },
-  { stat: "Guild Outcast",         description: "Exiled or ostracized from organized groups", storyUse: "Former allies hunt you, no refuge",             opposed: "Guild Membership" },
-  { stat: "Wealth\nProsperity",   description: "Gold, treasures, and assets accumulated",  storyUse: "Buy out rivals, commission grand works",        opposed: "Debt\nObligation" },
-  { stat: "Debt\nObligation",     description: "Owe gold or favors to powerful forces",    storyUse: "Creditors demand payment in blood",              opposed: "Wealth\nProsperity" },
-  { stat: "Manipulation",          description: "Master of deception and cunning schemes",   storyUse: "Turn enemies against each other, blackmail nobles", opposed: "Sincerity" },
-  { stat: "Sincerity",             description: "Known for truth and unwavering honor",      storyUse: "Enemies trust your word, easier treaties",       opposed: "Manipulation" },
+  { stat: "Fame",         description: "Known as a hero — trusted, admired, celebrated",    storyUse: "Nobility welcomes you with honor, strangers offer aid", opposed: "Infamous" },
+  { stat: "Infamous",     description: "Feared by the powerful — a weapon in the shadows",   storyUse: "Noble houses employ you for dark deeds, finest vintage wines flow freely", opposed: "Fame" },
+  { stat: "Faith",        description: "Devoted to a god or cosmic force, earning divine favour", storyUse: "Temples offer shelter, clergy grant healing, holy orders call on you", opposed: "Heresy" },
+  { stat: "Heresy",       description: "Denounced by the faithful, touched by forbidden powers", storyUse: "Inquisitors hunt you, holy temples bar entry, but dark shrines grant power to the condemned", opposed: "Faith" },
+  { stat: "Notoriety",    description: "Bards sing your legend in every tavern and kingdom", storyUse: "Doors open without asking, nobles and merchants gift you gold", opposed: "Obscurity" },
+  { stat: "Obscurity",    description: "Unknown, hidden, forgotten, walking unseen through the world", storyUse: "Slip past guards unnoticed, enemies cannot find you", opposed: "Notoriety" },
+  { stat: "Loyality",     description: "Bonds of loyalty and deep romance",        storyUse: "Allies risk their lives for you, secret aid flows freely", opposed: "Treachery" },
+  { stat: "Treachery",       description: "Scorned lovers and betrayed allies",       storyUse: "Ambushed by those who once knew you, reputation poisoned", opposed: "Loyality" },
+  { stat: "Honor",        description: "Esteemed by peers for integrity and strength", storyUse: "Duels avoided through reputation, lead honor guard", opposed: "Infamy" },
+  { stat: "Infamy",       description: "Scorned and disrespected by worthy foes",  storyUse: "Challenged constantly, betrayed by allies",      opposed: "Honor" },
+  { stat: "Persuasion",   description: "Words that sway hearts and minds",           storyUse: "Enemies lay down arms, merchants offer discounts", opposed: "Intimidation" },
+  { stat: "Intimidation", description: "Rule through fear and force of will",      storyUse: "Enemies flee in terror, merchants comply quickly", opposed: "Persuasion" },
+  { stat: "Guildmember",  description: "Belonging to a guild or secret order",      storyUse: "Call for aid, access guild safehouse",          opposed: "Guildoutcast" },
+  { stat: "Guildoutcast", description: "Exiled or ostracized from organized groups", storyUse: "Former allies hunt you, no refuge",             opposed: "Guildmember" },
+  { stat: "Wealth",       description: "Gold, treasures, and assets accumulated",  storyUse: "Buy out rivals, commission grand works",        opposed: "Debt" },
+  { stat: "Debt",         description: "Owe gold or favors to powerful forces",    storyUse: "Creditors demand payment in blood",              opposed: "Wealth" },
+  { stat: "Manipulation", description: "Master of deception and cunning schemes",   storyUse: "Turn enemies against each other, blackmail nobles", opposed: "Sincerity" },
+  { stat: "Sincerity",    description: "Known for truth and unwavering honor",      storyUse: "Enemies trust your word, easier treaties",       opposed: "Manipulation" },
 ];
 
 export default function Storyteller() {
@@ -62,11 +62,11 @@ export default function Storyteller() {
 
   const guidelinesRef = useRef<HTMLDetailsElement>(null);
   const romanceRef = useRef<HTMLDetailsElement>(null);
-  const lovehateRef = useRef<HTMLDetailsElement>(null);
-  const storyimpactRef = useRef<HTMLDetailsElement>(null);
   const writingRef = useRef<HTMLDetailsElement>(null);
   const imagesRef = useRef<HTMLDetailsElement>(null);
   const exampleRef = useRef<HTMLDetailsElement>(null);
+  const echoesRef = useRef<HTMLDetailsElement>(null);
+  const storyimpactRef = useRef<HTMLDetailsElement>(null);
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -78,11 +78,11 @@ export default function Storyteller() {
     const refs: { [key: string]: React.RefObject<HTMLDetailsElement | null> } = {
       guidelines: guidelinesRef,
       romance: romanceRef,
-      lovehate: lovehateRef,
-      storyimpact: storyimpactRef,
       writing: writingRef,
       images: imagesRef,
       example: exampleRef,
+      echoes: echoesRef,
+      storyimpact: storyimpactRef,
     };
 
     if (openSection && refs[openSection]?.current) {
@@ -134,6 +134,24 @@ export default function Storyteller() {
             </span>
           </li>
         </ol>
+
+        <div style={{ scrollMarginTop: "1rem", marginBottom: "1.5rem", padding: "2rem", background: "#0a0a0a", border: "1px solid #7a6a3a" }}>
+          <p className={styles.body}>
+            Get inspired by the story guidelines and romance traditions, 
+            follow the sections below to find everything needed to build your story. 
+            They define the minimal, essential architecture: how to write scenes and choices, 
+            how to integrate images, and how to structure a complete addon—from your first scene to 
+            your final ending. Let&apos;s build an engine that powers the Wudlands.
+          </p>
+          <div className={styles.imageFrameClean}>
+            <img
+              src="/images/create/engine-beyond.jpg"
+              alt="The Wudlands Engine"
+              className={styles.sectionImageClean}
+            />
+          </div>
+        </div>
+
 
         <details ref={guidelinesRef} className={styles.group} style={{ scrollMarginTop: "1rem" }} open={openSection === "guidelines"}>
           <summary className={styles.groupSummary} onClick={(e) => {
@@ -201,14 +219,15 @@ export default function Storyteller() {
           The engine that runs addon stories is built to handle missing or undefined scenes gracefully. If a requested node,
           scene, or encounter cannot be found in the addon data, the system will not crash or break the session.
           Instead it falls back to the addon&apos;s <span className={styles.code}>emergency_exit</span> scene — a dedicated
-          error-recovery scene that must lead the player toward the <span className={styles.code}>escape_route</span>. 
+          error-recovery scene that ends the story. 
           The description of the emergency scene should contain a description of something unusual, unforeseen, blocking
           the way forward — a collapsed tunnel, a sudden rockfall, an ambush by bandits,
           a magical trap, or any other narrative obstacle that fits the tone of the story. 
-          Addon creators are responsible for defining this scene and ensuring it leads somewhere meaningful.
-          A play through only counts 
-          against the limit of 3 replays, if any scene with <span className={styles.code}>ending: true</span> was encountered. 
-          Several endings should be available. Being redirected to the escape route through 
+          Addon creators are responsible for defining this scene and ensuring a smooth narrative end.
+          A play through only counts against the limit of 3 replays, 
+          if any scene with <span className={styles.code}>ending: true</span> was encountered. 
+          Several endings should be available. <br/><br/>
+          Being redirected to 
           the <span className={styles.code}>emergency_exit</span> does not count 
           as a playthrough, and does not consume one of the three replays.
         </p>
@@ -267,8 +286,8 @@ export default function Storyteller() {
             </tr>
             <tr>
               <td>Missing Scene Fallback</td>
-              <td>If a scene cannot be found, the engine redirects to the addon&apos;s <span className={styles.code}>emergency_exit</span> scene. That scene must lead toward
-              the <span className={styles.code}>escape_route</span>. Only one scene of this should be provided.</td>
+              <td>If a scene cannot be found, the engine redirects to the addon&apos;s <span className={styles.code}>emergency_exit</span> scene. 
+              It must be marked <span className={styles.code}>{`"ending": false`}</span>.</td>
             </tr>
             <tr>
               <td>Survival</td>
@@ -357,389 +376,11 @@ export default function Storyteller() {
           </div>
         </details>
 
-        <details id="love-hate" ref={lovehateRef} className={styles.group} open={openSection === "lovehate"} style={{ scrollMarginTop: "1rem" }}>
-          <summary className={styles.groupSummary} onClick={(e) => {
-            e.preventDefault();
-            setOpenSection(openSection === "lovehate" ? null : "lovehate");
-          }}>[ Love &amp; Hate ]</summary>
-          <div className={styles.groupBody}>
-
-        <p className={styles.body}>
-          <strong>Love &amp; Hate ratings</strong> earned in previous adventures persist across the entire campaign. When your story introduces a <strong>powerful person</strong> — a lord, a villain, a temptress, a betrayer — you have a choice as creator. Name them specifically and they begin as a stranger, their opinion of the player starting at zero. Or leave the role <strong>generic</strong> — &ldquo;the Duke,&rdquo; &ldquo;the High Priest,&rdquo; &ldquo;the Merchant Queen&rdquo; — and the platform will reach back into the player&apos;s history. If they have already charmed, scorned, saved, or wronged someone of that standing, those old feelings carry forward into your story. A generic powerful figure is not a blank slate — they arrive with a relationship already written.
-        </p>
-
-        <p className={styles.body}>
-          Use this deliberately. A powerful figure who adores the player may offer shelter that should not exist, whisper secrets that change the shape of a scene, or step into danger on their behalf. One who despises them may close doors before they are reached, poison reputations, or arrive at the worst possible moment. If you want your story to feel connected to the broader world, lean on generic roles and let the player&apos;s history do the work. If you want a clean slate with no inherited baggage, name your character.
-        </p>
-
-        <p className={styles.body}>
-          Allowing a person from a previous adventure to be reused is done by defining <strong>matching requirements</strong> — a set of criteria the known person must satisfy before the platform considers them a valid match. Each criterion can be stated as a requirement (<span className={styles.code}>Standing: Legendary</span> means the character must know someone of exactly that level) or as an exclusion (<span className={styles.code}>!Shadow</span> means that affiliation is ruled out, so the match may be Spiritual or Power but not Shadow). You decide how many criteria must fit and how strict each one is. The more requirements you define, the more specific the match — the fewer, the broader the net. <strong>Any criterion left undefined accepts all values.</strong> A role with no requirements at all will match the first relevant person in the character&apos;s history regardless of their standing, affiliation, or faith. If no match is found, the role is treated as a new person and added to the character&apos;s list — ready to carry weight in adventures that follow.
-        </p>
-
-        <table className={styles.table}>
-          <thead>
-            <tr>
-              <th>Topic</th>
-              <th>Levels</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td>Relationship</td>
-              <td>
-                <strong>Love</strong> — romantic devotion; shapes decisions through emotion and personal connection.<br />
-                <strong>Magic</strong> — arcane knowledge and mystical power; rare, potent, and transformative in action.<br />
-                <strong>Warfare</strong> — martial skill and combat proficiency; earned through shared battles and tested valor.<br />
-                <strong>Economic</strong> — money moves mountains; convert riches into influence and exclusive paths.<br />
-                <strong>Bloodline</strong> — family ties and hereditary bonds; legacy and blood obligation run deeper than choice.<br />
-                <strong>Prophecy</strong> — bound by fate itself; a shared prophecy or mystical connection ties your futures together.<br />
-                <strong>Knowledge</strong> — information, secrets, and insight; shapes decisions through understanding and foresight.
-              </td>
-            </tr>
-            <tr>
-              <td>Gender</td>
-              <td>
-                <strong>Male</strong> — chivalric rivalry, martial honour, political alliance through strength.<br />
-                <strong>Female</strong> — courtly love, inheritance intrigue, social manipulation.<br />
-                <strong>Other</strong> — ambiguous, magical, or outside convention; the world does not read them easily.
-              </td>
-            </tr>
-            <tr>
-              <td>Race</td>
-              <td>
-                <strong>Common</strong> — the foundational races that walk between civilization and wilderness alike.<br />
-                <strong>Mystical</strong> — touched by magic and ancient forces, bearing gifts and curses beyond mortal ken.<br />
-                <strong>Mixed</strong> — born between worlds, carrying conflicting legacies that define and complicate existence.<br />
-                <strong>Giants</strong> — towering beings whose very size shapes how the world reacts to their presence.
-              </td>
-            </tr>
-            <tr>
-              <td>Morality</td>
-              <td>
-                <strong>Corrupt</strong> — love and hate are tools; acts only when it profits them.<br />
-                <strong>Pragmatic</strong> — the feeling is real but so is caution; acts when the moment is right.<br />
-                <strong>Bound</strong> — feeling translates directly into action; driven by code, oath, or unbreakable conviction.
-              </td>
-            </tr>
-            <tr>
-              <td>Wealth</td>
-              <td>
-                <strong>Poor</strong> — no material leverage; harm or help is personal and direct.<br />
-                <strong>Comfortable</strong> — coin, shelter, skilled allies, minor bribes.<br />
-                <strong>Rich</strong> — funds enemies, buys witnesses, hires soldiers, changes the player&apos;s circumstances entirely.
-              </td>
-            </tr>
-            <tr>
-              <td>Standing</td>
-              <td>
-                <strong>Commoner</strong> — local reach only.<br />
-                <strong>Notable</strong> — guild officer, merchant, local lord; leverage across a town or province.<br />
-                <strong>Legendary</strong> — noble, warlord, high clergy, royalty; their word reshapes the world.
-              </td>
-            </tr>
-            <tr>
-              <td>Affiliation</td>
-              <td>
-                <strong>Spiritual</strong> — church, arcane order, cult; wields faith and sacred authority.<br />
-                <strong>Power</strong> — court, military, crown; commands soldiers, law, and political favour.<br />
-                <strong>Shadow</strong> — guild, merchant network, criminal fraternity; controls trade, information, and coin.
-              </td>
-            </tr>
-            <tr>
-              <td>Faith</td>
-              <td>
-                <strong>Secular</strong> — religion plays no part in how they love or hate.<br />
-                <strong>Observant</strong> — faith shapes judgement; doctrine justifies the feeling.<br />
-                <strong>Fanatical</strong> — faith defines everything; can grant absolution or call for trial, exile, and holy war.
-              </td>
-            </tr>
-          </tbody>
-        </table>
-
-        <h3 className={styles.subHeading}>NPC Example: Lady Isolde</h3>
-
-        <p className={styles.body}>
-          Below is a complete example of an important NPC character defined in JSON. Lady Isolde represents a <span className={styles.highlight}>Minne courtly love</span> —
-          a noble woman whose affection must be earned through deeds, not words. Her matching requirements ensure she only appears to players 
-          who have previously encountered a notable female noble, creating continuity across adventures. Fallback parameters will be used in 
-          case no match is found in the character history. Allowing her to enter as a new person in the history of the player. 
-          The fallback entry is <strong>mandatory</strong> for negated entries or missing stats. Visuals are optional, but recommended to give 
-          the player a sense of her appearance and presence in the world.
-        </p>
-
-        <button
-          onClick={() => setExpandNPC(!expandNPC)}
-          style={{
-            marginBottom: "1.5rem",
-            padding: "0.75rem 1.5rem",
-            background: "#1a1a1a",
-            color: "#d4c9a8",
-            border: "2px solid #7a6a3a",
-            cursor: "pointer",
-            fontSize: "0.9rem",
-            letterSpacing: "0.1em",
-            transition: "all 0.2s",
-          }}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.background = "#7a6a3a";
-            e.currentTarget.style.color = "#0a0a0a";
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.background = "#1a1a1a";
-            e.currentTarget.style.color = "#d4c9a8";
-          }}
-        >
-          {expandNPC ? "[ HIDE NPC EXAMPLE ]" : "[ SHOW NPC EXAMPLE ]"}
-        </button>
-        {expandNPC && (
-          <code className={styles.codeBlock}>{`
-          { 
-            // identifier for this NPC, used in the story to reference them
-            "id": "lady-isolde",
-            "pattern": {
-              "relationship": "Love",
-              "gender": "Female",
-              "race": "Common",
-              // morality is not defined, any is accepted
-              // wealth is negated, so any poor person will be excluded from matching
-              "wealth": "!Poor", 
-              // standing is negated, so any commoner will be excluded from matching
-              "standing": "!Commoner",
-              "affiliation": "Power",
-              "faith": "Observant"
-            },
-            // in case no match is found, use this complete fallback entries to create a new person
-            "fallback": {
-              // in case no match is found, this is the default race to use for the new NPC 
-              "name": "Lady Isolde of Ashenvale",
-              "relationship": "Love",
-              "race": "Elf",
-              "morality": "Pragmatic",
-              "wealth": "Rich",
-              "standing": "Notable",
-              "affiliation": "Power",
-              "faith": "Observant",
-              // the default starting love/hate rating for this NPC if no match is found
-              "rating_npc": 0,
-              // visuals for the new person
-              "visuals": {
-                "formal_1": "She wears a {royal blue | deep purple | midnight black} {brocade gown | formal dress | coronet robe} adorned with intricate {gold | silver | bronze} embroidery.",
-                "formal_2": "Multiple {gemstones | pearls | jewels} are woven into the fabric, and she carries a {ceremonial fan | formal scepter | ornate staff} as a symbol of her station.",
-                "formal_3": "Her hair is swept into an elaborate {upswept style | jeweled crown | ornate headdress}, held with {gold pins | pearl clasps | silver combs}.",
-                "formal_4": "She sits upon a {high-backed chair | throne | dais}, surrounded by the {tapestries | heraldic banners | ceremonial symbols} of her house.",
-
-                "walk_1": "She wears a severe travelling coat of {charcoal | rust-brown | slate grey}, a {wooden staff | iron-tipped walking staff | carved walking stick} in her hand.",
-                "walk_2": "Her feet are shod in {leather riding boots | heavy wool boots | weathered travel boots}, and a {leather satchel | canvas pack | travel bag} rests across her shoulder.",
-                "walk_3": "Her hair is bound in a {tight braid | high knot | austere twist}.",
-                "walk_4": "She wears no jewelry, only a {rope belt | leather belt | cord cincher} at her waist.",
-  
-                "dinner_1": "She wears a {simple linen gown | understated silk shift | modest wool dress} in {grey-blue | ash grey | pale dove}, seated at a table before a {goblet of wine | cup of mead | plate of bread}.",
-                "dinner_2": "The fabric carries minimal embroidery—a few threads at the cuffs—and a {silver spoon | bronze knife | pewter fork} rests beside her plate.",
-                "dinner_3": "Her hair is bound in a {tight braid | high knot | severe twist}.",
-                "dinner_4": "Candlelight flickers across her face from {tallow candles | oil lamps | wax candles} on the table.",
-
-                "flirt_1": "She wears a {crimson | deep wine | blood-red} {silk gown | satin robe | velvet dress}, pooled around her like {rose petals | spilled wine | liquid shadow}.",
-                "flirt_2": "The fabric flows like liquid, unbuttoned at the throat, and {rose petals | scattered silk scarves | perfumed oils} surround her.",
-                "flirt_3": "A {gold | silver | pearl} pendant rests at her collarbone, catching light from {multiple candles | brazier flames | hanging lanterns}.",
-                "flirt_4": "Her hair cascades {unbound | loosely braided | tumbling past her shoulders}, intertwined with {silk ribbons | golden threads | fresh flowers}.",
-
-                "sleep_1": "She wears a {dark wool | heavy linen | midnight blue} travelling cloak, lying upon a {straw mattress | bedroll | fur pelt}.",
-                "sleep_2": "Beside her rest a {dagger | short sword | hunting knife} and a {waterskin | clay jug | leather flask}.",
-                "sleep_3": "Her hair is loosely bound with a single cord, spread across a {stuffed pillow | cloth bag | rolled cloak}.",
-                "sleep_4": "A {dying fire | oil lamp | single candle} casts long shadows across her sleeping form.",
-
-                "battle_1": "She wears a {deep emerald | rich sapphire | midnight purple} {velvet gown | brocade dress | silk robe}, now stained with {dust | ash | dried blood}.",
-                "battle_2": "{Gold | Silver | Bronze}-threaded accents run along the sleeves, and a {sword | longsword | curved blade} is clasped in her hands.",
-                "battle_3": "Her hair is loose, falling freely past her shoulders, tangled with {sweat | debris | battle-dust}.",
-                "battle_4": "A {silver | gold | pearl-set} circlet rests upon her brow, dented from combat.",
-              }
-            }
-          }
-          `}</code>
-        )}
-
-        <h3 className={styles.subHeading}>Using NPCs in Your Story</h3>
-
-        <p className={styles.body}>
-          To reference an NPC in your story scenes, use the NPC's identifier in your scene text or choices. The platform will look up the NPC definition, apply matching criteria, and display the appropriate visuals and relationship state.
-        </p>
-
-        <button
-          onClick={() => setExpandUsage(!expandUsage)}
-          style={{
-            marginBottom: "1.5rem",
-            padding: "0.75rem 1.5rem",
-            background: "#1a1a1a",
-            color: "#d4c9a8",
-            border: "2px solid #7a6a3a",
-            cursor: "pointer",
-            fontSize: "0.9rem",
-            letterSpacing: "0.1em",
-            transition: "all 0.2s",
-          }}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.background = "#7a6a3a";
-            e.currentTarget.style.color = "#0a0a0a";
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.background = "#1a1a1a";
-            e.currentTarget.style.color = "#d4c9a8";
-          }}
-        >
-          {expandUsage ? "[ HIDE USAGE EXAMPLE ]" : "[ SHOW USAGE EXAMPLE ]"}
-        </button>
-        {expandUsage && (
-          <code className={styles.codeBlock}>{`{
-  "scenes": {
-    "camp-night": {
-      "text": "You find her by the dying embers of the campfire. {id-isolde:sleep}<br>
-               She sleeps fitfully, her hand resting on a dagger nearby.<br>
-               The night is cold and quiet around you.",
-      "image": "camp-night.jpg",
-      "choices": [
-        { "text": "Watch over her until dawn", "to": "isolde-awakening" },
-        { "text": "Return to your own bedroll", "to": "camp-morning" }
-      ]
-    },
-    "isolde-awakening": {
-      "text": "As the first light touches the camp, her eyes open.<br>
-               She sees you watching and rises slowly, her expression shifting<br>
-               from vulnerability to something deeper. {id-isolde:flirt}<br>
-               She moves closer, and for a moment, the world holds still.",
-      "image": "camp-dawn.jpg",
-      "rating_npc": { "lady-isolde": 20 },
-        { "text": "Reach for her hand", "to": "isolde-hand" },
-        { "text": "Step back respectfully", "to": "camp-morning" }
-    }
-  }
-          `}</code>
-        )}
-
-        <h3 className={styles.subHeading}>Scene Preview</h3>
-
-        <div style={{
-          border: "2px solid #7a6a3a",
-          background: "#1a1a1a",
-          padding: "2rem",
-          maxWidth: "500px",
-          color: "#d4c9a8",
-          fontFamily: "Georgia, serif",
-          lineHeight: "1.8",
-          marginTop: "1.5rem"
-        }}>
-          <img
-            src="/images/create/isolde.jpg"
-            alt="Lady Isolde"
-            style={{
-              width: "100%",
-              marginBottom: "1.5rem",
-              border: "1px solid #7a6a3a"
-            }}
-          />
-
-          <p style={{ marginBottom: "1rem" }}>As the first light touches the camp, her eyes open. She sees you watching and rises slowly, her expression shifting from vulnerability to something deeper.</p>
-
-          <p style={{
-            background: "rgba(192,122,58,0.15)",
-            borderLeft: "3px solid #c07a3a",
-            padding: "1rem",
-            margin: "1rem 0",
-            fontStyle: "italic",
-            fontSize: "0.95rem"
-          }}>
-            {randomFlirtLine}
-          </p>
-
-          <p style={{ marginBottom: "1.5rem" }}>She moves closer, and for a moment, the world holds still.</p>
-
-          <div style={{ display: "flex", gap: "1rem" }}>
-            <button
-              onMouseEnter={(e) => {
-                e.currentTarget.style.background = "#7a6a3a";
-                e.currentTarget.style.color = "#0a0a0a";
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.background = "#2a2a2a";
-                e.currentTarget.style.color = "#d4c9a8";
-              }}
-              style={{
-                flex: 1,
-                padding: "1rem",
-                background: "#2a2a2a",
-                border: "2px solid #7a6a3a",
-                color: "#d4c9a8",
-                cursor: "pointer",
-                fontFamily: "Georgia, serif",
-                fontSize: "0.95rem",
-                transition: "all 0.2s"
-              }}
-            >Reach for her hand</button>
-
-            <button
-              onMouseEnter={(e) => {
-                e.currentTarget.style.background = "#7a6a3a";
-                e.currentTarget.style.color = "#0a0a0a";
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.background = "#2a2a2a";
-                e.currentTarget.style.color = "#d4c9a8";
-              }}
-              style={{
-                flex: 1,
-                padding: "1rem",
-                background: "#2a2a2a",
-                border: "2px solid #7a6a3a",
-                color: "#d4c9a8",
-                cursor: "pointer",
-                fontFamily: "Georgia, serif",
-                fontSize: "0.95rem",
-                transition: "all 0.2s"
-              }}
-            >Step back respectfully</button>
-          </div>
-        </div>
-
-          </div>
-        </details>
-
-        <details id="the-legend" ref={storyimpactRef} className={styles.group} style={{ scrollMarginTop: "1rem" }} open={openSection === "storyimpact"}>
-          <summary className={styles.groupSummary} onClick={(e) => {
-            e.preventDefault();
-            setOpenSection(openSection === "storyimpact" ? null : "storyimpact");
-          }}>[ Your Legend ]</summary>
-          <div className={styles.groupBody}>
-
-        <p className={styles.body}>
-          Every decision leaves a mark that shapes how the world reads you. Your stats are not numbers on a sheet — they are the reputation players build, the bonds they forge, and the enemies they make. Every choice in your adventure leaves a mark. These marks accumulate into social forces that open doors, close them, or kick them off their hinges. Most stats come with an opposing force: push too hard in one direction and the other diminishes into shadow.
-        </p>
-
-        <table className={styles.table}>
-          <thead>
-            <tr>
-              <th>Stat</th>
-              <th>Description</th>
-              <th>In-story Use</th>
-            </tr>
-          </thead>
-          <tbody>
-            {STORY_STATS.map((row, index) => (
-              <tr key={row.stat} data-pair={Math.floor(index / 2)} className={styles.statRow}>
-                <td className={styles.statName}>{row.stat}</td>
-                <td>{row.description}</td>
-                <td>{row.storyUse}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-
-          </div>
-        </details>
-
         <details ref={writingRef} className={styles.group} style={{ scrollMarginTop: "1rem" }} open={openSection === "writing"}>
           <summary className={styles.groupSummary} onClick={(e) => {
             e.preventDefault();
             setOpenSection(openSection === "writing" ? null : "writing");
-          }}>[ Story as JSON ]</summary>
+          }}>[ 1 Story scenes ]</summary>
           <div className={styles.groupBody}>
 
         {/* ── Story Elements ─────────────────────────────────────── */}
@@ -804,48 +445,47 @@ export default function Storyteller() {
   "scenes": {
     "<scene_id>": {
       "image":   "string  — optional. filename of the scene image, e.g. ruined-gate.jpg",
-      "text":    "string  — narrative prose shown to the player. Supports \\n for line breaks.",
       "image_style": "string  — optional. display preset applied to the image. available styles:",
-               //   origin         — no filter, image shown as-is (default when field is omitted)",
-               //   mirrorh        — horizontally flipped image",
-               //   mirrorv        — vertically flipped image",
-               //   darkened       — heavy shadow, very gloomy atmosphere",
-               //   pitchblack     — near total darkness, only outlines remain",
-               //   bright         — lifted and warmed, rare daylight or hope",
-               //   blackwhite     — full desaturation, all colour removed",
-               //   vintage        — aged, parchment-like tone",
-               //   deepsepia      — full sepia burn, old photograph feel",
-               //   cold           — icy blue shift, ghostly and frozen",
-               //   moonlight      — deep cold contrast, pale silver light",
-               //   crimson        — dark blood-red wash, dread and danger",
-               //   copper         — warm metallic orange, firelit scenes",
-               //   deepocean      — submerged blue-green darkness",
-               //   poison         — sickly green hue, cursed or toxic places",
-               //   infrared       — alien colour inversion, heat-map look",
-               //   goldenhour     — warm amber sunset glow",
-               //   apocalypse     — scorched high-contrast ruin",
-               //   neonsurge      — blown-out electric colour overload",
-               //   inverted       — full colour inversion, uncanny and unsettling",
-               //   xray           — white-on-black skeletal exposure",
-               //   drunk          — soft blur with lifted saturation",
-               //   fog            — pale mist veil, washed-out and desaturated",
-               //   rain           — animated diagonal rain streaks, cold blue-grey wash",
-               //   drunk          — animated: slow irregular sway and rotation (5s)",
-               //   emerge         —  emerges once from black to full brightness",
-               //   colorpulse     — animated: cycles between greyscale and full colour (6s)",
-               //   heat           — animated: slow hue and saturation pulse (2s)",
-               //   scanlines      — soft horizontal scanline overlay",
-               //   scanlinesdark  — scanlines over darkened image",
-               //   verticalstrips — soft vertical strip overlay",
-               //   flicker        — animated: erratic rapid brightness flicker",
+          //   origin         — no filter, image shown as-is (default when field is omitted)",
+          //   mirrorh        — horizontally flipped image",
+          //   mirrorv        — vertically flipped image",
+          //   darkened       — heavy shadow, very gloomy atmosphere",
+          //   pitchblack     — near total darkness, only outlines remain",
+          //   bright         — lifted and warmed, rare daylight or hope",
+          //   blackwhite     — full desaturation, all colour removed",
+          //   vintage        — aged, parchment-like tone",
+          //   deepsepia      — full sepia burn, old photograph feel",
+          //   cold           — icy blue shift, ghostly and frozen",
+          //   moonlight      — deep cold contrast, pale silver light",
+          //   crimson        — dark blood-red wash, dread and danger",
+          //   copper         — warm metallic orange, firelit scenes",
+          //   deepocean      — submerged blue-green darkness",
+          //   poison         — sickly green hue, cursed or toxic places",
+          //   infrared       — alien colour inversion, heat-map look",
+          //   goldenhour     — warm amber sunset glow",
+          //   apocalypse     — scorched high-contrast ruin",
+          //   neonsurge      — blown-out electric colour overload",
+          //   inverted       — full colour inversion, uncanny and unsettling",
+          //   xray           — white-on-black skeletal exposure",
+          //   emerge         —  emerges once from black to full brightness",
+          //   colorpulse     — animated: cycles between greyscale and full colour (6s)",
+          //   heat           — animated: slow hue and saturation pulse (2s)",
+          //   fog            — pale mist veil, washed-out and desaturated",
+          //   rain           — animated diagonal rain streaks, cold blue-grey wash",
+          //   snow           — animated: falling snowflakes, soft white overlay",
+          //   lightening     — animated: rapid lightning flashes (1s)",
+          //   scanlines      — soft horizontal scanline overlay",
+          //   scanlinesdark  — scanlines over darkened image",
+          //   verticalstrips — soft vertical strip overlay",
+          //   drunk          — animated: slow irregular sway and rotation (5s)",
+          //   flicker        — animated: erratic rapid brightness flicker",
+      "text":    "string  — narrative prose shown to the player. Supports \\n for line breaks.",
       "ending":   true, // 'ending' marks this as a terminal scene — deducts from the 3 playthroughs."
                         // 'false' is also a terminal scene, but does not deduct from the 3 playthroughs."
                         // default_entry must not be marked as an ending!
       "choices": [
-        {
-          "text": "string  — the choice label the player sees",
-          "to":   "string  — target <scene id>"
-        }
+        { "text": "string  — 1st choice label the player sees", "to": "string  — target <scene id>" },
+        { "text": "string  — 2nd choice label the player sees", "to": "string  — target <scene id>" }
       ]
     }
   }
@@ -871,7 +511,7 @@ export default function Storyteller() {
           <summary className={styles.groupSummary} onClick={(e) => {
             e.preventDefault();
             setOpenSection(openSection === "images" ? null : "images");
-          }}>[ Images &amp; styles ]</summary>
+          }}>[ 2 Images sets ]</summary>
           <div className={styles.groupBody}>
 
         <p className={styles.body}>
@@ -1031,7 +671,7 @@ export default function Storyteller() {
           <summary className={styles.groupSummary} onClick={(e) => {
             e.preventDefault();
             setOpenSection(openSection === "example" ? null : "example");
-          }}>[ Full example ]</summary>
+          }}>[ 3 Story example ]</summary>
           <div className={styles.groupBody}>
 
         <p className={styles.body}>
@@ -1170,6 +810,502 @@ export default function Storyteller() {
           distinct endings depending on the choices the player made. The escape route will always be reachable from
           any scene. The escape route might be a short story in itself.
         </p>
+
+          </div>
+        </details>
+
+        <div style={{ scrollMarginTop: "1rem", marginTop: "1.5rem", marginBottom: "1.5rem", padding: "1rem 2rem", background: "#0a0a0a", border: "1px solid #7a6a3a" }}>
+          <p className={styles.body}>
+            Here you find optional elements to enrich your stories. Only the active
+            elements (marked with the <img src="/images/create/feature-active.png" alt="wax seal" title="active" style={{ height: "1.8rem", width: "auto", display: "inline", verticalAlign: "middle", marginLeft: "0.25rem", marginRight: "0.25rem" }} /> wax seal) are available for use in stories.
+          </p>
+
+          <div style={{ marginTop: "1.5rem", marginBottom: "1.5rem", display: "flex", flexDirection: "column", gap: "1rem" }}>
+            <div style={{ display: "flex", gap: "1rem", alignItems: "flex-start" }}>
+              <img src="/images/create/feature-progress.png" alt="Progress" title="progress" style={{ height: "2rem", width: "auto", flexShrink: 0 }} />
+              <div>
+                <strong>Your Legend: Reputation</strong><br /><span style={{ fontSize: "0.9rem", color: "#a09080" }}>Every deed is carved into the eternal record — your deeds shape how the world remembers you, from whispered legend to feared name</span>
+              </div>
+            </div>
+            <div style={{ display: "flex", gap: "1rem", alignItems: "flex-start" }}>
+              <img src="/images/create/feature-progress.png" alt="Progress" title="progress" style={{ height: "2rem", width: "auto", flexShrink: 0 }} />
+              <div>
+                <strong>Echoes of the past</strong><br /><span style={{ fontSize: "0.9rem", color: "#a09080" }}>Powerful figures bound to you by devotion and desire — lovers, rivals, sworn enemies in matters of passion</span>
+              </div>
+            </div>
+            <div style={{ display: "flex", gap: "1rem", alignItems: "flex-start" }}>
+              <img src="/images/create/feature-idea.png" alt="Idea" title="idea" style={{ height: "2rem", width: "auto", flexShrink: 0 }} />
+              <div>
+                <strong>Creatures</strong><br /><span style={{ fontSize: "0.9rem", color: "#a09080" }}>Monsters, beasts, and NPCs that inhabit your stories — enemies to face, allies to befriend, and characters that shape the narrative</span>
+              </div>
+            </div>
+            <div style={{ display: "flex", gap: "1rem", alignItems: "flex-start" }}>
+              <img src="/images/create/feature-idea.png" alt="Idea" title="idea" style={{ height: "2rem", width: "auto", flexShrink: 0 }} />
+              <div>
+                <strong>Prove Your Abilities</strong><br /><span style={{ fontSize: "0.9rem", color: "#a09080" }}>Skill and crafting checks that separate the lucky from the truly capable</span>
+              </div>
+            </div>
+            <div style={{ display: "flex", gap: "1rem", alignItems: "flex-start" }}>
+              <img src="/images/create/feature-idea.png" alt="Idea" title="idea" style={{ height: "2rem", width: "auto", flexShrink: 0 }} />
+              <div>
+                <strong>Vital Status</strong><br /><span style={{ fontSize: "0.9rem", color: "#a09080" }}>Track special conditions of characters throughout their journey</span>
+              </div>
+            </div>
+            <div style={{ display: "flex", gap: "1rem", alignItems: "flex-start" }}>
+              <img src="/images/create/feature-idea.png" alt="Idea" title="idea" style={{ height: "2rem", width: "auto", flexShrink: 0 }} />
+              <div>
+                <strong>Availablility</strong><br /><span style={{ fontSize: "0.9rem", color: "#a09080" }}>Track character status with countdown timers in characer preview — free, ready, working, travelling, or imprisoned — showing when they are available again.</span>
+              </div>
+            </div>
+            <div style={{ display: "flex", gap: "1rem", alignItems: "flex-start" }}>
+              <img src="/images/create/feature-idea.png" alt="Idea" title="idea" style={{ height: "2rem", width: "auto", flexShrink: 0 }} />
+              <div>
+                <strong>Forged together</strong><br /><span style={{ fontSize: "0.9rem", color: "#a09080" }}>Legendary works built through cooperation, trust, and shared purpose — bridges, sky vessels, and sailships created by fellowships working together</span>
+              </div>
+            </div>
+            <div style={{ display: "flex", gap: "1rem", alignItems: "flex-start" }}>
+              <img src="/images/create/feature-idea.png" alt="Idea" title="idea" style={{ height: "2rem", width: "auto", flexShrink: 0 }} />
+              <div>
+                <strong>Random Scene Choices</strong><br /><span style={{ fontSize: "0.9rem", color: "#a09080" }}>Random scene selection can create unique and unpredictable experiences for players. 
+                  Some events only happen rarely. Others create a unique flow through the narrative.</span>
+              </div>
+            </div>
+            <div style={{ display: "flex", gap: "1rem", alignItems: "flex-start" }}>
+              <img src="/images/create/feature-idea.png" alt="Idea" title="idea" style={{ height: "2rem", width: "auto", flexShrink: 0 }} />
+              <div>
+                <strong>Market Trading</strong><br /><span style={{ fontSize: "0.9rem", color: "#a09080" }}>Multiple choice buttons for item selection and trading in markets, allowing adventurers to buy, sell, and exchange goods</span>
+              </div>
+            </div>
+            <div style={{ display: "flex", gap: "1rem", alignItems: "flex-start" }}>
+              <img src="/images/create/feature-idea.png" alt="Idea" title="idea" style={{ height: "2rem", width: "auto", flexShrink: 0 }} />
+              <div>
+                <strong>Story Effects</strong><br /><span style={{ fontSize: "0.9rem", color: "#a09080" }}>Local in-adventure values that exist only within the context of the running adventure, be it hunger, thirst, cold</span>
+              </div>
+            </div>
+            <div style={{ display: "flex", gap: "1rem", alignItems: "flex-start" }}>
+              <img src="/images/create/feature-idea.png" alt="Idea" title="idea" style={{ height: "2rem", width: "auto", flexShrink: 0 }} />
+              <div>
+                <strong>Magic</strong><br /><span style={{ fontSize: "0.9rem", color: "#a09080" }}>Arcane forces, pagan rites, ancient spells, and forbidden lore waiting to reshape fate</span>
+              </div>
+            </div>
+            <div style={{ display: "flex", gap: "1rem", alignItems: "flex-start" }}>
+              <img src="/images/create/feature-idea.png" alt="Idea" title="idea" style={{ height: "2rem", width: "auto", flexShrink: 0 }} />
+              <div>
+                <strong>Saving Throws</strong><br /><span style={{ fontSize: "0.9rem", color: "#a09080" }}>Moments of desperation where luck and will decide if you survive the impossible</span>
+              </div>
+            </div>
+            <div style={{ display: "flex", gap: "1rem", alignItems: "flex-start" }}>
+              <img src="/images/create/feature-idea.png" alt="Idea" title="idea" style={{ height: "2rem", width: "auto", flexShrink: 0 }} />
+              <div>
+                <strong>Classes</strong><br /><span style={{ fontSize: "0.9rem", color: "#a09080" }}>Distinct paths that define your character — warrior, scholar, rogue, or beyond</span>
+              </div>
+            </div>
+          </div>
+
+            <div className={styles.imageFrameClean}>
+            <img
+              src="/images/create/wudland-engine2.jpg"
+              alt="The Wudlands Engine"
+              className={styles.sectionImageClean}
+            />
+          </div>
+        </div>
+
+    <details id="the-legend" ref={storyimpactRef} className={styles.group} style={{ scrollMarginTop: "1rem" }} open={openSection === "storyimpact"}>
+          <summary className={styles.groupSummary} onClick={(e) => {
+            e.preventDefault();
+            setOpenSection(openSection === "storyimpact" ? null : "storyimpact");
+          }}>[ Your Legend ]</summary>
+          <div className={styles.groupBody}>
+
+        <p className={styles.body}>
+          Every decision leaves a mark that shapes how the world reads you.
+          Your stats are not numbers on a sheet — they are the reputation players build,
+          the bonds they forge, and the enemies they make. Every choice in your adventure leaves a mark that is permanently recorded.
+          These marks are stored and carried forward into every adventure that follows, accumulating into social forces that allow you aboard a pirate ship or deny entry.
+          The stats come with an opposing force: push too hard in one direction and the other diminishes into shadow.
+        </p>
+
+        <table className={styles.table}>
+          <thead>
+            <tr>
+              <th>Stat</th>
+              <th>Description</th>
+              <th>In-story Use</th>
+            </tr>
+          </thead>
+          <tbody>
+            {STORY_STATS.map((row, index) => (
+              <tr key={row.stat} data-pair={Math.floor(index / 2)} className={styles.statRow}>
+                <td className={styles.statName}>{row.stat}</td>
+                <td>{row.description}</td>
+                <td>{row.storyUse}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+
+          </div>
+        </details>
+
+    <details id="echoes" ref={echoesRef} className={styles.group} open={openSection === "echoes"} style={{ scrollMarginTop: "1rem" }}>
+          <summary className={styles.groupSummary} onClick={(e) => {
+            e.preventDefault();
+            setOpenSection(openSection === "echoes" ? null : "echoes");
+          }}>[ Echoes of the Past ]</summary>
+          <div className={styles.groupBody}>
+
+        <p className={styles.body}>
+          Every relationship your character builds persists across adventures. When your story introduces an <strong>important character</strong> — a pauper, lord, sorceress, a villain, a temptress, a betrayer — you have a choice as creator. Name them specifically and they begin as a stranger, their opinion of the player starting at zero. Or leave the role <strong>generic</strong> — &ldquo;the Duke,&rdquo; &ldquo;the High Priest,&rdquo; &ldquo;the Merchant Queen&rdquo; — and the platform will reach back into the player&apos;s history. If they have already charmed, scorned, saved, or wronged someone of that standing, those old feelings carry forward into your story. A generic powerful figure is not a blank slate — they arrive with a relationship already written.
+        </p>
+
+        <p className={styles.body}>
+          Use this deliberately. A powerful figure who adores the player may offer shelter that should not exist, whisper secrets that change the shape of a scene, or step into danger on their behalf. One who despises them may close doors before they are reached, poison reputations, or arrive at the worst possible moment. If you want your story to feel connected to the broader world, lean on generic roles and let the player&apos;s history do the work. If you want a clean slate with no inherited baggage, name your character.
+        </p>
+
+        <p className={styles.body}>
+          Allowing a person from a previous adventure to be reused is done by defining <strong>matching requirements</strong> — a set of criteria the known person must satisfy before the platform considers them a valid match. Each criterion can be stated as a requirement (<span className={styles.code}>Standing: Legendary</span> means the character must know someone of exactly that level) or as an exclusion (<span className={styles.code}>!Shadow</span> means that affiliation is ruled out, so the match may be Spiritual or Power but not Shadow). You decide how many criteria must fit and how strict each one is. The more requirements you define, the more specific the match — the fewer, the broader the net. <strong>Any criterion left undefined accepts all values.</strong> A role with no requirements at all will match the first relevant person in the character&apos;s history regardless of their standing, affiliation, or faith. If no match is found, the role is treated as a new person and added to the character&apos;s list — ready to carry weight in adventures that follow.
+        </p>
+
+        <table className={styles.table}>
+          <thead>
+            <tr>
+              <th>Topic</th>
+              <th>Levels</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Relationship</td>
+              <td>
+                <strong>Love</strong> — romantic devotion; shapes decisions through emotion and personal connection.<br />
+                <strong>Magic</strong> — arcane knowledge and mystical power; rare, potent, and transformative in action.<br />
+                <strong>Warfare</strong> — martial skill and combat proficiency; earned through shared battles and tested valor.<br />
+                <strong>Economic</strong> — money moves mountains; convert riches into influence and exclusive paths.<br />
+                <strong>Bloodline</strong> — family ties and hereditary bonds; legacy and blood obligation run deeper than choice.<br />
+                <strong>Prophecy</strong> — bound by fate itself; a shared prophecy or mystical connection ties your futures together.<br />
+                <strong>Knowledge</strong> — information, secrets, and insight; shapes decisions through understanding and foresight.
+              </td>
+            </tr>
+            <tr>
+              <td>Gender</td>
+              <td>
+                <strong>Male</strong> — chivalric rivalry, martial honour, political alliance through strength.<br />
+                <strong>Female</strong> — courtly love, inheritance intrigue, social manipulation.<br />
+                <strong>Other</strong> — ambiguous, magical, or outside convention; the world does not read them easily.
+              </td>
+            </tr>
+            <tr>
+              <td>Race</td>
+              <td>
+                The bloodline that defines your character. 
+                Choose <strong>Common, Mystical, Mixed,</strong> or <strong>Giants</strong> — or 
+                specify a particular race like <strong>Tiefling, Human, Goliath </strong> or <strong>Lizardfolk</strong>. Explore the full range 
+                 in <a href="/characters#race" style={{ color: "#c07a3a", textDecoration: "underline" }}>
+                 Races</a> on the Characters page.
+              </td>
+            </tr>
+            <tr>
+              <td>Morality</td>
+              <td>
+                <strong>Corrupt</strong> — love and hate are tools; acts only when it profits them.<br />
+                <strong>Pragmatic</strong> — the feeling is real but so is caution; acts when the moment is right.<br />
+                <strong>Bound</strong> — feeling translates directly into action; driven by code, oath, or unbreakable conviction.
+              </td>
+            </tr>
+            <tr>
+              <td>Wealth</td>
+              <td>
+                <strong>Poor</strong> — no material leverage; harm or help is personal and direct.<br />
+                <strong>Comfortable</strong> — coin, shelter, skilled allies, minor bribes.<br />
+                <strong>Rich</strong> — funds enemies, buys witnesses, hires soldiers, changes the player&apos;s circumstances entirely.
+              </td>
+            </tr>
+            <tr>
+              <td>Standing</td>
+              <td>
+                <strong>Commoner</strong> — local reach only.<br />
+                <strong>Notable</strong> — guild officer, merchant, local lord; leverage across a town or province.<br />
+                <strong>Legendary</strong> — noble, warlord, high clergy, royalty; their word reshapes the world.
+              </td>
+            </tr>
+            <tr>
+              <td>Affiliation</td>
+              <td>
+                <strong>Spiritual</strong> — church, arcane order, cult; wields faith and sacred authority.<br />
+                <strong>Power</strong> — court, military, crown; commands soldiers, law, and political favour.<br />
+                <strong>Shadow</strong> — guild, merchant network, criminal fraternity; controls trade, information, and coin.
+              </td>
+            </tr>
+            <tr>
+              <td>Faith</td>
+              <td>
+                <strong>Secular</strong> — religion plays no part in how they love or hate.<br />
+                <strong>Observant</strong> — faith shapes judgement; doctrine justifies the feeling.<br />
+                <strong>Fanatical</strong> — faith defines everything; can grant absolution or call for trial, exile, and holy war.
+              </td>
+            </tr>
+          </tbody>
+        </table>
+
+        <h3 className={styles.subHeading}>VIP Example: Lady Isolde</h3>
+
+        <p className={styles.body}>
+          Below is a complete example of a VIP defined in JSON. Lady Isolde represents a <span className={styles.highlight}>Minne courtly love</span> —
+          a noble woman whose affection must be earned through deeds, not words. Her matching requirements ensure she only appears to players 
+          who have <strong>not</strong> previously encountered a notable female noble, creating continuity across adventures. 'new' parameters will be used in 
+          case no match is found in the character history. Allowing her to enter as a new person in the history of the player. 
+          Visual description are optional, but recommended to give the player a sense of her appearance and presence in the world. 
+          When <span className={styles.code}>{'{id-isolde:formal}'}</span> is used, one of the formal sentences is 
+          selected randomly and displayed to the player. Options in <span className={styles.code}>{'{ x | y | z }'}</span> vary each time. 
+        </p>
+
+        <button
+          onClick={() => setExpandNPC(!expandNPC)}
+          style={{
+            marginBottom: "1.5rem",
+            padding: "0.75rem 1.5rem",
+            background: "#1a1a1a",
+            color: "#d4c9a8",
+            border: "2px solid #7a6a3a",
+            cursor: "pointer",
+            fontSize: "0.9rem",
+            letterSpacing: "0.1em",
+            transition: "all 0.2s",
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.background = "#7a6a3a";
+            e.currentTarget.style.color = "#0a0a0a";
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.background = "#1a1a1a";
+            e.currentTarget.style.color = "#d4c9a8";
+          }}
+        >
+          {expandNPC ? "[ HIDE NPC EXAMPLE ]" : "[ SHOW NPC EXAMPLE ]"}
+        </button>
+        {expandNPC && (
+          <code className={styles.codeBlock}>{`
+          {
+            "vip": [ // array of npcs
+            {
+              "id-vip": "id-isolde", // used 
+              "match": { 
+                // identifier for this NPC to find matches in player history
+                "pattern": {
+                  "relationship": "Love",
+                  "gender": "Female",
+                  "race": "Common",
+                  // morality is not defined, any is accepted
+                  // wealth is negated, so any poor person will be excluded from matching
+                  "wealth": "!Poor", 
+                  // standing is negated, so any commoner will be excluded from matching
+                  "standing": "!Commoner",
+                  "affiliation": "Power",
+                  "faith": "Observant"
+                }, 
+                // in case no match is found, use this complete fallback entries to create a new person
+              "new": {
+                // in case no match is found, this is the default race to use for the new NPC 
+                "name": "Lady Isolde of Ashenvale",
+                "relationship": "Love",
+                "race": "Elf",
+                "morality": "Pragmatic",
+                "wealth": "Rich",
+                "standing": "Notable",
+                "affiliation": "Power",
+                "faith": "Observant",
+                // the default starting love/hate rating for this NPC if no match is found
+                "rating_npc": 0,
+                // visuals for the new person
+                "visuals": {
+                  "formal_1": "She wears a {royal blue | deep purple | midnight black} {brocade gown | formal dress | coronet robe} adorned with intricate {gold | silver | bronze} embroidery.",
+                  "formal_2": "Multiple {gemstones | pearls | jewels} are woven into the fabric, and she carries a {ceremonial fan | formal scepter | ornate staff} as a symbol of her station.",
+                  "formal_3": "Her hair is swept into an elaborate {upswept style | jeweled crown | ornate headdress}, held with {gold pins | pearl clasps | silver combs}.",
+                  "formal_4": "She sits upon a {high-backed chair | throne | dais}, surrounded by the {tapestries | heraldic banners | ceremonial symbols} of her house.",
+
+                  "walk_1": "She wears a severe travelling coat of {charcoal | rust-brown | slate grey}, a {wooden staff | iron-tipped walking staff | carved walking stick} in her hand.",
+                  "walk_2": "Her feet are shod in {leather riding boots | heavy wool boots | weathered travel boots}, and a {leather satchel | canvas pack | travel bag} rests across her shoulder.",
+                  "walk_3": "Her hair is bound in a {tight braid | high knot | austere twist}.",
+                  "walk_4": "She wears no jewelry, only a {rope belt | leather belt | cord cincher} at her waist.",
+    
+                  "dinner_1": "She wears a {simple linen gown | understated silk shift | modest wool dress} in {grey-blue | ash grey | pale dove}, seated at a table before a {goblet of wine | cup of mead | plate of bread}.",
+                  "dinner_2": "The fabric carries minimal embroidery—a few threads at the cuffs—and a {silver spoon | bronze knife | pewter fork} rests beside her plate.",
+                  "dinner_3": "Her hair is bound in a {tight braid | high knot | severe twist}.",
+                  "dinner_4": "Candlelight flickers across her face from {tallow candles | oil lamps | wax candles} on the table.",
+
+                  "flirt_1": "She wears a {crimson | deep wine | blood-red} {silk gown | satin robe | velvet dress} that clings to her skin like {rose petals | spilled wine | liquid shadow}, each breath she takes demanding the fabric's surrender.",
+                  "flirt_2": "The fabric drapes loose and deliberate, unbuttoned at the throat to reveal the curve of her collarbone, while the scent of {rose petals | scattered silk scarves | perfumed oils} mingles with the warmth radiating from her skin.",
+                  "flirt_3": "A {gold | silver | pearl} pendant hangs low at her collarbone, catching light from {multiple candles | brazier flames | hanging lanterns} and drawing your eye to where her pulse quickens.",
+                  "flirt_4": "Her hair falls {unbound | loosely braided | tumbling past her shoulders}, damp at the nape, intertwined with {silk ribbons | golden threads | fresh flowers} that frame her face like an invitation.",
+
+                  "sleep_1": "She wears a {dark wool | heavy linen | midnight blue} travelling cloak, lying upon a {straw mattress | bedroll | fur pelt}.",
+                  "sleep_2": "Beside her rest a {dagger | short sword | hunting knife} and a {waterskin | clay jug | leather flask}.",
+                  "sleep_3": "Her hair is loosely bound with a single cord, spread across a {stuffed pillow | cloth bag | rolled cloak}.",
+                  "sleep_4": "A {dying fire | oil lamp | single candle} casts long shadows across her sleeping form.",
+
+                  "battle_1": "She wears a {deep emerald | rich sapphire | midnight purple} {velvet gown | brocade dress | silk robe}, now stained with {dust | ash | dried blood}.",
+                  "battle_2": "{Gold | Silver | Bronze}-threaded accents run along the sleeves, and a {sword | longsword | curved blade} is clasped in her hands.",
+                  "battle_3": "Her hair is loose, falling freely past her shoulders, tangled with {sweat | debris | battle-dust}.",
+                  "battle_4": "A {silver | gold | pearl-set} circlet rests upon her brow, dented from combat.",
+                } //visuals
+              } //new
+            }, // end 1st vip
+            {
+              // 2nd vip
+              "id-vip": "id-sir...",
+            },
+            {
+              // 3rd vip
+              "id-vip": "id-traveler...",
+            } 
+            ] // array end
+          }
+          `}</code>
+        )}
+
+        <h3 className={styles.subHeading}>Using NPCs in Your Story</h3>
+
+        <p className={styles.body}>
+          To reference an NPC in your story scenes, use the NPC&apos;s identifier in your scene text or choices. The platform will look up the NPC definition, apply matching criteria, and display the appropriate visuals and relationship state.
+        </p>
+
+        <button
+          onClick={() => setExpandUsage(!expandUsage)}
+          style={{
+            marginBottom: "1.5rem",
+            padding: "0.75rem 1.5rem",
+            background: "#1a1a1a",
+            color: "#d4c9a8",
+            border: "2px solid #7a6a3a",
+            cursor: "pointer",
+            fontSize: "0.9rem",
+            letterSpacing: "0.1em",
+            transition: "all 0.2s",
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.background = "#7a6a3a";
+            e.currentTarget.style.color = "#0a0a0a";
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.background = "#1a1a1a";
+            e.currentTarget.style.color = "#d4c9a8";
+          }}
+        >
+          {expandUsage ? "[ HIDE USAGE EXAMPLE ]" : "[ SHOW USAGE EXAMPLE ]"}
+        </button>
+        {expandUsage && (
+          <code className={styles.codeBlock}>{`{
+  "scenes": {
+    "camp-night": {
+      "image": "camp-night.jpg",
+      "text": "You find {lady-isolde:name} by the dying embers of the campfire. {id-isolde:sleep}<br>
+               She sleeps fitfully, her hand resting on a dagger nearby.<br>
+               The night is cold and quiet around you.",
+      "choices": [
+        { "text": "Watch over her until dawn", "to": "isolde-awakening" },
+        { "text": "Return to your own bedroll", "to": "camp-morning" }
+      ]
+    },
+    "isolde-awakening": {
+      "image": "camp-dawn.jpg",
+      "text": "As the first light touches the camp, her eyes open.<br>
+               {lady-isolde:name} sees you watching and rises slowly, her expression shifting<br>
+               from vulnerability to something deeper. {id-isolde:flirt}<br>
+               She moves closer, and for a moment, the world holds still.",
+      "rating_npc": { "lady-isolde": 20 },
+        { "text": "Reach for her hand", "to": "isolde-hand" },
+        { "text": "Step back respectfully", "to": "camp-morning" }
+    }
+  }
+          `}</code>
+        )}
+
+        <h3 className={styles.subHeading}>Scene Preview</h3>
+
+        <div style={{
+          border: "2px solid #7a6a3a",
+          background: "#1a1a1a",
+          padding: "2rem",
+          maxWidth: "500px",
+          color: "#d4c9a8",
+          fontFamily: "Georgia, serif",
+          lineHeight: "1.8",
+          marginTop: "1.5rem"
+        }}>
+          <img
+            src="/images/create/isolde.jpg"
+            alt="Lady Isolde"
+            style={{
+              width: "100%",
+              marginBottom: "1.5rem",
+              border: "1px solid #7a6a3a"
+            }}
+          />
+
+          <p style={{ marginBottom: "1rem" }}>As the first light touches the camp, her eyes open. 
+            She sees you watching and rises slowly, Lady Isolde of Ashenvale expression shifting 
+            from vulnerability to something deeper.</p>
+
+          <p style={{
+            background: "rgba(192,122,58,0.15)",
+            borderLeft: "3px solid #c07a3a",
+            padding: "1rem",
+            margin: "1rem 0",
+            fontStyle: "italic",
+            fontSize: "0.95rem"
+          }}>
+            {randomFlirtLine}
+          </p>
+
+          <p style={{ marginBottom: "1.5rem" }}>She moves closer, and for a moment, the world holds still.</p>
+
+          <div style={{ display: "flex", gap: "1rem" }}>
+            <button
+              onMouseEnter={(e) => {
+                e.currentTarget.style.background = "#7a6a3a";
+                e.currentTarget.style.color = "#0a0a0a";
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.background = "#2a2a2a";
+                e.currentTarget.style.color = "#d4c9a8";
+              }}
+              style={{
+                flex: 1,
+                padding: "1rem",
+                background: "#2a2a2a",
+                border: "2px solid #7a6a3a",
+                color: "#d4c9a8",
+                cursor: "pointer",
+                fontFamily: "Georgia, serif",
+                fontSize: "0.95rem",
+                transition: "all 0.2s"
+              }}
+            >Reach for her hand</button>
+
+            <button
+              onMouseEnter={(e) => {
+                e.currentTarget.style.background = "#7a6a3a";
+                e.currentTarget.style.color = "#0a0a0a";
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.background = "#2a2a2a";
+                e.currentTarget.style.color = "#d4c9a8";
+              }}
+              style={{
+                flex: 1,
+                padding: "1rem",
+                background: "#2a2a2a",
+                border: "2px solid #7a6a3a",
+                color: "#d4c9a8",
+                cursor: "pointer",
+                fontFamily: "Georgia, serif",
+                fontSize: "0.95rem",
+                transition: "all 0.2s"
+              }}
+            >Step back respectfully</button>
+          </div>
+        </div>
 
           </div>
         </details>
