@@ -7,7 +7,7 @@
  * address that was connected in the header.
  */
 
-import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
+import { createContext, useCallback, useContext, useEffect, useRef, useState, type ReactNode } from "react";
 import {
   enableWalletExtension,
   getAccounts,
@@ -38,6 +38,15 @@ export function WalletProvider({ children }: { children: ReactNode }) {
   const [isConnecting, setIsConnecting] = useState(false);
   const [connectError, setConnectError] = useState<string | null>(null);
   const [verified, setVerified] = useState(false);
+  const broadcastChannelRef = useRef<BroadcastChannel | null>(null);
+
+  const disconnect = useCallback(() => {
+    resetWalletState();
+    setAccount(null);
+    setAvailableAccounts([]);
+    setConnectError(null);
+    setVerified(false);
+  }, []);
 
   // Restore session on page reload — validate with backend using secure cookie.
   useEffect(() => {
@@ -59,6 +68,36 @@ export function WalletProvider({ children }: { children: ReactNode }) {
       sessionStorage.removeItem("user_id");
     });
   }, []);
+
+  // Listen for logout events from other tabs.
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+
+    // Try to use BroadcastChannel for reliable cross-tab communication.
+    if ("BroadcastChannel" in window) {
+      const channel = new BroadcastChannel("wallet_auth");
+      broadcastChannelRef.current = channel;
+      channel.onmessage = (event) => {
+        if (event.data.type === "logout") {
+          disconnect();
+          localStorage.removeItem("player_address");
+          sessionStorage.removeItem("user_id");
+        }
+      };
+      return () => channel.close();
+    } else {
+      // Fallback: listen for localStorage changes (for older browsers).
+      const handleStorageChange = (e: StorageEvent) => {
+        if (e.key === "player_address" && e.newValue === null) {
+          disconnect();
+          sessionStorage.removeItem("user_id");
+        }
+      };
+      const win = window as Window;
+      win.addEventListener("storage", handleStorageChange);
+      return () => win.removeEventListener("storage", handleStorageChange);
+    }
+  }, [disconnect]);
 
   const connect = async (): Promise<WalletAccount | null> => {
     setIsConnecting(true);
@@ -82,14 +121,6 @@ export function WalletProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const disconnect = () => {
-    resetWalletState();
-    setAccount(null);
-    setAvailableAccounts([]);
-    setConnectError(null);
-    setVerified(false);
-  };
-
   const logout = async () => {
     // Call backend logout to clear the session cookie
     try {
@@ -99,6 +130,11 @@ export function WalletProvider({ children }: { children: ReactNode }) {
       });
     } catch (e) {
       console.error("Logout error:", e);
+    }
+
+    // Broadcast logout to other tabs.
+    if (broadcastChannelRef.current) {
+      broadcastChannelRef.current.postMessage({ type: "logout" });
     }
 
     disconnect();

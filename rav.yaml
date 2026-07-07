@@ -116,7 +116,7 @@ scripts:
 
   gcp_full:
     - rav run frontend_build
-    - rav run clean_build
+    - rav run gcp_push
     - rav run gcp_deploy
 
   gcp_setup_secrets: gcloud secrets add-iam-policy-binding py_env_file --member='serviceAccount:60927173241-compute@developer.gserviceaccount.com' --role='roles/secretmanager.secretAccessor' --project=thewudlands
