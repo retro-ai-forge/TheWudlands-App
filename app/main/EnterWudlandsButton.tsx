@@ -50,6 +50,13 @@ export function EnterWudlandsButton({
     }
   }, [connectError, attemptKey]);
 
+  // Auto-enter when session is restored and verified (e.g., navigating back after login).
+  useEffect(() => {
+    if (verified && account && !disabled) {
+      onEnter?.(account.address);
+    }
+  }, [verified, account, disabled, onEnter]);
+
   /** Offline signing request -> backend verify -> enter the game. */
   const signAndEnter = async (acct: WalletAccount) => {
     setIsSigning(true);
@@ -95,12 +102,7 @@ export function EnterWudlandsButton({
     } catch (err: unknown) {
       let message = 'Authentication failed';
       if (err instanceof Error) {
-        // Replace generic wallet error with clearer message for active sessions
-        if (err.message.includes('Wallet extension not enabled')) {
-          message = 'Session already active — use a single browser tab';
-        } else {
-          message = err.message;
-        }
+        message = err.message;
       }
       onError?.(message);
     } finally {
@@ -118,6 +120,23 @@ export function EnterWudlandsButton({
     if (account) {
       await signAndEnter(account);
       return;
+    }
+
+    // Check if there's an existing valid session (e.g., from another tab).
+    try {
+      const meRes = await fetch('/api/auth/me', {
+        credentials: 'include',
+      });
+      if (meRes.ok) {
+        const userData = await meRes.json();
+        const address = userData.address;
+        localStorage.setItem('player_address', address);
+        setVerified(true);
+        onEnter?.(address);
+        return;
+      }
+    } catch {
+      // Continue to wallet connection if session check fails.
     }
 
     // First tap without a wallet connected -> notify parent to show wallet hint.
