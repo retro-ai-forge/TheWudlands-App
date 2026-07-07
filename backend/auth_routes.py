@@ -8,7 +8,7 @@ Provides:
 - POST /api/auth/logout - Clear session
 """
 
-from fastapi import APIRouter, HTTPException, Request, Depends
+from fastapi import APIRouter, HTTPException, Request, Response, Depends
 from pydantic import BaseModel, Field
 from datetime import datetime, timedelta
 from typing import Optional
@@ -80,10 +80,10 @@ class LogoutResponse(BaseModel):
     message: str = Field(..., description="Confirmation message")
 
 
-# Dependency: Extract and verify token from Authorization header
+# Dependency: Extract and verify token from secure cookie
 async def get_current_address(request: Request) -> str:
     """
-    Extract and verify authorization token from request.
+    Extract and verify session token from secure cookie.
 
     Usage in route:
         @router.get("/protected")
@@ -93,15 +93,11 @@ async def get_current_address(request: Request) -> str:
     Raises:
         HTTPException 401 if token is invalid or missing
     """
-    auth_header = request.headers.get("Authorization")
+    token = request.cookies.get("session_token")
 
-    if not auth_header:
-        raise HTTPException(status_code=401, detail="Missing Authorization header")
+    if not token:
+        raise HTTPException(status_code=401, detail="Missing session token")
 
-    if not auth_header.startswith("Bearer "):
-        raise HTTPException(status_code=401, detail="Invalid Authorization format")
-
-    token = auth_header[7:]  # Remove "Bearer " prefix
     session = verify_session_token(token)
 
     if not session:
@@ -176,8 +172,8 @@ async def get_auth_challenge(payload: ChallengeRequest):
     return ChallengeResponse(message=message, nonce=nonce)
 
 
-@router.post("/verify", response_model=AuthSessionResponse)
-async def verify_auth_signature(payload: SignedAuthMessageRequest):
+@router.post("/verify")
+async def verify_auth_signature(payload: SignedAuthMessageRequest, response: Response):
     """
     Verify signed authentication message and create session.
 
@@ -186,13 +182,15 @@ async def verify_auth_signature(payload: SignedAuthMessageRequest):
     2. Check nonce uniqueness (replay protection)
     3. Verify cryptographic signature
     4. Create session token
-    5. Return session data
+    5. Set secure HTTP cookie
+    6. Return session data
 
     Args:
         payload: SignedAuthMessageRequest with message, signature, and metadata
+        response: FastAPI Response object to set cookie
 
     Returns:
-        AuthSessionResponse with auth token
+        Session data without token (token is in secure cookie)
 
     Raises:
         HTTPException 401: Verification failed (bad signature, expired message, etc.)
@@ -215,13 +213,24 @@ async def verify_auth_signature(payload: SignedAuthMessageRequest):
             session_duration_hours=72,
         )
 
-        # Step 3: Return response
-        return AuthSessionResponse(
-            token=session.token,
-            address=session.address,
-            expiresAt=session.expires_at.isoformat(),
-            sessionDurationHours=session.session_duration_hours,
+        # Step 3: Set secure HTTP cookie
+        max_age = int((session.expires_at - datetime.utcnow()).total_seconds())
+        response.set_cookie(
+            key="session_token",
+            value=session.token,
+            max_age=max_age,
+            httponly=True,  # Prevent JavaScript access (XSS protection)
+            secure=True,  # Only send over HTTPS
+            samesite="Lax",  # CSRF protection
+            path="/",
         )
+
+        # Step 4: Return response (token not included, it's in the secure cookie)
+        return {
+            "address": session.address,
+            "expiresAt": session.expires_at.isoformat(),
+            "sessionDurationHours": session.session_duration_hours,
+        }
 
     except HTTPException:
         # Re-raise HTTP exceptions
@@ -264,21 +273,30 @@ async def get_current_user(address: str = Depends(get_current_address)):
 
 
 @router.post("/logout", response_model=LogoutResponse)
-async def logout(request: Request):
+async def logout(request: Request, response: Response):
     """
     Clear session and logout user.
 
-    Requires valid Authorization header.
+    Deletes the secure session cookie.
 
     Returns:
         LogoutResponse with confirmation message
     """
     try:
-        auth_header = request.headers.get("Authorization")
+        # Get token from cookie
+        token = request.cookies.get("session_token")
 
-        if auth_header and auth_header.startswith("Bearer "):
-            token = auth_header[7:]
+        if token:
             clear_session(token)
+
+        # Clear the session cookie
+        response.delete_cookie(
+            key="session_token",
+            path="/",
+            httponly=True,
+            secure=True,
+            samesite="Lax",
+        )
 
         return LogoutResponse(message="Successfully logged out")
 

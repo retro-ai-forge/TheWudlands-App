@@ -39,26 +39,22 @@ export function WalletProvider({ children }: { children: ReactNode }) {
   const [connectError, setConnectError] = useState<string | null>(null);
   const [verified, setVerified] = useState(false);
 
-  // Restore session on page reload — validate token with backend before trusting it.
+  // Restore session on page reload — validate with backend using secure cookie.
   useEffect(() => {
-    const token = localStorage.getItem("session_token");
     const address = localStorage.getItem("player_address");
-    if (!token || !address) return;
+    if (!address) return;
 
     fetch("/api/auth/me", {
-      headers: { Authorization: `Bearer ${token}` },
+      credentials: "include", // Send cookies with request
     }).then((res) => {
       if (res.ok) {
         setAccount({ address, meta: { source: "restored" } });
         setVerified(true);
       } else {
-        localStorage.removeItem("session_token");
         localStorage.removeItem("player_address");
-        sessionStorage.removeItem("user_id");
       }
     }).catch(() => {
       // Backend unreachable — clear everything to avoid stuck state.
-      localStorage.removeItem("session_token");
       localStorage.removeItem("player_address");
       sessionStorage.removeItem("user_id");
     });
@@ -94,10 +90,19 @@ export function WalletProvider({ children }: { children: ReactNode }) {
     setVerified(false);
   };
 
-  const logout = () => {
+  const logout = async () => {
+    // Call backend logout to clear the session cookie
+    try {
+      await fetch("/api/auth/logout", {
+        method: "POST",
+        credentials: "include", // Send cookies with request
+      });
+    } catch (e) {
+      console.error("Logout error:", e);
+    }
+
     disconnect();
     if (typeof window !== "undefined") {
-      localStorage.removeItem("session_token");
       localStorage.removeItem("player_address");
       sessionStorage.removeItem("user_id");
     }

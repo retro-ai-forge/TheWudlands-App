@@ -1,5 +1,5 @@
 import styles from "./VersionBadge.module.css";
 
 export function VersionBadge() {
-  return <div className={styles.badge}>beta-0.30</div>;
+  return <div className={styles.badge}>beta-0.40</div>;
 }

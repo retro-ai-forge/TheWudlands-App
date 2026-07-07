@@ -75,24 +75,33 @@ export function EnterWudlandsButton({
       });
 
       // 3. Verify the signature on the backend.
+      // The session token is automatically set as a secure HTTP-only cookie by the backend.
       const verifyRes = await fetch('/api/auth/verify', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'include', // Send cookies with request
         body: JSON.stringify({ address: acct.address, message, signature, nonce }),
       });
       if (!verifyRes.ok) {
         const err = await verifyRes.json();
         throw new Error(err.detail || 'Signature verification failed');
       }
-      const { session_token } = await verifyRes.json();
 
-      // 4. Save session, flag the account as verified, and enter the game.
-      localStorage.setItem('session_token', session_token);
+      // 4. Save player address and flag the account as verified, then enter the game.
+      // The session token is stored in a secure HTTP-only cookie (not accessible to JavaScript).
       localStorage.setItem('player_address', acct.address);
       setVerified(true);
       onEnter?.(acct.address);
     } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : 'Authentication failed';
+      let message = 'Authentication failed';
+      if (err instanceof Error) {
+        // Replace generic wallet error with clearer message for active sessions
+        if (err.message.includes('Wallet extension not enabled')) {
+          message = 'Session already active — use a single browser tab';
+        } else {
+          message = err.message;
+        }
+      }
       onError?.(message);
     } finally {
       setIsSigning(false);
@@ -146,13 +155,7 @@ export function EnterWudlandsButton({
         disabled={disabled || isSigning || isConnecting}
         title={notConnected ? 'Begin — your progress is saved forever' : 'Sign to enter The Wudlands'}
       >
-        {verified && !notConnected && !showHint ? (
-          <>
-            <span className={styles.verifiedDot} />✓
-          </>
-        ) : (
-          label
-        )}
+        {label}
       </button>
 
     </div>
