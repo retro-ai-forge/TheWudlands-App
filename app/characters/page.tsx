@@ -1,28 +1,13 @@
 "use client";
 
-import { useState, useEffect, Suspense } from "react";
-import { useSearchParams } from "next/navigation";
+import { useState, useEffect } from "react";
 import styles from "./characters.module.css";
 
-function CharactersInner() {
-  const searchParams = useSearchParams();
+export default function Characters() {
   const [openSection, setOpenSection] = useState<string | null>(null);
   const [openRaceCategory, setOpenRaceCategory] = useState<string | null>(null);
   const [openProfessionCategory, setOpenProfessionCategory] = useState<string | null>(null);
   const [openGender, setOpenGender] = useState<string | null>(null);
-
-  useEffect(() => {
-    const section = searchParams.get("section");
-    if (section === "story-impact") {
-      setOpenSection("impact");
-      setTimeout(() => {
-        const element = document.getElementById("story-impact");
-        if (element) {
-          element.scrollIntoView({ behavior: "smooth", block: "start" });
-        }
-      }, 100);
-    }
-  }, [searchParams]);
 
   useEffect(() => {
     const hash = window.location.hash.slice(1);
@@ -281,14 +266,6 @@ function CharactersInner() {
   );
 }
 
-export default function Characters() {
-  return (
-    <Suspense>
-      <CharactersInner />
-    </Suspense>
-  );
-}
-
 const GENDERS = [
   {
     id: "m",
@@ -346,20 +323,20 @@ const PROFESSIONS = [
   { id: "fisher", name: "Fisher", category: "Rural", description: "Net and line. Coast and tidal knowledge. You harvest the sea's bounty." },
   { id: "miner", name: "Miner", category: "Rural", description: "Stone and darkness. Pickaxe and deep earth. You have dug deep." },
   { id: "forager", name: "Forager", category: "Rural", description: "Wild plants and mushrooms. Herbs and roots. The forest feeds those who know where to look." },
-  { id: "blacksmith", name: "Blacksmith", category: "Craftsman Metal", description: "Hammer, anvil, fire. Iron and steel know your hands. Creation through force." },
-  { id: "armorer", name: "Armorer", category: "Craftsman Metal", description: "Armor and blades. Protection and precision. Your work saves lives." },
-  { id: "tinsmith", name: "Tinsmith", category: "Craftsman Metal", description: "Cups, pots, pans. Useful beauty. Common things, well-made." },
-  { id: "mason", name: "Mason", category: "Craftsman Stone", description: "Stone and mortar. Walls and cathedrals. You built things that last." },
-  { id: "stonemason", name: "Stonemason", category: "Craftsman Stone", description: "Chisel and hammer. Shaping rock. Strength in precision." },
-  { id: "potter", name: "Potter", category: "Craftsman Stone", description: "Clay and wheel. Vessels and art. Hands and water and earth." },
-  { id: "leatherworker", name: "Leatherworker", category: "Craftsman Garment", description: "Hides and dyes. Armor and saddles. Your craft is both practical and beautiful." },
-  { id: "tanner", name: "Tanner", category: "Craftsman Garment", description: "Raw hides into leather. Smells nobody forgets. Essential work, little glory." },
-  { id: "weaver", name: "Weaver", category: "Craftsman Garment", description: "Loom and thread. Cloth and tapestry. Patterns from chaos." },
-  { id: "dyer", name: "Dyer", category: "Craftsman Garment", description: "Colors from plants and minerals. Bringing life to cloth. Chemistry is your art." },
-  { id: "glassblower", name: "Glassblower", category: "Craftsman Glass", description: "Fire and sand. Fragile beauty. Your breath shapes light." },
-  { id: "jeweler", name: "Jeweler", category: "Craftsman Glass", description: "Gems and precious metals. Tiny, intricate, priceless. Luxury is your medium." },
-  { id: "carpenter", name: "Wudsman", category: "Craftsman Wood", description: "Lumberjack builds roofs and houses. You built the bones of the world." },
-  { id: "cooper", name: "Carpenter", category: "Craftsman Wood", description: "Cabinet maker, barrels and casks. Wooden vessels and tools, great demand." },
+  { id: "blacksmith", name: "Blacksmith", category: "CraftMetal", description: "Hammer, anvil, fire. Iron and steel know your hands. Creation through force." },
+  { id: "armorer", name: "Armorer", category: "CraftMetal", description: "Armor and blades. Protection and precision. Your work saves lives." },
+  { id: "tinsmith", name: "Tinsmith", category: "CraftMetal", description: "Cups, pots, pans. Useful beauty. Common things, well-made." },
+  { id: "mason", name: "Mason", category: "CraftStone", description: "Stone and mortar. Walls and cathedrals. You built things that last." },
+  { id: "stonemason", name: "Stonemason", category: "CraftStone", description: "Chisel and hammer. Shaping rock. Strength in precision." },
+  { id: "potter", name: "Potter", category: "CraftStone", description: "Clay and wheel. Vessels and art. Hands and water and earth." },
+  { id: "leatherworker", name: "Leatherworker", category: "CraftGarment", description: "Hides and dyes. Armor and saddles. Your craft is both practical and beautiful." },
+  { id: "tanner", name: "Tanner", category: "CraftGarment", description: "Raw hides into leather. Smells nobody forgets. Essential work, little glory." },
+  { id: "weaver", name: "Weaver", category: "CraftGarment", description: "Loom and thread. Cloth and tapestry. Patterns from chaos." },
+  { id: "dyer", name: "Dyer", category: "CraftGarment", description: "Colors from plants and minerals. Bringing life to cloth. Chemistry is your art." },
+  { id: "glassblower", name: "Glassblower", category: "CraftGlass", description: "Fire and sand. Fragile beauty. Your breath shapes light." },
+  { id: "jeweler", name: "Jeweler", category: "CraftGlass", description: "Gems and precious metals. Tiny, intricate, priceless. Luxury is your medium." },
+  { id: "carpenter", name: "Carpenter", category: "CraftWood", description: "Lumberjack builds roofs and houses. You built the bones of the world." },
+  { id: "cooper", name: "Carpenter", category: "CraftWood", description: "Cabinet maker, barrels and casks. Wooden vessels and tools, great demand." },
   { id: "scribe", name: "Scribe", category: "Aristocratic", description: "Words and ink. Record-keeping and documents. Knowledge flows through your hands." },
   { id: "clerk", name: "Clerk", category: "Aristocratic", description: "Numbers and ledgers. Accounts and records. Order is your domain." },
   { id: "scholar", name: "Scholar", category: "Aristocratic", description: "Books and learning. Your mind is your wealth. Questions guide your life." },
@@ -390,23 +367,3 @@ const professionsByCategory = PROFESSIONS.reduce((acc, profession) => {
   return acc;
 }, {} as Record<string, typeof PROFESSIONS>);
 
-const STORY_STATS = [
-  { stat: "Fame",                  description: "Known as a hero — trusted, admired, celebrated",    storyUse: "Nobility welcomes you with honor, strangers offer aid", opposed: "Infamous" },
-  { stat: "Infamous",              description: "Feared by the powerful — a weapon in the shadows",   storyUse: "Noble houses employ you for dark deeds, finest vintage wines flow freely", opposed: "Fame" },
-  { stat: "Faith",                 description: "Devoted to a god or cosmic force, earning divine favour", storyUse: "Temples offer shelter, clergy grant healing, holy orders call on you", opposed: "Heresy / Corruption" },
-  { stat: "Heresy\nCorruption",   description: "Denounced by the faithful, touched by forbidden powers", storyUse: "Inquisitors hunt you, holy temples bar entry, but dark shrines grant power to the condemned", opposed: "Faith" },
-  { stat: "Notoriety",             description: "Bards sing your legend in every tavern and kingdom", storyUse: "Doors open without asking, nobles and merchants gift you gold", opposed: "Obscurity" },
-  { stat: "Obscurity",             description: "Unknown, hidden, forgotten, walking unseen through the world", storyUse: "Slip past guards unnoticed, enemies cannot find you", opposed: "Notoriety" },
-  { stat: "Love\nAffection",      description: "Bonds of loyalty and deep romance",        storyUse: "Allies risk their lives for you, secret aid flows freely", opposed: "Hatred / Resentment" },
-  { stat: "Hatred\nResentment",   description: "Scorned lovers and betrayed allies",       storyUse: "Ambushed by those who once knew you, reputation poisoned", opposed: "Love / Affection" },
-  { stat: "Respect\nHonor",       description: "Esteemed by peers for integrity and strength", storyUse: "Duels avoided through reputation, lead honor guard", opposed: "Infamy / Disdain" },
-  { stat: "Infamy\nDisdain",      description: "Scorned and disrespected by worthy foes",  storyUse: "Challenged constantly, betrayed by allies",      opposed: "Respect / Honor" },
-  { stat: "Persuasion",            description: "Words that sway hearts and minds",           storyUse: "Enemies lay down arms, merchants offer discounts", opposed: "Intimidation" },
-  { stat: "Intimidation",          description: "Rule through fear and force of will",      storyUse: "Enemies flee in terror, merchants comply quickly", opposed: "Persuasion" },
-  { stat: "Guild Membership",      description: "Belonging to a guild or secret order",      storyUse: "Call for aid, access guild safehouse",          opposed: "Guild Outcast" },
-  { stat: "Guild Outcast",         description: "Exiled or ostracized from organized groups", storyUse: "Former allies hunt you, no refuge",             opposed: "Guild Membership" },
-  { stat: "Wealth\nProsperity",   description: "Gold, treasures, and assets accumulated",  storyUse: "Buy out rivals, commission grand works",        opposed: "Debt\nObligation" },
-  { stat: "Debt\nObligation",     description: "Owe gold or favors to powerful forces",    storyUse: "Creditors demand payment in blood",              opposed: "Wealth\nProsperity" },
-  { stat: "Manipulation",          description: "Master of deception and cunning schemes",   storyUse: "Turn enemies against each other, blackmail nobles", opposed: "Sincerity" },
-  { stat: "Sincerity",             description: "Known for truth and unwavering honor",      storyUse: "Enemies trust your word, easier treaties",       opposed: "Manipulation" },
-];

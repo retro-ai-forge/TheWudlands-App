@@ -14,8 +14,7 @@ export default function Home() {
   const [restoring, setRestoring] = useState(true);
   const [status, setStatus] = useState("Ready.");
   const [entering, setEntering] = useState(false);
-  const [playerAddress, setPlayerAddress] = useState<string | null>(null);
-  const { verified, account, logout } = useWallet();
+  const { verified, account } = useWallet();
   const wasVerified = useRef(false);
 
   function resetToJoin(message: string) {
@@ -30,7 +29,6 @@ export default function Home() {
   // separately by the context's logout().
   function endGameSession() {
     resetToJoin("You have signed out.");
-    setPlayerAddress(null);
   }
 
   // Primary: tear down the game session when verified drops to false.
@@ -53,18 +51,17 @@ export default function Home() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [account]);
 
-  async function enterGameSession(address: string) {
+  async function enterGameSession() {
     setEntering(true);
     setStatus("Entering The Wudlands...");
     // Simulate entry delay for UX
     await new Promise(resolve => setTimeout(resolve, 500));
-    setPlayerAddress(address);
     setView("game");
     setEntering(false);
   }
 
-  function handleEnterWudlands(address: string) {
-    enterGameSession(address);
+  function handleEnterWudlands() {
+    enterGameSession();
   }
 
   function handleAuthError(error: string) {
@@ -92,11 +89,7 @@ export default function Home() {
         </>
       )}
 
-      {view === "game" && (
-        <WelcomeView
-          playerAddress={playerAddress}
-        />
-      )}
+      {view === "game" && <WelcomeView />}
     </main>
   );
 }

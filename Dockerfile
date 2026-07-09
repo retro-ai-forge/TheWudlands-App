@@ -11,7 +11,6 @@ RUN npm ci
 # Copy frontend source
 COPY app ./app
 COPY public ./public
-COPY lib ./lib
 COPY tsconfig.json next.config.ts eslint.config.mjs ./
 
 # Build Next.js app

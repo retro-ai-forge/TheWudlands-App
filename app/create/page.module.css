@@ -27,6 +27,10 @@
   margin-bottom: 0.75rem;
 }
 
+.highlight {
+  color: #c07a3a;
+}
+
 .table {
   width: 100%;
   border-collapse: collapse;
@@ -166,18 +170,6 @@
   }
 }
 
-.sectionHeading {
-  font-family: "Courier New", Courier, monospace;
-  font-size: 1rem;
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
-  color: #c07a3a;
-  border-bottom: 1px solid #3a3020;
-  padding-bottom: 0.5rem;
-  margin-top: 3rem;
-  margin-bottom: 1.25rem;
-}
-
 .subHeading {
   font-family: "Courier New", Courier, monospace;
   font-size: 0.82rem;
@@ -251,13 +243,6 @@
   filter: sepia(0.2) brightness(0.9);
 }
 
-.imageGrid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-  gap: 1rem;
-  margin-bottom: 1.5rem;
-}
-
 /* ── CSS Preview Gallery ───────────────────────────── */
 .previewSection {
   margin-top: 2.5rem;
@@ -265,14 +250,6 @@
 
 .previewSet {
   margin-bottom: 0.5rem;
-}
-
-.previewSetTitle {
-  display: none;
-}
-
-.previewSetMeta {
-  display: none;
 }
 
 .previewGrid {
@@ -344,17 +321,6 @@
     rgba(0,0,0,0.18)   5px,
     rgba(0,0,0,0.18)   7px
   );
-  pointer-events: none;
-}
-
-/* crosshatch overlay */
-.overlayCrosshatch::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background:
-    repeating-linear-gradient(to bottom, transparent 0px, transparent 3px, rgba(0,0,0,0.3) 3px, rgba(0,0,0,0.3) 5px),
-    repeating-linear-gradient(to right,  transparent 0px, transparent 5px, rgba(0,0,0,0.3) 5px, rgba(0,0,0,0.3) 7px);
   pointer-events: none;
 }
 
@@ -537,6 +503,11 @@
   50%     { filter: hue-rotate(25deg)  saturate(3) brightness(1.1) contrast(1.5); }
 }
 
+@keyframes glyphFade {
+  0%, 100% { opacity: 0.25; }
+  50%      { opacity: 0.85; }
+}
+
 @keyframes drunkSway {
   0%   { transform: rotate(0deg)    translate(0px,   0px);  }
   12%  { transform: rotate(-0.7deg) translate(-2px,  1px);  }
@@ -555,6 +526,7 @@
 .animFlicker { animation: flickerAnim        1.8s linear infinite; }
 .animHeat    { animation: heatDistort        2s ease-in-out infinite; }
 .animDrunk   { animation: drunkSway          8s ease-in-out infinite; }
+.glyphFade   { animation: glyphFade          2.5s ease-in-out infinite; display: inline-block; }
 
 /* ── Lightbox ──────────────────────────────────────── */
 .lightboxOverlay {

@@ -14,9 +14,8 @@
  */
 
 import { useEffect, useState } from 'react';
-import Link from 'next/link';
 import { useWallet } from './WalletProvider';
-import { getSignerForAddress, type WalletAccount } from '@/lib/wallet';
+import { getSignerForAddress, type WalletAccount } from '@/app/lib/wallet';
 import styles from './EnterWudlandsButton.module.css';
 
 export interface EnterWudlandsButtonProps {
@@ -73,7 +72,7 @@ export function EnterWudlandsButton({
       const { message, nonce } = await challengeRes.json();
 
       // 2. Offline signature proving private-key ownership (no transaction).
-      const signer = await getSignerForAddress(acct.address);
+      const signer = await getSignerForAddress();
       const signerObj = signer as { signRaw: (payload: { address: string; data: string; type: string }) => Promise<{ signature: string }> };
       const { signature } = await signerObj.signRaw({
         address: acct.address,

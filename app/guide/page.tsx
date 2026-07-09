@@ -131,7 +131,7 @@ export default function Guide() {
           but the choice, once made, belongs to the story.
         </p>
 
-        <GuideTable rows={WORLD_ROWS} accordion />
+        <GuideTable rows={WORLD_ROWS} />
 
         {/* ── Character & Party ───────────────────────────────── */}
         <h2 className={styles.sectionHeading}>Character &amp; Party</h2>
@@ -171,7 +171,7 @@ export default function Guide() {
           who you put where. It may save their life. It may cost them one.
         </p>
 
-        <GuideTable rows={CHARACTER_ROWS} accordion />
+        <GuideTable rows={CHARACTER_ROWS} />
 
         {/* ── Character Availability ──────────────────────────────────────── */}
         <h2 className={styles.sectionHeading}>Character Availability</h2>

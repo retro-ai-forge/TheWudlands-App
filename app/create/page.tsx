@@ -19,32 +19,70 @@ const FLIRT_LINES = [
 ];
 
 const STORY_STATS = [
-  { stat: "Fame",         description: "Known as a hero — trusted, admired, celebrated",    storyUse: "Nobility welcomes you with honor, strangers offer aid", opposed: "Infamous" },
-  { stat: "Infamous",     description: "Feared by the powerful — a weapon in the shadows",   storyUse: "Noble houses employ you for dark deeds, finest vintage wines flow freely", opposed: "Fame" },
-  { stat: "Faith",        description: "Devoted to a god or cosmic force, earning divine favour", storyUse: "Temples offer shelter, clergy grant healing, holy orders call on you", opposed: "Heresy" },
-  { stat: "Heresy",       description: "Denounced by the faithful, touched by forbidden powers", storyUse: "Inquisitors hunt you, holy temples bar entry, but dark shrines grant power to the condemned", opposed: "Faith" },
-  { stat: "Notoriety",    description: "Bards sing your legend in every tavern and kingdom", storyUse: "Doors open without asking, nobles and merchants gift you gold", opposed: "Obscurity" },
-  { stat: "Obscurity",    description: "Unknown, hidden, forgotten, walking unseen through the world", storyUse: "Slip past guards unnoticed, enemies cannot find you", opposed: "Notoriety" },
-  { stat: "Loyality",     description: "Bonds of loyalty and deep romance",        storyUse: "Allies risk their lives for you, secret aid flows freely", opposed: "Treachery" },
-  { stat: "Treachery",       description: "Scorned lovers and betrayed allies",       storyUse: "Ambushed by those who once knew you, reputation poisoned", opposed: "Loyality" },
-  { stat: "Honor",        description: "Esteemed by peers for integrity and strength", storyUse: "Duels avoided through reputation, lead honor guard", opposed: "Infamy" },
-  { stat: "Infamy",       description: "Scorned and disrespected by worthy foes",  storyUse: "Challenged constantly, betrayed by allies",      opposed: "Honor" },
-  { stat: "Persuasion",   description: "Words that sway hearts and minds",           storyUse: "Enemies lay down arms, merchants offer discounts", opposed: "Intimidation" },
-  { stat: "Intimidation", description: "Rule through fear and force of will",      storyUse: "Enemies flee in terror, merchants comply quickly", opposed: "Persuasion" },
-  { stat: "Guildmember",  description: "Belonging to a guild or secret order",      storyUse: "Call for aid, access guild safehouse",          opposed: "Guildoutcast" },
-  { stat: "Guildoutcast", description: "Exiled or ostracized from organized groups", storyUse: "Former allies hunt you, no refuge",             opposed: "Guildmember" },
-  { stat: "Wealth",       description: "Gold, treasures, and assets accumulated",  storyUse: "Buy out rivals, commission grand works",        opposed: "Debt" },
-  { stat: "Debt",         description: "Owe gold or favors to powerful forces",    storyUse: "Creditors demand payment in blood",              opposed: "Wealth" },
-  { stat: "Manipulation", description: "Master of deception and cunning schemes",   storyUse: "Turn enemies against each other, blackmail nobles", opposed: "Sincerity" },
-  { stat: "Sincerity",    description: "Known for truth and unwavering honor",      storyUse: "Enemies trust your word, easier treaties",       opposed: "Manipulation" },
+  { stat: "Fame",         description: "Known as a hero — trusted, admired, celebrated",    storyUse: "Nobility welcomes you with honor, strangers offer aid" },
+  { stat: "Infamy",     description: "Feared by the powerful — a weapon in the shadows",   storyUse: "Noble houses employ you for dark deeds, finest vintage wines flow freely" },
+  { stat: "Faith",        description: "Devoted to a god or cosmic force, earning divine favour", storyUse: "Temples offer shelter, clergy grant healing, holy orders call on you" },
+  { stat: "Heresy",       description: "Denounced by the faithful, touched by forbidden powers", storyUse: "Inquisitors hunt you, holy temples bar entry, but dark shrines grant power to the condemned" },
+  { stat: "Notoriety",    description: "Bards sing your legend in every tavern and kingdom", storyUse: "Doors open without asking, nobles and merchants gift you gold" },
+  { stat: "Obscurity",    description: "Unknown, hidden, forgotten, walking unseen through the world", storyUse: "Slip past guards unnoticed, enemies cannot find you" },
+  { stat: "Loyality",     description: "Bonds of loyalty and deep romance",        storyUse: "Allies risk their lives for you, secret aid flows freely" },
+  { stat: "Treachery",       description: "Scorned lovers and betrayed allies",       storyUse: "Ambushed by those who once knew you, reputation poisoned" },
+  { stat: "Honor",        description: "Esteemed by peers for integrity and strength", storyUse: "Duels avoided through reputation, lead honor guard" },
+  { stat: "Disdain",      description: "Scorned and disrespected by worthy foes",  storyUse: "Challenged constantly, betrayed by allies" },
+  { stat: "Persuasion",   description: "Words that sway hearts and minds",           storyUse: "Enemies lay down arms, merchants offer discounts" },
+  { stat: "Intimidation", description: "Rule through fear and force of will",      storyUse: "Enemies flee in terror, merchants comply quickly" },
+  { stat: "Guildmember",  description: "Belonging to a guild or secret order",      storyUse: "Call for aid, access guild safehouse" },
+  { stat: "Guildoutcast", description: "Exiled or ostracized from organized groups", storyUse: "Former allies hunt you, no refuge" },
+  { stat: "Wealth",       description: "Gold, treasures, and assets accumulated",  storyUse: "Buy out rivals, commission grand works" },
+  { stat: "Debt",         description: "Owe gold or favors to powerful forces",    storyUse: "Creditors demand payment in blood" },
+  { stat: "Manipulation", description: "Master of deception and cunning schemes",   storyUse: "Turn enemies against each other, blackmail nobles" },
+  { stat: "Sincerity",    description: "Known for truth and unwavering honor",      storyUse: "Enemies trust your word, easier treaties" },
+];
+
+const LEGEND_PREVIEWS = [
+  {
+    heading: "No Reputation",
+    image: "/images/create/legend-1.jpg",
+    alt: "City gates, no stats",
+    text: "The gate guards eye you like any other traveler and ask to pay a toll before entering the city.",
+    textGated: false,
+    choices: [
+      { label: "Greet and walk to the front gate", gated: false },
+      { label: "Walk to the west gate", gated: false },
+    ],
+  },
+  {
+    heading: "Guildmember",
+    image: "/images/create/legend-2.jpg",
+    alt: "City gates, Guildmember greater than 30",
+    text: "The gate guards eye you like any other traveler and ask to pay a toll before entering the city.",
+    textGated: false,
+    choices: [
+      { label: "Greet and walk to the front gate", gated: false },
+      { label: "Walk to the west gate", gated: false },
+      { label: "Slip in through the smugglers' tunnel", gated: true },
+    ],
+  },
+  {
+    heading: "High Fame or Infamy",
+    image: "/images/create/legend-3.jpg",
+    alt: "City gates, Fame greater than 40",
+    text: "The gate guards recognize you at once and wave you through with a salute.",
+    textGated: true,
+    choices: [
+      { label: "Greet the guard and walk through the main gate", gated: true },
+    ],
+  },
 ];
 
 export default function Storyteller() {
   const [showImageDimensionsPopup, setShowImageDimensionsPopup] = useState(false);
   const [expandSchema, setExpandSchema] = useState(false);
   const [expandExample, setExpandExample] = useState(false);
-  const [expandNPC, setExpandNPC] = useState(false);
+  const [expandVIP, setExpandVIP] = useState(false);
   const [expandUsage, setExpandUsage] = useState(false);
+  const [expandStats, setExpandStats] = useState(false);
+  const [legendSlide, setLegendSlide] = useState(0);
   const [openSection, setOpenSection] = useState<string | null>(null);
 
   const [randomFlirtLine, setRandomFlirtLine] = useState("");
@@ -56,7 +94,14 @@ export default function Storyteller() {
     };
 
     generateRandomLine();
-    const interval = setInterval(generateRandomLine, 10000);
+    const interval = setInterval(generateRandomLine, 15000);
+    return () => clearInterval(interval);
+  }, []);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setLegendSlide((i) => (i + 1) % LEGEND_PREVIEWS.length);
+    }, 10000);
     return () => clearInterval(interval);
   }, []);
 
@@ -208,7 +253,7 @@ export default function Storyteller() {
         </p>
 
         <p className={styles.body}>
-          Every addon must include a default ending or escape route. This is not optional. When a player is overwhelmed,
+          Every addon must include at least one ending and an escape route. This is not optional. When a player is overwhelmed,
           badly wounded, out of resources, or simply lost, there must always be a valid path they can take to retreat,
           recover, or reach some form of conclusion. This fallback path should work as a short, complete adventure on its own —
           not a punishment for failure, but an honest exit that respects the player&apos;s experience.
@@ -258,7 +303,7 @@ export default function Storyteller() {
             </tr>
             <tr>
               <td>Fame</td>
-              <td>The adventurer&apos;s reputation — famed heroes earn trust and open doors, while infamous wanderers earn darker renown. Use fame to shape how NPCs react, what they know, and what stories follow the adventurer.</td>
+              <td>The adventurer&apos;s reputation — famed heroes earn trust and open doors, while infamous wanderers earn darker renown. Use fame to shape how VIP and NPCs react, what they know, and what stories follow the adventurer.</td>
             </tr>
             <tr>
               <td>Notoriety</td>
@@ -266,7 +311,7 @@ export default function Storyteller() {
             </tr>
             <tr>
               <td>Story Structure</td>
-              <td>Branching paths, loops, and N:M scene relationships are allowed and encouraged. Stories do not need to be linear.</td>
+              <td>Branching paths, loops, and various scene relationships are allowed and encouraged. Stories do not need to be linear.</td>
             </tr>
             <tr>
               <td>Adventure Dependencies</td>
@@ -425,71 +470,87 @@ export default function Storyteller() {
           {expandSchema ? "[ HIDE JSON SCHEMA ]" : "[ SHOW JSON SCHEMA ]"}
         </button>
         {expandSchema && (
-          <code className={styles.codeBlock}>{`{
-  "id":               "string  — unique addon id, lowercase, hyphens only. e.g. the-black-tower",
-  "title":            "string  — display name shown to players",
-  "author":           "string  — your name or handle",
-  "version":          "string  — semver format, e.g. 1.0.0",
-  "Polkadot_address": "string  — optional. your Polkadot address for revenue share",
+          <code className={styles.codeBlock}>{`
+{
+  "id":               "string  — unique id, lowercase, authorname and number, e.g. id-adv-<authorname>-<uniqueNumber>",
+  "title":            "string  — adventure title shown to players",
+  "author":           "string  — your artist name to display",
+  "version":          "string  — version format, e.g. 1.0.0",
+  "polkadot_address": "string  — your polkadot address for revenue share",
   "eth_address":      "string  — optional. your ETH address for revenue share",
-  "adult":            false,   // boolean — true if addon contains adult content",
-  "require":          ["array or requirements to enter - e.g. m, d, f, solo],
-  "tags":             ["array of strings — e.g. dungeon, horror, romance, survival"],
-  "requires":         ["array of addon ids, one must be completed before this one is accessible"],
-  "unlocks":          ["array of addon ids that become accessible after this one is completed"],
+
+  "comment":          "adult — true if addon contains adult content",
+  "adult":            false,   
+  "comment":          "array of character requirements to enter this adventure",
+  "character":        ["m","solo","elf"],
+  "comment":          "array of strings to tag the addon for search and discovery",
+  "tags":             ["dungeon", "horror", "romance", "survival"],
+  "comment":          "array of addon ids, one must be completed before this one is accessible",
+  "requires":         ["id-adv-auth-musterman-235","id-adv-auth-musterman-236"],
 
   "default_entry": "string  — scene id used as start point AND missing-scene fallback",
   "emergency_exit": "string  — scene id used on errors to lead to the escape route",
   "escape_route":  "string  — scene id of the retreat / fallback ending",
 
-  "scenes": {
-    "<scene_id>": {
+  "scenes": [
+    {
+      "id_scene": "<scene_id>",
       "image":   "string  — optional. filename of the scene image, e.g. ruined-gate.jpg",
       "image_style": "string  — optional. display preset applied to the image. available styles:",
-          //   origin         — no filter, image shown as-is (default when field is omitted)",
-          //   mirrorh        — horizontally flipped image",
-          //   mirrorv        — vertically flipped image",
-          //   darkened       — heavy shadow, very gloomy atmosphere",
-          //   pitchblack     — near total darkness, only outlines remain",
-          //   bright         — lifted and warmed, rare daylight or hope",
-          //   blackwhite     — full desaturation, all colour removed",
-          //   vintage        — aged, parchment-like tone",
-          //   deepsepia      — full sepia burn, old photograph feel",
-          //   cold           — icy blue shift, ghostly and frozen",
-          //   moonlight      — deep cold contrast, pale silver light",
-          //   crimson        — dark blood-red wash, dread and danger",
-          //   copper         — warm metallic orange, firelit scenes",
-          //   deepocean      — submerged blue-green darkness",
-          //   poison         — sickly green hue, cursed or toxic places",
-          //   infrared       — alien colour inversion, heat-map look",
-          //   goldenhour     — warm amber sunset glow",
-          //   apocalypse     — scorched high-contrast ruin",
-          //   neonsurge      — blown-out electric colour overload",
-          //   inverted       — full colour inversion, uncanny and unsettling",
-          //   xray           — white-on-black skeletal exposure",
-          //   emerge         —  emerges once from black to full brightness",
-          //   colorpulse     — animated: cycles between greyscale and full colour (6s)",
-          //   heat           — animated: slow hue and saturation pulse (2s)",
-          //   fog            — pale mist veil, washed-out and desaturated",
-          //   rain           — animated diagonal rain streaks, cold blue-grey wash",
-          //   snow           — animated: falling snowflakes, soft white overlay",
-          //   lightening     — animated: rapid lightning flashes (1s)",
-          //   scanlines      — soft horizontal scanline overlay",
-          //   scanlinesdark  — scanlines over darkened image",
-          //   verticalstrips — soft vertical strip overlay",
-          //   drunk          — animated: slow irregular sway and rotation (5s)",
-          //   flicker        — animated: erratic rapid brightness flicker",
+          "comment":   "origin         — no filter, image shown as-is (default when field is omitted)",
+          "comment":   "mirrorh        — horizontally flipped image",
+          "comment":   "mirrorv        — vertically flipped image",
+          "comment":   "darkened       — heavy shadow, very gloomy atmosphere",
+          "comment":   "pitchblack     — near total darkness, only outlines remain",
+          "comment":   "bright         — lifted and warmed, rare daylight or hope",
+          "comment":   "blackwhite     — full desaturation, all colour removed",
+          "comment":   "vintage        — aged, parchment-like tone",
+          "comment":   "deepsepia      — full sepia burn, old photograph feel",
+          "comment":   "cold           — icy blue shift, ghostly and frozen",
+          "comment":   "moonlight      — deep cold contrast, pale silver light",
+          "comment":   "crimson        — dark blood-red wash, dread and danger",
+          "comment":   "copper         — warm metallic orange, firelit scenes",
+          "comment":   "deepocean      — submerged blue-green darkness",
+          "comment":   "poison         — sickly green hue, cursed or toxic places",
+          "comment":   "infrared       — alien colour inversion, heat-map look",
+          "comment":   "goldenhour     — warm amber sunset glow",
+          "comment":   "apocalypse     — scorched high-contrast ruin",
+          "comment":   "neonsurge      — blown-out electric colour overload",
+          "comment":   "inverted       — full colour inversion, uncanny and unsettling",
+          "comment":   "xray           — white-on-black skeletal exposure",
+          "comment":   "emerge         —  emerges once from black to full brightness",
+          "comment":   "colorpulse     — animated: cycles between greyscale and full colour (6s)",
+          "comment":   "heat           — animated: slow hue and saturation pulse (2s)",
+          "comment":   "fog            — pale mist veil, washed-out and desaturated",
+          "comment":   "rain           — animated diagonal rain streaks, cold blue-grey wash",
+          "comment":   "snow           — animated: falling snowflakes, soft white overlay",
+          "comment":   "lightening     — animated: rapid lightning flashes (1s)",
+          "comment":   "scanlines      — soft horizontal scanline overlay",
+          "comment":   "scanlinesdark  — scanlines over darkened image",
+          "comment":   "verticalstrips — soft vertical strip overlay",
+          "comment":   "drunk          — animated: slow irregular sway and rotation (5s)",
+          "comment":   "flicker        — animated: erratic rapid brightness flicker",
       "text":    "string  — narrative prose shown to the player. Supports \\n for line breaks.",
-      "ending":   true, // 'ending' marks this as a terminal scene — deducts from the 3 playthroughs."
-                        // 'false' is also a terminal scene, but does not deduct from the 3 playthroughs."
-                        // default_entry must not be marked as an ending!
+      "ending":   true, 
+      "comment": "ending marks this as a terminal scene — deducts from the 3 playthroughs.",
+      "comment": "false is also a terminal scene, but does not deduct from the 3 playthroughs.",
+      "comment": "default_entry must not be marked as an ending!",
       "choices": [
         { "text": "string  — 1st choice label the player sees", "to": "string  — target <scene id>" },
         { "text": "string  — 2nd choice label the player sees", "to": "string  — target <scene id>" }
       ]
+    },
+    {
+      "comment": "repeat the scene structure for each scene in your addon",
+      "id_scene": "<scene_id>"
+    },
+    {
+      "comment": "3rd scene",
+      "id_scene": "<scene_id>"
     }
-  }
-}`}</code>
+  ]
+}
+  `}</code>
         )}
 
         <p className={styles.body}>
@@ -705,103 +766,75 @@ export default function Storyteller() {
           {expandExample ? "[ HIDE EXAMPLE JSON ]" : "[ SHOW EXAMPLE JSON ]"}
         </button>
         {expandExample && (
-          <code className={styles.codeBlock}>{`{
-  "id":                "the-ruined-gate",
+          <code className={styles.codeBlock}>{`
+{
+  "id":                "id-adv-grimwald-001",
   "title":             "The Ruined Gate",
   "author":            "Grimwald of Ashfen",
   "version":           "1.0.0",
-  "Poldkadot_address": "",
+  "polkadot_address":  "",
   "eth_address":       "",
   "adult":             false,
-  "require":           ["m", "d", "f", "solo"],
+  "character":         ["m", "d", "f", "solo"],
   "tags":              ["dungeon", "ruins"],
   "requires":          [],
-  "unlocks":           [],
 
   "default_entry":     "approach",
   "emergency_exit":    "broken_ceiling",
   "escape_route":      "run_away",
 
-  "scenes": {
-
-    "approach": {
+  "comment": "array of scenes, each with a unique id, image, text, and choices" ,
+  "scenes": [
+    { 
+      "id-scene":    "approach",
       "image":       "approach.jpg",
       "image_style": "deepocean",
-      "text":        "After a few hours of travel, you stand at the lip of a yawning sinkhole,
-                      the air below smelling of damp stone and old rot. <br>
-                      You claimed down carefully into the pit, but the ground beneath you
-                      crumbles and gives way. You fall a short distance,
-                      scraping your arms and legs on the jagged rock. <br>
-                      At the bottom you see a narrow staircase carved into the rock
-                      descends into the dark — a cold draft sighs up from the depths. <br>
-                      Loose pebbles skitter underfoot. Far below, something moves that is not the
-                      wind.",
+      "text":        "After a few hours of travel, you stand at the lip of a yawning sinkhole, the air below smelling of damp stone and old rot.<br>You claimed down carefully into the pit, but the ground beneath you crumbles and gives way. You fall a short distance, scraping your arms and legs on the jagged rock.<br>At the bottom you see a narrow staircase carved into the rock descends into the dark — a cold draft sighs up from the depths.<br>Loose pebbles skitter underfoot. Far below, something moves that is not the wind.",
       "choices": [
         { "text": "Descend the carved steps",                  "to": "inner-court" },
         { "text": "You don't feel ready for this. Climb out",  "to": "forest-retreat" }
-      ]}
+      ]
     },
-
-    "inner-court": {
+    {
+      "id-scene":    "inner-court",
       "image":       "inner-court.jpg",
       "image_style": "scanlines",
-      "text":        "You step into a vaulted cavern where moulded pillars hold a ceiling
-                      low with mineral veins.<br>
-                      Water drips in slow, musical patterns.
-                      Ancient scratches mark a path toward a half-buried gate carved
-                      with symbols. The gate is broken and some metal pieces hang loose.<br>
-                      From somewhere deeper comes a metallic, distant clank.",
+      "text":        "You step into a vaulted cavern where moulded pillars hold a ceiling low with mineral veins.<br>Water drips in slow, musical patterns. Ancient scratches mark a path toward a half-buried gate carved with symbols. The gate is broken and some metal pieces hang loose.<br>From somewhere deeper comes a metallic, distant clank.",
       "choices": [
         { "text": "Follow the scratched path",              "to": "inner-court" },
         { "text": "Grab a rusty metal bar and return home", "to": "return-home" },
         { "text": "Leave to get better equippment",         "to": "forest-retreat" }
       ]
     },
-
-    "return-home": {
+    {
+      "id-scene":    "return-home",
       "image":       "peaceful-forest.jpg",
-      "text":        "With effort, you grab one of the rusty metal poles and wrench it free.
-                      Clutching the dusty metal bar, you quickly run back to the surface and
-                      climb out of the sinkhole. The sun is warm on your face as you emerge,
-                      though the air tastes of dust and earth.<br>
-                      Still, you feel lucky to have returned with your prize.",
+      "text":        "With effort, you grab one of the rusty metal poles and wrench it free. Clutching the dusty metal bar, you quickly run back to the surface and climb out of the sinkhole. The sun is warm on your face as you emerge, though the air tastes of dust and earth.<br>Still, you feel lucky to have returned with your prize.",
       "ending":       true
     },
-
-    "forest-retreat": {
+    {
+      "id-scene":    "forest-retreat",
       "image":       "forest-path.jpg",
-      "text":        "You claw your way back to the surface and emerge from the sinkhole
-                      into a quiet forest. Sunlight filters through the canopy above, and
-                      the air is crisp with the scent of pine and earth.<br>
-                      You make your way home, vowing to return better equipped and
-                      ready to claim what the depths have guarded.",
+      "text":        "You claw your way back to the surface and emerge from the sinkhole into a quiet forest. Sunlight filters through the canopy above, and the air is crisp with the scent of pine and earth.<br>You make your way home, vowing to return better equipped and ready to claim what the depths have guarded.",
       "ending":       true
     },
-
-    "broken-ceiling": {
+    {
+      "id-scene":    "broken-ceiling",
       "image":       "broken-ceiling.jpg",
       "image_style": "apocalypse",
-      "text":        "Suddenly an earthquake shakes the caverns. Dust falls like rain and a
-                      thunder of collapsing stone drowns the sound of your breath.<br>
-                      A fissure opens, dropping you into a fractured passage; rubble blocks
-                      the way you came. You must fight your way through the shifting dark
-                      toward any route that leads upward.<br>
-                      Debris underfoot threatens to give; the air tastes of iron and panic.",
+      "text":        "Suddenly an earthquake shakes the caverns. Dust falls like rain and a thunder of collapsing stone drowns the sound of your breath.<br>A fissure opens, dropping you into a fractured passage; rubble blocks the way you came. You must fight your way through the shifting dark toward any route that leads upward.<br>Debris underfoot threatens to give; the air tastes of iron and panic.",
       "ending":       false
     },
-
-    "run_away": {
+    {
+      "id-scene":    "run_away",
       "image":       "forest-retreat.jpg",
-      "text":        "You scramble up a narrow shaft and find a ragged slit of sky. <br>
-                      The surface is a maze of broken earth and toppled root, but above you,
-                      the world is open and the air warm. <br>
-                      You make your way back to the light, lungs burning and pockets
-                      full of dust, alive and changed.",
+      "text":        "You scramble up a narrow shaft and find a ragged slit of sky.<br>The surface is a maze of broken earth and toppled root, but above you, the world is open and the air warm.<br>You make your way back to the light, lungs burning and pockets full of dust, alive and changed.",
       "ending":       true
     }
-
-  }
-}`}</code>
+  ],
+  "comment": "end of scene array"
+}
+  `}</code>
         )}
 
         <p className={styles.body}>
@@ -822,6 +855,14 @@ export default function Storyteller() {
 
           <div style={{ marginTop: "1.5rem", marginBottom: "1.5rem", display: "flex", flexDirection: "column", gap: "1rem" }}>
             <div style={{ display: "flex", gap: "1rem", alignItems: "flex-start" }}>
+              <img src="/images/create/feature-active.png" alt="Active" title="active" style={{ height: "2rem", width: "auto", flexShrink: 0 }} />
+              <div>
+                <strong>none</strong><br /><span style={{ fontSize: "0.9rem", color: "#a09080" }}>-</span>
+              </div>
+            </div>
+            <hr style={{ border: "none", borderTop: "1px solid #3a3020", margin: "0" }} />
+
+            <div style={{ display: "flex", gap: "1rem", alignItems: "flex-start" }}>
               <img src="/images/create/feature-progress.png" alt="Progress" title="progress" style={{ height: "2rem", width: "auto", flexShrink: 0 }} />
               <div>
                 <strong>Your Legend: Reputation</strong><br /><span style={{ fontSize: "0.9rem", color: "#a09080" }}>Every deed is carved into the eternal record — your deeds shape how the world remembers you, from whispered legend to feared name</span>
@@ -833,6 +874,8 @@ export default function Storyteller() {
                 <strong>Echoes of the past</strong><br /><span style={{ fontSize: "0.9rem", color: "#a09080" }}>Powerful figures bound to you by devotion and desire — lovers, rivals, sworn enemies in matters of passion</span>
               </div>
             </div>
+            <hr style={{ border: "none", borderTop: "1px solid #3a3020", margin: "0" }} />
+            
             <div style={{ display: "flex", gap: "1rem", alignItems: "flex-start" }}>
               <img src="/images/create/feature-idea.png" alt="Idea" title="idea" style={{ height: "2rem", width: "auto", flexShrink: 0 }} />
               <div>
@@ -861,6 +904,12 @@ export default function Storyteller() {
               <img src="/images/create/feature-idea.png" alt="Idea" title="idea" style={{ height: "2rem", width: "auto", flexShrink: 0 }} />
               <div>
                 <strong>Forged together</strong><br /><span style={{ fontSize: "0.9rem", color: "#a09080" }}>Legendary works built through cooperation, trust, and shared purpose — bridges, sky vessels, and sailships created by fellowships working together</span>
+              </div>
+            </div>
+            <div style={{ display: "flex", gap: "1rem", alignItems: "flex-start" }}>
+              <img src="/images/create/feature-idea.png" alt="Idea" title="idea" style={{ height: "2rem", width: "auto", flexShrink: 0 }} />
+              <div>
+                <strong>Carrying capacity</strong><br /><span style={{ fontSize: "0.9rem", color: "#a09080" }}>Slot based inventory system allowing characters to carry a limited number of items.</span>
               </div>
             </div>
             <div style={{ display: "flex", gap: "1rem", alignItems: "flex-start" }}>
@@ -945,6 +994,201 @@ export default function Storyteller() {
           </tbody>
         </table>
 
+        <p className={styles.body}>
+          Stats are moved by attaching the stat key straight to a choice, alongside its <span className={styles.code}>text</span> and <span className={styles.code}>to</span>.
+          A positive value raises the stat, a negative value lowers it; since each stat has an opposing
+          force, raising one gently pulls its opposite down. You are not required to touch a stat on
+          every choice — only mark the ones where the decision should leave a lasting impression. The gap between two opposing stats is the measure of your reputation in that domain. A player with a high Fame and low Infamy is widely celebrated, while a player with low Fame and high Infamy is feared and revered.
+        </p>
+
+        <p className={styles.body}>
+          Stats can also steer the story itself. A scene&apos;s <span className={styles.code}>text</span> can branch on a
+          stat threshold, so the same location reads differently depending on what the player has built. A choice can
+          likewise be gated behind <span className={styles.code}>show_if</span>, so it only appears once the player has
+          earned — or sunk to — the reputation it requires.
+        </p>
+
+        <button
+          onClick={() => setExpandStats(!expandStats)}
+          style={{
+            marginBottom: "1.5rem",
+            padding: "0.75rem 1.5rem",
+            background: "#1a1a1a",
+            color: "#d4c9a8",
+            border: "2px solid #7a6a3a",
+            cursor: "pointer",
+            fontSize: "0.9rem",
+            letterSpacing: "0.1em",
+            transition: "all 0.2s",
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.background = "#7a6a3a";
+            e.currentTarget.style.color = "#0a0a0a";
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.background = "#1a1a1a";
+            e.currentTarget.style.color = "#d4c9a8";
+          }}
+        >
+          {expandStats ? "[ HIDE STAT EXAMPLE ]" : "[ SHOW STAT EXAMPLE ]"}
+        </button>
+        {expandStats && (
+          <code className={styles.codeBlock}>{`
+{
+  "scenes": [
+    {
+      "id-scene":  "tavern-boast",
+      "text": "You recount your deeds before the crowded tavern, and the room falls quiet to listen.",
+      "choices": [
+        { "text": "Tell the truth of your victory", "to": "tavern-cheer", "stat.Fame": 2 },
+        { "text": "Threaten the loudest heckler into silence", "to": "tavern-fear", "stat.Infamy": 3 }
+      ]
+    },
+    {
+      "id-scene": "city-gates",
+      "comment": "text branches on the player's accumulated Fame",
+      "text": {
+        "stat.Fame>40": "The gate guards recognize you at once and wave you through with a salute.",
+        "default": "The gate guards eye you like any other traveler and ask to pay a toll before entering the city."
+      },
+      "choices": [
+        {
+          "show_if": "stat.Fame>40",
+          "show_if": "stat.Infamy>40",
+          "comment": "only shown once the player has high enough fame",
+          "text": "Greet the guard and walk through the main gate",
+          "to": "city-square"
+        },
+        { 
+          "show_if": "stat.Fame<=40",
+          "text": "Greet and walk to the front gate", "to": "pay-toll-at-gate" },
+        { 
+          "show_if": "stat.Fame<=40",
+          "text": "Walk to the west gate", "to": "city-west" 
+        },
+        {
+          "show_if": "stat.Guildmember>30",
+          "comment": "only shown once the player has high standing with local guild to know this route exists",
+          "text": "Slip in through the smugglers' tunnel",
+          "to": "city-underbelly"
+        }
+      ]
+    }
+  ],
+  "comment": "end of scene array"
+}
+          `}</code>
+        )}
+
+        <p className={styles.body}>
+          A leading <span style={{ color: "#c07a3a", fontWeight: "bold" }}>◆</span> marks any line of text or any choice
+          that only appears because of a stat — always visible, no hover needed. A grey <span className={styles.glyphFade} style={{ color: "#6b6b6b", fontWeight: "bold" }}>◆</span> in
+          the corner means other options exist here too, hidden until your stats qualify for them.
+        </p>
+
+        <h3 className={styles.subHeading}>Scene Preview: {LEGEND_PREVIEWS[legendSlide].heading}</h3>
+
+        <div style={{ display: "grid", maxWidth: "500px", marginTop: "1.5rem" }}>
+          {LEGEND_PREVIEWS.map((preview, i) => (
+            <div
+              key={preview.heading}
+              aria-hidden={i !== legendSlide}
+              style={{
+                gridArea: "1 / 1",
+                position: "relative",
+                opacity: i === legendSlide ? 1 : 0,
+                pointerEvents: i === legendSlide ? "auto" : "none",
+                transition: "opacity 0.4s",
+                border: "2px solid #7a6a3a",
+                background: "#1a1a1a",
+                padding: "2rem",
+                color: "#d4c9a8",
+                fontFamily: "Georgia, serif",
+                lineHeight: "1.8"
+              }}
+            >
+              {i === 0 && (
+                <span
+                  title="Other options exist but are hidden until your stats qualify"
+                  className={styles.glyphFade}
+                  style={{
+                    position: "absolute",
+                    bottom: "0.75rem",
+                    left: "0.75rem",
+                    color: "#6b6b6b",
+                    fontWeight: "bold",
+                    fontSize: "1.1rem"
+                  }}
+                >◆</span>
+              )}
+
+              <img
+                src={preview.image}
+                alt={preview.alt}
+                style={{
+                  width: "100%",
+                  marginBottom: "1.5rem",
+                  border: "1px solid #7a6a3a"
+                }}
+              />
+
+              <p style={{ marginBottom: "1.5rem" }}>
+                {preview.textGated && (
+                  <span style={{ marginRight: "0.5em", color: "#c07a3a", fontWeight: "bold" }}>◆</span>
+                )}
+                {preview.text}
+              </p>
+
+              <div style={{ display: "flex", flexWrap: "wrap", gap: "1rem" }}>
+                {preview.choices.map((choice) => (
+                  <button
+                    key={choice.label}
+                    tabIndex={i === legendSlide ? 0 : -1}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.background = "#7a6a3a";
+                      e.currentTarget.style.color = "#0a0a0a";
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.background = "#2a2a2a";
+                      e.currentTarget.style.color = "#d4c9a8";
+                    }}
+                    style={{
+                      flex: preview.choices.length > 1 ? "1 1 45%" : 1,
+                      padding: "1rem",
+                      background: "#2a2a2a",
+                      border: "2px solid #7a6a3a",
+                      color: "#d4c9a8",
+                      cursor: "pointer",
+                      fontFamily: "Georgia, serif",
+                      fontSize: "0.95rem",
+                      transition: "all 0.2s"
+                    }}
+                  >
+                    {choice.gated && (
+                      <span style={{ marginRight: "0.5em", color: "#c07a3a", fontWeight: "bold" }}>◆</span>
+                    )}
+                    {choice.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+
+        <div style={{ display: "flex", justifyContent: "center", gap: "0.5rem", marginTop: "1rem", maxWidth: "500px" }}>
+          {LEGEND_PREVIEWS.map((preview, i) => (
+            <span
+              key={preview.heading}
+              style={{
+                width: "0.5rem",
+                height: "0.5rem",
+                borderRadius: "50%",
+                background: i === legendSlide ? "#c07a3a" : "#3a3020"
+              }}
+            />
+          ))}
+        </div>
+
           </div>
         </details>
 
@@ -956,7 +1200,14 @@ export default function Storyteller() {
           <div className={styles.groupBody}>
 
         <p className={styles.body}>
-          Every relationship your character builds persists across adventures. When your story introduces an <strong>important character</strong> — a pauper, lord, sorceress, a villain, a temptress, a betrayer — you have a choice as creator. Name them specifically and they begin as a stranger, their opinion of the player starting at zero. Or leave the role <strong>generic</strong> — &ldquo;the Duke,&rdquo; &ldquo;the High Priest,&rdquo; &ldquo;the Merchant Queen&rdquo; — and the platform will reach back into the player&apos;s history. If they have already charmed, scorned, saved, or wronged someone of that standing, those old feelings carry forward into your story. A generic powerful figure is not a blank slate — they arrive with a relationship already written.
+          Every true relationship your character builds persists across adventures. 
+          When your story introduces an <strong>important character</strong> — a pauper, 
+          lord, sorceress, a villain, a temptress, a betrayer that might reappear in the future,
+          you create them specifically. The platform will reach back into the player&apos;s history. 
+          If they have already charmed, scorned, saved, or wronged someone of that standing, 
+          those old feelings carry forward into your story, they arrive with a relationship already written. 
+          If none is found the new proposed person is added to the player&apos;s history and will be 
+          available for future stories.
         </p>
 
         <p className={styles.body}>
@@ -964,7 +1215,21 @@ export default function Storyteller() {
         </p>
 
         <p className={styles.body}>
-          Allowing a person from a previous adventure to be reused is done by defining <strong>matching requirements</strong> — a set of criteria the known person must satisfy before the platform considers them a valid match. Each criterion can be stated as a requirement (<span className={styles.code}>Standing: Legendary</span> means the character must know someone of exactly that level) or as an exclusion (<span className={styles.code}>!Shadow</span> means that affiliation is ruled out, so the match may be Spiritual or Power but not Shadow). You decide how many criteria must fit and how strict each one is. The more requirements you define, the more specific the match — the fewer, the broader the net. <strong>Any criterion left undefined accepts all values.</strong> A role with no requirements at all will match the first relevant person in the character&apos;s history regardless of their standing, affiliation, or faith. If no match is found, the role is treated as a new person and added to the character&apos;s list — ready to carry weight in adventures that follow.
+          Allowing a person from a previous adventure to be reused is done by defining 
+          small <strong>matching requirements</strong> — a set of criteria the known 
+          person must satisfy before the platform considers them a valid match. 
+          Each criterion can be stated as a 
+          requirement (<span className={styles.code}>Standing: Legendary</span> means 
+          the character must know someone of exactly that 
+          level) or as an exclusion (<span className={styles.code}>!Shadow</span> means that 
+          affiliation is ruled out, so the match may be Spiritual or Power but not Shadow). You 
+          decide how many criteria must fit and how strict each one is. The more requirements 
+          you define, the more specific the match — the fewer, the broader 
+          the net. <strong>Any criterion left undefined accepts all values.</strong> A role with 
+          no requirements at all will match the first relevant person in the 
+          character&apos;s history regardless of their standing, affiliation, or faith. 
+          If no match is found, the role is treated as a new person and added to 
+          the character&apos;s list — ready to carry weight in adventures that follow.
         </p>
 
         <table className={styles.table}>
@@ -1047,21 +1312,22 @@ export default function Storyteller() {
             </tr>
           </tbody>
         </table>
+        
 
         <h3 className={styles.subHeading}>VIP Example: Lady Isolde</h3>
 
         <p className={styles.body}>
           Below is a complete example of a VIP defined in JSON. Lady Isolde represents a <span className={styles.highlight}>Minne courtly love</span> —
           a noble woman whose affection must be earned through deeds, not words. Her matching requirements ensure she only appears to players 
-          who have <strong>not</strong> previously encountered a notable female noble, creating continuity across adventures. 'new' parameters will be used in 
+          who have <strong>not</strong> previously encountered a notable female noble, creating continuity across adventures. &apos;new&apos; parameters will be used in 
           case no match is found in the character history. Allowing her to enter as a new person in the history of the player. 
           Visual description are optional, but recommended to give the player a sense of her appearance and presence in the world. 
-          When <span className={styles.code}>{'{id-isolde:formal}'}</span> is used, one of the formal sentences is 
+          When <span className={styles.code}>{'{vip.id-isolde.formal}'}</span> is used, one of the formal sentences is 
           selected randomly and displayed to the player. Options in <span className={styles.code}>{'{ x | y | z }'}</span> vary each time. 
         </p>
 
         <button
-          onClick={() => setExpandNPC(!expandNPC)}
+          onClick={() => setExpandVIP(!expandVIP)}
           style={{
             marginBottom: "1.5rem",
             padding: "0.75rem 1.5rem",
@@ -1082,32 +1348,36 @@ export default function Storyteller() {
             e.currentTarget.style.color = "#d4c9a8";
           }}
         >
-          {expandNPC ? "[ HIDE NPC EXAMPLE ]" : "[ SHOW NPC EXAMPLE ]"}
+          {expandVIP ? "[ HIDE VIP EXAMPLE ]" : "[ SHOW VIP EXAMPLE ]"}
         </button>
-        {expandNPC && (
+        {expandVIP && (
           <code className={styles.codeBlock}>{`
           {
-            "vip": [ // array of npcs
+            "comment": "array of vips",
+            "vip": [ 
             {
-              "id-vip": "id-isolde", // used 
+              "id-vip": "id-isolde",
+              "comment": "id used throughout the adventure even when this was loaded from character history",
               "match": { 
-                // identifier for this NPC to find matches in player history
+                "comment": "identifiers for this vip to find matches in player history",
                 "pattern": {
                   "relationship": "Love",
                   "gender": "Female",
                   "race": "Common",
-                  // morality is not defined, any is accepted
-                  // wealth is negated, so any poor person will be excluded from matching
+                  "comment": "morality is not defined, any is accepted",
+                  "comment": "wealth is negated, so any poor person will be excluded from matching",
                   "wealth": "!Poor", 
-                  // standing is negated, so any commoner will be excluded from matching
+                  "comment": "standing is negated, so any commoner will be excluded from matching",
                   "standing": "!Commoner",
                   "affiliation": "Power",
                   "faith": "Observant"
                 }, 
-                // in case no match is found, use this complete fallback entries to create a new person
+                "comment": "in case no match is found, use this complete fallback entries to create a new person"
+              },
               "new": {
-                // in case no match is found, this is the default race to use for the new NPC 
-                "name": "Lady Isolde of Ashenvale",
+                "comment": "in case no match is found, new vip char is created",
+                "name.first": "Lady Isolde",
+                "name.last": "of Ashenvale",
                 "relationship": "Love",
                 "race": "Elf",
                 "morality": "Pragmatic",
@@ -1115,9 +1385,9 @@ export default function Storyteller() {
                 "standing": "Notable",
                 "affiliation": "Power",
                 "faith": "Observant",
-                // the default starting love/hate rating for this NPC if no match is found
+                "comment": "the default starting love/hate rating for this NPC if no match is found",
                 "rating_npc": 0,
-                // visuals for the new person
+                "comment": "visuals for the new person",
                 "visuals": {
                   "formal_1": "She wears a {royal blue | deep purple | midnight black} {brocade gown | formal dress | coronet robe} adorned with intricate {gold | silver | bronze} embroidery.",
                   "formal_2": "Multiple {gemstones | pearls | jewels} are woven into the fabric, and she carries a {ceremonial fan | formal scepter | ornate staff} as a symbol of her station.",
@@ -1147,27 +1417,28 @@ export default function Storyteller() {
                   "battle_1": "She wears a {deep emerald | rich sapphire | midnight purple} {velvet gown | brocade dress | silk robe}, now stained with {dust | ash | dried blood}.",
                   "battle_2": "{Gold | Silver | Bronze}-threaded accents run along the sleeves, and a {sword | longsword | curved blade} is clasped in her hands.",
                   "battle_3": "Her hair is loose, falling freely past her shoulders, tangled with {sweat | debris | battle-dust}.",
-                  "battle_4": "A {silver | gold | pearl-set} circlet rests upon her brow, dented from combat.",
-                } //visuals
-              } //new
-            }, // end 1st vip
+                  "battle_4": "A {silver | gold | pearl-set} circlet rests upon her brow, dented from combat."
+                } 
+              },
+              "comment": "end 1st vip"
+            }, 
             {
-              // 2nd vip
-              "id-vip": "id-sir...",
+              "id-vip": "id-warlock-of-the...",
+              "comment": "end 2st vip"
             },
             {
-              // 3rd vip
               "id-vip": "id-traveler...",
-            } 
-            ] // array end
+              "comment": "end 3st vip"
+            }], 
+            "comment": "array end"
           }
           `}</code>
         )}
 
-        <h3 className={styles.subHeading}>Using NPCs in Your Story</h3>
+        <h3 className={styles.subHeading}>Using VIPs in Your Story</h3>
 
         <p className={styles.body}>
-          To reference an NPC in your story scenes, use the NPC&apos;s identifier in your scene text or choices. The platform will look up the NPC definition, apply matching criteria, and display the appropriate visuals and relationship state.
+          To reference a VIP in your story scenes, use the VIP&apos;s identifier in your scene text or choices. The platform will look up the VIP definition, apply matching criteria, and display the appropriate visuals and relationship state.
         </p>
 
         <button
@@ -1195,29 +1466,30 @@ export default function Storyteller() {
           {expandUsage ? "[ HIDE USAGE EXAMPLE ]" : "[ SHOW USAGE EXAMPLE ]"}
         </button>
         {expandUsage && (
-          <code className={styles.codeBlock}>{`{
-  "scenes": {
-    "camp-night": {
-      "image": "camp-night.jpg",
-      "text": "You find {lady-isolde:name} by the dying embers of the campfire. {id-isolde:sleep}<br>
-               She sleeps fitfully, her hand resting on a dagger nearby.<br>
-               The night is cold and quiet around you.",
-      "choices": [
-        { "text": "Watch over her until dawn", "to": "isolde-awakening" },
-        { "text": "Return to your own bedroll", "to": "camp-morning" }
-      ]
-    },
-    "isolde-awakening": {
-      "image": "camp-dawn.jpg",
-      "text": "As the first light touches the camp, her eyes open.<br>
-               {lady-isolde:name} sees you watching and rises slowly, her expression shifting<br>
-               from vulnerability to something deeper. {id-isolde:flirt}<br>
-               She moves closer, and for a moment, the world holds still.",
-      "rating_npc": { "lady-isolde": 20 },
-        { "text": "Reach for her hand", "to": "isolde-hand" },
-        { "text": "Step back respectfully", "to": "camp-morning" }
-    }
-  }
+          <code className={styles.codeBlock}>{`
+          {
+            "scenes": [
+              {
+                "id-scene": "camp-night",
+                "image": "camp-night.jpg",
+                "text": "You find {vip.id-isolde.name.full} by the dying embers of the campfire. {vip.id-isolde.sleep} She sleeps fitfully, her hand resting on a dagger nearby.<br>The night is cold and quiet around you.",
+                "choices": [
+                  { "text": "Watch over her until dawn", "to": "isolde-awakening" },
+                  { "text": "Return to your own bedroll", "to": "camp-morning" }
+                ]
+              },
+              {
+                "id-scene": "isolde-awakening",
+                "image": "camp-dawn.jpg",
+                "text": "As the first light touches the camp, her eyes open.<br>{vip.id-isolde.name.full} sees you watching and rises slowly, her expression shifting from vulnerability to something deeper.<br>{vip.id-isolde.flirt} She moves closer, and for a moment, the world holds still.",
+                "choices": [
+                  { "text": "Reach for her hand", "to": "isolde-hand", "vip.id-isolde.rating": 3 },
+                  { "text": "Step back respectfully", "to": "camp-morning", "vip.id-isolde.rating": -2 }
+                ]
+              }
+            ],
+            "comment": "end of scene array"
+          }
           `}</code>
         )}
 

@@ -2,11 +2,7 @@ import Link from "next/link";
 import styles from "../page.module.css";
 import { FeedbackForm } from "./FeedbackForm";
 
-interface WelcomeViewProps {
-  playerAddress: string | null;
-}
-
-export function WelcomeView({ playerAddress }: WelcomeViewProps) {
+export function WelcomeView() {
   return (
     <>
       <div className={styles.welcomeBody}>

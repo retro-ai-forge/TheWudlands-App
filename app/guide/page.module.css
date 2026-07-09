@@ -38,41 +38,6 @@
   color: #e6a55a;
 }
 
-.table {
-  width: 100%;
-  border-collapse: collapse;
-  font-family: "Courier New", Courier, monospace;
-  font-size: 1rem;
-  margin-top: 2.5rem;
-}
-
-.table th {
-  background: #1a1a1a;
-  color: #c07a3a;
-  text-transform: uppercase;
-  letter-spacing: 0.15em;
-  padding: 0.65rem 1rem;
-  border: 1px solid #7a6a3a;
-  text-align: left;
-}
-
-.table td {
-  color: #d4c9a8;
-  padding: 0.6rem 1rem;
-  border: 1px solid #3a3020;
-  vertical-align: top;
-}
-
-.table td:first-child {
-  color: #c07a3a;
-  white-space: nowrap;
-  width: 1%;
-}
-
-.table tr:hover td {
-  background: #111108;
-}
-
 .sectionHeading {
   font-family: "Courier New", Courier, monospace;
   font-size: 1rem;
@@ -85,16 +50,6 @@
   margin-bottom: 1.25rem;
 }
 
-.subHeading {
-  font-family: "Courier New", Courier, monospace;
-  font-size: 0.82rem;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: #7a6a3a;
-  margin-top: 2rem;
-  margin-bottom: 0.6rem;
-}
-
 .code {
   font-family: "Courier New", Courier, monospace;
   font-size: 0.82rem;
@@ -103,170 +58,6 @@
   padding: 0.1em 0.35em;
   border: 1px solid #3a3020;
 }
-
-.codeBlock {
-  display: block;
-  font-family: "Courier New", Courier, monospace;
-  font-size: 0.78rem;
-  line-height: 1.7;
-  color: #d4c9a8;
-  background: #0e0e0b;
-  border: 1px solid #7a6a3a;
-  border-left: 3px solid #c07a3a;
-  padding: 1.25rem 1.5rem;
-  overflow-x: auto;
-  white-space: pre;
-  margin-bottom: 1.5rem;
-}
-
-.imageGrid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-  gap: 1rem;
-  margin-bottom: 1.5rem;
-}
-
-/* ── CSS Preview Gallery ───────────────────────────── */
-.previewSection {
-  margin-top: 2.5rem;
-}
-
-.previewSet {
-  margin-bottom: 2.5rem;
-}
-
-.previewSetTitle {
-  font-family: "Courier New", Courier, monospace;
-  font-size: 0.82rem;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: #c07a3a;
-  margin-bottom: 0.2rem;
-}
-
-.previewSetMeta {
-  font-family: "Courier New", Courier, monospace;
-  font-size: 0.72rem;
-  color: #5a4a2a;
-  margin-bottom: 0.75rem;
-  letter-spacing: 0.06em;
-}
-
-.previewGrid {
-  display: grid;
-  grid-template-columns: repeat(6, 1fr);
-  gap: 4px;
-}
-
-.previewImg {
-  width: 100%;
-  aspect-ratio: 16 / 9;
-  object-fit: cover;
-  display: block;
-}
-
-@media (max-width: 1024px) {
-  .previewGrid {
-    grid-template-columns: repeat(4, 1fr);
-  }
-}
-
-@media (max-width: 600px) {
-  .previewGrid {
-    grid-template-columns: repeat(3, 1fr);
-  }
-}
-
-@media (max-width: 400px) {
-  .previewGrid {
-    grid-template-columns: repeat(2, 1fr);
-  }
-}
-
-/* ── Image wrapper (needed for overlay sets) ───────── */
-.previewImgWrapper {
-  position: relative;
-  overflow: hidden;
-  line-height: 0;
-}
-
-.previewImgWrapper .previewImg {
-  width: 100%;
-}
-
-/* scanlines overlay */
-.overlayScanlines::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background: repeating-linear-gradient(
-    to bottom,
-    transparent        0px,
-    transparent        3px,
-    rgba(0,0,0,0.18)   3px,
-    rgba(0,0,0,0.18)   5px
-  );
-  pointer-events: none;
-}
-
-/* vertical strips overlay */
-.overlayStrips::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background: repeating-linear-gradient(
-    to right,
-    transparent        0px,
-    transparent        5px,
-    rgba(0,0,0,0.18)   5px,
-    rgba(0,0,0,0.18)   7px
-  );
-  pointer-events: none;
-}
-
-/* crosshatch overlay */
-.overlayCrosshatch::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background:
-    repeating-linear-gradient(to bottom, transparent 0px, transparent 3px, rgba(0,0,0,0.3) 3px, rgba(0,0,0,0.3) 5px),
-    repeating-linear-gradient(to right,  transparent 0px, transparent 5px, rgba(0,0,0,0.3) 5px, rgba(0,0,0,0.3) 7px);
-  pointer-events: none;
-}
-
-/* ── Animated sets ─────────────────────────────────── */
-@keyframes emergeFromBlack {
-  0%   { filter: brightness(0); }
-  100% { filter: brightness(1); }
-}
-
-@keyframes colorPulseGallery {
-  0%, 100% { filter: grayscale(1) brightness(0.5); }
-  50%       { filter: grayscale(0) brightness(1);  }
-}
-
-@keyframes flickerAnim {
-  0%,100% { filter: brightness(1);   }
-  10%     { filter: brightness(0.1); }
-  12%     { filter: brightness(0.9); }
-  40%     { filter: brightness(1);   }
-  60%     { filter: brightness(0.2); }
-  62%     { filter: brightness(1);   }
-  80%     { filter: brightness(0.05);}
-  82%     { filter: brightness(1);   }
-}
-
-@keyframes heatDistort {
-  0%,100% { filter: hue-rotate(0deg)   saturate(2) brightness(0.9) contrast(1.3); }
-  50%     { filter: hue-rotate(25deg)  saturate(3) brightness(1.1) contrast(1.5); }
-}
-
-.animEmerge     { animation: emergeFromBlack 4s ease-in-out infinite alternate; }
-.animEmergeOnce { animation: emergeFromBlack 4s ease-in-out 1 forwards; }
-.animPulse   { animation: colorPulseGallery  6s ease-in-out infinite; }
-.animFlicker { animation: flickerAnim        1.8s linear infinite; }
-.animHeat    { animation: heatDistort        2s ease-in-out infinite; }
 
 /* ── Lightbox ──────────────────────────────────────── */
 .lightboxOverlay {
@@ -287,48 +78,6 @@
   display: block;
 }
 
-.lightboxImgWrapper {
-  position: relative;
-  line-height: 0;
-}
-
-.fieldTable {
-  width: 100%;
-  border-collapse: collapse;
-  font-family: "Courier New", Courier, monospace;
-  font-size: 1rem;
-  margin-bottom: 1.5rem;
-}
-
-.fieldTable th {
-  background: #111108;
-  color: #7a6a3a;
-  text-transform: uppercase;
-  letter-spacing: 0.1em;
-  padding: 0.5rem 0.85rem;
-  border: 1px solid #3a3020;
-  text-align: left;
-}
-
-.fieldTable td {
-  color: #d4c9a8;
-  padding: 0.45rem 0.85rem;
-  border: 1px solid #2a2010;
-  vertical-align: top;
-}
-
-.fieldTable td:first-child {
-  color: #c07a3a;
-  white-space: nowrap;
-  font-size: 0.76rem;
-}
-
-.fieldTable td:nth-child(2) {
-  color: #7a9a6a;
-  white-space: nowrap;
-  font-size: 0.76rem;
-}
-
 .imageFrame {
   max-width: min(95vw, 750px);
   margin: 2rem auto;
@@ -344,69 +93,6 @@
   width: 100%;
   height: auto;
   display: block;
-}
-
-/* ── Section Accordions (World Mechanics) ──────────────────── */
-.sectionTitle {
-  font-size: 1.1rem;
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
-  color: #c07a3a;
-  margin-bottom: 0.6rem;
-  text-align: center;
-}
-
-.sectionDivider {
-  color: #7a6a3a;
-  font-size: 0.8rem;
-  letter-spacing: 0.05em;
-  margin-bottom: 1.25rem;
-  text-align: center;
-}
-
-
-/* ── Wallet Setup Accordion ────────────────────────── */
-/* Character & Origins foldable — embeds the full /characters content,
-   collapsed by default so it does not clutter the Guide's first view. */
-.originsGuide {
-  border: 1px solid #7a6a3a;
-  background: #0d0d0a;
-  margin-bottom: 1.75rem;
-}
-
-.originsSummary {
-  font-family: "Courier New", Courier, monospace;
-  font-size: 0.82rem;
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
-  color: #c07a3a;
-  padding: 0.75rem 1rem;
-  cursor: pointer;
-  user-select: none;
-  list-style: none;
-}
-
-.originsSummary::-webkit-details-marker {
-  display: none;
-}
-
-.originsSummary::before {
-  content: "▶ ";
-  font-size: 0.65rem;
-  vertical-align: middle;
-}
-
-.originsGuide[open] .originsSummary::before {
-  content: "▼ ";
-}
-
-.originsSummary:hover {
-  color: #d4a060;
-  background: #111108;
-}
-
-.originsBody {
-  padding: 1rem 0 0.5rem;
 }
 
 .walletGuide {
@@ -493,19 +179,5 @@
 @media (max-width: 749px) {
   .page {
     padding: 2rem 1rem 3rem;
-  }
-
-  .table td:first-child {
-    white-space: normal;
-  }
-
-  .codeBlock {
-    font-size: 0.7rem;
-    padding: 1rem;
-  }
-
-  .fieldTable td:first-child,
-  .fieldTable td:nth-child(2) {
-    white-space: normal;
   }
 }

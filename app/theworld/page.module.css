@@ -104,31 +104,6 @@
   color: #c07a3a;
 }
 
-.statusReady {
-  color: #5a8c2a;
-  font-weight: bold;
-}
-
-.statusFree {
-  color: #a1d82e;
-  font-weight: bold;
-}
-
-.statusWorking {
-  color: #ffa726;
-  font-weight: bold;
-}
-
-.statusTravelling {
-  color: #29b6f6;
-  font-weight: bold;
-}
-
-.statusImprisoned {
-  color: #ef5350;
-  font-weight: bold;
-}
-
 .statusAlive {
   color: #66bb6a;
   font-weight: bold;
@@ -140,11 +115,6 @@
   font-weight: bold;
   padding: 0.1em 0.3em;
   border-radius: 2px;
-}
-
-.statusVampire {
-  color: #ab47bc;
-  font-weight: bold;
 }
 
 .statusCursed {

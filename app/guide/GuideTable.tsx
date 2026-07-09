@@ -10,26 +10,16 @@ interface Row {
 
 interface GuideTableProps {
   rows: Row[];
-  accordion?: boolean;
 }
 
-export default function GuideTable({ rows, accordion = false }: GuideTableProps) {
-  const [open, setOpen] = useState<Set<number>>(new Set());
+export default function GuideTable({ rows }: GuideTableProps) {
   const [openSingle, setOpenSingle] = useState<number | null>(null);
 
   const toggle = (i: number) => {
-    if (accordion) {
-      setOpenSingle(prev => prev === i ? null : i);
-    } else {
-      setOpen((prev) => {
-        const next = new Set(prev);
-        next.has(i) ? next.delete(i) : next.add(i);
-        return next;
-      });
-    }
+    setOpenSingle(prev => prev === i ? null : i);
   };
 
-  const isOpen = (i: number) => accordion ? openSingle === i : open.has(i);
+  const isOpen = (i: number) => openSingle === i;
 
   return (
     <>

@@ -284,8 +284,6 @@ export default function ImageGallery() {
             </span>
             <span style={{ fontSize: "0.9rem", letterSpacing: "0.12em" }}>{set.name}</span>
           </button>
-          <p className={styles.previewSetTitle}>{set.name}</p>
-          <p className={styles.previewSetMeta}>({set.meta})</p>
 
           <div className={styles.previewGrid} style={{ display: collapsedSets.has(set.name) ? "none" : "grid" }}>
             {IMAGES.map((img) => {

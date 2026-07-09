@@ -13,11 +13,10 @@ import {
   getAccounts,
   resetWalletState,
   type WalletAccount,
-} from "@/lib/wallet";
+} from "@/app/lib/wallet";
 
 interface WalletContextValue {
   account: WalletAccount | null;
-  availableAccounts: WalletAccount[];
   isConnecting: boolean;
   connectError: string | null;
   /** True once the user has signed the challenge and the backend verified it. */
@@ -34,7 +33,6 @@ const WalletContext = createContext<WalletContextValue | null>(null);
 
 export function WalletProvider({ children }: { children: ReactNode }) {
   const [account, setAccount] = useState<WalletAccount | null>(null);
-  const [availableAccounts, setAvailableAccounts] = useState<WalletAccount[]>([]);
   const [isConnecting, setIsConnecting] = useState(false);
   const [connectError, setConnectError] = useState<string | null>(null);
   const [verified, setVerified] = useState(false);
@@ -43,7 +41,6 @@ export function WalletProvider({ children }: { children: ReactNode }) {
   const disconnect = useCallback(() => {
     resetWalletState();
     setAccount(null);
-    setAvailableAccounts([]);
     setConnectError(null);
     setVerified(false);
   }, []);
@@ -107,8 +104,6 @@ export function WalletProvider({ children }: { children: ReactNode }) {
       if (accounts.length === 0) {
         throw new Error("No accounts found in wallet");
       }
-      // Store all unique accounts for selection, and set first as default.
-      setAvailableAccounts(accounts);
       setAccount(accounts[0]);
       setConnectError(null);
       return accounts[0];
@@ -146,7 +141,7 @@ export function WalletProvider({ children }: { children: ReactNode }) {
 
   return (
     <WalletContext.Provider
-      value={{ account, availableAccounts, isConnecting, connectError, verified, setVerified, connect, disconnect, logout }}
+      value={{ account, isConnecting, connectError, verified, setVerified, connect, disconnect, logout }}
     >
       {children}
     </WalletContext.Provider>
