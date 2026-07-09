@@ -323,6 +323,7 @@ gcloud config set project thewudlands
 gcloud auth print-access-token | docker login -u oauth2accesstoken --password-stdin https://europe-west1-docker.pkg.dev
 
 # full build and deploy
+# to prevent error: close local uvicorn and npm run dev
 rav run gcp_full
 
 # or step by step
