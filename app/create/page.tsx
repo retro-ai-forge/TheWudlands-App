@@ -960,7 +960,7 @@ export default function Storyteller() {
           </div>
         </div>
 
-    <details id="the-legend" ref={storyimpactRef} className={styles.group} style={{ scrollMarginTop: "1rem" }} open={openSection === "storyimpact"}>
+        <details id="the-legend" ref={storyimpactRef} className={styles.group} style={{ scrollMarginTop: "1rem" }} open={openSection === "storyimpact"}>
           <summary className={styles.groupSummary} onClick={(e) => {
             e.preventDefault();
             setOpenSection(openSection === "storyimpact" ? null : "storyimpact");
