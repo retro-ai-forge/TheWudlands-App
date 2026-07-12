@@ -124,6 +124,81 @@
   color: #d4c9a8;
 }
 
+/* Character preview matrix — placeholder slots until character art exists */
+.characterMatrix {
+  width: 100%;
+  max-width: 900px;
+  margin: 2rem auto 0;
+  text-align: center;
+}
+
+.characterMatrixHeading {
+  font-size: 1.1rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: #c07a3a;
+  margin-bottom: 1.25rem;
+}
+
+.characterGrid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1rem;
+}
+
+@media (max-width: 749px) {
+  .characterGrid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 420px) {
+  .characterGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.characterSlot {
+  aspect-ratio: 1 / 1;
+  border: 1px dashed #3a3020;
+  background: rgba(0, 0, 0, 0.4);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.6rem;
+  width: 100%;
+  padding: 0;
+  font: inherit;
+  cursor: pointer;
+  transition: border-color 0.15s, background-color 0.15s;
+}
+
+.characterSlot:hover {
+  border-color: #c07a3a;
+  background: rgba(192, 122, 58, 0.12);
+}
+
+.characterSlot:hover .characterSlotMark,
+.characterSlot:hover .characterSlotLabel {
+  color: #e6a55a;
+}
+
+.characterSlotMark {
+  font-family: Georgia, "Times New Roman", serif;
+  font-style: italic;
+  font-size: 5.5rem;
+  line-height: 1;
+  color: #c07a3a;
+}
+
+.characterSlotLabel {
+  font-size: 0.75rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #a89968;
+}
+
 /* ── Landing funnel ─────────────────────────────────────── */
 .landing {
   position: relative;

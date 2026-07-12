@@ -12,6 +12,7 @@
   "dependencies": {
     "@polkadot/extension-dapp": "^0.63.1",
     "@polkadot/extension-inject": "^0.63.1",
+    "framer-motion": "^12.42.2",
     "next": "^15.0.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0"

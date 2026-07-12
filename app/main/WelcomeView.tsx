@@ -1,8 +1,24 @@
+"use client";
+
+import { useState } from "react";
 import Link from "next/link";
 import styles from "../page.module.css";
 import { FeedbackForm } from "./FeedbackForm";
+import { CharacterSheet } from "./CharacterSheet";
+import { loadCharacter } from "./characterData";
 
 export function WelcomeView() {
+  const [selectedSoul, setSelectedSoul] = useState<number | null>(null);
+
+  if (selectedSoul !== null) {
+    return (
+      <CharacterSheet
+        character={loadCharacter(selectedSoul)}
+        onBack={() => setSelectedSoul(null)}
+      />
+    );
+  }
+
   return (
     <>
       <div className={styles.welcomeBody}>
@@ -15,6 +31,23 @@ export function WelcomeView() {
           <Link href="/dev-section#roadmap" className={styles.welcomeLink}>roadmap</Link>{" "}
           in the dev-section to see what&apos;s planned.
         </p>
+
+        <div className={styles.characterMatrix}>
+          <h2 className={styles.characterMatrixHeading}>Character Preview</h2>
+          <div className={styles.characterGrid}>
+            {Array.from({ length: 6 }).map((_, i) => (
+              <button
+                key={i}
+                className={styles.characterSlot}
+                onClick={() => setSelectedSoul(i + 1)}
+              >
+                <span className={styles.characterSlotMark}>?</span>
+                <span className={styles.characterSlotLabel}>Create Soul {i + 1}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+
         <br/>
         <p className={styles.welcomeMessage}>
           We&apos;d love your feedback and ideas!

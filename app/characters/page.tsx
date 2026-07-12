@@ -2,12 +2,17 @@
 
 import { useState, useEffect } from "react";
 import styles from "./characters.module.css";
+import GlassMagicBulb from "@/app/main/GlassMagicBulb";
 
 export default function Characters() {
   const [openSection, setOpenSection] = useState<string | null>(null);
   const [openRaceCategory, setOpenRaceCategory] = useState<string | null>(null);
   const [openProfessionCategory, setOpenProfessionCategory] = useState<string | null>(null);
   const [openGender, setOpenGender] = useState<string | null>(null);
+
+  // Temporary Magic Bulb playground controls (top-left bulb)
+  const [demoColor, setDemoColor] = useState("#6f8fb8");
+  const [demoFill, setDemoFill] = useState(0);
 
   useEffect(() => {
     const hash = window.location.hash.slice(1);
@@ -48,6 +53,92 @@ export default function Characters() {
           become more than you were.
         </p>
       </section>
+
+      {/* ── TEMPORARY: Glass Magic Bulb Testing ─────────────────────────────────────────── */}
+      <section style={{ padding: "2rem 1.5rem", textAlign: "center" }}>
+        <p style={{ fontSize: "0.9rem", color: "#c07a3a", marginBottom: "1.5rem", textTransform: "uppercase", letterSpacing: "0.08em" }}>
+          Glass Magic Bulb (Temporary Test)
+        </p>
+        {/* top row — 2 */}
+        <div style={{ display: "flex", flexWrap: "wrap", justifyContent: "center", alignItems: "center", gap: "2rem", marginBottom: "2rem" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
+            <div style={{ position: "relative", width: 240, height: 240 }}>
+              <GlassMagicBulb fillPercent={demoFill} color={demoColor} size={240} showPercent={false} />
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src="/images/character/frame-lens-nr-plate.png" alt="" aria-hidden="true"
+                style={{ position: "absolute", inset: 0, width: "100%", height: "100%", pointerEvents: "none" }} />
+              {/* percent shown on the frame's name plate */}
+              <div style={{ position: "absolute", left: "3%", right: 0, top: "87.5%", transform: "translateY(-50%)", textAlign: "center", pointerEvents: "none", fontFamily: 'Georgia, "Times New Roman", serif', fontSize: "18px", fontWeight: 600, letterSpacing: "0.06em", color: "#1a1008", textShadow: "0 0 4px rgba(255,240,200,0.9), 0 0 8px rgba(255,240,200,0.6)" }}>
+                {demoFill}%
+              </div>
+            </div>
+            <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem", textAlign: "left" }}>
+              <label style={{ display: "flex", flexDirection: "column", gap: "0.3rem", fontSize: "0.75rem", letterSpacing: "0.08em", textTransform: "uppercase", color: "#a89968" }}>
+                Color
+                <input
+                  type="color"
+                  value={demoColor}
+                  onChange={(e) => setDemoColor(e.target.value)}
+                  style={{ width: "56px", height: "32px", padding: 0, border: "1px solid #3a3020", background: "#0a0a0a", cursor: "pointer" }}
+                />
+              </label>
+              <label style={{ display: "flex", flexDirection: "column", gap: "0.3rem", fontSize: "0.75rem", letterSpacing: "0.08em", textTransform: "uppercase", color: "#a89968" }}>
+                Fill %
+                <input
+                  type="number"
+                  min={0}
+                  max={100}
+                  value={demoFill}
+                  onChange={(e) => {
+                    const v = Number(e.target.value);
+                    setDemoFill(Number.isNaN(v) ? 0 : Math.max(0, Math.min(100, v)));
+                  }}
+                  style={{ width: "80px", padding: "0.35rem 0.5rem", border: "1px solid #3a3020", background: "#0a0a0a", color: "#ead9b0", fontSize: "0.9rem" }}
+                />
+              </label>
+            </div>
+          </div>
+          <div style={{ position: "relative", width: 240, height: 240 }}>
+            <GlassMagicBulb fillPercent={100} color="#d9c48c" size={240} showPercent={false} />
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/images/character/frame-lens-nr-plate-dark.png" alt="" aria-hidden="true"
+              style={{ position: "absolute", inset: 0, width: "100%", height: "100%", pointerEvents: "none" }} />
+            {/* percent shown on the frame's name plate */}
+            <div style={{ position: "absolute", left: 0, right: 0, top: "87.5%", transform: "translateY(-50%)", textAlign: "center", pointerEvents: "none", fontFamily: 'Georgia, "Times New Roman", serif', fontSize: "17px", fontWeight: 600, letterSpacing: "0.06em", color: "#dcc79a", textShadow: "0 1px 2px rgba(0,0,0,0.6)" }}>
+              100%
+            </div>
+          </div>
+        </div>
+
+        {/* middle row — 3, each bulb embedded in an ornate lens frame */}
+        <div style={{ display: "flex", flexWrap: "wrap", justifyContent: "center", gap: "2rem", marginBottom: "2rem" }}>
+          <div style={{ position: "relative", width: 240, height: 240 }}>
+            <GlassMagicBulb fillPercent={15} color="#a3c62d" size={240} />
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/images/character/frame-lens-gold.png" alt="" aria-hidden="true"
+              style={{ position: "absolute", inset: 0, width: "100%", height: "100%", pointerEvents: "none" }} />
+          </div>
+          <div style={{ position: "relative", width: 240, height: 240 }}>
+            <GlassMagicBulb fillPercent={50} color="#8b5cf6" size={240} />
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/images/character/frame-lens-silver.png" alt="" aria-hidden="true"
+              style={{ position: "absolute", inset: 0, width: "100%", height: "100%", pointerEvents: "none" }} />
+          </div>
+          <div style={{ position: "relative", width: 240, height: 240 }}>
+            <GlassMagicBulb fillPercent={90} color="#b41419" size={240} />
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/images/character/frame-lens-chrome.png" alt="" aria-hidden="true"
+              style={{ position: "absolute", inset: 0, width: "100%", height: "100%", pointerEvents: "none" }} />
+          </div>
+        </div>
+
+        {/* below row — 2 */}
+        <div style={{ display: "flex", flexWrap: "wrap", justifyContent: "center", gap: "2rem" }}>
+          <GlassMagicBulb fillPercent={5} color="#ff7a1f" size={240} />
+          <GlassMagicBulb fillPercent={95} color="#1e6b34" size={240} />
+        </div>
+      </section>
+      {/* ── END TEMPORARY TESTING ─────────────────────────────────────────── */}
 
       <div className={styles.panels}>
         <div className={styles.panel}>
