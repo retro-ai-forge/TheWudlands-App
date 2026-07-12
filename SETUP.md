@@ -53,7 +53,9 @@ pyenv install 3.11.4
 4. Upgrade pip and install requirements:
    ```bash
    python -m pip install --upgrade pip
+   npm install
    pip install -r requirements.txt
+   rav run build
    ```
 
 ## Create .env file for email credentials
