@@ -1,6 +1,8 @@
 # The Wudlands
 An old-school round-based Fighting Fantasy-style adventure game inspired by UltraQuest, Lone Wolf Saga, EverQuest, Dungeon Crawl Classic, books from Steve Jackson, Ian Livingstone, and the GAVUN WUD meme, built as a browser-based fantasy RPG with scene-driven gameplay, pixel-art, ascii-art, narrative-driven adventures, and onchain character progression. The game will be built using a modular, plugin-based architecture that allows for easy extension and modification. 
 
+Visit [The Wudlands](https://thewudlands.eu/) to explore the game.
+
 ## Game Engine
 
 This repo is the core engine to host and run several adventures in parallel for users. It tracks the current position of an adventurer, game specific variables and status.
