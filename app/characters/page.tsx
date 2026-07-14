@@ -66,9 +66,9 @@ export default function Characters() {
               <GlassMagicBulb fillPercent={demoFill} color={demoColor} size={240} showPercent={false} />
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img src="/images/character/frame-lens-nr-plate.png" alt="" aria-hidden="true"
-                style={{ position: "absolute", inset: 0, width: "100%", height: "100%", pointerEvents: "none" }} />
+                style={{ position: "absolute", inset: 0, width: "100%", height: "100%", pointerEvents: "none", transform: "translateY(7px)" }} />
               {/* percent shown on the frame's name plate */}
-              <div style={{ position: "absolute", left: "3%", right: 0, top: "87.5%", transform: "translateY(-50%)", textAlign: "center", pointerEvents: "none", fontFamily: 'Georgia, "Times New Roman", serif', fontSize: "18px", fontWeight: 600, letterSpacing: "0.06em", color: "#1a1008", textShadow: "0 0 4px rgba(255,240,200,0.9), 0 0 8px rgba(255,240,200,0.6)" }}>
+              <div style={{ position: "absolute", left: "3%", right: 0, top: "92.5%", transform: "translateY(-50%)", textAlign: "center", pointerEvents: "none", fontFamily: 'Georgia, "Times New Roman", serif', fontSize: "18px", fontWeight: 600, letterSpacing: "0.06em", color: "#1a1008", textShadow: "0 0 4px rgba(255,240,200,0.9), 0 0 8px rgba(255,240,200,0.6)" }}>
                 {demoFill}%
               </div>
             </div>
