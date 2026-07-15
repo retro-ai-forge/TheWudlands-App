@@ -11,8 +11,8 @@ export default function Characters() {
   const [openGender, setOpenGender] = useState<string | null>(null);
 
   // Temporary Magic Bulb playground controls (top-left bulb)
-  const [demoColor, setDemoColor] = useState("#6f8fb8");
-  const [demoFill, setDemoFill] = useState(0);
+  const [demoColor, setDemoColor] = useState("#a3c62d");
+  const [demoFill, setDemoFill] = useState(50);
 
   useEffect(() => {
     const hash = window.location.hash.slice(1);
@@ -68,7 +68,7 @@ export default function Characters() {
               <img src="/images/character/frame-lens-nr-plate.png" alt="" aria-hidden="true"
                 style={{ position: "absolute", inset: 0, width: "100%", height: "100%", pointerEvents: "none", transform: "translate(-1px, 5px)" }} />
               {/* percent shown on the frame's name plate */}
-              <div style={{ position: "absolute", left: "3%", right: 0, top: "91.0%", transform: "translateY(-50%)", textAlign: "center", pointerEvents: "none", fontFamily: 'Georgia, "Times New Roman", serif', fontSize: "18px", fontWeight: 600, letterSpacing: "0.06em", color: "#1a1008", textShadow: "0 0 4px rgba(255,240,200,0.9), 0 0 8px rgba(255,240,200,0.6)" }}>
+              <div style={{ position: "absolute", left: "3%", right: 0, top: "91.0%", transform: "translateY(-50%)", textAlign: "center", pointerEvents: "none", fontFamily: 'Georgia, "Times New Roman", serif', fontSize: "18px", fontWeight: 600, letterSpacing: "0.06em", color: "#1a1008", textShadow: "0 0 6px rgba(255,240,200,1), 0 0 14px rgba(255,240,200,0.85)" }}>
                 {demoFill}%
               </div>
             </div>
@@ -99,13 +99,13 @@ export default function Characters() {
             </div>
           </div>
           <div style={{ position: "relative", width: 240, height: 240 }}>
-            <GlassMagicBulb fillPercent={100} color="#d9c48c" size={240} showPercent={false} />
+            <GlassMagicBulb fillPercent={50} color="#8b5cf6" size={240} showPercent={false} />
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src="/images/character/frame-lens-nr-plate-dark.png" alt="" aria-hidden="true"
-              style={{ position: "absolute", inset: 0, width: "100%", height: "100%", pointerEvents: "none" }} />
+              style={{ position: "absolute", inset: 0, width: "100%", height: "100%", pointerEvents: "none", transform: "translate(-1px, 5px)" }} />
             {/* percent shown on the frame's name plate */}
-            <div style={{ position: "absolute", left: 0, right: 0, top: "87.5%", transform: "translateY(-50%)", textAlign: "center", pointerEvents: "none", fontFamily: 'Georgia, "Times New Roman", serif', fontSize: "17px", fontWeight: 600, letterSpacing: "0.06em", color: "#dcc79a", textShadow: "0 1px 2px rgba(0,0,0,0.6)" }}>
-              100%
+            <div style={{ position: "absolute", left: "3%", right: 0, top: "91.0%", transform: "translateY(-50%)", textAlign: "center", pointerEvents: "none", fontFamily: 'Georgia, "Times New Roman", serif', fontSize: "17px", fontWeight: 600, letterSpacing: "0.06em", color: "#e7c477", textShadow: "0 3px 6px rgba(0,0,0,1), 0 6px 14px rgba(0,0,0,0.85)" }}>
+              50%
             </div>
           </div>
         </div>
@@ -113,7 +113,7 @@ export default function Characters() {
         {/* middle row — 3, each bulb embedded in an ornate lens frame */}
         <div style={{ display: "flex", flexWrap: "wrap", justifyContent: "center", gap: "2rem", marginBottom: "2rem" }}>
           <div style={{ position: "relative", width: 240, height: 240 }}>
-            <GlassMagicBulb fillPercent={15} color="#a3c62d" size={240} />
+            <GlassMagicBulb fillPercent={5} color="#a3c62d" size={240} />
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src="/images/character/frame-lens-gold.png" alt="" aria-hidden="true"
               style={{ position: "absolute", inset: 0, width: "100%", height: "100%", pointerEvents: "none" }} />
@@ -125,7 +125,7 @@ export default function Characters() {
               style={{ position: "absolute", inset: 0, width: "100%", height: "100%", pointerEvents: "none" }} />
           </div>
           <div style={{ position: "relative", width: 240, height: 240 }}>
-            <GlassMagicBulb fillPercent={90} color="#b41419" size={240} />
+            <GlassMagicBulb fillPercent={90} color="#d9c48c" size={240} />
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src="/images/character/frame-lens-chrome.png" alt="" aria-hidden="true"
               style={{ position: "absolute", inset: 0, width: "100%", height: "100%", pointerEvents: "none" }} />
