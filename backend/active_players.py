@@ -14,7 +14,7 @@ than via a background task.
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import Any, Dict, List, Optional
 
 INACTIVITY_TIMEOUT = timedelta(hours=2)
@@ -42,7 +42,7 @@ class ActivePlayer:
 
 
 def _evict_expired(now: Optional[datetime] = None) -> None:
-    now = now or datetime.utcnow()
+    now = now or datetime.now(timezone.utc)
     expired = [
         address
         for address, player in _active_players.items()
@@ -57,7 +57,7 @@ def add_active_player(address: str) -> ActivePlayer:
     Register a login for `address`, or refresh its idle timer if already
     active. Called from the /api/auth/verify flow once a signature checks out.
     """
-    now = datetime.utcnow()
+    now = datetime.now(timezone.utc)
     _evict_expired(now)
 
     player = _active_players.get(address)
@@ -75,7 +75,7 @@ def touch_player(address: str) -> Optional[ActivePlayer]:
     Reset the idle timer for an already-active player, e.g. after a value
     change. Returns None if the player isn't currently active.
     """
-    now = datetime.utcnow()
+    now = datetime.now(timezone.utc)
     _evict_expired(now)
 
     player = _active_players.get(address)

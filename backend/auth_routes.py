@@ -21,7 +21,7 @@ from backend.auth import (
     clear_session,
     AuthenticationError,
 )
-from backend.active_players import add_active_player, remove_active_player
+from backend.active_players import add_active_player, remove_active_player, list_active_players
 
 router = APIRouter(prefix="/api/auth", tags=["authentication"])
 
@@ -79,6 +79,12 @@ class LogoutResponse(BaseModel):
     """Logout response."""
 
     message: str = Field(..., description="Confirmation message")
+
+
+class ActivePlayerCountResponse(BaseModel):
+    """Count of currently active (logged-in, non-idle) players."""
+
+    count: int = Field(..., description="Number of active players")
 
 
 # Dependency: Extract and verify token from secure cookie
@@ -310,6 +316,15 @@ async def logout(request: Request, response: Response):
     except Exception as e:
         print(f"Logout error: {e}")
         raise HTTPException(status_code=500, detail="Logout failed")
+
+
+@router.get("/active-players/count", response_model=ActivePlayerCountResponse)
+async def get_active_player_count():
+    """
+    Number of players currently logged in and active (i.e. not idle for
+    more than the 2-hour inactivity timeout).
+    """
+    return ActivePlayerCountResponse(count=len(list_active_players()))
 
 
 # Protected route example
