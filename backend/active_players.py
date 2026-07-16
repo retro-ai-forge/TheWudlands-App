@@ -15,7 +15,9 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta, timezone
-from typing import Any, Dict, List, Optional
+from typing import Dict, List, Optional
+
+from backend.character import Character
 
 INACTIVITY_TIMEOUT = timedelta(hours=2)
 
@@ -30,14 +32,14 @@ class ActivePlayer:
     address: str
     logged_in_at: datetime
     last_active_at: datetime
-    characters: List[Any] = field(default_factory=list)
+    characters: List[Character] = field(default_factory=list)
 
     def to_dict(self) -> dict:
         return {
             "address": self.address,
             "loggedInAt": self.logged_in_at.isoformat(),
             "lastActiveAt": self.last_active_at.isoformat(),
-            "characters": self.characters,
+            "characters": [character.to_dict() for character in self.characters],
         }
 
 
@@ -100,7 +102,7 @@ def list_active_players() -> List[ActivePlayer]:
     return list(_active_players.values())
 
 
-def add_character(address: str, character: Any) -> Optional[ActivePlayer]:
+def add_character(address: str, character: Character) -> Optional[ActivePlayer]:
     """Append a newly created character for `address` and refresh its idle timer."""
     player = touch_player(address)
     if player is None:

@@ -53,7 +53,10 @@ export async function getAccounts(): Promise<WalletAccount[]> {
 
   const { web3Accounts } = await import("@polkadot/extension-dapp");
 
-  const accounts = await web3Accounts();
+  // Force Polkadot mainnet encoding (prefix 0, addresses start with "1"),
+  // rather than each extension's default generic Substrate format
+  // (prefix 42, addresses start with "5").
+  const accounts = await web3Accounts({ ss58Format: 0 });
 
   cachedAccounts = accounts.map((account: InjectedAccountWithMeta) => ({
     address: account.address,

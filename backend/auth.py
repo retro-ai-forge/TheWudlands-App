@@ -11,7 +11,7 @@ Handles:
 from __future__ import annotations
 
 from typing import Tuple, Optional, Dict
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 import secrets
 import json
 import os
@@ -169,7 +169,7 @@ class MessageValidator:
                 return False, f"Invalid timestamp format: {timestamp_str}"
 
             # Get current time in UTC
-            now = datetime.utcnow()
+            now = datetime.now(timezone.utc)
 
             # Handle timezone-naive comparison
             if timestamp.tzinfo is None:
@@ -436,7 +436,7 @@ def create_session(
     Returns:
         SessionData with token and expiry
     """
-    now = datetime.utcnow()
+    now = datetime.now(timezone.utc)
     expires_at = now + timedelta(hours=session_duration_hours)
 
     # Generate cryptographically secure token
@@ -491,7 +491,7 @@ def verify_session_token(token: str) -> Optional[SessionData]:
 
     # Check in-memory storage
     session = _sessions.get(token)
-    if session and datetime.utcnow() < session.expires_at:
+    if session and datetime.now(timezone.utc) < session.expires_at:
         return session
 
     # Expired or not found

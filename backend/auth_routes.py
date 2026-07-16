@@ -9,9 +9,9 @@ Provides:
 """
 
 from fastapi import APIRouter, HTTPException, Request, Response, Depends
-from pydantic import BaseModel, Field
-from datetime import datetime, timedelta
-from typing import Optional
+from pydantic import BaseModel, ConfigDict, Field
+from datetime import datetime, timedelta, timezone
+from typing import List, Optional
 import secrets
 import time
 from backend.auth import (
@@ -21,7 +21,12 @@ from backend.auth import (
     clear_session,
     AuthenticationError,
 )
-from backend.active_players import add_active_player, remove_active_player, list_active_players
+from backend.active_players import (
+    add_active_player,
+    remove_active_player,
+    list_active_players,
+    get_active_player,
+)
 
 router = APIRouter(prefix="/api/auth", tags=["authentication"])
 
@@ -85,6 +90,49 @@ class ActivePlayerCountResponse(BaseModel):
     """Count of currently active (logged-in, non-idle) players."""
 
     count: int = Field(..., description="Number of active players")
+
+
+class CharacterBodyResponse(BaseModel):
+    """Physical stats: strength, constitution, dexterity, speed."""
+
+    str: int = Field(..., description="Strength")
+    con: int = Field(..., description="Constitution")
+    dex: int = Field(..., description="Dexterity")
+    speed: int = Field(..., description="Speed")
+
+
+class CharacterSoulResponse(BaseModel):
+    """Mental stats: intelligence, power, wisdom."""
+
+    # A field literally named `int` breaks pydantic v2's annotation
+    # resolution, so the Python attribute is `intelligence` aliased to the
+    # `int` key on the wire (matching Character.to_dict()'s output).
+    model_config = ConfigDict(populate_by_name=True)
+
+    power: int = Field(..., description="Power")
+    wis: int = Field(..., description="Wisdom")
+    intelligence: int = Field(..., alias="int", description="Intelligence")
+
+
+class CharacterResponse(BaseModel):
+    """A single character belonging to a player."""
+
+    firstName: str = Field(..., description="Character's first name")
+    lastName: str = Field(..., description="Character's last name")
+    age: int = Field(..., description="Character's age")
+    body: CharacterBodyResponse
+    soul: CharacterSoulResponse
+
+
+class PlayerDataResponse(BaseModel):
+    """The authenticated player's active session data and character roster."""
+
+    address: str = Field(..., description="Wallet address")
+    loggedInAt: str = Field(..., description="Login timestamp (ISO 8601)")
+    lastActiveAt: str = Field(..., description="Last activity timestamp (ISO 8601)")
+    characters: List[CharacterResponse] = Field(
+        default_factory=list, description="Characters belonging to this player"
+    )
 
 
 # Dependency: Extract and verify token from secure cookie
@@ -159,9 +207,10 @@ async def get_auth_challenge(payload: ChallengeRequest):
     _challenge_cache[nonce] = now
 
     # Build the message in the exact format the verifier expects
-    # (see MessageValidator in auth.py). Timestamps are naive UTC ISO-8601 so
-    # they compare cleanly against datetime.utcnow() during verification.
-    issued_at = datetime.utcnow()
+    # (see MessageValidator in auth.py). Timestamps are timezone-aware UTC
+    # ISO-8601 so they compare cleanly against datetime.now(timezone.utc)
+    # during verification.
+    issued_at = datetime.now(timezone.utc)
     expires_at = issued_at + timedelta(minutes=5)
 
     message = (
@@ -224,7 +273,7 @@ async def verify_auth_signature(payload: SignedAuthMessageRequest, response: Res
         add_active_player(session.address)
 
         # Step 3: Set secure HTTP cookie
-        max_age = int((session.expires_at - datetime.utcnow()).total_seconds())
+        max_age = int((session.expires_at - datetime.now(timezone.utc)).total_seconds())
         response.set_cookie(
             key="session_token",
             value=session.token,
@@ -271,10 +320,10 @@ async def get_current_user(address: str = Depends(get_current_address)):
     # Get session to get expiry time
     # Note: In production, you'd store full session info
     # For this example, we just return the address
-    from datetime import datetime, timedelta
+    from datetime import datetime, timedelta, timezone
 
     # Placeholder - in production, retrieve from session storage
-    expires_at = (datetime.utcnow() + timedelta(hours=72)).isoformat()
+    expires_at = (datetime.now(timezone.utc) + timedelta(hours=72)).isoformat()
 
     return UserInfoResponse(
         address=address,
@@ -318,6 +367,27 @@ async def logout(request: Request, response: Response):
         raise HTTPException(status_code=500, detail="Logout failed")
 
 
+@router.get("/me/characters", response_model=PlayerDataResponse)
+async def get_my_characters(address: str = Depends(get_current_address)):
+    """
+    Get the authenticated player's active session data and character roster.
+
+    Looks up the caller's entry in the active-players registry by wallet
+    address. This is a read-only lookup: unlike touch_player/add_character,
+    it does not refresh the player's idle timer, so simply querying your
+    data doesn't keep an otherwise-idle session alive.
+
+    Raises:
+        HTTPException 404: No active session for this address (e.g. it
+        timed out after 2 hours of inactivity).
+    """
+    player = get_active_player(address)
+    if player is None:
+        raise HTTPException(status_code=404, detail="No active session found for this player")
+
+    return player.to_dict()
+
+
 @router.get("/active-players/count", response_model=ActivePlayerCountResponse)
 async def get_active_player_count():
     """
@@ -340,5 +410,5 @@ async def get_profile(address: str = Depends(get_current_address)):
     return {
         "address": address,
         "username": f"user_{address[:6]}",
-        "joinedAt": datetime.utcnow().isoformat(),
+        "joinedAt": datetime.now(timezone.utc).isoformat(),
     }
