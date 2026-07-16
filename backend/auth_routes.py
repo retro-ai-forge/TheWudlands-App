@@ -21,6 +21,7 @@ from backend.auth import (
     clear_session,
     AuthenticationError,
 )
+from backend.active_players import add_active_player, remove_active_player
 
 router = APIRouter(prefix="/api/auth", tags=["authentication"])
 
@@ -213,6 +214,9 @@ async def verify_auth_signature(payload: SignedAuthMessageRequest, response: Res
             session_duration_hours=72,
         )
 
+        # Register (or refresh) this address in the active-players registry
+        add_active_player(session.address)
+
         # Step 3: Set secure HTTP cookie
         max_age = int((session.expires_at - datetime.utcnow()).total_seconds())
         response.set_cookie(
@@ -287,6 +291,9 @@ async def logout(request: Request, response: Response):
         token = request.cookies.get("session_token")
 
         if token:
+            session = verify_session_token(token)
+            if session:
+                remove_active_player(session.address)
             clear_session(token)
 
         # Clear the session cookie
