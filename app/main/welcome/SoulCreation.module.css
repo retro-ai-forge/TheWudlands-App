@@ -1,0 +1,529 @@
+.wizard {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  background:
+    linear-gradient(180deg, rgba(0, 0, 0, 0.55), rgba(0, 0, 0, 0.7)),
+    url("/pattern/tile.jpg");
+  background-repeat: repeat;
+  overflow: hidden;
+  touch-action: none;
+}
+
+.wizard img {
+  -webkit-user-drag: none;
+  user-select: none;
+}
+
+/* Keeps all wizard content within the site's usual 900px content width on
+   wide viewports — everything below is positioned relative to this, not the
+   raw viewport, so it stays clamped instead of spreading to the screen edges. */
+.stage {
+  position: relative;
+  width: 100%;
+  max-width: 900px;
+  height: 100%;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.content {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  max-width: 40rem;
+  padding: 1.5rem;
+  text-align: center;
+}
+
+.introText {
+  font-size: clamp(0.8rem, 2vw, 1rem);
+  line-height: 1.5;
+  color: #d4c9a8;
+}
+
+.inlineLink {
+  color: #c07a3a;
+  text-decoration: underline;
+}
+
+.inlineLink:hover {
+  color: #e6a55a;
+}
+
+.attributeRow {
+  display: flex;
+  justify-content: center;
+  gap: clamp(1rem, 5vw, 3rem);
+  margin-top: 0.5rem;
+}
+
+.attributeItem {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.attributeIcon {
+  width: clamp(4.3rem, 10vw, 4.9rem);
+  height: auto;
+}
+
+.attributeLabel {
+  font-size: 0.75rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #a89968;
+}
+
+.middleIllustration {
+  width: clamp(4.6rem, 10vw, 5.4rem);
+  height: auto;
+  margin: 0.25rem 0;
+}
+
+@media (min-height: 700px) {
+  .middleIllustration {
+    width: clamp(6.5rem, 14vw, 8rem);
+  }
+}
+
+.contentTop {
+  align-self: flex-start;
+  margin-top: 4.5rem;
+}
+
+.contentTopTight {
+  margin-top: -0.5rem;
+}
+
+.headline {
+  font-size: clamp(1.3rem, 5vw, 2.4rem);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #c07a3a;
+}
+
+.nameRow {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.6rem;
+  margin-left: -1.5rem;
+  margin-right: -0.9rem;
+}
+
+.textInput {
+  font-family: inherit;
+  font-size: 0.85rem;
+  background: rgba(0, 0, 0, 0.4);
+  border: 1px solid #6f532f;
+  color: #d4c9a8;
+  border-radius: 6px;
+  padding: 0.5rem 0.75rem;
+  width: 8rem;
+  max-width: 44vw;
+}
+
+.textInput::placeholder {
+  color: #7a6a4a;
+}
+
+.textInput:focus {
+  outline: none;
+  border-color: #c07a3a;
+}
+
+.comboBox {
+  font-family: inherit;
+  font-size: 0.8rem;
+  background: rgba(10, 8, 4, 0.9);
+  border: 1px solid #6f532f;
+  color: #d4c9a8;
+  border-radius: 6px;
+  padding: 0.4rem 0.6rem;
+  width: 9rem;
+  max-width: 40vw;
+  cursor: pointer;
+}
+
+.comboBox:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.sideHeadline {
+  position: absolute;
+  left: 1.25rem;
+  top: 9rem;
+  font-size: 0.9rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #c07a3a;
+  z-index: 2;
+}
+
+.sideHeadlineRight {
+  position: absolute;
+  right: 1.25rem;
+  top: 9rem;
+  font-size: 0.9rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  text-align: right;
+  color: #c07a3a;
+  z-index: 2;
+}
+
+.statBlockLeft {
+  position: absolute;
+  left: 3rem;
+  top: 16rem;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 3.5rem;
+  z-index: 2;
+}
+
+.statBlockRight {
+  position: absolute;
+  right: 3rem;
+  top: 18.5rem;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  z-index: 2;
+}
+
+.statItem {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.statLabel {
+  font-size: .85rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #a89968;
+}
+
+.statValue {
+  font-size: clamp(3rem, 9vw, 5.5rem);
+  font-weight: 400;
+  line-height: 1;
+  color: #e6a55a;
+}
+
+@media (max-height: 700px) {
+  .statValue {
+    font-size: clamp(2rem, 6.5vw, 3rem);
+  }
+}
+
+.sideSelectsLeft {
+  position: absolute;
+  left: 1.25rem;
+  top: 10.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  z-index: 2;
+}
+
+.sideSelectsRight {
+  position: absolute;
+  right: 1.25rem;
+  top: 10.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  z-index: 2;
+}
+
+.navButton {
+  position: absolute;
+  z-index: 3;
+  background: linear-gradient(180deg, #d4b57a, #a67c41);
+  color: #1b130b;
+  border: 1px solid #6f532f;
+  border-radius: 8px;
+  padding: 0.45rem 0.9rem;
+  font-size: 0.85rem;
+  letter-spacing: 0.04em;
+  box-shadow: 0 3px 0 #6b4e28;
+  cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.navButton:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 0 #6b4e28;
+}
+
+.navButton:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.continue {
+  bottom: 1.25rem;
+  right: 1.25rem;
+  background: linear-gradient(180deg, #cf9b51, #614724);
+  border-color: #554323;
+  box-shadow: 0 3px 0 #362818;
+}
+
+.continue:hover:not(:disabled) {
+  box-shadow: 0 4px 0 #4a3620;
+}
+
+/* Looks disabled, but stays clickable — clicking it "anyway" is what
+   triggers the missing-field / illustration highlight below. */
+.continueInactive {
+  opacity: 0.4;
+}
+
+@keyframes fieldMissingFlash {
+  0% {
+    border-color: #e2b33a;
+    box-shadow: 0 0 0 3px rgba(226, 179, 58, 0.55);
+  }
+  60% {
+    border-color: #e2b33a;
+    box-shadow: 0 0 0 3px rgba(226, 179, 58, 0.55);
+  }
+  100% {
+    border-color: #6f532f;
+    box-shadow: 0 0 0 0 rgba(226, 179, 58, 0);
+  }
+}
+
+.fieldMissing {
+  animation: fieldMissingFlash 2s ease-out;
+}
+
+@keyframes illuActivationHintFlash {
+  0% {
+    filter: brightness(1) drop-shadow(0 0 0 rgba(255, 214, 120, 0));
+  }
+  20% {
+    filter: brightness(1.9) drop-shadow(0 0 26px rgba(255, 214, 120, 0.95));
+  }
+  60% {
+    filter: brightness(1.9) drop-shadow(0 0 26px rgba(255, 214, 120, 0.95));
+  }
+  100% {
+    filter: brightness(1) drop-shadow(0 0 0 rgba(255, 214, 120, 0));
+  }
+}
+
+/* Specificity must strictly beat .middleOverlayWrapIllu .middleOverlayImg's
+   `animation: illuBreathe ...` below (same 2-class weight would tie and lose
+   on source order) — three classes here ensures the breathing loop can
+   never silently win and suppress this flash. */
+.middleOverlayWrapIllu .middleOverlayImg.illuActivationHint {
+  animation: illuActivationHintFlash 2s ease-out;
+}
+
+.triangleGroup {
+  position: absolute;
+  left: 50%;
+  bottom: 3rem;
+  transform: translateX(-50%);
+  display: inline-block;
+  line-height: 0;
+}
+
+.triangleImg {
+  position: relative;
+  z-index: 1;
+  display: block;
+  width: auto;
+  height: auto;
+  max-width: min(100vw, 743px);
+  max-height: calc(100vh - 18rem);
+}
+
+.bulbSlot {
+  position: absolute;
+  aspect-ratio: 1;
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  overflow: hidden;
+}
+
+.bulbSlotBody {
+  top: 19.3%;
+  left: 50%;
+  width: 31.0%;
+}
+
+.bulbSlotSoul {
+  top: 75.7%;
+  left: 16.6%;
+  width: 31.5%;
+}
+
+.bulbSlotLife {
+  top: 75.7%;
+  left: 83.2%;
+  width: 31.6%;
+}
+
+.bulbFill {
+  width: 100% !important;
+  height: 100% !important;
+}
+
+.medallion {
+  position: absolute;
+  height: auto;
+  transform: translate(-50%, -50%);
+  filter: grayscale(0) drop-shadow(0 6px 10px rgba(0, 0, 0, 0.8));
+  transition: filter 3s ease, top 5s ease 1s, left 5s ease 1s;
+}
+
+.medallionActivated {
+  filter: grayscale(0.5) drop-shadow(0 6px 10px rgba(0, 0, 0, 0.8));
+}
+
+.medallionBody {
+  top: 19.2%;
+  left: 50%;
+  width: 21.8%;
+}
+
+.medallionSoul {
+  top: 75.7%;
+  left: 16.5%;
+  width: 22.1%;
+}
+
+/* On activation all three converge on the same point — the triangle's
+   center disc — so they visually slide underneath it and out of the way
+   of the holes, revealing the bulbs. Body moves straight down, Soul to
+   the upper right, Life to the upper left (purely a result of each one's
+   starting position relative to this shared target). */
+.medallionBody.medallionActivated,
+.medallionSoul.medallionActivated,
+.medallionLife.medallionActivated {
+  top: 61.5%;
+  left: 50%;
+}
+
+.medallionLife {
+  top: 75.7%;
+  left: 83.2%;
+  width: 21.4%;
+}
+
+.middleOverlayWrap {
+  position: absolute;
+  transform: translate(calc(-50% + var(--joy-x, 0px)), calc(-50% + var(--joy-y, 0px)));
+  z-index: 2;
+  transition: opacity 2.5s ease;
+}
+
+.middleOverlayImg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  mix-blend-mode: screen;
+}
+
+.middleOverlayWrapJoystick {
+  top: 61.5%;
+  left: 50%;
+  width: 11.8%;
+  aspect-ratio: 88 / 91;
+  filter: drop-shadow(0 8px 14px rgba(0, 0, 0, 0.9));
+  opacity: 0;
+}
+
+.middleOverlayWrapIllu {
+  top: 61.5%;
+  left: 50%;
+  width: 28%;
+  aspect-ratio: 208 / 213;
+  opacity: 1;
+}
+
+.middleOverlayWrapIllu .middleOverlayImg {
+  transform-origin: center;
+  animation: illuBreathe 3.2s ease-in-out infinite;
+}
+
+@keyframes illuBreathe {
+  0%, 100% {
+    transform: scale(1);
+    filter: drop-shadow(0 0 0 rgba(255, 195, 90, 0));
+  }
+  50% {
+    transform: scale(1.02);
+    filter: drop-shadow(0 0 4px rgba(255, 195, 90, 0.35));
+  }
+}
+
+.illuShine {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  -webkit-mask-image: url("/images/soul-creation/equilize-middle-illu.png");
+  mask-image: url("/images/soul-creation/equilize-middle-illu.png");
+  -webkit-mask-size: 100% 100%;
+  mask-size: 100% 100%;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  background: linear-gradient(115deg, transparent 44%, rgba(255, 230, 170, 0.45) 50%, transparent 56%);
+  background-size: 300% 300%;
+  mix-blend-mode: screen;
+  animation: illuShineSweep 3.2s linear infinite;
+}
+
+@keyframes illuShineSweep {
+  0% {
+    background-position: 160% -40%;
+    opacity: 0;
+  }
+  12% {
+    opacity: 0.5;
+  }
+  50% {
+    opacity: 0.5;
+  }
+  62% {
+    opacity: 0;
+  }
+  100% {
+    background-position: -60% 120%;
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .middleOverlayWrapIllu .middleOverlayImg {
+    animation: none;
+  }
+
+  .illuShine {
+    animation: none;
+    opacity: 0;
+  }
+}
+
+.middleOverlayFadeOut {
+  opacity: 0;
+}
+
+.middleOverlayFadeIn {
+  opacity: 1;
+}

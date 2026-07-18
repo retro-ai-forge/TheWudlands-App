@@ -31,6 +31,21 @@
   transition: opacity 0.2s ease;
 }
 
+/* Forced blend-out while a flow (e.g. soul creation) owns the screen —
+   stays fully invisible, no hover reveal, until that flow releases it.
+   Belt-and-braces beyond opacity: sticky positioning combined with the
+   scroll-lock those flows apply to html/body can promote this element to
+   its own compositing layer in some browsers, letting it paint above a
+   later fixed overlay despite opacity 0. visibility + a demoted z-index
+   guarantee it can't, once the fade transition finishes. */
+.headerHidden {
+  opacity: 0;
+  pointer-events: none;
+  z-index: 1;
+  visibility: hidden;
+  transition: opacity 0.6s ease, visibility 0s linear 0.6s, z-index 0s linear 0.6s;
+}
+
 .nav {
   display: flex;
   flex-wrap: wrap;

@@ -1,0 +1,62 @@
+.wrapper {
+  position: relative;
+  display: inline-block;
+  overflow: hidden;
+}
+
+.svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+/* Left→right→back slosh of the liquid surface. Travel distance is driven
+   by --flow-amp (from motion intensity in JS). Front and back layers move
+   in opposite phase for an organic churn. */
+.flowA {
+  animation: flowSloshA var(--flow-dur-a, 6s) ease-in-out infinite;
+  transform-box: fill-box;
+  transform-origin: center;
+}
+
+.flowB {
+  animation: flowSloshB var(--flow-dur-b, 8s) ease-in-out infinite;
+  transform-box: fill-box;
+  transform-origin: center;
+}
+
+@keyframes flowSloshA {
+  0%,
+  100% {
+    transform: translateX(calc(var(--flow-amp, 20px) * -1));
+  }
+  50% {
+    transform: translateX(var(--flow-amp, 20px));
+  }
+}
+
+@keyframes flowSloshB {
+  0%,
+  100% {
+    transform: translateX(var(--flow-amp, 20px));
+  }
+  50% {
+    transform: translateX(calc(var(--flow-amp, 20px) * -1));
+  }
+}
+
+.percent {
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 34px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  opacity: 0.9;
+  paint-order: stroke;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .flowA,
+  .flowB {
+    animation: none !important;
+  }
+}

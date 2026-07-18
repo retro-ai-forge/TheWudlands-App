@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
+import Link from "next/link";
 import styles from "./page.module.css";
 import ImageGallery from "./ImageGallery";
 
@@ -31,8 +32,6 @@ const STORY_STATS = [
   { stat: "Disdain",      description: "Scorned and disrespected by worthy foes",  storyUse: "Challenged constantly, betrayed by allies" },
   { stat: "Persuasion",   description: "Words that sway hearts and minds",           storyUse: "Enemies lay down arms, merchants offer discounts" },
   { stat: "Intimidation", description: "Rule through fear and force of will",      storyUse: "Enemies flee in terror, merchants comply quickly" },
-  { stat: "Guildmember",  description: "Belonging to a guild or secret order",      storyUse: "Call for aid, access guild safehouse" },
-  { stat: "Guildoutcast", description: "Exiled or ostracized from organized groups", storyUse: "Former allies hunt you, no refuge" },
   { stat: "Wealth",       description: "Gold, treasures, and assets accumulated",  storyUse: "Buy out rivals, commission grand works" },
   { stat: "Debt",         description: "Owe gold or favors to powerful forces",    storyUse: "Creditors demand payment in blood" },
   { stat: "Manipulation", description: "Master of deception and cunning schemes",   storyUse: "Turn enemies against each other, blackmail nobles" },
@@ -52,9 +51,9 @@ const LEGEND_PREVIEWS = [
     ],
   },
   {
-    heading: "Guildmember",
+    heading: "Obscurity",
     image: "/images/create/legend-2.jpg",
-    alt: "City gates, Guildmember greater than 30",
+    alt: "City gates, Obscurity greater than 30",
     text: "The gate guards eye you like any other traveler and ask to pay a toll before entering the city.",
     textGated: false,
     choices: [
@@ -143,9 +142,7 @@ export default function Storyteller() {
 
         <p className={styles.authorIntro}>
           <strong>Imagine a world, create an immersive experience.</strong> Set its mood, sketch its dangers, map the choices that lead through it.
-          Gather the images that bring it to life. Feed your vision into the Wudlands engine — and watch it transform
-          into a playable adventure that thousands of wanderers will enter, explore, and carry with them forever.
-          Everything you need to know is below. Open a section when you&apos;re ready.
+          Gather the images that bring it to life.
         </p>
 
         <div className={styles.imageFrame}>
@@ -155,6 +152,12 @@ export default function Storyteller() {
             className={styles.sectionImage}
           />
         </div>
+
+         <p className={styles.authorIntro}>
+          Feed your vision into the Wudlands engine — and watch it transform
+          into a playable adventure that thousands of wanderers will enter, explore, and carry with them forever.
+          Everything you need to know is below. Open a section when you&apos;re ready.
+        </p>
 
         <ol className={styles.steps}>
           <li className={styles.step}>
@@ -182,7 +185,15 @@ export default function Storyteller() {
 
         <div style={{ scrollMarginTop: "1rem", marginBottom: "1.5rem", padding: "2rem", background: "#0a0a0a", border: "1px solid #7a6a3a" }}>
           <p className={styles.body}>
-            Get inspired by the story guidelines and romance traditions, 
+            <strong>Revenue Share.</strong> Earn 80% of the revenue your adventure generates by publishing it on The Wudlands —
+            20% goes to the platform. This is voluntary, not guaranteed, and may change at any time; see the{" "}
+            <Link href="/gtc" className={styles.highlight}>GTC</Link> for full terms.
+          </p>
+        </div>
+
+        <div style={{ scrollMarginTop: "1rem", marginBottom: "1.5rem", padding: "2rem", background: "#0a0a0a", border: "1px solid #7a6a3a" }}>
+          <p className={styles.body}>
+            Get inspired by the story guidelines and romance traditions,
             follow the sections below to find everything needed to build your story. 
             They define the minimal, essential architecture: how to write scenes and choices, 
             how to integrate images, and how to structure a complete addon—from your first scene to 
@@ -1067,8 +1078,8 @@ export default function Storyteller() {
           "text": "Walk to the west gate", "to": "city-west" 
         },
         {
-          "show_if": "stat.Guildmember>30",
-          "comment": "only shown once the player has high standing with local guild to know this route exists",
+          "show_if": "stat.Obscurity>30",
+          "comment": "only shown if the player has high obscurity and can sneak around",
           "text": "Slip in through the smugglers' tunnel",
           "to": "city-underbelly"
         }

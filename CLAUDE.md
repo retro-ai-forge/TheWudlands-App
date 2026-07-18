@@ -31,4 +31,7 @@ npm run lint        # ESLint
 npm run type-check  # TypeScript check without emitting
 ```
 
+## Conventions
+- ESLint's `react/no-unescaped-entities` rule is enabled — escape raw apostrophes/quotes in JSX text (e.g. `'` → `&apos;`, `"` → `&quot;`).
+
 

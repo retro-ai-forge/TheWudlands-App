@@ -66,6 +66,65 @@ see .env-example
 The one-time index provisioning step, run manually, decoupled from every container boot
 scripts/setup_db_indexes.py 
 
+## GCP help, how to create a service account and enable the IAM API
+
+To access the firestore db directly from the cloud run instances OIDC can be used
+for gcp cloud internal access. Check .env-example for credentials required.
+
+If Cloud Run deployment fails because the Identity and Access Management (IAM)
+API is disabled in your project, service accounts can't be created or
+validated. Additionally, to deploy a Cloud Run service using a custom service
+account, your active user account must have permission to act as that service
+account.
+
+Here is how to resolve this step-by-step:
+
+
+
+**Step 1: Enable the IAM API**
+```bash
+gcloud auth login
+
+gcloud services enable iam.googleapis.com \
+    --project=thewudlands
+```
+
+**Step 2: Create the custom service account**
+```bash
+gcloud iam service-accounts create cloud-run-firestore-sa \
+    --project=thewudlands
+```
+
+**Step 3: Grant Firestore access to the service account**
+```bash
+gcloud projects add-iam-policy-binding thewudlands \
+    --member="serviceAccount:cloud-run-firestore-sa@thewudlands.iam.gserviceaccount.com" \
+    --role="roles/datastore.user"
+```
+
+**Step 4: Grant yourself permission to use the service account**
+
+To fix a `PERMISSION_DENIED: Permission 'iam.serviceaccounts.actAs' denied`
+error, grant your user account the Service Account User role on the service
+account:
+```bash
+gcloud iam service-accounts add-iam-policy-binding \
+    cloud-run-firestore-sa@thewudlands.iam.gserviceaccount.com \
+    --member="user:<email>" \
+    --role="roles/iam.serviceAccountUser" \
+    --project=thewudlands
+```
+
+**Step 5: Update your Cloud Run service**
+
+Now you can update your Cloud Run service to run under the new identity:
+```bash
+gcloud run services update serverless-wudlands \
+    --service-account=cloud-run-firestore-sa@thewudlands.iam.gserviceaccount.com \
+    --region=europe-west1 \
+    --project=thewudlands
+```
+
 ## 2. Run the App on linux two terminals
 
 Run all commands from the **project root** (`TheWudlands/`).

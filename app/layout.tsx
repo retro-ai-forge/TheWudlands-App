@@ -3,6 +3,7 @@ import "./globals.css";
 import Header from "./main/Header";
 import Footer from "./main/Footer";
 import { WalletProvider } from "./main/WalletProvider";
+import { HeaderVisibilityProvider } from "./main/HeaderVisibilityProvider";
 import { VersionBadge } from "./main/VersionBadge";
 export const metadata: Metadata = {
   title: "The Wudlands | Old School Fantasy RPG",
@@ -30,8 +31,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body>
         <div className="scanlines" />
         <WalletProvider>
-          <Header />
-          <div className="pageContent">{children}</div>
+          <HeaderVisibilityProvider>
+            <Header />
+            <div className="pageContent">{children}</div>
+          </HeaderVisibilityProvider>
           <Footer />
           <VersionBadge />
         </WalletProvider>

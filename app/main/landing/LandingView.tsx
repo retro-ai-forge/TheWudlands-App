@@ -1,7 +1,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { useState } from "react";
-import styles from "../page.module.css";
+import styles from "../../page.module.css";
 import { EnterWudlandsButton } from "./EnterWudlandsButton";
 
 interface LandingViewProps {

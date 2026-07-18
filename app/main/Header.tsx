@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 import styles from "./Header.module.css";
 import { useWallet } from "./WalletProvider";
+import { useHeaderVisibility } from "./HeaderVisibilityProvider";
 
 const NAV = [
   { label: "Play",       href: "/" },
@@ -30,6 +31,7 @@ export default function Header() {
   const menuOpenRef = useRef(false);
   const { account: connectedAccount, isConnecting, connectError, verified, connect, disconnect, logout } =
     useWallet();
+  const { hidden } = useHeaderVisibility();
 
   // Auto-dismiss the connect error hint after 2 seconds.
   // Depend on connectAttemptKey so the effect re-triggers on each new attempt.
@@ -158,8 +160,8 @@ export default function Header() {
       <div className={styles.menuBackdrop} onClick={() => setMenuOpen(false)} />
     )}
     <header
-      className={`${styles.header} ${faded ? styles.headerFaded : ""}`}
-      onClick={handleHeaderClick}
+      className={`${styles.header} ${hidden ? styles.headerHidden : faded ? styles.headerFaded : ""}`}
+      onClick={hidden ? undefined : handleHeaderClick}
     >
 
       {/* Desktop nav — hidden below 1000px */}
