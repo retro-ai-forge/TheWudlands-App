@@ -29,7 +29,7 @@ export function VersionBadge() {
       {playerCount !== null && (
         <div className={styles.playerCount}>{playerCount} online</div>
       )}
-      <div className={styles.badge}>beta-0.6</div>
+      <div className={styles.badge}>beta-0.62</div>
     </div>
   );
 }
