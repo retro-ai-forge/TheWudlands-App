@@ -92,26 +92,48 @@ class ActivePlayerCountResponse(BaseModel):
     count: int = Field(..., description="Number of active players")
 
 
+class CharacterAvailabilityResponse(BaseModel):
+    """Availability stats: name, ready timer"""
+
+    name: str = Field(..., description="Display availability info")
+    timeRdy: str = Field(..., description="Timestamp (ISO 8601) when free or ready")
+
+
+class CharacterClassResponse(BaseModel):
+    """Class stats: class type and level."""
+
+    class1: str = Field(..., description="Class 1 type")
+    lvl1: int = Field(..., description="Class 1 level")
+    class2: str = Field(..., description="Class 2 type")
+    lvl2: int = Field(..., description="Class 2 level")
+
+
+class CharacterProfessionResponse(BaseModel):
+    """Profession stats: profession type and level."""
+
+    prof1: str = Field(..., description="Profession 1 type")
+    lvl1: int = Field(..., description="Profession 1 level")
+    prof2: str = Field(..., description="Profession 2 type")
+    lvl2: int = Field(..., description="Profession 2 level")
+
+
 class CharacterBodyResponse(BaseModel):
     """Physical stats: strength, constitution, dexterity, speed."""
 
     str: int = Field(..., description="Strength")
-    con: int = Field(..., description="Constitution")
+    sta: int = Field(..., description="Constitution")
     dex: int = Field(..., description="Dexterity")
+    size: int = Field(..., description="Size")
     speed: int = Field(..., description="Speed")
 
 
 class CharacterSoulResponse(BaseModel):
     """Mental stats: intelligence, power, wisdom."""
 
-    # A field literally named `int` breaks pydantic v2's annotation
-    # resolution, so the Python attribute is `intelligence` aliased to the
-    # `int` key on the wire (matching Character.to_dict()'s output).
-    model_config = ConfigDict(populate_by_name=True)
-
     power: int = Field(..., description="Power")
     wis: int = Field(..., description="Wisdom")
-    intelligence: int = Field(..., alias="int", description="Intelligence")
+    intelli: int = Field(..., description="Intelligence")
+    perc: int = Field(..., description="Perception")
 
 
 class CharacterResponse(BaseModel):
@@ -119,7 +141,14 @@ class CharacterResponse(BaseModel):
 
     firstName: str = Field(..., description="Character's first name")
     lastName: str = Field(..., description="Character's last name")
+    vital_status: str = Field(..., description="Character's vital status")
     age: int = Field(..., description="Character's age")
+    gender: str = Field(..., description="Character's gender")
+    raceGroup: str = Field(..., description="Character's race group")
+    race: str = Field(..., description="Character's subrace")
+    availability: CharacterAvailabilityResponse
+    classes: CharacterClassResponse
+    profession: CharacterProfessionResponse 
     body: CharacterBodyResponse
     soul: CharacterSoulResponse
 
@@ -364,7 +393,7 @@ async def logout(request: Request, response: Response):
 
     except Exception as e:
         print(f"Logout error: {e}")
-        raise HTTPException(status_code=500, detail="Logout failed")
+        raise HTTPException(status_code=500, detail="Logout get_active_playerfailed")
 
 
 @router.get("/me/characters", response_model=PlayerDataResponse)
