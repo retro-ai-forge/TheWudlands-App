@@ -208,11 +208,16 @@ export default function GlassMagicBulb({
         {
           width: size,
           height: size,
-          ["--flow-amp" as any]: `${flowAmp}px`,
-          ["--flow-dur-a" as any]: flowDurA,
-          ["--flow-dur-b" as any]: flowDurB,
-          ["--magic-glow" as any]: palette.glow,
-        } as React.CSSProperties
+          "--flow-amp": `${flowAmp}px`,
+          "--flow-dur-a": flowDurA,
+          "--flow-dur-b": flowDurB,
+          "--magic-glow": palette.glow,
+        } as React.CSSProperties & {
+          "--flow-amp": string;
+          "--flow-dur-a": string;
+          "--flow-dur-b": string;
+          "--magic-glow": string;
+        }
       }
       role="img"
       aria-label={`${label}: ${Math.round(fill)}%`}
