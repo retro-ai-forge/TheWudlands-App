@@ -61,6 +61,11 @@ pyenv install 3.11.4
 ## Create .env file for email credentials
 see .env-example
 
+
+## On new firestore DB do
+The one-time index provisioning step, run manually, decoupled from every container boot
+scripts/setup_db_indexes.py 
+
 ## 2. Run the App on linux two terminals
 
 Run all commands from the **project root** (`TheWudlands/`).

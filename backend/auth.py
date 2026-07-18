@@ -13,16 +13,11 @@ from __future__ import annotations
 from typing import Tuple, Optional, Dict
 from datetime import datetime, timedelta, timezone
 import secrets
-import json
-import os
-from dataclasses import dataclass, asdict
+from dataclasses import dataclass
 
-# Optional: Redis for distributed session storage (production)
-try:
-    import redis
-    REDIS_AVAILABLE = True
-except ImportError:
-    REDIS_AVAILABLE = False
+from pymongo.errors import DuplicateKeyError
+
+from backend.db import get_database
 
 # For signature verification.
 # Default to False so the name is always defined, even when substrateinterface
@@ -45,15 +40,6 @@ class AuthenticationError(Exception):
     pass
 
 
-# In-memory session and nonce storage (for development)
-_sessions: Dict[str, 'SessionData'] = {}
-_used_nonces: set[str] = set()
-
-# Redis client (for production distributed sessions)
-# Quoted annotation so the module still imports when redis isn't installed.
-_redis_client: "Optional[redis.Redis]" = None
-
-
 @dataclass
 class SessionData:
     """Authenticated session data."""
@@ -71,30 +57,6 @@ class SessionData:
             "expires_at": self.expires_at.isoformat(),
             "session_duration_hours": self.session_duration_hours,
         }
-
-
-def get_redis_client() -> Optional[redis.Redis]:
-    """Get or create Redis client for distributed session storage."""
-    global _redis_client
-
-    if not REDIS_AVAILABLE:
-        return None
-
-    if _redis_client is None:
-        try:
-            _redis_client = redis.Redis(
-                host=os.getenv("REDIS_HOST", "localhost"),
-                port=int(os.getenv("REDIS_PORT", 6379)),
-                db=0,
-                decode_responses=True,
-            )
-            # Test connection
-            _redis_client.ping()
-        except Exception as e:
-            print(f"Failed to connect to Redis: {e}")
-            _redis_client = None
-
-    return _redis_client
 
 
 class MessageValidator:
@@ -191,34 +153,25 @@ class MessageValidator:
             return False, f"Timestamp validation error: {str(e)}"
 
     @classmethod
-    def validate_nonce_uniqueness(cls, nonce: str) -> Tuple[bool, str]:
+    async def validate_nonce_uniqueness(cls, nonce: str) -> Tuple[bool, str]:
         """
         Prevent replay attacks by ensuring nonce is unique.
 
-        Uses Redis in production for distributed cache.
+        Backed by a Mongo `nonces` collection: a unique index on `nonce`
+        makes the insert double as an atomic uniqueness check (no
+        check-then-set race across instances), and a TTL index on
+        `created_at` expires each entry after 5 minutes.
 
         Returns:
             (is_valid, error_message)
         """
-        if nonce in _used_nonces:
+        db = get_database()
+        try:
+            await db.nonces.insert_one(
+                {"nonce": nonce, "created_at": datetime.now(timezone.utc)}
+            )
+        except DuplicateKeyError:
             return False, "Nonce already used (replay attack detected)"
-
-        # Check Redis if available
-        redis_client = get_redis_client()
-        if redis_client:
-            nonce_key = f"auth_nonce:{nonce}"
-            if redis_client.exists(nonce_key):
-                return False, "Nonce already used (replay attack detected)"
-
-            # Store nonce with 5 minute expiry
-            redis_client.setex(nonce_key, 5 * 60, "1")
-        else:
-            # In-memory storage
-            _used_nonces.add(nonce)
-
-            # Prevent memory leaks
-            if len(_used_nonces) > 10000:
-                _used_nonces.clear()
 
         return True, ""
 
@@ -380,7 +333,7 @@ class SignatureVerifier:
             return False
 
 
-def validate_auth_message(address: str, message: str, signature: str) -> Tuple[bool, str]:
+async def validate_auth_message(address: str, message: str, signature: str) -> Tuple[bool, str]:
     """
     Complete validation pipeline for authentication message.
 
@@ -410,7 +363,7 @@ def validate_auth_message(address: str, message: str, signature: str) -> Tuple[b
     fields = validator._parse_message_fields(message)
     nonce = fields.get("Nonce:", "")
 
-    is_valid, error = validator.validate_nonce_uniqueness(nonce)
+    is_valid, error = await validator.validate_nonce_uniqueness(nonce)
     if not is_valid:
         return False, f"Nonce validation failed: {error}"
 
@@ -422,12 +375,13 @@ def validate_auth_message(address: str, message: str, signature: str) -> Tuple[b
     return True, ""
 
 
-def create_session(
+async def create_session(
     address: str,
     session_duration_hours: int = 72,
 ) -> SessionData:
     """
-    Create a new authenticated session.
+    Create a new authenticated session, stored in the Mongo `sessions`
+    collection so any instance can validate it (see backend.db).
 
     Args:
         address: Polkadot wallet address
@@ -450,61 +404,56 @@ def create_session(
         session_duration_hours=session_duration_hours,
     )
 
-    # Store session
-    redis_client = get_redis_client()
-    if redis_client:
-        # Redis storage with TTL
-        ttl = int((expires_at - now).total_seconds())
-        redis_client.setex(
-            f"session:{token}",
-            ttl,
-            json.dumps(session.to_dict()),
-        )
-    else:
-        # In-memory storage
-        _sessions[token] = session
+    db = get_database()
+    await db.sessions.insert_one(
+        {
+            "token": token,
+            "address": address,
+            "created_at": now,
+            "expires_at": expires_at,
+            "session_duration_hours": session_duration_hours,
+        }
+    )
 
     return session
 
 
-def verify_session_token(token: str) -> Optional[SessionData]:
+async def verify_session_token(token: str) -> Optional[SessionData]:
     """
-    Verify and retrieve a session by token.
+    Verify and retrieve a session by token from the `sessions` collection.
 
     Returns:
         SessionData if valid, None if invalid or expired
     """
-    # Check Redis first
-    redis_client = get_redis_client()
-    if redis_client:
-        session_data = redis_client.get(f"session:{token}")
-        if session_data:
-            data = json.loads(session_data)
-            return SessionData(
-                token=token,
-                address=data["address"],
-                created_at=datetime.fromisoformat(data["created_at"]),
-                expires_at=datetime.fromisoformat(data["expires_at"]),
-                session_duration_hours=data["session_duration_hours"],
-            )
+    db = get_database()
+    doc = await db.sessions.find_one({"token": token})
+
+    if not doc:
         return None
 
-    # Check in-memory storage
-    session = _sessions.get(token)
-    if session and datetime.now(timezone.utc) < session.expires_at:
-        return session
+    expires_at = doc["expires_at"]
+    if expires_at.tzinfo is None:
+        expires_at = expires_at.replace(tzinfo=timezone.utc)
 
-    # Expired or not found
-    if token in _sessions:
-        del _sessions[token]
+    if datetime.now(timezone.utc) >= expires_at:
+        # Expired but not yet swept by the TTL index; treat as gone.
+        await db.sessions.delete_one({"token": token})
+        return None
 
-    return None
+    created_at = doc["created_at"]
+    if created_at.tzinfo is None:
+        created_at = created_at.replace(tzinfo=timezone.utc)
+
+    return SessionData(
+        token=doc["token"],
+        address=doc["address"],
+        created_at=created_at,
+        expires_at=expires_at,
+        session_duration_hours=doc["session_duration_hours"],
+    )
 
 
-def clear_session(token: str) -> None:
+async def clear_session(token: str) -> None:
     """Clear a session (logout)."""
-    redis_client = get_redis_client()
-    if redis_client:
-        redis_client.delete(f"session:{token}")
-    else:
-        _sessions.pop(token, None)
+    db = get_database()
+    await db.sessions.delete_one({"token": token})

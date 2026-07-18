@@ -25,8 +25,8 @@ from backend.active_players import (
     add_active_player,
     remove_active_player,
     list_active_players,
-    get_active_player,
 )
+from backend.players import get_or_create_player, get_player
 
 router = APIRouter(prefix="/api/auth", tags=["authentication"])
 
@@ -154,11 +154,15 @@ class CharacterResponse(BaseModel):
 
 
 class PlayerDataResponse(BaseModel):
-    """The authenticated player's active session data and character roster."""
+    """The authenticated player's permanent record and character roster.
+
+    Unlike the active-players registry (which only tracks who's online and
+    is evicted after 2 hours idle), this data is permanent - it survives
+    logout and any amount of time between sessions.
+    """
 
     address: str = Field(..., description="Wallet address")
-    loggedInAt: str = Field(..., description="Login timestamp (ISO 8601)")
-    lastActiveAt: str = Field(..., description="Last activity timestamp (ISO 8601)")
+    firstLoginAt: str = Field(..., description="First-ever login timestamp (ISO 8601)")
     characters: List[CharacterResponse] = Field(
         default_factory=list, description="Characters belonging to this player"
     )
@@ -182,7 +186,7 @@ async def get_current_address(request: Request) -> str:
     if not token:
         raise HTTPException(status_code=401, detail="Missing session token")
 
-    session = verify_session_token(token)
+    session = await verify_session_token(token)
 
     if not session:
         raise HTTPException(status_code=401, detail="Invalid or expired token")
@@ -283,7 +287,7 @@ async def verify_auth_signature(payload: SignedAuthMessageRequest, response: Res
     """
     try:
         # Step 1: Validate message and signature
-        is_valid, error = validate_auth_message(
+        is_valid, error = await validate_auth_message(
             payload.address,
             payload.message,
             payload.signature,
@@ -293,13 +297,17 @@ async def verify_auth_signature(payload: SignedAuthMessageRequest, response: Res
             raise HTTPException(status_code=401, detail=error)
 
         # Step 2: Create session
-        session = create_session(
+        session = await create_session(
             address=payload.address,
             session_duration_hours=72,
         )
 
         # Register (or refresh) this address in the active-players registry
-        add_active_player(session.address)
+        await add_active_player(session.address)
+
+        # Create the permanent player record on first-ever login (no-op if
+        # it already exists) - this is what survives logout and idle eviction.
+        await get_or_create_player(session.address)
 
         # Step 3: Set secure HTTP cookie
         max_age = int((session.expires_at - datetime.now(timezone.utc)).total_seconds())
@@ -375,10 +383,10 @@ async def logout(request: Request, response: Response):
         token = request.cookies.get("session_token")
 
         if token:
-            session = verify_session_token(token)
+            session = await verify_session_token(token)
             if session:
-                remove_active_player(session.address)
-            clear_session(token)
+                await remove_active_player(session.address)
+            await clear_session(token)
 
         # Clear the session cookie
         response.delete_cookie(
@@ -399,20 +407,21 @@ async def logout(request: Request, response: Response):
 @router.get("/me/characters", response_model=PlayerDataResponse)
 async def get_my_characters(address: str = Depends(get_current_address)):
     """
-    Get the authenticated player's active session data and character roster.
+    Get the authenticated player's permanent record and character roster.
 
-    Looks up the caller's entry in the active-players registry by wallet
-    address. This is a read-only lookup: unlike touch_player/add_character,
-    it does not refresh the player's idle timer, so simply querying your
-    data doesn't keep an otherwise-idle session alive.
+    Looks up the caller's entry in the permanent players collection - unlike
+    the old active-players-backed version, this reflects characters even if
+    the player has been logged out or idle past the 2-hour active-session
+    window, since that data no longer lives there.
 
     Raises:
-        HTTPException 404: No active session for this address (e.g. it
-        timed out after 2 hours of inactivity).
+        HTTPException 404: No player record for this address (shouldn't
+        normally happen for an authenticated caller, since get_or_create_player
+        runs on every successful login).
     """
-    player = get_active_player(address)
+    player = await get_player(address)
     if player is None:
-        raise HTTPException(status_code=404, detail="No active session found for this player")
+        raise HTTPException(status_code=404, detail="No player record found for this address")
 
     return player.to_dict()
 
@@ -423,7 +432,7 @@ async def get_active_player_count():
     Number of players currently logged in and active (i.e. not idle for
     more than the 2-hour inactivity timeout).
     """
-    return ActivePlayerCountResponse(count=len(list_active_players()))
+    return ActivePlayerCountResponse(count=len(await list_active_players()))
 
 
 # Protected route example
