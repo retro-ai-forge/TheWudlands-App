@@ -1,21 +1,31 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import styles from "../page.module.css";
 import { FeedbackForm } from "./FeedbackForm";
-import { CharacterSheet } from "./CharacterSheet";
-import { loadCharacter } from "./characterData";
 
 export function WelcomeView() {
-  const [selectedSoul, setSelectedSoul] = useState<number | null>(null);
+  const [creatingSoul, setCreatingSoul] = useState(false);
+  // null while loading; once resolved, an empty array means the player has no characters yet.
+  const [characterCount, setCharacterCount] = useState<number | null>(null);
 
-  if (selectedSoul !== null) {
+  useEffect(() => {
+    fetch("/api/auth/me/characters", { credentials: "include" })
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => setCharacterCount(data?.characters?.length ?? 0))
+      .catch(() => setCharacterCount(0));
+  }, []);
+
+  if (creatingSoul) {
     return (
-      <CharacterSheet
-        character={loadCharacter(selectedSoul)}
-        onBack={() => setSelectedSoul(null)}
-      />
+      <div className={styles.welcomeBody}>
+        <button className={styles.welcomeLink} onClick={() => setCreatingSoul(false)}>
+          ← Back
+        </button>
+        <h1 className={styles.welcomeHeadline}>Soul Creation</h1>
+        <p className={styles.welcomeMessage}>Soul creation is coming soon.</p>
+      </div>
     );
   }
 
@@ -32,21 +42,23 @@ export function WelcomeView() {
           in the dev-section to see what&apos;s planned.
         </p>
 
-        <div className={styles.characterMatrix}>
-          <h2 className={styles.characterMatrixHeading}>Character Preview</h2>
-          <div className={styles.characterGrid}>
-            {Array.from({ length: 6 }).map((_, i) => (
-              <button
-                key={i}
-                className={styles.characterSlot}
-                onClick={() => setSelectedSoul(i + 1)}
-              >
-                <span className={styles.characterSlotMark}>?</span>
-                <span className={styles.characterSlotLabel}>Create Soul {i + 1}</span>
-              </button>
-            ))}
+        {characterCount === 0 && (
+          <div className={styles.characterMatrix}>
+            <h2 className={styles.characterMatrixHeading}>Character Preview</h2>
+            <div className={styles.characterGrid}>
+              {Array.from({ length: 3 }).map((_, i) => (
+                <button
+                  key={i}
+                  className={styles.characterSlot}
+                  onClick={() => setCreatingSoul(true)}
+                >
+                  <span className={styles.characterSlotMark}>?</span>
+                  <span className={styles.characterSlotLabel}>Create Soul {i + 1}</span>
+                </button>
+              ))}
+            </div>
           </div>
-        </div>
+        )}
 
         <br/>
         <p className={styles.welcomeMessage}>

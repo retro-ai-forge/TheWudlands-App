@@ -37,13 +37,6 @@ export function CharacterSheet({
             <div className={`${styles.statPill} ${styles.mentalSide}`}>WIS {character.attributes.wis}</div>
           </div>
 
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            className={styles.portrait}
-            src="/images/character/char_placeholder_silhouette.png"
-            alt={`${character.name} portrait`}
-          />
-
           <div className={styles.feetRow}>
             <div className={styles.statPill}>DEX {character.attributes.dex}</div>
             <div className={styles.statPill}>SPEED {character.attributes.speed}</div>

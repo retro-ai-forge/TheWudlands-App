@@ -14,7 +14,11 @@ env_path = Path(__file__).parent.parent / ".env"
 load_dotenv(env_path)
 
 # Import auth routes
-from backend.auth_routes import router as auth_router
+from backend.auth_routes import (
+    router as auth_router,
+    player_router,
+    statistics_router,
+)
 from backend.db import close_mongo_client
 
 app = FastAPI(title="TheWudlands API")
@@ -30,6 +34,8 @@ app.add_middleware(
 
 # Include authentication router
 app.include_router(auth_router)
+app.include_router(player_router)
+app.include_router(statistics_router)
 
 
 @app.on_event("shutdown")

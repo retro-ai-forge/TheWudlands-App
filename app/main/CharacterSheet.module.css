@@ -62,16 +62,10 @@
 
 .portraitSection {
   position: relative;
-  width: fit-content;
-  margin: 0 auto 1.5rem;
-}
-
-.portrait {
   width: 420px;
   max-width: 82vw;
-  height: auto;
-  display: block;
-  mix-blend-mode: multiply;
+  aspect-ratio: 2 / 3;
+  margin: 0 auto 1.5rem;
 }
 
 .mentalRow {

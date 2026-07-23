@@ -32,8 +32,6 @@ const STORY_STATS = [
   { stat: "Disdain",      description: "Scorned and disrespected by worthy foes",  storyUse: "Challenged constantly, betrayed by allies" },
   { stat: "Persuasion",   description: "Words that sway hearts and minds",           storyUse: "Enemies lay down arms, merchants offer discounts" },
   { stat: "Intimidation", description: "Rule through fear and force of will",      storyUse: "Enemies flee in terror, merchants comply quickly" },
-  { stat: "Guildmember",  description: "Belonging to a guild or secret order",      storyUse: "Call for aid, access guild safehouse" },
-  { stat: "Guildoutcast", description: "Exiled or ostracized from organized groups", storyUse: "Former allies hunt you, no refuge" },
   { stat: "Wealth",       description: "Gold, treasures, and assets accumulated",  storyUse: "Buy out rivals, commission grand works" },
   { stat: "Debt",         description: "Owe gold or favors to powerful forces",    storyUse: "Creditors demand payment in blood" },
   { stat: "Manipulation", description: "Master of deception and cunning schemes",   storyUse: "Turn enemies against each other, blackmail nobles" },
@@ -53,9 +51,9 @@ const LEGEND_PREVIEWS = [
     ],
   },
   {
-    heading: "Guildmember",
+    heading: "Obscurity",
     image: "/images/create/legend-2.jpg",
-    alt: "City gates, Guildmember greater than 30",
+    alt: "City gates, Obscurity greater than 30",
     text: "The gate guards eye you like any other traveler and ask to pay a toll before entering the city.",
     textGated: false,
     choices: [
@@ -1080,8 +1078,8 @@ export default function Storyteller() {
           "text": "Walk to the west gate", "to": "city-west" 
         },
         {
-          "show_if": "stat.Guildmember>30",
-          "comment": "only shown once the player has high standing with local guild to know this route exists",
+          "show_if": "stat.Obscurity>30",
+          "comment": "only shown if the player has high obscurity and can sneak around",
           "text": "Slip in through the smugglers' tunnel",
           "to": "city-underbelly"
         }

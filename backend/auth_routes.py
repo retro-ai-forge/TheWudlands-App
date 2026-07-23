@@ -29,6 +29,8 @@ from backend.active_players import (
 from backend.players import get_or_create_player, get_player
 
 router = APIRouter(prefix="/api/auth", tags=["authentication"])
+player_router = APIRouter(prefix="/api/auth", tags=["player"])
+statistics_router = APIRouter(prefix="/api/auth", tags=["statistics"])
 
 # Challenge cache for replay protection
 _challenge_cache: dict[str, float] = {}
@@ -404,7 +406,7 @@ async def logout(request: Request, response: Response):
         raise HTTPException(status_code=500, detail="Logout get_active_playerfailed")
 
 
-@router.get("/me/characters", response_model=PlayerDataResponse)
+@player_router.get("/me/characters", response_model=PlayerDataResponse)
 async def get_my_characters(address: str = Depends(get_current_address)):
     """
     Get the authenticated player's permanent record and character roster.
@@ -426,27 +428,10 @@ async def get_my_characters(address: str = Depends(get_current_address)):
     return player.to_dict()
 
 
-@router.get("/active-players/count", response_model=ActivePlayerCountResponse)
+@statistics_router.get("/active-players/count", response_model=ActivePlayerCountResponse)
 async def get_active_player_count():
     """
     Number of players currently logged in and active (i.e. not idle for
     more than the 2-hour inactivity timeout).
     """
     return ActivePlayerCountResponse(count=len(await list_active_players()))
-
-
-# Protected route example
-@router.get("/api/profile")
-async def get_profile(address: str = Depends(get_current_address)):
-    """
-    Example protected route - requires authentication.
-
-    Usage:
-        GET /api/profile
-        Authorization: Bearer <token>
-    """
-    return {
-        "address": address,
-        "username": f"user_{address[:6]}",
-        "joinedAt": datetime.now(timezone.utc).isoformat(),
-    }
