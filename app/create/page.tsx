@@ -143,9 +143,7 @@ export default function Storyteller() {
 
         <p className={styles.authorIntro}>
           <strong>Imagine a world, create an immersive experience.</strong> Set its mood, sketch its dangers, map the choices that lead through it.
-          Gather the images that bring it to life. Feed your vision into the Wudlands engine — and watch it transform
-          into a playable adventure that thousands of wanderers will enter, explore, and carry with them forever.
-          Everything you need to know is below. Open a section when you&apos;re ready.
+          Gather the images that bring it to life.
         </p>
 
         <div className={styles.imageFrame}>
@@ -155,6 +153,12 @@ export default function Storyteller() {
             className={styles.sectionImage}
           />
         </div>
+
+         <p className={styles.authorIntro}>
+          Feed your vision into the Wudlands engine — and watch it transform
+          into a playable adventure that thousands of wanderers will enter, explore, and carry with them forever.
+          Everything you need to know is below. Open a section when you&apos;re ready.
+        </p>
 
         <ol className={styles.steps}>
           <li className={styles.step}>
