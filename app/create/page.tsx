@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
+import Link from "next/link";
 import styles from "./page.module.css";
 import ImageGallery from "./ImageGallery";
 
@@ -186,7 +187,15 @@ export default function Storyteller() {
 
         <div style={{ scrollMarginTop: "1rem", marginBottom: "1.5rem", padding: "2rem", background: "#0a0a0a", border: "1px solid #7a6a3a" }}>
           <p className={styles.body}>
-            Get inspired by the story guidelines and romance traditions, 
+            <strong>Revenue Share.</strong> Earn 80% of the revenue your adventure generates by publishing it on The Wudlands —
+            20% goes to the platform. This is voluntary, not guaranteed, and may change at any time; see the{" "}
+            <Link href="/gtc" className={styles.highlight}>GTC</Link> for full terms.
+          </p>
+        </div>
+
+        <div style={{ scrollMarginTop: "1rem", marginBottom: "1.5rem", padding: "2rem", background: "#0a0a0a", border: "1px solid #7a6a3a" }}>
+          <p className={styles.body}>
+            Get inspired by the story guidelines and romance traditions,
             follow the sections below to find everything needed to build your story. 
             They define the minimal, essential architecture: how to write scenes and choices, 
             how to integrate images, and how to structure a complete addon—from your first scene to 

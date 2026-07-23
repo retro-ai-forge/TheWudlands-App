@@ -1,3 +1,4 @@
+import Link from "next/link";
 import styles from "./page.module.css";
 
 export default function GTC() {
@@ -46,7 +47,8 @@ export default function GTC() {
         <h3 className={styles.subheading}>3. Revenue Share</h3>
 
         <p className={styles.body}>
-          The Wudlands may offer an 80/20 revenue split with contributors (80% to contributor, 20% to platform).
+          The Wudlands may offer a revenue split with contributors, as described on the{" "}
+          <Link href="/create" className={styles.highlight}>Create</Link> page.
           This is entirely voluntary, not guaranteed, and does not create any employment relationship or legal entitlement.
           Revenue may be changed or discontinued at any time. Contributors may suggest a price, but The Wudlands
           reserves final say on pricing. Each adventure allows 3 plays; further plays require paying the fee again.
@@ -156,7 +158,7 @@ export default function GTC() {
             </tr>
             <tr>
               <td>Revenue Share</td>
-              <td>80/20 split is voluntary, not guaranteed, and can change anytime.</td>
+              <td>Revenue split (see Create page) is voluntary, not guaranteed, and can change anytime.</td>
             </tr>
             <tr>
               <td>No Legal Entitlement</td>
