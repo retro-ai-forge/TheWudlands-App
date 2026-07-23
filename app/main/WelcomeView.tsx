@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import styles from "../page.module.css";
 import { FeedbackForm } from "./FeedbackForm";
+import { SoulCreation } from "./SoulCreation";
 
 export function WelcomeView() {
   const [creatingSoul, setCreatingSoul] = useState(false);
@@ -18,15 +19,7 @@ export function WelcomeView() {
   }, []);
 
   if (creatingSoul) {
-    return (
-      <div className={styles.welcomeBody}>
-        <button className={styles.welcomeLink} onClick={() => setCreatingSoul(false)}>
-          ← Back
-        </button>
-        <h1 className={styles.welcomeHeadline}>Soul Creation</h1>
-        <p className={styles.welcomeMessage}>Soul creation is coming soon.</p>
-      </div>
-    );
+    return <SoulCreation onExit={() => setCreatingSoul(false)} />;
   }
 
   return (
