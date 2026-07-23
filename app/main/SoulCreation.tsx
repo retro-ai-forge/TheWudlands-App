@@ -33,9 +33,38 @@ export function SoulCreation({ onExit }: { onExit: () => void }) {
         Back
       </button>
 
-      <div className={styles.content}>
+      <div className={page === 0 ? `${styles.content} ${styles.contentTop}` : styles.content}>
         <h1 className={styles.headline}>Page {page + 1}</h1>
       </div>
+
+      {page === 0 && (
+        <div className={styles.triangleGroup}>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            className={`${styles.medallion} ${styles.medallionBody}`}
+            src="/images/soul-creation/equilize-body.png"
+            alt="Body"
+          />
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            className={`${styles.medallion} ${styles.medallionSoul}`}
+            src="/images/soul-creation/equilize-soul.png"
+            alt="Soul"
+          />
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            className={`${styles.medallion} ${styles.medallionLife}`}
+            src="/images/soul-creation/equilize-life.png"
+            alt="Life"
+          />
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            className={styles.triangleImg}
+            src="/images/soul-creation/equilize-triangle.png"
+            alt=""
+          />
+        </div>
+      )}
 
       <button className={`${styles.navButton} ${styles.continue}`} onClick={handleContinue}>
         Continue

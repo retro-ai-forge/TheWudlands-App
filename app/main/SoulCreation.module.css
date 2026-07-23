@@ -22,6 +22,11 @@
   text-align: center;
 }
 
+.contentTop {
+  align-self: flex-start;
+  margin-top: 4.5rem;
+}
+
 .headline {
   font-size: clamp(1.5rem, 6vw, 2.75rem);
   letter-spacing: 0.12em;
@@ -61,4 +66,47 @@
 .continue {
   bottom: 1.25rem;
   right: 1.25rem;
+}
+
+.triangleGroup {
+  position: absolute;
+  left: 50%;
+  bottom: 2.1rem;
+  transform: translateX(-50%);
+  display: inline-block;
+  line-height: 0;
+}
+
+.triangleImg {
+  position: relative;
+  z-index: 1;
+  display: block;
+  width: auto;
+  height: auto;
+  max-width: min(100vw, 743px);
+  max-height: calc(100vh - 10rem);
+}
+
+.medallion {
+  position: absolute;
+  height: auto;
+  transform: translate(-50%, -50%);
+}
+
+.medallionBody {
+  top: 19.2%;
+  left: 50%;
+  width: 21.8%;
+}
+
+.medallionSoul {
+  top: 75.7%;
+  left: 16.5%;
+  width: 22.1%;
+}
+
+.medallionLife {
+  top: 75.7%;
+  left: 83.2%;
+  width: 21.4%;
 }
