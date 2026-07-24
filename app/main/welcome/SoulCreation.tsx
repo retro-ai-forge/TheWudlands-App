@@ -2,9 +2,12 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { Pinyon_Script } from "next/font/google";
 import styles from "./SoulCreation.module.css";
 import { GENDERS, racesByCategory, professionsByCategory } from "@/app/lib/characterOptions";
 import { getDisplayedAge } from "@/app/lib/ageScaling";
+
+const pinyonScript = Pinyon_Script({ subsets: ["latin"], weight: "400" });
 
 const PAGE_COUNT = 4;
 
@@ -60,230 +63,232 @@ export function SoulCreation({ onExit }: { onExit: () => void }) {
 
   return (
     <div className={styles.wizard}>
-      <div className={page === 1 ? `${styles.content} ${styles.contentTop}` : styles.content}>
-        {page === 0 ? (
-          <>
-            <h1 className={styles.headline}>Shaping forces</h1>
-            <p className={styles.introText}>
-              Every character is shaped by three forces. Body and Soul share one reserve of points —
-              strengthen one, and the other yields — those points will be distributed across your attributes.
-            </p>
+      <div className={styles.stage}>
+        <div className={page === 1 ? `${styles.content} ${styles.contentTop}` : styles.content}>
+          {page === 0 ? (
+            <>
+              <h1 className={styles.headline}>Shaping forces</h1>
+              <p className={styles.introText}>
+                Every character is shaped by three forces. Body and Soul share one reserve of points —
+                strengthen one, and the other yields — those points will be distributed across your attributes.
+              </p>
 
-            <div className={styles.attributeRow}>
-              <div className={styles.attributeItem}>
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  className={styles.attributeIcon}
-                  src="/images/soul-creation/equilize-body.png"
-                  alt="Body"
-                />
-                <span className={styles.attributeLabel}>Body</span>
+              <div className={styles.attributeRow}>
+                <div className={styles.attributeItem}>
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    className={styles.attributeIcon}
+                    src="/images/soul-creation/equilize-body.png"
+                    alt="Body"
+                  />
+                  <span className={styles.attributeLabel}>Body</span>
+                </div>
+                <div className={styles.attributeItem}>
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    className={styles.attributeIcon}
+                    src="/images/soul-creation/equilize-soul.png"
+                    alt="Soul"
+                  />
+                  <span className={styles.attributeLabel}>Soul</span>
+                </div>
+                <div className={styles.attributeItem}>
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    className={styles.attributeIcon}
+                    src="/images/soul-creation/equilize-life.png"
+                    alt="Life"
+                  />
+                  <span className={styles.attributeLabel}>Life</span>
+                </div>
               </div>
-              <div className={styles.attributeItem}>
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  className={styles.attributeIcon}
-                  src="/images/soul-creation/equilize-soul.png"
-                  alt="Soul"
-                />
-                <span className={styles.attributeLabel}>Soul</span>
-              </div>
-              <div className={styles.attributeItem}>
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  className={styles.attributeIcon}
-                  src="/images/soul-creation/equilize-life.png"
-                  alt="Life"
-                />
-                <span className={styles.attributeLabel}>Life</span>
-              </div>
-            </div>
 
-            <p className={styles.introText}>
-              Life Energy sets that reserve&apos;s size — more Energy means more points, but rises your starting age. Body and Soul each range from 5–100;
-            </p>
+              <p className={styles.introText}>
+                Life Energy sets that reserve&apos;s size — more Energy means more points, but rises your starting age. Body and Soul each range from 5–100;
+              </p>
 
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                className={styles.middleIllustration}
+                src="/images/soul-creation/equilize-middle-illu.png"
+                alt="The mystic triangle"
+              />
+
+              <p className={styles.introText}>
+                Continue to activate the mystic triangle to balance Body, Soul, and Life Energy.
+              </p>
+
+            </>
+          ) : page === 1 ? (
+            <>
+              <h1 className={styles.headline}>Foundation</h1>
+              <p className={styles.introText}>
+                Select your{" "}
+                <Link href="/characters" className={styles.inlineLink}>origins</Link>{" "}
+                and shape your soul.
+              </p>
+              <div className={styles.nameRow}>
+                <input
+                  className={styles.textInput}
+                  type="text"
+                  placeholder="First name"
+                  value={firstName}
+                  onChange={(e) => setFirstName(e.target.value)}
+                />
+                <input
+                  className={styles.textInput}
+                  type="text"
+                  placeholder="Surname"
+                  value={lastName}
+                  onChange={(e) => setLastName(e.target.value)}
+                />
+              </div>
+            </>
+          ) : (
+            <h1 className={styles.headline}>Page {page + 1}</h1>
+          )}
+        </div>
+
+        {page === 1 && (
+          <div className={styles.triangleGroup}>
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
-              className={styles.middleIllustration}
-              src="/images/soul-creation/equilize-middle-illu.png"
-              alt="The mystic triangle"
+              className={`${styles.medallion} ${styles.medallionBody}`}
+              src="/images/soul-creation/equilize-body.png"
+              alt="Body"
             />
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              className={`${styles.medallion} ${styles.medallionSoul}`}
+              src="/images/soul-creation/equilize-soul.png"
+              alt="Soul"
+            />
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              className={`${styles.medallion} ${styles.medallionLife}`}
+              src="/images/soul-creation/equilize-life.png"
+              alt="Life"
+            />
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              className={styles.triangleImg}
+              src="/images/soul-creation/equilize-triangle.png"
+              alt=""
+            />
+          </div>
+        )}
 
-            <p className={styles.introText}>
-              Click continue to activate the mystic triangle to balance Body, Soul, and Life Energy.
-            </p>
+        {page === 1 && (
+          <div className={styles.statBlockLeft}>
+            <div className={styles.statItem}>
+              <span className={`${styles.statValue} ${pinyonScript.className}`}>{body}</span>
+              <span className={styles.statLabel}>Body</span>
+            </div>
+            <div className={styles.statItem}>
+              <span className={`${styles.statValue} ${pinyonScript.className}`}>{soul}</span>
+              <span className={styles.statLabel}>Soul</span>
+            </div>
+          </div>
+        )}
 
-          </>
-        ) : page === 1 ? (
+        {page === 1 && (
+          <div className={styles.statBlockRight}>
+            <div className={styles.statItem}>
+              <span className={`${styles.statValue} ${pinyonScript.className}`}>{displayedAge}</span>
+              <span className={styles.statLabel}>Age</span>
+            </div>
+          </div>
+        )}
+
+        {page === 1 && (
           <>
-            <h1 className={styles.headline}>Foundation</h1>
-            <p className={styles.introText}>
-              Select your{" "}
-              <Link href="/characters" className={styles.inlineLink}>origins</Link>{" "}
-              and shape your soul.
-            </p>
-            <div className={styles.nameRow}>
-              <input
-                className={styles.textInput}
-                type="text"
-                placeholder="First name"
-                value={firstName}
-                onChange={(e) => setFirstName(e.target.value)}
-              />
-              <input
-                className={styles.textInput}
-                type="text"
-                placeholder="Surname"
-                value={lastName}
-                onChange={(e) => setLastName(e.target.value)}
-              />
+            <h2 className={styles.sideHeadline}>Origins</h2>
+            <div className={styles.sideSelectsLeft}>
+              <select
+                className={styles.comboBox}
+                value={race}
+                onChange={(e) => setRace(e.target.value)}
+              >
+                <option value="" disabled>Race</option>
+                {Object.entries(racesByCategory).map(([category, races]) => (
+                  <optgroup key={category} label={category}>
+                    {races.map((r) => (
+                      <option key={r.id} value={r.id}>{r.name}</option>
+                    ))}
+                  </optgroup>
+                ))}
+              </select>
+              <select
+                className={styles.comboBox}
+                value={gender}
+                onChange={(e) => setGender(e.target.value)}
+              >
+                <option value="" disabled>Gender</option>
+                {GENDERS.map((g) => (
+                  <option key={g.id} value={g.id}>{g.name}</option>
+                ))}
+              </select>
             </div>
           </>
-        ) : (
-          <h1 className={styles.headline}>Page {page + 1}</h1>
         )}
+
+        {page === 1 && (
+          <>
+            <h2 className={styles.sideHeadlineRight}>Craft</h2>
+            <div className={styles.sideSelectsRight}>
+              <select
+                className={styles.comboBox}
+                disabled={activeProfessionCount < 1}
+                value={profession1}
+                onChange={(e) => setProfession1(e.target.value)}
+              >
+                <option value="" disabled>Profession 1</option>
+                {Object.entries(professionsByCategory).map(([category, professions]) => (
+                  <optgroup key={category} label={category}>
+                    {professions.map((p) => (
+                      <option key={p.id} value={p.id}>{p.name}</option>
+                    ))}
+                  </optgroup>
+                ))}
+              </select>
+              <select
+                className={styles.comboBox}
+                disabled={activeProfessionCount < 2}
+                value={profession2}
+                onChange={(e) => setProfession2(e.target.value)}
+              >
+                <option value="" disabled>Profession 2</option>
+                {Object.entries(professionsByCategory).map(([category, professions]) => (
+                  <optgroup key={category} label={category}>
+                    {professions.map((p) => (
+                      <option key={p.id} value={p.id}>{p.name}</option>
+                    ))}
+                  </optgroup>
+                ))}
+              </select>
+              <select
+                className={styles.comboBox}
+                disabled={activeProfessionCount < 3}
+                value={profession3}
+                onChange={(e) => setProfession3(e.target.value)}
+              >
+                <option value="" disabled>Profession 3</option>
+                {Object.entries(professionsByCategory).map(([category, professions]) => (
+                  <optgroup key={category} label={category}>
+                    {professions.map((p) => (
+                      <option key={p.id} value={p.id}>{p.name}</option>
+                    ))}
+                  </optgroup>
+                ))}
+              </select>
+            </div>
+          </>
+        )}
+
+        <button className={`${styles.navButton} ${styles.continue}`} onClick={handleContinue}>
+          Continue
+        </button>
       </div>
-
-      {page === 1 && (
-        <div className={styles.triangleGroup}>
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            className={`${styles.medallion} ${styles.medallionBody}`}
-            src="/images/soul-creation/equilize-body.png"
-            alt="Body"
-          />
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            className={`${styles.medallion} ${styles.medallionSoul}`}
-            src="/images/soul-creation/equilize-soul.png"
-            alt="Soul"
-          />
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            className={`${styles.medallion} ${styles.medallionLife}`}
-            src="/images/soul-creation/equilize-life.png"
-            alt="Life"
-          />
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            className={styles.triangleImg}
-            src="/images/soul-creation/equilize-triangle.png"
-            alt=""
-          />
-        </div>
-      )}
-
-      {page === 1 && (
-        <div className={styles.statBlockLeft}>
-          <div className={styles.statItem}>
-            <span className={styles.statLabel}>Body</span>
-            <span className={styles.statValue}>{body}</span>
-          </div>
-          <div className={styles.statItem}>
-            <span className={styles.statLabel}>Soul</span>
-            <span className={styles.statValue}>{soul}</span>
-          </div>
-        </div>
-      )}
-
-      {page === 1 && (
-        <div className={styles.statBlockRight}>
-          <div className={styles.statItem}>
-            <span className={styles.statLabel}>Age</span>
-            <span className={styles.statValue}>{displayedAge}</span>
-          </div>
-        </div>
-      )}
-
-      {page === 1 && (
-        <>
-          <h2 className={styles.sideHeadline}>Origins</h2>
-          <div className={styles.sideSelectsLeft}>
-            <select
-              className={styles.comboBox}
-              value={race}
-              onChange={(e) => setRace(e.target.value)}
-            >
-              <option value="" disabled>Race</option>
-              {Object.entries(racesByCategory).map(([category, races]) => (
-                <optgroup key={category} label={category}>
-                  {races.map((r) => (
-                    <option key={r.id} value={r.id}>{r.name}</option>
-                  ))}
-                </optgroup>
-              ))}
-            </select>
-            <select
-              className={styles.comboBox}
-              value={gender}
-              onChange={(e) => setGender(e.target.value)}
-            >
-              <option value="" disabled>Gender</option>
-              {GENDERS.map((g) => (
-                <option key={g.id} value={g.id}>{g.name}</option>
-              ))}
-            </select>
-          </div>
-        </>
-      )}
-
-      {page === 1 && (
-        <>
-          <h2 className={styles.sideHeadlineRight}>Craft</h2>
-          <div className={styles.sideSelectsRight}>
-            <select
-              className={styles.comboBox}
-              disabled={activeProfessionCount < 1}
-              value={profession1}
-              onChange={(e) => setProfession1(e.target.value)}
-            >
-              <option value="" disabled>Profession 1</option>
-              {Object.entries(professionsByCategory).map(([category, professions]) => (
-                <optgroup key={category} label={category}>
-                  {professions.map((p) => (
-                    <option key={p.id} value={p.id}>{p.name}</option>
-                  ))}
-                </optgroup>
-              ))}
-            </select>
-            <select
-              className={styles.comboBox}
-              disabled={activeProfessionCount < 2}
-              value={profession2}
-              onChange={(e) => setProfession2(e.target.value)}
-            >
-              <option value="" disabled>Profession 2</option>
-              {Object.entries(professionsByCategory).map(([category, professions]) => (
-                <optgroup key={category} label={category}>
-                  {professions.map((p) => (
-                    <option key={p.id} value={p.id}>{p.name}</option>
-                  ))}
-                </optgroup>
-              ))}
-            </select>
-            <select
-              className={styles.comboBox}
-              disabled={activeProfessionCount < 3}
-              value={profession3}
-              onChange={(e) => setProfession3(e.target.value)}
-            >
-              <option value="" disabled>Profession 3</option>
-              {Object.entries(professionsByCategory).map(([category, professions]) => (
-                <optgroup key={category} label={category}>
-                  {professions.map((p) => (
-                    <option key={p.id} value={p.id}>{p.name}</option>
-                  ))}
-                </optgroup>
-              ))}
-            </select>
-          </div>
-        </>
-      )}
-
-      <button className={`${styles.navButton} ${styles.continue}`} onClick={handleContinue}>
-        Continue
-      </button>
     </div>
   );
 }

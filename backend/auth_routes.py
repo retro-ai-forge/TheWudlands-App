@@ -144,7 +144,7 @@ class CharacterResponse(BaseModel):
 
     firstName: str = Field(..., description="Character's first name")
     lastName: str = Field(..., description="Character's last name")
-    vital_status: str = Field(..., description="Character's vital status")
+    vitalStatus: str = Field(..., description="Character's vital status")
     age: int = Field(..., description="Character's age in months (canonical, human-equivalent)")
     gender: str = Field(..., description="Character's gender")
     raceGroup: str = Field(..., description="Character's race group")
