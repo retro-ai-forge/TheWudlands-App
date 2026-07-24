@@ -13,6 +13,8 @@
 }
 
 .content {
+  position: relative;
+  z-index: 2;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -27,6 +29,15 @@
   font-size: clamp(0.8rem, 2vw, 1rem);
   line-height: 1.5;
   color: #d4c9a8;
+}
+
+.inlineLink {
+  color: #c07a3a;
+  text-decoration: underline;
+}
+
+.inlineLink:hover {
+  color: #e6a55a;
 }
 
 .attributeRow {
@@ -73,10 +84,79 @@
   color: #c07a3a;
 }
 
+.nameRow {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.6rem;
+}
+
+.textInput {
+  font-family: inherit;
+  font-size: 0.85rem;
+  background: rgba(0, 0, 0, 0.4);
+  border: 1px solid #6f532f;
+  color: #d4c9a8;
+  border-radius: 6px;
+  padding: 0.5rem 0.75rem;
+  width: 12rem;
+  max-width: 60vw;
+}
+
+.textInput::placeholder {
+  color: #7a6a4a;
+}
+
+.textInput:focus {
+  outline: none;
+  border-color: #c07a3a;
+}
+
+.comboBox {
+  font-family: inherit;
+  font-size: 0.8rem;
+  background: rgba(10, 8, 4, 0.9);
+  border: 1px solid #6f532f;
+  color: #d4c9a8;
+  border-radius: 6px;
+  padding: 0.4rem 0.6rem;
+  width: 9rem;
+  max-width: 40vw;
+  cursor: pointer;
+}
+
+.comboBox:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.sideSelectsLeft {
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  z-index: 2;
+}
+
+.sideSelectsRight {
+  position: absolute;
+  right: 1.25rem;
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  z-index: 2;
+}
+
 .navButton {
   position: absolute;
+  z-index: 3;
   background: linear-gradient(180deg, #d4b57a, #a67c41);
-  color: #2f2013;
+  color: #1b130b;
   border: 1px solid #6f532f;
   border-radius: 8px;
   padding: 0.45rem 0.9rem;
@@ -100,7 +180,7 @@
 .continue {
   bottom: 1.25rem;
   right: 1.25rem;
-  background: linear-gradient(180deg, #b88948, #7a5a2e);
+  background: linear-gradient(180deg, #cf9b51, #614724);
   border-color: #554323;
   box-shadow: 0 3px 0 #362818;
 }
@@ -125,7 +205,7 @@
   width: auto;
   height: auto;
   max-width: min(100vw, 743px);
-  max-height: calc(100vh - 10rem);
+  max-height: calc(100vh - 18rem);
 }
 
 .medallion {
