@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import styles from "./SoulCreation.module.css";
 import { GENDERS, racesByCategory, professionsByCategory } from "@/app/lib/characterOptions";
+import { getDisplayedAge } from "@/app/lib/ageScaling";
 
 const PAGE_COUNT = 4;
 
@@ -12,17 +13,24 @@ export function SoulCreation({ onExit }: { onExit: () => void }) {
 
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
-  const [title, setTitle] = useState("");
-  const [race, setRace] = useState("");
+  const [race, setRace] = useState("human");
   const [gender, setGender] = useState("");
   const [profession1, setProfession1] = useState("");
   const [profession2, setProfession2] = useState("");
   const [profession3, setProfession3] = useState("");
 
-  // Starting age drives how many profession slots are unlocked: under 30 the
-  // character has only had time to learn one trade, 30–42 two, 43+ three.
-  const [char_age] = useState(28);
-  const activeProfessionCount = char_age >= 43 ? 3 : char_age >= 30 ? 2 : 1;
+  // Canonical age, always tracked in human-equivalent MONTHS (never years) so
+  // race-based display scaling stays precise. Starting age is 28 years.
+  // Drives how many profession slots are unlocked: under 30 the character
+  // has only had time to learn one trade, 30–42 two, 43+ three.
+  const [char_age] = useState(28 * 12);
+  const activeProfessionCount = char_age >= 43 * 12 ? 3 : char_age >= 30 * 12 ? 2 : 1;
+  const displayedAge = getDisplayedAge(char_age, race);
+
+  // Body/Soul values shown beside the triangle — placeholders until the
+  // planchette interaction (page 0's "Activate the mystic triangle") is wired up.
+  const [body] = useState(35);
+  const [soul] = useState(35);
 
   const isLastPage = page === PAGE_COUNT - 1;
 
@@ -131,13 +139,6 @@ export function SoulCreation({ onExit }: { onExit: () => void }) {
                 onChange={(e) => setLastName(e.target.value)}
               />
             </div>
-            <input
-              className={styles.textInput}
-              type="text"
-              placeholder="Title (optional)"
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-            />
           </>
         ) : (
           <h1 className={styles.headline}>Page {page + 1}</h1>
@@ -170,7 +171,34 @@ export function SoulCreation({ onExit }: { onExit: () => void }) {
             src="/images/soul-creation/equilize-triangle.png"
             alt=""
           />
+        </div>
+      )}
 
+      {page === 1 && (
+        <div className={styles.statBlockLeft}>
+          <div className={styles.statItem}>
+            <span className={styles.statLabel}>Body</span>
+            <span className={styles.statValue}>{body}</span>
+          </div>
+          <div className={styles.statItem}>
+            <span className={styles.statLabel}>Soul</span>
+            <span className={styles.statValue}>{soul}</span>
+          </div>
+        </div>
+      )}
+
+      {page === 1 && (
+        <div className={styles.statBlockRight}>
+          <div className={styles.statItem}>
+            <span className={styles.statLabel}>Age</span>
+            <span className={styles.statValue}>{displayedAge}</span>
+          </div>
+        </div>
+      )}
+
+      {page === 1 && (
+        <>
+          <h2 className={styles.sideHeadline}>Origins</h2>
           <div className={styles.sideSelectsLeft}>
             <select
               className={styles.comboBox}
@@ -197,57 +225,60 @@ export function SoulCreation({ onExit }: { onExit: () => void }) {
               ))}
             </select>
           </div>
-        </div>
+        </>
       )}
 
       {page === 1 && (
-        <div className={styles.sideSelectsRight}>
-          <select
-            className={styles.comboBox}
-            disabled={activeProfessionCount < 1}
-            value={profession1}
-            onChange={(e) => setProfession1(e.target.value)}
-          >
-            <option value="" disabled>Profession 1</option>
-            {Object.entries(professionsByCategory).map(([category, professions]) => (
-              <optgroup key={category} label={category}>
-                {professions.map((p) => (
-                  <option key={p.id} value={p.id}>{p.name}</option>
-                ))}
-              </optgroup>
-            ))}
-          </select>
-          <select
-            className={styles.comboBox}
-            disabled={activeProfessionCount < 2}
-            value={profession2}
-            onChange={(e) => setProfession2(e.target.value)}
-          >
-            <option value="" disabled>Profession 2</option>
-            {Object.entries(professionsByCategory).map(([category, professions]) => (
-              <optgroup key={category} label={category}>
-                {professions.map((p) => (
-                  <option key={p.id} value={p.id}>{p.name}</option>
-                ))}
-              </optgroup>
-            ))}
-          </select>
-          <select
-            className={styles.comboBox}
-            disabled={activeProfessionCount < 3}
-            value={profession3}
-            onChange={(e) => setProfession3(e.target.value)}
-          >
-            <option value="" disabled>Profession 3</option>
-            {Object.entries(professionsByCategory).map(([category, professions]) => (
-              <optgroup key={category} label={category}>
-                {professions.map((p) => (
-                  <option key={p.id} value={p.id}>{p.name}</option>
-                ))}
-              </optgroup>
-            ))}
-          </select>
-        </div>
+        <>
+          <h2 className={styles.sideHeadlineRight}>Craft</h2>
+          <div className={styles.sideSelectsRight}>
+            <select
+              className={styles.comboBox}
+              disabled={activeProfessionCount < 1}
+              value={profession1}
+              onChange={(e) => setProfession1(e.target.value)}
+            >
+              <option value="" disabled>Profession 1</option>
+              {Object.entries(professionsByCategory).map(([category, professions]) => (
+                <optgroup key={category} label={category}>
+                  {professions.map((p) => (
+                    <option key={p.id} value={p.id}>{p.name}</option>
+                  ))}
+                </optgroup>
+              ))}
+            </select>
+            <select
+              className={styles.comboBox}
+              disabled={activeProfessionCount < 2}
+              value={profession2}
+              onChange={(e) => setProfession2(e.target.value)}
+            >
+              <option value="" disabled>Profession 2</option>
+              {Object.entries(professionsByCategory).map(([category, professions]) => (
+                <optgroup key={category} label={category}>
+                  {professions.map((p) => (
+                    <option key={p.id} value={p.id}>{p.name}</option>
+                  ))}
+                </optgroup>
+              ))}
+            </select>
+            <select
+              className={styles.comboBox}
+              disabled={activeProfessionCount < 3}
+              value={profession3}
+              onChange={(e) => setProfession3(e.target.value)}
+            >
+              <option value="" disabled>Profession 3</option>
+              {Object.entries(professionsByCategory).map(([category, professions]) => (
+                <optgroup key={category} label={category}>
+                  {professions.map((p) => (
+                    <option key={p.id} value={p.id}>{p.name}</option>
+                  ))}
+                </optgroup>
+              ))}
+            </select>
+          </div>
+        </>
       )}
 
       <button className={`${styles.navButton} ${styles.continue}`} onClick={handleContinue}>

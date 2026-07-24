@@ -91,7 +91,7 @@ export const PROFESSIONS = [
   { id: "acrobat", name: "Acrobat", category: "Artists", description: "Balance and daring. Your body is a tool of impossible grace. The crowd gasps when you leap." },
   { id: "clown", name: "Clown", category: "Artists", description: "Laughter and wit. You read the room and play the fool. Humor is your weapon and shield." },
   { id: "firespitter", name: "Fire Spitter", category: "Artists", description: "Flame and breath. You dance with danger and dazzle crowds with impossible fire. Danger thrills you." },
-  { id: "bard", name: "Bard", category: "Artists", description: "Words and wonder. You weave tales that move hearts and shape how the world remembers itself. Stories are your power." },
+  { id: "storyteller", name: "Storyteller", category: "Artists", description: "Words and wonder. You weave tales that move hearts and shape how the world remembers itself. Stories are your power." },
 ];
 
 export const professionsByCategory = PROFESSIONS.reduce((acc, profession) => {

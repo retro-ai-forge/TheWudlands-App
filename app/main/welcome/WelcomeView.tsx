@@ -10,7 +10,7 @@ const SOUL_SLOTS = [
   { subtitle: "FREE", disabled: false },
   { subtitle: "Test", disabled: false },
   { subtitle: "Wud 1st year NFT", disabled: true },
-  { subtitle: "WUD BURN NFT", disabled: true },
+  { subtitle: "WUD OG BURN NFT", disabled: true },
   { subtitle: "own 100 mio WUD", disabled: true },
   { subtitle: "own 1 B WUD", disabled: true },
   { subtitle: "own 5 B WUD", disabled: true },

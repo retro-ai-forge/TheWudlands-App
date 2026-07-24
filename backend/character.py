@@ -37,11 +37,10 @@ class BodyStats:
     strength: int = 1
     stamina: int = 1
     dexterity: int = 1
-    size: int = 1
     speed: int = 1
 
     def to_dict(self) -> dict:
-        return {"str": self.strength, "sta": self.stamina, "dex": self.dexterity, "size": self.size, "speed": self.speed}
+        return {"str": self.strength, "sta": self.stamina, "dex": self.dexterity, "speed": self.speed}
 
 
 @dataclass

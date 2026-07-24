@@ -117,6 +117,8 @@ class CharacterProfessionResponse(BaseModel):
     lvl1: int = Field(..., description="Profession 1 level")
     prof2: str = Field(..., description="Profession 2 type")
     lvl2: int = Field(..., description="Profession 2 level")
+    prof3: str = Field(..., description="Profession 3 type")
+    lvl3: int = Field(..., description="Profession 3 level")
 
 
 class CharacterBodyResponse(BaseModel):
@@ -125,7 +127,6 @@ class CharacterBodyResponse(BaseModel):
     str: int = Field(..., description="Strength")
     sta: int = Field(..., description="Constitution")
     dex: int = Field(..., description="Dexterity")
-    size: int = Field(..., description="Size")
     speed: int = Field(..., description="Speed")
 
 
@@ -144,7 +145,7 @@ class CharacterResponse(BaseModel):
     firstName: str = Field(..., description="Character's first name")
     lastName: str = Field(..., description="Character's last name")
     vital_status: str = Field(..., description="Character's vital status")
-    age: int = Field(..., description="Character's age")
+    age: int = Field(..., description="Character's age in months (canonical, human-equivalent)")
     gender: str = Field(..., description="Character's gender")
     raceGroup: str = Field(..., description="Character's race group")
     race: str = Field(..., description="Character's subrace")
