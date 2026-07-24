@@ -175,6 +175,12 @@ export function SoulCreation({ onExit }: { onExit: () => void }) {
               src="/images/soul-creation/equilize-triangle.png"
               alt=""
             />
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              className={styles.middleOverlay}
+              src="/images/soul-creation/equilize-middle-illu.png"
+              alt=""
+            />
           </div>
         )}
 
