@@ -282,6 +282,37 @@
   max-height: calc(100vh - 18rem);
 }
 
+.bulbSlot {
+  position: absolute;
+  aspect-ratio: 1;
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  overflow: hidden;
+}
+
+.bulbSlotBody {
+  top: 19.3%;
+  left: 50%;
+  width: 31.0%;
+}
+
+.bulbSlotSoul {
+  top: 75.7%;
+  left: 16.6%;
+  width: 31.5%;
+}
+
+.bulbSlotLife {
+  top: 75.7%;
+  left: 83.2%;
+  width: 31.6%;
+}
+
+.bulbFill {
+  width: 100% !important;
+  height: 100% !important;
+}
+
 .medallion {
   position: absolute;
   height: auto;

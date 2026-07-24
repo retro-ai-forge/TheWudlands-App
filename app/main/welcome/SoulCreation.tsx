@@ -6,6 +6,7 @@ import { Pinyon_Script } from "next/font/google";
 import styles from "./SoulCreation.module.css";
 import { GENDERS, racesByCategory, professionsByCategory } from "@/app/lib/characterOptions";
 import { getDisplayedAge } from "@/app/lib/ageScaling";
+import SoulBulb from "./SoulBulb";
 
 const pinyonScript = Pinyon_Script({ subsets: ["latin"], weight: "400" });
 
@@ -151,6 +152,36 @@ export function SoulCreation({ onExit }: { onExit: () => void }) {
 
         {page === 1 && (
           <div className={styles.triangleGroup}>
+            {/* Bulbs — lowest layer. Sit under the body/soul/life holes. */}
+            <div className={`${styles.bulbSlot} ${styles.bulbSlotBody}`}>
+              <SoulBulb
+                fillPercent={body}
+                color="#9e1303"
+                showPercent={false}
+                label="Body"
+                className={styles.bulbFill}
+              />
+            </div>
+            <div className={`${styles.bulbSlot} ${styles.bulbSlotSoul}`}>
+              <SoulBulb
+                fillPercent={soul}
+                color="#8b5cf6"
+                showPercent={false}
+                label="Soul"
+                className={styles.bulbFill}
+              />
+            </div>
+            <div className={`${styles.bulbSlot} ${styles.bulbSlotLife}`}>
+              <SoulBulb
+                fillPercent={char_age}
+                color="#aaa9a9"
+                showPercent={false}
+                label="Life"
+                className={styles.bulbFill}
+              />
+            </div>
+
+            {/* Body/Soul/Life medallions — sit on top of the bulbs, below the triangle. */}
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               className={`${styles.medallion} ${styles.medallionBody}`}
