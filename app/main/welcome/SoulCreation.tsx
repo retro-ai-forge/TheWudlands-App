@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import styles from "./SoulCreation.module.css";
 
 const PAGE_COUNT = 4;
@@ -10,6 +10,17 @@ export function SoulCreation({ onExit }: { onExit: () => void }) {
 
   const isFirstPage = page === 0;
   const isLastPage = page === PAGE_COUNT - 1;
+
+  // The wizard is a fixed full-viewport overlay, but the page behind it
+  // (header + welcomeScreen + footer) can still exceed 100vh and scroll
+  // underneath it. Lock body scroll while the wizard is mounted.
+  useEffect(() => {
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = previousOverflow;
+    };
+  }, []);
 
   function handleBack() {
     if (isFirstPage) {
@@ -33,11 +44,11 @@ export function SoulCreation({ onExit }: { onExit: () => void }) {
         Back
       </button>
 
-      <div className={page === 0 ? `${styles.content} ${styles.contentTop}` : styles.content}>
+      <div className={page === 1 ? `${styles.content} ${styles.contentTop}` : styles.content}>
         <h1 className={styles.headline}>Page {page + 1}</h1>
       </div>
 
-      {page === 0 && (
+      {page === 1 && (
         <div className={styles.triangleGroup}>
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img

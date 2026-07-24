@@ -2,9 +2,19 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import styles from "../page.module.css";
+import styles from "../../page.module.css";
 import { FeedbackForm } from "./FeedbackForm";
 import { SoulCreation } from "./SoulCreation";
+
+const SOUL_SLOTS = [
+  { subtitle: "FREE", disabled: false },
+  { subtitle: "Test", disabled: false },
+  { subtitle: "Wud 1st year NFT", disabled: true },
+  { subtitle: "WUD BURN NFT", disabled: true },
+  { subtitle: "own 100 mio WUD", disabled: true },
+  { subtitle: "own 1 B WUD", disabled: true },
+  { subtitle: "own 5 B WUD", disabled: true },
+];
 
 export function WelcomeView() {
   const [creatingSoul, setCreatingSoul] = useState(false);
@@ -39,14 +49,25 @@ export function WelcomeView() {
           <div className={styles.characterMatrix}>
             <h2 className={styles.characterMatrixHeading}>Character Preview</h2>
             <div className={styles.characterGrid}>
-              {Array.from({ length: 3 }).map((_, i) => (
+              {SOUL_SLOTS.map(({ subtitle, disabled }, i) => (
                 <button
                   key={i}
                   className={styles.characterSlot}
+                  disabled={disabled}
                   onClick={() => setCreatingSoul(true)}
                 >
-                  <span className={styles.characterSlotMark}>?</span>
+                  {disabled ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                      className={styles.characterSlotIcon}
+                      src="/images/soul-creation/lookup.png"
+                      alt=""
+                    />
+                  ) : (
+                    <span className={styles.characterSlotMark}>?</span>
+                  )}
                   <span className={styles.characterSlotLabel}>Create Soul {i + 1}</span>
+                  <span className={styles.characterSlotSubtitle}>{subtitle}</span>
                 </button>
               ))}
             </div>

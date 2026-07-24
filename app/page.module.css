@@ -184,6 +184,32 @@
   color: #e6a55a;
 }
 
+.characterSlot:disabled {
+  cursor: not-allowed;
+}
+
+.characterSlot:disabled:hover {
+  border-color: #3a3020;
+  background: rgba(0, 0, 0, 0.4);
+}
+
+.characterSlot:disabled:hover .characterSlotMark,
+.characterSlot:disabled:hover .characterSlotLabel {
+  color: #c07a3a;
+}
+
+.characterSlot:disabled .characterSlotIcon {
+  opacity: 0.35;
+}
+
+.characterSlot:disabled .characterSlotLabel {
+  color: #6b5f45;
+}
+
+.characterSlot:disabled .characterSlotSubtitle {
+  color: #d4a24e;
+}
+
 .characterSlotMark {
   font-family: Georgia, "Times New Roman", serif;
   font-style: italic;
@@ -192,11 +218,23 @@
   color: #c07a3a;
 }
 
+.characterSlotIcon {
+  width: 4.5rem;
+  height: auto;
+}
+
 .characterSlotLabel {
   font-size: 0.75rem;
   letter-spacing: 0.1em;
   text-transform: uppercase;
   color: #a89968;
+}
+
+.characterSlotSubtitle {
+  font-size: 0.65rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #6b5f45;
 }
 
 /* ── Landing funnel ─────────────────────────────────────── */

@@ -3,9 +3,9 @@
 import { useEffect, useRef, useState } from "react";
 import styles from "./page.module.css";
 import { useWallet } from "./main/WalletProvider";
-import { LandingView } from "./main/LandingView";
-import { WelcomeView } from "./main/WelcomeView";
-import BannerSlideshow from "./main/BannerSlideshow";
+import { LandingView } from "./main/landing/LandingView";
+import { WelcomeView } from "./main/welcome/WelcomeView";
+import BannerSlideshow from "./main/landing/BannerSlideshow";
 
 type View = "join" | "game";
 

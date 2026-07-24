@@ -14,7 +14,7 @@
  */
 
 import { useEffect, useState } from 'react';
-import { useWallet } from './WalletProvider';
+import { useWallet } from '../WalletProvider';
 import { getSignerForAddress, type WalletAccount } from '@/app/lib/wallet';
 import styles from './EnterWudlandsButton.module.css';
 
