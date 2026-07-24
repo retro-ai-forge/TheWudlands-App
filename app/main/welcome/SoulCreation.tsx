@@ -36,6 +36,14 @@ export function SoulCreation({ onExit }: { onExit: () => void }) {
   const [body] = useState(35);
   const [soul] = useState(35);
 
+  // Set once, on the first click on the triangle's solid area (holes excluded).
+  // Further clicks do nothing — this is a one-way activation.
+  const [triangleActivated, setTriangleActivated] = useState(false);
+  function handleTriangleClick() {
+    if (triangleActivated) return;
+    setTriangleActivated(true);
+  }
+
   const isLastPage = page === PAGE_COUNT - 1;
 
   // The wizard is a fixed full-viewport overlay, but the page behind it
@@ -181,22 +189,24 @@ export function SoulCreation({ onExit }: { onExit: () => void }) {
               />
             </div>
 
-            {/* Body/Soul/Life medallions — sit on top of the bulbs, below the triangle. */}
+            {/* Body/Soul/Life medallions — sit on top of the bulbs, below the triangle.
+                Once activated, they slowly grey out, darken, and fade away to
+                reveal the full-color bulbs underneath. */}
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
-              className={`${styles.medallion} ${styles.medallionBody}`}
+              className={`${styles.medallion} ${styles.medallionBody} ${triangleActivated ? styles.medallionActivated : ""}`}
               src="/images/soul-creation/equilize-body.png"
               alt="Body"
             />
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
-              className={`${styles.medallion} ${styles.medallionSoul}`}
+              className={`${styles.medallion} ${styles.medallionSoul} ${triangleActivated ? styles.medallionActivated : ""}`}
               src="/images/soul-creation/equilize-soul.png"
               alt="Soul"
             />
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
-              className={`${styles.medallion} ${styles.medallionLife}`}
+              className={`${styles.medallion} ${styles.medallionLife} ${triangleActivated ? styles.medallionActivated : ""}`}
               src="/images/soul-creation/equilize-life.png"
               alt="Life"
             />
@@ -206,12 +216,32 @@ export function SoulCreation({ onExit }: { onExit: () => void }) {
               src="/images/soul-creation/equilize-triangle.png"
               alt=""
             />
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              className={styles.middleOverlay}
-              src="/images/soul-creation/equilize-middle-illu.png"
-              alt=""
+            <div
+              className={`${styles.middleOverlayWrap} ${triangleActivated ? styles.middleOverlayWrapJoystick : styles.middleOverlayWrapIllu}`}
+            >
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                className={styles.middleOverlayImg}
+                src={
+                  triangleActivated
+                    ? "/images/soul-creation/equilize-joystick.png"
+                    : "/images/soul-creation/equilize-middle-illu.png"
+                }
+                alt=""
+              />
+            </div>
+
+            {/* Rough click target for "activating" the triangle — the solid
+                triangle area only. The three holes are excluded via the
+                blocker circles below, which sit above this in the stacking
+                order and simply absorb the click instead of acting on it. */}
+            <div
+              className={styles.triangleClickCatcher}
+              onClick={handleTriangleClick}
             />
+            <div className={`${styles.holeBlocker} ${styles.holeBlockerBody}`} />
+            <div className={`${styles.holeBlocker} ${styles.holeBlockerSoul}`} />
+            <div className={`${styles.holeBlocker} ${styles.holeBlockerLife}`} />
           </div>
         )}
 
