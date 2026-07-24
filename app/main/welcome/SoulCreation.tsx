@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { Pinyon_Script } from "next/font/google";
 import styles from "./SoulCreation.module.css";
@@ -42,6 +42,52 @@ export function SoulCreation({ onExit }: { onExit: () => void }) {
   function handleTriangleClick() {
     if (triangleActivated) return;
     setTriangleActivated(true);
+  }
+
+  // The joystick (equilize-joystick.png, shown once activated) can be dragged,
+  // but its center is confined to the circle originally occupied by
+  // equilize-middle-illu.png (top:61.5%, left:50%, width:28% of triangleGroup —
+  // see .middleOverlayWrapIllu). Offset is tracked in pixels from that circle's
+  // center; recomputed from the triangle's actual rendered size on every drag
+  // so it stays correct at any viewport (the circle scales with the triangle).
+  const triangleGroupRef = useRef<HTMLDivElement>(null);
+  const isDraggingJoystickRef = useRef(false);
+  const [joystickOffset, setJoystickOffset] = useState({ x: 0, y: 0 });
+
+  function updateJoystickFromPointer(clientX: number, clientY: number) {
+    const group = triangleGroupRef.current;
+    if (!group) return;
+    const rect = group.getBoundingClientRect();
+    const centerX = rect.left + rect.width * 0.5;
+    const centerY = rect.top + rect.height * 0.615;
+    const radius = (rect.width * 0.28) / 2;
+
+    let dx = clientX - centerX;
+    let dy = clientY - centerY;
+    const dist = Math.hypot(dx, dy);
+    if (dist > radius) {
+      const scale = radius / dist;
+      dx *= scale;
+      dy *= scale;
+    }
+    setJoystickOffset({ x: dx, y: dy });
+  }
+
+  function handleJoystickPointerDown(e: React.PointerEvent<HTMLDivElement>) {
+    if (!triangleActivated) return;
+    isDraggingJoystickRef.current = true;
+    e.currentTarget.setPointerCapture(e.pointerId);
+    updateJoystickFromPointer(e.clientX, e.clientY);
+  }
+
+  function handleJoystickPointerMove(e: React.PointerEvent<HTMLDivElement>) {
+    if (!isDraggingJoystickRef.current) return;
+    updateJoystickFromPointer(e.clientX, e.clientY);
+  }
+
+  function handleJoystickPointerUp(e: React.PointerEvent<HTMLDivElement>) {
+    isDraggingJoystickRef.current = false;
+    e.currentTarget.releasePointerCapture(e.pointerId);
   }
 
   const isLastPage = page === PAGE_COUNT - 1;
@@ -159,7 +205,7 @@ export function SoulCreation({ onExit }: { onExit: () => void }) {
         </div>
 
         {page === 1 && (
-          <div className={styles.triangleGroup}>
+          <div className={styles.triangleGroup} ref={triangleGroupRef}>
             {/* Bulbs — lowest layer. Sit under the body/soul/life holes. */}
             <div className={`${styles.bulbSlot} ${styles.bulbSlotBody}`}>
               <SoulBulb
@@ -228,6 +274,10 @@ export function SoulCreation({ onExit }: { onExit: () => void }) {
             </div>
             <div
               className={`${styles.middleOverlayWrap} ${styles.middleOverlayWrapJoystick} ${triangleActivated ? styles.middleOverlayFadeIn : ""}`}
+              style={{
+                "--joy-x": `${joystickOffset.x}px`,
+                "--joy-y": `${joystickOffset.y}px`,
+              } as React.CSSProperties}
             >
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
@@ -240,10 +290,17 @@ export function SoulCreation({ onExit }: { onExit: () => void }) {
             {/* Rough click target for "activating" the triangle — the solid
                 triangle area only. The three holes are excluded via the
                 blocker circles below, which sit above this in the stacking
-                order and simply absorb the click instead of acting on it. */}
+                order and simply absorb the click instead of acting on it.
+                Once activated, the same area doubles as the joystick's drag
+                surface — press and move anywhere on it to steer the joystick,
+                clamped to its circle. */}
             <div
               className={styles.triangleClickCatcher}
               onClick={handleTriangleClick}
+              onPointerDown={handleJoystickPointerDown}
+              onPointerMove={handleJoystickPointerMove}
+              onPointerUp={handleJoystickPointerUp}
+              onPointerCancel={handleJoystickPointerUp}
             />
             <div className={`${styles.holeBlocker} ${styles.holeBlockerBody}`} />
             <div className={`${styles.holeBlocker} ${styles.holeBlockerSoul}`} />
