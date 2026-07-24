@@ -8,27 +8,23 @@ const PAGE_COUNT = 4;
 export function SoulCreation({ onExit }: { onExit: () => void }) {
   const [page, setPage] = useState(0);
 
-  const isFirstPage = page === 0;
   const isLastPage = page === PAGE_COUNT - 1;
 
   // The wizard is a fixed full-viewport overlay, but the page behind it
   // (header + welcomeScreen + footer) can still exceed 100vh and scroll
-  // underneath it. Lock body scroll while the wizard is mounted.
+  // underneath it. Some browsers scroll the html element rather than body,
+  // so both need to be locked while the wizard is mounted.
   useEffect(() => {
-    const previousOverflow = document.body.style.overflow;
+    const html = document.documentElement;
+    const previousHtmlOverflow = html.style.overflow;
+    const previousBodyOverflow = document.body.style.overflow;
+    html.style.overflow = "hidden";
     document.body.style.overflow = "hidden";
     return () => {
-      document.body.style.overflow = previousOverflow;
+      html.style.overflow = previousHtmlOverflow;
+      document.body.style.overflow = previousBodyOverflow;
     };
   }, []);
-
-  function handleBack() {
-    if (isFirstPage) {
-      onExit();
-    } else {
-      setPage((p) => p - 1);
-    }
-  }
 
   function handleContinue() {
     if (isLastPage) {
@@ -40,12 +36,64 @@ export function SoulCreation({ onExit }: { onExit: () => void }) {
 
   return (
     <div className={styles.wizard}>
-      <button className={`${styles.navButton} ${styles.back}`} onClick={handleBack}>
-        Back
-      </button>
-
       <div className={page === 1 ? `${styles.content} ${styles.contentTop}` : styles.content}>
-        <h1 className={styles.headline}>Page {page + 1}</h1>
+        {page === 0 ? (
+          <>
+            <h1 className={styles.headline}>Shaping forces</h1>
+            <p className={styles.introText}>
+              Every character is shaped by three forces. Body and Soul share one reserve of points —
+              strengthen one, and the other yields — those points will be distributed across your attributes.
+            </p>
+
+            <div className={styles.attributeRow}>
+              <div className={styles.attributeItem}>
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  className={styles.attributeIcon}
+                  src="/images/soul-creation/equilize-body.png"
+                  alt="Body"
+                />
+                <span className={styles.attributeLabel}>Body</span>
+              </div>
+              <div className={styles.attributeItem}>
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  className={styles.attributeIcon}
+                  src="/images/soul-creation/equilize-soul.png"
+                  alt="Soul"
+                />
+                <span className={styles.attributeLabel}>Soul</span>
+              </div>
+              <div className={styles.attributeItem}>
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  className={styles.attributeIcon}
+                  src="/images/soul-creation/equilize-life.png"
+                  alt="Life"
+                />
+                <span className={styles.attributeLabel}>Life</span>
+              </div>
+            </div>
+
+            <p className={styles.introText}>
+              Life Energy sets that reserve&apos;s size — more Energy means more points, but rises your starting age. Body and Soul each range from 5–100;
+            </p>
+
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              className={styles.middleIllustration}
+              src="/images/soul-creation/equilize-middle-illu.png"
+              alt="The mystic triangle"
+            />
+
+            <p className={styles.introText}>
+              Click continue to activate the mystic triangle to balance Body, Soul, and Life Energy.
+            </p>
+
+          </>
+        ) : (
+          <h1 className={styles.headline}>Page {page + 1}</h1>
+        )}
       </div>
 
       {page === 1 && (
