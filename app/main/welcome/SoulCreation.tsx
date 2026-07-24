@@ -5,7 +5,7 @@ import Link from "next/link";
 import { Pinyon_Script } from "next/font/google";
 import styles from "./SoulCreation.module.css";
 import { GENDERS, racesByCategory, professionsByCategory } from "@/app/lib/characterOptions";
-import { getDisplayedAge } from "@/app/lib/ageScaling";
+import { getDisplayedAge, getLifeEnergyFill } from "@/app/lib/ageScaling";
 import SoulBulb from "./SoulBulb";
 
 const pinyonScript = Pinyon_Script({ subsets: ["latin"], weight: "400" });
@@ -181,7 +181,7 @@ export function SoulCreation({ onExit }: { onExit: () => void }) {
             </div>
             <div className={`${styles.bulbSlot} ${styles.bulbSlotLife}`}>
               <SoulBulb
-                fillPercent={char_age}
+                fillPercent={getLifeEnergyFill(char_age)}
                 color="#aaa9a9"
                 showPercent={false}
                 label="Life"

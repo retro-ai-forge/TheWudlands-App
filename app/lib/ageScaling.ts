@@ -48,3 +48,18 @@ export function getDisplayedAge(humanAgeMonths: number, raceId: string): number 
   const multiplier = AGE_SCALE_BY_RACE[raceId] ?? 1;
   return Math.floor((humanAgeMonths * multiplier) / 12);
 }
+
+// Life Energy bulb fill — younger souls run hotter, older souls run lower.
+// Linear between the two extremes; ages outside 23–58 clamp to the nearest end.
+const LIFE_ENERGY_MAX_FILL = 100; // at the youngest end, age 23 (276 months)
+const LIFE_ENERGY_MIN_FILL = 5; // at the oldest end, age 58 (696 months)
+const LIFE_ENERGY_MIN_AGE_MONTHS = 23 * 12;
+const LIFE_ENERGY_MAX_AGE_MONTHS = 58 * 12;
+
+export function getLifeEnergyFill(humanAgeMonths: number): number {
+  const t =
+    (humanAgeMonths - LIFE_ENERGY_MIN_AGE_MONTHS) /
+    (LIFE_ENERGY_MAX_AGE_MONTHS - LIFE_ENERGY_MIN_AGE_MONTHS);
+  const clampedT = Math.max(0, Math.min(1, t));
+  return LIFE_ENERGY_MAX_FILL + clampedT * (LIFE_ENERGY_MIN_FILL - LIFE_ENERGY_MAX_FILL);
+}
