@@ -317,14 +317,12 @@
   position: absolute;
   height: auto;
   transform: translate(-50%, -50%);
-  filter: grayscale(0) brightness(1);
-  opacity: 1;
-  transition: filter 2.5s ease, opacity 2.5s ease;
+  filter: grayscale(0);
+  transition: filter 3s ease, top 5s ease 1s, left 5s ease 1s;
 }
 
 .medallionActivated {
-  filter: grayscale(1) brightness(0.3);
-  opacity: 0;
+  filter: grayscale(0.5);
 }
 
 .medallionBody {
@@ -337,6 +335,18 @@
   top: 75.7%;
   left: 16.5%;
   width: 22.1%;
+}
+
+/* On activation all three converge on the same point — the triangle's
+   center disc — so they visually slide underneath it and out of the way
+   of the holes, revealing the bulbs. Body moves straight down, Soul to
+   the upper right, Life to the upper left (purely a result of each one's
+   starting position relative to this shared target). */
+.medallionBody.medallionActivated,
+.medallionSoul.medallionActivated,
+.medallionLife.medallionActivated {
+  top: 61.5%;
+  left: 50%;
 }
 
 .medallionLife {
@@ -383,6 +393,7 @@
   position: absolute;
   transform: translate(-50%, -50%);
   z-index: 2;
+  transition: opacity 2.5s ease;
 }
 
 .middleOverlayImg {
@@ -398,6 +409,7 @@
   width: 11.8%;
   aspect-ratio: 88 / 91;
   filter: drop-shadow(0 8px 14px rgba(0, 0, 0, 0.9));
+  opacity: 0;
 }
 
 .middleOverlayWrapIllu {
@@ -405,6 +417,15 @@
   left: 50%;
   width: 28%;
   aspect-ratio: 208 / 213;
+  opacity: 1;
+}
+
+.middleOverlayFadeOut {
+  opacity: 0;
+}
+
+.middleOverlayFadeIn {
+  opacity: 1;
 }
 
 @media (min-width: 441px) and (max-width: 599px) {

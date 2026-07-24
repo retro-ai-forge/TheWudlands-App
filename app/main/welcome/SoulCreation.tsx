@@ -217,16 +217,22 @@ export function SoulCreation({ onExit }: { onExit: () => void }) {
               alt=""
             />
             <div
-              className={`${styles.middleOverlayWrap} ${triangleActivated ? styles.middleOverlayWrapJoystick : styles.middleOverlayWrapIllu}`}
+              className={`${styles.middleOverlayWrap} ${styles.middleOverlayWrapIllu} ${triangleActivated ? styles.middleOverlayFadeOut : ""}`}
             >
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 className={styles.middleOverlayImg}
-                src={
-                  triangleActivated
-                    ? "/images/soul-creation/equilize-joystick.png"
-                    : "/images/soul-creation/equilize-middle-illu.png"
-                }
+                src="/images/soul-creation/equilize-middle-illu.png"
+                alt=""
+              />
+            </div>
+            <div
+              className={`${styles.middleOverlayWrap} ${styles.middleOverlayWrapJoystick} ${triangleActivated ? styles.middleOverlayFadeIn : ""}`}
+            >
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                className={styles.middleOverlayImg}
+                src="/images/soul-creation/equilize-joystick.png"
                 alt=""
               />
             </div>
