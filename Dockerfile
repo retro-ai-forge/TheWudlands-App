@@ -33,18 +33,20 @@ COPY backend ./
 FROM python:3.11-slim
 WORKDIR /app
 
-# Install Node.js
+# Node.js only — no npm needed, the standalone server below is started
+# directly with `node server.js`.
 RUN apt-get update && \
     DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
-    nodejs npm \
+    nodejs \
     && rm -rf /var/lib/apt/lists/*
 
-# Copy built Next.js from frontend-builder
-COPY --from=frontend-builder /app/.next ./.next
-COPY --from=frontend-builder /app/node_modules ./node_modules
+# Standalone output traces exactly which files/node_modules entries the
+# server actually needs at runtime, instead of shipping the whole
+# (dev-dependency-laden) node_modules tree. Static assets and public/ are
+# excluded from the trace and must be copied in separately.
+COPY --from=frontend-builder /app/.next/standalone ./
+COPY --from=frontend-builder /app/.next/static ./.next/static
 COPY --from=frontend-builder /app/public ./public
-COPY --from=frontend-builder /app/package*.json ./
-COPY --from=frontend-builder /app/next.config.ts ./
 
 # Copy Python backend and dependencies
 COPY --from=backend-builder /usr/local/lib/python3.11/site-packages /usr/local/lib/python3.11/site-packages
@@ -57,6 +59,6 @@ EXPOSE 3000 8000
 ENV NODE_ENV=production
 
 # Start both services with a simple shell script
-RUN printf '#!/bin/sh\nnpm start &\npython -m uvicorn backend.main:app --host 0.0.0.0 --port 8000\nwait\n' > /entrypoint.sh && chmod +x /entrypoint.sh
+RUN printf '#!/bin/sh\nnode server.js &\npython -m uvicorn backend.main:app --host 0.0.0.0 --port 8000\nwait\n' > /entrypoint.sh && chmod +x /entrypoint.sh
 
 CMD ["/entrypoint.sh"]
