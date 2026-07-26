@@ -49,6 +49,14 @@
   color: #d4c9a8;
 }
 
+.introImage {
+  display: block;
+  width: 100%;
+  max-width: 14rem;
+  height: auto;
+  margin: 1.5rem auto;
+}
+
 .panels {
   display: flex;
   flex-direction: column;

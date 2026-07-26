@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import Image from "next/image";
 import styles from "./characters.module.css";
 import { GENDERS, racesByCategory, professionsByCategory } from "@/app/lib/characterOptions";
 
@@ -42,6 +43,13 @@ export default function Characters() {
           you served, the trade your hands learned. This is who you are, before
           the road.
         </p>
+        <Image
+          src="/images/character/char_placeholder_silhouette.png"
+          alt="A placeholder silhouette of your character"
+          width={500}
+          height={750}
+          className={styles.introImage}
+        />
         <p className={styles.introText}>
           A class is not something you are born with. A blacksmith master
           notices the way your hands know iron. A guild recognizes the cut of
