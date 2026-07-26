@@ -92,6 +92,7 @@ export const PROFESSIONS = [
   { id: "clown", name: "Clown", category: "Artists", description: "Laughter and wit. You read the room and play the fool. Humor is your weapon and shield." },
   { id: "firespitter", name: "Fire Spitter", category: "Artists", description: "Flame and breath. You dance with danger and dazzle crowds with impossible fire. Danger thrills you." },
   { id: "storyteller", name: "Storyteller", category: "Artists", description: "Words and wonder. You weave tales that move hearts and shape how the world remembers itself. Stories are your power." },
+  { id: "actor", name: "Actor", category: "Artists", description: "Mask and voice. You become anyone the stage demands. Every emotion is yours to command." },
 ];
 
 export const professionsByCategory = PROFESSIONS.reduce((acc, profession) => {
