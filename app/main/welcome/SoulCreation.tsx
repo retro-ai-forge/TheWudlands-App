@@ -359,19 +359,40 @@ export function SoulCreation({ onExit }: { onExit: () => void }) {
 
   // What page 1 (Foundation) requires before Continue may proceed: the
   // triangle activated, a gender, every currently-unlocked profession slot
-  // filled, and both name fields typed in.
+  // filled with a distinct profession, and both name fields typed in.
   const isGenderMissing = gender === "";
   const isProfession1Missing = activeProfessionCount >= 1 && profession1 === "";
   const isProfession2Missing = activeProfessionCount >= 2 && profession2 === "";
   const isProfession3Missing = activeProfessionCount >= 3 && profession3 === "";
   const isFirstNameMissing = firstName.trim() === "";
   const isLastNameMissing = lastName.trim() === "";
+
+  // Only compares against slots that are currently active/unlocked — a
+  // stale value left in a since-deactivated slot (e.g. age dragged back
+  // down) must not count as a clash.
+  const isProfession1Duplicate =
+    activeProfessionCount >= 1 &&
+    profession1 !== "" &&
+    ((activeProfessionCount >= 2 && profession1 === profession2) ||
+      (activeProfessionCount >= 3 && profession1 === profession3));
+  const isProfession2Duplicate =
+    activeProfessionCount >= 2 &&
+    profession2 !== "" &&
+    (profession2 === profession1 || (activeProfessionCount >= 3 && profession2 === profession3));
+  const isProfession3Duplicate =
+    activeProfessionCount >= 3 &&
+    profession3 !== "" &&
+    (profession3 === profession1 || profession3 === profession2);
+
   const isPage1Ready =
     triangleActivated &&
     !isGenderMissing &&
     !isProfession1Missing &&
     !isProfession2Missing &&
     !isProfession3Missing &&
+    !isProfession1Duplicate &&
+    !isProfession2Duplicate &&
+    !isProfession3Duplicate &&
     !isFirstNameMissing &&
     !isLastNameMissing;
 
@@ -422,6 +443,9 @@ export function SoulCreation({ onExit }: { onExit: () => void }) {
       if (isProfession1Missing) missing.push("profession1");
       if (isProfession2Missing) missing.push("profession2");
       if (isProfession3Missing) missing.push("profession3");
+      if (isProfession1Duplicate) missing.push("profession1");
+      if (isProfession2Duplicate) missing.push("profession2");
+      if (isProfession3Duplicate) missing.push("profession3");
       if (isFirstNameMissing) missing.push("firstName");
       if (isLastNameMissing) missing.push("lastName");
       if (missing.length > 0) flashMissingFields(missing);
