@@ -7,6 +7,13 @@
     url("/pattern/tile.jpg");
   background-repeat: repeat;
   overflow: hidden;
+}
+
+/* Only page 1 needs default touch gestures suppressed, so a swipe drags the
+   joystick instead of panning the page — an ancestor's touch-action always
+   wins over a descendant's, so this must NOT be set on .wizard itself, or
+   page 0's scrollable content below could never become scrollable on touch. */
+.noTouchScroll {
   touch-action: none;
 }
 
@@ -84,14 +91,14 @@
 }
 
 .middleIllustration {
-  width: clamp(4.6rem, 10vw, 5.4rem);
+  width: clamp(6.5rem, 15vw, 8rem);
   height: auto;
   margin: 0.25rem 0;
 }
 
 @media (min-height: 700px) {
   .middleIllustration {
-    width: clamp(6.5rem, 14vw, 8rem);
+    width: clamp(9rem, 20vw, 11.5rem);
   }
 }
 
@@ -102,6 +109,30 @@
 
 .contentTopTight {
   margin-top: -0.5rem;
+}
+
+/* Page 0 only — page 1 (Foundation) stays fixed/non-scrolling so a swipe
+   there always drags the joystick, never scrolls the page. */
+.contentScrollable {
+  max-height: 100%;
+  overflow-y: auto;
+  touch-action: pan-y;
+  -webkit-overflow-scrolling: touch;
+  /* .content's base justify-content:center centers overflowing children
+     symmetrically at BOTH ends when they're taller than the box — pushing
+     the headline above the visible area with no way to scroll up to it,
+     since scrollTop can't go negative. Anchor to the top instead so
+     overflow only ever happens below, where scrolling can reach it. */
+  justify-content: flex-start;
+  /* The Continue button lives outside this scroll area (absolute on .stage,
+     pinned to the viewport bottom), so it always overlaps whatever's
+     scrolled to the bottom unless extra room is reserved here to scroll
+     past it. */
+  padding-bottom: 4.5rem;
+}
+
+.introTextLarge {
+  font-size: clamp(1rem, 2.6vw, 1.25rem);
 }
 
 .headline {

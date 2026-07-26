@@ -250,6 +250,11 @@ export function SoulCreation({ onExit }: { onExit: () => void }) {
     return clamp(BODY_SOUL_SUM_PEAK + localT * (BODY_SOUL_SUM_AT_YOUNGEST - BODY_SOUL_SUM_PEAK));
   }
 
+  // Matches what getBodySoul's own formulas produce at the activation resting
+  // point (age 28, dead-center on the Body/Soul axis) — so activating the
+  // triangle doesn't cause a visible jump from this placeholder.
+  const DEFAULT_BODY_SOUL = { body: 25, soul: 25, bodySoulSum: 50 };
+
   // Body/Soul are derived from two independent projections of the same
   // joystick offset: the age diagonal sets how much total the two share
   // (bodySoulSum), and the perpendicular axis sets how that total is split
@@ -258,9 +263,9 @@ export function SoulCreation({ onExit }: { onExit: () => void }) {
   function getBodySoul(): { body: number; soul: number; bodySoulSum: number } {
     // Same reasoning as getCharAgeMonths — stay pinned to the placeholder
     // split until the joystick has actually been placed somewhere.
-    if (!triangleActivated) return { body: 35, soul: 35, bodySoulSum: 70 };
+    if (!triangleActivated) return DEFAULT_BODY_SOUL;
     const box = getIlluBoxSize();
-    if (!box) return { body: 35, soul: 35, bodySoulSum: 70 };
+    if (!box) return DEFAULT_BODY_SOUL;
 
     const { upperLeft, lowerRight } = getAgeDiagonal(box.boxWidth, box.boxHeight);
     const ageT = projectOntoAxis(joystickOffset, upperLeft, lowerRight);
@@ -427,7 +432,7 @@ export function SoulCreation({ onExit }: { onExit: () => void }) {
 
   return (
     <div
-      className={styles.wizard}
+      className={`${styles.wizard} ${page === 1 ? styles.noTouchScroll : ""}`}
       onClick={handlePageClick}
       onPointerDown={handlePagePointerDown}
       onPointerMove={handlePagePointerMove}
@@ -437,7 +442,9 @@ export function SoulCreation({ onExit }: { onExit: () => void }) {
       <div className={styles.stage}>
         <div
           className={
-            page === 0 || page === 1
+            page === 0
+              ? `${styles.content} ${styles.contentTop} ${styles.contentTopTight} ${styles.contentScrollable}`
+              : page === 1
               ? `${styles.content} ${styles.contentTop} ${styles.contentTopTight}`
               : styles.content
           }
@@ -445,7 +452,7 @@ export function SoulCreation({ onExit }: { onExit: () => void }) {
           {page === 0 ? (
             <>
               <h1 className={styles.headline}>Shaping forces</h1>
-              <p className={styles.introText}>
+              <p className={`${styles.introText} ${styles.introTextLarge}`}>
                 Every character is shaped by three forces. Body and Soul share one reserve of points —
                 strengthen one, and the other yields — those points will be distributed across your attributes.
               </p>
@@ -483,8 +490,8 @@ export function SoulCreation({ onExit }: { onExit: () => void }) {
                 </div>
               </div>
 
-              <p className={styles.introText}>
-                Life Energy sets that reserve&apos;s size — more Energy means more points, but rises your starting age. Body and Soul each range from 5–100;
+              <p className={`${styles.introText} ${styles.introTextLarge}`}>
+                Life Energy sets that reserve&apos;s size — more Energy rises your starting age. Body and Soul each range from 4-100;
               </p>
 
               {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -495,7 +502,7 @@ export function SoulCreation({ onExit }: { onExit: () => void }) {
                 alt="The mystic triangle"
               />
 
-              <p className={styles.introText}>
+              <p className={`${styles.introText} ${styles.introTextLarge}`}>
                 Continue to activate the mystic triangle to balance Body, Soul, and Life Energy.
               </p>
 
