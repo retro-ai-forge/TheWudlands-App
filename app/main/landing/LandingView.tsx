@@ -9,6 +9,8 @@ interface LandingViewProps {
   joining: boolean;
   onEnter: (address: string) => void;
   onError: (error: string) => void;
+  onPending: () => void;
+  onPendingCancel: () => void;
 }
 
 const STEPS = [
@@ -32,7 +34,7 @@ const STEPS = [
   },
 ];
 
-export function LandingView({ status, joining, onEnter, onError }: LandingViewProps) {
+export function LandingView({ status, joining, onEnter, onError, onPending, onPendingCancel }: LandingViewProps) {
   const [showWalletHint, setShowWalletHint] = useState(false);
 
   const statusLine = showWalletHint ? (
@@ -46,7 +48,14 @@ export function LandingView({ status, joining, onEnter, onError }: LandingViewPr
   const cta = (
     <div className={styles.ctaGroup}>
       {statusLine}
-      <EnterWudlandsButton onEnter={onEnter} onError={onError} onNoWallet={() => setShowWalletHint(true)} disabled={joining} />
+      <EnterWudlandsButton
+        onEnter={onEnter}
+        onError={onError}
+        onPending={onPending}
+        onPendingCancel={onPendingCancel}
+        onNoWallet={() => setShowWalletHint(true)}
+        disabled={joining}
+      />
     </div>
   );
 

@@ -44,6 +44,52 @@
   z-index: 9999;
 }
 
+.pending {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1.25rem;
+  background:
+    linear-gradient(180deg, rgba(0, 0, 0, 0.55), rgba(0, 0, 0, 0.8)),
+    #0a0a0a;
+}
+
+.pendingSpinner {
+  width: 3rem;
+  height: 3rem;
+  border-radius: 50%;
+  border: 3px solid rgba(192, 122, 58, 0.25);
+  border-top-color: #c07a3a;
+  animation: pendingSpin 0.9s linear infinite;
+}
+
+@keyframes pendingSpin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.pendingText {
+  font-size: 0.95rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #d4c9a8;
+  animation: pendingPulse 1.6s ease-in-out infinite;
+}
+
+@keyframes pendingPulse {
+  0%, 100% {
+    opacity: 0.55;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
 /* Join view is now a scrollable landing; the hero provides the first-screen
    fill, the sections below flow normally over the fixed backdrop. */
 .screen {

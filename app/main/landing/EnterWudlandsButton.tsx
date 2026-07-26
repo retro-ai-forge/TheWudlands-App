@@ -22,6 +22,16 @@ export interface EnterWudlandsButtonProps {
   onEnter?: (address: string) => void;
   onError?: (error: string) => void;
   onNoWallet?: () => void;
+  /** Fired once a wallet account is available and a backend round-trip is
+   * about to start — lets the parent switch to a full-screen pending view,
+   * since the backend/DB call can occasionally take a while. NOT fired while
+   * merely waiting on the wallet extension's own popup (connect/sign), since
+   * that needs the page's hint text to stay visible/interactive. */
+  onPending?: () => void;
+  /** Fired if a pending backend call didn't pan out (e.g. no existing
+   * session) and the flow falls back to the wallet-connect path — lets the
+   * parent revert out of the pending view back to the normal landing page. */
+  onPendingCancel?: () => void;
   disabled?: boolean;
 }
 
@@ -29,6 +39,8 @@ export function EnterWudlandsButton({
   onEnter,
   onError,
   onNoWallet,
+  onPending,
+  onPendingCancel,
   disabled = false,
 }: EnterWudlandsButtonProps) {
   const { account, isConnecting, connectError, connect, setVerified, verified } = useWallet();
@@ -52,9 +64,10 @@ export function EnterWudlandsButton({
   // Auto-enter when session is restored and verified (e.g., navigating back after login).
   useEffect(() => {
     if (verified && account && !disabled) {
+      onPending?.();
       onEnter?.(account.address);
     }
-  }, [verified, account, disabled, onEnter]);
+  }, [verified, account, disabled, onEnter, onPending]);
 
   /** Offline signing request -> backend verify -> enter the game. */
   const signAndEnter = async (acct: WalletAccount) => {
@@ -103,6 +116,7 @@ export function EnterWudlandsButton({
       if (err instanceof Error) {
         message = err.message;
       }
+      onPendingCancel?.();
       onError?.(message);
     } finally {
       setIsSigning(false);
@@ -117,11 +131,13 @@ export function EnterWudlandsButton({
 
     // Already connected -> go straight to offline signing.
     if (account) {
+      onPending?.();
       await signAndEnter(account);
       return;
     }
 
     // Check if there's an existing valid session (e.g., from another tab).
+    onPending?.();
     try {
       const meRes = await fetch('/api/auth/me', {
         credentials: 'include',
@@ -137,14 +153,18 @@ export function EnterWudlandsButton({
     } catch {
       // Continue to wallet connection if session check fails.
     }
+    onPendingCancel?.();
 
     // First tap without a wallet connected -> notify parent to show wallet hint.
     onNoWallet?.();
 
     // Not connected -> try to connect (this also updates the header button).
     // On failure, connect() sets connectError and the effect will show the hint.
+    // Deliberately no onPending() here: the wallet extension's own popup
+    // needs the page (and the wallet hint) to stay visible while it's open.
     const connected = await connect();
     if (connected) {
+      onPending?.();
       await signAndEnter(connected);
     }
   };

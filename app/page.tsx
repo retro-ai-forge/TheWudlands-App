@@ -7,7 +7,7 @@ import { LandingView } from "./main/landing/LandingView";
 import { WelcomeView } from "./main/welcome/WelcomeView";
 import BannerSlideshow from "./main/landing/BannerSlideshow";
 
-type View = "join" | "game";
+type View = "join" | "pending" | "game";
 
 export default function Home() {
   const [view, setView] = useState<View>("join");
@@ -64,8 +64,23 @@ export default function Home() {
     enterGameSession();
   }
 
+  // The database backing login can occasionally take a while to respond —
+  // switch to a full-screen pending view the moment a backend round-trip
+  // starts, rather than leaving the user staring at the button.
+  function handlePending() {
+    setStatus("Entering The Wudlands...");
+    setView("pending");
+  }
+
+  // A pending backend check (e.g. no existing session) fell through to the
+  // wallet-connect step, which needs the landing page visible again.
+  function handlePendingCancel() {
+    setView("join");
+  }
+
   function handleAuthError(error: string) {
     setStatus(`Auth error: ${error}`);
+    setView("join");
   }
 
   // Session is validated via the secure cookie in WalletProvider
@@ -74,6 +89,15 @@ export default function Home() {
   }, []);
 
   if (restoring) return <main className={styles.restoring} />;
+
+  if (view === "pending") {
+    return (
+      <main className={styles.pending}>
+        <div className={styles.pendingSpinner} />
+        <p className={styles.pendingText}>{status}</p>
+      </main>
+    );
+  }
 
   return (
     <main className={view === "game" ? styles.welcomeScreen : styles.screen}>
@@ -85,6 +109,8 @@ export default function Home() {
             joining={entering}
             onEnter={handleEnterWudlands}
             onError={handleAuthError}
+            onPending={handlePending}
+            onPendingCancel={handlePendingCancel}
           />
         </>
       )}
