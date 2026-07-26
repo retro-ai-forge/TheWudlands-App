@@ -32,7 +32,7 @@ export function VersionBadge() {
 
   return (
     <div className={styles.wrapper}>
-      <div className={styles.badge}>beta-0.71</div>
+      <div className={styles.badge}>beta-0.72</div>
       {isMainPage && playerCount !== null && (
         <div className={styles.playerCount}>{playerCount} online</div>
       )}
