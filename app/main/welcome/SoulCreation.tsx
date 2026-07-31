@@ -29,6 +29,136 @@ export function SoulCreation({ onExit }: { onExit: () => void }) {
   const [profession1, setProfession1] = useState("");
   const [profession2, setProfession2] = useState("");
   const [profession3, setProfession3] = useState("");
+  // Persisted to the character's Firestore document later on; local-only state for now.
+  const [portraitUrl, setPortraitUrl] = useState("");
+
+  // Manual fit/zoom/pan for the portrait, instead of object-fit:cover (which
+  // always force-crops to fill the frame). At zoom 1 the whole image is
+  // shown, uncropped, scaled down/up only as far as needed to fit inside
+  // .portraitFrame (whichever dimension is the tighter constraint) — the
+  // zoom slider then scales up from there, and pan (drag) repositions
+  // within whatever now overflows the frame.
+  const [portraitZoom, setPortraitZoom] = useState(1);
+  const [portraitPan, setPortraitPan] = useState({ x: 0, y: 0 });
+  const portraitFrameRef = useRef<HTMLDivElement>(null);
+  const portraitUrlInputRef = useRef<HTMLInputElement>(null);
+  const portraitNaturalSizeRef = useRef<{ width: number; height: number } | null>(null);
+  const portraitDragRef = useRef<{ startClientX: number; startClientY: number; startPanX: number; startPanY: number } | null>(null);
+
+  // Measured (not guessed) midpoint between the frame's bottom edge and the
+  // URL field's top edge, so the zoom slider sits in that gap regardless of
+  // actual headline/content height at runtime. PORTRAIT_SLIDER_NUDGE shifts
+  // it off dead-center — positive moves it down (toward the URL field),
+  // negative moves it up (toward the frame).
+  const PORTRAIT_SLIDER_NUDGE = 12;
+  const [portraitSliderBottom, setPortraitSliderBottom] = useState<number | null>(null);
+  useEffect(() => {
+    if (page !== 3) return;
+    function updatePortraitSliderBottom() {
+      const frame = portraitFrameRef.current;
+      const urlInput = portraitUrlInputRef.current;
+      if (!frame || !urlInput) return;
+      const midpointY = (frame.getBoundingClientRect().bottom + urlInput.getBoundingClientRect().top) / 2;
+      setPortraitSliderBottom(window.innerHeight - midpointY - PORTRAIT_SLIDER_NUDGE);
+    }
+    updatePortraitSliderBottom();
+    window.addEventListener("resize", updatePortraitSliderBottom);
+    return () => window.removeEventListener("resize", updatePortraitSliderBottom);
+  }, [page]);
+
+  // The scale at which the image's natural size fits entirely inside the
+  // frame without cropping — the zoom slider's 1x baseline.
+  function getPortraitFitScale(): number {
+    const nat = portraitNaturalSizeRef.current;
+    const frame = portraitFrameRef.current;
+    if (!nat || !frame) return 1;
+    const rect = frame.getBoundingClientRect();
+    return Math.min(rect.width / nat.width, rect.height / nat.height);
+  }
+
+  // How far the image can be panned from center, per axis — (frame + image)/2
+  // is the distance at which the image's near edge just reaches the frame's
+  // far edge, i.e. it's about to completely leave the frame. That's a
+  // deliberately permissive limit (lets the image go beyond the frame's own
+  // edges, not just up to them) and works the same whether the image is
+  // currently larger or smaller than the frame in that axis — smaller
+  // doesn't mean locked centered, it just starts with more room to spare.
+  function getPortraitPanLimits(zoom: number) {
+    const nat = portraitNaturalSizeRef.current;
+    const frame = portraitFrameRef.current;
+    if (!nat || !frame) return { maxX: 0, maxY: 0 };
+    const rect = frame.getBoundingClientRect();
+    const scale = getPortraitFitScale() * zoom;
+    return {
+      maxX: (rect.width + nat.width * scale) / 2,
+      maxY: (rect.height + nat.height * scale) / 2,
+    };
+  }
+
+  function handlePortraitImageLoad(e: React.SyntheticEvent<HTMLImageElement>) {
+    portraitNaturalSizeRef.current = { width: e.currentTarget.naturalWidth, height: e.currentTarget.naturalHeight };
+    setPortraitZoom(1);
+    setPortraitPan({ x: 0, y: 0 });
+  }
+
+  function handlePortraitZoomChange(rawZoom: number) {
+    setPortraitZoom(rawZoom);
+    // Re-clamp so zooming back out can't leave a pan offset from the old,
+    // more-permissive zoom level stranded outside the new limits.
+    const { maxX, maxY } = getPortraitPanLimits(rawZoom);
+    setPortraitPan((prev) => ({
+      x: Math.max(-maxX, Math.min(maxX, prev.x)),
+      y: Math.max(-maxY, Math.min(maxY, prev.y)),
+    }));
+  }
+
+  function handlePortraitPointerDown(e: React.PointerEvent<HTMLImageElement>) {
+    if (!portraitNaturalSizeRef.current) return;
+    e.currentTarget.setPointerCapture(e.pointerId);
+    portraitDragRef.current = {
+      startClientX: e.clientX,
+      startClientY: e.clientY,
+      startPanX: portraitPan.x,
+      startPanY: portraitPan.y,
+    };
+  }
+
+  function handlePortraitPointerMove(e: React.PointerEvent<HTMLImageElement>) {
+    const drag = portraitDragRef.current;
+    if (!drag) return;
+    const { maxX, maxY } = getPortraitPanLimits(portraitZoom);
+    const dx = e.clientX - drag.startClientX;
+    const dy = e.clientY - drag.startClientY;
+    setPortraitPan({
+      x: Math.max(-maxX, Math.min(maxX, drag.startPanX + dx)),
+      y: Math.max(-maxY, Math.min(maxY, drag.startPanY + dy)),
+    });
+  }
+
+  function handlePortraitPointerUp(e: React.PointerEvent<HTMLImageElement>) {
+    portraitDragRef.current = null;
+    e.currentTarget.releasePointerCapture(e.pointerId);
+  }
+
+  // Page 2 (Attributes) — spending the Body/Soul totals from the triangle
+  // (page 1) across the 4 stats each. Every stat starts at the backend's
+  // floor of 1 (see BodyStats/SoulStats in character.py); the lowest
+  // possible pool is 4 (BODY_SOUL_RATIO_MIN), which exactly covers that
+  // 4-stats-at-1 floor with nothing left to spend.
+  type BodyAttrKey = "strength" | "stamina" | "dexterity" | "speed";
+  type SoulAttrKey = "power" | "wisdom" | "intelligence" | "perception";
+  const [bodyAttributes, setBodyAttributes] = useState<Record<BodyAttrKey, number>>({
+    strength: 1,
+    stamina: 1,
+    dexterity: 1,
+    speed: 1,
+  });
+  const [soulAttributes, setSoulAttributes] = useState<Record<SoulAttrKey, number>>({
+    power: 1,
+    wisdom: 1,
+    intelligence: 1,
+    perception: 1,
+  });
 
   // Set once, on the first click anywhere on page 1 (outside form controls).
   // Further clicks do nothing — this is a one-way activation.
@@ -120,11 +250,19 @@ export function SoulCreation({ onExit }: { onExit: () => void }) {
 
   // The illustration's box size, in the same coordinate space used for
   // joystickOffset (which is always tracked relative to its center).
+  // triangleGroupRef is only mounted while page === 1 (see its JSX below),
+  // so on later pages the live measurement is gone even though joystickOffset
+  // (and thus the real age/body/soul it encodes) is still perfectly valid.
+  // Cache the last real measurement so callers keep using the true numbers
+  // instead of silently falling back to a flat placeholder once navigated away.
+  const lastIlluBoxSizeRef = useRef<{ boxWidth: number; boxHeight: number } | null>(null);
   function getIlluBoxSize() {
     const group = triangleGroupRef.current;
-    if (!group) return null;
+    if (!group) return lastIlluBoxSizeRef.current;
     const boxWidth = group.getBoundingClientRect().width * 0.28;
-    return { boxWidth, boxHeight: boxWidth * (213 / 208) };
+    const size = { boxWidth, boxHeight: boxWidth * (213 / 208) };
+    lastIlluBoxSizeRef.current = size;
+    return size;
   }
 
   // The lower-right⟷upper-left diagonal of the joystick's travel area controls
@@ -355,6 +493,58 @@ export function SoulCreation({ onExit }: { onExit: () => void }) {
   // position, see getBodySoul above.
   const { body, soul, bodySoulSum } = getBodySoul();
 
+  // Page 2 (Attributes) spending pools — how much of body/soul is still
+  // unallocated across their 4 stats.
+  const bodyPointsSpent = Object.values(bodyAttributes).reduce((sum, v) => sum + v, 0);
+  const bodyPointsRemaining = body - bodyPointsSpent;
+  const soulPointsSpent = Object.values(soulAttributes).reduce((sum, v) => sum + v, 0);
+  const soulPointsRemaining = soul - soulPointsSpent;
+
+  // Applies `delta` (+1/-1) via a functional update so it always reads the
+  // true latest value — required for press-and-hold repeat below, where the
+  // same step closure fires many times and a captured render-time value
+  // would go stale after the first tick. Clamped so a section's total spend
+  // can never exceed its pool.
+  function handleBodyAttributeChange(key: BodyAttrKey, delta: number) {
+    setBodyAttributes((prev) => {
+      const remaining = body - Object.values(prev).reduce((sum, v) => sum + v, 0);
+      const maxAllowed = prev[key] + remaining;
+      return { ...prev, [key]: Math.max(1, Math.min(prev[key] + delta, maxAllowed)) };
+    });
+  }
+
+  function handleSoulAttributeChange(key: SoulAttrKey, delta: number) {
+    setSoulAttributes((prev) => {
+      const remaining = soul - Object.values(prev).reduce((sum, v) => sum + v, 0);
+      const maxAllowed = prev[key] + remaining;
+      return { ...prev, [key]: Math.max(1, Math.min(prev[key] + delta, maxAllowed)) };
+    });
+  }
+
+  // Press-and-hold repeat for the attribute stepper triangles: one immediate
+  // step, a short pause, then fast auto-repeat until release. Listens on
+  // `window` for the release rather than just the button, since a hold that
+  // ends because the button became disabled mid-repeat (hit the pool's cap)
+  // would otherwise never fire its own pointerup — disabled elements stop
+  // dispatching pointer events to themselves.
+  const holdTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const holdIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  function stopHold() {
+    if (holdTimeoutRef.current) clearTimeout(holdTimeoutRef.current);
+    if (holdIntervalRef.current) clearInterval(holdIntervalRef.current);
+    holdTimeoutRef.current = null;
+    holdIntervalRef.current = null;
+  }
+  function startHold(step: () => void) {
+    stopHold();
+    step();
+    holdTimeoutRef.current = setTimeout(() => {
+      holdIntervalRef.current = setInterval(step, 90);
+    }, 400);
+    window.addEventListener("pointerup", stopHold, { once: true });
+    window.addEventListener("pointercancel", stopHold, { once: true });
+  }
+
   const isLastPage = page === PAGE_COUNT - 1;
 
   // What page 1 (Foundation) requires before Continue may proceed: the
@@ -456,7 +646,9 @@ export function SoulCreation({ onExit }: { onExit: () => void }) {
 
   return (
     <div
-      className={`${styles.wizard} ${page === 1 ? styles.noTouchScroll : ""}`}
+      className={`${styles.wizard} ${page === 1 ? styles.noTouchScroll : ""} ${
+        page === 0 || page === 2 ? styles.wizardScrollable : ""
+      }`}
       onClick={handlePageClick}
       onPointerDown={handlePagePointerDown}
       onPointerMove={handlePagePointerMove}
@@ -466,9 +658,9 @@ export function SoulCreation({ onExit }: { onExit: () => void }) {
       <div className={styles.stage}>
         <div
           className={
-            page === 0
+            page === 0 || page === 2
               ? `${styles.content} ${styles.contentTop} ${styles.contentTopTight} ${styles.contentScrollable}`
-              : page === 1
+              : page === 1 || page === 3
               ? `${styles.content} ${styles.contentTop} ${styles.contentTopTight}`
               : styles.content
           }
@@ -554,6 +746,143 @@ export function SoulCreation({ onExit }: { onExit: () => void }) {
                   onChange={(e) => setLastName(e.target.value)}
                 />
               </div>
+            </>
+          ) : page === 2 ? (
+            <>
+              <h1 className={styles.headline}>Attributes</h1>
+
+              <div className={`${styles.attrSection} ${styles.attrSectionBody}`}>
+                <h2 className={styles.attrSectionHeading}>Body</h2>
+                <div className={styles.attrRemaining}>
+                  <span className={styles.attrRemainingValue}>{bodyPointsRemaining}</span>
+                  <span className={styles.attrRemainingLabel}>
+                    point{bodyPointsRemaining === 1 ? "" : "s"} to spend
+                  </span>
+                </div>
+                {(
+                  [
+                    ["strength", "Strength"],
+                    ["stamina", "Stamina"],
+                    ["dexterity", "Dexterity"],
+                    ["speed", "Speed"],
+                  ] as const
+                ).map(([key, label]) => (
+                  <div className={styles.attrRow} key={key}>
+                    <span className={styles.attrLabel}>{label}</span>
+                    <button
+                      type="button"
+                      className={styles.attrStepBtn}
+                      onPointerDown={() => startHold(() => handleBodyAttributeChange(key, -1))}
+                      disabled={bodyAttributes[key] <= 1}
+                      aria-label={`Decrease ${label}`}
+                    >
+                      ◀
+                    </button>
+                    <span className={styles.attrValueBox}>{bodyAttributes[key]}</span>
+                    <button
+                      type="button"
+                      className={styles.attrStepBtn}
+                      onPointerDown={() => startHold(() => handleBodyAttributeChange(key, 1))}
+                      disabled={bodyPointsRemaining <= 0}
+                      aria-label={`Increase ${label}`}
+                    >
+                      ▶
+                    </button>
+                  </div>
+                ))}
+              </div>
+
+              <div className={`${styles.attrSection} ${styles.attrSectionSoul}`}>
+                <h2 className={styles.attrSectionHeading}>Soul</h2>
+                <div className={styles.attrRemaining}>
+                  <span className={styles.attrRemainingValue}>{soulPointsRemaining}</span>
+                  <span className={styles.attrRemainingLabel}>
+                    point{soulPointsRemaining === 1 ? "" : "s"} to spend
+                  </span>
+                </div>
+                {(
+                  [
+                    ["power", "Power"],
+                    ["wisdom", "Wisdom"],
+                    ["intelligence", "Intelligence"],
+                    ["perception", "Perception"],
+                  ] as const
+                ).map(([key, label]) => (
+                  <div className={styles.attrRow} key={key}>
+                    <span className={styles.attrLabel}>{label}</span>
+                    <button
+                      type="button"
+                      className={styles.attrStepBtn}
+                      onPointerDown={() => startHold(() => handleSoulAttributeChange(key, -1))}
+                      disabled={soulAttributes[key] <= 1}
+                      aria-label={`Decrease ${label}`}
+                    >
+                      ◀
+                    </button>
+                    <span className={styles.attrValueBox}>{soulAttributes[key]}</span>
+                    <button
+                      type="button"
+                      className={styles.attrStepBtn}
+                      onPointerDown={() => startHold(() => handleSoulAttributeChange(key, 1))}
+                      disabled={soulPointsRemaining <= 0}
+                      aria-label={`Increase ${label}`}
+                    >
+                      ▶
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </>
+          ) : page === 3 ? (
+            <>
+              <h1 className={styles.headline}>Portrait</h1>
+              <div className={styles.portraitFrame} ref={portraitFrameRef}>
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  draggable={false}
+                  className={styles.portraitImage}
+                  src={portraitUrl.trim() !== "" ? portraitUrl : "/images/character/char_placeholder_silhouette.png"}
+                  alt={portraitUrl.trim() !== "" ? "Your character's portrait" : "A placeholder silhouette of your character"}
+                  style={
+                    portraitNaturalSizeRef.current
+                      ? {
+                          width: `${portraitNaturalSizeRef.current.width * getPortraitFitScale() * portraitZoom}px`,
+                          height: `${portraitNaturalSizeRef.current.height * getPortraitFitScale() * portraitZoom}px`,
+                          transform: `translate(calc(-50% + ${portraitPan.x}px), calc(-50% + ${portraitPan.y}px))`,
+                        }
+                      : { width: "100%", height: "100%", transform: "translate(-50%, -50%)" }
+                  }
+                  onLoad={handlePortraitImageLoad}
+                  onPointerDown={handlePortraitPointerDown}
+                  onPointerMove={handlePortraitPointerMove}
+                  onPointerUp={handlePortraitPointerUp}
+                  onPointerCancel={handlePortraitPointerUp}
+                />
+                {/* Outer rectangle marks the portrait bounds; the inner one
+                    shows where the head must land — the character preview
+                    page will use that same defined area to align/crop it. */}
+                <div className={styles.portraitOutline} />
+                <div className={styles.portraitHeadZone} />
+              </div>
+              <input
+                type="range"
+                className={styles.portraitZoomSlider}
+                style={portraitSliderBottom !== null ? { bottom: `${portraitSliderBottom}px` } : undefined}
+                min={1}
+                max={3}
+                step={0.01}
+                value={portraitZoom}
+                onChange={(e) => handlePortraitZoomChange(Number(e.target.value))}
+                aria-label="Zoom portrait"
+              />
+              <input
+                ref={portraitUrlInputRef}
+                className={`${styles.textInput} ${styles.portraitUrlInput}`}
+                type="text"
+                placeholder="Image URL"
+                value={portraitUrl}
+                onChange={(e) => setPortraitUrl(e.target.value)}
+              />
             </>
           ) : (
             <h1 className={styles.headline}>Page {page + 1}</h1>

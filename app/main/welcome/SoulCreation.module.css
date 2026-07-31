@@ -9,10 +9,17 @@
   overflow: hidden;
 }
 
+/* Pages 0/2 scroll .wizard itself (not the narrow .stage column), so the
+   scrollbar renders at the true screen edge — past the 900px-capped content
+   and past the Continue button — instead of hugging the readable column's
+   own edge in the middle of a wide screen. */
+.wizardScrollable {
+  overflow-y: auto;
+}
+
 /* Only page 1 needs default touch gestures suppressed, so a swipe drags the
    joystick instead of panning the page — an ancestor's touch-action always
-   wins over a descendant's, so this must NOT be set on .wizard itself, or
-   page 0's scrollable content below could never become scrollable on touch. */
+   wins over a descendant's, so this must NOT be set here on scrollable pages. */
 .noTouchScroll {
   touch-action: none;
 }
@@ -24,12 +31,15 @@
 
 /* Keeps all wizard content within the site's usual 900px content width on
    wide viewports — everything below is positioned relative to this, not the
-   raw viewport, so it stays clamped instead of spreading to the screen edges. */
+   raw viewport, so it stays clamped instead of spreading to the screen edges.
+   min-height (not height) so it can grow taller than the viewport on pages
+   whose content overflows — .wizardScrollable above is what actually scrolls
+   that extra height, since .stage/.content have no overflow of their own. */
 .stage {
   position: relative;
   width: 100%;
   max-width: 900px;
-  height: 100%;
+  min-height: 100%;
   margin: 0 auto;
   display: flex;
   align-items: center;
@@ -102,6 +112,150 @@
   }
 }
 
+/* Fixed-size frame (2:3, matching the placeholder silhouette's own 500x750)
+   so the box never changes shape once a user-supplied image (any aspect
+   ratio) replaces the placeholder — object-fit:cover on the img fills it
+   without stretching/distorting, cropping instead where needed. This also
+   keeps .portraitHeadZone below meaningful: it's defined relative to this
+   fixed frame, not to whatever aspect ratio a given image happens to have. */
+.portraitFrame {
+  position: relative;
+  display: inline-block;
+  height: 80vh;
+  aspect-ratio: 2 / 3;
+  max-width: 90vw;
+  margin: 0rem 0 0.75rem;
+  line-height: 0;
+  overflow: hidden;
+}
+
+/* Width/height/transform are set inline per-image (they depend on the
+   loaded image's natural size, current zoom, and pan) — this just anchors
+   the positioning origin to the frame's center. */
+.portraitImage {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  display: block;
+  cursor: grab;
+  touch-action: none;
+}
+
+.portraitImage:active {
+  cursor: grabbing;
+}
+
+/* Fixed and roughly vertically centered in the gap between the frame's
+   bottom edge and .portraitUrlInput below — an estimate (frame height is
+   viewport-relative, headline height isn't measured), nudge bottom if it
+   drifts off-center in practice. Shares the URL field's horizontal span. */
+.portraitZoomSlider {
+  position: fixed;
+  bottom: 10vh;
+  left: 50%;
+  transform: translateX(-50%);
+  width: min(16rem, calc(100vw - 2.5rem));
+  max-width: none;
+  margin: 0;
+  z-index: 3;
+  -webkit-appearance: none;
+  appearance: none;
+  background: transparent;
+  height: 1.4rem;
+}
+
+.portraitZoomSlider::-webkit-slider-runnable-track {
+  height: 0.4rem;
+  border-radius: 0.2rem;
+  background: #3a3a3a;
+}
+
+.portraitZoomSlider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  margin-top: -0.5rem;
+  width: 1.4rem;
+  height: 1.4rem;
+  border-radius: 50%;
+  background: #e0a84a;
+  border: 1px solid #6f532f;
+  cursor: pointer;
+  animation: portraitSliderPulse 2.6s ease-in-out infinite;
+}
+
+.portraitZoomSlider::-moz-range-track {
+  height: 0.4rem;
+  border-radius: 0.2rem;
+  background: #3a3a3a;
+}
+
+.portraitZoomSlider::-moz-range-progress {
+  height: 0.4rem;
+  border-radius: 0.2rem;
+  background: #e0a84a;
+}
+
+.portraitZoomSlider::-moz-range-thumb {
+  width: 1.4rem;
+  height: 1.4rem;
+  border-radius: 50%;
+  background: #e0a84a;
+  border: 1px solid #6f532f;
+  cursor: pointer;
+  animation: portraitSliderPulse 2.6s ease-in-out infinite;
+}
+
+@keyframes portraitSliderPulse {
+  0%, 100% {
+    box-shadow: 0 0 4px 0 rgba(224, 168, 74, 0.5);
+  }
+  50% {
+    box-shadow: 0 0 12px 3px rgba(224, 168, 74, 0.85);
+  }
+}
+
+.portraitOutline {
+  position: absolute;
+  inset: 0;
+  border: 2px solid rgba(230, 184, 92, 0.7);
+  pointer-events: none;
+}
+
+/* Head-placement guide — roughly the top-center of the frame, where a
+   subject's head should land so later crops (character preview page) line
+   up consistently across different uploaded portraits. */
+.portraitHeadZone {
+  position: absolute;
+  top: 1.5%;
+  left: 50%;
+  width: 11rem;
+  aspect-ratio: 1 / 1;
+  transform: translateX(-50%);
+  border: 2px solid rgba(168, 120, 50, 0.9);
+  border-radius: 4px;
+  pointer-events: none;
+}
+
+/* Decoupled from the centered headline/image flex flow (which any bottom
+   margin would only half-satisfy, since centering redistributes added
+   height equally above/below) — pinned to the viewport's bottom-left
+   instead, same height as .continue, extending most of the way across
+   (stopping short of the button) rather than staying a small centered box. */
+.portraitUrlInput {
+  position: fixed;
+  bottom: 1.25rem;
+  left: 1.25rem;
+  right: 8rem;
+  z-index: 3;
+}
+
+/* Compound selector so this reliably beats .textInput's width/max-width
+   regardless of which rule comes first in the file (equal specificity
+   would otherwise make that an accident of source order). */
+.textInput.portraitUrlInput {
+  width: auto;
+  max-width: none;
+}
+
 .contentTop {
   align-self: flex-start;
   margin-top: 4.5rem;
@@ -111,23 +265,14 @@
   margin-top: -0.5rem;
 }
 
-/* Page 0 only — page 1 (Foundation) stays fixed/non-scrolling so a swipe
-   there always drags the joystick, never scrolls the page. */
+/* Page 0/2 only — page 1 (Foundation) stays fixed/non-scrolling so a swipe
+   there always drags the joystick, never scrolls the page. The actual
+   scrolling happens on .wizardScrollable (.wizard itself) now, not here —
+   .content has no height cap of its own, so it can never overflow its own
+   box; this class just reserves room below the last line of content so it
+   doesn't end up hidden behind the Continue button, which is fixed to the
+   viewport and floats above everything regardless of scroll position. */
 .contentScrollable {
-  max-height: 100%;
-  overflow-y: auto;
-  touch-action: pan-y;
-  -webkit-overflow-scrolling: touch;
-  /* .content's base justify-content:center centers overflowing children
-     symmetrically at BOTH ends when they're taller than the box — pushing
-     the headline above the visible area with no way to scroll up to it,
-     since scrollTop can't go negative. Anchor to the top instead so
-     overflow only ever happens below, where scrolling can reach it. */
-  justify-content: flex-start;
-  /* The Continue button lives outside this scroll area (absolute on .stage,
-     pinned to the viewport bottom), so it always overlaps whatever's
-     scrolled to the bottom unless extra room is reserved here to scroll
-     past it. */
   padding-bottom: 4.5rem;
 }
 
@@ -170,6 +315,198 @@
 .textInput:focus {
   outline: none;
   border-color: #c07a3a;
+}
+
+/* Double-ruled frame — an outer brass border plus a thinner inset gold line
+   (via ::before, so it can float independently of the padding box) — the
+   classic aristocratic/ornate picture-frame look. */
+.attrSection {
+  position: relative;
+  width: 100%;
+  max-width: 26rem;
+  margin: 0.5rem 0 1.25rem;
+  padding: 1.1rem 1.35rem 1.35rem;
+  border: 1px solid #6f532f;
+  border-radius: 6px;
+  background: rgba(0, 0, 0, 0.15);
+}
+
+.attrSection::before {
+  content: "";
+  position: absolute;
+  inset: 6px;
+  border: 1px solid rgba(230, 184, 92, 0.4);
+  border-radius: 3px;
+  pointer-events: none;
+}
+
+/* Body: brick-red/brown, matching the Body bulb's #9e1303 on page 1. */
+.attrSectionBody {
+  border-color: #6b2a1a;
+}
+
+.attrSectionBody::before {
+  border-color: rgba(158, 19, 3, 0.45);
+}
+
+.attrSectionBody .attrSectionHeading {
+  color: #c8532f;
+}
+
+.attrSectionBody .attrRemainingValue {
+  color: #d9663d;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.65), 0 0 16px rgba(158, 19, 3, 0.45);
+}
+
+.attrSectionBody .attrValueBox {
+  background: linear-gradient(155deg, #e0a888 0%, #b5654a 35%, #8a3f2a 70%, #5c2415 100%);
+  border-color: #3a180e;
+}
+
+.attrSectionBody .attrStepBtn {
+  color: #d9663d;
+  text-shadow: 0 2px 3px rgba(0, 0, 0, 0.6), 0 0 10px rgba(158, 19, 3, 0.5);
+}
+
+.attrSectionBody .attrStepBtn:hover:not(:disabled) {
+  color: #f0a17a;
+}
+
+/* Soul: violet/white, matching the Soul bulb's #8b5cf6 on page 1. */
+.attrSectionSoul {
+  border-color: #4a3a7a;
+}
+
+.attrSectionSoul::before {
+  border-color: rgba(139, 92, 246, 0.45);
+}
+
+.attrSectionSoul .attrSectionHeading {
+  color: #a78bfa;
+}
+
+.attrSectionSoul .attrRemainingValue {
+  color: #b9a3fb;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.65), 0 0 16px rgba(139, 92, 246, 0.5);
+}
+
+.attrSectionSoul .attrValueBox {
+  background: linear-gradient(155deg, #ede8ff 0%, #b9a3fb 35%, #7c5cd6 70%, #4c2d99 100%);
+  border-color: #2c1a5c;
+  color: #241448;
+}
+
+.attrSectionSoul .attrStepBtn {
+  color: #cdbdfd;
+  text-shadow: 0 2px 3px rgba(0, 0, 0, 0.6), 0 0 10px rgba(139, 92, 246, 0.55);
+}
+
+.attrSectionSoul .attrStepBtn:hover:not(:disabled) {
+  color: #efe9ff;
+}
+
+.attrSectionHeading {
+  font-size: 1rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #c07a3a;
+  margin: 0 0 0.15rem;
+}
+
+.attrRemaining {
+  display: flex;
+  flex-direction: row;
+  align-items: baseline;
+  justify-content: center;
+  gap: 0.4rem;
+  margin: 0 0 1rem;
+}
+
+.attrRemainingValue {
+  font-size: clamp(1.3rem, 4vw, 1.7rem);
+  font-weight: 800;
+  line-height: 1;
+  color: #e6b85c;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.65), 0 0 16px rgba(230, 184, 92, 0.35);
+}
+
+.attrRemainingLabel {
+  font-size: 0.7rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #a89968;
+}
+
+.attrRow {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  margin-bottom: 0.65rem;
+}
+
+.attrLabel {
+  width: 5.5rem;
+  flex-shrink: 0;
+  text-align: left;
+  font-size: 0.8rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #a89968;
+}
+
+/* Solid gold triangle glyphs — no button chrome, just a large glowing
+   glyph, generous touch target via padding rather than a visible box. */
+.attrStepBtn {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 2.6rem;
+  min-height: 2.6rem;
+  padding: 0;
+  background: transparent;
+  border: none;
+  font-size: 1.9rem;
+  line-height: 1;
+  color: #e6b85c;
+  text-shadow: 0 2px 3px rgba(0, 0, 0, 0.6), 0 0 10px rgba(230, 184, 92, 0.4);
+  cursor: pointer;
+}
+
+.attrStepBtn:hover:not(:disabled) {
+  color: #f4d999;
+}
+
+.attrStepBtn:active:not(:disabled) {
+  transform: scale(0.9);
+}
+
+.attrStepBtn:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+/* Vintage brass number plate, like the stat boxes on old occult character
+   sheets — embossed metal via layered inset highlight/shadow, engraved-look
+   numerals via a light-above/dark-below text-shadow pair. */
+.attrValueBox {
+  flex-shrink: 0;
+  min-width: 2.8rem;
+  padding: 0.3rem 0.6rem;
+  text-align: center;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: #2a1a0a;
+  background: linear-gradient(155deg, #e9c884 0%, #c79a52 35%, #9c6f34 70%, #7a531f 100%);
+  border: 1px solid #4a3018;
+  border-radius: 4px;
+  box-shadow:
+    inset 0 2px 2px rgba(255, 244, 214, 0.55),
+    inset 0 -2px 3px rgba(0, 0, 0, 0.5),
+    0 2px 4px rgba(0, 0, 0, 0.55);
+  text-shadow: 0 1px 0 rgba(255, 244, 214, 0.5), 0 -1px 0 rgba(0, 0, 0, 0.35);
 }
 
 .comboBox {
@@ -280,8 +617,12 @@
   z-index: 2;
 }
 
+/* Fixed to the true viewport (not .stage) so it stays visually pinned in
+   place regardless of .wizardScrollable's scroll position — position:absolute
+   relative to .stage would otherwise scroll away with the content it needs
+   to float above. */
 .navButton {
-  position: absolute;
+  position: fixed;
   z-index: 3;
   background: linear-gradient(180deg, #d4b57a, #a67c41);
   color: #1b130b;
@@ -307,7 +648,12 @@
 
 .continue {
   bottom: 1.25rem;
-  right: 1.25rem;
+  /* Replicates .stage's own max-width:900px + margin:0 auto centering, now
+     that this is fixed to the viewport instead of positioned inside .stage —
+     1.25rem from the true edge on narrow/mobile screens (viewport <= 900px,
+     where the two formulas agree), or 1.25rem from the virtual 900px
+     column's edge on wider ones, whichever sits further from the edge. */
+  right: max(1.25rem, calc((100vw - 900px) / 2 + 1.25rem));
   background: linear-gradient(180deg, #cf9b51, #614724);
   border-color: #554323;
   box-shadow: 0 3px 0 #362818;

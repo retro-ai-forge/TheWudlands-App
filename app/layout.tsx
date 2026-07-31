@@ -34,9 +34,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <HeaderVisibilityProvider>
             <Header />
             <div className="pageContent">{children}</div>
+            <VersionBadge />
           </HeaderVisibilityProvider>
           <Footer />
-          <VersionBadge />
         </WalletProvider>
       </body>
     </html>

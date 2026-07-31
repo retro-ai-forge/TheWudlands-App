@@ -3,12 +3,16 @@
 import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
 import { useWallet } from "./WalletProvider";
+import { useHeaderVisibility } from "./HeaderVisibilityProvider";
 import styles from "./VersionBadge.module.css";
 
 export function VersionBadge() {
   const { verified } = useWallet();
   const pathname = usePathname();
   const isMainPage = pathname === "/";
+  // Soul creation (and anything else that blends the header out) hides the
+  // online-player count too — it's about the same "focused flow" state.
+  const { hidden: headerHidden } = useHeaderVisibility();
   const [playerCount, setPlayerCount] = useState<number | null>(null);
 
   useEffect(() => {
@@ -32,9 +36,12 @@ export function VersionBadge() {
 
   return (
     <div className={styles.wrapper}>
-      <div className={styles.badge}>beta-0.72</div>
-      {isMainPage && playerCount !== null && (
-        <div className={styles.playerCount}>{playerCount} online</div>
+      {verified ? (
+        isMainPage && !headerHidden && playerCount !== null && (
+          <div className={styles.playerCount}>{playerCount} online</div>
+        )
+      ) : (
+        <div className={styles.badge}>beta-0.72</div>
       )}
     </div>
   );
