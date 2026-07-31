@@ -16,7 +16,7 @@ import { useHeaderVisibility } from "@/app/main/HeaderVisibilityProvider";
 
 const pinyonScript = Pinyon_Script({ subsets: ["latin"], weight: "400" });
 
-const PAGE_COUNT = 4;
+const PAGE_COUNT = 5;
 
 export function SoulCreation({ onExit }: { onExit: () => void }) {
   const [page, setPage] = useState(0);
@@ -42,6 +42,7 @@ export function SoulCreation({ onExit }: { onExit: () => void }) {
   const [portraitPan, setPortraitPan] = useState({ x: 0, y: 0 });
   const portraitFrameRef = useRef<HTMLDivElement>(null);
   const portraitUrlInputRef = useRef<HTMLInputElement>(null);
+  const portraitHeadZoneRef = useRef<HTMLDivElement>(null);
   const portraitNaturalSizeRef = useRef<{ width: number; height: number } | null>(null);
   const portraitDragRef = useRef<{ startClientX: number; startClientY: number; startPanX: number; startPanY: number } | null>(null);
 
@@ -95,10 +96,65 @@ export function SoulCreation({ onExit }: { onExit: () => void }) {
     };
   }
 
+  // A crop rectangle expressed relative to the ORIGINAL uploaded image
+  // (0–1 fractions of its natural width/height) — portable, so it still
+  // makes sense however large/small the image is later re-rendered at,
+  // unlike the on-screen pixel positions used while editing.
+  type PortraitArea = { x: number; y: number; width: number; height: number };
+
+  // What .portraitFrame (the full character screen) and .portraitHeadZone
+  // (the face preview) currently show, both translated back into that same
+  // natural-image coordinate space — this is what actually needs storing:
+  // re-applying { x, y, width, height } as a crop (e.g. background-position
+  // + background-size, or a server-side crop) reproduces exactly what the
+  // user framed here, regardless of zoom/pan, which are just the editing
+  // controls used to arrive at these two rectangles.
+  function getPortraitAreas(): { frameArea: PortraitArea | null; faceArea: PortraitArea | null } {
+    const nat = portraitNaturalSizeRef.current;
+    const frame = portraitFrameRef.current;
+    const headZone = portraitHeadZoneRef.current;
+    if (!nat || !frame || !headZone) return { frameArea: null, faceArea: null };
+
+    const frameRect = frame.getBoundingClientRect();
+    const scale = getPortraitFitScale() * portraitZoom;
+    const renderedW = nat.width * scale;
+    const renderedH = nat.height * scale;
+    // Image's rendered top-left corner, relative to the frame's own top-left.
+    const imgOffsetX = (frameRect.width - renderedW) / 2 + portraitPan.x;
+    const imgOffsetY = (frameRect.height - renderedH) / 2 + portraitPan.y;
+
+    // `left`/`top` are frame-relative pixels; converts through the image's
+    // current render scale/offset back to natural-image fractions.
+    const toNaturalArea = (left: number, top: number, width: number, height: number): PortraitArea => ({
+      x: (left - imgOffsetX) / scale / nat.width,
+      y: (top - imgOffsetY) / scale / nat.height,
+      width: width / scale / nat.width,
+      height: height / scale / nat.height,
+    });
+
+    const headRect = headZone.getBoundingClientRect();
+    return {
+      frameArea: toNaturalArea(0, 0, frameRect.width, frameRect.height),
+      faceArea: toNaturalArea(headRect.left - frameRect.left, headRect.top - frameRect.top, headRect.width, headRect.height),
+    };
+  }
+
+  // True once the current portraitUrl fails to load — the browser's own
+  // broken-image + alt-text rendering isn't stylable/positionable (it's
+  // stuck top-left of the image box and often unreadable), so on error the
+  // image itself is hidden and this drives a custom, readable message with
+  // its own dark backdrop instead.
+  const [portraitLoadFailed, setPortraitLoadFailed] = useState(false);
+
   function handlePortraitImageLoad(e: React.SyntheticEvent<HTMLImageElement>) {
     portraitNaturalSizeRef.current = { width: e.currentTarget.naturalWidth, height: e.currentTarget.naturalHeight };
+    setPortraitLoadFailed(false);
     setPortraitZoom(1);
     setPortraitPan({ x: 0, y: 0 });
+  }
+
+  function handlePortraitImageError() {
+    setPortraitLoadFailed(true);
   }
 
   function handlePortraitZoomChange(rawZoom: number) {
@@ -493,8 +549,19 @@ export function SoulCreation({ onExit }: { onExit: () => void }) {
   // position, see getBodySoul above.
   const { body, soul, bodySoulSum } = getBodySoul();
 
+  // Everything the portrait step needs to hand off later: portraitUrl (the
+  // source image), portraitZoom (kept mainly for re-opening the editor at
+  // the same view), and the two crop rectangles actually used to render the
+  // character screen (frameArea) and the face preview (faceArea).
+  const { frameArea: portraitFrameArea, faceArea: portraitFaceArea } = getPortraitAreas();
+
   // Page 2 (Attributes) spending pools — how much of body/soul is still
-  // unallocated across their 4 stats.
+  // unallocated across their 4 stats. "Remaining" is intentionally the true
+  // pool minus the CURRENT total (not minus-the-floor) — it's what actually
+  // bounds how far a stat can still go, so it can't drift from the number
+  // used to clamp maxAllowed below. That does mean an untouched section
+  // reads pool-minus-4 (e.g. 21, not the triangle's 25) since the mandatory
+  // floor of 1 per stat already accounts for those first 4 points.
   const bodyPointsSpent = Object.values(bodyAttributes).reduce((sum, v) => sum + v, 0);
   const bodyPointsRemaining = body - bodyPointsSpent;
   const soulPointsSpent = Object.values(soulAttributes).reduce((sum, v) => sum + v, 0);
@@ -646,7 +713,7 @@ export function SoulCreation({ onExit }: { onExit: () => void }) {
 
   return (
     <div
-      className={`${styles.wizard} ${page === 1 ? styles.noTouchScroll : ""} ${
+      className={`${styles.wizard} ${page === 1 || page === 3 ? styles.noTouchScroll : ""} ${
         page === 0 || page === 2 ? styles.wizardScrollable : ""
       }`}
       onClick={handlePageClick}
@@ -660,7 +727,7 @@ export function SoulCreation({ onExit }: { onExit: () => void }) {
           className={
             page === 0 || page === 2
               ? `${styles.content} ${styles.contentTop} ${styles.contentTopTight} ${styles.contentScrollable}`
-              : page === 1 || page === 3
+              : page === 1 || page === 3 || page === 4
               ? `${styles.content} ${styles.contentTop} ${styles.contentTopTight}`
               : styles.content
           }
@@ -754,9 +821,11 @@ export function SoulCreation({ onExit }: { onExit: () => void }) {
               <div className={`${styles.attrSection} ${styles.attrSectionBody}`}>
                 <h2 className={styles.attrSectionHeading}>Body</h2>
                 <div className={styles.attrRemaining}>
-                  <span className={styles.attrRemainingValue}>{bodyPointsRemaining}</span>
+                  <span className={styles.attrRemainingValue}>
+                    {bodyPointsRemaining}/{body}
+                  </span>
                   <span className={styles.attrRemainingLabel}>
-                    point{bodyPointsRemaining === 1 ? "" : "s"} to spend
+                    point{body === 1 ? "" : "s"} to spend
                   </span>
                 </div>
                 {(
@@ -795,9 +864,11 @@ export function SoulCreation({ onExit }: { onExit: () => void }) {
               <div className={`${styles.attrSection} ${styles.attrSectionSoul}`}>
                 <h2 className={styles.attrSectionHeading}>Soul</h2>
                 <div className={styles.attrRemaining}>
-                  <span className={styles.attrRemainingValue}>{soulPointsRemaining}</span>
+                  <span className={styles.attrRemainingValue}>
+                    {soulPointsRemaining}/{soul}
+                  </span>
                   <span className={styles.attrRemainingLabel}>
-                    point{soulPointsRemaining === 1 ? "" : "s"} to spend
+                    point{soul === 1 ? "" : "s"} to spend
                   </span>
                 </div>
                 {(
@@ -836,33 +907,48 @@ export function SoulCreation({ onExit }: { onExit: () => void }) {
           ) : page === 3 ? (
             <>
               <h1 className={styles.headline}>Portrait</h1>
-              <div className={styles.portraitFrame} ref={portraitFrameRef}>
+              <div
+                className={styles.portraitFrame}
+                ref={portraitFrameRef}
+                title={portraitFrameArea ? `frameArea: ${JSON.stringify(portraitFrameArea)}` : undefined}
+              >
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   draggable={false}
                   className={styles.portraitImage}
-                  src={portraitUrl.trim() !== "" ? portraitUrl : "/images/character/char_placeholder_silhouette.png"}
-                  alt={portraitUrl.trim() !== "" ? "Your character's portrait" : "A placeholder silhouette of your character"}
-                  style={
-                    portraitNaturalSizeRef.current
+                  style={{
+                    ...(portraitNaturalSizeRef.current
                       ? {
                           width: `${portraitNaturalSizeRef.current.width * getPortraitFitScale() * portraitZoom}px`,
                           height: `${portraitNaturalSizeRef.current.height * getPortraitFitScale() * portraitZoom}px`,
                           transform: `translate(calc(-50% + ${portraitPan.x}px), calc(-50% + ${portraitPan.y}px))`,
                         }
-                      : { width: "100%", height: "100%", transform: "translate(-50%, -50%)" }
-                  }
+                      : { width: "100%", height: "100%", transform: "translate(-50%, -50%)" }),
+                    ...(portraitLoadFailed ? { visibility: "hidden" as const } : {}),
+                  }}
+                  src={portraitUrl.trim() !== "" ? portraitUrl : "/images/character/char_placeholder_silhouette.png"}
+                  alt={portraitUrl.trim() !== "" ? "Your character's portrait" : "A placeholder silhouette of your character"}
                   onLoad={handlePortraitImageLoad}
+                  onError={handlePortraitImageError}
                   onPointerDown={handlePortraitPointerDown}
                   onPointerMove={handlePortraitPointerMove}
                   onPointerUp={handlePortraitPointerUp}
                   onPointerCancel={handlePortraitPointerUp}
                 />
+                {portraitLoadFailed && (
+                  <div className={styles.portraitLoadError}>
+                    Couldn&apos;t load that image — check the URL and try again.
+                  </div>
+                )}
                 {/* Outer rectangle marks the portrait bounds; the inner one
                     shows where the head must land — the character preview
                     page will use that same defined area to align/crop it. */}
                 <div className={styles.portraitOutline} />
-                <div className={styles.portraitHeadZone} />
+                <div
+                  className={styles.portraitHeadZone}
+                  ref={portraitHeadZoneRef}
+                  title={portraitFaceArea ? `faceArea: ${JSON.stringify(portraitFaceArea)}` : undefined}
+                />
               </div>
               <input
                 type="range"
@@ -881,9 +967,14 @@ export function SoulCreation({ onExit }: { onExit: () => void }) {
                 type="text"
                 placeholder="Image URL"
                 value={portraitUrl}
-                onChange={(e) => setPortraitUrl(e.target.value)}
+                onChange={(e) => {
+                  setPortraitUrl(e.target.value);
+                  setPortraitLoadFailed(false);
+                }}
               />
             </>
+          ) : page === 4 ? (
+            <h1 className={styles.headline}>Craft</h1>
           ) : (
             <h1 className={styles.headline}>Page {page + 1}</h1>
           )}

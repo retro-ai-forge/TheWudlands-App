@@ -220,6 +220,27 @@
   pointer-events: none;
 }
 
+/* Replaces the browser's own broken-image + alt-text rendering, which is
+   stuck at the image box's top-left and isn't stylable/positionable —
+   centered lower in the frame instead, with its own solid dark backdrop so
+   it stays readable regardless of whatever's behind it. */
+.portraitLoadError {
+  position: absolute;
+  left: 10%;
+  right: 10%;
+  top: 60%;
+  transform: translateY(-50%);
+  padding: 1rem 1.1rem;
+  background: rgba(10, 8, 4, 0.92);
+  border: 1px solid #6f532f;
+  border-radius: 6px;
+  color: #d4c9a8;
+  font-size: 0.85rem;
+  line-height: 1.4;
+  text-align: center;
+  pointer-events: none;
+}
+
 /* Head-placement guide — roughly the top-center of the frame, where a
    subject's head should land so later crops (character preview page) line
    up consistently across different uploaded portraits. */
@@ -324,8 +345,8 @@
   position: relative;
   width: 100%;
   max-width: 26rem;
-  margin: 0.5rem 0 1.25rem;
-  padding: 1.1rem 1.35rem 1.35rem;
+  margin: clamp(0rem, 1vh, 0.75rem) 0 clamp(0.1rem, 1.2vh, 1rem);
+  padding: clamp(0.25rem, 1.5vh, 1.4rem) clamp(0.6rem, 4vw, 1.4rem) clamp(0.3rem, 1.5vh, 1.5rem);
   border: 1px solid #6f532f;
   border-radius: 6px;
   background: rgba(0, 0, 0, 0.15);
@@ -406,11 +427,11 @@
 }
 
 .attrSectionHeading {
-  font-size: 1rem;
+  font-size: clamp(0.8rem, 2.2vh, 1rem);
   letter-spacing: 0.1em;
   text-transform: uppercase;
   color: #c07a3a;
-  margin: 0 0 0.15rem;
+  margin: clamp(0.15rem, 1vh, 0.4rem) 0 clamp(0.05rem, 0.4vh, 0.15rem);
 }
 
 .attrRemaining {
@@ -419,11 +440,11 @@
   align-items: baseline;
   justify-content: center;
   gap: 0.4rem;
-  margin: 0 0 1rem;
+  margin: 0 0 clamp(0.1rem, 1.2vh, 1.4rem);
 }
 
 .attrRemainingValue {
-  font-size: clamp(1.3rem, 4vw, 1.7rem);
+  font-size: clamp(1.1rem, 3vh, 1.7rem);
   font-weight: 800;
   line-height: 1;
   color: #e6b85c;
@@ -442,7 +463,7 @@
   align-items: center;
   justify-content: center;
   gap: 0.75rem;
-  margin-bottom: 0.65rem;
+  margin-bottom: clamp(0.35rem, 2vh, 1.2rem);
 }
 
 .attrLabel {
@@ -462,12 +483,12 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  min-width: 2.6rem;
-  min-height: 2.6rem;
+  min-width: clamp(1.2rem, 3.5vh, 2.6rem);
+  min-height: clamp(1.2rem, 3.5vh, 2.6rem);
   padding: 0;
   background: transparent;
   border: none;
-  font-size: 1.9rem;
+  font-size: clamp(1rem, 3vh, 1.9rem);
   line-height: 1;
   color: #e6b85c;
   text-shadow: 0 2px 3px rgba(0, 0, 0, 0.6), 0 0 10px rgba(230, 184, 92, 0.4);
@@ -493,10 +514,10 @@
 .attrValueBox {
   flex-shrink: 0;
   min-width: 2.8rem;
-  padding: 0.3rem 0.6rem;
+  padding: clamp(0.1rem, 0.8vh, 0.3rem) clamp(0.4rem, 2vw, 0.6rem);
   text-align: center;
   font-family: Georgia, "Times New Roman", serif;
-  font-size: 1.05rem;
+  font-size: clamp(0.8rem, 2.4vh, 1.05rem);
   font-weight: 700;
   color: #2a1a0a;
   background: linear-gradient(155deg, #e9c884 0%, #c79a52 35%, #9c6f34 70%, #7a531f 100%);
