@@ -442,6 +442,11 @@
 
 /* Solid gold triangle glyphs — no button chrome, just a large glowing
    glyph, generous touch target via padding rather than a visible box. */
+/* Held down to auto-repeat (see startHold in the component) rather than
+   single-clicked — without these, holding the pointer down reliably
+   triggers the browser's own text-selection/callout ("Copy…") popup on
+   both mobile (long-press) and desktop (click-drag) instead of just
+   repeating the step. */
 .attrStepBtn {
   flex-shrink: 0;
   display: flex;
@@ -457,6 +462,10 @@
   color: #e6b85c;
   text-shadow: 0 2px 3px rgba(0, 0, 0, 0.6), 0 0 10px rgba(230, 184, 92, 0.4);
   cursor: pointer;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+  touch-action: manipulation;
 }
 
 .attrStepBtn:hover:not(:disabled) {

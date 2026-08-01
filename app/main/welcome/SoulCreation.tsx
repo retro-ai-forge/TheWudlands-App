@@ -898,6 +898,7 @@ export function SoulCreation({ onExit }: { onExit: () => void }) {
                       type="button"
                       className={styles.attrStepBtn}
                       onPointerDown={() => startHold(() => handleBodyAttributeChange(key, -1))}
+                      onContextMenu={(e) => e.preventDefault()}
                       disabled={bodyAttributes[key] <= 1}
                       aria-label={`Decrease ${label}`}
                     >
@@ -908,6 +909,7 @@ export function SoulCreation({ onExit }: { onExit: () => void }) {
                       type="button"
                       className={styles.attrStepBtn}
                       onPointerDown={() => startHold(() => handleBodyAttributeChange(key, 1))}
+                      onContextMenu={(e) => e.preventDefault()}
                       disabled={bodyPointsRemaining <= 0}
                       aria-label={`Increase ${label}`}
                     >
@@ -941,6 +943,7 @@ export function SoulCreation({ onExit }: { onExit: () => void }) {
                       type="button"
                       className={styles.attrStepBtn}
                       onPointerDown={() => startHold(() => handleSoulAttributeChange(key, -1))}
+                      onContextMenu={(e) => e.preventDefault()}
                       disabled={soulAttributes[key] <= 1}
                       aria-label={`Decrease ${label}`}
                     >
@@ -951,6 +954,7 @@ export function SoulCreation({ onExit }: { onExit: () => void }) {
                       type="button"
                       className={styles.attrStepBtn}
                       onPointerDown={() => startHold(() => handleSoulAttributeChange(key, 1))}
+                      onContextMenu={(e) => e.preventDefault()}
                       disabled={soulPointsRemaining <= 0}
                       aria-label={`Increase ${label}`}
                     >
