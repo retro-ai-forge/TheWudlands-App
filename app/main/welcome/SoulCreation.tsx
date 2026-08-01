@@ -35,9 +35,10 @@ export function SoulCreation({ onExit }: { onExit: () => void }) {
   // Manual fit/zoom/pan for the portrait, instead of object-fit:cover (which
   // always force-crops to fill the frame). At zoom 1 the whole image is
   // shown, uncropped, scaled down/up only as far as needed to fit inside
-  // .portraitFrame (whichever dimension is the tighter constraint) — the
-  // zoom slider then scales up from there, and pan (drag) repositions
-  // within whatever now overflows the frame.
+  // .portraitFrame (whichever dimension is the tighter constraint) — zoom
+  // then scales up from there (mouse wheel/trackpad pinch, or two-finger
+  // touch pinch), and pan (drag) repositions within whatever now overflows
+  // the frame.
   const [portraitZoom, setPortraitZoom] = useState(1);
   const [portraitPan, setPortraitPan] = useState({ x: 0, y: 0 });
   const portraitFrameRef = useRef<HTMLDivElement>(null);
@@ -45,26 +46,31 @@ export function SoulCreation({ onExit }: { onExit: () => void }) {
   const portraitHeadZoneRef = useRef<HTMLDivElement>(null);
   const portraitNaturalSizeRef = useRef<{ width: number; height: number } | null>(null);
   const portraitDragRef = useRef<{ startClientX: number; startClientY: number; startPanX: number; startPanY: number } | null>(null);
+  // Pointers currently down on the portrait image — one active pointer pans
+  // (existing drag behavior below), two active pointers pinch-zoom instead.
+  const portraitActivePointersRef = useRef<Map<number, { x: number; y: number }>>(new Map());
+  const portraitPinchStartRef = useRef<{ distance: number; zoom: number } | null>(null);
 
-  // Measured (not guessed) midpoint between the frame's bottom edge and the
-  // URL field's top edge, so the zoom slider sits in that gap regardless of
-  // actual headline/content height at runtime. PORTRAIT_SLIDER_NUDGE shifts
-  // it off dead-center — positive moves it down (toward the URL field),
-  // negative moves it up (toward the frame).
-  const PORTRAIT_SLIDER_NUDGE = 12;
-  const [portraitSliderBottom, setPortraitSliderBottom] = useState<number | null>(null);
+  // .portraitFrame is viewport-height-relative (80vh) and the URL field is
+  // pinned near the true bottom edge, so on short viewports the gap between
+  // them can shrink well below the hint text's fixed CSS offset, pushing it
+  // to overlap the frame. Measuring the actual gap and centering the hint
+  // within it (like the old zoom slider did) keeps it clear on any height.
+  // This is the midpoint's distance from the viewport TOP — paired with the
+  // CSS's translate(-50%, -50%), that centers the text's own box on the
+  // midpoint, rather than anchoring just one edge of it there.
+  const [portraitHintCenterY, setPortraitHintCenterY] = useState<number | null>(null);
   useEffect(() => {
     if (page !== 3) return;
-    function updatePortraitSliderBottom() {
+    function updatePortraitHintCenterY() {
       const frame = portraitFrameRef.current;
       const urlInput = portraitUrlInputRef.current;
       if (!frame || !urlInput) return;
-      const midpointY = (frame.getBoundingClientRect().bottom + urlInput.getBoundingClientRect().top) / 2;
-      setPortraitSliderBottom(window.innerHeight - midpointY - PORTRAIT_SLIDER_NUDGE);
+      setPortraitHintCenterY((frame.getBoundingClientRect().bottom + urlInput.getBoundingClientRect().top) / 2);
     }
-    updatePortraitSliderBottom();
-    window.addEventListener("resize", updatePortraitSliderBottom);
-    return () => window.removeEventListener("resize", updatePortraitSliderBottom);
+    updatePortraitHintCenterY();
+    window.addEventListener("resize", updatePortraitHintCenterY);
+    return () => window.removeEventListener("resize", updatePortraitHintCenterY);
   }, [page]);
 
   // The scale at which the image's natural size fits entirely inside the
@@ -158,28 +164,63 @@ export function SoulCreation({ onExit }: { onExit: () => void }) {
   }
 
   function handlePortraitZoomChange(rawZoom: number) {
-    setPortraitZoom(rawZoom);
+    const clamped = Math.max(1, Math.min(3, rawZoom));
+    setPortraitZoom(clamped);
     // Re-clamp so zooming back out can't leave a pan offset from the old,
     // more-permissive zoom level stranded outside the new limits.
-    const { maxX, maxY } = getPortraitPanLimits(rawZoom);
+    const { maxX, maxY } = getPortraitPanLimits(clamped);
     setPortraitPan((prev) => ({
       x: Math.max(-maxX, Math.min(maxX, prev.x)),
       y: Math.max(-maxY, Math.min(maxY, prev.y)),
     }));
   }
 
+  // Trackpad pinch reliably arrives as a wheel event with ctrlKey set (the
+  // browser translates the OS-level pinch gesture for us); a plain mouse
+  // wheel arrives without it. Both are treated as zoom here, since a mouse
+  // has no other natural zoom gesture and this replaces the old slider.
+  function handlePortraitWheel(e: React.WheelEvent<HTMLDivElement>) {
+    e.preventDefault();
+    const factor = Math.exp(-e.deltaY * 0.0006);
+    handlePortraitZoomChange(portraitZoom * factor);
+  }
+
+  function pinchDistance(pointers: Map<number, { x: number; y: number }>): number {
+    const [a, b] = Array.from(pointers.values());
+    return Math.hypot(a.x - b.x, a.y - b.y);
+  }
+
   function handlePortraitPointerDown(e: React.PointerEvent<HTMLImageElement>) {
     if (!portraitNaturalSizeRef.current) return;
     e.currentTarget.setPointerCapture(e.pointerId);
-    portraitDragRef.current = {
-      startClientX: e.clientX,
-      startClientY: e.clientY,
-      startPanX: portraitPan.x,
-      startPanY: portraitPan.y,
-    };
+    const pointers = portraitActivePointersRef.current;
+    pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+    if (pointers.size === 2) {
+      portraitDragRef.current = null;
+      portraitPinchStartRef.current = { distance: pinchDistance(pointers), zoom: portraitZoom };
+    } else if (pointers.size === 1) {
+      portraitPinchStartRef.current = null;
+      portraitDragRef.current = {
+        startClientX: e.clientX,
+        startClientY: e.clientY,
+        startPanX: portraitPan.x,
+        startPanY: portraitPan.y,
+      };
+    }
   }
 
   function handlePortraitPointerMove(e: React.PointerEvent<HTMLImageElement>) {
+    const pointers = portraitActivePointersRef.current;
+    if (!pointers.has(e.pointerId)) return;
+    pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+
+    const pinchStart = portraitPinchStartRef.current;
+    if (pointers.size === 2 && pinchStart) {
+      const ratio = pinchDistance(pointers) / pinchStart.distance;
+      handlePortraitZoomChange(pinchStart.zoom * ratio);
+      return;
+    }
+
     const drag = portraitDragRef.current;
     if (!drag) return;
     const { maxX, maxY } = getPortraitPanLimits(portraitZoom);
@@ -192,8 +233,23 @@ export function SoulCreation({ onExit }: { onExit: () => void }) {
   }
 
   function handlePortraitPointerUp(e: React.PointerEvent<HTMLImageElement>) {
-    portraitDragRef.current = null;
+    const pointers = portraitActivePointersRef.current;
+    pointers.delete(e.pointerId);
     e.currentTarget.releasePointerCapture(e.pointerId);
+    portraitDragRef.current = null;
+    portraitPinchStartRef.current = null;
+    // Releasing one finger of a pinch, with the other still down, resumes
+    // as a single-finger pan from here rather than jumping.
+    const [remaining] = Array.from(pointers.entries());
+    if (remaining) {
+      const [, pos] = remaining;
+      portraitDragRef.current = {
+        startClientX: pos.x,
+        startClientY: pos.y,
+        startPanX: portraitPan.x,
+        startPanY: portraitPan.y,
+      };
+    }
   }
 
   // Page 2 (Attributes) — spending the Body/Soul totals from the triangle
@@ -910,6 +966,7 @@ export function SoulCreation({ onExit }: { onExit: () => void }) {
               <div
                 className={styles.portraitFrame}
                 ref={portraitFrameRef}
+                onWheel={handlePortraitWheel}
                 title={portraitFrameArea ? `frameArea: ${JSON.stringify(portraitFrameArea)}` : undefined}
               >
                 {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -950,22 +1007,17 @@ export function SoulCreation({ onExit }: { onExit: () => void }) {
                   title={portraitFaceArea ? `faceArea: ${JSON.stringify(portraitFaceArea)}` : undefined}
                 />
               </div>
-              <input
-                type="range"
-                className={styles.portraitZoomSlider}
-                style={portraitSliderBottom !== null ? { bottom: `${portraitSliderBottom}px` } : undefined}
-                min={1}
-                max={3}
-                step={0.01}
-                value={portraitZoom}
-                onChange={(e) => handlePortraitZoomChange(Number(e.target.value))}
-                aria-label="Zoom portrait"
-              />
+              <p
+                className={styles.portraitHint}
+                style={portraitHintCenterY !== null ? { top: `${portraitHintCenterY}px` } : undefined}
+              >
+                Zoom and pan the image to frame it.
+              </p>
               <input
                 ref={portraitUrlInputRef}
                 className={`${styles.textInput} ${styles.portraitUrlInput}`}
                 type="text"
-                placeholder="Image URL"
+                placeholder="Paste an image URL"
                 value={portraitUrl}
                 onChange={(e) => {
                   setPortraitUrl(e.target.value);

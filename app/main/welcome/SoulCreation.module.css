@@ -145,72 +145,31 @@
   cursor: grabbing;
 }
 
-/* Fixed and roughly vertically centered in the gap between the frame's
-   bottom edge and .portraitUrlInput below — an estimate (frame height is
-   viewport-relative, headline height isn't measured), nudge bottom if it
-   drifts off-center in practice. Shares the URL field's horizontal span. */
-.portraitZoomSlider {
+/* Centered on the true viewport (left:50%/transform, not the asymmetric
+   left/right clamp .portraitUrlInput below needs to dodge the Continue
+   button) — .stage/.content/.portraitFrame are all centered the same
+   symmetric way, so this lines up under the frame's own horizontal center
+   rather than the input row's off-center one. Sits in the old zoom slider's
+   spot, just above the URL field — zoom is now wheel/trackpad-pinch
+   (desktop) or two-finger touch pinch (mobile) directly on the image, so
+   this just explains that instead of hosting a control. */
+.portraitHint {
   position: fixed;
-  bottom: 10vh;
+  top: calc(100% - 4.25rem);
   left: 50%;
-  transform: translateX(-50%);
-  width: min(16rem, calc(100vw - 2.5rem));
-  max-width: none;
+  /* translate(-50%, -50%), not just X — `top` is set to the midpoint of the
+     frame/URL-field gap, so centering the text's own height on that point
+     (not anchoring an edge to it) is what actually lands it in the middle,
+     regardless of how tall the text renders at any given width. */
+  transform: translate(-50%, -50%);
+  width: min(28rem, calc(100vw - 2.5rem));
   margin: 0;
   z-index: 3;
-  -webkit-appearance: none;
-  appearance: none;
-  background: transparent;
-  height: 1.4rem;
-}
-
-.portraitZoomSlider::-webkit-slider-runnable-track {
-  height: 0.4rem;
-  border-radius: 0.2rem;
-  background: #3a3a3a;
-}
-
-.portraitZoomSlider::-webkit-slider-thumb {
-  -webkit-appearance: none;
-  margin-top: -0.5rem;
-  width: 1.4rem;
-  height: 1.4rem;
-  border-radius: 50%;
-  background: #e0a84a;
-  border: 1px solid #6f532f;
-  cursor: pointer;
-  animation: portraitSliderPulse 2.6s ease-in-out infinite;
-}
-
-.portraitZoomSlider::-moz-range-track {
-  height: 0.4rem;
-  border-radius: 0.2rem;
-  background: #3a3a3a;
-}
-
-.portraitZoomSlider::-moz-range-progress {
-  height: 0.4rem;
-  border-radius: 0.2rem;
-  background: #e0a84a;
-}
-
-.portraitZoomSlider::-moz-range-thumb {
-  width: 1.4rem;
-  height: 1.4rem;
-  border-radius: 50%;
-  background: #e0a84a;
-  border: 1px solid #6f532f;
-  cursor: pointer;
-  animation: portraitSliderPulse 2.6s ease-in-out infinite;
-}
-
-@keyframes portraitSliderPulse {
-  0%, 100% {
-    box-shadow: 0 0 4px 0 rgba(224, 168, 74, 0.5);
-  }
-  50% {
-    box-shadow: 0 0 12px 3px rgba(224, 168, 74, 0.85);
-  }
+  color: #d4c9a8;
+  font-size: 0.75rem;
+  line-height: 1.35;
+  text-align: center;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.6);
 }
 
 .portraitOutline {
