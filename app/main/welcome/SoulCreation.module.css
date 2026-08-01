@@ -260,12 +260,17 @@
    margin would only half-satisfy, since centering redistributes added
    height equally above/below) — pinned to the viewport's bottom-left
    instead, same height as .continue, extending most of the way across
-   (stopping short of the button) rather than staying a small centered box. */
+   (stopping short of the button) rather than staying a small centered box.
+   left/right replicate .stage's own max-width:900px + margin:0 auto
+   centering, same as .continue does for its own edge — 1.25rem/8rem from
+   the true edges on narrow/mobile screens (viewport <= 900px, where the two
+   formulas agree), or that same gutter from the virtual 900px column's
+   edges on wider ones, whichever sits further from the edge. */
 .portraitUrlInput {
   position: fixed;
   bottom: 1.25rem;
-  left: 1.25rem;
-  right: 8rem;
+  left: max(1.25rem, calc((100vw - 900px) / 2 + 1.25rem));
+  right: max(8rem, calc((100vw - 900px) / 2 + 8rem));
   z-index: 3;
 }
 
