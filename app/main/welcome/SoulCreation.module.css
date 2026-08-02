@@ -54,9 +54,11 @@
   align-items: center;
   justify-content: center;
   gap: 0.75rem;
+  width: 100%;
   max-width: 40rem;
   padding: 1.5rem;
   text-align: center;
+  box-sizing: border-box;
 }
 
 .introText {
@@ -308,7 +310,7 @@
 .attrSection {
   position: relative;
   width: 100%;
-  max-width: 26rem;
+  max-width: 500px;
   margin: clamp(0rem, 1vh, 0.75rem) 0 clamp(0.1rem, 1.2vh, 1rem);
   padding: clamp(0.25rem, 1.5vh, 1.4rem) clamp(0.6rem, 4vw, 1.4rem) clamp(0.3rem, 1.5vh, 1.5rem);
   border: 1px solid #6f532f;
@@ -391,11 +393,11 @@
 }
 
 .attrSectionHeading {
-  font-size: clamp(0.8rem, 2.2vh, 1rem);
+  font-size: clamp(1.1rem, 3.2vh, 1.5rem);
   letter-spacing: 0.1em;
   text-transform: uppercase;
   color: #c07a3a;
-  margin: clamp(0.15rem, 1vh, 0.4rem) 0 clamp(0.05rem, 0.4vh, 0.15rem);
+  margin: clamp(0.15rem, 1vh, 0.4rem) 0 clamp(0.1rem, 1.6vh, 0.6rem);
 }
 
 .attrRemaining {
@@ -404,7 +406,7 @@
   align-items: baseline;
   justify-content: center;
   gap: 0.4rem;
-  margin: 0 0 clamp(0.1rem, 1.2vh, 1.4rem);
+  margin: 0 0 clamp(0.1rem, 2.6vh, 2.2rem);
 }
 
 .attrRemainingValue {
@@ -426,18 +428,25 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 0.75rem;
-  margin-bottom: clamp(0.35rem, 2vh, 1.2rem);
+  gap: clamp(1.25rem, 4vw, 2.25rem);
+  margin-bottom: clamp(0.15rem, 1vh, 0.6rem);
 }
 
 .attrLabel {
   width: 5.5rem;
   flex-shrink: 0;
+  margin-right: clamp(0.5rem, 2vw, 1rem);
   text-align: left;
-  font-size: 0.8rem;
+  font-size: clamp(0.9rem, 2.4vh, 1.05rem);
   letter-spacing: 0.06em;
   text-transform: uppercase;
   color: #a89968;
+}
+
+@media (max-width: 800px) {
+  .attrLabel {
+    font-size: clamp(0.7rem, 2.4vh, 0.85rem);
+  }
 }
 
 /* Solid gold triangle glyphs — no button chrome, just a large glowing
@@ -484,13 +493,23 @@
 /* Vintage brass number plate, like the stat boxes on old occult character
    sheets — embossed metal via layered inset highlight/shadow, engraved-look
    numerals via a light-above/dark-below text-shadow pair. */
+/* Vertical padding ramps linearly between 630px and 800px of viewport
+   height (0.05rem → 0.45rem) instead of the plain `1vh` .attrLabel/.attrRow
+   spacing uses elsewhere — 1vh barely moves across that whole band (only
+   ~1.7px total), so on its own it never freed enough room for the Continue
+   button, which stays fixed 1.25rem off the true bottom edge regardless of
+   how tall the page's content is. A hard cutoff at max-height:630px used to
+   patch that, but a step function has to overcorrect on one side of its
+   threshold or undercorrect on the other — this replaces it with a smooth
+   ramp instead, tuned to still clear Continue's height at the lower end
+   without shrinking any earlier than the taller end actually needs it. */
 .attrValueBox {
   flex-shrink: 0;
-  min-width: 2.8rem;
-  padding: clamp(0.1rem, 0.8vh, 0.3rem) clamp(0.4rem, 2vw, 0.6rem);
+  min-width: 3.6rem;
+  padding: clamp(0.05rem, calc(0.05rem + (100vh - 630px) * 0.03765), 0.45rem) clamp(0.5rem, 2.5vw, 0.8rem);
   text-align: center;
   font-family: Georgia, "Times New Roman", serif;
-  font-size: clamp(0.8rem, 2.4vh, 1.05rem);
+  font-size: clamp(1rem, 3vh, 1.4rem);
   font-weight: 700;
   color: #2a1a0a;
   background: linear-gradient(155deg, #e9c884 0%, #c79a52 35%, #9c6f34 70%, #7a531f 100%);
