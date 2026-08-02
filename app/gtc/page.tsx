@@ -142,7 +142,20 @@ export default function GTC() {
           mechanic, reward, or feature across platform updates.
         </p>
 
-        <h3 className={styles.subheading}>7. Summary</h3>
+        <h3 className={styles.subheading}>7. Character Portrait Images</h3>
+
+        <p className={styles.body}>
+          Character creation lets you supply a portrait by pasting an image URL. This image is loaded and displayed
+          locally in your own browser only — The Wudlands does not host, store, or take ownership of it.
+          <span className={styles.highlight}> You are solely responsible for any image you choose to display</span>,
+          including ensuring you have the right to use it and that it complies with the content standards set out in
+          Section 5. This feature is provided for
+          <span className={styles.highlight}> personal use only</span> and must not be used to link images that are
+          illegal, infringing, or otherwise inappropriate. The Wudlands accepts no responsibility for third-party
+          image content that a user chooses to link.
+        </p>
+
+        <h3 className={styles.subheading}>8. Summary</h3>
 
         <table className={styles.table}>
           <thead>
@@ -179,6 +192,10 @@ export default function GTC() {
             <tr>
               <td>Platform Changes</td>
               <td>Content, mechanics, and features may change anytime without notice.</td>
+            </tr>
+            <tr>
+              <td>Portrait Images</td>
+              <td>You are responsible for any image URL you display; personal use only, not hosted by The Wudlands.</td>
             </tr>
           </tbody>
         </table>
