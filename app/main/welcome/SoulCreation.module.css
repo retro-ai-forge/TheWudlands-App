@@ -209,7 +209,12 @@
   position: absolute;
   top: 1.5%;
   left: 50%;
-  width: 11rem;
+  /* vh-based, not a fixed rem, so it scales down with .portraitFrame (which
+     is itself height:80vh) on short screens instead of staying a fixed size
+     that ends up oversized relative to a shrunk frame — 23.47vh reproduces
+     the old fixed 11rem (176px) at a 750px-tall viewport, the reference
+     height used to size this originally. */
+  width: 23.47vh;
   aspect-ratio: 1 / 1;
   transform: translateX(-50%);
   border: 2px solid rgba(168, 120, 50, 0.9);

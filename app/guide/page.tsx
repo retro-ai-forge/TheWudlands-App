@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useState, useEffect } from "react";
+import { PageVersionTag } from "../main/PageVersionTag";
 import styles from "./page.module.css";
 import WalletGuide from "./WalletGuide";
 import GuideTable from "./GuideTable";
@@ -198,6 +199,7 @@ export default function Guide() {
         </p>
 
       </section>
+      <PageVersionTag />
     </div>
   );
 }

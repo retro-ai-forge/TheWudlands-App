@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
+import { PageVersionTag } from "../main/PageVersionTag";
 import styles from "./page.module.css";
 import ImageGallery from "./ImageGallery";
 
@@ -1594,6 +1595,7 @@ export default function Storyteller() {
         </details>
 
       </section>
+      <PageVersionTag />
     </div>
   );
 }

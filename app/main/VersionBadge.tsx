@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
 import { useWallet } from "./WalletProvider";
 import { useHeaderVisibility } from "./HeaderVisibilityProvider";
+import { APP_VERSION } from "./appVersion";
 import styles from "./VersionBadge.module.css";
 
 export function VersionBadge() {
@@ -41,7 +42,7 @@ export function VersionBadge() {
           <div className={styles.playerCount}>{playerCount} online</div>
         )
       ) : (
-        <div className={styles.badge}>beta-0.73</div>
+        <div className={styles.badge}>{APP_VERSION}</div>
       )}
     </div>
   );
