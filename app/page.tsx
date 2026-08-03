@@ -6,16 +6,35 @@ import { useWallet } from "./main/WalletProvider";
 import { LandingView } from "./main/landing/LandingView";
 import { WelcomeView } from "./main/welcome/WelcomeView";
 import BannerSlideshow from "./main/landing/BannerSlideshow";
+import { DUNGEON_FLAVOR_LINES } from "./dungeonFlavorText";
 
 type View = "join" | "pending" | "game";
+
+const FLAVOR_SWAP_INTERVAL_MS = 5000;
+
+function pickRandomFlavorLine() {
+  return DUNGEON_FLAVOR_LINES[Math.floor(Math.random() * DUNGEON_FLAVOR_LINES.length)];
+}
 
 export default function Home() {
   const [view, setView] = useState<View>("join");
   const [restoring, setRestoring] = useState(true);
   const [status, setStatus] = useState("Ready.");
   const [entering, setEntering] = useState(false);
+  const [flavorLine, setFlavorLine] = useState("");
   const { verified, account } = useWallet();
   const wasVerified = useRef(false);
+
+  // Rotate a random flavor line on the pending view so a slow backend
+  // round-trip reads as atmosphere rather than a stall.
+  useEffect(() => {
+    if (view !== "pending") return;
+    setFlavorLine(pickRandomFlavorLine());
+    const interval = setInterval(() => {
+      setFlavorLine(pickRandomFlavorLine());
+    }, FLAVOR_SWAP_INTERVAL_MS);
+    return () => clearInterval(interval);
+  }, [view]);
 
   function resetToJoin(message: string) {
     setEntering(false);
@@ -95,6 +114,9 @@ export default function Home() {
       <main className={styles.pending}>
         <div className={styles.pendingSpinner} />
         <p className={styles.pendingText}>{status}</p>
+        <p className={styles.pendingFlavorLine} key={flavorLine}>
+          {flavorLine}
+        </p>
       </main>
     );
   }

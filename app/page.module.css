@@ -90,6 +90,26 @@
   }
 }
 
+.pendingFlavorLine {
+  max-width: 26rem;
+  padding: 0 1.5rem;
+  font-size: 0.8rem;
+  font-style: italic;
+  letter-spacing: 0.02em;
+  text-align: center;
+  color: rgba(212, 201, 168, 0.7);
+  animation: pendingFlavorFade 0.5s ease;
+}
+
+@keyframes pendingFlavorFade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
 /* Join view is now a scrollable landing; the hero provides the first-screen
    fill, the sections below flow normally over the fixed backdrop. */
 .screen {
