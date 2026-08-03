@@ -871,7 +871,7 @@ export function SoulCreation({ onExit }: { onExit: () => void }) {
               </div>
             </>
           ) : page === 2 ? (
-            <>
+            <div className={styles.attrPage} onContextMenu={(e) => e.preventDefault()}>
               <h1 className={styles.headline}>Attributes</h1>
 
               <div className={`${styles.attrSection} ${styles.attrSectionBody}`}>
@@ -963,7 +963,7 @@ export function SoulCreation({ onExit }: { onExit: () => void }) {
                   </div>
                 ))}
               </div>
-            </>
+            </div>
           ) : page === 3 ? (
             <>
               <h1 className={styles.headline}>Portrait</h1>
