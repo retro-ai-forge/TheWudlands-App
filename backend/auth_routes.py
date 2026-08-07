@@ -121,22 +121,17 @@ class CharacterProfessionResponse(BaseModel):
     lvl3: int = Field(..., description="Profession 3 level")
 
 
-class CharacterBodyResponse(BaseModel):
-    """Physical stats: strength, constitution, dexterity, speed."""
+class CharacterAttributeResponse(BaseModel):
+    """Physical & Soul stats"""
 
-    str: int = Field(..., description="Strength")
-    sta: int = Field(..., description="Constitution")
-    dex: int = Field(..., description="Dexterity")
-    speed: int = Field(..., description="Speed")
-
-
-class CharacterSoulResponse(BaseModel):
-    """Mental stats: intelligence, power, wisdom."""
-
-    power: int = Field(..., description="Power")
-    wis: int = Field(..., description="Wisdom")
-    intelli: int = Field(..., description="Intelligence")
-    perc: int = Field(..., description="Perception")
+    migh: int = Field(..., description="Might: raw strength, lifting, melee damage, forced doors, grapples")
+    agil: int = Field(..., description="Agility: reflexes, dodging, stealth movement, initiative, finesse attacks")
+    endu: int = Field(..., description="Endurance: HP scaling, poison/disease resistance, fatigue, long treks")
+    prec: int = Field(..., description="Precision: aim and control: ranged accuracy, lockpicking, delicate tasks")
+    will: int = Field(..., description="Will: mental toughness: resist fear/charm, concentration, oath/discipline")
+    insi: int = Field(..., description="Insight: perception + intuition: spotting traps, reading intent, awareness")
+    lore: int = Field(..., description="Lore: learned knowledge: arcana, history, alchemy, rituals, languages")
+    pres: int = Field(..., description="Presence: charisma/aura: persuasion, intimidation, leadership, divine favor")
 
 
 class CharacterResponse(BaseModel):
@@ -152,9 +147,7 @@ class CharacterResponse(BaseModel):
     availability: CharacterAvailabilityResponse
     classes: CharacterClassResponse
     profession: CharacterProfessionResponse 
-    body: CharacterBodyResponse
-    soul: CharacterSoulResponse
-
+    attr: CharacterAttributeResponse
 
 class PlayerDataResponse(BaseModel):
     """The authenticated player's permanent record and character roster.

@@ -254,22 +254,22 @@ export function SoulCreation({ onExit }: { onExit: () => void }) {
 
   // Page 2 (Attributes) — spending the Body/Soul totals from the triangle
   // (page 1) across the 4 stats each. Every stat starts at the backend's
-  // floor of 1 (see BodyStats/SoulStats in character.py); the lowest
+  // floor of 1 (see AttributeStats in character.py); the lowest
   // possible pool is 4 (BODY_SOUL_RATIO_MIN), which exactly covers that
   // 4-stats-at-1 floor with nothing left to spend.
-  type BodyAttrKey = "strength" | "stamina" | "dexterity" | "speed";
-  type SoulAttrKey = "power" | "wisdom" | "intelligence" | "perception";
+  type BodyAttrKey = "migh" | "agil" | "endu" | "prec";
+  type SoulAttrKey = "will" | "insi" | "lore" | "pres";
   const [bodyAttributes, setBodyAttributes] = useState<Record<BodyAttrKey, number>>({
-    strength: 1,
-    stamina: 1,
-    dexterity: 1,
-    speed: 1,
+    migh: 1,
+    agil: 1,
+    endu: 1,
+    prec: 1,
   });
   const [soulAttributes, setSoulAttributes] = useState<Record<SoulAttrKey, number>>({
-    power: 1,
-    wisdom: 1,
-    intelligence: 1,
-    perception: 1,
+    will: 1,
+    insi: 1,
+    lore: 1,
+    pres: 1,
   });
 
   // Set once, on the first click anywhere on page 1 (outside form controls).
@@ -886,10 +886,10 @@ export function SoulCreation({ onExit }: { onExit: () => void }) {
                 </div>
                 {(
                   [
-                    ["strength", "Strength"],
-                    ["stamina", "Stamina"],
-                    ["dexterity", "Dexterity"],
-                    ["speed", "Speed"],
+                    ["migh", "Might"],
+                    ["agil", "Agility"],
+                    ["endu", "Endurance"],
+                    ["prec", "Precision"],
                   ] as const
                 ).map(([key, label]) => (
                   <div className={styles.attrRow} key={key}>
@@ -931,10 +931,10 @@ export function SoulCreation({ onExit }: { onExit: () => void }) {
                 </div>
                 {(
                   [
-                    ["power", "Power"],
-                    ["wisdom", "Wisdom"],
-                    ["intelligence", "Intelligence"],
-                    ["perception", "Perception"],
+                    ["will", "Will"],
+                    ["insi", "Insight"],
+                    ["lore", "Lore"],
+                    ["pres", "Presence"],
                   ] as const
                 ).map(([key, label]) => (
                   <div className={styles.attrRow} key={key}>

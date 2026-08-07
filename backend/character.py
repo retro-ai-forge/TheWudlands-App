@@ -31,30 +31,30 @@ class ProfStats:
         return {"prof1": self.profession_1, "lvl1": self.level_1, "prof2": self.profession_2, "lvl2": self.level_2, "prof3": self.profession_3, "lvl3": self.level_3}
 
 @dataclass
-class BodyStats:
-    """Physical stats: strength, stamina, dexterity, speed."""
+class AttributeStats:
+    """Physical & Soul stats."""
 
-    strength: int = 1
-    stamina: int = 1
-    dexterity: int = 1
-    speed: int = 1
-
-    def to_dict(self) -> dict:
-        return {"str": self.strength, "sta": self.stamina, "dex": self.dexterity, "speed": self.speed}
-
-
-@dataclass
-class SoulStats:
-    """Mental stats: intelligence, power, wisdom."""
-
-    power: int = 1
-    wisdom: int = 1
-    intelligence: int = 1
-    perception: int = 1
+    might: int = 1
+    agility: int = 1
+    endurance: int = 1
+    precision: int = 1
+    will: int = 1
+    insight: int = 1
+    lore: int = 1
+    presence: int = 1
 
     def to_dict(self) -> dict:
-        return {"power": self.power, "wis": self.wisdom, "intelli": self.intelligence, "perc": self.perception}
-    
+        return {
+            "migh": self.might,
+            "agil": self.agility,
+            "endu": self.endurance,
+            "prec": self.precision,
+            "will": self.will,
+            "insi": self.insight,
+            "lore": self.lore,
+            "pres": self.presence,
+        }
+
 @dataclass
 class Character:
 
@@ -67,8 +67,7 @@ class Character:
     race: str = 'human'
     classes: ClassStats = field(default_factory=ClassStats)
     profession: ProfStats = field(default_factory=ProfStats)
-    body: BodyStats = field(default_factory=BodyStats)
-    soul: SoulStats = field(default_factory=SoulStats)
+    attr: AttributeStats = field(default_factory=AttributeStats)
 
     def to_dict(self) -> dict:
         return {
@@ -80,6 +79,5 @@ class Character:
             "race": self.race,
             "classes": self.classes.to_dict(),
             "profession": self.profession.to_dict(),
-            "body": self.body.to_dict(),
-            "soul": self.soul.to_dict(),
+            "attr": self.attr.to_dict(),
         }
