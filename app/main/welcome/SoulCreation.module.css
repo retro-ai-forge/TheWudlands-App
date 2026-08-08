@@ -61,6 +61,13 @@
   box-sizing: border-box;
 }
 
+/* Page 4 (Birthsign) only — lets the tile grid keep growing with the
+   viewport instead of capping at .content's usual 40rem, up to .stage's
+   own 900px ceiling. */
+.contentWide {
+  max-width: 800px;
+}
+
 .introText {
   font-size: clamp(0.8rem, 2vw, 1rem);
   line-height: 1.5;
@@ -537,6 +544,181 @@
     inset 0 -2px 3px rgba(0, 0, 0, 0.5),
     0 2px 4px rgba(0, 0, 0, 0.55);
   text-shadow: 0 1px 0 rgba(255, 244, 214, 0.5), 0 -1px 0 rgba(0, 0, 0, 0.35);
+}
+
+/* Page 4 (Birthsign) — unframed grid of flip-card tiles (each sign's name
+   is baked into its artwork). .fieldMissing (shared with the Foundation
+   page's required fields) flashes a gold glow around the grid when
+   Continue is pressed with nothing picked yet. */
+.birthsignGrid {
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0.4rem;
+  width: 100%;
+  max-width: 800px;
+  margin: clamp(0.25rem, 1.5vh, 0.75rem) 0 clamp(0.4rem, 1.5vh, 0.9rem);
+  padding: 0;
+}
+
+/* Two columns all the way down to 450px (not just a narrow phone range) —
+   below that, a single column takes over. */
+@media (max-width: 650px) {
+  .birthsignGrid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 450px) {
+  .birthsignGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Each tile is a flip card: .birthsignTile is the static frame (border,
+   selection glow), .birthsignFlipper is the part that actually rotates,
+   and the two .birthsignFace children are pinned back-to-back via
+   backface-visibility so only one is ever showing. */
+.birthsignTile {
+  position: relative;
+  aspect-ratio: 9 / 10;
+  padding: 0;
+  border: 1px solid #6f532f;
+  border-radius: 6px;
+  /* It's a native <button> — without this it falls back to the browser's
+     default button chrome (opaque white/gray) instead of true transparency. */
+  background: none;
+  cursor: pointer;
+  perspective: 900px;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease, transform 0.1s ease;
+}
+
+.birthsignTile:hover {
+  border-color: #c07a3a;
+}
+
+.birthsignTile:active {
+  transform: scale(0.96);
+}
+
+.birthsignTile:focus-visible {
+  outline: none;
+  border-color: #e6b85c;
+  box-shadow: 0 0 0 2px rgba(230, 184, 92, 0.55);
+}
+
+.birthsignTileSelected {
+  border-color: #e6b85c;
+  box-shadow: 0 0 0 2px rgba(230, 184, 92, 0.55), 0 0 16px rgba(230, 184, 92, 0.5);
+}
+
+.birthsignFlipper {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  transition: transform 0.6s cubic-bezier(0.4, 0.15, 0.2, 1);
+  transform-style: preserve-3d;
+}
+
+.birthsignFlipperFlipped {
+  transform: rotateY(180deg);
+}
+
+.birthsignFace {
+  position: absolute;
+  inset: 0;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  border-radius: 5px;
+  overflow: hidden;
+}
+
+.birthsignFaceBack {
+  transform: rotateY(180deg);
+  display: flex;
+  flex-direction: column;
+  /* flex-start, not center: centered content taller than the box would
+     have its top clipped unreachably — overflow-y:auto can't scroll to a
+     negative offset to reveal it. */
+  justify-content: flex-start;
+  gap: 0.3rem;
+  padding: clamp(0.35rem, 3vw, 0.6rem);
+  overflow-y: auto;
+  text-align: left;
+}
+
+.birthsignImage {
+  display: block;
+  width: 100%;
+  height: 100%;
+  /* contain, not cover: the artwork's aspect ratio doesn't exactly match
+     the tile's, and cover would crop the top (where each sign's name is
+     baked in) to fill the mismatch. contain always shows the whole image,
+     letterboxed into the tile's own dark background instead. */
+  object-fit: contain;
+}
+
+.birthsignName {
+  margin: 0;
+  font-size: clamp(0.62rem, 2.6vw, 0.8rem);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #c07a3a;
+}
+
+.birthsignFlavor {
+  margin: 0;
+  font-style: italic;
+  font-size: clamp(0.55rem, 2.3vw, 0.7rem);
+  line-height: 1.3;
+  color: #d4c9a8;
+}
+
+.birthsignEffect {
+  margin: 0;
+  font-size: clamp(0.52rem, 2.1vw, 0.66rem);
+  line-height: 1.3;
+  color: #b9ac86;
+}
+
+.birthsignEffectLabel {
+  color: #e6b85c;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+}
+
+/* Tiles roughly double in size at each of .birthsignGrid's column-count
+   breakpoints (4 → 2 → 1 columns), so the back-face text is bumped up to
+   match rather than staying tile-sized-for-4-columns everywhere. Placed
+   after the base rules above so the cascade favors these at matching
+   widths despite equal selector specificity. */
+@media (max-width: 650px) {
+  .birthsignName {
+    font-size: clamp(0.85rem, 3.4vw, 1.05rem);
+  }
+
+  .birthsignFlavor {
+    font-size: clamp(0.8rem, 3vw, 1rem);
+  }
+
+  .birthsignEffect {
+    font-size: clamp(0.76rem, 2.8vw, 0.94rem);
+  }
+}
+
+@media (max-width: 450px) {
+  .birthsignName {
+    font-size: clamp(1rem, 4.6vw, 1.2rem);
+  }
+
+  .birthsignFlavor {
+    font-size: clamp(0.95rem, 4.2vw, 1.15rem);
+  }
+
+  .birthsignEffect {
+    font-size: clamp(0.9rem, 3.9vw, 1.08rem);
+  }
 }
 
 .comboBox {

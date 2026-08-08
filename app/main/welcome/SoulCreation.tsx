@@ -16,7 +16,91 @@ import { useHeaderVisibility } from "@/app/main/HeaderVisibilityProvider";
 
 const pinyonScript = Pinyon_Script({ subsets: ["latin"], weight: "400" });
 
-const PAGE_COUNT = 5;
+const PAGE_COUNT = 6;
+
+// Page 4 (Birthsign) — the name is baked into each image, so only the flavor
+// line and its in-game effect need to be typed out here.
+type BirthsignId =
+  | "fatecoil_mark"
+  | "grit_stitch_brand"
+  | "hearthfinder_sigil"
+  | "far_sight_rune"
+  | "courtseers_eye"
+  | "legend_crest"
+  | "glassvein_birthmark"
+  | "fortunes_thistle";
+
+const BIRTHSIGNS: {
+  id: BirthsignId;
+  name: string;
+  image: string;
+  flavor: string;
+  effect: string;
+}[] = [
+  {
+    id: "fatecoil_mark",
+    name: "Fatecoil Mark",
+    image: "/images/soul-creation/birth_fatecoil_mark.png",
+    flavor: "You feel fate loosen for a heartbeat—enough to tug a choice back from ruin.",
+    effect:
+      "Before you attempt a risky check (skill, stealth, trap, save, challenge), you may invoke the mark to gain a Re-roll option. Each invocation uses 1 charge.",
+  },
+  {
+    id: "grit_stitch_brand",
+    name: "Grit Stitch Brand",
+    image: "/images/soul-creation/birth_grid_stitch_brand.png",
+    flavor: "Pain becomes a seam you can pull tight—if you pay for the thread.",
+    effect:
+      "After a failed check, the Brand offers fail-forward recovery: Recover, Retreat, Brace, or Pay a cost to survive. Each recovery uses 1 charge.",
+  },
+  {
+    id: "hearthfinder_sigil",
+    name: "Hearthfinder Sigil",
+    image: "/images/soul-creation/birth_hearthfinders_sigh.png",
+    flavor: "Your instincts hunt shelter like a hound hunts blood.",
+    effect:
+      "In many standard scenes you can attempt a Safe Rest to recover. It usually works without special story support, but some places still refuse rest. Each rest costs 1 charge.",
+  },
+  {
+    id: "far_sight_rune",
+    name: "Far Sight Rune",
+    image: "/images/soul-creation/birth_far_sight_rune.png",
+    flavor: "Your eyes catch the angle of tomorrow — just enough to choose your step.",
+    effect:
+      "The Rune can reveal a hint about what's ahead (treasure, exit, fight). Each reveal costs 1 charge.",
+  },
+  {
+    id: "courtseers_eye",
+    name: "Courtseer's Eye",
+    image: "/images/soul-creation/birth_courtseer_eye.png",
+    flavor: "When power walks into the room, your mind leaves a nail in the doorframe.",
+    effect:
+      "When a VIP / important person appears, you may enter a vision and wake up from it. Each scene cost 1 charge.",
+  },
+  {
+    id: "legend_crest",
+    name: "Legend Crest",
+    image: "/images/soul-creation/birth_legend_crest.png",
+    flavor: "Your deeds echo louder than they should, and the world answers as if it must.",
+    effect:
+      "When a legend-impact choice appears, you may press the Amplifier to make that impact stronger. Each impact costs 1 charge.",
+  },
+  {
+    id: "glassvein_birthmark",
+    name: "Glassvein Birthmark",
+    image: "/images/soul-creation/birth_glassvein_birthmark.png",
+    flavor: "A thin sheen over the soul like moonlight on glass — lets you glimpse what's hidden.",
+    effect: "You may peer into a VIP's soul to learn one random attribute and their level. Each peek costs 1 charge.",
+  },
+  {
+    id: "fortunes_thistle",
+    name: "Fortune's Thistle",
+    image: "/images/soul-creation/birth_fortunes_thistle.png",
+    flavor: "Strange hair grows where luck takes root; it prickles when the world is about to bend.",
+    effect:
+      "You gain a small bonus to all non-combat, non-magic checks — a quiet edge that turns near-misses into narrow wins. Rises with charge level.",
+  },
+];
 
 export function SoulCreation({ onExit }: { onExit: () => void }) {
   const [page, setPage] = useState(0);
@@ -31,6 +115,28 @@ export function SoulCreation({ onExit }: { onExit: () => void }) {
   const [profession3, setProfession3] = useState("");
   // Persisted to the character's Firestore document later on; local-only state for now.
   const [portraitUrl, setPortraitUrl] = useState("");
+
+  // Page 4 (Birthsign) — a single required pick; null blocks Continue.
+  const [birthsign, setBirthsign] = useState<BirthsignId | null>(null);
+  // Which single tile is currently showing its text-revealing backside —
+  // purely a display toggle, independent of `birthsign` (the actual pick).
+  // At most one at a time: flipping a new tile flips any other back, and
+  // scrolling clears it so a flipped tile doesn't scroll off looking stuck open.
+  const [flippedBirthsign, setFlippedBirthsign] = useState<BirthsignId | null>(null);
+  // Clicking a tile can itself trigger a native "scroll the focused button
+  // into view" nudge, which would otherwise immediately fire the scroll
+  // handler below and undo the flip the click just caused. Suppress
+  // scroll-driven clearing for a moment after every tile click.
+  const suppressBirthsignScrollClearRef = useRef(false);
+
+  function handleBirthsignTileClick(id: BirthsignId) {
+    setBirthsign(id);
+    setFlippedBirthsign((prev) => (prev === id ? null : id));
+    suppressBirthsignScrollClearRef.current = true;
+    setTimeout(() => {
+      suppressBirthsignScrollClearRef.current = false;
+    }, 300);
+  }
 
   // Manual fit/zoom/pan for the portrait, instead of object-fit:cover (which
   // always force-crops to fill the frame). At zoom 1 the whole image is
@@ -764,26 +870,36 @@ export function SoulCreation({ onExit }: { onExit: () => void }) {
       if (missing.length > 0) flashMissingFields(missing);
       return;
     }
+    if (page === 4 && birthsign === null) {
+      flashMissingFields(["birthsign"]);
+      return;
+    }
     handleContinue();
   }
 
   return (
     <div
       className={`${styles.wizard} ${page === 1 || page === 3 ? styles.noTouchScroll : ""} ${
-        page === 0 || page === 2 ? styles.wizardScrollable : ""
+        page === 0 || page === 2 || page === 4 ? styles.wizardScrollable : ""
       }`}
       onClick={handlePageClick}
       onPointerDown={handlePagePointerDown}
       onPointerMove={handlePagePointerMove}
       onPointerUp={handlePagePointerUp}
       onPointerCancel={handlePagePointerUp}
+      onScroll={() => {
+        if (suppressBirthsignScrollClearRef.current) return;
+        if (flippedBirthsign !== null) setFlippedBirthsign(null);
+      }}
     >
       <div className={styles.stage}>
         <div
           className={
             page === 0 || page === 2
               ? `${styles.content} ${styles.contentTop} ${styles.contentTopTight} ${styles.contentScrollable}`
-              : page === 1 || page === 3 || page === 4
+              : page === 4
+              ? `${styles.content} ${styles.contentTop} ${styles.contentTopTight} ${styles.contentScrollable} ${styles.contentWide}`
+              : page === 1 || page === 3
               ? `${styles.content} ${styles.contentTop} ${styles.contentTopTight}`
               : styles.content
           }
@@ -830,7 +946,7 @@ export function SoulCreation({ onExit }: { onExit: () => void }) {
               </div>
 
               <p className={`${styles.introText} ${styles.introTextLarge}`}>
-                Life Energy sets that reserve&apos;s size — more Energy rises your starting age. Body and Soul each range from 4-100;
+                Life Energy sets that reserve&apos;s size — more Energy rises your starting age. Body and Soul each range from 4-100.
               </p>
 
               {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -1030,7 +1146,55 @@ export function SoulCreation({ onExit }: { onExit: () => void }) {
               />
             </>
           ) : page === 4 ? (
-            <h1 className={styles.headline}>Craft</h1>
+            <>
+              <h1 className={styles.headline}>Birth Sign</h1>
+              <div
+                className={`${styles.birthsignGrid} ${
+                  missingFields.has("birthsign") ? styles.fieldMissing : ""
+                }`}
+              >
+                {BIRTHSIGNS.map((sign) => {
+                  const isFlipped = flippedBirthsign === sign.id;
+                  return (
+                    <button
+                      key={sign.id}
+                      type="button"
+                      className={`${styles.birthsignTile} ${
+                        birthsign === sign.id ? styles.birthsignTileSelected : ""
+                      }`}
+                      onClick={() => handleBirthsignTileClick(sign.id)}
+                      aria-pressed={birthsign === sign.id}
+                      aria-label={`${sign.name}: ${isFlipped ? "hide" : "show"} description`}
+                    >
+                      <div
+                        className={`${styles.birthsignFlipper} ${
+                          isFlipped ? styles.birthsignFlipperFlipped : ""
+                        }`}
+                      >
+                        <div className={styles.birthsignFace}>
+                          <img src={sign.image} alt={sign.name} className={styles.birthsignImage} />
+                        </div>
+                        <div className={`${styles.birthsignFace} ${styles.birthsignFaceBack}`}>
+                          <h3 className={styles.birthsignName}>{sign.name}</h3>
+                          <p className={styles.birthsignFlavor}>{sign.flavor}</p>
+                          <p className={styles.birthsignEffect}>
+                            <span className={styles.birthsignEffectLabel}>Event: </span>
+                            {sign.effect}
+                          </p>
+                        </div>
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+              <p className={styles.introText}>
+                Selecting a birth sign is permanent. A character that comes to life gets one birth
+                sign — being revived from death, regaining a lost soul, or other rare means might
+                grant a second or third.
+              </p>
+            </>
+          ) : page === 5 ? (
+            <h1 className={styles.headline}>finishing touches</h1>
           ) : (
             <h1 className={styles.headline}>Page {page + 1}</h1>
           )}
@@ -1236,7 +1400,9 @@ export function SoulCreation({ onExit }: { onExit: () => void }) {
         )}
 
         <button
-          className={`${styles.navButton} ${styles.continue} ${page === 1 && !isPage1Ready ? styles.continueInactive : ""}`}
+          className={`${styles.navButton} ${styles.continue} ${
+            (page === 1 && !isPage1Ready) || (page === 4 && birthsign === null) ? styles.continueInactive : ""
+          }`}
           onClick={handleContinueClick}
         >
           Continue
