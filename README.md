@@ -63,6 +63,29 @@ Each addon may declare a list of prerequisite addon ids in its `requires` field 
 
 The platform operates on a blockchain environment, currently targeting Polkadot with an optional Ethereum fallback address per contributor. Note that Nova Wallets already feature both addresses with a single seed. When a player pays the entry fee for an adventure, the revenue split is applied at transaction time: 80% is routed to the wallet address declared in the addon's `polkadot_address` field, and 20% is retained by the platform.
 
+### Soul Creation Slots
+
+A player's welcome page shows ten soul-creation slots. The first is free and open to everyone — it is clickable the moment the page renders, without waiting on any lookup. The other nine are earned by what the player's wallet holds: an NFT from a specific collection, a total token balance, or a number of Grid Miner stars. Locked slots still show their artwork, greyed out, so a player can see what each reward looks like before qualifying for it.
+
+Requirements are read from two public sources. Token balances and NFT collection ownership come from the Subscan API in a single call per chain, covering both Polkadot Asset Hub and Hydration — fast enough for the page to wait on. The Grid Miner star count is slower: it reads every owned item from Asset Hub's `nfts` pallet over RPC, then fetches each item's metadata document from IPFS to total the `Stars` trait. Those two slots therefore resolve on a second, background request and keep their loading indicator until it returns, so the rest of the grid is never held up.
+
+Token thresholds are cumulative — holding 5B WUD unlocks the 1B slot as well. Balances are summed across both chains.
+
+| Slot | Requirement | Source | Speed |
+|------|---|---|---|
+| 1 | Free — open to everyone | — | Immediate |
+| 2 | WUD 1st Year NFT | Asset Hub collection 441 | Fast |
+| 3 | WUD 2nd Year NFT | Asset Hub collection 842 | Fast |
+| 4 | OG WUD BURN NFT | Asset Hub collection 244 | Fast |
+| 5 | 1,000,000,000 WUD | Asset Hub + Hydration balance | Fast |
+| 6 | 5,000,000,000 WUD | Asset Hub + Hydration balance | Fast |
+| 7 | 1,000 DOT | Asset Hub + Hydration balance | Fast |
+| 8 | 5,000 DOT | Asset Hub + Hydration balance | Fast |
+| 9 | 20 Grid Miner stars | Collection 852 metadata (IPFS) | Background |
+| 10 | 100 Grid Miner stars | Collection 852 metadata (IPFS) | Background |
+
+Results are stored per wallet so the checks do not run on every visit. A player with no stored record is always checked; after that, roughly one login in ten re-verifies, which keeps the unlock state current without spending the API quota on data that rarely changes. If a lookup cannot run at all — no API key configured, or the service is unreachable with nothing cached — the grid stays locked rather than recording that the wallet qualifies for nothing, and previously earned slots are never revoked by an outage.
+
 ### Image Rendering & Style Presets
 
 Each scene may reference a single image by filename. At runtime, the frontend loads the next scene as an HTML site and applies CSS filters to the image based on the scene's declared style preset. The scene text is displayed. Buttons will be rendered for each choice, and the player can click checkboxes and radio buttons for extra interactivity. There will be an escape button in the corner of the screen, backpack, character sheet and numbers of story dependent stats like health, sanity, and gold. The exact layout and design of the UI is still being iterated on, but the core functionality will be in place for Beta 1.0.
@@ -80,4 +103,5 @@ Each scene may reference a single image by filename. At runtime, the frontend lo
 | Dependencies | Resolved per player at adventure entry. Completed addons are recorded. Unlocks are evaluated on completion and made available immediately. |
 | Revenue Share | Applied at transaction time. 80% to the contributor's declared wallet address, 20% to the platform. Polkadot primary, Ethereum fallback. |
 | Blockchain | Currently Polkadot. Migration to another chain might happen. |
+| Soul Slots | Ten welcome-page creation slots. One free, nine gated on wallet holdings — NFT collections, token balances, and Grid Miner stars. Checked per wallet and cached, re-verified on roughly one login in ten. |
 

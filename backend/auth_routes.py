@@ -28,6 +28,12 @@ from backend.active_players import (
 )
 from backend.players import get_or_create_player, get_player
 from backend.balances import log_login_balances
+from backend.soul_slots import (
+    SOUL_SLOTS,
+    STAR_SLOT_NUMBERS,
+    resolve_fast_slots,
+    resolve_star_slots,
+)
 
 router = APIRouter(prefix="/api/auth", tags=["authentication"])
 player_router = APIRouter(prefix="/api/auth", tags=["player"])
@@ -429,6 +435,61 @@ async def get_my_characters(address: str = Depends(get_current_address)):
         raise HTTPException(status_code=404, detail="No player record found for this address")
 
     return player.to_dict()
+
+
+@player_router.get("/me/soul-slots")
+async def get_my_soul_slots(address: str = Depends(get_current_address)):
+    """
+    Which soul-creation slots the caller's wallet has unlocked.
+
+    Covers the fast checks only - NFT ownership and token balances. The star
+    slots need every Grid Miner's metadata read from IPFS, which is far too
+    slow to block the welcome page on, so they stay pending here and the
+    client fetches /me/soul-slots/stars separately.
+
+    `checked` is false when the lookup could not run at all (no Subscan key
+    configured, or the API was unreachable with nothing cached). The client
+    shows the grid as locked in that case rather than claiming the wallet
+    qualifies for nothing.
+    """
+    try:
+        state = await resolve_fast_slots(address)
+    except Exception as e:
+        print(f"[soul-slots] Lookup failed for {address}: {type(e).__name__}: {e}")
+        state = {"unlocked": [1], "stars": None, "checked": False, "cached": False}
+
+    return {
+        "slots": [slot.to_dict() for slot in SOUL_SLOTS],
+        "unlocked": state["unlocked"],
+        "stars": state.get("stars"),
+        "checked": state["checked"],
+        # Star slots are only settled once /me/soul-slots/stars has run.
+        "starsPending": state.get("stars") is None,
+        "starSlots": list(STAR_SLOT_NUMBERS),
+    }
+
+
+@player_router.get("/me/soul-slots/stars")
+async def get_my_star_slots(address: str = Depends(get_current_address)):
+    """
+    Resolve the Grid Miner star slots for the caller.
+
+    Deliberately a separate request: it walks one RPC call plus one IPFS
+    document per owned miner, so it can take seconds. The client calls this
+    after painting the grid and swaps the star slots in when it returns.
+    """
+    try:
+        state = await resolve_star_slots(address)
+    except Exception as e:
+        print(f"[soul-slots] Star lookup failed for {address}: {type(e).__name__}: {e}")
+        raise HTTPException(status_code=503, detail="Star lookup unavailable")
+
+    return {
+        "unlocked": state["unlocked"],
+        "stars": state["stars"],
+        "checked": True,
+        "starSlots": list(STAR_SLOT_NUMBERS),
+    }
 
 
 @statistics_router.get("/active-players/count", response_model=ActivePlayerCountResponse)

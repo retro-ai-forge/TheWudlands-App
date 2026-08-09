@@ -303,6 +303,84 @@
   color: #6b5f45;
 }
 
+/* ── Soul slot artwork ──────────────────────────────────── */
+/* One grid cell: the button, with its requirement as a caption underneath.
+   The requirement sits outside the button so the artwork can be swapped for
+   a character portrait without text competing with it. */
+.slotCell {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+  min-width: 0;
+}
+
+.slotRequirement,
+.slotRequirementMet {
+  font-size: 0.65rem;
+  line-height: 1.35;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  text-align: center;
+  padding: 0 0.2rem;
+  color: #6b5f45;
+}
+
+/* Once earned, the requirement reads as a badge rather than a hurdle. */
+.slotRequirementMet {
+  color: #a8894e;
+}
+
+.slotArt {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 72%;
+  aspect-ratio: 1 / 1;
+}
+
+.slotImage,
+.slotImageLocked {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border: 1px solid #3a3020;
+  transition: filter 0.3s ease, opacity 0.3s ease;
+}
+
+/* Locked slots stay visible but drained of colour, so the player can see
+   what the reward looks like without mistaking it for something they own. */
+.slotImageLocked {
+  filter: grayscale(100%) brightness(0.55);
+  opacity: 0.6;
+}
+
+.characterSlot:disabled .slotImageLocked {
+  opacity: 0.6;
+}
+
+.slotSpinner {
+  position: absolute;
+  width: 1.9rem;
+  height: 1.9rem;
+  border: 2px solid rgba(192, 122, 58, 0.25);
+  border-top-color: #e6a55a;
+  border-radius: 50%;
+  animation: slotSpin 0.9s linear infinite;
+}
+
+@keyframes slotSpin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .slotSpinner {
+    animation-duration: 2.4s;
+  }
+}
+
 /* ── Landing funnel ─────────────────────────────────────── */
 .landing {
   position: relative;
