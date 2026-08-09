@@ -436,7 +436,7 @@
   width: 100%;
   height: auto;
   transform: translate(-50%, -50%);
-  filter: drop-shadow(0 3px 8px rgba(0, 0, 0, 0.65));
+  filter: drop-shadow(0 6px 14px rgba(0, 0, 0, 0.9));
   pointer-events: none;
   opacity: 1;
   /* linear, matching .slotImageColor - see the comment there.
