@@ -68,3 +68,7 @@ async def ensure_indexes() -> None:
     # `players` is the permanent record (no TTL) - unlike active_players,
     # documents here must survive logout and idle eviction indefinitely.
     await db.players.create_index("address", unique=True)
+
+    # soul_slots is read on nearly every welcome-page load - without an
+    # index this is a full collection scan per lookup.
+    await db.soul_slots.create_index("address", unique=True)

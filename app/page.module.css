@@ -384,6 +384,100 @@
   opacity: 0.6;
 }
 
+/* Grid Miner star progress: a grid of outline stars over the artwork,
+   filled in gold up to however many of the slot's target the wallet has. */
+.starOverlay {
+  position: absolute;
+  inset: 8%;
+  display: grid;
+  gap: 6%;
+  pointer-events: none;
+  /* Scopes mix-blend-mode on .gridShine to blending against the star icons
+     only. Without this, "overlay" would blend against the artwork image
+     and everything else stacked beneath .slotArt too. */
+  isolation: isolate;
+}
+
+.starOutline,
+.starFilled {
+  width: 100%;
+  height: 100%;
+}
+
+.starOutline path {
+  fill: none;
+  stroke: rgba(255, 255, 255, 0.45);
+  stroke-width: 1.5;
+}
+
+.starFilled path {
+  fill: url(#soulSlotStarGloss);
+  stroke: #8a6a1a;
+  stroke-width: 0.6;
+  filter: drop-shadow(0 0 2px rgba(255, 213, 74, 0.85));
+}
+
+/* One diagonal band sweeping across the whole grid, not per star, clipped
+   (via inline style, see StarOverlay) to exactly the currently-filled
+   stars' shapes - so it only ever shows on the owned stars, never the
+   outline ones or the gaps between them. This outer element only clips; it
+   does not itself animate, so the clip mask is computed once per render
+   rather than re-rasterized every frame. */
+.gridShine {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+/* The moving part. Oversized relative to its parent and pushed off to one
+   side, then slid across by a transform - transform is compositor-only, so
+   the browser can paint this gradient once and just translate the layer
+   each frame, instead of recomputing a background position (which forces a
+   fresh paint under the clip on every frame - that combination was the
+   flicker). mix-blend-mode: overlay darkens away on the near-black
+   background and faint outline strokes, but lightens the bright gold fill,
+   giving the sweep a "light passing over foil" look. */
+.gridShineBand {
+  position: absolute;
+  inset: -60%;
+  /* Narrow enough to highlight roughly one star at a time even on the
+     dense 10x10 grid - the original 44%-56% band, stretched across this
+     oversized (220%) box, was wide enough to cover several adjacent stars
+     at once. On a grid where the filled stars sit in a single row (a
+     small count on a wide grid fills horizontally before it ever wraps),
+     that made the whole row look like a static gold wash instead of a
+     travelling highlight - the diagonal only reads as "moving" when it
+     visibly leaves one star and arrives at the next. */
+  background: linear-gradient(
+    115deg,
+    transparent 46%,
+    rgba(255, 255, 255, 0.5) 48%,
+    rgba(255, 255, 255, 0.95) 50%,
+    rgba(255, 255, 255, 0.5) 52%,
+    transparent 54%
+  );
+  mix-blend-mode: overlay;
+  transform: translate(-55%, -55%);
+  animation: gridShineSweep 10s ease-in-out infinite;
+}
+
+@keyframes gridShineSweep {
+  0%,
+  55% {
+    transform: translate(-55%, -55%);
+  }
+  100% {
+    transform: translate(55%, 55%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .gridShineBand {
+    animation: none;
+  }
+}
+
 .slotSpinner {
   position: absolute;
   width: 1.9rem;

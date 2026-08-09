@@ -84,7 +84,7 @@ Token thresholds are cumulative — holding 5B WUD unlocks the 1B slot as well. 
 | 9 | 20 Grid Miner stars | Collection 852 metadata (IPFS) | Background |
 | 10 | 100 Grid Miner stars | Collection 852 metadata (IPFS) | Background |
 
-Results are stored per wallet so the checks do not run on every visit. A player with no stored record is always checked; after that, roughly one login in twenty re-verifies, which keeps the unlock state current without spending the API quota on data that rarely changes. A "Reload Balances & NFTs" button on the welcome page forces an immediate re-check outside that schedule, for a player who wants to confirm a fresh balance or NFT right away. If a lookup cannot run at all — no API key configured, or the service is unreachable with nothing cached — the grid stays locked rather than recording that the wallet qualifies for nothing, and previously earned slots are never revoked by an outage.
+Results are stored per wallet so the checks do not run on every visit. A player with no stored record is always checked; after that, roughly one login in thirty-three re-verifies, which keeps the unlock state current without spending the API quota on data that rarely changes. A "Reload Balances & NFTs" button on the welcome page forces an immediate re-check outside that schedule, for a player who wants to confirm a fresh balance or NFT right away. If a lookup cannot run at all — no API key configured, or the service is unreachable with nothing cached — the grid stays locked rather than recording that the wallet qualifies for nothing, and previously earned slots are never revoked by an outage.
 
 ### Image Rendering & Style Presets
 
@@ -103,5 +103,5 @@ Each scene may reference a single image by filename. At runtime, the frontend lo
 | Dependencies | Resolved per player at adventure entry. Completed addons are recorded. Unlocks are evaluated on completion and made available immediately. |
 | Revenue Share | Applied at transaction time. 80% to the contributor's declared wallet address, 20% to the platform. Polkadot primary, Ethereum fallback. |
 | Blockchain | Currently Polkadot. Migration to another chain might happen. |
-| Soul Slots | Ten welcome-page creation slots. One free, nine gated on wallet holdings — NFT collections, token balances, and Grid Miner stars. Checked per wallet and cached, re-verified on roughly one login in twenty, or immediately via the Reload button. |
+| Soul Slots | Ten welcome-page creation slots. One free, nine gated on wallet holdings — NFT collections, token balances, and Grid Miner stars. Checked per wallet and cached, re-verified on roughly one login in thirty-three, or immediately via the Reload button. |
 

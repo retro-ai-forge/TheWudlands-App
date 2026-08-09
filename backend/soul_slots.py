@@ -15,7 +15,7 @@ Two speeds of check:
 
 Results are cached per address in the `soul_slots` collection. Re-checking
 on every login would burn the Subscan quota for data that rarely changes,
-so a cached entry is only re-verified on roughly one login in twenty.
+so a cached entry is only re-verified on roughly one login in thirty-three.
 """
 
 from __future__ import annotations
@@ -46,7 +46,7 @@ from backend.nfts import (
 STARS_ATTRIBUTE_POSITION = 2
 
 # Fraction of logins that re-verify an already-cached entry.
-REVERIFY_PROBABILITY = 0.05
+REVERIFY_PROBABILITY = 0.03
 
 # Stored records hold slot *numbers*, so any change to the order or meaning
 # of SOUL_SLOTS makes existing records mean something else. Bump this when
@@ -84,6 +84,9 @@ class SoulSlot:
             "label": self.label,
             "image": self.image,
             "slow": self.is_slow,
+            # Lets the client draw the star-progress overlay (e.g. "14 of 20
+            # filled") without parsing the target out of the label text.
+            "amount": self.amount,
         }
 
 
@@ -108,8 +111,8 @@ SOUL_SLOTS: tuple[SoulSlot, ...] = (
     # Grid Miner slots sit last: they resolve on the slow IPFS pass, so their
     # spinners keep running after the rest of the grid has settled, and that
     # reads better at the end of the list than in the middle of it.
-    SoulSlot(9, STARS, "20 STARS", image="nft-wud-grid-miner.jpg", amount=20),
-    SoulSlot(10, STARS, "100 STARS", image="nft-wud-grid-miner.jpg", amount=100),
+    SoulSlot(9, STARS, "20 MINING STARS", image="nft-wud-grid-miner.jpg", amount=20),
+    SoulSlot(10, STARS, "100 MINING STARS", image="nft-wud-grid-miner.jpg", amount=100),
 )
 
 FREE_SLOT_NUMBERS = tuple(s.number for s in SOUL_SLOTS if s.kind == FREE)
@@ -240,15 +243,11 @@ async def resolve_fast_slots(address: str, roll: Optional[float] = None) -> dict
     "stars_pending": bool}. `checked` is False only when there was nothing
     stored and the live lookup could not run - the case the UI shows as
     "still locked". `stars_pending` tells the caller whether the slow star
-    pass should run this request; it follows the same cache/force roll as
-    the fast slots so "Reload" recomputes both, but is otherwise decided
-    independently (see should_recheck_stars) so a normal cache hit here
-    does not keep the star check pinned to its very first result forever.
+    pass should run this request; it shares the fast slots' roll, so on the
+    rare login that reverifies at all, it reverifies everything at once
+    rather than ageing the two independently.
     """
     stored = await get_stored_slots(address)
-    # Resolved once so a caller passing an explicit roll (tests, force=true)
-    # drives both the fast-slot and the star-recheck decision consistently,
-    # rather than each drawing its own independent random() call.
     effective_roll = random.random() if roll is None else roll
     stars_pending = should_recheck_stars(stored, effective_roll)
 

@@ -96,8 +96,8 @@ def test_each_label_matches_the_requirement_it_enforces():
         6: ("token", "5B WUD", None, WUD_SYMBOL, 5e9),
         7: ("token", "1000 DOT", None, DOT_SYMBOL, 1000),
         8: ("token", "5000 DOT", None, DOT_SYMBOL, 5000),
-        9: ("stars", "20 STARS", None, None, 20),
-        10: ("stars", "100 STARS", None, None, 100),
+        9: ("stars", "20 MINING STARS", None, None, 20),
+        10: ("stars", "100 MINING STARS", None, None, 100),
     }
 
     for slot in SOUL_SLOTS:
@@ -107,6 +107,17 @@ def test_each_label_matches_the_requirement_it_enforces():
         assert slot.collection_id == collection, f"slot {slot.number} collection"
         assert slot.symbol == symbol, f"slot {slot.number} symbol"
         assert slot.amount == amount, f"slot {slot.number} amount"
+
+
+def test_to_dict_exposes_the_star_targets_the_client_needs():
+    """
+    The star-progress overlay fills N of `amount` stars per slot, so the
+    client needs the numeric target - not just the "20 MINING STARS" label text.
+    """
+    by_number = {slot.number: slot.to_dict() for slot in SOUL_SLOTS}
+
+    assert by_number[9]["amount"] == 20
+    assert by_number[10]["amount"] == 100
 
 
 def test_slot_images_match_their_requirement_type():
@@ -138,7 +149,7 @@ def test_layout_version_invalidates_records_from_an_older_order():
     assert should_reverify(old, roll=0.99) is True
     # A record with no version at all predates versioning entirely.
     assert should_reverify({"address": TEST_ADDRESS, "unlocked": [1, 5]}, roll=0.99) is True
-    # A current record still follows the one-in-twenty rule.
+    # A current record still follows the one-in-thirty-three rule.
     assert should_reverify(current, roll=0.99) is False
 
 
@@ -220,19 +231,19 @@ def test_first_ever_login_always_checks():
 def test_stored_result_is_reused_most_logins():
     stored = _current_record([1, 2])
 
-    # Roughly one login in twenty re-checks; the rest serve the cached answer.
+    # Roughly one login in thirty-three re-checks; the rest serve the cached answer.
     assert should_reverify(stored, roll=0.02) is True
     assert should_reverify(stored, roll=0.5) is False
     assert should_reverify(stored, roll=0.99) is False
 
 
-def test_reverify_rate_is_about_one_in_twenty():
+def test_reverify_rate_is_about_one_in_thirty_three():
     stored = _current_record([1])
     rolls = [i / 1000 for i in range(1000)]
 
     checked = sum(1 for roll in rolls if should_reverify(stored, roll))
 
-    assert 45 <= checked <= 55
+    assert 25 <= checked <= 35
 
 
 # --- Offline: fast resolve fallbacks -----------------------------------------
@@ -334,7 +345,7 @@ def test_stars_are_rechecked_on_their_own_cadence_not_on_first_result_only():
     checked_zero["stars_checked_at"] = "2026-01-01T00:00:00"
 
     for record in (checked_with_a_real_count, checked_zero):
-        assert soul_slots.should_recheck_stars(record, roll=0.05) is True
+        assert soul_slots.should_recheck_stars(record, roll=0.02) is True
         assert soul_slots.should_recheck_stars(record, roll=0.5) is False
 
 
@@ -367,12 +378,35 @@ async def test_resolve_fast_slots_reports_stars_pending_from_its_own_cadence(mon
     assert cached["stars_pending"] is False  # roll 0.5 also skips the star recheck
 
     # A roll inside the reverify window must recheck both.
-    reverified = await soul_slots.resolve_fast_slots(TEST_ADDRESS, roll=0.05)
+    reverified = await soul_slots.resolve_fast_slots(TEST_ADDRESS, roll=0.02)
     assert reverified["stars_pending"] is True
 
     # Force (roll=0.0) must always recheck stars, regardless of any stored value.
     forced = await soul_slots.resolve_fast_slots(TEST_ADDRESS, roll=0.0)
     assert forced["stars_pending"] is True
+
+
+@pytest.mark.asyncio
+async def test_natural_reverify_uses_one_shared_roll_for_both_passes(monkeypatch):
+    """
+    A natural (unforced) page load reverifies fast slots and stars together.
+
+    Deliberate: on the rare login that reverifies at all, doing both at
+    once is an acceptable cost, and it is simpler than ageing the two
+    independently.
+    """
+    stored = _current_record([1, 9], stars=37)
+    stored["stars_checked_at"] = "2026-01-01T00:00:00"
+
+    monkeypatch.setattr(soul_slots, "get_stored_slots", _async_return(stored))
+    monkeypatch.setattr(soul_slots, "evaluate_fast_slots", _async_return([1]))
+    monkeypatch.setattr(soul_slots, "store_slots", _async_return(None))
+    monkeypatch.setattr(soul_slots.random, "random", lambda: 0.02)
+
+    state = await soul_slots.resolve_fast_slots(TEST_ADDRESS)  # roll=None
+
+    assert state["cached"] is False
+    assert state["stars_pending"] is True
 
 
 @pytest.mark.asyncio
