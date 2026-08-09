@@ -280,6 +280,29 @@ def test_tracked_collections_are_reported_even_when_absent(monkeypatch):
     assert 999 not in tracked
 
 
+def test_nfts_are_owned_independently_of_any_token_balance(monkeypatch):
+    """
+    A wallet with zero DOT and zero WUD can still own NFTs.
+
+    Subscan omits tokens the account does not hold, so such a wallet returns
+    NFT rows only - the balances must read zero without the NFT check being
+    dragged down with them.
+    """
+    monkeypatch.setenv("SUBSCAN_API_KEY", "test-key")
+    monkeypatch.setattr(
+        balances,
+        "_fetch_account_tokens",
+        lambda *a, **kw: [_nft_entry(OG_WUD_BURN_COLLECTION_ID, 1, "OG WUD BURN")],
+    )
+
+    holdings = _run(fetch_holdings("1abc"))
+
+    assert holdings.totals[DOT_SYMBOL].total == 0
+    assert holdings.totals[WUD_SYMBOL].total == 0
+    assert holdings.owns_nft_from_collection(OG_WUD_BURN_COLLECTION_ID) is True
+    assert holdings.tracked_nfts[OG_WUD_BURN_COLLECTION_ID].count == 1
+
+
 def test_holdings_beyond_the_first_page_are_followed(monkeypatch):
     """
     Subscan defaults to 10 rows ordered by balance descending, so paging is

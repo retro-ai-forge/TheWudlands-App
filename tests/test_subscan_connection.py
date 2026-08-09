@@ -25,19 +25,34 @@ HYDRATION_API = "https://hydration.api.subscan.io"
 WUD_ASSETHUB_ASSET_ID = 31337
 WUD_SYMBOL = "WUD"
 
-# The free key allows 5 requests/second across all Subscan endpoints, so
-# space the calls out rather than risk a 429 mid-suite.
+# The free key allows 5 requests/second across all Subscan endpoints, and the
+# quota is shared - the rest of the suite spends it too. Space the calls out,
+# and retry a 429 rather than failing a test over someone else's burst.
 REQUEST_SPACING_SECONDS = 0.3
+RATE_LIMIT_RETRIES = 3
+
+
+def subscan_request(url: str, api_key: str, payload: dict) -> requests.Response:
+    """POST to Subscan, backing off and retrying while it reports 429."""
+    response = None
+
+    for attempt in range(RATE_LIMIT_RETRIES):
+        time.sleep(REQUEST_SPACING_SECONDS)
+        response = requests.post(
+            url,
+            headers={"X-API-Key": api_key, "Content-Type": "application/json"},
+            json=payload,
+            timeout=15,
+        )
+        if response.status_code != 429:
+            return response
+        time.sleep(float(response.headers.get("retry-after", 1)) + attempt)
+
+    return response
 
 
 def subscan_post(base_url: str, path: str, api_key: str, payload: dict) -> dict:
-    time.sleep(REQUEST_SPACING_SECONDS)
-    response = requests.post(
-        f"{base_url}{path}",
-        headers={"X-API-Key": api_key, "Content-Type": "application/json"},
-        json=payload,
-        timeout=15,
-    )
+    response = subscan_request(f"{base_url}{path}", api_key, payload)
     assert response.status_code == 200, (
         f"{path} returned HTTP {response.status_code}: {response.text[:200]}"
     )
@@ -125,13 +140,7 @@ def test_hydration_dot_and_wud_balances(subscan_api_key, subscan_test_address):
 
 def test_rate_limit_headers_are_present(subscan_api_key):
     """The key is accepted and Subscan reports the quota we can budget against."""
-    time.sleep(REQUEST_SPACING_SECONDS)
-    response = requests.post(
-        f"{ASSETHUB_API}/api/scan/metadata",
-        headers={"X-API-Key": subscan_api_key, "Content-Type": "application/json"},
-        json={},
-        timeout=15,
-    )
+    response = subscan_request(f"{ASSETHUB_API}/api/scan/metadata", subscan_api_key, {})
 
     assert response.status_code == 200, (
         f"Subscan rejected the API key: HTTP {response.status_code} "
