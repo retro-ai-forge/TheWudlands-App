@@ -38,22 +38,33 @@ export function SoulSlotGrid({ onCreate }: { onCreate: () => void }) {
   // Distinct from `state === null`: the first request has come back but the
   // slow star pass has not.
   const [starsPending, setStarsPending] = useState(true);
+  const [reloading, setReloading] = useState(false);
 
-  useEffect(() => {
+  const load = (force: boolean) => {
     let cancelled = false;
 
-    fetch("/api/auth/me/soul-slots", { credentials: "include" })
+    const url = force
+      ? "/api/auth/me/soul-slots?force=true"
+      : "/api/auth/me/soul-slots";
+
+    fetch(url, { credentials: "include" })
       .then((res) => (res.ok ? res.json() : null))
       .then((data: SlotState | null) => {
         if (cancelled || !data) {
-          if (!cancelled) setState(null);
+          if (!cancelled) {
+            setState(null);
+            setReloading(false);
+          }
           return;
         }
         setState(data);
         setStarsPending(data.starsPending);
 
         // Kick off the slow star lookup only when it is still unresolved.
-        if (!data.starsPending) return;
+        if (!data.starsPending) {
+          setReloading(false);
+          return;
+        }
 
         fetch("/api/auth/me/soul-slots/stars", { credentials: "include" })
           .then((res) => (res.ok ? res.json() : null))
@@ -65,19 +76,37 @@ export function SoulSlotGrid({ onCreate }: { onCreate: () => void }) {
               );
             }
             setStarsPending(false);
+            setReloading(false);
           })
           .catch(() => {
-            if (!cancelled) setStarsPending(false);
+            if (!cancelled) {
+              setStarsPending(false);
+              setReloading(false);
+            }
           });
       })
       .catch(() => {
-        if (!cancelled) setState(null);
+        if (!cancelled) {
+          setState(null);
+          setReloading(false);
+        }
       });
 
     return () => {
       cancelled = true;
     };
-  }, []);
+  };
+
+  useEffect(() => load(false), []);
+
+  const handleReload = () => {
+    if (reloading) return;
+    setReloading(true);
+    // Re-show the spinners while the forced re-check runs, same as first load.
+    setState(null);
+    setStarsPending(true);
+    load(true);
+  };
 
   // Until the first response lands we still render the grid, so the layout
   // does not jump - every slot but the free one shows its spinner.
@@ -87,7 +116,7 @@ export function SoulSlotGrid({ onCreate }: { onCreate: () => void }) {
 
   return (
     <div className={styles.characterMatrix}>
-      <h2 className={styles.characterMatrixHeading}>Character Preview</h2>
+      <h2 className={styles.characterMatrixHeading}>Soul Slots</h2>
       <div className={styles.characterGrid}>
         {slots.map((slot) => {
           const isFree = slot.kind === "free";
@@ -141,6 +170,15 @@ export function SoulSlotGrid({ onCreate }: { onCreate: () => void }) {
           );
         })}
       </div>
+
+      <button
+        type="button"
+        className={styles.reloadButton}
+        onClick={handleReload}
+        disabled={reloading}
+      >
+        {reloading ? "Reloading Balances & NFTs…" : "Reload Balances & NFTs"}
+      </button>
     </div>
   );
 }

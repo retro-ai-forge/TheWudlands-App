@@ -206,6 +206,31 @@
   margin-bottom: 1.25rem;
 }
 
+.reloadButton {
+  display: block;
+  margin: 1.75rem auto 0;
+  font-size: 0.85rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #d4a24e;
+  background: rgba(192, 122, 58, 0.08);
+  border: 1px solid #6b5326;
+  padding: 0.7rem 1.75rem;
+  cursor: pointer;
+  transition: border-color 0.15s, background-color 0.15s, color 0.15s;
+}
+
+.reloadButton:hover:not(:disabled) {
+  border-color: #c07a3a;
+  background: rgba(192, 122, 58, 0.16);
+  color: #e6a55a;
+}
+
+.reloadButton:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
 .characterGrid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);

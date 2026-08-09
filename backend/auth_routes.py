@@ -438,7 +438,9 @@ async def get_my_characters(address: str = Depends(get_current_address)):
 
 
 @player_router.get("/me/soul-slots")
-async def get_my_soul_slots(address: str = Depends(get_current_address)):
+async def get_my_soul_slots(
+    force: bool = False, address: str = Depends(get_current_address)
+):
     """
     Which soul-creation slots the caller's wallet has unlocked.
 
@@ -451,20 +453,29 @@ async def get_my_soul_slots(address: str = Depends(get_current_address)):
     configured, or the API was unreachable with nothing cached). The client
     shows the grid as locked in that case rather than claiming the wallet
     qualifies for nothing.
+
+    Pass `?force=true` (the welcome page's Reload button) to bypass the
+    one-in-ten cache roll and re-check the wallet immediately, rather than
+    waiting for a random login to happen to pick it.
     """
     try:
-        state = await resolve_fast_slots(address)
+        state = await resolve_fast_slots(address, roll=0.0 if force else None)
     except Exception as e:
         print(f"[soul-slots] Lookup failed for {address}: {type(e).__name__}: {e}")
-        state = {"unlocked": [1], "stars": None, "checked": False, "cached": False}
+        state = {
+            "unlocked": [1], "stars": None, "checked": False, "cached": False,
+            "stars_pending": True,
+        }
 
     return {
         "slots": [slot.to_dict() for slot in SOUL_SLOTS],
         "unlocked": state["unlocked"],
         "stars": state.get("stars"),
         "checked": state["checked"],
-        # Star slots are only settled once /me/soul-slots/stars has run.
-        "starsPending": state.get("stars") is None,
+        # Whether the slow star pass should run this request - on its own
+        # cadence (see should_recheck_stars), not just "no count stored yet".
+        # A stale-but-present count must not stop it from ever re-running.
+        "starsPending": state.get("stars_pending", True),
         "starSlots": list(STAR_SLOT_NUMBERS),
     }
 

@@ -28,10 +28,8 @@ export function WelcomeView() {
       <div className={styles.welcomeBody}>
         <h1 className={styles.welcomeHeadline}>Welcome to The Wudlands</h1>
         <p className={styles.welcomeMessage}>
-          Thanks for signing in! This is a <strong>beta</strong> version of
-          The Wudlands. There is no game yet!
-          Our app engine is still in development as we gather
-          ideas on how to structure and develop it. Check our{" "}
+          This is the <strong>beta</strong> version of
+          The Wudlands. Character creation is life. Check our{" "}
           <Link href="/dev-section#roadmap" className={styles.welcomeLink}>roadmap</Link>{" "}
           in the dev-section to see what&apos;s planned.
         </p>

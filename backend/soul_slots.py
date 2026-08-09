@@ -211,22 +211,54 @@ def should_reverify(stored: Optional[dict], roll: Optional[float] = None) -> boo
     return roll < REVERIFY_PROBABILITY
 
 
+def should_recheck_stars(stored: Optional[dict], roll: Optional[float] = None) -> bool:
+    """
+    Whether to run the slow star pass this request.
+
+    Deliberately tracked by its own timestamp (stars_checked_at) rather than
+    by whether a star count is already stored: a count of 37, or even 0, is
+    still a valid previous result, and "we have a number" is not the same
+    question as "is it time to check again". Conflating the two meant a
+    wallet's stars were checked exactly once, ever, and every login after
+    that - including a forced reload - silently reused that first number
+    forever, because the client only re-fetches stars when it sees none
+    stored at all.
+    """
+    if not stored or "stars_checked_at" not in stored:
+        return True
+    if stored.get("layout_version") != SLOT_LAYOUT_VERSION:
+        return True
+    roll = random.random() if roll is None else roll
+    return roll < REVERIFY_PROBABILITY
+
+
 async def resolve_fast_slots(address: str, roll: Optional[float] = None) -> dict:
     """
     The non-star slot state for `address`, from cache or a fresh lookup.
 
-    Returns {"unlocked": [...], "checked": bool, "stars": float|None} where
-    `checked` is False only when there was nothing stored and the live
-    lookup could not run - the case the UI shows as "still locked".
+    Returns {"unlocked": [...], "checked": bool, "stars": float|None,
+    "stars_pending": bool}. `checked` is False only when there was nothing
+    stored and the live lookup could not run - the case the UI shows as
+    "still locked". `stars_pending` tells the caller whether the slow star
+    pass should run this request; it follows the same cache/force roll as
+    the fast slots so "Reload" recomputes both, but is otherwise decided
+    independently (see should_recheck_stars) so a normal cache hit here
+    does not keep the star check pinned to its very first result forever.
     """
     stored = await get_stored_slots(address)
+    # Resolved once so a caller passing an explicit roll (tests, force=true)
+    # drives both the fast-slot and the star-recheck decision consistently,
+    # rather than each drawing its own independent random() call.
+    effective_roll = random.random() if roll is None else roll
+    stars_pending = should_recheck_stars(stored, effective_roll)
 
-    if not should_reverify(stored, roll):
+    if not should_reverify(stored, effective_roll):
         return {
             "unlocked": stored.get("unlocked", list(FREE_SLOT_NUMBERS)),
             "stars": stored.get("stars"),
             "checked": True,
             "cached": True,
+            "stars_pending": stars_pending,
         }
 
     unlocked = await evaluate_fast_slots(address)
@@ -243,9 +275,10 @@ async def resolve_fast_slots(address: str, roll: Optional[float] = None) -> dict
                 "stars": stored.get("stars"),
                 "checked": True,
                 "cached": True,
+                "stars_pending": stars_pending,
             }
         return {"unlocked": list(FREE_SLOT_NUMBERS), "stars": None, "checked": False,
-                "cached": False}
+                "cached": False, "stars_pending": True}
 
     # Keep any star slots already earned; this pass did not re-check them.
     stars = stored.get("stars") if stored else None
@@ -255,7 +288,13 @@ async def resolve_fast_slots(address: str, roll: Optional[float] = None) -> dict
     await store_slots(address, {"unlocked": unlocked, "tokens_checked_at":
                                 datetime.now(timezone.utc)})
 
-    return {"unlocked": unlocked, "stars": stars, "checked": True, "cached": False}
+    return {
+        "unlocked": unlocked,
+        "stars": stars,
+        "checked": True,
+        "cached": False,
+        "stars_pending": stars_pending,
+    }
 
 
 async def resolve_star_slots(address: str) -> dict:

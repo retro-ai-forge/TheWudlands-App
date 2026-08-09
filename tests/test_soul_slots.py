@@ -315,6 +315,66 @@ async def test_fast_pass_keeps_previously_earned_star_slots(monkeypatch):
     assert saved["unlocked"] == [1, 5, 9]
 
 
+def test_stars_are_rechecked_on_their_own_cadence_not_on_first_result_only():
+    """
+    A stored star count must not permanently suppress rechecking.
+
+    Before this, "do we have a number" and "is it time to check again" were
+    the same field, so a wallet's stars were counted once, ever, and every
+    later login - including a forced reload - silently reused that first
+    result forever.
+    """
+    never_checked = {"address": TEST_ADDRESS, "unlocked": [1]}
+    assert soul_slots.should_recheck_stars(never_checked) is True
+
+    checked_with_a_real_count = _current_record([1, 9], stars=37)
+    checked_with_a_real_count["stars_checked_at"] = "2026-01-01T00:00:00"
+    # A wallet with zero stars is still a completed check, not "unchecked".
+    checked_zero = _current_record([1], stars=0)
+    checked_zero["stars_checked_at"] = "2026-01-01T00:00:00"
+
+    for record in (checked_with_a_real_count, checked_zero):
+        assert soul_slots.should_recheck_stars(record, roll=0.05) is True
+        assert soul_slots.should_recheck_stars(record, roll=0.5) is False
+
+
+def test_forced_reload_always_recheck_stars_even_after_a_result_is_stored():
+    """The exact bug: force=true must reach the star pass, not just the fast one."""
+    record = _current_record([1, 9], stars=37)
+    record["stars_checked_at"] = "2026-01-01T00:00:00"
+
+    assert soul_slots.should_recheck_stars(record, roll=0.0) is True
+
+
+@pytest.mark.asyncio
+async def test_resolve_fast_slots_reports_stars_pending_from_its_own_cadence(monkeypatch):
+    """
+    The stale-value bug, reproduced through resolve_fast_slots directly:
+    a stored star count must not silently flip stars_pending to False.
+    """
+    stored = _current_record([1, 9], stars=37)
+    stored["stars_checked_at"] = "2026-01-01T00:00:00"
+
+    monkeypatch.setattr(soul_slots, "get_stored_slots", _async_return(stored))
+    monkeypatch.setattr(soul_slots, "evaluate_fast_slots", _async_return([1]))
+    monkeypatch.setattr(soul_slots, "store_slots", _async_return(None))
+
+    # A normal cache hit (not forced) still returns the last stars value...
+    cached = await soul_slots.resolve_fast_slots(TEST_ADDRESS, roll=0.5)
+    assert cached["stars"] == 37
+    # ...but must not claim the star pass is settled just because a number
+    # exists - that decision is should_recheck_stars's alone.
+    assert cached["stars_pending"] is False  # roll 0.5 also skips the star recheck
+
+    # A roll inside the reverify window must recheck both.
+    reverified = await soul_slots.resolve_fast_slots(TEST_ADDRESS, roll=0.05)
+    assert reverified["stars_pending"] is True
+
+    # Force (roll=0.0) must always recheck stars, regardless of any stored value.
+    forced = await soul_slots.resolve_fast_slots(TEST_ADDRESS, roll=0.0)
+    assert forced["stars_pending"] is True
+
+
 @pytest.mark.asyncio
 async def test_star_pass_revokes_stars_that_are_no_longer_held(monkeypatch):
     """Selling the miners must take slot 5 back, without touching the rest."""
