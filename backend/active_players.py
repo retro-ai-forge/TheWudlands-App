@@ -5,7 +5,7 @@ sees the same state instead of each holding its own private copy.
 
 A player is added when they log in (see auth_routes.verify_auth_signature)
 and evicted once idle for INACTIVITY_TIMEOUT - i.e. no login refresh and no
-in-game state change (touch_player) for 2 hours. Any activity resets the
+in-game state change (touch_player) for 8 hours. Any activity resets the
 idle timer, so an active player is never evicted mid-session.
 
 Eviction itself is handled by a TTL index on `last_active_at` (created in
@@ -26,7 +26,7 @@ from pymongo import ReturnDocument
 
 from backend.db import get_database
 
-INACTIVITY_TIMEOUT = timedelta(hours=2)
+INACTIVITY_TIMEOUT = timedelta(hours=8)
 
 
 @dataclass

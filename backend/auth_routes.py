@@ -160,7 +160,7 @@ class PlayerDataResponse(BaseModel):
     """The authenticated player's permanent record and character roster.
 
     Unlike the active-players registry (which only tracks who's online and
-    is evicted after 2 hours idle), this data is permanent - it survives
+    is evicted after 8 hours idle), this data is permanent - it survives
     logout and any amount of time between sessions.
     """
 
@@ -422,7 +422,7 @@ async def get_my_characters(address: str = Depends(get_current_address)):
 
     Looks up the caller's entry in the permanent players collection - unlike
     the old active-players-backed version, this reflects characters even if
-    the player has been logged out or idle past the 2-hour active-session
+    the player has been logged out or idle past the 8-hour active-session
     window, since that data no longer lives there.
 
     Raises:
@@ -507,6 +507,6 @@ async def get_my_star_slots(address: str = Depends(get_current_address)):
 async def get_active_player_count():
     """
     Number of players currently logged in and active (i.e. not idle for
-    more than the 2-hour inactivity timeout).
+    more than the 8-hour inactivity timeout).
     """
     return ActivePlayerCountResponse(count=len(await list_active_players()))

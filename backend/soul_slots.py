@@ -71,6 +71,10 @@ class SoulSlot:
     collection_id: Optional[int] = None
     symbol: Optional[str] = None
     amount: float = 0.0
+    # Where a locked slot sends the player to go earn it - a marketplace
+    # listing, the DEX, the mining game. Placeholder links for now; expect
+    # these to be replaced once in-app soul creation covers this itself.
+    link: Optional[str] = None
 
     @property
     def is_slow(self) -> bool:
@@ -87,6 +91,7 @@ class SoulSlot:
             # Lets the client draw the star-progress overlay (e.g. "14 of 20
             # filled") without parsing the target out of the label text.
             "amount": self.amount,
+            "link": self.link,
         }
 
 
@@ -95,24 +100,33 @@ SOUL_SLOTS: tuple[SoulSlot, ...] = (
     SoulSlot(
         2, NFT, "WUD 1st YEAR NFT",
         image="nft-wud-1st-year.jpg", collection_id=FIRST_ANNIVERSARY_COLLECTION_ID,
+        link="https://www.chaotic.art/ahp/collection/441",
     ),
     SoulSlot(
         3, NFT, "WUD 2nd YEAR NFT",
         image="nft-wud-2nd-year.jpg", collection_id=SECOND_ANNIVERSARY_COLLECTION_ID,
+        link="https://www.chaotic.art/ahp/collection/842",
     ),
     SoulSlot(
         4, NFT, "OG WUD BURN NFT",
         image="nft-wud-og-burn.jpg", collection_id=OG_WUD_BURN_COLLECTION_ID,
+        link="https://www.chaotic.art/ahp/collection/244",
     ),
-    SoulSlot(5, TOKEN, "1B WUD", image="assset-wud.jpg", symbol=WUD_SYMBOL, amount=1e9),
-    SoulSlot(6, TOKEN, "5B WUD", image="assset-wud.jpg", symbol=WUD_SYMBOL, amount=5e9),
-    SoulSlot(7, TOKEN, "1000 DOT", image="asset-dot.png", symbol=DOT_SYMBOL, amount=1000),
-    SoulSlot(8, TOKEN, "5000 DOT", image="asset-dot.png", symbol=DOT_SYMBOL, amount=5000),
+    SoulSlot(5, TOKEN, "1B WUD", image="assset-wud.jpg", symbol=WUD_SYMBOL, amount=1e9,
+             link="https://app.hydration.net/"),
+    SoulSlot(6, TOKEN, "5B WUD", image="assset-wud.jpg", symbol=WUD_SYMBOL, amount=5e9,
+             link="https://app.hydration.net/"),
+    SoulSlot(7, TOKEN, "1000 DOT", image="asset-dot.png", symbol=DOT_SYMBOL, amount=1000,
+             link="https://app.hydration.net/"),
+    SoulSlot(8, TOKEN, "5000 DOT", image="asset-dot.png", symbol=DOT_SYMBOL, amount=5000,
+             link="https://app.hydration.net/"),
     # Grid Miner slots sit last: they resolve on the slow IPFS pass, so their
     # spinners keep running after the rest of the grid has settled, and that
     # reads better at the end of the list than in the middle of it.
-    SoulSlot(9, STARS, "20 MINING STARS", image="nft-wud-grid-miner.jpg", amount=20),
-    SoulSlot(10, STARS, "100 MINING STARS", image="nft-wud-grid-miner.jpg", amount=100),
+    SoulSlot(9, STARS, "20 MINING STARS", image="nft-wud-grid-miner.jpg", amount=20,
+             link="https://gavunminer.xyz/"),
+    SoulSlot(10, STARS, "100 MINING STARS", image="nft-wud-grid-miner.jpg", amount=100,
+             link="https://gavunminer.xyz/"),
 )
 
 FREE_SLOT_NUMBERS = tuple(s.number for s in SOUL_SLOTS if s.kind == FREE)

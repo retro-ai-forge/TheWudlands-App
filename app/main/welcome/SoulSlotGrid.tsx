@@ -10,10 +10,23 @@
  *
  * The two Grid Miner star slots resolve on a slower second request, so they
  * keep their spinner after the rest of the grid has settled.
+ *
+ * Once a slot has been confirmed unlocked, it stays showing unlocked on
+ * every later visit for this wallet - a fresh page load, or leaving and
+ * returning from character creation - without flashing back to locked
+ * while the background check re-runs. A wallet's confirmed slots are
+ * cached in localStorage (see loadCachedUnlocked/persistUnlocked below)
+ * and used to seed the very first render, before any fetch has resolved.
+ * The lock/reveal sequence is only genuinely shown for: the first time
+ * this wallet is ever checked (nothing cached yet), the rare ~3% login
+ * that the backend independently chooses to re-verify, or an explicit
+ * click on Reload - which does intentionally reset everything to locked
+ * and re-check from scratch, same as before.
  */
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import styles from "../../page.module.css";
+import { useWallet } from "../WalletProvider";
 
 export interface SoulSlotDefinition {
   number: number;
@@ -23,6 +36,8 @@ export interface SoulSlotDefinition {
   slow: boolean;
   /** Star target for "stars" slots (20, 100, ...); unused otherwise. */
   amount: number;
+  /** Where a locked slot sends the player to go earn it; null for slot 1. */
+  link: string | null;
 }
 
 interface SlotState {
@@ -37,15 +52,82 @@ interface SlotState {
 
 const IMAGE_BASE = "/images/soul-creation/";
 
+// Keyed by address so switching wallets in the same browser never shows one
+// wallet's confirmed slots for another.
+const CACHE_KEY_PREFIX = "soul-slots-unlocked:";
+
+function loadCachedUnlocked(address: string): number[] {
+  if (typeof window === "undefined") return [];
+  try {
+    const parsed = JSON.parse(window.localStorage.getItem(CACHE_KEY_PREFIX + address) ?? "[]");
+    return Array.isArray(parsed) ? parsed.filter((n) => typeof n === "number") : [];
+  } catch {
+    return [];
+  }
+}
+
+function saveCachedUnlocked(address: string, unlocked: number[]) {
+  if (typeof window === "undefined") return;
+  try {
+    window.localStorage.setItem(CACHE_KEY_PREFIX + address, JSON.stringify(unlocked));
+  } catch {
+    // Best-effort: a full or blocked localStorage just means the next visit
+    // replays the reveal instead of skipping it - not a functional break.
+  }
+}
+
+// Same key WalletProvider itself reads to restore a session. Reading it here
+// too lets the cache be consulted before WalletProvider's own async
+// verification of that address has resolved.
+function getStoredAddress(): string | null {
+  if (typeof window === "undefined") return null;
+  return window.localStorage.getItem("player_address");
+}
+
 export function SoulSlotGrid({ onCreate }: { onCreate: () => void }) {
+  const { account } = useWallet();
+  const address = account?.address ?? null;
+  // WalletProvider only confirms `account` after an awaited fetch, so
+  // `address` is still null on this component's very first render even for
+  // a wallet that is already logged in. The same address is already sitting
+  // in localStorage from that earlier login (see WalletProvider's restore
+  // effect) - read it directly for cache purposes so a returning wallet's
+  // confirmed slots render unlocked from the first paint, rather than
+  // waiting on that verification round-trip and briefly mounting each slot
+  // as locked (which plays its lock-reveal animation once corrected).
+  const cacheAddress = address ?? getStoredAddress();
+
   const [state, setState] = useState<SlotState | null>(null);
   // Distinct from `state === null`: the first request has come back but the
   // slow star pass has not.
   const [starsPending, setStarsPending] = useState(true);
   const [reloading, setReloading] = useState(false);
 
+  // False only until the very first fetch of this mount resolves. Reload
+  // clears `state` back to null too, but by then this is already true, so
+  // the fallback below correctly tells the two situations apart.
+  const hasLoadedOnceRef = useRef(false);
+
   const load = (force: boolean) => {
     let cancelled = false;
+
+    // Read fresh here rather than trusting a value captured once at mount -
+    // see the `cacheAddress` comment above for why this can differ from
+    // `address` this early.
+    let runningUnlocked = cacheAddress ? loadCachedUnlocked(cacheAddress) : [];
+
+    // On a passive check (not Reload), a slot already known unlocked stays
+    // shown unlocked even if this particular response doesn't happen to
+    // repeat it - it only ever grows. On an explicit Reload, the fresh
+    // result is trusted exactly as returned, which is what lets Reload
+    // genuinely reset a slot that turned out to no longer qualify.
+    const mergeAndCache = (freshUnlocked: number[]): number[] => {
+      runningUnlocked = force
+        ? freshUnlocked
+        : Array.from(new Set([...runningUnlocked, ...freshUnlocked]));
+      if (cacheAddress) saveCachedUnlocked(cacheAddress, runningUnlocked);
+      return runningUnlocked;
+    };
 
     const url = force
       ? "/api/auth/me/soul-slots?force=true"
@@ -61,7 +143,9 @@ export function SoulSlotGrid({ onCreate }: { onCreate: () => void }) {
           }
           return;
         }
-        setState(data);
+        hasLoadedOnceRef.current = true;
+        const unlocked = mergeAndCache(data.unlocked);
+        setState({ ...data, unlocked });
         setStarsPending(data.starsPending);
 
         // Kick off the slow star lookup only when it is still unresolved.
@@ -75,9 +159,10 @@ export function SoulSlotGrid({ onCreate }: { onCreate: () => void }) {
           .then((stars) => {
             if (cancelled) return;
             if (stars) {
+              const starsUnlocked = mergeAndCache(stars.unlocked);
               setState((prev) =>
                 prev
-                  ? { ...prev, unlocked: stars.unlocked, stars: stars.stars }
+                  ? { ...prev, unlocked: starsUnlocked, stars: stars.stars }
                   : prev
               );
             }
@@ -115,9 +200,20 @@ export function SoulSlotGrid({ onCreate }: { onCreate: () => void }) {
   };
 
   // Until the first response lands we still render the grid, so the layout
-  // does not jump - every slot but the free one shows its spinner.
+  // does not jump - every slot but the free one shows its spinner, UNLESS
+  // it's already known unlocked from a previous visit (see loadCachedUnlocked),
+  // in which case it renders straight into its resting unlocked look with
+  // no spinner and no lock ever shown. `hasLoadedOnceRef` is what keeps this
+  // from also applying while Reload has deliberately cleared `state` back to
+  // null to reset already-confirmed slots to locked - the cache is only
+  // consulted for the very first paint of a fresh mount.
   const slots = state?.slots ?? FALLBACK_SLOTS;
-  const unlocked = new Set(state?.unlocked ?? [1]);
+  const unlocked = new Set(
+    state?.unlocked ??
+      (hasLoadedOnceRef.current
+        ? [1]
+        : [1, ...(cacheAddress ? loadCachedUnlocked(cacheAddress) : [])])
+  );
   const awaitingFirstResponse = state === null;
   const starsOwned = state?.stars ?? 0;
 
@@ -146,53 +242,14 @@ export function SoulSlotGrid({ onCreate }: { onCreate: () => void }) {
             (awaitingFirstResponse || (slot.slow && starsPending));
 
           return (
-            // The requirement sits outside the button: the artwork becomes the
-            // player's character portrait later, and a portrait should not
-            // carry unlock text across it.
-            <div key={slot.number} className={styles.slotCell}>
-              <button
-                className={styles.characterSlot}
-                disabled={!isUnlocked}
-                onClick={isUnlocked ? onCreate : undefined}
-              >
-                <span className={styles.slotArt}>
-                  {slot.image ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img
-                      className={
-                        isUnlocked ? styles.slotImage : styles.slotImageLocked
-                      }
-                      src={IMAGE_BASE + slot.image}
-                      alt=""
-                    />
-                  ) : (
-                    <span className={styles.characterSlotMark}>?</span>
-                  )}
-                  {slot.kind === "stars" && (
-                    <StarOverlay
-                      total={slot.amount}
-                      filled={Math.min(starsOwned, slot.amount)}
-                      slotNumber={slot.number}
-                    />
-                  )}
-                  {isLoading && (
-                    <span className={styles.slotSpinner} aria-hidden="true" />
-                  )}
-                </span>
-
-                <span className={styles.characterSlotLabel}>
-                  {isUnlocked ? `Create Soul ${slot.number}` : "Locked"}
-                </span>
-              </button>
-
-              <span
-                className={
-                  isUnlocked ? styles.slotRequirementMet : styles.slotRequirement
-                }
-              >
-                {slot.label}
-              </span>
-            </div>
+            <SoulSlotCard
+              key={slot.number}
+              slot={slot}
+              isUnlocked={isUnlocked}
+              isLoading={isLoading}
+              starsOwned={starsOwned}
+              onCreate={onCreate}
+            />
           );
         })}
       </div>
@@ -211,17 +268,212 @@ export function SoulSlotGrid({ onCreate }: { onCreate: () => void }) {
 
 /** Shape-only placeholder so the grid renders before the first response. */
 const FALLBACK_SLOTS: SoulSlotDefinition[] = [
-  { number: 1, kind: "free", label: "FREE", image: null, slow: false, amount: 0 },
-  { number: 2, kind: "nft", label: "WUD 1st YEAR NFT", image: "nft-wud-1st-year.jpg", slow: false, amount: 0 },
-  { number: 3, kind: "nft", label: "WUD 2nd YEAR NFT", image: "nft-wud-2nd-year.jpg", slow: false, amount: 0 },
-  { number: 4, kind: "nft", label: "OG WUD BURN NFT", image: "nft-wud-og-burn.jpg", slow: false, amount: 0 },
-  { number: 5, kind: "token", label: "1B WUD", image: "assset-wud.jpg", slow: false, amount: 1e9 },
-  { number: 6, kind: "token", label: "5B WUD", image: "assset-wud.jpg", slow: false, amount: 5e9 },
-  { number: 7, kind: "token", label: "1000 DOT", image: "asset-dot.png", slow: false, amount: 1000 },
-  { number: 8, kind: "token", label: "5000 DOT", image: "asset-dot.png", slow: false, amount: 5000 },
-  { number: 9, kind: "stars", label: "20 MINING STARS", image: "nft-wud-grid-miner.jpg", slow: true, amount: 20 },
-  { number: 10, kind: "stars", label: "100 MINING STARS", image: "nft-wud-grid-miner.jpg", slow: true, amount: 100 },
+  { number: 1, kind: "free", label: "FREE", image: null, slow: false, amount: 0, link: null },
+  { number: 2, kind: "nft", label: "WUD 1st YEAR NFT", image: "nft-wud-1st-year.jpg", slow: false, amount: 0, link: "https://www.chaotic.art/ahp/collection/441" },
+  { number: 3, kind: "nft", label: "WUD 2nd YEAR NFT", image: "nft-wud-2nd-year.jpg", slow: false, amount: 0, link: "https://www.chaotic.art/ahp/collection/842" },
+  { number: 4, kind: "nft", label: "OG WUD BURN NFT", image: "nft-wud-og-burn.jpg", slow: false, amount: 0, link: "https://www.chaotic.art/ahp/collection/244" },
+  { number: 5, kind: "token", label: "1B WUD", image: "assset-wud.jpg", slow: false, amount: 1e9, link: "https://app.hydration.net/" },
+  { number: 6, kind: "token", label: "5B WUD", image: "assset-wud.jpg", slow: false, amount: 5e9, link: "https://app.hydration.net/" },
+  { number: 7, kind: "token", label: "1000 DOT", image: "asset-dot.png", slow: false, amount: 1000, link: "https://app.hydration.net/" },
+  { number: 8, kind: "token", label: "5000 DOT", image: "asset-dot.png", slow: false, amount: 5000, link: "https://app.hydration.net/" },
+  { number: 9, kind: "stars", label: "20 MINING STARS", image: "nft-wud-grid-miner.jpg", slow: true, amount: 20, link: "https://gavunminer.xyz/" },
+  { number: 10, kind: "stars", label: "100 MINING STARS", image: "nft-wud-grid-miner.jpg", slow: true, amount: 100, link: "https://gavunminer.xyz/" },
 ];
+
+// Reveal sequence for a slot that carries a padlock (kinds "nft"/"token"):
+// the lock fades away while the dimmed artwork underneath simultaneously
+// turns full colour, then the card flips to the "?" mystery-box face as
+// soon as that finishes. Each duration must match the CSS transition it
+// drives - see the corresponding rules in page.module.css.
+const REVEAL_MS = 3000;
+const FLIP_MS = 100;
+
+type RevealPhase = "locked" | "revealing" | "flipping" | "unlockedResting";
+
+/**
+ * One soul-creation slot: the flip button plus its requirement caption.
+ *
+ * Owns its own reveal-phase state because the padlock-fade / colour-reveal
+ * / flip sequence needs independent timing per slot - two slots unlocking
+ * on the same load must not share one timer.
+ */
+function SoulSlotCard({
+  slot,
+  isUnlocked,
+  isLoading,
+  starsOwned,
+  onCreate,
+}: {
+  slot: SoulSlotDefinition;
+  isUnlocked: boolean;
+  isLoading: boolean;
+  starsOwned: number;
+  onCreate: () => void;
+}) {
+  const isFree = slot.kind === "free";
+  // Slots 2-8 (NFT and token requirements) get a padlock badge, and the
+  // staged reveal, while locked. The star slots (9-10) carry their own
+  // progress overlay instead and just flip immediately once unlocked, same
+  // as the free slot always has.
+  const showsPadlock = slot.kind === "nft" || slot.kind === "token";
+
+  const [phase, setPhase] = useState<RevealPhase>(
+    isUnlocked ? "unlockedResting" : "locked"
+  );
+
+  // Tracks `isUnlocked` in both directions. The grid clears its state (so
+  // every slot's `isUnlocked` prop goes briefly false) at the start of
+  // every Reload click, before the fresh check comes back - which is
+  // exactly the mechanism used here to reset slots 2-10 to their locked
+  // look on Reload: this snaps straight back to "locked" (no fade-out
+  // animation for the reset itself), and once the new data confirms the
+  // slot is still unlocked, the reveal sequence below plays again from the
+  // start. The free slot never sees `isUnlocked` go false in the first
+  // place, so it's unaffected regardless.
+  // Safe on mount too: if the slot is already unlocked when this first
+  // runs, `prev` is already "unlockedResting", so the update is a no-op.
+  useEffect(() => {
+    if (isFree) return;
+    setPhase((prev) => {
+      if (!isUnlocked) return "locked";
+      if (prev !== "locked") return prev;
+      return showsPadlock ? "revealing" : "unlockedResting";
+    });
+  }, [isFree, isUnlocked, showsPadlock]);
+
+  // Chains each timed phase to the next. A slot unmounting mid-sequence
+  // (e.g. the grid re-rendering with fresh data) clears the pending timer
+  // via the effect cleanup, rather than firing a setState after unmount.
+  useEffect(() => {
+    let delay: number | null = null;
+    let next: RevealPhase | null = null;
+
+    if (phase === "revealing") {
+      delay = REVEAL_MS;
+      next = "flipping";
+    } else if (phase === "flipping") {
+      delay = FLIP_MS;
+      next = "unlockedResting";
+    }
+
+    if (delay === null || next === null) return;
+    const resolvedNext = next;
+    const timer = setTimeout(() => setPhase(resolvedNext), delay);
+    return () => clearTimeout(timer);
+  }, [phase]);
+
+  const padlockShown =
+    showsPadlock && (phase === "locked" || phase === "revealing");
+  const padlockFading = phase === "revealing";
+  const imageIsColor = phase !== "locked";
+  const flipped = phase === "flipping" || phase === "unlockedResting";
+  // The button stays inert until the reveal has actually finished, so a
+  // click mid-animation can't fire onCreate while the card still looks
+  // locked or is mid-flip.
+  const canInteract = isFree || phase === "unlockedResting";
+
+  // Locked, a slot sends the player to go earn it (buy the NFT, get the
+  // token, play the mining game) instead of doing nothing. Placeholder
+  // destinations for now - see SoulSlot.link - expected to be replaced
+  // once in-app soul creation covers this itself.
+  const handleClick = () => {
+    if (canInteract) {
+      onCreate();
+    } else if (slot.link) {
+      window.open(slot.link, "_blank", "noopener,noreferrer");
+    }
+  };
+
+  return (
+    // The requirement sits outside the button. Locked, it shows the real
+    // (greyed) artwork with a padlock badge over it and the requirement
+    // caption beneath. Unlocked, the slot flips like a postcard to the same
+    // "?" mystery-box face slot 1 always shows - what you've earned stops
+    // being about the specific reward and becomes a soul waiting to be
+    // made, same as the free slot.
+    <div className={styles.slotCell}>
+      <button
+        className={styles.characterSlot}
+        disabled={!canInteract && !slot.link}
+        onClick={canInteract || slot.link ? handleClick : undefined}
+        title={!canInteract && slot.link ? "Opens in a new tab" : undefined}
+      >
+        <span className={styles.slotArt}>
+          <span
+            className={[
+              styles.slotArtFlip,
+              // Animated only once a reveal is actually in progress or
+              // finished - not while "locked". Reload resets phase straight
+              // to "locked" to snap the card back immediately; if the
+              // transition stayed active for that too, removing the flip
+              // class would slowly un-rotate it over the same 2.5s instead
+              // of resetting right away.
+              phase !== "locked" ? styles.slotArtFlipAnimated : "",
+              flipped ? styles.slotArtFlipped : "",
+            ]
+              .filter(Boolean)
+              .join(" ")
+            }
+          >
+            <span className={`${styles.slotArtFace} ${styles.slotArtFront}`}>
+              {slot.image && (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  className={
+                    imageIsColor
+                      ? `${styles.slotImageLocked} ${styles.slotImageColor}`
+                      : styles.slotImageLocked
+                  }
+                  src={IMAGE_BASE + slot.image}
+                  alt=""
+                />
+              )}
+              {slot.kind === "stars" && (
+                <StarOverlay
+                  total={slot.amount}
+                  filled={Math.min(starsOwned, slot.amount)}
+                  slotNumber={slot.number}
+                />
+              )}
+              {padlockShown && (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  className={
+                    padlockFading
+                      ? `${styles.slotPadlock} ${styles.slotPadlockFading}`
+                      : styles.slotPadlock
+                  }
+                  src={`${IMAGE_BASE}padlock.png`}
+                  alt=""
+                />
+              )}
+              {isLoading && (
+                <span className={styles.slotSpinner} aria-hidden="true" />
+              )}
+            </span>
+            <span className={`${styles.slotArtFace} ${styles.slotArtBack}`}>
+              <span className={styles.characterSlotMark}>?</span>
+            </span>
+          </span>
+        </span>
+
+        {flipped && (
+          <span className={styles.characterSlotLabel}>
+            Create Soul {slot.number}
+          </span>
+        )}
+      </button>
+
+      <span
+        className={
+          isUnlocked ? styles.slotRequirementMet : styles.slotRequirement
+        }
+      >
+        {slot.label}
+      </span>
+    </div>
+  );
+}
 
 /**
  * A grid of star icons overlaid on a Grid Miner slot's artwork: outlined

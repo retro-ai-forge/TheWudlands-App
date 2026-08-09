@@ -2,10 +2,49 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import dynamic from "next/dynamic";
 import styles from "../../page.module.css";
 import { FeedbackForm } from "./FeedbackForm";
 import { SoulCreation } from "./SoulCreation";
-import { SoulSlotGrid } from "./SoulSlotGrid";
+
+// SoulSlotGrid reads localStorage (a wallet's cached slot unlocks) during
+// its very first render. Server-rendered HTML can never see that cache, so
+// letting this component go through SSR means the server always paints
+// every slot locked, and the client's hydration render - which can see the
+// cache immediately - then disagrees with it. React resolves that by
+// discarding and regenerating the mismatched subtree, which is slower and
+// jankier than a normal re-render and defeats the "no flash" point of
+// caching in the first place. Skipping SSR for it means the client's own
+// first render is the only render, free to read localStorage synchronously.
+//
+// That does mean the grid's own code chunk loads in after the rest of the
+// page - without a placeholder occupying its spot in the meantime, the page
+// below it (the feedback form) would render right up against the intro
+// text and then jump down once the grid pops in. `loading` reserves the
+// same footprint with the real grid's own classes, so nothing shifts.
+const SoulSlotGrid = dynamic(
+  () => import("./SoulSlotGrid").then((mod) => mod.SoulSlotGrid),
+  { ssr: false, loading: SoulSlotGridSkeleton }
+);
+
+function SoulSlotGridSkeleton() {
+  return (
+    <div className={styles.characterMatrix}>
+      <h2 className={styles.characterMatrixHeading}>Soul Slots</h2>
+      <div className={styles.characterGrid}>
+        {Array.from({ length: 10 }, (_, i) => (
+          <div key={i} className={styles.slotCell}>
+            <button className={styles.characterSlot} disabled />
+            <span className={styles.slotRequirement}>&nbsp;</span>
+          </div>
+        ))}
+      </div>
+      <button className={styles.reloadButton} disabled>
+        &nbsp;
+      </button>
+    </div>
+  );
+}
 
 export function WelcomeView() {
   const [creatingSoul, setCreatingSoul] = useState(false);
@@ -34,6 +73,12 @@ export function WelcomeView() {
           in the dev-section to see what&apos;s planned.
         </p>
 
+        {/* While characterCount is still resolving, whether the grid will
+            end up showing at all is unknown - reserving its footprint here
+            too (not just once SoulSlotGrid itself starts loading) is what
+            stops the feedback form below from rendering flush against this
+            text and then jumping down once the answer comes back. */}
+        {characterCount === null && <SoulSlotGridSkeleton />}
         {characterCount === 0 && (
           <SoulSlotGrid onCreate={() => setCreatingSoul(true)} />
         )}

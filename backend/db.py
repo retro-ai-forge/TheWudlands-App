@@ -63,7 +63,7 @@ async def ensure_indexes() -> None:
     await db.nonces.create_index("created_at", expireAfterSeconds=5 * 60)
 
     await db.active_players.create_index("address", unique=True)
-    await db.active_players.create_index("last_active_at", expireAfterSeconds=2 * 60 * 60)
+    await db.active_players.create_index("last_active_at", expireAfterSeconds=8 * 60 * 60)
 
     # `players` is the permanent record (no TTL) - unlike active_players,
     # documents here must survive logout and idle eviction indefinitely.

@@ -250,14 +250,11 @@
 }
 
 .characterSlot {
+  position: relative;
   aspect-ratio: 1 / 1;
   border: 1px dashed #3a3020;
   background: rgba(0, 0, 0, 0.4);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 0.6rem;
+  display: block;
   width: 100%;
   padding: 0;
   font: inherit;
@@ -284,23 +281,6 @@
   background: rgba(0, 0, 0, 0.4);
 }
 
-.characterSlot:disabled:hover .characterSlotMark,
-.characterSlot:disabled:hover .characterSlotLabel {
-  color: #c07a3a;
-}
-
-.characterSlot:disabled .characterSlotIcon {
-  opacity: 0.35;
-}
-
-.characterSlot:disabled .characterSlotLabel {
-  color: #6b5f45;
-}
-
-.characterSlot:disabled .characterSlotSubtitle {
-  color: #d4a24e;
-}
-
 .characterSlotMark {
   font-family: Georgia, "Times New Roman", serif;
   font-style: italic;
@@ -314,11 +294,20 @@
   height: auto;
 }
 
+/* Overlaid on the flipped (unlocked) face, over the "?" mark - the art now
+   fills the whole button, so there is no room left in normal flow beneath
+   it the way there used to be. */
 .characterSlotLabel {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0.6rem;
   font-size: 0.75rem;
   letter-spacing: 0.1em;
   text-transform: uppercase;
+  text-align: center;
   color: #a89968;
+  pointer-events: none;
 }
 
 .characterSlotSubtitle {
@@ -329,9 +318,9 @@
 }
 
 /* ── Soul slot artwork ──────────────────────────────────── */
-/* One grid cell: the button, with its requirement as a caption underneath.
-   The requirement sits outside the button so the artwork can be swapped for
-   a character portrait without text competing with it. */
+/* One grid cell: the button, with its requirement (and, locked, a LOCKED
+   line) as captions underneath. They sit outside the button so the artwork
+   can fill the whole button without text competing with it. */
 .slotCell {
   display: flex;
   flex-direction: column;
@@ -347,41 +336,119 @@
   text-transform: uppercase;
   text-align: center;
   padding: 0 0.2rem;
-  color: #6b5f45;
+}
+
+/* Not yet met - reads as a warning, not just a dim hint. */
+.slotRequirement {
+  color: #8a2020;
 }
 
 /* Once earned, the requirement reads as a badge rather than a hurdle. */
 .slotRequirementMet {
-  color: #a8894e;
+  color: #4caf50;
 }
 
+/* Fills the whole button now - the requirement caption that used to share
+   this space with it moved outside, below the button entirely. */
 .slotArt {
+  display: block;
   position: relative;
+  width: 100%;
+  height: 100%;
+  perspective: 900px;
+}
+
+/* The rotating half of the postcard-flip: locked shows the front (real,
+   greyed artwork); unlocked flips 180deg to the back (the "?" mark, the
+   same mystery-box face slot 1 always shows - once earned, what matters is
+   that a soul is waiting, not which specific reward unlocked it). */
+.slotArtFlip {
+  display: block;
+  position: relative;
+  width: 100%;
+  height: 100%;
+  transform-style: preserve-3d;
+  /* No transition here by default - resetting to locked (Reload) must snap
+     the card back instantly, not slowly un-rotate over the same duration
+     as the reveal. Only .slotArtFlipAnimated (applied once a reveal is
+     under way) turns the rotation into an animation. */
+}
+
+/* ease-out: fast from the first frame, settling only at the end - the
+   previous custom curve spent its first ~250ms barely rotating at all,
+   which read as a pause before the turn started rather than the turn
+   itself starting. Duration must match FLIP_MS in SoulSlotGrid.tsx. */
+.slotArtFlipAnimated {
+  transition: transform 2.5s ease-out;
+}
+
+.slotArtFlipped {
+  transform: rotateY(180deg);
+}
+
+.slotArtFace {
+  position: absolute;
+  inset: 0;
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 72%;
-  aspect-ratio: 1 / 1;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
 }
 
-.slotImage,
+.slotArtBack {
+  transform: rotateY(180deg);
+}
+
 .slotImageLocked {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  border: 1px solid #3a3020;
-  transition: filter 0.3s ease, opacity 0.3s ease;
-}
-
-/* Locked slots stay visible but drained of colour, so the player can see
-   what the reward looks like without mistaking it for something they own. */
-.slotImageLocked {
   filter: grayscale(100%) brightness(0.55);
   opacity: 0.6;
+  /* No transition here by default - resetting to locked (Reload) must snap
+     back to grey instantly, not slowly fade the colour out over the same
+     duration as the reveal. .slotImageColor carries its own transition,
+     applied only together with the colour state itself. */
 }
 
-.characterSlot:disabled .slotImageLocked {
-  opacity: 0.6;
+/* Applied once a slot's requirement is met - the reward's real colours,
+   not just a preview of its shape. Runs at the same time as the padlock
+   fading out below, not after it. linear, not ease: ease decelerates
+   toward the end, so the colour already looks fully arrived well before
+   REVEAL_MS is actually up - which read as a pause before the turn, since
+   the turn correctly waits for the real elapsed time, not the point it
+   merely looks finished.
+   Duration must match REVEAL_MS in SoulSlotGrid.tsx. */
+.slotImageColor {
+  filter: none;
+  opacity: 1;
+  transition: filter 3s linear, opacity 3s linear;
+}
+
+/* Padlock badge over slots 2-8 while locked. Deliberately not sharing
+   .slotImageLocked's grayscale/opacity - it must read as a distinct,
+   full-colour object sitting on top of the dimmed artwork, not part of it. */
+.slotPadlock {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 100%;
+  height: auto;
+  transform: translate(-50%, -50%);
+  filter: drop-shadow(0 3px 8px rgba(0, 0, 0, 0.65));
+  pointer-events: none;
+  opacity: 1;
+  /* linear, matching .slotImageColor - see the comment there.
+     Duration must match REVEAL_MS in SoulSlotGrid.tsx. */
+  transition: opacity 3s linear;
+}
+
+/* Applied once a slot's requirement is met - fades the lock down to a
+   faint 30% while .slotImageColor (above) simultaneously blends the
+   artwork in, rather than blending the lock out to fully invisible. */
+.slotPadlockFading {
+  opacity: 0.0;
 }
 
 /* Grid Miner star progress: a grid of outline stars over the artwork,

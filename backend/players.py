@@ -2,7 +2,7 @@
 Permanent player registry, backed by the Mongo `players` collection.
 
 Unlike active_players.py (which tracks who's online right now and is
-evicted after 2 hours idle via TTL index), documents here have no TTL and
+evicted after 8 hours idle via TTL index), documents here have no TTL and
 are meant to persist indefinitely - a player's character roster must
 survive logout and any amount of time between sessions.
 """

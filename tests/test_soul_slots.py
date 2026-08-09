@@ -109,6 +109,29 @@ def test_each_label_matches_the_requirement_it_enforces():
         assert slot.amount == amount, f"slot {slot.number} amount"
 
 
+def test_every_locked_slot_has_a_link_to_go_earn_it():
+    """
+    Slots 2-10 send the player somewhere to go get the requirement; only
+    the free slot has nothing to link to.
+    """
+    expected_links = {
+        1: None,
+        2: "https://www.chaotic.art/ahp/collection/441",
+        3: "https://www.chaotic.art/ahp/collection/842",
+        4: "https://www.chaotic.art/ahp/collection/244",
+        5: "https://app.hydration.net/",
+        6: "https://app.hydration.net/",
+        7: "https://app.hydration.net/",
+        8: "https://app.hydration.net/",
+        9: "https://gavunminer.xyz/",
+        10: "https://gavunminer.xyz/",
+    }
+
+    for slot in SOUL_SLOTS:
+        assert slot.link == expected_links[slot.number], f"slot {slot.number} link"
+        assert slot.to_dict()["link"] == expected_links[slot.number]
+
+
 def test_to_dict_exposes_the_star_targets_the_client_needs():
     """
     The star-progress overlay fills N of `amount` stars per slot, so the
