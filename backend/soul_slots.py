@@ -15,7 +15,7 @@ Two speeds of check:
 
 Results are cached per address in the `soul_slots` collection. Re-checking
 on every login would burn the Subscan quota for data that rarely changes,
-so a cached entry is only re-verified on roughly one login in ten.
+so a cached entry is only re-verified on roughly one login in twenty.
 """
 
 from __future__ import annotations
@@ -46,7 +46,7 @@ from backend.nfts import (
 STARS_ATTRIBUTE_POSITION = 2
 
 # Fraction of logins that re-verify an already-cached entry.
-REVERIFY_PROBABILITY = 0.1
+REVERIFY_PROBABILITY = 0.05
 
 # Stored records hold slot *numbers*, so any change to the order or meaning
 # of SOUL_SLOTS makes existing records mean something else. Bump this when

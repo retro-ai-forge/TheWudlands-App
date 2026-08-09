@@ -455,7 +455,7 @@ async def get_my_soul_slots(
     qualifies for nothing.
 
     Pass `?force=true` (the welcome page's Reload button) to bypass the
-    one-in-ten cache roll and re-check the wallet immediately, rather than
+    one-in-twenty cache roll and re-check the wallet immediately, rather than
     waiting for a random login to happen to pick it.
     """
     try:

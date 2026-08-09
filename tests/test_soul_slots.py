@@ -138,7 +138,7 @@ def test_layout_version_invalidates_records_from_an_older_order():
     assert should_reverify(old, roll=0.99) is True
     # A record with no version at all predates versioning entirely.
     assert should_reverify({"address": TEST_ADDRESS, "unlocked": [1, 5]}, roll=0.99) is True
-    # A current record still follows the one-in-ten rule.
+    # A current record still follows the one-in-twenty rule.
     assert should_reverify(current, roll=0.99) is False
 
 
@@ -220,19 +220,19 @@ def test_first_ever_login_always_checks():
 def test_stored_result_is_reused_most_logins():
     stored = _current_record([1, 2])
 
-    # Roughly one login in ten re-checks; the rest serve the cached answer.
-    assert should_reverify(stored, roll=0.05) is True
+    # Roughly one login in twenty re-checks; the rest serve the cached answer.
+    assert should_reverify(stored, roll=0.02) is True
     assert should_reverify(stored, roll=0.5) is False
     assert should_reverify(stored, roll=0.99) is False
 
 
-def test_reverify_rate_is_about_one_in_ten():
+def test_reverify_rate_is_about_one_in_twenty():
     stored = _current_record([1])
     rolls = [i / 1000 for i in range(1000)]
 
     checked = sum(1 for roll in rolls if should_reverify(stored, roll))
 
-    assert 95 <= checked <= 105
+    assert 45 <= checked <= 55
 
 
 # --- Offline: fast resolve fallbacks -----------------------------------------
