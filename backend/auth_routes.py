@@ -8,7 +8,7 @@ Provides:
 - POST /api/auth/logout - Clear session
 """
 
-from fastapi import APIRouter, HTTPException, Request, Response, Depends
+from fastapi import APIRouter, BackgroundTasks, HTTPException, Request, Response, Depends
 from pydantic import BaseModel, ConfigDict, Field
 from datetime import datetime, timedelta, timezone
 from typing import List, Optional
@@ -27,6 +27,7 @@ from backend.active_players import (
     list_active_players,
 )
 from backend.players import get_or_create_player, get_player
+from backend.balances import log_login_balances
 
 router = APIRouter(prefix="/api/auth", tags=["authentication"])
 player_router = APIRouter(prefix="/api/auth", tags=["player"])
@@ -258,7 +259,11 @@ async def get_auth_challenge(payload: ChallengeRequest):
 
 
 @router.post("/verify")
-async def verify_auth_signature(payload: SignedAuthMessageRequest, response: Response):
+async def verify_auth_signature(
+    payload: SignedAuthMessageRequest,
+    response: Response,
+    background_tasks: BackgroundTasks,
+):
     """
     Verify signed authentication message and create session.
 
@@ -304,6 +309,10 @@ async def verify_auth_signature(payload: SignedAuthMessageRequest, response: Res
         # Create the permanent player record on first-ever login (no-op if
         # it already exists) - this is what survives logout and idle eviction.
         await get_or_create_player(session.address)
+
+        # Log the wallet's DOT and WUD holdings, but only after the response
+        # is sent - two Subscan round-trips shouldn't slow down the login.
+        background_tasks.add_task(log_login_balances, session.address)
 
         # Step 3: Set secure HTTP cookie
         max_age = int((session.expires_at - datetime.now(timezone.utc)).total_seconds())

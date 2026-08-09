@@ -15,6 +15,23 @@ def mongodb_uri() -> str:
     return uri
 
 
+@pytest.fixture(scope="session")
+def subscan_api_key() -> str:
+    key = os.getenv("SUBSCAN_API_KEY")
+    if not key:
+        pytest.skip("SUBSCAN_API_KEY not set in .env")
+    return key
+
+
+@pytest.fixture(scope="session")
+def subscan_test_address() -> str:
+    """The wallet the live balance/NFT tests read - kept in .env, not in code."""
+    address = os.getenv("SUBSCAN_TEST_ADDRESS")
+    if not address:
+        pytest.skip("SUBSCAN_TEST_ADDRESS not set in .env")
+    return address
+
+
 # Indexes are provisioned once via scripts/setup_db_indexes.py, not per test
 # run - creating them takes minutes on Firestore's MongoDB-compatibility
 # layer (real server-side index builds), far too slow to redo on every
