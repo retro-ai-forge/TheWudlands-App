@@ -210,6 +210,67 @@ async def store_slots(address: str, changes: dict[str, Any]) -> None:
     )
 
 
+async def apply_slot_membership(
+    address: str,
+    candidate_numbers: tuple[int, ...],
+    qualifying_numbers: set[int],
+    extra_fields: dict[str, Any],
+) -> None:
+    """
+    Make `unlocked` agree with `qualifying_numbers` for exactly the slots in
+    `candidate_numbers`, leaving every other slot number in the array alone.
+
+    The fast-slot pass and the star-slot pass each own a disjoint slice of
+    slot numbers (evaluate_fast_slots never decides a star slot and vice
+    versa). Writing through $pull/$addToSet scoped to just its own slice,
+    instead of overwriting the whole array from a locally-held snapshot,
+    means the two passes can run concurrently - the page's own background
+    star check overlapping a Reload click, for instance - without one
+    silently discarding a slot number the other just confirmed. That used to
+    be possible: both passes read the full stored array, recomputed the
+    whole thing including the other pass's slots from whatever was cached
+    at that moment, and blindly `$set` it back - so whichever write landed
+    second could revert a slot the other had only just correctly unlocked.
+    """
+    db = get_database()
+    now = datetime.now(timezone.utc)
+    stamp = {"layout_version": SLOT_LAYOUT_VERSION, "updated_at": now, **extra_fields}
+    qualifying_numbers = qualifying_numbers & set(candidate_numbers)
+    to_remove = [n for n in candidate_numbers if n not in qualifying_numbers]
+
+    # $pull and $addToSet cannot target the same field in one update, so a
+    # pass that both drops and gains slot numbers needs two round trips.
+    if to_remove:
+        await db.soul_slots.update_one(
+            {"address": address},
+            {
+                "$pull": {"unlocked": {"$in": to_remove}},
+                "$set": stamp,
+                "$setOnInsert": {"address": address},
+            },
+            upsert=True,
+        )
+    if qualifying_numbers:
+        await db.soul_slots.update_one(
+            {"address": address},
+            {
+                "$addToSet": {"unlocked": {"$each": sorted(qualifying_numbers)}},
+                "$set": stamp,
+                "$setOnInsert": {"address": address},
+            },
+            upsert=True,
+        )
+    if not to_remove and not qualifying_numbers:
+        # Neither branch above ran, so the freshness stamp (and, for a
+        # wallet seen for the first time, the record itself) still needs
+        # writing even though membership didn't change.
+        await db.soul_slots.update_one(
+            {"address": address},
+            {"$set": stamp, "$setOnInsert": {"address": address, "unlocked": []}},
+            upsert=True,
+        )
+
+
 def should_reverify(stored: Optional[dict], roll: Optional[float] = None) -> bool:
     """
     Whether to re-check a wallet that already has a stored result.
@@ -249,18 +310,44 @@ def should_recheck_stars(stored: Optional[dict], roll: Optional[float] = None) -
     return roll < REVERIFY_PROBABILITY
 
 
-async def resolve_fast_slots(address: str, roll: Optional[float] = None) -> dict:
+async def resolve_fast_slots(
+    address: str, roll: Optional[float] = None, force: bool = False
+) -> dict:
     """
     The non-star slot state for `address`, from cache or a fresh lookup.
 
     Returns {"unlocked": [...], "checked": bool, "stars": float|None,
     "stars_pending": bool}. `checked` is False whenever the live lookup
-    could not run - the fast slots are reset to unearned (and that reset is
-    persisted) rather than left reporting an unlocked state that could not
-    actually be confirmed this time. `stars_pending` tells the caller
-    whether the slow star pass should run this request; it shares the fast
-    slots' roll, so on the rare login that reverifies at all, it reverifies
-    everything at once rather than ageing the two independently.
+    could not run (no Subscan key configured, or the API is unreachable).
+    What happens to the fast slots in that case depends on whether this was
+    a passive check or an explicit Reload (`force`):
+
+      * Passive - the fast slots are left exactly as already stored, since
+        there is nothing to verify them against and a routine page load
+        should not flicker a wallet's confirmed slots back to locked over a
+        transient hiccup.
+      * Forced - the player explicitly asked for a fresh answer and none
+        could be produced, so pretending the old cached result is still
+        good would be misleading. The fast slots reset to just the free
+        slot, the same as a wallet that has never been checked at all.
+
+    A forced reload additionally clears the *star* slots up front, because
+    it always schedules a fresh star check (stars_pending is necessarily
+    true at roll 0). Without that, the stored star slots would come straight
+    back in this response and light slots 9/10 up again for the seconds
+    until the slow check finishes - which is exactly the flash of
+    still-unverified state Reload is meant to clear. They are re-earned
+    only by resolve_star_slots actually completing.
+
+    Apart from that deliberate clear, each write only ever touches its own
+    slice of slot numbers (see apply_slot_membership), so the fast and star
+    passes cannot clobber one another whatever order they complete in.
+    `unlocked` in the return value is always read back from the stored
+    record after writing, so it reflects the star pass's latest result too,
+    not just what this pass itself just decided. `stars_pending` tells the
+    caller whether the slow star pass should run this request; it shares
+    the fast slots' roll, so on the rare login that reverifies at all, it
+    reverifies everything at once rather than ageing the two independently.
     """
     stored = await get_stored_slots(address)
     effective_roll = random.random() if roll is None else roll
@@ -276,45 +363,34 @@ async def resolve_fast_slots(address: str, roll: Optional[float] = None) -> dict
         }
 
     unlocked = await evaluate_fast_slots(address)
+    checked = unlocked is not None
 
-    if unlocked is None:
-        # Lookup unavailable (no Subscan key configured, or the API is
-        # unreachable) - the fast slots cannot be confirmed right now, so
-        # reset them to unearned and persist that, the same way the star
-        # pass always stores whatever it actually found rather than quietly
-        # keeping a stale prior success. A wallet that can't currently be
-        # verified must not go on reporting itself unlocked from a check
-        # that ran an arbitrary amount of time ago - that used to be the
-        # fallback here, which meant a broken Subscan key made the Reload
-        # button silently do nothing for every slot but the stars.
-        # Star slots are a separate pass and aren't what failed here, so
-        # whatever was last confirmed for them is kept rather than reset too.
-        stars = stored.get("stars") if stored else None
-        reset_unlocked = sorted(
-            set(FREE_SLOT_NUMBERS)
-            | (set(unlocked_from_stars(stars)) if stars is not None else set())
+    if checked:
+        await apply_slot_membership(
+            address,
+            FAST_SLOT_NUMBERS,
+            set(unlocked),
+            {"tokens_checked_at": datetime.now(timezone.utc)},
         )
-        await store_slots(address, {"unlocked": reset_unlocked})
-        return {
-            "unlocked": reset_unlocked,
-            "stars": stars,
-            "checked": False,
-            "cached": False,
-            "stars_pending": stars_pending,
-        }
+    elif force:
+        # Explicit Reload, but the lookup could not run at all - reset to
+        # just the free slot rather than go on reporting a stale prior
+        # result as if it were the fresh answer the player asked for.
+        await apply_slot_membership(address, FAST_SLOT_NUMBERS, set(FREE_SLOT_NUMBERS), {})
+    # else: passive load, lookup unavailable - leave the stored fast slots
+    # untouched; see the docstring above.
 
-    # Keep any star slots already earned; this pass did not re-check them.
-    stars = stored.get("stars") if stored else None
-    if stars is not None:
-        unlocked = sorted(set(unlocked) | set(unlocked_from_stars(stars)))
+    # Clear the star slots for the duration of the re-check they are about
+    # to get, so this response cannot hand back the previous run's result
+    # and briefly re-light slots 9/10 before it has actually been redone.
+    if force and stars_pending:
+        await apply_slot_membership(address, STAR_SLOT_NUMBERS, set(), {"stars": None})
 
-    await store_slots(address, {"unlocked": unlocked, "tokens_checked_at":
-                                datetime.now(timezone.utc)})
-
+    stored_now = await get_stored_slots(address)
     return {
-        "unlocked": unlocked,
-        "stars": stars,
-        "checked": True,
+        "unlocked": stored_now.get("unlocked", list(FREE_SLOT_NUMBERS)) if stored_now else list(FREE_SLOT_NUMBERS),
+        "stars": stored_now.get("stars") if stored_now else None,
+        "checked": checked,
         "cached": False,
         "stars_pending": stars_pending,
     }
@@ -324,22 +400,23 @@ async def resolve_star_slots(address: str) -> dict:
     """
     The star slot state for `address`, always freshly counted.
 
-    Merges the result into the stored record so the next login serves it
-    from cache instead of walking IPFS again.
+    The write only ever touches STAR_SLOT_NUMBERS (see
+    apply_slot_membership), so it can never affect the fast slots' own
+    unlocked state - no read-modify-write over the whole array, so nothing
+    here can revert a fast-slot unlock that happened to land while this was
+    still walking IPFS. `unlocked` in the return value is read back from the
+    stored record after writing, so it reflects the fast pass's latest
+    result too, not just the star slots this pass just decided.
     """
-    stored = await get_stored_slots(address)
-    previous = set(stored.get("unlocked", FREE_SLOT_NUMBERS)) if stored else set(
-        FREE_SLOT_NUMBERS
-    )
-
     stars, star_slots = await evaluate_star_slots(address)
 
-    # Drop star slots that are no longer earned, keep everything else.
-    unlocked = sorted((previous - set(STAR_SLOT_NUMBERS)) | set(star_slots))
-
-    await store_slots(
+    await apply_slot_membership(
         address,
-        {"unlocked": unlocked, "stars": stars, "stars_checked_at": datetime.now(timezone.utc)},
+        STAR_SLOT_NUMBERS,
+        set(star_slots),
+        {"stars": stars, "stars_checked_at": datetime.now(timezone.utc)},
     )
 
+    stored_now = await get_stored_slots(address)
+    unlocked = stored_now.get("unlocked", list(FREE_SLOT_NUMBERS)) if stored_now else list(FREE_SLOT_NUMBERS)
     return {"unlocked": unlocked, "stars": stars, "checked": True}

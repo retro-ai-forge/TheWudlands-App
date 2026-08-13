@@ -450,16 +450,18 @@ async def get_my_soul_slots(
     client fetches /me/soul-slots/stars separately.
 
     `checked` is false when the lookup could not run at all (no Subscan key
-    configured, or the API was unreachable). The fast slots are reset to
-    unearned and that reset is persisted in that case, rather than the grid
-    going on reporting an unlock state that could no longer be confirmed.
+    configured, or the API was unreachable). On a passive load the fast
+    slots are just left as already stored in that case; on an explicit
+    Reload (`force=true`) they reset to unearned instead, since the player
+    asked for a fresh answer and none could be produced - see
+    resolve_fast_slots for the full reasoning.
 
     Pass `?force=true` (the welcome page's Reload button) to bypass the
     one-in-thirty-three cache roll and re-check the wallet immediately, rather than
     waiting for a random login to happen to pick it.
     """
     try:
-        state = await resolve_fast_slots(address, roll=0.0 if force else None)
+        state = await resolve_fast_slots(address, roll=0.0 if force else None, force=force)
     except Exception as e:
         print(f"[soul-slots] Lookup failed for {address}: {type(e).__name__}: {e}")
         state = {

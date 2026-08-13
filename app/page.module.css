@@ -498,9 +498,11 @@
   height: 100%;
 }
 
+/* The not-yet-earned stars. Kept faint so the filled ones carry the eye and
+   the artwork underneath still reads through the grid. */
 .starOutline path {
   fill: none;
-  stroke: rgba(255, 255, 255, 0.45);
+  stroke: rgba(255, 255, 255, 0.30);
   stroke-width: 1.5;
 }
 
