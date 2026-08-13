@@ -73,16 +73,18 @@ export function WelcomeView() {
           in the dev-section to see what&apos;s planned.
         </p>
 
-        {/* While characterCount is still resolving, whether the grid will
-            end up showing at all is unknown - reserving its footprint here
-            too (not just once SoulSlotGrid itself starts loading) is what
-            stops the feedback form below from rendering flush against this
-            text and then jumping down once the answer comes back. */}
-        {characterCount === null && <SoulSlotGridSkeleton />}
-        {characterCount === 0 && (
-          <SoulSlotGrid onCreate={() => setCreatingSoul(true)} />
-        )}
+      </div>
 
+      {/* Outside .welcomeBody deliberately - that wrapper caps at 34rem for
+          prose readability, which would squeeze the grid down to the same
+          narrow column instead of letting it use the full 900px the page
+          now allows. */}
+      {characterCount === null && <SoulSlotGridSkeleton />}
+      {characterCount === 0 && (
+        <SoulSlotGrid onCreate={() => setCreatingSoul(true)} />
+      )}
+
+      <div className={styles.welcomeBody}>
         <br/>
         <p className={styles.welcomeMessage}>
           We&apos;d love your feedback and ideas!

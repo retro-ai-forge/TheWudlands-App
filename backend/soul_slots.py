@@ -254,12 +254,13 @@ async def resolve_fast_slots(address: str, roll: Optional[float] = None) -> dict
     The non-star slot state for `address`, from cache or a fresh lookup.
 
     Returns {"unlocked": [...], "checked": bool, "stars": float|None,
-    "stars_pending": bool}. `checked` is False only when there was nothing
-    stored and the live lookup could not run - the case the UI shows as
-    "still locked". `stars_pending` tells the caller whether the slow star
-    pass should run this request; it shares the fast slots' roll, so on the
-    rare login that reverifies at all, it reverifies everything at once
-    rather than ageing the two independently.
+    "stars_pending": bool}. `checked` is False whenever the live lookup
+    could not run - the fast slots are reset to unearned (and that reset is
+    persisted) rather than left reporting an unlocked state that could not
+    actually be confirmed this time. `stars_pending` tells the caller
+    whether the slow star pass should run this request; it shares the fast
+    slots' roll, so on the rare login that reverifies at all, it reverifies
+    everything at once rather than ageing the two independently.
     """
     stored = await get_stored_slots(address)
     effective_roll = random.random() if roll is None else roll
@@ -277,21 +278,30 @@ async def resolve_fast_slots(address: str, roll: Optional[float] = None) -> dict
     unlocked = await evaluate_fast_slots(address)
 
     if unlocked is None:
-        # Lookup unavailable - fall back to whatever was stored before.
-        if (
-            stored
-            and "unlocked" in stored
-            and stored.get("layout_version") == SLOT_LAYOUT_VERSION
-        ):
-            return {
-                "unlocked": stored["unlocked"],
-                "stars": stored.get("stars"),
-                "checked": True,
-                "cached": True,
-                "stars_pending": stars_pending,
-            }
-        return {"unlocked": list(FREE_SLOT_NUMBERS), "stars": None, "checked": False,
-                "cached": False, "stars_pending": True}
+        # Lookup unavailable (no Subscan key configured, or the API is
+        # unreachable) - the fast slots cannot be confirmed right now, so
+        # reset them to unearned and persist that, the same way the star
+        # pass always stores whatever it actually found rather than quietly
+        # keeping a stale prior success. A wallet that can't currently be
+        # verified must not go on reporting itself unlocked from a check
+        # that ran an arbitrary amount of time ago - that used to be the
+        # fallback here, which meant a broken Subscan key made the Reload
+        # button silently do nothing for every slot but the stars.
+        # Star slots are a separate pass and aren't what failed here, so
+        # whatever was last confirmed for them is kept rather than reset too.
+        stars = stored.get("stars") if stored else None
+        reset_unlocked = sorted(
+            set(FREE_SLOT_NUMBERS)
+            | (set(unlocked_from_stars(stars)) if stars is not None else set())
+        )
+        await store_slots(address, {"unlocked": reset_unlocked})
+        return {
+            "unlocked": reset_unlocked,
+            "stars": stars,
+            "checked": False,
+            "cached": False,
+            "stars_pending": stars_pending,
+        }
 
     # Keep any star slots already earned; this pass did not re-check them.
     stars = stored.get("stars") if stored else None

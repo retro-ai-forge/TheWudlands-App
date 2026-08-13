@@ -158,6 +158,9 @@
   align-items: center;
   justify-content: space-between;
   padding: 2rem 1.5rem 8vh;
+  width: 100%;
+  max-width: 900px;
+  margin: 0 auto;
 }
 
 .welcomeBody {
@@ -233,19 +236,22 @@
 
 .characterGrid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(4, 1fr);
   gap: 1rem;
 }
 
-@media (max-width: 749px) {
+/* 3 columns in the mid range, then 2 below 600px - stays 2 all the way down
+   to the 300px floor rather than collapsing to 1, which would waste the
+   width these slots have room for on small phones. */
+@media (max-width: 799px) {
   .characterGrid {
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: repeat(3, 1fr);
   }
 }
 
-@media (max-width: 420px) {
+@media (max-width: 599px) {
   .characterGrid {
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(2, 1fr);
   }
 }
 
@@ -267,11 +273,6 @@
   background: rgba(192, 122, 58, 0.12);
 }
 
-.characterSlot:hover .characterSlotMark,
-.characterSlot:hover .characterSlotLabel {
-  color: #e6a55a;
-}
-
 .characterSlot:disabled {
   cursor: not-allowed;
 }
@@ -281,33 +282,9 @@
   background: rgba(0, 0, 0, 0.4);
 }
 
-.characterSlotMark {
-  font-family: Georgia, "Times New Roman", serif;
-  font-style: italic;
-  font-size: 5.5rem;
-  line-height: 1;
-  color: #c07a3a;
-}
-
 .characterSlotIcon {
   width: 4.5rem;
   height: auto;
-}
-
-/* Overlaid on the flipped (unlocked) face, over the "?" mark - the art now
-   fills the whole button, so there is no room left in normal flow beneath
-   it the way there used to be. */
-.characterSlotLabel {
-  position: absolute;
-  left: 0;
-  right: 0;
-  bottom: 0.6rem;
-  font-size: 0.75rem;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  text-align: center;
-  color: #a89968;
-  pointer-events: none;
 }
 
 .characterSlotSubtitle {
@@ -330,7 +307,7 @@
 
 .slotRequirement,
 .slotRequirementMet {
-  font-size: 0.65rem;
+  font-size: 0.78rem;
   line-height: 1.35;
   letter-spacing: 0.08em;
   text-transform: uppercase;
@@ -340,12 +317,13 @@
 
 /* Not yet met - reads as a warning, not just a dim hint. */
 .slotRequirement {
-  color: #8a2020;
+  color: #d15a5a;
 }
 
 /* Once earned, the requirement reads as a badge rather than a hurdle. */
 .slotRequirementMet {
   color: #4caf50;
+  font-weight: 700;
 }
 
 /* Fills the whole button now - the requirement caption that used to share
@@ -400,6 +378,55 @@
   transform: rotateY(180deg);
 }
 
+/* The unlocked/flipped face's artwork - an empty soul waiting to be made,
+   replacing the old "?" mark. Dims in lockstep with .slotEmptyGlow fading
+   out below, so the trough of the pulse reads as the art actually going
+   darker, not just the glow layer thinning out over an unchanged image. */
+.slotEmptyImage {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  animation: slotEmptyDim 2.4s ease-in-out infinite;
+}
+
+/* A soft pulsing glow over the empty-soul artwork, centred on the blue
+   plus sign the art already carries - draws the eye to every slot that's
+   actually ready to create in. screen blend so it lifts the glow into the
+   dark artwork instead of sitting as a flat tinted disc on top of it. */
+.slotEmptyGlow {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: radial-gradient(
+    circle at 50% 50%,
+    rgba(96, 220, 255, 0.3) 0%,
+    rgba(96, 220, 255, 0.13) 32%,
+    rgba(96, 220, 255, 0) 62%
+  );
+  mix-blend-mode: screen;
+  animation: slotEmptyPulse 2.4s ease-in-out infinite;
+}
+
+@keyframes slotEmptyPulse {
+  0%, 100% {
+    opacity: 0.06;
+    transform: scale(0.9);
+  }
+  50% {
+    opacity: 0.6;
+    transform: scale(1.06);
+  }
+}
+
+@keyframes slotEmptyDim {
+  0%, 100% {
+    filter: brightness(0.6);
+  }
+  50% {
+    filter: brightness(1);
+  }
+}
+
 .slotImageLocked {
   width: 100%;
   height: 100%;
@@ -426,16 +453,16 @@
   transition: filter 3s linear, opacity 3s linear;
 }
 
-/* Padlock badge over slots 2-8 while locked. Deliberately not sharing
+/* Padlock badge over slots 2-8 while locked (and, stacked beneath the star
+   overlay, over slots 9-10 too). Deliberately not sharing
    .slotImageLocked's grayscale/opacity - it must read as a distinct,
    full-colour object sitting on top of the dimmed artwork, not part of it. */
 .slotPadlock {
   position: absolute;
-  top: 50%;
-  left: 50%;
-  width: 100%;
+  bottom: -2%;
+  right: -2%;
+  width: 54%;
   height: auto;
-  transform: translate(-50%, -50%);
   filter: drop-shadow(0 6px 14px rgba(0, 0, 0, 0.9));
   pointer-events: none;
   opacity: 1;

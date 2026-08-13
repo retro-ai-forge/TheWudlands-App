@@ -311,10 +311,12 @@ function SoulSlotCard({
   onCreate: () => void;
 }) {
   const isFree = slot.kind === "free";
+  const isStars = slot.kind === "stars";
   // Slots 2-8 (NFT and token requirements) get a padlock badge, and the
   // staged reveal, while locked. The star slots (9-10) carry their own
   // progress overlay instead and just flip immediately once unlocked, same
-  // as the free slot always has.
+  // as the free slot always has - they still show the padlock while locked,
+  // but stacked beneath the star overlay rather than driving a reveal.
   const showsPadlock = slot.kind === "nft" || slot.kind === "token";
 
   const [phase, setPhase] = useState<RevealPhase>(
@@ -363,7 +365,7 @@ function SoulSlotCard({
   }, [phase]);
 
   const padlockShown =
-    showsPadlock && (phase === "locked" || phase === "revealing");
+    (showsPadlock || isStars) && (phase === "locked" || phase === "revealing");
   const padlockFading = phase === "revealing";
   const imageIsColor = phase !== "locked";
   const flipped = phase === "flipping" || phase === "unlockedResting";
@@ -428,13 +430,6 @@ function SoulSlotCard({
                   alt=""
                 />
               )}
-              {slot.kind === "stars" && (
-                <StarOverlay
-                  total={slot.amount}
-                  filled={Math.min(starsOwned, slot.amount)}
-                  slotNumber={slot.number}
-                />
-              )}
               {padlockShown && (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img
@@ -447,21 +442,28 @@ function SoulSlotCard({
                   alt=""
                 />
               )}
+              {slot.kind === "stars" && (
+                <StarOverlay
+                  total={slot.amount}
+                  filled={Math.min(starsOwned, slot.amount)}
+                  slotNumber={slot.number}
+                />
+              )}
               {isLoading && (
                 <span className={styles.slotSpinner} aria-hidden="true" />
               )}
             </span>
             <span className={`${styles.slotArtFace} ${styles.slotArtBack}`}>
-              <span className={styles.characterSlotMark}>?</span>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                className={styles.slotEmptyImage}
+                src={`${IMAGE_BASE}char-empty.jpg`}
+                alt=""
+              />
+              <span className={styles.slotEmptyGlow} aria-hidden="true" />
             </span>
           </span>
         </span>
-
-        {flipped && (
-          <span className={styles.characterSlotLabel}>
-            Create Soul {slot.number}
-          </span>
-        )}
       </button>
 
       <span

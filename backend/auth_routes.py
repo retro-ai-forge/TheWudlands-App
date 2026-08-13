@@ -450,9 +450,9 @@ async def get_my_soul_slots(
     client fetches /me/soul-slots/stars separately.
 
     `checked` is false when the lookup could not run at all (no Subscan key
-    configured, or the API was unreachable with nothing cached). The client
-    shows the grid as locked in that case rather than claiming the wallet
-    qualifies for nothing.
+    configured, or the API was unreachable). The fast slots are reset to
+    unearned and that reset is persisted in that case, rather than the grid
+    going on reporting an unlock state that could no longer be confirmed.
 
     Pass `?force=true` (the welcome page's Reload button) to bypass the
     one-in-thirty-three cache roll and re-check the wallet immediately, rather than

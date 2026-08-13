@@ -3,6 +3,8 @@ An old-school round-based Fighting Fantasy-style adventure game inspired by Ultr
 
 Visit [The Wudlands](https://thewudlands.eu/) to explore the game.
 
+Want to run the project locally? See [SETUP.md](SETUP.md) for the full setup instructions.
+
 ## Game Engine
 
 This repo is the core engine to host and run several adventures in parallel for users. It tracks the current position of an adventurer, game specific variables and status.
@@ -84,7 +86,7 @@ Token thresholds are cumulative — holding 5B WUD unlocks the 1B slot as well. 
 | 9 | 20 Grid Miner stars | Collection 852 metadata (IPFS) | Background |
 | 10 | 100 Grid Miner stars | Collection 852 metadata (IPFS) | Background |
 
-Results are stored per wallet so the checks do not run on every visit. A player with no stored record is always checked; after that, roughly one login in thirty-three re-verifies, which keeps the unlock state current without spending the API quota on data that rarely changes. A "Reload Balances & NFTs" button on the welcome page forces an immediate re-check outside that schedule, for a player who wants to confirm a fresh balance or NFT right away. If a lookup cannot run at all — no API key configured, or the service is unreachable with nothing cached — the grid stays locked rather than recording that the wallet qualifies for nothing, and previously earned slots are never revoked by an outage.
+Results are stored per wallet so the checks do not run on every visit. A player with no stored record is always checked; after that, roughly one login in thirty-three re-verifies, which keeps the unlock state current without spending the API quota on data that rarely changes. A "Reload Balances & NFTs" button on the welcome page forces an immediate re-check outside that schedule, for a player who wants to confirm a fresh balance or NFT right away. If the NFT/token lookup cannot run at all — no API key configured, or Subscan is unreachable — those slots are reset to unearned and that reset is stored, the same as any other fresh result; the grid never keeps reporting a wallet unlocked from a check it can no longer confirm. The Grid Miner star slots are unaffected by a Subscan outage, since they resolve over RPC and IPFS instead.
 
 ### Image Rendering & Style Presets
 
