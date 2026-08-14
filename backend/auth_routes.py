@@ -31,6 +31,7 @@ from backend.balances import log_login_balances
 from backend.soul_slots import (
     SOUL_SLOTS,
     STAR_SLOT_NUMBERS,
+    TOKEN_SLOT_NUMBERS,
     resolve_fast_slots,
     resolve_star_slots,
 )
@@ -465,7 +466,9 @@ async def get_my_soul_slots(
     except Exception as e:
         print(f"[soul-slots] Lookup failed for {address}: {type(e).__name__}: {e}")
         state = {
-            "unlocked": [1], "stars": None, "checked": False, "cached": False,
+            "unlocked": [1], "stars": None,
+            "token_progress": [0.0] * len(TOKEN_SLOT_NUMBERS),
+            "checked": False, "cached": False,
             "stars_pending": True,
         }
 
@@ -473,6 +476,10 @@ async def get_my_soul_slots(
         "slots": [slot.to_dict() for slot in SOUL_SLOTS],
         "unlocked": state["unlocked"],
         "stars": state.get("stars"),
+        # Percent of its required amount held, one entry per token slot
+        # (5-8) in ascending order - drives the golden progress line drawn
+        # along the bottom edge of each token slot's artwork.
+        "tokenProgress": state.get("token_progress", [0.0] * len(TOKEN_SLOT_NUMBERS)),
         "checked": state["checked"],
         # Whether the slow star pass should run this request - on its own
         # cadence (see should_recheck_stars), not just "no count stored yet".

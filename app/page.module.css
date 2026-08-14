@@ -478,6 +478,21 @@
   opacity: 0.0;
 }
 
+/* Token-holding progress: a thin golden line along the bottom edge of a
+   token slot's artwork (slots 5-8), growing from the left corner up to how
+   much of the required balance the wallet currently holds. */
+.tokenProgressLine {
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  height: 4%;
+  min-height: 3px;
+  max-width: 100%;
+  background: linear-gradient(90deg, #c9971f, #ffd54a, #fff6c6);
+  box-shadow: 0 0 6px rgba(255, 213, 74, 0.8);
+  pointer-events: none;
+}
+
 /* Grid Miner star progress: a grid of outline stars over the artwork,
    filled in gold up to however many of the slot's target the wallet has. */
 .starOverlay {

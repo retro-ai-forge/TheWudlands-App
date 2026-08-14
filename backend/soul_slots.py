@@ -132,6 +132,7 @@ SOUL_SLOTS: tuple[SoulSlot, ...] = (
 FREE_SLOT_NUMBERS = tuple(s.number for s in SOUL_SLOTS if s.kind == FREE)
 STAR_SLOT_NUMBERS = tuple(s.number for s in SOUL_SLOTS if s.kind == STARS)
 FAST_SLOT_NUMBERS = tuple(s.number for s in SOUL_SLOTS if not s.is_slow)
+TOKEN_SLOT_NUMBERS = tuple(s.number for s in SOUL_SLOTS if s.kind == TOKEN)
 
 
 def unlocked_from_holdings(holdings) -> list[int]:
@@ -159,9 +160,26 @@ def unlocked_from_stars(stars: float) -> list[int]:
     return sorted(s.number for s in SOUL_SLOTS if s.kind == STARS and stars >= s.amount)
 
 
-async def evaluate_fast_slots(address: str) -> Optional[list[int]]:
+def token_progress_from_holdings(holdings) -> list[float]:
     """
-    Resolve every non-star slot for `address`.
+    Percent of its required amount `holdings` holds for each token slot, in
+    TOKEN_SLOT_NUMBERS order. Capped at 100 - once a slot is unlocked its
+    line is simply full, not overflowing past the edge.
+    """
+    progress = []
+    for slot in SOUL_SLOTS:
+        if slot.kind != TOKEN:
+            continue
+        held = holdings.totals.get(slot.symbol)
+        held_amount = held.total if held else 0.0
+        progress.append(round(min(100.0, held_amount / slot.amount * 100), 1))
+    return progress
+
+
+async def evaluate_fast_slots(address: str) -> Optional[tuple[list[int], list[float]]]:
+    """
+    Resolve every non-star slot for `address`, plus each token slot's
+    percent progress toward its required amount.
 
     Returns None when the lookup could not run at all (no Subscan key), so
     callers can leave the grid locked rather than record a false negative.
@@ -169,7 +187,7 @@ async def evaluate_fast_slots(address: str) -> Optional[list[int]]:
     holdings = await fetch_holdings(address)
     if holdings is None:
         return None
-    return unlocked_from_holdings(holdings)
+    return unlocked_from_holdings(holdings), token_progress_from_holdings(holdings)
 
 
 async def evaluate_star_slots(address: str) -> tuple[float, list[int]]:
@@ -325,7 +343,8 @@ async def resolve_fast_slots(
     The non-star slot state for `address`, from cache or a fresh lookup.
 
     Returns {"unlocked": [...], "checked": bool, "stars": float|None,
-    "stars_pending": bool}. `checked` is False whenever the live lookup
+    "token_progress": [...], "stars_pending": bool}. `checked` is False
+    whenever the live lookup
     could not run (no Subscan key configured, or the API is unreachable).
     What happens to the fast slots in that case depends on whether this was
     a passive check or an explicit Reload (`force`):
@@ -361,32 +380,42 @@ async def resolve_fast_slots(
     effective_roll = random.random() if roll is None else roll
     stars_pending = should_recheck_stars(stored, effective_roll)
 
+    default_progress = [0.0] * len(TOKEN_SLOT_NUMBERS)
+
     if not should_reverify(stored, effective_roll):
         return {
             "unlocked": stored.get("unlocked", list(FREE_SLOT_NUMBERS)),
             "stars": stored.get("stars"),
+            "token_progress": stored.get("token_progress", default_progress),
             "checked": True,
             "cached": True,
             "stars_pending": stars_pending,
         }
 
-    unlocked = await evaluate_fast_slots(address)
-    checked = unlocked is not None
+    result = await evaluate_fast_slots(address)
+    checked = result is not None
 
     if checked:
+        unlocked, token_progress = result
         await apply_slot_membership(
             address,
             FAST_SLOT_NUMBERS,
             set(unlocked),
-            {"tokens_checked_at": datetime.now(timezone.utc)},
+            {
+                "tokens_checked_at": datetime.now(timezone.utc),
+                "token_progress": token_progress,
+            },
         )
     elif force:
         # Explicit Reload, but the lookup could not run at all - reset to
         # just the free slot rather than go on reporting a stale prior
         # result as if it were the fresh answer the player asked for.
-        await apply_slot_membership(address, FAST_SLOT_NUMBERS, set(FREE_SLOT_NUMBERS), {})
+        await apply_slot_membership(
+            address, FAST_SLOT_NUMBERS, set(FREE_SLOT_NUMBERS),
+            {"token_progress": default_progress},
+        )
     # else: passive load, lookup unavailable - leave the stored fast slots
-    # untouched; see the docstring above.
+    # (and their progress) untouched; see the docstring above.
 
     # Clear the star slots for the duration of the re-check they are about
     # to get, so this response cannot hand back the previous run's result
@@ -398,6 +427,7 @@ async def resolve_fast_slots(
     return {
         "unlocked": stored_now.get("unlocked", list(FREE_SLOT_NUMBERS)) if stored_now else list(FREE_SLOT_NUMBERS),
         "stars": stored_now.get("stars") if stored_now else None,
+        "token_progress": stored_now.get("token_progress", default_progress) if stored_now else default_progress,
         "checked": checked,
         "cached": False,
         "stars_pending": stars_pending,

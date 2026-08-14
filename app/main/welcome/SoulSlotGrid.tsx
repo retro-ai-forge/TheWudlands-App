@@ -48,6 +48,8 @@ interface SlotState {
   checked: boolean;
   /** How many Grid Miner stars the wallet has, once known. */
   stars: number | null;
+  /** Percent of its required amount held, one entry per "token" slot in ascending slot order. */
+  tokenProgress: number[];
 }
 
 const IMAGE_BASE = "/images/soul-creation/";
@@ -217,6 +219,16 @@ export function SoulSlotGrid({ onCreate }: { onCreate: () => void }) {
   const awaitingFirstResponse = state === null;
   const starsOwned = state?.stars ?? 0;
 
+  // state.tokenProgress is indexed by ascending token-slot order (matching
+  // TOKEN_SLOT_NUMBERS on the backend), not by slot number - map it back to
+  // slot number here so SoulSlotCard can just look its own progress up.
+  const tokenProgressBySlot = new Map<number, number>();
+  if (state?.tokenProgress) {
+    slots
+      .filter((s) => s.kind === "token")
+      .forEach((s, i) => tokenProgressBySlot.set(s.number, state.tokenProgress[i] ?? 0));
+  }
+
   return (
     <div className={styles.characterMatrix}>
       {/* Shared gradient for every filled star below - defined once so each
@@ -248,6 +260,7 @@ export function SoulSlotGrid({ onCreate }: { onCreate: () => void }) {
               isUnlocked={isUnlocked}
               isLoading={isLoading}
               starsOwned={starsOwned}
+              tokenProgress={tokenProgressBySlot.get(slot.number) ?? 0}
               onCreate={onCreate}
             />
           );
@@ -302,12 +315,14 @@ function SoulSlotCard({
   isUnlocked,
   isLoading,
   starsOwned,
+  tokenProgress,
   onCreate,
 }: {
   slot: SoulSlotDefinition;
   isUnlocked: boolean;
   isLoading: boolean;
   starsOwned: number;
+  tokenProgress: number;
   onCreate: () => void;
 }) {
   const isFree = slot.kind === "free";
@@ -440,6 +455,13 @@ function SoulSlotCard({
                   }
                   src={`${IMAGE_BASE}padlock.png`}
                   alt=""
+                />
+              )}
+              {slot.kind === "token" && (phase === "locked" || phase === "revealing") && (
+                <span
+                  className={styles.tokenProgressLine}
+                  style={{ width: `${tokenProgress}%` }}
+                  aria-hidden="true"
                 />
               )}
               {slot.kind === "stars" && (

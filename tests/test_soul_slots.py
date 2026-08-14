@@ -336,7 +336,7 @@ async def test_fast_pass_keeps_previously_earned_star_slots(monkeypatch):
     saved: dict = {}
 
     monkeypatch.setattr(soul_slots, "get_stored_slots", _async_return(stored))
-    monkeypatch.setattr(soul_slots, "evaluate_fast_slots", _async_return([1, 5]))
+    monkeypatch.setattr(soul_slots, "evaluate_fast_slots", _async_return(([1, 5], [0.0, 0.0, 0.0, 0.0])))
 
     async def capture(address, changes):
         saved.update(changes)
@@ -390,7 +390,7 @@ async def test_resolve_fast_slots_reports_stars_pending_from_its_own_cadence(mon
     stored["stars_checked_at"] = "2026-01-01T00:00:00"
 
     monkeypatch.setattr(soul_slots, "get_stored_slots", _async_return(stored))
-    monkeypatch.setattr(soul_slots, "evaluate_fast_slots", _async_return([1]))
+    monkeypatch.setattr(soul_slots, "evaluate_fast_slots", _async_return(([1], [0.0, 0.0, 0.0, 0.0])))
     monkeypatch.setattr(soul_slots, "store_slots", _async_return(None))
 
     # A normal cache hit (not forced) still returns the last stars value...
@@ -422,7 +422,7 @@ async def test_natural_reverify_uses_one_shared_roll_for_both_passes(monkeypatch
     stored["stars_checked_at"] = "2026-01-01T00:00:00"
 
     monkeypatch.setattr(soul_slots, "get_stored_slots", _async_return(stored))
-    monkeypatch.setattr(soul_slots, "evaluate_fast_slots", _async_return([1]))
+    monkeypatch.setattr(soul_slots, "evaluate_fast_slots", _async_return(([1], [0.0, 0.0, 0.0, 0.0])))
     monkeypatch.setattr(soul_slots, "store_slots", _async_return(None))
     monkeypatch.setattr(soul_slots.random, "random", lambda: 0.02)
 
