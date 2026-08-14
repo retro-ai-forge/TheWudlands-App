@@ -1188,9 +1188,8 @@ export function SoulCreation({ onExit }: { onExit: () => void }) {
                 })}
               </div>
               <p className={styles.introText}>
-                Selecting a birth sign is permanent. A character that comes to life gets one birth
-                sign — being revived from death, regaining a lost soul, or other rare means might
-                grant a second or third.
+                Your birth sign is permanent once chosen. It grants one charge per adventure — rare events like
+                death and revival, or regaining a lost soul, may grant a second or third charge.
               </p>
             </>
           ) : page === 5 ? (

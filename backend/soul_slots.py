@@ -176,11 +176,19 @@ async def evaluate_star_slots(address: str) -> tuple[float, list[int]]:
     """
     Resolve the star slots for `address`; returns (total stars, slot numbers).
 
-    Slow - one RPC call per owned Grid Miner plus its IPFS document.
+    Slow - one RPC call per owned Grid Miner plus its IPFS document. The RPC
+    calls have no retry of their own, so a single dropped connection to the
+    public AssetHub node would otherwise fail the whole check; retried once
+    here before giving up.
     """
-    items = await asyncio.to_thread(
-        fetch_collection_items, address, WUD_MINERS_COLLECTION_ID
-    )
+    try:
+        items = await asyncio.to_thread(
+            fetch_collection_items, address, WUD_MINERS_COLLECTION_ID
+        )
+    except Exception:
+        items = await asyncio.to_thread(
+            fetch_collection_items, address, WUD_MINERS_COLLECTION_ID
+        )
     stars, _, _ = sum_attribute(items, STARS_ATTRIBUTE_POSITION)
     return stars, unlocked_from_stars(stars)
 
