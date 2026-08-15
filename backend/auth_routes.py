@@ -27,7 +27,7 @@ from backend.active_players import (
     list_active_players,
 )
 from backend.character import AttributeStats, Character, PortraitArea, ProfStats
-from backend.players import add_character, get_or_create_player, get_player, grant_resource
+from backend.players import add_character, delete_character, get_or_create_player, get_player, grant_resource
 from backend.balances import log_login_balances
 from backend.resources_catalog import RESOURCE_ITEMS_BY_ID, STARTING_RESOURCE_GRANTS
 from backend.soul_slots import (
@@ -569,10 +569,16 @@ async def create_character(
         portrait_face_area=(
             PortraitArea(**payload.portraitFaceArea.model_dump()) if payload.portraitFaceArea else None
         ),
+        # A selected profession starts at level 1, not ProfStats' default of
+        # 0 - "none" (an unfilled slot) stays at 0 since there's nothing to
+        # level.
         profession=ProfStats(
             profession_1=payload.profession1,
+            level_1=1 if payload.profession1 != "none" else 0,
             profession_2=payload.profession2,
+            level_2=1 if payload.profession2 != "none" else 0,
             profession_3=payload.profession3,
+            level_3=1 if payload.profession3 != "none" else 0,
         ),
         attr=AttributeStats(
             might=payload.attr.migh,
@@ -592,6 +598,19 @@ async def create_character(
 
     for resource_id, amount in STARTING_RESOURCE_GRANTS:
         player = await grant_resource(address, character.id, resource_id, amount)
+
+    return player.to_dict()
+
+
+@player_router.delete("/me/characters/{character_id}", response_model=PlayerDataResponse)
+async def delete_my_character(character_id: str, address: str = Depends(get_current_address)):
+    """
+    Permanently delete one of the caller's characters. Called from the
+    character preview page's Delete button - there's no undo.
+    """
+    player = await delete_character(address, character_id)
+    if player is None:
+        raise HTTPException(status_code=404, detail="No player record found for this address")
 
     return player.to_dict()
 

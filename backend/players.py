@@ -104,6 +104,27 @@ async def add_character(address: str, character: Character) -> Optional[Player]:
     return _doc_to_player(doc)
 
 
+async def delete_character(address: str, character_id: str) -> Optional[Player]:
+    """
+    Remove one character from `address`'s roster by id. Idempotent - pulling
+    a character_id that doesn't match anything just leaves the roster
+    unchanged, same as any other $pull. Returns None only if there's no
+    player record for `address` at all.
+    """
+    db = get_database()
+
+    doc = await db.players.find_one_and_update(
+        {"address": address},
+        {"$pull": {"characters": {"id": character_id}}},
+        return_document=ReturnDocument.AFTER,
+    )
+
+    if doc is None:
+        return None
+
+    return _doc_to_player(doc)
+
+
 def _validate_resource_grant(resource_id: str, amount: int) -> None:
     if resource_id not in RESOURCE_ITEMS_BY_ID:
         raise ValueError(f"Unknown resource id: {resource_id}")

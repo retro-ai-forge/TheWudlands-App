@@ -86,9 +86,16 @@ export function WelcomeView() {
   if (viewingCharacter !== null) {
     return (
       <CharacterPreview
+        id={viewingCharacter.id}
         firstName={viewingCharacter.firstName}
         lastName={viewingCharacter.lastName}
         onClose={() => setViewingCharacter(null)}
+        onDeleted={() => {
+          // The character is gone - close the preview and refresh the
+          // roster so its slot goes back to unlocked-but-empty.
+          setViewingCharacter(null);
+          refreshCharacters();
+        }}
       />
     );
   }

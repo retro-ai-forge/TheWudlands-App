@@ -919,7 +919,12 @@ export function SoulCreation({
           profession1: profession1 || "none",
           profession2: profession2 || "none",
           profession3: profession3 || "none",
-          portraitUrl,
+          // An untouched portrait step leaves this blank - stored as a
+          // deliberately unloadable placeholder rather than "", so the soul
+          // slot's existing broken-image handling renders it as a "?"
+          // instead of silently reading as "no portrait was ever framed"
+          // (the separate, neutral empty-soul art).
+          portraitUrl: portraitUrl.trim() || "empty",
           birthsign: birthsign ?? "",
           portraitZoom,
           portraitPan,

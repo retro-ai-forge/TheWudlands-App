@@ -50,6 +50,7 @@ export interface PortraitArea {
 
 /** The character (if any) already living in a given soul slot. */
 export interface SlotCharacterSummary {
+  id: string;
   slotNumber: number;
   firstName: string;
   lastName: string;
