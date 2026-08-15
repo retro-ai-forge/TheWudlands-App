@@ -40,6 +40,24 @@ export interface SoulSlotDefinition {
   link: string | null;
 }
 
+/** A crop rectangle, as fractions (0-1) of the source portrait's natural size. */
+export interface PortraitArea {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+}
+
+/** The character (if any) already living in a given soul slot. */
+export interface SlotCharacterSummary {
+  slotNumber: number;
+  firstName: string;
+  lastName: string;
+  portraitUrl: string;
+  /** Face-only crop framed during creation; null falls back to a plain cover-fit image. */
+  portraitFaceArea: PortraitArea | null;
+}
+
 interface SlotState {
   slots: SoulSlotDefinition[];
   unlocked: number[];
@@ -86,7 +104,42 @@ function getStoredAddress(): string | null {
   return window.localStorage.getItem("player_address");
 }
 
-export function SoulSlotGrid({ onCreate }: { onCreate: (slotNumber: number) => void }) {
+// Sizes/positions an <img> (absolutely positioned inside an overflow-hidden,
+// position-relative wrapper the same size as the slot) so only the fractional
+// crop rect (see PortraitArea) is visible, stretched to fill the wrapper.
+// An <img>, not a CSS background-image, specifically so a broken portraitUrl
+// still fires a real onError the caller can react to.
+//
+// Setting the img's own width/height to 100/width% and 100/height% renders
+// the WHOLE natural image at that scale - at which point the crop's own
+// left/top edge sits exactly area.x/area.y of the way across the img's own
+// box, in the img's own percentage terms (independent of the scale factor,
+// since area.x is already a fraction of the full image). Translating by
+// that same negative percentage moves the crop's edge to the wrapper's
+// edge (0,0), which is what -area.x*100%/-area.y*100% below does.
+function getFaceCropImgStyle(area: { x: number; y: number; width: number; height: number }) {
+  const width = Math.min(Math.max(area.width, 0.01), 1);
+  const height = Math.min(Math.max(area.height, 0.01), 1);
+  return {
+    position: "absolute" as const,
+    top: 0,
+    left: 0,
+    width: `${100 / width}%`,
+    height: `${100 / height}%`,
+    maxWidth: "none",
+    transform: `translate(-${area.x * 100}%, -${area.y * 100}%)`,
+  };
+}
+
+export function SoulSlotGrid({
+  onCreate,
+  onViewCharacter,
+  characters,
+}: {
+  onCreate: (slotNumber: number) => void;
+  onViewCharacter: (character: SlotCharacterSummary) => void;
+  characters: SlotCharacterSummary[];
+}) {
   const { account } = useWallet();
   const address = account?.address ?? null;
   // WalletProvider only confirms `account` after an awaited fetch, so
@@ -229,6 +282,8 @@ export function SoulSlotGrid({ onCreate }: { onCreate: (slotNumber: number) => v
       .forEach((s, i) => tokenProgressBySlot.set(s.number, state.tokenProgress[i] ?? 0));
   }
 
+  const charactersBySlot = new Map(characters.map((c) => [c.slotNumber, c]));
+
   return (
     <div className={styles.characterMatrix}>
       {/* Shared gradient for every filled star below - defined once so each
@@ -261,7 +316,9 @@ export function SoulSlotGrid({ onCreate }: { onCreate: (slotNumber: number) => v
               isLoading={isLoading}
               starsOwned={starsOwned}
               tokenProgress={tokenProgressBySlot.get(slot.number) ?? 0}
+              occupant={charactersBySlot.get(slot.number)}
               onCreate={onCreate}
+              onViewCharacter={onViewCharacter}
             />
           );
         })}
@@ -316,15 +373,28 @@ function SoulSlotCard({
   isLoading,
   starsOwned,
   tokenProgress,
+  occupant,
   onCreate,
+  onViewCharacter,
 }: {
   slot: SoulSlotDefinition;
   isUnlocked: boolean;
   isLoading: boolean;
   starsOwned: number;
   tokenProgress: number;
+  occupant?: SlotCharacterSummary;
   onCreate: (slotNumber: number) => void;
+  onViewCharacter: (character: SlotCharacterSummary) => void;
 }) {
+  const isOccupied = occupant !== undefined;
+  // True once occupant.portraitUrl has failed to load (a broken external
+  // link, most likely) - drives the large "?" placeholder below instead of
+  // a blank/broken image sitting in the slot.
+  const [faceCropFailed, setFaceCropFailed] = useState(false);
+  useEffect(() => {
+    setFaceCropFailed(false);
+  }, [occupant?.portraitUrl]);
+
   const isFree = slot.kind === "free";
   const isStars = slot.kind === "stars";
   // Slots 2-8 (NFT and token requirements) get a padlock badge, and the
@@ -388,12 +458,27 @@ function SoulSlotCard({
   // click mid-animation can't fire onCreate while the card still looks
   // locked or is mid-flip.
   const canInteract = isFree || phase === "unlockedResting";
+  // An occupied slot only shows its character while the slot's requirement
+  // is still currently met (or it's the free slot, which never re-locks) -
+  // `phase` already tracks that live (see the effect above, keyed off
+  // isUnlocked), so a wallet that no longer qualifies (NFT sold, balance
+  // dropped, Reload finding it no longer holds) falls straight back to the
+  // same locked artwork any other locked slot shows, character or not.
+  const showsOccupantPreview = isOccupied && canInteract;
 
   // Locked, a slot sends the player to go earn it (buy the NFT, get the
   // token, play the mining game) instead of doing nothing. Placeholder
   // destinations for now - see SoulSlot.link - expected to be replaced
   // once in-app soul creation covers this itself.
   const handleClick = () => {
+    // An unlocked occupied slot already has its soul made - open its
+    // preview instead of the creation wizard. A re-locked occupied slot
+    // falls through below same as any other locked slot (send them to go
+    // re-earn it) - showsOccupantPreview is false there.
+    if (showsOccupantPreview) {
+      onViewCharacter(occupant);
+      return;
+    }
     if (canInteract) {
       onCreate(slot.number);
     } else if (slot.link) {
@@ -413,79 +498,132 @@ function SoulSlotCard({
         className={styles.characterSlot}
         disabled={!canInteract && !slot.link}
         onClick={canInteract || slot.link ? handleClick : undefined}
-        title={!canInteract && slot.link ? "Opens in a new tab" : undefined}
+        title={
+          showsOccupantPreview
+            ? `${occupant.firstName} ${occupant.lastName}`
+            : !canInteract && slot.link
+            ? "Opens in a new tab"
+            : undefined
+        }
       >
-        <span className={styles.slotArt}>
-          <span
-            className={[
-              styles.slotArtFlip,
-              // Animated only once a reveal is actually in progress or
-              // finished - not while "locked". Reload resets phase straight
-              // to "locked" to snap the card back immediately; if the
-              // transition stayed active for that too, removing the flip
-              // class would slowly un-rotate it over the same 2.5s instead
-              // of resetting right away.
-              phase !== "locked" ? styles.slotArtFlipAnimated : "",
-              flipped ? styles.slotArtFlipped : "",
-            ]
-              .filter(Boolean)
-              .join(" ")
-            }
-          >
-            <span className={`${styles.slotArtFace} ${styles.slotArtFront}`}>
-              {slot.image && (
+        {showsOccupantPreview ? (
+          <span className={styles.slotArt}>
+            {occupant.portraitUrl && !faceCropFailed ? (
+              occupant.portraitFaceArea ? (
+                <span className={styles.slotFaceCropWrap}>
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={occupant.portraitUrl}
+                    alt={occupant.firstName}
+                    style={getFaceCropImgStyle(occupant.portraitFaceArea)}
+                    onError={() => setFaceCropFailed(true)}
+                  />
+                </span>
+              ) : (
+                // No framed face crop (e.g. a character that predates this
+                // feature) - fall back to the whole image, cover-fit rather
+                // than precisely cropped.
                 // eslint-disable-next-line @next/next/no-img-element
                 <img
-                  className={
-                    imageIsColor
-                      ? `${styles.slotImageLocked} ${styles.slotImageColor}`
-                      : styles.slotImageLocked
-                  }
-                  src={IMAGE_BASE + slot.image}
-                  alt=""
+                  className={`${styles.slotImageLocked} ${styles.slotImageColor}`}
+                  src={occupant.portraitUrl}
+                  alt={occupant.firstName}
+                  onError={() => setFaceCropFailed(true)}
                 />
-              )}
-              {padlockShown && (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img
-                  className={
-                    padlockFading
-                      ? `${styles.slotPadlock} ${styles.slotPadlockFading}`
-                      : styles.slotPadlock
-                  }
-                  src={`${IMAGE_BASE}padlock.png`}
-                  alt=""
-                />
-              )}
-              {slot.kind === "token" && (phase === "locked" || phase === "revealing") && (
-                <span
-                  className={styles.tokenProgressLine}
-                  style={{ width: `${tokenProgress}%` }}
-                  aria-hidden="true"
-                />
-              )}
-              {slot.kind === "stars" && (
-                <StarOverlay
-                  total={slot.amount}
-                  filled={Math.min(starsOwned, slot.amount)}
-                  slotNumber={slot.number}
-                />
-              )}
-              {isLoading && (
-                <span className={styles.slotSpinner} aria-hidden="true" />
-              )}
-            </span>
-            <span className={`${styles.slotArtFace} ${styles.slotArtBack}`}>
-              {/* eslint-disable-next-line @next/next/no-img-element */}
+              )
+            ) : occupant.portraitUrl ? (
+              // A portrait URL was set but failed to load - show a plain
+              // placeholder instead of a blank/broken image.
+              <span className={styles.slotQuestionMark} aria-hidden="true">
+                <svg viewBox="0 0 100 100" className={styles.slotQuestionMarkIcon}>
+                  <text x="50" y="54" textAnchor="middle" dominantBaseline="middle">
+                    ?
+                  </text>
+                </svg>
+              </span>
+            ) : (
+              // No portrait was ever set for this character.
+              // eslint-disable-next-line @next/next/no-img-element
               <img
-                className={styles.slotEmptyImage}
+                className={`${styles.slotImageLocked} ${styles.slotImageColor}`}
                 src={`${IMAGE_BASE}char-empty.jpg`}
-                alt=""
+                alt={occupant.firstName}
               />
-              <span className={styles.slotEmptyGlow} aria-hidden="true" />
+            )}
+          </span>
+        ) : (
+          <span className={styles.slotArt}>
+            <span
+              className={[
+                styles.slotArtFlip,
+                // Animated only once a reveal is actually in progress or
+                // finished - not while "locked". Reload resets phase straight
+                // to "locked" to snap the card back immediately; if the
+                // transition stayed active for that too, removing the flip
+                // class would slowly un-rotate it over the same 2.5s instead
+                // of resetting right away.
+                phase !== "locked" ? styles.slotArtFlipAnimated : "",
+                flipped ? styles.slotArtFlipped : "",
+              ]
+                .filter(Boolean)
+                .join(" ")
+              }
+            >
+              <span className={`${styles.slotArtFace} ${styles.slotArtFront}`}>
+                {slot.image && (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    className={
+                      imageIsColor
+                        ? `${styles.slotImageLocked} ${styles.slotImageColor}`
+                        : styles.slotImageLocked
+                    }
+                    src={IMAGE_BASE + slot.image}
+                    alt=""
+                  />
+                )}
+                {padlockShown && (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    className={
+                      padlockFading
+                        ? `${styles.slotPadlock} ${styles.slotPadlockFading}`
+                        : styles.slotPadlock
+                    }
+                    src={`${IMAGE_BASE}padlock.png`}
+                    alt=""
+                  />
+                )}
+                {slot.kind === "token" && (phase === "locked" || phase === "revealing") && (
+                  <span
+                    className={styles.tokenProgressLine}
+                    style={{ width: `${tokenProgress}%` }}
+                    aria-hidden="true"
+                  />
+                )}
+                {slot.kind === "stars" && (
+                  <StarOverlay
+                    total={slot.amount}
+                    filled={Math.min(starsOwned, slot.amount)}
+                    slotNumber={slot.number}
+                  />
+                )}
+                {isLoading && (
+                  <span className={styles.slotSpinner} aria-hidden="true" />
+                )}
+              </span>
+              <span className={`${styles.slotArtFace} ${styles.slotArtBack}`}>
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  className={styles.slotEmptyImage}
+                  src={`${IMAGE_BASE}char-empty.jpg`}
+                  alt=""
+                />
+                <span className={styles.slotEmptyGlow} aria-hidden="true" />
+              </span>
             </span>
           </span>
-        </span>
+        )}
       </button>
 
       <span
@@ -493,7 +631,7 @@ function SoulSlotCard({
           isUnlocked ? styles.slotRequirementMet : styles.slotRequirement
         }
       >
-        {slot.label}
+        {showsOccupantPreview ? `${occupant.firstName} ${occupant.lastName}` : slot.label}
       </span>
     </div>
   );

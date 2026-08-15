@@ -6,6 +6,8 @@ import dynamic from "next/dynamic";
 import styles from "../../page.module.css";
 import { FeedbackForm } from "./FeedbackForm";
 import { SoulCreation } from "./SoulCreation";
+import { CharacterPreview } from "./CharacterPreview";
+import type { SlotCharacterSummary } from "./SoulSlotGrid";
 
 // SoulSlotGrid reads localStorage (a wallet's cached slot unlocks) during
 // its very first render. Server-rendered HTML can never see that cache, so
@@ -49,18 +51,20 @@ function SoulSlotGridSkeleton() {
 export function WelcomeView() {
   // The soul slot clicked to start the wizard; null means not creating.
   const [creatingSlot, setCreatingSlot] = useState<number | null>(null);
-  // null while loading; once resolved, an empty array means the player has no characters yet.
-  const [characterCount, setCharacterCount] = useState<number | null>(null);
+  // The character whose preview is open; null means not viewing one.
+  const [viewingCharacter, setViewingCharacter] = useState<SlotCharacterSummary | null>(null);
+  // null while loading the roster for the first time.
+  const [characters, setCharacters] = useState<SlotCharacterSummary[] | null>(null);
 
-  const refreshCharacterCount = () => {
+  const refreshCharacters = () => {
     fetch("/api/auth/me/characters", { credentials: "include" })
       .then((res) => (res.ok ? res.json() : null))
-      .then((data) => setCharacterCount(data?.characters?.length ?? 0))
-      .catch(() => setCharacterCount(0));
+      .then((data) => setCharacters(data?.characters ?? []))
+      .catch(() => setCharacters([]));
   };
 
   useEffect(() => {
-    refreshCharacterCount();
+    refreshCharacters();
   }, []);
 
   if (creatingSlot !== null) {
@@ -70,11 +74,21 @@ export function WelcomeView() {
         onExit={() => {
           // The wizard only calls onExit after a successful save, so the
           // character roster just changed - refresh rather than relying on
-          // the mount-only fetch above, or the create-a-soul grid would keep
-          // showing despite the new character existing.
+          // the mount-only fetch above, or the newly created soul wouldn't
+          // show in its slot until the next full page load.
           setCreatingSlot(null);
-          refreshCharacterCount();
+          refreshCharacters();
         }}
+      />
+    );
+  }
+
+  if (viewingCharacter !== null) {
+    return (
+      <CharacterPreview
+        firstName={viewingCharacter.firstName}
+        lastName={viewingCharacter.lastName}
+        onClose={() => setViewingCharacter(null)}
       />
     );
   }
@@ -96,9 +110,13 @@ export function WelcomeView() {
           prose readability, which would squeeze the grid down to the same
           narrow column instead of letting it use the full 900px the page
           now allows. */}
-      {characterCount === null && <SoulSlotGridSkeleton />}
-      {characterCount === 0 && (
-        <SoulSlotGrid onCreate={(slotNumber) => setCreatingSlot(slotNumber)} />
+      {characters === null && <SoulSlotGridSkeleton />}
+      {characters !== null && (
+        <SoulSlotGrid
+          characters={characters}
+          onCreate={(slotNumber) => setCreatingSlot(slotNumber)}
+          onViewCharacter={(character) => setViewingCharacter(character)}
+        />
       )}
 
       <div className={styles.welcomeBody}>

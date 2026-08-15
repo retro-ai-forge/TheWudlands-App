@@ -26,7 +26,7 @@ from backend.active_players import (
     remove_active_player,
     list_active_players,
 )
-from backend.character import AttributeStats, Character, ProfStats
+from backend.character import AttributeStats, Character, PortraitArea, ProfStats
 from backend.players import add_character, get_or_create_player, get_player, grant_resource
 from backend.balances import log_login_balances
 from backend.resources_catalog import RESOURCE_ITEMS_BY_ID, STARTING_RESOURCE_GRANTS
@@ -144,6 +144,25 @@ class CharacterAttributeResponse(BaseModel):
     pres: int = Field(..., description="Presence: charisma/aura: persuasion, intimidation, leadership, divine favor")
 
 
+class PortraitPan(BaseModel):
+    """Pan offset (pixels, at 1x zoom) applied to the source portrait image."""
+
+    x: float = Field(..., description="Horizontal pan offset")
+    y: float = Field(..., description="Vertical pan offset")
+
+
+class PortraitAreaResponse(BaseModel):
+    """
+    A crop rectangle expressed as fractions (0-1) of the source portrait
+    image's natural width/height, portable across any render size.
+    """
+
+    x: float = Field(..., description="Left edge, as a fraction of the image width")
+    y: float = Field(..., description="Top edge, as a fraction of the image height")
+    width: float = Field(..., description="Width, as a fraction of the image width")
+    height: float = Field(..., description="Height, as a fraction of the image height")
+
+
 class CharacterResponse(BaseModel):
     """A single character belonging to a player."""
 
@@ -158,6 +177,16 @@ class CharacterResponse(BaseModel):
     race: str = Field(..., description="Character's subrace")
     portraitUrl: str = Field(..., description="Character's portrait image URL")
     birthsign: str = Field(..., description="Character's chosen birth sign")
+    portraitZoom: float = Field(1.0, description="Zoom applied to the source portrait when framed")
+    portraitPan: PortraitPan = Field(
+        default_factory=lambda: PortraitPan(x=0, y=0), description="Pan applied to the source portrait when framed"
+    )
+    portraitFrameArea: Optional[PortraitAreaResponse] = Field(
+        None, description="Full-body crop, for future equipment-slot rendering"
+    )
+    portraitFaceArea: Optional[PortraitAreaResponse] = Field(
+        None, description="Face-only crop, used for the soul slot preview"
+    )
     availability: CharacterAvailabilityResponse
     classes: CharacterClassResponse
     profession: CharacterProfessionResponse
@@ -199,6 +228,16 @@ class CreateCharacterRequest(BaseModel):
     profession3: str = Field("none", description="Profession 3")
     portraitUrl: str = Field("", description="Character's portrait image URL")
     birthsign: str = Field("", description="Character's chosen birth sign")
+    portraitZoom: float = Field(1.0, description="Zoom applied to the source portrait when framed")
+    portraitPan: PortraitPan = Field(
+        default_factory=lambda: PortraitPan(x=0, y=0), description="Pan applied to the source portrait when framed"
+    )
+    portraitFrameArea: Optional[PortraitAreaResponse] = Field(
+        None, description="Full-body crop, for future equipment-slot rendering"
+    )
+    portraitFaceArea: Optional[PortraitAreaResponse] = Field(
+        None, description="Face-only crop, used for the soul slot preview"
+    )
     attr: CharacterAttributeResponse
 
 
@@ -522,6 +561,14 @@ async def create_character(
         race=payload.race,
         portrait_url=payload.portraitUrl,
         birthsign=payload.birthsign,
+        portrait_zoom=payload.portraitZoom,
+        portrait_pan={"x": payload.portraitPan.x, "y": payload.portraitPan.y},
+        portrait_frame_area=(
+            PortraitArea(**payload.portraitFrameArea.model_dump()) if payload.portraitFrameArea else None
+        ),
+        portrait_face_area=(
+            PortraitArea(**payload.portraitFaceArea.model_dump()) if payload.portraitFaceArea else None
+        ),
         profession=ProfStats(
             profession_1=payload.profession1,
             profession_2=payload.profession2,

@@ -290,6 +290,22 @@ export function SoulCreation({
     };
   }
 
+  // getPortraitAreas() reads live DOM refs (portraitFrameRef/portraitHeadZoneRef),
+  // which only exist while page 3 is actually mounted - called again after
+  // moving on to a later page, it returns nulls. These two hold the last
+  // real values computed while page 3 was up, so they survive navigating
+  // away and are what actually gets sent on save (page 5's Continue).
+  const [savedPortraitFrameArea, setSavedPortraitFrameArea] = useState<PortraitArea | null>(null);
+  const [savedPortraitFaceArea, setSavedPortraitFaceArea] = useState<PortraitArea | null>(null);
+
+  useEffect(() => {
+    if (page !== 3) return;
+    const { frameArea, faceArea } = getPortraitAreas();
+    if (frameArea) setSavedPortraitFrameArea(frameArea);
+    if (faceArea) setSavedPortraitFaceArea(faceArea);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [page, portraitZoom, portraitPan.x, portraitPan.y, portraitUrl]);
+
   // True once the current portraitUrl fails to load — the browser's own
   // broken-image + alt-text rendering isn't stylable/positionable (it's
   // stuck top-left of the image box and often unreadable), so on error the
@@ -905,6 +921,10 @@ export function SoulCreation({
           profession3: profession3 || "none",
           portraitUrl,
           birthsign: birthsign ?? "",
+          portraitZoom,
+          portraitPan,
+          portraitFrameArea: savedPortraitFrameArea,
+          portraitFaceArea: savedPortraitFaceArea,
           attr: { ...bodyAttributes, ...soulAttributes },
         }),
       });

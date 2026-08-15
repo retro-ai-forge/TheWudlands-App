@@ -7,7 +7,7 @@ from __future__ import annotations
 import uuid
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
-from typing import Dict
+from typing import Dict, Optional
 
 # Valid values for Character.vital_status, per the "Vital Status" lore
 # section on the world page (app/theworld/page.tsx). Nothing sets a
@@ -67,6 +67,25 @@ class AttributeStats:
             "pres": self.presence,
         }
 
+@dataclass(frozen=True)
+class PortraitArea:
+    """
+    A crop rectangle expressed as fractions (0-1) of the source portrait
+    image's natural width/height - portable, so it still makes sense however
+    large/small the image is later re-rendered at, unlike on-screen pixel
+    positions. See getPortraitAreas() in SoulCreation.tsx, which computes
+    these client-side.
+    """
+
+    x: float
+    y: float
+    width: float
+    height: float
+
+    def to_dict(self) -> dict:
+        return {"x": self.x, "y": self.y, "width": self.width, "height": self.height}
+
+
 @dataclass
 class Character:
 
@@ -84,6 +103,15 @@ class Character:
     race: str = 'human'
     portrait_url: str = ''
     birthsign: str = ''
+    # Editing state (kept mainly for re-opening the portrait editor at the
+    # same view) plus the two crop rectangles actually derived from it: the
+    # full frame (frame_area, for future body/equipment-slot rendering) and
+    # the face-only crop (face_area, used today for the soul slot preview).
+    # None until a portrait has actually been framed (e.g. no portraitUrl).
+    portrait_zoom: float = 1.0
+    portrait_pan: Dict[str, float] = field(default_factory=lambda: {"x": 0.0, "y": 0.0})
+    portrait_frame_area: Optional[PortraitArea] = None
+    portrait_face_area: Optional[PortraitArea] = None
     classes: ClassStats = field(default_factory=ClassStats)
     profession: ProfStats = field(default_factory=ProfStats)
     attr: AttributeStats = field(default_factory=AttributeStats)
@@ -106,6 +134,10 @@ class Character:
             "race": self.race,
             "portraitUrl": self.portrait_url,
             "birthsign": self.birthsign,
+            "portraitZoom": self.portrait_zoom,
+            "portraitPan": self.portrait_pan,
+            "portraitFrameArea": self.portrait_frame_area.to_dict() if self.portrait_frame_area else None,
+            "portraitFaceArea": self.portrait_face_area.to_dict() if self.portrait_face_area else None,
             "classes": self.classes.to_dict(),
             "profession": self.profession.to_dict(),
             "attr": self.attr.to_dict(),

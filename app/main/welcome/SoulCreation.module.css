@@ -894,6 +894,14 @@
   cursor: not-allowed;
 }
 
+/* Character preview's exit button — mirrors .continue's fixed-to-viewport
+   positioning but pinned to the opposite corner, since this page has no
+   step sequence to advance through, only a way back out. */
+.close {
+  top: 1.25rem;
+  left: max(1.25rem, calc((100vw - 900px) / 2 + 1.25rem));
+}
+
 .continue {
   bottom: 1.25rem;
   /* Replicates .stage's own max-width:900px + margin:0 auto centering, now
