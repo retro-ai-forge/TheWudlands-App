@@ -86,7 +86,7 @@ function getStoredAddress(): string | null {
   return window.localStorage.getItem("player_address");
 }
 
-export function SoulSlotGrid({ onCreate }: { onCreate: () => void }) {
+export function SoulSlotGrid({ onCreate }: { onCreate: (slotNumber: number) => void }) {
   const { account } = useWallet();
   const address = account?.address ?? null;
   // WalletProvider only confirms `account` after an awaited fetch, so
@@ -323,7 +323,7 @@ function SoulSlotCard({
   isLoading: boolean;
   starsOwned: number;
   tokenProgress: number;
-  onCreate: () => void;
+  onCreate: (slotNumber: number) => void;
 }) {
   const isFree = slot.kind === "free";
   const isStars = slot.kind === "stars";
@@ -395,7 +395,7 @@ function SoulSlotCard({
   // once in-app soul creation covers this itself.
   const handleClick = () => {
     if (canInteract) {
-      onCreate();
+      onCreate(slot.number);
     } else if (slot.link) {
       window.open(slot.link, "_blank", "noopener,noreferrer");
     }

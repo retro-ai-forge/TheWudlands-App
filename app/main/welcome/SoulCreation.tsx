@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { Pinyon_Script } from "next/font/google";
 import styles from "./SoulCreation.module.css";
-import { GENDERS, racesByCategory, professionsByCategory } from "@/app/lib/characterOptions";
+import { GENDERS, RACES, racesByCategory, professionsByCategory } from "@/app/lib/characterOptions";
 import {
   getDisplayedAge,
   getLifeEnergyFill,
@@ -102,7 +102,24 @@ const BIRTHSIGNS: {
   },
 ];
 
-export function SoulCreation({ onExit }: { onExit: () => void }) {
+// Page 5 (finishing touches) — the fixed starting-resource kit, fetched from
+// the backend so this display can never drift from what actually gets
+// granted (see GET /api/auth/me/starting-resources).
+type StartingResource = {
+  id: string;
+  name: string;
+  familyId: string;
+  tier: number;
+  amount: number;
+};
+
+export function SoulCreation({
+  onExit,
+  slotNumber,
+}: {
+  onExit: () => void;
+  slotNumber: number;
+}) {
   const [page, setPage] = useState(0);
   const { setHidden: setHeaderHidden } = useHeaderVisibility();
 
@@ -115,6 +132,28 @@ export function SoulCreation({ onExit }: { onExit: () => void }) {
   const [profession3, setProfession3] = useState("");
   // Persisted to the character's Firestore document later on; local-only state for now.
   const [portraitUrl, setPortraitUrl] = useState("");
+
+  // Page 5 (finishing touches) — the starting-resource kit shown before
+  // committing, and submit state for the save-and-exit Continue click.
+  const [startingResources, setStartingResources] = useState<StartingResource[]>([]);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (page !== 5) return;
+    let cancelled = false;
+    fetch("/api/auth/me/starting-resources", { credentials: "include" })
+      .then((res) => (res.ok ? res.json() : []))
+      .then((data: StartingResource[]) => {
+        if (!cancelled) setStartingResources(data ?? []);
+      })
+      .catch(() => {
+        if (!cancelled) setStartingResources([]);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [page]);
 
   // Page 4 (Birthsign) — a single required pick; null blocks Continue.
   const [birthsign, setBirthsign] = useState<BirthsignId | null>(null);
@@ -838,11 +877,43 @@ export function SoulCreation({ onExit }: { onExit: () => void }) {
     return () => setHeaderHidden(false);
   }, [setHeaderHidden]);
 
-  function handleContinue() {
-    if (isLastPage) {
-      onExit();
-    } else {
+  async function handleContinue() {
+    if (!isLastPage) {
       setPage((p) => p + 1);
+      return;
+    }
+    if (isSubmitting) return;
+
+    setSubmitError(null);
+    setIsSubmitting(true);
+    try {
+      const raceGroup = RACES.find((r) => r.id === race)?.category ?? "Common";
+      const res = await fetch("/api/auth/me/characters", {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          slotNumber,
+          firstName,
+          lastName,
+          age: char_age,
+          gender,
+          raceGroup,
+          race,
+          profession1: profession1 || "none",
+          profession2: profession2 || "none",
+          profession3: profession3 || "none",
+          portraitUrl,
+          birthsign: birthsign ?? "",
+          attr: { ...bodyAttributes, ...soulAttributes },
+        }),
+      });
+      if (!res.ok) throw new Error("Failed to save character");
+      onExit();
+    } catch {
+      setSubmitError("Could not save your character. Please try again.");
+    } finally {
+      setIsSubmitting(false);
     }
   }
 
@@ -1193,7 +1264,21 @@ export function SoulCreation({ onExit }: { onExit: () => void }) {
               </p>
             </>
           ) : page === 5 ? (
-            <h1 className={styles.headline}>finishing touches</h1>
+            <>
+              <h1 className={styles.headline}>finishing touches</h1>
+              <p className={styles.introText}>
+                You set out with a handful of basic crafting materials — enough to get started.
+              </p>
+              <div className={styles.resourceList}>
+                {startingResources.map((resource) => (
+                  <div key={resource.id} className={styles.resourceRow}>
+                    <span className={styles.resourceName}>{resource.name}</span>
+                    <span className={styles.resourceAmount}>x{resource.amount}</span>
+                  </div>
+                ))}
+              </div>
+              {submitError && <p className={styles.submitError}>{submitError}</p>}
+            </>
           ) : (
             <h1 className={styles.headline}>Page {page + 1}</h1>
           )}
@@ -1403,8 +1488,9 @@ export function SoulCreation({ onExit }: { onExit: () => void }) {
             (page === 1 && !isPage1Ready) || (page === 4 && birthsign === null) ? styles.continueInactive : ""
           }`}
           onClick={handleContinueClick}
+          disabled={isLastPage && isSubmitting}
         >
-          Continue
+          {isLastPage && isSubmitting ? "Saving…" : "Continue"}
         </button>
       </div>
     </div>

@@ -83,6 +83,42 @@
   color: #e6a55a;
 }
 
+/* Page 5 (finishing touches) — plain informational list of the starting
+   resource kit, not a selectable choice like the birthsign tiles. */
+.resourceList {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  max-width: 24rem;
+  margin-top: 0.5rem;
+  border-top: 1px solid rgba(168, 153, 104, 0.35);
+}
+
+.resourceRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  padding: 0.5rem 0.25rem;
+  border-bottom: 1px solid rgba(168, 153, 104, 0.35);
+}
+
+.resourceName {
+  font-size: clamp(0.85rem, 2.2vw, 1rem);
+  color: #d4c9a8;
+}
+
+.resourceAmount {
+  font-size: clamp(0.85rem, 2.2vw, 1rem);
+  color: #c07a3a;
+  letter-spacing: 0.05em;
+}
+
+.submitError {
+  font-size: 0.85rem;
+  color: #c0463a;
+  margin-top: 0.5rem;
+}
+
 .attributeRow {
   display: flex;
   justify-content: center;

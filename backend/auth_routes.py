@@ -11,7 +11,7 @@ Provides:
 from fastapi import APIRouter, BackgroundTasks, HTTPException, Request, Response, Depends
 from pydantic import BaseModel, ConfigDict, Field
 from datetime import datetime, timedelta, timezone
-from typing import List, Optional
+from typing import Dict, List, Optional
 import secrets
 import time
 from backend.auth import (
@@ -26,8 +26,10 @@ from backend.active_players import (
     remove_active_player,
     list_active_players,
 )
-from backend.players import get_or_create_player, get_player
+from backend.character import AttributeStats, Character, ProfStats
+from backend.players import add_character, get_or_create_player, get_player, grant_resource
 from backend.balances import log_login_balances
+from backend.resources_catalog import RESOURCE_ITEMS_BY_ID, STARTING_RESOURCE_GRANTS
 from backend.soul_slots import (
     SOUL_SLOTS,
     STAR_SLOT_NUMBERS,
@@ -145,6 +147,8 @@ class CharacterAttributeResponse(BaseModel):
 class CharacterResponse(BaseModel):
     """A single character belonging to a player."""
 
+    id: str = Field(..., description="Stable character id")
+    slotNumber: int = Field(..., description="Soul slot this character lives in")
     firstName: str = Field(..., description="Character's first name")
     lastName: str = Field(..., description="Character's last name")
     vitalStatus: str = Field(..., description="Character's vital status")
@@ -152,10 +156,15 @@ class CharacterResponse(BaseModel):
     gender: str = Field(..., description="Character's gender")
     raceGroup: str = Field(..., description="Character's race group")
     race: str = Field(..., description="Character's subrace")
+    portraitUrl: str = Field(..., description="Character's portrait image URL")
+    birthsign: str = Field(..., description="Character's chosen birth sign")
     availability: CharacterAvailabilityResponse
     classes: CharacterClassResponse
-    profession: CharacterProfessionResponse 
+    profession: CharacterProfessionResponse
     attr: CharacterAttributeResponse
+    resourceBalances: Dict[str, int] = Field(
+        default_factory=dict, description="Stackable resources this character carries, by resource id"
+    )
 
 class PlayerDataResponse(BaseModel):
     """The authenticated player's permanent record and character roster.
@@ -170,6 +179,37 @@ class PlayerDataResponse(BaseModel):
     characters: List[CharacterResponse] = Field(
         default_factory=list, description="Characters belonging to this player"
     )
+    resourceBalances: Dict[str, int] = Field(
+        default_factory=dict, description="Shared resource vault, pooled across this player's characters"
+    )
+
+
+class CreateCharacterRequest(BaseModel):
+    """Payload collected by the Soul Creation wizard's finishing-touches step."""
+
+    slotNumber: int = Field(..., description="Soul slot clicked to start creation")
+    firstName: str = Field(..., description="Character's first name")
+    lastName: str = Field(..., description="Character's last name")
+    age: int = Field(..., description="Character's age in months")
+    gender: str = Field(..., description="Character's gender")
+    raceGroup: str = Field(..., description="Character's race group")
+    race: str = Field(..., description="Character's subrace")
+    profession1: str = Field("none", description="Profession 1")
+    profession2: str = Field("none", description="Profession 2")
+    profession3: str = Field("none", description="Profession 3")
+    portraitUrl: str = Field("", description="Character's portrait image URL")
+    birthsign: str = Field("", description="Character's chosen birth sign")
+    attr: CharacterAttributeResponse
+
+
+class StartingResourceResponse(BaseModel):
+    """One entry of the fixed starting-resource kit shown on finishing touches."""
+
+    id: str = Field(..., description="Resource id")
+    name: str = Field(..., description="Resource display name")
+    familyId: str = Field(..., description="Resource family id")
+    tier: int = Field(..., description="Resource tier")
+    amount: int = Field(..., description="Amount granted on character creation")
 
 
 # Dependency: Extract and verify token from secure cookie
@@ -434,6 +474,77 @@ async def get_my_characters(address: str = Depends(get_current_address)):
     player = await get_player(address)
     if player is None:
         raise HTTPException(status_code=404, detail="No player record found for this address")
+
+    return player.to_dict()
+
+
+@player_router.get("/me/starting-resources", response_model=List[StartingResourceResponse])
+async def get_starting_resources(address: str = Depends(get_current_address)):
+    """
+    The fixed starting-resource kit granted on character creation.
+
+    A placeholder for a real selection process, shown on the Soul Creation
+    wizard's finishing-touches step before the player commits. Single source
+    of truth for the grant POST /me/characters actually applies, so the
+    displayed list can never drift from what gets credited.
+    """
+    return [
+        StartingResourceResponse(
+            id=resource_id,
+            name=RESOURCE_ITEMS_BY_ID[resource_id].name,
+            familyId=RESOURCE_ITEMS_BY_ID[resource_id].family_id,
+            tier=RESOURCE_ITEMS_BY_ID[resource_id].tier,
+            amount=amount,
+        )
+        for resource_id, amount in STARTING_RESOURCE_GRANTS
+    ]
+
+
+@player_router.post("/me/characters", response_model=PlayerDataResponse)
+async def create_character(
+    payload: CreateCharacterRequest, address: str = Depends(get_current_address)
+):
+    """
+    Save a character built by the Soul Creation wizard and grant its
+    starting resource kit.
+
+    Called from the wizard's last ("finishing touches") page - this is the
+    only place a character is ever persisted; the soul slot the player
+    clicked to enter the wizard travels with it as slotNumber.
+    """
+    character = Character(
+        slot_number=payload.slotNumber,
+        first_name=payload.firstName,
+        last_name=payload.lastName,
+        age=payload.age,
+        gender=payload.gender,
+        race_group=payload.raceGroup,
+        race=payload.race,
+        portrait_url=payload.portraitUrl,
+        birthsign=payload.birthsign,
+        profession=ProfStats(
+            profession_1=payload.profession1,
+            profession_2=payload.profession2,
+            profession_3=payload.profession3,
+        ),
+        attr=AttributeStats(
+            might=payload.attr.migh,
+            agility=payload.attr.agil,
+            endurance=payload.attr.endu,
+            precision=payload.attr.prec,
+            will=payload.attr.will,
+            insight=payload.attr.insi,
+            lore=payload.attr.lore,
+            presence=payload.attr.pres,
+        ),
+    )
+
+    player = await add_character(address, character)
+    if player is None:
+        raise HTTPException(status_code=404, detail="No player record found for this address")
+
+    for resource_id, amount in STARTING_RESOURCE_GRANTS:
+        player = await grant_resource(address, character.id, resource_id, amount)
 
     return player.to_dict()
 

@@ -47,19 +47,36 @@ function SoulSlotGridSkeleton() {
 }
 
 export function WelcomeView() {
-  const [creatingSoul, setCreatingSoul] = useState(false);
+  // The soul slot clicked to start the wizard; null means not creating.
+  const [creatingSlot, setCreatingSlot] = useState<number | null>(null);
   // null while loading; once resolved, an empty array means the player has no characters yet.
   const [characterCount, setCharacterCount] = useState<number | null>(null);
 
-  useEffect(() => {
+  const refreshCharacterCount = () => {
     fetch("/api/auth/me/characters", { credentials: "include" })
       .then((res) => (res.ok ? res.json() : null))
       .then((data) => setCharacterCount(data?.characters?.length ?? 0))
       .catch(() => setCharacterCount(0));
+  };
+
+  useEffect(() => {
+    refreshCharacterCount();
   }, []);
 
-  if (creatingSoul) {
-    return <SoulCreation onExit={() => setCreatingSoul(false)} />;
+  if (creatingSlot !== null) {
+    return (
+      <SoulCreation
+        slotNumber={creatingSlot}
+        onExit={() => {
+          // The wizard only calls onExit after a successful save, so the
+          // character roster just changed - refresh rather than relying on
+          // the mount-only fetch above, or the create-a-soul grid would keep
+          // showing despite the new character existing.
+          setCreatingSlot(null);
+          refreshCharacterCount();
+        }}
+      />
+    );
   }
 
   return (
@@ -81,7 +98,7 @@ export function WelcomeView() {
           now allows. */}
       {characterCount === null && <SoulSlotGridSkeleton />}
       {characterCount === 0 && (
-        <SoulSlotGrid onCreate={() => setCreatingSoul(true)} />
+        <SoulSlotGrid onCreate={(slotNumber) => setCreatingSlot(slotNumber)} />
       )}
 
       <div className={styles.welcomeBody}>
