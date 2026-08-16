@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { Pinyon_Script } from "next/font/google";
 import styles from "./SoulCreation.module.css";
-import { GENDERS, RACES, racesByCategory, professionsByCategory } from "@/app/lib/characterOptions";
+import { GENDERS, RACES, racesByCategory, professionsByCategory, PROFESSIONS } from "@/app/lib/characterOptions";
 import {
   getDisplayedAge,
   getLifeEnergyFill,
@@ -102,16 +102,24 @@ const BIRTHSIGNS: {
   },
 ];
 
-// Page 5 (finishing touches) — the fixed starting-resource kit, fetched from
-// the backend so this display can never drift from what actually gets
-// granted (see GET /api/auth/me/starting-resources).
-type StartingResource = {
+// Page 5 (Trappings) — resource items the player may pick from, and how
+// many units of each tier they may spend, both derived server-side from
+// their chosen professions (see GET /api/auth/me/trappings-options). Kept
+// as the single source of truth so this picker can never offer something
+// POST /me/characters would reject.
+type TrappingsItem = {
   id: string;
   name: string;
   familyId: string;
   tier: number;
-  amount: number;
 };
+
+type TrappingsOptions = {
+  tierPools: Record<string, number>;
+  items: TrappingsItem[];
+};
+
+const EMPTY_TRAPPINGS_OPTIONS: TrappingsOptions = { tierPools: {}, items: [] };
 
 export function SoulCreation({
   onExit,
@@ -133,27 +141,67 @@ export function SoulCreation({
   // Persisted to the character's Firestore document later on; local-only state for now.
   const [portraitUrl, setPortraitUrl] = useState("");
 
-  // Page 5 (finishing touches) — the starting-resource kit shown before
-  // committing, and submit state for the save-and-exit Continue click.
-  const [startingResources, setStartingResources] = useState<StartingResource[]>([]);
+  // Page 5 (Trappings) — the resources the player may choose from (refetched
+  // whenever the chosen professions change, since those gate what's on
+  // offer), the player's in-progress picks, and submit state for the
+  // save-and-exit Continue click.
+  const [trappingsOptions, setTrappingsOptions] = useState<TrappingsOptions>(EMPTY_TRAPPINGS_OPTIONS);
+  const [selectedResources, setSelectedResources] = useState<Record<string, number>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
 
   useEffect(() => {
     if (page !== 5) return;
     let cancelled = false;
-    fetch("/api/auth/me/starting-resources", { credentials: "include" })
-      .then((res) => (res.ok ? res.json() : []))
-      .then((data: StartingResource[]) => {
-        if (!cancelled) setStartingResources(data ?? []);
+    const params = new URLSearchParams({
+      profession1: profession1 || "none",
+      profession2: profession2 || "none",
+      profession3: profession3 || "none",
+    });
+    fetch(`/api/auth/me/trappings-options?${params.toString()}`, { credentials: "include" })
+      .then((res) => (res.ok ? res.json() : EMPTY_TRAPPINGS_OPTIONS))
+      .then((data: TrappingsOptions) => {
+        if (!cancelled) {
+          setTrappingsOptions(data ?? EMPTY_TRAPPINGS_OPTIONS);
+          setSelectedResources({});
+        }
       })
       .catch(() => {
-        if (!cancelled) setStartingResources([]);
+        if (!cancelled) {
+          setTrappingsOptions(EMPTY_TRAPPINGS_OPTIONS);
+          setSelectedResources({});
+        }
       });
     return () => {
       cancelled = true;
     };
-  }, [page]);
+  }, [page, profession1, profession2, profession3]);
+
+  // Units of `tier` already allocated across `resources` (the player's picks
+  // so far) — used both to render each tier's remaining budget and to clamp
+  // further +/- clicks to what's left.
+  function tierUnitsSpent(resources: Record<string, number>, tier: number): number {
+    return trappingsOptions.items
+      .filter((item) => item.tier === tier)
+      .reduce((sum, item) => sum + (resources[item.id] ?? 0), 0);
+  }
+
+  function adjustSelectedResource(item: TrappingsItem, delta: number) {
+    setSelectedResources((prev) => {
+      const current = prev[item.id] ?? 0;
+      const pool = trappingsOptions.tierPools[String(item.tier)] ?? 0;
+      const spentByOthers = tierUnitsSpent(prev, item.tier) - current;
+      const next = Math.max(0, Math.min(current + delta, pool - spentByOthers));
+      if (next === current) return prev;
+      const updated = { ...prev };
+      if (next === 0) {
+        delete updated[item.id];
+      } else {
+        updated[item.id] = next;
+      }
+      return updated;
+    });
+  }
 
   // Page 4 (Birthsign) — a single required pick; null blocks Continue.
   const [birthsign, setBirthsign] = useState<BirthsignId | null>(null);
@@ -931,6 +979,7 @@ export function SoulCreation({
           portraitFrameArea: savedPortraitFrameArea,
           portraitFaceArea: savedPortraitFaceArea,
           attr: { ...bodyAttributes, ...soulAttributes },
+          selectedResources,
         }),
       });
       if (!res.ok) throw new Error("Failed to save character");
@@ -976,7 +1025,7 @@ export function SoulCreation({
   return (
     <div
       className={`${styles.wizard} ${page === 1 || page === 3 ? styles.noTouchScroll : ""} ${
-        page === 0 || page === 2 || page === 4 ? styles.wizardScrollable : ""
+        page === 0 || page === 2 || page === 4 || page === 5 ? styles.wizardScrollable : ""
       }`}
       onClick={handlePageClick}
       onPointerDown={handlePagePointerDown}
@@ -991,7 +1040,7 @@ export function SoulCreation({
       <div className={styles.stage}>
         <div
           className={
-            page === 0 || page === 2
+            page === 0 || page === 2 || page === 5
               ? `${styles.content} ${styles.contentTop} ${styles.contentTopTight} ${styles.contentScrollable}`
               : page === 4
               ? `${styles.content} ${styles.contentTop} ${styles.contentTopTight} ${styles.contentScrollable} ${styles.contentWide}`
@@ -1290,17 +1339,72 @@ export function SoulCreation({
             </>
           ) : page === 5 ? (
             <>
-              <h1 className={styles.headline}>finishing touches</h1>
+              <h1 className={styles.headline}>Trappings</h1>
               <p className={styles.introText}>
-                You set out with a handful of basic crafting materials — enough to get started.
+                Your professions leave you with the makings of your trade. Choose what you carry into the world.
               </p>
-              <div className={styles.resourceList}>
-                {startingResources.map((resource) => (
-                  <div key={resource.id} className={styles.resourceRow}>
-                    <span className={styles.resourceName}>{resource.name}</span>
-                    <span className={styles.resourceAmount}>x{resource.amount}</span>
-                  </div>
-                ))}
+              <p className={styles.trappingsProfessionList}>
+                {[profession1, profession2, profession3]
+                  .filter((id) => id && id !== "none")
+                  .map((professionId) => PROFESSIONS.find((p) => p.id === professionId)?.name)
+                  .filter(Boolean)
+                  .join(" · ")}
+              </p>
+              <div className={styles.trappingsPicker}>
+                {Object.keys(trappingsOptions.tierPools)
+                  .map(Number)
+                  .sort((a, b) => a - b)
+                  .map((tier) => {
+                    const pool = trappingsOptions.tierPools[String(tier)] ?? 0;
+                    const spent = tierUnitsSpent(selectedResources, tier);
+                    const remaining = pool - spent;
+                    return (
+                      <div key={tier} className={styles.trappingsTierGroup}>
+                        <div className={styles.trappingsTierHeader}>
+                          <span>Tier {tier}</span>
+                          <span>
+                            {remaining} / {pool} remaining
+                          </span>
+                        </div>
+                        {trappingsOptions.items
+                          .filter((item) => item.tier === tier)
+                          .map((item) => {
+                            const amount = selectedResources[item.id] ?? 0;
+                            return (
+                              <div key={item.id} className={styles.trappingsRow}>
+                                <div className={styles.trappingsItemInfo}>
+                                  <span className={styles.trappingsItemName}>{item.name}</span>
+                                  <span className={styles.trappingsItemFamily}>{item.familyId}</span>
+                                </div>
+                                <div className={styles.trappingsStepper}>
+                                  <button
+                                    type="button"
+                                    className={styles.attrStepBtn}
+                                    onPointerDown={() => startHold(() => adjustSelectedResource(item, -1))}
+                                    onContextMenu={(e) => e.preventDefault()}
+                                    disabled={amount <= 0}
+                                    aria-label={`Decrease ${item.name}`}
+                                  >
+                                    ◀
+                                  </button>
+                                  <span className={styles.trappingsAmount}>{amount}</span>
+                                  <button
+                                    type="button"
+                                    className={styles.attrStepBtn}
+                                    onPointerDown={() => startHold(() => adjustSelectedResource(item, 1))}
+                                    onContextMenu={(e) => e.preventDefault()}
+                                    disabled={remaining <= 0}
+                                    aria-label={`Increase ${item.name}`}
+                                  >
+                                    ▶
+                                  </button>
+                                </div>
+                              </div>
+                            );
+                          })}
+                      </div>
+                    );
+                  })}
               </div>
               {submitError && <p className={styles.submitError}>{submitError}</p>}
             </>

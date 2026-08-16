@@ -13,7 +13,7 @@ from backend.players import (
     grant_resource,
     grant_shared_resource,
 )
-from backend.resources_catalog import STARTING_RESOURCE_GRANTS
+from backend.resources_catalog import resolve_trapping_options
 
 TEST_ADDRESS = "5TestResourcesAddress"
 
@@ -72,20 +72,37 @@ async def test_grant_resource_rejects_unknown_id(mongodb_uri):
 
 
 @pytest.mark.asyncio
-async def test_starting_resource_grants_apply_to_a_new_character(mongodb_uri):
+async def test_trapping_selection_grants_apply_to_a_new_character(mongodb_uri):
     db = get_database()
     try:
         await get_or_create_player(TEST_ADDRESS)
         character = Character(first_name="Test", last_name="Hero")
         await add_character(TEST_ADDRESS, character)
 
-        player = None
-        for resource_id, amount in STARTING_RESOURCE_GRANTS:
-            player = await grant_resource(TEST_ADDRESS, character.id, resource_id, amount)
+        options = resolve_trapping_options(["farmer"])
+        tier1_item = next(item for item in options.items if item.tier == 1)
+
+        player = await grant_resource(TEST_ADDRESS, character.id, tier1_item.id, options.tier_pools[1])
 
         assert player is not None
         stored = next(c for c in player.characters if c["id"] == character.id)
-        for resource_id, amount in STARTING_RESOURCE_GRANTS:
-            assert stored["resourceBalances"][resource_id] == amount
+        assert stored["resourceBalances"][tier1_item.id] == options.tier_pools[1]
     finally:
         await db.players.delete_one({"address": TEST_ADDRESS})
+
+
+def test_resolve_trapping_options_scales_with_profession_count():
+    one = resolve_trapping_options(["farmer"])
+    assert one.tier_pools == {1: 15}
+    assert all(item.tier == 1 for item in one.items)
+
+    two = resolve_trapping_options(["farmer", "blacksmith"])
+    assert two.tier_pools == {1: 30, 2: 15}
+
+    three = resolve_trapping_options(["farmer", "blacksmith", "scribe"])
+    assert three.tier_pools == {1: 45, 2: 30, 3: 8}
+
+
+def test_resolve_trapping_options_rejects_unknown_profession():
+    with pytest.raises(ValueError):
+        resolve_trapping_options(["not_a_real_profession"])

@@ -1,7 +1,7 @@
 [
   { "id": "lead_ore", "name": "Lead Ore", "familyId": "ore", "tier": 1 },
-  { "id": "iron_ore", "name": "Iron Ore", "familyId": "ore", "tier": 2 },
-  { "id": "copper_ore", "name": "Copper Ore", "familyId": "ore", "tier": 3 },
+  { "id": "copper_ore", "name": "Copper Ore", "familyId": "ore", "tier": 2 },
+  { "id": "iron_ore", "name": "Iron Ore", "familyId": "ore", "tier": 3 },
   { "id": "silver_ore", "name": "Silver Ore", "familyId": "ore", "tier": 4 },
   { "id": "gold_ore", "name": "Gold Ore", "familyId": "ore", "tier": 5 },
   { "id": "star_metal_ore", "name": "Star Metal Ore", "familyId": "ore", "tier": 6 },
@@ -62,10 +62,59 @@
   { "id": "roc_feather", "name": "Roc Feather", "familyId": "feather", "tier": 5 },
   { "id": "celestial_feather", "name": "Celestial Feather", "familyId": "feather", "tier": 6 },
 
-  { "id": "goblin_ear", "name": "Goblin Ear", "familyId": "monster_part", "tier": 1 },
+  { "id": "rat_ear", "name": "Rat Ear", "familyId": "monster_part", "tier": 1 },
   { "id": "troll_fat", "name": "Troll Fat", "familyId": "monster_part", "tier": 2 },
   { "id": "basilisk_eye", "name": "Basilisk Eye", "familyId": "monster_part", "tier": 3 },
   { "id": "wyvern_tail", "name": "Wyvern Tail", "familyId": "monster_part", "tier": 4 },
   { "id": "gorgon_scale", "name": "Gorgon Scale", "familyId": "monster_part", "tier": 5 },
-  { "id": "umbral_heart", "name": "Umbral Heart", "familyId": "monster_part", "tier": 6 }
+  { "id": "umbral_heart", "name": "Umbral Heart", "familyId": "monster_part", "tier": 6 },
+
+  { "id": "common_clay", "name": "Common Clay", "familyId": "clay", "tier": 1 },
+  { "id": "red_clay", "name": "Red Clay", "familyId": "clay", "tier": 2 },
+  { "id": "fire_clay", "name": "Fire Clay", "familyId": "clay", "tier": 3 },
+  { "id": "porcelain_clay", "name": "Porcelain Clay", "familyId": "clay", "tier": 4 },
+  { "id": "spirit_clay", "name": "Spirit Clay", "familyId": "clay", "tier": 5 },
+  { "id": "worldclay", "name": "Worldclay", "familyId": "clay", "tier": 6 },
+
+  { "id": "river_sand", "name": "River Sand", "familyId": "sand", "tier": 1 },
+  { "id": "white_sand", "name": "White Sand", "familyId": "sand", "tier": 2 },
+  { "id": "quartz_sand", "name": "Quartz Sand", "familyId": "sand", "tier": 3 },
+  { "id": "obsidian_sand", "name": "Obsidian Sand", "familyId": "sand", "tier": 4 },
+  { "id": "moonlit_sand", "name": "Moonlit Sand", "familyId": "sand", "tier": 5 },
+  { "id": "astral_sand", "name": "Astral Sand", "familyId": "sand", "tier": 6 },
+
+  { "id": "papyrus", "name": "Papyrus", "familyId": "parchment", "tier": 1 },
+  { "id": "parchment_sheet", "name": "Parchment", "familyId": "parchment", "tier": 2 },
+  { "id": "vellum", "name": "Vellum", "familyId": "parchment", "tier": 3 },
+  { "id": "enchanted_parchment", "name": "Enchanted Parchment", "familyId": "parchment", "tier": 4 },
+  { "id": "spirit_vellum", "name": "Spirit Vellum", "familyId": "parchment", "tier": 5 },
+  { "id": "starweave_parchment", "name": "Starweave Parchment", "familyId": "parchment", "tier": 6 },
+
+  { "id": "weak_venom", "name": "Weak Venom", "familyId": "venom", "tier": 1 },
+  { "id": "serpent_venom", "name": "Serpent Venom", "familyId": "venom", "tier": 2 },
+  { "id": "spider_venom", "name": "Spider Venom", "familyId": "venom", "tier": 3 },
+  { "id": "basilisk_venom", "name": "Basilisk Venom", "familyId": "venom", "tier": 4 },
+  { "id": "wyvern_venom", "name": "Wyvern Venom", "familyId": "venom", "tier": 5 },
+  { "id": "void_venom", "name": "Void Venom", "familyId": "venom", "tier": 6 },
+
+  { "id": "common_pigment", "name": "Common Pigment", "familyId": "pigment", "tier": 1 },
+  { "id": "plant_dye", "name": "Plant Dye", "familyId": "pigment", "tier": 2 },
+  { "id": "mineral_pigment", "name": "Mineral Pigment", "familyId": "pigment", "tier": 3 },
+  { "id": "rare_pigment", "name": "Rare Pigment", "familyId": "pigment", "tier": 4 },
+  { "id": "phoenix_ash_pigment", "name": "Phoenix Ash Pigment", "familyId": "pigment", "tier": 5 },
+  { "id": "chromatic_pigment", "name": "Chromatic Pigment", "familyId": "pigment", "tier": 6 },
+
+  { "id": "faint_essence", "name": "Faint Essence", "familyId": "essence", "tier": 1 },
+  { "id": "elemental_essence", "name": "Elemental Essence", "familyId": "essence", "tier": 2 },
+  { "id": "spirit_essence", "name": "Spirit Essence", "familyId": "essence", "tier": 3 },
+  { "id": "planar_essence", "name": "Planar Essence", "familyId": "essence", "tier": 4 },
+  { "id": "primordial_essence", "name": "Primordial Essence", "familyId": "essence", "tier": 5 },
+  { "id": "void_essence", "name": "Void Essence", "familyId": "essence", "tier": 6 },
+
+  { "id": "rusty_gearwork", "name": "Rusty Gearwork", "familyId": "clockwork", "tier": 1 },
+  { "id": "bronze_clockwork", "name": "Bronze Clockwork", "familyId": "clockwork", "tier": 2 },
+  { "id": "precision_gearwork", "name": "Precision Gearwork", "familyId": "clockwork", "tier": 3 },
+  { "id": "runic_clockwork", "name": "Runic Clockwork", "familyId": "clockwork", "tier": 4 },
+  { "id": "arcane_clockwork", "name": "Arcane Clockwork", "familyId": "clockwork", "tier": 5 },
+  { "id": "worldforge_mechanism", "name": "Worldforge Mechanism", "familyId": "clockwork", "tier": 6 }
 ]

@@ -1,0 +1,13 @@
+{
+  "Rural": ["hide", "herbs", "feather"],
+  "CraftMetal": ["ore", "wood", "leather"],
+  "CraftStone": ["clay", "crystal", "ore"],
+  "CraftGarment": ["leather", "hide", "cloth"],
+  "CraftGlass": ["sand", "crystal", "monster_part"],
+  "CraftWood": ["wood", "leather", "bone"],
+  "Aristocratic": ["parchment", "feather", "crystal"],
+  "Trade": ["cloth", "herbs", "monster_part"],
+  "Food": ["herbs", "bone", "wood"],
+  "Military": ["ore", "leather", "monster_part"],
+  "Artists": ["feather", "cloth", "bone"]
+}

@@ -83,34 +83,89 @@
   color: #e6a55a;
 }
 
-/* Page 5 (finishing touches) — plain informational list of the starting
-   resource kit, not a selectable choice like the birthsign tiles. */
-.resourceList {
+/* Page 5 (Trappings) — the chosen professions' names once up top, then the
+   resource picker: one group per unlocked tier (each item listed once,
+   never repeated even if multiple professions grant it). The +/- buttons
+   reuse .attrStepBtn (Page 2's triangle glyphs) for a consistent look and
+   its shared press-and-hold behavior. */
+.trappingsProfessionList {
+  font-size: clamp(1rem, 2.8vh, 1.2rem);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #c07a3a;
+  margin: 0.5rem 0 0;
+}
+
+.trappingsPicker {
   display: flex;
   flex-direction: column;
   width: 100%;
-  max-width: 24rem;
+  max-width: 28rem;
   margin-top: 0.5rem;
-  border-top: 1px solid rgba(168, 153, 104, 0.35);
+  gap: 1.25rem;
 }
 
-.resourceRow {
+.trappingsTierGroup {
+  display: flex;
+  flex-direction: column;
+}
+
+.trappingsTierHeader {
   display: flex;
   justify-content: space-between;
-  align-items: baseline;
-  padding: 0.5rem 0.25rem;
+  font-size: 0.85rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #a89968;
+  padding: 0.35rem 0.25rem;
   border-bottom: 1px solid rgba(168, 153, 104, 0.35);
 }
 
-.resourceName {
-  font-size: clamp(0.85rem, 2.2vw, 1rem);
+.trappingsRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.55rem 0.25rem;
+  border-bottom: 1px solid rgba(168, 153, 104, 0.2);
+}
+
+.trappingsItemInfo {
+  display: flex;
+  flex-direction: column;
+}
+
+.trappingsItemName {
+  font-size: clamp(1.05rem, 2.8vw, 1.3rem);
   color: #d4c9a8;
 }
 
-.resourceAmount {
-  font-size: clamp(0.85rem, 2.2vw, 1rem);
+.trappingsItemFamily {
+  font-size: 0.8rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #7d7256;
+}
+
+.trappingsStepper {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+/* Scoped larger than the shared .attrStepBtn default (Page 2's Attributes
+   triangles) — this list has fewer, larger touch targets than the 8-way
+   attribute grid, so it can afford bigger glyphs. */
+.trappingsStepper .attrStepBtn {
+  min-width: clamp(1.8rem, 5vh, 3.4rem);
+  min-height: clamp(1.8rem, 5vh, 3.4rem);
+  font-size: clamp(1.4rem, 4.2vh, 2.4rem);
+}
+
+.trappingsAmount {
+  min-width: 2rem;
+  text-align: center;
   color: #c07a3a;
-  letter-spacing: 0.05em;
+  font-size: 1.3rem;
 }
 
 .submitError {

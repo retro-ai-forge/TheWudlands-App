@@ -29,7 +29,7 @@ from backend.active_players import (
 from backend.character import AttributeStats, Character, PortraitArea, ProfStats
 from backend.players import add_character, delete_character, get_or_create_player, get_player, grant_resource
 from backend.balances import log_login_balances
-from backend.resources_catalog import RESOURCE_ITEMS_BY_ID, STARTING_RESOURCE_GRANTS
+from backend.resources_catalog import RESOURCE_ITEMS_BY_ID, resolve_trapping_options
 from backend.soul_slots import (
     SOUL_SLOTS,
     STAR_SLOT_NUMBERS,
@@ -214,7 +214,7 @@ class PlayerDataResponse(BaseModel):
 
 
 class CreateCharacterRequest(BaseModel):
-    """Payload collected by the Soul Creation wizard's finishing-touches step."""
+    """Payload collected by the Soul Creation wizard's Trappings step."""
 
     slotNumber: int = Field(..., description="Soul slot clicked to start creation")
     firstName: str = Field(..., description="Character's first name")
@@ -239,16 +239,28 @@ class CreateCharacterRequest(BaseModel):
         None, description="Face-only crop, used for the soul slot preview"
     )
     attr: CharacterAttributeResponse
+    selectedResources: Dict[str, int] = Field(
+        default_factory=dict,
+        description="Resources chosen on the Trappings step, as resource id -> amount",
+    )
 
 
-class StartingResourceResponse(BaseModel):
-    """One entry of the fixed starting-resource kit shown on finishing touches."""
+class TrappingsItemResponse(BaseModel):
+    """One resource item selectable on the Trappings step."""
 
     id: str = Field(..., description="Resource id")
     name: str = Field(..., description="Resource display name")
     familyId: str = Field(..., description="Resource family id")
     tier: int = Field(..., description="Resource tier")
-    amount: int = Field(..., description="Amount granted on character creation")
+
+
+class TrappingsOptionsResponse(BaseModel):
+    """What a character may pick from on the Trappings step, derived from
+    their chosen professions: a spendable unit pool per unlocked tier, and
+    the resource items available at those tiers."""
+
+    tierPools: Dict[int, int] = Field(..., description="Total spendable units per tier")
+    items: List[TrappingsItemResponse]
 
 
 # Dependency: Extract and verify token from secure cookie
@@ -517,26 +529,32 @@ async def get_my_characters(address: str = Depends(get_current_address)):
     return player.to_dict()
 
 
-@player_router.get("/me/starting-resources", response_model=List[StartingResourceResponse])
-async def get_starting_resources(address: str = Depends(get_current_address)):
+@player_router.get("/me/trappings-options", response_model=TrappingsOptionsResponse)
+async def get_trappings_options(
+    profession1: str = "none",
+    profession2: str = "none",
+    profession3: str = "none",
+    address: str = Depends(get_current_address),
+):
     """
-    The fixed starting-resource kit granted on character creation.
+    What a character with these (1-3) professions may pick from on the Soul
+    Creation wizard's Trappings step, before the player commits. Single
+    source of truth also used server-side to validate POST /me/characters'
+    selectedResources, so the picker a player sees can never drift from
+    what's actually allowed.
+    """
+    try:
+        options = resolve_trapping_options([profession1, profession2, profession3])
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc))
 
-    A placeholder for a real selection process, shown on the Soul Creation
-    wizard's finishing-touches step before the player commits. Single source
-    of truth for the grant POST /me/characters actually applies, so the
-    displayed list can never drift from what gets credited.
-    """
-    return [
-        StartingResourceResponse(
-            id=resource_id,
-            name=RESOURCE_ITEMS_BY_ID[resource_id].name,
-            familyId=RESOURCE_ITEMS_BY_ID[resource_id].family_id,
-            tier=RESOURCE_ITEMS_BY_ID[resource_id].tier,
-            amount=amount,
-        )
-        for resource_id, amount in STARTING_RESOURCE_GRANTS
-    ]
+    return TrappingsOptionsResponse(
+        tierPools=options.tier_pools,
+        items=[
+            TrappingsItemResponse(id=item.id, name=item.name, familyId=item.family_id, tier=item.tier)
+            for item in options.items
+        ],
+    )
 
 
 @player_router.post("/me/characters", response_model=PlayerDataResponse)
@@ -547,10 +565,30 @@ async def create_character(
     Save a character built by the Soul Creation wizard and grant its
     starting resource kit.
 
-    Called from the wizard's last ("finishing touches") page - this is the
+    Called from the wizard's last ("Trappings") page - this is the
     only place a character is ever persisted; the soul slot the player
     clicked to enter the wizard travels with it as slotNumber.
     """
+    try:
+        trappings = resolve_trapping_options([payload.profession1, payload.profession2, payload.profession3])
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc))
+
+    eligible_item_ids = {item.id for item in trappings.items}
+    spent_by_tier: Dict[int, int] = {}
+    for resource_id, amount in payload.selectedResources.items():
+        if amount <= 0:
+            raise HTTPException(status_code=400, detail=f"Invalid amount for {resource_id}")
+        if resource_id not in eligible_item_ids:
+            raise HTTPException(
+                status_code=400, detail=f"{resource_id} is not available for the chosen professions"
+            )
+        tier = RESOURCE_ITEMS_BY_ID[resource_id].tier
+        spent_by_tier[tier] = spent_by_tier.get(tier, 0) + amount
+    for tier, spent in spent_by_tier.items():
+        if spent > trappings.tier_pools[tier]:
+            raise HTTPException(status_code=400, detail=f"Tier {tier} selection exceeds the allotted pool")
+
     character = Character(
         slot_number=payload.slotNumber,
         first_name=payload.firstName,
@@ -596,7 +634,7 @@ async def create_character(
     if player is None:
         raise HTTPException(status_code=404, detail="No player record found for this address")
 
-    for resource_id, amount in STARTING_RESOURCE_GRANTS:
+    for resource_id, amount in payload.selectedResources.items():
         player = await grant_resource(address, character.id, resource_id, amount)
 
     return player.to_dict()
