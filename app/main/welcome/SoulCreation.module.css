@@ -152,14 +152,6 @@
   gap: 0.75rem;
 }
 
-/* Scoped larger than the shared .attrStepBtn default (Page 2's Attributes
-   triangles) — this list has fewer, larger touch targets than the 8-way
-   attribute grid, so it can afford bigger glyphs. */
-.trappingsStepper .attrStepBtn {
-  min-width: clamp(1.8rem, 5vh, 3.4rem);
-  min-height: clamp(1.8rem, 5vh, 3.4rem);
-  font-size: clamp(1.4rem, 4.2vh, 2.4rem);
-}
 
 .trappingsAmount {
   min-width: 2rem;
@@ -198,6 +190,51 @@
   letter-spacing: 0.1em;
   text-transform: uppercase;
   color: #a89968;
+}
+
+.upcomingSteps {
+  width: 100%;
+  max-width: 28rem;
+  margin-top: 1.25rem;
+  border-top: 1px solid rgba(168, 153, 104, 0.3);
+  padding-top: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.upcomingStepsLabel {
+  font-size: 0.7rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #a89968;
+  margin: 0 0 0.25rem;
+}
+
+.upcomingStepList {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.upcomingStep {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  text-align: left;
+}
+
+.upcomingStepTitle {
+  font-size: 0.85rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #d9955a;
+}
+
+.upcomingStepDesc {
+  font-size: clamp(0.75rem, 1.8vw, 0.9rem);
+  line-height: 1.45;
+  color: #c4b07a;
 }
 
 .middleIllustration {
@@ -419,153 +456,50 @@
   touch-action: manipulation;
 }
 
-/* Double-ruled frame — an outer brass border plus a thinner inset gold line
-   (via ::before, so it can float independently of the padding box) — the
-   classic aristocratic/ornate picture-frame look. */
-.attrSection {
-  position: relative;
+.attrPicker {
+  display: flex;
+  flex-direction: column;
   width: 100%;
-  max-width: 500px;
-  margin: clamp(0rem, 1vh, 0.75rem) 0 clamp(0.1rem, 1.2vh, 1rem);
-  padding: clamp(0.25rem, 1.5vh, 1.4rem) clamp(0.6rem, 4vw, 1.4rem) clamp(0.3rem, 1.5vh, 1.5rem);
-  border: 1px solid #6f532f;
-  border-radius: 6px;
-  background: rgba(0, 0, 0, 0.15);
+  max-width: 28rem;
+  margin-top: 0.5rem;
+  gap: 1.25rem;
 }
 
-.attrSection::before {
-  content: "";
-  position: absolute;
-  inset: 6px;
-  border: 1px solid rgba(230, 184, 92, 0.4);
-  border-radius: 3px;
-  pointer-events: none;
+.attrSection {
+  display: flex;
+  flex-direction: column;
 }
 
-/* Body: brick-red/brown, matching the Body bulb's #9e1303 on page 1. */
-.attrSectionBody {
-  border-color: #6b2a1a;
-}
-
-.attrSectionBody::before {
-  border-color: rgba(158, 19, 3, 0.45);
-}
-
-.attrSectionBody .attrSectionHeading {
-  color: #c8532f;
-}
-
-.attrSectionBody .attrRemainingValue {
-  color: #d9663d;
-  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.65), 0 0 16px rgba(158, 19, 3, 0.45);
-}
-
-.attrSectionBody .attrValueBox {
-  background: linear-gradient(155deg, #e0a888 0%, #b5654a 35%, #8a3f2a 70%, #5c2415 100%);
-  border-color: #3a180e;
-}
-
-.attrSectionBody .attrStepBtn {
-  color: #d9663d;
-  text-shadow: 0 2px 3px rgba(0, 0, 0, 0.6), 0 0 10px rgba(158, 19, 3, 0.5);
-}
-
-.attrSectionBody .attrStepBtn:hover:not(:disabled) {
-  color: #f0a17a;
-}
-
-/* Soul: violet/white, matching the Soul bulb's #8b5cf6 on page 1. */
-.attrSectionSoul {
-  border-color: #4a3a7a;
-}
-
-.attrSectionSoul::before {
-  border-color: rgba(139, 92, 246, 0.45);
-}
-
-.attrSectionSoul .attrSectionHeading {
-  color: #a78bfa;
-}
-
-.attrSectionSoul .attrRemainingValue {
-  color: #b9a3fb;
-  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.65), 0 0 16px rgba(139, 92, 246, 0.5);
-}
-
-.attrSectionSoul .attrValueBox {
-  background: linear-gradient(155deg, #ede8ff 0%, #b9a3fb 35%, #7c5cd6 70%, #4c2d99 100%);
-  border-color: #2c1a5c;
-  color: #241448;
-}
-
-.attrSectionSoul .attrStepBtn {
-  color: #cdbdfd;
-  text-shadow: 0 2px 3px rgba(0, 0, 0, 0.6), 0 0 10px rgba(139, 92, 246, 0.55);
-}
-
-.attrSectionSoul .attrStepBtn:hover:not(:disabled) {
-  color: #efe9ff;
-}
-
-.attrSectionHeading {
-  font-size: clamp(1.1rem, 3.2vh, 1.5rem);
+.attrSectionHeader {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.85rem;
   letter-spacing: 0.1em;
   text-transform: uppercase;
-  color: #c07a3a;
-  margin: clamp(0.15rem, 1vh, 0.4rem) 0 clamp(0.1rem, 1.6vh, 0.6rem);
-}
-
-.attrRemaining {
-  display: flex;
-  flex-direction: row;
-  align-items: baseline;
-  justify-content: center;
-  gap: 0.4rem;
-  margin: 0 0 clamp(0.1rem, 2.6vh, 2.2rem);
-}
-
-.attrRemainingValue {
-  font-size: clamp(1.1rem, 3vh, 1.7rem);
-  font-weight: 800;
-  line-height: 1;
-  color: #e6b85c;
-  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.65), 0 0 16px rgba(230, 184, 92, 0.35);
-}
-
-.attrRemainingLabel {
-  font-size: 0.7rem;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
   color: #a89968;
+  padding: 0.35rem 0.25rem;
+  border-bottom: 1px solid rgba(168, 153, 104, 0.35);
 }
 
 .attrRow {
   display: flex;
+  justify-content: space-between;
   align-items: center;
-  justify-content: center;
-  gap: clamp(1.25rem, 4vw, 2.25rem);
-  margin-bottom: clamp(0.15rem, 1vh, 0.6rem);
+  padding: 0.55rem 0.25rem;
+  border-bottom: 1px solid rgba(168, 153, 104, 0.2);
 }
 
 .attrLabel {
-  width: 5.5rem;
-  flex-shrink: 0;
-  margin-right: clamp(0.5rem, 2vw, 1rem);
-  text-align: left;
-  font-size: clamp(0.9rem, 2.4vh, 1.05rem);
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  color: #a89968;
+  font-size: clamp(1.05rem, 2.8vw, 1.3rem);
+  color: #d4c9a8;
 }
 
-@media (max-width: 800px) {
-  .attrLabel {
-    font-size: clamp(0.7rem, 2.4vh, 0.85rem);
-  }
+.attrStepper {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
 }
 
-/* Solid gold triangle glyphs — no button chrome, just a large glowing
-   glyph, generous touch target via padding rather than a visible box. */
 /* Held down to auto-repeat (see startHold in the component) rather than
    single-clicked — without these, holding the pointer down reliably
    triggers the browser's own text-selection/callout ("Copy…") popup on
@@ -576,12 +510,12 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  min-width: clamp(1.2rem, 3.5vh, 2.6rem);
-  min-height: clamp(1.2rem, 3.5vh, 2.6rem);
+  min-width: clamp(1.8rem, 5vh, 3.4rem);
+  min-height: clamp(1.8rem, 5vh, 3.4rem);
   padding: 0;
   background: transparent;
   border: none;
-  font-size: clamp(1rem, 3vh, 1.9rem);
+  font-size: clamp(1.4rem, 4.2vh, 2.4rem);
   line-height: 1;
   color: #e6b85c;
   text-shadow: 0 2px 3px rgba(0, 0, 0, 0.6), 0 0 10px rgba(230, 184, 92, 0.4);
@@ -605,36 +539,11 @@
   cursor: not-allowed;
 }
 
-/* Vintage brass number plate, like the stat boxes on old occult character
-   sheets — embossed metal via layered inset highlight/shadow, engraved-look
-   numerals via a light-above/dark-below text-shadow pair. */
-/* Vertical padding ramps linearly between 630px and 800px of viewport
-   height (0.05rem → 0.45rem) instead of the plain `1vh` .attrLabel/.attrRow
-   spacing uses elsewhere — 1vh barely moves across that whole band (only
-   ~1.7px total), so on its own it never freed enough room for the Continue
-   button, which stays fixed 1.25rem off the true bottom edge regardless of
-   how tall the page's content is. A hard cutoff at max-height:630px used to
-   patch that, but a step function has to overcorrect on one side of its
-   threshold or undercorrect on the other — this replaces it with a smooth
-   ramp instead, tuned to still clear Continue's height at the lower end
-   without shrinking any earlier than the taller end actually needs it. */
 .attrValueBox {
-  flex-shrink: 0;
-  min-width: 3.6rem;
-  padding: clamp(0.05rem, calc(0.05rem + (100vh - 630px) * 0.03765), 0.45rem) clamp(0.5rem, 2.5vw, 0.8rem);
+  min-width: 2rem;
   text-align: center;
-  font-family: Georgia, "Times New Roman", serif;
-  font-size: clamp(1rem, 3vh, 1.4rem);
-  font-weight: 700;
-  color: #2a1a0a;
-  background: linear-gradient(155deg, #e9c884 0%, #c79a52 35%, #9c6f34 70%, #7a531f 100%);
-  border: 1px solid #4a3018;
-  border-radius: 4px;
-  box-shadow:
-    inset 0 2px 2px rgba(255, 244, 214, 0.55),
-    inset 0 -2px 3px rgba(0, 0, 0, 0.5),
-    0 2px 4px rgba(0, 0, 0, 0.55);
-  text-shadow: 0 1px 0 rgba(255, 244, 214, 0.5), 0 -1px 0 rgba(0, 0, 0, 0.35);
+  color: #c07a3a;
+  font-size: 1.3rem;
 }
 
 /* Page 4 (Birthsign) — unframed grid of flip-card tiles (each sign's name
@@ -949,12 +858,10 @@
   cursor: not-allowed;
 }
 
-/* Character preview's exit button — mirrors .continue's fixed-to-viewport
-   positioning but pinned to the opposite corner, since this page has no
-   step sequence to advance through, only a way back out. */
+/* Character preview's exit button — bottom-right corner. */
 .close {
-  top: 1.25rem;
-  left: max(1.25rem, calc((100vw - 900px) / 2 + 1.25rem));
+  bottom: 1.25rem;
+  right: max(1.25rem, calc((100vw - 900px) / 2 + 1.25rem));
 }
 
 .continue {
@@ -974,12 +881,11 @@
   box-shadow: 0 4px 0 #4a3620;
 }
 
-/* Character preview's delete button — same fixed bottom-right slot .continue
-   uses elsewhere (this page has no continue step of its own), coloured red
+/* Character preview's delete button — top-right corner, coloured red
    so a destructive action never reads as the same kind of button as
    "proceed". */
 .delete {
-  bottom: 1.25rem;
+  top: 1.25rem;
   right: max(1.25rem, calc((100vw - 900px) / 2 + 1.25rem));
   background: linear-gradient(180deg, #b5453a, #6b241c);
   border-color: #4a1a14;

@@ -146,6 +146,7 @@ export function SoulCreation({
   // offer), the player's in-progress picks, and submit state for the
   // save-and-exit Continue click.
   const [trappingsOptions, setTrappingsOptions] = useState<TrappingsOptions>(EMPTY_TRAPPINGS_OPTIONS);
+  const [trappingsLoaded, setTrappingsLoaded] = useState(false);
   const [selectedResources, setSelectedResources] = useState<Record<string, number>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
@@ -153,6 +154,7 @@ export function SoulCreation({
   useEffect(() => {
     if (page !== 5) return;
     let cancelled = false;
+    setTrappingsLoaded(false);
     const params = new URLSearchParams({
       profession1: profession1 || "none",
       profession2: profession2 || "none",
@@ -164,12 +166,14 @@ export function SoulCreation({
         if (!cancelled) {
           setTrappingsOptions(data ?? EMPTY_TRAPPINGS_OPTIONS);
           setSelectedResources({});
+          setTrappingsLoaded(true);
         }
       })
       .catch(() => {
         if (!cancelled) {
           setTrappingsOptions(EMPTY_TRAPPINGS_OPTIONS);
           setSelectedResources({});
+          setTrappingsLoaded(true);
         }
       });
     return () => {
@@ -877,6 +881,14 @@ export function SoulCreation({
     window.addEventListener("pointercancel", stopHold, { once: true });
   }
 
+  const isPage2Ready = bodyPointsRemaining === 0 && soulPointsRemaining === 0;
+
+  const isPage5Ready =
+    trappingsLoaded &&
+    Object.keys(trappingsOptions.tierPools).every(
+      (tier) => tierUnitsSpent(selectedResources, Number(tier)) >= (trappingsOptions.tierPools[tier] ?? 0)
+    );
+
   const isLastPage = page === PAGE_COUNT - 1;
 
   // What page 1 (Foundation) requires before Continue may proceed: the
@@ -1015,6 +1027,12 @@ export function SoulCreation({
       if (missing.length > 0) flashMissingFields(missing);
       return;
     }
+    if (page === 2 && !isPage2Ready) {
+      return;
+    }
+    if (page === 5 && !isPage5Ready) {
+      return;
+    }
     if (page === 4 && birthsign === null) {
       flashMissingFields(["birthsign"]);
       return;
@@ -1106,6 +1124,30 @@ export function SoulCreation({
                 Continue to activate the mystic triangle to balance Body, Soul, and Life Energy.
               </p>
 
+              <div className={styles.upcomingSteps}>
+                <p className={styles.upcomingStepsLabel}>Also ahead in this wizard</p>
+                <div className={styles.upcomingStepList}>
+                  <div className={styles.upcomingStep}>
+                    <span className={styles.upcomingStepTitle}>Portrait</span>
+                    <span className={styles.upcomingStepDesc}>
+                      Paste any image URL and frame your character&apos;s face — zoom and pan to get the crop exactly right. An image hosting service is recommended for a stable link.
+                    </span>
+                  </div>
+                  <div className={styles.upcomingStep}>
+                    <span className={styles.upcomingStepTitle}>Birth Sign</span>
+                    <span className={styles.upcomingStepDesc}>
+                      Choose one of eight permanent signs. Each grants a rechargeable ability that shapes how your adventures unfold.
+                    </span>
+                  </div>
+                  <div className={styles.upcomingStep}>
+                    <span className={styles.upcomingStepTitle}>Trappings</span>
+                    <span className={styles.upcomingStepDesc}>
+                      Your professions determine what resources and blueprints you carry into the world — spend your starting budget across tiered items.
+                    </span>
+                  </div>
+                </div>
+              </div>
+
             </>
           ) : page === 1 ? (
             <>
@@ -1134,95 +1176,90 @@ export function SoulCreation({
           ) : page === 2 ? (
             <div className={styles.attrPage} onContextMenu={(e) => e.preventDefault()}>
               <h1 className={styles.headline}>Attributes</h1>
-
-              <div className={`${styles.attrSection} ${styles.attrSectionBody}`}>
-                <h2 className={styles.attrSectionHeading}>Body</h2>
-                <div className={styles.attrRemaining}>
-                  <span className={styles.attrRemainingValue}>
-                    {bodyPointsRemaining}/{body}
-                  </span>
-                  <span className={styles.attrRemainingLabel}>
-                    point{body === 1 ? "" : "s"} to spend
-                  </span>
-                </div>
-                {(
-                  [
-                    ["migh", "Might"],
-                    ["agil", "Agility"],
-                    ["endu", "Endurance"],
-                    ["prec", "Precision"],
-                  ] as const
-                ).map(([key, label]) => (
-                  <div className={styles.attrRow} key={key}>
-                    <span className={styles.attrLabel}>{label}</span>
-                    <button
-                      type="button"
-                      className={styles.attrStepBtn}
-                      onPointerDown={() => startHold(() => handleBodyAttributeChange(key, -1))}
-                      onContextMenu={(e) => e.preventDefault()}
-                      disabled={bodyAttributes[key] <= 1}
-                      aria-label={`Decrease ${label}`}
-                    >
-                      ◀
-                    </button>
-                    <span className={styles.attrValueBox}>{bodyAttributes[key]}</span>
-                    <button
-                      type="button"
-                      className={styles.attrStepBtn}
-                      onPointerDown={() => startHold(() => handleBodyAttributeChange(key, 1))}
-                      onContextMenu={(e) => e.preventDefault()}
-                      disabled={bodyPointsRemaining <= 0}
-                      aria-label={`Increase ${label}`}
-                    >
-                      ▶
-                    </button>
+              <div className={styles.attrPicker}>
+                <div className={styles.attrSection}>
+                  <div className={styles.attrSectionHeader}>
+                    <span>Body</span>
+                    <span>{bodyPointsRemaining} / {body} remaining</span>
                   </div>
-                ))}
-              </div>
-
-              <div className={`${styles.attrSection} ${styles.attrSectionSoul}`}>
-                <h2 className={styles.attrSectionHeading}>Soul</h2>
-                <div className={styles.attrRemaining}>
-                  <span className={styles.attrRemainingValue}>
-                    {soulPointsRemaining}/{soul}
-                  </span>
-                  <span className={styles.attrRemainingLabel}>
-                    point{soul === 1 ? "" : "s"} to spend
-                  </span>
+                  {(
+                    [
+                      ["migh", "Might"],
+                      ["agil", "Agility"],
+                      ["endu", "Endurance"],
+                      ["prec", "Precision"],
+                    ] as const
+                  ).map(([key, label]) => (
+                    <div className={styles.attrRow} key={key}>
+                      <span className={styles.attrLabel}>{label}</span>
+                      <div className={styles.attrStepper}>
+                        <button
+                          type="button"
+                          className={styles.attrStepBtn}
+                          onPointerDown={() => startHold(() => handleBodyAttributeChange(key, -1))}
+                          onContextMenu={(e) => e.preventDefault()}
+                          disabled={bodyAttributes[key] <= 1}
+                          aria-label={`Decrease ${label}`}
+                        >
+                          ◀
+                        </button>
+                        <span className={styles.attrValueBox}>{bodyAttributes[key]}</span>
+                        <button
+                          type="button"
+                          className={styles.attrStepBtn}
+                          onPointerDown={() => startHold(() => handleBodyAttributeChange(key, 1))}
+                          onContextMenu={(e) => e.preventDefault()}
+                          disabled={bodyPointsRemaining <= 0}
+                          aria-label={`Increase ${label}`}
+                        >
+                          ▶
+                        </button>
+                      </div>
+                    </div>
+                  ))}
                 </div>
-                {(
-                  [
-                    ["will", "Will"],
-                    ["insi", "Insight"],
-                    ["lore", "Lore"],
-                    ["pres", "Presence"],
-                  ] as const
-                ).map(([key, label]) => (
-                  <div className={styles.attrRow} key={key}>
-                    <span className={styles.attrLabel}>{label}</span>
-                    <button
-                      type="button"
-                      className={styles.attrStepBtn}
-                      onPointerDown={() => startHold(() => handleSoulAttributeChange(key, -1))}
-                      onContextMenu={(e) => e.preventDefault()}
-                      disabled={soulAttributes[key] <= 1}
-                      aria-label={`Decrease ${label}`}
-                    >
-                      ◀
-                    </button>
-                    <span className={styles.attrValueBox}>{soulAttributes[key]}</span>
-                    <button
-                      type="button"
-                      className={styles.attrStepBtn}
-                      onPointerDown={() => startHold(() => handleSoulAttributeChange(key, 1))}
-                      onContextMenu={(e) => e.preventDefault()}
-                      disabled={soulPointsRemaining <= 0}
-                      aria-label={`Increase ${label}`}
-                    >
-                      ▶
-                    </button>
+
+                <div className={styles.attrSection}>
+                  <div className={styles.attrSectionHeader}>
+                    <span>Soul</span>
+                    <span>{soulPointsRemaining} / {soul} remaining</span>
                   </div>
-                ))}
+                  {(
+                    [
+                      ["will", "Will"],
+                      ["insi", "Insight"],
+                      ["lore", "Lore"],
+                      ["pres", "Presence"],
+                    ] as const
+                  ).map(([key, label]) => (
+                    <div className={styles.attrRow} key={key}>
+                      <span className={styles.attrLabel}>{label}</span>
+                      <div className={styles.attrStepper}>
+                        <button
+                          type="button"
+                          className={styles.attrStepBtn}
+                          onPointerDown={() => startHold(() => handleSoulAttributeChange(key, -1))}
+                          onContextMenu={(e) => e.preventDefault()}
+                          disabled={soulAttributes[key] <= 1}
+                          aria-label={`Decrease ${label}`}
+                        >
+                          ◀
+                        </button>
+                        <span className={styles.attrValueBox}>{soulAttributes[key]}</span>
+                        <button
+                          type="button"
+                          className={styles.attrStepBtn}
+                          onPointerDown={() => startHold(() => handleSoulAttributeChange(key, 1))}
+                          onContextMenu={(e) => e.preventDefault()}
+                          disabled={soulPointsRemaining <= 0}
+                          aria-label={`Increase ${label}`}
+                        >
+                          ▶
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
               </div>
             </div>
           ) : page === 3 ? (
@@ -1614,7 +1651,7 @@ export function SoulCreation({
 
         <button
           className={`${styles.navButton} ${styles.continue} ${
-            (page === 1 && !isPage1Ready) || (page === 4 && birthsign === null) ? styles.continueInactive : ""
+            (page === 1 && !isPage1Ready) || (page === 2 && !isPage2Ready) || (page === 4 && birthsign === null) || (page === 5 && !isPage5Ready) ? styles.continueInactive : ""
           }`}
           onClick={handleContinueClick}
           disabled={isLastPage && isSubmitting}
