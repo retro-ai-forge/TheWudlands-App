@@ -51,4 +51,7 @@ PROFESSION_CATEGORIES: dict[str, str] = {
     "firespitter": "Artists",
     "storyteller": "Artists",
     "actor": "Artists",
+    "alchemist": "Alchemy",
+    "poisoner": "Alchemy",
+    "enchanter": "Alchemy",
 }

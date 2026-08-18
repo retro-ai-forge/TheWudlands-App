@@ -91,6 +91,9 @@ export const PROFESSIONS = [
   { id: "firespitter", name: "Fire Spitter", category: "Artists", description: "Flame and breath. You dance with danger and dazzle crowds with impossible fire. Danger thrills you." },
   { id: "storyteller", name: "Storyteller", category: "Artists", description: "Words and wonder. You weave tales that move hearts and shape how the world remembers itself. Stories are your power." },
   { id: "actor", name: "Actor", category: "Artists", description: "Mask and voice. You become anyone the stage demands. Every emotion is yours to command." },
+  { id: "alchemist", name: "Alchemist", category: "Alchemy", description: "Vials and reagents. Potions and poisons. You bend nature's chemistry to your will." },
+  { id: "poisoner", name: "Poisoner", category: "Alchemy", description: "Venom and vials. Toxins refined to purpose. Death is precise when you have prepared it." },
+  { id: "enchanter", name: "Enchanter", category: "Alchemy", description: "Runes and residue. Magic bound into matter. You give ordinary things extraordinary purpose." },
 ];
 
 export const professionsByCategory = PROFESSIONS.reduce((acc, profession) => {
