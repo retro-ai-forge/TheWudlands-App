@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <mxfile host="app.diagrams.net">
   <diagram name="Seite-1" id="TestRecipes20">
-    <mxGraphModel dx="843" dy="571" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="3100" pageHeight="2340" math="0" shadow="0">
+    <mxGraphModel dx="843" dy="571" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="3100" pageHeight="5950" math="0" shadow="0">
       <root>
         <mxCell id="0" />
         <mxCell id="1" parent="0" />
@@ -63,371 +63,702 @@
         </mxCell>
 
         <!-- SECTION 2: processed (plus raw, plus existing products) to tool. Advanced tools (Anvil, Loom) need a Section 3 product as prerequisite (Tinkers Construct Tool Forge / EnderIO Dark Steel Anvil pattern); those inputs keep their tier3/final color even though they sit in this band. -->
-        <mxCell id="furnace_29" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;fontStyle=1;" value="T1 Furnace" vertex="1">
-          <mxGeometry height="44" width="130" x="125" y="800" as="geometry" />
-        </mxCell>
-        <mxCell id="refined_ore_30" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" value="T1 refined_ore" vertex="1">
-          <mxGeometry height="44" width="130" x="40" y="680" as="geometry" />
-        </mxCell>
-        <mxCell id="refined_clay_32" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" value="T1 refined_clay" vertex="1">
-          <mxGeometry height="44" width="130" x="210" y="680" as="geometry" />
-        </mxCell>
-        <mxCell id="anvil_34" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;fontStyle=1;" value="T1 Anvil" vertex="1">
-          <mxGeometry height="44" width="130" x="525" y="800" as="geometry" />
-        </mxCell>
-        <mxCell id="refined_ore_35" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" value="T1 refined_ore" vertex="1">
-          <mxGeometry height="44" width="130" x="440" y="680" as="geometry" />
-        </mxCell>
-        <mxCell id="metal_bar_37" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=11;" value="T1 metal_bar" vertex="1">
-          <mxGeometry height="44" width="130" x="610" y="680" as="geometry" />
-        </mxCell>
-        <mxCell id="table_39" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;fontStyle=1;" value="T1 Table" vertex="1">
-          <mxGeometry height="44" width="130" x="925" y="800" as="geometry" />
-        </mxCell>
-        <mxCell id="plank_40" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" value="T1 plank" vertex="1">
-          <mxGeometry height="44" width="130" x="840" y="680" as="geometry" />
-        </mxCell>
-        <mxCell id="reinforced_frame_42" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" value="T1 reinforced_frame" vertex="1">
-          <mxGeometry height="44" width="130" x="1010" y="680" as="geometry" />
-        </mxCell>
-        <mxCell id="kiln_44" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;fontStyle=1;" value="T1 Kiln" vertex="1">
-          <mxGeometry height="44" width="130" x="1325" y="800" as="geometry" />
-        </mxCell>
-        <mxCell id="refined_clay_45" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" value="T1 refined_clay" vertex="1">
-          <mxGeometry height="44" width="130" x="1240" y="680" as="geometry" />
-        </mxCell>
-        <mxCell id="refined_ore_47" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" value="T1 refined_ore" vertex="1">
-          <mxGeometry height="44" width="130" x="1410" y="680" as="geometry" />
-        </mxCell>
-        <mxCell id="spinningwheel_49" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;fontStyle=1;" value="T1 Spinning Wheel" vertex="1">
-          <mxGeometry height="44" width="130" x="1725" y="800" as="geometry" />
-        </mxCell>
-        <mxCell id="plank_50" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" value="T1 plank" vertex="1">
-          <mxGeometry height="44" width="130" x="1640" y="680" as="geometry" />
-        </mxCell>
-        <mxCell id="reinforced_frame_52" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" value="T1 reinforced_frame" vertex="1">
-          <mxGeometry height="44" width="130" x="1810" y="680" as="geometry" />
-        </mxCell>
-        <mxCell id="loom_54" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;fontStyle=1;" value="T1 Loom (Webstuhl)" vertex="1">
-          <mxGeometry height="44" width="130" x="2125" y="800" as="geometry" />
-        </mxCell>
-        <mxCell id="plank_55" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" value="T1 plank" vertex="1">
-          <mxGeometry height="44" width="130" x="2040" y="680" as="geometry" />
-        </mxCell>
-        <mxCell id="clockwork_mechanism_57" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=11;" value="T1 clockwork_mechanism" vertex="1">
-          <mxGeometry height="44" width="130" x="2210" y="680" as="geometry" />
-        </mxCell>
-        <mxCell id="tanningrack_59" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;fontStyle=1;" value="T1 Tanning Rack" vertex="1">
-          <mxGeometry height="44" width="130" x="2525" y="800" as="geometry" />
-        </mxCell>
-        <mxCell id="plank_60" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" value="T1 plank" vertex="1">
-          <mxGeometry height="44" width="130" x="2440" y="680" as="geometry" />
-        </mxCell>
-        <mxCell id="refined_ore_62" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" value="T1 refined_ore" vertex="1">
-          <mxGeometry height="44" width="130" x="2610" y="680" as="geometry" />
-        </mxCell>
-        <mxCell id="lapidarybench_64" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;fontStyle=1;" value="T1 Lapidary Bench" vertex="1">
-          <mxGeometry height="44" width="130" x="125" y="1050" as="geometry" />
-        </mxCell>
-        <mxCell id="refined_ore_65" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" value="T1 refined_ore" vertex="1">
-          <mxGeometry height="44" width="130" x="40" y="930" as="geometry" />
-        </mxCell>
-        <mxCell id="refined_clay_67" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" value="T1 refined_clay" vertex="1">
-          <mxGeometry height="44" width="130" x="210" y="930" as="geometry" />
-        </mxCell>
-        <mxCell id="quill_69" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;fontStyle=1;" value="T1 Quill" vertex="1">
-          <mxGeometry height="44" width="130" x="525" y="1050" as="geometry" />
-        </mxCell>
-        <mxCell id="feather_70" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" value="T1 feather" vertex="1">
-          <mxGeometry height="44" width="130" x="440" y="930" as="geometry" />
-        </mxCell>
-        <mxCell id="dagger_72" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=11;fontStyle=1;" value="T1 dagger" vertex="1">
-          <mxGeometry height="44" width="130" x="610" y="930" as="geometry" />
-        </mxCell>
-        <mxCell id="mortarpestle_74" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;fontStyle=1;" value="T1 Mortar &amp; Pestle" vertex="1">
-          <mxGeometry height="44" width="130" x="925" y="1050" as="geometry" />
-        </mxCell>
-        <mxCell id="refined_ore_75" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" value="T1 refined_ore" vertex="1">
-          <mxGeometry height="44" width="130" x="840" y="930" as="geometry" />
-        </mxCell>
-        <mxCell id="refined_clay_77" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" value="T1 refined_clay" vertex="1">
-          <mxGeometry height="44" width="130" x="1010" y="930" as="geometry" />
-        </mxCell>
-        <mxCell id="alchemystand_79" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;fontStyle=1;" value="T1 Alchemy Stand" vertex="1">
-          <mxGeometry height="44" width="130" x="1325" y="1050" as="geometry" />
-        </mxCell>
-        <mxCell id="refined_clay_80" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" value="T1 refined_clay" vertex="1">
-          <mxGeometry height="44" width="130" x="1240" y="930" as="geometry" />
-        </mxCell>
-        <mxCell id="refined_ore_82" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" value="T1 refined_ore" vertex="1">
-          <mxGeometry height="44" width="130" x="1410" y="930" as="geometry" />
-        </mxCell>
 
         <!-- SECTION 3: tool plus processed (plus raw) to product. Includes materials that need a tool to refine (leather, cut_crystal, clockwork_mechanism) as well as true end products. Every recipe here is fully independent, no shared nodes with any other product. -->
         <mxCell id="leather_84" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=11;" value="T1 leather" vertex="1">
-          <mxGeometry height="44" width="130" x="125" y="2200" as="geometry" />
+          <mxGeometry height="44" width="130" x="125" y="2460" as="geometry" />
         </mxCell>
         <mxCell id="skin_85" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" value="T1 skin" vertex="1">
-          <mxGeometry height="44" width="130" x="40" y="2080" as="geometry" />
+          <mxGeometry height="44" width="130" x="40" y="2340" as="geometry" />
         </mxCell>
         <mxCell id="tanningrack_87" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;fontStyle=1;" value="T1 Tanning Rack" vertex="1">
-          <mxGeometry height="44" width="130" x="210" y="2080" as="geometry" />
+          <mxGeometry height="44" width="130" x="210" y="2340" as="geometry" />
         </mxCell>
         <mxCell id="cut_crystal_89" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=11;" value="T1 cut_crystal" vertex="1">
-          <mxGeometry height="44" width="130" x="525" y="2200" as="geometry" />
+          <mxGeometry height="44" width="130" x="525" y="2460" as="geometry" />
         </mxCell>
         <mxCell id="crystal_90" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" value="T1 crystal" vertex="1">
-          <mxGeometry height="44" width="130" x="440" y="2080" as="geometry" />
+          <mxGeometry height="44" width="130" x="440" y="2340" as="geometry" />
         </mxCell>
         <mxCell id="lapidarybench_92" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;fontStyle=1;" value="T1 Lapidary Bench" vertex="1">
-          <mxGeometry height="44" width="130" x="610" y="2080" as="geometry" />
+          <mxGeometry height="44" width="130" x="610" y="2340" as="geometry" />
         </mxCell>
         <mxCell id="clockwork_mechanism_94" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=11;" value="T1 clockwork_mechanism" vertex="1">
-          <mxGeometry height="44" width="130" x="1010" y="2200" as="geometry" />
+          <mxGeometry height="44" width="130" x="1010" y="2460" as="geometry" />
         </mxCell>
         <mxCell id="clockwork_95" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" value="T1 clockwork" vertex="1">
-          <mxGeometry height="44" width="130" x="840" y="2080" as="geometry" />
+          <mxGeometry height="44" width="130" x="840" y="2340" as="geometry" />
         </mxCell>
         <mxCell id="refined_ore_97" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" value="T1 refined_ore" vertex="1">
-          <mxGeometry height="44" width="130" x="1010" y="2058" as="geometry" />
+          <mxGeometry height="44" width="130" x="1010" y="2318" as="geometry" />
         </mxCell>
         <mxCell id="anvil_99" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;fontStyle=1;" value="T1 Anvil" vertex="1">
-          <mxGeometry height="44" width="130" x="1180" y="2080" as="geometry" />
+          <mxGeometry height="44" width="130" x="1180" y="2340" as="geometry" />
         </mxCell>
         <mxCell id="ground_pigment_101" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=11;" value="T1 ground_pigment" vertex="1">
-          <mxGeometry height="44" width="130" x="1495" y="2200" as="geometry" />
+          <mxGeometry height="44" width="130" x="1495" y="2460" as="geometry" />
         </mxCell>
         <mxCell id="pigment_102" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" value="T1 pigment" vertex="1">
-          <mxGeometry height="44" width="130" x="1410" y="2080" as="geometry" />
+          <mxGeometry height="44" width="130" x="1410" y="2340" as="geometry" />
         </mxCell>
         <mxCell id="mortarpestle_104" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;fontStyle=1;" value="T1 Mortar &amp; Pestle" vertex="1">
-          <mxGeometry height="44" width="130" x="1580" y="2080" as="geometry" />
+          <mxGeometry height="44" width="130" x="1580" y="2340" as="geometry" />
         </mxCell>
         <mxCell id="ink_106" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=11;" value="T1 ink" vertex="1">
-          <mxGeometry height="44" width="130" x="1980" y="2200" as="geometry" />
+          <mxGeometry height="44" width="130" x="1980" y="2460" as="geometry" />
         </mxCell>
         <mxCell id="ground_pigment_107" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=11;" value="T1 ground_pigment" vertex="1">
-          <mxGeometry height="44" width="130" x="1810" y="2080" as="geometry" />
+          <mxGeometry height="44" width="130" x="1810" y="2340" as="geometry" />
         </mxCell>
         <mxCell id="glass_pane_109" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=11;" value="T1 glass_pane" vertex="1">
-          <mxGeometry height="44" width="130" x="1980" y="2058" as="geometry" />
+          <mxGeometry height="44" width="130" x="1980" y="2318" as="geometry" />
         </mxCell>
         <mxCell id="mortarpestle_111" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;fontStyle=1;" value="T1 Mortar &amp; Pestle" vertex="1">
-          <mxGeometry height="44" width="130" x="2150" y="2080" as="geometry" />
+          <mxGeometry height="44" width="130" x="2150" y="2340" as="geometry" />
         </mxCell>
         <mxCell id="parchment_113" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=11;" value="T1 parchment" vertex="1">
-          <mxGeometry height="44" width="130" x="2465" y="2200" as="geometry" />
+          <mxGeometry height="44" width="130" x="2465" y="2460" as="geometry" />
         </mxCell>
         <mxCell id="reed_114" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" value="T1 reed" vertex="1">
-          <mxGeometry height="44" width="130" x="2380" y="2080" as="geometry" />
+          <mxGeometry height="44" width="130" x="2380" y="2340" as="geometry" />
         </mxCell>
         <mxCell id="table_116" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;fontStyle=1;" value="T1 Table" vertex="1">
-          <mxGeometry height="44" width="130" x="2550" y="2080" as="geometry" />
-        </mxCell>
-        <mxCell id="written_scroll_118" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=11;" value="T1 written_scroll" vertex="1">
-          <mxGeometry height="44" width="130" x="210" y="2450" as="geometry" />
-        </mxCell>
-        <mxCell id="parchment_119" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=11;" value="T1 parchment" vertex="1">
-          <mxGeometry height="44" width="130" x="40" y="2330" as="geometry" />
-        </mxCell>
-        <mxCell id="ink_121" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=11;" value="T1 ink" vertex="1">
-          <mxGeometry height="44" width="130" x="210" y="2308" as="geometry" />
-        </mxCell>
-        <mxCell id="quill_123" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;fontStyle=1;" value="T1 Quill" vertex="1">
-          <mxGeometry height="44" width="130" x="380" y="2330" as="geometry" />
-        </mxCell>
-        <mxCell id="poisoned_dagger_125" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=11;" value="T1 poisoned_dagger" vertex="1">
-          <mxGeometry height="44" width="130" x="780" y="2450" as="geometry" />
-        </mxCell>
-        <mxCell id="dagger_126" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=11;fontStyle=1;" value="T1 dagger" vertex="1">
-          <mxGeometry height="44" width="130" x="610" y="2330" as="geometry" />
-        </mxCell>
-        <mxCell id="venom_128" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" value="T1 venom" vertex="1">
-          <mxGeometry height="44" width="130" x="780" y="2308" as="geometry" />
-        </mxCell>
-        <mxCell id="alchemystand_130" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;fontStyle=1;" value="T1 Alchemy Stand" vertex="1">
-          <mxGeometry height="44" width="130" x="950" y="2330" as="geometry" />
-        </mxCell>
-        <mxCell id="distilled_essence_132" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=11;" value="T1 distilled_essence" vertex="1">
-          <mxGeometry height="44" width="130" x="1350" y="2450" as="geometry" />
-        </mxCell>
-        <mxCell id="essence_133" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" value="T1 essence" vertex="1">
-          <mxGeometry height="44" width="130" x="1180" y="2330" as="geometry" />
-        </mxCell>
-        <mxCell id="monster_part_135" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" value="T1 monster_part" vertex="1">
-          <mxGeometry height="44" width="130" x="1350" y="2308" as="geometry" />
-        </mxCell>
-        <mxCell id="alchemystand_137" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;fontStyle=1;" value="T1 Alchemy Stand" vertex="1">
-          <mxGeometry height="44" width="130" x="1520" y="2330" as="geometry" />
-        </mxCell>
-        <mxCell id="metal_ingot_139" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=11;" value="T1 metal_ingot" vertex="1">
-          <mxGeometry height="44" width="130" x="1920" y="2450" as="geometry" />
-        </mxCell>
-        <mxCell id="refined_ore_140" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" value="T1 refined_ore" vertex="1">
-          <mxGeometry height="44" width="130" x="1750" y="2330" as="geometry" />
-        </mxCell>
-        <mxCell id="coal_142" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" value="T1 coal" vertex="1">
-          <mxGeometry height="44" width="130" x="1920" y="2308" as="geometry" />
-        </mxCell>
-        <mxCell id="furnace_144" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;fontStyle=1;" value="T1 Furnace" vertex="1">
-          <mxGeometry height="44" width="130" x="2090" y="2330" as="geometry" />
-        </mxCell>
-        <mxCell id="metal_bar_146" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=11;" value="T1 metal_bar" vertex="1">
-          <mxGeometry height="44" width="130" x="2490" y="2450" as="geometry" />
-        </mxCell>
-        <mxCell id="metal_ingot_147" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=11;" value="T1 metal_ingot" vertex="1">
-          <mxGeometry height="44" width="130" x="2320" y="2330" as="geometry" />
-        </mxCell>
-        <mxCell id="coal_149" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" value="T1 coal" vertex="1">
-          <mxGeometry height="44" width="130" x="2490" y="2308" as="geometry" />
-        </mxCell>
-        <mxCell id="furnace_151" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;fontStyle=1;" value="T1 Furnace" vertex="1">
-          <mxGeometry height="44" width="130" x="2660" y="2330" as="geometry" />
-        </mxCell>
-        <mxCell id="sword_153" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=11;fontStyle=1;" value="T1 sword" vertex="1">
-          <mxGeometry height="44" width="130" x="210" y="2700" as="geometry" />
-        </mxCell>
-        <mxCell id="metal_bar_154" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=11;" value="T1 metal_bar" vertex="1">
-          <mxGeometry height="44" width="130" x="40" y="2580" as="geometry" />
-        </mxCell>
-        <mxCell id="plank_156" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" value="T1 plank" vertex="1">
-          <mxGeometry height="44" width="130" x="210" y="2558" as="geometry" />
-        </mxCell>
-        <mxCell id="anvil_158" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;fontStyle=1;" value="T1 Anvil" vertex="1">
-          <mxGeometry height="44" width="130" x="380" y="2580" as="geometry" />
-        </mxCell>
-        <mxCell id="dagger_160" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=11;fontStyle=1;" value="T1 dagger" vertex="1">
-          <mxGeometry height="44" width="130" x="695" y="2700" as="geometry" />
-        </mxCell>
-        <mxCell id="metal_bar_161" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=11;" value="T1 metal_bar" vertex="1">
-          <mxGeometry height="44" width="130" x="610" y="2580" as="geometry" />
-        </mxCell>
-        <mxCell id="anvil_163" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;fontStyle=1;" value="T1 Anvil" vertex="1">
-          <mxGeometry height="44" width="130" x="780" y="2580" as="geometry" />
-        </mxCell>
-        <mxCell id="armor_plate_165" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=11;fontStyle=1;" value="T1 armor_plate" vertex="1">
-          <mxGeometry height="44" width="130" x="1265" y="2700" as="geometry" />
-        </mxCell>
-        <mxCell id="metal_bar_166" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=11;" value="T1 metal_bar" vertex="1">
-          <mxGeometry height="44" width="130" x="1010" y="2580" as="geometry" />
-        </mxCell>
-        <mxCell id="leather_168" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=11;" value="T1 leather" vertex="1">
-          <mxGeometry height="44" width="130" x="1180" y="2558" as="geometry" />
-        </mxCell>
-        <mxCell id="monster_part_170" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" value="T1 monster_part" vertex="1">
-          <mxGeometry height="44" width="130" x="1350" y="2558" as="geometry" />
-        </mxCell>
-        <mxCell id="anvil_172" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;fontStyle=1;" value="T1 Anvil" vertex="1">
-          <mxGeometry height="44" width="130" x="1520" y="2580" as="geometry" />
-        </mxCell>
-        <mxCell id="beam_174" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=11;" value="T1 beam" vertex="1">
-          <mxGeometry height="44" width="130" x="1835" y="2700" as="geometry" />
-        </mxCell>
-        <mxCell id="plank_175" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" value="T1 plank" vertex="1">
-          <mxGeometry height="44" width="130" x="1750" y="2580" as="geometry" />
-        </mxCell>
-        <mxCell id="table_177" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;fontStyle=1;" value="T1 Table" vertex="1">
-          <mxGeometry height="44" width="130" x="1920" y="2580" as="geometry" />
-        </mxCell>
-        <mxCell id="wooden_shield_179" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=11;fontStyle=1;" value="T1 wooden_shield" vertex="1">
-          <mxGeometry height="44" width="130" x="2320" y="2700" as="geometry" />
-        </mxCell>
-        <mxCell id="plank_180" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" value="T1 plank" vertex="1">
-          <mxGeometry height="44" width="130" x="2150" y="2580" as="geometry" />
-        </mxCell>
-        <mxCell id="leather_182" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=11;" value="T1 leather" vertex="1">
-          <mxGeometry height="44" width="130" x="2320" y="2558" as="geometry" />
-        </mxCell>
-        <mxCell id="table_184" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;fontStyle=1;" value="T1 Table" vertex="1">
-          <mxGeometry height="44" width="130" x="2490" y="2580" as="geometry" />
+          <mxGeometry height="44" width="130" x="2550" y="2340" as="geometry" />
         </mxCell>
         <mxCell id="cart_186" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=11;fontStyle=1;" value="T1 cart" vertex="1">
-          <mxGeometry height="44" width="130" x="210" y="2950" as="geometry" />
+          <mxGeometry height="44" width="130" x="210" y="3210" as="geometry" />
         </mxCell>
         <mxCell id="beam_187" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=11;" value="T1 beam" vertex="1">
-          <mxGeometry height="44" width="130" x="40" y="2830" as="geometry" />
+          <mxGeometry height="44" width="130" x="40" y="3090" as="geometry" />
         </mxCell>
         <mxCell id="plank_189" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" value="T1 plank" vertex="1">
-          <mxGeometry height="44" width="130" x="210" y="2808" as="geometry" />
+          <mxGeometry height="44" width="130" x="210" y="3068" as="geometry" />
         </mxCell>
         <mxCell id="table_191" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;fontStyle=1;" value="T1 Table" vertex="1">
-          <mxGeometry height="44" width="130" x="380" y="2830" as="geometry" />
+          <mxGeometry height="44" width="130" x="380" y="3090" as="geometry" />
         </mxCell>
         <mxCell id="fired_brick_193" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=11;" value="T1 fired_brick" vertex="1">
-          <mxGeometry height="44" width="130" x="695" y="2950" as="geometry" />
+          <mxGeometry height="44" width="130" x="695" y="3210" as="geometry" />
         </mxCell>
         <mxCell id="refined_clay_194" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" value="T1 refined_clay" vertex="1">
-          <mxGeometry height="44" width="130" x="610" y="2830" as="geometry" />
+          <mxGeometry height="44" width="130" x="610" y="3090" as="geometry" />
         </mxCell>
         <mxCell id="kiln_196" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;fontStyle=1;" value="T1 Kiln" vertex="1">
-          <mxGeometry height="44" width="130" x="780" y="2830" as="geometry" />
+          <mxGeometry height="44" width="130" x="780" y="3090" as="geometry" />
         </mxCell>
         <mxCell id="glass_pane_198" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=11;" value="T1 glass_pane" vertex="1">
-          <mxGeometry height="44" width="130" x="1095" y="2950" as="geometry" />
+          <mxGeometry height="44" width="130" x="1095" y="3210" as="geometry" />
         </mxCell>
         <mxCell id="sand_199" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" value="T1 sand" vertex="1">
-          <mxGeometry height="44" width="130" x="1010" y="2830" as="geometry" />
+          <mxGeometry height="44" width="130" x="1010" y="3090" as="geometry" />
         </mxCell>
         <mxCell id="kiln_201" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;fontStyle=1;" value="T1 Kiln" vertex="1">
-          <mxGeometry height="44" width="130" x="1180" y="2830" as="geometry" />
+          <mxGeometry height="44" width="130" x="1180" y="3090" as="geometry" />
         </mxCell>
         <mxCell id="glass_lantern_203" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=11;fontStyle=1;" value="T1 glass_lantern" vertex="1">
-          <mxGeometry height="44" width="130" x="1665" y="2950" as="geometry" />
+          <mxGeometry height="44" width="130" x="1665" y="3210" as="geometry" />
         </mxCell>
         <mxCell id="glass_pane_204" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=11;" value="T1 glass_pane" vertex="1">
-          <mxGeometry height="44" width="130" x="1410" y="2830" as="geometry" />
+          <mxGeometry height="44" width="130" x="1410" y="3090" as="geometry" />
         </mxCell>
         <mxCell id="metal_bar_206" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=11;" value="T1 metal_bar" vertex="1">
-          <mxGeometry height="44" width="130" x="1580" y="2808" as="geometry" />
+          <mxGeometry height="44" width="130" x="1580" y="3068" as="geometry" />
         </mxCell>
         <mxCell id="cut_crystal_208" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=11;" value="T1 cut_crystal" vertex="1">
-          <mxGeometry height="44" width="130" x="1750" y="2808" as="geometry" />
+          <mxGeometry height="44" width="130" x="1750" y="3068" as="geometry" />
         </mxCell>
         <mxCell id="kiln_210" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;fontStyle=1;" value="T1 Kiln" vertex="1">
-          <mxGeometry height="44" width="130" x="1920" y="2830" as="geometry" />
+          <mxGeometry height="44" width="130" x="1920" y="3090" as="geometry" />
         </mxCell>
         <mxCell id="thread_212" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=11;" value="T1 thread" vertex="1">
-          <mxGeometry height="44" width="130" x="2235" y="2950" as="geometry" />
+          <mxGeometry height="44" width="130" x="2235" y="3210" as="geometry" />
         </mxCell>
         <mxCell id="fiber_213" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" value="T1 fiber" vertex="1">
-          <mxGeometry height="44" width="130" x="2150" y="2830" as="geometry" />
+          <mxGeometry height="44" width="130" x="2150" y="3090" as="geometry" />
         </mxCell>
         <mxCell id="spinningwheel_215" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;fontStyle=1;" value="T1 Spinning Wheel" vertex="1">
-          <mxGeometry height="44" width="130" x="2320" y="2830" as="geometry" />
+          <mxGeometry height="44" width="130" x="2320" y="3090" as="geometry" />
         </mxCell>
         <mxCell id="quilted_thread_217" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=11;" value="T1 quilted_thread" vertex="1">
-          <mxGeometry height="44" width="130" x="2635" y="2950" as="geometry" />
+          <mxGeometry height="44" width="130" x="2635" y="3210" as="geometry" />
         </mxCell>
         <mxCell id="feather_218" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" value="T1 feather" vertex="1">
-          <mxGeometry height="44" width="130" x="2550" y="2830" as="geometry" />
+          <mxGeometry height="44" width="130" x="2550" y="3090" as="geometry" />
         </mxCell>
         <mxCell id="spinningwheel_220" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;fontStyle=1;" value="T1 Spinning Wheel" vertex="1">
-          <mxGeometry height="44" width="130" x="2720" y="2830" as="geometry" />
+          <mxGeometry height="44" width="130" x="2720" y="3090" as="geometry" />
         </mxCell>
         <mxCell id="woven_cloth_222" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=11;" value="T1 woven_cloth" vertex="1">
-          <mxGeometry height="44" width="130" x="125" y="3200" as="geometry" />
+          <mxGeometry height="44" width="130" x="125" y="3460" as="geometry" />
         </mxCell>
         <mxCell id="thread_223" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=11;" value="T1 thread" vertex="1">
-          <mxGeometry height="44" width="130" x="40" y="3080" as="geometry" />
+          <mxGeometry height="44" width="130" x="40" y="3340" as="geometry" />
         </mxCell>
         <mxCell id="loom_225" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;fontStyle=1;" value="T1 Loom (Webstuhl)" vertex="1">
-          <mxGeometry height="44" width="130" x="210" y="3080" as="geometry" />
+          <mxGeometry height="44" width="130" x="210" y="3340" as="geometry" />
         </mxCell>
         <mxCell id="garment_227" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=11;fontStyle=1;" value="T1 garment" vertex="1">
-          <mxGeometry height="44" width="130" x="695" y="3200" as="geometry" />
+          <mxGeometry height="44" width="130" x="695" y="3460" as="geometry" />
         </mxCell>
         <mxCell id="woven_cloth_228" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=11;" value="T1 woven_cloth" vertex="1">
-          <mxGeometry height="44" width="130" x="440" y="3080" as="geometry" />
+          <mxGeometry height="44" width="130" x="440" y="3340" as="geometry" />
         </mxCell>
         <mxCell id="leather_230" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=11;" value="T1 leather" vertex="1">
-          <mxGeometry height="44" width="130" x="610" y="3058" as="geometry" />
+          <mxGeometry height="44" width="130" x="610" y="3318" as="geometry" />
         </mxCell>
         <mxCell id="quilted_thread_232" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=11;" value="T1 quilted_thread" vertex="1">
-          <mxGeometry height="44" width="130" x="780" y="3058" as="geometry" />
+          <mxGeometry height="44" width="130" x="780" y="3318" as="geometry" />
         </mxCell>
         <mxCell id="loom_234" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;fontStyle=1;" value="T1 Loom (Webstuhl)" vertex="1">
-          <mxGeometry height="44" width="130" x="950" y="3080" as="geometry" />
+          <mxGeometry height="44" width="130" x="950" y="3340" as="geometry" />
         </mxCell>
+
+
+        <!-- Blueprint retrofit for pre-existing tool/weapon/armor rows, plus SECTION 1 (continued), SECTION 2 (continued): Enchanter's Table, Hearth, Wrench, Axe; SECTION 3 (continued): knife/cooking/enchanting/tinkering/armor recipes, all Blueprint-gated where higher-level. -->
+        <mxCell id="refined_ore_236" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" value="T1 refined_ore" vertex="1">
+          <mxGeometry height="44" width="130" x="40" y="680" as="geometry" />
+        </mxCell>
+        <mxCell id="refined_clay_237" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" value="T1 refined_clay" vertex="1">
+          <mxGeometry height="44" width="130" x="210" y="658" as="geometry" />
+        </mxCell>
+        <mxCell id="blueprint_238" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=11;" value="Blueprint: Furnace" vertex="1">
+          <mxGeometry height="44" width="130" x="380" y="680" as="geometry" />
+        </mxCell>
+        <mxCell id="furnace_239" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;fontStyle=1;" value="T1 Furnace" vertex="1">
+          <mxGeometry height="44" width="130" x="40" y="800" as="geometry" />
+        </mxCell>
+        <mxCell id="refined_ore_243" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" value="T1 refined_ore" vertex="1">
+          <mxGeometry height="44" width="130" x="720" y="680" as="geometry" />
+        </mxCell>
+        <mxCell id="metal_bar_244" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=11;" value="T1 metal_bar" vertex="1">
+          <mxGeometry height="44" width="130" x="890" y="658" as="geometry" />
+        </mxCell>
+        <mxCell id="blueprint_245" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=11;" value="Blueprint: Anvil" vertex="1">
+          <mxGeometry height="44" width="130" x="1060" y="680" as="geometry" />
+        </mxCell>
+        <mxCell id="anvil_246" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;fontStyle=1;" value="T1 Anvil" vertex="1">
+          <mxGeometry height="44" width="130" x="720" y="800" as="geometry" />
+        </mxCell>
+        <mxCell id="plank_250" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" value="T1 plank" vertex="1">
+          <mxGeometry height="44" width="130" x="1400" y="680" as="geometry" />
+        </mxCell>
+        <mxCell id="reinforced_frame_251" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" value="T1 reinforced_frame" vertex="1">
+          <mxGeometry height="44" width="130" x="1570" y="658" as="geometry" />
+        </mxCell>
+        <mxCell id="blueprint_252" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=11;" value="Blueprint: Table" vertex="1">
+          <mxGeometry height="44" width="130" x="1740" y="680" as="geometry" />
+        </mxCell>
+        <mxCell id="table_253" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;fontStyle=1;" value="T1 Table" vertex="1">
+          <mxGeometry height="44" width="130" x="1400" y="800" as="geometry" />
+        </mxCell>
+        <mxCell id="refined_clay_257" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" value="T1 refined_clay" vertex="1">
+          <mxGeometry height="44" width="130" x="2080" y="680" as="geometry" />
+        </mxCell>
+        <mxCell id="refined_ore_258" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" value="T1 refined_ore" vertex="1">
+          <mxGeometry height="44" width="130" x="2250" y="658" as="geometry" />
+        </mxCell>
+        <mxCell id="blueprint_259" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=11;" value="Blueprint: Kiln" vertex="1">
+          <mxGeometry height="44" width="130" x="2420" y="680" as="geometry" />
+        </mxCell>
+        <mxCell id="kiln_260" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;fontStyle=1;" value="T1 Kiln" vertex="1">
+          <mxGeometry height="44" width="130" x="2080" y="800" as="geometry" />
+        </mxCell>
+        <mxCell id="plank_264" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" value="T1 plank" vertex="1">
+          <mxGeometry height="44" width="130" x="2760" y="680" as="geometry" />
+        </mxCell>
+        <mxCell id="reinforced_frame_265" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" value="T1 reinforced_frame" vertex="1">
+          <mxGeometry height="44" width="130" x="2930" y="658" as="geometry" />
+        </mxCell>
+        <mxCell id="blueprint_266" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=11;" value="Blueprint: Spinning Wheel" vertex="1">
+          <mxGeometry height="44" width="130" x="3100" y="680" as="geometry" />
+        </mxCell>
+        <mxCell id="spinningwheel_267" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;fontStyle=1;" value="T1 Spinning Wheel" vertex="1">
+          <mxGeometry height="44" width="130" x="2760" y="800" as="geometry" />
+        </mxCell>
+        <mxCell id="plank_271" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" value="T1 plank" vertex="1">
+          <mxGeometry height="44" width="130" x="3440" y="680" as="geometry" />
+        </mxCell>
+        <mxCell id="clockwork_mechanism_272" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=11;" value="T1 clockwork_mechanism" vertex="1">
+          <mxGeometry height="44" width="130" x="3610" y="658" as="geometry" />
+        </mxCell>
+        <mxCell id="blueprint_273" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=11;" value="Blueprint: Loom" vertex="1">
+          <mxGeometry height="44" width="130" x="3780" y="680" as="geometry" />
+        </mxCell>
+        <mxCell id="loom_274" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;fontStyle=1;" value="T1 Loom (Webstuhl)" vertex="1">
+          <mxGeometry height="44" width="130" x="3440" y="800" as="geometry" />
+        </mxCell>
+        <mxCell id="plank_278" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" value="T1 plank" vertex="1">
+          <mxGeometry height="44" width="130" x="4120" y="680" as="geometry" />
+        </mxCell>
+        <mxCell id="refined_ore_279" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" value="T1 refined_ore" vertex="1">
+          <mxGeometry height="44" width="130" x="4290" y="658" as="geometry" />
+        </mxCell>
+        <mxCell id="blueprint_280" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=11;" value="Blueprint: Tanning Rack" vertex="1">
+          <mxGeometry height="44" width="130" x="4460" y="680" as="geometry" />
+        </mxCell>
+        <mxCell id="tanningrack_281" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;fontStyle=1;" value="T1 Tanning Rack" vertex="1">
+          <mxGeometry height="44" width="130" x="4120" y="800" as="geometry" />
+        </mxCell>
+        <mxCell id="refined_ore_285" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" value="T1 refined_ore" vertex="1">
+          <mxGeometry height="44" width="130" x="40" y="930" as="geometry" />
+        </mxCell>
+        <mxCell id="refined_clay_286" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" value="T1 refined_clay" vertex="1">
+          <mxGeometry height="44" width="130" x="210" y="908" as="geometry" />
+        </mxCell>
+        <mxCell id="blueprint_287" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=11;" value="Blueprint: Lapidary Bench" vertex="1">
+          <mxGeometry height="44" width="130" x="380" y="930" as="geometry" />
+        </mxCell>
+        <mxCell id="lapidarybench_288" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;fontStyle=1;" value="T1 Lapidary Bench" vertex="1">
+          <mxGeometry height="44" width="130" x="40" y="1050" as="geometry" />
+        </mxCell>
+        <mxCell id="feather_292" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" value="T1 feather" vertex="1">
+          <mxGeometry height="44" width="130" x="720" y="930" as="geometry" />
+        </mxCell>
+        <mxCell id="dagger_293" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=11;fontStyle=1;" value="T1 dagger" vertex="1">
+          <mxGeometry height="44" width="130" x="890" y="908" as="geometry" />
+        </mxCell>
+        <mxCell id="blueprint_294" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=11;" value="Blueprint: Quill" vertex="1">
+          <mxGeometry height="44" width="130" x="1060" y="930" as="geometry" />
+        </mxCell>
+        <mxCell id="quill_295" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;fontStyle=1;" value="T1 Quill" vertex="1">
+          <mxGeometry height="44" width="130" x="720" y="1050" as="geometry" />
+        </mxCell>
+        <mxCell id="refined_ore_299" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" value="T1 refined_ore" vertex="1">
+          <mxGeometry height="44" width="130" x="1400" y="930" as="geometry" />
+        </mxCell>
+        <mxCell id="refined_clay_300" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" value="T1 refined_clay" vertex="1">
+          <mxGeometry height="44" width="130" x="1570" y="908" as="geometry" />
+        </mxCell>
+        <mxCell id="blueprint_301" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=11;" value="Blueprint: Mortar &amp; Pestle" vertex="1">
+          <mxGeometry height="44" width="130" x="1740" y="930" as="geometry" />
+        </mxCell>
+        <mxCell id="mortarpestle_302" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;fontStyle=1;" value="T1 Mortar &amp; Pestle" vertex="1">
+          <mxGeometry height="44" width="130" x="1400" y="1050" as="geometry" />
+        </mxCell>
+        <mxCell id="refined_clay_306" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" value="T1 refined_clay" vertex="1">
+          <mxGeometry height="44" width="130" x="2080" y="930" as="geometry" />
+        </mxCell>
+        <mxCell id="refined_ore_307" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" value="T1 refined_ore" vertex="1">
+          <mxGeometry height="44" width="130" x="2250" y="908" as="geometry" />
+        </mxCell>
+        <mxCell id="blueprint_308" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=11;" value="Blueprint: Alchemy Stand" vertex="1">
+          <mxGeometry height="44" width="130" x="2420" y="930" as="geometry" />
+        </mxCell>
+        <mxCell id="alchemystand_309" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;fontStyle=1;" value="T1 Alchemy Stand" vertex="1">
+          <mxGeometry height="44" width="130" x="2080" y="1050" as="geometry" />
+        </mxCell>
+        <mxCell id="parchment_313" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=11;" value="T1 parchment" vertex="1">
+          <mxGeometry height="44" width="130" x="40" y="2590" as="geometry" />
+        </mxCell>
+        <mxCell id="ink_314" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=11;" value="T1 ink" vertex="1">
+          <mxGeometry height="44" width="130" x="210" y="2568" as="geometry" />
+        </mxCell>
+        <mxCell id="quill_315" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;fontStyle=1;" value="T1 Quill" vertex="1">
+          <mxGeometry height="44" width="130" x="380" y="2590" as="geometry" />
+        </mxCell>
+        <mxCell id="written_scroll_316" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=11;" value="T1 written_scroll" vertex="1">
+          <mxGeometry height="44" width="130" x="40" y="2710" as="geometry" />
+        </mxCell>
+        <mxCell id="dagger_320" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=11;fontStyle=1;" value="T1 dagger" vertex="1">
+          <mxGeometry height="44" width="130" x="720" y="2590" as="geometry" />
+        </mxCell>
+        <mxCell id="venom_321" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" value="T1 venom" vertex="1">
+          <mxGeometry height="44" width="130" x="890" y="2568" as="geometry" />
+        </mxCell>
+        <mxCell id="alchemystand_322" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;fontStyle=1;" value="T1 Alchemy Stand" vertex="1">
+          <mxGeometry height="44" width="130" x="1060" y="2568" as="geometry" />
+        </mxCell>
+        <mxCell id="blueprint_323" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=11;" value="Blueprint: Poisoned Dagger" vertex="1">
+          <mxGeometry height="44" width="130" x="1230" y="2590" as="geometry" />
+        </mxCell>
+        <mxCell id="poisoned_dagger_324" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=11;" value="T1 poisoned_dagger" vertex="1">
+          <mxGeometry height="44" width="130" x="720" y="2710" as="geometry" />
+        </mxCell>
+        <mxCell id="essence_329" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" value="T1 essence" vertex="1">
+          <mxGeometry height="44" width="130" x="1570" y="2590" as="geometry" />
+        </mxCell>
+        <mxCell id="monster_part_330" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" value="T1 monster_part" vertex="1">
+          <mxGeometry height="44" width="130" x="1740" y="2568" as="geometry" />
+        </mxCell>
+        <mxCell id="alchemystand_331" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;fontStyle=1;" value="T1 Alchemy Stand" vertex="1">
+          <mxGeometry height="44" width="130" x="1910" y="2590" as="geometry" />
+        </mxCell>
+        <mxCell id="distilled_essence_332" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=11;" value="T1 distilled_essence" vertex="1">
+          <mxGeometry height="44" width="130" x="1570" y="2710" as="geometry" />
+        </mxCell>
+        <mxCell id="refined_ore_336" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" value="T1 refined_ore" vertex="1">
+          <mxGeometry height="44" width="130" x="2250" y="2590" as="geometry" />
+        </mxCell>
+        <mxCell id="coal_337" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" value="T1 coal" vertex="1">
+          <mxGeometry height="44" width="130" x="2420" y="2568" as="geometry" />
+        </mxCell>
+        <mxCell id="furnace_338" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;fontStyle=1;" value="T1 Furnace" vertex="1">
+          <mxGeometry height="44" width="130" x="2590" y="2590" as="geometry" />
+        </mxCell>
+        <mxCell id="metal_ingot_339" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=11;" value="T1 metal_ingot" vertex="1">
+          <mxGeometry height="44" width="130" x="2250" y="2710" as="geometry" />
+        </mxCell>
+        <mxCell id="metal_ingot_343" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=11;" value="T1 metal_ingot" vertex="1">
+          <mxGeometry height="44" width="130" x="2930" y="2590" as="geometry" />
+        </mxCell>
+        <mxCell id="coal_344" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" value="T1 coal" vertex="1">
+          <mxGeometry height="44" width="130" x="3100" y="2568" as="geometry" />
+        </mxCell>
+        <mxCell id="furnace_345" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;fontStyle=1;" value="T1 Furnace" vertex="1">
+          <mxGeometry height="44" width="130" x="3270" y="2590" as="geometry" />
+        </mxCell>
+        <mxCell id="metal_bar_346" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=11;" value="T1 metal_bar" vertex="1">
+          <mxGeometry height="44" width="130" x="2930" y="2710" as="geometry" />
+        </mxCell>
+        <mxCell id="metal_bar_350" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=11;" value="T1 metal_bar" vertex="1">
+          <mxGeometry height="44" width="130" x="40" y="2840" as="geometry" />
+        </mxCell>
+        <mxCell id="plank_351" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" value="T1 plank" vertex="1">
+          <mxGeometry height="44" width="130" x="210" y="2818" as="geometry" />
+        </mxCell>
+        <mxCell id="anvil_352" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;fontStyle=1;" value="T1 Anvil" vertex="1">
+          <mxGeometry height="44" width="130" x="380" y="2818" as="geometry" />
+        </mxCell>
+        <mxCell id="blueprint_353" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=11;" value="Blueprint: Sword" vertex="1">
+          <mxGeometry height="44" width="130" x="550" y="2840" as="geometry" />
+        </mxCell>
+        <mxCell id="sword_354" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=11;fontStyle=1;" value="T1 sword" vertex="1">
+          <mxGeometry height="44" width="130" x="40" y="2960" as="geometry" />
+        </mxCell>
+        <mxCell id="metal_bar_359" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=11;" value="T1 metal_bar" vertex="1">
+          <mxGeometry height="44" width="130" x="890" y="2840" as="geometry" />
+        </mxCell>
+        <mxCell id="anvil_360" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;fontStyle=1;" value="T1 Anvil" vertex="1">
+          <mxGeometry height="44" width="130" x="1060" y="2818" as="geometry" />
+        </mxCell>
+        <mxCell id="blueprint_361" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=11;" value="Blueprint: Dagger" vertex="1">
+          <mxGeometry height="44" width="130" x="1230" y="2840" as="geometry" />
+        </mxCell>
+        <mxCell id="dagger_362" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=11;fontStyle=1;" value="T1 dagger" vertex="1">
+          <mxGeometry height="44" width="130" x="890" y="2960" as="geometry" />
+        </mxCell>
+        <mxCell id="metal_bar_366" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=11;" value="T1 metal_bar" vertex="1">
+          <mxGeometry height="44" width="130" x="1570" y="2840" as="geometry" />
+        </mxCell>
+        <mxCell id="leather_367" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=11;" value="T1 leather" vertex="1">
+          <mxGeometry height="44" width="130" x="1740" y="2818" as="geometry" />
+        </mxCell>
+        <mxCell id="monster_part_368" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" value="T1 monster_part" vertex="1">
+          <mxGeometry height="44" width="130" x="1910" y="2818" as="geometry" />
+        </mxCell>
+        <mxCell id="anvil_369" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;fontStyle=1;" value="T1 Anvil" vertex="1">
+          <mxGeometry height="44" width="130" x="2080" y="2818" as="geometry" />
+        </mxCell>
+        <mxCell id="blueprint_370" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=11;" value="Blueprint: Armor Plate" vertex="1">
+          <mxGeometry height="44" width="130" x="2250" y="2840" as="geometry" />
+        </mxCell>
+        <mxCell id="armor_plate_371" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=11;fontStyle=1;" value="T1 armor_plate" vertex="1">
+          <mxGeometry height="44" width="130" x="1570" y="2960" as="geometry" />
+        </mxCell>
+        <mxCell id="plank_377" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" value="T1 plank" vertex="1">
+          <mxGeometry height="44" width="130" x="2590" y="2840" as="geometry" />
+        </mxCell>
+        <mxCell id="table_378" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;fontStyle=1;" value="T1 Table" vertex="1">
+          <mxGeometry height="44" width="130" x="2760" y="2840" as="geometry" />
+        </mxCell>
+        <mxCell id="beam_379" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=11;" value="T1 beam" vertex="1">
+          <mxGeometry height="44" width="130" x="2590" y="2960" as="geometry" />
+        </mxCell>
+        <mxCell id="plank_382" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" value="T1 plank" vertex="1">
+          <mxGeometry height="44" width="130" x="3100" y="2840" as="geometry" />
+        </mxCell>
+        <mxCell id="leather_383" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=11;" value="T1 leather" vertex="1">
+          <mxGeometry height="44" width="130" x="3270" y="2818" as="geometry" />
+        </mxCell>
+        <mxCell id="table_384" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;fontStyle=1;" value="T1 Table" vertex="1">
+          <mxGeometry height="44" width="130" x="3440" y="2818" as="geometry" />
+        </mxCell>
+        <mxCell id="blueprint_385" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=11;" value="Blueprint: Wooden Shield" vertex="1">
+          <mxGeometry height="44" width="130" x="3610" y="2840" as="geometry" />
+        </mxCell>
+        <mxCell id="wooden_shield_386" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=11;fontStyle=1;" value="T1 wooden_shield" vertex="1">
+          <mxGeometry height="44" width="130" x="3100" y="2960" as="geometry" />
+        </mxCell>
+        <mxCell id="herbs_391" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" value="T1 herbs" vertex="1">
+          <mxGeometry height="44" width="130" x="40" y="280" as="geometry" />
+        </mxCell>
+        <mxCell id="venom_392" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" value="T1 venom" vertex="1">
+          <mxGeometry height="44" width="130" x="210" y="280" as="geometry" />
+        </mxCell>
+        <mxCell id="venomous_extract_393" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" value="T1 venomous_extract" vertex="1">
+          <mxGeometry height="44" width="130" x="40" y="400" as="geometry" />
+        </mxCell>
+        <mxCell id="crystal_396" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" value="T1 crystal" vertex="1">
+          <mxGeometry height="44" width="130" x="550" y="280" as="geometry" />
+        </mxCell>
+        <mxCell id="essence_397" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" value="T1 essence" vertex="1">
+          <mxGeometry height="44" width="130" x="720" y="280" as="geometry" />
+        </mxCell>
+        <mxCell id="arcane_dust_398" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" value="T1 arcane_dust" vertex="1">
+          <mxGeometry height="44" width="130" x="550" y="400" as="geometry" />
+        </mxCell>
+        <mxCell id="herbs_401" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" value="T1 herbs" vertex="1">
+          <mxGeometry height="44" width="130" x="1060" y="280" as="geometry" />
+        </mxCell>
+        <mxCell id="harvest_402" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" value="T1 harvest" vertex="1">
+          <mxGeometry height="44" width="130" x="1230" y="280" as="geometry" />
+        </mxCell>
+        <mxCell id="medicinal_paste_403" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" value="T1 medicinal_paste" vertex="1">
+          <mxGeometry height="44" width="130" x="1060" y="400" as="geometry" />
+        </mxCell>
+        <mxCell id="ore_406" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" value="T1 ore" vertex="1">
+          <mxGeometry height="44" width="130" x="1570" y="280" as="geometry" />
+        </mxCell>
+        <mxCell id="crystal_407" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" value="T1 crystal" vertex="1">
+          <mxGeometry height="44" width="130" x="1740" y="258" as="geometry" />
+        </mxCell>
+        <mxCell id="essence_408" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" value="T1 essence" vertex="1">
+          <mxGeometry height="44" width="130" x="1910" y="280" as="geometry" />
+        </mxCell>
+        <mxCell id="alloy_dust_409" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" value="T1 alloy_dust" vertex="1">
+          <mxGeometry height="44" width="130" x="1570" y="400" as="geometry" />
+        </mxCell>
+        <mxCell id="plank_413" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" value="T1 plank" vertex="1">
+          <mxGeometry height="44" width="130" x="40" y="1180" as="geometry" />
+        </mxCell>
+        <mxCell id="cut_crystal_414" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=11;" value="T1 cut_crystal" vertex="1">
+          <mxGeometry height="44" width="130" x="210" y="1158" as="geometry" />
+        </mxCell>
+        <mxCell id="reinforced_frame_415" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" value="T1 reinforced_frame" vertex="1">
+          <mxGeometry height="44" width="130" x="380" y="1158" as="geometry" />
+        </mxCell>
+        <mxCell id="blueprint_416" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=11;" value="Blueprint: Enchanter's Table" vertex="1">
+          <mxGeometry height="44" width="130" x="550" y="1180" as="geometry" />
+        </mxCell>
+        <mxCell id="enchanterstable_417" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;fontStyle=1;" value="T1 Enchanter's Table" vertex="1">
+          <mxGeometry height="44" width="130" x="40" y="1300" as="geometry" />
+        </mxCell>
+        <mxCell id="stone_422" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" value="T1 stone" vertex="1">
+          <mxGeometry height="44" width="130" x="40" y="1430" as="geometry" />
+        </mxCell>
+        <mxCell id="plank_423" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" value="T1 plank" vertex="1">
+          <mxGeometry height="44" width="130" x="210" y="1408" as="geometry" />
+        </mxCell>
+        <mxCell id="blueprint_424" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=11;" value="Blueprint: Hearth" vertex="1">
+          <mxGeometry height="44" width="130" x="380" y="1430" as="geometry" />
+        </mxCell>
+        <mxCell id="hearth_425" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;fontStyle=1;" value="T1 Hearth" vertex="1">
+          <mxGeometry height="44" width="130" x="40" y="1550" as="geometry" />
+        </mxCell>
+        <mxCell id="refined_ore_429" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" value="T1 refined_ore" vertex="1">
+          <mxGeometry height="44" width="130" x="40" y="1680" as="geometry" />
+        </mxCell>
+        <mxCell id="table_430" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;fontStyle=1;" value="T1 Table" vertex="1">
+          <mxGeometry height="44" width="130" x="210" y="1658" as="geometry" />
+        </mxCell>
+        <mxCell id="blueprint_431" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=11;" value="Blueprint: Wrench" vertex="1">
+          <mxGeometry height="44" width="130" x="380" y="1680" as="geometry" />
+        </mxCell>
+        <mxCell id="wrench_432" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;fontStyle=1;" value="T1 Wrench" vertex="1">
+          <mxGeometry height="44" width="130" x="40" y="1800" as="geometry" />
+        </mxCell>
+        <mxCell id="wood_436" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" value="T1 wood" vertex="1">
+          <mxGeometry height="44" width="130" x="40" y="1930" as="geometry" />
+        </mxCell>
+        <mxCell id="stone_437" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" value="T1 stone" vertex="1">
+          <mxGeometry height="44" width="130" x="210" y="1908" as="geometry" />
+        </mxCell>
+        <mxCell id="blueprint_438" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=11;" value="Blueprint: Axe" vertex="1">
+          <mxGeometry height="44" width="130" x="380" y="1930" as="geometry" />
+        </mxCell>
+        <mxCell id="axe_439" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;fontStyle=1;" value="T1 Axe" vertex="1">
+          <mxGeometry height="44" width="130" x="40" y="2050" as="geometry" />
+        </mxCell>
+        <mxCell id="wood_443" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" value="T1 wood" vertex="1">
+          <mxGeometry height="44" width="130" x="40" y="3734" as="geometry" />
+        </mxCell>
+        <mxCell id="knife_444" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;fontStyle=1;dashed=1;" value="Knife (starter, no recipe)" vertex="1">
+          <mxGeometry height="44" width="130" x="210" y="3734" as="geometry" />
+        </mxCell>
+        <mxCell id="club_445" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=11;fontStyle=1;" value="T1 club" vertex="1">
+          <mxGeometry height="44" width="130" x="40" y="3854" as="geometry" />
+        </mxCell>
+        <mxCell id="wood_448" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" value="T1 wood" vertex="1">
+          <mxGeometry height="44" width="130" x="550" y="3734" as="geometry" />
+        </mxCell>
+        <mxCell id="knife_449" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;fontStyle=1;dashed=1;" value="Knife (starter, no recipe)" vertex="1">
+          <mxGeometry height="44" width="130" x="720" y="3734" as="geometry" />
+        </mxCell>
+        <mxCell id="sharpened_stick_450" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=11;fontStyle=1;" value="T1 sharpened_stick" vertex="1">
+          <mxGeometry height="44" width="130" x="550" y="3854" as="geometry" />
+        </mxCell>
+        <mxCell id="trophy_charm_453" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=11;" value="T1 trophy_charm" vertex="1">
+          <mxGeometry height="44" width="130" x="1060" y="3734" as="geometry" />
+        </mxCell>
+        <mxCell id="bone_shard_454" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=11;" value="T1 bone_shard" vertex="1">
+          <mxGeometry height="44" width="130" x="1230" y="3712" as="geometry" />
+        </mxCell>
+        <mxCell id="knife_455" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;fontStyle=1;dashed=1;" value="Knife (starter, no recipe)" vertex="1">
+          <mxGeometry height="44" width="130" x="1400" y="3734" as="geometry" />
+        </mxCell>
+        <mxCell id="hunters_charm_456" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=11;fontStyle=1;" value="T1 hunters_charm" vertex="1">
+          <mxGeometry height="44" width="130" x="1060" y="3854" as="geometry" />
+        </mxCell>
+        <mxCell id="meat_460" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" value="T1 meat" vertex="1">
+          <mxGeometry height="44" width="130" x="1740" y="3734" as="geometry" />
+        </mxCell>
+        <mxCell id="knife_461" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;fontStyle=1;dashed=1;" value="Knife (starter, no recipe)" vertex="1">
+          <mxGeometry height="44" width="130" x="1910" y="3734" as="geometry" />
+        </mxCell>
+        <mxCell id="dressed_meat_462" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=11;" value="T1 dressed_meat" vertex="1">
+          <mxGeometry height="44" width="130" x="1740" y="3854" as="geometry" />
+        </mxCell>
+        <mxCell id="hide_465" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" value="T1 hide" vertex="1">
+          <mxGeometry height="44" width="130" x="2250" y="3734" as="geometry" />
+        </mxCell>
+        <mxCell id="knife_466" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;fontStyle=1;dashed=1;" value="Knife (starter, no recipe)" vertex="1">
+          <mxGeometry height="44" width="130" x="2420" y="3734" as="geometry" />
+        </mxCell>
+        <mxCell id="trimmed_pelt_467" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=11;" value="T1 trimmed_pelt" vertex="1">
+          <mxGeometry height="44" width="130" x="2250" y="3854" as="geometry" />
+        </mxCell>
+        <mxCell id="glass_pane_470" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=11;" value="T1 glass_pane" vertex="1">
+          <mxGeometry height="44" width="130" x="40" y="3984" as="geometry" />
+        </mxCell>
+        <mxCell id="kiln_471" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;fontStyle=1;" value="T1 Kiln" vertex="1">
+          <mxGeometry height="44" width="130" x="210" y="3984" as="geometry" />
+        </mxCell>
+        <mxCell id="glass_bottle_472" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=11;" value="T1 glass_bottle" vertex="1">
+          <mxGeometry height="44" width="130" x="40" y="4104" as="geometry" />
+        </mxCell>
+        <mxCell id="wood_475" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" value="T1 wood" vertex="1">
+          <mxGeometry height="44" width="130" x="550" y="3984" as="geometry" />
+        </mxCell>
+        <mxCell id="axe_476" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;fontStyle=1;" value="T1 Axe" vertex="1">
+          <mxGeometry height="44" width="130" x="720" y="3984" as="geometry" />
+        </mxCell>
+        <mxCell id="firewood_477" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=11;fontStyle=1;" value="T1 firewood" vertex="1">
+          <mxGeometry height="44" width="130" x="550" y="4104" as="geometry" />
+        </mxCell>
+        <mxCell id="venomous_extract_480" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" value="T1 venomous_extract" vertex="1">
+          <mxGeometry height="44" width="130" x="40" y="4234" as="geometry" />
+        </mxCell>
+        <mxCell id="glass_bottle_481" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=11;" value="T1 glass_bottle" vertex="1">
+          <mxGeometry height="44" width="130" x="210" y="4212" as="geometry" />
+        </mxCell>
+        <mxCell id="alchemystand_482" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;fontStyle=1;" value="T1 Alchemy Stand" vertex="1">
+          <mxGeometry height="44" width="130" x="380" y="4234" as="geometry" />
+        </mxCell>
+        <mxCell id="venom_vial_483" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=11;fontStyle=1;" value="T1 venom_vial" vertex="1">
+          <mxGeometry height="44" width="130" x="40" y="4354" as="geometry" />
+        </mxCell>
+        <mxCell id="herbal_extract_487" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" value="T1 herbal_extract" vertex="1">
+          <mxGeometry height="44" width="130" x="720" y="4234" as="geometry" />
+        </mxCell>
+        <mxCell id="medicinal_paste_488" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" value="T1 medicinal_paste" vertex="1">
+          <mxGeometry height="44" width="130" x="890" y="4212" as="geometry" />
+        </mxCell>
+        <mxCell id="glass_bottle_489" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=11;" value="T1 glass_bottle" vertex="1">
+          <mxGeometry height="44" width="130" x="1060" y="4212" as="geometry" />
+        </mxCell>
+        <mxCell id="alchemystand_490" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;fontStyle=1;" value="T1 Alchemy Stand" vertex="1">
+          <mxGeometry height="44" width="130" x="1230" y="4234" as="geometry" />
+        </mxCell>
+        <mxCell id="healing_potion_491" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=11;fontStyle=1;" value="T1 healing_potion" vertex="1">
+          <mxGeometry height="44" width="130" x="720" y="4354" as="geometry" />
+        </mxCell>
+        <mxCell id="dagger_496" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=11;fontStyle=1;" value="T1 dagger" vertex="1">
+          <mxGeometry height="44" width="130" x="40" y="4484" as="geometry" />
+        </mxCell>
+        <mxCell id="distilled_essence_497" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=11;" value="T1 distilled_essence" vertex="1">
+          <mxGeometry height="44" width="130" x="210" y="4462" as="geometry" />
+        </mxCell>
+        <mxCell id="arcane_dust_498" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" value="T1 arcane_dust" vertex="1">
+          <mxGeometry height="44" width="130" x="380" y="4462" as="geometry" />
+        </mxCell>
+        <mxCell id="enchanterstable_499" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;fontStyle=1;" value="T1 Enchanter's Table" vertex="1">
+          <mxGeometry height="44" width="130" x="550" y="4462" as="geometry" />
+        </mxCell>
+        <mxCell id="blueprint_500" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=11;" value="Blueprint: Enchanted Blade" vertex="1">
+          <mxGeometry height="44" width="130" x="720" y="4484" as="geometry" />
+        </mxCell>
+        <mxCell id="enchanted_blade_501" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=11;fontStyle=1;" value="T1 enchanted_blade" vertex="1">
+          <mxGeometry height="44" width="130" x="40" y="4604" as="geometry" />
+        </mxCell>
+        <mxCell id="dressed_meat_507" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=11;" value="T1 dressed_meat" vertex="1">
+          <mxGeometry height="44" width="130" x="40" y="4734" as="geometry" />
+        </mxCell>
+        <mxCell id="hearth_508" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;fontStyle=1;" value="T1 Hearth" vertex="1">
+          <mxGeometry height="44" width="130" x="210" y="4734" as="geometry" />
+        </mxCell>
+        <mxCell id="cooked_meat_509" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=11;" value="T1 cooked_meat" vertex="1">
+          <mxGeometry height="44" width="130" x="40" y="4854" as="geometry" />
+        </mxCell>
+        <mxCell id="harvest_512" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" value="T1 harvest" vertex="1">
+          <mxGeometry height="44" width="130" x="550" y="4734" as="geometry" />
+        </mxCell>
+        <mxCell id="hearth_513" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;fontStyle=1;" value="T1 Hearth" vertex="1">
+          <mxGeometry height="44" width="130" x="720" y="4734" as="geometry" />
+        </mxCell>
+        <mxCell id="baked_harvest_514" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=11;" value="T1 baked_harvest" vertex="1">
+          <mxGeometry height="44" width="130" x="550" y="4854" as="geometry" />
+        </mxCell>
+        <mxCell id="cooked_meat_517" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=11;" value="T1 cooked_meat" vertex="1">
+          <mxGeometry height="44" width="130" x="40" y="4984" as="geometry" />
+        </mxCell>
+        <mxCell id="baked_harvest_518" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=11;" value="T1 baked_harvest" vertex="1">
+          <mxGeometry height="44" width="130" x="210" y="4962" as="geometry" />
+        </mxCell>
+        <mxCell id="hearth_519" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;fontStyle=1;" value="T1 Hearth" vertex="1">
+          <mxGeometry height="44" width="130" x="380" y="4984" as="geometry" />
+        </mxCell>
+        <mxCell id="hearty_stew_520" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=11;fontStyle=1;" value="T1 hearty_stew" vertex="1">
+          <mxGeometry height="44" width="130" x="40" y="5104" as="geometry" />
+        </mxCell>
+        <mxCell id="trimmed_pelt_524" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=11;" value="T1 trimmed_pelt" vertex="1">
+          <mxGeometry height="44" width="130" x="40" y="5234" as="geometry" />
+        </mxCell>
+        <mxCell id="knife_525" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;fontStyle=1;dashed=1;" value="Knife (starter, no recipe)" vertex="1">
+          <mxGeometry height="44" width="130" x="210" y="5234" as="geometry" />
+        </mxCell>
+        <mxCell id="fur_garment_526" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=11;fontStyle=1;" value="T1 fur_garment" vertex="1">
+          <mxGeometry height="44" width="130" x="40" y="5354" as="geometry" />
+        </mxCell>
+        <mxCell id="clockwork_mechanism_529" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=11;" value="T1 clockwork_mechanism" vertex="1">
+          <mxGeometry height="44" width="130" x="40" y="5484" as="geometry" />
+        </mxCell>
+        <mxCell id="refined_ore_530" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" value="T1 refined_ore" vertex="1">
+          <mxGeometry height="44" width="130" x="210" y="5462" as="geometry" />
+        </mxCell>
+        <mxCell id="wrench_531" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;fontStyle=1;" value="T1 Wrench" vertex="1">
+          <mxGeometry height="44" width="130" x="380" y="5484" as="geometry" />
+        </mxCell>
+        <mxCell id="tinkered_gearbox_532" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=11;fontStyle=1;" value="T1 tinkered_gearbox" vertex="1">
+          <mxGeometry height="44" width="130" x="40" y="5604" as="geometry" />
+        </mxCell>
+        <mxCell id="leather_536" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=11;" value="T1 leather" vertex="1">
+          <mxGeometry height="44" width="130" x="40" y="5734" as="geometry" />
+        </mxCell>
+        <mxCell id="reinforced_frame_537" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" value="T1 reinforced_frame" vertex="1">
+          <mxGeometry height="44" width="130" x="210" y="5712" as="geometry" />
+        </mxCell>
+        <mxCell id="table_538" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;fontStyle=1;" value="T1 Table" vertex="1">
+          <mxGeometry height="44" width="130" x="380" y="5712" as="geometry" />
+        </mxCell>
+        <mxCell id="blueprint_539" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=11;" value="Blueprint: Leather Armor" vertex="1">
+          <mxGeometry height="44" width="130" x="550" y="5734" as="geometry" />
+        </mxCell>
+        <mxCell id="leather_armor_540" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=11;fontStyle=1;" value="T1 leather_armor" vertex="1">
+          <mxGeometry height="44" width="130" x="40" y="5854" as="geometry" />
+        </mxCell>
+        <mxCell id="metal_bar_545" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=11;" value="T1 metal_bar" vertex="1">
+          <mxGeometry height="44" width="130" x="890" y="5734" as="geometry" />
+        </mxCell>
+        <mxCell id="anvil_546" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;fontStyle=1;" value="T1 Anvil" vertex="1">
+          <mxGeometry height="44" width="130" x="1060" y="5712" as="geometry" />
+        </mxCell>
+        <mxCell id="blueprint_547" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=11;" value="Blueprint: Chainmail" vertex="1">
+          <mxGeometry height="44" width="130" x="1230" y="5734" as="geometry" />
+        </mxCell>
+        <mxCell id="chainmail_548" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=11;fontStyle=1;" value="T1 chainmail" vertex="1">
+          <mxGeometry height="44" width="130" x="890" y="5854" as="geometry" />
+        </mxCell>
+
 
         <!-- Edges -->
         <mxCell id="e_3" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontSize=10;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" source="ore_2" target="refined_ore_1" value="5" edge="1"><mxGeometry relative="1" as="geometry" /></mxCell>
@@ -440,28 +771,6 @@
         <mxCell id="e_22" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontSize=10;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" source="herbs_21" target="herbal_extract_20" value="6" edge="1"><mxGeometry relative="1" as="geometry" /></mxCell>
         <mxCell id="e_25" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontSize=10;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" source="bone_24" target="bone_shard_23" value="2" edge="1"><mxGeometry relative="1" as="geometry" /></mxCell>
         <mxCell id="e_28" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontSize=10;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" source="monster_part_27" target="trophy_charm_26" value="3" edge="1"><mxGeometry relative="1" as="geometry" /></mxCell>
-        <mxCell id="e_31" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontSize=10;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" source="refined_ore_30" target="furnace_29" value="10" edge="1"><mxGeometry relative="1" as="geometry" /></mxCell>
-        <mxCell id="e_33" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontSize=10;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" source="refined_clay_32" target="furnace_29" value="6" edge="1"><mxGeometry relative="1" as="geometry" /></mxCell>
-        <mxCell id="e_36" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontSize=10;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" source="refined_ore_35" target="anvil_34" value="12" edge="1"><mxGeometry relative="1" as="geometry" /></mxCell>
-        <mxCell id="e_38" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontSize=10;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" source="metal_bar_37" target="anvil_34" value="2" edge="1"><mxGeometry relative="1" as="geometry" /></mxCell>
-        <mxCell id="e_41" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontSize=10;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" source="plank_40" target="table_39" value="6" edge="1"><mxGeometry relative="1" as="geometry" /></mxCell>
-        <mxCell id="e_43" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontSize=10;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" source="reinforced_frame_42" target="table_39" value="2" edge="1"><mxGeometry relative="1" as="geometry" /></mxCell>
-        <mxCell id="e_46" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontSize=10;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" source="refined_clay_45" target="kiln_44" value="10" edge="1"><mxGeometry relative="1" as="geometry" /></mxCell>
-        <mxCell id="e_48" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontSize=10;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" source="refined_ore_47" target="kiln_44" value="3" edge="1"><mxGeometry relative="1" as="geometry" /></mxCell>
-        <mxCell id="e_51" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontSize=10;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" source="plank_50" target="spinningwheel_49" value="5" edge="1"><mxGeometry relative="1" as="geometry" /></mxCell>
-        <mxCell id="e_53" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontSize=10;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" source="reinforced_frame_52" target="spinningwheel_49" value="1" edge="1"><mxGeometry relative="1" as="geometry" /></mxCell>
-        <mxCell id="e_56" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontSize=10;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" source="plank_55" target="loom_54" value="10" edge="1"><mxGeometry relative="1" as="geometry" /></mxCell>
-        <mxCell id="e_58" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontSize=10;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" source="clockwork_mechanism_57" target="loom_54" value="1" edge="1"><mxGeometry relative="1" as="geometry" /></mxCell>
-        <mxCell id="e_61" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontSize=10;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" source="plank_60" target="tanningrack_59" value="6" edge="1"><mxGeometry relative="1" as="geometry" /></mxCell>
-        <mxCell id="e_63" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontSize=10;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" source="refined_ore_62" target="tanningrack_59" value="2" edge="1"><mxGeometry relative="1" as="geometry" /></mxCell>
-        <mxCell id="e_66" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontSize=10;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" source="refined_ore_65" target="lapidarybench_64" value="8" edge="1"><mxGeometry relative="1" as="geometry" /></mxCell>
-        <mxCell id="e_68" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontSize=10;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" source="refined_clay_67" target="lapidarybench_64" value="4" edge="1"><mxGeometry relative="1" as="geometry" /></mxCell>
-        <mxCell id="e_71" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontSize=10;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" source="feather_70" target="quill_69" value="3" edge="1"><mxGeometry relative="1" as="geometry" /></mxCell>
-        <mxCell id="e_73" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontSize=10;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" source="dagger_72" target="quill_69" value="1" edge="1"><mxGeometry relative="1" as="geometry" /></mxCell>
-        <mxCell id="e_76" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontSize=10;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" source="refined_ore_75" target="mortarpestle_74" value="2" edge="1"><mxGeometry relative="1" as="geometry" /></mxCell>
-        <mxCell id="e_78" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontSize=10;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" source="refined_clay_77" target="mortarpestle_74" value="2" edge="1"><mxGeometry relative="1" as="geometry" /></mxCell>
-        <mxCell id="e_81" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontSize=10;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" source="refined_clay_80" target="alchemystand_79" value="3" edge="1"><mxGeometry relative="1" as="geometry" /></mxCell>
-        <mxCell id="e_83" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontSize=10;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" source="refined_ore_82" target="alchemystand_79" value="2" edge="1"><mxGeometry relative="1" as="geometry" /></mxCell>
         <mxCell id="e_86" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontSize=10;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" source="skin_85" target="leather_84" value="6" edge="1"><mxGeometry relative="1" as="geometry" /></mxCell>
         <mxCell id="e_88" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontSize=10;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" source="tanningrack_87" target="leather_84" value="1" edge="1"><mxGeometry relative="1" as="geometry" /></mxCell>
         <mxCell id="e_91" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontSize=10;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" source="crystal_90" target="cut_crystal_89" value="3" edge="1"><mxGeometry relative="1" as="geometry" /></mxCell>
@@ -476,35 +785,6 @@
         <mxCell id="e_112" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontSize=10;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" source="mortarpestle_111" target="ink_106" value="1" edge="1"><mxGeometry relative="1" as="geometry" /></mxCell>
         <mxCell id="e_115" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontSize=10;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" source="reed_114" target="parchment_113" value="4" edge="1"><mxGeometry relative="1" as="geometry" /></mxCell>
         <mxCell id="e_117" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontSize=10;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" source="table_116" target="parchment_113" value="1" edge="1"><mxGeometry relative="1" as="geometry" /></mxCell>
-        <mxCell id="e_120" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontSize=10;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" source="parchment_119" target="written_scroll_118" value="2" edge="1"><mxGeometry relative="1" as="geometry" /></mxCell>
-        <mxCell id="e_122" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontSize=10;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" source="ink_121" target="written_scroll_118" value="2" edge="1"><mxGeometry relative="1" as="geometry" /></mxCell>
-        <mxCell id="e_124" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontSize=10;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" source="quill_123" target="written_scroll_118" value="1" edge="1"><mxGeometry relative="1" as="geometry" /></mxCell>
-        <mxCell id="e_127" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontSize=10;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" source="dagger_126" target="poisoned_dagger_125" value="1" edge="1"><mxGeometry relative="1" as="geometry" /></mxCell>
-        <mxCell id="e_129" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontSize=10;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" source="venom_128" target="poisoned_dagger_125" value="3" edge="1"><mxGeometry relative="1" as="geometry" /></mxCell>
-        <mxCell id="e_131" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontSize=10;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" source="alchemystand_130" target="poisoned_dagger_125" value="1" edge="1"><mxGeometry relative="1" as="geometry" /></mxCell>
-        <mxCell id="e_134" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontSize=10;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" source="essence_133" target="distilled_essence_132" value="3" edge="1"><mxGeometry relative="1" as="geometry" /></mxCell>
-        <mxCell id="e_136" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontSize=10;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" source="monster_part_135" target="distilled_essence_132" value="2" edge="1"><mxGeometry relative="1" as="geometry" /></mxCell>
-        <mxCell id="e_138" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontSize=10;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" source="alchemystand_137" target="distilled_essence_132" value="1" edge="1"><mxGeometry relative="1" as="geometry" /></mxCell>
-        <mxCell id="e_141" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontSize=10;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" source="refined_ore_140" target="metal_ingot_139" value="5" edge="1"><mxGeometry relative="1" as="geometry" /></mxCell>
-        <mxCell id="e_143" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontSize=10;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" source="coal_142" target="metal_ingot_139" value="2" edge="1"><mxGeometry relative="1" as="geometry" /></mxCell>
-        <mxCell id="e_145" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontSize=10;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" source="furnace_144" target="metal_ingot_139" value="1" edge="1"><mxGeometry relative="1" as="geometry" /></mxCell>
-        <mxCell id="e_148" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontSize=10;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" source="metal_ingot_147" target="metal_bar_146" value="5" edge="1"><mxGeometry relative="1" as="geometry" /></mxCell>
-        <mxCell id="e_150" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontSize=10;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" source="coal_149" target="metal_bar_146" value="1" edge="1"><mxGeometry relative="1" as="geometry" /></mxCell>
-        <mxCell id="e_152" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontSize=10;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" source="furnace_151" target="metal_bar_146" value="1" edge="1"><mxGeometry relative="1" as="geometry" /></mxCell>
-        <mxCell id="e_155" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontSize=10;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" source="metal_bar_154" target="sword_153" value="2" edge="1"><mxGeometry relative="1" as="geometry" /></mxCell>
-        <mxCell id="e_157" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontSize=10;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" source="plank_156" target="sword_153" value="1" edge="1"><mxGeometry relative="1" as="geometry" /></mxCell>
-        <mxCell id="e_159" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontSize=10;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" source="anvil_158" target="sword_153" value="1" edge="1"><mxGeometry relative="1" as="geometry" /></mxCell>
-        <mxCell id="e_162" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontSize=10;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" source="metal_bar_161" target="dagger_160" value="1" edge="1"><mxGeometry relative="1" as="geometry" /></mxCell>
-        <mxCell id="e_164" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontSize=10;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" source="anvil_163" target="dagger_160" value="1" edge="1"><mxGeometry relative="1" as="geometry" /></mxCell>
-        <mxCell id="e_167" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontSize=10;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" source="metal_bar_166" target="armor_plate_165" value="2" edge="1"><mxGeometry relative="1" as="geometry" /></mxCell>
-        <mxCell id="e_169" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontSize=10;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" source="leather_168" target="armor_plate_165" value="1" edge="1"><mxGeometry relative="1" as="geometry" /></mxCell>
-        <mxCell id="e_171" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontSize=10;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" source="monster_part_170" target="armor_plate_165" value="1" edge="1"><mxGeometry relative="1" as="geometry" /></mxCell>
-        <mxCell id="e_173" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontSize=10;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" source="anvil_172" target="armor_plate_165" value="1" edge="1"><mxGeometry relative="1" as="geometry" /></mxCell>
-        <mxCell id="e_176" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontSize=10;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" source="plank_175" target="beam_174" value="3" edge="1"><mxGeometry relative="1" as="geometry" /></mxCell>
-        <mxCell id="e_178" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontSize=10;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" source="table_177" target="beam_174" value="1" edge="1"><mxGeometry relative="1" as="geometry" /></mxCell>
-        <mxCell id="e_181" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontSize=10;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" source="plank_180" target="wooden_shield_179" value="4" edge="1"><mxGeometry relative="1" as="geometry" /></mxCell>
-        <mxCell id="e_183" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontSize=10;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" source="leather_182" target="wooden_shield_179" value="2" edge="1"><mxGeometry relative="1" as="geometry" /></mxCell>
-        <mxCell id="e_185" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontSize=10;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" source="table_184" target="wooden_shield_179" value="1" edge="1"><mxGeometry relative="1" as="geometry" /></mxCell>
         <mxCell id="e_188" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontSize=10;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" source="beam_187" target="cart_186" value="2" edge="1"><mxGeometry relative="1" as="geometry" /></mxCell>
         <mxCell id="e_190" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontSize=10;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" source="plank_189" target="cart_186" value="2" edge="1"><mxGeometry relative="1" as="geometry" /></mxCell>
         <mxCell id="e_192" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontSize=10;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" source="table_191" target="cart_186" value="1" edge="1"><mxGeometry relative="1" as="geometry" /></mxCell>
@@ -526,6 +806,143 @@
         <mxCell id="e_231" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontSize=10;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" source="leather_230" target="garment_227" value="1" edge="1"><mxGeometry relative="1" as="geometry" /></mxCell>
         <mxCell id="e_233" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontSize=10;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" source="quilted_thread_232" target="garment_227" value="1" edge="1"><mxGeometry relative="1" as="geometry" /></mxCell>
         <mxCell id="e_235" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontSize=10;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" source="loom_234" target="garment_227" value="1" edge="1"><mxGeometry relative="1" as="geometry" /></mxCell>
+
+        <!-- New edges for the above -->
+        <mxCell id="e_240" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontSize=10;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" source="refined_ore_236" target="furnace_239" value="10" edge="1"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e_241" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontSize=10;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" source="refined_clay_237" target="furnace_239" value="6" edge="1"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e_242" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontSize=10;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" source="blueprint_238" target="furnace_239" value="1" edge="1"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e_247" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontSize=10;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" source="refined_ore_243" target="anvil_246" value="12" edge="1"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e_248" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontSize=10;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" source="metal_bar_244" target="anvil_246" value="2" edge="1"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e_249" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontSize=10;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" source="blueprint_245" target="anvil_246" value="1" edge="1"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e_254" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontSize=10;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" source="plank_250" target="table_253" value="6" edge="1"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e_255" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontSize=10;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" source="reinforced_frame_251" target="table_253" value="2" edge="1"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e_256" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontSize=10;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" source="blueprint_252" target="table_253" value="1" edge="1"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e_261" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontSize=10;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" source="refined_clay_257" target="kiln_260" value="10" edge="1"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e_262" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontSize=10;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" source="refined_ore_258" target="kiln_260" value="3" edge="1"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e_263" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontSize=10;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" source="blueprint_259" target="kiln_260" value="1" edge="1"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e_268" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontSize=10;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" source="plank_264" target="spinningwheel_267" value="5" edge="1"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e_269" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontSize=10;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" source="reinforced_frame_265" target="spinningwheel_267" value="1" edge="1"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e_270" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontSize=10;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" source="blueprint_266" target="spinningwheel_267" value="1" edge="1"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e_275" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontSize=10;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" source="plank_271" target="loom_274" value="10" edge="1"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e_276" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontSize=10;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" source="clockwork_mechanism_272" target="loom_274" value="1" edge="1"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e_277" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontSize=10;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" source="blueprint_273" target="loom_274" value="1" edge="1"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e_282" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontSize=10;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" source="plank_278" target="tanningrack_281" value="6" edge="1"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e_283" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontSize=10;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" source="refined_ore_279" target="tanningrack_281" value="2" edge="1"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e_284" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontSize=10;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" source="blueprint_280" target="tanningrack_281" value="1" edge="1"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e_289" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontSize=10;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" source="refined_ore_285" target="lapidarybench_288" value="8" edge="1"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e_290" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontSize=10;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" source="refined_clay_286" target="lapidarybench_288" value="4" edge="1"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e_291" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontSize=10;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" source="blueprint_287" target="lapidarybench_288" value="1" edge="1"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e_296" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontSize=10;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" source="feather_292" target="quill_295" value="3" edge="1"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e_297" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontSize=10;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" source="dagger_293" target="quill_295" value="1" edge="1"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e_298" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontSize=10;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" source="blueprint_294" target="quill_295" value="1" edge="1"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e_303" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontSize=10;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" source="refined_ore_299" target="mortarpestle_302" value="2" edge="1"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e_304" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontSize=10;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" source="refined_clay_300" target="mortarpestle_302" value="2" edge="1"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e_305" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontSize=10;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" source="blueprint_301" target="mortarpestle_302" value="1" edge="1"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e_310" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontSize=10;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" source="refined_clay_306" target="alchemystand_309" value="3" edge="1"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e_311" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontSize=10;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" source="refined_ore_307" target="alchemystand_309" value="2" edge="1"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e_312" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontSize=10;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" source="blueprint_308" target="alchemystand_309" value="1" edge="1"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e_317" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontSize=10;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" source="parchment_313" target="written_scroll_316" value="2" edge="1"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e_318" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontSize=10;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" source="ink_314" target="written_scroll_316" value="2" edge="1"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e_319" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontSize=10;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" source="quill_315" target="written_scroll_316" value="1" edge="1"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e_325" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontSize=10;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" source="dagger_320" target="poisoned_dagger_324" value="1" edge="1"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e_326" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontSize=10;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" source="venom_321" target="poisoned_dagger_324" value="3" edge="1"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e_327" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontSize=10;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" source="alchemystand_322" target="poisoned_dagger_324" value="1" edge="1"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e_328" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontSize=10;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" source="blueprint_323" target="poisoned_dagger_324" value="1" edge="1"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e_333" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontSize=10;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" source="essence_329" target="distilled_essence_332" value="3" edge="1"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e_334" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontSize=10;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" source="monster_part_330" target="distilled_essence_332" value="2" edge="1"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e_335" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontSize=10;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" source="alchemystand_331" target="distilled_essence_332" value="1" edge="1"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e_340" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontSize=10;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" source="refined_ore_336" target="metal_ingot_339" value="5" edge="1"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e_341" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontSize=10;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" source="coal_337" target="metal_ingot_339" value="2" edge="1"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e_342" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontSize=10;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" source="furnace_338" target="metal_ingot_339" value="1" edge="1"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e_347" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontSize=10;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" source="metal_ingot_343" target="metal_bar_346" value="5" edge="1"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e_348" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontSize=10;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" source="coal_344" target="metal_bar_346" value="1" edge="1"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e_349" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontSize=10;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" source="furnace_345" target="metal_bar_346" value="1" edge="1"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e_355" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontSize=10;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" source="metal_bar_350" target="sword_354" value="2" edge="1"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e_356" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontSize=10;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" source="plank_351" target="sword_354" value="1" edge="1"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e_357" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontSize=10;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" source="anvil_352" target="sword_354" value="1" edge="1"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e_358" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontSize=10;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" source="blueprint_353" target="sword_354" value="1" edge="1"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e_363" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontSize=10;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" source="metal_bar_359" target="dagger_362" value="1" edge="1"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e_364" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontSize=10;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" source="anvil_360" target="dagger_362" value="1" edge="1"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e_365" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontSize=10;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" source="blueprint_361" target="dagger_362" value="1" edge="1"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e_372" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontSize=10;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" source="metal_bar_366" target="armor_plate_371" value="2" edge="1"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e_373" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontSize=10;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" source="leather_367" target="armor_plate_371" value="1" edge="1"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e_374" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontSize=10;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" source="monster_part_368" target="armor_plate_371" value="1" edge="1"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e_375" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontSize=10;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" source="anvil_369" target="armor_plate_371" value="1" edge="1"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e_376" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontSize=10;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" source="blueprint_370" target="armor_plate_371" value="1" edge="1"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e_380" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontSize=10;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" source="plank_377" target="beam_379" value="3" edge="1"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e_381" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontSize=10;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" source="table_378" target="beam_379" value="1" edge="1"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e_387" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontSize=10;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" source="plank_382" target="wooden_shield_386" value="4" edge="1"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e_388" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontSize=10;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" source="leather_383" target="wooden_shield_386" value="2" edge="1"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e_389" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontSize=10;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" source="table_384" target="wooden_shield_386" value="1" edge="1"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e_390" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontSize=10;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" source="blueprint_385" target="wooden_shield_386" value="1" edge="1"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e_394" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontSize=10;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" source="herbs_391" target="venomous_extract_393" value="4" edge="1"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e_395" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontSize=10;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" source="venom_392" target="venomous_extract_393" value="3" edge="1"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e_399" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontSize=10;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" source="crystal_396" target="arcane_dust_398" value="3" edge="1"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e_400" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontSize=10;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" source="essence_397" target="arcane_dust_398" value="2" edge="1"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e_404" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontSize=10;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" source="herbs_401" target="medicinal_paste_403" value="4" edge="1"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e_405" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontSize=10;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" source="harvest_402" target="medicinal_paste_403" value="2" edge="1"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e_410" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontSize=10;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" source="ore_406" target="alloy_dust_409" value="3" edge="1"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e_411" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontSize=10;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" source="crystal_407" target="alloy_dust_409" value="2" edge="1"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e_412" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontSize=10;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" source="essence_408" target="alloy_dust_409" value="1" edge="1"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e_418" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontSize=10;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" source="plank_413" target="enchanterstable_417" value="6" edge="1"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e_419" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontSize=10;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" source="cut_crystal_414" target="enchanterstable_417" value="2" edge="1"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e_420" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontSize=10;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" source="reinforced_frame_415" target="enchanterstable_417" value="2" edge="1"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e_421" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontSize=10;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" source="blueprint_416" target="enchanterstable_417" value="1" edge="1"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e_426" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontSize=10;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" source="stone_422" target="hearth_425" value="5" edge="1"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e_427" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontSize=10;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" source="plank_423" target="hearth_425" value="2" edge="1"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e_428" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontSize=10;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" source="blueprint_424" target="hearth_425" value="1" edge="1"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e_433" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontSize=10;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" source="refined_ore_429" target="wrench_432" value="4" edge="1"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e_434" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontSize=10;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" source="table_430" target="wrench_432" value="1" edge="1"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e_435" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontSize=10;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" source="blueprint_431" target="wrench_432" value="1" edge="1"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e_440" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontSize=10;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" source="wood_436" target="axe_439" value="4" edge="1"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e_441" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontSize=10;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" source="stone_437" target="axe_439" value="3" edge="1"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e_442" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontSize=10;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" source="blueprint_438" target="axe_439" value="1" edge="1"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e_446" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontSize=10;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" source="wood_443" target="club_445" value="3" edge="1"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e_447" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontSize=10;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" source="knife_444" target="club_445" value="1" edge="1"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e_451" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontSize=10;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" source="wood_448" target="sharpened_stick_450" value="2" edge="1"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e_452" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontSize=10;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" source="knife_449" target="sharpened_stick_450" value="1" edge="1"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e_457" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontSize=10;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" source="trophy_charm_453" target="hunters_charm_456" value="2" edge="1"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e_458" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontSize=10;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" source="bone_shard_454" target="hunters_charm_456" value="3" edge="1"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e_459" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontSize=10;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" source="knife_455" target="hunters_charm_456" value="1" edge="1"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e_463" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontSize=10;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" source="meat_460" target="dressed_meat_462" value="3" edge="1"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e_464" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontSize=10;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" source="knife_461" target="dressed_meat_462" value="1" edge="1"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e_468" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontSize=10;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" source="hide_465" target="trimmed_pelt_467" value="4" edge="1"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e_469" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontSize=10;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" source="knife_466" target="trimmed_pelt_467" value="1" edge="1"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e_473" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontSize=10;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" source="glass_pane_470" target="glass_bottle_472" value="2" edge="1"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e_474" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontSize=10;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" source="kiln_471" target="glass_bottle_472" value="1" edge="1"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e_478" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontSize=10;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" source="wood_475" target="firewood_477" value="3" edge="1"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e_479" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontSize=10;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" source="axe_476" target="firewood_477" value="1" edge="1"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e_484" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontSize=10;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" source="venomous_extract_480" target="venom_vial_483" value="3" edge="1"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e_485" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontSize=10;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" source="glass_bottle_481" target="venom_vial_483" value="1" edge="1"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e_486" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontSize=10;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" source="alchemystand_482" target="venom_vial_483" value="1" edge="1"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e_492" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontSize=10;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" source="herbal_extract_487" target="healing_potion_491" value="3" edge="1"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e_493" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontSize=10;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" source="medicinal_paste_488" target="healing_potion_491" value="2" edge="1"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e_494" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontSize=10;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" source="glass_bottle_489" target="healing_potion_491" value="1" edge="1"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e_495" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontSize=10;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" source="alchemystand_490" target="healing_potion_491" value="1" edge="1"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e_502" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontSize=10;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" source="dagger_496" target="enchanted_blade_501" value="1" edge="1"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e_503" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontSize=10;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" source="distilled_essence_497" target="enchanted_blade_501" value="2" edge="1"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e_504" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontSize=10;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" source="arcane_dust_498" target="enchanted_blade_501" value="3" edge="1"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e_505" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontSize=10;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" source="enchanterstable_499" target="enchanted_blade_501" value="1" edge="1"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e_506" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontSize=10;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" source="blueprint_500" target="enchanted_blade_501" value="1" edge="1"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e_510" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontSize=10;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" source="dressed_meat_507" target="cooked_meat_509" value="2" edge="1"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e_511" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontSize=10;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" source="hearth_508" target="cooked_meat_509" value="1" edge="1"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e_515" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontSize=10;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" source="harvest_512" target="baked_harvest_514" value="3" edge="1"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e_516" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontSize=10;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" source="hearth_513" target="baked_harvest_514" value="1" edge="1"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e_521" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontSize=10;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" source="cooked_meat_517" target="hearty_stew_520" value="2" edge="1"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e_522" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontSize=10;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" source="baked_harvest_518" target="hearty_stew_520" value="2" edge="1"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e_523" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontSize=10;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" source="hearth_519" target="hearty_stew_520" value="1" edge="1"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e_527" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontSize=10;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" source="trimmed_pelt_524" target="fur_garment_526" value="2" edge="1"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e_528" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontSize=10;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" source="knife_525" target="fur_garment_526" value="1" edge="1"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e_533" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontSize=10;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" source="clockwork_mechanism_529" target="tinkered_gearbox_532" value="1" edge="1"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e_534" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontSize=10;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" source="refined_ore_530" target="tinkered_gearbox_532" value="3" edge="1"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e_535" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontSize=10;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" source="wrench_531" target="tinkered_gearbox_532" value="1" edge="1"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e_541" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontSize=10;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" source="leather_536" target="leather_armor_540" value="3" edge="1"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e_542" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontSize=10;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" source="reinforced_frame_537" target="leather_armor_540" value="1" edge="1"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e_543" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontSize=10;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" source="table_538" target="leather_armor_540" value="1" edge="1"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e_544" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontSize=10;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" source="blueprint_539" target="leather_armor_540" value="1" edge="1"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e_549" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontSize=10;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" source="metal_bar_545" target="chainmail_548" value="3" edge="1"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e_550" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontSize=10;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" source="anvil_546" target="chainmail_548" value="1" edge="1"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e_551" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontSize=10;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" source="blueprint_547" target="chainmail_548" value="1" edge="1"><mxGeometry relative="1" as="geometry" /></mxCell>
       </root>
     </mxGraphModel>
   </diagram>

@@ -147,6 +147,26 @@ consume a `dagger` as an ingredient (`poisoned_dagger`, `enchanted_blade`)
 don't also need a Knife - the blade requirement is already satisfied by the
 dagger itself.
 
+## Blueprints gate every higher-level armor, weapon, and tool
+
+Knife-tier basics (`club`, `sharpened_stick`, `hunters_charm`, `dressed_meat`,
+`trimmed_pelt`, `fur_garment`, `firewood`) and plain materials/food/reagents
+need nothing but their ingredients and a tool. Everything past that - every
+Section 2 tool build, and every Section 3 recipe whose result is armor, a
+weapon, or a tool - additionally needs a **Blueprint**, a recipe-specific
+reagent (`Blueprint: Furnace`, `Blueprint: Sword`, `Blueprint: Chainmail`,
+...) drawn purple, one fresh copy per recipe like any other ingredient. It's
+the classic "learn the schematic before you can build it" gate (crafting
+scrolls/schematics in countless RPGs), and it's *why* the line is drawn at
+armor/weapon/tool specifically: those are the results worth gating behind
+found/earned knowledge, while a stew or a trimmed pelt isn't.
+
+Concretely: `poisoned_dagger`/`distilled_essence`/`metal_ingot`/`metal_bar`
+share a row, but only `poisoned_dagger` (a weapon) gets a Blueprint -
+`distilled_essence` (a reagent) and the two metal-refining steps don't.
+Same shape on the sword/dagger/armor_plate/beam/wooden_shield row: `beam`
+(a construction part, not equipment) is the one recipe left without one.
+
 ## Color legend
 
 | Style | Meaning |
@@ -155,6 +175,7 @@ dagger itself.
 | Yellow | Section 1 processed material |
 | Blue, bold | Tool |
 | Blue, bold, dashed | Starter tool (every character has one; no build recipe) |
+| Purple | Blueprint (required by every higher-level armor/weapon/tool recipe) |
 | Orange | Section 3 intermediate (further-refined, feeds other recipes) |
 | Red, bold | Section 3 end product |
 
@@ -333,10 +354,18 @@ is a proper combined meal built from both of them, the same "assemble two
 already-finished components into a bigger dish" shape `garment` and
 `glass_lantern` already use for their own final assembly step.
 
-## Wrench: a tool built from an existing tool
+`glass_bottle` (`glass_pane` + Kiln) rounds out the Kiln's own output list
+alongside `fired_brick` and `glass_pane` itself, and gives the glassblower
+a container product in its own right - but its real job is fixing a gap in
+the two Alchemy Stand recipes that came before it: `venom_vial` and
+`healing_potion` are, by name, a bottled poison and a bottled potion, yet
+neither one actually consumed a bottle. Both recipes now pull in a fresh
+`glass_bottle` alongside their reagents.
 
-Section 2 gained a third new addition, **Wrench** (`refined_ore` + an
-existing **Table**, pulled in as an ingredient) - the diagram's second use
+## Wrench and Axe: tools built from raw materials (and one from a tool)
+
+Section 2 gained two more additions. **Wrench** (`refined_ore` + an
+existing **Table**, pulled in as an ingredient) is the diagram's second use
 of the Tinkers' Construct Tool Forge pattern already named in "Other
 real-crafting-system patterns" below (build a new tool at/from an existing
 one, not just raw materials), after Enchanter's Table's own `cut_crystal`
@@ -345,6 +374,23 @@ Wrench) is its Section 3 product - a tinsmith's assembled mechanical
 component, giving `clockwork_mechanism` a second consumer beyond the Loom
 and giving CraftMetal's tinsmith profession a recipe of its own to reach
 for.
+
+**Axe** (raw `wood` + raw `stone`, no tool needed to bind them) is
+Valheim's actual stone axe, the tool the "Starter tool: the Knife" section
+above cites as precedent but hadn't, until now, actually been a recipe -
+club was that stand-in. Its own product, `firewood` (raw `wood` + Axe), is
+deliberately the simplest possible Axe recipe, the same role
+`sharpened_stick` plays for the Knife.
+
+## Two armor tiers: `leather_armor` and `chainmail`
+
+`armor_plate` was already Anvil-tier heavy armor, but nothing existed
+between "no armor" and it. `leather_armor` (`leather` + `reinforced_frame`
+at the Table - padding under stitched leather, no forge needed) and
+`chainmail` (`metal_bar` at the Anvil - many rings, no leather or
+monster_part needed, unlike the heavier `armor_plate`) fill the light/
+medium gap, giving CraftGarment's leatherworker and CraftMetal's
+blacksmith each a second product beyond `garment`/`sword` respectively.
 
 `alloy_dust` (Section 1, ore + crystal + essence — three raw materials,
 where every other Section 1 recipe combines at most two) rounds out the
