@@ -14,7 +14,7 @@ and last. A 3-input recipe raises its middle input; a 4-input recipe raises
 its two middle inputs. Endpoints and the tool (when it sits last, as usual)
 stay on the base row. Applied throughout, including to every pre-existing
 3+-input recipe (`clockwork_mechanism`, `ink`, `written_scroll`,
-`poisoned_dagger`, `distilled_essence`, `metal_ingot`, `metal_bar`, `sword`,
+`dagger_poisoned`, `distilled_essence`, `metal_ingot`, `metal_bar`, `sword`,
 `armor_plate`, `wooden_shield`, `cart`, `glass_lantern`, `garment`), not just
 new ones.
 
@@ -143,7 +143,7 @@ butchered before it can be cooked - see Hearth below), `trimmed_pelt` (raw
 `hide`, cut to shape without tanning - `hide` is kept whole per its own
 section below, unlike `skin`), and `fur_garment` (a second Knife pass over
 `trimmed_pelt`, the fur equivalent of woven `garment`). Recipes that already
-consume a `dagger` as an ingredient (`poisoned_dagger`, `enchanted_blade`)
+consume a `dagger` as an ingredient (`dagger_poisoned`, `enchanted_blade`)
 don't also need a Knife - the blade requirement is already satisfied by the
 dagger itself.
 
@@ -161,8 +161,8 @@ scrolls/schematics in countless RPGs), and it's *why* the line is drawn at
 armor/weapon/tool specifically: those are the results worth gating behind
 found/earned knowledge, while a stew or a trimmed pelt isn't.
 
-Concretely: `poisoned_dagger`/`distilled_essence`/`metal_ingot`/`metal_bar`
-share a row, but only `poisoned_dagger` (a weapon) gets a Blueprint -
+Concretely: `dagger_poisoned`/`distilled_essence`/`metal_ingot`/`metal_bar`
+share a row, but only `dagger_poisoned` (a weapon) gets a Blueprint -
 `distilled_essence` (a reagent) and the two metal-refining steps don't.
 Same shape on the sword/dagger/armor_plate/beam/wooden_shield row: `beam`
 (a construction part, not equipment) is the one recipe left without one.
@@ -285,12 +285,12 @@ Research and the pattern each now follows in `test-recipes.drawio.xml`:
   arrows/blades are the classic use, and modded Minecraft antivenom recipes
   (spider eye + sugar + fermented spider eye) confirm venom-handling wants
   its own dedicated equipment rather than being hand-mixed. We added an
-  **Alchemy Stand** tool and `poisoned_dagger` (existing `dagger` product +
+  **Alchemy Stand** tool and `dagger_poisoned` (existing `dagger` product +
   raw venom + Alchemy Stand) — coating an already-forged weapon, not
   crafting venom into a new base item. The poisoner profession now also
   gets a standalone toxin: `venomous_extract` (Section 1, herbs + venom, no
   tool) reduces down to `venom_vial` (Alchemy Stand) — a tradeable poison
-  that doesn't require already owning a dagger, unlike `poisoned_dagger`.
+  that doesn't require already owning a dagger, unlike `dagger_poisoned`.
 
 - **`essence`** — no longer parked. `distilled_essence` (raw essence +
   monster_part + Alchemy Stand) now feeds `enchanted_blade` (existing
@@ -402,7 +402,7 @@ inputs just because most of them happen to use two.
 Between these and the venom/essence work above, alchemist, poisoner, and
 enchanter each now have a flagship product reachable from their granted
 `herbs`/`crystal`/`monster_part` starting kit plus loot-only reagents:
-`healing_potion`, `venom_vial` (or `poisoned_dagger`), and `enchanted_blade`
+`healing_potion`, `venom_vial` (or `dagger_poisoned`), and `enchanted_blade`
 respectively.
 
 ## Other real-crafting-system patterns worth reusing later
