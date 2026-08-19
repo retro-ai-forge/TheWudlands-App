@@ -447,12 +447,21 @@ different roles in this diagram, so they can't share a name.
 Poisoning a weapon used to be `dagger_poisoned` specifically (`dagger` +
 `venom` + Alchemy Stand + its own Blueprint) - removed, since gating this
 per weapon type would mean 16 near-identical recipes. Replaced with one
-generic template right after Weapons: `Weapon (any, template)` + `venom` +
-Alchemy Stand + `Blueprint: Poison Weapon (template)` → `Weapon (poisoned,
-template)`, styled with a dashed border (matching the Knife's "granted, not
-concrete" visual language) to mark it explicitly as a pattern, not a real
-recipe - the actual per-weapon versions (or a properly generic
-implementation) are still to be defined.
+generic template right after Weapons: `Weapon (any, template)` +
+`venom_extract` + Alchemy Stand + `Blueprint: Poison Weapon (template)` →
+`Weapon (poisoned, template)`, styled with a dashed border (matching the
+Knife's "granted, not concrete" visual language) to mark it explicitly as a
+pattern, not a real recipe - the actual per-weapon versions (or a properly
+generic implementation) are still to be defined.
+
+The template takes `venom_extract` (Section 1, `venom` → `venom_extract`,
+no tool), not raw `venom` directly - coating a blade calls for a
+concentrated dose, not the crude gland extract, so it costs less per use
+(2 vs. the raw amount) once processed. `venomous_extract` (herbs + venom,
+the poisoner's standalone-toxin ingredient feeding `venom_vial`) stays a
+separate recipe from `venom_extract` - one is a herbal poison compound, the
+other is venom refined on its own; they read as different things and stay
+as different Section 1 nodes.
 
 ## Other real-crafting-system patterns worth reusing later
 
