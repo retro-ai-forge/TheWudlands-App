@@ -4,6 +4,17 @@ Spec for how `test-recipes.drawio.xml` (and any future recipe diagram in this
 folder) is organized. Follow this when adding or regenerating recipes so the
 diagram stays readable as it grows.
 
+## Layout: output centered below its inputs
+
+A recipe's output node is x-positioned at the horizontal midpoint of its
+inputs (materials + tool, when the tool sits among them rather than off to
+one side) - never left-aligned to the first input or offset by a fixed slot
+width. Centering keeps the converging edges roughly symmetric instead of
+all leaning toward one side of the output, which reads as lopsided
+especially on wider recipes (3-4 inputs). Applies everywhere a recipe has
+more than one input, on top of - not instead of - the interior-input
+y-staggering below.
+
 ## Layout: staggering 3+-input recipes
 
 When a recipe has more than two inputs, drawing all of them on one flat row
@@ -14,7 +25,7 @@ and last. A 3-input recipe raises its middle input; a 4-input recipe raises
 its two middle inputs. Endpoints and the tool (when it sits last, as usual)
 stay on the base row. Applied throughout, including to every pre-existing
 3+-input recipe (`clockwork_mechanism`, `ink`, `written_scroll`,
-`dagger_poisoned`, `distilled_essence`, `metal_ingot`, `metal_bar`, `sword`,
+`distilled_essence`, `metal_ingot`, `metal_bar`, `sword`,
 `armor_plate`, `wooden_shield`, `cart`, `glass_lantern`, `garment`), not just
 new ones.
 
@@ -143,9 +154,8 @@ butchered before it can be cooked - see Hearth below), `trimmed_pelt` (raw
 `hide`, cut to shape without tanning - `hide` is kept whole per its own
 section below, unlike `skin`), and `fur_garment` (a second Knife pass over
 `trimmed_pelt`, the fur equivalent of woven `garment`). Recipes that already
-consume a `dagger` as an ingredient (`dagger_poisoned`, `enchanted_blade`)
-don't also need a Knife - the blade requirement is already satisfied by the
-dagger itself.
+consume a `dagger` as an ingredient (`enchanted_blade`) don't also need a
+Knife - the blade requirement is already satisfied by the dagger itself.
 
 ## Blueprints gate every higher-level armor, weapon, and tool
 
@@ -161,11 +171,12 @@ scrolls/schematics in countless RPGs), and it's *why* the line is drawn at
 armor/weapon/tool specifically: those are the results worth gating behind
 found/earned knowledge, while a stew or a trimmed pelt isn't.
 
-Concretely: `dagger_poisoned`/`distilled_essence`/`metal_ingot`/`metal_bar`
-share a row, but only `dagger_poisoned` (a weapon) gets a Blueprint -
-`distilled_essence` (a reagent) and the two metal-refining steps don't.
-Same shape on the sword/dagger/armor_plate/beam/wooden_shield row: `beam`
-(a construction part, not equipment) is the one recipe left without one.
+Concretely: in the Weapons section, `club` and `sharpened_stick`
+(Knife-tier, no forge involved) are the only two of the sixteen weapons
+without a Blueprint - every Anvil/Table/Enchanter's-Table weapon in that
+same section has one. Same shape on the armor_plate/beam/wooden_shield row:
+`beam` (a construction part, not equipment) is the one recipe left without
+one.
 
 ## Color legend
 
@@ -402,8 +413,46 @@ inputs just because most of them happen to use two.
 Between these and the venom/essence work above, alchemist, poisoner, and
 enchanter each now have a flagship product reachable from their granted
 `herbs`/`crystal`/`monster_part` starting kit plus loot-only reagents:
-`healing_potion`, `venom_vial` (or `dagger_poisoned`), and `enchanted_blade`
-respectively.
+`healing_potion`, `venom_vial`, and `enchanted_blade` respectively. (Poisoner
+also has the general poisoned-weapon pattern below, now that it's no longer
+dagger-specific.)
+
+## A dedicated Weapons section, and generalizing poisoned weapons
+
+The diagram's four sections are now, top to bottom: raw→processed, tool
+builds, **Weapons**, then everything else Section 3 holds (armor, food,
+alchemy, magic items, ...) shifted down to make room - inserted at the same
+y that used to be Section 3's start, per "Layout: new recipes wrap into
+their real section" above, not bolted onto the diagram's end.
+
+Weapons covers 16 recipes, following a specific list: `dagger`, `sickle`,
+`sword`, `greatsword`, `battle_axe`, `mace`, `warhammer`, `sharpened_stick`,
+`spear`, `bow`, `quiver_of_arrows`, `crossbow`, `set_of_bolts`,
+`magic_staff`, `wand`, `club`. Four of these already existed elsewhere in
+the diagram (`dagger`, `sword`, `club`, `sharpened_stick`) and were
+relocated here wholesale - not duplicated, the originals were removed and
+recreated in this section, since they were terminal (nothing consumed
+their output, so nothing needed patching). The other 12 are new, each
+following the established weight/material logic: heavier weapons
+(`greatsword`, `warhammer`) cost roughly double a comparable lighter one
+(`sword`, `mace`) in `metal_bar`; `bow`/`crossbow`/staves reach for `Table`
+or `Enchanter's Table` instead of `Anvil`, since they're not primarily
+forged; `quiver_of_arrows` and `set_of_bolts` exist as their own Section 3
+products (ammunition, not consumables baked into the bow/crossbow recipe
+itself) since real archery always separates the launcher from its ammo.
+`battle_axe` is a deliberately different id from the Section 2 `Axe` tool
+(wood + stone, used to make `firewood`) - same real-world object, two
+different roles in this diagram, so they can't share a name.
+
+Poisoning a weapon used to be `dagger_poisoned` specifically (`dagger` +
+`venom` + Alchemy Stand + its own Blueprint) - removed, since gating this
+per weapon type would mean 16 near-identical recipes. Replaced with one
+generic template right after Weapons: `Weapon (any, template)` + `venom` +
+Alchemy Stand + `Blueprint: Poison Weapon (template)` → `Weapon (poisoned,
+template)`, styled with a dashed border (matching the Knife's "granted, not
+concrete" visual language) to mark it explicitly as a pattern, not a real
+recipe - the actual per-weapon versions (or a properly generic
+implementation) are still to be defined.
 
 ## Other real-crafting-system patterns worth reusing later
 
