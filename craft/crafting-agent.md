@@ -4,6 +4,32 @@ Spec for how `test-recipes.drawio.xml` (and any future recipe diagram in this
 folder) is organized. Follow this when adding or regenerating recipes so the
 diagram stays readable as it grows.
 
+## Layout: staggering 3+-input recipes
+
+When a recipe has more than two inputs, drawing all of them on one flat row
+crowds their orthogonal edges right above the output node. Fix: every
+*interior* input (not the first, not the last, by x-position) is drawn half
+a node-height higher (22px, for the standard 44px-tall node) than the first
+and last. A 3-input recipe raises its middle input; a 4-input recipe raises
+its two middle inputs. Endpoints and the tool (when it sits last, as usual)
+stay on the base row. Applied throughout, including to every pre-existing
+3+-input recipe (`clockwork_mechanism`, `ink`, `written_scroll`,
+`poisoned_dagger`, `distilled_essence`, `metal_ingot`, `metal_bar`, `sword`,
+`armor_plate`, `wooden_shield`, `cart`, `glass_lantern`, `garment`), not just
+new ones.
+
+## Yield multipliers were dropped in favor of halved input costs
+
+Recipes used to carry a `(yield Nx)` annotation on the output (`coal`,
+`bone_shard`, `fired_brick`) meaning "this craft produces N units." That's a
+second axis of variation on top of input quantity, and it's redundant: a
+recipe that costs 6 wood and yields 2 coal has the exact same wood-per-coal
+ratio as one that costs 3 wood and yields 1 coal. All three were rewritten
+to the single-output form (`coal` now costs 3 wood, `bone_shard` 2 bone,
+`fired_brick` 2 refined_clay) and the yield annotation removed. Every recipe
+in this diagram now produces exactly one unit of its output; cost-per-craft
+is the only thing that varies.
+
 ## The one hard rule: no node has more than one outgoing edge
 
 Every material or tool that appears as an ingredient is a **fresh, dedicated
@@ -72,6 +98,28 @@ This section holds both:
   legitimate Section 3 entries too, and other Section 3 recipes (or Section
   2 tool builds) may then reference *fresh copies* of them as ingredients.
 
+### Starter tool: the Knife
+
+Every character now begins with a Knife already in hand - the one tool in
+this diagram with no build recipe of its own; it never appears as a
+recipe's *output*, only as an ingredient. Everywhere else a Section 3
+recipe needs "a tool," that tool was itself built in Section 2. The Knife
+is the deliberate exception: real survival/crafting games gate their
+*very* first crafts behind a tool you either start with or make from bare
+hands before anything else exists to build it with (Valheim's earliest
+tools - the club, then the stone axe - exist for exactly this reason: the
+game can't require a tool to make your first tool). Giving every character
+a Knife for free plays the same role here without an awkward "hands only"
+Section 0: it's what turns `trophy_charm` + `bone_shard` (raw monster/bone
+byproducts nothing else consumed - see below) and a plain raw log into
+usable output on turn one, before any Section 2 tool has been built.
+
+Knife recipes are drawn like any other Section 3 entry (tool + processed
+(+raw) → product) and follow the same fresh-copy rule - if two recipes both
+need the Knife, it's drawn twice. It's styled as a tool (blue, bold) but
+with a dashed border and the label `Knife (starter, no recipe)`, so it
+reads unambiguously as "granted, not crafted" even in a plain-text export.
+
 ## Color legend
 
 | Style | Meaning |
@@ -79,6 +127,7 @@ This section holds both:
 | Green | Raw material |
 | Yellow | Section 1 processed material |
 | Blue, bold | Tool |
+| Blue, bold, dashed | Starter tool (every character has one; no build recipe) |
 | Orange | Section 3 intermediate (further-refined, feeds other recipes) |
 | Red, bold | Section 3 end product |
 
@@ -186,13 +235,63 @@ Research and the pattern each now follows in `test-recipes.drawio.xml`:
   its own dedicated equipment rather than being hand-mixed. We added an
   **Alchemy Stand** tool and `poisoned_dagger` (existing `dagger` product +
   raw venom + Alchemy Stand) — coating an already-forged weapon, not
-  crafting venom into a new base item.
+  crafting venom into a new base item. The poisoner profession now also
+  gets a standalone toxin: `venomous_extract` (Section 1, herbs + venom, no
+  tool) reduces down to `venom_vial` (Alchemy Stand) — a tradeable poison
+  that doesn't require already owning a dagger, unlike `poisoned_dagger`.
 
-- **`essence`** — parked as `distilled_essence` (raw essence + Alchemy
-  Stand) for now: a plain refined form with no consumer yet, mirroring how
-  WoW's enchanting essences and ESO's runes exist purely as reagents for a
-  *later* system (enchanting/glyphs) we haven't modeled here. Revisit once
-  there's an actual "make an item magical" mechanic to feed.
+- **`essence`** — no longer parked. `distilled_essence` (raw essence +
+  monster_part + Alchemy Stand) now feeds `enchanted_blade` (existing
+  `dagger` product + `distilled_essence` + `arcane_dust` + the new
+  **Enchanter's Table**) — the "make an item magical" mechanic the essence
+  family was reserved for, mirroring WoW's enchanting essences and ESO's
+  runes as reagents consumed by an enchanting system, and directly
+  patterned on Minecraft's Enchanting Table (an existing item + a
+  consumable reagent, lapis lazuli, at a dedicated station) for "imbue an
+  already-crafted item with magic" as the right shape for this recipe.
+  `arcane_dust` (Section 1, crystal + essence, no tool) is `essence`'s
+  other new consumer — a raw magical reagent standing in for lapis, built
+  from two of the three families the Alchemy category already grants
+  (`crystal`) plus one of the loot-only ones (`essence`).
+
+## Closing the remaining dead ends: alchemist, and the Knife
+
+Two more Section 1 outputs had no consumer at all before this pass:
+
+- **`herbal_extract`** (herbs, no tool) — the alchemist's actual flavor is
+  "vials and reagents, potions and poisons," yet nothing in the diagram
+  produced a potion. Fixed with `medicinal_paste` (Section 1, herbs +
+  harvest, no tool — honey/honeycomb as a real-world salve binder, the same
+  role it plays in traditional herbalism) feeding `healing_potion`
+  (`herbal_extract` + `medicinal_paste` + Alchemy Stand) — Potion Craft and
+  Vintage Story's alchemy both start potions from ground plant matter at a
+  simple bench-tier station, which is exactly this shape: no forge, no
+  advanced tool, just herbs plus a binder at the Alchemy Stand the poisoner
+  and enchanter recipes already justified building.
+
+- **`bone_shard`** and **`trophy_charm`** — both raw hunting byproducts
+  (bone, monster_part) with nowhere to go. Rather than invent two more
+  single-purpose trinkets, one recipe uses both: `hunters_charm`
+  (`trophy_charm` + `bone_shard` + Knife) — a hunter/trapper's carved
+  amulet, the kind of thing a Knife alone is realistically enough to make.
+  `sharpened_stick` (raw `wood` + Knife) sits alongside it as the simplest
+  possible craft in the whole diagram — the literal first thing a new
+  character can make, with only what they start with and whatever they can
+  pick up off the ground, the same bootstrap role Minecraft's stick or
+  Valheim's club plays before any tool station exists.
+
+`alloy_dust` (Section 1, ore + crystal + essence — three raw materials,
+where every other Section 1 recipe combines at most two) rounds out the
+new Section 1 batch: a magically-infused ore dust that reads as `ore`'s own
+entry point into the enchanting chain, not just another `arcane_dust`
+duplicate, and demonstrates that Section 1 recipes aren't capped at two
+inputs just because most of them happen to use two.
+
+Between these and the venom/essence work above, alchemist, poisoner, and
+enchanter each now have a flagship product reachable from their granted
+`herbs`/`crystal`/`monster_part` starting kit plus loot-only reagents:
+`healing_potion`, `venom_vial` (or `poisoned_dagger`), and `enchanted_blade`
+respectively.
 
 ## Other real-crafting-system patterns worth reusing later
 

@@ -7,7 +7,14 @@ from __future__ import annotations
 import uuid
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
-from typing import Dict, Optional
+from typing import Dict, List, Optional
+
+# Tools granted to every character for free at creation, regardless of
+# profession - unlike resource_balances, never gated by the Trappings step.
+# Matches the "Knife (starter, no recipe)" node in craft/test-recipes.drawio.xml
+# (see craft/crafting-agent.md's "Starter tool: the Knife" section): the one
+# tool basic recipes can use before any Section 2 tool has been built.
+STARTER_TOOLS: tuple[str, ...] = ("knife",)
 
 # Valid values for Character.vital_status, per the "Vital Status" lore
 # section on the world page (app/theworld/page.tsx). Nothing sets a
@@ -120,6 +127,9 @@ class Character:
     # by resource id (see backend.resources_catalog) - a running total, never
     # per-unit item instances or slot assignments.
     resource_balances: Dict[str, int] = field(default_factory=dict)
+    # Discrete tools this character owns (e.g. "knife") - distinct from
+    # resource_balances, which is stackable-quantity crafting materials only.
+    tools: List[str] = field(default_factory=lambda: list(STARTER_TOOLS))
 
     def to_dict(self) -> dict:
         return {
@@ -148,4 +158,5 @@ class Character:
             # countdown at all, just a "ready" status.
             "availability": {"name": "ready", "timeRdy": self.created_at.isoformat()},
             "resourceBalances": self.resource_balances,
+            "tools": self.tools,
         }

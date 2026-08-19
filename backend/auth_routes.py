@@ -194,6 +194,9 @@ class CharacterResponse(BaseModel):
     resourceBalances: Dict[str, int] = Field(
         default_factory=dict, description="Stackable resources this character carries, by resource id"
     )
+    tools: List[str] = Field(
+        default_factory=list, description="Discrete tools this character owns (e.g. 'knife'), granted free at creation"
+    )
 
 class PlayerDataResponse(BaseModel):
     """The authenticated player's permanent record and character roster.
