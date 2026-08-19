@@ -463,6 +463,50 @@ separate recipe from `venom_extract` - one is a herbal poison compound, the
 other is venom refined on its own; they read as different things and stay
 as different Section 1 nodes.
 
+## Armor: 9 material tiers, each with a piece-template and a separate shield
+
+Appended as its own clearly-labeled section at the diagram's end (not
+inserted mid-file with a shift, unlike Weapons - by this point the file had
+picked up enough manual edits outside this session that a full
+insert-and-shift carried more risk than it was worth; append-with-a-label
+was the safer call here).
+
+Covers 9 materials in ascending rarity: `Cloth`, `Leather`, `Living Wood`,
+`Chainmail`, `Iron`, `Ebony`, `Darksteel`, `Chitin`, `Meteoric Iron`. Two
+existing recipes were reused rather than duplicated: `leather_armor` and
+`chainmail` were relabeled in place into the new piece-template pattern
+(same ingredients, same ids, new dashed style and name) rather than removed
+and rebuilt. `armor_plate` was removed outright - it mixed metal + leather
++ monster_part in a way that didn't cleanly map to any single one of the 9
+tiers, and its role is now split cleanly between `Iron` (pure metal_bar)
+and `Chitin` (monster_part-based).
+
+Every material follows the same two-recipe shape:
+
+- **Piece** (`helmet`/`chest`/`legs`, one recipe, dashed-border template
+  like Poisoned Weapon): crafting it produces *one* of the three slots,
+  chosen at craft time, not a fixed single output - the same "pattern, not
+  concrete recipe" concept, reused for a second thing that genuinely needs
+  it (three near-identical armor pieces differing only in silhouette, not
+  materials or process).
+- **Shield**: always its own separate, concrete recipe (never templated
+  with the other three) - a shield is a different shape of object end to
+  end (flat/round, held not worn), not a size variant of the same garment
+  the way helmet/chest/legs are.
+
+Material sourcing reuses existing processed goods wherever the fit is
+real, rather than inventing 9 new raw chains: `Cloth`→`woven_cloth`,
+`Leather`→`leather`, `Chainmail`/`Iron`→`metal_bar`, `Ebony`→
+`reinforced_frame` (already the "fancier wood" Section 1 material),
+`Chitin`→raw `monster_part` + `leather` (binding), `Living Wood`→`plank` +
+`herbal_extract` (nature magic animating timber). `Darksteel` and `Meteoric
+Iron` both start from `metal_bar` but reach for a rarer second ingredient
+to earn their higher tier - `clockwork_mechanism` (a tempered, precision-
+reinforced steel) and raw `essence` (a truly rare sky-metal) respectively -
+the same "make the higher tier cost more than just more of the base
+material" logic `greatsword`/`warhammer` already used against `sword`/`mace`
+in Weapons.
+
 ## Other real-crafting-system patterns worth reusing later
 
 - **EnderIO** (`enderio-base/.../config/recipes/materials.xml`): multi-raw
