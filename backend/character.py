@@ -97,7 +97,7 @@ class Character:
     first_name: str = ''
     last_name: str = ''
     vital_status: str = 'alive'
-    age: int = 23
+    age_month: int = 23
     gender: str = 'd'
     race_group: str = 'common'
     race: str = 'human'
@@ -128,7 +128,7 @@ class Character:
             "firstName": self.first_name,
             "lastName": self.last_name,
             "vitalStatus": self.vital_status,
-            "age": self.age,
+            "age_month": self.age_month,
             "gender": self.gender,
             "raceGroup": self.race_group,
             "race": self.race,

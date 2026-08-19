@@ -171,7 +171,7 @@ class CharacterResponse(BaseModel):
     firstName: str = Field(..., description="Character's first name")
     lastName: str = Field(..., description="Character's last name")
     vitalStatus: str = Field(..., description="Character's vital status")
-    age: int = Field(..., description="Character's age in months (canonical, human-equivalent)")
+    age_month: int = Field(..., description="Character's age in months (canonical, human-equivalent)")
     gender: str = Field(..., description="Character's gender")
     raceGroup: str = Field(..., description="Character's race group")
     race: str = Field(..., description="Character's subrace")
@@ -219,7 +219,7 @@ class CreateCharacterRequest(BaseModel):
     slotNumber: int = Field(..., description="Soul slot clicked to start creation")
     firstName: str = Field(..., description="Character's first name")
     lastName: str = Field(..., description="Character's last name")
-    age: int = Field(..., description="Character's age in months")
+    age_month: int = Field(..., description="Character's age in months")
     gender: str = Field(..., description="Character's gender")
     raceGroup: str = Field(..., description="Character's race group")
     race: str = Field(..., description="Character's subrace")
@@ -593,7 +593,7 @@ async def create_character(
         slot_number=payload.slotNumber,
         first_name=payload.firstName,
         last_name=payload.lastName,
-        age=payload.age,
+        age_month=payload.age_month,
         gender=payload.gender,
         race_group=payload.raceGroup,
         race=payload.race,

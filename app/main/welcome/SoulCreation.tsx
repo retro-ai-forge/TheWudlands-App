@@ -972,7 +972,7 @@ export function SoulCreation({
           slotNumber,
           firstName,
           lastName,
-          age: char_age,
+          age_month: char_age,
           gender,
           raceGroup,
           race,
