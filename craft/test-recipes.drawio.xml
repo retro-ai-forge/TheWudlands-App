@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <mxfile host="app.diagrams.net">
   <diagram name="Seite-1" id="TestRecipes20">
-    <mxGraphModel dx="843" dy="571" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="3100" pageHeight="3800" math="0" shadow="0">
+    <mxGraphModel dx="843" dy="571" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="3100" pageHeight="2340" math="0" shadow="0">
       <root>
         <mxCell id="0" />
         <mxCell id="1" parent="0" />
@@ -64,482 +64,370 @@
 
         <!-- SECTION 2: processed (plus raw, plus existing products) to tool. Advanced tools (Anvil, Loom) need a Section 3 product as prerequisite (Tinkers Construct Tool Forge / EnderIO Dark Steel Anvil pattern); those inputs keep their tier3/final color even though they sit in this band. -->
         <mxCell id="furnace_29" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;fontStyle=1;" value="T1 Furnace" vertex="1">
-          <mxGeometry height="44" width="130" x="125" y="510" as="geometry" />
+          <mxGeometry height="44" width="130" x="125" y="800" as="geometry" />
         </mxCell>
         <mxCell id="refined_ore_30" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" value="T1 refined_ore" vertex="1">
-          <mxGeometry height="44" width="130" x="40" y="390" as="geometry" />
+          <mxGeometry height="44" width="130" x="40" y="680" as="geometry" />
         </mxCell>
         <mxCell id="refined_clay_32" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" value="T1 refined_clay" vertex="1">
-          <mxGeometry height="44" width="130" x="210" y="390" as="geometry" />
+          <mxGeometry height="44" width="130" x="210" y="680" as="geometry" />
         </mxCell>
         <mxCell id="anvil_34" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;fontStyle=1;" value="T1 Anvil" vertex="1">
-          <mxGeometry height="44" width="130" x="525" y="510" as="geometry" />
+          <mxGeometry height="44" width="130" x="525" y="800" as="geometry" />
         </mxCell>
         <mxCell id="refined_ore_35" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" value="T1 refined_ore" vertex="1">
-          <mxGeometry height="44" width="130" x="440" y="390" as="geometry" />
+          <mxGeometry height="44" width="130" x="440" y="680" as="geometry" />
         </mxCell>
         <mxCell id="metal_bar_37" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=11;" value="T1 metal_bar" vertex="1">
-          <mxGeometry height="44" width="130" x="610" y="390" as="geometry" />
+          <mxGeometry height="44" width="130" x="610" y="680" as="geometry" />
         </mxCell>
         <mxCell id="table_39" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;fontStyle=1;" value="T1 Table" vertex="1">
-          <mxGeometry height="44" width="130" x="925" y="510" as="geometry" />
+          <mxGeometry height="44" width="130" x="925" y="800" as="geometry" />
         </mxCell>
         <mxCell id="plank_40" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" value="T1 plank" vertex="1">
-          <mxGeometry height="44" width="130" x="840" y="390" as="geometry" />
+          <mxGeometry height="44" width="130" x="840" y="680" as="geometry" />
         </mxCell>
         <mxCell id="reinforced_frame_42" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" value="T1 reinforced_frame" vertex="1">
-          <mxGeometry height="44" width="130" x="1010" y="390" as="geometry" />
+          <mxGeometry height="44" width="130" x="1010" y="680" as="geometry" />
         </mxCell>
         <mxCell id="kiln_44" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;fontStyle=1;" value="T1 Kiln" vertex="1">
-          <mxGeometry height="44" width="130" x="1325" y="510" as="geometry" />
+          <mxGeometry height="44" width="130" x="1325" y="800" as="geometry" />
         </mxCell>
         <mxCell id="refined_clay_45" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" value="T1 refined_clay" vertex="1">
-          <mxGeometry height="44" width="130" x="1240" y="390" as="geometry" />
+          <mxGeometry height="44" width="130" x="1240" y="680" as="geometry" />
         </mxCell>
         <mxCell id="refined_ore_47" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" value="T1 refined_ore" vertex="1">
-          <mxGeometry height="44" width="130" x="1410" y="390" as="geometry" />
+          <mxGeometry height="44" width="130" x="1410" y="680" as="geometry" />
         </mxCell>
         <mxCell id="spinningwheel_49" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;fontStyle=1;" value="T1 Spinning Wheel" vertex="1">
-          <mxGeometry height="44" width="130" x="1725" y="510" as="geometry" />
+          <mxGeometry height="44" width="130" x="1725" y="800" as="geometry" />
         </mxCell>
         <mxCell id="plank_50" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" value="T1 plank" vertex="1">
-          <mxGeometry height="44" width="130" x="1640" y="390" as="geometry" />
+          <mxGeometry height="44" width="130" x="1640" y="680" as="geometry" />
         </mxCell>
         <mxCell id="reinforced_frame_52" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" value="T1 reinforced_frame" vertex="1">
-          <mxGeometry height="44" width="130" x="1810" y="390" as="geometry" />
+          <mxGeometry height="44" width="130" x="1810" y="680" as="geometry" />
         </mxCell>
         <mxCell id="loom_54" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;fontStyle=1;" value="T1 Loom (Webstuhl)" vertex="1">
-          <mxGeometry height="44" width="130" x="2125" y="510" as="geometry" />
+          <mxGeometry height="44" width="130" x="2125" y="800" as="geometry" />
         </mxCell>
         <mxCell id="plank_55" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" value="T1 plank" vertex="1">
-          <mxGeometry height="44" width="130" x="2040" y="390" as="geometry" />
+          <mxGeometry height="44" width="130" x="2040" y="680" as="geometry" />
         </mxCell>
         <mxCell id="clockwork_mechanism_57" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=11;" value="T1 clockwork_mechanism" vertex="1">
-          <mxGeometry height="44" width="130" x="2210" y="390" as="geometry" />
+          <mxGeometry height="44" width="130" x="2210" y="680" as="geometry" />
         </mxCell>
         <mxCell id="tanningrack_59" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;fontStyle=1;" value="T1 Tanning Rack" vertex="1">
-          <mxGeometry height="44" width="130" x="2525" y="510" as="geometry" />
+          <mxGeometry height="44" width="130" x="2525" y="800" as="geometry" />
         </mxCell>
         <mxCell id="plank_60" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" value="T1 plank" vertex="1">
-          <mxGeometry height="44" width="130" x="2440" y="390" as="geometry" />
+          <mxGeometry height="44" width="130" x="2440" y="680" as="geometry" />
         </mxCell>
         <mxCell id="refined_ore_62" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" value="T1 refined_ore" vertex="1">
-          <mxGeometry height="44" width="130" x="2610" y="390" as="geometry" />
+          <mxGeometry height="44" width="130" x="2610" y="680" as="geometry" />
         </mxCell>
         <mxCell id="lapidarybench_64" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;fontStyle=1;" value="T1 Lapidary Bench" vertex="1">
-          <mxGeometry height="44" width="130" x="125" y="760" as="geometry" />
+          <mxGeometry height="44" width="130" x="125" y="1050" as="geometry" />
         </mxCell>
         <mxCell id="refined_ore_65" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" value="T1 refined_ore" vertex="1">
-          <mxGeometry height="44" width="130" x="40" y="640" as="geometry" />
+          <mxGeometry height="44" width="130" x="40" y="930" as="geometry" />
         </mxCell>
         <mxCell id="refined_clay_67" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" value="T1 refined_clay" vertex="1">
-          <mxGeometry height="44" width="130" x="210" y="640" as="geometry" />
+          <mxGeometry height="44" width="130" x="210" y="930" as="geometry" />
         </mxCell>
         <mxCell id="quill_69" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;fontStyle=1;" value="T1 Quill" vertex="1">
-          <mxGeometry height="44" width="130" x="525" y="760" as="geometry" />
+          <mxGeometry height="44" width="130" x="525" y="1050" as="geometry" />
         </mxCell>
         <mxCell id="feather_70" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" value="T1 feather" vertex="1">
-          <mxGeometry height="44" width="130" x="440" y="640" as="geometry" />
+          <mxGeometry height="44" width="130" x="440" y="930" as="geometry" />
         </mxCell>
         <mxCell id="dagger_72" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=11;fontStyle=1;" value="T1 dagger" vertex="1">
-          <mxGeometry height="44" width="130" x="610" y="640" as="geometry" />
+          <mxGeometry height="44" width="130" x="610" y="930" as="geometry" />
         </mxCell>
         <mxCell id="mortarpestle_74" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;fontStyle=1;" value="T1 Mortar &amp; Pestle" vertex="1">
-          <mxGeometry height="44" width="130" x="925" y="760" as="geometry" />
+          <mxGeometry height="44" width="130" x="925" y="1050" as="geometry" />
         </mxCell>
         <mxCell id="refined_ore_75" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" value="T1 refined_ore" vertex="1">
-          <mxGeometry height="44" width="130" x="840" y="640" as="geometry" />
+          <mxGeometry height="44" width="130" x="840" y="930" as="geometry" />
         </mxCell>
         <mxCell id="refined_clay_77" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" value="T1 refined_clay" vertex="1">
-          <mxGeometry height="44" width="130" x="1010" y="640" as="geometry" />
+          <mxGeometry height="44" width="130" x="1010" y="930" as="geometry" />
         </mxCell>
         <mxCell id="alchemystand_79" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;fontStyle=1;" value="T1 Alchemy Stand" vertex="1">
-          <mxGeometry height="44" width="130" x="1325" y="760" as="geometry" />
+          <mxGeometry height="44" width="130" x="1325" y="1050" as="geometry" />
         </mxCell>
         <mxCell id="refined_clay_80" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" value="T1 refined_clay" vertex="1">
-          <mxGeometry height="44" width="130" x="1240" y="640" as="geometry" />
+          <mxGeometry height="44" width="130" x="1240" y="930" as="geometry" />
         </mxCell>
         <mxCell id="refined_ore_82" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" value="T1 refined_ore" vertex="1">
-          <mxGeometry height="44" width="130" x="1410" y="640" as="geometry" />
+          <mxGeometry height="44" width="130" x="1410" y="930" as="geometry" />
         </mxCell>
 
         <!-- SECTION 3: tool plus processed (plus raw) to product. Includes materials that need a tool to refine (leather, cut_crystal, clockwork_mechanism) as well as true end products. Every recipe here is fully independent, no shared nodes with any other product. -->
         <mxCell id="leather_84" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=11;" value="T1 leather" vertex="1">
-          <mxGeometry height="44" width="130" x="125" y="1110" as="geometry" />
+          <mxGeometry height="44" width="130" x="125" y="2200" as="geometry" />
         </mxCell>
         <mxCell id="skin_85" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" value="T1 skin" vertex="1">
-          <mxGeometry height="44" width="130" x="40" y="990" as="geometry" />
+          <mxGeometry height="44" width="130" x="40" y="2080" as="geometry" />
         </mxCell>
         <mxCell id="tanningrack_87" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;fontStyle=1;" value="T1 Tanning Rack" vertex="1">
-          <mxGeometry height="44" width="130" x="210" y="990" as="geometry" />
+          <mxGeometry height="44" width="130" x="210" y="2080" as="geometry" />
         </mxCell>
         <mxCell id="cut_crystal_89" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=11;" value="T1 cut_crystal" vertex="1">
-          <mxGeometry height="44" width="130" x="525" y="1110" as="geometry" />
+          <mxGeometry height="44" width="130" x="525" y="2200" as="geometry" />
         </mxCell>
         <mxCell id="crystal_90" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" value="T1 crystal" vertex="1">
-          <mxGeometry height="44" width="130" x="440" y="990" as="geometry" />
+          <mxGeometry height="44" width="130" x="440" y="2080" as="geometry" />
         </mxCell>
         <mxCell id="lapidarybench_92" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;fontStyle=1;" value="T1 Lapidary Bench" vertex="1">
-          <mxGeometry height="44" width="130" x="610" y="990" as="geometry" />
+          <mxGeometry height="44" width="130" x="610" y="2080" as="geometry" />
         </mxCell>
         <mxCell id="clockwork_mechanism_94" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=11;" value="T1 clockwork_mechanism" vertex="1">
-          <mxGeometry height="44" width="130" x="1010" y="1110" as="geometry" />
+          <mxGeometry height="44" width="130" x="1010" y="2200" as="geometry" />
         </mxCell>
         <mxCell id="clockwork_95" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" value="T1 clockwork" vertex="1">
-          <mxGeometry height="44" width="130" x="840" y="990" as="geometry" />
+          <mxGeometry height="44" width="130" x="840" y="2080" as="geometry" />
         </mxCell>
         <mxCell id="refined_ore_97" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" value="T1 refined_ore" vertex="1">
-          <mxGeometry height="44" width="130" x="1010" y="968" as="geometry" />
+          <mxGeometry height="44" width="130" x="1010" y="2058" as="geometry" />
         </mxCell>
         <mxCell id="anvil_99" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;fontStyle=1;" value="T1 Anvil" vertex="1">
-          <mxGeometry height="44" width="130" x="1180" y="990" as="geometry" />
+          <mxGeometry height="44" width="130" x="1180" y="2080" as="geometry" />
         </mxCell>
         <mxCell id="ground_pigment_101" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=11;" value="T1 ground_pigment" vertex="1">
-          <mxGeometry height="44" width="130" x="1495" y="1110" as="geometry" />
+          <mxGeometry height="44" width="130" x="1495" y="2200" as="geometry" />
         </mxCell>
         <mxCell id="pigment_102" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" value="T1 pigment" vertex="1">
-          <mxGeometry height="44" width="130" x="1410" y="990" as="geometry" />
+          <mxGeometry height="44" width="130" x="1410" y="2080" as="geometry" />
         </mxCell>
         <mxCell id="mortarpestle_104" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;fontStyle=1;" value="T1 Mortar &amp; Pestle" vertex="1">
-          <mxGeometry height="44" width="130" x="1580" y="990" as="geometry" />
+          <mxGeometry height="44" width="130" x="1580" y="2080" as="geometry" />
         </mxCell>
         <mxCell id="ink_106" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=11;" value="T1 ink" vertex="1">
-          <mxGeometry height="44" width="130" x="1980" y="1110" as="geometry" />
+          <mxGeometry height="44" width="130" x="1980" y="2200" as="geometry" />
         </mxCell>
         <mxCell id="ground_pigment_107" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=11;" value="T1 ground_pigment" vertex="1">
-          <mxGeometry height="44" width="130" x="1810" y="990" as="geometry" />
+          <mxGeometry height="44" width="130" x="1810" y="2080" as="geometry" />
         </mxCell>
         <mxCell id="glass_pane_109" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=11;" value="T1 glass_pane" vertex="1">
-          <mxGeometry height="44" width="130" x="1980" y="968" as="geometry" />
+          <mxGeometry height="44" width="130" x="1980" y="2058" as="geometry" />
         </mxCell>
         <mxCell id="mortarpestle_111" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;fontStyle=1;" value="T1 Mortar &amp; Pestle" vertex="1">
-          <mxGeometry height="44" width="130" x="2150" y="990" as="geometry" />
+          <mxGeometry height="44" width="130" x="2150" y="2080" as="geometry" />
         </mxCell>
         <mxCell id="parchment_113" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=11;" value="T1 parchment" vertex="1">
-          <mxGeometry height="44" width="130" x="2465" y="1110" as="geometry" />
+          <mxGeometry height="44" width="130" x="2465" y="2200" as="geometry" />
         </mxCell>
         <mxCell id="reed_114" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" value="T1 reed" vertex="1">
-          <mxGeometry height="44" width="130" x="2380" y="990" as="geometry" />
+          <mxGeometry height="44" width="130" x="2380" y="2080" as="geometry" />
         </mxCell>
         <mxCell id="table_116" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;fontStyle=1;" value="T1 Table" vertex="1">
-          <mxGeometry height="44" width="130" x="2550" y="990" as="geometry" />
+          <mxGeometry height="44" width="130" x="2550" y="2080" as="geometry" />
         </mxCell>
         <mxCell id="written_scroll_118" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=11;" value="T1 written_scroll" vertex="1">
-          <mxGeometry height="44" width="130" x="210" y="1360" as="geometry" />
+          <mxGeometry height="44" width="130" x="210" y="2450" as="geometry" />
         </mxCell>
         <mxCell id="parchment_119" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=11;" value="T1 parchment" vertex="1">
-          <mxGeometry height="44" width="130" x="40" y="1240" as="geometry" />
+          <mxGeometry height="44" width="130" x="40" y="2330" as="geometry" />
         </mxCell>
         <mxCell id="ink_121" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=11;" value="T1 ink" vertex="1">
-          <mxGeometry height="44" width="130" x="210" y="1218" as="geometry" />
+          <mxGeometry height="44" width="130" x="210" y="2308" as="geometry" />
         </mxCell>
         <mxCell id="quill_123" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;fontStyle=1;" value="T1 Quill" vertex="1">
-          <mxGeometry height="44" width="130" x="380" y="1240" as="geometry" />
+          <mxGeometry height="44" width="130" x="380" y="2330" as="geometry" />
         </mxCell>
         <mxCell id="poisoned_dagger_125" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=11;" value="T1 poisoned_dagger" vertex="1">
-          <mxGeometry height="44" width="130" x="780" y="1360" as="geometry" />
+          <mxGeometry height="44" width="130" x="780" y="2450" as="geometry" />
         </mxCell>
         <mxCell id="dagger_126" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=11;fontStyle=1;" value="T1 dagger" vertex="1">
-          <mxGeometry height="44" width="130" x="610" y="1240" as="geometry" />
+          <mxGeometry height="44" width="130" x="610" y="2330" as="geometry" />
         </mxCell>
         <mxCell id="venom_128" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" value="T1 venom" vertex="1">
-          <mxGeometry height="44" width="130" x="780" y="1218" as="geometry" />
+          <mxGeometry height="44" width="130" x="780" y="2308" as="geometry" />
         </mxCell>
         <mxCell id="alchemystand_130" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;fontStyle=1;" value="T1 Alchemy Stand" vertex="1">
-          <mxGeometry height="44" width="130" x="950" y="1240" as="geometry" />
+          <mxGeometry height="44" width="130" x="950" y="2330" as="geometry" />
         </mxCell>
         <mxCell id="distilled_essence_132" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=11;" value="T1 distilled_essence" vertex="1">
-          <mxGeometry height="44" width="130" x="1350" y="1360" as="geometry" />
+          <mxGeometry height="44" width="130" x="1350" y="2450" as="geometry" />
         </mxCell>
         <mxCell id="essence_133" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" value="T1 essence" vertex="1">
-          <mxGeometry height="44" width="130" x="1180" y="1240" as="geometry" />
+          <mxGeometry height="44" width="130" x="1180" y="2330" as="geometry" />
         </mxCell>
         <mxCell id="monster_part_135" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" value="T1 monster_part" vertex="1">
-          <mxGeometry height="44" width="130" x="1350" y="1218" as="geometry" />
+          <mxGeometry height="44" width="130" x="1350" y="2308" as="geometry" />
         </mxCell>
         <mxCell id="alchemystand_137" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;fontStyle=1;" value="T1 Alchemy Stand" vertex="1">
-          <mxGeometry height="44" width="130" x="1520" y="1240" as="geometry" />
+          <mxGeometry height="44" width="130" x="1520" y="2330" as="geometry" />
         </mxCell>
         <mxCell id="metal_ingot_139" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=11;" value="T1 metal_ingot" vertex="1">
-          <mxGeometry height="44" width="130" x="1920" y="1360" as="geometry" />
+          <mxGeometry height="44" width="130" x="1920" y="2450" as="geometry" />
         </mxCell>
         <mxCell id="refined_ore_140" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" value="T1 refined_ore" vertex="1">
-          <mxGeometry height="44" width="130" x="1750" y="1240" as="geometry" />
+          <mxGeometry height="44" width="130" x="1750" y="2330" as="geometry" />
         </mxCell>
         <mxCell id="coal_142" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" value="T1 coal" vertex="1">
-          <mxGeometry height="44" width="130" x="1920" y="1218" as="geometry" />
+          <mxGeometry height="44" width="130" x="1920" y="2308" as="geometry" />
         </mxCell>
         <mxCell id="furnace_144" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;fontStyle=1;" value="T1 Furnace" vertex="1">
-          <mxGeometry height="44" width="130" x="2090" y="1240" as="geometry" />
+          <mxGeometry height="44" width="130" x="2090" y="2330" as="geometry" />
         </mxCell>
         <mxCell id="metal_bar_146" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=11;" value="T1 metal_bar" vertex="1">
-          <mxGeometry height="44" width="130" x="2490" y="1360" as="geometry" />
+          <mxGeometry height="44" width="130" x="2490" y="2450" as="geometry" />
         </mxCell>
         <mxCell id="metal_ingot_147" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=11;" value="T1 metal_ingot" vertex="1">
-          <mxGeometry height="44" width="130" x="2320" y="1240" as="geometry" />
+          <mxGeometry height="44" width="130" x="2320" y="2330" as="geometry" />
         </mxCell>
         <mxCell id="coal_149" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" value="T1 coal" vertex="1">
-          <mxGeometry height="44" width="130" x="2490" y="1218" as="geometry" />
+          <mxGeometry height="44" width="130" x="2490" y="2308" as="geometry" />
         </mxCell>
         <mxCell id="furnace_151" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;fontStyle=1;" value="T1 Furnace" vertex="1">
-          <mxGeometry height="44" width="130" x="2660" y="1240" as="geometry" />
+          <mxGeometry height="44" width="130" x="2660" y="2330" as="geometry" />
         </mxCell>
         <mxCell id="sword_153" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=11;fontStyle=1;" value="T1 sword" vertex="1">
-          <mxGeometry height="44" width="130" x="210" y="1610" as="geometry" />
+          <mxGeometry height="44" width="130" x="210" y="2700" as="geometry" />
         </mxCell>
         <mxCell id="metal_bar_154" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=11;" value="T1 metal_bar" vertex="1">
-          <mxGeometry height="44" width="130" x="40" y="1490" as="geometry" />
+          <mxGeometry height="44" width="130" x="40" y="2580" as="geometry" />
         </mxCell>
         <mxCell id="plank_156" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" value="T1 plank" vertex="1">
-          <mxGeometry height="44" width="130" x="210" y="1468" as="geometry" />
+          <mxGeometry height="44" width="130" x="210" y="2558" as="geometry" />
         </mxCell>
         <mxCell id="anvil_158" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;fontStyle=1;" value="T1 Anvil" vertex="1">
-          <mxGeometry height="44" width="130" x="380" y="1490" as="geometry" />
+          <mxGeometry height="44" width="130" x="380" y="2580" as="geometry" />
         </mxCell>
         <mxCell id="dagger_160" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=11;fontStyle=1;" value="T1 dagger" vertex="1">
-          <mxGeometry height="44" width="130" x="695" y="1610" as="geometry" />
+          <mxGeometry height="44" width="130" x="695" y="2700" as="geometry" />
         </mxCell>
         <mxCell id="metal_bar_161" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=11;" value="T1 metal_bar" vertex="1">
-          <mxGeometry height="44" width="130" x="610" y="1490" as="geometry" />
+          <mxGeometry height="44" width="130" x="610" y="2580" as="geometry" />
         </mxCell>
         <mxCell id="anvil_163" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;fontStyle=1;" value="T1 Anvil" vertex="1">
-          <mxGeometry height="44" width="130" x="780" y="1490" as="geometry" />
+          <mxGeometry height="44" width="130" x="780" y="2580" as="geometry" />
         </mxCell>
         <mxCell id="armor_plate_165" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=11;fontStyle=1;" value="T1 armor_plate" vertex="1">
-          <mxGeometry height="44" width="130" x="1265" y="1610" as="geometry" />
+          <mxGeometry height="44" width="130" x="1265" y="2700" as="geometry" />
         </mxCell>
         <mxCell id="metal_bar_166" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=11;" value="T1 metal_bar" vertex="1">
-          <mxGeometry height="44" width="130" x="1010" y="1490" as="geometry" />
+          <mxGeometry height="44" width="130" x="1010" y="2580" as="geometry" />
         </mxCell>
         <mxCell id="leather_168" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=11;" value="T1 leather" vertex="1">
-          <mxGeometry height="44" width="130" x="1180" y="1468" as="geometry" />
+          <mxGeometry height="44" width="130" x="1180" y="2558" as="geometry" />
         </mxCell>
         <mxCell id="monster_part_170" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" value="T1 monster_part" vertex="1">
-          <mxGeometry height="44" width="130" x="1350" y="1468" as="geometry" />
+          <mxGeometry height="44" width="130" x="1350" y="2558" as="geometry" />
         </mxCell>
         <mxCell id="anvil_172" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;fontStyle=1;" value="T1 Anvil" vertex="1">
-          <mxGeometry height="44" width="130" x="1520" y="1490" as="geometry" />
+          <mxGeometry height="44" width="130" x="1520" y="2580" as="geometry" />
         </mxCell>
         <mxCell id="beam_174" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=11;" value="T1 beam" vertex="1">
-          <mxGeometry height="44" width="130" x="1835" y="1610" as="geometry" />
+          <mxGeometry height="44" width="130" x="1835" y="2700" as="geometry" />
         </mxCell>
         <mxCell id="plank_175" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" value="T1 plank" vertex="1">
-          <mxGeometry height="44" width="130" x="1750" y="1490" as="geometry" />
+          <mxGeometry height="44" width="130" x="1750" y="2580" as="geometry" />
         </mxCell>
         <mxCell id="table_177" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;fontStyle=1;" value="T1 Table" vertex="1">
-          <mxGeometry height="44" width="130" x="1920" y="1490" as="geometry" />
+          <mxGeometry height="44" width="130" x="1920" y="2580" as="geometry" />
         </mxCell>
         <mxCell id="wooden_shield_179" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=11;fontStyle=1;" value="T1 wooden_shield" vertex="1">
-          <mxGeometry height="44" width="130" x="2320" y="1610" as="geometry" />
+          <mxGeometry height="44" width="130" x="2320" y="2700" as="geometry" />
         </mxCell>
         <mxCell id="plank_180" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" value="T1 plank" vertex="1">
-          <mxGeometry height="44" width="130" x="2150" y="1490" as="geometry" />
+          <mxGeometry height="44" width="130" x="2150" y="2580" as="geometry" />
         </mxCell>
         <mxCell id="leather_182" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=11;" value="T1 leather" vertex="1">
-          <mxGeometry height="44" width="130" x="2320" y="1468" as="geometry" />
+          <mxGeometry height="44" width="130" x="2320" y="2558" as="geometry" />
         </mxCell>
         <mxCell id="table_184" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;fontStyle=1;" value="T1 Table" vertex="1">
-          <mxGeometry height="44" width="130" x="2490" y="1490" as="geometry" />
+          <mxGeometry height="44" width="130" x="2490" y="2580" as="geometry" />
         </mxCell>
         <mxCell id="cart_186" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=11;fontStyle=1;" value="T1 cart" vertex="1">
-          <mxGeometry height="44" width="130" x="210" y="1860" as="geometry" />
+          <mxGeometry height="44" width="130" x="210" y="2950" as="geometry" />
         </mxCell>
         <mxCell id="beam_187" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=11;" value="T1 beam" vertex="1">
-          <mxGeometry height="44" width="130" x="40" y="1740" as="geometry" />
+          <mxGeometry height="44" width="130" x="40" y="2830" as="geometry" />
         </mxCell>
         <mxCell id="plank_189" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" value="T1 plank" vertex="1">
-          <mxGeometry height="44" width="130" x="210" y="1718" as="geometry" />
+          <mxGeometry height="44" width="130" x="210" y="2808" as="geometry" />
         </mxCell>
         <mxCell id="table_191" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;fontStyle=1;" value="T1 Table" vertex="1">
-          <mxGeometry height="44" width="130" x="380" y="1740" as="geometry" />
+          <mxGeometry height="44" width="130" x="380" y="2830" as="geometry" />
         </mxCell>
         <mxCell id="fired_brick_193" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=11;" value="T1 fired_brick" vertex="1">
-          <mxGeometry height="44" width="130" x="695" y="1860" as="geometry" />
+          <mxGeometry height="44" width="130" x="695" y="2950" as="geometry" />
         </mxCell>
         <mxCell id="refined_clay_194" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" value="T1 refined_clay" vertex="1">
-          <mxGeometry height="44" width="130" x="610" y="1740" as="geometry" />
+          <mxGeometry height="44" width="130" x="610" y="2830" as="geometry" />
         </mxCell>
         <mxCell id="kiln_196" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;fontStyle=1;" value="T1 Kiln" vertex="1">
-          <mxGeometry height="44" width="130" x="780" y="1740" as="geometry" />
+          <mxGeometry height="44" width="130" x="780" y="2830" as="geometry" />
         </mxCell>
         <mxCell id="glass_pane_198" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=11;" value="T1 glass_pane" vertex="1">
-          <mxGeometry height="44" width="130" x="1095" y="1860" as="geometry" />
+          <mxGeometry height="44" width="130" x="1095" y="2950" as="geometry" />
         </mxCell>
         <mxCell id="sand_199" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" value="T1 sand" vertex="1">
-          <mxGeometry height="44" width="130" x="1010" y="1740" as="geometry" />
+          <mxGeometry height="44" width="130" x="1010" y="2830" as="geometry" />
         </mxCell>
         <mxCell id="kiln_201" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;fontStyle=1;" value="T1 Kiln" vertex="1">
-          <mxGeometry height="44" width="130" x="1180" y="1740" as="geometry" />
+          <mxGeometry height="44" width="130" x="1180" y="2830" as="geometry" />
         </mxCell>
         <mxCell id="glass_lantern_203" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=11;fontStyle=1;" value="T1 glass_lantern" vertex="1">
-          <mxGeometry height="44" width="130" x="1665" y="1860" as="geometry" />
+          <mxGeometry height="44" width="130" x="1665" y="2950" as="geometry" />
         </mxCell>
         <mxCell id="glass_pane_204" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=11;" value="T1 glass_pane" vertex="1">
-          <mxGeometry height="44" width="130" x="1410" y="1740" as="geometry" />
+          <mxGeometry height="44" width="130" x="1410" y="2830" as="geometry" />
         </mxCell>
         <mxCell id="metal_bar_206" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=11;" value="T1 metal_bar" vertex="1">
-          <mxGeometry height="44" width="130" x="1580" y="1718" as="geometry" />
+          <mxGeometry height="44" width="130" x="1580" y="2808" as="geometry" />
         </mxCell>
         <mxCell id="cut_crystal_208" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=11;" value="T1 cut_crystal" vertex="1">
-          <mxGeometry height="44" width="130" x="1750" y="1718" as="geometry" />
+          <mxGeometry height="44" width="130" x="1750" y="2808" as="geometry" />
         </mxCell>
         <mxCell id="kiln_210" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;fontStyle=1;" value="T1 Kiln" vertex="1">
-          <mxGeometry height="44" width="130" x="1920" y="1740" as="geometry" />
+          <mxGeometry height="44" width="130" x="1920" y="2830" as="geometry" />
         </mxCell>
         <mxCell id="thread_212" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=11;" value="T1 thread" vertex="1">
-          <mxGeometry height="44" width="130" x="2235" y="1860" as="geometry" />
+          <mxGeometry height="44" width="130" x="2235" y="2950" as="geometry" />
         </mxCell>
         <mxCell id="fiber_213" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" value="T1 fiber" vertex="1">
-          <mxGeometry height="44" width="130" x="2150" y="1740" as="geometry" />
+          <mxGeometry height="44" width="130" x="2150" y="2830" as="geometry" />
         </mxCell>
         <mxCell id="spinningwheel_215" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;fontStyle=1;" value="T1 Spinning Wheel" vertex="1">
-          <mxGeometry height="44" width="130" x="2320" y="1740" as="geometry" />
+          <mxGeometry height="44" width="130" x="2320" y="2830" as="geometry" />
         </mxCell>
         <mxCell id="quilted_thread_217" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=11;" value="T1 quilted_thread" vertex="1">
-          <mxGeometry height="44" width="130" x="2635" y="1860" as="geometry" />
+          <mxGeometry height="44" width="130" x="2635" y="2950" as="geometry" />
         </mxCell>
         <mxCell id="feather_218" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" value="T1 feather" vertex="1">
-          <mxGeometry height="44" width="130" x="2550" y="1740" as="geometry" />
+          <mxGeometry height="44" width="130" x="2550" y="2830" as="geometry" />
         </mxCell>
         <mxCell id="spinningwheel_220" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;fontStyle=1;" value="T1 Spinning Wheel" vertex="1">
-          <mxGeometry height="44" width="130" x="2720" y="1740" as="geometry" />
+          <mxGeometry height="44" width="130" x="2720" y="2830" as="geometry" />
         </mxCell>
         <mxCell id="woven_cloth_222" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=11;" value="T1 woven_cloth" vertex="1">
-          <mxGeometry height="44" width="130" x="125" y="2110" as="geometry" />
+          <mxGeometry height="44" width="130" x="125" y="3200" as="geometry" />
         </mxCell>
         <mxCell id="thread_223" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=11;" value="T1 thread" vertex="1">
-          <mxGeometry height="44" width="130" x="40" y="1990" as="geometry" />
-        </mxCell>
-        <mxCell id="loom_225" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;fontStyle=1;" value="T1 Loom (Webstuhl)" vertex="1">
-          <mxGeometry height="44" width="130" x="210" y="1990" as="geometry" />
-        </mxCell>
-        <mxCell id="garment_227" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=11;fontStyle=1;" value="T1 garment" vertex="1">
-          <mxGeometry height="44" width="130" x="695" y="2110" as="geometry" />
-        </mxCell>
-        <mxCell id="woven_cloth_228" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=11;" value="T1 woven_cloth" vertex="1">
-          <mxGeometry height="44" width="130" x="440" y="1990" as="geometry" />
-        </mxCell>
-        <mxCell id="leather_230" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=11;" value="T1 leather" vertex="1">
-          <mxGeometry height="44" width="130" x="610" y="1968" as="geometry" />
-        </mxCell>
-        <mxCell id="quilted_thread_232" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=11;" value="T1 quilted_thread" vertex="1">
-          <mxGeometry height="44" width="130" x="780" y="1968" as="geometry" />
-        </mxCell>
-        <mxCell id="loom_234" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;fontStyle=1;" value="T1 Loom (Webstuhl)" vertex="1">
-          <mxGeometry height="44" width="130" x="950" y="1990" as="geometry" />
-        </mxCell>
-
-
-        <!-- SECTION 1 (continued): new multi-raw-material basic recipes -->
-        <mxCell id="venomous_extract_236" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" value="T1 venomous_extract" vertex="1">
-          <mxGeometry height="44" width="130" x="40" y="2380" as="geometry" />
-        </mxCell>
-        <mxCell id="herbs_237" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" value="T1 herbs" vertex="1">
-          <mxGeometry height="44" width="130" x="40" y="2260" as="geometry" />
-        </mxCell>
-        <mxCell id="venom_239" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" value="T1 venom" vertex="1">
-          <mxGeometry height="44" width="130" x="210" y="2260" as="geometry" />
-        </mxCell>
-        <mxCell id="arcane_dust_241" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" value="T1 arcane_dust" vertex="1">
-          <mxGeometry height="44" width="130" x="440" y="2380" as="geometry" />
-        </mxCell>
-        <mxCell id="crystal_242" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" value="T1 crystal" vertex="1">
-          <mxGeometry height="44" width="130" x="440" y="2260" as="geometry" />
-        </mxCell>
-        <mxCell id="essence_244" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" value="T1 essence" vertex="1">
-          <mxGeometry height="44" width="130" x="610" y="2260" as="geometry" />
-        </mxCell>
-        <mxCell id="medicinal_paste_246" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" value="T1 medicinal_paste" vertex="1">
-          <mxGeometry height="44" width="130" x="840" y="2380" as="geometry" />
-        </mxCell>
-        <mxCell id="herbs_247" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" value="T1 herbs" vertex="1">
-          <mxGeometry height="44" width="130" x="840" y="2260" as="geometry" />
-        </mxCell>
-        <mxCell id="harvest_249" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" value="T1 harvest" vertex="1">
-          <mxGeometry height="44" width="130" x="1010" y="2260" as="geometry" />
-        </mxCell>
-        <mxCell id="alloy_dust_251" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" value="T1 alloy_dust" vertex="1">
-          <mxGeometry height="44" width="130" x="1240" y="2380" as="geometry" />
-        </mxCell>
-        <mxCell id="ore_252" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" value="T1 ore" vertex="1">
-          <mxGeometry height="44" width="130" x="1240" y="2260" as="geometry" />
-        </mxCell>
-        <mxCell id="crystal_254" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" value="T1 crystal" vertex="1">
-          <mxGeometry height="44" width="130" x="1410" y="2238" as="geometry" />
-        </mxCell>
-        <mxCell id="essence_256" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" value="T1 essence" vertex="1">
-          <mxGeometry height="44" width="130" x="1580" y="2260" as="geometry" />
-        </mxCell>
-        <mxCell id="enchanterstable_258" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;fontStyle=1;" value="T1 Enchanter's Table" vertex="1">
-          <mxGeometry height="44" width="130" x="125" y="2730" as="geometry" />
-        </mxCell>
-        <mxCell id="plank_259" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" value="T1 plank" vertex="1">
-          <mxGeometry height="44" width="130" x="40" y="2610" as="geometry" />
-        </mxCell>
-        <mxCell id="cut_crystal_261" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=11;" value="T1 cut_crystal" vertex="1">
-          <mxGeometry height="44" width="130" x="210" y="2588" as="geometry" />
-        </mxCell>
-        <mxCell id="reinforced_frame_263" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" value="T1 reinforced_frame" vertex="1">
-          <mxGeometry height="44" width="130" x="380" y="2610" as="geometry" />
-        </mxCell>
-        <mxCell id="hunters_charm_265" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=11;fontStyle=1;" value="T1 hunters_charm" vertex="1">
           <mxGeometry height="44" width="130" x="40" y="3080" as="geometry" />
         </mxCell>
-        <mxCell id="trophy_charm_266" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=11;" value="T1 trophy_charm" vertex="1">
-          <mxGeometry height="44" width="130" x="40" y="2960" as="geometry" />
+        <mxCell id="loom_225" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;fontStyle=1;" value="T1 Loom (Webstuhl)" vertex="1">
+          <mxGeometry height="44" width="130" x="210" y="3080" as="geometry" />
         </mxCell>
-        <mxCell id="bone_shard_268" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=11;" value="T1 bone_shard" vertex="1">
-          <mxGeometry height="44" width="130" x="210" y="2938" as="geometry" />
+        <mxCell id="garment_227" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=11;fontStyle=1;" value="T1 garment" vertex="1">
+          <mxGeometry height="44" width="130" x="695" y="3200" as="geometry" />
         </mxCell>
-        <mxCell id="knife_270" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;fontStyle=1;dashed=1;" value="Knife (starter, no recipe)" vertex="1">
-          <mxGeometry height="44" width="130" x="380" y="2960" as="geometry" />
+        <mxCell id="woven_cloth_228" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=11;" value="T1 woven_cloth" vertex="1">
+          <mxGeometry height="44" width="130" x="440" y="3080" as="geometry" />
         </mxCell>
-        <mxCell id="sharpened_stick_272" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=11;fontStyle=1;" value="T1 sharpened_stick" vertex="1">
-          <mxGeometry height="44" width="130" x="610" y="3080" as="geometry" />
+        <mxCell id="leather_230" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=11;" value="T1 leather" vertex="1">
+          <mxGeometry height="44" width="130" x="610" y="3058" as="geometry" />
         </mxCell>
-        <mxCell id="wood_273" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" value="T1 wood" vertex="1">
-          <mxGeometry height="44" width="130" x="610" y="2960" as="geometry" />
+        <mxCell id="quilted_thread_232" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=11;" value="T1 quilted_thread" vertex="1">
+          <mxGeometry height="44" width="130" x="780" y="3058" as="geometry" />
         </mxCell>
-        <mxCell id="knife_275" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;fontStyle=1;dashed=1;" value="Knife (starter, no recipe)" vertex="1">
-          <mxGeometry height="44" width="130" x="780" y="2960" as="geometry" />
+        <mxCell id="loom_234" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;fontStyle=1;" value="T1 Loom (Webstuhl)" vertex="1">
+          <mxGeometry height="44" width="130" x="950" y="3080" as="geometry" />
         </mxCell>
-        <mxCell id="venom_vial_277" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=11;fontStyle=1;" value="T1 venom_vial" vertex="1">
-          <mxGeometry height="44" width="130" x="40" y="3330" as="geometry" />
-        </mxCell>
-        <mxCell id="venomous_extract_278" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" value="T1 venomous_extract" vertex="1">
-          <mxGeometry height="44" width="130" x="40" y="3210" as="geometry" />
-        </mxCell>
-        <mxCell id="alchemystand_280" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;fontStyle=1;" value="T1 Alchemy Stand" vertex="1">
-          <mxGeometry height="44" width="130" x="210" y="3210" as="geometry" />
-        </mxCell>
-        <mxCell id="healing_potion_282" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=11;fontStyle=1;" value="T1 healing_potion" vertex="1">
-          <mxGeometry height="44" width="130" x="440" y="3330" as="geometry" />
-        </mxCell>
-        <mxCell id="herbal_extract_283" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" value="T1 herbal_extract" vertex="1">
-          <mxGeometry height="44" width="130" x="440" y="3210" as="geometry" />
-        </mxCell>
-        <mxCell id="medicinal_paste_285" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" value="T1 medicinal_paste" vertex="1">
-          <mxGeometry height="44" width="130" x="610" y="3188" as="geometry" />
-        </mxCell>
-        <mxCell id="alchemystand_287" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;fontStyle=1;" value="T1 Alchemy Stand" vertex="1">
-          <mxGeometry height="44" width="130" x="780" y="3210" as="geometry" />
-        </mxCell>
-        <mxCell id="enchanted_blade_289" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=11;fontStyle=1;" value="T1 enchanted_blade" vertex="1">
-          <mxGeometry height="44" width="130" x="40" y="3580" as="geometry" />
-        </mxCell>
-        <mxCell id="dagger_290" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=11;fontStyle=1;" value="T1 dagger" vertex="1">
-          <mxGeometry height="44" width="130" x="40" y="3460" as="geometry" />
-        </mxCell>
-        <mxCell id="distilled_essence_292" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=11;" value="T1 distilled_essence" vertex="1">
-          <mxGeometry height="44" width="130" x="210" y="3438" as="geometry" />
-        </mxCell>
-        <mxCell id="arcane_dust_294" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" value="T1 arcane_dust" vertex="1">
-          <mxGeometry height="44" width="130" x="380" y="3438" as="geometry" />
-        </mxCell>
-        <mxCell id="enchanterstable_296" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;fontStyle=1;" value="T1 Enchanter's Table" vertex="1">
-          <mxGeometry height="44" width="130" x="550" y="3460" as="geometry" />
-        </mxCell>
-
 
         <!-- Edges -->
         <mxCell id="e_3" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontSize=10;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" source="ore_2" target="refined_ore_1" value="5" edge="1"><mxGeometry relative="1" as="geometry" /></mxCell>
@@ -638,34 +526,6 @@
         <mxCell id="e_231" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontSize=10;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" source="leather_230" target="garment_227" value="1" edge="1"><mxGeometry relative="1" as="geometry" /></mxCell>
         <mxCell id="e_233" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontSize=10;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" source="quilted_thread_232" target="garment_227" value="1" edge="1"><mxGeometry relative="1" as="geometry" /></mxCell>
         <mxCell id="e_235" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontSize=10;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" source="loom_234" target="garment_227" value="1" edge="1"><mxGeometry relative="1" as="geometry" /></mxCell>
-
-        <!-- New edges: knife starter tool, alchemist/poisoner/enchanter chains -->
-        <mxCell id="e_238" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontSize=10;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" source="herbs_237" target="venomous_extract_236" value="4" edge="1"><mxGeometry relative="1" as="geometry" /></mxCell>
-        <mxCell id="e_240" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontSize=10;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" source="venom_239" target="venomous_extract_236" value="3" edge="1"><mxGeometry relative="1" as="geometry" /></mxCell>
-        <mxCell id="e_243" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontSize=10;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" source="crystal_242" target="arcane_dust_241" value="3" edge="1"><mxGeometry relative="1" as="geometry" /></mxCell>
-        <mxCell id="e_245" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontSize=10;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" source="essence_244" target="arcane_dust_241" value="2" edge="1"><mxGeometry relative="1" as="geometry" /></mxCell>
-        <mxCell id="e_248" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontSize=10;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" source="herbs_247" target="medicinal_paste_246" value="4" edge="1"><mxGeometry relative="1" as="geometry" /></mxCell>
-        <mxCell id="e_250" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontSize=10;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" source="harvest_249" target="medicinal_paste_246" value="2" edge="1"><mxGeometry relative="1" as="geometry" /></mxCell>
-        <mxCell id="e_253" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontSize=10;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" source="ore_252" target="alloy_dust_251" value="3" edge="1"><mxGeometry relative="1" as="geometry" /></mxCell>
-        <mxCell id="e_255" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontSize=10;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" source="crystal_254" target="alloy_dust_251" value="2" edge="1"><mxGeometry relative="1" as="geometry" /></mxCell>
-        <mxCell id="e_257" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontSize=10;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" source="essence_256" target="alloy_dust_251" value="1" edge="1"><mxGeometry relative="1" as="geometry" /></mxCell>
-        <mxCell id="e_260" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontSize=10;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" source="plank_259" target="enchanterstable_258" value="6" edge="1"><mxGeometry relative="1" as="geometry" /></mxCell>
-        <mxCell id="e_262" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontSize=10;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" source="cut_crystal_261" target="enchanterstable_258" value="2" edge="1"><mxGeometry relative="1" as="geometry" /></mxCell>
-        <mxCell id="e_264" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontSize=10;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" source="reinforced_frame_263" target="enchanterstable_258" value="2" edge="1"><mxGeometry relative="1" as="geometry" /></mxCell>
-        <mxCell id="e_267" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontSize=10;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" source="trophy_charm_266" target="hunters_charm_265" value="2" edge="1"><mxGeometry relative="1" as="geometry" /></mxCell>
-        <mxCell id="e_269" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontSize=10;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" source="bone_shard_268" target="hunters_charm_265" value="3" edge="1"><mxGeometry relative="1" as="geometry" /></mxCell>
-        <mxCell id="e_271" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontSize=10;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" source="knife_270" target="hunters_charm_265" value="1" edge="1"><mxGeometry relative="1" as="geometry" /></mxCell>
-        <mxCell id="e_274" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontSize=10;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" source="wood_273" target="sharpened_stick_272" value="2" edge="1"><mxGeometry relative="1" as="geometry" /></mxCell>
-        <mxCell id="e_276" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontSize=10;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" source="knife_275" target="sharpened_stick_272" value="1" edge="1"><mxGeometry relative="1" as="geometry" /></mxCell>
-        <mxCell id="e_279" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontSize=10;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" source="venomous_extract_278" target="venom_vial_277" value="3" edge="1"><mxGeometry relative="1" as="geometry" /></mxCell>
-        <mxCell id="e_281" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontSize=10;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" source="alchemystand_280" target="venom_vial_277" value="1" edge="1"><mxGeometry relative="1" as="geometry" /></mxCell>
-        <mxCell id="e_284" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontSize=10;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" source="herbal_extract_283" target="healing_potion_282" value="3" edge="1"><mxGeometry relative="1" as="geometry" /></mxCell>
-        <mxCell id="e_286" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontSize=10;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" source="medicinal_paste_285" target="healing_potion_282" value="2" edge="1"><mxGeometry relative="1" as="geometry" /></mxCell>
-        <mxCell id="e_288" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontSize=10;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" source="alchemystand_287" target="healing_potion_282" value="1" edge="1"><mxGeometry relative="1" as="geometry" /></mxCell>
-        <mxCell id="e_291" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontSize=10;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" source="dagger_290" target="enchanted_blade_289" value="1" edge="1"><mxGeometry relative="1" as="geometry" /></mxCell>
-        <mxCell id="e_293" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontSize=10;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" source="distilled_essence_292" target="enchanted_blade_289" value="2" edge="1"><mxGeometry relative="1" as="geometry" /></mxCell>
-        <mxCell id="e_295" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontSize=10;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" source="arcane_dust_294" target="enchanted_blade_289" value="3" edge="1"><mxGeometry relative="1" as="geometry" /></mxCell>
-        <mxCell id="e_297" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontSize=10;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" source="enchanterstable_296" target="enchanted_blade_289" value="1" edge="1"><mxGeometry relative="1" as="geometry" /></mxCell>
       </root>
     </mxGraphModel>
   </diagram>

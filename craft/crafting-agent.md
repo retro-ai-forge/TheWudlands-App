@@ -30,6 +30,21 @@ to the single-output form (`coal` now costs 3 wood, `bone_shard` 2 bone,
 in this diagram now produces exactly one unit of its output; cost-per-craft
 is the only thing that varies.
 
+## Layout: new recipes wrap into their real section, never bolt on below everything
+
+A section that gains new recipes after the fact must wrap *within its own
+row band*, not get appended as a disconnected block under Section 3 - even
+though every recipe there is technically self-contained regardless of where
+it sits on the canvas, a chunk of "Section 1" floating below the whole
+diagram reads as an unrelated appendix, not as Section 1. Concretely: when
+Section 1 or Section 2 needs new rows, every row at or below the insertion
+point (the rest of Section 1/2, all of Section 2/3) shifts down by however
+much room the new rows need, so the new content lands in the gap it just
+opened up instead of tacked on past the diagram's true end. Section 3, being
+last, only ever needs to grow downward - but still directly below the rest
+of Section 3, with the standard section gap, not after some other section's
+own new content that happens to end at a smaller y.
+
 ## The one hard rule: no node has more than one outgoing edge
 
 Every material or tool that appears as an ingredient is a **fresh, dedicated
@@ -120,6 +135,18 @@ need the Knife, it's drawn twice. It's styled as a tool (blue, bold) but
 with a dashed border and the label `Knife (starter, no recipe)`, so it
 reads unambiguously as "granted, not crafted" even in a plain-text export.
 
+Real cutting/slicing/whittling actions are the Knife's whole domain, and it
+now covers most of them where nothing else already implies a blade: `club`
+(raw wood - Valheim's actual first weapon, the precedent already cited
+above), `sharpened_stick`, `hunters_charm`, `dressed_meat` (raw `meat`,
+butchered before it can be cooked - see Hearth below), `trimmed_pelt` (raw
+`hide`, cut to shape without tanning - `hide` is kept whole per its own
+section below, unlike `skin`), and `fur_garment` (a second Knife pass over
+`trimmed_pelt`, the fur equivalent of woven `garment`). Recipes that already
+consume a `dagger` as an ingredient (`poisoned_dagger`, `enchanted_blade`)
+don't also need a Knife - the blade requirement is already satisfied by the
+dagger itself.
+
 ## Color legend
 
 | Style | Meaning |
@@ -149,8 +176,12 @@ checking for whenever a new family is proposed:
 
   `hide` was deliberately left untouched through all of this — it's a
   separate, distinct raw family reserved for winter-wear/insulation use
-  (fur kept whole, not tanned), not yet built out. Don't reuse `hide` for
-  tanning inputs; that's `skin`'s job.
+  (fur kept whole, not tanned). Don't reuse `hide` for tanning inputs;
+  that's `skin`'s job. It's since been built out (see "Cooking, and the
+  last two raw families" below): `trimmed_pelt` (`hide` + Knife, no
+  tanning — cut to shape, fur kept whole, exactly the distinction this
+  paragraph draws) feeds `fur_garment`, the fur equivalent of the woven
+  `garment` `skin`/`leather` already had.
 
 - **`cloth`** — same shape of problem: its items (`Burlap Cloth`, `Cotton
   Cloth`, `Wool Cloth`, `Silk Cloth`...) already describe *finished, woven*
@@ -274,11 +305,46 @@ Two more Section 1 outputs had no consumer at all before this pass:
   single-purpose trinkets, one recipe uses both: `hunters_charm`
   (`trophy_charm` + `bone_shard` + Knife) — a hunter/trapper's carved
   amulet, the kind of thing a Knife alone is realistically enough to make.
-  `sharpened_stick` (raw `wood` + Knife) sits alongside it as the simplest
-  possible craft in the whole diagram — the literal first thing a new
-  character can make, with only what they start with and whatever they can
-  pick up off the ground, the same bootstrap role Minecraft's stick or
-  Valheim's club plays before any tool station exists.
+  `sharpened_stick` and `club` (raw `wood` + Knife, nothing else) sit
+  alongside it as the simplest possible crafts in the whole diagram — the
+  literal first things a new character can make, with only what they start
+  with and whatever they can pick up off the ground, the same bootstrap
+  role Minecraft's stick and Valheim's club play before any tool station
+  exists - except here it's a real recipe, not just a precedent cited in
+  prose.
+
+## Cooking, and the last two raw families: `stone` and `meat`
+
+Two raw families were sitting in the base catalog with no recipe anywhere
+consuming them, `stone` and `meat` (the third, `hide`, is covered by
+`trimmed_pelt`/`fur_garment` above) - and Food (baker, butcher, brewmaster,
+cook, pastry, apiarist, barkeep, server) is the single largest profession
+category yet had zero recipes of its own before this pass, despite already
+granting `meat` and `harvest` as starting resources.
+
+Fixed with a new **Hearth** tool (Section 2, `stone` + `plank` - a stone
+fire-ring with a wooden frame, the simplest possible campfire, needing
+nothing more advanced than what Section 1 already produces) and a small
+cooking chain: `dressed_meat` (raw `meat` + Knife, butchered before it's
+cooked - the same cut/slice step real cooking always starts with) and
+`baked_harvest` (raw `harvest` + Hearth) are the two basic dishes, and
+`hearty_stew` (fresh copies of `cooked_meat` + `baked_harvest` + Hearth)
+is a proper combined meal built from both of them, the same "assemble two
+already-finished components into a bigger dish" shape `garment` and
+`glass_lantern` already use for their own final assembly step.
+
+## Wrench: a tool built from an existing tool
+
+Section 2 gained a third new addition, **Wrench** (`refined_ore` + an
+existing **Table**, pulled in as an ingredient) - the diagram's second use
+of the Tinkers' Construct Tool Forge pattern already named in "Other
+real-crafting-system patterns" below (build a new tool at/from an existing
+one, not just raw materials), after Enchanter's Table's own `cut_crystal`
+pull-in. `tinkered_gearbox` (`clockwork_mechanism` + `refined_ore` +
+Wrench) is its Section 3 product - a tinsmith's assembled mechanical
+component, giving `clockwork_mechanism` a second consumer beyond the Loom
+and giving CraftMetal's tinsmith profession a recipe of its own to reach
+for.
 
 `alloy_dust` (Section 1, ore + crystal + essence — three raw materials,
 where every other Section 1 recipe combines at most two) rounds out the
