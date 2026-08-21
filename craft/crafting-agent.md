@@ -105,10 +105,13 @@ systems gate their better tools behind earlier ones:
 
 So: an advanced tool's build recipe can require an existing **product**
 copied in from Section 3 (e.g. a metal bar), not only Section‑1‑level
-materials. When that happens, the pulled-in node still uses its Section‑3
-color (tier3/final), even though it's sitting in the Section 2 band — that
-color is what signals "this ingredient is itself the output of a bigger
-recipe," at a glance.
+materials. When that happens, the pulled-in node still uses whatever color
+its own kind gets - yellow if it's a processed material, red if it's a
+finished product - even though it's sitting in the Section 2 band. Since
+yellow no longer splits into two shades (see the color legend above), a
+pulled-in processed material now reads the same as any other yellow node;
+only a pulled-in *finished product* (red) still visually flags "this came
+from a bigger recipe elsewhere."
 
 ### Section 3 — Tool + Processed (+ raw) → Product
 A recipe here always ends in exactly one product and is never connected to
@@ -124,38 +127,23 @@ This section holds both:
   legitimate Section 3 entries too, and other Section 3 recipes (or Section
   2 tool builds) may then reference *fresh copies* of them as ingredients.
 
-### Starter tool: the Knife
+### Starter tool: removed
 
-Every character now begins with a Knife already in hand - the one tool in
-this diagram with no build recipe of its own; it never appears as a
-recipe's *output*, only as an ingredient. Everywhere else a Section 3
-recipe needs "a tool," that tool was itself built in Section 2. The Knife
-is the deliberate exception: real survival/crafting games gate their
-*very* first crafts behind a tool you either start with or make from bare
-hands before anything else exists to build it with (Valheim's earliest
-tools - the club, then the stone axe - exist for exactly this reason: the
-game can't require a tool to make your first tool). Giving every character
-a Knife for free plays the same role here without an awkward "hands only"
-Section 0: it's what turns `trophy_charm` + `bone_shard` (raw monster/bone
-byproducts nothing else consumed - see below) and a plain raw log into
-usable output on turn one, before any Section 2 tool has been built.
+The Knife (a free starter tool, no build recipe, styled blue/dashed) used
+to gate the earliest crafts (`club`, `sharpened_stick`, `hunters_charm`,
+`dressed_meat`, `trimmed_pelt`, `fur_garment`, `trophy_charm`) before any
+Section 2 tool existed. Removed by request - those 7 recipes are now true
+bare-hand crafts (raw material(s) → product, no tool at all), which is
+simpler than the Knife concept it replaces, not a downgrade: nothing
+actually needed a blade specifically, "no tool yet" was the real
+requirement all along. `enchanted_blade` still needs a `dagger` as an
+ingredient for its own reasons, unrelated to this.
 
-Knife recipes are drawn like any other Section 3 entry (tool + processed
-(+raw) → product) and follow the same fresh-copy rule - if two recipes both
-need the Knife, it's drawn twice. It's styled as a tool (blue, bold) but
-with a dashed border and the label `Knife (starter, no recipe)`, so it
-reads unambiguously as "granted, not crafted" even in a plain-text export.
-
-Real cutting/slicing/whittling actions are the Knife's whole domain, and it
-now covers most of them where nothing else already implies a blade: `club`
-(raw wood - Valheim's actual first weapon, the precedent already cited
-above), `sharpened_stick`, `hunters_charm`, `dressed_meat` (raw `meat`,
-butchered before it can be cooked - see Hearth below), `trimmed_pelt` (raw
-`hide`, cut to shape without tanning - `hide` is kept whole per its own
-section below, unlike `skin`), and `fur_garment` (a second Knife pass over
-`trimmed_pelt`, the fur equivalent of woven `garment`). Recipes that already
-consume a `dagger` as an ingredient (`enchanted_blade`) don't also need a
-Knife - the blade requirement is already satisfied by the dagger itself.
+Note for later: `sword`/`greatsword`/`battle_axe`/etc. in Weapons, and
+`club` here, are Valheim's actual early-tool precedent (stone axe before
+metal tools exist) - if a "can't build your first tool without a tool"
+bootstrapping problem ever resurfaces, that's the pattern to reach for
+again, just not via a dedicated Knife node.
 
 ## Blueprints gate every higher-level armor, weapon, and tool
 
@@ -183,12 +171,18 @@ one.
 | Style | Meaning |
 |---|---|
 | Green | Raw material |
-| Yellow | Section 1 processed material |
+| Yellow | Processed material (Section 1 output, or a further-refined Section 3 intermediate that feeds other recipes - one color for both now, see below) |
 | Blue, bold | Tool |
-| Blue, bold, dashed | Starter tool (every character has one; no build recipe) |
 | Purple | Blueprint (required by every higher-level armor/weapon/tool recipe) |
-| Orange | Section 3 intermediate (further-refined, feeds other recipes) |
 | Red, bold | Section 3 end product |
+
+Yellow used to split into two shades - Section 1 processed material vs. a
+further-refined Section 3 intermediate - but that distinction lived in the
+diagram's history (which section a recipe happened to be drawn in), not in
+what the item actually *is*: both are "a processed material something else
+consumes." Merged into one yellow. The color legend still separates *raw*
+from *processed* from *finished product* (green/yellow/red), just not two
+flavors of "processed."
 
 ## Base catalog only holds raw materials, never crafted goods
 
@@ -387,10 +381,11 @@ and giving CraftMetal's tinsmith profession a recipe of its own to reach
 for.
 
 **Axe** (raw `wood` + raw `stone`, no tool needed to bind them) is
-Valheim's actual stone axe, the tool the "Starter tool: the Knife" section
-above cites as precedent but hadn't, until now, actually been a recipe -
-club was that stand-in. Its own product, `firewood` (raw `wood` + Axe), is
-deliberately the simplest possible Axe recipe, the same role
+Valheim's actual stone axe, the tool the "Starter tool: removed" section
+above cites as precedent (its build recipe was lost at some point during
+manual edits and got restored - see below). Its own product, `firewood`
+(raw `wood` + Axe), is deliberately the simplest possible Axe recipe, the
+same role
 `sharpened_stick` plays for the Knife.
 
 ## Two armor tiers: `leather_armor` and `chainmail`
@@ -518,3 +513,82 @@ in Weapons.
   *existing* Tool Station plus iron blocks and seared brick — the precedent
   for Section 2 tools needing a Section‑3 product (Anvil ← metal_bar,
   Loom ← clockwork_mechanism, Quill ← dagger).
+
+## Dismantle mechanic: every final item needs a real material floor
+
+Final (red) items will get 3 states — new/used/broken — each dismantle-able
+for a share of its original materials (80% new, 40% used, 10-20% broken).
+That only works if a final item is built from enough raw units to begin
+with: below ~10-15 raw units, "80% back" and "10% back" round to the same
+handful of materials and the three states stop feeling different. Target:
+every final item should trace back to at least 15 raw units, ideally more.
+
+A blanket "triple every edge" does **not** achieve this — quantities compound
+multiplicatively through chain depth, so tripling sends already-deep chains
+(`sword`, `greatsword`, most metal/armor gear) into the tens of thousands
+while barely moving genuinely shallow recipes (a 1-input bare-hand craft
+goes from 1 to 3, still nowhere near 15). The fix has to be per-item:
+deep chains (`sword`=320, `greatsword`=640, most armor/shields=300-650)
+already clear the floor and are left untouched; shallow recipes get their
+own top-level quantities bumped, or gain a genuine intermediate step,
+until they clear it independently. `dagger` and `Axe` are exempt from this
+floor by design (dagger is deliberately a cheap, early throwaway tool-proxy;
+Axe is a tool, not a dismantle-able final item). When a final/red item is
+itself consumed as an ingredient in another recipe (e.g. `dagger` inside
+`sharpened_stick`/`Quill`, or the `Weapon (any, template)` stand-in inside
+`Weapon (poisoned, template)`), it counts as 1 atomic unit and is not
+decomposed into its own sub-materials for this calculation.
+
+First pass (raise everything below 15 to at least 5, matching a first
+"needs a real second look" bar): `club`, `firewood`, `Quill` got simple
+quantity bumps (more raw material per recipe, same shape). `sharpened_stick`
+got a genuine new step instead — `hardened_stick` (wood + Hearth) now sits
+between raw wood and the final sharpen step, illustrating the "add a step"
+option the quantity-bump option can't express (a stick hardened over fire,
+then sharpened, is a materially different recipe from just "more wood").
+
+Second pass (raise a batch of 8-23-cost items to 22-25+, the real
+dismantle-ready range): `Chitin Shield`(22), `Chitin Armor Piece`(23),
+`bow`(22), `fur_garment`(25), `magic_staff`(22), `hunters_charm`(22),
+`set_of_bolts`(22), `Ebony Armor Piece`(25), `Ebony Shield`(22),
+`Weapon (poisoned, template)`(22), `Wood Shield`(22), `quiver_of_arrows`(24)
+— all via quantity bumps on existing ingredients, except `Ebony Shield`,
+which also picked up a small second ingredient (`bone_shard` ×1) since its
+single-ingredient recipe could only move in steps of 5. `hearty_stew`(22)
+and `Leather Armor Piece`(23) were already inside the target range and were
+left as-is.
+
+Third pass: re-tiering the Armor category and two outliers, once the floor
+numbers made the *relative* pricing across tiers look wrong rather than
+just low.
+
+- `Chitin`/`Leather`/`Ebony Armor Piece` were still priced like their own
+  Shields (22-25) even though a full body-piece should cost meaningfully
+  more than a shield of the same material — every metal tier already had
+  that gap (`Iron Armor Piece` 474 vs `Iron Shield` 320), the organic tiers
+  didn't. Raised via quantity bumps on existing ingredients to ~150 each
+  (`Chitin Armor Piece`=152, `Leather Armor Piece`=150,
+  `Ebony Armor Piece`=150). Their Shields were left untouched — only the
+  Armor Piece side was flagged as underpriced.
+- `Chainmail`/`Iron Armor Piece` were the opposite problem: 474 each, almost
+  entirely just `3× metal_bar`, and barely distinguishable from
+  `Darksteel`/`Meteoric Iron Armor Piece` (475-488) even though those are
+  meant to be the premium tier (`metal_bar` + a rare second ingredient).
+  Cut to `2× metal_bar` = 316 each, which reopens a real gap below
+  Darksteel/Meteoric and above the newly-raised organic tier.
+  `Iron Shield` was brought down in step (`2× metal_bar`→`1×`, 320→162) so
+  Armor Piece still costs visibly more than Shield in the same material —
+  Chainmail has no separate Shield item in this diagram, so only Iron's was
+  touched. Darksteel and Meteoric Iron (armor and shield) were left exactly
+  as-is: with Chainmail/Iron pulled down, they're now unambiguously the
+  most expensive tier, which is the point of being the top tier.
+- `bow` (22) got the "add a step in between" treatment instead of another
+  quantity bump: it now spends `fiber` on the existing `thread` intermediate
+  (6× fiber, Spinning Wheel) rather than raw fiber directly, at ×22 —
+  reusing an intermediate that already existed elsewhere in the diagram
+  rather than inventing a new one. New cost: 152.
+- `greatsword`/`warhammer` (640 each) were judged too expensive relative to
+  everything else once the rest of the ladder moved — cut from `4× metal_bar`
+  to `3×` (with `plank` bumped 2→3 to compensate slightly), landing both at
+  486. `sword` (320) was explicitly left unchanged throughout all three
+  passes.
