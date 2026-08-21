@@ -51,9 +51,12 @@ TRACKED_NFT_COLLECTIONS = (
 
 REQUEST_TIMEOUT_SECONDS = 10
 
-# Subscan rejects `row` above 100 outright, and defaults to 10 when it is
-# omitted - so always ask for the maximum and page through the rest.
-PAGE_SIZE = 100
+# Subscan defaults to 10 rows when `row` is omitted, so always ask
+# explicitly and page through the rest. The old assumption here was that
+# Subscan rejected `row` above 100 outright; in practice this key's plan
+# tier now 403s ("row_limit_exceeded") anywhere above ~20-49, confirmed by
+# probing directly - 20 is the largest value that reliably returns 200.
+PAGE_SIZE = 20
 MAX_PAGES = 20
 
 
