@@ -20,12 +20,12 @@
   {"id": "gold_wrench", "name": "Gold Wrench", "familyId": "wrench", "tier": 5},
   {"id": "star_metal_wrench", "name": "Star Metal Wrench", "familyId": "wrench", "tier": 6},
 
-  {"id": "pine_table", "name": "Pine Table", "familyId": "table", "tier": 1},
-  {"id": "oak_table", "name": "Oak Table", "familyId": "table", "tier": 2},
-  {"id": "ash_table", "name": "Ash Table", "familyId": "table", "tier": 3},
-  {"id": "cedar_table", "name": "Cedar Table", "familyId": "table", "tier": 4},
-  {"id": "ebony_table", "name": "Ebony Table", "familyId": "table", "tier": 5},
-  {"id": "worldroot_table", "name": "Worldroot Table", "familyId": "table", "tier": 6},
+  {"id": "pine_workbench", "name": "Pine Workbench", "familyId": "workbench", "tier": 1},
+  {"id": "oak_workbench", "name": "Oak Workbench", "familyId": "workbench", "tier": 2},
+  {"id": "ash_workbench", "name": "Ash Workbench", "familyId": "workbench", "tier": 3},
+  {"id": "cedar_workbench", "name": "Cedar Workbench", "familyId": "workbench", "tier": 4},
+  {"id": "ebony_workbench", "name": "Ebony Workbench", "familyId": "workbench", "tier": 5},
+  {"id": "worldroot_workbench", "name": "Worldroot Workbench", "familyId": "workbench", "tier": 6},
 
   {"id": "pine_axe", "name": "Pine Stone Axe", "familyId": "axe", "tier": 1},
   {"id": "oak_axe", "name": "Oak Stone Axe", "familyId": "axe", "tier": 2},
