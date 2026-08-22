@@ -1,0 +1,50 @@
+[
+  {"id": "pine_wooden_shield", "name": "Pine Wooden Shield", "familyId": "wooden_shield", "tier": 1},
+  {"id": "oak_wooden_shield", "name": "Oak Wooden Shield", "familyId": "wooden_shield", "tier": 2},
+  {"id": "ash_wooden_shield", "name": "Ash Wooden Shield", "familyId": "wooden_shield", "tier": 3},
+  {"id": "cedar_wooden_shield", "name": "Cedar Wooden Shield", "familyId": "wooden_shield", "tier": 4},
+  {"id": "ebony_wooden_shield", "name": "Ebony Wooden Shield", "familyId": "wooden_shield", "tier": 5},
+  {"id": "worldroot_wooden_shield", "name": "Worldroot Wooden Shield", "familyId": "wooden_shield", "tier": 6},
+
+  {"id": "lead_reinforced_wooden_shield", "name": "Lead Reinforced Wooden Shield", "familyId": "reinforced_wooden_shield", "tier": 1},
+  {"id": "copper_reinforced_wooden_shield", "name": "Copper Reinforced Wooden Shield", "familyId": "reinforced_wooden_shield", "tier": 2},
+  {"id": "iron_reinforced_wooden_shield", "name": "Iron Reinforced Wooden Shield", "familyId": "reinforced_wooden_shield", "tier": 3},
+  {"id": "silver_reinforced_wooden_shield", "name": "Silver Reinforced Wooden Shield", "familyId": "reinforced_wooden_shield", "tier": 4},
+  {"id": "gold_reinforced_wooden_shield", "name": "Gold Reinforced Wooden Shield", "familyId": "reinforced_wooden_shield", "tier": 5},
+  {"id": "star_metal_reinforced_wooden_shield", "name": "Star Metal Reinforced Wooden Shield", "familyId": "reinforced_wooden_shield", "tier": 6},
+
+  {"id": "ironclad_iron_shield", "name": "Ironclad Shield", "familyId": "iron_shield", "tier": 1},
+  {"id": "steelbound_iron_shield", "name": "Steelbound Shield", "familyId": "iron_shield", "tier": 2},
+  {"id": "warforged_iron_shield", "name": "Warforged Iron Shield", "familyId": "iron_shield", "tier": 3},
+  {"id": "ironheart_iron_shield", "name": "Ironheart Shield", "familyId": "iron_shield", "tier": 4},
+  {"id": "ironbound_iron_shield", "name": "Ironbound Shield", "familyId": "iron_shield", "tier": 5},
+  {"id": "deathless_iron_shield", "name": "Deathless Iron Shield", "familyId": "iron_shield", "tier": 6},
+
+  {"id": "dusk_ebony_shield", "name": "Dusk Ebony Shield", "familyId": "ebony_shield", "tier": 1},
+  {"id": "twilight_ebony_shield", "name": "Twilight Ebony Shield", "familyId": "ebony_shield", "tier": 2},
+  {"id": "shadow_ebony_shield", "name": "Shadow Ebony Shield", "familyId": "ebony_shield", "tier": 3},
+  {"id": "midnight_ebony_shield", "name": "Midnight Ebony Shield", "familyId": "ebony_shield", "tier": 4},
+  {"id": "umbral_ebony_shield", "name": "Umbral Ebony Shield", "familyId": "ebony_shield", "tier": 5},
+  {"id": "eclipsed_ebony_shield", "name": "Eclipsed Ebony Shield", "familyId": "ebony_shield", "tier": 6},
+
+  {"id": "beetle_chitin_shield", "name": "Beetle Chitin Shield", "familyId": "chitin_shield", "tier": 1},
+  {"id": "mantis_chitin_shield", "name": "Mantis Chitin Shield", "familyId": "chitin_shield", "tier": 2},
+  {"id": "scorpion_chitin_shield", "name": "Scorpion Chitin Shield", "familyId": "chitin_shield", "tier": 3},
+  {"id": "spider_chitin_shield", "name": "Spider Chitin Shield", "familyId": "chitin_shield", "tier": 4},
+  {"id": "wyrm_chitin_shield", "name": "Wyrm Chitin Shield", "familyId": "chitin_shield", "tier": 5},
+  {"id": "voidling_chitin_shield", "name": "Voidling Chitin Shield", "familyId": "chitin_shield", "tier": 6},
+
+  {"id": "lead_meteoric_iron_shield", "name": "Lead Meteoric Iron Shield", "familyId": "meteoric_iron_shield", "tier": 1},
+  {"id": "copper_meteoric_iron_shield", "name": "Copper Meteoric Iron Shield", "familyId": "meteoric_iron_shield", "tier": 2},
+  {"id": "iron_meteoric_iron_shield", "name": "Iron Meteoric Iron Shield", "familyId": "meteoric_iron_shield", "tier": 3},
+  {"id": "silver_meteoric_iron_shield", "name": "Silver Meteoric Iron Shield", "familyId": "meteoric_iron_shield", "tier": 4},
+  {"id": "gold_meteoric_iron_shield", "name": "Gold Meteoric Iron Shield", "familyId": "meteoric_iron_shield", "tier": 5},
+  {"id": "star_metal_meteoric_iron_shield", "name": "Star Metal Meteoric Iron Shield", "familyId": "meteoric_iron_shield", "tier": 6},
+
+  {"id": "tempered_darksteel_shield", "name": "Tempered Darksteel Shield", "familyId": "darksteel_shield", "tier": 1},
+  {"id": "warded_darksteel_shield", "name": "Warded Darksteel Shield", "familyId": "darksteel_shield", "tier": 2},
+  {"id": "runed_darksteel_shield", "name": "Runed Darksteel Shield", "familyId": "darksteel_shield", "tier": 3},
+  {"id": "sigiled_darksteel_shield", "name": "Sigiled Darksteel Shield", "familyId": "darksteel_shield", "tier": 4},
+  {"id": "shadowforged_darksteel_shield", "name": "Shadowforged Darksteel Shield", "familyId": "darksteel_shield", "tier": 5},
+  {"id": "worldforged_darksteel_shield", "name": "Worldforged Darksteel Shield", "familyId": "darksteel_shield", "tier": 6}
+]
