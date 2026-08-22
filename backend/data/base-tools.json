@@ -27,12 +27,12 @@
   {"id": "ebony_workbench", "name": "Ebony Workbench", "familyId": "workbench", "tier": 5},
   {"id": "worldroot_workbench", "name": "Worldroot Workbench", "familyId": "workbench", "tier": 6},
 
-  {"id": "pine_axe", "name": "Pine Stone Axe", "familyId": "axe", "tier": 1},
-  {"id": "oak_axe", "name": "Oak Stone Axe", "familyId": "axe", "tier": 2},
-  {"id": "ash_axe", "name": "Ash Stone Axe", "familyId": "axe", "tier": 3},
-  {"id": "cedar_axe", "name": "Cedar Stone Axe", "familyId": "axe", "tier": 4},
-  {"id": "ebony_axe", "name": "Ebony Stone Axe", "familyId": "axe", "tier": 5},
-  {"id": "worldroot_axe", "name": "Worldroot Stone Axe", "familyId": "axe", "tier": 6},
+  {"id": "pine_axe_stone", "name": "Pine Stone Axe", "familyId": "axe_stone", "tier": 1},
+  {"id": "oak_axe_stone", "name": "Oak Stone Axe", "familyId": "axe_stone", "tier": 2},
+  {"id": "ash_axe_stone", "name": "Ash Stone Axe", "familyId": "axe_stone", "tier": 3},
+  {"id": "cedar_axe_stone", "name": "Cedar Stone Axe", "familyId": "axe_stone", "tier": 4},
+  {"id": "ebony_axe_stone", "name": "Ebony Stone Axe", "familyId": "axe_stone", "tier": 5},
+  {"id": "worldroot_axe_stone", "name": "Worldroot Stone Axe", "familyId": "axe_stone", "tier": 6},
 
   {"id": "pine_loom", "name": "Pine Loom", "familyId": "loom", "tier": 1},
   {"id": "oak_loom", "name": "Oak Loom", "familyId": "loom", "tier": 2},
