@@ -3,7 +3,7 @@ Catalog of stackable crafting resources (ore, wood, herbs, etc.).
 
 These are aggregate-balance items, not equippable item instances: a player's
 or character's storage holds a running total per resource id, never a slot
-assignment. Loaded once at import time from data/base-resource-items.json,
+assignment. Loaded once at import time from data/base-resources.json,
 the same constant-tuple approach as SOUL_SLOTS in backend.soul_slots.
 """
 
@@ -15,7 +15,7 @@ from pathlib import Path
 
 from backend.professions_catalog import PROFESSION_CATEGORIES
 
-_CATALOG_PATH = Path(__file__).resolve().parent / "data" / "base-resource-items.json"
+_CATALOG_PATH = Path(__file__).resolve().parent / "data" / "base-resources.json"
 _PROFESSION_FAMILIES_PATH = Path(__file__).resolve().parent / "data" / "profession-resource-families.json"
 _SELECTION_RULES_PATH = Path(__file__).resolve().parent / "data" / "resource-selection-rules.json"
 

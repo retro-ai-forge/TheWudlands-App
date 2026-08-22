@@ -1,0 +1,455 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Crafting Recipe Viewer</title>
+<style>
+  :root {
+    --bg: #12141a;
+    --panel: #1a1d26;
+    --panel2: #21252f;
+    --border: #2c303c;
+    --text: #e4e6ee;
+    --text-dim: #8b90a3;
+    --raw: #3a6b3f;
+    --raw-bg: #1c2b1e;
+    --processed: #8a7325;
+    --processed-bg: #2b2718;
+    --final: #8a3a3a;
+    --final-bg: #2b1c1c;
+    --tool: #3a5a8a;
+    --blueprint: #6a3a8a;
+    --accent: #d7a94a;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: "SF Mono", "Cascadia Code", Consolas, monospace;
+    font-size: 14px;
+    padding: 24px;
+  }
+  h1 {
+    font-size: 18px;
+    margin: 0 0 4px;
+    letter-spacing: 0.02em;
+  }
+  .subtitle {
+    color: var(--text-dim);
+    font-size: 12px;
+    margin: 0 0 20px;
+  }
+  .toolbar {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+  }
+  select, input {
+    background: var(--panel2);
+    color: var(--text);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 8px 10px;
+    font-family: inherit;
+    font-size: 13px;
+  }
+  select { min-width: 340px; }
+  input[type="text"] { min-width: 200px; }
+  .layout {
+    display: grid;
+    grid-template-columns: 1fr 340px;
+    gap: 20px;
+    align-items: start;
+  }
+  @media (max-width: 900px) {
+    .layout { grid-template-columns: 1fr; }
+  }
+  .panel {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 16px;
+  }
+  .panel h2 {
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--text-dim);
+    margin: 0 0 12px;
+  }
+  .empty {
+    color: var(--text-dim);
+    font-style: italic;
+  }
+  .node {
+    border-left: 2px solid var(--border);
+    margin-left: 10px;
+    padding-left: 12px;
+  }
+  #tree > .node { margin-left: 0; padding-left: 0; border-left: none; }
+  .row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 4px 8px;
+    border-radius: 4px;
+    margin: 2px 0;
+    flex-wrap: wrap;
+  }
+  .row.raw { background: var(--raw-bg); }
+  .row.processed { background: var(--processed-bg); }
+  .row.final { background: var(--final-bg); }
+  .row.blueprint { background: #241b2e; }
+  .row.root { background: var(--panel2); border: 1px solid var(--accent); padding: 8px 10px; }
+  .qty {
+    color: var(--accent);
+    font-weight: bold;
+    min-width: 2.5em;
+    text-align: right;
+  }
+  .name { color: var(--text); }
+  .fam { color: var(--text-dim); font-size: 11px; }
+  .tag {
+    font-size: 10px;
+    padding: 1px 6px;
+    border-radius: 10px;
+    border: 1px solid;
+    white-space: nowrap;
+  }
+  .tag.tool { border-color: var(--tool); color: #8fb3e8; }
+  .tag.blueprint { border-color: var(--blueprint); color: #c79ce8; }
+  .tag.unconsumed { border-color: var(--text-dim); color: var(--text-dim); }
+  .tag.cat-raw { border-color: var(--raw); color: #7fd08a; }
+  .tag.cat-processed { border-color: var(--processed); color: #e0c565; }
+  .tag.cat-final { border-color: var(--final); color: #e08a8a; }
+  .tag.cat-blueprint { border-color: var(--blueprint); color: #c79ce8; }
+  .tag.tier { border-color: var(--accent); color: var(--accent); font-weight: bold; }
+  .note { color: var(--text-dim); font-size: 11px; margin: -8px 0 20px; }
+  .chevron {
+    display: inline-block;
+    width: 1em;
+    flex-shrink: 0;
+    text-align: center;
+    color: var(--text-dim);
+  }
+  .chevron.spacer { visibility: hidden; }
+  .row.expandable { cursor: pointer; }
+  .row.expandable:hover { outline: 1px solid var(--border); }
+  .children { margin-top: 2px; }
+  table { width: 100%; border-collapse: collapse; font-size: 12px; }
+  th, td { text-align: left; padding: 4px 6px; }
+  th { color: var(--text-dim); font-weight: normal; border-bottom: 1px solid var(--border); }
+  td.n { text-align: right; color: var(--accent); font-variant-numeric: tabular-nums; }
+  tr + tr td { border-top: 1px solid var(--border); }
+  .legend { display: flex; flex-direction: column; gap: 6px; font-size: 12px; margin-bottom: 16px; }
+  .legend .row { padding: 2px 8px; }
+  .toollist { display: flex; flex-wrap: wrap; gap: 6px; }
+</style>
+</head>
+<body>
+  <h1>Crafting Recipe Viewer</h1>
+  <p class="subtitle">craft-recipes.json cross-referenced against every base-*.json catalog — pick a recipe to expand its full raw/processed material tree.</p>
+
+  <div class="toolbar">
+    <select id="recipeSelect"></select>
+    <input type="text" id="filterBox" placeholder="filter list...">
+    <select id="tierSelect">
+      <option value="1">Tier 1</option>
+      <option value="2">Tier 2</option>
+      <option value="3">Tier 3</option>
+      <option value="4">Tier 4</option>
+      <option value="5">Tier 5</option>
+      <option value="6">Tier 6</option>
+    </select>
+  </div>
+  <p class="note">Shows the top-level recipe first. Click any ▸ ingredient to expand what it's made of (one open per level, like an accordion) — quantities shown on expand are per 1 unit of that ingredient; the side panel gives the fully multiplied grand total. Tier applies uniformly down the whole chain (a T{n} craft is assumed to use T{n} ingredients throughout) — a visualization assumption only, the game's actual tier-matching rule isn't decided yet.</p>
+
+  <div class="layout">
+    <div class="panel">
+      <h2>Recipe Tree</h2>
+      <div id="tree"><span class="empty">Select a recipe above.</span></div>
+    </div>
+    <div>
+      <div class="panel" style="margin-bottom:16px;">
+        <h2>Legend</h2>
+        <div class="legend">
+          <div class="row raw"><span class="tag cat-raw">raw</span> mined/gathered material</div>
+          <div class="row processed"><span class="tag cat-processed">processed</span> crafted from a sub-recipe</div>
+          <div class="row final"><span class="tag cat-final">final</span> a separate finished item (▸ if it has its own recipe)</div>
+          <div class="row blueprint"><span class="tag cat-blueprint">blueprint</span> technique required, learned once and never consumed</div>
+        </div>
+      </div>
+      <div class="panel" style="margin-bottom:16px;">
+        <h2>Total Raw Materials</h2>
+        <table id="rawTotals">
+          <thead><tr><th>Material</th><th>Tier</th><th></th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+      <div class="panel" style="margin-bottom:16px;">
+        <h2>Other Items Required</h2>
+        <table id="finalTotals">
+          <thead><tr><th>Item</th><th>Tier</th><th></th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+      <div class="panel">
+        <h2>Tools Used Anywhere In Chain</h2>
+        <div class="toollist" id="toolList"></div>
+      </div>
+    </div>
+  </div>
+
+<script>
+const DATA = __DATA__;
+const families = DATA.families;
+const recipes = DATA.recipes;
+
+function tierName(famId, tier) {
+  const f = families[famId];
+  if (!f) return null;
+  const t = f.tiers[tier - 1];
+  return t ? t.name : f.tiers[f.tiers.length - 1].name;
+}
+function famLabel(famId, tier) {
+  const f = families[famId];
+  if (!f) return famId;
+  const displayName = tier ? (tierName(famId, tier) || f.name) : f.name;
+  return displayName + " (" + famId + ")";
+}
+function famCategory(famId) {
+  const f = families[famId];
+  return f ? f.category : "unknown";
+}
+
+const select = document.getElementById("recipeSelect");
+const filterBox = document.getElementById("filterBox");
+const tierSelect = document.getElementById("tierSelect");
+
+function currentTier() {
+  return parseInt(tierSelect.value, 10);
+}
+
+const recipeFamIds = Object.keys(recipes).sort((a, b) => famLabel(a).localeCompare(famLabel(b)));
+const groups = {};
+for (const famId of recipeFamIds) {
+  const cat = famCategory(famId);
+  (groups[cat] = groups[cat] || []).push(famId);
+}
+const catOrder = ["armor", "shield", "weapon", "food", "potion", "misc", "adventuring_gear", "tool", "processed"];
+
+function populateSelect(filterText, tier) {
+  const prev = select.value;
+  select.innerHTML = "";
+  const ft = (filterText || "").toLowerCase();
+  for (const cat of catOrder) {
+    if (!groups[cat]) continue;
+    const matches = groups[cat].filter(f => famLabel(f, tier).toLowerCase().includes(ft));
+    if (!matches.length) continue;
+    const og = document.createElement("optgroup");
+    og.label = cat;
+    for (const famId of matches) {
+      const opt = document.createElement("option");
+      opt.value = famId;
+      opt.textContent = famLabel(famId, tier);
+      og.appendChild(opt);
+    }
+    select.appendChild(og);
+  }
+  if ([...select.options].some(o => o.value === prev)) select.value = prev;
+}
+populateSelect("", currentTier());
+
+filterBox.addEventListener("input", () => {
+  populateSelect(filterBox.value, currentTier());
+  render(select.value, currentTier());
+});
+select.addEventListener("change", () => render(select.value, currentTier()));
+tierSelect.addEventListener("change", () => {
+  populateSelect(filterBox.value, currentTier());
+  render(select.value, currentTier());
+});
+
+function el(tag, cls, text) {
+  const e = document.createElement(tag);
+  if (cls) e.className = cls;
+  if (text !== undefined) e.textContent = text;
+  return e;
+}
+
+// Interactive tree: clicking an expandable ingredient reveals ITS OWN recipe
+// (quantities are per 1 unit of that ingredient, not multiplied by how many
+// the parent needs) - the fully multiplied grand total lives in the side
+// panel, computed separately by computeTotals(). Siblings under the same
+// parent behave as an accordion: opening one closes any open sibling.
+function buildInteractiveNode(famId, qty, category, tier, isRoot) {
+  const recipe = recipes[famId];
+  const expandable = !!(recipe && recipe.ingredients && recipe.ingredients.length);
+
+  const wrapper = el("div", "node");
+  const row = el("div", "row " + category + (isRoot ? " root" : "") + (expandable ? " expandable" : ""));
+  row.appendChild(el("span", "chevron" + (expandable ? "" : " spacer"), expandable ? "▸" : ""));
+  row.appendChild(el("span", "qty", qty + "x"));
+  row.appendChild(el("span", "name", famLabel(famId, tier)));
+  row.appendChild(el("span", "tag tier", "T" + tier));
+  row.appendChild(el("span", "tag cat-" + (category === "final" ? "final" : category), category));
+  if (recipe && recipe.tool) row.appendChild(el("span", "tag tool", "\u{1F528} " + recipe.tool));
+  wrapper.appendChild(row);
+
+  const childrenBox = el("div", "children");
+  childrenBox.style.display = "none";
+  wrapper.appendChild(childrenBox);
+
+  let populated = false;
+  const childControllers = [];
+  const chevron = row.querySelector(".chevron");
+
+  const controller = {
+    row,
+    expandable,
+    isExpanded: () => childrenBox.style.display !== "none",
+    doExpand: () => {
+      if (!populated) {
+        if (recipe.blueprintFamilyId) {
+          const bp = buildInteractiveNode(recipe.blueprintFamilyId, 1, "blueprint", tier, false);
+          bp.row.appendChild(el("span", "tag unconsumed", "not consumed"));
+          childrenBox.appendChild(bp.wrapper);
+          if (bp.expandable) {
+            wireAccordionClick(bp, childControllers);
+            childControllers.push(bp);
+          }
+        }
+        for (const ing of recipe.ingredients) {
+          const childCat = ing.category === "final_unresolved" ? "final" : ing.category;
+          const child = buildInteractiveNode(ing.familyId, ing.qty, childCat, tier, false);
+          if (!ing.consumed) {
+            child.row.appendChild(el("span", "tag unconsumed", "not consumed"));
+          }
+          childrenBox.appendChild(child.wrapper);
+          if (child.expandable) {
+            wireAccordionClick(child, childControllers);
+            childControllers.push(child);
+          }
+        }
+        populated = true;
+      }
+      childrenBox.style.display = "";
+      chevron.textContent = "▾";
+    },
+    doCollapse: () => {
+      childrenBox.style.display = "none";
+      chevron.textContent = "▸";
+      for (const c of childControllers) {
+        if (c.isExpanded()) c.doCollapse();
+      }
+    },
+    wrapper,
+  };
+  return controller;
+}
+
+function wireAccordionClick(controller, siblingGroup) {
+  controller.row.addEventListener("click", () => {
+    if (controller.isExpanded()) {
+      controller.doCollapse();
+    } else {
+      for (const sib of siblingGroup) {
+        if (sib !== controller && sib.isExpanded()) sib.doCollapse();
+      }
+      controller.doExpand();
+    }
+  });
+}
+
+// Fully multiplied raw/final-item cost of the whole tree, independent of
+// which nodes are expanded in the UI.
+function computeTotals(famId, qty, category, rawTotals, finalTotals, toolSet) {
+  const recipe = recipes[famId];
+  if (recipe && recipe.tool) toolSet.add(recipe.tool);
+  if (category === "raw") {
+    rawTotals[famId] = (rawTotals[famId] || 0) + qty;
+    return;
+  }
+  if (category === "final") {
+    finalTotals[famId] = (finalTotals[famId] || 0) + qty;
+    return;
+  }
+  if (!recipe) {
+    rawTotals[famId] = (rawTotals[famId] || 0) + qty;
+    return;
+  }
+  for (const ing of recipe.ingredients) {
+    const childCat = ing.category === "final_unresolved" ? "final" : ing.category;
+    computeTotals(ing.familyId, ing.qty * qty, childCat, rawTotals, finalTotals, toolSet);
+  }
+}
+
+function renderTable(tableId, totals, tier) {
+  const tbody = document.querySelector("#" + tableId + " tbody");
+  tbody.innerHTML = "";
+  const entries = Object.entries(totals).sort((a, b) => b[1] - a[1]);
+  if (!entries.length) {
+    const tr = document.createElement("tr");
+    const td = el("td", "empty", "—");
+    td.colSpan = 3;
+    tr.appendChild(td);
+    tbody.appendChild(tr);
+    return;
+  }
+  for (const [famId, qty] of entries) {
+    const tr = document.createElement("tr");
+    tr.appendChild(el("td", "", famLabel(famId, tier)));
+    tr.appendChild(el("td", "", "T" + tier));
+    tr.appendChild(el("td", "n", String(qty)));
+    tbody.appendChild(tr);
+  }
+}
+
+function render(famId, tier) {
+  const tree = document.getElementById("tree");
+  tree.innerHTML = "";
+  if (!famId) {
+    tree.appendChild(el("span", "empty", "Select a recipe above."));
+    return;
+  }
+  const rootCategory = famCategory(famId);
+
+  const rootController = buildInteractiveNode(famId, 1, rootCategory, tier, true);
+  tree.appendChild(rootController.wrapper);
+  if (rootController.expandable) {
+    rootController.row.addEventListener("click", () => {
+      if (rootController.isExpanded()) rootController.doCollapse();
+      else rootController.doExpand();
+    });
+    rootController.doExpand();
+  }
+
+  const rawTotals = {};
+  const finalTotals = {};
+  const toolSet = new Set();
+  computeTotals(famId, 1, rootCategory, rawTotals, finalTotals, toolSet);
+
+  renderTable("rawTotals", rawTotals, tier);
+  renderTable("finalTotals", finalTotals, tier);
+
+  const toolListEl = document.getElementById("toolList");
+  toolListEl.innerHTML = "";
+  if (!toolSet.size) {
+    toolListEl.appendChild(el("span", "empty", "none"));
+  } else {
+    for (const t of [...toolSet].sort()) {
+      toolListEl.appendChild(el("span", "tag tool", "\u{1F528} " + t));
+    }
+  }
+}
+
+if (select.options.length) {
+  select.selectedIndex = 0;
+  render(select.value, currentTier());
+}
+</script>
+</body>
+</html>
