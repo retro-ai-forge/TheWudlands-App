@@ -1,0 +1,50 @@
+[
+  {"id": "farmhands_hearty_stew", "name": "Farmhand's Hearty Stew", "familyId": "hearty_stew", "tier": 1},
+  {"id": "travelers_hearty_stew", "name": "Traveler's Hearty Stew", "familyId": "hearty_stew", "tier": 2},
+  {"id": "innkeepers_hearty_stew", "name": "Innkeeper's Hearty Stew", "familyId": "hearty_stew", "tier": 3},
+  {"id": "chieftains_hearty_stew", "name": "Chieftain's Hearty Stew", "familyId": "hearty_stew", "tier": 4},
+  {"id": "highland_hearty_stew", "name": "Highland Hearty Stew", "familyId": "hearty_stew", "tier": 5},
+  {"id": "harvestkings_hearty_stew", "name": "Harvestking's Hearty Stew", "familyId": "hearty_stew", "tier": 6},
+
+  {"id": "cabin_boys_salt_horse", "name": "Cabin Boy's Salt Horse", "familyId": "salt_horse", "tier": 1},
+  {"id": "sailors_salt_horse", "name": "Sailor's Salt Horse", "familyId": "salt_horse", "tier": 2},
+  {"id": "boatswains_salt_horse", "name": "Boatswain's Salt Horse", "familyId": "salt_horse", "tier": 3},
+  {"id": "first_mates_salt_horse", "name": "First Mate's Salt Horse", "familyId": "salt_horse", "tier": 4},
+  {"id": "captains_salt_horse", "name": "Captain's Salt Horse", "familyId": "salt_horse", "tier": 5},
+  {"id": "admirals_salt_horse", "name": "Admiral's Salt Horse", "familyId": "salt_horse", "tier": 6},
+
+  {"id": "campfire_roast_haunch", "name": "Campfire Roast Haunch", "familyId": "roast_haunch", "tier": 1},
+  {"id": "hearthside_roast_haunch", "name": "Hearthside Roast Haunch", "familyId": "roast_haunch", "tier": 2},
+  {"id": "tavern_roast_haunch", "name": "Tavern Roast Haunch", "familyId": "roast_haunch", "tier": 3},
+  {"id": "banquet_roast_haunch", "name": "Banquet Roast Haunch", "familyId": "roast_haunch", "tier": 4},
+  {"id": "feastday_roast_haunch", "name": "Feastday Roast Haunch", "familyId": "roast_haunch", "tier": 5},
+  {"id": "mythic_roast_haunch", "name": "Mythic Roast Haunch", "familyId": "roast_haunch", "tier": 6},
+
+  {"id": "prentice_bangers", "name": "Prentice Bangers", "familyId": "bangers", "tier": 1},
+  {"id": "butchers_bangers", "name": "Butcher's Bangers", "familyId": "bangers", "tier": 2},
+  {"id": "master_butchers_bangers", "name": "Master Butcher's Bangers", "familyId": "bangers", "tier": 3},
+  {"id": "guildmasters_bangers", "name": "Guildmaster's Bangers", "familyId": "bangers", "tier": 4},
+  {"id": "imperial_bangers", "name": "Imperial Bangers", "familyId": "bangers", "tier": 5},
+  {"id": "peerless_bangers", "name": "Peerless Bangers", "familyId": "bangers", "tier": 6},
+
+  {"id": "foragers_squirrel_hoard", "name": "Forager's Squirrel Hoard", "familyId": "squirrel_hoard", "tier": 1},
+  {"id": "scavengers_squirrel_hoard", "name": "Scavenger's Squirrel Hoard", "familyId": "squirrel_hoard", "tier": 2},
+  {"id": "woodland_squirrel_hoard", "name": "Woodland Squirrel Hoard", "familyId": "squirrel_hoard", "tier": 3},
+  {"id": "autumns_squirrel_hoard", "name": "Autumn's Squirrel Hoard", "familyId": "squirrel_hoard", "tier": 4},
+  {"id": "bountiful_squirrel_hoard", "name": "Bountiful Squirrel Hoard", "familyId": "squirrel_hoard", "tier": 5},
+  {"id": "ageless_squirrel_hoard", "name": "Ageless Squirrel Hoard", "familyId": "squirrel_hoard", "tier": 6},
+
+  {"id": "sunfaded_wizened_figs", "name": "Sunfaded Wizened Figs", "familyId": "wizened_figs", "tier": 1},
+  {"id": "windswept_wizened_figs", "name": "Windswept Wizened Figs", "familyId": "wizened_figs", "tier": 2},
+  {"id": "shriveled_wizened_figs", "name": "Shriveled Wizened Figs", "familyId": "wizened_figs", "tier": 3},
+  {"id": "amberfig_wizened_figs", "name": "Amberfig Wizened Figs", "familyId": "wizened_figs", "tier": 4},
+  {"id": "honeyfig_wizened_figs", "name": "Honeyfig Wizened Figs", "familyId": "wizened_figs", "tier": 5},
+  {"id": "ancient_wizened_figs", "name": "Ancient Wizened Figs", "familyId": "wizened_figs", "tier": 6},
+
+  {"id": "skirmishers_iron_ration", "name": "Skirmisher's Iron Ration", "familyId": "iron_ration", "tier": 1},
+  {"id": "soldiers_iron_ration", "name": "Soldier's Iron Ration", "familyId": "iron_ration", "tier": 2},
+  {"id": "veterans_iron_ration", "name": "Veteran's Iron Ration", "familyId": "iron_ration", "tier": 3},
+  {"id": "legionnaires_iron_ration", "name": "Legionnaire's Iron Ration", "familyId": "iron_ration", "tier": 4},
+  {"id": "generals_iron_ration", "name": "General's Iron Ration", "familyId": "iron_ration", "tier": 5},
+  {"id": "warlords_iron_ration", "name": "Warlord's Iron Ration", "familyId": "iron_ration", "tier": 6}
+]

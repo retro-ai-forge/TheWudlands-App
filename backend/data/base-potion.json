@@ -1,0 +1,29 @@
+[
+  {"id": "minor_healing_potion", "name": "Minor Healing Potion", "familyId": "healing_potion", "tier": 1},
+  {"id": "lesser_healing_potion", "name": "Lesser Healing Potion", "familyId": "healing_potion", "tier": 2},
+  {"id": "common_healing_potion", "name": "Common Healing Potion", "familyId": "healing_potion", "tier": 3},
+  {"id": "greater_healing_potion", "name": "Greater Healing Potion", "familyId": "healing_potion", "tier": 4},
+  {"id": "superior_healing_potion", "name": "Superior Healing Potion", "familyId": "healing_potion", "tier": 5},
+  {"id": "supreme_healing_potion", "name": "Supreme Healing Potion", "familyId": "healing_potion", "tier": 6},
+
+  {"id": "minor_mana_potion", "name": "Minor Mana Potion", "familyId": "mana_potion", "tier": 1},
+  {"id": "lesser_mana_potion", "name": "Lesser Mana Potion", "familyId": "mana_potion", "tier": 2},
+  {"id": "common_mana_potion", "name": "Common Mana Potion", "familyId": "mana_potion", "tier": 3},
+  {"id": "greater_mana_potion", "name": "Greater Mana Potion", "familyId": "mana_potion", "tier": 4},
+  {"id": "superior_mana_potion", "name": "Superior Mana Potion", "familyId": "mana_potion", "tier": 5},
+  {"id": "supreme_mana_potion", "name": "Supreme Mana Potion", "familyId": "mana_potion", "tier": 6},
+
+  {"id": "simple_antidote_potion", "name": "Simple Antidote", "familyId": "antidote_potion", "tier": 1},
+  {"id": "basic_antidote_potion", "name": "Basic Antidote", "familyId": "antidote_potion", "tier": 2},
+  {"id": "refined_antidote_potion", "name": "Refined Antidote", "familyId": "antidote_potion", "tier": 3},
+  {"id": "potent_antidote_potion", "name": "Potent Antidote", "familyId": "antidote_potion", "tier": 4},
+  {"id": "concentrated_antidote_potion", "name": "Concentrated Antidote", "familyId": "antidote_potion", "tier": 5},
+  {"id": "masters_antidote_potion", "name": "Master's Antidote", "familyId": "antidote_potion", "tier": 6},
+
+  {"id": "weak_venom_vial", "name": "Weak Venom Vial", "familyId": "venom_vial", "tier": 1},
+  {"id": "mild_venom_vial", "name": "Mild Venom Vial", "familyId": "venom_vial", "tier": 2},
+  {"id": "sharp_venom_vial", "name": "Sharp Venom Vial", "familyId": "venom_vial", "tier": 3},
+  {"id": "vicious_venom_vial", "name": "Vicious Venom Vial", "familyId": "venom_vial", "tier": 4},
+  {"id": "deadly_venom_vial", "name": "Deadly Venom Vial", "familyId": "venom_vial", "tier": 5},
+  {"id": "lethal_venom_vial", "name": "Lethal Venom Vial", "familyId": "venom_vial", "tier": 6}
+]
