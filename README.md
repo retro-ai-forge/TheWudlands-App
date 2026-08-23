@@ -5,6 +5,26 @@ Visit [The Wudlands](https://thewudlands.eu/) to explore the game.
 
 Want to run the project locally? See [SETUP.md](SETUP.md) for the full setup instructions.
 
+## Call for Contributors
+
+The Wudlands is built by the community, for the community. We're actively recruiting contributors across multiple disciplines to help bring this dark fantasy world to life. Whether you're a writer, artist, developer, or designer, there are roles that match your skills and passion.
+
+### 1. Narrative Architects
+
+Write the stories and decide how the adventures should feel. You create branching storylines, rich dialogue, and set the mood for the entire dark fantasy world. Work together with other writers to weave The Wudlands' emerging main storyline — your adventures connect and bring players deeper into the world's larger tale. You define the style, pacing, and tone that brings everything together into one amazing experience.
+
+### 2. Visual & Audio Creators
+
+Paint the world with images and sounds. Create character portraits, spooky environments, sound effects, and music that makes adventures come alive. Your art and audio turn words on a screen into something players can see and hear.
+
+### 3. Platform Engineers
+
+Build the machine that runs everything. You create the engine that loads adventures, handles player choices, displays scenes on screen, and keeps everything running smoothly. You also write tools that help story writers turn their ideas into playable adventures without needing to code.
+
+### 4. Community Stewards
+
+Keep the community happy and the quality high. You review what people make, give helpful feedback, answer questions, and make sure everything stays fun and fair for everyone.
+
 ## Game Engine
 
 This repo is the core engine to host and run several adventures in parallel for users. It tracks the current position of an adventurer, game specific variables and status.
@@ -48,25 +68,26 @@ Profession level also governs what happens when a craft fails: at low levels a f
 | 29 | 82,000  | 14,000 |
 | 30 | 100,000 | 18,000 |
 
-## Call for Contributors
+### Crafting Recipes by Profession Category
 
-The Wudlands is built by the community, for the community. We're actively recruiting contributors across multiple disciplines to help bring this dark fantasy world to life. Whether you're a writer, artist, developer, or designer, there are roles that match your skills and passion.
+Each of the 12 profession categories draws from 3 raw-material resource families (see `backend/data/profession-resource-families.json`). A recipe isn't scoped to a single category — it belongs to whichever category supplies the most of its raw-material inputs (resolved recursively through any processed ingredients), and ties count toward more than one.
 
-### 1. Narrative Architects
+| Category | Professions | Resource Families | Recipes | Notes |
+|-------|---|---|-------:|---|
+| CraftMetal | blacksmith, armorer, tinsmith | ore, wood, sand | 81 | Weapons and armor aren't going to grow on trees; material and time costs will keep them scarce. |
+| CraftWood | carpenter, cooper | wood, hide, bone | 47 | The clean, undisputed wins here are the ebony armor/shield set and crafting furniture (workbench, tables, etc.) |
+| CraftGlass | glassblower, jeweler | sand, crystal, ore | 34 | |
+| CraftGarment | leatherworker, tanner, weaver, dyer | skin, fiber, herbs | 31 | |
+| Military | soldier, guard | ore, fiber, monster_part | 29 | |
+| Artists | painter, acrobat, clown, firespitter, storyteller, actor | feather, fiber, bone | 26 | |
+| Alchemy | alchemist, poisoner, enchanter | herbs, crystal, monster_part | 20 | Planned to grow substantially once more items are introduced across the game. |
+| Food | baker, butcher, brewmaster, cook, pastry, apiarist, barkeep, server | meat, harvest, herbs | 18 | Planned perk: these professions need less food to eat, and get it cheaper. |
+| Rural | farmer, herder, hunter, fisher, miner, forager | hide, meat, harvest | 11 | Foragers are planned to earn a bonus yield on gathered resources, raising Rural's output without needing more recipes. |
+| CraftStone | mason, stonemason, potter | clay, stone, crystal | 11 | Their expertise is stone construction — underground building, traps, and doors — a naturally smaller domain, expected to stay limited relative to the other craft categories. |
+| Aristocratic | scribe, clerk, scholar | reed, feather, skin | 11 | Planned to grow through magic scroll recipes, once is introduced. |
+| Trade | merchant, trader | harvest, stone, monster_part | 11 | Planned to lean on a marketplace discount mechanic (traders paying less for goods) rather than more recipes. |
 
-Write the stories and decide how the adventures should feel. You create branching storylines, rich dialogue, and set the mood for the entire dark fantasy world. Work together with other writers to weave The Wudlands' emerging main storyline — your adventures connect and bring players deeper into the world's larger tale. You define the style, pacing, and tone that brings everything together into one amazing experience.
-
-### 2. Visual & Audio Creators
-
-Paint the world with images and sounds. Create character portraits, spooky environments, sound effects, and music that makes adventures come alive. Your art and audio turn words on a screen into something players can see and hear.
-
-### 3. Platform Engineers
-
-Build the machine that runs everything. You create the engine that loads adventures, handles player choices, displays scenes on screen, and keeps everything running smoothly. You also write tools that help story writers turn their ideas into playable adventures without needing to code.
-
-### 4. Community Stewards
-
-Keep the community happy and the quality high. You review what people make, give helpful feedback, answer questions, and make sure everything stays fun and fair for everyone.
+The four lowest-count categories — Rural, CraftStone, Aristocratic, and Trade — are expected to expand later, through new mechanics (foraging yield, marketplace pricing) as well as new recipes, once those systems and the resources they depend on are designed.
 
 ## For Story Contributors
 
