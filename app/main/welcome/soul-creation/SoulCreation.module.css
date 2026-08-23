@@ -881,12 +881,18 @@
   box-shadow: 0 4px 0 #4a3620;
 }
 
-/* Character preview's delete button — top-right corner, coloured red
-   so a destructive action never reads as the same kind of button as
-   "proceed". */
+/* Character preview's delete button — bottom-left corner (mirroring Close's
+   bottom-right), coloured red so a destructive action never reads as the
+   same kind of button as "proceed". */
+/* Icon-only (see char-preview-delete.png) - square padding instead of
+   .navButton's default pill shape, sized to match the icon it holds. */
 .delete {
-  top: 1.25rem;
-  right: max(1.25rem, calc((100vw - 900px) / 2 + 1.25rem));
+  bottom: 1.25rem;
+  left: max(1.25rem, calc((100vw - 900px) / 2 + 1.25rem));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.5rem;
   background: linear-gradient(180deg, #b5453a, #6b241c);
   border-color: #4a1a14;
   box-shadow: 0 3px 0 #34120d;

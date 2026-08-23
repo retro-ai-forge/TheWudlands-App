@@ -103,3 +103,19 @@ export const professionsByCategory = PROFESSIONS.reduce((acc, profession) => {
   acc[profession.category].push(profession);
   return acc;
 }, {} as Record<string, typeof PROFESSIONS>);
+
+// Body and Soul share one reserve of points at creation - strengthening one
+// yields the other. Descriptions match what each attribute governs in play.
+export const BODY_ATTRIBUTES = [
+  { id: "migh", name: "Might", description: "Raw strength — lifting, melee damage, forcing doors, grapples." },
+  { id: "agil", name: "Agility", description: "Reflexes — dodging, stealth movement, initiative, finesse attacks." },
+  { id: "endu", name: "Endurance", description: "HP scaling, poison and disease resistance, fatigue, long treks." },
+  { id: "prec", name: "Precision", description: "Aim and control — ranged accuracy, lockpicking, delicate tasks." },
+];
+
+export const SOUL_ATTRIBUTES = [
+  { id: "will", name: "Will", description: "Mental toughness — resisting fear and charm, concentration, oath and discipline." },
+  { id: "insi", name: "Insight", description: "Perception and intuition — spotting traps, reading intent, awareness." },
+  { id: "lore", name: "Lore", description: "Learned knowledge — arcana, history, alchemy, rituals, languages." },
+  { id: "pres", name: "Presence", description: "Charisma and aura — persuasion, intimidation, leadership, divine favor." },
+];

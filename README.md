@@ -9,6 +9,45 @@ Want to run the project locally? See [SETUP.md](SETUP.md) for the full setup ins
 
 This repo is the core engine to host and run several adventures in parallel for users. It tracks the current position of an adventurer, game specific variables and status.
 
+### Class & Profession Level Progression
+
+Character classes and crafting professions level from 1 to 30, using a shared XP curve that starts cheap and escalates steadily rather than exploding: each level costs roughly 1.2× the previous one's XP, so early levels come fast while level 30 asks for real investment. The table below is the reference progression chart — `Total XP` is the cumulative XP needed to reach that level, `Diff` is how much more that level costs than the one before it.
+
+Profession level also governs what happens when a craft fails: at low levels a failed craft can lose few of the ingredients, while higher levels let the crafter salvage and save back some of the material, softening the risk as mastery grows.
+
+| Level | Total XP | Diff to previous |
+|-------|----------|-------------------|
+| 1  | 0       | —      |
+| 2  | 100     | 100    |
+| 3  | 220     | 120    |
+| 4  | 360     | 140    |
+| 5  | 540     | 180    |
+| 6  | 740     | 200    |
+| 7  | 1,000   | 260    |
+| 8  | 1,300   | 300    |
+| 9  | 1,600   | 300    |
+| 10 | 2,100   | 500    |
+| 11 | 2,600   | 500    |
+| 12 | 3,200   | 600    |
+| 13 | 4,000   | 800    |
+| 14 | 4,800   | 800    |
+| 15 | 5,900   | 1,100  |
+| 16 | 7,200   | 1,300  |
+| 17 | 8,700   | 1,500  |
+| 18 | 11,000  | 2,300  |
+| 19 | 13,000  | 2,000  |
+| 20 | 15,000  | 2,000  |
+| 21 | 19,000  | 4,000  |
+| 22 | 23,000  | 4,000  |
+| 23 | 27,000  | 4,000  |
+| 24 | 33,000  | 6,000  |
+| 25 | 39,000  | 6,000  |
+| 26 | 47,000  | 8,000  |
+| 27 | 57,000  | 10,000 |
+| 28 | 68,000  | 11,000 |
+| 29 | 82,000  | 14,000 |
+| 30 | 100,000 | 18,000 |
+
 ## Call for Contributors
 
 The Wudlands is built by the community, for the community. We're actively recruiting contributors across multiple disciplines to help bring this dark fantasy world to life. Whether you're a writer, artist, developer, or designer, there are roles that match your skills and passion.

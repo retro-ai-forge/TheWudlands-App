@@ -5,8 +5,8 @@ import Link from "next/link";
 import dynamic from "next/dynamic";
 import styles from "../../page.module.css";
 import { FeedbackForm } from "./FeedbackForm";
-import { SoulCreation } from "./SoulCreation";
-import { CharacterPreview } from "./CharacterPreview";
+import { SoulCreation } from "./soul-creation/SoulCreation";
+import { CharacterPreview } from "./character-preview/CharacterPreview";
 import type { SlotCharacterSummary } from "./SoulSlotGrid";
 
 // SoulSlotGrid reads localStorage (a wallet's cached slot unlocks) during
@@ -55,11 +55,18 @@ export function WelcomeView() {
   const [viewingCharacter, setViewingCharacter] = useState<SlotCharacterSummary | null>(null);
   // null while loading the roster for the first time.
   const [characters, setCharacters] = useState<SlotCharacterSummary[] | null>(null);
+  // The player's own shared resource vault, pooled across every character -
+  // used by the character sheet's Inventory tab alongside that character's
+  // own resourceBalances.
+  const [playerResourceBalances, setPlayerResourceBalances] = useState<Record<string, number>>({});
 
   const refreshCharacters = () => {
     fetch("/api/auth/me/characters", { credentials: "include" })
       .then((res) => (res.ok ? res.json() : null))
-      .then((data) => setCharacters(data?.characters ?? []))
+      .then((data) => {
+        setCharacters(data?.characters ?? []);
+        setPlayerResourceBalances(data?.resourceBalances ?? {});
+      })
       .catch(() => setCharacters([]));
   };
 
@@ -86,9 +93,8 @@ export function WelcomeView() {
   if (viewingCharacter !== null) {
     return (
       <CharacterPreview
-        id={viewingCharacter.id}
-        firstName={viewingCharacter.firstName}
-        lastName={viewingCharacter.lastName}
+        character={viewingCharacter}
+        playerResourceBalances={playerResourceBalances}
         onClose={() => setViewingCharacter(null)}
         onDeleted={() => {
           // The character is gone - close the preview and refresh the

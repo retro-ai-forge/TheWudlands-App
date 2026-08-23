@@ -3,12 +3,13 @@
 import { useState, useEffect } from "react";
 import Image from "next/image";
 import styles from "./characters.module.css";
-import { GENDERS, racesByCategory, professionsByCategory } from "@/app/lib/characterOptions";
+import { GENDERS, racesByCategory, professionsByCategory, BODY_ATTRIBUTES, SOUL_ATTRIBUTES } from "@/app/lib/characterOptions";
 
 export default function Characters() {
   const [openSection, setOpenSection] = useState<string | null>(null);
   const [openRaceCategory, setOpenRaceCategory] = useState<string | null>(null);
   const [openProfessionCategory, setOpenProfessionCategory] = useState<string | null>(null);
+  const [openAttributeCategory, setOpenAttributeCategory] = useState<string | null>(null);
   const [openGender, setOpenGender] = useState<string | null>(null);
 
   useEffect(() => {
@@ -217,6 +218,52 @@ export default function Characters() {
                         <div key={profession.id} className={styles.raceEntry}>
                           <p className={styles.raceName}>{profession.name}</p>
                           <p className={styles.raceDescription}>{profession.description}</p>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* ── Attributes ─────────────────────────────────────── */}
+        <div className={styles.accordionItem}>
+          <button
+            className={styles.accordionHeader}
+            onClick={() => toggleSection("attributes")}
+          >
+            <span>[ Attributes ]</span>
+            <span className={styles.accordionChevron}>{openSection === "attributes" ? "▴" : "▾"}</span>
+          </button>
+          {openSection === "attributes" && (
+            <div className={styles.accordionBody}>
+              <p className={styles.sectionIntro}>
+                Every character is shaped by two forces, Body and Soul, and both draw
+                from the same well. Strengthen one and the other yields — there is no
+                character who is strong everywhere. Four attributes make up each half,
+                and together the eight decide what comes naturally to you and what
+                costs you effort.
+              </p>
+              {([
+                ["Body", BODY_ATTRIBUTES],
+                ["Soul", SOUL_ATTRIBUTES],
+              ] as const).map(([category, attributes]) => (
+                <div key={category} className={styles.subAccordionItem}>
+                  <button
+                    className={styles.subAccordionHeader}
+                    onClick={() => setOpenAttributeCategory(openAttributeCategory === category ? null : category)}
+                  >
+                    <span>{category}</span>
+                    <span className={styles.accordionChevron}>{openAttributeCategory === category ? "▴" : "▾"}</span>
+                  </button>
+                  {openAttributeCategory === category && (
+                    <div className={styles.subAccordionBody}>
+                      {attributes.map((attr) => (
+                        <div key={attr.id} className={styles.raceEntry}>
+                          <p className={styles.raceName}>{attr.name}</p>
+                          <p className={styles.raceDescription}>{attr.description}</p>
                         </div>
                       ))}
                     </div>

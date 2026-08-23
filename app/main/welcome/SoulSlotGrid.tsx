@@ -27,6 +27,7 @@
 import { useEffect, useRef, useState } from "react";
 import styles from "../../page.module.css";
 import { useWallet } from "../WalletProvider";
+import { getPortraitCropImgStyle, type PortraitArea } from "@/app/lib/portraitCrop";
 
 export interface SoulSlotDefinition {
   number: number;
@@ -40,23 +41,68 @@ export interface SoulSlotDefinition {
   link: string | null;
 }
 
-/** A crop rectangle, as fractions (0-1) of the source portrait's natural size. */
-export interface PortraitArea {
-  x: number;
-  y: number;
-  width: number;
-  height: number;
+export interface CharacterAvailability {
+  name: string;
+  timeRdy: string;
 }
 
-/** The character (if any) already living in a given soul slot. */
+export interface CharacterClasses {
+  class1: string;
+  lvl1: number;
+  class2: string;
+  lvl2: number;
+}
+
+export interface CharacterProfessions {
+  prof1: string;
+  lvl1: number;
+  prof2: string;
+  lvl2: number;
+  prof3: string;
+  lvl3: number;
+}
+
+export interface CharacterAttributes {
+  migh: number;
+  agil: number;
+  endu: number;
+  prec: number;
+  will: number;
+  insi: number;
+  lore: number;
+  pres: number;
+}
+
+/**
+ * The character (if any) already living in a given soul slot. Carries the
+ * full character record (stats, professions, portrait crops, inventory) -
+ * not just enough to render the slot thumbnail - since this is also what
+ * gets handed to CharacterPreview's full character sheet.
+ */
 export interface SlotCharacterSummary {
   id: string;
   slotNumber: number;
   firstName: string;
   lastName: string;
+  vitalStatus: string;
+  age_month: number;
+  gender: string;
+  raceGroup: string;
+  race: string;
+  birthsign: string;
   portraitUrl: string;
+  portraitZoom: number;
+  portraitPan: { x: number; y: number };
+  /** Full-body crop, for equipment-slot rendering; null pre-dates the feature. */
+  portraitFrameArea: PortraitArea | null;
   /** Face-only crop framed during creation; null falls back to a plain cover-fit image. */
   portraitFaceArea: PortraitArea | null;
+  availability: CharacterAvailability;
+  classes: CharacterClasses;
+  profession: CharacterProfessions;
+  attr: CharacterAttributes;
+  resourceBalances: Record<string, number>;
+  tools: string[];
 }
 
 interface SlotState {
@@ -109,28 +155,9 @@ function getStoredAddress(): string | null {
 // position-relative wrapper the same size as the slot) so only the fractional
 // crop rect (see PortraitArea) is visible, stretched to fill the wrapper.
 // An <img>, not a CSS background-image, specifically so a broken portraitUrl
-// still fires a real onError the caller can react to.
-//
-// Setting the img's own width/height to 100/width% and 100/height% renders
-// the WHOLE natural image at that scale - at which point the crop's own
-// left/top edge sits exactly area.x/area.y of the way across the img's own
-// box, in the img's own percentage terms (independent of the scale factor,
-// since area.x is already a fraction of the full image). Translating by
-// that same negative percentage moves the crop's edge to the wrapper's
-// edge (0,0), which is what -area.x*100%/-area.y*100% below does.
-function getFaceCropImgStyle(area: { x: number; y: number; width: number; height: number }) {
-  const width = Math.min(Math.max(area.width, 0.01), 1);
-  const height = Math.min(Math.max(area.height, 0.01), 1);
-  return {
-    position: "absolute" as const,
-    top: 0,
-    left: 0,
-    width: `${100 / width}%`,
-    height: `${100 / height}%`,
-    maxWidth: "none",
-    transform: `translate(-${area.x * 100}%, -${area.y * 100}%)`,
-  };
-}
+// still fires a real onError the caller can react to. Implementation lives in
+// app/lib/portraitCrop.ts, shared with the character sheet's own crops.
+const getFaceCropImgStyle = getPortraitCropImgStyle;
 
 export function SoulSlotGrid({
   onCreate,
