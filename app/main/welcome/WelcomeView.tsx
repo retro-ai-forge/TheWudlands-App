@@ -6,7 +6,7 @@ import dynamic from "next/dynamic";
 import styles from "../../page.module.css";
 import { FeedbackForm } from "./FeedbackForm";
 import { SoulCreation } from "./soul-creation/SoulCreation";
-import { CharacterPreview } from "./character-preview/CharacterPreview";
+import { CharacterPreview, type TabKey } from "./character-preview/CharacterPreview";
 import type { SlotCharacterSummary } from "./SoulSlotGrid";
 
 // SoulSlotGrid reads localStorage (a wallet's cached slot unlocks) during
@@ -59,6 +59,9 @@ export function WelcomeView() {
   // used by the character sheet's Inventory tab alongside that character's
   // own resourceBalances.
   const [playerResourceBalances, setPlayerResourceBalances] = useState<Record<string, number>>({});
+  // Which tab CharacterPreview should open on - only meaningful alongside
+  // viewingCharacter, set when restoring from a ?character=&tab= URL below.
+  const [viewingTab, setViewingTab] = useState<TabKey>("stats");
 
   const refreshCharacters = () => {
     fetch("/api/auth/me/characters", { credentials: "include" })
@@ -73,6 +76,28 @@ export function WelcomeView() {
   useEffect(() => {
     refreshCharacters();
   }, []);
+
+  // Restores the exact character/tab a player left from, e.g. via the
+  // Inventory tab's link out to the recipe viewer's own full page - that
+  // page returns here with ?character=<id>&tab=<tab> once the roster has
+  // loaded, since the character being linked to has to actually exist in
+  // it. The URL is cleared right after so a later refresh doesn't keep
+  // re-opening the same character.
+  const VALID_TABS: TabKey[] = ["stats", "body", "soul", "adventure", "inventory"];
+  useEffect(() => {
+    if (characters === null) return;
+    const params = new URLSearchParams(window.location.search);
+    const characterId = params.get("character");
+    const tabParam = params.get("tab");
+    if (!characterId) return;
+    const match = characters.find((c) => c.id === characterId);
+    if (match) {
+      setViewingCharacter(match);
+      setViewingTab(VALID_TABS.includes(tabParam as TabKey) ? (tabParam as TabKey) : "stats");
+    }
+    window.history.replaceState(null, "", window.location.pathname);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [characters]);
 
   if (creatingSlot !== null) {
     return (
@@ -95,6 +120,7 @@ export function WelcomeView() {
       <CharacterPreview
         character={viewingCharacter}
         playerResourceBalances={playerResourceBalances}
+        initialTab={viewingTab}
         onClose={() => setViewingCharacter(null)}
         onDeleted={() => {
           // The character is gone - close the preview and refresh the

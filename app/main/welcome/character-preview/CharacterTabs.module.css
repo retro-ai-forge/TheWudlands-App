@@ -217,6 +217,26 @@
   padding: 2rem 1rem;
 }
 
+/* Opens the standalone crafting recipe reference (public/craft/recipe-viewer.html)
+   in a new tab - a plain full-width text link rather than a boxed button, so
+   it just reads as one more line in the page's existing vertical flow and
+   needs no extra layout work to fit a narrow mobile screen. */
+.recipeViewerLink {
+  display: block;
+  width: 100%;
+  box-sizing: border-box;
+  text-align: center;
+  font-size: 0.85rem;
+  color: #c07a3a;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  padding: 0.5rem;
+}
+
+.recipeViewerLink:hover {
+  color: #e6b85c;
+}
+
 /* ---- Stats tab ---- */
 
 .statsLayout {

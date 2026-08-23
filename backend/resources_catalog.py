@@ -55,7 +55,7 @@ def _load_selection_rules() -> dict[int, dict[int, int]]:
     data = json.loads(_SELECTION_RULES_PATH.read_text())
     return {
         int(profession_count): {int(tier): pool for tier, pool in tier_pools.items()}
-        for profession_count, tier_pools in data["tierPoolsByProfessionCount"].items()
+        for profession_count, tier_pools in data["resourcePoolsByProfessionCount"].items()
     }
 
 
@@ -72,7 +72,7 @@ PROFESSION_RESOURCE_FAMILIES: dict[str, tuple[str, ...]] = _load_profession_fami
 # allocate across the eligible familyIds of that tier (e.g. with 1
 # profession: a 15-unit Tier 1 pool spendable across that profession's 3
 # familyIds however the player likes).
-TIER_POOLS_BY_PROFESSION_COUNT: dict[int, dict[int, int]] = _load_selection_rules()
+RESOURCE_POOLS_BY_PROFESSION_COUNT: dict[int, dict[int, int]] = _load_selection_rules()
 
 
 @dataclass(frozen=True)
@@ -100,7 +100,7 @@ def resolve_trapping_options(profession_ids: list[str]) -> TrappingsOptions:
         if profession_id not in PROFESSION_CATEGORIES:
             raise ValueError(f"Unknown profession id: {profession_id}")
 
-    tier_pools = TIER_POOLS_BY_PROFESSION_COUNT.get(len(chosen), {})
+    tier_pools = RESOURCE_POOLS_BY_PROFESSION_COUNT.get(len(chosen), {})
     if not tier_pools:
         return TrappingsOptions(tier_pools={}, items=())
 

@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Crafting Recipe Viewer</title>
 <style>
   :root {
@@ -15,8 +16,8 @@
     --raw-bg: #1c2b1e;
     --processed: #8a7325;
     --processed-bg: #2b2718;
-    --final: #8a3a3a;
-    --final-bg: #2b1c1c;
+    --final: #2f6f9e;
+    --final-bg: #16232e;
     --tool: #3a5a8a;
     --blueprint: #6a3a8a;
     --accent: #d7a94a;
@@ -29,11 +30,15 @@
     font-family: "SF Mono", "Cascadia Code", Consolas, monospace;
     font-size: 14px;
     padding: 24px;
+    /* Extra room at the bottom so the fixed .backlink button never sits on
+       top of the last row of content. */
+    padding-bottom: 72px;
   }
   h1 {
     font-size: 18px;
     margin: 0 0 4px;
     letter-spacing: 0.02em;
+    color: var(--accent);
   }
   .subtitle {
     color: var(--text-dim);
@@ -56,8 +61,8 @@
     font-family: inherit;
     font-size: 13px;
   }
-  select { min-width: 340px; }
-  input[type="text"] { min-width: 200px; }
+  select { min-width: 340px; max-width: 100%; }
+  input[type="text"] { min-width: 200px; max-width: 100%; }
   .layout {
     display: grid;
     grid-template-columns: 1fr 340px;
@@ -66,6 +71,18 @@
   }
   @media (max-width: 900px) {
     .layout { grid-template-columns: 1fr; }
+  }
+  /* Fits down to a 300px-wide mobile screen: the toolbar's fixed min-widths
+     (above) are wider than that on their own, so they give way to a full-width
+     stacked column here instead, and padding shrinks to leave more room for
+     content. */
+  @media (max-width: 480px) {
+    body { padding: 10px; padding-bottom: 64px; font-size: 13px; }
+    .backlink { bottom: 10px; right: 10px; padding: 6px 12px; }
+    .toolbar { flex-direction: column; align-items: stretch; gap: 8px; }
+    select, input[type="text"] { min-width: 0; width: 100%; }
+    .panel { padding: 10px; }
+    .node { margin-left: 6px; padding-left: 8px; }
   }
   .panel {
     background: var(--panel);
@@ -124,7 +141,7 @@
   .tag.unconsumed { border-color: var(--text-dim); color: var(--text-dim); }
   .tag.cat-raw { border-color: var(--raw); color: #7fd08a; }
   .tag.cat-processed { border-color: var(--processed); color: #e0c565; }
-  .tag.cat-final { border-color: var(--final); color: #e08a8a; }
+  .tag.cat-final { border-color: var(--final); color: #7ec8e3; }
   .tag.cat-blueprint { border-color: var(--blueprint); color: #c79ce8; }
   .tag.tier { border-color: var(--accent); color: var(--accent); font-weight: bold; }
   .note { color: var(--text-dim); font-size: 11px; margin: -8px 0 20px; }
@@ -143,15 +160,38 @@
   th, td { text-align: left; padding: 4px 6px; }
   th { color: var(--text-dim); font-weight: normal; border-bottom: 1px solid var(--border); }
   td.n { text-align: right; color: var(--accent); font-variant-numeric: tabular-nums; }
+  /* Nothing missing - the character already has all of this material. */
+  td.n.have-enough { color: #9be6a8; }
   tr + tr td { border-top: 1px solid var(--border); }
   .legend { display: flex; flex-direction: column; gap: 6px; font-size: 12px; margin-bottom: 16px; }
   .legend .row { padding: 2px 8px; }
   .toollist { display: flex; flex-wrap: wrap; gap: 6px; }
+  /* Fixed to the corner (not inline at the top) so it stays reachable
+     regardless of scroll position, same convention the game itself uses for
+     its own corner buttons. */
+  .backlink {
+    position: fixed;
+    bottom: 16px;
+    right: 16px;
+    z-index: 10;
+    display: inline-block;
+    background: var(--panel);
+    border: 1px solid var(--accent);
+    border-radius: 20px;
+    color: var(--accent);
+    text-decoration: none;
+    font-size: 13px;
+    padding: 8px 16px;
+    cursor: pointer;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+  }
+  .backlink:hover { color: #e8c778; border-color: #e8c778; }
 </style>
 </head>
 <body>
+  <a class="backlink" id="backLink" href="/">&larr; Back to Character</a>
   <h1>Crafting Recipe Viewer</h1>
-  <p class="subtitle">craft-recipes.json cross-referenced against every base-*.json catalog — pick a recipe to expand its full raw/processed material tree.</p>
+  <p class="subtitle">Tier numbers shown are minimum requirements — a higher-tier material always works too.</p>
 
   <div class="toolbar">
     <select id="recipeSelect"></select>
@@ -165,7 +205,6 @@
       <option value="6">Tier 6</option>
     </select>
   </div>
-  <p class="note">Shows the top-level recipe first. Click any ▸ ingredient to expand what it's made of (one open per level, like an accordion) — quantities shown on expand are per 1 unit of that ingredient; the side panel gives the fully multiplied grand total. Tier applies uniformly down the whole chain (a T{n} craft is assumed to use T{n} ingredients throughout) — a visualization assumption only, the game's actual tier-matching rule isn't decided yet.</p>
 
   <div class="layout">
     <div class="panel">
@@ -176,10 +215,10 @@
       <div class="panel" style="margin-bottom:16px;">
         <h2>Legend</h2>
         <div class="legend">
-          <div class="row raw"><span class="tag cat-raw">raw</span> mined/gathered material</div>
-          <div class="row processed"><span class="tag cat-processed">processed</span> crafted from a sub-recipe</div>
           <div class="row final"><span class="tag cat-final">final</span> a separate finished item (▸ if it has its own recipe)</div>
           <div class="row blueprint"><span class="tag cat-blueprint">blueprint</span> technique required, learned once and never consumed</div>
+          <div class="row processed"><span class="tag cat-processed">processed</span> crafted from a sub-recipe</div>
+          <div class="row raw"><span class="tag cat-raw">raw</span> mined/gathered material</div>
         </div>
       </div>
       <div class="panel" style="margin-bottom:16px;">
@@ -208,6 +247,31 @@ const DATA = {"families": {"ore": {"category": "raw", "name": "Lead Ore", "tiers
 const families = DATA.families;
 const recipes = DATA.recipes;
 
+// Passed by the character preview's Inventory tab as ?inv=<json>, mapping
+// item id -> quantity owned. Absent (null) when this page is opened on its
+// own (bookmarked, no character context) - the raw-materials table falls
+// back to showing plain needed quantities in that case.
+function readInventoryFromQuery() {
+  try {
+    const raw = new URLSearchParams(window.location.search).get("inv");
+    return raw ? JSON.parse(raw) : null;
+  } catch {
+    return null;
+  }
+}
+const inventory = readInventoryFromQuery();
+if (inventory) {
+  document.querySelector("#rawTotals thead th:last-child").textContent = "Missing / Needed";
+}
+
+// Passed alongside ?inv= as the exact page (character + tab) the player
+// left from - e.g. "/?character=<id>&tab=inventory" - so "Back" can return
+// there directly instead of just going up to the bare welcome page.
+const returnUrl = new URLSearchParams(window.location.search).get("return");
+if (returnUrl) {
+  document.getElementById("backLink").href = returnUrl;
+}
+
 function tierName(famId, tier) {
   const f = families[famId];
   if (!f) return null;
@@ -217,8 +281,7 @@ function tierName(famId, tier) {
 function famLabel(famId, tier) {
   const f = families[famId];
   if (!f) return famId;
-  const displayName = tier ? (tierName(famId, tier) || f.name) : f.name;
-  return displayName + " (" + famId + ")";
+  return tier ? (tierName(famId, tier) || f.name) : f.name;
 }
 function famCategory(famId) {
   const f = families[famId];
@@ -387,7 +450,7 @@ function computeTotals(famId, qty, category, rawTotals, finalTotals, toolSet) {
   }
 }
 
-function renderTable(tableId, totals, tier) {
+function renderTable(tableId, totals, tier, showMissing) {
   const tbody = document.querySelector("#" + tableId + " tbody");
   tbody.innerHTML = "";
   const entries = Object.entries(totals).sort((a, b) => b[1] - a[1]);
@@ -403,7 +466,20 @@ function renderTable(tableId, totals, tier) {
     const tr = document.createElement("tr");
     tr.appendChild(el("td", "", famLabel(famId, tier)));
     tr.appendChild(el("td", "", "T" + tier));
-    tr.appendChild(el("td", "n", String(qty)));
+    if (showMissing && inventory) {
+      // The character's own inventory is keyed by concrete item id (e.g.
+      // "iron_ore"), not family id - resolve the family to whichever item
+      // sits at the currently-selected tier to look it up.
+      const f = families[famId];
+      const itemId = f && f.tiers[tier - 1] ? f.tiers[tier - 1].id : null;
+      const have = itemId ? inventory[itemId] || 0 : 0;
+      const missing = Math.max(0, qty - have);
+      const td = el("td", "n", missing + " / " + qty);
+      if (missing === 0) td.classList.add("have-enough");
+      tr.appendChild(td);
+    } else {
+      tr.appendChild(el("td", "n", String(qty)));
+    }
     tbody.appendChild(tr);
   }
 }
@@ -432,8 +508,8 @@ function render(famId, tier) {
   const toolSet = new Set();
   computeTotals(famId, 1, rootCategory, rawTotals, finalTotals, toolSet);
 
-  renderTable("rawTotals", rawTotals, tier);
-  renderTable("finalTotals", finalTotals, tier);
+  renderTable("rawTotals", rawTotals, tier, true);
+  renderTable("finalTotals", finalTotals, tier, false);
 
   const toolListEl = document.getElementById("toolList");
   toolListEl.innerHTML = "";
@@ -449,6 +525,24 @@ function render(famId, tier) {
 if (select.options.length) {
   select.selectedIndex = 0;
   render(select.value, currentTier());
+}
+
+// Prefer returning to exactly where the player came from (the character
+// preview page they clicked this link from) over the plain href="/"
+// fallback, which only gets used if there's no history to go back to (e.g.
+// this page was opened directly/bookmarked).
+// A known returnUrl (set above) is the exact character/tab to go back to -
+// let the link's own href handle that normally. Without one (opened
+// directly, no navigation context), prefer real browser history over the
+// plain href="/" fallback, so a bookmarked visit still goes back to
+// whatever the player actually had open before this page.
+if (!returnUrl) {
+  document.getElementById("backLink").addEventListener("click", (e) => {
+    if (window.history.length > 1) {
+      e.preventDefault();
+      window.history.back();
+    }
+  });
 }
 </script>
 </body>

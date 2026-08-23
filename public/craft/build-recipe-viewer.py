@@ -1,11 +1,12 @@
 """
-Regenerate craft/recipe-viewer.html from craft/recipe-viewer.template.html and
-the current backend/data/*.json catalogs + craft-recipes.json.
+Regenerate public/craft/recipe-viewer.html from
+public/craft/recipe-viewer.template.html and the current backend/data/*.json
+catalogs + craft-recipes.json.
 
 Run this after editing craft-recipes.json or any base-*.json catalog file so
 the viewer reflects the latest data:
 
-    python3 craft/build-recipe-viewer.py
+    python3 public/craft/build-recipe-viewer.py
 """
 
 from __future__ import annotations
@@ -13,7 +14,7 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
-ROOT = Path(__file__).resolve().parent.parent
+ROOT = Path(__file__).resolve().parent.parent.parent
 DATA_DIR = ROOT / "backend" / "data"
 TEMPLATE = Path(__file__).resolve().parent / "recipe-viewer.template.html"
 OUTPUT = Path(__file__).resolve().parent / "recipe-viewer.html"

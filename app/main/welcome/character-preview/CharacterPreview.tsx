@@ -13,7 +13,7 @@ import { SoulTab } from "./SoulTab";
 import { AdventureTab } from "./AdventureTab";
 import { InventoryTab } from "./InventoryTab";
 
-type TabKey = "stats" | "body" | "soul" | "adventure" | "inventory";
+export type TabKey = "stats" | "body" | "soul" | "adventure" | "inventory";
 
 const ICON_BASE = "/images/character/char-preview-";
 
@@ -38,15 +38,19 @@ export function CharacterPreview({
   onClose,
   onDeleted,
   onPortraitSaved,
+  initialTab = "stats",
 }: {
   character: SlotCharacterSummary;
   playerResourceBalances: Record<string, number>;
   onClose: () => void;
   onDeleted: () => void;
   onPortraitSaved: (character: SlotCharacterSummary) => void;
+  /** Which page to open on - e.g. restoring from a link that sent the player
+   * away to a full page (like the recipe viewer) and back. */
+  initialTab?: TabKey;
 }) {
   const { setHidden: setHeaderHidden } = useHeaderVisibility();
-  const [activeTab, setActiveTab] = useState<TabKey>("stats");
+  const [activeTab, setActiveTab] = useState<TabKey>(initialTab);
   const [isDeleting, setIsDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
 

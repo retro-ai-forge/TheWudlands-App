@@ -63,6 +63,14 @@ export function InventoryTab({
       <p className={styles.placeholderNote}>
         Moving items between vaults isn&apos;t wired up yet - this shows both sides for now.
       </p>
+      <a
+        href={`/craft/recipe-viewer.html?inv=${encodeURIComponent(
+          JSON.stringify(character.resourceBalances)
+        )}&return=${encodeURIComponent(`/?character=${character.id}&tab=inventory`)}`}
+        className={styles.recipeViewerLink}
+      >
+        Browse Crafting Recipes
+      </a>
     </div>
   );
 }
