@@ -6,6 +6,7 @@ import tabStyles from "./CharacterTabs.module.css";
 import { useHeaderVisibility } from "@/app/main/HeaderVisibilityProvider";
 import type { SlotCharacterSummary } from "../SoulSlotGrid";
 import { PortraitEditor, type PortraitEditorValue } from "../PortraitEditor";
+import { BIRTHSIGNS } from "@/app/lib/characterOptions";
 import { StatsTab } from "./StatsTab";
 import { BodyTab } from "./BodyTab";
 import { SoulTab } from "./SoulTab";
@@ -24,13 +25,13 @@ const TABS: { key: TabKey; label: string; icon: string }[] = [
   { key: "adventure", label: "Adventure", icon: `${ICON_BASE}adventure.png` },
 ];
 
-// Opened by clicking an active soul slot's character. Five subpages toggled
-// by a hamburger-menu flyout below the name - Stats (attributes + face),
-// Body (equipment slots), Soul (soul equipment), Adventure (addon
-// selection), and Inventory (this character's vault vs. the player's
-// shared vault). Close and Delete both live in that same flyout, but
-// Delete's margin-top:auto (see .tabButtonDanger) pushes it all the way to
-// the bottom of the panel, away from the other buttons.
+// Opened by clicking an active soul slot's character. Five subpages - Stats
+// (attributes + face), Body (equipment slots), Soul (soul equipment),
+// Inventory (this character's vault vs. the player's shared vault), and
+// Adventure (addon selection) - reached by tapping one of TABS' icons, laid
+// out in a row above the character's name; the current one is highlighted,
+// the rest greyed out. Close sits fixed top-right, always visible regardless
+// of which page is showing. Delete only shows on Stats, fixed bottom-left.
 export function CharacterPreview({
   character,
   playerResourceBalances,
@@ -46,9 +47,30 @@ export function CharacterPreview({
 }) {
   const { setHidden: setHeaderHidden } = useHeaderVisibility();
   const [activeTab, setActiveTab] = useState<TabKey>("stats");
-  const [menuOpen, setMenuOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
+
+  // Delete (Stats page only, see below) starts barely visible and inert,
+  // only lighting up once the player has actually scrolled this page's
+  // content down to its end - deliberate friction against an accidental tap
+  // on a permanent, unconfirmed-by-anything-else destructive action.
+  // .wizard (ref'd here) is the actual scrolling element (.wizardScrollable
+  // sets its own overflow-y:auto), not .mainColumn or .sheet.
+  const wizardScrollRef = useRef<HTMLDivElement>(null);
+  const [isScrolledToEnd, setIsScrolledToEnd] = useState(true);
+
+  function checkScrolledToEnd() {
+    const el = wizardScrollRef.current;
+    if (!el) return;
+    setIsScrolledToEnd(el.scrollTop + el.clientHeight >= el.scrollHeight - 4);
+  }
+
+  // Re-check on every tab switch too - a short page (nothing to scroll)
+  // should start unlocked rather than stuck on whatever the previous page's
+  // scroll position implied.
+  useEffect(() => {
+    checkScrolledToEnd();
+  }, [activeTab]);
 
   // Standalone portrait editor, opened by clicking the face portrait on the
   // Stats tab. The draft lives in a ref rather than state - PortraitEditor's
@@ -58,6 +80,16 @@ export function CharacterPreview({
   const [isSavingPortrait, setIsSavingPortrait] = useState(false);
   const [portraitError, setPortraitError] = useState<string | null>(null);
   const portraitDraftRef = useRef<PortraitEditorValue | null>(null);
+
+  // Birthsign popup, opened by clicking the Birthsign row on the Stats tab.
+  // Rendered as a sibling of .stage below (not nested inside StatsTab) so it
+  // sits in the same stacking context as the fixed corner buttons and
+  // correctly covers them - .sheet establishes its own stacking context
+  // (position:relative + z-index:2), so an overlay nested inside it can
+  // never outrank their z-index:6 no matter what z-index it's given.
+  const [showBirthsignPopup, setShowBirthsignPopup] = useState(false);
+  const [birthsignFlipped, setBirthsignFlipped] = useState(false);
+  const birthsignInfo = BIRTHSIGNS.find((b) => b.id === character.birthsign) ?? null;
 
   useEffect(() => {
     setHeaderHidden(true);
@@ -127,128 +159,150 @@ export function CharacterPreview({
   }
 
   return (
-    <div className={`${styles.wizard} ${styles.wizardScrollable}`}>
-      <div className={styles.stage}>
-        <div className={tabStyles.sheet}>
-          <h1 className={tabStyles.name}>
-            {character.firstName} {character.lastName}
-          </h1>
+    <div
+      className={`${styles.wizard} ${styles.wizardScrollable}`}
+      ref={wizardScrollRef}
+      onScroll={checkScrolledToEnd}
+    >
+      {/* Sticky, not fixed - stays in normal flow (so nothing below it needs
+          manual top-padding to avoid sitting underneath) but pins to the top
+          of .wizard's own scroll once the page scrolls past it. Spans the
+          full viewport width (outside .sheet's max-width:56rem column) so
+          the icons can spread across the whole top edge rather than
+          clustering in a narrow centered strip. */}
+      <div className={tabStyles.topBar}>
+        <div className={tabStyles.topBarRow}>
+          <nav className={tabStyles.tabRow}>
+            {TABS.map((tab) => (
+              <button
+                key={tab.key}
+                type="button"
+                className={`${tabStyles.tabRowButton} ${
+                  activeTab === tab.key ? tabStyles.tabRowButtonActive : tabStyles.tabRowButtonInactive
+                }`}
+                onClick={() => setActiveTab(tab.key)}
+                aria-pressed={activeTab === tab.key}
+                title={tab.label}
+                aria-label={tab.label}
+              >
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={tab.icon} alt="" className={tabStyles.tabIcon} />
+              </button>
+            ))}
+          </nav>
 
-          {deleteError && <p className={styles.submitError}>{deleteError}</p>}
-
-          <div className={tabStyles.body}>
-            <div className={tabStyles.mainColumn}>
-              {activeTab === "stats" && (
-                <StatsTab character={character} onEditPortrait={() => setEditingPortrait(true)} />
-              )}
-              {activeTab === "body" && <BodyTab character={character} />}
-              {activeTab === "soul" && <SoulTab character={character} />}
-              {activeTab === "adventure" && <AdventureTab character={character} />}
-              {activeTab === "inventory" && (
-                <InventoryTab character={character} playerResourceBalances={playerResourceBalances} />
-              )}
-            </div>
-
-            {menuOpen && (
-              <nav className={tabStyles.tabColumn}>
-                {TABS.map((tab) => (
-                  <button
-                    key={tab.key}
-                    type="button"
-                    className={activeTab === tab.key ? tabStyles.tabButtonActive : tabStyles.tabButton}
-                    onClick={() => {
-                      setActiveTab(tab.key);
-                      setMenuOpen(false);
-                    }}
-                    aria-pressed={activeTab === tab.key}
-                    title={tab.label}
-                    aria-label={tab.label}
-                  >
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src={tab.icon} alt="" className={tabStyles.tabIcon} />
-                  </button>
-                ))}
-
-                <button
-                  type="button"
-                  className={tabStyles.tabButton}
-                  onClick={() => {
-                    setMenuOpen(false);
-                    onClose();
-                  }}
-                  title="Close"
-                  aria-label="Close"
-                >
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={`${ICON_BASE}close.png`} alt="" className={tabStyles.tabIcon} />
-                </button>
-
-                <button
-                  type="button"
-                  className={tabStyles.tabButtonDanger}
-                  onClick={() => {
-                    setMenuOpen(false);
-                    handleDelete();
-                  }}
-                  disabled={isDeleting}
-                  title={isDeleting ? "Deleting…" : "Delete Character"}
-                  aria-label={isDeleting ? "Deleting…" : "Delete Character"}
-                >
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={`${ICON_BASE}delete.png`} alt="" className={tabStyles.tabIcon} />
-                </button>
-              </nav>
-            )}
-          </div>
-        </div>
-      </div>
-
-      <button
-        type="button"
-        className={menuOpen ? tabStyles.menuToggleOpen : tabStyles.menuToggle}
-        onClick={() => setMenuOpen((open) => !open)}
-        aria-expanded={menuOpen}
-        aria-label={menuOpen ? "Close menu" : "Open menu"}
-        title={menuOpen ? "Close menu" : "Open menu"}
-      >
-        <span className={tabStyles.hamburgerBar} />
-        <span className={tabStyles.hamburgerBar} />
-        <span className={tabStyles.hamburgerBar} />
-      </button>
-
-      {editingPortrait && (
-        <div className={tabStyles.portraitEditorOverlay}>
-          <h1 className={tabStyles.portraitEditorHeading}>Edit Portrait</h1>
-          <PortraitEditor
-            initialUrl={character.portraitUrl}
-            initialZoom={character.portraitZoom}
-            initialPan={character.portraitPan}
-            onChange={(value) => {
-              portraitDraftRef.current = value;
-            }}
-          />
-          {portraitError && <p className={tabStyles.portraitEditorError}>{portraitError}</p>}
-          <button
-            type="button"
-            className={`${tabStyles.tabButton} ${tabStyles.portraitEditorCancel}`}
-            onClick={() => {
-              setPortraitError(null);
-              setEditingPortrait(false);
-            }}
-            disabled={isSavingPortrait}
-            title="Cancel"
-            aria-label="Cancel"
-          >
+          <button type="button" className={tabStyles.closeButton} onClick={onClose} title="Close" aria-label="Close">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src={`${ICON_BASE}close.png`} alt="" className={tabStyles.tabIcon} />
           </button>
+        </div>
+
+        <h1 className={tabStyles.name}>
+          {character.firstName} {character.lastName}
+        </h1>
+      </div>
+
+      <div className={tabStyles.sheet}>
+        {deleteError && <p className={styles.submitError}>{deleteError}</p>}
+
+        <div className={tabStyles.mainColumn}>
+          {activeTab === "stats" && (
+            <StatsTab
+              character={character}
+              onEditPortrait={() => setEditingPortrait(true)}
+              onOpenBirthsign={() => {
+                setBirthsignFlipped(false);
+                setShowBirthsignPopup(true);
+              }}
+            />
+          )}
+          {activeTab === "body" && <BodyTab character={character} />}
+          {activeTab === "soul" && <SoulTab character={character} />}
+          {activeTab === "adventure" && <AdventureTab character={character} />}
+          {activeTab === "inventory" && (
+            <InventoryTab character={character} playerResourceBalances={playerResourceBalances} />
+          )}
+        </div>
+      </div>
+
+      {activeTab === "stats" && (
+        <button
+          type="button"
+          className={`${tabStyles.deleteButton} ${isScrolledToEnd ? "" : tabStyles.deleteButtonLocked}`}
+          onClick={handleDelete}
+          disabled={isDeleting || !isScrolledToEnd}
+          title={isDeleting ? "Deleting…" : isScrolledToEnd ? "Delete Character" : "Scroll to the end of the page to delete"}
+          aria-label={isDeleting ? "Deleting…" : isScrolledToEnd ? "Delete Character" : "Scroll to the end of the page to delete"}
+        >
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src={`${ICON_BASE}delete.png`} alt="" className={tabStyles.tabIcon} />
+        </button>
+      )}
+
+      {editingPortrait && (
+        // Mirrors the wizard's own Portrait step (page 3 of SoulCreation.tsx)
+        // as closely as possible - same .wizard/.stage/.content chrome and
+        // the same .headline treatment, just naming the character instead of
+        // the step ("Portrait"), and Save standing in for that step's
+        // Continue in the same bottom-right slot.
+        <div className={`${styles.wizard} ${styles.noTouchScroll}`}>
+          <div className={styles.stage}>
+            <div className={`${styles.content} ${styles.contentTop} ${styles.contentTopTight}`}>
+              <h1 className={styles.headline}>
+                {character.firstName} {character.lastName}
+              </h1>
+              <PortraitEditor
+                // "empty" is the DB's own unloadable-placeholder sentinel for
+                // "no portrait set" (see handleSavePortrait below and the
+                // wizard's matching save) - showing it as literal text would
+                // leave the player deleting it by hand before they can paste
+                // a real URL.
+                initialUrl={character.portraitUrl === "empty" ? "" : character.portraitUrl}
+                initialZoom={character.portraitZoom}
+                initialPan={character.portraitPan}
+                onChange={(value) => {
+                  portraitDraftRef.current = value;
+                }}
+              />
+            </div>
+          </div>
+          {portraitError && <p className={styles.submitError}>{portraitError}</p>}
           <button
             type="button"
-            className={`${styles.navButton} ${tabStyles.portraitEditorSave}`}
+            className={`${styles.navButton} ${styles.continue}`}
             onClick={handleSavePortrait}
             disabled={isSavingPortrait}
           >
             {isSavingPortrait ? "Saving…" : "Save"}
+          </button>
+        </div>
+      )}
+
+      {birthsignInfo && showBirthsignPopup && (
+        <div className={tabStyles.birthsignPopupOverlay} onClick={() => setShowBirthsignPopup(false)}>
+          <button
+            type="button"
+            className={`${styles.birthsignTile} ${tabStyles.birthsignPopupCard}`}
+            onClick={(e) => {
+              e.stopPropagation();
+              setBirthsignFlipped((flipped) => !flipped);
+            }}
+            aria-label={`${birthsignInfo.name}: ${birthsignFlipped ? "hide" : "show"} description`}
+          >
+            <div className={`${styles.birthsignFlipper} ${birthsignFlipped ? styles.birthsignFlipperFlipped : ""}`}>
+              <div className={styles.birthsignFace}>
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={birthsignInfo.image} alt={birthsignInfo.name} className={styles.birthsignImage} />
+              </div>
+              <div className={`${styles.birthsignFace} ${styles.birthsignFaceBack}`}>
+                <h3 className={styles.birthsignName}>{birthsignInfo.name}</h3>
+                <p className={styles.birthsignFlavor}>{birthsignInfo.flavor}</p>
+                <p className={styles.birthsignEffect}>
+                  <span className={styles.birthsignEffectLabel}>Event: </span>
+                  {birthsignInfo.effect}
+                </p>
+              </div>
+            </div>
           </button>
         </div>
       )}

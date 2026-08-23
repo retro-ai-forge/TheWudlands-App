@@ -120,18 +120,89 @@ export const SOUL_ATTRIBUTES = [
   { id: "pres", name: "Presence", description: "Charisma and aura — persuasion, intimidation, leadership, divine favor." },
 ];
 
-// id -> display name only, for places that just need to label a stored
-// birthsign id (e.g. the character sheet). The full flavor/effect copy for
-// each sign lives in the Birthsign step's own BIRTHSIGNS array in
-// SoulCreation.tsx - kept separate rather than merged here since that
-// array is tightly coupled to that step's flip-card UI.
-export const BIRTHSIGN_NAMES: Record<string, string> = {
-  fatecoil_mark: "Fatecoil Mark",
-  grit_stitch_brand: "Grit Stitch Brand",
-  hearthfinder_sigil: "Hearthfinder Sigil",
-  far_sight_rune: "Far Sight Rune",
-  courtseers_eye: "Courtseer's Eye",
-  legend_crest: "Legend Crest",
-  glassvein_birthmark: "Glassvein Birthmark",
-  fortunes_thistle: "Fortune's Thistle",
-};
+// The Soul Creation wizard's Birthsign step (its flip-card grid) and the
+// character preview's own birthsign popup both need the full flavor/effect
+// copy, not just a display name - single source of truth for both.
+export type BirthsignId =
+  | "fatecoil_mark"
+  | "grit_stitch_brand"
+  | "hearthfinder_sigil"
+  | "far_sight_rune"
+  | "courtseers_eye"
+  | "legend_crest"
+  | "glassvein_birthmark"
+  | "fortunes_thistle";
+
+// The name is baked into each sign's own artwork, so only the flavor line
+// and its in-game effect need to be typed out here.
+export const BIRTHSIGNS: {
+  id: BirthsignId;
+  name: string;
+  image: string;
+  flavor: string;
+  effect: string;
+}[] = [
+  {
+    id: "fatecoil_mark",
+    name: "Fatecoil Mark",
+    image: "/images/soul-creation/birth_fatecoil_mark.png",
+    flavor: "You feel fate loosen for a heartbeat—enough to tug a choice back from ruin.",
+    effect:
+      "Before you attempt a risky check (skill, stealth, trap, save, challenge), you may invoke the mark to gain a Re-roll option. Each invocation uses 1 charge.",
+  },
+  {
+    id: "grit_stitch_brand",
+    name: "Grit Stitch Brand",
+    image: "/images/soul-creation/birth_grid_stitch_brand.png",
+    flavor: "Pain becomes a seam you can pull tight—if you pay for the thread.",
+    effect:
+      "After a failed check, the Brand offers fail-forward recovery: Recover, Retreat, Brace, or Pay a cost to survive. Each recovery uses 1 charge.",
+  },
+  {
+    id: "hearthfinder_sigil",
+    name: "Hearthfinder Sigil",
+    image: "/images/soul-creation/birth_hearthfinders_sigh.png",
+    flavor: "Your instincts hunt shelter like a hound hunts blood.",
+    effect:
+      "In many standard scenes you can attempt a Safe Rest to recover. It usually works without special story support, but some places still refuse rest. Each rest costs 1 charge.",
+  },
+  {
+    id: "far_sight_rune",
+    name: "Far Sight Rune",
+    image: "/images/soul-creation/birth_far_sight_rune.png",
+    flavor: "Your eyes catch the angle of tomorrow — just enough to choose your step.",
+    effect:
+      "The Rune can reveal a hint about what's ahead (treasure, exit, fight). Each reveal costs 1 charge.",
+  },
+  {
+    id: "courtseers_eye",
+    name: "Courtseer's Eye",
+    image: "/images/soul-creation/birth_courtseer_eye.png",
+    flavor: "When power walks into the room, your mind leaves a nail in the doorframe.",
+    effect:
+      "When a VIP / important person appears, you may enter a vision and wake up from it. Each scene cost 1 charge.",
+  },
+  {
+    id: "legend_crest",
+    name: "Legend Crest",
+    image: "/images/soul-creation/birth_legend_crest.png",
+    flavor: "Your deeds echo louder than they should, and the world answers as if it must.",
+    effect:
+      "When a legend-impact choice appears, you may press the Amplifier to make that impact stronger. Each impact costs 1 charge.",
+  },
+  {
+    id: "glassvein_birthmark",
+    name: "Glassvein Birthmark",
+    image: "/images/soul-creation/birth_glassvein_birthmark.png",
+    flavor: "A thin sheen over the soul like moonlight on glass — lets you glimpse what's hidden.",
+    effect: "You may peer into a VIP's soul to learn one random attribute and their level. Each peek costs 1 charge.",
+  },
+  {
+    id: "fortunes_thistle",
+    name: "Fortune's Thistle",
+    image: "/images/soul-creation/birth_fortunes_thistle.png",
+    flavor: "Strange hair grows where luck takes root; it prickles when the world is about to bend.",
+    effect:
+      "You gain a small bonus to all non-combat, non-magic checks — a quiet edge that turns near-misses into narrow wins. Rises with charge level.",
+  },
+];

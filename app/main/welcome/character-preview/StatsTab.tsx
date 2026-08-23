@@ -1,6 +1,6 @@
 import styles from "./CharacterTabs.module.css";
 import { getPortraitCropImgStyle } from "@/app/lib/portraitCrop";
-import { RACES, PROFESSIONS, BIRTHSIGN_NAMES } from "@/app/lib/characterOptions";
+import { RACES, PROFESSIONS, BIRTHSIGNS } from "@/app/lib/characterOptions";
 import { getDisplayedAge } from "@/app/lib/ageScaling";
 import type { SlotCharacterSummary } from "../SoulSlotGrid";
 
@@ -28,7 +28,7 @@ function professionName(id: string): string {
 }
 
 function birthsignName(id: string): string {
-  return BIRTHSIGN_NAMES[id] ?? id;
+  return BIRTHSIGNS.find((b) => b.id === id)?.name ?? id;
 }
 
 // Sum of a group's 4 attributes - the full/base total. Shown as X/Y where Y
@@ -45,10 +45,14 @@ function sumAttrs(
 export function StatsTab({
   character,
   onEditPortrait,
+  onOpenBirthsign,
 }: {
   character: SlotCharacterSummary;
   onEditPortrait?: () => void;
+  onOpenBirthsign?: () => void;
 }) {
+  const birthsignInfo = BIRTHSIGNS.find((b) => b.id === character.birthsign) ?? null;
+
   const professions = [
     { name: professionName(character.profession.prof1), lvl: character.profession.lvl1 },
     { name: professionName(character.profession.prof2), lvl: character.profession.lvl2 },
@@ -105,10 +109,17 @@ export function StatsTab({
             <span>Age</span>
             <span>{getDisplayedAge(character.age_month, character.race)} years</span>
           </div>
-          <div className={styles.identityRow}>
-            <span>Birthsign</span>
-            <span>{birthsignName(character.birthsign)}</span>
-          </div>
+          {birthsignInfo ? (
+            <button type="button" className={styles.identityRowButton} onClick={onOpenBirthsign}>
+              <span>Birthsign</span>
+              <span>{birthsignInfo.name}</span>
+            </button>
+          ) : (
+            <div className={styles.identityRow}>
+              <span>Birthsign</span>
+              <span>{birthsignName(character.birthsign)}</span>
+            </div>
+          )}
           <div className={styles.identityRow}>
             <span>Vital</span>
             <span>{character.vitalStatus}</span>

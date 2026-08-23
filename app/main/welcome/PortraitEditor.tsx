@@ -52,6 +52,12 @@ export function PortraitEditor({
   // (existing drag behavior below), two active pointers pinch-zoom instead.
   const portraitActivePointersRef = useRef<Map<number, { x: number; y: number }>>(new Map());
   const portraitPinchStartRef = useRef<{ distance: number; zoom: number } | null>(null);
+  // The image's very first load (mount) should keep initialZoom/initialPan
+  // as-is - reopening the editor on an already-framed portrait shouldn't
+  // snap it back to unzoomed/centered. Every later load (the user pasted a
+  // different URL) is a new image with no framing yet, so that one really
+  // should reset to the 1x/centered baseline.
+  const isFirstLoadRef = useRef(true);
 
   // .portraitFrame is viewport-height-relative (80vh) and the URL field is
   // pinned near the true bottom edge, so on short viewports the gap between
@@ -112,19 +118,29 @@ export function PortraitEditor({
   // as a crop reproduces exactly what the user framed here, regardless of
   // zoom/pan, which are just the editing controls used to arrive at these
   // two rectangles.
-  function getPortraitAreas(): { frameArea: PortraitArea | null; faceArea: PortraitArea | null } {
+  // zoom/pan default to current state, but accept explicit overrides for the
+  // moment right after resetting them (see handlePortraitImageLoad) - a
+  // setState call doesn't update this render's own portraitZoom/portraitPan
+  // closure values, so computing immediately afterward would otherwise still
+  // read the pre-reset numbers.
+  function getPortraitAreas(
+    zoomOverride?: number,
+    panOverride?: { x: number; y: number }
+  ): { frameArea: PortraitArea | null; faceArea: PortraitArea | null } {
     const nat = portraitNaturalSizeRef.current;
     const frame = portraitFrameRef.current;
     const headZone = portraitHeadZoneRef.current;
     if (!nat || !frame || !headZone) return { frameArea: null, faceArea: null };
 
+    const zoom = zoomOverride ?? portraitZoom;
+    const pan = panOverride ?? portraitPan;
     const frameRect = frame.getBoundingClientRect();
-    const scale = getPortraitFitScale() * portraitZoom;
+    const scale = getPortraitFitScale() * zoom;
     const renderedW = nat.width * scale;
     const renderedH = nat.height * scale;
     // Image's rendered top-left corner, relative to the frame's own top-left.
-    const imgOffsetX = (frameRect.width - renderedW) / 2 + portraitPan.x;
-    const imgOffsetY = (frameRect.height - renderedH) / 2 + portraitPan.y;
+    const imgOffsetX = (frameRect.width - renderedW) / 2 + pan.x;
+    const imgOffsetY = (frameRect.height - renderedH) / 2 + pan.y;
 
     // `left`/`top` are frame-relative pixels; converts through the image's
     // current render scale/offset back to natural-image fractions.
@@ -145,12 +161,23 @@ export function PortraitEditor({
   const [savedPortraitFrameArea, setSavedPortraitFrameArea] = useState<PortraitArea | null>(null);
   const [savedPortraitFaceArea, setSavedPortraitFaceArea] = useState<PortraitArea | null>(null);
 
-  useEffect(() => {
-    const { frameArea, faceArea } = getPortraitAreas();
+  function recomputeSavedAreas(zoomOverride?: number, panOverride?: { x: number; y: number }) {
+    const { frameArea, faceArea } = getPortraitAreas(zoomOverride, panOverride);
     if (frameArea) setSavedPortraitFrameArea(frameArea);
     if (faceArea) setSavedPortraitFaceArea(faceArea);
+  }
+
+  // Covers dragging/zooming an already-loaded image. A freshly loaded image
+  // (a new src, or the very first load) is handled explicitly inside
+  // handlePortraitImageLoad instead - portraitZoom/portraitPan often don't
+  // actually change value there (a reset to 1/{0,0} that was already
+  // 1/{0,0}, or an unedited reopen), so relying on this effect's dependency
+  // array alone would silently skip recomputing against the image that just
+  // became the natural-size source of truth.
+  useEffect(() => {
+    recomputeSavedAreas();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [portraitZoom, portraitPan.x, portraitPan.y, portraitUrl]);
+  }, [portraitZoom, portraitPan.x, portraitPan.y]);
 
   useEffect(() => {
     onChange({
@@ -173,8 +200,33 @@ export function PortraitEditor({
   function handlePortraitImageLoad(e: React.SyntheticEvent<HTMLImageElement>) {
     portraitNaturalSizeRef.current = { width: e.currentTarget.naturalWidth, height: e.currentTarget.naturalHeight };
     setPortraitLoadFailed(false);
-    setPortraitZoom(1);
-    setPortraitPan({ x: 0, y: 0 });
+    if (isFirstLoadRef.current) {
+      isFirstLoadRef.current = false;
+      // The image's natural size just became known, which is what switches
+      // the img's inline style from the "size unknown yet" placeholder
+      // (100%/100%, no scale/pan) to the real scale+pan math - but setting a
+      // ref doesn't itself trigger a re-render. Recompute the areas now that
+      // natural size is known (so an open-then-immediately-save round trip
+      // doesn't wipe the existing framing back to null), and force a render
+      // via a new pan object as a fallback in case that computation comes
+      // back empty for some reason - all without touching the zoom/pan
+      // values themselves (unlike the reset below, meant for a genuinely new
+      // image with no framing to preserve).
+      recomputeSavedAreas();
+      setPortraitPan((prev) => ({ ...prev }));
+    } else {
+      // A genuinely new image (the user pasted a different URL) - starts
+      // unzoomed/centered. Recompute explicitly with these exact values
+      // rather than relying on the effect above: portraitZoom/portraitPan
+      // were very likely ALREADY 1/{0,0} (the common case - paste a URL,
+      // don't touch zoom/pan, move on), so the effect's own dependencies
+      // wouldn't register a change and would never fire, leaving the saved
+      // areas computed against whatever the PREVIOUS image's dimensions
+      // were - wrong for this one.
+      setPortraitZoom(1);
+      setPortraitPan({ x: 0, y: 0 });
+      recomputeSavedAreas(1, { x: 0, y: 0 });
+    }
   }
 
   function handlePortraitImageError() {

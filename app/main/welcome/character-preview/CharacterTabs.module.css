@@ -4,6 +4,44 @@
    like one continuous flow, but layout here is a real page grid rather
    than the wizard's single centered column. */
 
+/* Sticky (not fixed) - stays in normal document flow, so .sheet below needs
+   no manual top-padding to clear it, but pins to the top of .wizard's own
+   scroll (its nearest scrolling ancestor) once the page scrolls past it.
+   Spans the full viewport width, not .sheet's own max-width:56rem column,
+   so the tab row can spread across the whole top edge. Solid-enough
+   background so content scrolling underneath doesn't show through once
+   it's pinned. */
+.topBar {
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.4rem;
+  /* More on the left than the right - clears space for the first tab icon
+     from the true viewport edge; the right side already reads as clear of
+     the edge thanks to .topBarRow's own gap before .closeButton. */
+  padding: 0.6rem 0.5rem 0.6rem 1.25rem;
+  box-sizing: border-box;
+  background: rgba(10, 8, 4, 0.95);
+}
+
+.topBarRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: nowrap;
+  width: 100%;
+  max-width: 56rem;
+  /* Only 2 children (.tabRow, .closeButton), so this is exactly the gap
+     between Adventure (the row's last icon) and Close - deliberately wider
+     than .tabRow's own inter-icon gap below, so Close doesn't read as a 6th
+     tab. */
+  gap: clamp(0.6rem, 4vw, 1.5rem);
+}
+
 .sheet {
   position: relative;
   z-index: 2;
@@ -13,12 +51,13 @@
   gap: 0.5rem;
   width: 100%;
   max-width: 56rem;
-  padding: 1.5rem 1.5rem 6rem;
+  margin: 0 auto;
+  padding: 1rem 1.5rem 6rem;
   box-sizing: border-box;
 }
 
 .name {
-  font-size: clamp(1.3rem, 5vw, 2.2rem);
+  font-size: clamp(1.1rem, 4.5vw, 2.2rem);
   letter-spacing: 0.1em;
   text-transform: uppercase;
   color: #c07a3a;
@@ -26,14 +65,9 @@
   margin: 0;
 }
 
-.body {
-  display: flex;
-  width: 100%;
-}
-
-/* No reserved space for .menuToggle/.tabColumn - both are a fixed overlay
-   that floats over this content rather than pushing it, so the layout
-   never shifts just because the menu exists. */
+/* No reserved space for the fixed Delete button below - it floats over
+   this content rather than pushing it, so the layout never shifts just
+   because it exists. */
 .mainColumn {
   flex: 1 1 auto;
   min-width: 0;
@@ -42,95 +76,10 @@
   gap: 1.25rem;
 }
 
-/* Hamburger toggle - sits in the header-bar zone at the true top-left of
-   the viewport (the site's own header is blended out while this view is
-   open, see useHeaderVisibility in CharacterPreview.tsx), not lower down
-   the page. No box/border - just the three bars, so it reads as part of
-   that bar rather than a floating button. */
-.menuToggle {
-  position: fixed;
-  top: 0.75rem;
-  left: 0.75rem;
-  z-index: 6;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 5px;
-  width: 44px;
-  height: 44px;
-  background: none;
-  border: none;
-  cursor: pointer;
-}
-
-.menuToggleOpen {
-  composes: menuToggle;
-}
-
-.hamburgerBar {
-  width: 22px;
-  height: 2px;
-  border-radius: 1px;
-  background: #d4c9a8;
-  transition: transform 0.2s ease, opacity 0.2s ease, background 0.15s ease;
-}
-
-.menuToggle:hover .hamburgerBar {
-  background: #e6b85c;
-}
-
-/* Bars fold into an X while open, rather than relying on a background fill
-   to show state (there's no box to fill any more). */
-.menuToggleOpen .hamburgerBar {
-  background: #e6b85c;
-}
-
-.menuToggleOpen .hamburgerBar:nth-child(1) {
-  transform: translateY(7px) rotate(45deg);
-}
-
-.menuToggleOpen .hamburgerBar:nth-child(2) {
-  opacity: 0;
-}
-
-.menuToggleOpen .hamburgerBar:nth-child(3) {
-  transform: translateY(-7px) rotate(-45deg);
-}
-
-/* The flyout itself - drops down just below the toggle, flush to the same
-   left edge, and spans down to near the screen's own bottom edge (top AND
-   bottom set, not just top) so the flex column has real height to work
-   with. The gradient panel is wider than the icons themselves and bleeds
-   off the true screen edge (left:0, not inset) so it reads as one
-   continuous surface running the full height of the menu, not a boxed
-   dropdown. Delete lives in this same stack (see CharacterPreview.tsx) -
-   its own margin-top:auto (below) is what pushes it down to the bottom of
-   this panel, away from the other buttons, without needing a fixed height. */
-.tabColumn {
-  position: fixed;
-  top: 3.75rem;
-  bottom: 1.25rem;
-  left: 0;
-  z-index: 5;
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 0.5rem;
-  padding: 0.75rem 3rem 0.75rem 0.75rem;
-  /* Two layers: a vertical one that darkens toward the bottom (where
-     Delete sits, on top so it wins) over the base horizontal left-edge
-     fade, so the danger end of the panel reads visibly darker. */
-  background:
-    linear-gradient(180deg, transparent 0%, rgba(0, 0, 0, 0.55) 100%),
-    linear-gradient(90deg, rgba(10, 8, 4, 0.88) 0%, rgba(10, 8, 4, 0.55) 65%, transparent 100%);
-}
-
 /* Icon-only, no box - the icon art itself (see char-preview-*.png) carries
    the meaning, with title/aria-label covering accessibility and hover.
-   Active/hover state is a glow on the icon (drop-shadow respects the PNG's
-   own alpha) rather than a filled background, since there's no box left to
-   fill. */
+   Hover state is a glow on the icon (drop-shadow respects the PNG's own
+   alpha) rather than a filled background, since there's no box to fill. */
 .tabButton {
   display: flex;
   align-items: center;
@@ -146,31 +95,83 @@
   transform: translateY(-1px) scale(1.05);
 }
 
-.tabButtonActive {
+/* Close - the last item in .topBarRow, right-aligned by justify-content:
+   space-between there. Same row/scaling as the 5 tab icons (see .tabRow
+   below) since it shares the same clamp()-sized .tabIcon. */
+.closeButton {
   composes: tabButton;
+  padding: 0.15rem;
+  flex-shrink: 0;
 }
 
-.tabButtonActive .tabIcon {
-  filter: drop-shadow(0 0 8px rgba(230, 184, 92, 0.85));
+/* The 5 pages' own tab bar, sharing .topBarRow with Close. flex-wrap:nowrap
+   plus the icons' own clamp()-based sizing (see .tabRowButton .tabIcon)
+   keeps all 6 icons on one line down to very narrow screens (~300px)
+   instead of a fixed size that would eventually force a wrap. */
+.tabRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex: 1 1 auto;
+  flex-wrap: nowrap;
+  gap: clamp(0.1rem, 1vw, 0.6rem);
+  min-width: 0;
 }
 
-/* Delete lives inside .tabColumn (see CharacterPreview.tsx), but
-   margin-top:auto pushes it all the way to the bottom of that flex column -
-   .tabColumn's top+bottom (both set, above) give the column real height to
-   push against, so this works regardless of screen height. Red glow
-   instead of the gold one above, so a destructive action never reads as
-   just another toggle. */
-.tabButtonDanger {
+.tabRowButton {
   composes: tabButton;
-  margin-top: auto;
+  padding: 0.15rem;
+  flex-shrink: 0;
 }
 
-.tabButtonDanger .tabIcon {
+.tabRowButton .tabIcon,
+.closeButton .tabIcon {
+  width: clamp(30px, 9vw, 52px);
+  height: clamp(30px, 9vw, 52px);
+}
+
+/* The page currently showing - same gold glow the old flyout used for its
+   own "active" tab, just larger. The rest are dimmed via
+   .tabRowButtonInactive below, applied alongside .tabRowButton rather than
+   replacing it. */
+.tabRowButtonActive .tabIcon {
+  filter: drop-shadow(0 0 14px rgba(230, 184, 92, 0.95));
+}
+
+.tabRowButtonInactive {
+  opacity: 0.45;
+}
+
+/* Delete only shows on the Stats page (see CharacterPreview.tsx) - bottom
+   left corner. Red glow instead of gold, so a destructive action never
+   reads as just another toggle. */
+.deleteButton {
+  composes: tabButton;
+  position: fixed;
+  bottom: 0.75rem;
+  left: 0.75rem;
+  z-index: 6;
+}
+
+.deleteButton .tabIcon {
   filter: drop-shadow(0 0 6px rgba(181, 69, 58, 0.65));
 }
 
-.tabButtonDanger:hover .tabIcon {
+.deleteButton:hover .tabIcon {
   filter: drop-shadow(0 0 10px rgba(181, 69, 58, 0.9));
+}
+
+/* Before the player has actually scrolled this page down to its end (see
+   CharacterPreview.tsx) - barely visible and (via the button's own
+   `disabled`) inert, so a stray tap can't trigger this permanent action
+   before they've had a chance to see the rest of the page. */
+.deleteButtonLocked {
+  opacity: 0.15;
+  cursor: default;
+}
+
+.deleteButtonLocked:hover {
+  transform: none;
 }
 
 .tabIcon {
@@ -261,6 +262,64 @@
   color: #a89968;
 }
 
+/* The value span is only as wide as its content on one line, which is what
+   makes justify-content:space-between read as "right-aligned" in the first
+   place - once a long value (e.g. a birthsign name) wraps to a second line
+   on a narrow screen, that box widens and its text defaults back to
+   left-aligned within it, drifting the wrapped line away from the row's
+   right edge. Pin it explicitly instead of relying on the single-line box
+   width to fake it. */
+.identityRow span:last-child {
+  text-align: right;
+}
+
+/* Birthsign is the one identity row that opens something (its flip-card
+   popup, see StatsTab.tsx) - a <button> rather than a <div>, reset back to
+   .identityRow's own look since browser button defaults would otherwise
+   override its padding/border/font. */
+.identityRowButton {
+  composes: identityRow;
+  width: 100%;
+  background: none;
+  border: none;
+  border-bottom: 1px solid rgba(168, 153, 104, 0.2);
+  font: inherit;
+  text-align: inherit;
+  cursor: pointer;
+}
+
+.identityRowButton span:last-child {
+  color: #c07a3a;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.identityRowButton:hover span:last-child {
+  color: #e6b85c;
+}
+
+/* Full-screen backdrop for the birthsign popup - clicking it (anywhere but
+   the card itself, which stops propagation) closes the popup, same pattern
+   as a modal's click-outside-to-dismiss. */
+.birthsignPopupOverlay {
+  position: fixed;
+  inset: 0;
+  z-index: 10;
+  background: rgba(5, 4, 2, 0.85);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+/* Sized down from the wizard's own grid-filling .birthsignTile (imported as
+   wizardStyles) - everything else about the card (flip animation, faces,
+   aspect-ratio) is reused as-is. */
+.birthsignPopupCard {
+  width: min(16rem, 70vw);
+  cursor: pointer;
+}
+
 .attrColumns {
   display: flex;
   flex-wrap: wrap;
@@ -332,11 +391,17 @@
 
 /* ---- Body tab ---- */
 
+/* align-items:flex-start, not the flex default of stretch - without it,
+   .frameBox (which has no explicit height, only aspect-ratio:2/3) gets
+   force-stretched to match .slotGrid's own height on wide screens,
+   distorting the portrait crop away from the 2:3 shape the stored
+   frameArea/zoom/pan were actually framed against. */
 .bodyLayout {
   display: flex;
   flex-wrap: wrap;
   gap: 1.5rem;
   justify-content: center;
+  align-items: flex-start;
 }
 
 .frameBox {
@@ -468,69 +533,3 @@
   padding: 0.5rem 0;
 }
 
-/* ---- Standalone portrait editor overlay ----
-   Opened by clicking the face portrait on the Stats tab (see
-   CharacterPreview.tsx). Sits above everything else in the sheet, including
-   the hamburger menu, since it owns the whole screen while open. Cancel/Save
-   reuse SoulCreation.module.css's .navButton (imported there as `styles`) in
-   the same bottom corners the wizard's own Back/Continue occupy, so this
-   reads as the same interaction pattern rather than a new one. */
-.portraitEditorOverlay {
-  position: fixed;
-  inset: 0;
-  z-index: 10;
-  background: rgba(5, 4, 2, 0.94);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  overflow: hidden;
-}
-
-.portraitEditorHeading {
-  position: fixed;
-  top: 1.25rem;
-  left: 50%;
-  transform: translateX(-50%);
-  z-index: 11;
-  font-size: 0.9rem;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: #c07a3a;
-  margin: 0;
-}
-
-.portraitEditorError {
-  position: fixed;
-  bottom: 4.5rem;
-  left: 50%;
-  transform: translateX(-50%);
-  z-index: 11;
-  width: min(28rem, calc(100vw - 2.5rem));
-  color: #e07a5f;
-  font-size: 0.8rem;
-  text-align: center;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.6);
-}
-
-/* Top-right corner, same borderless icon-button language as the tab menu's
-   own Close button (.tabButton/.tabIcon) - bottom-left would collide with
-   PortraitEditor's own URL field, which spans from that same edge. */
-.portraitEditorCancel {
-  position: fixed;
-  top: 0.75rem;
-  right: 0.75rem;
-  z-index: 11;
-}
-
-/* Same bottom-right corner as the wizard's own .continue button
-   (SoulCreation.module.css) - PortraitEditor's own URL field already leaves
-   this slot clear for a caller's action button. */
-.portraitEditorSave {
-  position: fixed;
-  bottom: 1.25rem;
-  right: max(1.25rem, calc((100vw - 900px) / 2 + 1.25rem));
-  z-index: 11;
-  background: linear-gradient(180deg, #cf9b51, #614724);
-  border-color: #554323;
-  box-shadow: 0 3px 0 #362818;
-}

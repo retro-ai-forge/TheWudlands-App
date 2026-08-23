@@ -29,6 +29,12 @@ export function getPortraitCropImgStyle(area: PortraitArea) {
     width: `${100 / width}%`,
     height: `${100 / height}%`,
     maxWidth: "none",
-    transform: `translate(-${area.x * 100}%, -${area.y * 100}%)`,
+    // Negate the number itself, not the string - area.x/y are routinely
+    // negative (any letterboxed crop, e.g. a frame whose aspect ratio
+    // doesn't match the source image), and `-${area.x * 100}%` on a
+    // negative value string-concatenates into a doubly-negative, CSS-invalid
+    // "--25%", which the browser then silently drops the whole transform
+    // for - leaving the image unpositioned instead of cropped.
+    transform: `translate(${-area.x * 100}%, ${-area.y * 100}%)`,
   };
 }
