@@ -102,6 +102,13 @@ export function WelcomeView() {
           setViewingCharacter(null);
           refreshCharacters();
         }}
+        onPortraitSaved={(updated) => {
+          // Update the open preview immediately (its `character` prop is a
+          // snapshot, not live) and refresh the roster so the soul slot grid
+          // picks up the new portrait too.
+          setViewingCharacter(updated);
+          refreshCharacters();
+        }}
       />
     );
   }

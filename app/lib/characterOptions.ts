@@ -119,3 +119,19 @@ export const SOUL_ATTRIBUTES = [
   { id: "lore", name: "Lore", description: "Learned knowledge — arcana, history, alchemy, rituals, languages." },
   { id: "pres", name: "Presence", description: "Charisma and aura — persuasion, intimidation, leadership, divine favor." },
 ];
+
+// id -> display name only, for places that just need to label a stored
+// birthsign id (e.g. the character sheet). The full flavor/effect copy for
+// each sign lives in the Birthsign step's own BIRTHSIGNS array in
+// SoulCreation.tsx - kept separate rather than merged here since that
+// array is tightly coupled to that step's flip-card UI.
+export const BIRTHSIGN_NAMES: Record<string, string> = {
+  fatecoil_mark: "Fatecoil Mark",
+  grit_stitch_brand: "Grit Stitch Brand",
+  hearthfinder_sigil: "Hearthfinder Sigil",
+  far_sight_rune: "Far Sight Rune",
+  courtseers_eye: "Courtseer's Eye",
+  legend_crest: "Legend Crest",
+  glassvein_birthmark: "Glassvein Birthmark",
+  fortunes_thistle: "Fortune's Thistle",
+};

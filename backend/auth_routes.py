@@ -27,7 +27,14 @@ from backend.active_players import (
     list_active_players,
 )
 from backend.character import AttributeStats, Character, PortraitArea, ProfStats
-from backend.players import add_character, delete_character, get_or_create_player, get_player, grant_resource
+from backend.players import (
+    add_character,
+    delete_character,
+    get_or_create_player,
+    get_player,
+    grant_resource,
+    update_character_portrait,
+)
 from backend.balances import log_login_balances
 from backend.resources_catalog import RESOURCE_ITEMS_BY_ID, resolve_trapping_options
 from backend.soul_slots import (
@@ -245,6 +252,23 @@ class CreateCharacterRequest(BaseModel):
     selectedResources: Dict[str, int] = Field(
         default_factory=dict,
         description="Resources chosen on the Trappings step, as resource id -> amount",
+    )
+
+
+class UpdatePortraitRequest(BaseModel):
+    """Payload from the standalone portrait editor (opened from the
+    character preview page to re-frame an existing character's portrait)."""
+
+    portraitUrl: str = Field("", description="Character's portrait image URL")
+    portraitZoom: float = Field(1.0, description="Zoom applied to the source portrait when framed")
+    portraitPan: PortraitPan = Field(
+        default_factory=lambda: PortraitPan(x=0, y=0), description="Pan applied to the source portrait when framed"
+    )
+    portraitFrameArea: Optional[PortraitAreaResponse] = Field(
+        None, description="Full-body crop, for future equipment-slot rendering"
+    )
+    portraitFaceArea: Optional[PortraitAreaResponse] = Field(
+        None, description="Face-only crop, used for the soul slot preview"
     )
 
 
@@ -650,6 +674,31 @@ async def delete_my_character(character_id: str, address: str = Depends(get_curr
     character preview page's Delete button - there's no undo.
     """
     player = await delete_character(address, character_id)
+    if player is None:
+        raise HTTPException(status_code=404, detail="No player record found for this address")
+
+    return player.to_dict()
+
+
+@player_router.patch("/me/characters/{character_id}/portrait", response_model=PlayerDataResponse)
+async def update_my_character_portrait(
+    character_id: str, payload: UpdatePortraitRequest, address: str = Depends(get_current_address)
+):
+    """
+    Re-frame an existing character's portrait. Called from the standalone
+    portrait editor opened by clicking a character's portrait on the
+    character preview page (as opposed to the Soul Creation wizard, which
+    sets these once at creation).
+    """
+    player = await update_character_portrait(
+        address,
+        character_id,
+        portrait_url=payload.portraitUrl,
+        portrait_zoom=payload.portraitZoom,
+        portrait_pan={"x": payload.portraitPan.x, "y": payload.portraitPan.y},
+        portrait_frame_area=payload.portraitFrameArea.model_dump() if payload.portraitFrameArea else None,
+        portrait_face_area=payload.portraitFaceArea.model_dump() if payload.portraitFaceArea else None,
+    )
     if player is None:
         raise HTTPException(status_code=404, detail="No player record found for this address")
 

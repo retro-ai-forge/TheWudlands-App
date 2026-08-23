@@ -1,10 +1,11 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import styles from "../soul-creation/SoulCreation.module.css";
 import tabStyles from "./CharacterTabs.module.css";
 import { useHeaderVisibility } from "@/app/main/HeaderVisibilityProvider";
 import type { SlotCharacterSummary } from "../SoulSlotGrid";
+import { PortraitEditor, type PortraitEditorValue } from "../PortraitEditor";
 import { StatsTab } from "./StatsTab";
 import { BodyTab } from "./BodyTab";
 import { SoulTab } from "./SoulTab";
@@ -19,8 +20,8 @@ const TABS: { key: TabKey; label: string; icon: string }[] = [
   { key: "stats", label: "Stats", icon: `${ICON_BASE}stats.png` },
   { key: "body", label: "Body", icon: `${ICON_BASE}body.png` },
   { key: "soul", label: "Soul", icon: `${ICON_BASE}soul.png` },
-  { key: "adventure", label: "Adventure", icon: `${ICON_BASE}adventure.png` },
   { key: "inventory", label: "Inventory", icon: `${ICON_BASE}inventory.png` },
+  { key: "adventure", label: "Adventure", icon: `${ICON_BASE}adventure.png` },
 ];
 
 // Opened by clicking an active soul slot's character. Five subpages toggled
@@ -35,11 +36,13 @@ export function CharacterPreview({
   playerResourceBalances,
   onClose,
   onDeleted,
+  onPortraitSaved,
 }: {
   character: SlotCharacterSummary;
   playerResourceBalances: Record<string, number>;
   onClose: () => void;
   onDeleted: () => void;
+  onPortraitSaved: (character: SlotCharacterSummary) => void;
 }) {
   const { setHidden: setHeaderHidden } = useHeaderVisibility();
   const [activeTab, setActiveTab] = useState<TabKey>("stats");
@@ -47,10 +50,57 @@ export function CharacterPreview({
   const [isDeleting, setIsDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
 
+  // Standalone portrait editor, opened by clicking the face portrait on the
+  // Stats tab. The draft lives in a ref rather than state - PortraitEditor's
+  // onChange fires on every drag/zoom frame, and this component doesn't need
+  // to re-render for those, only to read the latest value once, on Save.
+  const [editingPortrait, setEditingPortrait] = useState(false);
+  const [isSavingPortrait, setIsSavingPortrait] = useState(false);
+  const [portraitError, setPortraitError] = useState<string | null>(null);
+  const portraitDraftRef = useRef<PortraitEditorValue | null>(null);
+
   useEffect(() => {
     setHeaderHidden(true);
     return () => setHeaderHidden(false);
   }, [setHeaderHidden]);
+
+  async function handleSavePortrait() {
+    const draft = portraitDraftRef.current;
+    if (!draft || isSavingPortrait) return;
+
+    setPortraitError(null);
+    setIsSavingPortrait(true);
+    try {
+      const res = await fetch(`/api/auth/me/characters/${character.id}/portrait`, {
+        method: "PATCH",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          // Same "empty" placeholder convention as the wizard's own save -
+          // see SoulCreation.tsx's handleContinue.
+          portraitUrl: draft.portraitUrl.trim() || "empty",
+          portraitZoom: draft.portraitZoom,
+          portraitPan: draft.portraitPan,
+          portraitFrameArea: draft.portraitFrameArea,
+          portraitFaceArea: draft.portraitFaceArea,
+        }),
+      });
+      if (!res.ok) throw new Error("Failed to save portrait");
+      setEditingPortrait(false);
+      onPortraitSaved({
+        ...character,
+        portraitUrl: draft.portraitUrl.trim() || "empty",
+        portraitZoom: draft.portraitZoom,
+        portraitPan: draft.portraitPan,
+        portraitFrameArea: draft.portraitFrameArea,
+        portraitFaceArea: draft.portraitFaceArea,
+      });
+    } catch {
+      setPortraitError("Could not save the portrait. Please try again.");
+    } finally {
+      setIsSavingPortrait(false);
+    }
+  }
 
   async function handleDelete() {
     if (isDeleting) return;
@@ -88,7 +138,9 @@ export function CharacterPreview({
 
           <div className={tabStyles.body}>
             <div className={tabStyles.mainColumn}>
-              {activeTab === "stats" && <StatsTab character={character} />}
+              {activeTab === "stats" && (
+                <StatsTab character={character} onEditPortrait={() => setEditingPortrait(true)} />
+              )}
               {activeTab === "body" && <BodyTab character={character} />}
               {activeTab === "soul" && <SoulTab character={character} />}
               {activeTab === "adventure" && <AdventureTab character={character} />}
@@ -163,6 +215,43 @@ export function CharacterPreview({
         <span className={tabStyles.hamburgerBar} />
         <span className={tabStyles.hamburgerBar} />
       </button>
+
+      {editingPortrait && (
+        <div className={tabStyles.portraitEditorOverlay}>
+          <h1 className={tabStyles.portraitEditorHeading}>Edit Portrait</h1>
+          <PortraitEditor
+            initialUrl={character.portraitUrl}
+            initialZoom={character.portraitZoom}
+            initialPan={character.portraitPan}
+            onChange={(value) => {
+              portraitDraftRef.current = value;
+            }}
+          />
+          {portraitError && <p className={tabStyles.portraitEditorError}>{portraitError}</p>}
+          <button
+            type="button"
+            className={`${tabStyles.tabButton} ${tabStyles.portraitEditorCancel}`}
+            onClick={() => {
+              setPortraitError(null);
+              setEditingPortrait(false);
+            }}
+            disabled={isSavingPortrait}
+            title="Cancel"
+            aria-label="Cancel"
+          >
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={`${ICON_BASE}close.png`} alt="" className={tabStyles.tabIcon} />
+          </button>
+          <button
+            type="button"
+            className={`${styles.navButton} ${tabStyles.portraitEditorSave}`}
+            onClick={handleSavePortrait}
+            disabled={isSavingPortrait}
+          >
+            {isSavingPortrait ? "Saving…" : "Save"}
+          </button>
+        </div>
+      )}
     </div>
   );
 }

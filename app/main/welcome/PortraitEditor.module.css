@@ -1,0 +1,147 @@
+/* Self-contained styling for PortraitEditor.tsx - deliberately not sharing
+   soul-creation/SoulCreation.module.css (colors/tokens duplicated instead),
+   so this component has no cross-directory dependency and stays usable
+   from any page. Palette matches the wizard's own for visual consistency. */
+
+.wizard img {
+  -webkit-user-drag: none;
+  user-select: none;
+}
+
+/* Fixed-size frame (2:3, matching the placeholder silhouette's own 500x750)
+   so the box never changes shape once a user-supplied image (any aspect
+   ratio) replaces the placeholder — object-fit:cover on the img fills it
+   without stretching/distorting, cropping instead where needed. This also
+   keeps .portraitHeadZone below meaningful: it's defined relative to this
+   fixed frame, not to whatever aspect ratio a given image happens to have. */
+.portraitFrame {
+  position: relative;
+  display: inline-block;
+  height: 80vh;
+  aspect-ratio: 2 / 3;
+  max-width: 90vw;
+  margin: 0 0 0.75rem;
+  line-height: 0;
+  overflow: hidden;
+}
+
+/* Width/height/transform are set inline per-image (they depend on the
+   loaded image's natural size, current zoom, and pan) — this just anchors
+   the positioning origin to the frame's center. */
+.portraitImage {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  display: block;
+  cursor: grab;
+  touch-action: none;
+  -webkit-user-drag: none;
+  user-select: none;
+}
+
+.portraitImage:active {
+  cursor: grabbing;
+}
+
+.portraitHint {
+  position: fixed;
+  top: calc(100% - 4.25rem);
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: min(28rem, calc(100vw - 2.5rem));
+  margin: 0;
+  z-index: 3;
+  color: #d4c9a8;
+  font-family: "Courier New", Courier, monospace;
+  font-size: 0.75rem;
+  line-height: 1.35;
+  text-align: center;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.6);
+}
+
+.portraitOutline {
+  position: absolute;
+  inset: 0;
+  border: 2px solid rgba(230, 184, 92, 0.7);
+  pointer-events: none;
+}
+
+/* Replaces the browser's own broken-image + alt-text rendering, which is
+   stuck at the image box's top-left and isn't stylable/positionable —
+   centered lower in the frame instead, with its own solid dark backdrop so
+   it stays readable regardless of whatever's behind it. */
+.portraitLoadError {
+  position: absolute;
+  left: 10%;
+  right: 10%;
+  top: 60%;
+  transform: translateY(-50%);
+  padding: 1rem 1.1rem;
+  background: rgba(10, 8, 4, 0.92);
+  border: 1px solid #6f532f;
+  border-radius: 6px;
+  color: #d4c9a8;
+  font-family: "Courier New", Courier, monospace;
+  font-size: 0.85rem;
+  line-height: 1.4;
+  text-align: center;
+  pointer-events: none;
+}
+
+/* Head-placement guide — roughly the top-center of the frame, where a
+   subject's head should land so later crops (the face-only preview) line
+   up consistently across different uploaded portraits. */
+.portraitHeadZone {
+  position: absolute;
+  top: 1.5%;
+  left: 50%;
+  /* vh-based, not a fixed rem, so it scales down with .portraitFrame (which
+     is itself height:80vh) on short screens instead of staying a fixed size
+     that ends up oversized relative to a shrunk frame. */
+  width: 23.47vh;
+  aspect-ratio: 1 / 1;
+  transform: translateX(-50%);
+  border: 2px solid rgba(168, 120, 50, 0.9);
+  border-radius: 4px;
+  pointer-events: none;
+}
+
+/* Pinned to the viewport's bottom-left, same reasoning as the wizard's own
+   version: decoupled from the centered headline/image flex flow (which any
+   bottom margin would only half-satisfy, since centering redistributes
+   added height equally above/below). right leaves room for a caller's own
+   action button(s) in the bottom-right corner. */
+.portraitUrlInput {
+  position: fixed;
+  bottom: 1.25rem;
+  left: max(1.25rem, calc((100vw - 900px) / 2 + 1.25rem));
+  right: max(8rem, calc((100vw - 900px) / 2 + 8rem));
+  z-index: 3;
+}
+
+.textInput {
+  font-family: "Courier New", Courier, monospace;
+  font-size: 0.85rem;
+  background: rgba(0, 0, 0, 0.4);
+  border: 1px solid #6f532f;
+  color: #d4c9a8;
+  border-radius: 6px;
+  padding: 0.5rem 0.75rem;
+}
+
+.textInput::placeholder {
+  color: #7a6a4a;
+}
+
+.textInput:focus {
+  outline: none;
+  border-color: #c07a3a;
+}
+
+/* Compound selector so this reliably beats .textInput's own width
+   regardless of which rule comes first in the file (equal specificity
+   would otherwise make that an accident of source order). */
+.textInput.portraitUrlInput {
+  width: auto;
+  max-width: none;
+}

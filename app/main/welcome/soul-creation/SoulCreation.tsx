@@ -13,6 +13,7 @@ import {
 } from "@/app/lib/ageScaling";
 import SoulBulb from "./SoulBulb";
 import { useHeaderVisibility } from "@/app/main/HeaderVisibilityProvider";
+import { PortraitEditor, type PortraitArea } from "../PortraitEditor";
 
 const pinyonScript = Pinyon_Script({ subsets: ["latin"], weight: "400" });
 
@@ -229,241 +230,13 @@ export function SoulCreation({
     }, 300);
   }
 
-  // Manual fit/zoom/pan for the portrait, instead of object-fit:cover (which
-  // always force-crops to fill the frame). At zoom 1 the whole image is
-  // shown, uncropped, scaled down/up only as far as needed to fit inside
-  // .portraitFrame (whichever dimension is the tighter constraint) — zoom
-  // then scales up from there (mouse wheel/trackpad pinch, or two-finger
-  // touch pinch), and pan (drag) repositions within whatever now overflows
-  // the frame.
+  // Portrait framing (zoom/pan/crop math) is owned by PortraitEditor, mounted
+  // for page 3 below - these mirror its latest reported value so
+  // handleContinue's save below can read it after navigating past page 3.
   const [portraitZoom, setPortraitZoom] = useState(1);
   const [portraitPan, setPortraitPan] = useState({ x: 0, y: 0 });
-  const portraitFrameRef = useRef<HTMLDivElement>(null);
-  const portraitUrlInputRef = useRef<HTMLInputElement>(null);
-  const portraitHeadZoneRef = useRef<HTMLDivElement>(null);
-  const portraitNaturalSizeRef = useRef<{ width: number; height: number } | null>(null);
-  const portraitDragRef = useRef<{ startClientX: number; startClientY: number; startPanX: number; startPanY: number } | null>(null);
-  // Pointers currently down on the portrait image — one active pointer pans
-  // (existing drag behavior below), two active pointers pinch-zoom instead.
-  const portraitActivePointersRef = useRef<Map<number, { x: number; y: number }>>(new Map());
-  const portraitPinchStartRef = useRef<{ distance: number; zoom: number } | null>(null);
-
-  // .portraitFrame is viewport-height-relative (80vh) and the URL field is
-  // pinned near the true bottom edge, so on short viewports the gap between
-  // them can shrink well below the hint text's fixed CSS offset, pushing it
-  // to overlap the frame. Measuring the actual gap and centering the hint
-  // within it (like the old zoom slider did) keeps it clear on any height.
-  // This is the midpoint's distance from the viewport TOP — paired with the
-  // CSS's translate(-50%, -50%), that centers the text's own box on the
-  // midpoint, rather than anchoring just one edge of it there.
-  const [portraitHintCenterY, setPortraitHintCenterY] = useState<number | null>(null);
-  useEffect(() => {
-    if (page !== 3) return;
-    function updatePortraitHintCenterY() {
-      const frame = portraitFrameRef.current;
-      const urlInput = portraitUrlInputRef.current;
-      if (!frame || !urlInput) return;
-      setPortraitHintCenterY((frame.getBoundingClientRect().bottom + urlInput.getBoundingClientRect().top) / 2);
-    }
-    updatePortraitHintCenterY();
-    window.addEventListener("resize", updatePortraitHintCenterY);
-    return () => window.removeEventListener("resize", updatePortraitHintCenterY);
-  }, [page]);
-
-  // The scale at which the image's natural size fits entirely inside the
-  // frame without cropping — the zoom slider's 1x baseline.
-  function getPortraitFitScale(): number {
-    const nat = portraitNaturalSizeRef.current;
-    const frame = portraitFrameRef.current;
-    if (!nat || !frame) return 1;
-    const rect = frame.getBoundingClientRect();
-    return Math.min(rect.width / nat.width, rect.height / nat.height);
-  }
-
-  // How far the image can be panned from center, per axis — (frame + image)/2
-  // is the distance at which the image's near edge just reaches the frame's
-  // far edge, i.e. it's about to completely leave the frame. That's a
-  // deliberately permissive limit (lets the image go beyond the frame's own
-  // edges, not just up to them) and works the same whether the image is
-  // currently larger or smaller than the frame in that axis — smaller
-  // doesn't mean locked centered, it just starts with more room to spare.
-  function getPortraitPanLimits(zoom: number) {
-    const nat = portraitNaturalSizeRef.current;
-    const frame = portraitFrameRef.current;
-    if (!nat || !frame) return { maxX: 0, maxY: 0 };
-    const rect = frame.getBoundingClientRect();
-    const scale = getPortraitFitScale() * zoom;
-    return {
-      maxX: (rect.width + nat.width * scale) / 2,
-      maxY: (rect.height + nat.height * scale) / 2,
-    };
-  }
-
-  // A crop rectangle expressed relative to the ORIGINAL uploaded image
-  // (0–1 fractions of its natural width/height) — portable, so it still
-  // makes sense however large/small the image is later re-rendered at,
-  // unlike the on-screen pixel positions used while editing.
-  type PortraitArea = { x: number; y: number; width: number; height: number };
-
-  // What .portraitFrame (the full character screen) and .portraitHeadZone
-  // (the face preview) currently show, both translated back into that same
-  // natural-image coordinate space — this is what actually needs storing:
-  // re-applying { x, y, width, height } as a crop (e.g. background-position
-  // + background-size, or a server-side crop) reproduces exactly what the
-  // user framed here, regardless of zoom/pan, which are just the editing
-  // controls used to arrive at these two rectangles.
-  function getPortraitAreas(): { frameArea: PortraitArea | null; faceArea: PortraitArea | null } {
-    const nat = portraitNaturalSizeRef.current;
-    const frame = portraitFrameRef.current;
-    const headZone = portraitHeadZoneRef.current;
-    if (!nat || !frame || !headZone) return { frameArea: null, faceArea: null };
-
-    const frameRect = frame.getBoundingClientRect();
-    const scale = getPortraitFitScale() * portraitZoom;
-    const renderedW = nat.width * scale;
-    const renderedH = nat.height * scale;
-    // Image's rendered top-left corner, relative to the frame's own top-left.
-    const imgOffsetX = (frameRect.width - renderedW) / 2 + portraitPan.x;
-    const imgOffsetY = (frameRect.height - renderedH) / 2 + portraitPan.y;
-
-    // `left`/`top` are frame-relative pixels; converts through the image's
-    // current render scale/offset back to natural-image fractions.
-    const toNaturalArea = (left: number, top: number, width: number, height: number): PortraitArea => ({
-      x: (left - imgOffsetX) / scale / nat.width,
-      y: (top - imgOffsetY) / scale / nat.height,
-      width: width / scale / nat.width,
-      height: height / scale / nat.height,
-    });
-
-    const headRect = headZone.getBoundingClientRect();
-    return {
-      frameArea: toNaturalArea(0, 0, frameRect.width, frameRect.height),
-      faceArea: toNaturalArea(headRect.left - frameRect.left, headRect.top - frameRect.top, headRect.width, headRect.height),
-    };
-  }
-
-  // getPortraitAreas() reads live DOM refs (portraitFrameRef/portraitHeadZoneRef),
-  // which only exist while page 3 is actually mounted - called again after
-  // moving on to a later page, it returns nulls. These two hold the last
-  // real values computed while page 3 was up, so they survive navigating
-  // away and are what actually gets sent on save (page 5's Continue).
   const [savedPortraitFrameArea, setSavedPortraitFrameArea] = useState<PortraitArea | null>(null);
   const [savedPortraitFaceArea, setSavedPortraitFaceArea] = useState<PortraitArea | null>(null);
-
-  useEffect(() => {
-    if (page !== 3) return;
-    const { frameArea, faceArea } = getPortraitAreas();
-    if (frameArea) setSavedPortraitFrameArea(frameArea);
-    if (faceArea) setSavedPortraitFaceArea(faceArea);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [page, portraitZoom, portraitPan.x, portraitPan.y, portraitUrl]);
-
-  // True once the current portraitUrl fails to load — the browser's own
-  // broken-image + alt-text rendering isn't stylable/positionable (it's
-  // stuck top-left of the image box and often unreadable), so on error the
-  // image itself is hidden and this drives a custom, readable message with
-  // its own dark backdrop instead.
-  const [portraitLoadFailed, setPortraitLoadFailed] = useState(false);
-
-  function handlePortraitImageLoad(e: React.SyntheticEvent<HTMLImageElement>) {
-    portraitNaturalSizeRef.current = { width: e.currentTarget.naturalWidth, height: e.currentTarget.naturalHeight };
-    setPortraitLoadFailed(false);
-    setPortraitZoom(1);
-    setPortraitPan({ x: 0, y: 0 });
-  }
-
-  function handlePortraitImageError() {
-    setPortraitLoadFailed(true);
-  }
-
-  function handlePortraitZoomChange(rawZoom: number) {
-    const clamped = Math.max(1, Math.min(3, rawZoom));
-    setPortraitZoom(clamped);
-    // Re-clamp so zooming back out can't leave a pan offset from the old,
-    // more-permissive zoom level stranded outside the new limits.
-    const { maxX, maxY } = getPortraitPanLimits(clamped);
-    setPortraitPan((prev) => ({
-      x: Math.max(-maxX, Math.min(maxX, prev.x)),
-      y: Math.max(-maxY, Math.min(maxY, prev.y)),
-    }));
-  }
-
-  // Trackpad pinch reliably arrives as a wheel event with ctrlKey set (the
-  // browser translates the OS-level pinch gesture for us); a plain mouse
-  // wheel arrives without it. Both are treated as zoom here, since a mouse
-  // has no other natural zoom gesture and this replaces the old slider.
-  function handlePortraitWheel(e: React.WheelEvent<HTMLDivElement>) {
-    e.preventDefault();
-    const factor = Math.exp(-e.deltaY * 0.0006);
-    handlePortraitZoomChange(portraitZoom * factor);
-  }
-
-  function pinchDistance(pointers: Map<number, { x: number; y: number }>): number {
-    const [a, b] = Array.from(pointers.values());
-    return Math.hypot(a.x - b.x, a.y - b.y);
-  }
-
-  function handlePortraitPointerDown(e: React.PointerEvent<HTMLImageElement>) {
-    if (!portraitNaturalSizeRef.current) return;
-    e.currentTarget.setPointerCapture(e.pointerId);
-    const pointers = portraitActivePointersRef.current;
-    pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
-    if (pointers.size === 2) {
-      portraitDragRef.current = null;
-      portraitPinchStartRef.current = { distance: pinchDistance(pointers), zoom: portraitZoom };
-    } else if (pointers.size === 1) {
-      portraitPinchStartRef.current = null;
-      portraitDragRef.current = {
-        startClientX: e.clientX,
-        startClientY: e.clientY,
-        startPanX: portraitPan.x,
-        startPanY: portraitPan.y,
-      };
-    }
-  }
-
-  function handlePortraitPointerMove(e: React.PointerEvent<HTMLImageElement>) {
-    const pointers = portraitActivePointersRef.current;
-    if (!pointers.has(e.pointerId)) return;
-    pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
-
-    const pinchStart = portraitPinchStartRef.current;
-    if (pointers.size === 2 && pinchStart) {
-      const ratio = pinchDistance(pointers) / pinchStart.distance;
-      handlePortraitZoomChange(pinchStart.zoom * ratio);
-      return;
-    }
-
-    const drag = portraitDragRef.current;
-    if (!drag) return;
-    const { maxX, maxY } = getPortraitPanLimits(portraitZoom);
-    const dx = e.clientX - drag.startClientX;
-    const dy = e.clientY - drag.startClientY;
-    setPortraitPan({
-      x: Math.max(-maxX, Math.min(maxX, drag.startPanX + dx)),
-      y: Math.max(-maxY, Math.min(maxY, drag.startPanY + dy)),
-    });
-  }
-
-  function handlePortraitPointerUp(e: React.PointerEvent<HTMLImageElement>) {
-    const pointers = portraitActivePointersRef.current;
-    pointers.delete(e.pointerId);
-    e.currentTarget.releasePointerCapture(e.pointerId);
-    portraitDragRef.current = null;
-    portraitPinchStartRef.current = null;
-    // Releasing one finger of a pinch, with the other still down, resumes
-    // as a single-finger pan from here rather than jumping.
-    const [remaining] = Array.from(pointers.entries());
-    if (remaining) {
-      const [, pos] = remaining;
-      portraitDragRef.current = {
-        startClientX: pos.x,
-        startClientY: pos.y,
-        startPanX: portraitPan.x,
-        startPanY: portraitPan.y,
-      };
-    }
-  }
 
   // Page 2 (Attributes) — spending the Body/Soul totals from the triangle
   // (page 1) across the 4 stats each. Every stat starts at the backend's
@@ -817,12 +590,6 @@ export function SoulCreation({
   // Body/Soul share one reserve (bodySoulSum) — driven by the joystick's
   // position, see getBodySoul above.
   const { body, soul, bodySoulSum } = getBodySoul();
-
-  // Everything the portrait step needs to hand off later: portraitUrl (the
-  // source image), portraitZoom (kept mainly for re-opening the editor at
-  // the same view), and the two crop rectangles actually used to render the
-  // character screen (frameArea) and the face preview (faceArea).
-  const { frameArea: portraitFrameArea, faceArea: portraitFaceArea } = getPortraitAreas();
 
   // Page 2 (Attributes) spending pools — how much of body/soul is still
   // unallocated across their 4 stats. "Remaining" is intentionally the true
@@ -1265,65 +1032,16 @@ export function SoulCreation({
           ) : page === 3 ? (
             <>
               <h1 className={styles.headline}>Portrait</h1>
-              <div
-                className={styles.portraitFrame}
-                ref={portraitFrameRef}
-                onWheel={handlePortraitWheel}
-                title={portraitFrameArea ? `frameArea: ${JSON.stringify(portraitFrameArea)}` : undefined}
-              >
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  draggable={false}
-                  className={styles.portraitImage}
-                  style={{
-                    ...(portraitNaturalSizeRef.current
-                      ? {
-                          width: `${portraitNaturalSizeRef.current.width * getPortraitFitScale() * portraitZoom}px`,
-                          height: `${portraitNaturalSizeRef.current.height * getPortraitFitScale() * portraitZoom}px`,
-                          transform: `translate(calc(-50% + ${portraitPan.x}px), calc(-50% + ${portraitPan.y}px))`,
-                        }
-                      : { width: "100%", height: "100%", transform: "translate(-50%, -50%)" }),
-                    ...(portraitLoadFailed ? { visibility: "hidden" as const } : {}),
-                  }}
-                  src={portraitUrl.trim() !== "" ? portraitUrl : "/images/character/char_placeholder_silhouette.png"}
-                  alt={portraitUrl.trim() !== "" ? "Your character's portrait" : "A placeholder silhouette of your character"}
-                  onLoad={handlePortraitImageLoad}
-                  onError={handlePortraitImageError}
-                  onPointerDown={handlePortraitPointerDown}
-                  onPointerMove={handlePortraitPointerMove}
-                  onPointerUp={handlePortraitPointerUp}
-                  onPointerCancel={handlePortraitPointerUp}
-                />
-                {portraitLoadFailed && (
-                  <div className={styles.portraitLoadError}>
-                    Couldn&apos;t load that image — check the URL and try again.
-                  </div>
-                )}
-                {/* Outer rectangle marks the portrait bounds; the inner one
-                    shows where the head must land — the character preview
-                    page will use that same defined area to align/crop it. */}
-                <div className={styles.portraitOutline} />
-                <div
-                  className={styles.portraitHeadZone}
-                  ref={portraitHeadZoneRef}
-                  title={portraitFaceArea ? `faceArea: ${JSON.stringify(portraitFaceArea)}` : undefined}
-                />
-              </div>
-              <p
-                className={styles.portraitHint}
-                style={portraitHintCenterY !== null ? { top: `${portraitHintCenterY}px` } : undefined}
-              >
-                Zoom and pan the image to frame it.
-              </p>
-              <input
-                ref={portraitUrlInputRef}
-                className={`${styles.textInput} ${styles.portraitUrlInput}`}
-                type="text"
-                placeholder="Paste an image URL"
-                value={portraitUrl}
-                onChange={(e) => {
-                  setPortraitUrl(e.target.value);
-                  setPortraitLoadFailed(false);
+              <PortraitEditor
+                initialUrl={portraitUrl}
+                initialZoom={portraitZoom}
+                initialPan={portraitPan}
+                onChange={(value) => {
+                  setPortraitUrl(value.portraitUrl);
+                  setPortraitZoom(value.portraitZoom);
+                  setPortraitPan(value.portraitPan);
+                  setSavedPortraitFrameArea(value.portraitFrameArea);
+                  setSavedPortraitFaceArea(value.portraitFaceArea);
                 }}
               />
             </>

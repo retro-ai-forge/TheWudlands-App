@@ -125,6 +125,44 @@ async def delete_character(address: str, character_id: str) -> Optional[Player]:
     return _doc_to_player(doc)
 
 
+async def update_character_portrait(
+    address: str,
+    character_id: str,
+    portrait_url: str,
+    portrait_zoom: float,
+    portrait_pan: Dict[str, float],
+    portrait_frame_area: Optional[dict],
+    portrait_face_area: Optional[dict],
+) -> Optional[Player]:
+    """
+    Overwrite one of `address`'s characters' portrait fields - the standalone
+    re-framing editor opened from the character preview page (as opposed to
+    the Soul Creation wizard, which sets these once at creation via
+    add_character). Returns None if the address/character pair doesn't match
+    any player document.
+    """
+    db = get_database()
+
+    doc = await db.players.find_one_and_update(
+        {"address": address, "characters.id": character_id},
+        {
+            "$set": {
+                "characters.$.portraitUrl": portrait_url,
+                "characters.$.portraitZoom": portrait_zoom,
+                "characters.$.portraitPan": portrait_pan,
+                "characters.$.portraitFrameArea": portrait_frame_area,
+                "characters.$.portraitFaceArea": portrait_face_area,
+            }
+        },
+        return_document=ReturnDocument.AFTER,
+    )
+
+    if doc is None:
+        return None
+
+    return _doc_to_player(doc)
+
+
 def _validate_resource_grant(resource_id: str, amount: int) -> None:
     if resource_id not in RESOURCE_ITEMS_BY_ID:
         raise ValueError(f"Unknown resource id: {resource_id}")

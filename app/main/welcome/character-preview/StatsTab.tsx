@@ -1,6 +1,6 @@
 import styles from "./CharacterTabs.module.css";
 import { getPortraitCropImgStyle } from "@/app/lib/portraitCrop";
-import { RACES, PROFESSIONS } from "@/app/lib/characterOptions";
+import { RACES, PROFESSIONS, BIRTHSIGN_NAMES } from "@/app/lib/characterOptions";
 import { getDisplayedAge } from "@/app/lib/ageScaling";
 import type { SlotCharacterSummary } from "../SoulSlotGrid";
 
@@ -27,8 +27,28 @@ function professionName(id: string): string {
   return PROFESSIONS.find((p) => p.id === id)?.name ?? id;
 }
 
+function birthsignName(id: string): string {
+  return BIRTHSIGN_NAMES[id] ?? id;
+}
+
+// Sum of a group's 4 attributes - the full/base total. Shown as X/Y where Y
+// is always this full sum; X (current) has no separate temporary-stat pool
+// yet, so it's the same value until that system exists.
+function sumAttrs(
+  keys: readonly (readonly [keyof SlotCharacterSummary["attr"], string])[],
+  attr: SlotCharacterSummary["attr"]
+): number {
+  return keys.reduce((total, [key]) => total + attr[key], 0);
+}
+
 /** Preview page: face portrait, identity, and the full attribute/profession sheet. */
-export function StatsTab({ character }: { character: SlotCharacterSummary }) {
+export function StatsTab({
+  character,
+  onEditPortrait,
+}: {
+  character: SlotCharacterSummary;
+  onEditPortrait?: () => void;
+}) {
   const professions = [
     { name: professionName(character.profession.prof1), lvl: character.profession.lvl1 },
     { name: professionName(character.profession.prof2), lvl: character.profession.lvl2 },
@@ -43,7 +63,13 @@ export function StatsTab({ character }: { character: SlotCharacterSummary }) {
   return (
     <div className={styles.panel}>
       <div className={styles.statsLayout}>
-        <div className={styles.faceFrame}>
+        <button
+          type="button"
+          className={styles.faceFrame}
+          onClick={onEditPortrait}
+          title="Edit portrait"
+          aria-label="Edit portrait"
+        >
           {character.portraitUrl ? (
             character.portraitFaceArea ? (
               // eslint-disable-next-line @next/next/no-img-element
@@ -68,7 +94,7 @@ export function StatsTab({ character }: { character: SlotCharacterSummary }) {
               style={{ width: "100%", height: "100%", objectFit: "cover" }}
             />
           )}
-        </div>
+        </button>
 
         <div className={styles.identityColumn}>
           <div className={styles.identityRow}>
@@ -81,7 +107,7 @@ export function StatsTab({ character }: { character: SlotCharacterSummary }) {
           </div>
           <div className={styles.identityRow}>
             <span>Birthsign</span>
-            <span>{character.birthsign}</span>
+            <span>{birthsignName(character.birthsign)}</span>
           </div>
           <div className={styles.identityRow}>
             <span>Vital</span>
@@ -113,7 +139,12 @@ export function StatsTab({ character }: { character: SlotCharacterSummary }) {
 
       <div className={styles.attrColumns}>
         <div className={styles.attrGroup}>
-          <div className={styles.attrGroupHeader}>Body</div>
+          <div className={styles.attrGroupHeader}>
+            <span>Body</span>
+            <span className={styles.attrGroupTotal}>
+              {sumAttrs(BODY_ATTRS, character.attr)}/{sumAttrs(BODY_ATTRS, character.attr)}
+            </span>
+          </div>
           {BODY_ATTRS.map(([key, label]) => (
             <div className={styles.attrDisplayRow} key={key}>
               <span>{label}</span>
@@ -122,7 +153,12 @@ export function StatsTab({ character }: { character: SlotCharacterSummary }) {
           ))}
         </div>
         <div className={styles.attrGroup}>
-          <div className={styles.attrGroupHeader}>Soul</div>
+          <div className={styles.attrGroupHeader}>
+            <span>Soul</span>
+            <span className={styles.attrGroupTotal}>
+              {sumAttrs(SOUL_ATTRS, character.attr)}/{sumAttrs(SOUL_ATTRS, character.attr)}
+            </span>
+          </div>
           {SOUL_ATTRS.map(([key, label]) => (
             <div className={styles.attrDisplayRow} key={key}>
               <span>{label}</span>
