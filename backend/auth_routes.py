@@ -37,6 +37,7 @@ from backend.players import (
 )
 from backend.balances import log_login_balances
 from backend.resources_catalog import RESOURCE_ITEMS_BY_ID, resolve_trapping_options
+from backend.craft_catalog import category_blueprint_summary, resolve_blueprint_trapping_options
 from backend.soul_slots import (
     SOUL_SLOTS,
     STAR_SLOT_NUMBERS,
@@ -201,8 +202,20 @@ class CharacterResponse(BaseModel):
     resourceBalances: Dict[str, int] = Field(
         default_factory=dict, description="Stackable resources this character carries, by resource id"
     )
-    tools: List[str] = Field(
-        default_factory=list, description="Discrete tools this character owns (e.g. 'knife'), granted free at creation"
+    tools: Dict[str, int] = Field(
+        default_factory=dict,
+        description="Tools this character currently holds (id -> quantity), checked out of the player's shared pool",
+    )
+    toolStarter: Dict[str, int] = Field(
+        default_factory=dict,
+        description="Starter tools this character currently holds, checked out of the player's separate starter pool",
+    )
+    blueprints: List[str] = Field(
+        default_factory=list,
+        description="Blueprint ids this character has learned, chosen on the Trappings step - soulbound, never moves",
+    )
+    blueprintStarter: List[str] = Field(
+        default_factory=list, description="Starter blueprints this character has - soulbound, never moves"
     )
 
 class PlayerDataResponse(BaseModel):
@@ -220,6 +233,13 @@ class PlayerDataResponse(BaseModel):
     )
     resourceBalances: Dict[str, int] = Field(
         default_factory=dict, description="Shared resource vault, pooled across this player's characters"
+    )
+    tools: Dict[str, int] = Field(
+        default_factory=dict, description="Tools this player owns (id -> quantity), shared across all their characters"
+    )
+    toolStarter: Dict[str, int] = Field(
+        default_factory=dict,
+        description="Starter tools this player owns (id -> quantity), kept separate from the earned tools pool",
     )
 
 
@@ -253,6 +273,10 @@ class CreateCharacterRequest(BaseModel):
         default_factory=dict,
         description="Resources chosen on the Trappings step, as resource id -> amount",
     )
+    selectedBlueprints: List[str] = Field(
+        default_factory=list,
+        description="Blueprint ids chosen on the Trappings step",
+    )
 
 
 class UpdatePortraitRequest(BaseModel):
@@ -281,13 +305,49 @@ class TrappingsItemResponse(BaseModel):
     tier: int = Field(..., description="Resource tier")
 
 
+class TrappingsBlueprintPoolResponse(BaseModel):
+    """One blueprintPoolsByProfessionCount rule, paired with the blueprint
+    items it makes eligible for the character's chosen professions."""
+
+    source: str = Field(..., description="'tool_basic' | 'tool' | 'item_basic' | 'item'")
+    tiers: List[int] = Field(..., description="Blueprint tiers this rule draws from")
+    count: int = Field(..., description="How many distinct blueprints the player may pick from this pool")
+    items: List[TrappingsItemResponse]
+
+
 class TrappingsOptionsResponse(BaseModel):
     """What a character may pick from on the Trappings step, derived from
-    their chosen professions: a spendable unit pool per unlocked tier, and
-    the resource items available at those tiers."""
+    their chosen professions: a spendable unit pool per unlocked tier, the
+    resource items available at those tiers, and the tool/item blueprint
+    pools they may pick from."""
 
     tierPools: Dict[int, int] = Field(..., description="Total spendable units per tier")
     items: List[TrappingsItemResponse]
+    blueprintPools: List[TrappingsBlueprintPoolResponse] = Field(default_factory=list)
+
+
+class BlueprintCategoryItemResponse(BaseModel):
+    """One blueprint item, as listed under its family in the category summary."""
+
+    id: str
+    name: str
+    tier: int
+    isBasic: bool
+
+
+class BlueprintCategoryFamilyResponse(BaseModel):
+    """One blueprint family's tier 1-3 items, within a profession category."""
+
+    familyId: str
+    kind: str = Field(..., description="'tool' | 'weapon' | 'armor' | 'shield' | 'food'")
+    items: List[BlueprintCategoryItemResponse]
+
+
+class BlueprintCategoryResponse(BaseModel):
+    """One profession category's blueprint families - may be empty (e.g. Rural)."""
+
+    category: str
+    families: List[BlueprintCategoryFamilyResponse]
 
 
 # Dependency: Extract and verify token from secure cookie
@@ -572,6 +632,7 @@ async def get_trappings_options(
     """
     try:
         options = resolve_trapping_options([profession1, profession2, profession3])
+        blueprint_options = resolve_blueprint_trapping_options([profession1, profession2, profession3])
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc))
 
@@ -581,7 +642,44 @@ async def get_trappings_options(
             TrappingsItemResponse(id=item.id, name=item.name, familyId=item.family_id, tier=item.tier)
             for item in options.items
         ],
+        blueprintPools=[
+            TrappingsBlueprintPoolResponse(
+                source=pool.rule.source,
+                tiers=list(pool.rule.tiers),
+                count=pool.rule.count,
+                items=[
+                    TrappingsItemResponse(id=item.id, name=item.name, familyId=item.family_id, tier=item.tier)
+                    for item in pool.items
+                ],
+            )
+            for pool in blueprint_options.pools
+        ],
     )
+
+
+@player_router.get("/blueprint-categories", response_model=List[BlueprintCategoryResponse])
+async def get_blueprint_categories():
+    """
+    Lore/reference data: every profession category's tool and item blueprint
+    families (tiers 1-3), grouped by category. Powers the "Blueprints"
+    accordion on the /characters lore page - unlike /me/trappings-options,
+    this isn't scoped to any character's chosen professions, so it needs no
+    auth.
+    """
+    return [
+        BlueprintCategoryResponse(
+            category=entry["category"],
+            families=[
+                BlueprintCategoryFamilyResponse(
+                    familyId=family["familyId"],
+                    kind=family["kind"],
+                    items=[BlueprintCategoryItemResponse(**item) for item in family["items"]],
+                )
+                for family in entry["families"]
+            ],
+        )
+        for entry in category_blueprint_summary()
+    ]
 
 
 @player_router.post("/me/characters", response_model=PlayerDataResponse)
@@ -598,6 +696,9 @@ async def create_character(
     """
     try:
         trappings = resolve_trapping_options([payload.profession1, payload.profession2, payload.profession3])
+        blueprint_trappings = resolve_blueprint_trapping_options(
+            [payload.profession1, payload.profession2, payload.profession3]
+        )
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc))
 
@@ -615,6 +716,23 @@ async def create_character(
     for tier, spent in spent_by_tier.items():
         if spent > trappings.tier_pools[tier]:
             raise HTTPException(status_code=400, detail=f"Tier {tier} selection exceeds the allotted pool")
+
+    # Greedily match each pick against the pool it's eligible for, consuming
+    # that pool's count - a blueprint id is never eligible for more than one
+    # pool (tool_basic/tool/item_basic/item are mutually exclusive by
+    # is_basic and catalog type), so match order doesn't matter.
+    remaining_by_pool = {i: pool.rule.count for i, pool in enumerate(blueprint_trappings.pools)}
+    eligible_ids_by_pool = {i: {item.id for item in pool.items} for i, pool in enumerate(blueprint_trappings.pools)}
+    for blueprint_id in payload.selectedBlueprints:
+        matched_pool = next(
+            (i for i in remaining_by_pool if blueprint_id in eligible_ids_by_pool[i] and remaining_by_pool[i] > 0),
+            None,
+        )
+        if matched_pool is None:
+            raise HTTPException(
+                status_code=400, detail=f"{blueprint_id} is not available for the chosen professions"
+            )
+        remaining_by_pool[matched_pool] -= 1
 
     character = Character(
         slot_number=payload.slotNumber,
@@ -655,6 +773,7 @@ async def create_character(
             lore=payload.attr.lore,
             presence=payload.attr.pres,
         ),
+        blueprints=list(payload.selectedBlueprints),
     )
 
     player = await add_character(address, character)

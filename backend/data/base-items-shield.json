@@ -37,8 +37,8 @@
   {"id": "wyrm_chitin_shield", "name": "Wyrm Chitin Shield", "familyId": "chitin_shield", "tier": 5},
   {"id": "voidling_chitin_shield", "name": "Voidling Chitin Shield", "familyId": "chitin_shield", "tier": 6},
 
-  {"id": "lead_meteoric_iron_shield", "name": "Lead Meteoric Shield", "familyId": "meteoric_iron_shield", "tier": 1},
-  {"id": "copper_meteoric_iron_shield", "name": "Copper Meteoric Shield", "familyId": "meteoric_iron_shield", "tier": 2},
+  {"id": "copper_meteoric_iron_shield", "name": "Copper Meteoric Shield", "familyId": "meteoric_iron_shield", "tier": 1},
+  {"id": "bronze_meteoric_iron_shield", "name": "Bronze Meteoric Shield", "familyId": "meteoric_iron_shield", "tier": 2},
   {"id": "iron_meteoric_iron_shield", "name": "Iron Meteoric Shield", "familyId": "meteoric_iron_shield", "tier": 3},
   {"id": "silver_meteoric_iron_shield", "name": "Silver Meteoric Shield", "familyId": "meteoric_iron_shield", "tier": 4},
   {"id": "gold_meteoric_iron_shield", "name": "Gold Meteoric Shield", "familyId": "meteoric_iron_shield", "tier": 5},

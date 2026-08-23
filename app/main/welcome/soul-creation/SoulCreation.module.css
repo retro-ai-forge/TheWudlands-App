@@ -68,6 +68,12 @@
   max-width: 800px;
 }
 
+/* Page 5 (Trappings) only — the embedded recipe viewer wants more room than
+   .content's usual 40rem; goes all the way to .stage's own 900px ceiling. */
+.contentWidest {
+  max-width: 900px;
+}
+
 .introText {
   font-size: clamp(0.8rem, 2vw, 1rem);
   line-height: 1.5;
@@ -152,6 +158,18 @@
   gap: 0.75rem;
 }
 
+.trappingsBlueprintSelect {
+  font-family: inherit;
+  font-size: 0.9rem;
+  background: rgba(10, 8, 4, 0.9);
+  border: 1px solid #6f532f;
+  color: #d4c9a8;
+  border-radius: 6px;
+  padding: 0.45rem 0.6rem;
+  width: 100%;
+  cursor: pointer;
+}
+
 
 .trappingsAmount {
   min-width: 2rem;
@@ -164,6 +182,23 @@
   font-size: 0.85rem;
   color: #c0463a;
   margin-top: 0.5rem;
+}
+
+.recipeViewerFrame {
+  /* Bleeds past .content's own 1.5rem padding on both sides, out to
+     .content's outer edge - which .contentWidest already caps at 900px, and
+     which equals the actual screen edge on any narrower viewport. */
+  width: calc(100% + 3rem);
+  margin-left: -1.5rem;
+  margin-right: -1.5rem;
+  /* Height is set inline (see SoulCreation.tsx's recipeViewerHeight state) -
+     a ResizeObserver on the iframe's own (same-origin) body mirrors its
+     real content height, so there's never dead grey space or an inner
+     scrollbar, on top of the page itself (.contentScrollable) already
+     being scrollable as a whole. */
+  margin-top: 1rem;
+  border: none;
+  border-radius: 0;
 }
 
 .attributeRow {
@@ -722,6 +757,16 @@
 .navButton:disabled {
   opacity: 0.4;
   cursor: not-allowed;
+}
+
+/* Page 5 (Trappings) only — same bottom-right corner look as .continue, but
+   sits right after the embedded recipe viewer instead of being fixed to the
+   viewport (which would either float over the iframe or land far below it
+   once the iframe's height tracks its own content). */
+.continueInline {
+  position: static;
+  align-self: flex-end;
+  margin-top: 0.5rem;
 }
 
 /* Character preview's exit button — bottom-right corner. */

@@ -30,6 +30,18 @@ class Player:
     # Shared resource storage (a vault) - separate from each character's own
     # resourceBalances, and pooled across every character this player owns.
     resource_balances: Dict[str, int] = field(default_factory=dict)
+    # Tools this player owns, keyed by tool id, stacked as a quantity (e.g.
+    # {"bronze_anvil": 2}) - shared across every character this player owns,
+    # the same way resource_balances is a pooled vault rather than a
+    # per-character stock. Unlike blueprints (Character.blueprints - what a
+    # specific character has learned to craft), a physical tool isn't tied
+    # to any one character's knowledge.
+    tools: Dict[str, int] = field(default_factory=dict)
+    # Starter tools (e.g. "knife"), granted free - kept in a separate pool
+    # from `tools` (crafted/earned tools) so the two are never confused, but
+    # otherwise stacked and checked out/in the same way (see check_out_tool /
+    # check_in_tool's `pool` argument).
+    tool_starter: Dict[str, int] = field(default_factory=dict)
 
     def to_dict(self) -> dict:
         return {
@@ -37,6 +49,8 @@ class Player:
             "firstLoginAt": self.first_login_at.isoformat(),
             "characters": self.characters,
             "resourceBalances": self.resource_balances,
+            "tools": self.tools,
+            "toolStarter": self.tool_starter,
         }
 
 
@@ -51,6 +65,8 @@ def _doc_to_player(doc: dict) -> Player:
         first_login_at=_as_utc(doc["first_login_at"]),
         characters=doc.get("characters", []),
         resource_balances=doc.get("resourceBalances", {}),
+        tools=doc.get("tools", {}),
+        tool_starter=doc.get("toolStarter", {}),
     )
 
 
@@ -69,6 +85,8 @@ async def get_or_create_player(address: str) -> Player:
         "address": address,
         "first_login_at": datetime.now(timezone.utc),
         "characters": [],
+        "tools": {},
+        "toolStarter": {},
     }
     await db.players.insert_one(doc)
     return _doc_to_player(doc)
@@ -206,6 +224,100 @@ async def grant_shared_resource(address: str, resource_id: str, amount: int) -> 
     doc = await db.players.find_one_and_update(
         {"address": address},
         {"$inc": {f"resourceBalances.{resource_id}": amount}},
+        return_document=ReturnDocument.AFTER,
+    )
+
+    if doc is None:
+        return None
+
+    return _doc_to_player(doc)
+
+
+# Both of a player's tool pools ("tools" = crafted/earned, "toolStarter" =
+# granted free) are stacked and checked out/in identically - only the Mongo
+# field name differs, so check_out_tool/check_in_tool/grant_tool all take
+# `pool` rather than being duplicated per pool.
+_TOOL_POOLS = ("tools", "toolStarter")
+
+
+def _validate_tool_pool(pool: str) -> None:
+    if pool not in _TOOL_POOLS:
+        raise ValueError(f"Unknown tool pool: {pool}")
+
+
+async def grant_tool(address: str, tool_id: str, amount: int = 1, pool: str = "tools") -> Optional[Player]:
+    """
+    Credit `amount` of `tool_id` to `address`'s shared tool pool ("tools" or
+    "toolStarter") - stacked the same way grant_shared_resource stacks
+    resources, since a player can own more than one of the same tool (e.g.
+    two anvils).
+    """
+    _validate_tool_pool(pool)
+    if amount <= 0:
+        raise ValueError("amount must be positive")
+    db = get_database()
+
+    doc = await db.players.find_one_and_update(
+        {"address": address},
+        {"$inc": {f"{pool}.{tool_id}": amount}},
+        return_document=ReturnDocument.AFTER,
+    )
+
+    if doc is None:
+        return None
+
+    return _doc_to_player(doc)
+
+
+async def check_out_tool(
+    address: str, character_id: str, tool_id: str, amount: int = 1, pool: str = "tools"
+) -> Optional[Player]:
+    """
+    Move `amount` of `tool_id` from `address`'s shared pool ("tools" or
+    "toolStarter") onto one of their characters (Character.tools /
+    Character.toolStarter, matching `pool`) - the character now holds it, so
+    it's unavailable to the player's other characters until checked back in.
+    Requires the pool to actually have `amount` available; returns None if
+    the address/character pair doesn't match any player document OR the pool
+    doesn't have enough (same "no match" signal as the other grant/spend
+    functions here - callers distinguish the two by re-fetching if needed).
+    """
+    _validate_tool_pool(pool)
+    if amount <= 0:
+        raise ValueError("amount must be positive")
+    db = get_database()
+
+    doc = await db.players.find_one_and_update(
+        {"address": address, "characters.id": character_id, f"{pool}.{tool_id}": {"$gte": amount}},
+        {"$inc": {f"{pool}.{tool_id}": -amount, f"characters.$.{pool}.{tool_id}": amount}},
+        return_document=ReturnDocument.AFTER,
+    )
+
+    if doc is None:
+        return None
+
+    return _doc_to_player(doc)
+
+
+async def check_in_tool(
+    address: str, character_id: str, tool_id: str, amount: int = 1, pool: str = "tools"
+) -> Optional[Player]:
+    """
+    The reverse of check_out_tool: move `amount` of `tool_id` from one of
+    `address`'s characters back into the shared pool ("tools" or
+    "toolStarter"). Requires that character to actually be holding `amount`.
+    """
+    _validate_tool_pool(pool)
+    if amount <= 0:
+        raise ValueError("amount must be positive")
+    db = get_database()
+
+    doc = await db.players.find_one_and_update(
+        {
+            "address": address,
+            "characters": {"$elemMatch": {"id": character_id, f"{pool}.{tool_id}": {"$gte": amount}}},
+        },
+        {"$inc": {f"{pool}.{tool_id}": amount, f"characters.$.{pool}.{tool_id}": -amount}},
         return_document=ReturnDocument.AFTER,
     )
 

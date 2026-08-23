@@ -39,19 +39,56 @@ type TrappingsItem = {
   tier: number;
 };
 
-type TrappingsOptions = {
-  tierPools: Record<string, number>;
+// One blueprintPoolsByProfessionCount rule (see resource-selection-rules.json),
+// paired with the blueprint items it makes eligible - `count` is how many
+// separate combo boxes this pool gets, one independent pick each.
+type TrappingsBlueprintPool = {
+  source: string;
+  tiers: number[];
+  count: number;
   items: TrappingsItem[];
 };
 
-const EMPTY_TRAPPINGS_OPTIONS: TrappingsOptions = { tierPools: {}, items: [] };
+type TrappingsOptions = {
+  tierPools: Record<string, number>;
+  items: TrappingsItem[];
+  blueprintPools: TrappingsBlueprintPool[];
+};
+
+const EMPTY_TRAPPINGS_OPTIONS: TrappingsOptions = { tierPools: {}, items: [], blueprintPools: [] };
+
+const BLUEPRINT_SOURCE_LABELS: Record<string, string> = {
+  tool_basic: "Starter Tool Blueprint",
+  tool: "Tool Blueprint",
+  item_basic: "Starter Item Blueprint",
+  item: "Item Blueprint",
+};
+
+// Ids owned (quantity > 0) across one or more stackable pools, deduplicated -
+// used to build the embedded recipe viewer's "?tools=" ownership list, which
+// only cares whether something is owned at all, not how many.
+function ownedIds(...pools: Record<string, number>[]): string[] {
+  const ids = new Set<string>();
+  for (const pool of pools) {
+    for (const [id, qty] of Object.entries(pool)) {
+      if (qty > 0) ids.add(id);
+    }
+  }
+  return [...ids];
+}
 
 export function SoulCreation({
   onExit,
   slotNumber,
+  playerTools,
+  playerToolStarter,
 }: {
   onExit: () => void;
   slotNumber: number;
+  /** The player's existing shared tool pools - available to this new
+   * character too, even before it's saved, since tools live on the player. */
+  playerTools: Record<string, number>;
+  playerToolStarter: Record<string, number>;
 }) {
   const [page, setPage] = useState(0);
   const { setHidden: setHeaderHidden } = useHeaderVisibility();
@@ -73,8 +110,58 @@ export function SoulCreation({
   const [trappingsOptions, setTrappingsOptions] = useState<TrappingsOptions>(EMPTY_TRAPPINGS_OPTIONS);
   const [trappingsLoaded, setTrappingsLoaded] = useState(false);
   const [selectedResources, setSelectedResources] = useState<Record<string, number>>({});
+  // One combo box's pick, keyed by "<poolIndex>:<slotIndex>" - as many slots
+  // per pool as that pool's `count` (e.g. a "3"-profession tool_basic pool
+  // with count:2 gets 2 independent combo boxes). Built into a flat
+  // selectedBlueprints array (dropping empty picks) at submit time.
+  const [blueprintSelections, setBlueprintSelections] = useState<Record<string, string>>({});
+  // The embedded recipe viewer's own content height, in px - the iframe is
+  // same-origin, so its body height can be read directly and mirrored onto
+  // the iframe element, instead of guessing a fixed height that leaves
+  // either dead grey space or an unwanted inner scrollbar.
+  const [recipeViewerHeight, setRecipeViewerHeight] = useState(600);
+  const recipeViewerRef = useRef<HTMLIFrameElement>(null);
+  const [recipeViewerSrc, setRecipeViewerSrc] = useState("");
+  const [recipeViewerLoaded, setRecipeViewerLoaded] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
+
+  // Set the iframe's src only once per visit to page 5 (not on every stepper
+  // click or combo box pick, which would reload the whole document and lose
+  // whatever recipe/tier the player was looking at) - later picks are pushed
+  // in via postMessage instead, see the effect below.
+  useEffect(() => {
+    if (page !== 5) return;
+    setRecipeViewerLoaded(false);
+    setRecipeViewerSrc(
+      `/craft/recipe-viewer.html?inv=${encodeURIComponent(
+        JSON.stringify(selectedResources)
+      )}&tools=${encodeURIComponent(
+        JSON.stringify(ownedIds(playerTools, playerToolStarter))
+      )}&blueprints=${encodeURIComponent(
+        JSON.stringify(Object.values(blueprintSelections).filter(Boolean))
+      )}`
+    );
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [page]);
+
+  // Live updates once the iframe has actually loaded (and can receive
+  // messages) - keeps the currently-selected item/tier in the embedded
+  // viewer untouched, just refreshes what's owned/needed. Tools don't
+  // change during creation (no tool-selection step exists), but including
+  // them here is harmless.
+  useEffect(() => {
+    if (!recipeViewerLoaded) return;
+    recipeViewerRef.current?.contentWindow?.postMessage(
+      {
+        type: "recipe-viewer:update",
+        inv: selectedResources,
+        tools: ownedIds(playerTools, playerToolStarter),
+        blueprints: Object.values(blueprintSelections).filter(Boolean),
+      },
+      window.location.origin
+    );
+  }, [selectedResources, blueprintSelections, playerTools, playerToolStarter, recipeViewerLoaded]);
 
   useEffect(() => {
     if (page !== 5) return;
@@ -91,6 +178,7 @@ export function SoulCreation({
         if (!cancelled) {
           setTrappingsOptions(data ?? EMPTY_TRAPPINGS_OPTIONS);
           setSelectedResources({});
+          setBlueprintSelections({});
           setTrappingsLoaded(true);
         }
       })
@@ -98,6 +186,7 @@ export function SoulCreation({
         if (!cancelled) {
           setTrappingsOptions(EMPTY_TRAPPINGS_OPTIONS);
           setSelectedResources({});
+          setBlueprintSelections({});
           setTrappingsLoaded(true);
         }
       });
@@ -683,6 +772,7 @@ export function SoulCreation({
           portraitFaceArea: savedPortraitFaceArea,
           attr: { ...bodyAttributes, ...soulAttributes },
           selectedResources,
+          selectedBlueprints: Object.values(blueprintSelections).filter(Boolean),
         }),
       });
       if (!res.ok) throw new Error("Failed to save character");
@@ -749,10 +839,12 @@ export function SoulCreation({
       <div className={styles.stage}>
         <div
           className={
-            page === 0 || page === 2 || page === 5
+            page === 0 || page === 2
               ? `${styles.content} ${styles.contentTop} ${styles.contentTopTight} ${styles.contentScrollable}`
               : page === 4
               ? `${styles.content} ${styles.contentTop} ${styles.contentTopTight} ${styles.contentScrollable} ${styles.contentWide}`
+              : page === 5
+              ? `${styles.content} ${styles.contentTop} ${styles.contentTopTight} ${styles.contentScrollable} ${styles.contentWidest}`
               : page === 1 || page === 3
               ? `${styles.content} ${styles.contentTop} ${styles.contentTopTight}`
               : styles.content
@@ -1085,7 +1177,77 @@ export function SoulCreation({
                     );
                   })}
               </div>
+              {trappingsOptions.blueprintPools.length > 0 && (
+                <div className={styles.trappingsPicker}>
+                  {trappingsOptions.blueprintPools.map((pool, poolIdx) => {
+                    // Slots within the same pool shouldn't offer each other's
+                    // already-picked item - two dropdowns both landing on
+                    // the exact same blueprint would waste a slot.
+                    const slotKeys = Array.from({ length: pool.count }, (_, slotIdx) => `${poolIdx}:${slotIdx}`);
+                    const pickedElsewhere = (thisKey: string) =>
+                      new Set(slotKeys.filter((k) => k !== thisKey).map((k) => blueprintSelections[k]).filter(Boolean));
+                    return (
+                      <div key={poolIdx} className={styles.trappingsTierGroup}>
+                        <div className={styles.trappingsTierHeader}>
+                          <span>{BLUEPRINT_SOURCE_LABELS[pool.source] ?? pool.source}</span>
+                          <span>Tier {pool.tiers.join("/")}</span>
+                        </div>
+                        {slotKeys.map((slotKey) => {
+                          const taken = pickedElsewhere(slotKey);
+                          const value = blueprintSelections[slotKey] ?? "";
+                          return (
+                            <div key={slotKey} className={styles.trappingsRow}>
+                              <select
+                                className={styles.trappingsBlueprintSelect}
+                                value={value}
+                                onChange={(e) =>
+                                  setBlueprintSelections((prev) => ({ ...prev, [slotKey]: e.target.value }))
+                                }
+                              >
+                                <option value="">— choose —</option>
+                                {pool.items
+                                  .filter((item) => item.id === value || !taken.has(item.id))
+                                  .map((item) => (
+                                    <option key={item.id} value={item.id}>
+                                      {item.name} (T{item.tier})
+                                    </option>
+                                  ))}
+                              </select>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
               {submitError && <p className={styles.submitError}>{submitError}</p>}
+              <iframe
+                ref={recipeViewerRef}
+                src={recipeViewerSrc}
+                title="Crafting Recipe Viewer"
+                className={styles.recipeViewerFrame}
+                style={{ height: recipeViewerHeight }}
+                onLoad={() => {
+                  const doc = recipeViewerRef.current?.contentWindow?.document;
+                  if (!doc?.body) return;
+                  setRecipeViewerHeight(doc.body.scrollHeight);
+                  const observer = new ResizeObserver(() => {
+                    setRecipeViewerHeight(doc.body.scrollHeight);
+                  });
+                  observer.observe(doc.body);
+                  setRecipeViewerLoaded(true);
+                }}
+              />
+              <button
+                className={`${styles.navButton} ${styles.continueInline} ${
+                  !isPage5Ready ? styles.continueInactive : ""
+                }`}
+                onClick={handleContinueClick}
+                disabled={isLastPage && isSubmitting}
+              >
+                {isLastPage && isSubmitting ? "Saving…" : "Continue"}
+              </button>
             </>
           ) : (
             <h1 className={styles.headline}>Page {page + 1}</h1>
@@ -1291,15 +1453,19 @@ export function SoulCreation({
           </>
         )}
 
-        <button
-          className={`${styles.navButton} ${styles.continue} ${
-            (page === 1 && !isPage1Ready) || (page === 2 && !isPage2Ready) || (page === 4 && birthsign === null) || (page === 5 && !isPage5Ready) ? styles.continueInactive : ""
-          }`}
-          onClick={handleContinueClick}
-          disabled={isLastPage && isSubmitting}
-        >
-          {isLastPage && isSubmitting ? "Saving…" : "Continue"}
-        </button>
+        {/* Page 5's own Continue button sits inline right under the recipe
+            viewer instead - see the copy rendered there. */}
+        {page !== 5 && (
+          <button
+            className={`${styles.navButton} ${styles.continue} ${
+              (page === 1 && !isPage1Ready) || (page === 2 && !isPage2Ready) || (page === 4 && birthsign === null) ? styles.continueInactive : ""
+            }`}
+            onClick={handleContinueClick}
+            disabled={isLastPage && isSubmitting}
+          >
+            {isLastPage && isSubmitting ? "Saving…" : "Continue"}
+          </button>
+        )}
       </div>
     </div>
   );

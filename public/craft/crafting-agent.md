@@ -1,6 +1,6 @@
 # Crafting diagram structure
 
-Spec for how `test-recipes.drawio.xml` (and any future recipe diagram in this
+Spec for how `recipes.drawio.xml` (and any future recipe diagram in this
 folder) is organized. Follow this when adding or regenerating recipes so the
 diagram stays readable as it grows.
 
@@ -262,7 +262,7 @@ that exist but aren't wired into any profession's starting kit:
 `venom`, `pigment`, `essence`, `clockwork` — deliberately loot/gameplay-only
 (see `backend/data/profession-resource-families.json`). They're fair game
 for recipes, same as any other family, not just decoration for loot tables.
-Research and the pattern each now follows in `test-recipes.drawio.xml`:
+Research and the pattern each now follows in `recipes.drawio.xml`:
 
 - **`clockwork`** — TerraFirmaCraft's Clockwork Gear (chisel + brass disc)
   and RuneScape's clockwork (steel bar at a Clockmaker's bench) both treat

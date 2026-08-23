@@ -1,6 +1,6 @@
 [
-  { "id": "lead_ore", "name": "Lead Ore", "familyId": "ore", "tier": 1 },
-  { "id": "copper_ore", "name": "Copper Ore", "familyId": "ore", "tier": 2 },
+  { "id": "copper_ore", "name": "Copper Ore", "familyId": "ore", "tier": 1 },
+  { "id": "bronze_ore", "name": "Bronze Ore", "familyId": "ore", "tier": 2 },
   { "id": "iron_ore", "name": "Iron Ore", "familyId": "ore", "tier": 3 },
   { "id": "silver_ore", "name": "Silver Ore", "familyId": "ore", "tier": 4 },
   { "id": "gold_ore", "name": "Gold Ore", "familyId": "ore", "tier": 5 },

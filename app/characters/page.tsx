@@ -5,12 +5,52 @@ import Image from "next/image";
 import styles from "./characters.module.css";
 import { GENDERS, racesByCategory, professionsByCategory, BODY_ATTRIBUTES, SOUL_ATTRIBUTES } from "@/app/lib/characterOptions";
 
+// GET /api/auth/blueprint-categories - lore/reference data, not player-specific:
+// every profession category's tool and item blueprint families (tiers 1-3).
+type BlueprintCategoryItem = { id: string; name: string; tier: number; isBasic: boolean };
+type BlueprintCategoryFamily = { familyId: string; kind: string; items: BlueprintCategoryItem[] };
+type BlueprintCategoryEntry = { category: string; families: BlueprintCategoryFamily[] };
+
+// Past 19 letters a line (including its "T1:"/"S:" label, always 4 chars)
+// gets crowded - if the display name's last word just repeats the family
+// headline above it (e.g. "Master Butcher's Bangers" under the "bangers"
+// family) or its kind badge (e.g. "Beetle Chitin Armor" under "ARMOR"), drop
+// that word instead of wrapping.
+function trimRedundantLastWord(
+  label: string,
+  displayName: string,
+  familyHeadline: string,
+  kind: string
+): string {
+  const lineLength = `${label}: ${displayName}`.length;
+  if (lineLength <= 19) return displayName;
+  const words = displayName.split(" ");
+  const lastWord = words[words.length - 1].toLowerCase();
+  const headlineWords = familyHeadline.toLowerCase().split(" ");
+  const headlineLastWord = headlineWords[headlineWords.length - 1];
+  const redundantWords = new Set([headlineLastWord, `${headlineLastWord}s`, kind.toLowerCase(), `${kind.toLowerCase()}s`]);
+  if (!redundantWords.has(lastWord)) return displayName;
+  const trimmed = words.slice(0, -1);
+  const danglingConnectors = new Set(["of", "&", "and", "reinforced"]);
+  while (danglingConnectors.has(trimmed[trimmed.length - 1]?.toLowerCase())) trimmed.pop();
+  return trimmed.join(" ");
+}
+
 export default function Characters() {
   const [openSection, setOpenSection] = useState<string | null>(null);
   const [openRaceCategory, setOpenRaceCategory] = useState<string | null>(null);
   const [openProfessionCategory, setOpenProfessionCategory] = useState<string | null>(null);
   const [openAttributeCategory, setOpenAttributeCategory] = useState<string | null>(null);
   const [openGender, setOpenGender] = useState<string | null>(null);
+  const [openBlueprintCategory, setOpenBlueprintCategory] = useState<string | null>(null);
+  const [blueprintCategories, setBlueprintCategories] = useState<BlueprintCategoryEntry[]>([]);
+
+  useEffect(() => {
+    fetch("/api/auth/blueprint-categories")
+      .then((res) => (res.ok ? res.json() : []))
+      .then((data: BlueprintCategoryEntry[]) => setBlueprintCategories(data ?? []))
+      .catch(() => setBlueprintCategories([]));
+  }, []);
 
   useEffect(() => {
     const hash = window.location.hash.slice(1);
@@ -220,6 +260,82 @@ export default function Characters() {
                           <p className={styles.raceDescription}>{profession.description}</p>
                         </div>
                       ))}
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* ── Blueprints ─────────────────────────────────────── */}
+        <div className={styles.accordionItem}>
+          <button
+            className={styles.accordionHeader}
+            onClick={() => toggleSection("blueprints")}
+          >
+            <span>[ Blueprints Starter ]</span>
+            <span className={styles.accordionChevron}>{openSection === "blueprints" ? "▴" : "▾"}</span>
+          </button>
+          {openSection === "blueprints" && (
+            <div className={styles.accordionBody}>
+              <p className={styles.sectionIntro}>
+                A trade leaves you with more than know-how — it leaves you with the plans to build its
+                tools and wares. What your professions unlock here is what you may carry into the world
+                at creation, up through Tier 1, Tier 2, and Tier 3 — abbreviated below as T1, T2, T3, with
+                some starters marked S.
+              </p>
+              {blueprintCategories.map((entry) => (
+                <div key={entry.category} className={styles.subAccordionItem}>
+                  <button
+                    className={styles.subAccordionHeader}
+                    onClick={() =>
+                      setOpenBlueprintCategory(openBlueprintCategory === entry.category ? null : entry.category)
+                    }
+                  >
+                    <span>
+                      {entry.category} ({entry.families.length})
+                    </span>
+                    <span className={styles.accordionChevron}>
+                      {openBlueprintCategory === entry.category ? "▴" : "▾"}
+                    </span>
+                  </button>
+                  {openBlueprintCategory === entry.category && (
+                    <div className={styles.subAccordionBody}>
+                      {entry.families.length === 0 ? (
+                        <div className={styles.raceEntry}>
+                          <p className={styles.raceDescription}>
+                            No blueprint family belongs to {entry.category} yet.
+                            {entry.category === "Rural" &&
+                              " This mostly reflects how many Rural items just don't need a blueprint at all — e.g. the fishing pole is craftable straight from raw wood and fiber, no unlock required."}
+                          </p>
+                        </div>
+                      ) : (
+                        entry.families.map((family) => (
+                          <div key={family.familyId} className={styles.raceEntry}>
+                            <p className={styles.raceName}>
+                              {family.familyId.replace(/_/g, " ")}{" "}
+                              <span className={styles.blueprintKind}>{family.kind}</span>
+                            </p>
+                            <div className={styles.raceDescription}>
+                              {family.items.map((item) => {
+                                const label = item.isBasic ? "S" : `T${item.tier}`;
+                                const displayName = trimRedundantLastWord(
+                                  label,
+                                  item.name.replace("Blueprint: ", ""),
+                                  family.familyId.replace(/_/g, " "),
+                                  family.kind
+                                );
+                                return (
+                                  <p key={item.id} className={styles.blueprintItemLine}>
+                                    {label}: {displayName}
+                                  </p>
+                                );
+                              })}
+                            </div>
+                          </div>
+                        ))
+                      )}
                     </div>
                   )}
                 </div>

@@ -97,6 +97,19 @@
     color: var(--text-dim);
     margin: 0 0 12px;
   }
+  .panel summary {
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--text-dim);
+    margin: 0;
+    cursor: pointer;
+    list-style: none;
+  }
+  .panel summary::-webkit-details-marker { display: none; }
+  .panel summary::before { content: "▸ "; display: inline-block; transition: transform 0.15s ease; }
+  .panel[open] summary::before { transform: rotate(90deg); }
+  .panel[open] summary { margin-bottom: 12px; }
   .empty {
     color: var(--text-dim);
     font-style: italic;
@@ -139,11 +152,16 @@
   .tag.tool { border-color: var(--tool); color: #8fb3e8; }
   .tag.blueprint { border-color: var(--blueprint); color: #c79ce8; }
   .tag.unconsumed { border-color: var(--text-dim); color: var(--text-dim); }
+  .tag.basic { border-color: #9be6a8; color: #9be6a8; }
   .tag.cat-raw { border-color: var(--raw); color: #7fd08a; }
   .tag.cat-processed { border-color: var(--processed); color: #e0c565; }
   .tag.cat-final { border-color: var(--final); color: #7ec8e3; }
   .tag.cat-blueprint { border-color: var(--blueprint); color: #c79ce8; }
   .tag.tier { border-color: var(--accent); color: var(--accent); font-weight: bold; }
+  /* Declared after the .tag.cat-* rules so it always wins that cascade tie -
+     a missing tool/blueprint should read as missing regardless of which
+     category tag it's combined with. */
+  .tag.missing { border-color: #e08a8a; color: #e08a8a; }
   .note { color: var(--text-dim); font-size: 11px; margin: -8px 0 20px; }
   .chevron {
     display: inline-block;
@@ -164,7 +182,9 @@
   td.n.have-enough { color: #9be6a8; }
   tr + tr td { border-top: 1px solid var(--border); }
   .legend { display: flex; flex-direction: column; gap: 6px; font-size: 12px; margin-bottom: 16px; }
-  .legend .row { padding: 2px 8px; }
+  .legend .row { display: flex; flex-wrap: nowrap; align-items: baseline; gap: 8px; padding: 2px 8px; }
+  .legend .row .tag { flex: 0 0 76px; text-align: center; }
+  .legend .row .legend-text { flex: 1 1 auto; min-width: 0; }
   .toollist { display: flex; flex-wrap: wrap; gap: 6px; }
   /* Fixed to the corner (not inline at the top) so it stays reachable
      regardless of scroll position, same convention the game itself uses for
@@ -212,15 +232,17 @@
       <div id="tree"><span class="empty">Select a recipe above.</span></div>
     </div>
     <div>
-      <div class="panel" style="margin-bottom:16px;">
-        <h2>Legend</h2>
+      <details class="panel" open style="margin-bottom:16px;">
+        <summary>Legend</summary>
         <div class="legend">
-          <div class="row final"><span class="tag cat-final">final</span> a separate finished item (▸ if it has its own recipe)</div>
-          <div class="row blueprint"><span class="tag cat-blueprint">blueprint</span> technique required, learned once and never consumed</div>
-          <div class="row processed"><span class="tag cat-processed">processed</span> crafted from a sub-recipe</div>
-          <div class="row raw"><span class="tag cat-raw">raw</span> mined/gathered material</div>
+          <div class="row final"><span class="tag cat-final">final</span><span class="legend-text">a separate finished item (▸ if it has its own recipe)</span></div>
+          <div class="row blueprint"><span class="tag cat-blueprint">blueprint</span><span class="legend-text">technique required, learned once and never consumed</span></div>
+          <div class="row processed"><span class="tag cat-processed">processed</span><span class="legend-text">crafted from a sub-recipe</span></div>
+          <div class="row raw"><span class="tag cat-raw">raw</span><span class="legend-text">mined/gathered material</span></div>
+          <div class="row"><span class="tag basic">(S)</span><span class="legend-text">starter blueprint exists</span></div>
+          <div class="row"><span class="tag missing">!</span><span class="legend-text">missing tool or blueprint</span></div>
         </div>
-      </div>
+      </details>
       <div class="panel" style="margin-bottom:16px;">
         <h2>Total Raw Materials</h2>
         <table id="rawTotals">
@@ -259,17 +281,49 @@ function readInventoryFromQuery() {
     return null;
   }
 }
-const inventory = readInventoryFromQuery();
+let inventory = readInventoryFromQuery();
 if (inventory) {
-  document.querySelector("#rawTotals thead th:last-child").textContent = "Missing / Needed";
+  document.querySelector("#rawTotals thead th:last-child").textContent = "Owned/Req.";
+}
+
+// Discrete tools/blueprints owned (as opposed to `inventory`'s stackable raw
+// materials) - "?tools=" / "?blueprints=" carry the character's tools[] and
+// blueprints[] id lists (see backend.character.Character). Absent (null)
+// when opened without character context, same as `inventory`.
+function readIdListFromQuery(param) {
+  try {
+    const raw = new URLSearchParams(window.location.search).get(param);
+    return raw ? new Set(JSON.parse(raw)) : null;
+  } catch {
+    return null;
+  }
+}
+let ownedTools = readIdListFromQuery("tools");
+let ownedBlueprints = readIdListFromQuery("blueprints");
+
+// A recipe's `tool`/`blueprintFamilyId` reference a FAMILY (e.g. "anvil"),
+// not one specific tiered item - owning any tier of that family satisfies
+// the requirement.
+function ownsFamily(ownedSet, famId) {
+  if (!ownedSet || !famId) return true; // no character context - don't flag anything as missing
+  if (ownedSet.has(famId)) return true;
+  const f = families[famId];
+  if (!f) return false;
+  if (f.basic && ownedSet.has(f.basic.id)) return true;
+  return f.tiers.some(t => ownedSet.has(t.id));
 }
 
 // Passed alongside ?inv= as the exact page (character + tab) the player
 // left from - e.g. "/?character=<id>&tab=inventory" - so "Back" can return
-// there directly instead of just going up to the bare welcome page.
+// there directly instead of just going up to the bare welcome page. Without
+// one (e.g. embedded in an iframe, like the Soul Creation wizard's Trappings
+// step), there's nowhere meaningful to send the player back to, so the
+// button is hidden entirely rather than showing something that wouldn't work.
 const returnUrl = new URLSearchParams(window.location.search).get("return");
 if (returnUrl) {
   document.getElementById("backLink").href = returnUrl;
+} else {
+  document.getElementById("backLink").style.display = "none";
 }
 
 function tierName(famId, tier) {
@@ -359,7 +413,11 @@ function buildInteractiveNode(famId, qty, category, tier, isRoot) {
   row.appendChild(el("span", "name", famLabel(famId, tier)));
   row.appendChild(el("span", "tag tier", "T" + tier));
   row.appendChild(el("span", "tag cat-" + (category === "final" ? "final" : category), category));
-  if (recipe && recipe.tool) row.appendChild(el("span", "tag tool", "\u{1F528} " + recipe.tool));
+  if (recipe && recipe.tool) {
+    const toolTag = el("span", "tag tool", "\u{1F528} " + recipe.tool);
+    if (!ownsFamily(ownedTools, recipe.tool)) toolTag.classList.add("missing");
+    row.appendChild(toolTag);
+  }
   wrapper.appendChild(row);
 
   const childrenBox = el("div", "children");
@@ -378,7 +436,15 @@ function buildInteractiveNode(famId, qty, category, tier, isRoot) {
       if (!populated) {
         if (recipe.blueprintFamilyId) {
           const bp = buildInteractiveNode(recipe.blueprintFamilyId, 1, "blueprint", tier, false);
-          bp.row.appendChild(el("span", "tag unconsumed", "not consumed"));
+          const bpFam = families[recipe.blueprintFamilyId];
+          if (bpFam && bpFam.basic && tier === 1) {
+            const starterTag = el("span", "tag basic", "(S)");
+            starterTag.title = "Starter: " + bpFam.basic.name.replace("Blueprint: ", "");
+            bp.row.appendChild(starterTag);
+          }
+          if (!ownsFamily(ownedBlueprints, recipe.blueprintFamilyId)) {
+            bp.row.querySelector(".tag.cat-blueprint")?.classList.add("missing");
+          }
           childrenBox.appendChild(bp.wrapper);
           if (bp.expandable) {
             wireAccordionClick(bp, childControllers);
@@ -388,7 +454,11 @@ function buildInteractiveNode(famId, qty, category, tier, isRoot) {
         for (const ing of recipe.ingredients) {
           const childCat = ing.category === "final_unresolved" ? "final" : ing.category;
           const child = buildInteractiveNode(ing.familyId, ing.qty, childCat, tier, false);
-          if (!ing.consumed) {
+          // A tool being referenced as an ingredient (e.g. the axe_stone a
+          // sharpened stick needs on hand) is understood to never be
+          // consumed, same as blueprints - no need to say so explicitly.
+          const ingFam = families[ing.familyId];
+          if (!ing.consumed && (!ingFam || ingFam.category !== "tool")) {
             child.row.appendChild(el("span", "tag unconsumed", "not consumed"));
           }
           childrenBox.appendChild(child.wrapper);
@@ -450,7 +520,7 @@ function computeTotals(famId, qty, category, rawTotals, finalTotals, toolSet) {
   }
 }
 
-function renderTable(tableId, totals, tier, showMissing) {
+function renderTable(tableId, totals, tier, showMissing, checkBlueprint) {
   const tbody = document.querySelector("#" + tableId + " tbody");
   tbody.innerHTML = "";
   const entries = Object.entries(totals).sort((a, b) => b[1] - a[1]);
@@ -464,7 +534,16 @@ function renderTable(tableId, totals, tier, showMissing) {
   }
   for (const [famId, qty] of entries) {
     const tr = document.createElement("tr");
-    tr.appendChild(el("td", "", famLabel(famId, tier)));
+    const nameCell = el("td", "", famLabel(famId, tier));
+    if (checkBlueprint) {
+      const recipe = recipes[famId];
+      const bpFamId = recipe && recipe.blueprintFamilyId;
+      if (bpFamId && !ownsFamily(ownedBlueprints, bpFamId)) {
+        nameCell.appendChild(document.createTextNode(" "));
+        nameCell.appendChild(el("span", "tag missing", "!"));
+      }
+    }
+    tr.appendChild(nameCell);
     tr.appendChild(el("td", "", "T" + tier));
     if (showMissing && inventory) {
       // The character's own inventory is keyed by concrete item id (e.g.
@@ -473,9 +552,8 @@ function renderTable(tableId, totals, tier, showMissing) {
       const f = families[famId];
       const itemId = f && f.tiers[tier - 1] ? f.tiers[tier - 1].id : null;
       const have = itemId ? inventory[itemId] || 0 : 0;
-      const missing = Math.max(0, qty - have);
-      const td = el("td", "n", missing + " / " + qty);
-      if (missing === 0) td.classList.add("have-enough");
+      const td = el("td", "n", have + " / " + qty);
+      if (have >= qty) td.classList.add("have-enough");
       tr.appendChild(td);
     } else {
       tr.appendChild(el("td", "n", String(qty)));
@@ -508,8 +586,8 @@ function render(famId, tier) {
   const toolSet = new Set();
   computeTotals(famId, 1, rootCategory, rawTotals, finalTotals, toolSet);
 
-  renderTable("rawTotals", rawTotals, tier, true);
-  renderTable("finalTotals", finalTotals, tier, false);
+  renderTable("rawTotals", rawTotals, tier, true, false);
+  renderTable("finalTotals", finalTotals, tier, false, true);
 
   const toolListEl = document.getElementById("toolList");
   toolListEl.innerHTML = "";
@@ -517,7 +595,9 @@ function render(famId, tier) {
     toolListEl.appendChild(el("span", "empty", "none"));
   } else {
     for (const t of [...toolSet].sort()) {
-      toolListEl.appendChild(el("span", "tag tool", "\u{1F528} " + t));
+      const toolTag = el("span", "tag tool", "\u{1F528} " + t);
+      if (!ownsFamily(ownedTools, t)) toolTag.classList.add("missing");
+      toolListEl.appendChild(toolTag);
     }
   }
 }
@@ -528,22 +608,26 @@ if (select.options.length) {
 }
 
 // Prefer returning to exactly where the player came from (the character
-// preview page they clicked this link from) over the plain href="/"
-// fallback, which only gets used if there's no history to go back to (e.g.
-// this page was opened directly/bookmarked).
-// A known returnUrl (set above) is the exact character/tab to go back to -
-// let the link's own href handle that normally. Without one (opened
-// directly, no navigation context), prefer real browser history over the
-// plain href="/" fallback, so a bookmarked visit still goes back to
-// whatever the player actually had open before this page.
-if (!returnUrl) {
-  document.getElementById("backLink").addEventListener("click", (e) => {
-    if (window.history.length > 1) {
-      e.preventDefault();
-      window.history.back();
-    }
-  });
-}
+// preview page they clicked this link from) - the backlink is hidden
+// entirely above when there's no returnUrl, so there's nothing further to
+// wire up here.
+
+// Live updates from an embedding page (e.g. the Soul Creation wizard's
+// Trappings step, where picking a raw material or blueprint shouldn't blow
+// away whatever recipe/tier the player was already looking at in here).
+// Changing the iframe's own src would reload the whole document and lose
+// that state, so the parent instead posts fresh inv/tools/blueprints data
+// and this just re-renders in place - same selected item, same tier.
+window.addEventListener("message", (event) => {
+  if (event.origin !== window.location.origin) return;
+  const msg = event.data;
+  if (!msg || msg.type !== "recipe-viewer:update") return;
+  inventory = msg.inv ?? null;
+  document.querySelector("#rawTotals thead th:last-child").textContent = inventory ? "Owned/Req." : "";
+  ownedTools = msg.tools ? new Set(msg.tools) : null;
+  ownedBlueprints = msg.blueprints ? new Set(msg.blueprints) : null;
+  if (select.value) render(select.value, currentTier());
+});
 </script>
 </body>
 </html>

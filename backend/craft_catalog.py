@@ -1,47 +1,36 @@
 """
-Per-profession-category blueprint pools for the soul-creation "Trappings"
-step's blueprint quotas (see resource-selection-rules.json's
-blueprintPoolsByProfessionCount).
+Catalog of tool and item blueprints, scoped to profession categories for the
+soul-creation "Trappings" step - the blueprint equivalent of
+resources_catalog.py's resolve_trapping_options.
 
-Nothing here is hand-authored - it's all derived from craft-recipes.json
-cross-referenced against every base-*.json item catalog (the same data
-public/craft/recipe-viewer.html is built from) and
-profession-resource-families.json's category -> raw-family map. A recipe is
-assigned to whichever profession category supplies the most of its raw
-material inputs (resolved recursively through any "processed" ingredients,
-exactly like the recipe-viewer's own totals), ties counting for more than
-one category. That assignment carries over to the recipe's own required
-blueprint, if it has one.
-
-Blueprints split into three non-overlapping pools per category, by what the
-recipe actually produces:
-  - tool families (base-tools.json) -> TOOL_BLUEPRINT_FAMILIES_BY_PROFESSION
-  - "final" catalogs - armor, shield, weapon, food, potion, misc,
-    adventuring_gear -> FINAL_BLUEPRINT_FAMILIES_BY_PROFESSION
-  - everything else with a blueprint (mostly processed-good techniques, e.g.
-    blueprint_leather) -> BLUEPRINT_FAMILIES_BY_PROFESSION, the general pool
-    every profession count's quota draws from first.
-This mirrors the growing-mastery shape of the quota rules themselves: 1
-profession only unlocks the general pool, 2 additionally unlocks tool
-blueprints, 3 additionally unlocks final-item blueprints.
+Which profession category a blueprint belongs to isn't hand-authored: it's
+derived from craft-recipes.json, the same way the README's "Crafting Recipes
+by Profession Category" table was built. A recipe's raw-material ingredients
+(expanding "processed" ingredients through their own sub-recipe, skipping
+"final"/"final_unresolved" ingredients since those are other crafted items,
+not raw materials) are matched against each category's 3 resource families in
+profession-resource-families.json; the recipe belongs to whichever category
+has the most hits (ties count for multiple). A blueprint family then belongs
+to the union of categories of every recipe gated behind it - relevant for
+armor blueprints, which gate 3 recipes at once (head/chest/leg).
 """
 
 from __future__ import annotations
 
 import json
+from dataclasses import dataclass
 from pathlib import Path
 
 from backend.professions_catalog import PROFESSION_CATEGORIES
 from backend.resources_catalog import PROFESSION_RESOURCE_FAMILIES
 
 _DATA_DIR = Path(__file__).resolve().parent / "data"
+_BLUEPRINT_PATH = _DATA_DIR / "base-blueprint.json"
 _RECIPES_PATH = _DATA_DIR / "craft-recipes.json"
+_SELECTION_RULES_PATH = _DATA_DIR / "resource-selection-rules.json"
 
-# Mirrors public/craft/build-recipe-viewer.py's own CATALOG_FILES - the set
-# of item catalogs a recipe's output familyId might belong to.
-_CATALOG_FILES: dict[str, str] = {
-    "raw": "base-resources.json",
-    "processed": "base-processed.json",
+# Mirrors public/craft/build-recipe-viewer.py's CATALOG_FILES.
+_CATALOG_FILES = {
     "tool": "base-tools.json",
     "armor": "base-items-armor.json",
     "shield": "base-items-shield.json",
@@ -50,66 +39,110 @@ _CATALOG_FILES: dict[str, str] = {
     "potion": "base-potion.json",
     "misc": "base-items-misc.json",
     "adventuring_gear": "base-adventuring-gear.json",
-    "blueprint": "base-blueprint.json",
 }
-
-# A recipe whose own output lands in one of these catalogs is a "final"
-# result - a finished, usable item rather than a tool or an intermediate
-# processed good.
 _FINAL_CATALOG_TYPES = {"armor", "shield", "weapon", "food", "potion", "misc", "adventuring_gear"}
 
 
+@dataclass(frozen=True)
+class BlueprintItem:
+    """One entry in base-blueprint.json."""
+
+    id: str
+    name: str
+    family_id: str
+    tier: int
+    is_basic: bool
+
+    def to_dict(self) -> dict:
+        return {"id": self.id, "name": self.name, "familyId": self.family_id, "tier": self.tier}
+
+
+@dataclass(frozen=True)
+class BlueprintPoolRule:
+    """One entry of blueprintPoolsByProfessionCount for a given profession count."""
+
+    source: str  # "tool_basic" | "tool" | "item_basic" | "item"
+    tiers: tuple[int, ...]
+    count: int
+
+
+@dataclass(frozen=True)
+class BlueprintPoolOption:
+    """A pool rule paired with the blueprint items it makes eligible."""
+
+    rule: BlueprintPoolRule
+    items: tuple[BlueprintItem, ...]
+
+
+@dataclass(frozen=True)
+class BlueprintTrappingsOptions:
+    """What a character may pick from on the Trappings step's blueprint pools."""
+
+    pools: tuple[BlueprintPoolOption, ...]
+
+
+def _load_blueprints() -> tuple[BlueprintItem, ...]:
+    data = json.loads(_BLUEPRINT_PATH.read_text())
+    return tuple(
+        BlueprintItem(
+            id=item["id"],
+            name=item["name"],
+            family_id=item["familyId"],
+            tier=item["tier"],
+            is_basic=item["id"].startswith("blueprint_basic_"),
+        )
+        for item in data
+    )
+
+
 def _load_family_catalog_types() -> dict[str, str]:
-    """familyId -> which catalog it's defined in (raw/processed/tool/armor/...)."""
+    """familyId -> catalog type ("tool", "armor", "weapon", ...), across every non-blueprint catalog."""
     family_types: dict[str, str] = {}
     for catalog_type, filename in _CATALOG_FILES.items():
-        items = json.loads((_DATA_DIR / filename).read_text())
-        for item in items:
+        path = _DATA_DIR / filename
+        if not path.exists():
+            continue
+        for item in json.loads(path.read_text()):
             family_types[item["familyId"]] = catalog_type
     return family_types
 
 
-def _load_recipes() -> dict[str, dict]:
-    recipes = json.loads(_RECIPES_PATH.read_text())
-    return {r["familyId"]: r for r in recipes}
+def _load_recipes() -> tuple[dict, ...]:
+    return tuple(json.loads(_RECIPES_PATH.read_text()))
 
 
-_FAMILY_CATALOG_TYPES: dict[str, str] = _load_family_catalog_types()
-_RECIPES_BY_FAMILY: dict[str, dict] = _load_recipes()
-
-
-def _resolve_raw_family_hits(ingredients: list[dict], seen: frozenset[str] = frozenset()) -> list[str]:
-    """
-    Recursively resolves an ingredient list down to the raw-material family
-    ids it's ultimately built from - one entry per qualifying ingredient
-    line, "processed" ones expanded via their own recipe. "final" and
-    "final_unresolved" ingredients (other crafted items, not raw materials)
-    are skipped. Identical to the resolver used to build the recipe-count
-    table in README.md, just reimplemented here in Python.
-    """
+def _resolve_raw_family_hits(
+    family_id: str, recipes_by_family: dict[str, dict], seen: frozenset[str]
+) -> list[str]:
+    """Expand a "processed" ingredient down to the raw familyIds it's ultimately made from."""
+    if family_id in seen:
+        return []
+    recipe = recipes_by_family.get(family_id)
+    if recipe is None:
+        return []
+    seen = seen | {family_id}
     hits: list[str] = []
-    for ing in ingredients:
-        category, family_id = ing["category"], ing["familyId"]
-        if category == "raw":
-            hits.append(family_id)
-        elif category == "processed" and family_id not in seen:
-            sub_recipe = _RECIPES_BY_FAMILY.get(family_id)
-            if sub_recipe:
-                hits.extend(_resolve_raw_family_hits(sub_recipe["ingredients"], seen | {family_id}))
-        # "final" / "final_unresolved" -> not a raw material, skip.
+    for ingredient in recipe["ingredients"]:
+        if ingredient["category"] == "raw":
+            hits.append(ingredient["familyId"])
+        elif ingredient["category"] == "processed":
+            hits.extend(_resolve_raw_family_hits(ingredient["familyId"], recipes_by_family, seen))
+        # "final" / "final_unresolved" ingredients are other crafted items, not raw materials - skip.
     return hits
 
 
-def _recipe_profession_categories(recipe: dict) -> list[str]:
-    """Which profession category/categories this recipe belongs to - the
-    one(s) whose 3 raw-material families cover the most of its resolved raw
-    inputs. Empty if it has no raw-family input at all (nothing to match)."""
-    raw_hits = _resolve_raw_family_hits(recipe["ingredients"])
-    if not raw_hits:
+def _recipe_categories(recipe: dict, recipes_by_family: dict[str, dict]) -> list[str]:
+    hits: list[str] = []
+    for ingredient in recipe["ingredients"]:
+        if ingredient["category"] == "raw":
+            hits.append(ingredient["familyId"])
+        elif ingredient["category"] == "processed":
+            hits.extend(_resolve_raw_family_hits(ingredient["familyId"], recipes_by_family, frozenset()))
+    if not hits:
         return []
     counts = {
-        category: sum(1 for hit in raw_hits if hit in family_ids)
-        for category, family_ids in PROFESSION_RESOURCE_FAMILIES.items()
+        category: sum(1 for hit in hits if hit in families)
+        for category, families in PROFESSION_RESOURCE_FAMILIES.items()
     }
     best = max(counts.values())
     if best == 0:
@@ -117,44 +150,154 @@ def _recipe_profession_categories(recipe: dict) -> list[str]:
     return [category for category, count in counts.items() if count == best]
 
 
-def _build_blueprint_pools() -> tuple[dict[str, set[str]], dict[str, set[str]], dict[str, set[str]]]:
-    general: dict[str, set[str]] = {}
-    tool: dict[str, set[str]] = {}
-    final: dict[str, set[str]] = {}
-    for recipe in _RECIPES_BY_FAMILY.values():
-        blueprint_family_id = recipe.get("blueprintFamilyId")
-        if not blueprint_family_id:
+def _build_blueprint_category_index() -> dict[str, tuple[str, ...]]:
+    """blueprint familyId -> profession categories it belongs to (union across its recipes).
+
+    Every category counts a tied recipe as a member (e.g. a recipe tied
+    between CraftGlass and CraftMetal counts for both) - except CraftMetal,
+    which only counts a recipe where it's the sole winner. CraftMetal's raw
+    materials (ore, wood, sand) overlap so heavily with other categories'
+    that without this carve-out it would swallow nearly every generic tool
+    blueprint (furnace, kiln, wrench, ...) via ties, drowning out what
+    actually sets CraftMetal apart: weapons and the premium armor/shield
+    materials.
+    """
+    recipes = _load_recipes()
+    recipes_by_family = {r["familyId"]: r for r in recipes}
+    index: dict[str, set[str]] = {}
+    for recipe in recipes:
+        blueprint_family = recipe.get("blueprintFamilyId")
+        if not blueprint_family:
             continue
-        categories = _recipe_profession_categories(recipe)
-        if not categories:
-            continue
-        output_type = _FAMILY_CATALOG_TYPES.get(recipe["familyId"])
-        bucket = tool if output_type == "tool" else final if output_type in _FINAL_CATALOG_TYPES else general
+        categories = _recipe_categories(recipe, recipes_by_family)
         for category in categories:
-            bucket.setdefault(category, set()).add(blueprint_family_id)
-    return general, tool, final
+            if category == "CraftMetal" and len(categories) != 1:
+                continue
+            index.setdefault(blueprint_family, set()).add(category)
+    return {family: tuple(sorted(cats)) for family, cats in index.items()}
 
 
-_general_pools, _tool_pools, _final_pools = _build_blueprint_pools()
+def _load_blueprint_pool_rules() -> dict[int, tuple[BlueprintPoolRule, ...]]:
+    data = json.loads(_SELECTION_RULES_PATH.read_text())
+    rules_by_count: dict[int, tuple[BlueprintPoolRule, ...]] = {}
+    for count_str, rules in data.get("blueprintPoolsByProfessionCount", {}).items():
+        parsed = []
+        for rule in rules:
+            tiers = rule["tiers"]
+            if isinstance(tiers, int):
+                tiers = [tiers]
+            parsed.append(BlueprintPoolRule(source=rule["source"], tiers=tuple(tiers), count=rule["count"]))
+        rules_by_count[int(count_str)] = tuple(parsed)
+    return rules_by_count
 
-# Profession category -> blueprint familyIds for that category's general
-# technique pool (processed-good blueprints, e.g. blueprint_leather) - what
-# a 1-profession character's quota draws from.
-BLUEPRINT_FAMILIES_BY_PROFESSION: dict[str, tuple[str, ...]] = {
-    category: tuple(sorted(ids)) for category, ids in _general_pools.items()
+
+BLUEPRINT_ITEMS: tuple[BlueprintItem, ...] = _load_blueprints()
+BLUEPRINT_ITEMS_BY_ID: dict[str, BlueprintItem] = {item.id: item for item in BLUEPRINT_ITEMS}
+_FAMILY_CATALOG_TYPES: dict[str, str] = _load_family_catalog_types()
+
+# blueprint familyId -> profession categories it belongs to, e.g.
+# "blueprint_sword" -> ("CraftMetal", "Military").
+BLUEPRINT_CATEGORIES: dict[str, tuple[str, ...]] = _build_blueprint_category_index()
+
+# Starting-blueprint selection rules for the soul-creation "Trappings" step,
+# mirroring RESOURCE_POOLS_BY_PROFESSION_COUNT but for discrete blueprint
+# picks rather than a spendable raw-material budget.
+BLUEPRINT_POOLS_BY_PROFESSION_COUNT: dict[int, tuple[BlueprintPoolRule, ...]] = _load_blueprint_pool_rules()
+
+
+def _blueprint_catalog_type(blueprint_family_id: str) -> str | None:
+    """Whether a blueprint family unlocks a "tool" or a final item, via what its recipe(s) produce."""
+    suffix = blueprint_family_id[len("blueprint_"):]
+    for candidate in (suffix, f"{suffix}_head_armor", f"{suffix}_chest_armor", f"{suffix}_leg_armor"):
+        catalog_type = _FAMILY_CATALOG_TYPES.get(candidate)
+        if catalog_type:
+            return catalog_type
+    return None
+
+
+_SOURCE_PREDICATES = {
+    "tool_basic": lambda bp: bp.is_basic and _blueprint_catalog_type(bp.family_id) == "tool",
+    "tool": lambda bp: not bp.is_basic and _blueprint_catalog_type(bp.family_id) == "tool",
+    "item_basic": lambda bp: bp.is_basic and _blueprint_catalog_type(bp.family_id) in _FINAL_CATALOG_TYPES,
+    "item": lambda bp: not bp.is_basic and _blueprint_catalog_type(bp.family_id) in _FINAL_CATALOG_TYPES,
 }
 
-# Profession category -> blueprint familyIds for that category's tools
-# (workbench, anvil, etc.) - what a 2-profession character's tool quota
-# additionally draws from.
-TOOL_BLUEPRINT_FAMILIES_BY_PROFESSION: dict[str, tuple[str, ...]] = {
-    category: tuple(sorted(ids)) for category, ids in _tool_pools.items()
-}
 
-# Profession category -> blueprint familyIds for that category's finished
-# items (armor, weapons, shields, food, potions, misc, adventuring gear) -
-# what a 3-profession character's final-results quota additionally draws
-# from.
-FINAL_BLUEPRINT_FAMILIES_BY_PROFESSION: dict[str, tuple[str, ...]] = {
-    category: tuple(sorted(ids)) for category, ids in _final_pools.items()
-}
+def resolve_blueprint_trapping_options(profession_ids: list[str]) -> BlueprintTrappingsOptions:
+    """
+    Resolve the blueprint pools a character with these (1-3) professions may
+    pick from on the Trappings step, mirroring resolve_trapping_options in
+    resources_catalog.py.
+
+    Blank/"none" entries are ignored (unfilled slots). A non-empty id that
+    isn't a real profession is a hard error rather than silently ignored -
+    same reasoning as resolve_trapping_options: this is the source of truth
+    the character-creation endpoint validates against.
+    """
+    chosen = [p for p in profession_ids if p and p != "none"]
+    for profession_id in chosen:
+        if profession_id not in PROFESSION_CATEGORIES:
+            raise ValueError(f"Unknown profession id: {profession_id}")
+
+    rules = BLUEPRINT_POOLS_BY_PROFESSION_COUNT.get(len(chosen), ())
+    if not rules:
+        return BlueprintTrappingsOptions(pools=())
+
+    categories = {PROFESSION_CATEGORIES[p] for p in chosen}
+    eligible_families = {
+        family for family, cats in BLUEPRINT_CATEGORIES.items() if categories & set(cats)
+    }
+
+    pools = tuple(
+        BlueprintPoolOption(
+            rule=rule,
+            items=tuple(
+                bp
+                for bp in BLUEPRINT_ITEMS
+                if bp.family_id in eligible_families
+                and bp.tier in rule.tiers
+                and _SOURCE_PREDICATES[rule.source](bp)
+            ),
+        )
+        for rule in rules
+    )
+    return BlueprintTrappingsOptions(pools=pools)
+
+
+def category_blueprint_summary(max_tier: int = 3) -> list[dict]:
+    """
+    Every profession category's blueprint families (tiers up to max_tier),
+    grouped by category - lore/reference data for the /characters page's
+    "Blueprints" section, not player-specific (unlike
+    resolve_blueprint_trapping_options, which is scoped to one character's
+    chosen professions). A category with no eligible family (e.g. Rural)
+    still appears, with an empty families list.
+    """
+    by_category: dict[str, list[str]] = {}
+    for family, cats in BLUEPRINT_CATEGORIES.items():
+        for cat in cats:
+            by_category.setdefault(cat, []).append(family)
+
+    items_by_family: dict[str, list[BlueprintItem]] = {}
+    for item in BLUEPRINT_ITEMS:
+        items_by_family.setdefault(item.family_id, []).append(item)
+
+    all_categories = sorted(set(PROFESSION_CATEGORIES.values()))
+    summary = []
+    for category in all_categories:
+        families = []
+        for family in sorted(by_category.get(category, [])):
+            items = sorted(
+                (i for i in items_by_family[family] if i.tier <= max_tier),
+                key=lambda i: i.tier,
+            )
+            families.append({
+                "familyId": family[len("blueprint_"):],
+                "kind": _blueprint_catalog_type(family) or "?",
+                "items": [
+                    {"id": item.id, "name": item.name, "tier": item.tier, "isBasic": item.is_basic}
+                    for item in items
+                ],
+            })
+        summary.append({"category": category, "families": families})
+    return summary

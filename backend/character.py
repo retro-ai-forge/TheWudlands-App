@@ -9,13 +9,6 @@ from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from typing import Dict, List, Optional
 
-# Tools granted to every character for free at creation, regardless of
-# profession - unlike resource_balances, never gated by the Trappings step.
-# Matches the "Knife (starter, no recipe)" node in craft/test-recipes.drawio.xml
-# (see craft/crafting-agent.md's "Starter tool: the Knife" section): the one
-# tool basic recipes can use before any Section 2 tool has been built.
-STARTER_TOOLS: tuple[str, ...] = ("knife",)
-
 # Valid values for Character.vital_status, per the "Vital Status" lore
 # section on the world page (app/theworld/page.tsx). Nothing sets a
 # character to anything but "alive" yet, but the set is recorded here so
@@ -127,9 +120,27 @@ class Character:
     # by resource id (see backend.resources_catalog) - a running total, never
     # per-unit item instances or slot assignments.
     resource_balances: Dict[str, int] = field(default_factory=dict)
-    # Discrete tools this character owns (e.g. "knife") - distinct from
-    # resource_balances, which is stackable-quantity crafting materials only.
-    tools: List[str] = field(default_factory=lambda: list(STARTER_TOOLS))
+    # Tools this character currently holds (id -> quantity), checked out of
+    # the player's shared pool (backend.players.Player.tools, via
+    # check_out_tool/check_in_tool) - stacked the same way as that pool, and
+    # unavailable to the player's other characters while held here.
+    tools: Dict[str, int] = field(default_factory=dict)
+    # Starter tools (e.g. "knife") checked out of the player's separate
+    # Player.tool_starter pool - same check-out/check-in mechanics as
+    # `tools`, just a different pool (pass pool="toolStarter").
+    tool_starter: Dict[str, int] = field(default_factory=dict)
+    # Blueprint ids this character has learned (see backend.craft_catalog) -
+    # chosen on the Trappings step from the pools their professions unlock.
+    # Soulbound: unlike tools, blueprints never move to the player's shared
+    # pool or to another character - knowing a technique is permanently tied
+    # to the character who learned it (eventual candidate for an on-chain
+    # soulbound token, one day). A one-time unlock, never a stackable
+    # quantity like resource_balances.
+    blueprints: List[str] = field(default_factory=list)
+    # Starter (no-fancy-name, "blueprint_basic_*") blueprints - kept separate
+    # from `blueprints` since they aren't chosen on the Trappings step, they
+    # just come with the character. Equally soulbound.
+    blueprint_starter: List[str] = field(default_factory=list)
 
     def to_dict(self) -> dict:
         return {
@@ -159,4 +170,7 @@ class Character:
             "availability": {"name": "ready", "timeRdy": self.created_at.isoformat()},
             "resourceBalances": self.resource_balances,
             "tools": self.tools,
+            "toolStarter": self.tool_starter,
+            "blueprints": self.blueprints,
+            "blueprintStarter": self.blueprint_starter,
         }

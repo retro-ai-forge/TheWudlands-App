@@ -102,7 +102,14 @@ export interface SlotCharacterSummary {
   profession: CharacterProfessions;
   attr: CharacterAttributes;
   resourceBalances: Record<string, number>;
-  tools: string[];
+  /** Tools this character currently holds (id -> quantity), checked out of the player's shared pool. */
+  tools: Record<string, number>;
+  /** Starter tools currently held, checked out of the player's separate starter pool. */
+  toolStarter: Record<string, number>;
+  /** Blueprint ids this character has learned - soulbound, never moves. */
+  blueprints: string[];
+  /** Starter blueprints this character has - soulbound, never moves. */
+  blueprintStarter: string[];
 }
 
 interface SlotState {
