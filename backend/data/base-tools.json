@@ -1,4 +1,5 @@
 [
+  {"id": "basic_anvil", "name": "Hollow Anvil", "familyId": "anvil", "tier": 1},
   {"id": "lead_anvil", "name": "Lead Anvil", "familyId": "anvil", "tier": 1},
   {"id": "copper_anvil", "name": "Copper Anvil", "familyId": "anvil", "tier": 2},
   {"id": "iron_anvil", "name": "Iron Anvil", "familyId": "anvil", "tier": 3},
@@ -6,6 +7,7 @@
   {"id": "gold_anvil", "name": "Gold Anvil", "familyId": "anvil", "tier": 5},
   {"id": "star_metal_anvil", "name": "Star Metal Anvil", "familyId": "anvil", "tier": 6},
 
+  {"id": "basic_grinder", "name": "Bent Grinder", "familyId": "grinder", "tier": 1},
   {"id": "lead_grinder", "name": "Lead Grinder", "familyId": "grinder", "tier": 1},
   {"id": "copper_grinder", "name": "Copper Grinder", "familyId": "grinder", "tier": 2},
   {"id": "iron_grinder", "name": "Iron Grinder", "familyId": "grinder", "tier": 3},
@@ -13,6 +15,7 @@
   {"id": "gold_grinder", "name": "Gold Grinder", "familyId": "grinder", "tier": 5},
   {"id": "star_metal_grinder", "name": "Star Metal Grinder", "familyId": "grinder", "tier": 6},
 
+  {"id": "basic_wrench", "name": "Uneven Wrench", "familyId": "wrench", "tier": 1},
   {"id": "lead_wrench", "name": "Lead Wrench", "familyId": "wrench", "tier": 1},
   {"id": "copper_wrench", "name": "Copper Wrench", "familyId": "wrench", "tier": 2},
   {"id": "iron_wrench", "name": "Iron Wrench", "familyId": "wrench", "tier": 3},
@@ -20,6 +23,7 @@
   {"id": "gold_wrench", "name": "Gold Wrench", "familyId": "wrench", "tier": 5},
   {"id": "star_metal_wrench", "name": "Star Metal Wrench", "familyId": "wrench", "tier": 6},
 
+  {"id": "basic_workbench", "name": "Crude Workbench", "familyId": "workbench", "tier": 1},
   {"id": "pine_workbench", "name": "Pine Workbench", "familyId": "workbench", "tier": 1},
   {"id": "oak_workbench", "name": "Oak Workbench", "familyId": "workbench", "tier": 2},
   {"id": "ash_workbench", "name": "Ash Workbench", "familyId": "workbench", "tier": 3},
@@ -34,6 +38,7 @@
   {"id": "ebony_axe_stone", "name": "Ebony Stone Axe", "familyId": "axe_stone", "tier": 5},
   {"id": "worldroot_axe_stone", "name": "Worldroot Stone Axe", "familyId": "axe_stone", "tier": 6},
 
+  {"id": "basic_loom", "name": "Beginner's Loom", "familyId": "loom", "tier": 1},
   {"id": "pine_loom", "name": "Pine Loom", "familyId": "loom", "tier": 1},
   {"id": "oak_loom", "name": "Oak Loom", "familyId": "loom", "tier": 2},
   {"id": "ash_loom", "name": "Ash Loom", "familyId": "loom", "tier": 3},
@@ -41,6 +46,7 @@
   {"id": "ebony_loom", "name": "Ebony Loom", "familyId": "loom", "tier": 5},
   {"id": "worldroot_loom", "name": "Worldroot Loom", "familyId": "loom", "tier": 6},
 
+  {"id": "basic_scriptorium", "name": "Uneven Scriptorium", "familyId": "scriptorium", "tier": 1},
   {"id": "letter_scriptorium", "name": "Letter Scriptorium", "familyId": "scriptorium", "tier": 1},
   {"id": "journal_scriptorium", "name": "Journal Scriptorium", "familyId": "scriptorium", "tier": 2},
   {"id": "treatise_scriptorium", "name": "Treatise Scriptorium", "familyId": "scriptorium", "tier": 3},
@@ -48,6 +54,7 @@
   {"id": "grimoire_scriptorium", "name": "Grimoire Scriptorium", "familyId": "scriptorium", "tier": 5},
   {"id": "codex_scriptorium", "name": "Codex Scriptorium", "familyId": "scriptorium", "tier": 6},
 
+  {"id": "basic_spinning_wheel", "name": "Loose Spinning Wheel", "familyId": "spinning_wheel", "tier": 1},
   {"id": "pine_spinning_wheel", "name": "Pine Spinning Wheel", "familyId": "spinning_wheel", "tier": 1},
   {"id": "oak_spinning_wheel", "name": "Oak Spinning Wheel", "familyId": "spinning_wheel", "tier": 2},
   {"id": "ash_spinning_wheel", "name": "Ash Spinning Wheel", "familyId": "spinning_wheel", "tier": 3},
@@ -55,6 +62,7 @@
   {"id": "ebony_spinning_wheel", "name": "Ebony Spinning Wheel", "familyId": "spinning_wheel", "tier": 5},
   {"id": "worldroot_spinning_wheel", "name": "Worldroot Spinning Wheel", "familyId": "spinning_wheel", "tier": 6},
 
+  {"id": "basic_tanning_rack", "name": "Primitive Tanning Rack", "familyId": "tanning_rack", "tier": 1},
   {"id": "pine_tanning_rack", "name": "Pine Tanning Rack", "familyId": "tanning_rack", "tier": 1},
   {"id": "oak_tanning_rack", "name": "Oak Tanning Rack", "familyId": "tanning_rack", "tier": 2},
   {"id": "ash_tanning_rack", "name": "Ash Tanning Rack", "familyId": "tanning_rack", "tier": 3},
@@ -62,6 +70,7 @@
   {"id": "ebony_tanning_rack", "name": "Ebony Tanning Rack", "familyId": "tanning_rack", "tier": 5},
   {"id": "worldroot_tanning_rack", "name": "Worldroot Tanning Rack", "familyId": "tanning_rack", "tier": 6},
 
+  {"id": "basic_writers_table", "name": "Crude Writer's Table", "familyId": "writers_table", "tier": 1},
   {"id": "pine_writers_table", "name": "Pine Writer's Table", "familyId": "writers_table", "tier": 1},
   {"id": "oak_writers_table", "name": "Oak Writer's Table", "familyId": "writers_table", "tier": 2},
   {"id": "ash_writers_table", "name": "Ash Writer's Table", "familyId": "writers_table", "tier": 3},
@@ -69,6 +78,7 @@
   {"id": "ebony_writers_table", "name": "Ebony Writer's Table", "familyId": "writers_table", "tier": 5},
   {"id": "worldroot_writers_table", "name": "Worldroot Writer's Table", "familyId": "writers_table", "tier": 6},
 
+  {"id": "basic_furnace", "name": "Uneven Stone Furnace", "familyId": "furnace", "tier": 1},
   {"id": "rough_stone_furnace", "name": "Rough Stone Furnace", "familyId": "furnace", "tier": 1},
   {"id": "granite_furnace", "name": "Granite Furnace", "familyId": "furnace", "tier": 2},
   {"id": "marble_furnace", "name": "Marble Furnace", "familyId": "furnace", "tier": 3},
@@ -76,6 +86,7 @@
   {"id": "basalt_furnace", "name": "Basalt Furnace", "familyId": "furnace", "tier": 5},
   {"id": "worldstone_furnace", "name": "Worldstone Furnace", "familyId": "furnace", "tier": 6},
 
+  {"id": "basic_hearth", "name": "Loose Hearth", "familyId": "hearth", "tier": 1},
   {"id": "scullions_hearth", "name": "Scullion's Hearth", "familyId": "hearth", "tier": 1},
   {"id": "cooks_hearth", "name": "Cook's Hearth", "familyId": "hearth", "tier": 2},
   {"id": "chefs_hearth", "name": "Chef's Hearth", "familyId": "hearth", "tier": 3},
@@ -83,6 +94,7 @@
   {"id": "royal_chefs_hearth", "name": "Royal Chef's Hearth", "familyId": "hearth", "tier": 5},
   {"id": "feastmasters_hearth", "name": "Feastmaster's Hearth", "familyId": "hearth", "tier": 6},
 
+  {"id": "basic_mortar_and_pestle", "name": "Apprentice's Stone Mortar & Pestle", "familyId": "mortar_and_pestle", "tier": 1},
   {"id": "rough_stone_mortar_and_pestle", "name": "Rough Stone Mortar & Pestle", "familyId": "mortar_and_pestle", "tier": 1},
   {"id": "granite_mortar_and_pestle", "name": "Granite Mortar & Pestle", "familyId": "mortar_and_pestle", "tier": 2},
   {"id": "marble_mortar_and_pestle", "name": "Marble Mortar & Pestle", "familyId": "mortar_and_pestle", "tier": 3},
@@ -90,6 +102,7 @@
   {"id": "basalt_mortar_and_pestle", "name": "Basalt Mortar & Pestle", "familyId": "mortar_and_pestle", "tier": 5},
   {"id": "worldstone_mortar_and_pestle", "name": "Worldstone Mortar & Pestle", "familyId": "mortar_and_pestle", "tier": 6},
 
+  {"id": "basic_enchanters_table", "name": "Apprentice's Enchanter's Table", "familyId": "enchanters_table", "tier": 1},
   {"id": "quartz_enchanters_table", "name": "Quartz Enchanter's Table", "familyId": "enchanters_table", "tier": 1},
   {"id": "amethyst_enchanters_table", "name": "Amethyst Enchanter's Table", "familyId": "enchanters_table", "tier": 2},
   {"id": "sapphire_enchanters_table", "name": "Sapphire Enchanter's Table", "familyId": "enchanters_table", "tier": 3},
@@ -97,6 +110,7 @@
   {"id": "mana_enchanters_table", "name": "Mana Enchanter's Table", "familyId": "enchanters_table", "tier": 5},
   {"id": "astral_enchanters_table", "name": "Astral Enchanter's Table", "familyId": "enchanters_table", "tier": 6},
 
+  {"id": "basic_lapidary_bench", "name": "Crude Lapidary Bench", "familyId": "lapidary_bench", "tier": 1},
   {"id": "quartz_lapidary_bench", "name": "Quartz Lapidary Bench", "familyId": "lapidary_bench", "tier": 1},
   {"id": "amethyst_lapidary_bench", "name": "Amethyst Lapidary Bench", "familyId": "lapidary_bench", "tier": 2},
   {"id": "sapphire_lapidary_bench", "name": "Sapphire Lapidary Bench", "familyId": "lapidary_bench", "tier": 3},
@@ -104,6 +118,7 @@
   {"id": "mana_lapidary_bench", "name": "Mana Lapidary Bench", "familyId": "lapidary_bench", "tier": 5},
   {"id": "astral_lapidary_bench", "name": "Astral Lapidary Bench", "familyId": "lapidary_bench", "tier": 6},
 
+  {"id": "basic_alchemy_stand", "name": "Beginner's Alchemy Stand", "familyId": "alchemy_stand", "tier": 1},
   {"id": "apprentices_alchemy_stand", "name": "Apprentice's Alchemy Stand", "familyId": "alchemy_stand", "tier": 1},
   {"id": "journeymans_alchemy_stand", "name": "Journeyman's Alchemy Stand", "familyId": "alchemy_stand", "tier": 2},
   {"id": "transmuters_alchemy_stand", "name": "Transmuter's Alchemy Stand", "familyId": "alchemy_stand", "tier": 3},
@@ -111,6 +126,7 @@
   {"id": "arcanists_alchemy_stand", "name": "Arcanist's Alchemy Stand", "familyId": "alchemy_stand", "tier": 5},
   {"id": "grandmasters_alchemy_stand", "name": "Grandmaster's Alchemy Stand", "familyId": "alchemy_stand", "tier": 6},
 
+  {"id": "basic_kiln", "name": "Primitive Clay Kiln", "familyId": "kiln", "tier": 1},
   {"id": "common_clay_kiln", "name": "Common Clay Kiln", "familyId": "kiln", "tier": 1},
   {"id": "red_clay_kiln", "name": "Red Clay Kiln", "familyId": "kiln", "tier": 2},
   {"id": "fire_clay_kiln", "name": "Fire Clay Kiln", "familyId": "kiln", "tier": 3},

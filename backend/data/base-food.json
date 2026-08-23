@@ -1,4 +1,5 @@
 [
+  {"id": "basic_hearty_stew", "name": "Cheap Hearty Stew", "familyId": "hearty_stew", "tier": 1},
   {"id": "farmhands_hearty_stew", "name": "Farmhand's Hearty Stew", "familyId": "hearty_stew", "tier": 1},
   {"id": "travelers_hearty_stew", "name": "Traveler's Hearty Stew", "familyId": "hearty_stew", "tier": 2},
   {"id": "innkeepers_hearty_stew", "name": "Innkeeper's Hearty Stew", "familyId": "hearty_stew", "tier": 3},
@@ -20,6 +21,7 @@
   {"id": "feastday_roast_haunch", "name": "Feastday Roast Haunch", "familyId": "roast_haunch", "tier": 5},
   {"id": "mythic_roast_haunch", "name": "Mythic Roast Haunch", "familyId": "roast_haunch", "tier": 6},
 
+  {"id": "basic_bangers", "name": "Beginner's Bangers", "familyId": "bangers", "tier": 1},
   {"id": "prentice_bangers", "name": "Prentice Bangers", "familyId": "bangers", "tier": 1},
   {"id": "butchers_bangers", "name": "Butcher's Bangers", "familyId": "bangers", "tier": 2},
   {"id": "master_butchers_bangers", "name": "Master Butcher's Bangers", "familyId": "bangers", "tier": 3},
@@ -41,6 +43,7 @@
   {"id": "honeyfig_wizened_figs", "name": "Honeyfig Wizened Figs", "familyId": "wizened_figs", "tier": 5},
   {"id": "ancient_wizened_figs", "name": "Ancient Wizened Figs", "familyId": "wizened_figs", "tier": 6},
 
+  {"id": "basic_iron_ration", "name": "Plain Iron Ration", "familyId": "iron_ration", "tier": 1},
   {"id": "skirmishers_iron_ration", "name": "Skirmisher's Iron Ration", "familyId": "iron_ration", "tier": 1},
   {"id": "soldiers_iron_ration", "name": "Soldier's Iron Ration", "familyId": "iron_ration", "tier": 2},
   {"id": "veterans_iron_ration", "name": "Veteran's Iron Ration", "familyId": "iron_ration", "tier": 3},

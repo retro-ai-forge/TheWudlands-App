@@ -1,4 +1,5 @@
 [
+  {"id": "basic_cloth_head_armor", "name": "Tight Hood", "familyId": "cloth_head_armor", "tier": 1},
   {"id": "hemp_cloth_head_armor", "name": "Hemp Cloth Hood", "familyId": "cloth_head_armor", "tier": 1},
   {"id": "cotton_cloth_head_armor", "name": "Cotton Cloth Hood", "familyId": "cloth_head_armor", "tier": 2},
   {"id": "wool_cloth_head_armor", "name": "Wool Cloth Hood", "familyId": "cloth_head_armor", "tier": 3},
@@ -6,6 +7,7 @@
   {"id": "shadow_cloth_head_armor", "name": "Shadow Cloth Hood", "familyId": "cloth_head_armor", "tier": 5},
   {"id": "moon_cloth_head_armor", "name": "Moon Cloth Hood", "familyId": "cloth_head_armor", "tier": 6},
 
+  {"id": "basic_cloth_chest_armor", "name": "Small Robe", "familyId": "cloth_chest_armor", "tier": 1},
   {"id": "hemp_cloth_chest_armor", "name": "Hemp Cloth Robe", "familyId": "cloth_chest_armor", "tier": 1},
   {"id": "cotton_cloth_chest_armor", "name": "Cotton Cloth Robe", "familyId": "cloth_chest_armor", "tier": 2},
   {"id": "wool_cloth_chest_armor", "name": "Wool Cloth Robe", "familyId": "cloth_chest_armor", "tier": 3},
@@ -13,6 +15,7 @@
   {"id": "shadow_cloth_chest_armor", "name": "Shadow Cloth Robe", "familyId": "cloth_chest_armor", "tier": 5},
   {"id": "moon_cloth_chest_armor", "name": "Moon Cloth Robe", "familyId": "cloth_chest_armor", "tier": 6},
 
+  {"id": "basic_cloth_leg_armor", "name": "Loose Trousers", "familyId": "cloth_leg_armor", "tier": 1},
   {"id": "hemp_cloth_leg_armor", "name": "Hemp Cloth Trousers", "familyId": "cloth_leg_armor", "tier": 1},
   {"id": "cotton_cloth_leg_armor", "name": "Cotton Cloth Trousers", "familyId": "cloth_leg_armor", "tier": 2},
   {"id": "wool_cloth_leg_armor", "name": "Wool Cloth Trousers", "familyId": "cloth_leg_armor", "tier": 3},
@@ -20,6 +23,7 @@
   {"id": "shadow_cloth_leg_armor", "name": "Shadow Cloth Trousers", "familyId": "cloth_leg_armor", "tier": 5},
   {"id": "moon_cloth_leg_armor", "name": "Moon Cloth Trousers", "familyId": "cloth_leg_armor", "tier": 6},
 
+  {"id": "basic_leather_head_armor", "name": "Rotten Leather Cap", "familyId": "leather_head_armor", "tier": 1},
   {"id": "deer_leather_head_armor", "name": "Deer Leather Cap", "familyId": "leather_head_armor", "tier": 1},
   {"id": "goat_leather_head_armor", "name": "Goat Leather Cap", "familyId": "leather_head_armor", "tier": 2},
   {"id": "elk_leather_head_armor", "name": "Elk Leather Cap", "familyId": "leather_head_armor", "tier": 3},
@@ -27,6 +31,7 @@
   {"id": "wyvern_leather_head_armor", "name": "Wyvern Leather Cap", "familyId": "leather_head_armor", "tier": 5},
   {"id": "phoenix_leather_head_armor", "name": "Phoenix Leather Cap", "familyId": "leather_head_armor", "tier": 6},
 
+  {"id": "basic_leather_chest_armor", "name": "Primitive Leather Jerkin", "familyId": "leather_chest_armor", "tier": 1},
   {"id": "deer_leather_chest_armor", "name": "Deer Leather Jerkin", "familyId": "leather_chest_armor", "tier": 1},
   {"id": "goat_leather_chest_armor", "name": "Goat Leather Jerkin", "familyId": "leather_chest_armor", "tier": 2},
   {"id": "elk_leather_chest_armor", "name": "Elk Leather Jerkin", "familyId": "leather_chest_armor", "tier": 3},
@@ -34,6 +39,7 @@
   {"id": "wyvern_leather_chest_armor", "name": "Wyvern Leather Jerkin", "familyId": "leather_chest_armor", "tier": 5},
   {"id": "phoenix_leather_chest_armor", "name": "Phoenix Leather Jerkin", "familyId": "leather_chest_armor", "tier": 6},
 
+  {"id": "basic_leather_leg_armor", "name": "Long Leather Leggings", "familyId": "leather_leg_armor", "tier": 1},
   {"id": "deer_leather_leg_armor", "name": "Deer Leather Leggings", "familyId": "leather_leg_armor", "tier": 1},
   {"id": "goat_leather_leg_armor", "name": "Goat Leather Leggings", "familyId": "leather_leg_armor", "tier": 2},
   {"id": "elk_leather_leg_armor", "name": "Elk Leather Leggings", "familyId": "leather_leg_armor", "tier": 3},
@@ -41,6 +47,7 @@
   {"id": "wyvern_leather_leg_armor", "name": "Wyvern Leather Leggings", "familyId": "leather_leg_armor", "tier": 5},
   {"id": "phoenix_leather_leg_armor", "name": "Phoenix Leather Leggings", "familyId": "leather_leg_armor", "tier": 6},
 
+  {"id": "basic_chainmail_head_armor", "name": "Loose Chainmail Coif", "familyId": "chainmail_head_armor", "tier": 1},
   {"id": "lead_chainmail_head_armor", "name": "Lead Chainmail Coif", "familyId": "chainmail_head_armor", "tier": 1},
   {"id": "copper_chainmail_head_armor", "name": "Copper Chainmail Coif", "familyId": "chainmail_head_armor", "tier": 2},
   {"id": "iron_chainmail_head_armor", "name": "Iron Chainmail Coif", "familyId": "chainmail_head_armor", "tier": 3},
@@ -48,6 +55,7 @@
   {"id": "gold_chainmail_head_armor", "name": "Gold Chainmail Coif", "familyId": "chainmail_head_armor", "tier": 5},
   {"id": "star_metal_chainmail_head_armor", "name": "Star Metal Chainmail Coif", "familyId": "chainmail_head_armor", "tier": 6},
 
+  {"id": "basic_chainmail_chest_armor", "name": "Loose Chainmail Hauberk", "familyId": "chainmail_chest_armor", "tier": 1},
   {"id": "lead_chainmail_chest_armor", "name": "Lead Chainmail Hauberk", "familyId": "chainmail_chest_armor", "tier": 1},
   {"id": "copper_chainmail_chest_armor", "name": "Copper Chainmail Hauberk", "familyId": "chainmail_chest_armor", "tier": 2},
   {"id": "iron_chainmail_chest_armor", "name": "Iron Chainmail Hauberk", "familyId": "chainmail_chest_armor", "tier": 3},
@@ -55,6 +63,7 @@
   {"id": "gold_chainmail_chest_armor", "name": "Gold Chainmail Hauberk", "familyId": "chainmail_chest_armor", "tier": 5},
   {"id": "star_metal_chainmail_chest_armor", "name": "Star Metal Chainmail Hauberk", "familyId": "chainmail_chest_armor", "tier": 6},
 
+  {"id": "basic_chainmail_leg_armor", "name": "Loose Chainmail Chausses", "familyId": "chainmail_leg_armor", "tier": 1},
   {"id": "lead_chainmail_leg_armor", "name": "Lead Chainmail Chausses", "familyId": "chainmail_leg_armor", "tier": 1},
   {"id": "copper_chainmail_leg_armor", "name": "Copper Chainmail Chausses", "familyId": "chainmail_leg_armor", "tier": 2},
   {"id": "iron_chainmail_leg_armor", "name": "Iron Chainmail Chausses", "familyId": "chainmail_leg_armor", "tier": 3},
@@ -62,6 +71,7 @@
   {"id": "gold_chainmail_leg_armor", "name": "Gold Chainmail Chausses", "familyId": "chainmail_leg_armor", "tier": 5},
   {"id": "star_metal_chainmail_leg_armor", "name": "Star Metal Chainmail Chausses", "familyId": "chainmail_leg_armor", "tier": 6},
 
+  {"id": "basic_iron_head_armor", "name": "Apprentice's Iron Helmet", "familyId": "iron_head_armor", "tier": 1},
   {"id": "ironclad_iron_head_armor", "name": "Ironclad Helmet", "familyId": "iron_head_armor", "tier": 1},
   {"id": "steelbound_iron_head_armor", "name": "Steelbound Helmet", "familyId": "iron_head_armor", "tier": 2},
   {"id": "warforged_iron_head_armor", "name": "Warforged Iron Helmet", "familyId": "iron_head_armor", "tier": 3},
@@ -69,6 +79,7 @@
   {"id": "ironbound_iron_head_armor", "name": "Ironbound Helmet", "familyId": "iron_head_armor", "tier": 5},
   {"id": "deathless_iron_head_armor", "name": "Deathless Iron Helmet", "familyId": "iron_head_armor", "tier": 6},
 
+  {"id": "basic_iron_chest_armor", "name": "Apprentice's Iron Breastplate", "familyId": "iron_chest_armor", "tier": 1},
   {"id": "ironclad_iron_chest_armor", "name": "Ironclad Breastplate", "familyId": "iron_chest_armor", "tier": 1},
   {"id": "steelbound_iron_chest_armor", "name": "Steelbound Breastplate", "familyId": "iron_chest_armor", "tier": 2},
   {"id": "warforged_iron_chest_armor", "name": "Warforged Iron Breastplate", "familyId": "iron_chest_armor", "tier": 3},
@@ -76,6 +87,7 @@
   {"id": "ironbound_iron_chest_armor", "name": "Ironbound Breastplate", "familyId": "iron_chest_armor", "tier": 5},
   {"id": "deathless_iron_chest_armor", "name": "Deathless Iron Breastplate", "familyId": "iron_chest_armor", "tier": 6},
 
+  {"id": "basic_iron_leg_armor", "name": "Apprentice's Iron Greaves", "familyId": "iron_leg_armor", "tier": 1},
   {"id": "ironclad_iron_leg_armor", "name": "Ironclad Greaves", "familyId": "iron_leg_armor", "tier": 1},
   {"id": "steelbound_iron_leg_armor", "name": "Steelbound Greaves", "familyId": "iron_leg_armor", "tier": 2},
   {"id": "warforged_iron_leg_armor", "name": "Warforged Iron Greaves", "familyId": "iron_leg_armor", "tier": 3},

@@ -1,4 +1,5 @@
 [
+  {"id": "basic_wooden_shield", "name": "Crude Wooden Shield", "familyId": "wooden_shield", "tier": 1},
   {"id": "pine_wooden_shield", "name": "Pine Wooden Shield", "familyId": "wooden_shield", "tier": 1},
   {"id": "oak_wooden_shield", "name": "Oak Wooden Shield", "familyId": "wooden_shield", "tier": 2},
   {"id": "ash_wooden_shield", "name": "Ash Wooden Shield", "familyId": "wooden_shield", "tier": 3},
@@ -6,6 +7,7 @@
   {"id": "ebony_wooden_shield", "name": "Ebony Wooden Shield", "familyId": "wooden_shield", "tier": 5},
   {"id": "worldroot_wooden_shield", "name": "Worldroot Wooden Shield", "familyId": "wooden_shield", "tier": 6},
 
+  {"id": "basic_reinforced_wooden_shield", "name": "Beginner's Reinforced Shield", "familyId": "reinforced_wooden_shield", "tier": 1},
   {"id": "banded_reinforced_wooden_shield", "name": "Banded Reinforced Shield", "familyId": "reinforced_wooden_shield", "tier": 1},
   {"id": "riveted_reinforced_wooden_shield", "name": "Riveted Reinforced Shield", "familyId": "reinforced_wooden_shield", "tier": 2},
   {"id": "bossed_reinforced_wooden_shield", "name": "Bossed Reinforced Shield", "familyId": "reinforced_wooden_shield", "tier": 3},
@@ -13,6 +15,7 @@
   {"id": "barred_reinforced_wooden_shield", "name": "Barred Reinforced Shield", "familyId": "reinforced_wooden_shield", "tier": 5},
   {"id": "battleforged_reinforced_wooden_shield", "name": "Battleforged Reinforced Shield", "familyId": "reinforced_wooden_shield", "tier": 6},
 
+  {"id": "basic_iron_shield", "name": "Rusty Metal Shield", "familyId": "iron_shield", "tier": 1},
   {"id": "ironclad_iron_shield", "name": "Ironclad Shield", "familyId": "iron_shield", "tier": 1},
   {"id": "steelbound_iron_shield", "name": "Steelbound Shield", "familyId": "iron_shield", "tier": 2},
   {"id": "warforged_iron_shield", "name": "Warforged Iron Shield", "familyId": "iron_shield", "tier": 3},
@@ -46,12 +49,5 @@
   {"id": "runed_darksteel_shield", "name": "Runed Darksteel Shield", "familyId": "darksteel_shield", "tier": 3},
   {"id": "sigiled_darksteel_shield", "name": "Sigiled Darksteel Shield", "familyId": "darksteel_shield", "tier": 4},
   {"id": "shadowforged_darksteel_shield", "name": "Shadowforged Darksteel Shield", "familyId": "darksteel_shield", "tier": 5},
-  {"id": "worldforged_darksteel_shield", "name": "Worldforged Darksteel Shield", "familyId": "darksteel_shield", "tier": 6},
-
-  {"id": "pine_wood_shield", "name": "Pine Wood Shield", "familyId": "wood_shield", "tier": 1},
-  {"id": "oak_wood_shield", "name": "Oak Wood Shield", "familyId": "wood_shield", "tier": 2},
-  {"id": "ash_wood_shield", "name": "Ash Wood Shield", "familyId": "wood_shield", "tier": 3},
-  {"id": "cedar_wood_shield", "name": "Cedar Wood Shield", "familyId": "wood_shield", "tier": 4},
-  {"id": "ebony_wood_shield", "name": "Ebony Wood Shield", "familyId": "wood_shield", "tier": 5},
-  {"id": "worldroot_wood_shield", "name": "Worldroot Wood Shield", "familyId": "wood_shield", "tier": 6}
+  {"id": "worldforged_darksteel_shield", "name": "Worldforged Darksteel Shield", "familyId": "darksteel_shield", "tier": 6}
 ]

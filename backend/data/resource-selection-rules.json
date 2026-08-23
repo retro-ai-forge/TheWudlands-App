@@ -6,16 +6,18 @@
   },
   "blueprintPoolsByProfessionCount": {
     "1": [
-      { "source": "profession", "tiers": [1], "count": 2 }
+      { "source": "tool_basic", "tiers": [1], "count": 1 }
     ],
     "2": [
-      { "source": "profession", "tiers": [1, 2], "count": 4 },
-      { "source": "tool", "tiers": [1], "count": 2 }
+      { "source": "tool_basic", "tiers": [1], "count": 1 },
+      { "source": "tool", "tiers": [1, 2], "count": 1 },
+      { "source": "item_basic", "tiers": 1, "count": 1 }
     ],
     "3": [
-      { "source": "profession", "tiers": [1, 2, 3], "count": 6 },
-      { "source": "tool", "tiers": [1, 2], "count": 4 },
-      { "source": "final", "tiers": [1], "count": 2 }
+      { "source": "tool_basic", "tiers": [1], "count": 2 },
+      { "source": "tool", "tiers": [1, 2], "count": 1 },
+      { "source": "item_basic", "tiers": [1], "count": 2 },
+      { "source": "item", "tiers": [1, 2], "count": 1 }
     ]
   }
 }

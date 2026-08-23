@@ -1,4 +1,5 @@
 [
+  {"id": "blueprint_basic_wooden_shield", "name": "Blueprint: Crude Wooden Shield", "familyId": "blueprint_wooden_shield", "tier": 1},
   {"id": "blueprint_pine_wooden_shield", "name": "Blueprint: Pine Wooden Shield", "familyId": "blueprint_wooden_shield", "tier": 1},
   {"id": "blueprint_oak_wooden_shield", "name": "Blueprint: Oak Wooden Shield", "familyId": "blueprint_wooden_shield", "tier": 2},
   {"id": "blueprint_ash_wooden_shield", "name": "Blueprint: Ash Wooden Shield", "familyId": "blueprint_wooden_shield", "tier": 3},
@@ -6,6 +7,7 @@
   {"id": "blueprint_ebony_wooden_shield", "name": "Blueprint: Ebony Wooden Shield", "familyId": "blueprint_wooden_shield", "tier": 5},
   {"id": "blueprint_worldroot_wooden_shield", "name": "Blueprint: Worldroot Wooden Shield", "familyId": "blueprint_wooden_shield", "tier": 6},
 
+  {"id": "blueprint_basic_reinforced_wooden_shield", "name": "Blueprint: Beginner's Reinforced Shield", "familyId": "blueprint_reinforced_wooden_shield", "tier": 1},
   {"id": "blueprint_banded_reinforced_wooden_shield", "name": "Blueprint: Banded Reinforced Shield", "familyId": "blueprint_reinforced_wooden_shield", "tier": 1},
   {"id": "blueprint_riveted_reinforced_wooden_shield", "name": "Blueprint: Riveted Reinforced Shield", "familyId": "blueprint_reinforced_wooden_shield", "tier": 2},
   {"id": "blueprint_bossed_reinforced_wooden_shield", "name": "Blueprint: Bossed Reinforced Shield", "familyId": "blueprint_reinforced_wooden_shield", "tier": 3},
@@ -13,6 +15,7 @@
   {"id": "blueprint_barred_reinforced_wooden_shield", "name": "Blueprint: Barred Reinforced Shield", "familyId": "blueprint_reinforced_wooden_shield", "tier": 5},
   {"id": "blueprint_battleforged_reinforced_wooden_shield", "name": "Blueprint: Battleforged Reinforced Shield", "familyId": "blueprint_reinforced_wooden_shield", "tier": 6},
 
+  {"id": "blueprint_basic_iron_shield", "name": "Blueprint: Rusty Metal Shield", "familyId": "blueprint_iron_shield", "tier": 1},
   {"id": "blueprint_ironclad_iron_shield", "name": "Blueprint: Ironclad Shield", "familyId": "blueprint_iron_shield", "tier": 1},
   {"id": "blueprint_steelbound_iron_shield", "name": "Blueprint: Steelbound Shield", "familyId": "blueprint_iron_shield", "tier": 2},
   {"id": "blueprint_warforged_iron_shield", "name": "Blueprint: Warforged Iron Shield", "familyId": "blueprint_iron_shield", "tier": 3},
@@ -48,6 +51,7 @@
   {"id": "blueprint_shadowforged_darksteel_shield", "name": "Blueprint: Shadowforged Darksteel Shield", "familyId": "blueprint_darksteel_shield", "tier": 5},
   {"id": "blueprint_worldforged_darksteel_shield", "name": "Blueprint: Worldforged Darksteel Shield", "familyId": "blueprint_darksteel_shield", "tier": 6},
 
+  {"id": "blueprint_basic_cloth", "name": "Blueprint: Used Cloth", "familyId": "blueprint_cloth", "tier": 1},
   {"id": "blueprint_cloth_armor_1", "name": "Blueprint: Hemp Cloth", "familyId": "blueprint_cloth", "tier": 1},
   {"id": "blueprint_cloth_armor_2", "name": "Blueprint: Cotton Cloth", "familyId": "blueprint_cloth", "tier": 2},
   {"id": "blueprint_cloth_armor_3", "name": "Blueprint: Wool Cloth", "familyId": "blueprint_cloth", "tier": 3},
@@ -55,6 +59,7 @@
   {"id": "blueprint_cloth_armor_5", "name": "Blueprint: Shadow Cloth", "familyId": "blueprint_cloth", "tier": 5},
   {"id": "blueprint_cloth_armor_6", "name": "Blueprint: Moon Cloth", "familyId": "blueprint_cloth", "tier": 6},
 
+  {"id": "blueprint_basic_leather", "name": "Blueprint: Thin Leather Armor", "familyId": "blueprint_leather", "tier": 1},
   {"id": "blueprint_leather_armor_1", "name": "Blueprint: Deer Leather Armor", "familyId": "blueprint_leather", "tier": 1},
   {"id": "blueprint_leather_armor_2", "name": "Blueprint: Goat Leather Armor", "familyId": "blueprint_leather", "tier": 2},
   {"id": "blueprint_leather_armor_3", "name": "Blueprint: Elk Leather Armor", "familyId": "blueprint_leather", "tier": 3},
@@ -62,6 +67,7 @@
   {"id": "blueprint_leather_armor_5", "name": "Blueprint: Wyvern Leather Armor", "familyId": "blueprint_leather", "tier": 5},
   {"id": "blueprint_leather_armor_6", "name": "Blueprint: Phoenix Leather Armor", "familyId": "blueprint_leather", "tier": 6},
 
+  {"id": "blueprint_basic_chainmail", "name": "Blueprint: Ripped Chainmail", "familyId": "blueprint_chainmail", "tier": 1},
   {"id": "blueprint_chainmail_armor_1", "name": "Blueprint: Lead Chainmail Armor", "familyId": "blueprint_chainmail", "tier": 1},
   {"id": "blueprint_chainmail_armor_2", "name": "Blueprint: Copper Chainmail Armor", "familyId": "blueprint_chainmail", "tier": 2},
   {"id": "blueprint_chainmail_armor_3", "name": "Blueprint: Iron Chainmail Armor", "familyId": "blueprint_chainmail", "tier": 3},
@@ -69,6 +75,7 @@
   {"id": "blueprint_chainmail_armor_5", "name": "Blueprint: Gold Chainmail Armor", "familyId": "blueprint_chainmail", "tier": 5},
   {"id": "blueprint_chainmail_armor_6", "name": "Blueprint: Star Metal Chainmail Armor", "familyId": "blueprint_chainmail", "tier": 6},
 
+  {"id": "blueprint_basic_iron", "name": "Blueprint: Apprentice's Metal Armor", "familyId": "blueprint_iron", "tier": 1},
   {"id": "blueprint_iron_armor_1", "name": "Blueprint: Ironclad Armor", "familyId": "blueprint_iron", "tier": 1},
   {"id": "blueprint_iron_armor_2", "name": "Blueprint: Steelbound Armor", "familyId": "blueprint_iron", "tier": 2},
   {"id": "blueprint_iron_armor_3", "name": "Blueprint: Warforged Iron Armor", "familyId": "blueprint_iron", "tier": 3},
@@ -104,6 +111,7 @@
   {"id": "blueprint_darksteel_armor_5", "name": "Blueprint: Shadowforged Darksteel Armor", "familyId": "blueprint_darksteel", "tier": 5},
   {"id": "blueprint_darksteel_armor_6", "name": "Blueprint: Worldforged Darksteel Armor", "familyId": "blueprint_darksteel", "tier": 6},
 
+  {"id": "blueprint_basic_workbench", "name": "Blueprint: Crude Workbench", "familyId": "blueprint_workbench", "tier": 1},
   {"id": "blueprint_pine_workbench", "name": "Blueprint: Pine Workbench", "familyId": "blueprint_workbench", "tier": 1},
   {"id": "blueprint_oak_workbench", "name": "Blueprint: Oak Workbench", "familyId": "blueprint_workbench", "tier": 2},
   {"id": "blueprint_ash_workbench", "name": "Blueprint: Ash Workbench", "familyId": "blueprint_workbench", "tier": 3},
@@ -111,6 +119,7 @@
   {"id": "blueprint_ebony_workbench", "name": "Blueprint: Ebony Workbench", "familyId": "blueprint_workbench", "tier": 5},
   {"id": "blueprint_worldroot_workbench", "name": "Blueprint: Worldroot Workbench", "familyId": "blueprint_workbench", "tier": 6},
 
+  {"id": "blueprint_basic_anvil", "name": "Blueprint: Hollow Anvil", "familyId": "blueprint_anvil", "tier": 1},
   {"id": "blueprint_lead_anvil", "name": "Blueprint: Lead Anvil", "familyId": "blueprint_anvil", "tier": 1},
   {"id": "blueprint_copper_anvil", "name": "Blueprint: Copper Anvil", "familyId": "blueprint_anvil", "tier": 2},
   {"id": "blueprint_iron_anvil", "name": "Blueprint: Iron Anvil", "familyId": "blueprint_anvil", "tier": 3},
@@ -118,6 +127,7 @@
   {"id": "blueprint_gold_anvil", "name": "Blueprint: Gold Anvil", "familyId": "blueprint_anvil", "tier": 5},
   {"id": "blueprint_star_metal_anvil", "name": "Blueprint: Star Metal Anvil", "familyId": "blueprint_anvil", "tier": 6},
 
+  {"id": "blueprint_basic_alchemy_stand", "name": "Blueprint: Beginner's Alchemy Stand", "familyId": "blueprint_alchemy_stand", "tier": 1},
   {"id": "blueprint_apprentices_alchemy_stand", "name": "Blueprint: Apprentice's Alchemy Stand", "familyId": "blueprint_alchemy_stand", "tier": 1},
   {"id": "blueprint_journeymans_alchemy_stand", "name": "Blueprint: Journeyman's Alchemy Stand", "familyId": "blueprint_alchemy_stand", "tier": 2},
   {"id": "blueprint_transmuters_alchemy_stand", "name": "Blueprint: Transmuter's Alchemy Stand", "familyId": "blueprint_alchemy_stand", "tier": 3},
@@ -125,6 +135,7 @@
   {"id": "blueprint_arcanists_alchemy_stand", "name": "Blueprint: Arcanist's Alchemy Stand", "familyId": "blueprint_alchemy_stand", "tier": 5},
   {"id": "blueprint_grandmasters_alchemy_stand", "name": "Blueprint: Grandmaster's Alchemy Stand", "familyId": "blueprint_alchemy_stand", "tier": 6},
 
+  {"id": "blueprint_basic_enchanters_table", "name": "Blueprint: Apprentice's Enchanter's Table", "familyId": "blueprint_enchanters_table", "tier": 1},
   {"id": "blueprint_quartz_enchanters_table", "name": "Blueprint: Quartz Enchanter's Table", "familyId": "blueprint_enchanters_table", "tier": 1},
   {"id": "blueprint_amethyst_enchanters_table", "name": "Blueprint: Amethyst Enchanter's Table", "familyId": "blueprint_enchanters_table", "tier": 2},
   {"id": "blueprint_sapphire_enchanters_table", "name": "Blueprint: Sapphire Enchanter's Table", "familyId": "blueprint_enchanters_table", "tier": 3},
@@ -132,6 +143,7 @@
   {"id": "blueprint_mana_enchanters_table", "name": "Blueprint: Mana Enchanter's Table", "familyId": "blueprint_enchanters_table", "tier": 5},
   {"id": "blueprint_astral_enchanters_table", "name": "Blueprint: Astral Enchanter's Table", "familyId": "blueprint_enchanters_table", "tier": 6},
 
+  {"id": "blueprint_basic_furnace", "name": "Blueprint: Broken Stone Furnace", "familyId": "blueprint_furnace", "tier": 1},
   {"id": "blueprint_rough_stone_furnace", "name": "Blueprint: Rough Stone Furnace", "familyId": "blueprint_furnace", "tier": 1},
   {"id": "blueprint_granite_furnace", "name": "Blueprint: Granite Furnace", "familyId": "blueprint_furnace", "tier": 2},
   {"id": "blueprint_marble_furnace", "name": "Blueprint: Marble Furnace", "familyId": "blueprint_furnace", "tier": 3},
@@ -139,6 +151,7 @@
   {"id": "blueprint_basalt_furnace", "name": "Blueprint: Basalt Furnace", "familyId": "blueprint_furnace", "tier": 5},
   {"id": "blueprint_worldstone_furnace", "name": "Blueprint: Worldstone Furnace", "familyId": "blueprint_furnace", "tier": 6},
 
+  {"id": "blueprint_basic_grinder", "name": "Blueprint: Curved Grinder", "familyId": "blueprint_grinder", "tier": 1},
   {"id": "blueprint_lead_grinder", "name": "Blueprint: Lead Grinder", "familyId": "blueprint_grinder", "tier": 1},
   {"id": "blueprint_copper_grinder", "name": "Blueprint: Copper Grinder", "familyId": "blueprint_grinder", "tier": 2},
   {"id": "blueprint_iron_grinder", "name": "Blueprint: Iron Grinder", "familyId": "blueprint_grinder", "tier": 3},
@@ -146,6 +159,7 @@
   {"id": "blueprint_gold_grinder", "name": "Blueprint: Gold Grinder", "familyId": "blueprint_grinder", "tier": 5},
   {"id": "blueprint_star_metal_grinder", "name": "Blueprint: Star Metal Grinder", "familyId": "blueprint_grinder", "tier": 6},
 
+  {"id": "blueprint_basic_hearth", "name": "Blueprint: Small Hearth", "familyId": "blueprint_hearth", "tier": 1},
   {"id": "blueprint_scullions_hearth", "name": "Blueprint: Scullion's Hearth", "familyId": "blueprint_hearth", "tier": 1},
   {"id": "blueprint_cooks_hearth", "name": "Blueprint: Cook's Hearth", "familyId": "blueprint_hearth", "tier": 2},
   {"id": "blueprint_chefs_hearth", "name": "Blueprint: Chef's Hearth", "familyId": "blueprint_hearth", "tier": 3},
@@ -153,6 +167,7 @@
   {"id": "blueprint_royal_chefs_hearth", "name": "Blueprint: Royal Chef's Hearth", "familyId": "blueprint_hearth", "tier": 5},
   {"id": "blueprint_feastmasters_hearth", "name": "Blueprint: Feastmaster's Hearth", "familyId": "blueprint_hearth", "tier": 6},
 
+  {"id": "blueprint_basic_kiln", "name": "Blueprint: Primitive Clay Kiln", "familyId": "blueprint_kiln", "tier": 1},
   {"id": "blueprint_common_clay_kiln", "name": "Blueprint: Common Clay Kiln", "familyId": "blueprint_kiln", "tier": 1},
   {"id": "blueprint_red_clay_kiln", "name": "Blueprint: Red Clay Kiln", "familyId": "blueprint_kiln", "tier": 2},
   {"id": "blueprint_fire_clay_kiln", "name": "Blueprint: Fire Clay Kiln", "familyId": "blueprint_kiln", "tier": 3},
@@ -160,6 +175,7 @@
   {"id": "blueprint_spirit_clay_kiln", "name": "Blueprint: Spirit Clay Kiln", "familyId": "blueprint_kiln", "tier": 5},
   {"id": "blueprint_worldclay_kiln", "name": "Blueprint: Worldclay Kiln", "familyId": "blueprint_kiln", "tier": 6},
 
+  {"id": "blueprint_basic_lapidary_bench", "name": "Blueprint: Crude Lapidary Bench", "familyId": "blueprint_lapidary_bench", "tier": 1},
   {"id": "blueprint_quartz_lapidary_bench", "name": "Blueprint: Quartz Lapidary Bench", "familyId": "blueprint_lapidary_bench", "tier": 1},
   {"id": "blueprint_amethyst_lapidary_bench", "name": "Blueprint: Amethyst Lapidary Bench", "familyId": "blueprint_lapidary_bench", "tier": 2},
   {"id": "blueprint_sapphire_lapidary_bench", "name": "Blueprint: Sapphire Lapidary Bench", "familyId": "blueprint_lapidary_bench", "tier": 3},
@@ -167,6 +183,7 @@
   {"id": "blueprint_mana_lapidary_bench", "name": "Blueprint: Mana Lapidary Bench", "familyId": "blueprint_lapidary_bench", "tier": 5},
   {"id": "blueprint_astral_lapidary_bench", "name": "Blueprint: Astral Lapidary Bench", "familyId": "blueprint_lapidary_bench", "tier": 6},
 
+  {"id": "blueprint_basic_loom", "name": "Blueprint: Beginner's Loom", "familyId": "blueprint_loom", "tier": 1},
   {"id": "blueprint_pine_loom", "name": "Blueprint: Pine Loom", "familyId": "blueprint_loom", "tier": 1},
   {"id": "blueprint_oak_loom", "name": "Blueprint: Oak Loom", "familyId": "blueprint_loom", "tier": 2},
   {"id": "blueprint_ash_loom", "name": "Blueprint: Ash Loom", "familyId": "blueprint_loom", "tier": 3},
@@ -174,6 +191,7 @@
   {"id": "blueprint_ebony_loom", "name": "Blueprint: Ebony Loom", "familyId": "blueprint_loom", "tier": 5},
   {"id": "blueprint_worldroot_loom", "name": "Blueprint: Worldroot Loom", "familyId": "blueprint_loom", "tier": 6},
 
+  {"id": "blueprint_basic_mortar_and_pestle", "name": "Blueprint: Apprentice's Stone Mortar & Pestle", "familyId": "blueprint_mortar_and_pestle", "tier": 1},
   {"id": "blueprint_rough_stone_mortar_and_pestle", "name": "Blueprint: Rough Stone Mortar & Pestle", "familyId": "blueprint_mortar_and_pestle", "tier": 1},
   {"id": "blueprint_granite_mortar_and_pestle", "name": "Blueprint: Granite Mortar & Pestle", "familyId": "blueprint_mortar_and_pestle", "tier": 2},
   {"id": "blueprint_marble_mortar_and_pestle", "name": "Blueprint: Marble Mortar & Pestle", "familyId": "blueprint_mortar_and_pestle", "tier": 3},
@@ -181,6 +199,7 @@
   {"id": "blueprint_basalt_mortar_and_pestle", "name": "Blueprint: Basalt Mortar & Pestle", "familyId": "blueprint_mortar_and_pestle", "tier": 5},
   {"id": "blueprint_worldstone_mortar_and_pestle", "name": "Blueprint: Worldstone Mortar & Pestle", "familyId": "blueprint_mortar_and_pestle", "tier": 6},
 
+  {"id": "blueprint_basic_scriptorium", "name": "Blueprint: Uneven Scriptorium", "familyId": "blueprint_scriptorium", "tier": 1},
   {"id": "blueprint_letter_scriptorium", "name": "Blueprint: Letter Scriptorium", "familyId": "blueprint_scriptorium", "tier": 1},
   {"id": "blueprint_journal_scriptorium", "name": "Blueprint: Journal Scriptorium", "familyId": "blueprint_scriptorium", "tier": 2},
   {"id": "blueprint_treatise_scriptorium", "name": "Blueprint: Treatise Scriptorium", "familyId": "blueprint_scriptorium", "tier": 3},
@@ -188,6 +207,7 @@
   {"id": "blueprint_grimoire_scriptorium", "name": "Blueprint: Grimoire Scriptorium", "familyId": "blueprint_scriptorium", "tier": 5},
   {"id": "blueprint_codex_scriptorium", "name": "Blueprint: Codex Scriptorium", "familyId": "blueprint_scriptorium", "tier": 6},
 
+  {"id": "blueprint_basic_spinning_wheel", "name": "Blueprint: Loose Spinning Wheel", "familyId": "blueprint_spinning_wheel", "tier": 1},
   {"id": "blueprint_pine_spinning_wheel", "name": "Blueprint: Pine Spinning Wheel", "familyId": "blueprint_spinning_wheel", "tier": 1},
   {"id": "blueprint_oak_spinning_wheel", "name": "Blueprint: Oak Spinning Wheel", "familyId": "blueprint_spinning_wheel", "tier": 2},
   {"id": "blueprint_ash_spinning_wheel", "name": "Blueprint: Ash Spinning Wheel", "familyId": "blueprint_spinning_wheel", "tier": 3},
@@ -195,6 +215,7 @@
   {"id": "blueprint_ebony_spinning_wheel", "name": "Blueprint: Ebony Spinning Wheel", "familyId": "blueprint_spinning_wheel", "tier": 5},
   {"id": "blueprint_worldroot_spinning_wheel", "name": "Blueprint: Worldroot Spinning Wheel", "familyId": "blueprint_spinning_wheel", "tier": 6},
 
+  {"id": "blueprint_basic_tanning_rack", "name": "Blueprint: Primitive Tanning Rack", "familyId": "blueprint_tanning_rack", "tier": 1},
   {"id": "blueprint_pine_tanning_rack", "name": "Blueprint: Pine Tanning Rack", "familyId": "blueprint_tanning_rack", "tier": 1},
   {"id": "blueprint_oak_tanning_rack", "name": "Blueprint: Oak Tanning Rack", "familyId": "blueprint_tanning_rack", "tier": 2},
   {"id": "blueprint_ash_tanning_rack", "name": "Blueprint: Ash Tanning Rack", "familyId": "blueprint_tanning_rack", "tier": 3},
@@ -202,6 +223,7 @@
   {"id": "blueprint_ebony_tanning_rack", "name": "Blueprint: Ebony Tanning Rack", "familyId": "blueprint_tanning_rack", "tier": 5},
   {"id": "blueprint_worldroot_tanning_rack", "name": "Blueprint: Worldroot Tanning Rack", "familyId": "blueprint_tanning_rack", "tier": 6},
 
+  {"id": "blueprint_basic_wrench", "name": "Blueprint: Uneven Wrench", "familyId": "blueprint_wrench", "tier": 1},
   {"id": "blueprint_lead_wrench", "name": "Blueprint: Lead Wrench", "familyId": "blueprint_wrench", "tier": 1},
   {"id": "blueprint_copper_wrench", "name": "Blueprint: Copper Wrench", "familyId": "blueprint_wrench", "tier": 2},
   {"id": "blueprint_iron_wrench", "name": "Blueprint: Iron Wrench", "familyId": "blueprint_wrench", "tier": 3},
@@ -209,6 +231,7 @@
   {"id": "blueprint_gold_wrench", "name": "Blueprint: Gold Wrench", "familyId": "blueprint_wrench", "tier": 5},
   {"id": "blueprint_star_metal_wrench", "name": "Blueprint: Star Metal Wrench", "familyId": "blueprint_wrench", "tier": 6},
 
+  {"id": "blueprint_basic_writers_table", "name": "Blueprint: Crude Writer's Table", "familyId": "blueprint_writers_table", "tier": 1},
   {"id": "blueprint_pine_writers_table", "name": "Blueprint: Pine Writer's Table", "familyId": "blueprint_writers_table", "tier": 1},
   {"id": "blueprint_oak_writers_table", "name": "Blueprint: Oak Writer's Table", "familyId": "blueprint_writers_table", "tier": 2},
   {"id": "blueprint_ash_writers_table", "name": "Blueprint: Ash Writer's Table", "familyId": "blueprint_writers_table", "tier": 3},
@@ -223,6 +246,7 @@
   {"id": "blueprint_malignant_poison", "name": "Blueprint: Malignant Poison", "familyId": "blueprint_poison_weapon", "tier": 5},
   {"id": "blueprint_deathly_poison", "name": "Blueprint: Deathly Poison", "familyId": "blueprint_poison_weapon", "tier": 6},
 
+  {"id": "blueprint_basic_battle_axe", "name": "Blueprint: Loose Battle Axe", "familyId": "blueprint_battle_axe", "tier": 1},
   {"id": "blueprint_wyrmfang_battle_axe", "name": "Blueprint: Wyrmfang Battle Axe", "familyId": "blueprint_battle_axe", "tier": 1},
   {"id": "blueprint_drakebiter_battle_axe", "name": "Blueprint: Drakebiter Battle Axe", "familyId": "blueprint_battle_axe", "tier": 2},
   {"id": "blueprint_scaleshredder_battle_axe", "name": "Blueprint: Scaleshredder Battle Axe", "familyId": "blueprint_battle_axe", "tier": 3},
@@ -230,6 +254,7 @@
   {"id": "blueprint_drakebane_battle_axe", "name": "Blueprint: Drakebane Battle Axe", "familyId": "blueprint_battle_axe", "tier": 5},
   {"id": "blueprint_dragonbane_battle_axe", "name": "Blueprint: Dragonbane Battle Axe", "familyId": "blueprint_battle_axe", "tier": 6},
 
+  {"id": "blueprint_basic_bow", "name": "Blueprint: Apprentice's Bow", "familyId": "blueprint_bow", "tier": 1},
   {"id": "blueprint_hunters_bow", "name": "Blueprint: Hunter's Bow", "familyId": "blueprint_bow", "tier": 1},
   {"id": "blueprint_rangers_bow", "name": "Blueprint: Ranger's Bow", "familyId": "blueprint_bow", "tier": 2},
   {"id": "blueprint_marksmans_bow", "name": "Blueprint: Marksman's Bow", "familyId": "blueprint_bow", "tier": 3},
@@ -237,6 +262,7 @@
   {"id": "blueprint_elven_bow", "name": "Blueprint: Elven Bow", "familyId": "blueprint_bow", "tier": 5},
   {"id": "blueprint_windsong_bow", "name": "Blueprint: Windsong Bow", "familyId": "blueprint_bow", "tier": 6},
 
+  {"id": "blueprint_basic_crossbow", "name": "Blueprint: Bended Crossbow", "familyId": "blueprint_crossbow", "tier": 1},
   {"id": "blueprint_mercenarys_crossbow", "name": "Blueprint: Mercenary's Crossbow", "familyId": "blueprint_crossbow", "tier": 1},
   {"id": "blueprint_arbalest_crossbow", "name": "Blueprint: Arbalest Crossbow", "familyId": "blueprint_crossbow", "tier": 2},
   {"id": "blueprint_deadeye_crossbow", "name": "Blueprint: Deadeye Crossbow", "familyId": "blueprint_crossbow", "tier": 3},
@@ -244,6 +270,7 @@
   {"id": "blueprint_executioners_crossbow", "name": "Blueprint: Executioner's Crossbow", "familyId": "blueprint_crossbow", "tier": 5},
   {"id": "blueprint_doomsight_crossbow", "name": "Blueprint: Doomsight Crossbow", "familyId": "blueprint_crossbow", "tier": 6},
 
+  {"id": "blueprint_basic_dagger", "name": "Blueprint: Apprentice's Dagger", "familyId": "blueprint_dagger", "tier": 1},
   {"id": "blueprint_courtiers_dagger", "name": "Blueprint: Courtier's Dagger", "familyId": "blueprint_dagger", "tier": 1},
   {"id": "blueprint_duchesss_dagger", "name": "Blueprint: Duchess's Dagger", "familyId": "blueprint_dagger", "tier": 2},
   {"id": "blueprint_viscounts_dagger", "name": "Blueprint: Viscount's Dagger", "familyId": "blueprint_dagger", "tier": 3},
@@ -251,6 +278,7 @@
   {"id": "blueprint_chancellors_dagger", "name": "Blueprint: Chancellor's Dagger", "familyId": "blueprint_dagger", "tier": 5},
   {"id": "blueprint_sovereigns_dagger", "name": "Blueprint: Sovereign's Dagger", "familyId": "blueprint_dagger", "tier": 6},
 
+  {"id": "blueprint_basic_greatsword", "name": "Blueprint: Blunt Greatsword", "familyId": "blueprint_greatsword", "tier": 1},
   {"id": "blueprint_cleaver_greatsword", "name": "Blueprint: Cleaver Greatsword", "familyId": "blueprint_greatsword", "tier": 1},
   {"id": "blueprint_direblade_greatsword", "name": "Blueprint: Direblade Greatsword", "familyId": "blueprint_greatsword", "tier": 2},
   {"id": "blueprint_doomcleaver_greatsword", "name": "Blueprint: Doomcleaver Greatsword", "familyId": "blueprint_greatsword", "tier": 3},
@@ -258,6 +286,7 @@
   {"id": "blueprint_soulrender_greatsword", "name": "Blueprint: Soulrender Greatsword", "familyId": "blueprint_greatsword", "tier": 5},
   {"id": "blueprint_godslayer_greatsword", "name": "Blueprint: Godslayer Greatsword", "familyId": "blueprint_greatsword", "tier": 6},
 
+  {"id": "blueprint_basic_mace", "name": "Blueprint: Bent Mace", "familyId": "blueprint_mace", "tier": 1},
   {"id": "blueprint_squires_mace", "name": "Blueprint: Squire's Mace", "familyId": "blueprint_mace", "tier": 1},
   {"id": "blueprint_vanguards_mace", "name": "Blueprint: Vanguard's Mace", "familyId": "blueprint_mace", "tier": 2},
   {"id": "blueprint_templars_mace", "name": "Blueprint: Templar's Mace", "familyId": "blueprint_mace", "tier": 3},
@@ -265,6 +294,7 @@
   {"id": "blueprint_zealots_mace", "name": "Blueprint: Zealot's Mace", "familyId": "blueprint_mace", "tier": 5},
   {"id": "blueprint_judgment_mace", "name": "Blueprint: Judgment Mace", "familyId": "blueprint_mace", "tier": 6},
 
+  {"id": "blueprint_basic_magic_staff", "name": "Blueprint: Gnarled Magic Staff", "familyId": "blueprint_magic_staff", "tier": 1},
   {"id": "blueprint_quartz_magic_staff", "name": "Blueprint: Quartz Magic Staff", "familyId": "blueprint_magic_staff", "tier": 1},
   {"id": "blueprint_amethyst_magic_staff", "name": "Blueprint: Amethyst Magic Staff", "familyId": "blueprint_magic_staff", "tier": 2},
   {"id": "blueprint_sapphire_magic_staff", "name": "Blueprint: Sapphire Magic Staff", "familyId": "blueprint_magic_staff", "tier": 3},
@@ -272,6 +302,7 @@
   {"id": "blueprint_mana_magic_staff", "name": "Blueprint: Mana Magic Staff", "familyId": "blueprint_magic_staff", "tier": 5},
   {"id": "blueprint_astral_magic_staff", "name": "Blueprint: Astral Magic Staff", "familyId": "blueprint_magic_staff", "tier": 6},
 
+  {"id": "blueprint_basic_quiver_of_arrows", "name": "Blueprint: Primitive Quiver of Arrows", "familyId": "blueprint_quiver_of_arrows", "tier": 1},
   {"id": "blueprint_pine_quiver_of_arrows", "name": "Blueprint: Pine Quiver of Arrows", "familyId": "blueprint_quiver_of_arrows", "tier": 1},
   {"id": "blueprint_oak_quiver_of_arrows", "name": "Blueprint: Oak Quiver of Arrows", "familyId": "blueprint_quiver_of_arrows", "tier": 2},
   {"id": "blueprint_ash_quiver_of_arrows", "name": "Blueprint: Ash Quiver of Arrows", "familyId": "blueprint_quiver_of_arrows", "tier": 3},
@@ -279,6 +310,7 @@
   {"id": "blueprint_ebony_quiver_of_arrows", "name": "Blueprint: Ebony Quiver of Arrows", "familyId": "blueprint_quiver_of_arrows", "tier": 5},
   {"id": "blueprint_worldroot_quiver_of_arrows", "name": "Blueprint: Worldroot Quiver of Arrows", "familyId": "blueprint_quiver_of_arrows", "tier": 6},
 
+  {"id": "blueprint_basic_set_of_bolts", "name": "Blueprint: Crude Set of Bolts", "familyId": "blueprint_set_of_bolts", "tier": 1},
   {"id": "blueprint_pine_set_of_bolts", "name": "Blueprint: Pine Set of Bolts", "familyId": "blueprint_set_of_bolts", "tier": 1},
   {"id": "blueprint_oak_set_of_bolts", "name": "Blueprint: Oak Set of Bolts", "familyId": "blueprint_set_of_bolts", "tier": 2},
   {"id": "blueprint_ash_set_of_bolts", "name": "Blueprint: Ash Set of Bolts", "familyId": "blueprint_set_of_bolts", "tier": 3},
@@ -286,6 +318,7 @@
   {"id": "blueprint_ebony_set_of_bolts", "name": "Blueprint: Ebony Set of Bolts", "familyId": "blueprint_set_of_bolts", "tier": 5},
   {"id": "blueprint_worldroot_set_of_bolts", "name": "Blueprint: Worldroot Set of Bolts", "familyId": "blueprint_set_of_bolts", "tier": 6},
 
+  {"id": "blueprint_basic_sickle", "name": "Blueprint: Uneven Sickle", "familyId": "blueprint_sickle", "tier": 1},
   {"id": "blueprint_grovekeepers_sickle", "name": "Blueprint: Grovekeeper's Sickle", "familyId": "blueprint_sickle", "tier": 1},
   {"id": "blueprint_harvestmoon_sickle", "name": "Blueprint: Harvestmoon Sickle", "familyId": "blueprint_sickle", "tier": 2},
   {"id": "blueprint_wildroot_sickle", "name": "Blueprint: Wildroot Sickle", "familyId": "blueprint_sickle", "tier": 3},
@@ -293,6 +326,7 @@
   {"id": "blueprint_lunarfang_sickle", "name": "Blueprint: Lunarfang Sickle", "familyId": "blueprint_sickle", "tier": 5},
   {"id": "blueprint_eldermoon_sickle", "name": "Blueprint: Eldermoon Sickle", "familyId": "blueprint_sickle", "tier": 6},
 
+  {"id": "blueprint_basic_spear", "name": "Blueprint: Loose Spear", "familyId": "blueprint_spear", "tier": 1},
   {"id": "blueprint_tribesmans_spear", "name": "Blueprint: Tribesman's Spear", "familyId": "blueprint_spear", "tier": 1},
   {"id": "blueprint_bloodrite_spear", "name": "Blueprint: Bloodrite Spear", "familyId": "blueprint_spear", "tier": 2},
   {"id": "blueprint_skyfathers_spear", "name": "Blueprint: Skyfather's Spear", "familyId": "blueprint_spear", "tier": 3},
@@ -300,6 +334,7 @@
   {"id": "blueprint_wolfspirit_spear", "name": "Blueprint: Wolfspirit Spear", "familyId": "blueprint_spear", "tier": 5},
   {"id": "blueprint_godsblood_spear", "name": "Blueprint: Godsblood Spear", "familyId": "blueprint_spear", "tier": 6},
 
+  {"id": "blueprint_basic_sword", "name": "Blueprint: Apprentice's Sword", "familyId": "blueprint_sword", "tier": 1},
   {"id": "blueprint_pages_sword", "name": "Blueprint: Page's Sword", "familyId": "blueprint_sword", "tier": 1},
   {"id": "blueprint_knights_sword", "name": "Blueprint: Knight's Sword", "familyId": "blueprint_sword", "tier": 2},
   {"id": "blueprint_barons_sword", "name": "Blueprint: Baron's Sword", "familyId": "blueprint_sword", "tier": 3},
@@ -307,6 +342,7 @@
   {"id": "blueprint_highlords_sword", "name": "Blueprint: Highlord's Sword", "familyId": "blueprint_sword", "tier": 5},
   {"id": "blueprint_ascendant_sword", "name": "Blueprint: Ascendant Sword", "familyId": "blueprint_sword", "tier": 6},
 
+  {"id": "blueprint_basic_wand", "name": "Blueprint: Beginner's Wand", "familyId": "blueprint_wand", "tier": 1},
   {"id": "blueprint_quartz_wand", "name": "Blueprint: Quartz Wand", "familyId": "blueprint_wand", "tier": 1},
   {"id": "blueprint_amethyst_wand", "name": "Blueprint: Amethyst Wand", "familyId": "blueprint_wand", "tier": 2},
   {"id": "blueprint_sapphire_wand", "name": "Blueprint: Sapphire Wand", "familyId": "blueprint_wand", "tier": 3},
@@ -314,6 +350,7 @@
   {"id": "blueprint_mana_wand", "name": "Blueprint: Mana Wand", "familyId": "blueprint_wand", "tier": 5},
   {"id": "blueprint_astral_wand", "name": "Blueprint: Astral Wand", "familyId": "blueprint_wand", "tier": 6},
 
+  {"id": "blueprint_basic_warhammer", "name": "Blueprint: Melted Warhammer", "familyId": "blueprint_warhammer", "tier": 1},
   {"id": "blueprint_bonecrusher_warhammer", "name": "Blueprint: Bonecrusher Warhammer", "familyId": "blueprint_warhammer", "tier": 1},
   {"id": "blueprint_skullsplitter_warhammer", "name": "Blueprint: Skullsplitter Warhammer", "familyId": "blueprint_warhammer", "tier": 2},
   {"id": "blueprint_earthshaker_warhammer", "name": "Blueprint: Earthshaker Warhammer", "familyId": "blueprint_warhammer", "tier": 3},
@@ -321,6 +358,7 @@
   {"id": "blueprint_stormbreaker_warhammer", "name": "Blueprint: Stormbreaker Warhammer", "familyId": "blueprint_warhammer", "tier": 5},
   {"id": "blueprint_worldender_warhammer", "name": "Blueprint: Worldender Warhammer", "familyId": "blueprint_warhammer", "tier": 6},
 
+  {"id": "blueprint_basic_hearty_stew", "name": "Blueprint: Cheap Hearty Stew", "familyId": "blueprint_hearty_stew", "tier": 1},
   {"id": "blueprint_farmhands_hearty_stew", "name": "Blueprint: Farmhand's Hearty Stew", "familyId": "blueprint_hearty_stew", "tier": 1},
   {"id": "blueprint_travelers_hearty_stew", "name": "Blueprint: Traveler's Hearty Stew", "familyId": "blueprint_hearty_stew", "tier": 2},
   {"id": "blueprint_innkeepers_hearty_stew", "name": "Blueprint: Innkeeper's Hearty Stew", "familyId": "blueprint_hearty_stew", "tier": 3},
@@ -328,6 +366,7 @@
   {"id": "blueprint_highland_hearty_stew", "name": "Blueprint: Highland Hearty Stew", "familyId": "blueprint_hearty_stew", "tier": 5},
   {"id": "blueprint_harvestkings_hearty_stew", "name": "Blueprint: Harvestking's Hearty Stew", "familyId": "blueprint_hearty_stew", "tier": 6},
 
+  {"id": "blueprint_basic_bangers", "name": "Blueprint: Beginner's Bangers", "familyId": "blueprint_bangers", "tier": 1},
   {"id": "blueprint_prentice_bangers", "name": "Blueprint: Prentice Bangers", "familyId": "blueprint_bangers", "tier": 1},
   {"id": "blueprint_butchers_bangers", "name": "Blueprint: Butcher's Bangers", "familyId": "blueprint_bangers", "tier": 2},
   {"id": "blueprint_master_butchers_bangers", "name": "Blueprint: Master Butcher's Bangers", "familyId": "blueprint_bangers", "tier": 3},
@@ -335,17 +374,11 @@
   {"id": "blueprint_imperial_bangers", "name": "Blueprint: Imperial Bangers", "familyId": "blueprint_bangers", "tier": 5},
   {"id": "blueprint_peerless_bangers", "name": "Blueprint: Peerless Bangers", "familyId": "blueprint_bangers", "tier": 6},
 
+  {"id": "blueprint_basic_iron_ration", "name": "Blueprint: Plain Iron Ration", "familyId": "blueprint_iron_ration", "tier": 1},
   {"id": "blueprint_skirmishers_iron_ration", "name": "Blueprint: Skirmisher's Iron Ration", "familyId": "blueprint_iron_ration", "tier": 1},
   {"id": "blueprint_soldiers_iron_ration", "name": "Blueprint: Soldier's Iron Ration", "familyId": "blueprint_iron_ration", "tier": 2},
   {"id": "blueprint_veterans_iron_ration", "name": "Blueprint: Veteran's Iron Ration", "familyId": "blueprint_iron_ration", "tier": 3},
   {"id": "blueprint_legionnaires_iron_ration", "name": "Blueprint: Legionnaire's Iron Ration", "familyId": "blueprint_iron_ration", "tier": 4},
   {"id": "blueprint_generals_iron_ration", "name": "Blueprint: General's Iron Ration", "familyId": "blueprint_iron_ration", "tier": 5},
-  {"id": "blueprint_warlords_iron_ration", "name": "Blueprint: Warlord's Iron Ration", "familyId": "blueprint_iron_ration", "tier": 6},
-
-  {"id": "blueprint_pine_wood_shield", "name": "Blueprint: Pine Wood Shield", "familyId": "blueprint_wood_shield", "tier": 1},
-  {"id": "blueprint_oak_wood_shield", "name": "Blueprint: Oak Wood Shield", "familyId": "blueprint_wood_shield", "tier": 2},
-  {"id": "blueprint_ash_wood_shield", "name": "Blueprint: Ash Wood Shield", "familyId": "blueprint_wood_shield", "tier": 3},
-  {"id": "blueprint_cedar_wood_shield", "name": "Blueprint: Cedar Wood Shield", "familyId": "blueprint_wood_shield", "tier": 4},
-  {"id": "blueprint_ebony_wood_shield", "name": "Blueprint: Ebony Wood Shield", "familyId": "blueprint_wood_shield", "tier": 5},
-  {"id": "blueprint_worldroot_wood_shield", "name": "Blueprint: Worldroot Wood Shield", "familyId": "blueprint_wood_shield", "tier": 6}
+  {"id": "blueprint_warlords_iron_ration", "name": "Blueprint: Warlord's Iron Ration", "familyId": "blueprint_iron_ration", "tier": 6}
 ]

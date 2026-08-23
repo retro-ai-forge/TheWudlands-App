@@ -147,6 +147,5 @@
   {"familyId": "venomous_extract", "ingredients": [{"category": "raw", "familyId": "herbs", "qty": 4, "consumed": true}, {"category": "raw", "familyId": "venom", "qty": 3, "consumed": true}], "tool": null, "blueprintFamilyId": null},
   {"familyId": "woven_cloth", "ingredients": [{"category": "processed", "familyId": "thread", "qty": 4, "consumed": true}], "tool": "loom", "blueprintFamilyId": null},
   {"familyId": "written_scroll", "ingredients": [{"category": "processed", "familyId": "parchment", "qty": 2, "consumed": true}, {"category": "processed", "familyId": "ink", "qty": 2, "consumed": true}, {"category": "final_unresolved", "familyId": "quill", "qty": 1, "consumed": true}], "tool": null, "blueprintFamilyId": null},
-  {"familyId": "firewood", "ingredients": [{"category": "raw", "familyId": "wood", "qty": 5, "consumed": true}], "tool": "axe_stone", "blueprintFamilyId": null},
-  {"familyId": "wood_shield", "ingredients": [{"category": "processed", "familyId": "plank", "qty": 4, "consumed": true}, {"category": "processed", "familyId": "leather", "qty": 1, "consumed": true}], "tool": "workbench", "blueprintFamilyId": "blueprint_wood_shield"}
+  {"familyId": "firewood", "ingredients": [{"category": "raw", "familyId": "wood", "qty": 5, "consumed": true}], "tool": "axe_stone", "blueprintFamilyId": null}
 ]
