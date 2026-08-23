@@ -7,10 +7,10 @@
 /* Sticky (not fixed) - stays in normal document flow, so .sheet below needs
    no manual top-padding to clear it, but pins to the top of .wizard's own
    scroll (its nearest scrolling ancestor) once the page scrolls past it.
-   Spans the full viewport width, not .sheet's own max-width:56rem column,
-   so the tab row can spread across the whole top edge. Solid-enough
-   background so content scrolling underneath doesn't show through once
-   it's pinned. */
+   Only .topBarBackground (below) carries a solid fill - the name sits
+   directly on .wizard's own tiled background, not a solid bar, so it stays
+   part of the same sticky unit as the icon row without being boxed in with
+   it. */
 .topBar {
   position: sticky;
   top: 0;
@@ -19,12 +19,19 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 0.4rem;
+  gap: 0.9rem;
+}
+
+/* The icon row's own solid, full-width backing - kept solid-enough that
+   content scrolling underneath doesn't show through once pinned, same as
+   before, just scoped to only this row rather than the name below it too. */
+.topBarBackground {
+  width: 100%;
+  box-sizing: border-box;
   /* More on the left than the right - clears space for the first tab icon
      from the true viewport edge; the right side already reads as clear of
      the edge thanks to .topBarRow's own gap before .closeButton. */
   padding: 0.6rem 0.5rem 0.6rem 1.25rem;
-  box-sizing: border-box;
   background: rgba(10, 8, 4, 0.95);
 }
 
@@ -35,6 +42,7 @@
   flex-wrap: nowrap;
   width: 100%;
   max-width: 56rem;
+  margin: 0 auto;
   /* Only 2 children (.tabRow, .closeButton), so this is exactly the gap
      between Adventure (the row's last icon) and Close - deliberately wider
      than .tabRow's own inter-icon gap below, so Close doesn't read as a 6th
@@ -52,7 +60,7 @@
   width: 100%;
   max-width: 56rem;
   margin: 0 auto;
-  padding: 1rem 1.5rem 6rem;
+  padding: 0.25rem 1.5rem 6rem;
   box-sizing: border-box;
 }
 

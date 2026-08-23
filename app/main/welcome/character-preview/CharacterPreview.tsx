@@ -166,35 +166,36 @@ export function CharacterPreview({
     >
       {/* Sticky, not fixed - stays in normal flow (so nothing below it needs
           manual top-padding to avoid sitting underneath) but pins to the top
-          of .wizard's own scroll once the page scrolls past it. Spans the
-          full viewport width (outside .sheet's max-width:56rem column) so
-          the icons can spread across the whole top edge rather than
-          clustering in a narrow centered strip. */}
+          of .wizard's own scroll once the page scrolls past it. Only the
+          icon row (.topBarBackground) carries a solid fill; the name below
+          it sits directly on .wizard's own tiled background. */}
       <div className={tabStyles.topBar}>
-        <div className={tabStyles.topBarRow}>
-          <nav className={tabStyles.tabRow}>
-            {TABS.map((tab) => (
-              <button
-                key={tab.key}
-                type="button"
-                className={`${tabStyles.tabRowButton} ${
-                  activeTab === tab.key ? tabStyles.tabRowButtonActive : tabStyles.tabRowButtonInactive
-                }`}
-                onClick={() => setActiveTab(tab.key)}
-                aria-pressed={activeTab === tab.key}
-                title={tab.label}
-                aria-label={tab.label}
-              >
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={tab.icon} alt="" className={tabStyles.tabIcon} />
-              </button>
-            ))}
-          </nav>
+        <div className={tabStyles.topBarBackground}>
+          <div className={tabStyles.topBarRow}>
+            <nav className={tabStyles.tabRow}>
+              {TABS.map((tab) => (
+                <button
+                  key={tab.key}
+                  type="button"
+                  className={`${tabStyles.tabRowButton} ${
+                    activeTab === tab.key ? tabStyles.tabRowButtonActive : tabStyles.tabRowButtonInactive
+                  }`}
+                  onClick={() => setActiveTab(tab.key)}
+                  aria-pressed={activeTab === tab.key}
+                  title={tab.label}
+                  aria-label={tab.label}
+                >
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={tab.icon} alt="" className={tabStyles.tabIcon} />
+                </button>
+              ))}
+            </nav>
 
-          <button type="button" className={tabStyles.closeButton} onClick={onClose} title="Close" aria-label="Close">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={`${ICON_BASE}close.png`} alt="" className={tabStyles.tabIcon} />
-          </button>
+            <button type="button" className={tabStyles.closeButton} onClick={onClose} title="Close" aria-label="Close">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={`${ICON_BASE}close.png`} alt="" className={tabStyles.tabIcon} />
+            </button>
+          </div>
         </div>
 
         <h1 className={tabStyles.name}>
