@@ -591,12 +591,12 @@
 
 .inventoryRow {
   display: grid;
-  grid-template-columns: 1.5rem 2rem 1fr auto;
-  gap: 0.25rem;
+  grid-template-columns: 1.2rem 1.8rem 1fr;
+  gap: 0.15rem;
   align-items: center;
   font-size: 0.9rem;
   color: #d4c9a8;
-  padding: 0.1rem 0;
+  padding: 0.05rem 0;
 }
 
 .inventoryRow > span:first-child {
@@ -611,25 +611,24 @@
 }
 
 .inventoryTable td {
-  padding: 0.3rem 0.2rem;
+  padding: 0.15rem 0.1rem;
   color: #d4c9a8;
   font-variant-numeric: tabular-nums;
 }
 
 .inventoryTable td:first-child {
   text-align: center;
-  width: 1.5rem;
+  width: 1.2rem;
 }
 
 .inventoryTable td:nth-child(2) {
   text-align: center;
-  width: 2rem;
+  width: 1.8rem;
 }
 
 .inventoryTable td:last-child {
   color: #c07a3a;
   text-align: right;
-  padding-right: 0.5rem;
 }
 
 .tierSymbol {
