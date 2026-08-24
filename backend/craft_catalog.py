@@ -52,7 +52,6 @@ class BlueprintItem:
     name: str
     family_id: str
     tier: int
-    is_basic: bool
 
     def to_dict(self) -> dict:
         return {"id": self.id, "name": self.name, "familyId": self.family_id, "tier": self.tier}
@@ -90,7 +89,6 @@ def _load_blueprints() -> tuple[BlueprintItem, ...]:
             name=item["name"],
             family_id=item["familyId"],
             tier=item["tier"],
-            is_basic=item["id"].startswith("blueprint_basic_"),
         )
         for item in data
     )
@@ -292,7 +290,7 @@ def category_blueprint_summary(max_tier: int = 3) -> list[dict]:
                 "familyId": family[len("blueprint_"):],
                 "kind": _blueprint_catalog_type(family) or "?",
                 "items": [
-                    {"id": item.id, "name": item.name, "tier": item.tier, "isBasic": item.is_basic}
+                    {"id": item.id, "name": item.name, "tier": item.tier}
                     for item in items
                 ],
             })

@@ -86,14 +86,12 @@ export function SoulCreation({
   onExit,
   slotNumber,
   playerTools,
-  playerToolStarter,
 }: {
   onExit: () => void;
   slotNumber: number;
-  /** The player's existing shared tool pools - available to this new
+  /** The player's existing shared tool pool - available to this new
    * character too, even before it's saved, since tools live on the player. */
   playerTools: Record<string, number>;
-  playerToolStarter: Record<string, number>;
 }) {
   const [page, setPage] = useState(0);
   const { setHidden: setHeaderHidden } = useHeaderVisibility();
@@ -143,7 +141,7 @@ export function SoulCreation({
       `/craft/recipe-viewer.html?embedded=1&inv=${encodeURIComponent(
         JSON.stringify(selectedResources)
       )}&tools=${encodeURIComponent(
-        JSON.stringify(ownedIds(playerTools, playerToolStarter))
+        JSON.stringify(ownedIds(playerTools))
       )}&blueprints=${encodeURIComponent(
         JSON.stringify(Object.values(blueprintSelections).filter(Boolean))
       )}`
@@ -162,12 +160,12 @@ export function SoulCreation({
       {
         type: "recipe-viewer:update",
         inv: selectedResources,
-        tools: ownedIds(playerTools, playerToolStarter),
+        tools: ownedIds(playerTools),
         blueprints: Object.values(blueprintSelections).filter(Boolean),
       },
       window.location.origin
     );
-  }, [selectedResources, blueprintSelections, playerTools, playerToolStarter, recipeViewerLoaded]);
+  }, [selectedResources, blueprintSelections, playerTools, recipeViewerLoaded]);
 
   useEffect(() => {
     if (page !== 5) return;

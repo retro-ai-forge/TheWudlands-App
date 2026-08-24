@@ -37,11 +37,6 @@ class Player:
     # specific character has learned to craft), a physical tool isn't tied
     # to any one character's knowledge.
     tools: Dict[str, int] = field(default_factory=dict)
-    # Starter tools (e.g. "knife"), granted free - kept in a separate pool
-    # from `tools` (crafted/earned tools) so the two are never confused, but
-    # otherwise stacked and checked out/in the same way (see check_out_tool /
-    # check_in_tool's `pool` argument).
-    tool_starter: Dict[str, int] = field(default_factory=dict)
 
     def to_dict(self) -> dict:
         return {
@@ -50,7 +45,6 @@ class Player:
             "characters": self.characters,
             "resourceBalances": self.resource_balances,
             "tools": self.tools,
-            "toolStarter": self.tool_starter,
         }
 
 
@@ -66,7 +60,6 @@ def _doc_to_player(doc: dict) -> Player:
         characters=doc.get("characters", []),
         resource_balances=doc.get("resourceBalances", {}),
         tools=doc.get("tools", {}),
-        tool_starter=doc.get("toolStarter", {}),
     )
 
 

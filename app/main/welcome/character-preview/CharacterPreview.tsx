@@ -36,7 +36,6 @@ export function CharacterPreview({
   character,
   playerResourceBalances,
   playerTools,
-  playerToolStarter,
   onClose,
   onDeleted,
   onPortraitSaved,
@@ -45,7 +44,6 @@ export function CharacterPreview({
   character: SlotCharacterSummary;
   playerResourceBalances: Record<string, number>;
   playerTools: Record<string, number>;
-  playerToolStarter: Record<string, number>;
   onClose: () => void;
   onDeleted: () => void;
   onPortraitSaved: (character: SlotCharacterSummary) => void;
@@ -233,7 +231,6 @@ export function CharacterPreview({
               character={character}
               playerResourceBalances={playerResourceBalances}
               playerTools={playerTools}
-              playerToolStarter={playerToolStarter}
             />
           )}
         </div>

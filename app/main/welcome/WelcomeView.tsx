@@ -60,10 +60,8 @@ export function WelcomeView() {
   // own resourceBalances.
   const [playerResourceBalances, setPlayerResourceBalances] = useState<Record<string, number>>({});
   // The player's own shared tool pool (id -> quantity), pooled across every
-  // character - same sharing model as playerResourceBalances. Starter tools
-  // (e.g. "knife") are kept in their own separate pool.
+  // character - same sharing model as playerResourceBalances.
   const [playerTools, setPlayerTools] = useState<Record<string, number>>({});
-  const [playerToolStarter, setPlayerToolStarter] = useState<Record<string, number>>({});
   // Which tab CharacterPreview should open on - only meaningful alongside
   // viewingCharacter, set when restoring from a ?character=&tab= URL below.
   const [viewingTab, setViewingTab] = useState<TabKey>("stats");
@@ -75,7 +73,6 @@ export function WelcomeView() {
         setCharacters(data?.characters ?? []);
         setPlayerResourceBalances(data?.resourceBalances ?? {});
         setPlayerTools(data?.tools ?? {});
-        setPlayerToolStarter(data?.toolStarter ?? {});
       })
       .catch(() => setCharacters([]));
   };
@@ -111,7 +108,6 @@ export function WelcomeView() {
       <SoulCreation
         slotNumber={creatingSlot}
         playerTools={playerTools}
-        playerToolStarter={playerToolStarter}
         onExit={() => {
           // The wizard only calls onExit after a successful save, so the
           // character roster just changed - refresh rather than relying on
@@ -130,7 +126,6 @@ export function WelcomeView() {
         character={viewingCharacter}
         playerResourceBalances={playerResourceBalances}
         playerTools={playerTools}
-        playerToolStarter={playerToolStarter}
         initialTab={viewingTab}
         onClose={() => setViewingCharacter(null)}
         onDeleted={() => {

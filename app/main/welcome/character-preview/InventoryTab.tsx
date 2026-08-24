@@ -209,11 +209,8 @@ function IdList({
         // Items first, then tools
         if (infoA.kind !== infoB.kind) {
           const aIsTool = infoA.kind === "tool";
-          const bIsTool = infoB.kind === "tool";
           return aIsTool ? 1 : -1; // Non-tools (items) first
         }
-        // Starters first
-        if (infoA.isBasic !== infoB.isBasic) return infoA.isBasic ? -1 : 1;
         // Then by tier descending (highest first)
         return infoB.tier - infoA.tier;
       })
@@ -235,9 +232,9 @@ function IdList({
     <div className={styles.inventoryDetailsList}>
       {sortedIds.map((id, index) => {
         const info = tierInfo?.[id];
-        const tierDisplay = info ? (info.isBasic ? "S" : getTierIndicator(info.tier)) : "";
+        const tierDisplay = info ? getTierIndicator(info.tier) : "";
         const isGreyed =
-          info && !info.isBasic && highestTierByFamily[info.familyId] > info.tier;
+          info && highestTierByFamily[info.familyId] > info.tier;
         const icon = info?.kind ? getKindIcon(info.kind) : "";
 
         // Add divider between items and tools
@@ -254,7 +251,7 @@ function IdList({
             {showDivider && <div className={styles.resourceDivider} />}
             <div className={styles.inventoryRow} style={isGreyed ? { opacity: 0.5, color: "var(--text-dim)" } : undefined}>
               <span>{icon}</span>
-              <span className={tier > 0 ? getTierSymbolClass(tier) : styles.tierSymbol}>{tierDisplay}</span>
+              <span className={info?.tier ? getTierSymbolClass(info.tier) : styles.tierSymbol}>{tierDisplay}</span>
               <span>{formatResourceLabel(id)}</span>
             </div>
           </div>
@@ -311,12 +308,10 @@ export function InventoryTab({
   character,
   playerResourceBalances,
   playerTools,
-  playerToolStarter,
 }: {
   character: SlotCharacterSummary;
   playerResourceBalances: Record<string, number>;
   playerTools: Record<string, number>;
-  playerToolStarter: Record<string, number>;
 }) {
   // Fetched once - maps every blueprint id to its own tier/starter flag, so
   // the Blueprints Known lists below can show "T1: Copper Anvil" etc.
@@ -378,13 +373,13 @@ export function InventoryTab({
   const [recipeViewerOpen, setRecipeViewerOpen] = useState(false);
 
   // Blueprints are soulbound to the character (never move to the player's
-  // shared pool), so both the regular and starter lists always count as
-  // "known" for the recipe viewer's missing-blueprint check.
-  const knownBlueprints = [...character.blueprints, ...character.blueprintStarter];
+  // shared pool), so this counts as "known" for the recipe viewer's
+  // missing-blueprint check.
+  const knownBlueprints = character.blueprints;
   // A tool counts as available whether it's still sitting in the player's
   // shared pool or already checked out onto this character - both mean the
   // character can use it.
-  const ownedTools = ownedIds(playerTools, playerToolStarter, character.tools, character.toolStarter);
+  const ownedTools = ownedIds(playerTools, character.tools);
 
   // The embedded recipe viewer's own content height, in px - same-origin, so
   // its body height can be read directly and mirrored onto the iframe
@@ -416,7 +411,7 @@ export function InventoryTab({
               onToggle={toggleCharacterSub}
             >
               <IdList
-                ids={[...ownedIds(character.tools), ...ownedIds(character.toolStarter)]}
+                ids={ownedIds(character.tools)}
                 emptyLabel="Not currently holding any tools."
               />
             </SubAccordionItem>
@@ -460,7 +455,7 @@ export function InventoryTab({
               onToggle={togglePartySub}
             >
               <IdList
-                ids={[...ownedIds(playerTools), ...ownedIds(playerToolStarter)]}
+                ids={ownedIds(playerTools)}
                 emptyLabel="Nothing in the shared tool pool."
               />
             </SubAccordionItem>

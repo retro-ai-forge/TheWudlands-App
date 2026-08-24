@@ -138,10 +138,6 @@ class Character:
     # check_out_tool/check_in_tool) - stacked the same way as that pool, and
     # unavailable to the player's other characters while held here.
     tools: Dict[str, int] = field(default_factory=dict)
-    # Starter tools (e.g. "knife") checked out of the player's separate
-    # Player.tool_starter pool - same check-out/check-in mechanics as
-    # `tools`, just a different pool (pass pool="toolStarter").
-    tool_starter: Dict[str, int] = field(default_factory=dict)
     # Blueprint ids this character has learned (see backend.craft_catalog) -
     # chosen on the Trappings step from the pools their professions unlock.
     # Soulbound: unlike tools, blueprints never move to the player's shared
@@ -150,10 +146,6 @@ class Character:
     # soulbound token, one day). A one-time unlock, never a stackable
     # quantity like resource_balances.
     blueprints: List[str] = field(default_factory=list)
-    # Starter (no-fancy-name, "blueprint_basic_*") blueprints - kept separate
-    # from `blueprints` since they aren't chosen on the Trappings step, they
-    # just come with the character. Equally soulbound.
-    blueprint_starter: List[str] = field(default_factory=list)
 
     def to_dict(self) -> dict:
         return {
@@ -183,7 +175,5 @@ class Character:
             "availability": {"name": "ready", "timeRdy": self.created_at.isoformat()},
             "resourceBalances": self.resource_balances,
             "tools": self.tools,
-            "toolStarter": self.tool_starter,
             "blueprints": self.blueprints,
-            "blueprintStarter": self.blueprint_starter,
         }
