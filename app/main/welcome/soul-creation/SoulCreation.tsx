@@ -44,7 +44,7 @@ type TrappingsItem = {
 // separate combo boxes this pool gets, one independent pick each.
 type TrappingsBlueprintPool = {
   source: string;
-  tiers: number[];
+  tier: number;
   count: number;
   items: TrappingsItem[];
 };
@@ -134,7 +134,7 @@ export function SoulCreation({
     if (page !== 5) return;
     setRecipeViewerLoaded(false);
     setRecipeViewerSrc(
-      `/craft/recipe-viewer.html?inv=${encodeURIComponent(
+      `/craft/recipe-viewer.html?embedded=1&inv=${encodeURIComponent(
         JSON.stringify(selectedResources)
       )}&tools=${encodeURIComponent(
         JSON.stringify(ownedIds(playerTools, playerToolStarter))
@@ -637,6 +637,25 @@ export function SoulCreation({
     });
   }
 
+  // Spends `total` across `keys` at random, each starting from the mandatory
+  // floor of 1 - used by the Randomize button below to fill both sections at
+  // once with a valid (fully-spent) split, so Continue unlocks immediately.
+  function randomSpend<K extends string>(total: number, keys: readonly K[]): Record<K, number> {
+    const result = Object.fromEntries(keys.map((k) => [k, 1])) as Record<K, number>;
+    let remaining = total - keys.length;
+    while (remaining > 0) {
+      const key = keys[Math.floor(Math.random() * keys.length)];
+      result[key] += 1;
+      remaining -= 1;
+    }
+    return result;
+  }
+
+  function handleRandomizeAttributes() {
+    setBodyAttributes(randomSpend(body, ["migh", "agil", "endu", "prec"] as const));
+    setSoulAttributes(randomSpend(soul, ["will", "insi", "lore", "pres"] as const));
+  }
+
   // Press-and-hold repeat for the attribute stepper triangles: one immediate
   // step, a short pause, then fast auto-repeat until release. Listens on
   // `window` for the release rather than just the button, since a hold that
@@ -1044,6 +1063,13 @@ export function SoulCreation({
                   ))}
                 </div>
               </div>
+              <button
+                type="button"
+                className={styles.randomizeButton}
+                onClick={handleRandomizeAttributes}
+              >
+                Randomize
+              </button>
             </div>
           ) : page === 3 ? (
             <>
@@ -1190,7 +1216,7 @@ export function SoulCreation({
                       <div key={poolIdx} className={styles.trappingsTierGroup}>
                         <div className={styles.trappingsTierHeader}>
                           <span>{BLUEPRINT_SOURCE_LABELS[pool.source] ?? pool.source}</span>
-                          <span>Tier {pool.tiers.join("/")}</span>
+                          <span>Tier {pool.tier}</span>
                         </div>
                         {slotKeys.map((slotKey) => {
                           const taken = pickedElsewhere(slotKey);
@@ -1209,7 +1235,7 @@ export function SoulCreation({
                                   .filter((item) => item.id === value || !taken.has(item.id))
                                   .map((item) => (
                                     <option key={item.id} value={item.id}>
-                                      {item.name} (T{item.tier})
+                                      {item.name.replace("Blueprint: ", "")} (T{item.tier})
                                     </option>
                                   ))}
                               </select>
@@ -1222,23 +1248,28 @@ export function SoulCreation({
                 </div>
               )}
               {submitError && <p className={styles.submitError}>{submitError}</p>}
-              <iframe
-                ref={recipeViewerRef}
-                src={recipeViewerSrc}
-                title="Crafting Recipe Viewer"
-                className={styles.recipeViewerFrame}
-                style={{ height: recipeViewerHeight }}
-                onLoad={() => {
-                  const doc = recipeViewerRef.current?.contentWindow?.document;
-                  if (!doc?.body) return;
-                  setRecipeViewerHeight(doc.body.scrollHeight);
-                  const observer = new ResizeObserver(() => {
-                    setRecipeViewerHeight(doc.body.scrollHeight);
-                  });
-                  observer.observe(doc.body);
-                  setRecipeViewerLoaded(true);
-                }}
-              />
+              {recipeViewerSrc && (
+                <>
+                  <p className={styles.recipeViewerHeading}>Crafting Recipes</p>
+                  <iframe
+                    ref={recipeViewerRef}
+                    src={recipeViewerSrc}
+                    title="Crafting Recipe Viewer"
+                    className={styles.recipeViewerFrame}
+                    style={{ height: recipeViewerHeight }}
+                    onLoad={() => {
+                      const doc = recipeViewerRef.current?.contentWindow?.document;
+                      if (!doc?.body) return;
+                      setRecipeViewerHeight(doc.body.scrollHeight);
+                      const observer = new ResizeObserver(() => {
+                        setRecipeViewerHeight(doc.body.scrollHeight);
+                      });
+                      observer.observe(doc.body);
+                      setRecipeViewerLoaded(true);
+                    }}
+                  />
+                </>
+              )}
               <button
                 className={`${styles.navButton} ${styles.continueInline} ${
                   !isPage5Ready ? styles.continueInactive : ""

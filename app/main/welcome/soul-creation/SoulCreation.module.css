@@ -184,6 +184,17 @@
   margin-top: 0.5rem;
 }
 
+/* The embedded recipe viewer's own <h1> is suppressed (see "?embedded=1" in
+   SoulCreation.tsx) since it would just repeat this label - this is the
+   only heading the section actually gets. */
+.recipeViewerHeading {
+  font-size: 0.85rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #a89968;
+  margin: 1rem 0 0;
+}
+
 .recipeViewerFrame {
   /* Bleeds past .content's own 1.5rem padding on both sides, out to
      .content's outer edge - which .contentWidest already caps at 900px, and
@@ -369,6 +380,28 @@
 .attrSection {
   display: flex;
   flex-direction: column;
+}
+
+.randomizeButton {
+  align-self: center;
+  width: 100%;
+  max-width: 28rem;
+  margin-top: 1rem;
+  font-family: inherit;
+  font-size: 0.85rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  background: rgba(10, 8, 4, 0.9);
+  border: 1px solid #6f532f;
+  color: #d4c9a8;
+  border-radius: 6px;
+  padding: 0.55rem 0.6rem;
+  cursor: pointer;
+}
+
+.randomizeButton:hover {
+  border-color: #c07a3a;
+  color: #e6b85c;
 }
 
 .attrSectionHeader {

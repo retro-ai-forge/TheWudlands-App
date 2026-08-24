@@ -195,7 +195,7 @@
   width: 100%;
   background: rgba(10, 8, 4, 0.4);
   border-radius: 10px;
-  padding: 1.5rem;
+  padding: 1.5rem 0.15rem;
   box-sizing: border-box;
 }
 
@@ -217,24 +217,55 @@
   padding: 2rem 1rem;
 }
 
-/* Opens the standalone crafting recipe reference (public/craft/recipe-viewer.html)
-   in a new tab - a plain full-width text link rather than a boxed button, so
-   it just reads as one more line in the page's existing vertical flow and
-   needs no extra layout work to fit a narrow mobile screen. */
-.recipeViewerLink {
-  display: block;
-  width: 100%;
+/* No border, and the same dark grey + muted label color as the embedded
+   recipe-viewer.html's own background/text-dim (its own "h2" section
+   headers - Legend, Total Raw Materials, etc. - use this exact color) so
+   the heading reads as part of the same surface as the iframe below rather
+   than a seam against .panel's translucent brown. */
+.recipeViewerHeading {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-family: inherit;
+  font-size: 0.75rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #8b90a3;
+  background: #12141a;
+  border: none;
+  cursor: pointer;
+  margin: 0.5rem 0 0;
+  padding: 0.5rem 0.15rem 0.25rem 0.75rem;
+  /* Bleeds to the same edge as .recipeViewerFrame below (see there for the
+     0.15rem + 1.5rem = 1.65rem math) so the grey background lines up flush
+     with the iframe's own edges instead of stopping short. */
+  width: calc(100% + 3.3rem);
+  margin-left: -1.65rem;
+  margin-right: -1.65rem;
   box-sizing: border-box;
-  text-align: center;
-  font-size: 0.85rem;
-  color: #c07a3a;
-  text-decoration: underline;
-  text-underline-offset: 3px;
-  padding: 0.5rem;
+  text-align: left;
 }
 
-.recipeViewerLink:hover {
-  color: #e6b85c;
+.recipeViewerHeading:hover {
+  color: #c07a3a;
+}
+
+/* Embeds the standalone crafting recipe reference (public/craft/recipe-viewer.html)
+   inline, same treatment as SoulCreation's .recipeViewerFrame - height is
+   set inline (see InventoryTab.tsx's recipeViewerHeight state), a
+   ResizeObserver on the iframe's own (same-origin) body mirrors its real
+   content height so there's never dead grey space or an inner scrollbar. */
+.recipeViewerFrame {
+  /* Bleeds past .panel's own 0.15rem horizontal padding and .sheet's 1.5rem
+     (the actual tab-content wrapper this sits inside, via .mainColumn which
+     has no padding of its own) - out to .sheet's true outer edge, same
+     trick as SoulCreation's .recipeViewerFrame.
+     Total: 0.15rem + 1.5rem = 1.65rem each side. */
+  width: calc(100% + 3.3rem);
+  margin-left: -1.65rem;
+  margin-right: -1.65rem;
+  margin-top: 0;
+  border: none;
 }
 
 /* ---- Stats tab ---- */
@@ -559,5 +590,94 @@
   font-size: 0.8rem;
   color: #7d7256;
   padding: 0.5rem 0;
+}
+
+/* Mirrors app/characters/page.tsx's accordion exactly (same palette/behavior
+   - mutual exclusivity within a group, handled in InventoryTab's own state
+   rather than native <details>, so opening one section closes its sibling). */
+.accordionItem {
+  border: 1px solid #3a3020;
+  margin-bottom: 0.4rem;
+  background: #0d0d0a;
+}
+
+.accordionHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  padding: 0.65rem 0.4rem;
+  background: #1a1a1a;
+  color: #c07a3a;
+  font-family: inherit;
+  font-size: 0.9rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  cursor: pointer;
+  user-select: none;
+  border: none;
+  text-align: left;
+}
+
+.accordionHeader:hover {
+  background: #222215;
+  color: #d4a060;
+}
+
+.accordionChevron {
+  font-size: 0.7rem;
+  color: #7a6a3a;
+  flex-shrink: 0;
+}
+
+.accordionBody {
+  padding: 0.75rem 0.4rem;
+  border-top: 1px solid #3a3020;
+  background: #0d0d0a;
+}
+
+.subAccordionItem {
+  border: 1px solid #2a2018;
+  margin-bottom: 0.3rem;
+}
+
+.subAccordionHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  padding: 0.5rem 0.4rem;
+  background: #111108;
+  color: #a89968;
+  font-family: inherit;
+  font-size: 0.8rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  cursor: pointer;
+  user-select: none;
+  border: none;
+  text-align: left;
+}
+
+.subAccordionHeader:hover {
+  background: #1a1a10;
+  color: #c07a3a;
+}
+
+.subAccordionBody {
+  border-top: 1px solid #2a2018;
+  background: #0a0a08;
+  padding: 0.5rem 0.4rem;
+}
+
+.inventoryDetailsList {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.inventoryDetailsList span {
+  font-size: 0.85rem;
+  color: #c9bfa0;
 }
 

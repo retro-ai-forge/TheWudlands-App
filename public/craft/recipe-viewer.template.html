@@ -210,8 +210,8 @@
 </head>
 <body>
   <a class="backlink" id="backLink" href="/">&larr; Back to Character</a>
-  <h1>Crafting Recipe Viewer</h1>
-  <p class="subtitle">Tier numbers shown are minimum requirements — a higher-tier material always works too.</p>
+  <h1 id="pageTitle">Crafting Recipe Viewer</h1>
+  <p class="subtitle" id="pageSubtitle">Tier numbers shown are minimum requirements — a higher-tier material always works too.</p>
 
   <div class="toolbar">
     <select id="recipeSelect"></select>
@@ -235,9 +235,9 @@
       <details class="panel" open style="margin-bottom:16px;">
         <summary>Legend</summary>
         <div class="legend">
-          <div class="row final"><span class="tag cat-final">final</span><span class="legend-text">a separate finished item (▸ if it has its own recipe)</span></div>
+          <div class="row final"><span class="tag cat-final">final</span><span class="legend-text">a separate finished item (▸ has its own recipe)</span></div>
           <div class="row blueprint"><span class="tag cat-blueprint">blueprint</span><span class="legend-text">technique required, learned once and never consumed</span></div>
-          <div class="row processed"><span class="tag cat-processed">processed</span><span class="legend-text">crafted from a sub-recipe</span></div>
+          <div class="row processed"><span class="tag cat-processed">processed</span><span class="legend-text">crafted from raw</span></div>
           <div class="row raw"><span class="tag cat-raw">raw</span><span class="legend-text">mined/gathered material</span></div>
           <div class="row"><span class="tag basic">(S)</span><span class="legend-text">starter blueprint exists</span></div>
           <div class="row"><span class="tag missing">!</span><span class="legend-text">missing tool or blueprint</span></div>
@@ -258,7 +258,7 @@
         </table>
       </div>
       <div class="panel">
-        <h2>Tools Used Anywhere In Chain</h2>
+        <h2>Tools Used</h2>
         <div class="toollist" id="toolList"></div>
       </div>
     </div>
@@ -302,15 +302,17 @@ let ownedTools = readIdListFromQuery("tools");
 let ownedBlueprints = readIdListFromQuery("blueprints");
 
 // A recipe's `tool`/`blueprintFamilyId` reference a FAMILY (e.g. "anvil"),
-// not one specific tiered item - owning any tier of that family satisfies
-// the requirement.
-function ownsFamily(ownedSet, famId) {
+// not one specific tiered item - but owning a LOWER tier than what's
+// required doesn't satisfy it (a Copper Anvil can't stand in for an Iron
+// one). A basic/starter item counts as tier 1 only. Owning any tier >=
+// requiredTier is enough - a higher-tier tool/blueprint can always do what
+// a lower-tier one could.
+function ownsFamily(ownedSet, famId, requiredTier) {
   if (!ownedSet || !famId) return true; // no character context - don't flag anything as missing
-  if (ownedSet.has(famId)) return true;
   const f = families[famId];
-  if (!f) return false;
-  if (f.basic && ownedSet.has(f.basic.id)) return true;
-  return f.tiers.some(t => ownedSet.has(t.id));
+  if (!f) return ownedSet.has(famId);
+  if (f.basic && requiredTier <= 1 && ownedSet.has(f.basic.id)) return true;
+  return f.tiers.some(t => t.tier >= requiredTier && ownedSet.has(t.id));
 }
 
 // Passed alongside ?inv= as the exact page (character + tab) the player
@@ -324,6 +326,15 @@ if (returnUrl) {
   document.getElementById("backLink").href = returnUrl;
 } else {
   document.getElementById("backLink").style.display = "none";
+}
+
+// Passed as "?embedded=1" by pages that inline this in an iframe (Soul
+// Creation's Trappings step, the character preview's Inventory tab) - their
+// own fold/summary already labels the section, so this page's own <h1> and
+// subtitle would just be a redundant second headline stacked right under it.
+if (new URLSearchParams(window.location.search).get("embedded")) {
+  document.getElementById("pageTitle").style.display = "none";
+  document.getElementById("pageSubtitle").style.display = "none";
 }
 
 function tierName(famId, tier) {
@@ -415,7 +426,7 @@ function buildInteractiveNode(famId, qty, category, tier, isRoot) {
   row.appendChild(el("span", "tag cat-" + (category === "final" ? "final" : category), category));
   if (recipe && recipe.tool) {
     const toolTag = el("span", "tag tool", "\u{1F528} " + recipe.tool);
-    if (!ownsFamily(ownedTools, recipe.tool)) toolTag.classList.add("missing");
+    if (!ownsFamily(ownedTools, recipe.tool, tier)) toolTag.classList.add("missing");
     row.appendChild(toolTag);
   }
   wrapper.appendChild(row);
@@ -442,7 +453,7 @@ function buildInteractiveNode(famId, qty, category, tier, isRoot) {
             starterTag.title = "Starter: " + bpFam.basic.name.replace("Blueprint: ", "");
             bp.row.appendChild(starterTag);
           }
-          if (!ownsFamily(ownedBlueprints, recipe.blueprintFamilyId)) {
+          if (!ownsFamily(ownedBlueprints, recipe.blueprintFamilyId, tier)) {
             bp.row.querySelector(".tag.cat-blueprint")?.classList.add("missing");
           }
           childrenBox.appendChild(bp.wrapper);
@@ -538,7 +549,7 @@ function renderTable(tableId, totals, tier, showMissing, checkBlueprint) {
     if (checkBlueprint) {
       const recipe = recipes[famId];
       const bpFamId = recipe && recipe.blueprintFamilyId;
-      if (bpFamId && !ownsFamily(ownedBlueprints, bpFamId)) {
+      if (bpFamId && !ownsFamily(ownedBlueprints, bpFamId, tier)) {
         nameCell.appendChild(document.createTextNode(" "));
         nameCell.appendChild(el("span", "tag missing", "!"));
       }
@@ -596,7 +607,7 @@ function render(famId, tier) {
   } else {
     for (const t of [...toolSet].sort()) {
       const toolTag = el("span", "tag tool", "\u{1F528} " + t);
-      if (!ownsFamily(ownedTools, t)) toolTag.classList.add("missing");
+      if (!ownsFamily(ownedTools, t, tier)) toolTag.classList.add("missing");
       toolListEl.appendChild(toolTag);
     }
   }

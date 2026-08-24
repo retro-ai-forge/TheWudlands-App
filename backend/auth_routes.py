@@ -310,7 +310,7 @@ class TrappingsBlueprintPoolResponse(BaseModel):
     items it makes eligible for the character's chosen professions."""
 
     source: str = Field(..., description="'tool_basic' | 'tool' | 'item_basic' | 'item'")
-    tiers: List[int] = Field(..., description="Blueprint tiers this rule draws from")
+    tier: int = Field(..., description="Blueprint tier this rule draws from")
     count: int = Field(..., description="How many distinct blueprints the player may pick from this pool")
     items: List[TrappingsItemResponse]
 
@@ -645,7 +645,7 @@ async def get_trappings_options(
         blueprintPools=[
             TrappingsBlueprintPoolResponse(
                 source=pool.rule.source,
-                tiers=list(pool.rule.tiers),
+                tier=pool.rule.tier,
                 count=pool.rule.count,
                 items=[
                     TrappingsItemResponse(id=item.id, name=item.name, familyId=item.family_id, tier=item.tier)

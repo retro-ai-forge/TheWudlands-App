@@ -62,7 +62,7 @@ class BlueprintPoolRule:
     """One entry of blueprintPoolsByProfessionCount for a given profession count."""
 
     source: str  # "tool_basic" | "tool" | "item_basic" | "item"
-    tiers: tuple[int, ...]
+    tier: int
     count: int
 
 
@@ -181,12 +181,10 @@ def _load_blueprint_pool_rules() -> dict[int, tuple[BlueprintPoolRule, ...]]:
     data = json.loads(_SELECTION_RULES_PATH.read_text())
     rules_by_count: dict[int, tuple[BlueprintPoolRule, ...]] = {}
     for count_str, rules in data.get("blueprintPoolsByProfessionCount", {}).items():
-        parsed = []
-        for rule in rules:
-            tiers = rule["tiers"]
-            if isinstance(tiers, int):
-                tiers = [tiers]
-            parsed.append(BlueprintPoolRule(source=rule["source"], tiers=tuple(tiers), count=rule["count"]))
+        parsed = [
+            BlueprintPoolRule(source=rule["source"], tier=rule["tier"], count=rule["count"])
+            for rule in rules
+        ]
         rules_by_count[int(count_str)] = tuple(parsed)
     return rules_by_count
 
@@ -198,6 +196,35 @@ _FAMILY_CATALOG_TYPES: dict[str, str] = _load_family_catalog_types()
 # blueprint familyId -> profession categories it belongs to, e.g.
 # "blueprint_sword" -> ("CraftMetal", "Military").
 BLUEPRINT_CATEGORIES: dict[str, tuple[str, ...]] = _build_blueprint_category_index()
+
+# A category is "thin" if it gates 2 or fewer blueprint families - a player
+# whose chosen professions map only to thin categories could otherwise see
+# an empty (or near-empty) Trappings blueprint pool (e.g. Rural gates none,
+# Trade gates only "hearth"). Each thin category widens into one richer,
+# thematically-related fallback category (picked by shared raw-material
+# families in profession-resource-families.json) rather than falling back to
+# every category, so the extra choices still make sense for the profession.
+_CATEGORY_FALLBACKS: dict[str, str] = {
+    "Rural": "CraftWood",  # hide/wood -> leatherworking & woodworking
+    "Trade": "Military",  # monster_part -> weapons & armor to deal in
+    "Food": "Alchemy",  # herbs -> cooking & herbalism overlap
+    "Aristocratic": "CraftGarment",  # skin -> fine garments
+}
+
+
+def _thin_categories() -> frozenset[str]:
+    family_counts: dict[str, int] = {}
+    for cats in BLUEPRINT_CATEGORIES.values():
+        for category in cats:
+            family_counts[category] = family_counts.get(category, 0) + 1
+    return frozenset(
+        category
+        for category in PROFESSION_RESOURCE_FAMILIES
+        if family_counts.get(category, 0) <= 2
+    )
+
+
+_THIN_CATEGORIES: frozenset[str] = _thin_categories()
 
 # Starting-blueprint selection rules for the soul-creation "Trappings" step,
 # mirroring RESOURCE_POOLS_BY_PROFESSION_COUNT but for discrete blueprint
@@ -244,8 +271,16 @@ def resolve_blueprint_trapping_options(profession_ids: list[str]) -> BlueprintTr
         return BlueprintTrappingsOptions(pools=())
 
     categories = {PROFESSION_CATEGORIES[p] for p in chosen}
+    # Thin categories (e.g. Rural, Trade) widen into their fallback category
+    # so the pool isn't empty or near-empty for a player whose professions
+    # only map to them.
+    widened_categories = categories | {
+        _CATEGORY_FALLBACKS[category]
+        for category in categories
+        if category in _THIN_CATEGORIES and category in _CATEGORY_FALLBACKS
+    }
     eligible_families = {
-        family for family, cats in BLUEPRINT_CATEGORIES.items() if categories & set(cats)
+        family for family, cats in BLUEPRINT_CATEGORIES.items() if widened_categories & set(cats)
     }
 
     pools = tuple(
@@ -255,7 +290,7 @@ def resolve_blueprint_trapping_options(profession_ids: list[str]) -> BlueprintTr
                 bp
                 for bp in BLUEPRINT_ITEMS
                 if bp.family_id in eligible_families
-                and bp.tier in rule.tiers
+                and bp.tier == rule.tier
                 and _SOURCE_PREDICATES[rule.source](bp)
             ),
         )
