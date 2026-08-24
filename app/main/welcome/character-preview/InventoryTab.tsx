@@ -122,55 +122,67 @@ function ResourceList({
   const rawData = groupByFamilyAndType(rawItems);
 
   const renderProcessedGroup = (familyGroups: Record<string, Array<[string, number]>>, highestTierByFamily: Record<string, number>, sortedFamilies: string[]) => {
-    return sortedFamilies.flatMap((family) => {
-      const familyItems = familyGroups[family].sort((a, b) => {
-        const tierA = tierInfo?.[a[0]]?.tier ?? 0;
-        const tierB = tierInfo?.[b[0]]?.tier ?? 0;
-        return tierB - tierA;
-      });
+    return (
+      <table className={styles.inventoryTable}>
+        <tbody>
+          {sortedFamilies.flatMap((family) => {
+            const familyItems = familyGroups[family].sort((a, b) => {
+              const tierA = tierInfo?.[a[0]]?.tier ?? 0;
+              const tierB = tierInfo?.[b[0]]?.tier ?? 0;
+              return tierB - tierA;
+            });
 
-      return familyItems.map(([id, qty]) => {
-        const icon = getResourceIcon(id);
-        const tierData = tierInfo?.[id];
-        const tier = tierData?.tier ?? 0;
-        const tierDisplay = tier ? getTierIndicator(tier) : "";
-        const isGreyed = tier > 0 && highestTierByFamily[family] > tier;
-        return (
-          <div className={styles.inventoryRow} key={id} style={isGreyed ? { opacity: 0.5, color: "var(--text-dim)" } : undefined}>
-            <span>{icon}</span>
-            <span className={tier > 0 ? getTierSymbolClass(tier) : styles.tierSymbol}>{tierDisplay}</span>
-            <span>{formatResourceLabel(id)}</span>
-            <span>{qty}</span>
-          </div>
-        );
-      });
-    });
+            return familyItems.map(([id, qty]) => {
+              const icon = getResourceIcon(id);
+              const tierData = tierInfo?.[id];
+              const tier = tierData?.tier ?? 0;
+              const tierDisplay = tier ? getTierIndicator(tier) : "";
+              const isGreyed = tier > 0 && highestTierByFamily[family] > tier;
+              return (
+                <tr key={id} style={isGreyed ? { opacity: 0.5, color: "var(--text-dim)" } : undefined}>
+                  <td>{icon}</td>
+                  <td><span className={tier > 0 ? getTierSymbolClass(tier) : styles.tierSymbol}>{tierDisplay}</span></td>
+                  <td>{formatResourceLabel(id)}</td>
+                  <td>{qty}</td>
+                </tr>
+              );
+            });
+          })}
+        </tbody>
+      </table>
+    );
   };
 
   const renderRawGroup = (familyGroups: Record<string, Array<[string, number]>>, highestTierByFamily: Record<string, number>, sortedFamilies: string[]) => {
-    return sortedFamilies.flatMap((family) => {
-      const familyItems = familyGroups[family].sort((a, b) => {
-        const tierA = tierInfo?.[a[0]]?.tier ?? 0;
-        const tierB = tierInfo?.[b[0]]?.tier ?? 0;
-        return tierB - tierA;
-      });
+    return (
+      <table className={styles.inventoryTable}>
+        <tbody>
+          {sortedFamilies.flatMap((family) => {
+            const familyItems = familyGroups[family].sort((a, b) => {
+              const tierA = tierInfo?.[a[0]]?.tier ?? 0;
+              const tierB = tierInfo?.[b[0]]?.tier ?? 0;
+              return tierB - tierA;
+            });
 
-      return familyItems.map(([id, qty]) => {
-        const icon = getResourceIcon(id);
-        const tierData = tierInfo?.[id];
-        const tier = tierData?.tier ?? 0;
-        const tierDisplay = tier ? getTierIndicator(tier) : "";
-        const isGreyed = tier > 0 && highestTierByFamily[family] > tier;
-        return (
-          <div className={styles.inventoryRow} key={id} style={isGreyed ? { opacity: 0.5, color: "var(--text-dim)" } : undefined}>
-            <span>{icon}</span>
-            <span className={tier > 0 ? getTierSymbolClass(tier) : styles.tierSymbol}>{tierDisplay}</span>
-            <span>{formatResourceLabel(id)}</span>
-            <span>{qty}</span>
-          </div>
-        );
-      });
-    });
+            return familyItems.map(([id, qty]) => {
+              const icon = getResourceIcon(id);
+              const tierData = tierInfo?.[id];
+              const tier = tierData?.tier ?? 0;
+              const tierDisplay = tier ? getTierIndicator(tier) : "";
+              const isGreyed = tier > 0 && highestTierByFamily[family] > tier;
+              return (
+                <tr key={id} style={isGreyed ? { opacity: 0.5, color: "var(--text-dim)" } : undefined}>
+                  <td>{icon}</td>
+                  <td><span className={tier > 0 ? getTierSymbolClass(tier) : styles.tierSymbol}>{tierDisplay}</span></td>
+                  <td>{formatResourceLabel(id)}</td>
+                  <td>{qty}</td>
+                </tr>
+              );
+            });
+          })}
+        </tbody>
+      </table>
+    );
   };
 
   const hasProcessed = processedData.sortedFamilies.length > 0;
