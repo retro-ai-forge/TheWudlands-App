@@ -4,14 +4,13 @@ import type { SlotCharacterSummary } from "../SoulSlotGrid";
 
 // GET /api/auth/blueprint-categories - lore/reference data (not
 // player-specific), reused here purely to look up each known blueprint's own
-// tier/starter flag by id, since Character.blueprints is just a flat id
-// list with no tier attached.
-type BlueprintCategoryItem = { id: string; tier: number; isBasic: boolean };
+// tier by id, since Character.blueprints is just a flat id list with no tier attached.
+type BlueprintCategoryItem = { id: string; tier: number };
 type BlueprintCategoryFamily = { familyId: string; kind: string; items: BlueprintCategoryItem[] };
 type BlueprintCategoryEntry = { families: BlueprintCategoryFamily[] };
 type BlueprintTierInfo = Record<
   string,
-  { tier: number; isBasic: boolean; familyId: string; kind: string }
+  { tier: number; familyId: string; kind: string }
 >;
 type ResourceTierInfo = Record<string, { tier: number; family: string }>;
 
@@ -194,9 +193,9 @@ function IdList({
 }: {
   ids: string[];
   emptyLabel: string;
-  /** When given, prefixes each entry with "T1: "/"T2: "/... or "S: " for a starter. */
+  /** When given, prefixes each entry with "T1: "/"T2: "/... tier numbers. */
   tierInfo?: BlueprintTierInfo;
-  /** Starters first, then by tier descending (highest first) - requires `tierInfo`. */
+  /** Sort by tier descending (highest first) - requires `tierInfo`. */
   sortByTier?: boolean;
 }) {
   if (ids.length === 0) return <p className={styles.inventoryEmpty}>{emptyLabel}</p>;
@@ -313,8 +312,8 @@ export function InventoryTab({
   playerResourceBalances: Record<string, number>;
   playerTools: Record<string, number>;
 }) {
-  // Fetched once - maps every blueprint id to its own tier/starter flag, so
-  // the Blueprints Known lists below can show "T1: Copper Anvil" etc.
+  // Fetched once - maps every blueprint id to its own tier and family info, so
+  // the Blueprints Known lists below can show tier information etc.
   const [blueprintTierInfo, setBlueprintTierInfo] = useState<BlueprintTierInfo>({});
 
   // Resource tier info: id -> tier (for displaying tier indicators on resources)
@@ -330,7 +329,6 @@ export function InventoryTab({
             for (const item of family.items) {
               info[item.id] = {
                 tier: item.tier,
-                isBasic: item.isBasic,
                 familyId: family.familyId,
                 kind: family.kind,
               };

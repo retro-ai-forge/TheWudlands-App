@@ -210,16 +210,9 @@ class CharacterResponse(BaseModel):
         default_factory=dict,
         description="Tools this character currently holds (id -> quantity), checked out of the player's shared pool",
     )
-    toolStarter: Dict[str, int] = Field(
-        default_factory=dict,
-        description="Starter tools this character currently holds, checked out of the player's separate starter pool",
-    )
     blueprints: List[str] = Field(
         default_factory=list,
         description="Blueprint ids this character has learned, chosen on the Trappings step - soulbound, never moves",
-    )
-    blueprintStarter: List[str] = Field(
-        default_factory=list, description="Starter blueprints this character has - soulbound, never moves"
     )
 
 class PlayerDataResponse(BaseModel):
@@ -240,10 +233,6 @@ class PlayerDataResponse(BaseModel):
     )
     tools: Dict[str, int] = Field(
         default_factory=dict, description="Tools this player owns (id -> quantity), shared across all their characters"
-    )
-    toolStarter: Dict[str, int] = Field(
-        default_factory=dict,
-        description="Starter tools this player owns (id -> quantity), kept separate from the earned tools pool",
     )
 
 

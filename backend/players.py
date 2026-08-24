@@ -79,7 +79,6 @@ async def get_or_create_player(address: str) -> Player:
         "first_login_at": datetime.now(timezone.utc),
         "characters": [],
         "tools": {},
-        "toolStarter": {},
     }
     await db.players.insert_one(doc)
     return _doc_to_player(doc)
@@ -226,11 +225,9 @@ async def grant_shared_resource(address: str, resource_id: str, amount: int) -> 
     return _doc_to_player(doc)
 
 
-# Both of a player's tool pools ("tools" = crafted/earned, "toolStarter" =
-# granted free) are stacked and checked out/in identically - only the Mongo
-# field name differs, so check_out_tool/check_in_tool/grant_tool all take
-# `pool` rather than being duplicated per pool.
-_TOOL_POOLS = ("tools", "toolStarter")
+# The player's shared tool pool, stacked and checked out/in identically
+# across all characters.
+_TOOL_POOLS = ("tools",)
 
 
 def _validate_tool_pool(pool: str) -> None:
@@ -240,10 +237,9 @@ def _validate_tool_pool(pool: str) -> None:
 
 async def grant_tool(address: str, tool_id: str, amount: int = 1, pool: str = "tools") -> Optional[Player]:
     """
-    Credit `amount` of `tool_id` to `address`'s shared tool pool ("tools" or
-    "toolStarter") - stacked the same way grant_shared_resource stacks
-    resources, since a player can own more than one of the same tool (e.g.
-    two anvils).
+    Credit `amount` of `tool_id` to `address`'s shared tool pool - stacked
+    the same way grant_shared_resource stacks resources, since a player can
+    own more than one of the same tool (e.g. two anvils).
     """
     _validate_tool_pool(pool)
     if amount <= 0:
@@ -266,9 +262,8 @@ async def check_out_tool(
     address: str, character_id: str, tool_id: str, amount: int = 1, pool: str = "tools"
 ) -> Optional[Player]:
     """
-    Move `amount` of `tool_id` from `address`'s shared pool ("tools" or
-    "toolStarter") onto one of their characters (Character.tools /
-    Character.toolStarter, matching `pool`) - the character now holds it, so
+    Move `amount` of `tool_id` from `address`'s shared tool pool onto one of
+    their characters (Character.tools) - the character now holds it, so
     it's unavailable to the player's other characters until checked back in.
     Requires the pool to actually have `amount` available; returns None if
     the address/character pair doesn't match any player document OR the pool
@@ -297,8 +292,8 @@ async def check_in_tool(
 ) -> Optional[Player]:
     """
     The reverse of check_out_tool: move `amount` of `tool_id` from one of
-    `address`'s characters back into the shared pool ("tools" or
-    "toolStarter"). Requires that character to actually be holding `amount`.
+    `address`'s characters back into the shared tool pool. Requires that
+    character to actually be holding `amount`.
     """
     _validate_tool_pool(pool)
     if amount <= 0:
