@@ -207,7 +207,8 @@
   .children { margin-top: 2px; }
   table { width: 100%; border-collapse: collapse; font-size: 12px; }
   th, td { text-align: left; padding: 4px 6px; }
-  th { color: var(--text-dim); font-weight: normal; border-bottom: 1px solid var(--border); }
+  th { color: var(--text-dim); font-weight: normal; border-bottom: 1px solid var(--border); text-align: right; }
+  th:first-child { text-align: left; }
   td.n { text-align: right; color: var(--accent); font-variant-numeric: tabular-nums; }
   /* Nothing missing - the character already has all of this material. */
   td.n.have-enough { color: #9be6a8; }
@@ -327,7 +328,7 @@ function readInventoryFromQuery() {
 }
 let inventory = readInventoryFromQuery();
 if (inventory) {
-  document.querySelector("#rawTotals thead th:last-child").textContent = "Owned/Req.";
+  document.querySelector("#rawTotals thead th:last-child").textContent = "owned/needed";
 }
 
 // Discrete tools/blueprints owned (as opposed to `inventory`'s stackable raw
@@ -608,7 +609,11 @@ function renderTable(tableId, totals, tier, showMissing, checkBlueprint) {
       }
     }
     tr.appendChild(nameCell);
-    tr.appendChild(el("td", "", "T" + tier));
+    const tierIcons = ["○", "●", "◉", "✦", "✨", "🌟"];
+    const tierIcon = tierIcons[tier - 1] || "";
+    const tierCell = el("td", "", tierIcon);
+    tierCell.className = `tierSymbolT${tier}`;
+    tr.appendChild(tierCell);
     if (showMissing && inventory) {
       // The character's own inventory is keyed by concrete item id (e.g.
       // "iron_ore"), not family id - resolve the family to whichever item
@@ -687,7 +692,7 @@ window.addEventListener("message", (event) => {
   const msg = event.data;
   if (!msg || msg.type !== "recipe-viewer:update") return;
   inventory = msg.inv ?? null;
-  document.querySelector("#rawTotals thead th:last-child").textContent = inventory ? "Owned/Req." : "";
+  document.querySelector("#rawTotals thead th:last-child").textContent = inventory ? "owned/needed" : "";
   ownedTools = msg.tools ? new Set(msg.tools) : null;
   ownedBlueprints = msg.blueprints ? new Set(msg.blueprints) : null;
   if (select.value) render(select.value, currentTier());
