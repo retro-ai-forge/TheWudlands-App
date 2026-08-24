@@ -31,16 +31,29 @@ class ClassStats:
 
 @dataclass
 class ProfStats:
-    """Profession data: profession, level."""    
+    """Profession data: profession, level, experience points."""
     profession_1: str = 'none'
     level_1: int = 0
+    experience_1: int = 0
     profession_2: str = 'none'
     level_2: int = 0
+    experience_2: int = 0
     profession_3: str = 'none'
     level_3: int = 0
+    experience_3: int = 0
 
     def to_dict(self) -> dict:
-        return {"prof1": self.profession_1, "lvl1": self.level_1, "prof2": self.profession_2, "lvl2": self.level_2, "prof3": self.profession_3, "lvl3": self.level_3}
+        return {
+            "prof1": self.profession_1,
+            "lvl1": self.level_1,
+            "exp1": self.experience_1,
+            "prof2": self.profession_2,
+            "lvl2": self.level_2,
+            "exp2": self.experience_2,
+            "prof3": self.profession_3,
+            "lvl3": self.level_3,
+            "exp3": self.experience_3,
+        }
 
 @dataclass
 class AttributeStats:

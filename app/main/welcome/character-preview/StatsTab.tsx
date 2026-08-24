@@ -54,9 +54,9 @@ export function StatsTab({
   const birthsignInfo = BIRTHSIGNS.find((b) => b.id === character.birthsign) ?? null;
 
   const professions = [
-    { name: professionName(character.profession.prof1), lvl: character.profession.lvl1 },
-    { name: professionName(character.profession.prof2), lvl: character.profession.lvl2 },
-    { name: professionName(character.profession.prof3), lvl: character.profession.lvl3 },
+    { name: professionName(character.profession.prof1), lvl: character.profession.lvl1, exp: character.profession.exp1 },
+    { name: professionName(character.profession.prof2), lvl: character.profession.lvl2, exp: character.profession.exp2 },
+    { name: professionName(character.profession.prof3), lvl: character.profession.lvl3, exp: character.profession.exp3 },
   ].filter((p) => p.name);
 
   const classes = [
@@ -140,7 +140,7 @@ export function StatsTab({
               {professions.map((p) => (
                 <div className={styles.professionRow} key={p.name}>
                   <span>{p.name}</span>
-                  <span>Level {p.lvl}</span>
+                  <span>Lvl {p.lvl} — {p.exp} XP</span>
                 </div>
               ))}
             </div>

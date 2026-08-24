@@ -129,14 +129,17 @@ class CharacterClassResponse(BaseModel):
 
 
 class CharacterProfessionResponse(BaseModel):
-    """Profession stats: profession type and level."""
+    """Profession stats: profession type, level, and experience points."""
 
     prof1: str = Field(..., description="Profession 1 type")
     lvl1: int = Field(..., description="Profession 1 level")
+    exp1: int = Field(default=0, description="Profession 1 experience points")
     prof2: str = Field(..., description="Profession 2 type")
     lvl2: int = Field(..., description="Profession 2 level")
+    exp2: int = Field(default=0, description="Profession 2 experience points")
     prof3: str = Field(..., description="Profession 3 type")
     lvl3: int = Field(..., description="Profession 3 level")
+    exp3: int = Field(default=0, description="Profession 3 experience points")
 
 
 class CharacterAttributeResponse(BaseModel):

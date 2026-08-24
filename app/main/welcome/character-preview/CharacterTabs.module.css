@@ -4,50 +4,50 @@
    like one continuous flow, but layout here is a real page grid rather
    than the wizard's single centered column. */
 
-/* Sticky (not fixed) - stays in normal document flow, so .sheet below needs
-   no manual top-padding to clear it, but pins to the top of .wizard's own
-   scroll (its nearest scrolling ancestor) once the page scrolls past it.
-   Only .topBarBackground (below) carries a solid fill - the name sits
-   directly on .wizard's own tiled background, not a solid bar, so it stays
-   part of the same sticky unit as the icon row without being boxed in with
-   it. */
+/* Fixed footer at bottom of screen - floats over content with proper
+   stacking context. Icon bar floats at bottom, name positioned separately
+   at top of page. Only .topBarBackground carries a solid fill. */
 .topBar {
-  position: sticky;
-  top: 0;
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
   z-index: 5;
   width: 100%;
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 0.9rem;
+  pointer-events: none;
+  max-width: none;
 }
 
 /* The icon row's own solid, full-width backing - kept solid-enough that
-   content scrolling underneath doesn't show through once pinned, same as
-   before, just scoped to only this row rather than the name below it too. */
+   content scrolling underneath doesn't show through, scoped to only this row. */
 .topBarBackground {
   width: 100%;
   box-sizing: border-box;
-  /* More on the left than the right - clears space for the first tab icon
-     from the true viewport edge; the right side already reads as clear of
-     the edge thanks to .topBarRow's own gap before .closeButton. */
   padding: 0.6rem 0.5rem 0.6rem 1.25rem;
   background: rgba(10, 8, 4, 0.95);
+  pointer-events: auto;
 }
 
 .topBarRow {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: space-evenly;
   flex-wrap: nowrap;
   width: 100%;
   max-width: 56rem;
   margin: 0 auto;
-  /* Only 2 children (.tabRow, .closeButton), so this is exactly the gap
-     between Adventure (the row's last icon) and Close - deliberately wider
-     than .tabRow's own inter-icon gap below, so Close doesn't read as a 6th
-     tab. */
-  gap: clamp(0.6rem, 4vw, 1.5rem);
+  gap: clamp(0.4rem, 3vw, 1rem);
+}
+
+@media (max-width: 700px) {
+  .topBarRow {
+    justify-content: space-around;
+    gap: clamp(0.3rem, 2vw, 0.8rem);
+  }
 }
 
 .sheet {
@@ -60,17 +60,26 @@
   width: 100%;
   max-width: 56rem;
   margin: 0 auto;
-  padding: 0.25rem 1.5rem 6rem;
+  padding: 2rem 1.5rem 12rem 1.5rem;
   box-sizing: border-box;
 }
 
 .name {
+  position: fixed;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 5;
+  width: 90%;
+  max-width: calc(56rem - 3rem);
   font-size: clamp(1.1rem, 4.5vw, 2.2rem);
   letter-spacing: 0.1em;
   text-transform: uppercase;
   color: #c07a3a;
   text-align: center;
   margin: 0;
+  padding: 1.25rem 1rem;
+  pointer-events: auto;
 }
 
 /* No reserved space for the fixed Delete button below - it floats over
@@ -108,7 +117,7 @@
    below) since it shares the same clamp()-sized .tabIcon. */
 .closeButton {
   composes: tabButton;
-  padding: 0.15rem;
+  padding: 0.15rem 0.6rem 0.15rem 0.15rem;
   flex-shrink: 0;
 }
 
@@ -119,11 +128,19 @@
 .tabRow {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  flex: 1 1 auto;
+  justify-content: center;
+  flex: 0 1 auto;
   flex-wrap: nowrap;
-  gap: clamp(0.1rem, 1vw, 0.6rem);
+  gap: clamp(0.4rem, 3vw, 1rem);
   min-width: 0;
+}
+
+@media (max-width: 700px) {
+  .tabRow {
+    flex: 1 1 auto;
+    justify-content: space-around;
+    gap: clamp(0.3rem, 2vw, 0.8rem);
+  }
 }
 
 .tabRowButton {
@@ -151,12 +168,12 @@
 }
 
 /* Delete only shows on the Stats page (see CharacterPreview.tsx) - bottom
-   left corner. Red glow instead of gold, so a destructive action never
-   reads as just another toggle. */
+   left corner above the footer bar. Red glow instead of gold, so a destructive
+   action never reads as just another toggle. */
 .deleteButton {
   composes: tabButton;
   position: fixed;
-  bottom: 0.75rem;
+  bottom: 6rem;
   left: 0.75rem;
   z-index: 6;
 }

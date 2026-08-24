@@ -7,9 +7,12 @@ import type { SlotCharacterSummary } from "../SoulSlotGrid";
 // tier/starter flag by id, since Character.blueprints is just a flat id
 // list with no tier attached.
 type BlueprintCategoryItem = { id: string; tier: number; isBasic: boolean };
-type BlueprintCategoryFamily = { items: BlueprintCategoryItem[] };
+type BlueprintCategoryFamily = { familyId: string; kind: string; items: BlueprintCategoryItem[] };
 type BlueprintCategoryEntry = { families: BlueprintCategoryFamily[] };
-type BlueprintTierInfo = Record<string, { tier: number; isBasic: boolean }>;
+type BlueprintTierInfo = Record<
+  string,
+  { tier: number; isBasic: boolean; familyId: string; kind: string }
+>;
 
 // Resource/tool/blueprint ids are catalog keys (e.g. "iron_ore",
 // "blueprint_copper_anvil") - no per-id display-name lookup is wired to this
@@ -22,6 +25,20 @@ function formatResourceLabel(id: string): string {
     .split("_")
     .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
     .join(" ");
+}
+
+function getKindIcon(kind: string): string {
+  switch (kind) {
+    case "tool":
+      return "🔧";
+    case "weapon":
+    case "armor":
+    case "shield":
+    case "food":
+      return "📦";
+    default:
+      return "";
+  }
 }
 
 function ResourceList({
@@ -57,27 +74,54 @@ function IdList({
   emptyLabel: string;
   /** When given, prefixes each entry with "T1: "/"T2: "/... or "S: " for a starter. */
   tierInfo?: BlueprintTierInfo;
-  /** Starters first, then by tier ascending - requires `tierInfo`. */
+  /** Starters first, then by tier descending (highest first) - requires `tierInfo`. */
   sortByTier?: boolean;
 }) {
   if (ids.length === 0) return <p className={styles.inventoryEmpty}>{emptyLabel}</p>;
-  const sortedIds = sortByTier
+
+  const sortedIds = sortByTier && tierInfo
     ? [...ids].sort((a, b) => {
-        const infoA = tierInfo?.[a];
-        const infoB = tierInfo?.[b];
+        const infoA = tierInfo[a];
+        const infoB = tierInfo[b];
         if (!infoA || !infoB) return 0;
+        // Starters first
         if (infoA.isBasic !== infoB.isBasic) return infoA.isBasic ? -1 : 1;
-        return infoA.tier - infoB.tier;
+        // Then by tier descending (highest first)
+        return infoB.tier - infoA.tier;
       })
     : ids;
+
+  // Find highest tier for each family to grey out lower tiers
+  const highestTierByFamily: Record<string, number> = {};
+  if (tierInfo) {
+    for (const id of ids) {
+      const info = tierInfo[id];
+      if (info) {
+        const current = highestTierByFamily[info.familyId] ?? 0;
+        highestTierByFamily[info.familyId] = Math.max(current, info.tier);
+      }
+    }
+  }
+
   return (
     <div className={styles.inventoryDetailsList}>
       {sortedIds.map((id) => {
         const info = tierInfo?.[id];
         const prefix = info ? (info.isBasic ? "S: " : `T${info.tier}: `) : "";
+        const isGreyed =
+          info && !info.isBasic && highestTierByFamily[info.familyId] > info.tier;
+        const icon = info?.kind ? getKindIcon(info.kind) : "";
         return (
-          <span key={id}>
+          <span
+            key={id}
+            style={
+              isGreyed
+                ? { opacity: 0.5, color: "var(--text-dim)" }
+                : undefined
+            }
+          >
             {prefix}
+            {icon && <span style={{ marginRight: "0.25rem" }}>{icon}</span>}
             {formatResourceLabel(id)}
           </span>
         );
@@ -151,7 +195,12 @@ export function InventoryTab({
         for (const entry of data) {
           for (const family of entry.families) {
             for (const item of family.items) {
-              info[item.id] = { tier: item.tier, isBasic: item.isBasic };
+              info[item.id] = {
+                tier: item.tier,
+                isBasic: item.isBasic,
+                familyId: family.familyId,
+                kind: family.kind,
+              };
             }
           }
         }

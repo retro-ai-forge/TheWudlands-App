@@ -56,10 +56,13 @@ export interface CharacterClasses {
 export interface CharacterProfessions {
   prof1: string;
   lvl1: number;
+  exp1: number;
   prof2: string;
   lvl2: number;
+  exp2: number;
   prof3: string;
   lvl3: number;
+  exp3: number;
 }
 
 export interface CharacterAttributes {
