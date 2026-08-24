@@ -42,10 +42,15 @@ function getKindIcon(kind: string): string {
 }
 
 function getTierIndicator(tier: number): string {
-  if (tier >= 4) {
-    return "✨".repeat(tier - 3);
+  switch (tier) {
+    case 1: return "○";
+    case 2: return "●";
+    case 3: return "◉";
+    case 4: return "✦";
+    case 5: return "✨";
+    case 6: return "🌟";
+    default: return "";
   }
-  return "○".repeat(tier);
 }
 
 function getTierSymbolClass(tier: number): string {
