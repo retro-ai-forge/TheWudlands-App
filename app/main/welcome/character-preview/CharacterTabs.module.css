@@ -591,7 +591,7 @@
 
 .inventoryRow {
   display: grid;
-  grid-template-columns: auto auto 1fr auto;
+  grid-template-columns: 1.5rem 2rem 1fr auto;
   gap: 0.25rem;
   align-items: center;
   font-size: 0.9rem;
@@ -640,12 +640,20 @@
   font-size: 1.4em;
   letter-spacing: 0.03em;
   color: #d4af37;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
 }
 
 .tierSymbolStar {
   font-size: 1.2em;
   letter-spacing: -0.15em;
   color: #ffd700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
 }
 
 .inventoryRow span:last-child {
