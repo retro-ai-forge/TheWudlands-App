@@ -83,6 +83,9 @@
     select, input[type="text"] { min-width: 0; width: 100%; }
     .panel { padding: 10px; }
     .node { margin-left: 6px; padding-left: 8px; }
+    .tierButtons { gap: 2px; flex-wrap: wrap; }
+    .tierButton { width: 32px; height: 32px; font-size: 12px; }
+    .toggleLabel { font-size: 14px; }
   }
   .panel {
     background: var(--panel);
@@ -215,23 +218,31 @@
     display: none;
   }
   .toggleLabel {
-    background: var(--panel2);
     color: var(--text);
-    border: 2px solid var(--border);
-    border-radius: 6px;
-    padding: 6px 10px;
-    font-size: 14px;
+    font-size: 32px;
     font-weight: bold;
     transition: all 0.15s ease;
+    text-decoration: line-through;
+    cursor: pointer;
+    padding: 4px 8px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+  @keyframes pulse-zoom {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.15); }
   }
   .aestheticToggle input:checked + .toggleLabel {
-    border-color: var(--accent);
-    background: var(--panel);
-    color: var(--accent);
+    color: #5fb77d;
+    text-decoration: none;
+    font-size: 0;
+    animation: pulse-zoom 1.5s ease-in-out infinite;
   }
-  .aestheticToggle:hover .toggleLabel {
-    border-color: var(--accent);
-    color: var(--accent);
+  .aestheticToggle input:checked + .toggleLabel::after {
+    content: '✓';
+    font-size: 32px;
+    filter: drop-shadow(0 0 8px rgba(95, 183, 125, 0.8));
   }
   .note { color: var(--text-dim); font-size: 11px; margin: -8px 0 20px; }
   .chevron {
@@ -298,10 +309,6 @@
       <button class="tierButton" data-tier="4"><span class="tierSymbolT4">✦</span></button>
       <button class="tierButton" data-tier="5"><span class="tierSymbolT5">✨</span></button>
       <button class="tierButton" data-tier="6"><span class="tierSymbolT6">🌟</span></button>
-      <label class="aestheticToggle">
-        <input type="checkbox" id="aestheticCheckbox" checked>
-        <span class="toggleLabel">A</span>
-      </label>
     </div>
     <select id="tierSelect" style="display: none;">
       <option value="1">○</option>
@@ -314,8 +321,12 @@
   </div>
 
   <div class="layout">
-    <div class="panel">
+    <div class="panel" style="position: relative;">
       <h2>Recipe Tree</h2>
+      <label class="aestheticToggle" style="position: absolute; top: 0px; right: 0px;">
+        <input type="checkbox" id="aestheticCheckbox" checked>
+        <span class="toggleLabel">A</span>
+      </label>
       <div id="tree"><span class="empty">Select a recipe above.</span></div>
     </div>
     <div>
