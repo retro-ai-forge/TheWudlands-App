@@ -167,6 +167,32 @@
   .tierSymbolT4 { font-size: 1.6em; letter-spacing: -0.15em; color: #ffd700; }
   .tierSymbolT5 { font-size: 0.9em; letter-spacing: -0.15em; color: #ffd700; }
   .tierSymbolT6 { font-size: 0.8em; letter-spacing: -0.15em; color: #ffd700; }
+  .tierButtons {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+  }
+  .tierButton {
+    background: var(--panel2);
+    color: var(--text);
+    border: 2px solid var(--border);
+    border-radius: 6px;
+    padding: 6px 12px;
+    font-size: 18px;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    font-family: inherit;
+  }
+  .tierButton:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+  .tierButton.active {
+    border-color: var(--accent);
+    background: var(--panel);
+    color: var(--accent);
+    font-weight: bold;
+  }
   .note { color: var(--text-dim); font-size: 11px; margin: -8px 0 20px; }
   .chevron {
     display: inline-block;
@@ -223,7 +249,15 @@
   <div class="toolbar">
     <select id="recipeSelect"></select>
     <input type="text" id="filterBox" placeholder="filter list...">
-    <select id="tierSelect">
+    <div class="tierButtons">
+      <button class="tierButton active" data-tier="1">○</button>
+      <button class="tierButton" data-tier="2">●</button>
+      <button class="tierButton" data-tier="3">◉</button>
+      <button class="tierButton" data-tier="4">✦</button>
+      <button class="tierButton" data-tier="5">✨</button>
+      <button class="tierButton" data-tier="6">🌟</button>
+    </div>
+    <select id="tierSelect" style="display: none;">
       <option value="1">○</option>
       <option value="2">●</option>
       <option value="3">◉</option>
@@ -372,7 +406,8 @@ const filterBox = document.getElementById("filterBox");
 const tierSelect = document.getElementById("tierSelect");
 
 function currentTier() {
-  return parseInt(tierSelect.value, 10);
+  const activeBtn = document.querySelector(".tierButton.active");
+  return activeBtn ? parseInt(activeBtn.dataset.tier, 10) : 1;
 }
 
 const recipeFamIds = Object.keys(recipes).sort((a, b) => famLabel(a).localeCompare(famLabel(b)));
@@ -410,6 +445,18 @@ filterBox.addEventListener("input", () => {
   render(select.value, currentTier());
 });
 select.addEventListener("change", () => render(select.value, currentTier()));
+
+// Tier button handlers
+document.querySelectorAll(".tierButton").forEach(btn => {
+  btn.addEventListener("click", () => {
+    document.querySelectorAll(".tierButton").forEach(b => b.classList.remove("active"));
+    btn.classList.add("active");
+    tierSelect.value = btn.dataset.tier;
+    populateSelect(filterBox.value, currentTier());
+    render(select.value, currentTier());
+  });
+});
+
 tierSelect.addEventListener("change", () => {
   populateSelect(filterBox.value, currentTier());
   render(select.value, currentTier());
