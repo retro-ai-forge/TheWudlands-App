@@ -462,9 +462,14 @@ function isAestheticEnabled() {
 
 function stripFanciness(label) {
   if (!label) return label;
-  // If it's a blueprint, remove "Blueprint: " prefix
+  // If it's a blueprint, keep "Blueprint: " but remove the second word (fancy descriptor)
   if (label.startsWith("Blueprint: ")) {
-    return label.substring(11);
+    const rest = label.substring(11); // Remove "Blueprint: "
+    const words = rest.split(" ");
+    if (words.length > 1) {
+      return "Blueprint: " + words.slice(1).join(" ");
+    }
+    return label;
   }
   // Otherwise remove the first word (fancy descriptor)
   const words = label.split(" ");

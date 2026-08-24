@@ -422,6 +422,37 @@ function currentTier() {
   return activeBtn ? parseInt(activeBtn.dataset.tier, 10) : 1;
 }
 
+function isAestheticEnabled() {
+  return document.getElementById("aestheticCheckbox").checked;
+}
+
+function stripFanciness(label) {
+  if (!label) return label;
+  // If it's a blueprint, keep "Blueprint: " but remove the second word (fancy descriptor)
+  if (label.startsWith("Blueprint: ")) {
+    const rest = label.substring(11); // Remove "Blueprint: "
+    const words = rest.split(" ");
+    if (words.length > 1) {
+      return "Blueprint: " + words.slice(1).join(" ");
+    }
+    return label;
+  }
+  // Otherwise remove the first word (fancy descriptor)
+  const words = label.split(" ");
+  if (words.length > 1) {
+    return words.slice(1).join(" ");
+  }
+  return label;
+}
+
+function getDisplayLabel(label, category) {
+  if (isAestheticEnabled()) return label;
+  // Only strip fancy words from processed, final items, and blueprints
+  // Keep raw materials as-is (they need their descriptors like "iron", "copper", etc.)
+  if (category === "raw") return label;
+  return stripFanciness(label);
+}
+
 const recipeFamIds = Object.keys(recipes).sort((a, b) => famLabel(a).localeCompare(famLabel(b)));
 const groups = {};
 for (const famId of recipeFamIds) {
