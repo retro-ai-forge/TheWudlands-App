@@ -638,7 +638,7 @@
 
 .tierSymbolCircle {
   letter-spacing: 0.03em;
-  color: #d4af37;
+  color: #c07a3a;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -657,7 +657,7 @@
 .tierSymbolT1 {
   font-size: 1.4em;
   letter-spacing: 0.03em;
-  color: #d4af37;
+  color: #c07a3a;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -667,7 +667,7 @@
 .tierSymbolT2 {
   font-size: 1.4em;
   letter-spacing: 0.03em;
-  color: #d4af37;
+  color: #c07a3a;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -675,9 +675,9 @@
 }
 
 .tierSymbolT3 {
-  font-size: 1.4em;
+  font-size: 1.2em;
   letter-spacing: 0.03em;
-  color: #d4af37;
+  color: #c07a3a;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -685,7 +685,7 @@
 }
 
 .tierSymbolT4 {
-  font-size: 1.2em;
+  font-size: 1.6em;
   letter-spacing: -0.15em;
   color: #ffd700;
   display: flex;
@@ -695,7 +695,7 @@
 }
 
 .tierSymbolT5 {
-  font-size: 1.2em;
+  font-size: 1.0em;
   letter-spacing: -0.15em;
   color: #ffd700;
   display: flex;
@@ -705,7 +705,7 @@
 }
 
 .tierSymbolT6 {
-  font-size: 1.2em;
+  font-size: 0.8em;
   letter-spacing: -0.15em;
   color: #ffd700;
   display: flex;
