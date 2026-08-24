@@ -325,7 +325,6 @@ class BlueprintCategoryItemResponse(BaseModel):
     id: str
     name: str
     tier: int
-    isBasic: bool
 
 
 class BlueprintCategoryFamilyResponse(BaseModel):
