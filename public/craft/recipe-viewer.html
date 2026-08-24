@@ -169,7 +169,7 @@
   .tierSymbolT6 { font-size: 0.8em; letter-spacing: -0.15em; color: #ffd700; }
   .tierButtons {
     display: flex;
-    gap: 6px;
+    gap: 4px;
     align-items: center;
   }
   .tierButton {
@@ -177,18 +177,23 @@
     color: var(--text);
     border: 2px solid var(--border);
     border-radius: 6px;
-    padding: 4px 8px;
     cursor: pointer;
     transition: all 0.15s ease;
     font-family: inherit;
     display: flex;
     align-items: center;
     justify-content: center;
-    min-width: 36px;
-    height: 36px;
+    width: 40px;
+    height: 40px;
+    padding: 0;
+    line-height: 1;
   }
   .tierButton span {
-    display: inline-block;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100%;
   }
   .tierButton:hover {
     border-color: var(--accent);
