@@ -434,7 +434,7 @@
   padding: 0.5rem 0.1rem;
   border-bottom: 1px solid rgba(168, 153, 104, 0.15);
   color: #d4c9a8;
-  font-size: 1rem;
+  font-size: 0.9rem;
 }
 
 .attrDisplayValue {
@@ -745,11 +745,11 @@
   justify-content: space-between;
   align-items: center;
   width: 100%;
-  padding: 0.65rem 0.4rem;
+  padding: 0.4rem 0.4rem;
   background: #1a1a1a;
   color: #c07a3a;
   font-family: inherit;
-  font-size: 0.9rem;
+  font-size: 0.85rem;
   letter-spacing: 0.1em;
   text-transform: uppercase;
   cursor: pointer;
@@ -764,7 +764,7 @@
 }
 
 .accordionChevron {
-  font-size: 0.7rem;
+  font-size: 1.2rem;
   color: #7a6a3a;
   flex-shrink: 0;
 }

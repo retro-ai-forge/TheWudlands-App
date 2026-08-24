@@ -444,12 +444,13 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
+  gap: 1rem;
   padding: 0.55rem 0.25rem;
   border-bottom: 1px solid rgba(168, 153, 104, 0.2);
 }
 
 .attrLabel {
-  font-size: clamp(1.05rem, 2.8vw, 1.3rem);
+  font-size: clamp(0.95rem, 2.2vw, 1rem);
   color: #d4c9a8;
 }
 
@@ -469,12 +470,12 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  min-width: clamp(1.8rem, 5vh, 3.4rem);
-  min-height: clamp(1.8rem, 5vh, 3.4rem);
+  min-width: clamp(1.5rem, 4vh, 2.8rem);
+  min-height: clamp(1.5rem, 4vh, 2.8rem);
   padding: 0;
   background: transparent;
   border: none;
-  font-size: clamp(1.4rem, 4.2vh, 2.4rem);
+  font-size: clamp(1.1rem, 3.2vh, 1.9rem);
   line-height: 1;
   color: #e6b85c;
   text-shadow: 0 2px 3px rgba(0, 0, 0, 0.6), 0 0 10px rgba(230, 184, 92, 0.4);

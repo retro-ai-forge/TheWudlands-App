@@ -406,9 +406,9 @@ export default function Characters() {
                   {openAttributeCategory === category && (
                     <div className={styles.subAccordionBody}>
                       {attributes.map((attr) => (
-                        <div key={attr.id} className={styles.raceEntry}>
-                          <p className={styles.raceName}>{attr.name}</p>
-                          <p className={styles.raceDescription}>{attr.description}</p>
+                        <div key={attr.id} className={styles.attributeEntry}>
+                          <p className={styles.attributeName}>{attr.name}</p>
+                          <p className={styles.attributeDescription}>{attr.description}</p>
                         </div>
                       ))}
                     </div>

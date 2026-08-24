@@ -82,7 +82,6 @@
     .toolbar { flex-direction: column; align-items: stretch; gap: 8px; }
     select, input[type="text"] { min-width: 0; width: 100%; }
     .panel { padding: 10px; }
-    .node { margin-left: 6px; padding-left: 8px; }
     .tierButtons { gap: 2px; flex-wrap: wrap; }
     .tierButton { width: 32px; height: 32px; font-size: 12px; }
     .toggleLabel { font-size: 14px; }
@@ -110,7 +109,7 @@
     list-style: none;
   }
   .panel summary::-webkit-details-marker { display: none; }
-  .panel summary::before { content: "▸ "; display: inline-block; transition: transform 0.15s ease; }
+  .panel summary::before { content: "▸"; display: inline-block; transition: transform 0.15s ease; font-size: 16px; margin-right: 8px; }
   .panel[open] summary::before { transform: rotate(90deg); }
   .panel[open] summary { margin-bottom: 12px; }
   .empty {
@@ -118,19 +117,19 @@
     font-style: italic;
   }
   .node {
-    border-left: 2px solid var(--border);
-    margin-left: 10px;
-    padding-left: 12px;
+    border-left: none;
   }
-  #tree > .node { margin-left: 0; padding-left: 0; border-left: none; }
+  .node.child {
+    margin-left: 16px;
+  }
   .row {
     display: flex;
+    flex-wrap: wrap;
     align-items: center;
     gap: 8px;
-    padding: 4px 8px;
+    padding: 4px 0;
     border-radius: 4px;
     margin: 2px 0;
-    flex-wrap: wrap;
   }
   .row.raw { background: var(--raw-bg); }
   .row.processed { background: var(--processed-bg); }
@@ -147,29 +146,29 @@
   .fam { color: var(--text-dim); font-size: 11px; }
   .tag {
     font-size: 10px;
-    padding: 1px 6px;
+    padding: 1px 10px;
     border-radius: 10px;
     border: 1px solid;
     white-space: nowrap;
   }
   .tag.tool { border-color: var(--tool); color: #8fb3e8; }
-  .tag.blueprint { border-color: var(--blueprint); color: #c79ce8; }
+  .tag.blueprint { border-color: var(--blueprint); color: #e0b5f0; }
   .tag.unconsumed { border-color: var(--text-dim); color: var(--text-dim); }
   .tag.cat-raw { border-color: var(--raw); color: #7fd08a; }
   .tag.cat-processed { border-color: var(--processed); color: #e0c565; }
   .tag.cat-final { border-color: var(--final); color: #7ec8e3; }
-  .tag.cat-blueprint { border-color: var(--blueprint); color: #c79ce8; }
+  .tag.cat-blueprint { border-color: var(--blueprint); color: #e0b5f0; }
   .tag.tier { border-color: var(--accent); color: var(--accent); font-weight: bold; }
   /* Declared after the .tag.cat-* rules so it always wins that cascade tie -
      a missing tool/blueprint should read as missing regardless of which
      category tag it's combined with. */
-  .tag.missing { border-color: #e08a8a; color: #e08a8a; }
-  .tierSymbolT1 { font-size: 1.4em; letter-spacing: 0.03em; color: #c07a3a; }
-  .tierSymbolT2 { font-size: 1.4em; letter-spacing: 0.03em; color: #c07a3a; }
-  .tierSymbolT3 { font-size: 1.2em; letter-spacing: 0.03em; color: #c07a3a; }
-  .tierSymbolT4 { font-size: 1.6em; letter-spacing: -0.15em; color: #ffd700; }
-  .tierSymbolT5 { font-size: 0.9em; letter-spacing: -0.15em; color: #ffd700; }
-  .tierSymbolT6 { font-size: 0.8em; letter-spacing: -0.15em; color: #ffd700; }
+  .tag.missing { border-color: #c85555; color: #c85555; }
+  .tierSymbolT1 { font-size: 1.7em; letter-spacing: 0.03em; color: #c07a3a; }
+  .tierSymbolT2 { font-size: 1.7em; letter-spacing: 0.03em; color: #c07a3a; }
+  .tierSymbolT3 { font-size: 1.5em; letter-spacing: 0.03em; color: #c07a3a; }
+  .tierSymbolT4 { font-size: 2em; letter-spacing: -0.15em; color: #ffd700; }
+  .tierSymbolT5 { font-size: 1.2em; letter-spacing: -0.15em; color: #ffd700; }
+  .tierSymbolT6 { font-size: 1.1em; letter-spacing: -0.15em; color: #ffd700; }
   .tierButtons {
     display: flex;
     gap: 4px;
@@ -186,8 +185,8 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 40px;
-    height: 40px;
+    width: 43px;
+    height: 43px;
     padding: 0;
     line-height: 1;
   }
@@ -228,6 +227,8 @@
     display: inline-flex;
     align-items: center;
     justify-content: center;
+    filter: drop-shadow(0 0 6px rgba(228, 230, 238, 0.4));
+    animation: pulse-zoom 1.5s ease-in-out infinite;
   }
   @keyframes pulse-zoom {
     0%, 100% { transform: scale(1); }
@@ -242,7 +243,7 @@
   .aestheticToggle input:checked + .toggleLabel::after {
     content: '✓';
     font-size: 32px;
-    filter: drop-shadow(0 0 8px rgba(95, 183, 125, 0.8));
+    filter: drop-shadow(0 0 14px rgba(95, 183, 125, 1));
   }
   .note { color: var(--text-dim); font-size: 11px; margin: -8px 0 20px; }
   .chevron {
@@ -261,14 +262,18 @@
   th { color: var(--text-dim); font-weight: normal; border-bottom: 1px solid var(--border); text-align: right; }
   th:first-child { text-align: left; }
   th:nth-child(2) { text-align: center; }
+  td:nth-child(2) { text-align: center; }
   td.n { text-align: right; color: var(--accent); font-variant-numeric: tabular-nums; }
   /* Nothing missing - the character already has all of this material. */
   td.n.have-enough { color: #9be6a8; }
   tr + tr td { border-top: 1px solid var(--border); }
-  .legend { display: flex; flex-direction: column; gap: 6px; font-size: 12px; margin-bottom: 16px; }
-  .legend .row { display: flex; flex-wrap: nowrap; align-items: baseline; gap: 8px; padding: 2px 8px; }
-  .legend .row .tag { flex: 0 0 76px; text-align: center; }
-  .legend .row .legend-text { flex: 1 1 auto; min-width: 0; }
+  .legendTable { width: 100%; border-collapse: separate; border-spacing: 0 12px; font-size: 12px; margin-bottom: 16px; border: none; }
+  .legendTable tr { height: 18px; line-height: 18px; }
+  .legendTable td { vertical-align: middle; padding: 0; border: none; }
+  .legendTable td:first-child { text-align: center; width: 76px; display: flex; align-items: center; justify-content: center; padding-left: 8px; padding-right: 0; }
+  .legendTable td:first-child span { display: block; }
+  .legendTable td:last-child { padding-left: 12px; padding-right: 0; text-align: left; }
+  .tierLegend td:last-child { white-space: nowrap; }
   .toollist { display: flex; flex-wrap: wrap; gap: 6px; }
   /* Fixed to the corner (not inline at the top) so it stays reachable
      regardless of scroll position, same convention the game itself uses for
@@ -332,19 +337,19 @@
     <div>
       <details class="panel" style="margin-bottom:16px;">
         <summary>Legend</summary>
-        <div class="legend">
-          <div class="row final"><span class="tag cat-final">final</span><span class="legend-text">a separate finished item (▸ has its own recipe)</span></div>
-          <div class="row blueprint"><span class="tag cat-blueprint">blueprint</span><span class="legend-text">technique required, learned once and never consumed</span></div>
-          <div class="row processed"><span class="tag cat-processed">processed</span><span class="legend-text">crafted from raw</span></div>
-          <div class="row raw"><span class="tag cat-raw">raw</span><span class="legend-text">mined/gathered material</span></div>
-          <div class="row"><span class="tag missing">!</span><span class="legend-text">missing tool or blueprint</span></div>
-          <div class="row" style="margin-top: 12px;"><span class="tag" style="border: none; color: inherit;">○</span><span class="legend-text">Tier 1 (Mundane)</span></div>
-          <div class="row"><span class="tag" style="border: none; color: inherit;">●</span><span class="legend-text">Tier 2 (Mundane)</span></div>
-          <div class="row"><span class="tag" style="border: none; color: inherit;">◉</span><span class="legend-text">Tier 3 (Mundane)</span></div>
-          <div class="row"><span class="tag" style="border: none; color: inherit;">✦</span><span class="legend-text">Tier 4 (Enchantable)</span></div>
-          <div class="row"><span class="tag" style="border: none; color: inherit;">✨</span><span class="legend-text">Tier 5 (Enchantable)</span></div>
-          <div class="row"><span class="tag" style="border: none; color: inherit;">🌟</span><span class="legend-text">Tier 6 (Enchantable)</span></div>
-        </div>
+        <table class="legendTable">
+          <tr><td><span class="tag cat-final">final</span></td><td>a separate finished item (▸ has its own recipe)</td></tr>
+          <tr><td><span class="tag cat-blueprint">blueprint</span></td><td>technique required, learned once and never consumed</td></tr>
+          <tr><td><span class="tag cat-processed">processed</span></td><td>crafted from raw</td></tr>
+          <tr><td><span class="tag cat-raw">raw</span></td><td>gathered material</td></tr>
+          <tr><td><span class="tag missing">missing</span></td><td>missing tool/blueprint</td></tr>
+          <tr><td><span class="tierSymbolT1">○</span></td><td>Tier 1 (Mundane)</td></tr>
+          <tr><td><span class="tierSymbolT2">●</span></td><td>Tier 2 (Mundane)</td></tr>
+          <tr><td><span class="tierSymbolT3">◉</span></td><td>Tier 3 (Mundane)</td></tr>
+          <tr><td><span class="tierSymbolT4">✦</span></td><td>Tier 4 (Enchantable)</td></tr>
+          <tr><td><span class="tierSymbolT5">✨</span></td><td>Tier 5 (Enchantable)</td></tr>
+          <tr><td><span class="tierSymbolT6">🌟</span></td><td>Tier 6 (Enchantable)</td></tr>
+        </table>
       </details>
       <div class="panel" style="margin-bottom:16px;">
         <h2>Total Raw Materials</h2>
@@ -491,6 +496,10 @@ function stripFanciness(label) {
 }
 
 function getDisplayLabel(label, category) {
+  // Always strip "Blueprint: " prefix from blueprint items since we show the tag
+  if (category === "blueprint" && label.startsWith("Blueprint: ")) {
+    label = label.substring(11);
+  }
   if (isAestheticEnabled()) return label;
   // Only strip fancy words from processed, final items, and blueprints
   // Keep raw materials as-is (they need their descriptors like "iron", "copper", etc.)
@@ -512,14 +521,15 @@ function populateSelect(filterText, tier) {
   const ft = (filterText || "").toLowerCase();
   for (const cat of catOrder) {
     if (!groups[cat]) continue;
-    const matches = groups[cat].filter(f => famLabel(f, tier).toLowerCase().includes(ft));
+    const matches = groups[cat].filter(f => famLabel(f, tier).toLowerCase().includes(ft)).sort((a, b) => a.localeCompare(b));
     if (!matches.length) continue;
     const og = document.createElement("optgroup");
     og.label = cat;
     for (const famId of matches) {
       const opt = document.createElement("option");
       opt.value = famId;
-      opt.textContent = famLabel(famId, tier);
+      const label = famLabel(famId, tier);
+      opt.textContent = getDisplayLabel(label, cat);
       og.appendChild(opt);
     }
     select.appendChild(og);
@@ -571,14 +581,19 @@ function buildInteractiveNode(famId, qty, category, tier, isRoot) {
   const recipe = recipes[famId];
   const expandable = !!(recipe && recipe.ingredients && recipe.ingredients.length);
 
-  const wrapper = el("div", "node");
+  const wrapper = el("div", "node" + (!isRoot ? " child" : ""));
   const row = el("div", "row " + category + (isRoot ? " root" : "") + (expandable ? " expandable" : ""));
-  row.appendChild(el("span", "chevron" + (expandable ? "" : " spacer"), expandable ? "▸" : ""));
-  row.appendChild(el("span", "qty", qty + "x"));
+  if (!isRoot) {
+    row.appendChild(el("span", "chevron" + (expandable ? "" : " spacer"), expandable ? "▸" : ""));
+  }
+  if (!isRoot && category !== "blueprint") {
+    row.appendChild(el("span", "qty", qty + "x"));
+  }
   const displayLabel = getDisplayLabel(famLabel(famId, tier), category);
-  row.appendChild(el("span", "name", displayLabel));
-  if (isRoot) row.appendChild(el("span", "tag tier", "T" + tier));
-  row.appendChild(el("span", "tag cat-" + (category === "final" ? "final" : category), category));
+  const nameSpan = el("span", "name", displayLabel);
+  row.appendChild(nameSpan);
+  const tagCategory = isRoot ? "final" : category;
+  row.appendChild(el("span", "tag cat-" + (tagCategory === "final" ? "final" : tagCategory), tagCategory));
   if (recipe && recipe.tool) {
     const toolTag = el("span", "tag tool", "\u{1F528} " + recipe.tool);
     if (!ownsFamily(ownedTools, recipe.tool, tier)) toolTag.classList.add("missing");
@@ -630,11 +645,11 @@ function buildInteractiveNode(famId, qty, category, tier, isRoot) {
         populated = true;
       }
       childrenBox.style.display = "";
-      chevron.textContent = "▾";
+      if (chevron) chevron.textContent = "▾";
     },
     doCollapse: () => {
       childrenBox.style.display = "none";
-      chevron.textContent = "▸";
+      if (chevron) chevron.textContent = "▸";
       for (const c of childControllers) {
         if (c.isExpanded()) c.doCollapse();
       }
@@ -742,10 +757,6 @@ function render(famId, tier) {
   const rootController = buildInteractiveNode(famId, 1, rootCategory, tier, true);
   tree.appendChild(rootController.wrapper);
   if (rootController.expandable) {
-    rootController.row.addEventListener("click", () => {
-      if (rootController.isExpanded()) rootController.doCollapse();
-      else rootController.doExpand();
-    });
     rootController.doExpand();
   }
 

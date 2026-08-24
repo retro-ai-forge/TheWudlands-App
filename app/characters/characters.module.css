@@ -167,7 +167,7 @@
   background: #111108;
   color: #a89968;
   font-family: "Courier New", Courier, monospace;
-  font-size: 0.8rem;
+  font-size: 0.9rem;
   letter-spacing: 0.12em;
   text-transform: uppercase;
   cursor: pointer;
@@ -184,6 +184,30 @@
 .subAccordionBody {
   border-top: 1px solid #2a2018;
   background: #0a0a08;
+}
+
+.attributeEntry {
+  padding: 0.55rem 0.85rem;
+  border-bottom: 1px solid #1e1a10;
+  font-family: "Courier New", Courier, monospace;
+}
+
+.attributeEntry:last-child {
+  border-bottom: none;
+}
+
+.attributeEntry p:first-child {
+  font-size: 0.55rem !important;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #c07a3a;
+  margin-bottom: 0.5rem;
+}
+
+.attributeEntry p:last-child {
+  font-size: 0.65rem !important;
+  line-height: 1.5;
+  color: #d4c9a8;
 }
 
 .raceEntry {
@@ -214,7 +238,7 @@
 }
 
 .raceDescription {
-  font-size: 1rem;
+  font-size: 0.7rem;
   line-height: 1.5;
   color: #d4c9a8;
 }
