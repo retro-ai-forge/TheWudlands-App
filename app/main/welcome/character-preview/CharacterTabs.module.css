@@ -623,7 +623,7 @@
 
 .inventoryTable td:nth-child(2) {
   text-align: center;
-  width: 1.5rem;
+  width: 2rem;
 }
 
 .inventoryTable td:last-child {
@@ -695,7 +695,7 @@
 }
 
 .tierSymbolT5 {
-  font-size: 1.0em;
+  font-size: 0.9em;
   letter-spacing: -0.15em;
   color: #ffd700;
   display: flex;
