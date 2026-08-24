@@ -14,7 +14,7 @@
   {"id": "supreme_mana_potion", "name": "Supreme Mana Potion", "familyId": "mana_potion", "tier": 6},
 
   {"id": "simple_antidote_potion", "name": "Simple Antidote", "familyId": "antidote_potion", "tier": 1},
-  {"id": "basic_antidote_potion", "name": "Basic Antidote", "familyId": "antidote_potion", "tier": 2},
+  {"id": "common_antidote_potion", "name": "Common Antidote", "familyId": "antidote_potion", "tier": 2},
   {"id": "refined_antidote_potion", "name": "Refined Antidote", "familyId": "antidote_potion", "tier": 3},
   {"id": "potent_antidote_potion", "name": "Potent Antidote", "familyId": "antidote_potion", "tier": 4},
   {"id": "concentrated_antidote_potion", "name": "Concentrated Antidote", "familyId": "antidote_potion", "tier": 5},
