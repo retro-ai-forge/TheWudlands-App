@@ -177,11 +177,18 @@
     color: var(--text);
     border: 2px solid var(--border);
     border-radius: 6px;
-    padding: 6px 12px;
-    font-size: 18px;
+    padding: 4px 8px;
     cursor: pointer;
     transition: all 0.15s ease;
     font-family: inherit;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 36px;
+    height: 36px;
+  }
+  .tierButton span {
+    display: inline-block;
   }
   .tierButton:hover {
     border-color: var(--accent);
@@ -280,12 +287,12 @@
     <select id="recipeSelect"></select>
     <input type="text" id="filterBox" placeholder="filter list...">
     <div class="tierButtons">
-      <button class="tierButton active" data-tier="1">○</button>
-      <button class="tierButton" data-tier="2">●</button>
-      <button class="tierButton" data-tier="3">◉</button>
-      <button class="tierButton" data-tier="4">✦</button>
-      <button class="tierButton" data-tier="5">✨</button>
-      <button class="tierButton" data-tier="6">🌟</button>
+      <button class="tierButton active" data-tier="1"><span class="tierSymbolT1">○</span></button>
+      <button class="tierButton" data-tier="2"><span class="tierSymbolT2">●</span></button>
+      <button class="tierButton" data-tier="3"><span class="tierSymbolT3">◉</span></button>
+      <button class="tierButton" data-tier="4"><span class="tierSymbolT4">✦</span></button>
+      <button class="tierButton" data-tier="5"><span class="tierSymbolT5">✨</span></button>
+      <button class="tierButton" data-tier="6"><span class="tierSymbolT6">🌟</span></button>
       <label class="aestheticToggle">
         <input type="checkbox" id="aestheticCheckbox" checked>
         <span class="toggleLabel">A</span>
