@@ -309,7 +309,7 @@ class TrappingsBlueprintPoolResponse(BaseModel):
     """One blueprintPoolsByProfessionCount rule, paired with the blueprint
     items it makes eligible for the character's chosen professions."""
 
-    source: str = Field(..., description="'tool_basic' | 'tool' | 'item_basic' | 'item'")
+    source: str = Field(..., description="'tool' | 'item'")
     tier: int = Field(..., description="Blueprint tier this rule draws from")
     count: int = Field(..., description="How many distinct blueprints the player may pick from this pool")
     items: List[TrappingsItemResponse]
@@ -719,8 +719,8 @@ async def create_character(
 
     # Greedily match each pick against the pool it's eligible for, consuming
     # that pool's count - a blueprint id is never eligible for more than one
-    # pool (tool_basic/tool/item_basic/item are mutually exclusive by
-    # is_basic and catalog type), so match order doesn't matter.
+    # pool (its own fixed tier and catalog type pin it to exactly one
+    # tool/item x tier combination), so match order doesn't matter.
     remaining_by_pool = {i: pool.rule.count for i, pool in enumerate(blueprint_trappings.pools)}
     eligible_ids_by_pool = {i: {item.id for item in pool.items} for i, pool in enumerate(blueprint_trappings.pools)}
     for blueprint_id in payload.selectedBlueprints:

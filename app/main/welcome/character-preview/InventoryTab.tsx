@@ -176,7 +176,7 @@ export function InventoryTab({
 
   // Independent of the Crafting accordion above - folding the recipe viewer
   // has nothing to do with toggling between the character's and party's stock.
-  const [recipeViewerOpen, setRecipeViewerOpen] = useState(true);
+  const [recipeViewerOpen, setRecipeViewerOpen] = useState(false);
 
   // Blueprints are soulbound to the character (never move to the player's
   // shared pool), so both the regular and starter lists always count as

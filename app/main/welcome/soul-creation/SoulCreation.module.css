@@ -186,13 +186,38 @@
 
 /* The embedded recipe viewer's own <h1> is suppressed (see "?embedded=1" in
    SoulCreation.tsx) since it would just repeat this label - this is the
-   only heading the section actually gets. */
+   only heading the section actually gets. Doubles as the fold toggle,
+   mirroring InventoryTab.tsx's identical recipe-viewer heading/fold. */
 .recipeViewerHeading {
-  font-size: 0.85rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font: inherit;
+  font-size: 0.75rem;
   letter-spacing: 0.1em;
   text-transform: uppercase;
-  color: #a89968;
+  color: #8b90a3;
+  background: #12141a;
+  border: none;
+  cursor: pointer;
   margin: 1rem 0 0;
+  padding: 0.5rem 0.15rem 0.25rem 0.75rem;
+  /* Bleeds to the same edge as .recipeViewerFrame below (.content's 1.5rem
+     padding) so the grey background lines up flush with the iframe. */
+  width: calc(100% + 3rem);
+  margin-left: -1.5rem;
+  margin-right: -1.5rem;
+  box-sizing: border-box;
+  text-align: left;
+}
+
+.recipeViewerHeading:hover {
+  color: #c07a3a;
+}
+
+.recipeViewerChevron {
+  display: inline-block;
+  font-size: 0.75rem;
 }
 
 .recipeViewerFrame {
@@ -207,7 +232,7 @@
      real content height, so there's never dead grey space or an inner
      scrollbar, on top of the page itself (.contentScrollable) already
      being scrollable as a whole. */
-  margin-top: 1rem;
+  margin-top: 0;
   border: none;
   border-radius: 0;
 }

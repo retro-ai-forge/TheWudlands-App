@@ -27,6 +27,13 @@ const pinyonScript = Pinyon_Script({ subsets: ["latin"], weight: "400" });
 
 const PAGE_COUNT = 6;
 
+// Two professions from the same group (e.g. Mason + Potter, both
+// CraftStone) would double up on the same blueprint/resource pools rather
+// than broadening them, so profession picks must come from distinct groups.
+const PROFESSION_CATEGORY_BY_ID: Record<string, string> = Object.fromEntries(
+  PROFESSIONS.map((p) => [p.id, p.category])
+);
+
 // Page 5 (Trappings) — resource items the player may pick from, and how
 // many units of each tier they may spend, both derived server-side from
 // their chosen professions (see GET /api/auth/me/trappings-options). Kept
@@ -58,9 +65,7 @@ type TrappingsOptions = {
 const EMPTY_TRAPPINGS_OPTIONS: TrappingsOptions = { tierPools: {}, items: [], blueprintPools: [] };
 
 const BLUEPRINT_SOURCE_LABELS: Record<string, string> = {
-  tool_basic: "Starter Tool Blueprint",
   tool: "Tool Blueprint",
-  item_basic: "Starter Item Blueprint",
   item: "Item Blueprint",
 };
 
@@ -111,7 +116,7 @@ export function SoulCreation({
   const [trappingsLoaded, setTrappingsLoaded] = useState(false);
   const [selectedResources, setSelectedResources] = useState<Record<string, number>>({});
   // One combo box's pick, keyed by "<poolIndex>:<slotIndex>" - as many slots
-  // per pool as that pool's `count` (e.g. a "3"-profession tool_basic pool
+  // per pool as that pool's `count` (e.g. a "3"-profession tier-1 tool pool
   // with count:2 gets 2 independent combo boxes). Built into a flat
   // selectedBlueprints array (dropping empty picks) at submit time.
   const [blueprintSelections, setBlueprintSelections] = useState<Record<string, string>>({});
@@ -123,6 +128,7 @@ export function SoulCreation({
   const recipeViewerRef = useRef<HTMLIFrameElement>(null);
   const [recipeViewerSrc, setRecipeViewerSrc] = useState("");
   const [recipeViewerLoaded, setRecipeViewerLoaded] = useState(false);
+  const [recipeViewerOpen, setRecipeViewerOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
 
@@ -702,20 +708,27 @@ export function SoulCreation({
 
   // Only compares against slots that are currently active/unlocked — a
   // stale value left in a since-deactivated slot (e.g. age dragged back
-  // down) must not count as a clash.
+  // down) must not count as a clash. Compares by group, not exact id — two
+  // professions from the same group clash too, and this subsumes the exact
+  // same profession picked twice (same id -> same group).
   const isProfession1Duplicate =
     activeProfessionCount >= 1 &&
     profession1 !== "" &&
-    ((activeProfessionCount >= 2 && profession1 === profession2) ||
-      (activeProfessionCount >= 3 && profession1 === profession3));
+    ((activeProfessionCount >= 2 &&
+      PROFESSION_CATEGORY_BY_ID[profession1] === PROFESSION_CATEGORY_BY_ID[profession2]) ||
+      (activeProfessionCount >= 3 &&
+        PROFESSION_CATEGORY_BY_ID[profession1] === PROFESSION_CATEGORY_BY_ID[profession3]));
   const isProfession2Duplicate =
     activeProfessionCount >= 2 &&
     profession2 !== "" &&
-    (profession2 === profession1 || (activeProfessionCount >= 3 && profession2 === profession3));
+    (PROFESSION_CATEGORY_BY_ID[profession2] === PROFESSION_CATEGORY_BY_ID[profession1] ||
+      (activeProfessionCount >= 3 &&
+        PROFESSION_CATEGORY_BY_ID[profession2] === PROFESSION_CATEGORY_BY_ID[profession3]));
   const isProfession3Duplicate =
     activeProfessionCount >= 3 &&
     profession3 !== "" &&
-    (profession3 === profession1 || profession3 === profession2);
+    (PROFESSION_CATEGORY_BY_ID[profession3] === PROFESSION_CATEGORY_BY_ID[profession1] ||
+      PROFESSION_CATEGORY_BY_ID[profession3] === PROFESSION_CATEGORY_BY_ID[profession2]);
 
   const isPage1Ready =
     triangleActivated &&
@@ -1249,26 +1262,41 @@ export function SoulCreation({
               )}
               {submitError && <p className={styles.submitError}>{submitError}</p>}
               {recipeViewerSrc && (
-                <>
-                  <p className={styles.recipeViewerHeading}>Crafting Recipes</p>
-                  <iframe
-                    ref={recipeViewerRef}
-                    src={recipeViewerSrc}
-                    title="Crafting Recipe Viewer"
-                    className={styles.recipeViewerFrame}
-                    style={{ height: recipeViewerHeight }}
-                    onLoad={() => {
-                      const doc = recipeViewerRef.current?.contentWindow?.document;
-                      if (!doc?.body) return;
-                      setRecipeViewerHeight(doc.body.scrollHeight);
-                      const observer = new ResizeObserver(() => {
+                // A plain <div>, not a fragment - .content is a flex column
+                // with its own gap between children, which would otherwise
+                // insert a dead gap between the heading and the iframe on
+                // top of their own (zeroed) margins.
+                <div style={{ width: "100%" }}>
+                  <button
+                    type="button"
+                    className={styles.recipeViewerHeading}
+                    onClick={() => setRecipeViewerOpen((prev) => !prev)}
+                  >
+                    <span className={styles.recipeViewerChevron}>
+                      {recipeViewerOpen ? "▴" : "▾"}
+                    </span>
+                    Crafting Recipe Viewer
+                  </button>
+                  {recipeViewerOpen && (
+                    <iframe
+                      ref={recipeViewerRef}
+                      src={recipeViewerSrc}
+                      title="Crafting Recipe Viewer"
+                      className={styles.recipeViewerFrame}
+                      style={{ height: recipeViewerHeight }}
+                      onLoad={() => {
+                        const doc = recipeViewerRef.current?.contentWindow?.document;
+                        if (!doc?.body) return;
                         setRecipeViewerHeight(doc.body.scrollHeight);
-                      });
-                      observer.observe(doc.body);
-                      setRecipeViewerLoaded(true);
-                    }}
-                  />
-                </>
+                        const observer = new ResizeObserver(() => {
+                          setRecipeViewerHeight(doc.body.scrollHeight);
+                        });
+                        observer.observe(doc.body);
+                        setRecipeViewerLoaded(true);
+                      }}
+                    />
+                  )}
+                </div>
               )}
               <button
                 className={`${styles.navButton} ${styles.continueInline} ${

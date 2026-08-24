@@ -152,7 +152,6 @@
   .tag.tool { border-color: var(--tool); color: #8fb3e8; }
   .tag.blueprint { border-color: var(--blueprint); color: #c79ce8; }
   .tag.unconsumed { border-color: var(--text-dim); color: var(--text-dim); }
-  .tag.basic { border-color: #9be6a8; color: #9be6a8; }
   .tag.cat-raw { border-color: var(--raw); color: #7fd08a; }
   .tag.cat-processed { border-color: var(--processed); color: #e0c565; }
   .tag.cat-final { border-color: var(--final); color: #7ec8e3; }
@@ -239,7 +238,6 @@
           <div class="row blueprint"><span class="tag cat-blueprint">blueprint</span><span class="legend-text">technique required, learned once and never consumed</span></div>
           <div class="row processed"><span class="tag cat-processed">processed</span><span class="legend-text">crafted from raw</span></div>
           <div class="row raw"><span class="tag cat-raw">raw</span><span class="legend-text">mined/gathered material</span></div>
-          <div class="row"><span class="tag basic">(S)</span><span class="legend-text">starter blueprint exists</span></div>
           <div class="row"><span class="tag missing">!</span><span class="legend-text">missing tool or blueprint</span></div>
         </div>
       </details>
@@ -303,15 +301,13 @@ let ownedBlueprints = readIdListFromQuery("blueprints");
 
 // A recipe's `tool`/`blueprintFamilyId` reference a FAMILY (e.g. "anvil"),
 // not one specific tiered item - but owning a LOWER tier than what's
-// required doesn't satisfy it (a Copper Anvil can't stand in for an Iron
-// one). A basic/starter item counts as tier 1 only. Owning any tier >=
-// requiredTier is enough - a higher-tier tool/blueprint can always do what
-// a lower-tier one could.
+// required doesn't satisfy it (a Hollow Anvil can't stand in for an Iron
+// one). Owning any tier >= requiredTier is enough - a higher-tier
+// tool/blueprint can always do what a lower-tier one could.
 function ownsFamily(ownedSet, famId, requiredTier) {
   if (!ownedSet || !famId) return true; // no character context - don't flag anything as missing
   const f = families[famId];
   if (!f) return ownedSet.has(famId);
-  if (f.basic && requiredTier <= 1 && ownedSet.has(f.basic.id)) return true;
   return f.tiers.some(t => t.tier >= requiredTier && ownedSet.has(t.id));
 }
 
@@ -335,6 +331,10 @@ if (returnUrl) {
 if (new URLSearchParams(window.location.search).get("embedded")) {
   document.getElementById("pageTitle").style.display = "none";
   document.getElementById("pageSubtitle").style.display = "none";
+  // The embedding page's own fold heading already sits flush above this
+  // iframe (see its "?embedded=1" callers) - body's normal top padding
+  // would leave a dead gap between that heading and the toolbar below.
+  document.body.style.paddingTop = "10px";
 }
 
 function tierName(famId, tier) {
@@ -447,12 +447,6 @@ function buildInteractiveNode(famId, qty, category, tier, isRoot) {
       if (!populated) {
         if (recipe.blueprintFamilyId) {
           const bp = buildInteractiveNode(recipe.blueprintFamilyId, 1, "blueprint", tier, false);
-          const bpFam = families[recipe.blueprintFamilyId];
-          if (bpFam && bpFam.basic && tier === 1) {
-            const starterTag = el("span", "tag basic", "(S)");
-            starterTag.title = "Starter: " + bpFam.basic.name.replace("Blueprint: ", "");
-            bp.row.appendChild(starterTag);
-          }
           if (!ownsFamily(ownedBlueprints, recipe.blueprintFamilyId, tier)) {
             bp.row.querySelector(".tag.cat-blueprint")?.classList.add("missing");
           }

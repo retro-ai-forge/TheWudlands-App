@@ -42,24 +42,14 @@ def build_families() -> dict:
         for item in items:
             by_family.setdefault(item["familyId"], []).append(item)
         for family_id, family_items in by_family.items():
-            # A "starter" (blueprint_basic_*/basic_*) item shares its family's
-            # tier-1 slot with a regular tier-1 item - keep it out of `tiers`
-            # (which build_recipe-viewer.template.html indexes as tiers[tier-1],
-            # so two tier-1 entries would push every higher tier off by one)
-            # and expose it separately as an extra, not a replacement.
-            basic_item = next((it for it in family_items if "basic" in it["id"].split("_")), None)
-            regular_items = [it for it in family_items if it is not basic_item]
-            regular_items.sort(key=lambda x: x["tier"])
+            family_items = sorted(family_items, key=lambda x: x["tier"])
             families[family_id] = {
                 "category": category,
-                "name": regular_items[0]["name"] if regular_items else basic_item["name"],
+                "name": family_items[0]["name"],
                 "tiers": [
                     {"tier": it["tier"], "name": it["name"], "id": it["id"]}
-                    for it in regular_items
+                    for it in family_items
                 ],
-                "basic": (
-                    {"name": basic_item["name"], "id": basic_item["id"]} if basic_item else None
-                ),
             }
     return families
 
