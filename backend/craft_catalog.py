@@ -38,6 +38,7 @@ _CATALOG_FILES = {
     "food": "base-food.json",
     "potion": "base-potion.json",
     "misc": "base-items-misc.json",
+    "equipment": "base-items-equipment.json",
     "adventuring_gear": "base-adventuring-gear.json",
 }
 _FINAL_CATALOG_TYPES = {"armor", "shield", "weapon", "food", "potion", "misc", "adventuring_gear"}

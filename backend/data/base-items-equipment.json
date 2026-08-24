@@ -1,0 +1,8 @@
+[
+  {"id": "merchants_scale_1", "name": "Merchant's Scale", "familyId": "merchants_scale", "tier": 1},
+  {"id": "merchants_scale_2", "name": "Merchant's Scale", "familyId": "merchants_scale", "tier": 2},
+  {"id": "merchants_scale_3", "name": "Merchant's Scale", "familyId": "merchants_scale", "tier": 3},
+  {"id": "merchants_scale_4", "name": "Merchant's Scale", "familyId": "merchants_scale", "tier": 4},
+  {"id": "merchants_scale_5", "name": "Merchant's Scale", "familyId": "merchants_scale", "tier": 5},
+  {"id": "merchants_scale_6", "name": "Merchant's Scale", "familyId": "merchants_scale", "tier": 6}
+]

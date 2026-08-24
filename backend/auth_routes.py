@@ -37,6 +37,7 @@ from backend.players import (
 )
 from backend.balances import log_login_balances
 from backend.resources_catalog import RESOURCE_ITEMS_BY_ID, resolve_trapping_options
+from backend.processed_catalog import PROCESSED_RESOURCE_ITEMS_BY_ID
 from backend.craft_catalog import category_blueprint_summary, resolve_blueprint_trapping_options
 from backend.soul_slots import (
     SOUL_SLOTS,
@@ -353,6 +354,15 @@ class BlueprintCategoryResponse(BaseModel):
     families: List[BlueprintCategoryFamilyResponse]
 
 
+class ResourceItemResponse(BaseModel):
+    """A single resource item with its tier and family information."""
+
+    id: str
+    familyId: str
+    tier: int
+    resourceFamily: str = Field(..., description="The resource family (ore, wood, stone, etc.)")
+
+
 # Dependency: Extract and verify token from secure cookie
 async def get_current_address(request: Request) -> str:
     """
@@ -664,10 +674,10 @@ async def get_trappings_options(
 async def get_blueprint_categories():
     """
     Lore/reference data: every profession category's tool and item blueprint
-    families (tiers 1-3), grouped by category. Powers the "Blueprints"
-    accordion on the /characters lore page - unlike /me/trappings-options,
-    this isn't scoped to any character's chosen professions, so it needs no
-    auth.
+    families (tiers 1-6), grouped by category. Powers the "Blueprints"
+    accordion on the /characters lore page and blueprint tier info on character
+    preview - unlike /me/trappings-options, this isn't scoped to any character's
+    chosen professions, so it needs no auth.
     """
     return [
         BlueprintCategoryResponse(
@@ -681,8 +691,25 @@ async def get_blueprint_categories():
                 for family in entry["families"]
             ],
         )
-        for entry in category_blueprint_summary()
+        for entry in category_blueprint_summary(max_tier=6)
     ]
+
+
+@player_router.get("/resource-catalog", response_model=List[ResourceItemResponse])
+async def get_resource_catalog():
+    """
+    Reference data: all resource items (raw + processed) with their tier and family information.
+    Powers tier indicators and grouping in the inventory resource list.
+    """
+    raw_resources = [
+        ResourceItemResponse(id=item.id, familyId=item.family_id, tier=item.tier, resourceFamily=item.family_id)
+        for item in RESOURCE_ITEMS_BY_ID.values()
+    ]
+    processed_resources = [
+        ResourceItemResponse(id=item.id, familyId=item.family_id, tier=item.tier, resourceFamily=item.family_id)
+        for item in PROCESSED_RESOURCE_ITEMS_BY_ID.values()
+    ]
+    return raw_resources + processed_resources
 
 
 @player_router.post("/me/characters", response_model=PlayerDataResponse)

@@ -13,6 +13,7 @@ type BlueprintTierInfo = Record<
   string,
   { tier: number; isBasic: boolean; familyId: string; kind: string }
 >;
+type ResourceTierInfo = Record<string, { tier: number; family: string }>;
 
 // Resource/tool/blueprint ids are catalog keys (e.g. "iron_ore",
 // "blueprint_copper_anvil") - no per-id display-name lookup is wired to this
@@ -34,32 +35,153 @@ function getKindIcon(kind: string): string {
     case "weapon":
     case "armor":
     case "shield":
-    case "food":
+    case "equipment":
       return "📦";
     default:
       return "";
   }
 }
 
+function getTierIndicator(tier: number): string {
+  if (tier >= 4) {
+    return "✨".repeat(tier - 3);
+  }
+  return "○".repeat(tier);
+}
+
+function getTierSymbolClass(tier: number): string {
+  if (tier >= 4) {
+    return styles.tierSymbolStar;
+  }
+  return styles.tierSymbolCircle;
+}
+
+function isProcessedResource(id: string): boolean {
+  const processedPatterns = [
+    "metal_bar", "metal_ingot", "plank", "leather", "woven_cloth", "refined_ore",
+    "alloy_dust", "coal", "cut_crystal", "hardened_stick", "reinforced_frame",
+    "ground_spice", "dressed_meat", "herbal_extract", "distilled_essence",
+    "refined_clay", "ground_pigment", "lacquer", "quilted_thread", "trimmed_pelt",
+    "venomous_extract", "parchment", "pigment", "arcane_dust", "clockwork_mechanism",
+    "medicinal_paste", "cured_chitin"
+  ];
+  return processedPatterns.some(pattern => id.includes(pattern));
+}
+
+function getResourceIcon(id: string): string {
+  return isProcessedResource(id) ? "⚒️" : "🪨";
+}
+
 function ResourceList({
   balances,
   emptyLabel,
+  tierInfo,
 }: {
   balances: Record<string, number>;
   emptyLabel: string;
+  tierInfo?: ResourceTierInfo;
 }) {
-  const entries = Object.entries(balances).filter(([, qty]) => qty > 0);
+  let entries = Object.entries(balances).filter(([, qty]) => qty > 0);
   if (entries.length === 0) {
     return <p className={styles.inventoryEmpty}>{emptyLabel}</p>;
   }
+
+  // Split into processed and raw, group each by family
+  const groupByFamilyAndType = (items: Array<[string, number]>) => {
+    const familyGroups: Record<string, Array<[string, number]>> = {};
+    const highestTierByFamily: Record<string, number> = {};
+
+    for (const [id, qty] of items) {
+      const tierData = tierInfo?.[id];
+      const tier = tierData?.tier ?? 0;
+      const family = tierData?.family ?? id;
+
+      if (!familyGroups[family]) familyGroups[family] = [];
+      familyGroups[family].push([id, qty]);
+
+      if (tier > (highestTierByFamily[family] ?? 0)) {
+        highestTierByFamily[family] = tier;
+      }
+    }
+
+    // Sort families by highest tier descending
+    const sortedFamilies = Object.keys(familyGroups).sort((a, b) => {
+      const tierA = highestTierByFamily[a] ?? 0;
+      const tierB = highestTierByFamily[b] ?? 0;
+      if (tierB !== tierA) return tierB - tierA;
+      return a.localeCompare(b);
+    });
+
+    return { familyGroups, highestTierByFamily, sortedFamilies };
+  };
+
+  // Separate processed and raw
+  const processedItems = entries.filter(([id]) => isProcessedResource(id));
+  const rawItems = entries.filter(([id]) => !isProcessedResource(id));
+
+  const processedData = groupByFamilyAndType(processedItems);
+  const rawData = groupByFamilyAndType(rawItems);
+
+  const renderProcessedGroup = (familyGroups: Record<string, Array<[string, number]>>, highestTierByFamily: Record<string, number>, sortedFamilies: string[]) => {
+    return sortedFamilies.flatMap((family) => {
+      const familyItems = familyGroups[family].sort((a, b) => {
+        const tierA = tierInfo?.[a[0]]?.tier ?? 0;
+        const tierB = tierInfo?.[b[0]]?.tier ?? 0;
+        return tierB - tierA;
+      });
+
+      return familyItems.map(([id, qty]) => {
+        const icon = getResourceIcon(id);
+        const tierData = tierInfo?.[id];
+        const tier = tierData?.tier ?? 0;
+        const tierDisplay = tier ? getTierIndicator(tier) : "";
+        const isGreyed = tier > 0 && highestTierByFamily[family] > tier;
+        return (
+          <div className={styles.inventoryRow} key={id} style={isGreyed ? { opacity: 0.5, color: "var(--text-dim)" } : undefined}>
+            <span>{icon}</span>
+            <span className={tier > 0 ? getTierSymbolClass(tier) : styles.tierSymbol}>{tierDisplay}</span>
+            <span>{formatResourceLabel(id)}</span>
+            <span>{qty}</span>
+          </div>
+        );
+      });
+    });
+  };
+
+  const renderRawGroup = (familyGroups: Record<string, Array<[string, number]>>, highestTierByFamily: Record<string, number>, sortedFamilies: string[]) => {
+    return sortedFamilies.flatMap((family) => {
+      const familyItems = familyGroups[family].sort((a, b) => {
+        const tierA = tierInfo?.[a[0]]?.tier ?? 0;
+        const tierB = tierInfo?.[b[0]]?.tier ?? 0;
+        return tierB - tierA;
+      });
+
+      return familyItems.map(([id, qty]) => {
+        const icon = getResourceIcon(id);
+        const tierData = tierInfo?.[id];
+        const tier = tierData?.tier ?? 0;
+        const tierDisplay = tier ? getTierIndicator(tier) : "";
+        const isGreyed = tier > 0 && highestTierByFamily[family] > tier;
+        return (
+          <div className={styles.inventoryRow} key={id} style={isGreyed ? { opacity: 0.5, color: "var(--text-dim)" } : undefined}>
+            <span>{icon}</span>
+            <span className={tier > 0 ? getTierSymbolClass(tier) : styles.tierSymbol}>{tierDisplay}</span>
+            <span>{formatResourceLabel(id)}</span>
+            <span>{qty}</span>
+          </div>
+        );
+      });
+    });
+  };
+
+  const hasProcessed = processedData.sortedFamilies.length > 0;
+  const hasRaw = rawData.sortedFamilies.length > 0;
+
   return (
     <>
-      {entries.map(([id, qty]) => (
-        <div className={styles.inventoryRow} key={id}>
-          <span>{formatResourceLabel(id)}</span>
-          <span>{qty}</span>
-        </div>
-      ))}
+      {renderProcessedGroup(processedData.familyGroups, processedData.highestTierByFamily, processedData.sortedFamilies)}
+      {hasProcessed && hasRaw && <div className={styles.resourceDivider} />}
+      {renderRawGroup(rawData.familyGroups, rawData.highestTierByFamily, rawData.sortedFamilies)}
     </>
   );
 }
@@ -84,6 +206,12 @@ function IdList({
         const infoA = tierInfo[a];
         const infoB = tierInfo[b];
         if (!infoA || !infoB) return 0;
+        // Items first, then tools
+        if (infoA.kind !== infoB.kind) {
+          const aIsTool = infoA.kind === "tool";
+          const bIsTool = infoB.kind === "tool";
+          return aIsTool ? 1 : -1; // Non-tools (items) first
+        }
         // Starters first
         if (infoA.isBasic !== infoB.isBasic) return infoA.isBasic ? -1 : 1;
         // Then by tier descending (highest first)
@@ -105,25 +233,31 @@ function IdList({
 
   return (
     <div className={styles.inventoryDetailsList}>
-      {sortedIds.map((id) => {
+      {sortedIds.map((id, index) => {
         const info = tierInfo?.[id];
-        const prefix = info ? (info.isBasic ? "S: " : `T${info.tier}: `) : "";
+        const tierDisplay = info ? (info.isBasic ? "S" : getTierIndicator(info.tier)) : "";
         const isGreyed =
           info && !info.isBasic && highestTierByFamily[info.familyId] > info.tier;
         const icon = info?.kind ? getKindIcon(info.kind) : "";
+
+        // Add divider between items and tools
+        const prevInfo = index > 0 ? tierInfo?.[sortedIds[index - 1]] : null;
+        const showDivider =
+          index > 0 &&
+          info &&
+          prevInfo &&
+          prevInfo.kind !== info.kind &&
+          info.kind === "tool";
+
         return (
-          <span
-            key={id}
-            style={
-              isGreyed
-                ? { opacity: 0.5, color: "var(--text-dim)" }
-                : undefined
-            }
-          >
-            {prefix}
-            {icon && <span style={{ marginRight: "0.25rem" }}>{icon}</span>}
-            {formatResourceLabel(id)}
-          </span>
+          <div key={id}>
+            {showDivider && <div className={styles.resourceDivider} />}
+            <div className={styles.inventoryRow} style={isGreyed ? { opacity: 0.5, color: "var(--text-dim)" } : undefined}>
+              <span>{icon}</span>
+              <span className={tier > 0 ? getTierSymbolClass(tier) : styles.tierSymbol}>{tierDisplay}</span>
+              <span>{formatResourceLabel(id)}</span>
+            </div>
+          </div>
         );
       })}
     </div>
@@ -187,6 +321,10 @@ export function InventoryTab({
   // Fetched once - maps every blueprint id to its own tier/starter flag, so
   // the Blueprints Known lists below can show "T1: Copper Anvil" etc.
   const [blueprintTierInfo, setBlueprintTierInfo] = useState<BlueprintTierInfo>({});
+
+  // Resource tier info: id -> tier (for displaying tier indicators on resources)
+  const [resourceTierInfo, setResourceTierInfo] = useState<ResourceTierInfo>({});
+
   useEffect(() => {
     fetch("/api/auth/blueprint-categories")
       .then((res) => (res.ok ? res.json() : []))
@@ -207,6 +345,18 @@ export function InventoryTab({
         setBlueprintTierInfo(info);
       })
       .catch(() => setBlueprintTierInfo({}));
+
+    // Fetch resource tier information from the backend
+    fetch("/api/auth/resource-catalog")
+      .then((res) => (res.ok ? res.json() : []))
+      .then((data: Array<{ id: string; familyId: string; tier: number; resourceFamily: string }>) => {
+        const tierMap: ResourceTierInfo = {};
+        for (const item of data) {
+          tierMap[item.id] = { tier: item.tier, family: item.resourceFamily };
+        }
+        setResourceTierInfo(tierMap);
+      })
+      .catch(() => setResourceTierInfo({}));
   }, []);
 
   // Top-level accordion (this character's crafting stock vs. the party's) -
@@ -257,7 +407,7 @@ export function InventoryTab({
               openId={openCharacterSub}
               onToggle={toggleCharacterSub}
             >
-              <ResourceList balances={character.resourceBalances} emptyLabel="No materials carried." />
+              <ResourceList balances={character.resourceBalances} emptyLabel="No materials carried." tierInfo={resourceTierInfo} />
             </SubAccordionItem>
             <SubAccordionItem
               id="tools"
@@ -300,6 +450,7 @@ export function InventoryTab({
               <ResourceList
                 balances={playerResourceBalances}
                 emptyLabel="Nothing in the shared crafting stock."
+                tierInfo={resourceTierInfo}
               />
             </SubAccordionItem>
             <SubAccordionItem

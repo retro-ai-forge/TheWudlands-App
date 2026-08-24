@@ -60,7 +60,7 @@
   width: 100%;
   max-width: 56rem;
   margin: 0 auto;
-  padding: 2rem 1.5rem 12rem 1.5rem;
+  padding: 2.7rem 1.5rem 12rem 1.5rem;
   box-sizing: border-box;
 }
 
@@ -590,12 +590,31 @@
 }
 
 .inventoryRow {
-  display: flex;
-  justify-content: space-between;
+  display: grid;
+  grid-template-columns: auto auto 1fr auto;
+  gap: 0.25rem;
+  align-items: center;
   font-size: 0.9rem;
   color: #d4c9a8;
-  padding: 0.35rem 0;
-  border-bottom: 1px solid rgba(168, 153, 104, 0.15);
+  padding: 0.1rem 0;
+}
+
+.inventoryRow > span:first-child {
+  display: contents;
+}
+
+.tierSymbol {
+  display: inline-block;
+}
+
+.tierSymbolCircle {
+  font-size: 1.21em;
+  letter-spacing: 0.03em;
+}
+
+.tierSymbolStar {
+  font-size: 0.7em;
+  letter-spacing: -0.25em;
 }
 
 .inventoryRow span:last-child {
@@ -607,6 +626,12 @@
   font-size: 0.8rem;
   color: #7d7256;
   padding: 0.5rem 0;
+}
+
+.resourceDivider {
+  height: 2px;
+  background: linear-gradient(to right, transparent, #d4af37 20%, #d4af37 80%, transparent);
+  margin: 0.5rem 0;
 }
 
 /* Mirrors app/characters/page.tsx's accordion exactly (same palette/behavior

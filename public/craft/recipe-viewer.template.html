@@ -218,12 +218,12 @@
     <select id="recipeSelect"></select>
     <input type="text" id="filterBox" placeholder="filter list...">
     <select id="tierSelect">
-      <option value="1">Tier 1</option>
-      <option value="2">Tier 2</option>
-      <option value="3">Tier 3</option>
-      <option value="4">Tier 4</option>
-      <option value="5">Tier 5</option>
-      <option value="6">Tier 6</option>
+      <option value="1">○</option>
+      <option value="2">○○</option>
+      <option value="3">○○○</option>
+      <option value="4">✨</option>
+      <option value="5">✨✨</option>
+      <option value="6">✨✨✨</option>
     </select>
   </div>
 
@@ -233,7 +233,7 @@
       <div id="tree"><span class="empty">Select a recipe above.</span></div>
     </div>
     <div>
-      <details class="panel" open style="margin-bottom:16px;">
+      <details class="panel" style="margin-bottom:16px;">
         <summary>Legend</summary>
         <div class="legend">
           <div class="row final"><span class="tag cat-final">final</span><span class="legend-text">a separate finished item (▸ has its own recipe)</span></div>
@@ -241,6 +241,12 @@
           <div class="row processed"><span class="tag cat-processed">processed</span><span class="legend-text">crafted from raw</span></div>
           <div class="row raw"><span class="tag cat-raw">raw</span><span class="legend-text">mined/gathered material</span></div>
           <div class="row"><span class="tag missing">!</span><span class="legend-text">missing tool or blueprint</span></div>
+          <div class="row" style="margin-top: 12px;"><span class="tag" style="border: none; color: inherit;">○</span><span class="legend-text">Tier 1 (Mundane)</span></div>
+          <div class="row"><span class="tag" style="border: none; color: inherit;">○○</span><span class="legend-text">Tier 2 (Mundane)</span></div>
+          <div class="row"><span class="tag" style="border: none; color: inherit;">○○○</span><span class="legend-text">Tier 3 (Mundane)</span></div>
+          <div class="row"><span class="tag" style="border: none; color: inherit;">✨</span><span class="legend-text">Tier 4 (Enchanted)</span></div>
+          <div class="row"><span class="tag" style="border: none; color: inherit;">✨✨</span><span class="legend-text">Tier 5 (Enchanted)</span></div>
+          <div class="row"><span class="tag" style="border: none; color: inherit;">✨✨✨</span><span class="legend-text">Tier 6 (Enchanted)</span></div>
         </div>
       </details>
       <div class="panel" style="margin-bottom:16px;">
@@ -251,15 +257,15 @@
         </table>
       </div>
       <div class="panel" style="margin-bottom:16px;">
+        <h2>Tools Used</h2>
+        <div class="toollist" id="toolList"></div>
+      </div>
+      <div class="panel">
         <h2>Other Items Required</h2>
         <table id="finalTotals">
           <thead><tr><th>Item</th><th>Tier</th><th></th></tr></thead>
           <tbody></tbody>
         </table>
-      </div>
-      <div class="panel">
-        <h2>Tools Used</h2>
-        <div class="toollist" id="toolList"></div>
       </div>
     </div>
   </div>
@@ -424,7 +430,7 @@ function buildInteractiveNode(famId, qty, category, tier, isRoot) {
   row.appendChild(el("span", "chevron" + (expandable ? "" : " spacer"), expandable ? "▸" : ""));
   row.appendChild(el("span", "qty", qty + "x"));
   row.appendChild(el("span", "name", famLabel(famId, tier)));
-  row.appendChild(el("span", "tag tier", "T" + tier));
+  if (isRoot) row.appendChild(el("span", "tag tier", "T" + tier));
   row.appendChild(el("span", "tag cat-" + (category === "final" ? "final" : category), category));
   if (recipe && recipe.tool) {
     const toolTag = el("span", "tag tool", "\u{1F528} " + recipe.tool);

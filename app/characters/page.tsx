@@ -11,6 +11,27 @@ type BlueprintCategoryItem = { id: string; name: string; tier: number; isBasic: 
 type BlueprintCategoryFamily = { familyId: string; kind: string; items: BlueprintCategoryItem[] };
 type BlueprintCategoryEntry = { category: string; families: BlueprintCategoryFamily[] };
 
+function getTierIndicator(tier: number): string {
+  if (tier >= 4) {
+    return "✨".repeat(tier - 3);
+  }
+  return "○".repeat(tier);
+}
+
+function getKindIcon(kind: string): string {
+  switch (kind) {
+    case "tool":
+      return "🔧";
+    case "weapon":
+    case "armor":
+    case "shield":
+    case "equipment":
+      return "📦";
+    default:
+      return "";
+  }
+}
+
 // Past 19 letters a line (including its "T1:"/"S:" label, always 4 chars)
 // gets crowded - if the display name's last word just repeats the family
 // headline above it (e.g. "Master Butcher's Bangers" under the "bangers"
@@ -274,7 +295,7 @@ export default function Characters() {
             className={styles.accordionHeader}
             onClick={() => toggleSection("blueprints")}
           >
-            <span>[ Blueprints Starter ]</span>
+            <span>[ Blueprints ]</span>
             <span className={styles.accordionChevron}>{openSection === "blueprints" ? "▴" : "▾"}</span>
           </button>
           {openSection === "blueprints" && (
@@ -282,8 +303,16 @@ export default function Characters() {
               <p className={styles.sectionIntro}>
                 A trade leaves you with more than know-how — it leaves you with the plans to build its
                 tools and wares. What your professions unlock here is what you may carry into the world
-                at creation, up through Tier 1, Tier 2, and Tier 3 — abbreviated below as T1, T2, T3, with
-                some starters marked S.
+                at creation.
+              </p>
+              <p className={styles.sectionIntro}>
+                <strong>Legend:</strong>
+                <br />
+                <strong>🔧</strong> = Tool | <strong>📦</strong> = Item (weapon, armor, shield, special equipment)
+                <br />
+                <strong>○</strong> = Mundane (Tier 1) | <strong>○○</strong> = Mundane (Tier 2) | <strong>○○○</strong> = Mundane (Tier 3)
+                <br />
+                <strong>✨</strong> = Enchanted (Tier 4) | <strong>✨✨</strong> = Enchanted (Tier 5) | <strong>✨✨✨</strong> = Enchanted (Tier 6)
               </p>
               {blueprintCategories.map((entry) => (
                 <div key={entry.category} className={styles.subAccordionItem}>
@@ -314,12 +343,12 @@ export default function Characters() {
                         entry.families.map((family) => (
                           <div key={family.familyId} className={styles.raceEntry}>
                             <p className={styles.raceName}>
-                              {family.familyId.replace(/_/g, " ")}{" "}
+                              {getKindIcon(family.kind)} {family.familyId.replace(/_/g, " ")}{" "}
                               <span className={styles.blueprintKind}>{family.kind}</span>
                             </p>
                             <div className={styles.raceDescription}>
                               {family.items.map((item) => {
-                                const label = item.isBasic ? "S" : `T${item.tier}`;
+                                const label = item.isBasic ? "S" : getTierIndicator(item.tier);
                                 const displayName = trimRedundantLastWord(
                                   label,
                                   item.name.replace("Blueprint: ", ""),
@@ -328,7 +357,7 @@ export default function Characters() {
                                 );
                                 return (
                                   <p key={item.id} className={styles.blueprintItemLine}>
-                                    {label}: {displayName}
+                                    {label} {displayName}
                                   </p>
                                 );
                               })}
