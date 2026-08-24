@@ -54,10 +54,15 @@ function getTierIndicator(tier: number): string {
 }
 
 function getTierSymbolClass(tier: number): string {
-  if (tier >= 4) {
-    return styles.tierSymbolStar;
+  switch (tier) {
+    case 1: return styles.tierSymbolT1;
+    case 2: return styles.tierSymbolT2;
+    case 3: return styles.tierSymbolT3;
+    case 4: return styles.tierSymbolT4;
+    case 5: return styles.tierSymbolT5;
+    case 6: return styles.tierSymbolT6;
+    default: return styles.tierSymbol;
   }
-  return styles.tierSymbolCircle;
 }
 
 function isProcessedResource(id: string): boolean {
