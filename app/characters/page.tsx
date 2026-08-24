@@ -312,7 +312,7 @@ export default function Characters() {
                 <br />
                 <strong>○</strong> = Mundane (Tier 1) | <strong>○○</strong> = Mundane (Tier 2) | <strong>○○○</strong> = Mundane (Tier 3)
                 <br />
-                <strong>✨</strong> = Enchanted (Tier 4) | <strong>✨✨</strong> = Enchanted (Tier 5) | <strong>✨✨✨</strong> = Enchanted (Tier 6)
+                <strong>✨</strong> = Enchantable (Tier 4) | <strong>✨✨</strong> = Enchantable (Tier 5) | <strong>✨✨✨</strong> = Enchantable (Tier 6)
               </p>
               {blueprintCategories.map((entry) => (
                 <div key={entry.category} className={styles.subAccordionItem}>

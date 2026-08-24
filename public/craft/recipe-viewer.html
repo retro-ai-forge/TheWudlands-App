@@ -193,6 +193,34 @@
     color: var(--accent);
     font-weight: bold;
   }
+  .aestheticToggle {
+    display: flex;
+    align-items: center;
+    margin-left: 4px;
+    cursor: pointer;
+  }
+  .aestheticToggle input {
+    display: none;
+  }
+  .toggleLabel {
+    background: var(--panel2);
+    color: var(--text);
+    border: 2px solid var(--border);
+    border-radius: 6px;
+    padding: 6px 10px;
+    font-size: 14px;
+    font-weight: bold;
+    transition: all 0.15s ease;
+  }
+  .aestheticToggle input:checked + .toggleLabel {
+    border-color: var(--accent);
+    background: var(--panel);
+    color: var(--accent);
+  }
+  .aestheticToggle:hover .toggleLabel {
+    border-color: var(--accent);
+    color: var(--accent);
+  }
   .note { color: var(--text-dim); font-size: 11px; margin: -8px 0 20px; }
   .chevron {
     display: inline-block;
@@ -258,6 +286,10 @@
       <button class="tierButton" data-tier="4">✦</button>
       <button class="tierButton" data-tier="5">✨</button>
       <button class="tierButton" data-tier="6">🌟</button>
+      <label class="aestheticToggle">
+        <input type="checkbox" id="aestheticCheckbox" checked>
+        <span class="toggleLabel">A</span>
+      </label>
     </div>
     <select id="tierSelect" style="display: none;">
       <option value="1">○</option>
@@ -412,6 +444,32 @@ function currentTier() {
   return activeBtn ? parseInt(activeBtn.dataset.tier, 10) : 1;
 }
 
+function isAestheticEnabled() {
+  return document.getElementById("aestheticCheckbox").checked;
+}
+
+function stripFanciness(label) {
+  if (!label) return label;
+  // If it's a blueprint, remove "Blueprint: " prefix
+  if (label.startsWith("Blueprint: ")) {
+    return label.substring(11);
+  }
+  // Otherwise remove the first word (fancy descriptor)
+  const words = label.split(" ");
+  if (words.length > 1) {
+    return words.slice(1).join(" ");
+  }
+  return label;
+}
+
+function getDisplayLabel(label, category) {
+  if (isAestheticEnabled()) return label;
+  // Only strip fancy words from processed, final items, and blueprints
+  // Keep raw materials as-is (they need their descriptors like "iron", "copper", etc.)
+  if (category === "raw") return label;
+  return stripFanciness(label);
+}
+
 const recipeFamIds = Object.keys(recipes).sort((a, b) => famLabel(a).localeCompare(famLabel(b)));
 const groups = {};
 for (const famId of recipeFamIds) {
@@ -464,6 +522,11 @@ tierSelect.addEventListener("change", () => {
   render(select.value, currentTier());
 });
 
+document.getElementById("aestheticCheckbox").addEventListener("change", () => {
+  populateSelect(filterBox.value, currentTier());
+  render(select.value, currentTier());
+});
+
 function el(tag, cls, text) {
   const e = document.createElement(tag);
   if (cls) e.className = cls;
@@ -484,7 +547,8 @@ function buildInteractiveNode(famId, qty, category, tier, isRoot) {
   const row = el("div", "row " + category + (isRoot ? " root" : "") + (expandable ? " expandable" : ""));
   row.appendChild(el("span", "chevron" + (expandable ? "" : " spacer"), expandable ? "▸" : ""));
   row.appendChild(el("span", "qty", qty + "x"));
-  row.appendChild(el("span", "name", famLabel(famId, tier)));
+  const displayLabel = getDisplayLabel(famLabel(famId, tier), category);
+  row.appendChild(el("span", "name", displayLabel));
   if (isRoot) row.appendChild(el("span", "tag tier", "T" + tier));
   row.appendChild(el("span", "tag cat-" + (category === "final" ? "final" : category), category));
   if (recipe && recipe.tool) {
@@ -592,6 +656,8 @@ function renderTable(tableId, totals, tier, showMissing, checkBlueprint) {
   const tbody = document.querySelector("#" + tableId + " tbody");
   tbody.innerHTML = "";
   const entries = Object.entries(totals).sort((a, b) => b[1] - a[1]);
+  // Determine category from tableId
+  const category = tableId === "rawTotals" ? "raw" : "final";
   if (!entries.length) {
     const tr = document.createElement("tr");
     const td = el("td", "empty", "—");
@@ -602,7 +668,9 @@ function renderTable(tableId, totals, tier, showMissing, checkBlueprint) {
   }
   for (const [famId, qty] of entries) {
     const tr = document.createElement("tr");
-    const nameCell = el("td", "", famLabel(famId, tier));
+    const label = famLabel(famId, tier);
+    const displayLabel = getDisplayLabel(label, category);
+    const nameCell = el("td", "", displayLabel);
     if (checkBlueprint) {
       const recipe = recipes[famId];
       const bpFamId = recipe && recipe.blueprintFamilyId;
