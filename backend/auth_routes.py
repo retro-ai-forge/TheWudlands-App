@@ -231,8 +231,14 @@ class PlayerDataResponse(BaseModel):
     resourceBalances: Dict[str, int] = Field(
         default_factory=dict, description="Shared resource vault, pooled across this player's characters"
     )
-    tools: Dict[str, int] = Field(
-        default_factory=dict, description="Tools this player owns (id -> quantity), shared across all their characters"
+    inventory: dict = Field(
+        default_factory=lambda: {
+            "tools": {},
+            "rawResources": {},
+            "processedResources": {},
+            "items": {},
+        },
+        description="Shared inventory (tools, rawResources, processedResources, items) pooled across all their characters",
     )
 
 

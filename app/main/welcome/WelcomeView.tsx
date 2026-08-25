@@ -72,7 +72,7 @@ export function WelcomeView() {
       .then((data) => {
         setCharacters(data?.characters ?? []);
         setPlayerResourceBalances(data?.resourceBalances ?? {});
-        setPlayerTools(data?.tools ?? {});
+        setPlayerTools(data?.inventory?.tools ?? {});
       })
       .catch(() => setCharacters([]));
   };

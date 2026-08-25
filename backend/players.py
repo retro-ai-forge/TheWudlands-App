@@ -30,13 +30,14 @@ class Player:
     # Shared resource storage (a vault) - separate from each character's own
     # resourceBalances, and pooled across every character this player owns.
     resource_balances: Dict[str, int] = field(default_factory=dict)
-    # Tools this player owns, keyed by tool id, stacked as a quantity (e.g.
-    # {"bronze_anvil": 2}) - shared across every character this player owns,
-    # the same way resource_balances is a pooled vault rather than a
-    # per-character stock. Unlike blueprints (Character.blueprints - what a
-    # specific character has learned to craft), a physical tool isn't tied
-    # to any one character's knowledge.
-    tools: Dict[str, int] = field(default_factory=dict)
+    # Player inventory: tools, raw resources, processed resources, and items
+    # shared across every character this player owns, pooled in a shared vault
+    inventory: dict = field(default_factory=lambda: {
+        "tools": {},
+        "rawResources": {},
+        "processedResources": {},
+        "items": {},
+    })
 
     def to_dict(self) -> dict:
         return {
@@ -44,7 +45,7 @@ class Player:
             "firstLoginAt": self.first_login_at.isoformat(),
             "characters": self.characters,
             "resourceBalances": self.resource_balances,
-            "tools": self.tools,
+            "inventory": self.inventory,
         }
 
 
@@ -54,12 +55,28 @@ def _as_utc(value: datetime) -> datetime:
 
 
 def _doc_to_player(doc: dict) -> Player:
+    # Support migration from old "tools" field to new "inventory.tools"
+    inventory = doc.get("inventory", {})
+    if not inventory and "tools" in doc:
+        # Migrate old tools field into new inventory structure
+        inventory = {
+            "tools": doc.get("tools", {}),
+            "rawResources": {},
+            "processedResources": {},
+            "items": {},
+        }
+
     return Player(
         address=doc["address"],
         first_login_at=_as_utc(doc["first_login_at"]),
         characters=doc.get("characters", []),
         resource_balances=doc.get("resourceBalances", {}),
-        tools=doc.get("tools", {}),
+        inventory=inventory or {
+            "tools": {},
+            "rawResources": {},
+            "processedResources": {},
+            "items": {},
+        },
     )
 
 
@@ -78,7 +95,12 @@ async def get_or_create_player(address: str) -> Player:
         "address": address,
         "first_login_at": datetime.now(timezone.utc),
         "characters": [],
-        "tools": {},
+        "inventory": {
+            "tools": {},
+            "rawResources": {},
+            "processedResources": {},
+            "items": {},
+        },
     }
     await db.players.insert_one(doc)
     return _doc_to_player(doc)
@@ -227,7 +249,7 @@ async def grant_shared_resource(address: str, resource_id: str, amount: int) -> 
 
 # The player's shared tool pool, stacked and checked out/in identically
 # across all characters.
-_TOOL_POOLS = ("tools",)
+_TOOL_POOLS = ("inventory.tools",)
 
 
 def _validate_tool_pool(pool: str) -> None:
