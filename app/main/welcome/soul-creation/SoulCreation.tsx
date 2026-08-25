@@ -149,8 +149,11 @@ export function SoulCreation({
       }
     }
 
+    console.log("Selected blueprints:", selectedBlueprintIds);
+    console.log("Required material families:", Array.from(requiredIds));
+    console.log("Available items:", trappingsOptions.items.map(i => ({ id: i.id, name: i.name, familyId: i.familyId })));
     setRequiredMaterialIds(requiredIds);
-  }, [blueprintSelections, blueprintMaterials]);
+  }, [blueprintSelections, blueprintMaterials, trappingsOptions.items]);
 
   // The embedded recipe viewer's own content height, in px - the iframe is
   // same-origin, so its body height can be read directly and mirrored onto
