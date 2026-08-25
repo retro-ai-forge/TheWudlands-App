@@ -64,6 +64,18 @@ type TrappingsOptions = {
 
 const EMPTY_TRAPPINGS_OPTIONS: TrappingsOptions = { tierPools: {}, items: [], blueprintPools: [] };
 
+function getTierIndicator(tier: number): string {
+  switch (tier) {
+    case 1: return "○";
+    case 2: return "●";
+    case 3: return "◉";
+    case 4: return "✦";
+    case 5: return "✨";
+    case 6: return "🌟";
+    default: return "";
+  }
+}
+
 const BLUEPRINT_SOURCE_LABELS: Record<string, string> = {
   tool: "Tool Blueprint",
   item: "Item Blueprint",
@@ -1227,6 +1239,9 @@ export function SoulCreation({
                             return (
                               <div key={item.id} className={styles.trappingsRow}>
                                 <div className={styles.trappingsItemInfo}>
+                                  <span style={{ fontSize: "1.2em", marginRight: "0.3rem" }}>
+                                    {getTierIndicator(item.tier)}
+                                  </span>
                                   <span
                                     className={styles.trappingsItemName}
                                     style={isRelevant ? { color: "#4ade80", fontWeight: "bold" } : undefined}
