@@ -212,6 +212,7 @@ function IdList({
   emptyLabel,
   tierInfo,
   sortByTier,
+  textColor,
 }: {
   ids: string[];
   emptyLabel: string;
@@ -219,6 +220,8 @@ function IdList({
   tierInfo?: BlueprintTierInfo;
   /** Sort by tier descending (highest first) - requires `tierInfo`. */
   sortByTier?: boolean;
+  /** Optional text color for item labels. */
+  textColor?: string;
 }) {
   if (ids.length === 0) return <p className={styles.inventoryEmpty}>{emptyLabel}</p>;
 
@@ -273,7 +276,12 @@ function IdList({
             <div className={styles.inventoryRow}>
               <span>{icon}</span>
               <span className={info?.tier ? getTierSymbolClass(info.tier) : styles.tierSymbol}>{tierDisplay}</span>
-              <span style={isGreyed ? { opacity: 0.5, color: "#7d7256" } : undefined}>{formatResourceLabel(id)}</span>
+              <span style={{
+                ...(isGreyed ? { opacity: 0.5, color: "#7d7256" } : {}),
+                ...(textColor && !isGreyed ? { color: textColor } : {}),
+              }}>
+                {formatResourceLabel(id)}
+              </span>
             </div>
           </div>
         );
@@ -442,7 +450,7 @@ export function InventoryTab({
                 openId={openCharacterSub}
                 onToggle={toggleCharacterSub}
               >
-                <IdList ids={knownBlueprints} emptyLabel="" tierInfo={blueprintTierInfo} sortByTier />
+                <IdList ids={knownBlueprints} emptyLabel="" tierInfo={blueprintTierInfo} sortByTier textColor="#7eb8ff" />
               </SubAccordionItem>
             )}
           </div>
