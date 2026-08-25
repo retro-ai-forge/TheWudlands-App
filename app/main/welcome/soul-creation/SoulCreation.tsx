@@ -122,16 +122,22 @@ export function SoulCreation({
   const [requiredMaterialIds, setRequiredMaterialIds] = useState<Set<string>>(new Set());
   // Cache for blueprint materials mapping
   const [blueprintMaterials, setBlueprintMaterials] = useState<Record<string, string[]>>({});
+  // Blueprint ID to family ID mapping
+  const [blueprintIdMapping, setBlueprintIdMapping] = useState<Record<string, string>>({});
 
   // Load blueprint materials mapping once on mount
   useEffect(() => {
-    fetch("/data/blueprint-raw-materials.json")
-      .then(res => res.json())
-      .then(data => {
-        console.log("Blueprint materials loaded:", Object.keys(data).length, "blueprints");
-        setBlueprintMaterials(data);
+    Promise.all([
+      fetch("/data/blueprint-raw-materials.json").then(res => res.json()),
+      fetch("/data/blueprint-id-mapping.json").then(res => res.json())
+    ])
+      .then(([materials, mapping]) => {
+        console.log("Blueprint materials loaded:", Object.keys(materials).length, "blueprints");
+        console.log("Blueprint ID mapping loaded:", Object.keys(mapping).length, "blueprint variants");
+        setBlueprintMaterials(materials);
+        setBlueprintIdMapping(mapping);
       })
-      .catch(err => console.error("Failed to load blueprint materials:", err));
+      .catch(err => console.error("Failed to load blueprint data:", err));
   }, []);
 
   // Update required materials whenever blueprintSelections changes
@@ -145,7 +151,9 @@ export function SoulCreation({
     const requiredIds = new Set<string>();
 
     for (const blueprintId of selectedBlueprintIds) {
-      const materials = blueprintMaterials[blueprintId] || [];
+      // Map variant ID to family ID if needed
+      const familyId = blueprintIdMapping[blueprintId] || blueprintId;
+      const materials = blueprintMaterials[familyId] || [];
       if (Array.isArray(materials)) {
         // New format: array of raw material family IDs
         materials.forEach(materialId => requiredIds.add(materialId));
@@ -154,9 +162,10 @@ export function SoulCreation({
 
     console.log("Selected blueprints:", selectedBlueprintIds);
     console.log("Blueprint materials loaded:", Object.keys(blueprintMaterials).length > 0);
+    console.log("Blueprint ID mapping loaded:", Object.keys(blueprintIdMapping).length > 0);
     console.log("Required material families:", Array.from(requiredIds));
     setRequiredMaterialIds(requiredIds);
-  }, [blueprintSelections, blueprintMaterials]);
+  }, [blueprintSelections, blueprintMaterials, blueprintIdMapping]);
 
   // The embedded recipe viewer's own content height, in px - the iframe is
   // same-origin, so its body height can be read directly and mirrored onto
