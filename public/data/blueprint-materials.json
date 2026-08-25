@@ -1,225 +1,225 @@
 {
-  "blueprint_wooden_shield": [
-    "plank",
-    "leather"
-  ],
-  "blueprint_reinforced_wooden_shield": [
-    "plank",
-    "metal_bar"
-  ],
-  "blueprint_iron_shield": [
-    "metal_bar",
-    "plank"
-  ],
-  "blueprint_ebony_shield": [
-    "panel",
-    "bone_shard",
-    "lacquer"
-  ],
-  "blueprint_chitin_shield": [
-    "cured_chitin",
-    "leather_lining",
-    "lacquer"
-  ],
-  "blueprint_meteoric_iron_shield": [
-    "metal_bar",
-    "essence",
-    "alloy_dust"
-  ],
-  "blueprint_darksteel_shield": [
-    "metal_bar",
-    "clockwork_mechanism"
-  ],
-  "blueprint_cloth": [
-    "woven_cloth"
-  ],
-  "blueprint_leather": [
-    "leather",
-    "reinforced_frame"
-  ],
-  "blueprint_chainmail": [
-    "metal_bar"
-  ],
-  "blueprint_iron": [
-    "metal_bar"
-  ],
-  "blueprint_ebony": [
-    "panel",
-    "lacquer"
-  ],
-  "blueprint_chitin": [
-    "cured_chitin",
-    "leather_lining",
-    "lacquer"
-  ],
-  "blueprint_meteoric_iron": [
-    "metal_bar",
-    "essence",
-    "alloy_dust"
-  ],
-  "blueprint_darksteel": [
-    "metal_bar",
-    "clockwork_mechanism"
-  ],
-  "blueprint_workbench": [
-    "plank",
-    "reinforced_frame",
-    "reed",
-    "feather",
-    "skin"
-  ],
-  "blueprint_anvil": [
-    "refined_ore",
-    "metal_bar"
-  ],
-  "blueprint_axe_stone": [
-    "wood",
-    "stone",
-    "meat"
-  ],
-  "blueprint_alchemy_stand": [
-    "refined_clay",
-    "refined_ore"
-  ],
-  "blueprint_enchanters_table": [
-    "plank",
-    "cut_crystal",
-    "reinforced_frame",
-    "herbs",
-    "monster_part"
-  ],
-  "blueprint_furnace": [
-    "refined_ore",
-    "refined_clay"
-  ],
-  "blueprint_grinder": [
-    "refined_ore",
-    "refined_clay"
-  ],
-  "blueprint_hearth": [
-    "stone",
-    "plank"
-  ],
-  "blueprint_kiln": [
-    "refined_clay",
-    "refined_ore"
-  ],
-  "blueprint_lapidary_bench": [
-    "refined_ore",
-    "refined_clay"
-  ],
-  "blueprint_loom": [
-    "plank",
-    "clockwork_mechanism"
-  ],
-  "blueprint_mortar_and_pestle": [
-    "refined_ore",
-    "refined_clay"
-  ],
-  "blueprint_scriptorium": [
-    "sponge",
-    "ink",
-    "quill"
-  ],
-  "blueprint_spinning_wheel": [
-    "plank",
-    "reinforced_frame"
-  ],
-  "blueprint_tanning_rack": [
-    "plank",
-    "refined_ore"
-  ],
-  "blueprint_wrench": [
-    "refined_ore"
-  ],
-  "blueprint_writers_table": [
-    "plank",
-    "reinforced_frame"
-  ],
-  "blueprint_sharpened_stick": [
-    "axe_stone",
-    "hardened_stick",
-    "meat",
-    "harvest"
-  ],
-  "blueprint_dagger": [
-    "metal_bar"
-  ],
-  "blueprint_sickle": [
-    "metal_bar",
-    "plank"
-  ],
-  "blueprint_spear": [
-    "metal_bar",
-    "plank"
-  ],
-  "blueprint_crossbow": [
-    "metal_bar",
-    "plank",
-    "fiber"
-  ],
-  "blueprint_sword": [
-    "metal_bar",
-    "plank"
-  ],
-  "blueprint_mace": [
-    "metal_bar",
-    "plank"
-  ],
-  "blueprint_battle_axe": [
-    "metal_bar",
-    "plank"
-  ],
-  "blueprint_greatsword": [
-    "metal_bar",
-    "plank"
-  ],
-  "blueprint_warhammer": [
-    "metal_bar",
-    "plank"
-  ],
-  "blueprint_bow": [
-    "plank",
-    "thread"
-  ],
-  "blueprint_quiver_of_arrows": [
-    "plank",
-    "feather",
-    "refined_ore",
-    "skin"
-  ],
-  "blueprint_set_of_bolts": [
-    "plank",
-    "refined_ore"
-  ],
-  "blueprint_magic_staff": [
-    "plank",
-    "cut_crystal"
-  ],
-  "blueprint_wand": [
-    "plank",
-    "cut_crystal"
-  ],
-  "blueprint_hearty_stew": [
-    "cooked_meat",
-    "baked_harvest",
-    "ground_spice"
-  ],
-  "blueprint_bangers": [
-    "dressed_meat",
-    "monster_part",
-    "ground_spice"
-  ],
-  "blueprint_iron_ration": [
-    "salt_horse",
-    "squirrel_hoard",
-    "wizened_figs",
-    "fiber",
-    "meat",
-    "bone"
-  ],
-  "blueprint_merchants_scale": [
-    "wood",
-    "stone"
-  ]
+  "blueprint_wooden_shield": {
+    "plank": 4,
+    "leather": 2
+  },
+  "blueprint_reinforced_wooden_shield": {
+    "plank": 3,
+    "metal_bar": 1
+  },
+  "blueprint_iron_shield": {
+    "metal_bar": 1,
+    "plank": 1
+  },
+  "blueprint_ebony_shield": {
+    "panel": 4,
+    "bone_shard": 5,
+    "lacquer": 3
+  },
+  "blueprint_chitin_shield": {
+    "cured_chitin": 4,
+    "leather_lining": 4,
+    "lacquer": 3
+  },
+  "blueprint_meteoric_iron_shield": {
+    "metal_bar": 2,
+    "essence": 1,
+    "alloy_dust": 5
+  },
+  "blueprint_darksteel_shield": {
+    "metal_bar": 2,
+    "clockwork_mechanism": 3
+  },
+  "blueprint_cloth": {
+    "woven_cloth": 3
+  },
+  "blueprint_leather": {
+    "leather": 20,
+    "reinforced_frame": 6
+  },
+  "blueprint_chainmail": {
+    "metal_bar": 2
+  },
+  "blueprint_iron": {
+    "metal_bar": 2
+  },
+  "blueprint_ebony": {
+    "panel": 8,
+    "lacquer": 1
+  },
+  "blueprint_chitin": {
+    "cured_chitin": 8,
+    "leather_lining": 8,
+    "lacquer": 1
+  },
+  "blueprint_meteoric_iron": {
+    "metal_bar": 3,
+    "essence": 1,
+    "alloy_dust": 5
+  },
+  "blueprint_darksteel": {
+    "metal_bar": 3,
+    "clockwork_mechanism": 4
+  },
+  "blueprint_workbench": {
+    "plank": 6,
+    "reinforced_frame": 2,
+    "reed": 1,
+    "feather": 1,
+    "skin": 1
+  },
+  "blueprint_anvil": {
+    "refined_ore": 12,
+    "metal_bar": 2
+  },
+  "blueprint_axe_stone": {
+    "wood": 3,
+    "stone": 2,
+    "meat": 1
+  },
+  "blueprint_alchemy_stand": {
+    "refined_clay": 3,
+    "refined_ore": 2
+  },
+  "blueprint_enchanters_table": {
+    "plank": 6,
+    "cut_crystal": 2,
+    "reinforced_frame": 2,
+    "herbs": 1,
+    "monster_part": 1
+  },
+  "blueprint_furnace": {
+    "refined_ore": 10,
+    "refined_clay": 6
+  },
+  "blueprint_grinder": {
+    "refined_ore": 8,
+    "refined_clay": 4
+  },
+  "blueprint_hearth": {
+    "stone": 5,
+    "plank": 2
+  },
+  "blueprint_kiln": {
+    "refined_clay": 10,
+    "refined_ore": 3
+  },
+  "blueprint_lapidary_bench": {
+    "refined_ore": 8,
+    "refined_clay": 4
+  },
+  "blueprint_loom": {
+    "plank": 10,
+    "clockwork_mechanism": 1
+  },
+  "blueprint_mortar_and_pestle": {
+    "refined_ore": 2,
+    "refined_clay": 2
+  },
+  "blueprint_scriptorium": {
+    "sponge": 1,
+    "ink": 2,
+    "quill": 1
+  },
+  "blueprint_spinning_wheel": {
+    "plank": 5,
+    "reinforced_frame": 1
+  },
+  "blueprint_tanning_rack": {
+    "plank": 6,
+    "refined_ore": 2
+  },
+  "blueprint_wrench": {
+    "refined_ore": 4
+  },
+  "blueprint_writers_table": {
+    "plank": 6,
+    "reinforced_frame": 2
+  },
+  "blueprint_sharpened_stick": {
+    "axe_stone": 1,
+    "hardened_stick": 1,
+    "meat": 1,
+    "harvest": 1
+  },
+  "blueprint_dagger": {
+    "metal_bar": 1
+  },
+  "blueprint_sickle": {
+    "metal_bar": 1,
+    "plank": 1
+  },
+  "blueprint_spear": {
+    "metal_bar": 1,
+    "plank": 2
+  },
+  "blueprint_crossbow": {
+    "metal_bar": 1,
+    "plank": 3,
+    "fiber": 1
+  },
+  "blueprint_sword": {
+    "metal_bar": 2,
+    "plank": 1
+  },
+  "blueprint_mace": {
+    "metal_bar": 2,
+    "plank": 1
+  },
+  "blueprint_battle_axe": {
+    "metal_bar": 3,
+    "plank": 1
+  },
+  "blueprint_greatsword": {
+    "metal_bar": 3,
+    "plank": 3
+  },
+  "blueprint_warhammer": {
+    "metal_bar": 3,
+    "plank": 3
+  },
+  "blueprint_bow": {
+    "plank": 5,
+    "thread": 22
+  },
+  "blueprint_quiver_of_arrows": {
+    "plank": 4,
+    "feather": 2,
+    "refined_ore": 1,
+    "skin": 1
+  },
+  "blueprint_set_of_bolts": {
+    "plank": 3,
+    "refined_ore": 2
+  },
+  "blueprint_magic_staff": {
+    "plank": 4,
+    "cut_crystal": 2
+  },
+  "blueprint_wand": {
+    "plank": 1,
+    "cut_crystal": 1
+  },
+  "blueprint_hearty_stew": {
+    "cooked_meat": 2,
+    "baked_harvest": 2,
+    "ground_spice": 1
+  },
+  "blueprint_bangers": {
+    "dressed_meat": 2,
+    "monster_part": 1,
+    "ground_spice": 1
+  },
+  "blueprint_iron_ration": {
+    "salt_horse": 1,
+    "squirrel_hoard": 1,
+    "wizened_figs": 1,
+    "fiber": 2,
+    "meat": 20,
+    "bone": 5
+  },
+  "blueprint_merchants_scale": {
+    "wood": 2,
+    "stone": 2
+  }
 }

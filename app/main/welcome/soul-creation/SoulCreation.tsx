@@ -140,12 +140,33 @@ export function SoulCreation({
     }
 
     const requiredIds = new Set<string>();
+    const materialQuantities: Record<string, number> = {};
+
     for (const blueprintId of selectedBlueprintIds) {
-      const materials = blueprintMaterials[blueprintId] || [];
-      materials.forEach(id => requiredIds.add(id));
+      const materials = blueprintMaterials[blueprintId] || {};
+      for (const [materialId, qty] of Object.entries(materials)) {
+        requiredIds.add(materialId);
+        materialQuantities[materialId] = (materialQuantities[materialId] || 0) + (qty as number);
+      }
     }
+
     setRequiredMaterialIds(requiredIds);
-  }, [blueprintSelections, blueprintMaterials]);
+
+    // Auto-select materials with their required quantities
+    const materialItem = trappingsOptions.items.find(item =>
+      item.familyId in materialQuantities
+    );
+    if (materialItem) {
+      const newSelections: Record<string, number> = {};
+      for (const [materialId, qty] of Object.entries(materialQuantities)) {
+        const item = trappingsOptions.items.find(i => i.familyId === materialId);
+        if (item) {
+          newSelections[item.id] = qty;
+        }
+      }
+      setSelectedResources(prev => ({ ...prev, ...newSelections }));
+    }
+  }, [blueprintSelections, blueprintMaterials, trappingsOptions.items]);
 
   // The embedded recipe viewer's own content height, in px - the iframe is
   // same-origin, so its body height can be read directly and mirrored onto
