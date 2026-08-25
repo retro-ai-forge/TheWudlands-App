@@ -510,7 +510,7 @@ for (const famId of recipeFamIds) {
   const cat = famCategory(famId);
   (groups[cat] = groups[cat] || []).push(famId);
 }
-const catOrder = ["armor", "shield", "weapon", "food", "potion", "misc", "adventuring_gear", "tool", "processed"];
+const catOrder = ["raw", "blueprint", "processed", "armor", "shield", "weapon", "food", "potion", "misc", "adventuring_gear", "tool"];
 
 function populateSelect(filterText, tier) {
   const prev = select.value;
