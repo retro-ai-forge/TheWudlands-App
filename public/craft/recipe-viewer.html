@@ -301,6 +301,23 @@
   <h1 id="pageTitle">Crafting Recipe Viewer</h1>
   <p class="subtitle" id="pageSubtitle" style="display: none;">Tier icons shown are minimum requirements. Any higher tier can substitute for a lower tier.</p>
 
+  <details class="panel" style="margin-bottom:16px;">
+    <summary>Legend</summary>
+    <table class="legendTable">
+      <tr><td><span class="tag cat-final">final</span></td><td>a separate finished item (▸ has its own recipe)</td></tr>
+      <tr><td><span class="tag cat-blueprint">blueprint</span></td><td>technique required, learned once and never consumed</td></tr>
+      <tr><td><span class="tag cat-processed">processed</span></td><td>crafted from raw</td></tr>
+      <tr><td><span class="tag cat-raw">raw</span></td><td>mined/gathered material</td></tr>
+      <tr><td><span class="tag missing">missing</span></td><td>missing tool / blueprint</td></tr>
+      <tr><td><span class="tierSymbolT1">○</span></td><td>Tier 1 (Mundane)</td></tr>
+      <tr><td><span class="tierSymbolT2">●</span></td><td>Tier 2 (Mundane)</td></tr>
+      <tr><td><span class="tierSymbolT3">◉</span></td><td>Tier 3 (Mundane)</td></tr>
+      <tr><td><span class="tierSymbolT4">✦</span></td><td>Tier 4 (Enchantable)</td></tr>
+      <tr><td><span class="tierSymbolT5">✨</span></td><td>Tier 5 (Enchantable)</td></tr>
+      <tr><td><span class="tierSymbolT6">🌟</span></td><td>Tier 6 (Enchantable)</td></tr>
+    </table>
+  </details>
+
   <div class="toolbar">
     <select id="recipeSelect"></select>
     <input type="text" id="filterBox" placeholder="filter list...">
@@ -332,22 +349,6 @@
       <div id="tree"><span class="empty">Select a recipe above.</span></div>
     </div>
     <div>
-      <details class="panel" style="margin-bottom:16px;">
-        <summary>Legend</summary>
-        <table class="legendTable">
-          <tr><td><span class="tag cat-final">final</span></td><td>a separate finished item (▸ has its own recipe)</td></tr>
-          <tr><td><span class="tag cat-blueprint">blueprint</span></td><td>technique required, learned once and never consumed</td></tr>
-          <tr><td><span class="tag cat-processed">processed</span></td><td>crafted from raw</td></tr>
-          <tr><td><span class="tag cat-raw">raw</span></td><td>mined/gathered material</td></tr>
-          <tr><td><span class="tag missing">missing</span></td><td>missing tool / blueprint</td></tr>
-          <tr><td><span class="tierSymbolT1">○</span></td><td>Tier 1 (Mundane)</td></tr>
-          <tr><td><span class="tierSymbolT2">●</span></td><td>Tier 2 (Mundane)</td></tr>
-          <tr><td><span class="tierSymbolT3">◉</span></td><td>Tier 3 (Mundane)</td></tr>
-          <tr><td><span class="tierSymbolT4">✦</span></td><td>Tier 4 (Enchantable)</td></tr>
-          <tr><td><span class="tierSymbolT5">✨</span></td><td>Tier 5 (Enchantable)</td></tr>
-          <tr><td><span class="tierSymbolT6">🌟</span></td><td>Tier 6 (Enchantable)</td></tr>
-        </table>
-      </details>
       <div class="panel" style="margin-bottom:16px;">
         <h2>Total Raw Materials</h2>
         <table id="rawTotals">
