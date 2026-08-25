@@ -91,7 +91,9 @@ The four lowest-count categories — Rural, CraftStone, Aristocratic, and Trade 
 
 ## Crafting Recipe Viewer
 
-An interactive tool to explore all crafting recipes, search by item name or ingredient, and see detailed breakdowns of raw materials needed. 
+An interactive tool to explore all crafting recipes, search by item name or ingredient, and see detailed breakdowns of raw materials needed.
+
+![Crafting Recipe Viewer](/public/craft/crafting-260825.webp)
 
 **Access:** [View the Recipe Viewer](public/craft/recipe-viewer.html)
 
