@@ -74,7 +74,7 @@
   {"id": "beast_bone_blade", "name": "Beast Bone Blade", "familyId": "bone_blade", "tier": 3},
   {"id": "monster_bone_blade", "name": "Monster Bone Blade", "familyId": "bone_blade", "tier": 4},
   {"id": "ancient_bone_blade", "name": "Ancient Bone Blade", "familyId": "bone_blade", "tier": 5},
-  {"id": "dragon_bone_blade", "name": "Dragon Bone Blade", "familyId": "bone_blade", "tier": 6},
+  {"id": "dragon_bone_blade", "name": "Wyrm Bone Blade", "familyId": "bone_blade", "tier": 6},
 
   {"id": "hemp_thread", "name": "Hemp Thread", "familyId": "thread", "tier": 1},
   {"id": "cotton_thread", "name": "Cotton Thread", "familyId": "thread", "tier": 2},
