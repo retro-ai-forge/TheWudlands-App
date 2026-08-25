@@ -125,7 +125,7 @@ export function SoulCreation({
 
   // Load blueprint materials mapping once on mount
   useEffect(() => {
-    fetch("/data/blueprint-materials.json")
+    fetch("/data/blueprint-raw-materials.json")
       .then(res => res.json())
       .then(data => setBlueprintMaterials(data))
       .catch(err => console.error("Failed to load blueprint materials:", err));
@@ -140,33 +140,17 @@ export function SoulCreation({
     }
 
     const requiredIds = new Set<string>();
-    const materialQuantities: Record<string, number> = {};
 
     for (const blueprintId of selectedBlueprintIds) {
-      const materials = blueprintMaterials[blueprintId] || {};
-      for (const [materialId, qty] of Object.entries(materials)) {
-        requiredIds.add(materialId);
-        materialQuantities[materialId] = (materialQuantities[materialId] || 0) + (qty as number);
+      const materials = blueprintMaterials[blueprintId] || [];
+      if (Array.isArray(materials)) {
+        // New format: array of raw material family IDs
+        materials.forEach(materialId => requiredIds.add(materialId));
       }
     }
 
     setRequiredMaterialIds(requiredIds);
-
-    // Auto-select materials with their required quantities
-    const materialItem = trappingsOptions.items.find(item =>
-      item.familyId in materialQuantities
-    );
-    if (materialItem) {
-      const newSelections: Record<string, number> = {};
-      for (const [materialId, qty] of Object.entries(materialQuantities)) {
-        const item = trappingsOptions.items.find(i => i.familyId === materialId);
-        if (item) {
-          newSelections[item.id] = qty;
-        }
-      }
-      setSelectedResources(prev => ({ ...prev, ...newSelections }));
-    }
-  }, [blueprintSelections, blueprintMaterials, trappingsOptions.items]);
+  }, [blueprintSelections, blueprintMaterials]);
 
   // The embedded recipe viewer's own content height, in px - the iframe is
   // same-origin, so its body height can be read directly and mirrored onto

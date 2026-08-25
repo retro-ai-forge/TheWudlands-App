@@ -1,0 +1,251 @@
+{
+  "blueprint_wooden_shield": [
+    "skin",
+    "wood"
+  ],
+  "blueprint_reinforced_wooden_shield": [
+    "ore",
+    "wood"
+  ],
+  "blueprint_iron_shield": [
+    "ore",
+    "wood"
+  ],
+  "blueprint_ebony_shield": [
+    "bone",
+    "herbs",
+    "pigment",
+    "wood"
+  ],
+  "blueprint_chitin_shield": [
+    "herbs",
+    "monster_part",
+    "pigment",
+    "skin",
+    "wood"
+  ],
+  "blueprint_meteoric_iron_shield": [
+    "crystal",
+    "essence",
+    "ore",
+    "wood"
+  ],
+  "blueprint_darksteel_shield": [
+    "clockwork",
+    "ore",
+    "wood"
+  ],
+  "blueprint_cloth": [
+    "fiber"
+  ],
+  "blueprint_leather": [
+    "bone",
+    "skin",
+    "wood"
+  ],
+  "blueprint_chainmail": [
+    "ore",
+    "wood"
+  ],
+  "blueprint_iron": [
+    "ore",
+    "wood"
+  ],
+  "blueprint_ebony": [
+    "bone",
+    "herbs",
+    "pigment",
+    "wood"
+  ],
+  "blueprint_chitin": [
+    "herbs",
+    "monster_part",
+    "pigment",
+    "skin",
+    "wood"
+  ],
+  "blueprint_meteoric_iron": [
+    "crystal",
+    "essence",
+    "ore",
+    "wood"
+  ],
+  "blueprint_darksteel": [
+    "clockwork",
+    "ore",
+    "wood"
+  ],
+  "blueprint_workbench": [
+    "bone",
+    "feather",
+    "reed",
+    "skin",
+    "wood"
+  ],
+  "blueprint_anvil": [
+    "ore",
+    "wood"
+  ],
+  "blueprint_axe_stone": [
+    "meat",
+    "stone",
+    "wood"
+  ],
+  "blueprint_alchemy_stand": [
+    "clay",
+    "ore",
+    "sand"
+  ],
+  "blueprint_enchanters_table": [
+    "bone",
+    "crystal",
+    "herbs",
+    "monster_part",
+    "wood"
+  ],
+  "blueprint_furnace": [
+    "clay",
+    "ore",
+    "sand"
+  ],
+  "blueprint_grinder": [
+    "clay",
+    "ore",
+    "sand"
+  ],
+  "blueprint_hearth": [
+    "stone",
+    "wood"
+  ],
+  "blueprint_kiln": [
+    "clay",
+    "ore",
+    "sand"
+  ],
+  "blueprint_lapidary_bench": [
+    "clay",
+    "ore",
+    "sand"
+  ],
+  "blueprint_loom": [
+    "clockwork",
+    "ore",
+    "wood"
+  ],
+  "blueprint_mortar_and_pestle": [
+    "clay",
+    "ore",
+    "sand"
+  ],
+  "blueprint_scriptorium": [
+    "feather",
+    "fiber",
+    "ore",
+    "pigment",
+    "sand",
+    "wood"
+  ],
+  "blueprint_spinning_wheel": [
+    "bone",
+    "wood"
+  ],
+  "blueprint_tanning_rack": [
+    "ore",
+    "wood"
+  ],
+  "blueprint_wrench": [
+    "ore"
+  ],
+  "blueprint_writers_table": [
+    "bone",
+    "wood"
+  ],
+  "blueprint_sharpened_stick": [
+    "harvest",
+    "meat",
+    "stone",
+    "wood"
+  ],
+  "blueprint_dagger": [
+    "ore",
+    "wood"
+  ],
+  "blueprint_sickle": [
+    "ore",
+    "wood"
+  ],
+  "blueprint_spear": [
+    "ore",
+    "wood"
+  ],
+  "blueprint_crossbow": [
+    "fiber",
+    "ore",
+    "wood"
+  ],
+  "blueprint_sword": [
+    "ore",
+    "wood"
+  ],
+  "blueprint_mace": [
+    "ore",
+    "wood"
+  ],
+  "blueprint_battle_axe": [
+    "ore",
+    "wood"
+  ],
+  "blueprint_greatsword": [
+    "ore",
+    "wood"
+  ],
+  "blueprint_warhammer": [
+    "ore",
+    "wood"
+  ],
+  "blueprint_bow": [
+    "fiber",
+    "wood"
+  ],
+  "blueprint_quiver_of_arrows": [
+    "feather",
+    "ore",
+    "skin",
+    "wood"
+  ],
+  "blueprint_set_of_bolts": [
+    "ore",
+    "wood"
+  ],
+  "blueprint_magic_staff": [
+    "crystal",
+    "wood"
+  ],
+  "blueprint_wand": [
+    "crystal",
+    "wood"
+  ],
+  "blueprint_hearty_stew": [
+    "bone",
+    "harvest",
+    "herbs",
+    "meat"
+  ],
+  "blueprint_bangers": [
+    "bone",
+    "herbs",
+    "meat",
+    "monster_part"
+  ],
+  "blueprint_iron_ration": [
+    "bone",
+    "fiber",
+    "harvest",
+    "herbs",
+    "meat"
+  ],
+  "blueprint_merchants_scale": [
+    "stone",
+    "wood"
+  ]
+}
