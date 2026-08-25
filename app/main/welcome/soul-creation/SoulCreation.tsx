@@ -127,7 +127,10 @@ export function SoulCreation({
   useEffect(() => {
     fetch("/data/blueprint-raw-materials.json")
       .then(res => res.json())
-      .then(data => setBlueprintMaterials(data))
+      .then(data => {
+        console.log("Blueprint materials loaded:", Object.keys(data).length, "blueprints");
+        setBlueprintMaterials(data);
+      })
       .catch(err => console.error("Failed to load blueprint materials:", err));
   }, []);
 
