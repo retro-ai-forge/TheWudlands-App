@@ -518,10 +518,14 @@ function populateSelect(filterText, tier) {
   const prev = select.value;
   select.innerHTML = "";
   const ft = (filterText || "").toLowerCase();
+
+  // First try normal search by item name
+  let hasMatches = false;
   for (const cat of catOrder) {
     if (!groups[cat]) continue;
     const matches = groups[cat].filter(f => famLabel(f, tier).toLowerCase().includes(ft)).sort((a, b) => a.localeCompare(b));
     if (!matches.length) continue;
+    hasMatches = true;
     const og = document.createElement("optgroup");
     og.label = cat;
     for (const famId of matches) {
@@ -533,6 +537,49 @@ function populateSelect(filterText, tier) {
     }
     select.appendChild(og);
   }
+
+  // If no items found and filter text is not empty, search by ingredient
+  if (!hasMatches && ft.length > 0) {
+    const ingredientMatches = {};
+    for (const recipeId of recipeFamIds) {
+      const recipe = recipes[recipeId];
+      if (!recipe) continue;
+
+      // Check if any ingredient matches
+      let hasIngredient = false;
+      for (const ingredient of recipe.ingredients || []) {
+        if (ingredient.familyId.toLowerCase().includes(ft)) {
+          hasIngredient = true;
+          break;
+        }
+      }
+      // Check if tool matches
+      if (!hasIngredient && recipe.tool && recipe.tool.toLowerCase().includes(ft)) {
+        hasIngredient = true;
+      }
+
+      if (hasIngredient) {
+        const cat = famCategory(recipeId);
+        (ingredientMatches[cat] = ingredientMatches[cat] || []).push(recipeId);
+      }
+    }
+
+    // Display ingredient search results
+    for (const cat of catOrder) {
+      if (!ingredientMatches[cat]) continue;
+      const og = document.createElement("optgroup");
+      og.label = cat + " (uses " + ft + ")";
+      for (const famId of ingredientMatches[cat].sort((a, b) => a.localeCompare(b))) {
+        const opt = document.createElement("option");
+        opt.value = famId;
+        const label = famLabel(famId, tier);
+        opt.textContent = getDisplayLabel(label, cat);
+        og.appendChild(opt);
+      }
+      select.appendChild(og);
+    }
+  }
+
   if ([...select.options].some(o => o.value === prev)) select.value = prev;
 }
 populateSelect("", currentTier());
