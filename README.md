@@ -91,22 +91,11 @@ The four lowest-count categories — Rural, CraftStone, Aristocratic, and Trade 
 
 ## Crafting Recipe Viewer
 
-An interactive tool to explore all crafting recipes, search by item name or ingredient, and see detailed breakdowns of raw materials needed.
+An interactive tool to explore all crafting recipes, search by item name or ingredient, and see detailed breakdowns of raw materials needed. Download to enlarge.
 
-![Crafting Recipe Viewer](/public/craft/crafting-260825.webp)
+![Crafting Recipes](/public/craft/crafting-260825.webp)
 
 **Access:** <a href="public/craft/recipe-viewer.html" target="_blank">View the Recipe Viewer</a>
-
-**Features:**
-- Search recipes by item name or by ingredient/material (type a material name to see all recipes that use it)
-- Filter by crafting tier (6 tiers from Mundane to Enchantable)
-- View complete recipe breakdown with tier information
-- See raw materials needed and tools required
-- Track owned vs. needed quantities if accessed from the character inventory
-- Supports both aesthetic and text-only display modes
-- Responsive design works on desktop and mobile
-
-**For Contributors:** The recipe viewer is built from a JSON data file (`public/data/recipe-viewer.json`). Edit the template (`public/craft/recipe-viewer.template.html`) and run the build script (`public/craft/build-recipe-viewer.py`) to regenerate the static HTML.
 
 ## For Story Contributors
 
