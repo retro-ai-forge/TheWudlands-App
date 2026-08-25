@@ -76,6 +76,11 @@ function getTierIndicator(tier: number): string {
   }
 }
 
+function getTierIconColor(tier: number): string {
+  if (tier <= 3) return "#c07a3a"; // Brown for T1-3
+  return "#e6b85c"; // Gold for T4-6
+}
+
 const BLUEPRINT_SOURCE_LABELS: Record<string, string> = {
   tool: "Tool Blueprint",
   item: "Item Blueprint",
@@ -1239,7 +1244,7 @@ export function SoulCreation({
                             return (
                               <div key={item.id} className={styles.trappingsRow}>
                                 <div className={styles.trappingsItemInfo}>
-                                  <span style={{ fontSize: "1.2em", marginRight: "0.3rem" }}>
+                                  <span style={{ fontSize: "1.2em", marginRight: "0.3rem", color: getTierIconColor(item.tier) }}>
                                     {getTierIndicator(item.tier)}
                                   </span>
                                   <span
