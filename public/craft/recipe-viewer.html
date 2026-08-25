@@ -47,7 +47,7 @@
   }
   .toolbar {
     display: flex;
-    gap: 12px;
+    gap: 8px;
     align-items: center;
     margin-bottom: 12px;
     flex-wrap: wrap;
@@ -114,7 +114,7 @@
   .panel[open] summary { margin-bottom: 12px; }
   details.panel { padding: 4px 16px !important; }
   details.panel summary { line-height: 1.2; }
-  details.panel[open] summary { margin-bottom: 6px; }
+  details.panel[open] summary { margin-bottom: 12px; }
   .empty {
     color: var(--text-dim);
     font-style: italic;
@@ -270,7 +270,7 @@
   /* Nothing missing - the character already has all of this material. */
   td.n.have-enough { color: #9be6a8; }
   tr + tr td { border-top: 1px solid var(--border); }
-  .legendTable { width: 100%; border-collapse: separate; border-spacing: 0 12px; font-size: 12px; margin-bottom: 16px; border: none; }
+  .legendTable { width: 100%; border-collapse: separate; border-spacing: 0 12px; font-size: 12px; margin-bottom: 12px; border: none; }
   .legendTable tr { height: 18px; line-height: 18px; }
   .legendTable td { vertical-align: middle; padding: 0; border: none; }
   .legendTable td:first-child { text-align: center; width: 76px; display: flex; align-items: center; justify-content: center; padding-left: 8px; padding-right: 0; }
@@ -302,7 +302,7 @@
 <body>
   <a class="backlink" id="backLink" href="/">&larr; Back to Character</a>
 
-  <details class="panel" style="margin-bottom:8px;">
+  <details class="panel" style="margin-bottom:12px;">
     <summary>Legend</summary>
     <table class="legendTable">
       <tr><td><span class="tag cat-final">final</span></td><td>a separate finished item (▸ has its own recipe)</td></tr>
@@ -350,13 +350,13 @@
       <div id="tree"><span class="empty">Select a recipe above.</span></div>
     </div>
     <div>
-      <div class="panel" style="margin-bottom:16px;">
+      <div class="panel" style="margin-bottom:12px;">
         <table id="rawTotals">
           <thead><tr><th>Raw Material</th><th>Tier</th><th></th></tr></thead>
           <tbody></tbody>
         </table>
       </div>
-      <div class="panel" style="margin-bottom:16px;">
+      <div class="panel" style="margin-bottom:12px;">
         <h2>Tools Used</h2>
         <div class="toollist" id="toolList"></div>
       </div>
