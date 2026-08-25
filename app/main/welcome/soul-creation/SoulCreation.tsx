@@ -1201,7 +1201,7 @@ export function SoulCreation({
                           .filter((item) => item.tier === tier)
                           .map((item) => {
                             const amount = selectedResources[item.id] ?? 0;
-                            const isRelevant = maxBlueprintTier > 0 && item.tier <= maxBlueprintTier;
+                            const isRelevant = maxBlueprintTier > 0 && item.tier === maxBlueprintTier;
                             return (
                               <div key={item.id} className={styles.trappingsRow}>
                                 <div className={styles.trappingsItemInfo}>
