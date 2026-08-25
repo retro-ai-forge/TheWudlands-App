@@ -140,6 +140,8 @@
   flex-direction: row;
   align-items: center;
   gap: 0.4rem;
+  flex-wrap: wrap;
+  flex: 1;
 }
 
 .trappingsItemName {
@@ -150,6 +152,7 @@
 .trappingsItemFamily {
   font-size: 0.8rem;
   letter-spacing: 0.08em;
+  white-space: nowrap;
   text-transform: uppercase;
   color: #7d7256;
 }
