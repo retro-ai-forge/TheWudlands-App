@@ -1229,7 +1229,7 @@ export function SoulCreation({
                                 <div className={styles.trappingsItemInfo}>
                                   <span
                                     className={styles.trappingsItemName}
-                                    style={isRelevant ? { color: "#e6b85c" } : undefined}
+                                    style={isRelevant ? { color: "#4ade80", fontWeight: "bold" } : undefined}
                                   >
                                     {item.name}
                                   </span>
