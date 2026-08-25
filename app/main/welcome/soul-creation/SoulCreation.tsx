@@ -1244,10 +1244,10 @@ export function SoulCreation({
                             return (
                               <div key={item.id} className={styles.trappingsRow}>
                                 <div className={styles.trappingsItemInfo}>
-                                  <span style={{ fontSize: "1.2em", color: getTierIconColor(item.tier), flexShrink: 0, marginRight: "0.2rem" }}>
+                                  <span style={{ fontSize: "1.2em", color: getTierIconColor(item.tier), flexShrink: 0, marginRight: "0.4rem" }}>
                                     {getTierIndicator(item.tier)}
                                   </span>
-                                  <span style={{ display: "flex", gap: "0.4rem", flexWrap: "wrap", alignItems: "center", justifyContent: "flex-start" }}>
+                                  <div style={{ display: "flex", flexDirection: "column", gap: "0rem", flex: 1 }}>
                                     <span
                                       className={styles.trappingsItemName}
                                       style={isRelevant ? { color: "#4ade80", fontWeight: "bold" } : undefined}
@@ -1255,7 +1255,7 @@ export function SoulCreation({
                                       {item.name}
                                     </span>
                                     <span className={styles.trappingsItemFamily}>{item.familyId}</span>
-                                  </span>
+                                  </div>
                                 </div>
                                 <div className={styles.trappingsStepper}>
                                   <button
