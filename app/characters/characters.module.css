@@ -269,9 +269,9 @@
 .tierSymbolT1 { font-size: 1.7em; color: #c07a3a; }
 .tierSymbolT2 { font-size: 1.7em; color: #c07a3a; }
 .tierSymbolT3 { font-size: 1.5em; color: #c07a3a; }
-.tierSymbolT4 { font-size: 2em; color: #ffd700; }
-.tierSymbolT5 { font-size: 1.2em; color: #ffd700; }
-.tierSymbolT6 { font-size: 1.1em; color: #ffd700; }
+.tierSymbolT4 { font-size: 2em; color: #aa0000; text-shadow: 3px 3px 6px rgba(0, 0, 0, 0.6), 0 0 8px rgba(255, 255, 255, 1), 0 0 12px rgba(255, 255, 255, 0.8); }
+.tierSymbolT5 { font-size: 1.2em; filter: invert(1) hue-rotate(115deg) saturate(0.8) brightness(1); text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8), -2px -2px 4px rgba(100, 200, 255, 0.5); }
+.tierSymbolT6 { font-size: 1.1em; filter: invert(1) hue-rotate(115deg) saturate(0.8) brightness(0.85); text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8), -2px -2px 4px rgba(100, 200, 255, 0.5); }
 
 .legendTable {
   width: 100%;
