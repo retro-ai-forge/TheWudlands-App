@@ -1247,7 +1247,7 @@ export function SoulCreation({
                                   <span style={{ fontSize: "1.2em", color: getTierIconColor(item.tier), flexShrink: 0, marginRight: "0.2rem" }}>
                                     {getTierIndicator(item.tier)}
                                   </span>
-                                  <span style={{ display: "flex", gap: "0.4rem", flexWrap: "wrap", alignItems: "center" }}>
+                                  <span style={{ display: "flex", gap: "0.4rem", flexWrap: "wrap", alignItems: "center", justifyContent: "flex-start" }}>
                                     <span
                                       className={styles.trappingsItemName}
                                       style={isRelevant ? { color: "#4ade80", fontWeight: "bold" } : undefined}
