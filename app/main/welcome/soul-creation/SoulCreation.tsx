@@ -149,6 +149,9 @@ export function SoulCreation({
       }
     }
 
+    console.log("Selected blueprints:", selectedBlueprintIds);
+    console.log("Blueprint materials loaded:", Object.keys(blueprintMaterials).length > 0);
+    console.log("Required material families:", Array.from(requiredIds));
     setRequiredMaterialIds(requiredIds);
   }, [blueprintSelections, blueprintMaterials]);
 
