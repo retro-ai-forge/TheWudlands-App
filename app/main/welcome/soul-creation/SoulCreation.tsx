@@ -118,28 +118,34 @@ export function SoulCreation({
   // with count:2 gets 2 independent combo boxes). Built into a flat
   // selectedBlueprints array (dropping empty picks) at submit time.
   const [blueprintSelections, setBlueprintSelections] = useState<Record<string, string>>({});
-  // Track the max tier of selected blueprints for highlighting relevant materials
-  const [maxBlueprintTier, setMaxBlueprintTier] = useState(0);
+  // Track which material IDs are required by selected blueprints
+  const [requiredMaterialIds, setRequiredMaterialIds] = useState<Set<string>>(new Set());
+  // Cache for blueprint materials mapping
+  const [blueprintMaterials, setBlueprintMaterials] = useState<Record<string, string[]>>({});
 
-  // Update max tier whenever blueprintSelections or trappingsOptions changes
+  // Load blueprint materials mapping once on mount
+  useEffect(() => {
+    fetch("/data/blueprint-materials.json")
+      .then(res => res.json())
+      .then(data => setBlueprintMaterials(data))
+      .catch(err => console.error("Failed to load blueprint materials:", err));
+  }, []);
+
+  // Update required materials whenever blueprintSelections changes
   useEffect(() => {
     const selectedBlueprintIds = Object.values(blueprintSelections).filter(Boolean);
     if (selectedBlueprintIds.length === 0) {
-      setMaxBlueprintTier(0);
+      setRequiredMaterialIds(new Set());
       return;
     }
 
-    let maxTier = 0;
+    const requiredIds = new Set<string>();
     for (const blueprintId of selectedBlueprintIds) {
-      const item = trappingsOptions.blueprintPools
-        .flatMap(pool => pool.items)
-        .find(item => item.id === blueprintId);
-      if (item && item.tier > maxTier) {
-        maxTier = item.tier;
-      }
+      const materials = blueprintMaterials[blueprintId] || [];
+      materials.forEach(id => requiredIds.add(id));
     }
-    setMaxBlueprintTier(maxTier);
-  }, [blueprintSelections, trappingsOptions]);
+    setRequiredMaterialIds(requiredIds);
+  }, [blueprintSelections, blueprintMaterials]);
 
   // The embedded recipe viewer's own content height, in px - the iframe is
   // same-origin, so its body height can be read directly and mirrored onto
@@ -1201,7 +1207,7 @@ export function SoulCreation({
                           .filter((item) => item.tier === tier)
                           .map((item) => {
                             const amount = selectedResources[item.id] ?? 0;
-                            const isRelevant = maxBlueprintTier > 0 && item.tier === maxBlueprintTier;
+                            const isRelevant = requiredMaterialIds.has(item.familyId);
                             return (
                               <div key={item.id} className={styles.trappingsRow}>
                                 <div className={styles.trappingsItemInfo}>
