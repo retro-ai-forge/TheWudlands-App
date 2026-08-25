@@ -95,7 +95,7 @@ An interactive tool to explore all crafting recipes, search by item name or ingr
 
 ![Crafting Recipe Viewer](/public/craft/crafting-260825.webp)
 
-**Access:** [View the Recipe Viewer](public/craft/recipe-viewer.html)
+**Access:** <a href="public/craft/recipe-viewer.html" target="_blank">View the Recipe Viewer</a>
 
 **Features:**
 - Search recipes by item name or by ingredient/material (type a material name to see all recipes that use it)
