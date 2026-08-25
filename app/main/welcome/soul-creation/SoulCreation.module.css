@@ -137,7 +137,9 @@
 
 .trappingsItemInfo {
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
+  align-items: center;
+  gap: 0.4rem;
 }
 
 .trappingsItemName {

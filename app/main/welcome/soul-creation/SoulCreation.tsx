@@ -1244,7 +1244,7 @@ export function SoulCreation({
                             return (
                               <div key={item.id} className={styles.trappingsRow}>
                                 <div className={styles.trappingsItemInfo}>
-                                  <span style={{ fontSize: "1.2em", marginRight: "0.3rem", color: getTierIconColor(item.tier) }}>
+                                  <span style={{ fontSize: "1.2em", color: getTierIconColor(item.tier), flexShrink: 0 }}>
                                     {getTierIndicator(item.tier)}
                                   </span>
                                   <span
