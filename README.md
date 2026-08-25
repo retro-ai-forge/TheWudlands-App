@@ -89,6 +89,23 @@ Each of the 12 profession categories draws from 3 raw-material resource families
 
 The four lowest-count categories — Rural, CraftStone, Aristocratic, and Trade — are expected to expand later, through new mechanics (foraging yield, marketplace pricing) as well as new recipes, once those systems and the resources they depend on are designed.
 
+## Crafting Recipe Viewer
+
+An interactive tool to explore all crafting recipes, search by item name or ingredient, and see detailed breakdowns of raw materials needed. 
+
+**Access:** [View the Recipe Viewer](public/craft/recipe-viewer.html)
+
+**Features:**
+- Search recipes by item name or by ingredient/material (type a material name to see all recipes that use it)
+- Filter by crafting tier (6 tiers from Mundane to Enchantable)
+- View complete recipe breakdown with tier information
+- See raw materials needed and tools required
+- Track owned vs. needed quantities if accessed from the character inventory
+- Supports both aesthetic and text-only display modes
+- Responsive design works on desktop and mobile
+
+**For Contributors:** The recipe viewer is built from a JSON data file (`public/data/recipe-viewer.json`). Edit the template (`public/craft/recipe-viewer.template.html`) and run the build script (`public/craft/build-recipe-viewer.py`) to regenerate the static HTML.
+
 ## For Story Contributors
 
 If you want to contribute an adventure addon — a self-contained story with scenes, choices, images, and branching paths — you do not need to write any code. Adventures are defined in a structured JSON format and submitted alongside image assets. The engine handles everything else: loading, validation, session management, rendering, and player routing.
