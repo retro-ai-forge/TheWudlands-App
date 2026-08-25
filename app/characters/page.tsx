@@ -7,15 +7,25 @@ import { GENDERS, racesByCategory, professionsByCategory, BODY_ATTRIBUTES, SOUL_
 
 // GET /api/auth/blueprint-categories - lore/reference data, not player-specific:
 // every profession category's tool and item blueprint families (tiers 1-3).
-type BlueprintCategoryItem = { id: string; name: string; tier: number; isBasic: boolean };
+type BlueprintCategoryItem = { id: string; name: string; tier: number };
 type BlueprintCategoryFamily = { familyId: string; kind: string; items: BlueprintCategoryItem[] };
 type BlueprintCategoryEntry = { category: string; families: BlueprintCategoryFamily[] };
 
 function getTierIndicator(tier: number): string {
-  if (tier >= 4) {
-    return "✨".repeat(tier - 3);
-  }
-  return "○".repeat(tier);
+  const tierIcons = ["", "○", "●", "◉", "✦", "✨", "🌟"];
+  return tierIcons[tier] || "";
+}
+
+function getTierStyle(tier: number) {
+  const tierStyles = {
+    1: { fontSize: "1em", color: "#c07a3a" },
+    2: { fontSize: "1em", color: "#c07a3a" },
+    3: { fontSize: "0.95em", color: "#c07a3a" },
+    4: { fontSize: "1.1em", color: "#ffd700" },
+    5: { fontSize: "0.85em", color: "#ffd700" },
+    6: { fontSize: "0.8em", color: "#ffd700" },
+  };
+  return tierStyles[tier as keyof typeof tierStyles] || {};
 }
 
 function getKindIcon(kind: string): string {
@@ -307,13 +317,43 @@ export default function Characters() {
               </p>
               <p className={styles.sectionIntro}>
                 <strong>Legend:</strong>
-                <br />
-                <strong>🔧</strong> = Tool | <strong>📦</strong> = Item (weapon, armor, shield, special equipment)
-                <br />
-                <strong>○</strong> = Mundane (Tier 1) | <strong>○○</strong> = Mundane (Tier 2) | <strong>○○○</strong> = Mundane (Tier 3)
-                <br />
-                <strong>✨</strong> = Enchantable (Tier 4) | <strong>✨✨</strong> = Enchantable (Tier 5) | <strong>✨✨✨</strong> = Enchantable (Tier 6)
               </p>
+              <table className={styles.legendTable}>
+                <tbody>
+                  <tr>
+                    <td><strong>🔧</strong></td>
+                    <td>Tool</td>
+                  </tr>
+                  <tr>
+                    <td><strong>📦</strong></td>
+                    <td>Item (weapon, armor, shield, special equipment)</td>
+                  </tr>
+                  <tr>
+                    <td><span className={styles.tierSymbolT1}>○</span></td>
+                    <td>Tier 1 (Mundane)</td>
+                  </tr>
+                  <tr>
+                    <td><span className={styles.tierSymbolT2}>●</span></td>
+                    <td>Tier 2 (Mundane)</td>
+                  </tr>
+                  <tr>
+                    <td><span className={styles.tierSymbolT3}>◉</span></td>
+                    <td>Tier 3 (Mundane)</td>
+                  </tr>
+                  <tr>
+                    <td><span className={styles.tierSymbolT4}>✦</span></td>
+                    <td>Tier 4 (Enchantable)</td>
+                  </tr>
+                  <tr>
+                    <td><span className={styles.tierSymbolT5}>✨</span></td>
+                    <td>Tier 5 (Enchantable)</td>
+                  </tr>
+                  <tr>
+                    <td><span className={styles.tierSymbolT6}>🌟</span></td>
+                    <td>Tier 6 (Enchantable)</td>
+                  </tr>
+                </tbody>
+              </table>
               {blueprintCategories.map((entry) => (
                 <div key={entry.category} className={styles.subAccordionItem}>
                   <button
@@ -346,22 +386,26 @@ export default function Characters() {
                               {getKindIcon(family.kind)} {family.familyId.replace(/_/g, " ")}{" "}
                               <span className={styles.blueprintKind}>{family.kind}</span>
                             </p>
-                            <div className={styles.raceDescription}>
-                              {family.items.map((item) => {
-                                const label = item.isBasic ? "S" : getTierIndicator(item.tier);
-                                const displayName = trimRedundantLastWord(
-                                  label,
-                                  item.name.replace("Blueprint: ", ""),
-                                  family.familyId.replace(/_/g, " "),
-                                  family.kind
-                                );
-                                return (
-                                  <p key={item.id} className={styles.blueprintItemLine}>
-                                    {label} {displayName}
-                                  </p>
-                                );
-                              })}
-                            </div>
+                            <table className={styles.legendTable}>
+                              <tbody>
+                                {family.items.map((item) => {
+                                  const label = getTierIndicator(item.tier);
+                                  const displayName = trimRedundantLastWord(
+                                    label,
+                                    item.name.replace("Blueprint: ", ""),
+                                    family.familyId.replace(/_/g, " "),
+                                    family.kind
+                                  );
+                                  const tierClass = `tierSymbolT${item.tier}` as keyof typeof styles;
+                                  return (
+                                    <tr key={item.id}>
+                                      <td><span className={styles[tierClass]}>{label}</span></td>
+                                      <td>{displayName}</td>
+                                    </tr>
+                                  );
+                                })}
+                              </tbody>
+                            </table>
                           </div>
                         ))
                       )}

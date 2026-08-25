@@ -197,7 +197,7 @@
 }
 
 .attributeEntry p:first-child {
-  font-size: 0.55rem !important;
+  font-size: 0.75rem !important;
   letter-spacing: 0.12em;
   text-transform: uppercase;
   color: #c07a3a;
@@ -205,7 +205,7 @@
 }
 
 .attributeEntry p:last-child {
-  font-size: 0.65rem !important;
+  font-size: 0.85rem !important;
   line-height: 1.5;
   color: #d4c9a8;
 }
@@ -230,22 +230,27 @@
 }
 
 .raceName {
-  font-size: 0.95rem;
+  font-size: 0.85rem;
   letter-spacing: 0.12em;
   text-transform: uppercase;
   color: #c07a3a;
-  margin-bottom: 0.5rem;
+  margin-bottom: 0.35rem;
 }
 
 .raceDescription {
-  font-size: 0.7rem;
+  font-size: 0.9rem;
   line-height: 1.5;
   color: #d4c9a8;
 }
 
 .blueprintItemLine {
   margin: 0;
-  padding: 0.1rem 0;
+  padding: 0;
+  height: 1.5em;
+  line-height: 1.5em;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
 }
 
 .blueprintKind {
@@ -258,6 +263,50 @@
   border: 1px solid #3a3020;
   border-radius: 3px;
   padding: 0.1rem 0.4rem;
+  vertical-align: middle;
+}
+
+.tierSymbolT1 { font-size: 1.7em; color: #c07a3a; }
+.tierSymbolT2 { font-size: 1.7em; color: #c07a3a; }
+.tierSymbolT3 { font-size: 1.5em; color: #c07a3a; }
+.tierSymbolT4 { font-size: 2em; color: #ffd700; }
+.tierSymbolT5 { font-size: 1.2em; color: #ffd700; }
+.tierSymbolT6 { font-size: 1.1em; color: #ffd700; }
+
+.legendTable {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0 2px;
+  margin: 1rem 0;
+  font-size: 0.9rem;
+}
+
+.legendTable tbody tr {
+  height: 24px;
+  line-height: 24px;
+}
+
+.legendTable td {
+  padding: 0;
+  border: none;
+}
+
+.legendTable td:first-child {
+  width: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding-left: 0;
+  padding-right: 0.25rem;
+}
+
+.legendTable td:first-child span {
+  display: block;
+}
+
+.legendTable td:last-child {
+  padding-left: 0.25rem;
+  padding-right: 0;
   vertical-align: middle;
 }
 

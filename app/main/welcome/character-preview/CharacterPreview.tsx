@@ -203,14 +203,14 @@ export function CharacterPreview({
             </button>
           </div>
         </div>
-
-        <h1 className={tabStyles.name}>
-          {character.firstName} {character.lastName}
-        </h1>
       </div>
 
       <div className={tabStyles.sheet}>
         {deleteError && <p className={styles.submitError}>{deleteError}</p>}
+
+        <h1 className={tabStyles.name}>
+          {character.firstName} {character.lastName}
+        </h1>
 
         <div className={tabStyles.mainColumn}>
           {activeTab === "stats" && (
