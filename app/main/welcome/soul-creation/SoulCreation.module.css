@@ -141,7 +141,7 @@
 }
 
 .trappingsItemName {
-  font-size: clamp(1.05rem, 2.8vw, 1.3rem);
+  font-size: clamp(0.95rem, 2.2vw, 1rem);
   color: #d4c9a8;
 }
 
