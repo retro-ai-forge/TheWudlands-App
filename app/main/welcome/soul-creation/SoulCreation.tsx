@@ -1325,6 +1325,11 @@ export function SoulCreation({
                       {recipeViewerOpen ? "▴" : "▾"}
                     </span>
                     Crafting Recipe Viewer
+                    {Object.values(blueprintSelections).filter(Boolean).length > 0 && (
+                      <span style={{ marginLeft: "0.5rem", fontSize: "0.9rem", color: "#7a6a3a" }}>
+                        ({Object.values(blueprintSelections).filter(Boolean).length} selected)
+                      </span>
+                    )}
                   </button>
                   {recipeViewerOpen && (
                     <iframe
