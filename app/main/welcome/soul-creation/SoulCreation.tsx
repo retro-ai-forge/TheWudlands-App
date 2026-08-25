@@ -118,6 +118,29 @@ export function SoulCreation({
   // with count:2 gets 2 independent combo boxes). Built into a flat
   // selectedBlueprints array (dropping empty picks) at submit time.
   const [blueprintSelections, setBlueprintSelections] = useState<Record<string, string>>({});
+  // Track the max tier of selected blueprints for highlighting relevant materials
+  const [maxBlueprintTier, setMaxBlueprintTier] = useState(0);
+
+  // Update max tier whenever blueprintSelections or trappingsOptions changes
+  useEffect(() => {
+    const selectedBlueprintIds = Object.values(blueprintSelections).filter(Boolean);
+    if (selectedBlueprintIds.length === 0) {
+      setMaxBlueprintTier(0);
+      return;
+    }
+
+    let maxTier = 0;
+    for (const blueprintId of selectedBlueprintIds) {
+      const item = trappingsOptions.blueprintPools
+        .flatMap(pool => pool.items)
+        .find(item => item.id === blueprintId);
+      if (item && item.tier > maxTier) {
+        maxTier = item.tier;
+      }
+    }
+    setMaxBlueprintTier(maxTier);
+  }, [blueprintSelections, trappingsOptions]);
+
   // The embedded recipe viewer's own content height, in px - the iframe is
   // same-origin, so its body height can be read directly and mirrored onto
   // the iframe element, instead of guessing a fixed height that leaves
@@ -1178,10 +1201,16 @@ export function SoulCreation({
                           .filter((item) => item.tier === tier)
                           .map((item) => {
                             const amount = selectedResources[item.id] ?? 0;
+                            const isRelevant = maxBlueprintTier > 0 && item.tier <= maxBlueprintTier;
                             return (
                               <div key={item.id} className={styles.trappingsRow}>
                                 <div className={styles.trappingsItemInfo}>
-                                  <span className={styles.trappingsItemName}>{item.name}</span>
+                                  <span
+                                    className={styles.trappingsItemName}
+                                    style={isRelevant ? { color: "#e6b85c" } : undefined}
+                                  >
+                                    {item.name}
+                                  </span>
                                   <span className={styles.trappingsItemFamily}>{item.familyId}</span>
                                 </div>
                                 <div className={styles.trappingsStepper}>
