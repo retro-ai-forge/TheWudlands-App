@@ -112,6 +112,8 @@
   .panel summary::before { content: "▸"; display: inline-block; transition: transform 0.15s ease; font-size: 16px; margin-right: 8px; }
   .panel[open] summary::before { transform: rotate(90deg); }
   .panel[open] summary { margin-bottom: 12px; }
+  details.panel { padding: 6px 16px; }
+  details.panel[open] summary { margin-bottom: 8px; }
   .empty {
     color: var(--text-dim);
     font-style: italic;
