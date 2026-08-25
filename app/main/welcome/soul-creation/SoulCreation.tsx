@@ -160,6 +160,7 @@ export function SoulCreation({
       }
     }
 
+    console.log("Updating required materials - old:", Array.from(requiredMaterialIds), "new:", Array.from(requiredIds));
     setRequiredMaterialIds(requiredIds);
   }, [blueprintSelections, blueprintMaterials, blueprintIdMapping]);
 
