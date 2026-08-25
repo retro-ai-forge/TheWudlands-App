@@ -90,7 +90,7 @@ function ResourceList({
   emptyLabel: string;
   tierInfo?: ResourceTierInfo;
 }) {
-  let entries = Object.entries(balances).filter(([, qty]) => qty > 0);
+  const entries = Object.entries(balances).filter(([, qty]) => qty > 0);
   if (entries.length === 0) {
     return <p className={styles.inventoryEmpty}>{emptyLabel}</p>;
   }
