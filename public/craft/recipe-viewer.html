@@ -434,8 +434,6 @@ if (returnUrl) {
 // own fold/summary already labels the section, so this page's own <h1> and
 // subtitle would just be a redundant second headline stacked right under it.
 if (new URLSearchParams(window.location.search).get("embedded")) {
-  document.getElementById("pageTitle").style.display = "none";
-  document.getElementById("pageSubtitle").style.display = "none";
   // The embedding page's own fold heading already sits flush above this
   // iframe (see its "?embedded=1" callers) - body's normal top padding
   // would leave a dead gap between that heading and the toolbar below.
