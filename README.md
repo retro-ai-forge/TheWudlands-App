@@ -95,8 +95,6 @@ An interactive tool to explore all crafting recipes, search by item name or ingr
 
 ![Crafting Recipes](/public/craft/crafting-260825.webp)
 
-**Access:** <a href="public/craft/recipe-viewer.html" target="_blank">View the Recipe Viewer</a>
-
 ## For Story Contributors
 
 If you want to contribute an adventure addon — a self-contained story with scenes, choices, images, and branching paths — you do not need to write any code. Adventures are defined in a structured JSON format and submitted alongside image assets. The engine handles everything else: loading, validation, session management, rendering, and player routing.
