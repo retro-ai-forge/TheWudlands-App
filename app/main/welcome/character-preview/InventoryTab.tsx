@@ -149,11 +149,11 @@ function ResourceList({
               const tierDisplay = tier ? getTierIndicator(tier) : "";
               const isGreyed = tier > 0 && highestTierByFamily[family] > tier;
               return (
-                <tr key={id} style={isGreyed ? { opacity: 0.5, color: "var(--text-dim)" } : undefined}>
+                <tr key={id}>
                   <td>{icon}</td>
                   <td><span className={tier > 0 ? getTierSymbolClass(tier) : styles.tierSymbol}>{tierDisplay}</span></td>
-                  <td>{formatResourceLabel(id)}</td>
-                  <td>{qty}</td>
+                  <td style={isGreyed ? { opacity: 0.5, color: "#7d7256" } : undefined}>{formatResourceLabel(id)}</td>
+                  <td style={isGreyed ? { opacity: 0.5, color: "#7d7256" } : undefined}>{qty}</td>
                 </tr>
               );
             });
@@ -181,11 +181,11 @@ function ResourceList({
               const tierDisplay = tier ? getTierIndicator(tier) : "";
               const isGreyed = tier > 0 && highestTierByFamily[family] > tier;
               return (
-                <tr key={id} style={isGreyed ? { opacity: 0.5, color: "var(--text-dim)" } : undefined}>
+                <tr key={id}>
                   <td>{icon}</td>
                   <td><span className={tier > 0 ? getTierSymbolClass(tier) : styles.tierSymbol}>{tierDisplay}</span></td>
-                  <td>{formatResourceLabel(id)}</td>
-                  <td>{qty}</td>
+                  <td style={isGreyed ? { opacity: 0.5, color: "#7d7256" } : undefined}>{formatResourceLabel(id)}</td>
+                  <td style={isGreyed ? { opacity: 0.5, color: "#7d7256" } : undefined}>{qty}</td>
                 </tr>
               );
             });
@@ -270,10 +270,10 @@ function IdList({
         return (
           <div key={id}>
             {showDivider && <div className={styles.resourceDivider} />}
-            <div className={styles.inventoryRow} style={isGreyed ? { opacity: 0.5, color: "var(--text-dim)" } : undefined}>
+            <div className={styles.inventoryRow}>
               <span>{icon}</span>
               <span className={info?.tier ? getTierSymbolClass(info.tier) : styles.tierSymbol}>{tierDisplay}</span>
-              <span>{formatResourceLabel(id)}</span>
+              <span style={isGreyed ? { opacity: 0.5, color: "#7d7256" } : undefined}>{formatResourceLabel(id)}</span>
             </div>
           </div>
         );
