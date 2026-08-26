@@ -1,19 +1,19 @@
 Weapon ID,Weapon Name,Raw Materials Required,Tool,Blueprint,Processing Tools
-bow,Apprentice's Bow,"132x fiber, 20x wood",Workbench,Blueprint: Apprentice's Bow,"Spinning Wheel, Stone Axe"
-sickle,Apprentice's Sickle,"125x ore, 34x wood",Anvil,Blueprint: Uneven Sickle,"Furnace, Stone Axe"
-warhammer,Apprentice's Warhammer,"375x ore, 102x wood",Anvil,Blueprint: Melted Warhammer,"Furnace, Stone Axe"
-wand,Beginner's Wand,"3x crystal, 4x wood",Enchanter's Table,Blueprint: Beginner's Wand,"Lapidary Bench, Stone Axe"
-greatsword,Bent Greatsword,"375x ore, 102x wood",Anvil,Blueprint: Blunt Greatsword,"Furnace, Stone Axe"
-battle_axe,Blunt Battle Axe,"375x ore, 94x wood",Anvil,Blueprint: Loose Battle Axe,"Furnace, Stone Axe"
-spear,Blunt Spear,"125x ore, 38x wood",Anvil,Blueprint: Loose Spear,"Furnace, Stone Axe"
-set_of_bolts,Crude Set of Bolts,"10x ore, 12x wood",Workbench,Blueprint: Crude Set of Bolts,Stone Axe
-sharpened_stick,Crude Sharpened Stick,"1x harvest, 2x meat, 2x stone, 7x wood",—,—,Stone Axe
-magic_staff,Gnarled Magic Staff,"6x crystal, 16x wood",Enchanter's Table,Blueprint: Gnarled Magic Staff,"Lapidary Bench, Stone Axe"
-mace,Loose Mace,"250x ore, 64x wood",Anvil,Blueprint: Bent Mace,"Furnace, Stone Axe"
-club,Pine Club,5x wood,—,—,—
-dagger,Rusty Dagger,"125x ore, 30x wood",Anvil,Blueprint: Apprentice's Dagger,"Furnace, Stone Axe"
-sword,Rusty Sword,"250x ore, 64x wood",Anvil,Blueprint: Apprentice's Sword,"Furnace, Stone Axe"
-short_sword,Short Sword,"180x ore, 41x wood",Anvil,Blueprint: Short Sword,"Furnace, Stone Axe"
+bow,Apprentice's Bow,"132x fiber, 20x wood",Workbench,Blueprint: Apprentice's Bow,"Spinning Wheel, Stone Axe or Dagger"
+sickle,Apprentice's Sickle,"125x ore, 34x wood",Anvil,Blueprint: Uneven Sickle,"Furnace, Stone Axe or Dagger"
+warhammer,Apprentice's Warhammer,"375x ore, 102x wood",Anvil,Blueprint: Melted Warhammer,"Furnace, Stone Axe or Dagger"
+wand,Beginner's Wand,"3x crystal, 4x wood",Enchanter's Table,Blueprint: Beginner's Wand,"Lapidary Bench, Stone Axe or Dagger"
+greatsword,Bent Greatsword,"375x ore, 102x wood",Anvil,Blueprint: Blunt Greatsword,"Furnace, Stone Axe or Dagger"
+battle_axe,Blunt Battle Axe,"375x ore, 94x wood",Anvil,Blueprint: Loose Battle Axe,"Furnace, Stone Axe or Dagger"
+spear,Blunt Spear,"125x ore, 38x wood",Anvil,Blueprint: Loose Spear,"Furnace, Stone Axe or Dagger"
+set_of_bolts,Crude Set of Bolts,"10x ore, 12x wood",Workbench,Blueprint: Crude Set of Bolts,Stone Axe or Dagger
+sharpened_stick,Crude Sharpened Stick,"1x harvest, 2x meat, 2x stone, 7x wood",—,—,Stone Axe or Dagger
+magic_staff,Gnarled Magic Staff,"6x crystal, 16x wood",Enchanter's Table,Blueprint: Gnarled Magic Staff,"Lapidary Bench, Stone Axe or Dagger"
+mace,Loose Mace,"250x ore, 64x wood",Anvil,Blueprint: Bent Mace,"Furnace, Stone Axe or Dagger"
+club,Pine Club,5x wood,Stone Axe or Dagger,—,—
+dagger,Rusty Dagger,"125x ore, 30x wood",Anvil,Blueprint: Apprentice's Dagger,Furnace
+sword,Rusty Sword,"250x ore, 64x wood",Anvil,Blueprint: Apprentice's Sword,"Furnace, Stone Axe or Dagger"
+short_sword,Short Sword,"180x ore, 41x wood",Anvil,Blueprint: Short Sword,"Furnace, Stone Axe or Dagger"
 axe_stone,Stone Axe,"2x meat, 4x stone, 9x wood",—,—,—
-quiver_of_arrows,Tight Quiver of Arrows,"2x feather, 5x ore, 1x skin, 16x wood",Workbench,Blueprint: Primitive Quiver of Arrows,Stone Axe
-crossbow,Uneven Crossbow,"36x fiber, 75x ore, 60x wood",Anvil,Blueprint: Bended Crossbow,"Spinning Wheel, Stone Axe"
+quiver_of_arrows,Tight Quiver of Arrows,"2x feather, 5x ore, 1x skin, 16x wood",Workbench,Blueprint: Primitive Quiver of Arrows,Stone Axe or Dagger
+crossbow,Uneven Crossbow,"36x fiber, 75x ore, 60x wood",Anvil,Blueprint: Bended Crossbow,"Spinning Wheel, Stone Axe or Dagger"

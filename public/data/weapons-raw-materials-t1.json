@@ -12,7 +12,7 @@
       "blueprint": "Blueprint: Apprentice's Bow",
       "processing_tools": [
         "Spinning Wheel",
-        "Stone Axe"
+        "Stone Axe or Dagger"
       ]
     },
     {
@@ -27,7 +27,7 @@
       "blueprint": "Blueprint: Uneven Sickle",
       "processing_tools": [
         "Furnace",
-        "Stone Axe"
+        "Stone Axe or Dagger"
       ]
     },
     {
@@ -42,7 +42,7 @@
       "blueprint": "Blueprint: Melted Warhammer",
       "processing_tools": [
         "Furnace",
-        "Stone Axe"
+        "Stone Axe or Dagger"
       ]
     },
     {
@@ -57,7 +57,7 @@
       "blueprint": "Blueprint: Beginner's Wand",
       "processing_tools": [
         "Lapidary Bench",
-        "Stone Axe"
+        "Stone Axe or Dagger"
       ]
     },
     {
@@ -72,7 +72,7 @@
       "blueprint": "Blueprint: Blunt Greatsword",
       "processing_tools": [
         "Furnace",
-        "Stone Axe"
+        "Stone Axe or Dagger"
       ]
     },
     {
@@ -87,7 +87,7 @@
       "blueprint": "Blueprint: Loose Battle Axe",
       "processing_tools": [
         "Furnace",
-        "Stone Axe"
+        "Stone Axe or Dagger"
       ]
     },
     {
@@ -102,7 +102,7 @@
       "blueprint": "Blueprint: Loose Spear",
       "processing_tools": [
         "Furnace",
-        "Stone Axe"
+        "Stone Axe or Dagger"
       ]
     },
     {
@@ -116,7 +116,7 @@
       "tool": "Workbench",
       "blueprint": "Blueprint: Crude Set of Bolts",
       "processing_tools": [
-        "Stone Axe"
+        "Stone Axe or Dagger"
       ]
     },
     {
@@ -132,7 +132,7 @@
       "tool": null,
       "blueprint": null,
       "processing_tools": [
-        "Stone Axe"
+        "Stone Axe or Dagger"
       ]
     },
     {
@@ -147,7 +147,7 @@
       "blueprint": "Blueprint: Bent Mace",
       "processing_tools": [
         "Furnace",
-        "Stone Axe"
+        "Stone Axe or Dagger"
       ]
     },
     {
@@ -162,7 +162,7 @@
       "blueprint": "Blueprint: Gnarled Magic Staff",
       "processing_tools": [
         "Lapidary Bench",
-        "Stone Axe"
+        "Stone Axe or Dagger"
       ]
     },
     {
@@ -172,7 +172,7 @@
       "raw_materials": {
         "wood": 5
       },
-      "tool": null,
+      "tool": "Stone Axe or Dagger",
       "blueprint": null,
       "processing_tools": []
     },
@@ -187,8 +187,7 @@
       "tool": "Anvil",
       "blueprint": "Blueprint: Apprentice's Dagger",
       "processing_tools": [
-        "Furnace",
-        "Stone Axe"
+        "Furnace"
       ]
     },
     {
@@ -203,7 +202,7 @@
       "blueprint": "Blueprint: Apprentice's Sword",
       "processing_tools": [
         "Furnace",
-        "Stone Axe"
+        "Stone Axe or Dagger"
       ]
     },
     {
@@ -232,7 +231,7 @@
       "tool": "Workbench",
       "blueprint": "Blueprint: Primitive Quiver of Arrows",
       "processing_tools": [
-        "Stone Axe"
+        "Stone Axe or Dagger"
       ]
     },
     {
@@ -248,7 +247,7 @@
       "blueprint": "Blueprint: Bended Crossbow",
       "processing_tools": [
         "Spinning Wheel",
-        "Stone Axe"
+        "Stone Axe or Dagger"
       ]
     },
     {
@@ -263,7 +262,7 @@
       "blueprint": "Blueprint: Short Sword",
       "processing_tools": [
         "Furnace",
-        "Stone Axe"
+        "Stone Axe or Dagger"
       ]
     }
   ],
