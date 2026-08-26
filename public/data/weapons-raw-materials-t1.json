@@ -157,8 +157,17 @@
         "wood": 42,
         "fiber": 1
       }
+    },
+    {
+      "id": "short_sword",
+      "name": "Short Sword",
+      "tier": 1,
+      "raw_materials": {
+        "ore": 180,
+        "wood": 40
+      }
     }
   ],
   "tier": 1,
-  "count": 17
+  "count": 18
 }
