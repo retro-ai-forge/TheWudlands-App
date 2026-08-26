@@ -625,13 +625,16 @@ function populateSelect(filterText, tier) {
       }
 
       // A search that names exactly one item is a specific lookup, not a
-      // browse - e.g. "anvil" or "carcass" - so it also preselects that
-      // item, landing straight on its own build recipe. A broader search
-      // matching several items (e.g. "sword") keeps the previous
-      // selection if still valid instead, so refining a browse-style
-      // search doesn't keep resetting it.
+      // browse - e.g. "anvil" or "carcass" - so it preselects that item,
+      // landing straight on its own build recipe, but only when there's no
+      // still-valid previous selection to keep. Without this check, a tier
+      // toggle (which just replays the same search text) would keep
+      // snapping back to the searched item itself instead of preserving
+      // whatever was actually selected (e.g. a "uses carcass" pick like
+      // sharpened_stick, which still shows up at every tier).
       if (totalNameMatches === 1) {
-        select.value = firstNameMatch;
+        const prevStillValid = [...select.options].some(o => o.value === prev);
+        select.value = prevStillValid ? prev : firstNameMatch;
         return;
       }
     }

@@ -1265,3 +1265,25 @@ its edge quantity changed `6` → `3`. `fired_brick`'s own canonical build
 (from `refined_clay` + Kiln) was already drawn elsewhere with no
 consumer; still leaf-style, no upstream duplicated onto the relabeled
 copy - same convention as every other tool/ingredient swap this session.
+
+## Fix: tier toggle snapped a single-name-match search back to the wrong item
+
+`populateSelect()`'s "a search that names exactly one item preselects it"
+rule (e.g. typing "carcass" jumps straight to the Carcass recipe) ran on
+*every* call, including a tier-button/tier-select change - which just
+replays the same search text through `populateSelect(filterBox.value,
+currentTier())`. Since a family's tier-specific name still contains the
+search word at every tier ("Rabbit Carcass" → "Dragon Carcass" all match
+"carcass"), `totalNameMatches` stayed `1` on every tier, so toggling tiers
+kept discarding whatever the user had actually selected (e.g.
+`sharpened_stick`, picked from the "processed (uses carcass)" group) and
+snapping back to `carcass` itself.
+
+Fix: only auto-preselect the single name match when the previous
+selection isn't already a valid option in the freshly-built list -
+`prevStillValid = [...select.options].some(o => o.value === prev)`, then
+`select.value = prevStillValid ? prev : firstNameMatch`. A genuinely new
+search (previous selection unrelated, not present in the new list) still
+jumps straight to the matched item as before; a tier toggle or any other
+re-population that replays the same search now preserves the real
+selection instead.
