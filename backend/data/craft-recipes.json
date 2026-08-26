@@ -50,7 +50,7 @@
   {"familyId": "wrench", "ingredients": [{"category": "processed", "familyId": "refined_ore", "qty": 4, "consumed": true}], "tool": "anvil", "blueprintFamilyId": "blueprint_wrench"},
   {"familyId": "writers_table", "ingredients": [{"category": "processed", "familyId": "plank", "qty": 6, "consumed": true}, {"category": "processed", "familyId": "reinforced_frame", "qty": 2, "consumed": true}], "tool": null, "blueprintFamilyId": "blueprint_writers_table"},
 
-  {"familyId": "club", "ingredients": [{"category": "raw", "familyId": "wood", "qty": 5, "consumed": true}], "tool": "axe_stone", "blueprintFamilyId": null},
+  {"familyId": "club", "ingredients": [{"category": "raw", "familyId": "wood", "qty": 5, "consumed": true}], "tool": ["axe_stone", "dagger"], "blueprintFamilyId": null},
   {"familyId": "sharpened_stick", "ingredients": [{"category": "final", "familyId": "axe_stone", "qty": 1, "consumed": false}, {"category": "processed", "familyId": "firewood", "qty": 1, "consumed": true}, {"category": "raw", "familyId": "meat", "qty": 1, "consumed": true}, {"category": "raw", "familyId": "harvest", "qty": 1, "consumed": true}], "tool": null, "blueprintFamilyId": null},
   {"familyId": "dagger", "ingredients": [{"category": "processed", "familyId": "metal_bar", "qty": 1, "consumed": true}], "tool": "anvil", "blueprintFamilyId": "blueprint_dagger"},
   {"familyId": "sickle", "ingredients": [{"category": "processed", "familyId": "metal_bar", "qty": 1, "consumed": true}, {"category": "processed", "familyId": "plank", "qty": 1, "consumed": true}], "tool": "anvil", "blueprintFamilyId": "blueprint_sickle"},
@@ -85,7 +85,7 @@
   {"familyId": "candle", "ingredients": [{"category": "raw", "familyId": "harvest", "qty": 3, "consumed": true}, {"category": "raw", "familyId": "fiber", "qty": 2, "consumed": true}], "tool": null, "blueprintFamilyId": null},
   {"familyId": "cart", "ingredients": [{"category": "processed", "familyId": "beam", "qty": 2, "consumed": true}, {"category": "processed", "familyId": "plank", "qty": 2, "consumed": true}], "tool": "workbench", "blueprintFamilyId": null},
   {"familyId": "cloth_cloak", "ingredients": [{"category": "processed", "familyId": "woven_cloth", "qty": 1, "consumed": true}, {"category": "raw", "familyId": "fiber", "qty": 1, "consumed": true}], "tool": null, "blueprintFamilyId": null},
-  {"familyId": "fishing_pole", "ingredients": [{"category": "raw", "familyId": "wood", "qty": 3, "consumed": true}, {"category": "raw", "familyId": "fiber", "qty": 1, "consumed": true}], "tool": "axe_stone", "blueprintFamilyId": null},
+  {"familyId": "fishing_pole", "ingredients": [{"category": "raw", "familyId": "wood", "qty": 3, "consumed": true}, {"category": "raw", "familyId": "fiber", "qty": 1, "consumed": true}], "tool": ["axe_stone", "dagger"], "blueprintFamilyId": null},
   {"familyId": "fur_cloak", "ingredients": [{"category": "processed", "familyId": "trimmed_pelt", "qty": 5, "consumed": true}], "tool": null, "blueprintFamilyId": null},
   {"familyId": "glass_lantern", "ingredients": [{"category": "processed", "familyId": "glass_pane", "qty": 2, "consumed": true}, {"category": "processed", "familyId": "refined_ore", "qty": 2, "consumed": true}, {"category": "processed", "familyId": "cut_crystal", "qty": 1, "consumed": true}, {"category": "raw", "familyId": "meat", "qty": 1, "consumed": true}], "tool": "kiln", "blueprintFamilyId": null},
   {"familyId": "holy_symbol", "ingredients": [{"category": "raw", "familyId": "wood", "qty": 2, "consumed": true}, {"category": "raw", "familyId": "pigment", "qty": 1, "consumed": true}], "tool": null, "blueprintFamilyId": null},
@@ -102,7 +102,7 @@
   {"familyId": "grappling_hook", "ingredients": [{"category": "final", "familyId": "rope", "qty": 1, "consumed": true}, {"category": "processed", "familyId": "refined_ore", "qty": 3, "consumed": true}], "tool": "anvil", "blueprintFamilyId": null},
   {"familyId": "hourglass", "ingredients": [{"category": "processed", "familyId": "glass_pane", "qty": 1, "consumed": true}, {"category": "raw", "familyId": "sand", "qty": 1, "consumed": true}], "tool": "kiln", "blueprintFamilyId": null},
   {"familyId": "iron_spikes", "ingredients": [{"category": "processed", "familyId": "refined_ore", "qty": 3, "consumed": true}], "tool": "anvil", "blueprintFamilyId": null},
-  {"familyId": "ladder", "ingredients": [{"category": "raw", "familyId": "wood", "qty": 6, "consumed": true}, {"category": "raw", "familyId": "fiber", "qty": 2, "consumed": true}], "tool": "axe_stone", "blueprintFamilyId": null},
+  {"familyId": "ladder", "ingredients": [{"category": "raw", "familyId": "wood", "qty": 6, "consumed": true}, {"category": "raw", "familyId": "fiber", "qty": 2, "consumed": true}], "tool": ["axe_stone", "dagger"], "blueprintFamilyId": null},
   {"familyId": "lock_and_key", "ingredients": [{"category": "processed", "familyId": "refined_ore", "qty": 2, "consumed": true}], "tool": "wrench", "blueprintFamilyId": null},
   {"familyId": "manacles", "ingredients": [{"category": "processed", "familyId": "refined_ore", "qty": 3, "consumed": true}], "tool": "anvil", "blueprintFamilyId": null},
   {"familyId": "merchants_scale", "ingredients": [{"category": "raw", "familyId": "wood", "qty": 2, "consumed": true}, {"category": "raw", "familyId": "stone", "qty": 2, "consumed": true}], "tool": "wrench", "blueprintFamilyId": "blueprint_merchants_scale"},
@@ -140,7 +140,7 @@
   {"familyId": "metal_bar", "ingredients": [{"category": "processed", "familyId": "metal_ingot", "qty": 5, "consumed": true}, {"category": "processed", "familyId": "coal", "qty": 1, "consumed": true}], "tool": "furnace", "blueprintFamilyId": null},
   {"familyId": "metal_ingot", "ingredients": [{"category": "processed", "familyId": "refined_ore", "qty": 5, "consumed": true}, {"category": "processed", "familyId": "coal", "qty": 2, "consumed": true}], "tool": "furnace", "blueprintFamilyId": null},
   {"familyId": "parchment", "ingredients": [{"category": "raw", "familyId": "reed", "qty": 4, "consumed": true}], "tool": "workbench", "blueprintFamilyId": null},
-  {"familyId": "plank", "ingredients": [{"category": "raw", "familyId": "wood", "qty": 4, "consumed": true}], "tool": "axe_stone", "blueprintFamilyId": null},
+  {"familyId": "plank", "ingredients": [{"category": "raw", "familyId": "wood", "qty": 4, "consumed": true}], "tool": ["axe_stone", "dagger"], "blueprintFamilyId": null},
   {"familyId": "quilted_thread", "ingredients": [{"category": "raw", "familyId": "feather", "qty": 2, "consumed": true}], "tool": "spinning_wheel", "blueprintFamilyId": null},
   {"familyId": "refined_clay", "ingredients": [{"category": "raw", "familyId": "clay", "qty": 6, "consumed": true}, {"category": "raw", "familyId": "sand", "qty": 2, "consumed": true}], "tool": null, "blueprintFamilyId": null},
   {"familyId": "refined_ore", "ingredients": [{"category": "raw", "familyId": "ore", "qty": 5, "consumed": true}], "tool": null, "blueprintFamilyId": null},
@@ -155,5 +155,5 @@
   {"familyId": "woven_cloth", "ingredients": [{"category": "processed", "familyId": "thread", "qty": 4, "consumed": true}], "tool": "loom", "blueprintFamilyId": null},
   {"familyId": "written_scroll", "ingredients": [{"category": "processed", "familyId": "parchment", "qty": 2, "consumed": true}, {"category": "processed", "familyId": "ink", "qty": 2, "consumed": true}, {"category": "final_unresolved", "familyId": "quill", "qty": 1, "consumed": true}], "tool": null, "blueprintFamilyId": null},
 
-  {"familyId": "firewood", "ingredients": [{"category": "raw", "familyId": "wood", "qty": 5, "consumed": true}], "tool": "axe_stone", "blueprintFamilyId": null}
+  {"familyId": "firewood", "ingredients": [{"category": "raw", "familyId": "wood", "qty": 5, "consumed": true}], "tool": ["axe_stone", "dagger"], "blueprintFamilyId": null}
 ]

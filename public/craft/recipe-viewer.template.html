@@ -421,6 +421,23 @@ function ownsFamily(ownedSet, famId, requiredTier) {
   return f.tiers.some(t => t.tier >= requiredTier && ownedSet.has(t.id));
 }
 
+// A recipe's "tool" field is either a single familyId or an array of
+// alternatives (any one satisfies the requirement, e.g. axe_stone OR
+// dagger) - this normalizes either shape to an array everywhere it's read.
+function toolIds(tool) {
+  if (!tool) return [];
+  return Array.isArray(tool) ? tool : [tool];
+}
+
+// True if the player owns at least one of the tool's alternatives (or
+// there's no character context at all, same "don't flag anything as
+// missing" default ownsFamily uses).
+function ownsAnyTool(ownedSet, ids, requiredTier) {
+  if (!ownedSet) return true;
+  if (!ids.length) return true;
+  return ids.some(id => ownsFamily(ownedSet, id, requiredTier));
+}
+
 // Passed alongside ?inv= as the exact page (character + tab) the player
 // left from - e.g. "/?character=<id>&tab=inventory" - so "Back" can return
 // there directly instead of just going up to the bare welcome page. Without
@@ -555,7 +572,7 @@ function populateSelect(filterText, tier) {
         }
       }
       // Check if tool matches
-      if (!hasIngredient && recipe.tool && recipe.tool.toLowerCase().includes(ft)) {
+      if (!hasIngredient && toolIds(recipe.tool).some(t => t.toLowerCase().includes(ft))) {
         hasIngredient = true;
       }
 
@@ -644,8 +661,9 @@ function buildInteractiveNode(famId, qty, category, tier, isRoot) {
   const tagCategory = isRoot ? "final" : category;
   row.appendChild(el("span", "tag cat-" + (tagCategory === "final" ? "final" : tagCategory), tagCategory));
   if (recipe && recipe.tool) {
-    const toolTag = el("span", "tag tool", "\u{1F528} " + recipe.tool);
-    if (!ownsFamily(ownedTools, recipe.tool, tier)) toolTag.classList.add("missing");
+    const tIds = toolIds(recipe.tool);
+    const toolTag = el("span", "tag tool", "\u{1F528} " + tIds.join(" or "));
+    if (!ownsAnyTool(ownedTools, tIds, tier)) toolTag.classList.add("missing");
     row.appendChild(toolTag);
   }
   wrapper.appendChild(row);
@@ -725,7 +743,7 @@ function wireAccordionClick(controller, siblingGroup) {
 // which nodes are expanded in the UI.
 function computeTotals(famId, qty, category, rawTotals, finalTotals, toolSet) {
   const recipe = recipes[famId];
-  if (recipe && recipe.tool) toolSet.add(recipe.tool);
+  if (recipe && recipe.tool) toolSet.add(toolIds(recipe.tool).join("|"));
   if (category === "raw") {
     rawTotals[famId] = (rawTotals[famId] || 0) + qty;
     return;
@@ -818,9 +836,10 @@ function render(famId, tier) {
   if (!toolSet.size) {
     toolListEl.appendChild(el("span", "empty", "none"));
   } else {
-    for (const t of [...toolSet].sort()) {
-      const toolTag = el("span", "tag tool", "\u{1F528} " + t);
-      if (!ownsFamily(ownedTools, t, tier)) toolTag.classList.add("missing");
+    for (const key of [...toolSet].sort()) {
+      const tIds = key.split("|");
+      const toolTag = el("span", "tag tool", "\u{1F528} " + tIds.join(" or "));
+      if (!ownsAnyTool(ownedTools, tIds, tier)) toolTag.classList.add("missing");
       toolListEl.appendChild(toolTag);
     }
   }

@@ -742,3 +742,47 @@ changed to `T1 thread` (same node, no rewiring), and its edge's quantity
 changed from 35 to 6. `crossbow` picks up **Spinning Wheel** as a second
 processing tool alongside **Stone Axe**, the same pairing `bow` already
 has.
+
+## Tool alternatives: `axe_stone` OR `dagger`, one array instead of duplicated recipes
+
+By request: every recipe that needed `axe_stone` specifically as its tool
+should also accept `dagger` as a substitute - "a knife works too" - without
+duplicating the recipe per tool option.
+
+**Schema.** `craft-recipes.json`'s `tool` field now accepts either a single
+familyId (unchanged for every recipe not touched here) or an array of
+alternatives, any one of which satisfies the requirement. Applied to the
+5 recipes that used `axe_stone` as their tool: `club`, `plank`, `firewood`,
+`ladder`, `fishing_pole` → `"tool": ["axe_stone", "dagger"]`. No live
+crafting-execution backend code reads this field yet (checked first -
+`craft_catalog.py`'s few "tool" references are about catalog-source
+classification, unrelated to recipe execution), so this was a safe,
+non-breaking schema extension.
+
+Deliberately excluded: `sharpened_stick`'s `axe_stone` ingredient is a
+`final`-category ingredient (you must own one, unconsumed - see
+"Blueprints gate..." above), not its `tool` field. "Tool alternative"
+doesn't apply there; that's a different kind of requirement.
+
+**Recipe viewer.** `recipe.tool` is read in 4 places (search-by-tool, the
+per-node tool tag, `computeTotals`'s tool-collection, the "Tools Used"
+summary) - all 4 updated via two new helpers, `toolIds()` (normalizes
+either shape to an array) and `ownsAnyTool()` (true if the player owns
+*any* alternative, mirroring `ownsFamily`'s single-tool check). Multiple
+tools display joined as `"axe_stone or dagger"`; a tag is marked missing
+only if *none* of the alternatives are owned. The "Tools Used" summary
+groups a recipe's full alternative set behind one combined key (joined
+with `|`) so `club`'s tool renders as one tag, not two independent ones
+that would misread as "you need both."
+
+**Diagram.** No existing convention drew "either this tool or that one" -
+every edge into a recipe meant a required ingredient (AND), never an
+alternative (OR). Rather than invent a two-edges-plus-OR-label convention
+diagram-wide, went with the simplest fix that matches what the schema
+actually says: relabeled each of the 5 pulled-in `T1 axe_stone` tool
+copies (feeding `club`, `plank`, `firewood`, `ladder`, `fishing_pole`) to
+`T1 axe_stone or dagger` - one node, one edge, same weapon-red styling,
+same position. The two `axe_stone` nodes NOT touched: the canonical build
+recipe (no outgoing edge - it's "the item itself," not a tool usage) and
+`sharpened_stick`'s pulled-in `final`-ingredient copy (a different kind of
+requirement, per above).
