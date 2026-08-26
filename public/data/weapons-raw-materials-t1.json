@@ -7,7 +7,9 @@
       "raw_materials": {
         "wood": 20,
         "fiber": 132
-      }
+      },
+      "tool": "Workbench",
+      "blueprint": "Blueprint: Apprentice's Bow"
     },
     {
       "id": "sickle",
@@ -16,7 +18,9 @@
       "raw_materials": {
         "ore": 125,
         "wood": 34
-      }
+      },
+      "tool": "Anvil",
+      "blueprint": "Blueprint: Uneven Sickle"
     },
     {
       "id": "warhammer",
@@ -25,7 +29,9 @@
       "raw_materials": {
         "ore": 375,
         "wood": 102
-      }
+      },
+      "tool": "Anvil",
+      "blueprint": "Blueprint: Melted Warhammer"
     },
     {
       "id": "wand",
@@ -34,7 +40,9 @@
       "raw_materials": {
         "wood": 4,
         "crystal": 3
-      }
+      },
+      "tool": "Enchanter's Table",
+      "blueprint": "Blueprint: Beginner's Wand"
     },
     {
       "id": "greatsword",
@@ -43,7 +51,9 @@
       "raw_materials": {
         "ore": 375,
         "wood": 102
-      }
+      },
+      "tool": "Anvil",
+      "blueprint": "Blueprint: Blunt Greatsword"
     },
     {
       "id": "battle_axe",
@@ -52,7 +62,9 @@
       "raw_materials": {
         "ore": 375,
         "wood": 94
-      }
+      },
+      "tool": "Anvil",
+      "blueprint": "Blueprint: Loose Battle Axe"
     },
     {
       "id": "spear",
@@ -61,7 +73,9 @@
       "raw_materials": {
         "ore": 125,
         "wood": 38
-      }
+      },
+      "tool": "Anvil",
+      "blueprint": "Blueprint: Loose Spear"
     },
     {
       "id": "set_of_bolts",
@@ -70,7 +84,9 @@
       "raw_materials": {
         "wood": 12,
         "ore": 10
-      }
+      },
+      "tool": "Workbench",
+      "blueprint": "Blueprint: Crude Set of Bolts"
     },
     {
       "id": "sharpened_stick",
@@ -81,7 +97,9 @@
         "stone": 2,
         "meat": 2,
         "harvest": 1
-      }
+      },
+      "tool": null,
+      "blueprint": "Blueprint: Crude Sharpened Stick"
     },
     {
       "id": "mace",
@@ -90,7 +108,9 @@
       "raw_materials": {
         "ore": 250,
         "wood": 64
-      }
+      },
+      "tool": "Anvil",
+      "blueprint": "Blueprint: Bent Mace"
     },
     {
       "id": "magic_staff",
@@ -99,7 +119,9 @@
       "raw_materials": {
         "wood": 16,
         "crystal": 6
-      }
+      },
+      "tool": "Enchanter's Table",
+      "blueprint": "Blueprint: Gnarled Magic Staff"
     },
     {
       "id": "club",
@@ -107,7 +129,9 @@
       "tier": 1,
       "raw_materials": {
         "wood": 5
-      }
+      },
+      "tool": null,
+      "blueprint": null
     },
     {
       "id": "dagger",
@@ -116,7 +140,9 @@
       "raw_materials": {
         "ore": 125,
         "wood": 30
-      }
+      },
+      "tool": "Anvil",
+      "blueprint": "Blueprint: Apprentice's Dagger"
     },
     {
       "id": "sword",
@@ -125,7 +151,9 @@
       "raw_materials": {
         "ore": 250,
         "wood": 64
-      }
+      },
+      "tool": "Anvil",
+      "blueprint": "Blueprint: Apprentice's Sword"
     },
     {
       "id": "axe_stone",
@@ -135,7 +163,9 @@
         "meat": 2,
         "stone": 4,
         "wood": 9
-      }
+      },
+      "tool": null,
+      "blueprint": null
     },
     {
       "id": "quiver_of_arrows",
@@ -146,7 +176,9 @@
         "feather": 2,
         "ore": 5,
         "skin": 1
-      }
+      },
+      "tool": "Workbench",
+      "blueprint": "Blueprint: Primitive Quiver of Arrows"
     },
     {
       "id": "crossbow",
@@ -156,7 +188,9 @@
         "ore": 125,
         "wood": 42,
         "fiber": 1
-      }
+      },
+      "tool": "Anvil",
+      "blueprint": "Blueprint: Bended Crossbow"
     },
     {
       "id": "short_sword",
@@ -165,7 +199,9 @@
       "raw_materials": {
         "ore": 180,
         "wood": 41
-      }
+      },
+      "tool": "Anvil",
+      "blueprint": "Blueprint: Short Sword"
     }
   ],
   "tier": 1,

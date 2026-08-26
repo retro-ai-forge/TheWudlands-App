@@ -1,19 +1,19 @@
-Weapon ID,Weapon Name,Raw Materials Required
-bow,Apprentice's Bow,"132x fiber, 20x wood"
-sickle,Apprentice's Sickle,"125x ore, 34x wood"
-warhammer,Apprentice's Warhammer,"375x ore, 102x wood"
-wand,Beginner's Wand,"3x crystal, 4x wood"
-greatsword,Bent Greatsword,"375x ore, 102x wood"
-battle_axe,Blunt Battle Axe,"375x ore, 94x wood"
-spear,Blunt Spear,"125x ore, 38x wood"
-set_of_bolts,Crude Set of Bolts,"10x ore, 12x wood"
-sharpened_stick,Crude Sharpened Stick,"1x harvest, 2x meat, 2x stone, 7x wood"
-mace,Loose Mace,"250x ore, 64x wood"
-magic_staff,Gnarled Magic Staff,"6x crystal, 16x wood"
-club,Pine Club,5x wood
-dagger,Rusty Dagger,"125x ore, 30x wood"
-sword,Rusty Sword,"250x ore, 64x wood"
-axe_stone,Stone Axe,"2x meat, 4x stone, 9x wood"
-quiver_of_arrows,Tight Quiver of Arrows,"2x feather, 5x ore, 1x skin, 16x wood"
-crossbow,Uneven Crossbow,"1x fiber, 125x ore, 42x wood"
-short_sword,Short Sword,"180x ore, 41x wood"
+Weapon ID,Weapon Name,Raw Materials Required,Tool,Blueprint
+bow,Apprentice's Bow,"132x fiber, 20x wood",Workbench,Blueprint: Apprentice's Bow
+sickle,Apprentice's Sickle,"125x ore, 34x wood",Anvil,Blueprint: Uneven Sickle
+warhammer,Apprentice's Warhammer,"375x ore, 102x wood",Anvil,Blueprint: Melted Warhammer
+wand,Beginner's Wand,"3x crystal, 4x wood",Enchanter's Table,Blueprint: Beginner's Wand
+greatsword,Bent Greatsword,"375x ore, 102x wood",Anvil,Blueprint: Blunt Greatsword
+battle_axe,Blunt Battle Axe,"375x ore, 94x wood",Anvil,Blueprint: Loose Battle Axe
+spear,Blunt Spear,"125x ore, 38x wood",Anvil,Blueprint: Loose Spear
+set_of_bolts,Crude Set of Bolts,"10x ore, 12x wood",Workbench,Blueprint: Crude Set of Bolts
+sharpened_stick,Crude Sharpened Stick,"1x harvest, 2x meat, 2x stone, 7x wood",—,Blueprint: Crude Sharpened Stick
+magic_staff,Gnarled Magic Staff,"6x crystal, 16x wood",Enchanter's Table,Blueprint: Gnarled Magic Staff
+mace,Loose Mace,"250x ore, 64x wood",Anvil,Blueprint: Bent Mace
+club,Pine Club,5x wood,—,—
+dagger,Rusty Dagger,"125x ore, 30x wood",Anvil,Blueprint: Apprentice's Dagger
+sword,Rusty Sword,"250x ore, 64x wood",Anvil,Blueprint: Apprentice's Sword
+short_sword,Short Sword,"180x ore, 41x wood",Anvil,Blueprint: Short Sword
+axe_stone,Stone Axe,"2x meat, 4x stone, 9x wood",—,—
+quiver_of_arrows,Tight Quiver of Arrows,"2x feather, 5x ore, 1x skin, 16x wood",Workbench,Blueprint: Primitive Quiver of Arrows
+crossbow,Uneven Crossbow,"1x fiber, 125x ore, 42x wood",Anvil,Blueprint: Bended Crossbow
