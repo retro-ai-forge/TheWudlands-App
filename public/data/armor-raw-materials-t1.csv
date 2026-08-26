@@ -1,0 +1,9 @@
+Material ID,Material Name,Head Piece,Chest Piece,Leg Piece,Raw Materials Required,Tools,Blueprint
+darksteel,Darksteel Armor,Tempered Darksteel Helmet,Tempered Darksteel Breastplate,Tempered Darksteel Greaves,"16x clockwork, 415x ore, 99x wood","Anvil, Furnace",Blueprint: Tempered Darksteel Armor
+meteoric_iron,Meteoric Iron Armor,Copper Meteoric Helmet,Copper Meteoric Breastplate,Copper Meteoric Greaves,"10x crystal, 6x essence, 390x ore, 99x wood","Anvil, Furnace, Grinder",Blueprint: Copper Meteoric Armor
+chitin,Chitin Armor,Beetle Chitin Carapace Helm,Beetle Chitin Carapace Plate,Beetle Chitin Carapace Greaves,"48x herbs, 40x monster_part, 80x pigment, 192x skin, 12x wood","Workbench, Mortar & Pestle, Tanning Rack",Blueprint: Beetle Chitin Armor
+ebony,Ebony Armor,Dusk Ebony Helmet,Dusk Ebony Breastplate,Dusk Ebony Greaves,"80x bone, 48x herbs, 80x pigment, 132x wood","Workbench, Mortar & Pestle",Blueprint: Dusk Ebony Armor
+chainmail,Chainmail Armor,Loose Chainmail Coif,Loose Chainmail Hauberk,Loose Chainmail Chausses,"250x ore, 66x wood","Anvil, Furnace",Blueprint: Ripped Chainmail
+iron,Iron Armor,Apprentice's Iron Helmet,Apprentice's Iron Breastplate,Apprentice's Iron Greaves,"250x ore, 66x wood","Anvil, Furnace",Blueprint: Apprentice's Metal Armor
+leather,Leather Armor,Rotten Leather Cap,Primitive Leather Jerkin,Long Leather Leggings,"12x bone, 120x skin, 18x wood","Workbench, Tanning Rack",Blueprint: Thin Leather Armor
+cloth,Cloth Armor,Tight Hood,Small Robe,Loose Trousers,72x fiber,"Workbench, Loom, Spinning Wheel",Blueprint: Used Cloth
