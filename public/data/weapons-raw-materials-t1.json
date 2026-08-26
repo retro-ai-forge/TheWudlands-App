@@ -132,9 +132,9 @@
       "name": "Stone Axe",
       "tier": 1,
       "raw_materials": {
-        "wood": 3,
-        "stone": 2,
-        "meat": 1
+        "meat": 2,
+        "stone": 4,
+        "wood": 9
       }
     },
     {
