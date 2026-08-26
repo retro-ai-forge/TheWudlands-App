@@ -1,5 +1,5 @@
 Material ID,Material Name,Head Piece,Chest Piece,Leg Piece,Raw Materials Required,Tools,Blueprint
-darksteel,Darksteel Armor,Tempered Darksteel Helmet,Tempered Darksteel Breastplate,Tempered Darksteel Greaves,"60x clockwork, 300x ore",Anvil,Blueprint: Tempered Darksteel Armor
+darksteel,Darksteel Armor,Tempered Darksteel Helmet,Tempered Darksteel Breastplate,Tempered Darksteel Greaves,"60x clockwork, 275x ore, 33x wood","Anvil, Furnace",Blueprint: Tempered Darksteel Armor
 meteoric_iron,Meteoric Iron Armor,Copper Meteoric Helmet,Copper Meteoric Breastplate,Copper Meteoric Greaves,"140x crystal, 90x essence, 120x ore","Anvil, Grinder",Blueprint: Copper Meteoric Armor
 ebony,Ebony Armor,Dusk Ebony Helmet,Dusk Ebony Breastplate,Dusk Ebony Greaves,"80x bone, 48x herbs, 80x pigment, 132x wood","Workbench, Mortar & Pestle",Blueprint: Dusk Ebony Armor
 iron,Iron Armor,Apprentice's Iron Helmet,Apprentice's Iron Breastplate,Apprentice's Iron Greaves,"250x ore, 66x wood","Anvil, Furnace",Blueprint: Apprentice's Metal Armor

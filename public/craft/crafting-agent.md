@@ -1027,3 +1027,30 @@ qty-1) `metal_bar` node; Chitin's existing `cured_chitin`/`leather_lining`
 edge values updated in place (armor and shield); a new `arcane_dust` node
 added to both Meteoric Iron clusters, positioned near the existing
 `essence` node in each.
+
+## Darksteel: refined_ore reverted back to metal_bar (Furnace returns)
+
+By request - undoes half of the earlier metal_bar removal. `refined_ore`
+was swapped back for `metal_bar` in both Darksteel recipes, which brings
+the **Furnace** dependency back (Darksteel now needs Anvil + Furnace
+again, same as Iron/Chainmail) - flagged explicitly before making the
+change, since it reverses the differentiation `metal_bar`'s removal had
+specifically bought.
+
+Since `metal_bar` is a fixed 125-ore/33-wood block (no way to trim it
+gradually), hitting "keep the total about the same" required also
+retuning `clockwork_mechanism`'s quantity, not just swapping the ore
+ingredient 1:1:
+
+- **Armor**: `metal_bar`×1 + `clockwork_mechanism`×15 (unchanged) → `ore`
+  275 + `wood` 33 + `clockwork` 60 = **368** (was 360 with refined_ore,
+  +2%).
+- **Shield**: `metal_bar`×1 + `clockwork_mechanism`×6 (down from 10 - a
+  straight 1:1 substitution alone would have pushed the shield from
+  240→298, since `metal_bar` is proportionally a much bigger chunk
+  relative to the shield's smaller base) → `ore` 185 + `wood` 33 +
+  `clockwork` 24 = **242** (was 240, +1%).
+
+Diagram: relabeled both `T1 refined_ore` nodes back to `T1 metal_bar`
+(armor and shield), updated their edge values to 1, and reduced the
+shield's `clockwork_mechanism` edge value to 6.
