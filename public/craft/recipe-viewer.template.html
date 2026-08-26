@@ -158,6 +158,7 @@
   .tag.tool { border-color: var(--tool); color: #8fb3e8; }
   .tag.blueprint { border-color: var(--blueprint); color: #e0b5f0; }
   .tag.unconsumed { border-color: var(--text-dim); color: var(--text-dim); }
+  .tag.alt-ingredient { border-color: var(--accent); color: var(--accent); font-style: italic; }
   .tag.cat-raw { border-color: var(--raw); color: #7fd08a; }
   .tag.cat-processed { border-color: var(--processed); color: #e0c565; }
   .tag.cat-final { border-color: var(--final); color: #7ec8e3; }
@@ -438,6 +439,18 @@ function ownsAnyTool(ownedSet, ids, requiredTier) {
   return ids.some(id => ownsFamily(ownedSet, id, requiredTier));
 }
 
+// Flattens an ingredient list, expanding any "alternatives" slot (e.g.
+// carcass's bone_blade-consumed-or-dagger-not-consumed choice) into its
+// individual options. A plain ingredient passes through unchanged.
+function flattenIngredients(ingredients) {
+  const out = [];
+  for (const ing of ingredients || []) {
+    if (ing.alternatives) out.push(...ing.alternatives);
+    else out.push(ing);
+  }
+  return out;
+}
+
 // Passed alongside ?inv= as the exact page (character + tab) the player
 // left from - e.g. "/?character=<id>&tab=inventory" - so "Back" can return
 // there directly instead of just going up to the bare welcome page. Without
@@ -565,7 +578,7 @@ function populateSelect(filterText, tier) {
 
       // Check if any ingredient matches
       let hasIngredient = false;
-      for (const ingredient of recipe.ingredients || []) {
+      for (const ingredient of flattenIngredients(recipe.ingredients)) {
         if (ingredient.familyId.toLowerCase().includes(ft)) {
           hasIngredient = true;
           break;
@@ -693,7 +706,13 @@ function buildInteractiveNode(famId, qty, category, tier, isRoot) {
             childControllers.push(bp);
           }
         }
-        for (const ing of recipe.ingredients) {
+        for (const ing0 of recipe.ingredients) {
+          // An "alternatives" slot (e.g. carcass's bone_blade-consumed-or-
+          // dagger-not-consumed choice) renders its first/default option as
+          // the real child node, then appends the other option(s) as a
+          // small "or ..." note on that same row - informational only, not
+          // interactive.
+          const ing = ing0.alternatives ? ing0.alternatives[0] : ing0;
           const childCat = ing.category === "final_unresolved" ? "final" : ing.category;
           const child = buildInteractiveNode(ing.familyId, ing.qty, childCat, tier, false);
           // A tool being referenced as an ingredient (e.g. the axe_stone a
@@ -702,6 +721,12 @@ function buildInteractiveNode(famId, qty, category, tier, isRoot) {
           const ingFam = families[ing.familyId];
           if (!ing.consumed && (!ingFam || ingFam.category !== "tool")) {
             child.row.appendChild(el("span", "tag unconsumed", "not consumed"));
+          }
+          if (ing0.alternatives) {
+            for (const alt of ing0.alternatives.slice(1)) {
+              const altText = "or " + alt.qty + "x " + famLabel(alt.familyId, tier) + (alt.consumed ? "" : " (not consumed)");
+              child.row.appendChild(el("span", "tag alt-ingredient", altText));
+            }
           }
           childrenBox.appendChild(child.wrapper);
           if (child.expandable) {
@@ -756,7 +781,11 @@ function computeTotals(famId, qty, category, rawTotals, finalTotals, toolSet) {
     rawTotals[famId] = (rawTotals[famId] || 0) + qty;
     return;
   }
-  for (const ing of recipe.ingredients) {
+  for (const ing0 of recipe.ingredients) {
+    // For an "alternatives" slot (e.g. carcass's bone_blade-or-dagger
+    // choice), totals follow the first/default option only - counting
+    // both would double up on a single ingredient slot.
+    const ing = ing0.alternatives ? ing0.alternatives[0] : ing0;
     const childCat = ing.category === "final_unresolved" ? "final" : ing.category;
     computeTotals(ing.familyId, ing.qty * qty, childCat, rawTotals, finalTotals, toolSet);
   }

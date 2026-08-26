@@ -110,6 +110,18 @@ def _load_recipes() -> tuple[dict, ...]:
     return tuple(json.loads(_RECIPES_PATH.read_text()))
 
 
+def _iter_ingredients(ingredients: list[dict]):
+    """Flatten an ingredient list, expanding any "alternatives" slot (e.g.
+    carcass's bone_blade-consumed-or-dagger-not-consumed choice) into its
+    individual options. A plain ingredient yields itself unchanged."""
+    for ingredient in ingredients:
+        alternatives = ingredient.get("alternatives")
+        if alternatives is not None:
+            yield from alternatives
+        else:
+            yield ingredient
+
+
 def _resolve_raw_family_hits(
     family_id: str, recipes_by_family: dict[str, dict], seen: frozenset[str]
 ) -> list[str]:
@@ -121,7 +133,7 @@ def _resolve_raw_family_hits(
         return []
     seen = seen | {family_id}
     hits: list[str] = []
-    for ingredient in recipe["ingredients"]:
+    for ingredient in _iter_ingredients(recipe["ingredients"]):
         if ingredient["category"] == "raw":
             hits.append(ingredient["familyId"])
         elif ingredient["category"] == "processed":
@@ -132,7 +144,7 @@ def _resolve_raw_family_hits(
 
 def _recipe_categories(recipe: dict, recipes_by_family: dict[str, dict]) -> list[str]:
     hits: list[str] = []
-    for ingredient in recipe["ingredients"]:
+    for ingredient in _iter_ingredients(recipe["ingredients"]):
         if ingredient["category"] == "raw":
             hits.append(ingredient["familyId"])
         elif ingredient["category"] == "processed":

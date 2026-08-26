@@ -828,3 +828,57 @@ inputs stayed put, its former last input (`Kiln`) moved into the
 interior row since it's no longer an endpoint, and `carcass` became the
 new last/endpoint. All 4 outputs were re-centered to the horizontal
 midpoint of their (now one-more) inputs, per the standing centering rule.
+
+## `carcass`/`dressed_meat`: an ingredient-level alternative (`bone_blade` or `dagger`)
+
+Added by request: either recipe can be satisfied with a `bone_blade`
+(consumed, the original path) *or* a `dagger` (used but not consumed - you
+keep it). This went through a few designs before landing here, worth
+recording since the rejected ones are real traps for next time:
+
+1. **Multiple full recipes per output family** (`craft-recipes.json` allows
+   2+ entries for one `familyId`) - rejected as "a lot of extra fuzz." Would
+   have required `build-recipe-viewer.py`'s `build_recipes()` to group into
+   arrays instead of a single dict, and the recipe viewer to carry a
+   per-node variant switcher through `buildInteractiveNode`, `computeTotals`,
+   and search. Implemented once, then reverted whole - never shipped.
+2. **Two genuinely separate output families** (e.g. `carved_carcass` next to
+   `carcass`) - rejected too: "why do we need two families?" The dagger
+   path isn't a different *item*, just a different way to make the same one.
+3. **One recipe, ingredient-level alternative** - what shipped. `meat`×3
+   stays a plain required ingredient; the cutting-implement slot becomes
+   `{"alternatives": [...]}`, a list of options each with its own
+   category/qty/consumed, instead of a single ingredient object:
+
+   ```json
+   {"category": "raw", "familyId": "meat", "qty": 3, "consumed": true},
+   {"alternatives": [
+     {"category": "processed", "familyId": "bone_blade", "qty": 1, "consumed": true},
+     {"category": "final", "familyId": "dagger", "qty": 1, "consumed": false}
+   ]}
+   ```
+
+**Consumers of `ingredients` updated to flatten `alternatives`:**
+- `backend/craft_catalog.py`: new `_iter_ingredients()` helper, used by both
+  `_resolve_raw_family_hits` and `_recipe_categories` - a plain ingredient
+  yields itself, an `alternatives` slot yields all its options. Blueprint
+  category derivation was already skipping `final` ingredients (like
+  `dagger`) for raw-material scoring, so flattening changes nothing about
+  `carcass`/`dressed_meat`'s resolved categories - `bone_blade`→`bone` is
+  still the only raw hit either way.
+- `recipe-viewer.template.html`: new `flattenIngredients()` (mirrors
+  `_iter_ingredients`) used by the search-by-ingredient scan. `computeTotals`
+  and the interactive tree's child-rendering loop both take the **first**
+  alternative only (the default/bone_blade path) for whichever family the
+  slot belongs to - counting every alternative would double up a single
+  ingredient requirement. The tree additionally appends the *other*
+  alternative(s) as a small informational `or 1x dagger (not consumed)` tag
+  next to the rendered ingredient - not interactive, just visible.
+
+**Diagram.** The two clusters drawn for each item (bone_blade-based and
+dagger-based) got merged back into one per the backend's actual shape: kept
+the original `meat`+`bone_blade`→output cluster for each, relabeled its
+`T1 bone_blade` node to `T1 bone_blade or dagger` (same "combine into one
+labeled node" move already used for `axe_stone or dagger`), and deleted the
+now-redundant second cluster (`meat`+`dagger`→output) entirely, including
+its now-orphaned `meat`/`dagger` copies.
