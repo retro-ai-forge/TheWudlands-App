@@ -7,7 +7,7 @@ greatsword,Bent Greatsword,"375x ore, 102x wood",Anvil,Blueprint: Blunt Greatswo
 battle_axe,Blunt Battle Axe,"375x ore, 94x wood",Anvil,Blueprint: Loose Battle Axe,"Furnace, Stone Axe"
 spear,Blunt Spear,"125x ore, 38x wood",Anvil,Blueprint: Loose Spear,"Furnace, Stone Axe"
 set_of_bolts,Crude Set of Bolts,"10x ore, 12x wood",Workbench,Blueprint: Crude Set of Bolts,Stone Axe
-sharpened_stick,Crude Sharpened Stick,"1x harvest, 2x meat, 2x stone, 7x wood",—,Blueprint: Crude Sharpened Stick,Hearth
+sharpened_stick,Crude Sharpened Stick,"1x harvest, 2x meat, 2x stone, 7x wood",—,—,Stone Axe
 magic_staff,Gnarled Magic Staff,"6x crystal, 16x wood",Enchanter's Table,Blueprint: Gnarled Magic Staff,"Lapidary Bench, Stone Axe"
 mace,Loose Mace,"250x ore, 64x wood",Anvil,Blueprint: Bent Mace,"Furnace, Stone Axe"
 club,Pine Club,5x wood,—,—,—

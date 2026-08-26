@@ -131,12 +131,6 @@
     "plank": 6,
     "reinforced_frame": 2
   },
-  "blueprint_sharpened_stick": {
-    "axe_stone": 1,
-    "hardened_stick": 1,
-    "meat": 1,
-    "harvest": 1
-  },
   "blueprint_dagger": {
     "metal_bar": 1
   },

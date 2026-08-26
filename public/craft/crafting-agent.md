@@ -666,3 +666,36 @@ decision on whether an engine "tool" reference can point at a
 weapon-cataloged item; and wiring `axe_stone` into other weapon recipes as
 an ingredient (e.g. a future `dagger` variant) is a separate follow-up, not
 implied by the recolor.
+
+## `sharpened_stick`: blueprint removed, `hardened_stick`→`firewood`
+
+Two follow-up changes, backend this time (not diagram-only like the Stone
+Axe recolor above):
+
+- **Blueprint removed.** `sharpened_stick`'s `craft-recipes.json` entry had
+  `blueprintFamilyId: "blueprint_sharpened_stick"` even though the diagram
+  never drew a blueprint gate for it (it's one of the two Knife-tier basics
+  explicitly called out as blueprint-free in "Blueprints gate every
+  higher-level armor, weapon, and tool" above — the other being `club`).
+  Removed the 6 tier entries from `base-blueprint.json`
+  (`blueprint_pine_sharpened_stick` → `blueprint_worldroot_sharpened_stick`),
+  set `blueprintFamilyId` to `null` on the recipe, and cleaned the stale
+  `blueprint_sharpened_stick` entries out of the three precalculated Soul
+  Creation data files — the same backend/diagram-mismatch shape the Stone
+  Axe blueprint removal fixed, just already-diagram-correct this time.
+
+- **`hardened_stick` → `firewood`.** `sharpened_stick` used to consume
+  `hardened_stick` (`wood`×4 + **Hearth**). Swapped for `firewood`
+  (`wood`×5 + **Stone Axe**) instead — removes Hearth from this recipe's
+  tool chain entirely, and reuses Stone Axe, which `sharpened_stick`
+  already depends on via its `axe_stone` final-category ingredient. In the
+  diagram, this needed no rewiring: the pulled-in `T1 hardened_stick` copy
+  feeding `sharpened_stick` had no drawn upstream (a bare stand-in, same as
+  many pulled-in copies), so relabeling it `T1 firewood` in place was
+  sufficient — same yellow processed-material styling, same edge, same
+  qty label.
+
+  `hardened_stick`'s own build recipe (`wood`×4 + Hearth, Section 3) is now
+  an orphan with no consumer, in both the diagram and `craft-recipes.json`
+  — left in place rather than deleted, since removing a recipe family
+  outright wasn't asked for here and is a separate cleanup decision.

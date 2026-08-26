@@ -130,9 +130,9 @@
         "harvest": 1
       },
       "tool": null,
-      "blueprint": "Blueprint: Crude Sharpened Stick",
+      "blueprint": null,
       "processing_tools": [
-        "Hearth"
+        "Stone Axe"
       ]
     },
     {

@@ -155,12 +155,6 @@
     "bone",
     "wood"
   ],
-  "blueprint_sharpened_stick": [
-    "harvest",
-    "meat",
-    "stone",
-    "wood"
-  ],
   "blueprint_dagger": [
     "ore",
     "wood"

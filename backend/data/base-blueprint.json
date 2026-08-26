@@ -342,13 +342,6 @@
   {"id": "blueprint_generals_iron_ration", "name": "Blueprint: General's Iron Ration", "familyId": "blueprint_iron_ration", "tier": 5},
   {"id": "blueprint_warlords_iron_ration", "name": "Blueprint: Warlord's Iron Ration", "familyId": "blueprint_iron_ration", "tier": 6},
 
-  {"id": "blueprint_pine_sharpened_stick", "name": "Blueprint: Crude Sharpened Stick", "familyId": "blueprint_sharpened_stick", "tier": 1},
-  {"id": "blueprint_oak_sharpened_stick", "name": "Blueprint: Oak Sharpened Stick", "familyId": "blueprint_sharpened_stick", "tier": 2},
-  {"id": "blueprint_ash_sharpened_stick", "name": "Blueprint: Ash Sharpened Stick", "familyId": "blueprint_sharpened_stick", "tier": 3},
-  {"id": "blueprint_cedar_sharpened_stick", "name": "Blueprint: Cedar Sharpened Stick", "familyId": "blueprint_sharpened_stick", "tier": 4},
-  {"id": "blueprint_ebony_sharpened_stick", "name": "Blueprint: Ebony Sharpened Stick", "familyId": "blueprint_sharpened_stick", "tier": 5},
-  {"id": "blueprint_worldroot_sharpened_stick", "name": "Blueprint: Worldroot Sharpened Stick", "familyId": "blueprint_sharpened_stick", "tier": 6},
-
   {"id": "blueprint_merchants_scale_1", "name": "Blueprint: Merchant's Scale", "familyId": "blueprint_merchants_scale", "tier": 1},
   {"id": "blueprint_merchants_scale_2", "name": "Blueprint: Merchant's Scale", "familyId": "blueprint_merchants_scale", "tier": 2},
   {"id": "blueprint_merchants_scale_3", "name": "Blueprint: Merchant's Scale", "familyId": "blueprint_merchants_scale", "tier": 3},
