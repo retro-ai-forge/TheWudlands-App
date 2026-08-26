@@ -44,7 +44,7 @@
   { "id": "rabbit_meat", "name": "Rabbit Meat", "familyId": "meat", "tier": 1 },
   { "id": "boar_meat", "name": "Boar Meat", "familyId": "meat", "tier": 2 },
   { "id": "venison", "name": "Venison", "familyId": "meat", "tier": 3 },
-  { "id": "bear_meat", "name": "Bear Meat", "familyId": "meat", "tier": 4 },
+  { "id": "griffin_meat", "name": "Griffin Meat", "familyId": "meat", "tier": 4 },
   { "id": "wyvern_meat", "name": "Wyvern Meat", "familyId": "meat", "tier": 5 },
   { "id": "dragon_meat", "name": "Dragon Meat", "familyId": "meat", "tier": 6 },
 
