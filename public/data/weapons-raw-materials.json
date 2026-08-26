@@ -1,0 +1,806 @@
+{
+  "weapons": [
+    {
+      "id": "axe_stone",
+      "name": "Stone Axe",
+      "raw_materials": {
+        "wood": 3,
+        "stone": 2,
+        "meat": 1
+      }
+    },
+    {
+      "id": "magic_staff",
+      "name": "Amethyst Magic Staff",
+      "raw_materials": {
+        "wood": 16,
+        "crystal": 6
+      }
+    },
+    {
+      "id": "wand",
+      "name": "Amethyst Wand",
+      "raw_materials": {
+        "wood": 4,
+        "crystal": 3
+      }
+    },
+    {
+      "id": "bow",
+      "name": "Apprentice's Bow",
+      "raw_materials": {
+        "wood": 20,
+        "fiber": 132
+      }
+    },
+    {
+      "id": "sickle",
+      "name": "Apprentice's Sickle",
+      "raw_materials": {
+        "ore": 125,
+        "wood": 34
+      }
+    },
+    {
+      "id": "warhammer",
+      "name": "Apprentice's Warhammer",
+      "raw_materials": {
+        "ore": 375,
+        "wood": 102
+      }
+    },
+    {
+      "id": "crossbow",
+      "name": "Arbalest Crossbow",
+      "raw_materials": {
+        "ore": 125,
+        "wood": 42,
+        "fiber": 1
+      }
+    },
+    {
+      "id": "sword",
+      "name": "Ascendant Sword",
+      "raw_materials": {
+        "ore": 250,
+        "wood": 64
+      }
+    },
+    {
+      "id": "club",
+      "name": "Ash Club",
+      "raw_materials": {
+        "wood": 5
+      }
+    },
+    {
+      "id": "quiver_of_arrows",
+      "name": "Ash Quiver of Arrows",
+      "raw_materials": {
+        "wood": 16,
+        "feather": 2,
+        "ore": 5,
+        "skin": 1
+      }
+    },
+    {
+      "id": "set_of_bolts",
+      "name": "Ash Set of Bolts",
+      "raw_materials": {
+        "wood": 12,
+        "ore": 10
+      }
+    },
+    {
+      "id": "sharpened_stick",
+      "name": "Ash Sharpened Stick",
+      "raw_materials": {
+        "wood": 7,
+        "stone": 2,
+        "meat": 2,
+        "harvest": 1
+      }
+    },
+    {
+      "id": "magic_staff",
+      "name": "Astral Magic Staff",
+      "raw_materials": {
+        "wood": 16,
+        "crystal": 6
+      }
+    },
+    {
+      "id": "wand",
+      "name": "Astral Wand",
+      "raw_materials": {
+        "wood": 4,
+        "crystal": 3
+      }
+    },
+    {
+      "id": "sword",
+      "name": "Baron's Sword",
+      "raw_materials": {
+        "ore": 250,
+        "wood": 64
+      }
+    },
+    {
+      "id": "wand",
+      "name": "Beginner's Wand",
+      "raw_materials": {
+        "wood": 4,
+        "crystal": 3
+      }
+    },
+    {
+      "id": "greatsword",
+      "name": "Bent Greatsword",
+      "raw_materials": {
+        "ore": 375,
+        "wood": 102
+      }
+    },
+    {
+      "id": "spear",
+      "name": "Bloodrite Spear",
+      "raw_materials": {
+        "ore": 125,
+        "wood": 38
+      }
+    },
+    {
+      "id": "battle_axe",
+      "name": "Blunt Battle Axe",
+      "raw_materials": {
+        "ore": 375,
+        "wood": 94
+      }
+    },
+    {
+      "id": "spear",
+      "name": "Blunt Spear",
+      "raw_materials": {
+        "ore": 125,
+        "wood": 38
+      }
+    },
+    {
+      "id": "club",
+      "name": "Cedar Club",
+      "raw_materials": {
+        "wood": 5
+      }
+    },
+    {
+      "id": "quiver_of_arrows",
+      "name": "Cedar Quiver of Arrows",
+      "raw_materials": {
+        "wood": 16,
+        "feather": 2,
+        "ore": 5,
+        "skin": 1
+      }
+    },
+    {
+      "id": "set_of_bolts",
+      "name": "Cedar Set of Bolts",
+      "raw_materials": {
+        "wood": 12,
+        "ore": 10
+      }
+    },
+    {
+      "id": "sharpened_stick",
+      "name": "Cedar Sharpened Stick",
+      "raw_materials": {
+        "wood": 7,
+        "stone": 2,
+        "meat": 2,
+        "harvest": 1
+      }
+    },
+    {
+      "id": "dagger",
+      "name": "Chancellor's Dagger",
+      "raw_materials": {
+        "ore": 125,
+        "wood": 30
+      }
+    },
+    {
+      "id": "set_of_bolts",
+      "name": "Crude Set of Bolts",
+      "raw_materials": {
+        "wood": 12,
+        "ore": 10
+      }
+    },
+    {
+      "id": "sharpened_stick",
+      "name": "Crude Sharpened Stick",
+      "raw_materials": {
+        "wood": 7,
+        "stone": 2,
+        "meat": 2,
+        "harvest": 1
+      }
+    },
+    {
+      "id": "mace",
+      "name": "Crusader's Mace",
+      "raw_materials": {
+        "ore": 250,
+        "wood": 64
+      }
+    },
+    {
+      "id": "greatsword",
+      "name": "Dawnbringer Greatsword",
+      "raw_materials": {
+        "ore": 375,
+        "wood": 102
+      }
+    },
+    {
+      "id": "crossbow",
+      "name": "Deadeye Crossbow",
+      "raw_materials": {
+        "ore": 125,
+        "wood": 42,
+        "fiber": 1
+      }
+    },
+    {
+      "id": "greatsword",
+      "name": "Direblade Greatsword",
+      "raw_materials": {
+        "ore": 375,
+        "wood": 102
+      }
+    },
+    {
+      "id": "greatsword",
+      "name": "Doomcleaver Greatsword",
+      "raw_materials": {
+        "ore": 375,
+        "wood": 102
+      }
+    },
+    {
+      "id": "crossbow",
+      "name": "Doomsight Crossbow",
+      "raw_materials": {
+        "ore": 125,
+        "wood": 42,
+        "fiber": 1
+      }
+    },
+    {
+      "id": "battle_axe",
+      "name": "Dragonbane Battle Axe",
+      "raw_materials": {
+        "ore": 375,
+        "wood": 94
+      }
+    },
+    {
+      "id": "battle_axe",
+      "name": "Drakebane Battle Axe",
+      "raw_materials": {
+        "ore": 375,
+        "wood": 94
+      }
+    },
+    {
+      "id": "battle_axe",
+      "name": "Drakebiter Battle Axe",
+      "raw_materials": {
+        "ore": 375,
+        "wood": 94
+      }
+    },
+    {
+      "id": "dagger",
+      "name": "Duchess's Dagger",
+      "raw_materials": {
+        "ore": 125,
+        "wood": 30
+      }
+    },
+    {
+      "id": "sword",
+      "name": "Duke's Sword",
+      "raw_materials": {
+        "ore": 250,
+        "wood": 64
+      }
+    },
+    {
+      "id": "warhammer",
+      "name": "Earthshaker Warhammer",
+      "raw_materials": {
+        "ore": 375,
+        "wood": 102
+      }
+    },
+    {
+      "id": "club",
+      "name": "Ebony Club",
+      "raw_materials": {
+        "wood": 5
+      }
+    },
+    {
+      "id": "quiver_of_arrows",
+      "name": "Ebony Quiver of Arrows",
+      "raw_materials": {
+        "wood": 16,
+        "feather": 2,
+        "ore": 5,
+        "skin": 1
+      }
+    },
+    {
+      "id": "set_of_bolts",
+      "name": "Ebony Set of Bolts",
+      "raw_materials": {
+        "wood": 12,
+        "ore": 10
+      }
+    },
+    {
+      "id": "sharpened_stick",
+      "name": "Ebony Sharpened Stick",
+      "raw_materials": {
+        "wood": 7,
+        "stone": 2,
+        "meat": 2,
+        "harvest": 1
+      }
+    },
+    {
+      "id": "sickle",
+      "name": "Eldermoon Sickle",
+      "raw_materials": {
+        "ore": 125,
+        "wood": 34
+      }
+    },
+    {
+      "id": "bow",
+      "name": "Elven Bow",
+      "raw_materials": {
+        "wood": 20,
+        "fiber": 132
+      }
+    },
+    {
+      "id": "crossbow",
+      "name": "Executioner's Crossbow",
+      "raw_materials": {
+        "ore": 125,
+        "wood": 42,
+        "fiber": 1
+      }
+    },
+    {
+      "id": "spear",
+      "name": "Godsblood Spear",
+      "raw_materials": {
+        "ore": 125,
+        "wood": 38
+      }
+    },
+    {
+      "id": "greatsword",
+      "name": "Godslayer Greatsword",
+      "raw_materials": {
+        "ore": 375,
+        "wood": 102
+      }
+    },
+    {
+      "id": "sickle",
+      "name": "Harvestmoon Sickle",
+      "raw_materials": {
+        "ore": 125,
+        "wood": 34
+      }
+    },
+    {
+      "id": "sword",
+      "name": "Highlord's Sword",
+      "raw_materials": {
+        "ore": 250,
+        "wood": 64
+      }
+    },
+    {
+      "id": "mace",
+      "name": "Judgment Mace",
+      "raw_materials": {
+        "ore": 250,
+        "wood": 64
+      }
+    },
+    {
+      "id": "sword",
+      "name": "Knight's Sword",
+      "raw_materials": {
+        "ore": 250,
+        "wood": 64
+      }
+    },
+    {
+      "id": "mace",
+      "name": "Loose Mace",
+      "raw_materials": {
+        "ore": 250,
+        "wood": 64
+      }
+    },
+    {
+      "id": "magic_staff",
+      "name": "Loose Magic Staff",
+      "raw_materials": {
+        "wood": 16,
+        "crystal": 6
+      }
+    },
+    {
+      "id": "sickle",
+      "name": "Lunarfang Sickle",
+      "raw_materials": {
+        "ore": 125,
+        "wood": 34
+      }
+    },
+    {
+      "id": "magic_staff",
+      "name": "Mana Magic Staff",
+      "raw_materials": {
+        "wood": 16,
+        "crystal": 6
+      }
+    },
+    {
+      "id": "wand",
+      "name": "Mana Wand",
+      "raw_materials": {
+        "wood": 4,
+        "crystal": 3
+      }
+    },
+    {
+      "id": "bow",
+      "name": "Marksman's Bow",
+      "raw_materials": {
+        "wood": 20,
+        "fiber": 132
+      }
+    },
+    {
+      "id": "dagger",
+      "name": "Marquess's Dagger",
+      "raw_materials": {
+        "ore": 125,
+        "wood": 30
+      }
+    },
+    {
+      "id": "club",
+      "name": "Oak Club",
+      "raw_materials": {
+        "wood": 5
+      }
+    },
+    {
+      "id": "quiver_of_arrows",
+      "name": "Oak Quiver of Arrows",
+      "raw_materials": {
+        "wood": 16,
+        "feather": 2,
+        "ore": 5,
+        "skin": 1
+      }
+    },
+    {
+      "id": "set_of_bolts",
+      "name": "Oak Set of Bolts",
+      "raw_materials": {
+        "wood": 12,
+        "ore": 10
+      }
+    },
+    {
+      "id": "sharpened_stick",
+      "name": "Oak Sharpened Stick",
+      "raw_materials": {
+        "wood": 7,
+        "stone": 2,
+        "meat": 2,
+        "harvest": 1
+      }
+    },
+    {
+      "id": "club",
+      "name": "Pine Club",
+      "raw_materials": {
+        "wood": 5
+      }
+    },
+    {
+      "id": "bow",
+      "name": "Ranger's Bow",
+      "raw_materials": {
+        "wood": 20,
+        "fiber": 132
+      }
+    },
+    {
+      "id": "magic_staff",
+      "name": "Ruby Magic Staff",
+      "raw_materials": {
+        "wood": 16,
+        "crystal": 6
+      }
+    },
+    {
+      "id": "wand",
+      "name": "Ruby Wand",
+      "raw_materials": {
+        "wood": 4,
+        "crystal": 3
+      }
+    },
+    {
+      "id": "dagger",
+      "name": "Rusty Dagger",
+      "raw_materials": {
+        "ore": 125,
+        "wood": 30
+      }
+    },
+    {
+      "id": "sword",
+      "name": "Rusty Sword",
+      "raw_materials": {
+        "ore": 250,
+        "wood": 64
+      }
+    },
+    {
+      "id": "magic_staff",
+      "name": "Sapphire Magic Staff",
+      "raw_materials": {
+        "wood": 16,
+        "crystal": 6
+      }
+    },
+    {
+      "id": "wand",
+      "name": "Sapphire Wand",
+      "raw_materials": {
+        "wood": 4,
+        "crystal": 3
+      }
+    },
+    {
+      "id": "battle_axe",
+      "name": "Scaleshredder Battle Axe",
+      "raw_materials": {
+        "ore": 375,
+        "wood": 94
+      }
+    },
+    {
+      "id": "bow",
+      "name": "Sharpshooter's Bow",
+      "raw_materials": {
+        "wood": 20,
+        "fiber": 132
+      }
+    },
+    {
+      "id": "crossbow",
+      "name": "Siegebreaker Crossbow",
+      "raw_materials": {
+        "ore": 125,
+        "wood": 42,
+        "fiber": 1
+      }
+    },
+    {
+      "id": "warhammer",
+      "name": "Skullsplitter Warhammer",
+      "raw_materials": {
+        "ore": 375,
+        "wood": 102
+      }
+    },
+    {
+      "id": "spear",
+      "name": "Skyfather's Spear",
+      "raw_materials": {
+        "ore": 125,
+        "wood": 38
+      }
+    },
+    {
+      "id": "greatsword",
+      "name": "Soulrender Greatsword",
+      "raw_materials": {
+        "ore": 375,
+        "wood": 102
+      }
+    },
+    {
+      "id": "dagger",
+      "name": "Sovereign's Dagger",
+      "raw_materials": {
+        "ore": 125,
+        "wood": 30
+      }
+    },
+    {
+      "id": "warhammer",
+      "name": "Stormbreaker Warhammer",
+      "raw_materials": {
+        "ore": 375,
+        "wood": 102
+      }
+    },
+    {
+      "id": "mace",
+      "name": "Templar's Mace",
+      "raw_materials": {
+        "ore": 250,
+        "wood": 64
+      }
+    },
+    {
+      "id": "sickle",
+      "name": "Thornweave Sickle",
+      "raw_materials": {
+        "ore": 125,
+        "wood": 34
+      }
+    },
+    {
+      "id": "warhammer",
+      "name": "Thunderstrike Warhammer",
+      "raw_materials": {
+        "ore": 375,
+        "wood": 102
+      }
+    },
+    {
+      "id": "quiver_of_arrows",
+      "name": "Tight Quiver of Arrows",
+      "raw_materials": {
+        "wood": 16,
+        "feather": 2,
+        "ore": 5,
+        "skin": 1
+      }
+    },
+    {
+      "id": "spear",
+      "name": "Totemcaller Spear",
+      "raw_materials": {
+        "ore": 125,
+        "wood": 38
+      }
+    },
+    {
+      "id": "crossbow",
+      "name": "Uneven Crossbow",
+      "raw_materials": {
+        "ore": 125,
+        "wood": 42,
+        "fiber": 1
+      }
+    },
+    {
+      "id": "mace",
+      "name": "Vanguard's Mace",
+      "raw_materials": {
+        "ore": 250,
+        "wood": 64
+      }
+    },
+    {
+      "id": "dagger",
+      "name": "Viscount's Dagger",
+      "raw_materials": {
+        "ore": 125,
+        "wood": 30
+      }
+    },
+    {
+      "id": "sickle",
+      "name": "Wildroot Sickle",
+      "raw_materials": {
+        "ore": 125,
+        "wood": 34
+      }
+    },
+    {
+      "id": "bow",
+      "name": "Windsong Bow",
+      "raw_materials": {
+        "wood": 20,
+        "fiber": 132
+      }
+    },
+    {
+      "id": "spear",
+      "name": "Wolfspirit Spear",
+      "raw_materials": {
+        "ore": 125,
+        "wood": 38
+      }
+    },
+    {
+      "id": "warhammer",
+      "name": "Worldender Warhammer",
+      "raw_materials": {
+        "ore": 375,
+        "wood": 102
+      }
+    },
+    {
+      "id": "club",
+      "name": "Worldroot Club",
+      "raw_materials": {
+        "wood": 5
+      }
+    },
+    {
+      "id": "quiver_of_arrows",
+      "name": "Worldroot Quiver of Arrows",
+      "raw_materials": {
+        "wood": 16,
+        "feather": 2,
+        "ore": 5,
+        "skin": 1
+      }
+    },
+    {
+      "id": "set_of_bolts",
+      "name": "Worldroot Set of Bolts",
+      "raw_materials": {
+        "wood": 12,
+        "ore": 10
+      }
+    },
+    {
+      "id": "sharpened_stick",
+      "name": "Worldroot Sharpened Stick",
+      "raw_materials": {
+        "wood": 7,
+        "stone": 2,
+        "meat": 2,
+        "harvest": 1
+      }
+    },
+    {
+      "id": "battle_axe",
+      "name": "Wyrmreaver Battle Axe",
+      "raw_materials": {
+        "ore": 375,
+        "wood": 94
+      }
+    },
+    {
+      "id": "mace",
+      "name": "Zealot's Mace",
+      "raw_materials": {
+        "ore": 250,
+        "wood": 64
+      }
+    }
+  ],
+  "generated_at": "2026-08-26"
+}
