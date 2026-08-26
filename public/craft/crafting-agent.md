@@ -625,3 +625,44 @@ standard 4: material+material+tool+blueprint). Per "Layout: staggering
 which the section's own `sword`/`spear`/`mace`/etc. never actually followed
 — 44px is the de facto standard here, so `short_sword` matches its
 immediate neighbors over the written default).
+
+## `Stone Axe`: reclassified from tool to weapon (diagram only)
+
+`axe_stone` used to live purely as a Section 2 tool: a `wood`(3) +
+`stone`(2) → Stone Axe build recipe (no blueprint, blue tool styling),
+with 6 fresh copies pulled in as the `tool` field elsewhere (`club`,
+`plank`, `firewood`, `ladder`, `fishing_pole`) plus one more pulled in as a
+`final`-category ingredient (`sharpened_stick`) — 7 node instances total,
+one of them (the wood+stone build) being the sole canonical recipe.
+
+Reclassified as a weapon by request. Diagram-only change — `base-tools.json`
+and every recipe still referencing `axe_stone` as `"tool": "axe_stone"`
+(club/plank/firewood/ladder/fishing_pole) are untouched, so this is
+presently a diagram/backend split, same shape as the `metal_bar`
+discrepancies already documented elsewhere in this file. Concretely:
+
+- All 7 `T1 Stone Axe` node instances recolored blue→red and relabeled to
+  the lowercase-familyId convention every other weapon output uses
+  (`T1 Stone Axe` → `T1 axe_stone`), per the color-legend rule that a
+  pulled-in node "uses whatever color its own kind gets" regardless of
+  where it's consumed — since `axe_stone` is now a weapon everywhere it
+  appears, not just at its own build recipe.
+- Added `Blueprint: Stone Axe`, gating the build recipe the same way every
+  other weapon/armor/tool blueprint does.
+- The build recipe itself (`wood`×3, `stone`×2, now +`Blueprint: Stone Axe`)
+  moved from its old Section-2-area position into the Weapons row-band, as
+  an 18th recipe appended to the end of Row B (after `wand`, x+450). Its
+  3 inputs follow the same stagger convention as `wand`/the rest of Row B:
+  endpoints (`wood`, `Blueprint: Stone Axe`) on the base row, the interior
+  input (`stone`) raised 44px.
+- The 6 pulled-in copies were recolored/relabeled in place, not moved —
+  they still sit wherever their consuming recipe (`club`, `plank`, etc.)
+  already lives, since only the recipe *listing* was asked to move, not
+  every place the item gets referenced.
+
+Two things this change deliberately does *not* do (raised, not resolved,
+during this pass): `axe_stone` keeping a dual tool/weapon role would need a
+decision on whether an engine "tool" reference can point at a
+weapon-cataloged item; and wiring `axe_stone` into other weapon recipes as
+an ingredient (e.g. a future `dagger` variant) is a separate follow-up, not
+implied by the recolor.

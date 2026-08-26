@@ -2575,32 +2575,35 @@
         <mxCell id="-IPBEHNa8fbIYFqgw4qg-858" edge="1" parent="1" source="-IPBEHNa8fbIYFqgw4qg-853" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontSize=10;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" target="-IPBEHNa8fbIYFqgw4qg-854" value="1">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="-IPBEHNa8fbIYFqgw4qg-859" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;fontStyle=1;" value="T1 Stone Axe" vertex="1">
+        <mxCell id="-IPBEHNa8fbIYFqgw4qg-859" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=11;fontStyle=1;" value="T1 axe_stone" vertex="1">
           <mxGeometry height="44" width="130" x="290" y="1412" as="geometry" />
         </mxCell>
         <mxCell id="-IPBEHNa8fbIYFqgw4qg-860" edge="1" parent="1" source="-IPBEHNa8fbIYFqgw4qg-859" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontSize=10;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" target="-IPBEHNa8fbIYFqgw4qg-93" value="1">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="-IPBEHNa8fbIYFqgw4qg-861" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;fontStyle=1;" value="T1 Stone Axe" vertex="1">
+        <mxCell id="-IPBEHNa8fbIYFqgw4qg-861" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=11;fontStyle=1;" value="T1 axe_stone" vertex="1">
           <mxGeometry height="44" width="130" x="1340" y="330" as="geometry" />
         </mxCell>
         <mxCell id="-IPBEHNa8fbIYFqgw4qg-862" edge="1" parent="1" source="-IPBEHNa8fbIYFqgw4qg-861" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontSize=10;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" target="-IPBEHNa8fbIYFqgw4qg-3" value="1">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="-IPBEHNa8fbIYFqgw4qg-863" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;fontStyle=1;" value="T1 Stone Axe" vertex="1">
+        <mxCell id="-IPBEHNa8fbIYFqgw4qg-863" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=11;fontStyle=1;" value="T1 axe_stone" vertex="1">
           <mxGeometry height="44" width="130" x="1368.5" y="6840" as="geometry" />
         </mxCell>
         <mxCell id="-IPBEHNa8fbIYFqgw4qg-864" edge="1" parent="1" source="-IPBEHNa8fbIYFqgw4qg-863" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontSize=10;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" target="-IPBEHNa8fbIYFqgw4qg-820" value="1">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
         <mxCell id="-IPBEHNa8fbIYFqgw4qg-865" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" value="T1 wood" vertex="1">
-          <mxGeometry height="44" width="130" x="815" y="330" as="geometry" />
+          <mxGeometry height="44" width="130" x="5575" y="1722" as="geometry" />
         </mxCell>
         <mxCell id="-IPBEHNa8fbIYFqgw4qg-866" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" value="T1 stone" vertex="1">
-          <mxGeometry height="44" width="130" x="985" y="330" as="geometry" />
+          <mxGeometry height="44" width="130" x="5745" y="1678" as="geometry" />
         </mxCell>
-        <mxCell id="-IPBEHNa8fbIYFqgw4qg-867" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;fontStyle=1;" value="T1 Stone Axe" vertex="1">
-          <mxGeometry height="44" width="130" x="895" y="450" as="geometry" />
+        <mxCell id="-IPBEHNa8fbIYFqgw4qg-867" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=11;fontStyle=1;" value="T1 axe_stone" vertex="1">
+          <mxGeometry height="44" width="130" x="5745" y="1852" as="geometry" />
+        </mxCell>
+        <mxCell id="-IPBEHNa8fbIYFqgw4qg-910" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=11;" value="Blueprint: Stone Axe" vertex="1">
+          <mxGeometry height="44" width="130" x="5915" y="1722" as="geometry" />
         </mxCell>
         <mxCell id="-IPBEHNa8fbIYFqgw4qg-868" edge="1" parent="1" source="-IPBEHNa8fbIYFqgw4qg-865" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontSize=10;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" target="-IPBEHNa8fbIYFqgw4qg-867" value="3">
           <mxGeometry relative="1" as="geometry" />
@@ -2608,10 +2611,13 @@
         <mxCell id="-IPBEHNa8fbIYFqgw4qg-869" edge="1" parent="1" source="-IPBEHNa8fbIYFqgw4qg-866" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontSize=10;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" target="-IPBEHNa8fbIYFqgw4qg-867" value="2">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
+        <mxCell id="-IPBEHNa8fbIYFqgw4qg-911" edge="1" parent="1" source="-IPBEHNa8fbIYFqgw4qg-910" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontSize=10;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" target="-IPBEHNa8fbIYFqgw4qg-867" value="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
         <mxCell id="-IPBEHNa8fbIYFqgw4qg-870" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" value="T1 wood" vertex="1">
           <mxGeometry height="44" width="130" x="1535" y="330" as="geometry" />
         </mxCell>
-        <mxCell id="-IPBEHNa8fbIYFqgw4qg-871" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;fontStyle=1;" value="T1 Stone Axe" vertex="1">
+        <mxCell id="-IPBEHNa8fbIYFqgw4qg-871" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=11;fontStyle=1;" value="T1 axe_stone" vertex="1">
           <mxGeometry height="44" width="130" x="1705" y="330" as="geometry" />
         </mxCell>
         <mxCell id="-IPBEHNa8fbIYFqgw4qg-872" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=11;fontStyle=1;" value="T1 firewood" vertex="1">
@@ -2638,7 +2644,7 @@
         <mxCell id="-IPBEHNa8fbIYFqgw4qg-879" edge="1" parent="1" source="-IPBEHNa8fbIYFqgw4qg-876" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontSize=10;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" target="-IPBEHNa8fbIYFqgw4qg-877" value="1">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="-IPBEHNa8fbIYFqgw4qg-880" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;fontStyle=1;" value="T1 Stone Axe" vertex="1">
+        <mxCell id="-IPBEHNa8fbIYFqgw4qg-880" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=11;fontStyle=1;" value="T1 axe_stone" vertex="1">
           <mxGeometry height="44" width="130" x="2200" y="320" as="geometry" />
         </mxCell>
         <mxCell id="-IPBEHNa8fbIYFqgw4qg-881" edge="1" parent="1" source="-IPBEHNa8fbIYFqgw4qg-880" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontSize=10;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" target="-IPBEHNa8fbIYFqgw4qg-877" value="1">
@@ -2692,7 +2698,7 @@
         <mxCell id="-IPBEHNa8fbIYFqgw4qg-898" edge="1" parent="1" source="-IPBEHNa8fbIYFqgw4qg-897" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" target="-IPBEHNa8fbIYFqgw4qg-54" value="1">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="-IPBEHNa8fbIYFqgw4qg-897" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;fontStyle=1;" value="T1 Stone Axe" vertex="1">
+        <mxCell id="-IPBEHNa8fbIYFqgw4qg-897" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=11;fontStyle=1;" value="T1 axe_stone" vertex="1">
           <mxGeometry height="44" width="130" x="497.5" y="1412" as="geometry" />
         </mxCell>
         <mxCell id="-IPBEHNa8fbIYFqgw4qg-899" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" value="T1 metal_bar" vertex="1">
