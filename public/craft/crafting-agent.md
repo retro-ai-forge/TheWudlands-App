@@ -909,3 +909,15 @@ Typing "anvil" now surfaces 30+ recipes (armor, shields, weapons,
 `clockwork_mechanism`, even `wrench`'s own build) instead of just the
 Anvil item; a broader match like "table" correctly pools recipes from both
 `writers_table` and `enchanters_table` together.
+
+**Follow-up: the tool itself belongs in the results too, and preselected.**
+The first version above dropped the matched tool's own entry entirely -
+searching "anvil" showed only what you can forge *with* one, not how to
+build one in the first place. Fixed by giving the matched tool(s) their
+own leading optgroup (labeled plainly `tool`, ahead of every `<cat> (uses
+anvil)` group), and setting `select.value` to the first matched tool
+directly - overriding the usual "restore the previous selection" behavior,
+since the whole point of searching a tool's name is to land on that tool.
+Searching "anvil" now opens straight onto the Anvil's own build recipe
+(`refined_ore`×12 + `metal_bar`×2, gated by `blueprint_anvil`), with every
+recipe that uses an Anvil still one dropdown click away.

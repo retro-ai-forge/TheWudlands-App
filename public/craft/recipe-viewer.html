@@ -550,12 +550,13 @@ function populateSelect(filterText, tier) {
   select.innerHTML = "";
   const ft = (filterText || "").toLowerCase();
 
-  // If the search text matches a known tool by name, list every recipe
-  // that uses that tool directly, instead of the tool's own entry - typing
-  // "anvil" should show what you can forge, not the Anvil item itself
-  // (which would otherwise win the plain name-match pass below first).
+  // If the search text matches a known tool by name, show the tool itself
+  // first (preselected, so its own build recipe renders immediately) plus
+  // every recipe that uses it - typing "anvil" answers both "how do I build
+  // one" and "what can I forge with it" in one search, instead of just
+  // matching the Anvil item by name and stopping there.
   if (ft.length > 0) {
-    const matchedTools = (groups["tool"] || []).filter(f => famLabel(f, tier).toLowerCase().includes(ft));
+    const matchedTools = (groups["tool"] || []).filter(f => famLabel(f, tier).toLowerCase().includes(ft)).sort((a, b) => a.localeCompare(b));
     if (matchedTools.length > 0) {
       const toolMatches = {};
       for (const recipeId of recipeFamIds) {
@@ -566,27 +567,38 @@ function populateSelect(filterText, tier) {
           (toolMatches[cat] = toolMatches[cat] || []).push(recipeId);
         }
       }
-      const toolMatchCats = Object.keys(toolMatches);
-      if (toolMatchCats.length > 0) {
-        for (const cat of catOrder) {
-          if (!toolMatches[cat]) continue;
-          const og = document.createElement("optgroup");
-          og.label = cat + " (uses " + ft + ")";
-          for (const famId of toolMatches[cat].sort((a, b) => a.localeCompare(b))) {
-            const opt = document.createElement("option");
-            opt.value = famId;
-            const label = famLabel(famId, tier);
-            opt.textContent = getDisplayLabel(label, cat);
-            og.appendChild(opt);
-          }
-          select.appendChild(og);
-        }
-        if ([...select.options].some(o => o.value === prev)) select.value = prev;
-        return;
+
+      // The tool itself always gets its own leading optgroup, so it's
+      // reachable (and preselected) even if nothing uses it yet.
+      const toolGroup = document.createElement("optgroup");
+      toolGroup.label = "tool";
+      for (const famId of matchedTools) {
+        const opt = document.createElement("option");
+        opt.value = famId;
+        opt.textContent = getDisplayLabel(famLabel(famId, tier), "tool");
+        toolGroup.appendChild(opt);
       }
-      // Matched a tool by name, but nothing uses it yet - fall through to
-      // the normal name search so the tool item itself still shows up
-      // rather than leaving the dropdown empty.
+      select.appendChild(toolGroup);
+
+      for (const cat of catOrder) {
+        if (!toolMatches[cat]) continue;
+        const og = document.createElement("optgroup");
+        og.label = cat + " (uses " + ft + ")";
+        for (const famId of toolMatches[cat].sort((a, b) => a.localeCompare(b))) {
+          const opt = document.createElement("option");
+          opt.value = famId;
+          const label = famLabel(famId, tier);
+          opt.textContent = getDisplayLabel(label, cat);
+          og.appendChild(opt);
+        }
+        select.appendChild(og);
+      }
+
+      // Always preselect the tool itself for a fresh tool-name search,
+      // rather than restoring the previous selection - that's the whole
+      // point of searching a tool's name.
+      select.value = matchedTools[0];
+      return;
     }
   }
 
