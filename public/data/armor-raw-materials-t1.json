@@ -108,13 +108,14 @@
       },
       "tier": 1,
       "raw_materials": {
-        "ore": 275,
+        "ore": 300,
         "wood": 33,
-        "clockwork": 60
+        "clockwork": 28
       },
       "tools": [
         "Anvil",
-        "Furnace"
+        "Furnace",
+        "Wrench"
       ],
       "blueprint": "Blueprint: Tempered Darksteel Armor"
     },

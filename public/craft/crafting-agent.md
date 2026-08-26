@@ -1172,3 +1172,40 @@ since owning one is all that matters. A future *consumed* alternative
 since that one genuinely needs a quantity. Since `carcass`/`dressed_meat`
 are single recipe entries shared by all 6 tiers, this applies uniformly
 across Rabbit/Boar/Elk/Griffin/Wyvern/Dragon - not just T1.
+
+## Darksteel armor/shield: `clockwork_mechanism` → `tinkered_gearbox`
+
+Request: put `tinkered_gearbox` to use (it was a dead-end item - defined,
+craftable, but consumed by nothing) by swapping it in for Darksteel's
+`clockwork_mechanism` ingredient. `tinkered_gearbox` itself is built from
+1x `clockwork_mechanism` + 3x `refined_ore` (tool: Wrench), so it's a
+strictly pricier unit (29 raw points vs. 14) - a straight 1:1 quantity
+swap would have pushed the piece total from 368 to ~593. Asked the user;
+they chose to rebalance the quantity down to keep totals close instead of
+a flat swap.
+
+Chose `qty` by minimizing `|new total - old total|`:
+- **Armor piece** (head/chest/leg, was `clockwork_mechanism` x15):
+  `tinkered_gearbox` x7 → `{ore: 300, wood: 33, clockwork: 28}` = 361
+  (was 368).
+- **Shield** (was `clockwork_mechanism` x6): `tinkered_gearbox` x3 →
+  `{ore: 200, wood: 33, clockwork: 12}` = 245 (was 242).
+
+Side effect, flagged before applying (same pattern as the earlier
+Furnace-dependency confirmations): since `tinkered_gearbox` needs a
+Wrench to craft, Darksteel's full tool chain gains **Wrench** in addition
+to its existing Anvil (own tool) and Furnace (via `metal_bar`) -
+`computeTotals()`'s `toolSet` walks the whole tree, not just the
+top-level `tool` field, so this shows up automatically in the recipe
+viewer's Tools panel.
+
+Diagram: the two pulled-in `T1 clockwork_mechanism` leaf copies feeding
+the Darksteel armor-piece template and the Darksteel Shield node (no
+upstream edges of their own - leaf-style duplicates, per the "one node =
+one outgoing edge" convention) were relabeled to `T1 tinkered_gearbox` and
+their edge quantities changed to `7` and `3`. No new nodes needed -
+`tinkered_gearbox`'s own canonical build (from `clockwork_mechanism` +
+`refined_ore`) was already drawn elsewhere, just with no consumer; it
+still has none since these two copies are leaves like the others.
+Regenerated `weapons/armor-raw-materials-t1.*` and republished the T1
+armor artifact with the new Darksteel row (361 total, +Wrench).
