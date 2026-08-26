@@ -592,3 +592,36 @@ just low.
   to `3×` (with `plank` bumped 2→3 to compensate slightly), landing both at
   486. `sword` (320) was explicitly left unchanged throughout all three
   passes.
+
+## `short_sword`: a 17th Weapon, and the metal_bar-granularity problem
+
+Added as the 17th recipe in the Weapons row-band, appended to the end of
+Row A (after `warhammer`, same +740 output-spacing pattern the row already
+uses) rather than inserted mid-row, since Row A had room to extend right
+without displacing anything.
+
+The design target was a lighter blade costing 220 raw units total (180 ore +
+40 wood) — but every other Anvil weapon in this section is priced in whole
+`metal_bar` units, and `metal_bar` cost is fixed at 125 ore + 33 wood per
+unit (via its own `metal_ingot`/`coal`/`refined_ore` chain). 125 doesn't
+divide 180, so no whole-`metal_bar` recipe lands on exactly 180/40.
+
+Resolved by keeping `metal_bar` as the recipe's anchor ingredient (staying
+consistent with every sibling weapon) and topping up the remainder with a
+direct `refined_ore` pull-in, the same "pull in a processed material
+directly" pattern the Wrench tool already established:
+
+`short_sword` = 1× `metal_bar` + 11× `refined_ore` + 2× `plank` + `Anvil` +
+`Blueprint: Short Sword` → 125 + 55 = 180 ore, 33 + 8 = 41 wood (221 total,
+1 wood off the 220 target — the closest whole-unit fit that still reads as
+"a metal_bar weapon" rather than an outlier built from raw-adjacent
+materials alone).
+
+This is also the first 5-input recipe in the Weapons section (vs. the
+standard 4: material+material+tool+blueprint). Per "Layout: staggering
+3+-input recipes," the three interior inputs (`refined_ore`, `plank`,
+`Anvil`) are all raised together, matching the 44px offset this section's
+4-input recipes already use (not the 22px figure the general rule cites,
+which the section's own `sword`/`spear`/`mace`/etc. never actually followed
+— 44px is the de facto standard here, so `short_sword` matches its
+immediate neighbors over the written default).
