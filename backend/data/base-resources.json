@@ -137,5 +137,12 @@
   { "id": "precision_gearwork", "name": "Precision Gearwork", "familyId": "clockwork", "tier": 3 },
   { "id": "runic_clockwork", "name": "Runic Clockwork", "familyId": "clockwork", "tier": 4 },
   { "id": "arcane_clockwork", "name": "Arcane Clockwork", "familyId": "clockwork", "tier": 5 },
-  { "id": "worldforge_mechanism", "name": "Worldforge Mechanism", "familyId": "clockwork", "tier": 6 }
+  { "id": "worldforge_mechanism", "name": "Worldforge Mechanism", "familyId": "clockwork", "tier": 6 },
+
+  { "id": "stream_minnow", "name": "Stream Minnow", "familyId": "fish", "tier": 1 },
+  { "id": "river_trout", "name": "River Trout", "familyId": "fish", "tier": 2 },
+  { "id": "sea_salmon", "name": "Sea Salmon", "familyId": "fish", "tier": 3 },
+  { "id": "runic_eel", "name": "Runic Eel", "familyId": "fish", "tier": 4 },
+  { "id": "umbral_anglerfish", "name": "Umbral Anglerfish", "familyId": "fish", "tier": 5 },
+  { "id": "abyssal_leviathan", "name": "Abyssal Leviathan", "familyId": "fish", "tier": 6 }
 ]

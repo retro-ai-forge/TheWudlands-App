@@ -1287,3 +1287,40 @@ search (previous selection unrelated, not present in the new list) still
 jumps straight to the matched item as before; a tier toggle or any other
 re-population that replays the same search now preserves the real
 selection instead.
+
+## New raw material: `fish`
+
+Added as a plain gatherable raw resource - same category as `wood`,
+`stone`, `meat`, `hide` (no recipe, no tool, just something a character
+has). This was step one of a larger fishing idea brainstormed with the
+user (fishing_pole - currently a dead-end craftable item, like
+`tinkered_gearbox`/`fired_brick` were before this session wired them
+in - as the tool; a consumed `bait` ingredient; new fish-based food
+recipes) but only the raw family itself was requested for now; bait, the
+actual fishing recipe, and any fish-based food are deliberately not
+built yet.
+
+Naming follows the established animal-family convention (`meat`, `hide`,
+`skin`): T1-T3 mundane, escalating in size/rarity; T4-T6 reuses vocabulary
+already established elsewhere (`Runic` Clockwork, `Umbral` Heart) rather
+than inventing new flavor words, and T6 is a named mythic creature
+("Leviathan") rather than the "World-" prefix, which this game reserves
+for mineral/plant families (wood, stone, clay, reed, clockwork), not
+animal ones.
+
+- T1 Stream Minnow (`stream_minnow`)
+- T2 River Trout (`river_trout`)
+- T3 Sea Salmon (`sea_salmon`)
+- T4 Runic Eel (`runic_eel`)
+- T5 Umbral Anglerfish (`umbral_anglerfish`)
+- T6 Abyssal Leviathan (`abyssal_leviathan`)
+
+Considered and deferred: several random-looking catch-flavor names per
+tier (e.g. "Creek Minnow"/"Pond Minnow" alongside "Stream Minnow") shown
+only in a "you caught a ___!" moment, while the actual inventory item and
+recipe ingredient stay the single canonical tier name above - kept
+strictly separate from the catalog to avoid multiple rows sharing one
+`(familyId, tier)` pair, which would break every `tiers[tier - 1]`
+positional lookup in the recipe viewer and character-preview tabs (they
+index by array position, not by searching for a matching `tier` value).
+Not built yet, by request - noted here for whenever it is.
