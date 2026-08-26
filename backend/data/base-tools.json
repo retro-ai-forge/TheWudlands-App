@@ -65,7 +65,7 @@
   {"id": "deepslate_furnace", "name": "Deepslate Furnace", "familyId": "furnace", "tier": 4},
   {"id": "basalt_furnace", "name": "Basalt Furnace", "familyId": "furnace", "tier": 5},
   {"id": "worldstone_furnace", "name": "Worldstone Furnace", "familyId": "furnace", "tier": 6},
-  {"id": "scullions_oven", "name": "Loose Oven", "familyId": "oven", "tier": 1},
+  {"id": "scullions_oven", "name": "Cracked Oven", "familyId": "oven", "tier": 1},
   {"id": "cooks_oven", "name": "Cook's Oven", "familyId": "oven", "tier": 2},
   {"id": "chefs_oven", "name": "Chef's Oven", "familyId": "oven", "tier": 3},
   {"id": "master_chefs_oven", "name": "Master Chef's Oven", "familyId": "oven", "tier": 4},
