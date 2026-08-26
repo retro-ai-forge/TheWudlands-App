@@ -1359,7 +1359,8 @@ export function SoulCreation({
                       src={recipeViewerSrc}
                       title="Crafting Recipe Viewer"
                       className={styles.recipeViewerFrame}
-                      style={{ height: recipeViewerHeight }}
+                      style={{ height: recipeViewerHeight, overflow: "hidden" }}
+                      scrolling="no"
                       onLoad={() => {
                         const doc = recipeViewerRef.current?.contentWindow?.document;
                         if (!doc?.body) return;

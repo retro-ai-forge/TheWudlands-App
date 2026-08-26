@@ -411,7 +411,13 @@ export function InventoryTab({
 
   // The embedded recipe viewer's own content height, in px - same-origin, so
   // its body height can be read directly and mirrored onto the iframe
-  // element (see SoulCreation.tsx's identical pattern).
+  // element (see SoulCreation.tsx's identical pattern). The height-sync
+  // above is normally exact, but a brief mismatch (e.g. content reflowing
+  // taller after a narrow-screen media query settles, a tick after the
+  // initial measurement) used to show the iframe's own native scrollbar for
+  // that gap - a second scrollbar alongside the page's own. scrolling="no"
+  // below guarantees the iframe itself never scrolls, regardless of any
+  // such transient mismatch.
   const [recipeViewerHeight, setRecipeViewerHeight] = useState(600);
   const recipeViewerRef = useRef<HTMLIFrameElement>(null);
 
@@ -512,7 +518,8 @@ export function InventoryTab({
           )}`}
           title="Crafting Recipe Viewer"
           className={styles.recipeViewerFrame}
-          style={{ height: recipeViewerHeight }}
+          style={{ height: recipeViewerHeight, overflow: "hidden" }}
+          scrolling="no"
           onLoad={() => {
             const doc = recipeViewerRef.current?.contentWindow?.document;
             if (!doc?.body) return;
