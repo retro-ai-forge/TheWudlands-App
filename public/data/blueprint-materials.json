@@ -72,11 +72,6 @@
     "refined_ore": 12,
     "metal_bar": 2
   },
-  "blueprint_axe_stone": {
-    "wood": 3,
-    "stone": 2,
-    "meat": 1
-  },
   "blueprint_alchemy_stand": {
     "refined_clay": 3,
     "refined_ore": 2
