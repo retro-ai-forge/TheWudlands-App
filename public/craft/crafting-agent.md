@@ -1078,3 +1078,22 @@ Searching "refined" now surfaces all 29 consumers across armor (`chainmail_*`),
 9 tools, 3 weapons, 2 misc, 8 adventuring-gear items, and 4 further
 processed materials (`clockwork_mechanism`, `fired_brick`,
 `metal_ingot`, `tinkered_gearbox`).
+
+## The `alt-ingredient` note now flags a missing unconsumed alternative
+
+The "or 1x dagger (not consumed)" note appended next to `carcass`'s
+`bone_blade` child (see the ingredient-alternatives section above) was
+purely informational - it never checked whether the player actually owns
+that alternative, unlike every other unconsumed reference in the tree
+(tools, blueprints).
+
+An unconsumed alternative plays the exact same "own it, don't use it up"
+role a tool does, so it's checked the same way: `ownsFamily(ownedTools,
+alt.familyId, tier)`. If the player owns none of it, the tag gets the
+same `missing` class the tool/blueprint tags use - `.tag.missing` is
+declared after `.tag.alt-ingredient` in the stylesheet with equal
+selector specificity, so it wins the cascade and renders red. Only
+applies to *unconsumed* alternatives (`!alt.consumed`) - a consumed
+alternative like `bone_blade` itself isn't a "do you own it" check, it's
+"do you have enough," which is what the raw-materials side panel already
+covers.

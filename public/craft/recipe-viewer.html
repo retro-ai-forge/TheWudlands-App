@@ -791,7 +791,14 @@ function buildInteractiveNode(famId, qty, category, tier, isRoot) {
           if (ing0.alternatives) {
             for (const alt of ing0.alternatives.slice(1)) {
               const altText = "or " + alt.qty + "x " + famLabel(alt.familyId, tier) + (alt.consumed ? "" : " (not consumed)");
-              child.row.appendChild(el("span", "tag alt-ingredient", altText));
+              const altTag = el("span", "tag alt-ingredient", altText);
+              // An unconsumed alternative (e.g. carcass's dagger option)
+              // plays the same "own it, don't use it up" role as a tool -
+              // check ownership the same way, via ownedTools.
+              if (!alt.consumed && !ownsFamily(ownedTools, alt.familyId, tier)) {
+                altTag.classList.add("missing");
+              }
+              child.row.appendChild(altTag);
             }
           }
           childrenBox.appendChild(child.wrapper);
