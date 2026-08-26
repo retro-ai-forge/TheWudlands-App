@@ -9,7 +9,11 @@
         "fiber": 132
       },
       "tool": "Workbench",
-      "blueprint": "Blueprint: Apprentice's Bow"
+      "blueprint": "Blueprint: Apprentice's Bow",
+      "processing_tools": [
+        "Spinning Wheel",
+        "Stone Axe"
+      ]
     },
     {
       "id": "sickle",
@@ -20,7 +24,11 @@
         "wood": 34
       },
       "tool": "Anvil",
-      "blueprint": "Blueprint: Uneven Sickle"
+      "blueprint": "Blueprint: Uneven Sickle",
+      "processing_tools": [
+        "Furnace",
+        "Stone Axe"
+      ]
     },
     {
       "id": "warhammer",
@@ -31,7 +39,11 @@
         "wood": 102
       },
       "tool": "Anvil",
-      "blueprint": "Blueprint: Melted Warhammer"
+      "blueprint": "Blueprint: Melted Warhammer",
+      "processing_tools": [
+        "Furnace",
+        "Stone Axe"
+      ]
     },
     {
       "id": "wand",
@@ -42,7 +54,11 @@
         "crystal": 3
       },
       "tool": "Enchanter's Table",
-      "blueprint": "Blueprint: Beginner's Wand"
+      "blueprint": "Blueprint: Beginner's Wand",
+      "processing_tools": [
+        "Lapidary Bench",
+        "Stone Axe"
+      ]
     },
     {
       "id": "greatsword",
@@ -53,7 +69,11 @@
         "wood": 102
       },
       "tool": "Anvil",
-      "blueprint": "Blueprint: Blunt Greatsword"
+      "blueprint": "Blueprint: Blunt Greatsword",
+      "processing_tools": [
+        "Furnace",
+        "Stone Axe"
+      ]
     },
     {
       "id": "battle_axe",
@@ -64,7 +84,11 @@
         "wood": 94
       },
       "tool": "Anvil",
-      "blueprint": "Blueprint: Loose Battle Axe"
+      "blueprint": "Blueprint: Loose Battle Axe",
+      "processing_tools": [
+        "Furnace",
+        "Stone Axe"
+      ]
     },
     {
       "id": "spear",
@@ -75,7 +99,11 @@
         "wood": 38
       },
       "tool": "Anvil",
-      "blueprint": "Blueprint: Loose Spear"
+      "blueprint": "Blueprint: Loose Spear",
+      "processing_tools": [
+        "Furnace",
+        "Stone Axe"
+      ]
     },
     {
       "id": "set_of_bolts",
@@ -86,7 +114,10 @@
         "ore": 10
       },
       "tool": "Workbench",
-      "blueprint": "Blueprint: Crude Set of Bolts"
+      "blueprint": "Blueprint: Crude Set of Bolts",
+      "processing_tools": [
+        "Stone Axe"
+      ]
     },
     {
       "id": "sharpened_stick",
@@ -99,7 +130,10 @@
         "harvest": 1
       },
       "tool": null,
-      "blueprint": "Blueprint: Crude Sharpened Stick"
+      "blueprint": "Blueprint: Crude Sharpened Stick",
+      "processing_tools": [
+        "Hearth"
+      ]
     },
     {
       "id": "mace",
@@ -110,7 +144,11 @@
         "wood": 64
       },
       "tool": "Anvil",
-      "blueprint": "Blueprint: Bent Mace"
+      "blueprint": "Blueprint: Bent Mace",
+      "processing_tools": [
+        "Furnace",
+        "Stone Axe"
+      ]
     },
     {
       "id": "magic_staff",
@@ -121,7 +159,11 @@
         "crystal": 6
       },
       "tool": "Enchanter's Table",
-      "blueprint": "Blueprint: Gnarled Magic Staff"
+      "blueprint": "Blueprint: Gnarled Magic Staff",
+      "processing_tools": [
+        "Lapidary Bench",
+        "Stone Axe"
+      ]
     },
     {
       "id": "club",
@@ -131,7 +173,8 @@
         "wood": 5
       },
       "tool": null,
-      "blueprint": null
+      "blueprint": null,
+      "processing_tools": []
     },
     {
       "id": "dagger",
@@ -142,7 +185,11 @@
         "wood": 30
       },
       "tool": "Anvil",
-      "blueprint": "Blueprint: Apprentice's Dagger"
+      "blueprint": "Blueprint: Apprentice's Dagger",
+      "processing_tools": [
+        "Furnace",
+        "Stone Axe"
+      ]
     },
     {
       "id": "sword",
@@ -153,7 +200,11 @@
         "wood": 64
       },
       "tool": "Anvil",
-      "blueprint": "Blueprint: Apprentice's Sword"
+      "blueprint": "Blueprint: Apprentice's Sword",
+      "processing_tools": [
+        "Furnace",
+        "Stone Axe"
+      ]
     },
     {
       "id": "axe_stone",
@@ -165,7 +216,8 @@
         "wood": 9
       },
       "tool": null,
-      "blueprint": null
+      "blueprint": null,
+      "processing_tools": []
     },
     {
       "id": "quiver_of_arrows",
@@ -178,7 +230,10 @@
         "skin": 1
       },
       "tool": "Workbench",
-      "blueprint": "Blueprint: Primitive Quiver of Arrows"
+      "blueprint": "Blueprint: Primitive Quiver of Arrows",
+      "processing_tools": [
+        "Stone Axe"
+      ]
     },
     {
       "id": "crossbow",
@@ -190,7 +245,11 @@
         "fiber": 1
       },
       "tool": "Anvil",
-      "blueprint": "Blueprint: Bended Crossbow"
+      "blueprint": "Blueprint: Bended Crossbow",
+      "processing_tools": [
+        "Furnace",
+        "Stone Axe"
+      ]
     },
     {
       "id": "short_sword",
@@ -201,7 +260,11 @@
         "wood": 41
       },
       "tool": "Anvil",
-      "blueprint": "Blueprint: Short Sword"
+      "blueprint": "Blueprint: Short Sword",
+      "processing_tools": [
+        "Furnace",
+        "Stone Axe"
+      ]
     }
   ],
   "tier": 1,
