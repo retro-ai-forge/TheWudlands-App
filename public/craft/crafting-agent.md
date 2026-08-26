@@ -1054,3 +1054,27 @@ ingredient 1:1:
 Diagram: relabeled both `T1 refined_ore` nodes back to `T1 metal_bar`
 (armor and shield), updated their edge values to 1, and reduced the
 shield's `clockwork_mechanism` edge value to 6.
+
+## Search fix: "used in" needed to survive more than one name match
+
+Searching "refined" matched exactly two families by name (`refined_ore`,
+`refined_clay` - both processed materials with a "Refined X" tier-1
+name), so the search-viewer's `totalNameMatches === 1` gate for showing
+"what is this used in" never fired - the dropdown listed both items with
+no reverse-lookup at all, even though 29 real recipes consume one or the
+other.
+
+Widened the gate from "exactly one match" to "10 or fewer matches",
+computing the "used in" list against the **union** of every matched
+family instead of just a single one. Preselecting the matched item stays
+gated at exactly one match, unchanged - a multi-match search still keeps
+the previous selection rather than jumping, so a genuine browse (e.g.
+"sword", 4 matches: `sword`, `greatsword`, and their two blueprints)
+isn't hijacked. The 10-match cap exists to keep this cheap and the
+results meaningful for a search broad enough to match many unrelated
+items, where a merged "used in" list would be noise, not signal.
+
+Searching "refined" now surfaces all 29 consumers across armor (`chainmail_*`),
+9 tools, 3 weapons, 2 misc, 8 adventuring-gear items, and 4 further
+processed materials (`clockwork_mechanism`, `fired_brick`,
+`metal_ingot`, `tinkered_gearbox`).

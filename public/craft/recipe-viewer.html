@@ -590,20 +590,22 @@ function populateSelect(filterText, tier) {
       select.appendChild(og);
     }
 
-    // A search that names exactly one item (a tool, a processed material,
-    // anything) is a specific lookup, not a browse - e.g. "anvil" or
-    // "carcass". For that case, also list every recipe that uses it
-    // (ingredient, ingredient-alternative, or tool) right below it, and
-    // preselect the matched item itself so its own build recipe renders
-    // immediately - answering "how do I make this" and "what's it used
-    // for" in one search. A broader search matching several items (e.g.
-    // "sword") skips this and keeps the previous selection if still valid,
-    // so refining a browse-style search doesn't keep resetting it.
-    if (ft.length > 0 && totalNameMatches === 1) {
+    // Also list what the matched item(s) are used in - as an ingredient,
+    // an ingredient-alternative, or a tool - right below the name matches.
+    // Capped to a small handful of matches: a narrow search (one item, or
+    // a few closely-related tier/family variants like "refined" matching
+    // both refined_ore and refined_clay) benefits from this every time,
+    // but a search broad enough to match many unrelated items would make
+    // the lookup slow and the results noise rather than signal.
+    if (ft.length > 0 && totalNameMatches <= 10) {
+      const matchedFamIds = [];
+      for (const cat of catOrder) {
+        if (nameMatchesByCat[cat]) matchedFamIds.push(...nameMatchesByCat[cat]);
+      }
       const usedIn = {};
       for (const recipeId of recipeFamIds) {
-        if (recipeId === firstNameMatch) continue;
-        if (recipeUses(recipeId, firstNameMatch)) {
+        if (matchedFamIds.includes(recipeId)) continue;
+        if (matchedFamIds.some(famId => recipeUses(recipeId, famId))) {
           const cat = famCategory(recipeId);
           (usedIn[cat] = usedIn[cat] || []).push(recipeId);
         }
@@ -621,8 +623,17 @@ function populateSelect(filterText, tier) {
         }
         select.appendChild(og);
       }
-      select.value = firstNameMatch;
-      return;
+
+      // A search that names exactly one item is a specific lookup, not a
+      // browse - e.g. "anvil" or "carcass" - so it also preselects that
+      // item, landing straight on its own build recipe. A broader search
+      // matching several items (e.g. "sword") keeps the previous
+      // selection if still valid instead, so refining a browse-style
+      // search doesn't keep resetting it.
+      if (totalNameMatches === 1) {
+        select.value = firstNameMatch;
+        return;
+      }
     }
 
     if ([...select.options].some(o => o.value === prev)) select.value = prev;
