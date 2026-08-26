@@ -947,3 +947,49 @@ Searching "carcass" now opens on its own recipe (`meat`×3 + the
 `bone_blade`-or-`dagger` alternative) with `axe_stone`, `sharpened_stick`,
 `glass_lantern`, and `torch` listed right below as "misc/weapon/tool (uses
 carcass)".
+
+## Darksteel and Meteoric Iron no longer share `metal_bar`
+
+Both armor materials, and their shields, were built on `metal_bar` (3x for
+armor, 2x for shields), differentiated only by a second ingredient
+(`clockwork_mechanism` for Darksteel, `essence`+`alloy_dust` for Meteoric
+Iron). Since `metal_bar` resolves to raw `ore`, and both are Tier 6 items,
+that ore is specifically Star Metal Ore either way - two "distinct
+legendary materials" were mechanically identical at the base.
+
+Redesigned both to drop `metal_bar` (and therefore its `Furnace`
+dependency - a real point of differentiation, not just flavor) and lean
+into their existing second ingredient instead:
+
+- **Darksteel** → `refined_ore` + heavier `clockwork_mechanism`. Armor:
+  30× refined_ore + 15× clockwork_mechanism (was 3× metal_bar + 4×
+  clockwork_mechanism). Shield: 20× refined_ore + 10× clockwork_mechanism
+  (was 2× metal_bar + 3× clockwork_mechanism). Raw trace:
+  `ore`×300 + `clockwork`×60 = 360 (armor), no `wood` at all anymore
+  (that came from `metal_bar`'s own `coal` step) - reads as pure
+  metal-and-machinery, fitting "dwarven-forged dark mythril" without
+  introducing dwarven mythril as an actual new material (kept in scope to
+  existing ingredients, per explicit request).
+- **Meteoric Iron** → heavier `alloy_dust` + `essence`, `metal_bar`
+  dropped entirely (no direct `ore` at all - the only ore left is the 3×
+  baked into each `alloy_dust` unit). Armor: 40× alloy_dust + 10× essence
+  (was 3× metal_bar + 1× essence + 5× alloy_dust). Shield: 25× alloy_dust
+  + 5× essence (was 2× metal_bar + 1× essence + 5× alloy_dust). Raw
+  trace: `essence`×50 + `ore`×120 + `crystal`×80 = 250 (armor) - reads as
+  a found meteorite refined down, not mined and smelted.
+
+Both totals dropped from their old metal_bar-inflated numbers (armor:
+530→360 Darksteel, 505→250 Meteoric Iron) - a real consequence of
+removing a 375-405-ore block, not a rebalancing pass in its own right.
+Flag for a follow-up if the tier-6 armors should cost more in absolute
+terms; the point of this pass was differentiation, not pricing.
+
+**Diagram.** For both Armor Piece templates and both Shields: relabeled
+the `metal_bar` node to `refined_ore` for Darksteel (2 nodes, 4 edge
+values updated), and deleted the `metal_bar` node and its edge entirely
+for Meteoric Iron (2 nodes + 2 edges removed), updating the `essence` and
+`alloy_dust` edge values in place. No restaggering was done for Meteoric
+Iron's now-4-input layout (was 5) - the remaining nodes kept their
+existing positions rather than being pixel-perfectly recentered, a
+pragmatic call given the piece-template nodes already predate this
+diagram's per-recipe positioning conventions.

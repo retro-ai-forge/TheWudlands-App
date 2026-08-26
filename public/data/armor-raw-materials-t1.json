@@ -108,13 +108,11 @@
       },
       "tier": 1,
       "raw_materials": {
-        "ore": 415,
-        "wood": 99,
-        "clockwork": 16
+        "ore": 300,
+        "clockwork": 60
       },
       "tools": [
-        "Anvil",
-        "Furnace"
+        "Anvil"
       ],
       "blueprint": "Blueprint: Tempered Darksteel Armor"
     },
@@ -151,14 +149,12 @@
       },
       "tier": 1,
       "raw_materials": {
-        "ore": 390,
-        "wood": 99,
-        "essence": 6,
-        "crystal": 10
+        "essence": 50,
+        "ore": 120,
+        "crystal": 80
       },
       "tools": [
         "Anvil",
-        "Furnace",
         "Grinder"
       ],
       "blueprint": "Blueprint: Copper Meteoric Armor"
