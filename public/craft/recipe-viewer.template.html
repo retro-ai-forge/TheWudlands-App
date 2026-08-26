@@ -550,6 +550,46 @@ function populateSelect(filterText, tier) {
   select.innerHTML = "";
   const ft = (filterText || "").toLowerCase();
 
+  // If the search text matches a known tool by name, list every recipe
+  // that uses that tool directly, instead of the tool's own entry - typing
+  // "anvil" should show what you can forge, not the Anvil item itself
+  // (which would otherwise win the plain name-match pass below first).
+  if (ft.length > 0) {
+    const matchedTools = (groups["tool"] || []).filter(f => famLabel(f, tier).toLowerCase().includes(ft));
+    if (matchedTools.length > 0) {
+      const toolMatches = {};
+      for (const recipeId of recipeFamIds) {
+        const recipe = recipes[recipeId];
+        if (!recipe || !recipe.tool) continue;
+        if (toolIds(recipe.tool).some(t => matchedTools.includes(t))) {
+          const cat = famCategory(recipeId);
+          (toolMatches[cat] = toolMatches[cat] || []).push(recipeId);
+        }
+      }
+      const toolMatchCats = Object.keys(toolMatches);
+      if (toolMatchCats.length > 0) {
+        for (const cat of catOrder) {
+          if (!toolMatches[cat]) continue;
+          const og = document.createElement("optgroup");
+          og.label = cat + " (uses " + ft + ")";
+          for (const famId of toolMatches[cat].sort((a, b) => a.localeCompare(b))) {
+            const opt = document.createElement("option");
+            opt.value = famId;
+            const label = famLabel(famId, tier);
+            opt.textContent = getDisplayLabel(label, cat);
+            og.appendChild(opt);
+          }
+          select.appendChild(og);
+        }
+        if ([...select.options].some(o => o.value === prev)) select.value = prev;
+        return;
+      }
+      // Matched a tool by name, but nothing uses it yet - fall through to
+      // the normal name search so the tool item itself still shows up
+      // rather than leaving the dropdown empty.
+    }
+  }
+
   // First try normal search by item name
   let hasMatches = false;
   for (const cat of catOrder) {

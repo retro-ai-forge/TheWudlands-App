@@ -882,3 +882,30 @@ the original `meat`+`bone_blade`→output cluster for each, relabeled its
 labeled node" move already used for `axe_stone or dagger`), and deleted the
 now-redundant second cluster (`meat`+`dagger`→output) entirely, including
 its now-orphaned `meat`/`dagger` copies.
+
+## Searching a tool by name lists what it crafts, not the tool itself
+
+Tools are searchable items in their own right (`catOrder` includes `"tool"`,
+so e.g. `anvil` is a normal family with its own build recipe) - which meant
+typing "anvil" hit the plain by-name match first and stopped there, showing
+only the Anvil item itself. The much more useful result - every recipe you
+can actually make *with* an Anvil - never ran, since the existing
+ingredient/tool reverse-lookup only kicked in when the name search found
+*nothing at all*.
+
+Fixed by giving tool-name matches their own first-class path in
+`populateSelect`, checked before the normal by-name scan: if the filter
+text matches a tool family's name (`groups["tool"]`, same substring check
+as everywhere else), the dropdown is populated with every recipe whose
+`tool` field includes that tool's familyId (via `toolIds()`, so this also
+catches recipes with an alternative-tool list like `axe_stone`/`dagger`),
+grouped and sorted the normal way, across every category. `<select>`'s own
+default of pre-selecting its first option does the rest - the first tool-
+using recipe renders immediately, no extra selection logic needed. Falls
+through to the normal by-name search only if the matched tool has zero
+recipes using it yet (so the dropdown never ends up empty).
+
+Typing "anvil" now surfaces 30+ recipes (armor, shields, weapons,
+`clockwork_mechanism`, even `wrench`'s own build) instead of just the
+Anvil item; a broader match like "table" correctly pools recipes from both
+`writers_table` and `enchanters_table` together.
