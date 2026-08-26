@@ -1242,3 +1242,26 @@ Deliberately left alone: `base-food.json`'s `hearthside_roast_haunch`
 `characterOptions.ts`'s "Hearthfinder Sigil" / the Cook profession's
 "Hearth and pot." description - all three use "hearth" as flavor/lore
 text unrelated to the tool family, not as the identifier being renamed.
+
+## `furnace`: `refined_clay` swapped for `fired_brick`
+
+By request: `fired_brick` (`refined_clay` x2, tool Kiln) was a dead-end -
+defined and craftable, but nothing consumed it. `furnace` used 6x
+`refined_clay` directly; since `refined_clay` divides evenly into
+`fired_brick` (2 per brick), swapping in 3x `fired_brick` is an exact
+substitution - same raw trace (`ore: 50, clay: 36, sand: 12`, unchanged),
+no rebalancing math needed like the Darksteel/`tinkered_gearbox` swap.
+
+Side effect: `furnace`'s tool chain gains **Kiln** (via `fired_brick`),
+same pattern as Darksteel gaining Wrench via `tinkered_gearbox` -
+anything that itself needs Furnace (`metal_bar`, `metal_ingot`) now pulls
+in Kiln transitively too. `blueprint-raw-materials.json`'s
+`blueprint_furnace` entry (`clay`, `ore`, `sand`) needed no change - same
+raw types either way, just one more refinement step.
+
+Diagram: the single pulled-in `T1 refined_clay` leaf copy feeding
+`furnace`'s canonical build node was relabeled to `T1 fired_brick` and
+its edge quantity changed `6` → `3`. `fired_brick`'s own canonical build
+(from `refined_clay` + Kiln) was already drawn elsewhere with no
+consumer; still leaf-style, no upstream duplicated onto the relabeled
+copy - same convention as every other tool/ingredient swap this session.
