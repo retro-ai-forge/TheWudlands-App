@@ -543,7 +543,7 @@ for (const famId of recipeFamIds) {
   const cat = famCategory(famId);
   (groups[cat] = groups[cat] || []).push(famId);
 }
-const catOrder = ["raw", "blueprint", "processed", "armor", "shield", "weapon", "food", "potion", "misc", "adventuring_gear", "tool"];
+const catOrder = ["raw", "blueprint", "armor", "shield", "weapon", "food", "potion", "misc", "adventuring_gear", "tool", "processed"];
 
 // True if `recipeId`'s recipe consumes/uses `famId` anywhere - as a plain
 // ingredient, as one option inside an ingredient's "alternatives" slot
