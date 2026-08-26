@@ -49,8 +49,8 @@
       },
       "tier": 1,
       "raw_materials": {
-        "ore": 250,
-        "wood": 66
+        "ore": 225,
+        "wood": 33
       },
       "tools": [
         "Anvil",
@@ -126,8 +126,8 @@
       },
       "tier": 1,
       "raw_materials": {
-        "monster_part": 40,
-        "skin": 192,
+        "monster_part": 30,
+        "skin": 144,
         "pigment": 80,
         "wood": 12,
         "herbs": 48
@@ -149,9 +149,9 @@
       },
       "tier": 1,
       "raw_materials": {
-        "essence": 50,
+        "essence": 90,
         "ore": 120,
-        "crystal": 80
+        "crystal": 140
       },
       "tools": [
         "Anvil",

@@ -993,3 +993,37 @@ Iron's now-4-input layout (was 5) - the remaining nodes kept their
 existing positions rather than being pixel-perfectly recentered, a
 pragmatic call given the piece-template nodes already predate this
 diagram's per-recipe positioning conventions.
+
+## Follow-up balance pass: Chainmail down, Meteoric Iron up, Chitin down
+
+Requested after seeing the redesigned totals - three more targeted
+adjustments, all via quantity changes on existing ingredients (no new
+materials this round):
+
+- **Chainmail** (was 316, `metal_bar`×2 only) → **258**. Split into
+  `metal_bar`×1 + `refined_ore`×20 (125+100=225 ore, 33 wood unchanged) -
+  the same "swap part of a metal_bar block for loose refined_ore" lever
+  used for `short_sword` and `crossbow` earlier, needed here because
+  `metal_bar` is a fixed 125-ore unit with no way to trim it gradually on
+  its own. Side effect: Chainmail and Iron were tied at 316/316 before
+  this - they're now properly differentiated (258 vs 316).
+- **Meteoric Iron** (was 250) → **350** (armor), gained a genuinely new
+  processed ingredient: `arcane_dust` (`crystal`×3 + `essence`×2, no
+  tool - already existed in the catalog, just unused here before). Armor:
+  +20× arcane_dust; shield: +12× (scaled to the armor:shield 40:25 ratio
+  already in place, 20×25/40≈12). Keeps the "no mined ore beyond what
+  `alloy_dust` already carries" identity from the metal_bar removal -
+  `arcane_dust` adds `crystal`+`essence` only, zero new ore.
+- **Chitin** (was 372, armor; 536, shield) → **314** (armor), **507**
+  (shield). Cut `cured_chitin` and `leather_lining` by 25% each (armor
+  8→6, shield 4→3) - the two ingredients driving the bulk of the cost
+  (`leather_lining`'s `skin`×24/unit alone was 192 of the armor's 372).
+  `lacquer` left untouched at its existing quantity in both (1 for armor,
+  3 for shield), so the shield's cut is smaller in relative terms (536→507,
+  ~5%) since `lacquer` was already its dominant cost and wasn't touched.
+
+Diagram: `refined_ore` node added alongside Chainmail's existing (now
+qty-1) `metal_bar` node; Chitin's existing `cured_chitin`/`leather_lining`
+edge values updated in place (armor and shield); a new `arcane_dust` node
+added to both Meteoric Iron clusters, positioned near the existing
+`essence` node in each.
