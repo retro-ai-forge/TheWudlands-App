@@ -16,7 +16,7 @@
   {"id": "rabbit_fur_cloak", "name": "Rabbit Fur Cloak", "familyId": "fur_cloak", "tier": 1},
   {"id": "fox_fur_cloak", "name": "Fox Fur Cloak", "familyId": "fur_cloak", "tier": 2},
   {"id": "wolf_fur_cloak", "name": "Wolf Fur Cloak", "familyId": "fur_cloak", "tier": 3},
-  {"id": "bear_fur_cloak", "name": "Bear Fur Cloak", "familyId": "fur_cloak", "tier": 4},
+  {"id": "warg_fur_cloak", "name": "Warg Fur Cloak", "familyId": "fur_cloak", "tier": 4},
   {"id": "direwolf_fur_cloak", "name": "Direwolf Fur Cloak", "familyId": "fur_cloak", "tier": 5},
   {"id": "frostmane_fur_cloak", "name": "Frostmane Fur Cloak", "familyId": "fur_cloak", "tier": 6},
 

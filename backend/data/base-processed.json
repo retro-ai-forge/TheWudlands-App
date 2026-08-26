@@ -163,14 +163,14 @@
   {"id": "rabbit_trimmed_pelt", "name": "Trimmed Rabbit Pelt", "familyId": "trimmed_pelt", "tier": 1},
   {"id": "boar_trimmed_pelt", "name": "Trimmed Boar Pelt", "familyId": "trimmed_pelt", "tier": 2},
   {"id": "crocodile_trimmed_pelt", "name": "Trimmed Crocodile Pelt", "familyId": "trimmed_pelt", "tier": 3},
-  {"id": "cave_lizard_trimmed_pelt", "name": "Trimmed Cave Lizard Pelt", "familyId": "trimmed_pelt", "tier": 4},
+  {"id": "drake_trimmed_pelt", "name": "Trimmed Drake Pelt", "familyId": "trimmed_pelt", "tier": 4},
   {"id": "hydra_trimmed_pelt", "name": "Trimmed Hydra Pelt", "familyId": "trimmed_pelt", "tier": 5},
   {"id": "titan_trimmed_pelt", "name": "Trimmed Titan Pelt", "familyId": "trimmed_pelt", "tier": 6},
 
   {"id": "deer_leather", "name": "Deer Leather", "familyId": "leather", "tier": 1},
   {"id": "goat_leather", "name": "Goat Leather", "familyId": "leather", "tier": 2},
   {"id": "elk_leather", "name": "Elk Leather", "familyId": "leather", "tier": 3},
-  {"id": "panther_leather", "name": "Panther Leather", "familyId": "leather", "tier": 4},
+  {"id": "manticore_leather", "name": "Manticore Leather", "familyId": "leather", "tier": 4},
   {"id": "wyvern_leather", "name": "Wyvern Leather", "familyId": "leather", "tier": 5},
   {"id": "phoenix_leather", "name": "Phoenix Leather", "familyId": "leather", "tier": 6},
 

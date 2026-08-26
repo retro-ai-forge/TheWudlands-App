@@ -65,14 +65,14 @@
   { "id": "rabbit_hide", "name": "Rabbit Hide", "familyId": "hide", "tier": 1 },
   { "id": "boar_hide", "name": "Boar Hide", "familyId": "hide", "tier": 2 },
   { "id": "crocodile_hide", "name": "Crocodile Hide", "familyId": "hide", "tier": 3 },
-  { "id": "cave_lizard_hide", "name": "Cave Lizard Hide", "familyId": "hide", "tier": 4 },
+  { "id": "drake_hide", "name": "Drake Hide", "familyId": "hide", "tier": 4 },
   { "id": "hydra_hide", "name": "Hydra Hide", "familyId": "hide", "tier": 5 },
   { "id": "titan_hide", "name": "Titan Hide", "familyId": "hide", "tier": 6 },
 
   { "id": "deer_skin", "name": "Deer Skin", "familyId": "skin", "tier": 1 },
   { "id": "goat_skin", "name": "Goat Skin", "familyId": "skin", "tier": 2 },
   { "id": "elk_skin", "name": "Elk Skin", "familyId": "skin", "tier": 3 },
-  { "id": "panther_skin", "name": "Panther Skin", "familyId": "skin", "tier": 4 },
+  { "id": "manticore_skin", "name": "Manticore Skin", "familyId": "skin", "tier": 4 },
   { "id": "wyvern_skin", "name": "Wyvern Skin", "familyId": "skin", "tier": 5 },
   { "id": "phoenix_skin", "name": "Phoenix Skin", "familyId": "skin", "tier": 6 },
 
