@@ -1158,3 +1158,17 @@ as a real child node with the existing "or ... (not consumed)" note.
 `computeTotals()` is untouched - it already only reads `.consumed` per
 option, not how the tree draws it, so the Final Items side panel still
 lists `axe_stone`/`dagger`/etc. as before.
+
+## Follow-up: `carcass`/`dressed_meat`'s unconsumed alt-option gets the same
+## compact tag
+
+`carcass` and `dressed_meat` are a *mixed* slot (`bone_blade` consumed,
+`dagger` not) so the primary (`bone_blade`) still renders as a real child
+node - only the non-primary alternative changed. It used to read "or 1x
+Rusty Dagger (not consumed)"; now it's just "🔨 dagger", same compact
+"icon id" tag as the all-unconsumed case above, dropping the quantity
+since owning one is all that matters. A future *consumed* alternative
+(none exist today) still falls back to the old "or Nx Name" wording,
+since that one genuinely needs a quantity. Since `carcass`/`dressed_meat`
+are single recipe entries shared by all 6 tiers, this applies uniformly
+across Rabbit/Boar/Elk/Griffin/Wyvern/Dragon - not just T1.
