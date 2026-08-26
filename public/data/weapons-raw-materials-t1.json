@@ -1,0 +1,164 @@
+{
+  "weapons": [
+    {
+      "id": "bow",
+      "name": "Apprentice's Bow",
+      "tier": 1,
+      "raw_materials": {
+        "wood": 20,
+        "fiber": 132
+      }
+    },
+    {
+      "id": "sickle",
+      "name": "Apprentice's Sickle",
+      "tier": 1,
+      "raw_materials": {
+        "ore": 125,
+        "wood": 34
+      }
+    },
+    {
+      "id": "warhammer",
+      "name": "Apprentice's Warhammer",
+      "tier": 1,
+      "raw_materials": {
+        "ore": 375,
+        "wood": 102
+      }
+    },
+    {
+      "id": "wand",
+      "name": "Beginner's Wand",
+      "tier": 1,
+      "raw_materials": {
+        "wood": 4,
+        "crystal": 3
+      }
+    },
+    {
+      "id": "greatsword",
+      "name": "Bent Greatsword",
+      "tier": 1,
+      "raw_materials": {
+        "ore": 375,
+        "wood": 102
+      }
+    },
+    {
+      "id": "battle_axe",
+      "name": "Blunt Battle Axe",
+      "tier": 1,
+      "raw_materials": {
+        "ore": 375,
+        "wood": 94
+      }
+    },
+    {
+      "id": "spear",
+      "name": "Blunt Spear",
+      "tier": 1,
+      "raw_materials": {
+        "ore": 125,
+        "wood": 38
+      }
+    },
+    {
+      "id": "set_of_bolts",
+      "name": "Crude Set of Bolts",
+      "tier": 1,
+      "raw_materials": {
+        "wood": 12,
+        "ore": 10
+      }
+    },
+    {
+      "id": "sharpened_stick",
+      "name": "Crude Sharpened Stick",
+      "tier": 1,
+      "raw_materials": {
+        "wood": 7,
+        "stone": 2,
+        "meat": 2,
+        "harvest": 1
+      }
+    },
+    {
+      "id": "mace",
+      "name": "Loose Mace",
+      "tier": 1,
+      "raw_materials": {
+        "ore": 250,
+        "wood": 64
+      }
+    },
+    {
+      "id": "magic_staff",
+      "name": "Loose Magic Staff",
+      "tier": 1,
+      "raw_materials": {
+        "wood": 16,
+        "crystal": 6
+      }
+    },
+    {
+      "id": "club",
+      "name": "Pine Club",
+      "tier": 1,
+      "raw_materials": {
+        "wood": 5
+      }
+    },
+    {
+      "id": "dagger",
+      "name": "Rusty Dagger",
+      "tier": 1,
+      "raw_materials": {
+        "ore": 125,
+        "wood": 30
+      }
+    },
+    {
+      "id": "sword",
+      "name": "Rusty Sword",
+      "tier": 1,
+      "raw_materials": {
+        "ore": 250,
+        "wood": 64
+      }
+    },
+    {
+      "id": "axe_stone",
+      "name": "Stone Axe",
+      "tier": 1,
+      "raw_materials": {
+        "wood": 3,
+        "stone": 2,
+        "meat": 1
+      }
+    },
+    {
+      "id": "quiver_of_arrows",
+      "name": "Tight Quiver of Arrows",
+      "tier": 1,
+      "raw_materials": {
+        "wood": 16,
+        "feather": 2,
+        "ore": 5,
+        "skin": 1
+      }
+    },
+    {
+      "id": "crossbow",
+      "name": "Uneven Crossbow",
+      "tier": 1,
+      "raw_materials": {
+        "ore": 125,
+        "wood": 42,
+        "fiber": 1
+      }
+    }
+  ],
+  "tier": 1,
+  "count": 17
+}

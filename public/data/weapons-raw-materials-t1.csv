@@ -1,0 +1,18 @@
+Weapon ID,Weapon Name,Raw Materials Required
+bow,Apprentice's Bow,"132x fiber, 20x wood"
+sickle,Apprentice's Sickle,"125x ore, 34x wood"
+warhammer,Apprentice's Warhammer,"375x ore, 102x wood"
+wand,Beginner's Wand,"3x crystal, 4x wood"
+greatsword,Bent Greatsword,"375x ore, 102x wood"
+battle_axe,Blunt Battle Axe,"375x ore, 94x wood"
+spear,Blunt Spear,"125x ore, 38x wood"
+set_of_bolts,Crude Set of Bolts,"10x ore, 12x wood"
+sharpened_stick,Crude Sharpened Stick,"1x harvest, 2x meat, 2x stone, 7x wood"
+mace,Loose Mace,"250x ore, 64x wood"
+magic_staff,Loose Magic Staff,"6x crystal, 16x wood"
+club,Pine Club,5x wood
+dagger,Rusty Dagger,"125x ore, 30x wood"
+sword,Rusty Sword,"250x ore, 64x wood"
+axe_stone,Stone Axe,"1x meat, 2x stone, 3x wood"
+quiver_of_arrows,Tight Quiver of Arrows,"2x feather, 5x ore, 1x skin, 16x wood"
+crossbow,Uneven Crossbow,"1x fiber, 125x ore, 42x wood"
