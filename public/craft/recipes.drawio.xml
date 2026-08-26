@@ -2530,7 +2530,7 @@
         <mxCell id="p8Z4HN8t3ef-ZC7WEyMa-841" edge="1" parent="1" source="p8Z4HN8t3ef-ZC7WEyMa-840" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontSize=10;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" target="p8Z4HN8t3ef-ZC7WEyMa-51" value="1">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="p8Z4HN8t3ef-ZC7WEyMa-842" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=11;fontStyle=1;" value="T1 axe_stone" vertex="1">
+        <mxCell id="p8Z4HN8t3ef-ZC7WEyMa-842" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=11;fontStyle=1;" value="T1 axe_stone or dagger" vertex="1">
           <mxGeometry height="44" width="130" x="497.5" y="1362" as="geometry" />
         </mxCell>
         <mxCell id="p8Z4HN8t3ef-ZC7WEyMa-843" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" value="T1 metal_bar" vertex="1">

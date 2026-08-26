@@ -1097,3 +1097,33 @@ applies to *unconsumed* alternatives (`!alt.consumed`) - a consumed
 alternative like `bone_blade` itself isn't a "do you own it" check, it's
 "do you have enough," which is what the raw-materials side panel already
 covers.
+
+## `sharpened_stick`'s axe_stone requirement also accepts a dagger now
+
+Follow-up to the tool-alternatives work: `sharpened_stick` needs to *own*
+an `axe_stone` (unconsumed, `final` category) to craft - explicitly
+excluded from the earlier `axe_stone`-or-`dagger` pass since that was a
+`tool`-field change and this is a `final`-ingredient one, "a different
+kind of requirement" as recorded at the time. By request, it's now
+covered too - and the ingredient-alternatives schema built for
+`carcass`/`dressed_meat` turned out to be exactly the right shape for it,
+so no new code was needed:
+
+```json
+{"alternatives": [
+  {"category": "final", "familyId": "axe_stone", "qty": 1, "consumed": false},
+  {"category": "final", "familyId": "dagger", "qty": 1, "consumed": false}
+]}
+```
+
+Both options are unconsumed here (unlike `carcass`'s consumed-`bone_blade`
+-vs-unconsumed-`dagger` split) - the recipe viewer's existing "or ..."
+note and the missing-check added just above both apply unchanged, since
+neither cared which specific option was consumed, only whether an
+alternative *is*.
+
+Diagram: relabeled the single pulled-in `T1 axe_stone` copy feeding
+`sharpened_stick` to `T1 axe_stone or dagger`, same as the 5 tool-role
+copies already carry that label. The canonical `axe_stone` build recipe
+and its `Blueprint`-less status are untouched - this only concerns how
+`sharpened_stick` consumes it.
