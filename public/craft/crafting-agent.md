@@ -699,3 +699,28 @@ Axe recolor above):
   an orphan with no consumer, in both the diagram and `craft-recipes.json`
   — left in place rather than deleted, since removing a recipe family
   outright wasn't asked for here and is a separate cleanup decision.
+
+## `crossbow`: less ore, more fiber, same total-raw ballpark
+
+Rebalanced by request — more fiber, less ore, total raw kept close to the
+original. Same `metal_bar`-granularity problem `short_sword` hit: ore only
+enters this recipe through `metal_bar` (a fixed 125-ore/33-wood block), so
+there's no way to trim ore gradually while `metal_bar` stays in the recipe.
+
+Resolved the same way: dropped `metal_bar` entirely and replaced it with a
+scaled `refined_ore` quantity (5 ore/unit, no wood tax) for the crossbow's
+metal fittings/lock. Three ratios were sketched (50/80/40, 75/60/35,
+30/80/60 ore/wood/fiber, all landing at 170 total) and the middle one
+picked - keeps more metal in the design (a real trigger mechanism, not
+just a token fitting) while still cutting ore well below the original.
+
+`crossbow` = 15× `refined_ore` + 15× `plank` + 35× `fiber` (raw), Anvil,
+`Blueprint: Bended Crossbow` → 75 ore + 60 wood + 35 fiber = **170 total**
+(was 125 ore + 45 wood + 1 fiber = 171). Diagram update was a pure
+relabel + edge-value change: the existing `T1 metal_bar` node became
+`T1 refined_ore` (same yellow processed styling — no rewiring needed),
+and the three ingredient edges' quantities changed to 15/15/35.
+
+Side effect: `crossbow` no longer needs **Furnace** as a processing tool
+(that only existed to smelt `metal_bar`) — it now only needs **Stone Axe**
+upstream (for `plank`), on top of its own **Anvil**.

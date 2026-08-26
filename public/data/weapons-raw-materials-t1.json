@@ -240,14 +240,13 @@
       "name": "Uneven Crossbow",
       "tier": 1,
       "raw_materials": {
-        "ore": 125,
-        "wood": 42,
-        "fiber": 1
+        "ore": 75,
+        "wood": 60,
+        "fiber": 35
       },
       "tool": "Anvil",
       "blueprint": "Blueprint: Bended Crossbow",
       "processing_tools": [
-        "Furnace",
         "Stone Axe"
       ]
     },

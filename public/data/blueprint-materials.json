@@ -143,9 +143,9 @@
     "plank": 2
   },
   "blueprint_crossbow": {
-    "metal_bar": 1,
-    "plank": 3,
-    "fiber": 1
+    "refined_ore": 15,
+    "plank": 15,
+    "fiber": 35
   },
   "blueprint_sword": {
     "metal_bar": 2,

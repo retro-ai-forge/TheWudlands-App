@@ -16,4 +16,4 @@ sword,Rusty Sword,"250x ore, 64x wood",Anvil,Blueprint: Apprentice's Sword,"Furn
 short_sword,Short Sword,"180x ore, 41x wood",Anvil,Blueprint: Short Sword,"Furnace, Stone Axe"
 axe_stone,Stone Axe,"2x meat, 4x stone, 9x wood",—,—,—
 quiver_of_arrows,Tight Quiver of Arrows,"2x feather, 5x ore, 1x skin, 16x wood",Workbench,Blueprint: Primitive Quiver of Arrows,Stone Axe
-crossbow,Uneven Crossbow,"1x fiber, 125x ore, 42x wood",Anvil,Blueprint: Bended Crossbow,"Furnace, Stone Axe"
+crossbow,Uneven Crossbow,"35x fiber, 75x ore, 60x wood",Anvil,Blueprint: Bended Crossbow,Stone Axe
