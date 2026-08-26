@@ -827,10 +827,10 @@
         <mxCell id="p8Z4HN8t3ef-ZC7WEyMa-274" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" value="T1 plank" vertex="1">
           <mxGeometry height="44" width="130" x="3705" y="918" as="geometry" />
         </mxCell>
-        <mxCell id="p8Z4HN8t3ef-ZC7WEyMa-275" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=11;" value="Blueprint: Hearth" vertex="1">
+        <mxCell id="p8Z4HN8t3ef-ZC7WEyMa-275" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=11;" value="Blueprint: Oven" vertex="1">
           <mxGeometry height="44" width="130" x="3875" y="940" as="geometry" />
         </mxCell>
-        <mxCell id="p8Z4HN8t3ef-ZC7WEyMa-276" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;fontStyle=1;" value="T1 Hearth" vertex="1">
+        <mxCell id="p8Z4HN8t3ef-ZC7WEyMa-276" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;fontStyle=1;" value="T1 Oven" vertex="1">
           <mxGeometry height="44" width="130" x="3705" y="1060" as="geometry" />
         </mxCell>
         <mxCell id="p8Z4HN8t3ef-ZC7WEyMa-277" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" value="T1 refined_ore" vertex="1">
@@ -905,7 +905,7 @@
         <mxCell id="p8Z4HN8t3ef-ZC7WEyMa-300" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" value="T1 dressed_meat" vertex="1">
           <mxGeometry height="44" width="130" x="132.5" y="5557" as="geometry" />
         </mxCell>
-        <mxCell id="p8Z4HN8t3ef-ZC7WEyMa-301" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;fontStyle=1;" value="T1 Hearth" vertex="1">
+        <mxCell id="p8Z4HN8t3ef-ZC7WEyMa-301" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;fontStyle=1;" value="T1 Oven" vertex="1">
           <mxGeometry height="44" width="130" x="302.5" y="5557" as="geometry" />
         </mxCell>
         <mxCell id="p8Z4HN8t3ef-ZC7WEyMa-302" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" value="T1 cooked_meat" vertex="1">
@@ -914,7 +914,7 @@
         <mxCell id="p8Z4HN8t3ef-ZC7WEyMa-303" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" value="T1 harvest" vertex="1">
           <mxGeometry height="44" width="130" x="580" y="5559" as="geometry" />
         </mxCell>
-        <mxCell id="p8Z4HN8t3ef-ZC7WEyMa-304" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;fontStyle=1;" value="T1 Hearth" vertex="1">
+        <mxCell id="p8Z4HN8t3ef-ZC7WEyMa-304" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;fontStyle=1;" value="T1 Oven" vertex="1">
           <mxGeometry height="44" width="130" x="750" y="5559" as="geometry" />
         </mxCell>
         <mxCell id="p8Z4HN8t3ef-ZC7WEyMa-305" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" value="T1 baked_harvest" vertex="1">
@@ -1960,7 +1960,7 @@
         <mxCell id="p8Z4HN8t3ef-ZC7WEyMa-651" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" value="T1 cooked_meat" vertex="1">
           <mxGeometry height="44" width="130" x="270.5" y="5931" as="geometry" />
         </mxCell>
-        <mxCell id="p8Z4HN8t3ef-ZC7WEyMa-652" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;fontStyle=1;" value="T1 Hearth" vertex="1">
+        <mxCell id="p8Z4HN8t3ef-ZC7WEyMa-652" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;fontStyle=1;" value="T1 Oven" vertex="1">
           <mxGeometry height="44" width="130" x="480.5" y="5931" as="geometry" />
         </mxCell>
         <mxCell id="p8Z4HN8t3ef-ZC7WEyMa-653" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=11;fontStyle=1;" value="T1 Roast Haunch" vertex="1">
@@ -1978,7 +1978,7 @@
         <mxCell id="p8Z4HN8t3ef-ZC7WEyMa-657" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" value="T1 monster_part" vertex="1">
           <mxGeometry height="44" width="130" x="1449.5" y="5880" as="geometry" />
         </mxCell>
-        <mxCell id="p8Z4HN8t3ef-ZC7WEyMa-658" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;fontStyle=1;" value="T1 Hearth" vertex="1">
+        <mxCell id="p8Z4HN8t3ef-ZC7WEyMa-658" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;fontStyle=1;" value="T1 Oven" vertex="1">
           <mxGeometry height="44" width="130" x="1607" y="5850" as="geometry" />
         </mxCell>
         <mxCell id="p8Z4HN8t3ef-ZC7WEyMa-659" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=11;fontStyle=1;" value="T1 Bangers" vertex="1">
@@ -2101,7 +2101,7 @@
         <mxCell id="p8Z4HN8t3ef-ZC7WEyMa-698" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" value="T1 baked_harvest" vertex="1">
           <mxGeometry height="44" width="130" x="2222.5" y="5870" as="geometry" />
         </mxCell>
-        <mxCell id="p8Z4HN8t3ef-ZC7WEyMa-699" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;fontStyle=1;" value="T1 Hearth" vertex="1">
+        <mxCell id="p8Z4HN8t3ef-ZC7WEyMa-699" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;fontStyle=1;" value="T1 Oven" vertex="1">
           <mxGeometry height="44" width="130" x="2472.5" y="5870" as="geometry" />
         </mxCell>
         <mxCell id="p8Z4HN8t3ef-ZC7WEyMa-700" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=11;fontStyle=1;" value="T1 hearty_stew" vertex="1">
@@ -2710,7 +2710,7 @@
         <mxCell id="p8Z4HN8t3ef-ZC7WEyMa-901" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" value="T1 hardened_stick" vertex="1">
           <mxGeometry height="44" width="130" x="4380" y="3502" as="geometry" />
         </mxCell>
-        <mxCell id="p8Z4HN8t3ef-ZC7WEyMa-902" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;fontStyle=1;" value="T1 Hearth" vertex="1">
+        <mxCell id="p8Z4HN8t3ef-ZC7WEyMa-902" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;fontStyle=1;" value="T1 Oven" vertex="1">
           <mxGeometry height="44" width="130" x="4460" y="3350" as="geometry" />
         </mxCell>
         <mxCell id="p8Z4HN8t3ef-ZC7WEyMa-903" edge="1" parent="1" source="p8Z4HN8t3ef-ZC7WEyMa-902" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontSize=10;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" target="p8Z4HN8t3ef-ZC7WEyMa-901" value="1">

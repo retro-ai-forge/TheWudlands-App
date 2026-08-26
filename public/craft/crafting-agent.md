@@ -1208,4 +1208,37 @@ their edge quantities changed to `7` and `3`. No new nodes needed -
 `refined_ore`) was already drawn elsewhere, just with no consumer; it
 still has none since these two copies are leaves like the others.
 Regenerated `weapons/armor-raw-materials-t1.*` and republished the T1
-armor artifact with the new Darksteel row (361 total, +Wrench).
+armor artifact with the new Darksteel row (361 total, +Wrench). (Those
+reference tables and the T1 weapons one were later removed from
+`public/data/` at the user's request, along with an orphaned
+`blueprint-materials.json` - none were consumed by any app code, unlike
+`blueprint-raw-materials.json`/`blueprint-id-mapping.json`, which the Soul
+Creation wizard fetches at runtime to highlight resources relevant to a
+selected blueprint.)
+
+## Heat-processing tool: `hearth` renamed to `oven`
+
+By request, after an audit of which tools do actual heat-processing
+(`furnace`: smelting `metal_bar`/`metal_ingot`; `kiln`: firing glass/brick;
+`hearth`: cooking food + `hardened_stick` - `anvil` doesn't count, it
+shapes already-smelted `metal_bar`, heat is upstream of it). `hearth` is
+the odd one whose *name* didn't read as a heat tool, so renamed it to
+`oven` - `familyId` and all 6 tiers, plus its blueprint family
+(`blueprint_hearth` → `blueprint_oven`, "Blueprint: Small Hearth" →
+"Blueprint: Small Oven", etc.).
+
+Touched every place the identifier appears, not just display names:
+`base-tools.json` (id+name+familyId, 6 tiers), `base-blueprint.json` (id+
+name+familyId, 6 tiers), `craft-recipes.json` (the `hearth`→`oven` recipe
+itself, plus `"tool": "hearth"` → `"tool": "oven"` on its 6 consumers:
+`hearty_stew`, `roast_haunch`, `bangers`, `baked_harvest`, `cooked_meat`,
+`hardened_stick`), `blueprint-id-mapping.json` (6 tier-variant→family
+entries), `blueprint-raw-materials.json` (the `blueprint_oven` key), and
+the diagram (1 `Blueprint: Hearth` node + 7 pulled-in `T1 Hearth`
+tool-role copies, all relabeled - no wiring changes, pure text swap).
+
+Deliberately left alone: `base-food.json`'s `hearthside_roast_haunch`
+("Hearthside Roast Haunch", a T2 `roast_haunch` item) and
+`characterOptions.ts`'s "Hearthfinder Sigil" / the Cook profession's
+"Hearth and pot." description - all three use "hearth" as flavor/lore
+text unrelated to the tool family, not as the identifier being renamed.

@@ -146,12 +146,12 @@
   {"id": "blueprint_gold_grinder", "name": "Blueprint: Gold Grinder", "familyId": "blueprint_grinder", "tier": 5},
   {"id": "blueprint_star_metal_grinder", "name": "Blueprint: Star Metal Grinder", "familyId": "blueprint_grinder", "tier": 6},
 
-  {"id": "blueprint_scullions_hearth", "name": "Blueprint: Small Hearth", "familyId": "blueprint_hearth", "tier": 1},
-  {"id": "blueprint_cooks_hearth", "name": "Blueprint: Cook's Hearth", "familyId": "blueprint_hearth", "tier": 2},
-  {"id": "blueprint_chefs_hearth", "name": "Blueprint: Chef's Hearth", "familyId": "blueprint_hearth", "tier": 3},
-  {"id": "blueprint_master_chefs_hearth", "name": "Blueprint: Master Chef's Hearth", "familyId": "blueprint_hearth", "tier": 4},
-  {"id": "blueprint_royal_chefs_hearth", "name": "Blueprint: Royal Chef's Hearth", "familyId": "blueprint_hearth", "tier": 5},
-  {"id": "blueprint_feastmasters_hearth", "name": "Blueprint: Feastmaster's Hearth", "familyId": "blueprint_hearth", "tier": 6},
+  {"id": "blueprint_scullions_oven", "name": "Blueprint: Small Oven", "familyId": "blueprint_oven", "tier": 1},
+  {"id": "blueprint_cooks_oven", "name": "Blueprint: Cook's Oven", "familyId": "blueprint_oven", "tier": 2},
+  {"id": "blueprint_chefs_oven", "name": "Blueprint: Chef's Oven", "familyId": "blueprint_oven", "tier": 3},
+  {"id": "blueprint_master_chefs_oven", "name": "Blueprint: Master Chef's Oven", "familyId": "blueprint_oven", "tier": 4},
+  {"id": "blueprint_royal_chefs_oven", "name": "Blueprint: Royal Chef's Oven", "familyId": "blueprint_oven", "tier": 5},
+  {"id": "blueprint_feastmasters_oven", "name": "Blueprint: Feastmaster's Oven", "familyId": "blueprint_oven", "tier": 6},
 
   {"id": "blueprint_common_clay_kiln", "name": "Blueprint: Primitive Clay Kiln", "familyId": "blueprint_kiln", "tier": 1},
   {"id": "blueprint_red_clay_kiln", "name": "Blueprint: Red Clay Kiln", "familyId": "blueprint_kiln", "tier": 2},
