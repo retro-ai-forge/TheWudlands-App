@@ -102,6 +102,24 @@ export function CharacterPreview({
     return () => setHeaderHidden(false);
   }, [setHeaderHidden]);
 
+  // .wizard is a fixed full-viewport overlay, but the page behind it
+  // (header + welcomeScreen + footer) can still exceed 100vh and scroll
+  // underneath it, showing a second scrollbar alongside .wizardScrollable's
+  // own. Some browsers scroll the html element rather than body, so both
+  // need to be locked while this preview is mounted - same fix as the
+  // wizard's own SoulCreation.tsx.
+  useEffect(() => {
+    const html = document.documentElement;
+    const previousHtmlOverflow = html.style.overflow;
+    const previousBodyOverflow = document.body.style.overflow;
+    html.style.overflow = "hidden";
+    document.body.style.overflow = "hidden";
+    return () => {
+      html.style.overflow = previousHtmlOverflow;
+      document.body.style.overflow = previousBodyOverflow;
+    };
+  }, []);
+
   async function handleSavePortrait() {
     const draft = portraitDraftRef.current;
     if (!draft || isSavingPortrait) return;
