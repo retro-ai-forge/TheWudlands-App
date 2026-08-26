@@ -124,9 +124,9 @@
       "name": "Crude Sharpened Stick",
       "tier": 1,
       "raw_materials": {
-        "wood": 7,
-        "stone": 2,
-        "meat": 2,
+        "wood": 5,
+        "meat": 3,
+        "bone": 2,
         "harvest": 1
       },
       "blueprint": null,
@@ -210,9 +210,10 @@
       "name": "Stone Axe",
       "tier": 1,
       "raw_materials": {
-        "meat": 2,
-        "stone": 4,
-        "wood": 9
+        "wood": 3,
+        "stone": 2,
+        "meat": 3,
+        "bone": 2
       },
       "blueprint": null,
       "tools": []
