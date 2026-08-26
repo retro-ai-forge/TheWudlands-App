@@ -921,3 +921,29 @@ since the whole point of searching a tool's name is to land on that tool.
 Searching "anvil" now opens straight onto the Anvil's own build recipe
 (`refined_ore`×12 + `metal_bar`×2, gated by `blueprint_anvil`), with every
 recipe that uses an Anvil still one dropdown click away.
+
+**Follow-up: generalized from tools to any uniquely-named item.** The
+dual-view (preselect + "used in") only applied to the `tool` category -
+searching "carcass" (a processed material) still just matched it by name
+and stopped, same original problem one category over. Rewrote
+`populateSelect` around one rule instead of a tool-specific special case:
+compute every family that matches the search text by name across *all* of
+`catOrder` first; if the search names **exactly one** item (any category -
+tool, processed, raw, even a final item), also list every recipe that uses
+it - via `recipeUses()`, checking `flattenIngredients()` (so an
+ingredient-alternatives slot like `carcass`'s counts) and `toolIds()`
+(so a tool-alternatives list like `axe_stone`/`dagger` counts) - and
+preselect the matched item itself, same as the tool case always did.
+
+A search matching **more than one** item (e.g. "sword" - matches `sword`,
+`greatsword`, and two blueprints) deliberately skips the dual-view and
+falls back to plain browsing, restoring the previous selection if it's
+still among the results - otherwise refining a broad search would keep
+yanking the selection back to whatever's alphabetically first every
+keystroke. The one-name-only condition is what tells "anvil"/"carcass"
+(a specific lookup) apart from "sword" (a browse).
+
+Searching "carcass" now opens on its own recipe (`meat`×3 + the
+`bone_blade`-or-`dagger` alternative) with `axe_stone`, `sharpened_stick`,
+`glass_lantern`, and `torch` listed right below as "misc/weapon/tool (uses
+carcass)".

@@ -545,46 +545,74 @@ for (const famId of recipeFamIds) {
 }
 const catOrder = ["raw", "blueprint", "processed", "armor", "shield", "weapon", "food", "potion", "misc", "adventuring_gear", "tool"];
 
+// True if `recipeId`'s recipe consumes/uses `famId` anywhere - as a plain
+// ingredient, as one option inside an ingredient's "alternatives" slot
+// (flattenIngredients covers both), or as its tool (including as one
+// option in a tool-alternatives list like axe_stone/dagger).
+function recipeUses(recipeId, famId) {
+  const recipe = recipes[recipeId];
+  if (!recipe) return false;
+  if (flattenIngredients(recipe.ingredients).some(ing => ing.familyId === famId)) return true;
+  return toolIds(recipe.tool).includes(famId);
+}
+
 function populateSelect(filterText, tier) {
   const prev = select.value;
   select.innerHTML = "";
   const ft = (filterText || "").toLowerCase();
 
-  // If the search text matches a known tool by name, show the tool itself
-  // first (preselected, so its own build recipe renders immediately) plus
-  // every recipe that uses it - typing "anvil" answers both "how do I build
-  // one" and "what can I forge with it" in one search, instead of just
-  // matching the Anvil item by name and stopping there.
-  if (ft.length > 0) {
-    const matchedTools = (groups["tool"] || []).filter(f => famLabel(f, tier).toLowerCase().includes(ft)).sort((a, b) => a.localeCompare(b));
-    if (matchedTools.length > 0) {
-      const toolMatches = {};
-      for (const recipeId of recipeFamIds) {
-        const recipe = recipes[recipeId];
-        if (!recipe || !recipe.tool) continue;
-        if (toolIds(recipe.tool).some(t => matchedTools.includes(t))) {
-          const cat = famCategory(recipeId);
-          (toolMatches[cat] = toolMatches[cat] || []).push(recipeId);
-        }
-      }
+  // Find every family that matches the search text by name, across all
+  // categories (tools, processed materials, raw materials, final items -
+  // anything in catOrder).
+  const nameMatchesByCat = {};
+  let totalNameMatches = 0;
+  let firstNameMatch = null;
+  for (const cat of catOrder) {
+    if (!groups[cat]) continue;
+    const matches = groups[cat].filter(f => famLabel(f, tier).toLowerCase().includes(ft)).sort((a, b) => a.localeCompare(b));
+    if (!matches.length) continue;
+    nameMatchesByCat[cat] = matches;
+    totalNameMatches += matches.length;
+    if (firstNameMatch === null) firstNameMatch = matches[0];
+  }
 
-      // The tool itself always gets its own leading optgroup, so it's
-      // reachable (and preselected) even if nothing uses it yet.
-      const toolGroup = document.createElement("optgroup");
-      toolGroup.label = "tool";
-      for (const famId of matchedTools) {
+  if (totalNameMatches > 0) {
+    for (const cat of catOrder) {
+      if (!nameMatchesByCat[cat]) continue;
+      const og = document.createElement("optgroup");
+      og.label = cat;
+      for (const famId of nameMatchesByCat[cat]) {
         const opt = document.createElement("option");
         opt.value = famId;
-        opt.textContent = getDisplayLabel(famLabel(famId, tier), "tool");
-        toolGroup.appendChild(opt);
+        opt.textContent = getDisplayLabel(famLabel(famId, tier), cat);
+        og.appendChild(opt);
       }
-      select.appendChild(toolGroup);
+      select.appendChild(og);
+    }
 
+    // A search that names exactly one item (a tool, a processed material,
+    // anything) is a specific lookup, not a browse - e.g. "anvil" or
+    // "carcass". For that case, also list every recipe that uses it
+    // (ingredient, ingredient-alternative, or tool) right below it, and
+    // preselect the matched item itself so its own build recipe renders
+    // immediately - answering "how do I make this" and "what's it used
+    // for" in one search. A broader search matching several items (e.g.
+    // "sword") skips this and keeps the previous selection if still valid,
+    // so refining a browse-style search doesn't keep resetting it.
+    if (ft.length > 0 && totalNameMatches === 1) {
+      const usedIn = {};
+      for (const recipeId of recipeFamIds) {
+        if (recipeId === firstNameMatch) continue;
+        if (recipeUses(recipeId, firstNameMatch)) {
+          const cat = famCategory(recipeId);
+          (usedIn[cat] = usedIn[cat] || []).push(recipeId);
+        }
+      }
       for (const cat of catOrder) {
-        if (!toolMatches[cat]) continue;
+        if (!usedIn[cat]) continue;
         const og = document.createElement("optgroup");
         og.label = cat + " (uses " + ft + ")";
-        for (const famId of toolMatches[cat].sort((a, b) => a.localeCompare(b))) {
+        for (const famId of usedIn[cat].sort((a, b) => a.localeCompare(b))) {
           const opt = document.createElement("option");
           opt.value = famId;
           const label = famLabel(famId, tier);
@@ -593,50 +621,26 @@ function populateSelect(filterText, tier) {
         }
         select.appendChild(og);
       }
-
-      // Always preselect the tool itself for a fresh tool-name search,
-      // rather than restoring the previous selection - that's the whole
-      // point of searching a tool's name.
-      select.value = matchedTools[0];
+      select.value = firstNameMatch;
       return;
     }
+
+    if ([...select.options].some(o => o.value === prev)) select.value = prev;
+    return;
   }
 
-  // First try normal search by item name
-  let hasMatches = false;
-  for (const cat of catOrder) {
-    if (!groups[cat]) continue;
-    const matches = groups[cat].filter(f => famLabel(f, tier).toLowerCase().includes(ft)).sort((a, b) => a.localeCompare(b));
-    if (!matches.length) continue;
-    hasMatches = true;
-    const og = document.createElement("optgroup");
-    og.label = cat;
-    for (const famId of matches) {
-      const opt = document.createElement("option");
-      opt.value = famId;
-      const label = famLabel(famId, tier);
-      opt.textContent = getDisplayLabel(label, cat);
-      og.appendChild(opt);
-    }
-    select.appendChild(og);
-  }
-
-  // If no items found and filter text is not empty, search by ingredient
-  if (!hasMatches && ft.length > 0) {
+  // No name matches at all - fall back to a pure ingredient/tool search,
+  // for a term that doesn't match any item's display name directly (e.g.
+  // part of a raw familyId).
+  if (ft.length > 0) {
     const ingredientMatches = {};
     for (const recipeId of recipeFamIds) {
       const recipe = recipes[recipeId];
       if (!recipe) continue;
 
-      // Check if any ingredient matches
-      let hasIngredient = false;
-      for (const ingredient of flattenIngredients(recipe.ingredients)) {
-        if (ingredient.familyId.toLowerCase().includes(ft)) {
-          hasIngredient = true;
-          break;
-        }
-      }
-      // Check if tool matches
+      let hasIngredient = flattenIngredients(recipe.ingredients).some(
+        ing => ing.familyId.toLowerCase().includes(ft)
+      );
       if (!hasIngredient && toolIds(recipe.tool).some(t => t.toLowerCase().includes(ft))) {
         hasIngredient = true;
       }
@@ -647,7 +651,6 @@ function populateSelect(filterText, tier) {
       }
     }
 
-    // Display ingredient search results
     for (const cat of catOrder) {
       if (!ingredientMatches[cat]) continue;
       const og = document.createElement("optgroup");
