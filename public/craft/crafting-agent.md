@@ -724,3 +724,21 @@ and the three ingredient edges' quantities changed to 15/15/35.
 Side effect: `crossbow` no longer needs **Furnace** as a processing tool
 (that only existed to smelt `metal_bar`) — it now only needs **Stone Axe**
 upstream (for `plank`), on top of its own **Anvil**.
+
+### Follow-up: `fiber`→`thread`, matching `bow`'s Spinning Wheel step
+
+`bow` never touches raw `fiber` directly — it always spends it as `thread`
+(`fiber`×6 via **Spinning Wheel**), which reads as a properly spun string
+rather than loose fiber. `crossbow`'s raw `fiber`×35 was the odd one out.
+
+Swapped for `thread`×6 (36 fiber - the closest clean multiple to the
+previous 35, keeping the total nearly unchanged). `crossbow` is now:
+15× `refined_ore` + 15× `plank` + 6× `thread`, Anvil, `Blueprint: Bended
+Crossbow` → 75 ore + 60 wood + 36 fiber = **171 total** (was 170).
+
+Diagram change was a pure recolor + relabel: the `T1 fiber` node feeding
+`crossbow` switched from raw-green to processed-yellow and its value
+changed to `T1 thread` (same node, no rewiring), and its edge's quantity
+changed from 35 to 6. `crossbow` picks up **Spinning Wheel** as a second
+processing tool alongside **Stone Axe**, the same pairing `bow` already
+has.

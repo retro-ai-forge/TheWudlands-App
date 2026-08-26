@@ -242,11 +242,12 @@
       "raw_materials": {
         "ore": 75,
         "wood": 60,
-        "fiber": 35
+        "fiber": 36
       },
       "tool": "Anvil",
       "blueprint": "Blueprint: Bended Crossbow",
       "processing_tools": [
+        "Spinning Wheel",
         "Stone Axe"
       ]
     },
