@@ -60,17 +60,15 @@
   width: 100%;
   max-width: 56rem;
   margin: 0 auto;
-  padding: 2.7rem 1.5rem 12rem 1.5rem;
+  padding: 1.5rem 1.5rem 12rem 1.5rem;
   box-sizing: border-box;
 }
 
+/* Scrolls with the page now, as the first item in .sheet's flow - it used
+   to be pinned with position: fixed at the viewport top, which kept it
+   visible but meant it never scrolled away with the rest of the content. */
 .name {
-  position: fixed;
-  top: 0;
-  left: 50%;
-  transform: translateX(-50%);
-  z-index: 5;
-  width: 90%;
+  width: 100%;
   max-width: calc(56rem - 3rem);
   font-size: clamp(1.1rem, 4.5vw, 2.2rem);
   letter-spacing: 0.1em;
@@ -79,7 +77,6 @@
   text-align: center;
   margin: 0;
   padding: 1.25rem 1rem;
-  pointer-events: auto;
 }
 
 /* No reserved space for the fixed Delete button below - it floats over
