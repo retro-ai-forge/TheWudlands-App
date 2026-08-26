@@ -745,6 +745,21 @@ function buildInteractiveNode(famId, qty, category, tier, isRoot) {
     if (!ownsAnyTool(ownedTools, tIds, tier)) toolTag.classList.add("missing");
     row.appendChild(toolTag);
   }
+  // An ingredient slot where every option is unconsumed (e.g. sharpened_stick's
+  // axe_stone-or-dagger) means "own one of these", exactly the role a "tool"
+  // field plays - show it the same way, on this item's own row, instead of as
+  // a separate ingredient node in the tree below.
+  if (recipe && recipe.ingredients) {
+    for (const ing0 of recipe.ingredients) {
+      const opts = ing0.alternatives || [ing0];
+      if (opts.every(o => !o.consumed)) {
+        const ids = opts.map(o => o.familyId);
+        const heldTag = el("span", "tag tool", "\u{1F528} " + ids.join(" or "));
+        if (!ownsAnyTool(ownedTools, ids, tier)) heldTag.classList.add("missing");
+        row.appendChild(heldTag);
+      }
+    }
+  }
   wrapper.appendChild(row);
 
   const childrenBox = el("div", "children");
@@ -773,6 +788,11 @@ function buildInteractiveNode(famId, qty, category, tier, isRoot) {
           }
         }
         for (const ing0 of recipe.ingredients) {
+          // A slot where every option is unconsumed is rendered as a "held
+          // item" tag on this node's own row (see above), not as a child
+          // node here - skip it.
+          const optsCheck = ing0.alternatives || [ing0];
+          if (optsCheck.every(o => !o.consumed)) continue;
           // An "alternatives" slot (e.g. carcass's bone_blade-consumed-or-
           // dagger-not-consumed choice) renders its first/default option as
           // the real child node, then appends the other option(s) as a

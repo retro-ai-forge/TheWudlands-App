@@ -1127,3 +1127,34 @@ Diagram: relabeled the single pulled-in `T1 axe_stone` copy feeding
 copies already carry that label. The canonical `axe_stone` build recipe
 and its `Blueprint`-less status are untouched - this only concerns how
 `sharpened_stick` consumes it.
+
+## Recipe viewer: an all-unconsumed ingredient slot renders as a "held
+## item" tag, not a tree node
+
+Turned out the "unchanged" call above was wrong. In the interactive tree,
+`sharpened_stick`'s `axe_stone`-or-`dagger` slot was rendering as a full
+expandable child node - "1x Crude Stone Axe [final]" plus an "or 1x Rusty
+Dagger (not consumed)" note - as if it were a real ingredient with a
+quantity. It isn't: owning *either* one, uninvolved in quantity, is
+exactly what a `"tool": ["axe_stone", "dagger"]` field already means
+elsewhere (`club`, `plank`, `firewood`, `ladder`, `fishing_pole`) - it just
+couldn't be expressed as `tool` here because `sharpened_stick` also needs
+to *reference* the item by family (a real crafted weapon, not an abstract
+tool slot). The same shape existed unnoticed on two other recipes: `quill`
+and `trimmed_pelt`, both needing an unconsumed `dagger`.
+
+Fix, in `buildInteractiveNode()`: any ingredient slot (plain or
+`alternatives`) where *every* option has `consumed: false` is now skipped
+in the child-node loop and instead rendered as a tag directly on the
+parent item's own row - same "🔨 id or id" format and missing-ownership
+check (`ownsAnyTool`) as the real `tool` tag, just sourced from the
+ingredient list instead of `recipe.tool`. `sharpened_stick` now shows "🔨
+axe_stone or dagger" right next to its own name, same place `firewood`
+shows its `tool` tag one level down - both read the same way at a glance.
+`quill` and `trimmed_pelt` now show "🔨 dagger" the same way. Mixed slots
+like `carcass`'s (`bone_blade` consumed *or* `dagger` not-consumed) are
+unaffected - not every option is unconsumed there, so it keeps rendering
+as a real child node with the existing "or ... (not consumed)" note.
+`computeTotals()` is untouched - it already only reads `.consumed` per
+option, not how the tree draws it, so the Final Items side panel still
+lists `axe_stone`/`dagger`/etc. as before.
