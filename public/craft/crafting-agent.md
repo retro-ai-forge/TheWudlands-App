@@ -786,3 +786,45 @@ same position. The two `axe_stone` nodes NOT touched: the canonical build
 recipe (no outgoing edge - it's "the item itself," not a tool usage) and
 `sharpened_stick`'s pulled-in `final`-ingredient copy (a different kind of
 requirement, per above).
+
+## `carcass`: a new byproduct material, replacing `meat` in non-food recipes
+
+New family added by request: `carcass` (`meat`×3 + `bone_blade`×1, no tool
+- structurally identical to `dressed_meat`, just the "leftover animal
+material" half of butchering instead of the "consumable" half). Added
+6 tier entries to `base-processed.json` (Rabbit/Boar/Venison/Bear/Wyvern/
+Dragon Carcass, mirroring `dressed_meat`'s tier names) and the recipe
+itself to `craft-recipes.json`.
+
+**The split.** Every recipe consuming raw `meat` was checked against
+whether it produces food:
+
+- **Food (kept on `meat`):** `dressed_meat` (feeds `cooked_meat`/
+  `bangers`/`hearty_stew`), `iron_ration` (a food item itself).
+- **Non-food (swapped to `carcass`):** `axe_stone` (hide/sinew binding
+  for the haft), `sharpened_stick` (same), `torch` (tallow/fat fuel),
+  `glass_lantern` (fat/grease component) - none of these are edible, so
+  spending prime `meat` on them never made sense once a byproduct
+  material existed to cover it.
+
+Swapped `meat`→`carcass` (qty unchanged, category raw→processed to
+match) in all 4 non-food recipes. Real cost impact: since `carcass`
+itself costs `meat`×3 + `bone_blade`×1 (which itself costs `bone`×2),
+these 4 recipes got measurably more expensive and picked up a new `bone`
+dependency they didn't have before (e.g. `axe_stone`'s full raw trace
+went from 3 wood/2 stone/1 meat to 3 wood/2 stone/3 meat/2 bone) - an
+expected consequence of routing through an intermediate rather than
+consuming the raw material directly, not a separate balancing pass.
+
+**Diagram.** All 4 non-food recipes were already missing their `meat`
+input in the diagram before this change (a pre-existing gap, not
+something this pass introduced) - so instead of "swapping" a drawn edge,
+each got a fresh `T1 carcass` node added as a genuinely new input.
+`axe_stone`, `sharpened_stick`, and `torch` went from 2→3 inputs and
+picked up the standard interior-raise stagger (the newly-3rd input
+raised 44px, matching every other multi-input recipe in this diagram).
+`glass_lantern` went from 4→5 inputs: its two already-staggered interior
+inputs stayed put, its former last input (`Kiln`) moved into the
+interior row since it's no longer an endpoint, and `carcass` became the
+new last/endpoint. All 4 outputs were re-centered to the horizontal
+midpoint of their (now one-more) inputs, per the standing centering rule.
