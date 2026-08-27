@@ -139,12 +139,12 @@
   {"id": "blueprint_basalt_furnace", "name": "Blueprint: Basalt Furnace", "familyId": "blueprint_furnace", "tier": 5},
   {"id": "blueprint_worldstone_furnace", "name": "Blueprint: Worldstone Furnace", "familyId": "blueprint_furnace", "tier": 6},
 
-  {"id": "blueprint_copper_grinder", "name": "Blueprint: Curved Grinder", "familyId": "blueprint_grinder", "tier": 1},
-  {"id": "blueprint_bronze_grinder", "name": "Blueprint: Bronze Grinder", "familyId": "blueprint_grinder", "tier": 2},
-  {"id": "blueprint_iron_grinder", "name": "Blueprint: Iron Grinder", "familyId": "blueprint_grinder", "tier": 3},
-  {"id": "blueprint_silver_grinder", "name": "Blueprint: Silver Grinder", "familyId": "blueprint_grinder", "tier": 4},
-  {"id": "blueprint_gold_grinder", "name": "Blueprint: Gold Grinder", "familyId": "blueprint_grinder", "tier": 5},
-  {"id": "blueprint_star_metal_grinder", "name": "Blueprint: Star Metal Grinder", "familyId": "blueprint_grinder", "tier": 6},
+  {"id": "blueprint_copper_grinding_stone", "name": "Blueprint: Curved Grinding Stone", "familyId": "blueprint_grinding_stone", "tier": 1},
+  {"id": "blueprint_bronze_grinding_stone", "name": "Blueprint: Bronze Grinding Stone", "familyId": "blueprint_grinding_stone", "tier": 2},
+  {"id": "blueprint_iron_grinding_stone", "name": "Blueprint: Iron Grinding Stone", "familyId": "blueprint_grinding_stone", "tier": 3},
+  {"id": "blueprint_silver_grinding_stone", "name": "Blueprint: Silver Grinding Stone", "familyId": "blueprint_grinding_stone", "tier": 4},
+  {"id": "blueprint_gold_grinding_stone", "name": "Blueprint: Gold Grinding Stone", "familyId": "blueprint_grinding_stone", "tier": 5},
+  {"id": "blueprint_star_metal_grinding_stone", "name": "Blueprint: Star Metal Grinding Stone", "familyId": "blueprint_grinding_stone", "tier": 6},
 
   {"id": "blueprint_scullions_oven", "name": "Blueprint: Small Oven", "familyId": "blueprint_oven", "tier": 1},
   {"id": "blueprint_cooks_oven", "name": "Blueprint: Cook's Oven", "familyId": "blueprint_oven", "tier": 2},
@@ -347,5 +347,11 @@
   {"id": "blueprint_merchants_scale_3", "name": "Blueprint: Merchant's Scale", "familyId": "blueprint_merchants_scale", "tier": 3},
   {"id": "blueprint_merchants_scale_4", "name": "Blueprint: Merchant's Scale", "familyId": "blueprint_merchants_scale", "tier": 4},
   {"id": "blueprint_merchants_scale_5", "name": "Blueprint: Merchant's Scale", "familyId": "blueprint_merchants_scale", "tier": 5},
-  {"id": "blueprint_merchants_scale_6", "name": "Blueprint: Merchant's Scale", "familyId": "blueprint_merchants_scale", "tier": 6}
+  {"id": "blueprint_merchants_scale_6", "name": "Blueprint: Merchant's Scale", "familyId": "blueprint_merchants_scale", "tier": 6},
+  {"id": "blueprint_woodcutters_axe", "name": "Blueprint: Woodcutter's Axe", "familyId": "blueprint_axe", "tier": 1},
+  {"id": "blueprint_foresters_axe", "name": "Blueprint: Forester's Axe", "familyId": "blueprint_axe", "tier": 2},
+  {"id": "blueprint_rangers_axe", "name": "Blueprint: Ranger's Axe", "familyId": "blueprint_axe", "tier": 3},
+  {"id": "blueprint_wardens_axe", "name": "Blueprint: Warden's Axe", "familyId": "blueprint_axe", "tier": 4},
+  {"id": "blueprint_timberlords_axe", "name": "Blueprint: Timberlord's Axe", "familyId": "blueprint_axe", "tier": 5},
+  {"id": "blueprint_ancient_grove_axe", "name": "Blueprint: Ancient Grove Axe", "familyId": "blueprint_axe", "tier": 6}
 ]

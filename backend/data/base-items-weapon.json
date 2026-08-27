@@ -94,5 +94,11 @@
   {"id": "sapphire_wand", "name": "Sapphire Wand", "familyId": "wand", "tier": 3},
   {"id": "ruby_wand", "name": "Ruby Wand", "familyId": "wand", "tier": 4},
   {"id": "mana_wand", "name": "Mana Wand", "familyId": "wand", "tier": 5},
-  {"id": "astral_wand", "name": "Astral Wand", "familyId": "wand", "tier": 6}
+  {"id": "astral_wand", "name": "Astral Wand", "familyId": "wand", "tier": 6},
+  {"id": "woodcutters_axe", "name": "Woodcutter's Axe", "familyId": "axe", "tier": 1},
+  {"id": "foresters_axe", "name": "Forester's Axe", "familyId": "axe", "tier": 2},
+  {"id": "rangers_axe", "name": "Ranger's Axe", "familyId": "axe", "tier": 3},
+  {"id": "wardens_axe", "name": "Warden's Axe", "familyId": "axe", "tier": 4},
+  {"id": "timberlords_axe", "name": "Timberlord's Axe", "familyId": "axe", "tier": 5},
+  {"id": "ancient_grove_axe", "name": "Ancient Grove Axe", "familyId": "axe", "tier": 6}
 ]

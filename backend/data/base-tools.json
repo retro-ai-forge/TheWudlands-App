@@ -5,12 +5,6 @@
   {"id": "silver_anvil", "name": "Silver Anvil", "familyId": "anvil", "tier": 4},
   {"id": "gold_anvil", "name": "Gold Anvil", "familyId": "anvil", "tier": 5},
   {"id": "star_metal_anvil", "name": "Star Metal Anvil", "familyId": "anvil", "tier": 6},
-  {"id": "copper_grinder", "name": "Bent Grinder", "familyId": "grinder", "tier": 1},
-  {"id": "bronze_grinder", "name": "Bronze Grinder", "familyId": "grinder", "tier": 2},
-  {"id": "iron_grinder", "name": "Iron Grinder", "familyId": "grinder", "tier": 3},
-  {"id": "silver_grinder", "name": "Silver Grinder", "familyId": "grinder", "tier": 4},
-  {"id": "gold_grinder", "name": "Gold Grinder", "familyId": "grinder", "tier": 5},
-  {"id": "star_metal_grinder", "name": "Star Metal Grinder", "familyId": "grinder", "tier": 6},
   {"id": "copper_wrench", "name": "Uneven Wrench", "familyId": "wrench", "tier": 1},
   {"id": "bronze_wrench", "name": "Bronze Wrench", "familyId": "wrench", "tier": 2},
   {"id": "iron_wrench", "name": "Iron Wrench", "familyId": "wrench", "tier": 3},
@@ -100,5 +94,11 @@
   {"id": "fire_clay_kiln", "name": "Fire Clay Kiln", "familyId": "kiln", "tier": 3},
   {"id": "porcelain_clay_kiln", "name": "Porcelain Clay Kiln", "familyId": "kiln", "tier": 4},
   {"id": "spirit_clay_kiln", "name": "Spirit Clay Kiln", "familyId": "kiln", "tier": 5},
-  {"id": "worldclay_kiln", "name": "Worldclay Kiln", "familyId": "kiln", "tier": 6}
+  {"id": "worldclay_kiln", "name": "Worldclay Kiln", "familyId": "kiln", "tier": 6},
+  {"id": "copper_grinding_stone", "name": "Bent Grinding Stone", "familyId": "grinding_stone", "tier": 1},
+  {"id": "bronze_grinding_stone", "name": "Bronze Grinding Stone", "familyId": "grinding_stone", "tier": 2},
+  {"id": "iron_grinding_stone", "name": "Iron Grinding Stone", "familyId": "grinding_stone", "tier": 3},
+  {"id": "silver_grinding_stone", "name": "Silver Grinding Stone", "familyId": "grinding_stone", "tier": 4},
+  {"id": "gold_grinding_stone", "name": "Gold Grinding Stone", "familyId": "grinding_stone", "tier": 5},
+  {"id": "star_metal_grinding_stone", "name": "Star Metal Grinding Stone", "familyId": "grinding_stone", "tier": 6}
 ]

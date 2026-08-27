@@ -1128,8 +1128,7 @@ copies already carry that label. The canonical `axe_stone` build recipe
 and its `Blueprint`-less status are untouched - this only concerns how
 `sharpened_stick` consumes it.
 
-## Recipe viewer: an all-unconsumed ingredient slot renders as a "held
-## item" tag, not a tree node
+## Recipe viewer: an all-unconsumed ingredient slot renders as a "held item" tag, not a tree node
 
 Turned out the "unchanged" call above was wrong. In the interactive tree,
 `sharpened_stick`'s `axe_stone`-or-`dagger` slot was rendering as a full
@@ -1159,8 +1158,7 @@ as a real child node with the existing "or ... (not consumed)" note.
 option, not how the tree draws it, so the Final Items side panel still
 lists `axe_stone`/`dagger`/etc. as before.
 
-## Follow-up: `carcass`/`dressed_meat`'s unconsumed alt-option gets the same
-## compact tag
+## Follow-up: `carcass`/`dressed_meat`'s unconsumed alt-option gets the same compact tag
 
 `carcass` and `dressed_meat` are a *mixed* slot (`bone_blade` consumed,
 `dagger` not) so the primary (`bone_blade`) still renders as a real child
@@ -1324,3 +1322,120 @@ strictly separate from the catalog to avoid multiple rows sharing one
 positional lookup in the recipe viewer and character-preview tabs (they
 index by array position, not by searching for a matching `tier` value).
 Not built yet, by request - noted here for whenever it is.
+
+## `axe`: a new Anvil weapon, mirroring `short_sword` but wood-heavy
+
+Added by request - "a normal axe with metal and wood, similar to
+`short_sword` just use more wood." `short_sword` (see its own section
+above) was the obvious template: same `metal_bar`-granularity problem
+would apply to any Anvil weapon priced partly in raw ore, so the new
+recipe reuses its exact metal side rather than re-deriving one.
+
+`axe` = 1× `metal_bar` + 11× `refined_ore` + 4× `plank` (`short_sword`'s
+2× doubled) + `Anvil` + its own Blueprint → same 180 ore as `short_sword`
+(the metal side is untouched), but 49 wood instead of 41 (33 from
+`metal_bar` + 16 from 4× `plank` instead of 8) - **229 total**, comfortably
+past the 15-raw-unit dismantle floor. Diagram placement copied
+`short_sword`'s own interior/endpoint stagger wholesale (interior
+`refined_ore`/`plank`/`Anvil` raised 44px above the endpoint
+`metal_bar`/Blueprint row, output centered under `plank`'s x), just
+shifted into open space below the `short_sword` cluster rather than
+inserted into the Weapons row-band's own numbering.
+
+**Naming.** By request, tier names follow a forest-worker theme rather
+than reusing an existing family's convention (nobility ranks like
+`dagger`, mythic epithets like `spear`): Woodcutter's → Forester's →
+Ranger's → Warden's → Timberlord's → Ancient Grove Axe. `familyId` itself
+went through one more rename after the tier catalog was built -
+initially `woodcutters_axe` (matching the T1 item's own name, the same
+pattern `short_sword`'s single-recipe family uses), shortened to plain
+`axe` by request once the six-tier catalog existed. Only the `familyId`/
+`blueprintFamilyId` values changed in that follow-up - every tier's own
+`id` and display name (`woodcutters_axe`/"Woodcutter's Axe", etc.) were
+left alone, same as `battle_axe` and the Section-2 `Axe` tool coexist
+today under different ids for the same real-world object.
+
+**Backend, unlike `short_sword`/`axe_stone`'s precedent.** Both of those
+stayed diagram-only (see their own sections above, still true today -
+`short_sword` has no `base-items-weapon.json` entry to this day). `axe`
+was deliberately backported in full instead, by request: 6 tiers each in
+`base-items-weapon.json` and `base-blueprint.json`, the recipe itself in
+`craft-recipes.json`, 6 tier→family entries in `blueprint-id-mapping.json`,
+and a `blueprint_axe: ["ore", "wood"]` entry in
+`blueprint-raw-materials.json` (matching `dagger`'s own `["ore", "wood"]`
+shape) - then `build-recipe-viewer.py` re-run so the live crafting viewer
+actually shows it, closing the same diagram/backend gap `short_sword` and
+`axe_stone` were explicitly left open with.
+
+## Tool alternatives, round two: `axe` joins `axe_stone`; `dagger` narrowed to whittling
+
+Two follow-up requests to the `axe_stone`/`dagger` tool-alternatives work
+above, once `axe` existed as a real craftable item.
+
+**`axe` added everywhere `axe_stone` already stood in for a tool.** All 6
+spots - the 5 `"tool": ["axe_stone", "dagger"]` recipes (`club`, `plank`,
+`firewood`, `ladder`, `fishing_pole`) plus `sharpened_stick`'s `final`-
+ingredient alternative - gained `axe` as a third option, same shape as
+adding any other alternative: append to the array/`alternatives` list,
+relabel the diagram's combined node (`T1 axe_stone or dagger` →
+`T1 axe_stone or axe or dagger`), no schema changes needed since the
+array-of-alternatives mechanism already existed.
+
+**Then `dagger` was dropped from the four wood-chopping recipes.** By
+request - "dagger cannot cut wood easily." `club`, `plank`, `firewood`,
+and `ladder` all reduce a raw `wood` ingredient into something else,
+which is exactly the felling/hewing motion a stone axe (or now, a proper
+`axe`) is suited for and a dagger isn't. Narrowed to
+`["axe_stone", "axe"]` on all four; the diagram nodes for those four
+relabeled to `T1 axe_stone or axe`.
+
+`fishing_pole` and `sharpened_stick` were **not** included in the drop,
+by request - both are thin-stick/whittling work (a fishing rod, a
+sharpened point) rather than chopping, which a dagger genuinely handles
+fine, so they kept all three options: `["axe_stone", "axe", "dagger"]`
+(tool field for `fishing_pole`; the same three-way `alternatives` list
+for `sharpened_stick`'s `final`-ingredient slot). Diagram nodes for both
+read `T1 axe_stone or axe or dagger`, the only two of the six kept at
+three options instead of narrowed to two.
+
+## `grinder` and a new alchemy tool merge into one `grinding_stone`
+
+Two separate requests that turned out to converge. First, "Grinding
+Stone" was added as a brand-new tool, initially wired directly onto all
+four Alchemy Stand potions (`healing_potion`, `mana_potion`,
+`antidote_potion`, `venom_vial`) - diagram-only at that point, mirroring
+how a first pass often lands (c.f. `short_sword`/`axe_stone` above).
+Rewired by request soon after to sit one level down instead, on the
+`medicinal_paste` and `venomous_extract` intermediates rather than the
+potions themselves - which means only the potions whose chain actually
+passes through one of those two (`healing_potion`, `antidote_potion`,
+`venom_vial`) end up needing it; `mana_potion` (built from
+`distilled_essence` + `cut_crystal`, neither of which touch Grinding
+Stone) does not, a real consequence of moving the tool down the tree
+rather than a balancing choice.
+
+Backporting this exposed that a **`grinder`** tool already existed in
+`base-tools.json` - a full 6-tier metal-material family (Bent → Bronze →
+Iron → Silver → Gold → Star Metal, the same ladder `anvil`/`wrench` use),
+complete with its own build recipe (`refined_ore`×8 + `refined_clay`×4,
+gated by `Blueprint: Grinder`) and sole consumer, `alloy_dust`. Two
+different "grinding" tools existing side by side wasn't the intent, so by
+request `grinder` was **replaced by** `grinding_stone` rather than kept
+as a second, similar-but-different tool: every `grinder`/`blueprint_grinder`
+identifier (in `base-tools.json`, `base-blueprint.json`,
+`craft-recipes.json`'s build recipe and `alloy_dust`'s `tool` field,
+`blueprint-id-mapping.json`, `blueprint-raw-materials.json`, and the
+diagram's two `T1 Grinder` tool copies plus its `Blueprint: Grinder` node)
+renamed to `grinding_stone`/`blueprint_grinding_stone`. The merged family
+kept `grinder`'s original metal-tier names (just with "Grinder" swapped
+for "Grinding Stone" in each) rather than the stone-material names first
+sketched for the standalone alchemy-tool version - the underlying build
+recipe (`refined_ore` + `refined_clay`) reads as a smithing-adjacent
+object, so the metal-tier convention fits better than an invented
+stone-tier one once the two tools were one and the same.
+
+End state: one `grinding_stone` tool family, three consumers -
+`alloy_dust` (its original, metalworking role), `medicinal_paste`, and
+`venomous_extract` (the alchemy role it was actually invented for) - and
+`build-recipe-viewer.py` re-run to confirm every rename landed with no
+stray `grinder` references left anywhere in the regenerated output.

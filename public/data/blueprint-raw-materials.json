@@ -103,7 +103,7 @@
     "ore",
     "sand"
   ],
-  "blueprint_grinder": [
+  "blueprint_grinding_stone": [
     "clay",
     "ore",
     "sand"
@@ -235,6 +235,10 @@
   ],
   "blueprint_merchants_scale": [
     "stone",
+    "wood"
+  ],
+  "blueprint_axe": [
+    "ore",
     "wood"
   ]
 }
