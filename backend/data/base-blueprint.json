@@ -353,5 +353,17 @@
   {"id": "blueprint_rangers_axe", "name": "Blueprint: Ranger's Axe", "familyId": "blueprint_axe", "tier": 3},
   {"id": "blueprint_wardens_axe", "name": "Blueprint: Warden's Axe", "familyId": "blueprint_axe", "tier": 4},
   {"id": "blueprint_timberlords_axe", "name": "Blueprint: Timberlord's Axe", "familyId": "blueprint_axe", "tier": 5},
-  {"id": "blueprint_ancient_grove_axe", "name": "Blueprint: Ancient Grove Axe", "familyId": "blueprint_axe", "tier": 6}
+  {"id": "blueprint_ancient_grove_axe", "name": "Blueprint: Ancient Grove Axe", "familyId": "blueprint_axe", "tier": 6},
+  {"id": "blueprint_dockside_fish_chowder", "name": "Blueprint: Dockside Fish Chowder", "familyId": "blueprint_fish_chowder", "tier": 1},
+  {"id": "blueprint_fishermans_fish_chowder", "name": "Blueprint: Fisherman's Fish Chowder", "familyId": "blueprint_fish_chowder", "tier": 2},
+  {"id": "blueprint_harbormasters_fish_chowder", "name": "Blueprint: Harbormaster's Fish Chowder", "familyId": "blueprint_fish_chowder", "tier": 3},
+  {"id": "blueprint_coastal_fish_chowder", "name": "Blueprint: Coastal Fish Chowder", "familyId": "blueprint_fish_chowder", "tier": 4},
+  {"id": "blueprint_deepwater_fish_chowder", "name": "Blueprint: Deepwater Fish Chowder", "familyId": "blueprint_fish_chowder", "tier": 5},
+  {"id": "blueprint_leviathans_fish_chowder", "name": "Blueprint: Leviathan's Fish Chowder", "familyId": "blueprint_fish_chowder", "tier": 6},
+  {"id": "blueprint_deckhands_ration", "name": "Blueprint: Deckhand's Ration", "familyId": "blueprint_fishermans_ration", "tier": 1},
+  {"id": "blueprint_anglers_ration", "name": "Blueprint: Angler's Ration", "familyId": "blueprint_fishermans_ration", "tier": 2},
+  {"id": "blueprint_netmasters_ration", "name": "Blueprint: Netmaster's Ration", "familyId": "blueprint_fishermans_ration", "tier": 3},
+  {"id": "blueprint_harbor_guards_ration", "name": "Blueprint: Harbor Guard's Ration", "familyId": "blueprint_fishermans_ration", "tier": 4},
+  {"id": "blueprint_fleet_captains_ration", "name": "Blueprint: Fleet Captain's Ration", "familyId": "blueprint_fishermans_ration", "tier": 5},
+  {"id": "blueprint_tidekings_ration", "name": "Blueprint: Tideking's Ration", "familyId": "blueprint_fishermans_ration", "tier": 6}
 ]

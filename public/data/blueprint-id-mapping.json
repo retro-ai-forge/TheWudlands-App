@@ -304,5 +304,17 @@
   "blueprint_rangers_axe": "blueprint_axe",
   "blueprint_wardens_axe": "blueprint_axe",
   "blueprint_timberlords_axe": "blueprint_axe",
-  "blueprint_ancient_grove_axe": "blueprint_axe"
+  "blueprint_ancient_grove_axe": "blueprint_axe",
+  "blueprint_dockside_fish_chowder": "blueprint_fish_chowder",
+  "blueprint_fishermans_fish_chowder": "blueprint_fish_chowder",
+  "blueprint_harbormasters_fish_chowder": "blueprint_fish_chowder",
+  "blueprint_coastal_fish_chowder": "blueprint_fish_chowder",
+  "blueprint_deepwater_fish_chowder": "blueprint_fish_chowder",
+  "blueprint_leviathans_fish_chowder": "blueprint_fish_chowder",
+  "blueprint_deckhands_ration": "blueprint_fishermans_ration",
+  "blueprint_anglers_ration": "blueprint_fishermans_ration",
+  "blueprint_netmasters_ration": "blueprint_fishermans_ration",
+  "blueprint_harbor_guards_ration": "blueprint_fishermans_ration",
+  "blueprint_fleet_captains_ration": "blueprint_fishermans_ration",
+  "blueprint_tidekings_ration": "blueprint_fishermans_ration"
 }

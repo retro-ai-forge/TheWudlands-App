@@ -295,5 +295,11 @@
   {"id": "layered_leather_lining", "name": "Layered Lining", "familyId": "leather_lining", "tier": 3},
   {"id": "stitched_leather_lining", "name": "Stitched Lining", "familyId": "leather_lining", "tier": 4},
   {"id": "corded_leather_lining", "name": "Corded Lining", "familyId": "leather_lining", "tier": 5},
-  {"id": "braced_leather_lining", "name": "Braced Lining", "familyId": "leather_lining", "tier": 6}
+  {"id": "braced_leather_lining", "name": "Braced Lining", "familyId": "leather_lining", "tier": 6},
+  {"id": "stream_minnow_clean_fish", "name": "Cleaned Stream Minnow", "familyId": "clean_fish", "tier": 1},
+  {"id": "river_trout_clean_fish", "name": "Cleaned River Trout", "familyId": "clean_fish", "tier": 2},
+  {"id": "sea_salmon_clean_fish", "name": "Cleaned Sea Salmon", "familyId": "clean_fish", "tier": 3},
+  {"id": "runic_eel_clean_fish", "name": "Cleaned Runic Eel", "familyId": "clean_fish", "tier": 4},
+  {"id": "umbral_anglerfish_clean_fish", "name": "Cleaned Umbral Anglerfish", "familyId": "clean_fish", "tier": 5},
+  {"id": "abyssal_leviathan_clean_fish", "name": "Cleaned Abyssal Leviathan", "familyId": "clean_fish", "tier": 6}
 ]

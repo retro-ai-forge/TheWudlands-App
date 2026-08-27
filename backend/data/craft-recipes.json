@@ -158,5 +158,12 @@
 
   {"familyId": "firewood", "ingredients": [{"category": "raw", "familyId": "wood", "qty": 5, "consumed": true}], "tool": ["axe_stone", "axe"], "blueprintFamilyId": null},
 
-  {"familyId": "axe", "ingredients": [{"category": "processed", "familyId": "metal_bar", "qty": 1, "consumed": true}, {"category": "processed", "familyId": "refined_ore", "qty": 11, "consumed": true}, {"category": "processed", "familyId": "plank", "qty": 4, "consumed": true}], "tool": "anvil", "blueprintFamilyId": "blueprint_axe"}
+  {"familyId": "axe", "ingredients": [{"category": "processed", "familyId": "metal_bar", "qty": 1, "consumed": true}, {"category": "processed", "familyId": "refined_ore", "qty": 11, "consumed": true}, {"category": "processed", "familyId": "plank", "qty": 4, "consumed": true}], "tool": "anvil", "blueprintFamilyId": "blueprint_axe"},
+
+  {"familyId": "clean_fish", "ingredients": [{"category": "raw", "familyId": "fish", "qty": 1, "consumed": true}, {"alternatives": [{"category": "processed", "familyId": "bone_blade", "qty": 1, "consumed": true}, {"category": "final", "familyId": "dagger", "qty": 1, "consumed": false}]}], "tool": null, "blueprintFamilyId": null},
+  {"familyId": "cooked_fish", "ingredients": [{"category": "processed", "familyId": "clean_fish", "qty": 2, "consumed": true}], "tool": "oven", "blueprintFamilyId": null},
+  {"familyId": "grilled_fish_skewer", "ingredients": [{"category": "final", "familyId": "cooked_fish", "qty": 2, "consumed": true}], "tool": "oven", "blueprintFamilyId": null},
+  {"familyId": "fish_chowder", "ingredients": [{"category": "final", "familyId": "cooked_fish", "qty": 1, "consumed": true}, {"category": "processed", "familyId": "baked_harvest", "qty": 2, "consumed": true}, {"category": "processed", "familyId": "ground_spice", "qty": 1, "consumed": true}], "tool": "oven", "blueprintFamilyId": "blueprint_fish_chowder"},
+  {"familyId": "fishermans_ration", "ingredients": [{"category": "final", "familyId": "cooked_fish", "qty": 1, "consumed": true}, {"category": "final", "familyId": "grilled_fish_skewer", "qty": 1, "consumed": true}, {"category": "final", "familyId": "wizened_figs", "qty": 1, "consumed": true}, {"category": "raw", "familyId": "fiber", "qty": 10, "consumed": true}], "tool": "oven", "blueprintFamilyId": "blueprint_fishermans_ration"},
+  {"familyId": "pickled_fish", "ingredients": [{"category": "final", "familyId": "cooked_fish", "qty": 1, "consumed": true}, {"category": "processed", "familyId": "glass_bottle", "qty": 1, "consumed": true}], "tool": "alchemy_stand", "blueprintFamilyId": null}
 ]

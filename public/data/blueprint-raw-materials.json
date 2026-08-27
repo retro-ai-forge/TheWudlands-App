@@ -240,5 +240,18 @@
   "blueprint_axe": [
     "ore",
     "wood"
+  ],
+  "blueprint_fish_chowder": [
+    "bone",
+    "fish",
+    "harvest",
+    "herbs"
+  ],
+  "blueprint_fishermans_ration": [
+    "bone",
+    "fiber",
+    "fish",
+    "harvest",
+    "herbs"
   ]
 }
