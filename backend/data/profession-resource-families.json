@@ -1,5 +1,5 @@
 {
-  "Rural": ["hide", "meat", "harvest"],
+  "Rural": ["hide", "meat", "harvest", "fish"],
   "CraftMetal": ["ore", "wood", "sand"],
   "CraftStone": ["clay", "stone", "crystal"],
   "CraftGarment": ["skin", "fiber", "herbs"],

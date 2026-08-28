@@ -124,7 +124,15 @@ def test_no_api_key_returns_none(monkeypatch):
 
 
 def test_login_logging_survives_a_subscan_outage(monkeypatch, capsys):
-    """A failed lookup must log and move on - the session already exists."""
+    """
+    Both chains failing must log and move on - the session already exists.
+
+    fetch_holdings no longer lets a chain's exception propagate (see
+    test_one_chain_failing_does_not_lose_the_other below), so this now
+    resolves to an all-zero AccountHoldings rather than raising - the
+    per-chain failure is still logged, and log_login_balances still prints
+    its normal (zeroed) summary instead of crashing.
+    """
     monkeypatch.setenv("SUBSCAN_API_KEY", "test-key")
 
     def explode(*args, **kwargs):
@@ -134,7 +142,36 @@ def test_login_logging_survives_a_subscan_outage(monkeypatch, capsys):
 
     _run(log_login_balances("1abc"))  # must not raise
 
-    assert "Lookup failed" in capsys.readouterr().out
+    output = capsys.readouterr().out.lower()
+    assert "lookup failed" in output
+    assert "0.0000 dot" in output
+
+
+def test_one_chain_failing_does_not_lose_the_other(monkeypatch, capsys):
+    """A dead Hydration endpoint must not hide a working AssetHub balance."""
+    monkeypatch.setenv("SUBSCAN_API_KEY", "test-key")
+
+    def per_chain(base_url, address, api_key):
+        if base_url == balances.HYDRATION_API:
+            raise ConnectionError("hydration unreachable")
+        return [
+            {
+                "symbol": DOT_SYMBOL,
+                "decimals": 10,
+                "balance": "10000000000",
+                "category": "Native",
+            }
+        ]
+
+    monkeypatch.setattr(balances, "_fetch_account_tokens", per_chain)
+
+    holdings = _run(fetch_holdings("1abc"))
+
+    assert holdings is not None
+    assert holdings.balances[balances.ASSETHUB_CHAIN][DOT_SYMBOL].total == pytest.approx(1.0)
+    assert holdings.balances[balances.HYDRATION_CHAIN][DOT_SYMBOL].total == 0
+    assert holdings.totals[DOT_SYMBOL].total == pytest.approx(1.0)
+    assert "hydration lookup failed" in capsys.readouterr().out.lower()
 
 
 # --- Offline: NFT collection ownership ---------------------------------------

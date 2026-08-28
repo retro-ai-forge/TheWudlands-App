@@ -70,5 +70,11 @@
   {"id": "spiced_pickled_fish", "name": "Spiced Pickled Fish", "familyId": "pickled_fish", "tier": 3},
   {"id": "cask_aged_pickled_fish", "name": "Cask-Aged Pickled Fish", "familyId": "pickled_fish", "tier": 4},
   {"id": "deepbrine_pickled_fish", "name": "Deepbrine Pickled Fish", "familyId": "pickled_fish", "tier": 5},
-  {"id": "ambrosial_pickled_fish", "name": "Ambrosial Pickled Fish", "familyId": "pickled_fish", "tier": 6}
+  {"id": "ambrosial_pickled_fish", "name": "Ambrosial Pickled Fish", "familyId": "pickled_fish", "tier": 6},
+  {"id": "stream_minnow_smoked_fish", "name": "Smoked Stream Minnow", "familyId": "smoked_fish", "tier": 1},
+  {"id": "river_trout_smoked_fish", "name": "Smoked River Trout", "familyId": "smoked_fish", "tier": 2},
+  {"id": "sea_salmon_smoked_fish", "name": "Smoked Sea Salmon", "familyId": "smoked_fish", "tier": 3},
+  {"id": "runic_eel_smoked_fish", "name": "Smoked Runic Eel", "familyId": "smoked_fish", "tier": 4},
+  {"id": "umbral_anglerfish_smoked_fish", "name": "Smoked Umbral Anglerfish", "familyId": "smoked_fish", "tier": 5},
+  {"id": "abyssal_leviathan_smoked_fish", "name": "Smoked Abyssal Leviathan", "familyId": "smoked_fish", "tier": 6}
 ]

@@ -229,6 +229,16 @@ _SOURCE_PREDICATES = {
     "item": lambda bp: _blueprint_catalog_type(bp.family_id) in _FINAL_CATALOG_TYPES,
 }
 
+# Used only when a profession-category pool for a given source has nothing
+# eligible (e.g. Food has no tool blueprints, Trade has no item blueprints,
+# Rural has neither) - a small, fixed, broadly-applicable set rather than
+# leaving that combo box empty. Same set for every category regardless of
+# which one is short, not a per-category thematic pick.
+UNIVERSAL_FALLBACK_BLUEPRINT_FAMILIES: dict[str, tuple[str, ...]] = {
+    "tool": ("blueprint_workbench", "blueprint_kiln"),
+    "item": ("blueprint_dagger", "blueprint_cloth"),
+}
+
 
 def resolve_blueprint_trapping_options(profession_ids: list[str]) -> BlueprintTrappingsOptions:
     """
@@ -255,19 +265,30 @@ def resolve_blueprint_trapping_options(profession_ids: list[str]) -> BlueprintTr
         family for family, cats in BLUEPRINT_CATEGORIES.items() if categories & set(cats)
     }
 
-    pools = tuple(
-        BlueprintPoolOption(
-            rule=rule,
-            items=tuple(
-                bp
-                for bp in BLUEPRINT_ITEMS
-                if bp.family_id in eligible_families
-                and bp.tier == rule.tier
-                and _SOURCE_PREDICATES[rule.source](bp)
-            ),
+    def _pool_items(rule: BlueprintPoolRule) -> tuple[BlueprintItem, ...]:
+        items = tuple(
+            bp
+            for bp in BLUEPRINT_ITEMS
+            if bp.family_id in eligible_families
+            and bp.tier == rule.tier
+            and _SOURCE_PREDICATES[rule.source](bp)
         )
-        for rule in rules
-    )
+        if items:
+            return items
+
+        # Nothing eligible for this category/source combo (e.g. Food has no
+        # tool blueprints) - fall back to the universal set rather than
+        # handing the player an empty combo box.
+        fallback_families = set(UNIVERSAL_FALLBACK_BLUEPRINT_FAMILIES.get(rule.source, ()))
+        return tuple(
+            bp
+            for bp in BLUEPRINT_ITEMS
+            if bp.family_id in fallback_families
+            and bp.tier == rule.tier
+            and _SOURCE_PREDICATES[rule.source](bp)
+        )
+
+    pools = tuple(BlueprintPoolOption(rule=rule, items=_pool_items(rule)) for rule in rules)
     return BlueprintTrappingsOptions(pools=pools)
 
 

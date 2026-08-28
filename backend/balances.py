@@ -243,7 +243,12 @@ async def fetch_holdings(address: str) -> Optional[AccountHoldings]:
 
     Two Subscan calls total - one per chain, queried concurrently - covering
     DOT, WUD and every NFT collection. Returns None when no API key is
-    configured; raises on network or Subscan-side failures.
+    configured.
+
+    One chain's call failing (network error, that chain's Subscan endpoint
+    being down) degrades to an empty result for that chain rather than
+    failing the whole lookup - a dead Hydration endpoint, say, shouldn't
+    also hide a wallet's perfectly good AssetHub balance.
     """
     api_key = os.getenv("SUBSCAN_API_KEY")
     if not api_key:
@@ -252,9 +257,18 @@ async def fetch_holdings(address: str) -> Optional[AccountHoldings]:
     assethub, hydration = await asyncio.gather(
         _fetch_tokens(ASSETHUB_API, address, api_key),
         _fetch_tokens(HYDRATION_API, address, api_key),
+        return_exceptions=True,
     )
 
-    return AccountHoldings({ASSETHUB_CHAIN: assethub, HYDRATION_CHAIN: hydration})
+    tokens_by_chain: dict[str, list[dict]] = {}
+    for chain, result in ((ASSETHUB_CHAIN, assethub), (HYDRATION_CHAIN, hydration)):
+        if isinstance(result, Exception):
+            print(f"[balances] {chain} lookup failed for {address}: {type(result).__name__}: {result}")
+            tokens_by_chain[chain] = []
+        else:
+            tokens_by_chain[chain] = result
+
+    return AccountHoldings(tokens_by_chain)
 
 
 async def fetch_dot_and_wud(address: str) -> Optional[dict[str, dict[str, TokenBalance]]]:
