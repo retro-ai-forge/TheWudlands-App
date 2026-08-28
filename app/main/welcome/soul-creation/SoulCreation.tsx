@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { Pinyon_Script } from "next/font/google";
+import localFont from "next/font/local";
 import styles from "./SoulCreation.module.css";
 import {
   GENDERS,
@@ -23,7 +23,17 @@ import SoulBulb from "./SoulBulb";
 import { useHeaderVisibility } from "@/app/main/HeaderVisibilityProvider";
 import { PortraitEditor, type PortraitArea } from "../PortraitEditor";
 
-const pinyonScript = Pinyon_Script({ subsets: ["latin"], weight: "400" });
+// Self-hosted rather than pulled from Google Fonts at build time: next/font/google
+// downloads the file during `next build`, so a momentary network blip failed the
+// whole Docker image build ("Failed to fetch `Pinyon Script`", ETIMEDOUT after
+// three quick retries). This is the same latin-subset woff2 Google serves, just
+// committed - see app/fonts/PinyonScript-Regular.woff2.
+const pinyonScript = localFont({
+  src: "../../../fonts/PinyonScript-Regular.woff2",
+  weight: "400",
+  style: "normal",
+  display: "swap",
+});
 
 const PAGE_COUNT = 6;
 

@@ -16,18 +16,6 @@ function getTierIndicator(tier: number): string {
   return tierIcons[tier] || "";
 }
 
-function getTierStyle(tier: number) {
-  const tierStyles = {
-    1: { fontSize: "1em", color: "#c07a3a" },
-    2: { fontSize: "1em", color: "#c07a3a" },
-    3: { fontSize: "0.95em", color: "#c07a3a" },
-    4: { fontSize: "1.1em", color: "#ffd700" },
-    5: { fontSize: "0.85em", color: "#ffd700" },
-    6: { fontSize: "0.8em", color: "#ffd700" },
-  };
-  return tierStyles[tier as keyof typeof tierStyles] || {};
-}
-
 function getKindIcon(kind: string): string {
   switch (kind) {
     case "tool":
