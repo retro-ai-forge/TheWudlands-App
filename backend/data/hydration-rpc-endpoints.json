@@ -1,0 +1,38 @@
+{
+  "_note": [
+    "Public Hydration RPC nodes, tried in listed order - the first that",
+    "answers serves the query. Single source of truth shared by",
+    "backend/hydration_rpc.py, scripts/query_hydration_rpc.py,",
+    "scripts/benchmark_hydration_rpc.py and tests/test_hydration_rpc.py.",
+    "",
+    "Why RPC and not Subscan: Subscan's Hydration host",
+    "(https://hydration.api.subscan.io) 404s, which silently zeroed the",
+    "Hydration half of every balance lookup. AssetHub still goes via Subscan.",
+    "",
+    "Ordering is by measured median storage-query latency. Two runs of",
+    "scripts/benchmark_hydration_rpc.py show two stable tiers - fast",
+    "~100-250ms, slow ~800-1250ms - but the ordering *within* the fast tier",
+    "is run-to-run noise, so treat the fast six as interchangeable rather",
+    "than as a ranking. Re-measure with the benchmark script before",
+    "reordering. Note rpc.hydradx.cloud, the official Galactic Council node",
+    "most lists recommend, measured slowest of the ten.",
+    "",
+    "Deliberately omitted: wss://rpc.helikon.io/hydradx, listed upstream in",
+    "polkadot-js/apps-config but currently rejecting the websocket handshake",
+    "with HTTP 400 regardless of Origin/User-Agent.",
+    "",
+    "Verified 2026-08-28: all ten answering, chain=Hydration, runtime 440."
+  ],
+  "endpoints": [
+    { "url": "wss://subway.shellfish.hydration.cloud", "tier": "fast" },
+    { "url": "wss://rpc-catfish-1.catfish.hydration.cloud", "tier": "fast" },
+    { "url": "wss://rpc-catfish-2.catfish.hydration.cloud", "tier": "fast" },
+    { "url": "wss://rpc-catfish-3.catfish.hydration.cloud", "tier": "fast" },
+    { "url": "wss://rpc-catfish-4.catfish.hydration.cloud", "tier": "fast" },
+    { "url": "wss://hydration-rpc.n.dwellir.com", "tier": "fast", "operator": "Dwellir" },
+    { "url": "wss://subway.sin.hydration.cloud", "tier": "slow" },
+    { "url": "wss://subway.coke.hydration.cloud", "tier": "slow" },
+    { "url": "wss://hydration.rotko.net", "tier": "slow", "operator": "Rotko" },
+    { "url": "wss://rpc.hydradx.cloud", "tier": "slow", "operator": "Galactic Council" }
+  ]
+}

@@ -1,13 +1,21 @@
 """
-On-chain balance lookups via the Subscan API.
+On-chain balance lookups, per chain from whichever source works.
 
 Reads a wallet's DOT and WUD holdings on both Polkadot AssetHub and
-Hydration. One request per chain covers both tokens - Subscan's v2
-account/tokens endpoint returns the native balance alongside every asset
-the account holds.
+Hydration, plus its AssetHub NFT collections.
 
-Requires SUBSCAN_API_KEY in .env; Subscan rejects unauthenticated calls
-outright. The key must stay server-side, never exposed to the browser.
+  * AssetHub goes through the Subscan API. One request covers both tokens
+    and the NFTs - Subscan's v2 account/tokens endpoint returns the native
+    balance alongside every asset the account holds.
+  * Hydration goes through the chain's own public RPC nodes instead, via
+    backend.hydration_rpc. Subscan's Hydration host 404s, which used to
+    silently zero this half of every lookup. The RPC path returns rows in
+    the same shape Subscan does, so both parse through TokenBalance
+    identically.
+
+Requires SUBSCAN_API_KEY in .env for the AssetHub half; Subscan rejects
+unauthenticated calls outright. The key must stay server-side, never
+exposed to the browser. The Hydration half needs no key.
 """
 
 import asyncio
@@ -20,12 +28,15 @@ ASSETHUB_CHAIN = "assethub"
 HYDRATION_CHAIN = "hydration"
 
 ASSETHUB_API = "https://assethub-polkadot.api.subscan.io"
+
+# Subscan's Hydration host, kept only to document why it is not used: it
+# returns a bare HTTP 404 (verified 2026-08-28), so Hydration is read over
+# RPC instead - see backend.hydration_rpc and the module docstring above.
 HYDRATION_API = "https://hydration.api.subscan.io"
 
 # WUD is registered separately on each chain and the ids differ: 31337 is
-# the AssetHub asset id, Hydration's registry calls the same token 1000085.
-# Subscan reports Hydration balances by symbol rather than numeric id, so we
-# match on the symbol there and only need the id for direct RPC fallbacks.
+# the AssetHub asset id, Hydration's registry calls the same token 1000085
+# (which is what backend.hydration_rpc queries by).
 WUD_ASSETHUB_ASSET_ID = 31337
 WUD_HYDRATION_ASSET_ID = 1000085
 WUD_SYMBOL = "WUD"
@@ -237,18 +248,32 @@ class AccountHoldings:
         }
 
 
+async def _fetch_hydration_tokens(address: str) -> list[dict]:
+    """
+    Hydration's holdings, read over the chain's own RPC rather than Subscan.
+
+    Subscan's Hydration host 404s (see backend/hydration_rpc.py), so this
+    half deliberately uses a different source from AssetHub's. The rows come
+    back Subscan-shaped, so everything downstream parses them identically.
+    """
+    from backend import hydration_rpc
+
+    return await asyncio.to_thread(hydration_rpc.fetch_tokens, address)
+
+
 async def fetch_holdings(address: str) -> Optional[AccountHoldings]:
     """
     Read balances and NFT holdings for `address` in one pass.
 
-    Two Subscan calls total - one per chain, queried concurrently - covering
-    DOT, WUD and every NFT collection. Returns None when no API key is
-    configured.
+    Both chains, queried concurrently, covering DOT, WUD and every NFT
+    collection - but from two different sources: AssetHub via Subscan
+    (which also carries the NFTs), Hydration via its own RPC nodes, since
+    Subscan's Hydration endpoint is down. Returns None when no Subscan API
+    key is configured, as AssetHub cannot be read without one.
 
-    One chain's call failing (network error, that chain's Subscan endpoint
-    being down) degrades to an empty result for that chain rather than
-    failing the whole lookup - a dead Hydration endpoint, say, shouldn't
-    also hide a wallet's perfectly good AssetHub balance.
+    One chain failing degrades to an empty result for that chain rather
+    than failing the whole lookup - a Hydration outage shouldn't also hide
+    a wallet's perfectly good AssetHub balance, or vice versa.
     """
     api_key = os.getenv("SUBSCAN_API_KEY")
     if not api_key:
@@ -256,7 +281,7 @@ async def fetch_holdings(address: str) -> Optional[AccountHoldings]:
 
     assethub, hydration = await asyncio.gather(
         _fetch_tokens(ASSETHUB_API, address, api_key),
-        _fetch_tokens(HYDRATION_API, address, api_key),
+        _fetch_hydration_tokens(address),
         return_exceptions=True,
     )
 

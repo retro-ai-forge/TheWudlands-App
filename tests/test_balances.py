@@ -16,7 +16,7 @@ For the raw Subscan connection itself, see test_subscan_connection.py.
 
 import pytest
 
-from backend import balances
+from backend import balances, hydration_rpc
 from backend.balances import (
     DOT_SYMBOL,
     OG_WUD_BURN_COLLECTION_ID,
@@ -29,6 +29,22 @@ from backend.balances import (
     owns_nft_from_collection,
     total_across_chains,
 )
+
+
+@pytest.fixture(autouse=True)
+def stub_hydration_rpc(monkeypatch):
+    """
+    Keep the Hydration half offline by default.
+
+    Only AssetHub goes through Subscan now - Hydration reads over RPC (see
+    backend.hydration_rpc) - so monkeypatching `_fetch_account_tokens`, as
+    most tests here do, no longer intercepts it. Without this stub those
+    tests would open real websockets to public nodes.
+
+    Returns no holdings, which is a valid answer; tests that care about
+    Hydration's contribution override this with their own patch.
+    """
+    monkeypatch.setattr(hydration_rpc, "fetch_tokens", lambda address: [])
 
 
 # --- Offline: scaling and parsing -------------------------------------------
@@ -93,21 +109,27 @@ def test_missing_token_reads_as_zero(monkeypatch):
         assert result[chain][WUD_SYMBOL].total == 0
 
 
-def test_hydration_wud_is_matched_by_symbol_not_asset_id(monkeypatch):
-    """Hydration returns no numeric asset_id, only a registry hash and symbol."""
+def test_hydration_wud_comes_from_rpc_rows(monkeypatch):
+    """
+    Hydration's WUD is read over RPC and parses like any Subscan row.
+
+    backend.hydration_rpc deliberately emits Subscan-shaped rows so the
+    same TokenBalance parsing serves both sources; this pins that contract
+    from the balances side.
+    """
     monkeypatch.setenv("SUBSCAN_API_KEY", "test-key")
+    monkeypatch.setattr(balances, "_fetch_account_tokens", lambda *a, **kw: [])
     monkeypatch.setattr(
-        balances,
-        "_fetch_account_tokens",
-        lambda *a, **kw: [
+        hydration_rpc,
+        "fetch_tokens",
+        lambda address: [
             {
                 "symbol": "WUD",
-                "unique_id": "asset_registry/f68a68d6f6c10a5f66173d06e15cd6306da2c024",
-                "currency_id": "WUD",
                 "decimals": 10,
                 "balance": "10000000000",
                 "reserved": "0",
                 "lock": "0",
+                "category": "Assets",
             }
         ],
     )
@@ -115,6 +137,8 @@ def test_hydration_wud_is_matched_by_symbol_not_asset_id(monkeypatch):
     result = _run(fetch_dot_and_wud("1abc"))
 
     assert result["hydration"][WUD_SYMBOL].total == pytest.approx(1.0)
+    # AssetHub contributed nothing, so the cross-chain total is Hydration's.
+    assert result["assethub"][WUD_SYMBOL].total == 0
 
 
 def test_no_api_key_returns_none(monkeypatch):
@@ -148,22 +172,25 @@ def test_login_logging_survives_a_subscan_outage(monkeypatch, capsys):
 
 
 def test_one_chain_failing_does_not_lose_the_other(monkeypatch, capsys):
-    """A dead Hydration endpoint must not hide a working AssetHub balance."""
+    """Every Hydration RPC node being down must not hide AssetHub's balance."""
     monkeypatch.setenv("SUBSCAN_API_KEY", "test-key")
 
-    def per_chain(base_url, address, api_key):
-        if base_url == balances.HYDRATION_API:
-            raise ConnectionError("hydration unreachable")
-        return [
+    def explode(address):
+        raise ConnectionError("hydration unreachable")
+
+    monkeypatch.setattr(
+        balances,
+        "_fetch_account_tokens",
+        lambda *a, **kw: [
             {
                 "symbol": DOT_SYMBOL,
                 "decimals": 10,
                 "balance": "10000000000",
                 "category": "Native",
             }
-        ]
-
-    monkeypatch.setattr(balances, "_fetch_account_tokens", per_chain)
+        ],
+    )
+    monkeypatch.setattr(hydration_rpc, "fetch_tokens", explode)
 
     holdings = _run(fetch_holdings("1abc"))
 
@@ -242,28 +269,33 @@ def test_nft_check_without_api_key_is_false(monkeypatch):
 
 
 def test_one_call_per_chain_covers_balances_and_nfts(monkeypatch):
-    """The whole point of AccountHoldings: no duplicate AssetHub fetch."""
+    """
+    The whole point of AccountHoldings: no duplicate fetch per chain.
+
+    AssetHub is the only chain on Subscan now, so exactly one Subscan call
+    is expected - Hydration is fetched separately over RPC, stubbed here to
+    return its own DOT so the cross-chain total is still exercised.
+    """
     monkeypatch.setenv("SUBSCAN_API_KEY", "test-key")
     calls: list[str] = []
 
+    dot_row = {
+        "symbol": DOT_SYMBOL,
+        "decimals": 10,
+        "balance": "10000000000",
+        "category": "Native",
+    }
+
     def record(base_url, address, api_key):
         calls.append(base_url)
-        return [
-            {
-                "symbol": DOT_SYMBOL,
-                "decimals": 10,
-                "balance": "10000000000",
-                "category": "Native",
-            },
-            _nft_entry(OG_WUD_BURN_COLLECTION_ID, 2, "OG WUD BURN"),
-        ]
+        return [dot_row, _nft_entry(OG_WUD_BURN_COLLECTION_ID, 2, "OG WUD BURN")]
 
     monkeypatch.setattr(balances, "_fetch_account_tokens", record)
+    monkeypatch.setattr(hydration_rpc, "fetch_tokens", lambda address: [dot_row])
 
     holdings = _run(fetch_holdings("1abc"))
 
-    assert len(calls) == 2, f"expected one call per chain, got {calls}"
-    assert sorted(calls) == sorted({balances.ASSETHUB_API, balances.HYDRATION_API})
+    assert calls == [balances.ASSETHUB_API], f"expected one AssetHub call, got {calls}"
 
     # Balances, totals and NFTs all came out of those same two responses.
     assert holdings.balances[balances.ASSETHUB_CHAIN][DOT_SYMBOL].total == pytest.approx(1.0)
@@ -276,12 +308,16 @@ def test_nfts_are_read_from_assethub_only(monkeypatch):
     """Hydration has no NFT pallet, so its response must not contribute."""
     monkeypatch.setenv("SUBSCAN_API_KEY", "test-key")
 
-    def per_chain(base_url, address, api_key):
-        if base_url == balances.HYDRATION_API:
-            return [_nft_entry(777, 5, "Impossible Hydration NFT")]
-        return [_nft_entry(OG_WUD_BURN_COLLECTION_ID, 1, "OG WUD BURN")]
-
-    monkeypatch.setattr(balances, "_fetch_account_tokens", per_chain)
+    monkeypatch.setattr(
+        balances,
+        "_fetch_account_tokens",
+        lambda *a, **kw: [_nft_entry(OG_WUD_BURN_COLLECTION_ID, 1, "OG WUD BURN")],
+    )
+    monkeypatch.setattr(
+        hydration_rpc,
+        "fetch_tokens",
+        lambda address: [_nft_entry(777, 5, "Impossible Hydration NFT")],
+    )
 
     holdings = _run(fetch_holdings("1abc"))
 
