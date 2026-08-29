@@ -86,7 +86,7 @@ class PortraitArea:
     A crop rectangle expressed as fractions (0-1) of the source portrait
     image's natural width/height - portable, so it still makes sense however
     large/small the image is later re-rendered at, unlike on-screen pixel
-    positions. See getPortraitAreas() in SoulCreation.tsx, which computes
+    positions. See getPortraitAreas() in PortraitEditor.tsx, which computes
     these client-side.
     """
 
@@ -94,9 +94,23 @@ class PortraitArea:
     y: float
     width: float
     height: float
+    # The crop rectangle's true on-screen aspect ratio (width/height),
+    # captured directly from the editor's own frame element at save time -
+    # x/y/width/height alone can't reproduce this (they're fractions of two
+    # different bases, the source image's natural width and height, which
+    # don't cancel out into a ratio without also knowing the natural size).
+    # Optional only because older records were saved before this field
+    # existed; a display falls back to an approximate fixed ratio for those.
+    aspect_ratio: Optional[float] = None
 
     def to_dict(self) -> dict:
-        return {"x": self.x, "y": self.y, "width": self.width, "height": self.height}
+        return {
+            "x": self.x,
+            "y": self.y,
+            "width": self.width,
+            "height": self.height,
+            "aspectRatio": self.aspect_ratio,
+        }
 
 
 @dataclass

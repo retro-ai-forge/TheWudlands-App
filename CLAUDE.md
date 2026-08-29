@@ -34,4 +34,10 @@ npm run type-check  # TypeScript check without emitting
 ## Conventions
 - ESLint's `react/no-unescaped-entities` rule is enabled — escape raw apostrophes/quotes in JSX text (e.g. `'` → `&apos;`, `"` → `&quot;`).
 
+## Known gaps
+
+- **Character has no `items` field yet** — only `resources` and `tools` exist per-character (see `backend/character.py`). When a `Character.items` concept (schema field + check-in/check-out endpoint pair, mirroring `resources`/`tools`) gets built:
+  - Wire it into `CharacterPreview.tsx`'s delete-confirmation flow (`checkInAll` calls for `resources` and `tools` before deleting — add `items` there too).
+  - Add its section to `InventoryTab.tsx`'s accordion ordering (currently Blueprints Known → Tools → Resources for the character side; Tools → Resources for the party side, per an explicit reorder request — Items was left out only because there was nothing to show).
+
 

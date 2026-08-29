@@ -9,6 +9,18 @@ export interface PortraitArea {
   y: number;
   width: number;
   height: number;
+  // The crop rectangle's true on-screen aspect ratio (width/height),
+  // captured directly from the editor's own frame element at save time (see
+  // PortraitEditor.tsx's getPortraitAreas) - x/y/width/height alone can't
+  // reproduce this, since they're fractions of two different bases (the
+  // source image's natural width and natural height) that don't cancel out
+  // into a ratio without also knowing the natural size. A display box (see
+  // BodyTab.tsx) should use this directly rather than assuming a fixed
+  // shape - the editor's own frame can render at a slightly different ratio
+  // than its nominal CSS one depending on the viewport it was framed on.
+  // Optional only because records saved before this field existed won't
+  // have it.
+  aspectRatio?: number;
 }
 
 // Setting the img's own width/height to 100/width% and 100/height% renders
@@ -18,7 +30,8 @@ export interface PortraitArea {
 // since area.x is already a fraction of the full image). Translating by
 // that same negative percentage moves the crop's edge to the wrapper's
 // edge (0,0). The wrapper must be the same size as the box being filled,
-// with position:relative and overflow:hidden.
+// with position:relative and overflow:hidden - and must be shaped to
+// area.aspectRatio, or the crop renders visibly stretched.
 export function getPortraitCropImgStyle(area: PortraitArea) {
   const width = Math.min(Math.max(area.width, 0.01), 1);
   const height = Math.min(Math.max(area.height, 0.01), 1);

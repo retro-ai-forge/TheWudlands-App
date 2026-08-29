@@ -180,6 +180,12 @@ class PortraitAreaResponse(BaseModel):
     y: float = Field(..., description="Top edge, as a fraction of the image height")
     width: float = Field(..., description="Width, as a fraction of the image width")
     height: float = Field(..., description="Height, as a fraction of the image height")
+    aspectRatio: Optional[float] = Field(
+        None,
+        description="The crop rectangle's true on-screen aspect ratio (width/height), captured "
+        "directly from the editor's frame at save time - a display box should match this "
+        "exactly rather than assuming a fixed shape or recomputing from x/y/width/height alone",
+    )
 
 
 class CharacterResponse(BaseModel):
@@ -803,6 +809,13 @@ async def check_in_tool_route(
     return player.to_dict()
 
 
+def _to_portrait_area(model: PortraitAreaResponse) -> PortraitArea:
+    """PortraitAreaResponse (camelCase, request or response) -> the PortraitArea
+    dataclass (snake_case) - not a blind **model_dump() spread since
+    aspectRatio/aspect_ratio don't share a name."""
+    return PortraitArea(x=model.x, y=model.y, width=model.width, height=model.height, aspect_ratio=model.aspectRatio)
+
+
 @player_router.post("/me/characters", response_model=PlayerDataResponse)
 async def create_character(
     payload: CreateCharacterRequest, address: str = Depends(get_current_address)
@@ -868,10 +881,10 @@ async def create_character(
         portrait_zoom=payload.portraitZoom,
         portrait_pan={"x": payload.portraitPan.x, "y": payload.portraitPan.y},
         portrait_frame_area=(
-            PortraitArea(**payload.portraitFrameArea.model_dump()) if payload.portraitFrameArea else None
+            _to_portrait_area(payload.portraitFrameArea) if payload.portraitFrameArea else None
         ),
         portrait_face_area=(
-            PortraitArea(**payload.portraitFaceArea.model_dump()) if payload.portraitFaceArea else None
+            _to_portrait_area(payload.portraitFaceArea) if payload.portraitFaceArea else None
         ),
         # A selected profession starts at level 1, not ProfStats' default of
         # 0 - "none" (an unfilled slot) stays at 0 since there's nothing to

@@ -9,10 +9,18 @@ const EQUIP_SLOTS = ["Head", "Chest", "Legs", "Main Hand", "Off Hand", "Accessor
 
 /** Body page: the full character frame the player defined, plus equipment slots. */
 export function BodyTab({ character }: { character: SlotCharacterSummary }) {
+  // .frameBox's CSS aspect-ratio (2/3) is only a fallback for portraits
+  // saved before portraitFrameArea carried its own aspectRatio - once that
+  // field is present, it's this character's own saved frame shape and
+  // takes over via inline style, since the CSS default is only ever an
+  // approximation (the editor's frame can render at a slightly different
+  // ratio than its nominal one depending on the viewport it was framed on).
+  const frameAspectRatio = character.portraitFrameArea?.aspectRatio;
+
   return (
     <div className={styles.panel}>
       <div className={styles.bodyLayout}>
-        <div className={styles.frameBox}>
+        <div className={styles.frameBox} style={frameAspectRatio ? { aspectRatio: frameAspectRatio } : undefined}>
           {character.portraitUrl ? (
             character.portraitFrameArea ? (
               // eslint-disable-next-line @next/next/no-img-element

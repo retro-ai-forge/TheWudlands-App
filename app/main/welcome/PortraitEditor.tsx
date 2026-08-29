@@ -18,7 +18,7 @@
 import { useEffect, useRef, useState } from "react";
 import styles from "./PortraitEditor.module.css";
 
-export type PortraitArea = { x: number; y: number; width: number; height: number };
+export type PortraitArea = { x: number; y: number; width: number; height: number; aspectRatio?: number };
 
 export interface PortraitEditorValue {
   portraitUrl: string;
@@ -144,11 +144,16 @@ export function PortraitEditor({
 
     // `left`/`top` are frame-relative pixels; converts through the image's
     // current render scale/offset back to natural-image fractions.
+    // aspectRatio is just width/height of the on-screen rect itself - scale
+    // and nat cancel out of that ratio, so it's exact regardless of them,
+    // unlike trying to recover it later from width/height alone (see
+    // PortraitArea's own comment).
     const toNaturalArea = (left: number, top: number, width: number, height: number): PortraitArea => ({
       x: (left - imgOffsetX) / scale / nat.width,
       y: (top - imgOffsetY) / scale / nat.height,
       width: width / scale / nat.width,
       height: height / scale / nat.height,
+      aspectRatio: width / height,
     });
 
     const headRect = headZone.getBoundingClientRect();
