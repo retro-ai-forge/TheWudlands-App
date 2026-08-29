@@ -32,9 +32,18 @@ function getKindIcon(kind: string): string {
     case "tool":
       return "🔧";
     case "weapon":
+      return "⚔️";
     case "armor":
+      return "🥋";
     case "shield":
-    case "equipment":
+      return "🛡️";
+    case "food":
+      return "🍖";
+    case "potion":
+      return "🧪";
+    case "adventuring_gear":
+      return "🎒";
+    case "misc":
       return "📦";
     default:
       return "";
@@ -213,6 +222,8 @@ function IdList({
   tierInfo,
   sortByTier,
   textColor,
+  fixedIcon,
+  balances,
 }: {
   ids: string[];
   emptyLabel: string;
@@ -222,25 +233,18 @@ function IdList({
   sortByTier?: boolean;
   /** Optional text color for item labels. */
   textColor?: string;
+  /** When given, used as every row's icon instead of looking one up from `tierInfo`'s kind - for lists (like Tools) that are homogeneous by construction. */
+  fixedIcon?: string;
+  /** When given, adds a quantity column (like ResourceList's) looked up per id - for stackable owned counts (e.g. Tools), unlike Blueprints which are just owned/not. */
+  balances?: Record<string, number>;
 }) {
   if (ids.length === 0) return <p className={styles.inventoryEmpty}>{emptyLabel}</p>;
 
-  const sortedIds = sortByTier && tierInfo
-    ? [...ids].sort((a, b) => {
-        const infoA = tierInfo[a];
-        const infoB = tierInfo[b];
-        if (!infoA || !infoB) return 0;
-        // Items first, then tools
-        if (infoA.kind !== infoB.kind) {
-          const aIsTool = infoA.kind === "tool";
-          return aIsTool ? 1 : -1; // Non-tools (items) first
-        }
-        // Then by tier descending (highest first)
-        return infoB.tier - infoA.tier;
-      })
-    : ids;
-
-  // Find highest tier for each family to grey out lower tiers
+  // Find highest tier for each family, both to grey out lower tiers and to
+  // order families themselves (highest-tier family first) - same ordering
+  // ResourceList's groupByFamilyAndType uses, so a family's tiers (e.g.
+  // Ash Loom then Pine Loom) stay grouped together rather than interleaved
+  // with other families at the same tier.
   const highestTierByFamily: Record<string, number> = {};
   if (tierInfo) {
     for (const id of ids) {
@@ -252,41 +256,76 @@ function IdList({
     }
   }
 
+  const familyOrder = Object.keys(highestTierByFamily).sort((a, b) => {
+    const tierDiff = highestTierByFamily[b] - highestTierByFamily[a];
+    return tierDiff !== 0 ? tierDiff : a.localeCompare(b);
+  });
+  const familyIndex: Record<string, number> = {};
+  familyOrder.forEach((familyId, index) => { familyIndex[familyId] = index; });
+
+  const sortedIds = sortByTier && tierInfo
+    ? [...ids].sort((a, b) => {
+        const infoA = tierInfo[a];
+        const infoB = tierInfo[b];
+        if (!infoA || !infoB) return 0;
+        // Items first, then tools
+        if (infoA.kind !== infoB.kind) {
+          const aIsTool = infoA.kind === "tool";
+          return aIsTool ? 1 : -1; // Non-tools (items) first
+        }
+        // Then group by family (highest-tier family first)
+        const familyDiff = familyIndex[infoA.familyId] - familyIndex[infoB.familyId];
+        if (familyDiff !== 0) return familyDiff;
+        // Then by tier descending within the family (highest first)
+        return infoB.tier - infoA.tier;
+      })
+    : ids;
+
+  const renderRow = (id: string) => {
+    const info = tierInfo?.[id];
+    const tierDisplay = info ? getTierIndicator(info.tier) : "";
+    const isGreyed = info && highestTierByFamily[info.familyId] > info.tier;
+    const icon = fixedIcon ?? (info?.kind ? getKindIcon(info.kind) : "");
+    return (
+      <tr key={id}>
+        <td>{icon}</td>
+        <td><span className={info?.tier ? getTierSymbolClass(info.tier) : styles.tierSymbol}>{tierDisplay}</span></td>
+        <td style={{
+          textAlign: "left",
+          color: "#d4c9a8",
+          ...(isGreyed ? { color: "#665b42" } : {}),
+          ...(textColor && !isGreyed ? { color: textColor } : {}),
+        }}>
+          {formatResourceLabel(id)}
+        </td>
+        {balances && <td>{balances[id] ?? 0}</td>}
+      </tr>
+    );
+  };
+
+  // Mixed lists (blueprints: items then tools) get split into two tables
+  // with a divider, mirroring ResourceList's processed/raw split. A
+  // homogeneous list (e.g. Tools, all one kind) just renders as one table.
+  if (tierInfo) {
+    const nonToolIds = sortedIds.filter((id) => tierInfo[id]?.kind !== "tool");
+    const toolIds = sortedIds.filter((id) => tierInfo[id]?.kind === "tool");
+    return (
+      <>
+        {nonToolIds.length > 0 && (
+          <table className={styles.inventoryTable}><tbody>{nonToolIds.map(renderRow)}</tbody></table>
+        )}
+        {nonToolIds.length > 0 && toolIds.length > 0 && <div className={styles.resourceDivider} />}
+        {toolIds.length > 0 && (
+          <table className={styles.inventoryTable}><tbody>{toolIds.map(renderRow)}</tbody></table>
+        )}
+      </>
+    );
+  }
+
   return (
-    <div className={styles.inventoryDetailsList}>
-      {sortedIds.map((id, index) => {
-        const info = tierInfo?.[id];
-        const tierDisplay = info ? getTierIndicator(info.tier) : "";
-        const isGreyed =
-          info && highestTierByFamily[info.familyId] > info.tier;
-        const icon = info?.kind ? getKindIcon(info.kind) : "";
-
-        // Add divider between items and tools
-        const prevInfo = index > 0 ? tierInfo?.[sortedIds[index - 1]] : null;
-        const showDivider =
-          index > 0 &&
-          info &&
-          prevInfo &&
-          prevInfo.kind !== info.kind &&
-          info.kind === "tool";
-
-        return (
-          <div key={id}>
-            {showDivider && <div className={styles.resourceDivider} />}
-            <div className={styles.inventoryRow}>
-              <span>{icon}</span>
-              <span className={info?.tier ? getTierSymbolClass(info.tier) : styles.tierSymbol}>{tierDisplay}</span>
-              <span style={{
-                ...(isGreyed ? { color: "#665b42" } : {}),
-                ...(textColor && !isGreyed ? { color: textColor } : {}),
-              }}>
-                {formatResourceLabel(id)}
-              </span>
-            </div>
-          </div>
-        );
-      })}
-    </div>
+    <table className={styles.inventoryTable}>
+      <tbody>{sortedIds.map(renderRow)}</tbody>
+    </table>
   );
 }
 
@@ -349,6 +388,9 @@ export function InventoryTab({
   // Resource tier info: id -> tier (for displaying tier indicators on resources)
   const [resourceTierInfo, setResourceTierInfo] = useState<ResourceTierInfo>({});
 
+  // Tool tier info: id -> tier/family (for displaying tier indicators on tools)
+  const [toolTierInfo, setToolTierInfo] = useState<BlueprintTierInfo>({});
+
   useEffect(() => {
     fetch("/api/auth/blueprint-categories")
       .then((res) => (res.ok ? res.json() : []))
@@ -380,6 +422,18 @@ export function InventoryTab({
         setResourceTierInfo(tierMap);
       })
       .catch(() => setResourceTierInfo({}));
+
+    // Fetch tool tier information from the backend
+    fetch("/api/auth/tool-catalog")
+      .then((res) => (res.ok ? res.json() : []))
+      .then((data: Array<{ id: string; familyId: string; tier: number }>) => {
+        const tierMap: BlueprintTierInfo = {};
+        for (const item of data) {
+          tierMap[item.id] = { tier: item.tier, familyId: item.familyId, kind: "tool" };
+        }
+        setToolTierInfo(tierMap);
+      })
+      .catch(() => setToolTierInfo({}));
   }, []);
 
   // Top-level accordion (this character's crafting stock vs. the party's) -
@@ -447,6 +501,10 @@ export function InventoryTab({
               <IdList
                 ids={ownedIds(character.tools)}
                 emptyLabel="Not currently holding any tools."
+                tierInfo={toolTierInfo}
+                sortByTier
+                fixedIcon="🔧"
+                balances={character.tools}
               />
             </SubAccordionItem>
             {knownBlueprints.length > 0 && (
@@ -491,6 +549,10 @@ export function InventoryTab({
               <IdList
                 ids={ownedIds(playerTools)}
                 emptyLabel="Nothing in the shared tool pool."
+                tierInfo={toolTierInfo}
+                sortByTier
+                fixedIcon="🔧"
+                balances={playerTools}
               />
             </SubAccordionItem>
           </div>

@@ -38,6 +38,7 @@ from backend.players import (
 from backend.balances import log_login_balances
 from backend.resources_catalog import RESOURCE_ITEMS_BY_ID, resolve_trapping_options
 from backend.processed_catalog import PROCESSED_RESOURCE_ITEMS_BY_ID
+from backend.tools_catalog import TOOL_ITEMS_BY_ID
 from backend.craft_catalog import category_blueprint_summary, resolve_blueprint_trapping_options
 from backend.soul_slots import (
     SOUL_SLOTS,
@@ -355,6 +356,14 @@ class ResourceItemResponse(BaseModel):
     familyId: str
     tier: int
     resourceFamily: str = Field(..., description="The resource family (ore, wood, stone, etc.)")
+
+
+class ToolItemResponse(BaseModel):
+    """A single tool item with its tier and family information."""
+
+    id: str
+    familyId: str
+    tier: int
 
 
 # Dependency: Extract and verify token from secure cookie
@@ -704,6 +713,18 @@ async def get_resource_catalog():
         for item in PROCESSED_RESOURCE_ITEMS_BY_ID.values()
     ]
     return raw_resources + processed_resources
+
+
+@player_router.get("/tool-catalog", response_model=List[ToolItemResponse])
+async def get_tool_catalog():
+    """
+    Reference data: all tool items with their tier and family information.
+    Powers tier indicators in the inventory tools list.
+    """
+    return [
+        ToolItemResponse(id=item.id, familyId=item.family_id, tier=item.tier)
+        for item in TOOL_ITEMS_BY_ID.values()
+    ]
 
 
 @player_router.post("/me/characters", response_model=PlayerDataResponse)

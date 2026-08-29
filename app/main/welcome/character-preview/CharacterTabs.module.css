@@ -586,20 +586,6 @@
   border-bottom: 1px solid rgba(168, 153, 104, 0.3);
 }
 
-.inventoryRow {
-  display: grid;
-  grid-template-columns: 1.2rem 1.8rem 1fr;
-  gap: 0.15rem;
-  align-items: center;
-  font-size: 0.9rem;
-  color: #d4c9a8;
-  padding: 0.05rem 0;
-}
-
-.inventoryRow > span:first-child {
-  display: contents;
-}
-
 .inventoryTable {
   width: 100%;
   border-collapse: separate;
@@ -710,11 +696,6 @@
   height: 100%;
 }
 
-.inventoryRow span:last-child {
-  color: #c07a3a;
-  font-variant-numeric: tabular-nums;
-}
-
 .inventoryEmpty {
   font-size: 0.8rem;
   color: #7d7256;
@@ -806,14 +787,4 @@
   padding: 0.5rem 0.4rem;
 }
 
-.inventoryDetailsList {
-  display: flex;
-  flex-direction: column;
-  gap: 0.2rem;
-}
-
-.inventoryDetailsList span:not([class*="tierSymbol"]) {
-  font-size: 0.85rem;
-  color: #c9bfa0;
-}
 
