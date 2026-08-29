@@ -14,6 +14,60 @@ type BlueprintTierInfo = Record<
 >;
 type ResourceTierInfo = Record<string, { tier: number; family: string }>;
 
+// The raw shape returned by /me/characters and every check-in/check-out
+// transfer endpoint (backend.players.Player.to_dict()) - enough to refresh
+// the whole roster plus the shared vault/tool pool after a transfer.
+export type RawPlayerData = {
+  characters: SlotCharacterSummary[];
+  inventory: {
+    tools: Record<string, number>;
+    resources: Record<string, number>;
+  };
+};
+
+const TRANSFER_AMOUNTS = [1, 2, 5, 10, 20, 50] as const;
+
+/** The row of quick-transfer quantity buttons revealed under a clicked resource/tool row. */
+function TransferButtons({
+  owned,
+  pending,
+  onPick,
+}: {
+  owned: number;
+  pending: boolean;
+  onPick: (amount: number) => void;
+}) {
+  return (
+    <div className={styles.transferButtons}>
+      {TRANSFER_AMOUNTS.map((amount) => (
+        <button
+          key={amount}
+          type="button"
+          className={styles.transferButton}
+          disabled={pending || amount > owned}
+          onClick={(e) => {
+            e.stopPropagation();
+            onPick(amount);
+          }}
+        >
+          {amount}
+        </button>
+      ))}
+      <button
+        type="button"
+        className={styles.transferButton}
+        disabled={pending || owned <= 0}
+        onClick={(e) => {
+          e.stopPropagation();
+          onPick(owned);
+        }}
+      >
+        ∞
+      </button>
+    </div>
+  );
+}
+
 // Resource/tool/blueprint ids are catalog keys (e.g. "iron_ore",
 // "blueprint_copper_anvil") - no per-id display-name lookup is wired to this
 // page yet, so ids are just formatted for reading. The "blueprint_" prefix
@@ -94,15 +148,29 @@ function ResourceList({
   balances,
   emptyLabel,
   tierInfo,
+  onTransfer,
 }: {
   balances: Record<string, number>;
   emptyLabel: string;
   tierInfo?: ResourceTierInfo;
+  /** When given, clicking a row reveals quick-transfer quantity buttons that call this with (id, amount). */
+  onTransfer?: (id: string, amount: number) => Promise<boolean>;
 }) {
+  const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [pendingId, setPendingId] = useState<string | null>(null);
+
   const entries = Object.entries(balances).filter(([, qty]) => qty > 0);
   if (entries.length === 0) {
     return <p className={styles.inventoryEmpty}>{emptyLabel}</p>;
   }
+
+  const handlePick = async (id: string, amount: number) => {
+    if (!onTransfer) return;
+    setExpandedId(null);
+    setPendingId(id);
+    await onTransfer(id, amount);
+    setPendingId(null);
+  };
 
   // Split into processed and raw, group each by family
   const groupByFamilyAndType = (items: Array<[string, number]>) => {
@@ -140,7 +208,7 @@ function ResourceList({
   const processedData = groupByFamilyAndType(processedItems);
   const rawData = groupByFamilyAndType(rawItems);
 
-  const renderProcessedGroup = (familyGroups: Record<string, Array<[string, number]>>, highestTierByFamily: Record<string, number>, sortedFamilies: string[]) => {
+  const renderGroup = (familyGroups: Record<string, Array<[string, number]>>, highestTierByFamily: Record<string, number>, sortedFamilies: string[]) => {
     return (
       <table className={styles.inventoryTable}>
         <tbody>
@@ -151,52 +219,35 @@ function ResourceList({
               return tierB - tierA;
             });
 
-            return familyItems.map(([id, qty]) => {
+            return familyItems.flatMap(([id, qty]) => {
               const icon = getResourceIcon(id);
               const tierData = tierInfo?.[id];
               const tier = tierData?.tier ?? 0;
               const tierDisplay = tier ? getTierIndicator(tier) : "";
               const isGreyed = tier > 0 && highestTierByFamily[family] > tier;
-              return (
-                <tr key={id}>
+              const isExpanded = expandedId === id;
+              const rows = [
+                <tr
+                  key={id}
+                  onClick={onTransfer ? () => setExpandedId(isExpanded ? null : id) : undefined}
+                  className={onTransfer ? styles.transferableRow : undefined}
+                >
                   <td style={isGreyed ? { color: "#665b42" } : undefined}>{icon}</td>
                   <td><span className={tier > 0 ? getTierSymbolClass(tier) : styles.tierSymbol}>{tierDisplay}</span></td>
                   <td style={isGreyed ? { color: "#665b42" } : undefined}>{formatResourceLabel(id)}</td>
                   <td>{qty}</td>
-                </tr>
-              );
-            });
-          })}
-        </tbody>
-      </table>
-    );
-  };
-
-  const renderRawGroup = (familyGroups: Record<string, Array<[string, number]>>, highestTierByFamily: Record<string, number>, sortedFamilies: string[]) => {
-    return (
-      <table className={styles.inventoryTable}>
-        <tbody>
-          {sortedFamilies.flatMap((family) => {
-            const familyItems = familyGroups[family].sort((a, b) => {
-              const tierA = tierInfo?.[a[0]]?.tier ?? 0;
-              const tierB = tierInfo?.[b[0]]?.tier ?? 0;
-              return tierB - tierA;
-            });
-
-            return familyItems.map(([id, qty]) => {
-              const icon = getResourceIcon(id);
-              const tierData = tierInfo?.[id];
-              const tier = tierData?.tier ?? 0;
-              const tierDisplay = tier ? getTierIndicator(tier) : "";
-              const isGreyed = tier > 0 && highestTierByFamily[family] > tier;
-              return (
-                <tr key={id}>
-                  <td style={isGreyed ? { color: "#665b42" } : undefined}>{icon}</td>
-                  <td><span className={tier > 0 ? getTierSymbolClass(tier) : styles.tierSymbol}>{tierDisplay}</span></td>
-                  <td style={isGreyed ? { color: "#665b42" } : undefined}>{formatResourceLabel(id)}</td>
-                  <td>{qty}</td>
-                </tr>
-              );
+                </tr>,
+              ];
+              if (isExpanded && onTransfer) {
+                rows.push(
+                  <tr key={`${id}-transfer`}>
+                    <td colSpan={4}>
+                      <TransferButtons owned={qty} pending={pendingId === id} onPick={(amount) => handlePick(id, amount)} />
+                    </td>
+                  </tr>
+                );
+              }
+              return rows;
             });
           })}
         </tbody>
@@ -209,9 +260,9 @@ function ResourceList({
 
   return (
     <>
-      {renderProcessedGroup(processedData.familyGroups, processedData.highestTierByFamily, processedData.sortedFamilies)}
+      {renderGroup(processedData.familyGroups, processedData.highestTierByFamily, processedData.sortedFamilies)}
       {hasProcessed && hasRaw && <div className={styles.resourceDivider} />}
-      {renderRawGroup(rawData.familyGroups, rawData.highestTierByFamily, rawData.sortedFamilies)}
+      {renderGroup(rawData.familyGroups, rawData.highestTierByFamily, rawData.sortedFamilies)}
     </>
   );
 }
@@ -224,6 +275,7 @@ function IdList({
   textColor,
   fixedIcon,
   balances,
+  onTransfer,
 }: {
   ids: string[];
   emptyLabel: string;
@@ -237,8 +289,21 @@ function IdList({
   fixedIcon?: string;
   /** When given, adds a quantity column (like ResourceList's) looked up per id - for stackable owned counts (e.g. Tools), unlike Blueprints which are just owned/not. */
   balances?: Record<string, number>;
+  /** When given (alongside `balances`), clicking a row reveals quick-transfer quantity buttons that call this with (id, amount). */
+  onTransfer?: (id: string, amount: number) => Promise<boolean>;
 }) {
+  const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [pendingId, setPendingId] = useState<string | null>(null);
+
   if (ids.length === 0) return <p className={styles.inventoryEmpty}>{emptyLabel}</p>;
+
+  const handlePick = async (id: string, amount: number) => {
+    if (!onTransfer) return;
+    setExpandedId(null);
+    setPendingId(id);
+    await onTransfer(id, amount);
+    setPendingId(null);
+  };
 
   // Find highest tier for each family, both to grey out lower tiers and to
   // order families themselves (highest-tier family first) - same ordering
@@ -281,13 +346,22 @@ function IdList({
       })
     : ids;
 
+  const canTransfer = Boolean(onTransfer && balances);
+  const columnCount = balances ? 4 : 3;
+
   const renderRow = (id: string) => {
     const info = tierInfo?.[id];
     const tierDisplay = info ? getTierIndicator(info.tier) : "";
     const isGreyed = info && highestTierByFamily[info.familyId] > info.tier;
     const icon = fixedIcon ?? (info?.kind ? getKindIcon(info.kind) : "");
-    return (
-      <tr key={id}>
+    const isExpanded = expandedId === id;
+    const owned = balances?.[id] ?? 0;
+    const rows = [
+      <tr
+        key={id}
+        onClick={canTransfer ? () => setExpandedId(isExpanded ? null : id) : undefined}
+        className={canTransfer ? styles.transferableRow : undefined}
+      >
         <td>{icon}</td>
         <td><span className={info?.tier ? getTierSymbolClass(info.tier) : styles.tierSymbol}>{tierDisplay}</span></td>
         <td style={{
@@ -298,9 +372,19 @@ function IdList({
         }}>
           {formatResourceLabel(id)}
         </td>
-        {balances && <td>{balances[id] ?? 0}</td>}
-      </tr>
-    );
+        {balances && <td>{owned}</td>}
+      </tr>,
+    ];
+    if (isExpanded && canTransfer) {
+      rows.push(
+        <tr key={`${id}-transfer`}>
+          <td colSpan={columnCount}>
+            <TransferButtons owned={owned} pending={pendingId === id} onPick={(amount) => handlePick(id, amount)} />
+          </td>
+        </tr>
+      );
+    }
+    return rows;
   };
 
   // Mixed lists (blueprints: items then tools) get split into two tables
@@ -312,11 +396,11 @@ function IdList({
     return (
       <>
         {nonToolIds.length > 0 && (
-          <table className={styles.inventoryTable}><tbody>{nonToolIds.map(renderRow)}</tbody></table>
+          <table className={styles.inventoryTable}><tbody>{nonToolIds.flatMap(renderRow)}</tbody></table>
         )}
         {nonToolIds.length > 0 && toolIds.length > 0 && <div className={styles.resourceDivider} />}
         {toolIds.length > 0 && (
-          <table className={styles.inventoryTable}><tbody>{toolIds.map(renderRow)}</tbody></table>
+          <table className={styles.inventoryTable}><tbody>{toolIds.flatMap(renderRow)}</tbody></table>
         )}
       </>
     );
@@ -324,7 +408,7 @@ function IdList({
 
   return (
     <table className={styles.inventoryTable}>
-      <tbody>{sortedIds.map(renderRow)}</tbody>
+      <tbody>{sortedIds.flatMap(renderRow)}</tbody>
     </table>
   );
 }
@@ -343,23 +427,23 @@ function ownedIds(...pools: Record<string, number>[]): string[] {
 }
 
 // A single sub-accordion item (Resources/Tools/Blueprints Known/...) within
-// one of the two top-level sections - `openId`/`onToggle` implement the
-// mutual exclusivity (opening one closes whichever sibling was open),
-// mirroring app/characters/page.tsx's accordion exactly.
+// one of the two top-level sections - `openIds`/`onToggle` let any number of
+// siblings be open at once (each toggles independently, unlike the
+// mutually-exclusive top-level accordion in app/characters/page.tsx).
 function SubAccordionItem({
   id,
   label,
-  openId,
+  openIds,
   onToggle,
   children,
 }: {
   id: string;
   label: string;
-  openId: string | null;
+  openIds: Set<string>;
   onToggle: (id: string) => void;
   children: React.ReactNode;
 }) {
-  const isOpen = openId === id;
+  const isOpen = openIds.has(id);
   return (
     <div className={styles.subAccordionItem}>
       <button className={styles.subAccordionHeader} onClick={() => onToggle(id)}>
@@ -376,11 +460,42 @@ export function InventoryTab({
   character,
   playerResourceBalances,
   playerTools,
+  onPlayerDataUpdated,
 }: {
   character: SlotCharacterSummary;
   playerResourceBalances: Record<string, number>;
   playerTools: Record<string, number>;
+  /** Called with the fresh roster/vault/pool after a successful check-in/check-out transfer. */
+  onPlayerDataUpdated?: (data: RawPlayerData) => void;
 }) {
+  // Moves `amount` of a resource/tool between this character and the
+  // player's shared vault/pool. "check-in" = character -> shared,
+  // "check-out" = shared -> character (mirrors backend.players naming).
+  const transfer = async (
+    kind: "resources" | "tools",
+    direction: "check-in" | "check-out",
+    id: string,
+    amount: number
+  ): Promise<boolean> => {
+    try {
+      const res = await fetch(
+        `/api/auth/me/characters/${character.id}/${kind}/${id}/${direction}`,
+        {
+          method: "POST",
+          credentials: "include",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ amount }),
+        }
+      );
+      if (!res.ok) return false;
+      const data: RawPlayerData = await res.json();
+      onPlayerDataUpdated?.(data);
+      return true;
+    } catch {
+      return false;
+    }
+  };
+
   // Fetched once - maps every blueprint id to its own tier and family info, so
   // the Blueprints Known lists below can show tier information etc.
   const [blueprintTierInfo, setBlueprintTierInfo] = useState<BlueprintTierInfo>({});
@@ -437,18 +552,31 @@ export function InventoryTab({
   }, []);
 
   // Top-level accordion (this character's crafting stock vs. the party's) -
-  // only one open at a time. The recipe viewer below is always visible, not
-  // part of this fold.
-  const [openSection, setOpenSection] = useState<"character" | "party" | null>(null);
-  const toggleSection = (id: "character" | "party") =>
-    setOpenSection((prev) => (prev === id ? null : id));
+  // both can be open at once, toggled independently. The recipe viewer
+  // below is always visible, not part of this fold.
+  const [openSections, setOpenSections] = useState<Set<"character" | "party">>(new Set());
+  const toggleSection = (id: "character" | "party") => setOpenSections((prev) => {
+    const next = new Set(prev);
+    if (next.has(id)) next.delete(id); else next.add(id);
+    return next;
+  });
 
   // Each top-level section has its own sub-accordion state, so opening a
-  // sub-item in one section never affects the other.
-  const [openCharacterSub, setOpenCharacterSub] = useState<string | null>(null);
-  const [openPartySub, setOpenPartySub] = useState<string | null>(null);
-  const toggleCharacterSub = (id: string) => setOpenCharacterSub((prev) => (prev === id ? null : id));
-  const togglePartySub = (id: string) => setOpenPartySub((prev) => (prev === id ? null : id));
+  // sub-item in one section never affects the other. Any number of
+  // sub-items within a section can be open at once - toggling one doesn't
+  // close its siblings.
+  const [openCharacterSub, setOpenCharacterSub] = useState<Set<string>>(new Set());
+  const [openPartySub, setOpenPartySub] = useState<Set<string>>(new Set());
+  const toggleCharacterSub = (id: string) => setOpenCharacterSub((prev) => {
+    const next = new Set(prev);
+    if (next.has(id)) next.delete(id); else next.add(id);
+    return next;
+  });
+  const togglePartySub = (id: string) => setOpenPartySub((prev) => {
+    const next = new Set(prev);
+    if (next.has(id)) next.delete(id); else next.add(id);
+    return next;
+  });
 
   // Independent of the Crafting accordion above - folding the recipe viewer
   // has nothing to do with toggling between the character's and party's stock.
@@ -480,22 +608,24 @@ export function InventoryTab({
       <div className={styles.accordionItem}>
         <button className={styles.accordionHeader} onClick={() => toggleSection("character")}>
           <span>{character.firstName}&apos;s Crafting</span>
-          <span className={styles.accordionChevron}>{openSection === "character" ? "▴" : "▾"}</span>
+          <span className={styles.accordionChevron}>{openSections.has("character") ? "▴" : "▾"}</span>
         </button>
-        {openSection === "character" && (
+        {openSections.has("character") && (
           <div className={styles.accordionBody}>
-            <SubAccordionItem
-              id="resources"
-              label="Resources"
-              openId={openCharacterSub}
-              onToggle={toggleCharacterSub}
-            >
-              <ResourceList balances={character.resourceBalances} emptyLabel="No materials carried." tierInfo={resourceTierInfo} />
-            </SubAccordionItem>
+            {knownBlueprints.length > 0 && (
+              <SubAccordionItem
+                id="blueprints"
+                label={`Blueprints Known (${knownBlueprints.length})`}
+                openIds={openCharacterSub}
+                onToggle={toggleCharacterSub}
+              >
+                <IdList ids={knownBlueprints} emptyLabel="" tierInfo={blueprintTierInfo} sortByTier textColor="#7eb8ff" />
+              </SubAccordionItem>
+            )}
             <SubAccordionItem
               id="tools"
               label="Tools"
-              openId={openCharacterSub}
+              openIds={openCharacterSub}
               onToggle={toggleCharacterSub}
             >
               <IdList
@@ -505,18 +635,22 @@ export function InventoryTab({
                 sortByTier
                 fixedIcon="🔧"
                 balances={character.tools}
+                onTransfer={(id, amount) => transfer("tools", "check-in", id, amount)}
               />
             </SubAccordionItem>
-            {knownBlueprints.length > 0 && (
-              <SubAccordionItem
-                id="blueprints"
-                label={`Blueprints Known (${knownBlueprints.length})`}
-                openId={openCharacterSub}
-                onToggle={toggleCharacterSub}
-              >
-                <IdList ids={knownBlueprints} emptyLabel="" tierInfo={blueprintTierInfo} sortByTier textColor="#7eb8ff" />
-              </SubAccordionItem>
-            )}
+            <SubAccordionItem
+              id="resources"
+              label="Resources"
+              openIds={openCharacterSub}
+              onToggle={toggleCharacterSub}
+            >
+              <ResourceList
+                balances={character.resources}
+                emptyLabel="No materials carried."
+                tierInfo={resourceTierInfo}
+                onTransfer={(id, amount) => transfer("resources", "check-in", id, amount)}
+              />
+            </SubAccordionItem>
           </div>
         )}
       </div>
@@ -524,26 +658,14 @@ export function InventoryTab({
       <div className={styles.accordionItem}>
         <button className={styles.accordionHeader} onClick={() => toggleSection("party")}>
           <span>Party&apos;s Crafting</span>
-          <span className={styles.accordionChevron}>{openSection === "party" ? "▴" : "▾"}</span>
+          <span className={styles.accordionChevron}>{openSections.has("party") ? "▴" : "▾"}</span>
         </button>
-        {openSection === "party" && (
+        {openSections.has("party") && (
           <div className={styles.accordionBody}>
-            <SubAccordionItem
-              id="resources"
-              label="Resources"
-              openId={openPartySub}
-              onToggle={togglePartySub}
-            >
-              <ResourceList
-                balances={playerResourceBalances}
-                emptyLabel="Nothing in the shared crafting stock."
-                tierInfo={resourceTierInfo}
-              />
-            </SubAccordionItem>
             <SubAccordionItem
               id="tools"
               label="Tools"
-              openId={openPartySub}
+              openIds={openPartySub}
               onToggle={togglePartySub}
             >
               <IdList
@@ -553,15 +675,25 @@ export function InventoryTab({
                 sortByTier
                 fixedIcon="🔧"
                 balances={playerTools}
+                onTransfer={(id, amount) => transfer("tools", "check-out", id, amount)}
+              />
+            </SubAccordionItem>
+            <SubAccordionItem
+              id="resources"
+              label="Resources"
+              openIds={openPartySub}
+              onToggle={togglePartySub}
+            >
+              <ResourceList
+                balances={playerResourceBalances}
+                emptyLabel="Nothing in the shared crafting stock."
+                tierInfo={resourceTierInfo}
+                onTransfer={(id, amount) => transfer("resources", "check-out", id, amount)}
               />
             </SubAccordionItem>
           </div>
         )}
       </div>
-
-      <p className={styles.placeholderNote}>
-        Moving items between crafting stocks isn&apos;t wired up yet - this shows both sides for now.
-      </p>
 
       <button
         className={styles.recipeViewerHeading}
@@ -574,7 +706,7 @@ export function InventoryTab({
         <iframe
           ref={recipeViewerRef}
           src={`/craft/recipe-viewer.html?embedded=1&inv=${encodeURIComponent(
-            JSON.stringify(character.resourceBalances)
+            JSON.stringify(character.resources)
           )}&tools=${encodeURIComponent(JSON.stringify(ownedTools))}&blueprints=${encodeURIComponent(
             JSON.stringify(knownBlueprints)
           )}`}

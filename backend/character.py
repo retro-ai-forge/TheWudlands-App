@@ -173,7 +173,7 @@ class Character:
             # read back), which is the signal the frontend uses to show no
             # countdown at all, just a "ready" status.
             "availability": {"name": "ready", "timeRdy": self.created_at.isoformat()},
-            "resourceBalances": self.resource_balances,
+            "resources": self.resource_balances,
             "tools": self.tools,
             "blueprints": self.blueprints,
         }

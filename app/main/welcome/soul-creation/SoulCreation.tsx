@@ -202,6 +202,22 @@ export function SoulCreation({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
 
+  // Whether this slot number already received its one-time starter resource
+  // kit on an earlier character (see backend.soul_slots.has_claimed_starter_kit) -
+  // if so, the resources picked below won't actually be granted on save, so
+  // the Continue click warns about it once instead of silently giving less
+  // than the player expects.
+  const [starterKitClaimed, setStarterKitClaimed] = useState(false);
+  const [showStarterKitWarning, setShowStarterKitWarning] = useState(false);
+  const [starterKitWarningAcknowledged, setStarterKitWarningAcknowledged] = useState(false);
+
+  useEffect(() => {
+    fetch(`/api/auth/me/soul-slots/${slotNumber}/starter-kit-claimed`, { credentials: "include" })
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => setStarterKitClaimed(Boolean(data?.claimed)))
+      .catch(() => setStarterKitClaimed(false));
+  }, [slotNumber]);
+
   // Set the iframe's src only once per visit to page 5 (not on every stepper
   // click or combo box pick, which would reload the whole document and lose
   // whatever recipe/tier the player was looking at) - later picks are pushed
@@ -920,6 +936,15 @@ export function SoulCreation({
       flashMissingFields(["birthsign"]);
       return;
     }
+    if (
+      page === 5 &&
+      starterKitClaimed &&
+      !starterKitWarningAcknowledged &&
+      Object.keys(selectedResources).length > 0
+    ) {
+      setShowStarterKitWarning(true);
+      return;
+    }
     handleContinue();
   }
 
@@ -1613,6 +1638,28 @@ export function SoulCreation({
           </button>
         )}
       </div>
+
+      {showStarterKitWarning && (
+        <div className={styles.starterKitWarningOverlay}>
+          <div className={styles.starterKitWarningCard}>
+            <p>
+              This soul slot already claimed its one-time starter resource kit on an earlier
+              character. The resources you picked here won&apos;t be added to your new character.
+            </p>
+            <button
+              type="button"
+              className={styles.starterKitWarningButton}
+              onClick={() => {
+                setShowStarterKitWarning(false);
+                setStarterKitWarningAcknowledged(true);
+                handleContinue();
+              }}
+            >
+              Continue
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

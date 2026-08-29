@@ -11,7 +11,7 @@ import { StatsTab } from "./StatsTab";
 import { BodyTab } from "./BodyTab";
 import { SoulTab } from "./SoulTab";
 import { AdventureTab } from "./AdventureTab";
-import { InventoryTab } from "./InventoryTab";
+import { InventoryTab, type RawPlayerData } from "./InventoryTab";
 
 export type TabKey = "stats" | "body" | "soul" | "adventure" | "inventory";
 
@@ -39,6 +39,7 @@ export function CharacterPreview({
   onClose,
   onDeleted,
   onPortraitSaved,
+  onPlayerDataUpdated,
   initialTab = "stats",
 }: {
   character: SlotCharacterSummary;
@@ -47,6 +48,8 @@ export function CharacterPreview({
   onClose: () => void;
   onDeleted: () => void;
   onPortraitSaved: (character: SlotCharacterSummary) => void;
+  /** Called with the fresh roster/vault/pool after a resource/tool transfer on the Inventory tab. */
+  onPlayerDataUpdated?: (data: RawPlayerData) => void;
   /** Which page to open on - e.g. restoring from a link that sent the player
    * away to a full page (like the recipe viewer) and back. */
   initialTab?: TabKey;
@@ -55,6 +58,7 @@ export function CharacterPreview({
   const [activeTab, setActiveTab] = useState<TabKey>(initialTab);
   const [isDeleting, setIsDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
+  const [showDeleteWarning, setShowDeleteWarning] = useState(false);
 
   // Delete (Stats page only, see below) starts barely visible and inert,
   // only lighting up once the player has actually scrolled this page's
@@ -158,23 +162,49 @@ export function CharacterPreview({
     }
   }
 
-  async function handleDelete() {
+  function handleDeleteClick() {
     if (isDeleting) return;
-    // Permanent and immediate - a plain confirm() is enough friction for a
-    // destructive action with no other consequences (no shared state, no
-    // one else affected), without building out a custom dialog for it.
-    if (!window.confirm(`Permanently delete ${character.firstName} ${character.lastName}? This cannot be undone.`)) {
-      return;
-    }
+    setDeleteError(null);
+    setShowDeleteWarning(true);
+  }
 
+  // A resource/tool id -> quantity pool, checked in one id at a time via the
+  // same per-id endpoints the Inventory tab's transfer buttons use - there's
+  // no bulk "check in everything" endpoint, so this just loops.
+  async function checkInAll(kind: "resources" | "tools", pool: Record<string, number>) {
+    for (const [id, amount] of Object.entries(pool)) {
+      if (amount <= 0) continue;
+      const res = await fetch(
+        `/api/auth/me/characters/${character.id}/${kind}/${id}/check-in`,
+        {
+          method: "POST",
+          credentials: "include",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ amount }),
+        }
+      );
+      if (!res.ok) throw new Error(`Failed to check in ${kind} ${id}`);
+    }
+  }
+
+  async function handleConfirmDelete() {
+    if (isDeleting) return;
     setDeleteError(null);
     setIsDeleting(true);
     try {
+      // Soulbound blueprints are lost either way (never transfer), but
+      // resources and tools this character is holding move to the shared
+      // vault first - otherwise deleting the character would just discard
+      // them, since nothing else can reach a deleted character's storage.
+      await checkInAll("resources", character.resources);
+      await checkInAll("tools", character.tools);
+
       const res = await fetch(`/api/auth/me/characters/${character.id}`, {
         method: "DELETE",
         credentials: "include",
       });
       if (!res.ok) throw new Error("Failed to delete character");
+      setShowDeleteWarning(false);
       onDeleted();
     } catch {
       setDeleteError("Could not delete this character. Please try again.");
@@ -230,7 +260,7 @@ export function CharacterPreview({
           {character.firstName} {character.lastName}
         </h1>
 
-        <div className={tabStyles.mainColumn}>
+        <div className={activeTab === "inventory" ? tabStyles.mainColumn : `${tabStyles.mainColumn} ${tabStyles.mainColumnPadded}`}>
           {activeTab === "stats" && (
             <StatsTab
               character={character}
@@ -249,6 +279,7 @@ export function CharacterPreview({
               character={character}
               playerResourceBalances={playerResourceBalances}
               playerTools={playerTools}
+              onPlayerDataUpdated={onPlayerDataUpdated}
             />
           )}
         </div>
@@ -258,7 +289,7 @@ export function CharacterPreview({
         <button
           type="button"
           className={`${tabStyles.deleteButton} ${isScrolledToEnd ? "" : tabStyles.deleteButtonLocked}`}
-          onClick={handleDelete}
+          onClick={handleDeleteClick}
           disabled={isDeleting || !isScrolledToEnd}
           title={isDeleting ? "Deleting…" : isScrolledToEnd ? "Delete Character" : "Scroll to the end of the page to delete"}
           aria-label={isDeleting ? "Deleting…" : isScrolledToEnd ? "Delete Character" : "Scroll to the end of the page to delete"}
@@ -333,6 +364,40 @@ export function CharacterPreview({
               </div>
             </div>
           </button>
+        </div>
+      )}
+
+      {showDeleteWarning && (
+        <div className={tabStyles.birthsignPopupOverlay}>
+          <div className={tabStyles.deleteWarningCard}>
+            <p>
+              Permanently delete {character.firstName} {character.lastName}? This cannot be undone.
+            </p>
+            <p>
+              A new character in this soul slot won&apos;t receive a starter resource kit (this slot
+              already claimed one). Clicking Continue will first move this character&apos;s resources
+              and tools to your shared vault, then delete the character.
+            </p>
+            {deleteError && <p className={styles.submitError}>{deleteError}</p>}
+            <div className={tabStyles.deleteWarningActions}>
+              <button
+                type="button"
+                className={tabStyles.deleteWarningCancel}
+                onClick={() => setShowDeleteWarning(false)}
+                disabled={isDeleting}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                className={tabStyles.deleteWarningContinue}
+                onClick={handleConfirmDelete}
+                disabled={isDeleting}
+              >
+                {isDeleting ? "Deleting…" : "Continue"}
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>

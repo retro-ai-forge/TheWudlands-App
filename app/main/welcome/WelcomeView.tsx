@@ -57,7 +57,7 @@ export function WelcomeView() {
   const [characters, setCharacters] = useState<SlotCharacterSummary[] | null>(null);
   // The player's own shared resource vault, pooled across every character -
   // used by the character sheet's Inventory tab alongside that character's
-  // own resourceBalances.
+  // own resources.
   const [playerResourceBalances, setPlayerResourceBalances] = useState<Record<string, number>>({});
   // The player's own shared tool pool (id -> quantity), pooled across every
   // character - same sharing model as playerResourceBalances.
@@ -66,14 +66,32 @@ export function WelcomeView() {
   // viewingCharacter, set when restoring from a ?character=&tab= URL below.
   const [viewingTab, setViewingTab] = useState<TabKey>("stats");
 
+  // Applies a fresh roster/vault/pool snapshot (the shape returned by both
+  // /me/characters and every check-in/check-out transfer endpoint) to all
+  // three pieces of state at once, including re-syncing the open preview's
+  // `character` prop - which is otherwise a point-in-time snapshot, not live.
+  const applyPlayerData = (data: {
+    characters?: SlotCharacterSummary[];
+    inventory?: {
+      tools?: Record<string, number>;
+      resources?: Record<string, number>;
+    };
+  } | null) => {
+    const chars = data?.characters ?? [];
+    setCharacters(chars);
+    setPlayerResourceBalances(data?.inventory?.resources ?? {});
+    setPlayerTools(data?.inventory?.tools ?? {});
+    setViewingCharacter((prev) => {
+      if (!prev) return prev;
+      const updated = chars.find((c) => c.id === prev.id);
+      return updated ?? prev;
+    });
+  };
+
   const refreshCharacters = () => {
     fetch("/api/auth/me/characters", { credentials: "include" })
       .then((res) => (res.ok ? res.json() : null))
-      .then((data) => {
-        setCharacters(data?.characters ?? []);
-        setPlayerResourceBalances(data?.resourceBalances ?? {});
-        setPlayerTools(data?.inventory?.tools ?? {});
-      })
+      .then(applyPlayerData)
       .catch(() => setCharacters([]));
   };
 
@@ -127,6 +145,7 @@ export function WelcomeView() {
         playerResourceBalances={playerResourceBalances}
         playerTools={playerTools}
         initialTab={viewingTab}
+        onPlayerDataUpdated={applyPlayerData}
         onClose={() => setViewingCharacter(null)}
         onDeleted={() => {
           // The character is gone - close the preview and refresh the

@@ -18,6 +18,7 @@ from pymongo import ReturnDocument
 from backend.character import Character
 from backend.db import get_database
 from backend.resources_catalog import RESOURCE_ITEMS_BY_ID
+from backend.processed_catalog import PROCESSED_RESOURCE_ITEMS_BY_ID
 
 
 @dataclass
@@ -27,15 +28,13 @@ class Player:
     address: str
     first_login_at: datetime
     characters: List[dict] = field(default_factory=list)
-    # Shared resource storage (a vault) - separate from each character's own
-    # resourceBalances, and pooled across every character this player owns.
-    resource_balances: Dict[str, int] = field(default_factory=dict)
     # Player inventory: tools, raw resources, processed resources, and items
-    # shared across every character this player owns, pooled in a shared vault
+    # shared across every character this player owns, pooled in a shared
+    # vault - everything the player owns (that isn't soulbound to a specific
+    # character) lives under this one object, not scattered top-level fields.
     inventory: dict = field(default_factory=lambda: {
         "tools": {},
-        "rawResources": {},
-        "processedResources": {},
+        "resources": {},
         "items": {},
     })
 
@@ -44,7 +43,6 @@ class Player:
             "address": self.address,
             "firstLoginAt": self.first_login_at.isoformat(),
             "characters": self.characters,
-            "resourceBalances": self.resource_balances,
             "inventory": self.inventory,
         }
 
@@ -61,8 +59,7 @@ def _doc_to_player(doc: dict) -> Player:
         # Migrate old tools field into new inventory structure
         inventory = {
             "tools": doc.get("tools", {}),
-            "rawResources": {},
-            "processedResources": {},
+            "resources": {},
             "items": {},
         }
 
@@ -70,11 +67,9 @@ def _doc_to_player(doc: dict) -> Player:
         address=doc["address"],
         first_login_at=_as_utc(doc["first_login_at"]),
         characters=doc.get("characters", []),
-        resource_balances=doc.get("resourceBalances", {}),
         inventory=inventory or {
             "tools": {},
-            "rawResources": {},
-            "processedResources": {},
+            "resources": {},
             "items": {},
         },
     )
@@ -97,8 +92,7 @@ async def get_or_create_player(address: str) -> Player:
         "characters": [],
         "inventory": {
             "tools": {},
-            "rawResources": {},
-            "processedResources": {},
+            "resources": {},
             "items": {},
         },
     }
@@ -196,7 +190,7 @@ async def update_character_portrait(
 
 
 def _validate_resource_grant(resource_id: str, amount: int) -> None:
-    if resource_id not in RESOURCE_ITEMS_BY_ID:
+    if resource_id not in RESOURCE_ITEMS_BY_ID and resource_id not in PROCESSED_RESOURCE_ITEMS_BY_ID:
         raise ValueError(f"Unknown resource id: {resource_id}")
     if amount <= 0:
         raise ValueError("amount must be positive")
@@ -216,7 +210,7 @@ async def grant_resource(
 
     doc = await db.players.find_one_and_update(
         {"address": address, "characters.id": character_id},
-        {"$inc": {f"characters.$.resourceBalances.{resource_id}": amount}},
+        {"$inc": {f"characters.$.resources.{resource_id}": amount}},
         return_document=ReturnDocument.AFTER,
     )
 
@@ -230,14 +224,14 @@ async def grant_shared_resource(address: str, resource_id: str, amount: int) -> 
     """
     Credit `amount` of `resource_id` to `address`'s shared resource vault -
     pooled storage available to every character that player owns, separate
-    from any single character's own resourceBalances.
+    from any single character's own resources.
     """
     _validate_resource_grant(resource_id, amount)
     db = get_database()
 
     doc = await db.players.find_one_and_update(
         {"address": address},
-        {"$inc": {f"resourceBalances.{resource_id}": amount}},
+        {"$inc": {f"inventory.resources.{resource_id}": amount}},
         return_document=ReturnDocument.AFTER,
     )
 
@@ -297,9 +291,13 @@ async def check_out_tool(
         raise ValueError("amount must be positive")
     db = get_database()
 
+    # `pool` (e.g. "inventory.tools") is where the player's own shared pool
+    # lives, but a character's own tools are stored flatly as Character.tools
+    # ("tools", never nested under "inventory") - the two sides of this
+    # transfer are NOT the same path.
     doc = await db.players.find_one_and_update(
         {"address": address, "characters.id": character_id, f"{pool}.{tool_id}": {"$gte": amount}},
-        {"$inc": {f"{pool}.{tool_id}": -amount, f"characters.$.{pool}.{tool_id}": amount}},
+        {"$inc": {f"{pool}.{tool_id}": -amount, f"characters.$.tools.{tool_id}": amount}},
         return_document=ReturnDocument.AFTER,
     )
 
@@ -322,12 +320,78 @@ async def check_in_tool(
         raise ValueError("amount must be positive")
     db = get_database()
 
+    # Same path asymmetry as check_out_tool: the character side is always
+    # flat "tools", regardless of what `pool` names on the player's own side.
     doc = await db.players.find_one_and_update(
         {
             "address": address,
-            "characters": {"$elemMatch": {"id": character_id, f"{pool}.{tool_id}": {"$gte": amount}}},
+            "characters": {"$elemMatch": {"id": character_id, f"tools.{tool_id}": {"$gte": amount}}},
         },
-        {"$inc": {f"{pool}.{tool_id}": amount, f"characters.$.{pool}.{tool_id}": -amount}},
+        {"$inc": {f"{pool}.{tool_id}": amount, f"characters.$.tools.{tool_id}": -amount}},
+        return_document=ReturnDocument.AFTER,
+    )
+
+    if doc is None:
+        return None
+
+    return _doc_to_player(doc)
+
+
+async def check_out_resource(
+    address: str, character_id: str, resource_id: str, amount: int = 1
+) -> Optional[Player]:
+    """
+    Move `amount` of `resource_id` from `address`'s shared inventory
+    (inventory.resources - raw and processed pooled together, same as
+    Character.resources) onto one of their characters' own resources - the
+    resource equivalent of check_out_tool. Requires the pool to actually
+    have `amount` available.
+    """
+    _validate_resource_grant(resource_id, amount)
+    db = get_database()
+
+    doc = await db.players.find_one_and_update(
+        {
+            "address": address,
+            "characters.id": character_id,
+            f"inventory.resources.{resource_id}": {"$gte": amount},
+        },
+        {"$inc": {
+            f"inventory.resources.{resource_id}": -amount,
+            f"characters.$.resources.{resource_id}": amount,
+        }},
+        return_document=ReturnDocument.AFTER,
+    )
+
+    if doc is None:
+        return None
+
+    return _doc_to_player(doc)
+
+
+async def check_in_resource(
+    address: str, character_id: str, resource_id: str, amount: int = 1
+) -> Optional[Player]:
+    """
+    The reverse of check_out_resource: move `amount` of `resource_id` from
+    one of `address`'s characters' own resources back into the shared
+    inventory's resources pool. Requires that character to actually be
+    holding `amount`.
+    """
+    _validate_resource_grant(resource_id, amount)
+    db = get_database()
+
+    doc = await db.players.find_one_and_update(
+        {
+            "address": address,
+            "characters": {
+                "$elemMatch": {"id": character_id, f"resources.{resource_id}": {"$gte": amount}}
+            },
+        },
+        {"$inc": {
+            f"inventory.resources.{resource_id}": amount,
+            f"characters.$.resources.{resource_id}": -amount,
+        }},
         return_document=ReturnDocument.AFTER,
     )
 

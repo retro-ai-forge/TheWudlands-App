@@ -104,7 +104,7 @@ export interface SlotCharacterSummary {
   classes: CharacterClasses;
   profession: CharacterProfessions;
   attr: CharacterAttributes;
-  resourceBalances: Record<string, number>;
+  resources: Record<string, number>;
   /** Tools this character currently holds (id -> quantity), checked out of the player's shared pool. */
   tools: Record<string, number>;
   /** Blueprint ids this character has learned - soulbound, never moves. */

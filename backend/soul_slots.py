@@ -219,6 +219,34 @@ async def get_stored_slots(address: str) -> Optional[dict]:
     return await db.soul_slots.find_one({"address": address})
 
 
+async def has_claimed_starter_kit(address: str, slot_number: int) -> bool:
+    """
+    Whether `slot_number` has ever received its one-time character-creation
+    starter resource kit. Lives in the same per-address record as
+    `unlocked`/`stars`/`token_progress` rather than a new collection, but is
+    a permanent, append-only fact about the slot number itself - unlike
+    `unlocked`, it is never reconciled/removed by apply_slot_membership, so
+    deleting and recreating a character in the same slot can never re-claim
+    the kit (closing the free-resources-via-delete-and-recreate exploit).
+    """
+    db = get_database()
+    stored = await db.soul_slots.find_one({"address": address, "starter_kit_claimed": slot_number})
+    return stored is not None
+
+
+async def mark_starter_kit_claimed(address: str, slot_number: int) -> None:
+    """Permanently record that `slot_number` has received its starter kit."""
+    db = get_database()
+    await db.soul_slots.update_one(
+        {"address": address},
+        {
+            "$addToSet": {"starter_kit_claimed": slot_number},
+            "$setOnInsert": {"address": address},
+        },
+        upsert=True,
+    )
+
+
 async def store_slots(address: str, changes: dict[str, Any]) -> None:
     """Upsert `changes` onto the address's slot record, stamping the time."""
     db = get_database()
