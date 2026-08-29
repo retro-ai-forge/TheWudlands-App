@@ -150,10 +150,10 @@ function ResourceList({
               const isGreyed = tier > 0 && highestTierByFamily[family] > tier;
               return (
                 <tr key={id}>
-                  <td>{icon}</td>
+                  <td style={isGreyed ? { color: "#665b42" } : undefined}>{icon}</td>
                   <td><span className={tier > 0 ? getTierSymbolClass(tier) : styles.tierSymbol}>{tierDisplay}</span></td>
-                  <td style={isGreyed ? { opacity: 0.5, color: "#7d7256" } : undefined}>{formatResourceLabel(id)}</td>
-                  <td style={isGreyed ? { opacity: 0.5, color: "#7d7256" } : undefined}>{qty}</td>
+                  <td style={isGreyed ? { color: "#665b42" } : undefined}>{formatResourceLabel(id)}</td>
+                  <td>{qty}</td>
                 </tr>
               );
             });
@@ -182,10 +182,10 @@ function ResourceList({
               const isGreyed = tier > 0 && highestTierByFamily[family] > tier;
               return (
                 <tr key={id}>
-                  <td>{icon}</td>
+                  <td style={isGreyed ? { color: "#665b42" } : undefined}>{icon}</td>
                   <td><span className={tier > 0 ? getTierSymbolClass(tier) : styles.tierSymbol}>{tierDisplay}</span></td>
-                  <td style={isGreyed ? { opacity: 0.5, color: "#7d7256" } : undefined}>{formatResourceLabel(id)}</td>
-                  <td style={isGreyed ? { opacity: 0.5, color: "#7d7256" } : undefined}>{qty}</td>
+                  <td style={isGreyed ? { color: "#665b42" } : undefined}>{formatResourceLabel(id)}</td>
+                  <td>{qty}</td>
                 </tr>
               );
             });
@@ -277,7 +277,7 @@ function IdList({
               <span>{icon}</span>
               <span className={info?.tier ? getTierSymbolClass(info.tier) : styles.tierSymbol}>{tierDisplay}</span>
               <span style={{
-                ...(isGreyed ? { opacity: 0.5, color: "#7d7256" } : {}),
+                ...(isGreyed ? { color: "#665b42" } : {}),
                 ...(textColor && !isGreyed ? { color: textColor } : {}),
               }}>
                 {formatResourceLabel(id)}

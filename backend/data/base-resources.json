@@ -63,11 +63,11 @@
   { "id": "astral_crystal", "name": "Astral Crystal", "familyId": "crystal", "tier": 6 },
 
   { "id": "rabbit_hide", "name": "Rabbit Hide", "familyId": "hide", "tier": 1 },
-  { "id": "boar_hide", "name": "Boar Hide", "familyId": "hide", "tier": 2 },
-  { "id": "crocodile_hide", "name": "Crocodile Hide", "familyId": "hide", "tier": 3 },
-  { "id": "drake_hide", "name": "Drake Hide", "familyId": "hide", "tier": 4 },
-  { "id": "hydra_hide", "name": "Hydra Hide", "familyId": "hide", "tier": 5 },
-  { "id": "titan_hide", "name": "Titan Hide", "familyId": "hide", "tier": 6 },
+  { "id": "fox_hide", "name": "Fox Hide", "familyId": "hide", "tier": 2 },
+  { "id": "wolf_hide", "name": "Wolf Hide", "familyId": "hide", "tier": 3 },
+  { "id": "warg_hide", "name": "Warg Hide", "familyId": "hide", "tier": 4 },
+  { "id": "fenrir_hide", "name": "Fenrir Hide", "familyId": "hide", "tier": 5 },
+  { "id": "frostmane_hide", "name": "Frostmane Hide", "familyId": "hide", "tier": 6 },
 
   { "id": "deer_skin", "name": "Deer Skin", "familyId": "skin", "tier": 1 },
   { "id": "goat_skin", "name": "Goat Skin", "familyId": "skin", "tier": 2 },

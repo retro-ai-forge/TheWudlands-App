@@ -93,7 +93,7 @@
   {"familyId": "mirror", "ingredients": [{"category": "processed", "familyId": "glass_pane", "qty": 2, "consumed": true}, {"category": "processed", "familyId": "refined_ore", "qty": 1, "consumed": true}], "tool": "kiln", "blueprintFamilyId": null},
   {"familyId": "quill", "ingredients": [{"category": "raw", "familyId": "feather", "qty": 4, "consumed": true}, {"category": "final", "familyId": "dagger", "qty": 1, "consumed": false}], "tool": null, "blueprintFamilyId": null},
   {"familyId": "rope", "ingredients": [{"category": "raw", "familyId": "fiber", "qty": 6, "consumed": true}], "tool": null, "blueprintFamilyId": null},
-  {"familyId": "tent", "ingredients": [{"category": "raw", "familyId": "hide", "qty": 6, "consumed": true}, {"category": "raw", "familyId": "wood", "qty": 3, "consumed": true}], "tool": null, "blueprintFamilyId": null},
+  {"familyId": "tent", "ingredients": [{"category": "processed", "familyId": "woven_cloth", "qty": 4, "consumed": true}, {"category": "raw", "familyId": "wood", "qty": 3, "consumed": true}], "tool": null, "blueprintFamilyId": null},
   {"familyId": "torch", "ingredients": [{"category": "raw", "familyId": "wood", "qty": 2, "consumed": true}, {"category": "raw", "familyId": "fiber", "qty": 3, "consumed": true}, {"category": "processed", "familyId": "carcass", "qty": 1, "consumed": true}], "tool": null, "blueprintFamilyId": null},
   {"familyId": "waterskin", "ingredients": [{"category": "raw", "familyId": "skin", "qty": 3, "consumed": true}], "tool": null, "blueprintFamilyId": null},
   {"familyId": "chain", "ingredients": [{"category": "processed", "familyId": "refined_ore", "qty": 4, "consumed": true}], "tool": "wrench", "blueprintFamilyId": null},
