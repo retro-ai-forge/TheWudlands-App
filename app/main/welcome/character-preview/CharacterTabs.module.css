@@ -539,11 +539,11 @@
 
 /* ---- Body tab ---- */
 
-/* align-items:flex-start, not the flex default of stretch - without it,
-   .frameBox (which has no explicit height, only aspect-ratio:2/3) gets
-   force-stretched to match .slotGrid's own height on wide screens,
-   distorting the portrait crop away from the 2:3 shape the stored
-   frameArea/zoom/pan were actually framed against. */
+/* align-items:flex-start, not the flex default of stretch - .frameStage (and
+   .frameBox inside it, which has no explicit height, only aspect-ratio) must
+   never get force-stretched taller by its flex container, or the portrait
+   crop distorts away from the shape the stored frameArea/zoom/pan were
+   actually framed against. */
 .bodyLayout {
   display: flex;
   flex-wrap: wrap;
@@ -552,10 +552,33 @@
   align-items: flex-start;
 }
 
-.frameBox {
-  position: relative;
+/* Stacks .frameStage (the portrait + its overlaid slots) above .handSlotRow -
+   kept as two siblings, not one, because .frameStage's percentage-based
+   overlay positions resolve against ITS OWN box; if .handSlotRow lived
+   inside .frameStage too, that box would be portrait+hand-row combined,
+   throwing off every top/bottom percentage below (this actually happened -
+   "middle" landed low and "lower corner" landed off the portrait entirely). */
+.frameColumn {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0.75rem;
   flex-shrink: 0;
   width: min(18rem, 70vw);
+}
+
+/* Wraps .frameBox and positions every equip slot relative to it - the box
+   itself keeps overflow:hidden to crop the portrait, so the overlaid slots
+   (which must NOT be clipped) are siblings of it inside this, not children
+   of it. Its own size must come from .frameBox alone (see .frameColumn). */
+.frameStage {
+  position: relative;
+  width: 100%;
+}
+
+.frameBox {
+  position: relative;
+  width: 100%;
   aspect-ratio: 2 / 3;
   border-radius: 8px;
   border: 1px solid #6f532f;
@@ -570,14 +593,6 @@
   object-fit: cover;
 }
 
-.slotGrid {
-  flex: 1 1 14rem;
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 0.75rem;
-  align-content: start;
-}
-
 .equipSlot {
   display: flex;
   flex-direction: column;
@@ -589,6 +604,107 @@
   border-radius: 8px;
   background: rgba(10, 8, 4, 0.5);
   padding: 0.5rem;
+}
+
+/* Head/Chest/Legs (left edge) and Back/Girdle (right edge) sit directly on
+   top of the portrait - smaller and more translucent than a normal
+   .equipSlot so the art underneath still reads through. */
+.equipSlotOverlay {
+  composes: equipSlot;
+  position: absolute;
+  width: 4rem;
+  aspect-ratio: 1 / 1;
+  background: rgba(10, 8, 4, 0.65);
+  backdrop-filter: blur(1px);
+  z-index: 1;
+}
+
+/* .frameStage's own width (the portrait) still caps at 18rem past a
+   ~410px viewport (min(18rem, 70vw)) and stops growing there - and the
+   GAP between each slot and that image grows with it up to a 600px
+   viewport, then holds flat for anything wider: clamp(-4.875rem,
+   calc(-15vw + 0.75rem), -0.75rem).
+
+   The middle term is the real formula: -15vw shrinks (less negative, so
+   less push) as the viewport narrows and grows (more negative, more push
+   and thus a bigger gap) as it widens - unbounded on its own, so the two
+   clamp() bounds hem it in on both ends:
+   - the -0.75rem upper bound stops it from ever going positive/too small
+     on a narrow phone, which would push the slot back onto the image;
+   - the -4.875rem lower bound is exactly what the formula evaluates to at
+     a 600px viewport (-15 * 37.5vw... i.e. -0.15 * 37.5rem + 0.75rem) -
+     past that width the gap stops growing and stays right where it was
+     at 600px, rather than continuing to widen on larger screens.
+
+   The +0.75rem constant in the formula additionally guarantees at least
+   0.75rem of real padding from the actual viewport edge on narrow
+   screens: tracing the container chain (.mainColumnPadded's 0.75rem +
+   .panel's 0.15rem on each side, .sheet contributes none), .frameStage's
+   own edge sits at very close to 15vw from the viewport edge once
+   .frameStage is narrower than its 18rem cap - recalibrate the
+   15vw/0.75rem constants (and then re-derive the -4.875rem bound at
+   600px) if those ancestor paddings ever change. */
+/* All four left-edge slots are centered (top+translateY(-50%), rather than
+   mixing top/bottom-edge anchoring) on their own hand-placed percentages,
+   not an even grid: Head sits close to the top, Neck sits close under it
+   (a deliberately small gap - but no smaller than ~15%, since each slot is
+   a 4rem-tall box and anything tighter than that starts overlapping at
+   .frameStage's max height of 27rem), and Chest is the exact midpoint
+   between Neck and Legs (61% = (34.5% + 87.5%) / 2). */
+.equipSlotHead {
+  top: 12.5%;
+  left: clamp(-4.875rem, calc(-15vw + 0.75rem), -0.75rem);
+  transform: translateY(-50%);
+}
+
+.equipSlotNeck {
+  top: 34.5%;
+  left: clamp(-4.875rem, calc(-15vw + 0.75rem), -0.75rem);
+  transform: translateY(-50%);
+}
+
+.equipSlotChest {
+  top: 61%;
+  left: clamp(-4.875rem, calc(-15vw + 0.75rem), -0.75rem);
+  transform: translateY(-50%);
+}
+
+.equipSlotLegs {
+  top: 87.5%;
+  left: clamp(-4.875rem, calc(-15vw + 0.75rem), -0.75rem);
+  transform: translateY(-50%);
+}
+
+.equipSlotBack {
+  top: 55%;
+  right: clamp(-4.875rem, calc(-15vw + 0.75rem), -0.75rem);
+}
+
+.equipSlotGirdle {
+  top: 77%;
+  right: clamp(-4.875rem, calc(-15vw + 0.75rem), -0.75rem);
+}
+
+/* Left/right hand sit below the portrait rather than pinned to it - a held
+   item doesn't read well as a small badge overlaid on the image. Spacing
+   from .frameStage above comes from .frameColumn's own gap. */
+.handSlotRow {
+  display: flex;
+  gap: 0.75rem;
+  justify-content: center;
+}
+
+/* Same fixed 4rem as .equipSlotOverlay, so every slot on the page reads as
+   one consistent size - deliberately NOT shrunk to fit .frameColumn's own
+   width, so on narrow screens the row (3 * 4rem + 2 * 0.75rem gaps =
+   13.5rem) can end up wider than the portrait itself; nothing here clips
+   it, and justify-content:center on .handSlotRow keeps it centered under
+   the image regardless. flex:0 0 auto instead of the bare .equipSlot's
+   flexing, so 3 slots don't just divide up whatever width happens to be
+   available. */
+.handSlotRow .equipSlot {
+  flex: 0 0 auto;
+  width: 4rem;
 }
 
 .equipSlotLabel {

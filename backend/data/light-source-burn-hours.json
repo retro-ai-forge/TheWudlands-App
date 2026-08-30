@@ -1,0 +1,8 @@
+{
+  "candle": { "1": 1, "2": 2, "3": 4, "4": 8, "5": 16, "6": 32 },
+  "torch": { "1": 2, "2": 4, "3": 8, "4": 16, "5": 32, "6": 64 },
+  "oil": { "1": 1, "2": 2, "3": 4, "4": 8, "5": 16, "6": 32 },
+  "lantern": { "1": 1, "2": 2, "3": 4, "4": 8, "5": 16, "6": 32 },
+  "_combinationRule": "A lit lantern's actual burn duration is bottlenecked by whichever of the lantern/oil pair is the lower tier: effectiveHours = min(lantern[lanternTier], oil[oilTier]) - a tier-6 lantern burning tier-1 oil only gets the tier-1 duration, and vice versa. Candle and torch are self-contained (no pairing) and just use their own tier's value directly.",
+  "_fallbackRule": "For later implementation: when the equipped lantern runs out of oil, it auto-unequips and, if the character's backpack has any torch, one is auto-equipped in its place (consumed from the backpack at that moment, burning for its own tier's duration from there). When that torch burns out, fall back again to a candle from the backpack if any are carried, same as the torch step. If nothing is left at any step, equippedLight goes to null (character is in the dark) - see the session's design discussion for the full settle-function shape (litAt-based, cascading forward through time, resolved lazily whenever the next backend request touches the character rather than on a schedule)."
+}

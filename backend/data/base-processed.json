@@ -301,5 +301,12 @@
   {"id": "sea_salmon_clean_fish", "name": "Cleaned Sea Salmon", "familyId": "clean_fish", "tier": 3},
   {"id": "runic_eel_clean_fish", "name": "Cleaned Runic Eel", "familyId": "clean_fish", "tier": 4},
   {"id": "umbral_anglerfish_clean_fish", "name": "Cleaned Umbral Anglerfish", "familyId": "clean_fish", "tier": 5},
-  {"id": "abyssal_leviathan_clean_fish", "name": "Cleaned Abyssal Leviathan", "familyId": "clean_fish", "tier": 6}
+  {"id": "abyssal_leviathan_clean_fish", "name": "Cleaned Abyssal Leviathan", "familyId": "clean_fish", "tier": 6},
+
+  {"id": "rabbit_oil", "name": "Tallow Oil", "familyId": "oil", "tier": 1},
+  {"id": "boar_oil", "name": "Pressed Oil", "familyId": "oil", "tier": 2},
+  {"id": "elk_oil", "name": "Refined Lamp Oil", "familyId": "oil", "tier": 3},
+  {"id": "griffin_oil", "name": "Sacred Oil", "familyId": "oil", "tier": 4},
+  {"id": "wyvern_oil", "name": "Phoenix Oil", "familyId": "oil", "tier": 5},
+  {"id": "dragon_oil", "name": "Starfire Oil", "familyId": "oil", "tier": 6}
 ]
