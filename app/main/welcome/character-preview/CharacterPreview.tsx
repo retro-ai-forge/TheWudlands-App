@@ -260,7 +260,7 @@ export function CharacterPreview({
           {character.firstName} {character.lastName}
         </h1>
 
-        <div className={activeTab === "inventory" ? tabStyles.mainColumn : `${tabStyles.mainColumn} ${tabStyles.mainColumnPadded}`}>
+        <div className={activeTab === "inventory" || activeTab === "soul" ? tabStyles.mainColumn : `${tabStyles.mainColumn} ${tabStyles.mainColumnPadded}`}>
           {activeTab === "stats" && (
             <StatsTab
               character={character}

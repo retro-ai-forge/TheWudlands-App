@@ -722,35 +722,108 @@
 
 /* ---- Soul tab ---- */
 
-.soulLayout {
+/* The Soul panel spans close to the full remaining viewport height (100vh
+   minus a rough estimate of the header/name/tab-row chrome above it) so
+   .soulSlotGrid's margin-top:auto below has real room to push the slots
+   all the way down near the bottom of the screen, with .soulImageBox and
+   its background art occupying the space above them. May need retuning
+   against the actual chrome height once seen live. */
+.soulPanel {
   display: flex;
-  flex-wrap: wrap;
-  gap: 1.5rem;
-  justify-content: center;
-  align-items: flex-start;
+  flex-direction: column;
+  min-height: calc(100vh - 6rem);
 }
 
-.soulOrb {
-  flex-shrink: 0;
-  width: 10rem;
+/* A real <img>, not a cropped CSS background - "the whole image visible"
+   means preserving its natural aspect ratio (height:auto) rather than
+   cover-cropping it to fill a fixed box. */
+.soulImageBox {
+  display: flex;
+  justify-content: center;
+}
+
+/* Positioning root for the chakra slots overlaid on .soulImage - a
+   separate element from .soulImage itself (mirroring BodyTab's
+   .frameStage/.frameBox split) so percentage positions below resolve
+   against the image's own rendered box, not .soulImageBox's wider
+   flex-centered one. */
+.soulImageFrame {
+  position: relative;
+  width: 100%;
+  max-width: 26rem;
+}
+
+.soulImage {
+  display: block;
+  width: 100%;
+  height: auto;
+  border-radius: 8px;
+  /* Explicit lowest layer - .soulChakraSlot below establishes its own
+     stacking context via position:absolute and comes after this in the
+     DOM, which alone would already put it on top, but z-index here makes
+     the "image at the bottom, slots above it" layering explicit rather
+     than relying on paint order. */
+  position: relative;
+  z-index: 0;
+}
+
+/* One of the 10 dark squares baked into chakra-page-active.jpg (600x900) -
+   found by pixel-analyzing the image for near-black square regions, each
+   ~75x75px, i.e. ~12.5% of the image's own width (and, since the image is
+   a fixed 2:3 ratio, the same 12.5% works as a percent of .soulImageFrame's
+   width too, scaling in lockstep with the image at any render size).
+   top/left (each square's measured center) are set per-instance via inline
+   style from CHAKRA_SLOTS in SoulTab.tsx, not hardcoded here - only the
+   shared sizing/centering is a class. transform centers the slot on that
+   point rather than its corner.
+
+   Same dashed-border/translucent-box look as BodyTab's .equipSlotOverlay
+   (composes the same base .equipSlot), but percent-sized/positioned here
+   instead of a fixed rem push past an edge, since these sit ON the image
+   at exact measured points rather than pushed outside it. */
+.soulChakraSlot {
+  composes: equipSlot;
+  position: absolute;
+  z-index: 1;
+  width: 12.5%;
   aspect-ratio: 1 / 1;
-  border-radius: 50%;
-  border: 1px solid #6f532f;
-  background: radial-gradient(circle at 40% 35%, rgba(192, 122, 58, 0.25), rgba(10, 8, 4, 0.6));
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  text-align: center;
-  font-size: 0.7rem;
-  color: #7d7256;
-  padding: 1rem;
+  transform: translate(-50%, -50%);
+  /* Overrides .equipSlot's own dashed border - these sit directly on the
+     image's already-ornate square borders, so a second dashed outline is
+     redundant here (unlike BodyTab's overlay slots, which have no such
+     art underneath them). */
+  border: none;
+  /* It's a <button> (click-to-toggle, see .soulChakraSlotLit) rather than
+     a plain div - .equipSlot's own border/background/padding already
+     override the browser's button defaults, this just resets the couple
+     of things it doesn't touch. */
+  font: inherit;
+  cursor: pointer;
 }
 
-.soulSlotGrid {
-  flex: 1 1 14rem;
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 0.75rem;
+/* Click-to-toggle test state (see SoulTab.tsx's litSlots) for eyeballing
+   whether a slot's measured position lines up with its dark square - not
+   real equip state. */
+.soulChakraSlotLit {
+  background: rgba(230, 192, 132, 0.45);
+}
+
+/* Covers an inactive slot (and spills into the surrounding area around
+   it - see SoulTab.tsx). chakra-inactive.png is native-sized art
+   (213x214px) against the same 600px-native main image, so it's rendered
+   at that same zoom factor rather than cropped/stretched to fit a single
+   75x75px slot: width 35.5% = 213/600 of .soulImageFrame's own width
+   (which is already scaled 1:1 with the main image's 600px native width),
+   height:auto to preserve its own native aspect instead of forcing it to
+   the frame's unrelated 2:3 ratio. */
+.soulChakraInactiveImage {
+  position: absolute;
+  z-index: 2;
+  width: 35.5%;
+  height: auto;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  display: block;
 }
 
 /* ---- Inventory tab ---- */
