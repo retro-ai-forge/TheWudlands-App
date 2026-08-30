@@ -98,6 +98,7 @@ function getKindIcon(kind: string): string {
     case "adventuring_gear":
       return "🎒";
     case "misc":
+    case "equipment":
       return "📦";
     default:
       return "";
