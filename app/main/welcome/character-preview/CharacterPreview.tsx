@@ -90,6 +90,11 @@ export function CharacterPreview({
   const [isSavingPortrait, setIsSavingPortrait] = useState(false);
   const [portraitError, setPortraitError] = useState<string | null>(null);
   const portraitDraftRef = useRef<PortraitEditorValue | null>(null);
+  // Mirrors the draft's own `ready` flag into real state (unlike the rest of
+  // the draft, this needs to trigger a re-render, to disable Save while a
+  // freshly-pasted image hasn't loaded yet - see PortraitEditor's own
+  // isPortraitReady comment for why saving in that window would stretch it).
+  const [isPortraitReady, setIsPortraitReady] = useState(true);
 
   // Birthsign popup, opened by clicking the Birthsign row on the Stats tab.
   // Rendered as a sibling of .stage below (not nested inside StatsTab) so it
@@ -126,7 +131,7 @@ export function CharacterPreview({
 
   async function handleSavePortrait() {
     const draft = portraitDraftRef.current;
-    if (!draft || isSavingPortrait) return;
+    if (!draft || isSavingPortrait || !draft.ready) return;
 
     setPortraitError(null);
     setIsSavingPortrait(true);
@@ -322,6 +327,7 @@ export function CharacterPreview({
                 initialPan={character.portraitPan}
                 onChange={(value) => {
                   portraitDraftRef.current = value;
+                  setIsPortraitReady(value.ready);
                 }}
               />
             </div>
@@ -331,9 +337,9 @@ export function CharacterPreview({
             type="button"
             className={`${styles.navButton} ${styles.continue}`}
             onClick={handleSavePortrait}
-            disabled={isSavingPortrait}
+            disabled={isSavingPortrait || !isPortraitReady}
           >
-            {isSavingPortrait ? "Saving…" : "Save"}
+            {isSavingPortrait ? "Saving…" : isPortraitReady ? "Save" : "Loading image…"}
           </button>
         </div>
       )}

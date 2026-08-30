@@ -33,8 +33,16 @@ export interface PortraitArea {
 // with position:relative and overflow:hidden - and must be shaped to
 // area.aspectRatio, or the crop renders visibly stretched.
 export function getPortraitCropImgStyle(area: PortraitArea) {
-  const width = Math.min(Math.max(area.width, 0.01), 1);
-  const height = Math.min(Math.max(area.height, 0.01), 1);
+  // No upper bound: a letterboxed frame (the frame's own aspect ratio
+  // doesn't match the source image, so it doesn't fully fill the frame in
+  // one axis) legitimately produces a fraction greater than 1 in that axis
+  // - the frame spans more of the wrapper than the image's own natural
+  // size does. Clamping that back down to 1 would force this axis's
+  // percentage to 100%, stretching the image to fill the wrapper instead
+  // of rendering it at its real scaled size with letterbox gaps showing
+  // the wrapper's own background on either side.
+  const width = Math.max(area.width, 0.01);
+  const height = Math.max(area.height, 0.01);
   return {
     position: "absolute" as const,
     top: 0,

@@ -657,12 +657,16 @@
   transform: translateY(-50%);
 }
 
+/* Head-to-Neck gap matches Back-to-Girdle's own 22% gap (77% - 55%):
+   12.5% + 22% = 34.5%. */
 .equipSlotNeck {
   top: 34.5%;
   left: clamp(-4.875rem, calc(-15vw + 0.75rem), -0.75rem);
   transform: translateY(-50%);
 }
 
+/* Exact midpoint of Neck and Legs (34.5% + 87.5%) / 2, kept centered
+   whenever either moves. */
 .equipSlotChest {
   top: 61%;
   left: clamp(-4.875rem, calc(-15vw + 0.75rem), -0.75rem);
@@ -705,6 +709,12 @@
 .handSlotRow .equipSlot {
   flex: 0 0 auto;
   width: 4rem;
+  /* Flex items default to min-height:auto (their content's own min size),
+     which can stretch a box taller than aspect-ratio's preferred square the
+     moment the label text needs more room - overriding it to 0 lets
+     aspect-ratio actually win, matching Head's square size exactly (an
+     absolutely-positioned box, which isn't subject to this flex quirk). */
+  min-height: 0;
 }
 
 .equipSlotLabel {
@@ -824,6 +834,7 @@
   transform: translate(-50%, -50%);
   pointer-events: none;
   display: block;
+  opacity: 0.965;
 }
 
 /* ---- Inventory tab ---- */

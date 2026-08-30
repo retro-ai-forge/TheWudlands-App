@@ -26,6 +26,8 @@ export interface PortraitEditorValue {
   portraitPan: { x: number; y: number };
   portraitFrameArea: PortraitArea | null;
   portraitFaceArea: PortraitArea | null;
+  /** False while portraitUrl's own image hasn't finished loading yet - see `isPortraitReady` below. Callers should refuse to save/continue while this is false. */
+  ready: boolean;
 }
 
 export function PortraitEditor({
@@ -58,6 +60,15 @@ export function PortraitEditor({
   // different URL) is a new image with no framing yet, so that one really
   // should reset to the 1x/centered baseline.
   const isFirstLoadRef = useRef(true);
+  // False from the moment portraitUrl changes to a not-yet-loaded src until
+  // that image's onLoad (or onError) actually fires. Guards against a race
+  // where the URL input's onChange updates portraitUrl - and so the effect
+  // below re-fires with it - before the new image has loaded and
+  // recomputeSavedAreas has run against ITS natural size: without this, a
+  // Save/Continue click in that window would pair the new URL with the
+  // previous image's frameArea/faceArea (sized for different natural
+  // dimensions), rendering as a stretched crop once displayed.
+  const [isPortraitReady, setIsPortraitReady] = useState(false);
 
   // .portraitFrame is viewport-height-relative (80vh) and the URL field is
   // pinned near the true bottom edge, so on short viewports the gap between
@@ -191,9 +202,10 @@ export function PortraitEditor({
       portraitPan,
       portraitFrameArea: savedPortraitFrameArea,
       portraitFaceArea: savedPortraitFaceArea,
+      ready: isPortraitReady,
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [portraitUrl, portraitZoom, portraitPan, savedPortraitFrameArea, savedPortraitFaceArea]);
+  }, [portraitUrl, portraitZoom, portraitPan, savedPortraitFrameArea, savedPortraitFaceArea, isPortraitReady]);
 
   // True once the current portraitUrl fails to load — the browser's own
   // broken-image + alt-text rendering isn't stylable/positionable (it's
@@ -232,10 +244,14 @@ export function PortraitEditor({
       setPortraitPan({ x: 0, y: 0 });
       recomputeSavedAreas(1, { x: 0, y: 0 });
     }
+    setIsPortraitReady(true);
   }
 
   function handlePortraitImageError() {
     setPortraitLoadFailed(true);
+    // Nothing will ever load for this src, so don't leave Save/Continue
+    // permanently blocked - there's no image to stretch either way.
+    setIsPortraitReady(true);
   }
 
   function handlePortraitZoomChange(rawZoom: number) {
@@ -388,6 +404,21 @@ export function PortraitEditor({
         onChange={(e) => {
           setPortraitUrl(e.target.value);
           setPortraitLoadFailed(false);
+          // Reset right away, rather than waiting for this new src to
+          // finish loading - the old zoom/pan/areas belong to the PREVIOUS
+          // image and are meaningless (or actively wrong, if paired with
+          // the new url) for this one. handlePortraitImageLoad's own reset
+          // still runs once the new image actually loads, replacing these
+          // nulls with the real freshly-computed areas - this is just the
+          // immediate, no-stale-data starting point in between.
+          setPortraitZoom(1);
+          setPortraitPan({ x: 0, y: 0 });
+          setSavedPortraitFrameArea(null);
+          setSavedPortraitFaceArea(null);
+          // This src hasn't loaded yet - block Save/Continue on it (via
+          // `ready` in the onChange payload) until handlePortraitImageLoad
+          // recomputes the areas against whatever image actually loads.
+          setIsPortraitReady(false);
         }}
       />
     </>

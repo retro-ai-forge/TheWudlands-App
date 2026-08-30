@@ -20,9 +20,9 @@ const OVERLAY_SLOTS = [
 // Sit below the portrait instead, side by side - a hand holding something
 // doesn't read well as a small badge pinned to the image itself. Girdle
 // (the belt) sits centered between them.
-const HAND_SLOTS = ["Left Hand", "Girdle", "Right Hand"];
+const FIRST_ROW_SLOTS = ["Left Ring", "Girdle", "Right Ring"];
 // A second row below that, same size/gap/centering (reuses .handSlotRow).
-const RING_SLOTS = ["Left Ring", "Right Ring"];
+const SECOND_ROW_SLOTS = ["Left Hand", "Right Hand"];
 
 /** Body page: the full character frame the player defined, with equipment slots overlaid on it. */
 export function BodyTab({ character }: { character: SlotCharacterSummary }) {
@@ -75,7 +75,7 @@ export function BodyTab({ character }: { character: SlotCharacterSummary }) {
           </div>
 
           <div className={styles.handSlotRow}>
-            {HAND_SLOTS.map((label) => (
+            {FIRST_ROW_SLOTS.map((label) => (
               <div className={styles.equipSlot} key={label}>
                 <span className={styles.equipSlotLabel}>{label}</span>
                 <span className={styles.equipSlotEmpty}>Empty</span>
@@ -84,7 +84,7 @@ export function BodyTab({ character }: { character: SlotCharacterSummary }) {
           </div>
 
           <div className={styles.handSlotRow}>
-            {RING_SLOTS.map((label) => (
+            {SECOND_ROW_SLOTS.map((label) => (
               <div className={styles.equipSlot} key={label}>
                 <span className={styles.equipSlotLabel}>{label}</span>
                 <span className={styles.equipSlotEmpty}>Empty</span>

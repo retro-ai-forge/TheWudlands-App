@@ -342,6 +342,11 @@ export function SoulCreation({
   const [portraitPan, setPortraitPan] = useState({ x: 0, y: 0 });
   const [savedPortraitFrameArea, setSavedPortraitFrameArea] = useState<PortraitArea | null>(null);
   const [savedPortraitFaceArea, setSavedPortraitFaceArea] = useState<PortraitArea | null>(null);
+  // False while a just-pasted portrait URL hasn't finished loading yet -
+  // blocks Continue off page 3 in that window (see handleContinueClick),
+  // same reasoning as PortraitEditor's own isPortraitReady: continuing with
+  // a stale frameArea paired against a new url would save a stretched crop.
+  const [isPortraitReady, setIsPortraitReady] = useState(true);
 
   // Page 2 (Attributes) — spending the Body/Soul totals from the triangle
   // (page 1) across the 4 stats each. Every stat starts at the backend's
@@ -929,6 +934,9 @@ export function SoulCreation({
     if (page === 2 && !isPage2Ready) {
       return;
     }
+    if (page === 3 && !isPortraitReady) {
+      return;
+    }
     if (page === 5 && !isPage5Ready) {
       return;
     }
@@ -1192,6 +1200,7 @@ export function SoulCreation({
                   setPortraitPan(value.portraitPan);
                   setSavedPortraitFrameArea(value.portraitFrameArea);
                   setSavedPortraitFaceArea(value.portraitFaceArea);
+                  setIsPortraitReady(value.ready);
                 }}
               />
             </>
@@ -1629,12 +1638,17 @@ export function SoulCreation({
         {page !== 5 && (
           <button
             className={`${styles.navButton} ${styles.continue} ${
-              (page === 1 && !isPage1Ready) || (page === 2 && !isPage2Ready) || (page === 4 && birthsign === null) ? styles.continueInactive : ""
+              (page === 1 && !isPage1Ready) ||
+              (page === 2 && !isPage2Ready) ||
+              (page === 3 && !isPortraitReady) ||
+              (page === 4 && birthsign === null)
+                ? styles.continueInactive
+                : ""
             }`}
             onClick={handleContinueClick}
             disabled={isLastPage && isSubmitting}
           >
-            {isLastPage && isSubmitting ? "Saving…" : "Continue"}
+            {isLastPage && isSubmitting ? "Saving…" : page === 3 && !isPortraitReady ? "Loading image…" : "Continue"}
           </button>
         )}
       </div>
