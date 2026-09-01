@@ -82,7 +82,7 @@ Each of the 12 profession categories draws from 3 raw-material resource families
 | Artists | painter, acrobat, clown, firespitter, storyteller, actor | feather, fiber, bone | 26 | |
 | Alchemy | alchemist, poisoner, enchanter | herbs, crystal, monster_part | 20 | Planned to grow substantially once more items are introduced across the game. |
 | Food | baker, butcher, brewmaster, cook, pastry, apiarist, barkeep, server | meat, harvest, herbs | 18 | Planned perk: these professions need less food to eat, and get it cheaper. |
-| Rural | farmer, herder, hunter, fisher, miner, forager | hide, meat, harvest | 11 | Foragers are planned to earn a bonus yield on gathered resources, raising Rural's output without needing more recipes. |
+| Rural | farmer, herder, hunter, fisher, miner, forager | hide, meat, harvest, fish | 11 | Foragers are planned to earn a bonus yield on gathered resources, raising Rural's output without needing more recipes. |
 | CraftStone | mason, stonemason, potter | clay, stone, crystal | 11 | Their expertise is stone construction — underground building, traps, and doors — a naturally smaller domain, expected to stay limited relative to the other craft categories. |
 | Aristocratic | scribe, clerk, scholar | reed, feather, skin | 11 | Planned to grow through magic scroll recipes, once is introduced. |
 | Trade | merchant, trader | harvest, stone, monster_part | 11 | Planned to lean on a marketplace discount mechanic (traders paying less for goods) rather than more recipes. |
@@ -93,7 +93,7 @@ The four lowest-count categories — Rural, CraftStone, Aristocratic, and Trade 
 
 An interactive tool to explore all crafting recipes, search by item name or ingredient, and see detailed breakdowns of raw materials needed. Download to enlarge.
 
-![Crafting Recipes](/public/craft/crafting-260825.webp)
+![Crafting Recipes](/public/craft/crafting-260901.jpg)
 
 ## For Story Contributors
 
@@ -172,4 +172,179 @@ Each scene may reference a single image by filename. At runtime, the frontend lo
 | Revenue Share | Applied at transaction time. 80% to the contributor's declared wallet address, 20% to the platform. Polkadot primary, Ethereum fallback. |
 | Blockchain | Currently Polkadot. Migration to another chain might happen. |
 | Soul Slots | Ten welcome-page creation slots. One free, nine gated on wallet holdings — NFT collections, token balances, and Grid Miner stars. Checked per wallet and cached, re-verified on roughly one login in thirty-three, or immediately via the Reload button. |
+
+## Crafting XP
+
+Crafting pays out two kinds of XP, which can land on different professions from the same craft. **Raw-material XP** is automatic: we count all raw materials used across a recipe's full creation chain, but not tools or other ingredients that already have their own blueprint. Consuming a raw material grants XP equal to the amount consumed to every profession the character has whose category lists that material (see the Resource Families column above) — a single craft can pay out to more than one profession at once if its raw materials overlap across categories.
+
+**Final-item XP** only applies to genuinely blueprint-gated tools and items (not plain processing steps like refining ore or tanning leather): finishing one pays out a flat, tier-scaled assembly bonus — `10% × the item's full raw-material chain × its tier` — on top of whatever raw-material XP was already earned crafting its ingredients. Unlike raw-material XP, this bonus isn't tied to a fixed profession — the player chooses which of their profession slots receives it.
+
+| Item | Blueprint | Raw XP | Raw Materials | T1 XP | T2 XP | T3 XP | T4 XP | T5 XP | T6 XP | T1 Total XP |
+|---|---|---:|---|---:|---:|---:|---:|---:|---:|---:|
+| Ebony Shield | Ebony Shield | 530 | Pigment x240, Herbs x144, Wood x96, Bone x50 | 53 | 106 | 159 | 212 | 265 | 318 | 583 |
+| Chitin Shield | Chitin Shield | 507 | Pigment x240, Herbs x144, Skin x72, Wood x36, Monster Part x15 | 51 | 101 | 152 | 203 | 254 | 304 | 558 |
+| Greatsword | Greatsword | 486 | Ore x375, Wood x111 | 49 | 97 | 146 | 194 | 243 | 292 | 535 |
+| Warhammer | Warhammer | 486 | Ore x375, Wood x111 | 49 | 97 | 146 | 194 | 243 | 292 | 535 |
+| Battle Axe | Battle Axe | 478 | Ore x375, Wood x103 | 48 | 96 | 143 | 191 | 239 | 287 | 526 |
+| Anvil | Anvil | 376 | Ore x310, Wood x66 | 38 | 75 | 113 | 150 | 188 | 226 | 414 |
+| Darksteel Head Armor | Darksteel | 361 | Ore x300, Wood x33, Clockwork x28 | 36 | 72 | 108 | 144 | 180 | 217 | 397 |
+| Darksteel Chest Armor | Darksteel | 361 | Ore x300, Wood x33, Clockwork x28 | 36 | 72 | 108 | 144 | 180 | 217 | 397 |
+| Darksteel Leg Armor | Darksteel | 361 | Ore x300, Wood x33, Clockwork x28 | 36 | 72 | 108 | 144 | 180 | 217 | 397 |
+| Meteoric Iron Head Armor | Meteoric Iron | 350 | Crystal x140, Ore x120, Essence x90 | 35 | 70 | 105 | 140 | 175 | 210 | 385 |
+| Meteoric Iron Chest Armor | Meteoric Iron | 350 | Crystal x140, Ore x120, Essence x90 | 35 | 70 | 105 | 140 | 175 | 210 | 385 |
+| Meteoric Iron Leg Armor | Meteoric Iron | 350 | Crystal x140, Ore x120, Essence x90 | 35 | 70 | 105 | 140 | 175 | 210 | 385 |
+| Ebony Head Armor | Ebony | 340 | Wood x132, Bone x80, Pigment x80, Herbs x48 | 34 | 68 | 102 | 136 | 170 | 204 | 374 |
+| Ebony Chest Armor | Ebony | 340 | Wood x132, Bone x80, Pigment x80, Herbs x48 | 34 | 68 | 102 | 136 | 170 | 204 | 374 |
+| Ebony Leg Armor | Ebony | 340 | Wood x132, Bone x80, Pigment x80, Herbs x48 | 34 | 68 | 102 | 136 | 170 | 204 | 374 |
+| Sword | Sword | 320 | Ore x250, Wood x70 | 32 | 64 | 96 | 128 | 160 | 192 | 352 |
+| Mace | Mace | 320 | Ore x250, Wood x70 | 32 | 64 | 96 | 128 | 160 | 192 | 352 |
+| Iron Head Armor | Iron | 316 | Ore x250, Wood x66 | 32 | 63 | 95 | 126 | 158 | 190 | 348 |
+| Iron Chest Armor | Iron | 316 | Ore x250, Wood x66 | 32 | 63 | 95 | 126 | 158 | 190 | 348 |
+| Iron Leg Armor | Iron | 316 | Ore x250, Wood x66 | 32 | 63 | 95 | 126 | 158 | 190 | 348 |
+| Chitin Head Armor | Chitin | 314 | Skin x144, Pigment x80, Herbs x48, Monster Part x30, Wood x12 | 31 | 63 | 94 | 126 | 157 | 188 | 345 |
+| Chitin Chest Armor | Chitin | 314 | Skin x144, Pigment x80, Herbs x48, Monster Part x30, Wood x12 | 31 | 63 | 94 | 126 | 157 | 188 | 345 |
+| Chitin Leg Armor | Chitin | 314 | Skin x144, Pigment x80, Herbs x48, Monster Part x30, Wood x12 | 31 | 63 | 94 | 126 | 157 | 188 | 345 |
+| Chainmail Head Armor | Chainmail | 258 | Ore x225, Wood x33 | 26 | 52 | 77 | 103 | 129 | 155 | 284 |
+| Chainmail Chest Armor | Chainmail | 258 | Ore x225, Wood x33 | 26 | 52 | 77 | 103 | 129 | 155 | 284 |
+| Chainmail Leg Armor | Chainmail | 258 | Ore x225, Wood x33 | 26 | 52 | 77 | 103 | 129 | 155 | 284 |
+| Darksteel Shield | Darksteel Shield | 245 | Ore x200, Wood x33, Clockwork x12 | 24 | 49 | 74 | 98 | 122 | 147 | 269 |
+| Axe | Axe | 229 | Ore x180, Wood x49 | 23 | 46 | 69 | 92 | 115 | 137 | 252 |
+| Meteoric Iron Shield | Meteoric Iron Shield | 215 | Crystal x86, Ore x75, Essence x54 | 22 | 43 | 64 | 86 | 108 | 129 | 237 |
+| Crossbow | Crossbow | 171 | Ore x75, Wood x60, Fiber x36 | 17 | 34 | 51 | 68 | 86 | 103 | 188 |
+| Reinforced Wooden Shield | Reinforced Wooden Shield | 170 | Ore x125, Wood x45 | 17 | 34 | 51 | 68 | 85 | 102 | 187 |
+| Spear | Spear | 166 | Ore x125, Wood x41 | 17 | 33 | 50 | 66 | 83 | 100 | 183 |
+| Iron Shield | Iron Shield | 162 | Ore x125, Wood x37 | 16 | 32 | 49 | 65 | 81 | 97 | 178 |
+| Sickle | Sickle | 162 | Ore x125, Wood x37 | 16 | 32 | 49 | 65 | 81 | 97 | 178 |
+| Dagger | Dagger | 158 | Ore x125, Wood x33 | 16 | 32 | 47 | 63 | 79 | 95 | 174 |
+| Bow | Bow | 152 | Fiber x132, Wood x20 | 15 | 30 | 46 | 61 | 76 | 91 | 167 |
+| Leather Head Armor | Leather | 150 | Skin x120, Wood x18, Bone x12 | 15 | 30 | 45 | 60 | 75 | 90 | 165 |
+| Leather Chest Armor | Leather | 150 | Skin x120, Wood x18, Bone x12 | 15 | 30 | 45 | 60 | 75 | 90 | 165 |
+| Leather Leg Armor | Leather | 150 | Skin x120, Wood x18, Bone x12 | 15 | 30 | 45 | 60 | 75 | 90 | 165 |
+| Furnace | Furnace | 98 | Ore x50, Clay x36, Sand x12 | 10 | 20 | 29 | 39 | 49 | 59 | 108 |
+| Kiln | Kiln | 95 | Clay x60, Sand x20, Ore x15 | 10 | 19 | 28 | 38 | 48 | 57 | 105 |
+| Cloth Head Armor | Cloth | 72 | Fiber x72 | 7 | 14 | 22 | 29 | 36 | 43 | 79 |
+| Cloth Chest Armor | Cloth | 72 | Fiber x72 | 7 | 14 | 22 | 29 | 36 | 43 | 79 |
+| Cloth Leg Armor | Cloth | 72 | Fiber x72 | 7 | 14 | 22 | 29 | 36 | 43 | 79 |
+| Grinding Stone | Grinding Stone | 72 | Ore x40, Clay x24, Sand x8 | 7 | 14 | 22 | 29 | 36 | 43 | 79 |
+| Lapidary Bench | Lapidary Bench | 72 | Ore x40, Clay x24, Sand x8 | 7 | 14 | 22 | 29 | 36 | 43 | 79 |
+| Loom | Loom | 54 | Wood x40, Ore x10, Clockwork x4 | 5 | 11 | 16 | 22 | 27 | 32 | 59 |
+| Scriptorium | Scriptorium | 45 | Pigment x24, Sand x12, Fiber x5, Feather x4 | 4 | 9 | 14 | 18 | 22 | 27 | 49 |
+| Enchanters Table | Enchanters Table | 42 | Wood x30, Crystal x6, Bone x4, Herbs x1, Monster Part x1 | 4 | 8 | 13 | 17 | 21 | 25 | 46 |
+| Workbench | Workbench | 37 | Wood x30, Bone x4, Reed x1, Feather x1, Skin x1 | 4 | 7 | 11 | 15 | 18 | 22 | 41 |
+| Alchemy Stand | Alchemy Stand | 34 | Clay x18, Ore x10, Sand x6 | 3 | 7 | 10 | 14 | 17 | 20 | 37 |
+| Tanning Rack | Tanning Rack | 34 | Wood x24, Ore x10 | 3 | 7 | 10 | 14 | 17 | 20 | 37 |
+| Writers Table | Writers Table | 34 | Wood x30, Bone x4 | 3 | 7 | 10 | 14 | 17 | 20 | 37 |
+| Wooden Shield | Wooden Shield | 28 | Wood x16, Skin x12 | 3 | 6 | 8 | 11 | 14 | 17 | 31 |
+| Mortar And Pestle | Mortar And Pestle | 26 | Clay x12, Ore x10, Sand x4 | 3 | 5 | 8 | 10 | 13 | 16 | 29 |
+| Spinning Wheel | Spinning Wheel | 25 | Wood x23, Bone x2 | 2 | 5 | 8 | 10 | 12 | 15 | 27 |
+| Quiver Of Arrows | Quiver Of Arrows | 24 | Wood x16, Ore x5, Feather x2, Skin x1 | 2 | 5 | 7 | 10 | 12 | 14 | 26 |
+| Set Of Bolts | Set Of Bolts | 22 | Wood x12, Ore x10 | 2 | 4 | 7 | 9 | 11 | 13 | 24 |
+| Magic Staff | Magic Staff | 22 | Wood x16, Crystal x6 | 2 | 4 | 7 | 9 | 11 | 13 | 24 |
+| Iron Ration | Iron Ration | 21 | Fiber x10, Harvest x7, Meat x3, Herbs x1 | 2 | 4 | 6 | 8 | 10 | 13 | 23 |
+| Wrench | Wrench | 20 | Ore x20 | 2 | 4 | 6 | 8 | 10 | 12 | 22 |
+| Fishermans Ration | Fishermans Ration | 20 | Fiber x10, Fish x6, Harvest x3, Herbs x1 | 2 | 4 | 6 | 8 | 10 | 12 | 22 |
+| Hearty Stew | Hearty Stew | 14 | Harvest x6, Herbs x5, Meat x3 | 1 | 3 | 4 | 6 | 7 | 8 | 15 |
+| Oven | Oven | 13 | Wood x8, Stone x5 | 1 | 3 | 4 | 5 | 6 | 8 | 14 |
+| Fish Chowder | Fish Chowder | 13 | Harvest x6, Herbs x5, Fish x2 | 1 | 3 | 4 | 5 | 6 | 8 | 14 |
+| Bangers | Bangers | 12 | Meat x6, Herbs x5, Monster Part x1 | 1 | 2 | 4 | 5 | 6 | 7 | 13 |
+| Wand | Wand | 7 | Wood x4, Crystal x3 | 1 | 1 | 2 | 3 | 4 | 4 | 8 |
+| Merchants Scale | Merchants Scale | 4 | Wood x2, Stone x2 | 0 | 1 | 1 | 2 | 2 | 2 | 4 |
+
+### Items and Tools Without a Blueprint
+
+These recipes need no learned blueprint to craft, so they never earn the tier-scaled assembly bonus above — only the raw-material XP their full chain pays out.
+
+| Item | Raw XP | Raw Materials |
+|---|---:|---|
+| Metal Bar | 158 | Ore x125, Wood x33 |
+| Lacquer | 140 | Pigment x80, Herbs x48, Wood x12 |
+| Tent | 99 | Fiber x96, Wood x3 |
+| Written Scroll | 48 | Pigment x24, Sand x12, Reed x8, Feather x4 |
+| Antidote Potion | 44 | Herbs x26, Sand x12, Venom x6 |
+| Healing Potion | 42 | Herbs x26, Sand x12, Harvest x4 |
+| Mana Potion | 42 | Crystal x15, Sand x12, Essence x9, Monster Part x6 |
+| Venom Vial | 33 | Herbs x12, Sand x12, Venom x9 |
+| Cart | 32 | Wood x32 |
+| Metal Ingot | 31 | Ore x25, Wood x6 |
+| Tinkered Gearbox | 29 | Ore x25, Clockwork x4 |
+| Glass Lantern | 28 | Sand x12, Ore x10, Crystal x3, Meat x3 |
+| Cloth Cloak | 25 | Fiber x25 |
+| Panel | 25 | Wood x15, Bone x10 |
+| Leather Lining | 24 | Skin x24 |
+| Woven Cloth | 24 | Fiber x24 |
+| Hunters Charm | 22 | Monster Part x12, Bone x10 |
+| Grappling Hook | 21 | Ore x15, Fiber x6 |
+| Fur Cloak | 20 | Hide x20 |
+| Chain | 20 | Ore x20 |
+| Ink | 18 | Pigment x12, Sand x6 |
+| Mirror | 17 | Sand x12, Ore x5 |
+| Fired Brick | 16 | Clay x12, Sand x4 |
+| Iron Spikes | 15 | Ore x15 |
+| Manacles | 15 | Ore x15 |
+| Clockwork Mechanism | 14 | Ore x10, Clockwork x4 |
+| Pickled Fish | 14 | Sand x12, Fish x2 |
+| Beam | 12 | Wood x12 |
+| Glass Bottle | 12 | Sand x12 |
+| Backpack | 10 | Skin x6, Hide x4 |
+| Crowbar | 10 | Ore x10 |
+| Lock And Key | 10 | Ore x10 |
+| Sharpened Stick | 9 | Wood x5, Meat x3, Harvest x1 |
+| Roast Haunch | 9 | Meat x9 |
+| Axe Stone | 8 | Wood x3, Meat x3, Stone x2 |
+| Torch | 8 | Fiber x3, Meat x3, Wood x2 |
+| Ladder | 8 | Wood x6, Fiber x2 |
+| Spyglass | 8 | Ore x5, Crystal x3 |
+| Refined Clay | 8 | Clay x6, Sand x2 |
+| Hourglass | 7 | Sand x7 |
+| Shovel | 7 | Ore x5, Wood x2 |
+| Venomous Extract | 7 | Herbs x4, Venom x3 |
+| Smoked Fish | 7 | Wood x5, Fish x2 |
+| Rope | 6 | Fiber x6 |
+| Leather | 6 | Skin x6 |
+| Alloy Dust | 6 | Ore x3, Crystal x2, Essence x1 |
+| Glass Pane | 6 | Sand x6 |
+| Herbal Extract | 6 | Herbs x6 |
+| Medicinal Paste | 6 | Herbs x4, Harvest x2 |
+| Thread | 6 | Fiber x6 |
+| Club | 5 | Wood x5 |
+| Bedroll | 5 | Hide x3, Fiber x2 |
+| Candle | 5 | Harvest x3, Fiber x2 |
+| Cured Chitin | 5 | Monster Part x5 |
+| Arcane Dust | 5 | Crystal x3, Essence x2 |
+| Distilled Essence | 5 | Essence x3, Monster Part x2 |
+| Ground Spice | 5 | Herbs x5 |
+| Refined Ore | 5 | Ore x5 |
+| Reinforced Frame | 5 | Wood x3, Bone x2 |
+| Sponge | 5 | Fiber x5 |
+| Firewood | 5 | Wood x5 |
+| Squirrel Hoard | 4 | Harvest x4 |
+| Wizened Figs | 4 | Harvest x3, Herbs x1 |
+| Fishing Pole | 4 | Wood x3, Fiber x1 |
+| Quill | 4 | Feather x4 |
+| Ground Pigment | 4 | Pigment x4 |
+| Hardened Stick | 4 | Wood x4 |
+| Parchment | 4 | Reed x4 |
+| Plank | 4 | Wood x4 |
+| Trimmed Pelt | 4 | Hide x4 |
+| Grilled Fish Skewer | 4 | Fish x4 |
+| Salt Horse | 3 | Meat x3 |
+| Holy Symbol | 3 | Wood x2, Pigment x1 |
+| Waterskin | 3 | Skin x3 |
+| Tinderbox | 3 | Stone x2, Wood x1 |
+| Baked Harvest | 3 | Harvest x3 |
+| Coal | 3 | Wood x3 |
+| Cooked Meat | 3 | Meat x3 |
+| Cut Crystal | 3 | Crystal x3 |
+| Dressed Meat | 3 | Meat x3 |
+| Carcass | 3 | Meat x3 |
+| Trophy Charm | 3 | Monster Part x3 |
+| Chalk | 2 | Stone x2 |
+| Signal Whistle | 2 | Bone x2 |
+| Whetstone | 2 | Stone x2 |
+| Bone Blade | 2 | Bone x2 |
+| Bone Shard | 2 | Bone x2 |
+| Quilted Thread | 2 | Feather x2 |
+| Cooked Fish | 2 | Fish x2 |
+| Oil | 2 | Meat x1, Fiber x1 |
+| Clean Fish | 1 | Fish x1 |
 
