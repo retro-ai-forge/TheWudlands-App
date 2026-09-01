@@ -237,8 +237,8 @@ Crafting pays out two kinds of XP, which can land on different professions from 
 | Wooden Shield | Wooden Shield | 28 | Wood x16, Skin x12 | 3 | 6 | 8 | 11 | 14 | 17 | 31 |
 | Mortar And Pestle | Mortar And Pestle | 26 | Clay x12, Ore x10, Sand x4 | 3 | 5 | 8 | 10 | 13 | 16 | 29 |
 | Spinning Wheel | Spinning Wheel | 25 | Wood x23, Bone x2 | 2 | 5 | 8 | 10 | 12 | 15 | 27 |
-| Quiver Of Arrows | Quiver Of Arrows | 24 | Wood x16, Ore x5, Feather x2, Skin x1 | 2 | 5 | 7 | 10 | 12 | 14 | 26 |
-| Set Of Bolts | Set Of Bolts | 22 | Wood x12, Ore x10 | 2 | 4 | 7 | 9 | 11 | 13 | 24 |
+| Quiver | Quiver Of Arrows | 22 | Wood x16, Ore x5, Skin x1 | 2 | 4 | 7 | 9 | 11 | 13 | 24 |
+| Bolt Girdle | Set Of Bolts | 24 | Wood x12, Skin x12 | 2 | 5 | 7 | 10 | 12 | 14 | 26 |
 | Magic Staff | Magic Staff | 22 | Wood x16, Crystal x6 | 2 | 4 | 7 | 9 | 11 | 13 | 24 |
 | Iron Ration | Iron Ration | 21 | Fiber x10, Harvest x7, Meat x3, Herbs x1 | 2 | 4 | 6 | 8 | 10 | 13 | 23 |
 | Wrench | Wrench | 20 | Ore x20 | 2 | 4 | 6 | 8 | 10 | 12 | 22 |

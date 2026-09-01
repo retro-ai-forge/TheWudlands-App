@@ -4,7 +4,7 @@
     "kind": "adventuring_gear",
     "sizeClass": "light",
     "stackSize": 1,
-    "needsItemDefinition": null,
+    "needsItemDefinition": false,
     "note": "TBD - utility gear, durability unclear.",
     "equipSlots": [],
     "backpackable": true
@@ -14,7 +14,7 @@
     "kind": "adventuring_gear",
     "sizeClass": "light",
     "stackSize": 1,
-    "needsItemDefinition": null,
+    "needsItemDefinition": false,
     "note": "TBD - utility gear, durability unclear.",
     "equipSlots": [],
     "backpackable": true
@@ -24,7 +24,7 @@
     "kind": "adventuring_gear",
     "sizeClass": "tiny",
     "stackSize": 10,
-    "needsItemDefinition": null,
+    "needsItemDefinition": false,
     "note": "TBD - utility gear, durability unclear.",
     "equipSlots": [],
     "backpackable": true
@@ -34,7 +34,7 @@
     "kind": "adventuring_gear",
     "sizeClass": "light",
     "stackSize": 1,
-    "needsItemDefinition": null,
+    "needsItemDefinition": false,
     "note": "TBD - utility gear, durability unclear.",
     "equipSlots": [],
     "backpackable": true
@@ -44,7 +44,7 @@
     "kind": "adventuring_gear",
     "sizeClass": "light",
     "stackSize": 1,
-    "needsItemDefinition": null,
+    "needsItemDefinition": false,
     "note": "TBD - utility gear, durability unclear.",
     "equipSlots": [],
     "backpackable": true
@@ -54,7 +54,7 @@
     "kind": "adventuring_gear",
     "sizeClass": "light",
     "stackSize": 1,
-    "needsItemDefinition": null,
+    "needsItemDefinition": false,
     "note": "TBD - utility gear, durability unclear.",
     "equipSlots": [],
     "backpackable": true
@@ -64,7 +64,7 @@
     "kind": "adventuring_gear",
     "sizeClass": "light",
     "stackSize": 1,
-    "needsItemDefinition": null,
+    "needsItemDefinition": false,
     "note": "TBD - utility gear, durability unclear.",
     "equipSlots": [],
     "backpackable": true
@@ -74,7 +74,7 @@
     "kind": "adventuring_gear",
     "sizeClass": "light",
     "stackSize": 1,
-    "needsItemDefinition": null,
+    "needsItemDefinition": false,
     "note": "TBD - utility gear, durability unclear.",
     "equipSlots": [],
     "backpackable": true
@@ -84,7 +84,7 @@
     "kind": "adventuring_gear",
     "sizeClass": "tiny",
     "stackSize": 10,
-    "needsItemDefinition": null,
+    "needsItemDefinition": false,
     "note": "TBD - utility gear, durability unclear.",
     "equipSlots": [],
     "backpackable": true
@@ -94,7 +94,7 @@
     "kind": "adventuring_gear",
     "sizeClass": "light",
     "stackSize": 1,
-    "needsItemDefinition": null,
+    "needsItemDefinition": false,
     "note": "TBD - utility gear, durability unclear.",
     "equipSlots": [],
     "backpackable": true
@@ -104,7 +104,7 @@
     "kind": "adventuring_gear",
     "sizeClass": "tiny",
     "stackSize": 10,
-    "needsItemDefinition": null,
+    "needsItemDefinition": false,
     "note": "TBD - utility gear, durability unclear.",
     "equipSlots": [],
     "backpackable": true
@@ -114,7 +114,7 @@
     "kind": "adventuring_gear",
     "sizeClass": "light",
     "stackSize": 1,
-    "needsItemDefinition": null,
+    "needsItemDefinition": false,
     "note": "TBD - utility gear, durability unclear.",
     "equipSlots": [],
     "backpackable": true
@@ -124,7 +124,7 @@
     "kind": "adventuring_gear",
     "sizeClass": "light",
     "stackSize": 1,
-    "needsItemDefinition": null,
+    "needsItemDefinition": false,
     "note": "TBD - utility gear, durability unclear.",
     "equipSlots": [],
     "backpackable": true
@@ -134,7 +134,7 @@
     "kind": "adventuring_gear",
     "sizeClass": "light",
     "stackSize": 1,
-    "needsItemDefinition": null,
+    "needsItemDefinition": false,
     "note": "TBD - utility gear, durability unclear.",
     "equipSlots": [],
     "backpackable": true
@@ -144,7 +144,7 @@
     "kind": "adventuring_gear",
     "sizeClass": "tiny",
     "stackSize": 10,
-    "needsItemDefinition": null,
+    "needsItemDefinition": false,
     "note": "TBD - utility gear, durability unclear.",
     "equipSlots": [
       "Neck"
@@ -156,7 +156,7 @@
     "kind": "adventuring_gear",
     "sizeClass": "light",
     "stackSize": 1,
-    "needsItemDefinition": null,
+    "needsItemDefinition": false,
     "note": "TBD - utility gear, durability unclear.",
     "equipSlots": [],
     "backpackable": true
@@ -166,7 +166,7 @@
     "kind": "adventuring_gear",
     "sizeClass": "light",
     "stackSize": 1,
-    "needsItemDefinition": null,
+    "needsItemDefinition": false,
     "note": "TBD - utility gear, durability unclear.",
     "equipSlots": [],
     "backpackable": true
@@ -176,7 +176,7 @@
     "kind": "adventuring_gear",
     "sizeClass": "light",
     "stackSize": 1,
-    "needsItemDefinition": null,
+    "needsItemDefinition": false,
     "note": "TBD - utility gear, durability unclear.",
     "equipSlots": [],
     "backpackable": true
@@ -186,7 +186,7 @@
     "kind": "adventuring_gear",
     "sizeClass": "light",
     "stackSize": 1,
-    "needsItemDefinition": null,
+    "needsItemDefinition": false,
     "note": "TBD - utility gear, durability unclear.",
     "equipSlots": [
       "Girdle"
@@ -198,7 +198,7 @@
     "kind": "adventuring_gear",
     "sizeClass": "light",
     "stackSize": 1,
-    "needsItemDefinition": null,
+    "needsItemDefinition": false,
     "note": "TBD - utility gear, durability unclear.",
     "equipSlots": [],
     "backpackable": true
@@ -213,7 +213,8 @@
     "equipSlots": [
       "Chest"
     ],
-    "backpackable": true
+    "backpackable": true,
+    "qualityMax": 250
   },
   {
     "familyId": "chainmail_head_armor",
@@ -225,7 +226,8 @@
     "equipSlots": [
       "Head"
     ],
-    "backpackable": true
+    "backpackable": true,
+    "qualityMax": 250
   },
   {
     "familyId": "chainmail_leg_armor",
@@ -237,7 +239,8 @@
     "equipSlots": [
       "Legs"
     ],
-    "backpackable": true
+    "backpackable": true,
+    "qualityMax": 250
   },
   {
     "familyId": "chitin_chest_armor",
@@ -249,7 +252,8 @@
     "equipSlots": [
       "Chest"
     ],
-    "backpackable": true
+    "backpackable": true,
+    "qualityMax": 310
   },
   {
     "familyId": "chitin_head_armor",
@@ -261,7 +265,8 @@
     "equipSlots": [
       "Head"
     ],
-    "backpackable": true
+    "backpackable": true,
+    "qualityMax": 310
   },
   {
     "familyId": "chitin_leg_armor",
@@ -273,7 +278,8 @@
     "equipSlots": [
       "Legs"
     ],
-    "backpackable": true
+    "backpackable": true,
+    "qualityMax": 310
   },
   {
     "familyId": "cloth_chest_armor",
@@ -285,7 +291,8 @@
     "equipSlots": [
       "Chest"
     ],
-    "backpackable": true
+    "backpackable": true,
+    "qualityMax": 70
   },
   {
     "familyId": "cloth_head_armor",
@@ -297,7 +304,8 @@
     "equipSlots": [
       "Head"
     ],
-    "backpackable": true
+    "backpackable": true,
+    "qualityMax": 70
   },
   {
     "familyId": "cloth_leg_armor",
@@ -309,7 +317,8 @@
     "equipSlots": [
       "Legs"
     ],
-    "backpackable": true
+    "backpackable": true,
+    "qualityMax": 70
   },
   {
     "familyId": "darksteel_chest_armor",
@@ -321,7 +330,8 @@
     "equipSlots": [
       "Chest"
     ],
-    "backpackable": false
+    "backpackable": false,
+    "qualityMax": 360
   },
   {
     "familyId": "darksteel_head_armor",
@@ -333,7 +343,8 @@
     "equipSlots": [
       "Head"
     ],
-    "backpackable": false
+    "backpackable": false,
+    "qualityMax": 360
   },
   {
     "familyId": "darksteel_leg_armor",
@@ -345,7 +356,8 @@
     "equipSlots": [
       "Legs"
     ],
-    "backpackable": false
+    "backpackable": false,
+    "qualityMax": 360
   },
   {
     "familyId": "ebony_chest_armor",
@@ -357,7 +369,8 @@
     "equipSlots": [
       "Chest"
     ],
-    "backpackable": true
+    "backpackable": true,
+    "qualityMax": 340
   },
   {
     "familyId": "ebony_head_armor",
@@ -369,7 +382,8 @@
     "equipSlots": [
       "Head"
     ],
-    "backpackable": true
+    "backpackable": true,
+    "qualityMax": 340
   },
   {
     "familyId": "ebony_leg_armor",
@@ -381,7 +395,8 @@
     "equipSlots": [
       "Legs"
     ],
-    "backpackable": true
+    "backpackable": true,
+    "qualityMax": 340
   },
   {
     "familyId": "iron_chest_armor",
@@ -393,7 +408,8 @@
     "equipSlots": [
       "Chest"
     ],
-    "backpackable": true
+    "backpackable": true,
+    "qualityMax": 310
   },
   {
     "familyId": "iron_head_armor",
@@ -405,7 +421,8 @@
     "equipSlots": [
       "Head"
     ],
-    "backpackable": true
+    "backpackable": true,
+    "qualityMax": 310
   },
   {
     "familyId": "iron_leg_armor",
@@ -417,43 +434,47 @@
     "equipSlots": [
       "Legs"
     ],
-    "backpackable": true
+    "backpackable": true,
+    "qualityMax": 310
   },
   {
     "familyId": "leather_chest_armor",
     "kind": "armor",
-    "sizeClass": "medium",
+    "sizeClass": "light",
     "stackSize": 1,
     "needsItemDefinition": true,
     "note": "Wears out with use.",
     "equipSlots": [
       "Chest"
     ],
-    "backpackable": true
+    "backpackable": true,
+    "qualityMax": 150
   },
   {
     "familyId": "leather_head_armor",
     "kind": "armor",
-    "sizeClass": "medium",
+    "sizeClass": "light",
     "stackSize": 1,
     "needsItemDefinition": true,
     "note": "Wears out with use.",
     "equipSlots": [
       "Head"
     ],
-    "backpackable": true
+    "backpackable": true,
+    "qualityMax": 150
   },
   {
     "familyId": "leather_leg_armor",
     "kind": "armor",
-    "sizeClass": "medium",
+    "sizeClass": "light",
     "stackSize": 1,
     "needsItemDefinition": true,
     "note": "Wears out with use.",
     "equipSlots": [
       "Legs"
     ],
-    "backpackable": true
+    "backpackable": true,
+    "qualityMax": 150
   },
   {
     "familyId": "meteoric_iron_chest_armor",
@@ -465,7 +486,8 @@
     "equipSlots": [
       "Chest"
     ],
-    "backpackable": false
+    "backpackable": false,
+    "qualityMax": 350
   },
   {
     "familyId": "meteoric_iron_head_armor",
@@ -477,7 +499,8 @@
     "equipSlots": [
       "Head"
     ],
-    "backpackable": false
+    "backpackable": false,
+    "qualityMax": 350
   },
   {
     "familyId": "meteoric_iron_leg_armor",
@@ -489,14 +512,15 @@
     "equipSlots": [
       "Legs"
     ],
-    "backpackable": false
+    "backpackable": false,
+    "qualityMax": 350
   },
   {
     "familyId": "merchants_scale",
     "kind": "equipment",
     "sizeClass": "medium",
     "stackSize": 1,
-    "needsItemDefinition": null,
+    "needsItemDefinition": false,
     "note": "TBD - a trade tool, durability unclear.",
     "equipSlots": [],
     "backpackable": true
@@ -636,10 +660,11 @@
     "kind": "misc",
     "sizeClass": "light",
     "stackSize": 1,
-    "needsItemDefinition": null,
+    "needsItemDefinition": false,
     "note": "TBD - general trinket/utility, durability unclear.",
     "equipSlots": [
-      "Back"
+      "Back",
+      "Side"
     ],
     "backpackable": true
   },
@@ -648,7 +673,7 @@
     "kind": "misc",
     "sizeClass": "light",
     "stackSize": 10,
-    "needsItemDefinition": null,
+    "needsItemDefinition": false,
     "note": "TBD - burns down over time per light-source-burn-hours.json, a different kind of 'wear' than weapon/armor durability.",
     "equipSlots": [
       "Left Hand",
@@ -661,7 +686,7 @@
     "kind": "misc",
     "sizeClass": "light",
     "stackSize": 1,
-    "needsItemDefinition": null,
+    "needsItemDefinition": false,
     "note": "TBD - general trinket/utility, durability unclear.",
     "equipSlots": [],
     "backpackable": true
@@ -676,16 +701,17 @@
     "equipSlots": [
       "Cloak"
     ],
-    "backpackable": true
+    "backpackable": true,
+    "qualityMax": 40
   },
   {
     "familyId": "fishing_pole",
     "kind": "misc",
     "sizeClass": "light",
     "stackSize": 1,
-    "needsItemDefinition": null,
+    "needsItemDefinition": false,
     "note": "TBD - general trinket/utility, durability unclear.",
-     "equipSlots": [
+    "equipSlots": [
       "Left Hand",
       "Right Hand"
     ],
@@ -701,14 +727,15 @@
     "equipSlots": [
       "Cloak"
     ],
-    "backpackable": true
+    "backpackable": true,
+    "qualityMax": 40
   },
   {
     "familyId": "glass_lantern",
     "kind": "misc",
     "sizeClass": "light",
     "stackSize": 1,
-    "needsItemDefinition": null,
+    "needsItemDefinition": false,
     "note": "TBD - burns down over time per light-source-burn-hours.json, a different kind of 'wear' than weapon/armor durability.",
     "equipSlots": [
       "Left Hand",
@@ -721,7 +748,7 @@
     "kind": "misc",
     "sizeClass": "light",
     "stackSize": 1,
-    "needsItemDefinition": null,
+    "needsItemDefinition": false,
     "note": "TBD - general trinket/utility, durability unclear.",
     "equipSlots": [
       "Neck"
@@ -733,7 +760,7 @@
     "kind": "misc",
     "sizeClass": "light",
     "stackSize": 1,
-    "needsItemDefinition": null,
+    "needsItemDefinition": false,
     "note": "TBD - general trinket/utility, durability unclear.",
     "equipSlots": [],
     "backpackable": true
@@ -743,7 +770,7 @@
     "kind": "misc",
     "sizeClass": "light",
     "stackSize": 10,
-    "needsItemDefinition": null,
+    "needsItemDefinition": false,
     "note": "TBD - general trinket/utility, durability unclear.",
     "equipSlots": [],
     "backpackable": true
@@ -753,7 +780,7 @@
     "kind": "misc",
     "sizeClass": "light",
     "stackSize": 5,
-    "needsItemDefinition": null,
+    "needsItemDefinition": false,
     "note": "TBD - burns down over time per light-source-burn-hours.json, a different kind of 'wear' than weapon/armor durability.",
     "equipSlots": [
       "Left Hand",
@@ -812,7 +839,8 @@
       "Left Hand",
       "Right Hand"
     ],
-    "backpackable": false
+    "backpackable": false,
+    "qualityMax": 500
   },
   {
     "familyId": "darksteel_shield",
@@ -825,7 +853,8 @@
       "Left Hand",
       "Right Hand"
     ],
-    "backpackable": false
+    "backpackable": false,
+    "qualityMax": 240
   },
   {
     "familyId": "ebony_shield",
@@ -838,7 +867,8 @@
       "Left Hand",
       "Right Hand"
     ],
-    "backpackable": false
+    "backpackable": false,
+    "qualityMax": 530
   },
   {
     "familyId": "iron_shield",
@@ -851,7 +881,8 @@
       "Left Hand",
       "Right Hand"
     ],
-    "backpackable": true
+    "backpackable": true,
+    "qualityMax": 160
   },
   {
     "familyId": "meteoric_iron_shield",
@@ -864,7 +895,8 @@
       "Left Hand",
       "Right Hand"
     ],
-    "backpackable": false
+    "backpackable": false,
+    "qualityMax": 210
   },
   {
     "familyId": "reinforced_wooden_shield",
@@ -877,7 +909,8 @@
       "Left Hand",
       "Right Hand"
     ],
-    "backpackable": true
+    "backpackable": true,
+    "qualityMax": 170
   },
   {
     "familyId": "wooden_shield",
@@ -890,14 +923,15 @@
       "Left Hand",
       "Right Hand"
     ],
-    "backpackable": true
+    "backpackable": true,
+    "qualityMax": 40
   },
   {
     "familyId": "alchemy_stand",
     "kind": "tool",
     "sizeClass": "xLarge",
     "stackSize": 1,
-    "needsItemDefinition": null,
+    "needsItemDefinition": false,
     "note": "TBD - a placed crafting station, not personal gear; may not use carry/backpack rules at all.",
     "equipSlots": [],
     "backpackable": false
@@ -907,7 +941,7 @@
     "kind": "tool",
     "sizeClass": "xLarge",
     "stackSize": 1,
-    "needsItemDefinition": null,
+    "needsItemDefinition": false,
     "note": "TBD - a placed crafting station, not personal gear; may not use carry/backpack rules at all.",
     "equipSlots": [],
     "backpackable": false
@@ -924,14 +958,15 @@
       "Right Hand",
       "Girdle"
     ],
-    "backpackable": true
+    "backpackable": true,
+    "qualityMax": 20
   },
   {
     "familyId": "enchanters_table",
     "kind": "tool",
     "sizeClass": "xLarge",
     "stackSize": 1,
-    "needsItemDefinition": null,
+    "needsItemDefinition": false,
     "note": "TBD - a placed crafting station, not personal gear; may not use carry/backpack rules at all.",
     "equipSlots": [],
     "backpackable": false
@@ -941,7 +976,7 @@
     "kind": "tool",
     "sizeClass": "xLarge",
     "stackSize": 1,
-    "needsItemDefinition": null,
+    "needsItemDefinition": false,
     "note": "TBD - a placed crafting station, not personal gear; may not use carry/backpack rules at all.",
     "equipSlots": [],
     "backpackable": false
@@ -951,7 +986,7 @@
     "kind": "tool",
     "sizeClass": "xLarge",
     "stackSize": 1,
-    "needsItemDefinition": null,
+    "needsItemDefinition": false,
     "note": "TBD - a placed crafting station, not personal gear; may not use carry/backpack rules at all.",
     "equipSlots": [],
     "backpackable": false
@@ -961,7 +996,7 @@
     "kind": "tool",
     "sizeClass": "xLarge",
     "stackSize": 1,
-    "needsItemDefinition": null,
+    "needsItemDefinition": false,
     "note": "TBD - a placed crafting station, not personal gear; may not use carry/backpack rules at all.",
     "equipSlots": [],
     "backpackable": false
@@ -971,7 +1006,7 @@
     "kind": "tool",
     "sizeClass": "xLarge",
     "stackSize": 1,
-    "needsItemDefinition": null,
+    "needsItemDefinition": false,
     "note": "TBD - a placed crafting station, not personal gear; may not use carry/backpack rules at all.",
     "equipSlots": [],
     "backpackable": false
@@ -981,7 +1016,7 @@
     "kind": "tool",
     "sizeClass": "xLarge",
     "stackSize": 1,
-    "needsItemDefinition": null,
+    "needsItemDefinition": false,
     "note": "TBD - a placed crafting station, not personal gear; may not use carry/backpack rules at all.",
     "equipSlots": [],
     "backpackable": false
@@ -991,7 +1026,7 @@
     "kind": "tool",
     "sizeClass": "xLarge",
     "stackSize": 1,
-    "needsItemDefinition": null,
+    "needsItemDefinition": false,
     "note": "TBD - a placed crafting station, not personal gear; may not use carry/backpack rules at all.",
     "equipSlots": [],
     "backpackable": false
@@ -1001,7 +1036,7 @@
     "kind": "tool",
     "sizeClass": "xLarge",
     "stackSize": 1,
-    "needsItemDefinition": null,
+    "needsItemDefinition": false,
     "note": "TBD - a placed crafting station, not personal gear; may not use carry/backpack rules at all.",
     "equipSlots": [],
     "backpackable": false
@@ -1011,7 +1046,7 @@
     "kind": "tool",
     "sizeClass": "xLarge",
     "stackSize": 1,
-    "needsItemDefinition": null,
+    "needsItemDefinition": false,
     "note": "TBD - a placed crafting station, not personal gear; may not use carry/backpack rules at all.",
     "equipSlots": [],
     "backpackable": false
@@ -1021,7 +1056,7 @@
     "kind": "tool",
     "sizeClass": "heavy",
     "stackSize": 1,
-    "needsItemDefinition": null,
+    "needsItemDefinition": false,
     "note": "TBD - a placed crafting station, not personal gear; may not use carry/backpack rules at all.",
     "equipSlots": [],
     "backpackable": false
@@ -1031,7 +1066,7 @@
     "kind": "tool",
     "sizeClass": "heavy",
     "stackSize": 1,
-    "needsItemDefinition": null,
+    "needsItemDefinition": false,
     "note": "TBD - a placed crafting station, not personal gear; may not use carry/backpack rules at all.",
     "equipSlots": [],
     "backpackable": false
@@ -1041,7 +1076,7 @@
     "kind": "tool",
     "sizeClass": "xLarge",
     "stackSize": 1,
-    "needsItemDefinition": null,
+    "needsItemDefinition": false,
     "note": "TBD - a placed crafting station, not personal gear; may not use carry/backpack rules at all.",
     "equipSlots": [],
     "backpackable": false
@@ -1051,7 +1086,7 @@
     "kind": "tool",
     "sizeClass": "light",
     "stackSize": 1,
-    "needsItemDefinition": null,
+    "needsItemDefinition": false,
     "note": "TBD - a placed crafting station, still personal gear; not a weapon",
     "equipSlots": [
       "Left Hand",
@@ -1064,7 +1099,7 @@
     "kind": "tool",
     "sizeClass": "xLarge",
     "stackSize": 1,
-    "needsItemDefinition": null,
+    "needsItemDefinition": false,
     "note": "TBD - a placed crafting station, not personal gear; may not use carry/backpack rules at all.",
     "equipSlots": [],
     "backpackable": false
@@ -1080,7 +1115,8 @@
       "Left Hand",
       "Right Hand"
     ],
-    "backpackable": true
+    "backpackable": true,
+    "qualityMax": 220
   },
   {
     "familyId": "battle_axe",
@@ -1094,7 +1130,8 @@
       "Right Hand"
     ],
     "twoHanded": true,
-    "backpackable": false
+    "backpackable": false,
+    "qualityMax": 470
   },
   {
     "familyId": "bow",
@@ -1108,7 +1145,8 @@
       "Right Hand"
     ],
     "twoHanded": true,
-    "backpackable": true
+    "backpackable": true,
+    "qualityMax": 150
   },
   {
     "familyId": "club",
@@ -1121,7 +1159,8 @@
       "Left Hand",
       "Right Hand"
     ],
-    "backpackable": true
+    "backpackable": true,
+    "qualityMax": 20
   },
   {
     "familyId": "crossbow",
@@ -1135,7 +1174,8 @@
       "Right Hand"
     ],
     "twoHanded": true,
-    "backpackable": false
+    "backpackable": false,
+    "qualityMax": 170
   },
   {
     "familyId": "dagger",
@@ -1149,7 +1189,8 @@
       "Right Hand",
       "Girdle"
     ],
-    "backpackable": true
+    "backpackable": true,
+    "qualityMax": 150
   },
   {
     "familyId": "greatsword",
@@ -1163,7 +1204,8 @@
       "Right Hand"
     ],
     "twoHanded": true,
-    "backpackable": false
+    "backpackable": false,
+    "qualityMax": 480
   },
   {
     "familyId": "mace",
@@ -1176,7 +1218,8 @@
       "Left Hand",
       "Right Hand"
     ],
-    "backpackable": true
+    "backpackable": true,
+    "qualityMax": 320
   },
   {
     "familyId": "magic_staff",
@@ -1189,29 +1232,31 @@
       "Left Hand",
       "Right Hand"
     ],
-    "backpackable": true
+    "backpackable": true,
+    "qualityMax": 40
   },
   {
-    "familyId": "quiver_of_arrows",
+    "familyId": "quiver",
     "kind": "weapon",
     "sizeClass": "medium",
     "stackSize": 1,
-    "needsItemDefinition": true,
-    "note": "Wears out with use.",
+    "needsItemDefinition": false,
+    "note": "Reusable holder, not a wearing-out weapon - like backpack, but for ammo. Arrows/bolts are their own separate craftable stackable item (like oil for a lantern), drawn from storage to reload this;",
     "equipSlots": [
       "Side"
     ],
     "backpackable": true
   },
   {
-    "familyId": "set_of_bolts",
+    "familyId": "bolt_girdle",
     "kind": "weapon",
     "sizeClass": "medium",
     "stackSize": 1,
-    "needsItemDefinition": true,
-    "note": "Wears out with use.",
+    "needsItemDefinition": false,
+    "note": "Reusable holder, not a wearing-out weapon - like backpack, but for ammo. Arrows/bolts are their own separate craftable stackable item (like oil for a lantern), drawn from storage to reload this;",
     "equipSlots": [
-      "Side"
+      "Side",
+      "Girdle"
     ],
     "backpackable": true
   },
@@ -1226,7 +1271,8 @@
       "Left Hand",
       "Right Hand"
     ],
-    "backpackable": true
+    "backpackable": true,
+    "qualityMax": 20
   },
   {
     "familyId": "sickle",
@@ -1240,7 +1286,8 @@
       "Right Hand",
       "Girdle"
     ],
-    "backpackable": true
+    "backpackable": true,
+    "qualityMax": 160
   },
   {
     "familyId": "spear",
@@ -1253,7 +1300,8 @@
       "Left Hand",
       "Right Hand"
     ],
-    "backpackable": true
+    "backpackable": true,
+    "qualityMax": 160
   },
   {
     "familyId": "sword",
@@ -1266,7 +1314,8 @@
       "Left Hand",
       "Right Hand"
     ],
-    "backpackable": true
+    "backpackable": true,
+    "qualityMax": 320
   },
   {
     "familyId": "wand",
@@ -1279,7 +1328,8 @@
       "Left Hand",
       "Right Hand"
     ],
-    "backpackable": true
+    "backpackable": true,
+    "qualityMax": 20
   },
   {
     "familyId": "warhammer",
@@ -1293,6 +1343,47 @@
       "Right Hand"
     ],
     "twoHanded": true,
+    "backpackable": false,
+    "qualityMax": 480
+  },
+  {
+    "familyId": "arrow",
+    "kind": "processed",
+    "sizeClass": "tiny",
+    "stackSize": 10,
+    "needsItemDefinition": false,
+    "note": "Stackable ammo for Quiver - consumed one at a time when fired.",
+    "equipSlots": [],
+    "backpackable": true
+  },
+  {
+    "familyId": "bolt",
+    "kind": "processed",
+    "sizeClass": "tiny",
+    "stackSize": 10,
+    "needsItemDefinition": false,
+    "note": "Stackable ammo for Bolt Girdle - consumed one at a time when fired.",
+    "equipSlots": [],
+    "backpackable": true
+  },
+  {
+    "familyId": "oil",
+    "kind": "processed",
+    "sizeClass": "tiny",
+    "stackSize": 10,
+    "needsItemDefinition": false,
+    "note": "Stackable fuel for a lit lantern - burn duration bottlenecked by whichever of lantern/oil is the lower tier (see light-source-burn-hours.json). Not tied to one specific lantern instance.",
+    "equipSlots": [],
+    "backpackable": true
+  },
+  {
+    "familyId": "smokehouse",
+    "kind": "tool",
+    "sizeClass": "xLarge",
+    "stackSize": 1,
+    "needsItemDefinition": false,
+    "note": "A placed crafting station, not personal gear - Rural's own station, mirroring Oven/Tanning Rack for other categories.",
+    "equipSlots": [],
     "backpackable": false
   }
 ]

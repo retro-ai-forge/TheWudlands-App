@@ -100,5 +100,12 @@
   {"id": "iron_grinding_stone", "name": "Iron Grinding Stone", "familyId": "grinding_stone", "tier": 3},
   {"id": "silver_grinding_stone", "name": "Silver Grinding Stone", "familyId": "grinding_stone", "tier": 4},
   {"id": "gold_grinding_stone", "name": "Gold Grinding Stone", "familyId": "grinding_stone", "tier": 5},
-  {"id": "star_metal_grinding_stone", "name": "Star Metal Grinding Stone", "familyId": "grinding_stone", "tier": 6}
+  {"id": "star_metal_grinding_stone", "name": "Star Metal Grinding Stone", "familyId": "grinding_stone", "tier": 6},
+
+  {"id": "ramshackle_smokehouse", "name": "Ramshackle Smokehouse", "familyId": "smokehouse", "tier": 1},
+  {"id": "trappers_smokehouse", "name": "Trapper's Smokehouse", "familyId": "smokehouse", "tier": 2},
+  {"id": "homestead_smokehouse", "name": "Homestead Smokehouse", "familyId": "smokehouse", "tier": 3},
+  {"id": "wardens_smokehouse", "name": "Warden's Smokehouse", "familyId": "smokehouse", "tier": 4},
+  {"id": "huntmasters_smokehouse", "name": "Huntmaster's Smokehouse", "familyId": "smokehouse", "tier": 5},
+  {"id": "legendary_smokehouse", "name": "Legendary Smokehouse", "familyId": "smokehouse", "tier": 6}
 ]

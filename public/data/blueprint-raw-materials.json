@@ -196,14 +196,13 @@
     "fiber",
     "wood"
   ],
-  "blueprint_quiver_of_arrows": [
-    "feather",
+  "blueprint_quiver": [
     "ore",
     "skin",
     "wood"
   ],
-  "blueprint_set_of_bolts": [
-    "ore",
+  "blueprint_bolt_girdle": [
+    "skin",
     "wood"
   ],
   "blueprint_magic_staff": [

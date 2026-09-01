@@ -308,5 +308,19 @@
   {"id": "elk_oil", "name": "Refined Lamp Oil", "familyId": "oil", "tier": 3},
   {"id": "griffin_oil", "name": "Sacred Oil", "familyId": "oil", "tier": 4},
   {"id": "wyvern_oil", "name": "Phoenix Oil", "familyId": "oil", "tier": 5},
-  {"id": "dragon_oil", "name": "Starfire Oil", "familyId": "oil", "tier": 6}
+  {"id": "dragon_oil", "name": "Starfire Oil", "familyId": "oil", "tier": 6},
+
+  {"id": "pine_arrow", "name": "Pine Arrow", "familyId": "arrow", "tier": 1},
+  {"id": "oak_arrow", "name": "Oak Arrow", "familyId": "arrow", "tier": 2},
+  {"id": "ash_arrow", "name": "Ash Arrow", "familyId": "arrow", "tier": 3},
+  {"id": "cedar_arrow", "name": "Cedar Arrow", "familyId": "arrow", "tier": 4},
+  {"id": "ebony_arrow", "name": "Ebony Arrow", "familyId": "arrow", "tier": 5},
+  {"id": "worldroot_arrow", "name": "Worldroot Arrow", "familyId": "arrow", "tier": 6},
+
+  {"id": "pine_bolt", "name": "Pine Bolt", "familyId": "bolt", "tier": 1},
+  {"id": "oak_bolt", "name": "Oak Bolt", "familyId": "bolt", "tier": 2},
+  {"id": "ash_bolt", "name": "Ash Bolt", "familyId": "bolt", "tier": 3},
+  {"id": "cedar_bolt", "name": "Cedar Bolt", "familyId": "bolt", "tier": 4},
+  {"id": "ebony_bolt", "name": "Ebony Bolt", "familyId": "bolt", "tier": 5},
+  {"id": "worldroot_bolt", "name": "Worldroot Bolt", "familyId": "bolt", "tier": 6}
 ]

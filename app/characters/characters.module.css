@@ -104,6 +104,16 @@
   text-align: center;
 }
 
+/* Sits right under .sectionIntro's own 1.75rem margin-bottom - a smaller
+   negative pull tightens the gap above (partially offsetting the collapse
+   with .sectionIntro), a larger explicit margin-bottom widens the gap below
+   before the Body/Soul breakdown that follows. */
+.carryNote {
+  composes: panelNote;
+  margin-top: -0.75rem;
+  margin-bottom: 1.5rem;
+}
+
 .sectionWrap {
   width: 100%;
   max-width: 56rem;

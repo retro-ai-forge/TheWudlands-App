@@ -423,6 +423,11 @@ export default function Characters() {
                 and together the eight decide what comes naturally to you and what
                 costs you effort.
               </p>
+              <p className={styles.carryNote}>
+                Sum of Might and Endurance decides how much gear you can carry:
+                12 — Light armor (Cloth, Leather) · 24 — Medium armor (Chainmail,
+                Chitin, Ebony, Iron) · 48 — Heavy armor (Darksteel, Meteoric Iron)
+              </p>
               {([
                 ["Body", BODY_ATTRIBUTES],
                 ["Soul", SOUL_ATTRIBUTES],

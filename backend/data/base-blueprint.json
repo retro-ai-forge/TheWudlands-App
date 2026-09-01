@@ -272,19 +272,19 @@
   {"id": "blueprint_mana_magic_staff", "name": "Blueprint: Mana Magic Staff", "familyId": "blueprint_magic_staff", "tier": 5},
   {"id": "blueprint_astral_magic_staff", "name": "Blueprint: Astral Magic Staff", "familyId": "blueprint_magic_staff", "tier": 6},
 
-  {"id": "blueprint_pine_quiver_of_arrows", "name": "Blueprint: Primitive Quiver of Arrows", "familyId": "blueprint_quiver_of_arrows", "tier": 1},
-  {"id": "blueprint_oak_quiver_of_arrows", "name": "Blueprint: Oak Quiver of Arrows", "familyId": "blueprint_quiver_of_arrows", "tier": 2},
-  {"id": "blueprint_ash_quiver_of_arrows", "name": "Blueprint: Ash Quiver of Arrows", "familyId": "blueprint_quiver_of_arrows", "tier": 3},
-  {"id": "blueprint_cedar_quiver_of_arrows", "name": "Blueprint: Cedar Quiver of Arrows", "familyId": "blueprint_quiver_of_arrows", "tier": 4},
-  {"id": "blueprint_ebony_quiver_of_arrows", "name": "Blueprint: Ebony Quiver of Arrows", "familyId": "blueprint_quiver_of_arrows", "tier": 5},
-  {"id": "blueprint_worldroot_quiver_of_arrows", "name": "Blueprint: Worldroot Quiver of Arrows", "familyId": "blueprint_quiver_of_arrows", "tier": 6},
+  {"id": "blueprint_pine_quiver", "name": "Blueprint: Primitive Quiver", "familyId": "blueprint_quiver", "tier": 1},
+  {"id": "blueprint_oak_quiver", "name": "Blueprint: Oak Quiver", "familyId": "blueprint_quiver", "tier": 2},
+  {"id": "blueprint_ash_quiver", "name": "Blueprint: Ash Quiver", "familyId": "blueprint_quiver", "tier": 3},
+  {"id": "blueprint_cedar_quiver", "name": "Blueprint: Cedar Quiver", "familyId": "blueprint_quiver", "tier": 4},
+  {"id": "blueprint_ebony_quiver", "name": "Blueprint: Ebony Quiver", "familyId": "blueprint_quiver", "tier": 5},
+  {"id": "blueprint_worldroot_quiver", "name": "Blueprint: Worldroot Quiver", "familyId": "blueprint_quiver", "tier": 6},
 
-  {"id": "blueprint_pine_set_of_bolts", "name": "Blueprint: Crude Set of Bolts", "familyId": "blueprint_set_of_bolts", "tier": 1},
-  {"id": "blueprint_oak_set_of_bolts", "name": "Blueprint: Oak Set of Bolts", "familyId": "blueprint_set_of_bolts", "tier": 2},
-  {"id": "blueprint_ash_set_of_bolts", "name": "Blueprint: Ash Set of Bolts", "familyId": "blueprint_set_of_bolts", "tier": 3},
-  {"id": "blueprint_cedar_set_of_bolts", "name": "Blueprint: Cedar Set of Bolts", "familyId": "blueprint_set_of_bolts", "tier": 4},
-  {"id": "blueprint_ebony_set_of_bolts", "name": "Blueprint: Ebony Set of Bolts", "familyId": "blueprint_set_of_bolts", "tier": 5},
-  {"id": "blueprint_worldroot_set_of_bolts", "name": "Blueprint: Worldroot Set of Bolts", "familyId": "blueprint_set_of_bolts", "tier": 6},
+  {"id": "blueprint_pine_bolt_girdle", "name": "Blueprint: Crude Bolt Girdle", "familyId": "blueprint_bolt_girdle", "tier": 1},
+  {"id": "blueprint_oak_bolt_girdle", "name": "Blueprint: Oak Bolt Girdle", "familyId": "blueprint_bolt_girdle", "tier": 2},
+  {"id": "blueprint_ash_bolt_girdle", "name": "Blueprint: Ash Bolt Girdle", "familyId": "blueprint_bolt_girdle", "tier": 3},
+  {"id": "blueprint_cedar_bolt_girdle", "name": "Blueprint: Cedar Bolt Girdle", "familyId": "blueprint_bolt_girdle", "tier": 4},
+  {"id": "blueprint_ebony_bolt_girdle", "name": "Blueprint: Ebony Bolt Girdle", "familyId": "blueprint_bolt_girdle", "tier": 5},
+  {"id": "blueprint_worldroot_bolt_girdle", "name": "Blueprint: Worldroot Bolt Girdle", "familyId": "blueprint_bolt_girdle", "tier": 6},
 
   {"id": "blueprint_grovekeepers_sickle", "name": "Blueprint: Uneven Sickle", "familyId": "blueprint_sickle", "tier": 1},
   {"id": "blueprint_harvestmoon_sickle", "name": "Blueprint: Harvestmoon Sickle", "familyId": "blueprint_sickle", "tier": 2},
@@ -365,5 +365,12 @@
   {"id": "blueprint_netmasters_ration", "name": "Blueprint: Netmaster's Ration", "familyId": "blueprint_fishermans_ration", "tier": 3},
   {"id": "blueprint_harbor_guards_ration", "name": "Blueprint: Harbor Guard's Ration", "familyId": "blueprint_fishermans_ration", "tier": 4},
   {"id": "blueprint_fleet_captains_ration", "name": "Blueprint: Fleet Captain's Ration", "familyId": "blueprint_fishermans_ration", "tier": 5},
-  {"id": "blueprint_tidekings_ration", "name": "Blueprint: Tideking's Ration", "familyId": "blueprint_fishermans_ration", "tier": 6}
+  {"id": "blueprint_tidekings_ration", "name": "Blueprint: Tideking's Ration", "familyId": "blueprint_fishermans_ration", "tier": 6},
+
+  {"id": "blueprint_ramshackle_smokehouse", "name": "Blueprint: Ramshackle Smokehouse", "familyId": "blueprint_smokehouse", "tier": 1},
+  {"id": "blueprint_trappers_smokehouse", "name": "Blueprint: Trapper's Smokehouse", "familyId": "blueprint_smokehouse", "tier": 2},
+  {"id": "blueprint_homestead_smokehouse", "name": "Blueprint: Homestead Smokehouse", "familyId": "blueprint_smokehouse", "tier": 3},
+  {"id": "blueprint_wardens_smokehouse", "name": "Blueprint: Warden's Smokehouse", "familyId": "blueprint_smokehouse", "tier": 4},
+  {"id": "blueprint_huntmasters_smokehouse", "name": "Blueprint: Huntmaster's Smokehouse", "familyId": "blueprint_smokehouse", "tier": 5},
+  {"id": "blueprint_legendary_smokehouse", "name": "Blueprint: Legendary Smokehouse", "familyId": "blueprint_smokehouse", "tier": 6}
 ]
