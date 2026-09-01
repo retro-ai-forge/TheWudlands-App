@@ -34,12 +34,12 @@
   {"id": "mirror_5", "name": "Mirror", "familyId": "mirror", "tier": 5},
   {"id": "mirror_6", "name": "Mirror", "familyId": "mirror", "tier": 6},
 
-  {"id": "backpack_1", "name": "Backpack", "familyId": "backpack", "tier": 1},
-  {"id": "backpack_2", "name": "Backpack", "familyId": "backpack", "tier": 2},
-  {"id": "backpack_3", "name": "Backpack", "familyId": "backpack", "tier": 3},
-  {"id": "backpack_4", "name": "Backpack", "familyId": "backpack", "tier": 4},
-  {"id": "backpack_5", "name": "Backpack", "familyId": "backpack", "tier": 5},
-  {"id": "backpack_6", "name": "Backpack", "familyId": "backpack", "tier": 6},
+  {"id": "backpack_1", "name": "Bindle", "familyId": "backpack", "tier": 1, "capacitySlots": 4},
+  {"id": "backpack_2", "name": "Ragged Sack", "familyId": "backpack", "tier": 2, "capacitySlots": 8},
+  {"id": "backpack_3", "name": "Traveler's Pack", "familyId": "backpack", "tier": 3, "capacitySlots": 14},
+  {"id": "backpack_4", "name": "Journeyman's Pack", "familyId": "backpack", "tier": 4, "capacitySlots": 20},
+  {"id": "backpack_5", "name": "Adventurer's Pack", "familyId": "backpack", "tier": 5, "capacitySlots": 28},
+  {"id": "backpack_6", "name": "Explorer's Greatpack", "familyId": "backpack", "tier": 6, "capacitySlots": 40},
 
   {"id": "fishing_pole_1", "name": "Fishing Pole", "familyId": "fishing_pole", "tier": 1},
   {"id": "fishing_pole_2", "name": "Fishing Pole", "familyId": "fishing_pole", "tier": 2},
