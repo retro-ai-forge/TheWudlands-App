@@ -679,6 +679,12 @@
   transform: translateY(-50%);
 }
 
+/* Sits above Back on the right edge - the cloak worn over the backpack. */
+.equipSlotCloak {
+  top: 34.5%;
+  right: clamp(-4.875rem, calc(-15vw + 0.75rem), -0.75rem);
+}
+
 .equipSlotBack {
   top: 55%;
   right: clamp(-4.875rem, calc(-15vw + 0.75rem), -0.75rem);
@@ -689,22 +695,45 @@
   right: clamp(-4.875rem, calc(-15vw + 0.75rem), -0.75rem);
 }
 
-/* Left/right hand sit below the portrait rather than pinned to it - a held
+/* Hand/Ring/Girdle sit below the portrait rather than pinned to it - a held
    item doesn't read well as a small badge overlaid on the image. Spacing
-   from .frameStage above comes from .frameColumn's own gap. */
+   from .frameStage above comes from .frameColumn's own gap.
+
+   All 5 slots (Hand, Ring, Girdle, Ring, Hand) need 23rem unwrapped
+   (5 * 4rem + 4 * 0.75rem gaps) - wider than .frameColumn's own 18rem cap,
+   so this overrides that cap with its own width instead of inheriting it
+   via align-items:stretch, growing up to 23.75rem (a hair over 23rem for
+   rounding slack) once the viewport has room, and wrapping onto two lines
+   below that instead of overflowing uncapped. */
 .handSlotRow {
   display: flex;
+  flex-wrap: wrap;
   gap: 0.75rem;
   justify-content: center;
+  /* .frameColumn's align-items:stretch only stretches a flex child with no
+     explicit size of its own - now that this has one (13.5rem/23.75rem,
+     narrower than frameColumn itself), it falls back to flex-start
+     (left-aligned) instead, so this needs its own centering. */
+  align-self: center;
+  /* Exactly 3 slots + 2 gaps (13.5rem) below the breakpoint - a continuous
+     vw-based width here lands right in the "exactly 4 fit" zone across most
+     real phone widths (320-414px), wrapping as an ugly 4-then-1 instead of
+     the clean 3-then-2 split wanted. justify-content:center already centers
+     each wrapped line independently, so 3-then-2 reads as two centered rows. */
+  width: 13.5rem;
+}
+
+@media (min-width: 390px) {
+  .handSlotRow {
+    /* All 5 slots + 4 gaps (23rem, plus a hair of rounding slack) fit
+       unwrapped once there's room. */
+    width: 23.75rem;
+  }
 }
 
 /* Same fixed 4rem as .equipSlotOverlay, so every slot on the page reads as
-   one consistent size - deliberately NOT shrunk to fit .frameColumn's own
-   width, so on narrow screens the row (3 * 4rem + 2 * 0.75rem gaps =
-   13.5rem) can end up wider than the portrait itself; nothing here clips
-   it, and justify-content:center on .handSlotRow keeps it centered under
-   the image regardless. flex:0 0 auto instead of the bare .equipSlot's
-   flexing, so 3 slots don't just divide up whatever width happens to be
+   one consistent size. flex:0 0 auto instead of the bare .equipSlot's
+   flexing, so 5 slots don't just divide up whatever width happens to be
    available. */
 .handSlotRow .equipSlot {
   flex: 0 0 auto;
@@ -714,6 +743,30 @@
      moment the label text needs more room - overriding it to 0 lets
      aspect-ratio actually win, matching Head's square size exactly (an
      absolutely-positioned box, which isn't subject to this flex quirk). */
+  min-height: 0;
+}
+
+/* Companion/Mount sit below everything else, each scaled up to the same max
+   size as the character's own portrait (.frameColumn's own width cap) -
+   large enough to show a full companion/mount portrait later, not another
+   small badge. Row wraps under that width on narrow screens instead of
+   forcing two full-size boxes side by side. */
+.companionMountRow {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 1.5rem;
+  margin-top: 1.5rem;
+}
+
+.largeEquipSlot {
+  composes: equipSlot;
+  /* Same size as .faceFrame (the small face-crop portrait on the Stats
+     tab) - a face-sized frame, not the full body portrait. */
+  width: 10rem;
+  aspect-ratio: 1 / 1;
+  /* min-height:0 for the same flex/aspect-ratio reason as .handSlotRow
+     .equipSlot above - .companionMountRow is a flex row too. */
   min-height: 0;
 }
 

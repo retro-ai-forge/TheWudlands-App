@@ -338,6 +338,7 @@ These recipes need no learned blueprint to craft, so they never earn the tier-sc
 | Dressed Meat | 3 | Meat x3 |
 | Carcass | 3 | Meat x3 |
 | Trophy Charm | 3 | Monster Part x3 |
+| Oil | 3 | Meat x2, Fiber x1 |
 | Chalk | 2 | Stone x2 |
 | Signal Whistle | 2 | Bone x2 |
 | Whetstone | 2 | Stone x2 |
@@ -345,6 +346,27 @@ These recipes need no learned blueprint to craft, so they never earn the tier-sc
 | Bone Shard | 2 | Bone x2 |
 | Quilted Thread | 2 | Feather x2 |
 | Cooked Fish | 2 | Fish x2 |
-| Oil | 2 | Meat x1, Fiber x1 |
 | Clean Fish | 1 | Fish x1 |
+
+### Light Sources
+
+A light source's raw cost stays the same across all six tiers — only the tier of raw material used changes (e.g. a tier-1 Candle burns Grain, a tier-6 Candle burns Ambrosia) — while burn duration doubles each tier:
+
+| Light Source | Raw Materials | T1 | T2 | T3 | T4 | T5 | T6 |
+|---|---|---:|---:|---:|---:|---:|---:|
+| Candle | Harvest x3, Fiber x2 | 1h | 2h | 4h | 8h | 16h | 32h |
+| Torch | Fiber x3, Meat x3, Wood x2 | 2h | 4h | 8h | 16h | 32h | 64h |
+| Glass Lantern + Oil (per flask) | Lantern: Sand x12, Ore x10, Crystal x3, Meat x3 · Oil: Meat x2, Fiber x1 | 1h | 2h | 4h | 8h | 16h | 32h |
+
+Candle and Torch are self-contained and just burn for their own tier's duration. A Lantern instead needs Oil: its actual burn time is bottlenecked by whichever of the lantern/oil pair is the lower tier (a tier-6 lantern burning tier-1 oil only gets 1h). When the equipped lantern runs dry, the character automatically falls back to a carried Torch, then a Candle, and finally goes dark if nothing is left.
+
+Total raw material cost to keep a light burning for a given duration, using tier-1 items:
+
+| Duration | Candle (1h each) | Torch per 1h | Lantern 1 oil per hour |
+|---|---:|---:|---:|
+| 10h | 50 | 40 | 58 |
+| 20h | 100 | 80 | 88 |
+| 30h | 150 | 120 | 118 |
+| 40h | 200 | 160 | 148 |
+| 50h | 250 | 200 | 178 |
 

@@ -14,15 +14,22 @@ const OVERLAY_SLOTS = [
   { label: "Neck", position: styles.equipSlotNeck },
   { label: "Chest", position: styles.equipSlotChest },
   { label: "Legs", position: styles.equipSlotLegs },
+  { label: "Cloak", position: styles.equipSlotCloak },
   { label: "Back", position: styles.equipSlotBack },
   { label: "Side", position: styles.equipSlotGirdle },
 ];
 // Sit below the portrait instead, side by side - a hand holding something
 // doesn't read well as a small badge pinned to the image itself. Girdle
-// (the belt) sits centered between them.
-const FIRST_ROW_SLOTS = ["Left Ring", "Girdle", "Right Ring"];
-// A second row below that, same size/gap/centering (reuses .handSlotRow).
-const SECOND_ROW_SLOTS = ["Left Hand", "Right Hand"];
+// (the belt) sits centered between them, and each Hand sits directly beside
+// its matching Ring. One row in the markup; .handSlotRow's own flex-wrap
+// breaks it onto two lines (Hand+Ring, Hand+Ring) on narrow screens and
+// keeps all 5 on one line once there's room.
+const HAND_RING_SLOTS = ["Left Hand", "Left Ring", "Girdle", "Right Ring", "Right Hand"];
+// Below everything else, at full portrait size rather than a small badge -
+// these are large enough to actually show a companion/mount's own portrait
+// once that art exists, capped at the same max size as the character's own
+// portrait (see .largeEquipSlot).
+const COMPANION_MOUNT_SLOTS = ["Companion", "Mount"];
 
 /** Body page: the full character frame the player defined, with equipment slots overlaid on it. */
 export function BodyTab({ character }: { character: SlotCharacterSummary }) {
@@ -75,16 +82,7 @@ export function BodyTab({ character }: { character: SlotCharacterSummary }) {
           </div>
 
           <div className={styles.handSlotRow}>
-            {FIRST_ROW_SLOTS.map((label) => (
-              <div className={styles.equipSlot} key={label}>
-                <span className={styles.equipSlotLabel}>{label}</span>
-                <span className={styles.equipSlotEmpty}>Empty</span>
-              </div>
-            ))}
-          </div>
-
-          <div className={styles.handSlotRow}>
-            {SECOND_ROW_SLOTS.map((label) => (
+            {HAND_RING_SLOTS.map((label) => (
               <div className={styles.equipSlot} key={label}>
                 <span className={styles.equipSlotLabel}>{label}</span>
                 <span className={styles.equipSlotEmpty}>Empty</span>
@@ -92,6 +90,15 @@ export function BodyTab({ character }: { character: SlotCharacterSummary }) {
             ))}
           </div>
         </div>
+      </div>
+
+      <div className={styles.companionMountRow}>
+        {COMPANION_MOUNT_SLOTS.map((label) => (
+          <div className={styles.largeEquipSlot} key={label}>
+            <span className={styles.equipSlotLabel}>{label}</span>
+            <span className={styles.equipSlotEmpty}>Empty</span>
+          </div>
+        ))}
       </div>
     </div>
   );
