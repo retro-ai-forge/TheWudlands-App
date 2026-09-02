@@ -847,7 +847,7 @@
     "kind": [
       "misc"
     ],
-    "sizeClass": "light",
+    "sizeClass": "tiny",
     "stackSize": 10,
     "needsItemDefinition": false,
     "note": "Never equipped - carried as a stackable backpack item, not an individually tracked instance.",
@@ -970,8 +970,8 @@
     "kind": [
       "misc"
     ],
-    "sizeClass": "light",
-    "stackSize": 5,
+    "sizeClass": "tiny",
+    "stackSize": 10,
     "needsItemDefinition": false,
     "note": "Never equipped - carried as a stackable backpack item, not an individually tracked instance.",
     "equipSlots": [],
