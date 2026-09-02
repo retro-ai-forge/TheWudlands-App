@@ -29,14 +29,25 @@ from backend.active_players import (
 from backend.character import AttributeStats, Character, PortraitArea, ProfStats
 from backend.players import (
     add_character,
+    check_in_item_balance,
+    check_in_item_instance,
     check_in_resource,
     check_in_tool,
+    check_out_item_balance,
+    check_out_item_instance,
     check_out_resource,
     check_out_tool,
+    craft_item,
     delete_character,
+    equip_item,
     get_or_create_player,
     get_player,
     grant_resource,
+    load_item_balance_to_backpack,
+    load_resource_to_backpack,
+    unequip_item,
+    unload_item_balance_from_backpack,
+    unload_resource_from_backpack,
     update_character_portrait,
 )
 from backend.balances import log_login_balances
@@ -188,6 +199,18 @@ class PortraitAreaResponse(BaseModel):
     )
 
 
+class ItemInstanceResponse(BaseModel):
+    """One individually-tracked item instance (needsItemDefinition:true family)."""
+
+    instanceId: str
+    itemId: str
+    familyId: str
+    quality: Optional[int] = None
+    location: str = Field(..., description="'backpack' | 'body' | 'soul' | 'pool'")
+    slotRef: List[str] = Field(default_factory=list)
+    createdAt: str
+
+
 class CharacterResponse(BaseModel):
     """A single character belonging to a player."""
 
@@ -227,6 +250,34 @@ class CharacterResponse(BaseModel):
         default_factory=list,
         description="Blueprint ids this character has learned, chosen on the Trappings step - soulbound, never moves",
     )
+    items: List[ItemInstanceResponse] = Field(
+        default_factory=list,
+        description="Item instances this character holds - backpacked or equipped (see location/slotRef)",
+    )
+    itemBalances: Dict[str, int] = Field(
+        default_factory=dict,
+        description="Crafting-vault balances for non-instance crafted items (food, potions, misc, adventuring gear)",
+    )
+    backpackResources: Dict[str, int] = Field(
+        default_factory=dict, description="Subset of resources physically loaded into the backpack"
+    )
+    backpackItemBalances: Dict[str, int] = Field(
+        default_factory=dict, description="Subset of itemBalances physically loaded into the backpack"
+    )
+    equippedLight: Optional[dict] = Field(
+        None, description="Which light source (if any) is currently lit and held - {family, tier, litAt, hand}"
+    )
+
+class PlayerInventoryResponse(BaseModel):
+    """The player's shared vault - pooled across every character they own."""
+
+    tools: Dict[str, int] = Field(default_factory=dict)
+    resources: Dict[str, int] = Field(default_factory=dict)
+    items: List[ItemInstanceResponse] = Field(
+        default_factory=list, description="Unassigned item instances, always location:\"pool\""
+    )
+    itemBalances: Dict[str, int] = Field(default_factory=dict)
+
 
 class PlayerDataResponse(BaseModel):
     """The authenticated player's permanent record and character roster.
@@ -241,13 +292,9 @@ class PlayerDataResponse(BaseModel):
     characters: List[CharacterResponse] = Field(
         default_factory=list, description="Characters belonging to this player"
     )
-    inventory: dict = Field(
-        default_factory=lambda: {
-            "tools": {},
-            "resources": {},
-            "items": {},
-        },
-        description="Shared inventory (tools, resources, items) pooled across all their characters",
+    inventory: PlayerInventoryResponse = Field(
+        default_factory=PlayerInventoryResponse,
+        description="Shared inventory (tools, resources, items, itemBalances) pooled across all their characters",
     )
 
 
@@ -805,6 +852,195 @@ async def check_in_tool_route(
 
     if player is None:
         raise HTTPException(status_code=404, detail="No matching character, or not enough on that character")
+
+    return player.to_dict()
+
+
+class CraftItemRequest(BaseModel):
+    """Which tier of a recipe's output to craft."""
+
+    tier: int = Field(..., gt=0, description="Tier of the item to craft")
+
+
+@player_router.post("/me/characters/{character_id}/craft/{family_id}", response_model=PlayerDataResponse)
+async def craft_item_route(
+    character_id: str, family_id: str, payload: CraftItemRequest, address: str = Depends(get_current_address)
+):
+    """
+    Craft one unit of `family_id` at the given tier for one of the player's
+    characters, consuming ingredients from that character's own resources.
+    The crafted output lands in the player's shared vault, not on the
+    character directly - check it out afterward.
+    """
+    try:
+        player = await craft_item(address, character_id, family_id, payload.tier)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc))
+
+    if player is None:
+        raise HTTPException(
+            status_code=404, detail="No matching character, missing ingredients/tool/blueprint, or unknown recipe"
+        )
+
+    return player.to_dict()
+
+
+class EquipItemRequest(BaseModel):
+    """Which body slot(s) to equip an item instance into."""
+
+    slots: List[str] = Field(..., description="One slot for an ordinary item, or both for a twoHanded item")
+
+
+@player_router.post("/me/characters/{character_id}/items/{instance_id}/equip", response_model=PlayerDataResponse)
+async def equip_item_route(
+    character_id: str, instance_id: str, payload: EquipItemRequest, address: str = Depends(get_current_address)
+):
+    """Equip one of a character's own item instances into `slots`."""
+    try:
+        player = await equip_item(address, character_id, instance_id, payload.slots)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc))
+
+    if player is None:
+        raise HTTPException(status_code=404, detail="No matching instance on that character, or slot(s) occupied")
+
+    return player.to_dict()
+
+
+@player_router.post("/me/characters/{character_id}/items/{instance_id}/unequip", response_model=PlayerDataResponse)
+async def unequip_item_route(character_id: str, instance_id: str, address: str = Depends(get_current_address)):
+    """Unequip one of a character's item instances back to the backpack."""
+    player = await unequip_item(address, character_id, instance_id)
+    if player is None:
+        raise HTTPException(status_code=404, detail="No matching equipped instance on that character")
+
+    return player.to_dict()
+
+
+@player_router.post("/me/characters/{character_id}/items/{instance_id}/check-out", response_model=PlayerDataResponse)
+async def check_out_item_instance_route(character_id: str, instance_id: str, address: str = Depends(get_current_address)):
+    """Move one item instance from the player's shared pool onto a character's backpack (capacity-gated)."""
+    player = await check_out_item_instance(address, character_id, instance_id)
+    if player is None:
+        raise HTTPException(status_code=404, detail="No matching instance in the shared vault, or no backpack room")
+
+    return player.to_dict()
+
+
+@player_router.post("/me/characters/{character_id}/items/{instance_id}/check-in", response_model=PlayerDataResponse)
+async def check_in_item_instance_route(character_id: str, instance_id: str, address: str = Depends(get_current_address)):
+    """Move one item instance from a character's backpack back into the player's shared pool."""
+    player = await check_in_item_instance(address, character_id, instance_id)
+    if player is None:
+        raise HTTPException(status_code=404, detail="No matching backpacked instance on that character")
+
+    return player.to_dict()
+
+
+@player_router.post(
+    "/me/characters/{character_id}/item-balances/{item_id}/check-out", response_model=PlayerDataResponse
+)
+async def check_out_item_balance_route(
+    character_id: str, item_id: str, payload: TransferAmountRequest, address: str = Depends(get_current_address)
+):
+    """Move `amount` of `item_id` from the player's shared vault onto one of their characters (uncapped)."""
+    try:
+        player = await check_out_item_balance(address, character_id, item_id, payload.amount)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc))
+
+    if player is None:
+        raise HTTPException(status_code=404, detail="No matching character, or not enough in the shared vault")
+
+    return player.to_dict()
+
+
+@player_router.post(
+    "/me/characters/{character_id}/item-balances/{item_id}/check-in", response_model=PlayerDataResponse
+)
+async def check_in_item_balance_route(
+    character_id: str, item_id: str, payload: TransferAmountRequest, address: str = Depends(get_current_address)
+):
+    """Move `amount` of `item_id` from one of the player's characters back into the shared vault."""
+    try:
+        player = await check_in_item_balance(address, character_id, item_id, payload.amount)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc))
+
+    if player is None:
+        raise HTTPException(status_code=404, detail="No matching character, or not enough on that character")
+
+    return player.to_dict()
+
+
+@player_router.post(
+    "/me/characters/{character_id}/resources/{resource_id}/load-backpack", response_model=PlayerDataResponse
+)
+async def load_resource_to_backpack_route(
+    character_id: str, resource_id: str, payload: TransferAmountRequest, address: str = Depends(get_current_address)
+):
+    """Physically pack `amount` of `resource_id` from a character's crafting vault into their backpack (capacity-gated)."""
+    try:
+        player = await load_resource_to_backpack(address, character_id, resource_id, payload.amount)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc))
+
+    if player is None:
+        raise HTTPException(status_code=404, detail="No matching character, not enough in the vault, or no backpack room")
+
+    return player.to_dict()
+
+
+@player_router.post(
+    "/me/characters/{character_id}/resources/{resource_id}/unload-backpack", response_model=PlayerDataResponse
+)
+async def unload_resource_from_backpack_route(
+    character_id: str, resource_id: str, payload: TransferAmountRequest, address: str = Depends(get_current_address)
+):
+    """Move `amount` of `resource_id` from a character's backpack back into their crafting vault."""
+    try:
+        player = await unload_resource_from_backpack(address, character_id, resource_id, payload.amount)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc))
+
+    if player is None:
+        raise HTTPException(status_code=404, detail="No matching character, or not enough in the backpack")
+
+    return player.to_dict()
+
+
+@player_router.post(
+    "/me/characters/{character_id}/item-balances/{item_id}/load-backpack", response_model=PlayerDataResponse
+)
+async def load_item_balance_to_backpack_route(
+    character_id: str, item_id: str, payload: TransferAmountRequest, address: str = Depends(get_current_address)
+):
+    """Physically pack `amount` of `item_id` from a character's crafting vault into their backpack (capacity-gated)."""
+    try:
+        player = await load_item_balance_to_backpack(address, character_id, item_id, payload.amount)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc))
+
+    if player is None:
+        raise HTTPException(status_code=404, detail="No matching character, not enough in the vault, or no backpack room")
+
+    return player.to_dict()
+
+
+@player_router.post(
+    "/me/characters/{character_id}/item-balances/{item_id}/unload-backpack", response_model=PlayerDataResponse
+)
+async def unload_item_balance_from_backpack_route(
+    character_id: str, item_id: str, payload: TransferAmountRequest, address: str = Depends(get_current_address)
+):
+    """Move `amount` of `item_id` from a character's backpack back into their crafting vault."""
+    try:
+        player = await unload_item_balance_from_backpack(address, character_id, item_id, payload.amount)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc))
+
+    if player is None:
+        raise HTTPException(status_code=404, detail="No matching character, or not enough in the backpack")
 
     return player.to_dict()
 

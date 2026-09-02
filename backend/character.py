@@ -160,6 +160,27 @@ class Character:
     # soulbound token, one day). A one-time unlock, never a stackable
     # quantity like resource_balances.
     blueprints: List[str] = field(default_factory=list)
+    # Item instances this character holds - either in the backpack
+    # (location:"backpack") or equipped into a body slot (location:"body").
+    # See backend.items_catalog; only needsItemDefinition:true families ever
+    # appear here (everything else is a flat count in item_balances).
+    items: List[dict] = field(default_factory=list)
+    # Crafting vault for non-instance crafted items (food, potions, misc
+    # trinkets, adventuring gear) - unlimited, keyed by concrete item id,
+    # the same flat-count pattern as resource_balances/tools.
+    item_balances: Dict[str, int] = field(default_factory=dict)
+    # Subset of resource_balances physically loaded into the backpack -
+    # slot-limited (see backend.items_catalog.backpack_slots_used), unlike
+    # resource_balances itself which is the unlimited crafting vault.
+    backpack_resources: Dict[str, int] = field(default_factory=dict)
+    # Subset of item_balances physically loaded into the backpack -
+    # same relationship backpack_resources has to resource_balances.
+    backpack_item_balances: Dict[str, int] = field(default_factory=dict)
+    # Which light source (if any) is currently lit and held, e.g.
+    # {"family": "torch", "tier": 4, "litAt": "<isoformat>", "hand": "Left Hand"}.
+    # Not an item instance - see backend/data/light-source-burn-hours.json;
+    # remaining burn time is computed lazily from litAt, not stored directly.
+    equipped_light: Optional[dict] = None
 
     def to_dict(self) -> dict:
         return {
@@ -190,4 +211,9 @@ class Character:
             "resources": self.resource_balances,
             "tools": self.tools,
             "blueprints": self.blueprints,
+            "items": self.items,
+            "itemBalances": self.item_balances,
+            "backpackResources": self.backpack_resources,
+            "backpackItemBalances": self.backpack_item_balances,
+            "equippedLight": self.equipped_light,
         }
