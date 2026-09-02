@@ -81,8 +81,8 @@ Each of the 12 profession categories draws from 3 raw-material resource families
 | Military | soldier, guard | ore, fiber, monster_part | 29 | |
 | Artists | painter, acrobat, clown, firespitter, storyteller, actor | feather, fiber, bone | 26 | |
 | Alchemy | alchemist, poisoner, enchanter | herbs, crystal, monster_part | 20 | Planned to grow substantially once more items are introduced across the game. |
-| Food | baker, butcher, brewmaster, cook, pastry, apiarist, barkeep, server | meat, harvest, herbs | 18 | Planned perk: these professions need less food to eat, and get it cheaper. |
-| Rural | farmer, herder, hunter, fisher, miner, forager | hide, meat, harvest, fish | 11 | Foragers are planned to earn a bonus yield on gathered resources, raising Rural's output without needing more recipes. |
+| Food | baker, butcher, brewmaster, cook | meat, harvest, herbs | 18 | Planned perk: these professions need less food to eat, and get it cheaper. |
+| Rural | farmer, herder, hunter, fisher, miner | hide, meat, harvest, fish | 12 | Now has its own crafting station, the Smokehouse. |
 | CraftStone | mason, stonemason, potter | clay, stone, crystal | 11 | Their expertise is stone construction — underground building, traps, and doors — a naturally smaller domain, expected to stay limited relative to the other craft categories. |
 | Aristocratic | scribe, clerk, scholar | reed, feather, skin | 11 | Planned to grow through magic scroll recipes, once is introduced. |
 | Trade | merchant, trader | harvest, stone, monster_part | 11 | Planned to lean on a marketplace discount mechanic (traders paying less for goods) rather than more recipes. |

@@ -1,0 +1,12 @@
+{
+  "_comment": "How many backpack/carry slots one item of a given sizeClass (item-inventory-properties.json) occupies. Tiny costs a full slot like Light does - the difference is that a Tiny item's own stackSize (also on item-inventory-properties.json, e.g. arrow/bolt/oil at 10) lets several units share that one slot, so the per-unit cost is amortized down; Light items are conventionally not stacked (stackSize 1) even though nothing here enforces that.",
+  "tiny": 1,
+  "light": 1,
+  "medium": 2,
+  "heavy": 4,
+  "xLarge": 8,
+  "_rawAndProcessedFallback": "Raw and processed resources (base-resources.json, base-processed.json - ~396 entries) aren't in item-inventory-properties.json at all, since that file only covers the 'kind'-classified subset (weapons/armor/tools/etc). They default to sizeClass 'tiny' (1 slot). One unified stacking rule now, not a separate display-only one: rawStackSize matches resources_catalog.py's STACK_SIZE, processedStackSize matches processed_catalog.py's STACK_SIZE - same numbers used for both carry capacity and storage/backpack UI display.",
+  "rawStackSize": 40,
+  "processedStackSize": 20,
+  "tinyStackSize": 10
+}

@@ -19,10 +19,12 @@ _CATALOG_PATH = Path(__file__).resolve().parent / "data" / "base-resources.json"
 _PROFESSION_FAMILIES_PATH = Path(__file__).resolve().parent / "data" / "profession-resource-families.json"
 _SELECTION_RULES_PATH = Path(__file__).resolve().parent / "data" / "resource-selection-rules.json"
 
-# Display-only contract: the frontend splits a resource's total into stacks
-# of this size when rendering storage/backpack UI. Storage itself just keeps
-# a running total; there is no per-stack backend concept.
-MAX_STACK_SIZE = 100
+# How many units of a raw resource share one backpack/carry slot (see
+# backend/data/item-size-classes.json's rawStackSize) - also used by the
+# frontend to split a resource's total into stacks when rendering
+# storage/backpack UI. Storage itself just keeps a running total; there is
+# no per-stack backend concept.
+STACK_SIZE = 40
 
 
 @dataclass(frozen=True)

@@ -37,3 +37,9 @@ def _load_catalog() -> tuple[ProcessedResourceItem, ...]:
 
 PROCESSED_RESOURCE_ITEMS: tuple[ProcessedResourceItem, ...] = _load_catalog()
 PROCESSED_RESOURCE_ITEMS_BY_ID: dict[str, ProcessedResourceItem] = {item.id: item for item in PROCESSED_RESOURCE_ITEMS}
+
+# How many units of a processed resource share one backpack/carry slot (see
+# backend/data/item-size-classes.json's processedStackSize) - lower than raw
+# resources' own STACK_SIZE (resources_catalog.py, 40), since processed
+# goods are bulkier per unit than the raw materials they're refined from.
+STACK_SIZE = 20
