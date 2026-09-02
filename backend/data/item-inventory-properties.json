@@ -957,7 +957,7 @@
     "kind": [
       "misc"
     ],
-    "sizeClass": "light",
+    "sizeClass": "tiny",
     "stackSize": 10,
     "needsItemDefinition": false,
     "note": "TBD - general trinket/utility, durability unclear.",
@@ -1721,54 +1721,6 @@
     "needsItemDefinition": false,
     "note": "A placed crafting station, not personal gear - Rural's own station, mirroring Oven/Tanning Rack for other categories.",
     "equipSlots": [],
-    "backpackable": false,
-    "icon": "/images/items/bat.png"
-  },
-  {
-    "familyId": "lit_torch",
-    "note": "System-generated - represents a lit torch equipped in hand; consumed from the torch backpack stack by the (future) lighting mechanic, not crafted or carried on its own.",
-    "kind": [
-      "light"
-    ],
-    "sizeClass": "tiny",
-    "stackSize": 1,
-    "needsItemDefinition": true,
-    "equipSlots": [
-      "Left Hand",
-      "Right Hand"
-    ],
-    "backpackable": false,
-    "icon": "/images/items/bat.png"
-  },
-  {
-    "familyId": "lit_candle",
-    "note": "System-generated - represents a lit candle equipped in hand; consumed from the candle backpack stack by the (future) lighting mechanic, not crafted or carried on its own.",
-    "kind": [
-      "light"
-    ],
-    "sizeClass": "tiny",
-    "stackSize": 1,
-    "needsItemDefinition": true,
-    "equipSlots": [
-      "Left Hand",
-      "Right Hand"
-    ],
-    "backpackable": false,
-    "icon": "/images/items/bat.png"
-  },
-  {
-    "familyId": "lit_lantern",
-    "note": "System-generated - represents a lit glass lantern equipped in hand; consumed from the glass_lantern backpack stack by the (future) lighting mechanic, not crafted or carried on its own.",
-    "kind": [
-      "light"
-    ],
-    "sizeClass": "tiny",
-    "stackSize": 1,
-    "needsItemDefinition": true,
-    "equipSlots": [
-      "Left Hand",
-      "Right Hand"
-    ],
     "backpackable": false,
     "icon": "/images/items/bat.png"
   }
