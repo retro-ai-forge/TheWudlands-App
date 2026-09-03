@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import styles from "./CharacterTabs.module.css";
+import { formatRemaining, useCraftCountdown } from "../craftTimer";
 import type { SlotCharacterSummary } from "../SoulSlotGrid";
 
 // GET /api/auth/blueprint-categories - lore/reference data (not
@@ -12,7 +13,7 @@ type BlueprintTierInfo = Record<
   string,
   { tier: number; familyId: string; kind: string; name?: string }
 >;
-type ResourceTierInfo = Record<string, { tier: number; family: string }>;
+type ResourceTierInfo = Record<string, { tier: number; family: string; category: "raw" | "processed" }>;
 
 // One individually-tracked crafted item (a needsItemDefinition:true
 // family - weapons, armor, shields, and the rest) - unlike a flat balance,
@@ -151,20 +152,20 @@ function getTierSymbolClass(tier: number): string {
   }
 }
 
-function isProcessedResource(id: string): boolean {
-  const processedPatterns = [
-    "metal_bar", "metal_ingot", "plank", "leather", "woven_cloth", "refined_ore",
-    "alloy_dust", "coal", "cut_crystal", "hardened_stick", "reinforced_frame",
-    "ground_spice", "dressed_meat", "herbal_extract", "distilled_essence",
-    "refined_clay", "ground_pigment", "lacquer", "quilted_thread", "trimmed_pelt",
-    "venomous_extract", "parchment", "pigment", "arcane_dust", "clockwork_mechanism",
-    "medicinal_paste", "cured_chitin"
-  ];
-  return processedPatterns.some(pattern => id.includes(pattern));
+// Reads the real category from /resource-catalog (fetched into
+// resourceTierInfo) rather than guessing from the id string - a
+// resource's actual raw/processed split lives in
+// resources_catalog.py/processed_catalog.py, and hand-maintaining a
+// pattern list here just means every new processed material (carcass
+// among them) silently shows up misclassified until someone notices.
+// Defaults to "raw" only in the brief window before the catalog fetch
+// resolves, or if it fails.
+function isProcessedResource(id: string, tierInfo?: ResourceTierInfo): boolean {
+  return tierInfo?.[id]?.category === "processed";
 }
 
-function getResourceIcon(id: string): string {
-  return isProcessedResource(id) ? "⚒️" : "🪨";
+function getResourceIcon(id: string, tierInfo?: ResourceTierInfo): string {
+  return isProcessedResource(id, tierInfo) ? "⚒️" : "🪨";
 }
 
 function ResourceList({
@@ -225,8 +226,8 @@ function ResourceList({
   };
 
   // Separate processed and raw
-  const processedItems = entries.filter(([id]) => isProcessedResource(id));
-  const rawItems = entries.filter(([id]) => !isProcessedResource(id));
+  const processedItems = entries.filter(([id]) => isProcessedResource(id, tierInfo));
+  const rawItems = entries.filter(([id]) => !isProcessedResource(id, tierInfo));
 
   const processedData = groupByFamilyAndType(processedItems);
   const rawData = groupByFamilyAndType(rawItems);
@@ -243,7 +244,7 @@ function ResourceList({
             });
 
             return familyItems.flatMap(([id, qty]) => {
-              const icon = getResourceIcon(id);
+              const icon = getResourceIcon(id, tierInfo);
               const tierData = tierInfo?.[id];
               const tier = tierData?.tier ?? 0;
               const tierDisplay = tier ? getTierIndicator(tier) : "";
@@ -576,13 +577,23 @@ export function InventoryTab({
     // Fetch resource tier information from the backend
     fetch("/api/auth/resource-catalog")
       .then((res) => (res.ok ? res.json() : []))
-      .then((data: Array<{ id: string; familyId: string; tier: number; resourceFamily: string }>) => {
-        const tierMap: ResourceTierInfo = {};
-        for (const item of data) {
-          tierMap[item.id] = { tier: item.tier, family: item.resourceFamily };
+      .then(
+        (
+          data: Array<{
+            id: string;
+            familyId: string;
+            tier: number;
+            resourceFamily: string;
+            category: "raw" | "processed";
+          }>
+        ) => {
+          const tierMap: ResourceTierInfo = {};
+          for (const item of data) {
+            tierMap[item.id] = { tier: item.tier, family: item.resourceFamily, category: item.category };
+          }
+          setResourceTierInfo(tierMap);
         }
-        setResourceTierInfo(tierMap);
-      })
+      )
       .catch(() => setResourceTierInfo({}));
 
     // Fetch tool tier information from the backend
@@ -704,36 +715,53 @@ export function InventoryTab({
   // recipe-viewer.template.html is the one place they actually get defined.
   type RecipeViewerWindow = Window & {
     getCurrentSelection?: () => { familyId: string; tier: number } | null;
-    isCurrentSelectionCraftable?: () => boolean;
+    isCurrentSelectionCraftable?: (count?: number) => boolean;
   };
   const getRecipeViewerWindow = () =>
     recipeViewerRef.current?.contentWindow as RecipeViewerWindow | null | undefined;
 
+  // How many units to craft in one batch - the row of quick-count buttons
+  // next to Craft. Ingredients scale with this; the server-side timer
+  // doesn't (see start_craft's own count parameter).
+  const CRAFT_COUNTS = [1, 2, 5, 10] as const;
+  const [craftCount, setCraftCount] = useState<number>(1);
+
   // Re-checked on an interval while the viewer is open, since there's no
   // "selection changed" event fired out of it - a player can browse
-  // recipes/tiers freely and the button should track whatever's on screen
-  // right now, not just what it was when last clicked.
-  const [canCraft, setCanCraft] = useState(false);
+  // recipes/tiers freely and the button(s) should track whatever's on
+  // screen right now, not just what it was when last polled. Checked once
+  // per available count (1/2/5/10) so each quick-count button can be
+  // disabled independently once affording it runs out.
+  const [craftableCounts, setCraftableCounts] = useState<Record<number, boolean>>({});
   useEffect(() => {
     if (!recipeViewerOpen) {
-      setCanCraft(false);
+      setCraftableCounts({});
       return;
     }
-    const check = () => setCanCraft(getRecipeViewerWindow()?.isCurrentSelectionCraftable?.() ?? false);
+    const check = () => {
+      const win = getRecipeViewerWindow();
+      const next: Record<number, boolean> = {};
+      for (const count of CRAFT_COUNTS) {
+        next[count] = win?.isCurrentSelectionCraftable?.(count) ?? false;
+      }
+      setCraftableCounts(next);
+    };
     check();
     const interval = setInterval(check, 500);
     return () => clearInterval(interval);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [recipeViewerOpen, playerResourceBalances, playerTools, knownBlueprints]);
+  const canCraft = craftableCounts[craftCount] ?? false;
 
   const [crafting, setCrafting] = useState(false);
   const [craftError, setCraftError] = useState<string | null>(null);
 
-  // Begins crafting whatever's currently selected in the viewer - checks
-  // ingredients/tool/blueprint against the player's shared vault, transfers
-  // what's needed onto the character, and starts the CRAFT_DURATION_SECONDS
-  // timer server-side (character.activeCraft). See the countdown effect
-  // below for what happens once that timer elapses.
+  // Begins crafting `craftCount` units of whatever's currently selected in
+  // the viewer, in one batch - checks ingredients (scaled by craftCount)/
+  // tool/blueprint against the player's shared vault, transfers what's
+  // needed onto the character, and starts the CRAFT_DURATION_SECONDS timer
+  // server-side (character.activeCraft) - one timer regardless of count.
+  // See the countdown effect below for what happens once that timer elapses.
   const startCraft = async () => {
     const selection = getRecipeViewerWindow()?.getCurrentSelection?.();
     if (!selection) {
@@ -749,7 +777,7 @@ export function InventoryTab({
           method: "POST",
           credentials: "include",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ tier: selection.tier }),
+          body: JSON.stringify({ tier: selection.tier, count: craftCount }),
         }
       );
       if (!res.ok) {
@@ -792,34 +820,16 @@ export function InventoryTab({
   };
 
   // Countdown against character.activeCraft.readyAt - resolved lazily
-  // (matching backend.players' own "no background job" design): ticks
-  // once a second while a craft is in progress, and fires finishCraft the
-  // moment it reaches zero, including immediately on mount if readyAt is
-  // already in the past.
-  const [remainingSeconds, setRemainingSeconds] = useState<number | null>(null);
+  // (matching backend.players' own "no background job" design), shared
+  // with the soul-slot grid's own compact badge. Unlike that display-only
+  // use, this tab is also responsible for actually collecting the craft:
+  // fires finishCraft the moment the countdown reaches zero, including
+  // immediately on mount if readyAt is already in the past.
+  const remainingSeconds = useCraftCountdown(character.activeCraft?.readyAt);
   useEffect(() => {
-    const readyAt = character.activeCraft?.readyAt;
-    if (!readyAt) {
-      setRemainingSeconds(null);
-      return;
-    }
-    const readyAtMs = new Date(readyAt).getTime();
-    const tick = () => {
-      const remaining = Math.max(0, Math.ceil((readyAtMs - Date.now()) / 1000));
-      setRemainingSeconds(remaining);
-      if (remaining === 0) finishCraft();
-    };
-    tick();
-    const interval = setInterval(tick, 1000);
-    return () => clearInterval(interval);
+    if (remainingSeconds === 0) finishCraft();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [character.activeCraft?.readyAt]);
-
-  const formatRemaining = (seconds: number) => {
-    const m = Math.floor(seconds / 60);
-    const s = seconds % 60;
-    return `${m}:${s.toString().padStart(2, "0")}`;
-  };
+  }, [remainingSeconds === 0]);
 
   return (
     <div className={styles.panel}>
@@ -941,6 +951,26 @@ export function InventoryTab({
             ✓
           </span>
         )}
+        <div className={styles.craftCountRow} role="radiogroup" aria-label="How many to craft">
+          {CRAFT_COUNTS.map((count) => (
+            <button
+              key={count}
+              type="button"
+              role="radio"
+              aria-checked={craftCount === count}
+              className={[
+                styles.craftCountButton,
+                craftCount === count ? styles.craftCountButtonActive : "",
+              ]
+                .filter(Boolean)
+                .join(" ")}
+              disabled={crafting || remainingSeconds !== null || !(craftableCounts[count] ?? false)}
+              onClick={() => setCraftCount(count)}
+            >
+              {count}
+            </button>
+          ))}
+        </div>
         {craftError && <span className={styles.craftError}>{craftError}</span>}
       </div>
 

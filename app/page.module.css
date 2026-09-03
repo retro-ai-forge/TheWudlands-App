@@ -516,6 +516,44 @@
   opacity: 0.0;
 }
 
+/* Small badge over an occupied slot's portrait when that character has a
+   craft in progress - same amber-glow language as the Inventory tab's own
+   .craftTimer, just compact enough to sit on a thumbnail. */
+.slotCraftBadge {
+  position: absolute;
+  bottom: 4%;
+  right: 4%;
+  z-index: 1;
+  padding: 0.1rem 0.5rem;
+  border-radius: 999px;
+  background: rgba(20, 16, 10, 0.85);
+  border: 1px solid rgba(212, 160, 96, 0.6);
+  color: #ffcf80;
+  font-size: 0.7rem;
+  font-weight: bold;
+  font-variant-numeric: tabular-nums;
+  text-shadow: 0 0 6px #d4a060;
+  pointer-events: none;
+}
+
+/* Pairs with .slotCraftBadge - the countdown alone doesn't say what it's
+   counting down to, so this names it, mirrored to the opposite corner. */
+.slotCraftingLabel {
+  position: absolute;
+  bottom: 4%;
+  left: 4%;
+  z-index: 1;
+  padding: 0.1rem 0.5rem;
+  border-radius: 999px;
+  background: rgba(20, 16, 10, 0.85);
+  border: 1px solid rgba(212, 160, 96, 0.6);
+  color: #ffcf80;
+  font-size: 0.7rem;
+  font-weight: bold;
+  text-shadow: 0 0 6px #d4a060;
+  pointer-events: none;
+}
+
 /* Token-holding progress: a thin golden line along the bottom edge of a
    token slot's artwork (slots 5-8), growing from the left corner up to how
    much of the required balance the wallet currently holds. */

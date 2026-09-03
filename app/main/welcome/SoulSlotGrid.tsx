@@ -27,6 +27,7 @@
 import { useEffect, useRef, useState } from "react";
 import styles from "../../page.module.css";
 import { useWallet } from "../WalletProvider";
+import { formatRemaining, useCraftCountdown } from "./craftTimer";
 import { getPortraitCropImgStyle, type PortraitArea } from "@/app/lib/portraitCrop";
 
 export interface SoulSlotDefinition {
@@ -110,7 +111,7 @@ export interface SlotCharacterSummary {
   /** Blueprint ids this character has learned - soulbound, never moves. */
   blueprints: string[];
   /** In-progress craft, if any - one job at a time. Resolved lazily against readyAt, not a live server countdown. */
-  activeCraft: { familyId: string; tier: number; readyAt: string } | null;
+  activeCraft: { familyId: string; tier: number; count: number; readyAt: string } | null;
 }
 
 interface SlotState {
@@ -423,6 +424,10 @@ function SoulSlotCard({
   onViewCharacter: (character: SlotCharacterSummary) => void;
 }) {
   const isOccupied = occupant !== undefined;
+  // Display-only - this grid never calls finish_craft itself, unlike the
+  // Inventory tab's own use of this same hook. Just lets a player glance
+  // at the grid and see who's still busy, without opening anyone's sheet.
+  const remainingSeconds = useCraftCountdown(occupant?.activeCraft?.readyAt);
   // True once occupant.portraitUrl has failed to load (a broken external
   // link, most likely) - drives the large "?" placeholder below instead of
   // a blank/broken image sitting in the slot.
@@ -544,6 +549,16 @@ function SoulSlotCard({
       >
         {showsOccupantPreview ? (
           <span className={styles.slotArt}>
+            {remainingSeconds !== null && (
+              <>
+                <span className={styles.slotCraftingLabel} aria-hidden="true">
+                  Crafting
+                </span>
+                <span className={styles.slotCraftBadge} aria-hidden="true">
+                  {formatRemaining(remainingSeconds)}
+                </span>
+              </>
+            )}
             {occupant.portraitUrl && !faceCropFailed ? (
               occupant.portraitFaceArea ? (
                 <span className={styles.slotFaceCropWrap}>

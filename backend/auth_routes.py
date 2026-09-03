@@ -268,7 +268,7 @@ class CharacterResponse(BaseModel):
         None, description="Which light source (if any) is currently lit and held - {family, tier, litAt, hand}"
     )
     activeCraft: Optional[dict] = Field(
-        None, description="In-progress craft, if any - {familyId, tier, readyAt}. One job at a time."
+        None, description="In-progress craft, if any - {familyId, tier, count, readyAt}. One job at a time."
     )
 
 class PlayerInventoryResponse(BaseModel):
@@ -414,6 +414,7 @@ class ResourceItemResponse(BaseModel):
     familyId: str
     tier: int
     resourceFamily: str = Field(..., description="The resource family (ore, wood, stone, etc.)")
+    category: str = Field(..., description="'raw' | 'processed' - which catalog this id actually comes from")
 
 
 class ToolItemResponse(BaseModel):
@@ -776,11 +777,15 @@ async def get_resource_catalog():
     Powers tier indicators and grouping in the inventory resource list.
     """
     raw_resources = [
-        ResourceItemResponse(id=item.id, familyId=item.family_id, tier=item.tier, resourceFamily=item.family_id)
+        ResourceItemResponse(
+            id=item.id, familyId=item.family_id, tier=item.tier, resourceFamily=item.family_id, category="raw"
+        )
         for item in RESOURCE_ITEMS_BY_ID.values()
     ]
     processed_resources = [
-        ResourceItemResponse(id=item.id, familyId=item.family_id, tier=item.tier, resourceFamily=item.family_id)
+        ResourceItemResponse(
+            id=item.id, familyId=item.family_id, tier=item.tier, resourceFamily=item.family_id, category="processed"
+        )
         for item in PROCESSED_RESOURCE_ITEMS_BY_ID.values()
     ]
     return raw_resources + processed_resources
@@ -855,9 +860,10 @@ async def check_in_tool_route(
 
 
 class CraftItemRequest(BaseModel):
-    """Which tier of a recipe's output to craft."""
+    """Which tier of a recipe's output to craft, and how many units in one batch."""
 
     tier: int = Field(..., gt=0, description="Tier of the item to craft")
+    count: int = Field(1, ge=1, description="How many units to craft in one batch - ingredients scale, the timer doesn't")
 
 
 @player_router.post("/me/characters/{character_id}/craft/{family_id}/start", response_model=PlayerDataResponse)
@@ -873,7 +879,7 @@ async def start_craft_route(
     `.../craft/finish` once that timer elapses.
     """
     try:
-        player = await start_craft(address, character_id, family_id, payload.tier)
+        player = await start_craft(address, character_id, family_id, payload.tier, payload.count)
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc))
 

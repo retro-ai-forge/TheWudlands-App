@@ -324,6 +324,47 @@
   50% { text-shadow: 0 0 10px #4ade80, 0 0 20px rgba(74, 222, 128, 0.9); }
 }
 
+/* How many units to craft in one batch - a row of "radio" buttons (1/2/5/10)
+   next to Craft. Same visual language as .transferButton, but pill-shaped
+   and with a distinct active state instead of just hover/disabled. */
+.craftCountRow {
+  display: flex;
+  gap: 0.3rem;
+}
+
+.craftCountButton {
+  min-width: 2rem;
+  padding: 0.3rem 0.5rem;
+  background: #1a1a1a;
+  border: 1px solid rgba(168, 153, 104, 0.4);
+  border-radius: 999px;
+  color: #d4a060;
+  font-family: inherit;
+  font-size: 0.85rem;
+  font-variant-numeric: tabular-nums;
+  cursor: pointer;
+}
+
+.craftCountButton:hover:not(:disabled):not(.craftCountButtonActive) {
+  background: #2a2215;
+  border-color: #c07a3a;
+  color: #c07a3a;
+}
+
+.craftCountButtonActive {
+  background: #3a2a12;
+  border-color: #d4a060;
+  color: #ffcf80;
+  font-weight: bold;
+  box-shadow: 0 0 6px rgba(212, 160, 96, 0.6);
+}
+
+.craftCountButton:disabled {
+  color: #4a4432;
+  border-color: rgba(168, 153, 104, 0.15);
+  cursor: default;
+}
+
 .craftError {
   font-size: 0.75rem;
   color: #b04a4a;

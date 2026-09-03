@@ -456,47 +456,129 @@ def _resolve_tool_for_craft(
 CRAFT_DURATION_SECONDS = 120
 
 
+def _resolve_ingredient_option(
+    option: dict,
+    tier: int,
+    character: dict,
+    character_resources: Dict[str, int],
+    player_resources: Dict[str, int],
+    count: int = 1,
+) -> Optional[dict]:
+    """
+    Checks whether ONE ingredient option (the sole option for a plain
+    ingredient, or one entry inside an "alternatives" list, e.g. carcass's
+    bone_blade-consumed-or-dagger-not-consumed choice) can be satisfied
+    right now, for crafting `count` units in one batch - `count` only
+    scales a consumed resource's quantity (2x metal_bar for count=2); an
+    unconsumed "held" option (a tool-like requirement - own it, don't use
+    it up) still only needs ONE, regardless of count, same as a recipe's
+    "tool" field doesn't need `count` anvils to make `count` daggers.
+    Returns None if it can't be satisfied. Otherwise a small plan dict:
+    `{"held": True}` for an unconsumed option that's simply owned (nothing
+    to decrement - resolved the same way `_resolve_tool_for_craft` resolves
+    the "tool" field, since "own a needsItemDefinition:true family,
+    don't use it up" is the identical question), or
+    `{"held": False, "concrete_id", "qty", "from_character", "from_player"}`
+    for a resource that would actually be consumed.
+    """
+    category = option["category"]
+    qty = option["qty"] * count
+    consumed = option.get("consumed", True)
+    family_id = option["familyId"]
+
+    if category == "final" and not consumed:
+        if _resolve_tool_for_craft(character, {}, [family_id]) is None:
+            return None
+        return {"held": True}
+
+    if category == "raw":
+        concrete_id = _RAW_ID_BY_FAMILY_TIER.get((family_id, tier))
+    elif category == "processed":
+        concrete_id = _PROCESSED_ID_BY_FAMILY_TIER.get((family_id, tier))
+    else:
+        raise ValueError(f"Unsupported ingredient category: {category}")
+    if concrete_id is None:
+        raise ValueError(f"No tier {tier} id for ingredient family {family_id}")
+
+    held_by_character = character_resources.get(concrete_id, 0)
+    held_by_player = player_resources.get(concrete_id, 0)
+    if held_by_character + held_by_player < qty:
+        return None
+    if not consumed:
+        return {"held": True}
+    from_character = min(held_by_character, qty)
+    from_player = qty - from_character
+    return {"held": False, "concrete_id": concrete_id, "from_character": from_character, "from_player": from_player}
+
+
 def _resolve_recipe_ingredients(
-    recipe: dict, tier: int, character_resources: Dict[str, int], player_resources: Dict[str, int]
+    recipe: dict,
+    tier: int,
+    character_resources: Dict[str, int],
+    player_resources: Dict[str, int],
+    character: Optional[dict] = None,
+    count: int = 1,
 ) -> Optional[tuple[Dict[str, int], Dict[str, int]]]:
     """
     Resolves one recipe's ingredients (at `tier`) to concrete resource ids
     and checks the character vault + player shared vault hold enough
     combined - same "counts either way" reasoning the recipe viewer's
-    owned/needed check already uses for tools. Returns
+    owned/needed check already uses for tools. `count` crafts that many
+    units in one batch: each consumed ingredient's quantity scales by
+    `count` (2x metal_bar for count=2), but an unconsumed "held" option
+    (a tool-like requirement) still only needs owning one, same as a
+    recipe's "tool" field doesn't need `count` anvils to make `count`
+    daggers - see `_resolve_ingredient_option`. Returns
     (character_decrements, player_decrements) - amounts to take from each,
     character vault first, shared vault only for whatever's still short -
     or None if there isn't enough even combined.
 
+    An ingredient with an "alternatives" list (e.g. carcass's
+    bone_blade-or-dagger choice) tries each option, preferring an
+    already-owned unconsumed one (free to use) before falling back to the
+    first affordable consumed one - the same priority
+    recipe-viewer.template.html's pickBestAlternative uses, so what the
+    button shows as craftable matches what this actually accepts. `character`
+    is only needed to resolve an unconsumed "final"-category option
+    (e.g. dagger) - omit it for calls that can't have one satisfied anyway
+    (finish_craft's re-check already gets this from its own character read).
+
     Raises ValueError for an unsupported ingredient category or a missing
-    tier row, same as the old single-phase craft_item did.
+    tier row.
     """
     character_decrements: Dict[str, int] = {}
     player_decrements: Dict[str, int] = {}
+    character = character or {}
     for ingredient in recipe["ingredients"]:
-        category = ingredient["category"]
-        ing_family = ingredient["familyId"]
-        qty = ingredient["qty"]
-        if category == "raw":
-            concrete_id = _RAW_ID_BY_FAMILY_TIER.get((ing_family, tier))
-        elif category == "processed":
-            concrete_id = _PROCESSED_ID_BY_FAMILY_TIER.get((ing_family, tier))
-        else:
-            raise ValueError(f"Unsupported ingredient category: {category}")
-        if concrete_id is None:
-            raise ValueError(f"No tier {tier} id for ingredient family {ing_family}")
+        options = ingredient["alternatives"] if "alternatives" in ingredient else [ingredient]
 
-        held_by_character = character_resources.get(concrete_id, 0)
-        held_by_player = player_resources.get(concrete_id, 0)
-        if held_by_character + held_by_player < qty:
+        plan = None
+        for option in options:
+            if option.get("consumed", True):
+                continue
+            plan = _resolve_ingredient_option(
+                option, tier, character, character_resources, player_resources, count
+            )
+            if plan is not None:
+                break
+        if plan is None:
+            for option in options:
+                if not option.get("consumed", True):
+                    continue
+                plan = _resolve_ingredient_option(
+                    option, tier, character, character_resources, player_resources, count
+                )
+                if plan is not None:
+                    break
+        if plan is None:
             return None
-        if ingredient.get("consumed", True):
-            from_character = min(held_by_character, qty)
-            from_player = qty - from_character
-            if from_character:
-                character_decrements[concrete_id] = character_decrements.get(concrete_id, 0) + from_character
-            if from_player:
-                player_decrements[concrete_id] = player_decrements.get(concrete_id, 0) + from_player
+
+        if not plan["held"]:
+            concrete_id = plan["concrete_id"]
+            if plan["from_character"]:
+                character_decrements[concrete_id] = character_decrements.get(concrete_id, 0) + plan["from_character"]
+            if plan["from_player"]:
+                player_decrements[concrete_id] = player_decrements.get(concrete_id, 0) + plan["from_player"]
     return character_decrements, player_decrements
 
 
@@ -524,8 +606,8 @@ def _resolve_recipe_output(family_id: str, tier: int) -> Optional[tuple[dict, bo
 
 def _validate_recipe(family_id: str, tier: int) -> tuple[dict, dict, bool]:
     """Shared start_craft/finish_craft validation: known recipe, known tier
-    row, no unsupported "alternatives" ingredient block. Raises ValueError
-    otherwise. Returns (recipe, output_row, output_is_processed_resource)."""
+    row. Raises ValueError otherwise. Returns
+    (recipe, output_row, output_is_processed_resource)."""
     recipe = _RECIPES_BY_FAMILY.get(family_id)
     if recipe is None:
         raise ValueError(f"Unknown recipe family: {family_id}")
@@ -533,31 +615,36 @@ def _validate_recipe(family_id: str, tier: int) -> tuple[dict, dict, bool]:
     if resolved_output is None:
         raise ValueError(f"No tier {tier} row for family {family_id}")
     output_row, output_is_processed = resolved_output
-    for ingredient in recipe["ingredients"]:
-        if "alternatives" in ingredient:
-            raise ValueError(f"Recipe {family_id} uses 'alternatives' ingredients - not supported yet")
     return recipe, output_row, output_is_processed
 
 
-async def start_craft(address: str, character_id: str, family_id: str, tier: int) -> Optional[Player]:
+async def start_craft(
+    address: str, character_id: str, family_id: str, tier: int, count: int = 1
+) -> Optional[Player]:
     """
-    Begins crafting `family_id` at `tier` for one of `address`'s
-    characters: one job at a time (rejects if the character already has an
-    unfinished craft), checks ingredients against the character vault +
-    player's shared vault combined and the required tool similarly, then
-    transfers onto the character whatever wasn't already there (so it shows
-    up in the character's own crafting list right away) and starts a
-    `CRAFT_DURATION_SECONDS` timer (Character.activeCraft). The output
-    isn't produced yet - call finish_craft once the timer elapses.
+    Begins crafting `count` units of `family_id` at `tier` in one batch for
+    one of `address`'s characters: one job at a time (rejects if the
+    character already has an unfinished craft), checks ingredients (each
+    consumed quantity scaled by `count` - see `_resolve_recipe_ingredients`)
+    against the character vault + player's shared vault combined and the
+    required tool similarly, then transfers onto the character whatever
+    wasn't already there (so it shows up in the character's own crafting
+    list right away) and starts a single `CRAFT_DURATION_SECONDS` timer
+    (Character.activeCraft) - the timer doesn't scale with `count`, only
+    the ingredients do. The output isn't produced yet - call finish_craft
+    once the timer elapses, which produces all `count` units at once.
 
     Instance-tracked tool alternatives (e.g. axe_stone) are never
-    auto-transferred here - see `_resolve_tool_for_craft`. Raises
-    ValueError for an unknown recipe/output row or an unsupported recipe
-    shape. Returns None if the character is already mid-craft, can't
-    afford the ingredients even combined, has no access to a listed tool,
-    hasn't learned the required blueprint, or the address/character pair
-    doesn't match any player document.
+    auto-transferred here, and only ever need to be owned once regardless
+    of `count` - see `_resolve_tool_for_craft`. Raises ValueError for an
+    unknown recipe/output row, an unsupported recipe shape, or `count < 1`.
+    Returns None if the character is already mid-craft, can't afford the
+    (count-scaled) ingredients even combined, has no access to a listed
+    tool, hasn't learned the required blueprint, or the address/character
+    pair doesn't match any player document.
     """
+    if count < 1:
+        raise ValueError("count must be at least 1")
     recipe, _output_row, _output_is_processed = _validate_recipe(family_id, tier)
 
     db = get_database()
@@ -578,7 +665,9 @@ async def start_craft(address: str, character_id: str, family_id: str, tier: int
     # not a persistent balance a player manages directly. Passing {} for
     # the character side means the full amount always comes from the
     # player vault (character_decrements stays empty).
-    resolved = _resolve_recipe_ingredients(recipe, tier, {}, doc.get("inventory", {}).get("resources", {}))
+    resolved = _resolve_recipe_ingredients(
+        recipe, tier, {}, doc.get("inventory", {}).get("resources", {}), character, count
+    )
     if resolved is None:
         return None
     _, player_decrements = resolved
@@ -627,7 +716,13 @@ async def start_craft(address: str, character_id: str, family_id: str, tier: int
             "characters.$.activeCraft": {
                 "familyId": family_id,
                 "tier": tier,
+                "count": count,
                 "readyAt": ready_at.isoformat(),
+                # Only set when this call actually moved a tool from the
+                # player's shared pool - a tool the character already had
+                # (found on hand, nothing transferred) is never returned by
+                # finish_craft, only what was specifically borrowed here.
+                "toolTransferId": tool_transfer_id,
             }
         }
     }
@@ -647,10 +742,13 @@ async def finish_craft(address: str, character_id: str) -> Optional[Player]:
     (Character.activeCraft), once its timer has elapsed: consumes the
     ingredients/tool that start_craft already transferred onto the
     character (nothing left to draw from the player's shared vault at this
-    point) and produces the output exactly like the old one-shot craft
-    function did - inventory.items for a needsItemDefinition:true family,
-    inventory.itemBalances for a flat count, always into the player's
-    shared vault, never straight onto the character.
+    point) and produces `activeCraft.count` units of the output at once -
+    inventory.items for a needsItemDefinition:true family (each unit its
+    own instance, per the instance-per-physical-item invariant - never a
+    single instance with a quantity), inventory.itemBalances or
+    inventory.resources incremented by `count` for a flat-count output,
+    always into the player's shared vault, never straight onto the
+    character.
 
     Returns None if there's no active craft, its timer hasn't elapsed yet,
     the character somehow no longer has enough of what was transferred (an
@@ -671,12 +769,13 @@ async def finish_craft(address: str, character_id: str) -> Optional[Player]:
 
     family_id = active["familyId"]
     tier = active["tier"]
+    count = active.get("count", 1)
     recipe, output_row, output_is_processed = _validate_recipe(family_id, tier)
 
     # Everything needed should already be sitting on the character (see
     # start_craft) - resolved purely against the character's own vault now,
     # with an empty player vault so nothing can be drawn from there.
-    resolved = _resolve_recipe_ingredients(recipe, tier, character.get("resources", {}), {})
+    resolved = _resolve_recipe_ingredients(recipe, tier, character.get("resources", {}), {}, character, count)
     if resolved is None:
         return None
     character_decrements, _ = resolved
@@ -694,6 +793,20 @@ async def finish_craft(address: str, character_id: str) -> Optional[Player]:
         elem_match[f"resources.{concrete_id}"] = {"$gte": qty}
         inc_ops[f"characters.$.resources.{concrete_id}"] = -qty
 
+    # A flat-balance tool start_craft borrowed from the player's shared
+    # pool (not one the character already had) goes back once the craft
+    # is done - "locked" only for the crafting duration, not indefinitely.
+    # An instance-tracked tool alternative (e.g. axe_stone/dagger) is never
+    # touched here - toolTransferId is only ever set for the transferred
+    # flat-balance case, see start_craft.
+    tool_transfer_id = active.get("toolTransferId")
+    if tool_transfer_id is not None:
+        elem_match[f"tools.{tool_transfer_id}"] = {"$gte": 1}
+        inc_ops[f"characters.$.tools.{tool_transfer_id}"] = inc_ops.get(
+            f"characters.$.tools.{tool_transfer_id}", 0
+        ) - 1
+        inc_ops[f"inventory.tools.{tool_transfer_id}"] = 1
+
     update: Dict = {"$unset": {"characters.$.activeCraft": ""}}
     family = items_catalog.ITEM_FAMILIES_BY_ID.get(family_id)
     if output_is_processed:
@@ -702,20 +815,23 @@ async def finish_craft(address: str, character_id: str) -> Optional[Player]:
         # inventory.resources - it belongs in the shared resources pool,
         # not itemBalances, so other recipes' ingredient checks (which only
         # ever look at resources) can actually see it.
-        inc_ops[f"inventory.resources.{output_row['id']}"] = 1
+        inc_ops[f"inventory.resources.{output_row['id']}"] = count
     elif family and family.needs_item_definition:
-        instance = {
-            "instanceId": uuid.uuid4().hex,
-            "itemId": output_row["id"],
-            "familyId": family_id,
-            "quality": family.quality_max,
-            "location": "pool",
-            "slotRef": [],
-            "createdAt": datetime.now(timezone.utc).isoformat(),
-        }
-        update["$push"] = {"inventory.items": instance}
+        instances = [
+            {
+                "instanceId": uuid.uuid4().hex,
+                "itemId": output_row["id"],
+                "familyId": family_id,
+                "quality": family.quality_max,
+                "location": "pool",
+                "slotRef": [],
+                "createdAt": datetime.now(timezone.utc).isoformat(),
+            }
+            for _ in range(count)
+        ]
+        update["$push"] = {"inventory.items": {"$each": instances}}
     else:
-        inc_ops[f"inventory.itemBalances.{output_row['id']}"] = 1
+        inc_ops[f"inventory.itemBalances.{output_row['id']}"] = count
 
     if inc_ops:
         update["$inc"] = inc_ops

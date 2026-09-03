@@ -439,6 +439,25 @@ function ownsAnyTool(ownedSet, ids, requiredTier) {
   return ids.some(id => ownsFamily(ownedSet, id, requiredTier));
 }
 
+// For an ingredient's "alternatives" slot (e.g. carcass's bone_blade-or-
+// dagger choice), picks whichever option the tree/totals should actually
+// expand as the required path - not just always the first-listed one.
+// Prefers an unconsumed option (a reusable tool/item like dagger - free to
+// use, nothing to craft) that's already owned, since there's no reason to
+// spend materials crafting bone_blade when a dagger is sitting right
+// there. Falls back to the first consumed option (today's behavior) when
+// nothing unconsumed is owned - that becomes the expanded child node,
+// showing its own sub-requirements (e.g. 2x small_bone for bone_blade).
+// With no character context at all, still defaults to the first option,
+// same as before.
+function pickBestAlternative(alts, tier) {
+  if (ownedTools) {
+    const owned = alts.find(alt => !alt.consumed && ownsFamily(ownedTools, alt.familyId, tier));
+    if (owned) return owned;
+  }
+  return alts.find(alt => alt.consumed) || alts[0];
+}
+
 // Flattens an ingredient list, expanding any "alternatives" slot (e.g.
 // carcass's bone_blade-consumed-or-dagger-not-consumed choice) into its
 // individual options. A plain ingredient passes through unchanged.
@@ -521,9 +540,16 @@ window.getCurrentSelection = function () {
 // computeTotals' recursively-expanded rawTotals/finalTotals. Mirrors
 // backend.players._validate_recipe/_resolve_recipe_ingredients exactly:
 // no "alternatives" ingredient slots, no "final"-category ingredients
-// directly on the recipe, exact concrete id/tier match on quantity.
-// Returns false (not just "nothing flagged missing") when there's no
-// character context to actually confirm against.
+// directly on the recipe, exact concrete id/tier match on quantity. An
+// "alternatives" slot (e.g. carcass's bone_blade-or-dagger choice) passes
+// if EITHER option is satisfiable - an unconsumed option (own it, don't
+// use it up) is checked the same way the tool field is, a consumed
+// resource option the same way a plain ingredient is - mirroring
+// backend.players._resolve_recipe_ingredients/_resolve_ingredient_option
+// exactly, including their priority (prefer an already-owned unconsumed
+// option before falling back to a consumed one). Returns false (not just
+// "nothing flagged missing") when there's no character context to
+// actually confirm against.
 //
 // Deliberately does NOT reuse ownsFamily/ownsAnyTool for the tool/blueprint
 // checks below - those apply a ">= requiredTier" rule (a higher tier
@@ -534,20 +560,36 @@ window.getCurrentSelection = function () {
 // (_BLUEPRINT_ID_BY_FAMILY_TIER) requires the EXACT tier's blueprint, not
 // "or higher". Getting either of those wrong here means the button
 // disagrees with what clicking it would actually do.
-window.isCurrentSelectionCraftable = function () {
+// `count` (default 1) scales each consumed option's required quantity,
+// same as backend.players._resolve_ingredient_option's own `count`
+// parameter - an unconsumed "held" option (own it, don't use it up) still
+// only needs ONE regardless of count, matching that a recipe's "tool"
+// field doesn't need `count` anvils to make `count` daggers.
+window.isCurrentSelectionCraftable = function (count) {
+  count = count || 1;
   if (!select.value || !inventory || !ownedTools || !ownedBlueprints) return false;
   const famId = select.value;
   const tier = currentTier();
   const recipe = recipes[famId];
   if (!recipe) return false;
 
-  for (const ing of recipe.ingredients) {
-    if (ing.alternatives) return false;
-    if (ing.category !== "raw" && ing.category !== "processed") return false;
-    const f = families[ing.familyId];
+  const optionSatisfied = (opt) => {
+    if (opt.consumed === false) {
+      return opt.category === "final" && ownsFamily(ownedTools, opt.familyId, tier);
+    }
+    if (opt.category !== "raw" && opt.category !== "processed") return false;
+    const f = families[opt.familyId];
     const item = f && f.tiers[tier - 1];
     if (!item) return false;
-    if ((inventory[item.id] || 0) < ing.qty) return false;
+    return (inventory[item.id] || 0) >= opt.qty * count;
+  };
+
+  for (const ing0 of recipe.ingredients) {
+    const options = ing0.alternatives || [ing0];
+    const satisfied =
+      options.some((opt) => opt.consumed === false && optionSatisfied(opt)) ||
+      options.some((opt) => opt.consumed !== false && optionSatisfied(opt));
+    if (!satisfied) return false;
   }
 
   const tIds = toolIds(recipe.tool);
@@ -864,11 +906,28 @@ function buildInteractiveNode(famId, qty, category, tier, isRoot) {
           const optsCheck = ing0.alternatives || [ing0];
           if (optsCheck.every(o => !o.consumed)) continue;
           // An "alternatives" slot (e.g. carcass's bone_blade-consumed-or-
-          // dagger-not-consumed choice) renders its first/default option as
-          // the real child node, then appends the other option(s) as a
-          // small "or ..." note on that same row - informational only, not
+          // dagger-not-consumed choice) expands whichever option
+          // pickBestAlternative decides is actually the one that applies
+          // (an already-owned unconsumed option like dagger, or - when
+          // nothing unconsumed is owned - the first consumed option, e.g.
+          // bone_blade), then appends the other option(s) as a small
+          // "or ..." note on that same row - informational only, not
           // interactive.
-          const ing = ing0.alternatives ? ing0.alternatives[0] : ing0;
+          const ing = ing0.alternatives ? pickBestAlternative(ing0.alternatives, tier) : ing0;
+          if (ing0.alternatives && !ing.consumed) {
+            // The chosen alternative is unconsumed and already owned
+            // (that's the only way pickBestAlternative returns one) -
+            // nothing to craft, so this whole slot is just a compact
+            // "held item" tag on this node's own row, same as a plain
+            // tool requirement, instead of a full expandable child.
+            const heldTag = el("span", "tag tool", "\u{1F528} " + ing.familyId);
+            row.appendChild(heldTag);
+            for (const alt of ing0.alternatives) {
+              if (alt === ing) continue;
+              row.appendChild(el("span", "tag alt-ingredient", "or " + alt.qty + "x " + famLabel(alt.familyId, tier)));
+            }
+            continue;
+          }
           const childCat = ing.category === "final_unresolved" ? "final" : ing.category;
           const child = buildInteractiveNode(ing.familyId, ing.qty, childCat, tier, false);
           // A tool being referenced as an ingredient (e.g. the axe_stone a
@@ -879,11 +938,13 @@ function buildInteractiveNode(famId, qty, category, tier, isRoot) {
             child.row.appendChild(el("span", "tag unconsumed", "not consumed"));
           }
           if (ing0.alternatives) {
-            for (const alt of ing0.alternatives.slice(1)) {
-              // An unconsumed alternative (e.g. carcass's dagger option)
-              // plays the same "own it, don't use it up" role as a tool -
-              // show it the same compact "icon id" way, not as a quantified
-              // ingredient, and check ownership the same way (ownedTools).
+            for (const alt of ing0.alternatives) {
+              if (alt === ing) continue;
+              // An unconsumed alternative (e.g. carcass's dagger option,
+              // not chosen here since it isn't owned) plays the same "own
+              // it, don't use it up" role as a tool - show it the same
+              // compact "icon id" way, not as a quantified ingredient, and
+              // check ownership the same way (ownedTools).
               if (!alt.consumed) {
                 const altTag = el("span", "tag tool", "\u{1F528} " + alt.familyId);
                 if (!ownsFamily(ownedTools, alt.familyId, tier)) altTag.classList.add("missing");
@@ -932,7 +993,7 @@ function wireAccordionClick(controller, siblingGroup) {
 
 // Fully multiplied raw/final-item cost of the whole tree, independent of
 // which nodes are expanded in the UI.
-function computeTotals(famId, qty, category, rawTotals, finalTotals, toolSet) {
+function computeTotals(famId, qty, category, rawTotals, finalTotals, toolSet, tier) {
   const recipe = recipes[famId];
   if (recipe && recipe.tool) toolSet.add(toolIds(recipe.tool).join("|"));
   if (category === "raw") {
@@ -949,11 +1010,14 @@ function computeTotals(famId, qty, category, rawTotals, finalTotals, toolSet) {
   }
   for (const ing0 of recipe.ingredients) {
     // For an "alternatives" slot (e.g. carcass's bone_blade-or-dagger
-    // choice), totals follow the first/default option only - counting
-    // both would double up on a single ingredient slot.
-    const ing = ing0.alternatives ? ing0.alternatives[0] : ing0;
+    // choice), totals follow whichever option pickBestAlternative picks
+    // (same "prefer an already-owned unconsumed option" rule the
+    // interactive tree uses) - counting both would double up on a single
+    // ingredient slot, and always assuming bone_blade regardless of
+    // owning a dagger would show materials that aren't actually needed.
+    const ing = ing0.alternatives ? pickBestAlternative(ing0.alternatives, tier) : ing0;
     const childCat = ing.category === "final_unresolved" ? "final" : ing.category;
-    computeTotals(ing.familyId, ing.qty * qty, childCat, rawTotals, finalTotals, toolSet);
+    computeTotals(ing.familyId, ing.qty * qty, childCat, rawTotals, finalTotals, toolSet, tier);
   }
 }
 
@@ -1031,7 +1095,7 @@ function render(famId, tier) {
   const rawTotals = {};
   const finalTotals = {};
   const toolSet = new Set();
-  computeTotals(famId, 1, rootCategory, rawTotals, finalTotals, toolSet);
+  computeTotals(famId, 1, rootCategory, rawTotals, finalTotals, toolSet, tier);
 
   renderTable("rawTotals", rawTotals, tier, true, false);
   renderTable("finalTotals", finalTotals, tier, false, true);
