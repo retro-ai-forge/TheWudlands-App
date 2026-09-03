@@ -143,14 +143,17 @@ class Character:
     profession: ProfStats = field(default_factory=ProfStats)
     attr: AttributeStats = field(default_factory=AttributeStats)
     created_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
-    # Stackable crafting resources this character carries (backpack), keyed
-    # by resource id (see backend.resources_catalog) - a running total, never
-    # per-unit item instances or slot assignments.
+    # Temporary crafting-session staging area, keyed by resource id (see
+    # backend.resources_catalog) - populated by backend.players.start_craft
+    # (drawing from the player's shared inventory.resources) and drained by
+    # finish_craft, or check_in_resource as a manual escape hatch. Never a
+    # place a player parks materials directly - see the item-instance
+    # plan's "Backpack capacity" section for the full four-tier model.
     resource_balances: Dict[str, int] = field(default_factory=dict)
-    # Tools this character currently holds (id -> quantity), checked out of
-    # the player's shared pool (backend.players.Player.tools, via
-    # check_out_tool/check_in_tool) - stacked the same way as that pool, and
-    # unavailable to the player's other characters while held here.
+    # Same temporary-staging role as resource_balances, for tools -
+    # populated by start_craft when the recipe's tool isn't already held,
+    # drained via check_in_tool (start_craft's transfer never automatically
+    # reverses on its own, unlike resources which finish_craft consumes).
     tools: Dict[str, int] = field(default_factory=dict)
     # Blueprint ids this character has learned (see backend.craft_catalog) -
     # chosen on the Trappings step from the pools their professions unlock.

@@ -328,54 +328,27 @@ async def grant_tool(address: str, tool_id: str, amount: int = 1, pool: str = "t
     return _doc_to_player(doc)
 
 
-async def check_out_tool(
-    address: str, character_id: str, tool_id: str, amount: int = 1, pool: str = "tools"
-) -> Optional[Player]:
-    """
-    Move `amount` of `tool_id` from `address`'s shared tool pool onto one of
-    their characters (Character.tools) - the character now holds it, so
-    it's unavailable to the player's other characters until checked back in.
-    Requires the pool to actually have `amount` available; returns None if
-    the address/character pair doesn't match any player document OR the pool
-    doesn't have enough (same "no match" signal as the other grant/spend
-    functions here - callers distinguish the two by re-fetching if needed).
-    """
-    _validate_tool_pool(pool)
-    if amount <= 0:
-        raise ValueError("amount must be positive")
-    db = get_database()
-
-    # `pool` (e.g. "inventory.tools") is where the player's own shared pool
-    # lives, but a character's own tools are stored flatly as Character.tools
-    # ("tools", never nested under "inventory") - the two sides of this
-    # transfer are NOT the same path.
-    doc = await db.players.find_one_and_update(
-        {"address": address, "characters.id": character_id, f"{pool}.{tool_id}": {"$gte": amount}},
-        {"$inc": {f"{pool}.{tool_id}": -amount, f"characters.$.tools.{tool_id}": amount}},
-        return_document=ReturnDocument.AFTER,
-    )
-
-    if doc is None:
-        return None
-
-    return _doc_to_player(doc)
-
-
 async def check_in_tool(
     address: str, character_id: str, tool_id: str, amount: int = 1, pool: str = "tools"
 ) -> Optional[Player]:
     """
-    The reverse of check_out_tool: move `amount` of `tool_id` from one of
-    `address`'s characters back into the shared tool pool. Requires that
-    character to actually be holding `amount`.
+    Move `amount` of `tool_id` from one of `address`'s characters back into
+    the shared tool pool. Requires that character to actually be holding
+    `amount`. The only direction this moves in now - a character's own
+    tools are a temporary crafting-session staging area (populated by
+    start_craft, never by a direct player-initiated transfer), so there's
+    no check_out_tool counterpart; this stays as the drain path for
+    whatever a craft left behind, or old data.
     """
     _validate_tool_pool(pool)
     if amount <= 0:
         raise ValueError("amount must be positive")
     db = get_database()
 
-    # Same path asymmetry as check_out_tool: the character side is always
-    # flat "tools", regardless of what `pool` names on the player's own side.
+    # `pool` (e.g. "inventory.tools") is the player's own shared pool, but a
+    # character's own tools are always stored flatly as Character.tools
+    # ("tools", never nested under "inventory") - the two sides of this
+    # transfer are NOT the same path.
     doc = await db.players.find_one_and_update(
         {
             "address": address,
@@ -391,46 +364,16 @@ async def check_in_tool(
     return _doc_to_player(doc)
 
 
-async def check_out_resource(
-    address: str, character_id: str, resource_id: str, amount: int = 1
-) -> Optional[Player]:
-    """
-    Move `amount` of `resource_id` from `address`'s shared inventory
-    (inventory.resources - raw and processed pooled together, same as
-    Character.resources) onto one of their characters' own resources - the
-    resource equivalent of check_out_tool. Requires the pool to actually
-    have `amount` available.
-    """
-    _validate_resource_grant(resource_id, amount)
-    db = get_database()
-
-    doc = await db.players.find_one_and_update(
-        {
-            "address": address,
-            "characters.id": character_id,
-            f"inventory.resources.{resource_id}": {"$gte": amount},
-        },
-        {"$inc": {
-            f"inventory.resources.{resource_id}": -amount,
-            f"characters.$.resources.{resource_id}": amount,
-        }},
-        return_document=ReturnDocument.AFTER,
-    )
-
-    if doc is None:
-        return None
-
-    return _doc_to_player(doc)
-
-
 async def check_in_resource(
     address: str, character_id: str, resource_id: str, amount: int = 1
 ) -> Optional[Player]:
     """
-    The reverse of check_out_resource: move `amount` of `resource_id` from
-    one of `address`'s characters' own resources back into the shared
-    inventory's resources pool. Requires that character to actually be
-    holding `amount`.
+    Move `amount` of `resource_id` from one of `address`'s characters' own
+    resources back into the shared inventory's resources pool. Requires
+    that character to actually be holding `amount`. The only direction this
+    moves in now - same reasoning as check_in_tool: a character's own
+    resources are a temporary crafting-session staging area, not somewhere
+    a player parks materials directly.
     """
     _validate_resource_grant(resource_id, amount)
     db = get_database()
@@ -755,10 +698,10 @@ async def finish_craft(address: str, character_id: str) -> Optional[Player]:
     family = items_catalog.ITEM_FAMILIES_BY_ID.get(family_id)
     if output_is_processed:
         # A crafted processed material (plank, metal_bar, leather, ...) is
-        # the exact same kind of thing check_out_resource already moves -
-        # it belongs in the shared resources pool, not itemBalances, so
-        # other recipes' ingredient checks (which only ever look at
-        # resources) can actually see it.
+        # the exact same kind of thing already stacked in
+        # inventory.resources - it belongs in the shared resources pool,
+        # not itemBalances, so other recipes' ingredient checks (which only
+        # ever look at resources) can actually see it.
         inc_ops[f"inventory.resources.{output_row['id']}"] = 1
     elif family and family.needs_item_definition:
         instance = {
@@ -890,8 +833,7 @@ async def check_out_item_instance(address: str, character_id: str, instance_id: 
     """
     Move one item instance from `address`'s shared pool (inventory.items,
     location:"pool") onto one of their characters' own backpack
-    (location:"backpack") - the instance equivalent of check_out_resource.
-    Capacity-gated: rejected if the character's backpack has no free slot
+    (location:"backpack"). Capacity-gated: rejected if the character's backpack has no free slot
     for this family's size class (see items_catalog.backpack_slots_used/
     backpack_capacity). Returns None if the instance isn't in the pool, the
     address/character pair doesn't match, or there's no room.
@@ -980,10 +922,10 @@ async def check_out_item_balance(address: str, character_id: str, item_id: str, 
     """
     Move `amount` of `item_id` (a concrete crafted-item id) from
     `address`'s shared inventory.itemBalances onto one of their characters'
-    own itemBalances - the itemBalances equivalent of check_out_resource.
-    Never capacity-gated, same as resources/tools - see the item-instance
-    plan's "Backpack capacity" section for why this crafting-page-style
-    transfer stays unlimited.
+    own itemBalances. Never capacity-gated - unlike resources/tools,
+    itemBalances was never part of the crafting-vault redesign (nothing a
+    recipe consumes ever lives there), so a character carrying crafted
+    goods directly is still a normal, ungated transfer.
     """
     if amount <= 0:
         raise ValueError("amount must be positive")
@@ -1031,10 +973,10 @@ async def load_resource_to_backpack(
 ) -> Optional[Player]:
     """
     Move `amount` of `resource_id` from a character's own crafting vault
-    (resources, unlimited) into their backpack (backpackResources,
-    slot-limited) - physically packing materials for an adventure, distinct
-    from the unlimited crafting-page check_out_resource transfer. The
-    marginal slot cost is ceil((existing+amount)/stack_size) -
+    (resources - now only ever populated transiently by start_craft, since
+    check_out_resource no longer exists) into their backpack
+    (backpackResources, slot-limited) - physically packing materials for an
+    adventure. The marginal slot cost is ceil((existing+amount)/stack_size) -
     ceil(existing/stack_size), since multiple units of the same id share a
     slot up to its stack size (rawStackSize:40 / processedStackSize:20).
     Returns None if the character doesn't hold `amount` in its vault, or

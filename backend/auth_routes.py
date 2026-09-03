@@ -35,14 +35,12 @@ from backend.players import (
     check_in_tool,
     check_out_item_balance,
     check_out_item_instance,
-    check_out_resource,
-    check_out_tool,
     delete_character,
     equip_item,
     finish_craft,
     get_or_create_player,
     get_player,
-    grant_resource,
+    grant_shared_resource,
     load_item_balance_to_backpack,
     load_resource_to_backpack,
     start_craft,
@@ -823,24 +821,6 @@ class TransferAmountRequest(BaseModel):
 
 
 @player_router.post(
-    "/me/characters/{character_id}/resources/{resource_id}/check-out", response_model=PlayerDataResponse
-)
-async def check_out_resource_route(
-    character_id: str, resource_id: str, payload: TransferAmountRequest, address: str = Depends(get_current_address)
-):
-    """Move `amount` of `resource_id` from the player's shared vault onto one of their characters."""
-    try:
-        player = await check_out_resource(address, character_id, resource_id, payload.amount)
-    except ValueError as exc:
-        raise HTTPException(status_code=400, detail=str(exc))
-
-    if player is None:
-        raise HTTPException(status_code=404, detail="No matching character, or not enough in the shared vault")
-
-    return player.to_dict()
-
-
-@player_router.post(
     "/me/characters/{character_id}/resources/{resource_id}/check-in", response_model=PlayerDataResponse
 )
 async def check_in_resource_route(
@@ -854,22 +834,6 @@ async def check_in_resource_route(
 
     if player is None:
         raise HTTPException(status_code=404, detail="No matching character, or not enough on that character")
-
-    return player.to_dict()
-
-
-@player_router.post("/me/characters/{character_id}/tools/{tool_id}/check-out", response_model=PlayerDataResponse)
-async def check_out_tool_route(
-    character_id: str, tool_id: str, payload: TransferAmountRequest, address: str = Depends(get_current_address)
-):
-    """Move `amount` of `tool_id` from the player's shared tool pool onto one of their characters."""
-    try:
-        player = await check_out_tool(address, character_id, tool_id, payload.amount, pool="inventory.tools")
-    except ValueError as exc:
-        raise HTTPException(status_code=400, detail=str(exc))
-
-    if player is None:
-        raise HTTPException(status_code=404, detail="No matching character, or not enough in the shared pool")
 
     return player.to_dict()
 
@@ -1209,11 +1173,16 @@ async def create_character(
     # Each soul slot gets its starter kit exactly once, ever - tracked by
     # slot number (not character id), so deleting this character and
     # recreating one in the same slot can never re-claim it. Without this,
-    # check-in/check-out (moving resources to the player's shared vault)
-    # would let a delete-and-recreate loop mint resources for free.
+    # a delete-and-recreate loop would mint resources for free. Blueprints
+    # aren't gated by this at all (see the Character(...) construction
+    # above, unconditional) - they're soulbound to whichever character is
+    # created, not a limited one-time slot bonus the way raw materials are.
+    # Raw materials go straight to the player's shared vault, not this
+    # character's own - there's no per-character crafting-vault stockpile
+    # anymore, only a temporary staging area an active craft populates.
     if not await has_claimed_starter_kit(address, payload.slotNumber):
         for resource_id, amount in payload.selectedResources.items():
-            player = await grant_resource(address, character.id, resource_id, amount)
+            player = await grant_shared_resource(address, resource_id, amount)
         await mark_starter_kit_claimed(address, payload.slotNumber)
 
     return player.to_dict()

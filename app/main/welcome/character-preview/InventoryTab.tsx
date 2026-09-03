@@ -48,16 +48,10 @@ function TransferButtons({
   owned,
   pending,
   onPick,
-  disabled,
 }: {
   owned: number;
   pending: boolean;
   onPick: (amount: number) => void;
-  /** Forces every button off regardless of owned/pending - for a transfer
-   * direction that's turned off entirely (see InventoryTab's
-   * playerToCharacterTransfersDisabled), as opposed to just this one
-   * amount being unaffordable. */
-  disabled?: boolean;
 }) {
   return (
     <div className={styles.transferButtons}>
@@ -66,7 +60,7 @@ function TransferButtons({
           key={amount}
           type="button"
           className={styles.transferButton}
-          disabled={disabled || pending || amount > owned}
+          disabled={pending || amount > owned}
           onClick={(e) => {
             e.stopPropagation();
             onPick(amount);
@@ -78,7 +72,7 @@ function TransferButtons({
       <button
         type="button"
         className={styles.transferButton}
-        disabled={disabled || pending || owned <= 0}
+        disabled={pending || owned <= 0}
         onClick={(e) => {
           e.stopPropagation();
           onPick(owned);
@@ -178,15 +172,12 @@ function ResourceList({
   emptyLabel,
   tierInfo,
   onTransfer,
-  transferDisabled,
 }: {
   balances: Record<string, number>;
   emptyLabel: string;
   tierInfo?: ResourceTierInfo;
   /** When given, clicking a row reveals quick-transfer quantity buttons that call this with (id, amount). */
   onTransfer?: (id: string, amount: number) => Promise<boolean>;
-  /** Row stays expandable, but every revealed amount button is disabled/greyed - for a transfer direction that's temporarily turned off. */
-  transferDisabled?: boolean;
 }) {
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [pendingId, setPendingId] = useState<string | null>(null);
@@ -278,7 +269,6 @@ function ResourceList({
                         owned={qty}
                         pending={pendingId === id}
                         onPick={(amount) => handlePick(id, amount)}
-                        disabled={transferDisabled}
                       />
                     </td>
                   </tr>
@@ -313,7 +303,6 @@ function IdList({
   fixedIcon,
   balances,
   onTransfer,
-  transferDisabled,
 }: {
   ids: string[];
   emptyLabel: string;
@@ -329,8 +318,6 @@ function IdList({
   balances?: Record<string, number>;
   /** When given (alongside `balances`), clicking a row reveals quick-transfer quantity buttons that call this with (id, amount). */
   onTransfer?: (id: string, amount: number) => Promise<boolean>;
-  /** Row stays expandable, but every revealed amount button is disabled/greyed - for a transfer direction that's temporarily turned off. */
-  transferDisabled?: boolean;
 }) {
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [pendingId, setPendingId] = useState<string | null>(null);
@@ -423,7 +410,6 @@ function IdList({
               owned={owned}
               pending={pendingId === id}
               onPick={(amount) => handlePick(id, amount)}
-              disabled={transferDisabled}
             />
           </td>
         </tr>
@@ -519,25 +505,19 @@ export function InventoryTab({
   /** Called with the fresh roster/vault/pool after a successful check-in/check-out transfer. */
   onPlayerDataUpdated?: (data: RawPlayerData) => void;
 }) {
-  // Temporarily off: player vault -> character vault (check-out) for
-  // resources/tools. This flow is being superseded by loading straight into
-  // the character's backpack instead - check-in (character -> shared) stays
-  // enabled. Flip back once that backpack-loading feature lands, or remove
-  // this (and transferDisabled/disabled on TransferButtons) if it doesn't.
-  const playerToCharacterTransfersDisabled = true;
-
-  // Moves `amount` of a resource/tool between this character and the
-  // player's shared vault/pool. "check-in" = character -> shared,
-  // "check-out" = shared -> character (mirrors backend.players naming).
+  // Moves `amount` of a resource/tool from this character's own (temporary,
+  // crafting-session-only) vault back into the player's shared vault.
+  // check-out (shared -> character) no longer exists for resources/tools -
+  // a character's own vault is populated exclusively by start_craft now,
+  // never by a direct player-initiated transfer.
   const transfer = async (
     kind: "resources" | "tools",
-    direction: "check-in" | "check-out",
     id: string,
     amount: number
   ): Promise<boolean> => {
     try {
       const res = await fetch(
-        `/api/auth/me/characters/${character.id}/${kind}/${id}/${direction}`,
+        `/api/auth/me/characters/${character.id}/${kind}/${id}/check-in`,
         {
           method: "POST",
           credentials: "include",
@@ -871,20 +851,20 @@ export function InventoryTab({
           <div className={styles.accordionBody}>
             <IdList
               ids={ownedIds(character.tools)}
-              emptyLabel="Not currently holding any tools."
+              emptyLabel="Not currently using any tools."
               tierInfo={toolTierInfo}
               sortByTier
               fixedIcon="🔧"
               balances={character.tools}
-              onTransfer={(id, amount) => transfer("tools", "check-in", id, amount)}
+              onTransfer={(id, amount) => transfer("tools", id, amount)}
               textColor="#7eb8ff"
             />
             {ownedIds(character.tools).length > 0 && <div className={styles.toolsResourceDivider} />}
             <ResourceList
               balances={character.resources}
-              emptyLabel="No materials carried."
+              emptyLabel="No materials used."
               tierInfo={resourceTierInfo}
-              onTransfer={(id, amount) => transfer("resources", "check-in", id, amount)}
+              onTransfer={(id, amount) => transfer("resources", id, amount)}
             />
           </div>
         )}
@@ -910,8 +890,6 @@ export function InventoryTab({
                 sortByTier
                 fixedIcon="🔧"
                 balances={playerTools}
-                onTransfer={(id, amount) => transfer("tools", "check-out", id, amount)}
-                transferDisabled={playerToCharacterTransfersDisabled}
               />
             </SubAccordionItem>
             <SubAccordionItem
@@ -924,8 +902,6 @@ export function InventoryTab({
                 balances={playerResourcesExcludingItems}
                 emptyLabel="Nothing in the shared crafting stock."
                 tierInfo={resourceTierInfo}
-                onTransfer={(id, amount) => transfer("resources", "check-out", id, amount)}
-                transferDisabled={playerToCharacterTransfersDisabled}
               />
             </SubAccordionItem>
             <SubAccordionItem
