@@ -409,6 +409,20 @@ function readIdListFromQuery(param) {
 }
 let ownedTools = readIdListFromQuery("tools");
 let ownedBlueprints = readIdListFromQuery("blueprints");
+// Instance-tracked tools (e.g. axe_stone) sitting unreserved in the
+// player's shared vault - usable for a recipe's own "tool" field right
+// where they sit (backend.players.start_craft reserves them in place, no
+// backpack move), unlike ownedTools' character-only ownership. Kept
+// separate from ownedTools rather than merged into it: an ingredient's
+// "alternatives" slot (e.g. carcass's bone_blade-or-dagger choice) is
+// resolved by a different backend code path
+// (_resolve_ingredient_option/_resolve_recipe_ingredients) that was NOT
+// extended to draw from the vault - only a recipe's direct "tool" field
+// was (see start_craft's reservedInstanceId). Using ownedToolsWithVault
+// for THOSE checks too would show green here for something start_craft
+// would still reject.
+let vaultTools = readIdListFromQuery("vaultTools");
+let ownedToolsWithVault = ownedTools ? new Set([...ownedTools, ...(vaultTools || [])]) : null;
 
 // A recipe's `tool`/`blueprintFamilyId` reference a FAMILY (e.g. "anvil"),
 // not one specific tiered item - but owning a LOWER tier than what's
@@ -596,8 +610,8 @@ window.isCurrentSelectionCraftable = function (count) {
   if (tIds.length) {
     const hasTool = tIds.some(toolFamId => {
       const f = families[toolFamId];
-      if (!f) return ownedTools.has(toolFamId);
-      return f.tiers.some(t => ownedTools.has(t.id));
+      if (!f) return ownedToolsWithVault.has(toolFamId);
+      return f.tiers.some(t => ownedToolsWithVault.has(t.id));
     });
     if (!hasTool) return false;
   }
@@ -854,7 +868,7 @@ function buildInteractiveNode(famId, qty, category, tier, isRoot) {
   if (recipe && recipe.tool) {
     const tIds = toolIds(recipe.tool);
     const toolTag = el("span", "tag tool", "\u{1F528} " + tIds.join(" or "));
-    if (!ownsAnyTool(ownedTools, tIds, tier)) toolTag.classList.add("missing");
+    if (!ownsAnyTool(ownedToolsWithVault, tIds, tier)) toolTag.classList.add("missing");
     row.appendChild(toolTag);
   }
   // An ingredient slot where every option is unconsumed (e.g. sharpened_stick's
@@ -1108,7 +1122,7 @@ function render(famId, tier) {
     for (const key of [...toolSet].sort()) {
       const tIds = key.split("|");
       const toolTag = el("span", "tag tool", "\u{1F528} " + tIds.join(" or "));
-      if (!ownsAnyTool(ownedTools, tIds, tier)) toolTag.classList.add("missing");
+      if (!ownsAnyTool(ownedToolsWithVault, tIds, tier)) toolTag.classList.add("missing");
       toolListEl.appendChild(toolTag);
     }
   }
@@ -1138,6 +1152,12 @@ window.addEventListener("message", (event) => {
   document.querySelector("#rawTotals thead th:last-child").textContent = inventory ? "owned/needed" : "";
   ownedTools = msg.tools ? new Set(msg.tools) : null;
   ownedBlueprints = msg.blueprints ? new Set(msg.blueprints) : null;
+  // The embedding pages that use this live-update path (e.g. Soul
+  // Creation's Trappings step) don't have a character crafting yet, so
+  // there's never a vault-tools list to carry here - falls back to
+  // whatever ownedTools alone now is, same as before this existed.
+  vaultTools = msg.vaultTools ? new Set(msg.vaultTools) : null;
+  ownedToolsWithVault = ownedTools ? new Set([...ownedTools, ...(vaultTools || [])]) : null;
   if (select.value) render(select.value, currentTier());
 });
 </script>

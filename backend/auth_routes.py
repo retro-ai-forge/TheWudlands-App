@@ -206,7 +206,14 @@ class ItemInstanceResponse(BaseModel):
     itemId: str
     familyId: str
     quality: Optional[int] = None
-    location: str = Field(..., description="'backpack' | 'body' | 'soul' | 'pool'")
+    location: str = Field(
+        ...,
+        description=(
+            "'backpack' | 'body' | 'soul' | 'pool' | 'crafting' - 'crafting' means this instance is "
+            "currently borrowed for an in-progress craft (see activeCraft.borrowedInstances) and will "
+            "return to wherever it came from once finish_craft releases it"
+        ),
+    )
     slotRef: List[str] = Field(default_factory=list)
     createdAt: str
 
@@ -268,7 +275,11 @@ class CharacterResponse(BaseModel):
         None, description="Which light source (if any) is currently lit and held - {family, tier, litAt, hand}"
     )
     activeCraft: Optional[dict] = Field(
-        None, description="In-progress craft, if any - {familyId, tier, count, readyAt}. One job at a time."
+        None,
+        description=(
+            "In-progress craft, if any - {familyId, tier, count, readyAt, toolTransferId, "
+            "borrowedInstances: [{instanceId, source, slotRef}]}. One job at a time."
+        ),
     )
 
 class PlayerInventoryResponse(BaseModel):

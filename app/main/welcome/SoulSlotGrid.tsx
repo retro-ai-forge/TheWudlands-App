@@ -83,6 +83,21 @@ export interface CharacterAttributes {
  * not just enough to render the slot thumbnail - since this is also what
  * gets handed to CharacterPreview's full character sheet.
  */
+// One individually-tracked crafted item (a needsItemDefinition:true
+// family - weapons, armor, shields, and the rest) - unlike a flat balance,
+// each physical one a player/character owns is its own instance with its
+// own quality.
+export type ItemInstance = {
+  instanceId: string;
+  itemId: string;
+  familyId: string;
+  quality: number | null;
+  /** "pool" | "backpack" | "body" | "soul" | "crafting" - "crafting" means it's currently borrowed for an in-progress craft (see Character.activeCraft.borrowedInstances) and will return to wherever it came from once the craft finishes. */
+  location: string;
+  slotRef: string[];
+  createdAt: string;
+};
+
 export interface SlotCharacterSummary {
   id: string;
   slotNumber: number;
@@ -110,8 +125,17 @@ export interface SlotCharacterSummary {
   tools: Record<string, number>;
   /** Blueprint ids this character has learned - soulbound, never moves. */
   blueprints: string[];
+  /** Item instances this character holds - backpacked or equipped (see location/slotRef). */
+  items: ItemInstance[];
   /** In-progress craft, if any - one job at a time. Resolved lazily against readyAt, not a live server countdown. */
-  activeCraft: { familyId: string; tier: number; count: number; readyAt: string } | null;
+  activeCraft: {
+    familyId: string;
+    tier: number;
+    count: number;
+    readyAt: string;
+    /** Instance-tracked tools (e.g. axe_stone) currently borrowed for this craft - each moved to location:"crafting" for the duration and returned to `source` once it finishes. */
+    borrowedInstances?: { instanceId: string; source: string; slotRef: string[] }[];
+  } | null;
 }
 
 interface SlotState {

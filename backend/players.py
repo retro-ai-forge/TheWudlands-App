@@ -334,11 +334,14 @@ async def check_in_tool(
     """
     Move `amount` of `tool_id` from one of `address`'s characters back into
     the shared tool pool. Requires that character to actually be holding
-    `amount`. The only direction this moves in now - a character's own
-    tools are a temporary crafting-session staging area (populated by
-    start_craft, never by a direct player-initiated transfer), so there's
-    no check_out_tool counterpart; this stays as the drain path for
-    whatever a craft left behind, or old data.
+    `amount`, and that it has no in-progress craft - whatever start_craft
+    staged there is locked for the crafting duration; pulling it back out
+    from under an active craft would leave finish_craft unable to find it.
+    The only direction this moves in now - a character's own tools are a
+    temporary crafting-session staging area (populated by start_craft,
+    never by a direct player-initiated transfer), so there's no
+    check_out_tool counterpart; this stays as the drain path for whatever a
+    finished craft left behind, or old data.
     """
     _validate_tool_pool(pool)
     if amount <= 0:
@@ -352,7 +355,13 @@ async def check_in_tool(
     doc = await db.players.find_one_and_update(
         {
             "address": address,
-            "characters": {"$elemMatch": {"id": character_id, f"tools.{tool_id}": {"$gte": amount}}},
+            "characters": {
+                "$elemMatch": {
+                    "id": character_id,
+                    f"tools.{tool_id}": {"$gte": amount},
+                    "$or": [{"activeCraft": {"$exists": False}}, {"activeCraft": None}],
+                }
+            },
         },
         {"$inc": {f"{pool}.{tool_id}": amount, f"characters.$.tools.{tool_id}": -amount}},
         return_document=ReturnDocument.AFTER,
@@ -370,10 +379,13 @@ async def check_in_resource(
     """
     Move `amount` of `resource_id` from one of `address`'s characters' own
     resources back into the shared inventory's resources pool. Requires
-    that character to actually be holding `amount`. The only direction this
-    moves in now - same reasoning as check_in_tool: a character's own
-    resources are a temporary crafting-session staging area, not somewhere
-    a player parks materials directly.
+    that character to actually be holding `amount`, and that it has no
+    in-progress craft - same reasoning as check_in_tool: pulling staged
+    materials back out from under an active craft would leave finish_craft
+    unable to find what start_craft transferred. The only direction this
+    moves in now - a character's own resources are a temporary
+    crafting-session staging area, not somewhere a player parks materials
+    directly.
     """
     _validate_resource_grant(resource_id, amount)
     db = get_database()
@@ -382,7 +394,11 @@ async def check_in_resource(
         {
             "address": address,
             "characters": {
-                "$elemMatch": {"id": character_id, f"resources.{resource_id}": {"$gte": amount}}
+                "$elemMatch": {
+                    "id": character_id,
+                    f"resources.{resource_id}": {"$gte": amount},
+                    "$or": [{"activeCraft": {"$exists": False}}, {"activeCraft": None}],
+                }
             },
         },
         {"$inc": {
@@ -403,15 +419,28 @@ def _resolve_tool_for_craft(
     player_tools: Dict[str, int],
     tool_families: List[str],
     check_character_flat_balance: bool = True,
-) -> Optional[tuple[bool, Optional[str]]]:
+    player_items: Optional[List[dict]] = None,
+) -> Optional[tuple]:
     """
     For a recipe's tool alternatives, find one `character` can use.
 
-    Instance-tracked tool-weapons (a needsItemDefinition:true family like
-    axe_stone that doubles as a tool) are a separate, unrelated mechanic -
-    always checked against the character's own equip/backpack state
-    (Character.items), never transferred here (that's a capacity-gated
-    backpack check-out, a different operation).
+    An instance-tracked tool-weapon (a needsItemDefinition:true family like
+    axe_stone that doubles as a tool) always gets physically MOVED onto
+    Character.items with location:"crafting" for the duration - visibly
+    listed in the character's own crafting section, and gone from wherever
+    it was (never in the player vault, never sitting in the character's own
+    backpack/equip listing while in use - see start_craft/finish_craft).
+    Never backpack-capacity-gated: "crafting" is a distinct location from
+    "backpack", so borrowing doesn't compete for pack space. Source
+    priority, only meaningful when `player_items` is given (the player's
+    shared inventory.items pool - only start_craft passes this): the vault
+    is checked FIRST (an unassigned copy sitting there is fair game, and
+    freeing it up for this craft doesn't cost the character anything they
+    were using), the character's own backpack/equipped instance SECOND (so
+    an axe already in hand only gets pulled if the vault has no spare).
+    `player_items` left None (finish_craft's re-verification, and every
+    ingredient-level "final"/unconsumed alternative check via
+    _resolve_ingredient_option) means only the character's own items count.
 
     For an ordinary flat-balance family, crafting only ever checks the
     player's shared vault (same "character vault is a temporary staging
@@ -421,32 +450,49 @@ def _resolve_tool_for_craft(
     re-verify what start_craft transferred is still there, passing
     `player_tools={}` so it can only ever find it on the character.
 
-    Returns `(True, None)` if already usable without a transfer (an
-    instance-tracked tool on the character, or - only when
-    `check_character_flat_balance` - a flat balance on the character).
-    Returns `(False, concrete_id)` if a flat-balance tool is only available
-    in `player_tools` and would need transferring first. Returns None if
-    nothing usable is found anywhere.
+    Returns `("instance_move", instance_id, source, slot_ref)` for an
+    instance-tracked tool that needs moving to "crafting" - `source` is
+    "pool" (came from the shared vault) or "backpack"/"body" (came from the
+    character's own gear, `slot_ref` carrying whatever it was equipped into
+    so finish_craft can restore it exactly; `slot_ref` is `[]` for "pool"
+    and "backpack" sources). Returns `("owned", None)` for a flat balance
+    already on the character (only when `check_character_flat_balance`) -
+    nothing to move, it's already exactly where it needs to be. Returns
+    `("flat_transfer", concrete_id)` if a flat-balance tool is only
+    available in `player_tools` and would need transferring first. Returns
+    None if nothing usable is found anywhere.
     """
     held_tools = character.get("tools", {})
-    held_items = character.get("items", [])
+    held_items = character.get("items", []) or []
 
     for family_id in tool_families:
         family = items_catalog.ITEM_FAMILIES_BY_ID.get(family_id)
         if family and family.needs_item_definition:
+            # Already staged for THIS craft (finish_craft's re-verification,
+            # after start_craft already moved it to "crafting") - present
+            # and nothing further to do, same "owned" tag the flat-balance
+            # branch uses for "already fine as-is".
             if any(
-                instance["familyId"] == family_id and instance.get("location") in ("backpack", "body")
+                instance.get("familyId") == family_id and instance.get("location") == "crafting"
                 for instance in held_items
             ):
-                return (True, None)
+                return ("owned", None)
+            if player_items:
+                for instance in player_items:
+                    if instance.get("familyId") == family_id and instance.get("location") == "pool":
+                        return ("instance_move", instance["instanceId"], "pool", [])
+            for instance in held_items:
+                loc = instance.get("location")
+                if instance.get("familyId") == family_id and loc in ("backpack", "body"):
+                    return ("instance_move", instance["instanceId"], loc, instance.get("slotRef") or [])
             continue
         if check_character_flat_balance and any(
             held_tools.get(tool.id, 0) > 0 for tool in TOOL_ITEMS_BY_ID.values() if tool.family_id == family_id
         ):
-            return (True, None)
+            return ("owned", None)
         for tool in TOOL_ITEMS_BY_ID.values():
             if tool.family_id == family_id and player_tools.get(tool.id, 0) > 0:
-                return (False, tool.id)
+                return ("flat_transfer", tool.id)
     return None
 
 
@@ -463,6 +509,7 @@ def _resolve_ingredient_option(
     character_resources: Dict[str, int],
     player_resources: Dict[str, int],
     count: int = 1,
+    player_items: Optional[List[dict]] = None,
 ) -> Optional[dict]:
     """
     Checks whether ONE ingredient option (the sole option for a plain
@@ -474,10 +521,12 @@ def _resolve_ingredient_option(
     it up) still only needs ONE, regardless of count, same as a recipe's
     "tool" field doesn't need `count` anvils to make `count` daggers.
     Returns None if it can't be satisfied. Otherwise a small plan dict:
-    `{"held": True}` for an unconsumed option that's simply owned (nothing
-    to decrement - resolved the same way `_resolve_tool_for_craft` resolves
-    the "tool" field, since "own a needsItemDefinition:true family,
-    don't use it up" is the identical question), or
+    `{"held": True, "move": <_resolve_tool_for_craft's instance_move tuple, or None>}`
+    for an unconsumed option that's simply owned (resolved the same way
+    `_resolve_tool_for_craft` resolves the "tool" field, since "own a
+    needsItemDefinition:true family, don't use it up" is the identical
+    question - `move` carries the same move-to-"crafting" instruction when
+    `player_items` surfaces one, same as the "tool" field gets), or
     `{"held": False, "concrete_id", "qty", "from_character", "from_player"}`
     for a resource that would actually be consumed.
     """
@@ -487,9 +536,10 @@ def _resolve_ingredient_option(
     family_id = option["familyId"]
 
     if category == "final" and not consumed:
-        if _resolve_tool_for_craft(character, {}, [family_id]) is None:
+        found = _resolve_tool_for_craft(character, {}, [family_id], player_items=player_items)
+        if found is None:
             return None
-        return {"held": True}
+        return {"held": True, "move": found if found[0] == "instance_move" else None}
 
     if category == "raw":
         concrete_id = _RAW_ID_BY_FAMILY_TIER.get((family_id, tier))
@@ -518,7 +568,8 @@ def _resolve_recipe_ingredients(
     player_resources: Dict[str, int],
     character: Optional[dict] = None,
     count: int = 1,
-) -> Optional[tuple[Dict[str, int], Dict[str, int]]]:
+    player_items: Optional[List[dict]] = None,
+) -> Optional[tuple[Dict[str, int], Dict[str, int], List[tuple]]]:
     """
     Resolves one recipe's ingredients (at `tier`) to concrete resource ids
     and checks the character vault + player shared vault hold enough
@@ -529,9 +580,11 @@ def _resolve_recipe_ingredients(
     (a tool-like requirement) still only needs owning one, same as a
     recipe's "tool" field doesn't need `count` anvils to make `count`
     daggers - see `_resolve_ingredient_option`. Returns
-    (character_decrements, player_decrements) - amounts to take from each,
-    character vault first, shared vault only for whatever's still short -
-    or None if there isn't enough even combined.
+    (character_decrements, player_decrements, instance_moves) - amounts to
+    take from each vault (character vault first, shared vault only for
+    whatever's still short), plus any instance-tracked tools an unconsumed
+    "final" alternative resolved to a move (see `_resolve_tool_for_craft`'s
+    `instance_move` tuples) - or None if there isn't enough even combined.
 
     An ingredient with an "alternatives" list (e.g. carcass's
     bone_blade-or-dagger choice) tries each option, preferring an
@@ -542,12 +595,17 @@ def _resolve_recipe_ingredients(
     is only needed to resolve an unconsumed "final"-category option
     (e.g. dagger) - omit it for calls that can't have one satisfied anyway
     (finish_craft's re-check already gets this from its own character read).
+    `player_items` is only ever passed by start_craft (see
+    _resolve_tool_for_craft) - finish_craft's re-check leaves it None so an
+    unconsumed alternative can only resolve against what's already on the
+    character, never trigger a fresh move.
 
     Raises ValueError for an unsupported ingredient category or a missing
     tier row.
     """
     character_decrements: Dict[str, int] = {}
     player_decrements: Dict[str, int] = {}
+    instance_moves: List[tuple] = []
     character = character or {}
     for ingredient in recipe["ingredients"]:
         options = ingredient["alternatives"] if "alternatives" in ingredient else [ingredient]
@@ -557,7 +615,7 @@ def _resolve_recipe_ingredients(
             if option.get("consumed", True):
                 continue
             plan = _resolve_ingredient_option(
-                option, tier, character, character_resources, player_resources, count
+                option, tier, character, character_resources, player_resources, count, player_items
             )
             if plan is not None:
                 break
@@ -566,7 +624,7 @@ def _resolve_recipe_ingredients(
                 if not option.get("consumed", True):
                     continue
                 plan = _resolve_ingredient_option(
-                    option, tier, character, character_resources, player_resources, count
+                    option, tier, character, character_resources, player_resources, count, player_items
                 )
                 if plan is not None:
                     break
@@ -579,7 +637,9 @@ def _resolve_recipe_ingredients(
                 character_decrements[concrete_id] = character_decrements.get(concrete_id, 0) + plan["from_character"]
             if plan["from_player"]:
                 player_decrements[concrete_id] = player_decrements.get(concrete_id, 0) + plan["from_player"]
-    return character_decrements, player_decrements
+        elif plan.get("move") is not None:
+            instance_moves.append(plan["move"])
+    return character_decrements, player_decrements, instance_moves
 
 
 def _resolve_recipe_output(family_id: str, tier: int) -> Optional[tuple[dict, bool]]:
@@ -664,16 +724,21 @@ async def start_craft(
     # area for an active craft (populated here, drained by finish_craft),
     # not a persistent balance a player manages directly. Passing {} for
     # the character side means the full amount always comes from the
-    # player vault (character_decrements stays empty).
+    # player vault (character_decrements stays empty). player_items lets
+    # an unconsumed ingredient alternative (e.g. carcass's dagger option)
+    # resolve to a vault-borrow the same way the recipe's own "tool" field
+    # does, below.
     resolved = _resolve_recipe_ingredients(
-        recipe, tier, {}, doc.get("inventory", {}).get("resources", {}), character, count
+        recipe, tier, {}, doc.get("inventory", {}).get("resources", {}), character, count,
+        player_items=doc.get("inventory", {}).get("items", []),
     )
     if resolved is None:
         return None
-    _, player_decrements = resolved
+    _, player_decrements, ingredient_moves = resolved
 
     tool_candidates = recipe.get("tool")
     tool_transfer_id: Optional[str] = None
+    tool_move: Optional[tuple] = None
     if tool_candidates is not None:
         if isinstance(tool_candidates, str):
             tool_candidates = [tool_candidates]
@@ -682,16 +747,32 @@ async def start_craft(
             doc.get("inventory", {}).get("tools", {}),
             tool_candidates,
             check_character_flat_balance=False,
+            player_items=doc.get("inventory", {}).get("items", []),
         )
         if found is None:
             return None
-        _, tool_transfer_id = found
+        if found[0] == "flat_transfer":
+            tool_transfer_id = found[1]
+        elif found[0] == "instance_move":
+            tool_move = found
 
     blueprint_family_id = recipe.get("blueprintFamilyId")
     if blueprint_family_id is not None:
         blueprint_id = _BLUEPRINT_ID_BY_FAMILY_TIER.get((blueprint_family_id, tier))
         if blueprint_id is None or blueprint_id not in character.get("blueprints", []):
             return None
+
+    # Every instance-tracked tool this craft needs to borrow: the recipe's
+    # own "tool" field (tool_move) plus any ingredient-level "final"/
+    # unconsumed alternative that also resolved to one (ingredient_moves).
+    # Deduplicated by instanceId - no current recipe needs the same
+    # instance twice, but cheap to guard.
+    all_moves: List[tuple] = []
+    seen_instance_ids: set = set()
+    for move in ingredient_moves + ([tool_move] if tool_move else []):
+        if move[1] not in seen_instance_ids:
+            seen_instance_ids.add(move[1])
+            all_moves.append(move)
 
     # Only the shortfall drawn from the player's shared vault actually
     # moves - whatever was already on the character (character_decrements)
@@ -711,26 +792,83 @@ async def start_craft(
         inc_ops[f"characters.$.tools.{tool_transfer_id}"] = 1
 
     ready_at = datetime.now(timezone.utc) + timedelta(seconds=CRAFT_DURATION_SECONDS)
-    update: Dict = {
-        "$set": {
-            "characters.$.activeCraft": {
-                "familyId": family_id,
-                "tier": tier,
-                "count": count,
-                "readyAt": ready_at.isoformat(),
-                # Only set when this call actually moved a tool from the
-                # player's shared pool - a tool the character already had
-                # (found on hand, nothing transferred) is never returned by
-                # finish_craft, only what was specifically borrowed here.
-                "toolTransferId": tool_transfer_id,
-            }
-        }
+    active_craft: Dict = {
+        "familyId": family_id,
+        "tier": tier,
+        "count": count,
+        "readyAt": ready_at.isoformat(),
+        # Only set when this call actually moved a tool from the player's
+        # shared pool - a tool the character already had (found on hand,
+        # nothing transferred) is never returned by finish_craft, only
+        # what was specifically borrowed here.
+        "toolTransferId": tool_transfer_id,
+        # Every instance-tracked tool physically moved to location:
+        # "crafting" for this craft (see _resolve_tool_for_craft) -
+        # {instanceId, source, slotRef}, source being "pool"/"backpack"/
+        # "body" so finish_craft can put each one back exactly where it
+        # came from (a "body" source's slotRef is what it was equipped
+        # into, restored on release).
+        "borrowedInstances": [
+            {"instanceId": instance_id, "source": source, "slotRef": slot_ref}
+            for _kind, instance_id, source, slot_ref in all_moves
+        ],
     }
+
+    if not all_moves:
+        # No instance-tracked tool involved - the simple, original shape:
+        # plain positional $ against the query's own characters.$elemMatch.
+        update: Dict = {"$set": {"characters.$.activeCraft": active_craft}}
+        if inc_ops:
+            update["$inc"] = inc_ops
+        match_filter["characters"] = {"$elemMatch": elem_match}
+        doc = await db.players.find_one_and_update(match_filter, update, return_document=ReturnDocument.AFTER)
+        if doc is None:
+            return None
+        return _doc_to_player(doc)
+
+    # At least one instance needs moving to "crafting" - switch every
+    # characters-array field in this update to $[char]/array_filters
+    # instead of mixing with plain $, since a backpack/body-sourced move
+    # also needs characters.$[char].items.$[itemN] (a nested array filter
+    # on the SAME "characters" field) in the same update document.
+    # The vault-side sufficiency checks (inventory.resources.X >= qty,
+    # inventory.tools.X >= 1) already sit in match_filter above - nothing
+    # about the character's own current balance needs preconditioning
+    # here, these are increments landing on the character, not decrements.
+    set_ops: Dict = {"characters.$[char].activeCraft": active_craft}
+    array_filters: List[Dict] = [{"char.id": character_id}]
+
+    pool_pull_ids: List[str] = []
+    pool_push_instances: List[dict] = []
+    inventory_items_by_id = {i["instanceId"]: i for i in doc.get("inventory", {}).get("items", [])}
+    for idx, (_kind, instance_id, source, _slot_ref) in enumerate(all_moves):
+        if source == "pool":
+            pool_pull_ids.append(instance_id)
+            src_instance = inventory_items_by_id[instance_id]
+            pool_push_instances.append({**src_instance, "location": "crafting", "slotRef": []})
+        else:
+            filt_id = f"moveItem{idx}"
+            array_filters.append({f"{filt_id}.instanceId": instance_id, f"{filt_id}.location": source})
+            set_ops[f"characters.$[char].items.$[{filt_id}].location"] = "crafting"
+            set_ops[f"characters.$[char].items.$[{filt_id}].slotRef"] = []
+
+    update = {"$set": set_ops}
     if inc_ops:
-        update["$inc"] = inc_ops
+        update["$inc"] = {k.replace("characters.$.", "characters.$[char]."): v for k, v in inc_ops.items()}
+    if pool_pull_ids:
+        match_filter["$and"] = [
+            {"inventory.items": {"$elemMatch": {"instanceId": iid, "location": "pool"}}} for iid in pool_pull_ids
+        ]
+        # Pull off the vault, push onto the character - different top-level
+        # fields, so no path collision (unlike pulling and pushing the
+        # same "inventory.items" field, which Mongo rejects outright).
+        update["$pull"] = {"inventory.items": {"instanceId": {"$in": pool_pull_ids}}}
+        update["$push"] = {"characters.$[char].items": {"$each": pool_push_instances}}
 
     match_filter["characters"] = {"$elemMatch": elem_match}
-    doc = await db.players.find_one_and_update(match_filter, update, return_document=ReturnDocument.AFTER)
+    doc = await db.players.find_one_and_update(
+        match_filter, update, array_filters=array_filters, return_document=ReturnDocument.AFTER
+    )
     if doc is None:
         return None
     return _doc_to_player(doc)
@@ -774,72 +912,175 @@ async def finish_craft(address: str, character_id: str) -> Optional[Player]:
 
     # Everything needed should already be sitting on the character (see
     # start_craft) - resolved purely against the character's own vault now,
-    # with an empty player vault so nothing can be drawn from there.
+    # with an empty player vault so nothing can be drawn from there. An
+    # instance-tracked tool borrowed for this craft is, by now, sitting at
+    # location:"crafting" - _resolve_tool_for_craft/_resolve_ingredient_option
+    # recognize that as "already staged, present" (see their docstrings),
+    # so an ingredient's unconsumed "final" alternative re-verifies
+    # correctly here without trying to move anything again.
     resolved = _resolve_recipe_ingredients(recipe, tier, character.get("resources", {}), {}, character, count)
     if resolved is None:
         return None
-    character_decrements, _ = resolved
+    character_decrements, _, _ = resolved
 
-    tool_candidates = recipe.get("tool")
-    if tool_candidates is not None:
-        if isinstance(tool_candidates, str):
-            tool_candidates = [tool_candidates]
-        if _resolve_tool_for_craft(character, {}, tool_candidates) is None:
+    # borrowedInstances (see start_craft) is the authoritative record of
+    # what got moved to location:"crafting" and needs releasing now - no
+    # separate re-resolution of recipe.tool needed here; the fact that
+    # activeCraft exists at all with a tool requirement already proves it
+    # was satisfied at start_craft time, and each release below re-verifies
+    # (via its own precondition) that it's still there before letting go.
+    borrowed_instances = active.get("borrowedInstances") or []
+
+    family = items_catalog.ITEM_FAMILIES_BY_ID.get(family_id)
+
+    def _output_ops() -> tuple[Dict[str, int], Dict]:
+        """Returns (extra inc_ops, extra $push) for crediting this craft's output."""
+        inc: Dict[str, int] = {}
+        push: Dict = {}
+        if output_is_processed:
+            # A crafted processed material (plank, metal_bar, leather, ...)
+            # is the exact same kind of thing already stacked in
+            # inventory.resources - it belongs in the shared resources
+            # pool, not itemBalances, so other recipes' ingredient checks
+            # (which only ever look at resources) can actually see it.
+            inc[f"inventory.resources.{output_row['id']}"] = count
+        elif family and family.needs_item_definition:
+            instances = [
+                {
+                    "instanceId": uuid.uuid4().hex,
+                    "itemId": output_row["id"],
+                    "familyId": family_id,
+                    "quality": family.quality_max,
+                    "location": "pool",
+                    "slotRef": [],
+                    "createdAt": datetime.now(timezone.utc).isoformat(),
+                }
+                for _ in range(count)
+            ]
+            push["inventory.items"] = {"$each": instances}
+        else:
+            inc[f"inventory.itemBalances.{output_row['id']}"] = count
+        return inc, push
+
+    if not borrowed_instances:
+        # ORIGINAL simple shape - no instance-tracked tool was borrowed for
+        # this craft, plain positional $ against the query's own
+        # characters.$elemMatch.
+        elem_match: Dict = {"id": character_id}
+        inc_ops: Dict[str, int] = {}
+        for concrete_id, qty in character_decrements.items():
+            elem_match[f"resources.{concrete_id}"] = {"$gte": qty}
+            inc_ops[f"characters.$.resources.{concrete_id}"] = -qty
+
+        # A flat-balance tool start_craft borrowed from the player's shared
+        # pool (not one the character already had) goes back once the
+        # craft is done - "locked" only for the crafting duration, not
+        # indefinitely.
+        tool_transfer_id = active.get("toolTransferId")
+        if tool_transfer_id is not None:
+            elem_match[f"tools.{tool_transfer_id}"] = {"$gte": 1}
+            inc_ops[f"characters.$.tools.{tool_transfer_id}"] = inc_ops.get(
+                f"characters.$.tools.{tool_transfer_id}", 0
+            ) - 1
+            inc_ops[f"inventory.tools.{tool_transfer_id}"] = 1
+
+        extra_inc, extra_push = _output_ops()
+        inc_ops.update(extra_inc)
+
+        update: Dict = {"$unset": {"characters.$.activeCraft": ""}}
+        if extra_push:
+            update["$push"] = extra_push
+        if inc_ops:
+            update["$inc"] = inc_ops
+
+        doc = await db.players.find_one_and_update(
+            {"address": address, "characters": {"$elemMatch": elem_match}},
+            update,
+            return_document=ReturnDocument.AFTER,
+        )
+        if doc is None:
             return None
+        return _doc_to_player(doc)
 
-    elem_match: Dict = {"id": character_id}
-    inc_ops: Dict[str, int] = {}
+    # At least one instance-tracked tool was borrowed - release each back
+    # to its recorded source (see start_craft's borrowedInstances). Same
+    # $[char]/array_filters-throughout approach as start_craft, to avoid
+    # mixing the plain positional $ with an array filter on the same
+    # "characters" field in one update.
+    #
+    # No current recipe needs more than one instance-tracked tool at once,
+    # so borrowed_instances is a single-element list in practice, and every
+    # element shares one source. This only implements that reachable shape
+    # (asserted below) rather than a general multi-instance/mixed-source
+    # release - MongoDB rejects a $pull and a $set both touching
+    # characters.$[char].items in one update (one path prefixes the
+    # other), which a real mix would require untangling; add that handling
+    # if a future recipe actually needs two simultaneous instance tools.
+    sources = {bi["source"] for bi in borrowed_instances}
+    if len(sources) > 1:
+        raise ValueError("Releasing instance tools borrowed from more than one source in a single craft is not supported yet")
+    source = next(iter(sources))
+
+    elem_match = {"id": character_id}
     for concrete_id, qty in character_decrements.items():
         elem_match[f"resources.{concrete_id}"] = {"$gte": qty}
-        inc_ops[f"characters.$.resources.{concrete_id}"] = -qty
-
-    # A flat-balance tool start_craft borrowed from the player's shared
-    # pool (not one the character already had) goes back once the craft
-    # is done - "locked" only for the crafting duration, not indefinitely.
-    # An instance-tracked tool alternative (e.g. axe_stone/dagger) is never
-    # touched here - toolTransferId is only ever set for the transferred
-    # flat-balance case, see start_craft.
     tool_transfer_id = active.get("toolTransferId")
     if tool_transfer_id is not None:
         elem_match[f"tools.{tool_transfer_id}"] = {"$gte": 1}
-        inc_ops[f"characters.$.tools.{tool_transfer_id}"] = inc_ops.get(
-            f"characters.$.tools.{tool_transfer_id}", 0
+
+    inc_ops = {}
+    for concrete_id, qty in character_decrements.items():
+        inc_ops[f"characters.$[char].resources.{concrete_id}"] = -qty
+    if tool_transfer_id is not None:
+        inc_ops[f"characters.$[char].tools.{tool_transfer_id}"] = inc_ops.get(
+            f"characters.$[char].tools.{tool_transfer_id}", 0
         ) - 1
         inc_ops[f"inventory.tools.{tool_transfer_id}"] = 1
+    extra_inc, extra_push = _output_ops()
+    inc_ops.update(extra_inc)
 
-    update: Dict = {"$unset": {"characters.$.activeCraft": ""}}
-    family = items_catalog.ITEM_FAMILIES_BY_ID.get(family_id)
-    if output_is_processed:
-        # A crafted processed material (plank, metal_bar, leather, ...) is
-        # the exact same kind of thing already stacked in
-        # inventory.resources - it belongs in the shared resources pool,
-        # not itemBalances, so other recipes' ingredient checks (which only
-        # ever look at resources) can actually see it.
-        inc_ops[f"inventory.resources.{output_row['id']}"] = count
-    elif family and family.needs_item_definition:
-        instances = [
-            {
-                "instanceId": uuid.uuid4().hex,
-                "itemId": output_row["id"],
-                "familyId": family_id,
-                "quality": family.quality_max,
-                "location": "pool",
-                "slotRef": [],
-                "createdAt": datetime.now(timezone.utc).isoformat(),
-            }
-            for _ in range(count)
+    array_filters: List[Dict] = [{"char.id": character_id}]
+    update: Dict = {"$unset": {"characters.$[char].activeCraft": ""}}
+    query: Dict = {"address": address, "characters": {"$elemMatch": elem_match}}
+
+    if source == "pool":
+        # $pull the borrowed instance(s) off the character, $push them
+        # back into the shared vault as ordinary unassigned pool items.
+        instance_ids = [bi["instanceId"] for bi in borrowed_instances]
+        held_by_id = {i["instanceId"]: i for i in character.get("items", [])}
+        returned = [
+            {**held_by_id[iid], "location": "pool", "slotRef": []}
+            for iid in instance_ids
         ]
-        update["$push"] = {"inventory.items": {"$each": instances}}
+        update["$pull"] = {"characters.$[char].items": {"instanceId": {"$in": instance_ids}}}
+        push_items = list(returned)
+        if extra_push:
+            push_items += extra_push["inventory.items"]["$each"]
+        update["$push"] = {"inventory.items": {"$each": push_items}}
+        query["$and"] = [
+            {"characters": {"$elemMatch": {"id": character_id, "items": {
+                "$elemMatch": {"instanceId": iid, "location": "crafting"}
+            }}}}
+            for iid in instance_ids
+        ]
     else:
-        inc_ops[f"inventory.itemBalances.{output_row['id']}"] = count
+        # backpack/body source - restore in place, nothing leaves
+        # characters.$[char].items at all.
+        set_ops: Dict = {}
+        for idx, bi in enumerate(borrowed_instances):
+            filt_id = f"relItem{idx}"
+            array_filters.append({f"{filt_id}.instanceId": bi["instanceId"], f"{filt_id}.location": "crafting"})
+            set_ops[f"characters.$[char].items.$[{filt_id}].location"] = bi["source"]
+            set_ops[f"characters.$[char].items.$[{filt_id}].slotRef"] = bi.get("slotRef") or []
+        update["$set"] = set_ops
+        if extra_push:
+            update["$push"] = extra_push
 
     if inc_ops:
         update["$inc"] = inc_ops
 
     doc = await db.players.find_one_and_update(
-        {"address": address, "characters": {"$elemMatch": elem_match}},
-        update,
-        return_document=ReturnDocument.AFTER,
+        query, update, array_filters=array_filters, return_document=ReturnDocument.AFTER
     )
     if doc is None:
         return None
@@ -857,9 +1098,11 @@ async def equip_item(address: str, character_id: str, instance_id: str, slots: L
     something else into just one of those slots.
 
     Raises ValueError if `slots` doesn't match what the instance's family
-    actually requires. Returns None if the instance isn't found on this
-    character, or if any of `slots` is already occupied by another equipped
-    instance.
+    actually requires. Returns None if the instance isn't found backpacked
+    on this character (an equipped one is already equipped; a
+    location:"crafting" one is borrowed for an in-progress craft and can't
+    be touched until it's released - see start_craft/finish_craft), or if
+    any of `slots` is already occupied by another equipped instance.
     """
     db = get_database()
     doc = await db.players.find_one({"address": address, "characters.id": character_id})
@@ -868,7 +1111,10 @@ async def equip_item(address: str, character_id: str, instance_id: str, slots: L
     character = next((c for c in doc["characters"] if c["id"] == character_id), None)
     if character is None:
         return None
-    instance = next((i for i in character.get("items", []) if i["instanceId"] == instance_id), None)
+    instance = next(
+        (i for i in character.get("items", []) if i["instanceId"] == instance_id and i.get("location") == "backpack"),
+        None,
+    )
     if instance is None:
         return None
 
@@ -891,15 +1137,19 @@ async def equip_item(address: str, character_id: str, instance_id: str, slots: L
             "characters": {
                 "$elemMatch": {
                     "id": character_id,
-                    "items.instanceId": instance_id,
-                    "items": {
-                        "$not": {
-                            "$elemMatch": {
-                                "instanceId": {"$ne": instance_id},
-                                "slotRef": {"$in": slots},
+                    "$and": [
+                        {"items": {"$elemMatch": {"instanceId": instance_id, "location": "backpack"}}},
+                        {
+                            "items": {
+                                "$not": {
+                                    "$elemMatch": {
+                                        "instanceId": {"$ne": instance_id},
+                                        "slotRef": {"$in": slots},
+                                    }
+                                }
                             }
-                        }
-                    },
+                        },
+                    ],
                 }
             },
         },
@@ -909,7 +1159,7 @@ async def equip_item(address: str, character_id: str, instance_id: str, slots: L
                 "characters.$[char].items.$[item].slotRef": slots,
             }
         },
-        array_filters=[{"char.id": character_id}, {"item.instanceId": instance_id}],
+        array_filters=[{"char.id": character_id}, {"item.instanceId": instance_id, "item.location": "backpack"}],
         return_document=ReturnDocument.AFTER,
     )
     if doc is None:
@@ -923,13 +1173,17 @@ async def unequip_item(address: str, character_id: str, instance_id: str) -> Opt
     "backpack" and slotRef to [] (freeing both slots at once for a
     two-handed item). Never capacity-gated (see the item-instance plan's
     "Backpack capacity" section). Returns None if the instance isn't found
-    equipped on this character.
+    equipped ("body") on this character - a location:"crafting" one is
+    borrowed for an in-progress craft and can't be touched until it's
+    released (see start_craft/finish_craft).
     """
     db = get_database()
     doc = await db.players.find_one_and_update(
         {
             "address": address,
-            "characters": {"$elemMatch": {"id": character_id, "items.instanceId": instance_id}},
+            "characters": {
+                "$elemMatch": {"id": character_id, "items": {"$elemMatch": {"instanceId": instance_id, "location": "body"}}}
+            },
         },
         {
             "$set": {
@@ -937,7 +1191,7 @@ async def unequip_item(address: str, character_id: str, instance_id: str) -> Opt
                 "characters.$[char].items.$[item].slotRef": [],
             }
         },
-        array_filters=[{"char.id": character_id}, {"item.instanceId": instance_id}],
+        array_filters=[{"char.id": character_id}, {"item.instanceId": instance_id, "item.location": "body"}],
         return_document=ReturnDocument.AFTER,
     )
     if doc is None:
@@ -951,8 +1205,11 @@ async def check_out_item_instance(address: str, character_id: str, instance_id: 
     location:"pool") onto one of their characters' own backpack
     (location:"backpack"). Capacity-gated: rejected if the character's backpack has no free slot
     for this family's size class (see items_catalog.backpack_slots_used/
-    backpack_capacity). Returns None if the instance isn't in the pool, the
-    address/character pair doesn't match, or there's no room.
+    backpack_capacity). Returns None if the instance isn't in the pool (an
+    instance borrowed for an in-progress craft is location:"crafting", not
+    "pool" - see start_craft/finish_craft - so it's naturally excluded
+    here rather than needing its own check), the address/character pair
+    doesn't match, or there's no room.
     """
     db = get_database()
     doc = await db.players.find_one({"address": address, "characters.id": character_id})

@@ -2,6 +2,8 @@ import { useEffect, useRef, useState } from "react";
 import styles from "./CharacterTabs.module.css";
 import { formatRemaining, useCraftCountdown } from "../craftTimer";
 import type { SlotCharacterSummary } from "../SoulSlotGrid";
+import type { ItemInstance } from "../SoulSlotGrid";
+export type { ItemInstance } from "../SoulSlotGrid";
 
 // GET /api/auth/blueprint-categories - lore/reference data (not
 // player-specific), reused here purely to look up each known blueprint's own
@@ -14,20 +16,6 @@ type BlueprintTierInfo = Record<
   { tier: number; familyId: string; kind: string; name?: string }
 >;
 type ResourceTierInfo = Record<string, { tier: number; family: string; category: "raw" | "processed" }>;
-
-// One individually-tracked crafted item (a needsItemDefinition:true
-// family - weapons, armor, shields, and the rest) - unlike a flat balance,
-// each physical one a player/character owns is its own instance with its
-// own quality.
-export type ItemInstance = {
-  instanceId: string;
-  itemId: string;
-  familyId: string;
-  quality: number | null;
-  location: string;
-  slotRef: string[];
-  createdAt: string;
-};
 
 // The raw shape returned by /me/characters and every check-in/check-out
 // transfer endpoint (backend.players.Player.to_dict()) - enough to refresh
@@ -304,6 +292,8 @@ function IdList({
   fixedIcon,
   balances,
   onTransfer,
+  transferableIds,
+  quantityHiddenIds,
 }: {
   ids: string[];
   emptyLabel: string;
@@ -319,6 +309,10 @@ function IdList({
   balances?: Record<string, number>;
   /** When given (alongside `balances`), clicking a row reveals quick-transfer quantity buttons that call this with (id, amount). */
   onTransfer?: (id: string, amount: number) => Promise<boolean>;
+  /** When given, only ids in this set are actually transferable - the rest render as plain, non-clickable rows even though `onTransfer`/`balances` are set (e.g. a merged list where only some entries support the action). Omit to make every row transferable, as before. */
+  transferableIds?: Set<string>;
+  /** When given, these ids skip the quantity column entirely - for individually-tracked item instances (needsItemDefinition:true), which never stack, so a bare "1" reads as a strange, meaningless count rather than useful information. */
+  quantityHiddenIds?: Set<string>;
 }) {
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [pendingId, setPendingId] = useState<string | null>(null);
@@ -374,10 +368,11 @@ function IdList({
       })
     : ids;
 
-  const canTransfer = Boolean(onTransfer && balances);
+  const canTransferList = Boolean(onTransfer && balances);
   const columnCount = balances ? 4 : 3;
 
   const renderRow = (id: string) => {
+    const canTransfer = canTransferList && (!transferableIds || transferableIds.has(id));
     const info = tierInfo?.[id];
     const tierDisplay = info ? getTierIndicator(info.tier) : "";
     const isGreyed = info && highestTierByFamily[info.familyId] > info.tier;
@@ -400,7 +395,7 @@ function IdList({
         }}>
           {info?.name ? stripBlueprintPrefix(info.name) : formatResourceLabel(id)}
         </td>
-        {balances && <td>{owned}</td>}
+        {balances && <td>{quantityHiddenIds?.has(id) ? "" : owned}</td>}
       </tr>,
     ];
     if (isExpanded && canTransfer) {
@@ -656,13 +651,57 @@ export function InventoryTab({
   // shared pool), so this counts as "known" for the recipe viewer's
   // missing-blueprint check.
   const knownBlueprints = character.blueprints;
-  // Crafting only ever checks the player's shared vault now, never the
-  // character's own - the character vault is a temporary staging area for
-  // an active craft (populated/drained by start/finish_craft), not
-  // somewhere a player parks materials ahead of time. So the recipe
-  // viewer's owned/needed check reflects the player vault only, matching
-  // exactly what backend.players.start_craft actually checks.
+  // Flat-balance tools (anvil, furnace, ...) only ever come from the
+  // player's shared vault now - the character vault is a temporary staging
+  // area for an active craft (populated/drained by start/finish_craft), not
+  // somewhere a player parks a tool ahead of time - so those are checked
+  // against playerTools only, matching backend.players.start_craft's
+  // check_character_flat_balance=False. Instance-tracked tool-weapons
+  // (axe_stone, axe, dagger - needsItemDefinition:true families that double
+  // as a recipe's tool) work the opposite way: backend._resolve_tool_for_craft
+  // never transfers those, it only ever checks whether the character is
+  // already physically holding one (backpack or equipped) - so those must
+  // come from this character's own items, never the shared pool, or an
+  // axe_stone sitting unassigned in the party's vault would incorrectly
+  // read as "owned" here. This set also backs ingredient-level "final"/
+  // unconsumed alternatives (e.g. carcass's bone_blade-or-dagger choice) -
+  // that path was never extended to draw from the vault, only a recipe's
+  // own "tool" field was (see vaultToolInstanceIds below), so keeping this
+  // one character-only keeps those checks matching what start_craft
+  // actually accepts.
   const ownedTools = ownedIds(playerTools);
+  for (const instance of character.items) {
+    if (instance.location === "backpack" || instance.location === "body") {
+      ownedTools.push(instance.itemId);
+    }
+  }
+
+  // Instance-tracked tools sitting in the shared vault - usable for a
+  // recipe's own "tool" field right where they sit: start_craft moves the
+  // specific instance onto this character (location:"crafting") for the
+  // duration, so anything currently borrowed by an OTHER character is
+  // already gone from playerItems entirely (not just marked - moved),
+  // leaving only what's genuinely still free here. Passed to the recipe
+  // viewer as a second, separate ownership list (see
+  // recipe-viewer.template.html's ownedToolsWithVault) rather than merged
+  // into ownedTools above.
+  const vaultToolInstanceIds = playerItems
+    .filter((instance) => instance.location === "pool")
+    .map((instance) => instance.itemId);
+
+  // Instance-tracked tools currently borrowed for this character's active
+  // craft (location:"crafting" - see start_craft/finish_craft's
+  // borrowedInstances) - shown right alongside the flat character.tools
+  // list above so a borrowed axe_stone is visibly "in the crafting
+  // section," not just gone from wherever it used to be.
+  const borrowedToolIds: string[] = [];
+  const borrowedToolCounts: Record<string, number> = {};
+  for (const instance of character.items) {
+    if (instance.location === "crafting") {
+      if (!(instance.itemId in borrowedToolCounts)) borrowedToolIds.push(instance.itemId);
+      borrowedToolCounts[instance.itemId] = (borrowedToolCounts[instance.itemId] ?? 0) + 1;
+    }
+  }
 
   // Crafted-item instances in the player's shared vault, counted by their
   // concrete (tier-specific) id - same "id -> quantity" shape
@@ -866,15 +905,34 @@ export function InventoryTab({
               sortByTier
               fixedIcon="🔧"
               balances={character.tools}
-              onTransfer={(id, amount) => transfer("tools", id, amount)}
+              // Locked for the crafting duration - whatever start_craft
+              // staged here isn't the player's to move back out until the
+              // craft finishes (or the timer runs out and finish_craft
+              // drains it), same "no check-out either" rule these are
+              // already subject to.
+              onTransfer={remainingSeconds === null ? (id, amount) => transfer("tools", id, amount) : undefined}
               textColor="#7eb8ff"
             />
-            {ownedIds(character.tools).length > 0 && <div className={styles.toolsResourceDivider} />}
+            {borrowedToolIds.length > 0 && (
+              <IdList
+                ids={borrowedToolIds}
+                emptyLabel=""
+                tierInfo={itemCatalogTierInfo}
+                sortByTier
+                fixedIcon="🔧"
+                balances={borrowedToolCounts}
+                quantityHiddenIds={new Set(borrowedToolIds)}
+                textColor="#7eb8ff"
+              />
+            )}
+            {(ownedIds(character.tools).length > 0 || borrowedToolIds.length > 0) && (
+              <div className={styles.toolsResourceDivider} />
+            )}
             <ResourceList
               balances={character.resources}
               emptyLabel="No materials used."
               tierInfo={resourceTierInfo}
-              onTransfer={(id, amount) => transfer("resources", id, amount)}
+              onTransfer={remainingSeconds === null ? (id, amount) => transfer("resources", id, amount) : undefined}
             />
           </div>
         )}
@@ -900,6 +958,7 @@ export function InventoryTab({
                 sortByTier
                 fixedIcon="🔧"
                 balances={playerTools}
+                textColor="#7eb8ff"
               />
             </SubAccordionItem>
             <SubAccordionItem
@@ -926,6 +985,7 @@ export function InventoryTab({
                 tierInfo={itemCatalogTierInfo}
                 sortByTier
                 balances={playerItemsCombined}
+                quantityHiddenIds={new Set(Object.keys(playerItemCounts))}
               />
             </SubAccordionItem>
           </div>
@@ -986,9 +1046,9 @@ export function InventoryTab({
           ref={recipeViewerRef}
           src={`/craft/recipe-viewer.html?embedded=1&inv=${encodeURIComponent(
             JSON.stringify(playerResourceBalances)
-          )}&tools=${encodeURIComponent(JSON.stringify(ownedTools))}&blueprints=${encodeURIComponent(
-            JSON.stringify(knownBlueprints)
-          )}`}
+          )}&tools=${encodeURIComponent(JSON.stringify(ownedTools))}&vaultTools=${encodeURIComponent(
+            JSON.stringify(vaultToolInstanceIds)
+          )}&blueprints=${encodeURIComponent(JSON.stringify(knownBlueprints))}`}
           title="Crafting Recipe Viewer"
           className={styles.recipeViewerFrame}
           style={{ height: recipeViewerHeight, overflow: "hidden" }}
