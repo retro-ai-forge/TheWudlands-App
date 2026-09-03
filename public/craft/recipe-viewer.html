@@ -247,7 +247,7 @@
     animation: pulse-zoom 1.5s ease-in-out infinite;
   }
   .aestheticToggle input:checked + .toggleLabel::after {
-    content: '✓';
+    content: 'A';
     font-size: 40px;
     filter: drop-shadow(0 0 14px rgba(95, 183, 125, 1));
   }
@@ -521,10 +521,19 @@ window.getCurrentSelection = function () {
 // computeTotals' recursively-expanded rawTotals/finalTotals. Mirrors
 // backend.players._validate_recipe/_resolve_recipe_ingredients exactly:
 // no "alternatives" ingredient slots, no "final"-category ingredients
-// directly on the recipe, exact concrete id/tier match on quantity, plus
-// the same tool/blueprint ownership checks the rest of this page already
-// computes. Returns false (not just "nothing flagged missing") when
-// there's no character context to actually confirm against.
+// directly on the recipe, exact concrete id/tier match on quantity.
+// Returns false (not just "nothing flagged missing") when there's no
+// character context to actually confirm against.
+//
+// Deliberately does NOT reuse ownsFamily/ownsAnyTool for the tool/blueprint
+// checks below - those apply a ">= requiredTier" rule (a higher tier
+// satisfies a lower requirement) that's right for this page's general
+// "missing" cosmetic tags elsewhere, but doesn't match what start_craft
+// actually accepts: _resolve_tool_for_craft takes ANY tier of a listed
+// tool family (no minimum at all), while the blueprint check
+// (_BLUEPRINT_ID_BY_FAMILY_TIER) requires the EXACT tier's blueprint, not
+// "or higher". Getting either of those wrong here means the button
+// disagrees with what clicking it would actually do.
 window.isCurrentSelectionCraftable = function () {
   if (!select.value || !inventory || !ownedTools || !ownedBlueprints) return false;
   const famId = select.value;
@@ -542,9 +551,20 @@ window.isCurrentSelectionCraftable = function () {
   }
 
   const tIds = toolIds(recipe.tool);
-  if (tIds.length && !ownsAnyTool(ownedTools, tIds, tier)) return false;
+  if (tIds.length) {
+    const hasTool = tIds.some(toolFamId => {
+      const f = families[toolFamId];
+      if (!f) return ownedTools.has(toolFamId);
+      return f.tiers.some(t => ownedTools.has(t.id));
+    });
+    if (!hasTool) return false;
+  }
 
-  if (recipe.blueprintFamilyId && !ownsFamily(ownedBlueprints, recipe.blueprintFamilyId, tier)) return false;
+  if (recipe.blueprintFamilyId) {
+    const bf = families[recipe.blueprintFamilyId];
+    const bpItem = bf && bf.tiers[tier - 1];
+    if (!bpItem || !ownedBlueprints.has(bpItem.id)) return false;
+  }
 
   return true;
 };
@@ -987,7 +1007,17 @@ function render(famId, tier) {
   const tree = document.getElementById("tree");
   tree.innerHTML = "";
   if (!famId) {
+    // Nothing matched the current search/tier combination (e.g. a search
+    // for one tier's flavor name - "Rusty Dagger" only exists at T1 - no
+    // longer matches after switching tiers). Clear every section instead
+    // of leaving the previous selection's raw materials/tools/final items
+    // on screen looking like they still apply.
     tree.appendChild(el("span", "empty", "Select a recipe above."));
+    renderTable("rawTotals", {}, tier, true, false);
+    renderTable("finalTotals", {}, tier, false, true);
+    const toolListEl = document.getElementById("toolList");
+    toolListEl.innerHTML = "";
+    toolListEl.appendChild(el("span", "empty", "none"));
     return;
   }
   const rootCategory = famCategory(famId);

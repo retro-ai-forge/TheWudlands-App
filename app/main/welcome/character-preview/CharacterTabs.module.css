@@ -285,13 +285,13 @@
 }
 
 .craftButton {
-  padding: 0.35rem 1.1rem;
+  padding: 0.6rem 1.8rem;
   background: #1a1a1a;
   border: 1px solid rgba(168, 153, 104, 0.4);
-  border-radius: 3px;
+  border-radius: 4px;
   color: #d4a060;
   font-family: inherit;
-  font-size: 0.85rem;
+  font-size: 1.05rem;
   letter-spacing: 0.04em;
   cursor: pointer;
 }
@@ -308,14 +308,39 @@
   cursor: default;
 }
 
+/* Lit only while the recipe currently selected in the viewer is actually
+   craftable right now - same green-glow "on" language as the recipe
+   viewer's own fancy-text toggle checkbox. */
+.craftReadyCheck {
+  color: #4ade80;
+  font-size: 2.4rem;
+  line-height: 1;
+  text-shadow: 0 0 6px #4ade80, 0 0 12px rgba(74, 222, 128, 0.7);
+  animation: craftReadyPulse 1.6s ease-in-out infinite;
+}
+
+@keyframes craftReadyPulse {
+  0%, 100% { text-shadow: 0 0 6px #4ade80, 0 0 12px rgba(74, 222, 128, 0.7); }
+  50% { text-shadow: 0 0 10px #4ade80, 0 0 20px rgba(74, 222, 128, 0.9); }
+}
+
 .craftError {
   font-size: 0.75rem;
   color: #b04a4a;
 }
 
 .craftTimer {
-  color: #d4a060;
+  color: #ffcf80;
+  font-weight: bold;
+  font-size: 1.1em;
   font-variant-numeric: tabular-nums;
+  text-shadow: 0 0 6px #d4a060, 0 0 12px rgba(212, 160, 96, 0.7);
+  animation: craftTimerPulse 1.6s ease-in-out infinite;
+}
+
+@keyframes craftTimerPulse {
+  0%, 100% { text-shadow: 0 0 6px #d4a060, 0 0 12px rgba(212, 160, 96, 0.7); }
+  50% { text-shadow: 0 0 10px #d4a060, 0 0 20px rgba(212, 160, 96, 0.9); }
 }
 
 /* Embeds the standalone crafting recipe reference (public/craft/recipe-viewer.html)

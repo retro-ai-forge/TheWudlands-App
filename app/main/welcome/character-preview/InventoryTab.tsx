@@ -5,12 +5,12 @@ import type { SlotCharacterSummary } from "../SoulSlotGrid";
 // GET /api/auth/blueprint-categories - lore/reference data (not
 // player-specific), reused here purely to look up each known blueprint's own
 // tier by id, since Character.blueprints is just a flat id list with no tier attached.
-type BlueprintCategoryItem = { id: string; tier: number };
+type BlueprintCategoryItem = { id: string; name: string; tier: number };
 type BlueprintCategoryFamily = { familyId: string; kind: string; items: BlueprintCategoryItem[] };
 type BlueprintCategoryEntry = { families: BlueprintCategoryFamily[] };
 type BlueprintTierInfo = Record<
   string,
-  { tier: number; familyId: string; kind: string }
+  { tier: number; familyId: string; kind: string; name?: string }
 >;
 type ResourceTierInfo = Record<string, { tier: number; family: string }>;
 
@@ -90,9 +90,8 @@ function TransferButtons({
   );
 }
 
-// Resource/tool/blueprint ids are catalog keys (e.g. "iron_ore",
-// "blueprint_copper_anvil") - no per-id display-name lookup is wired to this
-// page yet, so ids are just formatted for reading. The "blueprint_" prefix
+// Fallback for ids with no catalog name wired up (currently just Tools) -
+// mechanically formats the id itself for reading. The "blueprint_" prefix
 // is dropped since whichever list a blueprint id shows up in is already
 // headed "Blueprints Known"/"Starter Blueprints Known".
 function formatResourceLabel(id: string): string {
@@ -101,6 +100,13 @@ function formatResourceLabel(id: string): string {
     .split("_")
     .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
     .join(" ");
+}
+
+// Same "the headline already says Blueprint(s)" reasoning as
+// formatResourceLabel's id-prefix strip, applied to a real catalog name
+// (e.g. "Blueprint: Cotton Cloth" -> "Cotton Cloth").
+function stripBlueprintPrefix(name: string): string {
+  return name.replace(/^Blueprint:\s*/, "");
 }
 
 function getKindIcon(kind: string): string {
@@ -404,7 +410,7 @@ function IdList({
           ...(isGreyed ? { color: "#665b42" } : {}),
           ...(textColor && !isGreyed ? { color: textColor } : {}),
         }}>
-          {formatResourceLabel(id)}
+          {info?.name ? stripBlueprintPrefix(info.name) : formatResourceLabel(id)}
         </td>
         {balances && <td>{owned}</td>}
       </tr>,
@@ -578,6 +584,7 @@ export function InventoryTab({
                 tier: item.tier,
                 familyId: family.familyId,
                 kind: family.kind,
+                name: item.name,
               };
             }
           }
@@ -619,7 +626,7 @@ export function InventoryTab({
         const tierMap: BlueprintTierInfo = {};
         for (const item of data) {
           ids.add(item.id);
-          tierMap[item.id] = { tier: item.tier, familyId: item.familyId, kind: item.kind[0] ?? "" };
+          tierMap[item.id] = { tier: item.tier, familyId: item.familyId, kind: item.kind[0] ?? "", name: item.name };
         }
         setItemCatalogIds(ids);
         setItemCatalogTierInfo(tierMap);
@@ -855,7 +862,7 @@ export function InventoryTab({
           <span>
             {character.firstName}&apos;s Crafting
             {remainingSeconds !== null && (
-              <span className={styles.craftTimer}> — Crafting: {formatRemaining(remainingSeconds)}</span>
+              <span className={styles.craftTimer}> {formatRemaining(remainingSeconds)}</span>
             )}
           </span>
           <span className={styles.accordionChevron}>{openSections.has("character") ? "▴" : "▾"}</span>
@@ -945,12 +952,19 @@ export function InventoryTab({
           onClick={startCraft}
           disabled={crafting || !canCraft || remainingSeconds !== null}
         >
-          {remainingSeconds !== null
-            ? `Crafting… ${formatRemaining(remainingSeconds)}`
-            : crafting
-              ? "Crafting…"
-              : "Craft"}
+          {remainingSeconds !== null ? (
+            <span className={styles.craftTimer}>Crafting… {formatRemaining(remainingSeconds)}</span>
+          ) : crafting ? (
+            "Crafting…"
+          ) : (
+            "Craft"
+          )}
         </button>
+        {canCraft && remainingSeconds === null && (
+          <span className={styles.craftReadyCheck} title="Selected recipe can be crafted right now">
+            ✓
+          </span>
+        )}
         {craftError && <span className={styles.craftError}>{craftError}</span>}
       </div>
 
