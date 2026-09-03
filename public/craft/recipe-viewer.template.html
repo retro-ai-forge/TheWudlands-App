@@ -502,6 +502,53 @@ function currentTier() {
   return activeBtn ? parseInt(activeBtn.dataset.tier, 10) : 1;
 }
 
+// Exposed for an embedding same-origin page to read directly (no
+// postMessage round-trip needed, same "read it straight off the iframe"
+// approach already used for body-height sync) - e.g. a "Craft" button that
+// lives on the embedding page itself, outside this viewer, needs to know
+// what's currently selected in here when clicked.
+window.getCurrentSelection = function () {
+  if (!select.value) return null;
+  return { familyId: select.value, tier: currentTier() };
+};
+
+// True if the currently selected family/tier can be crafted right now by
+// a single backend start_craft call - deliberately narrower than what this
+// page's own tree view shows: start_craft only reads the top-level
+// recipe's own direct ingredients (never recursively auto-crafts a
+// "processed"/"final" ingredient's own sub-recipe the way the tree does),
+// so this checks recipe.ingredients directly rather than reusing
+// computeTotals' recursively-expanded rawTotals/finalTotals. Mirrors
+// backend.players._validate_recipe/_resolve_recipe_ingredients exactly:
+// no "alternatives" ingredient slots, no "final"-category ingredients
+// directly on the recipe, exact concrete id/tier match on quantity, plus
+// the same tool/blueprint ownership checks the rest of this page already
+// computes. Returns false (not just "nothing flagged missing") when
+// there's no character context to actually confirm against.
+window.isCurrentSelectionCraftable = function () {
+  if (!select.value || !inventory || !ownedTools || !ownedBlueprints) return false;
+  const famId = select.value;
+  const tier = currentTier();
+  const recipe = recipes[famId];
+  if (!recipe) return false;
+
+  for (const ing of recipe.ingredients) {
+    if (ing.alternatives) return false;
+    if (ing.category !== "raw" && ing.category !== "processed") return false;
+    const f = families[ing.familyId];
+    const item = f && f.tiers[tier - 1];
+    if (!item) return false;
+    if ((inventory[item.id] || 0) < ing.qty) return false;
+  }
+
+  const tIds = toolIds(recipe.tool);
+  if (tIds.length && !ownsAnyTool(ownedTools, tIds, tier)) return false;
+
+  if (recipe.blueprintFamilyId && !ownsFamily(ownedBlueprints, recipe.blueprintFamilyId, tier)) return false;
+
+  return true;
+};
+
 function isAestheticEnabled() {
   return document.getElementById("aestheticCheckbox").checked;
 }

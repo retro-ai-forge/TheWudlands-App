@@ -37,14 +37,15 @@ from backend.players import (
     check_out_item_instance,
     check_out_resource,
     check_out_tool,
-    craft_item,
     delete_character,
     equip_item,
+    finish_craft,
     get_or_create_player,
     get_player,
     grant_resource,
     load_item_balance_to_backpack,
     load_resource_to_backpack,
+    start_craft,
     unequip_item,
     unload_item_balance_from_backpack,
     unload_resource_from_backpack,
@@ -266,6 +267,9 @@ class CharacterResponse(BaseModel):
     )
     equippedLight: Optional[dict] = Field(
         None, description="Which light source (if any) is currently lit and held - {family, tier, litAt, hand}"
+    )
+    activeCraft: Optional[dict] = Field(
+        None, description="In-progress craft, if any - {familyId, tier, readyAt}. One job at a time."
     )
 
 class PlayerInventoryResponse(BaseModel):
@@ -862,25 +866,47 @@ class CraftItemRequest(BaseModel):
     tier: int = Field(..., gt=0, description="Tier of the item to craft")
 
 
-@player_router.post("/me/characters/{character_id}/craft/{family_id}", response_model=PlayerDataResponse)
-async def craft_item_route(
+@player_router.post("/me/characters/{character_id}/craft/{family_id}/start", response_model=PlayerDataResponse)
+async def start_craft_route(
     character_id: str, family_id: str, payload: CraftItemRequest, address: str = Depends(get_current_address)
 ):
     """
-    Craft one unit of `family_id` at the given tier for one of the player's
-    characters, consuming ingredients from that character's own resources.
-    The crafted output lands in the player's shared vault, not on the
-    character directly - check it out afterward.
+    Begins crafting `family_id` at the given tier for one of the player's
+    characters: checks ingredients/tool/blueprint against the player's
+    shared vault, transfers whatever's needed onto the character, and
+    starts a CRAFT_DURATION_SECONDS timer (returned as the character's
+    `activeCraft.readyAt`). The output isn't produced yet - call
+    `.../craft/finish` once that timer elapses.
     """
     try:
-        player = await craft_item(address, character_id, family_id, payload.tier)
+        player = await start_craft(address, character_id, family_id, payload.tier)
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc))
 
     if player is None:
         raise HTTPException(
-            status_code=404, detail="No matching character, missing ingredients/tool/blueprint, or unknown recipe"
+            status_code=404,
+            detail="Already crafting, missing ingredients/tool/blueprint in the shared vault, or unknown recipe",
         )
+
+    return player.to_dict()
+
+
+@player_router.post("/me/characters/{character_id}/craft/finish", response_model=PlayerDataResponse)
+async def finish_craft_route(character_id: str, address: str = Depends(get_current_address)):
+    """
+    Completes one of the player's character's in-progress craft, once its
+    `activeCraft.readyAt` timer has elapsed. The crafted output lands in
+    the player's shared vault, not on the character directly - check it
+    out afterward.
+    """
+    try:
+        player = await finish_craft(address, character_id)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc))
+
+    if player is None:
+        raise HTTPException(status_code=404, detail="No craft in progress on that character, or its timer isn't up yet")
 
     return player.to_dict()
 

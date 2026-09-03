@@ -109,6 +109,8 @@ export interface SlotCharacterSummary {
   tools: Record<string, number>;
   /** Blueprint ids this character has learned - soulbound, never moves. */
   blueprints: string[];
+  /** In-progress craft, if any - one job at a time. Resolved lazily against readyAt, not a live server countdown. */
+  activeCraft: { familyId: string; tier: number; readyAt: string } | null;
 }
 
 interface SlotState {

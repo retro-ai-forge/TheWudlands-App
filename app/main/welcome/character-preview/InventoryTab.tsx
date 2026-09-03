@@ -32,10 +32,16 @@ function TransferButtons({
   owned,
   pending,
   onPick,
+  disabled,
 }: {
   owned: number;
   pending: boolean;
   onPick: (amount: number) => void;
+  /** Forces every button off regardless of owned/pending - for a transfer
+   * direction that's turned off entirely (see InventoryTab's
+   * playerToCharacterTransfersDisabled), as opposed to just this one
+   * amount being unaffordable. */
+  disabled?: boolean;
 }) {
   return (
     <div className={styles.transferButtons}>
@@ -44,7 +50,7 @@ function TransferButtons({
           key={amount}
           type="button"
           className={styles.transferButton}
-          disabled={pending || amount > owned}
+          disabled={disabled || pending || amount > owned}
           onClick={(e) => {
             e.stopPropagation();
             onPick(amount);
@@ -56,7 +62,7 @@ function TransferButtons({
       <button
         type="button"
         className={styles.transferButton}
-        disabled={pending || owned <= 0}
+        disabled={disabled || pending || owned <= 0}
         onClick={(e) => {
           e.stopPropagation();
           onPick(owned);
@@ -150,12 +156,15 @@ function ResourceList({
   emptyLabel,
   tierInfo,
   onTransfer,
+  transferDisabled,
 }: {
   balances: Record<string, number>;
   emptyLabel: string;
   tierInfo?: ResourceTierInfo;
   /** When given, clicking a row reveals quick-transfer quantity buttons that call this with (id, amount). */
   onTransfer?: (id: string, amount: number) => Promise<boolean>;
+  /** Row stays expandable, but every revealed amount button is disabled/greyed - for a transfer direction that's temporarily turned off. */
+  transferDisabled?: boolean;
 }) {
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [pendingId, setPendingId] = useState<string | null>(null);
@@ -243,7 +252,12 @@ function ResourceList({
                 rows.push(
                   <tr key={`${id}-transfer`}>
                     <td colSpan={4}>
-                      <TransferButtons owned={qty} pending={pendingId === id} onPick={(amount) => handlePick(id, amount)} />
+                      <TransferButtons
+                        owned={qty}
+                        pending={pendingId === id}
+                        onPick={(amount) => handlePick(id, amount)}
+                        disabled={transferDisabled}
+                      />
                     </td>
                   </tr>
                 );
@@ -277,6 +291,7 @@ function IdList({
   fixedIcon,
   balances,
   onTransfer,
+  transferDisabled,
 }: {
   ids: string[];
   emptyLabel: string;
@@ -292,6 +307,8 @@ function IdList({
   balances?: Record<string, number>;
   /** When given (alongside `balances`), clicking a row reveals quick-transfer quantity buttons that call this with (id, amount). */
   onTransfer?: (id: string, amount: number) => Promise<boolean>;
+  /** Row stays expandable, but every revealed amount button is disabled/greyed - for a transfer direction that's temporarily turned off. */
+  transferDisabled?: boolean;
 }) {
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [pendingId, setPendingId] = useState<string | null>(null);
@@ -380,7 +397,12 @@ function IdList({
       rows.push(
         <tr key={`${id}-transfer`}>
           <td colSpan={columnCount}>
-            <TransferButtons owned={owned} pending={pendingId === id} onPick={(amount) => handlePick(id, amount)} />
+            <TransferButtons
+              owned={owned}
+              pending={pendingId === id}
+              onPick={(amount) => handlePick(id, amount)}
+              disabled={transferDisabled}
+            />
           </td>
         </tr>
       );
@@ -469,6 +491,13 @@ export function InventoryTab({
   /** Called with the fresh roster/vault/pool after a successful check-in/check-out transfer. */
   onPlayerDataUpdated?: (data: RawPlayerData) => void;
 }) {
+  // Temporarily off: player vault -> character vault (check-out) for
+  // resources/tools. This flow is being superseded by loading straight into
+  // the character's backpack instead - check-in (character -> shared) stays
+  // enabled. Flip back once that backpack-loading feature lands, or remove
+  // this (and transferDisabled/disabled on TransferButtons) if it doesn't.
+  const playerToCharacterTransfersDisabled = true;
+
   // Moves `amount` of a resource/tool between this character and the
   // player's shared vault/pool. "check-in" = character -> shared,
   // "check-out" = shared -> character (mirrors backend.players naming).
@@ -555,24 +584,17 @@ export function InventoryTab({
   // Top-level accordion (this character's crafting stock vs. the party's) -
   // both can be open at once, toggled independently. The recipe viewer
   // below is always visible, not part of this fold.
-  const [openSections, setOpenSections] = useState<Set<"character" | "party">>(new Set());
-  const toggleSection = (id: "character" | "party") => setOpenSections((prev) => {
+  const [openSections, setOpenSections] = useState<Set<"blueprints" | "character" | "party">>(new Set());
+  const toggleSection = (id: "blueprints" | "character" | "party") => setOpenSections((prev) => {
     const next = new Set(prev);
     if (next.has(id)) next.delete(id); else next.add(id);
     return next;
   });
 
-  // Each top-level section has its own sub-accordion state, so opening a
-  // sub-item in one section never affects the other. Any number of
-  // sub-items within a section can be open at once - toggling one doesn't
-  // close its siblings.
-  const [openCharacterSub, setOpenCharacterSub] = useState<Set<string>>(new Set());
+  // Party's Vault still has sub-items (Tools/Resources) that can each open
+  // independently - the character's own section no longer does, now that
+  // it's just a single Resources table with no fold of its own.
   const [openPartySub, setOpenPartySub] = useState<Set<string>>(new Set());
-  const toggleCharacterSub = (id: string) => setOpenCharacterSub((prev) => {
-    const next = new Set(prev);
-    if (next.has(id)) next.delete(id); else next.add(id);
-    return next;
-  });
   const togglePartySub = (id: string) => setOpenPartySub((prev) => {
     const next = new Set(prev);
     if (next.has(id)) next.delete(id); else next.add(id);
@@ -587,10 +609,13 @@ export function InventoryTab({
   // shared pool), so this counts as "known" for the recipe viewer's
   // missing-blueprint check.
   const knownBlueprints = character.blueprints;
-  // A tool counts as available whether it's still sitting in the player's
-  // shared pool or already checked out onto this character - both mean the
-  // character can use it.
-  const ownedTools = ownedIds(playerTools, character.tools);
+  // Crafting only ever checks the player's shared vault now, never the
+  // character's own - the character vault is a temporary staging area for
+  // an active craft (populated/drained by start/finish_craft), not
+  // somewhere a player parks materials ahead of time. So the recipe
+  // viewer's owned/needed check reflects the player vault only, matching
+  // exactly what backend.players.start_craft actually checks.
+  const ownedTools = ownedIds(playerTools);
 
   // The embedded recipe viewer's own content height, in px - same-origin, so
   // its body height can be read directly and mirrored onto the iframe
@@ -604,61 +629,182 @@ export function InventoryTab({
   const [recipeViewerHeight, setRecipeViewerHeight] = useState(600);
   const recipeViewerRef = useRef<HTMLIFrameElement>(null);
 
+  // The viewer tracks its own selection (and, now, its own craftability
+  // check) internally - since the iframe is same-origin, these globals are
+  // read directly rather than this component duplicating that state via
+  // postMessage. Not part of Window's real type, hence the cast -
+  // recipe-viewer.template.html is the one place they actually get defined.
+  type RecipeViewerWindow = Window & {
+    getCurrentSelection?: () => { familyId: string; tier: number } | null;
+    isCurrentSelectionCraftable?: () => boolean;
+  };
+  const getRecipeViewerWindow = () =>
+    recipeViewerRef.current?.contentWindow as RecipeViewerWindow | null | undefined;
+
+  // Re-checked on an interval while the viewer is open, since there's no
+  // "selection changed" event fired out of it - a player can browse
+  // recipes/tiers freely and the button should track whatever's on screen
+  // right now, not just what it was when last clicked.
+  const [canCraft, setCanCraft] = useState(false);
+  useEffect(() => {
+    if (!recipeViewerOpen) {
+      setCanCraft(false);
+      return;
+    }
+    const check = () => setCanCraft(getRecipeViewerWindow()?.isCurrentSelectionCraftable?.() ?? false);
+    check();
+    const interval = setInterval(check, 500);
+    return () => clearInterval(interval);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [recipeViewerOpen, playerResourceBalances, playerTools, knownBlueprints]);
+
+  const [crafting, setCrafting] = useState(false);
+  const [craftError, setCraftError] = useState<string | null>(null);
+
+  // Begins crafting whatever's currently selected in the viewer - checks
+  // ingredients/tool/blueprint against the player's shared vault, transfers
+  // what's needed onto the character, and starts the CRAFT_DURATION_SECONDS
+  // timer server-side (character.activeCraft). See the countdown effect
+  // below for what happens once that timer elapses.
+  const startCraft = async () => {
+    const selection = getRecipeViewerWindow()?.getCurrentSelection?.();
+    if (!selection) {
+      setCraftError("Pick a recipe in the viewer first.");
+      return;
+    }
+    setCrafting(true);
+    setCraftError(null);
+    try {
+      const res = await fetch(
+        `/api/auth/me/characters/${character.id}/craft/${selection.familyId}/start`,
+        {
+          method: "POST",
+          credentials: "include",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ tier: selection.tier }),
+        }
+      );
+      if (!res.ok) {
+        const body = await res.json().catch(() => null);
+        setCraftError(body?.detail ?? "Couldn't craft that - check ingredients, tool, and blueprint.");
+        return;
+      }
+      const data: RawPlayerData = await res.json();
+      onPlayerDataUpdated?.(data);
+    } catch {
+      setCraftError("Couldn't reach the server.");
+    } finally {
+      setCrafting(false);
+    }
+  };
+
+  // Collects the output of an already-finished craft (server re-checks
+  // activeCraft.readyAt itself - this is only ever called once the local
+  // countdown below has already reached zero, or immediately on mount if
+  // it turns out to already be in the past, e.g. the player closed the tab
+  // mid-craft and came back later).
+  const [finishing, setFinishing] = useState(false);
+  const finishCraft = async () => {
+    if (finishing) return;
+    setFinishing(true);
+    try {
+      const res = await fetch(`/api/auth/me/characters/${character.id}/craft/finish`, {
+        method: "POST",
+        credentials: "include",
+      });
+      if (res.ok) {
+        const data: RawPlayerData = await res.json();
+        onPlayerDataUpdated?.(data);
+      }
+    } catch {
+      // Next tick's countdown effect will retry - no need to surface this.
+    } finally {
+      setFinishing(false);
+    }
+  };
+
+  // Countdown against character.activeCraft.readyAt - resolved lazily
+  // (matching backend.players' own "no background job" design): ticks
+  // once a second while a craft is in progress, and fires finishCraft the
+  // moment it reaches zero, including immediately on mount if readyAt is
+  // already in the past.
+  const [remainingSeconds, setRemainingSeconds] = useState<number | null>(null);
+  useEffect(() => {
+    const readyAt = character.activeCraft?.readyAt;
+    if (!readyAt) {
+      setRemainingSeconds(null);
+      return;
+    }
+    const readyAtMs = new Date(readyAt).getTime();
+    const tick = () => {
+      const remaining = Math.max(0, Math.ceil((readyAtMs - Date.now()) / 1000));
+      setRemainingSeconds(remaining);
+      if (remaining === 0) finishCraft();
+    };
+    tick();
+    const interval = setInterval(tick, 1000);
+    return () => clearInterval(interval);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [character.activeCraft?.readyAt]);
+
+  const formatRemaining = (seconds: number) => {
+    const m = Math.floor(seconds / 60);
+    const s = seconds % 60;
+    return `${m}:${s.toString().padStart(2, "0")}`;
+  };
+
   return (
     <div className={styles.panel}>
+      {knownBlueprints.length > 0 && (
+        <div className={styles.accordionItem}>
+          <button className={styles.accordionHeader} onClick={() => toggleSection("blueprints")}>
+            <span>{`Blueprints Known (${knownBlueprints.length})`}</span>
+            <span className={styles.accordionChevron}>{openSections.has("blueprints") ? "▴" : "▾"}</span>
+          </button>
+          {openSections.has("blueprints") && (
+            <div className={styles.accordionBody}>
+              <IdList ids={knownBlueprints} emptyLabel="" tierInfo={blueprintTierInfo} sortByTier textColor="#7eb8ff" />
+            </div>
+          )}
+        </div>
+      )}
+
       <div className={styles.accordionItem}>
         <button className={styles.accordionHeader} onClick={() => toggleSection("character")}>
-          <span>{character.firstName}&apos;s Crafting</span>
+          <span>
+            {character.firstName}&apos;s Crafting
+            {remainingSeconds !== null && (
+              <span className={styles.craftTimer}> — Crafting: {formatRemaining(remainingSeconds)}</span>
+            )}
+          </span>
           <span className={styles.accordionChevron}>{openSections.has("character") ? "▴" : "▾"}</span>
         </button>
         {openSections.has("character") && (
           <div className={styles.accordionBody}>
-            {knownBlueprints.length > 0 && (
-              <SubAccordionItem
-                id="blueprints"
-                label={`Blueprints Known (${knownBlueprints.length})`}
-                openIds={openCharacterSub}
-                onToggle={toggleCharacterSub}
-              >
-                <IdList ids={knownBlueprints} emptyLabel="" tierInfo={blueprintTierInfo} sortByTier textColor="#7eb8ff" />
-              </SubAccordionItem>
-            )}
-            <SubAccordionItem
-              id="tools"
-              label="Tools"
-              openIds={openCharacterSub}
-              onToggle={toggleCharacterSub}
-            >
-              <IdList
-                ids={ownedIds(character.tools)}
-                emptyLabel="Not currently holding any tools."
-                tierInfo={toolTierInfo}
-                sortByTier
-                fixedIcon="🔧"
-                balances={character.tools}
-                onTransfer={(id, amount) => transfer("tools", "check-in", id, amount)}
-              />
-            </SubAccordionItem>
-            <SubAccordionItem
-              id="resources"
-              label="Resources"
-              openIds={openCharacterSub}
-              onToggle={toggleCharacterSub}
-            >
-              <ResourceList
-                balances={character.resources}
-                emptyLabel="No materials carried."
-                tierInfo={resourceTierInfo}
-                onTransfer={(id, amount) => transfer("resources", "check-in", id, amount)}
-              />
-            </SubAccordionItem>
+            <IdList
+              ids={ownedIds(character.tools)}
+              emptyLabel="Not currently holding any tools."
+              tierInfo={toolTierInfo}
+              sortByTier
+              fixedIcon="🔧"
+              balances={character.tools}
+              onTransfer={(id, amount) => transfer("tools", "check-in", id, amount)}
+              textColor="#7eb8ff"
+            />
+            {ownedIds(character.tools).length > 0 && <div className={styles.toolsResourceDivider} />}
+            <ResourceList
+              balances={character.resources}
+              emptyLabel="No materials carried."
+              tierInfo={resourceTierInfo}
+              onTransfer={(id, amount) => transfer("resources", "check-in", id, amount)}
+            />
           </div>
         )}
       </div>
 
       <div className={styles.accordionItem}>
         <button className={styles.accordionHeader} onClick={() => toggleSection("party")}>
-          <span>Party&apos;s Crafting</span>
+          <span>Party&apos;s Vault</span>
           <span className={styles.accordionChevron}>{openSections.has("party") ? "▴" : "▾"}</span>
         </button>
         {openSections.has("party") && (
@@ -677,6 +823,7 @@ export function InventoryTab({
                 fixedIcon="🔧"
                 balances={playerTools}
                 onTransfer={(id, amount) => transfer("tools", "check-out", id, amount)}
+                transferDisabled={playerToCharacterTransfersDisabled}
               />
             </SubAccordionItem>
             <SubAccordionItem
@@ -690,10 +837,26 @@ export function InventoryTab({
                 emptyLabel="Nothing in the shared crafting stock."
                 tierInfo={resourceTierInfo}
                 onTransfer={(id, amount) => transfer("resources", "check-out", id, amount)}
+                transferDisabled={playerToCharacterTransfersDisabled}
               />
             </SubAccordionItem>
           </div>
         )}
+      </div>
+
+      <div className={styles.craftRow}>
+        <button
+          className={styles.craftButton}
+          onClick={startCraft}
+          disabled={crafting || !canCraft || remainingSeconds !== null}
+        >
+          {remainingSeconds !== null
+            ? `Crafting… ${formatRemaining(remainingSeconds)}`
+            : crafting
+              ? "Crafting…"
+              : "Craft"}
+        </button>
+        {craftError && <span className={styles.craftError}>{craftError}</span>}
       </div>
 
       <button
@@ -707,7 +870,7 @@ export function InventoryTab({
         <iframe
           ref={recipeViewerRef}
           src={`/craft/recipe-viewer.html?embedded=1&inv=${encodeURIComponent(
-            JSON.stringify(character.resources)
+            JSON.stringify(playerResourceBalances)
           )}&tools=${encodeURIComponent(JSON.stringify(ownedTools))}&blueprints=${encodeURIComponent(
             JSON.stringify(knownBlueprints)
           )}`}

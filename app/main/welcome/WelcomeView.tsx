@@ -126,6 +126,7 @@ export function WelcomeView() {
       <SoulCreation
         slotNumber={creatingSlot}
         playerTools={playerTools}
+        playerResourceBalances={playerResourceBalances}
         onExit={() => {
           // The wizard only calls onExit after a successful save, so the
           // character roster just changed - refresh rather than relying on

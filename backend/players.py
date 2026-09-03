@@ -13,7 +13,7 @@ import json
 import math
 import uuid
 from dataclasses import dataclass, field
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Dict, List, Optional
 
@@ -455,13 +455,35 @@ async def check_in_resource(
     return _doc_to_player(doc)
 
 
-def _character_has_tool(character: dict, tool_families: List[str]) -> bool:
+def _resolve_tool_for_craft(
+    character: dict,
+    player_tools: Dict[str, int],
+    tool_families: List[str],
+    check_character_flat_balance: bool = True,
+) -> Optional[tuple[bool, Optional[str]]]:
     """
-    True if `character` holds at least one of `tool_families` - a flat
-    Character.tools balance for a needsItemDefinition:false family (any
-    concrete id under it), or a Character.items instance (backpacked or
-    equipped, either counts) for a needsItemDefinition:true family like
-    axe_stone that doubles as a tool.
+    For a recipe's tool alternatives, find one `character` can use.
+
+    Instance-tracked tool-weapons (a needsItemDefinition:true family like
+    axe_stone that doubles as a tool) are a separate, unrelated mechanic -
+    always checked against the character's own equip/backpack state
+    (Character.items), never transferred here (that's a capacity-gated
+    backpack check-out, a different operation).
+
+    For an ordinary flat-balance family, crafting only ever checks the
+    player's shared vault (same "character vault is a temporary staging
+    area, not a persistent balance" reasoning as resources) - unless
+    `check_character_flat_balance` is left True, which also accepts one
+    already sitting in Character.tools; finish_craft uses that to
+    re-verify what start_craft transferred is still there, passing
+    `player_tools={}` so it can only ever find it on the character.
+
+    Returns `(True, None)` if already usable without a transfer (an
+    instance-tracked tool on the character, or - only when
+    `check_character_flat_balance` - a flat balance on the character).
+    Returns `(False, concrete_id)` if a flat-balance tool is only available
+    in `player_tools` and would need transferring first. Returns None if
+    nothing usable is found anywhere.
     """
     held_tools = character.get("tools", {})
     held_items = character.get("items", [])
@@ -473,61 +495,41 @@ def _character_has_tool(character: dict, tool_families: List[str]) -> bool:
                 instance["familyId"] == family_id and instance.get("location") in ("backpack", "body")
                 for instance in held_items
             ):
-                return True
-        else:
-            if any(
-                held_tools.get(tool.id, 0) > 0
-                for tool in TOOL_ITEMS_BY_ID.values()
-                if tool.family_id == family_id
-            ):
-                return True
-    return False
+                return (True, None)
+            continue
+        if check_character_flat_balance and any(
+            held_tools.get(tool.id, 0) > 0 for tool in TOOL_ITEMS_BY_ID.values() if tool.family_id == family_id
+        ):
+            return (True, None)
+        for tool in TOOL_ITEMS_BY_ID.values():
+            if tool.family_id == family_id and player_tools.get(tool.id, 0) > 0:
+                return (False, tool.id)
+    return None
 
 
-async def craft_item(address: str, character_id: str, family_id: str, tier: int) -> Optional[Player]:
+# Flat for now - every recipe takes the same 2 minutes, regardless of
+# family/tier/character stats. A future pass could scale this per recipe
+# (a "craftSeconds" field) or by a profession-level/attribute formula.
+CRAFT_DURATION_SECONDS = 120
+
+
+def _resolve_recipe_ingredients(
+    recipe: dict, tier: int, character_resources: Dict[str, int], player_resources: Dict[str, int]
+) -> Optional[tuple[Dict[str, int], Dict[str, int]]]:
     """
-    Craft one unit of `family_id` at `tier` for one of `address`'s
-    characters: consumes ingredients from that character's own resources
-    (crafting vault), requires one of the recipe's listed tools to be held
-    and, if the recipe names one, the matching blueprint to be learned. The
-    crafted output lands in the player's shared vault - inventory.items for
-    a needsItemDefinition:true family, inventory.itemBalances for a flat
-    count - never straight onto the character; a following check-out call
-    moves it over.
+    Resolves one recipe's ingredients (at `tier`) to concrete resource ids
+    and checks the character vault + player shared vault hold enough
+    combined - same "counts either way" reasoning the recipe viewer's
+    owned/needed check already uses for tools. Returns
+    (character_decrements, player_decrements) - amounts to take from each,
+    character vault first, shared vault only for whatever's still short -
+    or None if there isn't enough even combined.
 
-    Raises ValueError for an unknown recipe/output row, or a recipe using
-    an "alternatives" ingredient block (e.g. the bone_blade-or-dagger
-    pattern - out of scope for this first pass, only plain ingredient lists
-    are resolved). Returns None if the character can't actually craft this
-    right now (missing ingredients, tool, or blueprint), or the
-    address/character pair doesn't match any player document - same "no
-    match" signal check_out_tool uses.
+    Raises ValueError for an unsupported ingredient category or a missing
+    tier row, same as the old single-phase craft_item did.
     """
-    recipe = _RECIPES_BY_FAMILY.get(family_id)
-    if recipe is None:
-        raise ValueError(f"Unknown recipe family: {family_id}")
-
-    output_row = items_catalog.resolve_output_row(family_id, tier)
-    if output_row is None:
-        raise ValueError(f"No tier {tier} row for family {family_id}")
-
-    for ingredient in recipe["ingredients"]:
-        if "alternatives" in ingredient:
-            raise ValueError(f"Recipe {family_id} uses 'alternatives' ingredients - not supported yet")
-
-    db = get_database()
-    doc = await db.players.find_one({"address": address, "characters.id": character_id})
-    if doc is None:
-        return None
-    character = next((c for c in doc["characters"] if c["id"] == character_id), None)
-    if character is None:
-        return None
-
-    # Resolve each ingredient family+tier to a concrete resource/processed
-    # id and check the character holds enough - a pre-read, since the tool
-    # check below needs one too and there's no way to make this whole
-    # function a single atomic conditional update.
-    resource_decrements: Dict[str, int] = {}
+    character_decrements: Dict[str, int] = {}
+    player_decrements: Dict[str, int] = {}
     for ingredient in recipe["ingredients"]:
         category = ingredient["category"]
         ing_family = ingredient["familyId"]
@@ -540,17 +542,95 @@ async def craft_item(address: str, character_id: str, family_id: str, tier: int)
             raise ValueError(f"Unsupported ingredient category: {category}")
         if concrete_id is None:
             raise ValueError(f"No tier {tier} id for ingredient family {ing_family}")
-        if character.get("resources", {}).get(concrete_id, 0) < qty:
+
+        held_by_character = character_resources.get(concrete_id, 0)
+        held_by_player = player_resources.get(concrete_id, 0)
+        if held_by_character + held_by_player < qty:
             return None
         if ingredient.get("consumed", True):
-            resource_decrements[concrete_id] = resource_decrements.get(concrete_id, 0) + qty
+            from_character = min(held_by_character, qty)
+            from_player = qty - from_character
+            if from_character:
+                character_decrements[concrete_id] = character_decrements.get(concrete_id, 0) + from_character
+            if from_player:
+                player_decrements[concrete_id] = player_decrements.get(concrete_id, 0) + from_player
+    return character_decrements, player_decrements
+
+
+def _validate_recipe(family_id: str, tier: int) -> tuple[dict, dict]:
+    """Shared start_craft/finish_craft validation: known recipe, known tier
+    row, no unsupported "alternatives" ingredient block. Raises ValueError
+    otherwise. Returns (recipe, output_row)."""
+    recipe = _RECIPES_BY_FAMILY.get(family_id)
+    if recipe is None:
+        raise ValueError(f"Unknown recipe family: {family_id}")
+    output_row = items_catalog.resolve_output_row(family_id, tier)
+    if output_row is None:
+        raise ValueError(f"No tier {tier} row for family {family_id}")
+    for ingredient in recipe["ingredients"]:
+        if "alternatives" in ingredient:
+            raise ValueError(f"Recipe {family_id} uses 'alternatives' ingredients - not supported yet")
+    return recipe, output_row
+
+
+async def start_craft(address: str, character_id: str, family_id: str, tier: int) -> Optional[Player]:
+    """
+    Begins crafting `family_id` at `tier` for one of `address`'s
+    characters: one job at a time (rejects if the character already has an
+    unfinished craft), checks ingredients against the character vault +
+    player's shared vault combined and the required tool similarly, then
+    transfers onto the character whatever wasn't already there (so it shows
+    up in the character's own crafting list right away) and starts a
+    `CRAFT_DURATION_SECONDS` timer (Character.activeCraft). The output
+    isn't produced yet - call finish_craft once the timer elapses.
+
+    Instance-tracked tool alternatives (e.g. axe_stone) are never
+    auto-transferred here - see `_resolve_tool_for_craft`. Raises
+    ValueError for an unknown recipe/output row or an unsupported recipe
+    shape. Returns None if the character is already mid-craft, can't
+    afford the ingredients even combined, has no access to a listed tool,
+    hasn't learned the required blueprint, or the address/character pair
+    doesn't match any player document.
+    """
+    recipe, output_row = _validate_recipe(family_id, tier)
+
+    db = get_database()
+    doc = await db.players.find_one({"address": address, "characters.id": character_id})
+    if doc is None:
+        return None
+    character = next((c for c in doc["characters"] if c["id"] == character_id), None)
+    if character is None:
+        return None
+
+    active = character.get("activeCraft")
+    if active and datetime.fromisoformat(active["readyAt"]) > datetime.now(timezone.utc):
+        return None
+
+    # Crafting only ever checks the player's shared vault, never the
+    # character's own - the character vault is purely a temporary staging
+    # area for an active craft (populated here, drained by finish_craft),
+    # not a persistent balance a player manages directly. Passing {} for
+    # the character side means the full amount always comes from the
+    # player vault (character_decrements stays empty).
+    resolved = _resolve_recipe_ingredients(recipe, tier, {}, doc.get("inventory", {}).get("resources", {}))
+    if resolved is None:
+        return None
+    _, player_decrements = resolved
 
     tool_candidates = recipe.get("tool")
+    tool_transfer_id: Optional[str] = None
     if tool_candidates is not None:
         if isinstance(tool_candidates, str):
             tool_candidates = [tool_candidates]
-        if not _character_has_tool(character, tool_candidates):
+        found = _resolve_tool_for_craft(
+            character,
+            doc.get("inventory", {}).get("tools", {}),
+            tool_candidates,
+            check_character_flat_balance=False,
+        )
+        if found is None:
             return None
+        _, tool_transfer_id = found
 
     blueprint_family_id = recipe.get("blueprintFamilyId")
     if blueprint_family_id is not None:
@@ -558,13 +638,97 @@ async def craft_item(address: str, character_id: str, family_id: str, tier: int)
         if blueprint_id is None or blueprint_id not in character.get("blueprints", []):
             return None
 
+    # Only the shortfall drawn from the player's shared vault actually
+    # moves - whatever was already on the character (character_decrements)
+    # stays put until finish_craft consumes it.
+    match_filter: Dict = {"address": address}
     elem_match: Dict = {"id": character_id}
     inc_ops: Dict[str, int] = {}
-    for concrete_id, qty in resource_decrements.items():
+    for concrete_id, qty in player_decrements.items():
+        match_filter[f"inventory.resources.{concrete_id}"] = {"$gte": qty}
+        inc_ops[f"inventory.resources.{concrete_id}"] = -qty
+        inc_ops[f"characters.$.resources.{concrete_id}"] = inc_ops.get(
+            f"characters.$.resources.{concrete_id}", 0
+        ) + qty
+    if tool_transfer_id is not None:
+        match_filter[f"inventory.tools.{tool_transfer_id}"] = {"$gte": 1}
+        inc_ops[f"inventory.tools.{tool_transfer_id}"] = -1
+        inc_ops[f"characters.$.tools.{tool_transfer_id}"] = 1
+
+    ready_at = datetime.now(timezone.utc) + timedelta(seconds=CRAFT_DURATION_SECONDS)
+    update: Dict = {
+        "$set": {
+            "characters.$.activeCraft": {
+                "familyId": family_id,
+                "tier": tier,
+                "readyAt": ready_at.isoformat(),
+            }
+        }
+    }
+    if inc_ops:
+        update["$inc"] = inc_ops
+
+    match_filter["characters"] = {"$elemMatch": elem_match}
+    doc = await db.players.find_one_and_update(match_filter, update, return_document=ReturnDocument.AFTER)
+    if doc is None:
+        return None
+    return _doc_to_player(doc)
+
+
+async def finish_craft(address: str, character_id: str) -> Optional[Player]:
+    """
+    Completes one of `address`'s character's in-progress craft
+    (Character.activeCraft), once its timer has elapsed: consumes the
+    ingredients/tool that start_craft already transferred onto the
+    character (nothing left to draw from the player's shared vault at this
+    point) and produces the output exactly like the old one-shot craft
+    function did - inventory.items for a needsItemDefinition:true family,
+    inventory.itemBalances for a flat count, always into the player's
+    shared vault, never straight onto the character.
+
+    Returns None if there's no active craft, its timer hasn't elapsed yet,
+    the character somehow no longer has enough of what was transferred (an
+    accepted edge case, not actively guarded against elsewhere), or the
+    address/character pair doesn't match any player document.
+    """
+    db = get_database()
+    doc = await db.players.find_one({"address": address, "characters.id": character_id})
+    if doc is None:
+        return None
+    character = next((c for c in doc["characters"] if c["id"] == character_id), None)
+    if character is None:
+        return None
+
+    active = character.get("activeCraft")
+    if active is None or datetime.fromisoformat(active["readyAt"]) > datetime.now(timezone.utc):
+        return None
+
+    family_id = active["familyId"]
+    tier = active["tier"]
+    recipe, output_row = _validate_recipe(family_id, tier)
+
+    # Everything needed should already be sitting on the character (see
+    # start_craft) - resolved purely against the character's own vault now,
+    # with an empty player vault so nothing can be drawn from there.
+    resolved = _resolve_recipe_ingredients(recipe, tier, character.get("resources", {}), {})
+    if resolved is None:
+        return None
+    character_decrements, _ = resolved
+
+    tool_candidates = recipe.get("tool")
+    if tool_candidates is not None:
+        if isinstance(tool_candidates, str):
+            tool_candidates = [tool_candidates]
+        if _resolve_tool_for_craft(character, {}, tool_candidates) is None:
+            return None
+
+    elem_match: Dict = {"id": character_id}
+    inc_ops: Dict[str, int] = {}
+    for concrete_id, qty in character_decrements.items():
         elem_match[f"resources.{concrete_id}"] = {"$gte": qty}
         inc_ops[f"characters.$.resources.{concrete_id}"] = -qty
 
-    update: Dict = {}
+    update: Dict = {"$unset": {"characters.$.activeCraft": ""}}
     family = items_catalog.ITEM_FAMILIES_BY_ID.get(family_id)
     if family and family.needs_item_definition:
         instance = {

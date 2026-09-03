@@ -274,6 +274,50 @@
   color: #c07a3a;
 }
 
+/* Sits between the fold heading and the iframe - crafts whatever the
+   viewer's own selection currently is (read directly off the same-origin
+   iframe, not duplicated as separate component state). */
+.craftRow {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.4rem 0.75rem;
+}
+
+.craftButton {
+  padding: 0.35rem 1.1rem;
+  background: #1a1a1a;
+  border: 1px solid rgba(168, 153, 104, 0.4);
+  border-radius: 3px;
+  color: #d4a060;
+  font-family: inherit;
+  font-size: 0.85rem;
+  letter-spacing: 0.04em;
+  cursor: pointer;
+}
+
+.craftButton:hover:not(:disabled) {
+  background: #2a2215;
+  border-color: #c07a3a;
+  color: #c07a3a;
+}
+
+.craftButton:disabled {
+  color: #4a4432;
+  border-color: rgba(168, 153, 104, 0.15);
+  cursor: default;
+}
+
+.craftError {
+  font-size: 0.75rem;
+  color: #b04a4a;
+}
+
+.craftTimer {
+  color: #d4a060;
+  font-variant-numeric: tabular-nums;
+}
+
 /* Embeds the standalone crafting recipe reference (public/craft/recipe-viewer.html)
    inline, same treatment as SoulCreation's .recipeViewerFrame - height is
    set inline (see InventoryTab.tsx's recipeViewerHeight state), a
@@ -1033,6 +1077,16 @@
 .resourceDivider {
   height: 2px;
   background: linear-gradient(to right, transparent, #d4af37 20%, #d4af37 80%, transparent);
+  margin: 0.75rem 0;
+  display: block;
+}
+
+/* Separates the character crafting list's Tools group (blue, like
+   Blueprints Known) from its Resources groups below - same shape as
+   .resourceDivider, blue instead of gold to match the tools text color. */
+.toolsResourceDivider {
+  height: 2px;
+  background: linear-gradient(to right, transparent, #7eb8ff 20%, #7eb8ff 80%, transparent);
   margin: 0.75rem 0;
   display: block;
 }

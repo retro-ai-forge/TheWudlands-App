@@ -109,16 +109,36 @@ function ownedIds(...pools: Record<string, number>[]): string[] {
   return [...ids];
 }
 
+// Summed quantities across one or more stackable pools - used for the
+// recipe viewer's "?inv=" resource check, where how many matters (have >=
+// needed), not just whether something is owned at all. Mirrors ownedTools'
+// "counts either way" reasoning: the player's existing shared vault is just
+// as usable for this not-yet-saved character's crafting as whatever's been
+// allocated to it on the Trappings step.
+function combineBalances(...pools: Record<string, number>[]): Record<string, number> {
+  const combined: Record<string, number> = {};
+  for (const pool of pools) {
+    for (const [id, qty] of Object.entries(pool)) {
+      combined[id] = (combined[id] ?? 0) + qty;
+    }
+  }
+  return combined;
+}
+
 export function SoulCreation({
   onExit,
   slotNumber,
   playerTools,
+  playerResourceBalances,
 }: {
   onExit: () => void;
   slotNumber: number;
   /** The player's existing shared tool pool - available to this new
    * character too, even before it's saved, since tools live on the player. */
   playerTools: Record<string, number>;
+  /** The player's existing shared resource vault - same "available before
+   * this character is even saved" reasoning as playerTools. */
+  playerResourceBalances: Record<string, number>;
 }) {
   const [page, setPage] = useState(0);
   const { setHidden: setHeaderHidden } = useHeaderVisibility();
@@ -227,7 +247,7 @@ export function SoulCreation({
     setRecipeViewerLoaded(false);
     setRecipeViewerSrc(
       `/craft/recipe-viewer.html?embedded=1&inv=${encodeURIComponent(
-        JSON.stringify(selectedResources)
+        JSON.stringify(combineBalances(selectedResources, playerResourceBalances))
       )}&tools=${encodeURIComponent(
         JSON.stringify(ownedIds(playerTools))
       )}&blueprints=${encodeURIComponent(
@@ -247,13 +267,13 @@ export function SoulCreation({
     recipeViewerRef.current?.contentWindow?.postMessage(
       {
         type: "recipe-viewer:update",
-        inv: selectedResources,
+        inv: combineBalances(selectedResources, playerResourceBalances),
         tools: ownedIds(playerTools),
         blueprints: Object.values(blueprintSelections).filter(Boolean),
       },
       window.location.origin
     );
-  }, [selectedResources, blueprintSelections, playerTools, recipeViewerLoaded]);
+  }, [selectedResources, playerResourceBalances, blueprintSelections, playerTools, recipeViewerLoaded]);
 
   useEffect(() => {
     if (page !== 5) return;

@@ -181,6 +181,12 @@ class Character:
     # Not an item instance - see backend/data/light-source-burn-hours.json;
     # remaining burn time is computed lazily from litAt, not stored directly.
     equipped_light: Optional[dict] = None
+    # The character's in-progress craft, if any: {"familyId", "tier",
+    # "readyAt"} (readyAt = start time + backend.players.CRAFT_DURATION_SECONDS,
+    # ISO 8601). One job at a time - starting a craft is rejected while this
+    # is set and still in the future. Resolved lazily (no background job):
+    # a client counts down against readyAt itself, then calls finish_craft.
+    active_craft: Optional[dict] = None
 
     def to_dict(self) -> dict:
         return {
