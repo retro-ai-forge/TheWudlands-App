@@ -557,20 +557,43 @@ def _resolve_recipe_ingredients(
     return character_decrements, player_decrements
 
 
-def _validate_recipe(family_id: str, tier: int) -> tuple[dict, dict]:
+def _resolve_recipe_output(family_id: str, tier: int) -> Optional[tuple[dict, bool]]:
+    """
+    Resolves a recipe's output to a concrete {"id", "name"} row, checked
+    against the processed-resource catalog first (many recipes - plank,
+    metal_bar, leather, and 44 others - produce an ordinary processed
+    material, the exact same ids ingredients elsewhere resolve through
+    _PROCESSED_ID_BY_FAMILY_TIER, not a "final" weapon/armor/tool/food/etc.
+    row) and items_catalog's final-catalog files second. Returns
+    (output_row, is_processed_resource) - the bool tells the caller which
+    inventory bucket the output belongs in (resources vs items/itemBalances,
+    since a processed material was never in item-inventory-properties.json
+    to begin with, so `family.needs_item_definition` doesn't apply to it).
+    """
+    concrete_id = _PROCESSED_ID_BY_FAMILY_TIER.get((family_id, tier))
+    if concrete_id is not None:
+        return {"id": concrete_id, "name": PROCESSED_RESOURCE_ITEMS_BY_ID[concrete_id].name}, True
+    output_row = items_catalog.resolve_output_row(family_id, tier)
+    if output_row is not None:
+        return output_row, False
+    return None
+
+
+def _validate_recipe(family_id: str, tier: int) -> tuple[dict, dict, bool]:
     """Shared start_craft/finish_craft validation: known recipe, known tier
     row, no unsupported "alternatives" ingredient block. Raises ValueError
-    otherwise. Returns (recipe, output_row)."""
+    otherwise. Returns (recipe, output_row, output_is_processed_resource)."""
     recipe = _RECIPES_BY_FAMILY.get(family_id)
     if recipe is None:
         raise ValueError(f"Unknown recipe family: {family_id}")
-    output_row = items_catalog.resolve_output_row(family_id, tier)
-    if output_row is None:
+    resolved_output = _resolve_recipe_output(family_id, tier)
+    if resolved_output is None:
         raise ValueError(f"No tier {tier} row for family {family_id}")
+    output_row, output_is_processed = resolved_output
     for ingredient in recipe["ingredients"]:
         if "alternatives" in ingredient:
             raise ValueError(f"Recipe {family_id} uses 'alternatives' ingredients - not supported yet")
-    return recipe, output_row
+    return recipe, output_row, output_is_processed
 
 
 async def start_craft(address: str, character_id: str, family_id: str, tier: int) -> Optional[Player]:
@@ -592,7 +615,7 @@ async def start_craft(address: str, character_id: str, family_id: str, tier: int
     hasn't learned the required blueprint, or the address/character pair
     doesn't match any player document.
     """
-    recipe, output_row = _validate_recipe(family_id, tier)
+    recipe, _output_row, _output_is_processed = _validate_recipe(family_id, tier)
 
     db = get_database()
     doc = await db.players.find_one({"address": address, "characters.id": character_id})
@@ -705,7 +728,7 @@ async def finish_craft(address: str, character_id: str) -> Optional[Player]:
 
     family_id = active["familyId"]
     tier = active["tier"]
-    recipe, output_row = _validate_recipe(family_id, tier)
+    recipe, output_row, output_is_processed = _validate_recipe(family_id, tier)
 
     # Everything needed should already be sitting on the character (see
     # start_craft) - resolved purely against the character's own vault now,
@@ -730,7 +753,14 @@ async def finish_craft(address: str, character_id: str) -> Optional[Player]:
 
     update: Dict = {"$unset": {"characters.$.activeCraft": ""}}
     family = items_catalog.ITEM_FAMILIES_BY_ID.get(family_id)
-    if family and family.needs_item_definition:
+    if output_is_processed:
+        # A crafted processed material (plank, metal_bar, leather, ...) is
+        # the exact same kind of thing check_out_resource already moves -
+        # it belongs in the shared resources pool, not itemBalances, so
+        # other recipes' ingredient checks (which only ever look at
+        # resources) can actually see it.
+        inc_ops[f"inventory.resources.{output_row['id']}"] = 1
+    elif family and family.needs_item_definition:
         instance = {
             "instanceId": uuid.uuid4().hex,
             "itemId": output_row["id"],

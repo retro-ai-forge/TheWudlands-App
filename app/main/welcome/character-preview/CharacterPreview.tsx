@@ -11,7 +11,7 @@ import { StatsTab } from "./StatsTab";
 import { BodyTab } from "./BodyTab";
 import { SoulTab } from "./SoulTab";
 import { AdventureTab } from "./AdventureTab";
-import { InventoryTab, type RawPlayerData } from "./InventoryTab";
+import { InventoryTab, type ItemInstance, type RawPlayerData } from "./InventoryTab";
 
 export type TabKey = "stats" | "body" | "soul" | "adventure" | "inventory";
 
@@ -36,6 +36,8 @@ export function CharacterPreview({
   character,
   playerResourceBalances,
   playerTools,
+  playerItemBalances,
+  playerItems,
   onClose,
   onDeleted,
   onPortraitSaved,
@@ -45,6 +47,8 @@ export function CharacterPreview({
   character: SlotCharacterSummary;
   playerResourceBalances: Record<string, number>;
   playerTools: Record<string, number>;
+  playerItemBalances: Record<string, number>;
+  playerItems: ItemInstance[];
   onClose: () => void;
   onDeleted: () => void;
   onPortraitSaved: (character: SlotCharacterSummary) => void;
@@ -284,6 +288,8 @@ export function CharacterPreview({
               character={character}
               playerResourceBalances={playerResourceBalances}
               playerTools={playerTools}
+              playerItemBalances={playerItemBalances}
+              playerItems={playerItems}
               onPlayerDataUpdated={onPlayerDataUpdated}
             />
           )}

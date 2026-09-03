@@ -14,6 +14,20 @@ type BlueprintTierInfo = Record<
 >;
 type ResourceTierInfo = Record<string, { tier: number; family: string }>;
 
+// One individually-tracked crafted item (a needsItemDefinition:true
+// family - weapons, armor, shields, and the rest) - unlike a flat balance,
+// each physical one a player/character owns is its own instance with its
+// own quality.
+export type ItemInstance = {
+  instanceId: string;
+  itemId: string;
+  familyId: string;
+  quality: number | null;
+  location: string;
+  slotRef: string[];
+  createdAt: string;
+};
+
 // The raw shape returned by /me/characters and every check-in/check-out
 // transfer endpoint (backend.players.Player.to_dict()) - enough to refresh
 // the whole roster plus the shared vault/tool pool after a transfer.
@@ -22,6 +36,8 @@ export type RawPlayerData = {
   inventory: {
     tools: Record<string, number>;
     resources: Record<string, number>;
+    itemBalances: Record<string, number>;
+    items: ItemInstance[];
   };
 };
 
@@ -483,11 +499,17 @@ export function InventoryTab({
   character,
   playerResourceBalances,
   playerTools,
+  playerItemBalances,
+  playerItems,
   onPlayerDataUpdated,
 }: {
   character: SlotCharacterSummary;
   playerResourceBalances: Record<string, number>;
   playerTools: Record<string, number>;
+  /** Flat-count crafted goods in the player's shared vault (potions, food, misc trinkets - never equipped, never degrade). */
+  playerItemBalances: Record<string, number>;
+  /** Individually-tracked crafted items in the player's shared vault (weapons, armor, shields, ...), each its own instance with its own quality. */
+  playerItems: ItemInstance[];
   /** Called with the fresh roster/vault/pool after a successful check-in/check-out transfer. */
   onPlayerDataUpdated?: (data: RawPlayerData) => void;
 }) {
@@ -536,6 +558,14 @@ export function InventoryTab({
   // Tool tier info: id -> tier/family (for displaying tier indicators on tools)
   const [toolTierInfo, setToolTierInfo] = useState<BlueprintTierInfo>({});
 
+  // Every concrete id belonging to an item-inventory-properties.json family
+  // (all 118, regardless of storage bucket) - itemCatalogIds reclassifies a
+  // matching resources-balance entry (arrow/bolt/oil) as an item for
+  // display, itemCatalogTierInfo gives the combined Items list real
+  // tier/family sorting the same way blueprints/resources/tools already get.
+  const [itemCatalogIds, setItemCatalogIds] = useState<Set<string>>(new Set());
+  const [itemCatalogTierInfo, setItemCatalogTierInfo] = useState<BlueprintTierInfo>({});
+
   useEffect(() => {
     fetch("/api/auth/blueprint-categories")
       .then((res) => (res.ok ? res.json() : []))
@@ -579,6 +609,25 @@ export function InventoryTab({
         setToolTierInfo(tierMap);
       })
       .catch(() => setToolTierInfo({}));
+
+    // Fetch the item catalog (all 118 item-inventory-properties.json
+    // families' concrete ids) from the backend
+    fetch("/api/auth/item-catalog")
+      .then((res) => (res.ok ? res.json() : []))
+      .then((data: Array<{ id: string; name: string; familyId: string; tier: number; kind: string[] }>) => {
+        const ids = new Set<string>();
+        const tierMap: BlueprintTierInfo = {};
+        for (const item of data) {
+          ids.add(item.id);
+          tierMap[item.id] = { tier: item.tier, familyId: item.familyId, kind: item.kind[0] ?? "" };
+        }
+        setItemCatalogIds(ids);
+        setItemCatalogTierInfo(tierMap);
+      })
+      .catch(() => {
+        setItemCatalogIds(new Set());
+        setItemCatalogTierInfo({});
+      });
   }, []);
 
   // Top-level accordion (this character's crafting stock vs. the party's) -
@@ -616,6 +665,38 @@ export function InventoryTab({
   // viewer's owned/needed check reflects the player vault only, matching
   // exactly what backend.players.start_craft actually checks.
   const ownedTools = ownedIds(playerTools);
+
+  // Crafted-item instances in the player's shared vault, counted by their
+  // concrete (tier-specific) id - same "id -> quantity" shape
+  // playerItemBalances already has, so both can render through the same
+  // IdList. Two Iron Battle Axes and one Copper Battle Axe show as two
+  // separate rows, not lumped together, since they're different concrete
+  // ids even though they share a family.
+  const playerItemCounts: Record<string, number> = {};
+  for (const instance of playerItems) {
+    playerItemCounts[instance.itemId] = (playerItemCounts[instance.itemId] ?? 0) + 1;
+  }
+
+  // Some item-inventory-properties.json families (ammo - arrow/bolt/oil)
+  // are physically stored in resources, not itemBalances/items, since
+  // they're ordinary stackable PROCESSED_RESOURCE_ITEMS entries. They
+  // still belong in the Items list for display, and get excluded from the
+  // Resources list below so they aren't shown twice.
+  const playerAmmoBalances: Record<string, number> = {};
+  const playerResourcesExcludingItems: Record<string, number> = {};
+  for (const [id, qty] of Object.entries(playerResourceBalances)) {
+    if (itemCatalogIds.has(id)) {
+      playerAmmoBalances[id] = qty;
+    } else {
+      playerResourcesExcludingItems[id] = qty;
+    }
+  }
+
+  const playerItemsCombined: Record<string, number> = {
+    ...playerItemBalances,
+    ...playerItemCounts,
+    ...playerAmmoBalances,
+  };
 
   // The embedded recipe viewer's own content height, in px - same-origin, so
   // its body height can be read directly and mirrored onto the iframe
@@ -833,11 +914,25 @@ export function InventoryTab({
               onToggle={togglePartySub}
             >
               <ResourceList
-                balances={playerResourceBalances}
+                balances={playerResourcesExcludingItems}
                 emptyLabel="Nothing in the shared crafting stock."
                 tierInfo={resourceTierInfo}
                 onTransfer={(id, amount) => transfer("resources", "check-out", id, amount)}
                 transferDisabled={playerToCharacterTransfersDisabled}
+              />
+            </SubAccordionItem>
+            <SubAccordionItem
+              id="items"
+              label="Items"
+              openIds={openPartySub}
+              onToggle={togglePartySub}
+            >
+              <IdList
+                ids={Object.keys(playerItemsCombined).filter((id) => playerItemsCombined[id] > 0)}
+                emptyLabel="Nothing crafted yet."
+                tierInfo={itemCatalogTierInfo}
+                sortByTier
+                balances={playerItemsCombined}
               />
             </SubAccordionItem>
           </div>

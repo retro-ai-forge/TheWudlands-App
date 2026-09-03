@@ -143,6 +143,51 @@ def resolve_output_row(family_id: str, tier: int) -> Optional[dict]:
     return FINAL_ITEM_ROWS_BY_FAMILY_TIER.get((family_id, tier))
 
 
+@dataclass(frozen=True)
+class ItemCatalogEntry:
+    """One concrete tiered id belonging to an item-inventory-properties.json
+    family - the reference data a UI needs to display "this id is really an
+    item, here's its family/tier/kind" regardless of which physical bucket
+    (items/itemBalances/resources) it's actually stored in."""
+
+    id: str
+    name: str
+    family_id: str
+    tier: int
+    kind: tuple[str, ...]
+
+
+def _load_item_catalog_entries() -> tuple[ItemCatalogEntry, ...]:
+    """
+    Every concrete tiered id across all 118 item-inventory-properties.json
+    families, resolved from whichever catalog actually holds that family's
+    rows - the 9 "final" files for most families, plus base-processed.json
+    for the handful (arrow, bolt, oil) that are kind:["processed"] ammo
+    living in Character.resources rather than items/itemBalances. A family
+    with no rows in either (shouldn't happen, but not fatal) contributes
+    nothing rather than raising.
+    """
+    from backend.processed_catalog import PROCESSED_RESOURCE_ITEMS
+
+    entries: list[ItemCatalogEntry] = []
+    for (family_id, tier), row in FINAL_ITEM_ROWS_BY_FAMILY_TIER.items():
+        family = ITEM_FAMILIES_BY_ID.get(family_id)
+        if family is not None:
+            entries.append(ItemCatalogEntry(row["id"], row["name"], family_id, tier, family.kind))
+    for item in PROCESSED_RESOURCE_ITEMS:
+        family = ITEM_FAMILIES_BY_ID.get(item.family_id)
+        if family is not None:
+            entries.append(ItemCatalogEntry(item.id, item.name, item.family_id, item.tier, family.kind))
+    return tuple(entries)
+
+
+ITEM_CATALOG_ENTRIES: tuple[ItemCatalogEntry, ...] = _load_item_catalog_entries()
+# Every concrete id an item-inventory-properties.json family accounts for,
+# regardless of storage bucket - a UI uses this to reclassify a resource
+# balance entry (e.g. arrow/bolt/oil) as "really an item" for display.
+ITEM_CATALOG_ID_SET: frozenset[str] = frozenset(entry.id for entry in ITEM_CATALOG_ENTRIES)
+
+
 def backpack_slots_used(character: dict) -> int:
     """
     Total backpack slots currently occupied on one character (as returned by

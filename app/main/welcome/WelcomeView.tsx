@@ -7,6 +7,7 @@ import styles from "../../page.module.css";
 import { FeedbackForm } from "./FeedbackForm";
 import { SoulCreation } from "./soul-creation/SoulCreation";
 import { CharacterPreview, type TabKey } from "./character-preview/CharacterPreview";
+import type { ItemInstance } from "./character-preview/InventoryTab";
 import type { SlotCharacterSummary } from "./SoulSlotGrid";
 
 // SoulSlotGrid reads localStorage (a wallet's cached slot unlocks) during
@@ -62,6 +63,13 @@ export function WelcomeView() {
   // The player's own shared tool pool (id -> quantity), pooled across every
   // character - same sharing model as playerResourceBalances.
   const [playerTools, setPlayerTools] = useState<Record<string, number>>({});
+  // Crafted-item results sitting in the player's shared vault (not yet
+  // checked out to a character): flat counts for non-instance goods
+  // (itemBalances) plus individually-tracked instances (items, each with
+  // its own quality/instanceId) - together, "everything red in the
+  // crafting diagram" that isn't a raw/processed resource or a tool.
+  const [playerItemBalances, setPlayerItemBalances] = useState<Record<string, number>>({});
+  const [playerItems, setPlayerItems] = useState<ItemInstance[]>([]);
   // Which tab CharacterPreview should open on - only meaningful alongside
   // viewingCharacter, set when restoring from a ?character=&tab= URL below.
   const [viewingTab, setViewingTab] = useState<TabKey>("stats");
@@ -75,12 +83,16 @@ export function WelcomeView() {
     inventory?: {
       tools?: Record<string, number>;
       resources?: Record<string, number>;
+      itemBalances?: Record<string, number>;
+      items?: ItemInstance[];
     };
   } | null) => {
     const chars = data?.characters ?? [];
     setCharacters(chars);
     setPlayerResourceBalances(data?.inventory?.resources ?? {});
     setPlayerTools(data?.inventory?.tools ?? {});
+    setPlayerItemBalances(data?.inventory?.itemBalances ?? {});
+    setPlayerItems(data?.inventory?.items ?? []);
     setViewingCharacter((prev) => {
       if (!prev) return prev;
       const updated = chars.find((c) => c.id === prev.id);
@@ -145,6 +157,8 @@ export function WelcomeView() {
         character={viewingCharacter}
         playerResourceBalances={playerResourceBalances}
         playerTools={playerTools}
+        playerItemBalances={playerItemBalances}
+        playerItems={playerItems}
         initialTab={viewingTab}
         onPlayerDataUpdated={applyPlayerData}
         onClose={() => setViewingCharacter(null)}

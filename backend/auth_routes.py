@@ -51,6 +51,7 @@ from backend.players import (
     unload_resource_from_backpack,
     update_character_portrait,
 )
+from backend import items_catalog
 from backend.balances import log_login_balances
 from backend.resources_catalog import RESOURCE_ITEMS_BY_ID, resolve_trapping_options
 from backend.processed_catalog import PROCESSED_RESOURCE_ITEMS_BY_ID
@@ -425,6 +426,19 @@ class ToolItemResponse(BaseModel):
     tier: int
 
 
+class ItemCatalogEntryResponse(BaseModel):
+    """One concrete tiered id belonging to an item-inventory-properties.json
+    family - lets the UI recognize an id as "really an item" (for display
+    grouping/tier info) regardless of which bucket it's actually stored in
+    (items/itemBalances for most families, resources for ammo)."""
+
+    id: str
+    name: str
+    familyId: str
+    tier: int
+    kind: List[str]
+
+
 # Dependency: Extract and verify token from secure cookie
 async def get_current_address(request: Request) -> str:
     """
@@ -783,6 +797,22 @@ async def get_tool_catalog():
     return [
         ToolItemResponse(id=item.id, familyId=item.family_id, tier=item.tier)
         for item in TOOL_ITEMS_BY_ID.values()
+    ]
+
+
+@player_router.get("/item-catalog", response_model=List[ItemCatalogEntryResponse])
+async def get_item_catalog():
+    """
+    Reference data: every concrete tiered id belonging to an
+    item-inventory-properties.json family (all 118 - weapons, armor,
+    tools, ammo, misc trinkets, food, potions, adventuring gear), with its
+    tier/kind. Powers the shared vault's "Items" list, which reclassifies
+    matching resource-balance entries (e.g. arrow/bolt/oil) as items for
+    display even though they're physically stored in resources.
+    """
+    return [
+        ItemCatalogEntryResponse(id=e.id, name=e.name, familyId=e.family_id, tier=e.tier, kind=list(e.kind))
+        for e in items_catalog.ITEM_CATALOG_ENTRIES
     ]
 
 
