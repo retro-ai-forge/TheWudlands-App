@@ -22,9 +22,10 @@ from pymongo import ReturnDocument
 from backend import items_catalog
 from backend.character import Character
 from backend.db import get_database
-from backend.resources_catalog import RESOURCE_ITEMS, RESOURCE_ITEMS_BY_ID
+from backend.resources_catalog import RESOURCE_ITEMS, RESOURCE_ITEMS_BY_ID, PROFESSION_RESOURCE_FAMILIES
 from backend.processed_catalog import PROCESSED_RESOURCE_ITEMS, PROCESSED_RESOURCE_ITEMS_BY_ID
 from backend.tools_catalog import TOOL_ITEMS_BY_ID
+from backend.professions_catalog import PROFESSION_CATEGORIES
 
 _RECIPES_PATH = Path(__file__).resolve().parent / "data" / "craft-recipes.json"
 
@@ -683,6 +684,84 @@ def _resolve_recipe_output(family_id: str, tier: int) -> Optional[tuple[dict, bo
     return None
 
 
+def _resolve_recipe_direct_raw_totals(family_id: str, count: int, character: dict) -> Dict[str, int]:
+    """
+    This recipe's own DIRECT ingredients only, at this one crafting step -
+    deliberately NOT recursive (unlike a full chain expansion): a
+    "processed" ingredient (e.g. dagger's metal_bar) contributes nothing
+    here, since its own raw materials already paid out XP whenever THAT
+    was crafted as its own separate step - same one-level "Materials"
+    scoping the recipe viewer's own Materials section uses, just for XP
+    instead of display. A recipe with no direct "raw" ingredient at all
+    (dagger's only ingredient is processed) earns no raw-material XP from
+    this step.
+
+    An "alternatives" slot (e.g. carcass's bone_blade-or-dagger choice)
+    resolves via the same priority _resolve_ingredient_option uses (prefer
+    an already-owned unconsumed option) so this reflects what THIS craft
+    actually used - an unconsumed "final" choice contributes nothing
+    either way, same as a "final"/"final_unresolved" ingredient never
+    contributes (a held tool, or another already-crafted item that earned
+    its own XP when IT was crafted).
+    """
+    recipe = _RECIPES_BY_FAMILY.get(family_id)
+    if recipe is None:
+        return {}
+    held_items = character.get("items", []) or []
+    totals: Dict[str, int] = {}
+    for ing0 in recipe["ingredients"]:
+        options = ing0["alternatives"] if "alternatives" in ing0 else [ing0]
+        chosen = None
+        for opt in options:
+            if opt.get("consumed", True):
+                continue
+            family = items_catalog.ITEM_FAMILIES_BY_ID.get(opt["familyId"])
+            if family and family.needs_item_definition and any(
+                item.get("familyId") == opt["familyId"] and item.get("location") in ("backpack", "body", "crafting")
+                for item in held_items
+            ):
+                chosen = opt
+                break
+        if chosen is None:
+            chosen = next((opt for opt in options if opt.get("consumed", True)), None)
+        if chosen is None or chosen["category"] != "raw":
+            continue
+        totals[chosen["familyId"]] = totals.get(chosen["familyId"], 0) + chosen["qty"] * count
+    return totals
+
+
+def _crafting_xp_increments(character: dict, family_id: str, count: int) -> Dict[str, int]:
+    """
+    Raw-material XP only for now (the README's final-item assembly bonus
+    isn't implemented yet), scoped to this recipe's own direct ingredients
+    (see _resolve_recipe_direct_raw_totals) - a recipe with no direct raw
+    ingredient (e.g. dagger, which only needs processed metal_bar) earns
+    none; the raw materials it's ultimately built from already paid out
+    when the processed intermediate was crafted as its own step. Each raw
+    family used grants XP equal to the amount consumed to EVERY profession
+    slot (prof1/2/3) whose category lists that family - a single craft can
+    pay out to more than one profession slot at once if the recipe's raw
+    materials span more than one category. Returns {"exp1": ..., "exp2":
+    ..., "exp3": ...} deltas to add, only for slots that actually gained
+    something.
+    """
+    raw_totals = _resolve_recipe_direct_raw_totals(family_id, count, character)
+    if not raw_totals:
+        return {}
+    profession = character.get("profession", {})
+    increments: Dict[str, int] = {}
+    for prof_key, exp_key in (("prof1", "exp1"), ("prof2", "exp2"), ("prof3", "exp3")):
+        profession_id = profession.get(prof_key)
+        category = PROFESSION_CATEGORIES.get(profession_id) if profession_id else None
+        if not category:
+            continue
+        families = PROFESSION_RESOURCE_FAMILIES.get(category, ())
+        gained = sum(qty for fam, qty in raw_totals.items() if fam in families)
+        if gained:
+            increments[exp_key] = gained
+    return increments
+
+
 def _validate_recipe(family_id: str, tier: int) -> tuple[dict, dict, bool]:
     """Shared start_craft/finish_craft validation: known recipe, known tier
     row. Raises ValueError otherwise. Returns
@@ -715,12 +794,21 @@ async def start_craft(
 
     Instance-tracked tool alternatives (e.g. axe_stone) are never
     auto-transferred here, and only ever need to be owned once regardless
-    of `count` - see `_resolve_tool_for_craft`. Raises ValueError for an
+    of `count` - see `_resolve_tool_for_craft`. Also pays out raw-material
+    crafting XP right away (see `_crafting_xp_increments`) - to every
+    profession slot whose category lists a raw material used directly by
+    this recipe's own ingredients (not recursively through a "processed"
+    ingredient's own sub-recipe), scaled by `count`. A recipe with no
+    direct raw ingredient (e.g. dagger, purely processed metal_bar) earns
+    none from this step - crafting the processed intermediate is its own
+    separate step that already paid that out. The README's final-item
+    assembly-bonus XP isn't implemented yet. Raises ValueError for an
     unknown recipe/output row, an unsupported recipe shape, or `count < 1`.
-    Returns None if the character is already mid-craft, can't afford the
-    (count-scaled) ingredients even combined, has no access to a listed
-    tool, hasn't learned the required blueprint, or the address/character
-    pair doesn't match any player document.
+    Returns None if the
+    character is already mid-craft, can't afford the (count-scaled)
+    ingredients even combined, has no access to a listed tool, hasn't
+    learned the required blueprint, or the address/character pair doesn't
+    match any player document.
     """
     if count < 1:
         raise ValueError("count must be at least 1")
@@ -808,6 +896,13 @@ async def start_craft(
         match_filter[f"inventory.tools.{tool_transfer_id}"] = {"$gte": 1}
         inc_ops[f"inventory.tools.{tool_transfer_id}"] = -1
         inc_ops[f"characters.$.tools.{tool_transfer_id}"] = 1
+
+    # Raw-material crafting XP (see the README's "Crafting XP" section) -
+    # paid out the moment the timer starts, not on finish_craft, same as
+    # the ingredients themselves are already spoken for at this point.
+    # Final-item assembly-bonus XP isn't implemented yet.
+    for exp_key, gained in _crafting_xp_increments(character, family_id, count).items():
+        inc_ops[f"characters.$.profession.{exp_key}"] = gained
 
     ready_at = datetime.now(timezone.utc) + timedelta(seconds=CRAFT_DURATION_SECONDS)
     active_craft: Dict = {
