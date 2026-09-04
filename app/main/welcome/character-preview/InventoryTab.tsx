@@ -145,11 +145,12 @@ function getKindIcon(kind: string): string {
 }
 
 // Condition name shown in place of a quantity for an individually-tracked
-// item instance (weapons, armor, ... - each one has its own quality, not a
-// stacked count). Buckets by percent of quality/qualityMax on a fresh one:
-// 100-51% New, 50-21% Used, 20-0% Broken.
-const QUALITY_LABEL_RANK = { Broken: 0, Used: 1, New: 2 } as const;
-function qualityLabel(quality: number, qualityMax: number): keyof typeof QUALITY_LABEL_RANK {
+// item instance (weapons, armor, ... - each physical one gets its own row
+// with its own quality, never lumped into a stacked count). Buckets by
+// percent of quality/qualityMax on a fresh one: 100-51% New, 50-21% Used,
+// 20-0% Broken.
+type QualityLabel = "New" | "Used" | "Broken";
+function qualityLabel(quality: number, qualityMax: number): QualityLabel {
   const pct = qualityMax > 0 ? (quality / qualityMax) * 100 : 0;
   if (pct >= 51) return "New";
   if (pct >= 21) return "Used";
@@ -335,6 +336,7 @@ function IdList({
   transferableIds,
   quantityHiddenIds,
   qualityLabels,
+  lookupIds,
 }: {
   ids: string[];
   emptyLabel: string;
@@ -356,6 +358,8 @@ function IdList({
   quantityHiddenIds?: Set<string>;
   /** When given, shows this text in the quantity column position instead of a number (or instead of nothing, for a `quantityHiddenIds` row) - e.g. "New"/"Used"/"Broken" for an item instance's condition. */
   qualityLabels?: Record<string, string>;
+  /** When given, row id -> the id `tierInfo` should actually be looked up by - for a list where each row is its own uniquely-keyed thing (e.g. one row per item instanceId) but several rows can share the same underlying catalog entry (itemId). Defaults to each row using its own id, as before. */
+  lookupIds?: Record<string, string>;
 }) {
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [pendingId, setPendingId] = useState<string | null>(null);
@@ -378,7 +382,7 @@ function IdList({
   const highestTierByFamily: Record<string, number> = {};
   if (tierInfo) {
     for (const id of ids) {
-      const info = tierInfo[id];
+      const info = tierInfo[lookupIds?.[id] ?? id];
       if (info) {
         const current = highestTierByFamily[info.familyId] ?? 0;
         highestTierByFamily[info.familyId] = Math.max(current, info.tier);
@@ -395,8 +399,8 @@ function IdList({
 
   const sortedIds = sortByTier && tierInfo
     ? [...ids].sort((a, b) => {
-        const infoA = tierInfo[a];
-        const infoB = tierInfo[b];
+        const infoA = tierInfo[lookupIds?.[a] ?? a];
+        const infoB = tierInfo[lookupIds?.[b] ?? b];
         if (!infoA || !infoB) return 0;
         // Items first, then tools
         if (infoA.kind !== infoB.kind) {
@@ -416,7 +420,7 @@ function IdList({
 
   const renderRow = (id: string) => {
     const canTransfer = canTransferList && (!transferableIds || transferableIds.has(id));
-    const info = tierInfo?.[id];
+    const info = tierInfo?.[lookupIds?.[id] ?? id];
     const tierDisplay = info ? getTierIndicator(info.tier) : "";
     const isGreyed = info && highestTierByFamily[info.familyId] > info.tier;
     const icon = fixedIcon ?? (info?.kind ? getKindIcon(info.kind) : "");
@@ -436,7 +440,7 @@ function IdList({
           ...(isGreyed ? { color: "#665b42" } : {}),
           ...(textColor && !isGreyed ? { color: textColor } : {}),
         }}>
-          {info?.name ? stripBlueprintPrefix(info.name) : formatResourceLabel(id)}
+          {info?.name ? stripBlueprintPrefix(info.name) : formatResourceLabel(lookupIds?.[id] ?? id)}
         </td>
         {balances && (
           <td>{qualityLabels?.[id] ?? (quantityHiddenIds?.has(id) ? "" : owned)}</td>
@@ -463,8 +467,8 @@ function IdList({
   // with a divider, mirroring ResourceList's processed/raw split. A
   // homogeneous list (e.g. Tools, all one kind) just renders as one table.
   if (tierInfo) {
-    const nonToolIds = sortedIds.filter((id) => tierInfo[id]?.kind !== "tool");
-    const toolIds = sortedIds.filter((id) => tierInfo[id]?.kind === "tool");
+    const nonToolIds = sortedIds.filter((id) => tierInfo[lookupIds?.[id] ?? id]?.kind !== "tool");
+    const toolIds = sortedIds.filter((id) => tierInfo[lookupIds?.[id] ?? id]?.kind === "tool");
     return (
       <>
         {nonToolIds.length > 0 && (
@@ -777,30 +781,24 @@ export function InventoryTab({
     }
   }
 
-  // Crafted-item instances in the player's shared vault, counted by their
-  // concrete (tier-specific) id - same "id -> quantity" shape
-  // playerItemBalances already has, so both can render through the same
-  // IdList. Two Iron Battle Axes and one Copper Battle Axe show as two
-  // separate rows, not lumped together, since they're different concrete
-  // ids even though they share a family.
-  const playerItemCounts: Record<string, number> = {};
+  // Crafted-item instances in the player's shared vault - one row PER
+  // PHYSICAL INSTANCE, not aggregated by concrete id: each one has its own
+  // quality and its own instanceId, so two Iron Battle Axes at different
+  // wear levels are two separate rows, not one row with a count of 2.
+  // instanceId is the row's own id (unique); lookupIds maps it back to the
+  // concrete itemId for name/tier/kind lookups in tierInfo, which is keyed
+  // by itemId, not instanceId.
+  const playerItemRowIds: string[] = [];
+  const playerItemLookupIds: Record<string, string> = {};
+  const playerItemRowBalances: Record<string, number> = {};
+  const playerItemRowQuality: Record<string, string> = {};
   for (const instance of playerItems) {
-    playerItemCounts[instance.itemId] = (playerItemCounts[instance.itemId] ?? 0) + 1;
-  }
-
-  // Condition label (New/Used/Broken) shown in place of a count for each
-  // item-instance row - when several copies of the same concrete id are in
-  // the vault at different wear levels, shows the worst one (most
-  // actionable: "at least one of these needs attention"), rather than
-  // averaging or picking arbitrarily.
-  const playerItemQualityLabels: Record<string, string> = {};
-  for (const instance of playerItems) {
+    playerItemRowIds.push(instance.instanceId);
+    playerItemLookupIds[instance.instanceId] = instance.itemId;
+    playerItemRowBalances[instance.instanceId] = 1; // one row = one physical unit
     const qualityMax = itemCatalogTierInfo[instance.itemId]?.qualityMax;
-    if (instance.quality == null || !qualityMax) continue;
-    const label = qualityLabel(instance.quality, qualityMax);
-    const existing = playerItemQualityLabels[instance.itemId];
-    if (!existing || QUALITY_LABEL_RANK[label] < QUALITY_LABEL_RANK[existing as keyof typeof QUALITY_LABEL_RANK]) {
-      playerItemQualityLabels[instance.itemId] = label;
+    if (instance.quality != null && qualityMax) {
+      playerItemRowQuality[instance.instanceId] = qualityLabel(instance.quality, qualityMax);
     }
   }
 
@@ -821,7 +819,7 @@ export function InventoryTab({
 
   const playerItemsCombined: Record<string, number> = {
     ...playerItemBalances,
-    ...playerItemCounts,
+    ...playerItemRowBalances,
     ...playerAmmoBalances,
   };
 
@@ -1146,8 +1144,9 @@ export function InventoryTab({
                 tierInfo={itemCatalogTierInfo}
                 sortByTier
                 balances={playerItemsCombined}
-                quantityHiddenIds={new Set(Object.keys(playerItemCounts))}
-                qualityLabels={playerItemQualityLabels}
+                quantityHiddenIds={new Set(playerItemRowIds)}
+                qualityLabels={playerItemRowQuality}
+                lookupIds={playerItemLookupIds}
               />
             </SubAccordionItem>
           </div>
