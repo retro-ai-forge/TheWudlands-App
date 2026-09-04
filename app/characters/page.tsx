@@ -8,7 +8,7 @@ import { GENDERS, racesByCategory, professionsByCategory, BODY_ATTRIBUTES, SOUL_
 // GET /api/auth/blueprint-categories - lore/reference data, not player-specific:
 // every profession category's tool and item blueprint families (tiers 1-3).
 type BlueprintCategoryItem = { id: string; name: string; tier: number };
-type BlueprintCategoryFamily = { familyId: string; kind: string; items: BlueprintCategoryItem[] };
+type BlueprintCategoryFamily = { familyId: string; name: string; kind: string; items: BlueprintCategoryItem[] };
 type BlueprintCategoryEntry = { category: string; families: BlueprintCategoryFamily[] };
 
 function getTierIndicator(tier: number): string {
@@ -371,7 +371,7 @@ export default function Characters() {
                         entry.families.map((family) => (
                           <div key={family.familyId} className={styles.raceEntry}>
                             <p className={styles.raceName}>
-                              {getKindIcon(family.kind)} {family.familyId.replace(/_/g, " ")}{" "}
+                              {getKindIcon(family.kind)} {family.name}{" "}
                               <span className={styles.blueprintKind}>{family.kind}</span>
                             </p>
                             <table className={styles.legendTable}>
@@ -381,7 +381,7 @@ export default function Characters() {
                                   const displayName = trimRedundantLastWord(
                                     label,
                                     item.name.replace("Blueprint: ", ""),
-                                    family.familyId.replace(/_/g, " "),
+                                    family.name,
                                     family.kind
                                   );
                                   const tierClass = `tierSymbolT${item.tier}` as keyof typeof styles;

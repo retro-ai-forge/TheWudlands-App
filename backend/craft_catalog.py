@@ -319,8 +319,16 @@ def category_blueprint_summary(max_tier: int = 3) -> list[dict]:
                 (i for i in items_by_family[family] if i.tier <= max_tier),
                 key=lambda i: i.tier,
             )
+            # No family-level display name exists anywhere in the data (only
+            # each tiered item has its own flavor name) - same convention
+            # the recipe viewer's own family grouping already uses: the
+            # lowest-tier item's name, "Blueprint: " prefix stripped, stands
+            # in for the family as a whole.
+            all_items = sorted(items_by_family[family], key=lambda i: i.tier)
+            family_name = all_items[0].name.removeprefix("Blueprint: ") if all_items else family[len("blueprint_"):]
             families.append({
                 "familyId": family[len("blueprint_"):],
+                "name": family_name,
                 "kind": _blueprint_catalog_type(family) or "?",
                 "items": [
                     {"id": item.id, "name": item.name, "tier": item.tier}

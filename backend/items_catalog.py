@@ -155,6 +155,11 @@ class ItemCatalogEntry:
     family_id: str
     tier: int
     kind: tuple[str, ...]
+    # Flat across all 6 tiers of a family (unlike damage/defense, which
+    # would scale by tier) - None for a family with no qualityMax row at
+    # all (needsItemDefinition:false families never degrade, so this is
+    # only ever meaningful alongside a real Character.items instance).
+    quality_max: Optional[int]
 
 
 def _load_item_catalog_entries() -> tuple[ItemCatalogEntry, ...]:
@@ -173,11 +178,13 @@ def _load_item_catalog_entries() -> tuple[ItemCatalogEntry, ...]:
     for (family_id, tier), row in FINAL_ITEM_ROWS_BY_FAMILY_TIER.items():
         family = ITEM_FAMILIES_BY_ID.get(family_id)
         if family is not None:
-            entries.append(ItemCatalogEntry(row["id"], row["name"], family_id, tier, family.kind))
+            entries.append(ItemCatalogEntry(row["id"], row["name"], family_id, tier, family.kind, family.quality_max))
     for item in PROCESSED_RESOURCE_ITEMS:
         family = ITEM_FAMILIES_BY_ID.get(item.family_id)
         if family is not None:
-            entries.append(ItemCatalogEntry(item.id, item.name, item.family_id, item.tier, family.kind))
+            entries.append(
+                ItemCatalogEntry(item.id, item.name, item.family_id, item.tier, family.kind, family.quality_max)
+            )
     return tuple(entries)
 
 

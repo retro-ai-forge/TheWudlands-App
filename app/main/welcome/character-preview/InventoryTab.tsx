@@ -13,9 +13,9 @@ type BlueprintCategoryFamily = { familyId: string; kind: string; items: Blueprin
 type BlueprintCategoryEntry = { families: BlueprintCategoryFamily[] };
 type BlueprintTierInfo = Record<
   string,
-  { tier: number; familyId: string; kind: string; name?: string }
+  { tier: number; familyId: string; kind: string; name?: string; qualityMax?: number | null }
 >;
-type ResourceTierInfo = Record<string, { tier: number; family: string; category: "raw" | "processed" }>;
+type ResourceTierInfo = Record<string, { tier: number; family: string; category: "raw" | "processed"; name?: string }>;
 
 // The raw shape returned by /me/characters and every check-in/check-out
 // transfer endpoint (backend.players.Player.to_dict()) - enough to refresh
@@ -114,6 +114,18 @@ function getKindIcon(kind: string): string {
     default:
       return "";
   }
+}
+
+// Condition name shown in place of a quantity for an individually-tracked
+// item instance (weapons, armor, ... - each one has its own quality, not a
+// stacked count). Buckets by percent of quality/qualityMax on a fresh one:
+// 100-51% New, 50-21% Used, 20-0% Broken.
+const QUALITY_LABEL_RANK = { Broken: 0, Used: 1, New: 2 } as const;
+function qualityLabel(quality: number, qualityMax: number): keyof typeof QUALITY_LABEL_RANK {
+  const pct = qualityMax > 0 ? (quality / qualityMax) * 100 : 0;
+  if (pct >= 51) return "New";
+  if (pct >= 21) return "Used";
+  return "Broken";
 }
 
 function getTierIndicator(tier: number): string {
@@ -246,7 +258,7 @@ function ResourceList({
                 >
                   <td style={isGreyed ? { color: "#665b42" } : undefined}>{icon}</td>
                   <td><span className={tier > 0 ? getTierSymbolClass(tier) : styles.tierSymbol}>{tierDisplay}</span></td>
-                  <td style={isGreyed ? { color: "#665b42" } : undefined}>{formatResourceLabel(id)}</td>
+                  <td style={isGreyed ? { color: "#665b42" } : undefined}>{tierData?.name ?? formatResourceLabel(id)}</td>
                   <td>{qty}</td>
                 </tr>,
               ];
@@ -294,6 +306,7 @@ function IdList({
   onTransfer,
   transferableIds,
   quantityHiddenIds,
+  qualityLabels,
 }: {
   ids: string[];
   emptyLabel: string;
@@ -313,6 +326,8 @@ function IdList({
   transferableIds?: Set<string>;
   /** When given, these ids skip the quantity column entirely - for individually-tracked item instances (needsItemDefinition:true), which never stack, so a bare "1" reads as a strange, meaningless count rather than useful information. */
   quantityHiddenIds?: Set<string>;
+  /** When given, shows this text in the quantity column position instead of a number (or instead of nothing, for a `quantityHiddenIds` row) - e.g. "New"/"Used"/"Broken" for an item instance's condition. */
+  qualityLabels?: Record<string, string>;
 }) {
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [pendingId, setPendingId] = useState<string | null>(null);
@@ -395,7 +410,9 @@ function IdList({
         }}>
           {info?.name ? stripBlueprintPrefix(info.name) : formatResourceLabel(id)}
         </td>
-        {balances && <td>{quantityHiddenIds?.has(id) ? "" : owned}</td>}
+        {balances && (
+          <td>{qualityLabels?.[id] ?? (quantityHiddenIds?.has(id) ? "" : owned)}</td>
+        )}
       </tr>,
     ];
     if (isExpanded && canTransfer) {
@@ -576,6 +593,7 @@ export function InventoryTab({
         (
           data: Array<{
             id: string;
+            name: string;
             familyId: string;
             tier: number;
             resourceFamily: string;
@@ -584,7 +602,12 @@ export function InventoryTab({
         ) => {
           const tierMap: ResourceTierInfo = {};
           for (const item of data) {
-            tierMap[item.id] = { tier: item.tier, family: item.resourceFamily, category: item.category };
+            tierMap[item.id] = {
+              tier: item.tier,
+              family: item.resourceFamily,
+              category: item.category,
+              name: item.name,
+            };
           }
           setResourceTierInfo(tierMap);
         }
@@ -607,12 +630,28 @@ export function InventoryTab({
     // families' concrete ids) from the backend
     fetch("/api/auth/item-catalog")
       .then((res) => (res.ok ? res.json() : []))
-      .then((data: Array<{ id: string; name: string; familyId: string; tier: number; kind: string[] }>) => {
+      .then(
+        (
+          data: Array<{
+            id: string;
+            name: string;
+            familyId: string;
+            tier: number;
+            kind: string[];
+            qualityMax: number | null;
+          }>
+        ) => {
         const ids = new Set<string>();
         const tierMap: BlueprintTierInfo = {};
         for (const item of data) {
           ids.add(item.id);
-          tierMap[item.id] = { tier: item.tier, familyId: item.familyId, kind: item.kind[0] ?? "", name: item.name };
+          tierMap[item.id] = {
+            tier: item.tier,
+            familyId: item.familyId,
+            kind: item.kind[0] ?? "",
+            name: item.name,
+            qualityMax: item.qualityMax,
+          };
         }
         setItemCatalogIds(ids);
         setItemCatalogTierInfo(tierMap);
@@ -714,6 +753,22 @@ export function InventoryTab({
     playerItemCounts[instance.itemId] = (playerItemCounts[instance.itemId] ?? 0) + 1;
   }
 
+  // Condition label (New/Used/Broken) shown in place of a count for each
+  // item-instance row - when several copies of the same concrete id are in
+  // the vault at different wear levels, shows the worst one (most
+  // actionable: "at least one of these needs attention"), rather than
+  // averaging or picking arbitrarily.
+  const playerItemQualityLabels: Record<string, string> = {};
+  for (const instance of playerItems) {
+    const qualityMax = itemCatalogTierInfo[instance.itemId]?.qualityMax;
+    if (instance.quality == null || !qualityMax) continue;
+    const label = qualityLabel(instance.quality, qualityMax);
+    const existing = playerItemQualityLabels[instance.itemId];
+    if (!existing || QUALITY_LABEL_RANK[label] < QUALITY_LABEL_RANK[existing as keyof typeof QUALITY_LABEL_RANK]) {
+      playerItemQualityLabels[instance.itemId] = label;
+    }
+  }
+
   // Some item-inventory-properties.json families (ammo - arrow/bolt/oil)
   // are physically stored in resources, not itemBalances/items, since
   // they're ordinary stackable PROCESSED_RESOURCE_ITEMS entries. They
@@ -762,7 +817,7 @@ export function InventoryTab({
   // How many units to craft in one batch - the row of quick-count buttons
   // next to Craft. Ingredients scale with this; the server-side timer
   // doesn't (see start_craft's own count parameter).
-  const CRAFT_COUNTS = [1, 2, 5, 10] as const;
+  const CRAFT_COUNTS = [1, 2, 5, 10, 20, 50] as const;
   const [craftCount, setCraftCount] = useState<number>(1);
 
   // Re-checked on an interval while the viewer is open, since there's no
@@ -802,9 +857,21 @@ export function InventoryTab({
   // server-side (character.activeCraft) - one timer regardless of count.
   // See the countdown effect below for what happens once that timer elapses.
   const startCraft = async () => {
-    const selection = getRecipeViewerWindow()?.getCurrentSelection?.();
+    const win = getRecipeViewerWindow();
+    const selection = win?.getCurrentSelection?.();
     if (!selection) {
       setCraftError("Pick a recipe in the viewer first.");
+      return;
+    }
+    // The Craft button's enabled look is driven by craftableCounts, a
+    // poll that only re-checks every 500ms - if the tier/recipe selection
+    // changes and this fires before the next poll catches up, the button
+    // can still look clickable for a moment based on the PREVIOUS
+    // selection's craftability. Re-verify synchronously, against whatever
+    // is selected right now, before ever hitting the network - this is
+    // what actually decides whether to submit, not the polled state.
+    if (!(win?.isCurrentSelectionCraftable?.(craftCount) ?? false)) {
+      setCraftError("Couldn't craft that - check ingredients, tool, and blueprint.");
       return;
     }
     setCrafting(true);
@@ -986,6 +1053,7 @@ export function InventoryTab({
                 sortByTier
                 balances={playerItemsCombined}
                 quantityHiddenIds={new Set(Object.keys(playerItemCounts))}
+                qualityLabels={playerItemQualityLabels}
               />
             </SubAccordionItem>
           </div>

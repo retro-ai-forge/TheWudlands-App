@@ -329,6 +329,7 @@
    and with a distinct active state instead of just hover/disabled. */
 .craftCountRow {
   display: flex;
+  flex-wrap: wrap;
   gap: 0.3rem;
 }
 

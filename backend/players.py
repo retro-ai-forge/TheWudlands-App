@@ -56,10 +56,29 @@ def _load_blueprint_ids() -> dict[tuple[str, int], str]:
 
 
 # A recipe's blueprintFamilyId (when set) gates crafting on the character
-# having learned that blueprint - at the same tier as the item being
-# crafted, resolved the same family+tier -> concrete id way as ingredients
-# and outputs.
+# having learned that blueprint - resolved the same family+tier -> concrete
+# id way as ingredients and outputs.
 _BLUEPRINT_ID_BY_FAMILY_TIER: dict[tuple[str, int], str] = _load_blueprint_ids()
+
+# Blueprints span tiers 1-6, same as every other tiered catalog.
+_BLUEPRINT_MAX_TIER = 6
+
+
+def _owns_blueprint_at_or_above(character: dict, blueprint_family_id: str, tier: int) -> bool:
+    """
+    A blueprint learned at `tier` or higher satisfies crafting at `tier` -
+    a character who's learned the more advanced version of a recipe
+    already knows how to make the simpler one too, same "any tier works,
+    no minimum" rule _resolve_tool_for_craft already applies to tools.
+    Checks every tier from `tier` up to the highest one that exists for
+    this family, not just an exact match.
+    """
+    owned = character.get("blueprints", [])
+    for t in range(tier, _BLUEPRINT_MAX_TIER + 1):
+        blueprint_id = _BLUEPRINT_ID_BY_FAMILY_TIER.get((blueprint_family_id, t))
+        if blueprint_id is not None and blueprint_id in owned:
+            return True
+    return False
 
 
 @dataclass
@@ -758,8 +777,7 @@ async def start_craft(
 
     blueprint_family_id = recipe.get("blueprintFamilyId")
     if blueprint_family_id is not None:
-        blueprint_id = _BLUEPRINT_ID_BY_FAMILY_TIER.get((blueprint_family_id, tier))
-        if blueprint_id is None or blueprint_id not in character.get("blueprints", []):
+        if not _owns_blueprint_at_or_above(character, blueprint_family_id, tier):
             return None
 
     # Every instance-tracked tool this craft needs to borrow: the recipe's

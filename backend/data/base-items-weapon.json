@@ -11,7 +11,7 @@
   {"id": "cedar_sharpened_stick", "name": "Cedar Sharpened Stick", "familyId": "sharpened_stick", "tier": 4},
   {"id": "ebony_sharpened_stick", "name": "Ebony Sharpened Stick", "familyId": "sharpened_stick", "tier": 5},
   {"id": "worldroot_sharpened_stick", "name": "Worldroot Sharpened Stick", "familyId": "sharpened_stick", "tier": 6},
-  {"id": "courtiers_dagger", "name": "Rusty Dagger", "familyId": "dagger", "tier": 1},
+  {"id": "courtiers_dagger", "name": "Apprentice's Dagger", "familyId": "dagger", "tier": 1},
   {"id": "duchess_dagger", "name": "Duchess's Dagger", "familyId": "dagger", "tier": 2},
   {"id": "viscounts_dagger", "name": "Viscount's Dagger", "familyId": "dagger", "tier": 3},
   {"id": "marquess_dagger", "name": "Marquess's Dagger", "familyId": "dagger", "tier": 4},

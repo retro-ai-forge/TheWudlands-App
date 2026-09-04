@@ -407,6 +407,9 @@ class BlueprintCategoryFamilyResponse(BaseModel):
     """One blueprint family's tier 1-3 items, within a profession category."""
 
     familyId: str
+    name: str = Field(
+        ..., description="Family-level display name - no such name exists in the data, so this is the lowest tier's own flavor name with the 'Blueprint: ' prefix stripped"
+    )
     kind: str = Field(..., description="'tool' | 'weapon' | 'armor' | 'shield' | 'food'")
     items: List[BlueprintCategoryItemResponse]
 
@@ -422,6 +425,7 @@ class ResourceItemResponse(BaseModel):
     """A single resource item with its tier and family information."""
 
     id: str
+    name: str
     familyId: str
     tier: int
     resourceFamily: str = Field(..., description="The resource family (ore, wood, stone, etc.)")
@@ -447,6 +451,9 @@ class ItemCatalogEntryResponse(BaseModel):
     familyId: str
     tier: int
     kind: List[str]
+    qualityMax: Optional[int] = Field(
+        None, description="Max quality a fresh instance of this family starts at, if it degrades at all"
+    )
 
 
 # Dependency: Extract and verify token from secure cookie
@@ -771,6 +778,7 @@ async def get_blueprint_categories():
             families=[
                 BlueprintCategoryFamilyResponse(
                     familyId=family["familyId"],
+                    name=family["name"],
                     kind=family["kind"],
                     items=[BlueprintCategoryItemResponse(**item) for item in family["items"]],
                 )
@@ -789,13 +797,23 @@ async def get_resource_catalog():
     """
     raw_resources = [
         ResourceItemResponse(
-            id=item.id, familyId=item.family_id, tier=item.tier, resourceFamily=item.family_id, category="raw"
+            id=item.id,
+            name=item.name,
+            familyId=item.family_id,
+            tier=item.tier,
+            resourceFamily=item.family_id,
+            category="raw",
         )
         for item in RESOURCE_ITEMS_BY_ID.values()
     ]
     processed_resources = [
         ResourceItemResponse(
-            id=item.id, familyId=item.family_id, tier=item.tier, resourceFamily=item.family_id, category="processed"
+            id=item.id,
+            name=item.name,
+            familyId=item.family_id,
+            tier=item.tier,
+            resourceFamily=item.family_id,
+            category="processed",
         )
         for item in PROCESSED_RESOURCE_ITEMS_BY_ID.values()
     ]
@@ -825,7 +843,9 @@ async def get_item_catalog():
     display even though they're physically stored in resources.
     """
     return [
-        ItemCatalogEntryResponse(id=e.id, name=e.name, familyId=e.family_id, tier=e.tier, kind=list(e.kind))
+        ItemCatalogEntryResponse(
+            id=e.id, name=e.name, familyId=e.family_id, tier=e.tier, kind=list(e.kind), qualityMax=e.quality_max
+        )
         for e in items_catalog.ITEM_CATALOG_ENTRIES
     ]
 

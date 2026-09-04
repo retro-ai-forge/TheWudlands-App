@@ -565,15 +565,17 @@ window.getCurrentSelection = function () {
 // "nothing flagged missing") when there's no character context to
 // actually confirm against.
 //
-// Deliberately does NOT reuse ownsFamily/ownsAnyTool for the tool/blueprint
-// checks below - those apply a ">= requiredTier" rule (a higher tier
-// satisfies a lower requirement) that's right for this page's general
-// "missing" cosmetic tags elsewhere, but doesn't match what start_craft
-// actually accepts: _resolve_tool_for_craft takes ANY tier of a listed
-// tool family (no minimum at all), while the blueprint check
-// (_BLUEPRINT_ID_BY_FAMILY_TIER) requires the EXACT tier's blueprint, not
-// "or higher". Getting either of those wrong here means the button
-// disagrees with what clicking it would actually do.
+// Deliberately does NOT reuse ownsAnyTool for the tool check below - that
+// applies a ">= requiredTier" rule (a higher tier satisfies a lower
+// requirement) which is right for this page's general "missing" cosmetic
+// tags elsewhere, but doesn't match what start_craft actually accepts:
+// _resolve_tool_for_craft takes ANY tier of a listed tool family, no
+// minimum at all (not even ">="). The blueprint check below DOES reuse
+// ownsFamily, though - a blueprint learned at tier N or higher covers
+// crafting at any tier <= N (_owns_blueprint_at_or_above mirrors this
+// exactly), the same ">= requiredTier" rule ownsFamily already applies.
+// Getting either of these wrong here means the button disagrees with what
+// clicking it would actually do.
 // `count` (default 1) scales each consumed option's required quantity,
 // same as backend.players._resolve_ingredient_option's own `count`
 // parameter - an unconsumed "held" option (own it, don't use it up) still
@@ -616,10 +618,8 @@ window.isCurrentSelectionCraftable = function (count) {
     if (!hasTool) return false;
   }
 
-  if (recipe.blueprintFamilyId) {
-    const bf = families[recipe.blueprintFamilyId];
-    const bpItem = bf && bf.tiers[tier - 1];
-    if (!bpItem || !ownedBlueprints.has(bpItem.id)) return false;
+  if (recipe.blueprintFamilyId && !ownsFamily(ownedBlueprints, recipe.blueprintFamilyId, tier)) {
+    return false;
   }
 
   return true;
