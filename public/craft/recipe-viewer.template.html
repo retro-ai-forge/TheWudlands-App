@@ -353,7 +353,15 @@
       <div id="tree"><span class="empty">Select a recipe above.</span></div>
     </div>
     <div>
+      <div class="panel" style="margin-bottom:12px;" id="materialsPanel">
+        <h2>Materials</h2>
+        <table id="materialsTotals">
+          <thead><tr><th>Material</th><th>Tier</th><th></th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
       <div class="panel" style="margin-bottom:12px;">
+        <h2>Raw Total</h2>
         <table id="rawTotals">
           <thead><tr><th>Raw Material</th><th>Tier</th><th></th></tr></thead>
           <tbody></tbody>
@@ -393,6 +401,7 @@ function readInventoryFromQuery() {
 let inventory = readInventoryFromQuery();
 if (inventory) {
   document.querySelector("#rawTotals thead th:last-child").textContent = "owned/needed";
+  document.querySelector("#materialsTotals thead th:last-child").textContent = "owned/needed";
 }
 
 // Discrete tools/blueprints owned (as opposed to `inventory`'s stackable raw
@@ -1006,6 +1015,38 @@ function wireAccordionClick(controller, siblingGroup) {
   });
 }
 
+// The selected recipe's OWN direct ingredients only - one level, never
+// recursing into a "processed" ingredient's own sub-recipe the way
+// computeTotals does. This is "what do I need in hand for this exact
+// crafting step" (may already be satisfied by processed materials the
+// player is holding) rather than Raw Total's "what would the whole chain
+// cost built up from nothing" - genuinely different, useful information
+// once a recipe has any processed ingredient at all. A "final"/tool
+// ingredient is skipped here - those already have their own sections
+// (Tools Used / Other Items Required).
+//
+// Returns {materials, hasProcessed} - hasProcessed tells the caller
+// whether this section is worth showing at all: if every direct
+// ingredient is already "raw", this table would just duplicate Raw Total
+// row for row, so the caller hides it in that case.
+function computeDirectMaterials(famId, tier) {
+  const recipe = recipes[famId];
+  const materials = {};
+  let hasProcessed = false;
+  if (!recipe) return { materials, hasProcessed };
+  for (const ing0 of recipe.ingredients) {
+    const ing = ing0.alternatives ? pickBestAlternative(ing0.alternatives, tier) : ing0;
+    if (ing.category === "raw" || ing.category === "processed") {
+      if (ing.category === "processed") hasProcessed = true;
+      materials[ing.familyId] = (materials[ing.familyId] || 0) + ing.qty;
+    }
+    // "final"/"final_unresolved" (an unconsumed tool-role ingredient like
+    // axe_stone, or another crafted item) isn't a "material" in this
+    // sense - already covered by Tools Used / Other Items Required.
+  }
+  return { materials, hasProcessed };
+}
+
 // Fully multiplied raw/final-item cost of the whole tree, independent of
 // which nodes are expanded in the UI.
 function computeTotals(famId, qty, category, rawTotals, finalTotals, toolSet, tier) {
@@ -1092,6 +1133,8 @@ function render(famId, tier) {
     // of leaving the previous selection's raw materials/tools/final items
     // on screen looking like they still apply.
     tree.appendChild(el("span", "empty", "Select a recipe above."));
+    document.getElementById("materialsPanel").style.display = "none";
+    renderTable("materialsTotals", {}, tier, true, false);
     renderTable("rawTotals", {}, tier, true, false);
     renderTable("finalTotals", {}, tier, false, true);
     const toolListEl = document.getElementById("toolList");
@@ -1112,6 +1155,9 @@ function render(famId, tier) {
   const toolSet = new Set();
   computeTotals(famId, 1, rootCategory, rawTotals, finalTotals, toolSet, tier);
 
+  const { materials, hasProcessed } = computeDirectMaterials(famId, tier);
+  document.getElementById("materialsPanel").style.display = hasProcessed ? "" : "none";
+  renderTable("materialsTotals", materials, tier, true, false);
   renderTable("rawTotals", rawTotals, tier, true, false);
   renderTable("finalTotals", finalTotals, tier, false, true);
 
@@ -1151,6 +1197,7 @@ window.addEventListener("message", (event) => {
   if (!msg || msg.type !== "recipe-viewer:update") return;
   inventory = msg.inv ?? null;
   document.querySelector("#rawTotals thead th:last-child").textContent = inventory ? "owned/needed" : "";
+  document.querySelector("#materialsTotals thead th:last-child").textContent = inventory ? "owned/needed" : "";
   ownedTools = msg.tools ? new Set(msg.tools) : null;
   ownedBlueprints = msg.blueprints ? new Set(msg.blueprints) : null;
   // The embedding pages that use this live-update path (e.g. Soul
