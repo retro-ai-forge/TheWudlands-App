@@ -554,6 +554,24 @@
   pointer-events: none;
 }
 
+/* Once the timer hits 0, the craft is done but still waiting for
+   finish_craft to actually run (opening the character collects it) - same
+   green .slotRequirementMet already uses below the slot for "earned", so
+   readiness reads the same way everywhere on this page. */
+.slotCraftingLabelReady {
+  composes: slotCraftingLabel;
+  border-color: rgba(76, 175, 80, 0.6);
+  color: #4caf50;
+  text-shadow: 0 0 6px #4caf50;
+}
+
+.slotCraftBadgeReady {
+  composes: slotCraftBadge;
+  border-color: rgba(76, 175, 80, 0.6);
+  color: #4caf50;
+  text-shadow: 0 0 6px #4caf50;
+}
+
 /* Token-holding progress: a thin golden line along the bottom edge of a
    token slot's artwork (slots 5-8), growing from the left corner up to how
    much of the required balance the wallet currently holds. */

@@ -409,18 +409,19 @@ function readIdListFromQuery(param) {
 }
 let ownedTools = readIdListFromQuery("tools");
 let ownedBlueprints = readIdListFromQuery("blueprints");
-// Instance-tracked tools (e.g. axe_stone) sitting unreserved in the
-// player's shared vault - usable for a recipe's own "tool" field right
-// where they sit (backend.players.start_craft reserves them in place, no
-// backpack move), unlike ownedTools' character-only ownership. Kept
-// separate from ownedTools rather than merged into it: an ingredient's
-// "alternatives" slot (e.g. carcass's bone_blade-or-dagger choice) is
-// resolved by a different backend code path
-// (_resolve_ingredient_option/_resolve_recipe_ingredients) that was NOT
-// extended to draw from the vault - only a recipe's direct "tool" field
-// was (see start_craft's reservedInstanceId). Using ownedToolsWithVault
-// for THOSE checks too would show green here for something start_craft
-// would still reject.
+// Instance-tracked tools (e.g. axe_stone) sitting in the player's shared
+// vault - usable right where they sit: start_craft moves the specific
+// instance onto the character (location:"crafting") for the crafting
+// duration and back afterward, no backpack-capacity check. This applies
+// uniformly to a recipe's own "tool" field AND an ingredient's
+// "alternatives" slot (e.g. sharpened_stick's axe_stone-or-dagger choice,
+// carcass's bone_blade-or-dagger choice) - both go through
+// _resolve_tool_for_craft on the backend (the ingredient path via
+// _resolve_ingredient_option), so every tool-role ownership check on this
+// page uses ownedToolsWithVault, never the character-only ownedTools
+// alone. ownedTools itself is still used directly for blueprint checks
+// (those go through ownedBlueprints, unrelated) and as the plain
+// null-check for "is there any character context at all."
 let vaultTools = readIdListFromQuery("vaultTools");
 let ownedToolsWithVault = ownedTools ? new Set([...ownedTools, ...(vaultTools || [])]) : null;
 
@@ -465,8 +466,8 @@ function ownsAnyTool(ownedSet, ids, requiredTier) {
 // With no character context at all, still defaults to the first option,
 // same as before.
 function pickBestAlternative(alts, tier) {
-  if (ownedTools) {
-    const owned = alts.find(alt => !alt.consumed && ownsFamily(ownedTools, alt.familyId, tier));
+  if (ownedToolsWithVault) {
+    const owned = alts.find(alt => !alt.consumed && ownsFamily(ownedToolsWithVault, alt.familyId, tier));
     if (owned) return owned;
   }
   return alts.find(alt => alt.consumed) || alts[0];
@@ -591,7 +592,7 @@ window.isCurrentSelectionCraftable = function (count) {
 
   const optionSatisfied = (opt) => {
     if (opt.consumed === false) {
-      return opt.category === "final" && ownsFamily(ownedTools, opt.familyId, tier);
+      return opt.category === "final" && ownsFamily(ownedToolsWithVault, opt.familyId, tier);
     }
     if (opt.category !== "raw" && opt.category !== "processed") return false;
     const f = families[opt.familyId];
@@ -881,7 +882,7 @@ function buildInteractiveNode(famId, qty, category, tier, isRoot) {
       if (opts.every(o => !o.consumed)) {
         const ids = opts.map(o => o.familyId);
         const heldTag = el("span", "tag tool", "\u{1F528} " + ids.join(" or "));
-        if (!ownsAnyTool(ownedTools, ids, tier)) heldTag.classList.add("missing");
+        if (!ownsAnyTool(ownedToolsWithVault, ids, tier)) heldTag.classList.add("missing");
         row.appendChild(heldTag);
       }
     }
@@ -958,10 +959,10 @@ function buildInteractiveNode(famId, qty, category, tier, isRoot) {
               // not chosen here since it isn't owned) plays the same "own
               // it, don't use it up" role as a tool - show it the same
               // compact "icon id" way, not as a quantified ingredient, and
-              // check ownership the same way (ownedTools).
+              // check ownership the same way (ownedToolsWithVault).
               if (!alt.consumed) {
                 const altTag = el("span", "tag tool", "\u{1F528} " + alt.familyId);
-                if (!ownsFamily(ownedTools, alt.familyId, tier)) altTag.classList.add("missing");
+                if (!ownsFamily(ownedToolsWithVault, alt.familyId, tier)) altTag.classList.add("missing");
                 child.row.appendChild(altTag);
               } else {
                 const altText = "or " + alt.qty + "x " + famLabel(alt.familyId, tier);

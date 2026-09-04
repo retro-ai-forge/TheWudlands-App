@@ -575,11 +575,17 @@ function SoulSlotCard({
           <span className={styles.slotArt}>
             {remainingSeconds !== null && (
               <>
-                <span className={styles.slotCraftingLabel} aria-hidden="true">
+                <span
+                  className={remainingSeconds === 0 ? styles.slotCraftingLabelReady : styles.slotCraftingLabel}
+                  aria-hidden="true"
+                >
                   Crafting
                 </span>
-                <span className={styles.slotCraftBadge} aria-hidden="true">
-                  {formatRemaining(remainingSeconds)}
+                <span
+                  className={remainingSeconds === 0 ? styles.slotCraftBadgeReady : styles.slotCraftBadge}
+                  aria-hidden="true"
+                >
+                  {remainingSeconds === 0 ? "Ready" : formatRemaining(remainingSeconds)}
                 </span>
               </>
             )}

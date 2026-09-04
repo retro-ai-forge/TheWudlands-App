@@ -34,6 +34,13 @@
   {"id": "ebony_coal", "name": "Ebony Charcoal", "familyId": "coal", "tier": 5},
   {"id": "worldroot_coal", "name": "Worldroot Charcoal", "familyId": "coal", "tier": 6},
 
+  {"id": "pine_firewood", "name": "Pine Firewood", "familyId": "firewood", "tier": 1},
+  {"id": "oak_firewood", "name": "Oak Firewood", "familyId": "firewood", "tier": 2},
+  {"id": "ash_firewood", "name": "Ash Firewood", "familyId": "firewood", "tier": 3},
+  {"id": "cedar_firewood", "name": "Cedar Firewood", "familyId": "firewood", "tier": 4},
+  {"id": "ebony_firewood", "name": "Ebony Firewood", "familyId": "firewood", "tier": 5},
+  {"id": "worldroot_firewood", "name": "Worldroot Firewood", "familyId": "firewood", "tier": 6},
+
   {"id": "pine_plank", "name": "Pine Plank", "familyId": "plank", "tier": 1},
   {"id": "oak_plank", "name": "Oak Plank", "familyId": "plank", "tier": 2},
   {"id": "ash_plank", "name": "Ash Plank", "familyId": "plank", "tier": 3},

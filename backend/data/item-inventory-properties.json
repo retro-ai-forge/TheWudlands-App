@@ -52,19 +52,6 @@
     "icon": "/images/items/bat.png"
   },
   {
-    "familyId": "firewood",
-    "kind": [
-      "adventuring_gear"
-    ],
-    "sizeClass": "light",
-    "stackSize": 1,
-    "needsItemDefinition": false,
-    "note": "TBD - utility gear, durability unclear.",
-    "equipSlots": [],
-    "backpackable": true,
-    "icon": "/images/items/bat.png"
-  },
-  {
     "familyId": "grappling_hook",
     "kind": [
       "adventuring_gear"
