@@ -85,6 +85,34 @@ function formatResourceLabel(id: string): string {
     .join(" ");
 }
 
+// How long the "Finished: ..." result line stays visible (fading out) after
+// a craft completes, before it's cleared entirely - matches the CSS fade
+// animation's own duration (see .craftResultFading in CharacterTabs.module.css).
+const CRAFT_RESULT_FADE_MS = 8000;
+
+// Resolves an active craft's {familyId, tier} to a display name - the same
+// question backend.players._resolve_recipe_output answers server-side, but
+// there's no single "recipe output" endpoint to ask, so this scans the two
+// tier-info maps that between them cover every possible recipe output
+// (resourceTierInfo: raw/processed materials; itemCatalogTierInfo: all 118
+// item-inventory-properties.json families, instance-tracked or not) for the
+// entry at that exact family+tier. Falls back to a mechanical label from
+// the family id if somehow neither catalog has it yet (e.g. mid-fetch).
+function resolveOutputName(
+  familyId: string,
+  tier: number,
+  resourceTierInfo: ResourceTierInfo,
+  itemCatalogTierInfo: BlueprintTierInfo
+): string {
+  for (const info of Object.values(resourceTierInfo)) {
+    if (info.family === familyId && info.tier === tier) return info.name ?? formatResourceLabel(familyId);
+  }
+  for (const info of Object.values(itemCatalogTierInfo)) {
+    if (info.familyId === familyId && info.tier === tier) return info.name ?? formatResourceLabel(familyId);
+  }
+  return formatResourceLabel(familyId);
+}
+
 // Same "the headline already says Blueprint(s)" reasoning as
 // formatResourceLabel's id-prefix strip, applied to a real catalog name
 // (e.g. "Blueprint: Cotton Cloth" -> "Cotton Cloth").
@@ -507,6 +535,7 @@ export function InventoryTab({
   playerItemBalances,
   playerItems,
   onPlayerDataUpdated,
+  openCraftingSectionByDefault = false,
 }: {
   character: SlotCharacterSummary;
   playerResourceBalances: Record<string, number>;
@@ -517,6 +546,10 @@ export function InventoryTab({
   playerItems: ItemInstance[];
   /** Called with the fresh roster/vault/pool after a successful check-in/check-out transfer. */
   onPlayerDataUpdated?: (data: RawPlayerData) => void;
+  /** Opens the character's own Crafting accordion section right away - set
+   * when the player got here by clicking a soul slot that showed an active
+   * crafting timer, so they land straight on what they came to check. */
+  openCraftingSectionByDefault?: boolean;
 }) {
   // Moves `amount` of a resource/tool from this character's own (temporary,
   // crafting-session-only) vault back into the player's shared vault.
@@ -665,7 +698,9 @@ export function InventoryTab({
   // Top-level accordion (this character's crafting stock vs. the party's) -
   // both can be open at once, toggled independently. The recipe viewer
   // below is always visible, not part of this fold.
-  const [openSections, setOpenSections] = useState<Set<"blueprints" | "character" | "party">>(new Set());
+  const [openSections, setOpenSections] = useState<Set<"blueprints" | "character" | "party">>(
+    () => (openCraftingSectionByDefault ? new Set(["character"]) : new Set())
+  );
   const toggleSection = (id: "blueprints" | "character" | "party") => setOpenSections((prev) => {
     const next = new Set(prev);
     if (next.has(id)) next.delete(id); else next.add(id);
@@ -892,6 +927,11 @@ export function InventoryTab({
         return;
       }
       const data: RawPlayerData = await res.json();
+      // A fresh craft starting means the last one's "Finished: ..." line
+      // (still fading, if the player was quick) is stale news now - clear
+      // it rather than let it linger alongside the new one starting up.
+      if (fadeTimeoutRef.current) clearTimeout(fadeTimeoutRef.current);
+      setLastCraftResult(null);
       onPlayerDataUpdated?.(data);
     } catch {
       setCraftError("Couldn't reach the server.");
@@ -906,6 +946,16 @@ export function InventoryTab({
   // it turns out to already be in the past, e.g. the player closed the tab
   // mid-craft and came back later).
   const [finishing, setFinishing] = useState(false);
+  // Keeps the "what just got made" line on screen a while after the
+  // ingredients/tools it's summing up have already been cleared out from
+  // under it - finish_craft's response has already dropped activeCraft by
+  // the time it comes back, so this is captured from the CraftItemRequest
+  // still in scope right before that call, not read back from the result.
+  const [lastCraftResult, setLastCraftResult] = useState<{ name: string; count: number } | null>(null);
+  const fadeTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  useEffect(() => () => {
+    if (fadeTimeoutRef.current) clearTimeout(fadeTimeoutRef.current);
+  }, []);
   const finishCraft = async () => {
     if (finishing) return;
     setFinishing(true);
@@ -916,6 +966,19 @@ export function InventoryTab({
       });
       if (res.ok) {
         const data: RawPlayerData = await res.json();
+        if (character.activeCraft) {
+          setLastCraftResult({
+            name: resolveOutputName(
+              character.activeCraft.familyId,
+              character.activeCraft.tier,
+              resourceTierInfo,
+              itemCatalogTierInfo
+            ),
+            count: character.activeCraft.count,
+          });
+          if (fadeTimeoutRef.current) clearTimeout(fadeTimeoutRef.current);
+          fadeTimeoutRef.current = setTimeout(() => setLastCraftResult(null), CRAFT_RESULT_FADE_MS);
+        }
         onPlayerDataUpdated?.(data);
       }
     } catch {
@@ -1010,6 +1073,28 @@ export function InventoryTab({
               tierInfo={resourceTierInfo}
               onTransfer={remainingSeconds === null ? (id, amount) => transfer("resources", id, amount) : undefined}
             />
+            {remainingSeconds !== null && character.activeCraft && (
+              <>
+                <div className={styles.craftOutputDivider} />
+                <p className={styles.craftOutputLine}>
+                  Crafting {character.activeCraft.count}x{" "}
+                  {resolveOutputName(
+                    character.activeCraft.familyId,
+                    character.activeCraft.tier,
+                    resourceTierInfo,
+                    itemCatalogTierInfo
+                  )}
+                </p>
+              </>
+            )}
+            {!character.activeCraft && lastCraftResult && (
+              <>
+                <div className={styles.craftOutputDivider} />
+                <p className={`${styles.craftOutputLine} ${styles.craftResultFading}`}>
+                  Finished: {lastCraftResult.count}x {lastCraftResult.name}
+                </p>
+              </>
+            )}
           </div>
         )}
       </div>

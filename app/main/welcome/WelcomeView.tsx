@@ -73,6 +73,10 @@ export function WelcomeView() {
   // Which tab CharacterPreview should open on - only meaningful alongside
   // viewingCharacter, set when restoring from a ?character=&tab= URL below.
   const [viewingTab, setViewingTab] = useState<TabKey>("stats");
+  // Set alongside viewingTab="inventory" when the soul slot clicked to get
+  // here was showing an active crafting timer - jumps straight to the
+  // Inventory tab's character Crafting section instead of just the tab.
+  const [viewingOpenCrafting, setViewingOpenCrafting] = useState(false);
 
   // Applies a fresh roster/vault/pool snapshot (the shape returned by both
   // /me/characters and every check-in/check-out transfer endpoint) to all
@@ -160,6 +164,7 @@ export function WelcomeView() {
         playerItemBalances={playerItemBalances}
         playerItems={playerItems}
         initialTab={viewingTab}
+        openCraftingSectionByDefault={viewingOpenCrafting}
         onPlayerDataUpdated={applyPlayerData}
         onClose={() => setViewingCharacter(null)}
         onDeleted={() => {
@@ -201,7 +206,16 @@ export function WelcomeView() {
         <SoulSlotGrid
           characters={characters}
           onCreate={(slotNumber) => setCreatingSlot(slotNumber)}
-          onViewCharacter={(character) => setViewingCharacter(character)}
+          onViewCharacter={(character, options) => {
+            setViewingCharacter(character);
+            if (options?.openCrafting) {
+              setViewingTab("inventory");
+              setViewingOpenCrafting(true);
+            } else {
+              setViewingTab("stats");
+              setViewingOpenCrafting(false);
+            }
+          }}
         />
       )}
 

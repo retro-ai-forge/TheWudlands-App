@@ -1158,6 +1158,40 @@
   display: block;
 }
 
+/* Separates the ingredients from the "what this craft will produce" line
+   below it - green, like the ready/earned state elsewhere on this page,
+   since it's announcing the result rather than grouping inputs. */
+.craftOutputDivider {
+  height: 2px;
+  background: linear-gradient(to right, transparent, #4caf50 20%, #4caf50 80%, transparent);
+  margin: 0.75rem 0;
+  display: block;
+}
+
+.craftOutputLine {
+  font-size: 0.85rem;
+  color: #4caf50;
+  font-weight: 600;
+  text-align: center;
+  margin: 0;
+}
+
+/* The "Finished: ..." line - same look as .craftOutputLine while a craft is
+   in progress, but stays on screen a while after the ingredients/tools it
+   was summing up are already gone, slowly fading out rather than just
+   vanishing the instant the craft completes. Duration must match
+   CRAFT_RESULT_FADE_MS in InventoryTab.tsx, which clears it from state once
+   the fade finishes. */
+.craftResultFading {
+  animation: craftResultFadeOut 8s ease-in forwards;
+}
+
+@keyframes craftResultFadeOut {
+  /* Full opacity for the first 5s, then fades out over the remaining 3s. */
+  0%, 62.5% { opacity: 1; }
+  100% { opacity: 0; }
+}
+
 /* Mirrors app/characters/page.tsx's accordion exactly (same palette/behavior
    - mutual exclusivity within a group, handled in InventoryTab's own state
    rather than native <details>, so opening one section closes its sibling). */

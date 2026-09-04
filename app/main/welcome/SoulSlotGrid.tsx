@@ -198,7 +198,10 @@ export function SoulSlotGrid({
   characters,
 }: {
   onCreate: (slotNumber: number) => void;
-  onViewCharacter: (character: SlotCharacterSummary) => void;
+  /** `openCrafting` is true when the clicked slot was showing an active
+   * crafting timer - the caller jumps straight to the Inventory tab's
+   * character Crafting section instead of the default Stats page. */
+  onViewCharacter: (character: SlotCharacterSummary, options?: { openCrafting?: boolean }) => void;
   characters: SlotCharacterSummary[];
 }) {
   const { account } = useWallet();
@@ -445,7 +448,7 @@ function SoulSlotCard({
   tokenProgress: number;
   occupant?: SlotCharacterSummary;
   onCreate: (slotNumber: number) => void;
-  onViewCharacter: (character: SlotCharacterSummary) => void;
+  onViewCharacter: (character: SlotCharacterSummary, options?: { openCrafting?: boolean }) => void;
 }) {
   const isOccupied = occupant !== undefined;
   // Display-only - this grid never calls finish_craft itself, unlike the
@@ -541,7 +544,7 @@ function SoulSlotCard({
     // falls through below same as any other locked slot (send them to go
     // re-earn it) - showsOccupantPreview is false there.
     if (showsOccupantPreview) {
-      onViewCharacter(occupant);
+      onViewCharacter(occupant, { openCrafting: remainingSeconds !== null });
       return;
     }
     if (canInteract) {

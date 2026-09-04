@@ -43,6 +43,7 @@ export function CharacterPreview({
   onPortraitSaved,
   onPlayerDataUpdated,
   initialTab = "stats",
+  openCraftingSectionByDefault = false,
 }: {
   character: SlotCharacterSummary;
   playerResourceBalances: Record<string, number>;
@@ -57,6 +58,10 @@ export function CharacterPreview({
   /** Which page to open on - e.g. restoring from a link that sent the player
    * away to a full page (like the recipe viewer) and back. */
   initialTab?: TabKey;
+  /** Passed straight through to InventoryTab - opens its character Crafting
+   * section right away, for a soul slot click that came in with an active
+   * crafting timer showing. */
+  openCraftingSectionByDefault?: boolean;
 }) {
   const { setHidden: setHeaderHidden } = useHeaderVisibility();
   const [activeTab, setActiveTab] = useState<TabKey>(initialTab);
@@ -291,6 +296,7 @@ export function CharacterPreview({
               playerItemBalances={playerItemBalances}
               playerItems={playerItems}
               onPlayerDataUpdated={onPlayerDataUpdated}
+              openCraftingSectionByDefault={openCraftingSectionByDefault}
             />
           )}
         </div>
