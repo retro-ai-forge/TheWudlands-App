@@ -965,21 +965,30 @@ export function InventoryTab({
         </button>
         {openSections.has("character") && (
           <div className={styles.accordionBody}>
-            <IdList
-              ids={ownedIds(character.tools)}
-              emptyLabel="Not currently using any tools."
-              tierInfo={toolTierInfo}
-              sortByTier
-              fixedIcon="🔧"
-              balances={character.tools}
-              // Locked for the crafting duration - whatever start_craft
-              // staged here isn't the player's to move back out until the
-              // craft finishes (or the timer runs out and finish_craft
-              // drains it), same "no check-out either" rule these are
-              // already subject to.
-              onTransfer={remainingSeconds === null ? (id, amount) => transfer("tools", id, amount) : undefined}
-              textColor="#7eb8ff"
-            />
+            {/* A borrowed instance tool (axe_stone, ...) is a tool in use
+                too - just rendered in the separate list right below, since
+                it's not a flat balance. Skip this list entirely (rather
+                than showing its own empty-state message with padding)
+                when it has nothing but a borrowed tool already covers the
+                "using a tool" story - only claim "no tools" when BOTH
+                lists are actually empty. */}
+            {(ownedIds(character.tools).length > 0 || borrowedToolIds.length === 0) && (
+              <IdList
+                ids={ownedIds(character.tools)}
+                emptyLabel="Not currently using any tools."
+                tierInfo={toolTierInfo}
+                sortByTier
+                fixedIcon="🔧"
+                balances={character.tools}
+                // Locked for the crafting duration - whatever start_craft
+                // staged here isn't the player's to move back out until
+                // the craft finishes (or the timer runs out and
+                // finish_craft drains it), same "no check-out either"
+                // rule these are already subject to.
+                onTransfer={remainingSeconds === null ? (id, amount) => transfer("tools", id, amount) : undefined}
+                textColor="#7eb8ff"
+              />
+            )}
             {borrowedToolIds.length > 0 && (
               <IdList
                 ids={borrowedToolIds}
