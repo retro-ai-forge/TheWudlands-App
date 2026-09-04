@@ -1,6 +1,6 @@
 import styles from "./CharacterTabs.module.css";
 import { getPortraitCropImgStyle } from "@/app/lib/portraitCrop";
-import { RACES, PROFESSIONS, BIRTHSIGNS } from "@/app/lib/characterOptions";
+import { RACES, PROFESSIONS, BIRTHSIGNS, PROFESSION_RESOURCE_FAMILIES } from "@/app/lib/characterOptions";
 import { getDisplayedAge } from "@/app/lib/ageScaling";
 import type { SlotCharacterSummary } from "../SoulSlotGrid";
 
@@ -25,6 +25,19 @@ function raceName(id: string): string {
 function professionName(id: string): string {
   if (!id || id === "none") return "";
   return PROFESSIONS.find((p) => p.id === id)?.name ?? id;
+}
+
+// The profession's raw-material resource families (e.g. blacksmith ->
+// ["ore","wood","sand"]), formatted as a display caption - "Ore, Wood,
+// Sand". Empty for a blank/"none" profession slot.
+function professionResourceFamilies(id: string): string {
+  if (!id || id === "none") return "";
+  const category = PROFESSIONS.find((p) => p.id === id)?.category;
+  const families = category ? PROFESSION_RESOURCE_FAMILIES[category] : undefined;
+  if (!families) return "";
+  return families
+    .map((family) => family.split("_").map((w) => w.charAt(0).toUpperCase() + w.slice(1)).join(" "))
+    .join(", ");
 }
 
 function birthsignName(id: string): string {
@@ -54,9 +67,24 @@ export function StatsTab({
   const birthsignInfo = BIRTHSIGNS.find((b) => b.id === character.birthsign) ?? null;
 
   const professions = [
-    { name: professionName(character.profession.prof1), lvl: character.profession.lvl1, exp: character.profession.exp1 },
-    { name: professionName(character.profession.prof2), lvl: character.profession.lvl2, exp: character.profession.exp2 },
-    { name: professionName(character.profession.prof3), lvl: character.profession.lvl3, exp: character.profession.exp3 },
+    {
+      name: professionName(character.profession.prof1),
+      lvl: character.profession.lvl1,
+      exp: character.profession.exp1,
+      resourceFamilies: professionResourceFamilies(character.profession.prof1),
+    },
+    {
+      name: professionName(character.profession.prof2),
+      lvl: character.profession.lvl2,
+      exp: character.profession.exp2,
+      resourceFamilies: professionResourceFamilies(character.profession.prof2),
+    },
+    {
+      name: professionName(character.profession.prof3),
+      lvl: character.profession.lvl3,
+      exp: character.profession.exp3,
+      resourceFamilies: professionResourceFamilies(character.profession.prof3),
+    },
   ].filter((p) => p.name);
 
   const classes = [
@@ -133,14 +161,21 @@ export function StatsTab({
             <div className={styles.professionList}>
               {classes.map((c) => (
                 <div className={styles.professionRow} key={c.name}>
-                  <span>{c.name}</span>
-                  <span>Level {c.lvl}</span>
+                  <div className={styles.professionRowMain}>
+                    <span>{c.name}</span>
+                    <span>Level {c.lvl}</span>
+                  </div>
                 </div>
               ))}
               {professions.map((p) => (
                 <div className={styles.professionRow} key={p.name}>
-                  <span>{p.name}</span>
-                  <span>Lvl {p.lvl} — {p.exp} XP</span>
+                  <div className={styles.professionRowMain}>
+                    <span>{p.name}</span>
+                    <span>Lvl {p.lvl} — {p.exp} XP</span>
+                  </div>
+                  {p.resourceFamilies && (
+                    <span className={styles.professionResourceFamilies}>{p.resourceFamilies}</span>
+                  )}
                 </div>
               ))}
             </div>

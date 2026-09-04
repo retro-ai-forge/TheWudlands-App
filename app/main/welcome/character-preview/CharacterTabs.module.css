@@ -634,18 +634,33 @@
 
 .professionRow {
   display: flex;
-  justify-content: space-between;
-  font-size: 0.9rem;
-  color: #d4c9a8;
+  flex-direction: column;
+  gap: 0.15rem;
   padding: 0.3rem 0;
   border-bottom: 1px solid rgba(168, 153, 104, 0.15);
 }
 
-.professionRow span:last-child {
+.professionRowMain {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.9rem;
+  color: #d4c9a8;
+}
+
+.professionRowMain span:last-child {
   color: #a89968;
   font-size: 0.8rem;
   letter-spacing: 0.06em;
   text-transform: uppercase;
+}
+
+/* A profession's raw-material resource families (e.g. "Ore, Wood, Sand"
+   for a blacksmith) - a quiet caption under its name, not competing with
+   the level/XP line's own emphasis. */
+.professionResourceFamilies {
+  font-size: 0.7rem;
+  color: #7d7256;
+  letter-spacing: 0.03em;
 }
 
 /* ---- Body tab ---- */

@@ -99,6 +99,27 @@ export const professionsByCategory = PROFESSIONS.reduce((acc, profession) => {
   return acc;
 }, {} as Record<string, typeof PROFESSIONS>);
 
+// Mirror of backend/data/profession-resource-families.json - the 3 raw
+// resource families each profession category draws from for its Trappings
+// starter-material pool. The backend has no reason to expose this over an
+// endpoint just for a display caption, so it's kept in sync here by hand,
+// same "small reference table duplicated rather than fetched" convention
+// backend/professions_catalog.py already uses for PROFESSIONS itself.
+export const PROFESSION_RESOURCE_FAMILIES: Record<string, string[]> = {
+  Rural: ["hide", "meat", "harvest", "fish"],
+  CraftMetal: ["ore", "wood", "sand"],
+  CraftStone: ["clay", "stone", "crystal"],
+  CraftGarment: ["skin", "fiber", "herbs"],
+  CraftGlass: ["sand", "crystal", "ore"],
+  CraftWood: ["wood", "hide", "bone"],
+  Aristocratic: ["reed", "feather", "skin"],
+  Trade: ["harvest", "stone", "monster_part"],
+  Food: ["meat", "harvest", "herbs"],
+  Military: ["ore", "fiber", "monster_part"],
+  Artists: ["feather", "fiber", "bone"],
+  Alchemy: ["herbs", "crystal", "monster_part"],
+};
+
 // Body and Soul share one reserve of points at creation - strengthening one
 // yields the other. Descriptions match what each attribute governs in play.
 export const BODY_ATTRIBUTES = [
