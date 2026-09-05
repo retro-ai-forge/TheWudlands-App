@@ -472,10 +472,20 @@ async def check_in_resource(
     return _doc_to_player(doc)
 
 
+def _instance_tier(instance: dict) -> Optional[int]:
+    """An item instance's own tier, resolved from its stored itemId via
+    items_catalog.ITEM_CATALOG_ENTRIES_BY_ID - None if somehow not found
+    in the catalog (never blocks a match on its own; only used where a
+    tier requirement is being actively checked)."""
+    entry = items_catalog.ITEM_CATALOG_ENTRIES_BY_ID.get(instance.get("itemId"))
+    return entry.tier if entry else None
+
+
 def _resolve_tool_for_craft(
     character: dict,
     player_tools: Dict[str, int],
     tool_families: List[str],
+    tier: int,
     check_character_flat_balance: bool = True,
     player_items: Optional[List[dict]] = None,
 ) -> Optional[tuple]:
@@ -499,6 +509,11 @@ def _resolve_tool_for_craft(
     `player_items` left None (finish_craft's re-verification, and every
     ingredient-level "final"/unconsumed alternative check via
     _resolve_ingredient_option) means only the character's own items count.
+    Unlike a flat-balance tool (see below), an instance-tracked one must be
+    at LEAST `tier` - only candidates meeting that are ever considered, so
+    a T1 Dagger can't stand in for a T3 recipe's own "tool" requirement,
+    matching the recipe viewer's own "missing" cosmetic tag for these
+    (ownsFamily's ">= requiredTier" rule) rather than disagreeing with it.
 
     For an ordinary flat-balance family, crafting only ever checks the
     player's shared vault (same "character vault is a temporary staging
@@ -506,7 +521,10 @@ def _resolve_tool_for_craft(
     `check_character_flat_balance` is left True, which also accepts one
     already sitting in Character.tools; finish_craft uses that to
     re-verify what start_craft transferred is still there, passing
-    `player_tools={}` so it can only ever find it on the character.
+    `player_tools={}` so it can only ever find it on the character. A
+    flat-balance tool (an anvil, a furnace, ...) is generic work
+    infrastructure, not personal gear that scales with the item being
+    made - ANY tier satisfies ANY recipe tier here, no minimum at all.
 
     Returns `("instance_move", instance_id, source, slot_ref)` for an
     instance-tracked tool that needs moving to "crafting" - `source` is
@@ -536,29 +554,38 @@ def _resolve_tool_for_craft(
             # Already staged for THIS craft (finish_craft's re-verification,
             # after start_craft already moved it to "crafting") - present
             # and nothing further to do, same "owned" tag the flat-balance
-            # branch uses for "already fine as-is".
+            # branch uses for "already fine as-is". No tier re-check needed:
+            # start_craft already verified this exact instance met the
+            # requirement before moving it here.
             if any(
                 instance.get("familyId") == family_id and instance.get("location") == "crafting"
                 for instance in held_items
             ):
                 return ("owned", None)
             # When more than one instance of this family qualifies (e.g. two
-            # owned daggers), always pick the WORST-quality one - crafting
-            # wears down whichever tool/weapon is already the most beat-up
-            # first, rather than spreading wear evenly or grabbing whichever
-            # happens to sort first, so a fresh one stays fresh until the
-            # worn one is actually used up.
+            # owned daggers, one of them too low tier), always pick the
+            # WORST-quality one AMONG THOSE AT OR ABOVE `tier` - crafting
+            # wears down whichever eligible tool/weapon is already the most
+            # beat-up first, rather than spreading wear evenly or grabbing
+            # whichever happens to sort first, so a fresh one stays fresh
+            # until the worn one is actually used up. A too-low-tier
+            # instance is filtered out entirely, never picked regardless of
+            # quality.
             if player_items:
                 pool_candidates = [
                     instance for instance in player_items
-                    if instance.get("familyId") == family_id and instance.get("location") == "pool"
+                    if instance.get("familyId") == family_id
+                    and instance.get("location") == "pool"
+                    and (_instance_tier(instance) or 0) >= tier
                 ]
                 if pool_candidates:
                     worst = min(pool_candidates, key=lambda i: i.get("quality", 0))
                     return ("instance_move", worst["instanceId"], "pool", [])
             held_candidates = [
                 instance for instance in held_items
-                if instance.get("familyId") == family_id and instance.get("location") in ("backpack", "body")
+                if instance.get("familyId") == family_id
+                and instance.get("location") in ("backpack", "body")
+                and (_instance_tier(instance) or 0) >= tier
             ]
             if held_candidates:
                 worst = min(held_candidates, key=lambda i: i.get("quality", 0))
@@ -739,7 +766,7 @@ def _resolve_ingredient_option(
     family_id = option["familyId"]
 
     if category == "final" and not consumed:
-        found = _resolve_tool_for_craft(character, {}, [family_id], player_items=player_items)
+        found = _resolve_tool_for_craft(character, {}, [family_id], tier, player_items=player_items)
         if found is None:
             return None
         return {"held": True, "move": found if found[0] == "instance_move" else None}
@@ -1115,6 +1142,7 @@ async def start_craft(
             character,
             doc.get("inventory", {}).get("tools", {}),
             tool_candidates,
+            tier,
             check_character_flat_balance=False,
             player_items=doc.get("inventory", {}).get("items", []),
         )

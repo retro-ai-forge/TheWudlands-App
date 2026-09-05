@@ -573,17 +573,19 @@ window.getCurrentSelection = function () {
 // "nothing flagged missing") when there's no character context to
 // actually confirm against.
 //
-// Deliberately does NOT reuse ownsAnyTool for the tool check below - that
-// applies a ">= requiredTier" rule (a higher tier satisfies a lower
-// requirement) which is right for this page's general "missing" cosmetic
-// tags elsewhere, but doesn't match what start_craft actually accepts:
-// _resolve_tool_for_craft takes ANY tier of a listed tool family, no
-// minimum at all (not even ">="). The blueprint check below DOES reuse
-// ownsFamily, though - a blueprint learned at tier N or higher covers
-// crafting at any tier <= N (_owns_blueprint_at_or_above mirrors this
-// exactly), the same ">= requiredTier" rule ownsFamily already applies.
-// Getting either of these wrong here means the button disagrees with what
-// clicking it would actually do.
+// The tool check below applies ownsFamily's ">= requiredTier" rule ONLY
+// for an instance-tracked family (needsItemDefinition:true - axe_stone/
+// axe/dagger doubling as a tool) - a T1 Dagger can't stand in for a T3
+// recipe's own tool requirement, matching backend.players.
+// _resolve_tool_for_craft exactly (personal gear that scales with the
+// item being made). A flat-balance family (an anvil, a furnace, ...) is
+// generic work infrastructure - ANY tier satisfies ANY recipe tier there,
+// no minimum at all, same as _resolve_tool_for_craft's own flat-balance
+// branch. The blueprint check below also reuses ownsFamily - a blueprint
+// learned at tier N or higher covers crafting at any tier <= N
+// (_owns_blueprint_at_or_above mirrors this exactly). Getting any of
+// these wrong here means the button disagrees with what clicking it
+// would actually do.
 // `count` (default 1) scales each consumed option's required quantity,
 // same as backend.players._resolve_ingredient_option's own `count`
 // parameter - an unconsumed "held" option (own it, don't use it up) still
@@ -621,6 +623,7 @@ window.isCurrentSelectionCraftable = function (count) {
     const hasTool = tIds.some(toolFamId => {
       const f = families[toolFamId];
       if (!f) return ownedToolsWithVault.has(toolFamId);
+      if (f.needsItemDefinition) return ownsFamily(ownedToolsWithVault, toolFamId, tier);
       return f.tiers.some(t => ownedToolsWithVault.has(t.id));
     });
     if (!hasTool) return false;

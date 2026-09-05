@@ -193,6 +193,12 @@ ITEM_CATALOG_ENTRIES: tuple[ItemCatalogEntry, ...] = _load_item_catalog_entries(
 # regardless of storage bucket - a UI uses this to reclassify a resource
 # balance entry (e.g. arrow/bolt/oil) as "really an item" for display.
 ITEM_CATALOG_ID_SET: frozenset[str] = frozenset(entry.id for entry in ITEM_CATALOG_ENTRIES)
+# Concrete id -> its own entry (family/tier/kind/qualityMax) - used to
+# resolve a Character.items instance's own tier from its stored itemId
+# (e.g. deciding whether an owned T1 dagger is high enough tier to serve
+# as a T3 recipe's own "tool" requirement - see backend.players.
+# _resolve_tool_for_craft).
+ITEM_CATALOG_ENTRIES_BY_ID: dict[str, ItemCatalogEntry] = {entry.id: entry for entry in ITEM_CATALOG_ENTRIES}
 
 
 def backpack_slots_used(character: dict) -> int:

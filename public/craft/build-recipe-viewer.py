@@ -35,6 +35,19 @@ CATALOG_FILES = {
 
 
 def build_families() -> dict:
+    # familyId -> needsItemDefinition, the same flag backend.items_catalog
+    # loads - a family with this true (e.g. axe_stone/axe/dagger doubling
+    # as a tool) is individually instance-tracked, each physical one its
+    # own degrading item; embedded here so the viewer's own
+    # isCurrentSelectionCraftable can apply the same ">= recipe tier"
+    # minimum backend.players._resolve_tool_for_craft enforces for these,
+    # while a flat-balance tool (an anvil, a furnace, ...) stays
+    # any-tier-satisfies.
+    needs_item_definition: dict[str, bool] = {
+        row["familyId"]: row.get("needsItemDefinition", False)
+        for row in json.loads((DATA_DIR / "item-inventory-properties.json").read_text())
+    }
+
     families: dict[str, dict] = {}
     for category, filename in CATALOG_FILES.items():
         items = json.loads((DATA_DIR / filename).read_text())
@@ -46,6 +59,7 @@ def build_families() -> dict:
             families[family_id] = {
                 "category": category,
                 "name": family_items[0]["name"],
+                "needsItemDefinition": needs_item_definition.get(family_id, False),
                 "tiers": [
                     {"tier": it["tier"], "name": it["name"], "id": it["id"]}
                     for it in family_items
