@@ -3,6 +3,7 @@ import { getPortraitCropImgStyle } from "@/app/lib/portraitCrop";
 import { RACES, PROFESSIONS, BIRTHSIGNS, PROFESSION_RESOURCE_FAMILIES } from "@/app/lib/characterOptions";
 import { getDisplayedAge } from "@/app/lib/ageScaling";
 import { useState } from "react";
+import { formatRemainingLong, useCraftCountdown } from "../craftTimer";
 import type { SlotCharacterSummary } from "../SoulSlotGrid";
 import type { RawPlayerData } from "./InventoryTab";
 
@@ -70,6 +71,17 @@ export function StatsTab({
   onPlayerDataUpdated?: (data: RawPlayerData) => void;
 }) {
   const birthsignInfo = BIRTHSIGNS.find((b) => b.id === character.birthsign) ?? null;
+
+  // The "Ready" row reflects whatever's currently keeping this character
+  // busy - today that's only ever a craft timer (Character.activeCraft),
+  // but the row is meant to cover any future timed activity a character
+  // can be tied up in (traveling, imprisoned, ...) the same way: "now"
+  // once nothing's running, the remaining time while something is. A
+  // craft still counts as "running" right up through the moment its
+  // timer hits 0 (uncollected results don't block anything - see
+  // InventoryTab's own "Ready"/0:00 handling) - 0 is falsy, so it already
+  // falls through to "now" below without a separate check.
+  const craftRemainingSeconds = useCraftCountdown(character.activeCraft?.readyAt);
 
   // The sole slot ("prof1"|"prof2"|"prof3") that receives final-item
   // assembly-bonus XP on finishing a blueprint-gated item - player-chosen
@@ -202,7 +214,7 @@ export function StatsTab({
           </div>
           <div className={styles.identityRow}>
             <span>Ready</span>
-            <span>now</span>
+            <span>{craftRemainingSeconds ? formatRemainingLong(craftRemainingSeconds) : "now"}</span>
           </div>
 
           {classes.length > 0 || professions.length > 0 ? (

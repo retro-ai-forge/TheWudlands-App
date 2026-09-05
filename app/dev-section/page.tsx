@@ -82,7 +82,7 @@ export default function DevSection() {
                 <div className={styles.phaseName}>Alpha 1.0 February 2027</div>
                 <ul className={styles.phaseDetails}>
                   <li>DOT / WUD token payments</li>
-                  <li>In-game currency system</li>
+                  <li>In-game Trading</li>
                   <li>Adventure entry fees</li>
                   <li>Revenue share distribution</li>
                   <li>On-chain character progression</li>

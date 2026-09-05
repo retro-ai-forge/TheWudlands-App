@@ -308,6 +308,18 @@
   cursor: default;
 }
 
+/* The time/XP preview shown under "Craft" once a craftable recipe is
+   selected - see InventoryTab.tsx's craftXpPreview. */
+.craftButtonDetail {
+  display: block;
+  margin-top: 0.15rem;
+  font-size: 0.65rem;
+  font-weight: normal;
+  letter-spacing: normal;
+  color: #9a8968;
+  font-variant-numeric: tabular-nums;
+}
+
 /* Lit only while the recipe currently selected in the viewer is actually
    craftable right now - same green-glow "on" language as the recipe
    viewer's own fancy-text toggle checkbox. */
@@ -691,10 +703,17 @@
   color: #4caf50;
 }
 
-.professionPrimeTag {
-  font-size: 0.7rem;
+/* Specificity needs to match .professionRowMain span:last-child above
+   (0,2,1) - this tag's own <span> is the last child of ITS parent (the
+   name span) too, so a plain .professionPrimeTag class selector alone
+   (0,1,0) loses to that rule's uppercase/grey/0.8rem styling meant for
+   the Lvl/XP caption on the row's other side. */
+.professionRowMain span.professionPrimeTag {
+  font-size: 0.60rem;
   font-weight: 600;
   letter-spacing: 0.04em;
+  text-transform: none;
+  color: inherit;
 }
 
 /* ---- Body tab ---- */

@@ -177,6 +177,8 @@ Each scene may reference a single image by filename. At runtime, the frontend lo
 
 ## Crafting XP
 
+Each profession can gain at most 30% of its current level's XP cost per day, from raw-material and final-item XP combined — grinding past that cap earns nothing more until the next day.
+
 Crafting pays out two kinds of XP, which can land on different professions from the same craft. **Raw-material XP** is automatic: we count all raw materials used across a recipe's full creation chain, but not tools or other ingredients that already have their own blueprint. Consuming a raw material grants XP equal to the amount consumed to every profession the character has whose category lists that material (see the Resource Families column above) — a single craft can pay out to more than one profession at once if its raw materials overlap across categories.
 
 **Final-item XP** only applies to genuinely blueprint-gated tools and items (not plain processing steps like refining ore or tanning leather): finishing one pays out a flat, tier-scaled assembly bonus — `10% × the item's full raw-material chain × its tier` — on top of whatever raw-material XP was already earned crafting its ingredients. Unlike raw-material XP, this bonus isn't tied to a fixed profession — the character's selected prime profession receives it.

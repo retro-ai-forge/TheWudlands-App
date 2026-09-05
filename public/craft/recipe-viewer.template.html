@@ -633,6 +633,48 @@ window.isCurrentSelectionCraftable = function (count) {
   return true;
 };
 
+// Exposed for the embedding page's own Craft button label - the XP a
+// single start_craft/finish_craft pair of calls would pay out for the
+// current selection at the given count, mirroring backend.players'
+// crafting-XP mechanics (see the README's "Crafting XP" section) without
+// a round trip: `rawXp` is raw-material XP (backend._crafting_xp_
+// increments/_resolve_recipe_direct_raw_totals) - this recipe's own
+// DIRECT "raw" ingredients only, keyed by family id, scaled by `count`; a
+// "processed" ingredient (e.g. dagger's metal_bar) contributes nothing
+// here, same as start_craft itself. `finalXp` is the final-item assembly
+// bonus (backend._assembly_bonus_xp) - 0 unless the recipe is genuinely
+// blueprint-gated, otherwise 10% of the item's FULL raw-material chain
+// (every "processed" ingredient's own sub-recipe expanded too, reusing
+// computeTotals - the same recursive expansion already driving the Raw
+// Total table) times the tier, rounded, scaled by `count`.
+window.getCurrentSelectionXp = function (count) {
+  count = count || 1;
+  if (!select.value) return null;
+  const famId = select.value;
+  const tier = currentTier();
+  const recipe = recipes[famId];
+  if (!recipe) return null;
+
+  const rawXp = {};
+  for (const ing0 of recipe.ingredients) {
+    const ing = ing0.alternatives ? pickBestAlternative(ing0.alternatives, tier) : ing0;
+    if (ing.category === "raw") {
+      rawXp[ing.familyId] = (rawXp[ing.familyId] || 0) + ing.qty * count;
+    }
+  }
+
+  let finalXp = 0;
+  if (recipe.blueprintFamilyId) {
+    const rawTotals = {};
+    const finalTotals = {};
+    computeTotals(famId, count, famCategory(famId), rawTotals, finalTotals, new Set(), tier);
+    const fullChainTotal = Object.values(rawTotals).reduce((a, b) => a + b, 0);
+    finalXp = Math.round(0.1 * fullChainTotal * tier);
+  }
+
+  return { rawXp, finalXp };
+};
+
 function isAestheticEnabled() {
   return document.getElementById("aestheticCheckbox").checked;
 }

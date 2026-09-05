@@ -47,6 +47,12 @@ class ProfStats:
     # item (see backend.players.finish_craft). Player-chosen on the Stats
     # page, persisted here so it survives between sessions.
     prime: str = 'none'
+    # Per-slot daily XP-cap tracking (see backend.players.
+    # _profession_xp_grant_set_ops) - {"prof1": {"date": "2026-09-06",
+    # "gained": 18}, ...}. "date" is a UTC calendar date (ISO 8601);
+    # "gained" resets to 0 the first time that slot gains XP on a new date.
+    # Never read directly by anything outside that grant logic.
+    daily_xp: Dict[str, dict] = field(default_factory=dict)
 
     def to_dict(self) -> dict:
         return {
@@ -60,6 +66,7 @@ class ProfStats:
             "lvl3": self.level_3,
             "exp3": self.experience_3,
             "prime": self.prime,
+            "dailyXp": self.daily_xp,
         }
 
 @dataclass

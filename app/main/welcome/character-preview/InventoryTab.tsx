@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import styles from "./CharacterTabs.module.css";
-import { formatRemaining, useCraftCountdown } from "../craftTimer";
+import { formatRemaining, formatRemainingLong, useCraftCountdown } from "../craftTimer";
 import type { SlotCharacterSummary } from "../SoulSlotGrid";
 import type { ItemInstance } from "../SoulSlotGrid";
 export type { ItemInstance } from "../SoulSlotGrid";
@@ -85,10 +85,28 @@ function formatResourceLabel(id: string): string {
     .join(" ");
 }
 
+// "+5 Ore XP, +3 Wood XP, +16 Final XP" - the Craft button's own detail
+// line, built from getCurrentSelectionXp's preview. Raw families are
+// formatted the same mechanical way professions' resource-family caption
+// already does (there's no per-family display-name catalog for these,
+// just category ids like "ore"/"monster_part").
+function formatXpPreview(preview: { rawXp: Record<string, number>; finalXp: number } | null): string {
+  if (!preview) return "";
+  const parts = Object.entries(preview.rawXp).map(([family, xp]) => `+${xp} ${formatResourceLabel(family)} XP`);
+  if (preview.finalXp > 0) parts.push(`+${preview.finalXp} Final XP`);
+  return parts.join(", ");
+}
+
 // How long the "Finished: ..." result line stays visible (fading out) after
 // a craft completes, before it's cleared entirely - matches the CSS fade
 // animation's own duration (see .craftResultFading in CharacterTabs.module.css).
 const CRAFT_RESULT_FADE_MS = 8000;
+
+// Mirrors backend.players.CRAFT_DURATION_SECONDS - purely a display
+// estimate for the Craft button's own label before a craft has started;
+// the actual countdown always comes from the server's activeCraft.readyAt
+// once start_craft succeeds (see useCraftCountdown above).
+const CRAFT_DURATION_SECONDS_DISPLAY = 120;
 
 // Resolves an active craft's {familyId, tier} to a display name - the same
 // question backend.players._resolve_recipe_output answers server-side, but
@@ -843,6 +861,7 @@ export function InventoryTab({
   type RecipeViewerWindow = Window & {
     getCurrentSelection?: () => { familyId: string; tier: number } | null;
     isCurrentSelectionCraftable?: (count?: number) => boolean;
+    getCurrentSelectionXp?: (count?: number) => { rawXp: Record<string, number>; finalXp: number } | null;
   };
   const getRecipeViewerWindow = () =>
     recipeViewerRef.current?.contentWindow as RecipeViewerWindow | null | undefined;
@@ -860,9 +879,21 @@ export function InventoryTab({
   // per available count (1/2/5/10) so each quick-count button can be
   // disabled independently once affording it runs out.
   const [craftableCounts, setCraftableCounts] = useState<Record<number, boolean>>({});
+
+  // The Craft button's own label - what a single start_craft/finish_craft
+  // pair would actually pay out for whatever's selected in the viewer right
+  // now, at the current craftCount (see recipe-viewer.template.html's
+  // getCurrentSelectionXp, which mirrors backend.players' XP mechanics).
+  // Re-polled alongside craftableCounts below since both depend on the same
+  // "whatever's currently selected in the iframe" state with no change
+  // event of its own.
+  const [craftXpPreview, setCraftXpPreview] = useState<{ rawXp: Record<string, number>; finalXp: number } | null>(
+    null
+  );
   useEffect(() => {
     if (!recipeViewerOpen) {
       setCraftableCounts({});
+      setCraftXpPreview(null);
       return;
     }
     const check = () => {
@@ -872,12 +903,13 @@ export function InventoryTab({
         next[count] = win?.isCurrentSelectionCraftable?.(count) ?? false;
       }
       setCraftableCounts(next);
+      setCraftXpPreview(win?.getCurrentSelectionXp?.(craftCount) ?? null);
     };
     check();
     const interval = setInterval(check, 500);
     return () => clearInterval(interval);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [recipeViewerOpen, playerResourceBalances, playerTools, knownBlueprints]);
+  }, [recipeViewerOpen, playerResourceBalances, playerTools, knownBlueprints, craftCount]);
   const canCraft = craftableCounts[craftCount] ?? false;
 
   const [crafting, setCrafting] = useState(false);
@@ -1160,9 +1192,17 @@ export function InventoryTab({
           disabled={crafting || !canCraft || remainingSeconds !== null}
         >
           {remainingSeconds !== null ? (
-            <span className={styles.craftTimer}>Crafting… {formatRemaining(remainingSeconds)}</span>
+            <span className={styles.craftTimer}>Crafting… {formatRemainingLong(remainingSeconds)}</span>
           ) : crafting ? (
             "Crafting…"
+          ) : canCraft ? (
+            <>
+              Craft
+              <span className={styles.craftButtonDetail}>
+                {formatRemainingLong(CRAFT_DURATION_SECONDS_DISPLAY)}
+                {craftXpPreview && formatXpPreview(craftXpPreview) && `, ${formatXpPreview(craftXpPreview)}`}
+              </span>
+            </>
           ) : (
             "Craft"
           )}

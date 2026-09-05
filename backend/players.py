@@ -523,6 +523,13 @@ def _resolve_tool_for_craft(
     held_tools = character.get("tools", {})
     held_items = character.get("items", []) or []
 
+    # Tried in the order `tool_families` lists them - craft-recipes.json's
+    # own multi-option "tool" lists (e.g. fishing_pole's
+    # ["axe_stone", "dagger", "axe"]) are curated cheapest-full-raw-chain-
+    # cost-first, so a plain first-match walk already reaches for the
+    # cheap Stone Axe before the moderately-priced Dagger before the
+    # expensive Axe. Keep new multi-option "tool" lists in that same
+    # cheapest-first order when adding one.
     for family_id in tool_families:
         family = items_catalog.ITEM_FAMILIES_BY_ID.get(family_id)
         if family and family.needs_item_definition:
@@ -535,14 +542,27 @@ def _resolve_tool_for_craft(
                 for instance in held_items
             ):
                 return ("owned", None)
+            # When more than one instance of this family qualifies (e.g. two
+            # owned daggers), always pick the WORST-quality one - crafting
+            # wears down whichever tool/weapon is already the most beat-up
+            # first, rather than spreading wear evenly or grabbing whichever
+            # happens to sort first, so a fresh one stays fresh until the
+            # worn one is actually used up.
             if player_items:
-                for instance in player_items:
-                    if instance.get("familyId") == family_id and instance.get("location") == "pool":
-                        return ("instance_move", instance["instanceId"], "pool", [])
-            for instance in held_items:
-                loc = instance.get("location")
-                if instance.get("familyId") == family_id and loc in ("backpack", "body"):
-                    return ("instance_move", instance["instanceId"], loc, instance.get("slotRef") or [])
+                pool_candidates = [
+                    instance for instance in player_items
+                    if instance.get("familyId") == family_id and instance.get("location") == "pool"
+                ]
+                if pool_candidates:
+                    worst = min(pool_candidates, key=lambda i: i.get("quality", 0))
+                    return ("instance_move", worst["instanceId"], "pool", [])
+            held_candidates = [
+                instance for instance in held_items
+                if instance.get("familyId") == family_id and instance.get("location") in ("backpack", "body")
+            ]
+            if held_candidates:
+                worst = min(held_candidates, key=lambda i: i.get("quality", 0))
+                return ("instance_move", worst["instanceId"], worst.get("location"), worst.get("slotRef") or [])
             continue
         if check_character_flat_balance and any(
             held_tools.get(tool.id, 0) > 0 for tool in TOOL_ITEMS_BY_ID.values() if tool.family_id == family_id
@@ -558,6 +578,96 @@ def _resolve_tool_for_craft(
 # family/tier/character stats. A future pass could scale this per recipe
 # (a "craftSeconds" field) or by a profession-level/attribute formula.
 CRAFT_DURATION_SECONDS = 120
+
+
+# Cumulative "Total XP" needed to REACH each level, 1-30 - index i (0-based)
+# holds level (i+1)'s threshold. Mirrors the README's "Class & Profession
+# Level Progression" table exactly; that table is the single source of
+# truth both here and there - update both together.
+_PROFESSION_LEVEL_TOTAL_XP = [
+    0, 100, 220, 360, 540, 740, 1000, 1300, 1600, 2100,
+    2600, 3200, 4000, 4800, 5900, 7200, 8700, 11000, 13000, 15000,
+    19000, 23000, 27000, 33000, 39000, 47000, 57000, 68000, 82000, 100000,
+]
+
+
+def _profession_level_for_xp(total_xp: int) -> int:
+    """Highest level (1-30) whose cumulative Total XP threshold `total_xp`
+    has reached or passed, per _PROFESSION_LEVEL_TOTAL_XP above."""
+    level = 1
+    for i, threshold in enumerate(_PROFESSION_LEVEL_TOTAL_XP):
+        if total_xp >= threshold:
+            level = i + 1
+    return level
+
+
+def _profession_daily_xp_cap(level: int) -> int:
+    """
+    30% of the XP cost of advancing from `level` to `level + 1` (the
+    README table's own "Diff to previous" for the next level) - grinding
+    the same craft over and over, in any number of batches or one single
+    large one, can't earn a profession more than this much XP in one UTC
+    calendar day. Scales up as a profession advances (a level 20
+    profession's daily cap is much larger than a level 1's, whose cap is
+    30% of 100 = 30) rather than staying a fixed number forever. Level 30
+    has no "next level" cost to measure - reuses the cost of reaching 30
+    itself, so play at the level cap still earns some capped XP instead of
+    none.
+    """
+    idx = min(max(level, 1), 30)
+    if idx >= 30:
+        diff = _PROFESSION_LEVEL_TOTAL_XP[29] - _PROFESSION_LEVEL_TOTAL_XP[28]
+    else:
+        diff = _PROFESSION_LEVEL_TOTAL_XP[idx] - _PROFESSION_LEVEL_TOTAL_XP[idx - 1]
+    return round(diff * 0.30)
+
+
+def _profession_xp_grant_set_ops(
+    character: dict, grants: Dict[str, int], prefix: str = "characters.$."
+) -> Dict[str, object]:
+    """
+    Turns {"exp1": 12, "exp2": 4}-style raw XP grants (see
+    _crafting_xp_increments's raw-material XP and finish_craft's
+    assembly-bonus grant) into concrete "$set" entries under `prefix`
+    (either "characters.$." for the plain-elemMatch update shape, or
+    "characters.$[char]." for the array-filter shape start_craft/
+    finish_craft also use when an instance-tracked tool is involved) -
+    applying the 30%-of-current-level-cost daily XP cap
+    (_profession_daily_xp_cap, tracked per profession slot in
+    profession.dailyXp) and re-deriving that slot's level
+    (_profession_level_for_xp) from the resulting total.
+
+    $set rather than $inc: both the capped delta and the resulting level
+    depend on the character's own current state (current level, today's
+    already-granted amount), not just a fixed increment - so this always
+    needs the freshly-read `character` dict the caller already has in
+    hand, same accepted pre-read-then-write style the rest of this file's
+    capacity/precondition checks already use. The cap applies to the WHOLE
+    grant at once regardless of how it was earned - a single 50-unit batch
+    craft is clamped exactly the same as 50 separate 1-unit crafts would
+    be, never a bigger allowance for a bigger batch.
+    """
+    profession = character.get("profession", {})
+    today = datetime.now(timezone.utc).date().isoformat()
+    ops: Dict[str, object] = {}
+    for exp_key, amount in grants.items():
+        if not amount:
+            continue
+        n = exp_key[-1]
+        slot = f"prof{n}"
+        current_xp = profession.get(exp_key, 0)
+        current_level = profession.get(f"lvl{n}") or 1
+        daily = (profession.get("dailyXp") or {}).get(slot) or {}
+        gained_today = daily.get("gained", 0) if daily.get("date") == today else 0
+        cap = _profession_daily_xp_cap(current_level)
+        granted = min(amount, max(0, cap - gained_today))
+        ops[f"{prefix}profession.dailyXp.{slot}"] = {"date": today, "gained": gained_today + granted}
+        if granted <= 0:
+            continue
+        new_xp = current_xp + granted
+        ops[f"{prefix}profession.{exp_key}"] = new_xp
+        ops[f"{prefix}profession.lvl{n}"] = _profession_level_for_xp(new_xp)
+    return ops
 
 
 def _resolve_ingredient_option(
@@ -1017,9 +1127,10 @@ async def start_craft(
     # paid out the moment the timer starts, not on finish_craft, same as
     # the ingredients themselves are already spoken for at this point.
     # Final-item assembly-bonus XP is a separate mechanic paid at
-    # finish_craft instead - see there.
-    for exp_key, gained in _crafting_xp_increments(character, family_id, count).items():
-        inc_ops[f"characters.$.profession.{exp_key}"] = gained
+    # finish_craft instead - see there. Subject to the daily XP cap (see
+    # _profession_xp_grant_set_ops) - folded into whichever "$set" ops
+    # shape each branch below builds, not $inc.
+    xp_grants = _crafting_xp_increments(character, family_id, count)
 
     ready_at = datetime.now(timezone.utc) + timedelta(seconds=CRAFT_DURATION_SECONDS)
     active_craft: Dict = {
@@ -1047,7 +1158,12 @@ async def start_craft(
     if not all_moves:
         # No instance-tracked tool involved - the simple, original shape:
         # plain positional $ against the query's own characters.$elemMatch.
-        update: Dict = {"$set": {"characters.$.activeCraft": active_craft}}
+        update: Dict = {
+            "$set": {
+                "characters.$.activeCraft": active_craft,
+                **_profession_xp_grant_set_ops(character, xp_grants, "characters.$."),
+            }
+        }
         if inc_ops:
             update["$inc"] = inc_ops
         match_filter["characters"] = {"$elemMatch": elem_match}
@@ -1066,6 +1182,7 @@ async def start_craft(
     # about the character's own current balance needs preconditioning
     # here, these are increments landing on the character, not decrements.
     set_ops: Dict = {"characters.$[char].activeCraft": active_craft}
+    set_ops.update(_profession_xp_grant_set_ops(character, xp_grants, "characters.$[char]."))
     array_filters: List[Dict] = [{"char.id": character_id}]
 
     pool_pull_ids: List[str] = []
@@ -1125,6 +1242,16 @@ async def finish_craft(address: str, character_id: str) -> Optional[Player]:
     land, not silently nothing for a character who's never visited the
     Stats page.
 
+    Any instance-tracked tool/weapon borrowed for this craft (see
+    start_craft's borrowedInstances - axe_stone/axe/dagger doubling as a
+    recipe's "tool" or an ingredient's unconsumed "final" alternative) has
+    its quality docked by `count` when released back here - one point of
+    wear per unit actually crafted in the batch. Unlike degrade_item_quality's
+    own "quality can go negative, treat <= 0 as broken" convention, a
+    borrowed tool/weapon whose quality would drop to 0 or below from this
+    wear doesn't just sit there broken - it's removed entirely, gone from
+    wherever it would have been returned to (pool or backpack/body alike).
+
     Returns None if there's no active craft, its timer hasn't elapsed yet,
     the character somehow no longer has enough of what was transferred (an
     accepted edge case, not actively guarded against elsewhere), or the
@@ -1177,12 +1304,15 @@ async def finish_craft(address: str, character_id: str) -> Optional[Player]:
     # a character who's never visited that page, rather than silently
     # earning nothing. Computed once here so both the "no borrowed
     # instances" and "$[char]" update shapes below can fold it into their
-    # own inc_ops the same way raw-material XP already does in start_craft.
+    # own "$set" ops the same way raw-material XP already does in
+    # start_craft - subject to the same daily XP cap
+    # (_profession_xp_grant_set_ops).
     prime_slot = character.get("profession", {}).get("prime", "none")
     if prime_slot not in ("prof1", "prof2", "prof3"):
         prime_slot = "prof1"
     prime_exp_key = {"prof1": "exp1", "prof2": "exp2", "prof3": "exp3"}[prime_slot]
     assembly_bonus = _assembly_bonus_xp(recipe, family_id, tier, count, character)
+    assembly_grants = {prime_exp_key: assembly_bonus} if assembly_bonus else {}
 
     def _output_ops() -> tuple[Dict[str, int], Dict]:
         """Returns (extra inc_ops, extra $push) for crediting this craft's output."""
@@ -1237,10 +1367,11 @@ async def finish_craft(address: str, character_id: str) -> Optional[Player]:
 
         extra_inc, extra_push = _output_ops()
         inc_ops.update(extra_inc)
-        if assembly_bonus:
-            inc_ops[f"characters.$.profession.{prime_exp_key}"] = assembly_bonus
 
         update: Dict = {"$unset": {"characters.$.activeCraft": ""}}
+        xp_set_ops = _profession_xp_grant_set_ops(character, assembly_grants, "characters.$.")
+        if xp_set_ops:
+            update["$set"] = xp_set_ops
         if extra_push:
             update["$push"] = extra_push
         if inc_ops:
@@ -1291,27 +1422,33 @@ async def finish_craft(address: str, character_id: str) -> Optional[Player]:
         inc_ops[f"inventory.tools.{tool_transfer_id}"] = 1
     extra_inc, extra_push = _output_ops()
     inc_ops.update(extra_inc)
-    if assembly_bonus:
-        inc_ops[f"characters.$[char].profession.{prime_exp_key}"] = assembly_bonus
+    xp_set_ops = _profession_xp_grant_set_ops(character, assembly_grants, "characters.$[char].")
 
     array_filters: List[Dict] = [{"char.id": character_id}]
     update: Dict = {"$unset": {"characters.$[char].activeCraft": ""}}
     query: Dict = {"address": address, "characters": {"$elemMatch": elem_match}}
 
+    held_by_id = {i["instanceId"]: i for i in character.get("items", [])}
+
     if source == "pool":
-        # $pull the borrowed instance(s) off the character, $push them
-        # back into the shared vault as ordinary unassigned pool items.
+        # $pull the borrowed instance(s) off the character. A survivor
+        # (quality still above 0 after this batch's -count wear, see the
+        # README's tool-wear note) gets $push'd back into the shared vault
+        # as an ordinary unassigned pool item; one whose quality drops to
+        # 0 or below is gone for good instead - it just vanishes, never
+        # pushed back anywhere.
         instance_ids = [bi["instanceId"] for bi in borrowed_instances]
-        held_by_id = {i["instanceId"]: i for i in character.get("items", [])}
-        returned = [
-            {**held_by_id[iid], "location": "pool", "slotRef": []}
-            for iid in instance_ids
-        ]
+        returned = []
+        for iid in instance_ids:
+            new_quality = held_by_id[iid].get("quality", 0) - count
+            if new_quality > 0:
+                returned.append({**held_by_id[iid], "location": "pool", "slotRef": [], "quality": new_quality})
         update["$pull"] = {"characters.$[char].items": {"instanceId": {"$in": instance_ids}}}
         push_items = list(returned)
         if extra_push:
             push_items += extra_push["inventory.items"]["$each"]
-        update["$push"] = {"inventory.items": {"$each": push_items}}
+        if push_items:
+            update["$push"] = {"inventory.items": {"$each": push_items}}
         query["$and"] = [
             {"characters": {"$elemMatch": {"id": character_id, "items": {
                 "$elemMatch": {"instanceId": iid, "location": "crafting"}
@@ -1319,17 +1456,55 @@ async def finish_craft(address: str, character_id: str) -> Optional[Player]:
             for iid in instance_ids
         ]
     else:
-        # backpack/body source - restore in place, nothing leaves
-        # characters.$[char].items at all.
-        set_ops: Dict = {}
-        for idx, bi in enumerate(borrowed_instances):
-            filt_id = f"relItem{idx}"
-            array_filters.append({f"{filt_id}.instanceId": bi["instanceId"], f"{filt_id}.location": "crafting"})
-            set_ops[f"characters.$[char].items.$[{filt_id}].location"] = bi["source"]
-            set_ops[f"characters.$[char].items.$[{filt_id}].slotRef"] = bi.get("slotRef") or []
-        update["$set"] = set_ops
+        # backpack/body source - restore in place, unless its quality
+        # would drop to 0 or below after this batch's -count wear (same
+        # vanish rule as the pool branch above), in which case it's
+        # $pull'd out entirely instead of restored. Only reachable with
+        # exactly one borrowed instance in today's recipes (see the
+        # sources-mixing guard above) - a $pull and a $set can't both
+        # touch characters.$[char].items in one update, so a hypothetical
+        # mixed survive/break batch of more than one instance isn't
+        # handled; raise rather than silently doing the wrong thing if
+        # that ever becomes reachable.
+        broken_ids = [
+            bi["instanceId"] for bi in borrowed_instances
+            if held_by_id[bi["instanceId"]].get("quality", 0) - count <= 0
+        ]
+        if broken_ids and len(borrowed_instances) > 1:
+            raise ValueError(
+                "Releasing a mixed batch of surviving/broken instance tools in a single craft is not supported yet"
+            )
+
+        if broken_ids:
+            update["$pull"] = {"characters.$[char].items": {"instanceId": {"$in": broken_ids}}}
+        else:
+            set_ops: Dict = {}
+            for idx, bi in enumerate(borrowed_instances):
+                filt_id = f"relItem{idx}"
+                array_filters.append({f"{filt_id}.instanceId": bi["instanceId"], f"{filt_id}.location": "crafting"})
+                set_ops[f"characters.$[char].items.$[{filt_id}].location"] = bi["source"]
+                set_ops[f"characters.$[char].items.$[{filt_id}].slotRef"] = bi.get("slotRef") or []
+                # Tool wear - see the "pool" branch above for the same
+                # -count per unit crafted. Deliberately a SEPARATE
+                # array-filter identifier (matched on instanceId alone,
+                # not also location:"crafting" like relItem's) rather
+                # than reusing relItem's own filt_id here: this backend's
+                # Mongo-compatible layer silently drops an $inc that
+                # shares an array-filter identifier with a $set already
+                # changing the very field (location) that identifier's
+                # own match condition depends on (confirmed live - the
+                # $set applies, the co-identified $inc quietly no-ops). A
+                # plain instanceId-only filter isn't affected by that
+                # field changing mid-update.
+                wear_filt_id = f"wearItem{idx}"
+                array_filters.append({f"{wear_filt_id}.instanceId": bi["instanceId"]})
+                inc_ops[f"characters.$[char].items.$[{wear_filt_id}].quality"] = -count
+            update["$set"] = set_ops
         if extra_push:
             update["$push"] = extra_push
+
+    if xp_set_ops:
+        update["$set"] = {**update.get("$set", {}), **xp_set_ops}
 
     if inc_ops:
         update["$inc"] = inc_ops
