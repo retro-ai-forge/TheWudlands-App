@@ -41,6 +41,12 @@ class ProfStats:
     profession_3: str = 'none'
     level_3: int = 0
     experience_3: int = 0
+    # Which profession slot ("prof1"|"prof2"|"prof3") is this character's
+    # prime profession, if any ("none" otherwise) - the sole slot that
+    # receives final-item assembly-bonus XP on finishing a blueprint-gated
+    # item (see backend.players.finish_craft). Player-chosen on the Stats
+    # page, persisted here so it survives between sessions.
+    prime: str = 'none'
 
     def to_dict(self) -> dict:
         return {
@@ -53,6 +59,7 @@ class ProfStats:
             "prof3": self.profession_3,
             "lvl3": self.level_3,
             "exp3": self.experience_3,
+            "prime": self.prime,
         }
 
 @dataclass

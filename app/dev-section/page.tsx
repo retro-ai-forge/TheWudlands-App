@@ -51,12 +51,13 @@ export default function DevSection() {
                   <li>Wallet login</li>
                   <li>Gathering feedback</li>
                   <li>Rewards for participation</li>
-                  <li>Fixed characters</li>
-                  <li>No character creation</li>
-                  <li>No persistent data storage</li>
+                  <li>Characters creation</li>
+                  <li>Starter blueprints</li>
+                  <li>Crafting system</li>
+                  <li>XP for professions</li>
+                  <li>Data storage</li>
                   <li>Limited adventure content</li>
                   <li>Starting in Beta &gt; 1.0 </li>
-                  <li>Reset after logout</li>
                   <li>Free to play</li>
                 </ul>
               </div>
@@ -65,13 +66,13 @@ export default function DevSection() {
                 <div className={styles.phaseName}>Beta 2.0 October 2026</div>
                 <ul className={styles.phaseDetails}>
                   <li>Progress <strong><span style={{fontSize: '1.2em'}}>loss</span></strong> on major upgrades!</li>
-                  <li>Character creation system</li>
-                  <li>Gender selection</li>
-                  <li>Race selection</li>
-                  <li>Profession selection</li>
-                  <li>Character progress</li>
+                  <li>Equip items</li>
+                  <li>Weapon and armor stats</li>
+                  <li>Carrying capacity</li>
+                  <li>Soul slots for magic</li>
+                  <li>Crafting to enchant items</li>
+                  <li>Your legend stats</li>
                   <li>First adventure addons</li>
-                  <li>Off-chain database storage</li>
                   <li>Data migration to Alpha not guaranteed</li>
                   <li>Free to play</li>
                 </ul>

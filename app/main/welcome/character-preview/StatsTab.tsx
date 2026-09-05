@@ -2,7 +2,9 @@ import styles from "./CharacterTabs.module.css";
 import { getPortraitCropImgStyle } from "@/app/lib/portraitCrop";
 import { RACES, PROFESSIONS, BIRTHSIGNS, PROFESSION_RESOURCE_FAMILIES } from "@/app/lib/characterOptions";
 import { getDisplayedAge } from "@/app/lib/ageScaling";
+import { useState } from "react";
 import type { SlotCharacterSummary } from "../SoulSlotGrid";
+import type { RawPlayerData } from "./InventoryTab";
 
 const BODY_ATTRS = [
   ["migh", "Might"],
@@ -59,33 +61,79 @@ export function StatsTab({
   character,
   onEditPortrait,
   onOpenBirthsign,
+  onPlayerDataUpdated,
 }: {
   character: SlotCharacterSummary;
   onEditPortrait?: () => void;
   onOpenBirthsign?: () => void;
+  /** Called with the fresh roster/vault/pool after setting the prime profession. */
+  onPlayerDataUpdated?: (data: RawPlayerData) => void;
 }) {
   const birthsignInfo = BIRTHSIGNS.find((b) => b.id === character.birthsign) ?? null;
 
-  const professions = [
-    {
-      name: professionName(character.profession.prof1),
-      lvl: character.profession.lvl1,
-      exp: character.profession.exp1,
-      resourceFamilies: professionResourceFamilies(character.profession.prof1),
-    },
-    {
-      name: professionName(character.profession.prof2),
-      lvl: character.profession.lvl2,
-      exp: character.profession.exp2,
-      resourceFamilies: professionResourceFamilies(character.profession.prof2),
-    },
-    {
-      name: professionName(character.profession.prof3),
-      lvl: character.profession.lvl3,
-      exp: character.profession.exp3,
-      resourceFamilies: professionResourceFamilies(character.profession.prof3),
-    },
-  ].filter((p) => p.name);
+  // The sole slot ("prof1"|"prof2"|"prof3") that receives final-item
+  // assembly-bonus XP on finishing a blueprint-gated item - player-chosen
+  // by clicking a profession row below, persisted on the character.
+  const [settingPrime, setSettingPrime] = useState(false);
+  const setPrimeProfession = async (slot: "prof1" | "prof2" | "prof3") => {
+    if (settingPrime) return;
+    setSettingPrime(true);
+    try {
+      const res = await fetch(`/api/auth/me/characters/${character.id}/profession/prime`, {
+        method: "PATCH",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ slot }),
+      });
+      if (res.ok) {
+        const data: RawPlayerData = await res.json();
+        onPlayerDataUpdated?.(data);
+      }
+    } catch {
+      // Best-effort - the row just stays clickable to try again.
+    } finally {
+      setSettingPrime(false);
+    }
+  };
+
+  // Matches backend.players.finish_craft's own default: "prof1" until the
+  // player has ever explicitly picked a prime profession, so the Stats
+  // page shows the same slot as prime that's actually earning the
+  // assembly-bonus XP, not a blank state that doesn't match reality.
+  const effectivePrime = ["prof1", "prof2", "prof3"].includes(character.profession.prime)
+    ? character.profession.prime
+    : "prof1";
+
+  const professions = (
+    [
+      {
+        slot: "prof1" as const,
+        name: professionName(character.profession.prof1),
+        lvl: character.profession.lvl1,
+        exp: character.profession.exp1,
+        resourceFamilies: professionResourceFamilies(character.profession.prof1),
+      },
+      {
+        slot: "prof2" as const,
+        name: professionName(character.profession.prof2),
+        lvl: character.profession.lvl2,
+        exp: character.profession.exp2,
+        resourceFamilies: professionResourceFamilies(character.profession.prof2),
+      },
+      {
+        slot: "prof3" as const,
+        name: professionName(character.profession.prof3),
+        lvl: character.profession.lvl3,
+        exp: character.profession.exp3,
+        resourceFamilies: professionResourceFamilies(character.profession.prof3),
+      },
+    ]
+      .filter((p) => p.name)
+      .map((p) => ({ ...p, isPrime: p.slot === effectivePrime }))
+      // The prime profession (if any) always sorts to the top - clicking a
+      // row to make it prime visibly promotes it, not just marks it.
+      .sort((a, b) => (a.isPrime === b.isPrime ? 0 : a.isPrime ? -1 : 1))
+  );
 
   const classes = [
     { name: character.classes.class1, lvl: character.classes.lvl1 },
@@ -168,15 +216,25 @@ export function StatsTab({
                 </div>
               ))}
               {professions.map((p) => (
-                <div className={styles.professionRow} key={p.name}>
+                <button
+                  type="button"
+                  className={`${styles.professionRow} ${styles.professionRowClickable}`}
+                  key={p.name}
+                  onClick={() => setPrimeProfession(p.slot)}
+                  disabled={settingPrime}
+                  title={p.isPrime ? undefined : "Click to make this the prime profession"}
+                >
                   <div className={styles.professionRowMain}>
-                    <span>{p.name}</span>
+                    <span className={p.isPrime ? styles.professionPrime : undefined}>
+                      {p.name}
+                      {p.isPrime && <span className={styles.professionPrimeTag}> (prime)</span>}
+                    </span>
                     <span>Lvl {p.lvl} — {p.exp} XP</span>
                   </div>
                   {p.resourceFamilies && (
                     <span className={styles.professionResourceFamilies}>{p.resourceFamilies}</span>
                   )}
-                </div>
+                </button>
               ))}
             </div>
           ) : null}

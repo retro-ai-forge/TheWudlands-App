@@ -663,6 +663,40 @@
   letter-spacing: 0.03em;
 }
 
+/* A profession row doubles as a button (click to make it prime) - resets
+   the browser's default button chrome so it reads exactly like the plain
+   .professionRow div it otherwise matches (Classes rows stay plain divs). */
+.professionRowClickable {
+  width: 100%;
+  background: none;
+  border: none;
+  border-bottom: 1px solid rgba(168, 153, 104, 0.15);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.professionRowClickable:hover:not(:disabled) {
+  background: rgba(168, 153, 104, 0.08);
+}
+
+.professionRowClickable:disabled {
+  cursor: default;
+}
+
+/* The prime profession's name - green like the "ready"/earned state
+   elsewhere on this page, since it's the one standing designation among
+   equals rather than a per-craft choice. */
+.professionPrime {
+  color: #4caf50;
+}
+
+.professionPrimeTag {
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+}
+
 /* ---- Body tab ---- */
 
 /* align-items:flex-start, not the flex default of stretch - .frameStage (and

@@ -64,6 +64,8 @@ export interface CharacterProfessions {
   prof3: string;
   lvl3: number;
   exp3: number;
+  /** Which slot ("prof1"|"prof2"|"prof3"|"none") is the prime profession - the sole slot that receives final-item assembly-bonus XP on finishing a blueprint-gated item. */
+  prime: string;
 }
 
 export interface CharacterAttributes {

@@ -283,6 +283,7 @@ export function CharacterPreview({
                 setBirthsignFlipped(false);
                 setShowBirthsignPopup(true);
               }}
+              onPlayerDataUpdated={onPlayerDataUpdated}
             />
           )}
           {activeTab === "body" && <BodyTab character={character} />}

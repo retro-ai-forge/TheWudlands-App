@@ -43,6 +43,7 @@ from backend.players import (
     grant_shared_resource,
     load_item_balance_to_backpack,
     load_resource_to_backpack,
+    set_prime_profession,
     start_craft,
     unequip_item,
     unload_item_balance_from_backpack,
@@ -159,6 +160,10 @@ class CharacterProfessionResponse(BaseModel):
     prof3: str = Field(..., description="Profession 3 type")
     lvl3: int = Field(..., description="Profession 3 level")
     exp3: int = Field(default=0, description="Profession 3 experience points")
+    prime: str = Field(
+        default="none",
+        description="Which slot ('prof1'|'prof2'|'prof3'|'none') is the prime profession - the sole slot that receives final-item assembly-bonus XP",
+    )
 
 
 class CharacterAttributeResponse(BaseModel):
@@ -1257,6 +1262,32 @@ async def update_my_character_portrait(
         portrait_frame_area=payload.portraitFrameArea.model_dump() if payload.portraitFrameArea else None,
         portrait_face_area=payload.portraitFaceArea.model_dump() if payload.portraitFaceArea else None,
     )
+    if player is None:
+        raise HTTPException(status_code=404, detail="No player record found for this address")
+
+    return player.to_dict()
+
+
+class SetPrimeProfessionRequest(BaseModel):
+    """Which profession slot to mark as this character's prime profession."""
+
+    slot: str = Field(..., description="'prof1' | 'prof2' | 'prof3' | 'none'")
+
+
+@player_router.patch("/me/characters/{character_id}/profession/prime", response_model=PlayerDataResponse)
+async def update_my_character_prime_profession(
+    character_id: str, payload: SetPrimeProfessionRequest, address: str = Depends(get_current_address)
+):
+    """
+    Marks one of a character's profession slots as its prime profession -
+    the sole slot that receives final-item assembly-bonus XP on finishing a
+    blueprint-gated item (see backend.players.finish_craft). Called from
+    the Stats page's profession list.
+    """
+    try:
+        player = await set_prime_profession(address, character_id, payload.slot)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc))
     if player is None:
         raise HTTPException(status_code=404, detail="No player record found for this address")
 

@@ -263,6 +263,44 @@ async def update_character_portrait(
     return _doc_to_player(doc)
 
 
+_PRIME_PROFESSION_SLOTS = ("prof1", "prof2", "prof3", "none")
+
+
+async def set_prime_profession(address: str, character_id: str, slot: str) -> Optional[Player]:
+    """
+    Sets which profession slot ("prof1"|"prof2"|"prof3", or "none" to
+    clear) is this character's prime profession - the sole slot that
+    receives final-item assembly-bonus XP on finishing a blueprint-gated
+    item (see finish_craft). Raises ValueError for an unrecognized slot
+    name, or for a real slot ("prof1".."prof3") that doesn't actually have
+    a profession assigned (character.profession.profN == "none") - nothing
+    to mark prime there. Returns None if the address/character pair
+    doesn't match any player document.
+    """
+    if slot not in _PRIME_PROFESSION_SLOTS:
+        raise ValueError(f"Unknown profession slot: {slot}")
+    db = get_database()
+    doc = await db.players.find_one({"address": address, "characters.id": character_id})
+    if doc is None:
+        return None
+    character = next((c for c in doc["characters"] if c["id"] == character_id), None)
+    if character is None:
+        return None
+    if slot != "none":
+        prof_field = {"prof1": "prof1", "prof2": "prof2", "prof3": "prof3"}[slot]
+        if character.get("profession", {}).get(prof_field, "none") == "none":
+            raise ValueError(f"Character has no profession assigned to {slot}")
+
+    doc = await db.players.find_one_and_update(
+        {"address": address, "characters.id": character_id},
+        {"$set": {"characters.$.profession.prime": slot}},
+        return_document=ReturnDocument.AFTER,
+    )
+    if doc is None:
+        return None
+    return _doc_to_player(doc)
+
+
 def _validate_resource_grant(resource_id: str, amount: int) -> None:
     if resource_id not in RESOURCE_ITEMS_BY_ID and resource_id not in PROCESSED_RESOURCE_ITEMS_BY_ID:
         raise ValueError(f"Unknown resource id: {resource_id}")
@@ -732,9 +770,9 @@ def _resolve_recipe_direct_raw_totals(family_id: str, count: int, character: dic
 
 def _crafting_xp_increments(character: dict, family_id: str, count: int) -> Dict[str, int]:
     """
-    Raw-material XP only for now (the README's final-item assembly bonus
-    isn't implemented yet), scoped to this recipe's own direct ingredients
-    (see _resolve_recipe_direct_raw_totals) - a recipe with no direct raw
+    Raw-material XP - see the README's "Crafting XP" section - scoped to
+    this recipe's own direct ingredients (see
+    _resolve_recipe_direct_raw_totals) - a recipe with no direct raw
     ingredient (e.g. dagger, which only needs processed metal_bar) earns
     none; the raw materials it's ultimately built from already paid out
     when the processed intermediate was crafted as its own step. Each raw
@@ -743,7 +781,9 @@ def _crafting_xp_increments(character: dict, family_id: str, count: int) -> Dict
     pay out to more than one profession slot at once if the recipe's raw
     materials span more than one category. Returns {"exp1": ..., "exp2":
     ..., "exp3": ...} deltas to add, only for slots that actually gained
-    something.
+    something. Paid out at start_craft time (see there) - the separate
+    final-item assembly bonus (_assembly_bonus_xp) pays out at finish_craft
+    instead.
     """
     raw_totals = _resolve_recipe_direct_raw_totals(family_id, count, character)
     if not raw_totals:
@@ -760,6 +800,82 @@ def _crafting_xp_increments(character: dict, family_id: str, count: int) -> Dict
         if gained:
             increments[exp_key] = gained
     return increments
+
+
+def _resolve_recipe_full_chain_raw_total(
+    family_id: str, count: int, character: dict, seen: frozenset = frozenset()
+) -> int:
+    """
+    Recursively expands a recipe's ingredients down through every
+    "processed" sub-recipe to a single raw-material total across its
+    *full* creation chain - used only for the final-item assembly bonus
+    (see _assembly_bonus_xp), which the README defines as
+    `10% x this total x tier`. Deliberately different from
+    _resolve_recipe_direct_raw_totals (which only earns XP for one step's
+    own direct raw ingredients, paid out every time that step runs): this
+    total re-counts raw materials already paid out at an earlier step, by
+    design - the assembly bonus rewards finishing the whole item, not just
+    its last step.
+
+    Same alternatives-resolution priority as
+    _resolve_recipe_direct_raw_totals (prefer an already-owned unconsumed
+    option) and the same "final"/"final_unresolved" skip (a held tool or
+    another crafted item already earned its own XP when IT was crafted).
+    `seen` guards against a pathological recipe cycle looping forever.
+    """
+    if family_id in seen:
+        return 0
+    recipe = _RECIPES_BY_FAMILY.get(family_id)
+    if recipe is None:
+        return 0
+    seen = seen | {family_id}
+    held_items = character.get("items", []) or []
+    total = 0
+    for ing0 in recipe["ingredients"]:
+        options = ing0["alternatives"] if "alternatives" in ing0 else [ing0]
+        chosen = None
+        for opt in options:
+            if opt.get("consumed", True):
+                continue
+            family = items_catalog.ITEM_FAMILIES_BY_ID.get(opt["familyId"])
+            if family and family.needs_item_definition and any(
+                item.get("familyId") == opt["familyId"] and item.get("location") in ("backpack", "body", "crafting")
+                for item in held_items
+            ):
+                chosen = opt
+                break
+        if chosen is None:
+            chosen = next((opt for opt in options if opt.get("consumed", True)), None)
+        if chosen is None:
+            continue
+        qty = chosen["qty"] * count
+        if chosen["category"] == "raw":
+            total += qty
+        elif chosen["category"] == "processed":
+            total += _resolve_recipe_full_chain_raw_total(chosen["familyId"], qty, character, seen)
+        # "final"/"final_unresolved": a held tool or another crafted item - already earned its own XP, skip.
+    return total
+
+
+def _assembly_bonus_xp(recipe: dict, family_id: str, tier: int, count: int, character: dict) -> int:
+    """
+    The README's "Final-item XP": finishing a genuinely blueprint-gated
+    item (recipe.blueprintFamilyId set) pays a flat, tier-scaled bonus -
+    `10% x the item's full raw-material chain x tier` - on top of whatever
+    raw-material XP was already earned crafting its ingredients along the
+    way. Returns 0 for a recipe with no blueprintFamilyId (a plain
+    processing step - refining ore, tanning leather, etc. - never earns
+    this). Not tied to a fixed profession the way raw-material XP is -
+    always goes to whichever profession slot the player has marked "prime"
+    (see set_prime_profession), decided per-character rather than
+    per-craft; the caller resolves which slot that is (defaulting to
+    "prof1" until the player ever picks one - see finish_craft) and
+    credits the returned amount there.
+    """
+    if not recipe.get("blueprintFamilyId"):
+        return 0
+    full_chain_total = _resolve_recipe_full_chain_raw_total(family_id, count, character)
+    return round(0.10 * full_chain_total * tier)
 
 
 def _validate_recipe(family_id: str, tier: int) -> tuple[dict, dict, bool]:
@@ -802,9 +918,9 @@ async def start_craft(
     direct raw ingredient (e.g. dagger, purely processed metal_bar) earns
     none from this step - crafting the processed intermediate is its own
     separate step that already paid that out. The README's final-item
-    assembly-bonus XP isn't implemented yet. Raises ValueError for an
-    unknown recipe/output row, an unsupported recipe shape, or `count < 1`.
-    Returns None if the
+    assembly-bonus XP is a separate mechanic paid at finish_craft time
+    instead - see there. Raises ValueError for an unknown recipe/output
+    row, an unsupported recipe shape, or `count < 1`. Returns None if the
     character is already mid-craft, can't afford the (count-scaled)
     ingredients even combined, has no access to a listed tool, hasn't
     learned the required blueprint, or the address/character pair doesn't
@@ -900,7 +1016,8 @@ async def start_craft(
     # Raw-material crafting XP (see the README's "Crafting XP" section) -
     # paid out the moment the timer starts, not on finish_craft, same as
     # the ingredients themselves are already spoken for at this point.
-    # Final-item assembly-bonus XP isn't implemented yet.
+    # Final-item assembly-bonus XP is a separate mechanic paid at
+    # finish_craft instead - see there.
     for exp_key, gained in _crafting_xp_increments(character, family_id, count).items():
         inc_ops[f"characters.$.profession.{exp_key}"] = gained
 
@@ -999,7 +1116,14 @@ async def finish_craft(address: str, character_id: str) -> Optional[Player]:
     single instance with a quantity), inventory.itemBalances or
     inventory.resources incremented by `count` for a flat-count output,
     always into the player's shared vault, never straight onto the
-    character.
+    character. Also pays out the README's final-item assembly-bonus XP
+    (see `_assembly_bonus_xp`) when the recipe is genuinely blueprint-gated -
+    unlike raw-material XP (paid at start_craft time), this only pays out
+    once the item is actually collected here. Goes to whichever profession
+    slot is marked prime (`set_prime_profession`), defaulting to "prof1"
+    until the player has ever picked one - so this always has somewhere to
+    land, not silently nothing for a character who's never visited the
+    Stats page.
 
     Returns None if there's no active craft, its timer hasn't elapsed yet,
     the character somehow no longer has enough of what was transferred (an
@@ -1045,6 +1169,20 @@ async def finish_craft(address: str, character_id: str) -> Optional[Player]:
     borrowed_instances = active.get("borrowedInstances") or []
 
     family = items_catalog.ITEM_FAMILIES_BY_ID.get(family_id)
+
+    # Final-item assembly-bonus XP (see _assembly_bonus_xp) - only for a
+    # genuinely blueprint-gated recipe. Defaults to "prof1" until the
+    # player explicitly picks a prime profession on the Stats page (see
+    # set_prime_profession) - so the bonus has somewhere to land even for
+    # a character who's never visited that page, rather than silently
+    # earning nothing. Computed once here so both the "no borrowed
+    # instances" and "$[char]" update shapes below can fold it into their
+    # own inc_ops the same way raw-material XP already does in start_craft.
+    prime_slot = character.get("profession", {}).get("prime", "none")
+    if prime_slot not in ("prof1", "prof2", "prof3"):
+        prime_slot = "prof1"
+    prime_exp_key = {"prof1": "exp1", "prof2": "exp2", "prof3": "exp3"}[prime_slot]
+    assembly_bonus = _assembly_bonus_xp(recipe, family_id, tier, count, character)
 
     def _output_ops() -> tuple[Dict[str, int], Dict]:
         """Returns (extra inc_ops, extra $push) for crediting this craft's output."""
@@ -1099,6 +1237,8 @@ async def finish_craft(address: str, character_id: str) -> Optional[Player]:
 
         extra_inc, extra_push = _output_ops()
         inc_ops.update(extra_inc)
+        if assembly_bonus:
+            inc_ops[f"characters.$.profession.{prime_exp_key}"] = assembly_bonus
 
         update: Dict = {"$unset": {"characters.$.activeCraft": ""}}
         if extra_push:
@@ -1151,6 +1291,8 @@ async def finish_craft(address: str, character_id: str) -> Optional[Player]:
         inc_ops[f"inventory.tools.{tool_transfer_id}"] = 1
     extra_inc, extra_push = _output_ops()
     inc_ops.update(extra_inc)
+    if assembly_bonus:
+        inc_ops[f"characters.$[char].profession.{prime_exp_key}"] = assembly_bonus
 
     array_filters: List[Dict] = [{"char.id": character_id}]
     update: Dict = {"$unset": {"characters.$[char].activeCraft": ""}}
