@@ -864,7 +864,7 @@ export function InventoryTab({
   // How many units to craft in one batch - the row of quick-count buttons
   // next to Craft. Ingredients scale with this; the server-side timer
   // doesn't (see start_craft's own count parameter).
-  const CRAFT_COUNTS = [1, 2, 5, 10, 20, 50] as const;
+  const CRAFT_COUNTS = [1, 2, 3, 4, 5, 10, 20, 25, 50] as const;
   const [craftCount, setCraftCount] = useState<number>(1);
 
   // Re-checked on an interval while the viewer is open, since there's no

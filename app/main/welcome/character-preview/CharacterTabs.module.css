@@ -346,8 +346,8 @@
 }
 
 .craftCountButton {
-  min-width: 2rem;
-  padding: 0.3rem 0.5rem;
+  width: 2.4rem;
+  padding: 0.3rem 0;
   background: #1a1a1a;
   border: 1px solid rgba(168, 153, 104, 0.4);
   border-radius: 999px;
@@ -355,6 +355,7 @@
   font-family: inherit;
   font-size: 0.85rem;
   font-variant-numeric: tabular-nums;
+  text-align: center;
   cursor: pointer;
 }
 
