@@ -675,6 +675,42 @@ window.getCurrentSelectionXp = function (count) {
   return { rawXp, finalXp };
 };
 
+// Exposed for the embedding page's own Craft button label - the crafting
+// timer length backend.players._craft_duration_seconds would compute for
+// the current selection at the given count, without a round trip. Mirrors
+// that function exactly: one unit's duration is the SAME full raw-
+// material chain total the XP preview's finalXp above already computes
+// (reusing computeTotals) times CRAFT_SECONDS_PER_RAW times the selected
+// tier (T1 = 1x, T2 = 2x, ..., T6 = 6x), capped at CRAFT_BLUEPRINT_MAX_SECONDS
+// times that same tier per unit for a genuinely blueprint-gated recipe
+// (never capped otherwise), then multiplied by `count` - a batch of
+// `count` units takes `count` times as long as crafting just one. These 2
+// constants MUST be kept in sync with backend.players' own
+// CRAFT_SECONDS_PER_RAW/CRAFT_BLUEPRINT_MAX_SECONDS - update both
+// together if either changes.
+const CRAFT_SECONDS_PER_RAW = 30;
+const CRAFT_BLUEPRINT_MAX_SECONDS = 3600;
+
+window.getCurrentSelectionDuration = function (count) {
+  count = count || 1;
+  if (!select.value) return null;
+  const famId = select.value;
+  const tier = currentTier();
+  const recipe = recipes[famId];
+  if (!recipe) return null;
+
+  const rawTotals = {};
+  const finalTotals = {};
+  computeTotals(famId, 1, famCategory(famId), rawTotals, finalTotals, new Set(), tier);
+  const fullChainTotal = Object.values(rawTotals).reduce((a, b) => a + b, 0);
+
+  let perUnitSeconds = CRAFT_SECONDS_PER_RAW * tier * fullChainTotal;
+  if (recipe.blueprintFamilyId) {
+    perUnitSeconds = Math.min(perUnitSeconds, CRAFT_BLUEPRINT_MAX_SECONDS * tier);
+  }
+  return perUnitSeconds * count;
+};
+
 function isAestheticEnabled() {
   return document.getElementById("aestheticCheckbox").checked;
 }

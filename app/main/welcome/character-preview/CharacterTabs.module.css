@@ -397,6 +397,22 @@
   50% { text-shadow: 0 0 10px #d4a060, 0 0 20px rgba(212, 160, 96, 0.9); }
 }
 
+/* The "Ready" row's value on the Stats page, while any timer is running
+   (see StatsTab.tsx's craftRemainingSeconds) - yellow instead of
+   .craftTimer's amber, same pulsing glow language. */
+.readyTimerValue {
+  color: #f5e050;
+  font-weight: bold;
+  font-variant-numeric: tabular-nums;
+  text-shadow: 0 0 6px #f5e050, 0 0 12px rgba(245, 224, 80, 0.7);
+  animation: readyTimerPulse 1.6s ease-in-out infinite;
+}
+
+@keyframes readyTimerPulse {
+  0%, 100% { text-shadow: 0 0 6px #f5e050, 0 0 12px rgba(245, 224, 80, 0.7); }
+  50% { text-shadow: 0 0 10px #f5e050, 0 0 20px rgba(245, 224, 80, 0.9); }
+}
+
 /* Embeds the standalone crafting recipe reference (public/craft/recipe-viewer.html)
    inline, same treatment as SoulCreation's .recipeViewerFrame - height is
    set inline (see InventoryTab.tsx's recipeViewerHeight state), a

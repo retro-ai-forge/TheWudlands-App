@@ -27,7 +27,7 @@
 import { useEffect, useRef, useState } from "react";
 import styles from "../../page.module.css";
 import { useWallet } from "../WalletProvider";
-import { formatRemaining, useCraftCountdown } from "./craftTimer";
+import { formatRemainingCompactLong, useCraftCountdown } from "./craftTimer";
 import { getPortraitCropImgStyle, type PortraitArea } from "@/app/lib/portraitCrop";
 
 export interface SoulSlotDefinition {
@@ -579,20 +579,12 @@ function SoulSlotCard({
         {showsOccupantPreview ? (
           <span className={styles.slotArt}>
             {remainingSeconds !== null && (
-              <>
-                <span
-                  className={remainingSeconds === 0 ? styles.slotCraftingLabelReady : styles.slotCraftingLabel}
-                  aria-hidden="true"
-                >
-                  Crafting
-                </span>
-                <span
-                  className={remainingSeconds === 0 ? styles.slotCraftBadgeReady : styles.slotCraftBadge}
-                  aria-hidden="true"
-                >
-                  {remainingSeconds === 0 ? "Ready" : formatRemaining(remainingSeconds)}
-                </span>
-              </>
+              <span
+                className={remainingSeconds === 0 ? styles.slotCraftBadgeReady : styles.slotCraftBadge}
+                aria-hidden="true"
+              >
+                {remainingSeconds === 0 ? "Ready" : `Crafting ${formatRemainingCompactLong(remainingSeconds)}`}
+              </span>
             )}
             {occupant.portraitUrl && !faceCropFailed ? (
               occupant.portraitFaceArea ? (

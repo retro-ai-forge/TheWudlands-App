@@ -27,26 +27,19 @@ export function useCraftCountdown(readyAt: string | null | undefined): number | 
   return remainingSeconds;
 }
 
-/** "1:32" - the same m:ss format everywhere a craft countdown is shown
- * (the compact soul-slot badge, the inline crafting-tab timer) - a craft
- * never runs longer than a couple minutes, so this never needs to scale
- * beyond that. See formatRemainingLong for a timer that can run far
- * longer (travel, imprisonment, ...). */
-export function formatRemaining(seconds: number): string {
-  const m = Math.floor(seconds / 60);
-  const s = seconds % 60;
-  return `${m}:${s.toString().padStart(2, "0")}`;
-}
-
-/** "00D 00H 00:00" - fixed-width, every field always shown (zero-padded)
- * regardless of magnitude - for the Stats page's "Ready" row, which can
- * end up reflecting a timer far longer than any craft (travel,
- * imprisonment, ...) once those exist. */
-export function formatRemainingLong(seconds: number): string {
-  const days = Math.floor(seconds / 86400);
-  const hours = Math.floor((seconds % 86400) / 3600);
+/** "00:00:00" - hours:minutes:seconds, always all three fields
+ * zero-padded, no day component and no unit letters - hours just keep
+ * counting up past 24 rather than rolling into a separate day field (a
+ * craft can run from seconds to many hours depending on the recipe's own
+ * raw-material chain and tier, see backend.players._craft_duration_seconds,
+ * so a fixed two-field hour cap isn't enough). Used everywhere a craft
+ * countdown or duration estimate is shown - the Craft button, the
+ * crafting-tab accordion header, the soul-slot badge, the Stats page's
+ * "Ready" row. */
+export function formatRemainingCompactLong(seconds: number): string {
+  const hours = Math.floor(seconds / 3600);
   const minutes = Math.floor((seconds % 3600) / 60);
   const secs = seconds % 60;
   const pad = (n: number) => n.toString().padStart(2, "0");
-  return `${pad(days)}D ${pad(hours)}H ${pad(minutes)}:${pad(secs)}`;
+  return `${pad(hours)}:${pad(minutes)}:${pad(secs)}`;
 }

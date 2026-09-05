@@ -910,8 +910,9 @@ async def start_craft_route(
     Begins crafting `family_id` at the given tier for one of the player's
     characters: checks ingredients/tool/blueprint against the player's
     shared vault, transfers whatever's needed onto the character, and
-    starts a CRAFT_DURATION_SECONDS timer (returned as the character's
-    `activeCraft.readyAt`). The output isn't produced yet - call
+    starts a timer, its length scaled by the recipe's own raw-material
+    cost (see `backend.players._craft_duration_seconds`), returned as the
+    character's `activeCraft.readyAt`. The output isn't produced yet - call
     `.../craft/finish` once that timer elapses.
     """
     try:

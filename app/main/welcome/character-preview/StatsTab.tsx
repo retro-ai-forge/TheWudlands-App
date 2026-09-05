@@ -3,7 +3,7 @@ import { getPortraitCropImgStyle } from "@/app/lib/portraitCrop";
 import { RACES, PROFESSIONS, BIRTHSIGNS, PROFESSION_RESOURCE_FAMILIES } from "@/app/lib/characterOptions";
 import { getDisplayedAge } from "@/app/lib/ageScaling";
 import { useState } from "react";
-import { formatRemainingLong, useCraftCountdown } from "../craftTimer";
+import { formatRemainingCompactLong, useCraftCountdown } from "../craftTimer";
 import type { SlotCharacterSummary } from "../SoulSlotGrid";
 import type { RawPlayerData } from "./InventoryTab";
 
@@ -214,7 +214,9 @@ export function StatsTab({
           </div>
           <div className={styles.identityRow}>
             <span>Ready</span>
-            <span>{craftRemainingSeconds ? formatRemainingLong(craftRemainingSeconds) : "now"}</span>
+            <span className={craftRemainingSeconds ? styles.readyTimerValue : undefined}>
+              {craftRemainingSeconds ? formatRemainingCompactLong(craftRemainingSeconds) : "now"}
+            </span>
           </div>
 
           {classes.length > 0 || professions.length > 0 ? (

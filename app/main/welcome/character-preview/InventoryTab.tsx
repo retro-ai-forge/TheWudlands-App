@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import styles from "./CharacterTabs.module.css";
-import { formatRemaining, formatRemainingLong, useCraftCountdown } from "../craftTimer";
+import { formatRemainingCompactLong, useCraftCountdown } from "../craftTimer";
 import type { SlotCharacterSummary } from "../SoulSlotGrid";
 import type { ItemInstance } from "../SoulSlotGrid";
 export type { ItemInstance } from "../SoulSlotGrid";
@@ -101,12 +101,6 @@ function formatXpPreview(preview: { rawXp: Record<string, number>; finalXp: numb
 // a craft completes, before it's cleared entirely - matches the CSS fade
 // animation's own duration (see .craftResultFading in CharacterTabs.module.css).
 const CRAFT_RESULT_FADE_MS = 8000;
-
-// Mirrors backend.players.CRAFT_DURATION_SECONDS - purely a display
-// estimate for the Craft button's own label before a craft has started;
-// the actual countdown always comes from the server's activeCraft.readyAt
-// once start_craft succeeds (see useCraftCountdown above).
-const CRAFT_DURATION_SECONDS_DISPLAY = 120;
 
 // Resolves an active craft's {familyId, tier} to a display name - the same
 // question backend.players._resolve_recipe_output answers server-side, but
@@ -862,6 +856,7 @@ export function InventoryTab({
     getCurrentSelection?: () => { familyId: string; tier: number } | null;
     isCurrentSelectionCraftable?: (count?: number) => boolean;
     getCurrentSelectionXp?: (count?: number) => { rawXp: Record<string, number>; finalXp: number } | null;
+    getCurrentSelectionDuration?: (count?: number) => number | null;
   };
   const getRecipeViewerWindow = () =>
     recipeViewerRef.current?.contentWindow as RecipeViewerWindow | null | undefined;
@@ -890,10 +885,18 @@ export function InventoryTab({
   const [craftXpPreview, setCraftXpPreview] = useState<{ rawXp: Record<string, number>; finalXp: number } | null>(
     null
   );
+  // The crafting timer length for whatever's selected right now, at the
+  // current craftCount (see recipe-viewer.template.html's
+  // getCurrentSelectionDuration, which mirrors backend.players.
+  // _craft_duration_seconds - scaled by the recipe's own full raw-
+  // material chain AND craftCount, not a flat number) - polled alongside
+  // the XP preview above for the same reason.
+  const [craftDurationPreview, setCraftDurationPreview] = useState<number | null>(null);
   useEffect(() => {
     if (!recipeViewerOpen) {
       setCraftableCounts({});
       setCraftXpPreview(null);
+      setCraftDurationPreview(null);
       return;
     }
     const check = () => {
@@ -904,6 +907,7 @@ export function InventoryTab({
       }
       setCraftableCounts(next);
       setCraftXpPreview(win?.getCurrentSelectionXp?.(craftCount) ?? null);
+      setCraftDurationPreview(win?.getCurrentSelectionDuration?.(craftCount) ?? null);
     };
     check();
     const interval = setInterval(check, 500);
@@ -1051,7 +1055,7 @@ export function InventoryTab({
           <span>
             {character.firstName}&apos;s Crafting
             {remainingSeconds !== null && (
-              <span className={styles.craftTimer}> {formatRemaining(remainingSeconds)}</span>
+              <span className={styles.craftTimer}> {formatRemainingCompactLong(remainingSeconds)}</span>
             )}
           </span>
           <span className={styles.accordionChevron}>{openSections.has("character") ? "▴" : "▾"}</span>
@@ -1192,14 +1196,14 @@ export function InventoryTab({
           disabled={crafting || !canCraft || remainingSeconds !== null}
         >
           {remainingSeconds !== null ? (
-            <span className={styles.craftTimer}>Crafting… {formatRemainingLong(remainingSeconds)}</span>
+            <span className={styles.craftTimer}>Crafting… {formatRemainingCompactLong(remainingSeconds)}</span>
           ) : crafting ? (
             "Crafting…"
           ) : canCraft ? (
             <>
               Craft
               <span className={styles.craftButtonDetail}>
-                {formatRemainingLong(CRAFT_DURATION_SECONDS_DISPLAY)}
+                {craftDurationPreview !== null && formatRemainingCompactLong(craftDurationPreview)}
                 {craftXpPreview && formatXpPreview(craftXpPreview) && `, ${formatXpPreview(craftXpPreview)}`}
               </span>
             </>

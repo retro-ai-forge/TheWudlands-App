@@ -574,10 +574,45 @@ def _resolve_tool_for_craft(
     return None
 
 
-# Flat for now - every recipe takes the same 2 minutes, regardless of
-# family/tier/character stats. A future pass could scale this per recipe
-# (a "craftSeconds" field) or by a profession-level/attribute formula.
-CRAFT_DURATION_SECONDS = 120
+# --- Crafting duration ---
+# Pure linear scaling, no floor - one unit's duration is exactly
+# CRAFT_SECONDS_PER_RAW times the recipe's own FULL raw-material chain
+# total (_resolve_recipe_full_chain_raw_total, below - the same metric
+# _assembly_bonus_xp already uses for the README's final-item XP), not
+# just its direct ingredients: a recipe built from a lot of raw material
+# takes longer to craft than one built from very little, even if most of
+# that raw material was actually spent on an earlier processing step. A
+# genuinely blueprint-gated recipe's finishing step uses the same rate but
+# each unit is capped at CRAFT_BLUEPRINT_MAX_SECONDS so a top-tier item
+# doesn't take an absurd real-world duration; an ordinary processing
+# recipe's own per-unit time is never capped. `tier` multiplies both the
+# per-raw rate AND the blueprint cap linearly - T1 is exactly this base
+# rate/cap, T2 is double both, ..., T6 is six times both - a higher tier
+# item is both slower per raw material to work AND allowed to take
+# proportionally longer at the finishing step before the cap kicks in.
+# A batch of `count` units takes exactly `count` times one unit's own
+# (tier-scaled, possibly capped) duration - the cap protects one
+# absurdly expensive single item, not a big batch of reasonably-priced
+# ones. See _craft_duration_seconds.
+CRAFT_SECONDS_PER_RAW = 30  # T1: 30s of craft time per raw material in the full chain
+CRAFT_BLUEPRINT_MAX_SECONDS = 3600  # T1: 1 hour hard cap per unit on the blueprint finishing time
+
+
+def _craft_duration_seconds(recipe: dict, family_id: str, tier: int, character: dict, count: int) -> int:
+    """
+    How long start_craft's timer runs for one call (see the constants
+    above) - scaled by this recipe's own full raw-material chain total,
+    not just its direct ingredients, then by `tier` (T1 = 1x, T2 = 2x, ...,
+    T6 = 6x the base rate and the blueprint cap alike), THEN multiplied by
+    `count`: a batch of `count` units takes `count` times as long as
+    crafting just one, same as the ingredients themselves already scale
+    with count.
+    """
+    full_chain_total = _resolve_recipe_full_chain_raw_total(family_id, 1, character)
+    per_unit_seconds = CRAFT_SECONDS_PER_RAW * tier * full_chain_total
+    if recipe.get("blueprintFamilyId"):
+        per_unit_seconds = min(per_unit_seconds, CRAFT_BLUEPRINT_MAX_SECONDS * tier)
+    return per_unit_seconds * count
 
 
 # Cumulative "Total XP" needed to REACH each level, 1-30 - index i (0-based)
@@ -1013,10 +1048,11 @@ async def start_craft(
     against the character vault + player's shared vault combined and the
     required tool similarly, then transfers onto the character whatever
     wasn't already there (so it shows up in the character's own crafting
-    list right away) and starts a single `CRAFT_DURATION_SECONDS` timer
-    (Character.activeCraft) - the timer doesn't scale with `count`, only
-    the ingredients do. The output isn't produced yet - call finish_craft
-    once the timer elapses, which produces all `count` units at once.
+    list right away) and starts a single timer (Character.activeCraft),
+    its length scaled by the recipe's own full raw-material chain, `tier`,
+    AND `count` - see `_craft_duration_seconds`. The output isn't
+    produced yet - call finish_craft once the timer elapses, which
+    produces all `count` units at once.
 
     Instance-tracked tool alternatives (e.g. axe_stone) are never
     auto-transferred here, and only ever need to be owned once regardless
@@ -1132,7 +1168,9 @@ async def start_craft(
     # shape each branch below builds, not $inc.
     xp_grants = _crafting_xp_increments(character, family_id, count)
 
-    ready_at = datetime.now(timezone.utc) + timedelta(seconds=CRAFT_DURATION_SECONDS)
+    ready_at = datetime.now(timezone.utc) + timedelta(
+        seconds=_craft_duration_seconds(recipe, family_id, tier, character, count)
+    )
     active_craft: Dict = {
         "familyId": family_id,
         "tier": tier,
