@@ -181,12 +181,12 @@
   {"id": "wyvern_leather", "name": "Wyvern Leather", "familyId": "leather", "tier": 5},
   {"id": "phoenix_leather", "name": "Phoenix Leather", "familyId": "leather", "tier": 6},
 
-  {"id": "sparrow_quilted_thread", "name": "Quilted Sparrow Feather", "familyId": "quilted_thread", "tier": 1},
-  {"id": "owl_quilted_thread", "name": "Quilted Owl Feather", "familyId": "quilted_thread", "tier": 2},
-  {"id": "hawk_quilted_thread", "name": "Quilted Hawk Feather", "familyId": "quilted_thread", "tier": 3},
-  {"id": "phoenix_quilted_thread", "name": "Quilted Phoenix Feather", "familyId": "quilted_thread", "tier": 4},
-  {"id": "roc_quilted_thread", "name": "Quilted Roc Feather", "familyId": "quilted_thread", "tier": 5},
-  {"id": "celestial_quilted_thread", "name": "Quilted Celestial Feather", "familyId": "quilted_thread", "tier": 6},
+  {"id": "sparrow_quilted_thread", "name": "Sparrow Feather Thread", "familyId": "quilted_thread", "tier": 1},
+  {"id": "owl_quilted_thread", "name": "Owl Feather Thread", "familyId": "quilted_thread", "tier": 2},
+  {"id": "hawk_quilted_thread", "name": "Hawk Feather Thread", "familyId": "quilted_thread", "tier": 3},
+  {"id": "phoenix_quilted_thread", "name": "Phoenix Feather Thread", "familyId": "quilted_thread", "tier": 4},
+  {"id": "roc_quilted_thread", "name": "Roc Feather Thread", "familyId": "quilted_thread", "tier": 5},
+  {"id": "celestial_quilted_thread", "name": "Celestial Feather Thread", "familyId": "quilted_thread", "tier": 6},
 
   {"id": "rat_ear_trophy_charm", "name": "Rat Ear Charm", "familyId": "trophy_charm", "tier": 1},
   {"id": "troll_fat_trophy_charm", "name": "Troll Fat Charm", "familyId": "trophy_charm", "tier": 2},
