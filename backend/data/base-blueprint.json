@@ -300,6 +300,12 @@
   {"id": "blueprint_wolfspirit_spear", "name": "Blueprint: Wolfspirit Spear", "familyId": "blueprint_spear", "tier": 5},
   {"id": "blueprint_godsblood_spear", "name": "Blueprint: Godsblood Spear", "familyId": "blueprint_spear", "tier": 6},
 
+  {"id": "blueprint_rusty_short_sword", "name": "Blueprint: Rusty Short Sword", "familyId": "blueprint_short_sword", "tier": 1},
+  {"id": "blueprint_soldiers_short_sword", "name": "Blueprint: Soldier's Short Sword", "familyId": "blueprint_short_sword", "tier": 2},
+  {"id": "blueprint_sergeants_short_sword", "name": "Blueprint: Sergeant's Short Sword", "familyId": "blueprint_short_sword", "tier": 3},
+  {"id": "blueprint_captains_short_sword", "name": "Blueprint: Captain's Short Sword", "familyId": "blueprint_short_sword", "tier": 4},
+  {"id": "blueprint_marshals_short_sword", "name": "Blueprint: Marshal's Short Sword", "familyId": "blueprint_short_sword", "tier": 5},
+  {"id": "blueprint_peerless_short_sword", "name": "Blueprint: Peerless Short Sword", "familyId": "blueprint_short_sword", "tier": 6},
   {"id": "blueprint_pages_sword", "name": "Blueprint: Apprentice's Sword", "familyId": "blueprint_sword", "tier": 1},
   {"id": "blueprint_knights_sword", "name": "Blueprint: Knight's Sword", "familyId": "blueprint_sword", "tier": 2},
   {"id": "blueprint_barons_sword", "name": "Blueprint: Baron's Sword", "familyId": "blueprint_sword", "tier": 3},

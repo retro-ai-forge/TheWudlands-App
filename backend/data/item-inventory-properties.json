@@ -1647,6 +1647,23 @@
     "icon": "/images/items/bat.png"
   },
   {
+    "familyId": "short_sword",
+    "kind": [
+      "weapon"
+    ],
+    "sizeClass": "light",
+    "stackSize": 1,
+    "needsItemDefinition": true,
+    "note": "Wears out with use.",
+    "equipSlots": [
+      "Left Hand",
+      "Right Hand"
+    ],
+    "backpackable": true,
+    "qualityMax": 220,
+    "icon": "/images/items/bat.png"
+  },
+  {
     "familyId": "sword",
     "kind": [
       "weapon"
