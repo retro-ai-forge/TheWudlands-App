@@ -1296,10 +1296,13 @@ async def finish_craft(address: str, character_id: str) -> Optional[Player]:
     point) and produces `activeCraft.count` units of the output at once -
     inventory.items for a needsItemDefinition:true family (each unit its
     own instance, per the instance-per-physical-item invariant - never a
-    single instance with a quantity), inventory.itemBalances or
-    inventory.resources incremented by `count` for a flat-count output,
-    always into the player's shared vault, never straight onto the
-    character. Also pays out the README's final-item assembly-bonus XP
+    single instance with a quantity); otherwise a flat-count output
+    incremented by `count` - inventory.tools if the concrete output id is
+    a known flat-balance tool (TOOL_ITEMS_BY_ID - an anvil, a furnace, a
+    tanning rack, ...), inventory.resources for a processed material,
+    inventory.itemBalances for everything else (food, potions, misc
+    gear) - always into the player's shared vault, never straight onto
+    the character. Also pays out the README's final-item assembly-bonus XP
     (see `_assembly_bonus_xp`) when the recipe is genuinely blueprint-gated -
     unlike raw-material XP (paid at start_craft time), this only pays out
     once the item is actually collected here. Goes to whichever profession
@@ -1405,6 +1408,13 @@ async def finish_craft(address: str, character_id: str) -> Optional[Player]:
                 for _ in range(count)
             ]
             push["inventory.items"] = {"$each": instances}
+        elif output_row["id"] in TOOL_ITEMS_BY_ID:
+            # A flat-balance tool (anvil, furnace, tanning_rack, ...) - the
+            # exact same catalog _resolve_tool_for_craft's own flat-balance
+            # branch reads from inventory.tools, so a crafted one has to
+            # land there too, not itemBalances, or it would never be
+            # recognized as an owned tool for a later recipe that needs it.
+            inc[f"inventory.tools.{output_row['id']}"] = count
         else:
             inc[f"inventory.itemBalances.{output_row['id']}"] = count
         return inc, push
