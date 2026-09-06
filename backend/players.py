@@ -740,6 +740,8 @@ def _resolve_ingredient_option(
     player_resources: Dict[str, int],
     count: int = 1,
     player_items: Optional[List[dict]] = None,
+    character_item_balances: Optional[Dict[str, int]] = None,
+    player_item_balances: Optional[Dict[str, int]] = None,
 ) -> Optional[dict]:
     """
     Checks whether ONE ingredient option (the sole option for a plain
@@ -757,19 +759,47 @@ def _resolve_ingredient_option(
     needsItemDefinition:true family, don't use it up" is the identical
     question - `move` carries the same move-to-"crafting" instruction when
     `player_items` surfaces one, same as the "tool" field gets), or
-    `{"held": False, "concrete_id", "qty", "from_character", "from_player"}`
-    for a resource that would actually be consumed.
+    `{"held": False, "bucket", "concrete_id", "from_character", "from_player"}`
+    for something that would actually be consumed - `bucket` is
+    "resources" for a raw/processed ingredient, or "itemBalances" for a
+    consumed "final" ingredient (e.g. iron_ration consuming a whole
+    salt_horse) - a genuinely finished, needsItemDefinition:false item,
+    checked/decremented against character_item_balances/
+    player_item_balances instead of the resources dicts, mirroring the
+    exact same "character vault first, shared vault for the shortfall"
+    logic one bucket over. A consumed "final" ingredient that happens to
+    be needsItemDefinition:true isn't supported here - every current one
+    is a flat-count food/good, never an item instance.
     """
     category = option["category"]
     qty = option["qty"] * count
     consumed = option.get("consumed", True)
     family_id = option["familyId"]
 
-    if category == "final" and not consumed:
-        found = _resolve_tool_for_craft(character, {}, [family_id], tier, player_items=player_items)
-        if found is None:
+    if category == "final":
+        if not consumed:
+            found = _resolve_tool_for_craft(character, {}, [family_id], tier, player_items=player_items)
+            if found is None:
+                return None
+            return {"held": True, "move": found if found[0] == "instance_move" else None}
+
+        output_row = items_catalog.resolve_output_row(family_id, tier)
+        if output_row is None:
+            raise ValueError(f"No tier {tier} id for ingredient family {family_id}")
+        concrete_id = output_row["id"]
+        held_by_character = (character_item_balances or {}).get(concrete_id, 0)
+        held_by_player = (player_item_balances or {}).get(concrete_id, 0)
+        if held_by_character + held_by_player < qty:
             return None
-        return {"held": True, "move": found if found[0] == "instance_move" else None}
+        from_character = min(held_by_character, qty)
+        from_player = qty - from_character
+        return {
+            "held": False,
+            "bucket": "itemBalances",
+            "concrete_id": concrete_id,
+            "from_character": from_character,
+            "from_player": from_player,
+        }
 
     if category == "raw":
         concrete_id = _RAW_ID_BY_FAMILY_TIER.get((family_id, tier))
@@ -788,7 +818,13 @@ def _resolve_ingredient_option(
         return {"held": True}
     from_character = min(held_by_character, qty)
     from_player = qty - from_character
-    return {"held": False, "concrete_id": concrete_id, "from_character": from_character, "from_player": from_player}
+    return {
+        "held": False,
+        "bucket": "resources",
+        "concrete_id": concrete_id,
+        "from_character": from_character,
+        "from_player": from_player,
+    }
 
 
 def _resolve_recipe_ingredients(
@@ -799,7 +835,9 @@ def _resolve_recipe_ingredients(
     character: Optional[dict] = None,
     count: int = 1,
     player_items: Optional[List[dict]] = None,
-) -> Optional[tuple[Dict[str, int], Dict[str, int], List[tuple]]]:
+    character_item_balances: Optional[Dict[str, int]] = None,
+    player_item_balances: Optional[Dict[str, int]] = None,
+) -> Optional[tuple[Dict[str, int], Dict[str, int], Dict[str, int], Dict[str, int], List[tuple]]]:
     """
     Resolves one recipe's ingredients (at `tier`) to concrete resource ids
     and checks the character vault + player shared vault hold enough
@@ -810,11 +848,16 @@ def _resolve_recipe_ingredients(
     (a tool-like requirement) still only needs owning one, same as a
     recipe's "tool" field doesn't need `count` anvils to make `count`
     daggers - see `_resolve_ingredient_option`. Returns
-    (character_decrements, player_decrements, instance_moves) - amounts to
-    take from each vault (character vault first, shared vault only for
-    whatever's still short), plus any instance-tracked tools an unconsumed
-    "final" alternative resolved to a move (see `_resolve_tool_for_craft`'s
-    `instance_move` tuples) - or None if there isn't enough even combined.
+    (character_resource_decrements, player_resource_decrements,
+    character_item_balance_decrements, player_item_balance_decrements,
+    instance_moves) - amounts to take from each vault (character vault
+    first, shared vault only for whatever's still short), split into the
+    "resources" bucket (raw/processed ingredients) and the "itemBalances"
+    bucket (a consumed "final" ingredient - e.g. iron_ration consuming a
+    whole salt_horse - see _resolve_ingredient_option's own `bucket` tag),
+    plus any instance-tracked tools an unconsumed "final" alternative
+    resolved to a move (see `_resolve_tool_for_craft`'s `instance_move`
+    tuples) - or None if there isn't enough even combined.
 
     An ingredient with an "alternatives" list (e.g. carcass's
     bone_blade-or-dagger choice) tries each option, preferring an
@@ -833,8 +876,10 @@ def _resolve_recipe_ingredients(
     Raises ValueError for an unsupported ingredient category or a missing
     tier row.
     """
-    character_decrements: Dict[str, int] = {}
-    player_decrements: Dict[str, int] = {}
+    character_resource_decrements: Dict[str, int] = {}
+    player_resource_decrements: Dict[str, int] = {}
+    character_item_balance_decrements: Dict[str, int] = {}
+    player_item_balance_decrements: Dict[str, int] = {}
     instance_moves: List[tuple] = []
     character = character or {}
     for ingredient in recipe["ingredients"]:
@@ -845,7 +890,8 @@ def _resolve_recipe_ingredients(
             if option.get("consumed", True):
                 continue
             plan = _resolve_ingredient_option(
-                option, tier, character, character_resources, player_resources, count, player_items
+                option, tier, character, character_resources, player_resources, count, player_items,
+                character_item_balances, player_item_balances,
             )
             if plan is not None:
                 break
@@ -854,7 +900,8 @@ def _resolve_recipe_ingredients(
                 if not option.get("consumed", True):
                     continue
                 plan = _resolve_ingredient_option(
-                    option, tier, character, character_resources, player_resources, count, player_items
+                    option, tier, character, character_resources, player_resources, count, player_items,
+                    character_item_balances, player_item_balances,
                 )
                 if plan is not None:
                     break
@@ -863,13 +910,24 @@ def _resolve_recipe_ingredients(
 
         if not plan["held"]:
             concrete_id = plan["concrete_id"]
+            character_decrements, player_decrements = (
+                (character_item_balance_decrements, player_item_balance_decrements)
+                if plan["bucket"] == "itemBalances"
+                else (character_resource_decrements, player_resource_decrements)
+            )
             if plan["from_character"]:
                 character_decrements[concrete_id] = character_decrements.get(concrete_id, 0) + plan["from_character"]
             if plan["from_player"]:
                 player_decrements[concrete_id] = player_decrements.get(concrete_id, 0) + plan["from_player"]
         elif plan.get("move") is not None:
             instance_moves.append(plan["move"])
-    return character_decrements, player_decrements, instance_moves
+    return (
+        character_resource_decrements,
+        player_resource_decrements,
+        character_item_balance_decrements,
+        player_item_balance_decrements,
+        instance_moves,
+    )
 
 
 def _resolve_recipe_output(family_id: str, tier: int) -> Optional[tuple[dict, bool]]:
@@ -1120,17 +1178,20 @@ async def start_craft(
     # area for an active craft (populated here, drained by finish_craft),
     # not a persistent balance a player manages directly. Passing {} for
     # the character side means the full amount always comes from the
-    # player vault (character_decrements stays empty). player_items lets
+    # player vault (character_decrements stays empty) - same for
+    # itemBalances (a consumed "final" ingredient, e.g. iron_ration's
+    # smoked_salt_horse) as it already is for resources. player_items lets
     # an unconsumed ingredient alternative (e.g. carcass's dagger option)
     # resolve to a vault-borrow the same way the recipe's own "tool" field
     # does, below.
     resolved = _resolve_recipe_ingredients(
         recipe, tier, {}, doc.get("inventory", {}).get("resources", {}), character, count,
         player_items=doc.get("inventory", {}).get("items", []),
+        character_item_balances={}, player_item_balances=doc.get("inventory", {}).get("itemBalances", {}),
     )
     if resolved is None:
         return None
-    _, player_decrements, ingredient_moves = resolved
+    _, player_decrements, _, player_item_balance_decrements, ingredient_moves = resolved
 
     tool_candidates = recipe.get("tool")
     tool_transfer_id: Optional[str] = None
@@ -1181,6 +1242,12 @@ async def start_craft(
         inc_ops[f"inventory.resources.{concrete_id}"] = -qty
         inc_ops[f"characters.$.resources.{concrete_id}"] = inc_ops.get(
             f"characters.$.resources.{concrete_id}", 0
+        ) + qty
+    for concrete_id, qty in player_item_balance_decrements.items():
+        match_filter[f"inventory.itemBalances.{concrete_id}"] = {"$gte": qty}
+        inc_ops[f"inventory.itemBalances.{concrete_id}"] = -qty
+        inc_ops[f"characters.$.itemBalances.{concrete_id}"] = inc_ops.get(
+            f"characters.$.itemBalances.{concrete_id}", 0
         ) + qty
     if tool_transfer_id is not None:
         match_filter[f"inventory.tools.{tool_transfer_id}"] = {"$gte": 1}
@@ -1351,10 +1418,13 @@ async def finish_craft(address: str, character_id: str) -> Optional[Player]:
     # recognize that as "already staged, present" (see their docstrings),
     # so an ingredient's unconsumed "final" alternative re-verifies
     # correctly here without trying to move anything again.
-    resolved = _resolve_recipe_ingredients(recipe, tier, character.get("resources", {}), {}, character, count)
+    resolved = _resolve_recipe_ingredients(
+        recipe, tier, character.get("resources", {}), {}, character, count,
+        character_item_balances=character.get("itemBalances", {}), player_item_balances={},
+    )
     if resolved is None:
         return None
-    character_decrements, _, _ = resolved
+    character_decrements, _, character_item_balance_decrements, _, _ = resolved
 
     # borrowedInstances (see start_craft) is the authoritative record of
     # what got moved to location:"crafting" and needs releasing now - no
@@ -1428,6 +1498,9 @@ async def finish_craft(address: str, character_id: str) -> Optional[Player]:
         for concrete_id, qty in character_decrements.items():
             elem_match[f"resources.{concrete_id}"] = {"$gte": qty}
             inc_ops[f"characters.$.resources.{concrete_id}"] = -qty
+        for concrete_id, qty in character_item_balance_decrements.items():
+            elem_match[f"itemBalances.{concrete_id}"] = {"$gte": qty}
+            inc_ops[f"characters.$.itemBalances.{concrete_id}"] = -qty
 
         # A flat-balance tool start_craft borrowed from the player's shared
         # pool (not one the character already had) goes back once the
@@ -1484,6 +1557,8 @@ async def finish_craft(address: str, character_id: str) -> Optional[Player]:
     elem_match = {"id": character_id}
     for concrete_id, qty in character_decrements.items():
         elem_match[f"resources.{concrete_id}"] = {"$gte": qty}
+    for concrete_id, qty in character_item_balance_decrements.items():
+        elem_match[f"itemBalances.{concrete_id}"] = {"$gte": qty}
     tool_transfer_id = active.get("toolTransferId")
     if tool_transfer_id is not None:
         elem_match[f"tools.{tool_transfer_id}"] = {"$gte": 1}
@@ -1491,6 +1566,8 @@ async def finish_craft(address: str, character_id: str) -> Optional[Player]:
     inc_ops = {}
     for concrete_id, qty in character_decrements.items():
         inc_ops[f"characters.$[char].resources.{concrete_id}"] = -qty
+    for concrete_id, qty in character_item_balance_decrements.items():
+        inc_ops[f"characters.$[char].itemBalances.{concrete_id}"] = -qty
     if tool_transfer_id is not None:
         inc_ops[f"characters.$[char].tools.{tool_transfer_id}"] = inc_ops.get(
             f"characters.$[char].tools.{tool_transfer_id}", 0

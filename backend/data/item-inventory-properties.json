@@ -787,6 +787,45 @@
     "icon": "/images/items/bat.png"
   },
   {
+    "familyId": "smoked_salt_horse",
+    "kind": [
+      "food"
+    ],
+    "sizeClass": "tiny",
+    "stackSize": 10,
+    "needsItemDefinition": false,
+    "note": "Consumed on use, not degraded - proposed as a simple stackable count.",
+    "equipSlots": [],
+    "backpackable": true,
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "familyId": "smoked_squirrel_hoard",
+    "kind": [
+      "food"
+    ],
+    "sizeClass": "tiny",
+    "stackSize": 10,
+    "needsItemDefinition": false,
+    "note": "Consumed on use, not degraded - proposed as a simple stackable count.",
+    "equipSlots": [],
+    "backpackable": true,
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "familyId": "smoked_wizened_figs",
+    "kind": [
+      "food"
+    ],
+    "sizeClass": "tiny",
+    "stackSize": 10,
+    "needsItemDefinition": false,
+    "note": "Consumed on use, not degraded - proposed as a simple stackable count.",
+    "equipSlots": [],
+    "backpackable": true,
+    "icon": "/images/items/bat.png"
+  },
+  {
     "familyId": "squirrel_hoard",
     "kind": [
       "food"

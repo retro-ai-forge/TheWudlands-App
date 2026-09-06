@@ -913,7 +913,7 @@ export function InventoryTab({
     const interval = setInterval(check, 500);
     return () => clearInterval(interval);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [recipeViewerOpen, playerResourceBalances, playerTools, knownBlueprints, craftCount]);
+  }, [recipeViewerOpen, playerResourceBalances, playerItemBalances, playerTools, knownBlueprints, craftCount]);
   const canCraft = craftableCounts[craftCount] ?? false;
 
   const [crafting, setCrafting] = useState(false);
@@ -1251,6 +1251,8 @@ export function InventoryTab({
           ref={recipeViewerRef}
           src={`/craft/recipe-viewer.html?embedded=1&inv=${encodeURIComponent(
             JSON.stringify(playerResourceBalances)
+          )}&itemBalances=${encodeURIComponent(
+            JSON.stringify(playerItemBalances)
           )}&tools=${encodeURIComponent(JSON.stringify(ownedTools))}&vaultTools=${encodeURIComponent(
             JSON.stringify(vaultToolInstanceIds)
           )}&blueprints=${encodeURIComponent(JSON.stringify(knownBlueprints))}`}

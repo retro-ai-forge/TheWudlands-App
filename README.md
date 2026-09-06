@@ -95,7 +95,7 @@ The four lowest-count categories — Rural, CraftStone, Aristocratic, and Trade 
 
 An interactive tool to explore all crafting recipes, search by item name or ingredient, and see detailed breakdowns of raw materials needed. Download to enlarge.
 
-![Crafting Recipes](/public/craft/crafting-260901.jpg)
+![Crafting Recipes](/public/craft/crafting-260906.jpg)
 
 ## For Story Contributors
 

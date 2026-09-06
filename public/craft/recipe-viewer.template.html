@@ -402,6 +402,21 @@ if (inventory) {
   document.querySelector("#materialsTotals thead th:last-child").textContent = "owned/needed";
 }
 
+// Same shape as `inventory`, but for the player's shared inventory.itemBalances
+// - a consumed "final" ingredient (e.g. iron_ration consuming a whole
+// salt_horse) is checked against this instead of `inventory`, mirroring
+// backend.players._resolve_ingredient_option's own resources-vs-itemBalances
+// bucket split. "?itemBalances=" - absent (null) same as `inventory`.
+function readItemBalancesFromQuery() {
+  try {
+    const raw = new URLSearchParams(window.location.search).get("itemBalances");
+    return raw ? JSON.parse(raw) : null;
+  } catch {
+    return null;
+  }
+}
+let itemBalances = readItemBalancesFromQuery();
+
 // Discrete tools/blueprints owned (as opposed to `inventory`'s stackable raw
 // materials) - "?tools=" / "?blueprints=" carry the character's tools[] and
 // blueprints[] id lists (see backend.character.Character). Absent (null)
@@ -603,11 +618,16 @@ window.isCurrentSelectionCraftable = function (count) {
     if (opt.consumed === false) {
       return opt.category === "final" && ownsFamily(ownedToolsWithVault, opt.familyId, tier);
     }
-    if (opt.category !== "raw" && opt.category !== "processed") return false;
+    if (opt.category !== "raw" && opt.category !== "processed" && opt.category !== "final") return false;
     const f = families[opt.familyId];
     const item = f && f.tiers[tier - 1];
     if (!item) return false;
-    return (inventory[item.id] || 0) >= opt.qty * count;
+    // A consumed "final" ingredient (e.g. iron_ration consuming a whole
+    // salt_horse) lives in itemBalances, not the raw/processed inventory -
+    // mirrors backend.players._resolve_ingredient_option's own bucket split.
+    const balances = opt.category === "final" ? itemBalances : inventory;
+    if (!balances) return false;
+    return (balances[item.id] || 0) >= opt.qty * count;
   };
 
   for (const ing0 of recipe.ingredients) {
