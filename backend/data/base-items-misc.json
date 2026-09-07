@@ -27,6 +27,13 @@
   {"id": "shadow_cloth_cloak", "name": "Shadow Cloak", "familyId": "cloth_cloak", "tier": 5},
   {"id": "moon_cloth_cloak", "name": "Moon Cloak", "familyId": "cloth_cloak", "tier": 6},
 
+  {"id": "sparrow_quilted_cloak", "name": "Sparrow Feather Cloak", "familyId": "quilted_cloak", "tier": 1},
+  {"id": "owl_quilted_cloak", "name": "Owl Feather Cloak", "familyId": "quilted_cloak", "tier": 2},
+  {"id": "hawk_quilted_cloak", "name": "Hawk Feather Cloak", "familyId": "quilted_cloak", "tier": 3},
+  {"id": "phoenix_quilted_cloak", "name": "Phoenix Feather Cloak", "familyId": "quilted_cloak", "tier": 4},
+  {"id": "roc_quilted_cloak", "name": "Roc Feather Cloak", "familyId": "quilted_cloak", "tier": 5},
+  {"id": "celestial_quilted_cloak", "name": "Celestial Feather Cloak", "familyId": "quilted_cloak", "tier": 6},
+
   {"id": "mirror_1", "name": "Mirror", "familyId": "mirror", "tier": 1},
   {"id": "mirror_2", "name": "Mirror", "familyId": "mirror", "tier": 2},
   {"id": "mirror_3", "name": "Mirror", "familyId": "mirror", "tier": 3},

@@ -940,6 +940,22 @@
     "icon": "/images/items/bat.png"
   },
   {
+    "familyId": "quilted_cloak",
+    "kind": [
+      "misc"
+    ],
+    "sizeClass": "light",
+    "stackSize": 1,
+    "needsItemDefinition": true,
+    "note": "Wears out with use.",
+    "equipSlots": [
+      "Cloak"
+    ],
+    "backpackable": true,
+    "qualityMax": 40,
+    "icon": "/images/items/bat.png"
+  },
+  {
     "familyId": "glass_lantern",
     "kind": [
       "misc"
