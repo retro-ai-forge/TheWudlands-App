@@ -55,13 +55,6 @@
   {"id": "ebony_beam", "name": "Ebony Beam", "familyId": "beam", "tier": 5},
   {"id": "worldroot_beam", "name": "Worldroot Beam", "familyId": "beam", "tier": 6},
 
-  {"id": "pine_hardened_stick", "name": "Hardened Pine Stick", "familyId": "hardened_stick", "tier": 1},
-  {"id": "oak_hardened_stick", "name": "Hardened Oak Stick", "familyId": "hardened_stick", "tier": 2},
-  {"id": "ash_hardened_stick", "name": "Hardened Ash Stick", "familyId": "hardened_stick", "tier": 3},
-  {"id": "cedar_hardened_stick", "name": "Hardened Cedar Stick", "familyId": "hardened_stick", "tier": 4},
-  {"id": "ebony_hardened_stick", "name": "Hardened Ebony Stick", "familyId": "hardened_stick", "tier": 5},
-  {"id": "worldroot_hardened_stick", "name": "Hardened Worldroot Stick", "familyId": "hardened_stick", "tier": 6},
-
   {"id": "pine_reinforced_frame", "name": "Pine Reinforced Frame", "familyId": "reinforced_frame", "tier": 1},
   {"id": "oak_reinforced_frame", "name": "Oak Reinforced Frame", "familyId": "reinforced_frame", "tier": 2},
   {"id": "ash_reinforced_frame", "name": "Ash Reinforced Frame", "familyId": "reinforced_frame", "tier": 3},

@@ -326,7 +326,6 @@ These recipes need no learned blueprint to craft, so they never earn the tier-sc
 | Fishing Pole | 4 | Wood x3, Fiber x1 |
 | Quill | 4 | Feather x4 |
 | Ground Pigment | 4 | Pigment x4 |
-| Hardened Stick | 4 | Wood x4 |
 | Parchment | 4 | Reed x4 |
 | Plank | 4 | Wood x4 |
 | Trimmed Pelt | 4 | Hide x4 |

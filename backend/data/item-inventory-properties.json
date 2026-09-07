@@ -1607,7 +1607,8 @@
       "Left Hand",
       "Right Hand"
     ],
-    "backpackable": true,
+    "twoHanded": true,
+    "backpackable": false,
     "qualityMax": 20,
     "icon": "/images/items/bat.png"
   },
