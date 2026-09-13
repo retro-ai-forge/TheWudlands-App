@@ -112,6 +112,31 @@ def _load_backpack_capacity() -> dict[str, int]:
 # family-level one, so it needs its own lookup separate from ITEM_FAMILIES_BY_ID.
 BACKPACK_CAPACITY_BY_ID: dict[str, int] = _load_backpack_capacity()
 
+_GATHERING_BONUSES_PATH = _DATA_DIR / "raw-material-gathering-bonuses.json"
+
+
+def _load_gathering_bonuses_by_item() -> dict[str, tuple[str, ...]]:
+    """
+    raw-material-gathering-bonuses.json is keyed the other way around (raw
+    material -> which item families help gather it) - inverted here into
+    item family -> which raw materials it helps gather, since that's the
+    direction the item detail popup actually needs (looking up one item's
+    own bonuses, not one material's).
+    """
+    data = json.loads(_GATHERING_BONUSES_PATH.read_text())
+    by_item: dict[str, list[str]] = {}
+    for raw_material, info in data.items():
+        for item_family in info.get("gatheringItems", []):
+            by_item.setdefault(item_family, []).append(raw_material)
+    return {item_family: tuple(materials) for item_family, materials in by_item.items()}
+
+
+# Item family -> raw materials it grants a foraging/gathering bonus for
+# (e.g. "pickaxe" -> ("ore", "stone", "crystal")) - empty tuple (via
+# .get(family_id, ())) for the majority of families that aren't a
+# gathering tool at all.
+GATHERING_BONUSES_BY_ITEM: dict[str, tuple[str, ...]] = _load_gathering_bonuses_by_item()
+
 
 def _load_final_catalog() -> tuple[dict[tuple[str, int], dict], dict[str, str]]:
     """
@@ -193,6 +218,12 @@ class ItemCatalogEntry:
     # Family-level (item-inventory-properties.json's own "twoHanded") -
     # whether equipping this family occupies both named hand slots at once.
     two_handed: bool
+    # Family-level (raw-material-gathering-bonuses.json, inverted - see
+    # GATHERING_BONUSES_BY_ITEM) - raw materials this family grants a
+    # foraging/gathering bonus for, e.g. ("ore", "stone", "crystal") for a
+    # pickaxe. Empty for the majority of families that aren't a gathering
+    # tool at all.
+    gathering_bonuses: tuple[str, ...]
 
 
 def _load_item_catalog_entries() -> tuple[ItemCatalogEntry, ...]:
@@ -217,6 +248,7 @@ def _load_item_catalog_entries() -> tuple[ItemCatalogEntry, ...]:
                     row.get("icon", ""), family.stack_size,
                     row.get("description", ""), family.size_class,
                     family.equip_slots, family.backpackable, family.two_handed,
+                    GATHERING_BONUSES_BY_ITEM.get(family_id, ()),
                 )
             )
     for item in PROCESSED_RESOURCE_ITEMS:
@@ -228,6 +260,7 @@ def _load_item_catalog_entries() -> tuple[ItemCatalogEntry, ...]:
                     "", family.stack_size,
                     "", family.size_class,
                     family.equip_slots, family.backpackable, family.two_handed,
+                    GATHERING_BONUSES_BY_ITEM.get(item.family_id, ()),
                 )
             )
     return tuple(entries)
@@ -281,16 +314,26 @@ def backpack_slots_used(character: dict) -> int:
     return total
 
 
+def has_backpack_equipped(character: dict) -> bool:
+    """Whether any of this character's own item instances is currently
+    equipped with "Back"/"Side" in its slotRef - i.e. a physical backpack
+    worn right now, as opposed to just carried or sitting in the pool."""
+    return any(
+        instance.get("location") == "body" and any(slot in ("Back", "Side") for slot in instance.get("slotRef", []))
+        for instance in character.get("items", [])
+    )
+
+
 def backpack_capacity(character: dict) -> int:
     """
-    Total backpack slot ceiling for one character: base carry capacity from
-    might/endurance, plus whichever backpack instance (if any) is currently
-    equipped with "Back"/"Side" in its slotRef.
+    Total backpack slot ceiling for one character - 0 with nothing to carry
+    it in (a character can't stash anything in a "backpack" that doesn't
+    physically exist), otherwise base carry capacity from might/endurance
+    plus whichever backpack instance is currently equipped with
+    "Back"/"Side" in its slotRef.
     """
-    attr = character.get("attr", {})
-    might = attr.get("migh", 1)
-    endurance = attr.get("endu", 1)
-    base = 10 + (might + endurance) // 3
+    if not has_backpack_equipped(character):
+        return 0
 
     bonus = 0
     for instance in character.get("items", []):
@@ -299,4 +342,8 @@ def backpack_capacity(character: dict) -> int:
         ):
             bonus = max(bonus, BACKPACK_CAPACITY_BY_ID.get(instance["itemId"], 0))
 
+    attr = character.get("attr", {})
+    might = attr.get("migh", 1)
+    endurance = attr.get("endu", 1)
+    base = 10 + (might + endurance) // 3
     return base + bonus

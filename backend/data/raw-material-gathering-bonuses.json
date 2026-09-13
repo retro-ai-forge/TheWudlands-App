@@ -2,7 +2,7 @@
   "ore": {
     "professionGroups": ["CraftWeapon", "CraftArmor", "CraftTool", "CraftGlass", "Military"],
     "bonusProfessions": ["Rural"],
-    "gatheringItems": ["pickaxe"]
+    "gatheringItems": ["pickaxe", "warhammer"]
   },
   "wood": {
     "professionGroups": ["CraftWeapon", "CraftArmor", "CraftTool", "CraftFurniture", "CraftWood"],
@@ -12,12 +12,12 @@
   "stone": {
     "professionGroups": ["CraftStone", "Trade"],
     "bonusProfessions": [],
-    "gatheringItems": ["pickaxe"]
+    "gatheringItems": ["pickaxe", "warhammer"]
   },
   "bone": {
     "professionGroups": ["Artists", "CraftFurniture", "CraftWood"],
     "bonusProfessions": ["Rural", "Food"],
-    "gatheringItems": ["dagger"]
+    "gatheringItems": ["dagger", "axe_stone", "axe", "battle_axe", "warhammer"]
   },
   "fiber": {
     "professionGroups": ["Artists", "CraftGarment", "Military"],
@@ -32,7 +32,7 @@
   "meat": {
     "professionGroups": ["Food", "Rural"],
     "bonusProfessions": [],
-    "gatheringItems": ["bow", "spear", "sharpened_stick"]
+    "gatheringItems": ["bow", "spear", "sharpened_stick", "crossbow"]
   },
   "harvest": {
     "professionGroups": ["Food", "Rural", "Trade"],
@@ -47,22 +47,22 @@
   "hide": {
     "professionGroups": ["CraftFurniture", "CraftWood", "Rural"],
     "bonusProfessions": ["Food"],
-    "gatheringItems": ["dagger", "bow"]
+    "gatheringItems": ["dagger", "bow", "crossbow"]
   },
   "skin": {
     "professionGroups": ["Aristocratic", "CraftGarment"],
     "bonusProfessions": ["Trade"],
-    "gatheringItems": ["dagger", "bow"]
+    "gatheringItems": ["dagger", "bow", "crossbow"]
   },
   "feather": {
     "professionGroups": ["Aristocratic", "Artists"],
     "bonusProfessions": [],
-    "gatheringItems": ["net", "bow"]
+    "gatheringItems": ["net", "bow", "crossbow"]
   },
   "monster_part": {
     "professionGroups": ["Alchemy", "Military", "Trade"],
     "bonusProfessions": ["Rural"],
-    "gatheringItems": ["monster_trap", "spear"]
+    "gatheringItems": ["monster_trap", "spear", "bow", "crossbow"]
   },
   "clay": {
     "professionGroups": ["CraftStone"],

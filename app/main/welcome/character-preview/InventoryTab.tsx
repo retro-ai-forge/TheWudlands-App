@@ -33,6 +33,8 @@ type BlueprintTierInfo = Record<
     backpackable?: boolean;
     /** Family-level (item-catalog only) - whether equipping occupies both named hand slots at once. */
     twoHanded?: boolean;
+    /** Family-level (item-catalog only) - raw materials this family grants a foraging/gathering bonus for, e.g. ["ore","stone","crystal"] for a pickaxe. */
+    gatheringBonuses?: string[];
   }
 >;
 type ResourceTierInfo = Record<string, { tier: number; family: string; category: "raw" | "processed"; name?: string }>;
@@ -678,16 +680,27 @@ function formatSlotLabel(slot: string): string {
   return slot.replace(/\bHand\b/, "✋");
 }
 
-async function postJson(url: string, body?: object): Promise<RawPlayerData | null> {
+type PostJsonResult =
+  | { ok: true; data: RawPlayerData }
+  | { ok: false; detail: string | null };
+
+async function postJson(url: string, body?: object): Promise<PostJsonResult> {
   const res = await fetch(url, {
     method: "POST",
     credentials: "include",
     headers: body ? { "Content-Type": "application/json" } : undefined,
     body: body ? JSON.stringify(body) : undefined,
   });
-  if (!res.ok) return null;
-  return res.json();
+  if (!res.ok) {
+    const detail = await res.json().then((b) => b?.detail ?? null).catch(() => null);
+    return { ok: false, detail };
+  }
+  return { ok: true, data: await res.json() };
 }
+
+// How long a failed move/equip's message replaces the description text
+// before reverting - long enough to read, short enough not to feel stuck.
+const ITEM_POPUP_FLASH_MS = 3000;
 
 /** The popup opened by clicking an ItemGrid tile - icon/name/description/
  * sizeClass/stackMax/two-handed/quality, plus (when `movable`) a quantity
@@ -729,43 +742,61 @@ function ItemDetailPopup({
 
   const [quantity, setQuantity] = useState(1);
   const [pending, setPending] = useState(false);
-  const [actionError, setActionError] = useState<string | null>(null);
+  // Replaces the description text for ITEM_POPUP_FLASH_MS after a failed
+  // move/equip, then reverts on its own - see the render below, which
+  // prefers this over info.description whenever it's set.
+  const [flashMessage, setFlashMessage] = useState<string | null>(null);
+  const flashTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  useEffect(() => () => {
+    if (flashTimeoutRef.current) clearTimeout(flashTimeoutRef.current);
+  }, []);
 
-  const finish = (data: RawPlayerData | null) => {
-    if (!data) {
-      setActionError("Couldn't move that - check the destination has room.");
-      setPending(false);
-      return;
-    }
-    onPlayerDataUpdated?.(data);
+  // "No backpack equipped" / "Backpack is full" (see backend.players.
+  // check_out_item_instance/load_item_balance_to_backpack) get their own
+  // specific wording; anything else falls back to a generic message.
+  const flashForDetail = (detail: string | null): string => {
+    if (detail === "No backpack equipped") return "No backpack found, equip one.";
+    if (detail === "Backpack is full") return "Backpack full - remove items first.";
+    return "Couldn't move that.";
+  };
+
+  const fail = (detail: string | null) => {
+    if (flashTimeoutRef.current) clearTimeout(flashTimeoutRef.current);
+    setFlashMessage(flashForDetail(detail));
+    flashTimeoutRef.current = setTimeout(() => setFlashMessage(null), ITEM_POPUP_FLASH_MS);
+    setPending(false);
+  };
+
+  const finish = (result: PostJsonResult) => {
+    if (!result.ok) return fail(result.detail);
+    onPlayerDataUpdated?.(result.data);
     onClose();
   };
 
   const moveToBackpack = async () => {
     setPending(true);
-    setActionError(null);
-    const data = isInstance
-      ? await postJson(`/api/auth/me/characters/${characterId}/items/${moveId}/check-out`)
-      : await (async () => {
-          const checkedOut = await postJson(
-            `/api/auth/me/characters/${characterId}/item-balances/${moveId}/check-out`,
-            { amount: quantity }
-          );
-          if (!checkedOut) return null;
-          return postJson(`/api/auth/me/characters/${characterId}/item-balances/${moveId}/load-backpack`, {
-            amount: quantity,
-          });
-        })();
-    finish(data);
+    setFlashMessage(null);
+    if (isInstance) {
+      return finish(await postJson(`/api/auth/me/characters/${characterId}/items/${moveId}/check-out`));
+    }
+    const checkedOut = await postJson(
+      `/api/auth/me/characters/${characterId}/item-balances/${moveId}/check-out`,
+      { amount: quantity }
+    );
+    if (!checkedOut.ok) return fail(checkedOut.detail);
+    finish(
+      await postJson(`/api/auth/me/characters/${characterId}/item-balances/${moveId}/load-backpack`, {
+        amount: quantity,
+      })
+    );
   };
 
   const equipToSlots = async (slots: string[]) => {
     setPending(true);
-    setActionError(null);
+    setFlashMessage(null);
     const checkedOut = await postJson(`/api/auth/me/characters/${characterId}/items/${moveId}/check-out`);
-    if (!checkedOut) return finish(null);
-    const equipped = await postJson(`/api/auth/me/characters/${characterId}/items/${moveId}/equip`, { slots });
-    finish(equipped);
+    if (!checkedOut.ok) return fail(checkedOut.detail);
+    finish(await postJson(`/api/auth/me/characters/${characterId}/items/${moveId}/equip`, { slots }));
   };
 
   // A twoHanded family occupies both its slots at once (equip_item requires
@@ -790,10 +821,22 @@ function ItemDetailPopup({
   return (
     <div className={styles.itemPopupOverlay} onClick={handleClick}>
       <div className={styles.itemPopupCard}>
+        {!!info?.tier && (
+          <span className={`${styles.itemPopupTierBadge} ${itemGridTierBadgeClass(info.tier)}`}>
+            {getTierIndicator(info.tier)}
+          </span>
+        )}
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img src={info?.icon || FALLBACK_ITEM_ICON} alt={name} className={styles.itemPopupImg} />
         <h3 className={styles.itemPopupName}>{displayName}</h3>
-        <p className={styles.itemPopupDescription}>{info?.description || "dummy"}</p>
+        <p className={`${styles.itemPopupDescription} ${flashMessage ? styles.itemPopupFlash : ""}`}>
+          {flashMessage ?? (info?.description || "dummy")}
+        </p>
+        {!!info?.gatheringBonuses?.length && (
+          <p className={styles.itemPopupGathering}>
+            Helps gather: {info.gatheringBonuses.map(formatResourceLabel).join(", ")}
+          </p>
+        )}
         <div className={styles.itemPopupMeta}>
           <span>Size: {info?.sizeClass ?? "tiny"}</span>
           <span>StackMax: {stackSize}</span>
@@ -850,7 +893,6 @@ function ItemDetailPopup({
             )}
           </div>
         )}
-        {actionError && <p className={styles.craftError}>{actionError}</p>}
       </div>
     </div>
   );
@@ -867,35 +909,6 @@ function ownedIds(...pools: Record<string, number>[]): string[] {
     }
   }
   return [...ids];
-}
-
-// A single sub-accordion item (Resources/Tools/Blueprints Known/...) within
-// one of the two top-level sections - `openIds`/`onToggle` let any number of
-// siblings be open at once (each toggles independently, unlike the
-// mutually-exclusive top-level accordion in app/characters/page.tsx).
-function SubAccordionItem({
-  id,
-  label,
-  openIds,
-  onToggle,
-  children,
-}: {
-  id: string;
-  label: string;
-  openIds: Set<string>;
-  onToggle: (id: string) => void;
-  children: React.ReactNode;
-}) {
-  const isOpen = openIds.has(id);
-  return (
-    <div className={styles.subAccordionItem}>
-      <button className={styles.subAccordionHeader} onClick={() => onToggle(id)}>
-        <span>{label}</span>
-        <span className={styles.accordionChevron}>{isOpen ? "▴" : "▾"}</span>
-      </button>
-      {isOpen && <div className={styles.subAccordionBody}>{children}</div>}
-    </div>
-  );
 }
 
 /** Exchange page: this character's own crafting stock next to the party's shared stock. */
@@ -1056,6 +1069,7 @@ export function InventoryTab({
             equipSlots: string[];
             backpackable: boolean;
             twoHanded: boolean;
+            gatheringBonuses: string[];
           }>
         ) => {
         const tierMap: BlueprintTierInfo = {};
@@ -1073,6 +1087,7 @@ export function InventoryTab({
             equipSlots: item.equipSlots,
             backpackable: item.backpackable,
             twoHanded: item.twoHanded,
+            gatheringBonuses: item.gatheringBonuses,
           };
         }
         setItemCatalogTierInfo(tierMap);
@@ -1094,29 +1109,21 @@ export function InventoryTab({
   }, [activeSubTab, onSubTabChange]);
 
   // Top-level accordion within the Crafting tab (Blueprints Known/this
-  // character's own Crafting stock/the party's shared Tools & Resources) -
-  // any number can be open at once, toggled independently. The recipe
-  // viewer below is always visible, not part of this fold. Only the party's
-  // crafted Items live under the separate Vault tab (see activeSubTab) -
-  // Tools/Resources stay here since they're what a craft actually draws on.
-  const [openSections, setOpenSections] = useState<Set<"blueprints" | "character" | "partyStock">>(
-    () => (openCraftingSectionByDefault ? new Set(["character"]) : new Set())
-  );
-  const toggleSection = (id: "blueprints" | "character" | "partyStock") => setOpenSections((prev) => {
-    const next = new Set(prev);
-    if (next.has(id)) next.delete(id); else next.add(id);
-    return next;
-  });
-
-  // Party's Vault still has sub-items (Tools/Resources) that can each open
-  // independently - the character's own section no longer does, now that
-  // it's just a single Resources table with no fold of its own.
-  const [openPartySub, setOpenPartySub] = useState<Set<string>>(new Set());
-  const togglePartySub = (id: string) => setOpenPartySub((prev) => {
-    const next = new Set(prev);
-    if (next.has(id)) next.delete(id); else next.add(id);
-    return next;
-  });
+  // character's own Crafting stock/the party's shared Tools/the party's
+  // shared Resources) - any number can be open at once, toggled
+  // independently. The recipe viewer below is always visible, not part of
+  // this fold. Only the party's crafted Items live under the separate
+  // Vault tab (see activeSubTab) - Tools/Resources stay here since they're
+  // what a craft actually draws on.
+  const [openSections, setOpenSections] = useState<
+    Set<"blueprints" | "character" | "partyTools" | "partyResources">
+  >(() => (openCraftingSectionByDefault ? new Set(["character"]) : new Set()));
+  const toggleSection = (id: "blueprints" | "character" | "partyTools" | "partyResources") =>
+    setOpenSections((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      return next;
+    });
 
   // Independent of the Crafting accordion above - folding the recipe viewer
   // has nothing to do with toggling between the character's and party's stock.
@@ -1535,40 +1542,37 @@ export function InventoryTab({
           )}
 
           <div className={styles.accordionItem}>
-            <button className={styles.accordionHeader} onClick={() => toggleSection("partyStock")}>
-              <span>Party&apos;s Tools &amp; Resources</span>
-              <span className={styles.accordionChevron}>{openSections.has("partyStock") ? "▴" : "▾"}</span>
+            <button className={styles.accordionHeader} onClick={() => toggleSection("partyTools")}>
+              <span>Party&apos;s Tools</span>
+              <span className={styles.accordionChevron}>{openSections.has("partyTools") ? "▴" : "▾"}</span>
             </button>
-            {openSections.has("partyStock") && (
+            {openSections.has("partyTools") && (
               <div className={styles.accordionBody}>
-                <SubAccordionItem
-                  id="tools"
-                  label="Tools"
-                  openIds={openPartySub}
-                  onToggle={togglePartySub}
-                >
-                  <IdList
-                    ids={ownedIds(playerTools)}
-                    emptyLabel="Nothing in the shared tool pool."
-                    tierInfo={toolTierInfo}
-                    sortByTier
-                    fixedIcon="🔧"
-                    balances={playerTools}
-                    textColor="#7eb8ff"
-                  />
-                </SubAccordionItem>
-                <SubAccordionItem
-                  id="resources"
-                  label="Resources"
-                  openIds={openPartySub}
-                  onToggle={togglePartySub}
-                >
-                  <ResourceList
-                    balances={playerResourceBalances}
-                    emptyLabel="Nothing in the shared crafting stock."
-                    tierInfo={resourceTierInfo}
-                  />
-                </SubAccordionItem>
+                <IdList
+                  ids={ownedIds(playerTools)}
+                  emptyLabel="Nothing in the shared tool pool."
+                  tierInfo={toolTierInfo}
+                  sortByTier
+                  fixedIcon="🔧"
+                  balances={playerTools}
+                  textColor="#7eb8ff"
+                />
+              </div>
+            )}
+          </div>
+
+          <div className={styles.accordionItem}>
+            <button className={styles.accordionHeader} onClick={() => toggleSection("partyResources")}>
+              <span>Party&apos;s Resources</span>
+              <span className={styles.accordionChevron}>{openSections.has("partyResources") ? "▴" : "▾"}</span>
+            </button>
+            {openSections.has("partyResources") && (
+              <div className={styles.accordionBody}>
+                <ResourceList
+                  balances={playerResourceBalances}
+                  emptyLabel="Nothing in the shared crafting stock."
+                  tierInfo={resourceTierInfo}
+                />
               </div>
             )}
           </div>

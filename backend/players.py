@@ -1796,13 +1796,15 @@ async def check_out_item_instance(address: str, character_id: str, instance_id: 
     """
     Move one item instance from `address`'s shared pool (inventory.items,
     location:"pool") onto one of their characters' own backpack
-    (location:"backpack"). Capacity-gated: rejected if the character's backpack has no free slot
-    for this family's size class (see items_catalog.backpack_slots_used/
-    backpack_capacity). Returns None if the instance isn't in the pool (an
+    (location:"backpack"). Capacity-gated (see items_catalog.
+    backpack_slots_used/backpack_capacity): raises ValueError if the
+    character has no backpack equipped at all (capacity is 0 with nothing
+    to carry it in) or the backpack has no free slot for this family's
+    size class. Returns None if the instance isn't in the pool (an
     instance borrowed for an in-progress craft is location:"crafting", not
     "pool" - see start_craft/finish_craft - so it's naturally excluded
-    here rather than needing its own check), the address/character pair
-    doesn't match, or there's no room.
+    here rather than needing its own check), or the address/character pair
+    doesn't match.
     """
     db = get_database()
     doc = await db.players.find_one({"address": address, "characters.id": character_id})
@@ -1819,10 +1821,12 @@ async def check_out_item_instance(address: str, character_id: str, instance_id: 
         return None
 
     cost = items_catalog.slot_cost_for_family(instance["familyId"])
-    used = items_catalog.backpack_slots_used(character)
     capacity = items_catalog.backpack_capacity(character)
+    if capacity == 0:
+        raise ValueError("No backpack equipped")
+    used = items_catalog.backpack_slots_used(character)
     if used + cost > capacity:
-        return None
+        raise ValueError("Backpack is full")
 
     backpacked_instance = {**instance, "location": "backpack"}
     doc = await db.players.find_one_and_update(
@@ -1966,10 +1970,12 @@ async def load_resource_to_backpack(
     existing = character.get("backpackResources", {}).get(resource_id, 0)
     marginal_slots = math.ceil((existing + amount) / stack_size) - math.ceil(existing / stack_size)
 
-    used = items_catalog.backpack_slots_used(character)
     capacity = items_catalog.backpack_capacity(character)
+    if capacity == 0:
+        raise ValueError("No backpack equipped")
+    used = items_catalog.backpack_slots_used(character)
     if used + marginal_slots > capacity:
-        return None
+        raise ValueError("Backpack is full")
 
     doc = await db.players.find_one_and_update(
         {
@@ -2045,10 +2051,12 @@ async def load_item_balance_to_backpack(
         math.ceil((existing + amount) / stack_size) - math.ceil(existing / stack_size)
     ) * slot_cost
 
-    used = items_catalog.backpack_slots_used(character)
     capacity = items_catalog.backpack_capacity(character)
+    if capacity == 0:
+        raise ValueError("No backpack equipped")
+    used = items_catalog.backpack_slots_used(character)
     if used + marginal_slots > capacity:
-        return None
+        raise ValueError("Backpack is full")
 
     doc = await db.players.find_one_and_update(
         {
