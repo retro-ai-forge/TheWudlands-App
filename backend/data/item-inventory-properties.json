@@ -1457,19 +1457,6 @@
     "icon": "/images/items/bat.png"
   },
   {
-    "familyId": "writers_table",
-    "kind": [
-      "tool"
-    ],
-    "sizeClass": "xLarge",
-    "stackSize": 1,
-    "needsItemDefinition": false,
-    "note": "TBD - a placed crafting station, not personal gear; may not use carry/backpack rules at all.",
-    "equipSlots": [],
-    "backpackable": false,
-    "icon": "/images/items/bat.png"
-  },
-  {
     "familyId": "axe",
     "kind": [
       "weapon",

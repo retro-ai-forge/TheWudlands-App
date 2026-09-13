@@ -62,6 +62,13 @@
   {"id": "ebony_reinforced_frame", "name": "Ebony Reinforced Frame", "familyId": "reinforced_frame", "tier": 5},
   {"id": "worldroot_reinforced_frame", "name": "Worldroot Reinforced Frame", "familyId": "reinforced_frame", "tier": 6},
 
+  {"id": "pine_writers_table", "name": "Crude Writer's Table", "familyId": "writers_table", "tier": 1},
+  {"id": "oak_writers_table", "name": "Oak Writer's Table", "familyId": "writers_table", "tier": 2},
+  {"id": "ash_writers_table", "name": "Ash Writer's Table", "familyId": "writers_table", "tier": 3},
+  {"id": "cedar_writers_table", "name": "Cedar Writer's Table", "familyId": "writers_table", "tier": 4},
+  {"id": "ebony_writers_table", "name": "Ebony Writer's Table", "familyId": "writers_table", "tier": 5},
+  {"id": "worldroot_writers_table", "name": "Worldroot Writer's Table", "familyId": "writers_table", "tier": 6},
+
   {"id": "small_bone_shard", "name": "Small Bone Shard", "familyId": "bone_shard", "tier": 1},
   {"id": "large_bone_shard", "name": "Large Bone Shard", "familyId": "bone_shard", "tier": 2},
   {"id": "beast_bone_shard", "name": "Beast Bone Shard", "familyId": "bone_shard", "tier": 3},

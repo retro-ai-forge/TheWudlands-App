@@ -1,9 +1,12 @@
 {
   "Rural": ["hide", "meat", "harvest", "fish"],
-  "CraftMetal": ["ore", "wood", "sand"],
+  "CraftWeapon": ["ore", "wood", "sand"],
+  "CraftArmor": ["ore", "wood", "sand"],
+  "CraftTool": ["ore", "wood", "sand"],
   "CraftStone": ["clay", "stone", "crystal"],
   "CraftGarment": ["skin", "fiber", "herbs"],
   "CraftGlass": ["sand", "crystal", "ore"],
+  "CraftFurniture": ["wood", "hide", "bone"],
   "CraftWood": ["wood", "hide", "bone"],
   "Aristocratic": ["reed", "feather", "skin"],
   "Trade": ["harvest", "stone", "monster_part"],

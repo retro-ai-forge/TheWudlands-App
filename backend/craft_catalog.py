@@ -21,8 +21,65 @@ import json
 from dataclasses import dataclass
 from pathlib import Path
 
+from backend import items_catalog
 from backend.professions_catalog import PROFESSION_CATEGORIES
 from backend.resources_catalog import PROFESSION_RESOURCE_FAMILIES
+
+# CraftMetal (blacksmith/armorer/tinsmith) and CraftWood (carpenter/cooper)
+# were later split into finer profession-facing categories - see the
+# CraftWeapon/CraftArmor/CraftTool/CraftFurniture/CraftWood entries in
+# profession-resource-families.json. But CraftWeapon/CraftArmor/CraftTool
+# all share the same raw-family tuple (ore, wood, sand), so tallying hits
+# against them directly would make every recipe a 3-way tie instead of the
+# single "sole winner" the old CraftMetal carve-out relied on. The tie-break
+# math below stays on the original, unsplit CraftMetal/CraftWood categories
+# (this dict), and _build_blueprint_category_index relabels a win into the
+# right sub-category afterward, using the recipe's own output item's kind.
+_BLUEPRINT_TIE_BREAK_FAMILIES: dict[str, tuple[str, ...]] = {
+    category: tuple(families)
+    for category, families in PROFESSION_RESOURCE_FAMILIES.items()
+    if category not in ("CraftWeapon", "CraftArmor", "CraftTool", "CraftFurniture")
+}
+_BLUEPRINT_TIE_BREAK_FAMILIES["CraftMetal"] = ("ore", "wood", "sand")
+
+# Output item "kind" (items_catalog.ITEM_FAMILIES_BY_ID[...].kind) -> which
+# split-off category a CraftMetal/CraftWood win relabels to. Verified exact
+# (no leftovers) against the current blueprint set: CraftMetal's 20
+# blueprints split 11/6/3 weapon/armor+shield/tool; CraftWood's 14 split
+# 8/6 weapon+armor+shield/tool+equipment.
+_CRAFTMETAL_SUBCATEGORY_BY_KIND = {
+    "weapon": "CraftWeapon",
+    "armor": "CraftArmor",
+    "shield": "CraftArmor",
+    "tool": "CraftTool",
+}
+_CRAFTWOOD_SUBCATEGORY_BY_KIND = {
+    "weapon": "CraftWood",
+    "armor": "CraftWood",
+    "shield": "CraftWood",
+    "tool": "CraftFurniture",
+    "equipment": "CraftFurniture",
+}
+
+
+def _craftmetal_subcategory(output_family_id: str) -> str:
+    item = items_catalog.ITEM_FAMILIES_BY_ID.get(output_family_id)
+    if item:
+        for kind in item.kind:
+            sub = _CRAFTMETAL_SUBCATEGORY_BY_KIND.get(kind)
+            if sub:
+                return sub
+    return "CraftTool"
+
+
+def _craftwood_subcategory(output_family_id: str) -> str:
+    item = items_catalog.ITEM_FAMILIES_BY_ID.get(output_family_id)
+    if item:
+        for kind in item.kind:
+            sub = _CRAFTWOOD_SUBCATEGORY_BY_KIND.get(kind)
+            if sub:
+                return sub
+    return "CraftWood"
 
 _DATA_DIR = Path(__file__).resolve().parent / "data"
 _BLUEPRINT_PATH = _DATA_DIR / "base-blueprint.json"
@@ -153,7 +210,7 @@ def _recipe_categories(recipe: dict, recipes_by_family: dict[str, dict]) -> list
         return []
     counts = {
         category: sum(1 for hit in hits if hit in families)
-        for category, families in PROFESSION_RESOURCE_FAMILIES.items()
+        for category, families in _BLUEPRINT_TIE_BREAK_FAMILIES.items()
     }
     best = max(counts.values())
     if best == 0:
@@ -182,8 +239,12 @@ def _build_blueprint_category_index() -> dict[str, tuple[str, ...]]:
             continue
         categories = _recipe_categories(recipe, recipes_by_family)
         for category in categories:
-            if category == "CraftMetal" and len(categories) != 1:
-                continue
+            if category == "CraftMetal":
+                if len(categories) != 1:
+                    continue
+                category = _craftmetal_subcategory(recipe["familyId"])
+            elif category == "CraftWood":
+                category = _craftwood_subcategory(recipe["familyId"])
             index.setdefault(blueprint_family, set()).add(category)
     return {family: tuple(sorted(cats)) for family, cats in index.items()}
 

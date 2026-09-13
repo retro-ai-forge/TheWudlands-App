@@ -209,13 +209,6 @@
   {"id": "blueprint_gold_wrench", "name": "Blueprint: Gold Wrench", "familyId": "blueprint_wrench", "tier": 5},
   {"id": "blueprint_star_metal_wrench", "name": "Blueprint: Star Metal Wrench", "familyId": "blueprint_wrench", "tier": 6},
 
-  {"id": "blueprint_pine_writers_table", "name": "Blueprint: Crude Writer's Table", "familyId": "blueprint_writers_table", "tier": 1},
-  {"id": "blueprint_oak_writers_table", "name": "Blueprint: Oak Writer's Table", "familyId": "blueprint_writers_table", "tier": 2},
-  {"id": "blueprint_ash_writers_table", "name": "Blueprint: Ash Writer's Table", "familyId": "blueprint_writers_table", "tier": 3},
-  {"id": "blueprint_cedar_writers_table", "name": "Blueprint: Cedar Writer's Table", "familyId": "blueprint_writers_table", "tier": 4},
-  {"id": "blueprint_ebony_writers_table", "name": "Blueprint: Ebony Writer's Table", "familyId": "blueprint_writers_table", "tier": 5},
-  {"id": "blueprint_worldroot_writers_table", "name": "Blueprint: Worldroot Writer's Table", "familyId": "blueprint_writers_table", "tier": 6},
-
   {"id": "blueprint_coated_poison", "name": "Blueprint: Coated Poison", "familyId": "blueprint_poison_weapon", "tier": 1},
   {"id": "blueprint_envenomed_poison", "name": "Blueprint: Envenomed Poison", "familyId": "blueprint_poison_weapon", "tier": 2},
   {"id": "blueprint_toxic_poison", "name": "Blueprint: Toxic Poison", "familyId": "blueprint_poison_weapon", "tier": 3},
