@@ -7,10 +7,10 @@
     "sizeClass": "light",
     "stackSize": 1,
     "needsItemDefinition": false,
-    "note": "TBD - utility gear, durability unclear.",
+    "note": "Utility gear - does not wear out, no durability tracking needed.",
     "equipSlots": [],
     "backpackable": true,
-    "icon": "/images/items/bat.png"
+    "description": "bedroll"
   },
   {
     "familyId": "chain",
@@ -20,10 +20,10 @@
     "sizeClass": "light",
     "stackSize": 1,
     "needsItemDefinition": false,
-    "note": "TBD - utility gear, durability unclear.",
+    "note": "Utility gear - does not wear out, no durability tracking needed.",
     "equipSlots": [],
     "backpackable": true,
-    "icon": "/images/items/bat.png"
+    "description": "chain"
   },
   {
     "familyId": "chalk",
@@ -33,10 +33,10 @@
     "sizeClass": "tiny",
     "stackSize": 10,
     "needsItemDefinition": false,
-    "note": "TBD - utility gear, durability unclear.",
+    "note": "Utility gear - does not wear out, no durability tracking needed.",
     "equipSlots": [],
     "backpackable": true,
-    "icon": "/images/items/bat.png"
+    "description": "chalk"
   },
   {
     "familyId": "crowbar",
@@ -46,10 +46,10 @@
     "sizeClass": "light",
     "stackSize": 1,
     "needsItemDefinition": false,
-    "note": "TBD - utility gear, durability unclear.",
+    "note": "Utility gear - does not wear out, no durability tracking needed.",
     "equipSlots": [],
     "backpackable": true,
-    "icon": "/images/items/bat.png"
+    "description": "crowbar"
   },
   {
     "familyId": "grappling_hook",
@@ -59,10 +59,10 @@
     "sizeClass": "light",
     "stackSize": 1,
     "needsItemDefinition": false,
-    "note": "TBD - utility gear, durability unclear.",
+    "note": "Utility gear - does not wear out, no durability tracking needed.",
     "equipSlots": [],
     "backpackable": true,
-    "icon": "/images/items/bat.png"
+    "description": "grappling_hook"
   },
   {
     "familyId": "hourglass",
@@ -72,10 +72,10 @@
     "sizeClass": "light",
     "stackSize": 1,
     "needsItemDefinition": false,
-    "note": "TBD - utility gear, durability unclear.",
+    "note": "Utility gear - does not wear out, no durability tracking needed.",
     "equipSlots": [],
     "backpackable": true,
-    "icon": "/images/items/bat.png"
+    "description": "hourglass"
   },
   {
     "familyId": "hunters_charm",
@@ -85,10 +85,10 @@
     "sizeClass": "light",
     "stackSize": 1,
     "needsItemDefinition": false,
-    "note": "TBD - utility gear, durability unclear.",
+    "note": "Utility gear - does not wear out, no durability tracking needed.",
     "equipSlots": [],
     "backpackable": true,
-    "icon": "/images/items/bat.png"
+    "description": "hunters_charm"
   },
   {
     "familyId": "iron_spikes",
@@ -98,10 +98,10 @@
     "sizeClass": "tiny",
     "stackSize": 10,
     "needsItemDefinition": false,
-    "note": "TBD - utility gear, durability unclear.",
+    "note": "Utility gear - does not wear out, no durability tracking needed.",
     "equipSlots": [],
     "backpackable": true,
-    "icon": "/images/items/bat.png"
+    "description": "iron_spikes"
   },
   {
     "familyId": "ladder",
@@ -111,10 +111,10 @@
     "sizeClass": "light",
     "stackSize": 1,
     "needsItemDefinition": false,
-    "note": "TBD - utility gear, durability unclear.",
+    "note": "Utility gear - does not wear out, no durability tracking needed.",
     "equipSlots": [],
     "backpackable": true,
-    "icon": "/images/items/bat.png"
+    "description": "ladder"
   },
   {
     "familyId": "lock_and_key",
@@ -124,10 +124,10 @@
     "sizeClass": "tiny",
     "stackSize": 10,
     "needsItemDefinition": false,
-    "note": "TBD - utility gear, durability unclear.",
+    "note": "Utility gear - does not wear out, no durability tracking needed.",
     "equipSlots": [],
     "backpackable": true,
-    "icon": "/images/items/bat.png"
+    "description": "lock_and_key"
   },
   {
     "familyId": "manacles",
@@ -137,10 +137,10 @@
     "sizeClass": "light",
     "stackSize": 1,
     "needsItemDefinition": false,
-    "note": "TBD - utility gear, durability unclear.",
+    "note": "Utility gear - does not wear out, no durability tracking needed.",
     "equipSlots": [],
     "backpackable": true,
-    "icon": "/images/items/bat.png"
+    "description": "manacles"
   },
   {
     "familyId": "rope",
@@ -150,10 +150,10 @@
     "sizeClass": "light",
     "stackSize": 1,
     "needsItemDefinition": false,
-    "note": "TBD - utility gear, durability unclear.",
+    "note": "Utility gear - does not wear out, no durability tracking needed.",
     "equipSlots": [],
     "backpackable": true,
-    "icon": "/images/items/bat.png"
+    "description": "rope"
   },
   {
     "familyId": "net",
@@ -163,10 +163,10 @@
     "sizeClass": "light",
     "stackSize": 1,
     "needsItemDefinition": false,
-    "note": "TBD - utility gear, durability unclear.",
+    "note": "Utility gear - does not wear out, no durability tracking needed.",
     "equipSlots": [],
     "backpackable": true,
-    "icon": "/images/items/bat.png"
+    "description": "net"
   },
   {
     "familyId": "pickaxe",
@@ -176,10 +176,10 @@
     "sizeClass": "medium",
     "stackSize": 1,
     "needsItemDefinition": false,
-    "note": "TBD - utility gear, durability unclear.",
+    "note": "Utility gear - does not wear out, no durability tracking needed.",
     "equipSlots": [],
     "backpackable": true,
-    "icon": "/images/items/bat.png"
+    "description": "pickaxe"
   },
   {
     "familyId": "monster_trap",
@@ -189,10 +189,10 @@
     "sizeClass": "medium",
     "stackSize": 1,
     "needsItemDefinition": false,
-    "note": "TBD - utility gear, durability unclear.",
+    "note": "Utility gear - does not wear out, no durability tracking needed.",
     "equipSlots": [],
     "backpackable": true,
-    "icon": "/images/items/bat.png"
+    "description": "monster_trap"
   },
   {
     "familyId": "starlight_catcher",
@@ -202,10 +202,10 @@
     "sizeClass": "light",
     "stackSize": 1,
     "needsItemDefinition": false,
-    "note": "TBD - utility gear, durability unclear.",
+    "note": "Utility gear - does not wear out, no durability tracking needed.",
     "equipSlots": [],
     "backpackable": true,
-    "icon": "/images/items/bat.png"
+    "description": "starlight_catcher"
   },
   {
     "familyId": "shovel",
@@ -215,10 +215,10 @@
     "sizeClass": "light",
     "stackSize": 1,
     "needsItemDefinition": false,
-    "note": "TBD - utility gear, durability unclear.",
+    "note": "Utility gear - does not wear out, no durability tracking needed.",
     "equipSlots": [],
     "backpackable": true,
-    "icon": "/images/items/bat.png"
+    "description": "shovel"
   },
   {
     "familyId": "signal_whistle",
@@ -231,7 +231,7 @@
     "note": "Never equipped - carried as a stackable backpack item, not an individually tracked instance.",
     "equipSlots": [],
     "backpackable": true,
-    "icon": "/images/items/bat.png"
+    "description": "signal_whistle"
   },
   {
     "familyId": "spyglass",
@@ -241,10 +241,10 @@
     "sizeClass": "light",
     "stackSize": 1,
     "needsItemDefinition": false,
-    "note": "TBD - utility gear, durability unclear.",
+    "note": "Utility gear - does not wear out, no durability tracking needed.",
     "equipSlots": [],
     "backpackable": true,
-    "icon": "/images/items/bat.png"
+    "description": "spyglass"
   },
   {
     "familyId": "tent",
@@ -254,10 +254,10 @@
     "sizeClass": "light",
     "stackSize": 1,
     "needsItemDefinition": false,
-    "note": "TBD - utility gear, durability unclear.",
+    "note": "Utility gear - does not wear out, no durability tracking needed.",
     "equipSlots": [],
     "backpackable": true,
-    "icon": "/images/items/bat.png"
+    "description": "tent"
   },
   {
     "familyId": "tinderbox",
@@ -267,10 +267,10 @@
     "sizeClass": "light",
     "stackSize": 1,
     "needsItemDefinition": false,
-    "note": "TBD - utility gear, durability unclear.",
+    "note": "Utility gear - does not wear out, no durability tracking needed.",
     "equipSlots": [],
     "backpackable": true,
-    "icon": "/images/items/bat.png"
+    "description": "tinderbox"
   },
   {
     "familyId": "waterskin",
@@ -283,7 +283,7 @@
     "note": "Never equipped - carried as a stackable backpack item, not an individually tracked instance.",
     "equipSlots": [],
     "backpackable": true,
-    "icon": "/images/items/bat.png"
+    "description": "waterskin"
   },
   {
     "familyId": "whetstone",
@@ -293,10 +293,10 @@
     "sizeClass": "light",
     "stackSize": 1,
     "needsItemDefinition": false,
-    "note": "TBD - utility gear, durability unclear.",
+    "note": "Utility gear - does not wear out, no durability tracking needed.",
     "equipSlots": [],
     "backpackable": true,
-    "icon": "/images/items/bat.png"
+    "description": "whetstone"
   },
   {
     "familyId": "chainmail_chest_armor",
@@ -312,7 +312,7 @@
     ],
     "backpackable": true,
     "qualityMax": 250,
-    "icon": "/images/items/bat.png"
+    "description": "chainmail_chest_armor"
   },
   {
     "familyId": "chainmail_head_armor",
@@ -328,7 +328,7 @@
     ],
     "backpackable": true,
     "qualityMax": 250,
-    "icon": "/images/items/bat.png"
+    "description": "chainmail_head_armor"
   },
   {
     "familyId": "chainmail_leg_armor",
@@ -344,7 +344,7 @@
     ],
     "backpackable": true,
     "qualityMax": 250,
-    "icon": "/images/items/bat.png"
+    "description": "chainmail_leg_armor"
   },
   {
     "familyId": "chitin_chest_armor",
@@ -360,7 +360,7 @@
     ],
     "backpackable": true,
     "qualityMax": 310,
-    "icon": "/images/items/bat.png"
+    "description": "chitin_chest_armor"
   },
   {
     "familyId": "chitin_head_armor",
@@ -376,7 +376,7 @@
     ],
     "backpackable": true,
     "qualityMax": 310,
-    "icon": "/images/items/bat.png"
+    "description": "chitin_head_armor"
   },
   {
     "familyId": "chitin_leg_armor",
@@ -392,7 +392,7 @@
     ],
     "backpackable": true,
     "qualityMax": 310,
-    "icon": "/images/items/bat.png"
+    "description": "chitin_leg_armor"
   },
   {
     "familyId": "cloth_chest_armor",
@@ -408,7 +408,7 @@
     ],
     "backpackable": true,
     "qualityMax": 70,
-    "icon": "/images/items/bat.png"
+    "description": "cloth_chest_armor"
   },
   {
     "familyId": "cloth_head_armor",
@@ -424,7 +424,7 @@
     ],
     "backpackable": true,
     "qualityMax": 70,
-    "icon": "/images/items/bat.png"
+    "description": "cloth_head_armor"
   },
   {
     "familyId": "cloth_leg_armor",
@@ -440,7 +440,7 @@
     ],
     "backpackable": true,
     "qualityMax": 70,
-    "icon": "/images/items/bat.png"
+    "description": "cloth_leg_armor"
   },
   {
     "familyId": "darksteel_chest_armor",
@@ -456,7 +456,7 @@
     ],
     "backpackable": false,
     "qualityMax": 360,
-    "icon": "/images/items/bat.png"
+    "description": "darksteel_chest_armor"
   },
   {
     "familyId": "darksteel_head_armor",
@@ -472,7 +472,7 @@
     ],
     "backpackable": false,
     "qualityMax": 360,
-    "icon": "/images/items/bat.png"
+    "description": "darksteel_head_armor"
   },
   {
     "familyId": "darksteel_leg_armor",
@@ -488,7 +488,7 @@
     ],
     "backpackable": false,
     "qualityMax": 360,
-    "icon": "/images/items/bat.png"
+    "description": "darksteel_leg_armor"
   },
   {
     "familyId": "ebony_chest_armor",
@@ -504,7 +504,7 @@
     ],
     "backpackable": true,
     "qualityMax": 340,
-    "icon": "/images/items/bat.png"
+    "description": "ebony_chest_armor"
   },
   {
     "familyId": "ebony_head_armor",
@@ -520,7 +520,7 @@
     ],
     "backpackable": true,
     "qualityMax": 340,
-    "icon": "/images/items/bat.png"
+    "description": "ebony_head_armor"
   },
   {
     "familyId": "ebony_leg_armor",
@@ -536,7 +536,7 @@
     ],
     "backpackable": true,
     "qualityMax": 340,
-    "icon": "/images/items/bat.png"
+    "description": "ebony_leg_armor"
   },
   {
     "familyId": "iron_chest_armor",
@@ -552,7 +552,7 @@
     ],
     "backpackable": true,
     "qualityMax": 310,
-    "icon": "/images/items/bat.png"
+    "description": "iron_chest_armor"
   },
   {
     "familyId": "iron_head_armor",
@@ -568,7 +568,7 @@
     ],
     "backpackable": true,
     "qualityMax": 310,
-    "icon": "/images/items/bat.png"
+    "description": "iron_head_armor"
   },
   {
     "familyId": "iron_leg_armor",
@@ -584,7 +584,7 @@
     ],
     "backpackable": true,
     "qualityMax": 310,
-    "icon": "/images/items/bat.png"
+    "description": "iron_leg_armor"
   },
   {
     "familyId": "leather_chest_armor",
@@ -600,7 +600,7 @@
     ],
     "backpackable": true,
     "qualityMax": 150,
-    "icon": "/images/items/bat.png"
+    "description": "leather_chest_armor"
   },
   {
     "familyId": "leather_head_armor",
@@ -616,7 +616,7 @@
     ],
     "backpackable": true,
     "qualityMax": 150,
-    "icon": "/images/items/bat.png"
+    "description": "leather_head_armor"
   },
   {
     "familyId": "leather_leg_armor",
@@ -632,7 +632,7 @@
     ],
     "backpackable": true,
     "qualityMax": 150,
-    "icon": "/images/items/bat.png"
+    "description": "leather_leg_armor"
   },
   {
     "familyId": "meteoric_iron_chest_armor",
@@ -648,7 +648,7 @@
     ],
     "backpackable": false,
     "qualityMax": 350,
-    "icon": "/images/items/bat.png"
+    "description": "meteoric_iron_chest_armor"
   },
   {
     "familyId": "meteoric_iron_head_armor",
@@ -664,7 +664,7 @@
     ],
     "backpackable": false,
     "qualityMax": 350,
-    "icon": "/images/items/bat.png"
+    "description": "meteoric_iron_head_armor"
   },
   {
     "familyId": "meteoric_iron_leg_armor",
@@ -680,7 +680,7 @@
     ],
     "backpackable": false,
     "qualityMax": 350,
-    "icon": "/images/items/bat.png"
+    "description": "meteoric_iron_leg_armor"
   },
   {
     "familyId": "merchants_scale",
@@ -690,10 +690,10 @@
     "sizeClass": "medium",
     "stackSize": 1,
     "needsItemDefinition": false,
-    "note": "TBD - a trade tool, durability unclear.",
+    "note": "A trade tool - does not wear out, no durability tracking needed.",
     "equipSlots": [],
     "backpackable": true,
-    "icon": "/images/items/bat.png"
+    "description": "merchants_scale"
   },
   {
     "familyId": "bangers",
@@ -706,7 +706,7 @@
     "note": "Consumed on use, not degraded - proposed as a simple stackable count.",
     "equipSlots": [],
     "backpackable": true,
-    "icon": "/images/items/bat.png"
+    "description": "bangers"
   },
   {
     "familyId": "cooked_fish",
@@ -719,7 +719,7 @@
     "note": "Consumed on use, not degraded - proposed as a simple stackable count.",
     "equipSlots": [],
     "backpackable": true,
-    "icon": "/images/items/bat.png"
+    "description": "cooked_fish"
   },
   {
     "familyId": "fish_chowder",
@@ -732,7 +732,7 @@
     "note": "Consumed on use, not degraded - proposed as a simple stackable count.",
     "equipSlots": [],
     "backpackable": true,
-    "icon": "/images/items/bat.png"
+    "description": "fish_chowder"
   },
   {
     "familyId": "fishermans_ration",
@@ -745,7 +745,7 @@
     "note": "Consumed on use, not degraded - proposed as a simple stackable count.",
     "equipSlots": [],
     "backpackable": true,
-    "icon": "/images/items/bat.png"
+    "description": "fishermans_ration"
   },
   {
     "familyId": "grilled_fish_skewer",
@@ -758,7 +758,7 @@
     "note": "Consumed on use, not degraded - proposed as a simple stackable count.",
     "equipSlots": [],
     "backpackable": true,
-    "icon": "/images/items/bat.png"
+    "description": "grilled_fish_skewer"
   },
   {
     "familyId": "hearty_stew",
@@ -771,7 +771,7 @@
     "note": "Consumed on use, not degraded - proposed as a simple stackable count.",
     "equipSlots": [],
     "backpackable": true,
-    "icon": "/images/items/bat.png"
+    "description": "hearty_stew"
   },
   {
     "familyId": "iron_ration",
@@ -784,7 +784,7 @@
     "note": "Consumed on use, not degraded - proposed as a simple stackable count.",
     "equipSlots": [],
     "backpackable": true,
-    "icon": "/images/items/bat.png"
+    "description": "iron_ration"
   },
   {
     "familyId": "pickled_fish",
@@ -797,7 +797,7 @@
     "note": "Consumed on use, not degraded - proposed as a simple stackable count.",
     "equipSlots": [],
     "backpackable": true,
-    "icon": "/images/items/bat.png"
+    "description": "pickled_fish"
   },
   {
     "familyId": "roast_haunch",
@@ -810,7 +810,7 @@
     "note": "Consumed on use, not degraded - proposed as a simple stackable count.",
     "equipSlots": [],
     "backpackable": true,
-    "icon": "/images/items/bat.png"
+    "description": "roast_haunch"
   },
   {
     "familyId": "salt_horse",
@@ -823,7 +823,7 @@
     "note": "Consumed on use, not degraded - proposed as a simple stackable count.",
     "equipSlots": [],
     "backpackable": true,
-    "icon": "/images/items/bat.png"
+    "description": "salt_horse"
   },
   {
     "familyId": "smoked_fish",
@@ -836,7 +836,7 @@
     "note": "Consumed on use, not degraded - proposed as a simple stackable count.",
     "equipSlots": [],
     "backpackable": true,
-    "icon": "/images/items/bat.png"
+    "description": "smoked_fish"
   },
   {
     "familyId": "smoked_salt_horse",
@@ -849,7 +849,7 @@
     "note": "Consumed on use, not degraded - proposed as a simple stackable count.",
     "equipSlots": [],
     "backpackable": true,
-    "icon": "/images/items/bat.png"
+    "description": "smoked_salt_horse"
   },
   {
     "familyId": "smoked_squirrel_hoard",
@@ -862,7 +862,7 @@
     "note": "Consumed on use, not degraded - proposed as a simple stackable count.",
     "equipSlots": [],
     "backpackable": true,
-    "icon": "/images/items/bat.png"
+    "description": "smoked_squirrel_hoard"
   },
   {
     "familyId": "smoked_wizened_figs",
@@ -875,7 +875,7 @@
     "note": "Consumed on use, not degraded - proposed as a simple stackable count.",
     "equipSlots": [],
     "backpackable": true,
-    "icon": "/images/items/bat.png"
+    "description": "smoked_wizened_figs"
   },
   {
     "familyId": "squirrel_hoard",
@@ -888,7 +888,7 @@
     "note": "Consumed on use, not degraded - proposed as a simple stackable count.",
     "equipSlots": [],
     "backpackable": true,
-    "icon": "/images/items/bat.png"
+    "description": "squirrel_hoard"
   },
   {
     "familyId": "wizened_figs",
@@ -901,7 +901,7 @@
     "note": "Consumed on use, not degraded - proposed as a simple stackable count.",
     "equipSlots": [],
     "backpackable": true,
-    "icon": "/images/items/bat.png"
+    "description": "wizened_figs"
   },
   {
     "familyId": "backpack",
@@ -917,8 +917,8 @@
       "Side"
     ],
     "backpackable": true,
-    "icon": "/images/items/bat.png",
-    "qualityMax": 10
+    "qualityMax": 10,
+    "description": "backpack"
   },
   {
     "familyId": "candle",
@@ -931,7 +931,7 @@
     "note": "Never equipped - carried as a stackable backpack item, not an individually tracked instance.",
     "equipSlots": [],
     "backpackable": true,
-    "icon": "/images/items/bat.png"
+    "description": "candle"
   },
   {
     "familyId": "cart",
@@ -941,10 +941,10 @@
     "sizeClass": "light",
     "stackSize": 1,
     "needsItemDefinition": false,
-    "note": "TBD - general trinket/utility, durability unclear.",
+    "note": "General trinket/utility - does not wear out, no durability tracking needed.",
     "equipSlots": [],
     "backpackable": true,
-    "icon": "/images/items/bat.png"
+    "description": "cart"
   },
   {
     "familyId": "cloth_cloak",
@@ -960,7 +960,7 @@
     ],
     "backpackable": true,
     "qualityMax": 40,
-    "icon": "/images/items/bat.png"
+    "description": "cloth_cloak"
   },
   {
     "familyId": "fishing_pole",
@@ -973,7 +973,7 @@
     "note": "Never equipped - carried as a stackable backpack item, not an individually tracked instance.",
     "equipSlots": [],
     "backpackable": true,
-    "icon": "/images/items/bat.png"
+    "description": "fishing_pole"
   },
   {
     "familyId": "fur_cloak",
@@ -989,7 +989,7 @@
     ],
     "backpackable": true,
     "qualityMax": 40,
-    "icon": "/images/items/bat.png"
+    "description": "fur_cloak"
   },
   {
     "familyId": "quilted_cloak",
@@ -1005,7 +1005,7 @@
     ],
     "backpackable": true,
     "qualityMax": 40,
-    "icon": "/images/items/bat.png"
+    "description": "quilted_cloak"
   },
   {
     "familyId": "glass_lantern",
@@ -1018,7 +1018,7 @@
     "note": "Never equipped - carried as a stackable backpack item, not an individually tracked instance.",
     "equipSlots": [],
     "backpackable": true,
-    "icon": "/images/items/bat.png"
+    "description": "glass_lantern"
   },
   {
     "familyId": "holy_symbol",
@@ -1031,7 +1031,7 @@
     "note": "Never equipped - carried as a stackable backpack item, not an individually tracked instance.",
     "equipSlots": [],
     "backpackable": true,
-    "icon": "/images/items/bat.png"
+    "description": "holy_symbol"
   },
   {
     "familyId": "mirror",
@@ -1041,10 +1041,10 @@
     "sizeClass": "light",
     "stackSize": 1,
     "needsItemDefinition": false,
-    "note": "TBD - general trinket/utility, durability unclear.",
+    "note": "Never equipped - carried as a stackable backpack item, not an individually tracked instance.",
     "equipSlots": [],
     "backpackable": true,
-    "icon": "/images/items/bat.png"
+    "description": "mirror"
   },
   {
     "familyId": "quill",
@@ -1054,10 +1054,10 @@
     "sizeClass": "tiny",
     "stackSize": 10,
     "needsItemDefinition": false,
-    "note": "TBD - general trinket/utility, durability unclear.",
+    "note": "Consumed by use.",
     "equipSlots": [],
     "backpackable": true,
-    "icon": "/images/items/bat.png"
+    "description": "quill"
   },
   {
     "familyId": "torch",
@@ -1070,7 +1070,7 @@
     "note": "Never equipped - carried as a stackable backpack item, not an individually tracked instance.",
     "equipSlots": [],
     "backpackable": true,
-    "icon": "/images/items/bat.png"
+    "description": "torch"
   },
   {
     "familyId": "antidote_potion",
@@ -1083,7 +1083,7 @@
     "note": "Consumed on use, not degraded - proposed as a simple stackable count.",
     "equipSlots": [],
     "backpackable": true,
-    "icon": "/images/items/bat.png"
+    "description": "antidote_potion"
   },
   {
     "familyId": "healing_potion",
@@ -1096,7 +1096,7 @@
     "note": "Consumed on use, not degraded - proposed as a simple stackable count.",
     "equipSlots": [],
     "backpackable": true,
-    "icon": "/images/items/bat.png"
+    "description": "healing_potion"
   },
   {
     "familyId": "mana_potion",
@@ -1109,7 +1109,7 @@
     "note": "Consumed on use, not degraded - proposed as a simple stackable count.",
     "equipSlots": [],
     "backpackable": true,
-    "icon": "/images/items/bat.png"
+    "description": "mana_potion"
   },
   {
     "familyId": "venom_vial",
@@ -1122,7 +1122,7 @@
     "note": "Consumed on use, not degraded - proposed as a simple stackable count.",
     "equipSlots": [],
     "backpackable": true,
-    "icon": "/images/items/bat.png"
+    "description": "venom_vial"
   },
   {
     "familyId": "chitin_shield",
@@ -1139,7 +1139,7 @@
     ],
     "backpackable": false,
     "qualityMax": 500,
-    "icon": "/images/items/bat.png"
+    "description": "chitin_shield"
   },
   {
     "familyId": "darksteel_shield",
@@ -1156,7 +1156,7 @@
     ],
     "backpackable": false,
     "qualityMax": 240,
-    "icon": "/images/items/bat.png"
+    "description": "darksteel_shield"
   },
   {
     "familyId": "ebony_shield",
@@ -1173,7 +1173,7 @@
     ],
     "backpackable": false,
     "qualityMax": 530,
-    "icon": "/images/items/bat.png"
+    "description": "ebony_shield"
   },
   {
     "familyId": "iron_shield",
@@ -1190,7 +1190,7 @@
     ],
     "backpackable": true,
     "qualityMax": 160,
-    "icon": "/images/items/bat.png"
+    "description": "iron_shield"
   },
   {
     "familyId": "meteoric_iron_shield",
@@ -1207,7 +1207,7 @@
     ],
     "backpackable": false,
     "qualityMax": 210,
-    "icon": "/images/items/bat.png"
+    "description": "meteoric_iron_shield"
   },
   {
     "familyId": "reinforced_wooden_shield",
@@ -1224,7 +1224,7 @@
     ],
     "backpackable": true,
     "qualityMax": 170,
-    "icon": "/images/items/bat.png"
+    "description": "reinforced_wooden_shield"
   },
   {
     "familyId": "wooden_shield",
@@ -1241,7 +1241,7 @@
     ],
     "backpackable": true,
     "qualityMax": 40,
-    "icon": "/images/items/bat.png"
+    "description": "wooden_shield"
   },
   {
     "familyId": "alchemy_stand",
@@ -1254,7 +1254,7 @@
     "note": "TBD - a placed crafting station, not personal gear; may not use carry/backpack rules at all.",
     "equipSlots": [],
     "backpackable": false,
-    "icon": "/images/items/bat.png"
+    "description": "alchemy_stand"
   },
   {
     "familyId": "anvil",
@@ -1267,7 +1267,7 @@
     "note": "TBD - a placed crafting station, not personal gear; may not use carry/backpack rules at all.",
     "equipSlots": [],
     "backpackable": false,
-    "icon": "/images/items/bat.png"
+    "description": "anvil"
   },
   {
     "familyId": "axe_stone",
@@ -1285,7 +1285,7 @@
     ],
     "backpackable": true,
     "qualityMax": 20,
-    "icon": "/images/items/bat.png"
+    "description": "axe_stone"
   },
   {
     "familyId": "enchanters_table",
@@ -1298,7 +1298,7 @@
     "note": "TBD - a placed crafting station, not personal gear; may not use carry/backpack rules at all.",
     "equipSlots": [],
     "backpackable": false,
-    "icon": "/images/items/bat.png"
+    "description": "enchanters_table"
   },
   {
     "familyId": "furnace",
@@ -1311,7 +1311,7 @@
     "note": "TBD - a placed crafting station, not personal gear; may not use carry/backpack rules at all.",
     "equipSlots": [],
     "backpackable": false,
-    "icon": "/images/items/bat.png"
+    "description": "furnace"
   },
   {
     "familyId": "grinding_stone",
@@ -1324,7 +1324,7 @@
     "note": "TBD - a placed crafting station, not personal gear; may not use carry/backpack rules at all.",
     "equipSlots": [],
     "backpackable": false,
-    "icon": "/images/items/bat.png"
+    "description": "grinding_stone"
   },
   {
     "familyId": "kiln",
@@ -1337,7 +1337,7 @@
     "note": "TBD - a placed crafting station, not personal gear; may not use carry/backpack rules at all.",
     "equipSlots": [],
     "backpackable": false,
-    "icon": "/images/items/bat.png"
+    "description": "kiln"
   },
   {
     "familyId": "lapidary_bench",
@@ -1350,7 +1350,7 @@
     "note": "TBD - a placed crafting station, not personal gear; may not use carry/backpack rules at all.",
     "equipSlots": [],
     "backpackable": false,
-    "icon": "/images/items/bat.png"
+    "description": "lapidary_bench"
   },
   {
     "familyId": "loom",
@@ -1363,7 +1363,7 @@
     "note": "TBD - a placed crafting station, not personal gear; may not use carry/backpack rules at all.",
     "equipSlots": [],
     "backpackable": false,
-    "icon": "/images/items/bat.png"
+    "description": "loom"
   },
   {
     "familyId": "mortar_and_pestle",
@@ -1376,7 +1376,7 @@
     "note": "TBD - a placed crafting station, not personal gear; may not use carry/backpack rules at all.",
     "equipSlots": [],
     "backpackable": false,
-    "icon": "/images/items/bat.png"
+    "description": "mortar_and_pestle"
   },
   {
     "familyId": "oven",
@@ -1389,7 +1389,7 @@
     "note": "TBD - a placed crafting station, not personal gear; may not use carry/backpack rules at all.",
     "equipSlots": [],
     "backpackable": false,
-    "icon": "/images/items/bat.png"
+    "description": "oven"
   },
   {
     "familyId": "scriptorium",
@@ -1402,7 +1402,7 @@
     "note": "TBD - a placed crafting station, not personal gear; may not use carry/backpack rules at all.",
     "equipSlots": [],
     "backpackable": false,
-    "icon": "/images/items/bat.png"
+    "description": "scriptorium"
   },
   {
     "familyId": "spinning_wheel",
@@ -1415,7 +1415,7 @@
     "note": "TBD - a placed crafting station, not personal gear; may not use carry/backpack rules at all.",
     "equipSlots": [],
     "backpackable": false,
-    "icon": "/images/items/bat.png"
+    "description": "spinning_wheel"
   },
   {
     "familyId": "tanning_rack",
@@ -1428,7 +1428,7 @@
     "note": "TBD - a placed crafting station, not personal gear; may not use carry/backpack rules at all.",
     "equipSlots": [],
     "backpackable": false,
-    "icon": "/images/items/bat.png"
+    "description": "tanning_rack"
   },
   {
     "familyId": "workbench",
@@ -1441,7 +1441,7 @@
     "note": "TBD - a placed crafting station, not personal gear; may not use carry/backpack rules at all.",
     "equipSlots": [],
     "backpackable": false,
-    "icon": "/images/items/bat.png"
+    "description": "workbench"
   },
   {
     "familyId": "wrench",
@@ -1454,7 +1454,7 @@
     "note": "Never equipped - carried as a stackable backpack item, not an individually tracked instance.",
     "equipSlots": [],
     "backpackable": true,
-    "icon": "/images/items/bat.png"
+    "description": "wrench"
   },
   {
     "familyId": "axe",
@@ -1472,7 +1472,7 @@
     ],
     "backpackable": true,
     "qualityMax": 220,
-    "icon": "/images/items/bat.png"
+    "description": "axe"
   },
   {
     "familyId": "battle_axe",
@@ -1490,7 +1490,7 @@
     "twoHanded": true,
     "backpackable": false,
     "qualityMax": 470,
-    "icon": "/images/items/bat.png"
+    "description": "battle_axe"
   },
   {
     "familyId": "bow",
@@ -1508,7 +1508,7 @@
     "twoHanded": true,
     "backpackable": true,
     "qualityMax": 150,
-    "icon": "/images/items/bat.png"
+    "description": "bow"
   },
   {
     "familyId": "club",
@@ -1525,7 +1525,7 @@
     ],
     "backpackable": true,
     "qualityMax": 20,
-    "icon": "/images/items/bat.png"
+    "description": "club"
   },
   {
     "familyId": "crossbow",
@@ -1543,7 +1543,7 @@
     "twoHanded": true,
     "backpackable": false,
     "qualityMax": 170,
-    "icon": "/images/items/bat.png"
+    "description": "crossbow"
   },
   {
     "familyId": "dagger",
@@ -1562,7 +1562,7 @@
     ],
     "backpackable": true,
     "qualityMax": 150,
-    "icon": "/images/items/bat.png"
+    "description": "dagger"
   },
   {
     "familyId": "greatsword",
@@ -1580,7 +1580,7 @@
     "twoHanded": true,
     "backpackable": false,
     "qualityMax": 480,
-    "icon": "/images/items/bat.png"
+    "description": "greatsword"
   },
   {
     "familyId": "mace",
@@ -1597,7 +1597,7 @@
     ],
     "backpackable": true,
     "qualityMax": 320,
-    "icon": "/images/items/bat.png"
+    "description": "mace"
   },
   {
     "familyId": "magic_staff",
@@ -1614,7 +1614,7 @@
     ],
     "backpackable": true,
     "qualityMax": 40,
-    "icon": "/images/items/bat.png"
+    "description": "magic_staff"
   },
   {
     "familyId": "quiver",
@@ -1629,8 +1629,8 @@
       "Side"
     ],
     "backpackable": true,
-    "icon": "/images/items/bat.png",
-    "qualityMax": 10
+    "qualityMax": 200,
+    "description": "quiver"
   },
   {
     "familyId": "bolt_girdle",
@@ -1646,8 +1646,8 @@
       "Girdle"
     ],
     "backpackable": true,
-    "icon": "/images/items/bat.png",
-    "qualityMax": 10
+    "qualityMax": 200,
+    "description": "bolt_girdle"
   },
   {
     "familyId": "sharpened_stick",
@@ -1665,7 +1665,7 @@
     "twoHanded": true,
     "backpackable": false,
     "qualityMax": 20,
-    "icon": "/images/items/bat.png"
+    "description": "sharpened_stick"
   },
   {
     "familyId": "sickle",
@@ -1683,7 +1683,7 @@
     ],
     "backpackable": true,
     "qualityMax": 160,
-    "icon": "/images/items/bat.png"
+    "description": "sickle"
   },
   {
     "familyId": "spear",
@@ -1700,7 +1700,7 @@
     ],
     "backpackable": false,
     "qualityMax": 160,
-    "icon": "/images/items/bat.png"
+    "description": "spear"
   },
   {
     "familyId": "short_sword",
@@ -1717,7 +1717,7 @@
     ],
     "backpackable": true,
     "qualityMax": 220,
-    "icon": "/images/items/bat.png"
+    "description": "short_sword"
   },
   {
     "familyId": "sword",
@@ -1734,7 +1734,7 @@
     ],
     "backpackable": true,
     "qualityMax": 320,
-    "icon": "/images/items/bat.png"
+    "description": "sword"
   },
   {
     "familyId": "wand",
@@ -1751,7 +1751,7 @@
     ],
     "backpackable": true,
     "qualityMax": 20,
-    "icon": "/images/items/bat.png"
+    "description": "wand"
   },
   {
     "familyId": "warhammer",
@@ -1769,7 +1769,7 @@
     "twoHanded": true,
     "backpackable": false,
     "qualityMax": 480,
-    "icon": "/images/items/bat.png"
+    "description": "warhammer"
   },
   {
     "familyId": "arrow",
@@ -1782,7 +1782,7 @@
     "note": "Stackable ammo for Quiver - consumed one at a time when fired.",
     "equipSlots": [],
     "backpackable": true,
-    "icon": "/images/items/bat.png"
+    "description": "arrow"
   },
   {
     "familyId": "bolt",
@@ -1795,7 +1795,7 @@
     "note": "Stackable ammo for Bolt Girdle - consumed one at a time when fired.",
     "equipSlots": [],
     "backpackable": true,
-    "icon": "/images/items/bat.png"
+    "description": "bolt"
   },
   {
     "familyId": "oil",
@@ -1808,7 +1808,7 @@
     "note": "Stackable fuel for a lit lantern - burn duration bottlenecked by whichever of lantern/oil is the lower tier (see light-source-burn-hours.json). Not tied to one specific lantern instance.",
     "equipSlots": [],
     "backpackable": true,
-    "icon": "/images/items/bat.png"
+    "description": "oil"
   },
   {
     "familyId": "smokehouse",
@@ -1821,6 +1821,6 @@
     "note": "A placed crafting station, not personal gear - Rural's own station, mirroring Oven/Tanning Rack for other categories.",
     "equipSlots": [],
     "backpackable": false,
-    "icon": "/images/items/bat.png"
+    "description": "smokehouse"
   }
 ]
