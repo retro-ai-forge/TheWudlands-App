@@ -156,6 +156,58 @@
     "icon": "/images/items/bat.png"
   },
   {
+    "familyId": "net",
+    "kind": [
+      "adventuring_gear"
+    ],
+    "sizeClass": "light",
+    "stackSize": 1,
+    "needsItemDefinition": false,
+    "note": "TBD - utility gear, durability unclear.",
+    "equipSlots": [],
+    "backpackable": true,
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "familyId": "pickaxe",
+    "kind": [
+      "adventuring_gear"
+    ],
+    "sizeClass": "medium",
+    "stackSize": 1,
+    "needsItemDefinition": false,
+    "note": "TBD - utility gear, durability unclear.",
+    "equipSlots": [],
+    "backpackable": true,
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "familyId": "monster_trap",
+    "kind": [
+      "adventuring_gear"
+    ],
+    "sizeClass": "medium",
+    "stackSize": 1,
+    "needsItemDefinition": false,
+    "note": "TBD - utility gear, durability unclear.",
+    "equipSlots": [],
+    "backpackable": true,
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "familyId": "starlight_catcher",
+    "kind": [
+      "adventuring_gear"
+    ],
+    "sizeClass": "light",
+    "stackSize": 1,
+    "needsItemDefinition": false,
+    "note": "TBD - utility gear, durability unclear.",
+    "equipSlots": [],
+    "backpackable": true,
+    "icon": "/images/items/bat.png"
+  },
+  {
     "familyId": "shovel",
     "kind": [
       "adventuring_gear"
