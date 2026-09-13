@@ -100,7 +100,7 @@ The lowest-count categories — Rural, CraftStone, CraftTool, Food, Aristocratic
 
 An interactive tool to explore all crafting recipes, search by item name or ingredient, and see detailed breakdowns of raw materials needed. Download to enlarge.
 
-![Crafting Recipes](/public/craft13.jpg)
+![Crafting Recipes](/public/craft/crafting-260913.jpg)
 
 ## For Story Contributors
 
@@ -219,6 +219,7 @@ Crafting pays out two kinds of XP, which can land on different professions from 
 | Darksteel Shield | Darksteel Shield | 245 | Ore x200, Wood x33, Clockwork x12 | 24 | 49 | 74 | 98 | 122 | 147 | 269 |
 | Axe | Axe | 229 | Ore x180, Wood x49 | 23 | 46 | 69 | 92 | 115 | 137 | 252 |
 | Meteoric Iron Shield | Meteoric Iron Shield | 215 | Crystal x86, Ore x75, Essence x54 | 22 | 43 | 64 | 86 | 108 | 129 | 237 |
+| Short Sword | Short Sword | 197 | Ore x150, Wood x47 | 20 | 39 | 59 | 79 | 99 | 118 | 217 |
 | Crossbow | Crossbow | 171 | Ore x75, Wood x60, Fiber x36 | 17 | 34 | 51 | 68 | 86 | 103 | 188 |
 | Reinforced Wooden Shield | Reinforced Wooden Shield | 170 | Ore x125, Wood x45 | 17 | 34 | 51 | 68 | 85 | 102 | 187 |
 | Spear | Spear | 166 | Ore x125, Wood x41 | 17 | 33 | 50 | 66 | 83 | 100 | 183 |
@@ -240,18 +241,17 @@ Crafting pays out two kinds of XP, which can land on different professions from 
 | Scriptorium | Scriptorium | 45 | Pigment x24, Sand x12, Fiber x5, Feather x4 | 4 | 9 | 14 | 18 | 22 | 27 | 49 |
 | Enchanters Table | Enchanters Table | 42 | Wood x30, Crystal x6, Bone x4, Herbs x1, Monster Part x1 | 4 | 8 | 13 | 17 | 21 | 25 | 46 |
 | Workbench | Workbench | 37 | Wood x30, Bone x4, Reed x1, Feather x1, Skin x1 | 4 | 7 | 11 | 15 | 18 | 22 | 41 |
+| Iron Ration | Iron Ration | 36 | Wood x15, Fiber x10, Harvest x7, Meat x3, Herbs x1 | 4 | 7 | 11 | 14 | 18 | 22 | 40 |
 | Alchemy Stand | Alchemy Stand | 34 | Clay x18, Ore x10, Sand x6 | 3 | 7 | 10 | 14 | 17 | 20 | 37 |
 | Tanning Rack | Tanning Rack | 34 | Wood x24, Ore x10 | 3 | 7 | 10 | 14 | 17 | 20 | 37 |
-| Writers Table | Writers Table | 34 | Wood x30, Bone x4 | 3 | 7 | 10 | 14 | 17 | 20 | 37 |
 | Wooden Shield | Wooden Shield | 28 | Wood x16, Skin x12 | 3 | 6 | 8 | 11 | 14 | 17 | 31 |
 | Mortar And Pestle | Mortar And Pestle | 26 | Clay x12, Ore x10, Sand x4 | 3 | 5 | 8 | 10 | 13 | 16 | 29 |
 | Spinning Wheel | Spinning Wheel | 25 | Wood x23, Bone x2 | 2 | 5 | 8 | 10 | 12 | 15 | 27 |
+| Fishermans Ration | Fishermans Ration | 25 | Fiber x10, Fish x6, Wood x5, Harvest x3, Herbs x1 | 3 | 5 | 8 | 10 | 13 | 15 | 28 |
 | Quiver | Quiver Of Arrows | 22 | Wood x16, Ore x5, Skin x1 | 2 | 4 | 7 | 9 | 11 | 13 | 24 |
 | Bolt Girdle | Set Of Bolts | 24 | Wood x12, Skin x12 | 2 | 5 | 7 | 10 | 12 | 14 | 26 |
 | Magic Staff | Magic Staff | 22 | Wood x16, Crystal x6 | 2 | 4 | 7 | 9 | 11 | 13 | 24 |
-| Iron Ration | Iron Ration | 21 | Fiber x10, Harvest x7, Meat x3, Herbs x1 | 2 | 4 | 6 | 8 | 10 | 13 | 23 |
 | Wrench | Wrench | 20 | Ore x20 | 2 | 4 | 6 | 8 | 10 | 12 | 22 |
-| Fishermans Ration | Fishermans Ration | 20 | Fiber x10, Fish x6, Harvest x3, Herbs x1 | 2 | 4 | 6 | 8 | 10 | 12 | 22 |
 | Hearty Stew | Hearty Stew | 14 | Harvest x6, Herbs x5, Meat x3 | 1 | 3 | 4 | 6 | 7 | 8 | 15 |
 | Oven | Oven | 13 | Wood x8, Stone x5 | 1 | 3 | 4 | 5 | 6 | 8 | 14 |
 | Fish Chowder | Fish Chowder | 13 | Harvest x6, Herbs x5, Fish x2 | 1 | 3 | 4 | 5 | 6 | 8 | 14 |
@@ -265,6 +265,7 @@ These recipes need no learned blueprint to craft, so they never earn the tier-sc
 
 | Item | Raw XP | Raw Materials |
 |---|---:|---|
+| Pickaxe | 160 | Ore x125, Wood x35 |
 | Metal Bar | 158 | Ore x125, Wood x33 |
 | Lacquer | 140 | Pigment x80, Herbs x48, Wood x12 |
 | Tent | 99 | Fiber x96, Wood x3 |
@@ -272,6 +273,7 @@ These recipes need no learned blueprint to craft, so they never earn the tier-sc
 | Antidote Potion | 44 | Herbs x26, Sand x12, Venom x6 |
 | Healing Potion | 42 | Herbs x26, Sand x12, Harvest x4 |
 | Mana Potion | 42 | Crystal x15, Sand x12, Essence x9, Monster Part x6 |
+| Monster Trap | 39 | Ore x30, Fiber x6, Wood x3 |
 | Venom Vial | 33 | Herbs x12, Sand x12, Venom x9 |
 | Cart | 32 | Wood x32 |
 | Metal Ingot | 31 | Ore x25, Wood x6 |
@@ -287,11 +289,13 @@ These recipes need no learned blueprint to craft, so they never earn the tier-sc
 | Chain | 20 | Ore x20 |
 | Ink | 18 | Pigment x12, Sand x6 |
 | Mirror | 17 | Sand x12, Ore x5 |
+| Starlight Catcher | 17 | Sand x12, Crystal x3, Reed x2 |
 | Fired Brick | 16 | Clay x12, Sand x4 |
 | Iron Spikes | 15 | Ore x15 |
 | Manacles | 15 | Ore x15 |
 | Clockwork Mechanism | 14 | Ore x10, Clockwork x4 |
 | Pickled Fish | 14 | Sand x12, Fish x2 |
+| Net | 14 | Fiber x12, Wood x2 |
 | Beam | 12 | Wood x12 |
 | Glass Bottle | 12 | Sand x12 |
 | Backpack | 10 | Skin x6, Hide x4 |
