@@ -942,10 +942,20 @@ def _resolve_recipe_output(family_id: str, tier: int) -> Optional[tuple[dict, bo
     inventory bucket the output belongs in (resources vs items/itemBalances,
     since a processed material was never in item-inventory-properties.json
     to begin with, so `family.needs_item_definition` doesn't apply to it).
+
+    A handful of families (arrow, bolt, oil) are dual-cataloged: their
+    concrete ids/names are resolved via the processed-resource catalog like
+    any other processed material (that's simply where their tiered rows
+    live), but they're ALSO real item-inventory-properties.json families -
+    ammo belongs in the vault (itemBalances) like any other crafted item,
+    not in resources, so a family found in both catalogs reports
+    is_processed_resource=False despite resolving its id/name the
+    processed-resource way.
     """
     concrete_id = _PROCESSED_ID_BY_FAMILY_TIER.get((family_id, tier))
     if concrete_id is not None:
-        return {"id": concrete_id, "name": PROCESSED_RESOURCE_ITEMS_BY_ID[concrete_id].name}, True
+        is_processed_resource = items_catalog.ITEM_FAMILIES_BY_ID.get(family_id) is None
+        return {"id": concrete_id, "name": PROCESSED_RESOURCE_ITEMS_BY_ID[concrete_id].name}, is_processed_resource
     output_row = items_catalog.resolve_output_row(family_id, tier)
     if output_row is not None:
         return output_row, False

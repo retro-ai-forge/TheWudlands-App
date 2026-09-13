@@ -130,7 +130,12 @@ def _load_final_catalog() -> tuple[dict[tuple[str, int], dict], dict[str, str]]:
         if not path.exists():
             continue
         for row in json.loads(path.read_text()):
-            rows[(row["familyId"], row["tier"])] = {"id": row["id"], "name": row["name"]}
+            rows[(row["familyId"], row["tier"])] = {
+                "id": row["id"],
+                "name": row["name"],
+                "icon": row.get("icon", ""),
+                "description": row.get("description", ""),
+            }
             family_by_id[row["id"]] = row["familyId"]
     return rows, family_by_id
 
@@ -160,6 +165,34 @@ class ItemCatalogEntry:
     # all (needsItemDefinition:false families never degrade, so this is
     # only ever meaningful alongside a real Character.items instance).
     quality_max: Optional[int]
+    # Per-tier art (see base-items-weapon.json/base-tools.json's own
+    # "icon" field) - "" for a family/tier with no dedicated art yet, in
+    # which case the UI falls back to its own generic placeholder.
+    icon: str
+    # Family-level (item-inventory-properties.json's own "stackSize") -
+    # whether the UI should show an owned-count badge at all: 1 means
+    # never stacked (including every needsItemDefinition:true instance,
+    # which is always exactly 1 per row), so a bare "1" would be noise.
+    stack_size: int
+    # Per-tier flavor text (see base-items-weapon.json's own "description"
+    # field) - "" for a family/tier with no dedicated text yet, in which
+    # case the UI shows its own placeholder.
+    description: str
+    # Family-level (item-inventory-properties.json's own "sizeClass") -
+    # backpack slot-cost bucket ("tiny"/"light"/"medium"/...), shown as
+    # reference info in the item detail popup.
+    size_class: str
+    # Family-level (item-inventory-properties.json's own "equipSlots") -
+    # non-empty only for needsItemDefinition:true families (the invariant
+    # every family in this catalog already follows). Drives the item
+    # detail popup's per-slot move buttons.
+    equip_slots: tuple[str, ...]
+    # Family-level (item-inventory-properties.json's own "backpackable") -
+    # whether a "move to backpack" action makes sense for this family at all.
+    backpackable: bool
+    # Family-level (item-inventory-properties.json's own "twoHanded") -
+    # whether equipping this family occupies both named hand slots at once.
+    two_handed: bool
 
 
 def _load_item_catalog_entries() -> tuple[ItemCatalogEntry, ...]:
@@ -178,12 +211,24 @@ def _load_item_catalog_entries() -> tuple[ItemCatalogEntry, ...]:
     for (family_id, tier), row in FINAL_ITEM_ROWS_BY_FAMILY_TIER.items():
         family = ITEM_FAMILIES_BY_ID.get(family_id)
         if family is not None:
-            entries.append(ItemCatalogEntry(row["id"], row["name"], family_id, tier, family.kind, family.quality_max))
+            entries.append(
+                ItemCatalogEntry(
+                    row["id"], row["name"], family_id, tier, family.kind, family.quality_max,
+                    row.get("icon", ""), family.stack_size,
+                    row.get("description", ""), family.size_class,
+                    family.equip_slots, family.backpackable, family.two_handed,
+                )
+            )
     for item in PROCESSED_RESOURCE_ITEMS:
         family = ITEM_FAMILIES_BY_ID.get(item.family_id)
         if family is not None:
             entries.append(
-                ItemCatalogEntry(item.id, item.name, item.family_id, item.tier, family.kind, family.quality_max)
+                ItemCatalogEntry(
+                    item.id, item.name, item.family_id, item.tier, family.kind, family.quality_max,
+                    "", family.stack_size,
+                    "", family.size_class,
+                    family.equip_slots, family.backpackable, family.two_handed,
+                )
             )
     return tuple(entries)
 

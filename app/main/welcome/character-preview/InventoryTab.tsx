@@ -13,7 +13,27 @@ type BlueprintCategoryFamily = { familyId: string; kind: string; items: Blueprin
 type BlueprintCategoryEntry = { families: BlueprintCategoryFamily[] };
 type BlueprintTierInfo = Record<
   string,
-  { tier: number; familyId: string; kind: string; name?: string; qualityMax?: number | null }
+  {
+    tier: number;
+    familyId: string;
+    kind: string;
+    name?: string;
+    qualityMax?: number | null;
+    /** Per-tier art path (item-catalog only) - "" when this family/tier has no dedicated art yet. */
+    icon?: string;
+    /** Family-level stack size (item-catalog only) - 1 means never stacked, so the grid hides its owned-count badge. */
+    stackSize?: number;
+    /** Per-tier flavor text (item-catalog only) - "" when this family/tier has no dedicated text yet. */
+    description?: string;
+    /** Family-level backpack slot-cost bucket (item-catalog only), e.g. "tiny"/"light"/"medium". */
+    sizeClass?: string;
+    /** Family-level valid equip slot names (item-catalog only) - non-empty only for needsItemDefinition:true families. */
+    equipSlots?: string[];
+    /** Family-level (item-catalog only) - whether a move-to-backpack action applies at all. */
+    backpackable?: boolean;
+    /** Family-level (item-catalog only) - whether equipping occupies both named hand slots at once. */
+    twoHanded?: boolean;
+  }
 >;
 type ResourceTierInfo = Record<string, { tier: number; family: string; category: "raw" | "processed"; name?: string }>;
 
@@ -154,19 +174,6 @@ function getKindIcon(kind: string): string {
     default:
       return "";
   }
-}
-
-// Condition name shown in place of a quantity for an individually-tracked
-// item instance (weapons, armor, ... - each physical one gets its own row
-// with its own quality, never lumped into a stacked count). Buckets by
-// percent of quality/qualityMax on a fresh one: 100-51% New, 50-21% Used,
-// 20-0% Broken.
-type QualityLabel = "New" | "Used" | "Broken";
-function qualityLabel(quality: number, qualityMax: number): QualityLabel {
-  const pct = qualityMax > 0 ? (quality / qualityMax) * 100 : 0;
-  if (pct >= 51) return "New";
-  if (pct >= 21) return "Used";
-  return "Broken";
 }
 
 function getTierIndicator(tier: number): string {
@@ -347,7 +354,6 @@ function IdList({
   onTransfer,
   transferableIds,
   quantityHiddenIds,
-  qualityLabels,
   lookupIds,
 }: {
   ids: string[];
@@ -368,8 +374,6 @@ function IdList({
   transferableIds?: Set<string>;
   /** When given, these ids skip the quantity column entirely - for individually-tracked item instances (needsItemDefinition:true), which never stack, so a bare "1" reads as a strange, meaningless count rather than useful information. */
   quantityHiddenIds?: Set<string>;
-  /** When given, shows this text in the quantity column position instead of a number (or instead of nothing, for a `quantityHiddenIds` row) - e.g. "New"/"Used"/"Broken" for an item instance's condition. */
-  qualityLabels?: Record<string, string>;
   /** When given, row id -> the id `tierInfo` should actually be looked up by - for a list where each row is its own uniquely-keyed thing (e.g. one row per item instanceId) but several rows can share the same underlying catalog entry (itemId). Defaults to each row using its own id, as before. */
   lookupIds?: Record<string, string>;
 }) {
@@ -455,7 +459,7 @@ function IdList({
           {info?.name ? stripBlueprintPrefix(info.name) : formatResourceLabel(lookupIds?.[id] ?? id)}
         </td>
         {balances && (
-          <td>{qualityLabels?.[id] ?? (quantityHiddenIds?.has(id) ? "" : owned)}</td>
+          <td>{quantityHiddenIds?.has(id) ? "" : owned}</td>
         )}
       </tr>,
     ];
@@ -498,6 +502,357 @@ function IdList({
     <table className={styles.inventoryTable}>
       <tbody>{sortedIds.flatMap(renderRow)}</tbody>
     </table>
+  );
+}
+
+// No dedicated art yet for every item family - most still fall back to
+// this generic placeholder (matches item-inventory-properties.json's own
+// former family-level default before per-tier art started landing there).
+const FALLBACK_ITEM_ICON = "/images/items/bat.png";
+
+// Matches .itemGridCell's own width/height in CharacterTabs.module.css -
+// kept in sync by hand (CSS modules give no clean way to read a class's
+// computed size before layout). Used only as ItemGrid's height floor
+// before its own measurement effect has run, and again as a lower bound
+// afterward so a very cramped viewport still shows at least one full row
+// instead of clipping it.
+const ITEM_TILE_PX = 64;
+
+// A native horizontal scrollbar's own rough thickness - the icon grid's
+// scroll container is deliberately let run this much further down than
+// it strictly needs to (see ItemGrid's measure()), so the scrollbar track
+// itself lands underneath the page's fixed bottom bar (already stacked
+// above it, z-index 5) and is visually covered by it, rather than sitting
+// in a visible gap right above it. Doesn't add an extra icon row - the
+// grid's own row tracks are still whole 64px multiples; this slack is
+// just blank space below the last row.
+const SCROLLBAR_OVERLAP_PX = 18;
+
+function itemGridTierBadgeClass(tier: number): string {
+  switch (tier) {
+    case 1: return styles.itemGridTierT1;
+    case 2: return styles.itemGridTierT2;
+    case 3: return styles.itemGridTierT3;
+    case 4: return styles.itemGridTierT4;
+    case 5: return styles.itemGridTierT5;
+    case 6: return styles.itemGridTierT6;
+    default: return "";
+  }
+}
+
+/** The Party's Vault tab's Items view - a horizontally-scrollable row of
+ * 100x100 icon tiles (tier badge upper-left, owned-count badge lower-
+ * right) replacing the old name/tier/quantity table. No name column and
+ * no New/Used/Broken condition label - the icon alone identifies the
+ * item, and quality/condition isn't shown here anymore. */
+function ItemGrid({
+  ids,
+  emptyLabel,
+  tierInfo,
+  balances,
+  lookupIds,
+  instanceQuality,
+  nonMovableIds,
+  characterId,
+  onPlayerDataUpdated,
+}: {
+  ids: string[];
+  emptyLabel: string;
+  tierInfo: BlueprintTierInfo;
+  balances: Record<string, number>;
+  /** When given, row id -> the id `tierInfo` should actually be looked up by - see IdList's identical prop. */
+  lookupIds?: Record<string, string>;
+  /** Row id (instanceId) -> that specific instance's current quality, for rows lookupIds resolves to a real item instance. */
+  instanceQuality?: Record<string, number | null>;
+  /** Row ids with no working move-to-backpack/equip path yet (ammo living in resources, not items/itemBalances) - the popup shows info only, no action buttons, for these. */
+  nonMovableIds?: Set<string>;
+  characterId: string;
+  onPlayerDataUpdated?: (data: RawPlayerData) => void;
+}) {
+  // How tall the scroll container is allowed to be, measured against the
+  // real remaining viewport space below it rather than a guessed vh
+  // percentage - this is what lets the grid below (grid-template-rows:
+  // repeat(auto-fill, 64px)) compute how many full rows actually fit
+  // on screen right now. Re-measured on mount and on resize (a rotated
+  // phone or a resized browser window changes how much space is left).
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const [gridHeight, setGridHeight] = useState<number>(ITEM_TILE_PX);
+  useEffect(() => {
+    const measure = () => {
+      const el = scrollRef.current;
+      if (!el) return;
+      // The page's own fixed bottom icon bar (see CharacterTabs.module.css's
+      // .topBar, position: fixed; bottom: 0) sits on top of whatever's
+      // scrolled underneath it - window.innerHeight alone doesn't know
+      // about it, so a row of icons could otherwise land partly hidden
+      // behind it. Measured live (rather than a hardcoded guess) since its
+      // own height already flexes with viewport width (.tabIcon's clamp()
+      // sizing) - falls back to a generous flat reserve if it's ever not
+      // in the DOM for some reason.
+      const footer = document.querySelector('[data-role="character-preview-topbar"]');
+      const footerHeight = footer ? footer.getBoundingClientRect().height : 90;
+      const available =
+        window.innerHeight - el.getBoundingClientRect().top - footerHeight - 16 + SCROLLBAR_OVERLAP_PX;
+      setGridHeight(Math.max(ITEM_TILE_PX, available));
+    };
+    measure();
+    window.addEventListener("resize", measure);
+    return () => window.removeEventListener("resize", measure);
+  }, []);
+
+  // The clicked tile's own row id (not its lookupIds-resolved concrete id -
+  // the detail popup needs the SAME id back to re-read `balances`/`name`
+  // for whichever exact row was clicked).
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+
+  if (ids.length === 0) return <p className={styles.inventoryEmpty}>{emptyLabel}</p>;
+
+  const sortedIds = [...ids].sort((a, b) => {
+    const infoA = tierInfo[lookupIds?.[a] ?? a];
+    const infoB = tierInfo[lookupIds?.[b] ?? b];
+    return (infoB?.tier ?? 0) - (infoA?.tier ?? 0);
+  });
+
+  return (
+    <div ref={scrollRef} className={styles.itemGridScroll} style={{ height: gridHeight }}>
+      <div className={styles.itemGrid}>
+        {sortedIds.map((id) => {
+          const info = tierInfo[lookupIds?.[id] ?? id];
+          const name = info?.name ? stripBlueprintPrefix(info.name) : formatResourceLabel(lookupIds?.[id] ?? id);
+          // Only a family with a real stackSize > 1 (item-inventory-
+          // properties.json) ever shows a count - a needsItemDefinition:true
+          // instance is always exactly 1 of itself, so a bare "1" badge
+          // would be noise rather than information.
+          const showCount = (info?.stackSize ?? 1) > 1;
+          return (
+            <button
+              key={id}
+              type="button"
+              className={styles.itemGridCell}
+              title={name}
+              onClick={() => setSelectedId(id)}
+            >
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={info?.icon || FALLBACK_ITEM_ICON} alt={name} className={styles.itemGridImg} />
+              {!!info?.tier && (
+                <span className={`${styles.itemGridTierBadge} ${itemGridTierBadgeClass(info.tier)}`}>
+                  {getTierIndicator(info.tier)}
+                </span>
+              )}
+              {showCount && <span className={styles.itemGridCountBadge}>{balances[id] ?? 0}</span>}
+            </button>
+          );
+        })}
+      </div>
+      {selectedId && (
+        <ItemDetailPopup
+          info={tierInfo[lookupIds?.[selectedId] ?? selectedId]}
+          fallbackName={formatResourceLabel(lookupIds?.[selectedId] ?? selectedId)}
+          owned={balances[selectedId] ?? 0}
+          isInstance={lookupIds?.[selectedId] !== undefined}
+          movable={!nonMovableIds?.has(selectedId)}
+          quality={instanceQuality?.[selectedId] ?? null}
+          moveId={selectedId}
+          characterId={characterId}
+          onPlayerDataUpdated={onPlayerDataUpdated}
+          onClose={() => setSelectedId(null)}
+        />
+      )}
+    </div>
+  );
+}
+
+// Same icon the footer's own Inventory tab uses (see CharacterPreview.tsx's
+// TABS list) - reused here so the "move to backpack" action reads as the
+// same concept in both places, rather than inventing a second sack icon.
+const BACKPACK_ACTION_ICON = "/images/character/char-preview-inventory.png";
+
+const QUANTITY_OPTIONS = [1, 2, 5, 10] as const;
+
+// No dedicated hand icon asset exists - a plain emoji glyph fits the same
+// convention every other icon in this file already uses (getKindIcon's
+// ⚔️/🛡️/🥋, getTierIndicator's ○●◉✦✨🌟), no image needed. Unicode has no
+// left/right-hand distinction, so "Left"/"Right" stay as text and only the
+// word "Hand" itself is replaced.
+function formatSlotLabel(slot: string): string {
+  return slot.replace(/\bHand\b/, "✋");
+}
+
+async function postJson(url: string, body?: object): Promise<RawPlayerData | null> {
+  const res = await fetch(url, {
+    method: "POST",
+    credentials: "include",
+    headers: body ? { "Content-Type": "application/json" } : undefined,
+    body: body ? JSON.stringify(body) : undefined,
+  });
+  if (!res.ok) return null;
+  return res.json();
+}
+
+/** The popup opened by clicking an ItemGrid tile - icon/name/description/
+ * sizeClass/stackMax/two-handed/quality, plus (when `movable`) a quantity
+ * picker for a stackable balance and one button per destination: this
+ * item's own equip slot(s), or a backpack icon when it's backpackable.
+ * Each button moves it straight from the shared pool onto this character
+ * in one click (check-out, then equip for a slot button). */
+function ItemDetailPopup({
+  info,
+  fallbackName,
+  owned,
+  isInstance,
+  movable,
+  quality,
+  moveId,
+  characterId,
+  onPlayerDataUpdated,
+  onClose,
+}: {
+  info: BlueprintTierInfo[string] | undefined;
+  fallbackName: string;
+  /** How many of this id the shared pool currently holds - 1 for an item instance row. */
+  owned: number;
+  /** Whether `moveId` is a real item-instance id (character.items[].instanceId) rather than a flat itemBalances/resources concrete id. */
+  isInstance: boolean;
+  /** False for ammo (arrow/bolt/oil) - no working move-to-backpack path exists yet, so no action buttons show. */
+  movable: boolean;
+  /** This exact instance's current quality (isInstance rows only) - paired with info.qualityMax for the "Quality: current/max" line. */
+  quality: number | null;
+  /** The row id itself - an instanceId (isInstance) or a concrete itemBalances/resource id. */
+  moveId: string;
+  characterId: string;
+  onPlayerDataUpdated?: (data: RawPlayerData) => void;
+  onClose: () => void;
+}) {
+  const stackSize = info?.stackSize ?? 1;
+  const name = info?.name ? stripBlueprintPrefix(info.name) : fallbackName;
+  const displayName = stackSize > 1 ? `${owned} ${name}` : name;
+
+  const [quantity, setQuantity] = useState(1);
+  const [pending, setPending] = useState(false);
+  const [actionError, setActionError] = useState<string | null>(null);
+
+  const finish = (data: RawPlayerData | null) => {
+    if (!data) {
+      setActionError("Couldn't move that - check the destination has room.");
+      setPending(false);
+      return;
+    }
+    onPlayerDataUpdated?.(data);
+    onClose();
+  };
+
+  const moveToBackpack = async () => {
+    setPending(true);
+    setActionError(null);
+    const data = isInstance
+      ? await postJson(`/api/auth/me/characters/${characterId}/items/${moveId}/check-out`)
+      : await (async () => {
+          const checkedOut = await postJson(
+            `/api/auth/me/characters/${characterId}/item-balances/${moveId}/check-out`,
+            { amount: quantity }
+          );
+          if (!checkedOut) return null;
+          return postJson(`/api/auth/me/characters/${characterId}/item-balances/${moveId}/load-backpack`, {
+            amount: quantity,
+          });
+        })();
+    finish(data);
+  };
+
+  const equipToSlots = async (slots: string[]) => {
+    setPending(true);
+    setActionError(null);
+    const checkedOut = await postJson(`/api/auth/me/characters/${characterId}/items/${moveId}/check-out`);
+    if (!checkedOut) return finish(null);
+    const equipped = await postJson(`/api/auth/me/characters/${characterId}/items/${moveId}/equip`, { slots });
+    finish(equipped);
+  };
+
+  // A twoHanded family occupies both its slots at once (equip_item requires
+  // them supplied together, order-independent) - one combined button
+  // rather than two that would each individually fail the "exactly these
+  // slots" check.
+  const slotGroups: string[][] =
+    isInstance && info?.equipSlots?.length
+      ? info.twoHanded
+        ? [info.equipSlots]
+        : info.equipSlots.map((slot) => [slot])
+      : [];
+
+  // Closes on a click anywhere - including inside the card itself (the
+  // image, name, description, meta row) - except on a button, so the
+  // move/equip action buttons below get their own clicks instead of just
+  // dismissing the popup.
+  const handleClick = (e: React.MouseEvent<HTMLElement>) => {
+    if ((e.target as HTMLElement).closest("button")) return;
+    onClose();
+  };
+  return (
+    <div className={styles.itemPopupOverlay} onClick={handleClick}>
+      <div className={styles.itemPopupCard}>
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src={info?.icon || FALLBACK_ITEM_ICON} alt={name} className={styles.itemPopupImg} />
+        <h3 className={styles.itemPopupName}>{displayName}</h3>
+        <p className={styles.itemPopupDescription}>{info?.description || "dummy"}</p>
+        <div className={styles.itemPopupMeta}>
+          <span>Size: {info?.sizeClass ?? "tiny"}</span>
+          <span>StackMax: {stackSize}</span>
+          {info?.twoHanded && <span>Two-Handed: true</span>}
+          {isInstance && info?.qualityMax != null && (
+            <span>Quality: {quality ?? 0}/{info.qualityMax}</span>
+          )}
+        </div>
+        {movable && (
+          <div className={styles.itemPopupActions} role={stackSize > 1 ? "radiogroup" : undefined}>
+            {stackSize > 1
+              ? QUANTITY_OPTIONS.map((n) => (
+                  <button
+                    key={n}
+                    type="button"
+                    role="radio"
+                    aria-checked={quantity === n}
+                    className={[
+                      styles.craftCountButton,
+                      styles.itemPopupQuantityButton,
+                      quantity === n ? styles.craftCountButtonActive : "",
+                    ]
+                      .filter(Boolean)
+                      .join(" ")}
+                    disabled={pending || n > owned}
+                    onClick={() => setQuantity(n)}
+                  >
+                    {n}
+                  </button>
+                ))
+              : slotGroups.map((slots) => (
+                  <button
+                    key={slots.join("+")}
+                    type="button"
+                    className={styles.itemPopupActionButton}
+                    disabled={pending}
+                    onClick={() => equipToSlots(slots)}
+                  >
+                    {slots.map(formatSlotLabel).join(" + ")}
+                  </button>
+                ))}
+            {info?.backpackable && (
+              <button
+                type="button"
+                className={styles.itemPopupBackpackButton}
+                disabled={pending}
+                onClick={moveToBackpack}
+                aria-label="Move to backpack"
+                title="Move to backpack"
+              >
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={BACKPACK_ACTION_ICON} alt="" className={styles.itemPopupBackpackIcon} />
+              </button>
+            )}
+          </div>
+        )}
+        {actionError && <p className={styles.craftError}>{actionError}</p>}
+      </div>
+    </div>
   );
 }
 
@@ -552,6 +907,7 @@ export function InventoryTab({
   playerItems,
   onPlayerDataUpdated,
   openCraftingSectionByDefault = false,
+  onSubTabChange,
 }: {
   character: SlotCharacterSummary;
   playerResourceBalances: Record<string, number>;
@@ -566,6 +922,11 @@ export function InventoryTab({
    * when the player got here by clicking a soul slot that showed an active
    * crafting timer, so they land straight on what they came to check. */
   openCraftingSectionByDefault?: boolean;
+  /** Called whenever the Crafting/Vault sub-tab changes - lets the parent
+   * suspend the page's own vertical scroll while Vault is showing, since
+   * that tab's Items grid is meant to be the only scrollable thing on
+   * screen (horizontally), never the page itself. */
+  onSubTabChange?: (tab: "crafting" | "vault") => void;
 }) {
   // Moves `amount` of a resource/tool from this character's own (temporary,
   // crafting-session-only) vault back into the player's shared vault.
@@ -606,12 +967,12 @@ export function InventoryTab({
   // Tool tier info: id -> tier/family (for displaying tier indicators on tools)
   const [toolTierInfo, setToolTierInfo] = useState<BlueprintTierInfo>({});
 
-  // Every concrete id belonging to an item-inventory-properties.json family
-  // (all 118, regardless of storage bucket) - itemCatalogIds reclassifies a
-  // matching resources-balance entry (arrow/bolt/oil) as an item for
-  // display, itemCatalogTierInfo gives the combined Items list real
-  // tier/family sorting the same way blueprints/resources/tools already get.
-  const [itemCatalogIds, setItemCatalogIds] = useState<Set<string>>(new Set());
+  // Tier/family info for every concrete id belonging to an
+  // item-inventory-properties.json family (all 118) - gives the Items grid
+  // real tier/family sorting the same way blueprints/resources/tools
+  // already get. Ammo (arrow/bolt/oil) crafts straight into itemBalances
+  // like any other item now, so there's no separate resources-reclassifying
+  // step needed here anymore.
   const [itemCatalogTierInfo, setItemCatalogTierInfo] = useState<BlueprintTierInfo>({});
 
   useEffect(() => {
@@ -688,25 +1049,35 @@ export function InventoryTab({
             tier: number;
             kind: string[];
             qualityMax: number | null;
+            icon: string;
+            stackSize: number;
+            description: string;
+            sizeClass: string;
+            equipSlots: string[];
+            backpackable: boolean;
+            twoHanded: boolean;
           }>
         ) => {
-        const ids = new Set<string>();
         const tierMap: BlueprintTierInfo = {};
         for (const item of data) {
-          ids.add(item.id);
           tierMap[item.id] = {
             tier: item.tier,
             familyId: item.familyId,
             kind: item.kind[0] ?? "",
             name: item.name,
             qualityMax: item.qualityMax,
+            icon: item.icon,
+            stackSize: item.stackSize,
+            description: item.description,
+            sizeClass: item.sizeClass,
+            equipSlots: item.equipSlots,
+            backpackable: item.backpackable,
+            twoHanded: item.twoHanded,
           };
         }
-        setItemCatalogIds(ids);
         setItemCatalogTierInfo(tierMap);
       })
       .catch(() => {
-        setItemCatalogIds(new Set());
         setItemCatalogTierInfo({});
       });
   }, []);
@@ -718,6 +1089,9 @@ export function InventoryTab({
   // Resources/Items) now only renders while this tab is selected, instead
   // of always being present-but-collapsed in the accordion.
   const [activeSubTab, setActiveSubTab] = useState<"crafting" | "vault">("crafting");
+  useEffect(() => {
+    onSubTabChange?.(activeSubTab);
+  }, [activeSubTab, onSubTabChange]);
 
   // Top-level accordion within the Crafting tab (Blueprints Known/this
   // character's own Crafting stock/the party's shared Tools & Resources) -
@@ -811,39 +1185,21 @@ export function InventoryTab({
   // instanceId is the row's own id (unique); lookupIds maps it back to the
   // concrete itemId for name/tier/kind lookups in tierInfo, which is keyed
   // by itemId, not instanceId.
-  const playerItemRowIds: string[] = [];
   const playerItemLookupIds: Record<string, string> = {};
   const playerItemRowBalances: Record<string, number> = {};
-  const playerItemRowQuality: Record<string, string> = {};
+  // Current quality per pool instance (its family's own qualityMax comes
+  // from itemCatalogTierInfo instead - the item detail popup pairs the two
+  // for its own "Quality: current/max" line).
+  const playerItemRowQuality: Record<string, number | null> = {};
   for (const instance of playerItems) {
-    playerItemRowIds.push(instance.instanceId);
     playerItemLookupIds[instance.instanceId] = instance.itemId;
     playerItemRowBalances[instance.instanceId] = 1; // one row = one physical unit
-    const qualityMax = itemCatalogTierInfo[instance.itemId]?.qualityMax;
-    if (instance.quality != null && qualityMax) {
-      playerItemRowQuality[instance.instanceId] = qualityLabel(instance.quality, qualityMax);
-    }
-  }
-
-  // Some item-inventory-properties.json families (ammo - arrow/bolt/oil)
-  // are physically stored in resources, not itemBalances/items, since
-  // they're ordinary stackable PROCESSED_RESOURCE_ITEMS entries. They
-  // still belong in the Items list for display, and get excluded from the
-  // Resources list below so they aren't shown twice.
-  const playerAmmoBalances: Record<string, number> = {};
-  const playerResourcesExcludingItems: Record<string, number> = {};
-  for (const [id, qty] of Object.entries(playerResourceBalances)) {
-    if (itemCatalogIds.has(id)) {
-      playerAmmoBalances[id] = qty;
-    } else {
-      playerResourcesExcludingItems[id] = qty;
-    }
+    playerItemRowQuality[instance.instanceId] = instance.quality;
   }
 
   const playerItemsCombined: Record<string, number> = {
     ...playerItemBalances,
     ...playerItemRowBalances,
-    ...playerAmmoBalances,
   };
 
   // The embedded recipe viewer's own content height, in px - same-origin, so
@@ -1066,7 +1422,7 @@ export function InventoryTab({
           onClick={() => setActiveSubTab("vault")}
           aria-pressed={activeSubTab === "vault"}
         >
-          Party&apos;s Vault
+          Vault
         </button>
       </div>
 
@@ -1208,7 +1564,7 @@ export function InventoryTab({
                   onToggle={togglePartySub}
                 >
                   <ResourceList
-                    balances={playerResourcesExcludingItems}
+                    balances={playerResourceBalances}
                     emptyLabel="Nothing in the shared crafting stock."
                     tierInfo={resourceTierInfo}
                   />
@@ -1303,20 +1659,16 @@ export function InventoryTab({
       )}
 
       {activeSubTab === "vault" && (
-        <div className={styles.accordionItem}>
-          <div className={styles.accordionBody}>
-            <IdList
-              ids={Object.keys(playerItemsCombined).filter((id) => playerItemsCombined[id] > 0)}
-              emptyLabel="Nothing crafted yet."
-              tierInfo={itemCatalogTierInfo}
-              sortByTier
-              balances={playerItemsCombined}
-              quantityHiddenIds={new Set(playerItemRowIds)}
-              qualityLabels={playerItemRowQuality}
-              lookupIds={playerItemLookupIds}
-            />
-          </div>
-        </div>
+        <ItemGrid
+          ids={Object.keys(playerItemsCombined).filter((id) => playerItemsCombined[id] > 0)}
+          emptyLabel="Nothing crafted yet."
+          tierInfo={itemCatalogTierInfo}
+          balances={playerItemsCombined}
+          lookupIds={playerItemLookupIds}
+          instanceQuality={playerItemRowQuality}
+          characterId={character.id}
+          onPlayerDataUpdated={onPlayerDataUpdated}
+        />
       )}
     </div>
   );

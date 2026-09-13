@@ -459,6 +459,13 @@ class ItemCatalogEntryResponse(BaseModel):
     qualityMax: Optional[int] = Field(
         None, description="Max quality a fresh instance of this family starts at, if it degrades at all"
     )
+    icon: str = Field("", description="Per-tier art path, or empty if this family/tier has none yet")
+    stackSize: int = Field(1, description="Family-level stack size - 1 means never stack, no owned-count badge")
+    description: str = Field("", description="Per-tier flavor text, or empty if this family/tier has none yet")
+    sizeClass: str = Field("tiny", description="Family-level backpack slot-cost bucket")
+    equipSlots: List[str] = Field(default_factory=list, description="Family-level valid equip slot names, if any")
+    backpackable: bool = Field(True, description="Family-level - whether a move-to-backpack action applies at all")
+    twoHanded: bool = Field(False, description="Family-level - whether equipping occupies both named hand slots at once")
 
 
 # Dependency: Extract and verify token from secure cookie
@@ -849,7 +856,9 @@ async def get_item_catalog():
     """
     return [
         ItemCatalogEntryResponse(
-            id=e.id, name=e.name, familyId=e.family_id, tier=e.tier, kind=list(e.kind), qualityMax=e.quality_max
+            id=e.id, name=e.name, familyId=e.family_id, tier=e.tier, kind=list(e.kind), qualityMax=e.quality_max,
+            icon=e.icon, stackSize=e.stack_size, description=e.description, sizeClass=e.size_class,
+            equipSlots=list(e.equip_slots), backpackable=e.backpackable, twoHanded=e.two_handed,
         )
         for e in items_catalog.ITEM_CATALOG_ENTRIES
     ]
