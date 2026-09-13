@@ -74,23 +74,25 @@ Each of the 15 profession categories draws from 3 raw-material resource families
 
 A recipe's blueprint (when it has one) belongs to a category the same way the recipe itself does — whichever category supplies the most of the blueprint's *recipes'* raw-material inputs, with ties counting toward more than one (see `backend/craft_catalog.py`). Metal (ore/wood/sand) and wood (wood/hide/bone) recipes are a deliberate exception: because charcoal (needed to smelt almost every metal item) is itself made from wood, an ore-or-wood-heavy recipe tends to win outright rather than tying, threatening to swallow unrelated tool blueprints (furnace, kiln, wrench, ...) that happen to also use wood or ore. So metal and wood each keep one unified, internal tie-break identity for that math, then split afterward by what the recipe actually produces: blacksmith (**CraftWeapon**), armorer (**CraftArmor**, covering both armor and shields), and tinsmith (**CraftTool**) share metal's win; carpenter (**CraftFurniture**, tools and equipment) and cooper (**CraftWood**, weapons/armor/shields made of wood) share wood's. Metal additionally requires a *sole* win before it's split and counted below (a metal/wood tie with another category, e.g. CraftGlass, isn't attributed to any of the three metal sub-categories) — wood keeps counting ties as before.
 
-| Category | Professions | Resource Families | Blueprints | Recipes | Notes |
+| Category | Professions | Resource Families | Blueprints | Recipes | Blueprint Families |
 |-------|---|---|-------:|-------:|---|
-| CraftWeapon | blacksmith | ore, wood, sand | 11 | 11 | Pure weapon-making, split off from the old unified metal group — no armor, no tools. |
-| CraftGlass | glassblower, jeweler | sand, crystal, ore | 11 | 39 | |
-| CraftArmor | armorer | ore, wood, sand | 6 | 12 | Armor and shields — each armor blueprint gates a head/chest/leg set of recipes. |
-| CraftWood | cooper | wood, hide, bone | 8 | 52 | Weapons, armor, and shields made from wood: bows, staffs, wands, the ebony set, wooden/ebony shields. |
-| CraftGarment | leatherworker, tanner, weaver, dyer | skin, fiber, herbs | 8 | 33 | |
-| Military | soldier, guard | ore, fiber, monster_part | 6 | 32 | |
-| Alchemy | alchemist, poisoner, enchanter | herbs, crystal, monster_part | 6 | 21 | Planned to grow substantially once more items are introduced across the game. |
-| CraftFurniture | carpenter | wood, hide, bone | 6 | 6 | Tools and equipment made from wood: workbench, oven, scriptorium, spinning wheel, enchanter's table, merchant's scale. |
-| Artists | painter, acrobat, clown, firespitter, storyteller, actor | feather, fiber, bone | 4 | 33 | |
-| CraftStone | mason, stonemason, potter | clay, stone, crystal | 4 | 11 | Their expertise is stone construction — underground building, traps, and doors — a naturally smaller domain, expected to stay limited relative to the other craft categories. |
-| CraftTool | tinsmith | ore, wood, sand | 3 | 8 | The smallest of the three metal sub-categories — anvil, loom, tanning rack. |
-| Food | baker, butcher, brewmaster, cook | meat, harvest, herbs | 3 | 21 | Planned perk: these professions need less food to eat, and get it cheaper. |
-| Aristocratic | scribe, clerk, scholar | reed, feather, skin | 3 | 13 | Planned to grow through magic scroll recipes, once is introduced. |
-| Trade | merchant, trader | harvest, stone, monster_part | 2 | 12 | Planned to lean on a marketplace discount mechanic (traders paying less for goods) rather than more recipes. |
-| Rural | farmer, herder, hunter, fisher, miner | hide, meat, harvest, fish | 1 | 16 | Now has its own crafting station, the Smokehouse. Planned perk: a bonus on gathering materials. |
+| CraftWeapon | blacksmith | ore, wood, sand | 11 | 11 | axe, battle_axe, dagger, greatsword, mace, quiver, short_sword, sickle, spear, sword, warhammer |
+| CraftGlass | glassblower, jeweler | sand, crystal, ore | 11 | 39 | alchemy_stand, furnace, grinding_stone, kiln, lapidary_bench, magic_staff, meteoric_iron, meteoric_iron_shield, mortar_and_pestle, wand, wrench |
+| CraftWood | cooper | wood, hide, bone | 8 | 52 | bolt_girdle, bow, ebony, ebony_shield, leather, magic_staff, wand, wooden_shield |
+| CraftGarment | leatherworker, tanner, weaver, dyer | skin, fiber, herbs | 8 | 33 | bolt_girdle, bow, chitin, chitin_shield, cloth, fishermans_ration, iron_ration, wooden_shield |
+| CraftArmor | armorer | ore, wood, sand | 6 | 12 | chainmail, darksteel, darksteel_shield, iron, iron_shield, reinforced_wooden_shield |
+| Military | soldier, guard | ore, fiber, monster_part | 6 | 32 | bow, cloth, crossbow, fishermans_ration, iron_ration, wrench |
+| Alchemy | alchemist, poisoner, enchanter | herbs, crystal, monster_part | 6 | 21 | bangers, chitin, chitin_shield, enchanters_table, magic_staff, wand |
+| CraftFurniture | carpenter | wood, hide, bone | 6 | 6 | enchanters_table, merchants_scale, oven, scriptorium, spinning_wheel, workbench |
+| Artists | painter, acrobat, clown, firespitter, storyteller, actor | feather, fiber, bone | 4 | 33 | bow, cloth, fishermans_ration, iron_ration |
+| CraftStone | mason, stonemason, potter | clay, stone, crystal | 4 | 11 | magic_staff, merchants_scale, oven, wand |
+| CraftTool | tinsmith | ore, wood, sand | 3 | 8 | anvil, loom, tanning_rack |
+| Food | baker, butcher, brewmaster, cook | meat, harvest, herbs | 3 | 21 | bangers, fish_chowder, hearty_stew |
+| Aristocratic | scribe, clerk, scholar | reed, feather, skin | 3 | 13 | bolt_girdle, wooden_shield, workbench |
+| Trade | merchant, trader | harvest, stone, monster_part | 2 | 12 | merchants_scale, oven |
+| Rural | farmer, herder, hunter, fisher, miner | hide, meat, harvest, fish | 1 | 16 | smokehouse |
+
+A blueprint family can appear in more than one row: it belongs to every category tied for the most raw-material hits across its own recipe(s) (e.g. `bow` ties between CraftWood, CraftGarment, Military, and Artists) — except CraftWeapon/CraftArmor/CraftTool, which only count a *sole* metal win (see above), so a blueprint never appears in more than one of those three.
 
 The lowest-count categories — Rural, CraftStone, CraftTool, Food, Aristocratic, and Trade — are expected to expand later, through new mechanics (foraging yield, marketplace pricing) as well as new recipes, once those systems and the resources they depend on are designed.
 
