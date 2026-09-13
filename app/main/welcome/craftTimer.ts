@@ -27,19 +27,21 @@ export function useCraftCountdown(readyAt: string | null | undefined): number | 
   return remainingSeconds;
 }
 
-/** "00:00:00" - hours:minutes:seconds, always all three fields
+/** "00:00:00" (or "00:00" once under an hour) - hours:minutes:seconds,
  * zero-padded, no day component and no unit letters - hours just keep
  * counting up past 24 rather than rolling into a separate day field (a
  * craft can run from seconds to many hours depending on the recipe's own
  * raw-material chain and tier, see backend.players._craft_duration_seconds,
- * so a fixed two-field hour cap isn't enough). Used everywhere a craft
- * countdown or duration estimate is shown - the Craft button, the
- * crafting-tab accordion header, the soul-slot badge, the Stats page's
- * "Ready" row. */
+ * so a fixed two-field hour cap isn't enough). The hours field is dropped
+ * entirely once it's 0 - most crafts finish inside an hour, and a leading
+ * "00:" on every one of those reads as clutter rather than information.
+ * Used everywhere a craft countdown or duration estimate is shown - the
+ * Craft button, the crafting-tab accordion header, the soul-slot badge,
+ * the Stats page's "Ready" row. */
 export function formatRemainingCompactLong(seconds: number): string {
   const hours = Math.floor(seconds / 3600);
   const minutes = Math.floor((seconds % 3600) / 60);
   const secs = seconds % 60;
   const pad = (n: number) => n.toString().padStart(2, "0");
-  return `${pad(hours)}:${pad(minutes)}:${pad(secs)}`;
+  return hours > 0 ? `${pad(hours)}:${pad(minutes)}:${pad(secs)}` : `${pad(minutes)}:${pad(secs)}`;
 }

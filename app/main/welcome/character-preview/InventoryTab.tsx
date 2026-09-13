@@ -711,13 +711,24 @@ export function InventoryTab({
       });
   }, []);
 
-  // Top-level accordion (this character's crafting stock vs. the party's) -
-  // both can be open at once, toggled independently. The recipe viewer
-  // below is always visible, not part of this fold.
-  const [openSections, setOpenSections] = useState<Set<"blueprints" | "character" | "party">>(
+  // The Inventory page's own Crafting/Party's Vault split - a website-style
+  // header tab strip directly under the character name (see .invSubTabRow),
+  // replacing what used to be a third "Party's Vault" accordion section
+  // alongside Blueprints Known/character Crafting. Vault content (Tools/
+  // Resources/Items) now only renders while this tab is selected, instead
+  // of always being present-but-collapsed in the accordion.
+  const [activeSubTab, setActiveSubTab] = useState<"crafting" | "vault">("crafting");
+
+  // Top-level accordion within the Crafting tab (Blueprints Known/this
+  // character's own Crafting stock/the party's shared Tools & Resources) -
+  // any number can be open at once, toggled independently. The recipe
+  // viewer below is always visible, not part of this fold. Only the party's
+  // crafted Items live under the separate Vault tab (see activeSubTab) -
+  // Tools/Resources stay here since they're what a craft actually draws on.
+  const [openSections, setOpenSections] = useState<Set<"blueprints" | "character" | "partyStock">>(
     () => (openCraftingSectionByDefault ? new Set(["character"]) : new Set())
   );
-  const toggleSection = (id: "blueprints" | "character" | "party") => setOpenSections((prev) => {
+  const toggleSection = (id: "blueprints" | "character" | "partyStock") => setOpenSections((prev) => {
     const next = new Set(prev);
     if (next.has(id)) next.delete(id); else next.add(id);
     return next;
@@ -1036,240 +1047,276 @@ export function InventoryTab({
 
   return (
     <div className={styles.panel}>
-      {knownBlueprints.length > 0 && (
-        <div className={styles.accordionItem}>
-          <button className={styles.accordionHeader} onClick={() => toggleSection("blueprints")}>
-            <span>{`Blueprints Known (${knownBlueprints.length})`}</span>
-            <span className={styles.accordionChevron}>{openSections.has("blueprints") ? "▴" : "▾"}</span>
-          </button>
-          {openSections.has("blueprints") && (
-            <div className={styles.accordionBody}>
-              <IdList ids={knownBlueprints} emptyLabel="" tierInfo={blueprintTierInfo} sortByTier textColor="#7eb8ff" />
+      <div className={styles.invSubTabRow}>
+        <button
+          type="button"
+          className={`${styles.invSubTabButton} ${
+            activeSubTab === "crafting" ? styles.invSubTabButtonActive : ""
+          }`}
+          onClick={() => setActiveSubTab("crafting")}
+          aria-pressed={activeSubTab === "crafting"}
+        >
+          Crafting
+        </button>
+        <button
+          type="button"
+          className={`${styles.invSubTabButton} ${
+            activeSubTab === "vault" ? styles.invSubTabButtonActive : ""
+          }`}
+          onClick={() => setActiveSubTab("vault")}
+          aria-pressed={activeSubTab === "vault"}
+        >
+          Party&apos;s Vault
+        </button>
+      </div>
+
+      {activeSubTab === "crafting" && (
+        <>
+          {/* Hidden entirely when nothing's cooking - only appears once a
+              craft is actively running (remainingSeconds !== null) and
+              stays up through the "Finished: ..." line's own fade-out
+              (lastCraftResult, cleared by the CRAFT_RESULT_FADE_MS timeout
+              above), rather than sitting empty/idle between crafts. First
+              in the list, ahead of Blueprints Known, when it's showing at
+              all - an in-progress craft is the most relevant thing here. */}
+          {(remainingSeconds !== null || lastCraftResult !== null) && (
+          <div className={styles.accordionItem}>
+            <button className={styles.accordionHeader} onClick={() => toggleSection("character")}>
+              <span>
+                {character.firstName}&apos;s Crafting
+                {remainingSeconds !== null && (
+                  <span className={styles.craftTimer}> {formatRemainingCompactLong(remainingSeconds)}</span>
+                )}
+              </span>
+              <span className={styles.accordionChevron}>{openSections.has("character") ? "▴" : "▾"}</span>
+            </button>
+            {openSections.has("character") && (
+              <div className={styles.accordionBody}>
+                {/* A borrowed instance tool (axe_stone, ...) is a tool in use
+                    too - just rendered in the separate list right below, since
+                    it's not a flat balance. Skip this list entirely (rather
+                    than showing its own empty-state message with padding)
+                    when it has nothing but a borrowed tool already covers the
+                    "using a tool" story - only claim "no tools" when BOTH
+                    lists are actually empty. */}
+                {(ownedIds(character.tools).length > 0 || borrowedToolIds.length === 0) && (
+                  <IdList
+                    ids={ownedIds(character.tools)}
+                    emptyLabel="Not currently using any tools."
+                    tierInfo={toolTierInfo}
+                    sortByTier
+                    fixedIcon="🔧"
+                    balances={character.tools}
+                    // Locked for the crafting duration - whatever start_craft
+                    // staged here isn't the player's to move back out until
+                    // the craft finishes (or the timer runs out and
+                    // finish_craft drains it), same "no check-out either"
+                    // rule these are already subject to.
+                    onTransfer={remainingSeconds === null ? (id, amount) => transfer("tools", id, amount) : undefined}
+                    textColor="#7eb8ff"
+                  />
+                )}
+                {borrowedToolIds.length > 0 && (
+                  <IdList
+                    ids={borrowedToolIds}
+                    emptyLabel=""
+                    tierInfo={itemCatalogTierInfo}
+                    sortByTier
+                    fixedIcon="🔧"
+                    balances={borrowedToolCounts}
+                    quantityHiddenIds={new Set(borrowedToolIds)}
+                    textColor="#7eb8ff"
+                  />
+                )}
+                {(ownedIds(character.tools).length > 0 || borrowedToolIds.length > 0) && (
+                  <div className={styles.toolsResourceDivider} />
+                )}
+                <ResourceList
+                  balances={character.resources}
+                  emptyLabel="No materials used."
+                  tierInfo={resourceTierInfo}
+                  onTransfer={remainingSeconds === null ? (id, amount) => transfer("resources", id, amount) : undefined}
+                />
+                {remainingSeconds !== null && character.activeCraft && (
+                  <>
+                    <div className={styles.craftOutputDivider} />
+                    <p className={styles.craftOutputLine}>
+                      Crafting {character.activeCraft.count}x{" "}
+                      {resolveOutputName(
+                        character.activeCraft.familyId,
+                        character.activeCraft.tier,
+                        resourceTierInfo,
+                        itemCatalogTierInfo
+                      )}
+                    </p>
+                  </>
+                )}
+                {!character.activeCraft && lastCraftResult && (
+                  <>
+                    <div className={styles.craftOutputDivider} />
+                    <p className={`${styles.craftOutputLine} ${styles.craftResultFading}`}>
+                      Finished: {lastCraftResult.count}x {lastCraftResult.name}
+                    </p>
+                  </>
+                )}
+              </div>
+            )}
+          </div>
+          )}
+
+          {knownBlueprints.length > 0 && (
+            <div className={styles.accordionItem}>
+              <button className={styles.accordionHeader} onClick={() => toggleSection("blueprints")}>
+                <span>{`Blueprints Known (${knownBlueprints.length})`}</span>
+                <span className={styles.accordionChevron}>{openSections.has("blueprints") ? "▴" : "▾"}</span>
+              </button>
+              {openSections.has("blueprints") && (
+                <div className={styles.accordionBody}>
+                  <IdList ids={knownBlueprints} emptyLabel="" tierInfo={blueprintTierInfo} sortByTier textColor="#7eb8ff" />
+                </div>
+              )}
             </div>
           )}
-        </div>
+
+          <div className={styles.accordionItem}>
+            <button className={styles.accordionHeader} onClick={() => toggleSection("partyStock")}>
+              <span>Party&apos;s Tools &amp; Resources</span>
+              <span className={styles.accordionChevron}>{openSections.has("partyStock") ? "▴" : "▾"}</span>
+            </button>
+            {openSections.has("partyStock") && (
+              <div className={styles.accordionBody}>
+                <SubAccordionItem
+                  id="tools"
+                  label="Tools"
+                  openIds={openPartySub}
+                  onToggle={togglePartySub}
+                >
+                  <IdList
+                    ids={ownedIds(playerTools)}
+                    emptyLabel="Nothing in the shared tool pool."
+                    tierInfo={toolTierInfo}
+                    sortByTier
+                    fixedIcon="🔧"
+                    balances={playerTools}
+                    textColor="#7eb8ff"
+                  />
+                </SubAccordionItem>
+                <SubAccordionItem
+                  id="resources"
+                  label="Resources"
+                  openIds={openPartySub}
+                  onToggle={togglePartySub}
+                >
+                  <ResourceList
+                    balances={playerResourcesExcludingItems}
+                    emptyLabel="Nothing in the shared crafting stock."
+                    tierInfo={resourceTierInfo}
+                  />
+                </SubAccordionItem>
+              </div>
+            )}
+          </div>
+
+          <div className={styles.craftRow}>
+            <button
+              className={styles.craftButton}
+              onClick={startCraft}
+              disabled={crafting || !canCraft || remainingSeconds !== null}
+            >
+              {remainingSeconds !== null ? (
+                <span className={styles.craftTimer}>Crafting… {formatRemainingCompactLong(remainingSeconds)}</span>
+              ) : crafting ? (
+                "Crafting…"
+              ) : canCraft ? (
+                <>
+                  Craft
+                  <span className={styles.craftButtonDetail}>
+                    {craftDurationPreview !== null && formatRemainingCompactLong(craftDurationPreview)}
+                    {craftXpPreview && formatXpPreview(craftXpPreview) && `, ${formatXpPreview(craftXpPreview)}`}
+                  </span>
+                </>
+              ) : (
+                "Craft"
+              )}
+            </button>
+            {canCraft && remainingSeconds === null && (
+              <span className={styles.craftReadyCheck} title="Selected recipe can be crafted right now">
+                ✓
+              </span>
+            )}
+            <div className={styles.craftCountRow} role="radiogroup" aria-label="How many to craft">
+              {CRAFT_COUNTS.map((count) => (
+                <button
+                  key={count}
+                  type="button"
+                  role="radio"
+                  aria-checked={craftCount === count}
+                  className={[
+                    styles.craftCountButton,
+                    craftCount === count ? styles.craftCountButtonActive : "",
+                  ]
+                    .filter(Boolean)
+                    .join(" ")}
+                  disabled={crafting || remainingSeconds !== null || !(craftableCounts[count] ?? false)}
+                  onClick={() => setCraftCount(count)}
+                >
+                  {count}
+                </button>
+              ))}
+            </div>
+            {craftError && <span className={styles.craftError}>{craftError}</span>}
+          </div>
+
+          <button
+            className={styles.recipeViewerHeading}
+            onClick={() => setRecipeViewerOpen((prev) => !prev)}
+          >
+            <span className={styles.accordionChevron}>{recipeViewerOpen ? "▴" : "▾"}</span>
+            Crafting Recipe Viewer
+          </button>
+          {recipeViewerOpen && (
+            <iframe
+              ref={recipeViewerRef}
+              src={`/craft/recipe-viewer.html?embedded=1&inv=${encodeURIComponent(
+                JSON.stringify(playerResourceBalances)
+              )}&itemBalances=${encodeURIComponent(
+                JSON.stringify(playerItemBalances)
+              )}&tools=${encodeURIComponent(JSON.stringify(ownedTools))}&vaultTools=${encodeURIComponent(
+                JSON.stringify(vaultToolInstanceIds)
+              )}&blueprints=${encodeURIComponent(JSON.stringify(knownBlueprints))}`}
+              title="Crafting Recipe Viewer"
+              className={styles.recipeViewerFrame}
+              style={{ height: recipeViewerHeight, overflow: "hidden" }}
+              scrolling="no"
+              onLoad={() => {
+                const doc = recipeViewerRef.current?.contentWindow?.document;
+                if (!doc?.body) return;
+                setRecipeViewerHeight(doc.body.scrollHeight);
+                const observer = new ResizeObserver(() => {
+                  setRecipeViewerHeight(doc.body.scrollHeight);
+                });
+                observer.observe(doc.body);
+              }}
+            />
+          )}
+        </>
       )}
 
-      <div className={styles.accordionItem}>
-        <button className={styles.accordionHeader} onClick={() => toggleSection("character")}>
-          <span>
-            {character.firstName}&apos;s Crafting
-            {remainingSeconds !== null && (
-              <span className={styles.craftTimer}> {formatRemainingCompactLong(remainingSeconds)}</span>
-            )}
-          </span>
-          <span className={styles.accordionChevron}>{openSections.has("character") ? "▴" : "▾"}</span>
-        </button>
-        {openSections.has("character") && (
+      {activeSubTab === "vault" && (
+        <div className={styles.accordionItem}>
           <div className={styles.accordionBody}>
-            {/* A borrowed instance tool (axe_stone, ...) is a tool in use
-                too - just rendered in the separate list right below, since
-                it's not a flat balance. Skip this list entirely (rather
-                than showing its own empty-state message with padding)
-                when it has nothing but a borrowed tool already covers the
-                "using a tool" story - only claim "no tools" when BOTH
-                lists are actually empty. */}
-            {(ownedIds(character.tools).length > 0 || borrowedToolIds.length === 0) && (
-              <IdList
-                ids={ownedIds(character.tools)}
-                emptyLabel="Not currently using any tools."
-                tierInfo={toolTierInfo}
-                sortByTier
-                fixedIcon="🔧"
-                balances={character.tools}
-                // Locked for the crafting duration - whatever start_craft
-                // staged here isn't the player's to move back out until
-                // the craft finishes (or the timer runs out and
-                // finish_craft drains it), same "no check-out either"
-                // rule these are already subject to.
-                onTransfer={remainingSeconds === null ? (id, amount) => transfer("tools", id, amount) : undefined}
-                textColor="#7eb8ff"
-              />
-            )}
-            {borrowedToolIds.length > 0 && (
-              <IdList
-                ids={borrowedToolIds}
-                emptyLabel=""
-                tierInfo={itemCatalogTierInfo}
-                sortByTier
-                fixedIcon="🔧"
-                balances={borrowedToolCounts}
-                quantityHiddenIds={new Set(borrowedToolIds)}
-                textColor="#7eb8ff"
-              />
-            )}
-            {(ownedIds(character.tools).length > 0 || borrowedToolIds.length > 0) && (
-              <div className={styles.toolsResourceDivider} />
-            )}
-            <ResourceList
-              balances={character.resources}
-              emptyLabel="No materials used."
-              tierInfo={resourceTierInfo}
-              onTransfer={remainingSeconds === null ? (id, amount) => transfer("resources", id, amount) : undefined}
+            <IdList
+              ids={Object.keys(playerItemsCombined).filter((id) => playerItemsCombined[id] > 0)}
+              emptyLabel="Nothing crafted yet."
+              tierInfo={itemCatalogTierInfo}
+              sortByTier
+              balances={playerItemsCombined}
+              quantityHiddenIds={new Set(playerItemRowIds)}
+              qualityLabels={playerItemRowQuality}
+              lookupIds={playerItemLookupIds}
             />
-            {remainingSeconds !== null && character.activeCraft && (
-              <>
-                <div className={styles.craftOutputDivider} />
-                <p className={styles.craftOutputLine}>
-                  Crafting {character.activeCraft.count}x{" "}
-                  {resolveOutputName(
-                    character.activeCraft.familyId,
-                    character.activeCraft.tier,
-                    resourceTierInfo,
-                    itemCatalogTierInfo
-                  )}
-                </p>
-              </>
-            )}
-            {!character.activeCraft && lastCraftResult && (
-              <>
-                <div className={styles.craftOutputDivider} />
-                <p className={`${styles.craftOutputLine} ${styles.craftResultFading}`}>
-                  Finished: {lastCraftResult.count}x {lastCraftResult.name}
-                </p>
-              </>
-            )}
           </div>
-        )}
-      </div>
-
-      <div className={styles.accordionItem}>
-        <button className={styles.accordionHeader} onClick={() => toggleSection("party")}>
-          <span>Party&apos;s Vault</span>
-          <span className={styles.accordionChevron}>{openSections.has("party") ? "▴" : "▾"}</span>
-        </button>
-        {openSections.has("party") && (
-          <div className={styles.accordionBody}>
-            <SubAccordionItem
-              id="tools"
-              label="Tools"
-              openIds={openPartySub}
-              onToggle={togglePartySub}
-            >
-              <IdList
-                ids={ownedIds(playerTools)}
-                emptyLabel="Nothing in the shared tool pool."
-                tierInfo={toolTierInfo}
-                sortByTier
-                fixedIcon="🔧"
-                balances={playerTools}
-                textColor="#7eb8ff"
-              />
-            </SubAccordionItem>
-            <SubAccordionItem
-              id="resources"
-              label="Resources"
-              openIds={openPartySub}
-              onToggle={togglePartySub}
-            >
-              <ResourceList
-                balances={playerResourcesExcludingItems}
-                emptyLabel="Nothing in the shared crafting stock."
-                tierInfo={resourceTierInfo}
-              />
-            </SubAccordionItem>
-            <SubAccordionItem
-              id="items"
-              label="Items"
-              openIds={openPartySub}
-              onToggle={togglePartySub}
-            >
-              <IdList
-                ids={Object.keys(playerItemsCombined).filter((id) => playerItemsCombined[id] > 0)}
-                emptyLabel="Nothing crafted yet."
-                tierInfo={itemCatalogTierInfo}
-                sortByTier
-                balances={playerItemsCombined}
-                quantityHiddenIds={new Set(playerItemRowIds)}
-                qualityLabels={playerItemRowQuality}
-                lookupIds={playerItemLookupIds}
-              />
-            </SubAccordionItem>
-          </div>
-        )}
-      </div>
-
-      <div className={styles.craftRow}>
-        <button
-          className={styles.craftButton}
-          onClick={startCraft}
-          disabled={crafting || !canCraft || remainingSeconds !== null}
-        >
-          {remainingSeconds !== null ? (
-            <span className={styles.craftTimer}>Crafting… {formatRemainingCompactLong(remainingSeconds)}</span>
-          ) : crafting ? (
-            "Crafting…"
-          ) : canCraft ? (
-            <>
-              Craft
-              <span className={styles.craftButtonDetail}>
-                {craftDurationPreview !== null && formatRemainingCompactLong(craftDurationPreview)}
-                {craftXpPreview && formatXpPreview(craftXpPreview) && `, ${formatXpPreview(craftXpPreview)}`}
-              </span>
-            </>
-          ) : (
-            "Craft"
-          )}
-        </button>
-        {canCraft && remainingSeconds === null && (
-          <span className={styles.craftReadyCheck} title="Selected recipe can be crafted right now">
-            ✓
-          </span>
-        )}
-        <div className={styles.craftCountRow} role="radiogroup" aria-label="How many to craft">
-          {CRAFT_COUNTS.map((count) => (
-            <button
-              key={count}
-              type="button"
-              role="radio"
-              aria-checked={craftCount === count}
-              className={[
-                styles.craftCountButton,
-                craftCount === count ? styles.craftCountButtonActive : "",
-              ]
-                .filter(Boolean)
-                .join(" ")}
-              disabled={crafting || remainingSeconds !== null || !(craftableCounts[count] ?? false)}
-              onClick={() => setCraftCount(count)}
-            >
-              {count}
-            </button>
-          ))}
         </div>
-        {craftError && <span className={styles.craftError}>{craftError}</span>}
-      </div>
-
-      <button
-        className={styles.recipeViewerHeading}
-        onClick={() => setRecipeViewerOpen((prev) => !prev)}
-      >
-        <span className={styles.accordionChevron}>{recipeViewerOpen ? "▴" : "▾"}</span>
-        Crafting Recipe Viewer
-      </button>
-      {recipeViewerOpen && (
-        <iframe
-          ref={recipeViewerRef}
-          src={`/craft/recipe-viewer.html?embedded=1&inv=${encodeURIComponent(
-            JSON.stringify(playerResourceBalances)
-          )}&itemBalances=${encodeURIComponent(
-            JSON.stringify(playerItemBalances)
-          )}&tools=${encodeURIComponent(JSON.stringify(ownedTools))}&vaultTools=${encodeURIComponent(
-            JSON.stringify(vaultToolInstanceIds)
-          )}&blueprints=${encodeURIComponent(JSON.stringify(knownBlueprints))}`}
-          title="Crafting Recipe Viewer"
-          className={styles.recipeViewerFrame}
-          style={{ height: recipeViewerHeight, overflow: "hidden" }}
-          scrolling="no"
-          onLoad={() => {
-            const doc = recipeViewerRef.current?.contentWindow?.document;
-            if (!doc?.body) return;
-            setRecipeViewerHeight(doc.body.scrollHeight);
-            const observer = new ResizeObserver(() => {
-              setRecipeViewerHeight(doc.body.scrollHeight);
-            });
-            observer.observe(doc.body);
-          }}
-        />
       )}
     </div>
   );

@@ -223,6 +223,43 @@
   box-sizing: border-box;
 }
 
+/* The Inventory panel's own Crafting/Party's Vault split - a plain website-
+   style header tab strip (two even halves, underline on the active one),
+   distinct from .tabRow's icon-only top-level page tabs above the
+   character name. Sits as the first thing inside .panel, i.e. directly
+   under the name heading. */
+.invSubTabRow {
+  display: flex;
+  width: 100%;
+  border-bottom: 1px solid #3a3020;
+  margin-bottom: 1rem;
+}
+
+.invSubTabButton {
+  flex: 1 1 50%;
+  background: none;
+  border: none;
+  padding: 0.6rem 0.5rem;
+  font-family: inherit;
+  font-size: 0.85rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #7a6a3a;
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+  transition: color 0.15s ease, border-color 0.15s ease;
+}
+
+.invSubTabButton:hover {
+  color: #d4a060;
+}
+
+.invSubTabButtonActive {
+  color: #c07a3a;
+  border-bottom-color: #c07a3a;
+}
+
 .panelHeading {
   font-size: 0.75rem;
   letter-spacing: 0.12em;
