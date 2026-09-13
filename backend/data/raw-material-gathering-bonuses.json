@@ -1,0 +1,107 @@
+{
+  "ore": {
+    "professionGroups": ["CraftWeapon", "CraftArmor", "CraftTool", "CraftGlass", "Military"],
+    "bonusProfessions": ["Rural"],
+    "gatheringItems": ["pickaxe"]
+  },
+  "wood": {
+    "professionGroups": ["CraftWeapon", "CraftArmor", "CraftTool", "CraftFurniture", "CraftWood"],
+    "bonusProfessions": [],
+    "gatheringItems": ["axe", "axe_stone", "battle_axe"]
+  },
+  "stone": {
+    "professionGroups": ["CraftStone", "Trade"],
+    "bonusProfessions": [],
+    "gatheringItems": ["pickaxe"]
+  },
+  "bone": {
+    "professionGroups": ["Artists", "CraftFurniture", "CraftWood"],
+    "bonusProfessions": ["Rural", "Food"],
+    "gatheringItems": ["dagger"]
+  },
+  "fiber": {
+    "professionGroups": ["Artists", "CraftGarment", "Military"],
+    "bonusProfessions": ["Rural", "Trade"],
+    "gatheringItems": ["sickle"]
+  },
+  "herbs": {
+    "professionGroups": ["Alchemy", "CraftGarment", "Food"],
+    "bonusProfessions": [],
+    "gatheringItems": ["sickle"]
+  },
+  "meat": {
+    "professionGroups": ["Food", "Rural"],
+    "bonusProfessions": [],
+    "gatheringItems": ["bow", "spear", "sharpened_stick"]
+  },
+  "harvest": {
+    "professionGroups": ["Food", "Rural", "Trade"],
+    "bonusProfessions": [],
+    "gatheringItems": ["sickle"]
+  },
+  "crystal": {
+    "professionGroups": ["Alchemy", "CraftGlass", "CraftStone"],
+    "bonusProfessions": ["Trade", "Aristocratic"],
+    "gatheringItems": ["pickaxe"]
+  },
+  "hide": {
+    "professionGroups": ["CraftFurniture", "CraftWood", "Rural"],
+    "bonusProfessions": ["Food"],
+    "gatheringItems": ["dagger", "bow"]
+  },
+  "skin": {
+    "professionGroups": ["Aristocratic", "CraftGarment"],
+    "bonusProfessions": ["Trade"],
+    "gatheringItems": ["dagger", "bow"]
+  },
+  "feather": {
+    "professionGroups": ["Aristocratic", "Artists"],
+    "bonusProfessions": [],
+    "gatheringItems": ["net", "bow"]
+  },
+  "monster_part": {
+    "professionGroups": ["Alchemy", "Military", "Trade"],
+    "bonusProfessions": ["Rural"],
+    "gatheringItems": ["monster_trap", "spear"]
+  },
+  "clay": {
+    "professionGroups": ["CraftStone"],
+    "bonusProfessions": ["CraftTool"],
+    "gatheringItems": ["shovel"]
+  },
+  "sand": {
+    "professionGroups": ["CraftWeapon", "CraftArmor", "CraftTool", "CraftGlass"],
+    "bonusProfessions": ["CraftStone"],
+    "gatheringItems": ["shovel"]
+  },
+  "reed": {
+    "professionGroups": ["Aristocratic"],
+    "bonusProfessions": [],
+    "gatheringItems": ["sickle"]
+  },
+  "fish": {
+    "professionGroups": ["Rural"],
+    "bonusProfessions": [],
+    "gatheringItems": ["fishing_pole", "net", "spear"]
+  },
+  "venom": {
+    "professionGroups": [],
+    "bonusProfessions": ["Rural"],
+    "gatheringItems": ["dagger"]
+  },
+  "pigment": {
+    "professionGroups": [],
+    "bonusProfessions": ["Artists", "Aristocratic"],
+    "gatheringItems": ["shovel"]
+  },
+  "essence": {
+    "professionGroups": [],
+    "bonusProfessions": ["Alchemy"],
+    "gatheringItems": ["starlight_catcher"]
+  },
+  "clockwork": {
+    "professionGroups": [],
+    "bonusProfessions": ["CraftTool"],
+    "gatheringItems": ["crowbar"]
+  }
+}
