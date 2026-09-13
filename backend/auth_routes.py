@@ -459,6 +459,16 @@ class ItemCatalogEntryResponse(BaseModel):
     qualityMax: Optional[int] = Field(
         None, description="Max quality a fresh instance of this family starts at, if it degrades at all"
     )
+    icon: str = Field("", description="Per-tier art path, or empty if this family/tier has none yet")
+    stackSize: int = Field(1, description="Family-level stack size - 1 means never stack, no owned-count badge")
+    description: str = Field("", description="Per-tier flavor text, or empty if this family/tier has none yet")
+    sizeClass: str = Field("tiny", description="Family-level backpack slot-cost bucket")
+    equipSlots: List[str] = Field(default_factory=list, description="Family-level valid equip slot names, if any")
+    backpackable: bool = Field(True, description="Family-level - whether a move-to-backpack action applies at all")
+    twoHanded: bool = Field(False, description="Family-level - whether equipping occupies both named hand slots at once")
+    gatheringBonuses: List[str] = Field(
+        default_factory=list, description="Raw materials this family grants a foraging/gathering bonus for"
+    )
 
 
 # Dependency: Extract and verify token from secure cookie
@@ -849,7 +859,10 @@ async def get_item_catalog():
     """
     return [
         ItemCatalogEntryResponse(
-            id=e.id, name=e.name, familyId=e.family_id, tier=e.tier, kind=list(e.kind), qualityMax=e.quality_max
+            id=e.id, name=e.name, familyId=e.family_id, tier=e.tier, kind=list(e.kind), qualityMax=e.quality_max,
+            icon=e.icon, stackSize=e.stack_size, description=e.description, sizeClass=e.size_class,
+            equipSlots=list(e.equip_slots), backpackable=e.backpackable, twoHanded=e.two_handed,
+            gatheringBonuses=list(e.gathering_bonuses),
         )
         for e in items_catalog.ITEM_CATALOG_ENTRIES
     ]
@@ -983,9 +996,13 @@ async def unequip_item_route(character_id: str, instance_id: str, address: str =
 @player_router.post("/me/characters/{character_id}/items/{instance_id}/check-out", response_model=PlayerDataResponse)
 async def check_out_item_instance_route(character_id: str, instance_id: str, address: str = Depends(get_current_address)):
     """Move one item instance from the player's shared pool onto a character's backpack (capacity-gated)."""
-    player = await check_out_item_instance(address, character_id, instance_id)
+    try:
+        player = await check_out_item_instance(address, character_id, instance_id)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc))
+
     if player is None:
-        raise HTTPException(status_code=404, detail="No matching instance in the shared vault, or no backpack room")
+        raise HTTPException(status_code=404, detail="No matching instance in the shared vault")
 
     return player.to_dict()
 
@@ -1049,7 +1066,7 @@ async def load_resource_to_backpack_route(
         raise HTTPException(status_code=400, detail=str(exc))
 
     if player is None:
-        raise HTTPException(status_code=404, detail="No matching character, not enough in the vault, or no backpack room")
+        raise HTTPException(status_code=404, detail="No matching character, or not enough in the vault")
 
     return player.to_dict()
 
@@ -1085,7 +1102,7 @@ async def load_item_balance_to_backpack_route(
         raise HTTPException(status_code=400, detail=str(exc))
 
     if player is None:
-        raise HTTPException(status_code=404, detail="No matching character, not enough in the vault, or no backpack room")
+        raise HTTPException(status_code=404, detail="No matching character, or not enough in the vault")
 
     return player.to_dict()
 

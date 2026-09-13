@@ -26,27 +26,48 @@ CATALOG_FILES = {
     "armor": "base-items-armor.json",
     "shield": "base-items-shield.json",
     "weapon": "base-items-weapon.json",
-    "food": "base-food.json",
-    "potion": "base-potion.json",
-    "misc": "base-items-misc.json",
-    "adventuring_gear": "base-adventuring-gear.json",
+    "food": "base-items-food.json",
+    "potion": "base-items-potion.json",
+    "adventuring_gear": "base-items-adventuring-gear.json",
+    "essentials": "base-items-essentials.json",
+    "companion": "base-items-companion.json",
+    "mount": "base-items-mount.json",
     "blueprint": "base-blueprint.json",
 }
 
 
+def _load_gathering_bonuses_by_item() -> dict[str, list[str]]:
+    # Mirrors backend.items_catalog._load_gathering_bonuses_by_item -
+    # raw-material-gathering-bonuses.json is keyed the other way around (raw
+    # material -> which item families help gather it), inverted here into
+    # item family -> which raw materials it helps gather, the direction the
+    # popup actually needs.
+    data = json.loads((DATA_DIR / "raw-material-gathering-bonuses.json").read_text())
+    by_item: dict[str, list[str]] = {}
+    for raw_material, info in data.items():
+        for item_family in info.get("gatheringItems", []):
+            by_item.setdefault(item_family, []).append(raw_material)
+    return by_item
+
+
 def build_families() -> dict:
-    # familyId -> needsItemDefinition, the same flag backend.items_catalog
-    # loads - a family with this true (e.g. axe_stone/axe/dagger doubling
-    # as a tool) is individually instance-tracked, each physical one its
-    # own degrading item; embedded here so the viewer's own
-    # isCurrentSelectionCraftable can apply the same ">= recipe tier"
-    # minimum backend.players._resolve_tool_for_craft enforces for these,
-    # while a flat-balance tool (an anvil, a furnace, ...) stays
-    # any-tier-satisfies.
-    needs_item_definition: dict[str, bool] = {
-        row["familyId"]: row.get("needsItemDefinition", False)
+    # familyId -> its full item-inventory-properties.json row - the same
+    # equip/instance-tracking reference data backend.items_catalog loads.
+    # needsItemDefinition (true for e.g. axe_stone/axe/dagger doubling as a
+    # tool) lets the viewer's own isCurrentSelectionCraftable apply the same
+    # ">= recipe tier" minimum backend.players._resolve_tool_for_craft
+    # enforces for these, while a flat-balance tool (an anvil, a furnace,
+    # ...) stays any-tier-satisfies. The rest (sizeClass/stackSize/
+    # qualityMax/equipSlots/twoHanded/backpackable/gatheringBonuses) is
+    # embedded as each family's "props" below, feeding the item-detail
+    # popup opened by clicking the root row of the Recipe Tree - only a
+    # family with a props entry (an equippable/instance-tracked item, not a
+    # raw/processed material) gets that popup at all.
+    props_by_family: dict[str, dict] = {
+        row["familyId"]: row
         for row in json.loads((DATA_DIR / "item-inventory-properties.json").read_text())
     }
+    gathering_by_item = _load_gathering_bonuses_by_item()
 
     families: dict[str, dict] = {}
     for category, filename in CATALOG_FILES.items():
@@ -56,15 +77,39 @@ def build_families() -> dict:
             by_family.setdefault(item["familyId"], []).append(item)
         for family_id, family_items in by_family.items():
             family_items = sorted(family_items, key=lambda x: x["tier"])
-            families[family_id] = {
+            props = props_by_family.get(family_id)
+            family: dict = {
                 "category": category,
                 "name": family_items[0]["name"],
-                "needsItemDefinition": needs_item_definition.get(family_id, False),
+                "needsItemDefinition": props.get("needsItemDefinition", False) if props else False,
                 "tiers": [
-                    {"tier": it["tier"], "name": it["name"], "id": it["id"]}
+                    {
+                        "tier": it["tier"],
+                        "name": it["name"],
+                        "id": it["id"],
+                        "description": it.get("description"),
+                        "icon": it.get("icon"),
+                    }
                     for it in family_items
                 ],
             }
+            # A pure crafting-station tool (kind == ["tool"] exactly, e.g.
+            # anvil/furnace/workbench) gets no popup - still all "dummy"
+            # placeholder descriptions with nothing worth previewing. A
+            # dual-role item (kind includes "weapon" too, e.g. axe_stone/
+            # axe/dagger) keeps its popup same as any other equippable item.
+            has_popup = bool(props) and sorted(props.get("kind", [])) != ["tool"]
+            if has_popup:
+                family["props"] = {
+                    "sizeClass": props.get("sizeClass"),
+                    "stackSize": props.get("stackSize", 1),
+                    "qualityMax": props.get("qualityMax"),
+                    "equipSlots": props.get("equipSlots", []),
+                    "twoHanded": props.get("twoHanded", False),
+                    "backpackable": props.get("backpackable", False),
+                    "gatheringBonuses": gathering_by_item.get(family_id, []),
+                }
+            families[family_id] = family
     return families
 
 

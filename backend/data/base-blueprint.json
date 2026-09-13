@@ -209,13 +209,6 @@
   {"id": "blueprint_gold_wrench", "name": "Blueprint: Gold Wrench", "familyId": "blueprint_wrench", "tier": 5},
   {"id": "blueprint_star_metal_wrench", "name": "Blueprint: Star Metal Wrench", "familyId": "blueprint_wrench", "tier": 6},
 
-  {"id": "blueprint_coated_poison", "name": "Blueprint: Coated Poison", "familyId": "blueprint_poison_weapon", "tier": 1},
-  {"id": "blueprint_envenomed_poison", "name": "Blueprint: Envenomed Poison", "familyId": "blueprint_poison_weapon", "tier": 2},
-  {"id": "blueprint_toxic_poison", "name": "Blueprint: Toxic Poison", "familyId": "blueprint_poison_weapon", "tier": 3},
-  {"id": "blueprint_virulent_poison", "name": "Blueprint: Virulent Poison", "familyId": "blueprint_poison_weapon", "tier": 4},
-  {"id": "blueprint_malignant_poison", "name": "Blueprint: Malignant Poison", "familyId": "blueprint_poison_weapon", "tier": 5},
-  {"id": "blueprint_deathly_poison", "name": "Blueprint: Deathly Poison", "familyId": "blueprint_poison_weapon", "tier": 6},
-
   {"id": "blueprint_wyrmfang_battle_axe", "name": "Blueprint: Loose Battle Axe", "familyId": "blueprint_battle_axe", "tier": 1},
   {"id": "blueprint_drakebiter_battle_axe", "name": "Blueprint: Drakebiter Battle Axe", "familyId": "blueprint_battle_axe", "tier": 2},
   {"id": "blueprint_scaleshredder_battle_axe", "name": "Blueprint: Scaleshredder Battle Axe", "familyId": "blueprint_battle_axe", "tier": 3},

@@ -56,7 +56,7 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 0.25rem;
+  gap: 0;
   width: 100%;
   max-width: 56rem;
   margin: 0 auto;
@@ -71,12 +71,13 @@
   width: 100%;
   max-width: 56rem;
   font-size: clamp(1.1rem, 4.5vw, 2.2rem);
+  line-height: 1.1;
   letter-spacing: 0.1em;
   text-transform: uppercase;
   color: #c07a3a;
   text-align: center;
   margin: 0;
-  padding: 1.25rem 1rem 0.25rem;
+  padding: 1rem 1rem 0;
 }
 
 /* No reserved space for the fixed Delete button below - it floats over
@@ -219,7 +220,7 @@
   width: 100%;
   background: rgba(10, 8, 4, 0.4);
   border-radius: 10px;
-  padding: 1.5rem 0.15rem;
+  padding: 0.5rem 0.15rem 1.5rem;
   box-sizing: border-box;
 }
 
@@ -232,7 +233,7 @@
   display: flex;
   width: 100%;
   border-bottom: 1px solid #3a3020;
-  margin-bottom: 1rem;
+  margin-bottom: 0.4rem;
 }
 
 .invSubTabButton {
@@ -1358,38 +1359,300 @@
   background: #0d0d0a;
 }
 
-.subAccordionItem {
-  border: 1px solid #2a2018;
-  margin-bottom: 0.3rem;
-}
-
-.subAccordionHeader {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
+/* The Party's Vault tab's Items grid - one 100x100 icon tile per owned
+   item, tier badge upper-left, owned-count badge lower-right (only when
+   the family's own stackSize > 1 - a needsItemDefinition:true instance is
+   always exactly 1 of itself, so a bare "1" there would be noise).
+   .itemGridScroll's height is set inline by ItemGrid (measured against
+   the actual available viewport space on mount/resize, not guessed here)
+   - that's what lets the grid below compute how many 100px rows actually
+   fit. grid-auto-flow:column then packs items top-to-bottom within that
+   many rows before starting a new column, so overflow grows sideways,
+   never down. Only ever scrolls horizontally as ONE region (overflow-x
+   here) - never vertically, and never column-by-column. */
+.itemGridScroll {
   width: 100%;
-  padding: 0.5rem 0.4rem;
-  background: #111108;
-  color: #a89968;
-  font-family: inherit;
-  font-size: 0.8rem;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  cursor: pointer;
-  user-select: none;
-  border: none;
-  text-align: left;
+  overflow-x: auto;
+  overflow-y: hidden;
 }
 
-.subAccordionHeader:hover {
-  background: #1a1a10;
+.itemGrid {
+  display: grid;
+  grid-auto-flow: column;
+  grid-template-rows: repeat(auto-fill, 100px);
+  grid-auto-columns: 100px;
+  justify-content: start;
+  gap: 0.35rem;
+  height: 100%;
+}
+
+.itemGridCell {
+  position: relative;
+  width: 100px;
+  height: 100px;
+  padding: 0;
+  margin: 0;
+  font: inherit;
+  background: #0d0d0a;
+  border: 1px solid #3a3020;
+  border-radius: 6px;
+  overflow: hidden;
+  cursor: pointer;
+}
+
+.itemGridCell:hover {
+  border-color: #c07a3a;
+}
+
+.itemGridImg {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  image-rendering: pixelated;
+}
+
+.itemGridTierBadge {
+  position: absolute;
+  top: 2px;
+  left: 4px;
+  font-size: 1rem;
+  line-height: 1;
+  text-shadow: 0 0 3px #000, 0 0 3px #000;
+}
+
+/* Same per-tier coloring as .tierSymbolT1-6 (T1-T3 amber, T4 red, T5-T6
+   green-shifted via filter for the emoji tiers) but without that class's
+   own flex/height:100% layout, which assumes a table-cell parent rather
+   than this small absolutely-positioned corner badge. */
+.itemGridTierT1, .itemGridTierT2 {
   color: #c07a3a;
 }
 
-.subAccordionBody {
-  border-top: 1px solid #2a2018;
-  background: #0a0a08;
-  padding: 0.5rem 0.4rem;
+.itemGridTierT3 {
+  color: #c07a3a;
+  font-size: 0.9rem;
+}
+
+.itemGridTierT4 {
+  color: #aa0000;
+}
+
+.itemGridTierT5, .itemGridTierT6 {
+  filter: invert(1) hue-rotate(115deg) saturate(0.8) brightness(1.3);
+}
+
+.itemGridCountBadge {
+  position: absolute;
+  bottom: 2px;
+  right: 3px;
+  min-width: 1.1rem;
+  padding: 0 0.25rem;
+  font-size: 0.7rem;
+  font-weight: bold;
+  line-height: 1.3rem;
+  text-align: center;
+  color: #d4c9a8;
+  background: rgba(10, 8, 4, 0.85);
+  border: 1px solid #3a3020;
+  border-radius: 4px;
+}
+
+/* The item detail popup opened by clicking an ItemGrid tile - read-only
+   reference info (icon/name/description/sizeClass/stackSize) for now, no
+   move/equip actions yet. Sits above .topBar (z-index 5). */
+.itemPopupOverlay {
+  position: fixed;
+  inset: 0;
+  z-index: 20;
+  display: flex;
+  /* Anchored toward the top (not centered) - a short card sits with
+     headroom below it, and a tall one (long description) grows DOWNWARD
+     from that same top edge instead of upward off-screen. padding-bottom
+     below still reserves room at the bottom so a tall card's max-height
+     (see .itemPopupCard) stops clear of the fixed footer bar. */
+  align-items: flex-start;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.65);
+  padding: 1rem;
+  /* Gap above the card so it doesn't hug the very top of the screen. */
+  padding-top: 4rem;
+  padding-bottom: 6rem;
+}
+
+.itemPopupCard {
+  position: relative;
+  width: 100%;
+  max-width: 320px;
+  /* Caps how tall a long-description card can grow before it has to
+     scroll internally instead - matches .itemPopupOverlay's top gap (4rem)
+     plus its bottom footer reserve (6rem). */
+  max-height: calc(100vh - 10rem);
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 1.5rem 1.25rem 1.25rem;
+  background: #14100a;
+  border: 1px solid #3a3020;
+  border-radius: 10px;
+  text-align: center;
+}
+
+@media (max-width: 480px) {
+  .itemPopupOverlay {
+    padding: 0.5rem;
+    padding-top: 3rem;
+    padding-bottom: 5rem;
+  }
+
+  .itemPopupCard {
+    max-height: calc(100vh - 8rem);
+    padding: 0.9rem 0.6rem 0.6rem;
+    gap: 0.4rem;
+  }
+}
+
+.itemPopupImg {
+  width: 200px;
+  height: 200px;
+  max-width: 100%;
+  object-fit: contain;
+  image-rendering: pixelated;
+}
+
+/* Same tier symbol/coloring as .itemGridTierBadge (see the vault grid),
+   just anchored to .itemPopupCard's own corner instead of a 70px tile. */
+.itemPopupTierBadge {
+  position: absolute;
+  top: 0.6rem;
+  left: 0.7rem;
+  font-size: 1.4rem;
+  line-height: 1;
+  text-shadow: 0 0 3px #000, 0 0 3px #000;
+}
+
+.itemPopupName {
+  margin: 0;
+  font-size: 1.1rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #c07a3a;
+}
+
+.itemPopupDescription {
+  margin: 0;
+  font-size: 0.85rem;
+  line-height: 1.5;
+  color: #d4c9a8;
+}
+
+/* Replaces the description text for a few seconds after a failed
+   move/equip ("No backpack found, equip one." / "Backpack full - remove
+   items first.") - color-flagged so it reads as a warning, not more
+   flavor text. */
+.itemPopupFlash {
+  color: #d4a060;
+  font-weight: bold;
+}
+
+.itemPopupGathering {
+  margin: 0;
+  font-size: 0.75rem;
+  letter-spacing: 0.03em;
+  color: #8fae7a;
+}
+
+.itemPopupMeta {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.5rem 1.25rem;
+  font-size: 0.75rem;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: #a89968;
+}
+
+.itemPopupActions {
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: center;
+  justify-content: center;
+  gap: 0.3rem;
+}
+
+.itemPopupActionButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.4rem 0.8rem;
+  background: #1a1a1a;
+  border: 1px solid rgba(168, 153, 104, 0.4);
+  border-radius: 999px;
+  color: #d4a060;
+  font-family: inherit;
+  font-size: 0.8rem;
+  cursor: pointer;
+}
+
+.itemPopupActionButton:hover:not(:disabled) {
+  background: #2a2215;
+  border-color: #c07a3a;
+  color: #c07a3a;
+}
+
+.itemPopupActionButton:disabled {
+  color: #4a4432;
+  border-color: rgba(168, 153, 104, 0.15);
+  cursor: default;
+}
+
+/* The "move to backpack" action - no frame/background so it reads as a
+   loose icon rather than another pill button, sized up above the other
+   action buttons so it stands out as the one always-available option, and
+   pulsing to draw the eye without needing a border to do it. */
+.itemPopupBackpackButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 3.2rem;
+  height: 3.2rem;
+  padding: 0;
+  background: none;
+  border: none;
+  cursor: pointer;
+  transition: transform 0.15s ease;
+}
+
+.itemPopupBackpackButton:hover:not(:disabled) {
+  transform: scale(1.15);
+}
+
+.itemPopupBackpackButton:active:not(:disabled) {
+  transform: scale(0.9);
+}
+
+.itemPopupBackpackButton:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+
+.itemPopupBackpackIcon {
+  width: 2.6rem;
+  height: 2.6rem;
+  image-rendering: pixelated;
+}
+
+/* Overrides .craftCountButton's fixed 2.4rem/0.3rem sizing (tuned for the
+   Craft page's own row, which needs room for 2-digit counts up to 50) -
+   here the row has to fit a 300px-wide popup alongside 3-4 siblings and a
+   backpack icon, so width shrinks to fit each digit's own content instead
+   of a fixed box, and the button is shorter top-to-bottom too. */
+.itemPopupQuantityButton {
+  width: 2.3rem;
+  padding: 0.3rem 0;
+  font-size: 0.85rem;
 }
 
 /* A resource/tool row that can be clicked to reveal quick-transfer quantity

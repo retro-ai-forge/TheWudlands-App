@@ -2,106 +2,106 @@
   "ore": {
     "professionGroups": ["CraftWeapon", "CraftArmor", "CraftTool", "CraftGlass", "Military"],
     "bonusProfessions": ["Rural"],
-    "gatheringItems": ["pickaxe"]
+    "gatheringItems": ["pickaxe", "warhammer", "cart", "hunters_charm"]
   },
   "wood": {
     "professionGroups": ["CraftWeapon", "CraftArmor", "CraftTool", "CraftFurniture", "CraftWood"],
     "bonusProfessions": [],
-    "gatheringItems": ["axe", "axe_stone", "battle_axe"]
+    "gatheringItems": ["axe", "axe_stone", "battle_axe", "cart", "hunters_charm"]
   },
   "stone": {
     "professionGroups": ["CraftStone", "Trade"],
     "bonusProfessions": [],
-    "gatheringItems": ["pickaxe"]
+    "gatheringItems": ["pickaxe", "warhammer", "cart", "hunters_charm"]
   },
   "bone": {
     "professionGroups": ["Artists", "CraftFurniture", "CraftWood"],
     "bonusProfessions": ["Rural", "Food"],
-    "gatheringItems": ["dagger"]
+    "gatheringItems": ["dagger", "axe_stone", "axe", "battle_axe", "warhammer", "hunters_charm"]
   },
   "fiber": {
     "professionGroups": ["Artists", "CraftGarment", "Military"],
     "bonusProfessions": ["Rural", "Trade"],
-    "gatheringItems": ["sickle"]
+    "gatheringItems": ["sickle", "hunters_charm"]
   },
   "herbs": {
     "professionGroups": ["Alchemy", "CraftGarment", "Food"],
     "bonusProfessions": [],
-    "gatheringItems": ["sickle"]
+    "gatheringItems": ["sickle", "hunters_charm"]
   },
   "meat": {
     "professionGroups": ["Food", "Rural"],
     "bonusProfessions": [],
-    "gatheringItems": ["bow", "spear", "sharpened_stick"]
+    "gatheringItems": ["bow", "spear", "sharpened_stick", "crossbow", "hunters_charm"]
   },
   "harvest": {
     "professionGroups": ["Food", "Rural", "Trade"],
     "bonusProfessions": [],
-    "gatheringItems": ["sickle"]
+    "gatheringItems": ["sickle", "hunters_charm"]
   },
   "crystal": {
     "professionGroups": ["Alchemy", "CraftGlass", "CraftStone"],
     "bonusProfessions": ["Trade", "Aristocratic"],
-    "gatheringItems": ["pickaxe"]
+    "gatheringItems": ["pickaxe", "hunters_charm"]
   },
   "hide": {
     "professionGroups": ["CraftFurniture", "CraftWood", "Rural"],
     "bonusProfessions": ["Food"],
-    "gatheringItems": ["dagger", "bow"]
+    "gatheringItems": ["dagger", "bow", "crossbow", "hunters_charm"]
   },
   "skin": {
     "professionGroups": ["Aristocratic", "CraftGarment"],
     "bonusProfessions": ["Trade"],
-    "gatheringItems": ["dagger", "bow"]
+    "gatheringItems": ["dagger", "bow", "crossbow", "hunters_charm"]
   },
   "feather": {
     "professionGroups": ["Aristocratic", "Artists"],
     "bonusProfessions": [],
-    "gatheringItems": ["net", "bow"]
+    "gatheringItems": ["net", "bow", "crossbow", "hunters_charm"]
   },
   "monster_part": {
     "professionGroups": ["Alchemy", "Military", "Trade"],
     "bonusProfessions": ["Rural"],
-    "gatheringItems": ["monster_trap", "spear"]
+    "gatheringItems": ["monster_trap", "spear", "bow", "crossbow", "hunters_charm"]
   },
   "clay": {
     "professionGroups": ["CraftStone"],
     "bonusProfessions": ["CraftTool"],
-    "gatheringItems": ["shovel"]
+    "gatheringItems": ["shovel", "hunters_charm"]
   },
   "sand": {
     "professionGroups": ["CraftWeapon", "CraftArmor", "CraftTool", "CraftGlass"],
     "bonusProfessions": ["CraftStone"],
-    "gatheringItems": ["shovel"]
+    "gatheringItems": ["shovel", "hunters_charm"]
   },
   "reed": {
     "professionGroups": ["Aristocratic"],
     "bonusProfessions": [],
-    "gatheringItems": ["sickle"]
+    "gatheringItems": ["sickle", "hunters_charm"]
   },
   "fish": {
     "professionGroups": ["Rural"],
     "bonusProfessions": [],
-    "gatheringItems": ["fishing_pole", "net", "spear"]
+    "gatheringItems": ["fishing_pole", "net", "spear", "hunters_charm"]
   },
   "venom": {
     "professionGroups": [],
     "bonusProfessions": ["Rural"],
-    "gatheringItems": ["dagger"]
+    "gatheringItems": ["dagger", "hunters_charm"]
   },
   "pigment": {
     "professionGroups": [],
     "bonusProfessions": ["Artists", "Aristocratic"],
-    "gatheringItems": ["shovel"]
+    "gatheringItems": ["shovel", "hunters_charm"]
   },
   "essence": {
     "professionGroups": [],
     "bonusProfessions": ["Alchemy"],
-    "gatheringItems": ["starlight_catcher"]
+    "gatheringItems": ["starlight_catcher", "hunters_charm"]
   },
   "clockwork": {
     "professionGroups": [],
     "bonusProfessions": ["CraftTool"],
-    "gatheringItems": ["crowbar"]
+    "gatheringItems": ["crowbar", "hunters_charm"]
   }
 }

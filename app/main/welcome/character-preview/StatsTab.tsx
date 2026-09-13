@@ -72,15 +72,17 @@ export function StatsTab({
 }) {
   const birthsignInfo = BIRTHSIGNS.find((b) => b.id === character.birthsign) ?? null;
 
-  // The "Ready" row reflects whatever's currently keeping this character
-  // busy - today that's only ever a craft timer (Character.activeCraft),
-  // but the row is meant to cover any future timed activity a character
-  // can be tied up in (traveling, imprisoned, ...) the same way: "now"
-  // once nothing's running, the remaining time while something is. A
-  // craft still counts as "running" right up through the moment its
-  // timer hits 0 (uncollected results don't block anything - see
+  // This row reflects whatever's currently keeping this character busy -
+  // today that's only ever a craft timer (Character.activeCraft), so the
+  // label reads "Crafting" with a countdown while one's running and falls
+  // back to "Ready"/"now" once it isn't. Meant to cover any future timed
+  // activity a character can be tied up in (traveling, imprisoned, ...)
+  // the same way - a real backend-driven activity name (character.
+  // availability.name) would replace this craft-only check once those
+  // exist. A craft still counts as "running" right up through the moment
+  // its timer hits 0 (uncollected results don't block anything - see
   // InventoryTab's own "Ready"/0:00 handling) - 0 is falsy, so it already
-  // falls through to "now" below without a separate check.
+  // falls through to "Ready"/"now" below without a separate check.
   const craftRemainingSeconds = useCraftCountdown(character.activeCraft?.readyAt);
 
   // The sole slot ("prof1"|"prof2"|"prof3") that receives final-item
@@ -213,7 +215,7 @@ export function StatsTab({
             <span>{character.vitalStatus}</span>
           </div>
           <div className={styles.identityRow}>
-            <span>Ready</span>
+            <span>{craftRemainingSeconds ? "Crafting" : "Ready"}</span>
             <span className={craftRemainingSeconds ? styles.readyTimerValue : undefined}>
               {craftRemainingSeconds ? formatRemainingCompactLong(craftRemainingSeconds) : "now"}
             </span>

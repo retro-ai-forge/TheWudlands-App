@@ -140,6 +140,11 @@
   .row.final { background: var(--final-bg); }
   .row.blueprint { background: #241b2e; }
   .row.root { background: var(--panel2); border: 1px solid var(--accent); padding: 8px 10px; }
+  /* Only set when the root's family has an item-detail popup to open (see
+     buildInteractiveNode/showItemPopup) - a raw/processed material's root
+     row stays inert. */
+  .row.root.hasPopup { cursor: pointer; }
+  .row.root.hasPopup:hover { border-color: #e8c778; }
   .qty {
     color: var(--accent);
     font-weight: bold;
@@ -280,6 +285,133 @@
   .legendTable td:first-child span { display: block; }
   .legendTable td:last-child { padding-left: 12px; padding-right: 0; text-align: left; }
   .toollist { display: flex; flex-wrap: wrap; gap: 6px; }
+  /* A read-only preview of the item-detail popup the player sees in their
+     own vault (character-preview/InventoryTab.tsx's ItemDetailPopup) -
+     opened by clicking the Recipe Tree's root row (see .row.root.hasPopup
+     above). Nothing here is a real owned instance, so quality always reads
+     as full and every action button is shown-but-disabled (informational
+     only). */
+  .itemPopupOverlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.65);
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    z-index: 20;
+    padding: 16px;
+    padding-top: 64px;
+    box-sizing: border-box;
+  }
+  /* Set when the popup is mounted onto the embedding app page instead of
+     this iframe (see popupHostDocument) - same bottom reserve as the app's
+     own item popup (CharacterTabs.module.css), so a tall card stops clear
+     of that page's fixed footer bar. */
+  .itemPopupOverlay.itemPopupOverlayHosted { padding-bottom: 96px; }
+  .itemPopupOverlayHosted .itemPopupCard { max-height: calc(100vh - 160px); }
+  /* Same palette as character-preview/CharacterTabs.module.css's own
+     .itemPopupCard and friends below - this is a read-only preview of that
+     same vault popup, so it should look like it, not like the rest of this
+     page's cooler blue-grey theme. */
+  .itemPopupCard {
+    position: relative;
+    background: #14100a;
+    border: 1px solid #3a3020;
+    border-radius: 10px;
+    padding: 24px 20px 20px;
+    width: 320px;
+    max-width: 100%;
+    max-height: calc(100vh - 80px);
+    overflow-y: auto;
+    box-sizing: border-box;
+    text-align: center;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+  }
+  .itemPopupTierBadge {
+    position: absolute;
+    top: 10px;
+    left: 12px;
+    text-shadow: 0 0 3px #000, 0 0 3px #000;
+  }
+  .itemPopupImg {
+    width: 200px;
+    height: 200px;
+    max-width: 100%;
+    object-fit: contain;
+    image-rendering: pixelated;
+    margin: 4px auto 8px;
+    display: block;
+  }
+  .itemPopupName {
+    font-size: 17px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: #c07a3a;
+    margin: 0 0 8px;
+  }
+  .itemPopupDescription {
+    color: #d4c9a8;
+    font-size: 13px;
+    margin: 0 0 10px;
+    line-height: 1.5;
+  }
+  .itemPopupGathering {
+    color: #8fae7a;
+    font-size: 12px;
+    letter-spacing: 0.03em;
+    margin: 0 0 10px;
+  }
+  .itemPopupMeta {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 4px 20px;
+    color: #a89968;
+    font-size: 12px;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    margin-bottom: 12px;
+  }
+  .itemPopupActions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+  }
+  /* Always disabled (see the doc comment above) - styled the same as the
+     vault's own :disabled look directly, rather than the interactive one,
+     since there's no state here for it to ever transition out of. */
+  .itemPopupActionButton {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 6px 13px;
+    background: #1a1a1a;
+    border: 1px solid rgba(168, 153, 104, 0.15);
+    border-radius: 999px;
+    color: #4a4432;
+    font-family: inherit;
+    font-size: 13px;
+    cursor: default;
+  }
+  .itemPopupBackpackButton {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 51px;
+    height: 51px;
+    padding: 0;
+    background: none;
+    border: none;
+    opacity: 0.35;
+    cursor: default;
+  }
+  .itemPopupBackpackIcon {
+    width: 42px;
+    height: 42px;
+    image-rendering: pixelated;
+  }
   /* Fixed to the corner (not inline at the top) so it stays reachable
      regardless of scroll position, same convention the game itself uses for
      its own corner buttons. */
@@ -544,6 +676,148 @@ function famLabel(famId, tier) {
   const category = famCategory(famId);
   return getDisplayLabel(label, category);
 }
+const TIER_SYMBOLS = ["○", "●", "◉", "✦", "✨", "🌟"];
+function tierSymbol(tier) {
+  return TIER_SYMBOLS[tier - 1] || "";
+}
+// Mirrors character-preview/InventoryTab.tsx's formatSlotLabel - no
+// dedicated hand icon asset exists here either, so only the word "Hand"
+// itself is replaced with a plain glyph, "Left"/"Right" stay as text.
+function formatSlotLabel(slot) {
+  return slot.replace(/\bHand\b/, "✋");
+}
+
+// Mirrors InventoryTab.tsx's formatResourceLabel - "ore" -> "Ore",
+// "monster_part" -> "Monster Part", used for the popup's "Helps gather: "
+// line (raw material family ids have no per-family display name catalog
+// of their own, just underscore-separated category ids like this).
+function formatFamilyIdLabel(id) {
+  return id
+    .split("_")
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(" ");
+}
+
+// Same fallback InventoryTab.tsx's ItemDetailPopup uses when an item has no
+// icon of its own.
+const FALLBACK_ITEM_ICON = "/images/items/bat.png";
+
+// When embedded (see "?embedded=1" above), the popup is mounted onto the
+// embedding page's own document rather than this iframe's - otherwise it's
+// clipped to the iframe's box and sits wherever the viewer happens to be
+// on the page, instead of over the whole screen. Only possible because
+// every embedding page is same-origin; falls back to this document if the
+// parent can't be reached for any reason.
+function popupHostDocument() {
+  if (window.parent === window) return document;
+  try {
+    const doc = window.parent.document;
+    ensurePopupStyles(doc);
+    return doc;
+  } catch (e) {
+    return document;
+  }
+}
+
+// Copies this page's own popup rules (.itemPopup*, plus the .tierSymbolT*
+// badge colors) onto the host document once, so the popup looks the same
+// there as it does here.
+function ensurePopupStyles(doc) {
+  if (doc.getElementById("recipeViewerPopupStyles")) return;
+  const css = [];
+  for (const sheet of document.styleSheets) {
+    for (const rule of sheet.cssRules) {
+      if (rule.selectorText && /itemPopup|tierSymbol/.test(rule.selectorText)) css.push(rule.cssText);
+    }
+  }
+  const style = doc.createElement("style");
+  style.id = "recipeViewerPopupStyles";
+  style.textContent = css.join("\n");
+  doc.head.appendChild(style);
+}
+
+/** Read-only preview of the vault's item-detail popup, opened by clicking
+ * the Recipe Tree's root row (see buildInteractiveNode). Nothing here is a
+ * real owned instance: quality always reads as full (current == qualityMax)
+ * and every action button is rendered but disabled - equipping or moving to
+ * a backpack only makes sense for an item you actually own. */
+function showItemPopup(famId, tier) {
+  const f = families[famId];
+  const props = f && f.props;
+  if (!props) return;
+  const t = f.tiers[tier - 1];
+  if (!t) return;
+
+  const overlay = el("div", "itemPopupOverlay");
+  // Closes on a click anywhere - including inside the card itself (the
+  // image, name, description, meta row) - except on a button, same as
+  // InventoryTab.tsx's ItemDetailPopup. Every button here is always
+  // disabled anyway (see below), so this exception is mostly moot in
+  // practice, but kept for parity in case that ever changes.
+  overlay.addEventListener("click", (e) => {
+    if (e.target.closest("button")) return;
+    overlay.remove();
+  });
+
+  const card = el("div", "itemPopupCard");
+  card.appendChild(el("span", "itemPopupTierBadge tierSymbolT" + tier, tierSymbol(tier)));
+  const img = document.createElement("img");
+  img.src = t.icon || FALLBACK_ITEM_ICON;
+  img.alt = t.name;
+  img.className = "itemPopupImg";
+  card.appendChild(img);
+  card.appendChild(el("h3", "itemPopupName", t.name));
+  card.appendChild(el("p", "itemPopupDescription", t.description || ""));
+  if (props.gatheringBonuses && props.gatheringBonuses.length) {
+    card.appendChild(
+      el("p", "itemPopupGathering", "Helps gather: " + props.gatheringBonuses.map(formatFamilyIdLabel).join(", "))
+    );
+  }
+
+  const meta = el("div", "itemPopupMeta");
+  meta.appendChild(el("span", "", "Size: " + (props.sizeClass || "tiny")));
+  meta.appendChild(el("span", "", "StackMax: " + (props.stackSize || 1)));
+  if (props.twoHanded) meta.appendChild(el("span", "", "Two-Handed: true"));
+  if (props.qualityMax != null) {
+    meta.appendChild(el("span", "", "Quality: " + props.qualityMax + "/" + props.qualityMax));
+  }
+  card.appendChild(meta);
+
+  // Always disabled (see the doc comment above) - one button per equip
+  // slot, or a single combined one for a twoHanded family occupying both
+  // its slots at once, same grouping ItemDetailPopup's slotGroups uses.
+  const slotGroups = props.equipSlots && props.equipSlots.length
+    ? (props.twoHanded ? [props.equipSlots] : props.equipSlots.map((s) => [s]))
+    : [];
+  if (slotGroups.length || props.backpackable) {
+    const actions = el("div", "itemPopupActions");
+    for (const slots of slotGroups) {
+      const btn = el("button", "itemPopupActionButton", slots.map(formatSlotLabel).join(" + "));
+      btn.type = "button";
+      btn.disabled = true;
+      actions.appendChild(btn);
+    }
+    if (props.backpackable) {
+      const btn = el("button", "itemPopupBackpackButton");
+      btn.type = "button";
+      btn.disabled = true;
+      btn.title = "Move to backpack";
+      btn.setAttribute("aria-label", "Move to backpack");
+      const bpImg = document.createElement("img");
+      bpImg.src = "/images/character/char-preview-inventory.png";
+      bpImg.alt = "";
+      bpImg.className = "itemPopupBackpackIcon";
+      btn.appendChild(bpImg);
+      actions.appendChild(btn);
+    }
+    card.appendChild(actions);
+  }
+
+  overlay.appendChild(card);
+  const host = popupHostDocument();
+  if (host !== document) overlay.classList.add("itemPopupOverlayHosted");
+  host.body.appendChild(overlay);
+}
 function famCategory(famId) {
   const f = families[famId];
   return f ? f.category : "unknown";
@@ -775,7 +1049,7 @@ for (const famId of recipeFamIds) {
   const cat = famCategory(famId);
   (groups[cat] = groups[cat] || []).push(famId);
 }
-const catOrder = ["raw", "blueprint", "armor", "shield", "weapon", "food", "potion", "misc", "adventuring_gear", "tool", "processed"];
+const catOrder = ["raw", "blueprint", "armor", "shield", "weapon", "food", "potion", "essentials", "companion", "mount", "adventuring_gear", "tool", "processed"];
 
 // True if `recipeId`'s recipe consumes/uses `famId` anywhere - as a plain
 // ingredient, as one option inside an ingredient's "alternatives" slot
@@ -995,6 +1269,15 @@ function buildInteractiveNode(famId, qty, category, tier, isRoot) {
       }
     }
   }
+  // The root row doubles as a button opening a read-only preview of this
+  // item's vault item-detail popup - only when its family has a "props"
+  // entry (item-inventory-properties.json), i.e. it's an actual
+  // equippable/instance-tracked item rather than a raw/processed material
+  // with no popup to show.
+  if (isRoot && families[famId] && families[famId].props) {
+    row.classList.add("hasPopup");
+    row.addEventListener("click", () => showItemPopup(famId, tier));
+  }
   wrapper.appendChild(row);
 
   const childrenBox = el("div", "children");
@@ -1069,7 +1352,7 @@ function buildInteractiveNode(famId, qty, category, tier, isRoot) {
               // compact "icon id" way, not as a quantified ingredient, and
               // check ownership the same way (ownedToolsWithVault).
               if (!alt.consumed) {
-                const altTag = el("span", "tag tool", "\u{1F528} " + alt.familyId);
+                const altTag = el("span", "tag tool", "\u{1F528} (or " + alt.familyId + ")");
                 if (!ownsFamily(ownedToolsWithVault, alt.familyId, tier)) altTag.classList.add("missing");
                 child.row.appendChild(altTag);
               } else {

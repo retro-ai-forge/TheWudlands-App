@@ -1,0 +1,194 @@
+[
+  {
+    "id": "minor_healing_potion",
+    "name": "Minor Healing Potion",
+    "familyId": "healing_potion",
+    "tier": 1,
+    "description": "A small bronze vial of pale pink fluid with a simple brass stopper.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "lesser_healing_potion",
+    "name": "Lesser Healing Potion",
+    "familyId": "healing_potion",
+    "tier": 2,
+    "description": "A plain metal canteen of cherry-red draught with a leather band.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "common_healing_potion",
+    "name": "Common Healing Potion",
+    "familyId": "healing_potion",
+    "tier": 3,
+    "description": "A polished silver bottle of shimmering crimson syrup marked with a rune.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "greater_healing_potion",
+    "name": "Greater Healing Potion",
+    "familyId": "healing_potion",
+    "tier": 4,
+    "description": "An ornate gold phial of swirling ruby liquid with a radiant glow.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "superior_healing_potion",
+    "name": "Superior Healing Potion",
+    "familyId": "healing_potion",
+    "tier": 5,
+    "description": "An elegant star metal decanter of fiery red-gold elixir carved with a star sigil.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "supreme_healing_potion",
+    "name": "Supreme Healing Potion",
+    "familyId": "healing_potion",
+    "tier": 6,
+    "description": "A gem-encrusted star metal urn of glowing scarlet essence.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "minor_mana_potion",
+    "name": "Minor Mana Potion",
+    "familyId": "mana_potion",
+    "tier": 1,
+    "description": "A dull bronze tube of misty azure liquid with a pewter stopper.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "lesser_mana_potion",
+    "name": "Lesser Mana Potion",
+    "familyId": "mana_potion",
+    "tier": 2,
+    "description": "A simple metal flask of sapphire liquid etched with a glyph.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "common_mana_potion",
+    "name": "Common Mana Potion",
+    "familyId": "mana_potion",
+    "tier": 3,
+    "description": "A sleek silver vial of swirling cobalt magic with a crystal stopper.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "greater_mana_potion",
+    "name": "Greater Mana Potion",
+    "familyId": "mana_potion",
+    "tier": 4,
+    "description": "An embossed gold container of glowing cerulean fluid banded with runes.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "superior_mana_potion",
+    "name": "Superior Mana Potion",
+    "familyId": "mana_potion",
+    "tier": 5,
+    "description": "A refined star metal ampoule of star-specked blue energy.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "supreme_mana_potion",
+    "name": "Supreme Mana Potion",
+    "familyId": "mana_potion",
+    "tier": 6,
+    "description": "A majestic star metal bottle of prismatic blue, with tiny orbs of light floating inside.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "simple_antidote_potion",
+    "name": "Simple Antidote",
+    "familyId": "antidote_potion",
+    "tier": 1,
+    "description": "A plain bronze ampoule of muddy green antidote with a string-wrapped cork.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "common_antidote_potion",
+    "name": "Common Antidote",
+    "familyId": "antidote_potion",
+    "tier": 2,
+    "description": "An unadorned metal vial of clear, pale green solution.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "refined_antidote_potion",
+    "name": "Refined Antidote",
+    "familyId": "antidote_potion",
+    "tier": 3,
+    "description": "A slim silver container of glowing emerald tincture with a tiny rune charm.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "potent_antidote_potion",
+    "name": "Potent Antidote",
+    "familyId": "antidote_potion",
+    "tier": 4,
+    "description": "A gleaming gold flask of radiant lime fluid with a gem-set stopper.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "concentrated_antidote_potion",
+    "name": "Concentrated Antidote",
+    "familyId": "antidote_potion",
+    "tier": 5,
+    "description": "A star metal tube of glowing verdant liquid, embossed with a healing leaf.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "masters_antidote_potion",
+    "name": "Master's Antidote",
+    "familyId": "antidote_potion",
+    "tier": 6,
+    "description": "A translucent star metal vessel of swirling jade with golden flecks.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "weak_venom_vial",
+    "name": "Weak Venom Vial",
+    "familyId": "venom_vial",
+    "tier": 1,
+    "description": "A blunt bronze tube of watery purple toxin with a scratched warning symbol.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "mild_venom_vial",
+    "name": "Mild Venom Vial",
+    "familyId": "venom_vial",
+    "tier": 2,
+    "description": "A gray metal capsule of inky amethyst fluid wrapped in rough twine.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "sharp_venom_vial",
+    "name": "Sharp Venom Vial",
+    "familyId": "venom_vial",
+    "tier": 3,
+    "description": "A slim, serpent-etched silver cylinder of bright violet venom.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "vicious_venom_vial",
+    "name": "Vicious Venom Vial",
+    "familyId": "venom_vial",
+    "tier": 4,
+    "description": "A carved gold bottle of swirling indigo poison engraved with fangs.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "deadly_venom_vial",
+    "name": "Deadly Venom Vial",
+    "familyId": "venom_vial",
+    "tier": 5,
+    "description": "A polished star metal flask of glowing toxic purple, sealed with a rune.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "lethal_venom_vial",
+    "name": "Lethal Venom Vial",
+    "familyId": "venom_vial",
+    "tier": 6,
+    "description": "A spiked star metal flask of thick black-violet essence wreathed in spectral haze.",
+    "icon": "/images/items/bat.png"
+  }
+]

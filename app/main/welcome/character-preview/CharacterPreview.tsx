@@ -65,6 +65,13 @@ export function CharacterPreview({
 }) {
   const { setHidden: setHeaderHidden } = useHeaderVisibility();
   const [activeTab, setActiveTab] = useState<TabKey>(initialTab);
+  // Mirrors InventoryTab's own Crafting/Vault sub-tab - the Vault tab's
+  // Items grid is meant to be the only scrollable thing on screen while
+  // it's showing (horizontally, within the grid itself), so .wizard's own
+  // vertical scroll (see .wizardScrollable below) is suspended for it.
+  const [inventorySubTab, setInventorySubTab] = useState<"crafting" | "vault">(
+    openCraftingSectionByDefault ? "crafting" : "vault",
+  );
   const [isDeleting, setIsDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
   const [showDeleteWarning, setShowDeleteWarning] = useState(false);
@@ -90,6 +97,17 @@ export function CharacterPreview({
   useEffect(() => {
     checkScrolledToEnd();
   }, [activeTab]);
+
+  // The Vault tab suspends .wizard's own vertical scroll entirely (see the
+  // className below) - if the page was already scrolled down from a
+  // longer Crafting view right before switching, freezing that scroll
+  // position would leave the name/tab-strip cut off above the fold with
+  // no way back up. Snap to the top the moment Vault becomes active.
+  useEffect(() => {
+    if (activeTab === "inventory" && inventorySubTab === "vault") {
+      wizardScrollRef.current?.scrollTo(0, 0);
+    }
+  }, [activeTab, inventorySubTab]);
 
   // Standalone portrait editor, opened by clicking the face portrait on the
   // Stats tab. The draft lives in a ref rather than state - PortraitEditor's
@@ -228,7 +246,9 @@ export function CharacterPreview({
 
   return (
     <div
-      className={`${styles.wizard} ${styles.wizardScrollable}`}
+      className={`${styles.wizard} ${
+        activeTab === "inventory" && inventorySubTab === "vault" ? "" : styles.wizardScrollable
+      }`}
       ref={wizardScrollRef}
       onScroll={checkScrolledToEnd}
     >
@@ -237,7 +257,7 @@ export function CharacterPreview({
           of .wizard's own scroll once the page scrolls past it. Only the
           icon row (.topBarBackground) carries a solid fill; the name below
           it sits directly on .wizard's own tiled background. */}
-      <div className={tabStyles.topBar}>
+      <div className={tabStyles.topBar} data-role="character-preview-topbar">
         <div className={tabStyles.topBarBackground}>
           <div className={tabStyles.topBarRow}>
             <nav className={tabStyles.tabRow}>
@@ -298,6 +318,7 @@ export function CharacterPreview({
               playerItems={playerItems}
               onPlayerDataUpdated={onPlayerDataUpdated}
               openCraftingSectionByDefault={openCraftingSectionByDefault}
+              onSubTabChange={setInventorySubTab}
             />
           )}
         </div>

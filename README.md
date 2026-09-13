@@ -382,3 +382,29 @@ Total raw material cost to keep a light burning for a given duration, using tier
 | 40h | 200 | 160 | 148 |
 | 50h | 250 | 200 | 178 |
 
+
+## Companions & Mounts
+
+Companions and mounts are living creatures that travel with a character. Each one is equipped into its own slot on the character's Body page: a **Companion** (a familiar, pet or spirit at the character's side) goes into the Companion slot, and a **Mount** (a creature the character rides) goes into the Mount slot. A character can have one of each at a time.
+
+Like other gear, every creature belongs to a family with six tiers: T1–T3 are ordinary creatures, while T4–T6 are magical or mythic.
+
+### Companions
+
+| Family | T1 | T2 | T3 | T4 | T5 | T6 |
+|---|---|---|---|---|---|---|
+| Winged | Bat | Raven | Owl | Hawk | Harpy | Phoenix |
+| Critter | Rat | Ferret | Fox | Shadowcat | Moonhare | Kitsune |
+| Arcane | Glowmoth | Crystal Lizard | Living Grimoire | Blink Hound | Mandrake | Astral Familiar |
+| Fey | Wisp | Fairy | Sprite | Homunculus | Djinn | Seraph |
+| Aquatic | Crab | Otter | Octopus | Selkie | Siren | Water Elemental |
+| Dark | Witch Toad | Imp | Hellhound | Wraith | Shadow Demon | Abyssal Horror |
+
+### Mounts
+
+| Family | T1 | T2 | T3 | T4 | T5 | T6 |
+|---|---|---|---|---|---|---|
+| Steed | Riding Dog | Horse | Warhorse | Centaur | Unicorn | Pegasus |
+| Beast | Boar | Dire Wolf | Mammoth | Griffin | Roc | Dragon |
+| Exotic | Terror Bird | Giant Scorpion | Giant Spider | Manticore | Chimera | Hydra |
+| Aquatic | Giant Turtle | Hippocampus | Giant Shark | Kraken | Sea Serpent | Leviathan |

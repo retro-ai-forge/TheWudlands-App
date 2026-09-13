@@ -1,116 +1,962 @@
 [
-  {"id": "pine_club", "name": "Pine Club", "familyId": "club", "tier": 1, "description": "It is a rough pine knot club with bark patches, pale wood grain, and a blunt hand-hewn head.", "icon": "/images/items/club_t1.png"},
-  {"id": "oak_club", "name": "Oak Club", "familyId": "club", "tier": 2, "description": "It is a heavy oak club with thick rings, dark knots, and a sturdy old-forest silhouette.", "icon": "/images/items/club_t2.png"},
-  {"id": "ash_club", "name": "Ash Club", "familyId": "club", "tier": 3, "description": "It is a slim ash club with pale grain, a straight shaft, and a clean primitive finish.", "icon": "/images/items/club_t3.png"},
-  {"id": "cedar_club", "name": "Cedar Club", "familyId": "club", "tier": 4, "description": "It is a reddish cedar club with warm wood tones, bark remnants, and a rustic blunt shape.", "icon": "/images/items/club_t4.png"},
-  {"id": "ebony_club", "name": "Ebony Club", "familyId": "club", "tier": 5, "description": "It is a dark ebony club with a severe polished black sheen and an ominous profile.", "icon": "/images/items/club_t5.png"},
-  {"id": "worldroot_club", "name": "Worldroot Club", "familyId": "club", "tier": 6, "description": "It is a twisted living-root club with tangled veins, sacred bark texture, and primal druidic form.", "icon": "/images/items/club_t6.png"},
-  {"id": "pine_sharpened_stick", "name": "Crude Sharpened Stick", "familyId": "sharpened_stick", "tier": 1, "description": "It is a rough branch spear with bark still attached, a chipped point, and primitive handling.", "icon": "/images/items/sharpened_stick_t1.png"},
-  {"id": "oak_sharpened_stick", "name": "Oak Sharpened Stick", "familyId": "sharpened_stick", "tier": 2, "description": "It is an oak branch weapon with a thick grain, sharpened tip, and sturdy woodland feel.", "icon": "/images/items/sharpened_stick_t2.png"},
-  {"id": "ash_sharpened_stick", "name": "Ash Sharpened Stick", "familyId": "sharpened_stick", "tier": 3, "description": "It is a pale pointed ash rod with a straight shaft, light build, and clean survival style.", "icon": "/images/items/sharpened_stick_t3.png"},
-  {"id": "cedar_sharpened_stick", "name": "Cedar Sharpened Stick", "familyId": "sharpened_stick", "tier": 4, "description": "It is a warm red cedar shaft with a sharpened end, simple wraps, and rustic elegance.", "icon": "/images/items/sharpened_stick_t4.png"},
-  {"id": "ebony_sharpened_stick", "name": "Ebony Sharpened Stick", "familyId": "sharpened_stick", "tier": 5, "description": "It is a dark pointed ebony rod with a sleek black finish and a sinister edge.", "icon": "/images/items/sharpened_stick_t5.png"},
-  {"id": "worldroot_sharpened_stick", "name": "Worldroot Sharpened Stick", "familyId": "sharpened_stick", "tier": 6, "description": "It is a root-twisted staff-spear with living fibers, natural knots, and sacred wild.", "icon": "/images/items/sharpened_stick_t6.png"},
-  {"id": "courtiers_dagger", "name": "Apprentice's Dagger", "familyId": "dagger", "tier": 1, "description": "It is a plain learner's dagger with a short steel blade, simple guard, and modest grip.", "icon": "/images/items/dagger_t1.png"},
-  {"id": "duchess_dagger", "name": "Duchess's Dagger", "familyId": "dagger", "tier": 2, "description": "It is an elegant noble dagger with delicate filigree, polished metal, and courtly refinement.", "icon": "/images/items/dagger_t2.png"},
-  {"id": "viscounts_dagger", "name": "Viscount's Dagger", "familyId": "dagger", "tier": 3, "description": "It is a sleek aristocratic dagger with a narrow blade, tasteful ornament, and restrained prestige.", "icon": "/images/items/dagger_t3.png"},
-  {"id": "marquess_dagger", "name": "Marquess's Dagger", "familyId": "dagger", "tier": 4, "description": "It is a finely crafted dagger with richer trim, balanced proportions, and noble authority.", "icon": "/images/items/dagger_t4.png"},
-  {"id": "chancellors_dagger", "name": "Chancellor's Dagger", "familyId": "dagger", "tier": 5, "description": "It is a formal state dagger with disciplined symmetry, sharp polish, and administrative gravitas.", "icon": "/images/items/dagger_t5.png"},
-  {"id": "sovereigns_dagger", "name": "Sovereign's Dagger", "familyId": "dagger", "tier": 6, "description": "It is a regal dagger with ornate hilt, radiant metal, and the unmistakable air of royalty.", "icon": "/images/items/dagger_t6.png"},
-  {"id": "grovekeepers_sickle", "name": "Apprentice's Sickle", "familyId": "sickle", "tier": 1, "description": "It is a small training sickle with a simple crescent blade and humble farm-forged look.", "icon": "/images/items/sickle_t1.png"},
-  {"id": "harvestmoon_sickle", "name": "Harvestmoon Sickle", "familyId": "sickle", "tier": 2, "description": "It is a silver crescent sickle with moonlit curves, graceful balance, and harvest symbolism.", "icon": "/images/items/sickle_t2.png"},
-  {"id": "wildroot_sickle", "name": "Wildroot Sickle", "familyId": "sickle", "tier": 3, "description": "It is a natural sickle with vine-wrapped grip, greenwood accents, and druidic growth motifs.", "icon": "/images/items/sickle_t3.png"},
-  {"id": "thornweave_sickle", "name": "Thornweave Sickle", "familyId": "sickle", "tier": 4, "description": "It is a thorn-lined sickle with twisted brambles, sharp botanical details, and cruel elegance.", "icon": "/images/items/sickle_t4.png"},
-  {"id": "lunarfang_sickle", "name": "Lunarfang Sickle", "familyId": "sickle", "tier": 5, "description": "It is a crescent blade shaped like a moon fang, cold silver, and predatory grace.", "icon": "/images/items/sickle_t5.png"},
-  {"id": "eldermoon_sickle", "name": "Eldermoon Sickle", "familyId": "sickle", "tier": 6, "description": "It is an ancient moon sickle with weathered silver metal and a soft, wise lunar aura.", "icon": "/images/items/sickle_t6.png"},
-  {"id": "tribesmans_spear", "name": "Blunt Spear", "familyId": "spear", "tier": 1, "description": "It is a plain spear with a dull metal point, straight shaft, and practical old-world utility.", "icon": "/images/items/spear_t1.png"},
-  {"id": "bloodrite_spear", "name": "Bloodrite Spear", "familyId": "spear", "tier": 2, "description": "It is a ritual spear with crimson accents, dark steel, and sacrificial ceremonial flair.", "icon": "/images/items/spear_t2.png"},
-  {"id": "skyfathers_spear", "name": "Skyfather's Spear", "familyId": "spear", "tier": 3, "description": "It is a sky-touched spear with pale blue steel, a noble point, and stormborn elegance.", "icon": "/images/items/spear_t3.png"},
-  {"id": "totemcaller_spear", "name": "Totemcaller Spear", "familyId": "spear", "tier": 4, "description": "It is a tribal spear with carved charms, feather ties, and ancestral spirit markings.", "icon": "/images/items/spear_t4.png"},
-  {"id": "wolfspirit_spear", "name": "Wolfspirit Spear", "familyId": "spear", "tier": 5, "description": "It is a hunter's spear with fang motifs, fur wrappings, and a ghostly predatory aura.", "icon": "/images/items/spear_t5.png"},
-  {"id": "godsblood_spear", "name": "Godsblood Spear", "familyId": "spear", "tier": 6, "description": "It is a divine blood spear with red-gold metal, sacred corruption, and mythic menace.", "icon": "/images/items/spear_t6.png"},
-  {"id": "mercenarys_crossbow", "name": "Uneven Crossbow", "familyId": "crossbow", "tier": 1, "description": "It is a rough-built crossbow with crooked limbs, plain wood, and the awkward charm of an early workshop's invention.", "icon": "/images/items/crossbow_t1.png"},
-  {"id": "arbalest_crossbow", "name": "Arbalest Crossbow", "familyId": "crossbow", "tier": 2, "description": "It is a heavier arbalest with reinforced arms, disciplined construction, and the serious poise of siege-born engineering.", "icon": "/images/items/crossbow_t2.png"},
-  {"id": "deadeye_crossbow", "name": "Deadeye Crossbow", "familyId": "crossbow", "tier": 3, "description": "It is a precise hunting crossbow with a taut frame, fine metal fittings, and the sharp stillness of a weapon made to strike true.", "icon": "/images/items/crossbow_t3.png"},
-  {"id": "siegebreaker_crossbow", "name": "Siegebreaker Crossbow", "familyId": "crossbow", "tier": 4, "description": "It is a brutal crossbow of formidable strength, thick limbs, and a fortress-cracking silhouette.", "icon": "/images/items/crossbow_t4.png"},
-  {"id": "executioners_crossbow", "name": "Executioner's Crossbow", "familyId": "crossbow", "tier": 5, "description": "It is a grim, austere crossbow with severe lines and a cold, merciless presence fit for final judgment.", "icon": "/images/items/crossbow_t5.png"},
-  {"id": "doomsight_crossbow", "name": "Doomsight Crossbow", "familyId": "crossbow", "tier": 6, "description": "It is a dreadful masterwork crossbow with dark metal accents, ominous symmetry, and the air of an omen made steel.", "icon": "/images/items/crossbow_t6.png"},
-  {"id": "rusty_short_sword", "name": "Rusty Short Sword", "familyId": "short_sword", "tier": 1, "description": "It is a weathered little blade of pitted iron, its chipped edge and stained hilt giving it the grim dignity of a survivor.", "icon": "/images/items/short_sword_t1.png"},
-  {"id": "soldiers_short_sword", "name": "Soldier's Short Sword", "familyId": "short_sword", "tier": 2, "description": "It is a practical battlefield sidearm, cleanly forged and plain-faced, built for dependable service rather than glory.", "icon": "/images/items/short_sword_t2.png"},
-  {"id": "sergeants_short_sword", "name": "Sergeant's Short Sword", "familyId": "short_sword", "tier": 3, "description": "It is a harder-used command blade with neat steel lines, modest brass trimming, and the disciplined look of veteran hands.", "icon": "/images/items/short_sword_t3.png"},
-  {"id": "captains_short_sword", "name": "Captain's Short Sword", "familyId": "short_sword", "tier": 4, "description": "It is a refined officer's weapon with polished steel, balanced proportions, and a quiet air of authority.", "icon": "/images/items/short_sword_t4.png"},
-  {"id": "marshals_short_sword", "name": "Marshal's Short Sword", "familyId": "short_sword", "tier": 5, "description": "It is a formal, high-ranking sword of crisp craftsmanship and ceremonial severity, fit for a battlefield lord.", "icon": "/images/items/short_sword_t5.png"},
-  {"id": "peerless_short_sword", "name": "Peerless Short Sword", "familyId": "short_sword", "tier": 6, "description": "It is an exquisite duelist's blade of flawless temper and elegant form, sharp enough to suggest mastery before it ever strikes.", "icon": "/images/items/short_sword_t6.png"},
-  {"id": "pages_sword", "name": "Rusty Sword", "familyId": "sword", "tier": 1, "description": "It is an old and corroded sword with scarred metal, a weary edge, and the melancholy beauty of forgotten wars.", "icon": "/images/items/sword_t1.png"},
-  {"id": "knights_sword", "name": "Knight's Sword", "familyId": "sword", "tier": 2, "description": "It is a noble knightly blade with a straight gleaming edge, a proud guard, and the restrained grace of chivalric steel.", "icon": "/images/items/sword_t2.png"},
-  {"id": "barons_sword", "name": "Baron's Sword", "familyId": "sword", "tier": 3, "description": "It is a lordly weapon with tasteful ornament, a rich polished finish, and the measured confidence of inherited power.", "icon": "/images/items/sword_t3.png"},
-  {"id": "dukes_sword", "name": "Duke's Sword", "familyId": "sword", "tier": 4, "description": "It is a stately blade of fine steel and elegant balance, marked by aristocratic refinement and old bloodline prestige.", "icon": "/images/items/sword_t4.png"},
-  {"id": "highlords_sword", "name": "Highlord's Sword", "familyId": "sword", "tier": 5, "description": "It is a grand, commanding sword with brilliant polish, regal symmetry, and the unmistakable presence of dominion.", "icon": "/images/items/sword_t5.png"},
-  {"id": "ascendant_sword", "name": "Ascendant Sword", "familyId": "sword", "tier": 6, "description": "It is a transcendent blade of radiant craftsmanship, uplifted in design and aura, as if forged for the heights of legend.", "icon": "/images/items/sword_t6.png"},
-  {"id": "squires_mace", "name": "Loose Mace", "familyId": "mace", "tier": 1, "description": "It is a simple iron mace with a plain round head, rough haft, and frontier weapon charm.", "icon": "/images/items/mace_t1.png"},
-  {"id": "vanguards_mace", "name": "Vanguard's Mace", "familyId": "mace", "tier": 2, "description": "It is a disciplined military mace with reinforced head, bronze trim, and front-line authority.", "icon": "/images/items/mace_t2.png"},
-  {"id": "templars_mace", "name": "Templar's Mace", "familyId": "mace", "tier": 3, "description": "It is an austere holy mace with cross-like geometry, clean steel, and temple-made precision.", "icon": "/images/items/mace_t3.png"},
-  {"id": "crusaders_mace", "name": "Crusader's Mace", "familyId": "mace", "tier": 4, "description": "It is a battle-worn crusader mace with sharp flanges, polished edges, and righteous severity.", "icon": "/images/items/mace_t4.png"},
-  {"id": "zealots_mace", "name": "Zealot's Mace", "familyId": "mace", "tier": 5, "description": "It is an aggressive mace with jagged forms, dark metal, and fanatic ritual intensity.", "icon": "/images/items/mace_t5.png"},
-  {"id": "judgment_mace", "name": "Judgment Mace", "familyId": "mace", "tier": 6, "description": "It is a stern ceremonial mace with symmetrical lines, heavy weight, and verdict-like presence.", "icon": "/images/items/mace_t6.png"},
-  {"id": "wyrmfang_battle_axe", "name": "Blunt Battle Axe", "familyId": "battle_axe", "tier": 1, "description": "It is a heavy battle axe with a dull, smashed-looking edge and a workman's brutality that favors force over finesse.", "icon": "/images/items/battle_axe_t1.png"},
-  {"id": "drakebiter_battle_axe", "name": "Drakebiter Battle Axe", "familyId": "battle_axe", "tier": 2, "description": "It is a sharp, dragon-hunter's axe with a clean steel bite and a predatory, scalescarred look.", "icon": "/images/items/battle_axe_t2.png"},
-  {"id": "scaleshredder_battle_axe", "name": "Scaleshredder Battle Axe", "familyId": "battle_axe", "tier": 3, "description": "It is a savage axe with jagged steel contours, built to tear through hide, armor, and the pride of beasts.", "icon": "/images/items/battle_axe_t3.png"},
-  {"id": "wyrmreaver_battle_axe", "name": "Wyrmreaver Battle Axe", "familyId": "battle_axe", "tier": 4, "description": "It is a fearsome war axe with a noble blade and a heroic profile, made for the downfall of great monsters.", "icon": "/images/items/battle_axe_t4.png"},
-  {"id": "drakebane_battle_axe", "name": "Drakebane Battle Axe", "familyId": "battle_axe", "tier": 5, "description": "It is a refined dragon-slaying axe with polished steel and a lethal, mythic edge.", "icon": "/images/items/battle_axe_t5.png"},
-  {"id": "dragonbane_battle_axe", "name": "Dragonbane Battle Axe", "familyId": "battle_axe", "tier": 6, "description": "It is a legendary axe of mighty proportions, elegant yet cruel, with the unmistakable authority of a dragon-killing relic.", "icon": "/images/items/battle_axe_t6.png"},
-  {"id": "cleaver_greatsword", "name": "Bent Greatsword", "familyId": "greatsword", "tier": 1, "description": "It is a battered greatsword with a slightly warped blade, old scars, and the weary grandeur of a weapon that has endured too much war.", "icon": "/images/items/greatsword_t1.png"},
-  {"id": "direblade_greatsword", "name": "Direblade Greatsword", "familyId": "greatsword", "tier": 2, "description": "It is a long, predatory greatsword with a severe edge and a dark, menacing elegance.", "icon": "/images/items/greatsword_t2.png"},
-  {"id": "doomcleaver_greatsword", "name": "Doomcleaver Greatsword", "familyId": "greatsword", "tier": 3, "description": "It is a heavy executioner's greatsword with broad steel, brutal balance, and the finality of a falling sentence.", "icon": "/images/items/greatsword_t3.png"},
-  {"id": "dawnbringer_greatsword", "name": "Dawnbringer Greatsword", "familyId": "greatsword", "tier": 4, "description": "It is a luminous greatsword with bright polished steel and noble lines, as if forged to cut through night itself.", "icon": "/images/items/greatsword_t4.png"},
-  {"id": "soulrender_greatsword", "name": "Soulrender Greatsword", "familyId": "greatsword", "tier": 5, "description": "It is a sinister yet beautiful greatsword with a haunting blade profile and a chilling, spirit-severing aura.", "icon": "/images/items/greatsword_t5.png"},
-  {"id": "godslayer_greatsword", "name": "Godslayer Greatsword", "familyId": "greatsword", "tier": 6, "description": "It is an awe-inspiring greatsword of immense authority, radiant steel, and mythic presence, as if made to challenge heaven.", "icon": "/images/items/greatsword_t6.png"},
-  {"id": "bonecrusher_warhammer", "name": "Apprentice's Warhammer", "familyId": "warhammer", "tier": 1, "description": "It is a modest training hammer with a small iron head and simple haft, earnest and humble in its blunt purpose.", "icon": "/images/items/warhammer_t1.png"},
-  {"id": "skullsplitter_warhammer", "name": "Skullsplitter Warhammer", "familyId": "warhammer", "tier": 2, "description": "It is a vicious warhammer with a dense crushing head and an unforgiving silhouette made for smashing bone and helm alike.", "icon": "/images/items/warhammer_t2.png"},
-  {"id": "earthshaker_warhammer", "name": "Earthshaker Warhammer", "familyId": "warhammer", "tier": 3, "description": "It is a stout hammer with a weighty head and grounded design, as though every strike could rattle stone beneath it.", "icon": "/images/items/warhammer_t3.png"},
-  {"id": "thunderstrike_warhammer", "name": "Thunderstrike Warhammer", "familyId": "warhammer", "tier": 4, "description": "It is a fierce hammer of clean metal and stormborn energy, carrying the suggestion of lightning in its form.", "icon": "/images/items/warhammer_t4.png"},
-  {"id": "stormbreaker_warhammer", "name": "Stormbreaker Warhammer", "familyId": "warhammer", "tier": 5, "description": "It is a mighty warhammer with a commanding profile, built like a tool to shatter shields and break tempests.", "icon": "/images/items/warhammer_t5.png"},
-  {"id": "worldender_warhammer", "name": "Worldender Warhammer", "familyId": "warhammer", "tier": 6, "description": "It is a colossal-looking relic hammer with ancient gravitas, immense presence, and the terrible dignity of an ending made metal.", "icon": "/images/items/warhammer_t6.png"},
-  {"id": "hunters_bow", "name": "Apprentice's Bow", "familyId": "bow", "tier": 1, "description": "It is a simple learner's bow with a modest curve, plain wood, and the quiet promise of a first hunt.", "icon": "/images/items/bow_t1.png"},
-  {"id": "rangers_bow", "name": "Ranger's Bow", "familyId": "bow", "tier": 2, "description": "It is a practical wilderness bow with a clean arc, dark grip, and the balanced grace of a seasoned tracker.", "icon": "/images/items/bow_t2.png"},
-  {"id": "marksmans_bow", "name": "Marksman's Bow", "familyId": "bow", "tier": 3, "description": "It is a finely tuned bow with elegant limbs, crisp craftsmanship, and the disciplined poise of a true shot-maker.", "icon": "/images/items/bow_t3.png"},
-  {"id": "sharpshooters_bow", "name": "Sharpshooter's Bow", "familyId": "bow", "tier": 4, "description": "It is a sleek precision bow with a taut frame and refined finish, built for speed, accuracy, and deadly calm.", "icon": "/images/items/bow_t4.png"},
-  {"id": "elven_bow", "name": "Elven Bow", "familyId": "bow", "tier": 5, "description": "It is a graceful bow of flowing lines and delicate craftsmanship, light as a whisper and touched by woodland artistry.", "icon": "/images/items/bow_t5.png"},
-  {"id": "windsong_bow", "name": "Windsong Bow", "familyId": "bow", "tier": 6, "description": "It is an airy, elegant bow with a sweeping curve and lyrical shape, as if the breeze itself had learned to hunt.", "icon": "/images/items/bow_t6.png"},
-  {"id": "pine_quiver", "name": "Tight Quiver", "familyId": "quiver", "tier": 1, "description": "It is a compact leather quiver stitched with care, snugly fitted and travel-worn, made to ride close and silent.", "icon": "/images/items/quiver_t1.png"},
-  {"id": "oak_quiver", "name": "Oak Quiver", "familyId": "quiver", "tier": 2, "description": "It is a sturdy oak-bound quiver with warm wood tones, reinforced edges, and the dependable strength of forest craft.", "icon": "/images/items/quiver_t2.png"},
-  {"id": "ash_quiver", "name": "Ash Quiver", "familyId": "quiver", "tier": 3, "description": "It is a pale, swift-looking quiver with clean grain and a light hunter's profile, built for motion and precision.", "icon": "/images/items/quiver_t3.png"},
-  {"id": "cedar_quiver", "name": "Cedar Quiver", "familyId": "quiver", "tier": 4, "description": "It is a richly colored quiver of reddish cedar, neat in form and warm in spirit, like something from old woodlands.", "icon": "/images/items/quiver_t4.png"},
-  {"id": "ebony_quiver", "name": "Ebony Quiver", "familyId": "quiver", "tier": 5, "description": "It is a dark and polished quiver with a sleek black finish, understated yet severe, with a shadowed elegance.", "icon": "/images/items/quiver_t5.png"},
-  {"id": "worldroot_quiver", "name": "Worldroot Quiver", "familyId": "quiver", "tier": 6, "description": "It is a living, rootwoven quiver of tangled natural fibers and ancient growth, touched by druidic wild magic.", "icon": "/images/items/quiver_t6.png"},
-  {"id": "pine_bolt_girdle", "name": "Crude Bolt Girdle", "familyId": "bolt_girdle", "tier": 1, "description": "It is a rough bolt belt of coarse leather and blunt utility, all function and no finery.", "icon": "/images/items/bolt_girdle_t1.png"},
-  {"id": "oak_bolt_girdle", "name": "Oak Bolt Girdle", "familyId": "bolt_girdle", "tier": 2, "description": "It is a sturdy oak-fitted bolt girdle with firm stitching and a grounded, woodcrafted reliability.", "icon": "/images/items/bolt_girdle_t2.png"},
-  {"id": "ash_bolt_girdle", "name": "Ash Bolt Girdle", "familyId": "bolt_girdle", "tier": 3, "description": "It is a slim pale girdle with tidy loops and a light, disciplined form suited to a quick archer's kit.", "icon": "/images/items/bolt_girdle_t3.png"},
-  {"id": "cedar_bolt_girdle", "name": "Cedar Bolt Girdle", "familyId": "bolt_girdle", "tier": 4, "description": "It is a warm-toned cedar girdle with careful bindings and a rustic, well-kept finish.", "icon": "/images/items/bolt_girdle_t4.png"},
-  {"id": "ebony_bolt_girdle", "name": "Ebony Bolt Girdle", "familyId": "bolt_girdle", "tier": 5, "description": "It is a sleek dark girdle with polished leather and a stern, elegant silhouette.", "icon": "/images/items/bolt_girdle_t5.png"},
-  {"id": "worldroot_bolt_girdle", "name": "Worldroot Bolt Girdle", "familyId": "bolt_girdle", "tier": 6, "description": "It is a rootbound girdle of woven living fibers and ancient bark texture, as though grown rather than made.", "icon": "/images/items/bolt_girdle_t6.png"},
-  {"id": "quartz_magic_staff", "name": "Loose Magic Staff", "familyId": "magic_staff", "tier": 1, "description": "It is a plain, wandering staff of straight wood and simple binding, humble in form yet quietly potent in spellwork.", "icon": "/images/items/magic_staff_t1.png"},
-  {"id": "amethyst_magic_staff", "name": "Amethyst Magic Staff", "familyId": "magic_staff", "tier": 2, "description": "It is a stately arcane staff topped with amethyst brilliance, its violet light lending it a contemplative mysticism.", "icon": "/images/items/magic_staff_t2.png"},
-  {"id": "sapphire_magic_staff", "name": "Sapphire Magic Staff", "familyId": "magic_staff", "tier": 3, "description": "It is a refined staff with a blue crystal focus and clean silver fittings, cool as moonlit scholarship.", "icon": "/images/items/magic_staff_t3.png"},
-  {"id": "ruby_magic_staff", "name": "Ruby Magic Staff", "familyId": "magic_staff", "tier": 4, "description": "It is a powerful staff crowned in ruby fire, warm and regal, with the heartbeat of a contained blaze.", "icon": "/images/items/magic_staff_t4.png"},
-  {"id": "mana_magic_staff", "name": "Mana Magic Staff", "familyId": "magic_staff", "tier": 5, "description": "It is a finely tuned staff of balanced lines and luminous channels, built to guide pure magical force with elegance.", "icon": "/images/items/magic_staff_t5.png"},
-  {"id": "astral_magic_staff", "name": "Astral Magic Staff", "familyId": "magic_staff", "tier": 6, "description": "It is a majestic staff of celestial crystal and starry detailing, bearing the grand, distant splendor of the heavens.", "icon": "/images/items/magic_staff_t6.png"},
-  {"id": "quartz_wand", "name": "Beginner's Wand", "familyId": "wand", "tier": 1, "description": "It is a simple apprentice's wand of plain carved wood, humble and earnest, bearing the quiet promise of first spells.", "icon": "/images/items/wand_t1.png"},
-  {"id": "amethyst_wand", "name": "Amethyst Wand", "familyId": "wand", "tier": 2, "description": "It is a graceful wand crowned with violet crystal, rich with refined arcane beauty and a cool mystic glow.", "icon": "/images/items/wand_t2.png"},
-  {"id": "sapphire_wand", "name": "Sapphire Wand", "familyId": "wand", "tier": 3, "description": "It is a polished wand with a blue gemstone core, crisp silver accents, and the calm clarity of scholarly magic.", "icon": "/images/items/wand_t3.png"},
-  {"id": "ruby_wand", "name": "Ruby Wand", "familyId": "wand", "tier": 4, "description": "It is a warm, commanding wand set with a red gem, glowing as if it holds a heartbeat of ember fire.", "icon": "/images/items/wand_t4.png"},
-  {"id": "mana_wand", "name": "Mana Wand", "familyId": "wand", "tier": 5, "description": "It is a focused channeling wand of luminous craft, sleek and disciplined, designed to shape raw power with precision.", "icon": "/images/items/wand_t5.png"},
-  {"id": "astral_wand", "name": "Astral Wand", "familyId": "wand", "tier": 6, "description": "It is a celestial wand of radiant crystal and star-born ornament, elegant and distant, like magic drawn from the night sky.", "icon": "/images/items/wand_t6.png"},
-  {"id": "woodcutters_axe", "name": "Woodcutter's Axe", "familyId": "axe", "tier": 1, "description": "It is a practical felling axe forged from plain iron, with a broad workman's head, worn edge, and the sturdy humility of a tool made for the frontier.", "icon": "/images/items/axe_t1.png"},
-  {"id": "foresters_axe", "name": "Forester's Axe", "familyId": "axe", "tier": 2, "description": "It is a balanced forest axe with a clean steel blade, modest brass fittings, and the disciplined grace of a woodsman's trusted companion.", "icon": "/images/items/axe_t2.png"},
-  {"id": "rangers_axe", "name": "Ranger's Axe", "familyId": "axe", "tier": 3, "description": "It is a lean and agile axe with a refined edge, dark haft, and a quiet wilderness elegance suited to a hunter of wild places.", "icon": "/images/items/axe_t3.png"},
-  {"id": "wardens_axe", "name": "Warden's Axe", "familyId": "axe", "tier": 4, "description": "It is a stern guardian's axe with a reinforced blade, iron trim, and a severe, watchful silhouette of authority.", "icon": "/images/items/axe_t4.png"},
-  {"id": "timberlords_axe", "name": "Timberlord's Axe", "familyId": "axe", "tier": 5, "description": "It is a lordly chopping axe with polished steel, tasteful ornament, and the unmistakable bearing of command over deep woods.", "icon": "/images/items/axe_t5.png"},
-  {"id": "ancient_grove_axe", "name": "Ancient Grove Axe", "familyId": "axe", "tier": 6, "description": "It is an elder relic of steel and root, marked with sacred carvings and a venerable forest aura, as if the grove itself had armed it.", "icon": "/images/items/axe_t6.png"},
-  {"id": "pine_axe_stone", "name": "Crude Stone Axe", "familyId": "axe_stone", "tier": 1, "description": "It is a rough-edged stone axe lashed to a simple wooden haft, primitive and blunt, with the raw honesty of the first weapons.", "icon": "/images/items/axe_stone_t1.png"},
-  {"id": "oak_axe_stone", "name": "Oak Stone Axe", "familyId": "axe_stone", "tier": 2, "description": "It is a sturdier stone axe with an oak shaft, warm wood grain, and a more deliberate shape rooted in old craftsmanship.", "icon": "/images/items/axe_stone_t2.png"},
-  {"id": "ash_axe_stone", "name": "Ash Stone Axe", "familyId": "axe_stone", "tier": 3, "description": "It is a lighter stone axe with a pale ash handle, cleaner lines, and a quick, practical form for hard travel.", "icon": "/images/items/axe_stone_t3.png"},
-  {"id": "cedar_axe_stone", "name": "Cedar Stone Axe", "familyId": "axe_stone", "tier": 4, "description": "It is a reddish cedar-hafted stone axe with neat bindings and a rustic, warmly finished presence.", "icon": "/images/items/axe_stone_t4.png"},
-  {"id": "ebony_axe_stone", "name": "Ebony Stone Axe", "familyId": "axe_stone", "tier": 5, "description": "It is a dark and severe stone axe with a blackened haft and an ominous, ritual-like elegance.", "icon": "/images/items/axe_stone_t5.png"},
-  {"id": "worldroot_axe_stone", "name": "Worldroot Stone Axe", "familyId": "axe_stone", "tier": 6, "description": "It is a root-bound stone axe of living fibers and ancient bark, wild and sacred, as though grown from the earth itself.", "icon": "/images/items/axe_stone_t6.png"}
+  {
+    "id": "pine_club",
+    "name": "Pine Club",
+    "familyId": "club",
+    "tier": 1,
+    "description": "A rough pine-knot club with bark patches, pale grain and a blunt, hand-hewn head.",
+    "icon": "/images/items/club_t1.png"
+  },
+  {
+    "id": "oak_club",
+    "name": "Oak Club",
+    "familyId": "club",
+    "tier": 2,
+    "description": "A heavy oak club with thick growth rings and dark knots, sturdy as an old forest.",
+    "icon": "/images/items/club_t2.png"
+  },
+  {
+    "id": "ash_club",
+    "name": "Ash Club",
+    "familyId": "club",
+    "tier": 3,
+    "description": "A slim ash club with pale grain, a straight shaft and a clean, simple finish.",
+    "icon": "/images/items/club_t3.png"
+  },
+  {
+    "id": "cedar_club",
+    "name": "Cedar Club",
+    "familyId": "club",
+    "tier": 4,
+    "description": "A reddish cedar club with warm wood tones, bark remnants and a rustic, blunt head.",
+    "icon": "/images/items/club_t4.png"
+  },
+  {
+    "id": "ebony_club",
+    "name": "Ebony Club",
+    "familyId": "club",
+    "tier": 5,
+    "description": "A dark ebony club polished to a severe black sheen, with an ominous profile.",
+    "icon": "/images/items/club_t5.png"
+  },
+  {
+    "id": "worldroot_club",
+    "name": "Worldroot Club",
+    "familyId": "club",
+    "tier": 6,
+    "description": "A twisted club of living worldroot, veined with tangled roots and sacred bark.",
+    "icon": "/images/items/club_t6.png"
+  },
+  {
+    "id": "pine_sharpened_stick",
+    "name": "Crude Sharpened Stick",
+    "familyId": "sharpened_stick",
+    "tier": 1,
+    "description": "A rough branch spear with bark still attached and a chipped, hand-carved point.",
+    "icon": "/images/items/sharpened_stick_t1.png"
+  },
+  {
+    "id": "oak_sharpened_stick",
+    "name": "Oak Sharpened Stick",
+    "familyId": "sharpened_stick",
+    "tier": 2,
+    "description": "A thick-grained oak branch whittled to a sharp tip, sturdy and dependable.",
+    "icon": "/images/items/sharpened_stick_t2.png"
+  },
+  {
+    "id": "ash_sharpened_stick",
+    "name": "Ash Sharpened Stick",
+    "familyId": "sharpened_stick",
+    "tier": 3,
+    "description": "A light, straight rod of pale ash, sharpened to a clean survival point.",
+    "icon": "/images/items/sharpened_stick_t3.png"
+  },
+  {
+    "id": "cedar_sharpened_stick",
+    "name": "Cedar Sharpened Stick",
+    "familyId": "sharpened_stick",
+    "tier": 4,
+    "description": "A warm red cedar shaft with a sharpened end and simple cord wraps.",
+    "icon": "/images/items/sharpened_stick_t4.png"
+  },
+  {
+    "id": "ebony_sharpened_stick",
+    "name": "Ebony Sharpened Stick",
+    "familyId": "sharpened_stick",
+    "tier": 5,
+    "description": "A dark ebony rod with a sleek black finish and a sinister, pointed tip.",
+    "icon": "/images/items/sharpened_stick_t5.png"
+  },
+  {
+    "id": "worldroot_sharpened_stick",
+    "name": "Worldroot Sharpened Stick",
+    "familyId": "sharpened_stick",
+    "tier": 6,
+    "description": "A root-twisted staff-spear of living fibers and natural knots, wild and sacred.",
+    "icon": "/images/items/sharpened_stick_t6.png"
+  },
+  {
+    "id": "courtiers_dagger",
+    "name": "Apprentice's Dagger",
+    "familyId": "dagger",
+    "tier": 1,
+    "description": "A plain learner's dagger with a short steel blade, simple guard and modest grip.",
+    "icon": "/images/items/dagger_t1.png"
+  },
+  {
+    "id": "duchess_dagger",
+    "name": "Duchess's Dagger",
+    "familyId": "dagger",
+    "tier": 2,
+    "description": "An elegant noble dagger of polished metal, traced with delicate filigree.",
+    "icon": "/images/items/dagger_t2.png"
+  },
+  {
+    "id": "viscounts_dagger",
+    "name": "Viscount's Dagger",
+    "familyId": "dagger",
+    "tier": 3,
+    "description": "A sleek aristocratic dagger with a narrow blade and tasteful, restrained ornament.",
+    "icon": "/images/items/dagger_t3.png"
+  },
+  {
+    "id": "marquess_dagger",
+    "name": "Marquess's Dagger",
+    "familyId": "dagger",
+    "tier": 4,
+    "description": "A finely crafted dagger with rich trim and balanced proportions, carried with noble authority.",
+    "icon": "/images/items/dagger_t4.png"
+  },
+  {
+    "id": "chancellors_dagger",
+    "name": "Chancellor's Dagger",
+    "familyId": "dagger",
+    "tier": 5,
+    "description": "A formal state dagger of sharp polish and disciplined symmetry.",
+    "icon": "/images/items/dagger_t5.png"
+  },
+  {
+    "id": "sovereigns_dagger",
+    "name": "Sovereign's Dagger",
+    "familyId": "dagger",
+    "tier": 6,
+    "description": "A regal dagger with an ornate hilt and radiant blade, unmistakably made for royalty.",
+    "icon": "/images/items/dagger_t6.png"
+  },
+  {
+    "id": "grovekeepers_sickle",
+    "name": "Apprentice's Sickle",
+    "familyId": "sickle",
+    "tier": 1,
+    "description": "A small training sickle with a simple crescent blade and a humble, farm-forged look.",
+    "icon": "/images/items/sickle_t1.png"
+  },
+  {
+    "id": "harvestmoon_sickle",
+    "name": "Harvestmoon Sickle",
+    "familyId": "sickle",
+    "tier": 2,
+    "description": "A graceful silver sickle with moonlit curves, well balanced for the harvest.",
+    "icon": "/images/items/sickle_t2.png"
+  },
+  {
+    "id": "wildroot_sickle",
+    "name": "Wildroot Sickle",
+    "familyId": "sickle",
+    "tier": 3,
+    "description": "A natural sickle with a vine-wrapped grip and greenwood accents carved with druidic growth.",
+    "icon": "/images/items/sickle_t3.png"
+  },
+  {
+    "id": "thornweave_sickle",
+    "name": "Thornweave Sickle",
+    "familyId": "sickle",
+    "tier": 4,
+    "description": "A thorn-lined sickle wrapped in twisted brambles, cruel and elegant.",
+    "icon": "/images/items/sickle_t4.png"
+  },
+  {
+    "id": "lunarfang_sickle",
+    "name": "Lunarfang Sickle",
+    "familyId": "sickle",
+    "tier": 5,
+    "description": "A crescent blade of cold silver shaped like a moon-fang, full of predatory grace.",
+    "icon": "/images/items/sickle_t5.png"
+  },
+  {
+    "id": "eldermoon_sickle",
+    "name": "Eldermoon Sickle",
+    "familyId": "sickle",
+    "tier": 6,
+    "description": "An ancient moon sickle of weathered silver, glowing with a soft, wise lunar aura.",
+    "icon": "/images/items/sickle_t6.png"
+  },
+  {
+    "id": "tribesmans_spear",
+    "name": "Blunt Spear",
+    "familyId": "spear",
+    "tier": 1,
+    "description": "A plain spear with a dull metal point on a straight shaft, simple and practical.",
+    "icon": "/images/items/spear_t1.png"
+  },
+  {
+    "id": "bloodrite_spear",
+    "name": "Bloodrite Spear",
+    "familyId": "spear",
+    "tier": 2,
+    "description": "A ritual spear of dark steel with crimson accents, made for sacrificial ceremony.",
+    "icon": "/images/items/spear_t2.png"
+  },
+  {
+    "id": "skyfathers_spear",
+    "name": "Skyfather's Spear",
+    "familyId": "spear",
+    "tier": 3,
+    "description": "A spear of pale blue steel with a noble point, touched by the storms of the sky.",
+    "icon": "/images/items/spear_t3.png"
+  },
+  {
+    "id": "totemcaller_spear",
+    "name": "Totemcaller Spear",
+    "familyId": "spear",
+    "tier": 4,
+    "description": "A tribal spear hung with carved charms and feather ties, marked with ancestral spirits.",
+    "icon": "/images/items/spear_t4.png"
+  },
+  {
+    "id": "wolfspirit_spear",
+    "name": "Wolfspirit Spear",
+    "familyId": "spear",
+    "tier": 5,
+    "description": "A hunter's spear wrapped in fur and carved with fangs, carrying a ghostly, predatory aura.",
+    "icon": "/images/items/spear_t5.png"
+  },
+  {
+    "id": "godsblood_spear",
+    "name": "Godsblood Spear",
+    "familyId": "spear",
+    "tier": 6,
+    "description": "A divine spear of red-gold metal, touched by sacred corruption and mythic menace.",
+    "icon": "/images/items/spear_t6.png"
+  },
+  {
+    "id": "mercenarys_crossbow",
+    "name": "Uneven Crossbow",
+    "familyId": "crossbow",
+    "tier": 1,
+    "description": "A rough-built crossbow of plain wood with crooked limbs, the work of an early workshop.",
+    "icon": "/images/items/crossbow_t1.png"
+  },
+  {
+    "id": "arbalest_crossbow",
+    "name": "Arbalest Crossbow",
+    "familyId": "crossbow",
+    "tier": 2,
+    "description": "A heavy arbalest with reinforced arms and disciplined, siege-born construction.",
+    "icon": "/images/items/crossbow_t2.png"
+  },
+  {
+    "id": "deadeye_crossbow",
+    "name": "Deadeye Crossbow",
+    "familyId": "crossbow",
+    "tier": 3,
+    "description": "A precise hunting crossbow with a taut frame and fine metal fittings, made to strike true.",
+    "icon": "/images/items/crossbow_t3.png"
+  },
+  {
+    "id": "siegebreaker_crossbow",
+    "name": "Siegebreaker Crossbow",
+    "familyId": "crossbow",
+    "tier": 4,
+    "description": "A brutal crossbow of formidable strength and thick limbs, built to crack fortresses.",
+    "icon": "/images/items/crossbow_t4.png"
+  },
+  {
+    "id": "executioners_crossbow",
+    "name": "Executioner's Crossbow",
+    "familyId": "crossbow",
+    "tier": 5,
+    "description": "A grim, austere crossbow with severe lines and a cold, merciless presence.",
+    "icon": "/images/items/crossbow_t5.png"
+  },
+  {
+    "id": "doomsight_crossbow",
+    "name": "Doomsight Crossbow",
+    "familyId": "crossbow",
+    "tier": 6,
+    "description": "A dreadful masterwork crossbow with dark metal accents, like an omen made steel.",
+    "icon": "/images/items/crossbow_t6.png"
+  },
+  {
+    "id": "rusty_short_sword",
+    "name": "Rusty Short Sword",
+    "familyId": "short_sword",
+    "tier": 1,
+    "description": "A weathered little blade of pitted iron with a chipped edge and stained hilt, a grim survivor.",
+    "icon": "/images/items/short_sword_t1.png"
+  },
+  {
+    "id": "soldiers_short_sword",
+    "name": "Soldier's Short Sword",
+    "familyId": "short_sword",
+    "tier": 2,
+    "description": "A practical sidearm, cleanly forged and plain, built for dependable service rather than glory.",
+    "icon": "/images/items/short_sword_t2.png"
+  },
+  {
+    "id": "sergeants_short_sword",
+    "name": "Sergeant's Short Sword",
+    "familyId": "short_sword",
+    "tier": 3,
+    "description": "A well-used command blade with neat steel lines and modest brass trim.",
+    "icon": "/images/items/short_sword_t3.png"
+  },
+  {
+    "id": "captains_short_sword",
+    "name": "Captain's Short Sword",
+    "familyId": "short_sword",
+    "tier": 4,
+    "description": "A refined officer's blade of polished steel, balanced and quietly authoritative.",
+    "icon": "/images/items/short_sword_t4.png"
+  },
+  {
+    "id": "marshals_short_sword",
+    "name": "Marshal's Short Sword",
+    "familyId": "short_sword",
+    "tier": 5,
+    "description": "A formal, high-ranking sword of crisp craftsmanship, fit for a battlefield lord.",
+    "icon": "/images/items/short_sword_t5.png"
+  },
+  {
+    "id": "peerless_short_sword",
+    "name": "Peerless Short Sword",
+    "familyId": "short_sword",
+    "tier": 6,
+    "description": "An exquisite duelist's blade of flawless temper and elegant form.",
+    "icon": "/images/items/short_sword_t6.png"
+  },
+  {
+    "id": "pages_sword",
+    "name": "Rusty Sword",
+    "familyId": "sword",
+    "tier": 1,
+    "description": "An old, corroded sword with scarred metal and a weary edge, a relic of forgotten wars.",
+    "icon": "/images/items/sword_t1.png"
+  },
+  {
+    "id": "knights_sword",
+    "name": "Knight's Sword",
+    "familyId": "sword",
+    "tier": 2,
+    "description": "A noble knight's blade with a straight, gleaming edge and a proud guard.",
+    "icon": "/images/items/sword_t2.png"
+  },
+  {
+    "id": "barons_sword",
+    "name": "Baron's Sword",
+    "familyId": "sword",
+    "tier": 3,
+    "description": "A lordly sword with tasteful ornament and a rich, polished finish.",
+    "icon": "/images/items/sword_t3.png"
+  },
+  {
+    "id": "dukes_sword",
+    "name": "Duke's Sword",
+    "familyId": "sword",
+    "tier": 4,
+    "description": "A stately blade of fine steel and elegant balance, marked by old bloodline prestige.",
+    "icon": "/images/items/sword_t4.png"
+  },
+  {
+    "id": "highlords_sword",
+    "name": "Highlord's Sword",
+    "familyId": "sword",
+    "tier": 5,
+    "description": "A grand, commanding sword of brilliant polish and regal symmetry.",
+    "icon": "/images/items/sword_t5.png"
+  },
+  {
+    "id": "ascendant_sword",
+    "name": "Ascendant Sword",
+    "familyId": "sword",
+    "tier": 6,
+    "description": "A transcendent blade of radiant craftsmanship, as if forged for the heights of legend.",
+    "icon": "/images/items/sword_t6.png"
+  },
+  {
+    "id": "squires_mace",
+    "name": "Loose Mace",
+    "familyId": "mace",
+    "tier": 1,
+    "description": "A simple iron mace with a plain round head and a rough haft.",
+    "icon": "/images/items/mace_t1.png"
+  },
+  {
+    "id": "vanguards_mace",
+    "name": "Vanguard's Mace",
+    "familyId": "mace",
+    "tier": 2,
+    "description": "A disciplined military mace with a reinforced head and bronze trim.",
+    "icon": "/images/items/mace_t2.png"
+  },
+  {
+    "id": "templars_mace",
+    "name": "Templar's Mace",
+    "familyId": "mace",
+    "tier": 3,
+    "description": "An austere holy mace of clean steel with cross-like flanges.",
+    "icon": "/images/items/mace_t3.png"
+  },
+  {
+    "id": "crusaders_mace",
+    "name": "Crusader's Mace",
+    "familyId": "mace",
+    "tier": 4,
+    "description": "A battle-worn mace with sharp, polished flanges and righteous weight.",
+    "icon": "/images/items/mace_t4.png"
+  },
+  {
+    "id": "zealots_mace",
+    "name": "Zealot's Mace",
+    "familyId": "mace",
+    "tier": 5,
+    "description": "An aggressive mace of dark metal with jagged, fanatical ritual forms.",
+    "icon": "/images/items/mace_t5.png"
+  },
+  {
+    "id": "judgment_mace",
+    "name": "Judgment Mace",
+    "familyId": "mace",
+    "tier": 6,
+    "description": "A stern ceremonial mace, heavy and symmetrical, that lands like a verdict.",
+    "icon": "/images/items/mace_t6.png"
+  },
+  {
+    "id": "wyrmfang_battle_axe",
+    "name": "Blunt Battle Axe",
+    "familyId": "battle_axe",
+    "tier": 1,
+    "description": "A heavy battle axe with a dull, battered edge that favors brute force over finesse.",
+    "icon": "/images/items/battle_axe_t1.png"
+  },
+  {
+    "id": "drakebiter_battle_axe",
+    "name": "Drakebiter Battle Axe",
+    "familyId": "battle_axe",
+    "tier": 2,
+    "description": "A sharp dragon-hunter's axe with a clean steel bite and a scale-scarred look.",
+    "icon": "/images/items/battle_axe_t2.png"
+  },
+  {
+    "id": "scaleshredder_battle_axe",
+    "name": "Scaleshredder Battle Axe",
+    "familyId": "battle_axe",
+    "tier": 3,
+    "description": "A savage axe with jagged steel contours, built to tear through hide and armor.",
+    "icon": "/images/items/battle_axe_t3.png"
+  },
+  {
+    "id": "wyrmreaver_battle_axe",
+    "name": "Wyrmreaver Battle Axe",
+    "familyId": "battle_axe",
+    "tier": 4,
+    "description": "A fearsome war axe with a noble blade, made for the downfall of great monsters.",
+    "icon": "/images/items/battle_axe_t4.png"
+  },
+  {
+    "id": "drakebane_battle_axe",
+    "name": "Drakebane Battle Axe",
+    "familyId": "battle_axe",
+    "tier": 5,
+    "description": "A refined dragon-slaying axe of polished steel with a lethal, mythic edge.",
+    "icon": "/images/items/battle_axe_t5.png"
+  },
+  {
+    "id": "dragonbane_battle_axe",
+    "name": "Dragonbane Battle Axe",
+    "familyId": "battle_axe",
+    "tier": 6,
+    "description": "A legendary axe of mighty proportions, elegant yet cruel, a true dragon-killing relic.",
+    "icon": "/images/items/battle_axe_t6.png"
+  },
+  {
+    "id": "cleaver_greatsword",
+    "name": "Bent Greatsword",
+    "familyId": "greatsword",
+    "tier": 1,
+    "description": "A battered greatsword with a slightly warped blade, scarred by too many wars.",
+    "icon": "/images/items/greatsword_t1.png"
+  },
+  {
+    "id": "direblade_greatsword",
+    "name": "Direblade Greatsword",
+    "familyId": "greatsword",
+    "tier": 2,
+    "description": "A long, predatory greatsword with a severe edge and dark, menacing elegance.",
+    "icon": "/images/items/greatsword_t2.png"
+  },
+  {
+    "id": "doomcleaver_greatsword",
+    "name": "Doomcleaver Greatsword",
+    "familyId": "greatsword",
+    "tier": 3,
+    "description": "A heavy executioner's greatsword of broad steel, as final as a falling sentence.",
+    "icon": "/images/items/greatsword_t3.png"
+  },
+  {
+    "id": "dawnbringer_greatsword",
+    "name": "Dawnbringer Greatsword",
+    "familyId": "greatsword",
+    "tier": 4,
+    "description": "A luminous greatsword of bright polished steel, as if forged to cut through the night.",
+    "icon": "/images/items/greatsword_t4.png"
+  },
+  {
+    "id": "soulrender_greatsword",
+    "name": "Soulrender Greatsword",
+    "familyId": "greatsword",
+    "tier": 5,
+    "description": "A sinister yet beautiful greatsword with a chilling, spirit-severing aura.",
+    "icon": "/images/items/greatsword_t5.png"
+  },
+  {
+    "id": "godslayer_greatsword",
+    "name": "Godslayer Greatsword",
+    "familyId": "greatsword",
+    "tier": 6,
+    "description": "An awe-inspiring greatsword of radiant steel, as if made to challenge the heavens.",
+    "icon": "/images/items/greatsword_t6.png"
+  },
+  {
+    "id": "bonecrusher_warhammer",
+    "name": "Apprentice's Warhammer",
+    "familyId": "warhammer",
+    "tier": 1,
+    "description": "A modest training hammer with a small iron head and a simple haft.",
+    "icon": "/images/items/warhammer_t1.png"
+  },
+  {
+    "id": "skullsplitter_warhammer",
+    "name": "Skullsplitter Warhammer",
+    "familyId": "warhammer",
+    "tier": 2,
+    "description": "A vicious warhammer with a dense crushing head, made for smashing bone and helm.",
+    "icon": "/images/items/warhammer_t2.png"
+  },
+  {
+    "id": "earthshaker_warhammer",
+    "name": "Earthshaker Warhammer",
+    "familyId": "warhammer",
+    "tier": 3,
+    "description": "A stout hammer with a weighty head, as though every strike could rattle the stone below.",
+    "icon": "/images/items/warhammer_t3.png"
+  },
+  {
+    "id": "thunderstrike_warhammer",
+    "name": "Thunderstrike Warhammer",
+    "familyId": "warhammer",
+    "tier": 4,
+    "description": "A fierce hammer of clean metal that crackles with the promise of lightning.",
+    "icon": "/images/items/warhammer_t4.png"
+  },
+  {
+    "id": "stormbreaker_warhammer",
+    "name": "Stormbreaker Warhammer",
+    "familyId": "warhammer",
+    "tier": 5,
+    "description": "A mighty warhammer with a commanding profile, built to shatter shields and break storms.",
+    "icon": "/images/items/warhammer_t5.png"
+  },
+  {
+    "id": "worldender_warhammer",
+    "name": "Worldender Warhammer",
+    "familyId": "warhammer",
+    "tier": 6,
+    "description": "A colossal relic hammer of ancient weight and terrible dignity.",
+    "icon": "/images/items/warhammer_t6.png"
+  },
+  {
+    "id": "hunters_bow",
+    "name": "Apprentice's Bow",
+    "familyId": "bow",
+    "tier": 1,
+    "description": "A simple learner's bow of plain wood with a modest curve.",
+    "icon": "/images/items/bow_t1.png"
+  },
+  {
+    "id": "rangers_bow",
+    "name": "Ranger's Bow",
+    "familyId": "bow",
+    "tier": 2,
+    "description": "A practical wilderness bow with a clean arc and a dark grip.",
+    "icon": "/images/items/bow_t2.png"
+  },
+  {
+    "id": "marksmans_bow",
+    "name": "Marksman's Bow",
+    "familyId": "bow",
+    "tier": 3,
+    "description": "A finely tuned bow with elegant limbs and crisp craftsmanship.",
+    "icon": "/images/items/bow_t3.png"
+  },
+  {
+    "id": "sharpshooters_bow",
+    "name": "Sharpshooter's Bow",
+    "familyId": "bow",
+    "tier": 4,
+    "description": "A sleek precision bow with a taut frame, built for speed and accuracy.",
+    "icon": "/images/items/bow_t4.png"
+  },
+  {
+    "id": "elven_bow",
+    "name": "Elven Bow",
+    "familyId": "bow",
+    "tier": 5,
+    "description": "A graceful bow of flowing lines, light as a whisper and shaped by woodland artistry.",
+    "icon": "/images/items/bow_t5.png"
+  },
+  {
+    "id": "windsong_bow",
+    "name": "Windsong Bow",
+    "familyId": "bow",
+    "tier": 6,
+    "description": "An airy bow with a sweeping, lyrical curve, as if the breeze itself had learned to hunt.",
+    "icon": "/images/items/bow_t6.png"
+  },
+  {
+    "id": "pine_quiver",
+    "name": "Tight Quiver",
+    "familyId": "quiver",
+    "tier": 1,
+    "description": "A compact leather quiver, snugly stitched and travel-worn, made to ride close and silent.",
+    "icon": "/images/items/quiver_t1.png"
+  },
+  {
+    "id": "oak_quiver",
+    "name": "Oak Quiver",
+    "familyId": "quiver",
+    "tier": 2,
+    "description": "A sturdy oak-bound quiver with warm wood tones and reinforced edges.",
+    "icon": "/images/items/quiver_t2.png"
+  },
+  {
+    "id": "ash_quiver",
+    "name": "Ash Quiver",
+    "familyId": "quiver",
+    "tier": 3,
+    "description": "A light quiver of pale, clean-grained ash, built for a hunter on the move.",
+    "icon": "/images/items/quiver_t3.png"
+  },
+  {
+    "id": "cedar_quiver",
+    "name": "Cedar Quiver",
+    "familyId": "quiver",
+    "tier": 4,
+    "description": "A neat quiver of rich reddish cedar, warm and well made.",
+    "icon": "/images/items/quiver_t4.png"
+  },
+  {
+    "id": "ebony_quiver",
+    "name": "Ebony Quiver",
+    "familyId": "quiver",
+    "tier": 5,
+    "description": "A dark, polished ebony quiver with a sleek black finish.",
+    "icon": "/images/items/quiver_t5.png"
+  },
+  {
+    "id": "worldroot_quiver",
+    "name": "Worldroot Quiver",
+    "familyId": "quiver",
+    "tier": 6,
+    "description": "A living quiver of woven worldroot fibers, touched by wild druidic magic.",
+    "icon": "/images/items/quiver_t6.png"
+  },
+  {
+    "id": "pine_bolt_girdle",
+    "name": "Crude Bolt Girdle",
+    "familyId": "bolt_girdle",
+    "tier": 1,
+    "description": "A rough bolt belt of coarse leather, all function and no finery.",
+    "icon": "/images/items/bolt_girdle_t1.png"
+  },
+  {
+    "id": "oak_bolt_girdle",
+    "name": "Oak Bolt Girdle",
+    "familyId": "bolt_girdle",
+    "tier": 2,
+    "description": "A sturdy oak-fitted bolt girdle with firm stitching.",
+    "icon": "/images/items/bolt_girdle_t2.png"
+  },
+  {
+    "id": "ash_bolt_girdle",
+    "name": "Ash Bolt Girdle",
+    "familyId": "bolt_girdle",
+    "tier": 3,
+    "description": "A slim, pale girdle with tidy loops, suited to a quick crossbowman.",
+    "icon": "/images/items/bolt_girdle_t3.png"
+  },
+  {
+    "id": "cedar_bolt_girdle",
+    "name": "Cedar Bolt Girdle",
+    "familyId": "bolt_girdle",
+    "tier": 4,
+    "description": "A warm-toned cedar girdle with careful bindings and a well-kept finish.",
+    "icon": "/images/items/bolt_girdle_t4.png"
+  },
+  {
+    "id": "ebony_bolt_girdle",
+    "name": "Ebony Bolt Girdle",
+    "familyId": "bolt_girdle",
+    "tier": 5,
+    "description": "A sleek dark girdle of polished leather and ebony fittings.",
+    "icon": "/images/items/bolt_girdle_t5.png"
+  },
+  {
+    "id": "worldroot_bolt_girdle",
+    "name": "Worldroot Bolt Girdle",
+    "familyId": "bolt_girdle",
+    "tier": 6,
+    "description": "A rootbound girdle of living fibers and ancient bark, grown rather than made.",
+    "icon": "/images/items/bolt_girdle_t6.png"
+  },
+  {
+    "id": "quartz_magic_staff",
+    "name": "Loose Magic Staff",
+    "familyId": "magic_staff",
+    "tier": 1,
+    "description": "A plain wandering staff of straight wood and simple binding, humble yet quietly potent.",
+    "icon": "/images/items/magic_staff_t1.png"
+  },
+  {
+    "id": "amethyst_magic_staff",
+    "name": "Amethyst Magic Staff",
+    "familyId": "magic_staff",
+    "tier": 2,
+    "description": "A stately arcane staff topped with amethyst, glowing with a soft violet light.",
+    "icon": "/images/items/magic_staff_t2.png"
+  },
+  {
+    "id": "sapphire_magic_staff",
+    "name": "Sapphire Magic Staff",
+    "familyId": "magic_staff",
+    "tier": 3,
+    "description": "A refined staff with a blue crystal focus and clean silver fittings.",
+    "icon": "/images/items/magic_staff_t3.png"
+  },
+  {
+    "id": "ruby_magic_staff",
+    "name": "Ruby Magic Staff",
+    "familyId": "magic_staff",
+    "tier": 4,
+    "description": "A powerful staff crowned with a ruby that burns like a contained blaze.",
+    "icon": "/images/items/magic_staff_t4.png"
+  },
+  {
+    "id": "mana_magic_staff",
+    "name": "Mana Magic Staff",
+    "familyId": "magic_staff",
+    "tier": 5,
+    "description": "A finely tuned staff with luminous channels that guide pure magical force.",
+    "icon": "/images/items/magic_staff_t5.png"
+  },
+  {
+    "id": "astral_magic_staff",
+    "name": "Astral Magic Staff",
+    "familyId": "magic_staff",
+    "tier": 6,
+    "description": "A majestic staff of celestial crystal and starry detail, shining with the splendor of the heavens.",
+    "icon": "/images/items/magic_staff_t6.png"
+  },
+  {
+    "id": "quartz_wand",
+    "name": "Beginner's Wand",
+    "familyId": "wand",
+    "tier": 1,
+    "description": "A simple apprentice's wand of plain carved wood, full of the promise of first spells.",
+    "icon": "/images/items/wand_t1.png"
+  },
+  {
+    "id": "amethyst_wand",
+    "name": "Amethyst Wand",
+    "familyId": "wand",
+    "tier": 2,
+    "description": "A graceful wand crowned with violet crystal and a cool mystic glow.",
+    "icon": "/images/items/wand_t2.png"
+  },
+  {
+    "id": "sapphire_wand",
+    "name": "Sapphire Wand",
+    "familyId": "wand",
+    "tier": 3,
+    "description": "A polished wand with a blue gemstone core and crisp silver accents.",
+    "icon": "/images/items/wand_t3.png"
+  },
+  {
+    "id": "ruby_wand",
+    "name": "Ruby Wand",
+    "familyId": "wand",
+    "tier": 4,
+    "description": "A commanding wand set with a red gem that glows like a heartbeat of ember fire.",
+    "icon": "/images/items/wand_t4.png"
+  },
+  {
+    "id": "mana_wand",
+    "name": "Mana Wand",
+    "familyId": "wand",
+    "tier": 5,
+    "description": "A sleek channeling wand of luminous craft, made to shape raw power with precision.",
+    "icon": "/images/items/wand_t5.png"
+  },
+  {
+    "id": "astral_wand",
+    "name": "Astral Wand",
+    "familyId": "wand",
+    "tier": 6,
+    "description": "A celestial wand of radiant crystal and star-born ornament, drawing magic from the night sky.",
+    "icon": "/images/items/wand_t6.png"
+  },
+  {
+    "id": "woodcutters_axe",
+    "name": "Woodcutter's Axe",
+    "familyId": "axe",
+    "tier": 1,
+    "description": "A practical felling axe of plain iron with a broad head and a worn edge.",
+    "icon": "/images/items/axe_t1.png"
+  },
+  {
+    "id": "foresters_axe",
+    "name": "Forester's Axe",
+    "familyId": "axe",
+    "tier": 2,
+    "description": "A balanced forest axe with a clean steel blade and modest brass fittings.",
+    "icon": "/images/items/axe_t2.png"
+  },
+  {
+    "id": "rangers_axe",
+    "name": "Ranger's Axe",
+    "familyId": "axe",
+    "tier": 3,
+    "description": "A lean, agile axe with a refined edge and a dark haft, made for wild places.",
+    "icon": "/images/items/axe_t3.png"
+  },
+  {
+    "id": "wardens_axe",
+    "name": "Warden's Axe",
+    "familyId": "axe",
+    "tier": 4,
+    "description": "A stern guardian's axe with a reinforced blade and iron trim.",
+    "icon": "/images/items/axe_t4.png"
+  },
+  {
+    "id": "timberlords_axe",
+    "name": "Timberlord's Axe",
+    "familyId": "axe",
+    "tier": 5,
+    "description": "A lordly axe of polished steel and tasteful ornament, master of the deep woods.",
+    "icon": "/images/items/axe_t5.png"
+  },
+  {
+    "id": "ancient_grove_axe",
+    "name": "Ancient Grove Axe",
+    "familyId": "axe",
+    "tier": 6,
+    "description": "An elder relic of steel and root, carved with sacred marks, as if the grove itself had armed it.",
+    "icon": "/images/items/axe_t6.png"
+  },
+  {
+    "id": "pine_axe_stone",
+    "name": "Crude Stone Axe",
+    "familyId": "axe_stone",
+    "tier": 1,
+    "description": "A rough-edged stone axe lashed to a simple wooden haft, primitive and blunt.",
+    "icon": "/images/items/axe_stone_t1.png"
+  },
+  {
+    "id": "oak_axe_stone",
+    "name": "Oak Stone Axe",
+    "familyId": "axe_stone",
+    "tier": 2,
+    "description": "A sturdier stone axe on an oak shaft, with warm grain and a deliberate shape.",
+    "icon": "/images/items/axe_stone_t2.png"
+  },
+  {
+    "id": "ash_axe_stone",
+    "name": "Ash Stone Axe",
+    "familyId": "axe_stone",
+    "tier": 3,
+    "description": "A lighter stone axe with a pale ash handle and clean, practical lines.",
+    "icon": "/images/items/axe_stone_t3.png"
+  },
+  {
+    "id": "cedar_axe_stone",
+    "name": "Cedar Stone Axe",
+    "familyId": "axe_stone",
+    "tier": 4,
+    "description": "A stone axe hafted in reddish cedar, with neat bindings and a strong finish.",
+    "icon": "/images/items/axe_stone_t4.png"
+  },
+  {
+    "id": "ebony_axe_stone",
+    "name": "Ebony Stone Axe",
+    "familyId": "axe_stone",
+    "tier": 5,
+    "description": "A dark, severe stone axe on a blackened ebony haft, with a ritual-like elegance.",
+    "icon": "/images/items/axe_stone_t5.png"
+  },
+  {
+    "id": "worldroot_axe_stone",
+    "name": "Worldroot Stone Axe",
+    "familyId": "axe_stone",
+    "tier": 6,
+    "description": "A root-bound stone axe of living fibers and ancient bark, as though grown from the earth itself.",
+    "icon": "/images/items/axe_stone_t6.png"
+  },
+  {
+    "id": "pickaxe_1",
+    "name": "Miner's Pickaxe",
+    "familyId": "pickaxe",
+    "tier": 1,
+    "description": "A rugged pickaxe with a stout copper head, mounted on a worn hardwood handle.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "pickaxe_2",
+    "name": "Prospector's Pickaxe",
+    "familyId": "pickaxe",
+    "tier": 2,
+    "description": "A slender, sharply pointed pickaxe with a light bronze head on a grip-wrapped wooden shaft.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "pickaxe_3",
+    "name": "Quarrier's Pickaxe",
+    "familyId": "pickaxe",
+    "tier": 3,
+    "description": "A broad, wedge-headed iron pickaxe made for splitting stone, with a reinforced handle.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "pickaxe_4",
+    "name": "Deep Delver's Pickaxe",
+    "familyId": "pickaxe",
+    "tier": 4,
+    "description": "A long, curved pickaxe with a piercing silver tip, etched with luminescent runes for deep cavern work.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "pickaxe_5",
+    "name": "Stonebreaker's Pickaxe",
+    "familyId": "pickaxe",
+    "tier": 5,
+    "description": "A heavy, hammer-backed pickaxe with a jagged gold head crackling with runes, on a thick grooved handle.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "pickaxe_6",
+    "name": "Mountain King's Pickaxe",
+    "familyId": "pickaxe",
+    "tier": 6,
+    "description": "A ceremonial pickaxe with an oversized star metal head that shimmers with celestial patterns, mounted on an ancient haft.",
+    "icon": "/images/items/bat.png"
+  }
 ]

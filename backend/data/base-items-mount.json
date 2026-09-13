@@ -1,0 +1,194 @@
+[
+  {
+    "id": "dog_steed_mount",
+    "name": "Riding Dog",
+    "familyId": "steed_mount",
+    "tier": 1,
+    "description": "A bristly huge dog with sharp tusks and a saddle strapped tight.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "horse_steed_mount",
+    "name": "Horse",
+    "familyId": "steed_mount",
+    "tier": 2,
+    "description": "A sturdy brown horse, steady on long roads and calm in the face of danger.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "warhorse_steed_mount",
+    "name": "Warhorse",
+    "familyId": "steed_mount",
+    "tier": 3,
+    "description": "A massive armored warhorse bred for battle, unshaken by steel, fire or the roar of the crowd.",
+    "icon": "/images/items/bat.png"
+  },
+    {
+    "id": "centaur_steed_mount",
+    "name": "Centaur",
+    "familyId": "steed_mount",
+    "tier": 4,
+    "description": "A proud centaur who lets only the worthy ride, bow in hand and bound by an oath of loyalty.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "unicorn_steed_mount",
+    "name": "Unicorn",
+    "familyId": "steed_mount",
+    "tier": 5,
+    "description": "A pure white unicorn whose spiraled horn glows with healing light.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "pegasus_steed_mount",
+    "name": "Pegasus",
+    "familyId": "steed_mount",
+    "tier": 6,
+    "description": "A winged white horse that gallops across the clouds, swift as the wind itself.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "boar_beast_mount",
+    "name": "Boar",
+    "familyId": "beast_mount",
+    "tier": 1,
+    "description": "A bristly giant boar with sharp tusks and a saddle strapped tight, stubborn and quick to charge.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "dire_wolf_beast_mount",
+    "name": "Dire Wolf",
+    "familyId": "beast_mount",
+    "tier": 2,
+    "description": "A towering gray dire wolf with a thick ruff, fast on the hunt and fierce in battle.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "mammoth_beast_mount",
+    "name": "Mammoth",
+    "familyId": "beast_mount",
+    "tier": 3,
+    "description": "A shaggy woolly mammoth with curling tusks, strong enough to carry a whole camp through the snow.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "griffin_beast_mount",
+    "name": "Griffin",
+    "familyId": "beast_mount",
+    "tier": 4,
+    "description": "A griffin with an eagle's head and a lion's body, carrying its rider high above the battlefield.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "roc_beast_mount",
+    "name": "Roc",
+    "familyId": "beast_mount",
+    "tier": 5,
+    "description": "A colossal mythic bird whose wingbeats stir up storms, able to carry its rider across whole kingdoms.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "dragon_beast_mount",
+    "name": "Dragon",
+    "familyId": "beast_mount",
+    "tier": 6,
+    "description": "A mighty dragon of scale and flame, the rarest of mounts and a legend in its own right.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "terror_bird_exotic_mount",
+    "name": "Terror Bird",
+    "familyId": "exotic_mount",
+    "tier": 1,
+    "description": "A towering flightless bird with a hooked beak, fast across open plains and vicious in a fight.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "giant_scorpion_exotic_mount",
+    "name": "Giant Scorpion",
+    "familyId": "exotic_mount",
+    "tier": 2,
+    "description": "A sand-colored giant scorpion with a saddle between its claws, its stinger raised over its rider.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "giant_spider_exotic_mount",
+    "name": "Giant Spider",
+    "familyId": "exotic_mount",
+    "tier": 3,
+    "description": "A hairy cave spider that carries its rider along walls and ceilings where no horse could follow.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "manticore_exotic_mount",
+    "name": "Manticore",
+    "familyId": "exotic_mount",
+    "tier": 4,
+    "description": "A lion-bodied manticore with bat wings and a spiked tail, savage but loyal to a rider who tamed it.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "chimera_exotic_mount",
+    "name": "Chimera",
+    "familyId": "exotic_mount",
+    "tier": 5,
+    "description": "A three-headed chimera of lion, goat and serpent, breathing fire as it charges into battle.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "hydra_exotic_mount",
+    "name": "Hydra",
+    "familyId": "exotic_mount",
+    "tier": 6,
+    "description": "A many-headed hydra that regrows every severed head, an unstoppable mount for the boldest of riders.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "giant_turtle_aquatic_mount",
+    "name": "Giant Turtle",
+    "familyId": "aquatic_mount",
+    "tier": 1,
+    "description": "A patient sea turtle with a barnacled shell, gliding calmly along coastlines and shallow reefs.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "hippocampus_aquatic_mount",
+    "name": "Hippocampus",
+    "familyId": "aquatic_mount",
+    "tier": 2,
+    "description": "A sea-horse with a horse's front and a fish's tail, galloping through the waves.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "giant_shark_aquatic_mount",
+    "name": "Giant Shark",
+    "familyId": "aquatic_mount",
+    "tier": 3,
+    "description": "A scarred giant shark fitted with a saddle harness, cutting through deep water at terrifying speed.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "kraken_aquatic_mount",
+    "name": "Kraken",
+    "familyId": "aquatic_mount",
+    "tier": 4,
+    "description": "A young kraken whose great tentacles pull its rider through the darkest ocean trenches.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "sea_serpent_aquatic_mount",
+    "name": "Sea Serpent",
+    "familyId": "aquatic_mount",
+    "tier": 5,
+    "description": "A glittering sea serpent that coils through storms and dives beneath the heaviest waves.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "leviathan_aquatic_mount",
+    "name": "Leviathan",
+    "familyId": "aquatic_mount",
+    "tier": 6,
+    "description": "An ancient leviathan of the abyss, vast as an island and older than the oldest kingdoms.",
+    "icon": "/images/items/bat.png"
+  }
+]

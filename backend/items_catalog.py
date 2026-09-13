@@ -15,7 +15,7 @@ from typing import Optional
 _DATA_DIR = Path(__file__).resolve().parent / "data"
 _FAMILIES_PATH = _DATA_DIR / "item-inventory-properties.json"
 _SIZE_CLASSES_PATH = _DATA_DIR / "item-size-classes.json"
-_BACKPACK_TIERS_PATH = _DATA_DIR / "base-items-misc.json"
+_BACKPACK_TIERS_PATH = _DATA_DIR / "base-items-essentials.json"
 
 # Every "final" crafted-output catalog file, scanned to resolve a family+tier
 # to a concrete {id, name} - mirrors craft_catalog.py's _CATALOG_FILES, but
@@ -27,11 +27,12 @@ _FINAL_CATALOG_FILES = (
     "base-items-armor.json",
     "base-items-shield.json",
     "base-items-weapon.json",
-    "base-food.json",
-    "base-potion.json",
-    "base-items-misc.json",
-    "base-items-equipment.json",
-    "base-adventuring-gear.json",
+    "base-items-food.json",
+    "base-items-potion.json",
+    "base-items-adventuring-gear.json",
+    "base-items-essentials.json",
+    "base-items-companion.json",
+    "base-items-mount.json",
 )
 
 
@@ -112,6 +113,31 @@ def _load_backpack_capacity() -> dict[str, int]:
 # family-level one, so it needs its own lookup separate from ITEM_FAMILIES_BY_ID.
 BACKPACK_CAPACITY_BY_ID: dict[str, int] = _load_backpack_capacity()
 
+_GATHERING_BONUSES_PATH = _DATA_DIR / "raw-material-gathering-bonuses.json"
+
+
+def _load_gathering_bonuses_by_item() -> dict[str, tuple[str, ...]]:
+    """
+    raw-material-gathering-bonuses.json is keyed the other way around (raw
+    material -> which item families help gather it) - inverted here into
+    item family -> which raw materials it helps gather, since that's the
+    direction the item detail popup actually needs (looking up one item's
+    own bonuses, not one material's).
+    """
+    data = json.loads(_GATHERING_BONUSES_PATH.read_text())
+    by_item: dict[str, list[str]] = {}
+    for raw_material, info in data.items():
+        for item_family in info.get("gatheringItems", []):
+            by_item.setdefault(item_family, []).append(raw_material)
+    return {item_family: tuple(materials) for item_family, materials in by_item.items()}
+
+
+# Item family -> raw materials it grants a foraging/gathering bonus for
+# (e.g. "pickaxe" -> ("ore", "stone", "crystal")) - empty tuple (via
+# .get(family_id, ())) for the majority of families that aren't a
+# gathering tool at all.
+GATHERING_BONUSES_BY_ITEM: dict[str, tuple[str, ...]] = _load_gathering_bonuses_by_item()
+
 
 def _load_final_catalog() -> tuple[dict[tuple[str, int], dict], dict[str, str]]:
     """
@@ -130,7 +156,12 @@ def _load_final_catalog() -> tuple[dict[tuple[str, int], dict], dict[str, str]]:
         if not path.exists():
             continue
         for row in json.loads(path.read_text()):
-            rows[(row["familyId"], row["tier"])] = {"id": row["id"], "name": row["name"]}
+            rows[(row["familyId"], row["tier"])] = {
+                "id": row["id"],
+                "name": row["name"],
+                "icon": row.get("icon", ""),
+                "description": row.get("description", ""),
+            }
             family_by_id[row["id"]] = row["familyId"]
     return rows, family_by_id
 
@@ -160,6 +191,40 @@ class ItemCatalogEntry:
     # all (needsItemDefinition:false families never degrade, so this is
     # only ever meaningful alongside a real Character.items instance).
     quality_max: Optional[int]
+    # Per-tier art (see base-items-weapon.json/base-tools.json's own
+    # "icon" field) - "" for a family/tier with no dedicated art yet, in
+    # which case the UI falls back to its own generic placeholder.
+    icon: str
+    # Family-level (item-inventory-properties.json's own "stackSize") -
+    # whether the UI should show an owned-count badge at all: 1 means
+    # never stacked (including every needsItemDefinition:true instance,
+    # which is always exactly 1 per row), so a bare "1" would be noise.
+    stack_size: int
+    # Per-tier flavor text (see base-items-weapon.json's own "description"
+    # field) - "" for a family/tier with no dedicated text yet, in which
+    # case the UI shows its own placeholder.
+    description: str
+    # Family-level (item-inventory-properties.json's own "sizeClass") -
+    # backpack slot-cost bucket ("tiny"/"light"/"medium"/...), shown as
+    # reference info in the item detail popup.
+    size_class: str
+    # Family-level (item-inventory-properties.json's own "equipSlots") -
+    # non-empty only for needsItemDefinition:true families (the invariant
+    # every family in this catalog already follows). Drives the item
+    # detail popup's per-slot move buttons.
+    equip_slots: tuple[str, ...]
+    # Family-level (item-inventory-properties.json's own "backpackable") -
+    # whether a "move to backpack" action makes sense for this family at all.
+    backpackable: bool
+    # Family-level (item-inventory-properties.json's own "twoHanded") -
+    # whether equipping this family occupies both named hand slots at once.
+    two_handed: bool
+    # Family-level (raw-material-gathering-bonuses.json, inverted - see
+    # GATHERING_BONUSES_BY_ITEM) - raw materials this family grants a
+    # foraging/gathering bonus for, e.g. ("ore", "stone", "crystal") for a
+    # pickaxe. Empty for the majority of families that aren't a gathering
+    # tool at all.
+    gathering_bonuses: tuple[str, ...]
 
 
 def _load_item_catalog_entries() -> tuple[ItemCatalogEntry, ...]:
@@ -178,12 +243,26 @@ def _load_item_catalog_entries() -> tuple[ItemCatalogEntry, ...]:
     for (family_id, tier), row in FINAL_ITEM_ROWS_BY_FAMILY_TIER.items():
         family = ITEM_FAMILIES_BY_ID.get(family_id)
         if family is not None:
-            entries.append(ItemCatalogEntry(row["id"], row["name"], family_id, tier, family.kind, family.quality_max))
+            entries.append(
+                ItemCatalogEntry(
+                    row["id"], row["name"], family_id, tier, family.kind, family.quality_max,
+                    row.get("icon", ""), family.stack_size,
+                    row.get("description", ""), family.size_class,
+                    family.equip_slots, family.backpackable, family.two_handed,
+                    GATHERING_BONUSES_BY_ITEM.get(family_id, ()),
+                )
+            )
     for item in PROCESSED_RESOURCE_ITEMS:
         family = ITEM_FAMILIES_BY_ID.get(item.family_id)
         if family is not None:
             entries.append(
-                ItemCatalogEntry(item.id, item.name, item.family_id, item.tier, family.kind, family.quality_max)
+                ItemCatalogEntry(
+                    item.id, item.name, item.family_id, item.tier, family.kind, family.quality_max,
+                    "", family.stack_size,
+                    "", family.size_class,
+                    family.equip_slots, family.backpackable, family.two_handed,
+                    GATHERING_BONUSES_BY_ITEM.get(item.family_id, ()),
+                )
             )
     return tuple(entries)
 
@@ -236,16 +315,26 @@ def backpack_slots_used(character: dict) -> int:
     return total
 
 
+def has_backpack_equipped(character: dict) -> bool:
+    """Whether any of this character's own item instances is currently
+    equipped with "Back"/"Side" in its slotRef - i.e. a physical backpack
+    worn right now, as opposed to just carried or sitting in the pool."""
+    return any(
+        instance.get("location") == "body" and any(slot in ("Back", "Side") for slot in instance.get("slotRef", []))
+        for instance in character.get("items", [])
+    )
+
+
 def backpack_capacity(character: dict) -> int:
     """
-    Total backpack slot ceiling for one character: base carry capacity from
-    might/endurance, plus whichever backpack instance (if any) is currently
-    equipped with "Back"/"Side" in its slotRef.
+    Total backpack slot ceiling for one character - 0 with nothing to carry
+    it in (a character can't stash anything in a "backpack" that doesn't
+    physically exist), otherwise base carry capacity from might/endurance
+    plus whichever backpack instance is currently equipped with
+    "Back"/"Side" in its slotRef.
     """
-    attr = character.get("attr", {})
-    might = attr.get("migh", 1)
-    endurance = attr.get("endu", 1)
-    base = 10 + (might + endurance) // 3
+    if not has_backpack_equipped(character):
+        return 0
 
     bonus = 0
     for instance in character.get("items", []):
@@ -254,4 +343,8 @@ def backpack_capacity(character: dict) -> int:
         ):
             bonus = max(bonus, BACKPACK_CAPACITY_BY_ID.get(instance["itemId"], 0))
 
+    attr = character.get("attr", {})
+    might = attr.get("migh", 1)
+    endurance = attr.get("endu", 1)
+    base = 10 + (might + endurance) // 3
     return base + bonus
