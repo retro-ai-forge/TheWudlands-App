@@ -1359,13 +1359,13 @@
   background: #0d0d0a;
 }
 
-/* The Party's Vault tab's Items grid - one 70x70 icon tile per owned
+/* The Party's Vault tab's Items grid - one 100x100 icon tile per owned
    item, tier badge upper-left, owned-count badge lower-right (only when
    the family's own stackSize > 1 - a needsItemDefinition:true instance is
    always exactly 1 of itself, so a bare "1" there would be noise).
    .itemGridScroll's height is set inline by ItemGrid (measured against
    the actual available viewport space on mount/resize, not guessed here)
-   - that's what lets the grid below compute how many 64px rows actually
+   - that's what lets the grid below compute how many 100px rows actually
    fit. grid-auto-flow:column then packs items top-to-bottom within that
    many rows before starting a new column, so overflow grows sideways,
    never down. Only ever scrolls horizontally as ONE region (overflow-x
@@ -1379,8 +1379,8 @@
 .itemGrid {
   display: grid;
   grid-auto-flow: column;
-  grid-template-rows: repeat(auto-fill, 64px);
-  grid-auto-columns: 64px;
+  grid-template-rows: repeat(auto-fill, 100px);
+  grid-auto-columns: 100px;
   justify-content: start;
   gap: 0.35rem;
   height: 100%;
@@ -1388,8 +1388,8 @@
 
 .itemGridCell {
   position: relative;
-  width: 64px;
-  height: 64px;
+  width: 100px;
+  height: 100px;
   padding: 0;
   margin: 0;
   font: inherit;

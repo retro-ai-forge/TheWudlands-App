@@ -95,11 +95,10 @@ _CATALOG_FILES = {
     "weapon": "base-items-weapon.json",
     "food": "base-food.json",
     "potion": "base-potion.json",
-    "misc": "base-items-misc.json",
     "equipment": "base-items-equipment.json",
     "adventuring_gear": "base-adventuring-gear.json",
 }
-_FINAL_CATALOG_TYPES = {"armor", "shield", "weapon", "food", "potion", "misc", "adventuring_gear"}
+_FINAL_CATALOG_TYPES = {"armor", "shield", "weapon", "food", "potion", "equipment", "adventuring_gear"}
 
 
 @dataclass(frozen=True)

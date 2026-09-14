@@ -112,5 +112,11 @@
   {"id": "ash_axe_stone", "name": "Ash Stone Axe", "familyId": "axe_stone", "tier": 3, "description": "It is a lighter stone axe with a pale ash handle, cleaner lines, and a quick, practical form for hard travel.", "icon": "/images/items/axe_stone_t3.png"},
   {"id": "cedar_axe_stone", "name": "Cedar Stone Axe", "familyId": "axe_stone", "tier": 4, "description": "It is a reddish cedar-hafted stone axe with neat bindings and a rustic, warmly finished presence.", "icon": "/images/items/axe_stone_t4.png"},
   {"id": "ebony_axe_stone", "name": "Ebony Stone Axe", "familyId": "axe_stone", "tier": 5, "description": "It is a dark and severe stone axe with a blackened haft and an ominous, ritual-like elegance.", "icon": "/images/items/axe_stone_t5.png"},
-  {"id": "worldroot_axe_stone", "name": "Worldroot Stone Axe", "familyId": "axe_stone", "tier": 6, "description": "It is a root-bound stone axe of living fibers and ancient bark, wild and sacred, as though grown from the earth itself.", "icon": "/images/items/axe_stone_t6.png"}
+  {"id": "worldroot_axe_stone", "name": "Worldroot Stone Axe", "familyId": "axe_stone", "tier": 6, "description": "It is a root-bound stone axe of living fibers and ancient bark, wild and sacred, as though grown from the earth itself.", "icon": "/images/items/axe_stone_t6.png"},
+  {"id": "pickaxe_1", "name": "Miner's Pickaxe", "familyId": "pickaxe", "tier": 1, "description": "dummy", "icon": "/images/items/bat.png"},
+  {"id": "pickaxe_2", "name": "Prospector's Pickaxe", "familyId": "pickaxe", "tier": 2, "description": "dummy", "icon": "/images/items/bat.png"},
+  {"id": "pickaxe_3", "name": "Quarrier's Pickaxe", "familyId": "pickaxe", "tier": 3, "description": "dummy", "icon": "/images/items/bat.png"},
+  {"id": "pickaxe_4", "name": "Deep Delver's Pickaxe", "familyId": "pickaxe", "tier": 4, "description": "dummy", "icon": "/images/items/bat.png"},
+  {"id": "pickaxe_5", "name": "Stonebreaker's Pickaxe", "familyId": "pickaxe", "tier": 5, "description": "dummy", "icon": "/images/items/bat.png"},
+  {"id": "pickaxe_6", "name": "Mountain King's Pickaxe", "familyId": "pickaxe", "tier": 6, "description": "dummy", "icon": "/images/items/bat.png"}
 ]

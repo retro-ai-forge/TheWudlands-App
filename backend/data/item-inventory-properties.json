@@ -843,7 +843,7 @@
   {
     "familyId": "backpack",
     "kind": [
-      "misc"
+      "equipment"
     ],
     "sizeClass": "light",
     "stackSize": 1,
@@ -859,7 +859,7 @@
   {
     "familyId": "candle",
     "kind": [
-      "misc"
+      "equipment"
     ],
     "sizeClass": "tiny",
     "stackSize": 10,
@@ -871,7 +871,7 @@
   {
     "familyId": "cart",
     "kind": [
-      "misc"
+      "equipment"
     ],
     "sizeClass": "light",
     "stackSize": 1,
@@ -883,7 +883,7 @@
   {
     "familyId": "cloth_cloak",
     "kind": [
-      "misc"
+      "equipment"
     ],
     "sizeClass": "light",
     "stackSize": 1,
@@ -898,7 +898,7 @@
   {
     "familyId": "fishing_pole",
     "kind": [
-      "misc"
+      "equipment"
     ],
     "sizeClass": "light",
     "stackSize": 1,
@@ -910,7 +910,7 @@
   {
     "familyId": "fur_cloak",
     "kind": [
-      "misc"
+      "equipment"
     ],
     "sizeClass": "light",
     "stackSize": 1,
@@ -925,7 +925,7 @@
   {
     "familyId": "quilted_cloak",
     "kind": [
-      "misc"
+      "equipment"
     ],
     "sizeClass": "light",
     "stackSize": 1,
@@ -940,43 +940,43 @@
   {
     "familyId": "glass_lantern",
     "kind": [
-      "misc"
+      "equipment"
     ],
     "sizeClass": "light",
     "stackSize": 1,
     "needsItemDefinition": false,
-    "note": "Never equipped - carried as a stackable backpack item, not an individually tracked instance.",
+    "note": "Never equipped - backpack item.",
     "equipSlots": [],
     "backpackable": true
   },
   {
     "familyId": "holy_symbol",
     "kind": [
-      "misc"
+      "equipment"
     ],
     "sizeClass": "light",
     "stackSize": 1,
     "needsItemDefinition": false,
-    "note": "Never equipped - carried as a stackable backpack item, not an individually tracked instance.",
+    "note": "Never equipped - backpack item.",
     "equipSlots": [],
     "backpackable": true
   },
   {
     "familyId": "mirror",
     "kind": [
-      "misc"
+      "equipment"
     ],
     "sizeClass": "light",
     "stackSize": 1,
     "needsItemDefinition": false,
-    "note": "Never equipped - carried as a stackable backpack item, not an individually tracked instance.",
+    "note": "Never equipped - backpack item.",
     "equipSlots": [],
     "backpackable": true
   },
   {
     "familyId": "quill",
     "kind": [
-      "misc"
+      "equipment"
     ],
     "sizeClass": "tiny",
     "stackSize": 10,
@@ -988,7 +988,7 @@
   {
     "familyId": "torch",
     "kind": [
-      "misc"
+      "equipment"
     ],
     "sizeClass": "tiny",
     "stackSize": 10,

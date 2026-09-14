@@ -170,7 +170,6 @@ function getKindIcon(kind: string): string {
       return "🧪";
     case "adventuring_gear":
       return "🎒";
-    case "misc":
     case "equipment":
       return "📦";
     default:
@@ -518,7 +517,7 @@ const FALLBACK_ITEM_ICON = "/images/items/bat.png";
 // before its own measurement effect has run, and again as a lower bound
 // afterward so a very cramped viewport still shows at least one full row
 // instead of clipping it.
-const ITEM_TILE_PX = 64;
+const ITEM_TILE_PX = 100;
 
 // A native horizontal scrollbar's own rough thickness - the icon grid's
 // scroll container is deliberately let run this much further down than
@@ -1414,22 +1413,22 @@ export function InventoryTab({
         <button
           type="button"
           className={`${styles.invSubTabButton} ${
-            activeSubTab === "crafting" ? styles.invSubTabButtonActive : ""
-          }`}
-          onClick={() => setActiveSubTab("crafting")}
-          aria-pressed={activeSubTab === "crafting"}
-        >
-          Crafting
-        </button>
-        <button
-          type="button"
-          className={`${styles.invSubTabButton} ${
             activeSubTab === "vault" ? styles.invSubTabButtonActive : ""
           }`}
           onClick={() => setActiveSubTab("vault")}
           aria-pressed={activeSubTab === "vault"}
         >
           Vault
+        </button>
+        <button
+          type="button"
+          className={`${styles.invSubTabButton} ${
+            activeSubTab === "crafting" ? styles.invSubTabButtonActive : ""
+          }`}
+          onClick={() => setActiveSubTab("crafting")}
+          aria-pressed={activeSubTab === "crafting"}
+        >
+          Crafting
         </button>
       </div>
 

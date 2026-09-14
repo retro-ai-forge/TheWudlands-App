@@ -2,17 +2,17 @@
   "ore": {
     "professionGroups": ["CraftWeapon", "CraftArmor", "CraftTool", "CraftGlass", "Military"],
     "bonusProfessions": ["Rural"],
-    "gatheringItems": ["pickaxe", "warhammer"]
+    "gatheringItems": ["pickaxe", "warhammer", "cart"]
   },
   "wood": {
     "professionGroups": ["CraftWeapon", "CraftArmor", "CraftTool", "CraftFurniture", "CraftWood"],
     "bonusProfessions": [],
-    "gatheringItems": ["axe", "axe_stone", "battle_axe"]
+    "gatheringItems": ["axe", "axe_stone", "battle_axe", "cart"]
   },
   "stone": {
     "professionGroups": ["CraftStone", "Trade"],
     "bonusProfessions": [],
-    "gatheringItems": ["pickaxe", "warhammer"]
+    "gatheringItems": ["pickaxe", "warhammer", "cart"]
   },
   "bone": {
     "professionGroups": ["Artists", "CraftFurniture", "CraftWood"],
