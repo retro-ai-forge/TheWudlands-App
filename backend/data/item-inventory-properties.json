@@ -165,6 +165,7 @@
     "needsItemDefinition": true,
     "note": "Wears out with use.",
     "equipSlots": [],
+    "twoHanded": true,
     "backpackable": true,
     "qualityMax": 160
   },
