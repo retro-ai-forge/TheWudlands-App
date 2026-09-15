@@ -171,6 +171,7 @@ function getKindIcon(kind: string): string {
     case "adventuring_gear":
       return "🎒";
     case "equipment":
+    case "other":
       return "📦";
     default:
       return "";
@@ -356,6 +357,7 @@ function IdList({
   transferableIds,
   quantityHiddenIds,
   lookupIds,
+  dividerClassName,
 }: {
   ids: string[];
   emptyLabel: string;
@@ -377,6 +379,8 @@ function IdList({
   quantityHiddenIds?: Set<string>;
   /** When given, row id -> the id `tierInfo` should actually be looked up by - for a list where each row is its own uniquely-keyed thing (e.g. one row per item instanceId) but several rows can share the same underlying catalog entry (itemId). Defaults to each row using its own id, as before. */
   lookupIds?: Record<string, string>;
+  /** Divider style between the item/tool split (see below) - defaults to the gold .resourceDivider; Blueprints Known passes the blue .toolsResourceDivider to match its own blue text color. */
+  dividerClassName?: string;
 }) {
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [pendingId, setPendingId] = useState<string | null>(null);
@@ -491,7 +495,9 @@ function IdList({
         {nonToolIds.length > 0 && (
           <table className={styles.inventoryTable}><tbody>{nonToolIds.flatMap(renderRow)}</tbody></table>
         )}
-        {nonToolIds.length > 0 && toolIds.length > 0 && <div className={styles.resourceDivider} />}
+        {nonToolIds.length > 0 && toolIds.length > 0 && (
+          <div className={dividerClassName ?? styles.resourceDivider} />
+        )}
         {toolIds.length > 0 && (
           <table className={styles.inventoryTable}><tbody>{toolIds.flatMap(renderRow)}</tbody></table>
         )}
@@ -1534,7 +1540,14 @@ export function InventoryTab({
               </button>
               {openSections.has("blueprints") && (
                 <div className={styles.accordionBody}>
-                  <IdList ids={knownBlueprints} emptyLabel="" tierInfo={blueprintTierInfo} sortByTier textColor="#7eb8ff" />
+                  <IdList
+                    ids={knownBlueprints}
+                    emptyLabel=""
+                    tierInfo={blueprintTierInfo}
+                    sortByTier
+                    textColor="#7eb8ff"
+                    dividerClassName={styles.toolsResourceDivider}
+                  />
                 </div>
               )}
             </div>

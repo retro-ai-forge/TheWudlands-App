@@ -74,14 +74,17 @@
   {
     "familyId": "hunters_charm",
     "kind": [
-      "adventuring_gear"
+      "other"
     ],
     "sizeClass": "light",
     "stackSize": 1,
-    "needsItemDefinition": false,
-    "note": "Utility gear - does not wear out, no durability tracking needed.",
-    "equipSlots": [],
-    "backpackable": true
+    "needsItemDefinition": true,
+    "note": "Wears out with use.",
+    "equipSlots": [
+      "Neck"
+    ],
+    "backpackable": true,
+    "qualityMax": 40
   },
   {
     "familyId": "iron_spikes",
@@ -844,7 +847,7 @@
   {
     "familyId": "backpack",
     "kind": [
-      "equipment"
+      "other"
     ],
     "sizeClass": "light",
     "stackSize": 1,
@@ -872,7 +875,7 @@
   {
     "familyId": "cart",
     "kind": [
-      "equipment"
+      "other"
     ],
     "sizeClass": "light",
     "stackSize": 1,
@@ -884,7 +887,7 @@
   {
     "familyId": "cloth_cloak",
     "kind": [
-      "equipment"
+      "armor"
     ],
     "sizeClass": "light",
     "stackSize": 1,
@@ -899,19 +902,23 @@
   {
     "familyId": "fishing_pole",
     "kind": [
-      "equipment"
+      "other"
     ],
     "sizeClass": "light",
     "stackSize": 1,
-    "needsItemDefinition": false,
-    "note": "Never equipped - carried as a stackable backpack item, not an individually tracked instance.",
-    "equipSlots": [],
-    "backpackable": true
+    "needsItemDefinition": true,
+    "note": "Wears out with use.",
+    "equipSlots": [
+      "Left Hand",
+      "Right Hand"
+    ],
+    "backpackable": true,
+    "qualityMax": 20
   },
   {
     "familyId": "fur_cloak",
     "kind": [
-      "equipment"
+      "armor"
     ],
     "sizeClass": "light",
     "stackSize": 1,
@@ -926,7 +933,7 @@
   {
     "familyId": "quilted_cloak",
     "kind": [
-      "equipment"
+      "armor"
     ],
     "sizeClass": "light",
     "stackSize": 1,
@@ -953,14 +960,17 @@
   {
     "familyId": "holy_symbol",
     "kind": [
-      "equipment"
+      "other"
     ],
     "sizeClass": "light",
     "stackSize": 1,
-    "needsItemDefinition": false,
-    "note": "Never equipped - backpack item.",
-    "equipSlots": [],
-    "backpackable": true
+    "needsItemDefinition": true,
+    "note": "Wears out with use.",
+    "equipSlots": [
+      "Neck"
+    ],
+    "backpackable": true,
+    "qualityMax": 40
   },
   {
     "familyId": "mirror",

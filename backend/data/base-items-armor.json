@@ -142,5 +142,26 @@
   {"id": "runed_darksteel_leg_armor", "name": "Runed Darksteel Greaves", "familyId": "darksteel_leg_armor", "tier": 3, "description": "dummy", "icon": "/images/items/bat.png"},
   {"id": "sigiled_darksteel_leg_armor", "name": "Sigiled Darksteel Greaves", "familyId": "darksteel_leg_armor", "tier": 4, "description": "dummy", "icon": "/images/items/bat.png"},
   {"id": "shadowforged_darksteel_leg_armor", "name": "Shadowforged Darksteel Greaves", "familyId": "darksteel_leg_armor", "tier": 5, "description": "dummy", "icon": "/images/items/bat.png"},
-  {"id": "worldforged_darksteel_leg_armor", "name": "Worldforged Darksteel Greaves", "familyId": "darksteel_leg_armor", "tier": 6, "description": "dummy", "icon": "/images/items/bat.png"}
+  {"id": "worldforged_darksteel_leg_armor", "name": "Worldforged Darksteel Greaves", "familyId": "darksteel_leg_armor", "tier": 6, "description": "dummy", "icon": "/images/items/bat.png"},
+
+  {"id": "rabbit_fur_cloak", "name": "Rabbit Fur Cloak", "familyId": "fur_cloak", "tier": 1, "description": "dummy", "icon": "/images/items/bat.png"},
+  {"id": "fox_fur_cloak", "name": "Fox Fur Cloak", "familyId": "fur_cloak", "tier": 2, "description": "dummy", "icon": "/images/items/bat.png"},
+  {"id": "wolf_fur_cloak", "name": "Wolf Fur Cloak", "familyId": "fur_cloak", "tier": 3, "description": "dummy", "icon": "/images/items/bat.png"},
+  {"id": "warg_fur_cloak", "name": "Warg Fur Cloak", "familyId": "fur_cloak", "tier": 4, "description": "dummy", "icon": "/images/items/bat.png"},
+  {"id": "fenrir_fur_cloak", "name": "Fenrir Fur Cloak", "familyId": "fur_cloak", "tier": 5, "description": "dummy", "icon": "/images/items/bat.png"},
+  {"id": "frostmane_fur_cloak", "name": "Frostmane Fur Cloak", "familyId": "fur_cloak", "tier": 6, "description": "dummy", "icon": "/images/items/bat.png"},
+
+  {"id": "hemp_cloth_cloak", "name": "Hemp Cloak", "familyId": "cloth_cloak", "tier": 1, "description": "dummy", "icon": "/images/items/bat.png"},
+  {"id": "cotton_cloth_cloak", "name": "Cotton Cloak", "familyId": "cloth_cloak", "tier": 2, "description": "dummy", "icon": "/images/items/bat.png"},
+  {"id": "wool_cloth_cloak", "name": "Wool Cloak", "familyId": "cloth_cloak", "tier": 3, "description": "dummy", "icon": "/images/items/bat.png"},
+  {"id": "silk_cloth_cloak", "name": "Silk Cloak", "familyId": "cloth_cloak", "tier": 4, "description": "dummy", "icon": "/images/items/bat.png"},
+  {"id": "shadow_cloth_cloak", "name": "Shadow Cloak", "familyId": "cloth_cloak", "tier": 5, "description": "dummy", "icon": "/images/items/bat.png"},
+  {"id": "moon_cloth_cloak", "name": "Moon Cloak", "familyId": "cloth_cloak", "tier": 6, "description": "dummy", "icon": "/images/items/bat.png"},
+
+  {"id": "sparrow_quilted_cloak", "name": "Sparrow Feather Cloak", "familyId": "quilted_cloak", "tier": 1, "description": "dummy", "icon": "/images/items/bat.png"},
+  {"id": "owl_quilted_cloak", "name": "Owl Feather Cloak", "familyId": "quilted_cloak", "tier": 2, "description": "dummy", "icon": "/images/items/bat.png"},
+  {"id": "hawk_quilted_cloak", "name": "Hawk Feather Cloak", "familyId": "quilted_cloak", "tier": 3, "description": "dummy", "icon": "/images/items/bat.png"},
+  {"id": "phoenix_quilted_cloak", "name": "Phoenix Feather Cloak", "familyId": "quilted_cloak", "tier": 4, "description": "dummy", "icon": "/images/items/bat.png"},
+  {"id": "roc_quilted_cloak", "name": "Roc Feather Cloak", "familyId": "quilted_cloak", "tier": 5, "description": "dummy", "icon": "/images/items/bat.png"},
+  {"id": "celestial_quilted_cloak", "name": "Celestial Feather Cloak", "familyId": "quilted_cloak", "tier": 6, "description": "dummy", "icon": "/images/items/bat.png"}
 ]

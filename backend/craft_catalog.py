@@ -60,6 +60,7 @@ _CRAFTWOOD_SUBCATEGORY_BY_KIND = {
     "shield": "CraftWood",
     "tool": "CraftFurniture",
     "equipment": "CraftFurniture",
+    "other": "CraftFurniture",
 }
 
 
@@ -93,12 +94,13 @@ _CATALOG_FILES = {
     "armor": "base-items-armor.json",
     "shield": "base-items-shield.json",
     "weapon": "base-items-weapon.json",
-    "food": "base-food.json",
-    "potion": "base-potion.json",
+    "food": "base-items-food.json",
+    "potion": "base-items-potion.json",
     "equipment": "base-items-equipment.json",
-    "adventuring_gear": "base-adventuring-gear.json",
+    "adventuring_gear": "base-items-adventuring-gear.json",
+    "other": "base-items-other.json",
 }
-_FINAL_CATALOG_TYPES = {"armor", "shield", "weapon", "food", "potion", "equipment", "adventuring_gear"}
+_FINAL_CATALOG_TYPES = {"armor", "shield", "weapon", "food", "potion", "equipment", "adventuring_gear", "other"}
 
 
 @dataclass(frozen=True)

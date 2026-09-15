@@ -24,6 +24,7 @@ function getKindIcon(kind: string): string {
     case "armor":
     case "shield":
     case "equipment":
+    case "other":
       return "📦";
     default:
       return "";
