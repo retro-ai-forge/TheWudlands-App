@@ -1,29 +1,194 @@
 [
-  {"id": "minor_healing_potion", "name": "Minor Healing Potion", "familyId": "healing_potion", "tier": 1, "description": "dummy", "icon": "/images/items/bat.png"},
-  {"id": "lesser_healing_potion", "name": "Lesser Healing Potion", "familyId": "healing_potion", "tier": 2, "description": "dummy", "icon": "/images/items/bat.png"},
-  {"id": "common_healing_potion", "name": "Common Healing Potion", "familyId": "healing_potion", "tier": 3, "description": "dummy", "icon": "/images/items/bat.png"},
-  {"id": "greater_healing_potion", "name": "Greater Healing Potion", "familyId": "healing_potion", "tier": 4, "description": "dummy", "icon": "/images/items/bat.png"},
-  {"id": "superior_healing_potion", "name": "Superior Healing Potion", "familyId": "healing_potion", "tier": 5, "description": "dummy", "icon": "/images/items/bat.png"},
-  {"id": "supreme_healing_potion", "name": "Supreme Healing Potion", "familyId": "healing_potion", "tier": 6, "description": "dummy", "icon": "/images/items/bat.png"},
-
-  {"id": "minor_mana_potion", "name": "Minor Mana Potion", "familyId": "mana_potion", "tier": 1, "description": "dummy", "icon": "/images/items/bat.png"},
-  {"id": "lesser_mana_potion", "name": "Lesser Mana Potion", "familyId": "mana_potion", "tier": 2, "description": "dummy", "icon": "/images/items/bat.png"},
-  {"id": "common_mana_potion", "name": "Common Mana Potion", "familyId": "mana_potion", "tier": 3, "description": "dummy", "icon": "/images/items/bat.png"},
-  {"id": "greater_mana_potion", "name": "Greater Mana Potion", "familyId": "mana_potion", "tier": 4, "description": "dummy", "icon": "/images/items/bat.png"},
-  {"id": "superior_mana_potion", "name": "Superior Mana Potion", "familyId": "mana_potion", "tier": 5, "description": "dummy", "icon": "/images/items/bat.png"},
-  {"id": "supreme_mana_potion", "name": "Supreme Mana Potion", "familyId": "mana_potion", "tier": 6, "description": "dummy", "icon": "/images/items/bat.png"},
-
-  {"id": "simple_antidote_potion", "name": "Simple Antidote", "familyId": "antidote_potion", "tier": 1, "description": "dummy", "icon": "/images/items/bat.png"},
-  {"id": "common_antidote_potion", "name": "Common Antidote", "familyId": "antidote_potion", "tier": 2, "description": "dummy", "icon": "/images/items/bat.png"},
-  {"id": "refined_antidote_potion", "name": "Refined Antidote", "familyId": "antidote_potion", "tier": 3, "description": "dummy", "icon": "/images/items/bat.png"},
-  {"id": "potent_antidote_potion", "name": "Potent Antidote", "familyId": "antidote_potion", "tier": 4, "description": "dummy", "icon": "/images/items/bat.png"},
-  {"id": "concentrated_antidote_potion", "name": "Concentrated Antidote", "familyId": "antidote_potion", "tier": 5, "description": "dummy", "icon": "/images/items/bat.png"},
-  {"id": "masters_antidote_potion", "name": "Master's Antidote", "familyId": "antidote_potion", "tier": 6, "description": "dummy", "icon": "/images/items/bat.png"},
-
-  {"id": "weak_venom_vial", "name": "Weak Venom Vial", "familyId": "venom_vial", "tier": 1, "description": "dummy", "icon": "/images/items/bat.png"},
-  {"id": "mild_venom_vial", "name": "Mild Venom Vial", "familyId": "venom_vial", "tier": 2, "description": "dummy", "icon": "/images/items/bat.png"},
-  {"id": "sharp_venom_vial", "name": "Sharp Venom Vial", "familyId": "venom_vial", "tier": 3, "description": "dummy", "icon": "/images/items/bat.png"},
-  {"id": "vicious_venom_vial", "name": "Vicious Venom Vial", "familyId": "venom_vial", "tier": 4, "description": "dummy", "icon": "/images/items/bat.png"},
-  {"id": "deadly_venom_vial", "name": "Deadly Venom Vial", "familyId": "venom_vial", "tier": 5, "description": "dummy", "icon": "/images/items/bat.png"},
-  {"id": "lethal_venom_vial", "name": "Lethal Venom Vial", "familyId": "venom_vial", "tier": 6, "description": "dummy", "icon": "/images/items/bat.png"}
+  {
+    "id": "minor_healing_potion",
+    "name": "Minor Healing Potion",
+    "familyId": "healing_potion",
+    "tier": 1,
+    "description": "It is a small bronze vial, pale pink fluid, simple brass stopper, plain label.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "lesser_healing_potion",
+    "name": "Lesser Healing Potion",
+    "familyId": "healing_potion",
+    "tier": 2,
+    "description": "It is a standard metal canteen, cherry-red draught, leather band.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "common_healing_potion",
+    "name": "Common Healing Potion",
+    "familyId": "healing_potion",
+    "tier": 3,
+    "description": "It is a polished silver bottle, shimmering crimson syrup, inscribed rune, bright stopper.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "greater_healing_potion",
+    "name": "Greater Healing Potion",
+    "familyId": "healing_potion",
+    "tier": 4,
+    "description": "It is an ornate gold phial, swirling ruby contents, intricate filigree, radiant glow.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "superior_healing_potion",
+    "name": "Superior Healing Potion",
+    "familyId": "healing_potion",
+    "tier": 5,
+    "description": "It is an elegant star metal decanter, fiery red-gold elixir, star sigil carved, radiant sparkles.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "supreme_healing_potion",
+    "name": "Supreme Healing Potion",
+    "familyId": "healing_potion",
+    "tier": 6,
+    "description": "It is a radiant star metal urn, glowing scarlet essence, encrusted with gems, emits magical aura.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "minor_mana_potion",
+    "name": "Minor Mana Potion",
+    "familyId": "mana_potion",
+    "tier": 1,
+    "description": "It is a dull bronze tube, misty azure liquid, pewter stopper, inked symbol.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "lesser_mana_potion",
+    "name": "Lesser Mana Potion",
+    "familyId": "mana_potion",
+    "tier": 2,
+    "description": "It is a simple metal flask, sapphire liquid, braided twine, etched glyph.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "common_mana_potion",
+    "name": "Common Mana Potion",
+    "familyId": "mana_potion",
+    "tier": 3,
+    "description": "It is a sleek silver vial, swirling cobalt magic, arcane script, crystal stopper.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "greater_mana_potion",
+    "name": "Greater Mana Potion",
+    "familyId": "mana_potion",
+    "tier": 4,
+    "description": "It is an embossed gold container, glowing cerulean fluid, runic band, radiant shimmer.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "superior_mana_potion",
+    "name": "Superior Mana Potion",
+    "familyId": "mana_potion",
+    "tier": 5,
+    "description": "It is a refined star metal ampoule, star-specked blue energy, constellation motif, magical illumination.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "supreme_mana_potion",
+    "name": "Supreme Mana Potion",
+    "familyId": "mana_potion",
+    "tier": 6,
+    "description": "It is a majestic star metal bottle, bright prismatic blue, suspended with floating orbs and arcane glow.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "simple_antidote_potion",
+    "name": "Simple Antidote",
+    "familyId": "antidote_potion",
+    "tier": 1,
+    "description": "It is a plain bronze ampoule, muddy green antidote, string-wrapped cork.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "common_antidote_potion",
+    "name": "Common Antidote",
+    "familyId": "antidote_potion",
+    "tier": 2,
+    "description": "It is an unadorned metal vial, clear pale-green solution, stamped design.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "refined_antidote_potion",
+    "name": "Refined Antidote",
+    "familyId": "antidote_potion",
+    "tier": 3,
+    "description": "It is a slim silver container, glowing emerald tincture, tiny rune charm.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "potent_antidote_potion",
+    "name": "Potent Antidote",
+    "familyId": "antidote_potion",
+    "tier": 4,
+    "description": "It is a gleaming gold flask, radiant lime fluid, gem-set stopper, emits healthy vapors.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "concentrated_antidote_potion",
+    "name": "Concentrated Antidote",
+    "familyId": "antidote_potion",
+    "tier": 5,
+    "description": "It is a pure star metal tube, almost glowing verdant liquid, embossed with healing leaf.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "masters_antidote_potion",
+    "name": "Master's Antidote",
+    "familyId": "antidote_potion",
+    "tier": 6,
+    "description": "It is a translucent star metal vessel, swirling jade with golden flecks, haloed by mystical mist.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "weak_venom_vial",
+    "name": "Weak Venom Vial",
+    "familyId": "venom_vial",
+    "tier": 1,
+    "description": "It is a blunt bronze test-tube, watery purple toxin, scratched warning symbol.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "mild_venom_vial",
+    "name": "Mild Venom Vial",
+    "familyId": "venom_vial",
+    "tier": 2,
+    "description": "It is a gray metal capsule, inky amethyst fluid, wrapped in rough twine.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "sharp_venom_vial",
+    "name": "Sharp Venom Vial",
+    "familyId": "venom_vial",
+    "tier": 3,
+    "description": "It is a slim silver cylinder, bright violet venom, serpent-etched, sharp spout.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "vicious_venom_vial",
+    "name": "Vicious Venom Vial",
+    "familyId": "venom_vial",
+    "tier": 4,
+    "description": "It is a carved gold bottle, swirling deadly indigo poison, engraved fangs motif.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "deadly_venom_vial",
+    "name": "Deadly Venom Vial",
+    "familyId": "venom_vial",
+    "tier": 5,
+    "description": "It is a polished star metal flask, luminous toxic purple, dangerous glow, runic seal.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "lethal_venom_vial",
+    "name": "Lethal Venom Vial",
+    "familyId": "venom_vial",
+    "tier": 6,
+    "description": "It is a spiky star metal grenade, thick black-violet essence, surrounded by spectral wisps, emits a menacing haze.",
+    "icon": "/images/items/bat.png"
+  }
 ]

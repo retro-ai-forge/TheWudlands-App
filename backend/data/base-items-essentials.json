@@ -1,0 +1,536 @@
+[
+  {
+    "id": "backpack_1",
+    "name": "Bindle Backpack",
+    "familyId": "backpack",
+    "tier": 1,
+    "capacitySlots": 4,
+    "description": "It is a rough sackcloth bundle tied to a stick, rugged for roadside journeys.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "backpack_2",
+    "name": "Ragged Backpack",
+    "familyId": "backpack",
+    "tier": 2,
+    "capacitySlots": 8,
+    "description": "It is a patched and mended leather pack, straps worn from years of use.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "backpack_3",
+    "name": "Traveler's Backpack",
+    "familyId": "backpack",
+    "tier": 3,
+    "capacitySlots": 14,
+    "description": "It is a sturdy canvas pack with brass buckles and handy exterior pockets.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "backpack_4",
+    "name": "Journeyman's Backpack",
+    "familyId": "backpack",
+    "tier": 4,
+    "capacitySlots": 20,
+    "description": "It is a reinforced leather rucksack adorned with simple merchant charms.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "backpack_5",
+    "name": "Adventurer's Backpack",
+    "familyId": "backpack",
+    "tier": 5,
+    "capacitySlots": 28,
+    "description": "It is a well-made backpack with multiple compartments and gear loops.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "backpack_6",
+    "name": "Explorer's Great Backpack",
+    "familyId": "backpack",
+    "tier": 6,
+    "capacitySlots": 40,
+    "description": "It is an oversized, reinforced pack of enchanted fibers for legendary quests.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "rat_ear_hunters_charm",
+    "name": "Rat Ear Hunter's Charm",
+    "familyId": "hunters_charm",
+    "tier": 1,
+    "description": "It is a crude leather cord strung with a dried rat ear and copper wire, talisman for luck.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "troll_fat_hunters_charm",
+    "name": "Troll Fat Hunter's Charm",
+    "familyId": "hunters_charm",
+    "tier": 2,
+    "description": "It is a bronze locket holding a dollop of pale troll fat, chain decorated with crude sigils.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "basilisk_eye_hunters_charm",
+    "name": "Basilisk Eye Hunter's Charm",
+    "familyId": "hunters_charm",
+    "tier": 3,
+    "description": "It is a steel vial containing a preserved basilisk eye, secured by sharp iron thorns.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "wyvern_tail_hunters_charm",
+    "name": "Wyvern Tail Hunter's Charm",
+    "familyId": "hunters_charm",
+    "tier": 4,
+    "description": "It is a woven silver chain holding a scale from a wyvern tail, shimmering and prized.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "gorgon_scale_hunters_charm",
+    "name": "Gorgon Scale Hunter's Charm",
+    "familyId": "hunters_charm",
+    "tier": 5,
+    "description": "It is a golden amulet set with a burnished gorgon scale, radiating protective energy.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "umbral_heart_hunters_charm",
+    "name": "Umbral Heart Hunter's Charm",
+    "familyId": "hunters_charm",
+    "tier": 6,
+    "description": "It is a star metal pendant cradling a shadowy, pulsing core, swirling with dark cosmic energy.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "holy_symbol_1",
+    "name": "Holy Symbol",
+    "familyId": "holy_symbol",
+    "tier": 1,
+    "description": "It is a simple copper disk engraved with a humble sunburst, worn on a leather cord.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "holy_symbol_2",
+    "name": "Holy Symbol",
+    "familyId": "holy_symbol",
+    "tier": 2,
+    "description": "It is a small bronze amulet shaped like a balanced scale, suspended by a braided strap.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "holy_symbol_3",
+    "name": "Holy Symbol",
+    "familyId": "holy_symbol",
+    "tier": 3,
+    "description": "It is a solid iron holy symbol, hammer-shaped, with runic etchings along the sides.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "holy_symbol_4",
+    "name": "Holy Symbol",
+    "familyId": "holy_symbol",
+    "tier": 4,
+    "description": "It is an ornate silver medallion of a rising dawn, polished and strung on silk cord.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "holy_symbol_5",
+    "name": "Holy Symbol",
+    "familyId": "holy_symbol",
+    "tier": 5,
+    "description": "It is a radiant gold holy symbol, tree-shaped with radiant rays, suspended by a golden chain.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "holy_symbol_6",
+    "name": "Holy Symbol",
+    "familyId": "holy_symbol",
+    "tier": 6,
+    "description": "It is a legendary star metal holy symbol, comet-shaped and glowing with tiny, inlaid stars.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "pine_cart",
+    "name": "Pine Cart",
+    "familyId": "cart",
+    "tier": 1,
+    "description": "It is a rugged pine wood cart with copper-plated corners and copper-rimmed wheels, pale grain and sturdy build.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "oak_cart",
+    "name": "Oak Cart",
+    "familyId": "cart",
+    "tier": 2,
+    "description": "It is a heavy oak cart with bronze-banded edges, dark rich wood, and robust bronze wheels.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "ash_cart",
+    "name": "Ash Cart",
+    "familyId": "cart",
+    "tier": 3,
+    "description": "It is a pale ash cart with steel brackets, slender frame, and solid, utilitarian metal wheels.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "cedar_cart",
+    "name": "Cedar Cart",
+    "familyId": "cart",
+    "tier": 4,
+    "description": "It is a fragrant red cedar cart with silver-capped joints and polished silver wheels, elegant and aromatic.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "ebony_cart",
+    "name": "Ebony Cart",
+    "familyId": "cart",
+    "tier": 5,
+    "description": "It is a sleek ebony cart with gold-trimmed panels and bright gold wheels, polished to a deep shine.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "worldroot_cart",
+    "name": "Worldroot Cart",
+    "familyId": "cart",
+    "tier": 6,
+    "description": "It is an ancient rootwood cart entwined with glowing star metal veins, arcane runes, and luminous star metal wheels.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "fishing_pole_1",
+    "name": "Fishing Pole",
+    "familyId": "fishing_pole",
+    "tier": 1,
+    "description": "It is a plain wooden rod with copper reel and guides, simple twine line coiled at the base.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "fishing_pole_2",
+    "name": "Fishing Pole",
+    "familyId": "fishing_pole",
+    "tier": 2,
+    "description": "It is an oiled wood pole with bronze reel, faint green patina, and braided bronze eyelets.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "fishing_pole_3",
+    "name": "Fishing Pole",
+    "familyId": "fishing_pole",
+    "tier": 3,
+    "description": "It is a sturdy ash pole fitted with steel reel and metal rings, utilitarian and weatherproof.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "fishing_pole_4",
+    "name": "Fishing Pole",
+    "familyId": "fishing_pole",
+    "tier": 4,
+    "description": "It is an elegant maple pole with inlaid silver filigree and a sleek silver reel, line glinting.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "fishing_pole_5",
+    "name": "Fishing Pole",
+    "familyId": "fishing_pole",
+    "tier": 5,
+    "description": "It is a distinguished yew pole with gold-banded reel, gold-plated guides, and decorative etching.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "fishing_pole_6",
+    "name": "Fishing Pole",
+    "familyId": "fishing_pole",
+    "tier": 6,
+    "description": "It is a mystical darkwood pole with star metal reel and guides, swirling with faint celestial shimmer.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "tallow_torch",
+    "name": "Tallow Torch",
+    "familyId": "torch",
+    "tier": 1,
+    "description": "It is a rough pine torch smeared with thick white tallow, bound with copper wire, unlit but greasy.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "pitch_torch",
+    "name": "Pitch Torch",
+    "familyId": "torch",
+    "tier": 2,
+    "description": "It is a sturdy oak torch slathered with sticky black pitch, banded with bronze at the handle.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "oilsoaked_torch",
+    "name": "Oilsoaked Torch",
+    "familyId": "torch",
+    "tier": 3,
+    "description": "It is a durable iron torch head packed with oil-soaked cloth, rugged metal grip below.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "everflame_torch",
+    "name": "Everflame Torch",
+    "familyId": "torch",
+    "tier": 4,
+    "description": "It is a finely carved torch capped with silvery head, silvery wick bound and unlit, magically enduring.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "phoenixfire_torch",
+    "name": "Phoenixfire Torch",
+    "familyId": "torch",
+    "tier": 5,
+    "description": "It is a lavish gilded torch with golden filaments spiraling along the shaft, wick ready to burst with magical flame.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "sunfire_torch",
+    "name": "Sunfire Torch",
+    "familyId": "torch",
+    "tier": 6,
+    "description": "It is a torch of enigmatic star metal, tips shimmering with dormant light, arcane glyphs down the shaft.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "beeswax_candle",
+    "name": "Beeswax Candle",
+    "familyId": "candle",
+    "tier": 1,
+    "description": "It is a classic yellow beeswax taper with copper base, surface spiraled and faintly translucent.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "honeywax_candle",
+    "name": "Honeywax Candle",
+    "familyId": "candle",
+    "tier": 2,
+    "description": "It is a rich amber candle with bronze holder, glistening and thick, a drop of honey at the base.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "ambercomb_candle",
+    "name": "Ambercomb Candle",
+    "familyId": "candle",
+    "tier": 3,
+    "description": "It is a translucent orange candle with metallic iron holder, embedded with tiny bits of comb.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "moonlit_candle",
+    "name": "Moonlit Candle",
+    "familyId": "candle",
+    "tier": 4,
+    "description": "It is a slender, pale candle with gleaming silver holder, softly glowing in the moonlight.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "starwax_candle",
+    "name": "Starwax Candle",
+    "familyId": "candle",
+    "tier": 5,
+    "description": "It is a midnight blue candle with gold-flecked wax and elegant gold base, glitter swirling inside.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "sunwax_candle",
+    "name": "Sunwax Candle",
+    "familyId": "candle",
+    "tier": 6,
+    "description": "It is a radiant white-gold candle with star metal holder, faint celestial motes swirling within the wax.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "travelers_glass_lantern",
+    "name": "Traveler's Glass Lantern",
+    "familyId": "glass_lantern",
+    "tier": 1,
+    "description": "It is a copper-framed glass lantern with simple panels and sturdy wire handle, unlit and practical.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "miners_glass_lantern",
+    "name": "Miner's Glass Lantern",
+    "familyId": "glass_lantern",
+    "tier": 2,
+    "description": "It is a rugged bronze cage lantern with thick glass panes, heavy loop for hanging, ready for dark tunnels, unlit.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "watchmans_glass_lantern",
+    "name": "Watchman's Glass Lantern",
+    "familyId": "glass_lantern",
+    "tier": 3,
+    "description": "It is a square steel lantern with reinforced corners and cold blue-tinted glass, solid and serviceable, unlit.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "beacon_glass_lantern",
+    "name": "Beacon Glass Lantern",
+    "familyId": "glass_lantern",
+    "tier": 4,
+    "description": "It is an ornate lantern with filigreed silver frame, crystal-clear glass panels, and intricate latches, unlit.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "lighthouse_glass_lantern",
+    "name": "Lighthouse Glass Lantern",
+    "familyId": "glass_lantern",
+    "tier": 5,
+    "description": "It is a grand gold-framed lantern with faceted glass and decorative anchorwork, brilliant, unlit.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "starlight_glass_lantern",
+    "name": "Starlight Glass Lantern",
+    "familyId": "glass_lantern",
+    "tier": 6,
+    "description": "It is a lantern of delicate star metal filigree and prismatic glass, faintly glowing with trapped starlight, unlit.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "mirror_1",
+    "name": "Mirror",
+    "familyId": "mirror",
+    "tier": 1,
+    "description": "It is a simple round copper mirror in a wooden frame, slightly tarnished.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "mirror_2",
+    "name": "Mirror",
+    "familyId": "mirror",
+    "tier": 2,
+    "description": "It is a burnished bronze handmirror, engraved with trade sigils.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "mirror_3",
+    "name": "Mirror",
+    "familyId": "mirror",
+    "tier": 3,
+    "description": "It is a plain polished steel mirror, utilitarian and durable for travelers.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "mirror_4",
+    "name": "Mirror",
+    "familyId": "mirror",
+    "tier": 4,
+    "description": "It is a silver-framed mirror etched with swirling patterns, gleaming surface.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "mirror_5",
+    "name": "Mirror",
+    "familyId": "mirror",
+    "tier": 5,
+    "description": "It is a gold-rimmed mirror inset with small gemstones, reflecting a warm glow.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "mirror_6",
+    "name": "Mirror",
+    "familyId": "mirror",
+    "tier": 6,
+    "description": "It is a star metal mirror, its frame swirling with luminous celestial symbols.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "ladder_1",
+    "name": "Ladder",
+    "familyId": "ladder",
+    "tier": 1,
+    "description": "It is a sturdy wooden ladder fitted with copper rungs and copper-capped feet, weathered from use.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "ladder_2",
+    "name": "Ladder",
+    "familyId": "ladder",
+    "tier": 2,
+    "description": "It is a ladder reinforced with bronze side rails and bronze steps, aged to a burnished sheen.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "ladder_3",
+    "name": "Ladder",
+    "familyId": "ladder",
+    "tier": 3,
+    "description": "It is a metallic ladder with gleaming steel frame and solid metal rungs, practical and durable.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "ladder_4",
+    "name": "Ladder",
+    "familyId": "ladder",
+    "tier": 4,
+    "description": "It is an elegant ladder with silver-inlaid rails and polished silver rungs, reflective and sleek.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "ladder_5",
+    "name": "Ladder",
+    "familyId": "ladder",
+    "tier": 5,
+    "description": "It is a magnificent ladder adorned with golden rails and steps, ornate filigree crowning each rung.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "ladder_6",
+    "name": "Ladder",
+    "familyId": "ladder",
+    "tier": 6,
+    "description": "It is a mystical ladder crafted from star metal, faintly glowing, rungs etched with astral runes.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "signal_whistle_1",
+    "name": "Signal Whistle",
+    "familyId": "signal_whistle",
+    "tier": 1,
+    "description": "It is a simple copper whistle, squat, dimpled with dents and strung on a leather cord.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "signal_whistle_2",
+    "name": "Signal Whistle",
+    "familyId": "signal_whistle",
+    "tier": 2,
+    "description": "It is a gleaming bronze whistle, etched with wave motifs, compact and deep-toned.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "signal_whistle_3",
+    "name": "Signal Whistle",
+    "familyId": "signal_whistle",
+    "tier": 3,
+    "description": "It is a polished steel whistle, sleek and modern, sharp tone and crisp lines.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "signal_whistle_4",
+    "name": "Signal Whistle",
+    "familyId": "signal_whistle",
+    "tier": 4,
+    "description": "It is an ornate silver whistle, engraved with crescent moons, producing a clear, bright sound.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "signal_whistle_5",
+    "name": "Signal Whistle",
+    "familyId": "signal_whistle",
+    "tier": 5,
+    "description": "It is a golden whistle, filigreed with spiral patterns, reflecting dazzling light and emitting a regal call.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "signal_whistle_6",
+    "name": "Signal Whistle",
+    "familyId": "signal_whistle",
+    "tier": 6,
+    "description": "It is a star metal whistle, shimmering in shifting hues, its tone ringing with magical resonance.",
+    "icon": "/images/items/bat.png"
+  }
+]

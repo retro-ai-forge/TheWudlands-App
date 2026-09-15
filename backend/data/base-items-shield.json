@@ -1,44 +1,338 @@
 [
-  {"id": "pine_wooden_shield", "name": "Crude Wooden Shield", "familyId": "wooden_shield", "tier": 1, "description": "dummy", "icon": "/images/items/bat.png"},
-  {"id": "oak_wooden_shield", "name": "Oak Wooden Shield", "familyId": "wooden_shield", "tier": 2, "description": "dummy", "icon": "/images/items/bat.png"},
-  {"id": "ash_wooden_shield", "name": "Ash Wooden Shield", "familyId": "wooden_shield", "tier": 3, "description": "dummy", "icon": "/images/items/bat.png"},
-  {"id": "cedar_wooden_shield", "name": "Cedar Wooden Shield", "familyId": "wooden_shield", "tier": 4, "description": "dummy", "icon": "/images/items/bat.png"},
-  {"id": "ebony_wooden_shield", "name": "Ebony Wooden Shield", "familyId": "wooden_shield", "tier": 5, "description": "dummy", "icon": "/images/items/bat.png"},
-  {"id": "worldroot_wooden_shield", "name": "Worldroot Wooden Shield", "familyId": "wooden_shield", "tier": 6, "description": "dummy", "icon": "/images/items/bat.png"},
-  {"id": "banded_reinforced_wooden_shield", "name": "Beginner's Reinforced Shield", "familyId": "reinforced_wooden_shield", "tier": 1, "description": "dummy", "icon": "/images/items/bat.png"},
-  {"id": "riveted_reinforced_wooden_shield", "name": "Riveted Reinforced Shield", "familyId": "reinforced_wooden_shield", "tier": 2, "description": "dummy", "icon": "/images/items/bat.png"},
-  {"id": "bossed_reinforced_wooden_shield", "name": "Bossed Reinforced Shield", "familyId": "reinforced_wooden_shield", "tier": 3, "description": "dummy", "icon": "/images/items/bat.png"},
-  {"id": "plated_reinforced_wooden_shield", "name": "Plated Reinforced Shield", "familyId": "reinforced_wooden_shield", "tier": 4, "description": "dummy", "icon": "/images/items/bat.png"},
-  {"id": "barred_reinforced_wooden_shield", "name": "Barred Reinforced Shield", "familyId": "reinforced_wooden_shield", "tier": 5, "description": "dummy", "icon": "/images/items/bat.png"},
-  {"id": "battleforged_reinforced_wooden_shield", "name": "Battleforged Reinforced Shield", "familyId": "reinforced_wooden_shield", "tier": 6, "description": "dummy", "icon": "/images/items/bat.png"},
-  {"id": "ironclad_iron_shield", "name": "Rusty Metal Shield", "familyId": "iron_shield", "tier": 1, "description": "dummy", "icon": "/images/items/bat.png"},
-  {"id": "steelbound_iron_shield", "name": "Steelbound Shield", "familyId": "iron_shield", "tier": 2, "description": "dummy", "icon": "/images/items/bat.png"},
-  {"id": "warforged_iron_shield", "name": "Warforged Iron Shield", "familyId": "iron_shield", "tier": 3, "description": "dummy", "icon": "/images/items/bat.png"},
-  {"id": "ironheart_iron_shield", "name": "Ironheart Shield", "familyId": "iron_shield", "tier": 4, "description": "dummy", "icon": "/images/items/bat.png"},
-  {"id": "ironbound_iron_shield", "name": "Ironbound Shield", "familyId": "iron_shield", "tier": 5, "description": "dummy", "icon": "/images/items/bat.png"},
-  {"id": "deathless_iron_shield", "name": "Deathless Iron Shield", "familyId": "iron_shield", "tier": 6, "description": "dummy", "icon": "/images/items/bat.png"},
-  {"id": "dusk_ebony_shield", "name": "Dusk Ebony Shield", "familyId": "ebony_shield", "tier": 1, "description": "dummy", "icon": "/images/items/bat.png"},
-  {"id": "twilight_ebony_shield", "name": "Twilight Ebony Shield", "familyId": "ebony_shield", "tier": 2, "description": "dummy", "icon": "/images/items/bat.png"},
-  {"id": "shadow_ebony_shield", "name": "Shadow Ebony Shield", "familyId": "ebony_shield", "tier": 3, "description": "dummy", "icon": "/images/items/bat.png"},
-  {"id": "midnight_ebony_shield", "name": "Midnight Ebony Shield", "familyId": "ebony_shield", "tier": 4, "description": "dummy", "icon": "/images/items/bat.png"},
-  {"id": "umbral_ebony_shield", "name": "Umbral Ebony Shield", "familyId": "ebony_shield", "tier": 5, "description": "dummy", "icon": "/images/items/bat.png"},
-  {"id": "eclipsed_ebony_shield", "name": "Eclipsed Ebony Shield", "familyId": "ebony_shield", "tier": 6, "description": "dummy", "icon": "/images/items/bat.png"},
-  {"id": "beetle_chitin_shield", "name": "Beetle Chitin Shield", "familyId": "chitin_shield", "tier": 1, "description": "dummy", "icon": "/images/items/bat.png"},
-  {"id": "mantis_chitin_shield", "name": "Mantis Chitin Shield", "familyId": "chitin_shield", "tier": 2, "description": "dummy", "icon": "/images/items/bat.png"},
-  {"id": "scorpion_chitin_shield", "name": "Scorpion Chitin Shield", "familyId": "chitin_shield", "tier": 3, "description": "dummy", "icon": "/images/items/bat.png"},
-  {"id": "spider_chitin_shield", "name": "Spider Chitin Shield", "familyId": "chitin_shield", "tier": 4, "description": "dummy", "icon": "/images/items/bat.png"},
-  {"id": "wyrm_chitin_shield", "name": "Wyrm Chitin Shield", "familyId": "chitin_shield", "tier": 5, "description": "dummy", "icon": "/images/items/bat.png"},
-  {"id": "voidling_chitin_shield", "name": "Voidling Chitin Shield", "familyId": "chitin_shield", "tier": 6, "description": "dummy", "icon": "/images/items/bat.png"},
-  {"id": "copper_meteoric_iron_shield", "name": "Copper Meteoric Shield", "familyId": "meteoric_iron_shield", "tier": 1, "description": "dummy", "icon": "/images/items/bat.png"},
-  {"id": "bronze_meteoric_iron_shield", "name": "Bronze Meteoric Shield", "familyId": "meteoric_iron_shield", "tier": 2, "description": "dummy", "icon": "/images/items/bat.png"},
-  {"id": "iron_meteoric_iron_shield", "name": "Iron Meteoric Shield", "familyId": "meteoric_iron_shield", "tier": 3, "description": "dummy", "icon": "/images/items/bat.png"},
-  {"id": "silver_meteoric_iron_shield", "name": "Silver Meteoric Shield", "familyId": "meteoric_iron_shield", "tier": 4, "description": "dummy", "icon": "/images/items/bat.png"},
-  {"id": "gold_meteoric_iron_shield", "name": "Gold Meteoric Shield", "familyId": "meteoric_iron_shield", "tier": 5, "description": "dummy", "icon": "/images/items/bat.png"},
-  {"id": "star_metal_meteoric_iron_shield", "name": "Star Metal Meteoric Shield", "familyId": "meteoric_iron_shield", "tier": 6, "description": "dummy", "icon": "/images/items/bat.png"},
-  {"id": "tempered_darksteel_shield", "name": "Tempered Darksteel Shield", "familyId": "darksteel_shield", "tier": 1, "description": "dummy", "icon": "/images/items/bat.png"},
-  {"id": "warded_darksteel_shield", "name": "Warded Darksteel Shield", "familyId": "darksteel_shield", "tier": 2, "description": "dummy", "icon": "/images/items/bat.png"},
-  {"id": "runed_darksteel_shield", "name": "Runed Darksteel Shield", "familyId": "darksteel_shield", "tier": 3, "description": "dummy", "icon": "/images/items/bat.png"},
-  {"id": "sigiled_darksteel_shield", "name": "Sigiled Darksteel Shield", "familyId": "darksteel_shield", "tier": 4, "description": "dummy", "icon": "/images/items/bat.png"},
-  {"id": "shadowforged_darksteel_shield", "name": "Shadowforged Darksteel Shield", "familyId": "darksteel_shield", "tier": 5, "description": "dummy", "icon": "/images/items/bat.png"},
-  {"id": "worldforged_darksteel_shield", "name": "Worldforged Darksteel Shield", "familyId": "darksteel_shield", "tier": 6, "description": "dummy", "icon": "/images/items/bat.png"}
+  {
+    "id": "pine_wooden_shield",
+    "name": "Crude Wooden Shield",
+    "familyId": "wooden_shield",
+    "tier": 1,
+    "description": "It is a primitive, splintered wooden shield lashed together, reinforced with battered copper bands, rough bronze bracing, or dented metal patches, or as a magical relic with cracked silver edges, golden symbols, or swirling veins of glimmering star metal.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "oak_wooden_shield",
+    "name": "Oak Wooden Shield",
+    "familyId": "wooden_shield",
+    "tier": 2,
+    "description": "It is a sturdy oak shield ringed by solid copper trim, polished bronze edging, or hammered metal boss, or as an enchanted shield with shimmering silver filigree, radiant gold accents, or constellations of star metal embedded in its grain.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "ash_wooden_shield",
+    "name": "Ash Wooden Shield",
+    "familyId": "wooden_shield",
+    "tier": 3,
+    "description": "It is a pale ashwood shield reinforced with copper studs, bronze strapping, or brushed steel bands, or glowing with runic silver, gilded gold highlights, or subtle inlays of iridescent star metal.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "cedar_wooden_shield",
+    "name": "Cedar Wooden Shield",
+    "familyId": "wooden_shield",
+    "tier": 4,
+    "description": "It is a fragrant cedar shield adorned with decorative copper pins, bronze chevrons, or a brushed metal centerpiece, or empowered by etched silver leaves, golden rays, or a luminous star metal sigil carved at its heart.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "ebony_wooden_shield",
+    "name": "Ebony Wooden Shield",
+    "familyId": "wooden_shield",
+    "tier": 5,
+    "description": "It is a gleaming black ebony shield trimmed with copper leaf, ringed in rich bronze, or armored in shadowy metal, or sparkling with silver filigree vines, gold celestial marks, or star metal runes shining in the dark.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "worldroot_wooden_shield",
+    "name": "Worldroot Wooden Shield",
+    "familyId": "wooden_shield",
+    "tier": 6,
+    "description": "It is an ancient, knotty shield from the mythical worldroot tree, bound in copper roots, bronzed grain, or intricate metal frames, or enchanted with silver moss, glistening gold sap, or living lines of pulsing star metal within the wood.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "banded_reinforced_wooden_shield",
+    "name": "Beginner's Reinforced Shield",
+    "familyId": "reinforced_wooden_shield",
+    "tier": 1,
+    "description": "It is a basic oval shield of solid planks, strengthened with rough copper bands, riveted bronze rim, or plain iron boss, or made magical by a glowing silver border, gold centerpiece, or scattered points of enchanted star metal.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "riveted_reinforced_wooden_shield",
+    "name": "Riveted Reinforced Shield",
+    "familyId": "reinforced_wooden_shield",
+    "tier": 2,
+    "description": "It is a robust wooden shield with orderly copper rivets, bronze fasteners, or metal bands reinforcing its face, or further enchanted with silver studs, golden bands, or a pattern of luminous star metal gems.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "bossed_reinforced_wooden_shield",
+    "name": "Bossed Reinforced Shield",
+    "familyId": "reinforced_wooden_shield",
+    "tier": 3,
+    "description": "It is a circular shield with a heavy central boss made from copper, bronze, or metal, or dramatically improved with ornate silver, dazzling gold, or a star metal boss that shines with magical defense.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "plated_reinforced_wooden_shield",
+    "name": "Plated Reinforced Shield",
+    "familyId": "reinforced_wooden_shield",
+    "tier": 4,
+    "description": "It is a large shield set with overlapping copper plates, bronze panels, or metal armor, or elevated by mirror-like silver plating, glinting gold reinforcement, or celestial star metal facing.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "barred_reinforced_wooden_shield",
+    "name": "Barred Reinforced Shield",
+    "familyId": "reinforced_wooden_shield",
+    "tier": 5,
+    "description": "It is a broad, rectangular shield with vertical copper, bronze, or iron bars, or as a magical ward with silver rails, golden detailing, or radiant star metal braces fusing the strength of stars.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "battleforged_reinforced_wooden_shield",
+    "name": "Battleforged Reinforced Shield",
+    "familyId": "reinforced_wooden_shield",
+    "tier": 6,
+    "description": "It is a heavy, battered shield of war-forged design with copper edges, bronze bosses, or steel inlays, or as a champion's relic adorned by radiant silver, golden crests, or a surge of glowing star metal.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "ironclad_iron_shield",
+    "name": "Rusty Metal Shield",
+    "familyId": "iron_shield",
+    "tier": 1,
+    "description": "It is a round, battered shield of patchwork copper plates, tarnished bronze, or dented iron, or magically revived as a shining silver, polished gold, or spectral star metal shield swirling with arcane light.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "steelbound_iron_shield",
+    "name": "Steelbound Shield",
+    "familyId": "iron_shield",
+    "tier": 2,
+    "description": "It is a heavy, reinforced shield with copper rim, broad bronze face, or strong steel bosses, enchantable with shining silver trim, golden motifs, or star metal that radiates protective energy.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "warforged_iron_shield",
+    "name": "Warforged Iron Shield",
+    "familyId": "iron_shield",
+    "tier": 3,
+    "description": "It is a militaristic, rectangular shield with copper studs, bronze inlays, or heavy iron core, or with gleaming silver wards, radiant gold icons, or starlight-infused star metal at its center.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "ironheart_iron_shield",
+    "name": "Ironheart Shield",
+    "familyId": "iron_shield",
+    "tier": 4,
+    "description": "It is a sturdy, heart-shaped shield crafted in copper, polished bronze, or blackened iron, or made magical with etched silver glyphs, golden highlights, or a glowing star metal core.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "ironbound_iron_shield",
+    "name": "Ironbound Shield",
+    "familyId": "iron_shield",
+    "tier": 5,
+    "description": "It is a solid, banded shield reinforced with thick copper, bands of bronze, or riveted iron, elevated with flowing silver inlays, gilded decorations, or a pattern of mystical star metal.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "deathless_iron_shield",
+    "name": "Deathless Iron Shield",
+    "familyId": "iron_shield",
+    "tier": 6,
+    "description": "It is a sinister, battered shield adorned with skeletal motifs and forged from weathered copper, aged bronze, or corroded iron, later enchanted with ghostly silver, cursed gold, or star metal that pulses with eerie magical power.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "dusk_ebony_shield",
+    "name": "Dusk Ebony Shield",
+    "familyId": "ebony_shield",
+    "tier": 1,
+    "description": "It is a broad, oblong shield of dusky ebony inlaid with copper boss, bronzed bands, or matte-steel latticework, or enchanted with streaks of silvery light, gold trim, or a night-sky splatter of star metal.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "twilight_ebony_shield",
+    "name": "Twilight Ebony Shield",
+    "familyId": "ebony_shield",
+    "tier": 2,
+    "description": "It is a gently curved ebony shield, highlighted in copper rays, bronze haze, or dark steel rim, or aglow with arcs of silver, hints of gold, or a dusting of luminous star metal speckles.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "shadow_ebony_shield",
+    "name": "Shadow Ebony Shield",
+    "familyId": "ebony_shield",
+    "tier": 3,
+    "description": "It is a pointed ebony shield, copper framed, bronze detailed, or clad in midnight metal, or inscribed with shimmering silver, flowing gold traces, or bejeweled with star metal cores glowing in low light.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "midnight_ebony_shield",
+    "name": "Midnight Ebony Shield",
+    "familyId": "ebony_shield",
+    "tier": 4,
+    "description": "It is a strong oval shield of pure midnight ebony set with copper flashes, bold bronze rim, or shadowed steel, or radiant with elegant silver, regal gold, or imprints of magical star metal in the center.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "umbral_ebony_shield",
+    "name": "Umbral Ebony Shield",
+    "familyId": "ebony_shield",
+    "tier": 5,
+    "description": "It is a sinister, spiked ebony shield, copper crescent accents, bronze studded, or carried in black metal, or haunted with pallid silver, sunburst gold, or inlaid with a moving trail of luminous star metal.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "eclipsed_ebony_shield",
+    "name": "Eclipsed Ebony Shield",
+    "familyId": "ebony_shield",
+    "tier": 6,
+    "description": "It is a round, eclipse-themed shield of jet-black ebony, copper half-moon, arched bronze, or ringed shadow metal, or legendary as an enchanted barrier glowing with silver crescents, gold rays, or a blazing disc of pure star metal at its heart.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "beetle_chitin_shield",
+    "name": "Beetle Chitin Shield",
+    "familyId": "chitin_shield",
+    "tier": 1,
+    "description": "It is a domed shield of iridescent beetle chitin, copper-rimmed, bronze-bossed, or faced in mirrored steel, or enchantable with silver tracery, golden symbols, or star metal centerpiece pulsating like a living gem.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "mantis_chitin_shield",
+    "name": "Mantis Chitin Shield",
+    "familyId": "chitin_shield",
+    "tier": 2,
+    "description": "It is a narrow, leaf-shaped shield formed of mantis chitin, copper-edged, patterned in bronze, or layered with strong steel struts, or radiant with silver runes, golden accents, or a halo of star metal around its center.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "scorpion_chitin_shield",
+    "name": "Scorpion Chitin Shield",
+    "familyId": "chitin_shield",
+    "tier": 3,
+    "description": "It is a round shield crafted of black, jointed scorpion chitin, copper barbed, bronze-spiked, or steel framed, or bearing magical silver lines, golden scorpion emblems, or a wicked stinger formed of star metal.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "spider_chitin_shield",
+    "name": "Spider Chitin Shield",
+    "familyId": "chitin_shield",
+    "tier": 4,
+    "description": "It is a light, oval shield of black spider chitin, trimmed in copper, veined with bronze, or textured with fine steel mesh, or enchanted with sprawling silver webs, golden highlights, or nodes of glistening star metal.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "wyrm_chitin_shield",
+    "name": "Wyrm Chitin Shield",
+    "familyId": "chitin_shield",
+    "tier": 5,
+    "description": "It is an imposing, dragon-scale shield of thick wyrm chitin, copper plates, rippling bronze, or heavy iron banding, or inscribed with silver flames, gold serpents, or radiant star metal sigils.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "voidling_chitin_shield",
+    "name": "Voidling Chitin Shield",
+    "familyId": "chitin_shield",
+    "tier": 6,
+    "description": "It is a surreal, otherworldly shield of jagged voidling chitin, ringed in copper, detailed in bronze, or shadow-cast with dark steel, or alive with streaks of silver, flowing gold, or shifting star metal cracks that pulse with forbidden energy.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "copper_meteoric_iron_shield",
+    "name": "Copper Meteoric Shield",
+    "familyId": "meteoric_iron_shield",
+    "tier": 1,
+    "description": "It is a large, battered shield of copper meteoric alloy, marked by black streaks and impact dimples, or fantastically rimmed with enchanted silver, golden glyphs, or sparkling nodes of cosmic star metal.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "bronze_meteoric_iron_shield",
+    "name": "Bronze Meteoric Shield",
+    "familyId": "meteoric_iron_shield",
+    "tier": 2,
+    "description": "It is a broad bronze shield forged from meteor shards, with swirling green veining and natural heat fractures, or mystically adorned with networks of silver, sunburst gold, or radiant cores of star metal.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "iron_meteoric_iron_shield",
+    "name": "Iron Meteoric Shield",
+    "familyId": "meteoric_iron_shield",
+    "tier": 3,
+    "description": "It is a tower shield hammered from dense iron meteorite, crossed by natural fractures and magnetic lines, or inlaid with silver runes, gold arc details, or bands of shimmering star metal across its face.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "silver_meteoric_iron_shield",
+    "name": "Silver Meteoric Shield",
+    "familyId": "meteoric_iron_shield",
+    "tier": 4,
+    "description": "It is a mirror-bright silver meteoric shield, veined with glowing cracks and moon-phase engravings, shining with otherworldly resilience and reflective power.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "gold_meteoric_iron_shield",
+    "name": "Gold Meteoric Shield",
+    "familyId": "meteoric_iron_shield",
+    "tier": 5,
+    "description": "It is a resplendent meteor gold shield, etched with dazzling celestial symbols and crowned with a solar-gem boss, emanating waves of magical protection.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "star_metal_meteoric_iron_shield",
+    "name": "Star Metal Meteoric Shield",
+    "familyId": "meteoric_iron_shield",
+    "tier": 6,
+    "description": "It is an awe-inspiring star metal shield, deep cosmic blue shot through with radiating light, swirling with living constellations and pulsing with the timeless energy of the heavens.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "tempered_darksteel_shield",
+    "name": "Tempered Darksteel Shield",
+    "familyId": "darksteel_shield",
+    "tier": 1,
+    "description": "It is a heavy, utilitarian shield of tempered darksteel, rimmed with copper, bronzed bosses, or forged steel surface, or as a magical barrier set with silvered edges, ornate gold center, or bands of radiant star metal.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "warded_darksteel_shield",
+    "name": "Warded Darksteel Shield",
+    "familyId": "darksteel_shield",
+    "tier": 2,
+    "description": "It is a broad, defensive shield of darksteel inscribed with copper, bronze, or metal wards, or empowered by glowing silver symbols, arched golden glyphs, or glowing star metal runic circuits.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "runed_darksteel_shield",
+    "name": "Runed Darksteel Shield",
+    "familyId": "darksteel_shield",
+    "tier": 3,
+    "description": "It is a tall darksteel shield covered in runic markings, copper or bronze insets, or forged metal designs, or sparkling with glowing silver, radiant gold, or intricate star metal script along its face.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "sigiled_darksteel_shield",
+    "name": "Sigiled Darksteel Shield",
+    "familyId": "darksteel_shield",
+    "tier": 4,
+    "description": "It is a ceremonial shield of darksteel emblazoned with copper sigils, bronze plates, or metal emblems, or as an artifact adorned in elaborate silver, glittering gold, or radiant star metal insignia.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "shadowforged_darksteel_shield",
+    "name": "Shadowforged Darksteel Shield",
+    "familyId": "darksteel_shield",
+    "tier": 5,
+    "description": "It is a sinister shield of deep-black darksteel, copper-etched and bronze-edged, or pulsing with enchanted silver echoes, golden halos, or shimmering fields of celestial star metal.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "worldforged_darksteel_shield",
+    "name": "Worldforged Darksteel Shield",
+    "familyId": "darksteel_shield",
+    "tier": 6,
+    "description": "It is a colossal shield with a world design wrought in darksteel, continents picked out in copper, seas in bronze, or core in tough metal, or as a wonder alive with silver latitude lines, gold highlights, or swirling veins of glowing star metal.",
+    "icon": "/images/items/bat.png"
+  }
 ]

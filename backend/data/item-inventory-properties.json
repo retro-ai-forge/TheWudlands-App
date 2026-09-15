@@ -101,14 +101,17 @@
   {
     "familyId": "ladder",
     "kind": [
-      "adventuring_gear"
+      "other"
     ],
     "sizeClass": "light",
     "stackSize": 1,
     "needsItemDefinition": false,
     "note": "Utility gear - does not wear out, no durability tracking needed.",
-    "equipSlots": [],
-    "backpackable": true
+    "equipSlots": [
+      "Left Hand",
+      "Right Hand"
+    ],
+    "backpackable": false
   },
   {
     "familyId": "lock_and_key",
@@ -211,13 +214,15 @@
   {
     "familyId": "signal_whistle",
     "kind": [
-      "adventuring_gear"
+      "other"
     ],
     "sizeClass": "tiny",
     "stackSize": 10,
     "needsItemDefinition": false,
     "note": "Never equipped - carried as a stackable backpack item, not an individually tracked instance.",
-    "equipSlots": [],
+    "equipSlots": [
+      "Neck"
+    ],
     "backpackable": true
   },
   {
@@ -643,7 +648,7 @@
   {
     "familyId": "merchants_scale",
     "kind": [
-      "equipment"
+      "adventuring_gear"
     ],
     "sizeClass": "medium",
     "stackSize": 1,
@@ -863,7 +868,7 @@
   {
     "familyId": "candle",
     "kind": [
-      "equipment"
+      "other"
     ],
     "sizeClass": "tiny",
     "stackSize": 10,
@@ -948,7 +953,7 @@
   {
     "familyId": "glass_lantern",
     "kind": [
-      "equipment"
+      "other"
     ],
     "sizeClass": "light",
     "stackSize": 1,
@@ -975,19 +980,22 @@
   {
     "familyId": "mirror",
     "kind": [
-      "equipment"
+      "other"
     ],
     "sizeClass": "light",
     "stackSize": 1,
     "needsItemDefinition": false,
     "note": "Never equipped - backpack item.",
-    "equipSlots": [],
+    "equipSlots": [
+      "Left Hand",
+      "Right Hand"
+    ],
     "backpackable": true
   },
   {
     "familyId": "quill",
     "kind": [
-      "equipment"
+      "adventuring_gear"
     ],
     "sizeClass": "tiny",
     "stackSize": 10,
@@ -999,7 +1007,7 @@
   {
     "familyId": "torch",
     "kind": [
-      "equipment"
+      "other"
     ],
     "sizeClass": "tiny",
     "stackSize": 10,

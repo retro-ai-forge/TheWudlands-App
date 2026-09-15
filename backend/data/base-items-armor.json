@@ -1,167 +1,1298 @@
 [
-  {"id": "hemp_cloth_head_armor", "name": "Tight Hood", "familyId": "cloth_head_armor", "tier": 1, "description": "dummy", "icon": "/images/items/bat.png"},
-  {"id": "cotton_cloth_head_armor", "name": "Cotton Cloth Hood", "familyId": "cloth_head_armor", "tier": 2, "description": "dummy", "icon": "/images/items/bat.png"},
-  {"id": "wool_cloth_head_armor", "name": "Wool Cloth Hood", "familyId": "cloth_head_armor", "tier": 3, "description": "dummy", "icon": "/images/items/bat.png"},
-  {"id": "silk_cloth_head_armor", "name": "Silk Cloth Hood", "familyId": "cloth_head_armor", "tier": 4, "description": "dummy", "icon": "/images/items/bat.png"},
-  {"id": "shadow_cloth_head_armor", "name": "Shadow Cloth Hood", "familyId": "cloth_head_armor", "tier": 5, "description": "dummy", "icon": "/images/items/bat.png"},
-  {"id": "moon_cloth_head_armor", "name": "Moon Cloth Hood", "familyId": "cloth_head_armor", "tier": 6, "description": "dummy", "icon": "/images/items/bat.png"},
-  {"id": "hemp_cloth_chest_armor", "name": "Small Robe", "familyId": "cloth_chest_armor", "tier": 1, "description": "dummy", "icon": "/images/items/bat.png"},
-  {"id": "cotton_cloth_chest_armor", "name": "Cotton Cloth Robe", "familyId": "cloth_chest_armor", "tier": 2, "description": "dummy", "icon": "/images/items/bat.png"},
-  {"id": "wool_cloth_chest_armor", "name": "Wool Cloth Robe", "familyId": "cloth_chest_armor", "tier": 3, "description": "dummy", "icon": "/images/items/bat.png"},
-  {"id": "silk_cloth_chest_armor", "name": "Silk Cloth Robe", "familyId": "cloth_chest_armor", "tier": 4, "description": "dummy", "icon": "/images/items/bat.png"},
-  {"id": "shadow_cloth_chest_armor", "name": "Shadow Cloth Robe", "familyId": "cloth_chest_armor", "tier": 5, "description": "dummy", "icon": "/images/items/bat.png"},
-  {"id": "moon_cloth_chest_armor", "name": "Moon Cloth Robe", "familyId": "cloth_chest_armor", "tier": 6, "description": "dummy", "icon": "/images/items/bat.png"},
-  {"id": "hemp_cloth_leg_armor", "name": "Loose Trousers", "familyId": "cloth_leg_armor", "tier": 1, "description": "dummy", "icon": "/images/items/bat.png"},
-  {"id": "cotton_cloth_leg_armor", "name": "Cotton Cloth Trousers", "familyId": "cloth_leg_armor", "tier": 2, "description": "dummy", "icon": "/images/items/bat.png"},
-  {"id": "wool_cloth_leg_armor", "name": "Wool Cloth Trousers", "familyId": "cloth_leg_armor", "tier": 3, "description": "dummy", "icon": "/images/items/bat.png"},
-  {"id": "silk_cloth_leg_armor", "name": "Silk Cloth Trousers", "familyId": "cloth_leg_armor", "tier": 4, "description": "dummy", "icon": "/images/items/bat.png"},
-  {"id": "shadow_cloth_leg_armor", "name": "Shadow Cloth Trousers", "familyId": "cloth_leg_armor", "tier": 5, "description": "dummy", "icon": "/images/items/bat.png"},
-  {"id": "moon_cloth_leg_armor", "name": "Moon Cloth Trousers", "familyId": "cloth_leg_armor", "tier": 6, "description": "dummy", "icon": "/images/items/bat.png"},
-  {"id": "deer_leather_head_armor", "name": "Rotten Leather Cap", "familyId": "leather_head_armor", "tier": 1, "description": "dummy", "icon": "/images/items/bat.png"},
-  {"id": "goat_leather_head_armor", "name": "Goat Leather Cap", "familyId": "leather_head_armor", "tier": 2, "description": "dummy", "icon": "/images/items/bat.png"},
-  {"id": "elk_leather_head_armor", "name": "Elk Leather Cap", "familyId": "leather_head_armor", "tier": 3, "description": "dummy", "icon": "/images/items/bat.png"},
-  {"id": "manticore_leather_head_armor", "name": "Manticore Leather Cap", "familyId": "leather_head_armor", "tier": 4, "description": "dummy", "icon": "/images/items/bat.png"},
-  {"id": "wyvern_leather_head_armor", "name": "Wyvern Leather Cap", "familyId": "leather_head_armor", "tier": 5, "description": "dummy", "icon": "/images/items/bat.png"},
-  {"id": "phoenix_leather_head_armor", "name": "Phoenix Leather Cap", "familyId": "leather_head_armor", "tier": 6, "description": "dummy", "icon": "/images/items/bat.png"},
-  {"id": "deer_leather_chest_armor", "name": "Primitive Leather Jerkin", "familyId": "leather_chest_armor", "tier": 1, "description": "dummy", "icon": "/images/items/bat.png"},
-  {"id": "goat_leather_chest_armor", "name": "Goat Leather Jerkin", "familyId": "leather_chest_armor", "tier": 2, "description": "dummy", "icon": "/images/items/bat.png"},
-  {"id": "elk_leather_chest_armor", "name": "Elk Leather Jerkin", "familyId": "leather_chest_armor", "tier": 3, "description": "dummy", "icon": "/images/items/bat.png"},
-  {"id": "manticore_leather_chest_armor", "name": "Manticore Leather Jerkin", "familyId": "leather_chest_armor", "tier": 4, "description": "dummy", "icon": "/images/items/bat.png"},
-  {"id": "wyvern_leather_chest_armor", "name": "Wyvern Leather Jerkin", "familyId": "leather_chest_armor", "tier": 5, "description": "dummy", "icon": "/images/items/bat.png"},
-  {"id": "phoenix_leather_chest_armor", "name": "Phoenix Leather Jerkin", "familyId": "leather_chest_armor", "tier": 6, "description": "dummy", "icon": "/images/items/bat.png"},
-  {"id": "deer_leather_leg_armor", "name": "Long Leather Leggings", "familyId": "leather_leg_armor", "tier": 1, "description": "dummy", "icon": "/images/items/bat.png"},
-  {"id": "goat_leather_leg_armor", "name": "Goat Leather Leggings", "familyId": "leather_leg_armor", "tier": 2, "description": "dummy", "icon": "/images/items/bat.png"},
-  {"id": "elk_leather_leg_armor", "name": "Elk Leather Leggings", "familyId": "leather_leg_armor", "tier": 3, "description": "dummy", "icon": "/images/items/bat.png"},
-  {"id": "manticore_leather_leg_armor", "name": "Manticore Leather Leggings", "familyId": "leather_leg_armor", "tier": 4, "description": "dummy", "icon": "/images/items/bat.png"},
-  {"id": "wyvern_leather_leg_armor", "name": "Wyvern Leather Leggings", "familyId": "leather_leg_armor", "tier": 5, "description": "dummy", "icon": "/images/items/bat.png"},
-  {"id": "phoenix_leather_leg_armor", "name": "Phoenix Leather Leggings", "familyId": "leather_leg_armor", "tier": 6, "description": "dummy", "icon": "/images/items/bat.png"},
-  {"id": "copper_chainmail_head_armor", "name": "Ripped Chainmail Coif", "familyId": "chainmail_head_armor", "tier": 1, "description": "dummy", "icon": "/images/items/bat.png"},
-  {"id": "bronze_chainmail_head_armor", "name": "Bronze Chainmail Coif", "familyId": "chainmail_head_armor", "tier": 2, "description": "dummy", "icon": "/images/items/bat.png"},
-  {"id": "iron_chainmail_head_armor", "name": "Iron Chainmail Coif", "familyId": "chainmail_head_armor", "tier": 3, "description": "dummy", "icon": "/images/items/bat.png"},
-  {"id": "silver_chainmail_head_armor", "name": "Silver Chainmail Coif", "familyId": "chainmail_head_armor", "tier": 4, "description": "dummy", "icon": "/images/items/bat.png"},
-  {"id": "gold_chainmail_head_armor", "name": "Gold Chainmail Coif", "familyId": "chainmail_head_armor", "tier": 5, "description": "dummy", "icon": "/images/items/bat.png"},
-  {"id": "star_metal_chainmail_head_armor", "name": "Star Metal Chainmail Coif", "familyId": "chainmail_head_armor", "tier": 6, "description": "dummy", "icon": "/images/items/bat.png"},
-  {"id": "copper_chainmail_chest_armor", "name": "Ripped Chainmail Hauberk", "familyId": "chainmail_chest_armor", "tier": 1, "description": "dummy", "icon": "/images/items/bat.png"},
-  {"id": "bronze_chainmail_chest_armor", "name": "Bronze Chainmail Hauberk", "familyId": "chainmail_chest_armor", "tier": 2, "description": "dummy", "icon": "/images/items/bat.png"},
-  {"id": "iron_chainmail_chest_armor", "name": "Iron Chainmail Hauberk", "familyId": "chainmail_chest_armor", "tier": 3, "description": "dummy", "icon": "/images/items/bat.png"},
-  {"id": "silver_chainmail_chest_armor", "name": "Silver Chainmail Hauberk", "familyId": "chainmail_chest_armor", "tier": 4, "description": "dummy", "icon": "/images/items/bat.png"},
-  {"id": "gold_chainmail_chest_armor", "name": "Gold Chainmail Hauberk", "familyId": "chainmail_chest_armor", "tier": 5, "description": "dummy", "icon": "/images/items/bat.png"},
-  {"id": "star_metal_chainmail_chest_armor", "name": "Star Metal Chainmail Hauberk", "familyId": "chainmail_chest_armor", "tier": 6, "description": "dummy", "icon": "/images/items/bat.png"},
-  {"id": "copper_chainmail_leg_armor", "name": "Ripped Chainmail Chausses", "familyId": "chainmail_leg_armor", "tier": 1, "description": "dummy", "icon": "/images/items/bat.png"},
-  {"id": "bronze_chainmail_leg_armor", "name": "Bronze Chainmail Chausses", "familyId": "chainmail_leg_armor", "tier": 2, "description": "dummy", "icon": "/images/items/bat.png"},
-  {"id": "iron_chainmail_leg_armor", "name": "Iron Chainmail Chausses", "familyId": "chainmail_leg_armor", "tier": 3, "description": "dummy", "icon": "/images/items/bat.png"},
-  {"id": "silver_chainmail_leg_armor", "name": "Silver Chainmail Chausses", "familyId": "chainmail_leg_armor", "tier": 4, "description": "dummy", "icon": "/images/items/bat.png"},
-  {"id": "gold_chainmail_leg_armor", "name": "Gold Chainmail Chausses", "familyId": "chainmail_leg_armor", "tier": 5, "description": "dummy", "icon": "/images/items/bat.png"},
-  {"id": "star_metal_chainmail_leg_armor", "name": "Star Metal Chainmail Chausses", "familyId": "chainmail_leg_armor", "tier": 6, "description": "dummy", "icon": "/images/items/bat.png"},
-  {"id": "ironclad_iron_head_armor", "name": "Apprentice's Iron Helmet", "familyId": "iron_head_armor", "tier": 1, "description": "dummy", "icon": "/images/items/bat.png"},
-  {"id": "steelbound_iron_head_armor", "name": "Steelbound Helmet", "familyId": "iron_head_armor", "tier": 2, "description": "dummy", "icon": "/images/items/bat.png"},
-  {"id": "warforged_iron_head_armor", "name": "Warforged Iron Helmet", "familyId": "iron_head_armor", "tier": 3, "description": "dummy", "icon": "/images/items/bat.png"},
-  {"id": "ironheart_iron_head_armor", "name": "Ironheart Helmet", "familyId": "iron_head_armor", "tier": 4, "description": "dummy", "icon": "/images/items/bat.png"},
-  {"id": "ironbound_iron_head_armor", "name": "Ironbound Helmet", "familyId": "iron_head_armor", "tier": 5, "description": "dummy", "icon": "/images/items/bat.png"},
-  {"id": "deathless_iron_head_armor", "name": "Deathless Iron Helmet", "familyId": "iron_head_armor", "tier": 6, "description": "dummy", "icon": "/images/items/bat.png"},
-  {"id": "ironclad_iron_chest_armor", "name": "Apprentice's Iron Breastplate", "familyId": "iron_chest_armor", "tier": 1, "description": "dummy", "icon": "/images/items/bat.png"},
-  {"id": "steelbound_iron_chest_armor", "name": "Steelbound Breastplate", "familyId": "iron_chest_armor", "tier": 2, "description": "dummy", "icon": "/images/items/bat.png"},
-  {"id": "warforged_iron_chest_armor", "name": "Warforged Iron Breastplate", "familyId": "iron_chest_armor", "tier": 3, "description": "dummy", "icon": "/images/items/bat.png"},
-  {"id": "ironheart_iron_chest_armor", "name": "Ironheart Breastplate", "familyId": "iron_chest_armor", "tier": 4, "description": "dummy", "icon": "/images/items/bat.png"},
-  {"id": "ironbound_iron_chest_armor", "name": "Ironbound Breastplate", "familyId": "iron_chest_armor", "tier": 5, "description": "dummy", "icon": "/images/items/bat.png"},
-  {"id": "deathless_iron_chest_armor", "name": "Deathless Iron Breastplate", "familyId": "iron_chest_armor", "tier": 6, "description": "dummy", "icon": "/images/items/bat.png"},
-  {"id": "ironclad_iron_leg_armor", "name": "Apprentice's Iron Greaves", "familyId": "iron_leg_armor", "tier": 1, "description": "dummy", "icon": "/images/items/bat.png"},
-  {"id": "steelbound_iron_leg_armor", "name": "Steelbound Greaves", "familyId": "iron_leg_armor", "tier": 2, "description": "dummy", "icon": "/images/items/bat.png"},
-  {"id": "warforged_iron_leg_armor", "name": "Warforged Iron Greaves", "familyId": "iron_leg_armor", "tier": 3, "description": "dummy", "icon": "/images/items/bat.png"},
-  {"id": "ironheart_iron_leg_armor", "name": "Ironheart Greaves", "familyId": "iron_leg_armor", "tier": 4, "description": "dummy", "icon": "/images/items/bat.png"},
-  {"id": "ironbound_iron_leg_armor", "name": "Ironbound Greaves", "familyId": "iron_leg_armor", "tier": 5, "description": "dummy", "icon": "/images/items/bat.png"},
-  {"id": "deathless_iron_leg_armor", "name": "Deathless Iron Greaves", "familyId": "iron_leg_armor", "tier": 6, "description": "dummy", "icon": "/images/items/bat.png"},
-  {"id": "dusk_ebony_head_armor", "name": "Dusk Ebony Helmet", "familyId": "ebony_head_armor", "tier": 1, "description": "dummy", "icon": "/images/items/bat.png"},
-  {"id": "twilight_ebony_head_armor", "name": "Twilight Ebony Helmet", "familyId": "ebony_head_armor", "tier": 2, "description": "dummy", "icon": "/images/items/bat.png"},
-  {"id": "shadow_ebony_head_armor", "name": "Shadow Ebony Helmet", "familyId": "ebony_head_armor", "tier": 3, "description": "dummy", "icon": "/images/items/bat.png"},
-  {"id": "midnight_ebony_head_armor", "name": "Midnight Ebony Helmet", "familyId": "ebony_head_armor", "tier": 4, "description": "dummy", "icon": "/images/items/bat.png"},
-  {"id": "umbral_ebony_head_armor", "name": "Umbral Ebony Helmet", "familyId": "ebony_head_armor", "tier": 5, "description": "dummy", "icon": "/images/items/bat.png"},
-  {"id": "eclipsed_ebony_head_armor", "name": "Eclipsed Ebony Helmet", "familyId": "ebony_head_armor", "tier": 6, "description": "dummy", "icon": "/images/items/bat.png"},
-  {"id": "dusk_ebony_chest_armor", "name": "Dusk Ebony Breastplate", "familyId": "ebony_chest_armor", "tier": 1, "description": "dummy", "icon": "/images/items/bat.png"},
-  {"id": "twilight_ebony_chest_armor", "name": "Twilight Ebony Breastplate", "familyId": "ebony_chest_armor", "tier": 2, "description": "dummy", "icon": "/images/items/bat.png"},
-  {"id": "shadow_ebony_chest_armor", "name": "Shadow Ebony Breastplate", "familyId": "ebony_chest_armor", "tier": 3, "description": "dummy", "icon": "/images/items/bat.png"},
-  {"id": "midnight_ebony_chest_armor", "name": "Midnight Ebony Breastplate", "familyId": "ebony_chest_armor", "tier": 4, "description": "dummy", "icon": "/images/items/bat.png"},
-  {"id": "umbral_ebony_chest_armor", "name": "Umbral Ebony Breastplate", "familyId": "ebony_chest_armor", "tier": 5, "description": "dummy", "icon": "/images/items/bat.png"},
-  {"id": "eclipsed_ebony_chest_armor", "name": "Eclipsed Ebony Breastplate", "familyId": "ebony_chest_armor", "tier": 6, "description": "dummy", "icon": "/images/items/bat.png"},
-  {"id": "dusk_ebony_leg_armor", "name": "Dusk Ebony Greaves", "familyId": "ebony_leg_armor", "tier": 1, "description": "dummy", "icon": "/images/items/bat.png"},
-  {"id": "twilight_ebony_leg_armor", "name": "Twilight Ebony Greaves", "familyId": "ebony_leg_armor", "tier": 2, "description": "dummy", "icon": "/images/items/bat.png"},
-  {"id": "shadow_ebony_leg_armor", "name": "Shadow Ebony Greaves", "familyId": "ebony_leg_armor", "tier": 3, "description": "dummy", "icon": "/images/items/bat.png"},
-  {"id": "midnight_ebony_leg_armor", "name": "Midnight Ebony Greaves", "familyId": "ebony_leg_armor", "tier": 4, "description": "dummy", "icon": "/images/items/bat.png"},
-  {"id": "umbral_ebony_leg_armor", "name": "Umbral Ebony Greaves", "familyId": "ebony_leg_armor", "tier": 5, "description": "dummy", "icon": "/images/items/bat.png"},
-  {"id": "eclipsed_ebony_leg_armor", "name": "Eclipsed Ebony Greaves", "familyId": "ebony_leg_armor", "tier": 6, "description": "dummy", "icon": "/images/items/bat.png"},
-  {"id": "beetle_chitin_head_armor", "name": "Beetle Chitin Carapace Helm", "familyId": "chitin_head_armor", "tier": 1, "description": "dummy", "icon": "/images/items/bat.png"},
-  {"id": "mantis_chitin_head_armor", "name": "Mantis Chitin Carapace Helm", "familyId": "chitin_head_armor", "tier": 2, "description": "dummy", "icon": "/images/items/bat.png"},
-  {"id": "scorpion_chitin_head_armor", "name": "Scorpion Chitin Carapace Helm", "familyId": "chitin_head_armor", "tier": 3, "description": "dummy", "icon": "/images/items/bat.png"},
-  {"id": "spider_chitin_head_armor", "name": "Spider Chitin Carapace Helm", "familyId": "chitin_head_armor", "tier": 4, "description": "dummy", "icon": "/images/items/bat.png"},
-  {"id": "wyrm_chitin_head_armor", "name": "Wyrm Chitin Carapace Helm", "familyId": "chitin_head_armor", "tier": 5, "description": "dummy", "icon": "/images/items/bat.png"},
-  {"id": "voidling_chitin_head_armor", "name": "Voidling Chitin Carapace Helm", "familyId": "chitin_head_armor", "tier": 6, "description": "dummy", "icon": "/images/items/bat.png"},
-  {"id": "beetle_chitin_chest_armor", "name": "Beetle Chitin Carapace Plate", "familyId": "chitin_chest_armor", "tier": 1, "description": "dummy", "icon": "/images/items/bat.png"},
-  {"id": "mantis_chitin_chest_armor", "name": "Mantis Chitin Carapace Plate", "familyId": "chitin_chest_armor", "tier": 2, "description": "dummy", "icon": "/images/items/bat.png"},
-  {"id": "scorpion_chitin_chest_armor", "name": "Scorpion Chitin Carapace Plate", "familyId": "chitin_chest_armor", "tier": 3, "description": "dummy", "icon": "/images/items/bat.png"},
-  {"id": "spider_chitin_chest_armor", "name": "Spider Chitin Carapace Plate", "familyId": "chitin_chest_armor", "tier": 4, "description": "dummy", "icon": "/images/items/bat.png"},
-  {"id": "wyrm_chitin_chest_armor", "name": "Wyrm Chitin Carapace Plate", "familyId": "chitin_chest_armor", "tier": 5, "description": "dummy", "icon": "/images/items/bat.png"},
-  {"id": "voidling_chitin_chest_armor", "name": "Voidling Chitin Carapace Plate", "familyId": "chitin_chest_armor", "tier": 6, "description": "dummy", "icon": "/images/items/bat.png"},
-  {"id": "beetle_chitin_leg_armor", "name": "Beetle Chitin Carapace Greaves", "familyId": "chitin_leg_armor", "tier": 1, "description": "dummy", "icon": "/images/items/bat.png"},
-  {"id": "mantis_chitin_leg_armor", "name": "Mantis Chitin Carapace Greaves", "familyId": "chitin_leg_armor", "tier": 2, "description": "dummy", "icon": "/images/items/bat.png"},
-  {"id": "scorpion_chitin_leg_armor", "name": "Scorpion Chitin Carapace Greaves", "familyId": "chitin_leg_armor", "tier": 3, "description": "dummy", "icon": "/images/items/bat.png"},
-  {"id": "spider_chitin_leg_armor", "name": "Spider Chitin Carapace Greaves", "familyId": "chitin_leg_armor", "tier": 4, "description": "dummy", "icon": "/images/items/bat.png"},
-  {"id": "wyrm_chitin_leg_armor", "name": "Wyrm Chitin Carapace Greaves", "familyId": "chitin_leg_armor", "tier": 5, "description": "dummy", "icon": "/images/items/bat.png"},
-  {"id": "voidling_chitin_leg_armor", "name": "Voidling Chitin Carapace Greaves", "familyId": "chitin_leg_armor", "tier": 6, "description": "dummy", "icon": "/images/items/bat.png"},
-  {"id": "copper_meteoric_iron_head_armor", "name": "Copper Meteoric Helmet", "familyId": "meteoric_iron_head_armor", "tier": 1, "description": "dummy", "icon": "/images/items/bat.png"},
-  {"id": "bronze_meteoric_iron_head_armor", "name": "Bronze Meteoric Helmet", "familyId": "meteoric_iron_head_armor", "tier": 2, "description": "dummy", "icon": "/images/items/bat.png"},
-  {"id": "iron_meteoric_iron_head_armor", "name": "Iron Meteoric Helmet", "familyId": "meteoric_iron_head_armor", "tier": 3, "description": "dummy", "icon": "/images/items/bat.png"},
-  {"id": "silver_meteoric_iron_head_armor", "name": "Silver Meteoric Helmet", "familyId": "meteoric_iron_head_armor", "tier": 4, "description": "dummy", "icon": "/images/items/bat.png"},
-  {"id": "gold_meteoric_iron_head_armor", "name": "Gold Meteoric Helmet", "familyId": "meteoric_iron_head_armor", "tier": 5, "description": "dummy", "icon": "/images/items/bat.png"},
-  {"id": "star_metal_meteoric_iron_head_armor", "name": "Star Metal Meteoric Helmet", "familyId": "meteoric_iron_head_armor", "tier": 6, "description": "dummy", "icon": "/images/items/bat.png"},
-  {"id": "copper_meteoric_iron_chest_armor", "name": "Copper Meteoric Breastplate", "familyId": "meteoric_iron_chest_armor", "tier": 1, "description": "dummy", "icon": "/images/items/bat.png"},
-  {"id": "bronze_meteoric_iron_chest_armor", "name": "Bronze Meteoric Breastplate", "familyId": "meteoric_iron_chest_armor", "tier": 2, "description": "dummy", "icon": "/images/items/bat.png"},
-  {"id": "iron_meteoric_iron_chest_armor", "name": "Iron Meteoric Breastplate", "familyId": "meteoric_iron_chest_armor", "tier": 3, "description": "dummy", "icon": "/images/items/bat.png"},
-  {"id": "silver_meteoric_iron_chest_armor", "name": "Silver Meteoric Breastplate", "familyId": "meteoric_iron_chest_armor", "tier": 4, "description": "dummy", "icon": "/images/items/bat.png"},
-  {"id": "gold_meteoric_iron_chest_armor", "name": "Gold Meteoric Breastplate", "familyId": "meteoric_iron_chest_armor", "tier": 5, "description": "dummy", "icon": "/images/items/bat.png"},
-  {"id": "star_metal_meteoric_iron_chest_armor", "name": "Star Metal Meteoric Breastplate", "familyId": "meteoric_iron_chest_armor", "tier": 6, "description": "dummy", "icon": "/images/items/bat.png"},
-  {"id": "copper_meteoric_iron_leg_armor", "name": "Copper Meteoric Greaves", "familyId": "meteoric_iron_leg_armor", "tier": 1, "description": "dummy", "icon": "/images/items/bat.png"},
-  {"id": "bronze_meteoric_iron_leg_armor", "name": "Bronze Meteoric Greaves", "familyId": "meteoric_iron_leg_armor", "tier": 2, "description": "dummy", "icon": "/images/items/bat.png"},
-  {"id": "iron_meteoric_iron_leg_armor", "name": "Iron Meteoric Greaves", "familyId": "meteoric_iron_leg_armor", "tier": 3, "description": "dummy", "icon": "/images/items/bat.png"},
-  {"id": "silver_meteoric_iron_leg_armor", "name": "Silver Meteoric Greaves", "familyId": "meteoric_iron_leg_armor", "tier": 4, "description": "dummy", "icon": "/images/items/bat.png"},
-  {"id": "gold_meteoric_iron_leg_armor", "name": "Gold Meteoric Greaves", "familyId": "meteoric_iron_leg_armor", "tier": 5, "description": "dummy", "icon": "/images/items/bat.png"},
-  {"id": "star_metal_meteoric_iron_leg_armor", "name": "Star Metal Meteoric Greaves", "familyId": "meteoric_iron_leg_armor", "tier": 6, "description": "dummy", "icon": "/images/items/bat.png"},
-  {"id": "tempered_darksteel_head_armor", "name": "Tempered Darksteel Helmet", "familyId": "darksteel_head_armor", "tier": 1, "description": "dummy", "icon": "/images/items/bat.png"},
-  {"id": "warded_darksteel_head_armor", "name": "Warded Darksteel Helmet", "familyId": "darksteel_head_armor", "tier": 2, "description": "dummy", "icon": "/images/items/bat.png"},
-  {"id": "runed_darksteel_head_armor", "name": "Runed Darksteel Helmet", "familyId": "darksteel_head_armor", "tier": 3, "description": "dummy", "icon": "/images/items/bat.png"},
-  {"id": "sigiled_darksteel_head_armor", "name": "Sigiled Darksteel Helmet", "familyId": "darksteel_head_armor", "tier": 4, "description": "dummy", "icon": "/images/items/bat.png"},
-  {"id": "shadowforged_darksteel_head_armor", "name": "Shadowforged Darksteel Helmet", "familyId": "darksteel_head_armor", "tier": 5, "description": "dummy", "icon": "/images/items/bat.png"},
-  {"id": "worldforged_darksteel_head_armor", "name": "Worldforged Darksteel Helmet", "familyId": "darksteel_head_armor", "tier": 6, "description": "dummy", "icon": "/images/items/bat.png"},
-  {"id": "tempered_darksteel_chest_armor", "name": "Tempered Darksteel Breastplate", "familyId": "darksteel_chest_armor", "tier": 1, "description": "dummy", "icon": "/images/items/bat.png"},
-  {"id": "warded_darksteel_chest_armor", "name": "Warded Darksteel Breastplate", "familyId": "darksteel_chest_armor", "tier": 2, "description": "dummy", "icon": "/images/items/bat.png"},
-  {"id": "runed_darksteel_chest_armor", "name": "Runed Darksteel Breastplate", "familyId": "darksteel_chest_armor", "tier": 3, "description": "dummy", "icon": "/images/items/bat.png"},
-  {"id": "sigiled_darksteel_chest_armor", "name": "Sigiled Darksteel Breastplate", "familyId": "darksteel_chest_armor", "tier": 4, "description": "dummy", "icon": "/images/items/bat.png"},
-  {"id": "shadowforged_darksteel_chest_armor", "name": "Shadowforged Darksteel Breastplate", "familyId": "darksteel_chest_armor", "tier": 5, "description": "dummy", "icon": "/images/items/bat.png"},
-  {"id": "worldforged_darksteel_chest_armor", "name": "Worldforged Darksteel Breastplate", "familyId": "darksteel_chest_armor", "tier": 6, "description": "dummy", "icon": "/images/items/bat.png"},
-  {"id": "tempered_darksteel_leg_armor", "name": "Tempered Darksteel Greaves", "familyId": "darksteel_leg_armor", "tier": 1, "description": "dummy", "icon": "/images/items/bat.png"},
-  {"id": "warded_darksteel_leg_armor", "name": "Warded Darksteel Greaves", "familyId": "darksteel_leg_armor", "tier": 2, "description": "dummy", "icon": "/images/items/bat.png"},
-  {"id": "runed_darksteel_leg_armor", "name": "Runed Darksteel Greaves", "familyId": "darksteel_leg_armor", "tier": 3, "description": "dummy", "icon": "/images/items/bat.png"},
-  {"id": "sigiled_darksteel_leg_armor", "name": "Sigiled Darksteel Greaves", "familyId": "darksteel_leg_armor", "tier": 4, "description": "dummy", "icon": "/images/items/bat.png"},
-  {"id": "shadowforged_darksteel_leg_armor", "name": "Shadowforged Darksteel Greaves", "familyId": "darksteel_leg_armor", "tier": 5, "description": "dummy", "icon": "/images/items/bat.png"},
-  {"id": "worldforged_darksteel_leg_armor", "name": "Worldforged Darksteel Greaves", "familyId": "darksteel_leg_armor", "tier": 6, "description": "dummy", "icon": "/images/items/bat.png"},
-
-  {"id": "rabbit_fur_cloak", "name": "Rabbit Fur Cloak", "familyId": "fur_cloak", "tier": 1, "description": "dummy", "icon": "/images/items/bat.png"},
-  {"id": "fox_fur_cloak", "name": "Fox Fur Cloak", "familyId": "fur_cloak", "tier": 2, "description": "dummy", "icon": "/images/items/bat.png"},
-  {"id": "wolf_fur_cloak", "name": "Wolf Fur Cloak", "familyId": "fur_cloak", "tier": 3, "description": "dummy", "icon": "/images/items/bat.png"},
-  {"id": "warg_fur_cloak", "name": "Warg Fur Cloak", "familyId": "fur_cloak", "tier": 4, "description": "dummy", "icon": "/images/items/bat.png"},
-  {"id": "fenrir_fur_cloak", "name": "Fenrir Fur Cloak", "familyId": "fur_cloak", "tier": 5, "description": "dummy", "icon": "/images/items/bat.png"},
-  {"id": "frostmane_fur_cloak", "name": "Frostmane Fur Cloak", "familyId": "fur_cloak", "tier": 6, "description": "dummy", "icon": "/images/items/bat.png"},
-
-  {"id": "hemp_cloth_cloak", "name": "Hemp Cloak", "familyId": "cloth_cloak", "tier": 1, "description": "dummy", "icon": "/images/items/bat.png"},
-  {"id": "cotton_cloth_cloak", "name": "Cotton Cloak", "familyId": "cloth_cloak", "tier": 2, "description": "dummy", "icon": "/images/items/bat.png"},
-  {"id": "wool_cloth_cloak", "name": "Wool Cloak", "familyId": "cloth_cloak", "tier": 3, "description": "dummy", "icon": "/images/items/bat.png"},
-  {"id": "silk_cloth_cloak", "name": "Silk Cloak", "familyId": "cloth_cloak", "tier": 4, "description": "dummy", "icon": "/images/items/bat.png"},
-  {"id": "shadow_cloth_cloak", "name": "Shadow Cloak", "familyId": "cloth_cloak", "tier": 5, "description": "dummy", "icon": "/images/items/bat.png"},
-  {"id": "moon_cloth_cloak", "name": "Moon Cloak", "familyId": "cloth_cloak", "tier": 6, "description": "dummy", "icon": "/images/items/bat.png"},
-
-  {"id": "sparrow_quilted_cloak", "name": "Sparrow Feather Cloak", "familyId": "quilted_cloak", "tier": 1, "description": "dummy", "icon": "/images/items/bat.png"},
-  {"id": "owl_quilted_cloak", "name": "Owl Feather Cloak", "familyId": "quilted_cloak", "tier": 2, "description": "dummy", "icon": "/images/items/bat.png"},
-  {"id": "hawk_quilted_cloak", "name": "Hawk Feather Cloak", "familyId": "quilted_cloak", "tier": 3, "description": "dummy", "icon": "/images/items/bat.png"},
-  {"id": "phoenix_quilted_cloak", "name": "Phoenix Feather Cloak", "familyId": "quilted_cloak", "tier": 4, "description": "dummy", "icon": "/images/items/bat.png"},
-  {"id": "roc_quilted_cloak", "name": "Roc Feather Cloak", "familyId": "quilted_cloak", "tier": 5, "description": "dummy", "icon": "/images/items/bat.png"},
-  {"id": "celestial_quilted_cloak", "name": "Celestial Feather Cloak", "familyId": "quilted_cloak", "tier": 6, "description": "dummy", "icon": "/images/items/bat.png"}
+  {
+    "id": "hemp_cloth_head_armor",
+    "name": "Tight Hood",
+    "familyId": "cloth_head_armor",
+    "tier": 1,
+    "description": "It is a snug-fitting hood in simple, worn copper-dyed cloth, aged bronze-thread weave, or dull metallic fibers, or as a mystical version with shimmering silver, ornate gold embroidery, or ethereal, star metal strands that glimmer with cosmic energy.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "cotton_cloth_head_armor",
+    "name": "Cotton Cloth Hood",
+    "familyId": "cloth_head_armor",
+    "tier": 2,
+    "description": "It is a soft, comfortable cotton hood in natural copper-brown, rich bronze-tinged, or plain iron-gray shades, or enchanted with gleaming silver trim, golden threadwork, or soft, starlight-woven metal designs for a magical aura.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "wool_cloth_head_armor",
+    "name": "Wool Cloth Hood",
+    "familyId": "cloth_head_armor",
+    "tier": 3,
+    "description": "It is a thick, practical wool hood dyed in earthen copper, burnished bronze, or dull steel-gray, or tasting of magic with silver runes, regal gold bands, or radiant star metal threads twinkling under moonlight.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "silk_cloth_head_armor",
+    "name": "Silk Cloth Hood",
+    "familyId": "cloth_head_armor",
+    "tier": 4,
+    "description": "It is a smooth, elegant silk hood with subtle coppery sheen, antique bronze hues, or lustrous steel-blue, or transformed by delicate silver filigree, golden embroidery, or intricate, delicate star metal lattice that shimmers faintly.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "shadow_cloth_head_armor",
+    "name": "Shadow Cloth Hood",
+    "familyId": "cloth_head_armor",
+    "tier": 5,
+    "description": "It is a sleek, midnight-black hood of shadowy, copper-stitched, bronze-lined, or dark metallic-threaded fabric, or as an enchantable veil with ripples of silvery, golden, or star metal moonlight moving across its surface, blending with the night.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "moon_cloth_head_armor",
+    "name": "Moon Cloth Hood",
+    "familyId": "cloth_head_armor",
+    "tier": 6,
+    "description": "It is a mystical hood woven from copper-glinted, bronze-infused, or subtle metallic fibers, or enhanced with ethereal silver light, enchanting golden thread, or otherworldly star metal that glows faintly with a moonlit glow.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "hemp_cloth_chest_armor",
+    "name": "Small Robe",
+    "familyId": "cloth_chest_armor",
+    "tier": 1,
+    "description": "It is a simple, short robe of rough copper-tinted, aged bronze-washed, or plain steel-thread cloth, or as a magical garment with flashing silver hem, golden accents, or patterned with shifting, twinkling star metal sigils.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "cotton_cloth_chest_armor",
+    "name": "Cotton Cloth Robe",
+    "familyId": "cloth_chest_armor",
+    "tier": 2,
+    "description": "It is a humble cotton robe dyed a faded copper hue, pleasant bronze bands, or practical iron-gray, or imbued with runic silver, lavish gold trim, or touches of radiant star metal magic.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "wool_cloth_chest_armor",
+    "name": "Wool Cloth Robe",
+    "familyId": "cloth_chest_armor",
+    "tier": 3,
+    "description": "It is a thick, warm wool robe dyed in rustic copper, dull bronze, or steely gray, or enchanted with overlaying silver threadwork, broad gold borders, or brilliant star metal stars shimmering along the hem.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "silk_cloth_chest_armor",
+    "name": "Silk Cloth Robe",
+    "familyId": "cloth_chest_armor",
+    "tier": 4,
+    "description": "It is an elegant silk robe reflecting copper-red, gleaming bronze, or shining blue-gray, or illuminated with swirling silver accents, shimmering golden patches, or delicate celestial tapestries of star metal.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "shadow_cloth_chest_armor",
+    "name": "Shadow Cloth Robe",
+    "familyId": "cloth_chest_armor",
+    "tier": 5,
+    "description": "It is a long, dark robe of shadow-black copper-flecked cloth, shadowy bronze-lined or muted metallic patterns, or enchantable so silver light, gold reflections, or star metal constellations ripple across its semi-translucent surface.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "moon_cloth_chest_armor",
+    "name": "Moon Cloth Robe",
+    "familyId": "cloth_chest_armor",
+    "tier": 6,
+    "description": "It is a flowing, lightweight robe woven with hints of copper glow, bronze shimmer, or fine metallic thread, or woven through with enchanted silver, golden runes, or radiant patterns of glowing star metal.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "hemp_cloth_leg_armor",
+    "name": "Loose Trousers",
+    "familyId": "cloth_leg_armor",
+    "tier": 1,
+    "description": "It is a relaxed trousers in sturdy copper-stained, bronze-tinted, or metal-blue cloth, or with magical upgrades of shimmering silver piping, gold-thread loops, or softly glowing star metal flecks.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "cotton_cloth_leg_armor",
+    "name": "Cotton Cloth Trousers",
+    "familyId": "cloth_leg_armor",
+    "tier": 2,
+    "description": "It is a plain cotton trousers in copper-brown, bronze-reddish, or basic steel-gray, or enhanced with subtle silver seams, gold flourishes, or delicately embroidered star metal accents.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "wool_cloth_leg_armor",
+    "name": "Wool Cloth Trousers",
+    "familyId": "cloth_leg_armor",
+    "tier": 3,
+    "description": "It is a cozy wool trousers dyed a muted copper, warm bronze, or dark gray, or bearing silver-laced cuffs, gold-stitched sides, or faint glimmers of star metal tracery.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "silk_cloth_leg_armor",
+    "name": "Silk Cloth Trousers",
+    "familyId": "cloth_leg_armor",
+    "tier": 4,
+    "description": "It is a supple silk trousers with a coppery sheen, smooth bronze glow, or metallic blue finish, or woven with enchanted silver bands, golden highlights, or airy swirls of starlight metal.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "shadow_cloth_leg_armor",
+    "name": "Shadow Cloth Trousers",
+    "familyId": "cloth_leg_armor",
+    "tier": 5,
+    "description": "It is a shadow-draped trousers in copper-black, bronze-haze, or steel-tinged matte fabric, or magical iterations that shift with silvery ripples, golden glints, or shimmering threads of star metal.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "moon_cloth_leg_armor",
+    "name": "Moon Cloth Trousers",
+    "familyId": "cloth_leg_armor",
+    "tier": 6,
+    "description": "It is a light, flexible trousers spun with rare copper shimmer, bronze dust, or metallic fibers, or gleaming magically with silver luminescence, pure gold lines, or glowing star metal constellations.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "deer_leather_head_armor",
+    "name": "Rotten Leather Cap",
+    "familyId": "leather_head_armor",
+    "tier": 1,
+    "description": "It is a battered, decaying leather cap patched with cracked copper plates, green-bronze flaking bands, or rusty iron studs, or as a cursed relic adorned with tarnished silver, faded gold filigree, or faintly glowing, star metal fragments haunted by ancient magic.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "goat_leather_head_armor",
+    "name": "Goat Leather Cap",
+    "familyId": "leather_head_armor",
+    "tier": 2,
+    "description": "It is a snug cap fashioned from tough goat leather, reinforced with copper studs, bronze-edge seams, or dull steel rings, or enhanced with fine silver weaving, golden trim, or specks of starlit metal that glitter in the light.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "elk_leather_head_armor",
+    "name": "Elk Leather Cap",
+    "familyId": "leather_head_armor",
+    "tier": 3,
+    "description": "It is a sturdy, wide-brimmed elk hide cap adorned with copper clasps, embossed bronze brow, or weathered steel fixtures, or transformed with gleaming silver thread, intricate gold leaf, or radiant points of enchanted star metal.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "manticore_leather_head_armor",
+    "name": "Manticore Leather Cap",
+    "familyId": "leather_head_armor",
+    "tier": 4,
+    "description": "It is a fearsome manticore leather cap, supple but spiked, set with hammered copper barbs, articulated bronze spikes, or teeth-like metal banding, or magically runed with silver glyphs, golden fangs, or pulsing celestial star metal horns.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "wyvern_leather_head_armor",
+    "name": "Wyvern Leather Cap",
+    "familyId": "leather_head_armor",
+    "tier": 5,
+    "description": "It is a sleek, scaled cap from wyvern hide, copper-tipped crests, sculpted bronze scales, or dark iron ridges, or shimmering enchantments with silver scales, golden veil, or star metal accents that glow with shimmering dragon magic.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "phoenix_leather_head_armor",
+    "name": "Phoenix Leather Cap",
+    "familyId": "leather_head_armor",
+    "tier": 6,
+    "description": "It is a radiant cap of fiery phoenix leather, edged with copper flames, shimmering bronze feathers, or glossy iron plumes, or enchanted with trailing silver fire, brilliant gold veining, or vibrant star metal plumage sparking with magical embers.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "deer_leather_chest_armor",
+    "name": "Primitive Leather Jerkin",
+    "familyId": "leather_chest_armor",
+    "tier": 1,
+    "description": "It is a rough, sleeveless jerkin of patched rawhide, reinforced with crude copper discs, thick bronze links, or dull metal plates, or decorated with primitive silver stamping, chunky gold knots, or ancestor-marked panels of mystical star metal.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "goat_leather_chest_armor",
+    "name": "Goat Leather Jerkin",
+    "familyId": "leather_chest_armor",
+    "tier": 2,
+    "description": "It is a fitted, supple goat leather jerkin with copper buttons, bronze buckles, or chain-stitched steel trim, or adorned with silver scrollwork, gold-inlaid seams, or ethereal star metal studs at the shoulders.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "elk_leather_chest_armor",
+    "name": "Elk Leather Jerkin",
+    "familyId": "leather_chest_armor",
+    "tier": 3,
+    "description": "It is a robust jerkin of heavy elk leather, decorated with copper-accented lacing, hammered bronze fasteners, or steel-linked panels, or elevated with intricate silver beading, golden embroidery, or star metal filigree down the chest.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "manticore_leather_chest_armor",
+    "name": "Manticore Leather Jerkin",
+    "familyId": "leather_chest_armor",
+    "tier": 4,
+    "description": "It is a menacing black jerkin made of spiny manticore hide, with copper spine reinforcement, bronze talon clasps, or menacing steel trim, or as a rare treasure detailed with gleaming silver runes, golden monster motifs, or spectral star metal studs.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "wyvern_leather_chest_armor",
+    "name": "Wyvern Leather Jerkin",
+    "familyId": "leather_chest_armor",
+    "tier": 5,
+    "description": "It is a sinuous, dragon-scale jerkin crafted from lustrous wyvern leather, trimmed with copper scales, bronze shoulder guards, or articulated metal rings, or enchanted with silver dragon runes, gold-plated scale overlays, or brilliant star metal accents.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "phoenix_leather_chest_armor",
+    "name": "Phoenix Leather Jerkin",
+    "familyId": "leather_chest_armor",
+    "tier": 6,
+    "description": "It is a vibrant jerkin of brilliant phoenix hide sewn with copper feathers, bright bronze lining, or flexible steel vents, or as a piece of high magic with swirling silver fire, gold-thread flames, or iridescent star metal filaments.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "deer_leather_leg_armor",
+    "name": "Long Leather Leggings",
+    "familyId": "leather_leg_armor",
+    "tier": 1,
+    "description": "It is a protective, high-waisted leather leggings reinforced with copper patches, crested with bronze bands, or armored with iron plates, or bearing magical motifs in silver, radiant gold inlays, or streams of woven star metal through the seams.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "goat_leather_leg_armor",
+    "name": "Goat Leather Leggings",
+    "familyId": "leather_leg_armor",
+    "tier": 2,
+    "description": "It is a tough, fitted goat leather leggings with small copper rivets, bronze buckles, or steel-kneed guards, or delicately adorned with silver edgework, gold tracery up the sides, or elegant star metal flecks that shimmer with every step.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "elk_leather_leg_armor",
+    "name": "Elk Leather Leggings",
+    "familyId": "leather_leg_armor",
+    "tier": 3,
+    "description": "It is a broad, thick elk leather leggings fastened with copper hooks, bronze-looped straps, or rugged steel bands, or gracefully decorated with silver-leafed symbols, golden embroidery, or patterns of shimmering star metal.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "manticore_leather_leg_armor",
+    "name": "Manticore Leather Leggings",
+    "familyId": "leather_leg_armor",
+    "tier": 4,
+    "description": "It is a wild, coarse leggings of thick manticore hide with copper claw guards, bronze spike studs, or interlocked steel rings, or enchanted with glowing silver runes, golden monster-hide motifs, or celestial star metal lines along each limb.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "wyvern_leather_leg_armor",
+    "name": "Wyvern Leather Leggings",
+    "familyId": "leather_leg_armor",
+    "tier": 5,
+    "description": "It is a scaled leggings crafted from resilient wyvern leather, overlain with copper studs, bronze knee-caps, or black metal bands, or wreathed in enchanted silver filigree, gold patterns, or luminous star metal veinwork reminiscent of a dragon's form.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "phoenix_leather_leg_armor",
+    "name": "Phoenix Leather Leggings",
+    "familyId": "leather_leg_armor",
+    "tier": 6,
+    "description": "It is a magnificent, flame-hued leggings of phoenix hide, tipped with copper talon-guards, edged with bronze checks, or laced with iron, or set aglow with silver fire threads, arcs of molten gold, or flickering star metal that radiate magical warmth.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "copper_chainmail_head_armor",
+    "name": "Ripped Chainmail Coif",
+    "familyId": "chainmail_head_armor",
+    "tier": 1,
+    "description": "It is a battered, torn hood of interlocking copper links, faded bronze rings, or rusted iron loops, frayed and missing sections, later enchantable as tarnished silver, dented gold, or dull, cracked star metal with haunting remnants of lost magic.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "bronze_chainmail_head_armor",
+    "name": "Bronze Chainmail Coif",
+    "familyId": "chainmail_head_armor",
+    "tier": 2,
+    "description": "It is a protective coif of tightly-woven, gleaming bronze rings, with a subtle reddish sheen, accented by strong copper trim, or upgrades in mystical silver brilliance, embossed gold border, or shimmering star metal highlights.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "iron_chainmail_head_armor",
+    "name": "Iron Chainmail Coif",
+    "familyId": "chainmail_head_armor",
+    "tier": 3,
+    "description": "It is a rugged hood crafted of overlapping iron links, weathered and gray, showing marks of hard battles, or magically transformed with shimmering silver rings, rich gold-weave, or deep blue star metal emitting faint celestial light.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "silver_chainmail_head_armor",
+    "name": "Silver Chainmail Coif",
+    "familyId": "chainmail_head_armor",
+    "tier": 4,
+    "description": "It is a radiant coif of pure, polished silver mail, each ring etched with tiny runes, glowing faintly, with a silken inner lining and sparkling under any light, exuding an aura of protective enchantment.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "gold_chainmail_head_armor",
+    "name": "Gold Chainmail Coif",
+    "familyId": "chainmail_head_armor",
+    "tier": 5,
+    "description": "It is a luxurious coif crafted from shining golden links, ornate and masterfully joined, every ring reflecting warm light with intricate decorative trim and a regal, enchanted aura of nobility.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "star_metal_chainmail_head_armor",
+    "name": "Star Metal Chainmail Coif",
+    "familyId": "chainmail_head_armor",
+    "tier": 6,
+    "description": "It is an awe-inspiring coif of gleaming, deep indigo star metal whose rings shimmer with embedded stardust, each link seemingly pulsing with cosmic power and mystical energy.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "copper_chainmail_chest_armor",
+    "name": "Ripped Chainmail Hauberk",
+    "familyId": "chainmail_chest_armor",
+    "tier": 1,
+    "description": "It is a battle-damaged long shirt of torn, dented copper mail, scorched bronze bands, or corroded iron loops, missing patches and frayed hems, or enchanted with faded silver, cracked gold, or star metal that glows mournfully with ancient runes.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "bronze_chainmail_chest_armor",
+    "name": "Bronze Chainmail Hauberk",
+    "familyId": "chainmail_chest_armor",
+    "tier": 2,
+    "description": "It is a sturdy, knee-length hauberk of bright, intricately linked bronze rings, reinforced with copper-banded edges, with enchanted forms glowing silver, gilded with swirling gold, or traced with constellation-like star metal veins.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "iron_chainmail_chest_armor",
+    "name": "Iron Chainmail Hauberk",
+    "familyId": "chainmail_chest_armor",
+    "tier": 3,
+    "description": "It is a classic iron mail shirt, dark and heavy with interlocked gray links, showing warrior's wear, but with magical variants in glittering silver, lustrous gold, or mystic star metal that sparkles with every movement.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "silver_chainmail_chest_armor",
+    "name": "Silver Chainmail Hauberk",
+    "familyId": "chainmail_chest_armor",
+    "tier": 4,
+    "description": "It is a dazzling hauberk of shining silver rings, closely woven and finely polished, rippling with luminous runes, providing both arcane protection and unmatched elegance.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "gold_chainmail_chest_armor",
+    "name": "Gold Chainmail Hauberk",
+    "familyId": "chainmail_chest_armor",
+    "tier": 5,
+    "description": "It is a magnificent hauberk of solid gold links, ornate and polished to a mirror finish, laded with lavish filigree, exuding an enchanting, regal presence.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "star_metal_chainmail_chest_armor",
+    "name": "Star Metal Chainmail Hauberk",
+    "familyId": "chainmail_chest_armor",
+    "tier": 6,
+    "description": "It is a legendary hauberk of otherworldly star metal rings, deep blue with starspark inlays, softly glowing and shrouded in an aura of stardust, a relic of celestial power.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "copper_chainmail_leg_armor",
+    "name": "Ripped Chainmail Chausses",
+    "familyId": "chainmail_leg_armor",
+    "tier": 1,
+    "description": "It is a tattered leggings of copper, bronze, or iron rings\u2014frayed, broken, and incomplete, or as magical relics with tarnished silver, battered gold, or faintly glowing star metal intricately shattered and repaired by forgotten enchantments.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "bronze_chainmail_leg_armor",
+    "name": "Bronze Chainmail Chausses",
+    "familyId": "chainmail_leg_armor",
+    "tier": 2,
+    "description": "It is a leggings formed from tight, flexible bronze links, burnished with copper patches, their magical brethren enchanted in brilliant silver, opulent gold, or ethereal star metal swirling with night energy.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "iron_chainmail_leg_armor",
+    "name": "Iron Chainmail Chausses",
+    "familyId": "chainmail_leg_armor",
+    "tier": 3,
+    "description": "It is a sturdy iron chain leggings, matte and utilitarian, links darkened from use, while enchanted versions shimmer with protective silver, gleam with ornate gold, or radiate the mystical energy of woven star metal.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "silver_chainmail_leg_armor",
+    "name": "Silver Chainmail Chausses",
+    "familyId": "chainmail_leg_armor",
+    "tier": 4,
+    "description": "It is an artisan-forged chausses of gleaming silver links, etched with tiny runes, soft yet incredibly strong, glowing under moonlight or magical influence.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "gold_chainmail_leg_armor",
+    "name": "Gold Chainmail Chausses",
+    "familyId": "chainmail_leg_armor",
+    "tier": 5,
+    "description": "It is an opulent chausses fashioned from interwoven gold links, radiant with rich embellishments and glowing subtly with a powerful magical enchantment.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "star_metal_chainmail_leg_armor",
+    "name": "Star Metal Chainmail Chausses",
+    "familyId": "chainmail_leg_armor",
+    "tier": 6,
+    "description": "It is a celestial leggings of star metal chain, each link radiant blue or silver, shimmering like a constellation, and exuding an aura of mystery and cosmic shielding.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "ironclad_iron_head_armor",
+    "name": "Apprentice's Iron Helmet",
+    "familyId": "iron_head_armor",
+    "tier": 1,
+    "description": "It is a simple, rounded helm crafted from dull copper, aged bronze, or basic iron with minimal ornamentation, or as a magically enhanced version lined with crisp silver, radiant gold, or gleaming star metal that pulses softly with energy.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "steelbound_iron_head_armor",
+    "name": "Steelbound Helmet",
+    "familyId": "iron_head_armor",
+    "tier": 2,
+    "description": "It is a sturdy, angular helmet made of rugged copper, burnished bronze, or gleaming steel bands, or enchantable with shimmering silver filigree, ornate gold trim, or smooth, luminous star metal.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "warforged_iron_head_armor",
+    "name": "Warforged Iron Helmet",
+    "familyId": "iron_head_armor",
+    "tier": 3,
+    "description": "It is a robust, militaristic helmet reinforced with copper rivets, heavy bronze plates, or polished iron, upgraded to glow with intricate silver runes, golden emblems, or crackling star metal veins.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "ironheart_iron_head_armor",
+    "name": "Ironheart Helmet",
+    "familyId": "iron_head_armor",
+    "tier": 4,
+    "description": "It is a bold, crested helmet with a heart-shaped brow, forged from copper, bright bronze, or tempered iron, or bearing magical silver sigils, gilded laurelwork, or vibrant star metal inlays.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "ironbound_iron_head_armor",
+    "name": "Ironbound Helmet",
+    "familyId": "iron_head_armor",
+    "tier": 5,
+    "description": "It is a thick, reinforced helm clad in hammered copper, bronze, or solid iron, evolving into an arcane work lined in etched silver, gold bands, or swirling patterns of enchanted star metal.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "deathless_iron_head_armor",
+    "name": "Deathless Iron Helmet",
+    "familyId": "iron_head_armor",
+    "tier": 6,
+    "description": "It is a formidable helm styled with skeletal motifs in weathered copper, corroded bronze, or battered iron, transformed when enchanted into spectral silver, haunting gold, or ghostly star metal that glows with unnatural energy.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "ironclad_iron_chest_armor",
+    "name": "Apprentice's Iron Breastplate",
+    "familyId": "iron_chest_armor",
+    "tier": 1,
+    "description": "It is a plain chestplate with basic straps, fashioned from copper panels, bronze plating, or simple hammered iron, or as a magical breastplate rimmed with silver, embossed with gold, or shimmering with radiant star metal.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "steelbound_iron_chest_armor",
+    "name": "Steelbound Breastplate",
+    "familyId": "iron_chest_armor",
+    "tier": 2,
+    "description": "It is a reinforced breastplate of overlapping copper, bronzed, or steel segments, enchantable with intricate silver chasing, ornate golden overlay, or star metal that shines with cosmic light.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "warforged_iron_chest_armor",
+    "name": "Warforged Iron Breastplate",
+    "familyId": "iron_chest_armor",
+    "tier": 3,
+    "description": "It is a massive, militarized iron breastplate set with copper studs, bronze edging, or heavy steel, magically emboldened by protective silver runes, golden scrollwork, or veins of enchanted star metal.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "ironheart_iron_chest_armor",
+    "name": "Ironheart Breastplate",
+    "familyId": "iron_chest_armor",
+    "tier": 4,
+    "description": "It is a broad chestplate with a sculpted heart plate, shaped from copper, rich bronze, or buffed iron, or its magical forms glowing with silver glyphs, gold filigree, or star metal radiance.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "ironbound_iron_chest_armor",
+    "name": "Ironbound Breastplate",
+    "familyId": "iron_chest_armor",
+    "tier": 5,
+    "description": "It is a heavy, ribbed breastplate bound by copper bands, bronze bracing, or thick iron, enchanted with swirling silver wards, raised gold edges, or a network of luminous star metal.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "deathless_iron_chest_armor",
+    "name": "Deathless Iron Breastplate",
+    "familyId": "iron_chest_armor",
+    "tier": 6,
+    "description": "It is a battle-worn, ornate breastplate adorned with skeletal or immortal symbols in tarnished copper, aging bronze, or dark iron, enchanted to shimmer with ghostly silver, grim gold, or spectral star metal energy.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "ironclad_iron_leg_armor",
+    "name": "Apprentice's Iron Greaves",
+    "familyId": "iron_leg_armor",
+    "tier": 1,
+    "description": "It is a simple greaves covering the shins, formed from copper shells, bronze guards, or basic iron plates, or with magical overlays of glistening silver, opulent gold, or star metal shining with ethereal energy.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "steelbound_iron_leg_armor",
+    "name": "Steelbound Greaves",
+    "familyId": "iron_leg_armor",
+    "tier": 2,
+    "description": "It is a protective leg armor of copper bands, bronzed plates, or layered steel, with magical enhancements of engraved silver, chased gold, or cosmic star metal patterns.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "warforged_iron_leg_armor",
+    "name": "Warforged Iron Greaves",
+    "familyId": "iron_leg_armor",
+    "tier": 3,
+    "description": "It is a sturdy, industrial greaves with copper rivets, broad bronze trims, or solid iron flex plates, or enchanted with streaming silver runes, golden accents, or radiant star metal.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "ironheart_iron_leg_armor",
+    "name": "Ironheart Greaves",
+    "familyId": "iron_leg_armor",
+    "tier": 4,
+    "description": "It is a sculpted greaves with a raised heart design, made in copper, rich bronze, or black iron, or magic-forged with silver, inscribed gold, or gleaming star metal.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "ironbound_iron_leg_armor",
+    "name": "Ironbound Greaves",
+    "familyId": "iron_leg_armor",
+    "tier": 5,
+    "description": "It is a heavily reinforced greaves with thick copper, bronze, or steel bindings, enhanced with mystical silver scrolls, golden armor bands, or glimmering star metal overlays.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "deathless_iron_leg_armor",
+    "name": "Deathless Iron Greaves",
+    "familyId": "iron_leg_armor",
+    "tier": 6,
+    "description": "It is a haunted greaves with skeletal engravings, crafted in aged copper, blued bronze, or dark iron, or transformed with spectral silver, shadowy gold, or phantasmal star metal brilliance.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "dusk_ebony_head_armor",
+    "name": "Dusk Ebony Helmet",
+    "familyId": "ebony_head_armor",
+    "tier": 1,
+    "description": "It is a sleek helmet of dark ebony wood reinforced with copper trim, glowing bronze bands, or brushed black steel, or enchantable as a helm with silvery runes, gold filigree, or constellations of shimmering star metal adorning its shadowy crown.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "twilight_ebony_head_armor",
+    "name": "Twilight Ebony Helmet",
+    "familyId": "ebony_head_armor",
+    "tier": 2,
+    "description": "It is a rounded helmet crafted from midnight ebony, edged in copper glint, bronze gleam, or blackened steel, or magically imbued with swirling silver mist, golden twilight rays, or radiant star metal specks glowing in the gathering dark.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "shadow_ebony_head_armor",
+    "name": "Shadow Ebony Helmet",
+    "familyId": "ebony_head_armor",
+    "tier": 3,
+    "description": "It is a form-fitted, deeply shadowed ebony helm with accents of copper, dark bronze, or matte metal, or made mystical with silver-woven sigils, gold tracery, or veiled star metal that shimmers in the gloom.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "midnight_ebony_head_armor",
+    "name": "Midnight Ebony Helmet",
+    "familyId": "ebony_head_armor",
+    "tier": 4,
+    "description": "It is a close-faced, deep-black ebony helmet with fierce copper highlights, burnished bronze lines, or shadowed steel plates, or enchanted with gleaming silver arabesques, baroque gold details, or swirling star metal auras that pulse in the darkness.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "umbral_ebony_head_armor",
+    "name": "Umbral Ebony Helmet",
+    "familyId": "ebony_head_armor",
+    "tier": 5,
+    "description": "It is a menacing, horned helm of shadow-black ebony lined with copper veins, graven bronze, or cold, dark metal, or as an enchanted artifact inscribed with spectral silver, gilded in warm gold, or inlaid with ethereal star metal glowing with hidden power.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "eclipsed_ebony_head_armor",
+    "name": "Eclipsed Ebony Helmet",
+    "familyId": "ebony_head_armor",
+    "tier": 6,
+    "description": "It is a full-face ebony helm, copper-masked, bronzed, or ringed in eclipse-darkened metal, or legendary with runed silver crescents, a gold solar diadem, or a corona of radiant star metal that gives off a faint celestial eclipse glow.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "dusk_ebony_chest_armor",
+    "name": "Dusk Ebony Breastplate",
+    "familyId": "ebony_chest_armor",
+    "tier": 1,
+    "description": "It is a matte black ebony chestplate with sturdy copper binding, bronzed shoulders, or cold steel tortoise shell plates, transformed with silver sunbursts, curling gold overlays, or a core shimmer of magical star metal.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "twilight_ebony_chest_armor",
+    "name": "Twilight Ebony Breastplate",
+    "familyId": "ebony_chest_armor",
+    "tier": 2,
+    "description": "It is a deep violet-black breastplate of rich ebony, clad in copper edgework, burnished bronze bands, or steel chain, or dazzling with twilight-silver inscriptions, golden twilight accents, or a celestial pattern of starlit metal.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "shadow_ebony_chest_armor",
+    "name": "Shadow Ebony Breastplate",
+    "familyId": "ebony_chest_armor",
+    "tier": 3,
+    "description": "It is a contoured ebony cuirass, dull copper banded, shadow bronze adorned, or armored in midnight steel, or as a mystical piece veined with silver glyphs, gold shadows, or iridescent veins of star metal.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "midnight_ebony_chest_armor",
+    "name": "Midnight Ebony Breastplate",
+    "familyId": "ebony_chest_armor",
+    "tier": 4,
+    "description": "It is a heavy, mirror-black ebony breastplate lined with copper ribs, bright bronze filigree, or polished night-steel, or trimmed in swirling silver, bold arcs of gold, or softly-pulsing lines of enchanted star metal.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "umbral_ebony_chest_armor",
+    "name": "Umbral Ebony Breastplate",
+    "familyId": "ebony_chest_armor",
+    "tier": 5,
+    "description": "It is a sinister, spiked ebony chestpiece with copper sigils, darkened bronze, or dull metal insets, or hauntingly magical with spectral silver, luminous gold, or glowing star metal constellation marks.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "eclipsed_ebony_chest_armor",
+    "name": "Eclipsed Ebony Breastplate",
+    "familyId": "ebony_chest_armor",
+    "tier": 6,
+    "description": "It is a dramatic, full-torso helm-forged ebony plate with copper eclipses, bronze lunar phases, or ringed blackened steel, or brilliantly enchanted with crescent silver, arching arcs of gold, or a brilliant eclipse disc of radiant star metal.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "dusk_ebony_leg_armor",
+    "name": "Dusk Ebony Greaves",
+    "familyId": "ebony_leg_armor",
+    "tier": 1,
+    "description": "It is a thick greaves of dark ebony bark, copper-tipped, bronzed at the joints, or banded with steely matte, or enchanted with crescent silver, golden rays, or cosmic star metal glimmer at the knees and shin guards.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "twilight_ebony_leg_armor",
+    "name": "Twilight Ebony Greaves",
+    "familyId": "ebony_leg_armor",
+    "tier": 2,
+    "description": "It is an elegant, shadow-black ebony leg guards with copper scrolls, flowing bronze tracery, or dusk-blue metal, or lit with whorls of enchanted silver, golden bands, or subtle, shining star metal fragments.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "shadow_ebony_leg_armor",
+    "name": "Shadow Ebony Greaves",
+    "familyId": "ebony_leg_armor",
+    "tier": 3,
+    "description": "It is a fitted ebony shin armor adorned with copper points, shadow bronze edges, or dark metal knee guards, or traced with runic silver, rich gold streaming, or glinting patterns of star metal in low light.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "midnight_ebony_leg_armor",
+    "name": "Midnight Ebony Greaves",
+    "familyId": "ebony_leg_armor",
+    "tier": 4,
+    "description": "It is a sleek, faceted greaves of pitch ebony offset by copper fluting, bronze accents, or night-colored steel, or emblazoned with silver moon runes, gold braids, or hidden star metal constellations lighting up in darkness.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "umbral_ebony_leg_armor",
+    "name": "Umbral Ebony Greaves",
+    "familyId": "ebony_leg_armor",
+    "tier": 5,
+    "description": "It is an intimidating, heavy ebony greaves with sculpted copper, wrapped bronze wire, or an iron-black sheen, or magically set off with pale silver, radiant gold, or a meteorite star metal shinpiece.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "eclipsed_ebony_leg_armor",
+    "name": "Eclipsed Ebony Greaves",
+    "familyId": "ebony_leg_armor",
+    "tier": 6,
+    "description": "It is a full-leg ebony armor with eclipse-motif copper, bronze lunar crosses, or dusk steel guards, or enchanted with curved silver, radiating gold, or a crescent of pure star metal at each kneecap.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "beetle_chitin_head_armor",
+    "name": "Beetle Chitin Carapace Helm",
+    "familyId": "chitin_head_armor",
+    "tier": 1,
+    "description": "It is a domed helmet made from thick beetle chitin reinforced with copper bands, bronze accents, or metal plates, or enchantable with gleaming silver veins, golden horns, or radiant star metal eyes set in the brow.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "mantis_chitin_head_armor",
+    "name": "Mantis Chitin Carapace Helm",
+    "familyId": "chitin_head_armor",
+    "tier": 2,
+    "description": "It is an angular, crested helm crafted from vibrant green mantis chitin, edged with copper, bronze, or metallic trim, or as a magical helm glowing with silver antennae, gold mandible designs, or faceted star metal gem eyes.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "scorpion_chitin_head_armor",
+    "name": "Scorpion Chitin Carapace Helm",
+    "familyId": "chitin_head_armor",
+    "tier": 3,
+    "description": "It is a menacing scorpion chitin helm with raised crest and cheek plates, bolstered by copper, bronze, or dark steel, or enchanted into a fearsome visage with silver stingers, golden arcs, or star metal accents radiating deadly mystique.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "spider_chitin_head_armor",
+    "name": "Spider Chitin Carapace Helm",
+    "familyId": "chitin_head_armor",
+    "tier": 4,
+    "description": "It is a smooth, low helm fashioned from black spider chitin and webbed with copper wire, bronze filigree, or shadowed steel, or mesmerizingly enchanted inlaid with silver web motifs, gold fangs, or luminous star metal spinnerets.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "wyrm_chitin_head_armor",
+    "name": "Wyrm Chitin Carapace Helm",
+    "familyId": "chitin_head_armor",
+    "tier": 5,
+    "description": "It is a draconic helm molded from wyrm chitin with copper horns, bronze ridges, or sculpted metallic scales, or adorned with silver flames, golden brows, or star metal insets that shimmer with ancient power.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "voidling_chitin_head_armor",
+    "name": "Voidling Chitin Carapace Helm",
+    "familyId": "chitin_head_armor",
+    "tier": 6,
+    "description": "It is an alien, jagged helm of voidling chitin with eerie copper whorls, deepset bronze, or matte black metal tips, or unsettling enhancements in swirling silver, eerie gold, or star metal glowing with otherworldly light.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "beetle_chitin_chest_armor",
+    "name": "Beetle Chitin Carapace Plate",
+    "familyId": "chitin_chest_armor",
+    "tier": 1,
+    "description": "It is a sturdy chestplate of iridescent beetle chitin, patched with copper seams, bronze plates, or strong metal bands, or magically inlaid with silver circuitry, braided gold, or radiant star metal discs.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "mantis_chitin_chest_armor",
+    "name": "Mantis Chitin Carapace Plate",
+    "familyId": "chitin_chest_armor",
+    "tier": 2,
+    "description": "It is a segmented chestplate of glossy green mantis chitin with copper highlights, bronze connectors, or steel reinforcement, or aglow with silver leaf markings, gold lattice, or starlight-flecked star metal strips.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "scorpion_chitin_chest_armor",
+    "name": "Scorpion Chitin Carapace Plate",
+    "familyId": "chitin_chest_armor",
+    "tier": 3,
+    "description": "It is an armor overlapping with scorpion-plate segments tinted by copper edges, bronze panels, or iron clasps, or deadly accentuated with runic silver, curling gold, or pulsating veins of star metal.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "spider_chitin_chest_armor",
+    "name": "Spider Chitin Carapace Plate",
+    "familyId": "chitin_chest_armor",
+    "tier": 4,
+    "description": "It is a flexible cuirass of matte spider chitin woven with copper threads, bronze chain, or black metal plates, or alluringly enchanted with woven silver webs, gold filaments, or moon-bright star metal nodes.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "wyrm_chitin_chest_armor",
+    "name": "Wyrm Chitin Carapace Plate",
+    "familyId": "chitin_chest_armor",
+    "tier": 5,
+    "description": "It is a grand breastplate of heavy wyrm chitin with copper scale borders, bronze belly plates, or serrated steel ridges, or breath-taking in shimmering silver highlights, swirling gold, or dragon-marked star metal lines.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "voidling_chitin_chest_armor",
+    "name": "Voidling Chitin Carapace Plate",
+    "familyId": "chitin_chest_armor",
+    "tier": 6,
+    "description": "It is a warped, alien-looking plate of voidling chitin with copper facets, bronze fractals, or shadowed metal overlays, or inlaid with liquid silver, chromatic gold, or shifting star metal pulsing with cosmic energy.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "beetle_chitin_leg_armor",
+    "name": "Beetle Chitin Carapace Greaves",
+    "familyId": "chitin_leg_armor",
+    "tier": 1,
+    "description": "It is a bulky shin guards made of layered beetle chitin, fastened with copper buckles, bronze trim, or hard steel knees, or glowing with etched silver, gold sockets, or radiant star metal bands.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "mantis_chitin_leg_armor",
+    "name": "Mantis Chitin Carapace Greaves",
+    "familyId": "chitin_leg_armor",
+    "tier": 2,
+    "description": "It is a slender, pointed greaves crafted from mantis chitin, with copper stripes, bronze heel spurs, or segmented metal overlays, or magically lined with luminous silver, golden sigils, or glimmering star metal shards.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "scorpion_chitin_leg_armor",
+    "name": "Scorpion Chitin Carapace Greaves",
+    "familyId": "chitin_leg_armor",
+    "tier": 3,
+    "description": "It is a heavy greaves of interlocking scorpion chitin segments edged in copper, bronze, or mounted with steel, or set aglow by silver stingers, gold ridges, or starlit star metal gem clusters.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "spider_chitin_leg_armor",
+    "name": "Spider Chitin Carapace Greaves",
+    "familyId": "chitin_leg_armor",
+    "tier": 4,
+    "description": "It is a flexible, jointed greaves from dense spider chitin, laced with copper webbing, bronze fastenings, or black metal mesh, or graced with twisting silver filaments, golden silk bands, or enchanted star metal dew drops.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "wyrm_chitin_leg_armor",
+    "name": "Wyrm Chitin Carapace Greaves",
+    "familyId": "chitin_leg_armor",
+    "tier": 5,
+    "description": "It is a dragon-style chitin greaves, copper claw guards, bronze spikes, or layered steel toes, or magically veined with silver streaks, gold talon marks, or meteoric star metal scales.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "voidling_chitin_leg_armor",
+    "name": "Voidling Chitin Carapace Greaves",
+    "familyId": "chitin_leg_armor",
+    "tier": 6,
+    "description": "It is a slithering greaves of voidling chitin, twisted with copper veins, bronze marbling, or shadow metal claws, or transformed with glowing silver, eerie gold, or dark, flickering star metal.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "copper_meteoric_iron_head_armor",
+    "name": "Copper Meteoric Helmet",
+    "familyId": "meteoric_iron_head_armor",
+    "tier": 1,
+    "description": "It is a rugged helmet forged with a reddish copper meteoric shell, streaked with dark veins and impact scars, or\u2014when enchanted\u2014etched with shimmering silver, gilded with sun-bright gold, or adorned with glowing, cosmic star metal inlays.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "bronze_meteoric_iron_head_armor",
+    "name": "Bronze Meteoric Helmet",
+    "familyId": "meteoric_iron_head_armor",
+    "tier": 2,
+    "description": "It is a domed bronze meteoric helmet marbled with metallic greens and dappled with impact pits, or magically alive with thin silver circuit lines, golden filigree, or iridescent star metal highlights pulsing with celestial light.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "iron_meteoric_iron_head_armor",
+    "name": "Iron Meteoric Helmet",
+    "familyId": "meteoric_iron_head_armor",
+    "tier": 3,
+    "description": "It is a heavy, craggy helmet made from iron meteorite, burnished charcoal grey with natural fractures and rough textures, or imbued with celestial silver runes, radiant gold detail, or veins of twinkling star metal.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "silver_meteoric_iron_head_armor",
+    "name": "Silver Meteoric Helmet",
+    "familyId": "meteoric_iron_head_armor",
+    "tier": 4,
+    "description": "It is a brilliant helmet of meteor-born silver, faceted with mirror-like craters and rimmed with faintly glowing runes, exuding a mystical aura of moonlight and protection.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "gold_meteoric_iron_head_armor",
+    "name": "Gold Meteoric Helmet",
+    "familyId": "meteoric_iron_head_armor",
+    "tier": 5,
+    "description": "It is an opulent meteor-forged gold helm with swirling nebular etchings, polished to reflect any light, and pulsing softly with sun-charged magical energy.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "star_metal_meteoric_iron_head_armor",
+    "name": "Star Metal Meteoric Helmet",
+    "familyId": "meteoric_iron_head_armor",
+    "tier": 6,
+    "description": "It is a legendary helmet of starlit meteoric metal, deep blue and silver-touched, with radiant fissures, and a crown that gleams as if lit by the stars themselves.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "copper_meteoric_iron_chest_armor",
+    "name": "Copper Meteoric Breastplate",
+    "familyId": "meteoric_iron_chest_armor",
+    "tier": 1,
+    "description": "It is a robust breastplate hammered from copper meteoric ore, streaked with black fusion lines, or enchanted with silver rays, gold celestial icons, or a constellation of glowing star metal specks.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "bronze_meteoric_iron_chest_armor",
+    "name": "Bronze Meteoric Breastplate",
+    "familyId": "meteoric_iron_chest_armor",
+    "tier": 2,
+    "description": "It is a warm, golden-bronze breastplate infused with meteoric particles, cross-hatched with greenish veins, or enhanced by inlaid silver stars, golden celestial scenes, or brilliant star metal arcs across the chest.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "iron_meteoric_iron_chest_armor",
+    "name": "Iron Meteoric Breastplate",
+    "familyId": "meteoric_iron_chest_armor",
+    "tier": 3,
+    "description": "It is a dark iron breastplate molded from meteoric iron, marked by natural pockmarks and fiery lines, or energized with glowing silver patterns, gold highlights, or dynamic streams of luminous star metal.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "silver_meteoric_iron_chest_armor",
+    "name": "Silver Meteoric Breastplate",
+    "familyId": "meteoric_iron_chest_armor",
+    "tier": 4,
+    "description": "It is a reflective silver breastplate with moon-crater pitting, shooting star engravings, and a subtle, magical glow that pulses with every movement.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "gold_meteoric_iron_chest_armor",
+    "name": "Gold Meteoric Breastplate",
+    "familyId": "meteoric_iron_chest_armor",
+    "tier": 5,
+    "description": "It is a treasure-like gold meteoric breastplate etched with sunbursts and celestial runes, emanating warmth and powerful golden illumination from within.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "star_metal_meteoric_iron_chest_armor",
+    "name": "Star Metal Meteoric Breastplate",
+    "familyId": "meteoric_iron_chest_armor",
+    "tier": 6,
+    "description": "It is an unmatched star metal breastplate, night-sky blue and silver, transfused with living light and the sense of a thousand wandering stars embedded beneath the surface.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "copper_meteoric_iron_leg_armor",
+    "name": "Copper Meteoric Greaves",
+    "familyId": "meteoric_iron_leg_armor",
+    "tier": 1,
+    "description": "It is a shin guards of weathered copper meteoric alloy, streaked with black and pitted from atmospheric entry, or arcane with silver streaks, gold trims, or star metal embedded in each ridge.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "bronze_meteoric_iron_leg_armor",
+    "name": "Bronze Meteoric Greaves",
+    "familyId": "meteoric_iron_leg_armor",
+    "tier": 2,
+    "description": "It is a segmented bronze meteoric greaves, swirled green and gold with smoky inclusion veins, or blazing with silver constellations, golden arc trails, or starlit star metal pulses at knee and ankle.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "iron_meteoric_iron_leg_armor",
+    "name": "Iron Meteoric Greaves",
+    "familyId": "meteoric_iron_leg_armor",
+    "tier": 3,
+    "description": "It is an iron meteorite greaves, deeply scarred and textured with streaks of magnetite, or energized with silver latticework, gold panels, or glimmering lines of pure star metal.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "silver_meteoric_iron_leg_armor",
+    "name": "Silver Meteoric Greaves",
+    "familyId": "meteoric_iron_leg_armor",
+    "tier": 4,
+    "description": "It is a polished silver greaves with meteor impact pockmarks and trailing comet designs, glowing lightly with lunar magic and offering superb agility.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "gold_meteoric_iron_leg_armor",
+    "name": "Gold Meteoric Greaves",
+    "familyId": "meteoric_iron_leg_armor",
+    "tier": 5,
+    "description": "It is an opulent meteor gold greaves decorated with blazing runes and sun-spiral motifs, casting luster with each movement and radiating enchanted warmth.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "star_metal_meteoric_iron_leg_armor",
+    "name": "Star Metal Meteoric Greaves",
+    "familyId": "meteoric_iron_leg_armor",
+    "tier": 6,
+    "description": "It is a gothic, radiant blue star metal greaves, coursed with shimmering veins, enchanted to glimmer like falling stars each time the wearer moves.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "tempered_darksteel_head_armor",
+    "name": "Tempered Darksteel Helmet",
+    "familyId": "darksteel_head_armor",
+    "tier": 1,
+    "description": "It is a robust helmet of tempered darksteel, forged in layers of blackened copper, bronzed shadows, or glossy steel, or enchantable as a brooding helm with polished silver trim, golden accents, or glowing star metal patterns rippling across its surface.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "warded_darksteel_head_armor",
+    "name": "Warded Darksteel Helmet",
+    "familyId": "darksteel_head_armor",
+    "tier": 2,
+    "description": "It is a defensive, angular helmet made from darksteel with protective embossing in copper, bronze, or gunmetal, or empowered with intricate silver ward sigils, protective gold filigree, or star metal charms pulsing with magical protection.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "runed_darksteel_head_armor",
+    "name": "Runed Darksteel Helmet",
+    "familyId": "darksteel_head_armor",
+    "tier": 3,
+    "description": "It is a domed helmet of darksteel etched with ancient runes, incised in copper, bronze, or cold grey metal, or awakened with shining silver glyphs, luminous gold script, or mystical lines of radiant star metal.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "sigiled_darksteel_head_armor",
+    "name": "Sigiled Darksteel Helmet",
+    "familyId": "darksteel_head_armor",
+    "tier": 4,
+    "description": "It is a ceremonial-seeming helmet of stylized darksteel marked by bold copper sigils, bronze emblems, or metal crests, or emblazoned with bright silver, luminous gold, or twinkling star metal insignias.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "shadowforged_darksteel_head_armor",
+    "name": "Shadowforged Darksteel Helmet",
+    "familyId": "darksteel_head_armor",
+    "tier": 5,
+    "description": "It is a sleek, menacing helmet of shadow-infused darksteel, veined with copper undertones, dark bronze, or matte black metal, or enchanted to swirl with silver mist, flicker with gold light, or radiate a soft star metal halo in darkness.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "worldforged_darksteel_head_armor",
+    "name": "Worldforged Darksteel Helmet",
+    "familyId": "darksteel_head_armor",
+    "tier": 6,
+    "description": "It is a mighty helm with a world motif shaped from ancient darksteel\u2014copper continents, bronze oceans, or shining metal poles\u2014transformed when enchanted into a silver-girt, radiant gold-banded, or celestial star metal-crowned masterpiece.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "tempered_darksteel_chest_armor",
+    "name": "Tempered Darksteel Breastplate",
+    "familyId": "darksteel_chest_armor",
+    "tier": 1,
+    "description": "It is a heavy breastplate of durable darksteel, paneled with deep copper, brushed bronze, or burnished steel, or made magical with a shining silver shield, gold tracery, or constellations of glowing star metal on its chest.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "warded_darksteel_chest_armor",
+    "name": "Warded Darksteel Breastplate",
+    "familyId": "darksteel_chest_armor",
+    "tier": 2,
+    "description": "It is a protective darksteel chestpiece embossed with ward marks in copper, bronze, or metal, or etched with silvery script, golden runes, or arcane star metal sigils for extra mystical defense.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "runed_darksteel_chest_armor",
+    "name": "Runed Darksteel Breastplate",
+    "familyId": "darksteel_chest_armor",
+    "tier": 3,
+    "description": "It is a rune-covered plate of carved darksteel, the glyphs deep-set in copper, bronze, or iron, or glowing with silver runes, radiant gold symbols, or swirling star metal spellwork.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "sigiled_darksteel_chest_armor",
+    "name": "Sigiled Darksteel Breastplate",
+    "familyId": "darksteel_chest_armor",
+    "tier": 4,
+    "description": "It is a breastplate of etched darksteel stamped with copper sigils, bronze motifs, or steel emblems, or exalted in polished silver, brilliant gold, or luminous star metal crests across its face.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "shadowforged_darksteel_chest_armor",
+    "name": "Shadowforged Darksteel Breastplate",
+    "familyId": "darksteel_chest_armor",
+    "tier": 5,
+    "description": "It is a breastplate of shadow-black darksteel, layered with subtle copper or bronze, or as a magical relic flickering with silver mist, golden rays, or an aura of enchanted star metal under moonlight.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "worldforged_darksteel_chest_armor",
+    "name": "Worldforged Darksteel Breastplate",
+    "familyId": "darksteel_chest_armor",
+    "tier": 6,
+    "description": "It is an epic chestplate of world-patterned darksteel, marked with copper landforms, bronze ridges, or metallic swirls, or transformed into a marvel of silver lines, gold ornament, or radiant, globe-shaping star metal.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "tempered_darksteel_leg_armor",
+    "name": "Tempered Darksteel Greaves",
+    "familyId": "darksteel_leg_armor",
+    "tier": 1,
+    "description": "It is a rugged greaves of banded darksteel, accented in copper, bronze, or metal for enhanced strength, or powerfully enchanted with silvered knees, golden fastenings, or shimmering star metal up the front.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "warded_darksteel_leg_armor",
+    "name": "Warded Darksteel Greaves",
+    "familyId": "darksteel_leg_armor",
+    "tier": 2,
+    "description": "It is a protective leg armor of darksteel embossed with ward patterns in copper, bronze, or gunmetal, or alive with silver magic, gold reinforcement, or glowing star metal sigils.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "runed_darksteel_leg_armor",
+    "name": "Runed Darksteel Greaves",
+    "familyId": "darksteel_leg_armor",
+    "tier": 3,
+    "description": "It is a greaves of polished darksteel deeply carved with runes, copper or bronze inlay, or darkened iron, or mystically glowing with silver enchantment, gold flourishes, or radiant star metal runic trajectories.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "sigiled_darksteel_leg_armor",
+    "name": "Sigiled Darksteel Greaves",
+    "familyId": "darksteel_leg_armor",
+    "tier": 4,
+    "description": "It is an elegant greaves adorned in darksteel, stamped with copper symbols, bronze accents, or metal plaques, or elevated with shining silver, lavish gold, or spectral star metal insignia.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "shadowforged_darksteel_leg_armor",
+    "name": "Shadowforged Darksteel Greaves",
+    "familyId": "darksteel_leg_armor",
+    "tier": 5,
+    "description": "It is a slim, nearly black greaves of shadowforged darksteel, veined with reddish copper, shadow bronze, or steel blue, or emanating shadowy silver light, gold highlights, or enchanted with drifting specks of star metal.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "worldforged_darksteel_leg_armor",
+    "name": "Worldforged Darksteel Greaves",
+    "familyId": "darksteel_leg_armor",
+    "tier": 6,
+    "description": "It is a world-motif greaves modeled in darksteel, highlighted in copper, streaked with bronze, or lined in steel, or enchanted with faint silver lines, bold gold patches, or swirling patterns of luminous star metal.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "rabbit_fur_cloak",
+    "name": "Rabbit Fur Cloak",
+    "familyId": "fur_cloak",
+    "tier": 1,
+    "description": "It is a soft, pale rabbit fur cloak with copper-tipped fasteners, bronze clasp, or subtle metal brooch, or enchanted with a delicate silver lining, stitched gold weave, or a shimmer of star metal dust along the trim.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "fox_fur_cloak",
+    "name": "Fox Fur Cloak",
+    "familyId": "fur_cloak",
+    "tier": 2,
+    "description": "It is a russet-red fox fur cloak with copper clasps, braided bronze ties, or slender metal brooch, or as a captivating magical garment trimmed with silver highlights, golden braids, or accents of star metal glimmering in each tassel.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "wolf_fur_cloak",
+    "name": "Wolf Fur Cloak",
+    "familyId": "fur_cloak",
+    "tier": 3,
+    "description": "It is a thick, gray wolf fur cloak bound by copper hooks, bronze toggles, or a wolf-head metal brooch, or made mystical with silvery edges, gold clasps engraved with runes, or strands of glowing star metal woven into the fur.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "warg_fur_cloak",
+    "name": "Warg Fur Cloak",
+    "familyId": "fur_cloak",
+    "tier": 4,
+    "description": "It is a coarse, wild cloak from black warg fur, joined with dark copper rings, bronze medallions, or heavy metal clasps, or infused with runic silver, radiant gold motifs, or a trace of star metal power pulsing between the fur strands.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "fenrir_fur_cloak",
+    "name": "Fenrir Fur Cloak",
+    "familyId": "fur_cloak",
+    "tier": 5,
+    "description": "It is a massive, ominous cloak of primal Fenrir fur, secured with copper fangs, bronze rune tags, or iron wolf-heads, or dazzling with magical silver lining, broad gold hems, or brilliant star metal teeth along the collar.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "frostmane_fur_cloak",
+    "name": "Frostmane Fur Cloak",
+    "familyId": "fur_cloak",
+    "tier": 6,
+    "description": "It is a luminous white frostmane fur cloak, clasped with icy copper pins, shimmering bronze toggles, or cool metal ornaments, or enchanted with silver-blue frost charms, golden sunbursts, or a scattering of frosty star metal crystals.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "hemp_cloth_cloak",
+    "name": "Hemp Cloak",
+    "familyId": "cloth_cloak",
+    "tier": 1,
+    "description": "It is a rugged, hooded cloak of coarse copper-stained, bronze-threaded, or iron-hued hemp, or enchantable in silver trim, bold golden patterning, or with night-blue star metal weaving.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "cotton_cloth_cloak",
+    "name": "Cotton Cloak",
+    "familyId": "cloth_cloak",
+    "tier": 2,
+    "description": "It is a soft, travel-worn cotton cloak in coppery earth tones, sunny bronze, or sturdy metal gray, or richly enchanted with silver lace, embroidered gold, or drifting points of star metal light.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "wool_cloth_cloak",
+    "name": "Wool Cloak",
+    "familyId": "cloth_cloak",
+    "tier": 3,
+    "description": "It is a thick, durable wool cloak in coppery russet, dusky bronze, or weathered iron-gray, or magical with flowing lines of silver, golden leaf motif, or luminous star metal constellations stitched along the edges.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "silk_cloth_cloak",
+    "name": "Silk Cloak",
+    "familyId": "cloth_cloak",
+    "tier": 4,
+    "description": "It is a billowing silk cloak, gleaming with copper, bronze, or blue-steel iridescence, or magical with reflective silver edgework, golden clasps, or star metal symbols that catch the light.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "shadow_cloth_cloak",
+    "name": "Shadow Cloak",
+    "familyId": "cloth_cloak",
+    "tier": 5,
+    "description": "It is a swirling, near-black cloak with coppery undertones, shadow-bronze folds, or subtle metallic seams, or as an enchantable mantle dancing with silvery shadows, gold shimmer, or mystical star metal brilliance.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "moon_cloth_cloak",
+    "name": "Moon Cloak",
+    "familyId": "cloth_cloak",
+    "tier": 6,
+    "description": "It is a moonlit cloak woven with delicate copper threads, subtle bronze swirls, or sleek metallic shine, or breathtakingly magical with floating silver glyphs, gold beams, or radiant, star metal inlays that softly pulse in the night.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "sparrow_quilted_cloak",
+    "name": "Sparrow Feather Cloak",
+    "familyId": "quilted_cloak",
+    "tier": 1,
+    "description": "It is a lightweight, earth-toned cloak adorned with layered sparrow feathers and fastened by small copper pins, bronze beads, or a modest metal clasp, or charmed with twinkling silver flecks, gleaming gold highlights, or tiny star metal feathers.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "owl_quilted_cloak",
+    "name": "Owl Feather Cloak",
+    "familyId": "quilted_cloak",
+    "tier": 2,
+    "description": "It is a hooded, shadowy cloak of plush owl feathers set off with copper filaments, bronze beads, or matte metal brooch, or ensorcelled with silver-etched vanes, gold-edged eyespots, or shimmering star metal barbs.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "hawk_quilted_cloak",
+    "name": "Hawk Feather Cloak",
+    "familyId": "quilted_cloak",
+    "tier": 3,
+    "description": "It is a bold cloak of long, striped hawk feathers with copper barbs, bronze tip binders, or reinforced by lightweight metal, or gloriously trimmed in sequined silver, golden bands, or star metal shafts glowing with latent power.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "phoenix_quilted_cloak",
+    "name": "Phoenix Feather Cloak",
+    "familyId": "quilted_cloak",
+    "tier": 4,
+    "description": "It is a cloak ablaze with fiery phoenix feathers shimmering with copper veins, molten bronze edging, or flashing red metal, or transformed by radiant silver, molten gold tracery, or iridescent star metal feathers pulsing with magical light.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "roc_quilted_cloak",
+    "name": "Roc Feather Cloak",
+    "familyId": "quilted_cloak",
+    "tier": 5,
+    "description": "It is a massive cloak of giant roc feathers held by copper chains, bronze medallions, or broad metal plate, or as a legendary wingspan with silver inlays, gold tracery, or gleaming star metal shafts at every pinion.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "celestial_quilted_cloak",
+    "name": "Celestial Feather Cloak",
+    "familyId": "quilted_cloak",
+    "tier": 6,
+    "description": "It is a weightless, luminous cloak woven from feathers glimmering with raw starlight, their vanes shifting copper, bronze, or silver at the tips, enchanted with motes of gold brilliance, or entire plumes forged from opalescent star metal.",
+    "icon": "/images/items/bat.png"
+  }
 ]

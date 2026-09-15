@@ -1,98 +1,770 @@
 [
-  {"id": "farmhands_hearty_stew", "name": "Cheap Hearty Stew", "familyId": "hearty_stew", "tier": 1, "description": "dummy", "icon": "/images/items/bat.png"},
-  {"id": "travelers_hearty_stew", "name": "Traveler's Hearty Stew", "familyId": "hearty_stew", "tier": 2, "description": "dummy", "icon": "/images/items/bat.png"},
-  {"id": "innkeepers_hearty_stew", "name": "Innkeeper's Hearty Stew", "familyId": "hearty_stew", "tier": 3, "description": "dummy", "icon": "/images/items/bat.png"},
-  {"id": "chieftains_hearty_stew", "name": "Chieftain's Hearty Stew", "familyId": "hearty_stew", "tier": 4, "description": "dummy", "icon": "/images/items/bat.png"},
-  {"id": "highland_hearty_stew", "name": "Highland Hearty Stew", "familyId": "hearty_stew", "tier": 5, "description": "dummy", "icon": "/images/items/bat.png"},
-  {"id": "harvestkings_hearty_stew", "name": "Harvestking's Hearty Stew", "familyId": "hearty_stew", "tier": 6, "description": "dummy", "icon": "/images/items/bat.png"},
-  {"id": "cabin_boys_salt_horse", "name": "Cabin Boy's Salt Horse", "familyId": "salt_horse", "tier": 1, "description": "dummy", "icon": "/images/items/bat.png"},
-  {"id": "sailors_salt_horse", "name": "Sailor's Salt Horse", "familyId": "salt_horse", "tier": 2, "description": "dummy", "icon": "/images/items/bat.png"},
-  {"id": "boatswains_salt_horse", "name": "Boatswain's Salt Horse", "familyId": "salt_horse", "tier": 3, "description": "dummy", "icon": "/images/items/bat.png"},
-  {"id": "first_mates_salt_horse", "name": "First Mate's Salt Horse", "familyId": "salt_horse", "tier": 4, "description": "dummy", "icon": "/images/items/bat.png"},
-  {"id": "captains_salt_horse", "name": "Captain's Salt Horse", "familyId": "salt_horse", "tier": 5, "description": "dummy", "icon": "/images/items/bat.png"},
-  {"id": "admirals_salt_horse", "name": "Admiral's Salt Horse", "familyId": "salt_horse", "tier": 6, "description": "dummy", "icon": "/images/items/bat.png"},
-  {"id": "cabin_boys_smoked_salt_horse", "name": "Smoked Cabin Boy's Salt Horse", "familyId": "smoked_salt_horse", "tier": 1, "description": "dummy", "icon": "/images/items/bat.png"},
-  {"id": "sailors_smoked_salt_horse", "name": "Smoked Sailor's Salt Horse", "familyId": "smoked_salt_horse", "tier": 2, "description": "dummy", "icon": "/images/items/bat.png"},
-  {"id": "boatswains_smoked_salt_horse", "name": "Smoked Boatswain's Salt Horse", "familyId": "smoked_salt_horse", "tier": 3, "description": "dummy", "icon": "/images/items/bat.png"},
-  {"id": "first_mates_smoked_salt_horse", "name": "Smoked First Mate's Salt Horse", "familyId": "smoked_salt_horse", "tier": 4, "description": "dummy", "icon": "/images/items/bat.png"},
-  {"id": "captains_smoked_salt_horse", "name": "Smoked Captain's Salt Horse", "familyId": "smoked_salt_horse", "tier": 5, "description": "dummy", "icon": "/images/items/bat.png"},
-  {"id": "admirals_smoked_salt_horse", "name": "Smoked Admiral's Salt Horse", "familyId": "smoked_salt_horse", "tier": 6, "description": "dummy", "icon": "/images/items/bat.png"},
-  {"id": "campfire_roast_haunch", "name": "Campfire Roast Haunch", "familyId": "roast_haunch", "tier": 1, "description": "dummy", "icon": "/images/items/bat.png"},
-  {"id": "hearthside_roast_haunch", "name": "Hearthside Roast Haunch", "familyId": "roast_haunch", "tier": 2, "description": "dummy", "icon": "/images/items/bat.png"},
-  {"id": "tavern_roast_haunch", "name": "Tavern Roast Haunch", "familyId": "roast_haunch", "tier": 3, "description": "dummy", "icon": "/images/items/bat.png"},
-  {"id": "banquet_roast_haunch", "name": "Banquet Roast Haunch", "familyId": "roast_haunch", "tier": 4, "description": "dummy", "icon": "/images/items/bat.png"},
-  {"id": "feastday_roast_haunch", "name": "Feastday Roast Haunch", "familyId": "roast_haunch", "tier": 5, "description": "dummy", "icon": "/images/items/bat.png"},
-  {"id": "mythic_roast_haunch", "name": "Mythic Roast Haunch", "familyId": "roast_haunch", "tier": 6, "description": "dummy", "icon": "/images/items/bat.png"},
-  {"id": "prentice_bangers", "name": "Beginner's Bangers", "familyId": "bangers", "tier": 1, "description": "dummy", "icon": "/images/items/bat.png"},
-  {"id": "butchers_bangers", "name": "Butcher's Bangers", "familyId": "bangers", "tier": 2, "description": "dummy", "icon": "/images/items/bat.png"},
-  {"id": "master_butchers_bangers", "name": "Master Butcher's Bangers", "familyId": "bangers", "tier": 3, "description": "dummy", "icon": "/images/items/bat.png"},
-  {"id": "guildmasters_bangers", "name": "Guildmaster's Bangers", "familyId": "bangers", "tier": 4, "description": "dummy", "icon": "/images/items/bat.png"},
-  {"id": "imperial_bangers", "name": "Imperial Bangers", "familyId": "bangers", "tier": 5, "description": "dummy", "icon": "/images/items/bat.png"},
-  {"id": "peerless_bangers", "name": "Peerless Bangers", "familyId": "bangers", "tier": 6, "description": "dummy", "icon": "/images/items/bat.png"},
-  {"id": "foragers_squirrel_hoard", "name": "Forager's Squirrel Hoard", "familyId": "squirrel_hoard", "tier": 1, "description": "dummy", "icon": "/images/items/bat.png"},
-  {"id": "scavengers_squirrel_hoard", "name": "Scavenger's Squirrel Hoard", "familyId": "squirrel_hoard", "tier": 2, "description": "dummy", "icon": "/images/items/bat.png"},
-  {"id": "woodland_squirrel_hoard", "name": "Woodland Squirrel Hoard", "familyId": "squirrel_hoard", "tier": 3, "description": "dummy", "icon": "/images/items/bat.png"},
-  {"id": "autumns_squirrel_hoard", "name": "Autumn's Squirrel Hoard", "familyId": "squirrel_hoard", "tier": 4, "description": "dummy", "icon": "/images/items/bat.png"},
-  {"id": "bountiful_squirrel_hoard", "name": "Bountiful Squirrel Hoard", "familyId": "squirrel_hoard", "tier": 5, "description": "dummy", "icon": "/images/items/bat.png"},
-  {"id": "ageless_squirrel_hoard", "name": "Ageless Squirrel Hoard", "familyId": "squirrel_hoard", "tier": 6, "description": "dummy", "icon": "/images/items/bat.png"},
-  {"id": "foragers_smoked_squirrel_hoard", "name": "Smoked Forager's Squirrel Hoard", "familyId": "smoked_squirrel_hoard", "tier": 1, "description": "dummy", "icon": "/images/items/bat.png"},
-  {"id": "scavengers_smoked_squirrel_hoard", "name": "Smoked Scavenger's Squirrel Hoard", "familyId": "smoked_squirrel_hoard", "tier": 2, "description": "dummy", "icon": "/images/items/bat.png"},
-  {"id": "woodland_smoked_squirrel_hoard", "name": "Smoked Woodland Squirrel Hoard", "familyId": "smoked_squirrel_hoard", "tier": 3, "description": "dummy", "icon": "/images/items/bat.png"},
-  {"id": "autumns_smoked_squirrel_hoard", "name": "Smoked Autumn's Squirrel Hoard", "familyId": "smoked_squirrel_hoard", "tier": 4, "description": "dummy", "icon": "/images/items/bat.png"},
-  {"id": "bountiful_smoked_squirrel_hoard", "name": "Smoked Bountiful Squirrel Hoard", "familyId": "smoked_squirrel_hoard", "tier": 5, "description": "dummy", "icon": "/images/items/bat.png"},
-  {"id": "ageless_smoked_squirrel_hoard", "name": "Smoked Ageless Squirrel Hoard", "familyId": "smoked_squirrel_hoard", "tier": 6, "description": "dummy", "icon": "/images/items/bat.png"},
-  {"id": "sunfaded_wizened_figs", "name": "Sunfaded Wizened Figs", "familyId": "wizened_figs", "tier": 1, "description": "dummy", "icon": "/images/items/bat.png"},
-  {"id": "windswept_wizened_figs", "name": "Windswept Wizened Figs", "familyId": "wizened_figs", "tier": 2, "description": "dummy", "icon": "/images/items/bat.png"},
-  {"id": "shriveled_wizened_figs", "name": "Shriveled Wizened Figs", "familyId": "wizened_figs", "tier": 3, "description": "dummy", "icon": "/images/items/bat.png"},
-  {"id": "amberfig_wizened_figs", "name": "Amberfig Wizened Figs", "familyId": "wizened_figs", "tier": 4, "description": "dummy", "icon": "/images/items/bat.png"},
-  {"id": "honeyfig_wizened_figs", "name": "Honeyfig Wizened Figs", "familyId": "wizened_figs", "tier": 5, "description": "dummy", "icon": "/images/items/bat.png"},
-  {"id": "ancient_wizened_figs", "name": "Ancient Wizened Figs", "familyId": "wizened_figs", "tier": 6, "description": "dummy", "icon": "/images/items/bat.png"},
-  {"id": "sunfaded_smoked_wizened_figs", "name": "Smoked Sunfaded Wizened Figs", "familyId": "smoked_wizened_figs", "tier": 1, "description": "dummy", "icon": "/images/items/bat.png"},
-  {"id": "windswept_smoked_wizened_figs", "name": "Smoked Windswept Wizened Figs", "familyId": "smoked_wizened_figs", "tier": 2, "description": "dummy", "icon": "/images/items/bat.png"},
-  {"id": "shriveled_smoked_wizened_figs", "name": "Smoked Shriveled Wizened Figs", "familyId": "smoked_wizened_figs", "tier": 3, "description": "dummy", "icon": "/images/items/bat.png"},
-  {"id": "amberfig_smoked_wizened_figs", "name": "Smoked Amberfig Wizened Figs", "familyId": "smoked_wizened_figs", "tier": 4, "description": "dummy", "icon": "/images/items/bat.png"},
-  {"id": "honeyfig_smoked_wizened_figs", "name": "Smoked Honeyfig Wizened Figs", "familyId": "smoked_wizened_figs", "tier": 5, "description": "dummy", "icon": "/images/items/bat.png"},
-  {"id": "ancient_smoked_wizened_figs", "name": "Smoked Ancient Wizened Figs", "familyId": "smoked_wizened_figs", "tier": 6, "description": "dummy", "icon": "/images/items/bat.png"},
-  {"id": "skirmishers_iron_ration", "name": "Plain Iron Ration", "familyId": "iron_ration", "tier": 1, "description": "dummy", "icon": "/images/items/bat.png"},
-  {"id": "soldiers_iron_ration", "name": "Soldier's Iron Ration", "familyId": "iron_ration", "tier": 2, "description": "dummy", "icon": "/images/items/bat.png"},
-  {"id": "veterans_iron_ration", "name": "Veteran's Iron Ration", "familyId": "iron_ration", "tier": 3, "description": "dummy", "icon": "/images/items/bat.png"},
-  {"id": "legionnaires_iron_ration", "name": "Legionnaire's Iron Ration", "familyId": "iron_ration", "tier": 4, "description": "dummy", "icon": "/images/items/bat.png"},
-  {"id": "generals_iron_ration", "name": "General's Iron Ration", "familyId": "iron_ration", "tier": 5, "description": "dummy", "icon": "/images/items/bat.png"},
-  {"id": "warlords_iron_ration", "name": "Warlord's Iron Ration", "familyId": "iron_ration", "tier": 6, "description": "dummy", "icon": "/images/items/bat.png"},
-  {"id": "stream_minnow_cooked_fish", "name": "Cooked Stream Minnow", "familyId": "cooked_fish", "tier": 1, "description": "dummy", "icon": "/images/items/bat.png"},
-  {"id": "river_trout_cooked_fish", "name": "Cooked River Trout", "familyId": "cooked_fish", "tier": 2, "description": "dummy", "icon": "/images/items/bat.png"},
-  {"id": "sea_salmon_cooked_fish", "name": "Cooked Sea Salmon", "familyId": "cooked_fish", "tier": 3, "description": "dummy", "icon": "/images/items/bat.png"},
-  {"id": "runic_eel_cooked_fish", "name": "Cooked Runic Eel", "familyId": "cooked_fish", "tier": 4, "description": "dummy", "icon": "/images/items/bat.png"},
-  {"id": "umbral_anglerfish_cooked_fish", "name": "Cooked Umbral Anglerfish", "familyId": "cooked_fish", "tier": 5, "description": "dummy", "icon": "/images/items/bat.png"},
-  {"id": "abyssal_leviathan_cooked_fish", "name": "Cooked Abyssal Leviathan", "familyId": "cooked_fish", "tier": 6, "description": "dummy", "icon": "/images/items/bat.png"},
-  {"id": "campfire_fish_skewer", "name": "Campfire Fish Skewer", "familyId": "grilled_fish_skewer", "tier": 1, "description": "dummy", "icon": "/images/items/bat.png"},
-  {"id": "hearthside_fish_skewer", "name": "Hearthside Fish Skewer", "familyId": "grilled_fish_skewer", "tier": 2, "description": "dummy", "icon": "/images/items/bat.png"},
-  {"id": "tavern_fish_skewer", "name": "Tavern Fish Skewer", "familyId": "grilled_fish_skewer", "tier": 3, "description": "dummy", "icon": "/images/items/bat.png"},
-  {"id": "banquet_fish_skewer", "name": "Banquet Fish Skewer", "familyId": "grilled_fish_skewer", "tier": 4, "description": "dummy", "icon": "/images/items/bat.png"},
-  {"id": "feastday_fish_skewer", "name": "Feastday Fish Skewer", "familyId": "grilled_fish_skewer", "tier": 5, "description": "dummy", "icon": "/images/items/bat.png"},
-  {"id": "mythic_fish_skewer", "name": "Mythic Fish Skewer", "familyId": "grilled_fish_skewer", "tier": 6, "description": "dummy", "icon": "/images/items/bat.png"},
-  {"id": "dockside_fish_chowder", "name": "Dockside Fish Chowder", "familyId": "fish_chowder", "tier": 1, "description": "dummy", "icon": "/images/items/bat.png"},
-  {"id": "fishermans_fish_chowder", "name": "Fisherman's Fish Chowder", "familyId": "fish_chowder", "tier": 2, "description": "dummy", "icon": "/images/items/bat.png"},
-  {"id": "harbormasters_fish_chowder", "name": "Harbormaster's Fish Chowder", "familyId": "fish_chowder", "tier": 3, "description": "dummy", "icon": "/images/items/bat.png"},
-  {"id": "coastal_fish_chowder", "name": "Coastal Fish Chowder", "familyId": "fish_chowder", "tier": 4, "description": "dummy", "icon": "/images/items/bat.png"},
-  {"id": "deepwater_fish_chowder", "name": "Deepwater Fish Chowder", "familyId": "fish_chowder", "tier": 5, "description": "dummy", "icon": "/images/items/bat.png"},
-  {"id": "leviathans_fish_chowder", "name": "Leviathan's Fish Chowder", "familyId": "fish_chowder", "tier": 6, "description": "dummy", "icon": "/images/items/bat.png"},
-  {"id": "deckhands_ration", "name": "Deckhand's Ration", "familyId": "fishermans_ration", "tier": 1, "description": "dummy", "icon": "/images/items/bat.png"},
-  {"id": "anglers_ration", "name": "Angler's Ration", "familyId": "fishermans_ration", "tier": 2, "description": "dummy", "icon": "/images/items/bat.png"},
-  {"id": "netmasters_ration", "name": "Netmaster's Ration", "familyId": "fishermans_ration", "tier": 3, "description": "dummy", "icon": "/images/items/bat.png"},
-  {"id": "harbor_guards_ration", "name": "Harbor Guard's Ration", "familyId": "fishermans_ration", "tier": 4, "description": "dummy", "icon": "/images/items/bat.png"},
-  {"id": "fleet_captains_ration", "name": "Fleet Captain's Ration", "familyId": "fishermans_ration", "tier": 5, "description": "dummy", "icon": "/images/items/bat.png"},
-  {"id": "tidekings_ration", "name": "Tideking's Ration", "familyId": "fishermans_ration", "tier": 6, "description": "dummy", "icon": "/images/items/bat.png"},
-  {"id": "jarred_pickled_fish", "name": "Jarred Pickled Fish", "familyId": "pickled_fish", "tier": 1, "description": "dummy", "icon": "/images/items/bat.png"},
-  {"id": "brined_pickled_fish", "name": "Brined Pickled Fish", "familyId": "pickled_fish", "tier": 2, "description": "dummy", "icon": "/images/items/bat.png"},
-  {"id": "spiced_pickled_fish", "name": "Spiced Pickled Fish", "familyId": "pickled_fish", "tier": 3, "description": "dummy", "icon": "/images/items/bat.png"},
-  {"id": "cask_aged_pickled_fish", "name": "Cask-Aged Pickled Fish", "familyId": "pickled_fish", "tier": 4, "description": "dummy", "icon": "/images/items/bat.png"},
-  {"id": "deepbrine_pickled_fish", "name": "Deepbrine Pickled Fish", "familyId": "pickled_fish", "tier": 5, "description": "dummy", "icon": "/images/items/bat.png"},
-  {"id": "ambrosial_pickled_fish", "name": "Ambrosial Pickled Fish", "familyId": "pickled_fish", "tier": 6, "description": "dummy", "icon": "/images/items/bat.png"},
-  {"id": "stream_minnow_smoked_fish", "name": "Smoked Stream Minnow", "familyId": "smoked_fish", "tier": 1, "description": "dummy", "icon": "/images/items/bat.png"},
-  {"id": "river_trout_smoked_fish", "name": "Smoked River Trout", "familyId": "smoked_fish", "tier": 2, "description": "dummy", "icon": "/images/items/bat.png"},
-  {"id": "sea_salmon_smoked_fish", "name": "Smoked Sea Salmon", "familyId": "smoked_fish", "tier": 3, "description": "dummy", "icon": "/images/items/bat.png"},
-  {"id": "runic_eel_smoked_fish", "name": "Smoked Runic Eel", "familyId": "smoked_fish", "tier": 4, "description": "dummy", "icon": "/images/items/bat.png"},
-  {"id": "umbral_anglerfish_smoked_fish", "name": "Smoked Umbral Anglerfish", "familyId": "smoked_fish", "tier": 5, "description": "dummy", "icon": "/images/items/bat.png"},
-  {"id": "abyssal_leviathan_smoked_fish", "name": "Smoked Abyssal Leviathan", "familyId": "smoked_fish", "tier": 6, "description": "dummy", "icon": "/images/items/bat.png"}
+  {
+    "id": "farmhands_hearty_stew",
+    "name": "Cheap Hearty Stew",
+    "familyId": "hearty_stew",
+    "tier": 1,
+    "description": "It is a dent-rimmed tin bowl of lumpy brown stew, topped with wilted herbs.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "travelers_hearty_stew",
+    "name": "Traveler's Hearty Stew",
+    "familyId": "hearty_stew",
+    "tier": 2,
+    "description": "It is a pewter pot of chunky vegetable stew, rough bread on the side.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "innkeepers_hearty_stew",
+    "name": "Innkeeper's Hearty Stew",
+    "familyId": "hearty_stew",
+    "tier": 3,
+    "description": "It is a simple iron cauldron filled with steaming beef and carrot stew, parsley garnish.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "chieftains_hearty_stew",
+    "name": "Chieftain's Hearty Stew",
+    "familyId": "hearty_stew",
+    "tier": 4,
+    "description": "It is an ornate silver bowl brimming with rich, red stew, crowned by roast meats and roots.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "highland_hearty_stew",
+    "name": "Highland Hearty Stew",
+    "familyId": "hearty_stew",
+    "tier": 5,
+    "description": "It is a gold-inlaid bowl of wild game stew, golden potatoes, rare herbs, wisps of magical steam.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "harvestkings_hearty_stew",
+    "name": "Harvestking's Hearty Stew",
+    "familyId": "hearty_stew",
+    "tier": 6,
+    "description": "It is a gem-set star metal tureen of crimson stew, sparkling vegetables and magical golden glow.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "cabin_boys_salt_horse",
+    "name": "Cabin Boy's Salt Horse",
+    "familyId": "salt_horse",
+    "tier": 1,
+    "description": "It is a greasy tin plate, slabs of tough salted meat, meager pickles.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "sailors_salt_horse",
+    "name": "Sailor's Salt Horse",
+    "familyId": "salt_horse",
+    "tier": 2,
+    "description": "It is a wooden bowl of salty beef chunks, hardtack crumbs.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "boatswains_salt_horse",
+    "name": "Boatswain's Salt Horse",
+    "familyId": "salt_horse",
+    "tier": 3,
+    "description": "It is an iron platter, thick slices of well-cured salted meat, pepper crust.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "first_mates_salt_horse",
+    "name": "First Mate's Salt Horse",
+    "familyId": "salt_horse",
+    "tier": 4,
+    "description": "It is a silver tray of pink salted beef cuts, ringed with spiced beans.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "captains_salt_horse",
+    "name": "Captain's Salt Horse",
+    "familyId": "salt_horse",
+    "tier": 5,
+    "description": "It is a gilded plate, tender gold-glazed salt beef, exotic fruits, shining glaze.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "admirals_salt_horse",
+    "name": "Admiral's Salt Horse",
+    "familyId": "salt_horse",
+    "tier": 6,
+    "description": "It is a star metal dish, glistening marbled salt beef, jeweled garnish, crackling arcane energy.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "cabin_boys_smoked_salt_horse",
+    "name": "Smoked Cabin Boy's Salt Horse",
+    "familyId": "smoked_salt_horse",
+    "tier": 1,
+    "description": "It is a rusty tin dish, rough-smoked salted meat, charred edge.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "sailors_smoked_salt_horse",
+    "name": "Smoked Sailor's Salt Horse",
+    "familyId": "smoked_salt_horse",
+    "tier": 2,
+    "description": "It is a wooden slab, dark-smoked beef, flecked with pepper, dry crust.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "boatswains_smoked_salt_horse",
+    "name": "Smoked Boatswain's Salt Horse",
+    "familyId": "smoked_salt_horse",
+    "tier": 3,
+    "description": "It is a pewter platter, richly smoked salt meat, thick aroma rising.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "first_mates_smoked_salt_horse",
+    "name": "Smoked First Mate's Salt Horse",
+    "familyId": "smoked_salt_horse",
+    "tier": 4,
+    "description": "It is a silver plate, aromatic smoky beef, bright spices, parsley accent.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "captains_smoked_salt_horse",
+    "name": "Smoked Captain's Salt Horse",
+    "familyId": "smoked_salt_horse",
+    "tier": 5,
+    "description": "It is a gold plate, thin-sliced smoked beef, mysterious fragrant smoke, sparkling glaze.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "admirals_smoked_salt_horse",
+    "name": "Smoked Admiral's Salt Horse",
+    "familyId": "smoked_salt_horse",
+    "tier": 6,
+    "description": "It is a star metal board, deep-purple smoked beef, glowing edges, effervescing magic vapor.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "campfire_roast_haunch",
+    "name": "Campfire Roast Haunch",
+    "familyId": "roast_haunch",
+    "tier": 1,
+    "description": "It is a charred haunch on a stick, smoky marks, crackling fire below.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "hearthside_roast_haunch",
+    "name": "Hearthside Roast Haunch",
+    "familyId": "roast_haunch",
+    "tier": 2,
+    "description": "It is a cast iron tray, well-roasted haunch, crispy skin, sprigs of rosemary.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "tavern_roast_haunch",
+    "name": "Tavern Roast Haunch",
+    "familyId": "roast_haunch",
+    "tier": 3,
+    "description": "It is a carved platter, juicy roast haunch, caramelized onions, rustic garnish.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "banquet_roast_haunch",
+    "name": "Banquet Roast Haunch",
+    "familyId": "roast_haunch",
+    "tier": 4,
+    "description": "It is a silver tray, succulent carved haunch, gold-baked crust, fine vegetables.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "feastday_roast_haunch",
+    "name": "Feastday Roast Haunch",
+    "familyId": "roast_haunch",
+    "tier": 5,
+    "description": "It is a gilded dish, huge roasted haunch, enchanted fruits, magical glaze, steaming aroma.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "mythic_roast_haunch",
+    "name": "Mythic Roast Haunch",
+    "familyId": "roast_haunch",
+    "tier": 6,
+    "description": "It is a star metal stand, legendary beast's haunch, shining glaze, surrounded by runes and divine glow.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "prentice_bangers",
+    "name": "Beginner's Bangers",
+    "familyId": "bangers",
+    "tier": 1,
+    "description": "It is a greasy tin plate of misshaped sausages, pale mash.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "butchers_bangers",
+    "name": "Butcher's Bangers",
+    "familyId": "bangers",
+    "tier": 2,
+    "description": "It is a pewter dish, grilled plump sausages, brown sear, simple onions.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "master_butchers_bangers",
+    "name": "Master Butcher's Bangers",
+    "familyId": "bangers",
+    "tier": 3,
+    "description": "It is a bronze grill pan, fat golden sausages, rustic herb garnish.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "guildmasters_bangers",
+    "name": "Guildmaster's Bangers",
+    "familyId": "bangers",
+    "tier": 4,
+    "description": "It is a silver platter, perfectly browned links, topped with minted peas, roasted shallots.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "imperial_bangers",
+    "name": "Imperial Bangers",
+    "familyId": "bangers",
+    "tier": 5,
+    "description": "It is a gold plate, masterfully crafted fat sausages, truffle flakes, glow of enchantment.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "peerless_bangers",
+    "name": "Peerless Bangers",
+    "familyId": "bangers",
+    "tier": 6,
+    "description": "It is a star metal tray, glimmering sausages, flecked with silver and rare spice, pulsing with mystic light.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "foragers_squirrel_hoard",
+    "name": "Forager's Squirrel Hoard",
+    "familyId": "squirrel_hoard",
+    "tier": 1,
+    "description": "It is a wicker basket, battered small breads, roots, and roasted squirrel bits.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "scavengers_squirrel_hoard",
+    "name": "Scavenger's Squirrel Hoard",
+    "familyId": "squirrel_hoard",
+    "tier": 2,
+    "description": "It is a wooden mess tin, nuts, dry berries, chunks of fire-roasted squirrel.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "woodland_squirrel_hoard",
+    "name": "Woodland Squirrel Hoard",
+    "familyId": "squirrel_hoard",
+    "tier": 3,
+    "description": "It is a clay bowl, roasted squirrel, fresh greens, wild mushrooms scattered.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "autumns_squirrel_hoard",
+    "name": "Autumn's Squirrel Hoard",
+    "familyId": "squirrel_hoard",
+    "tier": 4,
+    "description": "It is a shining silver pan, acorn-studded squirrel, layered root vegetables, vibrant maple leaves.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "bountiful_squirrel_hoard",
+    "name": "Bountiful Squirrel Hoard",
+    "familyId": "squirrel_hoard",
+    "tier": 5,
+    "description": "It is a golden platter, honey-glazed squirrel, candied nuts, enchanted forest greens.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "ageless_squirrel_hoard",
+    "name": "Ageless Squirrel Hoard",
+    "familyId": "squirrel_hoard",
+    "tier": 6,
+    "description": "It is a star metal cornucopia, ethereal squirrel cuts, glowing herbs, shimmering autumn fruits.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "foragers_smoked_squirrel_hoard",
+    "name": "Smoked Forager's Squirrel Hoard",
+    "familyId": "smoked_squirrel_hoard",
+    "tier": 1,
+    "description": "It is a cracked tin dish, smoked squirrel, hard nuts, blackened leaves.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "scavengers_smoked_squirrel_hoard",
+    "name": "Smoked Scavenger's Squirrel Hoard",
+    "familyId": "smoked_squirrel_hoard",
+    "tier": 2,
+    "description": "It is a charred wooden box, smoky meat strips, dried wild greens.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "woodland_smoked_squirrel_hoard",
+    "name": "Smoked Woodland Squirrel Hoard",
+    "familyId": "smoked_squirrel_hoard",
+    "tier": 3,
+    "description": "It is a pewter tray, nicely smoked squirrel with root chips, pine needles.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "autumns_smoked_squirrel_hoard",
+    "name": "Smoked Autumn's Squirrel Hoard",
+    "familyId": "smoked_squirrel_hoard",
+    "tier": 4,
+    "description": "It is a silver platter, smoky golden squirrel, sweet-smoke escaping, shiny leaf garnish.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "bountiful_smoked_squirrel_hoard",
+    "name": "Smoked Bountiful Squirrel Hoard",
+    "familyId": "smoked_squirrel_hoard",
+    "tier": 5,
+    "description": "It is a gold basket, tender smoked squirrel, enchanted berries, wisps of glowing smoke.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "ageless_smoked_squirrel_hoard",
+    "name": "Smoked Ageless Squirrel Hoard",
+    "familyId": "smoked_squirrel_hoard",
+    "tier": 6,
+    "description": "It is a star metal chest, radiant smoked squirrel, shimmering blue mist, sparkling chestnuts.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "sunfaded_wizened_figs",
+    "name": "Sunfaded Wizened Figs",
+    "familyId": "wizened_figs",
+    "tier": 1,
+    "description": "It is a faded clay bowl, wrinkled sun-baked figs, dust-chalk surface.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "windswept_wizened_figs",
+    "name": "Windswept Wizened Figs",
+    "familyId": "wizened_figs",
+    "tier": 2,
+    "description": "It is a woven reed tray, lean wind-dried figs, pale skin, wild stems.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "shriveled_wizened_figs",
+    "name": "Shriveled Wizened Figs",
+    "familyId": "wizened_figs",
+    "tier": 3,
+    "description": "It is a tin bucket, cracked wrinkly figs, dry and brittle texture.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "amberfig_wizened_figs",
+    "name": "Amberfig Wizened Figs",
+    "familyId": "wizened_figs",
+    "tier": 4,
+    "description": "It is a polished silver dish, glistening amber-toned figs, honey drizzle.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "honeyfig_wizened_figs",
+    "name": "Honeyfig Wizened Figs",
+    "familyId": "wizened_figs",
+    "tier": 5,
+    "description": "It is a golden plate, plump honey-glazed figs, glowing nectar drops, fragrant steam.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "ancient_wizened_figs",
+    "name": "Ancient Wizened Figs",
+    "familyId": "wizened_figs",
+    "tier": 6,
+    "description": "It is a star metal chalice, deep-purple figs, shimmering cracks, magical golden mist, stone runes.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "sunfaded_smoked_wizened_figs",
+    "name": "Smoked Sunfaded Wizened Figs",
+    "familyId": "smoked_wizened_figs",
+    "tier": 1,
+    "description": "It is a blackened tin plate, smoky, sun-withered figs, gray tendrils rising.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "windswept_smoked_wizened_figs",
+    "name": "Smoked Windswept Wizened Figs",
+    "familyId": "smoked_wizened_figs",
+    "tier": 2,
+    "description": "It is a rough wood tray, wind-dried smoky figs, ash flakes, curled stalks.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "shriveled_smoked_wizened_figs",
+    "name": "Smoked Shriveled Wizened Figs",
+    "familyId": "smoked_wizened_figs",
+    "tier": 3,
+    "description": "It is a pewter cup, burnt edges, shriveled figs, dense smoke swirl.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "amberfig_smoked_wizened_figs",
+    "name": "Smoked Amberfig Wizened Figs",
+    "familyId": "smoked_wizened_figs",
+    "tier": 4,
+    "description": "It is a silver tray, gleaming amber figs, smoky glaze, golden haze brimming.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "honeyfig_smoked_wizened_figs",
+    "name": "Smoked Honeyfig Wizened Figs",
+    "familyId": "smoked_wizened_figs",
+    "tier": 5,
+    "description": "It is a gold bowl, glimmering honey-coated figs, thick aromatic smoke, magical glow.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "ancient_smoked_wizened_figs",
+    "name": "Smoked Ancient Wizened Figs",
+    "familyId": "smoked_wizened_figs",
+    "tier": 6,
+    "description": "It is a star metal dish, enchanted, smoky black-purple figs, spectral golden tendrils, runic light.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "skirmishers_iron_ration",
+    "name": "Plain Iron Ration",
+    "familyId": "iron_ration",
+    "tier": 1,
+    "description": "It is a ragged leather bundle tied with twine, hard biscuits and stubby smoked sausage ends sticking out, battered tin cup dangling.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "soldiers_iron_ration",
+    "name": "Soldier's Iron Ration",
+    "familyId": "iron_ration",
+    "tier": 2,
+    "description": "It is a sturdy oilcloth pack, bread loaf and thick jerky strips poking out, compact tin flask in side pocket.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "veterans_iron_ration",
+    "name": "Veteran's Iron Ration",
+    "familyId": "iron_ration",
+    "tier": 3,
+    "description": "It is a well-worn canvas satchel, hang of smoked sausage links, aged cheese wrapped in cloth, and dented eating knife strapped on.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "legionnaires_iron_ration",
+    "name": "Legionnaire's Iron Ration",
+    "familyId": "iron_ration",
+    "tier": 4,
+    "description": "It is a reinforced leather haversack, golden-brown artisan bread, fine cured meats, and nut pouch, silver emblem stitched.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "generals_iron_ration",
+    "name": "General's Iron Ration",
+    "familyId": "iron_ration",
+    "tier": 5,
+    "description": "It is an ornate gold-edged pack, braided sausages, enchanted fruit, and dark bread visible, intricate brass buckles gleaming.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "warlords_iron_ration",
+    "name": "Warlord's Iron Ration",
+    "familyId": "iron_ration",
+    "tier": 6,
+    "description": "It is a star metal-studded war-pack, radiant magical rations\u2014glowing breads, shimmering meats\u2014runes etching the straps and buckles.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "stream_minnow_cooked_fish",
+    "name": "Cooked Stream Minnow",
+    "familyId": "cooked_fish",
+    "tier": 1,
+    "description": "It is a fire-blackened pan, pale crisped minnow, wild herbs, crackling embers.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "river_trout_cooked_fish",
+    "name": "Cooked River Trout",
+    "familyId": "cooked_fish",
+    "tier": 2,
+    "description": "It is a pewter platter, grilled brown trout, buttered skin, simple lemon slice.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "sea_salmon_cooked_fish",
+    "name": "Cooked Sea Salmon",
+    "familyId": "cooked_fish",
+    "tier": 3,
+    "description": "It is an iron plate, flaky pink salmon, roasted root vegetables, dill.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "runic_eel_cooked_fish",
+    "name": "Cooked Runic Eel",
+    "familyId": "cooked_fish",
+    "tier": 4,
+    "description": "It is a silver dish, curled blue-striped eel, mystical glowing seasoning, arcane rune.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "umbral_anglerfish_cooked_fish",
+    "name": "Cooked Umbral Anglerfish",
+    "familyId": "cooked_fish",
+    "tier": 5,
+    "description": "It is a gold leaf serving, shadowy blue-black anglerfish, bioluminescent spots, arcane mist.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "abyssal_leviathan_cooked_fish",
+    "name": "Cooked Abyssal Leviathan",
+    "familyId": "cooked_fish",
+    "tier": 6,
+    "description": "It is a star metal basin, immense abyssal fish steak, glowing violet sauce, surrounded by cosmic light.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "campfire_fish_skewer",
+    "name": "Campfire Fish Skewer",
+    "familyId": "grilled_fish_skewer",
+    "tier": 1,
+    "description": "It is a charred wooden stick skewered with small fish, lightly blackened over an open flame, simple campfire embers.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "hearthside_fish_skewer",
+    "name": "Hearthside Fish Skewer",
+    "familyId": "grilled_fish_skewer",
+    "tier": 2,
+    "description": "It is an iron rod stacked with golden, crisp fish chunks and onions, grilled over hearthstones, rustic table.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "tavern_fish_skewer",
+    "name": "Tavern Fish Skewer",
+    "familyId": "grilled_fish_skewer",
+    "tier": 3,
+    "description": "It is a pewter platter of sizzling skewered fish, painted with herbs and garlic butter, set on a crowded tavern table.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "banquet_fish_skewer",
+    "name": "Banquet Fish Skewer",
+    "familyId": "grilled_fish_skewer",
+    "tier": 4,
+    "description": "It is a silver skewer with plump, perfectly grilled fish glazed in citrus, served with lavish greens and sparkling spices.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "feastday_fish_skewer",
+    "name": "Feastday Fish Skewer",
+    "familyId": "grilled_fish_skewer",
+    "tier": 5,
+    "description": "It is a gold-inlaid skewer of gleaming, jewel-toned fish fillets, vibrant enchanted vegetables, and a hint of magical glow.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "mythic_fish_skewer",
+    "name": "Mythic Fish Skewer",
+    "familyId": "grilled_fish_skewer",
+    "tier": 6,
+    "description": "It is a star metal skewer, rare glowing fish slices, iridescent scales, garnished with ethereal fruits and floating runes.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "dockside_fish_chowder",
+    "name": "Dockside Fish Chowder",
+    "familyId": "fish_chowder",
+    "tier": 1,
+    "description": "It is a smoked clay bowl of creamy fish chowder, flecked with herbs, simple dock planks background.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "fishermans_fish_chowder",
+    "name": "Fisherman's Fish Chowder",
+    "familyId": "fish_chowder",
+    "tier": 2,
+    "description": "It is a pewter pot brimming with chunky chowder, flaked river fish, potatoes, and leeks, sturdy wooden spoon.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "harbormasters_fish_chowder",
+    "name": "Harbormaster's Fish Chowder",
+    "familyId": "fish_chowder",
+    "tier": 3,
+    "description": "It is a wide metal bowl heaped with thick, rich chowder, mussels, clams, and diced root vegetables, embossed rim.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "coastal_fish_chowder",
+    "name": "Coastal Fish Chowder",
+    "familyId": "fish_chowder",
+    "tier": 4,
+    "description": "It is a silver tureen of white, shimmering chowder, brightly colored fish, pearls of magic oil and coastal garnish.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "deepwater_fish_chowder",
+    "name": "Deepwater Fish Chowder",
+    "familyId": "fish_chowder",
+    "tier": 5,
+    "description": "It is a gold-rimmed cauldron, pale blue chowder with rare deep-sea fish and glowing seaweed, mist swirling on the surface.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "leviathans_fish_chowder",
+    "name": "Leviathan's Fish Chowder",
+    "familyId": "fish_chowder",
+    "tier": 6,
+    "description": "It is a massive star metal cauldron, swirling silver and indigo chowder, mythical leviathan cuts, glowing currents and starlight touches.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "deckhands_ration",
+    "name": "Deckhand's Ration",
+    "familyId": "fishermans_ration",
+    "tier": 1,
+    "description": "It is a simple canvas roll bundle, dried fish tails and hardtack poking through, sea-twine wrap.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "anglers_ration",
+    "name": "Angler's Ration",
+    "familyId": "fishermans_ration",
+    "tier": 2,
+    "description": "It is an oilskin satchel bulging with smoked fish, pickled eggs in glass jar, and rustic black bread, cod-scale badge on flap.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "netmasters_ration",
+    "name": "Netmaster's Ration",
+    "familyId": "fishermans_ration",
+    "tier": 3,
+    "description": "It is a weathered leather bag, whole smoked eel and silvered dried fish poking out, tangle of net cord and dried seaweed attached.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "harbor_guards_ration",
+    "name": "Harbor Guard's Ration",
+    "familyId": "fishermans_ration",
+    "tier": 4,
+    "description": "It is a polished blue-pack, hearty grilled fish portions pressed between bread, shimmering pickled kelp, nautical brass clasp.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "fleet_captains_ration",
+    "name": "Fleet Captain's Ration",
+    "familyId": "fishermans_ration",
+    "tier": 5,
+    "description": "It is a gilded waterproof case, rich cured sea fish and luminous salt biscuits, enchanted citrus packed inside, golden anchor insignia.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "tidekings_ration",
+    "name": "Tideking's Ration",
+    "familyId": "fishermans_ration",
+    "tier": 6,
+    "description": "It is a star metal and driftwood chest-pack, radiant rainbow fish fillets and magical silver loaves glowing within, crusted with pearls and runic locks.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "jarred_pickled_fish",
+    "name": "Jarred Pickled Fish",
+    "familyId": "pickled_fish",
+    "tier": 1,
+    "description": "It is a glass jar filled with pale, slick pickled fish, floating onions, and peppercorns, cloudy brine.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "brined_pickled_fish",
+    "name": "Brined Pickled Fish",
+    "familyId": "pickled_fish",
+    "tier": 2,
+    "description": "It is a stoneware crock of thick brined fish chunks, coarse salt crust, rustic label.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "spiced_pickled_fish",
+    "name": "Spiced Pickled Fish",
+    "familyId": "pickled_fish",
+    "tier": 3,
+    "description": "It is a pewter bowl brimming with golden pickled fish, layered with fiery red spices, and herb tops.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "cask_aged_pickled_fish",
+    "name": "Cask-Aged Pickled Fish",
+    "familyId": "pickled_fish",
+    "tier": 4,
+    "description": "It is a silver-rimmed cask, aged pickled fish fillets, deep hues, oak leaf garnish, hints of shimmer.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "deepbrine_pickled_fish",
+    "name": "Deepbrine Pickled Fish",
+    "familyId": "pickled_fish",
+    "tier": 5,
+    "description": "It is a gold-studded amphora, translucent deep-sea fish, shimmering brine with sapphire-like flecks and enchanted bubbles.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "ambrosial_pickled_fish",
+    "name": "Ambrosial Pickled Fish",
+    "familyId": "pickled_fish",
+    "tier": 6,
+    "description": "It is a star metal jar, radiant rainbow pickled fish, glowing, swirling magical brine and floating arcane symbols.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "stream_minnow_smoked_fish",
+    "name": "Smoked Stream Minnow",
+    "familyId": "smoked_fish",
+    "tier": 1,
+    "description": "It is a tin rack, small smoked fish, curled and glistening, dry twigs.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "river_trout_smoked_fish",
+    "name": "Smoked River Trout",
+    "familyId": "smoked_fish",
+    "tier": 2,
+    "description": "It is a wooden board, plump smoked trout fillet, warm smoky scent swirling.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "sea_salmon_smoked_fish",
+    "name": "Smoked Sea Salmon",
+    "familyId": "smoked_fish",
+    "tier": 3,
+    "description": "It is a pewter tray, thick-cut smoked salmon, bronze-gold finish, curled dill leaves.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "runic_eel_smoked_fish",
+    "name": "Smoked Runic Eel",
+    "familyId": "smoked_fish",
+    "tier": 4,
+    "description": "It is a silver sheet, ringed glowing blue smoked eel, runic marks burning gently.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "umbral_anglerfish_smoked_fish",
+    "name": "Smoked Umbral Anglerfish",
+    "familyId": "smoked_fish",
+    "tier": 5,
+    "description": "It is a gold filigree slab, smoky shadowy angler, odd blue wisps, eerie shimmer.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "abyssal_leviathan_smoked_fish",
+    "name": "Smoked Abyssal Leviathan",
+    "familyId": "smoked_fish",
+    "tier": 6,
+    "description": "It is a star metal altar, radiant smoky purple leviathan flesh, outlined in pale magical aura.",
+    "icon": "/images/items/bat.png"
+  }
 ]

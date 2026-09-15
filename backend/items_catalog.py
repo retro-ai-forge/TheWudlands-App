@@ -15,7 +15,7 @@ from typing import Optional
 _DATA_DIR = Path(__file__).resolve().parent / "data"
 _FAMILIES_PATH = _DATA_DIR / "item-inventory-properties.json"
 _SIZE_CLASSES_PATH = _DATA_DIR / "item-size-classes.json"
-_BACKPACK_TIERS_PATH = _DATA_DIR / "base-items-other.json"
+_BACKPACK_TIERS_PATH = _DATA_DIR / "base-items-essentials.json"
 
 # Every "final" crafted-output catalog file, scanned to resolve a family+tier
 # to a concrete {id, name} - mirrors craft_catalog.py's _CATALOG_FILES, but
@@ -29,9 +29,8 @@ _FINAL_CATALOG_FILES = (
     "base-items-weapon.json",
     "base-items-food.json",
     "base-items-potion.json",
-    "base-items-equipment.json",
     "base-items-adventuring-gear.json",
-    "base-items-other.json",
+    "base-items-essentials.json",
 )
 
 
