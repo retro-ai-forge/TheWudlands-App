@@ -1,6 +1,6 @@
 """
 Exercises stackable resource storage in backend.players: per-character
-resourceBalances (backpack) and the player-level shared vault.
+crafting.resources (staging vault) and the player-level shared crafting pool.
 """
 
 import pytest
@@ -31,7 +31,7 @@ async def test_grant_resource_accumulates_on_a_character(mongodb_uri):
 
         assert player is not None
         stored = next(c for c in player.characters if c["id"] == character.id)
-        assert stored["resourceBalances"]["pine_wood"] == 15
+        assert stored["crafting"]["resources"]["pine_wood"] == 15
     finally:
         await db.players.delete_one({"address": TEST_ADDRESS})
 
@@ -48,9 +48,9 @@ async def test_grant_shared_resource_is_independent_of_characters(mongodb_uri):
         player = await grant_shared_resource(TEST_ADDRESS, "healing_herb", 7)
 
         assert player is not None
-        assert player.resource_balances["healing_herb"] == 7
+        assert player.crafting["resources"]["healing_herb"] == 7
         stored = next(c for c in player.characters if c["id"] == character.id)
-        assert stored["resourceBalances"]["healing_herb"] == 3
+        assert stored["crafting"]["resources"]["healing_herb"] == 3
     finally:
         await db.players.delete_one({"address": TEST_ADDRESS})
 
@@ -86,7 +86,7 @@ async def test_trapping_selection_grants_apply_to_a_new_character(mongodb_uri):
 
         assert player is not None
         stored = next(c for c in player.characters if c["id"] == character.id)
-        assert stored["resourceBalances"][tier1_item.id] == options.tier_pools[1]
+        assert stored["crafting"]["resources"][tier1_item.id] == options.tier_pools[1]
     finally:
         await db.players.delete_one({"address": TEST_ADDRESS})
 

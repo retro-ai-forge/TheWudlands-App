@@ -122,24 +122,34 @@ export interface SlotCharacterSummary {
   classes: CharacterClasses;
   profession: CharacterProfessions;
   attr: CharacterAttributes;
-  resources: Record<string, number>;
-  /** Tools this character currently holds (id -> quantity), checked out of the player's shared pool. */
-  tools: Record<string, number>;
+  /** Temporary crafting-session staging area - populated by start_craft, drained by finish_craft. */
+  crafting: {
+    resources: Record<string, number>;
+    tools: Record<string, number>;
+    /** Non-instance crafted items staged as a consumed "final" ingredient - concrete item id -> quantity. */
+    itemBalances: Record<string, number>;
+    /** In-progress craft, if any - one job at a time. Resolved lazily against readyAt, not a live server countdown. */
+    activeCraft: {
+      familyId: string;
+      tier: number;
+      count: number;
+      readyAt: string;
+      /** Instance-tracked tools (e.g. axe_stone) currently borrowed for this craft - each moved to location:"crafting" for the duration and returned to `source` once it finishes. */
+      borrowedInstances?: { instanceId: string; source: string; slotRef: string[] }[];
+    } | null;
+  };
   /** Blueprint ids this character has learned - soulbound, never moves. */
   blueprints: string[];
-  /** Item instances this character holds - backpacked or equipped (see location/slotRef). */
-  items: ItemInstance[];
-  /** Non-instance crafted items (food, potions, misc trinkets) this character holds - concrete item id -> quantity, unlimited (see backend.character.Character.item_balances). */
-  itemBalances: Record<string, number>;
-  /** In-progress craft, if any - one job at a time. Resolved lazily against readyAt, not a live server countdown. */
-  activeCraft: {
-    familyId: string;
-    tier: number;
-    count: number;
-    readyAt: string;
-    /** Instance-tracked tools (e.g. axe_stone) currently borrowed for this craft - each moved to location:"crafting" for the duration and returned to `source` once it finishes. */
-    borrowedInstances?: { instanceId: string; source: string; slotRef: string[] }[];
-  } | null;
+  /** Everything this character actually owns/carries for adventuring. */
+  gear: {
+    /** Item instances this character holds - backpacked or equipped (see location/slotRef). */
+    items: ItemInstance[];
+    /** Raw/processed resources this character owns, split by physical carry location. */
+    resources: { camp: Record<string, number>; backpack: Record<string, number>; saddlepack: Record<string, number> };
+    /** Non-instance crafted items (food, potions, misc trinkets) this character owns, split by physical carry location. */
+    itemBalances: { camp: Record<string, number>; backpack: Record<string, number>; saddlepack: Record<string, number> };
+  };
+  equippedLight: { family: string; tier: number; litAt: string; hand: string } | null;
 }
 
 interface SlotState {
@@ -458,7 +468,7 @@ function SoulSlotCard({
   // Display-only - this grid never calls finish_craft itself, unlike the
   // Inventory tab's own use of this same hook. Just lets a player glance
   // at the grid and see who's still busy, without opening anyone's sheet.
-  const remainingSeconds = useCraftCountdown(occupant?.activeCraft?.readyAt);
+  const remainingSeconds = useCraftCountdown(occupant?.crafting.activeCraft?.readyAt);
   // True once occupant.portraitUrl has failed to load (a broken external
   // link, most likely) - drives the large "?" placeholder below instead of
   // a blank/broken image sitting in the slot.

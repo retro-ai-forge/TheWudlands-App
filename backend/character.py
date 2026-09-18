@@ -157,53 +157,48 @@ class Character:
     profession: ProfStats = field(default_factory=ProfStats)
     attr: AttributeStats = field(default_factory=AttributeStats)
     created_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
-    # Temporary crafting-session staging area, keyed by resource id (see
-    # backend.resources_catalog) - populated by backend.players.start_craft
-    # (drawing from the player's shared inventory.resources) and drained by
-    # finish_craft, or check_in_resource as a manual escape hatch. Never a
-    # place a player parks materials directly - see the item-instance
-    # plan's "Backpack capacity" section for the full four-tier model.
-    resource_balances: Dict[str, int] = field(default_factory=dict)
-    # Same temporary-staging role as resource_balances, for tools -
-    # populated by start_craft when the recipe's tool isn't already held,
-    # drained via check_in_tool (start_craft's transfer never automatically
-    # reverses on its own, unlike resources which finish_craft consumes).
-    tools: Dict[str, int] = field(default_factory=dict)
+    # Temporary crafting-session staging area: resources/tools/itemBalances
+    # borrowed from the player's shared crafting/vault pools by
+    # backend.players.start_craft to stage one active craft, and drained by
+    # finish_craft (or check_in_resource/check_in_tool as a manual escape
+    # hatch). Never a place a player parks materials directly - see the
+    # item-instance plan's "Backpack capacity" section for the full model.
+    # {"resources": {id: qty}, "tools": {id: qty}, "itemBalances": {id: qty},
+    #  "activeCraft": {"familyId", "tier", "readyAt", ...} | None}
+    crafting: dict = field(default_factory=lambda: {
+        "resources": {},
+        "tools": {},
+        "itemBalances": {},
+        "activeCraft": None,
+    })
     # Blueprint ids this character has learned (see backend.craft_catalog) -
     # chosen on the Trappings step from the pools their professions unlock.
     # Soulbound: unlike tools, blueprints never move to the player's shared
     # pool or to another character - knowing a technique is permanently tied
     # to the character who learned it (eventual candidate for an on-chain
     # soulbound token, one day). A one-time unlock, never a stackable
-    # quantity like resource_balances.
+    # quantity like a resource balance.
     blueprints: List[str] = field(default_factory=list)
-    # Item instances this character holds - either in the backpack
-    # (location:"backpack") or equipped into a body slot (location:"body").
-    # See backend.items_catalog; only needsItemDefinition:true families ever
-    # appear here (everything else is a flat count in item_balances).
-    items: List[dict] = field(default_factory=list)
-    # Crafting vault for non-instance crafted items (food, potions, misc
-    # trinkets, adventuring gear) - unlimited, keyed by concrete item id,
-    # the same flat-count pattern as resource_balances/tools.
-    item_balances: Dict[str, int] = field(default_factory=dict)
-    # Subset of resource_balances physically loaded into the backpack -
-    # slot-limited (see backend.items_catalog.backpack_slots_used), unlike
-    # resource_balances itself which is the unlimited crafting vault.
-    backpack_resources: Dict[str, int] = field(default_factory=dict)
-    # Subset of item_balances physically loaded into the backpack -
-    # same relationship backpack_resources has to resource_balances.
-    backpack_item_balances: Dict[str, int] = field(default_factory=dict)
+    # Everything this character actually owns/carries for adventuring, as
+    # opposed to what's staged for an active craft (see `crafting` above).
+    # `items` holds item instances (backend.items_catalog; only
+    # needsItemDefinition:true families ever appear here - location:
+    # "backpack"/"body"/"crafting", the last meaning borrowed for an active
+    # craft). `resources`/`itemBalances` are flat-count balances split by
+    # physical location: "camp" (owned, not packed anywhere specific),
+    # "backpack", and "saddlepack" (mount-side, see the Mbagpack equip
+    # slot) - moving a unit between locations never changes the total the
+    # character owns, only where it currently sits.
+    gear: dict = field(default_factory=lambda: {
+        "items": [],
+        "resources": {"camp": {}, "backpack": {}, "saddlepack": {}},
+        "itemBalances": {"camp": {}, "backpack": {}, "saddlepack": {}},
+    })
     # Which light source (if any) is currently lit and held, e.g.
     # {"family": "torch", "tier": 4, "litAt": "<isoformat>", "hand": "Left Hand"}.
     # Not an item instance - see backend/data/light-source-burn-hours.json;
     # remaining burn time is computed lazily from litAt, not stored directly.
     equipped_light: Optional[dict] = None
-    # The character's in-progress craft, if any: {"familyId", "tier",
-    # "readyAt"} (readyAt = start time + backend.players._craft_duration_seconds(...),
-    # ISO 8601). One job at a time - starting a craft is rejected while this
-    # is set and still in the future. Resolved lazily (no background job):
-    # a client counts down against readyAt itself, then calls finish_craft.
-    active_craft: Optional[dict] = None
 
     def to_dict(self) -> dict:
         return {
@@ -231,12 +226,8 @@ class Character:
             # read back), which is the signal the frontend uses to show no
             # countdown at all, just a "ready" status.
             "availability": {"name": "ready", "timeRdy": self.created_at.isoformat()},
-            "resources": self.resource_balances,
-            "tools": self.tools,
+            "crafting": self.crafting,
             "blueprints": self.blueprints,
-            "items": self.items,
-            "itemBalances": self.item_balances,
-            "backpackResources": self.backpack_resources,
-            "backpackItemBalances": self.backpack_item_balances,
+            "gear": self.gear,
             "equippedLight": self.equipped_light,
         }

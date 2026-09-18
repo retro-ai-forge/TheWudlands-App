@@ -84,19 +84,21 @@ export function WelcomeView() {
   // `character` prop - which is otherwise a point-in-time snapshot, not live.
   const applyPlayerData = (data: {
     characters?: SlotCharacterSummary[];
-    inventory?: {
+    crafting?: {
       tools?: Record<string, number>;
       resources?: Record<string, number>;
+    };
+    vault?: {
       itemBalances?: Record<string, number>;
       items?: ItemInstance[];
     };
   } | null) => {
     const chars = data?.characters ?? [];
     setCharacters(chars);
-    setPlayerResourceBalances(data?.inventory?.resources ?? {});
-    setPlayerTools(data?.inventory?.tools ?? {});
-    setPlayerItemBalances(data?.inventory?.itemBalances ?? {});
-    setPlayerItems(data?.inventory?.items ?? []);
+    setPlayerResourceBalances(data?.crafting?.resources ?? {});
+    setPlayerTools(data?.crafting?.tools ?? {});
+    setPlayerItemBalances(data?.vault?.itemBalances ?? {});
+    setPlayerItems(data?.vault?.items ?? []);
     setViewingCharacter((prev) => {
       if (!prev) return prev;
       const updated = chars.find((c) => c.id === prev.id);

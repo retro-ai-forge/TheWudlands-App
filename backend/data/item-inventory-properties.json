@@ -731,11 +731,36 @@
     "needsItemDefinition": true,
     "note": "Wears out with use.",
     "equipSlots": [
-      ["Back"],
-      ["Side"]
+      ["Back"]
     ],
     "backpackable": false,
     "qualityMax": 20
+  },
+  {
+    "familyId": "saddlepack",
+    "kind": ["essentials"],
+    "sizeClass": "light",
+    "stackSize": 1,
+    "needsItemDefinition": true,
+    "note": "Wears out with use. Equips onto a mount's own Mbagpack slot, not the character - the mount's own carry capacity.",
+    "equipSlots": [
+      ["Mbagpack"]
+    ],
+    "backpackable": false,
+    "qualityMax": 30
+  },
+  {
+    "familyId": "bridle",
+    "kind": ["essentials"],
+    "sizeClass": "tiny",
+    "stackSize": 1,
+    "needsItemDefinition": true,
+    "note": "Wears out with use. Equips onto a mount's own Mhead slot, not the character.",
+    "equipSlots": [
+      ["Mhead"]
+    ],
+    "backpackable": false,
+    "qualityMax": 25
   },
   {
     "familyId": "candle",

@@ -83,7 +83,7 @@ export function StatsTab({
   // its timer hits 0 (uncollected results don't block anything - see
   // InventoryTab's own "Ready"/0:00 handling) - 0 is falsy, so it already
   // falls through to "Ready"/"now" below without a separate check.
-  const craftRemainingSeconds = useCraftCountdown(character.activeCraft?.readyAt);
+  const craftRemainingSeconds = useCraftCountdown(character.crafting.activeCraft?.readyAt);
 
   // The sole slot ("prof1"|"prof2"|"prof3") that receives final-item
   // assembly-bonus XP on finishing a blueprint-gated item - player-chosen

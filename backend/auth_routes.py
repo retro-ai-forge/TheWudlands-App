@@ -231,6 +231,41 @@ class ItemInstanceResponse(BaseModel):
     createdAt: str
 
 
+class CharacterCraftingResponse(BaseModel):
+    """Temporary crafting-session staging area - populated by start_craft
+    from the player's shared crafting/vault pools, drained by finish_craft."""
+
+    resources: Dict[str, int] = Field(default_factory=dict)
+    tools: Dict[str, int] = Field(default_factory=dict)
+    itemBalances: Dict[str, int] = Field(default_factory=dict)
+    activeCraft: Optional[dict] = Field(
+        None,
+        description=(
+            "In-progress craft, if any - {familyId, tier, count, readyAt, toolTransferId, "
+            "borrowedInstances: [{instanceId, source, slotRef}]}. One job at a time."
+        ),
+    )
+
+
+class GearBalancesResponse(BaseModel):
+    """A flat-count balance split by physical carry location."""
+
+    camp: Dict[str, int] = Field(default_factory=dict, description="Owned, not packed anywhere specific")
+    backpack: Dict[str, int] = Field(default_factory=dict, description="Physically loaded into the backpack")
+    saddlepack: Dict[str, int] = Field(default_factory=dict, description="Physically loaded into a mount's saddlepack")
+
+
+class CharacterGearResponse(BaseModel):
+    """Everything this character actually owns/carries for adventuring."""
+
+    items: List[ItemInstanceResponse] = Field(
+        default_factory=list,
+        description="Item instances this character holds - backpacked or equipped (see location/slotRef)",
+    )
+    resources: GearBalancesResponse = Field(default_factory=GearBalancesResponse)
+    itemBalances: GearBalancesResponse = Field(default_factory=GearBalancesResponse)
+
+
 class CharacterResponse(BaseModel):
     """A single character belonging to a player."""
 
@@ -259,47 +294,28 @@ class CharacterResponse(BaseModel):
     classes: CharacterClassResponse
     profession: CharacterProfessionResponse
     attr: CharacterAttributeResponse
-    resources: Dict[str, int] = Field(
-        default_factory=dict, description="Stackable resources this character carries, by resource id"
-    )
-    tools: Dict[str, int] = Field(
-        default_factory=dict,
-        description="Tools this character currently holds (id -> quantity), checked out of the player's shared pool",
-    )
+    crafting: CharacterCraftingResponse = Field(default_factory=CharacterCraftingResponse)
     blueprints: List[str] = Field(
         default_factory=list,
         description="Blueprint ids this character has learned, chosen on the Trappings step - soulbound, never moves",
     )
-    items: List[ItemInstanceResponse] = Field(
-        default_factory=list,
-        description="Item instances this character holds - backpacked or equipped (see location/slotRef)",
-    )
-    itemBalances: Dict[str, int] = Field(
-        default_factory=dict,
-        description="Crafting-vault balances for non-instance crafted items (food, potions, misc, adventuring gear)",
-    )
-    backpackResources: Dict[str, int] = Field(
-        default_factory=dict, description="Subset of resources physically loaded into the backpack"
-    )
-    backpackItemBalances: Dict[str, int] = Field(
-        default_factory=dict, description="Subset of itemBalances physically loaded into the backpack"
-    )
+    gear: CharacterGearResponse = Field(default_factory=CharacterGearResponse)
     equippedLight: Optional[dict] = Field(
         None, description="Which light source (if any) is currently lit and held - {family, tier, litAt, hand}"
     )
-    activeCraft: Optional[dict] = Field(
-        None,
-        description=(
-            "In-progress craft, if any - {familyId, tier, count, readyAt, toolTransferId, "
-            "borrowedInstances: [{instanceId, source, slotRef}]}. One job at a time."
-        ),
-    )
 
-class PlayerInventoryResponse(BaseModel):
-    """The player's shared vault - pooled across every character they own."""
+class PlayerCraftingResponse(BaseModel):
+    """Crafting-only shared pool - raw/processed resources and tools, drawn
+    on by start_craft to stage an active craft."""
 
-    tools: Dict[str, int] = Field(default_factory=dict)
     resources: Dict[str, int] = Field(default_factory=dict)
+    tools: Dict[str, int] = Field(default_factory=dict)
+
+
+class PlayerVaultResponse(BaseModel):
+    """Everything the player owns that isn't a raw/processed material and
+    isn't soulbound to a specific character."""
+
     items: List[ItemInstanceResponse] = Field(
         default_factory=list, description="Unassigned item instances, always location:\"pool\""
     )
@@ -319,9 +335,13 @@ class PlayerDataResponse(BaseModel):
     characters: List[CharacterResponse] = Field(
         default_factory=list, description="Characters belonging to this player"
     )
-    inventory: PlayerInventoryResponse = Field(
-        default_factory=PlayerInventoryResponse,
-        description="Shared inventory (tools, resources, items, itemBalances) pooled across all their characters",
+    crafting: PlayerCraftingResponse = Field(
+        default_factory=PlayerCraftingResponse,
+        description="Shared crafting pool (resources, tools) pooled across all their characters",
+    )
+    vault: PlayerVaultResponse = Field(
+        default_factory=PlayerVaultResponse,
+        description="Shared vault (items, itemBalances) pooled across all their characters",
     )
 
 
@@ -908,7 +928,7 @@ async def check_in_tool_route(
 ):
     """Move `amount` of `tool_id` from one of the player's characters back into the shared tool pool."""
     try:
-        player = await check_in_tool(address, character_id, tool_id, payload.amount, pool="inventory.tools")
+        player = await check_in_tool(address, character_id, tool_id, payload.amount, pool="crafting.tools")
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc))
 

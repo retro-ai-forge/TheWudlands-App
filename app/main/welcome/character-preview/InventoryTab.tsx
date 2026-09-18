@@ -45,9 +45,11 @@ type ResourceTierInfo = Record<string, { tier: number; family: string; category:
 // the whole roster plus the shared vault/tool pool after a transfer.
 export type RawPlayerData = {
   characters: SlotCharacterSummary[];
-  inventory: {
+  crafting: {
     tools: Record<string, number>;
     resources: Record<string, number>;
+  };
+  vault: {
     itemBalances: Record<string, number>;
     items: ItemInstance[];
   };
@@ -1335,9 +1337,17 @@ export function ItemDetailPopup({
                 />
               </div>
               {/* Only the icon itself is the hold target now - the label
-                  and progress track above are just display, not clickable. */}
+                  and progress track above are just display, not clickable.
+                  title/aria-label repeat that same headline directly on
+                  the hold target, not just the paragraph above it, so it
+                  reads correctly for a screen reader or a hover tooltip
+                  even without the visual label in view. */}
               <span
                 className={styles.destroyIcon}
+                role="button"
+                tabIndex={0}
+                title="Hold to destroy"
+                aria-label="Hold to destroy"
                 onPointerDown={(e) => {
                   e.preventDefault();
                   startDestroyHold();
@@ -1772,7 +1782,7 @@ export function InventoryTab({
   // one character-only keeps those checks matching what start_craft
   // actually accepts.
   const ownedTools = ownedIds(playerTools);
-  for (const instance of character.items) {
+  for (const instance of character.gear.items) {
     if (instance.location === "backpack" || instance.location === "body") {
       ownedTools.push(instance.itemId);
     }
@@ -1793,12 +1803,12 @@ export function InventoryTab({
 
   // Instance-tracked tools currently borrowed for this character's active
   // craft (location:"crafting" - see start_craft/finish_craft's
-  // borrowedInstances) - shown right alongside the flat character.tools
+  // borrowedInstances) - shown right alongside the flat character.crafting.tools
   // list above so a borrowed axe_stone is visibly "in the crafting
   // section," not just gone from wherever it used to be.
   const borrowedToolIds: string[] = [];
   const borrowedToolCounts: Record<string, number> = {};
-  for (const instance of character.items) {
+  for (const instance of character.gear.items) {
     if (instance.location === "crafting") {
       if (!(instance.itemId in borrowedToolCounts)) borrowedToolIds.push(instance.itemId);
       borrowedToolCounts[instance.itemId] = (borrowedToolCounts[instance.itemId] ?? 0) + 1;
@@ -1838,7 +1848,7 @@ export function InventoryTab({
   const characterItemRowBalances: Record<string, number> = {};
   const characterItemRowQuality: Record<string, number | null> = {};
   const characterItemLocations: Record<string, "backpack" | "body"> = {};
-  for (const instance of character.items) {
+  for (const instance of character.gear.items) {
     if (instance.location !== "backpack" && instance.location !== "body") continue;
     characterItemLookupIds[instance.instanceId] = instance.itemId;
     characterItemRowBalances[instance.instanceId] = 1;
@@ -1847,7 +1857,7 @@ export function InventoryTab({
   }
 
   const characterItemsCombined: Record<string, number> = {
-    ...character.itemBalances,
+    ...character.gear.itemBalances.camp,
     ...characterItemRowBalances,
   };
 
@@ -1856,7 +1866,7 @@ export function InventoryTab({
   // "Move to backpack" only makes sense with one on, so both the vault and
   // character item popups grey that button out otherwise instead of
   // letting the click fail server-side with "No backpack equipped".
-  const hasBackpackEquipped = character.items.some(
+  const hasBackpackEquipped = character.gear.items.some(
     (instance) => instance.location === "body" && (instance.slotRef.includes("Back") || instance.slotRef.includes("Side"))
   );
 
@@ -1948,7 +1958,7 @@ export function InventoryTab({
   // the viewer, in one batch - checks ingredients (scaled by craftCount)/
   // tool/blueprint against the player's shared vault, transfers what's
   // needed onto the character, and starts the CRAFT_DURATION_SECONDS timer
-  // server-side (character.activeCraft) - one timer regardless of count.
+  // server-side (character.crafting.activeCraft) - one timer regardless of count.
   // See the countdown effect below for what happens once that timer elapses.
   const startCraft = async () => {
     const win = getRecipeViewerWindow();
@@ -2025,15 +2035,15 @@ export function InventoryTab({
       });
       if (res.ok) {
         const data: RawPlayerData = await res.json();
-        if (character.activeCraft) {
+        if (character.crafting.activeCraft) {
           setLastCraftResult({
             name: resolveOutputName(
-              character.activeCraft.familyId,
-              character.activeCraft.tier,
+              character.crafting.activeCraft.familyId,
+              character.crafting.activeCraft.tier,
               resourceTierInfo,
               itemCatalogTierInfo
             ),
-            count: character.activeCraft.count,
+            count: character.crafting.activeCraft.count,
           });
           if (fadeTimeoutRef.current) clearTimeout(fadeTimeoutRef.current);
           fadeTimeoutRef.current = setTimeout(() => setLastCraftResult(null), CRAFT_RESULT_FADE_MS);
@@ -2047,13 +2057,13 @@ export function InventoryTab({
     }
   };
 
-  // Countdown against character.activeCraft.readyAt - resolved lazily
+  // Countdown against character.crafting.activeCraft.readyAt - resolved lazily
   // (matching backend.players' own "no background job" design), shared
   // with the soul-slot grid's own compact badge. Unlike that display-only
   // use, this tab is also responsible for actually collecting the craft:
   // fires finishCraft the moment the countdown reaches zero, including
   // immediately on mount if readyAt is already in the past.
-  const remainingSeconds = useCraftCountdown(character.activeCraft?.readyAt);
+  const remainingSeconds = useCraftCountdown(character.crafting.activeCraft?.readyAt);
   useEffect(() => {
     if (remainingSeconds === 0) finishCraft();
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -2113,14 +2123,14 @@ export function InventoryTab({
                     when it has nothing but a borrowed tool already covers the
                     "using a tool" story - only claim "no tools" when BOTH
                     lists are actually empty. */}
-                {(ownedIds(character.tools).length > 0 || borrowedToolIds.length === 0) && (
+                {(ownedIds(character.crafting.tools).length > 0 || borrowedToolIds.length === 0) && (
                   <IdList
-                    ids={ownedIds(character.tools)}
+                    ids={ownedIds(character.crafting.tools)}
                     emptyLabel="Not currently using any tools."
                     tierInfo={toolTierInfo}
                     sortByTier
                     fixedIcon="🔧"
-                    balances={character.tools}
+                    balances={character.crafting.tools}
                     // Locked for the crafting duration - whatever start_craft
                     // staged here isn't the player's to move back out until
                     // the craft finishes (or the timer runs out and
@@ -2142,30 +2152,30 @@ export function InventoryTab({
                     textColor="#7eb8ff"
                   />
                 )}
-                {(ownedIds(character.tools).length > 0 || borrowedToolIds.length > 0) && (
+                {(ownedIds(character.crafting.tools).length > 0 || borrowedToolIds.length > 0) && (
                   <div className={styles.toolsResourceDivider} />
                 )}
                 <ResourceList
-                  balances={character.resources}
+                  balances={character.crafting.resources}
                   emptyLabel="No materials used."
                   tierInfo={resourceTierInfo}
                   onTransfer={remainingSeconds === null ? (id, amount) => transfer("resources", id, amount) : undefined}
                 />
-                {remainingSeconds !== null && character.activeCraft && (
+                {remainingSeconds !== null && character.crafting.activeCraft && (
                   <>
                     <div className={styles.craftOutputDivider} />
                     <p className={styles.craftOutputLine}>
-                      Crafting {character.activeCraft.count}x{" "}
+                      Crafting {character.crafting.activeCraft.count}x{" "}
                       {resolveOutputName(
-                        character.activeCraft.familyId,
-                        character.activeCraft.tier,
+                        character.crafting.activeCraft.familyId,
+                        character.crafting.activeCraft.tier,
                         resourceTierInfo,
                         itemCatalogTierInfo
                       )}
                     </p>
                   </>
                 )}
-                {!character.activeCraft && lastCraftResult && (
+                {!character.crafting.activeCraft && lastCraftResult && (
                   <>
                     <div className={styles.craftOutputDivider} />
                     <p className={`${styles.craftOutputLine} ${styles.craftResultFading}`}>

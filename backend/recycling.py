@@ -115,12 +115,12 @@ def _best_owned_station_tool_tier(
     # equippable instances, never migrated. Costs nothing for a normal
     # instance-tracked family, which will never actually have a flat entry.
     best = 0
-    held_tools = character.get("tools", {})
+    held_tools = character.get("crafting", {}).get("tools", {})
     for tool_id, tool in TOOL_ITEMS_BY_ID.items():
         if held_tools.get(tool_id, 0) > 0 or player_tools.get(tool_id, 0) > 0:
             best = max(best, tool.tier)
 
-    for instance in (character.get("items", []) or []):
+    for instance in (character.get("gear", {}).get("items", []) or []):
         if instance.get("familyId") in _STATION_TOOL_FAMILY_IDS and instance.get("location") in ("backpack", "body"):
             entry = items_catalog.ITEM_CATALOG_ENTRIES_BY_ID.get(instance.get("itemId"))
             if entry:
@@ -137,7 +137,7 @@ def _equipped_charm_tier(character: dict) -> int:
     """Tier of a hunters_charm currently equipped in the Neck slot (0 if
     none worn) - only an equipped instance counts, not one merely owned."""
     best = 0
-    for instance in character.get("items", []) or []:
+    for instance in character.get("gear", {}).get("items", []) or []:
         if instance.get("familyId") != CHARM_FAMILY_ID or instance.get("location") != "body":
             continue
         if "Neck" not in (instance.get("slotRef") or []):

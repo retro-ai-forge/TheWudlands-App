@@ -54,6 +54,108 @@
     "icon": "/images/items/bat.png"
   },
   {
+    "id": "saddlepack_1",
+    "name": "Worn Saddlebag",
+    "familyId": "saddlepack",
+    "tier": 1,
+    "capacitySlots": 8,
+    "description": "A cracked leather saddlebag slung over the flank, patched more than once.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "saddlepack_2",
+    "name": "Leather Saddlepack",
+    "familyId": "saddlepack",
+    "tier": 2,
+    "capacitySlots": 16,
+    "description": "A pair of stitched leather packs buckled snugly across the mount's back.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "saddlepack_3",
+    "name": "Trail Saddlepack",
+    "familyId": "saddlepack",
+    "tier": 3,
+    "capacitySlots": 28,
+    "description": "A reinforced saddlepack with brass fittings, built for long trail routes.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "saddlepack_4",
+    "name": "Reinforced Saddlepack",
+    "familyId": "saddlepack",
+    "tier": 4,
+    "capacitySlots": 40,
+    "description": "A heavy-duty saddlepack with iron buckles, steady even on a loaded mount.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "saddlepack_5",
+    "name": "Expedition Saddlepack",
+    "familyId": "saddlepack",
+    "tier": 5,
+    "capacitySlots": 56,
+    "description": "A many-pouched expedition rig, packed by riders who never turn back early.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "saddlepack_6",
+    "name": "Grand Caravan Saddlepack",
+    "familyId": "saddlepack",
+    "tier": 6,
+    "capacitySlots": 80,
+    "description": "An enchanted caravan rig of reinforced fibers, carrying a small camp's worth of goods.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "rope_halter_bridle",
+    "name": "Rope Halter",
+    "familyId": "bridle",
+    "tier": 1,
+    "description": "A plain rope halter, just enough to keep a mount pointed the right way.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "leather_bridle",
+    "name": "Leather Bridle",
+    "familyId": "bridle",
+    "tier": 2,
+    "description": "A well-fitted leather bridle with a soft bit, easy on the mount's mouth.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "studded_bridle",
+    "name": "Studded Bridle",
+    "familyId": "bridle",
+    "tier": 3,
+    "description": "A sturdy bridle set with metal studs, favored by riders who push hard and far.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "silvered_bridle",
+    "name": "Silvered Bridle",
+    "familyId": "bridle",
+    "tier": 4,
+    "description": "A silver-fitted bridle, its bit cool and gentle, favored by careful riders.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "warbridle",
+    "name": "Warbridle",
+    "familyId": "bridle",
+    "tier": 5,
+    "description": "A battle-hardened bridle reinforced for the chaos and noise of the front line.",
+    "icon": "/images/items/bat.png"
+  },
+  {
+    "id": "radiant_bridle",
+    "name": "Radiant Bridle",
+    "familyId": "bridle",
+    "tier": 6,
+    "description": "A bridle threaded with faintly glowing filigree, said to calm even the wildest mount.",
+    "icon": "/images/items/bat.png"
+  },
+  {
     "id": "rat_ear_hunters_charm",
     "name": "Rat Ear Hunter's Charm",
     "familyId": "hunters_charm",

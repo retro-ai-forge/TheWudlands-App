@@ -228,8 +228,8 @@ export function CharacterPreview({
       // resources and tools this character is holding move to the shared
       // vault first - otherwise deleting the character would just discard
       // them, since nothing else can reach a deleted character's storage.
-      await checkInAll("resources", character.resources);
-      await checkInAll("tools", character.tools);
+      await checkInAll("resources", character.crafting.resources);
+      await checkInAll("tools", character.crafting.tools);
 
       const res = await fetch(`/api/auth/me/characters/${character.id}`, {
         method: "DELETE",

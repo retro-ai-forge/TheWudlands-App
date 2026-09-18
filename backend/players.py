@@ -89,13 +89,19 @@ class Player:
     address: str
     first_login_at: datetime
     characters: List[dict] = field(default_factory=list)
-    # Player inventory: tools, raw resources, processed resources, and items
-    # shared across every character this player owns, pooled in a shared
-    # vault - everything the player owns (that isn't soulbound to a specific
-    # character) lives under this one object, not scattered top-level fields.
-    inventory: dict = field(default_factory=lambda: {
-        "tools": {},
+    # Crafting-only shared pool: raw/processed resources and tools, drawn on
+    # by start_craft to stage an active craft (see Character.crafting for
+    # the per-character staging side of that same transfer). Never holds a
+    # finished item - that's vault's job.
+    crafting: dict = field(default_factory=lambda: {
         "resources": {},
+        "tools": {},
+    })
+    # Everything the player owns that isn't a raw/processed material and
+    # isn't soulbound to a specific character: unassigned item instances
+    # (location:"pool") and finished-good balances (food, potions, misc
+    # trinkets), pooled across every character this player owns.
+    vault: dict = field(default_factory=lambda: {
         "items": [],
         "itemBalances": {},
     })
@@ -105,7 +111,8 @@ class Player:
             "address": self.address,
             "firstLoginAt": self.first_login_at.isoformat(),
             "characters": self.characters,
-            "inventory": self.inventory,
+            "crafting": self.crafting,
+            "vault": self.vault,
         }
 
 
@@ -115,36 +122,21 @@ def _as_utc(value: datetime) -> datetime:
 
 
 def _doc_to_player(doc: dict) -> Player:
-    # Support migration from old "tools" field to new "inventory.tools"
-    inventory = doc.get("inventory", {})
-    if not inventory and "tools" in doc:
-        # Migrate old tools field into new inventory structure
-        inventory = {
-            "tools": doc.get("tools", {}),
-            "resources": {},
-            "items": [],
-            "itemBalances": {},
-        }
+    crafting = doc.get("crafting") or {"resources": {}, "tools": {}}
+    crafting.setdefault("resources", {})
+    crafting.setdefault("tools", {})
 
-    if inventory:
-        # "items" used to be a placeholder dict ({}) before the item-instance
-        # system existed - coerce any leftover pre-migration doc to the list
-        # shape instances actually need. itemBalances didn't exist at all
-        # before then, so it's always missing on those same old docs.
-        if not isinstance(inventory.get("items"), list):
-            inventory["items"] = []
-        inventory.setdefault("itemBalances", {})
+    vault = doc.get("vault") or {"items": [], "itemBalances": {}}
+    if not isinstance(vault.get("items"), list):
+        vault["items"] = []
+    vault.setdefault("itemBalances", {})
 
     return Player(
         address=doc["address"],
         first_login_at=_as_utc(doc["first_login_at"]),
         characters=doc.get("characters", []),
-        inventory=inventory or {
-            "tools": {},
-            "resources": {},
-            "items": [],
-            "itemBalances": {},
-        },
+        crafting=crafting,
+        vault=vault,
     )
 
 
@@ -163,12 +155,8 @@ async def get_or_create_player(address: str) -> Player:
         "address": address,
         "first_login_at": datetime.now(timezone.utc),
         "characters": [],
-        "inventory": {
-            "tools": {},
-            "resources": {},
-            "items": [],
-            "itemBalances": {},
-        },
+        "crafting": {"resources": {}, "tools": {}},
+        "vault": {"items": [], "itemBalances": {}},
     }
     await db.players.insert_one(doc)
     return _doc_to_player(doc)
@@ -322,7 +310,7 @@ async def grant_resource(
 
     doc = await db.players.find_one_and_update(
         {"address": address, "characters.id": character_id},
-        {"$inc": {f"characters.$.resources.{resource_id}": amount}},
+        {"$inc": {f"characters.$.crafting.resources.{resource_id}": amount}},
         return_document=ReturnDocument.AFTER,
     )
 
@@ -343,7 +331,7 @@ async def grant_shared_resource(address: str, resource_id: str, amount: int) -> 
 
     doc = await db.players.find_one_and_update(
         {"address": address},
-        {"$inc": {f"inventory.resources.{resource_id}": amount}},
+        {"$inc": {f"crafting.resources.{resource_id}": amount}},
         return_document=ReturnDocument.AFTER,
     )
 
@@ -355,7 +343,7 @@ async def grant_shared_resource(address: str, resource_id: str, amount: int) -> 
 
 # The player's shared tool pool, stacked and checked out/in identically
 # across all characters.
-_TOOL_POOLS = ("inventory.tools",)
+_TOOL_POOLS = ("crafting.tools",)
 
 
 def _validate_tool_pool(pool: str) -> None:
@@ -363,7 +351,7 @@ def _validate_tool_pool(pool: str) -> None:
         raise ValueError(f"Unknown tool pool: {pool}")
 
 
-async def grant_tool(address: str, tool_id: str, amount: int = 1, pool: str = "tools") -> Optional[Player]:
+async def grant_tool(address: str, tool_id: str, amount: int = 1, pool: str = "crafting.tools") -> Optional[Player]:
     """
     Credit `amount` of `tool_id` to `address`'s shared tool pool - stacked
     the same way grant_shared_resource stacks resources, since a player can
@@ -387,7 +375,7 @@ async def grant_tool(address: str, tool_id: str, amount: int = 1, pool: str = "t
 
 
 async def check_in_tool(
-    address: str, character_id: str, tool_id: str, amount: int = 1, pool: str = "tools"
+    address: str, character_id: str, tool_id: str, amount: int = 1, pool: str = "crafting.tools"
 ) -> Optional[Player]:
     """
     Move `amount` of `tool_id` from one of `address`'s characters back into
@@ -406,7 +394,7 @@ async def check_in_tool(
         raise ValueError("amount must be positive")
     db = get_database()
 
-    # `pool` (e.g. "inventory.tools") is the player's own shared pool, but a
+    # `pool` (e.g. "crafting.tools") is the player's own shared pool, but a
     # character's own tools are always stored flatly as Character.tools
     # ("tools", never nested under "inventory") - the two sides of this
     # transfer are NOT the same path.
@@ -416,12 +404,12 @@ async def check_in_tool(
             "characters": {
                 "$elemMatch": {
                     "id": character_id,
-                    f"tools.{tool_id}": {"$gte": amount},
-                    "$or": [{"activeCraft": {"$exists": False}}, {"activeCraft": None}],
+                    f"crafting.tools.{tool_id}": {"$gte": amount},
+                    "$or": [{"crafting.activeCraft": {"$exists": False}}, {"crafting.activeCraft": None}],
                 }
             },
         },
-        {"$inc": {f"{pool}.{tool_id}": amount, f"characters.$.tools.{tool_id}": -amount}},
+        {"$inc": {f"{pool}.{tool_id}": amount, f"characters.$.crafting.tools.{tool_id}": -amount}},
         return_document=ReturnDocument.AFTER,
     )
 
@@ -454,14 +442,14 @@ async def check_in_resource(
             "characters": {
                 "$elemMatch": {
                     "id": character_id,
-                    f"resources.{resource_id}": {"$gte": amount},
-                    "$or": [{"activeCraft": {"$exists": False}}, {"activeCraft": None}],
+                    f"crafting.resources.{resource_id}": {"$gte": amount},
+                    "$or": [{"crafting.activeCraft": {"$exists": False}}, {"crafting.activeCraft": None}],
                 }
             },
         },
         {"$inc": {
-            f"inventory.resources.{resource_id}": amount,
-            f"characters.$.resources.{resource_id}": -amount,
+            f"crafting.resources.{resource_id}": amount,
+            f"characters.$.crafting.resources.{resource_id}": -amount,
         }},
         return_document=ReturnDocument.AFTER,
     )
@@ -499,8 +487,8 @@ async def preview_recycle(
     entry = items_catalog.ITEM_CATALOG_ENTRIES_BY_ID.get(item_id)
     if entry is None:
         raise ValueError(f"Unknown item id: {item_id}")
-    player_tools = doc.get("inventory", {}).get("tools", {}) if from_vault else {}
-    player_items = doc.get("inventory", {}).get("items", []) if from_vault else []
+    player_tools = doc.get("crafting", {}).get("tools", {}) if from_vault else {}
+    player_items = doc.get("vault", {}).get("items", []) if from_vault else []
     recoveries = recycling.resolve_recycle_preview(
         entry.family_id, entry.tier, character, player_tools, player_items, count
     )
@@ -523,7 +511,7 @@ async def recycle_item_instance(
     recycles one of the PLAYER's shared pool instances instead, scored
     with the full shared tool pool too (the character is right there at
     the vault). Either way, for now, the recovered materials always land
-    in the shared inventory.resources - never the character's own
+    in the shared crafting.resources - never the character's own
     backpackResources, mirroring where finish_craft's own output lands.
 
     Raises ValueError if the item's family has no recipe. Returns None if
@@ -540,13 +528,13 @@ async def recycle_item_instance(
 
     if from_vault:
         instance = next(
-            (i for i in doc.get("inventory", {}).get("items", []) if i["instanceId"] == instance_id),
+            (i for i in doc.get("vault", {}).get("items", []) if i["instanceId"] == instance_id),
             None,
         )
     else:
         instance = next(
             (
-                i for i in character.get("items", [])
+                i for i in character.get("gear", {}).get("items", [])
                 if i["instanceId"] == instance_id and i.get("location") in ("backpack", "body")
             ),
             None,
@@ -563,27 +551,27 @@ async def recycle_item_instance(
     # toward the station-tool bonus - never the player's shared pool,
     # sitting back at the vault. A vault item is recycled right there at
     # the vault, so the full shared pool applies.
-    player_tools = doc.get("inventory", {}).get("tools", {}) if from_vault else {}
-    player_items = doc.get("inventory", {}).get("items", []) if from_vault else []
+    player_tools = doc.get("crafting", {}).get("tools", {}) if from_vault else {}
+    player_items = doc.get("vault", {}).get("items", []) if from_vault else []
     recoveries = recycling.resolve_recycle_preview(
         entry.family_id, entry.tier, character, player_tools, player_items
     )
     if not recoveries:
         raise ValueError(f"{entry.family_id} has no recipe to recycle materials from")
     amounts = recycling.flatten_recovery(recoveries)
-    inc_ops = {f"inventory.resources.{rid}": qty for rid, qty in amounts.items()}
+    inc_ops = {f"crafting.resources.{rid}": qty for rid, qty in amounts.items()}
 
     if from_vault:
-        update: Dict[str, object] = {"$pull": {"inventory.items": {"instanceId": instance_id}}}
+        update: Dict[str, object] = {"$pull": {"vault.items": {"instanceId": instance_id}}}
         if inc_ops:
             update["$inc"] = inc_ops
         doc = await db.players.find_one_and_update(
-            {"address": address, "inventory.items": {"$elemMatch": {"instanceId": instance_id, "location": "pool"}}},
+            {"address": address, "vault.items": {"$elemMatch": {"instanceId": instance_id, "location": "pool"}}},
             update,
             return_document=ReturnDocument.AFTER,
         )
     else:
-        update = {"$pull": {"characters.$.items": {"instanceId": instance_id}}}
+        update = {"$pull": {"characters.$.gear.items": {"instanceId": instance_id}}}
         if inc_ops:
             update["$inc"] = inc_ops
         doc = await db.players.find_one_and_update(
@@ -592,7 +580,7 @@ async def recycle_item_instance(
                 "characters": {
                     "$elemMatch": {
                         "id": character_id,
-                        "items": {"$elemMatch": {"instanceId": instance_id, "location": instance["location"]}},
+                        "gear.items": {"$elemMatch": {"instanceId": instance_id, "location": instance["location"]}},
                     }
                 },
             },
@@ -613,7 +601,7 @@ async def recycle_item_balance(
     (character's own itemBalances vs. the player's shared inventory.
     itemBalances), for stackable finished goods (food, potions, misc
     trinkets) rather than instance-tracked gear. Either way, for now, the
-    recovered materials always land in the shared inventory.resources.
+    recovered materials always land in the shared crafting.resources.
     Raises ValueError for a non-positive amount, an unknown item id, or a
     family with no recipe. Returns None if `amount` isn't held wherever
     this looks.
@@ -630,9 +618,9 @@ async def recycle_item_balance(
         return None
 
     if from_vault:
-        held = doc.get("inventory", {}).get("itemBalances", {}).get(item_id, 0)
+        held = doc.get("vault", {}).get("itemBalances", {}).get(item_id, 0)
     else:
-        held = character.get("itemBalances", {}).get(item_id, 0)
+        held = character.get("gear", {}).get("itemBalances", {}).get("camp", {}).get(item_id, 0)
     if held < amount:
         return None
 
@@ -641,8 +629,8 @@ async def recycle_item_balance(
         raise ValueError(f"Unknown item id: {item_id}")
 
     # Same physically-carried-tools-only restriction as recycle_item_instance.
-    player_tools = doc.get("inventory", {}).get("tools", {}) if from_vault else {}
-    player_items = doc.get("inventory", {}).get("items", []) if from_vault else []
+    player_tools = doc.get("crafting", {}).get("tools", {}) if from_vault else {}
+    player_items = doc.get("vault", {}).get("items", []) if from_vault else []
     recoveries = recycling.resolve_recycle_preview(
         entry.family_id, entry.tier, character, player_tools, player_items, amount
     )
@@ -651,22 +639,22 @@ async def recycle_item_balance(
     amounts = recycling.flatten_recovery(recoveries)
 
     if from_vault:
-        update: Dict[str, object] = {"$inc": {f"inventory.itemBalances.{item_id}": -amount}}
+        update: Dict[str, object] = {"$inc": {f"vault.itemBalances.{item_id}": -amount}}
         for rid, qty in amounts.items():
-            update["$inc"][f"inventory.resources.{rid}"] = qty
+            update["$inc"][f"crafting.resources.{rid}"] = qty
         doc = await db.players.find_one_and_update(
-            {"address": address, f"inventory.itemBalances.{item_id}": {"$gte": amount}},
+            {"address": address, f"vault.itemBalances.{item_id}": {"$gte": amount}},
             update,
             return_document=ReturnDocument.AFTER,
         )
     else:
-        update = {"$inc": {f"characters.$.itemBalances.{item_id}": -amount}}
+        update = {"$inc": {f"characters.$.gear.itemBalances.camp.{item_id}": -amount}}
         for rid, qty in amounts.items():
-            update["$inc"][f"inventory.resources.{rid}"] = qty
+            update["$inc"][f"crafting.resources.{rid}"] = qty
         doc = await db.players.find_one_and_update(
             {
                 "address": address,
-                "characters": {"$elemMatch": {"id": character_id, f"itemBalances.{item_id}": {"$gte": amount}}},
+                "characters": {"$elemMatch": {"id": character_id, f"gear.itemBalances.camp.{item_id}": {"$gte": amount}}},
             },
             update,
             return_document=ReturnDocument.AFTER,
@@ -705,7 +693,7 @@ def _resolve_tool_for_craft(
     Never backpack-capacity-gated: "crafting" is a distinct location from
     "backpack", so borrowing doesn't compete for pack space. Source
     priority, only meaningful when `player_items` is given (the player's
-    shared inventory.items pool - only start_craft passes this): the vault
+    shared vault.items pool - only start_craft passes this): the vault
     is checked FIRST (an unassigned copy sitting there is fair game, and
     freeing it up for this craft doesn't cost the character anything they
     were using), the character's own backpack/equipped instance SECOND (so
@@ -742,8 +730,8 @@ def _resolve_tool_for_craft(
     available in `player_tools` and would need transferring first. Returns
     None if nothing usable is found anywhere.
     """
-    held_tools = character.get("tools", {})
-    held_items = character.get("items", []) or []
+    held_tools = character.get("crafting", {}).get("tools", {})
+    held_items = character.get("gear", {}).get("items", []) or []
 
     # Tried in the order `tool_families` lists them - craft-recipes.json's
     # own multi-option "tool" lists (e.g. fishing_pole's
@@ -1189,7 +1177,7 @@ def _resolve_recipe_direct_raw_totals(family_id: str, count: int, character: dic
     recipe = _RECIPES_BY_FAMILY.get(family_id)
     if recipe is None:
         return {}
-    held_items = character.get("items", []) or []
+    held_items = character.get("gear", {}).get("items", []) or []
     totals: Dict[str, int] = {}
     for ing0 in recipe["ingredients"]:
         options = ing0["alternatives"] if "alternatives" in ing0 else [ing0]
@@ -1273,7 +1261,7 @@ def _resolve_recipe_full_chain_raw_total(
     if recipe is None:
         return 0
     seen = seen | {family_id}
-    held_items = character.get("items", []) or []
+    held_items = character.get("gear", {}).get("items", []) or []
     total = 0
     for ing0 in recipe["ingredients"]:
         options = ing0["alternatives"] if "alternatives" in ing0 else [ing0]
@@ -1383,7 +1371,7 @@ async def start_craft(
     if character is None:
         return None
 
-    active = character.get("activeCraft")
+    active = character.get("crafting", {}).get("activeCraft")
     if active and datetime.fromisoformat(active["readyAt"]) > datetime.now(timezone.utc):
         return None
 
@@ -1399,9 +1387,9 @@ async def start_craft(
     # resolve to a vault-borrow the same way the recipe's own "tool" field
     # does, below.
     resolved = _resolve_recipe_ingredients(
-        recipe, tier, {}, doc.get("inventory", {}).get("resources", {}), character, count,
-        player_items=doc.get("inventory", {}).get("items", []),
-        character_item_balances={}, player_item_balances=doc.get("inventory", {}).get("itemBalances", {}),
+        recipe, tier, {}, doc.get("crafting", {}).get("resources", {}), character, count,
+        player_items=doc.get("vault", {}).get("items", []),
+        character_item_balances={}, player_item_balances=doc.get("vault", {}).get("itemBalances", {}),
     )
     if resolved is None:
         return None
@@ -1415,11 +1403,11 @@ async def start_craft(
             tool_candidates = [tool_candidates]
         found = _resolve_tool_for_craft(
             character,
-            doc.get("inventory", {}).get("tools", {}),
+            doc.get("crafting", {}).get("tools", {}),
             tool_candidates,
             tier,
             check_character_flat_balance=False,
-            player_items=doc.get("inventory", {}).get("items", []),
+            player_items=doc.get("vault", {}).get("items", []),
         )
         if found is None:
             return None
@@ -1452,21 +1440,21 @@ async def start_craft(
     elem_match: Dict = {"id": character_id}
     inc_ops: Dict[str, int] = {}
     for concrete_id, qty in player_decrements.items():
-        match_filter[f"inventory.resources.{concrete_id}"] = {"$gte": qty}
-        inc_ops[f"inventory.resources.{concrete_id}"] = -qty
-        inc_ops[f"characters.$.resources.{concrete_id}"] = inc_ops.get(
-            f"characters.$.resources.{concrete_id}", 0
+        match_filter[f"crafting.resources.{concrete_id}"] = {"$gte": qty}
+        inc_ops[f"crafting.resources.{concrete_id}"] = -qty
+        inc_ops[f"characters.$.crafting.resources.{concrete_id}"] = inc_ops.get(
+            f"characters.$.crafting.resources.{concrete_id}", 0
         ) + qty
     for concrete_id, qty in player_item_balance_decrements.items():
-        match_filter[f"inventory.itemBalances.{concrete_id}"] = {"$gte": qty}
-        inc_ops[f"inventory.itemBalances.{concrete_id}"] = -qty
-        inc_ops[f"characters.$.itemBalances.{concrete_id}"] = inc_ops.get(
-            f"characters.$.itemBalances.{concrete_id}", 0
+        match_filter[f"vault.itemBalances.{concrete_id}"] = {"$gte": qty}
+        inc_ops[f"vault.itemBalances.{concrete_id}"] = -qty
+        inc_ops[f"characters.$.crafting.itemBalances.{concrete_id}"] = inc_ops.get(
+            f"characters.$.crafting.itemBalances.{concrete_id}", 0
         ) + qty
     if tool_transfer_id is not None:
-        match_filter[f"inventory.tools.{tool_transfer_id}"] = {"$gte": 1}
-        inc_ops[f"inventory.tools.{tool_transfer_id}"] = -1
-        inc_ops[f"characters.$.tools.{tool_transfer_id}"] = 1
+        match_filter[f"crafting.tools.{tool_transfer_id}"] = {"$gte": 1}
+        inc_ops[f"crafting.tools.{tool_transfer_id}"] = -1
+        inc_ops[f"characters.$.crafting.tools.{tool_transfer_id}"] = 1
 
     # Raw-material crafting XP (see the README's "Crafting XP" section) -
     # paid out the moment the timer starts, not on finish_craft, same as
@@ -1507,7 +1495,7 @@ async def start_craft(
         # plain positional $ against the query's own characters.$elemMatch.
         update: Dict = {
             "$set": {
-                "characters.$.activeCraft": active_craft,
+                "characters.$.crafting.activeCraft": active_craft,
                 **_profession_xp_grant_set_ops(character, xp_grants, "characters.$."),
             }
         }
@@ -1522,19 +1510,19 @@ async def start_craft(
     # At least one instance needs moving to "crafting" - switch every
     # characters-array field in this update to $[char]/array_filters
     # instead of mixing with plain $, since a backpack/body-sourced move
-    # also needs characters.$[char].items.$[itemN] (a nested array filter
+    # also needs characters.$[char].gear.items.$[itemN] (a nested array filter
     # on the SAME "characters" field) in the same update document.
-    # The vault-side sufficiency checks (inventory.resources.X >= qty,
-    # inventory.tools.X >= 1) already sit in match_filter above - nothing
+    # The vault-side sufficiency checks (crafting.resources.X >= qty,
+    # crafting.tools.X >= 1) already sit in match_filter above - nothing
     # about the character's own current balance needs preconditioning
     # here, these are increments landing on the character, not decrements.
-    set_ops: Dict = {"characters.$[char].activeCraft": active_craft}
+    set_ops: Dict = {"characters.$[char].crafting.activeCraft": active_craft}
     set_ops.update(_profession_xp_grant_set_ops(character, xp_grants, "characters.$[char]."))
     array_filters: List[Dict] = [{"char.id": character_id}]
 
     pool_pull_ids: List[str] = []
     pool_push_instances: List[dict] = []
-    inventory_items_by_id = {i["instanceId"]: i for i in doc.get("inventory", {}).get("items", [])}
+    inventory_items_by_id = {i["instanceId"]: i for i in doc.get("vault", {}).get("items", [])}
     for idx, (_kind, instance_id, source, _slot_ref) in enumerate(all_moves):
         if source == "pool":
             pool_pull_ids.append(instance_id)
@@ -1543,21 +1531,21 @@ async def start_craft(
         else:
             filt_id = f"moveItem{idx}"
             array_filters.append({f"{filt_id}.instanceId": instance_id, f"{filt_id}.location": source})
-            set_ops[f"characters.$[char].items.$[{filt_id}].location"] = "crafting"
-            set_ops[f"characters.$[char].items.$[{filt_id}].slotRef"] = []
+            set_ops[f"characters.$[char].gear.items.$[{filt_id}].location"] = "crafting"
+            set_ops[f"characters.$[char].gear.items.$[{filt_id}].slotRef"] = []
 
     update = {"$set": set_ops}
     if inc_ops:
         update["$inc"] = {k.replace("characters.$.", "characters.$[char]."): v for k, v in inc_ops.items()}
     if pool_pull_ids:
         match_filter["$and"] = [
-            {"inventory.items": {"$elemMatch": {"instanceId": iid, "location": "pool"}}} for iid in pool_pull_ids
+            {"vault.items": {"$elemMatch": {"instanceId": iid, "location": "pool"}}} for iid in pool_pull_ids
         ]
         # Pull off the vault, push onto the character - different top-level
         # fields, so no path collision (unlike pulling and pushing the
-        # same "inventory.items" field, which Mongo rejects outright).
-        update["$pull"] = {"inventory.items": {"instanceId": {"$in": pool_pull_ids}}}
-        update["$push"] = {"characters.$[char].items": {"$each": pool_push_instances}}
+        # same "vault.items" field, which Mongo rejects outright).
+        update["$pull"] = {"vault.items": {"instanceId": {"$in": pool_pull_ids}}}
+        update["$push"] = {"characters.$[char].gear.items": {"$each": pool_push_instances}}
 
     match_filter["characters"] = {"$elemMatch": elem_match}
     doc = await db.players.find_one_and_update(
@@ -1575,13 +1563,13 @@ async def finish_craft(address: str, character_id: str) -> Optional[Player]:
     ingredients/tool that start_craft already transferred onto the
     character (nothing left to draw from the player's shared vault at this
     point) and produces `activeCraft.count` units of the output at once -
-    inventory.items for a needsItemDefinition:true family (each unit its
+    vault.items for a needsItemDefinition:true family (each unit its
     own instance, per the instance-per-physical-item invariant - never a
     single instance with a quantity); otherwise a flat-count output
-    incremented by `count` - inventory.tools if the concrete output id is
+    incremented by `count` - crafting.tools if the concrete output id is
     a known flat-balance tool (TOOL_ITEMS_BY_ID - an anvil, a furnace, a
-    tanning rack, ...), inventory.resources for a processed material,
-    inventory.itemBalances for everything else (food, potions, misc
+    tanning rack, ...), crafting.resources for a processed material,
+    vault.itemBalances for everything else (food, potions, misc
     gear) - always into the player's shared vault, never straight onto
     the character. Also pays out the README's final-item assembly-bonus XP
     (see `_assembly_bonus_xp`) when the recipe is genuinely blueprint-gated -
@@ -1615,7 +1603,7 @@ async def finish_craft(address: str, character_id: str) -> Optional[Player]:
     if character is None:
         return None
 
-    active = character.get("activeCraft")
+    active = character.get("crafting", {}).get("activeCraft")
     if active is None or datetime.fromisoformat(active["readyAt"]) > datetime.now(timezone.utc):
         return None
 
@@ -1633,8 +1621,8 @@ async def finish_craft(address: str, character_id: str) -> Optional[Player]:
     # so an ingredient's unconsumed "final" alternative re-verifies
     # correctly here without trying to move anything again.
     resolved = _resolve_recipe_ingredients(
-        recipe, tier, character.get("resources", {}), {}, character, count,
-        character_item_balances=character.get("itemBalances", {}), player_item_balances={},
+        recipe, tier, character.get("crafting", {}).get("resources", {}), {}, character, count,
+        character_item_balances=character.get("crafting", {}).get("itemBalances", {}), player_item_balances={},
     )
     if resolved is None:
         return None
@@ -1674,10 +1662,10 @@ async def finish_craft(address: str, character_id: str) -> Optional[Player]:
         if output_is_processed:
             # A crafted processed material (plank, metal_bar, leather, ...)
             # is the exact same kind of thing already stacked in
-            # inventory.resources - it belongs in the shared resources
+            # crafting.resources - it belongs in the shared resources
             # pool, not itemBalances, so other recipes' ingredient checks
             # (which only ever look at resources) can actually see it.
-            inc[f"inventory.resources.{output_row['id']}"] = count
+            inc[f"crafting.resources.{output_row['id']}"] = count
         elif family and family.needs_item_definition:
             instances = [
                 {
@@ -1691,16 +1679,16 @@ async def finish_craft(address: str, character_id: str) -> Optional[Player]:
                 }
                 for _ in range(count)
             ]
-            push["inventory.items"] = {"$each": instances}
+            push["vault.items"] = {"$each": instances}
         elif output_row["id"] in TOOL_ITEMS_BY_ID:
             # A flat-balance tool (anvil, furnace, tanning_rack, ...) - the
             # exact same catalog _resolve_tool_for_craft's own flat-balance
-            # branch reads from inventory.tools, so a crafted one has to
+            # branch reads from crafting.tools, so a crafted one has to
             # land there too, not itemBalances, or it would never be
             # recognized as an owned tool for a later recipe that needs it.
-            inc[f"inventory.tools.{output_row['id']}"] = count
+            inc[f"crafting.tools.{output_row['id']}"] = count
         else:
-            inc[f"inventory.itemBalances.{output_row['id']}"] = count
+            inc[f"vault.itemBalances.{output_row['id']}"] = count
         return inc, push
 
     if not borrowed_instances:
@@ -1710,11 +1698,11 @@ async def finish_craft(address: str, character_id: str) -> Optional[Player]:
         elem_match: Dict = {"id": character_id}
         inc_ops: Dict[str, int] = {}
         for concrete_id, qty in character_decrements.items():
-            elem_match[f"resources.{concrete_id}"] = {"$gte": qty}
-            inc_ops[f"characters.$.resources.{concrete_id}"] = -qty
+            elem_match[f"crafting.resources.{concrete_id}"] = {"$gte": qty}
+            inc_ops[f"characters.$.crafting.resources.{concrete_id}"] = -qty
         for concrete_id, qty in character_item_balance_decrements.items():
-            elem_match[f"itemBalances.{concrete_id}"] = {"$gte": qty}
-            inc_ops[f"characters.$.itemBalances.{concrete_id}"] = -qty
+            elem_match[f"crafting.itemBalances.{concrete_id}"] = {"$gte": qty}
+            inc_ops[f"characters.$.crafting.itemBalances.{concrete_id}"] = -qty
 
         # A flat-balance tool start_craft borrowed from the player's shared
         # pool (not one the character already had) goes back once the
@@ -1722,16 +1710,16 @@ async def finish_craft(address: str, character_id: str) -> Optional[Player]:
         # indefinitely.
         tool_transfer_id = active.get("toolTransferId")
         if tool_transfer_id is not None:
-            elem_match[f"tools.{tool_transfer_id}"] = {"$gte": 1}
-            inc_ops[f"characters.$.tools.{tool_transfer_id}"] = inc_ops.get(
-                f"characters.$.tools.{tool_transfer_id}", 0
+            elem_match[f"crafting.tools.{tool_transfer_id}"] = {"$gte": 1}
+            inc_ops[f"characters.$.crafting.tools.{tool_transfer_id}"] = inc_ops.get(
+                f"characters.$.crafting.tools.{tool_transfer_id}", 0
             ) - 1
-            inc_ops[f"inventory.tools.{tool_transfer_id}"] = 1
+            inc_ops[f"crafting.tools.{tool_transfer_id}"] = 1
 
         extra_inc, extra_push = _output_ops()
         inc_ops.update(extra_inc)
 
-        update: Dict = {"$unset": {"characters.$.activeCraft": ""}}
+        update: Dict = {"$unset": {"characters.$.crafting.activeCraft": ""}}
         xp_set_ops = _profession_xp_grant_set_ops(character, assembly_grants, "characters.$.")
         if xp_set_ops:
             update["$set"] = xp_set_ops
@@ -1760,7 +1748,7 @@ async def finish_craft(address: str, character_id: str) -> Optional[Player]:
     # element shares one source. This only implements that reachable shape
     # (asserted below) rather than a general multi-instance/mixed-source
     # release - MongoDB rejects a $pull and a $set both touching
-    # characters.$[char].items in one update (one path prefixes the
+    # characters.$[char].gear.items in one update (one path prefixes the
     # other), which a real mix would require untangling; add that handling
     # if a future recipe actually needs two simultaneous instance tools.
     sources = {bi["source"] for bi in borrowed_instances}
@@ -1770,32 +1758,32 @@ async def finish_craft(address: str, character_id: str) -> Optional[Player]:
 
     elem_match = {"id": character_id}
     for concrete_id, qty in character_decrements.items():
-        elem_match[f"resources.{concrete_id}"] = {"$gte": qty}
+        elem_match[f"crafting.resources.{concrete_id}"] = {"$gte": qty}
     for concrete_id, qty in character_item_balance_decrements.items():
-        elem_match[f"itemBalances.{concrete_id}"] = {"$gte": qty}
+        elem_match[f"crafting.itemBalances.{concrete_id}"] = {"$gte": qty}
     tool_transfer_id = active.get("toolTransferId")
     if tool_transfer_id is not None:
-        elem_match[f"tools.{tool_transfer_id}"] = {"$gte": 1}
+        elem_match[f"crafting.tools.{tool_transfer_id}"] = {"$gte": 1}
 
     inc_ops = {}
     for concrete_id, qty in character_decrements.items():
-        inc_ops[f"characters.$[char].resources.{concrete_id}"] = -qty
+        inc_ops[f"characters.$[char].crafting.resources.{concrete_id}"] = -qty
     for concrete_id, qty in character_item_balance_decrements.items():
-        inc_ops[f"characters.$[char].itemBalances.{concrete_id}"] = -qty
+        inc_ops[f"characters.$[char].crafting.itemBalances.{concrete_id}"] = -qty
     if tool_transfer_id is not None:
-        inc_ops[f"characters.$[char].tools.{tool_transfer_id}"] = inc_ops.get(
-            f"characters.$[char].tools.{tool_transfer_id}", 0
+        inc_ops[f"characters.$[char].crafting.tools.{tool_transfer_id}"] = inc_ops.get(
+            f"characters.$[char].crafting.tools.{tool_transfer_id}", 0
         ) - 1
-        inc_ops[f"inventory.tools.{tool_transfer_id}"] = 1
+        inc_ops[f"crafting.tools.{tool_transfer_id}"] = 1
     extra_inc, extra_push = _output_ops()
     inc_ops.update(extra_inc)
     xp_set_ops = _profession_xp_grant_set_ops(character, assembly_grants, "characters.$[char].")
 
     array_filters: List[Dict] = [{"char.id": character_id}]
-    update: Dict = {"$unset": {"characters.$[char].activeCraft": ""}}
+    update: Dict = {"$unset": {"characters.$[char].crafting.activeCraft": ""}}
     query: Dict = {"address": address, "characters": {"$elemMatch": elem_match}}
 
-    held_by_id = {i["instanceId"]: i for i in character.get("items", [])}
+    held_by_id = {i["instanceId"]: i for i in character.get("gear", {}).get("items", [])}
 
     if source == "pool":
         # $pull the borrowed instance(s) off the character. A survivor
@@ -1810,14 +1798,14 @@ async def finish_craft(address: str, character_id: str) -> Optional[Player]:
             new_quality = held_by_id[iid].get("quality", 0) - count
             if new_quality > 0:
                 returned.append({**held_by_id[iid], "location": "pool", "slotRef": [], "quality": new_quality})
-        update["$pull"] = {"characters.$[char].items": {"instanceId": {"$in": instance_ids}}}
+        update["$pull"] = {"characters.$[char].gear.items": {"instanceId": {"$in": instance_ids}}}
         push_items = list(returned)
         if extra_push:
-            push_items += extra_push["inventory.items"]["$each"]
+            push_items += extra_push["vault.items"]["$each"]
         if push_items:
-            update["$push"] = {"inventory.items": {"$each": push_items}}
+            update["$push"] = {"vault.items": {"$each": push_items}}
         query["$and"] = [
-            {"characters": {"$elemMatch": {"id": character_id, "items": {
+            {"characters": {"$elemMatch": {"id": character_id, "gear.items": {
                 "$elemMatch": {"instanceId": iid, "location": "crafting"}
             }}}}
             for iid in instance_ids
@@ -1829,7 +1817,7 @@ async def finish_craft(address: str, character_id: str) -> Optional[Player]:
         # $pull'd out entirely instead of restored. Only reachable with
         # exactly one borrowed instance in today's recipes (see the
         # sources-mixing guard above) - a $pull and a $set can't both
-        # touch characters.$[char].items in one update, so a hypothetical
+        # touch characters.$[char].gear.items in one update, so a hypothetical
         # mixed survive/break batch of more than one instance isn't
         # handled; raise rather than silently doing the wrong thing if
         # that ever becomes reachable.
@@ -1843,14 +1831,14 @@ async def finish_craft(address: str, character_id: str) -> Optional[Player]:
             )
 
         if broken_ids:
-            update["$pull"] = {"characters.$[char].items": {"instanceId": {"$in": broken_ids}}}
+            update["$pull"] = {"characters.$[char].gear.items": {"instanceId": {"$in": broken_ids}}}
         else:
             set_ops: Dict = {}
             for idx, bi in enumerate(borrowed_instances):
                 filt_id = f"relItem{idx}"
                 array_filters.append({f"{filt_id}.instanceId": bi["instanceId"], f"{filt_id}.location": "crafting"})
-                set_ops[f"characters.$[char].items.$[{filt_id}].location"] = bi["source"]
-                set_ops[f"characters.$[char].items.$[{filt_id}].slotRef"] = bi.get("slotRef") or []
+                set_ops[f"characters.$[char].gear.items.$[{filt_id}].location"] = bi["source"]
+                set_ops[f"characters.$[char].gear.items.$[{filt_id}].slotRef"] = bi.get("slotRef") or []
                 # Tool wear - see the "pool" branch above for the same
                 # -count per unit crafted. Deliberately a SEPARATE
                 # array-filter identifier (matched on instanceId alone,
@@ -1865,7 +1853,7 @@ async def finish_craft(address: str, character_id: str) -> Optional[Player]:
                 # field changing mid-update.
                 wear_filt_id = f"wearItem{idx}"
                 array_filters.append({f"{wear_filt_id}.instanceId": bi["instanceId"]})
-                inc_ops[f"characters.$[char].items.$[{wear_filt_id}].quality"] = -count
+                inc_ops[f"characters.$[char].gear.items.$[{wear_filt_id}].quality"] = -count
             update["$set"] = set_ops
         if extra_push:
             update["$push"] = extra_push
@@ -1917,7 +1905,7 @@ async def equip_item(address: str, character_id: str, instance_id: str, slots: L
     if character is None:
         return None
     instance = next(
-        (i for i in character.get("items", []) if i["instanceId"] == instance_id and i.get("location") == "backpack"),
+        (i for i in character.get("gear", {}).get("items", []) if i["instanceId"] == instance_id and i.get("location") == "backpack"),
         None,
     )
     if instance is None:
@@ -1950,9 +1938,9 @@ async def equip_item(address: str, character_id: str, instance_id: str, slots: L
                 "$elemMatch": {
                     "id": character_id,
                     "$and": [
-                        {"items": {"$elemMatch": {"instanceId": instance_id, "location": "backpack"}}},
+                        {"gear.items": {"$elemMatch": {"instanceId": instance_id, "location": "backpack"}}},
                         {
-                            "items": {
+                            "gear.items": {
                                 "$not": {
                                     "$elemMatch": {
                                         "instanceId": {"$ne": instance_id},
@@ -1965,7 +1953,7 @@ async def equip_item(address: str, character_id: str, instance_id: str, slots: L
                 }
             },
         },
-        {"$set": {"characters.$[char].items.$[item]": equipped_instance}},
+        {"$set": {"characters.$[char].gear.items.$[item]": equipped_instance}},
         array_filters=[{"char.id": character_id}, {"item.instanceId": instance_id, "item.location": "backpack"}],
         return_document=ReturnDocument.AFTER,
     )
@@ -1977,7 +1965,7 @@ async def equip_item(address: str, character_id: str, instance_id: str, slots: L
 async def equip_item_from_pool(address: str, character_id: str, instance_id: str, slots: List[str]) -> Optional[Player]:
     """
     Equip one item instance straight from `address`'s shared pool
-    (inventory.items, location:"pool") into `slots` on one of their
+    (vault.items, location:"pool") into `slots` on one of their
     characters - unlike the check-out-then-equip flow (still used by the
     frontend's "Move to backpack" action), this never routes through the
     backpack at all, so it's never gated by backpack_capacity(): an item
@@ -2003,7 +1991,7 @@ async def equip_item_from_pool(address: str, character_id: str, instance_id: str
     if character is None:
         return None
     instance = next(
-        (i for i in doc.get("inventory", {}).get("items", []) if i["instanceId"] == instance_id),
+        (i for i in doc.get("vault", {}).get("items", []) if i["instanceId"] == instance_id),
         None,
     )
     if instance is None:
@@ -2026,11 +2014,11 @@ async def equip_item_from_pool(address: str, character_id: str, instance_id: str
     doc = await db.players.find_one_and_update(
         {
             "address": address,
-            "inventory.items": {"$elemMatch": {"instanceId": instance_id, "location": "pool"}},
+            "vault.items": {"$elemMatch": {"instanceId": instance_id, "location": "pool"}},
             "characters": {
                 "$elemMatch": {
                     "id": character_id,
-                    "items": {
+                    "gear.items": {
                         "$not": {
                             "$elemMatch": {
                                 "instanceId": {"$ne": instance_id},
@@ -2042,8 +2030,8 @@ async def equip_item_from_pool(address: str, character_id: str, instance_id: str
             },
         },
         {
-            "$pull": {"inventory.items": {"instanceId": instance_id}},
-            "$push": {"characters.$.items": equipped_instance},
+            "$pull": {"vault.items": {"instanceId": instance_id}},
+            "$push": {"characters.$.gear.items": equipped_instance},
         },
         return_document=ReturnDocument.AFTER,
     )
@@ -2078,7 +2066,7 @@ async def unequip_item(address: str, character_id: str, instance_id: str) -> Opt
     if character is None:
         return None
     instance = next(
-        (i for i in character.get("items", []) if i["instanceId"] == instance_id and i.get("location") == "body"),
+        (i for i in character.get("gear", {}).get("items", []) if i["instanceId"] == instance_id and i.get("location") == "body"),
         None,
     )
     if instance is None:
@@ -2089,10 +2077,10 @@ async def unequip_item(address: str, character_id: str, instance_id: str) -> Opt
         {
             "address": address,
             "characters": {
-                "$elemMatch": {"id": character_id, "items": {"$elemMatch": {"instanceId": instance_id, "location": "body"}}}
+                "$elemMatch": {"id": character_id, "gear.items": {"$elemMatch": {"instanceId": instance_id, "location": "body"}}}
             },
         },
-        {"$set": {"characters.$[char].items.$[item]": backpacked_instance}},
+        {"$set": {"characters.$[char].gear.items.$[item]": backpacked_instance}},
         array_filters=[{"char.id": character_id}, {"item.instanceId": instance_id, "item.location": "body"}],
         return_document=ReturnDocument.AFTER,
     )
@@ -2103,7 +2091,7 @@ async def unequip_item(address: str, character_id: str, instance_id: str) -> Opt
 
 async def check_out_item_instance(address: str, character_id: str, instance_id: str) -> Optional[Player]:
     """
-    Move one item instance from `address`'s shared pool (inventory.items,
+    Move one item instance from `address`'s shared pool (vault.items,
     location:"pool") onto one of their characters' own backpack
     (location:"backpack"). Capacity-gated (see items_catalog.
     backpack_slots_used/backpack_capacity): raises ValueError if the
@@ -2123,7 +2111,7 @@ async def check_out_item_instance(address: str, character_id: str, instance_id: 
     if character is None:
         return None
     instance = next(
-        (i for i in doc.get("inventory", {}).get("items", []) if i["instanceId"] == instance_id),
+        (i for i in doc.get("vault", {}).get("items", []) if i["instanceId"] == instance_id),
         None,
     )
     if instance is None:
@@ -2144,7 +2132,7 @@ async def check_out_item_instance(address: str, character_id: str, instance_id: 
     # non-empty slotRef to mean anything.
     backpacked_instance = {**instance, "location": "backpack", "slotRef": []}
     # Query filters the characters array via a bare "characters.id" match
-    # alongside an UNRELATED $elemMatch on inventory.items in the same
+    # alongside an UNRELATED $elemMatch on vault.items in the same
     # query - a real (Firestore MongoDB-compat) bug was observed under
     # exactly this shape: the bare positional $ in the update below
     # resolved against the wrong array, padding characters with nulls and
@@ -2155,11 +2143,11 @@ async def check_out_item_instance(address: str, character_id: str, instance_id: 
         {
             "address": address,
             "characters": {"$elemMatch": {"id": character_id}},
-            "inventory.items": {"$elemMatch": {"instanceId": instance_id, "location": "pool"}},
+            "vault.items": {"$elemMatch": {"instanceId": instance_id, "location": "pool"}},
         },
         {
-            "$pull": {"inventory.items": {"instanceId": instance_id}},
-            "$push": {"characters.$[char].items": backpacked_instance},
+            "$pull": {"vault.items": {"instanceId": instance_id}},
+            "$push": {"characters.$[char].gear.items": backpacked_instance},
         },
         array_filters=[{"char.id": character_id}],
         return_document=ReturnDocument.AFTER,
@@ -2185,7 +2173,7 @@ async def check_in_item_instance(address: str, character_id: str, instance_id: s
         return None
     instance = next(
         (
-            i for i in character.get("items", [])
+            i for i in character.get("gear", {}).get("items", [])
             if i["instanceId"] == instance_id and i.get("location") == "backpack"
         ),
         None,
@@ -2197,11 +2185,11 @@ async def check_in_item_instance(address: str, character_id: str, instance_id: s
     doc = await db.players.find_one_and_update(
         {
             "address": address,
-            "characters": {"$elemMatch": {"id": character_id, "items.instanceId": instance_id}},
+            "characters": {"$elemMatch": {"id": character_id, "gear.items.instanceId": instance_id}},
         },
         {
-            "$pull": {"characters.$[char].items": {"instanceId": instance_id}},
-            "$push": {"inventory.items": pooled_instance},
+            "$pull": {"characters.$[char].gear.items": {"instanceId": instance_id}},
+            "$push": {"vault.items": pooled_instance},
         },
         array_filters=[{"char.id": character_id}],
         return_document=ReturnDocument.AFTER,
@@ -2214,7 +2202,7 @@ async def check_in_item_instance(address: str, character_id: str, instance_id: s
 async def check_out_item_balance(address: str, character_id: str, item_id: str, amount: int = 1) -> Optional[Player]:
     """
     Move `amount` of `item_id` (a concrete crafted-item id) from
-    `address`'s shared inventory.itemBalances onto one of their characters'
+    `address`'s shared vault.itemBalances onto one of their characters'
     own itemBalances. Never capacity-gated - unlike resources/tools,
     itemBalances was never part of the crafting-vault redesign (nothing a
     recipe consumes ever lives there), so a character carrying crafted
@@ -2227,11 +2215,11 @@ async def check_out_item_balance(address: str, character_id: str, item_id: str, 
         {
             "address": address,
             "characters.id": character_id,
-            f"inventory.itemBalances.{item_id}": {"$gte": amount},
+            f"vault.itemBalances.{item_id}": {"$gte": amount},
         },
         {"$inc": {
-            f"inventory.itemBalances.{item_id}": -amount,
-            f"characters.$.itemBalances.{item_id}": amount,
+            f"vault.itemBalances.{item_id}": -amount,
+            f"characters.$.gear.itemBalances.camp.{item_id}": amount,
         }},
         return_document=ReturnDocument.AFTER,
     )
@@ -2248,11 +2236,11 @@ async def check_in_item_balance(address: str, character_id: str, item_id: str, a
     doc = await db.players.find_one_and_update(
         {
             "address": address,
-            "characters": {"$elemMatch": {"id": character_id, f"itemBalances.{item_id}": {"$gte": amount}}},
+            "characters": {"$elemMatch": {"id": character_id, f"gear.itemBalances.camp.{item_id}": {"$gte": amount}}},
         },
         {"$inc": {
-            f"inventory.itemBalances.{item_id}": amount,
-            f"characters.$.itemBalances.{item_id}": -amount,
+            f"vault.itemBalances.{item_id}": amount,
+            f"characters.$.gear.itemBalances.camp.{item_id}": -amount,
         }},
         return_document=ReturnDocument.AFTER,
     )
@@ -2264,7 +2252,7 @@ async def check_in_item_balance(address: str, character_id: str, item_id: str, a
 async def destroy_item_instance(address: str, character_id: str, instance_id: str) -> Optional[Player]:
     """
     Permanently remove one item instance from `address`'s shared pool
-    (inventory.items, location:"pool") - the Inventory tab's Vault grid
+    (vault.items, location:"pool") - the Inventory tab's Vault grid
     "hold 5s to destroy" action (see InventoryTab.tsx). Only ever deletes
     from the pool, mirroring check_out_item_instance's own location:"pool"
     match, so an instance currently backpacked/equipped/borrowed for a
@@ -2277,9 +2265,9 @@ async def destroy_item_instance(address: str, character_id: str, instance_id: st
         {
             "address": address,
             "characters.id": character_id,
-            "inventory.items": {"$elemMatch": {"instanceId": instance_id, "location": "pool"}},
+            "vault.items": {"$elemMatch": {"instanceId": instance_id, "location": "pool"}},
         },
-        {"$pull": {"inventory.items": {"instanceId": instance_id}}},
+        {"$pull": {"vault.items": {"instanceId": instance_id}}},
         return_document=ReturnDocument.AFTER,
     )
     if doc is None:
@@ -2289,7 +2277,7 @@ async def destroy_item_instance(address: str, character_id: str, instance_id: st
 
 async def destroy_item_balance(address: str, character_id: str, item_id: str, amount: int = 1) -> Optional[Player]:
     """Permanently remove `amount` of `item_id` from `address`'s shared
-    inventory.itemBalances - the item-balance counterpart to
+    vault.itemBalances - the item-balance counterpart to
     destroy_item_instance."""
     if amount <= 0:
         raise ValueError("amount must be positive")
@@ -2298,9 +2286,9 @@ async def destroy_item_balance(address: str, character_id: str, item_id: str, am
         {
             "address": address,
             "characters.id": character_id,
-            f"inventory.itemBalances.{item_id}": {"$gte": amount},
+            f"vault.itemBalances.{item_id}": {"$gte": amount},
         },
-        {"$inc": {f"inventory.itemBalances.{item_id}": -amount}},
+        {"$inc": {f"vault.itemBalances.{item_id}": -amount}},
         return_document=ReturnDocument.AFTER,
     )
     if doc is None:
@@ -2325,11 +2313,11 @@ async def destroy_character_item_instance(address: str, character_id: str, insta
             "characters": {
                 "$elemMatch": {
                     "id": character_id,
-                    "items": {"$elemMatch": {"instanceId": instance_id, "location": {"$in": ["backpack", "body"]}}},
+                    "gear.items": {"$elemMatch": {"instanceId": instance_id, "location": {"$in": ["backpack", "body"]}}},
                 }
             },
         },
-        {"$pull": {"characters.$.items": {"instanceId": instance_id}}},
+        {"$pull": {"characters.$.gear.items": {"instanceId": instance_id}}},
         return_document=ReturnDocument.AFTER,
     )
     if doc is None:
@@ -2347,9 +2335,9 @@ async def destroy_character_item_balance(address: str, character_id: str, item_i
     doc = await db.players.find_one_and_update(
         {
             "address": address,
-            "characters": {"$elemMatch": {"id": character_id, f"itemBalances.{item_id}": {"$gte": amount}}},
+            "characters": {"$elemMatch": {"id": character_id, f"gear.itemBalances.camp.{item_id}": {"$gte": amount}}},
         },
-        {"$inc": {f"characters.$.itemBalances.{item_id}": -amount}},
+        {"$inc": {f"characters.$.gear.itemBalances.camp.{item_id}": -amount}},
         return_document=ReturnDocument.AFTER,
     )
     if doc is None:
@@ -2379,14 +2367,14 @@ async def load_resource_to_backpack(
     character = next((c for c in doc["characters"] if c["id"] == character_id), None)
     if character is None:
         return None
-    if character.get("resources", {}).get(resource_id, 0) < amount:
+    if character.get("crafting", {}).get("resources", {}).get(resource_id, 0) < amount:
         return None
 
     if resource_id in RESOURCE_ITEMS_BY_ID:
         stack_size = items_catalog.RAW_STACK_SIZE
     else:
         stack_size = items_catalog.PROCESSED_STACK_SIZE
-    existing = character.get("backpackResources", {}).get(resource_id, 0)
+    existing = character.get("gear", {}).get("resources", {}).get("backpack", {}).get(resource_id, 0)
     marginal_slots = math.ceil((existing + amount) / stack_size) - math.ceil(existing / stack_size)
 
     capacity = items_catalog.backpack_capacity(character)
@@ -2399,11 +2387,11 @@ async def load_resource_to_backpack(
     doc = await db.players.find_one_and_update(
         {
             "address": address,
-            "characters": {"$elemMatch": {"id": character_id, f"resources.{resource_id}": {"$gte": amount}}},
+            "characters": {"$elemMatch": {"id": character_id, f"crafting.resources.{resource_id}": {"$gte": amount}}},
         },
         {"$inc": {
-            f"characters.$.resources.{resource_id}": -amount,
-            f"characters.$.backpackResources.{resource_id}": amount,
+            f"characters.$.crafting.resources.{resource_id}": -amount,
+            f"characters.$.gear.resources.backpack.{resource_id}": amount,
         }},
         return_document=ReturnDocument.AFTER,
     )
@@ -2422,12 +2410,12 @@ async def unload_resource_from_backpack(
         {
             "address": address,
             "characters": {
-                "$elemMatch": {"id": character_id, f"backpackResources.{resource_id}": {"$gte": amount}}
+                "$elemMatch": {"id": character_id, f"gear.resources.backpack.{resource_id}": {"$gte": amount}}
             },
         },
         {"$inc": {
-            f"characters.$.backpackResources.{resource_id}": -amount,
-            f"characters.$.resources.{resource_id}": amount,
+            f"characters.$.gear.resources.backpack.{resource_id}": -amount,
+            f"characters.$.crafting.resources.{resource_id}": amount,
         }},
         return_document=ReturnDocument.AFTER,
     )
@@ -2457,7 +2445,7 @@ async def load_item_balance_to_backpack(
     character = next((c for c in doc["characters"] if c["id"] == character_id), None)
     if character is None:
         return None
-    if character.get("itemBalances", {}).get(item_id, 0) < amount:
+    if character.get("gear", {}).get("itemBalances", {}).get("camp", {}).get(item_id, 0) < amount:
         return None
 
     family_id = items_catalog.FAMILY_ID_BY_FINAL_ITEM_ID.get(item_id)
@@ -2465,7 +2453,7 @@ async def load_item_balance_to_backpack(
     stack_size = family.stack_size if family else 1
     slot_cost = items_catalog.slot_cost_for_family(family_id) if family_id else 1
 
-    existing = character.get("backpackItemBalances", {}).get(item_id, 0)
+    existing = character.get("gear", {}).get("itemBalances", {}).get("backpack", {}).get(item_id, 0)
     marginal_slots = (
         math.ceil((existing + amount) / stack_size) - math.ceil(existing / stack_size)
     ) * slot_cost
@@ -2480,11 +2468,11 @@ async def load_item_balance_to_backpack(
     doc = await db.players.find_one_and_update(
         {
             "address": address,
-            "characters": {"$elemMatch": {"id": character_id, f"itemBalances.{item_id}": {"$gte": amount}}},
+            "characters": {"$elemMatch": {"id": character_id, f"gear.itemBalances.camp.{item_id}": {"$gte": amount}}},
         },
         {"$inc": {
-            f"characters.$.itemBalances.{item_id}": -amount,
-            f"characters.$.backpackItemBalances.{item_id}": amount,
+            f"characters.$.gear.itemBalances.camp.{item_id}": -amount,
+            f"characters.$.gear.itemBalances.backpack.{item_id}": amount,
         }},
         return_document=ReturnDocument.AFTER,
     )
@@ -2504,12 +2492,12 @@ async def unload_item_balance_from_backpack(
         {
             "address": address,
             "characters": {
-                "$elemMatch": {"id": character_id, f"backpackItemBalances.{item_id}": {"$gte": amount}}
+                "$elemMatch": {"id": character_id, f"gear.itemBalances.backpack.{item_id}": {"$gte": amount}}
             },
         },
         {"$inc": {
-            f"characters.$.backpackItemBalances.{item_id}": -amount,
-            f"characters.$.itemBalances.{item_id}": amount,
+            f"characters.$.gear.itemBalances.backpack.{item_id}": -amount,
+            f"characters.$.gear.itemBalances.camp.{item_id}": amount,
         }},
         return_document=ReturnDocument.AFTER,
     )
@@ -2530,8 +2518,8 @@ async def degrade_item_quality(
     """
     db = get_database()
     doc = await db.players.find_one_and_update(
-        {"address": address, "characters": {"$elemMatch": {"id": character_id, "items.instanceId": instance_id}}},
-        {"$inc": {"characters.$[char].items.$[item].quality": -amount}},
+        {"address": address, "characters": {"$elemMatch": {"id": character_id, "gear.items.instanceId": instance_id}}},
+        {"$inc": {"characters.$[char].gear.items.$[item].quality": -amount}},
         array_filters=[{"char.id": character_id}, {"item.instanceId": instance_id}],
         return_document=ReturnDocument.AFTER,
     )
@@ -2560,7 +2548,7 @@ async def consume_ammo(
     if character is None:
         return None
 
-    held = character.get("resources", {})
+    held = character.get("crafting", {}).get("resources", {})
     candidates = sorted(
         (item for item in PROCESSED_RESOURCE_ITEMS if item.family_id == ammo_family_id),
         key=lambda item: item.tier,
@@ -2573,9 +2561,9 @@ async def consume_ammo(
     doc = await db.players.find_one_and_update(
         {
             "address": address,
-            "characters": {"$elemMatch": {"id": character_id, f"resources.{concrete_id}": {"$gte": amount}}},
+            "characters": {"$elemMatch": {"id": character_id, f"crafting.resources.{concrete_id}": {"$gte": amount}}},
         },
-        {"$inc": {f"characters.$.resources.{concrete_id}": -amount}},
+        {"$inc": {f"characters.$.crafting.resources.{concrete_id}": -amount}},
         return_document=ReturnDocument.AFTER,
     )
     if doc is None:

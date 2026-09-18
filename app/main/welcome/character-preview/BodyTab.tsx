@@ -143,7 +143,7 @@ export function BodyTab({
   // has_backpack_equipped) - greys out the popup's "Move to backpack"
   // button when nothing's worn in Back/Side, instead of letting the click
   // fail server-side.
-  const hasBackpackEquipped = character.items.some(
+  const hasBackpackEquipped = character.gear.items.some(
     (instance) => instance.location === "body" && (instance.slotRef.includes("Back") || instance.slotRef.includes("Side"))
   );
 
@@ -180,7 +180,7 @@ export function BodyTab({
             </div>
 
             {OVERLAY_SLOTS.map(({ label, position }) => {
-              const instance = equippedInSlot(character.items, label);
+              const instance = equippedInSlot(character.gear.items, label);
               return (
                 <div
                   className={`${styles.equipSlotOverlay} ${position}`}
@@ -201,7 +201,7 @@ export function BodyTab({
 
           <div className={styles.handSlotRow}>
             {HAND_RING_SLOTS.map((label) => {
-              const instance = equippedInSlot(character.items, label);
+              const instance = equippedInSlot(character.gear.items, label);
               // A two-handed item's slotRef holds both hands at once (see
               // equip_item) - Right Hand always shows the normal icon, Left
               // Hand mirrors it only when it's the SAME instance spanning
@@ -229,7 +229,7 @@ export function BodyTab({
 
       <div className={styles.companionMountRow}>
         {COMPANION_MOUNT_SLOTS.map((label) => {
-          const instance = equippedInSlot(character.items, label);
+          const instance = equippedInSlot(character.gear.items, label);
           return (
             <div
               className={styles.largeEquipSlot}

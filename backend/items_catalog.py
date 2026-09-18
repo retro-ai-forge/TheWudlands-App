@@ -323,12 +323,13 @@ def backpack_slots_used(character: dict) -> int:
     from backend.resources_catalog import RESOURCE_ITEMS_BY_ID
 
     total = 0
+    gear = character.get("gear", {})
 
-    for instance in character.get("items", []):
+    for instance in gear.get("items", []):
         if instance.get("location") == "backpack":
             total += slot_cost_for_family(instance["familyId"])
 
-    for resource_id, qty in character.get("backpackResources", {}).items():
+    for resource_id, qty in gear.get("resources", {}).get("backpack", {}).items():
         if resource_id in RESOURCE_ITEMS_BY_ID:
             stack_size = RAW_STACK_SIZE
         elif resource_id in PROCESSED_RESOURCE_ITEMS_BY_ID:
@@ -337,7 +338,7 @@ def backpack_slots_used(character: dict) -> int:
             stack_size = TINY_STACK_SIZE
         total += math.ceil(qty / stack_size)
 
-    for family_id, qty in character.get("backpackItemBalances", {}).items():
+    for family_id, qty in gear.get("itemBalances", {}).get("backpack", {}).items():
         family = ITEM_FAMILIES_BY_ID.get(family_id)
         stack_size = family.stack_size if family else 1
         total += math.ceil(qty / stack_size) * slot_cost_for_family(family_id)
@@ -351,7 +352,7 @@ def has_backpack_equipped(character: dict) -> bool:
     worn right now, as opposed to just carried or sitting in the pool."""
     return any(
         instance.get("location") == "body" and any(slot in ("Back", "Side") for slot in instance.get("slotRef", []))
-        for instance in character.get("items", [])
+        for instance in character.get("gear", {}).get("items", [])
     )
 
 
@@ -367,7 +368,7 @@ def backpack_capacity(character: dict) -> int:
         return 0
 
     bonus = 0
-    for instance in character.get("items", []):
+    for instance in character.get("gear", {}).get("items", []):
         if instance.get("location") == "body" and any(
             slot in ("Back", "Side") for slot in instance.get("slotRef", [])
         ):
