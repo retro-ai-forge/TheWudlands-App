@@ -1010,28 +1010,20 @@
     "kind": ["tool"],
     "sizeClass": "xLarge",
     "stackSize": 1,
-    "needsItemDefinition": true,
+    "needsItemDefinition": false,
     "note": "A crafting station bulky enough to need both hands to carry, or a mount to haul it instead - degrades with use like any other equippable tool.",
-    "equipSlots": [
-      ["Left Hand", "Right Hand"],
-      ["Mount"]
-    ],
-    "backpackable": false,
-    "qualityMax": 300
+    "equipSlots": [],
+    "backpackable": false
   },
   {
     "familyId": "anvil",
     "kind": ["tool"],
     "sizeClass": "xLarge",
     "stackSize": 1,
-    "needsItemDefinition": true,
+    "needsItemDefinition": false,
     "note": "A crafting station bulky enough to need both hands to carry, or a mount to haul it instead - degrades with use like any other equippable tool.",
-    "equipSlots": [
-      ["Left Hand", "Right Hand"],
-      ["Mount"]
-    ],
-    "backpackable": false,
-    "qualityMax": 300
+    "equipSlots": [],
+    "backpackable": false
   },
   {
     "familyId": "axe_stone",
@@ -1053,14 +1045,10 @@
     "kind": ["tool"],
     "sizeClass": "xLarge",
     "stackSize": 1,
-    "needsItemDefinition": true,
+    "needsItemDefinition": false,
     "note": "A crafting station bulky enough to need both hands to carry, or a mount to haul it instead - degrades with use like any other equippable tool.",
-    "equipSlots": [
-      ["Left Hand", "Right Hand"],
-      ["Mount"]
-    ],
-    "backpackable": false,
-    "qualityMax": 300
+    "equipSlots": [],
+    "backpackable": false
   },
   {
     "familyId": "furnace",
@@ -1077,14 +1065,10 @@
     "kind": ["tool"],
     "sizeClass": "xLarge",
     "stackSize": 1,
-    "needsItemDefinition": true,
+    "needsItemDefinition": false,
     "note": "A crafting station bulky enough to need both hands to carry, or a mount to haul it instead - degrades with use like any other equippable tool.",
-    "equipSlots": [
-      ["Left Hand", "Right Hand"],
-      ["Mount"]
-    ],
-    "backpackable": false,
-    "qualityMax": 300
+    "equipSlots": [],
+    "backpackable": false
   },
   {
     "familyId": "kiln",
@@ -1101,33 +1085,25 @@
     "kind": ["tool"],
     "sizeClass": "xLarge",
     "stackSize": 1,
-    "needsItemDefinition": true,
+    "needsItemDefinition": false,
     "note": "A crafting station bulky enough to need both hands to carry, or a mount to haul it instead - degrades with use like any other equippable tool.",
-    "equipSlots": [
-      ["Left Hand", "Right Hand"],
-      ["Mount"]
-    ],
-    "backpackable": false,
-    "qualityMax": 300
+    "equipSlots": [],
+    "backpackable": false
   },
   {
     "familyId": "loom",
     "kind": ["tool"],
     "sizeClass": "xLarge",
     "stackSize": 1,
-    "needsItemDefinition": true,
+    "needsItemDefinition": false,
     "note": "A crafting station bulky enough to need both hands to carry, or a mount to haul it instead - degrades with use like any other equippable tool.",
-    "equipSlots": [
-      ["Left Hand", "Right Hand"],
-      ["Mount"]
-    ],
-    "backpackable": false,
-    "qualityMax": 300
+    "equipSlots": [],
+    "backpackable": false
   },
   {
     "familyId": "mortar_and_pestle",
     "kind": ["tool"],
-    "sizeClass": "large",
+    "sizeClass": "medium",
     "stackSize": 1,
     "needsItemDefinition": false,
     "note": "TBD - a placed crafting station, not personal gear; may not use carry/backpack rules at all.",
@@ -1149,14 +1125,10 @@
     "kind": ["tool"],
     "sizeClass": "xLarge",
     "stackSize": 1,
-    "needsItemDefinition": true,
+    "needsItemDefinition": false,
     "note": "A crafting station bulky enough to need both hands to carry, or a mount to haul it instead - degrades with use like any other equippable tool.",
-    "equipSlots": [
-      ["Left Hand", "Right Hand"],
-      ["Mount"]
-    ],
-    "backpackable": false,
-    "qualityMax": 300
+    "equipSlots": [],
+    "backpackable": false
   },
   {
     "familyId": "spinning_wheel",
@@ -1183,14 +1155,10 @@
     "kind": ["tool"],
     "sizeClass": "xLarge",
     "stackSize": 1,
-    "needsItemDefinition": true,
+    "needsItemDefinition": false,
     "note": "A crafting station bulky enough to need both hands to carry, or a mount to haul it instead - degrades with use like any other equippable tool.",
-    "equipSlots": [
-      ["Left Hand", "Right Hand"],
-      ["Mount"]
-    ],
-    "backpackable": false,
-    "qualityMax": 300
+    "equipSlots": [],
+    "backpackable": false
   },
   {
     "familyId": "wrench",
