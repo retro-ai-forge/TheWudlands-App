@@ -12,6 +12,7 @@ import { BodyTab } from "./BodyTab";
 import { SoulTab } from "./SoulTab";
 import { AdventureTab } from "./AdventureTab";
 import { InventoryTab, type ItemInstance, type RawPlayerData } from "./InventoryTab";
+import { CampView } from "./CampView";
 
 export type TabKey = "stats" | "body" | "soul" | "adventure" | "inventory";
 
@@ -72,6 +73,12 @@ export function CharacterPreview({
   const [inventorySubTab, setInventorySubTab] = useState<"crafting" | "vault">(
     openCraftingSectionByDefault ? "crafting" : "vault",
   );
+  // Opened via the camp button on the Body tab (see BodyTab.tsx's
+  // onOpenCamp) - replaces the normal per-tab content below the name
+  // heading rather than being its own TABS entry, and (like the Vault
+  // tab) suspends .wizard's own vertical scroll so only its item grid
+  // scrolls, horizontally. Cleared by switching to any of the 5 real tabs.
+  const [showCamp, setShowCamp] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
   const [showDeleteWarning, setShowDeleteWarning] = useState(false);
@@ -104,10 +111,10 @@ export function CharacterPreview({
   // position would leave the name/tab-strip cut off above the fold with
   // no way back up. Snap to the top the moment Vault becomes active.
   useEffect(() => {
-    if (activeTab === "inventory" && inventorySubTab === "vault") {
+    if (showCamp || (activeTab === "inventory" && inventorySubTab === "vault")) {
       wizardScrollRef.current?.scrollTo(0, 0);
     }
-  }, [activeTab, inventorySubTab]);
+  }, [activeTab, inventorySubTab, showCamp]);
 
   // Standalone portrait editor, opened by clicking the face portrait on the
   // Stats tab. The draft lives in a ref rather than state - PortraitEditor's
@@ -247,7 +254,7 @@ export function CharacterPreview({
   return (
     <div
       className={`${styles.wizard} ${
-        activeTab === "inventory" && inventorySubTab === "vault" ? "" : styles.wizardScrollable
+        showCamp || (activeTab === "inventory" && inventorySubTab === "vault") ? "" : styles.wizardScrollable
       }`}
       ref={wizardScrollRef}
       onScroll={checkScrolledToEnd}
@@ -266,10 +273,13 @@ export function CharacterPreview({
                   key={tab.key}
                   type="button"
                   className={`${tabStyles.tabRowButton} ${
-                    activeTab === tab.key ? tabStyles.tabRowButtonActive : tabStyles.tabRowButtonInactive
+                    !showCamp && activeTab === tab.key ? tabStyles.tabRowButtonActive : tabStyles.tabRowButtonInactive
                   }`}
-                  onClick={() => setActiveTab(tab.key)}
-                  aria-pressed={activeTab === tab.key}
+                  onClick={() => {
+                    setShowCamp(false);
+                    setActiveTab(tab.key);
+                  }}
+                  aria-pressed={!showCamp && activeTab === tab.key}
                   title={tab.label}
                   aria-label={tab.label}
                 >
@@ -291,10 +301,14 @@ export function CharacterPreview({
         {deleteError && <p className={styles.submitError}>{deleteError}</p>}
 
         <h1 className={tabStyles.name}>
-          {character.firstName} {character.lastName}
+          {showCamp ? `${character.firstName}'s Campfire` : `${character.firstName} ${character.lastName}`}
         </h1>
 
-        <div className={activeTab === "inventory" || activeTab === "soul" ? tabStyles.mainColumn : `${tabStyles.mainColumn} ${tabStyles.mainColumnPadded}`}>
+        <div className={showCamp || activeTab === "inventory" || activeTab === "soul" ? tabStyles.mainColumn : `${tabStyles.mainColumn} ${tabStyles.mainColumnPadded}`}>
+          {showCamp ? (
+            <CampView character={character} onPlayerDataUpdated={onPlayerDataUpdated} />
+          ) : (
+            <>
           {activeTab === "stats" && (
             <StatsTab
               character={character}
@@ -307,7 +321,7 @@ export function CharacterPreview({
             />
           )}
           {activeTab === "body" && (
-            <BodyTab character={character} onPlayerDataUpdated={onPlayerDataUpdated} />
+            <BodyTab character={character} onPlayerDataUpdated={onPlayerDataUpdated} onOpenCamp={() => setShowCamp(true)} />
           )}
           {activeTab === "soul" && <SoulTab character={character} />}
           {activeTab === "adventure" && <AdventureTab character={character} />}
@@ -323,10 +337,12 @@ export function CharacterPreview({
               onSubTabChange={setInventorySubTab}
             />
           )}
+            </>
+          )}
         </div>
       </div>
 
-      {activeTab === "stats" && (
+      {!showCamp && activeTab === "stats" && (
         <button
           type="button"
           className={`${tabStyles.deleteButton} ${isScrolledToEnd ? "" : tabStyles.deleteButtonLocked}`}

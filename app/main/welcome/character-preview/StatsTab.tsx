@@ -164,7 +164,7 @@ export function StatsTab({
           title="Edit portrait"
           aria-label="Edit portrait"
         >
-          {character.portraitUrl ? (
+          {character.portraitUrl && character.portraitUrl !== "empty" ? (
             character.portraitFaceArea ? (
               // eslint-disable-next-line @next/next/no-img-element
               <img

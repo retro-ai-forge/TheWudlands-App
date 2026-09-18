@@ -18,12 +18,12 @@ const OVERLAY_SLOTS = [
   { label: "Side", position: styles.equipSlotGirdle },
 ];
 // Sit below the portrait instead, side by side - a hand holding something
-// doesn't read well as a small badge pinned to the image itself. Girdle
-// (the belt) sits centered between them, and each Hand sits directly beside
-// its matching Ring. One row in the markup; .handSlotRow's own flex-wrap
-// breaks it onto two lines (Hand+Ring, Hand+Ring) on narrow screens and
-// keeps all 5 on one line once there's room.
-const HAND_RING_SLOTS = ["Left Hand", "Left Ring", "Girdle", "Right Ring", "Right Hand"];
+// doesn't read well as a small badge pinned to the image itself. Two fixed
+// rows, not one wrapping row: Left Hand/Girdle/Right Hand up top (Girdle
+// smaller than its neighbors and hung below their baseline - see
+// .equipSlotGirdleOffset), Left Ring/Right Ring on their own line below.
+const HAND_GIRDLE_SLOTS = ["Left Hand", "Girdle", "Right Hand"];
+const RING_SLOTS = ["Left Ring", "Right Ring"];
 // Below everything else, at full portrait size rather than a small badge -
 // these are large enough to actually show a companion/mount's own portrait
 // once that art exists, capped at the same max size as the character's own
@@ -69,9 +69,11 @@ function EquipSlotIcon({
 export function BodyTab({
   character,
   onPlayerDataUpdated,
+  onOpenCamp,
 }: {
   character: SlotCharacterSummary;
   onPlayerDataUpdated?: (data: RawPlayerData) => void;
+  onOpenCamp?: () => void;
 }) {
   // .frameBox's CSS aspect-ratio (2/3) is only a fallback for portraits
   // saved before portraitFrameArea carried its own aspectRatio - once that
@@ -153,7 +155,7 @@ export function BodyTab({
         <div className={styles.frameColumn}>
           <div className={styles.frameStage}>
             <div className={styles.frameBox} style={frameAspectRatio ? { aspectRatio: frameAspectRatio } : undefined}>
-              {character.portraitUrl ? (
+              {character.portraitUrl && character.portraitUrl !== "empty" ? (
                 character.portraitFrameArea ? (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img
@@ -197,16 +199,49 @@ export function BodyTab({
                 </div>
               );
             })}
+
+            {/* Absolutely positioned against .frameStage itself (its own
+                bottom edge, centered), not a participant in .frameColumn's
+                flex flow at all - so it adds no space between the portrait
+                and .handSlotRow below, it just overlaps both by sitting
+                half in/half out of the frame's own bottom edge. Opens
+                CampView (see CharacterPreview.tsx) in place of the normal
+                tab content. */}
+            <button type="button" className={styles.campButton} title="Camp" aria-label="Camp" onClick={onOpenCamp}>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src="/images/character/camp.png" alt="" className={styles.campButtonIcon} />
+            </button>
           </div>
 
           <div className={styles.handSlotRow}>
-            {HAND_RING_SLOTS.map((label) => {
+            {HAND_GIRDLE_SLOTS.map((label) => {
               const instance = equippedInSlot(character.gear.items, label);
               // A two-handed item's slotRef holds both hands at once (see
               // equip_item) - Right Hand always shows the normal icon, Left
               // Hand mirrors it only when it's the SAME instance spanning
               // both, not an independent one-handed item held there alone.
               const mirrored = label === "Left Hand" && !!instance && instance.slotRef.includes("Right Hand");
+              return (
+                <div
+                  className={label === "Girdle" ? `${styles.equipSlot} ${styles.equipSlotGirdleOffset}` : styles.equipSlot}
+                  key={label}
+                  role={instance ? "button" : undefined}
+                  tabIndex={instance ? 0 : undefined}
+                  onClick={instance ? () => setSelectedInstance(instance) : undefined}
+                >
+                  {instance ? (
+                    <EquipSlotIcon instance={instance} catalog={catalog} mirrored={mirrored} />
+                  ) : (
+                    <span className={styles.equipSlotLabel}>{label}</span>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+
+          <div className={styles.ringSlotRow}>
+            {RING_SLOTS.map((label) => {
+              const instance = equippedInSlot(character.gear.items, label);
               return (
                 <div
                   className={styles.equipSlot}
@@ -216,7 +251,7 @@ export function BodyTab({
                   onClick={instance ? () => setSelectedInstance(instance) : undefined}
                 >
                   {instance ? (
-                    <EquipSlotIcon instance={instance} catalog={catalog} mirrored={mirrored} />
+                    <EquipSlotIcon instance={instance} catalog={catalog} />
                   ) : (
                     <span className={styles.equipSlotLabel}>{label}</span>
                   )}

@@ -598,7 +598,7 @@ function SoulSlotCard({
                 {remainingSeconds === 0 ? "Ready" : `Crafting ${formatRemainingCompactLong(remainingSeconds)}`}
               </span>
             )}
-            {occupant.portraitUrl && !faceCropFailed ? (
+            {occupant.portraitUrl && occupant.portraitUrl !== "empty" && !faceCropFailed ? (
               occupant.portraitFaceArea ? (
                 <span className={styles.slotFaceCropWrap}>
                   {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -621,7 +621,7 @@ function SoulSlotCard({
                   onError={() => setFaceCropFailed(true)}
                 />
               )
-            ) : occupant.portraitUrl ? (
+            ) : occupant.portraitUrl && occupant.portraitUrl !== "empty" ? (
               // A portrait URL was set but failed to load - show a plain
               // placeholder instead of a blank/broken image.
               <span className={styles.slotQuestionMark} aria-hidden="true">

@@ -583,7 +583,7 @@ function itemGridTierBadgeClass(tier: number): string {
  * right) replacing the old name/tier/quantity table. No name column and
  * no New/Used/Broken condition label - the icon alone identifies the
  * item, and quality/condition isn't shown here anymore. */
-function ItemGrid({
+export function ItemGrid({
   ids,
   emptyLabel,
   tierInfo,
@@ -596,6 +596,7 @@ function ItemGrid({
   hasBackpackEquipped,
   characterId,
   onPlayerDataUpdated,
+  reserveBottomPx = 0,
 }: {
   ids: string[];
   emptyLabel: string;
@@ -615,6 +616,11 @@ function ItemGrid({
   hasBackpackEquipped: boolean;
   characterId: string;
   onPlayerDataUpdated?: (data: RawPlayerData) => void;
+  /** Extra px subtracted off the fill-to-bottom height measurement below,
+   * for a caller (CampView's campfire) that reserves its own fixed-height
+   * region below this grid instead of letting it fill all the way down to
+   * the footer bar the way the plain Vault tab usage does. */
+  reserveBottomPx?: number;
 }) {
   // How tall the scroll container is allowed to be, measured against the
   // real remaining viewport space below it rather than a guessed vh
@@ -639,13 +645,13 @@ function ItemGrid({
       const footer = document.querySelector('[data-role="character-preview-topbar"]');
       const footerHeight = footer ? footer.getBoundingClientRect().height : 90;
       const available =
-        window.innerHeight - el.getBoundingClientRect().top - footerHeight - 16 + SCROLLBAR_OVERLAP_PX;
+        window.innerHeight - el.getBoundingClientRect().top - footerHeight - 16 + SCROLLBAR_OVERLAP_PX - reserveBottomPx;
       setGridHeight(Math.max(ITEM_TILE_PX, available));
     };
     measure();
     window.addEventListener("resize", measure);
     return () => window.removeEventListener("resize", measure);
-  }, []);
+  }, [reserveBottomPx]);
 
   // The clicked tile's own row id (not its lookupIds-resolved concrete id -
   // the detail popup needs the SAME id back to re-read `balances`/`name`
@@ -1183,17 +1189,18 @@ export function ItemDetailPopup({
 
   // Closes on a click anywhere - including inside the card itself (the
   // image, name, description, meta row) - except on a button or a hold
-  // target (recycleHoldBar / destroyIcon), so those controls get their own
-  // clicks instead of just dismissing the popup. While showDestroy is
-  // open, clicking anywhere else in that view (the destroy label/track,
-  // the recycle breakdown text, ...) doesn't close the popup outright -
-  // it acts like the "↩" button instead, returning to the item info view,
-  // since the whole recycle/destroy card is still "inside" this same item.
+  // target (recycleHoldBar / destroySection - each covers its whole label +
+  // progress bar + icon area now, not just the icon), so those controls get
+  // their own clicks instead of just dismissing the popup. While showDestroy
+  // is open, clicking anywhere else in that view (the recycle breakdown
+  // text, ...) doesn't close the popup outright - it acts like the "↩"
+  // button instead, returning to the item info view, since the whole
+  // recycle/destroy card is still "inside" this same item.
   const handleClick = (e: React.MouseEvent<HTMLElement>) => {
     const target = e.target as HTMLElement;
     if (target.closest("button")) return;
     if (showDestroy) {
-      if (target.closest(`.${styles.recycleHoldBar}`) || target.closest(`.${styles.destroyIcon}`)) return;
+      if (target.closest(`.${styles.recycleHoldBar}`) || target.closest(`.${styles.destroySection}`)) return;
       setShowDestroy(false);
       return;
     }
@@ -1325,7 +1332,21 @@ export function ItemDetailPopup({
                 </button>
               </div>
             )}
-            <div className={styles.destroySection}>
+            <div
+              className={styles.destroySection}
+              role="button"
+              tabIndex={0}
+              title="Hold to destroy"
+              aria-label="Hold to destroy"
+              onPointerDown={(e) => {
+                e.preventDefault();
+                startDestroyHold();
+              }}
+              onPointerUp={cancelDestroyHold}
+              onPointerLeave={cancelDestroyHold}
+              onPointerCancel={cancelDestroyHold}
+              onContextMenu={(e) => e.preventDefault()}
+            >
               <p className={styles.destroyLabel}>Hold to DESTROY</p>
               <div className={styles.destroyProgressTrack}>
                 <div
@@ -1336,29 +1357,7 @@ export function ItemDetailPopup({
                   }}
                 />
               </div>
-              {/* Only the icon itself is the hold target now - the label
-                  and progress track above are just display, not clickable.
-                  title/aria-label repeat that same headline directly on
-                  the hold target, not just the paragraph above it, so it
-                  reads correctly for a screen reader or a hover tooltip
-                  even without the visual label in view. */}
-              <span
-                className={styles.destroyIcon}
-                role="button"
-                tabIndex={0}
-                title="Hold to destroy"
-                aria-label="Hold to destroy"
-                onPointerDown={(e) => {
-                  e.preventDefault();
-                  startDestroyHold();
-                }}
-                onPointerUp={cancelDestroyHold}
-                onPointerLeave={cancelDestroyHold}
-                onPointerCancel={cancelDestroyHold}
-                onContextMenu={(e) => e.preventDefault()}
-              >
-                🔥
-              </span>
+              <span className={styles.destroyIcon}>🔥</span>
             </div>
             {destroyError && <p className={styles.destroyError}>{destroyError}</p>}
           </>
@@ -1746,9 +1745,9 @@ export function InventoryTab({
   // Vault tab (see activeSubTab) - Tools/Resources stay here since they're
   // what a craft actually draws on.
   const [openSections, setOpenSections] = useState<
-    Set<"blueprints" | "character" | "items" | "partyTools" | "partyResources">
+    Set<"blueprints" | "character" | "partyTools" | "partyResources">
   >(() => (openCraftingSectionByDefault ? new Set(["character"]) : new Set()));
-  const toggleSection = (id: "blueprints" | "character" | "items" | "partyTools" | "partyResources") =>
+  const toggleSection = (id: "blueprints" | "character" | "partyTools" | "partyResources") =>
     setOpenSections((prev) => {
       const next = new Set(prev);
       if (next.has(id)) next.delete(id); else next.add(id);
@@ -1837,28 +1836,6 @@ export function InventoryTab({
   const playerItemsCombined: Record<string, number> = {
     ...playerItemBalances,
     ...playerItemRowBalances,
-  };
-
-  // This character's own item instances (backpack + equipped body - never
-  // "crafting", already shown separately above as a borrowed tool) plus
-  // its own itemBalances - the "Items" accordion's own grid, mirroring the
-  // playerItem* set above but scoped to this one character rather than the
-  // shared vault (see ItemGrid/ItemDetailPopup's source:"character").
-  const characterItemLookupIds: Record<string, string> = {};
-  const characterItemRowBalances: Record<string, number> = {};
-  const characterItemRowQuality: Record<string, number | null> = {};
-  const characterItemLocations: Record<string, "backpack" | "body"> = {};
-  for (const instance of character.gear.items) {
-    if (instance.location !== "backpack" && instance.location !== "body") continue;
-    characterItemLookupIds[instance.instanceId] = instance.itemId;
-    characterItemRowBalances[instance.instanceId] = 1;
-    characterItemRowQuality[instance.instanceId] = instance.quality;
-    characterItemLocations[instance.instanceId] = instance.location;
-  }
-
-  const characterItemsCombined: Record<string, number> = {
-    ...character.gear.itemBalances.camp,
-    ...characterItemRowBalances,
   };
 
   // Whether this character currently has a physical backpack worn (Back or
@@ -2203,32 +2180,6 @@ export function InventoryTab({
                     sortByTier
                     textColor="#7eb8ff"
                     dividerClassName={styles.toolsResourceDivider}
-                  />
-                </div>
-              )}
-            </div>
-          )}
-
-          {Object.keys(characterItemsCombined).some((id) => characterItemsCombined[id] > 0) && (
-            <div className={styles.accordionItem}>
-              <button className={styles.accordionHeader} onClick={() => toggleSection("items")}>
-                <span>{`${character.firstName}'s Items`}</span>
-                <span className={styles.accordionChevron}>{openSections.has("items") ? "▴" : "▾"}</span>
-              </button>
-              {openSections.has("items") && (
-                <div className={styles.accordionBody}>
-                  <ItemGrid
-                    ids={Object.keys(characterItemsCombined).filter((id) => characterItemsCombined[id] > 0)}
-                    emptyLabel="Nothing carried yet."
-                    tierInfo={itemCatalogTierInfo}
-                    balances={characterItemsCombined}
-                    lookupIds={characterItemLookupIds}
-                    instanceQuality={characterItemRowQuality}
-                    instanceLocations={characterItemLocations}
-                    source="character"
-                    hasBackpackEquipped={hasBackpackEquipped}
-                    characterId={character.id}
-                    onPlayerDataUpdated={onPlayerDataUpdated}
                   />
                 </div>
               )}

@@ -356,6 +356,19 @@ def has_backpack_equipped(character: dict) -> bool:
     )
 
 
+def has_saddlepack_equipped(character: dict) -> bool:
+    """Whether a saddlepack is currently equipped into the mount's own
+    Mbagpack slot - the mount-side counterpart to has_backpack_equipped.
+    Both the mount creature and its saddlepack are just ordinary equipped
+    instances in this same character's gear.items (no separate per-mount
+    storage exists), distinguished only by which slot name their own
+    slotRef carries."""
+    return any(
+        instance.get("location") == "body" and "Mbagpack" in instance.get("slotRef", [])
+        for instance in character.get("gear", {}).get("items", [])
+    )
+
+
 def backpack_capacity(character: dict) -> int:
     """
     Total backpack slot ceiling for one character - 0 with nothing to carry
