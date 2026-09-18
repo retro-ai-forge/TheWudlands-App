@@ -1680,6 +1680,11 @@ async def finish_craft(address: str, character_id: str) -> Optional[Player]:
     return _doc_to_player(doc)
 
 
+# Race ids under characterOptions.ts's "Giants" category (ogre, goliath,
+# giant) - too large to sit comfortably on anything but a Colossal mount.
+GIANT_RACES = frozenset({"ogre", "goliath", "giant"})
+
+
 async def equip_item(address: str, character_id: str, instance_id: str, slots: List[str]) -> Optional[Player]:
     """
     Equip one of a character's own item instances into `slots` - exactly
@@ -1690,9 +1695,12 @@ async def equip_item(address: str, character_id: str, instance_id: str, slots: L
     occupancy check below correctly block a later attempt to equip
     something else into just one of those slots.
 
-    Raises ValueError if `slots` doesn't match what the instance's family
-    actually requires. Returns None if the instance isn't found backpacked
-    on this character (an equipped one is already equipped; a
+    Raises ValueError if `slots` doesn't exactly match one of the instance's
+    family's equip_slots groups (e.g. both hands together for a two-handed
+    item, or a single named slot for an ordinary one - see items_catalog.
+    ItemFamily.equip_slots), or if a GIANT_RACES character tries to equip a
+    mount whose size isn't "Colossal". Returns None if the instance isn't found
+    backpacked on this character (an equipped one is already equipped; a
     location:"crafting" one is borrowed for an in-progress craft and can't
     be touched until it's released - see start_craft/finish_craft), or if
     any of `slots` is already occupied by another equipped instance.
@@ -1715,14 +1723,14 @@ async def equip_item(address: str, character_id: str, instance_id: str, slots: L
     if family is None:
         raise ValueError(f"Unknown item family: {instance['familyId']}")
 
-    if family.two_handed:
-        if sorted(slots) != sorted(family.equip_slots):
-            raise ValueError(
-                f"{family.family_id} is two-handed - must equip both {list(family.equip_slots)} at once"
-            )
-    else:
-        if len(slots) != 1 or slots[0] not in family.equip_slots:
-            raise ValueError(f"{family.family_id} can only be equipped into one of {list(family.equip_slots)}")
+    if not any(sorted(slots) == sorted(group) for group in family.equip_slots):
+        options = " or ".join("+".join(group) for group in family.equip_slots)
+        raise ValueError(f"{family.family_id} must be equipped into one of: {options}")
+
+    if "mount" in family.kind and character.get("race") in GIANT_RACES:
+        entry = items_catalog.ITEM_CATALOG_ENTRIES_BY_ID.get(instance["itemId"])
+        if entry is None or entry.size != "Colossal":
+            raise ValueError(f"{character.get('race')} characters can only ride Colossal mounts")
 
     doc = await db.players.find_one_and_update(
         {
@@ -1931,6 +1939,53 @@ async def check_in_item_balance(address: str, character_id: str, item_id: str, a
             f"inventory.itemBalances.{item_id}": amount,
             f"characters.$.itemBalances.{item_id}": -amount,
         }},
+        return_document=ReturnDocument.AFTER,
+    )
+    if doc is None:
+        return None
+    return _doc_to_player(doc)
+
+
+async def destroy_item_instance(address: str, character_id: str, instance_id: str) -> Optional[Player]:
+    """
+    Permanently remove one item instance from `address`'s shared pool
+    (inventory.items, location:"pool") - the Inventory tab's Vault grid
+    "hold 5s to destroy" action (see InventoryTab.tsx). Only ever deletes
+    from the pool, mirroring check_out_item_instance's own location:"pool"
+    match, so an instance currently backpacked/equipped/borrowed for a
+    craft (not reachable from that grid in the first place) can't be
+    destroyed through this path. Returns None if no matching pooled
+    instance exists, or the address/character pair doesn't match.
+    """
+    db = get_database()
+    doc = await db.players.find_one_and_update(
+        {
+            "address": address,
+            "characters.id": character_id,
+            "inventory.items": {"$elemMatch": {"instanceId": instance_id, "location": "pool"}},
+        },
+        {"$pull": {"inventory.items": {"instanceId": instance_id}}},
+        return_document=ReturnDocument.AFTER,
+    )
+    if doc is None:
+        return None
+    return _doc_to_player(doc)
+
+
+async def destroy_item_balance(address: str, character_id: str, item_id: str, amount: int = 1) -> Optional[Player]:
+    """Permanently remove `amount` of `item_id` from `address`'s shared
+    inventory.itemBalances - the item-balance counterpart to
+    destroy_item_instance."""
+    if amount <= 0:
+        raise ValueError("amount must be positive")
+    db = get_database()
+    doc = await db.players.find_one_and_update(
+        {
+            "address": address,
+            "characters.id": character_id,
+            f"inventory.itemBalances.{item_id}": {"$gte": amount},
+        },
+        {"$inc": {f"inventory.itemBalances.{item_id}": -amount}},
         return_document=ReturnDocument.AFTER,
     )
     if doc is None:

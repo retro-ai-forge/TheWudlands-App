@@ -27,8 +27,8 @@ type BlueprintTierInfo = Record<
     description?: string;
     /** Family-level backpack slot-cost bucket (item-catalog only), e.g. "tiny"/"light"/"medium". */
     sizeClass?: string;
-    /** Family-level valid equip slot names (item-catalog only) - non-empty only for needsItemDefinition:true families. */
-    equipSlots?: string[];
+    /** Family-level - alternative full slot-groups valid for one equip action (item-catalog only), e.g. [["Left Hand"],["Right Hand"]] for a sword or [["Left Hand","Right Hand"],["Mount"]] for a portable station. Non-empty only for needsItemDefinition:true families. */
+    equipSlots?: string[][];
     /** Family-level (item-catalog only) - whether a move-to-backpack action applies at all. */
     backpackable?: boolean;
     /** Family-level (item-catalog only) - whether equipping occupies both named hand slots at once. */
@@ -634,6 +634,15 @@ function ItemGrid({
           // instance is always exactly 1 of itself, so a bare "1" badge
           // would be noise rather than information.
           const showCount = (info?.stackSize ?? 1) > 1;
+          // Only a real item instance carries a quality (isInstance rows -
+          // same condition ItemDetailPopup uses for its "Quality: X/Y"
+          // line) - a stackable balance row has no such concept, so it
+          // gets no bar at all rather than a misleading full-green one.
+          const currentQuality = instanceQuality?.[id];
+          const qualityFraction =
+            lookupIds?.[id] !== undefined && info?.qualityMax != null && currentQuality != null
+              ? Math.max(0, Math.min(1, info.qualityMax > 0 ? currentQuality / info.qualityMax : 1))
+              : null;
           return (
             <button
               key={id}
@@ -641,15 +650,33 @@ function ItemGrid({
               className={styles.itemGridCell}
               title={name}
               onClick={() => setSelectedId(id)}
+              onContextMenu={(e) => e.preventDefault()}
             >
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={info?.icon || FALLBACK_ITEM_ICON} alt={name} className={styles.itemGridImg} />
+              {/* A background-image div, not a real <img> - mobile
+                  Chrome/Safari's long-press "save/share image" menu is
+                  tied to the <img> tag itself and fires from the browser's
+                  own native gesture recognizer, ahead of anything a
+                  contextmenu/touch-callout CSS override can catch. No tag
+                  for it to recognize as an image sidesteps that instead of
+                  fighting it per-browser. */}
+              <div
+                role="img"
+                aria-label={name}
+                className={styles.itemGridImg}
+                style={{ backgroundImage: `url(${info?.icon || FALLBACK_ITEM_ICON})` }}
+              />
               {!!info?.tier && (
                 <span className={`${styles.itemGridTierBadge} ${itemGridTierBadgeClass(info.tier)}`}>
                   {getTierIndicator(info.tier)}
                 </span>
               )}
               {showCount && <span className={styles.itemGridCountBadge}>{balances[id] ?? 0}</span>}
+              {qualityFraction !== null && (
+                <div
+                  className={styles.itemGridQualityBar}
+                  style={{ width: `${qualityFraction * 100}%`, backgroundColor: qualityBarColor(qualityFraction) }}
+                />
+              )}
             </button>
           );
         })}
@@ -706,6 +733,52 @@ async function postJson(url: string, body?: object): Promise<PostJsonResult> {
   return { ok: true, data: await res.json() };
 }
 
+// How long the destroy control must be held before it actually fires -
+// long enough that it can't be triggered by a stray tap, matching the
+// weight of "for good" (see ItemDetailPopup's showDestroy view).
+const DESTROY_HOLD_MS = 2000;
+
+// The fill's own solid color at hold-progress `t` (0-1) - gold deepening
+// through the app's own red (#c0453a) to blood red right as the hold
+// completes, matching .tabRowButtonActive's gold glow (#e6b85c) at the
+// start. A live color swap on one growing bar, not a fixed gradient image
+// revealed underneath it - see the render below.
+function destroyFillColor(t: number): string {
+  const GOLD: [number, number, number] = [230, 184, 92];
+  const RED: [number, number, number] = [192, 69, 58];
+  const BLOOD_RED: [number, number, number] = [107, 0, 0];
+  const clamped = Math.min(1, Math.max(0, t));
+  const [from, to, localT] =
+    clamped <= 0.55 ? [GOLD, RED, clamped / 0.55] : [RED, BLOOD_RED, (clamped - 0.55) / 0.45];
+  const [r, g, b] = from.map((c, i) => Math.round(c + (to[i] - c) * localT));
+  return `rgb(${r}, ${g}, ${b})`;
+}
+
+// The three discrete condition brackets a quality fraction (current/max)
+// falls into - fixed steps, not a smooth blend, matching the dismantle
+// mechanic's own three fixed material-yield brackets (100% new, 50% used,
+// 10-0% damaged - see crafting-agent.md's "Dismantle mechanic" section)
+// that this same state is meant to drive once recycle yield is wired up.
+type QualityState = "new" | "used" | "damaged";
+
+function qualityState(f: number): QualityState {
+  if (f > 0.5) return "new"; // 51-100%
+  if (f > 0.1) return "used"; // 11-50%
+  return "damaged"; // 1-10% (and 0)
+}
+
+const QUALITY_STATE_COLORS: Record<QualityState, string> = {
+  new: "rgb(90, 156, 74)",
+  used: "rgb(212, 160, 96)",
+  damaged: "rgb(192, 69, 58)",
+};
+
+// The quality bar's own color at fraction `f` (current/max, 0-1) - one of
+// the three fixed QUALITY_STATE_COLORS, never blended between them.
+function qualityBarColor(f: number): string {
+  return QUALITY_STATE_COLORS[qualityState(Math.max(0, Math.min(1, f)))];
+}
+
 // How long a failed move/equip's message replaces the description text
 // before reverting - long enough to read, short enough not to feel stuck.
 const ITEM_POPUP_FLASH_MS = 3000;
@@ -715,7 +788,15 @@ const ITEM_POPUP_FLASH_MS = 3000;
  * picker for a stackable balance and one button per destination: this
  * item's own equip slot(s), or a backpack icon when it's backpackable.
  * Each button moves it straight from the shared pool onto this character
- * in one click (check-out, then equip for a slot button). */
+ * in one click (check-out, then equip for a slot button).
+ *
+ * The cogwheel in the corner swaps this same card's content over to a
+ * recycle/destroy view instead of opening a second popup (see
+ * showDestroy) - a recycle preview up top (still a placeholder, no
+ * dismantle endpoint exists yet) and a hold-to-confirm destroy control
+ * below it. Holding that control for DESTROY_HOLD_MS fills a progress bar
+ * above its flame icon and permanently deletes the item; releasing early
+ * resets it with nothing destroyed. */
 function ItemDetailPopup({
   info,
   fallbackName,
@@ -747,6 +828,11 @@ function ItemDetailPopup({
   const stackSize = info?.stackSize ?? 1;
   const name = info?.name ? stripBlueprintPrefix(info.name) : fallbackName;
   const displayName = stackSize > 1 ? `${owned} ${name}` : name;
+
+  // Clicking the cogwheel swaps this same card's content over to the
+  // recycle/destroy view instead of opening a second popup - toggling it
+  // again (now an "info" glyph) swaps back.
+  const [showDestroy, setShowDestroy] = useState(false);
 
   const [quantity, setQuantity] = useState(1);
   const [pending, setPending] = useState(false);
@@ -807,99 +893,251 @@ function ItemDetailPopup({
     finish(await postJson(`/api/auth/me/characters/${characterId}/items/${moveId}/equip`, { slots }));
   };
 
-  // A twoHanded family occupies both its slots at once (equip_item requires
-  // them supplied together, order-independent) - one combined button
-  // rather than two that would each individually fail the "exactly these
-  // slots" check.
-  const slotGroups: string[][] =
-    isInstance && info?.equipSlots?.length
-      ? info.twoHanded
-        ? [info.equipSlots]
-        : info.equipSlots.map((slot) => [slot])
-      : [];
+  // Each equipSlots entry is already one full alternative slot-group (e.g.
+  // both hands together for a two-handed item, or a single named slot for
+  // an ordinary one) - one button per group, matching what equip_item
+  // itself will accept.
+  const slotGroups: string[][] = isInstance && info?.equipSlots?.length ? info.equipSlots : [];
+
+  // --- Recycle/destroy view (swapped in over the info view above by the
+  // cogwheel button, rather than a second popup - see showDestroy). ---
+  const [destroyProgress, setDestroyProgress] = useState(0);
+  const [destroying, setDestroying] = useState(false);
+  const [destroyError, setDestroyError] = useState<string | null>(null);
+  const [destroyQuantity, setDestroyQuantity] = useState(1);
+  // Set by the "∞" option - destroys everything currently owned rather
+  // than one of the fixed QUANTITY_OPTIONS amounts.
+  const [destroyAll, setDestroyAll] = useState(false);
+  const destroyRafRef = useRef<number | null>(null);
+
+  const resetDestroyHold = () => {
+    if (destroyRafRef.current !== null) cancelAnimationFrame(destroyRafRef.current);
+    destroyRafRef.current = null;
+    setDestroyProgress(0);
+  };
+  useEffect(() => resetDestroyHold, []);
+
+  const runDestroy = async () => {
+    setDestroying(true);
+    const result = isInstance
+      ? await postJson(`/api/auth/me/characters/${characterId}/items/${moveId}/destroy`)
+      : await postJson(`/api/auth/me/characters/${characterId}/item-balances/${moveId}/destroy`, {
+          amount: destroyAll ? owned : destroyQuantity,
+        });
+    if (!result.ok) {
+      setDestroying(false);
+      setDestroyError("Couldn't destroy that.");
+      resetDestroyHold();
+      return;
+    }
+    onPlayerDataUpdated?.(result.data);
+    onClose();
+  };
+
+  const destroyTick = (startedAt: number) => {
+    const next = Math.min(1, (performance.now() - startedAt) / DESTROY_HOLD_MS);
+    setDestroyProgress(next);
+    if (next >= 1) {
+      runDestroy();
+      return;
+    }
+    destroyRafRef.current = requestAnimationFrame(() => destroyTick(startedAt));
+  };
+
+  const startDestroyHold = () => {
+    if (destroying) return;
+    setDestroyError(null);
+    const startedAt = performance.now();
+    destroyRafRef.current = requestAnimationFrame(() => destroyTick(startedAt));
+  };
+  const cancelDestroyHold = () => {
+    if (destroying) return;
+    resetDestroyHold();
+  };
 
   // Closes on a click anywhere - including inside the card itself (the
-  // image, name, description, meta row) - except on a button, so the
-  // move/equip action buttons below get their own clicks instead of just
-  // dismissing the popup.
+  // image, name, description, meta row) - except on a button or the
+  // destroy hold target, so the move/equip/cogwheel/destroy controls below
+  // get their own clicks instead of just dismissing the popup.
   const handleClick = (e: React.MouseEvent<HTMLElement>) => {
-    if ((e.target as HTMLElement).closest("button")) return;
+    const target = e.target as HTMLElement;
+    if (target.closest("button") || target.closest(`.${styles.destroySection}`)) return;
     onClose();
   };
   return (
     <div className={styles.itemPopupOverlay} onClick={handleClick}>
-      <div className={styles.itemPopupCard}>
-        {!!info?.tier && (
-          <span className={`${styles.itemPopupTierBadge} ${itemGridTierBadgeClass(info.tier)}`}>
-            {getTierIndicator(info.tier)}
-          </span>
-        )}
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src={info?.icon || FALLBACK_ITEM_ICON} alt={name} className={styles.itemPopupImg} />
-        <h3 className={styles.itemPopupName}>{displayName}</h3>
-        <p className={`${styles.itemPopupDescription} ${flashMessage ? styles.itemPopupFlash : ""}`}>
-          {flashMessage ?? (info?.description || "dummy")}
-        </p>
-        {!!info?.gatheringBonuses?.length && (
-          <p className={styles.itemPopupGathering}>
-            Helps gather: {info.gatheringBonuses.map(formatResourceLabel).join(", ")}
-          </p>
-        )}
-        <div className={styles.itemPopupMeta}>
-          <span>Size: {info?.sizeClass ?? "tiny"}</span>
-          <span>StackMax: {stackSize}</span>
-          {info?.twoHanded && <span>Two-Handed: true</span>}
-          {isInstance && info?.qualityMax != null && (
-            <span>Quality: {quality ?? 0}/{info.qualityMax}</span>
-          )}
-        </div>
-        {movable && (
-          <div className={styles.itemPopupActions} role={stackSize > 1 ? "radiogroup" : undefined}>
-            {stackSize > 1
-              ? QUANTITY_OPTIONS.map((n) => (
+      <div className={`${styles.itemPopupCard} ${showDestroy ? styles.recycleDestroyCard : ""}`}>
+        <button
+          type="button"
+          className={styles.itemPopupSettingsButton}
+          onClick={() => setShowDestroy((prev) => !prev)}
+          aria-label={showDestroy ? "Back to item details" : "Recycle or destroy this item"}
+          title={showDestroy ? "Back to item details" : "Recycle or destroy this item"}
+        >
+          {showDestroy ? "↩" : "⚙"}
+        </button>
+        {showDestroy ? (
+          <>
+            <div className={styles.recycleSection}>
+              <span className={styles.recycleIcon}>♻️</span>
+              <p className={styles.recycleResultText}>Recycle Result</p>
+            </div>
+            <div className={styles.recycleDestroyDivider} />
+            {!isInstance && stackSize > 1 && (
+              <div className={styles.itemPopupActions} role="radiogroup" aria-label="How many to destroy">
+                {QUANTITY_OPTIONS.map((n) => (
                   <button
                     key={n}
                     type="button"
                     role="radio"
-                    aria-checked={quantity === n}
+                    aria-checked={!destroyAll && destroyQuantity === n}
                     className={[
                       styles.craftCountButton,
                       styles.itemPopupQuantityButton,
-                      quantity === n ? styles.craftCountButtonActive : "",
+                      !destroyAll && destroyQuantity === n ? styles.craftCountButtonActive : "",
                     ]
                       .filter(Boolean)
                       .join(" ")}
-                    disabled={pending || n > owned}
-                    onClick={() => setQuantity(n)}
+                    disabled={destroying || n > owned}
+                    onClick={() => {
+                      setDestroyAll(false);
+                      setDestroyQuantity(n);
+                    }}
                   >
                     {n}
                   </button>
-                ))
-              : slotGroups.map((slots) => (
-                  <button
-                    key={slots.join("+")}
-                    type="button"
-                    className={styles.itemPopupActionButton}
-                    disabled={pending}
-                    onClick={() => equipToSlots(slots)}
-                  >
-                    {slots.map(formatSlotLabel).join(" + ")}
-                  </button>
                 ))}
-            {info?.backpackable && (
-              <button
-                type="button"
-                className={styles.itemPopupBackpackButton}
-                disabled={pending}
-                onClick={moveToBackpack}
-                aria-label="Move to backpack"
-                title="Move to backpack"
-              >
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={BACKPACK_ACTION_ICON} alt="" className={styles.itemPopupBackpackIcon} />
-              </button>
+                <button
+                  type="button"
+                  role="radio"
+                  aria-checked={destroyAll}
+                  className={[
+                    styles.craftCountButton,
+                    styles.itemPopupQuantityButton,
+                    destroyAll ? styles.craftCountButtonActive : "",
+                  ]
+                    .filter(Boolean)
+                    .join(" ")}
+                  disabled={destroying || owned <= 0}
+                  onClick={() => setDestroyAll(true)}
+                  title="Destroy all"
+                  aria-label="Destroy all"
+                >
+                  ∞
+                </button>
+              </div>
             )}
-          </div>
+            <div
+              className={styles.destroySection}
+              onPointerDown={(e) => {
+                e.preventDefault();
+                startDestroyHold();
+              }}
+              onPointerUp={cancelDestroyHold}
+              onPointerLeave={cancelDestroyHold}
+              onPointerCancel={cancelDestroyHold}
+              onContextMenu={(e) => e.preventDefault()}
+            >
+              <p className={styles.destroyLabel}>Hold to DESTROY</p>
+              <div className={styles.destroyProgressTrack}>
+                <div
+                  className={styles.destroyProgressFill}
+                  style={{
+                    width: `${destroyProgress * 100}%`,
+                    backgroundColor: destroyFillColor(destroyProgress),
+                  }}
+                />
+              </div>
+              <span className={styles.destroyIcon}>🔥</span>
+            </div>
+            {destroyError && <p className={styles.destroyError}>{destroyError}</p>}
+          </>
+        ) : (
+          <>
+            {!!info?.tier && (
+              <span className={`${styles.itemPopupTierBadge} ${itemGridTierBadgeClass(info.tier)}`}>
+                {getTierIndicator(info.tier)}
+              </span>
+            )}
+            {/* background-image div, not a real <img> - see ItemGrid's tile
+                icon for why (mobile's native "save/share image" long-press
+                menu targets the <img> tag itself). */}
+            <div
+              role="img"
+              aria-label={name}
+              className={styles.itemPopupImg}
+              style={{ backgroundImage: `url(${info?.icon || FALLBACK_ITEM_ICON})` }}
+            />
+            <h3 className={styles.itemPopupName}>{displayName}</h3>
+            <p className={`${styles.itemPopupDescription} ${flashMessage ? styles.itemPopupFlash : ""}`}>
+              {flashMessage ?? (info?.description || "dummy")}
+            </p>
+            {!!info?.gatheringBonuses?.length && (
+              <p className={styles.itemPopupGathering}>
+                Helps gather: {info.gatheringBonuses.map(formatResourceLabel).join(", ")}
+              </p>
+            )}
+            <div className={styles.itemPopupMeta}>
+              <span>Size: {info?.sizeClass ?? "tiny"}</span>
+              <span>StackMax: {stackSize}</span>
+              {info?.twoHanded && <span>Two-Handed: true</span>}
+              {isInstance && info?.qualityMax != null && (
+                <span>Quality: {quality ?? 0}/{info.qualityMax}</span>
+              )}
+            </div>
+            {movable && (
+              <div className={styles.itemPopupActions} role={stackSize > 1 ? "radiogroup" : undefined}>
+                {stackSize > 1
+                  ? QUANTITY_OPTIONS.map((n) => (
+                      <button
+                        key={n}
+                        type="button"
+                        role="radio"
+                        aria-checked={quantity === n}
+                        className={[
+                          styles.craftCountButton,
+                          styles.itemPopupQuantityButton,
+                          quantity === n ? styles.craftCountButtonActive : "",
+                        ]
+                          .filter(Boolean)
+                          .join(" ")}
+                        disabled={pending || n > owned}
+                        onClick={() => setQuantity(n)}
+                      >
+                        {n}
+                      </button>
+                    ))
+                  : slotGroups.map((slots) => (
+                      <button
+                        key={slots.join("+")}
+                        type="button"
+                        className={styles.itemPopupActionButton}
+                        disabled={pending}
+                        onClick={() => equipToSlots(slots)}
+                      >
+                        {slots.map(formatSlotLabel).join(" + ")}
+                      </button>
+                    ))}
+                {info?.backpackable && (
+                  <button
+                    type="button"
+                    className={styles.itemPopupBackpackButton}
+                    disabled={pending}
+                    onClick={moveToBackpack}
+                    aria-label="Move to backpack"
+                    title="Move to backpack"
+                  >
+                    <div
+                      role="img"
+                      aria-label="Backpack"
+                      className={styles.itemPopupBackpackIcon}
+                      style={{ backgroundImage: `url(${BACKPACK_ACTION_ICON})` }}
+                    />
+                  </button>
+                )}
+              </div>
+            )}
+          </>
         )}
       </div>
     </div>
@@ -1074,7 +1312,7 @@ export function InventoryTab({
             stackSize: number;
             description: string;
             sizeClass: string;
-            equipSlots: string[];
+            equipSlots: string[][];
             backpackable: boolean;
             twoHanded: boolean;
             gatheringBonuses: string[];

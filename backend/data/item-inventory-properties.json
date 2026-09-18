@@ -1,9 +1,7 @@
 [
   {
     "familyId": "bedroll",
-    "kind": [
-      "adventuring_gear"
-    ],
+    "kind": ["adventuring_gear"],
     "sizeClass": "light",
     "stackSize": 1,
     "needsItemDefinition": false,
@@ -13,9 +11,7 @@
   },
   {
     "familyId": "chain",
-    "kind": [
-      "adventuring_gear"
-    ],
+    "kind": ["adventuring_gear"],
     "sizeClass": "light",
     "stackSize": 1,
     "needsItemDefinition": false,
@@ -25,9 +21,7 @@
   },
   {
     "familyId": "chalk",
-    "kind": [
-      "adventuring_gear"
-    ],
+    "kind": ["adventuring_gear"],
     "sizeClass": "tiny",
     "stackSize": 10,
     "needsItemDefinition": false,
@@ -37,9 +31,7 @@
   },
   {
     "familyId": "crowbar",
-    "kind": [
-      "adventuring_gear"
-    ],
+    "kind": ["adventuring_gear"],
     "sizeClass": "light",
     "stackSize": 1,
     "needsItemDefinition": false,
@@ -49,9 +41,7 @@
   },
   {
     "familyId": "grappling_hook",
-    "kind": [
-      "adventuring_gear"
-    ],
+    "kind": ["adventuring_gear"],
     "sizeClass": "light",
     "stackSize": 1,
     "needsItemDefinition": false,
@@ -61,9 +51,7 @@
   },
   {
     "familyId": "hourglass",
-    "kind": [
-      "adventuring_gear"
-    ],
+    "kind": ["adventuring_gear"],
     "sizeClass": "light",
     "stackSize": 1,
     "needsItemDefinition": false,
@@ -73,24 +61,20 @@
   },
   {
     "familyId": "hunters_charm",
-    "kind": [
-      "essentials"
-    ],
+    "kind": ["essentials"],
     "sizeClass": "light",
     "stackSize": 1,
     "needsItemDefinition": true,
     "note": "Wears out with use.",
     "equipSlots": [
-      "Neck"
+      ["Neck"]
     ],
     "backpackable": true,
     "qualityMax": 40
   },
   {
     "familyId": "iron_spikes",
-    "kind": [
-      "adventuring_gear"
-    ],
+    "kind": ["adventuring_gear"],
     "sizeClass": "tiny",
     "stackSize": 10,
     "needsItemDefinition": false,
@@ -100,24 +84,20 @@
   },
   {
     "familyId": "ladder",
-    "kind": [
-      "essentials"
-    ],
+    "kind": ["essentials"],
     "sizeClass": "heavy",
     "stackSize": 1,
     "needsItemDefinition": true,
     "note": "Wears out with use.",
     "equipSlots": [
-      "Side"
+      ["Side"]
     ],
     "backpackable": false,
     "qualityMax": 20
   },
   {
     "familyId": "lock_and_key",
-    "kind": [
-      "adventuring_gear"
-    ],
+    "kind": ["adventuring_gear"],
     "sizeClass": "tiny",
     "stackSize": 10,
     "needsItemDefinition": false,
@@ -127,9 +107,7 @@
   },
   {
     "familyId": "manacles",
-    "kind": [
-      "adventuring_gear"
-    ],
+    "kind": ["adventuring_gear"],
     "sizeClass": "light",
     "stackSize": 1,
     "needsItemDefinition": false,
@@ -139,9 +117,7 @@
   },
   {
     "familyId": "rope",
-    "kind": [
-      "adventuring_gear"
-    ],
+    "kind": ["adventuring_gear"],
     "sizeClass": "light",
     "stackSize": 1,
     "needsItemDefinition": false,
@@ -151,9 +127,7 @@
   },
   {
     "familyId": "net",
-    "kind": [
-      "adventuring_gear"
-    ],
+    "kind": ["adventuring_gear"],
     "sizeClass": "light",
     "stackSize": 1,
     "needsItemDefinition": false,
@@ -163,26 +137,20 @@
   },
   {
     "familyId": "pickaxe",
-    "kind": [
-      "weapon"
-    ],
+    "kind": ["weapon"],
     "sizeClass": "medium",
     "stackSize": 1,
     "needsItemDefinition": true,
     "note": "Wears out with use.",
     "equipSlots": [
-      "Left Hand",
-      "Right Hand"
+      ["Left Hand", "Right Hand"]
     ],
-    "twoHanded": true,
     "backpackable": true,
     "qualityMax": 160
   },
   {
     "familyId": "monster_trap",
-    "kind": [
-      "adventuring_gear"
-    ],
+    "kind": ["adventuring_gear"],
     "sizeClass": "medium",
     "stackSize": 1,
     "needsItemDefinition": false,
@@ -192,9 +160,7 @@
   },
   {
     "familyId": "starlight_catcher",
-    "kind": [
-      "adventuring_gear"
-    ],
+    "kind": ["adventuring_gear"],
     "sizeClass": "light",
     "stackSize": 1,
     "needsItemDefinition": false,
@@ -204,9 +170,7 @@
   },
   {
     "familyId": "shovel",
-    "kind": [
-      "adventuring_gear"
-    ],
+    "kind": ["adventuring_gear"],
     "sizeClass": "light",
     "stackSize": 1,
     "needsItemDefinition": false,
@@ -216,24 +180,20 @@
   },
   {
     "familyId": "signal_whistle",
-    "kind": [
-      "essentials"
-    ],
+    "kind": ["essentials"],
     "sizeClass": "light",
     "stackSize": 1,
     "needsItemDefinition": true,
     "note": "Wears out with use.",
     "equipSlots": [
-      "Neck"
+      ["Neck"]
     ],
     "backpackable": true,
     "qualityMax": 10
   },
   {
     "familyId": "spyglass",
-    "kind": [
-      "adventuring_gear"
-    ],
+    "kind": ["adventuring_gear"],
     "sizeClass": "light",
     "stackSize": 1,
     "needsItemDefinition": false,
@@ -243,9 +203,7 @@
   },
   {
     "familyId": "tent",
-    "kind": [
-      "adventuring_gear"
-    ],
+    "kind": ["adventuring_gear"],
     "sizeClass": "light",
     "stackSize": 1,
     "needsItemDefinition": false,
@@ -255,9 +213,7 @@
   },
   {
     "familyId": "tinderbox",
-    "kind": [
-      "adventuring_gear"
-    ],
+    "kind": ["adventuring_gear"],
     "sizeClass": "light",
     "stackSize": 1,
     "needsItemDefinition": false,
@@ -267,9 +223,7 @@
   },
   {
     "familyId": "waterskin",
-    "kind": [
-      "adventuring_gear"
-    ],
+    "kind": ["adventuring_gear"],
     "sizeClass": "light",
     "stackSize": 1,
     "needsItemDefinition": false,
@@ -279,9 +233,7 @@
   },
   {
     "familyId": "whetstone",
-    "kind": [
-      "adventuring_gear"
-    ],
+    "kind": ["adventuring_gear"],
     "sizeClass": "light",
     "stackSize": 1,
     "needsItemDefinition": false,
@@ -291,369 +243,319 @@
   },
   {
     "familyId": "chainmail_chest_armor",
-    "kind": [
-      "armor"
-    ],
+    "kind": ["armor"],
     "sizeClass": "medium",
     "stackSize": 1,
     "needsItemDefinition": true,
     "note": "Wears out with use.",
     "equipSlots": [
-      "Chest"
+      ["Chest"]
     ],
     "backpackable": true,
     "qualityMax": 250
   },
   {
     "familyId": "chainmail_head_armor",
-    "kind": [
-      "armor"
-    ],
+    "kind": ["armor"],
     "sizeClass": "medium",
     "stackSize": 1,
     "needsItemDefinition": true,
     "note": "Wears out with use.",
     "equipSlots": [
-      "Head"
+      ["Head"]
     ],
     "backpackable": true,
     "qualityMax": 250
   },
   {
     "familyId": "chainmail_leg_armor",
-    "kind": [
-      "armor"
-    ],
+    "kind": ["armor"],
     "sizeClass": "medium",
     "stackSize": 1,
     "needsItemDefinition": true,
     "note": "Wears out with use.",
     "equipSlots": [
-      "Legs"
+      ["Legs"]
     ],
     "backpackable": true,
     "qualityMax": 250
   },
   {
     "familyId": "chitin_chest_armor",
-    "kind": [
-      "armor"
-    ],
+    "kind": ["armor"],
     "sizeClass": "medium",
     "stackSize": 1,
     "needsItemDefinition": true,
     "note": "Wears out with use.",
     "equipSlots": [
-      "Chest"
+      ["Chest"]
     ],
     "backpackable": true,
     "qualityMax": 310
   },
   {
     "familyId": "chitin_head_armor",
-    "kind": [
-      "armor"
-    ],
+    "kind": ["armor"],
     "sizeClass": "medium",
     "stackSize": 1,
     "needsItemDefinition": true,
     "note": "Wears out with use.",
     "equipSlots": [
-      "Head"
+      ["Head"]
     ],
     "backpackable": true,
     "qualityMax": 310
   },
   {
     "familyId": "chitin_leg_armor",
-    "kind": [
-      "armor"
-    ],
+    "kind": ["armor"],
     "sizeClass": "medium",
     "stackSize": 1,
     "needsItemDefinition": true,
     "note": "Wears out with use.",
     "equipSlots": [
-      "Legs"
+      ["Legs"]
     ],
     "backpackable": true,
     "qualityMax": 310
   },
   {
     "familyId": "cloth_chest_armor",
-    "kind": [
-      "armor"
-    ],
+    "kind": ["armor"],
     "sizeClass": "light",
     "stackSize": 1,
     "needsItemDefinition": true,
     "note": "Wears out with use.",
     "equipSlots": [
-      "Chest"
+      ["Chest"]
     ],
     "backpackable": true,
     "qualityMax": 70
   },
   {
     "familyId": "cloth_head_armor",
-    "kind": [
-      "armor"
-    ],
+    "kind": ["armor"],
     "sizeClass": "light",
     "stackSize": 1,
     "needsItemDefinition": true,
     "note": "Wears out with use.",
     "equipSlots": [
-      "Head"
+      ["Head"]
     ],
     "backpackable": true,
     "qualityMax": 70
   },
   {
     "familyId": "cloth_leg_armor",
-    "kind": [
-      "armor"
-    ],
+    "kind": ["armor"],
     "sizeClass": "light",
     "stackSize": 1,
     "needsItemDefinition": true,
     "note": "Wears out with use.",
     "equipSlots": [
-      "Legs"
+      ["Legs"]
     ],
     "backpackable": true,
     "qualityMax": 70
   },
   {
     "familyId": "darksteel_chest_armor",
-    "kind": [
-      "armor"
-    ],
+    "kind": ["armor"],
     "sizeClass": "heavy",
     "stackSize": 1,
     "needsItemDefinition": true,
     "note": "Wears out with use.",
     "equipSlots": [
-      "Chest"
+      ["Chest"]
     ],
     "backpackable": false,
     "qualityMax": 360
   },
   {
     "familyId": "darksteel_head_armor",
-    "kind": [
-      "armor"
-    ],
+    "kind": ["armor"],
     "sizeClass": "heavy",
     "stackSize": 1,
     "needsItemDefinition": true,
     "note": "Wears out with use.",
     "equipSlots": [
-      "Head"
+      ["Head"]
     ],
     "backpackable": false,
     "qualityMax": 360
   },
   {
     "familyId": "darksteel_leg_armor",
-    "kind": [
-      "armor"
-    ],
+    "kind": ["armor"],
     "sizeClass": "heavy",
     "stackSize": 1,
     "needsItemDefinition": true,
     "note": "Wears out with use.",
     "equipSlots": [
-      "Legs"
+      ["Legs"]
     ],
     "backpackable": false,
     "qualityMax": 360
   },
   {
     "familyId": "ebony_chest_armor",
-    "kind": [
-      "armor"
-    ],
+    "kind": ["armor"],
     "sizeClass": "medium",
     "stackSize": 1,
     "needsItemDefinition": true,
     "note": "Wears out with use.",
     "equipSlots": [
-      "Chest"
+      ["Chest"]
     ],
     "backpackable": true,
     "qualityMax": 340
   },
   {
     "familyId": "ebony_head_armor",
-    "kind": [
-      "armor"
-    ],
+    "kind": ["armor"],
     "sizeClass": "medium",
     "stackSize": 1,
     "needsItemDefinition": true,
     "note": "Wears out with use.",
     "equipSlots": [
-      "Head"
+      ["Head"]
     ],
     "backpackable": true,
     "qualityMax": 340
   },
   {
     "familyId": "ebony_leg_armor",
-    "kind": [
-      "armor"
-    ],
+    "kind": ["armor"],
     "sizeClass": "medium",
     "stackSize": 1,
     "needsItemDefinition": true,
     "note": "Wears out with use.",
     "equipSlots": [
-      "Legs"
+      ["Legs"]
     ],
     "backpackable": true,
     "qualityMax": 340
   },
   {
     "familyId": "iron_chest_armor",
-    "kind": [
-      "armor"
-    ],
+    "kind": ["armor"],
     "sizeClass": "medium",
     "stackSize": 1,
     "needsItemDefinition": true,
     "note": "Wears out with use.",
     "equipSlots": [
-      "Chest"
+      ["Chest"]
     ],
     "backpackable": true,
     "qualityMax": 310
   },
   {
     "familyId": "iron_head_armor",
-    "kind": [
-      "armor"
-    ],
+    "kind": ["armor"],
     "sizeClass": "medium",
     "stackSize": 1,
     "needsItemDefinition": true,
     "note": "Wears out with use.",
     "equipSlots": [
-      "Head"
+      ["Head"]
     ],
     "backpackable": true,
     "qualityMax": 310
   },
   {
     "familyId": "iron_leg_armor",
-    "kind": [
-      "armor"
-    ],
+    "kind": ["armor"],
     "sizeClass": "medium",
     "stackSize": 1,
     "needsItemDefinition": true,
     "note": "Wears out with use.",
     "equipSlots": [
-      "Legs"
+      ["Legs"]
     ],
     "backpackable": true,
     "qualityMax": 310
   },
   {
     "familyId": "leather_chest_armor",
-    "kind": [
-      "armor"
-    ],
+    "kind": ["armor"],
     "sizeClass": "light",
     "stackSize": 1,
     "needsItemDefinition": true,
     "note": "Wears out with use.",
     "equipSlots": [
-      "Chest"
+      ["Chest"]
     ],
     "backpackable": true,
     "qualityMax": 150
   },
   {
     "familyId": "leather_head_armor",
-    "kind": [
-      "armor"
-    ],
+    "kind": ["armor"],
     "sizeClass": "light",
     "stackSize": 1,
     "needsItemDefinition": true,
     "note": "Wears out with use.",
     "equipSlots": [
-      "Head"
+      ["Head"]
     ],
     "backpackable": true,
     "qualityMax": 150
   },
   {
     "familyId": "leather_leg_armor",
-    "kind": [
-      "armor"
-    ],
+    "kind": ["armor"],
     "sizeClass": "light",
     "stackSize": 1,
     "needsItemDefinition": true,
     "note": "Wears out with use.",
     "equipSlots": [
-      "Legs"
+      ["Legs"]
     ],
     "backpackable": true,
     "qualityMax": 150
   },
   {
     "familyId": "meteoric_iron_chest_armor",
-    "kind": [
-      "armor"
-    ],
+    "kind": ["armor"],
     "sizeClass": "heavy",
     "stackSize": 1,
     "needsItemDefinition": true,
     "note": "Wears out with use.",
     "equipSlots": [
-      "Chest"
+      ["Chest"]
     ],
     "backpackable": false,
     "qualityMax": 350
   },
   {
     "familyId": "meteoric_iron_head_armor",
-    "kind": [
-      "armor"
-    ],
+    "kind": ["armor"],
     "sizeClass": "heavy",
     "stackSize": 1,
     "needsItemDefinition": true,
     "note": "Wears out with use.",
     "equipSlots": [
-      "Head"
+      ["Head"]
     ],
     "backpackable": false,
     "qualityMax": 350
   },
   {
     "familyId": "meteoric_iron_leg_armor",
-    "kind": [
-      "armor"
-    ],
+    "kind": ["armor"],
     "sizeClass": "heavy",
     "stackSize": 1,
     "needsItemDefinition": true,
     "note": "Wears out with use.",
     "equipSlots": [
-      "Legs"
+      ["Legs"]
     ],
     "backpackable": false,
     "qualityMax": 350
   },
   {
     "familyId": "merchants_scale",
-    "kind": [
-      "adventuring_gear"
-    ],
+    "kind": ["adventuring_gear"],
     "sizeClass": "medium",
     "stackSize": 1,
     "needsItemDefinition": false,
@@ -663,9 +565,7 @@
   },
   {
     "familyId": "bangers",
-    "kind": [
-      "food"
-    ],
+    "kind": ["food"],
     "sizeClass": "tiny",
     "stackSize": 10,
     "needsItemDefinition": false,
@@ -675,9 +575,7 @@
   },
   {
     "familyId": "cooked_fish",
-    "kind": [
-      "food"
-    ],
+    "kind": ["food"],
     "sizeClass": "tiny",
     "stackSize": 10,
     "needsItemDefinition": false,
@@ -687,9 +585,7 @@
   },
   {
     "familyId": "fish_chowder",
-    "kind": [
-      "food"
-    ],
+    "kind": ["food"],
     "sizeClass": "tiny",
     "stackSize": 10,
     "needsItemDefinition": false,
@@ -699,9 +595,7 @@
   },
   {
     "familyId": "fishermans_ration",
-    "kind": [
-      "food"
-    ],
+    "kind": ["food"],
     "sizeClass": "light",
     "stackSize": 1,
     "needsItemDefinition": false,
@@ -711,9 +605,7 @@
   },
   {
     "familyId": "grilled_fish_skewer",
-    "kind": [
-      "food"
-    ],
+    "kind": ["food"],
     "sizeClass": "tiny",
     "stackSize": 10,
     "needsItemDefinition": false,
@@ -723,9 +615,7 @@
   },
   {
     "familyId": "hearty_stew",
-    "kind": [
-      "food"
-    ],
+    "kind": ["food"],
     "sizeClass": "tiny",
     "stackSize": 10,
     "needsItemDefinition": false,
@@ -735,9 +625,7 @@
   },
   {
     "familyId": "iron_ration",
-    "kind": [
-      "food"
-    ],
+    "kind": ["food"],
     "sizeClass": "light",
     "stackSize": 1,
     "needsItemDefinition": false,
@@ -747,9 +635,7 @@
   },
   {
     "familyId": "pickled_fish",
-    "kind": [
-      "food"
-    ],
+    "kind": ["food"],
     "sizeClass": "tiny",
     "stackSize": 10,
     "needsItemDefinition": false,
@@ -759,9 +645,7 @@
   },
   {
     "familyId": "roast_haunch",
-    "kind": [
-      "food"
-    ],
+    "kind": ["food"],
     "sizeClass": "tiny",
     "stackSize": 10,
     "needsItemDefinition": false,
@@ -771,9 +655,7 @@
   },
   {
     "familyId": "salt_horse",
-    "kind": [
-      "food"
-    ],
+    "kind": ["food"],
     "sizeClass": "tiny",
     "stackSize": 10,
     "needsItemDefinition": false,
@@ -783,9 +665,7 @@
   },
   {
     "familyId": "smoked_fish",
-    "kind": [
-      "food"
-    ],
+    "kind": ["food"],
     "sizeClass": "tiny",
     "stackSize": 10,
     "needsItemDefinition": false,
@@ -795,9 +675,7 @@
   },
   {
     "familyId": "smoked_salt_horse",
-    "kind": [
-      "food"
-    ],
+    "kind": ["food"],
     "sizeClass": "tiny",
     "stackSize": 10,
     "needsItemDefinition": false,
@@ -807,9 +685,7 @@
   },
   {
     "familyId": "smoked_squirrel_hoard",
-    "kind": [
-      "food"
-    ],
+    "kind": ["food"],
     "sizeClass": "tiny",
     "stackSize": 10,
     "needsItemDefinition": false,
@@ -819,9 +695,7 @@
   },
   {
     "familyId": "smoked_wizened_figs",
-    "kind": [
-      "food"
-    ],
+    "kind": ["food"],
     "sizeClass": "tiny",
     "stackSize": 10,
     "needsItemDefinition": false,
@@ -831,9 +705,7 @@
   },
   {
     "familyId": "squirrel_hoard",
-    "kind": [
-      "food"
-    ],
+    "kind": ["food"],
     "sizeClass": "tiny",
     "stackSize": 10,
     "needsItemDefinition": false,
@@ -843,9 +715,7 @@
   },
   {
     "familyId": "wizened_figs",
-    "kind": [
-      "food"
-    ],
+    "kind": ["food"],
     "sizeClass": "tiny",
     "stackSize": 10,
     "needsItemDefinition": false,
@@ -855,25 +725,21 @@
   },
   {
     "familyId": "backpack",
-    "kind": [
-      "essentials"
-    ],
+    "kind": ["essentials"],
     "sizeClass": "light",
     "stackSize": 1,
     "needsItemDefinition": true,
     "note": "Wears out with use.",
     "equipSlots": [
-      "Back",
-      "Side"
+      ["Back"],
+      ["Side"]
     ],
     "backpackable": true,
     "qualityMax": 10
   },
   {
     "familyId": "candle",
-    "kind": [
-      "essentials"
-    ],
+    "kind": ["essentials"],
     "sizeClass": "tiny",
     "stackSize": 10,
     "needsItemDefinition": false,
@@ -883,9 +749,7 @@
   },
   {
     "familyId": "cart",
-    "kind": [
-      "essentials"
-    ],
+    "kind": ["essentials"],
     "sizeClass": "light",
     "stackSize": 1,
     "needsItemDefinition": false,
@@ -895,70 +759,60 @@
   },
   {
     "familyId": "cloth_cloak",
-    "kind": [
-      "armor"
-    ],
+    "kind": ["armor"],
     "sizeClass": "light",
     "stackSize": 1,
     "needsItemDefinition": true,
     "note": "Wears out with use.",
     "equipSlots": [
-      "Cloak"
+      ["Cloak"]
     ],
     "backpackable": true,
     "qualityMax": 40
   },
   {
     "familyId": "fishing_pole",
-    "kind": [
-      "essentials"
-    ],
+    "kind": ["essentials"],
     "sizeClass": "light",
     "stackSize": 1,
     "needsItemDefinition": true,
     "note": "Wears out with use.",
     "equipSlots": [
-      "Left Hand",
-      "Right Hand"
+      ["Left Hand"],
+      ["Right Hand"]
     ],
     "backpackable": true,
     "qualityMax": 20
   },
   {
     "familyId": "fur_cloak",
-    "kind": [
-      "armor"
-    ],
+    "kind": ["armor"],
     "sizeClass": "light",
     "stackSize": 1,
     "needsItemDefinition": true,
     "note": "Wears out with use.",
     "equipSlots": [
-      "Cloak"
+      ["Cloak"]
     ],
     "backpackable": true,
     "qualityMax": 40
   },
   {
     "familyId": "quilted_cloak",
-    "kind": [
-      "armor"
-    ],
+    "kind": ["armor"],
     "sizeClass": "light",
     "stackSize": 1,
     "needsItemDefinition": true,
     "note": "Wears out with use.",
     "equipSlots": [
-      "Cloak"
+      ["Cloak"]
     ],
     "backpackable": true,
     "qualityMax": 40
   },
   {
     "familyId": "glass_lantern",
-    "kind": [
-      "essentials"
-    ],
+    "kind": ["essentials"],
     "sizeClass": "light",
     "stackSize": 1,
     "needsItemDefinition": false,
@@ -968,40 +822,34 @@
   },
   {
     "familyId": "holy_symbol",
-    "kind": [
-      "essentials"
-    ],
+    "kind": ["essentials"],
     "sizeClass": "light",
     "stackSize": 1,
     "needsItemDefinition": true,
     "note": "Wears out with use.",
     "equipSlots": [
-      "Neck"
+      ["Neck"]
     ],
     "backpackable": true,
     "qualityMax": 40
   },
   {
     "familyId": "mirror",
-    "kind": [
-      "essentials"
-    ],
+    "kind": ["essentials"],
     "sizeClass": "light",
     "stackSize": 1,
     "needsItemDefinition": true,
     "note": "Wears out with use.",
     "equipSlots": [
-      "Left Hand",
-      "Right Hand"
+      ["Left Hand"],
+      ["Right Hand"]
     ],
     "backpackable": true,
     "qualityMax": 10
   },
   {
     "familyId": "quill",
-    "kind": [
-      "adventuring_gear"
-    ],
+    "kind": ["adventuring_gear"],
     "sizeClass": "tiny",
     "stackSize": 10,
     "needsItemDefinition": false,
@@ -1011,9 +859,7 @@
   },
   {
     "familyId": "torch",
-    "kind": [
-      "essentials"
-    ],
+    "kind": ["essentials"],
     "sizeClass": "tiny",
     "stackSize": 10,
     "needsItemDefinition": false,
@@ -1023,9 +869,7 @@
   },
   {
     "familyId": "antidote_potion",
-    "kind": [
-      "potion"
-    ],
+    "kind": ["potion"],
     "sizeClass": "tiny",
     "stackSize": 10,
     "needsItemDefinition": false,
@@ -1035,9 +879,7 @@
   },
   {
     "familyId": "healing_potion",
-    "kind": [
-      "potion"
-    ],
+    "kind": ["potion"],
     "sizeClass": "tiny",
     "stackSize": 10,
     "needsItemDefinition": false,
@@ -1047,9 +889,7 @@
   },
   {
     "familyId": "mana_potion",
-    "kind": [
-      "potion"
-    ],
+    "kind": ["potion"],
     "sizeClass": "tiny",
     "stackSize": 10,
     "needsItemDefinition": false,
@@ -1059,9 +899,7 @@
   },
   {
     "familyId": "venom_vial",
-    "kind": [
-      "potion"
-    ],
+    "kind": ["potion"],
     "sizeClass": "tiny",
     "stackSize": 10,
     "needsItemDefinition": false,
@@ -1071,175 +909,162 @@
   },
   {
     "familyId": "chitin_shield",
-    "kind": [
-      "shield"
-    ],
+    "kind": ["shield"],
     "sizeClass": "heavy",
     "stackSize": 1,
     "needsItemDefinition": true,
     "note": "Wears out with use.",
     "equipSlots": [
-      "Left Hand",
-      "Right Hand"
+      ["Left Hand"],
+      ["Right Hand"]
     ],
     "backpackable": false,
     "qualityMax": 500
   },
   {
     "familyId": "darksteel_shield",
-    "kind": [
-      "shield"
-    ],
+    "kind": ["shield"],
     "sizeClass": "heavy",
     "stackSize": 1,
     "needsItemDefinition": true,
     "note": "Wears out with use.",
     "equipSlots": [
-      "Left Hand",
-      "Right Hand"
+      ["Left Hand"],
+      ["Right Hand"]
     ],
     "backpackable": false,
     "qualityMax": 240
   },
   {
     "familyId": "ebony_shield",
-    "kind": [
-      "shield"
-    ],
+    "kind": ["shield"],
     "sizeClass": "heavy",
     "stackSize": 1,
     "needsItemDefinition": true,
     "note": "Wears out with use.",
     "equipSlots": [
-      "Left Hand",
-      "Right Hand"
+      ["Left Hand"],
+      ["Right Hand"]
     ],
     "backpackable": false,
     "qualityMax": 530
   },
   {
     "familyId": "iron_shield",
-    "kind": [
-      "shield"
-    ],
+    "kind": ["shield"],
     "sizeClass": "medium",
     "stackSize": 1,
     "needsItemDefinition": true,
     "note": "Wears out with use.",
     "equipSlots": [
-      "Left Hand",
-      "Right Hand"
+      ["Left Hand"],
+      ["Right Hand"]
     ],
     "backpackable": true,
     "qualityMax": 160
   },
   {
     "familyId": "meteoric_iron_shield",
-    "kind": [
-      "shield"
-    ],
+    "kind": ["shield"],
     "sizeClass": "heavy",
     "stackSize": 1,
     "needsItemDefinition": true,
     "note": "Wears out with use.",
     "equipSlots": [
-      "Left Hand",
-      "Right Hand"
+      ["Left Hand"],
+      ["Right Hand"]
     ],
     "backpackable": false,
     "qualityMax": 210
   },
   {
     "familyId": "reinforced_wooden_shield",
-    "kind": [
-      "shield"
-    ],
+    "kind": ["shield"],
     "sizeClass": "medium",
     "stackSize": 1,
     "needsItemDefinition": true,
     "note": "Wears out with use.",
     "equipSlots": [
-      "Left Hand",
-      "Right Hand"
+      ["Left Hand"],
+      ["Right Hand"]
     ],
     "backpackable": true,
     "qualityMax": 170
   },
   {
     "familyId": "wooden_shield",
-    "kind": [
-      "shield"
-    ],
+    "kind": ["shield"],
     "sizeClass": "medium",
     "stackSize": 1,
     "needsItemDefinition": true,
     "note": "Wears out with use.",
     "equipSlots": [
-      "Left Hand",
-      "Right Hand"
+      ["Left Hand"],
+      ["Right Hand"]
     ],
     "backpackable": true,
     "qualityMax": 40
   },
   {
     "familyId": "alchemy_stand",
-    "kind": [
-      "tool"
-    ],
+    "kind": ["tool"],
     "sizeClass": "xLarge",
     "stackSize": 1,
-    "needsItemDefinition": false,
-    "note": "TBD - a placed crafting station, not personal gear; may not use carry/backpack rules at all.",
-    "equipSlots": [],
-    "backpackable": false
+    "needsItemDefinition": true,
+    "note": "A crafting station bulky enough to need both hands to carry, or a mount to haul it instead - degrades with use like any other equippable tool.",
+    "equipSlots": [
+      ["Left Hand", "Right Hand"],
+      ["Mount"]
+    ],
+    "backpackable": false,
+    "qualityMax": 300
   },
   {
     "familyId": "anvil",
-    "kind": [
-      "tool"
-    ],
+    "kind": ["tool"],
     "sizeClass": "xLarge",
     "stackSize": 1,
-    "needsItemDefinition": false,
-    "note": "TBD - a placed crafting station, not personal gear; may not use carry/backpack rules at all.",
-    "equipSlots": [],
-    "backpackable": false
+    "needsItemDefinition": true,
+    "note": "A crafting station bulky enough to need both hands to carry, or a mount to haul it instead - degrades with use like any other equippable tool.",
+    "equipSlots": [
+      ["Left Hand", "Right Hand"],
+      ["Mount"]
+    ],
+    "backpackable": false,
+    "qualityMax": 300
   },
   {
     "familyId": "axe_stone",
-    "kind": [
-      "weapon",
-      "tool"
-    ],
+    "kind": ["weapon", "tool"],
     "sizeClass": "light",
     "stackSize": 1,
     "needsItemDefinition": true,
     "note": "Wears out with use.",
     "equipSlots": [
-      "Left Hand",
-      "Right Hand",
-      "Girdle"
+      ["Left Hand"],
+      ["Right Hand"],
+      ["Girdle"]
     ],
     "backpackable": true,
     "qualityMax": 20
   },
   {
     "familyId": "enchanters_table",
-    "kind": [
-      "tool"
-    ],
+    "kind": ["tool"],
     "sizeClass": "xLarge",
     "stackSize": 1,
-    "needsItemDefinition": false,
-    "note": "TBD - a placed crafting station, not personal gear; may not use carry/backpack rules at all.",
-    "equipSlots": [],
-    "backpackable": false
+    "needsItemDefinition": true,
+    "note": "A crafting station bulky enough to need both hands to carry, or a mount to haul it instead - degrades with use like any other equippable tool.",
+    "equipSlots": [
+      ["Left Hand", "Right Hand"],
+      ["Mount"]
+    ],
+    "backpackable": false,
+    "qualityMax": 300
   },
   {
     "familyId": "furnace",
-    "kind": [
-      "tool"
-    ],
+    "kind": ["tool"],
     "sizeClass": "xLarge",
     "stackSize": 1,
     "needsItemDefinition": false,
@@ -1249,21 +1074,21 @@
   },
   {
     "familyId": "grinding_stone",
-    "kind": [
-      "tool"
-    ],
+    "kind": ["tool"],
     "sizeClass": "xLarge",
     "stackSize": 1,
-    "needsItemDefinition": false,
-    "note": "TBD - a placed crafting station, not personal gear; may not use carry/backpack rules at all.",
-    "equipSlots": [],
-    "backpackable": false
+    "needsItemDefinition": true,
+    "note": "A crafting station bulky enough to need both hands to carry, or a mount to haul it instead - degrades with use like any other equippable tool.",
+    "equipSlots": [
+      ["Left Hand", "Right Hand"],
+      ["Mount"]
+    ],
+    "backpackable": false,
+    "qualityMax": 300
   },
   {
     "familyId": "kiln",
-    "kind": [
-      "tool"
-    ],
+    "kind": ["tool"],
     "sizeClass": "xLarge",
     "stackSize": 1,
     "needsItemDefinition": false,
@@ -1273,34 +1098,36 @@
   },
   {
     "familyId": "lapidary_bench",
-    "kind": [
-      "tool"
-    ],
+    "kind": ["tool"],
     "sizeClass": "xLarge",
     "stackSize": 1,
-    "needsItemDefinition": false,
-    "note": "TBD - a placed crafting station, not personal gear; may not use carry/backpack rules at all.",
-    "equipSlots": [],
-    "backpackable": false
+    "needsItemDefinition": true,
+    "note": "A crafting station bulky enough to need both hands to carry, or a mount to haul it instead - degrades with use like any other equippable tool.",
+    "equipSlots": [
+      ["Left Hand", "Right Hand"],
+      ["Mount"]
+    ],
+    "backpackable": false,
+    "qualityMax": 300
   },
   {
     "familyId": "loom",
-    "kind": [
-      "tool"
-    ],
+    "kind": ["tool"],
     "sizeClass": "xLarge",
     "stackSize": 1,
-    "needsItemDefinition": false,
-    "note": "TBD - a placed crafting station, not personal gear; may not use carry/backpack rules at all.",
-    "equipSlots": [],
-    "backpackable": false
+    "needsItemDefinition": true,
+    "note": "A crafting station bulky enough to need both hands to carry, or a mount to haul it instead - degrades with use like any other equippable tool.",
+    "equipSlots": [
+      ["Left Hand", "Right Hand"],
+      ["Mount"]
+    ],
+    "backpackable": false,
+    "qualityMax": 300
   },
   {
     "familyId": "mortar_and_pestle",
-    "kind": [
-      "tool"
-    ],
-    "sizeClass": "xLarge",
+    "kind": ["tool"],
+    "sizeClass": "large",
     "stackSize": 1,
     "needsItemDefinition": false,
     "note": "TBD - a placed crafting station, not personal gear; may not use carry/backpack rules at all.",
@@ -1309,9 +1136,7 @@
   },
   {
     "familyId": "oven",
-    "kind": [
-      "tool"
-    ],
+    "kind": ["tool"],
     "sizeClass": "xLarge",
     "stackSize": 1,
     "needsItemDefinition": false,
@@ -1321,21 +1146,21 @@
   },
   {
     "familyId": "scriptorium",
-    "kind": [
-      "tool"
-    ],
+    "kind": ["tool"],
     "sizeClass": "xLarge",
     "stackSize": 1,
-    "needsItemDefinition": false,
-    "note": "TBD - a placed crafting station, not personal gear; may not use carry/backpack rules at all.",
-    "equipSlots": [],
-    "backpackable": false
+    "needsItemDefinition": true,
+    "note": "A crafting station bulky enough to need both hands to carry, or a mount to haul it instead - degrades with use like any other equippable tool.",
+    "equipSlots": [
+      ["Left Hand", "Right Hand"],
+      ["Mount"]
+    ],
+    "backpackable": false,
+    "qualityMax": 300
   },
   {
     "familyId": "spinning_wheel",
-    "kind": [
-      "tool"
-    ],
+    "kind": ["tool"],
     "sizeClass": "heavy",
     "stackSize": 1,
     "needsItemDefinition": false,
@@ -1345,9 +1170,7 @@
   },
   {
     "familyId": "tanning_rack",
-    "kind": [
-      "tool"
-    ],
+    "kind": ["tool"],
     "sizeClass": "heavy",
     "stackSize": 1,
     "needsItemDefinition": false,
@@ -1357,21 +1180,21 @@
   },
   {
     "familyId": "workbench",
-    "kind": [
-      "tool"
-    ],
+    "kind": ["tool"],
     "sizeClass": "xLarge",
     "stackSize": 1,
-    "needsItemDefinition": false,
-    "note": "TBD - a placed crafting station, not personal gear; may not use carry/backpack rules at all.",
-    "equipSlots": [],
-    "backpackable": false
+    "needsItemDefinition": true,
+    "note": "A crafting station bulky enough to need both hands to carry, or a mount to haul it instead - degrades with use like any other equippable tool.",
+    "equipSlots": [
+      ["Left Hand", "Right Hand"],
+      ["Mount"]
+    ],
+    "backpackable": false,
+    "qualityMax": 300
   },
   {
     "familyId": "wrench",
-    "kind": [
-      "tool"
-    ],
+    "kind": ["tool"],
     "sizeClass": "light",
     "stackSize": 1,
     "needsItemDefinition": false,
@@ -1381,306 +1204,256 @@
   },
   {
     "familyId": "axe",
-    "kind": [
-      "weapon",
-      "tool"
-    ],
+    "kind": ["weapon", "tool"],
     "sizeClass": "medium",
     "stackSize": 1,
     "needsItemDefinition": true,
     "note": "Wears out with use.",
     "equipSlots": [
-      "Left Hand",
-      "Right Hand"
+      ["Left Hand"],
+      ["Right Hand"]
     ],
     "backpackable": true,
     "qualityMax": 220
   },
   {
     "familyId": "battle_axe",
-    "kind": [
-      "weapon"
-    ],
+    "kind": ["weapon"],
     "sizeClass": "heavy",
     "stackSize": 1,
     "needsItemDefinition": true,
     "note": "Wears out with use.",
     "equipSlots": [
-      "Left Hand",
-      "Right Hand"
+      ["Left Hand", "Right Hand"]
     ],
-    "twoHanded": true,
     "backpackable": false,
     "qualityMax": 470
   },
   {
     "familyId": "bow",
-    "kind": [
-      "weapon"
-    ],
+    "kind": ["weapon"],
     "sizeClass": "medium",
     "stackSize": 1,
     "needsItemDefinition": true,
     "note": "Wears out with use.",
     "equipSlots": [
-      "Left Hand",
-      "Right Hand"
+      ["Left Hand", "Right Hand"]
     ],
-    "twoHanded": true,
     "backpackable": true,
     "qualityMax": 150
   },
   {
     "familyId": "club",
-    "kind": [
-      "weapon"
-    ],
+    "kind": ["weapon"],
     "sizeClass": "medium",
     "stackSize": 1,
     "needsItemDefinition": true,
     "note": "Wears out with use.",
     "equipSlots": [
-      "Left Hand",
-      "Right Hand"
+      ["Left Hand"],
+      ["Right Hand"]
     ],
     "backpackable": true,
     "qualityMax": 20
   },
   {
     "familyId": "crossbow",
-    "kind": [
-      "weapon"
-    ],
+    "kind": ["weapon"],
     "sizeClass": "heavy",
     "stackSize": 1,
     "needsItemDefinition": true,
     "note": "Wears out with use.",
     "equipSlots": [
-      "Left Hand",
-      "Right Hand"
+      ["Left Hand", "Right Hand"]
     ],
-    "twoHanded": true,
     "backpackable": false,
     "qualityMax": 170
   },
   {
     "familyId": "dagger",
-    "kind": [
-      "weapon",
-      "tool"
-    ],
+    "kind": ["weapon", "tool"],
     "sizeClass": "light",
     "stackSize": 1,
     "needsItemDefinition": true,
     "note": "Wears out with use.",
     "equipSlots": [
-      "Left Hand",
-      "Right Hand",
-      "Girdle"
+      ["Left Hand"],
+      ["Right Hand"],
+      ["Girdle"]
     ],
     "backpackable": true,
     "qualityMax": 150
   },
   {
     "familyId": "greatsword",
-    "kind": [
-      "weapon"
-    ],
+    "kind": ["weapon"],
     "sizeClass": "heavy",
     "stackSize": 1,
     "needsItemDefinition": true,
     "note": "Wears out with use.",
     "equipSlots": [
-      "Left Hand",
-      "Right Hand"
+      ["Left Hand", "Right Hand"]
     ],
-    "twoHanded": true,
     "backpackable": false,
     "qualityMax": 480
   },
   {
     "familyId": "mace",
-    "kind": [
-      "weapon"
-    ],
+    "kind": ["weapon"],
     "sizeClass": "medium",
     "stackSize": 1,
     "needsItemDefinition": true,
     "note": "Wears out with use.",
     "equipSlots": [
-      "Left Hand",
-      "Right Hand"
+      ["Left Hand"],
+      ["Right Hand"]
     ],
     "backpackable": true,
     "qualityMax": 320
   },
   {
     "familyId": "magic_staff",
-    "kind": [
-      "weapon"
-    ],
+    "kind": ["weapon"],
     "sizeClass": "medium",
     "stackSize": 1,
     "needsItemDefinition": true,
     "note": "Wears out with use.",
     "equipSlots": [
-      "Left Hand",
-      "Right Hand"
+      ["Left Hand"],
+      ["Right Hand"]
     ],
     "backpackable": true,
     "qualityMax": 40
   },
   {
     "familyId": "quiver",
-    "kind": [
-      "weapon"
-    ],
+    "kind": ["weapon"],
     "sizeClass": "medium",
     "stackSize": 1,
     "needsItemDefinition": true,
     "note": "Wears out with use. Has no ammo capacity of its own - arrows/bolts are drawn directly from wherever they are carried (backpack or shared vault) as long as any is available, same as any other stackable resource - no separate loaded/reload step.",
     "equipSlots": [
-      "Side"
+      ["Side"]
     ],
     "backpackable": true,
     "qualityMax": 200
   },
   {
     "familyId": "bolt_girdle",
-    "kind": [
-      "weapon"
-    ],
+    "kind": ["weapon"],
     "sizeClass": "medium",
     "stackSize": 1,
     "needsItemDefinition": true,
     "note": "Wears out with use. Has no ammo capacity of its own - arrows/bolts are drawn directly from wherever they are carried (backpack or shared vault) as long as any is available, same as any other stackable resource - no separate loaded/reload step.",
     "equipSlots": [
-      "Side",
-      "Girdle"
+      ["Side"],
+      ["Girdle"]
     ],
     "backpackable": true,
     "qualityMax": 200
   },
   {
     "familyId": "sharpened_stick",
-    "kind": [
-      "weapon"
-    ],
+    "kind": ["weapon"],
     "sizeClass": "medium",
     "stackSize": 1,
     "needsItemDefinition": true,
     "note": "Wears out with use.",
     "equipSlots": [
-      "Left Hand",
-      "Right Hand",
-      "Girdle"
+      ["Left Hand"],
+      ["Right Hand"],
+      ["Girdle"]
     ],
     "backpackable": true,
     "qualityMax": 20
   },
   {
     "familyId": "sickle",
-    "kind": [
-      "weapon"
-    ],
+    "kind": ["weapon"],
     "sizeClass": "light",
     "stackSize": 1,
     "needsItemDefinition": true,
     "note": "Wears out with use.",
     "equipSlots": [
-      "Left Hand",
-      "Right Hand",
-      "Girdle"
+      ["Left Hand"],
+      ["Right Hand"],
+      ["Girdle"]
     ],
     "backpackable": true,
     "qualityMax": 160
   },
   {
     "familyId": "spear",
-    "kind": [
-      "weapon"
-    ],
+    "kind": ["weapon"],
     "sizeClass": "medium",
     "stackSize": 1,
     "needsItemDefinition": true,
     "note": "Wears out with use.",
     "equipSlots": [
-      "Left Hand",
-      "Right Hand"
+      ["Left Hand"],
+      ["Right Hand"]
     ],
     "backpackable": false,
     "qualityMax": 160
   },
   {
     "familyId": "short_sword",
-    "kind": [
-      "weapon"
-    ],
+    "kind": ["weapon"],
     "sizeClass": "light",
     "stackSize": 1,
     "needsItemDefinition": true,
     "note": "Wears out with use.",
     "equipSlots": [
-      "Left Hand",
-      "Right Hand"
+      ["Left Hand"],
+      ["Right Hand"]
     ],
     "backpackable": true,
     "qualityMax": 220
   },
   {
     "familyId": "sword",
-    "kind": [
-      "weapon"
-    ],
+    "kind": ["weapon"],
     "sizeClass": "medium",
     "stackSize": 1,
     "needsItemDefinition": true,
     "note": "Wears out with use.",
     "equipSlots": [
-      "Left Hand",
-      "Right Hand"
+      ["Left Hand"],
+      ["Right Hand"]
     ],
     "backpackable": true,
     "qualityMax": 320
   },
   {
     "familyId": "wand",
-    "kind": [
-      "weapon"
-    ],
+    "kind": ["weapon"],
     "sizeClass": "medium",
     "stackSize": 1,
     "needsItemDefinition": true,
     "note": "Wears out with use.",
     "equipSlots": [
-      "Left Hand",
-      "Right Hand"
+      ["Left Hand"],
+      ["Right Hand"]
     ],
     "backpackable": true,
     "qualityMax": 20
   },
   {
     "familyId": "warhammer",
-    "kind": [
-      "weapon"
-    ],
+    "kind": ["weapon"],
     "sizeClass": "heavy",
     "stackSize": 1,
     "needsItemDefinition": true,
     "note": "Wears out with use.",
     "equipSlots": [
-      "Left Hand",
-      "Right Hand"
+      ["Left Hand", "Right Hand"]
     ],
-    "twoHanded": true,
     "backpackable": false,
     "qualityMax": 480
   },
   {
     "familyId": "arrow",
-    "kind": [
-      "processed"
-    ],
+    "kind": ["processed"],
     "sizeClass": "tiny",
     "stackSize": 10,
     "needsItemDefinition": false,
@@ -1690,9 +1463,7 @@
   },
   {
     "familyId": "bolt",
-    "kind": [
-      "processed"
-    ],
+    "kind": ["processed"],
     "sizeClass": "tiny",
     "stackSize": 10,
     "needsItemDefinition": false,
@@ -1702,9 +1473,7 @@
   },
   {
     "familyId": "oil",
-    "kind": [
-      "processed"
-    ],
+    "kind": ["processed"],
     "sizeClass": "tiny",
     "stackSize": 10,
     "needsItemDefinition": false,
@@ -1714,9 +1483,7 @@
   },
   {
     "familyId": "smokehouse",
-    "kind": [
-      "tool"
-    ],
+    "kind": ["tool"],
     "sizeClass": "xLarge",
     "stackSize": 1,
     "needsItemDefinition": false,
@@ -1726,150 +1493,143 @@
   },
   {
     "familyId": "winged_companion",
-    "kind": [
-      "companion"
-    ],
+    "kind": ["companion"],
     "sizeClass": "light",
     "stackSize": 1,
     "needsItemDefinition": true,
     "note": "A living companion - bound to one character and loses vitality with use.",
     "equipSlots": [
-      "Companion"
+      ["Companion"]
     ],
     "backpackable": false,
     "qualityMax": 120
   },
   {
     "familyId": "critter_companion",
-    "kind": [
-      "companion"
-    ],
+    "kind": ["companion"],
     "sizeClass": "tiny",
     "stackSize": 1,
     "needsItemDefinition": true,
     "note": "A living companion - bound to one character and loses vitality with use.",
     "equipSlots": [
-      "Companion"
+      ["Companion"]
     ],
     "backpackable": false,
     "qualityMax": 60
   },
   {
     "familyId": "arcane_companion",
-    "kind": [
-      "companion"
-    ],
+    "kind": ["companion"],
     "sizeClass": "tiny",
     "stackSize": 1,
     "needsItemDefinition": true,
     "note": "A living companion - bound to one character and loses vitality with use.",
     "equipSlots": [
-      "Companion"
+      ["Companion"]
     ],
     "backpackable": false,
     "qualityMax": 150
   },
   {
     "familyId": "fey_companion",
-    "kind": [
-      "companion"
-    ],
+    "kind": ["companion"],
     "sizeClass": "tiny",
     "stackSize": 1,
     "needsItemDefinition": true,
     "note": "A living companion - bound to one character and loses vitality with use.",
     "equipSlots": [
-      "Companion"
+      ["Companion"]
     ],
     "backpackable": false,
     "qualityMax": 150
   },
   {
     "familyId": "steed_mount",
-    "kind": [
-      "mount"
-    ],
+    "kind": ["mount"],
     "sizeClass": "xLarge",
     "stackSize": 1,
     "needsItemDefinition": true,
     "note": "A living mount - bound to one character and loses vitality with use.",
     "equipSlots": [
-      "Mount"
+      ["Mount"]
     ],
     "backpackable": false,
     "qualityMax": 300
   },
   {
     "familyId": "beast_mount",
-    "kind": [
-      "mount"
-    ],
+    "kind": ["mount"],
     "sizeClass": "xLarge",
     "stackSize": 1,
     "needsItemDefinition": true,
     "note": "A living mount - bound to one character and loses vitality with use.",
     "equipSlots": [
-      "Mount"
+      ["Mount"]
     ],
     "backpackable": false,
     "qualityMax": 500
   },
   {
     "familyId": "exotic_mount",
-    "kind": [
-      "mount"
-    ],
+    "kind": ["mount"],
     "sizeClass": "xLarge",
     "stackSize": 1,
     "needsItemDefinition": true,
     "note": "A living mount - bound to one character and loses vitality with use.",
     "equipSlots": [
-      "Mount"
+      ["Mount"]
     ],
     "backpackable": false,
     "qualityMax": 400
   },
   {
     "familyId": "aquatic_mount",
-    "kind": [
-      "mount"
-    ],
+    "kind": ["mount"],
     "sizeClass": "xLarge",
     "stackSize": 1,
     "needsItemDefinition": true,
     "note": "A living mount - bound to one character and loses vitality with use.",
     "equipSlots": [
-      "Mount"
+      ["Mount"]
     ],
     "backpackable": false,
     "qualityMax": 400
   },
   {
     "familyId": "aquatic_companion",
-    "kind": [
-      "companion"
-    ],
+    "kind": ["companion"],
     "sizeClass": "light",
     "stackSize": 1,
     "needsItemDefinition": true,
     "note": "A living companion - bound to one character and loses vitality with use.",
     "equipSlots": [
-      "Companion"
+      ["Companion"]
     ],
     "backpackable": false,
     "qualityMax": 120
   },
   {
     "familyId": "dark_companion",
-    "kind": [
-      "companion"
-    ],
+    "kind": ["companion"],
     "sizeClass": "tiny",
     "stackSize": 1,
     "needsItemDefinition": true,
     "note": "A living companion - bound to one character and loses vitality with use.",
     "equipSlots": [
-      "Companion"
+      ["Companion"]
+    ],
+    "backpackable": false,
+    "qualityMax": 150
+  },
+  {
+    "familyId": "spirit_companion",
+    "kind": ["companion"],
+    "sizeClass": "tiny",
+    "stackSize": 1,
+    "needsItemDefinition": true,
+    "note": "A living companion - bound to one character and loses vitality with use.",
+    "equipSlots": [
+      ["Companion"]
     ],
     "backpackable": false,
     "qualityMax": 150

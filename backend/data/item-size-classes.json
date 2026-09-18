@@ -3,6 +3,7 @@
   "tiny": 1,
   "light": 1,
   "medium": 2,
+  "large": 3,
   "heavy": 4,
   "xLarge": 8,
   "_rawAndProcessedFallback": "Raw and processed resources (base-resources.json, base-processed.json - ~396 entries) aren't in item-inventory-properties.json at all, since that file only covers the 'kind'-classified subset (weapons/armor/tools/etc). They default to sizeClass 'tiny' (1 slot). One unified stacking rule now, not a separate display-only one: rawStackSize matches resources_catalog.py's STACK_SIZE, processedStackSize matches processed_catalog.py's STACK_SIZE - same numbers used for both carry capacity and storage/backpack UI display.",

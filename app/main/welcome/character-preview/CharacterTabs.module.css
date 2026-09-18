@@ -1384,6 +1384,12 @@
   justify-content: start;
   gap: 0.35rem;
   height: 100%;
+  /* Belt-and-suspenders alongside .itemGridCell's own onPointerDown
+     preventDefault - covers the tier/count badge text too (inherited from
+     here) so nothing under a held tile is ever selectable in the first
+     place. */
+  user-select: none;
+  -webkit-user-select: none;
 }
 
 .itemGridCell {
@@ -1398,6 +1404,14 @@
   border-radius: 6px;
   overflow: hidden;
   cursor: pointer;
+  /* The long press that opens RecycleDestroyPopup (see ItemGrid's
+     startLongPress) is exactly long enough for a phone's own long-press
+     gesture (image save/share callout on iOS, text-selection handles
+     elsewhere) to fire first and cover the popup - all three properties
+     needed since no single one suppresses every browser's version of it. */
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
 }
 
 .itemGridCell:hover {
@@ -1407,8 +1421,14 @@
 .itemGridImg {
   width: 100%;
   height: 100%;
-  object-fit: contain;
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
   image-rendering: pixelated;
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
+  pointer-events: none;
 }
 
 .itemGridTierBadge {
@@ -1455,6 +1475,19 @@
   background: rgba(10, 8, 4, 0.85);
   border: 1px solid #3a3020;
   border-radius: 4px;
+}
+
+/* Condition bar along the tile's bottom edge (item instances only - see
+   ItemGrid's qualityFraction) - full width and green at full quality,
+   shrinking and reddening toward 0 as it wears down. Left-anchored so it
+   always reads as "how much is left," like a health bar. */
+.itemGridQualityBar {
+  position: absolute;
+  left: 0;
+  /* Sits flush on the tile's own border instead of inset above it, so it
+     reads as the icon's bottom edge rather than a bar floating over it. */
+  bottom: -1px;
+  height: 5px;
 }
 
 /* The item detail popup opened by clicking an ItemGrid tile - read-only
@@ -1517,8 +1550,13 @@
   width: 200px;
   height: 200px;
   max-width: 100%;
-  object-fit: contain;
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
   image-rendering: pixelated;
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
 }
 
 /* Same tier symbol/coloring as .itemGridTierBadge (see the vault grid),
@@ -1530,6 +1568,30 @@
   font-size: 1.4rem;
   line-height: 1;
   text-shadow: 0 0 3px #000, 0 0 3px #000;
+}
+
+/* Toggles the card's own content between the item-info view and the
+   recycle/destroy view (see ItemDetailPopup's showDestroy) - mirrors
+   .itemPopupTierBadge's corner placement on the opposite side. */
+.itemPopupSettingsButton {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.6rem;
+  padding: 0.2rem;
+  background: none;
+  border: none;
+  font-size: 2rem;
+  line-height: 1;
+  cursor: pointer;
+  /* Rusty grey - text presentation (see the JSX's plain "⚙", not the
+     emoji "⚙️") so it actually takes this color instead of rendering as a
+     fixed-color emoji glyph. */
+  color: #8a7a60;
+  filter: drop-shadow(0 0 3px #000) drop-shadow(0 0 3px #000);
+}
+
+.itemPopupSettingsButton:hover {
+  color: #a6926f;
 }
 
 .itemPopupName {
@@ -1641,7 +1703,14 @@
 .itemPopupBackpackIcon {
   width: 2.6rem;
   height: 2.6rem;
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
   image-rendering: pixelated;
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
+  pointer-events: none;
 }
 
 /* Overrides .craftCountButton's fixed 2.4rem/0.3rem sizing (tuned for the
@@ -1653,6 +1722,93 @@
   width: 2.3rem;
   padding: 0.3rem 0;
   font-size: 0.85rem;
+}
+
+/* RecycleDestroyPopup (InventoryTab.tsx) - opened by a long press on an
+   ItemGrid tile instead of the ordinary click. Reuses .itemPopupOverlay/
+   .itemPopupCard for the dimmed backdrop and card shell, this just widens
+   the gap between its two stacked sections. */
+.recycleDestroyCard {
+  gap: 1.1rem;
+  padding-top: 1.75rem;
+  padding-bottom: 1.75rem;
+}
+
+.recycleSection,
+.destroySection {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.recycleIcon {
+  font-size: 3.4rem;
+  line-height: 1;
+}
+
+.recycleResultText {
+  margin: 0;
+  font-size: 0.75rem;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: #a89968;
+}
+
+.recycleDestroyDivider {
+  width: 55%;
+  height: 1px;
+  background: rgba(168, 153, 104, 0.35);
+}
+
+/* The hold target itself - touch-action:none stops a phone from treating
+   the hold as a scroll gesture and cancelling it partway through. */
+.destroySection {
+  width: 100%;
+  cursor: pointer;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+  touch-action: none;
+}
+
+.destroyLabel {
+  margin: 0;
+  font-size: 0.8rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  font-weight: bold;
+  color: #c0453a;
+}
+
+.destroyProgressTrack {
+  width: 90%;
+  height: 12px;
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.5);
+  overflow: hidden;
+}
+
+/* Grows from empty over the hold, its own solid color recomputed every
+   frame by InventoryTab.tsx's destroyFillColor (gold -> red -> blood red)
+   rather than a fixed gradient image sliding into view. No CSS transition
+   on width/background - both are already driven frame-by-frame by
+   RecycleDestroyPopup's own rAF loop, and a transition here would lag one
+   step behind that and make the last frame (release -> snap back to
+   empty) visibly ease instead of resetting instantly. */
+.destroyProgressFill {
+  height: 100%;
+}
+
+.destroyIcon {
+  font-size: 2.8rem;
+  line-height: 1;
+}
+
+.destroyError {
+  margin: 0;
+  font-size: 0.75rem;
+  color: #d4a060;
 }
 
 /* A resource/tool row that can be clicked to reveal quick-transfer quantity

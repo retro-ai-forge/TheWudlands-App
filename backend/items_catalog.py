@@ -45,26 +45,42 @@ class ItemFamily:
     size_class: str
     stack_size: int
     needs_item_definition: bool
-    equip_slots: tuple[str, ...]
+    # Valid ways to equip one instance of this family, each an alternative
+    # full set of slots it must occupy at once - e.g. a dagger's
+    # (("Left Hand",), ("Right Hand",), ("Girdle",)) (pick any one slot) vs
+    # a greatsword's (("Left Hand", "Right Hand"),) (must occupy both
+    # together) vs a portable crafting station's (("Left Hand", "Right
+    # Hand"), ("Mount",)) (both hands, OR just a mount). The single source
+    # of truth for equip_item's validation - item-inventory-properties.
+    # json's own "equipSlots" is already this list-of-groups shape.
+    equip_slots: tuple[tuple[str, ...], ...]
     backpackable: bool
-    two_handed: bool
     quality_max: Optional[int]
     icon: str
+
+    @property
+    def two_handed(self) -> bool:
+        """Whether any valid equip group for this family occupies more than
+        one slot at once - derived from equip_slots rather than stored
+        separately, so there's no second field that could drift out of sync
+        with it. Purely informational (e.g. an API display flag) - equip_
+        item validates against equip_slots directly, never this."""
+        return any(len(group) > 1 for group in self.equip_slots)
 
 
 def _load_families() -> dict[str, ItemFamily]:
     data = json.loads(_FAMILIES_PATH.read_text())
     families: dict[str, ItemFamily] = {}
     for row in data:
+        equip_slots = tuple(tuple(group) for group in row.get("equipSlots", []))
         family = ItemFamily(
             family_id=row["familyId"],
             kind=tuple(row.get("kind", [])),
             size_class=row["sizeClass"],
             stack_size=row["stackSize"],
             needs_item_definition=row["needsItemDefinition"],
-            equip_slots=tuple(row.get("equipSlots", [])),
+            equip_slots=equip_slots,
             backpackable=row.get("backpackable", False),
-            two_handed=bool(row.get("twoHanded", False)),
             quality_max=row.get("qualityMax"),
             icon=row.get("icon", ""),
         )
@@ -161,6 +177,8 @@ def _load_final_catalog() -> tuple[dict[tuple[str, int], dict], dict[str, str]]:
                 "name": row["name"],
                 "icon": row.get("icon", ""),
                 "description": row.get("description", ""),
+                "size": row.get("size", ""),
+                "carryCapacity": row.get("carryCapacity", 0),
             }
             family_by_id[row["id"]] = row["familyId"]
     return rows, family_by_id
@@ -208,16 +226,15 @@ class ItemCatalogEntry:
     # backpack slot-cost bucket ("tiny"/"light"/"medium"/...), shown as
     # reference info in the item detail popup.
     size_class: str
-    # Family-level (item-inventory-properties.json's own "equipSlots") -
-    # non-empty only for needsItemDefinition:true families (the invariant
-    # every family in this catalog already follows). Drives the item
-    # detail popup's per-slot move buttons.
-    equip_slots: tuple[str, ...]
+    # Family-level (ItemFamily.equip_slots) - alternative full slot-groups
+    # valid for one equip action, non-empty only for needsItemDefinition:
+    # true families. See ItemFamily's own docstring.
+    equip_slots: tuple[tuple[str, ...], ...]
     # Family-level (item-inventory-properties.json's own "backpackable") -
     # whether a "move to backpack" action makes sense for this family at all.
     backpackable: bool
-    # Family-level (item-inventory-properties.json's own "twoHanded") -
-    # whether equipping this family occupies both named hand slots at once.
+    # Family-level (ItemFamily.two_handed) - whether any valid equip group
+    # occupies more than one slot at once. Informational only.
     two_handed: bool
     # Family-level (raw-material-gathering-bonuses.json, inverted - see
     # GATHERING_BONUSES_BY_ITEM) - raw materials this family grants a
@@ -225,6 +242,17 @@ class ItemCatalogEntry:
     # pickaxe. Empty for the majority of families that aren't a gathering
     # tool at all.
     gathering_bonuses: tuple[str, ...]
+    # Per-tier (base-items-mount.json's own "size" field) - creature size on
+    # the Small/Medium/Large/Huge/Colossal scale, only meaningful for
+    # kind:["mount"] families. "" for anything else (companions aren't
+    # ridden, so they carry no size). Drives the Giants-race riding
+    # restriction in backend.players.equip_item.
+    size: str
+    # Per-tier (base-items-mount.json/base-items-companion.json's own
+    # "carryCapacity" field) - extra backpack slots this mount/companion
+    # grants its rider/owner while equipped. 0 for anything not a mount or
+    # companion.
+    carry_capacity: int
 
 
 def _load_item_catalog_entries() -> tuple[ItemCatalogEntry, ...]:
@@ -250,6 +278,7 @@ def _load_item_catalog_entries() -> tuple[ItemCatalogEntry, ...]:
                     row.get("description", ""), family.size_class,
                     family.equip_slots, family.backpackable, family.two_handed,
                     GATHERING_BONUSES_BY_ITEM.get(family_id, ()),
+                    row.get("size", ""), row.get("carryCapacity", 0),
                 )
             )
     for item in PROCESSED_RESOURCE_ITEMS:
@@ -262,6 +291,7 @@ def _load_item_catalog_entries() -> tuple[ItemCatalogEntry, ...]:
                     "", family.size_class,
                     family.equip_slots, family.backpackable, family.two_handed,
                     GATHERING_BONUSES_BY_ITEM.get(item.family_id, ()),
+                    "", 0,
                 )
             )
     return tuple(entries)
