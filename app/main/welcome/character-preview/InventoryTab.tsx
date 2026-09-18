@@ -1,4 +1,5 @@
-import { useEffect, useRef, useState } from "react";
+import { Fragment, useEffect, useRef, useState } from "react";
+import type { ReactNode } from "react";
 import styles from "./CharacterTabs.module.css";
 import { formatRemainingCompactLong, useCraftCountdown } from "../craftTimer";
 import type { SlotCharacterSummary } from "../SoulSlotGrid";
@@ -11,7 +12,7 @@ export type { ItemInstance } from "../SoulSlotGrid";
 type BlueprintCategoryItem = { id: string; name: string; tier: number };
 type BlueprintCategoryFamily = { familyId: string; kind: string; items: BlueprintCategoryItem[] };
 type BlueprintCategoryEntry = { families: BlueprintCategoryFamily[] };
-type BlueprintTierInfo = Record<
+export type BlueprintTierInfo = Record<
   string,
   {
     tier: number;
@@ -51,6 +52,29 @@ export type RawPlayerData = {
     items: ItemInstance[];
   };
 };
+
+// GET /me/characters/{characterId}/recycle-preview/{itemId} (backend.
+// recycling.RawMaterialRecovery, camelCased by auth_routes.py's
+// RecyclePreviewResponse) - what recycling would hand back, one entry per
+// recoverable raw material family.
+type RecycleYield = { base: number; skill: number; tool: number; charm: number; total: number };
+type RecycleRecoveredLine = {
+  familyId: string;
+  id: string;
+  name: string;
+  tier: number;
+  category: "raw" | "processed";
+  qty: number;
+};
+type RecycleMaterial = {
+  rawFamilyId: string;
+  rawName: string;
+  totalUnits: number;
+  yieldBreakdown: RecycleYield;
+  recoveredUnits: number;
+  recovered: RecycleRecoveredLine[];
+};
+type RecyclePreview = { materials: RecycleMaterial[] };
 
 const TRANSFER_AMOUNTS = [1, 2, 5, 10, 20, 50] as const;
 
@@ -564,7 +588,10 @@ function ItemGrid({
   balances,
   lookupIds,
   instanceQuality,
+  instanceLocations,
   nonMovableIds,
+  source = "vault",
+  hasBackpackEquipped,
   characterId,
   onPlayerDataUpdated,
 }: {
@@ -576,8 +603,14 @@ function ItemGrid({
   lookupIds?: Record<string, string>;
   /** Row id (instanceId) -> that specific instance's current quality, for rows lookupIds resolves to a real item instance. */
   instanceQuality?: Record<string, number | null>;
+  /** Row id (instanceId) -> "backpack" | "body" - source:"character" only, decides whether the popup offers Unequip(+Move to backpack) or Equip(+Check-in-to-vault). Unused for source:"vault" (every pool row is location:"pool" by definition). */
+  instanceLocations?: Record<string, "backpack" | "body">;
   /** Row ids with no working move-to-backpack/equip path yet (ammo living in resources, not items/itemBalances) - the popup shows info only, no action buttons, for these. */
   nonMovableIds?: Set<string>;
+  /** "vault" (default): rows live in the player's shared pool - the popup's move actions are equip-from-pool/move-to-backpack, recycle/destroy target the shared vault. "character": rows are this character's own backpack/body items or itemBalances - the popup's move actions are Unequip(-to-vault)/Move-to-backpack for a worn row, Equip/Check-in-to-vault for a backpacked one; recycle/destroy target this character's own holdings instead. */
+  source?: "vault" | "character";
+  /** Whether this character currently has a backpack worn - greys out the popup's "Move to backpack" button instead of letting the click fail server-side with "No backpack equipped". */
+  hasBackpackEquipped: boolean;
   characterId: string;
   onPlayerDataUpdated?: (data: RawPlayerData) => void;
 }) {
@@ -692,6 +725,10 @@ function ItemGrid({
           movable={!nonMovableIds?.has(selectedId)}
           quality={instanceQuality?.[selectedId] ?? null}
           moveId={selectedId}
+          catalogId={lookupIds?.[selectedId] ?? selectedId}
+          location={instanceLocations?.[selectedId]}
+          source={source}
+          hasBackpackEquipped={hasBackpackEquipped}
           characterId={characterId}
           onPlayerDataUpdated={onPlayerDataUpdated}
           onClose={() => setSelectedId(null)}
@@ -712,9 +749,19 @@ const QUANTITY_OPTIONS = [1, 2, 5, 10] as const;
 // convention every other icon in this file already uses (getKindIcon's
 // ⚔️/🛡️/🥋, getTierIndicator's ○●◉✦✨🌟), no image needed. Unicode has no
 // left/right-hand distinction, so "Left"/"Right" stay as text and only the
-// word "Hand" itself is replaced.
-function formatSlotLabel(slot: string): string {
-  return slot.replace(/\bHand\b/, "✋");
+// word "Hand" itself is replaced - with the same glyph flipped horizontally
+// (scaleX(-1), matching BodyTab.tsx's own EquipSlotIcon mirroring) for
+// "Right Hand", so the two read as a mirrored pair rather than two
+// identical icons.
+function formatSlotLabel(slot: string): ReactNode {
+  if (!/\bHand\b/.test(slot)) return slot;
+  const prefix = slot.replace(/\bHand\b/, "").trim();
+  return (
+    <>
+      {prefix}{" "}
+      <span style={prefix === "Right" ? { display: "inline-block", transform: "scaleX(-1)" } : undefined}>✋</span>
+    </>
+  );
 }
 
 type PostJsonResult =
@@ -753,6 +800,18 @@ function destroyFillColor(t: number): string {
   const [from, to, localT] =
     clamped <= 0.55 ? [GOLD, RED, clamped / 0.55] : [RED, BLOOD_RED, (clamped - 0.55) / 0.45];
   const [r, g, b] = from.map((c, i) => Math.round(c + (to[i] - c) * localT));
+  return `rgb(${r}, ${g}, ${b})`;
+}
+
+// The recycle hold bar's own fill (see ItemDetailPopup's runRecycle) - same
+// gold start as destroyFillColor, but deepening into the app's own
+// "healthy/recovered" green (QUALITY_STATE_COLORS.new, rgb(90, 156, 74))
+// instead of red, so a beneficial action never reads as a warning.
+function recycleFillColor(t: number): string {
+  const GOLD: [number, number, number] = [230, 184, 92];
+  const GREEN: [number, number, number] = [90, 156, 74];
+  const clamped = Math.min(1, Math.max(0, t));
+  const [r, g, b] = GOLD.map((c, i) => Math.round(c + (GREEN[i] - c) * clamped));
   return `rgb(${r}, ${g}, ${b})`;
 }
 
@@ -799,7 +858,7 @@ const ITEM_POPUP_FLASH_MS = 3000;
  * below it. Holding that control for DESTROY_HOLD_MS fills a progress bar
  * above its flame icon and permanently deletes the item; releasing early
  * resets it with nothing destroyed. */
-function ItemDetailPopup({
+export function ItemDetailPopup({
   info,
   fallbackName,
   owned,
@@ -807,6 +866,10 @@ function ItemDetailPopup({
   movable,
   quality,
   moveId,
+  catalogId,
+  location,
+  source = "vault",
+  hasBackpackEquipped,
   characterId,
   onPlayerDataUpdated,
   onClose,
@@ -823,6 +886,14 @@ function ItemDetailPopup({
   quality: number | null;
   /** The row id itself - an instanceId (isInstance) or a concrete itemBalances/resource id. */
   moveId: string;
+  /** The concrete catalog id (item-catalog familyId+tier) this row resolves to - same id used to look up `info` itself (lookupIds?.[id] ?? id), needed separately here since GET .../recycle-preview/{itemId} takes a concrete id, never an instanceId. */
+  catalogId: string;
+  /** source:"character" instance rows only - "backpack" or "body", decides whether the move actions offered are Equip/Check-in-to-vault or Unequip(-to-vault)/Move-to-backpack. */
+  location?: "backpack" | "body";
+  /** "vault" (default): `moveId` lives in the player's shared pool. "character": `moveId` is this character's own (backpack/body instance, or itemBalances row) - see ItemGrid's identical prop for what changes. */
+  source?: "vault" | "character";
+  /** Whether this character currently has a backpack worn - greys out any "Move to backpack" button instead of letting the click fail server-side with "No backpack equipped". */
+  hasBackpackEquipped: boolean;
   characterId: string;
   onPlayerDataUpdated?: (data: RawPlayerData) => void;
   onClose: () => void;
@@ -902,6 +973,51 @@ function ItemDetailPopup({
   // itself will accept.
   const slotGroups: string[][] = isInstance && info?.equipSlots?.length ? info.equipSlots : [];
 
+  // source:"character", location:"backpack" rows only - straight to the
+  // player's shared pool (check_in_item_instance only ever accepts a
+  // backpacked instance, never an equipped one - see unequipToVault below
+  // for the equipped case, which chains through this same endpoint).
+  const checkInToVault = async () => {
+    setPending(true);
+    setFlashMessage(null);
+    finish(await postJson(`/api/auth/me/characters/${characterId}/items/${moveId}/check-in`));
+  };
+
+  // source:"character", location:"body" rows' "Unequip" button - goes
+  // straight to the shared vault (unequip, then immediately check in),
+  // not just off the body onto this character's own backpack. Two chained
+  // calls under one click since check_in_item_instance only ever accepts
+  // an already-backpacked instance - see unequipToBackpack below for the
+  // one-step "keep it on this character instead" alternative.
+  const unequipToVault = async () => {
+    setPending(true);
+    setFlashMessage(null);
+    const unequipped = await postJson(`/api/auth/me/characters/${characterId}/items/${moveId}/unequip`);
+    if (!unequipped.ok) return fail(unequipped.detail);
+    finish(await postJson(`/api/auth/me/characters/${characterId}/items/${moveId}/check-in`));
+  };
+
+  // source:"character", location:"body" rows' "Move to backpack" button -
+  // the one-step alternative to unequipToVault above: off the body, but
+  // kept on this character (its own backpack) rather than sent to the
+  // shared vault.
+  const unequipToBackpack = async () => {
+    setPending(true);
+    setFlashMessage(null);
+    finish(await postJson(`/api/auth/me/characters/${characterId}/items/${moveId}/unequip`));
+  };
+
+  // source:"character", location:"backpack" rows only - the character's
+  // own backpack -> body (see backend.players.equip_item), the missing
+  // other half of unequipToBackpack: without this, a character-owned item
+  // that's ever unequipped had no way back onto the body except a manual
+  // database fix.
+  const equipFromBackpack = async (slots: string[]) => {
+    setPending(true);
+    setFlashMessage(null);
+    finish(await postJson(`/api/auth/me/characters/${characterId}/items/${moveId}/equip`, { slots }));
+  };
+
   // --- Recycle/destroy view (swapped in over the info view above by the
   // cogwheel button, rather than a second popup - see showDestroy). ---
   const [destroyProgress, setDestroyProgress] = useState(0);
@@ -920,12 +1036,61 @@ function ItemDetailPopup({
   };
   useEffect(() => resetDestroyHold, []);
 
+  // How many units the hold below would act on - always 1 for an instance
+  // (never stacked), otherwise whatever the quantity row above has picked.
+  const recycleCount = isInstance ? 1 : destroyAll ? owned : destroyQuantity;
+
+  // Fetched fresh from GET .../recycle-preview whenever this view is open
+  // and count changes - fromVault must match whichever recycle action will
+  // actually run below (see runRecycle): a vault row's full shared tool
+  // pool counts toward the bonus, a character row's own carried-only tools
+  // do not (see backend.players.preview_recycle).
+  const [recyclePreview, setRecyclePreview] = useState<RecyclePreview | null>(null);
+  const [recyclePreviewLoading, setRecyclePreviewLoading] = useState(false);
+
+  useEffect(() => {
+    if (!showDestroy || recycleCount <= 0) return;
+    let cancelled = false;
+    setRecyclePreviewLoading(true);
+    fetch(
+      `/api/auth/me/characters/${characterId}/recycle-preview/${catalogId}?count=${recycleCount}&fromVault=${
+        source === "vault"
+      }`,
+      { credentials: "include" }
+    )
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data: RecyclePreview | null) => {
+        if (!cancelled) setRecyclePreview(data);
+      })
+      .catch(() => {
+        if (!cancelled) setRecyclePreview(null);
+      })
+      .finally(() => {
+        if (!cancelled) setRecyclePreviewLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [showDestroy, catalogId, characterId, recycleCount, source]);
+
+  // Whether this item actually has anything to recycle (a known recipe) -
+  // false for e.g. a starter item authored with no craft-recipes.json
+  // entry, which hides the recycle bar entirely (destroy below is still
+  // always available either way).
+  const canRecycle = !!recyclePreview && recyclePreview.materials.length > 0;
+
+  // Plain zero-recovery destroy - unconditional, always available, same
+  // behavior as before recycling existed. Targets the shared vault
+  // (source:"vault") or this character's own backpack/body/itemBalances
+  // (source:"character" - see destroy_character_item_instance/_balance).
+  const destroySuffix = source === "vault" ? "destroy" : "destroy-from-character";
   const runDestroy = async () => {
     setDestroying(true);
+    const amount = destroyAll ? owned : destroyQuantity;
     const result = isInstance
-      ? await postJson(`/api/auth/me/characters/${characterId}/items/${moveId}/destroy`)
-      : await postJson(`/api/auth/me/characters/${characterId}/item-balances/${moveId}/destroy`, {
-          amount: destroyAll ? owned : destroyQuantity,
+      ? await postJson(`/api/auth/me/characters/${characterId}/items/${moveId}/${destroySuffix}`)
+      : await postJson(`/api/auth/me/characters/${characterId}/item-balances/${moveId}/${destroySuffix}`, {
+          amount,
         });
     if (!result.ok) {
       setDestroying(false);
@@ -935,6 +1100,62 @@ function ItemDetailPopup({
     }
     onPlayerDataUpdated?.(result.data);
     onClose();
+  };
+
+  // --- Recycle hold - a separate action from destroy above, only shown
+  // when canRecycle: credits the previewed materials to the shared vault
+  // instead of giving up the item for nothing. Own progress/state so
+  // holding one control never interferes with the other. ---
+  const [recycleHoldProgress, setRecycleHoldProgress] = useState(0);
+  const [recyclingItem, setRecyclingItem] = useState(false);
+  const [recycleActionError, setRecycleActionError] = useState<string | null>(null);
+  const recycleRafRef = useRef<number | null>(null);
+
+  const resetRecycleHold = () => {
+    if (recycleRafRef.current !== null) cancelAnimationFrame(recycleRafRef.current);
+    recycleRafRef.current = null;
+    setRecycleHoldProgress(0);
+  };
+  useEffect(() => resetRecycleHold, []);
+
+  const recycleSuffix = source === "vault" ? "recycle-from-vault" : "recycle";
+  const runRecycle = async () => {
+    setRecyclingItem(true);
+    const amount = destroyAll ? owned : destroyQuantity;
+    const result = isInstance
+      ? await postJson(`/api/auth/me/characters/${characterId}/items/${moveId}/${recycleSuffix}`)
+      : await postJson(`/api/auth/me/characters/${characterId}/item-balances/${moveId}/${recycleSuffix}`, {
+          amount,
+        });
+    if (!result.ok) {
+      setRecyclingItem(false);
+      setRecycleActionError("Couldn't recycle that.");
+      resetRecycleHold();
+      return;
+    }
+    onPlayerDataUpdated?.(result.data);
+    onClose();
+  };
+
+  const recycleTick = (startedAt: number) => {
+    const next = Math.min(1, (performance.now() - startedAt) / DESTROY_HOLD_MS);
+    setRecycleHoldProgress(next);
+    if (next >= 1) {
+      runRecycle();
+      return;
+    }
+    recycleRafRef.current = requestAnimationFrame(() => recycleTick(startedAt));
+  };
+
+  const startRecycleHold = () => {
+    if (recyclingItem) return;
+    setRecycleActionError(null);
+    const startedAt = performance.now();
+    recycleRafRef.current = requestAnimationFrame(() => recycleTick(startedAt));
+  };
+  const cancelRecycleHold = () => {
+    if (recyclingItem) return;
+    resetRecycleHold();
   };
 
   const destroyTick = (startedAt: number) => {
@@ -959,12 +1180,21 @@ function ItemDetailPopup({
   };
 
   // Closes on a click anywhere - including inside the card itself (the
-  // image, name, description, meta row) - except on a button or the
-  // destroy hold target, so the move/equip/cogwheel/destroy controls below
-  // get their own clicks instead of just dismissing the popup.
+  // image, name, description, meta row) - except on a button or a hold
+  // target (recycleHoldBar / destroyIcon), so those controls get their own
+  // clicks instead of just dismissing the popup. While showDestroy is
+  // open, clicking anywhere else in that view (the destroy label/track,
+  // the recycle breakdown text, ...) doesn't close the popup outright -
+  // it acts like the "↩" button instead, returning to the item info view,
+  // since the whole recycle/destroy card is still "inside" this same item.
   const handleClick = (e: React.MouseEvent<HTMLElement>) => {
     const target = e.target as HTMLElement;
-    if (target.closest("button") || target.closest(`.${styles.destroySection}`)) return;
+    if (target.closest("button")) return;
+    if (showDestroy) {
+      if (target.closest(`.${styles.recycleHoldBar}`) || target.closest(`.${styles.destroyIcon}`)) return;
+      setShowDestroy(false);
+      return;
+    }
     onClose();
   };
   return (
@@ -981,10 +1211,73 @@ function ItemDetailPopup({
         </button>
         {showDestroy ? (
           <>
-            <div className={styles.recycleSection}>
-              <span className={styles.recycleIcon}>♻️</span>
-              <p className={styles.recycleResultText}>Recycle Result</p>
-            </div>
+            {recyclePreviewLoading ? (
+              <div className={styles.recycleSection}>
+                <p className={styles.recycleResultText}>Checking recycle yield…</p>
+              </div>
+            ) : canRecycle ? (
+              <>
+                <div
+                  className={`${styles.destroySection} ${styles.recycleHoldBar}`}
+                  onPointerDown={(e) => {
+                    e.preventDefault();
+                    startRecycleHold();
+                  }}
+                  onPointerUp={cancelRecycleHold}
+                  onPointerLeave={cancelRecycleHold}
+                  onPointerCancel={cancelRecycleHold}
+                  onContextMenu={(e) => e.preventDefault()}
+                >
+                  <p className={styles.recycleLabel}>Hold to RECYCLE</p>
+                  <div className={styles.destroyProgressTrack}>
+                    <div
+                      className={styles.destroyProgressFill}
+                      style={{
+                        width: `${recycleHoldProgress * 100}%`,
+                        backgroundColor: recycleFillColor(recycleHoldProgress),
+                      }}
+                    />
+                  </div>
+                  <span className={styles.destroyIcon}>♻️</span>
+                </div>
+                {/* Outside .destroySection on purpose - only the bar above
+                    should start the hold/fill, not the breakdown text
+                    below it. Still exempted from handleClick's close-on-
+                    click below, same as .destroySection, so reading it
+                    doesn't dismiss the popup either. */}
+                <div className={styles.recycleMaterialsList}>
+                  {recyclePreview!.materials.map((material) => (
+                    <div key={material.rawFamilyId} className={styles.recycleMaterialRow}>
+                      <p className={styles.recycleMaterialHeader}>
+                        <span>{material.rawName}</span>
+                        <span className={styles.recycleMaterialAmounts}>
+                          {material.recoveredUnits}/{material.totalUnits}
+                        </span>
+                      </p>
+                      <p className={styles.recycleFormulaLine}>
+                        {material.yieldBreakdown.base} + {material.yieldBreakdown.skill} skill +{" "}
+                        <span className={material.yieldBreakdown.tool === 0 ? styles.recycleFormulaZero : undefined}>
+                          {material.yieldBreakdown.tool} tool
+                        </span>{" "}
+                        + {material.yieldBreakdown.charm} charm = {material.yieldBreakdown.total}%
+                      </p>
+                    </div>
+                  ))}
+                  <p className={styles.recycleFinalLine}>
+                    Recovered:{" "}
+                    {recyclePreview!.materials
+                      .flatMap((material) => material.recovered)
+                      .map((line) => `${line.qty}× ${line.name}`)
+                      .join(", ") || "nothing"}
+                  </p>
+                </div>
+              </>
+            ) : (
+              <div className={styles.recycleSection}>
+                <p className={styles.recycleResultText}>Nothing to recover from this item.</p>
+              </div>
+            )}
+            {recycleActionError && <p className={styles.destroyError}>{recycleActionError}</p>}
             <div className={styles.recycleDestroyDivider} />
             {!isInstance && stackSize > 1 && (
               <div className={styles.itemPopupActions} role="radiogroup" aria-label="How many to destroy">
@@ -1030,17 +1323,7 @@ function ItemDetailPopup({
                 </button>
               </div>
             )}
-            <div
-              className={styles.destroySection}
-              onPointerDown={(e) => {
-                e.preventDefault();
-                startDestroyHold();
-              }}
-              onPointerUp={cancelDestroyHold}
-              onPointerLeave={cancelDestroyHold}
-              onPointerCancel={cancelDestroyHold}
-              onContextMenu={(e) => e.preventDefault()}
-            >
+            <div className={styles.destroySection}>
               <p className={styles.destroyLabel}>Hold to DESTROY</p>
               <div className={styles.destroyProgressTrack}>
                 <div
@@ -1051,7 +1334,21 @@ function ItemDetailPopup({
                   }}
                 />
               </div>
-              <span className={styles.destroyIcon}>🔥</span>
+              {/* Only the icon itself is the hold target now - the label
+                  and progress track above are just display, not clickable. */}
+              <span
+                className={styles.destroyIcon}
+                onPointerDown={(e) => {
+                  e.preventDefault();
+                  startDestroyHold();
+                }}
+                onPointerUp={cancelDestroyHold}
+                onPointerLeave={cancelDestroyHold}
+                onPointerCancel={cancelDestroyHold}
+                onContextMenu={(e) => e.preventDefault()}
+              >
+                🔥
+              </span>
             </div>
             {destroyError && <p className={styles.destroyError}>{destroyError}</p>}
           </>
@@ -1088,7 +1385,7 @@ function ItemDetailPopup({
                 <span>Quality: {quality ?? 0}/{info.qualityMax}</span>
               )}
             </div>
-            {movable && (
+            {movable && source === "vault" && (
               <div className={styles.itemPopupActions} role={stackSize > 1 ? "radiogroup" : undefined}>
                 {stackSize > 1
                   ? QUANTITY_OPTIONS.map((n) => (
@@ -1118,17 +1415,22 @@ function ItemDetailPopup({
                         disabled={pending}
                         onClick={() => equipToSlots(slots)}
                       >
-                        {slots.map(formatSlotLabel).join(" + ")}
+                        {slots.map((slot, i) => (
+                          <Fragment key={slot}>
+                            {i > 0 && " + "}
+                            {formatSlotLabel(slot)}
+                          </Fragment>
+                        ))}
                       </button>
                     ))}
                 {info?.backpackable && (
                   <button
                     type="button"
                     className={styles.itemPopupBackpackButton}
-                    disabled={pending}
+                    disabled={pending || !hasBackpackEquipped}
                     onClick={moveToBackpack}
                     aria-label="Move to backpack"
-                    title="Move to backpack"
+                    title={hasBackpackEquipped ? "Move to backpack" : "No backpack equipped"}
                   >
                     <div
                       role="img"
@@ -1137,6 +1439,73 @@ function ItemDetailPopup({
                       style={{ backgroundImage: `url(${BACKPACK_ACTION_ICON})` }}
                     />
                   </button>
+                )}
+              </div>
+            )}
+            {movable && source === "character" && isInstance && (
+              <div className={styles.itemPopupActions}>
+                {location === "body" ? (
+                  <>
+                    <button
+                      type="button"
+                      className={styles.itemPopupActionButton}
+                      disabled={pending}
+                      onClick={unequipToVault}
+                      title="Unequip straight to the shared vault"
+                    >
+                      Unequip
+                    </button>
+                    {/* The one-step alternative to Unequip above: off the
+                        body, but kept on this character (its own backpack)
+                        instead of sent to the shared vault. Shown as its
+                        own icon button (matching the vault popup's own
+                        backpackable-gated button) only when this family can
+                        actually go there. */}
+                    {info?.backpackable && (
+                      <button
+                        type="button"
+                        className={styles.itemPopupBackpackButton}
+                        disabled={pending || !hasBackpackEquipped}
+                        onClick={unequipToBackpack}
+                        aria-label="Move to backpack"
+                        title={hasBackpackEquipped ? "Move to backpack" : "No backpack equipped"}
+                      >
+                        <div
+                          role="img"
+                          aria-label="Backpack"
+                          className={styles.itemPopupBackpackIcon}
+                          style={{ backgroundImage: `url(${BACKPACK_ACTION_ICON})` }}
+                        />
+                      </button>
+                    )}
+                  </>
+                ) : (
+                  <>
+                    {slotGroups.map((slots) => (
+                      <button
+                        key={slots.join("+")}
+                        type="button"
+                        className={styles.itemPopupActionButton}
+                        disabled={pending}
+                        onClick={() => equipFromBackpack(slots)}
+                      >
+                        {slots.map((slot, i) => (
+                          <Fragment key={slot}>
+                            {i > 0 && " + "}
+                            {formatSlotLabel(slot)}
+                          </Fragment>
+                        ))}
+                      </button>
+                    ))}
+                    <button
+                      type="button"
+                      className={styles.itemPopupActionButton}
+                      disabled={pending}
+                      onClick={checkInToVault}
+                    >
+                      Check in to vault
+                    </button>
+                  </>
                 )}
               </div>
             )}
@@ -1367,9 +1736,9 @@ export function InventoryTab({
   // Vault tab (see activeSubTab) - Tools/Resources stay here since they're
   // what a craft actually draws on.
   const [openSections, setOpenSections] = useState<
-    Set<"blueprints" | "character" | "partyTools" | "partyResources">
+    Set<"blueprints" | "character" | "items" | "partyTools" | "partyResources">
   >(() => (openCraftingSectionByDefault ? new Set(["character"]) : new Set()));
-  const toggleSection = (id: "blueprints" | "character" | "partyTools" | "partyResources") =>
+  const toggleSection = (id: "blueprints" | "character" | "items" | "partyTools" | "partyResources") =>
     setOpenSections((prev) => {
       const next = new Set(prev);
       if (next.has(id)) next.delete(id); else next.add(id);
@@ -1459,6 +1828,37 @@ export function InventoryTab({
     ...playerItemBalances,
     ...playerItemRowBalances,
   };
+
+  // This character's own item instances (backpack + equipped body - never
+  // "crafting", already shown separately above as a borrowed tool) plus
+  // its own itemBalances - the "Items" accordion's own grid, mirroring the
+  // playerItem* set above but scoped to this one character rather than the
+  // shared vault (see ItemGrid/ItemDetailPopup's source:"character").
+  const characterItemLookupIds: Record<string, string> = {};
+  const characterItemRowBalances: Record<string, number> = {};
+  const characterItemRowQuality: Record<string, number | null> = {};
+  const characterItemLocations: Record<string, "backpack" | "body"> = {};
+  for (const instance of character.items) {
+    if (instance.location !== "backpack" && instance.location !== "body") continue;
+    characterItemLookupIds[instance.instanceId] = instance.itemId;
+    characterItemRowBalances[instance.instanceId] = 1;
+    characterItemRowQuality[instance.instanceId] = instance.quality;
+    characterItemLocations[instance.instanceId] = instance.location;
+  }
+
+  const characterItemsCombined: Record<string, number> = {
+    ...character.itemBalances,
+    ...characterItemRowBalances,
+  };
+
+  // Whether this character currently has a physical backpack worn (Back or
+  // Side slot) - mirrors backend.items_catalog.has_backpack_equipped.
+  // "Move to backpack" only makes sense with one on, so both the vault and
+  // character item popups grey that button out otherwise instead of
+  // letting the click fail server-side with "No backpack equipped".
+  const hasBackpackEquipped = character.items.some(
+    (instance) => instance.location === "body" && (instance.slotRef.includes("Back") || instance.slotRef.includes("Side"))
+  );
 
   // The embedded recipe viewer's own content height, in px - same-origin, so
   // its body height can be read directly and mirrored onto the iframe
@@ -1799,6 +2199,32 @@ export function InventoryTab({
             </div>
           )}
 
+          {Object.keys(characterItemsCombined).some((id) => characterItemsCombined[id] > 0) && (
+            <div className={styles.accordionItem}>
+              <button className={styles.accordionHeader} onClick={() => toggleSection("items")}>
+                <span>{`${character.firstName}'s Items`}</span>
+                <span className={styles.accordionChevron}>{openSections.has("items") ? "▴" : "▾"}</span>
+              </button>
+              {openSections.has("items") && (
+                <div className={styles.accordionBody}>
+                  <ItemGrid
+                    ids={Object.keys(characterItemsCombined).filter((id) => characterItemsCombined[id] > 0)}
+                    emptyLabel="Nothing carried yet."
+                    tierInfo={itemCatalogTierInfo}
+                    balances={characterItemsCombined}
+                    lookupIds={characterItemLookupIds}
+                    instanceQuality={characterItemRowQuality}
+                    instanceLocations={characterItemLocations}
+                    source="character"
+                    hasBackpackEquipped={hasBackpackEquipped}
+                    characterId={character.id}
+                    onPlayerDataUpdated={onPlayerDataUpdated}
+                  />
+                </div>
+              )}
+            </div>
+          )}
+
           <div className={styles.accordionItem}>
             <button className={styles.accordionHeader} onClick={() => toggleSection("partyTools")}>
               <span>Party&apos;s Tools</span>
@@ -1928,6 +2354,8 @@ export function InventoryTab({
           balances={playerItemsCombined}
           lookupIds={playerItemLookupIds}
           instanceQuality={playerItemRowQuality}
+          source="vault"
+          hasBackpackEquipped={hasBackpackEquipped}
           characterId={character.id}
           onPlayerDataUpdated={onPlayerDataUpdated}
         />

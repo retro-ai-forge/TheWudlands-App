@@ -840,6 +840,14 @@
   background: rgba(10, 8, 4, 0.5);
 }
 
+/* Only an occupied slot carries role="button" (see BodyTab.tsx) - an empty
+   one has nothing to open a popup for, so it stays a plain box with the
+   default cursor. */
+.equipSlot[role="button"],
+.largeEquipSlot[role="button"] {
+  cursor: pointer;
+}
+
 /* Head/Chest/Legs (left edge) and Back/Girdle (right edge) sit directly on
    top of the portrait - smaller and more translucent than a normal
    .equipSlot so the art underneath still reads through. */
@@ -937,10 +945,10 @@
    filling a third of the row (see .handSlotRow .equipSlot) instead of a
    fixed small size, so a phone-width screen doesn't leave dead space on
    either side of a tiny fixed-size cluster. At/above 450px, widens to fit
-   all 5 slots at their original fixed 4rem size, unwrapped on one line -
-   independent of .frameColumn's own narrower 18rem cap either way (this
-   overrides that inherited stretch with its own explicit width, same as
-   before). */
+   all 5 slots unwrapped on one line, each growing with the row up to a
+   wider 37.5rem (600px) cap - independent of .frameColumn's own narrower
+   18rem cap either way (this overrides that inherited stretch with its
+   own explicit width, same as before). */
 .handSlotRow {
   display: flex;
   flex-wrap: wrap;
@@ -951,17 +959,21 @@
      flex-start (left-aligned) instead, so this needs its own centering. */
   align-self: center;
   /* Grows with the viewport (roughly full width, minus a 1rem gutter each
-     side) up to the same 23.75rem cap the unwrapped 5-slot line below
-     uses - never wider than that, so the 3-per-row wrap never accidentally
-     leaves room for a stray 4th slot to join it. */
+     side) up to 23.75rem - the exact width 5 slots at their original
+     fixed 4rem size would need, so the 3-per-row wrap never accidentally
+     leaves room for a stray 4th slot to join it. The unwrapped line at
+     450px+ (below) grows further, to its own separate 37.5rem cap. */
   width: min(calc(100vw - 2rem), 23.75rem);
 }
 
 @media (min-width: 450px) {
   .handSlotRow {
-    /* All 5 slots + 4 gaps (23rem, plus a hair of rounding slack) fit
-       unwrapped once there's room. */
-    width: 23.75rem;
+    /* Unwrapped onto one line now (all 5 fit), and grows with the
+       viewport the same way the wrapped layout below 450px does - up to
+       37.5rem (600px), past which it holds flat rather than the row
+       (and each slot within it, see .handSlotRow .equipSlot) growing
+       arbitrarily large on a wide desktop window. */
+    width: min(calc(100vw - 2rem), 37.5rem);
   }
 }
 
@@ -980,36 +992,51 @@
 }
 
 @media (min-width: 450px) {
-  /* Same fixed 4rem as .equipSlotOverlay, so every slot on the page reads
-     as one consistent size once unwrapped onto one line - flex:0 0 auto
-     instead of the 3-per-row fraction above, so 5 slots don't just divide
-     up whatever width happens to be available. */
+  /* Each of the 5 slots fills a fifth of .handSlotRow's own width (minus
+     its share of the 4 gaps between them), same growing-with-the-row
+     approach as the 3-per-row wrap below 450px, so the row's own growth
+     up to 37.5rem (see .handSlotRow) actually makes the slots themselves
+     bigger instead of just spreading fixed-size ones further apart. */
   .handSlotRow .equipSlot {
-    flex: 0 0 auto;
-    width: 4rem;
+    flex: 1 1 calc((100% - 3rem) / 5);
   }
 }
 
-/* Below the 450px breakpoint, .handSlotRow wraps these 5 slots 3-then-2
+/* Below the 450px breakpoint, .handSlotRow wraps these 5 slots 2-then-3
    (see its own comment) - but BodyTab.tsx's DOM order (Left Hand, Left
    Ring, Girdle, Right Ring, Right Hand, for the unwrapped large-screen
-   line below) would wrap that same sequence into a mismatched Left
-   Hand/Left Ring/Girdle top row. Reordered visually here (DOM/tab order
-   stays untouched) so the wrap instead reads Left Hand / Girdle / Right
-   Hand on top and Left Ring / Right Ring underneath. */
+   line below) doesn't match either that split point or the desired
+   grouping. Reordered visually here (DOM/tab order stays untouched) so
+   the wrap instead reads Left Hand / Right Hand on top and Left Ring /
+   Girdle / Right Ring underneath - the ::after break below forces the
+   line split exactly between them regardless of available width, since
+   .handSlotRow's own width is sized for a 3-wide line (a 2-item line
+   would otherwise still have room for a 3rd item to join it). */
 .handSlotRow .equipSlot:nth-child(1) { order: 0; } /* Left Hand */
 .handSlotRow .equipSlot:nth-child(2) { order: 3; } /* Left Ring */
-.handSlotRow .equipSlot:nth-child(3) { order: 1; } /* Girdle */
-.handSlotRow .equipSlot:nth-child(4) { order: 4; } /* Right Ring */
-.handSlotRow .equipSlot:nth-child(5) { order: 2; } /* Right Hand */
+.handSlotRow .equipSlot:nth-child(3) { order: 4; } /* Girdle */
+.handSlotRow .equipSlot:nth-child(4) { order: 5; } /* Right Ring */
+.handSlotRow .equipSlot:nth-child(5) { order: 1; } /* Right Hand */
+
+.handSlotRow::after {
+  content: "";
+  order: 2;
+  flex-basis: 100%;
+  width: 0;
+}
 
 @media (min-width: 450px) {
-  /* Back to natural DOM order once all 5 fit unwrapped on one line. */
+  /* Back to natural DOM order once all 5 fit unwrapped on one line, and
+     the forced break above no longer applies. */
   .handSlotRow .equipSlot:nth-child(1) { order: 0; }
   .handSlotRow .equipSlot:nth-child(2) { order: 1; }
   .handSlotRow .equipSlot:nth-child(3) { order: 2; }
   .handSlotRow .equipSlot:nth-child(4) { order: 3; }
   .handSlotRow .equipSlot:nth-child(5) { order: 4; }
+
+  .handSlotRow::after {
+    display: none;
+  }
 }
 
 /* Companion/Mount sit below everything else, each scaled up to the same max
@@ -1819,10 +1846,75 @@
   color: #a89968;
 }
 
+/* GET .../recycle-preview's rendered breakdown - one row per raw material
+   family (name + total/recovered, then how that yield% was calculated),
+   plus one combined line at the bottom listing every denomination the
+   recycle action would actually hand back. */
+.recycleMaterialsList {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0.5rem;
+  width: 100%;
+  text-align: left;
+}
+
+.recycleMaterialRow {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+}
+
+.recycleMaterialHeader {
+  margin: 0;
+  display: flex;
+  justify-content: space-between;
+  gap: 0.5rem;
+  font-size: 0.85rem;
+  color: #d4c9a8;
+}
+
+.recycleMaterialAmounts {
+  color: #c07a3a;
+  font-variant-numeric: tabular-nums;
+}
+
+.recycleFormulaLine {
+  margin: 0;
+  font-size: 0.7rem;
+  letter-spacing: 0.02em;
+  color: #8a7a60;
+}
+
+/* Flags a 0% component within .recycleFormulaLine (e.g. "0% tool") - same
+   red as .destroyLabel, so a missing bonus reads as a warning worth
+   fixing rather than blending into the line's own muted color. */
+.recycleFormulaZero {
+  color: #c0453a;
+}
+
+.recycleFinalLine {
+  margin: 0.3rem 0 0;
+  padding-top: 0.4rem;
+  border-top: 1px solid rgba(168, 153, 104, 0.35);
+  font-size: 0.8rem;
+  font-weight: bold;
+  color: #8fae7a;
+}
+
+/* Marker-only class, no rules of its own - lets InventoryTab.tsx's
+   handleClick tell "the recycle hold bar" (label+track+icon together,
+   still one hold target) apart from .destroySection's other, now
+   non-interactive use (destroy's own label+track, whose click area only
+   returns to the item info view - see .destroyIcon for destroy's actual
+   hold target). */
+.recycleHoldBar {
+}
+
 .recycleDestroyDivider {
-  width: 55%;
-  height: 1px;
-  background: rgba(168, 153, 104, 0.35);
+  width: 80%;
+  height: 2px;
+  background: rgba(168, 153, 104, 0.2);
 }
 
 /* The hold target itself - touch-action:none stops a phone from treating
@@ -1845,6 +1937,18 @@
   color: #c0453a;
 }
 
+/* Same as .destroyLabel, but the app's own "healthy/recovered" green
+   (matching recycleFillColor's own end color) - "Hold to RECYCLE" never
+   reads as a warning the way "Hold to DESTROY" does. */
+.recycleLabel {
+  margin: 0;
+  font-size: 0.8rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  font-weight: bold;
+  color: rgb(90, 156, 74);
+}
+
 .destroyProgressTrack {
   width: 90%;
   height: 12px;
@@ -1865,8 +1969,17 @@
 }
 
 .destroyIcon {
+  display: inline-block;
   font-size: 2.8rem;
   line-height: 1;
+  /* The actual hold target (see InventoryTab.tsx) - .destroySection itself
+     is layout only now, so the interactive touch/cursor treatment moved
+     here with it. */
+  cursor: pointer;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+  touch-action: none;
 }
 
 .destroyError {

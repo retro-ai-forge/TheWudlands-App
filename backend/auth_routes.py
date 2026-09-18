@@ -36,6 +36,8 @@ from backend.players import (
     check_out_item_balance,
     check_out_item_instance,
     delete_character,
+    destroy_character_item_balance,
+    destroy_character_item_instance,
     destroy_item_balance,
     destroy_item_instance,
     equip_item,
@@ -1175,6 +1177,38 @@ async def destroy_item_balance_route(
 
     if player is None:
         raise HTTPException(status_code=404, detail="No matching character, or not enough in the shared vault")
+
+    return player.to_dict()
+
+
+@player_router.post(
+    "/me/characters/{character_id}/items/{instance_id}/destroy-from-character", response_model=PlayerDataResponse
+)
+async def destroy_character_item_instance_route(
+    character_id: str, instance_id: str, address: str = Depends(get_current_address)
+):
+    """Permanently delete one item instance from the character's own backpack/body."""
+    player = await destroy_character_item_instance(address, character_id, instance_id)
+    if player is None:
+        raise HTTPException(status_code=404, detail="No matching backpack/body instance on that character")
+
+    return player.to_dict()
+
+
+@player_router.post(
+    "/me/characters/{character_id}/item-balances/{item_id}/destroy-from-character", response_model=PlayerDataResponse
+)
+async def destroy_character_item_balance_route(
+    character_id: str, item_id: str, payload: TransferAmountRequest, address: str = Depends(get_current_address)
+):
+    """Permanently delete `amount` of `item_id` from the character's own itemBalances."""
+    try:
+        player = await destroy_character_item_balance(address, character_id, item_id, payload.amount)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc))
+
+    if player is None:
+        raise HTTPException(status_code=404, detail="No matching character, or not enough on that character")
 
     return player.to_dict()
 

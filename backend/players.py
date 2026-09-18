@@ -472,32 +472,6 @@ async def check_in_resource(
     return _doc_to_player(doc)
 
 
-def _resource_stack_size(resource_id: str) -> int:
-    """Raw materials share a bigger stack than processed ones - same
-    raw-vs-everything-else fallback load_resource_to_backpack already
-    uses, reused here for a whole batch of recovered ids at once."""
-    return items_catalog.RAW_STACK_SIZE if resource_id in RESOURCE_ITEMS_BY_ID else items_catalog.PROCESSED_STACK_SIZE
-
-
-def _backpack_marginal_slots(character: dict, amounts: Dict[str, int]) -> int:
-    """
-    Total additional backpack slots needed to add every id in `amounts`
-    (concrete resource id -> qty) on top of a character's current
-    backpackResources in one go - the same per-id ceil((existing+amount)/
-    stack_size) - ceil(existing/stack_size) difference load_resource_to_
-    backpack uses, summed across a whole recycling recovery at once (which
-    can hand back several different ids - e.g. an iron bar AND leftover
-    ore - in one action).
-    """
-    existing_all = character.get("backpackResources", {})
-    total = 0
-    for resource_id, amount in amounts.items():
-        stack_size = _resource_stack_size(resource_id)
-        existing = existing_all.get(resource_id, 0)
-        total += math.ceil((existing + amount) / stack_size) - math.ceil(existing / stack_size)
-    return total
-
-
 async def preview_recycle(
     address: str, character_id: str, item_id: str, count: int = 1, from_vault: bool = False
 ) -> Optional[List[recycling.RawMaterialRecovery]]:
@@ -545,21 +519,16 @@ async def recycle_item_instance(
     access. `from_vault=False` (default) recycles one of the CHARACTER's
     own instances (backpack or body - not "crafting", which is borrowed
     for an in-progress craft), scored using only tools physically carried
-    (character.tools, never the player's shared pool), and credits the
-    recovered materials into that character's own backpackResources
-    (never resource_balances - see its docstring - and backpackResources
-    already stores raw AND processed ids alike, same as items_catalog.
-    backpack_slots_used already assumes). `from_vault=True` recycles one of
-    the PLAYER's shared pool instances instead, scored with the full
-    shared tool pool too (the character is right there at the vault), and
-    credits the shared inventory.resources instead, mirroring where
-    finish_craft's own output lands - never capacity-gated, since the
-    shared vault is unlimited.
+    (character.tools, never the player's shared pool). `from_vault=True`
+    recycles one of the PLAYER's shared pool instances instead, scored
+    with the full shared tool pool too (the character is right there at
+    the vault). Either way, for now, the recovered materials always land
+    in the shared inventory.resources - never the character's own
+    backpackResources, mirroring where finish_craft's own output lands.
 
-    Raises ValueError if the item's family has no recipe, or (character
-    path only) there isn't enough backpack room for what comes back.
-    Returns None if no matching instance exists in the searched location,
-    or the address/character pair doesn't match.
+    Raises ValueError if the item's family has no recipe. Returns None if
+    no matching instance exists in the searched location, or the address/
+    character pair doesn't match.
     """
     db = get_database()
     doc = await db.players.find_one({"address": address, "characters.id": character_id})
@@ -602,29 +571,21 @@ async def recycle_item_instance(
     if not recoveries:
         raise ValueError(f"{entry.family_id} has no recipe to recycle materials from")
     amounts = recycling.flatten_recovery(recoveries)
+    inc_ops = {f"inventory.resources.{rid}": qty for rid, qty in amounts.items()}
 
     if from_vault:
         update: Dict[str, object] = {"$pull": {"inventory.items": {"instanceId": instance_id}}}
-        if amounts:
-            update["$inc"] = {f"inventory.resources.{rid}": qty for rid, qty in amounts.items()}
+        if inc_ops:
+            update["$inc"] = inc_ops
         doc = await db.players.find_one_and_update(
             {"address": address, "inventory.items": {"$elemMatch": {"instanceId": instance_id, "location": "pool"}}},
             update,
             return_document=ReturnDocument.AFTER,
         )
     else:
-        if amounts:
-            marginal_slots = _backpack_marginal_slots(character, amounts)
-            capacity = items_catalog.backpack_capacity(character)
-            if capacity == 0:
-                raise ValueError("No backpack equipped")
-            used = items_catalog.backpack_slots_used(character)
-            if used + marginal_slots > capacity:
-                raise ValueError("Not enough backpack room for the recovered materials")
-
         update = {"$pull": {"characters.$.items": {"instanceId": instance_id}}}
-        if amounts:
-            update["$inc"] = {f"characters.$.backpackResources.{rid}": qty for rid, qty in amounts.items()}
+        if inc_ops:
+            update["$inc"] = inc_ops
         doc = await db.players.find_one_and_update(
             {
                 "address": address,
@@ -648,13 +609,14 @@ async def recycle_item_balance(
 ) -> Optional[Player]:
     """
     The item_balances/itemBalances equivalent of recycle_item_instance -
-    same from_vault split (character's own itemBalances -> its own
-    backpackResources, capacity-gated; player's shared inventory.
-    itemBalances -> shared inventory.resources, unlimited), for stackable
-    finished goods (food, potions, misc trinkets) rather than instance-
-    tracked gear. Raises ValueError for a non-positive amount, an unknown
-    item id, a family with no recipe, or (character path only) not enough
-    backpack room. Returns None if `amount` isn't held wherever this looks.
+    same from_vault split for which pool `amount` is consumed FROM
+    (character's own itemBalances vs. the player's shared inventory.
+    itemBalances), for stackable finished goods (food, potions, misc
+    trinkets) rather than instance-tracked gear. Either way, for now, the
+    recovered materials always land in the shared inventory.resources.
+    Raises ValueError for a non-positive amount, an unknown item id, or a
+    family with no recipe. Returns None if `amount` isn't held wherever
+    this looks.
     """
     if amount <= 0:
         raise ValueError("amount must be positive")
@@ -698,18 +660,9 @@ async def recycle_item_balance(
             return_document=ReturnDocument.AFTER,
         )
     else:
-        if amounts:
-            marginal_slots = _backpack_marginal_slots(character, amounts)
-            capacity = items_catalog.backpack_capacity(character)
-            if capacity == 0:
-                raise ValueError("No backpack equipped")
-            used = items_catalog.backpack_slots_used(character)
-            if used + marginal_slots > capacity:
-                raise ValueError("Not enough backpack room for the recovered materials")
-
         update = {"$inc": {f"characters.$.itemBalances.{item_id}": -amount}}
         for rid, qty in amounts.items():
-            update["$inc"][f"characters.$.backpackResources.{rid}"] = qty
+            update["$inc"][f"inventory.resources.{rid}"] = qty
         doc = await db.players.find_one_and_update(
             {
                 "address": address,
@@ -1983,6 +1936,13 @@ async def equip_item(address: str, character_id: str, instance_id: str, slots: L
         if entry is None or entry.size != "Colossal":
             raise ValueError(f"{character.get('race')} characters can only ride Colossal mounts")
 
+    # Replaces the whole matched array element in one $set, rather than two
+    # separate dotted-path $set keys (location, slotRef) both routed
+    # through the same $[item] array filter - see unequip_item's identical
+    # fix for why (this environment's Firestore MongoDB-compatible backend
+    # was observed silently dropping the second of two array-filtered $set
+    # keys in one update).
+    equipped_instance = {**instance, "location": "body", "slotRef": slots}
     doc = await db.players.find_one_and_update(
         {
             "address": address,
@@ -2005,12 +1965,7 @@ async def equip_item(address: str, character_id: str, instance_id: str, slots: L
                 }
             },
         },
-        {
-            "$set": {
-                "characters.$[char].items.$[item].location": "body",
-                "characters.$[char].items.$[item].slotRef": slots,
-            }
-        },
+        {"$set": {"characters.$[char].items.$[item]": equipped_instance}},
         array_filters=[{"char.id": character_id}, {"item.instanceId": instance_id, "item.location": "backpack"}],
         return_document=ReturnDocument.AFTER,
     )
@@ -2106,8 +2061,30 @@ async def unequip_item(address: str, character_id: str, instance_id: str) -> Opt
     equipped ("body") on this character - a location:"crafting" one is
     borrowed for an in-progress craft and can't be touched until it's
     released (see start_craft/finish_craft).
+
+    Replaces the whole matched array element in one $set (rather than two
+    separate dotted-path $set keys, location and slotRef, both routed
+    through the same $[item] array filter) - this environment's MongoDB-
+    compatible Firestore backend was observed silently dropping the second
+    of two array-filtered $set keys in one update (location changed,
+    slotRef didn't), so every field on this element is written together as
+    a single path instead.
     """
     db = get_database()
+    doc = await db.players.find_one({"address": address, "characters.id": character_id})
+    if doc is None:
+        return None
+    character = next((c for c in doc["characters"] if c["id"] == character_id), None)
+    if character is None:
+        return None
+    instance = next(
+        (i for i in character.get("items", []) if i["instanceId"] == instance_id and i.get("location") == "body"),
+        None,
+    )
+    if instance is None:
+        return None
+
+    backpacked_instance = {**instance, "location": "backpack", "slotRef": []}
     doc = await db.players.find_one_and_update(
         {
             "address": address,
@@ -2115,12 +2092,7 @@ async def unequip_item(address: str, character_id: str, instance_id: str) -> Opt
                 "$elemMatch": {"id": character_id, "items": {"$elemMatch": {"instanceId": instance_id, "location": "body"}}}
             },
         },
-        {
-            "$set": {
-                "characters.$[char].items.$[item].location": "backpack",
-                "characters.$[char].items.$[item].slotRef": [],
-            }
-        },
+        {"$set": {"characters.$[char].items.$[item]": backpacked_instance}},
         array_filters=[{"char.id": character_id}, {"item.instanceId": instance_id, "item.location": "body"}],
         return_document=ReturnDocument.AFTER,
     )
@@ -2165,17 +2137,31 @@ async def check_out_item_instance(address: str, character_id: str, instance_id: 
     if used + cost > capacity:
         raise ValueError("Backpack is full")
 
-    backpacked_instance = {**instance, "location": "backpack"}
+    # slotRef reset to [] - a pool instance can carry a stale non-empty
+    # slotRef left over from before it was checked in (check_in_item_instance
+    # already clears it there, but equip_item_from_pool's own pull doesn't -
+    # see that function), and "backpack" is never a valid location for a
+    # non-empty slotRef to mean anything.
+    backpacked_instance = {**instance, "location": "backpack", "slotRef": []}
+    # Query filters the characters array via a bare "characters.id" match
+    # alongside an UNRELATED $elemMatch on inventory.items in the same
+    # query - a real (Firestore MongoDB-compat) bug was observed under
+    # exactly this shape: the bare positional $ in the update below
+    # resolved against the wrong array, padding characters with nulls and
+    # pushing items onto a bogus new element instead of the matched
+    # character. array_filters + $[char] removes the ambiguity, matching
+    # check_in_item_instance's already-reliable pattern.
     doc = await db.players.find_one_and_update(
         {
             "address": address,
-            "characters.id": character_id,
+            "characters": {"$elemMatch": {"id": character_id}},
             "inventory.items": {"$elemMatch": {"instanceId": instance_id, "location": "pool"}},
         },
         {
             "$pull": {"inventory.items": {"instanceId": instance_id}},
-            "$push": {"characters.$.items": backpacked_instance},
+            "$push": {"characters.$[char].items": backpacked_instance},
         },
+        array_filters=[{"char.id": character_id}],
         return_document=ReturnDocument.AFTER,
     )
     if doc is None:
@@ -2315,6 +2301,55 @@ async def destroy_item_balance(address: str, character_id: str, item_id: str, am
             f"inventory.itemBalances.{item_id}": {"$gte": amount},
         },
         {"$inc": {f"inventory.itemBalances.{item_id}": -amount}},
+        return_document=ReturnDocument.AFTER,
+    )
+    if doc is None:
+        return None
+    return _doc_to_player(doc)
+
+
+async def destroy_character_item_instance(address: str, character_id: str, instance_id: str) -> Optional[Player]:
+    """
+    Permanently remove one item instance from `character_id`'s own backpack
+    or body (not "crafting", borrowed for an in-progress craft) -
+    character-owned counterpart to destroy_item_instance (which is vault-
+    pool-only). The zero-recovery fallback the character-side item popup
+    reaches for when recycle_item_instance(from_vault=False) finds no
+    recipe to recycle. Returns None if no matching backpack/body instance
+    exists on this character.
+    """
+    db = get_database()
+    doc = await db.players.find_one_and_update(
+        {
+            "address": address,
+            "characters": {
+                "$elemMatch": {
+                    "id": character_id,
+                    "items": {"$elemMatch": {"instanceId": instance_id, "location": {"$in": ["backpack", "body"]}}},
+                }
+            },
+        },
+        {"$pull": {"characters.$.items": {"instanceId": instance_id}}},
+        return_document=ReturnDocument.AFTER,
+    )
+    if doc is None:
+        return None
+    return _doc_to_player(doc)
+
+
+async def destroy_character_item_balance(address: str, character_id: str, item_id: str, amount: int = 1) -> Optional[Player]:
+    """Permanently remove `amount` of `item_id` from `character_id`'s own
+    itemBalances - the item-balance counterpart to
+    destroy_character_item_instance."""
+    if amount <= 0:
+        raise ValueError("amount must be positive")
+    db = get_database()
+    doc = await db.players.find_one_and_update(
+        {
+            "address": address,
+            "characters": {"$elemMatch": {"id": character_id, f"itemBalances.{item_id}": {"$gte": amount}}},
+        },
+        {"$inc": {f"characters.$.itemBalances.{item_id}": -amount}},
         return_document=ReturnDocument.AFTER,
     )
     if doc is None:

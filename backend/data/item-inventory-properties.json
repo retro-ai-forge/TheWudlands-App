@@ -734,8 +734,8 @@
       ["Back"],
       ["Side"]
     ],
-    "backpackable": true,
-    "qualityMax": 10
+    "backpackable": false,
+    "qualityMax": 20
   },
   {
     "familyId": "candle",
@@ -1433,7 +1433,8 @@
     "note": "Wears out with use.",
     "equipSlots": [
       ["Left Hand"],
-      ["Right Hand"]
+      ["Right Hand"],
+      ["Girdle"]
     ],
     "backpackable": true,
     "qualityMax": 20

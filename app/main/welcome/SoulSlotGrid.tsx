@@ -129,6 +129,8 @@ export interface SlotCharacterSummary {
   blueprints: string[];
   /** Item instances this character holds - backpacked or equipped (see location/slotRef). */
   items: ItemInstance[];
+  /** Non-instance crafted items (food, potions, misc trinkets) this character holds - concrete item id -> quantity, unlimited (see backend.character.Character.item_balances). */
+  itemBalances: Record<string, number>;
   /** In-progress craft, if any - one job at a time. Resolved lazily against readyAt, not a live server countdown. */
   activeCraft: {
     familyId: string;

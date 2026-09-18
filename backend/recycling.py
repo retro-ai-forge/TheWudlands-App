@@ -108,12 +108,15 @@ def _best_owned_station_tool_tier(
     right there at the vault). The character's own tools/backpack+body
     instances always count either way. 0 if none owned anywhere.
     """
+    # Checked regardless of family.needs_item_definition, not just for the
+    # flat-balance families - some accounts still hold an instance-tracked
+    # station (enchanters_table, lapidary_bench, ...) as a plain flat count
+    # in tools/inventory.tools from before those families were switched to
+    # equippable instances, never migrated. Costs nothing for a normal
+    # instance-tracked family, which will never actually have a flat entry.
     best = 0
     held_tools = character.get("tools", {})
     for tool_id, tool in TOOL_ITEMS_BY_ID.items():
-        family = items_catalog.ITEM_FAMILIES_BY_ID.get(tool.family_id)
-        if family and family.needs_item_definition:
-            continue  # instance-tracked - handled below instead
         if held_tools.get(tool_id, 0) > 0 or player_tools.get(tool_id, 0) > 0:
             best = max(best, tool.tier)
 
@@ -377,12 +380,12 @@ def resolve_recycle_preview(
 def flatten_recovery(recoveries: List[RawMaterialRecovery]) -> Dict[str, int]:
     """
     Every recovered line across every raw material, collapsed into one
-    concrete-id -> qty dict - what actually needs crediting somewhere
-    (a character's backpackResources, or the player's shared inventory.
-    resources), regardless of which raw family or denomination tier it
-    came from. Lines with qty 0 never occur (_break_into_denominations
-    only emits a denomination it actually used), but summed defensively in
-    case the same concrete id somehow appears under two raw families.
+    concrete-id -> qty dict - what actually needs crediting to the shared
+    inventory.resources, regardless of which raw family or denomination
+    tier it came from. Lines with qty 0 never occur
+    (_break_into_denominations only emits a denomination it actually
+    used), but summed defensively in case the same concrete id somehow
+    appears under two raw families.
     """
     amounts: Dict[str, int] = {}
     for recovery in recoveries:

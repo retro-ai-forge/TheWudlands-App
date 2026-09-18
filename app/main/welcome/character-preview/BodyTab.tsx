@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import styles from "./CharacterTabs.module.css";
 import { getPortraitCropImgStyle } from "@/app/lib/portraitCrop";
-import { FALLBACK_ITEM_ICON } from "./InventoryTab";
+import { FALLBACK_ITEM_ICON, ItemDetailPopup, type BlueprintTierInfo, type RawPlayerData } from "./InventoryTab";
 import type { ItemInstance, SlotCharacterSummary } from "../SoulSlotGrid";
 
 // Overlaid directly on the portrait: head/chest/legs down the left edge,
@@ -30,10 +30,6 @@ const HAND_RING_SLOTS = ["Left Hand", "Left Ring", "Girdle", "Right Ring", "Righ
 // portrait (see .largeEquipSlot).
 const COMPANION_MOUNT_SLOTS = ["Companion", "Mount"];
 
-// Only the fields BodyTab's own icons need - id -> name/icon, from the same
-// /api/auth/item-catalog endpoint InventoryTab.tsx uses for its Vault grid.
-type ItemCatalogEntry = { id: string; name: string; icon: string };
-
 // The item instance (if any) currently equipped into `slot` - at most one,
 // since equip_item blocks a slot already occupied by another instance.
 function equippedInSlot(items: ItemInstance[], slot: string): ItemInstance | undefined {
@@ -49,7 +45,7 @@ function EquipSlotIcon({
   mirrored,
 }: {
   instance: ItemInstance;
-  catalog: Record<string, ItemCatalogEntry>;
+  catalog: BlueprintTierInfo;
   /** Flips the icon horizontally - a two-handed item's "Left Hand" half
    * mirrors the same art shown normally in "Right Hand", rather than
    * needing a second, hand-drawn left-hand asset per family. */
@@ -70,7 +66,13 @@ function EquipSlotIcon({
 }
 
 /** Body page: the full character frame the player defined, with equipment slots overlaid on it. */
-export function BodyTab({ character }: { character: SlotCharacterSummary }) {
+export function BodyTab({
+  character,
+  onPlayerDataUpdated,
+}: {
+  character: SlotCharacterSummary;
+  onPlayerDataUpdated?: (data: RawPlayerData) => void;
+}) {
   // .frameBox's CSS aspect-ratio (2/3) is only a fallback for portraits
   // saved before portraitFrameArea carried its own aspectRatio - once that
   // field is present, it's this character's own saved frame shape and
@@ -80,19 +82,70 @@ export function BodyTab({ character }: { character: SlotCharacterSummary }) {
   const frameAspectRatio = character.portraitFrameArea?.aspectRatio;
 
   // Family name/icon lookup for whatever's equipped - fetched once, the
-  // same catalog InventoryTab's Vault grid uses, just a much smaller slice
-  // of it (id -> name/icon only).
-  const [catalog, setCatalog] = useState<Record<string, ItemCatalogEntry>>({});
+  // same full catalog shape InventoryTab.tsx's own itemCatalogTierInfo
+  // uses (not just name/icon), since ItemDetailPopup's "info" prop needs
+  // the whole thing (equipSlots, qualityMax, description, ...) to open the
+  // same recycle/destroy view when a slot is clicked.
+  const [catalog, setCatalog] = useState<BlueprintTierInfo>({});
   useEffect(() => {
     fetch("/api/auth/item-catalog")
       .then((res) => (res.ok ? res.json() : []))
-      .then((data: ItemCatalogEntry[]) => {
-        const map: Record<string, ItemCatalogEntry> = {};
-        for (const item of data) map[item.id] = item;
-        setCatalog(map);
-      })
+      .then(
+        (
+          data: Array<{
+            id: string;
+            name: string;
+            familyId: string;
+            tier: number;
+            kind: string[];
+            qualityMax: number | null;
+            icon: string;
+            stackSize: number;
+            description: string;
+            sizeClass: string;
+            equipSlots: string[][];
+            backpackable: boolean;
+            twoHanded: boolean;
+            gatheringBonuses: string[];
+          }>
+        ) => {
+          const map: BlueprintTierInfo = {};
+          for (const item of data) {
+            map[item.id] = {
+              tier: item.tier,
+              familyId: item.familyId,
+              kind: item.kind[0] ?? "",
+              name: item.name,
+              qualityMax: item.qualityMax,
+              icon: item.icon,
+              stackSize: item.stackSize,
+              description: item.description,
+              sizeClass: item.sizeClass,
+              equipSlots: item.equipSlots,
+              backpackable: item.backpackable,
+              twoHanded: item.twoHanded,
+              gatheringBonuses: item.gatheringBonuses,
+            };
+          }
+          setCatalog(map);
+        }
+      )
       .catch(() => setCatalog({}));
   }, []);
+
+  // The clicked slot's own equipped instance, if any - opens the same
+  // recycle/destroy(-from-character)/unequip popup InventoryTab.tsx's new
+  // "Items" accordion uses (source:"character"), scoped to whatever's worn
+  // right here rather than this character's whole backpack.
+  const [selectedInstance, setSelectedInstance] = useState<ItemInstance | null>(null);
+
+  // Mirrors InventoryTab.tsx's identical check (and backend.items_catalog.
+  // has_backpack_equipped) - greys out the popup's "Move to backpack"
+  // button when nothing's worn in Back/Side, instead of letting the click
+  // fail server-side.
+  const hasBackpackEquipped = character.items.some(
+    (instance) => instance.location === "body" && (instance.slotRef.includes("Back") || instance.slotRef.includes("Side"))
+  );
 
   return (
     <div className={styles.panel}>
@@ -129,7 +182,13 @@ export function BodyTab({ character }: { character: SlotCharacterSummary }) {
             {OVERLAY_SLOTS.map(({ label, position }) => {
               const instance = equippedInSlot(character.items, label);
               return (
-                <div className={`${styles.equipSlotOverlay} ${position}`} key={label}>
+                <div
+                  className={`${styles.equipSlotOverlay} ${position}`}
+                  key={label}
+                  role={instance ? "button" : undefined}
+                  tabIndex={instance ? 0 : undefined}
+                  onClick={instance ? () => setSelectedInstance(instance) : undefined}
+                >
                   {instance ? (
                     <EquipSlotIcon instance={instance} catalog={catalog} />
                   ) : (
@@ -149,7 +208,13 @@ export function BodyTab({ character }: { character: SlotCharacterSummary }) {
               // both, not an independent one-handed item held there alone.
               const mirrored = label === "Left Hand" && !!instance && instance.slotRef.includes("Right Hand");
               return (
-                <div className={styles.equipSlot} key={label}>
+                <div
+                  className={styles.equipSlot}
+                  key={label}
+                  role={instance ? "button" : undefined}
+                  tabIndex={instance ? 0 : undefined}
+                  onClick={instance ? () => setSelectedInstance(instance) : undefined}
+                >
                   {instance ? (
                     <EquipSlotIcon instance={instance} catalog={catalog} mirrored={mirrored} />
                   ) : (
@@ -166,7 +231,13 @@ export function BodyTab({ character }: { character: SlotCharacterSummary }) {
         {COMPANION_MOUNT_SLOTS.map((label) => {
           const instance = equippedInSlot(character.items, label);
           return (
-            <div className={styles.largeEquipSlot} key={label}>
+            <div
+              className={styles.largeEquipSlot}
+              key={label}
+              role={instance ? "button" : undefined}
+              tabIndex={instance ? 0 : undefined}
+              onClick={instance ? () => setSelectedInstance(instance) : undefined}
+            >
               {instance ? (
                 <EquipSlotIcon instance={instance} catalog={catalog} />
               ) : (
@@ -176,6 +247,25 @@ export function BodyTab({ character }: { character: SlotCharacterSummary }) {
           );
         })}
       </div>
+
+      {selectedInstance && (
+        <ItemDetailPopup
+          info={catalog[selectedInstance.itemId]}
+          fallbackName={selectedInstance.familyId}
+          owned={1}
+          isInstance
+          movable
+          quality={selectedInstance.quality}
+          moveId={selectedInstance.instanceId}
+          catalogId={selectedInstance.itemId}
+          location="body"
+          source="character"
+          hasBackpackEquipped={hasBackpackEquipped}
+          characterId={character.id}
+          onPlayerDataUpdated={onPlayerDataUpdated}
+          onClose={() => setSelectedInstance(null)}
+        />
+      )}
     </div>
   );
 }
