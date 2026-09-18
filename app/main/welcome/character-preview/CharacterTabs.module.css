@@ -828,16 +828,16 @@
 }
 
 .equipSlot {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 0.3rem;
+  /* Own positioning context for .equipSlotLabel/.equipSlotIcon below,
+     which now stack on top of each other (icon over label) rather than
+     sharing this box's flex layout - overflow:hidden keeps a cover-fit
+     icon from spilling past the slot's own rounded corners. */
+  position: relative;
+  overflow: hidden;
   aspect-ratio: 1 / 1;
   border: 1px dashed #4a3d28;
   border-radius: 8px;
   background: rgba(10, 8, 4, 0.5);
-  padding: 0.5rem;
 }
 
 /* Head/Chest/Legs (left edge) and Back/Girdle (right edge) sit directly on
@@ -933,31 +933,31 @@
    item doesn't read well as a small badge overlaid on the image. Spacing
    from .frameStage above comes from .frameColumn's own gap.
 
-   All 5 slots (Hand, Ring, Girdle, Ring, Hand) need 23rem unwrapped
-   (5 * 4rem + 4 * 0.75rem gaps) - wider than .frameColumn's own 18rem cap,
-   so this overrides that cap with its own width instead of inheriting it
-   via align-items:stretch, growing up to 23.75rem (a hair over 23rem for
-   rounding slack) once the viewport has room, and wrapping onto two lines
-   below that instead of overflowing uncapped. */
+   Below the 450px breakpoint, wraps 3-then-2 with each slot's own width
+   filling a third of the row (see .handSlotRow .equipSlot) instead of a
+   fixed small size, so a phone-width screen doesn't leave dead space on
+   either side of a tiny fixed-size cluster. At/above 450px, widens to fit
+   all 5 slots at their original fixed 4rem size, unwrapped on one line -
+   independent of .frameColumn's own narrower 18rem cap either way (this
+   overrides that inherited stretch with its own explicit width, same as
+   before). */
 .handSlotRow {
   display: flex;
   flex-wrap: wrap;
   gap: 0.75rem;
   justify-content: center;
   /* .frameColumn's align-items:stretch only stretches a flex child with no
-     explicit size of its own - now that this has one (13.5rem/23.75rem,
-     narrower than frameColumn itself), it falls back to flex-start
-     (left-aligned) instead, so this needs its own centering. */
+     explicit size of its own - now that this has one, it falls back to
+     flex-start (left-aligned) instead, so this needs its own centering. */
   align-self: center;
-  /* Exactly 3 slots + 2 gaps (13.5rem) below the breakpoint - a continuous
-     vw-based width here lands right in the "exactly 4 fit" zone across most
-     real phone widths (320-414px), wrapping as an ugly 4-then-1 instead of
-     the clean 3-then-2 split wanted. justify-content:center already centers
-     each wrapped line independently, so 3-then-2 reads as two centered rows. */
-  width: 13.5rem;
+  /* Grows with the viewport (roughly full width, minus a 1rem gutter each
+     side) up to the same 23.75rem cap the unwrapped 5-slot line below
+     uses - never wider than that, so the 3-per-row wrap never accidentally
+     leaves room for a stray 4th slot to join it. */
+  width: min(calc(100vw - 2rem), 23.75rem);
 }
 
-@media (min-width: 390px) {
+@media (min-width: 450px) {
   .handSlotRow {
     /* All 5 slots + 4 gaps (23rem, plus a hair of rounding slack) fit
        unwrapped once there's room. */
@@ -965,19 +965,51 @@
   }
 }
 
-/* Same fixed 4rem as .equipSlotOverlay, so every slot on the page reads as
-   one consistent size. flex:0 0 auto instead of the bare .equipSlot's
-   flexing, so 5 slots don't just divide up whatever width happens to be
-   available. */
+/* Below 450px: each slot fills a third of .handSlotRow's own width (minus
+   its share of the 2 gaps between them) so the 3-per-row wrap actually
+   uses the fuller row width above instead of clustering at a fixed small
+   size in the middle of it. */
 .handSlotRow .equipSlot {
-  flex: 0 0 auto;
-  width: 4rem;
+  flex: 1 1 calc((100% - 1.5rem) / 3);
   /* Flex items default to min-height:auto (their content's own min size),
      which can stretch a box taller than aspect-ratio's preferred square the
      moment the label text needs more room - overriding it to 0 lets
      aspect-ratio actually win, matching Head's square size exactly (an
      absolutely-positioned box, which isn't subject to this flex quirk). */
   min-height: 0;
+}
+
+@media (min-width: 450px) {
+  /* Same fixed 4rem as .equipSlotOverlay, so every slot on the page reads
+     as one consistent size once unwrapped onto one line - flex:0 0 auto
+     instead of the 3-per-row fraction above, so 5 slots don't just divide
+     up whatever width happens to be available. */
+  .handSlotRow .equipSlot {
+    flex: 0 0 auto;
+    width: 4rem;
+  }
+}
+
+/* Below the 450px breakpoint, .handSlotRow wraps these 5 slots 3-then-2
+   (see its own comment) - but BodyTab.tsx's DOM order (Left Hand, Left
+   Ring, Girdle, Right Ring, Right Hand, for the unwrapped large-screen
+   line below) would wrap that same sequence into a mismatched Left
+   Hand/Left Ring/Girdle top row. Reordered visually here (DOM/tab order
+   stays untouched) so the wrap instead reads Left Hand / Girdle / Right
+   Hand on top and Left Ring / Right Ring underneath. */
+.handSlotRow .equipSlot:nth-child(1) { order: 0; } /* Left Hand */
+.handSlotRow .equipSlot:nth-child(2) { order: 3; } /* Left Ring */
+.handSlotRow .equipSlot:nth-child(3) { order: 1; } /* Girdle */
+.handSlotRow .equipSlot:nth-child(4) { order: 4; } /* Right Ring */
+.handSlotRow .equipSlot:nth-child(5) { order: 2; } /* Right Hand */
+
+@media (min-width: 450px) {
+  /* Back to natural DOM order once all 5 fit unwrapped on one line. */
+  .handSlotRow .equipSlot:nth-child(1) { order: 0; }
+  .handSlotRow .equipSlot:nth-child(2) { order: 1; }
+  .handSlotRow .equipSlot:nth-child(3) { order: 2; }
+  .handSlotRow .equipSlot:nth-child(4) { order: 3; }
+  .handSlotRow .equipSlot:nth-child(5) { order: 4; }
 }
 
 /* Companion/Mount sit below everything else, each scaled up to the same max
@@ -1004,17 +1036,49 @@
   min-height: 0;
 }
 
+/* A background watermark now, not a layout row above the icon - fills the
+   whole slot so it still reads as the slot's name while empty, and simply
+   sits behind (z-index 0) whatever EquipSlotIcon covers it with once
+   something's equipped, rather than needing to be hidden itself. */
 .equipSlotLabel {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.3rem;
   font-size: 0.7rem;
   letter-spacing: 0.08em;
   text-transform: uppercase;
   color: #a89968;
   text-align: center;
+  pointer-events: none;
 }
 
+/* Still used by SoulTab's own chakra-slot placeholder (an unrelated
+   click-to-test toggle, no equip/icon concept there) - BodyTab itself no
+   longer renders this now that .equipSlotLabel doubles as the empty-slot
+   indicator. */
 .equipSlotEmpty {
   font-size: 0.7rem;
   color: #5a5138;
+}
+
+/* An equipped item's own art (BodyTab.EquipSlotIcon) - fills the entire
+   slot (cover, not contain - see the request that prompted this), same
+   background-image-div approach as ItemGrid's tile icon (no real <img>,
+   see its own comment on mobile's "save/share image" long-press menu).
+   Sits above .equipSlotLabel (z-index 1) so the label only shows through
+   an empty slot. */
+.equipSlotIcon {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  background-size: cover;
+  background-repeat: no-repeat;
+  background-position: center;
+  image-rendering: pixelated;
 }
 
 /* ---- Soul tab ---- */

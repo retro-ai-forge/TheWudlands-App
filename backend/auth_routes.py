@@ -39,12 +39,16 @@ from backend.players import (
     destroy_item_balance,
     destroy_item_instance,
     equip_item,
+    equip_item_from_pool,
     finish_craft,
     get_or_create_player,
     get_player,
     grant_shared_resource,
     load_item_balance_to_backpack,
     load_resource_to_backpack,
+    preview_recycle,
+    recycle_item_balance,
+    recycle_item_instance,
     set_prime_profession,
     start_craft,
     unequip_item,
@@ -987,6 +991,24 @@ async def equip_item_route(
     return player.to_dict()
 
 
+@player_router.post(
+    "/me/characters/{character_id}/items/{instance_id}/equip-from-pool", response_model=PlayerDataResponse
+)
+async def equip_item_from_pool_route(
+    character_id: str, instance_id: str, payload: EquipItemRequest, address: str = Depends(get_current_address)
+):
+    """Equip one item instance straight from the player's shared vault into `slots`, without routing through the backpack."""
+    try:
+        player = await equip_item_from_pool(address, character_id, instance_id, payload.slots)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc))
+
+    if player is None:
+        raise HTTPException(status_code=404, detail="No matching instance in the shared vault, or slot(s) occupied")
+
+    return player.to_dict()
+
+
 @player_router.post("/me/characters/{character_id}/items/{instance_id}/unequip", response_model=PlayerDataResponse)
 async def unequip_item_route(character_id: str, instance_id: str, address: str = Depends(get_current_address)):
     """Unequip one of a character's item instances back to the backpack."""
@@ -1148,6 +1170,171 @@ async def destroy_item_balance_route(
     """Permanently delete `amount` of `item_id` from the player's shared vault."""
     try:
         player = await destroy_item_balance(address, character_id, item_id, payload.amount)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc))
+
+    if player is None:
+        raise HTTPException(status_code=404, detail="No matching character, or not enough in the shared vault")
+
+    return player.to_dict()
+
+
+class RecycleYieldResponse(BaseModel):
+    """The four components _yield_breakdown.total adds up to - so the
+    recycle popup can print each contributing line, not just the total."""
+
+    base: int
+    skill: int
+    tool: int
+    charm: int
+    total: int
+
+
+class RecycleRecoveredLineResponse(BaseModel):
+    """One line of a recovery breakdown, e.g. "1 iron bar" or the leftover
+    "2 iron ore"."""
+
+    familyId: str
+    id: str
+    name: str
+    tier: int
+    category: str
+    qty: int
+
+
+class RecycleMaterialResponse(BaseModel):
+    """One raw material's full recycling line: its full recoverable-chain
+    total for one unit of the item, the yield% that applies to it, and the
+    denomination breakdown of what's actually handed back."""
+
+    rawFamilyId: str
+    rawName: str
+    totalUnits: int
+    yieldBreakdown: RecycleYieldResponse
+    recoveredUnits: int
+    recovered: List[RecycleRecoveredLineResponse]
+
+
+class RecyclePreviewResponse(BaseModel):
+    materials: List[RecycleMaterialResponse]
+
+
+def _to_recycle_preview_response(recoveries) -> RecyclePreviewResponse:
+    return RecyclePreviewResponse(materials=[
+        RecycleMaterialResponse(
+            rawFamilyId=r.raw_family_id,
+            rawName=r.raw_name,
+            totalUnits=r.total_units,
+            yieldBreakdown=RecycleYieldResponse(
+                base=r.yield_breakdown.base,
+                skill=r.yield_breakdown.skill,
+                tool=r.yield_breakdown.tool,
+                charm=r.yield_breakdown.charm,
+                total=r.yield_breakdown.total,
+            ),
+            recoveredUnits=r.recovered_units,
+            recovered=[
+                RecycleRecoveredLineResponse(
+                    familyId=line.family_id, id=line.concrete_id, name=line.name,
+                    tier=line.tier, category=line.category, qty=line.qty,
+                )
+                for line in r.recovered
+            ],
+        )
+        for r in recoveries
+    ])
+
+
+@player_router.get(
+    "/me/characters/{character_id}/recycle-preview/{item_id}", response_model=RecyclePreviewResponse
+)
+async def recycle_preview_route(
+    character_id: str,
+    item_id: str,
+    count: int = 1,
+    fromVault: bool = False,
+    address: str = Depends(get_current_address),
+):
+    """
+    Read-only: what recycling `count` unit(s) of concrete item `item_id`
+    would hand back to this character right now - doesn't consume
+    anything. `fromVault` must match whichever recycle-from-vault/
+    non-vault action would actually be taken: recycling off the
+    character's own body/backpack only credits tools physically carried
+    toward the station-tool bonus, never the player's shared pool.
+    """
+    try:
+        recoveries = await preview_recycle(address, character_id, item_id, count, fromVault)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc))
+
+    if recoveries is None:
+        raise HTTPException(status_code=404, detail="No matching character")
+
+    return _to_recycle_preview_response(recoveries)
+
+
+@player_router.post("/me/characters/{character_id}/items/{instance_id}/recycle", response_model=PlayerDataResponse)
+async def recycle_item_instance_route(
+    character_id: str, instance_id: str, address: str = Depends(get_current_address)
+):
+    """Recycle one of the character's own item instances (backpack/body) into a fraction of its raw materials, credited to that character's own backpack."""
+    try:
+        player = await recycle_item_instance(address, character_id, instance_id, from_vault=False)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc))
+
+    if player is None:
+        raise HTTPException(status_code=404, detail="No matching backpack/body instance on that character")
+
+    return player.to_dict()
+
+
+@player_router.post(
+    "/me/characters/{character_id}/items/{instance_id}/recycle-from-vault", response_model=PlayerDataResponse
+)
+async def recycle_item_instance_from_vault_route(
+    character_id: str, instance_id: str, address: str = Depends(get_current_address)
+):
+    """Recycle one of the player's shared-vault item instances, scored with this character's skills, credited to the shared vault."""
+    try:
+        player = await recycle_item_instance(address, character_id, instance_id, from_vault=True)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc))
+
+    if player is None:
+        raise HTTPException(status_code=404, detail="No matching instance in the shared vault")
+
+    return player.to_dict()
+
+
+@player_router.post(
+    "/me/characters/{character_id}/item-balances/{item_id}/recycle", response_model=PlayerDataResponse
+)
+async def recycle_item_balance_route(
+    character_id: str, item_id: str, payload: TransferAmountRequest, address: str = Depends(get_current_address)
+):
+    """Recycle `amount` of the character's own item_id balance into a fraction of its raw materials, credited to that character's own backpack."""
+    try:
+        player = await recycle_item_balance(address, character_id, item_id, payload.amount, from_vault=False)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc))
+
+    if player is None:
+        raise HTTPException(status_code=404, detail="No matching character, or not enough on that character")
+
+    return player.to_dict()
+
+
+@player_router.post(
+    "/me/characters/{character_id}/item-balances/{item_id}/recycle-from-vault", response_model=PlayerDataResponse
+)
+async def recycle_item_balance_from_vault_route(
+    character_id: str, item_id: str, payload: TransferAmountRequest, address: str = Depends(get_current_address)
+):
+    """Recycle `amount` of the player's shared-vault item_id balance, scored with this character's skills, credited to the shared vault."""
+    try:
+        player = await recycle_item_balance(address, character_id, item_id, payload.amount, from_vault=True)
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc))
 

@@ -518,7 +518,9 @@ function IdList({
 // No dedicated art yet for every item family - most still fall back to
 // this generic placeholder (matches item-inventory-properties.json's own
 // former family-level default before per-tier art started landing there).
-const FALLBACK_ITEM_ICON = "/images/items/bat.png";
+// Exported so BodyTab's equip-slot icons fall back to the exact same
+// placeholder instead of duplicating the path.
+export const FALLBACK_ITEM_ICON = "/images/items/bat.png";
 
 // Matches .itemGridCell's own width/height in CharacterTabs.module.css -
 // kept in sync by hand (CSS modules give no clean way to read a class's
@@ -885,12 +887,13 @@ function ItemDetailPopup({
     );
   };
 
+  // Straight pool -> body, one call - never routes through the backpack
+  // (see backend.players.equip_item_from_pool), unlike moveToBackpack
+  // below which deliberately does.
   const equipToSlots = async (slots: string[]) => {
     setPending(true);
     setFlashMessage(null);
-    const checkedOut = await postJson(`/api/auth/me/characters/${characterId}/items/${moveId}/check-out`);
-    if (!checkedOut.ok) return fail(checkedOut.detail);
-    finish(await postJson(`/api/auth/me/characters/${characterId}/items/${moveId}/equip`, { slots }));
+    finish(await postJson(`/api/auth/me/characters/${characterId}/items/${moveId}/equip-from-pool`, { slots }));
   };
 
   // Each equipSlots entry is already one full alternative slot-group (e.g.

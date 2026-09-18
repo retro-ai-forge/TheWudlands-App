@@ -19,7 +19,7 @@ from typing import Dict, List, Optional
 
 from pymongo import ReturnDocument
 
-from backend import items_catalog
+from backend import items_catalog, recycling
 from backend.character import Character
 from backend.db import get_database
 from backend.resources_catalog import RESOURCE_ITEMS, RESOURCE_ITEMS_BY_ID, PROFESSION_RESOURCE_FAMILIES
@@ -469,6 +469,257 @@ async def check_in_resource(
     if doc is None:
         return None
 
+    return _doc_to_player(doc)
+
+
+def _resource_stack_size(resource_id: str) -> int:
+    """Raw materials share a bigger stack than processed ones - same
+    raw-vs-everything-else fallback load_resource_to_backpack already
+    uses, reused here for a whole batch of recovered ids at once."""
+    return items_catalog.RAW_STACK_SIZE if resource_id in RESOURCE_ITEMS_BY_ID else items_catalog.PROCESSED_STACK_SIZE
+
+
+def _backpack_marginal_slots(character: dict, amounts: Dict[str, int]) -> int:
+    """
+    Total additional backpack slots needed to add every id in `amounts`
+    (concrete resource id -> qty) on top of a character's current
+    backpackResources in one go - the same per-id ceil((existing+amount)/
+    stack_size) - ceil(existing/stack_size) difference load_resource_to_
+    backpack uses, summed across a whole recycling recovery at once (which
+    can hand back several different ids - e.g. an iron bar AND leftover
+    ore - in one action).
+    """
+    existing_all = character.get("backpackResources", {})
+    total = 0
+    for resource_id, amount in amounts.items():
+        stack_size = _resource_stack_size(resource_id)
+        existing = existing_all.get(resource_id, 0)
+        total += math.ceil((existing + amount) / stack_size) - math.ceil(existing / stack_size)
+    return total
+
+
+async def preview_recycle(
+    address: str, character_id: str, item_id: str, count: int = 1, from_vault: bool = False
+) -> Optional[List[recycling.RawMaterialRecovery]]:
+    """
+    Read-only: what recycling `count` unit(s) of concrete item `item_id`
+    would hand back, using `character_id`'s own profession/tool/charm
+    either way - but the station-tool bonus itself depends on `from_vault`,
+    same restriction recycle_item_instance/recycle_item_balance actually
+    enforce: recycling something off the character's own body/backpack
+    (from_vault=False) can only draw on tools the character is physically
+    carrying (character.tools) - never the player's shared pool, sitting
+    back at the vault. Recycling a vault item (from_vault=True) can use
+    that full shared pool too, since the character is right there at the
+    vault already. Returns None if the address/character pair doesn't
+    match; raises ValueError for an item id with no catalog entry or whose
+    family has no recipe.
+    """
+    db = get_database()
+    doc = await db.players.find_one({"address": address, "characters.id": character_id})
+    if doc is None:
+        return None
+    character = next((c for c in doc["characters"] if c["id"] == character_id), None)
+    if character is None:
+        return None
+    entry = items_catalog.ITEM_CATALOG_ENTRIES_BY_ID.get(item_id)
+    if entry is None:
+        raise ValueError(f"Unknown item id: {item_id}")
+    player_tools = doc.get("inventory", {}).get("tools", {}) if from_vault else {}
+    player_items = doc.get("inventory", {}).get("items", []) if from_vault else []
+    recoveries = recycling.resolve_recycle_preview(
+        entry.family_id, entry.tier, character, player_tools, player_items, count
+    )
+    if not recoveries:
+        raise ValueError(f"{entry.family_id} has no recipe to recycle materials from")
+    return recoveries
+
+
+async def recycle_item_instance(
+    address: str, character_id: str, instance_id: str, from_vault: bool = False
+) -> Optional[Player]:
+    """
+    Break one item instance down into a fraction of its recipe's raw-
+    material chain (backend.recycling), using `character_id`'s own
+    profession/skill and worn charm either way - but NOT the same tool
+    access. `from_vault=False` (default) recycles one of the CHARACTER's
+    own instances (backpack or body - not "crafting", which is borrowed
+    for an in-progress craft), scored using only tools physically carried
+    (character.tools, never the player's shared pool), and credits the
+    recovered materials into that character's own backpackResources
+    (never resource_balances - see its docstring - and backpackResources
+    already stores raw AND processed ids alike, same as items_catalog.
+    backpack_slots_used already assumes). `from_vault=True` recycles one of
+    the PLAYER's shared pool instances instead, scored with the full
+    shared tool pool too (the character is right there at the vault), and
+    credits the shared inventory.resources instead, mirroring where
+    finish_craft's own output lands - never capacity-gated, since the
+    shared vault is unlimited.
+
+    Raises ValueError if the item's family has no recipe, or (character
+    path only) there isn't enough backpack room for what comes back.
+    Returns None if no matching instance exists in the searched location,
+    or the address/character pair doesn't match.
+    """
+    db = get_database()
+    doc = await db.players.find_one({"address": address, "characters.id": character_id})
+    if doc is None:
+        return None
+    character = next((c for c in doc["characters"] if c["id"] == character_id), None)
+    if character is None:
+        return None
+
+    if from_vault:
+        instance = next(
+            (i for i in doc.get("inventory", {}).get("items", []) if i["instanceId"] == instance_id),
+            None,
+        )
+    else:
+        instance = next(
+            (
+                i for i in character.get("items", [])
+                if i["instanceId"] == instance_id and i.get("location") in ("backpack", "body")
+            ),
+            None,
+        )
+    if instance is None:
+        return None
+
+    entry = items_catalog.ITEM_CATALOG_ENTRIES_BY_ID.get(instance["itemId"])
+    if entry is None:
+        raise ValueError(f"Unknown item id: {instance['itemId']}")
+
+    # Off the character's own body/backpack: only tools physically carried
+    # (character.tools, or an owned instance in character.items) count
+    # toward the station-tool bonus - never the player's shared pool,
+    # sitting back at the vault. A vault item is recycled right there at
+    # the vault, so the full shared pool applies.
+    player_tools = doc.get("inventory", {}).get("tools", {}) if from_vault else {}
+    player_items = doc.get("inventory", {}).get("items", []) if from_vault else []
+    recoveries = recycling.resolve_recycle_preview(
+        entry.family_id, entry.tier, character, player_tools, player_items
+    )
+    if not recoveries:
+        raise ValueError(f"{entry.family_id} has no recipe to recycle materials from")
+    amounts = recycling.flatten_recovery(recoveries)
+
+    if from_vault:
+        update: Dict[str, object] = {"$pull": {"inventory.items": {"instanceId": instance_id}}}
+        if amounts:
+            update["$inc"] = {f"inventory.resources.{rid}": qty for rid, qty in amounts.items()}
+        doc = await db.players.find_one_and_update(
+            {"address": address, "inventory.items": {"$elemMatch": {"instanceId": instance_id, "location": "pool"}}},
+            update,
+            return_document=ReturnDocument.AFTER,
+        )
+    else:
+        if amounts:
+            marginal_slots = _backpack_marginal_slots(character, amounts)
+            capacity = items_catalog.backpack_capacity(character)
+            if capacity == 0:
+                raise ValueError("No backpack equipped")
+            used = items_catalog.backpack_slots_used(character)
+            if used + marginal_slots > capacity:
+                raise ValueError("Not enough backpack room for the recovered materials")
+
+        update = {"$pull": {"characters.$.items": {"instanceId": instance_id}}}
+        if amounts:
+            update["$inc"] = {f"characters.$.backpackResources.{rid}": qty for rid, qty in amounts.items()}
+        doc = await db.players.find_one_and_update(
+            {
+                "address": address,
+                "characters": {
+                    "$elemMatch": {
+                        "id": character_id,
+                        "items": {"$elemMatch": {"instanceId": instance_id, "location": instance["location"]}},
+                    }
+                },
+            },
+            update,
+            return_document=ReturnDocument.AFTER,
+        )
+    if doc is None:
+        return None
+    return _doc_to_player(doc)
+
+
+async def recycle_item_balance(
+    address: str, character_id: str, item_id: str, amount: int = 1, from_vault: bool = False
+) -> Optional[Player]:
+    """
+    The item_balances/itemBalances equivalent of recycle_item_instance -
+    same from_vault split (character's own itemBalances -> its own
+    backpackResources, capacity-gated; player's shared inventory.
+    itemBalances -> shared inventory.resources, unlimited), for stackable
+    finished goods (food, potions, misc trinkets) rather than instance-
+    tracked gear. Raises ValueError for a non-positive amount, an unknown
+    item id, a family with no recipe, or (character path only) not enough
+    backpack room. Returns None if `amount` isn't held wherever this looks.
+    """
+    if amount <= 0:
+        raise ValueError("amount must be positive")
+
+    db = get_database()
+    doc = await db.players.find_one({"address": address, "characters.id": character_id})
+    if doc is None:
+        return None
+    character = next((c for c in doc["characters"] if c["id"] == character_id), None)
+    if character is None:
+        return None
+
+    if from_vault:
+        held = doc.get("inventory", {}).get("itemBalances", {}).get(item_id, 0)
+    else:
+        held = character.get("itemBalances", {}).get(item_id, 0)
+    if held < amount:
+        return None
+
+    entry = items_catalog.ITEM_CATALOG_ENTRIES_BY_ID.get(item_id)
+    if entry is None:
+        raise ValueError(f"Unknown item id: {item_id}")
+
+    # Same physically-carried-tools-only restriction as recycle_item_instance.
+    player_tools = doc.get("inventory", {}).get("tools", {}) if from_vault else {}
+    player_items = doc.get("inventory", {}).get("items", []) if from_vault else []
+    recoveries = recycling.resolve_recycle_preview(
+        entry.family_id, entry.tier, character, player_tools, player_items, amount
+    )
+    if not recoveries:
+        raise ValueError(f"{entry.family_id} has no recipe to recycle materials from")
+    amounts = recycling.flatten_recovery(recoveries)
+
+    if from_vault:
+        update: Dict[str, object] = {"$inc": {f"inventory.itemBalances.{item_id}": -amount}}
+        for rid, qty in amounts.items():
+            update["$inc"][f"inventory.resources.{rid}"] = qty
+        doc = await db.players.find_one_and_update(
+            {"address": address, f"inventory.itemBalances.{item_id}": {"$gte": amount}},
+            update,
+            return_document=ReturnDocument.AFTER,
+        )
+    else:
+        if amounts:
+            marginal_slots = _backpack_marginal_slots(character, amounts)
+            capacity = items_catalog.backpack_capacity(character)
+            if capacity == 0:
+                raise ValueError("No backpack equipped")
+            used = items_catalog.backpack_slots_used(character)
+            if used + marginal_slots > capacity:
+                raise ValueError("Not enough backpack room for the recovered materials")
+
+        update = {"$inc": {f"characters.$.itemBalances.{item_id}": -amount}}
+        for rid, qty in amounts.items():
+            update["$inc"][f"characters.$.backpackResources.{rid}"] = qty
+        doc = await db.players.find_one_and_update(
+            {
+                "address": address,
+                "characters": {"$elemMatch": {"id": character_id, f"itemBalances.{item_id}": {"$gte": amount}}},
+            },
+            update,
+            return_document=ReturnDocument.AFTER,
+        )
+    if doc is None:
+        return None
     return _doc_to_player(doc)
 
 
@@ -1761,6 +2012,84 @@ async def equip_item(address: str, character_id: str, instance_id: str, slots: L
             }
         },
         array_filters=[{"char.id": character_id}, {"item.instanceId": instance_id, "item.location": "backpack"}],
+        return_document=ReturnDocument.AFTER,
+    )
+    if doc is None:
+        return None
+    return _doc_to_player(doc)
+
+
+async def equip_item_from_pool(address: str, character_id: str, instance_id: str, slots: List[str]) -> Optional[Player]:
+    """
+    Equip one item instance straight from `address`'s shared pool
+    (inventory.items, location:"pool") into `slots` on one of their
+    characters - unlike the check-out-then-equip flow (still used by the
+    frontend's "Move to backpack" action), this never routes through the
+    backpack at all, so it's never gated by backpack_capacity(): an item
+    landing straight in a hand/body slot never occupies a backpack slot in
+    the first place (backpack_slots_used only counts location:"backpack"
+    instances), so requiring backpack room for it was never correct - it
+    also meant a character with no backpack yet worn couldn't equip even a
+    bare weapon into an empty hand, a chicken-and-egg gate purely from
+    routing through an unrelated intermediate step.
+
+    Same validation as equip_item otherwise: raises ValueError if `slots`
+    doesn't exactly match one of the family's equip_slots groups, or a
+    GIANT_RACES character tries to equip a non-Colossal mount. Returns
+    None if the instance isn't in the pool, the address/character pair
+    doesn't match, or any of `slots` is already occupied by another
+    equipped instance.
+    """
+    db = get_database()
+    doc = await db.players.find_one({"address": address, "characters.id": character_id})
+    if doc is None:
+        return None
+    character = next((c for c in doc["characters"] if c["id"] == character_id), None)
+    if character is None:
+        return None
+    instance = next(
+        (i for i in doc.get("inventory", {}).get("items", []) if i["instanceId"] == instance_id),
+        None,
+    )
+    if instance is None:
+        return None
+
+    family = items_catalog.ITEM_FAMILIES_BY_ID.get(instance["familyId"])
+    if family is None:
+        raise ValueError(f"Unknown item family: {instance['familyId']}")
+
+    if not any(sorted(slots) == sorted(group) for group in family.equip_slots):
+        options = " or ".join("+".join(group) for group in family.equip_slots)
+        raise ValueError(f"{family.family_id} must be equipped into one of: {options}")
+
+    if "mount" in family.kind and character.get("race") in GIANT_RACES:
+        entry = items_catalog.ITEM_CATALOG_ENTRIES_BY_ID.get(instance["itemId"])
+        if entry is None or entry.size != "Colossal":
+            raise ValueError(f"{character.get('race')} characters can only ride Colossal mounts")
+
+    equipped_instance = {**instance, "location": "body", "slotRef": slots}
+    doc = await db.players.find_one_and_update(
+        {
+            "address": address,
+            "inventory.items": {"$elemMatch": {"instanceId": instance_id, "location": "pool"}},
+            "characters": {
+                "$elemMatch": {
+                    "id": character_id,
+                    "items": {
+                        "$not": {
+                            "$elemMatch": {
+                                "instanceId": {"$ne": instance_id},
+                                "slotRef": {"$in": slots},
+                            }
+                        }
+                    },
+                }
+            },
+        },
+        {
+            "$pull": {"inventory.items": {"instanceId": instance_id}},
+            "$push": {"characters.$.items": equipped_instance},
+        },
         return_document=ReturnDocument.AFTER,
     )
     if doc is None:

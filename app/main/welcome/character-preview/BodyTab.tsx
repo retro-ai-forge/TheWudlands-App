@@ -1,10 +1,9 @@
+import { useEffect, useState } from "react";
 import styles from "./CharacterTabs.module.css";
 import { getPortraitCropImgStyle } from "@/app/lib/portraitCrop";
-import type { SlotCharacterSummary } from "../SoulSlotGrid";
+import { FALLBACK_ITEM_ICON } from "./InventoryTab";
+import type { ItemInstance, SlotCharacterSummary } from "../SoulSlotGrid";
 
-// No equipped-item/gear-slot model exists on the backend yet - these are
-// purely a visual layout for where equipped gear will render once that
-// exists. Every slot shows as empty for now.
 // Overlaid directly on the portrait: head/chest/legs down the left edge,
 // back/side down the right edge. The right-edge slot below Back used to be
 // labeled "Girdle" too - renamed to "Side" now that Girdle itself moved
@@ -31,6 +30,45 @@ const HAND_RING_SLOTS = ["Left Hand", "Left Ring", "Girdle", "Right Ring", "Righ
 // portrait (see .largeEquipSlot).
 const COMPANION_MOUNT_SLOTS = ["Companion", "Mount"];
 
+// Only the fields BodyTab's own icons need - id -> name/icon, from the same
+// /api/auth/item-catalog endpoint InventoryTab.tsx uses for its Vault grid.
+type ItemCatalogEntry = { id: string; name: string; icon: string };
+
+// The item instance (if any) currently equipped into `slot` - at most one,
+// since equip_item blocks a slot already occupied by another instance.
+function equippedInSlot(items: ItemInstance[], slot: string): ItemInstance | undefined {
+  return items.find((item) => item.location === "body" && item.slotRef.includes(slot));
+}
+
+/** One slot's own icon, filling the whole slot box - only rendered when
+ * something's actually equipped there (see the slot label's own comment
+ * for why an empty slot shows no icon at all). */
+function EquipSlotIcon({
+  instance,
+  catalog,
+  mirrored,
+}: {
+  instance: ItemInstance;
+  catalog: Record<string, ItemCatalogEntry>;
+  /** Flips the icon horizontally - a two-handed item's "Left Hand" half
+   * mirrors the same art shown normally in "Right Hand", rather than
+   * needing a second, hand-drawn left-hand asset per family. */
+  mirrored?: boolean;
+}) {
+  const entry = catalog[instance.itemId];
+  return (
+    <div
+      role="img"
+      aria-label={entry?.name ?? instance.familyId}
+      className={styles.equipSlotIcon}
+      style={{
+        backgroundImage: `url(${entry?.icon || FALLBACK_ITEM_ICON})`,
+        transform: mirrored ? "scaleX(-1)" : undefined,
+      }}
+    />
+  );
+}
+
 /** Body page: the full character frame the player defined, with equipment slots overlaid on it. */
 export function BodyTab({ character }: { character: SlotCharacterSummary }) {
   // .frameBox's CSS aspect-ratio (2/3) is only a fallback for portraits
@@ -40,6 +78,21 @@ export function BodyTab({ character }: { character: SlotCharacterSummary }) {
   // approximation (the editor's frame can render at a slightly different
   // ratio than its nominal one depending on the viewport it was framed on).
   const frameAspectRatio = character.portraitFrameArea?.aspectRatio;
+
+  // Family name/icon lookup for whatever's equipped - fetched once, the
+  // same catalog InventoryTab's Vault grid uses, just a much smaller slice
+  // of it (id -> name/icon only).
+  const [catalog, setCatalog] = useState<Record<string, ItemCatalogEntry>>({});
+  useEffect(() => {
+    fetch("/api/auth/item-catalog")
+      .then((res) => (res.ok ? res.json() : []))
+      .then((data: ItemCatalogEntry[]) => {
+        const map: Record<string, ItemCatalogEntry> = {};
+        for (const item of data) map[item.id] = item;
+        setCatalog(map);
+      })
+      .catch(() => setCatalog({}));
+  }, []);
 
   return (
     <div className={styles.panel}>
@@ -73,32 +126,55 @@ export function BodyTab({ character }: { character: SlotCharacterSummary }) {
               )}
             </div>
 
-            {OVERLAY_SLOTS.map(({ label, position }) => (
-              <div className={`${styles.equipSlotOverlay} ${position}`} key={label}>
-                <span className={styles.equipSlotLabel}>{label}</span>
-                <span className={styles.equipSlotEmpty}>Empty</span>
-              </div>
-            ))}
+            {OVERLAY_SLOTS.map(({ label, position }) => {
+              const instance = equippedInSlot(character.items, label);
+              return (
+                <div className={`${styles.equipSlotOverlay} ${position}`} key={label}>
+                  {instance ? (
+                    <EquipSlotIcon instance={instance} catalog={catalog} />
+                  ) : (
+                    <span className={styles.equipSlotLabel}>{label}</span>
+                  )}
+                </div>
+              );
+            })}
           </div>
 
           <div className={styles.handSlotRow}>
-            {HAND_RING_SLOTS.map((label) => (
-              <div className={styles.equipSlot} key={label}>
-                <span className={styles.equipSlotLabel}>{label}</span>
-                <span className={styles.equipSlotEmpty}>Empty</span>
-              </div>
-            ))}
+            {HAND_RING_SLOTS.map((label) => {
+              const instance = equippedInSlot(character.items, label);
+              // A two-handed item's slotRef holds both hands at once (see
+              // equip_item) - Right Hand always shows the normal icon, Left
+              // Hand mirrors it only when it's the SAME instance spanning
+              // both, not an independent one-handed item held there alone.
+              const mirrored = label === "Left Hand" && !!instance && instance.slotRef.includes("Right Hand");
+              return (
+                <div className={styles.equipSlot} key={label}>
+                  {instance ? (
+                    <EquipSlotIcon instance={instance} catalog={catalog} mirrored={mirrored} />
+                  ) : (
+                    <span className={styles.equipSlotLabel}>{label}</span>
+                  )}
+                </div>
+              );
+            })}
           </div>
         </div>
       </div>
 
       <div className={styles.companionMountRow}>
-        {COMPANION_MOUNT_SLOTS.map((label) => (
-          <div className={styles.largeEquipSlot} key={label}>
-            <span className={styles.equipSlotLabel}>{label}</span>
-            <span className={styles.equipSlotEmpty}>Empty</span>
-          </div>
-        ))}
+        {COMPANION_MOUNT_SLOTS.map((label) => {
+          const instance = equippedInSlot(character.items, label);
+          return (
+            <div className={styles.largeEquipSlot} key={label}>
+              {instance ? (
+                <EquipSlotIcon instance={instance} catalog={catalog} />
+              ) : (
+                <span className={styles.equipSlotLabel}>{label}</span>
+              )}
+            </div>
+          );
+        })}
       </div>
     </div>
   );
