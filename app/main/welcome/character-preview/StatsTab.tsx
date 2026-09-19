@@ -74,17 +74,21 @@ export function StatsTab({
   const birthsignInfo = BIRTHSIGNS.find((b) => b.id === character.birthsign) ?? null;
 
   // This row reflects whatever's currently keeping this character busy -
-  // today that's only ever a craft timer (Character.activeCraft), so the
-  // label reads "Crafting" with a countdown while one's running and falls
-  // back to "Ready"/"now" once it isn't. Meant to cover any future timed
-  // activity a character can be tied up in (traveling, imprisoned, ...)
-  // the same way - a real backend-driven activity name (character.
-  // availability.name) would replace this craft-only check once those
-  // exist. A craft still counts as "running" right up through the moment
-  // its timer hits 0 (uncollected results don't block anything - see
-  // InventoryTab's own "Ready"/0:00 handling) - 0 is falsy, so it already
-  // falls through to "Ready"/"now" below without a separate check.
+  // a craft timer (Character.activeCraft) or being out on a story
+  // (Character.availability.inAdventure), so the label reads "Crafting"
+  // with a countdown, "Storyline" while away, or falls back to "Ready"/
+  // "now" once neither applies. Backend.players.set_in_adventure/
+  // start_craft now enforce these as mutually exclusive (a crafting
+  // character can't start a story and vice versa), so in practice at
+  // most one of craftRemainingSeconds/inAdventure is ever true - checked
+  // in that order below only as a display-side tiebreak, not because
+  // both are expected simultaneously. A craft still counts as "running"
+  // right up through the moment its timer hits 0 (uncollected results
+  // don't block anything - see InventoryTab's own "Ready"/0:00 handling)
+  // - 0 is falsy, so it already falls through below without a separate
+  // check.
   const craftRemainingSeconds = useCraftCountdown(character.crafting.activeCraft?.readyAt);
+  const inAdventure = character.availability.inAdventure;
 
   // The sole slot ("prof1"|"prof2"|"prof3") that receives final-item
   // assembly-bonus XP on finishing a blueprint-gated item - player-chosen
@@ -220,9 +224,9 @@ export function StatsTab({
             <span>{character.vitalStatus}</span>
           </div>
           <div className={styles.identityRow}>
-            <span>{craftRemainingSeconds ? "Crafting" : "Ready"}</span>
+            <span>{craftRemainingSeconds ? "Crafting" : inAdventure ? "Storyline" : "Ready"}</span>
             <span className={craftRemainingSeconds ? styles.readyTimerValue : undefined}>
-              {craftRemainingSeconds ? formatRemainingCompactLong(craftRemainingSeconds) : "now"}
+              {craftRemainingSeconds ? formatRemainingCompactLong(craftRemainingSeconds) : inAdventure ? "active" : "now"}
             </span>
           </div>
 

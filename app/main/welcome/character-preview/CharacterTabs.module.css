@@ -359,11 +359,31 @@
 /* Sits between the fold heading and the iframe - crafts whatever the
    viewer's own selection currently is (read directly off the same-origin
    iframe, not duplicated as separate component state). */
+/* Outer column: .craftControlsRow (button + checkmark + count grid, all
+   on one line, never wrapping - see there) on top, .craftError (when
+   present) as its own guaranteed full-width line below - a column flex
+   child stretches to the container's full width by default (align-items:
+   stretch), so craftError needs no width/basis rule of its own. */
 .craftRow {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  padding: 0.4rem 0.75rem;
+}
+
+/* nowrap - the count grid (fixed 3x3, see .craftCountRow) must always
+   stay on the same line to the right of the Craft button, on every
+   screen size, never pushed onto its own line below it. */
+.craftControlsRow {
   display: flex;
   align-items: center;
   gap: 0.6rem;
-  padding: 0.4rem 0.75rem;
+  flex-wrap: nowrap;
+  /* Safety net for a very narrow viewport where the button + 3x3 grid
+     genuinely can't both fit - scrolls horizontally within this row
+     rather than either wrapping (the thing being avoided) or spilling
+     past the page's own edge. */
+  overflow-x: auto;
 }
 
 .craftButton {
@@ -390,6 +410,19 @@
   cursor: default;
 }
 
+/* Replaces the old standalone .craftReadyCheck glyph - same "this is
+   craftable right now" signal, now on the button's own border instead of
+   a separate checkmark beside it. */
+.craftButtonReady {
+  border-color: #4ade80;
+  box-shadow: 0 0 6px #4ade80, 0 0 12px rgba(74, 222, 128, 0.5);
+  animation: craftReadyPulse 1.6s ease-in-out infinite;
+}
+
+.craftButtonReady:hover:not(:disabled) {
+  border-color: #4ade80;
+}
+
 /* The time/XP preview shown under "Craft" once a craftable recipe is
    selected - see InventoryTab.tsx's craftXpPreview. */
 .craftButtonDetail {
@@ -402,28 +435,20 @@
   font-variant-numeric: tabular-nums;
 }
 
-/* Lit only while the recipe currently selected in the viewer is actually
-   craftable right now - same green-glow "on" language as the recipe
-   viewer's own fancy-text toggle checkbox. */
-.craftReadyCheck {
-  color: #4ade80;
-  font-size: 2.4rem;
-  line-height: 1;
-  text-shadow: 0 0 6px #4ade80, 0 0 12px rgba(74, 222, 128, 0.7);
-  animation: craftReadyPulse 1.6s ease-in-out infinite;
-}
-
 @keyframes craftReadyPulse {
-  0%, 100% { text-shadow: 0 0 6px #4ade80, 0 0 12px rgba(74, 222, 128, 0.7); }
-  50% { text-shadow: 0 0 10px #4ade80, 0 0 20px rgba(74, 222, 128, 0.9); }
+  0%, 100% { box-shadow: 0 0 6px #4ade80, 0 0 12px rgba(74, 222, 128, 0.5); }
+  50% { box-shadow: 0 0 10px #4ade80, 0 0 20px rgba(74, 222, 128, 0.7); }
 }
 
-/* How many units to craft in one batch - a row of "radio" buttons (1/2/5/10)
-   next to Craft. Same visual language as .transferButton, but pill-shaped
-   and with a distinct active state instead of just hover/disabled. */
+/* How many units to craft in one batch - a fixed 3x3 grid of "radio"
+   buttons (CRAFT_COUNTS' 9 values) next to Craft, compact enough to
+   never need to wrap or push .craftControlsRow's own nowrap past the
+   button, on any screen size. Same visual language as .transferButton,
+   but pill-shaped and with a distinct active state instead of just
+   hover/disabled. */
 .craftCountRow {
-  display: flex;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: repeat(3, auto);
   gap: 0.3rem;
 }
 
@@ -462,6 +487,10 @@
 }
 
 .craftError {
+  /* .craftRow (its parent) is a column flex container, so this - the
+     only other direct child besides .craftControlsRow - already
+     stretches to the full width on its own line below, no extra
+     width/basis rule needed. */
   font-size: 0.75rem;
   color: #b04a4a;
 }

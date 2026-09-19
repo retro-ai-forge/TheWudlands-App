@@ -974,7 +974,7 @@ async def start_craft_route(
     if player is None:
         raise HTTPException(
             status_code=404,
-            detail="Already crafting, missing ingredients/tool/blueprint in the shared vault, or unknown recipe",
+            detail="Already crafting, out on a story, missing ingredients/tool/blueprint in the shared vault, or unknown recipe",
         )
 
     return player.to_dict()
@@ -1659,8 +1659,13 @@ async def update_my_character_in_adventure(
     """
     Toggles Character.inAdventure - the small corner button on the Body/Soul
     tabs. Changes where unequip_item sends a freed item (see there).
+    Switching to True raises 400 if the character has a craft still
+    running - see set_in_adventure's own docstring.
     """
-    player = await set_in_adventure(address, character_id, payload.inAdventure)
+    try:
+        player = await set_in_adventure(address, character_id, payload.inAdventure)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc))
     if player is None:
         raise HTTPException(status_code=404, detail="No player record found for this address")
 

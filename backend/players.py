@@ -1379,10 +1379,12 @@ async def start_craft(
     assembly-bonus XP is a separate mechanic paid at finish_craft time
     instead - see there. Raises ValueError for an unknown recipe/output
     row, an unsupported recipe shape, or `count < 1`. Returns None if the
-    character is already mid-craft, can't afford the (count-scaled)
-    ingredients even combined, has no access to a listed tool, hasn't
-    learned the required blueprint, or the address/character pair doesn't
-    match any player document.
+    character is already mid-craft, is currently out on a story
+    (Character.availability.inAdventure - mutually exclusive with
+    crafting, see set_in_adventure's own matching check), can't afford
+    the (count-scaled) ingredients even combined, has no access to a
+    listed tool, hasn't learned the required blueprint, or the
+    address/character pair doesn't match any player document.
     """
     if count < 1:
         raise ValueError("count must be at least 1")
@@ -1398,6 +1400,11 @@ async def start_craft(
 
     active = character.get("crafting", {}).get("activeCraft")
     if active and datetime.fromisoformat(active["readyAt"]) > datetime.now(timezone.utc):
+        return None
+
+    # Mutually exclusive with being out on a story - see set_in_adventure's
+    # own matching check (the other half of this).
+    if character.get("availability", {}).get("inAdventure", False):
         return None
 
     # Crafting only ever checks the player's shared vault, never the
@@ -2186,8 +2193,26 @@ async def set_in_adventure(address: str, character_id: str, in_adventure: bool) 
     from the player's shared vault. Read by unequip_item to decide where a
     freed item lands (see there). Returns None if the address/character
     pair doesn't match any player document.
+
+    Crafting and being out on a story are mutually exclusive (see
+    start_craft's own inAdventure check, the other half of this):
+    switching to True raises ValueError if the character has a craft
+    still running (Character.activeCraft with readyAt still in the
+    future) - a finished-but-uncollected craft doesn't block this, same
+    "running" definition start_craft/finish_craft already use elsewhere.
+    Switching back to False (returning from a story) is never blocked.
     """
     db = get_database()
+    if in_adventure:
+        character_doc = await db.players.find_one(
+            {"address": address, "characters.id": character_id}, {"characters.$": 1}
+        )
+        if character_doc is None:
+            return None
+        active = character_doc["characters"][0].get("crafting", {}).get("activeCraft")
+        if active and datetime.fromisoformat(active["readyAt"]) > datetime.now(timezone.utc):
+            raise ValueError("Character is still crafting")
+
     doc = await db.players.find_one_and_update(
         {"address": address, "characters.id": character_id},
         {"$set": {"characters.$.availability.inAdventure": in_adventure}},

@@ -883,26 +883,42 @@ export function qualityBarColor(f: number): string {
 // before reverting - long enough to read, short enough not to feel stuck.
 const ITEM_POPUP_FLASH_MS = 3000;
 
-/** Read-only, single-row, horizontally-scrolling strip of tiles - what a
- * worn backpack's own popup shows packed inside it (see ItemDetailPopup's
+/** Single-row, horizontally-scrolling strip of tiles - what a worn
+ * backpack's own popup shows packed inside it (see ItemDetailPopup's
  * packedItems prop). Same 100px tile/icon/tier-badge/count-badge/
  * quality-bar-and-damaged-tint look as ItemGrid's own tiles (deliberately
- * duplicated rather than shared - ItemGrid's tiles are real <button>s
- * wired to open this very popup, which would be one popup opening
- * another; this is a peek inside, not another place to act from). */
+ * duplicated rather than shared - ItemGrid's own tiles measure/fill the
+ * whole remaining viewport height, which makes no sense embedded in a
+ * popup card's own fixed-size row). Clicking a tile opens a SECOND
+ * ItemDetailPopup on top, for that one packed item - its own overlay
+ * closes just itself (back to this backpack's popup, not both at once)
+ * on an outside click or a successful move, the same way any other
+ * popup already closes itself - see ItemDetailPopup's own handleClick. */
 function PackedItemsRow({
   ids,
   tierInfo,
   balances,
   lookupIds,
   instanceQuality,
+  hasBackpackEquipped,
+  hasSaddlepackEquipped,
+  inAdventure,
+  characterId,
+  onPlayerDataUpdated,
 }: {
   ids: string[];
   tierInfo: BlueprintTierInfo;
   balances: Record<string, number>;
   lookupIds: Record<string, string>;
   instanceQuality: Record<string, number | null>;
+  hasBackpackEquipped: boolean;
+  hasSaddlepackEquipped: boolean;
+  inAdventure: boolean;
+  characterId: string;
+  onPlayerDataUpdated?: (data: RawPlayerData) => void;
 }) {
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+
   if (ids.length === 0) {
     return <p className={styles.packedItemsEmpty}>Nothing packed in it yet.</p>;
   }
@@ -912,45 +928,70 @@ function PackedItemsRow({
     return (infoB?.tier ?? 0) - (infoA?.tier ?? 0);
   });
   return (
-    <div className={styles.packedItemsRow}>
-      {sortedIds.map((id) => {
-        const info = tierInfo[lookupIds[id] ?? id];
-        const name = info?.name ? stripBlueprintPrefix(info.name) : formatResourceLabel(lookupIds[id] ?? id);
-        const showCount = (info?.stackSize ?? 1) > 1;
-        const currentQuality = instanceQuality[id];
-        const qualityFraction =
-          lookupIds[id] !== undefined && info?.qualityMax != null && currentQuality != null
-            ? Math.max(0, Math.min(1, info.qualityMax > 0 ? currentQuality / info.qualityMax : 1))
-            : null;
-        const isDamaged = qualityFraction !== null && qualityState(qualityFraction) === "damaged";
-        return (
-          <div
-            key={id}
-            className={isDamaged ? `${styles.itemGridCell} ${styles.itemGridCellDamaged}` : styles.itemGridCell}
-            title={name}
-          >
-            <div
-              role="img"
-              aria-label={name}
-              className={styles.itemGridImg}
-              style={{ backgroundImage: `url(${info?.icon || FALLBACK_ITEM_ICON})` }}
-            />
-            {!!info?.tier && (
-              <span className={`${styles.itemGridTierBadge} ${itemGridTierBadgeClass(info.tier)}`}>
-                {getTierIndicator(info.tier)}
-              </span>
-            )}
-            {showCount && <span className={styles.itemGridCountBadge}>{balances[id] ?? 0}</span>}
-            {qualityFraction !== null && (
+    <>
+      <div className={styles.packedItemsRow}>
+        {sortedIds.map((id) => {
+          const info = tierInfo[lookupIds[id] ?? id];
+          const name = info?.name ? stripBlueprintPrefix(info.name) : formatResourceLabel(lookupIds[id] ?? id);
+          const showCount = (info?.stackSize ?? 1) > 1;
+          const currentQuality = instanceQuality[id];
+          const qualityFraction =
+            lookupIds[id] !== undefined && info?.qualityMax != null && currentQuality != null
+              ? Math.max(0, Math.min(1, info.qualityMax > 0 ? currentQuality / info.qualityMax : 1))
+              : null;
+          const isDamaged = qualityFraction !== null && qualityState(qualityFraction) === "damaged";
+          return (
+            <button
+              key={id}
+              type="button"
+              className={isDamaged ? `${styles.itemGridCell} ${styles.itemGridCellDamaged}` : styles.itemGridCell}
+              title={name}
+              onClick={() => setSelectedId(id)}
+              onContextMenu={(e) => e.preventDefault()}
+            >
               <div
-                className={styles.itemGridQualityBar}
-                style={{ width: `${qualityFraction * 100}%`, backgroundColor: qualityBarColor(qualityFraction) }}
+                role="img"
+                aria-label={name}
+                className={styles.itemGridImg}
+                style={{ backgroundImage: `url(${info?.icon || FALLBACK_ITEM_ICON})` }}
               />
-            )}
-          </div>
-        );
-      })}
-    </div>
+              {!!info?.tier && (
+                <span className={`${styles.itemGridTierBadge} ${itemGridTierBadgeClass(info.tier)}`}>
+                  {getTierIndicator(info.tier)}
+                </span>
+              )}
+              {showCount && <span className={styles.itemGridCountBadge}>{balances[id] ?? 0}</span>}
+              {qualityFraction !== null && (
+                <div
+                  className={styles.itemGridQualityBar}
+                  style={{ width: `${qualityFraction * 100}%`, backgroundColor: qualityBarColor(qualityFraction) }}
+                />
+              )}
+            </button>
+          );
+        })}
+      </div>
+      {selectedId && (
+        <ItemDetailPopup
+          info={tierInfo[lookupIds[selectedId] ?? selectedId]}
+          fallbackName={formatResourceLabel(lookupIds[selectedId] ?? selectedId)}
+          owned={balances[selectedId] ?? 0}
+          isInstance={lookupIds[selectedId] !== undefined}
+          movable
+          quality={instanceQuality[selectedId] ?? null}
+          moveId={selectedId}
+          catalogId={lookupIds[selectedId] ?? selectedId}
+          location="backpack"
+          source="character"
+          hasBackpackEquipped={hasBackpackEquipped}
+          hasSaddlepackEquipped={hasSaddlepackEquipped}
+          inAdventure={inAdventure}
+          characterId={characterId}
+          onPlayerDataUpdated={onPlayerDataUpdated}
+          onClose={() => setSelectedId(null)}
+        />
+      )}
+    </>
   );
 }
 
@@ -1155,14 +1196,13 @@ export function ItemDetailPopup({
     finish(await postJson(`/api/auth/me/characters/${characterId}/items/${moveId}/stow`));
   };
 
-  // source:"character", NOT isInstance (a flat gear.itemBalances.camp row,
-  // e.g. crafted goods like potions/food, or ammo living in resources
-  // instead - see nonMovableIds) - camp -> this same character's backpack,
-  // `quantity` units at a time. The itemBalances equivalent of
-  // stowToBackpack above - same backend.players.load_item_balance_to_backpack
-  // endpoint the Vault tab's own moveToBackpack already uses for a
-  // non-instance row, just always camp-sourced here since that's the only
-  // itemBalances location this popup is ever opened from (CampView).
+  // source:"character", NOT isInstance, location:"camp" only (a flat
+  // gear.itemBalances.camp row, e.g. crafted goods like potions/food, or
+  // ammo living in resources instead - see nonMovableIds) - camp -> this
+  // same character's backpack, `quantity` units at a time. The
+  // itemBalances equivalent of stowToBackpack above - same backend.
+  // players.load_item_balance_to_backpack endpoint the Vault tab's own
+  // moveToBackpack already uses for a non-instance row.
   const stowBalanceToBackpack = async () => {
     setPending(true);
     setFlashMessage(null);
@@ -1173,14 +1213,33 @@ export function ItemDetailPopup({
     );
   };
 
-  // source:"character", NOT isInstance - camp -> the shared pool,
-  // `quantity` units at a time. The itemBalances equivalent of
-  // checkInToVault above.
+  // source:"character", NOT isInstance, location:"camp" only - camp -> the
+  // shared pool, `quantity` units at a time. The itemBalances equivalent
+  // of checkInToVault above.
   const checkInBalanceToVault = async () => {
     setPending(true);
     setFlashMessage(null);
     finish(
       await postJson(`/api/auth/me/characters/${characterId}/item-balances/${moveId}/check-in`, {
+        amount: quantity,
+      })
+    );
+  };
+
+  // source:"character", NOT isInstance, location:"backpack" only (a flat
+  // gear.itemBalances.backpack row - see BodyTab's packedItems) - backpack
+  // -> camp, `quantity` units at a time, the reverse of
+  // stowBalanceToBackpack above. There's no direct backpack->vault balance
+  // endpoint (check_in_item_balance only ever reads gear.itemBalances.camp
+  // - see its own docstring), so unlike a packed item INSTANCE (which can
+  // check in to the vault straight from "backpack"), a packed balance row
+  // has to land in camp first - same two-step check-out_camp then
+  // check_in_vault path the Vault tab's own itemBalances rows already use.
+  const unloadBalanceToCamp = async () => {
+    setPending(true);
+    setFlashMessage(null);
+    finish(
+      await postJson(`/api/auth/me/characters/${characterId}/item-balances/${moveId}/unload-backpack`, {
         amount: quantity,
       })
     );
@@ -1585,7 +1644,14 @@ export function ItemDetailPopup({
             />
             <h3 className={styles.itemPopupName}>{displayName}</h3>
             {location === "body" && info?.familyId === "backpack" && packedItems && (
-              <PackedItemsRow {...packedItems} />
+              <PackedItemsRow
+                {...packedItems}
+                hasBackpackEquipped={hasBackpackEquipped}
+                hasSaddlepackEquipped={hasSaddlepackEquipped}
+                inAdventure={inAdventure}
+                characterId={characterId}
+                onPlayerDataUpdated={onPlayerDataUpdated}
+              />
             )}
             <p className={`${styles.itemPopupDescription} ${flashMessage ? styles.itemPopupFlash : ""}`}>
               {flashMessage ?? (info?.description || "dummy")}
@@ -1835,14 +1901,15 @@ export function ItemDetailPopup({
               </div>
             )}
             {/* The itemBalances counterpart of the isInstance block above -
-                a flat gear.itemBalances.camp row (crafted goods this
-                character owns but hasn't packed anywhere - see CampView)
+                a flat gear.itemBalances.camp/backpack row (crafted goods
+                this character owns - see CampView/BodyTab's packedItems)
                 has no instanceId, so it fails isInstance and would
                 otherwise get zero action buttons here even though the
                 backend already has a full camp<->backpack/vault transfer
                 path for it (load_item_balance_to_backpack/
-                check_in_item_balance), same as an item instance does. */}
-            {movable && source === "character" && !isInstance && location === "camp" && (
+                check_in_item_balance/unload_item_balance_from_backpack),
+                same as an item instance does. */}
+            {movable && source === "character" && !isInstance && (location === "camp" || location === "backpack") && (
               <div className={styles.itemPopupActions} role={stackSize > 1 ? "radiogroup" : undefined}>
                 {stackSize > 1 &&
                   QUANTITY_OPTIONS.map((n) => (
@@ -1864,36 +1931,60 @@ export function ItemDetailPopup({
                       {n}
                     </button>
                   ))}
-                <button
-                  type="button"
-                  className={styles.itemPopupBackpackButton}
-                  disabled={pending || !hasBackpackEquipped}
-                  onClick={stowBalanceToBackpack}
-                  aria-label="Move to backpack"
-                  title={hasBackpackEquipped ? "Move to backpack" : "No backpack equipped"}
-                >
-                  <div
-                    role="img"
-                    aria-label="Backpack"
-                    className={styles.itemPopupBackpackIcon}
-                    style={{ backgroundImage: `url(${BACKPACK_ACTION_ICON})` }}
-                  />
-                </button>
-                <button
-                  type="button"
-                  className={styles.itemPopupBackpackButton}
-                  disabled={pending || inAdventure}
-                  onClick={checkInBalanceToVault}
-                  aria-label="Check in to vault"
-                  title={inAdventure ? "Out on an adventure - the shared vault isn't reachable." : "Check in to vault"}
-                >
-                  <div
-                    role="img"
-                    aria-label="Vault"
-                    className={styles.itemPopupBackpackIcon}
-                    style={{ backgroundImage: `url(${VAULT_ACTION_ICON})` }}
-                  />
-                </button>
+                {location === "camp" ? (
+                  <>
+                    <button
+                      type="button"
+                      className={styles.itemPopupBackpackButton}
+                      disabled={pending || !hasBackpackEquipped}
+                      onClick={stowBalanceToBackpack}
+                      aria-label="Move to backpack"
+                      title={hasBackpackEquipped ? "Move to backpack" : "No backpack equipped"}
+                    >
+                      <div
+                        role="img"
+                        aria-label="Backpack"
+                        className={styles.itemPopupBackpackIcon}
+                        style={{ backgroundImage: `url(${BACKPACK_ACTION_ICON})` }}
+                      />
+                    </button>
+                    <button
+                      type="button"
+                      className={styles.itemPopupBackpackButton}
+                      disabled={pending || inAdventure}
+                      onClick={checkInBalanceToVault}
+                      aria-label="Check in to vault"
+                      title={inAdventure ? "Out on an adventure - the shared vault isn't reachable." : "Check in to vault"}
+                    >
+                      <div
+                        role="img"
+                        aria-label="Vault"
+                        className={styles.itemPopupBackpackIcon}
+                        style={{ backgroundImage: `url(${VAULT_ACTION_ICON})` }}
+                      />
+                    </button>
+                  </>
+                ) : (
+                  // "backpack" - no direct balance endpoint back to the
+                  // shared vault (check_in_item_balance only ever reads
+                  // gear.itemBalances.camp), so camp is the only move
+                  // offered here - see unloadBalanceToCamp.
+                  <button
+                    type="button"
+                    className={styles.itemPopupBackpackButton}
+                    disabled={pending}
+                    onClick={unloadBalanceToCamp}
+                    aria-label="Move to camp"
+                    title="Move to camp"
+                  >
+                    <div
+                      role="img"
+                      aria-label="Camp"
+                      className={styles.itemPopupBackpackIcon}
+                      style={{ backgroundImage: `url(${CAMP_ACTION_ICON})` }}
+                    />
+                  </button>
+                )}
               </div>
             )}
           </>
@@ -2608,51 +2699,53 @@ export function InventoryTab({
           </div>
 
           <div className={styles.craftRow}>
-            <button
-              className={styles.craftButton}
-              onClick={startCraft}
-              disabled={crafting || !canCraft || remainingSeconds !== null}
-            >
-              {remainingSeconds !== null ? (
-                <span className={styles.craftTimer}>Crafting… {formatRemainingCompactLong(remainingSeconds)}</span>
-              ) : crafting ? (
-                "Crafting…"
-              ) : canCraft ? (
-                <>
-                  Craft
-                  <span className={styles.craftButtonDetail}>
-                    {craftDurationPreview !== null && formatRemainingCompactLong(craftDurationPreview)}
-                    {craftXpPreview && formatXpPreview(craftXpPreview) && `, ${formatXpPreview(craftXpPreview)}`}
-                  </span>
-                </>
-              ) : (
-                "Craft"
-              )}
-            </button>
-            {canCraft && remainingSeconds === null && (
-              <span className={styles.craftReadyCheck} title="Selected recipe can be crafted right now">
-                ✓
-              </span>
-            )}
-            <div className={styles.craftCountRow} role="radiogroup" aria-label="How many to craft">
-              {CRAFT_COUNTS.map((count) => (
-                <button
-                  key={count}
-                  type="button"
-                  role="radio"
-                  aria-checked={craftCount === count}
-                  className={[
-                    styles.craftCountButton,
-                    craftCount === count ? styles.craftCountButtonActive : "",
-                  ]
-                    .filter(Boolean)
-                    .join(" ")}
-                  disabled={crafting || remainingSeconds !== null || !(craftableCounts[count] ?? false)}
-                  onClick={() => setCraftCount(count)}
-                >
-                  {count}
-                </button>
-              ))}
+            <div className={styles.craftControlsRow}>
+              <button
+                className={
+                  canCraft && remainingSeconds === null
+                    ? `${styles.craftButton} ${styles.craftButtonReady}`
+                    : styles.craftButton
+                }
+                onClick={startCraft}
+                disabled={crafting || !canCraft || remainingSeconds !== null}
+                title={canCraft && remainingSeconds === null ? "Selected recipe can be crafted right now" : undefined}
+              >
+                {remainingSeconds !== null ? (
+                  <span className={styles.craftTimer}>Crafting… {formatRemainingCompactLong(remainingSeconds)}</span>
+                ) : crafting ? (
+                  "Crafting…"
+                ) : canCraft ? (
+                  <>
+                    Craft
+                    <span className={styles.craftButtonDetail}>
+                      {craftDurationPreview !== null && formatRemainingCompactLong(craftDurationPreview)}
+                      {craftXpPreview && formatXpPreview(craftXpPreview) && `, ${formatXpPreview(craftXpPreview)}`}
+                    </span>
+                  </>
+                ) : (
+                  "Craft"
+                )}
+              </button>
+              <div className={styles.craftCountRow} role="radiogroup" aria-label="How many to craft">
+                {CRAFT_COUNTS.map((count) => (
+                  <button
+                    key={count}
+                    type="button"
+                    role="radio"
+                    aria-checked={craftCount === count}
+                    className={[
+                      styles.craftCountButton,
+                      craftCount === count ? styles.craftCountButtonActive : "",
+                    ]
+                      .filter(Boolean)
+                      .join(" ")}
+                    disabled={crafting || remainingSeconds !== null || !(craftableCounts[count] ?? false)}
+                    onClick={() => setCraftCount(count)}
+                  >
+                    {count}
+                  </button>
+                ))}
+              </div>
             </div>
             {craftError && <span className={styles.craftError}>{craftError}</span>}
           </div>
