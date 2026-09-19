@@ -2325,6 +2325,66 @@ async def check_in_item_instance(address: str, character_id: str, instance_id: s
     return _doc_to_player(doc)
 
 
+async def move_camp_item_to_backpack(address: str, character_id: str, instance_id: str) -> Optional[Player]:
+    """
+    Move one item instance straight from this character's own camp storage
+    into their backpack - unlike check_out_item_instance, both ends are
+    already this character's own holdings (see unequip_item's "camp"
+    destination), so this never touches the shared pool and works fine
+    mid-adventure (check_out_item_instance deliberately raises in that
+    case - there's no reaching the shared vault - but camp isn't the vault).
+
+    Capacity-gated the same way check_out_item_instance's backpack path is:
+    raises ValueError if the character has no backpack equipped, or the
+    backpack has no free slot for this family's size class. Returns None
+    if the instance isn't sitting at location:"camp" on this character.
+    """
+    db = get_database()
+    doc = await db.players.find_one({"address": address, "characters.id": character_id})
+    if doc is None:
+        return None
+    character = next((c for c in doc["characters"] if c["id"] == character_id), None)
+    if character is None:
+        return None
+    instance = next(
+        (
+            i for i in character.get("gear", {}).get("items", [])
+            if i["instanceId"] == instance_id and i.get("location") == "camp"
+        ),
+        None,
+    )
+    if instance is None:
+        return None
+
+    cost = items_catalog.slot_cost_for_family(instance["familyId"])
+    capacity = items_catalog.backpack_capacity(character)
+    if capacity == 0:
+        raise ValueError("No backpack equipped")
+    used = items_catalog.backpack_slots_used(character)
+    if used + cost > capacity:
+        raise ValueError("Backpack is full")
+
+    # Replaces the whole matched array element in one $set - see
+    # unequip_item's identical fix for why (this environment's Firestore
+    # MongoDB-compatible backend was observed silently dropping the second
+    # of two array-filtered $set keys in one update).
+    moved_instance = {**instance, "location": "backpack", "slotRef": []}
+    doc = await db.players.find_one_and_update(
+        {
+            "address": address,
+            "characters": {
+                "$elemMatch": {"id": character_id, "gear.items": {"$elemMatch": {"instanceId": instance_id, "location": "camp"}}}
+            },
+        },
+        {"$set": {"characters.$[char].gear.items.$[item]": moved_instance}},
+        array_filters=[{"char.id": character_id}, {"item.instanceId": instance_id, "item.location": "camp"}],
+        return_document=ReturnDocument.AFTER,
+    )
+    if doc is None:
+        return None
+    return _doc_to_player(doc)
+
+
 async def check_out_item_balance(address: str, character_id: str, item_id: str, amount: int = 1) -> Optional[Player]:
     """
     Move `amount` of `item_id` (a concrete crafted-item id) from

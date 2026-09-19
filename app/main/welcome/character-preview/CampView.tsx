@@ -94,15 +94,24 @@ export function CampView({
   const campInstanceLookupIds: Record<string, string> = {};
   const campInstanceRowBalances: Record<string, number> = {};
   const campInstanceQuality: Record<string, number | null> = {};
-  const campInstanceLocations: Record<string, "camp"> = {};
+  // Every row shown here - instance or flat-balance alike - is at
+  // location:"camp" by construction (this whole view only ever reads
+  // items/itemBalances.camp), so ItemDetailPopup's location-gated action
+  // buttons (e.g. "Move to backpack") work the same regardless of which
+  // kind of row was clicked. Balance ids are filled in below alongside
+  // campCombined, once both id sets are known.
+  const campLocations: Record<string, "camp"> = {};
   for (const instance of campInstances) {
     campInstanceLookupIds[instance.instanceId] = instance.itemId;
     campInstanceRowBalances[instance.instanceId] = 1;
     campInstanceQuality[instance.instanceId] = instance.quality;
-    campInstanceLocations[instance.instanceId] = "camp";
+    campLocations[instance.instanceId] = "camp";
   }
   const campCombined: Record<string, number> = { ...campBalances, ...campInstanceRowBalances };
   const campIds = Object.keys(campCombined).filter((id) => campCombined[id] > 0);
+  for (const id of Object.keys(campBalances)) {
+    campLocations[id] = "camp";
+  }
 
   return (
     <div className={styles.panel}>
@@ -113,7 +122,7 @@ export function CampView({
         balances={campCombined}
         lookupIds={campInstanceLookupIds}
         instanceQuality={campInstanceQuality}
-        instanceLocations={campInstanceLocations}
+        instanceLocations={campLocations}
         source="character"
         hasBackpackEquipped={hasBackpackEquipped}
         hasSaddlepackEquipped={hasSaddlepackEquipped}

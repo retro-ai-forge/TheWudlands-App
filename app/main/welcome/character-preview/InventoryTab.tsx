@@ -920,7 +920,7 @@ export function ItemDetailPopup({
   /** location:"body" rows only - the slot(s) this instance currently occupies (its own slotRef) - used to exclude that same group from the reslot button list below (equipToSlots), since re-clicking your own current slot(s) would be a no-op. */
   currentSlots?: string[];
   characterId: string;
-  /** source:"vault" only - named in the "On Adventure" notice that replaces the whole action row while inAdventure is true. */
+  /** source:"vault" only - named in the "In Storyline" notice that replaces the whole action row while inAdventure is true. */
   characterFirstName?: string;
   onPlayerDataUpdated?: (data: RawPlayerData) => void;
   onClose: () => void;
@@ -1037,6 +1037,49 @@ export function ItemDetailPopup({
     setPending(true);
     setFlashMessage(null);
     finish(await postJson(`/api/auth/me/characters/${characterId}/items/${moveId}/check-in`));
+  };
+
+  // source:"character", location:"camp" rows only - straight to this same
+  // character's backpack, staying off the shared pool entirely (unlike
+  // checkInToVault above) - see backend.players.move_camp_item_to_backpack.
+  // This is the only way a camped instance can reach the backpack while
+  // inAdventure, since checkInToVault is hidden then and check-out (the
+  // vault's own path to the backpack) is blocked mid-adventure server-side.
+  const stowToBackpack = async () => {
+    setPending(true);
+    setFlashMessage(null);
+    finish(await postJson(`/api/auth/me/characters/${characterId}/items/${moveId}/stow`));
+  };
+
+  // source:"character", NOT isInstance (a flat gear.itemBalances.camp row,
+  // e.g. crafted goods like potions/food, or ammo living in resources
+  // instead - see nonMovableIds) - camp -> this same character's backpack,
+  // `quantity` units at a time. The itemBalances equivalent of
+  // stowToBackpack above - same backend.players.load_item_balance_to_backpack
+  // endpoint the Vault tab's own moveToBackpack already uses for a
+  // non-instance row, just always camp-sourced here since that's the only
+  // itemBalances location this popup is ever opened from (CampView).
+  const stowBalanceToBackpack = async () => {
+    setPending(true);
+    setFlashMessage(null);
+    finish(
+      await postJson(`/api/auth/me/characters/${characterId}/item-balances/${moveId}/load-backpack`, {
+        amount: quantity,
+      })
+    );
+  };
+
+  // source:"character", NOT isInstance - camp -> the shared pool,
+  // `quantity` units at a time. The itemBalances equivalent of
+  // checkInToVault above.
+  const checkInBalanceToVault = async () => {
+    setPending(true);
+    setFlashMessage(null);
+    finish(
+      await postJson(`/api/auth/me/characters/${characterId}/item-balances/${moveId}/check-in`, {
+        amount: quantity,
+      })
+    );
   };
 
   // source:"character", location:"body" rows' automatic move icon (vault
@@ -1459,7 +1502,7 @@ export function ItemDetailPopup({
                 // check_out_item_balance) - no buttons, no hasBackpackEquipped/
                 // hasSaddlepackEquipped checks, just the status itself.
                 <p className={styles.itemPopupAwayNotice}>
-                  {characterFirstName ? `${characterFirstName} on Adventure` : "On Adventure"}
+                  {characterFirstName ? `${characterFirstName} in Storyline` : "In Storyline"}
                 </p>
               ) : (
                 <div className={styles.itemPopupActions} role={stackSize > 1 ? "radiogroup" : undefined}>
@@ -1633,32 +1676,117 @@ export function ItemDetailPopup({
                         ))}
                       </button>
                     ))}
-                    {/* No path back to the shared vault while out on an
-                        adventure - same reasoning as the body branch's
-                        automatic icon above only ever offering camp, never
-                        vault, while inAdventure is true. Hidden outright,
-                        not greyed, since there's nothing the player could
-                        do differently to enable it (it's a status, not a
-                        missing container). */}
-                    {!inAdventure && (
+                    {/* location:"camp" only - the other half of unequip's
+                        automatic camp drop (see the "body" branch's
+                        automatic icon above). Camp is this character's own
+                        overflow, not the shared vault, so this works
+                        mid-adventure unlike checkInToVault below - see
+                        backend.players.move_camp_item_to_backpack. */}
+                    {location === "camp" && info?.backpackable && (
                       <button
                         type="button"
                         className={styles.itemPopupBackpackButton}
-                        disabled={pending}
-                        onClick={checkInToVault}
-                        aria-label="Check in to vault"
-                        title="Check in to vault"
+                        disabled={pending || !hasBackpackEquipped}
+                        onClick={stowToBackpack}
+                        aria-label="Move to backpack"
+                        title={hasBackpackEquipped ? "Move to backpack" : "No backpack equipped"}
                       >
                         <div
                           role="img"
-                          aria-label="Vault"
+                          aria-label="Backpack"
                           className={styles.itemPopupBackpackIcon}
-                          style={{ backgroundImage: `url(${VAULT_ACTION_ICON})` }}
+                          style={{ backgroundImage: `url(${BACKPACK_ACTION_ICON})` }}
                         />
                       </button>
                     )}
+                    {/* No path back to the shared vault while out on an
+                        adventure - same reasoning as the body branch's
+                        automatic icon above only ever offering camp, never
+                        vault, while inAdventure is true. Greyed out rather
+                        than hidden while inAdventure, same as the backpack
+                        button above, so the popup never goes to zero
+                        visible actions just because none of them currently
+                        apply - a player can still see what's there and why
+                        it's disabled instead of a blank action row. */}
+                    <button
+                      type="button"
+                      className={styles.itemPopupBackpackButton}
+                      disabled={pending || inAdventure}
+                      onClick={checkInToVault}
+                      aria-label="Check in to vault"
+                      title={inAdventure ? "Out on an adventure - the shared vault isn't reachable." : "Check in to vault"}
+                    >
+                      <div
+                        role="img"
+                        aria-label="Vault"
+                        className={styles.itemPopupBackpackIcon}
+                        style={{ backgroundImage: `url(${VAULT_ACTION_ICON})` }}
+                      />
+                    </button>
                   </>
                 )}
+              </div>
+            )}
+            {/* The itemBalances counterpart of the isInstance block above -
+                a flat gear.itemBalances.camp row (crafted goods this
+                character owns but hasn't packed anywhere - see CampView)
+                has no instanceId, so it fails isInstance and would
+                otherwise get zero action buttons here even though the
+                backend already has a full camp<->backpack/vault transfer
+                path for it (load_item_balance_to_backpack/
+                check_in_item_balance), same as an item instance does. */}
+            {movable && source === "character" && !isInstance && location === "camp" && (
+              <div className={styles.itemPopupActions} role={stackSize > 1 ? "radiogroup" : undefined}>
+                {stackSize > 1 &&
+                  QUANTITY_OPTIONS.map((n) => (
+                    <button
+                      key={n}
+                      type="button"
+                      role="radio"
+                      aria-checked={quantity === n}
+                      className={[
+                        styles.craftCountButton,
+                        styles.itemPopupQuantityButton,
+                        quantity === n ? styles.craftCountButtonActive : "",
+                      ]
+                        .filter(Boolean)
+                        .join(" ")}
+                      disabled={pending || n > owned}
+                      onClick={() => setQuantity(n)}
+                    >
+                      {n}
+                    </button>
+                  ))}
+                <button
+                  type="button"
+                  className={styles.itemPopupBackpackButton}
+                  disabled={pending || !hasBackpackEquipped}
+                  onClick={stowBalanceToBackpack}
+                  aria-label="Move to backpack"
+                  title={hasBackpackEquipped ? "Move to backpack" : "No backpack equipped"}
+                >
+                  <div
+                    role="img"
+                    aria-label="Backpack"
+                    className={styles.itemPopupBackpackIcon}
+                    style={{ backgroundImage: `url(${BACKPACK_ACTION_ICON})` }}
+                  />
+                </button>
+                <button
+                  type="button"
+                  className={styles.itemPopupBackpackButton}
+                  disabled={pending || inAdventure}
+                  onClick={checkInBalanceToVault}
+                  aria-label="Check in to vault"
+                  title={inAdventure ? "Out on an adventure - the shared vault isn't reachable." : "Check in to vault"}
+                >
+                  <div
+                    role="img"
+                    aria-label="Vault"
+                    className={styles.itemPopupBackpackIcon}
+                    style={{ backgroundImage: `url(${VAULT_ACTION_ICON})` }}
+                  />
+                </button>
               </div>
             )}
           </>

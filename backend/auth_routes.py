@@ -48,6 +48,7 @@ from backend.players import (
     grant_shared_resource,
     load_item_balance_to_backpack,
     load_resource_to_backpack,
+    move_camp_item_to_backpack,
     preview_recycle,
     recycle_item_balance,
     recycle_item_instance,
@@ -1106,6 +1107,21 @@ async def check_in_item_instance_route(character_id: str, instance_id: str, addr
     player = await check_in_item_instance(address, character_id, instance_id)
     if player is None:
         raise HTTPException(status_code=404, detail="No matching backpacked instance on that character")
+
+    return player.to_dict()
+
+
+@player_router.post("/me/characters/{character_id}/items/{instance_id}/stow", response_model=PlayerDataResponse)
+async def move_camp_item_to_backpack_route(
+    character_id: str, instance_id: str, address: str = Depends(get_current_address)
+):
+    """Move one item instance straight from a character's camp storage into their backpack - stays on the character the whole way, so unlike check-out this works mid-adventure too."""
+    try:
+        player = await move_camp_item_to_backpack(address, character_id, instance_id)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc))
+    if player is None:
+        raise HTTPException(status_code=404, detail="No matching camped instance on that character")
 
     return player.to_dict()
 
