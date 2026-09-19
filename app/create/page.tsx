@@ -1065,8 +1065,7 @@ export default function Storyteller() {
       },
       "choices": [
         {
-          "show_if": "stat.Fame>40",
-          "show_if": "stat.Infamy>40",
+          "show_if": "stat.Fame>40 && stat.Infamy>40",
           "comment": "only shown once the player has high enough fame",
           "text": "Greet the guard and walk through the main gate",
           "to": "city-square"

@@ -199,6 +199,21 @@ export default function GTC() {
             </tr>
           </tbody>
         </table>
+
+        <h3 className={styles.subheading}>9. Third-Party Sound Credits</h3>
+
+        <p className={styles.body}>
+          Some sound effects and music used in The Wudlands are sourced from{" "}
+          <Link
+            href="https://www.zapsplat.com/license-type/standard-license/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className={styles.highlight}
+          >
+            ZapSplat
+          </Link>{" "}
+          under their Standard License.
+        </p>
       </section>
 
     </div>

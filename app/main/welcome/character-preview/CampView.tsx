@@ -5,10 +5,6 @@ import type { SlotCharacterSummary } from "../SoulSlotGrid";
 import { useSound } from "../../SoundProvider";
 
 const CAMP_ITEMS_SOUND = "/sounds/west_wolf_Campfire.mp3";
-// 0 (silent) to 1 (full volume, the Audio element's own default) - a
-// looping ambience track sitting under the rest of the UI reads as too
-// loud at 1, so this pulls it down to a background level.
-const CAMP_ITEMS_SOUND_VOLUME = 0.4;
 
 // A fixed placeholder height for the campfire art at the bottom of the
 // screen - reserved out of ItemGrid's own fill-to-bottom measurement (see
@@ -149,7 +145,6 @@ export function CampView({
     if (!hasCampItems || muted) return;
     const audio = new Audio(CAMP_ITEMS_SOUND);
     audio.loop = true;
-    audio.volume = CAMP_ITEMS_SOUND_VOLUME;
     audio.play().catch(() => {
       // Autoplay can still be blocked without a preceding user gesture in
       // some browsers - opening camp is itself a click, so this should
