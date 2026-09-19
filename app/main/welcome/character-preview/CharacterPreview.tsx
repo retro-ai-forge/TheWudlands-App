@@ -314,7 +314,7 @@ export function CharacterPreview({
         {deleteError && <p className={styles.submitError}>{deleteError}</p>}
 
         <h1 className={tabStyles.name}>
-          {showCamp ? `${character.firstName}'s Campfire` : `${character.firstName} ${character.lastName}`}
+          {showCamp ? `${character.firstName}'s Camp` : `${character.firstName} ${character.lastName}`}
         </h1>
 
         <div className={showCamp || activeTab === "inventory" || activeTab === "soul" ? tabStyles.mainColumn : `${tabStyles.mainColumn} ${tabStyles.mainColumnPadded}`}>
