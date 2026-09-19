@@ -121,7 +121,7 @@ def _best_owned_station_tool_tier(
             best = max(best, tool.tier)
 
     for instance in (character.get("gear", {}).get("items", []) or []):
-        if instance.get("familyId") in _STATION_TOOL_FAMILY_IDS and instance.get("location") in ("backpack", "body"):
+        if instance.get("familyId") in _STATION_TOOL_FAMILY_IDS and instance.get("location") in ("backpack", "body", "camp"):
             entry = items_catalog.ITEM_CATALOG_ENTRIES_BY_ID.get(instance.get("itemId"))
             if entry:
                 best = max(best, entry.tier)

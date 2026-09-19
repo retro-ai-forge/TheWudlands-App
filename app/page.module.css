@@ -465,6 +465,25 @@
   font-family: inherit;
 }
 
+/* No portrait was ever set for this character (as opposed to
+   .slotQuestionMark, a URL that WAS set but failed to load) - a plain
+   black square with its own two-line label, filling the slot the same
+   way a real portrait <img> would. */
+.slotNoPortrait {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  background: #000;
+  color: #a89968;
+  font-size: clamp(0.8rem, 4.5vw, 1.1rem);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  text-align: center;
+  line-height: 1.4;
+}
+
 .slotImageLocked {
   width: 100%;
   height: 100%;

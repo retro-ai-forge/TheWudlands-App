@@ -183,12 +183,14 @@ class Character:
     # opposed to what's staged for an active craft (see `crafting` above).
     # `items` holds item instances (backend.items_catalog; only
     # needsItemDefinition:true families ever appear here - location:
-    # "backpack"/"body"/"crafting", the last meaning borrowed for an active
-    # craft). `resources`/`itemBalances` are flat-count balances split by
-    # physical location: "camp" (owned, not packed anywhere specific),
-    # "backpack", and "saddlepack" (mount-side, see the Mbagpack equip
-    # slot) - moving a unit between locations never changes the total the
-    # character owns, only where it currently sits.
+    # "backpack"/"body"/"crafting"/"camp", the last two meaning respectively
+    # borrowed for an active craft, and unequipped-but-not-backpack-capacity-
+    # counted (see in_adventure below and backend.players.unequip_item).
+    # `resources`/`itemBalances` are flat-count balances split by physical
+    # location: "camp" (owned, not packed anywhere specific), "backpack",
+    # and "saddlepack" (mount-side, see the Mbagpack equip slot) - moving a
+    # unit between locations never changes the total the character owns,
+    # only where it currently sits.
     gear: dict = field(default_factory=lambda: {
         "items": [],
         "resources": {"camp": {}, "backpack": {}, "saddlepack": {}},
@@ -199,6 +201,14 @@ class Character:
     # Not an item instance - see backend/data/light-source-burn-hours.json;
     # remaining burn time is computed lazily from litAt, not stored directly.
     equipped_light: Optional[dict] = None
+    # Player-toggled (see backend.players.set_in_adventure) - whether this
+    # character is currently out on an adventure, away from the player's
+    # shared vault. Changes what unequip_item does with a freed item: while
+    # True, it's dropped into this character's own gear.items location:
+    # "camp" (still owned, not backpack-capacity-counted, since there's no
+    # vault to send it back to mid-adventure); while False (safely at
+    # base), it goes straight to the player's shared vault instead.
+    in_adventure: bool = False
 
     def to_dict(self) -> dict:
         return {
@@ -225,7 +235,11 @@ class Character:
             # stamped to created_at (already in the past by the time this is
             # read back), which is the signal the frontend uses to show no
             # countdown at all, just a "ready" status.
-            "availability": {"name": "ready", "timeRdy": self.created_at.isoformat()},
+            "availability": {
+                "name": "ready",
+                "timeRdy": self.created_at.isoformat(),
+                "inAdventure": self.in_adventure,
+            },
             "crafting": self.crafting,
             "blueprints": self.blueprints,
             "gear": self.gear,

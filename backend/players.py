@@ -553,7 +553,7 @@ async def recycle_item_instance(
         instance = next(
             (
                 i for i in character.get("gear", {}).get("items", [])
-                if i["instanceId"] == instance_id and i.get("location") in ("backpack", "body")
+                if i["instanceId"] == instance_id and i.get("location") in ("backpack", "body", "camp")
             ),
             None,
         )
@@ -801,7 +801,7 @@ def _resolve_tool_for_craft(
             held_candidates = [
                 instance for instance in held_items
                 if instance.get("familyId") == family_id
-                and instance.get("location") in ("backpack", "body")
+                and instance.get("location") in ("backpack", "body", "camp")
                 and (_instance_tier(instance) or 0) >= tier
             ]
             if held_candidates:
@@ -1212,7 +1212,7 @@ def _resolve_recipe_direct_raw_totals(family_id: str, count: int, character: dic
                 continue
             family = items_catalog.ITEM_FAMILIES_BY_ID.get(opt["familyId"])
             if family and family.needs_item_definition and any(
-                item.get("familyId") == opt["familyId"] and item.get("location") in ("backpack", "body", "crafting")
+                item.get("familyId") == opt["familyId"] and item.get("location") in ("backpack", "body", "camp", "crafting")
                 for item in held_items
             ):
                 chosen = opt
@@ -1296,7 +1296,7 @@ def _resolve_recipe_full_chain_raw_total(
                 continue
             family = items_catalog.ITEM_FAMILIES_BY_ID.get(opt["familyId"])
             if family and family.needs_item_definition and any(
-                item.get("familyId") == opt["familyId"] and item.get("location") in ("backpack", "body", "crafting")
+                item.get("familyId") == opt["familyId"] and item.get("location") in ("backpack", "body", "camp", "crafting")
                 for item in held_items
             ):
                 chosen = opt
@@ -1929,12 +1929,19 @@ async def equip_item(address: str, character_id: str, instance_id: str, slots: L
     character = next((c for c in doc["characters"] if c["id"] == character_id), None)
     if character is None:
         return None
+    # "camp" counts as an equippable source too - unequip_item can leave an
+    # instance there (in_adventure=True), and there's no other path back
+    # to "body" for it, so it must be re-equippable directly from camp.
     instance = next(
-        (i for i in character.get("gear", {}).get("items", []) if i["instanceId"] == instance_id and i.get("location") == "backpack"),
+        (
+            i for i in character.get("gear", {}).get("items", [])
+            if i["instanceId"] == instance_id and i.get("location") in ("backpack", "camp")
+        ),
         None,
     )
     if instance is None:
         return None
+    source_location = instance["location"]
 
     family = items_catalog.ITEM_FAMILIES_BY_ID.get(instance["familyId"])
     if family is None:
@@ -1963,7 +1970,7 @@ async def equip_item(address: str, character_id: str, instance_id: str, slots: L
                 "$elemMatch": {
                     "id": character_id,
                     "$and": [
-                        {"gear.items": {"$elemMatch": {"instanceId": instance_id, "location": "backpack"}}},
+                        {"gear.items": {"$elemMatch": {"instanceId": instance_id, "location": source_location}}},
                         {
                             "gear.items": {
                                 "$not": {
@@ -1979,7 +1986,7 @@ async def equip_item(address: str, character_id: str, instance_id: str, slots: L
             },
         },
         {"$set": {"characters.$[char].gear.items.$[item]": equipped_instance}},
-        array_filters=[{"char.id": character_id}, {"item.instanceId": instance_id, "item.location": "backpack"}],
+        array_filters=[{"char.id": character_id}, {"item.instanceId": instance_id, "item.location": source_location}],
         return_document=ReturnDocument.AFTER,
     )
     if doc is None:
@@ -2067,21 +2074,24 @@ async def equip_item_from_pool(address: str, character_id: str, instance_id: str
 
 async def unequip_item(address: str, character_id: str, instance_id: str) -> Optional[Player]:
     """
-    Unequip one of a character's item instances - clears location back to
-    "backpack" and slotRef to [] (freeing both slots at once for a
-    two-handed item). Never capacity-gated (see the item-instance plan's
+    Unequip one of a character's item instances - clears slotRef to []
+    (freeing both slots at once for a two-handed item) either way, but
+    where it lands afterward depends on Character.in_adventure (player-
+    toggled - see set_in_adventure):
+
+    - in_adventure=True: location becomes "camp" - still this character's
+      own, but NOT counted against backpack capacity (see
+      items_catalog.backpack_slots_used) - there's no shared vault to send
+      it back to mid-adventure.
+    - in_adventure=False: the instance leaves this character entirely and
+      lands in the player's shared vault (location:"pool") instead -
+      safely at base, there's no reason to keep it personally held at all.
+
+    Never capacity-gated either way (see the item-instance plan's
     "Backpack capacity" section). Returns None if the instance isn't found
     equipped ("body") on this character - a location:"crafting" one is
     borrowed for an in-progress craft and can't be touched until it's
     released (see start_craft/finish_craft).
-
-    Replaces the whole matched array element in one $set (rather than two
-    separate dotted-path $set keys, location and slotRef, both routed
-    through the same $[item] array filter) - this environment's MongoDB-
-    compatible Firestore backend was observed silently dropping the second
-    of two array-filtered $set keys in one update (location changed,
-    slotRef didn't), so every field on this element is written together as
-    a single path instead.
     """
     db = get_database()
     doc = await db.players.find_one({"address": address, "characters.id": character_id})
@@ -2097,16 +2107,59 @@ async def unequip_item(address: str, character_id: str, instance_id: str) -> Opt
     if instance is None:
         return None
 
-    backpacked_instance = {**instance, "location": "backpack", "slotRef": []}
-    doc = await db.players.find_one_and_update(
-        {
-            "address": address,
-            "characters": {
-                "$elemMatch": {"id": character_id, "gear.items": {"$elemMatch": {"instanceId": instance_id, "location": "body"}}}
+    if character.get("availability", {}).get("inAdventure", False):
+        # Replaces the whole matched array element in one $set (rather
+        # than two separate dotted-path $set keys, location and slotRef,
+        # both routed through the same $[item] array filter) - this
+        # environment's MongoDB-compatible Firestore backend was observed
+        # silently dropping the second of two array-filtered $set keys in
+        # one update (location changed, slotRef didn't), so every field on
+        # this element is written together as a single path instead.
+        camped_instance = {**instance, "location": "camp", "slotRef": []}
+        doc = await db.players.find_one_and_update(
+            {
+                "address": address,
+                "characters": {
+                    "$elemMatch": {"id": character_id, "gear.items": {"$elemMatch": {"instanceId": instance_id, "location": "body"}}}
+                },
             },
-        },
-        {"$set": {"characters.$[char].gear.items.$[item]": backpacked_instance}},
-        array_filters=[{"char.id": character_id}, {"item.instanceId": instance_id, "item.location": "body"}],
+            {"$set": {"characters.$[char].gear.items.$[item]": camped_instance}},
+            array_filters=[{"char.id": character_id}, {"item.instanceId": instance_id, "item.location": "body"}],
+            return_document=ReturnDocument.AFTER,
+        )
+    else:
+        pooled_instance = {**instance, "location": "pool", "slotRef": []}
+        doc = await db.players.find_one_and_update(
+            {
+                "address": address,
+                "characters": {
+                    "$elemMatch": {"id": character_id, "gear.items": {"$elemMatch": {"instanceId": instance_id, "location": "body"}}}
+                },
+            },
+            {
+                "$pull": {"characters.$[char].gear.items": {"instanceId": instance_id}},
+                "$push": {"vault.items": pooled_instance},
+            },
+            array_filters=[{"char.id": character_id}],
+            return_document=ReturnDocument.AFTER,
+        )
+    if doc is None:
+        return None
+    return _doc_to_player(doc)
+
+
+async def set_in_adventure(address: str, character_id: str, in_adventure: bool) -> Optional[Player]:
+    """
+    Player-toggled flag (see the Body/Soul tab's small corner button) -
+    whether this character currently counts as out on an adventure, away
+    from the player's shared vault. Read by unequip_item to decide where a
+    freed item lands (see there). Returns None if the address/character
+    pair doesn't match any player document.
+    """
+    db = get_database()
+    doc = await db.players.find_one_and_update(
+        {"address": address, "characters.id": character_id},
+        {"$set": {"characters.$.availability.inAdventure": in_adventure}},
         return_document=ReturnDocument.AFTER,
     )
     if doc is None:
@@ -2185,9 +2238,9 @@ async def check_out_item_instance(address: str, character_id: str, instance_id: 
 async def check_in_item_instance(address: str, character_id: str, instance_id: str) -> Optional[Player]:
     """
     The reverse of check_out_item_instance: move one item instance from a
-    character's backpack back into the shared pool. Never capacity-gated
-    (freeing space always succeeds). Returns None if the instance isn't
-    found backpacked on this character.
+    character's backpack (or camp - see unequip_item) back into the shared
+    pool. Never capacity-gated (freeing space always succeeds). Returns
+    None if the instance isn't found backpacked/camped on this character.
     """
     db = get_database()
     doc = await db.players.find_one({"address": address, "characters.id": character_id})
@@ -2199,7 +2252,7 @@ async def check_in_item_instance(address: str, character_id: str, instance_id: s
     instance = next(
         (
             i for i in character.get("gear", {}).get("items", [])
-            if i["instanceId"] == instance_id and i.get("location") == "backpack"
+            if i["instanceId"] == instance_id and i.get("location") in ("backpack", "camp")
         ),
         None,
     )
@@ -2323,13 +2376,13 @@ async def destroy_item_balance(address: str, character_id: str, item_id: str, am
 
 async def destroy_character_item_instance(address: str, character_id: str, instance_id: str) -> Optional[Player]:
     """
-    Permanently remove one item instance from `character_id`'s own backpack
-    or body (not "crafting", borrowed for an in-progress craft) -
+    Permanently remove one item instance from `character_id`'s own backpack,
+    body, or camp (not "crafting", borrowed for an in-progress craft) -
     character-owned counterpart to destroy_item_instance (which is vault-
     pool-only). The zero-recovery fallback the character-side item popup
     reaches for when recycle_item_instance(from_vault=False) finds no
-    recipe to recycle. Returns None if no matching backpack/body instance
-    exists on this character.
+    recipe to recycle. Returns None if no matching instance exists on this
+    character.
     """
     db = get_database()
     doc = await db.players.find_one_and_update(
@@ -2338,7 +2391,7 @@ async def destroy_character_item_instance(address: str, character_id: str, insta
             "characters": {
                 "$elemMatch": {
                     "id": character_id,
-                    "gear.items": {"$elemMatch": {"instanceId": instance_id, "location": {"$in": ["backpack", "body"]}}},
+                    "gear.items": {"$elemMatch": {"instanceId": instance_id, "location": {"$in": ["backpack", "body", "camp"]}}},
                 }
             },
         },

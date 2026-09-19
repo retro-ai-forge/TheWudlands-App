@@ -45,6 +45,8 @@ export interface SoulSlotDefinition {
 export interface CharacterAvailability {
   name: string;
   timeRdy: string;
+  /** Player-toggled - whether this character is currently out on an adventure, away from the shared vault. See InAdventureToggle.tsx. */
+  inAdventure: boolean;
 }
 
 export interface CharacterClasses {
@@ -632,13 +634,13 @@ function SoulSlotCard({
                 </svg>
               </span>
             ) : (
-              // No portrait was ever set for this character.
-              // eslint-disable-next-line @next/next/no-img-element
-              <img
-                className={`${styles.slotImageLocked} ${styles.slotImageColor}`}
-                src={`${IMAGE_BASE}char-empty.jpg`}
-                alt={occupant.firstName}
-              />
+              // No portrait was ever set for this character (portraitUrl is
+              // the "empty" sentinel, never a real URL to attempt loading).
+              <span className={styles.slotNoPortrait} aria-label="No portrait">
+                no
+                <br />
+                portrait
+              </span>
             )}
           </span>
         ) : (

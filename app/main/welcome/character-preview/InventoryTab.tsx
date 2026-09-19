@@ -5,6 +5,7 @@ import { formatRemainingCompactLong, useCraftCountdown } from "../craftTimer";
 import type { SlotCharacterSummary } from "../SoulSlotGrid";
 import type { ItemInstance } from "../SoulSlotGrid";
 export type { ItemInstance } from "../SoulSlotGrid";
+import { InAdventureToggle } from "./InAdventureToggle";
 
 // GET /api/auth/blueprint-categories - lore/reference data (not
 // player-specific), reused here purely to look up each known blueprint's own
@@ -2048,6 +2049,7 @@ export function InventoryTab({
 
   return (
     <div className={styles.panel}>
+      <InAdventureToggle character={character} onPlayerDataUpdated={onPlayerDataUpdated} />
       <div className={styles.invSubTabRow}>
         <button
           type="button"

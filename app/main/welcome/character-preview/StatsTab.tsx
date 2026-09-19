@@ -6,6 +6,7 @@ import { useState } from "react";
 import { formatRemainingCompactLong, useCraftCountdown } from "../craftTimer";
 import type { SlotCharacterSummary } from "../SoulSlotGrid";
 import type { RawPlayerData } from "./InventoryTab";
+import { InAdventureToggle } from "./InAdventureToggle";
 
 const BODY_ATTRS = [
   ["migh", "Might"],
@@ -156,6 +157,7 @@ export function StatsTab({
 
   return (
     <div className={styles.panel}>
+      <InAdventureToggle character={character} onPlayerDataUpdated={onPlayerDataUpdated} />
       <div className={styles.statsLayout}>
         <button
           type="button"
@@ -181,12 +183,15 @@ export function StatsTab({
               />
             )
           ) : (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
-              src="/images/soul-creation/char-empty.jpg"
-              alt=""
-              style={{ width: "100%", height: "100%", objectFit: "cover" }}
-            />
+            // No portrait was ever set for this character - same plain
+            // black square + label as the soul slot grid's own
+            // .slotNoPortrait (a different CSS module, so its own class
+            // here instead of importing across modules).
+            <span className={styles.noPortraitPlaceholder} aria-label="No portrait">
+              no
+              <br />
+              portrait
+            </span>
           )}
         </button>
 

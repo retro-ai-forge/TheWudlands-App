@@ -3,6 +3,7 @@ import styles from "./CharacterTabs.module.css";
 import { getPortraitCropImgStyle } from "@/app/lib/portraitCrop";
 import { FALLBACK_ITEM_ICON, ItemDetailPopup, type BlueprintTierInfo, type RawPlayerData } from "./InventoryTab";
 import type { ItemInstance, SlotCharacterSummary } from "../SoulSlotGrid";
+import { InAdventureToggle } from "./InAdventureToggle";
 
 // Overlaid directly on the portrait: head/chest/legs down the left edge,
 // back/side down the right edge. The right-edge slot below Back used to be
@@ -151,6 +152,7 @@ export function BodyTab({
 
   return (
     <div className={styles.panel}>
+      <InAdventureToggle character={character} onPlayerDataUpdated={onPlayerDataUpdated} />
       <div className={styles.bodyLayout}>
         <div className={styles.frameColumn}>
           <div className={styles.frameStage}>

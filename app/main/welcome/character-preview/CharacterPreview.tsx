@@ -323,8 +323,10 @@ export function CharacterPreview({
           {activeTab === "body" && (
             <BodyTab character={character} onPlayerDataUpdated={onPlayerDataUpdated} onOpenCamp={() => setShowCamp(true)} />
           )}
-          {activeTab === "soul" && <SoulTab character={character} />}
-          {activeTab === "adventure" && <AdventureTab character={character} />}
+          {activeTab === "soul" && <SoulTab character={character} onPlayerDataUpdated={onPlayerDataUpdated} />}
+          {activeTab === "adventure" && (
+            <AdventureTab character={character} onPlayerDataUpdated={onPlayerDataUpdated} />
+          )}
           {activeTab === "inventory" && (
             <InventoryTab
               character={character}

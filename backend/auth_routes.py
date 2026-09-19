@@ -51,6 +51,7 @@ from backend.players import (
     preview_recycle,
     recycle_item_balance,
     recycle_item_instance,
+    set_in_adventure,
     set_prime_profession,
     start_craft,
     unequip_item,
@@ -141,10 +142,14 @@ class ActivePlayerCountResponse(BaseModel):
 
 
 class CharacterAvailabilityResponse(BaseModel):
-    """Availability stats: name, ready timer"""
+    """Availability stats: name, ready timer, adventure flag"""
 
     name: str = Field(..., description="Display availability info")
     timeRdy: str = Field(..., description="Timestamp (ISO 8601) when free or ready")
+    inAdventure: bool = Field(
+        False,
+        description="Player-toggled - whether this character is currently out on an adventure, away from the shared vault. Changes where unequip_item sends a freed item.",
+    )
 
 
 class CharacterClassResponse(BaseModel):
@@ -303,6 +308,7 @@ class CharacterResponse(BaseModel):
     equippedLight: Optional[dict] = Field(
         None, description="Which light source (if any) is currently lit and held - {family, tier, litAt, hand}"
     )
+
 
 class PlayerCraftingResponse(BaseModel):
     """Crafting-only shared pool - raw/processed resources and tools, drawn
@@ -1579,6 +1585,27 @@ async def update_my_character_prime_profession(
         player = await set_prime_profession(address, character_id, payload.slot)
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc))
+    if player is None:
+        raise HTTPException(status_code=404, detail="No player record found for this address")
+
+    return player.to_dict()
+
+
+class SetInAdventureRequest(BaseModel):
+    """Whether this character currently counts as out on an adventure."""
+
+    inAdventure: bool = Field(..., description="True = away from the shared vault")
+
+
+@player_router.patch("/me/characters/{character_id}/in-adventure", response_model=PlayerDataResponse)
+async def update_my_character_in_adventure(
+    character_id: str, payload: SetInAdventureRequest, address: str = Depends(get_current_address)
+):
+    """
+    Toggles Character.inAdventure - the small corner button on the Body/Soul
+    tabs. Changes where unequip_item sends a freed item (see there).
+    """
+    player = await set_in_adventure(address, character_id, payload.inAdventure)
     if player is None:
         raise HTTPException(status_code=404, detail="No player record found for this address")
 

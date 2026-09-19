@@ -1,6 +1,8 @@
 import { useState } from "react";
 import styles from "./CharacterTabs.module.css";
 import type { SlotCharacterSummary } from "../SoulSlotGrid";
+import type { RawPlayerData } from "./InventoryTab";
+import { InAdventureToggle } from "./InAdventureToggle";
 
 // The 10 dark squares baked into chakra-page-active.jpg (600x900) - found
 // by pixel-analyzing the image for near-black square regions, each
@@ -31,7 +33,13 @@ function activeChakraCount(attr: SlotCharacterSummary["attr"]): number {
   return Math.floor((attr.will + attr.insi + attr.lore + attr.pres) / 10);
 }
 
-export function SoulTab({ character }: { character: SlotCharacterSummary }) {
+export function SoulTab({
+  character,
+  onPlayerDataUpdated,
+}: {
+  character: SlotCharacterSummary;
+  onPlayerDataUpdated?: (data: RawPlayerData) => void;
+}) {
   // Click-to-toggle "lighter" test state only, for eyeballing whether each
   // slot's measured position actually lines up with its dark square - not
   // real equip state (no backend concept of equipped soul gear yet). Only
@@ -47,6 +55,7 @@ export function SoulTab({ character }: { character: SlotCharacterSummary }) {
 
   return (
     <div className={`${styles.panel} ${styles.soulPanel}`}>
+      <InAdventureToggle character={character} onPlayerDataUpdated={onPlayerDataUpdated} />
       <div className={styles.soulImageBox}>
         <div className={styles.soulImageFrame}>
           {/* eslint-disable-next-line @next/next/no-img-element */}
