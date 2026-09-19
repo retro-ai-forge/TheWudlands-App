@@ -23,7 +23,11 @@ from typing import Any, Optional
 import requests
 
 ASSETHUB_RPC = os.getenv("ASSETHUB_RPC", "wss://polkadot-asset-hub-rpc.polkadot.io")
-IPFS_GATEWAY = os.getenv("IPFS_GATEWAY", "https://ipfs.io/ipfs/")
+# ipfs.io (and its sibling gateways dweb.link/nftstorage.link, all operated
+# by Protocol Labs) now reject plain server-side requests with a 429 -
+# "switching to a service worker gateway only" - which a backend fetch can
+# never satisfy. Pinata's public gateway still serves plain HTTP requests.
+IPFS_GATEWAY = os.getenv("IPFS_GATEWAY", "https://gateway.pinata.cloud/ipfs/")
 
 WUD_MINERS_COLLECTION_ID = 852
 
