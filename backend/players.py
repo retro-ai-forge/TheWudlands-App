@@ -474,6 +474,65 @@ async def check_in_resource(
     return _doc_to_player(doc)
 
 
+async def check_out_resource_to_backpack(
+    address: str, character_id: str, resource_id: str, amount: int = 1
+) -> Optional[Player]:
+    """
+    Move `amount` of `resource_id` straight from the player's own shared
+    crafting stock (crafting.resources - the same pool check_in_resource
+    empties into, shown as "Party's Resources") into one of their
+    characters' own backpack (gear.resources.backpack) - physically
+    packing shared materials for that character to carry into an
+    adventure. Deliberately skips the character's own crafting.resources
+    entirely (that pool is populated exclusively by start_craft - see
+    check_in_resource's own docstring - not somewhere a direct transfer
+    should park materials even in passing). Capacity-gated exactly like
+    load_resource_to_backpack (same marginal-slot math, never a partial
+    fill) - this is the direct-to-backpack replacement for the old
+    check_out_resource (shared -> character's own vault), removed when the
+    character-level crafting vault itself went away.
+
+    Raises ValueError if the character has no backpack equipped, or the
+    backpack doesn't have room for the whole amount. Returns None if the
+    shared pool doesn't hold `amount`, or the address/character pair
+    doesn't match.
+    """
+    _validate_resource_grant(resource_id, amount)
+    db = get_database()
+    doc = await db.players.find_one({"address": address, "characters.id": character_id})
+    if doc is None:
+        return None
+    character = next((c for c in doc["characters"] if c["id"] == character_id), None)
+    if character is None:
+        return None
+    if doc.get("crafting", {}).get("resources", {}).get(resource_id, 0) < amount:
+        return None
+
+    capacity = items_catalog.backpack_capacity(character)
+    if capacity == 0:
+        raise ValueError("No backpack equipped")
+    used = items_catalog.backpack_slots_used(character)
+    marginal = _resource_marginal_backpack_slots(character, {resource_id: amount})
+    if used + marginal > capacity:
+        raise ValueError("Backpack is full")
+
+    doc = await db.players.find_one_and_update(
+        {
+            "address": address,
+            "characters.id": character_id,
+            f"crafting.resources.{resource_id}": {"$gte": amount},
+        },
+        {"$inc": {
+            f"crafting.resources.{resource_id}": -amount,
+            f"characters.$.gear.resources.backpack.{resource_id}": amount,
+        }},
+        return_document=ReturnDocument.AFTER,
+    )
+    if doc is None:
+        return None
+    return _doc_to_player(doc)
+
+
 async def preview_recycle(
     address: str, character_id: str, item_id: str, count: int = 1, from_vault: bool = False
 ) -> Optional[List[recycling.RawMaterialRecovery]]:
@@ -2813,7 +2872,61 @@ async def load_resource_to_backpack(
 async def unload_resource_from_backpack(
     address: str, character_id: str, resource_id: str, amount: int = 1
 ) -> Optional[Player]:
-    """The reverse of load_resource_to_backpack - never capacity-gated."""
+    """
+    Move `amount` of `resource_id` from a character's own backpack
+    (gear.resources.backpack) straight into the player's shared crafting
+    stock (crafting.resources - "Party's Resources", the same pool
+    check_out_resource_to_backpack draws from) - the reverse of that
+    function. Never capacity-gated on the shared-pool side (only backpacks
+    have a slot ceiling). Raises ValueError if the character is currently
+    out on an adventure - there's no reaching the shared vault mid-
+    adventure, same as check_out_item_balance; a packed resource popup
+    should offer move_backpack_resource_to_camp instead while inAdventure.
+    Returns None if the character doesn't hold `amount` in its backpack.
+    """
+    _validate_resource_grant(resource_id, amount)
+    db = get_database()
+    character_doc = await db.players.find_one(
+        {"address": address, "characters.id": character_id}, {"characters.$": 1}
+    )
+    if character_doc is None or not character_doc.get("characters"):
+        return None
+    if character_doc["characters"][0].get("availability", {}).get("inAdventure", False):
+        raise ValueError("Character is out on an adventure - no reaching the shared vault")
+
+    doc = await db.players.find_one_and_update(
+        {
+            "address": address,
+            "characters": {
+                "$elemMatch": {"id": character_id, f"gear.resources.backpack.{resource_id}": {"$gte": amount}}
+            },
+        },
+        {"$inc": {
+            f"characters.$.gear.resources.backpack.{resource_id}": -amount,
+            f"crafting.resources.{resource_id}": amount,
+        }},
+        return_document=ReturnDocument.AFTER,
+    )
+    if doc is None:
+        return None
+    return _doc_to_player(doc)
+
+
+async def move_backpack_resource_to_camp(
+    address: str, character_id: str, resource_id: str, amount: int = 1
+) -> Optional[Player]:
+    """
+    Move `amount` of `resource_id` straight from a character's own backpack
+    (gear.resources.backpack) into their own camp (gear.resources.camp) -
+    both ends already this character's own holdings, so (like
+    move_backpack_item_to_camp) this works fine mid-adventure, unlike
+    unload_resource_from_backpack which reaches the shared vault instead.
+    This is what lets a packed resource's own popup offer a real "move to
+    camp" action while out on a story, the same way a packed ITEM instance
+    already does (see unstowToCamp). Never capacity-gated (camp is
+    uncapped). Returns None if the character doesn't hold `amount` in its
+    backpack.
+    """
     _validate_resource_grant(resource_id, amount)
     db = get_database()
     doc = await db.players.find_one_and_update(
@@ -2825,7 +2938,99 @@ async def unload_resource_from_backpack(
         },
         {"$inc": {
             f"characters.$.gear.resources.backpack.{resource_id}": -amount,
-            f"characters.$.crafting.resources.{resource_id}": amount,
+            f"characters.$.gear.resources.camp.{resource_id}": amount,
+        }},
+        return_document=ReturnDocument.AFTER,
+    )
+    if doc is None:
+        return None
+    return _doc_to_player(doc)
+
+
+async def move_camp_resource_to_backpack(
+    address: str, character_id: str, resource_id: str, amount: int = 1
+) -> Optional[Player]:
+    """
+    Move `amount` of `resource_id` straight from a character's own camp
+    (gear.resources.camp) into their own backpack (gear.resources.backpack)
+    - the reverse of move_backpack_resource_to_camp, and the resource
+    equivalent of move_camp_item_to_backpack. Capacity-gated exactly like
+    check_out_resource_to_backpack (same marginal-slot math, never a
+    partial fill) - camp itself stays uncapped either way. Raises
+    ValueError if the character has no backpack equipped, or the backpack
+    doesn't have room for the whole amount. Returns None if the character
+    doesn't hold `amount` in its camp.
+    """
+    _validate_resource_grant(resource_id, amount)
+    db = get_database()
+    doc = await db.players.find_one({"address": address, "characters.id": character_id})
+    if doc is None:
+        return None
+    character = next((c for c in doc["characters"] if c["id"] == character_id), None)
+    if character is None:
+        return None
+    if character.get("gear", {}).get("resources", {}).get("camp", {}).get(resource_id, 0) < amount:
+        return None
+
+    capacity = items_catalog.backpack_capacity(character)
+    if capacity == 0:
+        raise ValueError("No backpack equipped")
+    used = items_catalog.backpack_slots_used(character)
+    marginal = _resource_marginal_backpack_slots(character, {resource_id: amount})
+    if used + marginal > capacity:
+        raise ValueError("Backpack is full")
+
+    doc = await db.players.find_one_and_update(
+        {
+            "address": address,
+            "characters": {
+                "$elemMatch": {"id": character_id, f"gear.resources.camp.{resource_id}": {"$gte": amount}}
+            },
+        },
+        {"$inc": {
+            f"characters.$.gear.resources.camp.{resource_id}": -amount,
+            f"characters.$.gear.resources.backpack.{resource_id}": amount,
+        }},
+        return_document=ReturnDocument.AFTER,
+    )
+    if doc is None:
+        return None
+    return _doc_to_player(doc)
+
+
+async def check_in_resource_from_camp(
+    address: str, character_id: str, resource_id: str, amount: int = 1
+) -> Optional[Player]:
+    """
+    Move `amount` of `resource_id` straight from a character's own camp
+    (gear.resources.camp) into the player's shared crafting stock
+    (crafting.resources - "Party's Resources") - the camp equivalent of
+    unload_resource_from_backpack. Same inAdventure guard for the same
+    reason: there's no reaching the shared vault mid-adventure, so a camp
+    resource's own popup should offer move_camp_resource_to_backpack
+    instead while out on a story. Returns None if the character doesn't
+    hold `amount` in its camp.
+    """
+    _validate_resource_grant(resource_id, amount)
+    db = get_database()
+    character_doc = await db.players.find_one(
+        {"address": address, "characters.id": character_id}, {"characters.$": 1}
+    )
+    if character_doc is None or not character_doc.get("characters"):
+        return None
+    if character_doc["characters"][0].get("availability", {}).get("inAdventure", False):
+        raise ValueError("Character is out on an adventure - no reaching the shared vault")
+
+    doc = await db.players.find_one_and_update(
+        {
+            "address": address,
+            "characters": {
+                "$elemMatch": {"id": character_id, f"gear.resources.camp.{resource_id}": {"$gte": amount}}
+            },
+        },
+        {"$inc": {
+            f"characters.$.gear.resources.camp.{resource_id}": -amount,
+            f"crafting.resources.{resource_id}": amount,
         }},
         return_document=ReturnDocument.AFTER,
     )

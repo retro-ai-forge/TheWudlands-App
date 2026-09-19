@@ -11,6 +11,7 @@ import {
   qualityState,
   type BlueprintTierInfo,
   type RawPlayerData,
+  type ResourceTierInfo,
 } from "./InventoryTab";
 import type { ItemInstance, SlotCharacterSummary } from "../SoulSlotGrid";
 import { InAdventureToggle } from "./InAdventureToggle";
@@ -191,6 +192,35 @@ export function BodyTab({
       .catch(() => setCatalog({}));
   }, []);
 
+  // Same resource-catalog fetch InventoryTab.tsx already does independently
+  // for its own resourceTierInfo - needed here too now that a worn
+  // backpack's popup can show packed raw/processed materials (see
+  // packedItems below), not just packed items.
+  const [resourceTierInfo, setResourceTierInfo] = useState<ResourceTierInfo>({});
+  useEffect(() => {
+    fetch("/api/auth/resource-catalog")
+      .then((res) => (res.ok ? res.json() : []))
+      .then(
+        (
+          data: Array<{
+            id: string;
+            name: string;
+            familyId: string;
+            tier: number;
+            resourceFamily: string;
+            category: "raw" | "processed";
+          }>
+        ) => {
+          const map: ResourceTierInfo = {};
+          for (const item of data) {
+            map[item.id] = { tier: item.tier, family: item.resourceFamily, category: item.category, name: item.name };
+          }
+          setResourceTierInfo(map);
+        }
+      )
+      .catch(() => setResourceTierInfo({}));
+  }, []);
+
   // The clicked slot's own equipped instance, if any - opens the same
   // recycle/destroy(-from-character)/unequip popup InventoryTab.tsx's new
   // "Items" accordion uses (source:"character"), scoped to whatever's worn
@@ -220,8 +250,13 @@ export function BodyTab({
   // What's actually packed into whichever backpack is worn - handed to
   // ItemDetailPopup only for a worn family:"backpack" instance's own
   // popup (see its packedItems prop) so it can show a peek inside.
-  const { ids: backpackIds, balances: backpackCombined, lookupIds: backpackLookupIds, instanceQuality: backpackInstanceQuality } =
-    computeBackpackContents(character);
+  const {
+    ids: backpackIds,
+    balances: backpackCombined,
+    lookupIds: backpackLookupIds,
+    instanceQuality: backpackInstanceQuality,
+    resourceBalances: backpackResourceBalances,
+  } = computeBackpackContents(character);
 
   // Same emptiness check as CampView's own hasCampItems - lets the camp
   // button carry a small dropped.png badge (see below) so the player can
@@ -412,6 +447,8 @@ export function BodyTab({
             balances: backpackCombined,
             lookupIds: backpackLookupIds,
             instanceQuality: backpackInstanceQuality,
+            resourceBalances: backpackResourceBalances,
+            resourceTierInfo,
           }}
           backpackSlotsUsed={character.gear.backpackSlotsUsed}
           backpackCapacity={character.gear.backpackCapacity}

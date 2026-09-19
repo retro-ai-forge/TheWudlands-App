@@ -1766,6 +1766,13 @@
   image-rendering: pixelated;
 }
 
+/* Tent reads as "nothing to see here" once camp is empty - same idea as
+   the campfire's own lit/unlit swap, just a dimming filter on the same
+   camp.png rather than a second image. */
+.campfireStageIconEmpty {
+  filter: brightness(0.55);
+}
+
 /* Anchored off the tent's own box (left/bottom:0 of .campTentGroup, which
    is sized to the tent), pulled left via transform so it sits beside the
    tent rather than dead-center under it - both stay readable rather than
@@ -1956,6 +1963,22 @@
   -webkit-user-select: none;
   user-select: none;
   pointer-events: none;
+}
+
+/* A packed resource tile's stand-in for .itemGridImg - resources have no
+   catalog icon image (see PackedItemsRow's own comment on why), so the
+   tile just centers the resource's short text label instead. */
+.itemGridResourceLabel {
+  display: flex;
+  width: 100%;
+  height: 100%;
+  align-items: center;
+  justify-content: center;
+  padding: 0.5rem;
+  text-align: center;
+  font-size: 0.8rem;
+  color: #d4a060;
+  word-break: break-word;
 }
 
 .itemGridTierBadge {
@@ -2486,18 +2509,24 @@
 .transferButtons {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.25rem;
+  gap: 0.4rem;
   padding: 0.3rem 0;
 }
 
-/* min-width + gap sized so all 7 buttons still fit on one row down to a
-   300px-wide screen. */
+/* Round, same pill shape as .craftCountButton (the other itemBalance
+   popups' quantity buttons) - min-width rather than a fixed width since
+   TRANSFER_AMOUNTS goes up to two digits (20/50), unlike craftCountButton's
+   single-digit max. flex-wrap above (not nowrap, unlike .itemPopupActions)
+   is deliberate: at 8 buttons wide (6 amounts + ∞ + a destination icon)
+   this row doesn't fit one line at the popup's own max-width the way the
+   shorter 5-button destroy/recycle row does, so it wraps onto a second
+   line instead of shrinking illegibly or overflowing. */
 .transferButton {
   min-width: 2.1rem;
   padding: 0.3rem 0.3rem;
   background: #1a1a1a;
   border: 1px solid rgba(168, 153, 104, 0.4);
-  border-radius: 3px;
+  border-radius: 999px;
   color: #d4a060;
   font-family: inherit;
   font-size: 0.85rem;
@@ -2515,6 +2544,35 @@
   color: #4a4432;
   border-color: rgba(168, 153, 104, 0.15);
   cursor: default;
+}
+
+/* Decorative only (see TransferButtons' destinationIcon prop) - labels
+   where a row's amount buttons send the material. Same size as
+   .itemPopupBackpackIcon (the vault/camp/backpack icons every OTHER move
+   button in these popups uses) for visual consistency, not shrunk to
+   match .transferButton's own smaller height. */
+.transferDestinationIcon {
+  align-self: center;
+  width: 2.6rem;
+  height: 2.6rem;
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
+  image-rendering: pixelated;
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
+  pointer-events: none;
+}
+
+/* Replaces the whole quantity-button row (see ResourceList's
+   destinationUnavailableLabel prop) when there's nowhere for the transfer
+   to actually go right now - "No backpack equipped"/"Backpack full". */
+.transferUnavailable {
+  margin: 0;
+  padding: 0.3rem 0;
+  font-size: 0.8rem;
+  color: #8a7a52;
 }
 
 

@@ -37,7 +37,10 @@ export type BlueprintTierInfo = Record<
     gatheringBonuses?: string[];
   }
 >;
-type ResourceTierInfo = Record<string, { tier: number; family: string; category: "raw" | "processed"; name?: string }>;
+export type ResourceTierInfo = Record<
+  string,
+  { tier: number; family: string; category: "raw" | "processed"; name?: string }
+>;
 
 // The raw shape returned by /me/characters and every check-in/check-out
 // transfer endpoint (backend.players.Player.to_dict()) - enough to refresh
@@ -78,20 +81,45 @@ type RecycleMaterial = {
 type RecyclePreview = { materials: RecycleMaterial[] };
 
 const TRANSFER_AMOUNTS = [1, 2, 5, 10, 20, 50] as const;
+// Party's Resources/Tools' own quantity row keeps the full TRANSFER_AMOUNTS
+// (drawing from a shared pool that can hold hundreds of units), but a
+// single packed/camped resource's own popup (see ResourcePopup) drops 50 -
+// at typical backpack/camp quantities it's rarely reachable anyway, and
+// the shorter row reads cleaner in that smaller popup.
+const RESOURCE_POPUP_TRANSFER_AMOUNTS = [1, 2, 5, 10, 20] as const;
 
 /** The row of quick-transfer quantity buttons revealed under a clicked resource/tool row. */
 function TransferButtons({
   owned,
   pending,
   onPick,
+  destinationIcon,
+  destinationLabel = "Backpack",
+  amounts = TRANSFER_AMOUNTS,
 }: {
   owned: number;
   pending: boolean;
   onPick: (amount: number) => void;
+  /** When given, a small static icon tacked on after the ∞ button - purely
+   * a label for where clicking one of these amounts sends the material
+   * (e.g. a backpack icon for a check-out-to-backpack row), not a
+   * separate clickable trigger of its own - every amount button here
+   * already fires immediately on its own click, same as the rest of this
+   * row. */
+  destinationIcon?: string;
+  /** Accessible label for destinationIcon - e.g. "Vault"/"Camp" for a
+   * packed resource's move-out popup, whose destination varies by
+   * inAdventure. Defaults to "Backpack", the original (and still most
+   * common) destinationIcon usage. */
+  destinationLabel?: string;
+  /** The fixed-quantity buttons shown before the ∞ button - defaults to
+   * the full TRANSFER_AMOUNTS; ResourcePopup passes the shorter
+   * RESOURCE_POPUP_TRANSFER_AMOUNTS instead (see its own comment). */
+  amounts?: readonly number[];
 }) {
   return (
     <div className={styles.transferButtons}>
-      {TRANSFER_AMOUNTS.map((amount) => (
+      {amounts.map((amount) => (
         <button
           key={amount}
           type="button"
@@ -114,8 +142,17 @@ function TransferButtons({
           onPick(owned);
         }}
       >
-        ∞
+        <span className={styles.itemPopupInfinityGlyph}>∞</span>
       </button>
+      {destinationIcon && (
+        <div
+          role="img"
+          aria-label={destinationLabel}
+          title={destinationLabel}
+          className={styles.transferDestinationIcon}
+          style={{ backgroundImage: `url(${destinationIcon})` }}
+        />
+      )}
     </div>
   );
 }
@@ -251,12 +288,24 @@ function ResourceList({
   emptyLabel,
   tierInfo,
   onTransfer,
+  destinationIcon,
+  destinationUnavailableLabel,
 }: {
   balances: Record<string, number>;
   emptyLabel: string;
   tierInfo?: ResourceTierInfo;
   /** When given, clicking a row reveals quick-transfer quantity buttons that call this with (id, amount). */
   onTransfer?: (id: string, amount: number) => Promise<boolean>;
+  /** When given, shown as a small static icon at the end of every expanded
+   * row - purely a label for where onTransfer sends the material (e.g. a
+   * backpack icon), not a separate clickable trigger of its own. */
+  destinationIcon?: string;
+  /** When given (alongside destinationIcon), replaces the whole quantity-
+   * button row with this text instead of the buttons - e.g. "No backpack
+   * equipped"/"Backpack full" when there's nowhere for onTransfer to
+   * actually put anything right now, rather than letting every click fail
+   * server-side. */
+  destinationUnavailableLabel?: string;
 }) {
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [pendingId, setPendingId] = useState<string | null>(null);
@@ -344,11 +393,16 @@ function ResourceList({
                 rows.push(
                   <tr key={`${id}-transfer`}>
                     <td colSpan={4}>
-                      <TransferButtons
-                        owned={qty}
-                        pending={pendingId === id}
-                        onPick={(amount) => handlePick(id, amount)}
-                      />
+                      {destinationUnavailableLabel ? (
+                        <p className={styles.transferUnavailable}>{destinationUnavailableLabel}</p>
+                      ) : (
+                        <TransferButtons
+                          owned={qty}
+                          pending={pendingId === id}
+                          onPick={(amount) => handlePick(id, amount)}
+                          destinationIcon={destinationIcon}
+                        />
+                      )}
                     </td>
                   </tr>
                 );
@@ -653,6 +707,8 @@ export function ItemGrid({
     balances: Record<string, number>;
     lookupIds: Record<string, string>;
     instanceQuality: Record<string, number | null>;
+    resourceBalances: Record<string, number>;
+    resourceTierInfo: ResourceTierInfo;
   };
   backpackSlotsUsed?: number;
   backpackCapacity?: number;
@@ -803,9 +859,12 @@ export function ItemGrid({
 // The item popup's own move-destination icons - one per carry location an
 // item can end up in. Swapped in place of the old generic footer-tab icon
 // (char-preview-inventory.png) previously reused here for "backpack".
-const BACKPACK_ACTION_ICON = "/images/character/backpack.png";
+// Exported so CampView's own camp-resources popup (ResourcePopup) can
+// build the same "Backpack"/"Vault" destinations without a second copy of
+// these paths.
+export const BACKPACK_ACTION_ICON = "/images/character/backpack.png";
 const SADDLEPACK_ACTION_ICON = "/images/character/saddlebags.png";
-const VAULT_ACTION_ICON = "/images/character/vault.png";
+export const VAULT_ACTION_ICON = "/images/character/vault.png";
 const CAMP_ACTION_ICON = "/images/character/camp.png";
 
 const QUANTITY_OPTIONS = [1, 2, 5, 10] as const;
@@ -914,14 +973,25 @@ const ITEM_POPUP_FLASH_MS = 3000;
  * popup) and CampView (a camp-located backpack's popup) both call this
  * the same way to feed ItemDetailPopup's packedItems/backpackSlotsUsed/
  * backpackCapacity props. Doesn't include tierInfo - each caller already
- * has its own independently-fetched item-catalog map to pair with this. */
+ * has its own independently-fetched item-catalog map to pair with this.
+ * resourceBalances is the separate gear.resources.backpack bucket (raw/
+ * processed materials checked out straight from Party's Resources - see
+ * InventoryTab's transferToBackpack) - kept apart from `balances` rather
+ * than merged in since resources use their own id space/tier lookup
+ * (resourceTierInfo, not itemCatalogTierInfo) and render as a plain list,
+ * not image tiles (see PackedResourcesList). */
 export function computeBackpackContents(character: {
-  gear: { items: ItemInstance[]; itemBalances: { backpack: Record<string, number> } };
+  gear: {
+    items: ItemInstance[];
+    itemBalances: { backpack: Record<string, number> };
+    resources: { backpack: Record<string, number> };
+  };
 }): {
   ids: string[];
   balances: Record<string, number>;
   lookupIds: Record<string, string>;
   instanceQuality: Record<string, number | null>;
+  resourceBalances: Record<string, number>;
 } {
   const backpackBalances = character.gear.itemBalances.backpack;
   const backpackInstances = character.gear.items.filter((instance) => instance.location === "backpack");
@@ -935,7 +1005,62 @@ export function computeBackpackContents(character: {
   }
   const balances: Record<string, number> = { ...backpackBalances, ...instanceRowBalances };
   const ids = Object.keys(balances).filter((id) => balances[id] > 0);
-  return { ids, balances, lookupIds, instanceQuality };
+  return { ids, balances, lookupIds, instanceQuality, resourceBalances: character.gear.resources.backpack };
+}
+
+// Highest tier first, same ordering PackedItemsRow's own item tiles use.
+function sortResourceIds(balances: Record<string, number>, tierInfo: ResourceTierInfo): string[] {
+  return Object.keys(balances)
+    .filter((id) => (balances[id] ?? 0) > 0)
+    .sort((a, b) => (tierInfo[b]?.tier ?? 0) - (tierInfo[a]?.tier ?? 0));
+}
+
+/** One .itemGridCell tile per owned resource id, for embedding alongside
+ * (PackedItemsRow) or instead of (CampView's own camp-resources strip)
+ * item tiles in the same horizontally-scrolling row. Resources have no
+ * catalog icon (they're raw/processed materials, not items - see
+ * ResourceList's own getResourceIcon, which falls back to a plain emoji
+ * for the exact same reason), so each tile shows a short text label
+ * instead of .itemGridImg - just the last word of the resource's own name
+ * (e.g. "Oak Wood" -> "Wood"), since the tier badge already disambiguates
+ * which tier within that family this is. Clicking a tile hands its id to
+ * `onSelect`, which the caller uses to open a ResourcePopup. */
+export function ResourceTiles({
+  balances,
+  tierInfo,
+  onSelect,
+}: {
+  balances: Record<string, number>;
+  tierInfo: ResourceTierInfo;
+  onSelect: (id: string) => void;
+}) {
+  return (
+    <>
+      {sortResourceIds(balances, tierInfo).map((id) => {
+        const info = tierInfo[id];
+        const fullName = info?.name ?? formatResourceLabel(id);
+        const label = fullName.split(" ").pop() ?? fullName;
+        return (
+          <button
+            key={id}
+            type="button"
+            className={styles.itemGridCell}
+            title={fullName}
+            onClick={() => onSelect(id)}
+            onContextMenu={(e) => e.preventDefault()}
+          >
+            <span className={styles.itemGridResourceLabel}>{label}</span>
+            {!!info?.tier && (
+              <span className={`${styles.itemGridTierBadge} ${itemGridTierBadgeClass(info.tier)}`}>
+                {getTierIndicator(info.tier)}
+              </span>
+            )}
+            <span className={styles.itemGridCountBadge}>{balances[id] ?? 0}</span>
+          </button>
+        );
+      })}
+    </>
+  );
 }
 
 /** Single-row, horizontally-scrolling strip of tiles - what a worn
@@ -955,6 +1080,8 @@ function PackedItemsRow({
   balances,
   lookupIds,
   instanceQuality,
+  resourceBalances,
+  resourceTierInfo,
   hasBackpackEquipped,
   hasSaddlepackEquipped,
   inAdventure,
@@ -966,6 +1093,16 @@ function PackedItemsRow({
   balances: Record<string, number>;
   lookupIds: Record<string, string>;
   instanceQuality: Record<string, number | null>;
+  /** gear.resources.backpack - raw/processed materials checked out from
+   * Party's Resources (see InventoryTab's transferToBackpack). Rendered
+   * as a plain ResourceList below the item tiles instead of joining
+   * `ids`/`balances` above - resources have no image icon and use their
+   * own tier lookup (resourceTierInfo), so they don't fit the tile grid's
+   * id-and-BlueprintTierInfo shape. View-only for now, no onTransfer -
+   * there's no "unload" endpoint back out of a backpack straight to
+   * Party's Resources yet. */
+  resourceBalances: Record<string, number>;
+  resourceTierInfo: ResourceTierInfo;
   hasBackpackEquipped: boolean;
   hasSaddlepackEquipped: boolean;
   inAdventure: boolean;
@@ -973,8 +1110,10 @@ function PackedItemsRow({
   onPlayerDataUpdated?: (data: RawPlayerData) => void;
 }) {
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [selectedResourceId, setSelectedResourceId] = useState<string | null>(null);
 
-  if (ids.length === 0) {
+  const sortedResourceIds = sortResourceIds(resourceBalances, resourceTierInfo);
+  if (ids.length === 0 && sortedResourceIds.length === 0) {
     return <p className={styles.packedItemsEmpty}>Nothing packed in it yet.</p>;
   }
   const sortedIds = [...ids].sort((a, b) => {
@@ -984,6 +1123,7 @@ function PackedItemsRow({
   });
   return (
     <>
+      {(ids.length > 0 || sortedResourceIds.length > 0) && (
       <div className={styles.packedItemsRow}>
         {sortedIds.map((id) => {
           const info = tierInfo[lookupIds[id] ?? id];
@@ -1025,7 +1165,24 @@ function PackedItemsRow({
             </button>
           );
         })}
+        <ResourceTiles balances={resourceBalances} tierInfo={resourceTierInfo} onSelect={setSelectedResourceId} />
       </div>
+      )}
+      {selectedResourceId && (
+        <ResourcePopup
+          resourceId={selectedResourceId}
+          tierInfo={resourceTierInfo}
+          owned={resourceBalances[selectedResourceId] ?? 0}
+          characterId={characterId}
+          onPlayerDataUpdated={onPlayerDataUpdated}
+          onClose={() => setSelectedResourceId(null)}
+          destinations={
+            inAdventure
+              ? [{ key: "camp", icon: CAMP_ACTION_ICON, label: "Camp", endpoint: "unstow" }]
+              : [{ key: "vault", icon: VAULT_ACTION_ICON, label: "Vault", endpoint: "unload-backpack" }]
+          }
+        />
+      )}
       {selectedId && (
         <ItemDetailPopup
           info={tierInfo[lookupIds[selectedId] ?? selectedId]}
@@ -1047,6 +1204,103 @@ function PackedItemsRow({
         />
       )}
     </>
+  );
+}
+
+/** One quantity-picker row's target for ResourcePopup below - endpoint is
+ * the last path segment under .../resources/{resourceId}/..., e.g.
+ * "unload-backpack" or "stow". */
+export type ResourcePopupDestination = { key: string; icon: string; label: string; endpoint: string };
+
+/** Opened by clicking a packed/camped resource tile (see PackedItemsRow and
+ * CampView's own resource strip) - a deliberately stripped-down sibling of
+ * ItemDetailPopup: no cogwheel/recycle-destroy view (raw/processed
+ * materials have no recipe of their own to recycle - they're what
+ * recycling something else already hands back), just a tier/name header
+ * and one quantity-picker row (same as Party's Resources' own) per
+ * available move destination. A backpack resource only ever has ONE
+ * reachable destination at a time (vault OR camp, whichever inAdventure
+ * allows - see PackedItemsRow's own call), while a camp resource can have
+ * BOTH at once (backpack if equipped, vault if not inAdventure - see
+ * CampView's own call) - `destinations` covers either shape without the
+ * component needing to know which popup it's in. */
+export function ResourcePopup({
+  resourceId,
+  tierInfo,
+  owned,
+  characterId,
+  onPlayerDataUpdated,
+  onClose,
+  destinations,
+}: {
+  resourceId: string;
+  tierInfo: ResourceTierInfo;
+  owned: number;
+  characterId: string;
+  onPlayerDataUpdated?: (data: RawPlayerData) => void;
+  onClose: () => void;
+  destinations: ResourcePopupDestination[];
+}) {
+  const [pending, setPending] = useState(false);
+  const info = tierInfo[resourceId];
+  const name = info?.name ?? formatResourceLabel(resourceId);
+
+  const handlePick = async (endpoint: string, amount: number) => {
+    setPending(true);
+    try {
+      const res = await fetch(`/api/auth/me/characters/${characterId}/resources/${resourceId}/${endpoint}`, {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ amount }),
+      });
+      if (res.ok) {
+        const data: RawPlayerData = await res.json();
+        onPlayerDataUpdated?.(data);
+        onClose();
+        return;
+      }
+    } catch {
+      // Fall through - just leaves the popup open with the row re-enabled.
+    }
+    setPending(false);
+  };
+
+  // Same stopPropagation reasoning as ItemDetailPopup's own handleClick -
+  // this popup opens nested inside a backpack/camp's own ItemDetailPopup
+  // (via PackedItemsRow/CampView), so an unguarded click here would bubble
+  // up and close that one too.
+  const handleClick = (e: React.MouseEvent<HTMLElement>) => {
+    e.stopPropagation();
+    if ((e.target as HTMLElement).closest("button")) return;
+    onClose();
+  };
+
+  return (
+    <div className={styles.itemPopupOverlay} onClick={handleClick}>
+      <div className={styles.itemPopupCard}>
+        {!!info?.tier && (
+          <span className={`${styles.itemPopupTierBadge} ${itemGridTierBadgeClass(info.tier)}`}>
+            {getTierIndicator(info.tier)}
+          </span>
+        )}
+        <h3 className={styles.itemPopupName}>{name}</h3>
+        <div className={styles.itemPopupMeta}>
+          <span>Owned: {owned}</span>
+        </div>
+        {destinations.map((dest) => (
+          <TransferButtons
+            key={dest.key}
+            owned={owned}
+            pending={pending}
+            onPick={(amount) => handlePick(dest.endpoint, amount)}
+            destinationIcon={dest.icon}
+            destinationLabel={dest.label}
+            amounts={RESOURCE_POPUP_TRANSFER_AMOUNTS}
+          />
+        ))}
+      </div>
+    </div>
   );
 }
 
@@ -1133,6 +1387,8 @@ export function ItemDetailPopup({
     balances: Record<string, number>;
     lookupIds: Record<string, string>;
     instanceQuality: Record<string, number | null>;
+    resourceBalances: Record<string, number>;
+    resourceTierInfo: ResourceTierInfo;
   };
   /** Same family:"backpack" rows as packedItems, same character-level
    * source (Character.gear.backpackSlotsUsed/backpackCapacity, computed
@@ -2247,6 +2503,31 @@ export function InventoryTab({
     }
   };
 
+  // Party's Resources -> this character's own backpack, straight from the
+  // shared crafting stock (see backend.players.check_out_resource_to_
+  // backpack) - the resource equivalent of moveToBackpack's checkOut step,
+  // just direct instead of two calls since there's no character-level
+  // resources vault to land in along the way anymore.
+  const transferToBackpack = async (resourceId: string, amount: number): Promise<boolean> => {
+    try {
+      const res = await fetch(
+        `/api/auth/me/characters/${character.id}/resources/${resourceId}/check-out-backpack`,
+        {
+          method: "POST",
+          credentials: "include",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ amount }),
+        }
+      );
+      if (!res.ok) return false;
+      const data: RawPlayerData = await res.json();
+      onPlayerDataUpdated?.(data);
+      return true;
+    } catch {
+      return false;
+    }
+  };
+
   // Fetched once - maps every blueprint id to its own tier and family info, so
   // the Blueprints Known lists below can show tier information etc.
   const [blueprintTierInfo, setBlueprintTierInfo] = useState<BlueprintTierInfo>({});
@@ -2500,6 +2781,17 @@ export function InventoryTab({
   const hasBackpackEquipped = character.gear.items.some(
     (instance) => (instance.location === "body" || instance.location === "camp") && instance.familyId === "backpack"
   );
+  // Coarse "is there room for ANYTHING at all right now" check for the
+  // Party's Resources check-out-to-backpack row below - backpackSlotsUsed/
+  // backpackCapacity are both already computed server-side off the
+  // character's current gear (items + resources + itemBalances, see
+  // backend.items_catalog.backpack_slots_used/backpack_capacity), so this
+  // doesn't need its own duplicated slot-cost math. Not amount-precise
+  // (a specific click can still fail server-side with "Backpack is full"
+  // if it doesn't quite fit) - just enough to swap the whole button row
+  // for a plain message when there's plainly no room left at all.
+  const backpackFull =
+    hasBackpackEquipped && character.gear.backpackSlotsUsed >= character.gear.backpackCapacity;
   // Mirrors backend.items_catalog.has_saddlepack_equipped - hides (rather
   // than greys) the vault popup's "Move to saddlepack" button when false.
   const hasSaddlepackEquipped = character.gear.items.some(
@@ -2877,6 +3169,11 @@ export function InventoryTab({
                   balances={playerResourceBalances}
                   emptyLabel="Nothing in the shared crafting stock."
                   tierInfo={resourceTierInfo}
+                  onTransfer={transferToBackpack}
+                  destinationIcon={BACKPACK_ACTION_ICON}
+                  destinationUnavailableLabel={
+                    !hasBackpackEquipped ? "No backpack equipped" : backpackFull ? "Backpack full" : undefined
+                  }
                 />
               </div>
             )}

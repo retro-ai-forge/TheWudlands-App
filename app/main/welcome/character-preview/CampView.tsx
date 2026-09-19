@@ -1,6 +1,16 @@
 import { useEffect, useState } from "react";
 import styles from "./CharacterTabs.module.css";
-import { ItemGrid, computeBackpackContents, type BlueprintTierInfo, type RawPlayerData } from "./InventoryTab";
+import {
+  BACKPACK_ACTION_ICON,
+  ItemGrid,
+  ResourcePopup,
+  ResourceTiles,
+  VAULT_ACTION_ICON,
+  computeBackpackContents,
+  type BlueprintTierInfo,
+  type RawPlayerData,
+  type ResourceTierInfo,
+} from "./InventoryTab";
 import type { SlotCharacterSummary } from "../SoulSlotGrid";
 import { useSound } from "../../SoundProvider";
 
@@ -35,6 +45,10 @@ export function CampView({
   onExitCamp: () => void;
 }) {
   const { muted } = useSound();
+
+  // Which camp-located resource tile's own popup is open, if any (see
+  // ResourceTiles/ResourcePopup below).
+  const [selectedCampResourceId, setSelectedCampResourceId] = useState<string | null>(null);
 
   // Same item-catalog fetch BodyTab.tsx/InventoryTab.tsx each already do
   // independently for their own tierInfo - no shared ancestor state to
@@ -84,6 +98,35 @@ export function CampView({
       .catch(() => setItemCatalogTierInfo({}));
   }, []);
 
+  // Same resource-catalog fetch InventoryTab.tsx already does independently
+  // for its own resourceTierInfo - needed here too now that a camp-located
+  // backpack's popup can show packed raw/processed materials (see
+  // packedItems below), not just packed items.
+  const [resourceTierInfo, setResourceTierInfo] = useState<ResourceTierInfo>({});
+  useEffect(() => {
+    fetch("/api/auth/resource-catalog")
+      .then((res) => (res.ok ? res.json() : []))
+      .then(
+        (
+          data: Array<{
+            id: string;
+            name: string;
+            familyId: string;
+            tier: number;
+            resourceFamily: string;
+            category: "raw" | "processed";
+          }>
+        ) => {
+          const map: ResourceTierInfo = {};
+          for (const item of data) {
+            map[item.id] = { tier: item.tier, family: item.resourceFamily, category: item.category, name: item.name };
+          }
+          setResourceTierInfo(map);
+        }
+      )
+      .catch(() => setResourceTierInfo({}));
+  }, []);
+
   // Checked by familyId, not by "Back"/"Side" in slotRef - see BodyTab.tsx's
   // identical check for why (other families can occupy those slot names
   // too). Also counts a camp-located backpack, not just a worn one - see
@@ -125,11 +168,22 @@ export function CampView({
   for (const id of Object.keys(campBalances)) {
     campLocations[id] = "camp";
   }
-  // dropped.png (lower-left flavor icon) only makes sense once something's
-  // actually sitting at camp - same emptiness check the grid's own
-  // emptyLabel falls back to, so the two agree (both react live to the
-  // last item being moved out, or to opening an already-empty camp).
-  const hasCampItems = campIds.length > 0;
+
+  // Raw/processed materials sitting loose at camp - e.g. the backpack-full
+  // fallback of check_out_resource_to_backpack, or an explicit "move to
+  // camp" out of the backpack (see ResourcePopup's own "camp" destination).
+  const campResourceBalances = character.gear.resources.camp;
+  const hasCampResources = Object.values(campResourceBalances).some((qty) => qty > 0);
+
+  // dropped.png (lower-left flavor icon), the campfire lit/unlit swap, the
+  // tent's own dimming, and the ambient sound below all treat camp as
+  // "active" the moment it holds EITHER kind of thing sitting here -
+  // itemBalances/instances (campIds) or raw/processed materials
+  // (campResourceBalances) - not just the former. Same emptiness check the
+  // grid's own emptyLabel falls back to for campIds specifically, so that
+  // and this stay in agreement (both react live to the last thing leaving
+  // camp, or to opening an already-empty camp).
+  const hasCampItems = campIds.length > 0 || hasCampResources;
 
   // Tracks hasCampItems live, not just at open - starts playing the
   // moment camp actually has something (opening camp with items already
@@ -161,10 +215,41 @@ export function CampView({
   // - see Character.gear's own docstring on why storage is character-
   // level, not tied to a specific instance) can be opened the same way
   // the worn one can on the Body tab - see ItemGrid's identical props.
-  const packedItems = { tierInfo: itemCatalogTierInfo, ...computeBackpackContents(character) };
+  const packedItems = {
+    tierInfo: itemCatalogTierInfo,
+    resourceTierInfo,
+    ...computeBackpackContents(character),
+  };
 
   return (
     <div className={styles.panel}>
+      {hasCampResources && (
+        <div className={styles.packedItemsRow}>
+          <ResourceTiles
+            balances={campResourceBalances}
+            tierInfo={resourceTierInfo}
+            onSelect={setSelectedCampResourceId}
+          />
+        </div>
+      )}
+      {selectedCampResourceId && (
+        <ResourcePopup
+          resourceId={selectedCampResourceId}
+          tierInfo={resourceTierInfo}
+          owned={campResourceBalances[selectedCampResourceId] ?? 0}
+          characterId={character.id}
+          onPlayerDataUpdated={onPlayerDataUpdated}
+          onClose={() => setSelectedCampResourceId(null)}
+          destinations={[
+            ...(hasBackpackEquipped
+              ? [{ key: "backpack", icon: BACKPACK_ACTION_ICON, label: "Backpack", endpoint: "stow" }]
+              : []),
+            ...(!character.availability.inAdventure
+              ? [{ key: "vault", icon: VAULT_ACTION_ICON, label: "Vault", endpoint: "check-in-camp" }]
+              : []),
+          ]}
+        />
+      )}
       <ItemGrid
         ids={campIds}
         emptyLabel="Nothing sitting at camp right now."
@@ -205,7 +290,15 @@ export function CampView({
             }
           />
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/images/character/camp.png" alt="" className={styles.campfireStageIcon} />
+          <img
+            src="/images/character/camp.png"
+            alt=""
+            className={
+              hasCampItems
+                ? styles.campfireStageIcon
+                : `${styles.campfireStageIcon} ${styles.campfireStageIconEmpty}`
+            }
+          />
         </div>
         {hasCampItems && (
           // eslint-disable-next-line @next/next/no-img-element

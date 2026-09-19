@@ -33,8 +33,10 @@ from backend.players import (
     check_in_item_instance,
     check_in_resource,
     check_in_tool,
+    check_in_resource_from_camp,
     check_out_item_balance,
     check_out_item_instance,
+    check_out_resource_to_backpack,
     delete_character,
     destroy_character_item_balance,
     destroy_character_item_instance,
@@ -49,7 +51,9 @@ from backend.players import (
     load_item_balance_to_backpack,
     load_resource_to_backpack,
     move_backpack_item_to_camp,
+    move_backpack_resource_to_camp,
     move_camp_item_to_backpack,
+    move_camp_resource_to_backpack,
     preview_recycle,
     recycle_item_balance,
     recycle_item_instance,
@@ -941,6 +945,24 @@ async def check_in_resource_route(
     return player.to_dict()
 
 
+@player_router.post(
+    "/me/characters/{character_id}/resources/{resource_id}/check-out-backpack", response_model=PlayerDataResponse
+)
+async def check_out_resource_to_backpack_route(
+    character_id: str, resource_id: str, payload: TransferAmountRequest, address: str = Depends(get_current_address)
+):
+    """Move `amount` of `resource_id` from the player's shared crafting stock straight into one character's backpack."""
+    try:
+        player = await check_out_resource_to_backpack(address, character_id, resource_id, payload.amount)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc))
+
+    if player is None:
+        raise HTTPException(status_code=404, detail="No matching character, or not enough in the shared stock")
+
+    return player.to_dict()
+
+
 @player_router.post("/me/characters/{character_id}/tools/{tool_id}/check-in", response_model=PlayerDataResponse)
 async def check_in_tool_route(
     character_id: str, tool_id: str, payload: TransferAmountRequest, address: str = Depends(get_current_address)
@@ -1209,7 +1231,7 @@ async def load_resource_to_backpack_route(
 async def unload_resource_from_backpack_route(
     character_id: str, resource_id: str, payload: TransferAmountRequest, address: str = Depends(get_current_address)
 ):
-    """Move `amount` of `resource_id` from a character's backpack back into their crafting vault."""
+    """Move `amount` of `resource_id` from a character's backpack back into the shared crafting stock (Party's Resources)."""
     try:
         player = await unload_resource_from_backpack(address, character_id, resource_id, payload.amount)
     except ValueError as exc:
@@ -1217,6 +1239,60 @@ async def unload_resource_from_backpack_route(
 
     if player is None:
         raise HTTPException(status_code=404, detail="No matching character, or not enough in the backpack")
+
+    return player.to_dict()
+
+
+@player_router.post(
+    "/me/characters/{character_id}/resources/{resource_id}/unstow", response_model=PlayerDataResponse
+)
+async def move_backpack_resource_to_camp_route(
+    character_id: str, resource_id: str, payload: TransferAmountRequest, address: str = Depends(get_current_address)
+):
+    """Move `amount` of `resource_id` from a character's backpack into their own camp - works mid-adventure."""
+    try:
+        player = await move_backpack_resource_to_camp(address, character_id, resource_id, payload.amount)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc))
+
+    if player is None:
+        raise HTTPException(status_code=404, detail="No matching character, or not enough in the backpack")
+
+    return player.to_dict()
+
+
+@player_router.post(
+    "/me/characters/{character_id}/resources/{resource_id}/stow", response_model=PlayerDataResponse
+)
+async def move_camp_resource_to_backpack_route(
+    character_id: str, resource_id: str, payload: TransferAmountRequest, address: str = Depends(get_current_address)
+):
+    """Move `amount` of `resource_id` from a character's camp into their backpack (capacity-gated)."""
+    try:
+        player = await move_camp_resource_to_backpack(address, character_id, resource_id, payload.amount)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc))
+
+    if player is None:
+        raise HTTPException(status_code=404, detail="No matching character, or not enough in camp")
+
+    return player.to_dict()
+
+
+@player_router.post(
+    "/me/characters/{character_id}/resources/{resource_id}/check-in-camp", response_model=PlayerDataResponse
+)
+async def check_in_resource_from_camp_route(
+    character_id: str, resource_id: str, payload: TransferAmountRequest, address: str = Depends(get_current_address)
+):
+    """Move `amount` of `resource_id` from a character's camp back into the shared crafting stock (Party's Resources)."""
+    try:
+        player = await check_in_resource_from_camp(address, character_id, resource_id, payload.amount)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc))
+
+    if player is None:
+        raise HTTPException(status_code=404, detail="No matching character, or not enough in camp")
 
     return player.to_dict()
 
