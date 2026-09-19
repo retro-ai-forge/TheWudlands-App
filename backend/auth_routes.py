@@ -1617,6 +1617,25 @@ async def create_character(
             )
         remaining_by_pool[matched_pool] -= 1
 
+    # First filled slot becomes the starting prime, whether that's slot 1,
+    # 2, or 3 - the Trappings step always fills profession1 first in
+    # practice (see SoulCreation.tsx's own age-gating for slots 2/3), but
+    # this doesn't assume that ordering server-side, just "whichever slot
+    # actually has something". "none" only if literally none of the three
+    # were chosen.
+    prime_profession = next(
+        (
+            slot
+            for slot, profession in (
+                ("prof1", payload.profession1),
+                ("prof2", payload.profession2),
+                ("prof3", payload.profession3),
+            )
+            if profession != "none"
+        ),
+        "none",
+    )
+
     character = Character(
         slot_number=payload.slotNumber,
         first_name=payload.firstName,
@@ -1637,7 +1656,12 @@ async def create_character(
         ),
         # A selected profession starts at level 1, not ProfStats' default of
         # 0 - "none" (an unfilled slot) stays at 0 since there's nothing to
-        # level.
+        # level. prime is set to prime_profession (see above) rather than
+        # left at ProfStats' own "none" default, so every fresh Soul has a
+        # real prime from the start regardless of whether it ends up with
+        # one, two, or three professions - still player-changeable
+        # afterward on the Stats page (see backend.players.
+        # set_prime_profession), this is only the starting value.
         profession=ProfStats(
             profession_1=payload.profession1,
             level_1=1 if payload.profession1 != "none" else 0,
@@ -1645,6 +1669,7 @@ async def create_character(
             level_2=1 if payload.profession2 != "none" else 0,
             profession_3=payload.profession3,
             level_3=1 if payload.profession3 != "none" else 0,
+            prime=prime_profession,
         ),
         attr=AttributeStats(
             might=payload.attr.migh,
