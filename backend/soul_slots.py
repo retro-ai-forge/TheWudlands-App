@@ -133,6 +133,7 @@ FREE_SLOT_NUMBERS = tuple(s.number for s in SOUL_SLOTS if s.kind == FREE)
 STAR_SLOT_NUMBERS = tuple(s.number for s in SOUL_SLOTS if s.kind == STARS)
 FAST_SLOT_NUMBERS = tuple(s.number for s in SOUL_SLOTS if not s.is_slow)
 TOKEN_SLOT_NUMBERS = tuple(s.number for s in SOUL_SLOTS if s.kind == TOKEN)
+ALL_SLOT_NUMBERS = tuple(s.number for s in SOUL_SLOTS)
 
 
 def unlocked_from_holdings(holdings) -> list[int]:
@@ -422,6 +423,13 @@ async def resolve_fast_slots(
 
     result = await evaluate_fast_slots(address)
     checked = result is not None
+    # A record from an older slot layout means every number in it - fast or
+    # star - refers to a different slot now, not just whatever this pass
+    # happens to own. Trusting the fast slice alone and leaving the rest
+    # would silently carry forward star numbers with a meaning that no
+    # longer applies, so this one case resets the *whole* record instead of
+    # only FAST_SLOT_NUMBERS.
+    stale_layout = not stored or stored.get("layout_version") != SLOT_LAYOUT_VERSION
 
     if checked:
         unlocked, token_progress = result
@@ -434,6 +442,15 @@ async def resolve_fast_slots(
                 "token_progress": token_progress,
             },
         )
+    elif stale_layout:
+        # Outage on a record we already know is untrustworthy - no live
+        # answer to serve, and the cached one refers to a different layout
+        # entirely, so fall back to just the free slot regardless of
+        # whether this was a passive load or a forced Reload.
+        await apply_slot_membership(
+            address, ALL_SLOT_NUMBERS, set(FREE_SLOT_NUMBERS),
+            {"token_progress": default_progress},
+        )
     elif force:
         # Explicit Reload, but the lookup could not run at all - reset to
         # just the free slot rather than go on reporting a stale prior
@@ -442,8 +459,9 @@ async def resolve_fast_slots(
             address, FAST_SLOT_NUMBERS, set(FREE_SLOT_NUMBERS),
             {"token_progress": default_progress},
         )
-    # else: passive load, lookup unavailable - leave the stored fast slots
-    # (and their progress) untouched; see the docstring above.
+    # else: passive load, lookup unavailable, and the stored record is
+    # already on the current layout - leave the stored fast slots (and
+    # their progress) untouched; see the docstring above.
 
     # Clear the star slots for the duration of the re-check they are about
     # to get, so this response cannot hand back the previous run's result

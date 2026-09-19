@@ -6,8 +6,13 @@ python -m pytest tests/test_subscan_connection.py -v -s
 
 Verifies the app can reach the Subscan API with the key in .env
 (SUBSCAN_API_KEY) and read the balances we care about: DOT and WUD
-(AssetHub asset id 31337) on both Polkadot AssetHub and Hydration.
-Skips instead of failing if no key is configured yet.
+(AssetHub asset id 31337) on Polkadot AssetHub. Skips instead of failing if
+no key is configured yet.
+
+AssetHub only - Subscan's own Hydration host (hydration.api.subscan.io)
+returns a bare 404 and is no longer used at all (see backend/balances.py's
+module docstring); Hydration is read over its own public RPC instead, see
+test_hydration_rpc.py for that coverage.
 
 The wallet these read is SUBSCAN_TEST_ADDRESS in .env - change it there,
 not here.
@@ -18,7 +23,6 @@ import time
 import requests
 
 ASSETHUB_API = "https://assethub-polkadot.api.subscan.io"
-HYDRATION_API = "https://hydration.api.subscan.io"
 
 # WUD on AssetHub. On Hydration the same token is registry id 1000085, but
 # Subscan keys Hydration balances by symbol rather than by numeric id.
@@ -114,28 +118,6 @@ def test_assethub_dot_and_wud_balances(subscan_api_key, subscan_test_address):
         assert wud["asset_id"] == str(WUD_ASSETHUB_ASSET_ID)
 
     print(f"AssetHub: {_describe(dot, 'DOT')}, {_describe(wud, WUD_SYMBOL)}")
-
-
-def test_hydration_dot_and_wud_balances(subscan_api_key, subscan_test_address):
-    """Hydration holds both tokens in its ORML tokens pallet, keyed by symbol."""
-    data = subscan_post(
-        HYDRATION_API,
-        "/api/v2/scan/account/tokens",
-        subscan_api_key,
-        {"address": subscan_test_address},
-    )
-
-    tokens = data["list"]
-    dot = find_token(tokens, "DOT")
-    wud = find_token(tokens, WUD_SYMBOL)
-
-    # Hydration keys these by symbol, not by numeric id - and omits whatever
-    # the wallet does not hold.
-    assert isinstance(tokens, list)
-    for token in (t for t in (dot, wud) if t):
-        assert token["symbol"] in ("DOT", WUD_SYMBOL)
-
-    print(f"Hydration: {_describe(dot, 'DOT')}, {_describe(wud, WUD_SYMBOL)}")
 
 
 def test_rate_limit_headers_are_present(subscan_api_key):

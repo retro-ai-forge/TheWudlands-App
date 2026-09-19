@@ -394,9 +394,13 @@ def test_holdings_beyond_the_first_page_are_followed(monkeypatch):
     tokens = balances._fetch_account_tokens("https://x", "1abc", "test-key")
 
     assert len(tokens) == 250
-    assert [page for page, _ in requested] == [0, 1, 2]
+    # PAGE_SIZE is capped at 20 (Subscan's free-tier plan 403s above ~20-49
+    # rows/request - see PAGE_SIZE's own comment), so 250 items need pages
+    # 0 through 12, not the 100-rows-per-page math this test used to assume.
+    expected_pages = -(-len(everything) // balances.PAGE_SIZE)  # ceil division
+    assert [page for page, _ in requested] == list(range(expected_pages))
     # Every page must ask for the maximum row size, never Subscan's default.
-    assert {row for _, row in requested} == {100}
+    assert {row for _, row in requested} == {balances.PAGE_SIZE}
 
 
 def test_paging_stops_on_an_empty_page(monkeypatch):

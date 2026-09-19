@@ -14,6 +14,7 @@ tests need Mongo and skip without MONGODB_URI, same as test_players.py.
 import pytest
 
 from backend import soul_slots
+from backend.db import get_database
 from backend.balances import (
     DOT_SYMBOL,
     FIRST_ANNIVERSARY_COLLECTION_ID,
@@ -290,63 +291,93 @@ async def test_unavailable_lookup_leaves_the_grid_locked(monkeypatch):
 
 
 @pytest.mark.asyncio
-async def test_unavailable_lookup_falls_back_to_stored_unlocks(monkeypatch):
-    """A Subscan outage must not revoke slots the player already earned."""
-    monkeypatch.setattr(
-        soul_slots, "get_stored_slots", _async_return(_current_record([1, 2, 7], stars=40))
-    )
-    monkeypatch.setattr(soul_slots, "evaluate_fast_slots", _async_return(None))
+async def test_unavailable_lookup_falls_back_to_stored_unlocks(monkeypatch, mongodb_uri):
+    """
+    A Subscan outage must not revoke slots the player already earned.
 
-    state = await soul_slots.resolve_fast_slots(TEST_ADDRESS, roll=0.0)
+    Mongo-backed (not a get_stored_slots mock): resolve_fast_slots writes
+    through apply_slot_membership, which talks to the real database
+    directly, then reads the record back through get_stored_slots for its
+    return value - a static mock of that function would never see its own
+    write, and would pass or fail independent of what the code actually
+    did.
+    """
+    db = get_database()
+    await db.soul_slots.delete_many({"address": TEST_ADDRESS})
+    try:
+        await store_slots(TEST_ADDRESS, {"unlocked": [1, 2, 7], "stars": 40})
+        monkeypatch.setattr(soul_slots, "evaluate_fast_slots", _async_return(None))
 
-    assert state["checked"] is True
-    assert state["unlocked"] == [1, 2, 7]
+        state = await soul_slots.resolve_fast_slots(TEST_ADDRESS, roll=0.0)
+
+        # The live lookup genuinely failed - this cannot claim to be a
+        # fresh check (see resolve_fast_slots' docstring / the route's own
+        # `checked` doc).
+        assert state["checked"] is False
+        # ...but a passive load has nothing to verify the cached slots
+        # against, so they must be reported exactly as already earned, not
+        # reset.
+        assert state["unlocked"] == [1, 2, 7]
+    finally:
+        await db.soul_slots.delete_many({"address": TEST_ADDRESS})
 
 
 @pytest.mark.asyncio
-async def test_outage_does_not_serve_unlocks_from_an_older_layout(monkeypatch):
+async def test_outage_does_not_serve_unlocks_from_an_older_layout(monkeypatch, mongodb_uri):
     """
     Stale numbers are worse than no answer.
 
     A record from a previous slot order would grant whatever those numbers
-    now point at, so an outage must fall back to the free slot instead.
+    now point at, so an outage must fall back to the free slot instead -
+    even on a passive load, and even though the stale numbers span both the
+    fast and star slices (see resolve_fast_slots' stale_layout handling,
+    which resets the whole record rather than just its own slice for
+    exactly this reason).
     """
-    monkeypatch.setattr(
-        soul_slots,
-        "get_stored_slots",
-        _async_return({"unlocked": [1, 2, 3, 4, 7, 8, 9], "layout_version": 1}),
-    )
-    monkeypatch.setattr(soul_slots, "evaluate_fast_slots", _async_return(None))
+    db = get_database()
+    await db.soul_slots.delete_many({"address": TEST_ADDRESS})
+    try:
+        # store_slots always stamps the *current* layout_version, so an old
+        # one has to be written directly.
+        await db.soul_slots.update_one(
+            {"address": TEST_ADDRESS},
+            {"$set": {"unlocked": [1, 2, 3, 4, 7, 8, 9], "layout_version": 1}},
+            upsert=True,
+        )
+        monkeypatch.setattr(soul_slots, "evaluate_fast_slots", _async_return(None))
 
-    state = await soul_slots.resolve_fast_slots(TEST_ADDRESS, roll=0.99)
+        state = await soul_slots.resolve_fast_slots(TEST_ADDRESS, roll=0.99)
 
-    assert state["checked"] is False
-    assert state["unlocked"] == [1]
+        assert state["checked"] is False
+        assert state["unlocked"] == [1]
+    finally:
+        await db.soul_slots.delete_many({"address": TEST_ADDRESS})
 
 
 @pytest.mark.asyncio
-async def test_fast_pass_keeps_previously_earned_star_slots(monkeypatch):
+async def test_fast_pass_keeps_previously_earned_star_slots(monkeypatch, mongodb_uri):
     """
     The fast pass does not re-count stars, so it must not drop star slots.
 
     Without this, every login would briefly revoke slots 5/6 until the slow
-    pass finished.
+    pass finished. Mongo-backed for the same reason as the outage tests
+    above - apply_slot_membership's $addToSet merges onto the real stored
+    array rather than replacing it wholesale, and does not re-sort the
+    result, so membership (not list order, which is not a guarantee this
+    code makes - the frontend itself only ever reads `unlocked` as a Set)
+    is what's actually being checked here.
     """
-    stored = {"unlocked": [1, 9], "stars": 40}
-    saved: dict = {}
+    db = get_database()
+    await db.soul_slots.delete_many({"address": TEST_ADDRESS})
+    try:
+        await store_slots(TEST_ADDRESS, {"unlocked": [1, 9], "stars": 40})
+        monkeypatch.setattr(soul_slots, "evaluate_fast_slots", _async_return(([1, 5], [0.0, 0.0, 0.0, 0.0])))
 
-    monkeypatch.setattr(soul_slots, "get_stored_slots", _async_return(stored))
-    monkeypatch.setattr(soul_slots, "evaluate_fast_slots", _async_return(([1, 5], [0.0, 0.0, 0.0, 0.0])))
+        state = await soul_slots.resolve_fast_slots(TEST_ADDRESS, roll=0.0)
 
-    async def capture(address, changes):
-        saved.update(changes)
-
-    monkeypatch.setattr(soul_slots, "store_slots", capture)
-
-    state = await soul_slots.resolve_fast_slots(TEST_ADDRESS, roll=0.0)
-
-    assert state["unlocked"] == [1, 5, 9]
-    assert saved["unlocked"] == [1, 5, 9]
+        assert set(state["unlocked"]) == {1, 5, 9}
+    finally:
+        await db.soul_slots.delete_many({"address": TEST_ADDRESS})
 
 
 def test_stars_are_rechecked_on_their_own_cadence_not_on_first_result_only():
@@ -433,22 +464,32 @@ async def test_natural_reverify_uses_one_shared_roll_for_both_passes(monkeypatch
 
 
 @pytest.mark.asyncio
-async def test_star_pass_revokes_stars_that_are_no_longer_held(monkeypatch):
-    """Selling the miners must take slot 5 back, without touching the rest."""
-    monkeypatch.setattr(
-        soul_slots, "get_stored_slots", _async_return({"unlocked": [1, 2, 9, 10], "stars": 120})
-    )
+async def test_star_pass_revokes_stars_that_are_no_longer_held(monkeypatch, mongodb_uri):
+    """
+    Selling the miners must take slot 5 back, without touching the rest.
 
-    async def no_stars(address):
-        return 0, []
+    Mongo-backed, same reasoning as the fast-pass tests above:
+    resolve_star_slots writes through apply_slot_membership straight to the
+    database and reads the result back through get_stored_slots, so a
+    static mock of that function can never observe the write it is
+    supposedly verifying.
+    """
+    db = get_database()
+    await db.soul_slots.delete_many({"address": TEST_ADDRESS})
+    try:
+        await store_slots(TEST_ADDRESS, {"unlocked": [1, 2, 9, 10], "stars": 120})
 
-    monkeypatch.setattr(soul_slots, "evaluate_star_slots", no_stars)
-    monkeypatch.setattr(soul_slots, "store_slots", _async_return(None))
+        async def no_stars(address):
+            return 0, []
 
-    state = await soul_slots.resolve_star_slots(TEST_ADDRESS)
+        monkeypatch.setattr(soul_slots, "evaluate_star_slots", no_stars)
 
-    assert state["unlocked"] == [1, 2]
-    assert state["stars"] == 0
+        state = await soul_slots.resolve_star_slots(TEST_ADDRESS)
+
+        assert state["unlocked"] == [1, 2]
+        assert state["stars"] == 0
+    finally:
+        await db.soul_slots.delete_many({"address": TEST_ADDRESS})
 
 
 def _async_return(value):
