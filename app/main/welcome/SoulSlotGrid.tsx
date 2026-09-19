@@ -27,6 +27,7 @@
 import { useEffect, useRef, useState } from "react";
 import styles from "../../page.module.css";
 import { useWallet } from "../WalletProvider";
+import { useSound } from "../SoundProvider";
 import { formatRemainingCompactLong, useCraftCountdown } from "./craftTimer";
 import { getPortraitCropImgStyle, type PortraitArea } from "@/app/lib/portraitCrop";
 
@@ -200,7 +201,17 @@ function saveCachedUnlocked(address: string, unlocked: number[]) {
 // verification of that address has resolved.
 function getStoredAddress(): string | null {
   if (typeof window === "undefined") return null;
-  return window.localStorage.getItem("player_address");
+  try {
+    return window.localStorage.getItem("player_address");
+  } catch {
+    // Same "blocked/restricted storage" case loadCachedUnlocked/
+    // saveCachedUnlocked above already guard against (e.g. strict
+    // tracking protection, or a sandboxed preview context that throws
+    // "Access to storage is not allowed from this context" just from
+    // touching localStorage at all) - no cached address to fall back to,
+    // same as a first-ever visit.
+    return null;
+  }
 }
 
 // Sizes/positions an <img> (absolutely positioned inside an overflow-hidden,
@@ -224,6 +235,7 @@ export function SoulSlotGrid({
   characters: SlotCharacterSummary[];
 }) {
   const { account } = useWallet();
+  const { muted, toggleMuted } = useSound();
   const address = account?.address ?? null;
   // WalletProvider only confirms `account` after an awaited fetch, so
   // `address` is still null on this component's very first render even for
@@ -381,7 +393,19 @@ export function SoulSlotGrid({
         </defs>
       </svg>
 
-      <h2 className={styles.characterMatrixHeading}>Soul Slots</h2>
+      <h2 className={styles.characterMatrixHeading}>
+        Soul Slots
+        <button
+          type="button"
+          className={styles.soundToggleButton}
+          onClick={toggleMuted}
+          aria-label={muted ? "Unmute sound" : "Mute sound"}
+          title={muted ? "Unmute sound" : "Mute sound"}
+          aria-pressed={muted}
+        >
+          {muted ? "🔇" : "🔊"}
+        </button>
+      </h2>
       <div className={styles.characterGrid}>
         {slots.map((slot) => {
           const isFree = slot.kind === "free";

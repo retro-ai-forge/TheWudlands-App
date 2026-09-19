@@ -1786,6 +1786,53 @@
   pointer-events: none;
 }
 
+/* Only applied for campfire_lit.png (see CampView's hasCampItems check) -
+   a radial-gradient `background` on the <img> itself, not a drop-shadow
+   (which traces the flame sprite's own visible edges/outline instead of
+   the image's actual center). A background paints behind an <img>'s own
+   pixel content, so it only actually shows through wherever the PNG is
+   transparent - centered on the image's box, not hugging its outline.
+   The gradient itself stays fixed - animating BETWEEN two different
+   gradient value strings doesn't interpolate in CSS at all, it just
+   snaps at each keyframe (that was the "jumps in two steps" look).
+   filter:brightness() is a plain number, which DOES interpolate
+   smoothly, and brightening the whole element (sprite + glow together)
+   reads as a natural flame-intensity flicker rather than a downside. */
+.campfireStageFireIconLit {
+  background: radial-gradient(circle, rgba(255, 170, 50, 0.8) 0%, rgba(255, 110, 20, 0.48) 35%, rgba(255, 80, 20, 0) 65%);
+  animation: campfireGlowPulse 2.6s ease-in-out infinite;
+}
+
+@keyframes campfireGlowPulse {
+  0%, 100% {
+    filter: brightness(1);
+  }
+  50% {
+    filter: brightness(1.55);
+  }
+}
+
+/* campfire_unlit.png's own much-fainter version - "circle at 50% 75%"
+   moves the gradient's center down toward the image's lower quarter
+   (default radial-gradient centering is 50% 50%, dead middle) - reads as
+   a few dim embers still glowing at the base, not the lit version's full
+   flame glow. Own slower/subtler swell (emberGlowPulse, not
+   campfireGlowPulse) - a much smaller brightness range, like embers
+   breathing rather than a real flame's flicker. */
+.campfireStageFireIconUnlit {
+  background: radial-gradient(circle at 50% 75%, rgba(255, 130, 40, 0.45) 0%, rgba(255, 90, 20, 0.24) 30%, rgba(255, 80, 20, 0) 55%);
+  animation: emberGlowPulse 3.6s ease-in-out infinite;
+}
+
+@keyframes emberGlowPulse {
+  0%, 100% {
+    filter: brightness(1);
+  }
+  50% {
+    filter: brightness(1.25);
+  }
+}
+
 /* Only rendered at all while the camp actually holds something (see
    CampView's hasCampItems) - a little "stuff dropped here" flavor cue,
    not a button. Bottom-center of the stage. */

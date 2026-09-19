@@ -2,6 +2,13 @@ import { useEffect, useState } from "react";
 import styles from "./CharacterTabs.module.css";
 import { ItemGrid, computeBackpackContents, type BlueprintTierInfo, type RawPlayerData } from "./InventoryTab";
 import type { SlotCharacterSummary } from "../SoulSlotGrid";
+import { useSound } from "../../SoundProvider";
+
+const CAMP_ITEMS_SOUND = "/sounds/west_wolf_Campfire.mp3";
+// 0 (silent) to 1 (full volume, the Audio element's own default) - a
+// looping ambience track sitting under the rest of the UI reads as too
+// loud at 1, so this pulls it down to a background level.
+const CAMP_ITEMS_SOUND_VOLUME = 0.4;
 
 // A fixed placeholder height for the campfire art at the bottom of the
 // screen - reserved out of ItemGrid's own fill-to-bottom measurement (see
@@ -31,6 +38,8 @@ export function CampView({
    * view is open, so this is the only way out of it once opened. */
   onExitCamp: () => void;
 }) {
+  const { muted } = useSound();
+
   // Same item-catalog fetch BodyTab.tsx/InventoryTab.tsx each already do
   // independently for their own tierInfo - no shared ancestor state to
   // lift this into without a larger prop-threading change.
@@ -126,6 +135,32 @@ export function CampView({
   // last item being moved out, or to opening an already-empty camp).
   const hasCampItems = campIds.length > 0;
 
+  // Tracks hasCampItems live, not just at open - starts playing the
+  // moment camp actually has something (opening camp with items already
+  // in it, or the first item landing while already standing here), and
+  // the cleanup below pauses it the moment that stops being true (the
+  // last item leaving camp, same trigger dropped.png/campfire_lit.png
+  // already react to - or CampView unmounting outright, i.e. leaving
+  // camp). Only re-runs when hasCampItems/muted actually flip, not on
+  // every render where quantities change but camp is still non-empty -
+  // useEffect's own dependency comparison already skips re-firing when
+  // hasCampItems stays the same boolean across renders.
+  useEffect(() => {
+    if (!hasCampItems || muted) return;
+    const audio = new Audio(CAMP_ITEMS_SOUND);
+    audio.loop = true;
+    audio.volume = CAMP_ITEMS_SOUND_VOLUME;
+    audio.play().catch(() => {
+      // Autoplay can still be blocked without a preceding user gesture in
+      // some browsers - opening camp is itself a click, so this should
+      // normally succeed, but fail silently either way rather than an
+      // unhandled promise rejection.
+    });
+    return () => {
+      audio.pause();
+    };
+  }, [hasCampItems, muted]);
+
   // A family:"backpack" instance sitting unequipped in camp (e.g. this
   // character unequipped it here, still holding whatever was packed in it
   // - see Character.gear's own docstring on why storage is character-
@@ -161,8 +196,19 @@ export function CampView({
             own corner, so moving/resizing the tent carries the fire along
             with it instead of the two drifting apart. */}
         <div className={styles.campTentGroup}>
+          {/* Lit/unlit toggle, same idea as dropped.png below (though this
+              one never disappears, just swaps art) - lit whenever camp
+              actually holds something, unlit when hasCampItems is false. */}
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/images/character/campfire.png" alt="" className={styles.campfireStageFireIcon} />
+          <img
+            src={hasCampItems ? "/images/character/campfire_lit.png" : "/images/character/campfire_unlit.png"}
+            alt=""
+            className={
+              hasCampItems
+                ? `${styles.campfireStageFireIcon} ${styles.campfireStageFireIconLit}`
+                : `${styles.campfireStageFireIcon} ${styles.campfireStageFireIconUnlit}`
+            }
+          />
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src="/images/character/camp.png" alt="" className={styles.campfireStageIcon} />
         </div>

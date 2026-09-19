@@ -33,7 +33,16 @@ const SoulSlotGrid = dynamic(
 function SoulSlotGridSkeleton() {
   return (
     <div className={styles.characterMatrix}>
-      <h2 className={styles.characterMatrixHeading}>Soul Slots</h2>
+      <h2 className={styles.characterMatrixHeading}>
+        Soul Slots
+        {/* Static placeholder matching the real SoulSlotGrid's sound
+            toggle (see there) - same footprint so nothing shifts once
+            that dynamic import resolves, disabled since this skeleton has
+            no SoundProvider-reading logic of its own. */}
+        <button type="button" className={styles.soundToggleButton} disabled aria-hidden="true">
+          🔊
+        </button>
+      </h2>
       <div className={styles.characterGrid}>
         {Array.from({ length: 10 }, (_, i) => (
           <div key={i} className={styles.slotCell}>

@@ -4,6 +4,7 @@ import Header from "./main/Header";
 import Footer from "./main/Footer";
 import { WalletProvider } from "./main/WalletProvider";
 import { HeaderVisibilityProvider } from "./main/HeaderVisibilityProvider";
+import { SoundProvider } from "./main/SoundProvider";
 import { VersionBadge } from "./main/VersionBadge";
 export const metadata: Metadata = {
   title: "The Wudlands | Old School Fantasy RPG",
@@ -31,12 +32,14 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body>
         <div className="scanlines" />
         <WalletProvider>
-          <HeaderVisibilityProvider>
-            <Header />
-            <div className="pageContent">{children}</div>
-            <VersionBadge />
-          </HeaderVisibilityProvider>
-          <Footer />
+          <SoundProvider>
+            <HeaderVisibilityProvider>
+              <Header />
+              <div className="pageContent">{children}</div>
+              <VersionBadge />
+            </HeaderVisibilityProvider>
+            <Footer />
+          </SoundProvider>
         </WalletProvider>
       </body>
     </html>

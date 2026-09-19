@@ -46,8 +46,19 @@ export function WalletProvider({ children }: { children: ReactNode }) {
   }, []);
 
   // Restore session on page reload — validate with backend using secure cookie.
+  // Every localStorage/sessionStorage touch below is wrapped - some
+  // browser contexts (strict tracking protection, a sandboxed/embedded
+  // preview) throw "Access to storage is not allowed from this context"
+  // just from accessing either at all. The ones inside .then()/.catch()
+  // matter most: an uncaught throw there becomes an unhandled promise
+  // rejection, not just a crashed effect.
   useEffect(() => {
-    const address = localStorage.getItem("player_address");
+    let address: string | null = null;
+    try {
+      address = localStorage.getItem("player_address");
+    } catch {
+      return;
+    }
     if (!address) return;
 
     fetch("/api/auth/me", {
@@ -57,12 +68,20 @@ export function WalletProvider({ children }: { children: ReactNode }) {
         setAccount({ address, meta: { source: "restored" } });
         setVerified(true);
       } else {
-        localStorage.removeItem("player_address");
+        try {
+          localStorage.removeItem("player_address");
+        } catch {
+          // Nothing to clean up if storage isn't reachable in the first place.
+        }
       }
     }).catch(() => {
       // Backend unreachable — clear everything to avoid stuck state.
-      localStorage.removeItem("player_address");
-      sessionStorage.removeItem("user_id");
+      try {
+        localStorage.removeItem("player_address");
+        sessionStorage.removeItem("user_id");
+      } catch {
+        // Same as above - storage was never reachable, nothing to clear.
+      }
     });
   }, []);
 
@@ -77,8 +96,13 @@ export function WalletProvider({ children }: { children: ReactNode }) {
       channel.onmessage = (event) => {
         if (event.data.type === "logout") {
           disconnect();
-          localStorage.removeItem("player_address");
-          sessionStorage.removeItem("user_id");
+          try {
+            localStorage.removeItem("player_address");
+            sessionStorage.removeItem("user_id");
+          } catch {
+            // Storage unreachable in this context - disconnect() above
+            // already cleared the in-memory state either way.
+          }
         }
       };
       return () => channel.close();
@@ -87,7 +111,11 @@ export function WalletProvider({ children }: { children: ReactNode }) {
       const handleStorageChange = (e: StorageEvent) => {
         if (e.key === "player_address" && e.newValue === null) {
           disconnect();
-          sessionStorage.removeItem("user_id");
+          try {
+            sessionStorage.removeItem("user_id");
+          } catch {
+            // Same as above.
+          }
         }
       };
       const win = window as Window;
@@ -134,8 +162,15 @@ export function WalletProvider({ children }: { children: ReactNode }) {
 
     disconnect();
     if (typeof window !== "undefined") {
-      localStorage.removeItem("player_address");
-      sessionStorage.removeItem("user_id");
+      try {
+        localStorage.removeItem("player_address");
+        sessionStorage.removeItem("user_id");
+      } catch {
+        // Storage unreachable in this context - disconnect() above already
+        // cleared the in-memory state either way, and logout() is async
+        // with no guarantee its caller awaits/catches it, so an uncaught
+        // throw here would surface as an unhandled promise rejection.
+      }
     }
   };
 

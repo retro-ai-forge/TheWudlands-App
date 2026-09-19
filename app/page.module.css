@@ -201,12 +201,38 @@
   text-align: center;
 }
 
+/* inline-flex (not block) so the heading text + sound-toggle button stay
+   centered as one group under .characterMatrix's own text-align:center -
+   an inline-level box is still subject to that, a block-level one
+   wouldn't be. */
 .characterMatrixHeading {
-  font-size: 1.1rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 1.5rem;
   letter-spacing: 0.16em;
   text-transform: uppercase;
   color: #c07a3a;
   margin-bottom: 1.25rem;
+}
+
+.soundToggleButton {
+  background: none;
+  border: none;
+  padding: 0;
+  font-size: 1.35rem;
+  line-height: 1;
+  cursor: pointer;
+  /* Undo the heading's own uppercase/letter-spacing/color - those are
+     text transforms, not meant for the emoji glyph sitting next to it. */
+  text-transform: none;
+  letter-spacing: normal;
+  color: inherit;
+  opacity: 0.85;
+}
+
+.soundToggleButton:hover {
+  opacity: 1;
 }
 
 .reloadButton {
