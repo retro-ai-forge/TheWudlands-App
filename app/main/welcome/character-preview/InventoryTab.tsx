@@ -602,6 +602,7 @@ export function ItemGrid({
   characterFirstName,
   onPlayerDataUpdated,
   reserveBottomPx = 0,
+  hideScrollbar = false,
 }: {
   ids: string[];
   emptyLabel: string;
@@ -632,6 +633,10 @@ export function ItemGrid({
    * region below this grid instead of letting it fill all the way down to
    * the footer bar the way the plain Vault tab usage does. */
   reserveBottomPx?: number;
+  /** Hides the scroll container's own horizontal scrollbar track (still
+   * scrolls via drag/touch/trackpad, just no visible bar) - off by
+   * default so the Vault tab's own usage is unaffected; CampView opts in. */
+  hideScrollbar?: boolean;
 }) {
   // How tall the scroll container is allowed to be, measured against the
   // real remaining viewport space below it rather than a guessed vh
@@ -681,7 +686,11 @@ export function ItemGrid({
   });
 
   return (
-    <div ref={scrollRef} className={styles.itemGridScroll} style={{ height: gridHeight }}>
+    <div
+      ref={scrollRef}
+      className={hideScrollbar ? `${styles.itemGridScroll} ${styles.itemGridScrollNoBar}` : styles.itemGridScroll}
+      style={{ height: gridHeight }}
+    >
       <div className={styles.itemGrid}>
         {sortedIds.map((id) => {
           const info = tierInfo[lookupIds?.[id] ?? id];

@@ -208,6 +208,13 @@ export function BodyTab({
   const backpackCombined: Record<string, number> = { ...backpackBalances, ...backpackInstanceRowBalances };
   const backpackIds = Object.keys(backpackCombined).filter((id) => backpackCombined[id] > 0);
 
+  // Same emptiness check as CampView's own hasCampItems - lets the camp
+  // button carry a small dropped.png badge (see below) so the player can
+  // tell camp holds something without having to open it first.
+  const hasCampItems =
+    character.gear.items.some((instance) => instance.location === "camp") ||
+    Object.values(character.gear.itemBalances.camp).some((amount) => amount > 0);
+
   return (
     <div className={styles.panel}>
       <InAdventureToggle character={character} onPlayerDataUpdated={onPlayerDataUpdated} />
@@ -267,10 +274,22 @@ export function BodyTab({
                 half in/half out of the frame's own bottom edge. Opens
                 CampView (see CharacterPreview.tsx) in place of the normal
                 tab content. */}
-            <button type="button" className={styles.campButton} title="Camp" aria-label="Camp" onClick={onOpenCamp}>
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src="/images/character/camp.png" alt="" className={styles.campButtonIcon} />
-            </button>
+            <div className={styles.campButtonWrap}>
+              <button
+                type="button"
+                className={styles.campButton}
+                title={hasCampItems ? "Camp (items waiting)" : "Camp"}
+                aria-label={hasCampItems ? "Camp (items waiting)" : "Camp"}
+                onClick={onOpenCamp}
+              >
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src="/images/character/camp.png" alt="" className={styles.campButtonIcon} />
+              </button>
+              {hasCampItems && (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src="/images/character/dropped.png" alt="" className={styles.campButtonBadge} />
+              )}
+            </div>
           </div>
 
           <div className={styles.handSlotRow}>

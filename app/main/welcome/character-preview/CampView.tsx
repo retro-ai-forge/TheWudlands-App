@@ -141,6 +141,7 @@ export function CampView({
         characterId={character.id}
         onPlayerDataUpdated={onPlayerDataUpdated}
         reserveBottomPx={CAMPFIRE_AREA_PX}
+        hideScrollbar
       />
       <div className={styles.campfireStage} style={{ height: CAMPFIRE_AREA_PX }}>
         {/* Fire's position/size are relative to THIS group (i.e. to the

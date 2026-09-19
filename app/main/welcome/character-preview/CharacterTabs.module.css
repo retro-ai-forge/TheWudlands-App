@@ -1017,7 +1017,12 @@
    (bottom:0 + translateY(50%) shifts it down by half its own height),
    so it overlaps the portrait above and .handSlotRow below by straddling
    that one seam, rather than sitting cleanly in the gap between them. */
-.campButton {
+/* Wraps .campButton (own containing block for its absolute positioning
+   against .frameStage, unchanged from before) so .campButtonBadge below
+   can sit in its corner without being clipped by the button's own
+   overflow:hidden circular mask - a badge child of the button itself
+   would get cropped away near the edge. */
+.campButtonWrap {
   position: absolute;
   left: 50%;
   bottom: 0.25rem;
@@ -1025,12 +1030,39 @@
   width: 6rem;
   aspect-ratio: 1 / 1;
   z-index: 2;
+}
+
+.campButton {
+  display: block;
+  width: 100%;
+  height: 100%;
   border-radius: 50%;
   border: 2px solid #6f6142;
   background: #0d0d0a;
   padding: 0;
   cursor: pointer;
   overflow: hidden;
+}
+
+/* Only rendered while camp holds something (BodyTab's hasCampItems) -
+   same dropped.png flavor icon CampView itself shows, repurposed here as
+   a small "there's stuff waiting" badge rather than a full-size scene
+   prop. Own dark circular backing (matching .itemGridCountBadge's look
+   elsewhere) so it stays readable over any portrait art underneath. */
+.campButtonBadge {
+  position: absolute;
+  right: -0.25rem;
+  bottom: -0.25rem;
+  z-index: 3;
+  width: 2.25rem;
+  height: 2.25rem;
+  padding: 0.2rem;
+  border-radius: 50%;
+  border: 1px solid #6f6142;
+  background: rgba(10, 8, 4, 0.85);
+  object-fit: contain;
+  image-rendering: pixelated;
+  pointer-events: none;
 }
 
 .campButtonIcon {
@@ -1448,7 +1480,7 @@
 .inventoryEmpty {
   font-size: 0.8rem;
   color: #7d7256;
-  padding: 0.5rem 0;
+  padding: 0.5rem 0 0.5rem 0.4rem;
 }
 
 .resourceDivider {
@@ -1563,6 +1595,20 @@
   overflow-y: hidden;
 }
 
+/* CampView's own opt-in (ItemGrid's hideScrollbar) - still scrolls via
+   drag/touch/trackpad, just no visible track/thumb. Needs all three: the
+   standard property (Firefox), the legacy MS one (old Edge/IE), and the
+   WebKit pseudo-element (Chrome/Safari) - no single one covers every
+   engine. */
+.itemGridScrollNoBar {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.itemGridScrollNoBar::-webkit-scrollbar {
+  display: none;
+}
+
 /* CampView's own lower-screen centerpiece. Fixed to the true viewport
    bottom (like .campExitButton already was) rather than flow-positioned
    below the ItemGrid above it - flow position made its actual on-screen
@@ -1660,7 +1706,7 @@
 .campExitButton {
   position: fixed;
   right: 0.75rem;
-  bottom: 1.75rem;
+  bottom: 0.75rem;
   z-index: 5;
   width: 2rem;
   aspect-ratio: 1 / 1;
@@ -1690,6 +1736,10 @@
   grid-auto-columns: 100px;
   justify-content: start;
   gap: 0.35rem;
+  /* .panel's own horizontal padding is only 0.15rem - matches
+     .inventoryEmpty's left padding so the first tile isn't flush against
+     the true edge either. */
+  padding-left: 0.4rem;
   height: 100%;
   /* Belt-and-suspenders alongside .itemGridCell's own onPointerDown
      preventDefault - covers the tier/count badge text too (inherited from
