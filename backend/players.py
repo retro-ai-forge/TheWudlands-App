@@ -511,21 +511,54 @@ async def preview_recycle(
     return recoveries
 
 
-def _recycle_destination_bucket(character: dict) -> str:
+def _resource_marginal_backpack_slots(character: dict, amounts: Dict[str, int]) -> int:
     """
-    Which of this character's own gear.resources buckets recycled
-    materials land in - never the player's shared vault, recycling always
-    hands materials straight to whatever this character is physically
-    carrying it in. Prefers a worn backpack, then a mount's saddlepack
-    (Mbagpack), and only falls back to "camp" (owned, not packed anywhere)
-    when neither is equipped - so recycling never fails or discards
-    materials just because nothing's currently worn to carry them in.
+    Extra backpack slots the whole `amounts` batch (potentially several raw/
+    processed material ids at once, from one recycle) would cost on top of
+    whatever's already packed - same ceil(new/stack_size) - ceil(existing/
+    stack_size) math load_resource_to_backpack uses per id, just summed
+    across every id recycling handed back in one go.
     """
+    existing_backpack = character.get("gear", {}).get("resources", {}).get("backpack", {})
+    total = 0
+    for rid, qty in amounts.items():
+        stack_size = items_catalog.RAW_STACK_SIZE if rid in RESOURCE_ITEMS_BY_ID else items_catalog.PROCESSED_STACK_SIZE
+        existing = existing_backpack.get(rid, 0)
+        total += math.ceil((existing + qty) / stack_size) - math.ceil(existing / stack_size)
+    return total
+
+
+def _recycle_resource_updates(character: dict, amounts: Dict[str, int], from_vault: bool) -> Dict[str, int]:
+    """
+    Ready-to-merge $inc fragment for recycling's recovered raw/processed
+    materials. Recycling a VAULT item (from_vault=True) credits the
+    player's own shared crafting stock directly (top-level crafting.
+    resources - the same "Party's Resources" pool check_in_resource moves
+    into) since there's no specific character standing there to hand
+    physically-carried materials to. Recycling something a character is
+    actually carrying (from_vault=False) hands the materials to THAT
+    character instead - preferring its own worn backpack when there's
+    room for the WHOLE batch (never a partial fill - same all-or-nothing
+    rule load_resource_to_backpack itself enforces), then a mount's
+    saddlepack (uncapped, no slot system of its own), and only camp
+    (also uncapped) when neither is equipped or the backpack has no room
+    left - so recycling never fails or discards materials just because
+    nothing's currently worn to carry them in, or what's worn is full.
+    """
+    if from_vault:
+        return {f"crafting.resources.{rid}": qty for rid, qty in amounts.items()}
+
+    bucket = "camp"
     if items_catalog.has_backpack_equipped(character):
-        return "backpack"
-    if items_catalog.has_saddlepack_equipped(character):
-        return "saddlepack"
-    return "camp"
+        capacity = items_catalog.backpack_capacity(character)
+        used = items_catalog.backpack_slots_used(character)
+        if used + _resource_marginal_backpack_slots(character, amounts) <= capacity:
+            bucket = "backpack"
+        elif items_catalog.has_saddlepack_equipped(character):
+            bucket = "saddlepack"
+    elif items_catalog.has_saddlepack_equipped(character):
+        bucket = "saddlepack"
+    return {f"characters.$.gear.resources.{bucket}.{rid}": qty for rid, qty in amounts.items()}
 
 
 async def recycle_item_instance(
@@ -541,10 +574,13 @@ async def recycle_item_instance(
     (character.tools, never the player's shared pool). `from_vault=True`
     recycles one of the PLAYER's shared pool instances instead, scored
     with the full shared tool pool too (the character is right there at
-    the vault). Either way, the recovered materials always land on THIS
-    character - never the player's shared vault, even when recycling a
-    vault item - in whichever of its own gear.resources buckets it can
-    actually carry them in right now (see _recycle_destination_bucket).
+    the vault). Where the recovered materials land depends on which of
+    those two: a vault item's materials go straight into the player's own
+    shared crafting stock (crafting.resources, same pool "Party's
+    Resources" reads); a character-carried item's materials go to THAT
+    character instead, into whichever of its own gear.resources buckets
+    it can actually carry them in right now (see
+    _recycle_resource_updates).
 
     Raises ValueError if the item's family has no recipe. Returns None if
     no matching instance exists in the searched location, or the address/
@@ -591,8 +627,7 @@ async def recycle_item_instance(
     if not recoveries:
         raise ValueError(f"{entry.family_id} has no recipe to recycle materials from")
     amounts = recycling.flatten_recovery(recoveries)
-    bucket = _recycle_destination_bucket(character)
-    inc_ops = {f"characters.$.gear.resources.{bucket}.{rid}": qty for rid, qty in amounts.items()}
+    inc_ops = _recycle_resource_updates(character, amounts, from_vault)
 
     if from_vault:
         update: Dict[str, object] = {"$pull": {"vault.items": {"instanceId": instance_id}}}
@@ -637,9 +672,9 @@ async def recycle_item_balance(
     same from_vault split for which pool `amount` is consumed FROM
     (character's own gear.itemBalances.camp vs. the player's shared
     vault.itemBalances), for stackable finished goods (food, potions, misc
-    trinkets) rather than instance-tracked gear. Either way, the recovered
-    materials always land on THIS character's own gear.resources (see
-    _recycle_destination_bucket), never the player's shared vault.
+    trinkets) rather than instance-tracked gear. Where the recovered
+    materials land follows the same from_vault split as
+    recycle_item_instance (see _recycle_resource_updates).
     Raises ValueError for a non-positive amount, an unknown item id, or a
     family with no recipe. Returns None if `amount` isn't held wherever
     this looks.
@@ -675,21 +710,17 @@ async def recycle_item_balance(
     if not recoveries:
         raise ValueError(f"{entry.family_id} has no recipe to recycle materials from")
     amounts = recycling.flatten_recovery(recoveries)
-    bucket = _recycle_destination_bucket(character)
+    resource_inc_ops = _recycle_resource_updates(character, amounts, from_vault)
 
     if from_vault:
-        update: Dict[str, object] = {"$inc": {f"vault.itemBalances.{item_id}": -amount}}
-        for rid, qty in amounts.items():
-            update["$inc"][f"characters.$.gear.resources.{bucket}.{rid}"] = qty
+        update: Dict[str, object] = {"$inc": {f"vault.itemBalances.{item_id}": -amount, **resource_inc_ops}}
         doc = await db.players.find_one_and_update(
             {"address": address, "characters.id": character_id, f"vault.itemBalances.{item_id}": {"$gte": amount}},
             update,
             return_document=ReturnDocument.AFTER,
         )
     else:
-        update = {"$inc": {f"characters.$.gear.itemBalances.camp.{item_id}": -amount}}
-        for rid, qty in amounts.items():
-            update["$inc"][f"characters.$.gear.resources.{bucket}.{rid}"] = qty
+        update = {"$inc": {f"characters.$.gear.itemBalances.camp.{item_id}": -amount, **resource_inc_ops}}
         doc = await db.players.find_one_and_update(
             {
                 "address": address,
