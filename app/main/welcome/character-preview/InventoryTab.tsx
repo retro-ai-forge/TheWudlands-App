@@ -1653,7 +1653,6 @@ export function ItemDetailPopup({
               </div>
             )}
             {recycleActionError && <p className={styles.destroyError}>{recycleActionError}</p>}
-            <div className={styles.recycleDestroyDivider} />
             {!isInstance && stackSize > 1 && (
               <div className={styles.itemPopupActions} role="radiogroup" aria-label="How many to destroy">
                 {QUANTITY_OPTIONS.map((n) => (
@@ -1694,10 +1693,11 @@ export function ItemDetailPopup({
                   title="Destroy all"
                   aria-label="Destroy all"
                 >
-                  ∞
+                  <span className={styles.itemPopupInfinityGlyph}>∞</span>
                 </button>
               </div>
             )}
+            <div className={styles.recycleDestroyDivider} />
             <div
               className={styles.destroySection}
               role="button"
@@ -1784,25 +1784,47 @@ export function ItemDetailPopup({
               ) : (
                 <div className={styles.itemPopupActions} role={stackSize > 1 ? "radiogroup" : undefined}>
                   {stackSize > 1
-                    ? QUANTITY_OPTIONS.map((n) => (
+                    ? (
+                      <>
+                        {QUANTITY_OPTIONS.map((n) => (
+                          <button
+                            key={n}
+                            type="button"
+                            role="radio"
+                            aria-checked={quantity === n}
+                            className={[
+                              styles.craftCountButton,
+                              styles.itemPopupQuantityButton,
+                              quantity === n ? styles.craftCountButtonActive : "",
+                            ]
+                              .filter(Boolean)
+                              .join(" ")}
+                            disabled={pending || n > owned}
+                            onClick={() => setQuantity(n)}
+                          >
+                            {n}
+                          </button>
+                        ))}
                         <button
-                          key={n}
                           type="button"
                           role="radio"
-                          aria-checked={quantity === n}
+                          aria-checked={quantity === owned}
                           className={[
                             styles.craftCountButton,
                             styles.itemPopupQuantityButton,
-                            quantity === n ? styles.craftCountButtonActive : "",
+                            quantity === owned ? styles.craftCountButtonActive : "",
                           ]
                             .filter(Boolean)
                             .join(" ")}
-                          disabled={pending || n > owned}
-                          onClick={() => setQuantity(n)}
+                          disabled={pending || owned <= 0}
+                          onClick={() => setQuantity(owned)}
+                          title="All"
+                          aria-label="All"
                         >
-                          {n}
+                          <span className={styles.itemPopupInfinityGlyph}>∞</span>
                         </button>
-                      ))
+                      </>
+                    )
                     : slotGroups.map((slots) => (
                         <button
                           key={slots.join("+")}
@@ -2066,6 +2088,26 @@ export function ItemDetailPopup({
                       {n}
                     </button>
                   ))}
+                {stackSize > 1 && (
+                  <button
+                    type="button"
+                    role="radio"
+                    aria-checked={quantity === owned}
+                    className={[
+                      styles.craftCountButton,
+                      styles.itemPopupQuantityButton,
+                      quantity === owned ? styles.craftCountButtonActive : "",
+                    ]
+                      .filter(Boolean)
+                      .join(" ")}
+                    disabled={pending || owned <= 0}
+                    onClick={() => setQuantity(owned)}
+                    title="All"
+                    aria-label="All"
+                  >
+                    <span className={styles.itemPopupInfinityGlyph}>∞</span>
+                  </button>
+                )}
                 {location === "camp" ? (
                   <>
                     {hasBackpackEquipped && (
