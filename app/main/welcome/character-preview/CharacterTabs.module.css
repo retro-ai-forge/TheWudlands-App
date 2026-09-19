@@ -163,12 +163,28 @@
   height: clamp(30px, 9vw, 52px);
 }
 
+/* Close's own exit.webp (see CharacterPreview.tsx). */
+.closeArrowIcon {
+  width: clamp(24px, 7vw, 40px);
+  height: clamp(24px, 7vw, 40px);
+  flex-shrink: 0;
+}
+
 /* The page currently showing - same gold glow the old flyout used for its
    own "active" tab, just larger. The rest are dimmed via
    .tabRowButtonInactive below, applied alongside .tabRowButton rather than
    replacing it. */
 .tabRowButtonActive .tabIcon {
   filter: drop-shadow(0 0 14px rgba(230, 184, 92, 0.95));
+}
+
+/* Applied alongside .tabRowButtonActive (see TABS' lightenWhenActive flag
+   in CharacterPreview.tsx) for icons whose own art is too dark for the
+   glow above to read as clearly "active" on its own - same specificity as
+   .tabRowButtonActive .tabIcon (two classes each), so source order alone
+   is what makes this win and fully replace that rule's filter. */
+.tabRowButtonActiveLighten .tabIcon {
+  filter: drop-shadow(0 0 14px rgba(230, 184, 92, 0.95)) brightness(1.6);
 }
 
 .tabRowButtonInactive {
@@ -1768,6 +1784,19 @@
 .itemPopupFlash {
   color: #d4a060;
   font-weight: bold;
+}
+
+/* Replaces the vault popup's whole action row while the character is
+   inAdventure (see ItemDetailPopup) - no buttons at all, just the status
+   itself, in the same gold the active-tab glow uses elsewhere. */
+.itemPopupAwayNotice {
+  margin: 0.25rem 0 0;
+  text-align: center;
+  font-size: 1rem;
+  font-weight: bold;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #e6b85c;
 }
 
 .itemPopupGathering {

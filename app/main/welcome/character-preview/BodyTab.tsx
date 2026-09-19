@@ -108,7 +108,6 @@ export function BodyTab({
             sizeClass: string;
             equipSlots: string[][];
             backpackable: boolean;
-            twoHanded: boolean;
             gatheringBonuses: string[];
           }>
         ) => {
@@ -126,7 +125,6 @@ export function BodyTab({
               sizeClass: item.sizeClass,
               equipSlots: item.equipSlots,
               backpackable: item.backpackable,
-              twoHanded: item.twoHanded,
               gatheringBonuses: item.gatheringBonuses,
             };
           }
@@ -144,10 +142,18 @@ export function BodyTab({
 
   // Mirrors InventoryTab.tsx's identical check (and backend.items_catalog.
   // has_backpack_equipped) - greys out the popup's "Move to backpack"
-  // button when nothing's worn in Back/Side, instead of letting the click
-  // fail server-side.
+  // button when no "backpack" family is worn, instead of letting the click
+  // fail server-side. Checked by familyId, not by "Back"/"Side" in slotRef -
+  // bolt_girdle/quiver/ladder also list "Side" as one of their OWN
+  // alternative equip_slots groups, so an equipped bolt_girdle sitting in
+  // "Side" must not count as a backpack.
   const hasBackpackEquipped = character.gear.items.some(
-    (instance) => instance.location === "body" && (instance.slotRef.includes("Back") || instance.slotRef.includes("Side"))
+    (instance) => instance.location === "body" && instance.familyId === "backpack"
+  );
+  // Mirrors backend.items_catalog.has_saddlepack_equipped - hides (rather
+  // than greys) the popup's "Move to saddlepack" button when false.
+  const hasSaddlepackEquipped = character.gear.items.some(
+    (instance) => instance.location === "body" && instance.familyId === "saddlepack"
   );
 
   return (
@@ -298,6 +304,9 @@ export function BodyTab({
           location="body"
           source="character"
           hasBackpackEquipped={hasBackpackEquipped}
+          hasSaddlepackEquipped={hasSaddlepackEquipped}
+          inAdventure={character.availability.inAdventure}
+          currentSlots={selectedInstance.slotRef}
           characterId={character.id}
           onPlayerDataUpdated={onPlayerDataUpdated}
           onClose={() => setSelectedInstance(null)}

@@ -18,12 +18,16 @@ export type TabKey = "stats" | "body" | "soul" | "adventure" | "inventory";
 
 const ICON_BASE = "/images/character/char-preview-";
 
-const TABS: { key: TabKey; label: string; icon: string }[] = [
+const TABS: { key: TabKey; label: string; icon: string; lightenWhenActive?: boolean }[] = [
   { key: "stats", label: "Stats", icon: `${ICON_BASE}stats.png` },
-  { key: "body", label: "Body", icon: `${ICON_BASE}body.png` },
+  // body.png/adventure.png are noticeably darker art than the other three
+  // icons (muted brown/purple vs. stats' gold or soul's bright cyan) - the
+  // shared gold glow alone doesn't read as clearly "active" on them, so
+  // these two also get a brightness boost (see .tabRowButtonActiveLighten).
+  { key: "body", label: "Body", icon: `${ICON_BASE}body.png`, lightenWhenActive: true },
   { key: "soul", label: "Soul", icon: `${ICON_BASE}soul.png` },
-  { key: "inventory", label: "Inventory", icon: `${ICON_BASE}inventory.png` },
-  { key: "adventure", label: "Adventure", icon: `${ICON_BASE}adventure.png` },
+  { key: "inventory", label: "Inventory", icon: "/images/character/vault.png" },
+  { key: "adventure", label: "Adventure", icon: `${ICON_BASE}adventure.png`, lightenWhenActive: true },
 ];
 
 // Opened by clicking an active soul slot's character. Five subpages - Stats
@@ -272,9 +276,13 @@ export function CharacterPreview({
                 <button
                   key={tab.key}
                   type="button"
-                  className={`${tabStyles.tabRowButton} ${
-                    !showCamp && activeTab === tab.key ? tabStyles.tabRowButtonActive : tabStyles.tabRowButtonInactive
-                  }`}
+                  className={[
+                    tabStyles.tabRowButton,
+                    !showCamp && activeTab === tab.key ? tabStyles.tabRowButtonActive : tabStyles.tabRowButtonInactive,
+                    !showCamp && activeTab === tab.key && tab.lightenWhenActive ? tabStyles.tabRowButtonActiveLighten : "",
+                  ]
+                    .filter(Boolean)
+                    .join(" ")}
                   onClick={() => {
                     setShowCamp(false);
                     setActiveTab(tab.key);
@@ -291,7 +299,7 @@ export function CharacterPreview({
 
             <button type="button" className={tabStyles.closeButton} onClick={onClose} title="Close" aria-label="Close">
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={`${ICON_BASE}close.png`} alt="" className={tabStyles.tabIcon} />
+              <img src="/images/character/exit.webp" alt="" className={tabStyles.closeArrowIcon} />
             </button>
           </div>
         </div>

@@ -227,9 +227,11 @@ class ItemInstanceResponse(BaseModel):
     location: str = Field(
         ...,
         description=(
-            "'backpack' | 'body' | 'soul' | 'pool' | 'crafting' - 'crafting' means this instance is "
-            "currently borrowed for an in-progress craft (see activeCraft.borrowedInstances) and will "
-            "return to wherever it came from once finish_craft releases it"
+            "'backpack' | 'body' | 'soul' | 'pool' | 'crafting' | 'camp' | 'saddlepack' - 'crafting' means "
+            "this instance is currently borrowed for an in-progress craft (see activeCraft.borrowedInstances) "
+            "and will return to wherever it came from once finish_craft releases it; 'camp'/'saddlepack' mean "
+            "it's still this character's own, uncapped, not counted against backpack capacity (see "
+            "backend.players.unequip_item)"
         ),
     )
     slotRef: List[str] = Field(default_factory=list)
@@ -501,7 +503,6 @@ class ItemCatalogEntryResponse(BaseModel):
         default_factory=list, description="Family-level - alternative full slot-groups valid for one equip action"
     )
     backpackable: bool = Field(True, description="Family-level - whether a move-to-backpack action applies at all")
-    twoHanded: bool = Field(False, description="Family-level - whether any equipSlots group occupies more than one slot")
     gatheringBonuses: List[str] = Field(
         default_factory=list, description="Raw materials this family grants a foraging/gathering bonus for"
     )
@@ -897,7 +898,7 @@ async def get_item_catalog():
         ItemCatalogEntryResponse(
             id=e.id, name=e.name, familyId=e.family_id, tier=e.tier, kind=list(e.kind), qualityMax=e.quality_max,
             icon=e.icon, stackSize=e.stack_size, description=e.description, sizeClass=e.size_class,
-            equipSlots=[list(group) for group in e.equip_slots], backpackable=e.backpackable, twoHanded=e.two_handed,
+            equipSlots=[list(group) for group in e.equip_slots], backpackable=e.backpackable,
             gatheringBonuses=list(e.gathering_bonuses),
         )
         for e in items_catalog.ITEM_CATALOG_ENTRIES
@@ -1007,7 +1008,7 @@ class EquipItemRequest(BaseModel):
 async def equip_item_route(
     character_id: str, instance_id: str, payload: EquipItemRequest, address: str = Depends(get_current_address)
 ):
-    """Equip one of a character's own item instances into `slots`."""
+    """Equip one of a character's own item instances into `slots` - also doubles as the reslot action for an already-equipped instance (e.g. swap hands, move a dagger to its Girdle slot)."""
     try:
         player = await equip_item(address, character_id, instance_id, payload.slots)
     except ValueError as exc:
@@ -1037,21 +1038,59 @@ async def equip_item_from_pool_route(
     return player.to_dict()
 
 
+class UnequipItemRequest(BaseModel):
+    """Optional explicit move destination - omit for the automatic in-adventure-driven vault/camp choice."""
+
+    destination: Optional[str] = Field(
+        None,
+        description='"backpack" or "saddlepack" to skip the automatic vault/camp choice and stay on this character',
+    )
+
+
 @player_router.post("/me/characters/{character_id}/items/{instance_id}/unequip", response_model=PlayerDataResponse)
-async def unequip_item_route(character_id: str, instance_id: str, address: str = Depends(get_current_address)):
-    """Unequip one of a character's item instances back to the backpack."""
-    player = await unequip_item(address, character_id, instance_id)
+async def unequip_item_route(
+    character_id: str,
+    instance_id: str,
+    payload: Optional[UnequipItemRequest] = None,
+    address: str = Depends(get_current_address),
+):
+    """
+    Unequip one of a character's item instances. With no body (or an
+    empty one), the destination is automatic - camp while the character
+    is in_adventure, the shared vault otherwise (see unequip_item). Pass
+    {"destination": "backpack"} or {"destination": "saddlepack"} to send
+    it straight to one of this character's own carry locations instead.
+    """
+    try:
+        player = await unequip_item(address, character_id, instance_id, payload.destination if payload else None)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc))
     if player is None:
         raise HTTPException(status_code=404, detail="No matching equipped instance on that character")
 
     return player.to_dict()
 
 
+class CheckOutItemInstanceRequest(BaseModel):
+    """Optional explicit carry location - defaults to "backpack"."""
+
+    destination: str = Field(
+        "backpack", description='"backpack" (capacity-gated) or "saddlepack" (uncapped, requires one equipped)'
+    )
+
+
 @player_router.post("/me/characters/{character_id}/items/{instance_id}/check-out", response_model=PlayerDataResponse)
-async def check_out_item_instance_route(character_id: str, instance_id: str, address: str = Depends(get_current_address)):
-    """Move one item instance from the player's shared pool onto a character's backpack (capacity-gated)."""
+async def check_out_item_instance_route(
+    character_id: str,
+    instance_id: str,
+    payload: Optional[CheckOutItemInstanceRequest] = None,
+    address: str = Depends(get_current_address),
+):
+    """Move one item instance from the player's shared pool onto a character's backpack (capacity-gated) or saddlepack (uncapped)."""
     try:
-        player = await check_out_item_instance(address, character_id, instance_id)
+        player = await check_out_item_instance(
+            address, character_id, instance_id, payload.destination if payload else "backpack"
+        )
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc))
 

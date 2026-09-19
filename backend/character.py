@@ -183,9 +183,13 @@ class Character:
     # opposed to what's staged for an active craft (see `crafting` above).
     # `items` holds item instances (backend.items_catalog; only
     # needsItemDefinition:true families ever appear here - location:
-    # "backpack"/"body"/"crafting"/"camp", the last two meaning respectively
-    # borrowed for an active craft, and unequipped-but-not-backpack-capacity-
-    # counted (see in_adventure below and backend.players.unequip_item).
+    # "backpack"/"body"/"crafting"/"camp"/"saddlepack". "crafting" means
+    # borrowed for an active craft; "camp" means unequipped-but-not-
+    # backpack-capacity-counted (see in_adventure below and
+    # backend.players.unequip_item); "saddlepack" means moved into the
+    # mount's own saddlebags (see backend.players.unequip_item's
+    # `destination` param and items_catalog.has_saddlepack_equipped) -
+    # uncapped, same as "camp", since no slot-count model exists for it.
     # `resources`/`itemBalances` are flat-count balances split by physical
     # location: "camp" (owned, not packed anywhere specific), "backpack",
     # and "saddlepack" (mount-side, see the Mbagpack equip slot) - moving a

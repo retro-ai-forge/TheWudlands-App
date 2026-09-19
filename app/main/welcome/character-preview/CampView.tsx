@@ -14,8 +14,10 @@ const CAMPFIRE_AREA_PX = 220;
 
 /** Opened by clicking the camp button on the Body tab - this character's
  * own gear.itemBalances.camp (finished goods owned but not yet packed into
- * a backpack/saddlepack), styled like the Inventory tab's Vault grid, with
- * a campfire centerpiece filling the lower part of the screen below it. */
+ * a backpack/saddlepack) plus any gear.items instances sitting at
+ * location:"camp" (e.g. dropped there by unequip_item mid-adventure),
+ * styled like the Inventory tab's Vault grid, with a campfire centerpiece
+ * filling the lower part of the screen below it. */
 export function CampView({
   character,
   onPlayerDataUpdated,
@@ -45,7 +47,6 @@ export function CampView({
             sizeClass: string;
             equipSlots: string[][];
             backpackable: boolean;
-            twoHanded: boolean;
             gatheringBonuses: string[];
           }>
         ) => {
@@ -63,7 +64,6 @@ export function CampView({
               sizeClass: item.sizeClass,
               equipSlots: item.equipSlots,
               backpackable: item.backpackable,
-              twoHanded: item.twoHanded,
               gatheringBonuses: item.gatheringBonuses,
             };
           }
@@ -73,12 +73,36 @@ export function CampView({
       .catch(() => setItemCatalogTierInfo({}));
   }, []);
 
+  // Checked by familyId, not by "Back"/"Side" in slotRef - see BodyTab.tsx's
+  // identical check for why (other families can occupy those slot names too).
   const hasBackpackEquipped = character.gear.items.some(
-    (instance) => instance.location === "body" && (instance.slotRef.includes("Back") || instance.slotRef.includes("Side"))
+    (instance) => instance.location === "body" && instance.familyId === "backpack"
+  );
+  const hasSaddlepackEquipped = character.gear.items.some(
+    (instance) => instance.location === "body" && instance.familyId === "saddlepack"
   );
 
+  // Camp holds two different kinds of things, same split as the Vault
+  // tab's own combining logic (see InventoryTab.tsx's playerItemsCombined):
+  // flat-count crafted goods (gear.itemBalances.camp) and individually-
+  // tracked item instances sitting at location:"camp" - e.g. whatever
+  // unequip_item just dropped here because this character is out on an
+  // adventure. Without folding the instances in too, anything unequipped
+  // mid-adventure would be correctly stored but never show up here.
   const campBalances = character.gear.itemBalances.camp;
-  const campIds = Object.keys(campBalances).filter((id) => campBalances[id] > 0);
+  const campInstances = character.gear.items.filter((instance) => instance.location === "camp");
+  const campInstanceLookupIds: Record<string, string> = {};
+  const campInstanceRowBalances: Record<string, number> = {};
+  const campInstanceQuality: Record<string, number | null> = {};
+  const campInstanceLocations: Record<string, "camp"> = {};
+  for (const instance of campInstances) {
+    campInstanceLookupIds[instance.instanceId] = instance.itemId;
+    campInstanceRowBalances[instance.instanceId] = 1;
+    campInstanceQuality[instance.instanceId] = instance.quality;
+    campInstanceLocations[instance.instanceId] = "camp";
+  }
+  const campCombined: Record<string, number> = { ...campBalances, ...campInstanceRowBalances };
+  const campIds = Object.keys(campCombined).filter((id) => campCombined[id] > 0);
 
   return (
     <div className={styles.panel}>
@@ -86,9 +110,14 @@ export function CampView({
         ids={campIds}
         emptyLabel="Nothing sitting at camp right now."
         tierInfo={itemCatalogTierInfo}
-        balances={campBalances}
+        balances={campCombined}
+        lookupIds={campInstanceLookupIds}
+        instanceQuality={campInstanceQuality}
+        instanceLocations={campInstanceLocations}
         source="character"
         hasBackpackEquipped={hasBackpackEquipped}
+        hasSaddlepackEquipped={hasSaddlepackEquipped}
+        inAdventure={character.availability.inAdventure}
         characterId={character.id}
         onPlayerDataUpdated={onPlayerDataUpdated}
         reserveBottomPx={CAMPFIRE_AREA_PX}

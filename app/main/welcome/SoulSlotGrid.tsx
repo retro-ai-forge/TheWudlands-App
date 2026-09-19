@@ -96,7 +96,7 @@ export type ItemInstance = {
   itemId: string;
   familyId: string;
   quality: number | null;
-  /** "pool" | "backpack" | "body" | "soul" | "crafting" - "crafting" means it's currently borrowed for an in-progress craft (see Character.activeCraft.borrowedInstances) and will return to wherever it came from once the craft finishes. */
+  /** "pool" | "backpack" | "body" | "soul" | "crafting" | "camp" | "saddlepack" - "crafting" means it's currently borrowed for an in-progress craft (see Character.activeCraft.borrowedInstances) and will return to wherever it came from once the craft finishes; "camp"/"saddlepack" mean it's still this character's own, uncapped, not counted against backpack capacity. */
   location: string;
   slotRef: string[];
   createdAt: string;

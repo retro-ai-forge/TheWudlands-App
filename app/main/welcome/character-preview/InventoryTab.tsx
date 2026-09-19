@@ -33,8 +33,6 @@ export type BlueprintTierInfo = Record<
     equipSlots?: string[][];
     /** Family-level (item-catalog only) - whether a move-to-backpack action applies at all. */
     backpackable?: boolean;
-    /** Family-level (item-catalog only) - whether equipping occupies both named hand slots at once. */
-    twoHanded?: boolean;
     /** Family-level (item-catalog only) - raw materials this family grants a foraging/gathering bonus for, e.g. ["ore","stone","crystal"] for a pickaxe. */
     gatheringBonuses?: string[];
   }
@@ -595,7 +593,10 @@ export function ItemGrid({
   nonMovableIds,
   source = "vault",
   hasBackpackEquipped,
+  hasSaddlepackEquipped,
+  inAdventure = false,
   characterId,
+  characterFirstName,
   onPlayerDataUpdated,
   reserveBottomPx = 0,
 }: {
@@ -607,15 +608,21 @@ export function ItemGrid({
   lookupIds?: Record<string, string>;
   /** Row id (instanceId) -> that specific instance's current quality, for rows lookupIds resolves to a real item instance. */
   instanceQuality?: Record<string, number | null>;
-  /** Row id (instanceId) -> "backpack" | "body" - source:"character" only, decides whether the popup offers Unequip(+Move to backpack) or Equip(+Check-in-to-vault). Unused for source:"vault" (every pool row is location:"pool" by definition). */
-  instanceLocations?: Record<string, "backpack" | "body">;
+  /** Row id (instanceId) -> "backpack" | "body" | "camp" - source:"character" only, decides whether the popup offers Unequip or Equip(+Check-in-to-vault) ("backpack" and "camp" both get the equip view - see check_in_item_instance/equip_item, which treat the two the same). Unused for source:"vault" (every pool row is location:"pool" by definition). */
+  instanceLocations?: Record<string, "backpack" | "body" | "camp">;
   /** Row ids with no working move-to-backpack/equip path yet (ammo living in resources, not items/itemBalances) - the popup shows info only, no action buttons, for these. */
   nonMovableIds?: Set<string>;
   /** "vault" (default): rows live in the player's shared pool - the popup's move actions are equip-from-pool/move-to-backpack, recycle/destroy target the shared vault. "character": rows are this character's own backpack/body items or itemBalances - the popup's move actions are Unequip(-to-vault)/Move-to-backpack for a worn row, Equip/Check-in-to-vault for a backpacked one; recycle/destroy target this character's own holdings instead. */
   source?: "vault" | "character";
   /** Whether this character currently has a backpack worn - greys out the popup's "Move to backpack" button instead of letting the click fail server-side with "No backpack equipped". */
   hasBackpackEquipped: boolean;
+  /** Whether this character's mount currently has a saddlepack worn - hides the popup's "Move to saddlepack" button entirely when false (see ItemDetailPopup's identical prop). */
+  hasSaddlepackEquipped: boolean;
+  /** source:"character" only - hides the popup's "Check in to vault" button while true, since there's no path back to the shared vault mid-adventure (see ItemDetailPopup's identical prop). */
+  inAdventure?: boolean;
   characterId: string;
+  /** source:"vault" only - passed straight through to ItemDetailPopup's identical prop. */
+  characterFirstName?: string;
   onPlayerDataUpdated?: (data: RawPlayerData) => void;
   /** Extra px subtracted off the fill-to-bottom height measurement below,
    * for a caller (CampView's campfire) that reserves its own fixed-height
@@ -738,7 +745,10 @@ export function ItemGrid({
           location={instanceLocations?.[selectedId]}
           source={source}
           hasBackpackEquipped={hasBackpackEquipped}
+          hasSaddlepackEquipped={hasSaddlepackEquipped}
+          inAdventure={inAdventure}
           characterId={characterId}
+          characterFirstName={characterFirstName}
           onPlayerDataUpdated={onPlayerDataUpdated}
           onClose={() => setSelectedId(null)}
         />
@@ -747,30 +757,26 @@ export function ItemGrid({
   );
 }
 
-// Same icon the footer's own Inventory tab uses (see CharacterPreview.tsx's
-// TABS list) - reused here so the "move to backpack" action reads as the
-// same concept in both places, rather than inventing a second sack icon.
-const BACKPACK_ACTION_ICON = "/images/character/char-preview-inventory.png";
+// The item popup's own move-destination icons - one per carry location an
+// item can end up in. Swapped in place of the old generic footer-tab icon
+// (char-preview-inventory.png) previously reused here for "backpack".
+const BACKPACK_ACTION_ICON = "/images/character/backpack.png";
+const SADDLEPACK_ACTION_ICON = "/images/character/saddlebags.png";
+const VAULT_ACTION_ICON = "/images/character/vault.png";
+const CAMP_ACTION_ICON = "/images/character/camp.png";
 
 const QUANTITY_OPTIONS = [1, 2, 5, 10] as const;
 
 // No dedicated hand icon asset exists - a plain emoji glyph fits the same
 // convention every other icon in this file already uses (getKindIcon's
-// ⚔️/🛡️/🥋, getTierIndicator's ○●◉✦✨🌟), no image needed. Unicode has no
-// left/right-hand distinction, so "Left"/"Right" stay as text and only the
-// word "Hand" itself is replaced - with the same glyph flipped horizontally
-// (scaleX(-1), matching BodyTab.tsx's own EquipSlotIcon mirroring) for
-// "Right Hand", so the two read as a mirrored pair rather than two
-// identical icons.
+// ⚔️/🛡️/🥋, getTierIndicator's ○●◉✦✨🌟), no image needed. No "Left"/"Right"
+// text at all - the glyph alone flipped horizontally (scaleX(-1), matching
+// BodyTab.tsx's own EquipSlotIcon mirroring) for "Right Hand" is what tells
+// the two apart, read as a mirrored pair rather than two identical icons.
 function formatSlotLabel(slot: string): ReactNode {
   if (!/\bHand\b/.test(slot)) return slot;
-  const prefix = slot.replace(/\bHand\b/, "").trim();
-  return (
-    <>
-      {prefix}{" "}
-      <span style={prefix === "Right" ? { display: "inline-block", transform: "scaleX(-1)" } : undefined}>✋</span>
-    </>
-  );
+  const isRight = slot.startsWith("Right");
+  return <span style={isRight ? { display: "inline-block", transform: "scaleX(-1)" } : undefined}>✋</span>;
 }
 
 type PostJsonResult =
@@ -879,7 +885,11 @@ export function ItemDetailPopup({
   location,
   source = "vault",
   hasBackpackEquipped,
+  hasSaddlepackEquipped,
+  inAdventure = false,
+  currentSlots,
   characterId,
+  characterFirstName,
   onPlayerDataUpdated,
   onClose,
 }: {
@@ -897,13 +907,21 @@ export function ItemDetailPopup({
   moveId: string;
   /** The concrete catalog id (item-catalog familyId+tier) this row resolves to - same id used to look up `info` itself (lookupIds?.[id] ?? id), needed separately here since GET .../recycle-preview/{itemId} takes a concrete id, never an instanceId. */
   catalogId: string;
-  /** source:"character" instance rows only - "backpack" or "body", decides whether the move actions offered are Equip/Check-in-to-vault or Unequip(-to-vault)/Move-to-backpack. */
-  location?: "backpack" | "body";
+  /** source:"character" instance rows only - "backpack", "camp", or "body" - decides whether the move actions offered are Equip/Check-in-to-vault (backpack/camp, treated the same) or Unequip (body). */
+  location?: "backpack" | "body" | "camp";
   /** "vault" (default): `moveId` lives in the player's shared pool. "character": `moveId` is this character's own (backpack/body instance, or itemBalances row) - see ItemGrid's identical prop for what changes. */
   source?: "vault" | "character";
   /** Whether this character currently has a backpack worn - greys out any "Move to backpack" button instead of letting the click fail server-side with "No backpack equipped". */
   hasBackpackEquipped: boolean;
+  /** Whether this character's mount currently has a saddlepack worn (see items_catalog.has_saddlepack_equipped) - any "Move to saddlepack" button is hidden entirely (not just greyed) when false, since there's no mount slot to blame the way a missing backpack gets a "No backpack equipped" message. */
+  hasSaddlepackEquipped: boolean;
+  /** location:"body" rows only - whether this character currently counts as out on an adventure (Character.availability.inAdventure). Picks the automatic-unequip icon: camp while true, the shared vault while false - see backend.players.unequip_item. */
+  inAdventure?: boolean;
+  /** location:"body" rows only - the slot(s) this instance currently occupies (its own slotRef) - used to exclude that same group from the reslot button list below (equipToSlots), since re-clicking your own current slot(s) would be a no-op. */
+  currentSlots?: string[];
   characterId: string;
+  /** source:"vault" only - named in the "On Adventure" notice that replaces the whole action row while inAdventure is true. */
+  characterFirstName?: string;
   onPlayerDataUpdated?: (data: RawPlayerData) => void;
   onClose: () => void;
 }) {
@@ -927,12 +945,17 @@ export function ItemDetailPopup({
     if (flashTimeoutRef.current) clearTimeout(flashTimeoutRef.current);
   }, []);
 
-  // "No backpack equipped" / "Backpack is full" (see backend.players.
-  // check_out_item_instance/load_item_balance_to_backpack) get their own
-  // specific wording; anything else falls back to a generic message.
+  // "No backpack equipped" / "Backpack is full" / "No saddlepack equipped"
+  // (see backend.players.check_out_item_instance/unequip_item/
+  // load_item_balance_to_backpack) get their own specific wording; anything
+  // else falls back to a generic message.
   const flashForDetail = (detail: string | null): string => {
     if (detail === "No backpack equipped") return "No backpack found, equip one.";
     if (detail === "Backpack is full") return "Backpack full - remove items first.";
+    if (detail === "No saddlepack equipped") return "No saddlepack found, equip one.";
+    if (detail === "Character is out on an adventure - no reaching the shared vault") {
+      return "Out on an adventure - the shared vault isn't reachable.";
+    }
     return "Couldn't move that.";
   };
 
@@ -967,10 +990,24 @@ export function ItemDetailPopup({
     );
   };
 
+  // Pool -> this character's saddlepack, one step - instance rows only (no
+  // saddlepack equivalent of load-backpack exists for flat itemBalances
+  // yet, so this button never shows for a balance row - see its render
+  // guard below).
+  const moveToSaddlepack = async () => {
+    setPending(true);
+    setFlashMessage(null);
+    finish(
+      await postJson(`/api/auth/me/characters/${characterId}/items/${moveId}/check-out`, {
+        destination: "saddlepack",
+      })
+    );
+  };
+
   // Straight pool -> body, one call - never routes through the backpack
   // (see backend.players.equip_item_from_pool), unlike moveToBackpack
   // below which deliberately does.
-  const equipToSlots = async (slots: string[]) => {
+  const equipFromPool = async (slots: string[]) => {
     setPending(true);
     setFlashMessage(null);
     finish(await postJson(`/api/auth/me/characters/${characterId}/items/${moveId}/equip-from-pool`, { slots }));
@@ -982,46 +1019,67 @@ export function ItemDetailPopup({
   // itself will accept.
   const slotGroups: string[][] = isInstance && info?.equipSlots?.length ? info.equipSlots : [];
 
+  // location:"body" rows only - every OTHER group this family could be
+  // equipped into, for the reslot buttons below (swap hands, move a dagger
+  // to its Girdle slot, ...). Excludes whichever group matches this
+  // instance's own currentSlots - clicking your own current slot(s) would
+  // be a no-op, so it's left off the list entirely rather than shown
+  // disabled.
+  const sameSlotGroup = (a: string[], b: string[]) =>
+    a.length === b.length && [...a].sort().join("|") === [...b].sort().join("|");
+  const otherSlotGroups = currentSlots ? slotGroups.filter((group) => !sameSlotGroup(group, currentSlots)) : slotGroups;
+
   // source:"character", location:"backpack" rows only - straight to the
   // player's shared pool (check_in_item_instance only ever accepts a
-  // backpacked instance, never an equipped one - see unequipToVault below
-  // for the equipped case, which chains through this same endpoint).
+  // backpacked/camped/saddlepacked instance, never an equipped one - see
+  // unequip below for the equipped case, which posts to the same endpoint.
   const checkInToVault = async () => {
     setPending(true);
     setFlashMessage(null);
     finish(await postJson(`/api/auth/me/characters/${characterId}/items/${moveId}/check-in`));
   };
 
-  // source:"character", location:"body" rows' "Unequip" button - goes
-  // straight to the shared vault (unequip, then immediately check in),
-  // not just off the body onto this character's own backpack. Two chained
-  // calls under one click since check_in_item_instance only ever accepts
-  // an already-backpacked instance - see unequipToBackpack below for the
-  // one-step "keep it on this character instead" alternative.
-  const unequipToVault = async () => {
-    setPending(true);
-    setFlashMessage(null);
-    const unequipped = await postJson(`/api/auth/me/characters/${characterId}/items/${moveId}/unequip`);
-    if (!unequipped.ok) return fail(unequipped.detail);
-    finish(await postJson(`/api/auth/me/characters/${characterId}/items/${moveId}/check-in`));
-  };
-
-  // source:"character", location:"body" rows' "Move to backpack" button -
-  // the one-step alternative to unequipToVault above: off the body, but
-  // kept on this character (its own backpack) rather than sent to the
-  // shared vault.
-  const unequipToBackpack = async () => {
+  // source:"character", location:"body" rows' automatic move icon (vault
+  // or camp, picked by the popup's own render logic off `inAdventure`) -
+  // backend.players.unequip_item makes the same choice server-side off
+  // Character.availability.inAdventure when no explicit destination is
+  // given, so this call needs no body at all.
+  const unequip = async () => {
     setPending(true);
     setFlashMessage(null);
     finish(await postJson(`/api/auth/me/characters/${characterId}/items/${moveId}/unequip`));
   };
 
-  // source:"character", location:"backpack" rows only - the character's
-  // own backpack -> body (see backend.players.equip_item), the missing
-  // other half of unequipToBackpack: without this, a character-owned item
-  // that's ever unequipped had no way back onto the body except a manual
-  // database fix.
-  const equipFromBackpack = async (slots: string[]) => {
+  // source:"character", location:"body" rows' explicit "Move to
+  // backpack"/"Move to saddlepack" icons - bypass the automatic vault/camp
+  // choice above entirely, staying on this character regardless of
+  // in_adventure. Both post the same endpoint as `unequip`, just with a
+  // destination.
+  const unequipToBackpack = async () => {
+    setPending(true);
+    setFlashMessage(null);
+    finish(
+      await postJson(`/api/auth/me/characters/${characterId}/items/${moveId}/unequip`, { destination: "backpack" })
+    );
+  };
+  const unequipToSaddlepack = async () => {
+    setPending(true);
+    setFlashMessage(null);
+    finish(
+      await postJson(`/api/auth/me/characters/${characterId}/items/${moveId}/unequip`, { destination: "saddlepack" })
+    );
+  };
+
+  // source:"character" rows only - equip into `slots`, from wherever this
+  // instance currently is: backpack/camp/saddlepack -> body (the missing
+  // other half of the unequip* actions above, without which a
+  // character-owned item that's ever moved off the body had no way back
+  // onto it except a manual database fix), OR body -> body (reslotting an
+  // already-equipped instance into a DIFFERENT one of its own family's
+  // equip_slots groups - swap hands, move a dagger to its Girdle slot,
+  // ... - see backend.players.equip_item's reslot note and the
+  // otherSlotGroups render guard below).
+  const equipToSlots = async (slots: string[]) => {
     setPending(true);
     setFlashMessage(null);
     finish(await postJson(`/api/auth/me/characters/${characterId}/items/${moveId}/equip`, { slots }));
@@ -1390,67 +1448,98 @@ export function ItemDetailPopup({
             <div className={styles.itemPopupMeta}>
               <span>Size: {info?.sizeClass ?? "tiny"}</span>
               <span>StackMax: {stackSize}</span>
-              {info?.twoHanded && <span>Two-Handed: true</span>}
               {isInstance && info?.qualityMax != null && (
                 <span>Quality: {quality ?? 0}/{info.qualityMax}</span>
               )}
             </div>
             {movable && source === "vault" && (
-              <div className={styles.itemPopupActions} role={stackSize > 1 ? "radiogroup" : undefined}>
-                {stackSize > 1
-                  ? QUANTITY_OPTIONS.map((n) => (
-                      <button
-                        key={n}
-                        type="button"
-                        role="radio"
-                        aria-checked={quantity === n}
-                        className={[
-                          styles.craftCountButton,
-                          styles.itemPopupQuantityButton,
-                          quantity === n ? styles.craftCountButtonActive : "",
-                        ]
-                          .filter(Boolean)
-                          .join(" ")}
-                        disabled={pending || n > owned}
-                        onClick={() => setQuantity(n)}
-                      >
-                        {n}
-                      </button>
-                    ))
-                  : slotGroups.map((slots) => (
-                      <button
-                        key={slots.join("+")}
-                        type="button"
-                        className={styles.itemPopupActionButton}
-                        disabled={pending}
-                        onClick={() => equipToSlots(slots)}
-                      >
-                        {slots.map((slot, i) => (
-                          <Fragment key={slot}>
-                            {i > 0 && " + "}
-                            {formatSlotLabel(slot)}
-                          </Fragment>
-                        ))}
-                      </button>
-                    ))}
-                {info?.backpackable && (
-                  <button
-                    type="button"
-                    className={styles.itemPopupBackpackButton}
-                    disabled={pending || !hasBackpackEquipped}
-                    onClick={moveToBackpack}
-                    aria-label="Move to backpack"
-                    title={hasBackpackEquipped ? "Move to backpack" : "No backpack equipped"}
-                  >
-                    <div
-                      role="img"
-                      aria-label="Backpack"
-                      className={styles.itemPopupBackpackIcon}
-                      style={{ backgroundImage: `url(${BACKPACK_ACTION_ICON})` }}
-                    />
-                  </button>
-                )}
-              </div>
+              inAdventure ? (
+                // The shared vault isn't reachable at all mid-adventure
+                // (see equip_item_from_pool/check_out_item_instance/
+                // check_out_item_balance) - no buttons, no hasBackpackEquipped/
+                // hasSaddlepackEquipped checks, just the status itself.
+                <p className={styles.itemPopupAwayNotice}>
+                  {characterFirstName ? `${characterFirstName} on Adventure` : "On Adventure"}
+                </p>
+              ) : (
+                <div className={styles.itemPopupActions} role={stackSize > 1 ? "radiogroup" : undefined}>
+                  {stackSize > 1
+                    ? QUANTITY_OPTIONS.map((n) => (
+                        <button
+                          key={n}
+                          type="button"
+                          role="radio"
+                          aria-checked={quantity === n}
+                          className={[
+                            styles.craftCountButton,
+                            styles.itemPopupQuantityButton,
+                            quantity === n ? styles.craftCountButtonActive : "",
+                          ]
+                            .filter(Boolean)
+                            .join(" ")}
+                          disabled={pending || n > owned}
+                          onClick={() => setQuantity(n)}
+                        >
+                          {n}
+                        </button>
+                      ))
+                    : slotGroups.map((slots) => (
+                        <button
+                          key={slots.join("+")}
+                          type="button"
+                          className={styles.itemPopupActionButton}
+                          disabled={pending}
+                          onClick={() => equipFromPool(slots)}
+                        >
+                          {slots.map((slot, i) => (
+                            <Fragment key={slot}>
+                              {i > 0 && " + "}
+                              {formatSlotLabel(slot)}
+                            </Fragment>
+                          ))}
+                        </button>
+                      ))}
+                  {info?.backpackable && (
+                    <button
+                      type="button"
+                      className={styles.itemPopupBackpackButton}
+                      disabled={pending || !hasBackpackEquipped}
+                      onClick={moveToBackpack}
+                      aria-label="Move to backpack"
+                      title={hasBackpackEquipped ? "Move to backpack" : "No backpack equipped"}
+                    >
+                      <div
+                        role="img"
+                        aria-label="Backpack"
+                        className={styles.itemPopupBackpackIcon}
+                        style={{ backgroundImage: `url(${BACKPACK_ACTION_ICON})` }}
+                      />
+                    </button>
+                  )}
+                  {/* Hidden outright (not greyed) when no saddlepack is
+                      equipped - unlike the backpack icon above, there's no
+                      "you could wear one" affordance to point at, so a
+                      disabled button here would just be dead weight.
+                      Instance rows only - see moveToSaddlepack. */}
+                  {info?.backpackable && isInstance && hasSaddlepackEquipped && (
+                    <button
+                      type="button"
+                      className={styles.itemPopupBackpackButton}
+                      disabled={pending}
+                      onClick={moveToSaddlepack}
+                      aria-label="Move to saddlepack"
+                      title="Move to saddlepack"
+                    >
+                      <div
+                        role="img"
+                        aria-label="Saddlepack"
+                        className={styles.itemPopupBackpackIcon}
+                        style={{ backgroundImage: `url(${SADDLEPACK_ACTION_ICON})` }}
+                      />
+                    </button>
+                  )}
+                </div>
+              )
             )}
             {movable && source === "character" && isInstance && (
               <div className={styles.itemPopupActions}>
@@ -1458,19 +1547,19 @@ export function ItemDetailPopup({
                   <>
                     <button
                       type="button"
-                      className={styles.itemPopupActionButton}
+                      className={styles.itemPopupBackpackButton}
                       disabled={pending}
-                      onClick={unequipToVault}
-                      title="Unequip straight to the shared vault"
+                      onClick={unequip}
+                      aria-label={inAdventure ? "Move to camp" : "Move to vault"}
+                      title={inAdventure ? "Move to camp" : "Move to the shared vault"}
                     >
-                      Unequip
+                      <div
+                        role="img"
+                        aria-label={inAdventure ? "Camp" : "Vault"}
+                        className={styles.itemPopupBackpackIcon}
+                        style={{ backgroundImage: `url(${inAdventure ? CAMP_ACTION_ICON : VAULT_ACTION_ICON})` }}
+                      />
                     </button>
-                    {/* The one-step alternative to Unequip above: off the
-                        body, but kept on this character (its own backpack)
-                        instead of sent to the shared vault. Shown as its
-                        own icon button (matching the vault popup's own
-                        backpackable-gated button) only when this family can
-                        actually go there. */}
                     {info?.backpackable && (
                       <button
                         type="button"
@@ -1488,16 +1577,34 @@ export function ItemDetailPopup({
                         />
                       </button>
                     )}
-                  </>
-                ) : (
-                  <>
-                    {slotGroups.map((slots) => (
+                    {info?.backpackable && hasSaddlepackEquipped && (
+                      <button
+                        type="button"
+                        className={styles.itemPopupBackpackButton}
+                        disabled={pending}
+                        onClick={unequipToSaddlepack}
+                        aria-label="Move to saddlepack"
+                        title="Move to saddlepack"
+                      >
+                        <div
+                          role="img"
+                          aria-label="Saddlepack"
+                          className={styles.itemPopupBackpackIcon}
+                          style={{ backgroundImage: `url(${SADDLEPACK_ACTION_ICON})` }}
+                        />
+                      </button>
+                    )}
+                    {/* Reslot, still equipped - e.g. swap hands, or move a
+                        dagger from a hand to its Girdle slot. Same button
+                        style/handler as the backpack/camp -> body equip
+                        buttons below, since it's the exact same endpoint. */}
+                    {otherSlotGroups.map((slots) => (
                       <button
                         key={slots.join("+")}
                         type="button"
                         className={styles.itemPopupActionButton}
                         disabled={pending}
-                        onClick={() => equipFromBackpack(slots)}
+                        onClick={() => equipToSlots(slots)}
                       >
                         {slots.map((slot, i) => (
                           <Fragment key={slot}>
@@ -1507,14 +1614,49 @@ export function ItemDetailPopup({
                         ))}
                       </button>
                     ))}
-                    <button
-                      type="button"
-                      className={styles.itemPopupActionButton}
-                      disabled={pending}
-                      onClick={checkInToVault}
-                    >
-                      Check in to vault
-                    </button>
+                  </>
+                ) : (
+                  <>
+                    {slotGroups.map((slots) => (
+                      <button
+                        key={slots.join("+")}
+                        type="button"
+                        className={styles.itemPopupActionButton}
+                        disabled={pending}
+                        onClick={() => equipToSlots(slots)}
+                      >
+                        {slots.map((slot, i) => (
+                          <Fragment key={slot}>
+                            {i > 0 && " + "}
+                            {formatSlotLabel(slot)}
+                          </Fragment>
+                        ))}
+                      </button>
+                    ))}
+                    {/* No path back to the shared vault while out on an
+                        adventure - same reasoning as the body branch's
+                        automatic icon above only ever offering camp, never
+                        vault, while inAdventure is true. Hidden outright,
+                        not greyed, since there's nothing the player could
+                        do differently to enable it (it's a status, not a
+                        missing container). */}
+                    {!inAdventure && (
+                      <button
+                        type="button"
+                        className={styles.itemPopupBackpackButton}
+                        disabled={pending}
+                        onClick={checkInToVault}
+                        aria-label="Check in to vault"
+                        title="Check in to vault"
+                      >
+                        <div
+                          role="img"
+                          aria-label="Vault"
+                          className={styles.itemPopupBackpackIcon}
+                          style={{ backgroundImage: `url(${VAULT_ACTION_ICON})` }}
+                        />
+                      </button>
+                    )}
                   </>
                 )}
               </div>
@@ -1696,7 +1838,6 @@ export function InventoryTab({
             sizeClass: string;
             equipSlots: string[][];
             backpackable: boolean;
-            twoHanded: boolean;
             gatheringBonuses: string[];
           }>
         ) => {
@@ -1714,7 +1855,6 @@ export function InventoryTab({
             sizeClass: item.sizeClass,
             equipSlots: item.equipSlots,
             backpackable: item.backpackable,
-            twoHanded: item.twoHanded,
             gatheringBonuses: item.gatheringBonuses,
           };
         }
@@ -1839,13 +1979,21 @@ export function InventoryTab({
     ...playerItemRowBalances,
   };
 
-  // Whether this character currently has a physical backpack worn (Back or
-  // Side slot) - mirrors backend.items_catalog.has_backpack_equipped.
-  // "Move to backpack" only makes sense with one on, so both the vault and
-  // character item popups grey that button out otherwise instead of
-  // letting the click fail server-side with "No backpack equipped".
+  // Whether this character currently has a physical backpack worn -
+  // mirrors backend.items_catalog.has_backpack_equipped. Checked by
+  // familyId, not by "Back"/"Side" in slotRef - bolt_girdle/quiver/ladder
+  // also list "Side" as one of their OWN alternative equip_slots groups,
+  // so an equipped bolt_girdle sitting in "Side" must not count as a
+  // backpack. "Move to backpack" only makes sense with one on, so both the
+  // vault and character item popups grey that button out otherwise instead
+  // of letting the click fail server-side with "No backpack equipped".
   const hasBackpackEquipped = character.gear.items.some(
-    (instance) => instance.location === "body" && (instance.slotRef.includes("Back") || instance.slotRef.includes("Side"))
+    (instance) => instance.location === "body" && instance.familyId === "backpack"
+  );
+  // Mirrors backend.items_catalog.has_saddlepack_equipped - hides (rather
+  // than greys) the vault popup's "Move to saddlepack" button when false.
+  const hasSaddlepackEquipped = character.gear.items.some(
+    (instance) => instance.location === "body" && instance.familyId === "saddlepack"
   );
 
   // The embedded recipe viewer's own content height, in px - same-origin, so
@@ -2319,7 +2467,10 @@ export function InventoryTab({
           instanceQuality={playerItemRowQuality}
           source="vault"
           hasBackpackEquipped={hasBackpackEquipped}
+          hasSaddlepackEquipped={hasSaddlepackEquipped}
+          inAdventure={character.availability.inAdventure}
           characterId={character.id}
+          characterFirstName={character.firstName}
           onPlayerDataUpdated={onPlayerDataUpdated}
         />
       )}

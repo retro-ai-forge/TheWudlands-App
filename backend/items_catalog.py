@@ -58,15 +58,6 @@ class ItemFamily:
     quality_max: Optional[int]
     icon: str
 
-    @property
-    def two_handed(self) -> bool:
-        """Whether any valid equip group for this family occupies more than
-        one slot at once - derived from equip_slots rather than stored
-        separately, so there's no second field that could drift out of sync
-        with it. Purely informational (e.g. an API display flag) - equip_
-        item validates against equip_slots directly, never this."""
-        return any(len(group) > 1 for group in self.equip_slots)
-
 
 def _load_families() -> dict[str, ItemFamily]:
     data = json.loads(_FAMILIES_PATH.read_text())
@@ -233,9 +224,6 @@ class ItemCatalogEntry:
     # Family-level (item-inventory-properties.json's own "backpackable") -
     # whether a "move to backpack" action makes sense for this family at all.
     backpackable: bool
-    # Family-level (ItemFamily.two_handed) - whether any valid equip group
-    # occupies more than one slot at once. Informational only.
-    two_handed: bool
     # Family-level (raw-material-gathering-bonuses.json, inverted - see
     # GATHERING_BONUSES_BY_ITEM) - raw materials this family grants a
     # foraging/gathering bonus for, e.g. ("ore", "stone", "crystal") for a
@@ -276,7 +264,7 @@ def _load_item_catalog_entries() -> tuple[ItemCatalogEntry, ...]:
                     row["id"], row["name"], family_id, tier, family.kind, family.quality_max,
                     row.get("icon", ""), family.stack_size,
                     row.get("description", ""), family.size_class,
-                    family.equip_slots, family.backpackable, family.two_handed,
+                    family.equip_slots, family.backpackable,
                     GATHERING_BONUSES_BY_ITEM.get(family_id, ()),
                     row.get("size", ""), row.get("carryCapacity", 0),
                 )
@@ -289,7 +277,7 @@ def _load_item_catalog_entries() -> tuple[ItemCatalogEntry, ...]:
                     item.id, item.name, item.family_id, item.tier, family.kind, family.quality_max,
                     "", family.stack_size,
                     "", family.size_class,
-                    family.equip_slots, family.backpackable, family.two_handed,
+                    family.equip_slots, family.backpackable,
                     GATHERING_BONUSES_BY_ITEM.get(item.family_id, ()),
                     "", 0,
                 )
@@ -347,24 +335,28 @@ def backpack_slots_used(character: dict) -> int:
 
 
 def has_backpack_equipped(character: dict) -> bool:
-    """Whether any of this character's own item instances is currently
-    equipped with "Back"/"Side" in its slotRef - i.e. a physical backpack
-    worn right now, as opposed to just carried or sitting in the pool."""
+    """Whether this character's own "backpack" family is currently
+    equipped (location:"body") - a physical backpack worn right now, as
+    opposed to just carried or sitting in the pool. Checked by familyId,
+    not by "Back"/"Side" appearing in slotRef: several OTHER families
+    (bolt_girdle, quiver, ladder) also list "Side" as one of their own
+    alternative equip_slots groups, so an equipped bolt_girdle sitting in
+    "Side" is not a backpack and must not satisfy this check."""
     return any(
-        instance.get("location") == "body" and any(slot in ("Back", "Side") for slot in instance.get("slotRef", []))
+        instance.get("location") == "body" and instance.get("familyId") == "backpack"
         for instance in character.get("gear", {}).get("items", [])
     )
 
 
 def has_saddlepack_equipped(character: dict) -> bool:
-    """Whether a saddlepack is currently equipped into the mount's own
-    Mbagpack slot - the mount-side counterpart to has_backpack_equipped.
-    Both the mount creature and its saddlepack are just ordinary equipped
-    instances in this same character's gear.items (no separate per-mount
-    storage exists), distinguished only by which slot name their own
-    slotRef carries."""
+    """Whether this character's own "saddlepack" family is currently
+    equipped into the mount's own Mbagpack slot (location:"body") - the
+    mount-side counterpart to has_backpack_equipped. Checked by familyId
+    for the same reason has_backpack_equipped is - "Mbagpack" happens to be
+    exclusive to the "saddlepack" family today, but checking the family
+    directly doesn't depend on that staying true."""
     return any(
-        instance.get("location") == "body" and "Mbagpack" in instance.get("slotRef", [])
+        instance.get("location") == "body" and instance.get("familyId") == "saddlepack"
         for instance in character.get("gear", {}).get("items", [])
     )
 
@@ -374,17 +366,14 @@ def backpack_capacity(character: dict) -> int:
     Total backpack slot ceiling for one character - 0 with nothing to carry
     it in (a character can't stash anything in a "backpack" that doesn't
     physically exist), otherwise base carry capacity from might/endurance
-    plus whichever backpack instance is currently equipped with
-    "Back"/"Side" in its slotRef.
+    plus whichever "backpack"-family instance is currently equipped.
     """
     if not has_backpack_equipped(character):
         return 0
 
     bonus = 0
     for instance in character.get("gear", {}).get("items", []):
-        if instance.get("location") == "body" and any(
-            slot in ("Back", "Side") for slot in instance.get("slotRef", [])
-        ):
+        if instance.get("location") == "body" and instance.get("familyId") == "backpack":
             bonus = max(bonus, BACKPACK_CAPACITY_BY_ID.get(instance["itemId"], 0))
 
     attr = character.get("attr", {})
