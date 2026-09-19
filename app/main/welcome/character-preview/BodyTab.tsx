@@ -4,6 +4,7 @@ import { getPortraitCropImgStyle } from "@/app/lib/portraitCrop";
 import {
   FALLBACK_ITEM_ICON,
   ItemDetailPopup,
+  computeBackpackContents,
   getTierIndicator,
   itemGridTierBadgeClass,
   qualityBarColor,
@@ -187,26 +188,11 @@ export function BodyTab({
     (instance) => instance.location === "body" && instance.familyId === "saddlepack"
   );
 
-  // What's actually packed into whichever backpack is worn - same split
-  // as CampView's own campCombined (flat gear.itemBalances.backpack rows
-  // plus individually-tracked gear.items instances at location:"backpack"),
-  // handed to ItemDetailPopup only for a worn family:"backpack" instance's
-  // own popup (see its packedItems prop) so it can show a peek inside.
-  // Storage itself is character-level, not tied to which specific
-  // backpack instance is worn, so this doesn't need to filter by which
-  // instance is selected.
-  const backpackBalances = character.gear.itemBalances.backpack;
-  const backpackInstances = character.gear.items.filter((instance) => instance.location === "backpack");
-  const backpackLookupIds: Record<string, string> = {};
-  const backpackInstanceRowBalances: Record<string, number> = {};
-  const backpackInstanceQuality: Record<string, number | null> = {};
-  for (const instance of backpackInstances) {
-    backpackLookupIds[instance.instanceId] = instance.itemId;
-    backpackInstanceRowBalances[instance.instanceId] = 1;
-    backpackInstanceQuality[instance.instanceId] = instance.quality;
-  }
-  const backpackCombined: Record<string, number> = { ...backpackBalances, ...backpackInstanceRowBalances };
-  const backpackIds = Object.keys(backpackCombined).filter((id) => backpackCombined[id] > 0);
+  // What's actually packed into whichever backpack is worn - handed to
+  // ItemDetailPopup only for a worn family:"backpack" instance's own
+  // popup (see its packedItems prop) so it can show a peek inside.
+  const { ids: backpackIds, balances: backpackCombined, lookupIds: backpackLookupIds, instanceQuality: backpackInstanceQuality } =
+    computeBackpackContents(character);
 
   // Same emptiness check as CampView's own hasCampItems - lets the camp
   // button carry a small dropped.png badge (see below) so the player can
@@ -386,6 +372,8 @@ export function BodyTab({
             lookupIds: backpackLookupIds,
             instanceQuality: backpackInstanceQuality,
           }}
+          backpackSlotsUsed={character.gear.backpackSlotsUsed}
+          backpackCapacity={character.gear.backpackCapacity}
           onPlayerDataUpdated={onPlayerDataUpdated}
           onClose={() => setSelectedInstance(null)}
         />

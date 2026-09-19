@@ -131,10 +131,24 @@ def _doc_to_player(doc: dict) -> Player:
         vault["items"] = []
     vault.setdefault("itemBalances", {})
 
+    characters = doc.get("characters", [])
+    for character in characters:
+        # Computed, not stored - items_catalog.backpack_slots_used/
+        # backpack_capacity read straight off this same character dict's
+        # own gear/attr fields every time, so these two are always in sync
+        # with whatever else changed in this response. Read by the
+        # frontend's "Filled: X/Y" line on any backpack-family item's own
+        # popup (BodyTab/CampView) - character-level, not tied to which
+        # specific backpack instance was clicked, since backpack storage
+        # itself is (see Character.gear's own docstring).
+        character.setdefault("gear", {})
+        character["gear"]["backpackSlotsUsed"] = items_catalog.backpack_slots_used(character)
+        character["gear"]["backpackCapacity"] = items_catalog.backpack_capacity(character)
+
     return Player(
         address=doc["address"],
         first_login_at=_as_utc(doc["first_login_at"]),
-        characters=doc.get("characters", []),
+        characters=characters,
         crafting=crafting,
         vault=vault,
     )
@@ -2121,6 +2135,18 @@ async def unequip_item(
     equipped ("body") on this character - a location:"crafting" one is
     borrowed for an in-progress craft and can't be touched until it's
     released (see start_craft/finish_craft).
+
+    Unequipping a family:"backpack" instance straight to the shared vault
+    (target_location "pool" - i.e. NOT "camp"/"backpack"/"saddlepack")
+    also empties this character's whole backpack storage bucket
+    (gear.items location:"backpack", gear.itemBalances.backpack) into the
+    vault first, in the same update - backpack storage is character-level,
+    not tied to this one instance (see Character.gear's own docstring), so
+    it would otherwise become orphaned (still tagged "backpack", but
+    unreachable - no backpack equipped, 0 capacity) the moment this
+    backpack itself leaves. Unequipping to "camp" does NOT cascade - the
+    bucket stays exactly as-is, still readable through this same instance
+    once it's sitting in camp (see CampView's own packedItems).
     """
     db = get_database()
     doc = await db.players.find_one({"address": address, "characters.id": character_id})
@@ -2144,7 +2170,31 @@ async def unequip_item(
     target_location = destination or ("camp" if character.get("availability", {}).get("inAdventure", False) else "pool")
 
     if target_location == "pool":
-        pooled_instance = {**instance, "location": "pool", "slotRef": []}
+        pooled_instances = [{**instance, "location": "pool", "slotRef": []}]
+        pull_ids = [instance_id]
+        balance_inc: Dict[str, int] = {}
+
+        # This instance IS the currently-equipped backpack (location:
+        # "body" was just required to find it above), so its storage
+        # bucket is unambiguously "in use" right now - cascade whatever's
+        # in it along with it. See this function's own docstring.
+        if instance["familyId"] == "backpack":
+            for other in character.get("gear", {}).get("items", []):
+                if other.get("location") == "backpack":
+                    pooled_instances.append({**other, "location": "pool", "slotRef": []})
+                    pull_ids.append(other["instanceId"])
+            for item_id, qty in character.get("gear", {}).get("itemBalances", {}).get("backpack", {}).items():
+                if qty > 0:
+                    balance_inc[f"vault.itemBalances.{item_id}"] = qty
+
+        update: Dict = {
+            "$pull": {"characters.$[char].gear.items": {"instanceId": {"$in": pull_ids}}},
+            "$push": {"vault.items": {"$each": pooled_instances}},
+        }
+        if balance_inc:
+            update["$inc"] = balance_inc
+            update["$set"] = {"characters.$[char].gear.itemBalances.backpack": {}}
+
         doc = await db.players.find_one_and_update(
             {
                 "address": address,
@@ -2152,10 +2202,7 @@ async def unequip_item(
                     "$elemMatch": {"id": character_id, "gear.items": {"$elemMatch": {"instanceId": instance_id, "location": "body"}}}
                 },
             },
-            {
-                "$pull": {"characters.$[char].gear.items": {"instanceId": instance_id}},
-                "$push": {"vault.items": pooled_instance},
-            },
+            update,
             array_filters=[{"char.id": character_id}],
             return_document=ReturnDocument.AFTER,
         )
@@ -2314,6 +2361,15 @@ async def check_in_item_instance(address: str, character_id: str, instance_id: s
     character's backpack, saddlepack, or camp (see unequip_item) back into the shared
     pool. Never capacity-gated (freeing space always succeeds). Returns
     None if the instance isn't found backpacked/camped on this character.
+
+    Checking in a family:"backpack" instance also empties this character's
+    whole backpack storage bucket (gear.items location:"backpack",
+    gear.itemBalances.backpack) into the vault first, in the same update -
+    same cascade unequip_item's own "straight to vault" branch does, and
+    for the same reason (see its docstring) - but ONLY if no OTHER backpack
+    is currently equipped (items_catalog.has_backpack_equipped). If one is,
+    that other backpack's storage is what the bucket actually belongs to
+    right now, still legitimately in use - left untouched.
     """
     db = get_database()
     doc = await db.players.find_one({"address": address, "characters.id": character_id})
@@ -2332,16 +2388,33 @@ async def check_in_item_instance(address: str, character_id: str, instance_id: s
     if instance is None:
         return None
 
-    pooled_instance = {**instance, "location": "pool", "slotRef": []}
+    pooled_instances = [{**instance, "location": "pool", "slotRef": []}]
+    pull_ids = [instance_id]
+    balance_inc: Dict[str, int] = {}
+
+    if instance["familyId"] == "backpack" and not items_catalog.has_backpack_equipped(character):
+        for other in character.get("gear", {}).get("items", []):
+            if other.get("location") == "backpack":
+                pooled_instances.append({**other, "location": "pool", "slotRef": []})
+                pull_ids.append(other["instanceId"])
+        for item_id, qty in character.get("gear", {}).get("itemBalances", {}).get("backpack", {}).items():
+            if qty > 0:
+                balance_inc[f"vault.itemBalances.{item_id}"] = qty
+
+    update: Dict = {
+        "$pull": {"characters.$[char].gear.items": {"instanceId": {"$in": pull_ids}}},
+        "$push": {"vault.items": {"$each": pooled_instances}},
+    }
+    if balance_inc:
+        update["$inc"] = balance_inc
+        update["$set"] = {"characters.$[char].gear.itemBalances.backpack": {}}
+
     doc = await db.players.find_one_and_update(
         {
             "address": address,
             "characters": {"$elemMatch": {"id": character_id, "gear.items.instanceId": instance_id}},
         },
-        {
-            "$pull": {"characters.$[char].gear.items": {"instanceId": instance_id}},
-            "$push": {"vault.items": pooled_instance},
-        },
+        update,
         array_filters=[{"char.id": character_id}],
         return_document=ReturnDocument.AFTER,
     )
@@ -2403,6 +2476,59 @@ async def move_camp_item_to_backpack(address: str, character_id: str, instance_i
         },
         {"$set": {"characters.$[char].gear.items.$[item]": moved_instance}},
         array_filters=[{"char.id": character_id}, {"item.instanceId": instance_id, "item.location": "camp"}],
+        return_document=ReturnDocument.AFTER,
+    )
+    if doc is None:
+        return None
+    return _doc_to_player(doc)
+
+
+async def move_backpack_item_to_camp(address: str, character_id: str, instance_id: str) -> Optional[Player]:
+    """
+    The reverse of move_camp_item_to_backpack: move one item instance
+    straight from this character's own backpack into camp - both ends are
+    already this character's own holdings, so this works fine
+    mid-adventure too (unlike check_in_item_instance, which sends it to
+    the shared pool instead - unreachable while inAdventure). This is what
+    lets a backpacked item's own popup offer a real "move to camp" action
+    while out on a story, the same way an equipped item's own popup
+    automatically offers camp instead of vault then (see unequip_item).
+
+    Never capacity-gated (camp is uncapped, same as unequip_item's own
+    "camp" destination). Returns None if the instance isn't sitting at
+    location:"backpack" on this character.
+    """
+    db = get_database()
+    doc = await db.players.find_one({"address": address, "characters.id": character_id})
+    if doc is None:
+        return None
+    character = next((c for c in doc["characters"] if c["id"] == character_id), None)
+    if character is None:
+        return None
+    instance = next(
+        (
+            i for i in character.get("gear", {}).get("items", [])
+            if i["instanceId"] == instance_id and i.get("location") == "backpack"
+        ),
+        None,
+    )
+    if instance is None:
+        return None
+
+    # Replaces the whole matched array element in one $set - see
+    # unequip_item's identical fix for why (this environment's Firestore
+    # MongoDB-compatible backend was observed silently dropping the second
+    # of two array-filtered $set keys in one update).
+    moved_instance = {**instance, "location": "camp", "slotRef": []}
+    doc = await db.players.find_one_and_update(
+        {
+            "address": address,
+            "characters": {
+                "$elemMatch": {"id": character_id, "gear.items": {"$elemMatch": {"instanceId": instance_id, "location": "backpack"}}}
+            },
+        },
+        {"$set": {"characters.$[char].gear.items.$[item]": moved_instance}},
+        array_filters=[{"char.id": character_id}, {"item.instanceId": instance_id, "item.location": "backpack"}],
         return_document=ReturnDocument.AFTER,
     )
     if doc is None:

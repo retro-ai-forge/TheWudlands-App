@@ -150,6 +150,9 @@ export interface SlotCharacterSummary {
     resources: { camp: Record<string, number>; backpack: Record<string, number>; saddlepack: Record<string, number> };
     /** Non-instance crafted items (food, potions, misc trinkets) this character owns, split by physical carry location. */
     itemBalances: { camp: Record<string, number>; backpack: Record<string, number>; saddlepack: Record<string, number> };
+    /** Computed server-side (backend.items_catalog.backpack_slots_used/backpack_capacity) - total backpack slots currently occupied and the character's own ceiling (0 with nothing equipped). Powers a backpack-family item's own "Filled: X/Y" line - character-level, not tied to which specific backpack instance's popup is open. */
+    backpackSlotsUsed: number;
+    backpackCapacity: number;
   };
   equippedLight: { family: string; tier: number; litAt: string; hand: string } | null;
 }

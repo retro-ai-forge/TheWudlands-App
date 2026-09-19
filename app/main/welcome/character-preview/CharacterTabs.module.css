@@ -1737,7 +1737,7 @@
   right: 0.75rem;
   bottom: 0.75rem;
   z-index: 5;
-  width: 2rem;
+  width: 1.5rem;
   aspect-ratio: 1 / 1;
   padding: 0;
   /* .campfireStage (this button's parent) is pointer-events:none so it

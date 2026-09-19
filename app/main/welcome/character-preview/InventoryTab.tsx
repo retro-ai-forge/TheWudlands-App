@@ -603,6 +603,9 @@ export function ItemGrid({
   onPlayerDataUpdated,
   reserveBottomPx = 0,
   hideScrollbar = false,
+  packedItems,
+  backpackSlotsUsed,
+  backpackCapacity,
 }: {
   ids: string[];
   emptyLabel: string;
@@ -637,6 +640,22 @@ export function ItemGrid({
    * scrolls via drag/touch/trackpad, just no visible bar) - off by
    * default so the Vault tab's own usage is unaffected; CampView opts in. */
   hideScrollbar?: boolean;
+  /** source:"character" only - passed straight through to every tile's
+   * own ItemDetailPopup (see its identical props) so a family:"backpack"
+   * row - worn (BodyTab doesn't use ItemGrid) or sitting unequipped in
+   * camp (CampView does) - can show what's packed inside/how full it is.
+   * Character-level (see computeBackpackContents), so the SAME values
+   * apply no matter which row/instance was actually clicked - CampView
+   * computes this once per render and hands it to every tile alike. */
+  packedItems?: {
+    ids: string[];
+    tierInfo: BlueprintTierInfo;
+    balances: Record<string, number>;
+    lookupIds: Record<string, string>;
+    instanceQuality: Record<string, number | null>;
+  };
+  backpackSlotsUsed?: number;
+  backpackCapacity?: number;
 }) {
   // How tall the scroll container is allowed to be, measured against the
   // real remaining viewport space below it rather than a guessed vh
@@ -770,6 +789,9 @@ export function ItemGrid({
           inAdventure={inAdventure}
           characterId={characterId}
           characterFirstName={characterFirstName}
+          packedItems={packedItems}
+          backpackSlotsUsed={backpackSlotsUsed}
+          backpackCapacity={backpackCapacity}
           onPlayerDataUpdated={onPlayerDataUpdated}
           onClose={() => setSelectedId(null)}
         />
@@ -882,6 +904,39 @@ export function qualityBarColor(f: number): string {
 // How long a failed move/equip's message replaces the description text
 // before reverting - long enough to read, short enough not to feel stuck.
 const ITEM_POPUP_FLASH_MS = 3000;
+
+/** What's actually packed into a character's backpack storage - flat
+ * gear.itemBalances.backpack rows plus individually-tracked gear.items
+ * instances at location:"backpack", combined the same way CampView's own
+ * campCombined merges the "camp" equivalents. Character-level (backpack
+ * storage isn't tied to which specific backpack instance is worn - see
+ * Character.gear's own docstring), so BodyTab (the worn backpack's own
+ * popup) and CampView (a camp-located backpack's popup) both call this
+ * the same way to feed ItemDetailPopup's packedItems/backpackSlotsUsed/
+ * backpackCapacity props. Doesn't include tierInfo - each caller already
+ * has its own independently-fetched item-catalog map to pair with this. */
+export function computeBackpackContents(character: {
+  gear: { items: ItemInstance[]; itemBalances: { backpack: Record<string, number> } };
+}): {
+  ids: string[];
+  balances: Record<string, number>;
+  lookupIds: Record<string, string>;
+  instanceQuality: Record<string, number | null>;
+} {
+  const backpackBalances = character.gear.itemBalances.backpack;
+  const backpackInstances = character.gear.items.filter((instance) => instance.location === "backpack");
+  const lookupIds: Record<string, string> = {};
+  const instanceRowBalances: Record<string, number> = {};
+  const instanceQuality: Record<string, number | null> = {};
+  for (const instance of backpackInstances) {
+    lookupIds[instance.instanceId] = instance.itemId;
+    instanceRowBalances[instance.instanceId] = 1;
+    instanceQuality[instance.instanceId] = instance.quality;
+  }
+  const balances: Record<string, number> = { ...backpackBalances, ...instanceRowBalances };
+  const ids = Object.keys(balances).filter((id) => balances[id] > 0);
+  return { ids, balances, lookupIds, instanceQuality };
+}
 
 /** Single-row, horizontally-scrolling strip of tiles - what a worn
  * backpack's own popup shows packed inside it (see ItemDetailPopup's
@@ -1027,6 +1082,8 @@ export function ItemDetailPopup({
   characterId,
   characterFirstName,
   packedItems,
+  backpackSlotsUsed,
+  backpackCapacity,
   onPlayerDataUpdated,
   onClose,
 }: {
@@ -1059,7 +1116,17 @@ export function ItemDetailPopup({
   characterId: string;
   /** source:"vault" only - named in the "In Storyline" notice that replaces the whole action row while inAdventure is true. */
   characterFirstName?: string;
-  /** location:"body" rows for a family:"backpack" instance only - this character's own gear.items (location:"backpack") plus gear.itemBalances.backpack, in the same {ids, tierInfo, balances, lookupIds, instanceQuality} shape ItemGrid itself takes. Renders as a read-only horizontally-scrolling row of what's actually packed inside the worn backpack, between the name and description. Omitted (or empty) for any other row - there's nothing to peek inside otherwise. */
+  /** A family:"backpack" instance only (worn, or sitting unequipped in
+   * camp - see BodyTab/CampView's own packedItems) - this character's own
+   * gear.items (location:"backpack") plus gear.itemBalances.backpack, in
+   * the same {ids, tierInfo, balances, lookupIds, instanceQuality} shape
+   * ItemGrid itself takes. Renders as a horizontally-scrolling row of
+   * what's actually packed in the character's backpack storage, between
+   * the name and description - character-level storage, not tied to
+   * which specific backpack instance's popup happens to be open (see
+   * Character.gear's own docstring). Omitted for any other row, or a
+   * backpack instance sitting in the shared vault pool (no character
+   * context to read packed contents from there). */
   packedItems?: {
     ids: string[];
     tierInfo: BlueprintTierInfo;
@@ -1067,6 +1134,14 @@ export function ItemDetailPopup({
     lookupIds: Record<string, string>;
     instanceQuality: Record<string, number | null>;
   };
+  /** Same family:"backpack" rows as packedItems, same character-level
+   * source (Character.gear.backpackSlotsUsed/backpackCapacity, computed
+   * server-side by backend.items_catalog) - powers the "Filled: X/Y" meta
+   * line below. Passed separately (not folded into packedItems) since
+   * it's needed even when packedItems' own row would show nothing (e.g.
+   * an empty but equipped backpack still has a real capacity to report). */
+  backpackSlotsUsed?: number;
+  backpackCapacity?: number;
   onPlayerDataUpdated?: (data: RawPlayerData) => void;
   onClose: () => void;
 }) {
@@ -1194,6 +1269,20 @@ export function ItemDetailPopup({
     setPending(true);
     setFlashMessage(null);
     finish(await postJson(`/api/auth/me/characters/${characterId}/items/${moveId}/stow`));
+  };
+
+  // source:"character", location:"backpack" rows only - straight to this
+  // same character's camp, staying off the shared pool entirely (the
+  // reverse of stowToBackpack above) - see backend.players.
+  // move_backpack_item_to_camp. This is the only way a backpacked
+  // instance can reach camp while inAdventure, since checkInToVault is
+  // unreachable then (there's no shared vault mid-adventure) and camp is
+  // always its automatic fallback, same as an equipped item's own
+  // unequip icon (see location:"body"'s automatic camp/vault icon above).
+  const unstowToCamp = async () => {
+    setPending(true);
+    setFlashMessage(null);
+    finish(await postJson(`/api/auth/me/characters/${characterId}/items/${moveId}/unstow`));
   };
 
   // source:"character", NOT isInstance, location:"camp" only (a flat
@@ -1643,7 +1732,7 @@ export function ItemDetailPopup({
               style={{ backgroundImage: `url(${info?.icon || FALLBACK_ITEM_ICON})` }}
             />
             <h3 className={styles.itemPopupName}>{displayName}</h3>
-            {location === "body" && info?.familyId === "backpack" && packedItems && (
+            {info?.familyId === "backpack" && packedItems && (
               <PackedItemsRow
                 {...packedItems}
                 hasBackpackEquipped={hasBackpackEquipped}
@@ -1666,6 +1755,9 @@ export function ItemDetailPopup({
               <span>StackMax: {stackSize}</span>
               {isInstance && info?.qualityMax != null && (
                 <span>Quality: {quality ?? 0}/{info.qualityMax}</span>
+              )}
+              {info?.familyId === "backpack" && backpackSlotsUsed != null && backpackCapacity != null && (
+                <span>Filled: {backpackSlotsUsed}/{backpackCapacity}</span>
               )}
             </div>
             {movable && source === "vault" && (
@@ -1872,30 +1964,54 @@ export function ItemDetailPopup({
                         />
                       </button>
                     )}
-                    {/* No path back to the shared vault while out on an
-                        adventure - same reasoning as the body branch's
-                        automatic icon above only ever offering camp, never
-                        vault, while inAdventure is true. Greyed out rather
-                        than hidden while inAdventure, same as the backpack
-                        button above, so the popup never goes to zero
-                        visible actions just because none of them currently
-                        apply - a player can still see what's there and why
-                        it's disabled instead of a blank action row. */}
-                    <button
-                      type="button"
-                      className={styles.itemPopupBackpackButton}
-                      disabled={pending || inAdventure}
-                      onClick={checkInToVault}
-                      aria-label="Check in to vault"
-                      title={inAdventure ? "Out on an adventure - the shared vault isn't reachable." : "Check in to vault"}
-                    >
-                      <div
-                        role="img"
-                        aria-label="Vault"
-                        className={styles.itemPopupBackpackIcon}
-                        style={{ backgroundImage: `url(${VAULT_ACTION_ICON})` }}
-                      />
-                    </button>
+                    {/* location:"backpack" only - same automatic camp/
+                        vault switch as the body branch's own unequip icon
+                        above: while inAdventure, there's no shared vault
+                        to reach at all, so this offers the ACTUAL
+                        reachable move (camp - see unstowToCamp) instead of
+                        a permanently-greyed vault button that can never
+                        be clicked mid-adventure. location:"camp" items
+                        don't get this - they're already in camp, so the
+                        alternative destination there is the backpack
+                        (see the button above), not camp again. */}
+                    {location === "backpack" ? (
+                      <button
+                        type="button"
+                        className={styles.itemPopupBackpackButton}
+                        disabled={pending}
+                        onClick={inAdventure ? unstowToCamp : checkInToVault}
+                        aria-label={inAdventure ? "Move to camp" : "Check in to vault"}
+                        title={inAdventure ? "Move to camp" : "Check in to vault"}
+                      >
+                        <div
+                          role="img"
+                          aria-label={inAdventure ? "Camp" : "Vault"}
+                          className={styles.itemPopupBackpackIcon}
+                          style={{ backgroundImage: `url(${inAdventure ? CAMP_ACTION_ICON : VAULT_ACTION_ICON})` }}
+                        />
+                      </button>
+                    ) : (
+                      // location:"camp" - no path back to the shared vault
+                      // while out on an adventure (same reasoning as
+                      // above), and camp has no OTHER camp to switch to,
+                      // so this just greys out instead - see the
+                      // backpack case above for why that differs there.
+                      <button
+                        type="button"
+                        className={styles.itemPopupBackpackButton}
+                        disabled={pending || inAdventure}
+                        onClick={checkInToVault}
+                        aria-label="Check in to vault"
+                        title={inAdventure ? "Out on an adventure - the shared vault isn't reachable." : "Check in to vault"}
+                      >
+                        <div
+                          role="img"
+                          aria-label="Vault"
+                          className={styles.itemPopupBackpackIcon}
+                          style={{ backgroundImage: `url(${VAULT_ACTION_ICON})` }}
+                        />
+                      </button>
+                    )}
                   </>
                 )}
               </div>

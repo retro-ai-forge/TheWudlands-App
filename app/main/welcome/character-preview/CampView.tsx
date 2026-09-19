@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import styles from "./CharacterTabs.module.css";
-import { ItemGrid, type BlueprintTierInfo, type RawPlayerData } from "./InventoryTab";
+import { ItemGrid, computeBackpackContents, type BlueprintTierInfo, type RawPlayerData } from "./InventoryTab";
 import type { SlotCharacterSummary } from "../SoulSlotGrid";
 
 // A fixed placeholder height for the campfire art at the bottom of the
@@ -124,6 +124,13 @@ export function CampView({
   // last item being moved out, or to opening an already-empty camp).
   const hasCampItems = campIds.length > 0;
 
+  // A family:"backpack" instance sitting unequipped in camp (e.g. this
+  // character unequipped it here, still holding whatever was packed in it
+  // - see Character.gear's own docstring on why storage is character-
+  // level, not tied to a specific instance) can be opened the same way
+  // the worn one can on the Body tab - see ItemGrid's identical props.
+  const packedItems = { tierInfo: itemCatalogTierInfo, ...computeBackpackContents(character) };
+
   return (
     <div className={styles.panel}>
       <ItemGrid
@@ -142,6 +149,9 @@ export function CampView({
         onPlayerDataUpdated={onPlayerDataUpdated}
         reserveBottomPx={CAMPFIRE_AREA_PX}
         hideScrollbar
+        packedItems={packedItems}
+        backpackSlotsUsed={character.gear.backpackSlotsUsed}
+        backpackCapacity={character.gear.backpackCapacity}
       />
       <div className={styles.campfireStage} style={{ height: CAMPFIRE_AREA_PX }}>
         {/* Fire's position/size are relative to THIS group (i.e. to the
