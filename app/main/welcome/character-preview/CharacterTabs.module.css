@@ -1158,6 +1158,15 @@
    see its own comment on mobile's "save/share image" long-press menu).
    Sits above .equipSlotLabel (z-index 1) so the label only shows through
    an empty slot. */
+/* Wraps .equipSlotIcon so the quality bar/damaged overlay below can share
+   its exact bounds without needing their own copy of .equipSlot's
+   positioning - same idea as ItemGrid's tile button wrapping its own
+   .itemGridImg. */
+.equipSlotIconWrap {
+  position: absolute;
+  inset: 0;
+}
+
 .equipSlotIcon {
   position: absolute;
   inset: 0;
@@ -1166,6 +1175,33 @@
   background-repeat: no-repeat;
   background-position: center;
   image-rendering: pixelated;
+}
+
+/* Damaged equipped instances (qualityState's <=10% red band, mirroring
+   ItemGrid's own .itemGridCellDamaged) - .equipSlotIcon fills the slot
+   edge-to-edge with `cover` (unlike ItemGrid's `contain`), so a plain
+   background color behind it would never show. A translucent red
+   multiply-tint layered ON TOP of the icon instead. */
+.equipSlotIconWrapDamaged::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  background: rgba(168, 29, 16, 0.4);
+  mix-blend-mode: multiply;
+  pointer-events: none;
+}
+
+/* Condition bar along the equipped icon's bottom edge - same look/height
+   as ItemGrid's .itemGridQualityBar, just above the icon's own z-index
+   (1) instead of flush against a tile border. */
+.equipSlotQualityBar {
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  z-index: 2;
+  height: 3px;
+  pointer-events: none;
 }
 
 /* ---- Soul tab ---- */
@@ -1527,20 +1563,123 @@
   overflow-y: hidden;
 }
 
-/* CampView's own lower-screen centerpiece, below its ItemGrid (which
-   reserves this exact height out of its own fill-to-bottom measurement -
-   see ItemGrid's reserveBottomPx). camp.png stands in for a real campfire
-   gif for now, shown large rather than at its usual small button size. */
+/* CampView's own lower-screen centerpiece. Fixed to the true viewport
+   bottom (like .campExitButton already was) rather than flow-positioned
+   below the ItemGrid above it - flow position made its actual on-screen
+   spot depend on the grid's own JS-measured height, which drifted with
+   content and repeatedly pushed these icons partly off-screen. Fixed
+   height (CampView's CAMPFIRE_AREA_PX, passed inline) + fixed position
+   means everything inside it now always renders within that same fixed
+   band at the bottom of the screen, independent of the grid above.
+   ItemGrid's own reserveBottomPx still leaves this band clear of grid
+   tiles by shrinking the scrollable grid area by the same height. Own
+   positioning context for the fire tucked behind the tent and the
+   dropped-loot icon. CharacterPreview.tsx hides its usual fixed footer
+   bar while this is showing, so .campExitButton here is the only way
+   back to the Body tab. */
 .campfireStage {
-  width: 100%;
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 4;
   display: flex;
-  align-items: center;
+  align-items: flex-end;
   justify-content: center;
+  pointer-events: none;
+}
+
+/* Tightly wraps just the tent (its own height is the single source of
+   truth both the tent (100%) and fire (45%) scale from below) so the
+   fire is positioned/sized relative to the tent itself, not to
+   .campfireStage's own far corner - retuning the tent here (this height,
+   or its margin-bottom lift) carries the fire along with it instead of
+   the two drifting apart. */
+.campTentGroup {
+  position: relative;
+  height: 18rem;
+  margin-bottom: 2.25rem;
+  display: flex;
+  align-items: flex-end;
 }
 
 .campfireStageIcon {
+  position: relative;
+  z-index: 2;
   height: 100%;
   width: auto;
+  image-rendering: pixelated;
+}
+
+/* Anchored off the tent's own box (left/bottom:0 of .campTentGroup, which
+   is sized to the tent), pulled left via transform so it sits beside the
+   tent rather than dead-center under it - both stay readable rather than
+   the fire fully hidden. In front of the tent (z-index above its 2). */
+.campfireStageFireIcon {
+  position: absolute;
+  /* Holds still (extra shift is 0) at/below a 400px-wide viewport, then
+     eases further left as the screen widens past that, capped at 40px
+     so it never drifts far - same clamp() shape .campDroppedIcon below
+     uses in the opposite direction, so both stay symmetric. */
+  left: calc(-1 * clamp(0px, (100vw - 400px) * 0.15, 40px));
+  bottom: -0.75rem;
+  transform: translateX(-50%);
+  height: 46%;
+  width: auto;
+  z-index: 3;
+  image-rendering: pixelated;
+  pointer-events: none;
+}
+
+/* Only rendered at all while the camp actually holds something (see
+   CampView's hasCampItems) - a little "stuff dropped here" flavor cue,
+   not a button. Bottom-center of the stage. */
+.campDroppedIcon {
+  position: absolute;
+  left: 50%;
+  bottom: 1.25rem;
+  /* Mirrors .campfireStageFireIcon's clamp() - holds still at/below a
+     400px-wide viewport, then eases right (not far, capped at 40px) as
+     the screen widens past that. */
+  transform: translateX(clamp(0px, (100vw - 400px) * 0.15, 40px));
+  z-index: 3;
+  height: 6.5rem;
+  width: auto;
+  image-rendering: pixelated;
+  pointer-events: none;
+}
+
+/* Same exit.webp glyph as the page's own (now-hidden-while-in-camp)
+   .closeButton, repurposed here to back out of camp specifically rather
+   than close the whole character sheet - see CampView's onExitCamp. */
+/* Fixed to the viewport itself (like the page's own now-hidden .topBar),
+   not absolute against .campfireStage like the other 3 icons here -
+   .sheet caps out at 56rem wide and centers on anything wider, so an
+   absolute position would land at the content column's own edge rather
+   than the screen's actual corner on a wide viewport. */
+.campExitButton {
+  position: fixed;
+  right: 0.75rem;
+  bottom: 1.75rem;
+  z-index: 5;
+  width: 2rem;
+  aspect-ratio: 1 / 1;
+  padding: 0;
+  /* .campfireStage (this button's parent) is pointer-events:none so it
+     doesn't block clicks/scroll on the grid behind it - pointer-events
+     inherits, so this needs its own explicit override back to auto or
+     the button itself would stop being clickable too. */
+  pointer-events: auto;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+}
+
+.campExitIcon {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
   image-rendering: pixelated;
 }
 
@@ -1586,6 +1725,20 @@
   border-color: #c07a3a;
 }
 
+/* Damaged instances (qualityState's <=10% red band - see ItemGrid's
+   isDamaged) get a red-tinted tile, not just the thin quality bar along
+   the bottom edge, so a wrecked item stands out at a glance in a full
+   grid. Kept dark/desaturated rather than a bright red wash so the icon
+   itself (drawn over this) stays readable. */
+.itemGridCellDamaged {
+  background: #2a0d0d;
+  border-color: #7a2a20;
+}
+
+.itemGridCellDamaged:hover {
+  border-color: #aa4030;
+}
+
 .itemGridImg {
   width: 100%;
   height: 100%;
@@ -1606,6 +1759,12 @@
   font-size: 1rem;
   line-height: 1;
   text-shadow: 0 0 3px #000, 0 0 3px #000;
+  /* ItemGrid's own .itemGridImg is unpositioned (plain flow), so this
+     already painted above it either way - but BodyTab's .equipSlotIcon
+     (an equip slot's own icon) IS position:absolute with z-index:1, plus
+     its own z-index:2 damaged-tint overlay, so this needs an explicit
+     z-index above both to stay visible there too. */
+  z-index: 3;
 }
 
 /* Same per-tier coloring as .tierSymbolT1-6 (T1-T3 amber, T4 red, T5-T6
@@ -1655,7 +1814,35 @@
   /* Sits flush on the tile's own border instead of inset above it, so it
      reads as the icon's bottom edge rather than a bar floating over it. */
   bottom: -1px;
-  height: 5px;
+  height: 3px;
+}
+
+/* A worn backpack's own popup (ItemDetailPopup's packedItems) - a
+   single-row, horizontally-scrolling peek at what's actually packed
+   inside, sitting between the popup's name and description. Same
+   .itemGridCell tiles as the Vault/Camp grid, just in a plain flex row
+   instead of that grid's own multi-row/auto-height layout - one row is
+   the whole point here, so there's no per-viewport height to measure. */
+.packedItemsRow {
+  display: flex;
+  gap: 0.35rem;
+  width: 100%;
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding-bottom: 0.25rem;
+}
+
+.packedItemsRow .itemGridCell {
+  flex: 0 0 100px;
+}
+
+.packedItemsEmpty {
+  width: 100%;
+  margin: 0;
+  font-size: 0.8rem;
+  font-style: italic;
+  color: #8a7f66;
+  text-align: center;
 }
 
 /* The item detail popup opened by clicking an ItemGrid tile - read-only

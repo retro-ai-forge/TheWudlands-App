@@ -21,9 +21,15 @@ const CAMPFIRE_AREA_PX = 220;
 export function CampView({
   character,
   onPlayerDataUpdated,
+  onExitCamp,
 }: {
   character: SlotCharacterSummary;
   onPlayerDataUpdated?: (data: RawPlayerData) => void;
+  /** The lower-right exit.webp button's own handler - takes the player
+   * back to the Body tab. CharacterPreview.tsx hides its own fixed
+   * footer bar (tab row + its own exit.webp close button) while this
+   * view is open, so this is the only way out of it once opened. */
+  onExitCamp: () => void;
 }) {
   // Same item-catalog fetch BodyTab.tsx/InventoryTab.tsx each already do
   // independently for their own tierInfo - no shared ancestor state to
@@ -112,6 +118,11 @@ export function CampView({
   for (const id of Object.keys(campBalances)) {
     campLocations[id] = "camp";
   }
+  // dropped.png (lower-left flavor icon) only makes sense once something's
+  // actually sitting at camp - same emptiness check the grid's own
+  // emptyLabel falls back to, so the two agree (both react live to the
+  // last item being moved out, or to opening an already-empty camp).
+  const hasCampItems = campIds.length > 0;
 
   return (
     <div className={styles.panel}>
@@ -132,8 +143,30 @@ export function CampView({
         reserveBottomPx={CAMPFIRE_AREA_PX}
       />
       <div className={styles.campfireStage} style={{ height: CAMPFIRE_AREA_PX }}>
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src="/images/character/camp.png" alt="" className={styles.campfireStageIcon} />
+        {/* Fire's position/size are relative to THIS group (i.e. to the
+            tent itself - see .campfireStageFireIcon), not to .campfireStage's
+            own corner, so moving/resizing the tent carries the fire along
+            with it instead of the two drifting apart. */}
+        <div className={styles.campTentGroup}>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/images/character/campfire.png" alt="" className={styles.campfireStageFireIcon} />
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/images/character/camp.png" alt="" className={styles.campfireStageIcon} />
+        </div>
+        {hasCampItems && (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src="/images/character/dropped.png" alt="" className={styles.campDroppedIcon} />
+        )}
+        <button
+          type="button"
+          className={styles.campExitButton}
+          title="Back to Body"
+          aria-label="Back to Body"
+          onClick={onExitCamp}
+        >
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/images/character/exit.webp" alt="" className={styles.campExitIcon} />
+        </button>
       </div>
     </div>
   );

@@ -206,7 +206,7 @@ function getKindIcon(kind: string): string {
   }
 }
 
-function getTierIndicator(tier: number): string {
+export function getTierIndicator(tier: number): string {
   switch (tier) {
     case 1: return "○";
     case 2: return "●";
@@ -565,7 +565,10 @@ const ITEM_TILE_PX = 100;
 // just blank space below the last row.
 const SCROLLBAR_OVERLAP_PX = 18;
 
-function itemGridTierBadgeClass(tier: number): string {
+/** Exported so BodyTab.tsx's equip slots can show the same tier badge
+ * ItemGrid's tiles do, rather than duplicating the per-tier class/symbol
+ * mapping. */
+export function itemGridTierBadgeClass(tier: number): string {
   switch (tier) {
     case 1: return styles.itemGridTierT1;
     case 2: return styles.itemGridTierT2;
@@ -648,10 +651,13 @@ export function ItemGrid({
       // about it, so a row of icons could otherwise land partly hidden
       // behind it. Measured live (rather than a hardcoded guess) since its
       // own height already flexes with viewport width (.tabIcon's clamp()
-      // sizing) - falls back to a generous flat reserve if it's ever not
-      // in the DOM for some reason.
+      // sizing). Falls back to 0, not a guessed reserve, when it's not in
+      // the DOM - CharacterPreview.tsx now genuinely removes it while
+      // CampView is open (its own exit.webp replaces it there), so "not
+      // found" means "there's really nothing to reserve space for", not
+      // "measure this before it's mounted yet".
       const footer = document.querySelector('[data-role="character-preview-topbar"]');
-      const footerHeight = footer ? footer.getBoundingClientRect().height : 90;
+      const footerHeight = footer ? footer.getBoundingClientRect().height : 0;
       const available =
         window.innerHeight - el.getBoundingClientRect().top - footerHeight - 16 + SCROLLBAR_OVERLAP_PX - reserveBottomPx;
       setGridHeight(Math.max(ITEM_TILE_PX, available));
@@ -694,11 +700,17 @@ export function ItemGrid({
             lookupIds?.[id] !== undefined && info?.qualityMax != null && currentQuality != null
               ? Math.max(0, Math.min(1, info.qualityMax > 0 ? currentQuality / info.qualityMax : 1))
               : null;
+          // Same cutoff as the quality bar's own red band (qualityState) -
+          // a damaged instance gets a red-tinted tile background too, not
+          // just the thin bar along its bottom edge, so it reads at a
+          // glance in a full grid instead of needing a close look at one
+          // 5px sliver.
+          const isDamaged = qualityFraction !== null && qualityState(qualityFraction) === "damaged";
           return (
             <button
               key={id}
               type="button"
-              className={styles.itemGridCell}
+              className={isDamaged ? `${styles.itemGridCell} ${styles.itemGridCellDamaged}` : styles.itemGridCell}
               title={name}
               onClick={() => setSelectedId(id)}
               onContextMenu={(e) => e.preventDefault()}
@@ -835,29 +847,103 @@ function recycleFillColor(t: number): string {
 // mechanic's own three fixed material-yield brackets (100% new, 50% used,
 // 10-0% damaged - see crafting-agent.md's "Dismantle mechanic" section)
 // that this same state is meant to drive once recycle yield is wired up.
-type QualityState = "new" | "used" | "damaged";
+/** Exported so BodyTab.tsx's equip slots can apply the exact same
+ * damaged-tile treatment ItemGrid uses below, rather than duplicating the
+ * 10%/50% cutoffs. */
+export type QualityState = "new" | "used" | "damaged";
 
-function qualityState(f: number): QualityState {
+export function qualityState(f: number): QualityState {
   if (f > 0.5) return "new"; // 51-100%
   if (f > 0.1) return "used"; // 11-50%
   return "damaged"; // 1-10% (and 0)
 }
 
 const QUALITY_STATE_COLORS: Record<QualityState, string> = {
-  new: "rgb(90, 156, 74)",
-  used: "rgb(212, 160, 96)",
-  damaged: "rgb(192, 69, 58)",
+  new: "rgb(40, 99, 23)",
+  used: "rgb(143, 97, 41)",
+  damaged: "rgb(168, 29, 16)",
 };
 
 // The quality bar's own color at fraction `f` (current/max, 0-1) - one of
 // the three fixed QUALITY_STATE_COLORS, never blended between them.
-function qualityBarColor(f: number): string {
+export function qualityBarColor(f: number): string {
   return QUALITY_STATE_COLORS[qualityState(Math.max(0, Math.min(1, f)))];
 }
 
 // How long a failed move/equip's message replaces the description text
 // before reverting - long enough to read, short enough not to feel stuck.
 const ITEM_POPUP_FLASH_MS = 3000;
+
+/** Read-only, single-row, horizontally-scrolling strip of tiles - what a
+ * worn backpack's own popup shows packed inside it (see ItemDetailPopup's
+ * packedItems prop). Same 100px tile/icon/tier-badge/count-badge/
+ * quality-bar-and-damaged-tint look as ItemGrid's own tiles (deliberately
+ * duplicated rather than shared - ItemGrid's tiles are real <button>s
+ * wired to open this very popup, which would be one popup opening
+ * another; this is a peek inside, not another place to act from). */
+function PackedItemsRow({
+  ids,
+  tierInfo,
+  balances,
+  lookupIds,
+  instanceQuality,
+}: {
+  ids: string[];
+  tierInfo: BlueprintTierInfo;
+  balances: Record<string, number>;
+  lookupIds: Record<string, string>;
+  instanceQuality: Record<string, number | null>;
+}) {
+  if (ids.length === 0) {
+    return <p className={styles.packedItemsEmpty}>Nothing packed in it yet.</p>;
+  }
+  const sortedIds = [...ids].sort((a, b) => {
+    const infoA = tierInfo[lookupIds[a] ?? a];
+    const infoB = tierInfo[lookupIds[b] ?? b];
+    return (infoB?.tier ?? 0) - (infoA?.tier ?? 0);
+  });
+  return (
+    <div className={styles.packedItemsRow}>
+      {sortedIds.map((id) => {
+        const info = tierInfo[lookupIds[id] ?? id];
+        const name = info?.name ? stripBlueprintPrefix(info.name) : formatResourceLabel(lookupIds[id] ?? id);
+        const showCount = (info?.stackSize ?? 1) > 1;
+        const currentQuality = instanceQuality[id];
+        const qualityFraction =
+          lookupIds[id] !== undefined && info?.qualityMax != null && currentQuality != null
+            ? Math.max(0, Math.min(1, info.qualityMax > 0 ? currentQuality / info.qualityMax : 1))
+            : null;
+        const isDamaged = qualityFraction !== null && qualityState(qualityFraction) === "damaged";
+        return (
+          <div
+            key={id}
+            className={isDamaged ? `${styles.itemGridCell} ${styles.itemGridCellDamaged}` : styles.itemGridCell}
+            title={name}
+          >
+            <div
+              role="img"
+              aria-label={name}
+              className={styles.itemGridImg}
+              style={{ backgroundImage: `url(${info?.icon || FALLBACK_ITEM_ICON})` }}
+            />
+            {!!info?.tier && (
+              <span className={`${styles.itemGridTierBadge} ${itemGridTierBadgeClass(info.tier)}`}>
+                {getTierIndicator(info.tier)}
+              </span>
+            )}
+            {showCount && <span className={styles.itemGridCountBadge}>{balances[id] ?? 0}</span>}
+            {qualityFraction !== null && (
+              <div
+                className={styles.itemGridQualityBar}
+                style={{ width: `${qualityFraction * 100}%`, backgroundColor: qualityBarColor(qualityFraction) }}
+              />
+            )}
+          </div>
+        );
+      })}
+    </div>
+  );
+}
 
 /** The popup opened by clicking an ItemGrid tile - icon/name/description/
  * sizeClass/stackMax/two-handed/quality, plus (when `movable`) a quantity
@@ -890,6 +976,7 @@ export function ItemDetailPopup({
   currentSlots,
   characterId,
   characterFirstName,
+  packedItems,
   onPlayerDataUpdated,
   onClose,
 }: {
@@ -922,6 +1009,14 @@ export function ItemDetailPopup({
   characterId: string;
   /** source:"vault" only - named in the "In Storyline" notice that replaces the whole action row while inAdventure is true. */
   characterFirstName?: string;
+  /** location:"body" rows for a family:"backpack" instance only - this character's own gear.items (location:"backpack") plus gear.itemBalances.backpack, in the same {ids, tierInfo, balances, lookupIds, instanceQuality} shape ItemGrid itself takes. Renders as a read-only horizontally-scrolling row of what's actually packed inside the worn backpack, between the name and description. Omitted (or empty) for any other row - there's nothing to peek inside otherwise. */
+  packedItems?: {
+    ids: string[];
+    tierInfo: BlueprintTierInfo;
+    balances: Record<string, number>;
+    lookupIds: Record<string, string>;
+    instanceQuality: Record<string, number | null>;
+  };
   onPlayerDataUpdated?: (data: RawPlayerData) => void;
   onClose: () => void;
 }) {
@@ -1480,6 +1575,9 @@ export function ItemDetailPopup({
               style={{ backgroundImage: `url(${info?.icon || FALLBACK_ITEM_ICON})` }}
             />
             <h3 className={styles.itemPopupName}>{displayName}</h3>
+            {location === "body" && info?.familyId === "backpack" && packedItems && (
+              <PackedItemsRow {...packedItems} />
+            )}
             <p className={`${styles.itemPopupDescription} ${flashMessage ? styles.itemPopupFlash : ""}`}>
               {flashMessage ?? (info?.description || "dummy")}
             </p>

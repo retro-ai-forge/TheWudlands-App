@@ -1,7 +1,16 @@
 import { useEffect, useState } from "react";
 import styles from "./CharacterTabs.module.css";
 import { getPortraitCropImgStyle } from "@/app/lib/portraitCrop";
-import { FALLBACK_ITEM_ICON, ItemDetailPopup, type BlueprintTierInfo, type RawPlayerData } from "./InventoryTab";
+import {
+  FALLBACK_ITEM_ICON,
+  ItemDetailPopup,
+  getTierIndicator,
+  itemGridTierBadgeClass,
+  qualityBarColor,
+  qualityState,
+  type BlueprintTierInfo,
+  type RawPlayerData,
+} from "./InventoryTab";
 import type { ItemInstance, SlotCharacterSummary } from "../SoulSlotGrid";
 import { InAdventureToggle } from "./InAdventureToggle";
 
@@ -53,16 +62,38 @@ function EquipSlotIcon({
   mirrored?: boolean;
 }) {
   const entry = catalog[instance.itemId];
+  // Same condition/damaged treatment as the Vault/Camp grid's ItemGrid
+  // tiles (see qualityState/qualityBarColor there) - an equipped instance
+  // is just as much a "real" item instance as a backpacked/camped one, so
+  // it should wear down visibly here too, not only once unequipped.
+  const qualityFraction =
+    entry?.qualityMax != null && instance.quality != null
+      ? Math.max(0, Math.min(1, entry.qualityMax > 0 ? instance.quality / entry.qualityMax : 1))
+      : null;
+  const isDamaged = qualityFraction !== null && qualityState(qualityFraction) === "damaged";
   return (
-    <div
-      role="img"
-      aria-label={entry?.name ?? instance.familyId}
-      className={styles.equipSlotIcon}
-      style={{
-        backgroundImage: `url(${entry?.icon || FALLBACK_ITEM_ICON})`,
-        transform: mirrored ? "scaleX(-1)" : undefined,
-      }}
-    />
+    <div className={isDamaged ? `${styles.equipSlotIconWrap} ${styles.equipSlotIconWrapDamaged}` : styles.equipSlotIconWrap}>
+      <div
+        role="img"
+        aria-label={entry?.name ?? instance.familyId}
+        className={styles.equipSlotIcon}
+        style={{
+          backgroundImage: `url(${entry?.icon || FALLBACK_ITEM_ICON})`,
+          transform: mirrored ? "scaleX(-1)" : undefined,
+        }}
+      />
+      {!!entry?.tier && (
+        <span className={`${styles.itemGridTierBadge} ${itemGridTierBadgeClass(entry.tier)}`}>
+          {getTierIndicator(entry.tier)}
+        </span>
+      )}
+      {qualityFraction !== null && (
+        <div
+          className={styles.equipSlotQualityBar}
+          style={{ width: `${qualityFraction * 100}%`, backgroundColor: qualityBarColor(qualityFraction) }}
+        />
+      )}
+    </div>
   );
 }
 
@@ -155,6 +186,27 @@ export function BodyTab({
   const hasSaddlepackEquipped = character.gear.items.some(
     (instance) => instance.location === "body" && instance.familyId === "saddlepack"
   );
+
+  // What's actually packed into whichever backpack is worn - same split
+  // as CampView's own campCombined (flat gear.itemBalances.backpack rows
+  // plus individually-tracked gear.items instances at location:"backpack"),
+  // handed to ItemDetailPopup only for a worn family:"backpack" instance's
+  // own popup (see its packedItems prop) so it can show a peek inside.
+  // Storage itself is character-level, not tied to which specific
+  // backpack instance is worn, so this doesn't need to filter by which
+  // instance is selected.
+  const backpackBalances = character.gear.itemBalances.backpack;
+  const backpackInstances = character.gear.items.filter((instance) => instance.location === "backpack");
+  const backpackLookupIds: Record<string, string> = {};
+  const backpackInstanceRowBalances: Record<string, number> = {};
+  const backpackInstanceQuality: Record<string, number | null> = {};
+  for (const instance of backpackInstances) {
+    backpackLookupIds[instance.instanceId] = instance.itemId;
+    backpackInstanceRowBalances[instance.instanceId] = 1;
+    backpackInstanceQuality[instance.instanceId] = instance.quality;
+  }
+  const backpackCombined: Record<string, number> = { ...backpackBalances, ...backpackInstanceRowBalances };
+  const backpackIds = Object.keys(backpackCombined).filter((id) => backpackCombined[id] > 0);
 
   return (
     <div className={styles.panel}>
@@ -308,6 +360,13 @@ export function BodyTab({
           inAdventure={character.availability.inAdventure}
           currentSlots={selectedInstance.slotRef}
           characterId={character.id}
+          packedItems={{
+            ids: backpackIds,
+            tierInfo: catalog,
+            balances: backpackCombined,
+            lookupIds: backpackLookupIds,
+            instanceQuality: backpackInstanceQuality,
+          }}
           onPlayerDataUpdated={onPlayerDataUpdated}
           onClose={() => setSelectedInstance(null)}
         />

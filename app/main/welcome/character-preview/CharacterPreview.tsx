@@ -268,42 +268,47 @@ export function CharacterPreview({
           of .wizard's own scroll once the page scrolls past it. Only the
           icon row (.topBarBackground) carries a solid fill; the name below
           it sits directly on .wizard's own tiled background. */}
-      <div className={tabStyles.topBar} data-role="character-preview-topbar">
-        <div className={tabStyles.topBarBackground}>
-          <div className={tabStyles.topBarRow}>
-            <nav className={tabStyles.tabRow}>
-              {TABS.map((tab) => (
-                <button
-                  key={tab.key}
-                  type="button"
-                  className={[
-                    tabStyles.tabRowButton,
-                    !showCamp && activeTab === tab.key ? tabStyles.tabRowButtonActive : tabStyles.tabRowButtonInactive,
-                    !showCamp && activeTab === tab.key && tab.lightenWhenActive ? tabStyles.tabRowButtonActiveLighten : "",
-                  ]
-                    .filter(Boolean)
-                    .join(" ")}
-                  onClick={() => {
-                    setShowCamp(false);
-                    setActiveTab(tab.key);
-                  }}
-                  aria-pressed={!showCamp && activeTab === tab.key}
-                  title={tab.label}
-                  aria-label={tab.label}
-                >
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={tab.icon} alt="" className={tabStyles.tabIcon} />
-                </button>
-              ))}
-            </nav>
+      {/* Hidden outright while CampView is showing - it gets its own
+          lower-right exit.webp button (CampView's onExitCamp) back to the
+          Body tab instead, and ItemGrid's own measure() already falls
+          back gracefully to a flat reserve when this isn't in the DOM to
+          measure (see its own comment) - see the "no bottom bar,
+          exit.webp only" request this replaced the fixed footer for. */}
+      {!showCamp && (
+        <div className={tabStyles.topBar} data-role="character-preview-topbar">
+          <div className={tabStyles.topBarBackground}>
+            <div className={tabStyles.topBarRow}>
+              <nav className={tabStyles.tabRow}>
+                {TABS.map((tab) => (
+                  <button
+                    key={tab.key}
+                    type="button"
+                    className={[
+                      tabStyles.tabRowButton,
+                      activeTab === tab.key ? tabStyles.tabRowButtonActive : tabStyles.tabRowButtonInactive,
+                      activeTab === tab.key && tab.lightenWhenActive ? tabStyles.tabRowButtonActiveLighten : "",
+                    ]
+                      .filter(Boolean)
+                      .join(" ")}
+                    onClick={() => setActiveTab(tab.key)}
+                    aria-pressed={activeTab === tab.key}
+                    title={tab.label}
+                    aria-label={tab.label}
+                  >
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src={tab.icon} alt="" className={tabStyles.tabIcon} />
+                  </button>
+                ))}
+              </nav>
 
-            <button type="button" className={tabStyles.closeButton} onClick={onClose} title="Close" aria-label="Close">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src="/images/character/exit.webp" alt="" className={tabStyles.closeArrowIcon} />
-            </button>
+              <button type="button" className={tabStyles.closeButton} onClick={onClose} title="Close" aria-label="Close">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src="/images/character/exit.webp" alt="" className={tabStyles.closeArrowIcon} />
+              </button>
+            </div>
           </div>
         </div>
-      </div>
+      )}
 
       <div className={tabStyles.sheet}>
         {deleteError && <p className={styles.submitError}>{deleteError}</p>}
@@ -314,7 +319,11 @@ export function CharacterPreview({
 
         <div className={showCamp || activeTab === "inventory" || activeTab === "soul" ? tabStyles.mainColumn : `${tabStyles.mainColumn} ${tabStyles.mainColumnPadded}`}>
           {showCamp ? (
-            <CampView character={character} onPlayerDataUpdated={onPlayerDataUpdated} />
+            <CampView
+              character={character}
+              onPlayerDataUpdated={onPlayerDataUpdated}
+              onExitCamp={() => setShowCamp(false)}
+            />
           ) : (
             <>
           {activeTab === "stats" && (
