@@ -173,14 +173,18 @@ export function BodyTab({
   const [selectedInstance, setSelectedInstance] = useState<ItemInstance | null>(null);
 
   // Mirrors InventoryTab.tsx's identical check (and backend.items_catalog.
-  // has_backpack_equipped) - greys out the popup's "Move to backpack"
-  // button when no "backpack" family is worn, instead of letting the click
-  // fail server-side. Checked by familyId, not by "Back"/"Side" in slotRef -
-  // bolt_girdle/quiver/ladder also list "Side" as one of their OWN
-  // alternative equip_slots groups, so an equipped bolt_girdle sitting in
-  // "Side" must not count as a backpack.
+  // has_backpack_available) - greys out the popup's "Move to backpack"
+  // button when there's no "backpack" family to pack into, instead of
+  // letting the click fail server-side. A backpack still counts once
+  // unequipped to camp, not just worn - unequip_item's "camp" destination
+  // never empties its storage bucket, so it's still a real place to add
+  // more into (see backend.players.unequip_item's own docstring). Checked
+  // by familyId, not by "Back"/"Side" in slotRef - bolt_girdle/quiver/
+  // ladder also list "Side" as one of their OWN alternative equip_slots
+  // groups, so an equipped bolt_girdle sitting in "Side" must not count
+  // as a backpack.
   const hasBackpackEquipped = character.gear.items.some(
-    (instance) => instance.location === "body" && instance.familyId === "backpack"
+    (instance) => (instance.location === "body" || instance.location === "camp") && instance.familyId === "backpack"
   );
   // Mirrors backend.items_catalog.has_saddlepack_equipped - hides (rather
   // than greys) the popup's "Move to saddlepack" button when false.

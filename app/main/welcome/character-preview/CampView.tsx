@@ -80,9 +80,11 @@ export function CampView({
   }, []);
 
   // Checked by familyId, not by "Back"/"Side" in slotRef - see BodyTab.tsx's
-  // identical check for why (other families can occupy those slot names too).
+  // identical check for why (other families can occupy those slot names
+  // too). Also counts a camp-located backpack, not just a worn one - see
+  // BodyTab's identical check for why.
   const hasBackpackEquipped = character.gear.items.some(
-    (instance) => instance.location === "body" && instance.familyId === "backpack"
+    (instance) => (instance.location === "body" || instance.location === "camp") && instance.familyId === "backpack"
   );
   const hasSaddlepackEquipped = character.gear.items.some(
     (instance) => instance.location === "body" && instance.familyId === "saddlepack"

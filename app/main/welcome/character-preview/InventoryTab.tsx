@@ -1550,7 +1550,19 @@ export function ItemDetailPopup({
   // text, ...) doesn't close the popup outright - it acts like the "↩"
   // button instead, returning to the item info view, since the whole
   // recycle/destroy card is still "inside" this same item.
+  //
+  // stopPropagation matters here specifically for a packed item's own
+  // nested popup (PackedItemsRow, opened from inside a worn/camped
+  // backpack's own popup) - with no portal, that nested popup's whole
+  // overlay/card tree renders as a literal DOM descendant of the
+  // backpack's own overlay. Without this, ANY click here - a plain
+  // dismiss click, or a button click whose async move later calls this
+  // same popup's own onClose - still bubbles up into the backpack
+  // popup's own overlay onClick too, closing that one right along with
+  // it (all the way back to the Body/Camp page) instead of leaving it
+  // open underneath, which is what should happen either way.
   const handleClick = (e: React.MouseEvent<HTMLElement>) => {
+    e.stopPropagation();
     const target = e.target as HTMLElement;
     if (target.closest("button")) return;
     if (showDestroy) {
@@ -1946,15 +1958,18 @@ export function ItemDetailPopup({
                         automatic icon above). Camp is this character's own
                         overflow, not the shared vault, so this works
                         mid-adventure unlike checkInToVault below - see
-                        backend.players.move_camp_item_to_backpack. */}
-                    {location === "camp" && info?.backpackable && (
+                        backend.players.move_camp_item_to_backpack. Hidden
+                        outright (not greyed) with no backpack equipped -
+                        camp items are only ever checked one at a time, so
+                        a dead button here is just noise, not a nudge. */}
+                    {location === "camp" && info?.backpackable && hasBackpackEquipped && (
                       <button
                         type="button"
                         className={styles.itemPopupBackpackButton}
-                        disabled={pending || !hasBackpackEquipped}
+                        disabled={pending}
                         onClick={stowToBackpack}
                         aria-label="Move to backpack"
-                        title={hasBackpackEquipped ? "Move to backpack" : "No backpack equipped"}
+                        title="Move to backpack"
                       >
                         <div
                           role="img"
@@ -1994,23 +2009,27 @@ export function ItemDetailPopup({
                       // location:"camp" - no path back to the shared vault
                       // while out on an adventure (same reasoning as
                       // above), and camp has no OTHER camp to switch to,
-                      // so this just greys out instead - see the
-                      // backpack case above for why that differs there.
-                      <button
-                        type="button"
-                        className={styles.itemPopupBackpackButton}
-                        disabled={pending || inAdventure}
-                        onClick={checkInToVault}
-                        aria-label="Check in to vault"
-                        title={inAdventure ? "Out on an adventure - the shared vault isn't reachable." : "Check in to vault"}
-                      >
-                        <div
-                          role="img"
-                          aria-label="Vault"
-                          className={styles.itemPopupBackpackIcon}
-                          style={{ backgroundImage: `url(${VAULT_ACTION_ICON})` }}
-                        />
-                      </button>
+                      // so this is hidden outright rather than shown
+                      // greyed - a camp item's popup with nothing else to
+                      // offer (no equip slots) would otherwise show one
+                      // permanently-dead button.
+                      !inAdventure && (
+                        <button
+                          type="button"
+                          className={styles.itemPopupBackpackButton}
+                          disabled={pending}
+                          onClick={checkInToVault}
+                          aria-label="Check in to vault"
+                          title="Check in to vault"
+                        >
+                          <div
+                            role="img"
+                            aria-label="Vault"
+                            className={styles.itemPopupBackpackIcon}
+                            style={{ backgroundImage: `url(${VAULT_ACTION_ICON})` }}
+                          />
+                        </button>
+                      )
                     )}
                   </>
                 )}
@@ -2049,36 +2068,40 @@ export function ItemDetailPopup({
                   ))}
                 {location === "camp" ? (
                   <>
-                    <button
-                      type="button"
-                      className={styles.itemPopupBackpackButton}
-                      disabled={pending || !hasBackpackEquipped}
-                      onClick={stowBalanceToBackpack}
-                      aria-label="Move to backpack"
-                      title={hasBackpackEquipped ? "Move to backpack" : "No backpack equipped"}
-                    >
-                      <div
-                        role="img"
-                        aria-label="Backpack"
-                        className={styles.itemPopupBackpackIcon}
-                        style={{ backgroundImage: `url(${BACKPACK_ACTION_ICON})` }}
-                      />
-                    </button>
-                    <button
-                      type="button"
-                      className={styles.itemPopupBackpackButton}
-                      disabled={pending || inAdventure}
-                      onClick={checkInBalanceToVault}
-                      aria-label="Check in to vault"
-                      title={inAdventure ? "Out on an adventure - the shared vault isn't reachable." : "Check in to vault"}
-                    >
-                      <div
-                        role="img"
-                        aria-label="Vault"
-                        className={styles.itemPopupBackpackIcon}
-                        style={{ backgroundImage: `url(${VAULT_ACTION_ICON})` }}
-                      />
-                    </button>
+                    {hasBackpackEquipped && (
+                      <button
+                        type="button"
+                        className={styles.itemPopupBackpackButton}
+                        disabled={pending}
+                        onClick={stowBalanceToBackpack}
+                        aria-label="Move to backpack"
+                        title="Move to backpack"
+                      >
+                        <div
+                          role="img"
+                          aria-label="Backpack"
+                          className={styles.itemPopupBackpackIcon}
+                          style={{ backgroundImage: `url(${BACKPACK_ACTION_ICON})` }}
+                        />
+                      </button>
+                    )}
+                    {!inAdventure && (
+                      <button
+                        type="button"
+                        className={styles.itemPopupBackpackButton}
+                        disabled={pending}
+                        onClick={checkInBalanceToVault}
+                        aria-label="Check in to vault"
+                        title="Check in to vault"
+                      >
+                        <div
+                          role="img"
+                          aria-label="Vault"
+                          className={styles.itemPopupBackpackIcon}
+                          style={{ backgroundImage: `url(${VAULT_ACTION_ICON})` }}
+                        />
+                      </button>
+                    )}
                   </>
                 ) : (
                   // "backpack" - no direct balance endpoint back to the
@@ -2422,15 +2445,18 @@ export function InventoryTab({
   };
 
   // Whether this character currently has a physical backpack worn -
-  // mirrors backend.items_catalog.has_backpack_equipped. Checked by
-  // familyId, not by "Back"/"Side" in slotRef - bolt_girdle/quiver/ladder
-  // also list "Side" as one of their OWN alternative equip_slots groups,
-  // so an equipped bolt_girdle sitting in "Side" must not count as a
-  // backpack. "Move to backpack" only makes sense with one on, so both the
-  // vault and character item popups grey that button out otherwise instead
-  // of letting the click fail server-side with "No backpack equipped".
+  // mirrors backend.items_catalog.has_backpack_available - also counts a
+  // camp-located backpack, not just a worn one (unequip_item's "camp"
+  // destination never empties its storage bucket, so it's still a real
+  // place to add more into). Checked by familyId, not by "Back"/"Side" in
+  // slotRef - bolt_girdle/quiver/ladder also list "Side" as one of their
+  // OWN alternative equip_slots groups, so an equipped bolt_girdle sitting
+  // in "Side" must not count as a backpack. "Move to backpack" only makes
+  // sense with one available, so both the vault and character item popups
+  // grey that button out otherwise instead of letting the click fail
+  // server-side with "No backpack equipped".
   const hasBackpackEquipped = character.gear.items.some(
-    (instance) => instance.location === "body" && instance.familyId === "backpack"
+    (instance) => (instance.location === "body" || instance.location === "camp") && instance.familyId === "backpack"
   );
   // Mirrors backend.items_catalog.has_saddlepack_equipped - hides (rather
   // than greys) the vault popup's "Move to saddlepack" button when false.

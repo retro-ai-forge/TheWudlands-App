@@ -348,6 +348,27 @@ def has_backpack_equipped(character: dict) -> bool:
     )
 
 
+def has_backpack_available(character: dict) -> bool:
+    """Whether this character has a "backpack"-family instance to actually
+    pack things into - either worn (location:"body", same as
+    has_backpack_equipped) OR sitting unequipped in camp (location:"camp").
+    A camp-located backpack still holds its own gear.itemBalances.backpack/
+    gear.items location:"backpack" storage bucket (unequip_item's "camp"
+    destination deliberately never cascades that away - see its own
+    docstring), so it should count as available to add more into, not just
+    the one currently on the character's back. Used wherever "can this
+    character stash something in a backpack right now" is the actual
+    question (backpack_capacity, unequip_item's "backpack" destination) -
+    has_backpack_equipped itself stays literal (only "body") for callers
+    that specifically mean "is one physically worn" (e.g. the
+    check_in_item_instance cascade, which cares whether some OTHER worn
+    backpack's storage is still in active use)."""
+    return any(
+        instance.get("location") in ("body", "camp") and instance.get("familyId") == "backpack"
+        for instance in character.get("gear", {}).get("items", [])
+    )
+
+
 def has_saddlepack_equipped(character: dict) -> bool:
     """Whether this character's own "saddlepack" family is currently
     equipped into the mount's own Mbagpack slot (location:"body") - the
@@ -361,19 +382,36 @@ def has_saddlepack_equipped(character: dict) -> bool:
     )
 
 
+def has_saddlepack_available(character: dict) -> bool:
+    """The saddlepack counterpart to has_backpack_available - whether this
+    character has a "saddlepack"-family instance worn on the mount's own
+    Mbagpack slot (location:"body", same value backpack itself uses - see
+    has_saddlepack_equipped) OR sitting unequipped in camp (location:
+    "camp"). Used for the same "only one at a time" enforcement
+    equip_item/equip_item_from_pool apply to "backpack" - has_saddlepack_
+    equipped itself stays literal (only "body"/worn) for callers that
+    specifically mean that."""
+    return any(
+        instance.get("location") in ("body", "camp") and instance.get("familyId") == "saddlepack"
+        for instance in character.get("gear", {}).get("items", [])
+    )
+
+
 def backpack_capacity(character: dict) -> int:
     """
     Total backpack slot ceiling for one character - 0 with nothing to carry
     it in (a character can't stash anything in a "backpack" that doesn't
     physically exist), otherwise base carry capacity from might/endurance
-    plus whichever "backpack"-family instance is currently equipped.
+    plus whichever "backpack"-family instance is currently worn OR sitting
+    in camp (see has_backpack_available) - the biggest one, if more than
+    one of either counts.
     """
-    if not has_backpack_equipped(character):
+    if not has_backpack_available(character):
         return 0
 
     bonus = 0
     for instance in character.get("gear", {}).get("items", []):
-        if instance.get("location") == "body" and instance.get("familyId") == "backpack":
+        if instance.get("location") in ("body", "camp") and instance.get("familyId") == "backpack":
             bonus = max(bonus, BACKPACK_CAPACITY_BY_ID.get(instance["itemId"], 0))
 
     attr = character.get("attr", {})

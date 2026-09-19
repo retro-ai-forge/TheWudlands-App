@@ -1988,6 +1988,22 @@ async def equip_item(address: str, character_id: str, instance_id: str, slots: L
         if entry is None or entry.size != "Colossal":
             raise ValueError(f"{character.get('race')} characters can only ride Colossal mounts")
 
+    # One backpack (and separately, one saddlepack) per character, total -
+    # see equip_item_from_pool's identical check for why. Only relevant
+    # when this instance is actually MOVING onto the body from somewhere
+    # else (camp/backpack/saddlepack) - a pure body->body reslot
+    # (source_location == "body") is the SAME already-worn one changing
+    # slots, never a second one appearing, so that case is exempt.
+    if family.family_id in ("backpack", "saddlepack") and source_location != "body":
+        other_exists = any(
+            i.get("location") in ("body", "camp")
+            and i.get("familyId") == family.family_id
+            and i["instanceId"] != instance_id
+            for i in character.get("gear", {}).get("items", [])
+        )
+        if other_exists:
+            raise ValueError(f"Already have a {family.family_id} - only one at a time (worn or in camp)")
+
     # Replaces the whole matched array element in one $set, rather than two
     # separate dotted-path $set keys (location, slotRef) both routed
     # through the same $[item] array filter - see unequip_item's identical
@@ -2079,6 +2095,22 @@ async def equip_item_from_pool(address: str, character_id: str, instance_id: str
         if entry is None or entry.size != "Colossal":
             raise ValueError(f"{character.get('race')} characters can only ride Colossal mounts")
 
+    # One backpack (and separately, one saddlepack) per character, total -
+    # not just one worn at a time. Slot occupancy alone (the query's own
+    # "$not $elemMatch slotRef" check below) only blocks a SECOND one from
+    # taking the same "Back"/"Mbagpack" slot while one is already worn -
+    # it says nothing about a first one currently sitting unequipped in
+    # camp (see items_catalog.has_backpack_available/
+    # has_saddlepack_available), which is exactly the gap this closes.
+    # Losing the one already held (recycle_item_instance/
+    # destroy_item_instance, or however an adventure might one day take
+    # one away) frees this back up again - nothing else needs to track it,
+    # both checks always read the character's current live state fresh.
+    if instance["familyId"] == "backpack" and items_catalog.has_backpack_available(character):
+        raise ValueError("Already have a backpack - only one at a time (worn or in camp)")
+    if instance["familyId"] == "saddlepack" and items_catalog.has_saddlepack_available(character):
+        raise ValueError("Already have a saddlepack - only one at a time (worn or in camp)")
+
     equipped_instance = {**instance, "location": "body", "slotRef": slots}
     doc = await db.players.find_one_and_update(
         {
@@ -2162,7 +2194,7 @@ async def unequip_item(
     if instance is None:
         return None
 
-    if destination == "backpack" and not items_catalog.has_backpack_equipped(character):
+    if destination == "backpack" and not items_catalog.has_backpack_available(character):
         raise ValueError("No backpack equipped")
     if destination == "saddlepack" and not items_catalog.has_saddlepack_equipped(character):
         raise ValueError("No saddlepack equipped")

@@ -273,6 +273,16 @@ class CharacterGearResponse(BaseModel):
     )
     resources: GearBalancesResponse = Field(default_factory=GearBalancesResponse)
     itemBalances: GearBalancesResponse = Field(default_factory=GearBalancesResponse)
+    backpackSlotsUsed: int = Field(
+        0, description="Computed (backend.items_catalog.backpack_slots_used) - total backpack slots currently occupied"
+    )
+    backpackCapacity: int = Field(
+        0,
+        description=(
+            "Computed (backend.items_catalog.backpack_capacity) - this character's backpack slot ceiling, 0 with "
+            "nothing to carry it in"
+        ),
+    )
 
 
 class CharacterResponse(BaseModel):
