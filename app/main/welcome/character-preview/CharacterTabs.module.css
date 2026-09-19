@@ -1175,13 +1175,93 @@
 
 .largeEquipSlot {
   composes: equipSlot;
-  /* Same size as .faceFrame (the small face-crop portrait on the Stats
-     tab) - a face-sized frame, not the full body portrait. */
-  width: 10rem;
+  /* Was the same size as .faceFrame (10rem) - bumped larger so Mount has
+     more room for its own corner/edge sub-slots (see .mountSubSlot). */
+  width: 14rem;
   aspect-ratio: 1 / 1;
   /* min-height:0 for the same flex/aspect-ratio reason as .handSlotRow
      .equipSlot above - .companionMountRow is a flex row too. */
   min-height: 0;
+  /* Positioning context for .mountSubSlot's four corners below - overrides
+     the composed .equipSlot's own overflow:hidden (there to crop a
+     cover-fit icon to the slot's rounded corners), which would otherwise
+     clip those corner boxes where they poke outside this one's own edge. */
+  position: relative;
+  overflow: visible;
+}
+
+/* The Mount box's own four corner slots (Mhead/Msaddle/Marmor/Mbagpack -
+   see BodyTab's MOUNT_SUB_SLOTS) - same "sits on the edge, overlapping a
+   bit" idea as .equipSlotOverlay's slots on the character's own portrait,
+   just one per corner (translated 35% outward on both axes) instead of
+   stacked down each side, since this parent is a square box, not a tall
+   portrait. Visual-only for now - no role="button"/onClick wired up yet,
+   see MOUNT_SUB_SLOTS' own comment for why. */
+.mountSubSlot {
+  composes: equipSlot;
+  position: absolute;
+  /* Same size as .equipSlotOverlay's own body-side slots (Head/Neck/...). */
+  width: 5rem;
+  aspect-ratio: 1 / 1;
+  background: rgba(10, 8, 4, 0.3);
+  backdrop-filter: blur(1px);
+  z-index: 1;
+}
+
+/* Left/right edge stacks now, not corners - same idea as .equipSlotHead/
+   .equipSlotBack etc. on the character's own portrait (two per side,
+   vertically centered on their own top%, pulled out past the box's edge
+   a bit rather than sitting flush on it). */
+.mountSubSlotHead {
+  top: 25%;
+  left: -3.5rem;
+  transform: translateY(-50%);
+}
+
+.mountSubSlotSaddle {
+  top: 25%;
+  right: -3.5rem;
+  transform: translateY(-50%);
+}
+
+.mountSubSlotArmor {
+  top: 75%;
+  left: -3.5rem;
+  transform: translateY(-50%);
+}
+
+.mountSubSlotBags {
+  top: 75%;
+  right: -3.5rem;
+  transform: translateY(-50%);
+}
+
+/* Companion's own one sub-slot (see BodyTab's COMPANION_SUB_SLOTS) - left
+   middle, same .mountSubSlot box/offset as the Mount ones above. */
+.companionSubSlotCharm {
+  top: 50%;
+  left: -3.5rem;
+  transform: translateY(-50%);
+}
+
+/* Same look as .equipSlotLabel, inlined rather than composed - that class
+   is defined later in this file, and composes requires the referenced
+   class to already be declared above the composing rule. */
+.mountSubSlotLabel {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #a89968;
+  text-align: center;
+  pointer-events: none;
+  font-size: 0.7rem;
+  padding: 0.3rem;
+  line-height: 1.15;
 }
 
 /* A background watermark now, not a layout row above the icon - fills the

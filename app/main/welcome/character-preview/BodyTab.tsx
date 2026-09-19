@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { Fragment, useEffect, useState } from "react";
 import styles from "./CharacterTabs.module.css";
 import { getPortraitCropImgStyle } from "@/app/lib/portraitCrop";
 import {
@@ -40,6 +40,31 @@ const RING_SLOTS = ["Left Ring", "Right Ring"];
 // once that art exists, capped at the same max size as the character's own
 // portrait (see .largeEquipSlot).
 const COMPANION_MOUNT_SLOTS = ["Companion", "Mount"];
+
+// Visual-only for now - just the four corner squares and their labels, on
+// the "Mount" box specifically (not "Companion"), same overlapping-corner
+// idea as OVERLAY_SLOTS above but for a square box instead of a tall
+// portrait, so one per corner instead of stacked down each edge. Mhead
+// (bridle) and Mbagpack (saddlepack) already have real families in
+// item-inventory-properties.json; Marmor and Msaddle don't yet - none of
+// the four are wired to equippedInSlot/EquipSlotIcon/click-to-open here,
+// only real squares + names, until that catalog data exists.
+const MOUNT_SUB_SLOTS: { lines: string[]; position: string }[] = [
+  { lines: ["Head"], position: styles.mountSubSlotHead },
+  { lines: ["Saddle"], position: styles.mountSubSlotSaddle },
+  { lines: ["Armor"], position: styles.mountSubSlotArmor },
+  { lines: ["Saddle", "Packs"], position: styles.mountSubSlotBags },
+];
+
+// Same visual-only treatment as MOUNT_SUB_SLOTS above, but on the
+// "Companion" box - just the one, left-middle, labeled "Charm". "Ccharm"
+// (C- prefix for Companion, mirroring Mhead/Mbagpack/Marmor/Msaddle's M-
+// prefix for Mount) is the intended future family/slot key once real
+// catalog data exists for it - not wired to anything yet, same as the
+// mount's four.
+const COMPANION_SUB_SLOTS: { lines: string[]; position: string }[] = [
+  { lines: ["Charm"], position: styles.companionSubSlotCharm },
+];
 
 // The item instance (if any) currently equipped into `slot` - at most one,
 // since equip_item blocks a slot already occupied by another instance.
@@ -347,6 +372,18 @@ export function BodyTab({
               ) : (
                 <span className={styles.equipSlotLabel}>{label}</span>
               )}
+              {(label === "Mount" ? MOUNT_SUB_SLOTS : label === "Companion" ? COMPANION_SUB_SLOTS : []).map((sub) => (
+                <div key={sub.lines.join(" ")} className={`${styles.mountSubSlot} ${sub.position}`}>
+                  <span className={styles.mountSubSlotLabel}>
+                    {sub.lines.map((line, i) => (
+                      <Fragment key={line}>
+                        {i > 0 && <br />}
+                        {line}
+                      </Fragment>
+                    ))}
+                  </span>
+                </div>
+              ))}
             </div>
           );
         })}
