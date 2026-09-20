@@ -2130,6 +2130,19 @@
   }
 }
 
+/* Below 480px, .itemPopupCard's own 320px cap never actually binds (the
+   viewport itself is narrower), so a TransferButtons row's amount buttons
+   + ∞ + destination icon fit on one line there regardless. Above it, the
+   320px cap DOES bind and that same row is just wide enough to wrap onto a
+   second line, reshaping the fixed-width amount buttons into a lopsided
+   grid instead of one tidy row - a bit more width here keeps it on one
+   line without a special case in TransferButtons itself. */
+@media (min-width: 480px) {
+  .itemPopupCard {
+    max-width: 360px;
+  }
+}
+
 .itemPopupImg {
   width: 200px;
   height: 200px;
