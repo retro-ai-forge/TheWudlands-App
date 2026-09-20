@@ -3234,32 +3234,45 @@ export function InventoryTab({
 
           <div className={styles.craftRow}>
             <div className={styles.craftControlsRow}>
-              <button
-                className={
-                  canCraft && remainingSeconds === null
-                    ? `${styles.craftButton} ${styles.craftButtonReady}`
-                    : styles.craftButton
-                }
-                onClick={startCraft}
-                disabled={crafting || !canCraft || remainingSeconds !== null}
-                title={canCraft && remainingSeconds === null ? "Selected recipe can be crafted right now" : undefined}
-              >
-                {remainingSeconds !== null ? (
-                  <span className={styles.craftTimer}>Crafting… {formatRemainingCompactLong(remainingSeconds)}</span>
-                ) : crafting ? (
-                  "Crafting…"
-                ) : canCraft ? (
-                  <>
-                    Craft
-                    <span className={styles.craftButtonDetail}>
-                      {craftDurationPreview !== null && formatRemainingCompactLong(craftDurationPreview)}
-                      {craftXpPreview && formatXpPreview(craftXpPreview) && `, ${formatXpPreview(craftXpPreview)}`}
-                    </span>
-                  </>
+              <div className={styles.craftButtonColumn}>
+                <button
+                  className={
+                    !character.availability.inAdventure && canCraft && remainingSeconds === null
+                      ? `${styles.craftButton} ${styles.craftButtonReady}`
+                      : styles.craftButton
+                  }
+                  onClick={startCraft}
+                  disabled={crafting || !canCraft || remainingSeconds !== null || character.availability.inAdventure}
+                  title={
+                    character.availability.inAdventure
+                      ? `${character.firstName}  and more text incoming here.`
+                      : canCraft && remainingSeconds === null
+                      ? "Selected recipe can be crafted right now"
+                      : undefined
+                  }
+                >
+                  {remainingSeconds !== null ? (
+                    <span className={styles.craftTimer}>Crafting… {formatRemainingCompactLong(remainingSeconds)}</span>
+                  ) : crafting ? (
+                    "Crafting…"
+                  ) : canCraft ? (
+                    <>
+                      Craft
+                      <span className={styles.craftButtonDetail}>
+                        {craftDurationPreview !== null && formatRemainingCompactLong(craftDurationPreview)}
+                        {craftXpPreview && formatXpPreview(craftXpPreview) && `, ${formatXpPreview(craftXpPreview)}`}
+                      </span>
+                    </>
+                  ) : (
+                    "Craft"
+                  )}
+                </button>
+                {character.availability.inAdventure ? (
+                  <span className={styles.craftUnavailable}>{character.firstName} is on the road.</span>
                 ) : (
-                  "Craft"
+                  craftError && <span className={styles.craftError}>{craftError}</span>
                 )}
-              </button>
+              </div>
               <div className={styles.craftCountRow} role="radiogroup" aria-label="How many to craft">
                 {CRAFT_COUNTS.map((count) => (
                   <button
@@ -3281,7 +3294,6 @@ export function InventoryTab({
                 ))}
               </div>
             </div>
-            {craftError && <span className={styles.craftError}>{craftError}</span>}
           </div>
 
           <button

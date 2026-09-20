@@ -333,15 +333,19 @@
   align-items: center;
   gap: 0.5rem;
   font-family: inherit;
-  font-size: 0.75rem;
+  /* Same font-size and vertical padding as .accordionHeader (Party's
+     Tools/Party's Resources' own headers) so this heading renders at the
+     same height as theirs, even though the horizontal padding still
+     differs (see the bleed-to-edge comment below). */
+  font-size: 0.85rem;
   letter-spacing: 0.1em;
   text-transform: uppercase;
-  color: #8b90a3;
+  color: #c07a3a;
   background: #12141a;
   border: none;
   cursor: pointer;
   margin: 0.5rem 0 0;
-  padding: 0.5rem 0.15rem 0.25rem 0.75rem;
+  padding: 0.4rem 0.15rem 0.4rem 0.75rem;
   /* Bleeds to the same edge as .recipeViewerFrame below (see there for the
      0.15rem + 0rem = 0.15rem math) so the grey background lines up flush
      with the iframe's own edges instead of stopping short. */
@@ -353,17 +357,15 @@
 }
 
 .recipeViewerHeading:hover {
-  color: #c07a3a;
+  color: #d4a060;
 }
 
 /* Sits between the fold heading and the iframe - crafts whatever the
    viewer's own selection currently is (read directly off the same-origin
    iframe, not duplicated as separate component state). */
-/* Outer column: .craftControlsRow (button + checkmark + count grid, all
-   on one line, never wrapping - see there) on top, .craftError (when
-   present) as its own guaranteed full-width line below - a column flex
-   child stretches to the container's full width by default (align-items:
-   stretch), so craftError needs no width/basis rule of its own. */
+/* Wraps .craftControlsRow - the Craft button + its own status text on the
+   left (.craftButtonColumn) and the 3x3 count grid on the right, all on
+   one line, never wrapping (see there). */
 .craftRow {
   display: flex;
   flex-direction: column;
@@ -372,18 +374,28 @@
 }
 
 /* nowrap - the count grid (fixed 3x3, see .craftCountRow) must always
-   stay on the same line to the right of the Craft button, on every
-   screen size, never pushed onto its own line below it. */
+   stay on the same line to the right of the Craft button column, on
+   every screen size, never pushed onto its own line below it. */
 .craftControlsRow {
   display: flex;
   align-items: center;
   gap: 0.6rem;
   flex-wrap: nowrap;
-  /* Safety net for a very narrow viewport where the button + 3x3 grid
-     genuinely can't both fit - scrolls horizontally within this row
-     rather than either wrapping (the thing being avoided) or spilling
-     past the page's own edge. */
-  overflow-x: auto;
+}
+
+/* Craft button on top, its own status/error text (.craftUnavailable/
+   .craftError) below it - one unit that grows to fill whatever width the
+   3x3 count grid (fixed size - see .craftCountRow) isn't using, instead
+   of sitting at its own small content width with the leftover space
+   stranded to the right of the grid. Both children stretch to the
+   column's own width via the default flex align-items:stretch, so
+   .craftButton needs no width rule of its own. */
+.craftButtonColumn {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  flex: 1 1 auto;
+  min-width: 0;
 }
 
 .craftButton {
@@ -450,6 +462,9 @@
   display: grid;
   grid-template-columns: repeat(3, auto);
   gap: 0.3rem;
+  /* Stays at its own fixed 3x3 size - .craftButton is the one that grows
+     into whatever width this doesn't need (see its own comment). */
+  flex-shrink: 0;
 }
 
 .craftCountButton {
@@ -487,10 +502,18 @@
 }
 
 .craftError {
-  /* .craftRow (its parent) is a column flex container, so this - the
-     only other direct child besides .craftControlsRow - already
-     stretches to the full width on its own line below, no extra
-     width/basis rule needed. */
+  /* .craftButtonColumn (its parent) is a column flex container, so this -
+     sitting right below .craftButton - already stretches to the column's
+     own width on its own line, no extra width/basis rule needed. */
+  font-size: 0.75rem;
+  color: #b04a4a;
+}
+
+/* "{name} is on the road." while the character is out on an adventure -
+   same placement/sizing as .craftError (shown instead of it, never both
+   at once - see InventoryTab.tsx). The button itself just falls back to
+   its own plain :disabled look then, no extra glow. */
+.craftUnavailable {
   font-size: 0.75rem;
   color: #b04a4a;
 }

@@ -260,10 +260,15 @@ export function BodyTab({
 
   // Same emptiness check as CampView's own hasCampItems - lets the camp
   // button carry a small dropped.png badge (see below) so the player can
-  // tell camp holds something without having to open it first.
+  // tell camp holds something without having to open it first. Has to
+  // check gear.resources.camp too, not just items/itemBalances - a
+  // backpack-full recycle drop (see backend._recycle_resource_updates) or
+  // an explicit "move to camp" can leave camp holding ONLY raw/processed
+  // materials, with no item/itemBalance row at all.
   const hasCampItems =
     character.gear.items.some((instance) => instance.location === "camp") ||
-    Object.values(character.gear.itemBalances.camp).some((amount) => amount > 0);
+    Object.values(character.gear.itemBalances.camp).some((amount) => amount > 0) ||
+    Object.values(character.gear.resources.camp).some((amount) => amount > 0);
 
   return (
     <div className={styles.panel}>
