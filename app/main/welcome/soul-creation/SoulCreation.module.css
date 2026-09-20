@@ -589,7 +589,12 @@
    backface-visibility so only one is ever showing. */
 .birthsignTile {
   position: relative;
-  aspect-ratio: 9 / 10;
+  /* ~7% taller than a plain 9/10 at the same width, so the back face's
+     flavor/effect text (see .birthsignFaceBack's overflow-y:auto) has
+     room to fit without needing its own internal scroll - reused as-is
+     by the stats-page popup (CharacterTabs.module.css's
+     .birthsignPopupCard), so both get the extra height from here. */
+  aspect-ratio: 9 / 10.7;
   padding: 0;
   border: 1px solid #6f532f;
   border-radius: 6px;

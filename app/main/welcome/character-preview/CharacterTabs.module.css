@@ -543,6 +543,18 @@
   animation: readyTimerPulse 1.6s ease-in-out infinite;
 }
 
+/* "now" - neither crafting nor away, same green as .craftButtonReady's
+   own "this is craftable right now" signal elsewhere on the page. */
+.readyNowValue {
+  color: #4ade80;
+}
+
+/* "away" (inAdventure) - the app's own gold accent (see .craftCountButtonActive/
+   .craftButton, same #d4a060). */
+.readyAwayValue {
+  color: #d4a060;
+}
+
 @keyframes readyTimerPulse {
   0%, 100% { text-shadow: 0 0 6px #f5e050, 0 0 12px rgba(245, 224, 80, 0.7); }
   50% { text-shadow: 0 0 10px #f5e050, 0 0 20px rgba(245, 224, 80, 0.9); }
@@ -658,7 +670,14 @@
   background: none;
   border: none;
   border-bottom: 1px solid rgba(168, 153, 104, 0.2);
+  /* font: inherit resets the <button>'s own UA font defaults to match its
+     surroundings, but as a shorthand it also wipes out the 0.85rem
+     .identityRow already set via `composes` above (same specificity,
+     this rule wins on source order) - set back explicitly so this row
+     reads the same size as every other identityRow, not the page's
+     larger base size. */
   font: inherit;
+  font-size: 0.85rem;
   text-align: inherit;
   cursor: pointer;
 }
@@ -1831,6 +1850,11 @@
 .campfireStageFireIconLit {
   background: radial-gradient(circle, rgba(255, 170, 50, 0.8) 0%, rgba(255, 110, 20, 0.48) 35%, rgba(255, 80, 20, 0) 65%);
   animation: campfireGlowPulse 2.6s ease-in-out infinite;
+  /* Only the lit fire opens the "Burn All" popup (see CampView.tsx) -
+     unlit stays purely decorative, inheriting the base rule's
+     pointer-events:none above. */
+  pointer-events: auto;
+  cursor: pointer;
 }
 
 @keyframes campfireGlowPulse {
@@ -1852,6 +1876,20 @@
 .campfireStageFireIconUnlit {
   background: radial-gradient(circle at 50% 75%, rgba(255, 130, 40, 0.45) 0%, rgba(255, 90, 20, 0.24) 30%, rgba(255, 80, 20, 0) 55%);
   animation: emberGlowPulse 3.6s ease-in-out infinite;
+  /* The gradient above is a `background`, which can never paint past its
+     own element's box - with height:46% (from the base rule) leaving no
+     room below the sprite itself, the glow was hitting that box's lower
+     edge and getting cut off there instead of fading out on its own.
+     box-sizing:content-box (overriding the app-wide border-box default,
+     just for this rule) lets padding-bottom add pure extra box height
+     below the image's own content without shrinking/stretching the
+     sprite itself (unlike the base class's height:46%, which is a
+     replaced element's actual rendered size) - that's where the glow now
+     has room to extend into. bottom is nudged down by the same amount so
+     the sprite itself stays anchored exactly where it was before. */
+  box-sizing: content-box;
+  padding-bottom: 1.5rem;
+  bottom: -2.25rem;
 }
 
 @keyframes emberGlowPulse {
@@ -1872,13 +1910,60 @@
   bottom: 1.25rem;
   /* Mirrors .campfireStageFireIcon's clamp() - holds still at/below a
      400px-wide viewport, then eases right (not far, capped at 40px) as
-     the screen widens past that. */
-  transform: translateX(clamp(0px, (100vw - 400px) * 0.15, 40px));
+     the screen widens past that. The extra "- 0.4rem" nudges the whole
+     thing a little further left than dead center, at every width. */
+  transform: translateX(calc(clamp(0px, (100vw - 400px) * 0.15, 40px) - 0.6rem));
   z-index: 3;
   height: 6.5rem;
   width: auto;
   image-rendering: pixelated;
-  pointer-events: none;
+  /* Clickable - opens the "Move all to backpack" popup (see
+     CampView.tsx). Only ever rendered while hasCampItems, so there's
+     nothing to gate here the way .campfireStageFireIconLit gates the
+     fire icon. pointer-events:auto is required, not optional -
+     .campfireStage (the fixed-position ancestor housing this) sets
+     pointer-events:none on itself so its own empty areas don't eat
+     clicks meant for whatever's behind them, and that value inherits
+     down to every descendant by default until overridden right here. */
+  pointer-events: auto;
+  cursor: pointer;
+}
+
+/* Right of the tent (camp.png), mirroring .campDroppedIcon's own
+   left-side placement but sitting higher off the ground (2.75rem vs its
+   1.25rem) rather than at the same level. Purely decorative for now - no
+   click handler, so no pointer-events override needed the way
+   .campDroppedIcon's own click target requires. */
+.campChoppingBlockIcon {
+  position: absolute;
+  /* Anchored against .campTentGroup itself (this is now a child of it,
+     next to the fire/tent images) - same clamp() easing
+     .campfireStageFireIcon uses on the opposite side, so this only drifts
+     a little further from the tent on a wider screen instead of tracking
+     the actual viewport edge. */
+  right: calc(-1 * clamp(0px, (100vw - 400px) * 0.15, 40px));
+  bottom: 9rem;
+  transform: translateX(50%);
+  /* Behind the tent (.campfireStageIcon's own z-index:2), not in front
+     of it - the two sit close enough now that the tent's own silhouette
+     overlaps this a bit, rather than this floating fully in the clear
+     above/beside it. */
+  z-index: 1;
+  height: 8.5rem;
+  width: auto;
+  image-rendering: pixelated;
+  /* Clickable (opens ChopBlockPopup) - same pointer-events:auto
+     requirement as .campDroppedIcon's own identical comment: .campfireStage
+     sets pointer-events:none on itself, which inherits down to every
+     descendant unless overridden right here. */
+  pointer-events: auto;
+  cursor: pointer;
+}
+
+/* Same dimming as the tent's own .campfireStageIconEmpty while camp is
+   empty. */
+.campChoppingBlockIconEmpty {
+  filter: brightness(0.55);
 }
 
 /* Same exit.webp glyph as the page's own (now-hidden-while-in-camp)
@@ -2104,6 +2189,15 @@
   position: fixed;
   inset: 0;
   z-index: 20;
+  /* Explicit, not just the default - HoldActionPopup (see InventoryTab.tsx)
+     renders this overlay as a child of .campfireStage (CampView.tsx's
+     fixed-position campfire/dropped-items area), which sets
+     pointer-events:none on itself so its own empty space doesn't block
+     the grid behind it - that value inherits to every descendant,
+     including this whole popup, unless overridden right here. Every
+     OTHER .itemPopupOverlay usage sits outside that ancestor already, so
+     this is a no-op there, same as the browser's own default. */
+  pointer-events: auto;
   display: flex;
   /* Anchored toward the top (not centered) - a short card sits with
      headroom below it, and a tall one (long description) grows DOWNWARD
@@ -2524,6 +2618,87 @@
   display: inline-block;
   font-size: 2.8rem;
   line-height: 1;
+}
+
+/* Same role as .destroyIcon above, for HoldActionPopup's own hold bar
+   (see InventoryTab.tsx) - an actual image (campfire_lit.png/
+   dropped.png) instead of an emoji, so sized much bigger to actually
+   read as art rather than a small glyph, though not the full 90% width
+   .destroyProgressTrack right above it uses (no extra max-width cap of
+   its own - .itemPopupCard's own max-width already ceilings the whole
+   card, so this can't get silly on a wide screen either). Unlike
+   .destroySection in the original destroy/recycle bar, THIS is the
+   actual hold target here (see InventoryTab.tsx's own onPointerDown/Up
+   on this element) - same cursor/touch handling .destroySection itself
+   carries, moved onto this element instead since it's what's actually
+   interactive now. */
+.holdActionIcon {
+  width: 65%;
+  aspect-ratio: 1;
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
+  image-rendering: pixelated;
+  cursor: pointer;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+  touch-action: none;
+}
+
+/* HoldActionPopup's own disabled prop (see InventoryTab.tsx) - nothing
+   selected to act on yet, so the hold gesture is a no-op. Dimmed rather
+   than hidden, same as any other disabled button elsewhere. */
+.holdActionIconDisabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+/* ChopBlockPopup's own checklist (see CampView.tsx) - scrolls on its own
+   once it's too tall, capped well under the popup card's own max-height
+   so the hold bar/icon below it always stays on screen rather than being
+   scrolled away with a long list. */
+.chopBlockList {
+  width: 100%;
+  max-height: 32vh;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  padding-right: 0.25rem;
+}
+
+.chopBlockRow {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  text-align: left;
+  cursor: pointer;
+  font-size: 0.78rem;
+}
+
+.chopBlockRow input[type="checkbox"] {
+  flex-shrink: 0;
+  width: 1rem;
+  height: 1rem;
+  accent-color: #c07a3a;
+  cursor: pointer;
+}
+
+.chopBlockRowName {
+  flex-shrink: 0;
+  color: #d4c9a8;
+  font-weight: 600;
+}
+
+.chopBlockRowRecovered {
+  flex: 1 1 auto;
+  min-width: 0;
+  color: #9a8968;
+  font-size: 0.7rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .destroyError {

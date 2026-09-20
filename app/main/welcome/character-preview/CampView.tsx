@@ -2,9 +2,11 @@ import { useEffect, useState } from "react";
 import styles from "./CharacterTabs.module.css";
 import {
   BACKPACK_ACTION_ICON,
+  HoldActionPopup,
   ItemGrid,
   VAULT_ACTION_ICON,
   computeBackpackContents,
+  postJson,
   type BlueprintTierInfo,
   type RawPlayerData,
   type ResourceTierInfo,
@@ -12,7 +14,12 @@ import {
 import type { SlotCharacterSummary } from "../SoulSlotGrid";
 import { useSound } from "../../SoundProvider";
 
-const CAMP_ITEMS_SOUND = "/sounds/west_wolf_Campfire.mp3";
+const CAMP_ITEMS_SOUND = "/sounds/campfire_west_wolf.mp3";
+// Ambient loop while camp is empty (hasCampItems false) - swapped in for
+// CAMP_ITEMS_SOUND above, same loop/mute/cleanup behavior either way
+// (see the shared useEffect below), just a quieter night-wind backdrop
+// instead of the crackling campfire.
+const CAMP_EMPTY_SOUND = "/sounds/camp_night_wind.mp3";
 
 // A fixed placeholder height for the campfire art at the bottom of the
 // screen - reserved out of ItemGrid's own fill-to-bottom measurement (see
@@ -43,6 +50,16 @@ export function CampView({
   onExitCamp: () => void;
 }) {
   const { muted } = useSound();
+
+  // Which camp-wide bulk action popup is open, if any - the lit campfire
+  // opens "burn" (HoldActionPopup's own Burn All), the dropped-items icon
+  // opens "moveAll" (Move all to backpack), the chopping block opens
+  // "chop" (ChopBlockPopup's own bulk recycle). The fire/dropped icons
+  // aren't clickable at all unless hasCampItems (see their own render
+  // guards below); the chopping block is always clickable (its own
+  // preview list is simply empty when there's nothing recyclable), so
+  // there's nothing to gate here beyond which of the three was clicked.
+  const [campAction, setCampAction] = useState<"burn" | "moveAll" | "chop" | null>(null);
 
   // Same item-catalog fetch BodyTab.tsx/InventoryTab.tsx each already do
   // independently for their own tierInfo - no shared ancestor state to
@@ -179,20 +196,25 @@ export function CampView({
   // camp, or to opening an already-empty camp).
   const hasCampItems = campIds.length > 0 || hasCampResources;
 
-  // Tracks hasCampItems live, not just at open - starts playing the
-  // moment camp actually has something (opening camp with items already
-  // in it, or the first item landing while already standing here), and
-  // the cleanup below pauses it the moment that stops being true (the
-  // last item leaving camp, same trigger dropped.png/campfire_lit.png
-  // already react to - or CampView unmounting outright, i.e. leaving
-  // camp). Only re-runs when hasCampItems/muted actually flip, not on
-  // every render where quantities change but camp is still non-empty -
-  // useEffect's own dependency comparison already skips re-firing when
-  // hasCampItems stays the same boolean across renders.
+  // Tracks hasCampItems live, not just at open - one ambient loop or the
+  // other is always playing (CAMP_ITEMS_SOUND with something here,
+  // CAMP_EMPTY_SOUND's night wind otherwise), switching the moment
+  // hasCampItems itself flips (the last item leaving camp, or the first
+  // one landing while already standing here - same trigger dropped.png/
+  // campfire_lit.png already react to), same trigger CampView unmounting
+  // outright (leaving camp) already stops it on too. Only re-runs when
+  // hasCampItems/muted actually flip, not on every render where
+  // quantities change but camp's emptiness doesn't - useEffect's own
+  // dependency comparison already skips re-firing when hasCampItems
+  // stays the same boolean across renders.
   useEffect(() => {
-    if (!hasCampItems || muted) return;
-    const audio = new Audio(CAMP_ITEMS_SOUND);
+    if (muted) return;
+    const audio = new Audio(hasCampItems ? CAMP_ITEMS_SOUND : CAMP_EMPTY_SOUND);
     audio.loop = true;
+    // The night-wind loop reads as a lot more present than the campfire
+    // one at the same volume - toned down on its own rather than
+    // touching CAMP_ITEMS_SOUND's own level.
+    if (!hasCampItems) audio.volume = 0.5;
     audio.play().catch(() => {
       // Autoplay can still be blocked without a preceding user gesture in
       // some browsers - opening camp is itself a click, so this should
@@ -255,11 +277,27 @@ export function CampView({
         <div className={styles.campTentGroup}>
           {/* Lit/unlit toggle, same idea as dropped.png below (though this
               one never disappears, just swaps art) - lit whenever camp
-              actually holds something, unlit when hasCampItems is false. */}
+              actually holds something, unlit when hasCampItems is false.
+              Only the lit state is clickable (opens the "Burn All" popup) -
+              nothing to burn while it's unlit, so that version stays
+              purely decorative (see .campfireStageFireIconLit's own
+              pointer-events:auto, the base rule keeps pointer-events:none). */}
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src={hasCampItems ? "/images/character/campfire_lit.png" : "/images/character/campfire_unlit.png"}
             alt=""
+            role={hasCampItems ? "button" : undefined}
+            tabIndex={hasCampItems ? 0 : undefined}
+            title={hasCampItems ? "Burn everything in camp" : undefined}
+            aria-label={hasCampItems ? "Burn everything in camp" : undefined}
+            onClick={hasCampItems ? () => setCampAction("burn") : undefined}
+            onKeyDown={
+              hasCampItems
+                ? (e) => {
+                    if (e.key === "Enter" || e.key === " ") setCampAction("burn");
+                  }
+                : undefined
+            }
             className={
               hasCampItems
                 ? `${styles.campfireStageFireIcon} ${styles.campfireStageFireIconLit}`
@@ -276,10 +314,77 @@ export function CampView({
                 : `${styles.campfireStageIcon} ${styles.campfireStageIconEmpty}`
             }
           />
+          {/* Bound to the tent group itself (like .campfireStageFireIcon
+              above), not the screen edge - sits right of the tent, easing
+              only a little further out on wider screens instead of
+              tracking the actual viewport edge. Opens ChopBlockPopup's
+              own bulk-recycle popup - always clickable, even with
+              nothing currently recyclable (that popup's own list is just
+              empty then). Dims the same way the tent itself does
+              (.campfireStageIconEmpty) while camp is empty. */}
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src="/images/character/chopping_block.png"
+            alt=""
+            role="button"
+            tabIndex={0}
+            title="Refine everything in camp"
+            aria-label="Refine everything in camp"
+            onClick={() => setCampAction("chop")}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" || e.key === " ") setCampAction("chop");
+            }}
+            className={
+              hasCampItems
+                ? styles.campChoppingBlockIcon
+                : `${styles.campChoppingBlockIcon} ${styles.campChoppingBlockIconEmpty}`
+            }
+          />
         </div>
         {hasCampItems && (
           // eslint-disable-next-line @next/next/no-img-element
-          <img src="/images/character/dropped.png" alt="" className={styles.campDroppedIcon} />
+          <img
+            src="/images/character/dropped.png"
+            alt=""
+            role="button"
+            tabIndex={0}
+            title="Move everything to backpack"
+            aria-label="Move everything to backpack"
+            onClick={() => setCampAction("moveAll")}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" || e.key === " ") setCampAction("moveAll");
+            }}
+            className={styles.campDroppedIcon}
+          />
+        )}
+        {campAction === "burn" && (
+          <HoldActionPopup
+            headline="Burn All"
+            label="Hold to BURN ALL"
+            icon="/images/character/campfire_lit.png"
+            tone="destroy"
+            onConfirm={() => postJson(`/api/auth/me/characters/${character.id}/camp/burn-all`)}
+            onPlayerDataUpdated={onPlayerDataUpdated}
+            onClose={() => setCampAction(null)}
+          />
+        )}
+        {campAction === "moveAll" && (
+          <HoldActionPopup
+            headline="Move all to backpack"
+            label="Hold to MOVE ALL"
+            icon="/images/character/dropped.png"
+            tone="recycle"
+            onConfirm={() => postJson(`/api/auth/me/characters/${character.id}/camp/move-all-to-backpack`)}
+            onPlayerDataUpdated={onPlayerDataUpdated}
+            onClose={() => setCampAction(null)}
+          />
+        )}
+        {campAction === "chop" && (
+          <ChopBlockPopup
+            characterId={character.id}
+            onPlayerDataUpdated={onPlayerDataUpdated}
+            onClose={() => setCampAction(null)}
+          />
         )}
         <button
           type="button"
@@ -293,5 +398,108 @@ export function CampView({
         </button>
       </div>
     </div>
+  );
+}
+
+/** One recyclable camp item instance/itemBalance, as GET
+ * .../camp/refine-preview returns it - what recycling ALL of it would
+ * hand back, not yet actually recycled. */
+type ChopBlockRow = {
+  id: string;
+  kind: "instance" | "balance";
+  name: string;
+  tier: number;
+  owned: number;
+  recovered: { id: string; name: string; qty: number }[];
+};
+
+/** The chopping block's own bulk-recycle popup (see CampView's own
+ * onClick on chopping_block.png) - a HoldActionPopup whose extra
+ * `children` content is a scrollable checklist of every recyclable camp
+ * item/itemBalance, all checked by default (see ChopBlockRow/toggle
+ * below). Holding the icon recycles every still-checked row at once,
+ * crediting recovered materials straight into camp - see
+ * backend.players.refine_camp. */
+function ChopBlockPopup({
+  characterId,
+  onPlayerDataUpdated,
+  onClose,
+}: {
+  characterId: string;
+  onPlayerDataUpdated?: (data: RawPlayerData) => void;
+  onClose: () => void;
+}) {
+  // null while the preview fetch is in flight - distinct from [] (fetch
+  // resolved, nothing recyclable), so the hold icon stays disabled until
+  // there's actually something to act on either way.
+  const [rows, setRows] = useState<ChopBlockRow[] | null>(null);
+  const [selected, setSelected] = useState<Set<string>>(new Set());
+
+  useEffect(() => {
+    let cancelled = false;
+    fetch(`/api/auth/me/characters/${characterId}/camp/refine-preview`, { credentials: "include" })
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data: { rows: ChopBlockRow[] } | null) => {
+        if (cancelled) return;
+        const loaded = data?.rows ?? [];
+        setRows(loaded);
+        // Every row starts checked - the player unchecks whatever they
+        // don't want swept up, rather than having to opt every row in.
+        setSelected(new Set(loaded.map((row) => row.id)));
+      })
+      .catch(() => {
+        if (!cancelled) setRows([]);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [characterId]);
+
+  const toggle = (id: string) => {
+    setSelected((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+
+  return (
+    <HoldActionPopup
+      headline="Refine All"
+      label="Hold to REFINE ALL"
+      icon="/images/character/chopping_block.png"
+      tone="recycle"
+      disabled={rows === null || selected.size === 0}
+      onConfirm={() =>
+        postJson(`/api/auth/me/characters/${characterId}/camp/refine-all`, { selected: [...selected] })
+      }
+      onPlayerDataUpdated={onPlayerDataUpdated}
+      onClose={onClose}
+    >
+      {rows === null ? (
+        <p className={styles.recycleResultText}>Checking what can be refined…</p>
+      ) : rows.length === 0 ? (
+        <p className={styles.recycleResultText}>Nothing in camp can be refined right now.</p>
+      ) : (
+        // Scrolls on its own (see .chopBlockList) once the list is too
+        // tall to fit - the hold bar/icon below it stays on screen either
+        // way, never pushed off by a long list.
+        <div className={styles.chopBlockList}>
+          {rows.map((row) => (
+            <label key={row.id} className={styles.chopBlockRow}>
+              <input type="checkbox" checked={selected.has(row.id)} onChange={() => toggle(row.id)} />
+              <span className={styles.chopBlockRowName}>
+                {row.name}
+                {row.owned > 1 ? ` x${row.owned}` : ""}
+              </span>
+              <span className={styles.chopBlockRowRecovered}>
+                {row.recovered.map((line) => `${line.qty}x ${line.name}`).join(", ")}
+              </span>
+            </label>
+          ))}
+        </div>
+      )}
+    </HoldActionPopup>
   );
 }

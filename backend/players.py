@@ -3105,6 +3105,350 @@ async def destroy_character_item_balance(address: str, character_id: str, item_i
     return _doc_to_player(doc)
 
 
+async def destroy_all_camp(address: str, character_id: str) -> Optional[Player]:
+    """
+    Permanently deletes everything currently sitting in a character's own
+    camp - gear.items at location:"camp", gear.itemBalances.camp, and
+    gear.resources.camp, all at once. The camp view's own "Burn All" hold
+    action (see CampView.tsx) - unlike a normal single-item destroy,
+    nothing here is ever recovered or credited anywhere, it's just gone.
+    Returns None if camp is already empty, or the address/character pair
+    doesn't match.
+    """
+    db = get_database()
+    doc = await db.players.find_one({"address": address, "characters.id": character_id})
+    if doc is None:
+        return None
+    character = next((c for c in doc["characters"] if c["id"] == character_id), None)
+    if character is None:
+        return None
+    gear = character.get("gear", {})
+    has_camp_instances = any(i.get("location") == "camp" for i in gear.get("items", []))
+    has_camp_item_balances = any(qty > 0 for qty in gear.get("itemBalances", {}).get("camp", {}).values())
+    has_camp_resources = any(qty > 0 for qty in gear.get("resources", {}).get("camp", {}).values())
+    if not has_camp_instances and not has_camp_item_balances and not has_camp_resources:
+        return None
+
+    # Two sequential updates, not one combined $pull+$set - see
+    # recycle_item_instance's own two-phase workaround for the identical
+    # bare-"$" $pull-plus-another-operator combination on the same
+    # matched "characters.$" element; crediting nothing back here (unlike
+    # that case) still doesn't make trusting the untested combination
+    # worth the risk for a permanent, unrecoverable delete.
+    doc = await db.players.find_one_and_update(
+        {"address": address, "characters.id": character_id},
+        {"$pull": {"characters.$.gear.items": {"location": "camp"}}},
+        return_document=ReturnDocument.AFTER,
+    )
+    if doc is None:
+        return None
+    doc = await db.players.find_one_and_update(
+        {"address": address, "characters.id": character_id},
+        {"$set": {
+            "characters.$.gear.itemBalances.camp": {},
+            "characters.$.gear.resources.camp": {},
+        }},
+        return_document=ReturnDocument.AFTER,
+    )
+    if doc is None:
+        return None
+    return _doc_to_player(doc)
+
+
+def _max_move_amount(existing: int, stack_size: int, slot_cost: int, free_slots: int, available: int) -> int:
+    """
+    Same math as check_out_resource_to_backpack's own marginal-slot check,
+    solved for the largest amount instead of checked against one fixed
+    amount - see move_all_camp_to_backpack, the only caller. Capped at
+    `available` and never negative; 0 if there's no room for even one
+    more unit.
+    """
+    if free_slots <= 0:
+        return 0
+    max_new_stacks = free_slots // slot_cost
+    existing_stacks = math.ceil(existing / stack_size) if existing else 0
+    max_total = (existing_stacks + max_new_stacks) * stack_size
+    return max(0, min(available, max_total - existing))
+
+
+async def move_all_camp_to_backpack(address: str, character_id: str) -> Optional[Player]:
+    """
+    Best-effort bulk move: everything currently sitting in a character's
+    camp (gear.items location:"camp", gear.itemBalances.camp,
+    gear.resources.camp) moves into their own backpack, as much as
+    actually fits. The camp view's own "Move all to backpack" hold action
+    (see CampView.tsx) - deliberately NOT all-or-nothing the way a single
+    item/resource move is (see check_out_item_balance_to_backpack's own
+    docstring on why that one stays strict): whatever doesn't fit simply
+    stays behind in camp untouched, nothing is ever discarded or blocked
+    by one item that happens not to fit. Item instances move whole (each
+    one atomic - it either fits its own family's slot cost or it
+    doesn't); itemBalances and resources fill partially, in whatever
+    order backpack_slots_used already returns gear.items in dict order.
+
+    Computed once as a full replacement of gear.items/itemBalances.camp/
+    itemBalances.backpack/resources.camp/resources.backpack in a single
+    $set, rather than per-id $inc/$pull calls - simpler to reason about
+    for a bulk operation than chaining dozens of small updates, and avoids
+    any of this module's documented operator-combination quirks entirely
+    (this is a single $set, no $pull/$inc mixed in).
+
+    Raises ValueError if the character has no backpack equipped at all
+    while camp holds something. Returns None if camp is entirely empty,
+    or the address/character pair doesn't match.
+    """
+    db = get_database()
+    doc = await db.players.find_one({"address": address, "characters.id": character_id})
+    if doc is None:
+        return None
+    character = next((c for c in doc["characters"] if c["id"] == character_id), None)
+    if character is None:
+        return None
+
+    gear = character.get("gear", {})
+    all_items = gear.get("items", [])
+    camp_instances = [i for i in all_items if i.get("location") == "camp"]
+    camp_item_balances = gear.get("itemBalances", {}).get("camp", {})
+    camp_resources = gear.get("resources", {}).get("camp", {})
+
+    if (
+        not camp_instances
+        and not any(qty > 0 for qty in camp_item_balances.values())
+        and not any(qty > 0 for qty in camp_resources.values())
+    ):
+        return None
+
+    capacity = items_catalog.backpack_capacity(character)
+    if capacity == 0:
+        raise ValueError("No backpack equipped")
+    free_slots = capacity - items_catalog.backpack_slots_used(character)
+
+    moved_instance_ids: set = set()
+    for instance in camp_instances:
+        cost = items_catalog.slot_cost_for_family(instance["familyId"])
+        if cost <= free_slots:
+            moved_instance_ids.add(instance["instanceId"])
+            free_slots -= cost
+    new_items = [
+        {**instance, "location": "backpack", "slotRef": []} if instance["instanceId"] in moved_instance_ids else instance
+        for instance in all_items
+    ]
+
+    new_backpack_item_balances = dict(gear.get("itemBalances", {}).get("backpack", {}))
+    new_camp_item_balances = dict(camp_item_balances)
+    for item_id, qty in camp_item_balances.items():
+        if qty <= 0 or free_slots <= 0:
+            continue
+        family_id = items_catalog.FAMILY_ID_BY_FINAL_ITEM_ID.get(item_id)
+        family = items_catalog.ITEM_FAMILIES_BY_ID.get(family_id) if family_id else None
+        stack_size = family.stack_size if family else 1
+        slot_cost = items_catalog.slot_cost_for_family(family_id) if family_id else 1
+        existing = new_backpack_item_balances.get(item_id, 0)
+        move_amount = _max_move_amount(existing, stack_size, slot_cost, free_slots, qty)
+        if move_amount <= 0:
+            continue
+        new_backpack_item_balances[item_id] = existing + move_amount
+        new_camp_item_balances[item_id] = qty - move_amount
+        free_slots -= (math.ceil((existing + move_amount) / stack_size) - math.ceil(existing / stack_size)) * slot_cost
+
+    new_backpack_resources = dict(gear.get("resources", {}).get("backpack", {}))
+    new_camp_resources = dict(camp_resources)
+    for resource_id, qty in camp_resources.items():
+        if qty <= 0 or free_slots <= 0:
+            continue
+        stack_size = (
+            items_catalog.RAW_STACK_SIZE if resource_id in RESOURCE_ITEMS_BY_ID else items_catalog.PROCESSED_STACK_SIZE
+        )
+        existing = new_backpack_resources.get(resource_id, 0)
+        move_amount = _max_move_amount(existing, stack_size, 1, free_slots, qty)
+        if move_amount <= 0:
+            continue
+        new_backpack_resources[resource_id] = existing + move_amount
+        new_camp_resources[resource_id] = qty - move_amount
+        free_slots -= math.ceil((existing + move_amount) / stack_size) - math.ceil(existing / stack_size)
+
+    doc = await db.players.find_one_and_update(
+        {"address": address, "characters.id": character_id},
+        {"$set": {
+            "characters.$.gear.items": new_items,
+            "characters.$.gear.itemBalances.camp": new_camp_item_balances,
+            "characters.$.gear.itemBalances.backpack": new_backpack_item_balances,
+            "characters.$.gear.resources.camp": new_camp_resources,
+            "characters.$.gear.resources.backpack": new_backpack_resources,
+        }},
+        return_document=ReturnDocument.AFTER,
+    )
+    if doc is None:
+        return None
+    return _doc_to_player(doc)
+
+
+def _recyclable_camp_entries(character: dict):
+    """
+    Yields (kind, id, entry, count) for every camp item instance
+    (location:"camp") and itemBalances.camp entry whose family has a
+    recipe to recycle - "instance"/instanceId/1 for an instance (always
+    exactly one unit), "balance"/item_id/owned-quantity for an
+    itemBalance (its WHOLE stack, not a partial amount - there's no
+    partial selection here, only include-or-exclude per row). Shared by
+    preview_camp_refine and refine_camp so both agree on exactly what
+    "refinable" means and in what order - the chopping block's own bulk
+    recycle (see CampView.tsx).
+    """
+    gear = character.get("gear", {})
+    for instance in gear.get("items", []):
+        if instance.get("location") != "camp":
+            continue
+        entry = items_catalog.ITEM_CATALOG_ENTRIES_BY_ID.get(instance["itemId"])
+        if entry is None:
+            continue
+        yield "instance", instance["instanceId"], entry, 1
+    for item_id, qty in gear.get("itemBalances", {}).get("camp", {}).items():
+        if qty <= 0:
+            continue
+        entry = items_catalog.ITEM_CATALOG_ENTRIES_BY_ID.get(item_id)
+        if entry is None:
+            continue
+        yield "balance", item_id, entry, qty
+
+
+def _flatten_recovery_with_names(recoveries: List[recycling.RawMaterialRecovery]) -> List[Dict[str, object]]:
+    """Same merge recycling.flatten_recovery does, but keeping each
+    concrete id's own display name too (recycling.flatten_recovery
+    collapses straight to id -> qty) - preview_camp_refine's own rows need
+    something to actually print."""
+    merged: Dict[str, Dict[str, object]] = {}
+    for recovery in recoveries:
+        for line in recovery.recovered:
+            if line.qty <= 0:
+                continue
+            existing = merged.get(line.concrete_id)
+            if existing is not None:
+                existing["qty"] = existing["qty"] + line.qty  # type: ignore[operator]
+            else:
+                merged[line.concrete_id] = {"id": line.concrete_id, "name": line.name, "qty": line.qty}
+    return list(merged.values())
+
+
+async def preview_camp_refine(address: str, character_id: str) -> Optional[List[Dict[str, object]]]:
+    """
+    Read-only: every recyclable thing currently sitting in a character's
+    own camp (see _recyclable_camp_entries), one row per distinct thing,
+    with what recycling ALL of it would hand back - the chopping block's
+    own preview list (see CampView.tsx), "as if each would be recycled"
+    one by one, nothing actually recycled yet. Scored the same way a
+    character-side recycle always is (character.tools only, never the
+    shared pool - see recycle_item_instance's own docstring). Non-
+    recyclable camp holdings (no recipe) are silently left out, same as
+    ItemDetailPopup's own canRecycle gate. Returns None if the
+    address/character pair doesn't match; [] if camp holds nothing
+    recyclable right now.
+    """
+    db = get_database()
+    doc = await db.players.find_one({"address": address, "characters.id": character_id})
+    if doc is None:
+        return None
+    character = next((c for c in doc["characters"] if c["id"] == character_id), None)
+    if character is None:
+        return None
+
+    rows: List[Dict[str, object]] = []
+    for kind, entry_id, entry, count in _recyclable_camp_entries(character):
+        recoveries = recycling.resolve_recycle_preview(entry.family_id, entry.tier, character, {}, [], count)
+        if not recoveries:
+            continue
+        recovered = _flatten_recovery_with_names(recoveries)
+        if not recovered:
+            continue
+        rows.append({
+            "id": entry_id,
+            "kind": kind,
+            "name": entry.name,
+            "tier": entry.tier,
+            "owned": count,
+            "recovered": recovered,
+        })
+    return rows
+
+
+async def refine_camp(address: str, character_id: str, selected_ids: List[str]) -> Optional[Player]:
+    """
+    The chopping block's own bulk action (see CampView.tsx): recycles
+    every selected camp item instance/itemBalance entry (ids from
+    preview_camp_refine's own rows) at once, crediting ALL the recovered
+    raw/processed materials straight into gear.resources.camp - never the
+    backpack (unlike a normal single-item recycle's own
+    _recycle_resource_updates fallback chain), since dropping it in camp
+    is the whole point of a camp-side chopping block. Computed once as a
+    full replacement of gear.items/itemBalances.camp/resources.camp in a
+    single $set (same reasoning as move_all_camp_to_backpack's own
+    docstring) rather than per-id calls. An id that no longer qualifies
+    (already gone, or no longer has a recipe) is silently skipped rather
+    than failing the whole batch. Returns None if nothing in
+    `selected_ids` actually recycled (none given, or none of it still
+    qualifies), or the address/character pair doesn't match.
+    """
+    if not selected_ids:
+        return None
+    selected = set(selected_ids)
+    db = get_database()
+    doc = await db.players.find_one({"address": address, "characters.id": character_id})
+    if doc is None:
+        return None
+    character = next((c for c in doc["characters"] if c["id"] == character_id), None)
+    if character is None:
+        return None
+
+    recycled_instance_ids: set = set()
+    recycled_balance_ids: set = set()
+    recovered_totals: Dict[str, int] = {}
+
+    for kind, entry_id, entry, count in _recyclable_camp_entries(character):
+        if entry_id not in selected:
+            continue
+        recoveries = recycling.resolve_recycle_preview(entry.family_id, entry.tier, character, {}, [], count)
+        if not recoveries:
+            continue
+        amounts = recycling.flatten_recovery(recoveries)
+        if not amounts:
+            continue
+        for rid, qty in amounts.items():
+            recovered_totals[rid] = recovered_totals.get(rid, 0) + qty
+        if kind == "instance":
+            recycled_instance_ids.add(entry_id)
+        else:
+            recycled_balance_ids.add(entry_id)
+
+    if not recycled_instance_ids and not recycled_balance_ids:
+        return None
+
+    gear = character.get("gear", {})
+    new_items = [
+        instance for instance in gear.get("items", [])
+        if not (instance.get("location") == "camp" and instance["instanceId"] in recycled_instance_ids)
+    ]
+    new_camp_item_balances = {
+        item_id: qty for item_id, qty in gear.get("itemBalances", {}).get("camp", {}).items()
+        if item_id not in recycled_balance_ids
+    }
+    new_camp_resources = dict(gear.get("resources", {}).get("camp", {}))
+    for rid, qty in recovered_totals.items():
+        new_camp_resources[rid] = new_camp_resources.get(rid, 0) + qty
+
+    doc = await db.players.find_one_and_update(
+        {"address": address, "characters.id": character_id},
+        {"$set": {
+            "characters.$.gear.items": new_items,
+            "characters.$.gear.itemBalances.camp": new_camp_item_balances,
+            "characters.$.gear.resources.camp": new_camp_resources,
+        }},
+        return_document=ReturnDocument.AFTER,
+    )
+    if doc is None:
+        return None
+    return _doc_to_player(doc)
+
+
 async def load_resource_to_backpack(
     address: str, character_id: str, resource_id: str, amount: int = 1
 ) -> Optional[Player]:

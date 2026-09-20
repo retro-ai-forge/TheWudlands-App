@@ -39,6 +39,7 @@ from backend.players import (
     check_out_item_instance,
     check_out_resource_to_backpack,
     delete_character,
+    destroy_all_camp,
     destroy_character_item_balance,
     destroy_character_item_instance,
     destroy_item_balance,
@@ -51,13 +52,16 @@ from backend.players import (
     grant_shared_resource,
     load_item_balance_to_backpack,
     load_resource_to_backpack,
+    move_all_camp_to_backpack,
     move_backpack_item_to_camp,
     move_backpack_resource_to_camp,
     move_camp_item_to_backpack,
     move_camp_resource_to_backpack,
+    preview_camp_refine,
     preview_recycle,
     recycle_item_balance,
     recycle_item_instance,
+    refine_camp,
     set_in_adventure,
     set_prime_profession,
     start_craft,
@@ -1429,6 +1433,30 @@ async def destroy_character_item_balance_route(
     return player.to_dict()
 
 
+@player_router.post("/me/characters/{character_id}/camp/burn-all", response_model=PlayerDataResponse)
+async def destroy_all_camp_route(character_id: str, address: str = Depends(get_current_address)):
+    """Permanently delete everything currently sitting in this character's camp."""
+    player = await destroy_all_camp(address, character_id)
+    if player is None:
+        raise HTTPException(status_code=404, detail="Camp is already empty")
+
+    return player.to_dict()
+
+
+@player_router.post("/me/characters/{character_id}/camp/move-all-to-backpack", response_model=PlayerDataResponse)
+async def move_all_camp_to_backpack_route(character_id: str, address: str = Depends(get_current_address)):
+    """Move as much of this character's camp contents into their backpack as will fit - best-effort, never all-or-nothing."""
+    try:
+        player = await move_all_camp_to_backpack(address, character_id)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc))
+
+    if player is None:
+        raise HTTPException(status_code=404, detail="Camp is already empty")
+
+    return player.to_dict()
+
+
 class RecycleYieldResponse(BaseModel):
     """The four components _yield_breakdown.total adds up to - so the
     recycle popup can print each contributing line, not just the total."""
@@ -1493,6 +1521,66 @@ def _to_recycle_preview_response(recoveries) -> RecyclePreviewResponse:
         )
         for r in recoveries
     ])
+
+
+class CampRefinePreviewRowResponse(BaseModel):
+    """One recyclable camp item instance/itemBalance - what recycling ALL
+    of it would hand back, "as if" (see preview_camp_refine), not yet
+    actually recycled. `materials` is the exact same per-raw-family
+    breakdown (name, yield%, recovered/total units) a single item's own
+    recycle-preview popup shows, one row per raw family this thing's own
+    recipe chain touches."""
+
+    id: str
+    kind: Literal["instance", "balance"]
+    name: str
+    tier: int
+    owned: int
+    materials: List[RecycleMaterialResponse]
+
+
+class CampRefinePreviewResponse(BaseModel):
+    rows: List[CampRefinePreviewRowResponse]
+
+
+@player_router.get("/me/characters/{character_id}/camp/refine-preview", response_model=CampRefinePreviewResponse)
+async def preview_camp_refine_route(character_id: str, address: str = Depends(get_current_address)):
+    """What holding the chopping block down would recycle - every camp item/itemBalance with a recipe, one row per thing."""
+    rows = await preview_camp_refine(address, character_id)
+    if rows is None:
+        raise HTTPException(status_code=404, detail="No matching character")
+
+    return CampRefinePreviewResponse(
+        rows=[
+            CampRefinePreviewRowResponse(
+                id=row["id"],
+                kind=row["kind"],
+                name=row["name"],
+                tier=row["tier"],
+                owned=row["owned"],
+                materials=_to_recycle_preview_response(row["recoveries"]).materials,
+            )
+            for row in rows
+        ]
+    )
+
+
+class RefineCampRequest(BaseModel):
+    selected: List[str] = Field(
+        ..., description="Ids (instanceId or item_id) of the preview rows to actually recycle"
+    )
+
+
+@player_router.post("/me/characters/{character_id}/camp/refine-all", response_model=PlayerDataResponse)
+async def refine_camp_route(
+    character_id: str, payload: RefineCampRequest, address: str = Depends(get_current_address)
+):
+    """Recycle every selected camp item/itemBalance at once, crediting recovered materials straight into camp."""
+    player = await refine_camp(address, character_id, payload.selected)
+    if player is None:
+        raise HTTPException(status_code=404, detail="Nothing selected recycled")
+
+    return player.to_dict()
 
 
 @player_router.get(

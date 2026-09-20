@@ -60,9 +60,12 @@ export type RawPlayerData = {
 // GET /me/characters/{characterId}/recycle-preview/{itemId} (backend.
 // recycling.RawMaterialRecovery, camelCased by auth_routes.py's
 // RecyclePreviewResponse) - what recycling would hand back, one entry per
-// recoverable raw material family.
-type RecycleYield = { base: number; skill: number; tool: number; charm: number; total: number };
-type RecycleRecoveredLine = {
+// recoverable raw material family. Exported so CampView.tsx's own
+// ChopBlockPopup (the chopping block's bulk-recycle popup, which gets the
+// SAME per-material breakdown per row from GET .../camp/refine-preview)
+// can reuse this exact shape instead of redeclaring a parallel one.
+export type RecycleYield = { base: number; skill: number; tool: number; charm: number; total: number };
+export type RecycleRecoveredLine = {
   familyId: string;
   id: string;
   name: string;
@@ -70,7 +73,7 @@ type RecycleRecoveredLine = {
   category: "raw" | "processed";
   qty: number;
 };
-type RecycleMaterial = {
+export type RecycleMaterial = {
   rawFamilyId: string;
   rawName: string;
   totalUnits: number;
@@ -973,11 +976,13 @@ function formatSlotLabel(slot: string): ReactNode {
   return <span style={isRight ? { display: "inline-block", transform: "scaleX(-1)" } : undefined}>✋</span>;
 }
 
-type PostJsonResult =
+/** Exported so CampView.tsx's own bulk camp actions (HoldActionPopup's
+ * onConfirm) can share the exact same fetch/error-shape handling. */
+export type PostJsonResult =
   | { ok: true; data: RawPlayerData }
   | { ok: false; detail: string | null };
 
-async function postJson(url: string, body?: object): Promise<PostJsonResult> {
+export async function postJson(url: string, body?: object): Promise<PostJsonResult> {
   const res = await fetch(url, {
     method: "POST",
     credentials: "include",
@@ -1022,6 +1027,163 @@ function recycleFillColor(t: number): string {
   const clamped = Math.min(1, Math.max(0, t));
   const [r, g, b] = GOLD.map((c, i) => Math.round(c + (GREEN[i] - c) * clamped));
   return `rgb(${r}, ${g}, ${b})`;
+}
+
+/** A standalone hold-to-confirm popup - "Burn All"/"Move all to backpack"
+ * on the camp page (see CampView.tsx's campfire_lit.png/dropped.png).
+ * Reuses ItemDetailPopup's exact hold-bar visual language (label +
+ * progress track/fill + icon, same DESTROY_HOLD_MS duration) rather than
+ * a second copy of that mechanic - just standalone instead of nested
+ * inside one item's own recycle/destroy view, and the icon is an actual
+ * image (the same one that opened this popup) instead of an emoji. */
+export function HoldActionPopup({
+  headline,
+  children,
+  label,
+  icon,
+  tone,
+  disabled = false,
+  onConfirm,
+  onPlayerDataUpdated,
+  onClose,
+}: {
+  headline: string;
+  /** Extra content between the headline and the hold bar - e.g. the
+   * chopping block's own scrollable checklist of what's about to be
+   * recycled (see CampView.tsx's ChopBlockPopup). Whatever's passed here
+   * should cap its own height and scroll internally if it might overflow
+   * (see .chopBlockList) - the hold bar below always stays on screen,
+   * never pushed off by a long list the way the whole card's own
+   * overflow-y:auto could otherwise let happen. */
+  children?: ReactNode;
+  /** The hold bar's own label, e.g. "Hold to BURN ALL". */
+  label: string;
+  /** Image shown inside the hold bar - CampView passes the same
+   * campfire_lit.png/dropped.png icon the player just clicked. Sized to
+   * fill the same width as the progress bar above it (see
+   * .holdActionIcon) - a real icon reads better big here than a small
+   * one would, unlike .destroyIcon's own single-glyph emoji. */
+  icon: string;
+  /** "destroy": red-deepening fill (destroyFillColor), shown on a
+   * permanent, unrecoverable action. "recycle": gold-to-green fill
+   * (recycleFillColor), shown on a beneficial one. */
+  tone: "destroy" | "recycle";
+  /** Prevents starting the hold at all (e.g. the chopping block's own
+   * checklist hasn't loaded yet, or nothing on it is checked) - the icon
+   * stays visible but dimmed, same as ItemDetailPopup's own disabled
+   * buttons elsewhere, rather than hiding it outright. */
+  disabled?: boolean;
+  /** Fires once the hold completes - same PostJsonResult shape postJson
+   * returns, so the caller can just wrap its own fetch in that helper. */
+  onConfirm: () => Promise<PostJsonResult>;
+  onPlayerDataUpdated?: (data: RawPlayerData) => void;
+  onClose: () => void;
+}) {
+  const [progress, setProgress] = useState(0);
+  const [pending, setPending] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const rafRef = useRef<number | null>(null);
+
+  const reset = () => {
+    if (rafRef.current !== null) cancelAnimationFrame(rafRef.current);
+    rafRef.current = null;
+    setProgress(0);
+  };
+  useEffect(() => reset, []);
+
+  const run = async () => {
+    setPending(true);
+    const result = await onConfirm();
+    if (!result.ok) {
+      setPending(false);
+      setError(tone === "destroy" ? "Couldn't burn that." : "Couldn't move that.");
+      reset();
+      return;
+    }
+    onPlayerDataUpdated?.(result.data);
+    onClose();
+  };
+
+  const tick = (startedAt: number) => {
+    const next = Math.min(1, (performance.now() - startedAt) / DESTROY_HOLD_MS);
+    setProgress(next);
+    if (next >= 1) {
+      run();
+      return;
+    }
+    rafRef.current = requestAnimationFrame(() => tick(startedAt));
+  };
+
+  const startHold = () => {
+    if (pending || disabled) return;
+    setError(null);
+    const startedAt = performance.now();
+    rafRef.current = requestAnimationFrame(() => tick(startedAt));
+  };
+  const cancelHold = () => {
+    if (pending) return;
+    reset();
+  };
+
+  // Unlike ItemDetailPopup's own destroy/recycle bar (where the whole
+  // .destroySection - label, track, and icon together - is the hold
+  // target), only the icon itself starts/holds the fill here - a plain
+  // click anywhere else on the card, including the label/track, dismisses
+  // the popup instead.
+  const handleClick = (e: React.MouseEvent<HTMLElement>) => {
+    e.stopPropagation();
+    if ((e.target as HTMLElement).closest(`.${styles.holdActionIcon}`)) return;
+    onClose();
+  };
+
+  return (
+    <div className={styles.itemPopupOverlay} onClick={handleClick}>
+      <div className={`${styles.itemPopupCard} ${styles.recycleDestroyCard}`}>
+        <h3 className={styles.itemPopupName}>{headline}</h3>
+        {/* stopPropagation, not another handleClick exemption - `children`
+            can hold arbitrary interactive content (ChopBlockPopup's own
+            checkbox list), so a click anywhere in there - checking a box,
+            selecting text, whatever - should just do its own thing rather
+            than bubbling up and being treated as a dismiss click. */}
+        {children && (
+          <div style={{ width: "100%" }} onClick={(e) => e.stopPropagation()}>
+            {children}
+          </div>
+        )}
+        <div className={styles.destroySection}>
+          <p className={styles.destroyLabel}>{label}</p>
+          <div className={styles.destroyProgressTrack}>
+            <div
+              className={styles.destroyProgressFill}
+              style={{
+                width: `${progress * 100}%`,
+                backgroundColor: tone === "destroy" ? destroyFillColor(progress) : recycleFillColor(progress),
+              }}
+            />
+          </div>
+          <div
+            role="button"
+            tabIndex={0}
+            title={label}
+            aria-label={label}
+            className={
+              disabled ? `${styles.holdActionIcon} ${styles.holdActionIconDisabled}` : styles.holdActionIcon
+            }
+            style={{ backgroundImage: `url(${icon})` }}
+            onPointerDown={(e) => {
+              e.preventDefault();
+              startHold();
+            }}
+            onPointerUp={cancelHold}
+            onPointerLeave={cancelHold}
+            onPointerCancel={cancelHold}
+            onContextMenu={(e) => e.preventDefault()}
+          />
+        </div>
+        {error && <p className={styles.destroyError}>{error}</p>}
+      </div>
+    </div>
+  );
 }
 
 // The three discrete condition brackets a quality fraction (current/max)

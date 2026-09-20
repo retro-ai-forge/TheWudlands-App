@@ -76,7 +76,7 @@ export function StatsTab({
   // This row reflects whatever's currently keeping this character busy -
   // a craft timer (Character.activeCraft) or being out on a story
   // (Character.availability.inAdventure), so the label reads "Crafting"
-  // with a countdown, "Storyline" while away, or falls back to "Ready"/
+  // with a countdown, "ON THE ROAD" while away, or falls back to "Ready"/
   // "now" once neither applies. Backend.players.set_in_adventure/
   // start_craft now enforce these as mutually exclusive (a crafting
   // character can't start a story and vice versa), so in practice at
@@ -224,9 +224,17 @@ export function StatsTab({
             <span>{character.vitalStatus}</span>
           </div>
           <div className={styles.identityRow}>
-            <span>{craftRemainingSeconds ? "Crafting" : inAdventure ? "Storyline" : "Ready"}</span>
-            <span className={craftRemainingSeconds ? styles.readyTimerValue : undefined}>
-              {craftRemainingSeconds ? formatRemainingCompactLong(craftRemainingSeconds) : inAdventure ? "active" : "now"}
+            <span>{craftRemainingSeconds ? "Crafting" : inAdventure ? "ON THE ROAD" : "Ready"}</span>
+            <span
+              className={
+                craftRemainingSeconds
+                  ? styles.readyTimerValue
+                  : inAdventure
+                  ? styles.readyAwayValue
+                  : styles.readyNowValue
+              }
+            >
+              {craftRemainingSeconds ? formatRemainingCompactLong(craftRemainingSeconds) : inAdventure ? "away" : "now"}
             </span>
           </div>
 

@@ -80,8 +80,8 @@ export function InAdventureToggle({
         className={`${styles.inAdventureToggle} ${inAdventure ? styles.inAdventureToggleOn : styles.inAdventureToggleOff}`}
         onClick={toggle}
         disabled={pending}
-        title={inAdventure ? "In Storyline - click to return home" : "At Home - click to start a story"}
-        aria-label={inAdventure ? "In Storyline" : "At Home"}
+        title={inAdventure ? "On the road - click to return home" : "At Home - click to start a story"}
+        aria-label={inAdventure ? "On the road" : "At Home"}
         aria-pressed={inAdventure}
       />
       {blockedFlash && (
