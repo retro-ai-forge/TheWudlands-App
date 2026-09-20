@@ -880,7 +880,7 @@ export function ItemGrid({
               {qualityFraction !== null && (
                 <div
                   className={styles.itemGridQualityBar}
-                  style={{ width: `${qualityFraction * 100}%`, backgroundColor: qualityBarColor(qualityFraction) }}
+                  style={{ backgroundColor: qualityBarColor(qualityFraction) }}
                 />
               )}
             </button>
@@ -1238,8 +1238,8 @@ export function qualityState(f: number): QualityState {
 }
 
 const QUALITY_STATE_COLORS: Record<QualityState, string> = {
-  new: "rgb(40, 99, 23)",
-  used: "rgb(143, 97, 41)",
+  new: "rgb(64, 158, 37)",
+  used: "rgb(200, 136, 57)",
   damaged: "rgb(168, 29, 16)",
 };
 
@@ -1465,7 +1465,7 @@ function PackedItemsRow({
               {qualityFraction !== null && (
                 <div
                   className={styles.itemGridQualityBar}
-                  style={{ width: `${qualityFraction * 100}%`, backgroundColor: qualityBarColor(qualityFraction) }}
+                  style={{ backgroundColor: qualityBarColor(qualityFraction) }}
                 />
               )}
             </button>

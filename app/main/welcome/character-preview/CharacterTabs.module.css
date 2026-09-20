@@ -1338,15 +1338,17 @@
   pointer-events: none;
 }
 
-/* Condition bar along the equipped icon's bottom edge - same look/height
-   as ItemGrid's .itemGridQualityBar, just above the icon's own z-index
-   (1) instead of flush against a tile border. */
+/* Condition indicator in the equipped icon's bottom-left corner - same
+   look as ItemGrid's .itemGridQualityBar, just above the icon's own
+   z-index (1) instead of flush against a tile border. */
 .equipSlotQualityBar {
   position: absolute;
   left: 0;
   bottom: 0;
   z-index: 2;
-  height: 3px;
+  width: 14px;
+  height: 14px;
+  clip-path: polygon(0 0, 100% 100%, 0 100%);
   pointer-events: none;
 }
 
@@ -2127,17 +2129,20 @@
   border-radius: 4px;
 }
 
-/* Condition bar along the tile's bottom edge (item instances only - see
-   ItemGrid's qualityFraction) - full width and green at full quality,
-   shrinking and reddening toward 0 as it wears down. Left-anchored so it
-   always reads as "how much is left," like a health bar. */
+/* Condition indicator in the tile's bottom-left corner (item instances
+   only - see ItemGrid's qualityFraction) - green/orange/red per
+   qualityBarColor (still set inline as background-color, same prop as
+   the old bar), a fixed-size triangle rather than a proportional bar -
+   the damaged red tile tint already carries the "how much is left" read
+   at a glance, this is just the color cue, corner-badge style. Left, not
+   right, to stay clear of .itemGridCountBadge's own bottom-right corner. */
 .itemGridQualityBar {
   position: absolute;
   left: 0;
-  /* Sits flush on the tile's own border instead of inset above it, so it
-     reads as the icon's bottom edge rather than a bar floating over it. */
-  bottom: -1px;
-  height: 3px;
+  bottom: 0;
+  width: 14px;
+  height: 14px;
+  clip-path: polygon(0 0, 100% 100%, 0 100%);
 }
 
 /* A worn backpack's own popup (ItemDetailPopup's packedItems) - a

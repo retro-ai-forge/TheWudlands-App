@@ -117,7 +117,7 @@ function EquipSlotIcon({
       {qualityFraction !== null && (
         <div
           className={styles.equipSlotQualityBar}
-          style={{ width: `${qualityFraction * 100}%`, backgroundColor: qualityBarColor(qualityFraction) }}
+          style={{ backgroundColor: qualityBarColor(qualityFraction) }}
         />
       )}
     </div>
