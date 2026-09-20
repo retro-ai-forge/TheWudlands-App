@@ -1685,7 +1685,7 @@ export function ItemDetailPopup({
   /** location:"body" rows only - the slot(s) this instance currently occupies (its own slotRef) - used to exclude that same group from the reslot button list below (equipToSlots), since re-clicking your own current slot(s) would be a no-op. */
   currentSlots?: string[];
   characterId: string;
-  /** source:"vault" only - named in the "In Storyline" notice that replaces the whole action row while inAdventure is true. */
+  /** source:"vault" only - named in the "on the road" notice that replaces the whole action row while inAdventure is true. */
   characterFirstName?: string;
   /** A family:"backpack" instance only (worn, or sitting unequipped in
    * camp - see BodyTab/CampView's own packedItems) - this character's own
@@ -2360,7 +2360,7 @@ export function ItemDetailPopup({
                 // check_out_item_balance) - no buttons, no hasBackpackEquipped/
                 // hasSaddlepackEquipped checks, just the status itself.
                 <p className={styles.itemPopupAwayNotice}>
-                  {characterFirstName ? `${characterFirstName} in Storyline` : "In Storyline"}
+                  {characterFirstName ? `${characterFirstName} on the road` : "On the road"}
                 </p>
               ) : (
                 stackSize > 1 ? (
@@ -3378,7 +3378,7 @@ export function InventoryTab({
           {knownBlueprints.length > 0 && (
             <div className={styles.accordionItem}>
               <button className={styles.accordionHeader} onClick={() => toggleSection("blueprints")}>
-                <span>{`Blueprints Known (${knownBlueprints.length})`}</span>
+                <span>{`${character.firstName}'s Recipes Known (${knownBlueprints.length})`}</span>
                 <span className={styles.accordionChevron}>{openSections.has("blueprints") ? "▴" : "▾"}</span>
               </button>
               {openSections.has("blueprints") && (
@@ -3503,13 +3503,12 @@ export function InventoryTab({
             </div>
           </div>
 
-          <button
-            className={styles.recipeViewerHeading}
-            onClick={() => setRecipeViewerOpen((prev) => !prev)}
-          >
-            <span className={styles.accordionChevron}>{recipeViewerOpen ? "▴" : "▾"}</span>
-            Crafting Recipe Viewer
-          </button>
+          <div className={styles.accordionItem}>
+            <button className={styles.accordionHeader} onClick={() => setRecipeViewerOpen((prev) => !prev)}>
+              <span>Crafting Recipe Viewer</span>
+              <span className={styles.accordionChevron}>{recipeViewerOpen ? "▴" : "▾"}</span>
+            </button>
+          </div>
           {recipeViewerOpen && (
             <iframe
               ref={recipeViewerRef}

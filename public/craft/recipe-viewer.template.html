@@ -441,10 +441,10 @@
     <summary>Legend</summary>
     <table class="legendTable">
       <tr><td><span class="tag cat-final">final</span></td><td>a separate finished item (▸ has its own recipe)</td></tr>
-      <tr><td><span class="tag cat-blueprint">blueprint</span></td><td>technique required, learned once and never consumed</td></tr>
+      <tr><td><span class="tag cat-blueprint">recipe</span></td><td>technique required, learned once and never consumed</td></tr>
       <tr><td><span class="tag cat-processed">processed</span></td><td>crafted from raw</td></tr>
       <tr><td><span class="tag cat-raw">raw</span></td><td>mined/gathered material</td></tr>
-      <tr><td><span class="tag missing">missing</span></td><td>missing tool / blueprint</td></tr>
+      <tr><td><span class="tag missing">missing</span></td><td>missing tool / recipe</td></tr>
       <tr><td><span class="tierSymbolT1">○</span></td><td>Tier 1 (Mundane)</td></tr>
       <tr><td><span class="tierSymbolT2">●</span></td><td>Tier 2 (Mundane)</td></tr>
       <tr><td><span class="tierSymbolT3">◉</span></td><td>Tier 3 (Mundane)</td></tr>
@@ -681,10 +681,18 @@ function tierSymbol(tier) {
   return TIER_SYMBOLS[tier - 1] || "";
 }
 // Mirrors character-preview/InventoryTab.tsx's formatSlotLabel - no
-// dedicated hand icon asset exists here either, so only the word "Hand"
-// itself is replaced with a plain glyph, "Left"/"Right" stay as text.
+// dedicated hand icon asset exists here either, so a hand slot renders as
+// just the ✋ glyph (no "Left"/"Right" text at all), mirrored horizontally
+// for "Right Hand" so the two read as a mirrored pair rather than two
+// identical icons. Returns a Node (a plain Text node for anything that
+// isn't a hand slot) rather than a string, since the mirrored glyph needs
+// its own styled <span>.
 function formatSlotLabel(slot) {
-  return slot.replace(/\bHand\b/, "✋");
+  if (!/\bHand\b/.test(slot)) return document.createTextNode(slot);
+  const isRight = slot.startsWith("Right");
+  const span = el("span", "", "✋");
+  if (isRight) span.style.cssText = "display:inline-block;transform:scaleX(-1)";
+  return span;
 }
 
 // Mirrors InventoryTab.tsx's formatResourceLabel - "ore" -> "Ore",
@@ -784,15 +792,22 @@ function showItemPopup(famId, tier) {
   card.appendChild(meta);
 
   // Always disabled (see the doc comment above) - one button per equip
-  // slot, or a single combined one for a twoHanded family occupying both
-  // its slots at once, same grouping ItemDetailPopup's slotGroups uses.
-  const slotGroups = props.equipSlots && props.equipSlots.length
-    ? (props.twoHanded ? [props.equipSlots] : props.equipSlots.map((s) => [s]))
-    : [];
+  // slot group. props.equipSlots is already string[][] (each entry its own
+  // group - a twoHanded family's single group already lists both slots,
+  // e.g. [["Left Hand","Right Hand"]]), same as ItemDetailPopup's own
+  // slotGroups (InventoryTab.tsx) - used directly, not re-wrapped, which
+  // used to double-nest every group (crashing formatSlotLabel below on an
+  // array instead of a slot-name string, silently aborting the whole
+  // popup - see ItemDetailPopup's identical `info.equipSlots` usage).
+  const slotGroups = props.equipSlots && props.equipSlots.length ? props.equipSlots : [];
   if (slotGroups.length || props.backpackable) {
     const actions = el("div", "itemPopupActions");
     for (const slots of slotGroups) {
-      const btn = el("button", "itemPopupActionButton", slots.map(formatSlotLabel).join(" + "));
+      const btn = el("button", "itemPopupActionButton");
+      slots.forEach((slot, i) => {
+        if (i > 0) btn.appendChild(document.createTextNode(" + "));
+        btn.appendChild(formatSlotLabel(slot));
+      });
       btn.type = "button";
       btn.disabled = true;
       actions.appendChild(btn);
@@ -1247,7 +1262,12 @@ function buildInteractiveNode(famId, qty, category, tier, isRoot) {
   const nameSpan = el("span", "name", famLabel(famId, tier));
   row.appendChild(nameSpan);
   const tagCategory = isRoot ? "final" : category;
-  row.appendChild(el("span", "tag cat-" + (tagCategory === "final" ? "final" : tagCategory), tagCategory));
+  // Displayed text says "recipe", not "blueprint" - matches the "Crafting
+  // Recipe Viewer" heading's own wording - while the category value itself
+  // (class suffix, ownsFamily/category checks elsewhere) stays "blueprint"
+  // throughout, unrenamed.
+  const tagLabel = tagCategory === "blueprint" ? "recipe" : tagCategory;
+  row.appendChild(el("span", "tag cat-" + (tagCategory === "final" ? "final" : tagCategory), tagLabel));
   if (recipe && recipe.tool) {
     const tIds = toolIds(recipe.tool);
     const toolTag = el("span", "tag tool", "\u{1F528} " + tIds.join(" or "));

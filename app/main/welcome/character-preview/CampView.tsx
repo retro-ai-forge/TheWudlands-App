@@ -22,6 +22,28 @@ const CAMP_ITEMS_SOUND = "/sounds/campfire_west_wolf.mp3";
 // instead of the crackling campfire.
 const CAMP_EMPTY_SOUND = "/sounds/camp_night_wind.mp3";
 
+// How long the ambient loop takes to fade to silence before actually
+// pausing - covers every way the effect below tears an in-flight loop
+// down (hasCampItems flipping, muting, or leaving camp outright), so none
+// of them cut the sound off mid-note.
+const CAMP_AMBIENT_FADE_MS = 600;
+const CAMP_AMBIENT_FADE_STEPS = 12;
+
+function fadeOutAudio(audio: HTMLAudioElement) {
+  const startVolume = audio.volume;
+  const stepMs = CAMP_AMBIENT_FADE_MS / CAMP_AMBIENT_FADE_STEPS;
+  let step = 0;
+  const interval = setInterval(() => {
+    step += 1;
+    if (step >= CAMP_AMBIENT_FADE_STEPS) {
+      clearInterval(interval);
+      audio.pause();
+      return;
+    }
+    audio.volume = startVolume * (1 - step / CAMP_AMBIENT_FADE_STEPS);
+  }, stepMs);
+}
+
 // A fixed placeholder height for the campfire art at the bottom of the
 // screen - reserved out of ItemGrid's own fill-to-bottom measurement (see
 // its reserveBottomPx prop) so the two never fight over the same space.
@@ -223,7 +245,7 @@ export function CampView({
       // unhandled promise rejection.
     });
     return () => {
-      audio.pause();
+      fadeOutAudio(audio);
     };
   }, [hasCampItems, muted]);
 
