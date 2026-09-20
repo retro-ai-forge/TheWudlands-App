@@ -383,6 +383,52 @@ Total raw material cost to keep a light burning for a given duration, using tier
 | 50h | 250 | 200 | 178 |
 
 
+## Backpacks & Carry Capacity
+
+Every character has a base carry capacity from their own attributes, plus a bonus from whichever backpack they currently have equipped or sitting unequipped in camp (the two add together, they don't replace each other, and only the single biggest backpack bonus available counts if more than one qualifies).
+
+**Base capacity** = `10 + (might + endurance) / 3` slots, always available even with no backpack at all.
+
+**Backpack bonus**, added on top once a backpack of that tier is equipped:
+
+| Tier | Backpack | Slot Bonus |
+|---|---|---:|
+| 1 | Bindle Backpack | +4 |
+| 2 | Ragged Backpack | +8 |
+| 3 | Traveler's Backpack | +14 |
+| 4 | Journeyman's Backpack | +20 |
+| 5 | Adventurer's Backpack | +28 |
+| 6 | Explorer's Great Backpack | +40 |
+
+With no backpack equipped or in camp at all, backpack capacity is 0 — nothing can be carried there. Camp storage itself has no slot limit of its own and is available on resting as an overflow/staging area, regardless of backpack capacity.
+
+### Size Classes & Slot Weight
+
+Every equippable item belongs to a size class, which decides how many backpack slots one unit of it costs:
+
+| Size Class | Slots per Item |
+|---|---:|
+| Tiny | 1 |
+| Light | 1 |
+| Medium | 2 |
+| Large | 3 |
+| Heavy | 4 |
+| Extra Large | 8 |
+
+Tiny and Light both take 1 slot each — the difference is that a Tiny item is often stackable.
+
+### Stacking Limits
+
+Raw and processed crafting materials (ore, wood, meat, fiber, and so on) sit outside the size-class system above — they default to Tiny sizing and stack by their own fixed limit instead:
+
+| Kind | Units per Slot |
+|---|---:|
+| Raw material | 40 |
+| Processed material | 20 |
+| Stackable Tiny item (ammo, potions, food, and similar consumables) | 10 |
+
+A raw material's own slot cost works out to `ceil(quantity ÷ 40)`, a processed material's to `ceil(quantity ÷ 20)`, and a stackable Tiny item's (arrows, bolts, lantern oil, potions, cooked food, ...) to `ceil(quantity ÷ 10)`. Most equippable gear — weapons, armor, tools — doesn't stack at all (stack size 1): each individual instance takes up its own full slot(s) at its size class's own weight, regardless of how many of that item the character is carrying.
+
 ## Companions & Mounts
 
 Companions and mounts are living creatures that travel with a character. Each one is equipped into its own slot on the character's Body page: a **Companion** (a familiar, pet or spirit at the character's side) goes into the Companion slot, and a **Mount** (a creature the character rides) goes into the Mount slot. A character can have one of each at a time.

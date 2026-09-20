@@ -1648,15 +1648,20 @@ export function ItemDetailPopup({
     );
   };
 
-  // source:"character", NOT isInstance, location:"camp" only - camp -> the
-  // shared pool, `amount` units at a time. The itemBalances equivalent
-  // of checkInToVault above.
+  // source:"character", NOT isInstance, location:"camp" OR "backpack" -
+  // straight to the shared pool from whichever bucket this row is actually
+  // in, `amount` units at a time. The itemBalances equivalent of
+  // checkInToVault above - a backpack row reaches the vault in this same
+  // one direct hop now too (see backend.players.check_in_item_balance's
+  // own `location` param), matching how a packed item INSTANCE already
+  // could, rather than needing to stage through camp first.
   const checkInBalanceToVault = async (amount: number) => {
     setPending(true);
     setFlashMessage(null);
     finish(
       await postJson(`/api/auth/me/characters/${characterId}/item-balances/${moveId}/check-in`, {
         amount,
+        location: location ?? "camp",
       })
     );
   };
@@ -1664,12 +1669,10 @@ export function ItemDetailPopup({
   // source:"character", NOT isInstance, location:"backpack" only (a flat
   // gear.itemBalances.backpack row - see BodyTab's packedItems) - backpack
   // -> camp, `amount` units at a time, the reverse of
-  // stowBalanceToBackpack above. There's no direct backpack->vault balance
-  // endpoint (check_in_item_balance only ever reads gear.itemBalances.camp
-  // - see its own docstring), so unlike a packed item INSTANCE (which can
-  // check in to the vault straight from "backpack"), a packed balance row
-  // has to land in camp first - same two-step check-out_camp then
-  // check_in_vault path the Vault tab's own itemBalances rows already use.
+  // stowBalanceToBackpack above. Only offered while inAdventure (see this
+  // popup's itemBalances render block below) - there's no shared vault to
+  // reach mid-adventure, same reason an equipped instance's own unequip
+  // icon falls back to camp then too.
   const unloadBalanceToCamp = async (amount: number) => {
     setPending(true);
     setFlashMessage(null);
@@ -2431,16 +2434,18 @@ export function ItemDetailPopup({
                     )}
                   </>
                 ) : (
-                  // "backpack" - no direct balance endpoint back to the
-                  // shared vault (check_in_item_balance only ever reads
-                  // gear.itemBalances.camp), so camp is the only move
-                  // offered here - see unloadBalanceToCamp.
+                  // "backpack" - straight to the shared vault while not in
+                  // adventure (no reason to stage through camp first), or
+                  // camp while in adventure (no reaching the shared vault
+                  // mid-adventure) - one destination at a time, same
+                  // inAdventure-gated single-button choice an equipped
+                  // instance's own unequip icon already makes.
                   <TransferButtons
                     owned={owned}
                     pending={pending}
-                    onPick={unloadBalanceToCamp}
-                    destinationIcon={CAMP_ACTION_ICON}
-                    destinationLabel="Camp"
+                    onPick={inAdventure ? unloadBalanceToCamp : checkInBalanceToVault}
+                    destinationIcon={inAdventure ? CAMP_ACTION_ICON : VAULT_ACTION_ICON}
+                    destinationLabel={inAdventure ? "Camp" : "Vault"}
                     amounts={RESOURCE_POPUP_TRANSFER_AMOUNTS}
                   />
                 )}

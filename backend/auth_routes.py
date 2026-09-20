@@ -928,6 +928,18 @@ class TransferAmountRequest(BaseModel):
     amount: int = Field(..., gt=0, description="Quantity to transfer - must be positive")
 
 
+class ItemBalanceLocationAmountRequest(BaseModel):
+    """How much of a character's own flat itemBalances row to act on, and
+    which of its two possible buckets (see ItemDetailPopup's own
+    `location` prop) to actually target - there's no instance to read the
+    real location off of the way an item instance's own row carries it."""
+
+    amount: int = Field(..., gt=0, description="Quantity to move - must be positive")
+    location: Literal["camp", "backpack"] = Field(
+        "camp", description="Which of the character's own itemBalances buckets to act on"
+    )
+
+
 @player_router.post(
     "/me/characters/{character_id}/resources/{resource_id}/check-in", response_model=PlayerDataResponse
 )
@@ -1212,11 +1224,16 @@ async def check_out_item_balance_to_backpack_route(
     "/me/characters/{character_id}/item-balances/{item_id}/check-in", response_model=PlayerDataResponse
 )
 async def check_in_item_balance_route(
-    character_id: str, item_id: str, payload: TransferAmountRequest, address: str = Depends(get_current_address)
+    character_id: str,
+    item_id: str,
+    payload: ItemBalanceLocationAmountRequest,
+    address: str = Depends(get_current_address),
 ):
-    """Move `amount` of `item_id` from one of the player's characters back into the shared vault."""
+    """Move `amount` of `item_id` from one of the player's characters (camp or backpack) back into the shared vault."""
     try:
-        player = await check_in_item_balance(address, character_id, item_id, payload.amount)
+        player = await check_in_item_balance(
+            address, character_id, item_id, payload.amount, location=payload.location
+        )
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc))
 
@@ -1541,23 +1558,14 @@ async def recycle_item_instance_from_vault_route(
     return player.to_dict()
 
 
-class RecycleItemBalanceRequest(BaseModel):
-    """How much of a character's own flat itemBalances row to recycle, and
-    which of its two possible buckets (see ItemDetailPopup's own
-    `location` prop) to actually deduct it from - there's no instance to
-    read the real location off of, unlike recycle_item_instance."""
-
-    amount: int = Field(..., gt=0, description="Quantity to recycle - must be positive")
-    location: Literal["camp", "backpack"] = Field(
-        "camp", description="Which of the character's own itemBalances buckets to recycle from"
-    )
-
-
 @player_router.post(
     "/me/characters/{character_id}/item-balances/{item_id}/recycle", response_model=PlayerDataResponse
 )
 async def recycle_item_balance_route(
-    character_id: str, item_id: str, payload: RecycleItemBalanceRequest, address: str = Depends(get_current_address)
+    character_id: str,
+    item_id: str,
+    payload: ItemBalanceLocationAmountRequest,
+    address: str = Depends(get_current_address),
 ):
     """Recycle `amount` of the character's own item_id balance (from `location`) into a fraction of its raw materials, credited to that character's own backpack."""
     try:

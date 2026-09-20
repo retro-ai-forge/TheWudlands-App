@@ -2974,19 +2974,33 @@ async def check_out_item_balance_to_backpack(
     return _doc_to_player(doc)
 
 
-async def check_in_item_balance(address: str, character_id: str, item_id: str, amount: int = 1) -> Optional[Player]:
-    """The reverse of check_out_item_balance."""
+async def check_in_item_balance(
+    address: str, character_id: str, item_id: str, amount: int = 1, location: str = "camp"
+) -> Optional[Player]:
+    """
+    The reverse of check_out_item_balance - `location` ("camp" or
+    "backpack") picks which of the character's own two itemBalances
+    buckets to deduct from, same reasoning as recycle_item_balance's own
+    `location` param. A backpack row reaching the vault in one direct hop
+    (rather than staging through camp first) matches how a packed item
+    INSTANCE already works (see check_in_item_instance, which accepts
+    "backpack"/"camp"/"saddlepack" alike) - there's no reason an itemBalance
+    row should need an extra step just because it has no instance of its
+    own to read a location off of.
+    """
     if amount <= 0:
         raise ValueError("amount must be positive")
     db = get_database()
     doc = await db.players.find_one_and_update(
         {
             "address": address,
-            "characters": {"$elemMatch": {"id": character_id, f"gear.itemBalances.camp.{item_id}": {"$gte": amount}}},
+            "characters": {
+                "$elemMatch": {"id": character_id, f"gear.itemBalances.{location}.{item_id}": {"$gte": amount}}
+            },
         },
         {"$inc": {
             f"vault.itemBalances.{item_id}": amount,
-            f"characters.$.gear.itemBalances.camp.{item_id}": -amount,
+            f"characters.$.gear.itemBalances.{location}.{item_id}": -amount,
         }},
         return_document=ReturnDocument.AFTER,
     )
