@@ -90,14 +90,12 @@ const TRANSFER_AMOUNTS = [1, 2, 5, 10, 20, 50] as const;
 // packed/camped resource's popup - see ResourcePopup) drops 50 - at
 // typical backpack/camp quantities it's rarely reachable anyway, and the
 // shorter row reads cleaner.
-const RESOURCE_POPUP_TRANSFER_AMOUNTS = [1, 2, 5, 10, 20] as const;
-// Raw/processed materials specifically (not itemBalances, which also
-// reuse RESOURCE_POPUP_TRANSFER_AMOUNTS above) - a genuine resource row
-// always pairs with a destinationIcon (see TransferButtons' own comment),
-// so the ∞ button is redundant there and gets swapped for a plain "40"
-// instead (a full raw-material backpack slot's worth - see the README's
-// own Stacking Limits table), rather than showing two buttons that both
-// mean "move everything".
+// Raw/processed materials and stackable itemBalances rows alike - a
+// genuine resource/itemBalance row always pairs with a destinationIcon
+// (see TransferButtons' own comment), so the ∞ button is redundant there
+// and gets swapped for a plain "40" instead (a full raw-material backpack
+// slot's worth - see the README's own Stacking Limits table), rather than
+// showing two buttons that both mean "move everything".
 const RAW_RESOURCE_AMOUNTS = [1, 2, 5, 10, 20, 40] as const;
 
 /** The row of quick-transfer quantity buttons revealed under a clicked resource/tool row. */
@@ -125,9 +123,9 @@ function TransferButtons({
    * common) destinationIcon usage. */
   destinationLabel?: string;
   /** The fixed-quantity buttons shown before the ∞ button - defaults to
-   * the full TRANSFER_AMOUNTS; ResourcePopup/Party's Resources pass
-   * RAW_RESOURCE_AMOUNTS instead (see its own comment), other callers
-   * RESOURCE_POPUP_TRANSFER_AMOUNTS. */
+   * the full TRANSFER_AMOUNTS; ResourcePopup/Party's Resources and every
+   * stackable itemBalances row pass RAW_RESOURCE_AMOUNTS instead (see its
+   * own comment). */
   amounts?: readonly number[];
   /** False when destinationIcon is guaranteed present and already covers
    * "move everything" on its own (a genuine raw/processed resource row -
@@ -2379,7 +2377,8 @@ export function ItemDetailPopup({
                         onPick={moveToBackpack}
                         destinationIcon={BACKPACK_ACTION_ICON}
                         destinationLabel="Backpack"
-                        amounts={RESOURCE_POPUP_TRANSFER_AMOUNTS}
+                        amounts={RAW_RESOURCE_AMOUNTS}
+                        showInfinity={false}
                       />
                     ) : (
                       <p className={styles.transferUnavailable}>No backpack equipped</p>
@@ -2450,6 +2449,29 @@ export function ItemDetailPopup({
               <div className={styles.itemPopupActions}>
                 {location === "body" ? (
                   <>
+                    {/* Reslot, still equipped - e.g. swap hands, or move a
+                        dagger from a hand to its Girdle slot. Same button
+                        style/handler as the backpack/camp -> body equip
+                        buttons elsewhere, since it's the exact same
+                        endpoint. Rendered before the destination icons
+                        below so those icons stay rightmost, same as every
+                        other branch here. */}
+                    {otherSlotGroups.map((slots) => (
+                      <button
+                        key={slots.join("+")}
+                        type="button"
+                        className={styles.itemPopupActionButton}
+                        disabled={pending}
+                        onClick={() => equipToSlots(slots)}
+                      >
+                        {slots.map((slot, i) => (
+                          <Fragment key={slot}>
+                            {i > 0 && " + "}
+                            {formatSlotLabel(slot)}
+                          </Fragment>
+                        ))}
+                      </button>
+                    ))}
                     <button
                       type="button"
                       className={styles.itemPopupBackpackButton}
@@ -2499,26 +2521,6 @@ export function ItemDetailPopup({
                         />
                       </button>
                     )}
-                    {/* Reslot, still equipped - e.g. swap hands, or move a
-                        dagger from a hand to its Girdle slot. Same button
-                        style/handler as the backpack/camp -> body equip
-                        buttons below, since it's the exact same endpoint. */}
-                    {otherSlotGroups.map((slots) => (
-                      <button
-                        key={slots.join("+")}
-                        type="button"
-                        className={styles.itemPopupActionButton}
-                        disabled={pending}
-                        onClick={() => equipToSlots(slots)}
-                      >
-                        {slots.map((slot, i) => (
-                          <Fragment key={slot}>
-                            {i > 0 && " + "}
-                            {formatSlotLabel(slot)}
-                          </Fragment>
-                        ))}
-                      </button>
-                    ))}
                   </>
                 ) : (
                   <>
@@ -2645,7 +2647,8 @@ export function ItemDetailPopup({
                         onPick={stowBalanceToBackpack}
                         destinationIcon={BACKPACK_ACTION_ICON}
                         destinationLabel="Backpack"
-                        amounts={RESOURCE_POPUP_TRANSFER_AMOUNTS}
+                        amounts={RAW_RESOURCE_AMOUNTS}
+                        showInfinity={false}
                       />
                     )}
                     {!inAdventure && (
@@ -2655,7 +2658,8 @@ export function ItemDetailPopup({
                         onPick={checkInBalanceToVault}
                         destinationIcon={VAULT_ACTION_ICON}
                         destinationLabel="Vault"
-                        amounts={RESOURCE_POPUP_TRANSFER_AMOUNTS}
+                        amounts={RAW_RESOURCE_AMOUNTS}
+                        showInfinity={false}
                       />
                     )}
                   </>
@@ -2672,7 +2676,8 @@ export function ItemDetailPopup({
                     onPick={inAdventure ? unloadBalanceToCamp : checkInBalanceToVault}
                     destinationIcon={inAdventure ? CAMP_ACTION_ICON : VAULT_ACTION_ICON}
                     destinationLabel={inAdventure ? "Camp" : "Vault"}
-                    amounts={RESOURCE_POPUP_TRANSFER_AMOUNTS}
+                    amounts={RAW_RESOURCE_AMOUNTS}
+                    showInfinity={false}
                   />
                 )}
               </>
