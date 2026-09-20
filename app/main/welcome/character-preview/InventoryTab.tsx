@@ -1039,6 +1039,9 @@ function recycleFillColor(t: number): string {
 export function HoldActionPopup({
   headline,
   children,
+  overlayClassName,
+  cardClassName,
+  iconClassName,
   label,
   icon,
   tone,
@@ -1050,12 +1053,25 @@ export function HoldActionPopup({
   headline: string;
   /** Extra content between the headline and the hold bar - e.g. the
    * chopping block's own scrollable checklist of what's about to be
-   * recycled (see CampView.tsx's ChopBlockPopup). Whatever's passed here
-   * should cap its own height and scroll internally if it might overflow
-   * (see .chopBlockList) - the hold bar below always stays on screen,
-   * never pushed off by a long list the way the whole card's own
-   * overflow-y:auto could otherwise let happen. */
+   * recycled (see CampView.tsx's ChopBlockPopup). Scrolls internally
+   * inside its own flex-grown wrapper if it's tall enough to need to
+   * (see the children wrapper's own inline flex styling below) - the
+   * hold bar/icon below it always stays on screen either way, never
+   * pushed off by a long list. */
   children?: ReactNode;
+  /** Extra class appended to .itemPopupOverlay - CampView's own
+   * ChopBlockPopup passes .chopBlockOverlay to shrink the usual top/
+   * bottom screen margin, since its own scrollable checklist benefits
+   * from using as much of the viewport as possible. */
+  overlayClassName?: string;
+  /** Extra class appended to .itemPopupCard - paired with
+   * overlayClassName above (CampView's own .chopBlockCard raises the
+   * card's own max-height to match the shrunk overlay margin). */
+  cardClassName?: string;
+  /** Extra class appended to .holdActionIcon - CampView's own
+   * ChopBlockPopup passes .chopBlockIcon to size the chopping block
+   * icon down from the other two popups' shared default. */
+  iconClassName?: string;
   /** The hold bar's own label, e.g. "Hold to BURN ALL". */
   label: string;
   /** Image shown inside the hold bar - CampView passes the same
@@ -1137,16 +1153,33 @@ export function HoldActionPopup({
   };
 
   return (
-    <div className={styles.itemPopupOverlay} onClick={handleClick}>
-      <div className={`${styles.itemPopupCard} ${styles.recycleDestroyCard}`}>
+    <div
+      className={overlayClassName ? `${styles.itemPopupOverlay} ${overlayClassName}` : styles.itemPopupOverlay}
+      onClick={handleClick}
+    >
+      <div
+        className={
+          cardClassName
+            ? `${styles.itemPopupCard} ${styles.recycleDestroyCard} ${cardClassName}`
+            : `${styles.itemPopupCard} ${styles.recycleDestroyCard}`
+        }
+      >
         <h3 className={styles.itemPopupName}>{headline}</h3>
         {/* stopPropagation, not another handleClick exemption - `children`
             can hold arbitrary interactive content (ChopBlockPopup's own
             checkbox list), so a click anywhere in there - checking a box,
             selecting text, whatever - should just do its own thing rather
-            than bubbling up and being treated as a dismiss click. */}
+            than bubbling up and being treated as a dismiss click. flex
+            column + flex:1/min-height:0 so whichever of children's own
+            elements wants to grow and scroll (ChopBlockPopup's own
+            .chopBlockList) actually can, within whatever room
+            .itemPopupCard's own max-height leaves once the headline/hold
+            bar/error above and below it are accounted for. */}
         {children && (
-          <div style={{ width: "100%" }} onClick={(e) => e.stopPropagation()}>
+          <div
+            style={{ width: "100%", display: "flex", flexDirection: "column", flex: "1 1 auto", minHeight: 0 }}
+            onClick={(e) => e.stopPropagation()}
+          >
             {children}
           </div>
         )}
@@ -1166,9 +1199,13 @@ export function HoldActionPopup({
             tabIndex={0}
             title={label}
             aria-label={label}
-            className={
-              disabled ? `${styles.holdActionIcon} ${styles.holdActionIconDisabled}` : styles.holdActionIcon
-            }
+            className={[
+              styles.holdActionIcon,
+              iconClassName,
+              disabled ? styles.holdActionIconDisabled : "",
+            ]
+              .filter(Boolean)
+              .join(" ")}
             style={{ backgroundImage: `url(${icon})` }}
             onPointerDown={(e) => {
               e.preventDefault();
@@ -2083,14 +2120,13 @@ export function ItemDetailPopup({
   };
 
   // Closes on a click anywhere - including inside the card itself (the
-  // image, name, description, meta row) - except on a button or a hold
-  // target (recycleHoldBar / destroySection - each covers its whole label +
-  // progress bar + icon area now, not just the icon), so those controls get
-  // their own clicks instead of just dismissing the popup. While showDestroy
-  // is open, clicking anywhere else in that view (the recycle breakdown
-  // text, ...) doesn't close the popup outright - it returns to the item
-  // info view instead (there's no dedicated back button anymore), since
-  // the whole recycle/destroy card is still "inside" this same item.
+  // image, name, description, meta row) - except on a button, or (while
+  // showDestroy is open) directly on one of the two hold icons
+  // (.destroyIcon - shared by both the ♻️ recycle and 🔥 destroy bars) -
+  // only those two actually start/hold a fill now, so everything else in
+  // this view (the label/track text, the recycle breakdown list, ...) is
+  // just a dismiss click like the rest of the card, same as
+  // HoldActionPopup's own identical redesign.
   //
   // stopPropagation matters here specifically for a packed item's own
   // nested popup (PackedItemsRow, opened from inside a worn/camped
@@ -2106,11 +2142,7 @@ export function ItemDetailPopup({
     e.stopPropagation();
     const target = e.target as HTMLElement;
     if (target.closest("button")) return;
-    if (showDestroy) {
-      if (target.closest(`.${styles.recycleHoldBar}`) || target.closest(`.${styles.destroySection}`)) return;
-      setShowDestroy(false);
-      return;
-    }
+    if (showDestroy && target.closest(`.${styles.destroyIcon}`)) return;
     onClose();
   };
   return (
@@ -2135,17 +2167,7 @@ export function ItemDetailPopup({
               </div>
             ) : canRecycle ? (
               <>
-                <div
-                  className={`${styles.destroySection} ${styles.recycleHoldBar}`}
-                  onPointerDown={(e) => {
-                    e.preventDefault();
-                    startRecycleHold();
-                  }}
-                  onPointerUp={cancelRecycleHold}
-                  onPointerLeave={cancelRecycleHold}
-                  onPointerCancel={cancelRecycleHold}
-                  onContextMenu={(e) => e.preventDefault()}
-                >
+                <div className={`${styles.destroySection} ${styles.recycleHoldBar}`}>
                   <p className={styles.recycleLabel}>Hold to RECYCLE</p>
                   <div className={styles.destroyProgressTrack}>
                     <div
@@ -2156,7 +2178,23 @@ export function ItemDetailPopup({
                       }}
                     />
                   </div>
-                  <span className={styles.destroyIcon}>♻️</span>
+                  <span
+                    className={styles.destroyIcon}
+                    role="button"
+                    tabIndex={0}
+                    title="Hold to recycle"
+                    aria-label="Hold to recycle"
+                    onPointerDown={(e) => {
+                      e.preventDefault();
+                      startRecycleHold();
+                    }}
+                    onPointerUp={cancelRecycleHold}
+                    onPointerLeave={cancelRecycleHold}
+                    onPointerCancel={cancelRecycleHold}
+                    onContextMenu={(e) => e.preventDefault()}
+                  >
+                    ♻️
+                  </span>
                 </div>
                 {/* Outside .destroySection on purpose - only the bar above
                     should start the hold/fill, not the breakdown text
@@ -2241,21 +2279,7 @@ export function ItemDetailPopup({
               </div>
             )}
             <div className={styles.recycleDestroyDivider} />
-            <div
-              className={styles.destroySection}
-              role="button"
-              tabIndex={0}
-              title="Hold to destroy"
-              aria-label="Hold to destroy"
-              onPointerDown={(e) => {
-                e.preventDefault();
-                startDestroyHold();
-              }}
-              onPointerUp={cancelDestroyHold}
-              onPointerLeave={cancelDestroyHold}
-              onPointerCancel={cancelDestroyHold}
-              onContextMenu={(e) => e.preventDefault()}
-            >
+            <div className={styles.destroySection}>
               <p className={styles.destroyLabel}>Hold to DESTROY</p>
               <div className={styles.destroyProgressTrack}>
                 <div
@@ -2266,7 +2290,23 @@ export function ItemDetailPopup({
                   }}
                 />
               </div>
-              <span className={styles.destroyIcon}>🔥</span>
+              <span
+                className={styles.destroyIcon}
+                role="button"
+                tabIndex={0}
+                title="Hold to destroy"
+                aria-label="Hold to destroy"
+                onPointerDown={(e) => {
+                  e.preventDefault();
+                  startDestroyHold();
+                }}
+                onPointerUp={cancelDestroyHold}
+                onPointerLeave={cancelDestroyHold}
+                onPointerCancel={cancelDestroyHold}
+                onContextMenu={(e) => e.preventDefault()}
+              >
+                🔥
+              </span>
             </div>
             {destroyError && <p className={styles.destroyError}>{destroyError}</p>}
           </>

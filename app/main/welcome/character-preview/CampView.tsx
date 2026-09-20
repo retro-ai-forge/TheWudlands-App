@@ -9,6 +9,7 @@ import {
   postJson,
   type BlueprintTierInfo,
   type RawPlayerData,
+  type RecycleMaterial,
   type ResourceTierInfo,
 } from "./InventoryTab";
 import type { SlotCharacterSummary } from "../SoulSlotGrid";
@@ -318,22 +319,27 @@ export function CampView({
               above), not the screen edge - sits right of the tent, easing
               only a little further out on wider screens instead of
               tracking the actual viewport edge. Opens ChopBlockPopup's
-              own bulk-recycle popup - always clickable, even with
-              nothing currently recyclable (that popup's own list is just
-              empty then). Dims the same way the tent itself does
-              (.campfireStageIconEmpty) while camp is empty. */}
+              own bulk-recycle popup - only clickable while hasCampItems,
+              same gating as campfire_lit.png/campfire_unlit.png above
+              (nothing to refine with an empty camp, so it stays purely
+              decorative then, dimmed the same way the tent itself does
+              via .campfireStageIconEmpty). */}
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src="/images/character/chopping_block.png"
             alt=""
-            role="button"
-            tabIndex={0}
-            title="Refine everything in camp"
-            aria-label="Refine everything in camp"
-            onClick={() => setCampAction("chop")}
-            onKeyDown={(e) => {
-              if (e.key === "Enter" || e.key === " ") setCampAction("chop");
-            }}
+            role={hasCampItems ? "button" : undefined}
+            tabIndex={hasCampItems ? 0 : undefined}
+            title={hasCampItems ? "Refine everything in camp" : undefined}
+            aria-label={hasCampItems ? "Refine everything in camp" : undefined}
+            onClick={hasCampItems ? () => setCampAction("chop") : undefined}
+            onKeyDown={
+              hasCampItems
+                ? (e) => {
+                    if (e.key === "Enter" || e.key === " ") setCampAction("chop");
+                  }
+                : undefined
+            }
             className={
               hasCampItems
                 ? styles.campChoppingBlockIcon
@@ -403,21 +409,41 @@ export function CampView({
 
 /** One recyclable camp item instance/itemBalance, as GET
  * .../camp/refine-preview returns it - what recycling ALL of it would
- * hand back, not yet actually recycled. */
+ * hand back, not yet actually recycled. `materials` is the exact same
+ * per-raw-family breakdown shape (name, yield%, recovered/total units)
+ * a single item's own recycle preview uses. */
 type ChopBlockRow = {
   id: string;
   kind: "instance" | "balance";
   name: string;
   tier: number;
   owned: number;
-  recovered: { id: string; name: string; qty: number }[];
+  materials: RecycleMaterial[];
 };
+
+/** Every raw material a row's (or several rows') materials would hand
+ * back, collapsed into one concrete-id -> qty list - same merge
+ * backend.recycling.flatten_recovery does server-side, done here so
+ * ChopBlockPopup can total up just the currently-checked rows live,
+ * without a round trip. */
+function flattenChopBlockMaterials(materials: RecycleMaterial[]): { id: string; name: string; qty: number }[] {
+  const merged = new Map<string, { id: string; name: string; qty: number }>();
+  for (const material of materials) {
+    for (const line of material.recovered) {
+      const existing = merged.get(line.id);
+      if (existing) existing.qty += line.qty;
+      else merged.set(line.id, { id: line.id, name: line.name, qty: line.qty });
+    }
+  }
+  return [...merged.values()];
+}
 
 /** The chopping block's own bulk-recycle popup (see CampView's own
  * onClick on chopping_block.png) - a HoldActionPopup whose extra
- * `children` content is a scrollable checklist of every recyclable camp
- * item/itemBalance, all checked by default (see ChopBlockRow/toggle
- * below). Holding the icon recycles every still-checked row at once,
+ * `children` content is a live grand total (what recycling every
+ * currently-checked row would hand back combined) plus a scrollable
+ * checklist of every recyclable camp item/itemBalance, all checked by
+ * default. Holding the icon recycles every still-checked row at once,
  * crediting recovered materials straight into camp - see
  * backend.players.refine_camp. */
 function ChopBlockPopup({
@@ -464,9 +490,16 @@ function ChopBlockPopup({
     });
   };
 
+  const grandTotal = flattenChopBlockMaterials(
+    (rows ?? []).filter((row) => selected.has(row.id)).flatMap((row) => row.materials)
+  );
+
   return (
     <HoldActionPopup
       headline="Refine All"
+      overlayClassName={styles.chopBlockOverlay}
+      cardClassName={styles.chopBlockCard}
+      iconClassName={styles.chopBlockIcon}
       label="Hold to REFINE ALL"
       icon="/images/character/chopping_block.png"
       tone="recycle"
@@ -482,23 +515,64 @@ function ChopBlockPopup({
       ) : rows.length === 0 ? (
         <p className={styles.recycleResultText}>Nothing in camp can be refined right now.</p>
       ) : (
-        // Scrolls on its own (see .chopBlockList) once the list is too
-        // tall to fit - the hold bar/icon below it stays on screen either
-        // way, never pushed off by a long list.
-        <div className={styles.chopBlockList}>
-          {rows.map((row) => (
-            <label key={row.id} className={styles.chopBlockRow}>
-              <input type="checkbox" checked={selected.has(row.id)} onChange={() => toggle(row.id)} />
-              <span className={styles.chopBlockRowName}>
-                {row.name}
-                {row.owned > 1 ? ` x${row.owned}` : ""}
-              </span>
-              <span className={styles.chopBlockRowRecovered}>
-                {row.recovered.map((line) => `${line.qty}x ${line.name}`).join(", ")}
-              </span>
-            </label>
-          ))}
-        </div>
+        <>
+          {/* Live total for whatever's still checked below - updates the
+              moment a checkbox is toggled, not just at load. Stays fixed
+              above the scrollable list below (see .chopBlockList's own
+              flex-grow) - never part of what scrolls. Bracketed by a
+              divider on each side - one here separating it from the
+              headline above, one below separating it from the scrollable
+              list. */}
+          <div className={`${styles.recycleDestroyDivider} ${styles.recycleDestroyDividerTight}`} />
+          <p className={styles.recycleFinalLine}>
+            Recycling all: {grandTotal.length > 0 ? grandTotal.map((line) => `${line.qty}× ${line.name}`).join(", ") : "nothing"}
+          </p>
+          <div className={`${styles.recycleDestroyDivider} ${styles.recycleDestroyDividerSpaced}`} />
+          {/* Scrolls on its own (see .chopBlockList) once the list is too
+              tall to fit - the hold bar/icon below it stays on screen
+              either way, never pushed off by a long list. */}
+          <div className={styles.chopBlockList}>
+            {rows.map((row) => (
+              <div key={row.id} className={styles.chopBlockRow}>
+                <label className={styles.chopBlockRowHeader}>
+                  <input type="checkbox" checked={selected.has(row.id)} onChange={() => toggle(row.id)} />
+                  <span className={styles.chopBlockRowName}>
+                    {row.name}
+                    {row.owned > 1 ? ` x${row.owned}` : ""}
+                  </span>
+                </label>
+                {/* Same per-raw-family breakdown (name, recovered/total
+                    units, yield% formula) a single item's own recycle
+                    view shows - see ItemDetailPopup's identical markup. */}
+                <div className={styles.recycleMaterialsList}>
+                  {row.materials.map((material) => (
+                    <div key={material.rawFamilyId} className={styles.recycleMaterialRow}>
+                      <p className={styles.recycleMaterialHeader}>
+                        <span>{material.rawName}</span>
+                        <span className={styles.recycleMaterialAmounts}>
+                          {material.recoveredUnits}/{material.totalUnits}
+                        </span>
+                      </p>
+                      <p className={styles.recycleFormulaLine}>
+                        {material.yieldBreakdown.base} + {material.yieldBreakdown.skill} skill +{" "}
+                        <span className={material.yieldBreakdown.tool === 0 ? styles.recycleFormulaZero : undefined}>
+                          {material.yieldBreakdown.tool} tool
+                        </span>{" "}
+                        + {material.yieldBreakdown.charm} charm = {material.yieldBreakdown.total}%
+                      </p>
+                    </div>
+                  ))}
+                  <p className={styles.recycleFinalLine}>
+                    Recovered:{" "}
+                    {flattenChopBlockMaterials(row.materials)
+                      .map((line) => `${line.qty}× ${line.name}`)
+                      .join(", ") || "nothing"}
+                  </p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </>
       )}
     </HoldActionPopup>
   );

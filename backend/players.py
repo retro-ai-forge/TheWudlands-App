@@ -3312,37 +3312,24 @@ def _recyclable_camp_entries(character: dict):
         yield "balance", item_id, entry, qty
 
 
-def _flatten_recovery_with_names(recoveries: List[recycling.RawMaterialRecovery]) -> List[Dict[str, object]]:
-    """Same merge recycling.flatten_recovery does, but keeping each
-    concrete id's own display name too (recycling.flatten_recovery
-    collapses straight to id -> qty) - preview_camp_refine's own rows need
-    something to actually print."""
-    merged: Dict[str, Dict[str, object]] = {}
-    for recovery in recoveries:
-        for line in recovery.recovered:
-            if line.qty <= 0:
-                continue
-            existing = merged.get(line.concrete_id)
-            if existing is not None:
-                existing["qty"] = existing["qty"] + line.qty  # type: ignore[operator]
-            else:
-                merged[line.concrete_id] = {"id": line.concrete_id, "name": line.name, "qty": line.qty}
-    return list(merged.values())
-
-
 async def preview_camp_refine(address: str, character_id: str) -> Optional[List[Dict[str, object]]]:
     """
     Read-only: every recyclable thing currently sitting in a character's
     own camp (see _recyclable_camp_entries), one row per distinct thing,
     with what recycling ALL of it would hand back - the chopping block's
     own preview list (see CampView.tsx), "as if each would be recycled"
-    one by one, nothing actually recycled yet. Scored the same way a
-    character-side recycle always is (character.tools only, never the
-    shared pool - see recycle_item_instance's own docstring). Non-
-    recyclable camp holdings (no recipe) are silently left out, same as
-    ItemDetailPopup's own canRecycle gate. Returns None if the
-    address/character pair doesn't match; [] if camp holds nothing
-    recyclable right now.
+    one by one, nothing actually recycled yet. Each row's own "recoveries"
+    is the SAME List[RawMaterialRecovery] shape preview_recycle already
+    returns for one item - auth_routes.py's own _to_recycle_preview_response
+    turns it into the full per-raw-family breakdown (name, yield%,
+    recovered/total units), not just a flattened total, since the
+    chopping block's popup shows that same level of detail per row.
+    Scored the same way a character-side recycle always is
+    (character.tools only, never the shared pool - see
+    recycle_item_instance's own docstring). Non-recyclable camp holdings
+    (no recipe) are silently left out, same as ItemDetailPopup's own
+    canRecycle gate. Returns None if the address/character pair doesn't
+    match; [] if camp holds nothing recyclable right now.
     """
     db = get_database()
     doc = await db.players.find_one({"address": address, "characters.id": character_id})
@@ -3357,16 +3344,13 @@ async def preview_camp_refine(address: str, character_id: str) -> Optional[List[
         recoveries = recycling.resolve_recycle_preview(entry.family_id, entry.tier, character, {}, [], count)
         if not recoveries:
             continue
-        recovered = _flatten_recovery_with_names(recoveries)
-        if not recovered:
-            continue
         rows.append({
             "id": entry_id,
             "kind": kind,
             "name": entry.name,
             "tier": entry.tier,
             "owned": count,
-            "recovered": recovered,
+            "recoveries": recoveries,
         })
     return rows
 
