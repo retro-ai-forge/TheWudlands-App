@@ -88,6 +88,14 @@ const TRANSFER_AMOUNTS = [1, 2, 5, 10, 20, 50] as const;
 // typical backpack/camp quantities it's rarely reachable anyway, and the
 // shorter row reads cleaner.
 const RESOURCE_POPUP_TRANSFER_AMOUNTS = [1, 2, 5, 10, 20] as const;
+// Raw/processed materials specifically (not itemBalances, which also
+// reuse RESOURCE_POPUP_TRANSFER_AMOUNTS above) - a genuine resource row
+// always pairs with a destinationIcon (see TransferButtons' own comment),
+// so the ∞ button is redundant there and gets swapped for a plain "40"
+// instead (a full raw-material backpack slot's worth - see the README's
+// own Stacking Limits table), rather than showing two buttons that both
+// mean "move everything".
+const RAW_RESOURCE_AMOUNTS = [1, 2, 5, 10, 20, 40] as const;
 
 /** The row of quick-transfer quantity buttons revealed under a clicked resource/tool row. */
 function TransferButtons({
@@ -97,15 +105,16 @@ function TransferButtons({
   destinationIcon,
   destinationLabel = "Backpack",
   amounts = TRANSFER_AMOUNTS,
+  showInfinity = true,
 }: {
   owned: number;
   pending: boolean;
   onPick: (amount: number) => void;
-  /** When given, a small icon tacked on after the ∞ button, showing where
-   * these amounts go (e.g. a backpack icon for a check-out-to-backpack
-   * row). Clicking it is a second way to fire the same "move everything"
-   * action as the ∞ button - a bigger, more obvious target for the same
-   * owned-amount transfer. */
+  /** When given, a small icon tacked on after the ∞ button (if shown),
+   * showing where these amounts go (e.g. a backpack icon for a
+   * check-out-to-backpack row). Clicking it is a second way to fire the
+   * same "move everything" action as the ∞ button - a bigger, more
+   * obvious target for the same owned-amount transfer. */
   destinationIcon?: string;
   /** Accessible label for destinationIcon - e.g. "Vault"/"Camp" for a
    * packed resource's move-out popup, whose destination varies by
@@ -113,9 +122,17 @@ function TransferButtons({
    * common) destinationIcon usage. */
   destinationLabel?: string;
   /** The fixed-quantity buttons shown before the ∞ button - defaults to
-   * the full TRANSFER_AMOUNTS; ResourcePopup passes the shorter
-   * RESOURCE_POPUP_TRANSFER_AMOUNTS instead (see its own comment). */
+   * the full TRANSFER_AMOUNTS; ResourcePopup/Party's Resources pass
+   * RAW_RESOURCE_AMOUNTS instead (see its own comment), other callers
+   * RESOURCE_POPUP_TRANSFER_AMOUNTS. */
   amounts?: readonly number[];
+  /** False when destinationIcon is guaranteed present and already covers
+   * "move everything" on its own (a genuine raw/processed resource row -
+   * see RAW_RESOURCE_AMOUNTS's own comment) - showing both would just be
+   * two buttons for the same action. True (the default) everywhere else,
+   * including a row with no destinationIcon at all (∞ is then the only
+   * way to move everything). */
+  showInfinity?: boolean;
 }) {
   return (
     <div className={styles.transferButtons}>
@@ -133,17 +150,19 @@ function TransferButtons({
           {amount}
         </button>
       ))}
-      <button
-        type="button"
-        className={styles.transferButton}
-        disabled={pending || owned <= 0}
-        onClick={(e) => {
-          e.stopPropagation();
-          onPick(owned);
-        }}
-      >
-        <span className={styles.itemPopupInfinityGlyph}>∞</span>
-      </button>
+      {showInfinity && (
+        <button
+          type="button"
+          className={styles.transferButton}
+          disabled={pending || owned <= 0}
+          onClick={(e) => {
+            e.stopPropagation();
+            onPick(owned);
+          }}
+        >
+          <span className={styles.itemPopupInfinityGlyph}>∞</span>
+        </button>
+      )}
       {destinationIcon && (
         <button
           type="button"
@@ -294,6 +313,7 @@ function ResourceList({
   tierInfo,
   onTransfer,
   amounts = TRANSFER_AMOUNTS,
+  showInfinity = true,
   destinationIcon,
   destinationUnavailableLabel,
 }: {
@@ -304,6 +324,8 @@ function ResourceList({
   onTransfer?: (id: string, amount: number) => Promise<boolean>;
   /** Quick-transfer quantity options - see TransferButtons' own comment on its identical prop. */
   amounts?: readonly number[];
+  /** See TransferButtons' own identical prop - false for Party's Resources (a genuine raw/processed-materials row, always paired with destinationIcon), true (default) for anything else, e.g. the crafting-staging resources list, which has no destinationIcon of its own. */
+  showInfinity?: boolean;
   /** When given, shown as a small static icon at the end of every expanded
    * row - purely a label for where onTransfer sends the material (e.g. a
    * backpack icon), not a separate clickable trigger of its own. */
@@ -409,6 +431,7 @@ function ResourceList({
                           pending={pendingId === id}
                           onPick={(amount) => handlePick(id, amount)}
                           amounts={amounts}
+                          showInfinity={showInfinity}
                           destinationIcon={destinationIcon}
                         />
                       )}
@@ -1392,7 +1415,8 @@ export function ResourcePopup({
             onPick={(amount) => handlePick(dest.endpoint, amount)}
             destinationIcon={dest.icon}
             destinationLabel={dest.label}
-            amounts={RESOURCE_POPUP_TRANSFER_AMOUNTS}
+            amounts={RAW_RESOURCE_AMOUNTS}
+            showInfinity={false}
           />
         ))}
       </div>
@@ -3197,7 +3221,8 @@ export function InventoryTab({
                   emptyLabel="Nothing in the shared crafting stock."
                   tierInfo={resourceTierInfo}
                   onTransfer={transferToBackpack}
-                  amounts={RESOURCE_POPUP_TRANSFER_AMOUNTS}
+                  amounts={RAW_RESOURCE_AMOUNTS}
+                  showInfinity={false}
                   destinationIcon={BACKPACK_ACTION_ICON}
                   destinationUnavailableLabel={
                     !hasBackpackEquipped ? "No backpack equipped" : backpackFull ? "Backpack full" : undefined
