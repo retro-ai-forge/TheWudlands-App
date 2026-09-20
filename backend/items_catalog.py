@@ -298,6 +298,28 @@ ITEM_CATALOG_ID_SET: frozenset[str] = frozenset(entry.id for entry in ITEM_CATAL
 ITEM_CATALOG_ENTRIES_BY_ID: dict[str, ItemCatalogEntry] = {entry.id: entry for entry in ITEM_CATALOG_ENTRIES}
 
 
+def resolve_item_balance_stack(item_id: str) -> tuple[int, int]:
+    """
+    (stack_size, slot_cost) for one gear.itemBalances/vault.itemBalances
+    concrete id (e.g. "rabbit_oil") - every itemBalances write path keys by
+    this concrete per-tier id, never a bare family id (see
+    backend.players._resolve_recipe_output), so resolving it needs
+    ITEM_CATALOG_ENTRIES_BY_ID (concrete id -> family, covers the
+    dual-cataloged ammo families - arrow/bolt/oil - whose ids live in the
+    processed-resource catalog rather than one of the "final" catalog
+    files FAMILY_ID_BY_FINAL_ITEM_ID was built from) rather than looking
+    the id up directly in the family-keyed ITEM_FAMILIES_BY_ID, which
+    always misses for a concrete id and silently falls back to stack_size
+    1 - inflating slot cost by up to stackSize-fold.
+    """
+    entry = ITEM_CATALOG_ENTRIES_BY_ID.get(item_id)
+    if entry is not None:
+        return entry.stack_size, slot_cost_for_family(entry.family_id)
+    family = ITEM_FAMILIES_BY_ID.get(item_id)
+    stack_size = family.stack_size if family else 1
+    return stack_size, slot_cost_for_family(item_id)
+
+
 def backpack_slots_used(character: dict) -> int:
     """
     Total backpack slots currently occupied on one character (as returned by
@@ -326,10 +348,9 @@ def backpack_slots_used(character: dict) -> int:
             stack_size = TINY_STACK_SIZE
         total += math.ceil(qty / stack_size)
 
-    for family_id, qty in gear.get("itemBalances", {}).get("backpack", {}).items():
-        family = ITEM_FAMILIES_BY_ID.get(family_id)
-        stack_size = family.stack_size if family else 1
-        total += math.ceil(qty / stack_size) * slot_cost_for_family(family_id)
+    for item_id, qty in gear.get("itemBalances", {}).get("backpack", {}).items():
+        stack_size, slot_cost = resolve_item_balance_stack(item_id)
+        total += math.ceil(qty / stack_size) * slot_cost
 
     return total
 

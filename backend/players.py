@@ -2940,10 +2940,7 @@ async def check_out_item_balance_to_backpack(
     if doc.get("vault", {}).get("itemBalances", {}).get(item_id, 0) < amount:
         return None
 
-    family_id = items_catalog.FAMILY_ID_BY_FINAL_ITEM_ID.get(item_id)
-    family = items_catalog.ITEM_FAMILIES_BY_ID.get(family_id) if family_id else None
-    stack_size = family.stack_size if family else 1
-    slot_cost = items_catalog.slot_cost_for_family(family_id) if family_id else 1
+    stack_size, slot_cost = items_catalog.resolve_item_balance_stack(item_id)
 
     existing = character.get("gear", {}).get("itemBalances", {}).get("backpack", {}).get(item_id, 0)
     marginal_slots = (
@@ -3239,10 +3236,7 @@ async def move_all_camp_to_backpack(address: str, character_id: str) -> Optional
     for item_id, qty in camp_item_balances.items():
         if qty <= 0 or free_slots <= 0:
             continue
-        family_id = items_catalog.FAMILY_ID_BY_FINAL_ITEM_ID.get(item_id)
-        family = items_catalog.ITEM_FAMILIES_BY_ID.get(family_id) if family_id else None
-        stack_size = family.stack_size if family else 1
-        slot_cost = items_catalog.slot_cost_for_family(family_id) if family_id else 1
+        stack_size, slot_cost = items_catalog.resolve_item_balance_stack(item_id)
         existing = new_backpack_item_balances.get(item_id, 0)
         move_amount = _max_move_amount(existing, stack_size, slot_cost, free_slots, qty)
         if move_amount <= 0:
@@ -3667,7 +3661,8 @@ async def load_item_balance_to_backpack(
     itemBalances equivalent of load_resource_to_backpack. Stack size and
     slot cost come from the item's own family row in
     item-inventory-properties.json (resolved via
-    items_catalog.FAMILY_ID_BY_FINAL_ITEM_ID), not the raw/processed
+    items_catalog.resolve_item_balance_stack, which also covers the
+    dual-cataloged ammo families - arrow/bolt/oil), not the raw/processed
     fallback resources use.
     """
     if amount <= 0:
@@ -3682,10 +3677,7 @@ async def load_item_balance_to_backpack(
     if character.get("gear", {}).get("itemBalances", {}).get("camp", {}).get(item_id, 0) < amount:
         return None
 
-    family_id = items_catalog.FAMILY_ID_BY_FINAL_ITEM_ID.get(item_id)
-    family = items_catalog.ITEM_FAMILIES_BY_ID.get(family_id) if family_id else None
-    stack_size = family.stack_size if family else 1
-    slot_cost = items_catalog.slot_cost_for_family(family_id) if family_id else 1
+    stack_size, slot_cost = items_catalog.resolve_item_balance_stack(item_id)
 
     existing = character.get("gear", {}).get("itemBalances", {}).get("backpack", {}).get(item_id, 0)
     marginal_slots = (
