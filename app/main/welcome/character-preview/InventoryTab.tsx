@@ -669,6 +669,9 @@ export function ItemGrid({
   packedItems,
   backpackSlotsUsed,
   backpackCapacity,
+  resourceBalances,
+  resourceTierInfo,
+  resourceDestinations,
 }: {
   ids: string[];
   emptyLabel: string;
@@ -721,6 +724,22 @@ export function ItemGrid({
   };
   backpackSlotsUsed?: number;
   backpackCapacity?: number;
+  /** Raw/processed materials sitting loose at this same location (e.g.
+   * CampView's own gear.resources.camp) - rendered as their own tiles
+   * (see ResourceTiles) INSIDE this same wrapping grid, alongside the
+   * item/itemBalance tiles above, rather than in a separate horizontally-
+   * scrolling row of their own (they used to get one - see CampView's own
+   * history - but that read as a second, disconnected section instead of
+   * "everything sitting here", which is what this grid is for). Omitted
+   * entirely (no tiles, no popup) for a caller with nothing of this kind
+   * to show, e.g. the plain Vault tab's own ItemGrid usage. */
+  resourceBalances?: Record<string, number>;
+  resourceTierInfo?: ResourceTierInfo;
+  /** Passed straight through to the ResourcePopup opened by clicking one of
+   * this grid's own resource tiles - see ResourcePopup's identical prop
+   * for why this varies by caller (a camp resource can reach both backpack
+   * and vault; a packed one only ever reaches one of the two). */
+  resourceDestinations?: ResourcePopupDestination[];
 }) {
   // How tall the scroll container is allowed to be, measured against the
   // real remaining viewport space below it rather than a guessed vh
@@ -760,8 +779,15 @@ export function ItemGrid({
   // the detail popup needs the SAME id back to re-read `balances`/`name`
   // for whichever exact row was clicked).
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  // Same idea, for a resource tile (see below) - a separate id/popup since
+  // a resource opens ResourcePopup, not ItemDetailPopup.
+  const [selectedResourceId, setSelectedResourceId] = useState<string | null>(null);
 
-  if (ids.length === 0) return <p className={styles.inventoryEmpty}>{emptyLabel}</p>;
+  const resourceIds = resourceBalances && resourceTierInfo ? sortResourceIds(resourceBalances, resourceTierInfo) : [];
+
+  if (ids.length === 0 && resourceIds.length === 0) {
+    return <p className={styles.inventoryEmpty}>{emptyLabel}</p>;
+  }
 
   const sortedIds = [...ids].sort((a, b) => {
     const infoA = tierInfo[lookupIds?.[a] ?? a];
@@ -836,7 +862,41 @@ export function ItemGrid({
             </button>
           );
         })}
+        {resourceIds.map((id) => {
+          const info = resourceTierInfo?.[id];
+          const fullName = info?.name ?? formatResourceLabel(id);
+          const label = fullName.split(" ").pop() ?? fullName;
+          return (
+            <button
+              key={id}
+              type="button"
+              className={styles.itemGridCell}
+              title={fullName}
+              onClick={() => setSelectedResourceId(id)}
+              onContextMenu={(e) => e.preventDefault()}
+            >
+              <span className={styles.itemGridResourceLabel}>{label}</span>
+              {!!info?.tier && (
+                <span className={`${styles.itemGridTierBadge} ${itemGridTierBadgeClass(info.tier)}`}>
+                  {getTierIndicator(info.tier)}
+                </span>
+              )}
+              <span className={styles.itemGridCountBadge}>{resourceBalances?.[id] ?? 0}</span>
+            </button>
+          );
+        })}
       </div>
+      {selectedResourceId && resourceTierInfo && (
+        <ResourcePopup
+          resourceId={selectedResourceId}
+          tierInfo={resourceTierInfo}
+          owned={resourceBalances?.[selectedResourceId] ?? 0}
+          characterId={characterId}
+          onPlayerDataUpdated={onPlayerDataUpdated}
+          onClose={() => setSelectedResourceId(null)}
+          destinations={resourceDestinations ?? []}
+        />
+      )}
       {selectedId && (
         <ItemDetailPopup
           info={tierInfo[lookupIds?.[selectedId] ?? selectedId]}
@@ -972,6 +1032,23 @@ export function qualityBarColor(f: number): string {
 // How long a failed move/equip's message replaces the description text
 // before reverting - long enough to read, short enough not to feel stuck.
 const ITEM_POPUP_FLASH_MS = 3000;
+
+// "No backpack equipped" / "Backpack is full" / "No saddlepack equipped"
+// (see backend.players.check_out_item_instance/unequip_item/
+// load_item_balance_to_backpack/check_out_item_balance_to_backpack/
+// move_camp_resource_to_backpack) get their own specific wording; anything
+// else falls back to a generic message. Shared between ItemDetailPopup and
+// ResourcePopup so a failed move reads the same regardless of which one it
+// happened in.
+function transferFailureMessage(detail: string | null): string {
+  if (detail === "No backpack equipped") return "No backpack found, equip one.";
+  if (detail === "Backpack is full") return "Backpack full - remove items first.";
+  if (detail === "No saddlepack equipped") return "No saddlepack found, equip one.";
+  if (detail === "Character is out on an adventure - no reaching the shared vault") {
+    return "Out on an adventure - the shared vault isn't reachable.";
+  }
+  return "Couldn't move that.";
+}
 
 /** What's actually packed into a character's backpack storage - flat
  * gear.itemBalances.backpack rows plus individually-tracked gear.items
@@ -1251,27 +1328,33 @@ export function ResourcePopup({
   destinations: ResourcePopupDestination[];
 }) {
   const [pending, setPending] = useState(false);
+  // Same failed-move flash as ItemDetailPopup's own (see
+  // transferFailureMessage) - e.g. "Backpack full - remove items first."
+  // when a camp->backpack move can't fit, instead of just silently
+  // re-enabling the row with no explanation.
+  const [flashMessage, setFlashMessage] = useState<string | null>(null);
+  const flashTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  useEffect(() => () => {
+    if (flashTimeoutRef.current) clearTimeout(flashTimeoutRef.current);
+  }, []);
   const info = tierInfo[resourceId];
   const name = info?.name ?? formatResourceLabel(resourceId);
 
   const handlePick = async (endpoint: string, amount: number) => {
     setPending(true);
-    try {
-      const res = await fetch(`/api/auth/me/characters/${characterId}/resources/${resourceId}/${endpoint}`, {
-        method: "POST",
-        credentials: "include",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ amount }),
-      });
-      if (res.ok) {
-        const data: RawPlayerData = await res.json();
-        onPlayerDataUpdated?.(data);
-        onClose();
-        return;
-      }
-    } catch {
-      // Fall through - just leaves the popup open with the row re-enabled.
+    setFlashMessage(null);
+    const result = await postJson(
+      `/api/auth/me/characters/${characterId}/resources/${resourceId}/${endpoint}`,
+      { amount }
+    );
+    if (result.ok) {
+      onPlayerDataUpdated?.(result.data);
+      onClose();
+      return;
     }
+    if (flashTimeoutRef.current) clearTimeout(flashTimeoutRef.current);
+    setFlashMessage(transferFailureMessage(result.detail));
+    flashTimeoutRef.current = setTimeout(() => setFlashMessage(null), ITEM_POPUP_FLASH_MS);
     setPending(false);
   };
 
@@ -1294,9 +1377,13 @@ export function ResourcePopup({
           </span>
         )}
         <h3 className={styles.itemPopupName}>{name}</h3>
-        <div className={styles.itemPopupMeta}>
-          <span>Owned: {owned}</span>
-        </div>
+        {flashMessage ? (
+          <p className={`${styles.itemPopupDescription} ${styles.itemPopupFlash}`}>{flashMessage}</p>
+        ) : (
+          <div className={styles.itemPopupMeta}>
+            <span>Owned: {owned}</span>
+          </div>
+        )}
         {destinations.map((dest) => (
           <TransferButtons
             key={dest.key}
@@ -1419,7 +1506,6 @@ export function ItemDetailPopup({
   // again (now an "info" glyph) swaps back.
   const [showDestroy, setShowDestroy] = useState(false);
 
-  const [quantity, setQuantity] = useState(1);
   const [pending, setPending] = useState(false);
   // Replaces the description text for ITEM_POPUP_FLASH_MS after a failed
   // move/equip, then reverts on its own - see the render below, which
@@ -1430,23 +1516,9 @@ export function ItemDetailPopup({
     if (flashTimeoutRef.current) clearTimeout(flashTimeoutRef.current);
   }, []);
 
-  // "No backpack equipped" / "Backpack is full" / "No saddlepack equipped"
-  // (see backend.players.check_out_item_instance/unequip_item/
-  // load_item_balance_to_backpack) get their own specific wording; anything
-  // else falls back to a generic message.
-  const flashForDetail = (detail: string | null): string => {
-    if (detail === "No backpack equipped") return "No backpack found, equip one.";
-    if (detail === "Backpack is full") return "Backpack full - remove items first.";
-    if (detail === "No saddlepack equipped") return "No saddlepack found, equip one.";
-    if (detail === "Character is out on an adventure - no reaching the shared vault") {
-      return "Out on an adventure - the shared vault isn't reachable.";
-    }
-    return "Couldn't move that.";
-  };
-
   const fail = (detail: string | null) => {
     if (flashTimeoutRef.current) clearTimeout(flashTimeoutRef.current);
-    setFlashMessage(flashForDetail(detail));
+    setFlashMessage(transferFailureMessage(detail));
     flashTimeoutRef.current = setTimeout(() => setFlashMessage(null), ITEM_POPUP_FLASH_MS);
     setPending(false);
   };
@@ -1457,20 +1529,28 @@ export function ItemDetailPopup({
     onClose();
   };
 
-  const moveToBackpack = async () => {
+  // `amount` is only meaningful for a stackable itemBalance row (isInstance
+  // rows are always exactly one unit) - a TransferButtons row's own onPick
+  // (see this popup's stackSize > 1 render below) fires this straight away
+  // with the clicked amount, no separate select-then-confirm step.
+  //
+  // A single all-or-nothing backend call (check-out-backpack), not the old
+  // check-out-then-load-backpack pair - that chain moved the vault
+  // -> camp hop first (always uncapped) and only THEN checked capacity for
+  // camp -> backpack, so a full backpack left the item stranded in camp
+  // instead of the backpack the player actually asked for, with no way
+  // back to the vault in one click. Dropping into camp on a full backpack
+  // is deliberately ONLY something recycling does, never a normal move -
+  // see backend.players.check_out_item_balance_to_backpack.
+  const moveToBackpack = async (amount: number) => {
     setPending(true);
     setFlashMessage(null);
     if (isInstance) {
       return finish(await postJson(`/api/auth/me/characters/${characterId}/items/${moveId}/check-out`));
     }
-    const checkedOut = await postJson(
-      `/api/auth/me/characters/${characterId}/item-balances/${moveId}/check-out`,
-      { amount: quantity }
-    );
-    if (!checkedOut.ok) return fail(checkedOut.detail);
     finish(
-      await postJson(`/api/auth/me/characters/${characterId}/item-balances/${moveId}/load-backpack`, {
-        amount: quantity,
+      await postJson(`/api/auth/me/characters/${characterId}/item-balances/${moveId}/check-out-backpack`, {
+        amount,
       })
     );
   };
@@ -2056,105 +2136,85 @@ export function ItemDetailPopup({
                   {characterFirstName ? `${characterFirstName} in Storyline` : "In Storyline"}
                 </p>
               ) : (
-                <div className={styles.itemPopupActions} role={stackSize > 1 ? "radiogroup" : undefined}>
-                  {stackSize > 1
-                    ? (
-                      <>
-                        {QUANTITY_OPTIONS.map((n) => (
-                          <button
-                            key={n}
-                            type="button"
-                            role="radio"
-                            aria-checked={quantity === n}
-                            className={[
-                              styles.craftCountButton,
-                              styles.itemPopupQuantityButton,
-                              quantity === n ? styles.craftCountButtonActive : "",
-                            ]
-                              .filter(Boolean)
-                              .join(" ")}
-                            disabled={pending || n > owned}
-                            onClick={() => setQuantity(n)}
-                          >
-                            {n}
-                          </button>
-                        ))}
-                        <button
-                          type="button"
-                          role="radio"
-                          aria-checked={quantity === owned}
-                          className={[
-                            styles.craftCountButton,
-                            styles.itemPopupQuantityButton,
-                            quantity === owned ? styles.craftCountButtonActive : "",
-                          ]
-                            .filter(Boolean)
-                            .join(" ")}
-                          disabled={pending || owned <= 0}
-                          onClick={() => setQuantity(owned)}
-                          title="All"
-                          aria-label="All"
-                        >
-                          <span className={styles.itemPopupInfinityGlyph}>∞</span>
-                        </button>
-                      </>
+                stackSize > 1 ? (
+                  // A stackable itemBalance row - one TransferButtons row,
+                  // same one-click-moves-it, icon-moves-all behavior as the
+                  // resource popups (see ResourcePopup). No preselected
+                  // amount to confirm afterwards: every number/∞/backpack
+                  // click fires straight away.
+                  info?.backpackable && (
+                    hasBackpackEquipped ? (
+                      <TransferButtons
+                        owned={owned}
+                        pending={pending}
+                        onPick={moveToBackpack}
+                        destinationIcon={BACKPACK_ACTION_ICON}
+                        destinationLabel="Backpack"
+                        amounts={RESOURCE_POPUP_TRANSFER_AMOUNTS}
+                      />
+                    ) : (
+                      <p className={styles.transferUnavailable}>No backpack equipped</p>
                     )
-                    : slotGroups.map((slots) => (
-                        <button
-                          key={slots.join("+")}
-                          type="button"
-                          className={styles.itemPopupActionButton}
-                          disabled={pending}
-                          onClick={() => equipFromPool(slots)}
-                        >
-                          {slots.map((slot, i) => (
-                            <Fragment key={slot}>
-                              {i > 0 && " + "}
-                              {formatSlotLabel(slot)}
-                            </Fragment>
-                          ))}
-                        </button>
-                      ))}
-                  {info?.backpackable && (
-                    <button
-                      type="button"
-                      className={styles.itemPopupBackpackButton}
-                      disabled={pending || !hasBackpackEquipped}
-                      onClick={moveToBackpack}
-                      aria-label="Move to backpack"
-                      title={hasBackpackEquipped ? "Move to backpack" : "No backpack equipped"}
-                    >
-                      <div
-                        role="img"
-                        aria-label="Backpack"
-                        className={styles.itemPopupBackpackIcon}
-                        style={{ backgroundImage: `url(${BACKPACK_ACTION_ICON})` }}
-                      />
-                    </button>
-                  )}
-                  {/* Hidden outright (not greyed) when no saddlepack is
-                      equipped - unlike the backpack icon above, there's no
-                      "you could wear one" affordance to point at, so a
-                      disabled button here would just be dead weight.
-                      Instance rows only - see moveToSaddlepack. */}
-                  {info?.backpackable && isInstance && hasSaddlepackEquipped && (
-                    <button
-                      type="button"
-                      className={styles.itemPopupBackpackButton}
-                      disabled={pending}
-                      onClick={moveToSaddlepack}
-                      aria-label="Move to saddlepack"
-                      title="Move to saddlepack"
-                    >
-                      <div
-                        role="img"
-                        aria-label="Saddlepack"
-                        className={styles.itemPopupBackpackIcon}
-                        style={{ backgroundImage: `url(${SADDLEPACK_ACTION_ICON})` }}
-                      />
-                    </button>
-                  )}
-                </div>
+                  )
+                ) : (
+                  <div className={styles.itemPopupActions}>
+                    {slotGroups.map((slots) => (
+                      <button
+                        key={slots.join("+")}
+                        type="button"
+                        className={styles.itemPopupActionButton}
+                        disabled={pending}
+                        onClick={() => equipFromPool(slots)}
+                      >
+                        {slots.map((slot, i) => (
+                          <Fragment key={slot}>
+                            {i > 0 && " + "}
+                            {formatSlotLabel(slot)}
+                          </Fragment>
+                        ))}
+                      </button>
+                    ))}
+                    {info?.backpackable && (
+                      <button
+                        type="button"
+                        className={styles.itemPopupBackpackButton}
+                        disabled={pending || !hasBackpackEquipped}
+                        onClick={() => moveToBackpack(1)}
+                        aria-label="Move to backpack"
+                        title={hasBackpackEquipped ? "Move to backpack" : "No backpack equipped"}
+                      >
+                        <div
+                          role="img"
+                          aria-label="Backpack"
+                          className={styles.itemPopupBackpackIcon}
+                          style={{ backgroundImage: `url(${BACKPACK_ACTION_ICON})` }}
+                        />
+                      </button>
+                    )}
+                    {/* Hidden outright (not greyed) when no saddlepack is
+                        equipped - unlike the backpack icon above, there's no
+                        "you could wear one" affordance to point at, so a
+                        disabled button here would just be dead weight.
+                        Instance rows only - see moveToSaddlepack. */}
+                    {info?.backpackable && isInstance && hasSaddlepackEquipped && (
+                      <button
+                        type="button"
+                        className={styles.itemPopupBackpackButton}
+                        disabled={pending}
+                        onClick={moveToSaddlepack}
+                        aria-label="Move to saddlepack"
+                        title="Move to saddlepack"
+                      >
+                        <div
+                          role="img"
+                          aria-label="Saddlepack"
+                          className={styles.itemPopupBackpackIcon}
+                          style={{ backgroundImage: `url(${SADDLEPACK_ACTION_ICON})` }}
+                        />
+                      </button>
+                    )}
+                  </div>
+                )
               )
             )}
             {movable && source === "character" && isInstance && (

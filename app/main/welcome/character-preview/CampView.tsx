@@ -3,8 +3,6 @@ import styles from "./CharacterTabs.module.css";
 import {
   BACKPACK_ACTION_ICON,
   ItemGrid,
-  ResourcePopup,
-  ResourceTiles,
   VAULT_ACTION_ICON,
   computeBackpackContents,
   type BlueprintTierInfo,
@@ -45,10 +43,6 @@ export function CampView({
   onExitCamp: () => void;
 }) {
   const { muted } = useSound();
-
-  // Which camp-located resource tile's own popup is open, if any (see
-  // ResourceTiles/ResourcePopup below).
-  const [selectedCampResourceId, setSelectedCampResourceId] = useState<string | null>(null);
 
   // Same item-catalog fetch BodyTab.tsx/InventoryTab.tsx each already do
   // independently for their own tierInfo - no shared ancestor state to
@@ -223,33 +217,6 @@ export function CampView({
 
   return (
     <div className={styles.panel}>
-      {hasCampResources && (
-        <div className={styles.packedItemsRow}>
-          <ResourceTiles
-            balances={campResourceBalances}
-            tierInfo={resourceTierInfo}
-            onSelect={setSelectedCampResourceId}
-          />
-        </div>
-      )}
-      {selectedCampResourceId && (
-        <ResourcePopup
-          resourceId={selectedCampResourceId}
-          tierInfo={resourceTierInfo}
-          owned={campResourceBalances[selectedCampResourceId] ?? 0}
-          characterId={character.id}
-          onPlayerDataUpdated={onPlayerDataUpdated}
-          onClose={() => setSelectedCampResourceId(null)}
-          destinations={[
-            ...(hasBackpackEquipped
-              ? [{ key: "backpack", icon: BACKPACK_ACTION_ICON, label: "Backpack", endpoint: "stow" }]
-              : []),
-            ...(!character.availability.inAdventure
-              ? [{ key: "vault", icon: VAULT_ACTION_ICON, label: "Vault", endpoint: "check-in-camp" }]
-              : []),
-          ]}
-        />
-      )}
       <ItemGrid
         ids={campIds}
         emptyLabel="Nothing sitting at camp right now."
@@ -269,6 +236,16 @@ export function CampView({
         packedItems={packedItems}
         backpackSlotsUsed={character.gear.backpackSlotsUsed}
         backpackCapacity={character.gear.backpackCapacity}
+        resourceBalances={campResourceBalances}
+        resourceTierInfo={resourceTierInfo}
+        resourceDestinations={[
+          ...(hasBackpackEquipped
+            ? [{ key: "backpack", icon: BACKPACK_ACTION_ICON, label: "Backpack", endpoint: "stow" }]
+            : []),
+          ...(!character.availability.inAdventure
+            ? [{ key: "vault", icon: VAULT_ACTION_ICON, label: "Vault", endpoint: "check-in-camp" }]
+            : []),
+        ]}
       />
       <div className={styles.campfireStage} style={{ height: CAMPFIRE_AREA_PX }}>
         {/* Fire's position/size are relative to THIS group (i.e. to the

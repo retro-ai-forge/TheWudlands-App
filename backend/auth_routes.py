@@ -35,6 +35,7 @@ from backend.players import (
     check_in_tool,
     check_in_resource_from_camp,
     check_out_item_balance,
+    check_out_item_balance_to_backpack,
     check_out_item_instance,
     check_out_resource_to_backpack,
     delete_character,
@@ -1180,6 +1181,24 @@ async def check_out_item_balance_route(
     """Move `amount` of `item_id` from the player's shared vault onto one of their characters (uncapped)."""
     try:
         player = await check_out_item_balance(address, character_id, item_id, payload.amount)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc))
+
+    if player is None:
+        raise HTTPException(status_code=404, detail="No matching character, or not enough in the shared vault")
+
+    return player.to_dict()
+
+
+@player_router.post(
+    "/me/characters/{character_id}/item-balances/{item_id}/check-out-backpack", response_model=PlayerDataResponse
+)
+async def check_out_item_balance_to_backpack_route(
+    character_id: str, item_id: str, payload: TransferAmountRequest, address: str = Depends(get_current_address)
+):
+    """Move `amount` of `item_id` from the player's shared vault straight into this character's own backpack, in one all-or-nothing hop."""
+    try:
+        player = await check_out_item_balance_to_backpack(address, character_id, item_id, payload.amount)
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc))
 

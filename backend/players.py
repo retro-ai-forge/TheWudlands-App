@@ -2903,6 +2903,77 @@ async def check_out_item_balance(address: str, character_id: str, item_id: str, 
     return _doc_to_player(doc)
 
 
+async def check_out_item_balance_to_backpack(
+    address: str, character_id: str, item_id: str, amount: int = 1
+) -> Optional[Player]:
+    """
+    Move `amount` of `item_id` straight from the player's shared
+    vault.itemBalances into one of their characters' own backpack
+    (gear.itemBalances.backpack), in one atomic, all-or-nothing hop -
+    capacity checked BEFORE anything moves. This is the "Move to backpack"
+    action's own endpoint (see InventoryTab's moveToBackpack), deliberately
+    NOT the same as chaining check_out_item_balance (vault -> camp,
+    uncapped) with load_item_balance_to_backpack (camp -> backpack,
+    capacity-gated): if the second hop failed, the item was left stranded
+    in camp instead of the backpack the player actually clicked for, with
+    no way back to the vault in one click either. Dropping into camp on a
+    full backpack is deliberately ONLY something recycling does (see
+    _recycle_resource_updates) - a normal move either lands in the
+    backpack whole, or doesn't move at all.
+
+    Raises ValueError if the character is out on an adventure, has no
+    backpack equipped, or the backpack has no room for the whole amount.
+    Returns None if the shared vault doesn't hold `amount`, or the
+    address/character pair doesn't match.
+    """
+    if amount <= 0:
+        raise ValueError("amount must be positive")
+    db = get_database()
+    doc = await db.players.find_one({"address": address, "characters.id": character_id})
+    if doc is None:
+        return None
+    character = next((c for c in doc["characters"] if c["id"] == character_id), None)
+    if character is None:
+        return None
+    if character.get("availability", {}).get("inAdventure", False):
+        raise ValueError("Character is out on an adventure - no reaching the shared vault")
+    if doc.get("vault", {}).get("itemBalances", {}).get(item_id, 0) < amount:
+        return None
+
+    family_id = items_catalog.FAMILY_ID_BY_FINAL_ITEM_ID.get(item_id)
+    family = items_catalog.ITEM_FAMILIES_BY_ID.get(family_id) if family_id else None
+    stack_size = family.stack_size if family else 1
+    slot_cost = items_catalog.slot_cost_for_family(family_id) if family_id else 1
+
+    existing = character.get("gear", {}).get("itemBalances", {}).get("backpack", {}).get(item_id, 0)
+    marginal_slots = (
+        math.ceil((existing + amount) / stack_size) - math.ceil(existing / stack_size)
+    ) * slot_cost
+
+    capacity = items_catalog.backpack_capacity(character)
+    if capacity == 0:
+        raise ValueError("No backpack equipped")
+    used = items_catalog.backpack_slots_used(character)
+    if used + marginal_slots > capacity:
+        raise ValueError("Backpack is full")
+
+    doc = await db.players.find_one_and_update(
+        {
+            "address": address,
+            "characters.id": character_id,
+            f"vault.itemBalances.{item_id}": {"$gte": amount},
+        },
+        {"$inc": {
+            f"vault.itemBalances.{item_id}": -amount,
+            f"characters.$.gear.itemBalances.backpack.{item_id}": amount,
+        }},
+        return_document=ReturnDocument.AFTER,
+    )
+    if doc is None:
+        return None
+    return _doc_to_player(doc)
+
+
 async def check_in_item_balance(address: str, character_id: str, item_id: str, amount: int = 1) -> Optional[Player]:
     """The reverse of check_out_item_balance."""
     if amount <= 0:
