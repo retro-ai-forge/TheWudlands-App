@@ -11,7 +11,7 @@ Provides:
 from fastapi import APIRouter, BackgroundTasks, HTTPException, Request, Response, Depends
 from pydantic import BaseModel, ConfigDict, Field
 from datetime import datetime, timedelta, timezone
-from typing import Dict, List, Optional
+from typing import Dict, List, Literal, Optional
 import secrets
 import time
 from backend.auth import (
@@ -1522,15 +1522,29 @@ async def recycle_item_instance_from_vault_route(
     return player.to_dict()
 
 
+class RecycleItemBalanceRequest(BaseModel):
+    """How much of a character's own flat itemBalances row to recycle, and
+    which of its two possible buckets (see ItemDetailPopup's own
+    `location` prop) to actually deduct it from - there's no instance to
+    read the real location off of, unlike recycle_item_instance."""
+
+    amount: int = Field(..., gt=0, description="Quantity to recycle - must be positive")
+    location: Literal["camp", "backpack"] = Field(
+        "camp", description="Which of the character's own itemBalances buckets to recycle from"
+    )
+
+
 @player_router.post(
     "/me/characters/{character_id}/item-balances/{item_id}/recycle", response_model=PlayerDataResponse
 )
 async def recycle_item_balance_route(
-    character_id: str, item_id: str, payload: TransferAmountRequest, address: str = Depends(get_current_address)
+    character_id: str, item_id: str, payload: RecycleItemBalanceRequest, address: str = Depends(get_current_address)
 ):
-    """Recycle `amount` of the character's own item_id balance into a fraction of its raw materials, credited to that character's own backpack."""
+    """Recycle `amount` of the character's own item_id balance (from `location`) into a fraction of its raw materials, credited to that character's own backpack."""
     try:
-        player = await recycle_item_balance(address, character_id, item_id, payload.amount, from_vault=False)
+        player = await recycle_item_balance(
+            address, character_id, item_id, payload.amount, from_vault=False, location=payload.location
+        )
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc))
 

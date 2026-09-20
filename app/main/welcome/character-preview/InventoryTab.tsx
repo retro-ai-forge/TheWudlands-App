@@ -81,11 +81,12 @@ type RecycleMaterial = {
 type RecyclePreview = { materials: RecycleMaterial[] };
 
 const TRANSFER_AMOUNTS = [1, 2, 5, 10, 20, 50] as const;
-// Party's Resources/Tools' own quantity row keeps the full TRANSFER_AMOUNTS
-// (drawing from a shared pool that can hold hundreds of units), but a
-// single packed/camped resource's own popup (see ResourcePopup) drops 50 -
-// at typical backpack/camp quantities it's rarely reachable anyway, and
-// the shorter row reads cleaner in that smaller popup.
+// Tools' own quantity row keeps the full TRANSFER_AMOUNTS (drawing from a
+// shared pool that can hold hundreds of units), but every resource/
+// processed-material move (Party's Resources' own row, and a single
+// packed/camped resource's popup - see ResourcePopup) drops 50 - at
+// typical backpack/camp quantities it's rarely reachable anyway, and the
+// shorter row reads cleaner.
 const RESOURCE_POPUP_TRANSFER_AMOUNTS = [1, 2, 5, 10, 20] as const;
 
 /** The row of quick-transfer quantity buttons revealed under a clicked resource/tool row. */
@@ -100,12 +101,11 @@ function TransferButtons({
   owned: number;
   pending: boolean;
   onPick: (amount: number) => void;
-  /** When given, a small static icon tacked on after the ∞ button - purely
-   * a label for where clicking one of these amounts sends the material
-   * (e.g. a backpack icon for a check-out-to-backpack row), not a
-   * separate clickable trigger of its own - every amount button here
-   * already fires immediately on its own click, same as the rest of this
-   * row. */
+  /** When given, a small icon tacked on after the ∞ button, showing where
+   * these amounts go (e.g. a backpack icon for a check-out-to-backpack
+   * row). Clicking it is a second way to fire the same "move everything"
+   * action as the ∞ button - a bigger, more obvious target for the same
+   * owned-amount transfer. */
   destinationIcon?: string;
   /** Accessible label for destinationIcon - e.g. "Vault"/"Camp" for a
    * packed resource's move-out popup, whose destination varies by
@@ -145,12 +145,17 @@ function TransferButtons({
         <span className={styles.itemPopupInfinityGlyph}>∞</span>
       </button>
       {destinationIcon && (
-        <div
-          role="img"
+        <button
+          type="button"
           aria-label={destinationLabel}
           title={destinationLabel}
           className={styles.transferDestinationIcon}
           style={{ backgroundImage: `url(${destinationIcon})` }}
+          disabled={pending || owned <= 0}
+          onClick={(e) => {
+            e.stopPropagation();
+            onPick(owned);
+          }}
         />
       )}
     </div>
@@ -288,6 +293,7 @@ function ResourceList({
   emptyLabel,
   tierInfo,
   onTransfer,
+  amounts = TRANSFER_AMOUNTS,
   destinationIcon,
   destinationUnavailableLabel,
 }: {
@@ -296,6 +302,8 @@ function ResourceList({
   tierInfo?: ResourceTierInfo;
   /** When given, clicking a row reveals quick-transfer quantity buttons that call this with (id, amount). */
   onTransfer?: (id: string, amount: number) => Promise<boolean>;
+  /** Quick-transfer quantity options - see TransferButtons' own comment on its identical prop. */
+  amounts?: readonly number[];
   /** When given, shown as a small static icon at the end of every expanded
    * row - purely a label for where onTransfer sends the material (e.g. a
    * backpack icon), not a separate clickable trigger of its own. */
@@ -400,6 +408,7 @@ function ResourceList({
                           owned={qty}
                           pending={pendingId === id}
                           onPick={(amount) => handlePick(id, amount)}
+                          amounts={amounts}
                           destinationIcon={destinationIcon}
                         />
                       )}
@@ -1544,48 +1553,49 @@ export function ItemDetailPopup({
   // source:"character", NOT isInstance, location:"camp" only (a flat
   // gear.itemBalances.camp row, e.g. crafted goods like potions/food, or
   // ammo living in resources instead - see nonMovableIds) - camp -> this
-  // same character's backpack, `quantity` units at a time. The
-  // itemBalances equivalent of stowToBackpack above - same backend.
+  // same character's backpack, `amount` units at a time (one TransferButtons
+  // row's own onPick - see this popup's itemBalances render block below).
+  // The itemBalances equivalent of stowToBackpack above - same backend.
   // players.load_item_balance_to_backpack endpoint the Vault tab's own
   // moveToBackpack already uses for a non-instance row.
-  const stowBalanceToBackpack = async () => {
+  const stowBalanceToBackpack = async (amount: number) => {
     setPending(true);
     setFlashMessage(null);
     finish(
       await postJson(`/api/auth/me/characters/${characterId}/item-balances/${moveId}/load-backpack`, {
-        amount: quantity,
+        amount,
       })
     );
   };
 
   // source:"character", NOT isInstance, location:"camp" only - camp -> the
-  // shared pool, `quantity` units at a time. The itemBalances equivalent
+  // shared pool, `amount` units at a time. The itemBalances equivalent
   // of checkInToVault above.
-  const checkInBalanceToVault = async () => {
+  const checkInBalanceToVault = async (amount: number) => {
     setPending(true);
     setFlashMessage(null);
     finish(
       await postJson(`/api/auth/me/characters/${characterId}/item-balances/${moveId}/check-in`, {
-        amount: quantity,
+        amount,
       })
     );
   };
 
   // source:"character", NOT isInstance, location:"backpack" only (a flat
   // gear.itemBalances.backpack row - see BodyTab's packedItems) - backpack
-  // -> camp, `quantity` units at a time, the reverse of
+  // -> camp, `amount` units at a time, the reverse of
   // stowBalanceToBackpack above. There's no direct backpack->vault balance
   // endpoint (check_in_item_balance only ever reads gear.itemBalances.camp
   // - see its own docstring), so unlike a packed item INSTANCE (which can
   // check in to the vault straight from "backpack"), a packed balance row
   // has to land in camp first - same two-step check-out_camp then
   // check_in_vault path the Vault tab's own itemBalances rows already use.
-  const unloadBalanceToCamp = async () => {
+  const unloadBalanceToCamp = async (amount: number) => {
     setPending(true);
     setFlashMessage(null);
     finish(
       await postJson(`/api/auth/me/characters/${characterId}/item-balances/${moveId}/unload-backpack`, {
-        amount: quantity,
+        amount,
       })
     );
   };
@@ -1740,10 +1750,16 @@ export function ItemDetailPopup({
   const runRecycle = async () => {
     setRecyclingItem(true);
     const amount = destroyAll ? owned : destroyQuantity;
+    // A flat itemBalances row carries no location of its own the way an
+    // instance does (recycle_item_instance reads it straight off the
+    // instance) - this popup already knows which of the character's two
+    // buckets it opened on (backpack or camp), so it has to say so
+    // explicitly or the backend can't tell where to deduct from.
     const result = isInstance
       ? await postJson(`/api/auth/me/characters/${characterId}/items/${moveId}/${recycleSuffix}`)
       : await postJson(`/api/auth/me/characters/${characterId}/item-balances/${moveId}/${recycleSuffix}`, {
           amount,
+          ...(source === "character" ? { location: location ?? "camp" } : {}),
         });
     if (!result.ok) {
       setRecyclingItem(false);
@@ -1803,9 +1819,9 @@ export function ItemDetailPopup({
   // progress bar + icon area now, not just the icon), so those controls get
   // their own clicks instead of just dismissing the popup. While showDestroy
   // is open, clicking anywhere else in that view (the recycle breakdown
-  // text, ...) doesn't close the popup outright - it acts like the "↩"
-  // button instead, returning to the item info view, since the whole
-  // recycle/destroy card is still "inside" this same item.
+  // text, ...) doesn't close the popup outright - it returns to the item
+  // info view instead (there's no dedicated back button anymore), since
+  // the whole recycle/destroy card is still "inside" this same item.
   //
   // stopPropagation matters here specifically for a packed item's own
   // nested popup (PackedItemsRow, opened from inside a worn/camped
@@ -1831,15 +1847,17 @@ export function ItemDetailPopup({
   return (
     <div className={styles.itemPopupOverlay} onClick={handleClick}>
       <div className={`${styles.itemPopupCard} ${showDestroy ? styles.recycleDestroyCard : ""}`}>
-        <button
-          type="button"
-          className={styles.itemPopupSettingsButton}
-          onClick={() => setShowDestroy((prev) => !prev)}
-          aria-label={showDestroy ? "Back to item details" : "Recycle or destroy this item"}
-          title={showDestroy ? "Back to item details" : "Recycle or destroy this item"}
-        >
-          {showDestroy ? "↩" : "⚙"}
-        </button>
+        {!showDestroy && (
+          <button
+            type="button"
+            className={styles.itemPopupSettingsButton}
+            onClick={() => setShowDestroy(true)}
+            aria-label="Recycle or destroy this item"
+            title="Recycle or destroy this item"
+          >
+            ⚙
+          </button>
+        )}
         {showDestroy ? (
           <>
             {recyclePreviewLoading ? (
@@ -2323,82 +2341,33 @@ export function ItemDetailPopup({
                 check_in_item_balance/unload_item_balance_from_backpack),
                 same as an item instance does. */}
             {movable && source === "character" && !isInstance && (location === "camp" || location === "backpack") && (
-              <div className={styles.itemPopupActions} role={stackSize > 1 ? "radiogroup" : undefined}>
-                {stackSize > 1 &&
-                  QUANTITY_OPTIONS.map((n) => (
-                    <button
-                      key={n}
-                      type="button"
-                      role="radio"
-                      aria-checked={quantity === n}
-                      className={[
-                        styles.craftCountButton,
-                        styles.itemPopupQuantityButton,
-                        quantity === n ? styles.craftCountButtonActive : "",
-                      ]
-                        .filter(Boolean)
-                        .join(" ")}
-                      disabled={pending || n > owned}
-                      onClick={() => setQuantity(n)}
-                    >
-                      {n}
-                    </button>
-                  ))}
-                {stackSize > 1 && (
-                  <button
-                    type="button"
-                    role="radio"
-                    aria-checked={quantity === owned}
-                    className={[
-                      styles.craftCountButton,
-                      styles.itemPopupQuantityButton,
-                      quantity === owned ? styles.craftCountButtonActive : "",
-                    ]
-                      .filter(Boolean)
-                      .join(" ")}
-                    disabled={pending || owned <= 0}
-                    onClick={() => setQuantity(owned)}
-                    title="All"
-                    aria-label="All"
-                  >
-                    <span className={styles.itemPopupInfinityGlyph}>∞</span>
-                  </button>
-                )}
+              // One TransferButtons row per available move destination -
+              // same pattern as ResourcePopup (a camp row can have BOTH
+              // backpack and vault at once; a backpack row only ever has
+              // camp) - each row's own number/∞/destination-icon click
+              // fires that amount immediately, no separate "Move" step.
+              <>
                 {location === "camp" ? (
                   <>
                     {hasBackpackEquipped && (
-                      <button
-                        type="button"
-                        className={styles.itemPopupBackpackButton}
-                        disabled={pending}
-                        onClick={stowBalanceToBackpack}
-                        aria-label="Move to backpack"
-                        title="Move to backpack"
-                      >
-                        <div
-                          role="img"
-                          aria-label="Backpack"
-                          className={styles.itemPopupBackpackIcon}
-                          style={{ backgroundImage: `url(${BACKPACK_ACTION_ICON})` }}
-                        />
-                      </button>
+                      <TransferButtons
+                        owned={owned}
+                        pending={pending}
+                        onPick={stowBalanceToBackpack}
+                        destinationIcon={BACKPACK_ACTION_ICON}
+                        destinationLabel="Backpack"
+                        amounts={RESOURCE_POPUP_TRANSFER_AMOUNTS}
+                      />
                     )}
                     {!inAdventure && (
-                      <button
-                        type="button"
-                        className={styles.itemPopupBackpackButton}
-                        disabled={pending}
-                        onClick={checkInBalanceToVault}
-                        aria-label="Check in to vault"
-                        title="Check in to vault"
-                      >
-                        <div
-                          role="img"
-                          aria-label="Vault"
-                          className={styles.itemPopupBackpackIcon}
-                          style={{ backgroundImage: `url(${VAULT_ACTION_ICON})` }}
-                        />
-                      </button>
+                      <TransferButtons
+                        owned={owned}
+                        pending={pending}
+                        onPick={checkInBalanceToVault}
+                        destinationIcon={VAULT_ACTION_ICON}
+                        destinationLabel="Vault"
+                        amounts={RESOURCE_POPUP_TRANSFER_AMOUNTS}
+                      />
                     )}
                   </>
                 ) : (
@@ -2406,23 +2375,16 @@ export function ItemDetailPopup({
                   // shared vault (check_in_item_balance only ever reads
                   // gear.itemBalances.camp), so camp is the only move
                   // offered here - see unloadBalanceToCamp.
-                  <button
-                    type="button"
-                    className={styles.itemPopupBackpackButton}
-                    disabled={pending}
-                    onClick={unloadBalanceToCamp}
-                    aria-label="Move to camp"
-                    title="Move to camp"
-                  >
-                    <div
-                      role="img"
-                      aria-label="Camp"
-                      className={styles.itemPopupBackpackIcon}
-                      style={{ backgroundImage: `url(${CAMP_ACTION_ICON})` }}
-                    />
-                  </button>
+                  <TransferButtons
+                    owned={owned}
+                    pending={pending}
+                    onPick={unloadBalanceToCamp}
+                    destinationIcon={CAMP_ACTION_ICON}
+                    destinationLabel="Camp"
+                    amounts={RESOURCE_POPUP_TRANSFER_AMOUNTS}
+                  />
                 )}
-              </div>
+              </>
             )}
           </>
         )}
@@ -3170,6 +3132,7 @@ export function InventoryTab({
                   emptyLabel="Nothing in the shared crafting stock."
                   tierInfo={resourceTierInfo}
                   onTransfer={transferToBackpack}
+                  amounts={RESOURCE_POPUP_TRANSFER_AMOUNTS}
                   destinationIcon={BACKPACK_ACTION_ICON}
                   destinationUnavailableLabel={
                     !hasBackpackEquipped ? "No backpack equipped" : backpackFull ? "Backpack full" : undefined

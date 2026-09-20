@@ -2562,7 +2562,15 @@
   -webkit-touch-callout: none;
   -webkit-user-select: none;
   user-select: none;
-  pointer-events: none;
+  border: none;
+  padding: 0;
+  background-color: transparent;
+  cursor: pointer;
+}
+
+.transferDestinationIcon:disabled {
+  cursor: default;
+  opacity: 0.5;
 }
 
 /* Replaces the whole quantity-button row (see ResourceList's
