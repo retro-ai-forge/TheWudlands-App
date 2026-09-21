@@ -1066,21 +1066,83 @@ CRAFT_SECONDS_PER_RAW = 30  # T1: 30s of craft time per raw material in the full
 CRAFT_BLUEPRINT_MAX_SECONDS = 3600  # T1: 1 hour hard cap per unit on the blueprint finishing time
 
 
-def _craft_duration_seconds(recipe: dict, family_id: str, tier: int, character: dict, count: int) -> int:
+def _craft_step_duration_seconds(recipe: dict, family_id: str, tier: int, character: dict, count: int) -> int:
     """
-    How long start_craft's timer runs for one call (see the constants
-    above) - scaled by this recipe's own full raw-material chain total,
-    not just its direct ingredients, then by `tier` (T1 = 1x, T2 = 2x, ...,
-    T6 = 6x the base rate and the blueprint cap alike), THEN multiplied by
-    `count`: a batch of `count` units takes `count` times as long as
-    crafting just one, same as the ingredients themselves already scale
-    with count.
+    How long ONE auto-crafted INTERMEDIATE step of a craft chain takes
+    (see _resolve_craft_chain) - every step except the actually-requested
+    item itself, which uses _craft_final_duration_seconds instead (see
+    _craft_chain_duration_seconds, which combines the two). Scaled by
+    this recipe's own DIRECT raw-material total only (same one-level
+    scoping _resolve_recipe_direct_raw_totals already uses for XP), not
+    its full recursive chain - a "processed" ingredient contributes
+    nothing here, since its own raw-material time is already paid by ITS
+    OWN separate step elsewhere in the same chain. A step already fully
+    covered by owned stock never makes it into `steps` at all (see
+    _resolve_craft_chain's own owned-first accounting), contributing zero
+    time - this is the fix for an auto-crafted intermediate being charged
+    as if its own raw materials were being smelted twice. Then scaled by
+    `tier` (T1 = 1x, ..., T6 = 6x the base rate and the blueprint cap
+    alike), THEN multiplied by `count`.
+    """
+    direct_total = sum(_resolve_recipe_direct_raw_totals(family_id, 1, character).values())
+    per_unit_seconds = CRAFT_SECONDS_PER_RAW * tier * direct_total
+    if recipe.get("blueprintFamilyId"):
+        per_unit_seconds = min(per_unit_seconds, CRAFT_BLUEPRINT_MAX_SECONDS * tier)
+    return per_unit_seconds * count
+
+
+def _craft_final_duration_seconds(recipe: dict, family_id: str, tier: int, character: dict, count: int) -> int:
+    """
+    How long the actually-REQUESTED item's own step takes - always the
+    item's full RECURSIVE raw-material chain (_resolve_recipe_full_chain_
+    raw_total, same metric _assembly_bonus_xp already uses), capped, never
+    the direct-only total _craft_step_duration_seconds uses for an
+    auto-crafted intermediate. This is deliberate, separate "assembly/
+    craftsmanship" time - forging a finished hauberk from metal bars and
+    rings still takes real effort proportional to how big the whole item
+    is, whether or not those bars happened to already be sitting in the
+    vault; owning them removes the SMELTING time (that step just never
+    runs), not the forging time. Same formula a plain single-recipe craft
+    (nothing to auto-craft, chain of exactly one step) always used before
+    this feature existed - crafting one step at a time manually still
+    costs exactly this for whichever item you're actually asking for at
+    that moment, same as it always has.
     """
     full_chain_total = _resolve_recipe_full_chain_raw_total(family_id, 1, character)
     per_unit_seconds = CRAFT_SECONDS_PER_RAW * tier * full_chain_total
     if recipe.get("blueprintFamilyId"):
         per_unit_seconds = min(per_unit_seconds, CRAFT_BLUEPRINT_MAX_SECONDS * tier)
     return per_unit_seconds * count
+
+
+def _craft_chain_duration_seconds(steps: List[dict], character: dict) -> int:
+    """
+    Total time for a whole chain plan (see _resolve_craft_chain) - every
+    auto-crafted intermediate step's own direct-ingredients-only duration
+    (_craft_step_duration_seconds - a step fully covered by owned stock is
+    never in `steps` to begin with, so it contributes nothing, fixing the
+    "already own the processed ingredient, still charged as if smelting
+    the ore too" double-count), PLUS the actually-requested item's own
+    step (always `steps[-1]` - see _resolve_craft_chain's own post-order
+    guarantee), which always uses its full recursive chain instead
+    (_craft_final_duration_seconds) - added separately on top, not
+    replaced by the direct-only treatment every OTHER step gets.
+    """
+    if not steps:
+        return 0
+    total = 0
+    for step in steps[:-1]:
+        recipe = _RECIPES_BY_FAMILY.get(step["familyId"])
+        if recipe is None:
+            continue
+        total += _craft_step_duration_seconds(recipe, step["familyId"], step["tier"], character, step["count"])
+    final_step = steps[-1]
+    final_recipe = _RECIPES_BY_FAMILY.get(final_step["familyId"])
+    if final_recipe is not None:
+        total += _craft_final_duration_seconds(
+            final_recipe, final_step["familyId"], final_step["tier"], character, final_step["count"]
+        )
+    return total
 
 
 # Cumulative "Total XP" needed to REACH each level, 1-30 - index i (0-based)
@@ -1268,6 +1330,51 @@ def _resolve_ingredient_option(
     }
 
 
+def _choose_ingredient_option(
+    options: List[dict],
+    tier: int,
+    character: dict,
+    character_resources: Dict[str, int],
+    player_resources: Dict[str, int],
+    count: int,
+    player_items: Optional[List[dict]],
+    character_item_balances: Optional[Dict[str, int]],
+    player_item_balances: Optional[Dict[str, int]],
+) -> tuple[Optional[dict], Optional[dict]]:
+    """
+    Picks whichever option in one ingredient's `options` list (the sole
+    option for a plain ingredient, or the full "alternatives" list) would
+    be chosen right now against the given pools - same priority
+    `_resolve_recipe_ingredients` applies inline: an unconsumed ("held")
+    option first, then the first affordable consumed option in listed
+    order. Returns `(plan, option)` for whichever one resolves (see
+    `_resolve_ingredient_option`'s own return shape for `plan`), or
+    `(None, None)` if nothing in the list currently resolves. Factored out
+    of `_resolve_recipe_ingredients` so `_resolve_craft_chain` can reuse the
+    exact same choice, priority included, when deciding whether an
+    ingredient needs auto-crafting rather than re-implementing it.
+    """
+    for option in options:
+        if option.get("consumed", True):
+            continue
+        plan = _resolve_ingredient_option(
+            option, tier, character, character_resources, player_resources, count, player_items,
+            character_item_balances, player_item_balances,
+        )
+        if plan is not None:
+            return plan, option
+    for option in options:
+        if not option.get("consumed", True):
+            continue
+        plan = _resolve_ingredient_option(
+            option, tier, character, character_resources, player_resources, count, player_items,
+            character_item_balances, player_item_balances,
+        )
+        if plan is not None:
+            return plan, option
+    return None, None
+
+
 def _resolve_recipe_ingredients(
     recipe: dict,
     tier: int,
@@ -1325,27 +1432,10 @@ def _resolve_recipe_ingredients(
     character = character or {}
     for ingredient in recipe["ingredients"]:
         options = ingredient["alternatives"] if "alternatives" in ingredient else [ingredient]
-
-        plan = None
-        for option in options:
-            if option.get("consumed", True):
-                continue
-            plan = _resolve_ingredient_option(
-                option, tier, character, character_resources, player_resources, count, player_items,
-                character_item_balances, player_item_balances,
-            )
-            if plan is not None:
-                break
-        if plan is None:
-            for option in options:
-                if not option.get("consumed", True):
-                    continue
-                plan = _resolve_ingredient_option(
-                    option, tier, character, character_resources, player_resources, count, player_items,
-                    character_item_balances, player_item_balances,
-                )
-                if plan is not None:
-                    break
+        plan, _chosen_option = _choose_ingredient_option(
+            options, tier, character, character_resources, player_resources, count, player_items,
+            character_item_balances, player_item_balances,
+        )
         if plan is None:
             return None
 
@@ -1369,6 +1459,284 @@ def _resolve_recipe_ingredients(
         player_item_balance_decrements,
         instance_moves,
     )
+
+
+def _reserve_tool_instances(character: dict, player_items: List[dict], moves: List[tuple]) -> None:
+    """
+    Marks every instance in `moves` (see _resolve_tool_for_craft/
+    _resolve_tool_instances_for_craft's own move tuples) as spoken-for
+    within one _resolve_craft_chain resolution, so a later ingredient/step
+    in the same chain can't pick the same physical instance twice - a pool
+    (vault) instance is removed outright from `player_items` (mutated in
+    place via slice assignment, not reassignment, since every recursive
+    call shares this exact same list object), a character-held one has its
+    own `character["gear"]["items"]` entry flipped to location "crafting"
+    in place (`character` must be a working copy this whole resolution
+    owns, never the live document - see start_craft's own preparation),
+    matching what the real transfer will do for real once this plan is
+    actually applied. Harmless no-op for an unconsumed "held" alternative
+    that resolved to `("owned", None)` (nothing physically moved).
+    """
+    for instance_id, source, _slot_ref, _wear in moves:
+        if source == "pool":
+            player_items[:] = [i for i in player_items if i.get("instanceId") != instance_id]
+        else:
+            for instance in character.get("gear", {}).get("items", []):
+                if instance.get("instanceId") == instance_id:
+                    instance["location"] = "crafting"
+                    break
+
+
+def _resolve_craft_chain(
+    family_id: str,
+    tier: int,
+    count: int,
+    character: dict,
+    character_resources: Dict[str, int],
+    player_resources: Dict[str, int],
+    character_item_balances: Dict[str, int],
+    player_item_balances: Dict[str, int],
+    player_tools: Dict[str, int],
+    player_items: List[dict],
+    is_top_level: bool = True,
+) -> Optional[tuple[List[dict], Dict[str, int], Dict[str, int], List[tuple]]]:
+    """
+    Plans a full one-shot craft of `count` units of `family_id`@`tier`,
+    auto-resolving any "processed" ingredient shortfall from ITS OWN
+    recipe recursively (raw materials all the way down), rather than
+    requiring every processed ingredient be owned outright the way a
+    single `_resolve_recipe_ingredients` call does. For each "processed"
+    ingredient, whatever's already owned (character then player pool) is
+    used first; only the shortfall is auto-crafted - see the module-level
+    feature writeup in the crafting plan for the full design rationale.
+
+    `character_resources`/`player_resources`/`character_item_balances`/
+    `player_item_balances` are WORKING COPIES this function (and its own
+    recursive calls) mutate in place as each step's consumption is
+    committed - the caller diffs against its own untouched originals if it
+    needs that (it doesn't: the returned player-side decrement dicts below
+    already give the real amounts to actually transfer). `character` must
+    be a working copy too (its own `gear.items` list independently
+    copied) - `_reserve_tool_instances` mutates instance `location` fields
+    on it directly to stop two different steps in the same chain from
+    picking the same physical tool/weapon twice. `player_items` is a
+    working list mutated via slice-assignment for the same reason - always
+    pass the SAME list/character objects through every recursive call,
+    never a fresh copy per level.
+
+    `is_top_level` only affects tool-shortage handling: an intermediate
+    step whose own tool can't fully cover what it needs fails the WHOLE
+    chain (returns None) rather than silently shrinking its own output the
+    way a top-level craft's tool shortage does (see
+    _resolve_tool_instances_for_craft) - only the top-level step keeps
+    that "however many the tool(s) on hand can actually do" fallback. The
+    "only the shortfall beyond what's already owned" accounting for a
+    "processed" ingredient happens entirely in the ingredient loop below,
+    ONE level up the recursion, before a shortfall's exact size is ever
+    passed down here as `count` - by the time this function's own frame
+    runs for that shortfall, `count` is already the exact amount to
+    produce, top-level request or auto-crafted ingredient alike, with no
+    further owned-stock check of its own (re-checking here, after the
+    caller already subtracted owned stock but before it's actually
+    decremented from the pools, would double-apply the same offset and
+    under-manufacture).
+
+    Returns `None` if anything anywhere in the tree can't be resolved (not
+    enough raw material at some leaf, a missing tool, or an unlearned
+    blueprint for any step, including an auto-crafted intermediate one) -
+    nothing about a failed plan is meant to be applied. Otherwise returns
+    `(steps, player_resource_decrements, player_item_balance_decrements,
+    instance_moves)`: `steps` is every step this chain actually needs to
+    run at finish_craft time, deepest ingredient first and the requested
+    item itself last (post-order - by the time a step runs, everything it
+    depends on has already produced its own output), each a
+    `{familyId, tier, count, toolTransferId, borrowedInstances}` dict in
+    the exact shape `start_craft` already builds for its own
+    `activeCraft` (see there); the two decrement dicts are the TOTAL
+    amount to actually pull from the player's shared vault across the
+    whole chain (a processed ingredient manufactured mid-chain is never
+    counted here - it isn't really in the vault, it'll be produced by an
+    earlier step in the same finish_craft call instead); `instance_moves`
+    is every tool/weapon instance move needed across the whole chain,
+    already deduplicated by construction (each is only ever reserved
+    once - see _reserve_tool_instances).
+    """
+    recipe = _RECIPES_BY_FAMILY.get(family_id)
+    if recipe is None:
+        return None
+
+    steps: List[dict] = []
+    player_resource_decrements: Dict[str, int] = {}
+    player_item_balance_decrements: Dict[str, int] = {}
+    instance_moves: List[tuple] = []
+
+    # `count` is always already the EXACT amount this call needs to
+    # produce - for the top-level requested item, the full request (a
+    # craft always makes new units, never treats "you already own some" as
+    # already satisfying it); for an auto-crafted "processed" ingredient,
+    # the caller (this function's own ingredient loop below, one level up
+    # the recursion) has already subtracted whatever's owned BEFORE
+    # recursing here with exactly the shortfall - re-subtracting owned
+    # stock again in THIS frame would double-apply the same offset (the
+    # owned amount hasn't been decremented from the pools yet at the point
+    # the caller computes the shortfall, so a naive "check owned again
+    # here" would see it twice and under-manufacture).
+    needed = count
+
+    # --- this step's own top-level "tool" field, same resolution start_craft
+    #     already uses for a single recipe (quality-aware, can span several
+    #     owned instances - see _resolve_tool_instances_for_craft) ---
+    tool_candidates = recipe.get("tool")
+    actual_count = needed
+    step_tool_transfer_id: Optional[str] = None
+    step_instance_moves: List[tuple] = []
+    if tool_candidates:
+        candidates = [tool_candidates] if isinstance(tool_candidates, str) else tool_candidates
+        # A tool already sitting on the WORKING character - genuinely
+        # already owned, or borrowed by an EARLIER step in this same chain
+        # (an instance-tracked one reserved via _reserve_tool_instances'
+        # own location:"crafting" flip; a flat-balance one credited onto
+        # character["crafting"]["tools"] below, the same "moment" this
+        # active craft's timer is running for) - is reusable here for
+        # free, matching _resolve_tool_for_craft's own "already staged"
+        # check: work infrastructure like a furnace/anvil isn't a
+        # per-step consumable, so smelting metal_ingot and then finishing
+        # metal_bar right after doesn't need two separate furnaces. Known,
+        # deliberate simplification: when the reused tool is
+        # instance-tracked (not flat-balance), this doesn't add ANY
+        # further wear for this step's own usage on top of whatever an
+        # earlier step already recorded - under-charges wear in the (rare)
+        # case the exact same instance-tracked family is a DIFFERENT
+        # step's own top-level "tool" twice in one chain, never causes a
+        # craft to fail or any data corruption.
+        already_available = _resolve_tool_for_craft(character, {}, candidates, tier, check_character_flat_balance=True)
+        if already_available is None or already_available[0] != "owned":
+            found = _resolve_tool_instances_for_craft(character, player_tools, candidates, tier, needed, player_items)
+            if found is None:
+                return None
+            if found[0] == "flat_transfer":
+                step_tool_transfer_id, actual_count = found[1], found[2]
+                player_tools[step_tool_transfer_id] = player_tools.get(step_tool_transfer_id, 0) - 1
+                # Credit it onto the working character copy right away so a
+                # LATER step needing the same family is recognized as
+                # "already available" above, instead of needing its own
+                # separate unit.
+                character.setdefault("crafting", {}).setdefault("tools", {})
+                character["crafting"]["tools"][step_tool_transfer_id] = (
+                    character["crafting"]["tools"].get(step_tool_transfer_id, 0) + 1
+                )
+            else:
+                step_instance_moves, actual_count = found[1], found[2]
+            if actual_count <= 0 or (actual_count < needed and not is_top_level):
+                return None
+            _reserve_tool_instances(character, player_items, step_instance_moves)
+            instance_moves.extend(step_instance_moves)
+
+    # --- blueprint, same as start_craft's own single-recipe check ---
+    blueprint_family_id = recipe.get("blueprintFamilyId")
+    if blueprint_family_id is not None and not _owns_blueprint_at_or_above(character, blueprint_family_id, tier):
+        return None
+
+    # --- ingredients: resolve as-is where possible, auto-craft a
+    #     "processed" shortfall inline where not. `virtual_stock` tracks
+    #     how much of a concrete_id's current `player_resources` balance
+    #     was just manufactured (not really in the vault yet) so the
+    #     commit step below can tell real vault stock apart from it. ---
+    virtual_stock: Dict[str, int] = {}
+    for ingredient in recipe["ingredients"]:
+        options = ingredient["alternatives"] if "alternatives" in ingredient else [ingredient]
+        plan, _chosen = _choose_ingredient_option(
+            options, tier, character, character_resources, player_resources, actual_count, player_items,
+            character_item_balances, player_item_balances,
+        )
+        if plan is None:
+            # Nothing in this ingredient's option list resolves outright -
+            # only a consumed "processed" option can be helped by
+            # auto-crafting (a raw/final shortfall can't be manufactured,
+            # matching the plan's own scoping decision).
+            target = next(
+                (opt for opt in options if opt.get("consumed", True) and opt["category"] == "processed"), None
+            )
+            if target is None:
+                return None
+            concrete_id = _PROCESSED_ID_BY_FAMILY_TIER.get((target["familyId"], tier))
+            if concrete_id is None:
+                return None
+            shortfall = target["qty"] * actual_count - (
+                character_resources.get(concrete_id, 0) + player_resources.get(concrete_id, 0)
+            )
+            if shortfall <= 0:
+                return None  # shouldn't happen (this option would already resolve above) - fail safe
+            sub = _resolve_craft_chain(
+                target["familyId"], tier, shortfall, character,
+                character_resources, player_resources, character_item_balances, player_item_balances,
+                player_tools, player_items, is_top_level=False,
+            )
+            if sub is None:
+                return None
+            sub_steps, sub_player_dec, sub_player_ib_dec, sub_moves = sub
+            steps.extend(sub_steps)
+            for cid, qty in sub_player_dec.items():
+                player_resource_decrements[cid] = player_resource_decrements.get(cid, 0) + qty
+            for cid, qty in sub_player_ib_dec.items():
+                player_item_balance_decrements[cid] = player_item_balance_decrements.get(cid, 0) + qty
+            instance_moves.extend(sub_moves)
+            # Not really in the vault yet (finish_craft produces it into
+            # character.crafting.resources when the sub-step above actually
+            # runs) - topped up here just long enough for the ingredient
+            # choice below to resolve; `virtual_stock` remembers how much of
+            # it is fake so the real vault-transfer amount stays correct.
+            player_resources[concrete_id] = player_resources.get(concrete_id, 0) + shortfall
+            virtual_stock[concrete_id] = virtual_stock.get(concrete_id, 0) + shortfall
+            plan, _chosen = _choose_ingredient_option(
+                options, tier, character, character_resources, player_resources, actual_count, player_items,
+                character_item_balances, player_item_balances,
+            )
+            if plan is None:
+                return None  # shouldn't happen - the top-up covers exactly the shortfall
+
+        if plan["held"]:
+            if plan.get("move") is not None:
+                # plan["move"] is _resolve_tool_for_craft's own
+                # ("instance_move", instance_id, source, slot_ref) shape -
+                # convert to the uniform (instance_id, source, slot_ref,
+                # wear) tuple every other move in this function already
+                # uses, wearing `actual_count` same as the recipe's own
+                # "tool" field would if it only needed one instance (see
+                # start_craft's own identical ingredient_moves handling).
+                _kind, move_instance_id, move_source, move_slot_ref = plan["move"]
+                ingredient_move = (move_instance_id, move_source, move_slot_ref, actual_count)
+                instance_moves.append(ingredient_move)
+                _reserve_tool_instances(character, player_items, [ingredient_move])
+            continue
+
+        concrete_id = plan["concrete_id"]
+        is_item_balance = plan["bucket"] == "itemBalances"
+        char_bucket = character_item_balances if is_item_balance else character_resources
+        player_bucket = player_item_balances if is_item_balance else player_resources
+        decrement_bucket = player_item_balance_decrements if is_item_balance else player_resource_decrements
+        if plan["from_character"]:
+            char_bucket[concrete_id] = char_bucket.get(concrete_id, 0) - plan["from_character"]
+        if plan["from_player"]:
+            player_bucket[concrete_id] = player_bucket.get(concrete_id, 0) - plan["from_player"]
+            virtual_available = virtual_stock.get(concrete_id, 0)
+            from_virtual = min(plan["from_player"], virtual_available)
+            from_real = plan["from_player"] - from_virtual
+            virtual_stock[concrete_id] = virtual_available - from_virtual
+            if from_real:
+                decrement_bucket[concrete_id] = decrement_bucket.get(concrete_id, 0) + from_real
+
+    steps.append({
+        "familyId": family_id,
+        "tier": tier,
+        "count": actual_count,
+        "toolTransferId": step_tool_transfer_id,
+        "borrowedInstances": [
+            {"instanceId": iid, "source": source, "slotRef": slot_ref, "wear": wear}
+            for iid, source, slot_ref, wear in step_instance_moves
+        ],
+    })
+    return steps, player_resource_decrements, player_item_balance_decrements, instance_moves
 
 
 def _resolve_recipe_output(family_id: str, tier: int) -> Optional[tuple[dict, bool]]:
@@ -1579,42 +1947,52 @@ async def start_craft(
     """
     Begins crafting `count` units of `family_id` at `tier` in one batch for
     one of `address`'s characters: one job at a time (rejects if the
-    character already has an unfinished craft), resolves the recipe's own
-    tool requirement FIRST (see _resolve_tool_instances_for_craft - may
-    reduce the actual batch size below `count` if the tool's own quality
-    can't cover it), then checks ingredients (each consumed quantity
-    scaled by that possibly-reduced actual count - see
-    `_resolve_recipe_ingredients`) against the character vault + player's
-    shared vault combined, then transfers onto the character whatever
-    wasn't already there (so it shows up in the character's own crafting
-    list right away) and starts a single timer (Character.activeCraft),
-    its length scaled by the recipe's own full raw-material chain, `tier`,
-    AND the actual count - see `_craft_duration_seconds`. The output isn't
-    produced yet - call finish_craft once the timer elapses, which
-    produces all of the actual count's units at once.
+    character already has an unfinished craft), resolves the WHOLE
+    ingredient tree in one go via `_resolve_craft_chain` - see there for
+    the full design - rather than requiring every "processed" ingredient
+    be owned outright; whatever's already owned is used first, and only
+    the shortfall is auto-crafted from raw. Each step in the resulting
+    chain resolves its own tool (see `_resolve_tool_instances_for_craft` -
+    may reduce the TOP-level step's own actual batch size below `count` if
+    its tool's own quality can't cover it, exactly as a single-recipe
+    craft already could; an auto-crafted intermediate step instead fails
+    the whole chain outright on a tool shortage, never silently shrinking
+    its own output) and blueprint requirement, then transfers onto the
+    character whatever ingredients weren't already there across the whole
+    chain (so it shows up in the character's own crafting list right
+    away) and starts a single timer (Character.activeCraft), its length
+    the SUM of every step's own direct-ingredient duration (see
+    `_craft_chain_duration_seconds`) - a step already fully covered by
+    owned stock contributes no step, and so no time, at all. The output
+    isn't produced yet - call finish_craft once the timer elapses, which
+    runs every queued step in order (crediting each one's own output for
+    the next to consume) and produces the requested item's actual count's
+    units at once.
 
     An ingredient-level "final"/unconsumed alternative (e.g. carcass's
-    dagger option, as opposed to the recipe's own top-level "tool" field
+    dagger option, as opposed to a recipe's own top-level "tool" field
     above) is never auto-transferred here, and only ever needs to be owned
     once regardless of count - see `_resolve_tool_for_craft`. Also pays
     out raw-material crafting XP right away (see `_crafting_xp_increments`) -
-    to every profession slot whose category lists a raw material used
-    directly by this recipe's own ingredients (not recursively through a
-    "processed" ingredient's own sub-recipe), scaled by the actual count.
-    A recipe with no direct raw ingredient (e.g. dagger, purely processed
-    metal_bar) earns none from this step - crafting the processed
-    intermediate is its own separate step that already paid that out. The
-    README's final-item assembly-bonus XP is a separate mechanic paid at
-    finish_craft time instead - see there. Raises ValueError for an
-    unknown recipe/output row, an unsupported recipe shape, or `count < 1`.
+    summed across every step in the chain, to every profession slot whose
+    category lists a raw material used directly by that step's own
+    ingredients (not recursively through a "processed" ingredient's own
+    sub-recipe - that's its own separate step, already paying this out on
+    its own). An auto-crafted intermediate earns exactly what crafting it
+    separately would have. The README's final-item assembly-bonus XP is a
+    separate mechanic paid at finish_craft time instead, per blueprint-
+    gated step in the chain - see there. Raises ValueError for an unknown
+    recipe/output row, an unsupported recipe shape, or `count < 1`.
     Returns None if the character is already mid-craft, is currently out
     on a story (Character.availability.inAdventure - mutually exclusive
-    with crafting, see set_in_adventure's own matching check), has no
-    access to a listed tool at all (quality alone never causes this - see
-    above, only a total absence of any eligible tool does), can't afford
-    the (actual-count-scaled) ingredients even combined, hasn't learned
-    the required blueprint, or the address/character pair doesn't match
-    any player document.
+    with crafting, see set_in_adventure's own matching check), any step in
+    the chain has no access to a listed tool at all (quality alone never
+    causes this for the top-level step - see above - only a total absence
+    of any eligible tool does; an intermediate step also fails outright on
+    a mere quality shortfall, never just shrinking), can't afford the
+    (actual-count-scaled) ingredients even combined across the whole
+    chain, any step's own blueprint isn't learned, or the address/
+    character pair doesn't match any player document.
     """
     if count < 1:
         raise ValueError("count must be at least 1")
@@ -1637,89 +2015,42 @@ async def start_craft(
     if character.get("availability", {}).get("inAdventure", False):
         return None
 
-    # The recipe's own top-level tool is resolved FIRST, before ingredients
-    # - unlike ingredients (which just need to be affordable), an
-    # instance-tracked tool wears down by 1 quality per unit crafted (see
-    # finish_craft), so a single worn instance might not have enough
-    # quality left to cover the whole requested `count` on its own. When
-    # that happens, _resolve_tool_instances_for_craft keeps pulling the
-    # next worst-quality eligible instance (same family/source) to make up
-    # the shortfall, and if even all of them together still can't cover
-    # `count`, hands back however much they CAN cover instead of failing
-    # outright - "however many the tool(s) on hand can actually do".
-    # Ingredients are then resolved against that possibly-reduced
-    # actual_count, never the raw request, so nothing gets consumed for
-    # units the tool can't actually help produce. A recipe with no "tool"
-    # field at all is never capped this way - actual_count stays the
-    # requested count.
-    tool_candidates = recipe.get("tool")
-    tool_transfer_id: Optional[str] = None
-    tool_instance_moves: List[tuple] = []  # (instance_id, source, slot_ref, wear)
-    actual_count = count
-    if tool_candidates is not None:
-        if isinstance(tool_candidates, str):
-            tool_candidates = [tool_candidates]
-        found = _resolve_tool_instances_for_craft(
-            character,
-            doc.get("crafting", {}).get("tools", {}),
-            tool_candidates,
-            tier,
-            count,
-            doc.get("vault", {}).get("items", []),
-        )
-        if found is None:
-            return None
-        if found[0] == "flat_transfer":
-            tool_transfer_id, actual_count = found[1], found[2]
-        elif found[0] == "instance_moves":
-            tool_instance_moves, actual_count = found[1], found[2]
+    # Resolves the WHOLE ingredient tree in one action - for each
+    # "processed" ingredient, whatever's already owned is used first, and
+    # only the shortfall is auto-crafted from ITS OWN recipe recursively
+    # (raw materials all the way down where needed) - see
+    # _resolve_craft_chain for the full design, including its own tool/
+    # blueprint checks (per step, including this recipe's own top-level
+    # ones - no separate check needed here anymore). `steps` is every step
+    # this craft needs to run at finish_craft time, deepest ingredient
+    # first, the requested item itself last - `steps[-1]` is always this
+    # call's own top-level request, identical in shape to what a single-
+    # recipe craft already built right here; `steps` has only that one
+    # entry when the chain needed no auto-crafted intermediate at all (the
+    # common case), reproducing today's single-recipe behavior exactly.
+    working_character = {
+        **character,
+        "gear": {
+            **character.get("gear", {}),
+            "items": [dict(instance) for instance in character.get("gear", {}).get("items", [])],
+        },
+    }
+    working_player_resources = dict(doc.get("crafting", {}).get("resources", {}))
+    working_player_item_balances = dict(doc.get("vault", {}).get("itemBalances", {}))
+    working_player_tools = dict(doc.get("crafting", {}).get("tools", {}))
+    working_player_items = [dict(instance) for instance in doc.get("vault", {}).get("items", [])]
 
-    # Crafting only ever checks the player's shared vault, never the
-    # character's own - the character vault is purely a temporary staging
-    # area for an active craft (populated here, drained by finish_craft),
-    # not a persistent balance a player manages directly. Passing {} for
-    # the character side means the full amount always comes from the
-    # player vault (character_decrements stays empty) - same for
-    # itemBalances (a consumed "final" ingredient, e.g. iron_ration's
-    # smoked_salt_horse) as it already is for resources. player_items lets
-    # an unconsumed ingredient alternative (e.g. carcass's dagger option)
-    # resolve to a vault-borrow the same way the recipe's own "tool" field
-    # does, above - always at ONE unit regardless of count (see
-    # _resolve_ingredient_option), so actual_count never affects whether
-    # that specific alternative resolves, only how much wear it takes
-    # below.
-    resolved = _resolve_recipe_ingredients(
-        recipe, tier, {}, doc.get("crafting", {}).get("resources", {}), character, actual_count,
-        player_items=doc.get("vault", {}).get("items", []),
-        character_item_balances={}, player_item_balances=doc.get("vault", {}).get("itemBalances", {}),
+    chain = _resolve_craft_chain(
+        family_id, tier, count, working_character,
+        {}, working_player_resources, {}, working_player_item_balances,
+        working_player_tools, working_player_items,
+        is_top_level=True,
     )
-    if resolved is None:
+    if chain is None:
         return None
-    _, player_decrements, _, player_item_balance_decrements, ingredient_moves = resolved
-
-    blueprint_family_id = recipe.get("blueprintFamilyId")
-    if blueprint_family_id is not None:
-        if not _owns_blueprint_at_or_above(character, blueprint_family_id, tier):
-            return None
-
-    # Every instance-tracked tool this craft needs to borrow: the recipe's
-    # own "tool" field (tool_instance_moves, each already carrying its own
-    # pre-computed wear - see _resolve_tool_instances_for_craft) plus any
-    # ingredient-level "final"/unconsumed alternative that also resolved
-    # to one (ingredient_moves - a single instance each, wearing
-    # actual_count same as the recipe's own tool would if it only needed
-    # one). Deduplicated by instanceId - no current recipe needs the same
-    # instance twice, but cheap to guard.
-    all_moves: List[tuple] = []  # (instance_id, source, slot_ref, wear)
-    seen_instance_ids: set = set()
-    for _kind, instance_id, source, slot_ref in ingredient_moves:
-        if instance_id not in seen_instance_ids:
-            seen_instance_ids.add(instance_id)
-            all_moves.append((instance_id, source, slot_ref, actual_count))
-    for instance_id, source, slot_ref, wear in tool_instance_moves:
-        if instance_id not in seen_instance_ids:
-            seen_instance_ids.add(instance_id)
-            all_moves.append((instance_id, source, slot_ref, wear))
+    steps, player_decrements, player_item_balance_decrements, all_moves = chain
+    top_step = steps[-1]
+    actual_count = top_step["count"]
 
     # Only the shortfall drawn from the player's shared vault actually
     # moves - whatever was already on the character (character_decrements)
@@ -1729,57 +2060,85 @@ async def start_craft(
     inc_ops: Dict[str, int] = {}
     for concrete_id, qty in player_decrements.items():
         match_filter[f"crafting.resources.{concrete_id}"] = {"$gte": qty}
-        inc_ops[f"crafting.resources.{concrete_id}"] = -qty
+        inc_ops[f"crafting.resources.{concrete_id}"] = inc_ops.get(f"crafting.resources.{concrete_id}", 0) - qty
         inc_ops[f"characters.$.crafting.resources.{concrete_id}"] = inc_ops.get(
             f"characters.$.crafting.resources.{concrete_id}", 0
         ) + qty
     for concrete_id, qty in player_item_balance_decrements.items():
         match_filter[f"vault.itemBalances.{concrete_id}"] = {"$gte": qty}
-        inc_ops[f"vault.itemBalances.{concrete_id}"] = -qty
+        inc_ops[f"vault.itemBalances.{concrete_id}"] = inc_ops.get(f"vault.itemBalances.{concrete_id}", 0) - qty
         inc_ops[f"characters.$.crafting.itemBalances.{concrete_id}"] = inc_ops.get(
             f"characters.$.crafting.itemBalances.{concrete_id}", 0
         ) + qty
-    if tool_transfer_id is not None:
-        match_filter[f"crafting.tools.{tool_transfer_id}"] = {"$gte": 1}
-        inc_ops[f"crafting.tools.{tool_transfer_id}"] = -1
-        inc_ops[f"characters.$.crafting.tools.{tool_transfer_id}"] = 1
+    # A flat-balance tool (anvil, furnace, ...) each step in the chain
+    # borrowed - summed per concrete id rather than assuming at most one
+    # transfer the way a single-recipe craft always could, since more than
+    # one step can need the same tool id (see _resolve_craft_chain's own
+    # note on this - each such step already reserved a SEPARATE unit
+    # against its own working copy while planning, so this really is the
+    # true combined requirement, not a double-count).
+    tool_transfer_counts: Dict[str, int] = {}
+    for step in steps:
+        transfer_id = step["toolTransferId"]
+        if transfer_id is not None:
+            tool_transfer_counts[transfer_id] = tool_transfer_counts.get(transfer_id, 0) + 1
+    for transfer_id, transfer_count in tool_transfer_counts.items():
+        match_filter[f"crafting.tools.{transfer_id}"] = {"$gte": transfer_count}
+        inc_ops[f"crafting.tools.{transfer_id}"] = inc_ops.get(f"crafting.tools.{transfer_id}", 0) - transfer_count
+        inc_ops[f"characters.$.crafting.tools.{transfer_id}"] = inc_ops.get(
+            f"characters.$.crafting.tools.{transfer_id}", 0
+        ) + transfer_count
 
     # Raw-material crafting XP (see the README's "Crafting XP" section) -
-    # paid out the moment the timer starts, not on finish_craft, same as
-    # the ingredients themselves are already spoken for at this point.
-    # Final-item assembly-bonus XP is a separate mechanic paid at
-    # finish_craft instead - see there. Subject to the daily XP cap (see
+    # summed across EVERY step in the chain, not just the top-level
+    # request - an auto-crafted intermediate earns exactly what crafting
+    # it separately would have (same _crafting_xp_increments call, scoped
+    # to that step's own direct raw ingredients). Paid out the moment the
+    # timer starts, not on finish_craft, same as a single-recipe craft
+    # already does. Final-item assembly-bonus XP is a separate mechanic
+    # paid at finish_craft instead, per blueprint-gated step in the chain
+    # - see there. Subject to the daily XP cap (see
     # _profession_xp_grant_set_ops) - folded into whichever "$set" ops
-    # shape each branch below builds, not $inc. Uses actual_count, same as
-    # everything else below - a tool-capped batch only ever earns/costs/
-    # takes as long as the units it can actually produce.
-    xp_grants = _crafting_xp_increments(character, family_id, actual_count)
+    # shape each branch below builds, not $inc.
+    xp_grants: Dict[str, int] = {}
+    for step in steps:
+        for exp_key, amount in _crafting_xp_increments(character, step["familyId"], step["count"]).items():
+            xp_grants[exp_key] = xp_grants.get(exp_key, 0) + amount
 
-    ready_at = datetime.now(timezone.utc) + timedelta(
-        seconds=_craft_duration_seconds(recipe, family_id, tier, character, actual_count)
-    )
+    ready_at = datetime.now(timezone.utc) + timedelta(seconds=_craft_chain_duration_seconds(steps, character))
     active_craft: Dict = {
         "familyId": family_id,
         "tier": tier,
         "count": actual_count,
         "readyAt": ready_at.isoformat(),
+        # The requested item's OWN tool borrow only - see
+        # _resolve_craft_chain's own docstring for the per-step shape.
         # Only set when this call actually moved a tool from the player's
         # shared pool - a tool the character already had (found on hand,
         # nothing transferred) is never returned by finish_craft, only
         # what was specifically borrowed here.
-        "toolTransferId": tool_transfer_id,
+        "toolTransferId": top_step["toolTransferId"],
         # Every instance-tracked tool physically moved to location:
-        # "crafting" for this craft - {instanceId, source, slotRef, wear},
-        # source being "pool"/"backpack"/"body" so finish_craft can put
-        # each one back exactly where it came from (a "body" source's
-        # slotRef is what it was equipped into, restored on release), wear
-        # being exactly how much quality THIS instance spends (see
-        # _resolve_tool_instances_for_craft) - not always actual_count
-        # anymore, now that one requirement can span several instances.
-        "borrowedInstances": [
-            {"instanceId": instance_id, "source": source, "slotRef": slot_ref, "wear": wear}
-            for instance_id, source, slot_ref, wear in all_moves
-        ],
+        # "crafting" for the requested item's OWN step - {instanceId,
+        # source, slotRef, wear}, source being "pool"/"backpack"/"body" so
+        # finish_craft can put each one back exactly where it came from (a
+        # "body" source's slotRef is what it was equipped into, restored
+        # on release), wear being exactly how much quality THIS instance
+        # spends (see _resolve_tool_instances_for_craft) - not always
+        # actual_count anymore, now that one requirement can span several
+        # instances. A chain-auto-crafted intermediate's OWN borrowed
+        # instances live in its own entry under "chain" below instead.
+        "borrowedInstances": top_step["borrowedInstances"],
+        # Every step besides the requested item itself - a "processed"
+        # ingredient auto-crafted from raw because it wasn't already owned
+        # (see _resolve_craft_chain). finish_craft runs these first, in
+        # order, crediting each one's own output into this character's own
+        # crafting.resources/itemBalances so the next queued step (or the
+        # requested item itself) can consume it, exactly the way an
+        # already-owned processed material would have been consumed.
+        # Empty for a chain that needed no auto-crafted intermediate at
+        # all - the common, today-unchanged case.
+        "chain": steps[:-1],
     }
 
     if not all_moves:
@@ -1848,11 +2207,244 @@ async def start_craft(
     return _doc_to_player(doc)
 
 
+async def _finish_craft_step(address: str, character_id: str, step: dict) -> bool:
+    """
+    Finishes ONE intermediate step of a craft chain (see
+    _resolve_craft_chain/start_craft's own "chain" field) - a "processed"
+    ingredient auto-crafted from raw because it wasn't already owned.
+    Mirrors finish_craft's own top-level logic below (consume what
+    start_craft already staged on the character, release any borrowed
+    tool/weapon with its own recorded wear, pay this step's own assembly-
+    bonus XP if genuinely blueprint-gated) with two differences: output is
+    credited into THIS character's own crafting.resources/tools/
+    itemBalances (so the next queued step, or the requested item itself,
+    can consume it - never the player's shared vault, which only ever
+    receives the requested item's own final output) via `_output_ops`
+    below - never an instance output, since _resolve_craft_chain only ever
+    auto-crafts a "processed"-category ingredient, never a
+    needsItemDefinition:true one; and Character.activeCraft itself is
+    untouched here - only the requested item's own finish_craft call, at
+    the end of the whole chain, unsets it, once every step (including this
+    one) has already run and staged its own output for the next to use.
+
+    Returns False (nothing applied) if this step's own ingredients/tool
+    are somehow no longer there to release - an accepted edge case, same
+    as finish_craft's own top-level return-None case for the same reason.
+    """
+    db = get_database()
+    family_id = step["familyId"]
+    tier = step["tier"]
+    count = step["count"]
+    recipe, output_row, output_is_processed = _validate_recipe(family_id, tier)
+
+    doc = await db.players.find_one({"address": address, "characters.id": character_id})
+    if doc is None:
+        return False
+    character = next((c for c in doc["characters"] if c["id"] == character_id), None)
+    if character is None:
+        return False
+
+    resolved = _resolve_recipe_ingredients(
+        recipe, tier, character.get("crafting", {}).get("resources", {}), {}, character, count,
+        character_item_balances=character.get("crafting", {}).get("itemBalances", {}), player_item_balances={},
+    )
+    if resolved is None:
+        return False
+    character_decrements, _, character_item_balance_decrements, _, _ = resolved
+
+    borrowed_instances = step.get("borrowedInstances") or []
+
+    prime_slot = character.get("profession", {}).get("prime", "none")
+    if prime_slot not in ("prof1", "prof2", "prof3"):
+        prime_slot = "prof1"
+    prime_exp_key = {"prof1": "exp1", "prof2": "exp2", "prof3": "exp3"}[prime_slot]
+    assembly_bonus = _assembly_bonus_xp(recipe, family_id, tier, count, character)
+    assembly_grants = {prime_exp_key: assembly_bonus} if assembly_bonus else {}
+
+    def _output_ops(prefix: str) -> Dict[str, int]:
+        """This step's own output, credited onto the CHARACTER's own
+        crafting pool under `prefix` ("characters.$." or
+        "characters.$[char]." depending on which update shape below is in
+        play) - resources for a processed material (the common, expected
+        case - this is what an auto-crafted intermediate always is, by
+        construction), tools for a flat-balance tool, itemBalances for
+        anything else."""
+        if output_is_processed:
+            return {f"{prefix}crafting.resources.{output_row['id']}": count}
+        if output_row["id"] in TOOL_ITEMS_BY_ID:
+            return {f"{prefix}crafting.tools.{output_row['id']}": count}
+        return {f"{prefix}crafting.itemBalances.{output_row['id']}": count}
+
+    if not borrowed_instances:
+        elem_match: Dict = {"id": character_id}
+        inc_ops: Dict[str, int] = {}
+        for concrete_id, qty in character_decrements.items():
+            elem_match[f"crafting.resources.{concrete_id}"] = {"$gte": qty}
+            inc_ops[f"characters.$.crafting.resources.{concrete_id}"] = -qty
+        for concrete_id, qty in character_item_balance_decrements.items():
+            elem_match[f"crafting.itemBalances.{concrete_id}"] = {"$gte": qty}
+            inc_ops[f"characters.$.crafting.itemBalances.{concrete_id}"] = -qty
+        tool_transfer_id = step.get("toolTransferId")
+        if tool_transfer_id is not None:
+            elem_match[f"crafting.tools.{tool_transfer_id}"] = {"$gte": 1}
+            inc_ops[f"characters.$.crafting.tools.{tool_transfer_id}"] = inc_ops.get(
+                f"characters.$.crafting.tools.{tool_transfer_id}", 0
+            ) - 1
+            inc_ops[f"crafting.tools.{tool_transfer_id}"] = 1
+        for path, qty in _output_ops("characters.$.").items():
+            inc_ops[path] = inc_ops.get(path, 0) + qty
+
+        update: Dict = {}
+        xp_set_ops = _profession_xp_grant_set_ops(character, assembly_grants, "characters.$.")
+        if xp_set_ops:
+            update["$set"] = xp_set_ops
+        if inc_ops:
+            update["$inc"] = inc_ops
+        if not update:
+            return True
+        result = await db.players.find_one_and_update(
+            {"address": address, "characters": {"$elemMatch": elem_match}}, update,
+            return_document=ReturnDocument.AFTER,
+        )
+        return result is not None
+
+    # At least one instance-tracked tool was borrowed for this step -
+    # release it back, same single-source assumption/logic as
+    # finish_craft's own top-level release below (see there for the full
+    # reasoning on why one release batch never mixes sources, and on the
+    # broken/surviving/array-filter-identifier-collision workarounds).
+    sources = {bi["source"] for bi in borrowed_instances}
+    if len(sources) > 1:
+        raise ValueError(
+            "Releasing instance tools borrowed from more than one source in a single craft step is not supported yet"
+        )
+    source = next(iter(sources))
+
+    elem_match = {"id": character_id}
+    for concrete_id, qty in character_decrements.items():
+        elem_match[f"crafting.resources.{concrete_id}"] = {"$gte": qty}
+    for concrete_id, qty in character_item_balance_decrements.items():
+        elem_match[f"crafting.itemBalances.{concrete_id}"] = {"$gte": qty}
+    tool_transfer_id = step.get("toolTransferId")
+    if tool_transfer_id is not None:
+        elem_match[f"crafting.tools.{tool_transfer_id}"] = {"$gte": 1}
+
+    inc_ops = {}
+    for concrete_id, qty in character_decrements.items():
+        inc_ops[f"characters.$[char].crafting.resources.{concrete_id}"] = -qty
+    for concrete_id, qty in character_item_balance_decrements.items():
+        inc_ops[f"characters.$[char].crafting.itemBalances.{concrete_id}"] = -qty
+    if tool_transfer_id is not None:
+        inc_ops[f"characters.$[char].crafting.tools.{tool_transfer_id}"] = inc_ops.get(
+            f"characters.$[char].crafting.tools.{tool_transfer_id}", 0
+        ) - 1
+        inc_ops[f"crafting.tools.{tool_transfer_id}"] = 1
+    for path, qty in _output_ops("characters.$[char].").items():
+        inc_ops[path] = inc_ops.get(path, 0) + qty
+    xp_set_ops = _profession_xp_grant_set_ops(character, assembly_grants, "characters.$[char].")
+
+    array_filters: List[Dict] = [{"char.id": character_id}]
+    update = {}
+    query: Dict = {"address": address, "characters": {"$elemMatch": elem_match}}
+
+    held_by_id = {i["instanceId"]: i for i in character.get("gear", {}).get("items", [])}
+
+    broken_ids: List[str] = []
+    surviving: List[dict] = []
+    if source == "pool":
+        instance_ids = [bi["instanceId"] for bi in borrowed_instances]
+        returned = []
+        for bi in borrowed_instances:
+            iid = bi["instanceId"]
+            wear = bi.get("wear", count)
+            new_quality = held_by_id[iid].get("quality", 0) - wear
+            if new_quality > 0:
+                returned.append({**held_by_id[iid], "location": "pool", "slotRef": [], "quality": new_quality})
+            else:
+                broken_ids.append(iid)
+        update["$pull"] = {"characters.$[char].gear.items": {"instanceId": {"$in": instance_ids}}}
+        if returned:
+            update["$push"] = {"vault.items": {"$each": returned}}
+        query["$and"] = [
+            {"characters": {"$elemMatch": {"id": character_id, "gear.items": {
+                "$elemMatch": {"instanceId": iid, "location": "crafting"}
+            }}}}
+            for iid in instance_ids
+        ]
+    else:
+        broken_ids = [
+            bi["instanceId"] for bi in borrowed_instances
+            if held_by_id[bi["instanceId"]].get("quality", 0) - bi.get("wear", count) <= 0
+        ]
+        surviving = [bi for bi in borrowed_instances if bi["instanceId"] not in broken_ids]
+
+        if broken_ids:
+            update["$pull"] = {"characters.$[char].gear.items": {"instanceId": {"$in": broken_ids}}}
+        if surviving and not broken_ids:
+            set_ops: Dict = {}
+            for idx, bi in enumerate(surviving):
+                filt_id = f"relItem{idx}"
+                array_filters.append({f"{filt_id}.instanceId": bi["instanceId"], f"{filt_id}.location": "crafting"})
+                set_ops[f"characters.$[char].gear.items.$[{filt_id}].location"] = bi["source"]
+                set_ops[f"characters.$[char].gear.items.$[{filt_id}].slotRef"] = bi.get("slotRef") or []
+                wear_filt_id = f"wearItem{idx}"
+                array_filters.append({f"{wear_filt_id}.instanceId": bi["instanceId"]})
+                inc_ops[f"characters.$[char].gear.items.$[{wear_filt_id}].quality"] = -bi.get("wear", count)
+            update["$set"] = set_ops
+
+    if xp_set_ops:
+        update["$set"] = {**update.get("$set", {}), **xp_set_ops}
+    if inc_ops:
+        update["$inc"] = inc_ops
+
+    result = await db.players.find_one_and_update(
+        query, update, array_filters=array_filters, return_document=ReturnDocument.AFTER
+    )
+    if result is None:
+        return False
+
+    # A backpack/body-sourced release with BOTH a broken and a surviving
+    # instance needed the $pull above to go out on its own (same reasoning
+    # as finish_craft's own top-level release below) - restore the
+    # survivor(s) now, in a second call, with nothing left in the array to
+    # conflict with.
+    if source != "pool" and broken_ids and surviving:
+        survivor_array_filters: List[Dict] = [{"char.id": character_id}]
+        survivor_set_ops: Dict = {}
+        survivor_inc_ops: Dict[str, int] = {}
+        for idx, bi in enumerate(surviving):
+            rel_filt_id = f"survivorRel{idx}"
+            survivor_array_filters.append({f"{rel_filt_id}.instanceId": bi["instanceId"]})
+            survivor_set_ops[f"characters.$[char].gear.items.$[{rel_filt_id}].location"] = bi["source"]
+            survivor_set_ops[f"characters.$[char].gear.items.$[{rel_filt_id}].slotRef"] = bi.get("slotRef") or []
+            wear_filt_id = f"survivorWear{idx}"
+            survivor_array_filters.append({f"{wear_filt_id}.instanceId": bi["instanceId"]})
+            survivor_inc_ops[f"characters.$[char].gear.items.$[{wear_filt_id}].quality"] = -bi.get("wear", count)
+        result2 = await db.players.find_one_and_update(
+            {"address": address, "characters.id": character_id},
+            {"$set": survivor_set_ops, "$inc": survivor_inc_ops},
+            array_filters=survivor_array_filters,
+            return_document=ReturnDocument.AFTER,
+        )
+        if result2 is None:
+            return False
+    return True
+
+
 async def finish_craft(address: str, character_id: str) -> Optional[Player]:
     """
     Completes one of `address`'s character's in-progress craft
-    (Character.activeCraft), once its timer has elapsed: consumes the
-    ingredients/tool that start_craft already transferred onto the
+    (Character.activeCraft), once its timer has elapsed. Runs every
+    auto-crafted intermediate step queued under `activeCraft.chain` FIRST,
+    in order (see `_finish_craft_step` and `_resolve_craft_chain`/
+    start_craft) - each one's own output is credited onto this character's
+    own crafting.resources/itemBalances so the next queued step, or the
+    requested item's own resolution below, can consume it exactly the way
+    an already-owned processed material would have been. `chain` is empty
+    for a craft that needed no auto-crafted intermediate at all (the
+    common, today-unchanged case), so the rest of this function is
+    unaffected either way. Then, for the requested item itself: consumes
+    the ingredients/tool that start_craft already transferred onto the
     character (nothing left to draw from the player's shared vault at this
     point) and produces `activeCraft.count` units of the output at once -
     vault.items for a needsItemDefinition:true family (each unit its
@@ -1905,6 +2497,41 @@ async def finish_craft(address: str, character_id: str) -> Optional[Player]:
     active = character.get("crafting", {}).get("activeCraft")
     if active is None or datetime.fromisoformat(active["readyAt"]) > datetime.now(timezone.utc):
         return None
+
+    # Every step besides the requested item itself (see start_craft's own
+    # "chain" field/_resolve_craft_chain) - a "processed" ingredient
+    # auto-crafted from raw because it wasn't already owned, run first, in
+    # order, via _finish_craft_step (see there), so each one's own output
+    # is sitting in this character's own crafting.resources/itemBalances
+    # by the time the NEXT queued step (or the requested item's own
+    # resolution below) needs to consume it. Progress is persisted back
+    # onto activeCraft.chain after every single step succeeds (a plain
+    # field write, no array_filters needed) rather than only once the
+    # whole chain finishes - a step's own ingredients/tool are consumed
+    # from the character, not re-derived, so re-running an
+    # already-completed step on a retry (if a LATER step or the requested
+    # item's own finish below fails) would incorrectly try to consume them
+    # a second time; shrinking the persisted chain after each step makes a
+    # retry correctly resume from wherever it actually left off instead.
+    remaining_chain = list(active.get("chain") or [])
+    while remaining_chain:
+        step = remaining_chain[0]
+        if not await _finish_craft_step(address, character_id, step):
+            return None
+        remaining_chain = remaining_chain[1:]
+        doc = await db.players.find_one_and_update(
+            {"address": address, "characters.id": character_id},
+            {"$set": {"characters.$.crafting.activeCraft.chain": remaining_chain}},
+            return_document=ReturnDocument.AFTER,
+        )
+        if doc is None:
+            return None
+        character = next((c for c in doc["characters"] if c["id"] == character_id), None)
+        if character is None:
+            return None
+        active = character.get("crafting", {}).get("activeCraft")
+        if active is None:
+            return None
 
     family_id = active["familyId"]
     tier = active["tier"]

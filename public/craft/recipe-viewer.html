@@ -858,107 +858,77 @@ window.getCurrentSelection = function () {
 };
 
 // True if the currently selected family/tier can be crafted right now by
-// a single backend start_craft call - deliberately narrower than what this
-// page's own tree view shows: start_craft only reads the top-level
-// recipe's own direct ingredients (never recursively auto-crafts a
-// "processed"/"final" ingredient's own sub-recipe the way the tree does),
-// so this checks recipe.ingredients directly rather than reusing
-// computeTotals' recursively-expanded rawTotals/finalTotals. Mirrors
-// backend.players._validate_recipe/_resolve_recipe_ingredients exactly:
-// no "alternatives" ingredient slots, no "final"-category ingredients
-// directly on the recipe, exact concrete id/tier match on quantity. An
-// "alternatives" slot (e.g. carcass's bone_blade-or-dagger choice) passes
-// if EITHER option is satisfiable - an unconsumed option (own it, don't
-// use it up) is checked the same way the tool field is, a consumed
-// resource option the same way a plain ingredient is - mirroring
-// backend.players._resolve_recipe_ingredients/_resolve_ingredient_option
-// exactly, including their priority (prefer an already-owned unconsumed
-// option before falling back to a consumed one). Returns false (not just
-// "nothing flagged missing") when there's no character context to
-// actually confirm against.
-//
-// The tool check below applies ownsFamily's ">= requiredTier" rule ONLY
-// for an instance-tracked family (needsItemDefinition:true - axe_stone/
-// axe/dagger doubling as a tool) - a T1 Dagger can't stand in for a T3
-// recipe's own tool requirement, matching backend.players.
-// _resolve_tool_for_craft exactly (personal gear that scales with the
-// item being made). A flat-balance family (an anvil, a furnace, ...) is
-// generic work infrastructure - ANY tier satisfies ANY recipe tier there,
-// no minimum at all, same as _resolve_tool_for_craft's own flat-balance
-// branch. The blueprint check below also reuses ownsFamily - a blueprint
-// learned at tier N or higher covers crafting at any tier <= N
-// (_owns_blueprint_at_or_above mirrors this exactly). Getting any of
-// these wrong here means the button disagrees with what clicking it
-// would actually do.
-// `count` (default 1) scales each consumed option's required quantity,
-// same as backend.players._resolve_ingredient_option's own `count`
-// parameter - an unconsumed "held" option (own it, don't use it up) still
-// only needs ONE regardless of count, matching that a recipe's "tool"
-// field doesn't need `count` anvils to make `count` daggers.
+// a single backend start_craft call - mirrors backend.players.
+// _resolve_craft_chain exactly (see resolveChainPlan above, which this
+// just delegates to): a "processed" ingredient no longer needs to be
+// owned outright, since start_craft now auto-crafts its own shortfall
+// from raw in the same action - only a genuine raw-material/tool/
+// blueprint shortfall ANYWHERE in the tree (including an auto-crafted
+// intermediate step) fails this. Returns false (not just "nothing flagged
+// missing") when there's no character context to actually confirm
+// against.
+// `count` (default 1) scales the whole plan's required quantities, same
+// as backend.players.start_craft's own `count` parameter.
 window.isCurrentSelectionCraftable = function (count) {
   count = count || 1;
   if (!select.value || !inventory || !ownedTools || !ownedBlueprints) return false;
   const famId = select.value;
   const tier = currentTier();
-  const recipe = recipes[famId];
-  if (!recipe) return false;
-
-  const optionSatisfied = (opt) => {
-    if (opt.consumed === false) {
-      return opt.category === "final" && ownsFamily(ownedToolsWithVault, opt.familyId, tier);
-    }
-    if (opt.category !== "raw" && opt.category !== "processed" && opt.category !== "final") return false;
-    const f = families[opt.familyId];
-    const item = f && f.tiers[tier - 1];
-    if (!item) return false;
-    // A consumed "final" ingredient (e.g. iron_ration consuming a whole
-    // salt_horse) lives in itemBalances, not the raw/processed inventory -
-    // mirrors backend.players._resolve_ingredient_option's own bucket split.
-    const balances = opt.category === "final" ? itemBalances : inventory;
-    if (!balances) return false;
-    return (balances[item.id] || 0) >= opt.qty * count;
-  };
-
-  for (const ing0 of recipe.ingredients) {
-    const options = ing0.alternatives || [ing0];
-    const satisfied =
-      options.some((opt) => opt.consumed === false && optionSatisfied(opt)) ||
-      options.some((opt) => opt.consumed !== false && optionSatisfied(opt));
-    if (!satisfied) return false;
-  }
-
-  const tIds = toolIds(recipe.tool);
-  if (tIds.length) {
-    const hasTool = tIds.some(toolFamId => {
-      const f = families[toolFamId];
-      if (!f) return ownedToolsWithVault.has(toolFamId);
-      if (f.needsItemDefinition) return ownsFamily(ownedToolsWithVault, toolFamId, tier);
-      return f.tiers.some(t => ownedToolsWithVault.has(t.id));
-    });
-    if (!hasTool) return false;
-  }
-
-  if (recipe.blueprintFamilyId && !ownsFamily(ownedBlueprints, recipe.blueprintFamilyId, tier)) {
-    return false;
-  }
-
-  return true;
+  return resolveChainPlan(famId, tier, count, { ...inventory }, { ...(itemBalances || {}) }, true, true) !== null;
 };
+
+// These 2 constants MUST be kept in sync with backend.players' own
+// CRAFT_SECONDS_PER_RAW/CRAFT_BLUEPRINT_MAX_SECONDS - update both
+// together if either changes.
+const CRAFT_SECONDS_PER_RAW = 30;
+const CRAFT_BLUEPRINT_MAX_SECONDS = 3600;
+
+// One chain step's own duration/assembly-bonus-XP inputs, mirroring
+// backend.players._craft_step_duration_seconds/_assembly_bonus_xp exactly
+// for that one step's own family/tier/count - `directTotal` (this step's
+// own DIRECT raw ingredients only, via directRawTotals - a "processed"
+// ingredient contributes nothing, its own raw materials are its own
+// separate step's concern) drives duration; `fullChainTotal` (the FULL
+// recursive expansion, reusing computeTotals - deliberately NOT
+// direct-only, see _assembly_bonus_xp's own reasoning for why this one
+// re-counts raw materials on purpose) drives the assembly bonus, only for
+// a genuinely blueprint-gated step.
+function stepDurationAndXp(step) {
+  const recipe = recipes[step.familyId];
+  if (!recipe) return { seconds: 0, rawXp: {}, finalXp: 0 };
+
+  const directTotals = directRawTotals(step.familyId, step.tier);
+  const directTotal = Object.values(directTotals).reduce((a, b) => a + b, 0);
+  let perUnitSeconds = CRAFT_SECONDS_PER_RAW * step.tier * directTotal;
+  if (recipe.blueprintFamilyId) {
+    perUnitSeconds = Math.min(perUnitSeconds, CRAFT_BLUEPRINT_MAX_SECONDS * step.tier);
+  }
+
+  const rawXp = {};
+  for (const [famId, qty] of Object.entries(directTotals)) {
+    rawXp[famId] = qty * step.count;
+  }
+
+  let finalXp = 0;
+  if (recipe.blueprintFamilyId) {
+    const rawTotals = {};
+    const finalTotals = {};
+    computeTotals(step.familyId, step.count, famCategory(step.familyId), rawTotals, finalTotals, new Set(), step.tier);
+    const fullChainTotal = Object.values(rawTotals).reduce((a, b) => a + b, 0);
+    finalXp = Math.round(0.1 * fullChainTotal * step.tier);
+  }
+
+  return { seconds: perUnitSeconds * step.count, rawXp, finalXp };
+}
 
 // Exposed for the embedding page's own Craft button label - the XP a
 // single start_craft/finish_craft pair of calls would pay out for the
 // current selection at the given count, mirroring backend.players'
 // crafting-XP mechanics (see the README's "Crafting XP" section) without
-// a round trip: `rawXp` is raw-material XP (backend._crafting_xp_
-// increments/_resolve_recipe_direct_raw_totals) - this recipe's own
-// DIRECT "raw" ingredients only, keyed by family id, scaled by `count`; a
-// "processed" ingredient (e.g. dagger's metal_bar) contributes nothing
-// here, same as start_craft itself. `finalXp` is the final-item assembly
-// bonus (backend._assembly_bonus_xp) - 0 unless the recipe is genuinely
-// blueprint-gated, otherwise 10% of the item's FULL raw-material chain
-// (every "processed" ingredient's own sub-recipe expanded too, reusing
-// computeTotals - the same recursive expansion already driving the Raw
-// Total table) times the tier, rounded, scaled by `count`.
+// a round trip - summed across EVERY step resolveChainPlan returns
+// (deepest auto-crafted intermediate through the requested item itself),
+// same as backend.players.start_craft/finish_craft now pays out per step
+// rather than just for the top-level request (see stepDurationAndXp).
 window.getCurrentSelectionXp = function (count) {
   count = count || 1;
   if (!select.value) return null;
@@ -967,42 +937,32 @@ window.getCurrentSelectionXp = function (count) {
   const recipe = recipes[famId];
   if (!recipe) return null;
 
+  const hasContext = !!(inventory && ownedTools && ownedBlueprints);
+  const steps = resolveChainPlan(famId, tier, count, { ...(inventory || {}) }, { ...(itemBalances || {}) }, true, hasContext);
+  if (steps === null) return { rawXp: {}, finalXp: 0 };
+
   const rawXp = {};
-  for (const ing0 of recipe.ingredients) {
-    const ing = ing0.alternatives ? pickBestAlternative(ing0.alternatives, tier) : ing0;
-    if (ing.category === "raw") {
-      rawXp[ing.familyId] = (rawXp[ing.familyId] || 0) + ing.qty * count;
-    }
-  }
-
   let finalXp = 0;
-  if (recipe.blueprintFamilyId) {
-    const rawTotals = {};
-    const finalTotals = {};
-    computeTotals(famId, count, famCategory(famId), rawTotals, finalTotals, new Set(), tier);
-    const fullChainTotal = Object.values(rawTotals).reduce((a, b) => a + b, 0);
-    finalXp = Math.round(0.1 * fullChainTotal * tier);
+  for (const step of steps) {
+    const stepResult = stepDurationAndXp(step);
+    for (const [stepFamId, qty] of Object.entries(stepResult.rawXp)) {
+      rawXp[stepFamId] = (rawXp[stepFamId] || 0) + qty;
+    }
+    finalXp += stepResult.finalXp;
   }
-
   return { rawXp, finalXp };
 };
 
 // Exposed for the embedding page's own Craft button label - the crafting
-// timer length backend.players._craft_duration_seconds would compute for
-// the current selection at the given count, without a round trip. Mirrors
-// that function exactly: one unit's duration is the SAME full raw-
-// material chain total the XP preview's finalXp above already computes
-// (reusing computeTotals) times CRAFT_SECONDS_PER_RAW times the selected
-// tier (T1 = 1x, T2 = 2x, ..., T6 = 6x), capped at CRAFT_BLUEPRINT_MAX_SECONDS
-// times that same tier per unit for a genuinely blueprint-gated recipe
-// (never capped otherwise), then multiplied by `count` - a batch of
-// `count` units takes `count` times as long as crafting just one. These 2
-// constants MUST be kept in sync with backend.players' own
-// CRAFT_SECONDS_PER_RAW/CRAFT_BLUEPRINT_MAX_SECONDS - update both
-// together if either changes.
-const CRAFT_SECONDS_PER_RAW = 30;
-const CRAFT_BLUEPRINT_MAX_SECONDS = 3600;
-
+// timer length backend.players._craft_chain_duration_seconds would
+// compute for the current selection at the given count, without a round
+// trip - the SUM of every step resolveChainPlan returns' own duration
+// (stepDurationAndXp, direct-ingredients-only per step), not the single
+// top-level item's full recursive chain the way this used to work before
+// start_craft could auto-craft a missing intermediate - a step fully
+// covered by owned stock never makes it into `steps` at all, so it
+// contributes zero time (see resolveChainPlan/backend.players.
+// _resolve_craft_chain for why that's the fix, not a bug).
 window.getCurrentSelectionDuration = function (count) {
   count = count || 1;
   if (!select.value) return null;
@@ -1011,16 +971,10 @@ window.getCurrentSelectionDuration = function (count) {
   const recipe = recipes[famId];
   if (!recipe) return null;
 
-  const rawTotals = {};
-  const finalTotals = {};
-  computeTotals(famId, 1, famCategory(famId), rawTotals, finalTotals, new Set(), tier);
-  const fullChainTotal = Object.values(rawTotals).reduce((a, b) => a + b, 0);
-
-  let perUnitSeconds = CRAFT_SECONDS_PER_RAW * tier * fullChainTotal;
-  if (recipe.blueprintFamilyId) {
-    perUnitSeconds = Math.min(perUnitSeconds, CRAFT_BLUEPRINT_MAX_SECONDS * tier);
-  }
-  return perUnitSeconds * count;
+  const hasContext = !!(inventory && ownedTools && ownedBlueprints);
+  const steps = resolveChainPlan(famId, tier, count, { ...(inventory || {}) }, { ...(itemBalances || {}) }, true, hasContext);
+  if (steps === null) return null;
+  return steps.reduce((total, step) => total + stepDurationAndXp(step).seconds, 0);
 };
 
 function isAestheticEnabled() {
@@ -1447,6 +1401,141 @@ function computeDirectMaterials(famId, tier) {
     // sense - already covered by Tools Used / Other Items Required.
   }
   return { materials, hasProcessed };
+}
+
+// This recipe's own DIRECT "raw" ingredients only, at ONE unit - NOT
+// recursive (unlike computeTotals' own full chain expansion) - mirrors
+// backend.players._resolve_recipe_direct_raw_totals exactly, including
+// its alternatives priority (pickBestAlternative) and the "a 'processed'
+// ingredient contributes nothing here" rule (its own raw materials are
+// its own separate chain step's concern, not this one's).
+function directRawTotals(famId, tier) {
+  const recipe = recipes[famId];
+  const totals = {};
+  if (!recipe) return totals;
+  for (const ing0 of recipe.ingredients) {
+    const ing = ing0.alternatives ? pickBestAlternative(ing0.alternatives, tier) : ing0;
+    if (ing.category === "raw") {
+      totals[ing.familyId] = (totals[ing.familyId] || 0) + ing.qty;
+    }
+  }
+  return totals;
+}
+
+// Mirrors backend.players._resolve_craft_chain - plans a full one-shot
+// craft of `count` units of `famId`@`tier`, auto-crafting any "processed"
+// ingredient's own shortfall recursively from raw rather than requiring
+// it be owned outright the way a single backend start_craft call used to
+// need (see isCurrentSelectionCraftable's own comment, now out of date -
+// this IS now what start_craft actually does). `workingInventory`/
+// `workingItemBalances` are plain objects this function (and its own
+// recursive calls) mutate in place as each ingredient's consumption is
+// committed - pass fresh shallow copies of `inventory`/`itemBalances` in,
+// never the real globals, since a sibling/nested step must see an earlier
+// step's own consumption to avoid double-spending the same raw material.
+// `isTopLevel` only affects nothing here (unlike the backend, this
+// preview never needs to distinguish a top-level tool's own "shrink to
+// what's available" fallback from an intermediate's "fail outright" one -
+// this is a yes/no craftability check, not a real quality-wear
+// transaction) - kept as a parameter anyway to mirror the backend
+// function's own shape/call sites, for anyone cross-referencing the two.
+//
+// Returns null if anything anywhere in the tree can't be resolved (not
+// enough raw material at some leaf, a missing tool, or an unlearned
+// blueprint for any step, including an auto-crafted intermediate one).
+// Otherwise an ordered array of {familyId, tier, count} steps - deepest
+// ingredient first, the requested item itself last (post-order, same
+// order the backend's own `steps` list uses) - a single entry when no
+// auto-crafted intermediate was needed at all, reproducing today's
+// single-step duration/XP calculation exactly.
+function resolveChainPlan(famId, tier, count, workingInventory, workingItemBalances, isTopLevel, hasContext) {
+  const recipe = recipes[famId];
+  if (!recipe) return null;
+
+  const needed = count;
+
+  // No real character context at all (e.g. this page visited standalone,
+  // with no ?inv=/?tools=/?blueprints= - see isCurrentSelectionCraftable's
+  // own identical combined guard) - same "don't flag anything as missing"
+  // convention ownsFamily already applies to a null ownedSet, extended
+  // here to raw-material availability too: a standalone preview should
+  // report the SAME theoretical duration/XP as before this feature
+  // existed (everything assumed craftable from scratch), not fail outright
+  // just because there's no real inventory to check against.
+  if (hasContext) {
+    const tIds = toolIds(recipe.tool);
+    if (tIds.length) {
+      const hasTool = tIds.some(toolFamId => {
+        const f = families[toolFamId];
+        if (!f) return ownedToolsWithVault.has(toolFamId);
+        if (f.needsItemDefinition) return ownsFamily(ownedToolsWithVault, toolFamId, tier);
+        return f.tiers.some(t => ownedToolsWithVault.has(t.id));
+      });
+      if (!hasTool) return null;
+    }
+    if (recipe.blueprintFamilyId && !ownsFamily(ownedBlueprints, recipe.blueprintFamilyId, tier)) {
+      return null;
+    }
+  }
+
+  const steps = [];
+  for (const ing0 of recipe.ingredients) {
+    const options = ing0.alternatives || [ing0];
+
+    // An unconsumed ("held") option - own it, nothing to consume or
+    // auto-craft, same as isCurrentSelectionCraftable's own optionSatisfied.
+    // With no character context, always counts as satisfied (same as
+    // computeTotals' own standalone behavior - a plain, non-alternatives
+    // unconsumed ingredient like quill's dagger requirement was never
+    // ownership-checked there either, just folded into finalTotals, never
+    // failing the whole preview over it).
+    const held = options.find(
+      (opt) =>
+        opt.consumed === false &&
+        opt.category === "final" &&
+        (!hasContext || ownsFamily(ownedToolsWithVault, opt.familyId, tier))
+    );
+    if (held) continue;
+
+    // A consumed option, tried in listed order - prefer one that's
+    // already affordable outright; for a "processed" option that isn't,
+    // auto-craft the shortfall recursively before giving up on it.
+    let resolved = false;
+    for (const opt of options) {
+      if (opt.consumed === false) continue;
+      if (opt.category !== "raw" && opt.category !== "processed" && opt.category !== "final") continue;
+      const f = families[opt.familyId];
+      const item = f && f.tiers[tier - 1];
+      if (!item) continue;
+      const balances = opt.category === "final" ? workingItemBalances : workingInventory;
+      const qty = opt.qty * needed;
+      const have = hasContext ? balances[item.id] || 0 : Infinity;
+      if (have >= qty) {
+        if (hasContext) balances[item.id] = have - qty;
+        resolved = true;
+        break;
+      }
+      if (opt.category === "processed") {
+        const shortfall = qty - have;
+        const subSteps = resolveChainPlan(opt.familyId, tier, shortfall, workingInventory, workingItemBalances, false, hasContext);
+        if (subSteps === null) continue; // try the next alternative, if any
+        steps.push(...subSteps);
+        // This ingredient slot's full `qty` is now spoken for (whatever
+        // was already owned, plus exactly the shortfall just planned) -
+        // nothing left over here for a later, different ingredient
+        // elsewhere in the tree to also draw from (same "no leftover
+        // virtual stock persists" simplification the backend's own
+        // _resolve_craft_chain makes, see its own docstring).
+        if (hasContext) balances[item.id] = 0;
+        resolved = true;
+        break;
+      }
+    }
+    if (!resolved) return null;
+  }
+
+  steps.push({ familyId: famId, tier, count: needed });
+  return steps;
 }
 
 // Fully multiplied raw/final-item cost of the whole tree, independent of
