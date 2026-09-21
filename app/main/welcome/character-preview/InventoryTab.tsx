@@ -3067,6 +3067,12 @@ export function InventoryTab({
   // such transient mismatch.
   const [recipeViewerHeight, setRecipeViewerHeight] = useState(600);
   const recipeViewerRef = useRef<HTMLIFrameElement>(null);
+  // The iframe's own src is short/fixed (no inv/tools/blueprints query
+  // string at all - see the effect below) - reset to false whenever the
+  // accordion closes (the iframe JSX below unmounts entirely, so the NEXT
+  // open is a genuinely fresh load needing its own onLoad/postMessage
+  // cycle again, not a leftover true from the last time it was open).
+  const [recipeViewerLoaded, setRecipeViewerLoaded] = useState(false);
 
   // The viewer tracks its own selection (and, now, its own craftability
   // check) internally - since the iframe is same-origin, these globals are
@@ -3118,6 +3124,7 @@ export function InventoryTab({
       setCraftableCounts({});
       setCraftXpPreview(null);
       setCraftDurationPreview(null);
+      setRecipeViewerLoaded(false);
       return;
     }
     const check = () => {
@@ -3135,6 +3142,30 @@ export function InventoryTab({
     return () => clearInterval(interval);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [recipeViewerOpen, playerResourceBalances, playerItemBalances, playerTools, knownBlueprints, craftCount]);
+
+  // Sends the actual inv/itemBalances/tools/blueprints data to the iframe
+  // once it's loaded, via postMessage - same mechanism/message shape
+  // SoulCreation.tsx's own Trappings-step embed already uses for ITS live
+  // updates, just also doing the very first bootstrap send this way now
+  // instead of a giant query string on the iframe's own src (see there).
+  // A character who's learned a lot of blueprints (or owns a lot of
+  // distinct resources) could push that query string past what some
+  // mobile in-app-wallet browsers accept on a URL, silently failing to
+  // load the iframe at all - postMessage has no such length limit.
+  useEffect(() => {
+    if (!recipeViewerLoaded) return;
+    recipeViewerRef.current?.contentWindow?.postMessage(
+      {
+        type: "recipe-viewer:update",
+        inv: playerResourceBalances,
+        itemBalances: playerItemBalances,
+        tools: ownedTools,
+        vaultTools: vaultToolInstanceIds,
+        blueprints: knownBlueprints,
+      },
+      window.location.origin
+    );
+  }, [recipeViewerLoaded, playerResourceBalances, playerItemBalances, ownedTools, vaultToolInstanceIds, knownBlueprints]);
   const canCraft = craftableCounts[craftCount] ?? false;
 
   const [crafting, setCrafting] = useState(false);
@@ -3512,13 +3543,7 @@ export function InventoryTab({
           {recipeViewerOpen && (
             <iframe
               ref={recipeViewerRef}
-              src={`/craft/recipe-viewer.html?embedded=1&inv=${encodeURIComponent(
-                JSON.stringify(playerResourceBalances)
-              )}&itemBalances=${encodeURIComponent(
-                JSON.stringify(playerItemBalances)
-              )}&tools=${encodeURIComponent(JSON.stringify(ownedTools))}&vaultTools=${encodeURIComponent(
-                JSON.stringify(vaultToolInstanceIds)
-              )}&blueprints=${encodeURIComponent(JSON.stringify(knownBlueprints))}`}
+              src="/craft/recipe-viewer.html?embedded=1"
               title="Crafting Recipe Viewer"
               className={styles.recipeViewerFrame}
               style={{ height: recipeViewerHeight, overflow: "hidden" }}
@@ -3531,6 +3556,7 @@ export function InventoryTab({
                   setRecipeViewerHeight(doc.body.scrollHeight);
                 });
                 observer.observe(doc.body);
+                setRecipeViewerLoaded(true);
               }}
             />
           )}

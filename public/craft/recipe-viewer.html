@@ -883,39 +883,65 @@ window.isCurrentSelectionCraftable = function (count) {
 const CRAFT_SECONDS_PER_RAW = 30;
 const CRAFT_BLUEPRINT_MAX_SECONDS = 3600;
 
-// One chain step's own duration/assembly-bonus-XP inputs, mirroring
-// backend.players._craft_step_duration_seconds/_assembly_bonus_xp exactly
-// for that one step's own family/tier/count - `directTotal` (this step's
+// One chain step's own duration/XP inputs, mirroring backend.players'
+// _craft_step_duration_seconds/_craft_final_duration_seconds/
+// _assembly_bonus_xp exactly for that one step's own family/tier/count.
+//
+// Duration: every step EXCEPT the actually-requested item (`isFinal`
+// false - an auto-crafted intermediate) uses `directTotal` (this step's
 // own DIRECT raw ingredients only, via directRawTotals - a "processed"
 // ingredient contributes nothing, its own raw materials are its own
-// separate step's concern) drives duration; `fullChainTotal` (the FULL
-// recursive expansion, reusing computeTotals - deliberately NOT
-// direct-only, see _assembly_bonus_xp's own reasoning for why this one
-// re-counts raw materials on purpose) drives the assembly bonus, only for
-// a genuinely blueprint-gated step.
-function stepDurationAndXp(step) {
+// separate step's concern). The requested item's own step (`isFinal`
+// true - always resolveChainPlan's last entry) instead uses the FULL
+// recursive chain (reusing computeTotals, same metric the assembly bonus
+// below already uses) - separate "assembly/craftsmanship" time that
+// doesn't disappear just because its own ingredients got auto-crafted in
+// the same action rather than a separate one beforehand (see
+// backend.players._craft_final_duration_seconds's own reasoning). Both
+// get the blueprint cap when genuinely blueprint-gated.
+//
+// finalXp (the assembly bonus) always uses the full chain regardless of
+// `isFinal` - unaffected by this split, since a bonus-eligible
+// intermediate should be just as "by design" recursive as the top-level
+// one (mirrors _assembly_bonus_xp being called per-step on the backend).
+function stepDurationAndXp(step, isFinal) {
   const recipe = recipes[step.familyId];
   if (!recipe) return { seconds: 0, rawXp: {}, finalXp: 0 };
 
   const directTotals = directRawTotals(step.familyId, step.tier);
-  const directTotal = Object.values(directTotals).reduce((a, b) => a + b, 0);
-  let perUnitSeconds = CRAFT_SECONDS_PER_RAW * step.tier * directTotal;
-  if (recipe.blueprintFamilyId) {
-    perUnitSeconds = Math.min(perUnitSeconds, CRAFT_BLUEPRINT_MAX_SECONDS * step.tier);
-  }
-
   const rawXp = {};
   for (const [famId, qty] of Object.entries(directTotals)) {
     rawXp[famId] = qty * step.count;
   }
 
+  // Per-1-unit full chain (qty=1, same as backend._resolve_recipe_full_
+  // chain_raw_total's own "count=1" call) - kept separate from the
+  // count-scaled total below so duration (per-unit, then *count at the
+  // very end, matching _craft_final_duration_seconds) and the assembly
+  // bonus (count-scaled up front, matching _assembly_bonus_xp) each use
+  // the shape they actually need without dividing one back out of the
+  // other.
+  let fullChainPerUnit = 0;
+  if (isFinal || recipe.blueprintFamilyId) {
+    const perUnitTotals = {};
+    computeTotals(step.familyId, 1, famCategory(step.familyId), perUnitTotals, {}, new Set(), step.tier);
+    fullChainPerUnit = Object.values(perUnitTotals).reduce((a, b) => a + b, 0);
+  }
+
+  let perUnitSeconds;
+  if (isFinal) {
+    perUnitSeconds = CRAFT_SECONDS_PER_RAW * step.tier * fullChainPerUnit;
+  } else {
+    const directTotal = Object.values(directTotals).reduce((a, b) => a + b, 0);
+    perUnitSeconds = CRAFT_SECONDS_PER_RAW * step.tier * directTotal;
+  }
+  if (recipe.blueprintFamilyId) {
+    perUnitSeconds = Math.min(perUnitSeconds, CRAFT_BLUEPRINT_MAX_SECONDS * step.tier);
+  }
+
   let finalXp = 0;
   if (recipe.blueprintFamilyId) {
-    const rawTotals = {};
-    const finalTotals = {};
-    computeTotals(step.familyId, step.count, famCategory(step.familyId), rawTotals, finalTotals, new Set(), step.tier);
-    const fullChainTotal = Object.values(rawTotals).reduce((a, b) => a + b, 0);
-    finalXp = Math.round(0.1 * fullChainTotal * step.tier);
+    finalXp = Math.round(0.1 * fullChainPerUnit * step.count * step.tier);
   }
 
   return { seconds: perUnitSeconds * step.count, rawXp, finalXp };
@@ -943,26 +969,26 @@ window.getCurrentSelectionXp = function (count) {
 
   const rawXp = {};
   let finalXp = 0;
-  for (const step of steps) {
-    const stepResult = stepDurationAndXp(step);
+  steps.forEach((step, i) => {
+    const stepResult = stepDurationAndXp(step, i === steps.length - 1);
     for (const [stepFamId, qty] of Object.entries(stepResult.rawXp)) {
       rawXp[stepFamId] = (rawXp[stepFamId] || 0) + qty;
     }
     finalXp += stepResult.finalXp;
-  }
+  });
   return { rawXp, finalXp };
 };
 
 // Exposed for the embedding page's own Craft button label - the crafting
 // timer length backend.players._craft_chain_duration_seconds would
 // compute for the current selection at the given count, without a round
-// trip - the SUM of every step resolveChainPlan returns' own duration
-// (stepDurationAndXp, direct-ingredients-only per step), not the single
-// top-level item's full recursive chain the way this used to work before
-// start_craft could auto-craft a missing intermediate - a step fully
-// covered by owned stock never makes it into `steps` at all, so it
-// contributes zero time (see resolveChainPlan/backend.players.
-// _resolve_craft_chain for why that's the fix, not a bug).
+// trip - every auto-crafted intermediate step's own direct-ingredients-
+// only duration (stepDurationAndXp - a step fully covered by owned stock
+// never makes it into `steps` at all, so it contributes zero time), PLUS
+// the actually-requested item's own step (always the LAST entry), which
+// always uses its full recursive chain instead, added separately on top
+// (see stepDurationAndXp's own doc comment, and backend.players.
+// _craft_chain_duration_seconds for the identical split).
 window.getCurrentSelectionDuration = function (count) {
   count = count || 1;
   if (!select.value) return null;
@@ -974,7 +1000,7 @@ window.getCurrentSelectionDuration = function (count) {
   const hasContext = !!(inventory && ownedTools && ownedBlueprints);
   const steps = resolveChainPlan(famId, tier, count, { ...(inventory || {}) }, { ...(itemBalances || {}) }, true, hasContext);
   if (steps === null) return null;
-  return steps.reduce((total, step) => total + stepDurationAndXp(step).seconds, 0);
+  return steps.reduce((total, step, i) => total + stepDurationAndXp(step, i === steps.length - 1).seconds, 0);
 };
 
 function isAestheticEnabled() {
@@ -1676,12 +1702,18 @@ if (select.options.length) {
 // entirely above when there's no returnUrl, so there's nothing further to
 // wire up here.
 
-// Live updates from an embedding page (e.g. the Soul Creation wizard's
+// Live updates from an embedding page (the Soul Creation wizard's
 // Trappings step, where picking a raw material or blueprint shouldn't blow
-// away whatever recipe/tier the player was already looking at in here).
+// away whatever recipe/tier the player was already looking at in here; and
+// InventoryTab.tsx's own Crafting Recipe Viewer, which uses this for its
+// very FIRST bootstrap send too, not just later updates - the iframe's own
+// src carries no inv/tools/blueprints data at all now, since a character
+// who's learned a lot of blueprints (or owns a lot of distinct resources)
+// could push that query string past what some mobile in-app-wallet
+// browsers accept on a URL, silently failing to load the iframe at all).
 // Changing the iframe's own src would reload the whole document and lose
-// that state, so the parent instead posts fresh inv/tools/blueprints data
-// and this just re-renders in place - same selected item, same tier.
+// whatever state it had, so the parent instead posts fresh data and this
+// just re-renders in place - same selected item, same tier.
 window.addEventListener("message", (event) => {
   if (event.origin !== window.location.origin) return;
   const msg = event.data;
@@ -1689,6 +1721,12 @@ window.addEventListener("message", (event) => {
   inventory = msg.inv ?? null;
   document.querySelector("#rawTotals thead th:last-child").textContent = inventory ? "owned/needed" : "";
   document.querySelector("#materialsTotals thead th:last-child").textContent = inventory ? "owned/needed" : "";
+  // Only InventoryTab.tsx's own embed ever sends this (a "final"-category
+  // ingredient, e.g. iron_ration's salt_horse, lives here rather than in
+  // `inventory`) - Soul Creation's Trappings step has never had a reason
+  // to, so this simply stays null there, same as before itemBalances
+  // existed on this message at all.
+  itemBalances = msg.itemBalances ?? null;
   ownedTools = msg.tools ? new Set(msg.tools) : null;
   ownedBlueprints = msg.blueprints ? new Set(msg.blueprints) : null;
   // The embedding pages that use this live-update path (e.g. Soul
