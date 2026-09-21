@@ -1846,7 +1846,7 @@
      original 75% - closer to the embers themselves instead of spreading
      low into the padding area below (see the box-sizing comment below
      for why that room exists at all). */
-  background: radial-gradient(circle at 50% 45%, rgb(251, 120, 27) 0%, rgba(195, 73, 17, 0.426) 15%, rgba(62, 18, 8, 0.136) 50%);
+  background: radial-gradient(circle at 50% 45%, rgb(251, 120, 27) 0%, rgba(195, 73, 17, 0.426) 20%, rgba(62, 18, 8, 0.043) 50%);
   animation: emberGlowPulse 4.6s ease-in-out infinite;
   /* The gradient above is a `background`, which can never paint past its
      own element's box - with height:46% (from the base rule) leaving no
