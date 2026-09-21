@@ -9,24 +9,19 @@ import { PortraitEditor, type PortraitEditorValue } from "../PortraitEditor";
 import { BIRTHSIGNS } from "@/app/lib/characterOptions";
 import { StatsTab } from "./StatsTab";
 import { BodyTab } from "./BodyTab";
-import { SoulTab } from "./SoulTab";
 import { AdventureTab } from "./AdventureTab";
 import { InventoryTab, type ItemInstance, type RawPlayerData } from "./InventoryTab";
 import { CampView } from "./CampView";
 
-export type TabKey = "stats" | "body" | "soul" | "adventure" | "inventory";
+export type TabKey = "stats" | "body" | "crafting" | "adventure" | "inventory";
 
 const ICON_BASE = "/images/character/char-preview-";
 
-const TABS: { key: TabKey; label: string; icon: string; lightenWhenActive?: boolean }[] = [
+const TABS: { key: TabKey; label: string; icon: string; secondIcon?: string; emojiIcon?: string; lightenWhenActive?: boolean }[] = [
   { key: "stats", label: "Stats", icon: `${ICON_BASE}stats.png` },
-  // body.png/adventure.png are noticeably darker art than the other three
-  // icons (muted brown/purple vs. stats' gold or soul's bright cyan) - the
-  // shared gold glow alone doesn't read as clearly "active" on them, so
-  // these two also get a brightness boost (see .tabRowButtonActiveLighten).
-  { key: "body", label: "Body", icon: `${ICON_BASE}body.png`, lightenWhenActive: true },
-  { key: "soul", label: "Soul", icon: `${ICON_BASE}soul.png` },
+  { key: "body", label: "Body & Soul", icon: `${ICON_BASE}body.png`, secondIcon: `${ICON_BASE}soul.png`, lightenWhenActive: true },
   { key: "inventory", label: "Inventory", icon: "/images/character/vault.png" },
+  { key: "crafting", label: "Crafting", icon: "", emojiIcon: "🔧" },
   { key: "adventure", label: "Adventure", icon: `${ICON_BASE}adventure.png`, lightenWhenActive: true },
 ];
 
@@ -70,13 +65,6 @@ export function CharacterPreview({
 }) {
   const { setHidden: setHeaderHidden } = useHeaderVisibility();
   const [activeTab, setActiveTab] = useState<TabKey>(initialTab);
-  // Mirrors InventoryTab's own Crafting/Vault sub-tab - the Vault tab's
-  // Items grid is meant to be the only scrollable thing on screen while
-  // it's showing (horizontally, within the grid itself), so .wizard's own
-  // vertical scroll (see .wizardScrollable below) is suspended for it.
-  const [inventorySubTab, setInventorySubTab] = useState<"crafting" | "vault">(
-    openCraftingSectionByDefault ? "crafting" : "vault",
-  );
   // Opened via the camp button on the Body tab (see BodyTab.tsx's
   // onOpenCamp) - replaces the normal per-tab content below the name
   // heading rather than being its own TABS entry, and (like the Vault
@@ -115,10 +103,10 @@ export function CharacterPreview({
   // position would leave the name/tab-strip cut off above the fold with
   // no way back up. Snap to the top the moment Vault becomes active.
   useEffect(() => {
-    if (showCamp || (activeTab === "inventory" && inventorySubTab === "vault")) {
+    if (showCamp || activeTab === "inventory") {
       wizardScrollRef.current?.scrollTo(0, 0);
     }
-  }, [activeTab, inventorySubTab, showCamp]);
+  }, [activeTab, showCamp]);
 
   // Standalone portrait editor, opened by clicking the face portrait on the
   // Stats tab. The draft lives in a ref rather than state - PortraitEditor's
@@ -258,7 +246,7 @@ export function CharacterPreview({
   return (
     <div
       className={`${styles.wizard} ${
-        showCamp || (activeTab === "inventory" && inventorySubTab === "vault") ? "" : styles.wizardScrollable
+        showCamp || activeTab === "inventory" ? "" : styles.wizardScrollable
       }`}
       ref={wizardScrollRef}
       onScroll={checkScrolledToEnd}
@@ -295,8 +283,19 @@ export function CharacterPreview({
                     title={tab.label}
                     aria-label={tab.label}
                   >
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src={tab.icon} alt="" className={tabStyles.tabIcon} />
+                    {tab.emojiIcon ? (
+                      <span className={tabStyles.tabIconEmoji}>{tab.emojiIcon}</span>
+                    ) : tab.secondIcon ? (
+                      <span className={tabStyles.tabIconComposite}>
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img src={tab.secondIcon} alt="" className={`${tabStyles.tabIcon} ${tabStyles.tabIconBack}`} />
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img src={tab.icon} alt="" className={`${tabStyles.tabIcon} ${tabStyles.tabIconFront}`} />
+                      </span>
+                    ) : (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={tab.icon} alt="" className={tabStyles.tabIcon} />
+                    )}
                   </button>
                 ))}
               </nav>
@@ -317,7 +316,7 @@ export function CharacterPreview({
           {showCamp ? `${character.firstName}'s Camp` : `${character.firstName} ${character.lastName}`}
         </h1>
 
-        <div className={showCamp || activeTab === "inventory" || activeTab === "soul" ? tabStyles.mainColumn : `${tabStyles.mainColumn} ${tabStyles.mainColumnPadded}`}>
+        <div className={showCamp || activeTab === "inventory" || activeTab === "crafting" ? tabStyles.mainColumn : `${tabStyles.mainColumn} ${tabStyles.mainColumnPadded}`}>
           {showCamp ? (
             <CampView
               character={character}
@@ -340,7 +339,18 @@ export function CharacterPreview({
           {activeTab === "body" && (
             <BodyTab character={character} onPlayerDataUpdated={onPlayerDataUpdated} onOpenCamp={() => setShowCamp(true)} />
           )}
-          {activeTab === "soul" && <SoulTab character={character} onPlayerDataUpdated={onPlayerDataUpdated} />}
+          {activeTab === "crafting" && (
+            <InventoryTab
+              character={character}
+              playerResourceBalances={playerResourceBalances}
+              playerTools={playerTools}
+              playerItemBalances={playerItemBalances}
+              playerItems={playerItems}
+              onPlayerDataUpdated={onPlayerDataUpdated}
+              openCraftingSectionByDefault={openCraftingSectionByDefault}
+              section="crafting"
+            />
+          )}
           {activeTab === "adventure" && (
             <AdventureTab character={character} onPlayerDataUpdated={onPlayerDataUpdated} />
           )}
@@ -352,8 +362,7 @@ export function CharacterPreview({
               playerItemBalances={playerItemBalances}
               playerItems={playerItems}
               onPlayerDataUpdated={onPlayerDataUpdated}
-              openCraftingSectionByDefault={openCraftingSectionByDefault}
-              onSubTabChange={setInventorySubTab}
+              section="vault"
             />
           )}
             </>
