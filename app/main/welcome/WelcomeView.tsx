@@ -132,7 +132,7 @@ export function WelcomeView() {
   // loaded, since the character being linked to has to actually exist in
   // it. The URL is cleared right after so a later refresh doesn't keep
   // re-opening the same character.
-  const VALID_TABS: TabKey[] = ["stats", "body", "soul", "adventure", "inventory"];
+  const VALID_TABS: TabKey[] = ["stats", "body", "crafting", "adventure", "inventory"];
   useEffect(() => {
     if (characters === null) return;
     const params = new URLSearchParams(window.location.search);
@@ -220,7 +220,7 @@ export function WelcomeView() {
           onViewCharacter={(character, options) => {
             setViewingCharacter(character);
             if (options?.openCrafting) {
-              setViewingTab("inventory");
+              setViewingTab("crafting");
               setViewingOpenCrafting(true);
             } else {
               setViewingTab("stats");

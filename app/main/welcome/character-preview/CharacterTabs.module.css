@@ -227,9 +227,36 @@
   width: 52px;
   height: 52px;
   flex-shrink: 0;
-  /* These are small hand-drawn pixel-art icons - smooth browser scaling
-     blurs them, image-rendering keeps every pixel crisp. */
   image-rendering: pixelated;
+}
+
+.tabIconComposite {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 8px;
+}
+
+.tabIconBack {
+  position: absolute;
+  top: -6px;
+  left: 6px;
+  opacity: 0.55;
+}
+
+.tabIconFront {
+  position: relative;
+}
+
+.tabIconEmoji {
+  font-size: clamp(18px, 6vw, 30px);
+  line-height: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: clamp(22px, 7vw, 38px);
+  height: clamp(22px, 7vw, 38px);
 }
 
 .panel {
@@ -895,6 +922,11 @@
   gap: 0.35rem;
   flex-shrink: 0;
   width: min(18rem, 70vw);
+  transition: width 0.6s ease;
+}
+
+.frameColumnFlipped {
+  width: min(400px, calc(100vw - 2rem));
 }
 
 /* Wraps .frameBox and positions every equip slot relative to it - the box
@@ -921,6 +953,37 @@
   width: 100%;
   height: 100%;
   object-fit: cover;
+}
+
+.flipContainer {
+  perspective: 1000px;
+  width: 100%;
+}
+
+.flipInner {
+  position: relative;
+  width: 100%;
+  transition: transform 0.6s ease;
+  transform-style: preserve-3d;
+}
+
+.flipInnerFlipped {
+  transform: rotateY(180deg);
+}
+
+.flipFace {
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  cursor: pointer;
+}
+
+.flipBack {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  transform: rotateY(180deg);
 }
 
 .equipSlot {

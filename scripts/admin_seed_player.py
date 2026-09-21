@@ -41,7 +41,7 @@ RAW_MATERIAL_QTY = 3000
 
 DROP_BLUEPRINTS = False
 DROP_MATERIALS  = False    # raw materials → crafting.resources
-DROP_ITEMS      = False   # instance items + vault.itemBalances (armor, weapons, food, potions, …)
+DROP_ITEMS      = True   # instance items + vault.itemBalances (armor, weapons, food, potions, …)
 DROP_TOOLS      = False   # flat crafting tools (anvil, furnace, workbench, …)
 
 TIER_RANDOM     = False  # True = pick a random tier, overrides TIER_LVL

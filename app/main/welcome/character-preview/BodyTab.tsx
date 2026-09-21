@@ -15,6 +15,7 @@ import {
 } from "./InventoryTab";
 import type { ItemInstance, SlotCharacterSummary } from "../SoulSlotGrid";
 import { InAdventureToggle } from "./InAdventureToggle";
+import { CHAKRA_SLOTS, activeChakraCount } from "./SoulTab";
 
 // Overlaid directly on the portrait: head/chest/legs down the left edge,
 // back/side down the right edge. The right-edge slot below Back used to be
@@ -227,6 +228,15 @@ export function BodyTab({
   // right here rather than this character's whole backpack.
   const [selectedInstance, setSelectedInstance] = useState<ItemInstance | null>(null);
 
+  const [showSoul, setShowSoul] = useState(false);
+  const [litSlots, setLitSlots] = useState<Set<number>>(new Set());
+  const toggleLit = (n: number) => setLitSlots((prev) => {
+    const next = new Set(prev);
+    if (next.has(n)) next.delete(n); else next.add(n);
+    return next;
+  });
+  const activeCount = activeChakraCount(character.attr);
+
   // Mirrors InventoryTab.tsx's identical check (and backend.items_catalog.
   // has_backpack_available) - greys out the popup's "Move to backpack"
   // button when there's no "backpack" family to pack into, instead of
@@ -274,36 +284,81 @@ export function BodyTab({
     <div className={styles.panel}>
       <InAdventureToggle character={character} onPlayerDataUpdated={onPlayerDataUpdated} />
       <div className={styles.bodyLayout}>
-        <div className={styles.frameColumn}>
+        <div className={`${styles.frameColumn} ${showSoul ? styles.frameColumnFlipped : ""}`}>
           <div className={styles.frameStage}>
-            <div className={styles.frameBox} style={frameAspectRatio ? { aspectRatio: frameAspectRatio } : undefined}>
-              {character.portraitUrl && character.portraitUrl !== "empty" ? (
-                character.portraitFrameArea ? (
-                  // eslint-disable-next-line @next/next/no-img-element
+            <div className={styles.flipContainer}>
+              <div className={`${styles.flipInner} ${showSoul ? styles.flipInnerFlipped : ""}`}>
+                <div
+                  className={`${styles.frameBox} ${styles.flipFace}`}
+                  style={!showSoul && frameAspectRatio ? { aspectRatio: frameAspectRatio } : undefined}
+                  onClick={() => setShowSoul(true)}
+                >
+                  {character.portraitUrl && character.portraitUrl !== "empty" ? (
+                    character.portraitFrameArea ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img
+                        src={character.portraitUrl}
+                        alt={character.firstName}
+                        style={getPortraitCropImgStyle(character.portraitFrameArea)}
+                      />
+                    ) : (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img
+                        src={character.portraitUrl}
+                        alt={character.firstName}
+                        className={styles.frameImage}
+                      />
+                    )
+                  ) : (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                      src="/images/character/char_placeholder_silhouette.png"
+                      alt=""
+                      className={styles.frameImage}
+                    />
+                  )}
+                </div>
+                <div
+                  className={`${styles.frameBox} ${styles.flipFace} ${styles.flipBack}`}
+                  onClick={() => setShowSoul(false)}
+                >
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
-                    src={character.portraitUrl}
-                    alt={character.firstName}
-                    style={getPortraitCropImgStyle(character.portraitFrameArea)}
-                  />
-                ) : (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img
-                    src={character.portraitUrl}
-                    alt={character.firstName}
+                    src="/images/character/chakra-page-active.jpg"
+                    alt="Soul chakra"
                     className={styles.frameImage}
                   />
-                )
-              ) : (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img
-                  src="/images/character/char_placeholder_silhouette.png"
-                  alt=""
-                  className={styles.frameImage}
-                />
-              )}
+                  {CHAKRA_SLOTS.map(({ number, label: slotLabel, top, left }) => {
+                    if (number > activeCount) return null;
+                    return (
+                      <button
+                        type="button"
+                        key={number}
+                        className={`${styles.soulChakraSlot} ${litSlots.has(number) ? styles.soulChakraSlotLit : ""}`}
+                        style={{ top: `${top}%`, left: `${left}%` }}
+                        title={`${number}. ${slotLabel}`}
+                        onClick={(e) => { e.stopPropagation(); toggleLit(number); }}
+                      >
+                        <span className={styles.equipSlotEmpty}>Empty</span>
+                      </button>
+                    );
+                  })}
+                  {CHAKRA_SLOTS.filter(({ number }) => number > activeCount).map(({ number, label: slotLabel, top, left }) => (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                      key={number}
+                      src="/images/character/chakra-inactive.png"
+                      alt={`${slotLabel} (inactive)`}
+                      title={`${number}. ${slotLabel} (inactive)`}
+                      className={styles.soulChakraInactiveImage}
+                      style={{ top: `${top}%`, left: `${left}%` }}
+                    />
+                  ))}
+                </div>
+              </div>
             </div>
 
-            {OVERLAY_SLOTS.map(({ label, position }) => {
+            {!showSoul && OVERLAY_SLOTS.map(({ label, position }) => {
               const instance = equippedInSlot(character.gear.items, label);
               return (
                 <div
@@ -322,112 +377,109 @@ export function BodyTab({
               );
             })}
 
-            {/* Absolutely positioned against .frameStage itself (its own
-                bottom edge, centered), not a participant in .frameColumn's
-                flex flow at all - so it adds no space between the portrait
-                and .handSlotRow below, it just overlaps both by sitting
-                half in/half out of the frame's own bottom edge. Opens
-                CampView (see CharacterPreview.tsx) in place of the normal
-                tab content. */}
-            <div className={styles.campButtonWrap}>
-              <button
-                type="button"
-                className={styles.campButton}
-                title={hasCampItems ? "Camp (items waiting)" : "Camp"}
-                aria-label={hasCampItems ? "Camp (items waiting)" : "Camp"}
-                onClick={onOpenCamp}
-              >
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src="/images/character/camp.png" alt="" className={styles.campButtonIcon} />
-              </button>
-              {hasCampItems && (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img src="/images/character/dropped.png" alt="" className={styles.campButtonBadge} />
-              )}
-            </div>
+            {!showSoul && (
+              <div className={styles.campButtonWrap}>
+                <button
+                  type="button"
+                  className={styles.campButton}
+                  title={hasCampItems ? "Camp (items waiting)" : "Camp"}
+                  aria-label={hasCampItems ? "Camp (items waiting)" : "Camp"}
+                  onClick={onOpenCamp}
+                >
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src="/images/character/camp.png" alt="" className={styles.campButtonIcon} />
+                </button>
+                {hasCampItems && (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src="/images/character/dropped.png" alt="" className={styles.campButtonBadge} />
+                )}
+              </div>
+            )}
           </div>
 
-          <div className={styles.handSlotRow}>
-            {HAND_GIRDLE_SLOTS.map((label) => {
-              const instance = equippedInSlot(character.gear.items, label);
-              // A two-handed item's slotRef holds both hands at once (see
-              // equip_item) - Right Hand always shows the normal icon, Left
-              // Hand mirrors it only when it's the SAME instance spanning
-              // both, not an independent one-handed item held there alone.
-              const mirrored = label === "Left Hand" && !!instance && instance.slotRef.includes("Right Hand");
-              return (
-                <div
-                  className={label === "Girdle" ? `${styles.equipSlot} ${styles.equipSlotGirdleOffset}` : styles.equipSlot}
-                  key={label}
-                  role={instance ? "button" : undefined}
-                  tabIndex={instance ? 0 : undefined}
-                  onClick={instance ? () => setSelectedInstance(instance) : undefined}
-                >
-                  {instance ? (
-                    <EquipSlotIcon instance={instance} catalog={catalog} mirrored={mirrored} />
-                  ) : (
-                    <span className={styles.equipSlotLabel}>{label}</span>
-                  )}
-                </div>
-              );
-            })}
-          </div>
+          {!showSoul && (
+            <>
+              <div className={styles.handSlotRow}>
+                {HAND_GIRDLE_SLOTS.map((label) => {
+                  const instance = equippedInSlot(character.gear.items, label);
+                  const mirrored = label === "Left Hand" && !!instance && instance.slotRef.includes("Right Hand");
+                  return (
+                    <div
+                      className={label === "Girdle" ? `${styles.equipSlot} ${styles.equipSlotGirdleOffset}` : styles.equipSlot}
+                      key={label}
+                      role={instance ? "button" : undefined}
+                      tabIndex={instance ? 0 : undefined}
+                      onClick={instance ? () => setSelectedInstance(instance) : undefined}
+                    >
+                      {instance ? (
+                        <EquipSlotIcon instance={instance} catalog={catalog} mirrored={mirrored} />
+                      ) : (
+                        <span className={styles.equipSlotLabel}>{label}</span>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
 
-          <div className={styles.ringSlotRow}>
-            {RING_SLOTS.map((label) => {
-              const instance = equippedInSlot(character.gear.items, label);
-              return (
-                <div
-                  className={styles.equipSlot}
-                  key={label}
-                  role={instance ? "button" : undefined}
-                  tabIndex={instance ? 0 : undefined}
-                  onClick={instance ? () => setSelectedInstance(instance) : undefined}
-                >
-                  {instance ? (
-                    <EquipSlotIcon instance={instance} catalog={catalog} />
-                  ) : (
-                    <span className={styles.equipSlotLabel}>{label}</span>
-                  )}
-                </div>
-              );
-            })}
-          </div>
+              <div className={styles.ringSlotRow}>
+                {RING_SLOTS.map((label) => {
+                  const instance = equippedInSlot(character.gear.items, label);
+                  return (
+                    <div
+                      className={styles.equipSlot}
+                      key={label}
+                      role={instance ? "button" : undefined}
+                      tabIndex={instance ? 0 : undefined}
+                      onClick={instance ? () => setSelectedInstance(instance) : undefined}
+                    >
+                      {instance ? (
+                        <EquipSlotIcon instance={instance} catalog={catalog} />
+                      ) : (
+                        <span className={styles.equipSlotLabel}>{label}</span>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            </>
+          )}
         </div>
       </div>
 
-      <div className={styles.companionMountRow}>
-        {COMPANION_MOUNT_SLOTS.map((label) => {
-          const instance = equippedInSlot(character.gear.items, label);
-          return (
-            <div
-              className={styles.largeEquipSlot}
-              key={label}
-              role={instance ? "button" : undefined}
-              tabIndex={instance ? 0 : undefined}
-              onClick={instance ? () => setSelectedInstance(instance) : undefined}
-            >
-              {instance ? (
-                <EquipSlotIcon instance={instance} catalog={catalog} />
-              ) : (
-                <span className={styles.equipSlotLabel}>{label}</span>
-              )}
-              {(label === "Mount" ? MOUNT_SUB_SLOTS : label === "Companion" ? COMPANION_SUB_SLOTS : []).map((sub) => (
-                <div key={sub.lines.join(" ")} className={`${styles.mountSubSlot} ${sub.position}`}>
-                  <span className={styles.mountSubSlotLabel}>
-                    {sub.lines.map((line, i) => (
-                      <Fragment key={line}>
-                        {i > 0 && <br />}
-                        {line}
-                      </Fragment>
-                    ))}
-                  </span>
-                </div>
-              ))}
-            </div>
-          );
-        })}
-      </div>
+      {!showSoul && (
+        <div className={styles.companionMountRow}>
+          {COMPANION_MOUNT_SLOTS.map((label) => {
+            const instance = equippedInSlot(character.gear.items, label);
+            return (
+              <div
+                className={styles.largeEquipSlot}
+                key={label}
+                role={instance ? "button" : undefined}
+                tabIndex={instance ? 0 : undefined}
+                onClick={instance ? () => setSelectedInstance(instance) : undefined}
+              >
+                {instance ? (
+                  <EquipSlotIcon instance={instance} catalog={catalog} />
+                ) : (
+                  <span className={styles.equipSlotLabel}>{label}</span>
+                )}
+                {(label === "Mount" ? MOUNT_SUB_SLOTS : label === "Companion" ? COMPANION_SUB_SLOTS : []).map((sub) => (
+                  <div key={sub.lines.join(" ")} className={`${styles.mountSubSlot} ${sub.position}`}>
+                    <span className={styles.mountSubSlotLabel}>
+                      {sub.lines.map((line, i) => (
+                        <Fragment key={line}>
+                          {i > 0 && <br />}
+                          {line}
+                        </Fragment>
+                      ))}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            );
+          })}
+        </div>
+      )}
 
       {selectedInstance && (
         <ItemDetailPopup

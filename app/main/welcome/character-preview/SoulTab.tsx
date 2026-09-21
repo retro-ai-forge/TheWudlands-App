@@ -12,7 +12,7 @@ import { InAdventureToggle } from "./InAdventureToggle";
 // top/left are each square's measured center; numbered top to bottom per
 // row (row of 1 in the center counts as one number, a left/right pair
 // counts as two, in reading order).
-const CHAKRA_SLOTS: { number: number; label: string; top: number; left: number }[] = [
+export const CHAKRA_SLOTS: { number: number; label: string; top: number; left: number }[] = [
   { number: 1, label: "Mind", top: 9.9, left: 50.0 },
   { number: 2, label: "Prime", top: 21.8, left: 26.2 },
   { number: 3, label: "Spirit", top: 21.8, left: 73.2 },
@@ -29,7 +29,7 @@ const CHAKRA_SLOTS: { number: number; label: string; top: number; left: number }
 // insight + lore + presence), divided by 10 and rounded down, reaches its
 // number - e.g. 55 -> floor(5.5) = 5, so slots 1-5 are active; 100 -> all
 // ten; 11 -> only slot 1.
-function activeChakraCount(attr: SlotCharacterSummary["attr"]): number {
+export function activeChakraCount(attr: SlotCharacterSummary["attr"]): number {
   return Math.floor((attr.will + attr.insi + attr.lore + attr.pres) / 10);
 }
 

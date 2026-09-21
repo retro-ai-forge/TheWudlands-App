@@ -2711,7 +2711,7 @@ export function InventoryTab({
   playerItems,
   onPlayerDataUpdated,
   openCraftingSectionByDefault = false,
-  onSubTabChange,
+  section,
 }: {
   character: SlotCharacterSummary;
   playerResourceBalances: Record<string, number>;
@@ -2726,11 +2726,9 @@ export function InventoryTab({
    * when the player got here by clicking a soul slot that showed an active
    * crafting timer, so they land straight on what they came to check. */
   openCraftingSectionByDefault?: boolean;
-  /** Called whenever the Crafting/Vault sub-tab changes - lets the parent
-   * suspend the page's own vertical scroll while Vault is showing, since
-   * that tab's Items grid is meant to be the only scrollable thing on
-   * screen (horizontally), never the page itself. */
-  onSubTabChange?: (tab: "crafting" | "vault") => void;
+  /** Which section to display - "crafting" for blueprints/recipe viewer/character crafting stock,
+   * "vault" for the shared item grid. Controlled by the parent's footer tab. */
+  section: "crafting" | "vault";
 }) {
   // Moves `amount` of a resource/tool from this character's own (temporary,
   // crafting-session-only) vault back into the player's shared vault.
@@ -2911,25 +2909,13 @@ export function InventoryTab({
       });
   }, []);
 
-  // The Inventory page's own Crafting/Party's Vault split - a website-style
-  // header tab strip directly under the character name (see .invSubTabRow),
-  // replacing what used to be a third "Party's Vault" accordion section
-  // alongside Blueprints Known/character Crafting. Vault content (Tools/
-  // Resources/Items) now only renders while this tab is selected, instead
-  // of always being present-but-collapsed in the accordion.
-  const [activeSubTab, setActiveSubTab] = useState<"crafting" | "vault">(
-    openCraftingSectionByDefault ? "crafting" : "vault",
-  );
-  useEffect(() => {
-    onSubTabChange?.(activeSubTab);
-  }, [activeSubTab, onSubTabChange]);
 
   // Top-level accordion within the Crafting tab (Blueprints Known/this
   // character's own Crafting stock/the party's shared Tools/the party's
   // shared Resources) - any number can be open at once, toggled
   // independently. The recipe viewer below is always visible, not part of
   // this fold. Only the party's crafted Items live under the separate
-  // Vault tab (see activeSubTab) - Tools/Resources stay here since they're
+  // Vault footer tab (section="vault") - Tools/Resources stay here since they're
   // what a craft actually draws on.
   const [openSections, setOpenSections] = useState<
     Set<"blueprints" | "character" | "partyTools" | "partyResources">
@@ -3293,30 +3279,7 @@ export function InventoryTab({
   return (
     <div className={styles.panel}>
       <InAdventureToggle character={character} onPlayerDataUpdated={onPlayerDataUpdated} />
-      <div className={styles.invSubTabRow}>
-        <button
-          type="button"
-          className={`${styles.invSubTabButton} ${
-            activeSubTab === "vault" ? styles.invSubTabButtonActive : ""
-          }`}
-          onClick={() => setActiveSubTab("vault")}
-          aria-pressed={activeSubTab === "vault"}
-        >
-          Vault
-        </button>
-        <button
-          type="button"
-          className={`${styles.invSubTabButton} ${
-            activeSubTab === "crafting" ? styles.invSubTabButtonActive : ""
-          }`}
-          onClick={() => setActiveSubTab("crafting")}
-          aria-pressed={activeSubTab === "crafting"}
-        >
-          Crafting
-        </button>
-      </div>
-
-      {activeSubTab === "crafting" && (
+      {section === "crafting" && (
         <>
           {/* Hidden entirely when nothing's cooking - only appears once a
               craft is actively running (remainingSeconds !== null) and
@@ -3567,7 +3530,7 @@ export function InventoryTab({
         </>
       )}
 
-      {activeSubTab === "vault" && (
+      {section === "vault" && (
         <ItemGrid
           ids={Object.keys(playerItemsCombined).filter((id) => playerItemsCombined[id] > 0)}
           emptyLabel="Nothing crafted yet."
