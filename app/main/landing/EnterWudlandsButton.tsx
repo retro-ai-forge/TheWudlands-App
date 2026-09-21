@@ -74,13 +74,24 @@ export function EnterWudlandsButton({
     setIsSigning(true);
     try {
       // 1. Generate auth challenge for the connected address.
-      const challengeRes = await fetch('/api/auth/challenge', {
+      //    Retry once on failure — Nova Wallet's in-app browser can drop
+      //    the very first fetch after launch (WebView network warm-up).
+      let challengeRes = await fetch('/api/auth/challenge', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ address: acct.address }),
       });
       if (!challengeRes.ok) {
-        throw new Error('Failed to generate challenge');
+        await new Promise((r) => setTimeout(r, 800));
+        challengeRes = await fetch('/api/auth/challenge', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ address: acct.address }),
+        });
+      }
+      if (!challengeRes.ok) {
+        const detail = await challengeRes.text().catch(() => '');
+        throw new Error(detail || `Challenge failed (${challengeRes.status})`);
       }
       const { message, nonce } = await challengeRes.json();
 

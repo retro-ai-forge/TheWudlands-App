@@ -265,7 +265,7 @@
     color: var(--text-dim);
   }
   .chevron.spacer { visibility: hidden; }
-  .row.expandable { cursor: pointer; }
+  .row.expandable { cursor: pointer; touch-action: manipulation; }
   .row.expandable:hover { outline: 1px solid var(--border); }
   .children { margin-top: 2px; }
   table { width: 100%; border-collapse: collapse; font-size: 12px; }
@@ -1714,10 +1714,14 @@ if (select.options.length) {
 // Changing the iframe's own src would reload the whole document and lose
 // whatever state it had, so the parent instead posts fresh data and this
 // just re-renders in place - same selected item, same tier.
+let _lastMsgKey = '';
 window.addEventListener("message", (event) => {
   if (event.origin !== window.location.origin) return;
   const msg = event.data;
   if (!msg || msg.type !== "recipe-viewer:update") return;
+  const msgKey = JSON.stringify([msg.inv, msg.itemBalances, msg.tools, msg.vaultTools, msg.blueprints]);
+  if (msgKey === _lastMsgKey) return;
+  _lastMsgKey = msgKey;
   inventory = msg.inv ?? null;
   document.querySelector("#rawTotals thead th:last-child").textContent = inventory ? "owned/needed" : "";
   document.querySelector("#materialsTotals thead th:last-child").textContent = inventory ? "owned/needed" : "";
