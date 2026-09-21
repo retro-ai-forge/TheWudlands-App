@@ -1,4 +1,4 @@
-import { Fragment, useEffect, useRef, useState } from "react";
+import { Fragment, useEffect, useMemo, useRef, useState } from "react";
 import type { ReactNode } from "react";
 import styles from "./CharacterTabs.module.css";
 import { formatRemainingCompactLong, useCraftCountdown } from "../craftTimer";
@@ -2967,12 +2967,15 @@ export function InventoryTab({
   // own "tool" field was (see vaultToolInstanceIds below), so keeping this
   // one character-only keeps those checks matching what start_craft
   // actually accepts.
-  const ownedTools = ownedIds(playerTools);
-  for (const instance of character.gear.items) {
-    if (instance.location === "backpack" || instance.location === "body") {
-      ownedTools.push(instance.itemId);
+  const ownedTools = useMemo(() => {
+    const tools = ownedIds(playerTools);
+    for (const instance of character.gear.items) {
+      if (instance.location === "backpack" || instance.location === "body") {
+        tools.push(instance.itemId);
+      }
     }
-  }
+    return tools;
+  }, [playerTools, character.gear.items]);
 
   // Instance-tracked tools sitting in the shared vault - usable for a
   // recipe's own "tool" field right where they sit: start_craft moves the
@@ -2983,9 +2986,10 @@ export function InventoryTab({
   // viewer as a second, separate ownership list (see
   // recipe-viewer.template.html's ownedToolsWithVault) rather than merged
   // into ownedTools above.
-  const vaultToolInstanceIds = playerItems
-    .filter((instance) => instance.location === "pool")
-    .map((instance) => instance.itemId);
+  const vaultToolInstanceIds = useMemo(
+    () => playerItems.filter((instance) => instance.location === "pool").map((instance) => instance.itemId),
+    [playerItems]
+  );
 
   // Instance-tracked tools currently borrowed for this character's active
   // craft (location:"crafting" - see start_craft/finish_craft's
