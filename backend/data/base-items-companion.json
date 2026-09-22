@@ -5,7 +5,7 @@
     "familyId": "winged_companion",
     "tier": 1,
     "description": "A small cave bat that clings to its master's cloak and squeaks at hidden dangers in the dark.",
-    "icon": "/images/items/bat.png",
+    "icon": "/images/items/xxx.png",
     "carryCapacity": 3
   },
   {
@@ -14,7 +14,7 @@
     "familyId": "winged_companion",
     "tier": 2,
     "description": "A clever black raven with sharp eyes, quick to steal shiny things and carry whispered messages.",
-    "icon": "/images/items/bat.png",
+    "icon": "/images/items/xxx.png",
     "carryCapacity": 6
   },
   {
@@ -23,7 +23,7 @@
     "familyId": "winged_companion",
     "tier": 3,
     "description": "A silent gray owl with golden eyes that keeps watch through the night and misses nothing.",
-    "icon": "/images/items/bat.png",
+    "icon": "/images/items/xxx.png",
     "carryCapacity": 9
   },
   {
@@ -32,7 +32,7 @@
     "familyId": "winged_companion",
     "tier": 4,
     "description": "A swift red-tailed hawk that dives on prey and returns faithfully to its master's arm.",
-    "icon": "/images/items/bat.png",
+    "icon": "/images/items/xxx.png",
     "carryCapacity": 12
   },
   {
@@ -41,7 +41,7 @@
     "familyId": "winged_companion",
     "tier": 5,
     "description": "A shrieking harpy with a wild face and razor talons, fiercely protective of those it chooses.",
-    "icon": "/images/items/bat.png",
+    "icon": "/images/items/xxx.png",
     "carryCapacity": 15
   },
   {
@@ -50,7 +50,7 @@
     "familyId": "winged_companion",
     "tier": 6,
     "description": "A radiant bird of living flame that rises reborn from its own ashes, trailing golden embers.",
-    "icon": "/images/items/bat.png",
+    "icon": "/images/items/xxx.png",
     "carryCapacity": 18
   },
   {
@@ -59,7 +59,7 @@
     "familyId": "critter_companion",
     "tier": 1,
     "description": "A scruffy sewer rat with twitching whiskers, small enough to squeeze through any crack.",
-    "icon": "/images/items/bat.png",
+    "icon": "/images/items/xxx.png",
     "carryCapacity": 3
   },
   {
@@ -68,7 +68,7 @@
     "familyId": "critter_companion",
     "tier": 2,
     "description": "A sleek, playful ferret that slips into burrows and returns with things it was never meant to find.",
-    "icon": "/images/items/bat.png",
+    "icon": "/images/items/xxx.png",
     "carryCapacity": 6
   },
   {
@@ -77,7 +77,7 @@
     "familyId": "critter_companion",
     "tier": 3,
     "description": "A russet fox with a bushy tail and cunning eyes, silent on the trail and wary of traps.",
-    "icon": "/images/items/bat.png",
+    "icon": "/images/items/xxx.png",
     "carryCapacity": 9
   },
   {
@@ -86,7 +86,7 @@
     "familyId": "critter_companion",
     "tier": 4,
     "description": "A smoky black cat that melts into shadows and reappears wherever it pleases.",
-    "icon": "/images/items/bat.png",
+    "icon": "/images/items/xxx.png",
     "carryCapacity": 12
   },
   {
@@ -95,7 +95,7 @@
     "familyId": "critter_companion",
     "tier": 5,
     "description": "A silver-furred hare that glows faintly under the moon and bounds between places in a blink.",
-    "icon": "/images/items/bat.png",
+    "icon": "/images/items/xxx.png",
     "carryCapacity": 15
   },
   {
@@ -104,7 +104,7 @@
     "familyId": "critter_companion",
     "tier": 6,
     "description": "A nine-tailed spirit fox wreathed in pale blue foxfire, wise, mischievous and deeply magical.",
-    "icon": "/images/items/bat.png",
+    "icon": "/images/items/xxx.png",
     "carryCapacity": 18
   },
   {
@@ -113,7 +113,7 @@
     "familyId": "arcane_companion",
     "tier": 1,
     "description": "A pale moth whose wings shed soft arcane light, drawn to spellcasters like a flame.",
-    "icon": "/images/items/bat.png",
+    "icon": "/images/items/xxx.png",
     "carryCapacity": 3
   },
   {
@@ -122,7 +122,7 @@
     "familyId": "arcane_companion",
     "tier": 2,
     "description": "A small lizard with gemstone scales that hum and glitter whenever magic is near.",
-    "icon": "/images/items/bat.png",
+    "icon": "/images/items/xxx.png",
     "carryCapacity": 6
   },
   {
@@ -131,7 +131,7 @@
     "familyId": "arcane_companion",
     "tier": 3,
     "description": "A floating spellbook that flaps its pages like wings and mutters forgotten incantations.",
-    "icon": "/images/items/bat.png",
+    "icon": "/images/items/xxx.png",
     "carryCapacity": 9
   },
   {
@@ -140,7 +140,7 @@
     "familyId": "arcane_companion",
     "tier": 4,
     "description": "A spectral hound that vanishes in a flash of violet light and reappears at its master's side.",
-    "icon": "/images/items/bat.png",
+    "icon": "/images/items/xxx.png",
     "carryCapacity": 12
   },
   {
@@ -149,7 +149,7 @@
     "familyId": "arcane_companion",
     "tier": 5,
     "description": "A root creature pulled from the soil whose scream can stun foes, loyal to whoever dared to unearth it.",
-    "icon": "/images/items/bat.png",
+    "icon": "/images/items/xxx.png",
     "carryCapacity": 15
   },
   {
@@ -158,7 +158,7 @@
     "familyId": "arcane_companion",
     "tier": 6,
     "description": "A shimmering being of starlight that shares its master's mind and bends the flow of magic itself.",
-    "icon": "/images/items/bat.png",
+    "icon": "/images/items/xxx.png",
     "carryCapacity": 18
   },
   {
@@ -167,7 +167,7 @@
     "familyId": "fey_companion",
     "tier": 1,
     "description": "A flickering will-o'-the-wisp that lights the way and drifts ahead into the unknown.",
-    "icon": "/images/items/bat.png",
+    "icon": "/images/items/xxx.png",
     "carryCapacity": 3
   },
   {
@@ -176,7 +176,7 @@
     "familyId": "fey_companion",
     "tier": 2,
     "description": "A tiny winged fairy that sprinkles glittering dust and giggles at the misfortune of enemies.",
-    "icon": "/images/items/bat.png",
+    "icon": "/images/items/xxx.png",
     "carryCapacity": 6
   },
   {
@@ -185,7 +185,7 @@
     "familyId": "fey_companion",
     "tier": 3,
     "description": "A tiny glimmering sprite that darts between flowers and streams, leaving trails of dewdrop light.",
-    "icon": "/images/items/bat.png",
+    "icon": "/images/items/xxx.png",
     "carryCapacity": 9
   },
   {
@@ -194,7 +194,7 @@
     "familyId": "fey_companion",
     "tier": 4,
     "description": "An alchemically grown homunculus bound to its creator, sharing sight and whispered thoughts.",
-    "icon": "/images/items/bat.png",
+    "icon": "/images/items/xxx.png",
     "carryCapacity": 12
   },
   {
@@ -203,7 +203,7 @@
     "familyId": "fey_companion",
     "tier": 5,
     "description": "A smoky blue djinn bound to a lamp-like seal, swirling with wind and old desert magic.",
-    "icon": "/images/items/bat.png",
+    "icon": "/images/items/xxx.png",
     "carryCapacity": 15
   },
   {
@@ -212,7 +212,7 @@
     "familyId": "fey_companion",
     "tier": 6,
     "description": "A six-winged celestial seraph wreathed in holy light, a guardian from beyond the stars.",
-    "icon": "/images/items/bat.png",
+    "icon": "/images/items/xxx.png",
     "carryCapacity": 18
   },
   {
@@ -221,7 +221,7 @@
     "familyId": "aquatic_companion",
     "tier": 1,
     "description": "A small shore crab with one oversized claw, snapping at anything that comes too close.",
-    "icon": "/images/items/bat.png",
+    "icon": "/images/items/xxx.png",
     "carryCapacity": 3
   },
   {
@@ -230,7 +230,7 @@
     "familyId": "aquatic_companion",
     "tier": 2,
     "description": "A playful river otter that dives for fish and shiny pebbles and floats happily on its back.",
-    "icon": "/images/items/bat.png",
+    "icon": "/images/items/xxx.png",
     "carryCapacity": 6
   },
   {
@@ -239,7 +239,7 @@
     "familyId": "aquatic_companion",
     "tier": 3,
     "description": "A clever octopus that changes color at will and slips its arms into every lock and crevice.",
-    "icon": "/images/items/bat.png",
+    "icon": "/images/items/xxx.png",
     "carryCapacity": 9
   },
   {
@@ -248,7 +248,7 @@
     "familyId": "aquatic_companion",
     "tier": 4,
     "description": "A gentle selkie that sheds its sealskin to walk ashore, singing softly of the deep.",
-    "icon": "/images/items/bat.png",
+    "icon": "/images/items/xxx.png",
     "carryCapacity": 12
   },
   {
@@ -257,7 +257,7 @@
     "familyId": "aquatic_companion",
     "tier": 5,
     "description": "A haunting siren whose song lures foes to their doom and calms the stormiest seas.",
-    "icon": "/images/items/bat.png",
+    "icon": "/images/items/xxx.png",
     "carryCapacity": 15
   },
   {
@@ -266,7 +266,7 @@
     "familyId": "aquatic_companion",
     "tier": 6,
     "description": "A living wave of shimmering water that crashes over enemies and reforms from every spilled drop.",
-    "icon": "/images/items/bat.png",
+    "icon": "/images/items/xxx.png",
     "carryCapacity": 18
   },
   {
@@ -275,7 +275,7 @@
     "familyId": "dark_companion",
     "tier": 1,
     "description": "A warty black toad with glowing yellow eyes, the classic witch's familiar, croaking curses at its master's foes.",
-    "icon": "/images/items/bat.png",
+    "icon": "/images/items/xxx.png",
     "carryCapacity": 3
   },
   {
@@ -284,7 +284,7 @@
     "familyId": "dark_companion",
     "tier": 2,
     "description": "A tiny glimmering sprite that darts between flowers and streams, leaving trails of dewdrop light.",
-    "icon": "/images/items/bat.png",
+    "icon": "/images/items/xxx.png",
     "carryCapacity": 6
   },
   {
@@ -293,7 +293,7 @@
     "familyId": "dark_companion",
     "tier": 3,
     "description": "A lean black hound with smoldering fur and burning eyes, leaving scorched pawprints wherever it hunts.",
-    "icon": "/images/items/bat.png",
+    "icon": "/images/items/xxx.png",
     "carryCapacity": 9
   },
   {
@@ -302,7 +302,7 @@
     "familyId": "dark_companion",
     "tier": 4,
     "description": "A hooded, shadowy wraith that drifts at its master's side and drains the warmth from anyone it touches.",
-    "icon": "/images/items/bat.png",
+    "icon": "/images/items/xxx.png",
     "carryCapacity": 12
   },
   {
@@ -311,7 +311,7 @@
     "familyId": "dark_companion",
     "tier": 5,
     "description": "A demon of living darkness that slips between shadows and whispers dreadful secrets to its master.",
-    "icon": "/images/items/bat.png",
+    "icon": "/images/items/xxx.png",
     "carryCapacity": 15
   },
   {
@@ -320,7 +320,7 @@
     "familyId": "dark_companion",
     "tier": 6,
     "description": "A tentacled horror from the abyss with countless eyes, bound to its master by a pact no mortal should make.",
-    "icon": "/images/items/bat.png",
+    "icon": "/images/items/xxx.png",
     "carryCapacity": 18
   },
   {
@@ -329,7 +329,7 @@
     "familyId": "spirit_companion",
     "tier": 1,
     "description": "A faint, flickering soul newly parted from its body, clinging close and unsure of where else to go.",
-    "icon": "/images/items/bat.png",
+    "icon": "/images/items/xxx.png",
     "carryCapacity": 3
   },
   {
@@ -338,7 +338,7 @@
     "familyId": "spirit_companion",
     "tier": 2,
     "description": "A restless, unseen spirit that rattles doors and knocks objects loose, more prankster than threat.",
-    "icon": "/images/items/bat.png",
+    "icon": "/images/items/xxx.png",
     "carryCapacity": 6
   },
   {
@@ -347,7 +347,7 @@
     "familyId": "spirit_companion",
     "tier": 3,
     "description": "The translucent form of a forebear, watching over its bloodline and murmuring half-remembered warnings.",
-    "icon": "/images/items/bat.png",
+    "icon": "/images/items/xxx.png",
     "carryCapacity": 9
   },
   {
@@ -356,7 +356,7 @@
     "familyId": "spirit_companion",
     "tier": 4,
     "description": "A wailing spirit whose cry rises before danger finds its charge, mourning deaths not yet come.",
-    "icon": "/images/items/bat.png",
+    "icon": "/images/items/xxx.png",
     "carryCapacity": 12
   },
   {
@@ -365,7 +365,7 @@
     "familyId": "spirit_companion",
     "tier": 5,
     "description": "A vengeful ancestor returned from the grave, standing between its descendant and any who'd harm them.",
-    "icon": "/images/items/bat.png",
+    "icon": "/images/items/xxx.png",
     "carryCapacity": 15
   },
   {
@@ -374,7 +374,7 @@
     "familyId": "spirit_companion",
     "tier": 6,
     "description": "An undead sorcerer of terrible age, bound not by fear but by an old debt, lending its master centuries of stolen power.",
-    "icon": "/images/items/bat.png",
+    "icon": "/images/items/xxx.png",
     "carryCapacity": 18
   }
 ]
