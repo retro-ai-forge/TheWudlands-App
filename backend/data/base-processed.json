@@ -146,7 +146,7 @@
   {"id": "wyvern_cooked_meat", "name": "Cooked Wyvern", "familyId": "cooked_meat", "tier": 5},
   {"id": "dragon_cooked_meat", "name": "Cooked Dragon", "familyId": "cooked_meat", "tier": 6},
 
-  {"id": "grain_baked_harvest", "name": "Baked Grain", "familyId": "baked_harvest", "tier": 1},
+  {"id": "grain_baked_harvest", "name": "Baked Grain Bread", "familyId": "baked_harvest", "tier": 1},
   {"id": "root_vegetable_baked_harvest", "name": "Baked Root Vegetable", "familyId": "baked_harvest", "tier": 2},
   {"id": "wild_mushroom_baked_harvest", "name": "Baked Wild Mushroom", "familyId": "baked_harvest", "tier": 3},
   {"id": "orchard_fruit_baked_harvest", "name": "Baked Orchard Fruit", "familyId": "baked_harvest", "tier": 4},
