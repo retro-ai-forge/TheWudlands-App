@@ -140,11 +140,11 @@
   {"id": "blueprint_worldstone_furnace", "name": "Blueprint: Worldstone Furnace", "familyId": "blueprint_furnace", "tier": 6},
 
   {"id": "blueprint_copper_grinding_stone", "name": "Blueprint: Curved Grinding Stone", "familyId": "blueprint_grinding_stone", "tier": 1},
-  {"id": "blueprint_bronze_grinding_stone", "name": "Blueprint: Bronze Grinding Stone", "familyId": "blueprint_grinding_stone", "tier": 2},
-  {"id": "blueprint_iron_grinding_stone", "name": "Blueprint: Iron Grinding Stone", "familyId": "blueprint_grinding_stone", "tier": 3},
-  {"id": "blueprint_silver_grinding_stone", "name": "Blueprint: Silver Grinding Stone", "familyId": "blueprint_grinding_stone", "tier": 4},
-  {"id": "blueprint_gold_grinding_stone", "name": "Blueprint: Gold Grinding Stone", "familyId": "blueprint_grinding_stone", "tier": 5},
-  {"id": "blueprint_star_metal_grinding_stone", "name": "Blueprint: Star Metal Grinding Stone", "familyId": "blueprint_grinding_stone", "tier": 6},
+  {"id": "blueprint_bronze_grinding_stone", "name": "Blueprint: Granite Grinding Stone", "familyId": "blueprint_grinding_stone", "tier": 2},
+  {"id": "blueprint_iron_grinding_stone", "name": "Blueprint: Marble Grinding Stone", "familyId": "blueprint_grinding_stone", "tier": 3},
+  {"id": "blueprint_silver_grinding_stone", "name": "Blueprint: Deepslate Grinding Stone", "familyId": "blueprint_grinding_stone", "tier": 4},
+  {"id": "blueprint_gold_grinding_stone", "name": "Blueprint: Basalt Grinding Stone", "familyId": "blueprint_grinding_stone", "tier": 5},
+  {"id": "blueprint_star_metal_grinding_stone", "name": "Blueprint: Worldstone Grinding Stone", "familyId": "blueprint_grinding_stone", "tier": 6},
 
   {"id": "blueprint_scullions_oven", "name": "Blueprint: Small Oven", "familyId": "blueprint_oven", "tier": 1},
   {"id": "blueprint_cooks_oven", "name": "Blueprint: Cook's Oven", "familyId": "blueprint_oven", "tier": 2},
@@ -279,7 +279,7 @@
   {"id": "blueprint_lunarfang_sickle", "name": "Blueprint: Lunarfang Sickle", "familyId": "blueprint_sickle", "tier": 5},
   {"id": "blueprint_eldermoon_sickle", "name": "Blueprint: Eldermoon Sickle", "familyId": "blueprint_sickle", "tier": 6},
 
-  {"id": "blueprint_tribesmans_spear", "name": "Blueprint: Loose Spear", "familyId": "blueprint_spear", "tier": 1},
+  {"id": "blueprint_tribesmans_spear", "name": "Blueprint: Splintered Spear", "familyId": "blueprint_spear", "tier": 1},
   {"id": "blueprint_bloodrite_spear", "name": "Blueprint: Bloodrite Spear", "familyId": "blueprint_spear", "tier": 2},
   {"id": "blueprint_skyfathers_spear", "name": "Blueprint: Skyfather's Spear", "familyId": "blueprint_spear", "tier": 3},
   {"id": "blueprint_totemcaller_spear", "name": "Blueprint: Totemcaller Spear", "familyId": "blueprint_spear", "tier": 4},
