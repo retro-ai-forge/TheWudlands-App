@@ -5,7 +5,7 @@
     "familyId": "wooden_shield",
     "tier": 1,
     "description": "A primitive, splintered wooden shield lashed together with battered copper bands.",
-    "icon": "/images/items/bat.png"
+    "icon": "/images/items/xxx.png"
   },
   {
     "id": "oak_wooden_shield",
@@ -13,7 +13,7 @@
     "familyId": "wooden_shield",
     "tier": 2,
     "description": "A sturdy oak shield ringed by polished bronze edging.",
-    "icon": "/images/items/bat.png"
+    "icon": "/images/items/xxx.png"
   },
   {
     "id": "ash_wooden_shield",
@@ -21,7 +21,7 @@
     "familyId": "wooden_shield",
     "tier": 3,
     "description": "A pale ashwood shield with brushed rusty iron bands.",
-    "icon": "/images/items/bat.png"
+    "icon": "/images/items/xxx.png"
   },
   {
     "id": "cedar_wooden_shield",
@@ -29,7 +29,7 @@
     "familyId": "wooden_shield",
     "tier": 4,
     "description": "A fragrant cedar shield etched with silver leaves around a glowing sigil at its heart.",
-    "icon": "/images/items/bat.png"
+    "icon": "/images/items/xxx.png"
   },
   {
     "id": "ebony_wooden_shield",
@@ -37,7 +37,7 @@
     "familyId": "wooden_shield",
     "tier": 5,
     "description": "A gleaming black ebony shield trimmed with gold celestial marks that shine in the dark.",
-    "icon": "/images/items/bat.png"
+    "icon": "/images/items/xxx.png"
   },
   {
     "id": "worldroot_wooden_shield",
@@ -45,7 +45,7 @@
     "familyId": "wooden_shield",
     "tier": 6,
     "description": "An ancient, knotty shield of mythical worldroot, alive with pulsing lines of star metal within the wood.",
-    "icon": "/images/items/bat.png"
+    "icon": "/images/items/xxx.png"
   },
   {
     "id": "banded_reinforced_wooden_shield",
@@ -53,7 +53,7 @@
     "familyId": "reinforced_wooden_shield",
     "tier": 1,
     "description": "A basic oval shield of solid planks, strengthened with rough copper bands.",
-    "icon": "/images/items/bat.png"
+    "icon": "/images/items/xxx.png"
   },
   {
     "id": "riveted_reinforced_wooden_shield",
@@ -61,7 +61,7 @@
     "familyId": "reinforced_wooden_shield",
     "tier": 2,
     "description": "A robust wooden shield with orderly bronze rivets reinforcing its face.",
-    "icon": "/images/items/bat.png"
+    "icon": "/images/items/xxx.png"
   },
   {
     "id": "bossed_reinforced_wooden_shield",
@@ -69,7 +69,7 @@
     "familyId": "reinforced_wooden_shield",
     "tier": 3,
     "description": "A circular shield with a heavy central iron boss.",
-    "icon": "/images/items/bat.png"
+    "icon": "/images/items/xxx.png"
   },
   {
     "id": "plated_reinforced_wooden_shield",
@@ -77,7 +77,7 @@
     "familyId": "reinforced_wooden_shield",
     "tier": 4,
     "description": "A large shield faced with mirror-like hardened plating that glows with protective magic.",
-    "icon": "/images/items/bat.png"
+    "icon": "/images/items/xxx.png"
   },
   {
     "id": "barred_reinforced_wooden_shield",
@@ -85,7 +85,7 @@
     "familyId": "reinforced_wooden_shield",
     "tier": 5,
     "description": "A broad, rectangular shield braced with golden bars and glowing with warding magic.",
-    "icon": "/images/items/bat.png"
+    "icon": "/images/items/xxx.png"
   },
   {
     "id": "battleforged_reinforced_wooden_shield",
@@ -93,7 +93,7 @@
     "familyId": "reinforced_wooden_shield",
     "tier": 6,
     "description": "A heavy champion's shield of war-forged design, surging with glowing star metal.",
-    "icon": "/images/items/bat.png"
+    "icon": "/images/items/xxx.png"
   },
   {
     "id": "ironclad_iron_shield",
@@ -101,7 +101,7 @@
     "familyId": "iron_shield",
     "tier": 1,
     "description": "A round, battered shield of patchwork copper plates, dented and rusted from long neglect.",
-    "icon": "/images/items/bat.png"
+    "icon": "/images/items/xxx.png"
   },
   {
     "id": "steelbound_iron_shield",
@@ -109,7 +109,7 @@
     "familyId": "iron_shield",
     "tier": 2,
     "description": "A heavy, reinforced shield with a broad bronze face and a sturdy rim.",
-    "icon": "/images/items/bat.png"
+    "icon": "/images/items/xxx.png"
   },
   {
     "id": "warforged_iron_shield",
@@ -117,7 +117,7 @@
     "familyId": "iron_shield",
     "tier": 3,
     "description": "A militaristic, rectangular shield with a heavy iron core and studded face.",
-    "icon": "/images/items/bat.png"
+    "icon": "/images/items/xxx.png"
   },
   {
     "id": "ironheart_iron_shield",
@@ -125,7 +125,7 @@
     "familyId": "iron_shield",
     "tier": 4,
     "description": "A sturdy, heart-shaped shield etched with silver glyphs that glow with protective magic.",
-    "icon": "/images/items/bat.png"
+    "icon": "/images/items/xxx.png"
   },
   {
     "id": "ironbound_iron_shield",
@@ -133,7 +133,7 @@
     "familyId": "iron_shield",
     "tier": 5,
     "description": "A solid, banded shield inlaid with flowing gold and gilded decorations.",
-    "icon": "/images/items/bat.png"
+    "icon": "/images/items/xxx.png"
   },
   {
     "id": "deathless_iron_shield",
@@ -141,7 +141,7 @@
     "familyId": "iron_shield",
     "tier": 6,
     "description": "A sinister shield with skeletal motifs, pulsing with the eerie power of star metal.",
-    "icon": "/images/items/bat.png"
+    "icon": "/images/items/xxx.png"
   },
   {
     "id": "dusk_ebony_shield",
@@ -149,7 +149,7 @@
     "familyId": "ebony_shield",
     "tier": 1,
     "description": "A broad, oblong shield of dusky ebony set with a copper boss.",
-    "icon": "/images/items/bat.png"
+    "icon": "/images/items/xxx.png"
   },
   {
     "id": "twilight_ebony_shield",
@@ -157,7 +157,7 @@
     "familyId": "ebony_shield",
     "tier": 2,
     "description": "A gently curved ebony shield banded in warm bronze.",
-    "icon": "/images/items/bat.png"
+    "icon": "/images/items/xxx.png"
   },
   {
     "id": "shadow_ebony_shield",
@@ -165,7 +165,7 @@
     "familyId": "ebony_shield",
     "tier": 3,
     "description": "A pointed ebony shield clad in midnight iron, nearly invisible in low light.",
-    "icon": "/images/items/bat.png"
+    "icon": "/images/items/xxx.png"
   },
   {
     "id": "midnight_ebony_shield",
@@ -173,7 +173,7 @@
     "familyId": "ebony_shield",
     "tier": 4,
     "description": "A strong oval shield of pure midnight ebony, radiant with elegant silver.",
-    "icon": "/images/items/bat.png"
+    "icon": "/images/items/xxx.png"
   },
   {
     "id": "umbral_ebony_shield",
@@ -181,7 +181,7 @@
     "familyId": "ebony_shield",
     "tier": 5,
     "description": "A sinister, spiked ebony shield marked with sunburst gold.",
-    "icon": "/images/items/bat.png"
+    "icon": "/images/items/xxx.png"
   },
   {
     "id": "eclipsed_ebony_shield",
@@ -189,7 +189,7 @@
     "familyId": "ebony_shield",
     "tier": 6,
     "description": "A round, jet-black ebony shield with a blazing disc of pure star metal at its heart.",
-    "icon": "/images/items/bat.png"
+    "icon": "/images/items/xxx.png"
   },
   {
     "id": "beetle_chitin_shield",
@@ -197,7 +197,7 @@
     "familyId": "chitin_shield",
     "tier": 1,
     "description": "A domed shield of iridescent beetle chitin with a copper rim.",
-    "icon": "/images/items/bat.png"
+    "icon": "/images/items/xxx.png"
   },
   {
     "id": "mantis_chitin_shield",
@@ -205,7 +205,7 @@
     "familyId": "chitin_shield",
     "tier": 2,
     "description": "A narrow, leaf-shaped shield of mantis chitin patterned in bronze.",
-    "icon": "/images/items/bat.png"
+    "icon": "/images/items/xxx.png"
   },
   {
     "id": "scorpion_chitin_shield",
@@ -213,7 +213,7 @@
     "familyId": "chitin_shield",
     "tier": 3,
     "description": "A round shield of black, jointed scorpion chitin set in an iron frame.",
-    "icon": "/images/items/bat.png"
+    "icon": "/images/items/xxx.png"
   },
   {
     "id": "spider_chitin_shield",
@@ -221,7 +221,7 @@
     "familyId": "chitin_shield",
     "tier": 4,
     "description": "A light, oval shield of black spider chitin, enchanted with sprawling silver webs.",
-    "icon": "/images/items/bat.png"
+    "icon": "/images/items/xxx.png"
   },
   {
     "id": "wyrm_chitin_shield",
@@ -229,7 +229,7 @@
     "familyId": "chitin_shield",
     "tier": 5,
     "description": "An imposing, dragon-scale shield of thick wyrm chitin, inscribed with gold serpents.",
-    "icon": "/images/items/bat.png"
+    "icon": "/images/items/xxx.png"
   },
   {
     "id": "voidling_chitin_shield",
@@ -237,7 +237,7 @@
     "familyId": "chitin_shield",
     "tier": 6,
     "description": "A surreal shield of jagged voidling chitin, split by star metal cracks that pulse with forbidden energy.",
-    "icon": "/images/items/bat.png"
+    "icon": "/images/items/xxx.png"
   },
   {
     "id": "copper_meteoric_iron_shield",
@@ -245,7 +245,7 @@
     "familyId": "meteoric_iron_shield",
     "tier": 1,
     "description": "A large, battered shield of copper meteoric alloy, marked by black streaks and impact dimples.",
-    "icon": "/images/items/bat.png"
+    "icon": "/images/items/xxx.png"
   },
   {
     "id": "bronze_meteoric_iron_shield",
@@ -253,7 +253,7 @@
     "familyId": "meteoric_iron_shield",
     "tier": 2,
     "description": "A broad bronze shield forged from meteor shards, with swirling green veins and heat fractures.",
-    "icon": "/images/items/bat.png"
+    "icon": "/images/items/xxx.png"
   },
   {
     "id": "iron_meteoric_iron_shield",
@@ -261,7 +261,7 @@
     "familyId": "meteoric_iron_shield",
     "tier": 3,
     "description": "A tower shield hammered from dense iron meteorite, crossed by natural fractures and magnetic lines.",
-    "icon": "/images/items/bat.png"
+    "icon": "/images/items/xxx.png"
   },
   {
     "id": "silver_meteoric_iron_shield",
@@ -269,7 +269,7 @@
     "familyId": "meteoric_iron_shield",
     "tier": 4,
     "description": "A mirror-bright silver meteoric shield, veined with glowing cracks and moon-phase engravings.",
-    "icon": "/images/items/bat.png"
+    "icon": "/images/items/xxx.png"
   },
   {
     "id": "gold_meteoric_iron_shield",
@@ -277,7 +277,7 @@
     "familyId": "meteoric_iron_shield",
     "tier": 5,
     "description": "A resplendent meteor gold shield etched with celestial symbols and crowned with a solar-gem boss.",
-    "icon": "/images/items/bat.png"
+    "icon": "/images/items/xxx.png"
   },
   {
     "id": "star_metal_meteoric_iron_shield",
@@ -285,7 +285,7 @@
     "familyId": "meteoric_iron_shield",
     "tier": 6,
     "description": "A deep cosmic blue star metal shield, swirling with living constellations and the timeless energy of the heavens.",
-    "icon": "/images/items/bat.png"
+    "icon": "/images/items/xxx.png"
   },
   {
     "id": "tempered_darksteel_shield",
@@ -293,7 +293,7 @@
     "familyId": "darksteel_shield",
     "tier": 1,
     "description": "A brutal shield of hewn darksteel rimmed in blood-copper, a pool of rubin magic at its center.",
-    "icon": "/images/items/bat.png"
+    "icon": "/images/items/xxx.png"
   },
   {
     "id": "warded_darksteel_shield",
@@ -301,7 +301,7 @@
     "familyId": "darksteel_shield",
     "tier": 2,
     "description": "A darksteel wall inscribed with rubin wards, star metal runic circles blazing at its heart.",
-    "icon": "/images/items/bat.png"
+    "icon": "/images/items/xxx.png"
   },
   {
     "id": "runed_darksteel_shield",
@@ -309,7 +309,7 @@
     "familyId": "darksteel_shield",
     "tier": 3,
     "description": "A towering slab of runed darksteel with rubin insets and star metal script that writhes across its face.",
-    "icon": "/images/items/bat.png"
+    "icon": "/images/items/xxx.png"
   },
   {
     "id": "sigiled_darksteel_shield",
@@ -317,7 +317,7 @@
     "familyId": "darksteel_shield",
     "tier": 4,
     "description": "A grim ceremonial darksteel shield emblazoned with rubin sigils and arcane lines of star metal.",
-    "icon": "/images/items/bat.png"
+    "icon": "/images/items/xxx.png"
   },
   {
     "id": "shadowforged_darksteel_shield",
@@ -325,7 +325,7 @@
     "familyId": "darksteel_shield",
     "tier": 5,
     "description": "A black darksteel shield veined with light blue ether, pulsing with an unsettling dark power.",
-    "icon": "/images/items/bat.png"
+    "icon": "/images/items/xxx.png"
   },
   {
     "id": "worldforged_darksteel_shield",
@@ -333,6 +333,6 @@
     "familyId": "darksteel_shield",
     "tier": 6,
     "description": "A colossal shield of world-shaped, blood-red darksteel, girded by star metal veins older than memory.",
-    "icon": "/images/items/bat.png"
+    "icon": "/images/items/xxx.png"
   }
 ]

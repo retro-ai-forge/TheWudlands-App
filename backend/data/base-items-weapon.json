@@ -917,7 +917,7 @@
     "familyId": "pickaxe",
     "tier": 1,
     "description": "A rugged pickaxe with a stout copper head, mounted on a worn hardwood handle.",
-    "icon": "/images/items/bat.png"
+    "icon": "/images/items/xxx.png"
   },
   {
     "id": "pickaxe_2",
@@ -925,7 +925,7 @@
     "familyId": "pickaxe",
     "tier": 2,
     "description": "A slender, sharply pointed pickaxe with a light bronze head on a grip-wrapped wooden shaft.",
-    "icon": "/images/items/bat.png"
+    "icon": "/images/items/xxx.png"
   },
   {
     "id": "pickaxe_3",
@@ -933,7 +933,7 @@
     "familyId": "pickaxe",
     "tier": 3,
     "description": "A broad, wedge-headed iron pickaxe made for splitting stone, with a reinforced handle.",
-    "icon": "/images/items/bat.png"
+    "icon": "/images/items/xxx.png"
   },
   {
     "id": "pickaxe_4",
@@ -941,7 +941,7 @@
     "familyId": "pickaxe",
     "tier": 4,
     "description": "A long, curved pickaxe with a piercing silver tip, etched with luminescent runes for deep cavern work.",
-    "icon": "/images/items/bat.png"
+    "icon": "/images/items/xxx.png"
   },
   {
     "id": "pickaxe_5",
@@ -949,7 +949,7 @@
     "familyId": "pickaxe",
     "tier": 5,
     "description": "A heavy, hammer-backed pickaxe with a jagged gold head crackling with runes, on a thick grooved handle.",
-    "icon": "/images/items/bat.png"
+    "icon": "/images/items/xxx.png"
   },
   {
     "id": "pickaxe_6",
@@ -957,6 +957,6 @@
     "familyId": "pickaxe",
     "tier": 6,
     "description": "A ceremonial pickaxe with an oversized star metal head that shimmers with celestial patterns, mounted on an ancient haft.",
-    "icon": "/images/items/bat.png"
+    "icon": "/images/items/xxx.png"
   }
 ]

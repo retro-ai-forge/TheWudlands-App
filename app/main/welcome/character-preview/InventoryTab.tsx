@@ -632,7 +632,7 @@ function IdList({
 // former family-level default before per-tier art started landing there).
 // Exported so BodyTab's equip-slot icons fall back to the exact same
 // placeholder instead of duplicating the path.
-export const FALLBACK_ITEM_ICON = "/images/items/bat.png";
+export const FALLBACK_ITEM_ICON = "/images/items/xxx.png";
 
 // Matches .itemGridCell's own width/height in CharacterTabs.module.css -
 // kept in sync by hand (CSS modules give no clean way to read a class's
