@@ -538,11 +538,12 @@ function IdList({
         const infoA = tierInfo[lookupIds?.[a] ?? a];
         const infoB = tierInfo[lookupIds?.[b] ?? b];
         if (!infoA || !infoB) return 0;
-        // Items first, then tools
-        if (infoA.kind !== infoB.kind) {
-          const aIsTool = infoA.kind === "tool";
-          return aIsTool ? 1 : -1; // Non-tools (items) first
-        }
+        // Tools last
+        const aIsTool = infoA.kind === "tool";
+        const bIsTool = infoB.kind === "tool";
+        if (aIsTool !== bIsTool) return aIsTool ? 1 : -1;
+        // Group non-tools by kind (armor together, shield together, etc.)
+        if (infoA.kind !== infoB.kind) return infoA.kind.localeCompare(infoB.kind);
         // Then group by family (highest-tier family first)
         const familyDiff = familyIndex[infoA.familyId] - familyIndex[infoB.familyId];
         if (familyDiff !== 0) return familyDiff;

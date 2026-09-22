@@ -82,7 +82,7 @@ export function CharacterPreview({
   // .wizard (ref'd here) is the actual scrolling element (.wizardScrollable
   // sets its own overflow-y:auto), not .mainColumn or .sheet.
   const wizardScrollRef = useRef<HTMLDivElement>(null);
-  const [isScrolledToEnd, setIsScrolledToEnd] = useState(true);
+  const [isScrolledToEnd, setIsScrolledToEnd] = useState(false);
 
   function checkScrolledToEnd() {
     const el = wizardScrollRef.current;
@@ -370,14 +370,14 @@ export function CharacterPreview({
         </div>
       </div>
 
-      {!showCamp && activeTab === "stats" && (
+      {!showCamp && activeTab === "stats" && isScrolledToEnd && (
         <button
           type="button"
-          className={`${tabStyles.deleteButton} ${isScrolledToEnd ? "" : tabStyles.deleteButtonLocked}`}
+          className={tabStyles.deleteButton}
           onClick={handleDeleteClick}
-          disabled={isDeleting || !isScrolledToEnd}
-          title={isDeleting ? "Deleting…" : isScrolledToEnd ? "Delete Character" : "Scroll to the end of the page to delete"}
-          aria-label={isDeleting ? "Deleting…" : isScrolledToEnd ? "Delete Character" : "Scroll to the end of the page to delete"}
+          disabled={isDeleting}
+          title={isDeleting ? "Deleting…" : "Delete Character"}
+          aria-label={isDeleting ? "Deleting…" : "Delete Character"}
         >
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src={`${ICON_BASE}delete.png`} alt="" className={tabStyles.tabIcon} />
