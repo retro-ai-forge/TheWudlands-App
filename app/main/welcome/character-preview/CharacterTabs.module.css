@@ -682,6 +682,36 @@
   color: #e6b85c;
 }
 
+/* Birthsign row split into label (left) and name (right) buttons */
+.birthsignLabelBtn {
+  background: none;
+  border: none;
+  font: inherit;
+  font-size: 0.85rem;
+  padding: 0;
+  cursor: pointer;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #a89968;
+}
+
+.birthsignNameBtn {
+  background: none;
+  border: none;
+  font: inherit;
+  font-size: 0.85rem;
+  padding: 0;
+  cursor: pointer;
+  color: #c07a3a;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  text-align: right;
+}
+
+.birthsignNameBtn:hover {
+  color: #e6b85c;
+}
+
 /* Full-screen backdrop for the birthsign popup - clicking it (anywhere but
    the card itself, which stops propagation) closes the popup, same pattern
    as a modal's click-outside-to-dismiss. */
@@ -892,6 +922,155 @@
   letter-spacing: 0.04em;
   text-transform: none;
   color: inherit;
+}
+
+/* Profession row split into two click zones */
+.professionRowSplit {
+  display: flex;
+  align-items: flex-start;
+  width: 100%;
+}
+
+.professionLeftZone {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.12rem;
+  background: none;
+  border: none;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  padding: 0;
+  color: #d4c9a8;
+  min-width: 0;
+}
+
+.professionLeftZone:hover:not(:disabled) {
+  color: #e8dfc0;
+}
+
+.professionLeftZone:disabled {
+  cursor: default;
+}
+
+.professionRightZone {
+  flex-shrink: 0;
+  background: none;
+  border: none;
+  font: inherit;
+  cursor: pointer;
+  padding: 0 0 0 0.6rem;
+  color: #a89968;
+  font-size: 0.8rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.professionRightZone:hover {
+  color: #c4b07a;
+  text-decoration: underline dotted;
+}
+
+.professionRightZoneActive {
+  color: #c4b07a;
+}
+
+/* XP level overlay — floats above the page, anchored to the clicked right-zone button */
+.xpOverlayBackdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+}
+
+.xpOverlayPanel {
+  position: fixed;
+  z-index: 101;
+  padding: 0.4rem 0.6rem;
+  background: rgba(12, 10, 4, 0.96);
+  border: 1px solid rgba(168, 153, 104, 0.3);
+  min-width: 11rem;
+}
+
+.xpOverlayRow {
+  padding: 0.18rem 0;
+  color: #6a5e42;
+  font-size: 0.8rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.xpOverlayCurrentRow {
+  color: #d4c9a8;
+}
+
+.descOverlayPanel {
+  position: fixed;
+  z-index: 101;
+  padding: 0.5rem 0.7rem;
+  background: rgba(12, 10, 4, 0.96);
+  border: 1px solid rgba(168, 153, 104, 0.3);
+  max-width: 18rem;
+}
+
+.descOverlayHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 0.5rem;
+  margin-bottom: 0.35rem;
+  border-bottom: 1px solid rgba(168, 153, 104, 0.18);
+  padding-bottom: 0.2rem;
+}
+
+.descOverlayName {
+  font-size: 0.68rem;
+  color: #a89968;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.descOverlayPrimeTag {
+  font-size: 0.65rem;
+  color: #4caf50;
+  letter-spacing: 0.04em;
+  flex-shrink: 0;
+}
+
+.descOverlayMakePrimeBtn {
+  background: none;
+  border: none;
+  font: inherit;
+  font-size: 0.65rem;
+  letter-spacing: 0.04em;
+  color: #a89968;
+  cursor: pointer;
+  padding: 0;
+  flex-shrink: 0;
+}
+
+.descOverlayMakePrimeBtn:hover:not(:disabled) {
+  color: #c4b07a;
+}
+
+.descOverlayMakePrimeBtn:disabled {
+  cursor: default;
+  opacity: 0.5;
+}
+
+.descOverlayText {
+  font-size: 0.82rem;
+  color: #c8bea0;
+  line-height: 1.5;
+}
+
+.descOverlayEffect {
+  margin-top: 0.4rem;
+  padding-top: 0.35rem;
+  border-top: 1px solid rgba(168, 153, 104, 0.15);
+  font-size: 0.78rem;
+  color: #9a9078;
+  line-height: 1.5;
 }
 
 /* ---- Body tab ---- */

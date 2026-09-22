@@ -8,6 +8,10 @@ import type { SlotCharacterSummary } from "../SoulSlotGrid";
 import type { RawPlayerData } from "./InventoryTab";
 import { InAdventureToggle } from "./InAdventureToggle";
 
+import baseLevelsData from "../../../../backend/data/base-levels.json";
+const XP_LEVELS = baseLevelsData.levels;
+
+
 const BODY_ATTRS = [
   ["migh", "Might"],
   ["agil", "Agility"],
@@ -29,6 +33,11 @@ function raceName(id: string): string {
 function professionName(id: string): string {
   if (!id || id === "none") return "";
   return PROFESSIONS.find((p) => p.id === id)?.name ?? id;
+}
+
+function professionDescription(id: string): string {
+  if (!id || id === "none") return "";
+  return PROFESSIONS.find((p) => p.id === id)?.description ?? "";
 }
 
 // The profession's raw-material resource families (e.g. blacksmith ->
@@ -94,6 +103,43 @@ export function StatsTab({
   // assembly-bonus XP on finishing a blueprint-gated item - player-chosen
   // by clicking a profession row below, persisted on the character.
   const [settingPrime, setSettingPrime] = useState(false);
+  const [xpOverlay, setXpOverlay] = useState<{
+    slot: "prof1" | "prof2" | "prof3";
+    lvl: number;
+    top: number;
+    right: number;
+  } | null>(null);
+  const [descOverlay, setDescOverlay] = useState<{
+    slot: "prof1" | "prof2" | "prof3";
+    name: string;
+    description: string;
+    isPrime: boolean;
+    top: number;
+    left: number;
+  } | null>(null);
+  const [birthsignOverlay, setBirthsignOverlay] = useState<{
+    top: number;
+    left: number;
+  } | null>(null);
+  const openXpOverlay = (
+    p: { slot: "prof1" | "prof2" | "prof3"; lvl: number },
+    e: React.MouseEvent<HTMLButtonElement>
+  ) => {
+    if (p.lvl >= 30) return;
+    setDescOverlay(null);
+    if (xpOverlay?.slot === p.slot) { setXpOverlay(null); return; }
+    const rect = e.currentTarget.getBoundingClientRect();
+    setXpOverlay({ slot: p.slot, lvl: p.lvl, top: window.innerHeight - rect.top + 6, right: window.innerWidth - rect.right });
+  };
+  const openDescOverlay = (
+    p: { slot: "prof1" | "prof2" | "prof3"; name: string; description: string; isPrime: boolean },
+    e: React.MouseEvent<HTMLButtonElement>
+  ) => {
+    setXpOverlay(null);
+    if (descOverlay?.slot === p.slot) { setDescOverlay(null); return; }
+    const rect = e.currentTarget.getBoundingClientRect();
+    setDescOverlay({ slot: p.slot, name: p.name, description: p.description, isPrime: p.isPrime, top: window.innerHeight - rect.top + 6, left: rect.left });
+  };
   const setPrimeProfession = async (slot: "prof1" | "prof2" | "prof3") => {
     if (settingPrime) return;
     setSettingPrime(true);
@@ -128,6 +174,7 @@ export function StatsTab({
       {
         slot: "prof1" as const,
         name: professionName(character.profession.prof1),
+        description: professionDescription(character.profession.prof1),
         lvl: character.profession.lvl1,
         exp: character.profession.exp1,
         resourceFamilies: professionResourceFamilies(character.profession.prof1),
@@ -135,6 +182,7 @@ export function StatsTab({
       {
         slot: "prof2" as const,
         name: professionName(character.profession.prof2),
+        description: professionDescription(character.profession.prof2),
         lvl: character.profession.lvl2,
         exp: character.profession.exp2,
         resourceFamilies: professionResourceFamilies(character.profession.prof2),
@@ -142,6 +190,7 @@ export function StatsTab({
       {
         slot: "prof3" as const,
         name: professionName(character.profession.prof3),
+        description: professionDescription(character.profession.prof3),
         lvl: character.profession.lvl3,
         exp: character.profession.exp3,
         resourceFamilies: professionResourceFamilies(character.profession.prof3),
@@ -209,10 +258,26 @@ export function StatsTab({
             <span>{getDisplayedAge(character.age_month, character.race)} years</span>
           </div>
           {birthsignInfo ? (
-            <button type="button" className={styles.identityRowButton} onClick={onOpenBirthsign}>
-              <span>Birthsign</span>
-              <span>{birthsignInfo.name}</span>
-            </button>
+            <div className={styles.identityRow}>
+              <button
+                type="button"
+                className={styles.birthsignLabelBtn}
+                onClick={(e) => {
+                  if (birthsignOverlay) { setBirthsignOverlay(null); return; }
+                  const rect = e.currentTarget.getBoundingClientRect();
+                  setBirthsignOverlay({ top: window.innerHeight - rect.top + 6, left: rect.left });
+                }}
+              >
+                Birthsign
+              </button>
+              <button
+                type="button"
+                className={styles.birthsignNameBtn}
+                onClick={onOpenBirthsign}
+              >
+                {birthsignInfo.name}
+              </button>
+            </div>
           ) : (
             <div className={styles.identityRow}>
               <span>Birthsign</span>
@@ -249,25 +314,33 @@ export function StatsTab({
                 </div>
               ))}
               {professions.map((p) => (
-                <button
-                  type="button"
-                  className={`${styles.professionRow} ${styles.professionRowClickable}`}
-                  key={p.name}
-                  onClick={() => setPrimeProfession(p.slot)}
-                  disabled={settingPrime}
-                  title={p.isPrime ? undefined : "Click to make this the prime profession"}
-                >
-                  <div className={styles.professionRowMain}>
-                    <span className={p.isPrime ? styles.professionPrime : undefined}>
-                      {p.name}
-                      {p.isPrime && <span className={styles.professionPrimeTag}> (prime)</span>}
-                    </span>
-                    <span>Lvl {p.lvl} — {p.exp} XP</span>
+                <div className={styles.professionRow} key={p.name}>
+                  <div className={styles.professionRowSplit}>
+                    <button
+                      type="button"
+                      className={styles.professionLeftZone}
+                      onClick={(e) => openDescOverlay(p, e)}
+                      disabled={settingPrime}
+                      title={p.isPrime ? undefined : "Click to make this the prime profession"}
+                    >
+                      <span className={p.isPrime ? styles.professionPrime : undefined}>
+                        {p.name}
+                        {p.isPrime && <span className={styles.professionPrimeTag}> (prime)</span>}
+                      </span>
+                      {p.resourceFamilies && (
+                        <span className={styles.professionResourceFamilies}>{p.resourceFamilies}</span>
+                      )}
+                    </button>
+                    <button
+                      type="button"
+                      className={`${styles.professionRightZone}${xpOverlay?.slot === p.slot ? ` ${styles.professionRightZoneActive}` : ""}`}
+                      onClick={(e) => openXpOverlay(p, e)}
+                      title="View XP table"
+                    >
+                      Lvl {p.lvl} — {p.exp.toLocaleString()} XP
+                    </button>
                   </div>
-                  {p.resourceFamilies && (
-                    <span className={styles.professionResourceFamilies}>{p.resourceFamilies}</span>
-                  )}
-                </button>
+                </div>
               ))}
             </div>
           ) : null}
@@ -304,6 +377,66 @@ export function StatsTab({
           ))}
         </div>
       </div>
+
+      {xpOverlay && (
+        <>
+          <div className={styles.xpOverlayBackdrop} onClick={() => setXpOverlay(null)} />
+          <div
+            className={styles.xpOverlayPanel}
+            style={{ bottom: xpOverlay.top, right: xpOverlay.right }}
+          >
+            {XP_LEVELS.filter((l) => l.level >= xpOverlay.lvl - 2 && l.level <= xpOverlay.lvl + 2).map((entry) => (
+              <div
+                key={entry.level}
+                className={`${styles.xpOverlayRow}${entry.level === xpOverlay.lvl ? ` ${styles.xpOverlayCurrentRow}` : ""}`}
+              >
+                Lvl {entry.level} — {entry.XP.toLocaleString()} XP
+              </div>
+            ))}
+          </div>
+        </>
+      )}
+      {descOverlay && (
+        <>
+          <div className={styles.xpOverlayBackdrop} onClick={() => setDescOverlay(null)} />
+          <div
+            className={styles.descOverlayPanel}
+            style={{ bottom: descOverlay.top, left: descOverlay.left }}
+          >
+            <div className={styles.descOverlayHeader}>
+              <div className={styles.descOverlayName}>{descOverlay.name}</div>
+              {descOverlay.isPrime ? (
+                <span className={styles.descOverlayPrimeTag}>(prime)</span>
+              ) : (
+                <button
+                  type="button"
+                  className={styles.descOverlayMakePrimeBtn}
+                  disabled={settingPrime}
+                  onClick={() => { setPrimeProfession(descOverlay.slot); setDescOverlay(null); }}
+                >
+                  (make prime)
+                </button>
+              )}
+            </div>
+            <div className={styles.descOverlayText}>{descOverlay.description}</div>
+          </div>
+        </>
+      )}
+      {birthsignOverlay && (
+        <>
+          <div className={styles.xpOverlayBackdrop} onClick={() => setBirthsignOverlay(null)} />
+          <div
+            className={styles.descOverlayPanel}
+            style={{ bottom: birthsignOverlay.top, left: birthsignOverlay.left }}
+          >
+            <div className={styles.descOverlayText}>
+              Your birth sign is permanent once chosen. It grants one charge per adventure — rare
+              events like death and revival, or regaining a lost soul, may grant a second or third
+              charge.
+            </div>
+          </div>
+        </>
+      )}
     </div>
   );
 }
