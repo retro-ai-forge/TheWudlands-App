@@ -36,15 +36,15 @@ from backend.db import get_database  # noqa: E402
 # Configuration
 # ---------------------------------------------------------------------------
 
-PLAYER_ADDRESS = "1sFxBUESH2ztJzRFvP4s7Ehc8Sj8sFxpMxgA985yud1Yz34"
+PLAYER_ADDRESS = "16mBah9b7YrB9dJpu3hJHB17vMLJfnKYAhbSvpWQCdfgni8r"
 RAW_MATERIAL_QTY = 3000
 
-DROP_BLUEPRINTS = False
-DROP_MATERIALS  = False    # raw materials → crafting.resources
-DROP_ITEMS      = True   # instance items + vault.itemBalances (armor, weapons, food, potions, …)
+DROP_BLUEPRINTS = True
+DROP_MATERIALS  = True    # raw materials → crafting.resources
+DROP_ITEMS      = False   # instance items + vault.itemBalances (armor, weapons, food, potions, …)
 DROP_TOOLS      = False   # flat crafting tools (anvil, furnace, workbench, …)
 
-TIER_RANDOM     = False  # True = pick a random tier, overrides TIER_LVL
+TIER_RANDOM     = True  # True = pick a random tier, overrides TIER_LVL
 TIER_LVL        = 1      # tier to drop when TIER_RANDOM is False (1–6)
 
 # ---------------------------------------------------------------------------
@@ -133,17 +133,14 @@ async def main() -> None:
         return
 
     characters = player.get("characters", [])
-    slot1 = next((c for c in characters if c.get("slot_number") == 1), None)
-    if not slot1 and characters:
-        slot1 = characters[0]
-        print("Note: No character with slot_number=1; using first character.")
-    if not slot1:
-        print("ERROR: Player has no characters.")
+    slot = next((c for c in characters if c.get("slotNumber") == 1), None)
+    if slot is None:
+        print("ERROR: No character on slot 1.")
         return
-    char_id = slot1["id"]
-    print(f"Character: {slot1.get('name', char_id)} (id={char_id})\n")
+    char_id = slot["id"]
+    print(f"Character: {slot.get('firstName', '')} {slot.get('lastName', '')} (id={char_id})\n")
 
-    # 1 — Blueprints → character slot 1
+    # 1 — Blueprints → character
     if DROP_BLUEPRINTS:
         blueprint_ids = load_blueprints(tier)
         print(f"[blueprints] Adding {len(blueprint_ids)} tier-{tier} blueprints to character...")
