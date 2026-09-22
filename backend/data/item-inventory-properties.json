@@ -841,10 +841,15 @@
     "kind": ["essentials"],
     "sizeClass": "light",
     "stackSize": 1,
-    "needsItemDefinition": false,
-    "note": "Never equipped - backpack item.",
-    "equipSlots": [],
-    "backpackable": true
+    "needsItemDefinition": true,
+    "note": "Might break on physical damage.",
+    "equipSlots": [
+      ["Left Hand"],
+      ["Right Hand"],
+      ["Side"]
+    ],
+    "backpackable": true,
+    "qualityMax": 28
   },
   {
     "familyId": "holy_symbol",
