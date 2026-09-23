@@ -1437,6 +1437,14 @@
   overflow: visible;
 }
 
+/* Tier badge in the large companion/mount slot (14rem) — the base 1rem
+   badge looks too small at this scale, bump it up proportionally. */
+.largeEquipSlot .itemGridTierBadge {
+  font-size: 1.8rem;
+  top: 0.4rem;
+  left: 0.5rem;
+}
+
 /* The Mount box's own four corner slots (Mhead/Msaddle/Marmor/Mbagpack -
    see BodyTab's MOUNT_SUB_SLOTS) - same "sits on the edge, overlapping a
    bit" idea as .equipSlotOverlay's slots on the character's own portrait,
@@ -2340,19 +2348,29 @@
    than this small absolutely-positioned corner badge. */
 .itemGridTierT1, .itemGridTierT2 {
   color: #c07a3a;
+  font-size: 1.2rem;
 }
 
 .itemGridTierT3 {
   color: #c07a3a;
-  font-size: 0.9rem;
+  font-size: 1.1rem;
 }
 
 .itemGridTierT4 {
   color: #aa0000;
+  font-size: 1.9rem;
 }
 
-.itemGridTierT5, .itemGridTierT6 {
+.itemGridTierT5 {
   filter: invert(1) hue-rotate(115deg) saturate(0.8) brightness(1.3);
+  font-size: 0.75rem;
+  text-shadow: none;
+}
+
+.itemGridTierT6 {
+  filter: invert(1) hue-rotate(115deg) saturate(0.8) brightness(1.3);
+  font-size: 0.6rem;
+  text-shadow: none;
 }
 
 .itemGridCountBadge {
@@ -2545,6 +2563,32 @@
   font-size: 1.4rem;
   line-height: 1;
   text-shadow: 0 0 3px #000, 0 0 3px #000;
+}
+
+/* Per-tier size adjustments for the popup badge — emoji (T5/T6) render
+   at OS-font intrinsic size which varies by browser; shrink them to match
+   the Unicode-character tiers. */
+.itemPopupTierBadge.itemGridTierT1,
+.itemPopupTierBadge.itemGridTierT2 {
+  font-size: 2.1rem;
+}
+
+.itemPopupTierBadge.itemGridTierT3 {
+  font-size: 2.0rem;
+}
+
+.itemPopupTierBadge.itemGridTierT4 {
+  font-size: 2.8rem;
+}
+
+.itemPopupTierBadge.itemGridTierT5 {
+  font-size: 1.4rem;
+  text-shadow: none;
+}
+
+.itemPopupTierBadge.itemGridTierT6 {
+  font-size: 1.2rem;
+  text-shadow: none;
 }
 
 /* Toggles the card's own content between the item-info view and the
