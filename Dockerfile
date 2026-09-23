@@ -13,6 +13,9 @@ COPY app ./app
 COPY public ./public
 COPY tsconfig.json next.config.ts eslint.config.mjs ./
 
+# Copy backend data files referenced by the frontend build
+COPY backend/data ./backend/data
+
 # Build Next.js app
 RUN npm run build
 
