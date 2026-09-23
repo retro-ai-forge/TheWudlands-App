@@ -25,7 +25,7 @@ export default function About() {
         <section className={styles.wudSection}>
           <p className={styles.wudTitle}>— The Wud Legends —</p>
           <div className={styles.wudGrid}>
-            <Link href="https://gavunwud.xyz//" target="_blank" rel="noopener noreferrer" className={styles.wudCard}>
+            <Link href="https://serverless-gavunwud-745793950624.europe-west1.run.app/" target="_blank" rel="noopener noreferrer" className={styles.wudCard}>
               <Image src="/images/theworld/gavun-wud-black.png" alt="Gavun the Wud" width={80} height={80} className={styles.wudIcon} />
               <span className={styles.wudName}>Gavun of Wud</span>
             </Link>
