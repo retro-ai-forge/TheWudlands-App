@@ -2,8 +2,8 @@ import { Fragment, useEffect, useState } from "react";
 import styles from "./CharacterTabs.module.css";
 import { getPortraitCropImgStyle } from "@/app/lib/portraitCrop";
 import {
-  FALLBACK_ITEM_ICON,
   ItemDetailPopup,
+  ItemIcon,
   computeBackpackContents,
   getTierIndicator,
   itemGridTierBadgeClass,
@@ -101,14 +101,11 @@ function EquipSlotIcon({
   const isDamaged = qualityFraction !== null && qualityState(qualityFraction) === "damaged";
   return (
     <div className={isDamaged ? `${styles.equipSlotIconWrap} ${styles.equipSlotIconWrapDamaged}` : styles.equipSlotIconWrap}>
-      <div
-        role="img"
-        aria-label={entry?.name ?? instance.familyId}
+      <ItemIcon
+        icon={entry?.icon}
+        alt={entry?.name ?? instance.familyId}
         className={styles.equipSlotIcon}
-        style={{
-          backgroundImage: `url(${entry?.icon || FALLBACK_ITEM_ICON})`,
-          transform: mirrored ? "scaleX(-1)" : undefined,
-        }}
+        style={{ transform: mirrored ? "scaleX(-1)" : undefined }}
       />
       {!!entry?.tier && (
         <span className={`${styles.itemGridTierBadge} ${itemGridTierBadgeClass(entry.tier)}`}>

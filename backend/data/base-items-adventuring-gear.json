@@ -5,7 +5,7 @@
     "familyId": "grappling_hook",
     "tier": 1,
     "description": "A rugged hook of hammered copper with three sturdy, rough-forged prongs and a thick rope eyelet.",
-    "icon": "/images/items/xxx.png"
+    "icon": "/images/items/grappling_hook_t1.png"
   },
   {
     "id": "grappling_hook_2",
@@ -13,7 +13,7 @@
     "familyId": "grappling_hook",
     "tier": 2,
     "description": "An antiqued bronze hook with smooth prongs, a green patina and a loop for easy tying.",
-    "icon": "/images/items/xxx.png"
+    "icon": "/images/items/grappling_hook_t2.png"
   },
   {
     "id": "grappling_hook_3",
@@ -21,7 +21,7 @@
     "familyId": "grappling_hook",
     "tier": 3,
     "description": "A classic steel hook with three precise claws and a brushed, utilitarian finish.",
-    "icon": "/images/items/xxx.png"
+    "icon": "/images/items/grappling_hook_t3.png"
   },
   {
     "id": "grappling_hook_4",
@@ -29,7 +29,7 @@
     "familyId": "grappling_hook",
     "tier": 4,
     "description": "A shining silver hook engraved with swirling patterns, its crescent prongs catching the light.",
-    "icon": "/images/items/xxx.png"
+    "icon": "/images/items/grappling_hook_t4.png"
   },
   {
     "id": "grappling_hook_5",
@@ -37,7 +37,7 @@
     "familyId": "grappling_hook",
     "tier": 5,
     "description": "A gleaming gold hook, ornate and polished, its prongs tipped with filigree.",
-    "icon": "/images/items/xxx.png"
+    "icon": "/images/items/grappling_hook_t5.png"
   },
   {
     "id": "grappling_hook_6",
@@ -45,7 +45,7 @@
     "familyId": "grappling_hook",
     "tier": 6,
     "description": "An ethereal star metal hook, shimmering with iridescence, its prongs sparking with cosmic energy.",
-    "icon": "/images/items/xxx.png"
+    "icon": "/images/items/grappling_hook_t6.png"
   },
   {
     "id": "tinderbox_1",

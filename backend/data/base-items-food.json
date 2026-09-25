@@ -5,7 +5,7 @@
     "familyId": "hearty_stew",
     "tier": 1,
     "description": "A dented tin bowl of lumpy brown stew topped with wilted herbs.",
-    "icon": "/images/items/xxx.png"
+    "icon": "/images/items/hearty_stew_t1.png"
   },
   {
     "id": "travelers_hearty_stew",
@@ -13,7 +13,7 @@
     "familyId": "hearty_stew",
     "tier": 2,
     "description": "A pewter pot of chunky vegetable stew with rough bread on the side.",
-    "icon": "/images/items/xxx.png"
+    "icon": "/images/items/hearty_stew_t2.png"
   },
   {
     "id": "innkeepers_hearty_stew",
@@ -21,7 +21,7 @@
     "familyId": "hearty_stew",
     "tier": 3,
     "description": "A simple iron cauldron of steaming beef and carrot stew with parsley.",
-    "icon": "/images/items/xxx.png"
+    "icon": "/images/items/hearty_stew_t3.png"
   },
   {
     "id": "chieftains_hearty_stew",
@@ -29,7 +29,7 @@
     "familyId": "hearty_stew",
     "tier": 4,
     "description": "An ornate silver bowl of rich red stew, crowned with roast meats and roots.",
-    "icon": "/images/items/xxx.png"
+    "icon": "/images/items/hearty_stew_t4.png"
   },
   {
     "id": "highland_hearty_stew",
@@ -37,7 +37,7 @@
     "familyId": "hearty_stew",
     "tier": 5,
     "description": "A gold-inlaid bowl of wild game stew with golden potatoes and rare herbs, trailing magical steam.",
-    "icon": "/images/items/xxx.png"
+    "icon": "/images/items/hearty_stew_t5.png"
   },
   {
     "id": "harvestkings_hearty_stew",
@@ -45,7 +45,7 @@
     "familyId": "hearty_stew",
     "tier": 6,
     "description": "A gem-set star metal tureen of crimson stew with sparkling vegetables and a golden glow.",
-    "icon": "/images/items/xxx.png"
+    "icon": "/images/items/hearty_stew_t6.png"
   },
   {
     "id": "cabin_boys_salt_horse",
@@ -53,7 +53,7 @@
     "familyId": "salt_horse",
     "tier": 1,
     "description": "A greasy tin plate of tough salted meat with a few meager pickles.",
-    "icon": "/images/items/xxx.png"
+    "icon": "/images/items/salt_horse_t1.png"
   },
   {
     "id": "sailors_salt_horse",
@@ -61,7 +61,7 @@
     "familyId": "salt_horse",
     "tier": 2,
     "description": "A wooden bowl of salty beef chunks with hardtack crumbs.",
-    "icon": "/images/items/xxx.png"
+    "icon": "/images/items/salt_horse_t2.png"
   },
   {
     "id": "boatswains_salt_horse",
@@ -69,7 +69,7 @@
     "familyId": "salt_horse",
     "tier": 3,
     "description": "An iron platter of thick, well-cured salt meat with a pepper crust.",
-    "icon": "/images/items/xxx.png"
+    "icon": "/images/items/salt_horse_t3.png"
   },
   {
     "id": "first_mates_salt_horse",
@@ -77,7 +77,7 @@
     "familyId": "salt_horse",
     "tier": 4,
     "description": "A silver tray of pink salted beef ringed with spiced beans.",
-    "icon": "/images/items/xxx.png"
+    "icon": "/images/items/salt_horse_t4.png"
   },
   {
     "id": "captains_salt_horse",
@@ -85,7 +85,7 @@
     "familyId": "salt_horse",
     "tier": 5,
     "description": "A gilded plate of tender, gold-glazed salt beef with exotic fruits.",
-    "icon": "/images/items/xxx.png"
+    "icon": "/images/items/salt_horse_t5.png"
   },
   {
     "id": "admirals_salt_horse",
@@ -93,7 +93,7 @@
     "familyId": "salt_horse",
     "tier": 6,
     "description": "A star metal dish of marbled salt beef with jeweled garnish, crackling with arcane energy.",
-    "icon": "/images/items/xxx.png"
+    "icon": "/images/items/salt_horse_t6.png"
   },
   {
     "id": "cabin_boys_smoked_salt_horse",
@@ -101,7 +101,7 @@
     "familyId": "smoked_salt_horse",
     "tier": 1,
     "description": "A rusty tin dish of rough-smoked salted meat with charred edges.",
-    "icon": "/images/items/xxx.png"
+    "icon": "/images/items/smoked_salt_horse_t1.png"
   },
   {
     "id": "sailors_smoked_salt_horse",
@@ -109,7 +109,7 @@
     "familyId": "smoked_salt_horse",
     "tier": 2,
     "description": "A wooden slab of dark-smoked beef flecked with pepper.",
-    "icon": "/images/items/xxx.png"
+    "icon": "/images/items/smoked_salt_horse_t2.png"
   },
   {
     "id": "boatswains_smoked_salt_horse",
@@ -117,7 +117,7 @@
     "familyId": "smoked_salt_horse",
     "tier": 3,
     "description": "A pewter platter of richly smoked salt meat with a thick, rising aroma.",
-    "icon": "/images/items/xxx.png"
+    "icon": "/images/items/smoked_salt_horse_t3.png"
   },
   {
     "id": "first_mates_smoked_salt_horse",
@@ -125,7 +125,7 @@
     "familyId": "smoked_salt_horse",
     "tier": 4,
     "description": "A silver plate of aromatic smoked beef with bright spices and parsley.",
-    "icon": "/images/items/xxx.png"
+    "icon": "/images/items/smoked_salt_horse_t4.png"
   },
   {
     "id": "captains_smoked_salt_horse",
@@ -133,7 +133,7 @@
     "familyId": "smoked_salt_horse",
     "tier": 5,
     "description": "A gold plate of thin-sliced smoked beef under a sparkling glaze and fragrant smoke.",
-    "icon": "/images/items/xxx.png"
+    "icon": "/images/items/smoked_salt_horse_t5.png"
   },
   {
     "id": "admirals_smoked_salt_horse",
@@ -141,7 +141,7 @@
     "familyId": "smoked_salt_horse",
     "tier": 6,
     "description": "A star metal board of deep-purple smoked beef with glowing edges and magical vapor.",
-    "icon": "/images/items/xxx.png"
+    "icon": "/images/items/smoked_salt_horse_t6.png"
   },
   {
     "id": "campfire_roast_haunch",
@@ -149,7 +149,7 @@
     "familyId": "roast_haunch",
     "tier": 1,
     "description": "A charred haunch on a stick, smoky and crackling from the campfire.",
-    "icon": "/images/items/xxx.png"
+    "icon": "/images/items/roast_haunch_t1.png"
   },
   {
     "id": "hearthside_roast_haunch",
@@ -157,7 +157,7 @@
     "familyId": "roast_haunch",
     "tier": 2,
     "description": "A well-roasted haunch with crispy skin and rosemary on a cast iron tray.",
-    "icon": "/images/items/xxx.png"
+    "icon": "/images/items/roast_haunch_t2.png"
   },
   {
     "id": "tavern_roast_haunch",
@@ -165,7 +165,7 @@
     "familyId": "roast_haunch",
     "tier": 3,
     "description": "A juicy roast haunch with caramelized onions on a carved wooden platter.",
-    "icon": "/images/items/xxx.png"
+    "icon": "/images/items/roast_haunch_t3.png"
   },
   {
     "id": "banquet_roast_haunch",
@@ -173,7 +173,7 @@
     "familyId": "roast_haunch",
     "tier": 4,
     "description": "A silver tray of succulent carved haunch with a golden crust and fine vegetables.",
-    "icon": "/images/items/xxx.png"
+    "icon": "/images/items/roast_haunch_t4.png"
   },
   {
     "id": "feastday_roast_haunch",
@@ -181,7 +181,7 @@
     "familyId": "roast_haunch",
     "tier": 5,
     "description": "A huge roasted haunch with enchanted fruits and a magical glaze on a gilded dish.",
-    "icon": "/images/items/xxx.png"
+    "icon": "/images/items/roast_haunch_t5.png"
   },
   {
     "id": "mythic_roast_haunch",
@@ -189,7 +189,7 @@
     "familyId": "roast_haunch",
     "tier": 6,
     "description": "A legendary beast's haunch in a shining glaze on a star metal stand, ringed by glowing runes.",
-    "icon": "/images/items/xxx.png"
+    "icon": "/images/items/roast_haunch_t6.png"
   },
   {
     "id": "prentice_bangers",
@@ -197,7 +197,7 @@
     "familyId": "bangers",
     "tier": 1,
     "description": "A greasy tin plate of misshapen sausages with pale mash.",
-    "icon": "/images/items/xxx.png"
+    "icon": "/images/items/bangers_t1.png"
   },
   {
     "id": "butchers_bangers",
@@ -205,7 +205,7 @@
     "familyId": "bangers",
     "tier": 2,
     "description": "A pewter dish of plump grilled sausages with simple onions.",
-    "icon": "/images/items/xxx.png"
+    "icon": "/images/items/bangers_t2.png"
   },
   {
     "id": "master_butchers_bangers",
@@ -213,7 +213,7 @@
     "familyId": "bangers",
     "tier": 3,
     "description": "A bronze grill pan of fat golden sausages with a rustic herb garnish.",
-    "icon": "/images/items/xxx.png"
+    "icon": "/images/items/bangers_t3.png"
   },
   {
     "id": "guildmasters_bangers",
@@ -221,7 +221,7 @@
     "familyId": "bangers",
     "tier": 4,
     "description": "A silver platter of perfectly browned links with minted peas and roasted shallots.",
-    "icon": "/images/items/xxx.png"
+    "icon": "/images/items/bangers_t4.png"
   },
   {
     "id": "imperial_bangers",
@@ -229,7 +229,7 @@
     "familyId": "bangers",
     "tier": 5,
     "description": "A gold plate of masterfully made sausages with truffle flakes and a glow of enchantment.",
-    "icon": "/images/items/xxx.png"
+    "icon": "/images/items/bangers_t5.png"
   },
   {
     "id": "peerless_bangers",
@@ -237,7 +237,7 @@
     "familyId": "bangers",
     "tier": 6,
     "description": "A star metal tray of glimmering sausages flecked with rare spice, pulsing with mystic light.",
-    "icon": "/images/items/xxx.png"
+    "icon": "/images/items/bangers_t6.png"
   },
   {
     "id": "foragers_squirrel_hoard",
@@ -245,7 +245,7 @@
     "familyId": "squirrel_hoard",
     "tier": 1,
     "description": "A wicker basket of small breads, roots and roasted squirrel bits.",
-    "icon": "/images/items/xxx.png"
+    "icon": "/images/items/squirrel_hoard_t1.png"
   },
   {
     "id": "scavengers_squirrel_hoard",
@@ -253,7 +253,7 @@
     "familyId": "squirrel_hoard",
     "tier": 2,
     "description": "A leaden dish containing nuts, dried berries and fire-roasted squirrel.",
-    "icon": "/images/items/xxx.png"
+    "icon": "/images/items/squirrel_hoard_t2.png"
   },
   {
     "id": "woodland_squirrel_hoard",
@@ -261,7 +261,7 @@
     "familyId": "squirrel_hoard",
     "tier": 3,
     "description": "A clay bowl of roasted squirrel with fresh greens and wild mushrooms.",
-    "icon": "/images/items/xxx.png"
+    "icon": "/images/items/squirrel_hoard_t3.png"
   },
   {
     "id": "autumns_squirrel_hoard",
@@ -269,7 +269,7 @@
     "familyId": "squirrel_hoard",
     "tier": 4,
     "description": "A silver pan of acorn-studded squirrel over root vegetables and maple leaves.",
-    "icon": "/images/items/xxx.png"
+    "icon": "/images/items/squirrel_hoard_t4.png"
   },
   {
     "id": "bountiful_squirrel_hoard",
@@ -277,7 +277,7 @@
     "familyId": "squirrel_hoard",
     "tier": 5,
     "description": "A golden platter of honey-glazed squirrel with candied nuts and enchanted greens.",
-    "icon": "/images/items/xxx.png"
+    "icon": "/images/items/squirrel_hoard_t5.png"
   },
   {
     "id": "ageless_squirrel_hoard",
@@ -285,7 +285,7 @@
     "familyId": "squirrel_hoard",
     "tier": 6,
     "description": "A star metal cornucopia of ethereal squirrel cuts, glowing herbs and shimmering autumn fruits.",
-    "icon": "/images/items/xxx.png"
+    "icon": "/images/items/squirrel_hoard_t6.png"
   },
   {
     "id": "foragers_smoked_squirrel_hoard",
@@ -293,7 +293,7 @@
     "familyId": "smoked_squirrel_hoard",
     "tier": 1,
     "description": "A cracked tin dish of smoked squirrel, hard nuts and blackened leaves.",
-    "icon": "/images/items/xxx.png"
+    "icon": "/images/items/smoked_squirrel_hoard_t1.png"
   },
   {
     "id": "scavengers_smoked_squirrel_hoard",
@@ -301,7 +301,7 @@
     "familyId": "smoked_squirrel_hoard",
     "tier": 2,
     "description": "A charred wooden box of smoky meat strips and dried wild greens.",
-    "icon": "/images/items/xxx.png"
+    "icon": "/images/items/smoked_squirrel_hoard_t2.png"
   },
   {
     "id": "woodland_smoked_squirrel_hoard",
@@ -309,7 +309,7 @@
     "familyId": "smoked_squirrel_hoard",
     "tier": 3,
     "description": "A pewter tray of nicely smoked squirrel with root chips and pine needles.",
-    "icon": "/images/items/xxx.png"
+    "icon": "/images/items/smoked_squirrel_hoard_t3.png"
   },
   {
     "id": "autumns_smoked_squirrel_hoard",
@@ -317,7 +317,7 @@
     "familyId": "smoked_squirrel_hoard",
     "tier": 4,
     "description": "A silver platter of golden smoked squirrel with sweet smoke curling up.",
-    "icon": "/images/items/xxx.png"
+    "icon": "/images/items/smoked_squirrel_hoard_t4.png"
   },
   {
     "id": "bountiful_smoked_squirrel_hoard",
@@ -325,7 +325,7 @@
     "familyId": "smoked_squirrel_hoard",
     "tier": 5,
     "description": "A gold basket of tender smoked squirrel and enchanted berries in wisps of glowing smoke.",
-    "icon": "/images/items/xxx.png"
+    "icon": "/images/items/smoked_squirrel_hoard_t5.png"
   },
   {
     "id": "ageless_smoked_squirrel_hoard",
@@ -333,7 +333,7 @@
     "familyId": "smoked_squirrel_hoard",
     "tier": 6,
     "description": "A star metal chest of radiant smoked squirrel and sparkling chestnuts in a blue mist.",
-    "icon": "/images/items/xxx.png"
+    "icon": "/images/items/smoked_squirrel_hoard_t6.png"
   },
   {
     "id": "sunfaded_wizened_figs",
@@ -341,7 +341,7 @@
     "familyId": "wizened_figs",
     "tier": 1,
     "description": "A faded clay bowl of wrinkled, sun-baked figs with a dusty surface.",
-    "icon": "/images/items/xxx.png"
+    "icon": "/images/items/wizened_figs_t1.png"
   },
   {
     "id": "windswept_wizened_figs",
@@ -349,7 +349,7 @@
     "familyId": "wizened_figs",
     "tier": 2,
     "description": "A woven reed tray of lean, wind-dried figs with pale skins.",
-    "icon": "/images/items/xxx.png"
+    "icon": "/images/items/wizened_figs_t2.png"
   },
   {
     "id": "shriveled_wizened_figs",
@@ -357,7 +357,7 @@
     "familyId": "wizened_figs",
     "tier": 3,
     "description": "A tin bucket of cracked, brittle, shriveled figs.",
-    "icon": "/images/items/xxx.png"
+    "icon": "/images/items/wizened_figs_t3.png"
   },
   {
     "id": "amberfig_wizened_figs",
@@ -365,7 +365,7 @@
     "familyId": "wizened_figs",
     "tier": 4,
     "description": "A polished silver dish of glistening amber figs drizzled with honey.",
-    "icon": "/images/items/xxx.png"
+    "icon": "/images/items/wizened_figs_t4.png"
   },
   {
     "id": "honeyfig_wizened_figs",
@@ -373,7 +373,7 @@
     "familyId": "wizened_figs",
     "tier": 5,
     "description": "A golden plate of plump honey-glazed figs dripping with glowing nectar.",
-    "icon": "/images/items/xxx.png"
+    "icon": "/images/items/wizened_figs_t5.png"
   },
   {
     "id": "ancient_wizened_figs",
@@ -381,7 +381,7 @@
     "familyId": "wizened_figs",
     "tier": 6,
     "description": "A star metal chalice of deep-purple figs with shimmering cracks and a golden mist.",
-    "icon": "/images/items/xxx.png"
+    "icon": "/images/items/wizened_figs_t6.png"
   },
   {
     "id": "sunfaded_smoked_wizened_figs",
@@ -389,7 +389,7 @@
     "familyId": "smoked_wizened_figs",
     "tier": 1,
     "description": "A blackened tin plate of smoky, sun-withered figs.",
-    "icon": "/images/items/xxx.png"
+    "icon": "/images/items/smoked_wizened_figs_t1.png"
   },
   {
     "id": "windswept_smoked_wizened_figs",
@@ -397,7 +397,7 @@
     "familyId": "smoked_wizened_figs",
     "tier": 2,
     "description": "A rough wooden tray of wind-dried smoked figs flecked with ash.",
-    "icon": "/images/items/xxx.png"
+    "icon": "/images/items/smoked_wizened_figs_t2.png"
   },
   {
     "id": "shriveled_smoked_wizened_figs",
@@ -405,7 +405,7 @@
     "familyId": "smoked_wizened_figs",
     "tier": 3,
     "description": "A pewter cup of shriveled, burnt-edged figs wrapped in dense smoke.",
-    "icon": "/images/items/xxx.png"
+    "icon": "/images/items/smoked_wizened_figs_t3.png"
   },
   {
     "id": "amberfig_smoked_wizened_figs",
@@ -413,7 +413,7 @@
     "familyId": "smoked_wizened_figs",
     "tier": 4,
     "description": "A silver tray of gleaming amber figs in a smoky glaze.",
-    "icon": "/images/items/xxx.png"
+    "icon": "/images/items/smoked_wizened_figs_t4.png"
   },
   {
     "id": "honeyfig_smoked_wizened_figs",
@@ -421,7 +421,7 @@
     "familyId": "smoked_wizened_figs",
     "tier": 5,
     "description": "A gold bowl of honey-coated smoked figs with a warm magical glow.",
-    "icon": "/images/items/xxx.png"
+    "icon": "/images/items/smoked_wizened_figs_t5.png"
   },
   {
     "id": "ancient_smoked_wizened_figs",
@@ -429,7 +429,7 @@
     "familyId": "smoked_wizened_figs",
     "tier": 6,
     "description": "A star metal dish of smoky black-purple figs trailing spectral golden tendrils.",
-    "icon": "/images/items/xxx.png"
+    "icon": "/images/items/smoked_wizened_figs_t6.png"
   },
   {
     "id": "skirmishers_iron_ration",
@@ -437,7 +437,7 @@
     "familyId": "iron_ration",
     "tier": 1,
     "description": "A ragged leather bundle of hard biscuits and smoked sausage ends, with a battered tin cup.",
-    "icon": "/images/items/xxx.png"
+    "icon": "/images/items/iron_ration_t1.png"
   },
   {
     "id": "soldiers_iron_ration",
@@ -445,7 +445,7 @@
     "familyId": "iron_ration",
     "tier": 2,
     "description": "A sturdy oilcloth pack of bread and thick jerky strips, with a tin flask on the side.",
-    "icon": "/images/items/xxx.png"
+    "icon": "/images/items/iron_ration_t2.png"
   },
   {
     "id": "veterans_iron_ration",
@@ -453,7 +453,7 @@
     "familyId": "iron_ration",
     "tier": 3,
     "description": "A worn canvas satchel of smoked sausage links, aged cheese and a dented eating knife.",
-    "icon": "/images/items/xxx.png"
+    "icon": "/images/items/iron_ration_t3.png"
   },
   {
     "id": "legionnaires_iron_ration",
@@ -461,7 +461,7 @@
     "familyId": "iron_ration",
     "tier": 4,
     "description": "A reinforced leather haversack of artisan bread, cured meats and nuts, stitched with a silver emblem.",
-    "icon": "/images/items/xxx.png"
+    "icon": "/images/items/iron_ration_t4.png"
   },
   {
     "id": "generals_iron_ration",
@@ -469,7 +469,7 @@
     "familyId": "iron_ration",
     "tier": 5,
     "description": "An ornate gold-edged pack of braided sausages, dark bread and enchanted fruit.",
-    "icon": "/images/items/xxx.png"
+    "icon": "/images/items/iron_ration_t5.png"
   },
   {
     "id": "warlords_iron_ration",
@@ -477,7 +477,7 @@
     "familyId": "iron_ration",
     "tier": 6,
     "description": "A star metal-studded war pack of glowing breads and shimmering meats, its straps etched with runes.",
-    "icon": "/images/items/xxx.png"
+    "icon": "/images/items/iron_ration_t6.png"
   },
   {
     "id": "stream_minnow_cooked_fish",
@@ -485,7 +485,7 @@
     "familyId": "cooked_fish",
     "tier": 1,
     "description": "A pale, crisp minnow with wild herbs in a fire-blackened pan.",
-    "icon": "/images/items/xxx.png"
+    "icon": "/images/items/cooked_fish_t1.png"
   },
   {
     "id": "river_trout_cooked_fish",
@@ -493,7 +493,7 @@
     "familyId": "cooked_fish",
     "tier": 2,
     "description": "A grilled brown trout with buttered skin and a slice of lemon on a pewter platter.",
-    "icon": "/images/items/xxx.png"
+    "icon": "/images/items/cooked_fish_t2.png"
   },
   {
     "id": "sea_salmon_cooked_fish",
@@ -501,7 +501,7 @@
     "familyId": "cooked_fish",
     "tier": 3,
     "description": "Flaky pink salmon with roasted root vegetables and dill on an iron plate.",
-    "icon": "/images/items/xxx.png"
+    "icon": "/images/items/cooked_fish_t3.png"
   },
   {
     "id": "runic_eel_cooked_fish",
@@ -509,7 +509,7 @@
     "familyId": "cooked_fish",
     "tier": 4,
     "description": "A curled blue-striped eel in glowing, rune-marked seasoning on a silver dish.",
-    "icon": "/images/items/xxx.png"
+    "icon": "/images/items/cooked_fish_t4.png"
   },
   {
     "id": "umbral_anglerfish_cooked_fish",
@@ -517,7 +517,7 @@
     "familyId": "cooked_fish",
     "tier": 5,
     "description": "A shadowy blue-black anglerfish with glowing spots, served on gold leaf in arcane mist.",
-    "icon": "/images/items/xxx.png"
+    "icon": "/images/items/cooked_fish_t5.png"
   },
   {
     "id": "abyssal_leviathan_cooked_fish",
@@ -525,7 +525,7 @@
     "familyId": "cooked_fish",
     "tier": 6,
     "description": "An immense leviathan steak in glowing violet sauce, served in a star metal basin.",
-    "icon": "/images/items/xxx.png"
+    "icon": "/images/items/cooked_fish_t6.png"
   },
   {
     "id": "campfire_fish_skewer",
@@ -533,7 +533,7 @@
     "familyId": "grilled_fish_skewer",
     "tier": 1,
     "description": "A charred wooden stick of small fish, lightly blackened over an open flame.",
-    "icon": "/images/items/xxx.png"
+    "icon": "/images/items/grilled_fish_skewer_t1.png"
   },
   {
     "id": "hearthside_fish_skewer",
@@ -541,7 +541,7 @@
     "familyId": "grilled_fish_skewer",
     "tier": 2,
     "description": "An iron rod stacked with crisp, golden fish chunks and onions.",
-    "icon": "/images/items/xxx.png"
+    "icon": "/images/items/grilled_fish_skewer_t2.png"
   },
   {
     "id": "tavern_fish_skewer",
@@ -549,7 +549,7 @@
     "familyId": "grilled_fish_skewer",
     "tier": 3,
     "description": "Sizzling skewered fish brushed with herbs and garlic butter on a pewter platter.",
-    "icon": "/images/items/xxx.png"
+    "icon": "/images/items/grilled_fish_skewer_t3.png"
   },
   {
     "id": "banquet_fish_skewer",
@@ -557,7 +557,7 @@
     "familyId": "grilled_fish_skewer",
     "tier": 4,
     "description": "A silver skewer of plump, citrus-glazed fish with lavish greens.",
-    "icon": "/images/items/xxx.png"
+    "icon": "/images/items/grilled_fish_skewer_t4.png"
   },
   {
     "id": "feastday_fish_skewer",
@@ -565,7 +565,7 @@
     "familyId": "grilled_fish_skewer",
     "tier": 5,
     "description": "A gold-inlaid skewer of jewel-toned fish fillets and enchanted vegetables.",
-    "icon": "/images/items/xxx.png"
+    "icon": "/images/items/grilled_fish_skewer_t5.png"
   },
   {
     "id": "mythic_fish_skewer",
@@ -573,7 +573,7 @@
     "familyId": "grilled_fish_skewer",
     "tier": 6,
     "description": "A star metal skewer of rare glowing fish with iridescent scales and ethereal fruits.",
-    "icon": "/images/items/xxx.png"
+    "icon": "/images/items/grilled_fish_skewer_t6.png"
   },
   {
     "id": "dockside_fish_chowder",
@@ -581,7 +581,7 @@
     "familyId": "fish_chowder",
     "tier": 1,
     "description": "A smoky clay bowl of creamy fish chowder flecked with herbs.",
-    "icon": "/images/items/xxx.png"
+    "icon": "/images/items/fish_chowder_t1.png"
   },
   {
     "id": "fishermans_fish_chowder",
@@ -589,7 +589,7 @@
     "familyId": "fish_chowder",
     "tier": 2,
     "description": "A pewter pot of chunky chowder with river fish, potatoes and leeks.",
-    "icon": "/images/items/xxx.png"
+    "icon": "/images/items/fish_chowder_t2.png"
   },
   {
     "id": "harbormasters_fish_chowder",
@@ -597,7 +597,7 @@
     "familyId": "fish_chowder",
     "tier": 3,
     "description": "A wide iron bowl of thick chowder with mussels, clams and root vegetables.",
-    "icon": "/images/items/xxx.png"
+    "icon": "/images/items/fish_chowder_t3.png"
   },
   {
     "id": "coastal_fish_chowder",
@@ -605,7 +605,7 @@
     "familyId": "fish_chowder",
     "tier": 4,
     "description": "A silver tureen of shimmering white chowder with bright fish and pearls of magic oil.",
-    "icon": "/images/items/xxx.png"
+    "icon": "/images/items/fish_chowder_t4.png"
   },
   {
     "id": "deepwater_fish_chowder",
@@ -613,7 +613,7 @@
     "familyId": "fish_chowder",
     "tier": 5,
     "description": "A gold-rimmed cauldron of pale blue chowder with rare deep-sea fish and glowing seaweed.",
-    "icon": "/images/items/xxx.png"
+    "icon": "/images/items/fish_chowder_t5.png"
   },
   {
     "id": "leviathans_fish_chowder",
@@ -621,7 +621,7 @@
     "familyId": "fish_chowder",
     "tier": 6,
     "description": "A massive star metal cauldron of silver and indigo chowder with glowing leviathan cuts.",
-    "icon": "/images/items/xxx.png"
+    "icon": "/images/items/fish_chowder_t6.png"
   },
   {
     "id": "deckhands_ration",
@@ -629,7 +629,7 @@
     "familyId": "fishermans_ration",
     "tier": 1,
     "description": "A canvas roll of dried fish tails and hardtack tied with sea-twine.",
-    "icon": "/images/items/xxx.png"
+    "icon": "/images/items/fishermans_ration_t1.png"
   },
   {
     "id": "anglers_ration",
@@ -637,7 +637,7 @@
     "familyId": "fishermans_ration",
     "tier": 2,
     "description": "An oilskin satchel of smoked fish, pickled eggs and black bread.",
-    "icon": "/images/items/xxx.png"
+    "icon": "/images/items/fishermans_ration_t2.png"
   },
   {
     "id": "netmasters_ration",
@@ -645,7 +645,7 @@
     "familyId": "fishermans_ration",
     "tier": 3,
     "description": "A weathered leather bag of smoked eel, dried fish and seaweed.",
-    "icon": "/images/items/xxx.png"
+    "icon": "/images/items/fishermans_ration_t3.png"
   },
   {
     "id": "harbor_guards_ration",
@@ -653,7 +653,7 @@
     "familyId": "fishermans_ration",
     "tier": 4,
     "description": "A polished blue pack of grilled fish in bread with pickled kelp, fastened with a silver clasp.",
-    "icon": "/images/items/xxx.png"
+    "icon": "/images/items/fishermans_ration_t4.png"
   },
   {
     "id": "fleet_captains_ration",
@@ -661,7 +661,7 @@
     "familyId": "fishermans_ration",
     "tier": 5,
     "description": "A gilded waterproof case of cured sea fish, luminous salt biscuits and enchanted citrus.",
-    "icon": "/images/items/xxx.png"
+    "icon": "/images/items/fishermans_ration_t5.png"
   },
   {
     "id": "tidekings_ration",
@@ -669,7 +669,7 @@
     "familyId": "fishermans_ration",
     "tier": 6,
     "description": "A star metal and driftwood chest of radiant rainbow fish and glowing silver loaves.",
-    "icon": "/images/items/xxx.png"
+    "icon": "/images/items/fishermans_ration_t6.png"
   },
   {
     "id": "jarred_pickled_fish",
@@ -677,7 +677,7 @@
     "familyId": "pickled_fish",
     "tier": 1,
     "description": "A glass jar of pale pickled fish with onions and peppercorns in cloudy brine.",
-    "icon": "/images/items/xxx.png"
+    "icon": "/images/items/pickled_fish_t1.png"
   },
   {
     "id": "brined_pickled_fish",
@@ -685,7 +685,7 @@
     "familyId": "pickled_fish",
     "tier": 2,
     "description": "A stoneware crock of thick brined fish chunks under a coarse salt crust.",
-    "icon": "/images/items/xxx.png"
+    "icon": "/images/items/pickled_fish_t2.png"
   },
   {
     "id": "spiced_pickled_fish",
@@ -693,7 +693,7 @@
     "familyId": "pickled_fish",
     "tier": 3,
     "description": "A pewter bowl of golden pickled fish layered with fiery red spices.",
-    "icon": "/images/items/xxx.png"
+    "icon": "/images/items/pickled_fish_t3.png"
   },
   {
     "id": "cask_aged_pickled_fish",
@@ -701,7 +701,7 @@
     "familyId": "pickled_fish",
     "tier": 4,
     "description": "A silver-rimmed cask of deep-hued, aged pickled fish fillets.",
-    "icon": "/images/items/xxx.png"
+    "icon": "/images/items/pickled_fish_t4.png"
   },
   {
     "id": "deepbrine_pickled_fish",
@@ -709,7 +709,7 @@
     "familyId": "pickled_fish",
     "tier": 5,
     "description": "A gold-studded amphora of translucent deep-sea fish in shimmering, sapphire-flecked brine.",
-    "icon": "/images/items/xxx.png"
+    "icon": "/images/items/pickled_fish_t5.png"
   },
   {
     "id": "ambrosial_pickled_fish",
@@ -717,7 +717,7 @@
     "familyId": "pickled_fish",
     "tier": 6,
     "description": "A star metal jar of radiant rainbow fish in swirling, glowing magical brine.",
-    "icon": "/images/items/xxx.png"
+    "icon": "/images/items/pickled_fish_t6.png"
   },
   {
     "id": "stream_minnow_smoked_fish",
@@ -725,7 +725,7 @@
     "familyId": "smoked_fish",
     "tier": 1,
     "description": "Small smoked minnows, curled and glistening, on a tin rack.",
-    "icon": "/images/items/xxx.png"
+    "icon": "/images/items/smoked_fish_t1.png"
   },
   {
     "id": "river_trout_smoked_fish",
@@ -733,7 +733,7 @@
     "familyId": "smoked_fish",
     "tier": 2,
     "description": "A plump smoked trout fillet on a wooden board, warm with smoky scent.",
-    "icon": "/images/items/xxx.png"
+    "icon": "/images/items/smoked_fish_t2.png"
   },
   {
     "id": "sea_salmon_smoked_fish",
@@ -741,7 +741,7 @@
     "familyId": "smoked_fish",
     "tier": 3,
     "description": "Thick-cut smoked salmon with a bronze-gold finish and dill on a pewter tray.",
-    "icon": "/images/items/xxx.png"
+    "icon": "/images/items/smoked_fish_t3.png"
   },
   {
     "id": "runic_eel_smoked_fish",
@@ -749,7 +749,7 @@
     "familyId": "smoked_fish",
     "tier": 4,
     "description": "A ringed, glowing blue smoked eel with gently burning runes on a silver sheet.",
-    "icon": "/images/items/xxx.png"
+    "icon": "/images/items/smoked_fish_t4.png"
   },
   {
     "id": "umbral_anglerfish_smoked_fish",
@@ -757,7 +757,7 @@
     "familyId": "smoked_fish",
     "tier": 5,
     "description": "A shadowy smoked anglerfish trailing eerie blue wisps on a gold filigree slab.",
-    "icon": "/images/items/xxx.png"
+    "icon": "/images/items/smoked_fish_t5.png"
   },
   {
     "id": "abyssal_leviathan_smoked_fish",
@@ -765,6 +765,6 @@
     "familyId": "smoked_fish",
     "tier": 6,
     "description": "Radiant, smoky purple leviathan flesh with a pale magical aura on a star metal altar.",
-    "icon": "/images/items/xxx.png"
+    "icon": "/images/items/smoked_fish_t6.png"
   }
 ]

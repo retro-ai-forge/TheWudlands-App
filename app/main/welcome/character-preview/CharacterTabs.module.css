@@ -2312,6 +2312,60 @@
   pointer-events: none;
 }
 
+/* Shared "no real art yet" placeholder (see InventoryTab.tsx's ItemIcon
+   component) - a dark tile with a spinning ring instead of
+   FALLBACK_ITEM_ICON's own generic picture, across every real-item icon
+   context (grid tile, equip slot, popup) - always composes with that
+   context's own sizing class (.itemGridImg/.equipSlotIcon/.itemPopupImg),
+   never used alone. Resource tiles (ResourceTiles) never go through
+   ItemIcon at all - they render their own text-label-on-black tile
+   instead, so they're untouched by any of this. Centered with flexbox
+   (not the old ::after + percentage-margin trick, which resolves
+   margin-top/bottom against the box's WIDTH, not height - looked fine in
+   square boxes only by coincidence and was genuinely off-center
+   everywhere else) so it's correct regardless of the container's aspect
+   ratio, with no per-context override needed. */
+.itemIconLoading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #14120e;
+}
+
+/* The ring itself is inline SVG (see ItemIcon), not a CSS border - an SVG
+   stroke scales naturally (both diameter and thickness) with whatever
+   size the <svg> renders at, unlike border-width which can never be a
+   percentage - so this single size rule already covers every context
+   (grid tile, equip slot, popup) without the old equip-slot-specific
+   override. */
+.itemIconLoadingSpinner {
+  width: 58%;
+  height: 58%;
+  animation: itemIconLoadingSpin 1.3s linear infinite;
+}
+
+.itemIconLoadingTrack {
+  fill: none;
+  stroke: rgba(212, 201, 168, 0.18);
+  stroke-width: 2;
+}
+
+.itemIconLoadingArc {
+  fill: none;
+  stroke: rgba(212, 201, 168, 0.75);
+  stroke-width: 2;
+  stroke-linecap: round;
+  /* r=12 circle -> circumference ~75.4; a ~56/75 dash/gap split draws a
+     ~3/4 arc. */
+  stroke-dasharray: 56 75.4;
+}
+
+@keyframes itemIconLoadingSpin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
 /* A packed resource tile's stand-in for .itemGridImg - resources have no
    catalog icon image (see PackedItemsRow's own comment on why), so the
    tile just centers the resource's short text label instead. */

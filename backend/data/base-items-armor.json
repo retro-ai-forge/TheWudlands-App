@@ -1157,7 +1157,7 @@
     "familyId": "fur_cloak",
     "tier": 1,
     "description": "A soft, pale rabbit fur cloak fastened with a small copper-tipped clasp.",
-    "icon": "/images/items/xxx.png"
+    "icon": "/images/items/fur_cloak_t1.png"
   },
   {
     "id": "fox_fur_cloak",
@@ -1165,7 +1165,7 @@
     "familyId": "fur_cloak",
     "tier": 2,
     "description": "A russet-red fox fur cloak tied with braided bronze cords.",
-    "icon": "/images/items/xxx.png"
+    "icon": "/images/items/fur_cloak_t2.png"
   },
   {
     "id": "wolf_fur_cloak",
@@ -1173,7 +1173,7 @@
     "familyId": "fur_cloak",
     "tier": 3,
     "description": "A thick, gray wolf fur cloak held by a wolf-head iron brooch.",
-    "icon": "/images/items/xxx.png"
+    "icon": "/images/items/fur_cloak_t3.png"
   },
   {
     "id": "warg_fur_cloak",
@@ -1181,7 +1181,7 @@
     "familyId": "fur_cloak",
     "tier": 4,
     "description": "A coarse, wild cloak of black warg fur, joined with runic silver clasps that pulse with faint power.",
-    "icon": "/images/items/xxx.png"
+    "icon": "/images/items/fur_cloak_t4.png"
   },
   {
     "id": "fenrir_fur_cloak",
@@ -1189,7 +1189,7 @@
     "familyId": "fur_cloak",
     "tier": 5,
     "description": "A massive, ominous cloak of primal Fenrir fur with a broad gold hem that gleams with enchantment.",
-    "icon": "/images/items/xxx.png"
+    "icon": "/images/items/fur_cloak_t5.png"
   },
   {
     "id": "frostmane_fur_cloak",
@@ -1197,7 +1197,7 @@
     "familyId": "fur_cloak",
     "tier": 6,
     "description": "A luminous white frostmane fur cloak scattered with frosty star metal crystals that never melt.",
-    "icon": "/images/items/xxx.png"
+    "icon": "/images/items/fur_cloak_t6.png"
   },
   {
     "id": "hemp_cloth_cloak",
@@ -1253,7 +1253,7 @@
     "familyId": "quilted_cloak",
     "tier": 1,
     "description": "A lightweight, earth-toned cloak of layered sparrow feathers, fastened with small copper pins.",
-    "icon": "/images/items/xxx.png"
+    "icon": "/images/items/quilted_cloak_t1.png"
   },
   {
     "id": "owl_quilted_cloak",
@@ -1261,7 +1261,7 @@
     "familyId": "quilted_cloak",
     "tier": 2,
     "description": "A hooded, shadowy cloak of plush owl feathers, set off with bronze beads.",
-    "icon": "/images/items/xxx.png"
+    "icon": "/images/items/quilted_cloak_t2.png"
   },
   {
     "id": "hawk_quilted_cloak",
@@ -1269,7 +1269,7 @@
     "familyId": "quilted_cloak",
     "tier": 3,
     "description": "A bold cloak of long, striped hawk feathers, reinforced with light iron binders.",
-    "icon": "/images/items/xxx.png"
+    "icon": "/images/items/quilted_cloak_t3.png"
   },
   {
     "id": "phoenix_quilted_cloak",
@@ -1277,7 +1277,7 @@
     "familyId": "quilted_cloak",
     "tier": 4,
     "description": "A cloak ablaze with fiery red phoenix feathers, trimmed in radiant gold that pulses with magical light.",
-    "icon": "/images/items/xxx.png"
+    "icon": "/images/items/quilted_cloak_t4.png"
   },
   {
     "id": "roc_quilted_cloak",
@@ -1285,7 +1285,7 @@
     "familyId": "quilted_cloak",
     "tier": 5,
     "description": "A massive cloak of giant roc feathers with gold tracery at every pinion.",
-    "icon": "/images/items/xxx.png"
+    "icon": "/images/items/quilted_cloak_t5.png"
   },
   {
     "id": "celestial_quilted_cloak",
@@ -1293,6 +1293,6 @@
     "familyId": "quilted_cloak",
     "tier": 6,
     "description": "A weightless, luminous cloak of starlit feathers, with entire plumes forged from opalescent star metal.",
-    "icon": "/images/items/xxx.png"
+    "icon": "/images/items/quilted_cloak_t6.png"
   }
 ]
