@@ -646,6 +646,58 @@ function IdList({
 // placeholder instead of duplicating the path.
 export const FALLBACK_ITEM_ICON = "/images/items/xxx.png";
 
+/** Every icon-rendering spot (ItemGrid's tile, BodyTab's equip slot,
+ * ItemDetailPopup's larger image) shares this: a family with no real art
+ * yet (icon missing, or still FALLBACK_ITEM_ICON's own generic image)
+ * shows a dark "art coming soon" placeholder with a spinning loading ring
+ * instead of that generic picture, rather than every call site
+ * duplicating the same check.
+ *
+ * The ring is a real SVG (viewBox-centered `<circle>`), not a CSS
+ * border-trick div - a border-trick ring's usual centering technique
+ * (`top/left: 50%` + a negative percentage `margin` to pull it back by
+ * half its own size) is a known CSS quirk: percentage margins - even
+ * margin-TOP/BOTTOM - always resolve against the containing block's
+ * WIDTH, never its height, so it only happens to look centered in a
+ * perfectly square box and drifts everywhere else (confirmed live in
+ * both the equip slots and the grid tiles). A `<circle>` centered on its
+ * own viewBox has no such quirk - it's centered by construction,
+ * regardless of the box's aspect ratio. Its `stroke-width` is also in
+ * SVG user units, which scale automatically with however large the
+ * `<svg>` itself renders (no separate per-context override needed the
+ * way a CSS border-width, which can't use a percentage at all, would
+ * require - see the equip slots' own much larger range of sizes). */
+export function ItemIcon({
+  icon,
+  alt,
+  className,
+  style,
+}: {
+  icon?: string | null;
+  alt: string;
+  className: string;
+  style?: React.CSSProperties;
+}) {
+  if (!icon || icon === FALLBACK_ITEM_ICON) {
+    return (
+      <div role="img" aria-label={alt} className={`${className} ${styles.itemIconLoading}`} style={style}>
+        <svg viewBox="0 0 32 32" className={styles.itemIconLoadingSpinner} aria-hidden="true">
+          <circle cx="16" cy="16" r="12" className={styles.itemIconLoadingTrack} />
+          <circle cx="16" cy="16" r="12" className={styles.itemIconLoadingArc} />
+        </svg>
+      </div>
+    );
+  }
+  return (
+    <div
+      role="img"
+      aria-label={alt}
+      className={className}
+      style={{ ...style, backgroundImage: `url(${icon})` }}
+    />
+  );
+}
+
 // Matches .itemGridCell's own width/height in CharacterTabs.module.css -
 // kept in sync by hand (CSS modules give no clean way to read a class's
 // computed size before layout). Used only as ItemGrid's height floor
@@ -951,12 +1003,7 @@ export function ItemGrid({
                   contextmenu/touch-callout CSS override can catch. No tag
                   for it to recognize as an image sidesteps that instead of
                   fighting it per-browser. */}
-              <div
-                role="img"
-                aria-label={name}
-                className={styles.itemGridImg}
-                style={{ backgroundImage: `url(${info?.icon || FALLBACK_ITEM_ICON})` }}
-              />
+              <ItemIcon icon={info?.icon} alt={name} className={styles.itemGridImg} />
               {!!info?.tier && (
                 <span className={`${styles.itemGridTierBadge} ${itemGridTierBadgeClass(info.tier)}`}>
                   {getTierIndicator(info.tier)}
@@ -1594,12 +1641,7 @@ function PackedItemsRow({
               }}
               onContextMenu={(e) => e.preventDefault()}
             >
-              <div
-                role="img"
-                aria-label={name}
-                className={styles.itemGridImg}
-                style={{ backgroundImage: `url(${info?.icon || FALLBACK_ITEM_ICON})` }}
-              />
+              <ItemIcon icon={info?.icon} alt={name} className={styles.itemGridImg} />
               {!!info?.tier && (
                 <span className={`${styles.itemGridTierBadge} ${itemGridTierBadgeClass(info.tier)}`}>
                   {getTierIndicator(info.tier)}
@@ -2465,12 +2507,7 @@ export function ItemDetailPopup({
             {/* background-image div, not a real <img> - see ItemGrid's tile
                 icon for why (mobile's native "save/share image" long-press
                 menu targets the <img> tag itself). */}
-            <div
-              role="img"
-              aria-label={name}
-              className={styles.itemPopupImg}
-              style={{ backgroundImage: `url(${info?.icon || FALLBACK_ITEM_ICON})` }}
-            />
+            <ItemIcon icon={info?.icon} alt={name} className={styles.itemPopupImg} />
             <h3 className={styles.itemPopupName}>{displayName}</h3>
             {info?.familyId === "backpack" && packedItems && (
               <PackedItemsRow
