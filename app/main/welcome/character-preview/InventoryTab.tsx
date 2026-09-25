@@ -98,6 +98,17 @@ const TRANSFER_AMOUNTS = [1, 2, 5, 10, 20, 50] as const;
 // showing two buttons that both mean "move everything".
 const RAW_RESOURCE_AMOUNTS = [1, 2, 5, 10, 20, 40] as const;
 
+// Backpack/camp stack sizes for raw vs processed materials (see backend.
+// items_catalog.RAW_STACK_SIZE/PROCESSED_STACK_SIZE, sourced from
+// item-size-classes.json - the same 40/20 the "40" button above and
+// RAW_RESOURCE_AMOUNTS' own comment already reference) - used to split a
+// resource's owned quantity into one grid tile per backpack slot it
+// actually occupies (see ItemGrid/ResourceTiles' own expandedResourceIds),
+// the same principle an itemBalance's own per-family stackSize already
+// gets (see ItemGrid's own expandedIds).
+const RAW_STACK_SIZE = 40;
+const PROCESSED_STACK_SIZE = 20;
+
 /** The row of quick-transfer quantity buttons revealed under a clicked resource/tool row. */
 function TransferButtons({
   owned,
@@ -804,14 +815,43 @@ export function ItemGrid({
   // the detail popup needs the SAME id back to re-read `balances`/`name`
   // for whichever exact row was clicked).
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  // How many units the SPECIFIC tile just clicked represents (see
+  // expandedIds below) - a family split across several tiles (18 oil at
+  // stackSize 10 is a "10" tile and an "8" tile) now opens the popup
+  // scoped to just that one tile's own amount, not the family's full
+  // total, so "Owned: X" and every quantity button/move-all in there only
+  // ever act on what's actually sitting in the slot the player clicked.
+  const [selectedTileCap, setSelectedTileCap] = useState<number>(0);
   // Same idea, for a resource tile (see below) - a separate id/popup since
   // a resource opens ResourcePopup, not ItemDetailPopup.
   const [selectedResourceId, setSelectedResourceId] = useState<string | null>(null);
+  // Same idea as selectedTileCap above, for a resource tile.
+  const [selectedResourceTileCap, setSelectedResourceTileCap] = useState<number>(0);
 
   const resourceIds = resourceBalances && resourceTierInfo ? sortResourceIds(resourceBalances, resourceTierInfo) : [];
 
   if (ids.length === 0 && resourceIds.length === 0) {
     return <p className={styles.inventoryEmpty}>{emptyLabel}</p>;
+  }
+
+  // Same "one tile per backpack slot actually occupied" split as
+  // expandedIds above, for raw/processed resources - stack size comes
+  // from the family's own category (RAW_STACK_SIZE/PROCESSED_STACK_SIZE),
+  // not a per-family field the way itemBalances has one, since every raw
+  // family shares one stack size and every processed family shares the
+  // other (see backend.items_catalog).
+  const expandedResourceIds: { key: string; id: string; displayCount: number; tileCap: number }[] = [];
+  for (const id of resourceIds) {
+    const category = resourceTierInfo?.[id]?.category;
+    const stackSize = category === "raw" ? RAW_STACK_SIZE : PROCESSED_STACK_SIZE;
+    let remaining = resourceBalances?.[id] ?? 0;
+    let i = 0;
+    while (remaining > 0) {
+      const inThisStack = Math.min(stackSize, remaining);
+      expandedResourceIds.push({ key: `${id}#${i}`, id, displayCount: inThisStack, tileCap: inThisStack });
+      remaining -= inThisStack;
+      i += 1;
+    }
   }
 
   const sortedIds = [...ids].sort((a, b) => {
@@ -820,6 +860,53 @@ export function ItemGrid({
     return (infoB?.tier ?? 0) - (infoA?.tier ?? 0);
   });
 
+  // A flat itemBalance row is split into one grid tile PER BACKPACK SLOT
+  // it actually occupies (see backend.items_catalog.backpack_slots_used's
+  // own ceil(qty/stackSize) math) instead of one shared tile for the whole
+  // balance - a family with no real stack (stackSize <= 1 - whetstone,
+  // bedroll, crowbar, ...) gets one tile per owned unit, no count badge on
+  // any of them (each already reads as exactly one); a family that DOES
+  // batch (stackSize > 1 - oil, arrows, potions, ...) gets ceil(owned /
+  // stackSize) tiles, each capped at stackSize and showing ITS OWN count,
+  // not the family's full total - 18 oil at stackSize 10 is 2 tiles (10,
+  // then 8), matching the 2 backpack slots it actually uses, not 1 tile
+  // claiming "18" the way a single slot never could. A real item instance
+  // (lookupIds resolves) is already its own row, one tile each, untouched
+  // by this. The synthetic per-tile `key` is ONLY for React's own list
+  // identity - every other use below (click, tierInfo lookups) still
+  // reads the real `id`, so every tile of the same family opens the exact
+  // same popup showing the whole family's balance the way it used to,
+  // NOT anymore now that selectedTileCap exists (see below) - `id` is
+  // still what tierInfo/name/icon are looked up by, but the popup's own
+  // "owned" quantity is now this specific tile's own `tileCap`, not the
+  // family's raw total. `displayCount` (null for an instance or a
+  // stackSize<=1 unit tile) is what the count badge actually shows;
+  // `tileCap` (always a real number - 1 for those same null-badge cases)
+  // is what clicking this exact tile scopes the popup to.
+  const expandedIds: { key: string; id: string; displayCount: number | null; tileCap: number }[] = [];
+  for (const id of sortedIds) {
+    const info = tierInfo[lookupIds?.[id] ?? id];
+    const isInstance = lookupIds?.[id] !== undefined;
+    const stackSize = info?.stackSize ?? 1;
+    const owned = balances[id] ?? 0;
+    if (isInstance) {
+      expandedIds.push({ key: id, id, displayCount: null, tileCap: 1 });
+    } else if (stackSize <= 1) {
+      for (let i = 0; i < owned; i++) {
+        expandedIds.push({ key: `${id}#${i}`, id, displayCount: null, tileCap: 1 });
+      }
+    } else {
+      let remaining = owned;
+      let i = 0;
+      while (remaining > 0) {
+        const inThisStack = Math.min(stackSize, remaining);
+        expandedIds.push({ key: `${id}#${i}`, id, displayCount: inThisStack, tileCap: inThisStack });
+        remaining -= inThisStack;
+        i += 1;
+      }
+    }
+  }
+
   return (
     <div
       ref={scrollRef}
@@ -827,14 +914,9 @@ export function ItemGrid({
       style={{ height: gridHeight }}
     >
       <div className={styles.itemGrid}>
-        {sortedIds.map((id) => {
+        {expandedIds.map(({ key, id, displayCount, tileCap }) => {
           const info = tierInfo[lookupIds?.[id] ?? id];
           const name = info?.name ? stripBlueprintPrefix(info.name) : formatResourceLabel(lookupIds?.[id] ?? id);
-          // Only a family with a real stackSize > 1 (item-inventory-
-          // properties.json) ever shows a count - a needsItemDefinition:true
-          // instance is always exactly 1 of itself, so a bare "1" badge
-          // would be noise rather than information.
-          const showCount = (info?.stackSize ?? 1) > 1;
           // Only a real item instance carries a quality (isInstance rows -
           // same condition ItemDetailPopup uses for its "Quality: X/Y"
           // line) - a stackable balance row has no such concept, so it
@@ -852,11 +934,14 @@ export function ItemGrid({
           const isDamaged = qualityFraction !== null && qualityState(qualityFraction) === "damaged";
           return (
             <button
-              key={id}
+              key={key}
               type="button"
               className={isDamaged ? `${styles.itemGridCell} ${styles.itemGridCellDamaged}` : styles.itemGridCell}
               title={name}
-              onClick={() => setSelectedId(id)}
+              onClick={() => {
+                setSelectedId(id);
+                setSelectedTileCap(tileCap);
+              }}
               onContextMenu={(e) => e.preventDefault()}
             >
               {/* A background-image div, not a real <img> - mobile
@@ -877,7 +962,7 @@ export function ItemGrid({
                   {getTierIndicator(info.tier)}
                 </span>
               )}
-              {showCount && <span className={styles.itemGridCountBadge}>{balances[id] ?? 0}</span>}
+              {displayCount !== null && <span className={styles.itemGridCountBadge}>{displayCount}</span>}
               {qualityFraction !== null && (
                 <div
                   className={styles.itemGridQualityBar}
@@ -887,17 +972,20 @@ export function ItemGrid({
             </button>
           );
         })}
-        {resourceIds.map((id) => {
+        {expandedResourceIds.map(({ key, id, displayCount, tileCap }) => {
           const info = resourceTierInfo?.[id];
           const fullName = info?.name ?? formatResourceLabel(id);
           const label = fullName.split(" ").pop() ?? fullName;
           return (
             <button
-              key={id}
+              key={key}
               type="button"
               className={styles.itemGridCell}
               title={fullName}
-              onClick={() => setSelectedResourceId(id)}
+              onClick={() => {
+                setSelectedResourceId(id);
+                setSelectedResourceTileCap(tileCap);
+              }}
               onContextMenu={(e) => e.preventDefault()}
             >
               <span className={styles.itemGridResourceLabel}>{label}</span>
@@ -906,7 +994,7 @@ export function ItemGrid({
                   {getTierIndicator(info.tier)}
                 </span>
               )}
-              <span className={styles.itemGridCountBadge}>{resourceBalances?.[id] ?? 0}</span>
+              <span className={styles.itemGridCountBadge}>{displayCount}</span>
             </button>
           );
         })}
@@ -915,7 +1003,7 @@ export function ItemGrid({
         <ResourcePopup
           resourceId={selectedResourceId}
           tierInfo={resourceTierInfo}
-          owned={resourceBalances?.[selectedResourceId] ?? 0}
+          owned={selectedResourceTileCap}
           characterId={characterId}
           onPlayerDataUpdated={onPlayerDataUpdated}
           onClose={() => setSelectedResourceId(null)}
@@ -926,7 +1014,7 @@ export function ItemGrid({
         <ItemDetailPopup
           info={tierInfo[lookupIds?.[selectedId] ?? selectedId]}
           fallbackName={formatResourceLabel(lookupIds?.[selectedId] ?? selectedId)}
-          owned={balances[selectedId] ?? 0}
+          owned={selectedTileCap}
           isInstance={lookupIds?.[selectedId] !== undefined}
           movable={!nonMovableIds?.has(selectedId)}
           quality={instanceQuality?.[selectedId] ?? null}
@@ -1339,21 +1427,41 @@ export function ResourceTiles({
 }: {
   balances: Record<string, number>;
   tierInfo: ResourceTierInfo;
-  onSelect: (id: string) => void;
+  /** `tileCap` is how many units the SPECIFIC tile clicked represents (see
+   * ItemGrid's identical expandedResourceIds) - the caller opens its own
+   * ResourcePopup scoped to that amount, not the family's full balance. */
+  onSelect: (id: string, tileCap: number) => void;
 }) {
+  // Same "one tile per backpack slot actually occupied" split as
+  // ItemGrid's own expandedResourceIds - see its comment for why stack
+  // size comes from category (RAW_STACK_SIZE/PROCESSED_STACK_SIZE), not a
+  // per-family field.
+  const expandedResourceIds: { key: string; id: string; displayCount: number; tileCap: number }[] = [];
+  for (const id of sortResourceIds(balances, tierInfo)) {
+    const category = tierInfo[id]?.category;
+    const stackSize = category === "raw" ? RAW_STACK_SIZE : PROCESSED_STACK_SIZE;
+    let remaining = balances[id] ?? 0;
+    let i = 0;
+    while (remaining > 0) {
+      const inThisStack = Math.min(stackSize, remaining);
+      expandedResourceIds.push({ key: `${id}#${i}`, id, displayCount: inThisStack, tileCap: inThisStack });
+      remaining -= inThisStack;
+      i += 1;
+    }
+  }
   return (
     <>
-      {sortResourceIds(balances, tierInfo).map((id) => {
+      {expandedResourceIds.map(({ key, id, displayCount, tileCap }) => {
         const info = tierInfo[id];
         const fullName = info?.name ?? formatResourceLabel(id);
         const label = fullName.split(" ").pop() ?? fullName;
         return (
           <button
-            key={id}
+            key={key}
             type="button"
             className={styles.itemGridCell}
             title={fullName}
-            onClick={() => onSelect(id)}
+            onClick={() => onSelect(id, tileCap)}
             onContextMenu={(e) => e.preventDefault()}
           >
             <span className={styles.itemGridResourceLabel}>{label}</span>
@@ -1362,7 +1470,7 @@ export function ResourceTiles({
                 {getTierIndicator(info.tier)}
               </span>
             )}
-            <span className={styles.itemGridCountBadge}>{balances[id] ?? 0}</span>
+            <span className={styles.itemGridCountBadge}>{displayCount}</span>
           </button>
         );
       })}
@@ -1417,7 +1525,13 @@ function PackedItemsRow({
   onPlayerDataUpdated?: (data: RawPlayerData) => void;
 }) {
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  // See ItemGrid's identical selectedTileCap comment - which specific
+  // tile's own quantity (not the family's full total) the popup should
+  // scope its "Owned"/quantity-buttons/move-all to.
+  const [selectedTileCap, setSelectedTileCap] = useState<number>(0);
   const [selectedResourceId, setSelectedResourceId] = useState<string | null>(null);
+  // Same idea, for a resource tile (see ResourceTiles' own tileCap).
+  const [selectedResourceTileCap, setSelectedResourceTileCap] = useState<number>(0);
 
   const sortedResourceIds = sortResourceIds(resourceBalances, resourceTierInfo);
   if (ids.length === 0 && sortedResourceIds.length === 0) {
@@ -1428,14 +1542,40 @@ function PackedItemsRow({
     const infoB = tierInfo[lookupIds[b] ?? b];
     return (infoB?.tier ?? 0) - (infoA?.tier ?? 0);
   });
+  // See ItemGrid's identical expandedIds comment - one tile per backpack
+  // slot a flat itemBalance row actually occupies (one per unit at
+  // stackSize<=1, no count; up to stackSize per tile otherwise, each
+  // showing its OWN count, not the family's full total).
+  const expandedIds: { key: string; id: string; displayCount: number | null; tileCap: number }[] = [];
+  for (const id of sortedIds) {
+    const info = tierInfo[lookupIds[id] ?? id];
+    const isInstance = lookupIds[id] !== undefined;
+    const stackSize = info?.stackSize ?? 1;
+    const owned = balances[id] ?? 0;
+    if (isInstance) {
+      expandedIds.push({ key: id, id, displayCount: null, tileCap: 1 });
+    } else if (stackSize <= 1) {
+      for (let i = 0; i < owned; i++) {
+        expandedIds.push({ key: `${id}#${i}`, id, displayCount: null, tileCap: 1 });
+      }
+    } else {
+      let remaining = owned;
+      let i = 0;
+      while (remaining > 0) {
+        const inThisStack = Math.min(stackSize, remaining);
+        expandedIds.push({ key: `${id}#${i}`, id, displayCount: inThisStack, tileCap: inThisStack });
+        remaining -= inThisStack;
+        i += 1;
+      }
+    }
+  }
   return (
     <>
       {(ids.length > 0 || sortedResourceIds.length > 0) && (
       <div className={styles.packedItemsRow}>
-        {sortedIds.map((id) => {
+        {expandedIds.map(({ key, id, displayCount, tileCap }) => {
           const info = tierInfo[lookupIds[id] ?? id];
           const name = info?.name ? stripBlueprintPrefix(info.name) : formatResourceLabel(lookupIds[id] ?? id);
-          const showCount = (info?.stackSize ?? 1) > 1;
           const currentQuality = instanceQuality[id];
           const qualityFraction =
             lookupIds[id] !== undefined && info?.qualityMax != null && currentQuality != null
@@ -1444,11 +1584,14 @@ function PackedItemsRow({
           const isDamaged = qualityFraction !== null && qualityState(qualityFraction) === "damaged";
           return (
             <button
-              key={id}
+              key={key}
               type="button"
               className={isDamaged ? `${styles.itemGridCell} ${styles.itemGridCellDamaged}` : styles.itemGridCell}
               title={name}
-              onClick={() => setSelectedId(id)}
+              onClick={() => {
+                setSelectedId(id);
+                setSelectedTileCap(tileCap);
+              }}
               onContextMenu={(e) => e.preventDefault()}
             >
               <div
@@ -1462,7 +1605,7 @@ function PackedItemsRow({
                   {getTierIndicator(info.tier)}
                 </span>
               )}
-              {showCount && <span className={styles.itemGridCountBadge}>{balances[id] ?? 0}</span>}
+              {displayCount !== null && <span className={styles.itemGridCountBadge}>{displayCount}</span>}
               {qualityFraction !== null && (
                 <div
                   className={styles.itemGridQualityBar}
@@ -1472,14 +1615,21 @@ function PackedItemsRow({
             </button>
           );
         })}
-        <ResourceTiles balances={resourceBalances} tierInfo={resourceTierInfo} onSelect={setSelectedResourceId} />
+        <ResourceTiles
+          balances={resourceBalances}
+          tierInfo={resourceTierInfo}
+          onSelect={(id, tileCap) => {
+            setSelectedResourceId(id);
+            setSelectedResourceTileCap(tileCap);
+          }}
+        />
       </div>
       )}
       {selectedResourceId && (
         <ResourcePopup
           resourceId={selectedResourceId}
           tierInfo={resourceTierInfo}
-          owned={resourceBalances[selectedResourceId] ?? 0}
+          owned={selectedResourceTileCap}
           characterId={characterId}
           onPlayerDataUpdated={onPlayerDataUpdated}
           onClose={() => setSelectedResourceId(null)}
@@ -1494,7 +1644,7 @@ function PackedItemsRow({
         <ItemDetailPopup
           info={tierInfo[lookupIds[selectedId] ?? selectedId]}
           fallbackName={formatResourceLabel(lookupIds[selectedId] ?? selectedId)}
-          owned={balances[selectedId] ?? 0}
+          owned={selectedTileCap}
           isInstance={lookupIds[selectedId] !== undefined}
           movable
           quality={instanceQuality[selectedId] ?? null}
@@ -1597,13 +1747,9 @@ export function ResourcePopup({
             {getTierIndicator(info.tier)}
           </span>
         )}
-        <h3 className={styles.itemPopupName}>{name}</h3>
-        {flashMessage ? (
+        <h3 className={styles.itemPopupName}>{owned} {name}</h3>
+        {flashMessage && (
           <p className={`${styles.itemPopupDescription} ${styles.itemPopupFlash}`}>{flashMessage}</p>
-        ) : (
-          <div className={styles.itemPopupMeta}>
-            <span>Owned: {owned}</span>
-          </div>
         )}
         {destinations.map((dest) => (
           <TransferButtons
