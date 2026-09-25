@@ -174,8 +174,9 @@
    own "active" tab, just larger. The rest are dimmed via
    .tabRowButtonInactive below, applied alongside .tabRowButton rather than
    replacing it. */
-.tabRowButtonActive .tabIcon {
-  filter: drop-shadow(0 0 14px rgba(230, 184, 92, 0.95));
+.tabRowButtonActive .tabIcon,
+.tabRowButtonActive .tabIconEmoji {
+  filter: drop-shadow(0 0 9px rgba(230, 184, 92, 0.7));
 }
 
 /* Applied alongside .tabRowButtonActive (see TABS' lightenWhenActive flag
@@ -184,7 +185,7 @@
    .tabRowButtonActive .tabIcon (two classes each), so source order alone
    is what makes this win and fully replace that rule's filter. */
 .tabRowButtonActiveLighten .tabIcon {
-  filter: drop-shadow(0 0 14px rgba(230, 184, 92, 0.95)) brightness(1.6);
+  filter: drop-shadow(0 0 9px rgba(230, 184, 92, 0.7)) brightness(1.6);
 }
 
 .tabRowButtonInactive {
