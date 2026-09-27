@@ -248,10 +248,13 @@ def _load_item_catalog_entries() -> tuple[ItemCatalogEntry, ...]:
     Every concrete tiered id across all 118 item-inventory-properties.json
     families, resolved from whichever catalog actually holds that family's
     rows - the 9 "final" files for most families, plus base-processed.json
-    for the handful (arrow, bolt, oil) that are kind:["processed"] ammo
-    living in Character.resources rather than items/itemBalances. A family
-    with no rows in either (shouldn't happen, but not fatal) contributes
-    nothing rather than raising.
+    for the handful (arrow, bolt, oil) that are kind:["processed"] ammo -
+    their id/name/tier/icon are resolved the processed-resource-catalog
+    way (that's simply where their tiered rows live), but they're credited
+    into vault.itemBalances like any other crafted item, not resources
+    (see backend.players._resolve_recipe_output). A family with no rows in
+    either (shouldn't happen, but not fatal) contributes nothing rather
+    than raising.
     """
     from backend.processed_catalog import PROCESSED_RESOURCE_ITEMS
 
@@ -275,7 +278,7 @@ def _load_item_catalog_entries() -> tuple[ItemCatalogEntry, ...]:
             entries.append(
                 ItemCatalogEntry(
                     item.id, item.name, item.family_id, item.tier, family.kind, family.quality_max,
-                    "", family.stack_size,
+                    item.icon or "", family.stack_size,
                     "", family.size_class,
                     family.equip_slots, family.backpackable,
                     GATHERING_BONUSES_BY_ITEM.get(item.family_id, ()),

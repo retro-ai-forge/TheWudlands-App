@@ -22,6 +22,11 @@ class ProcessedResourceItem:
     name: str
     family_id: str
     tier: int
+    # Most processed families have no per-unit art (rendered as a plain
+    # name-on-black tile instead - see InventoryTab.tsx's ResourceTiles).
+    # A handful (oil, arrow, bolt) DO carry real icon art, same convention
+    # as item-catalog entries - None for everything else.
+    icon: str | None = None
 
     def to_dict(self) -> dict:
         return {"id": self.id, "name": self.name, "familyId": self.family_id, "tier": self.tier}
@@ -30,7 +35,13 @@ class ProcessedResourceItem:
 def _load_catalog() -> tuple[ProcessedResourceItem, ...]:
     data = json.loads(_CATALOG_PATH.read_text())
     return tuple(
-        ProcessedResourceItem(id=item["id"], name=item["name"], family_id=item["familyId"], tier=item["tier"])
+        ProcessedResourceItem(
+            id=item["id"],
+            name=item["name"],
+            family_id=item["familyId"],
+            tier=item["tier"],
+            icon=item.get("icon"),
+        )
         for item in data
     )
 

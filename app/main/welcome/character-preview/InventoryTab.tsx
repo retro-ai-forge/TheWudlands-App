@@ -39,7 +39,7 @@ export type BlueprintTierInfo = Record<
 >;
 export type ResourceTierInfo = Record<
   string,
-  { tier: number; family: string; category: "raw" | "processed"; name?: string }
+  { tier: number; family: string; category: "raw" | "processed"; name?: string; icon?: string }
 >;
 
 // The raw shape returned by /me/characters and every check-in/check-out
@@ -1035,7 +1035,16 @@ export function ItemGrid({
               }}
               onContextMenu={(e) => e.preventDefault()}
             >
-              <span className={styles.itemGridResourceLabel}>{label}</span>
+              {/* Most resource families have no per-unit art, so they fall
+                  back to a plain name-on-black tile (see the else branch)
+                  - a handful (oil, arrow, bolt) DO carry real icon art
+                  (backend.processed_catalog), same as item-catalog
+                  entries, and get the same ItemIcon treatment as those. */}
+              {info?.icon ? (
+                <ItemIcon icon={info.icon} alt={fullName} className={styles.itemGridImg} />
+              ) : (
+                <span className={styles.itemGridResourceLabel}>{label}</span>
+              )}
               {!!info?.tier && (
                 <span className={`${styles.itemGridTierBadge} ${itemGridTierBadgeClass(info.tier)}`}>
                   {getTierIndicator(info.tier)}
@@ -1511,7 +1520,14 @@ export function ResourceTiles({
             onClick={() => onSelect(id, tileCap)}
             onContextMenu={(e) => e.preventDefault()}
           >
-            <span className={styles.itemGridResourceLabel}>{label}</span>
+            {/* See ItemGrid's identical branch - most resource families
+                fall back to a name-on-black tile, but a handful (oil,
+                arrow, bolt) carry real icon art. */}
+            {info?.icon ? (
+              <ItemIcon icon={info.icon} alt={fullName} className={styles.itemGridImg} />
+            ) : (
+              <span className={styles.itemGridResourceLabel}>{label}</span>
+            )}
             {!!info?.tier && (
               <span className={`${styles.itemGridTierBadge} ${itemGridTierBadgeClass(info.tier)}`}>
                 {getTierIndicator(info.tier)}
@@ -1789,6 +1805,11 @@ export function ResourcePopup({
             {getTierIndicator(info.tier)}
           </span>
         )}
+        {/* Most resource families have no per-unit art and stay text-only
+            (see ItemGrid's own resource tiles) - a handful (oil, arrow,
+            bolt) carry real icon art and get the same treatment
+            ItemDetailPopup gives a real item. */}
+        {info?.icon && <ItemIcon icon={info.icon} alt={name} className={styles.itemPopupImg} />}
         <h3 className={styles.itemPopupName}>{owned} {name}</h3>
         {flashMessage && (
           <p className={`${styles.itemPopupDescription} ${styles.itemPopupFlash}`}>{flashMessage}</p>
@@ -3019,6 +3040,7 @@ export function InventoryTab({
             tier: number;
             resourceFamily: string;
             category: "raw" | "processed";
+            icon?: string | null;
           }>
         ) => {
           const tierMap: ResourceTierInfo = {};
@@ -3028,6 +3050,7 @@ export function InventoryTab({
               family: item.resourceFamily,
               category: item.category,
               name: item.name,
+              icon: item.icon ?? undefined,
             };
           }
           setResourceTierInfo(tierMap);
