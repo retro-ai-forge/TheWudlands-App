@@ -5,6 +5,8 @@ import {
   ItemDetailPopup,
   ItemIcon,
   computeBackpackContents,
+  computeSaddlepackContents,
+  computeCartContents,
   getTierIndicator,
   itemGridTierBadgeClass,
   qualityBarColor,
@@ -14,7 +16,6 @@ import {
   type ResourceTierInfo,
 } from "./InventoryTab";
 import type { ItemInstance, SlotCharacterSummary } from "../SoulSlotGrid";
-import { InAdventureToggle } from "./InAdventureToggle";
 import { CHAKRA_SLOTS, activeChakraCount } from "./SoulTab";
 
 // Overlaid directly on the portrait: head/chest/legs down the left edge,
@@ -43,29 +44,19 @@ const RING_SLOTS = ["Left Ring", "Right Ring"];
 // portrait (see .largeEquipSlot).
 const COMPANION_MOUNT_SLOTS = ["Companion", "Mount"];
 
-// Visual-only for now - just the four corner squares and their labels, on
-// the "Mount" box specifically (not "Companion"), same overlapping-corner
-// idea as OVERLAY_SLOTS above but for a square box instead of a tall
-// portrait, so one per corner instead of stacked down each edge. Mhead
-// (bridle) and Mbagpack (saddlepack) already have real families in
-// item-inventory-properties.json; Marmor and Msaddle don't yet - none of
-// the four are wired to equippedInSlot/EquipSlotIcon/click-to-open here,
-// only real squares + names, until that catalog data exists.
-const MOUNT_SUB_SLOTS: { lines: string[]; position: string }[] = [
-  { lines: ["Head"], position: styles.mountSubSlotHead },
-  { lines: ["Saddle"], position: styles.mountSubSlotSaddle },
-  { lines: ["Armor"], position: styles.mountSubSlotArmor },
-  { lines: ["Saddle", "Packs"], position: styles.mountSubSlotBags },
+type SubSlot = { lines: string[]; position: string; slotKey: string };
+
+const MOUNT_SUB_SLOTS: SubSlot[] = [
+  { lines: ["Bridle"], position: styles.mountSubSlotHead, slotKey: "Bridle" },
+  { lines: ["Saddle"], position: styles.mountSubSlotSaddle, slotKey: "Saddle" },
+  { lines: ["Barding"], position: styles.mountSubSlotArmor, slotKey: "Barding" },
+  { lines: ["Saddle", "pack"], position: styles.mountSubSlotBags, slotKey: "Saddlepack" },
+  { lines: ["Hitch"], position: styles.mountSubSlotCart, slotKey: "Hitch" },
 ];
 
-// Same visual-only treatment as MOUNT_SUB_SLOTS above, but on the
-// "Companion" box - just the one, left-middle, labeled "Charm". "Ccharm"
-// (C- prefix for Companion, mirroring Mhead/Mbagpack/Marmor/Msaddle's M-
-// prefix for Mount) is the intended future family/slot key once real
-// catalog data exists for it - not wired to anything yet, same as the
-// mount's four.
-const COMPANION_SUB_SLOTS: { lines: string[]; position: string }[] = [
-  { lines: ["Charm"], position: styles.companionSubSlotCharm },
+const COMPANION_SUB_SLOTS: SubSlot[] = [
+  { lines: ["Charm"], position: "", slotKey: "Charm" },
+  { lines: ["Rune"], position: "", slotKey: "Rune" },
 ];
 
 // The item instance (if any) currently equipped into `slot` - at most one,
@@ -81,6 +72,7 @@ function EquipSlotIcon({
   instance,
   catalog,
   mirrored,
+  iconOverride,
 }: {
   instance: ItemInstance;
   catalog: BlueprintTierInfo;
@@ -88,6 +80,7 @@ function EquipSlotIcon({
    * mirrors the same art shown normally in "Right Hand", rather than
    * needing a second, hand-drawn left-hand asset per family. */
   mirrored?: boolean;
+  iconOverride?: string;
 }) {
   const entry = catalog[instance.itemId];
   // Same condition/damaged treatment as the Vault/Camp grid's ItemGrid
@@ -96,13 +89,13 @@ function EquipSlotIcon({
   // it should wear down visibly here too, not only once unequipped.
   const qualityFraction =
     entry?.qualityMax != null && instance.quality != null
-      ? Math.max(0, Math.min(1, entry.qualityMax > 0 ? instance.quality / entry.qualityMax : 1))
+      ? Math.max(0, Math.min(1, entry.qualityMax > 0 ? instance.quality / (entry.qualityMax * (2 ** (entry.tier - 1))) : 1))
       : null;
   const isDamaged = qualityFraction !== null && qualityState(qualityFraction) === "damaged";
   return (
     <div className={isDamaged ? `${styles.equipSlotIconWrap} ${styles.equipSlotIconWrapDamaged}` : styles.equipSlotIconWrap}>
       <ItemIcon
-        icon={entry?.icon}
+        icon={iconOverride ?? entry?.icon}
         alt={entry?.name ?? instance.familyId}
         className={styles.equipSlotIcon}
         style={{ transform: mirrored ? "scaleX(-1)" : undefined }}
@@ -144,7 +137,7 @@ export function BodyTab({
   // same full catalog shape InventoryTab.tsx's own itemCatalogTierInfo
   // uses (not just name/icon), since ItemDetailPopup's "info" prop needs
   // the whole thing (equipSlots, qualityMax, description, ...) to open the
-  // same recycle/destroy view when a slot is clicked.
+  // same salvage/destroy view when a slot is clicked.
   const [catalog, setCatalog] = useState<BlueprintTierInfo>({});
   useEffect(() => {
     fetch("/api/auth/item-catalog")
@@ -220,7 +213,7 @@ export function BodyTab({
   }, []);
 
   // The clicked slot's own equipped instance, if any - opens the same
-  // recycle/destroy(-from-character)/unequip popup InventoryTab.tsx's new
+  // salvage/destroy(-from-character)/unequip popup InventoryTab.tsx's new
   // "Items" accordion uses (source:"character"), scoped to whatever's worn
   // right here rather than this character's whole backpack.
   const [selectedInstance, setSelectedInstance] = useState<ItemInstance | null>(null);
@@ -248,12 +241,9 @@ export function BodyTab({
   const hasBackpackEquipped = character.gear.items.some(
     (instance) => (instance.location === "body" || instance.location === "camp") && instance.familyId === "backpack"
   );
-  // Mirrors backend.items_catalog.has_saddlepack_equipped - hides (rather
-  // than greys) the popup's "Move to saddlepack" button when false.
   const hasSaddlepackEquipped = character.gear.items.some(
-    (instance) => instance.location === "body" && instance.familyId === "saddlepack"
+    (instance) => (instance.location === "body" || instance.location === "camp") && instance.familyId === "saddlepack"
   );
-
   // What's actually packed into whichever backpack is worn - handed to
   // ItemDetailPopup only for a worn family:"backpack" instance's own
   // popup (see its packedItems prop) so it can show a peek inside.
@@ -265,11 +255,27 @@ export function BodyTab({
     resourceBalances: backpackResourceBalances,
   } = computeBackpackContents(character);
 
+  const {
+    ids: saddlepackIds,
+    balances: saddlepackCombined,
+    lookupIds: saddlepackLookupIds,
+    instanceQuality: saddlepackInstanceQuality,
+    resourceBalances: saddlepackResourceBalances,
+  } = computeSaddlepackContents(character);
+
+  const {
+    ids: cartIds,
+    balances: cartCombined,
+    lookupIds: cartLookupIds,
+    instanceQuality: cartInstanceQuality,
+    resourceBalances: cartResourceBalances,
+  } = computeCartContents(character);
+
   // Same emptiness check as CampView's own hasCampItems - lets the camp
   // button carry a small dropped.png badge (see below) so the player can
   // tell camp holds something without having to open it first. Has to
   // check gear.resources.camp too, not just items/itemBalances - a
-  // backpack-full recycle drop (see backend._recycle_resource_updates) or
+  // backpack-full salvage drop (see backend._salvage_resource_updates) or
   // an explicit "move to camp" can leave camp holding ONLY raw/processed
   // materials, with no item/itemBalance row at all.
   const hasCampItems =
@@ -277,10 +283,132 @@ export function BodyTab({
     Object.values(character.gear.itemBalances.camp).some((amount) => amount > 0) ||
     Object.values(character.gear.resources.camp).some((amount) => amount > 0);
 
+  const hasCartItems =
+    cartIds.length > 0 ||
+    Object.values(cartResourceBalances).some((qty) => qty > 0);
+
+  const cartFilledIcon = (instance: ItemInstance): string | undefined => {
+    if (!hasCartItems || instance.familyId !== "cart") return undefined;
+    const icon = catalog[instance.itemId]?.icon;
+    if (!icon) return undefined;
+    return icon.replace("/cart_t", "/cart_filled_t");
+  };
+
+  const renderLargeSlot = (label: string) => {
+    const instance = equippedInSlot(character.gear.items, label);
+
+    if (label === "Mount") {
+      const renderMountSubSlot = (slotKey: string, extraClass?: string) => {
+        const sub = MOUNT_SUB_SLOTS.find((s) => s.slotKey === slotKey)!;
+        const subInst = equippedInSlot(character.gear.items, slotKey);
+        return (
+          <div
+            key={slotKey}
+            className={extraClass ? `${styles.mountColumnSlot} ${extraClass}` : styles.mountColumnSlot}
+            role={subInst ? "button" : undefined}
+            tabIndex={subInst ? 0 : undefined}
+            onClick={subInst ? (e) => { e.stopPropagation(); setSelectedInstance(subInst); } : undefined}
+          >
+            {subInst ? (
+              <EquipSlotIcon instance={subInst} catalog={catalog} iconOverride={cartFilledIcon(subInst)} />
+            ) : (
+              <span className={styles.mountSubSlotLabel}>
+                {sub.lines.map((line, i) => (
+                  <Fragment key={line}>
+                    {i > 0 && <br />}
+                    {line}
+                  </Fragment>
+                ))}
+              </span>
+            )}
+          </div>
+        );
+      };
+
+      return (
+        <div className={`${styles.mountWrapper} ${styles.mountLargeSlot}`} key="Mount">
+          {instance && (
+            <span className={styles.slotName}>
+              {catalog[instance.itemId]?.name ?? instance.familyId}
+            </span>
+          )}
+          <div className={styles.mountAssembly}>
+            <div className={styles.mountColumnLeft}>
+              {renderMountSubSlot("Bridle")}
+              {renderMountSubSlot("Saddle")}
+              {renderMountSubSlot("Saddlepack")}
+            </div>
+            <div
+              className={styles.largeEquipSlot}
+              role={instance ? "button" : undefined}
+              tabIndex={instance ? 0 : undefined}
+              onClick={instance ? () => setSelectedInstance(instance) : undefined}
+            >
+              {instance ? (
+                <EquipSlotIcon instance={instance} catalog={catalog} />
+              ) : (
+                <span className={styles.equipSlotLabel}>Mount</span>
+              )}
+            </div>
+            <div className={styles.mountColumnRight}>
+              {renderMountSubSlot("Barding")}
+              {renderMountSubSlot("Hitch")}
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    // Companion — portrait + right column (Charm + Rune)
+    return (
+      <div className={`${styles.companionWrapper} ${styles.companionLargeSlot}`} key={label}>
+        {instance && (
+          <span className={styles.slotName}>
+            {catalog[instance.itemId]?.name ?? instance.familyId}
+          </span>
+        )}
+        <div className={styles.companionAssembly}>
+          <div
+            className={styles.largeEquipSlot}
+            role={instance ? "button" : undefined}
+            tabIndex={instance ? 0 : undefined}
+            onClick={instance ? () => setSelectedInstance(instance) : undefined}
+          >
+            {instance ? (
+              <EquipSlotIcon instance={instance} catalog={catalog} />
+            ) : (
+              <span className={styles.equipSlotLabel}>{label}</span>
+            )}
+          </div>
+          <div className={styles.companionColumnRight}>
+            {COMPANION_SUB_SLOTS.map((sub) => {
+              const subInst = equippedInSlot(character.gear.items, sub.slotKey);
+              return (
+                <div
+                  key={sub.slotKey}
+                  className={styles.mountColumnSlot}
+                  role={subInst ? "button" : undefined}
+                  tabIndex={subInst ? 0 : undefined}
+                  onClick={subInst ? (e) => { e.stopPropagation(); setSelectedInstance(subInst); } : undefined}
+                >
+                  {subInst ? (
+                    <EquipSlotIcon instance={subInst} catalog={catalog} />
+                  ) : (
+                    <span className={styles.mountSubSlotLabel}>{sub.lines[0]}</span>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </div>
+    );
+  };
+
   return (
     <div className={styles.panel}>
-      <InAdventureToggle character={character} onPlayerDataUpdated={onPlayerDataUpdated} />
       <div className={styles.bodyLayout}>
+        {!showSoul && renderLargeSlot("Companion")}
         <div className={`${styles.frameColumn} ${showSoul ? styles.frameColumnFlipped : ""}`}>
           <div className={styles.frameStage}>
             <div className={styles.flipContainer}>
@@ -386,11 +514,11 @@ export function BodyTab({
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img src="/images/character/camp.png" alt="" className={styles.campButtonIcon} />
                 </button>
-                {hasCampItems && (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img src="/images/character/dropped.png" alt="" className={styles.campButtonBadge} />
-                )}
               </div>
+            )}
+            {!showSoul && hasCampItems && (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src="/images/character/dropped.png" alt="" className={styles.campButtonBadge} />
             )}
           </div>
 
@@ -409,7 +537,7 @@ export function BodyTab({
                       onClick={instance ? () => setSelectedInstance(instance) : undefined}
                     >
                       {instance ? (
-                        <EquipSlotIcon instance={instance} catalog={catalog} mirrored={mirrored} />
+                        <EquipSlotIcon instance={instance} catalog={catalog} mirrored={mirrored} iconOverride={cartFilledIcon(instance)} />
                       ) : (
                         <span className={styles.equipSlotLabel}>{label}</span>
                       )}
@@ -441,42 +569,8 @@ export function BodyTab({
             </>
           )}
         </div>
+        {!showSoul && renderLargeSlot("Mount")}
       </div>
-
-      {!showSoul && (
-        <div className={styles.companionMountRow}>
-          {COMPANION_MOUNT_SLOTS.map((label) => {
-            const instance = equippedInSlot(character.gear.items, label);
-            return (
-              <div
-                className={styles.largeEquipSlot}
-                key={label}
-                role={instance ? "button" : undefined}
-                tabIndex={instance ? 0 : undefined}
-                onClick={instance ? () => setSelectedInstance(instance) : undefined}
-              >
-                {instance ? (
-                  <EquipSlotIcon instance={instance} catalog={catalog} />
-                ) : (
-                  <span className={styles.equipSlotLabel}>{label}</span>
-                )}
-                {(label === "Mount" ? MOUNT_SUB_SLOTS : label === "Companion" ? COMPANION_SUB_SLOTS : []).map((sub) => (
-                  <div key={sub.lines.join(" ")} className={`${styles.mountSubSlot} ${sub.position}`}>
-                    <span className={styles.mountSubSlotLabel}>
-                      {sub.lines.map((line, i) => (
-                        <Fragment key={line}>
-                          {i > 0 && <br />}
-                          {line}
-                        </Fragment>
-                      ))}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            );
-          })}
-        </div>
-      )}
 
       {selectedInstance && (
         <ItemDetailPopup
@@ -492,6 +586,8 @@ export function BodyTab({
           source="character"
           hasBackpackEquipped={hasBackpackEquipped}
           hasSaddlepackEquipped={hasSaddlepackEquipped}
+          hasMountEquipped={character.gear.items.some((i) => i.location === "body" && i.slotRef?.includes("Mount"))}
+          hasCompanionEquipped={character.gear.items.some((i) => i.location === "body" && i.slotRef?.includes("Companion"))}
           inAdventure={character.availability.inAdventure}
           currentSlots={selectedInstance.slotRef}
           characterId={character.id}
@@ -504,10 +600,33 @@ export function BodyTab({
             resourceBalances: backpackResourceBalances,
             resourceTierInfo,
           }}
+          saddlepackPackedItems={{
+            ids: saddlepackIds,
+            tierInfo: catalog,
+            balances: saddlepackCombined,
+            lookupIds: saddlepackLookupIds,
+            instanceQuality: saddlepackInstanceQuality,
+            resourceBalances: saddlepackResourceBalances,
+            resourceTierInfo,
+          }}
+          cartPackedItems={{
+            ids: cartIds,
+            tierInfo: catalog,
+            balances: cartCombined,
+            lookupIds: cartLookupIds,
+            instanceQuality: cartInstanceQuality,
+            resourceBalances: cartResourceBalances,
+            resourceTierInfo,
+          }}
           backpackSlotsUsed={character.gear.backpackSlotsUsed}
           backpackCapacity={character.gear.backpackCapacity}
+          saddlepackSlotsUsed={character.gear.saddlepackSlotsUsed}
+          saddlepackCapacity={character.gear.saddlepackCapacity}
+          cartSlotsUsed={character.gear.cartSlotsUsed}
+          cartCapacity={character.gear.cartCapacity}
           onPlayerDataUpdated={onPlayerDataUpdated}
           onClose={() => setSelectedInstance(null)}
+          iconOverride={cartFilledIcon(selectedInstance)}
         />
       )}
     </div>

@@ -6,10 +6,14 @@ import {
   ItemGrid,
   VAULT_ACTION_ICON,
   computeBackpackContents,
+  computeSaddlepackContents,
+  computeCartContents,
   postJson,
+  SalvageFormulaLine,
   type BlueprintTierInfo,
   type RawPlayerData,
-  type RecycleMaterial,
+  type SalvageCondition,
+  type SalvageMaterial,
   type ResourceTierInfo,
 } from "./InventoryTab";
 import type { SlotCharacterSummary } from "../SoulSlotGrid";
@@ -77,7 +81,7 @@ export function CampView({
   // Which camp-wide bulk action popup is open, if any - the lit campfire
   // opens "burn" (HoldActionPopup's own Burn All), the dropped-items icon
   // opens "moveAll" (Move all to backpack), the chopping block opens
-  // "chop" (ChopBlockPopup's own bulk recycle). The fire/dropped icons
+  // "chop" (ChopBlockPopup's own bulk salvage). The fire/dropped icons
   // aren't clickable at all unless hasCampItems (see their own render
   // guards below); the chopping block is always clickable (its own
   // preview list is simply empty when there's nothing recyclable), so
@@ -169,7 +173,7 @@ export function CampView({
     (instance) => (instance.location === "body" || instance.location === "camp") && instance.familyId === "backpack"
   );
   const hasSaddlepackEquipped = character.gear.items.some(
-    (instance) => instance.location === "body" && instance.familyId === "saddlepack"
+    (instance) => (instance.location === "body" || instance.location === "camp") && instance.familyId === "saddlepack"
   );
 
   // Camp holds two different kinds of things, same split as the Vault
@@ -260,6 +264,33 @@ export function CampView({
     ...computeBackpackContents(character),
   };
 
+  const saddlepackPackedItems = {
+    tierInfo: itemCatalogTierInfo,
+    resourceTierInfo,
+    ...computeSaddlepackContents(character),
+  };
+
+  const cartContents = computeCartContents(character);
+  const cartPackedItems = {
+    tierInfo: itemCatalogTierInfo,
+    resourceTierInfo,
+    ...cartContents,
+  };
+
+  const hasCartItems =
+    cartContents.ids.length > 0 ||
+    Object.values(cartContents.resourceBalances).some((qty) => qty > 0);
+
+  const cartIconOverrides: Record<string, string> = {};
+  if (hasCartItems) {
+    for (const instance of campInstances) {
+      if (instance.familyId === "cart") {
+        const icon = itemCatalogTierInfo[instance.itemId]?.icon;
+        if (icon) cartIconOverrides[instance.itemId] = icon.replace("/cart_t", "/cart_filled_t");
+      }
+    }
+  }
+
   return (
     <div className={styles.panel}>
       <ItemGrid
@@ -273,14 +304,22 @@ export function CampView({
         source="character"
         hasBackpackEquipped={hasBackpackEquipped}
         hasSaddlepackEquipped={hasSaddlepackEquipped}
+        hasMountEquipped={character.gear.items.some((i) => i.location === "body" && i.slotRef?.includes("Mount"))}
+        hasCompanionEquipped={character.gear.items.some((i) => i.location === "body" && i.slotRef?.includes("Companion"))}
         inAdventure={character.availability.inAdventure}
         characterId={character.id}
         onPlayerDataUpdated={onPlayerDataUpdated}
         reserveBottomPx={CAMPFIRE_AREA_PX}
         hideScrollbar
         packedItems={packedItems}
+        saddlepackPackedItems={saddlepackPackedItems}
+        cartPackedItems={cartPackedItems}
         backpackSlotsUsed={character.gear.backpackSlotsUsed}
         backpackCapacity={character.gear.backpackCapacity}
+        saddlepackSlotsUsed={character.gear.saddlepackSlotsUsed}
+        saddlepackCapacity={character.gear.saddlepackCapacity}
+        cartSlotsUsed={character.gear.cartSlotsUsed}
+        cartCapacity={character.gear.cartCapacity}
         resourceBalances={campResourceBalances}
         resourceTierInfo={resourceTierInfo}
         resourceDestinations={[
@@ -291,6 +330,7 @@ export function CampView({
             ? [{ key: "vault", icon: VAULT_ACTION_ICON, label: "Vault", endpoint: "check-in-camp" }]
             : []),
         ]}
+        iconOverrides={Object.keys(cartIconOverrides).length > 0 ? cartIconOverrides : undefined}
       />
       <div className={styles.campfireStage} style={{ height: CAMPFIRE_AREA_PX }}>
         {/* Fire's position/size are relative to THIS group (i.e. to the
@@ -341,9 +381,9 @@ export function CampView({
               above), not the screen edge - sits right of the tent, easing
               only a little further out on wider screens instead of
               tracking the actual viewport edge. Opens ChopBlockPopup's
-              own bulk-recycle popup - only clickable while hasCampItems,
+              own bulk-salvage popup - only clickable while hasCampItems,
               same gating as campfire_lit.png/campfire_unlit.png above
-              (nothing to refine with an empty camp, so it stays purely
+              (nothing to salvage with an empty camp, so it stays purely
               decorative then, dimmed the same way the tent itself does
               via .campfireStageIconEmpty). */}
           {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -352,8 +392,8 @@ export function CampView({
             alt=""
             role={hasCampItems ? "button" : undefined}
             tabIndex={hasCampItems ? 0 : undefined}
-            title={hasCampItems ? "Refine everything in camp" : undefined}
-            aria-label={hasCampItems ? "Refine everything in camp" : undefined}
+            title={hasCampItems ? "Salvage everything in camp" : undefined}
+            aria-label={hasCampItems ? "Salvage everything in camp" : undefined}
             onClick={hasCampItems ? () => setCampAction("chop") : undefined}
             onKeyDown={
               hasCampItems
@@ -376,8 +416,8 @@ export function CampView({
             alt=""
             role="button"
             tabIndex={0}
-            title="Move everything to backpack"
-            aria-label="Move everything to backpack"
+            title="Pack everything up"
+            aria-label="Pack everything up"
             onClick={() => setCampAction("moveAll")}
             onKeyDown={(e) => {
               if (e.key === "Enter" || e.key === " ") setCampAction("moveAll");
@@ -388,7 +428,8 @@ export function CampView({
         {campAction === "burn" && (
           <HoldActionPopup
             headline="Burn All"
-            label="Hold to BURN ALL"
+            iconClassName={styles.burnAllIcon}
+            label="Hold to cast things into flames"
             icon="/images/character/campfire_lit.png"
             tone="destroy"
             onConfirm={() => postJson(`/api/auth/me/characters/${character.id}/camp/burn-all`)}
@@ -398,11 +439,11 @@ export function CampView({
         )}
         {campAction === "moveAll" && (
           <HoldActionPopup
-            headline="Move all to backpack"
-            label="Hold to MOVE ALL"
+            headline="Store all"
+            label="Hold to START PACKING UP"
             icon="/images/character/dropped.png"
-            tone="recycle"
-            onConfirm={() => postJson(`/api/auth/me/characters/${character.id}/camp/move-all-to-backpack`)}
+            tone="salvage"
+            onConfirm={() => postJson(`/api/auth/me/characters/${character.id}/camp/move-all-to-bags`)}
             onPlayerDataUpdated={onPlayerDataUpdated}
             onClose={() => setCampAction(null)}
           />
@@ -429,18 +470,20 @@ export function CampView({
   );
 }
 
-/** One recyclable camp item instance/itemBalance, as GET
- * .../camp/refine-preview returns it - what recycling ALL of it would
- * hand back, not yet actually recycled. `materials` is the exact same
+/** One salvageable camp item instance/itemBalance, as GET
+ * .../camp/salvage-preview returns it - what salvaging ALL of it would
+ * hand back, not yet actually salvaged. `materials` is the exact same
  * per-raw-family breakdown shape (name, yield%, recovered/total units)
- * a single item's own recycle preview uses. */
+ * a single item's own salvage preview uses. */
 type ChopBlockRow = {
   id: string;
   kind: "instance" | "balance";
   name: string;
   tier: number;
   owned: number;
-  materials: RecycleMaterial[];
+  materials: SalvageMaterial[];
+  preselected?: boolean;
+  condition?: SalvageCondition;
 };
 
 /** Every raw material a row's (or several rows') materials would hand
@@ -448,7 +491,7 @@ type ChopBlockRow = {
  * backend.recycling.flatten_recovery does server-side, done here so
  * ChopBlockPopup can total up just the currently-checked rows live,
  * without a round trip. */
-function flattenChopBlockMaterials(materials: RecycleMaterial[]): { id: string; name: string; qty: number }[] {
+function flattenChopBlockMaterials(materials: SalvageMaterial[]): { id: string; name: string; qty: number }[] {
   const merged = new Map<string, { id: string; name: string; qty: number }>();
   for (const material of materials) {
     for (const line of material.recovered) {
@@ -460,14 +503,14 @@ function flattenChopBlockMaterials(materials: RecycleMaterial[]): { id: string; 
   return [...merged.values()];
 }
 
-/** The chopping block's own bulk-recycle popup (see CampView's own
+/** The chopping block's own bulk-salvage popup (see CampView's own
  * onClick on chopping_block.png) - a HoldActionPopup whose extra
- * `children` content is a live grand total (what recycling every
+ * `children` content is a live grand total (what salvaging every
  * currently-checked row would hand back combined) plus a scrollable
- * checklist of every recyclable camp item/itemBalance, all checked by
- * default. Holding the icon recycles every still-checked row at once,
+ * checklist of every salvageable camp item/itemBalance, all checked by
+ * default. Holding the icon salvages every still-checked row at once,
  * crediting recovered materials straight into camp - see
- * backend.players.refine_camp. */
+ * backend.players.salvage_camp. */
 function ChopBlockPopup({
   characterId,
   onPlayerDataUpdated,
@@ -485,15 +528,13 @@ function ChopBlockPopup({
 
   useEffect(() => {
     let cancelled = false;
-    fetch(`/api/auth/me/characters/${characterId}/camp/refine-preview`, { credentials: "include" })
+    fetch(`/api/auth/me/characters/${characterId}/camp/salvage-preview`, { credentials: "include" })
       .then((res) => (res.ok ? res.json() : null))
       .then((data: { rows: ChopBlockRow[] } | null) => {
         if (cancelled) return;
         const loaded = data?.rows ?? [];
         setRows(loaded);
-        // Every row starts checked - the player unchecks whatever they
-        // don't want swept up, rather than having to opt every row in.
-        setSelected(new Set(loaded.map((row) => row.id)));
+        setSelected(new Set(loaded.filter((row) => row.preselected !== false).map((row) => row.id)));
       })
       .catch(() => {
         if (!cancelled) setRows([]);
@@ -518,24 +559,24 @@ function ChopBlockPopup({
 
   return (
     <HoldActionPopup
-      headline="Refine All"
+      headline="Salvage All"
       overlayClassName={styles.chopBlockOverlay}
       cardClassName={styles.chopBlockCard}
       iconClassName={styles.chopBlockIcon}
-      label="Hold to REFINE ALL"
+      label="Hold to unmake ALL"
       icon="/images/character/chopping_block.png"
-      tone="recycle"
+      tone="salvage"
       disabled={rows === null || selected.size === 0}
       onConfirm={() =>
-        postJson(`/api/auth/me/characters/${characterId}/camp/refine-all`, { selected: [...selected] })
+        postJson(`/api/auth/me/characters/${characterId}/camp/salvage-all`, { selected: [...selected] })
       }
       onPlayerDataUpdated={onPlayerDataUpdated}
       onClose={onClose}
     >
       {rows === null ? (
-        <p className={styles.recycleResultText}>Checking what can be refined…</p>
+        <p className={styles.salvageResultText}>Checking what can be salvaged…</p>
       ) : rows.length === 0 ? (
-        <p className={styles.recycleResultText}>Nothing in camp can be refined right now.</p>
+        <p className={styles.salvageResultText}>Nothing in camp can be salvaged right now.</p>
       ) : (
         <>
           {/* Live total for whatever's still checked below - updates the
@@ -545,11 +586,11 @@ function ChopBlockPopup({
               divider on each side - one here separating it from the
               headline above, one below separating it from the scrollable
               list. */}
-          <div className={`${styles.recycleDestroyDivider} ${styles.recycleDestroyDividerTight}`} />
-          <p className={styles.recycleFinalLine}>
-            Recycling all: {grandTotal.length > 0 ? grandTotal.map((line) => `${line.qty}× ${line.name}`).join(", ") : "nothing"}
+          <div className={`${styles.salvageDestroyDivider} ${styles.salvageDestroyDividerTight}`} />
+          <p className={styles.salvageFinalLine}>
+            Salvaged: {grandTotal.length > 0 ? grandTotal.map((line) => `${line.qty}× ${line.name}`).join(", ") : "nothing"}
           </p>
-          <div className={`${styles.recycleDestroyDivider} ${styles.recycleDestroyDividerSpaced}`} />
+          <div className={`${styles.salvageDestroyDivider} ${styles.salvageDestroyDividerSpaced}`} />
           {/* Scrolls on its own (see .chopBlockList) once the list is too
               tall to fit - the hold bar/icon below it stays on screen
               either way, never pushed off by a long list. */}
@@ -564,28 +605,22 @@ function ChopBlockPopup({
                   </span>
                 </label>
                 {/* Same per-raw-family breakdown (name, recovered/total
-                    units, yield% formula) a single item's own recycle
+                    units, yield% formula) a single item's own salvage
                     view shows - see ItemDetailPopup's identical markup. */}
-                <div className={styles.recycleMaterialsList}>
+                <div className={styles.salvageMaterialsList}>
                   {row.materials.map((material) => (
-                    <div key={material.rawFamilyId} className={styles.recycleMaterialRow}>
-                      <p className={styles.recycleMaterialHeader}>
+                    <div key={material.rawFamilyId} className={styles.salvageMaterialRow}>
+                      <p className={styles.salvageMaterialHeader}>
                         <span>{material.rawName}</span>
-                        <span className={styles.recycleMaterialAmounts}>
+                        <span className={`${styles.salvageMaterialAmounts} ${material.recoveredUnits === 0 ? styles.salvageAmountZero : selected.has(row.id) ? styles.salvageAmountPositive : styles.salvageAmountMuted}`}>
                           {material.recoveredUnits}/{material.totalUnits}
                         </span>
                       </p>
-                      <p className={styles.recycleFormulaLine}>
-                        {material.yieldBreakdown.base} + {material.yieldBreakdown.skill} skill +{" "}
-                        <span className={material.yieldBreakdown.tool === 0 ? styles.recycleFormulaZero : undefined}>
-                          {material.yieldBreakdown.tool} tool
-                        </span>{" "}
-                        + {material.yieldBreakdown.charm} charm = {material.yieldBreakdown.total}%
-                      </p>
+                      <SalvageFormulaLine breakdown={material.yieldBreakdown} condition={row.condition} />
                     </div>
                   ))}
-                  <p className={styles.recycleFinalLine}>
-                    Recovered:{" "}
+                  <p className={selected.has(row.id) ? styles.salvageFinalLine : styles.salvageFinalLineMuted}>
+                    Salvaged:{" "}
                     {flattenChopBlockMaterials(row.materials)
                       .map((line) => `${line.qty}× ${line.name}`)
                       .join(", ") || "nothing"}

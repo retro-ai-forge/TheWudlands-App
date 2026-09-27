@@ -6,7 +6,6 @@ import { useState } from "react";
 import { formatRemainingCompactLong, useCraftCountdown } from "../craftTimer";
 import type { SlotCharacterSummary } from "../SoulSlotGrid";
 import type { RawPlayerData } from "./InventoryTab";
-import { InAdventureToggle } from "./InAdventureToggle";
 
 import baseLevelsData from "../../../../backend/data/base-levels.json";
 const XP_LEVELS = baseLevelsData.levels;
@@ -121,6 +120,7 @@ export function StatsTab({
     top: number;
     left: number;
   } | null>(null);
+  const [carryOverlay, setCarryOverlay] = useState<{ top: number; left: number } | null>(null);
   const openXpOverlay = (
     p: { slot: "prof1" | "prof2" | "prof3"; lvl: number },
     e: React.MouseEvent<HTMLButtonElement>
@@ -210,7 +210,6 @@ export function StatsTab({
 
   return (
     <div className={styles.panel}>
-      <InAdventureToggle character={character} onPlayerDataUpdated={onPlayerDataUpdated} />
       <div className={styles.statsLayout}>
         <button
           type="button"
@@ -344,6 +343,27 @@ export function StatsTab({
               ))}
             </div>
           ) : null}
+
+          <div className={styles.carryCapacitySection}>
+            <button
+              type="button"
+              className={`${styles.carryCapacityRow} ${
+                character.gear.encumbranceState === "immobile"
+                  ? styles.carryOverloaded
+                  : character.gear.encumbranceState === "encumbered"
+                  ? styles.carryEncumbered
+                  : styles.carryNormal
+              }`}
+              onClick={(e) => {
+                if (carryOverlay) { setCarryOverlay(null); return; }
+                const rect = e.currentTarget.getBoundingClientRect();
+                setCarryOverlay({ top: window.innerHeight - rect.top + 6, left: rect.left });
+              }}
+            >
+              <span>Carry Capacity</span>
+              <span>{character.gear.carryWeightUsed}/{character.gear.carryWeightCapacity}</span>
+            </button>
+          </div>
         </div>
       </div>
 
@@ -419,6 +439,19 @@ export function StatsTab({
               )}
             </div>
             <div className={styles.descOverlayText}>{descOverlay.description}</div>
+          </div>
+        </>
+      )}
+      {carryOverlay && (
+        <>
+          <div className={styles.xpOverlayBackdrop} onClick={() => setCarryOverlay(null)} />
+          <div
+            className={styles.descOverlayPanel}
+            style={{ bottom: carryOverlay.top, left: carryOverlay.left }}
+          >
+            <div className={styles.descOverlayText}>
+              {character.gear.carryWeightCapacity} = 10 + (might {character.attr.migh} + endur {character.attr.endu})/3
+            </div>
           </div>
         </>
       )}

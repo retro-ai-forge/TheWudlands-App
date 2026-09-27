@@ -97,7 +97,7 @@ export type ItemInstance = {
   itemId: string;
   familyId: string;
   quality: number | null;
-  /** "pool" | "backpack" | "body" | "soul" | "crafting" | "camp" | "saddlepack" - "crafting" means it's currently borrowed for an in-progress craft (see Character.activeCraft.borrowedInstances) and will return to wherever it came from once the craft finishes; "camp"/"saddlepack" mean it's still this character's own, uncapped, not counted against backpack capacity. */
+  /** "pool" | "backpack" | "body" | "soul" | "crafting" | "camp" | "saddlepack" | "cart" - "crafting" means it's currently borrowed for an in-progress craft (see Character.activeCraft.borrowedInstances) and will return to wherever it came from once the craft finishes; "camp"/"saddlepack"/"cart" mean it's still this character's own, uncapped, not counted against backpack capacity. */
   location: string;
   slotRef: string[];
   createdAt: string;
@@ -148,12 +148,19 @@ export interface SlotCharacterSummary {
     /** Item instances this character holds - backpacked or equipped (see location/slotRef). */
     items: ItemInstance[];
     /** Raw/processed resources this character owns, split by physical carry location. */
-    resources: { camp: Record<string, number>; backpack: Record<string, number>; saddlepack: Record<string, number> };
+    resources: { camp: Record<string, number>; backpack: Record<string, number>; saddlepack: Record<string, number>; cart: Record<string, number> };
     /** Non-instance crafted items (food, potions, misc trinkets) this character owns, split by physical carry location. */
-    itemBalances: { camp: Record<string, number>; backpack: Record<string, number>; saddlepack: Record<string, number> };
+    itemBalances: { camp: Record<string, number>; backpack: Record<string, number>; saddlepack: Record<string, number>; cart: Record<string, number> };
     /** Computed server-side (backend.items_catalog.backpack_slots_used/backpack_capacity) - total backpack slots currently occupied and the character's own ceiling (0 with nothing equipped). Powers a backpack-family item's own "Filled: X/Y" line - character-level, not tied to which specific backpack instance's popup is open. */
     backpackSlotsUsed: number;
     backpackCapacity: number;
+    saddlepackSlotsUsed: number;
+    saddlepackCapacity: number;
+    cartSlotsUsed: number;
+    cartCapacity: number;
+    carryWeightUsed: number;
+    carryWeightCapacity: number;
+    encumbranceState: "normal" | "encumbered" | "immobile";
   };
   equippedLight: { family: string; tier: number; litAt: string; hand: string } | null;
 }

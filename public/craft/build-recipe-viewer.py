@@ -38,11 +38,11 @@ CATALOG_FILES = {
 
 def _load_gathering_bonuses_by_item() -> dict[str, list[str]]:
     # Mirrors backend.items_catalog._load_gathering_bonuses_by_item -
-    # raw-material-gathering-bonuses.json is keyed the other way around (raw
+    # gathering-bonuses-raw-material.json is keyed the other way around (raw
     # material -> which item families help gather it), inverted here into
     # item family -> which raw materials it helps gather, the direction the
     # popup actually needs.
-    data = json.loads((DATA_DIR / "raw-material-gathering-bonuses.json").read_text())
+    data = json.loads((DATA_DIR / "gathering-bonuses-raw-material.json").read_text())
     by_item: dict[str, list[str]] = {}
     for raw_material, info in data.items():
         for item_family in info.get("gatheringItems", []):
@@ -89,6 +89,8 @@ def build_families() -> dict:
                         "id": it["id"],
                         "description": it.get("description"),
                         "icon": it.get("icon"),
+                        # Backpack/saddlepack/cart tiers only - popup's "Filled: 0/N".
+                        **({"capacitySlots": it["capacitySlots"]} if "capacitySlots" in it else {}),
                     }
                     for it in family_items
                 ],

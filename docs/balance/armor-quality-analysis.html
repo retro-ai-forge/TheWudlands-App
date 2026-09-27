@@ -1,0 +1,488 @@
+<title>Armor & Shield Quality</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700&family=IBM+Plex+Mono:wght@400;600&display=swap');
+
+  /* Dark-first: forged-metal theme */
+  :root {
+    --bg: #1a1714;
+    --bg-surface: #231f1a;
+    --bg-row: #2a2520;
+    --bg-row-alt: #1f1c17;
+    --fg: #d4c8b0;
+    --fg-dim: #8a7e6a;
+    --fg-heading: #e8dcc4;
+    --accent: #c49a4e;
+    --accent-dim: #a07830;
+    --red: #c45040;
+    --red-bg: rgba(196,80,64,0.12);
+    --green: #6a9a50;
+    --green-bg: rgba(106,154,80,0.1);
+    --yellow: #c4a040;
+    --yellow-bg: rgba(196,160,64,0.1);
+    --border: #3a342a;
+    --light-tag: #5a8a4a;
+    --medium-tag: #6a7a9a;
+    --heavy-tag: #9a6a5a;
+    color-scheme: dark;
+  }
+  @media (prefers-color-scheme: light) {
+    :root:not([data-theme="dark"]) {
+      --bg: #f5f0e8;
+      --bg-surface: #ece5d8;
+      --bg-row: #e4ddd0;
+      --bg-row-alt: #ebe4d8;
+      --fg: #3a3428;
+      --fg-dim: #7a7060;
+      --fg-heading: #2a2418;
+      --accent: #8a6a2a;
+      --accent-dim: #a08040;
+      --red: #a03828;
+      --red-bg: rgba(160,56,40,0.1);
+      --green: #4a7a3a;
+      --green-bg: rgba(74,122,58,0.1);
+      --yellow: #8a7020;
+      --yellow-bg: rgba(138,112,32,0.1);
+      --border: #c4b89a;
+      --light-tag: #4a7a3a;
+      --medium-tag: #4a5a7a;
+      --heavy-tag: #8a4a3a;
+      color-scheme: light;
+    }
+  }
+  :root[data-theme="light"] {
+    --bg: #f5f0e8;
+    --bg-surface: #ece5d8;
+    --bg-row: #e4ddd0;
+    --bg-row-alt: #ebe4d8;
+    --fg: #3a3428;
+    --fg-dim: #7a7060;
+    --fg-heading: #2a2418;
+    --accent: #8a6a2a;
+    --accent-dim: #a08040;
+    --red: #a03828;
+    --red-bg: rgba(160,56,40,0.1);
+    --green: #4a7a3a;
+    --green-bg: rgba(74,122,58,0.1);
+    --yellow: #8a7020;
+    --yellow-bg: rgba(138,112,32,0.1);
+    --border: #c4b89a;
+    --light-tag: #4a7a3a;
+    --medium-tag: #4a5a7a;
+    --heavy-tag: #8a4a3a;
+    color-scheme: light;
+  }
+
+  body {
+    background: var(--bg);
+    color: var(--fg);
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 13px;
+    line-height: 1.5;
+    padding-inline: 16px;
+  }
+
+  h1 {
+    font-family: 'Cinzel', serif;
+    font-weight: 700;
+    font-size: 1.6rem;
+    color: var(--fg-heading);
+    margin: 1.5rem 0 0.25rem;
+    letter-spacing: 0.04em;
+  }
+  .subtitle {
+    color: var(--fg-dim);
+    font-size: 0.85rem;
+    margin-bottom: 1.5rem;
+  }
+  h2 {
+    font-family: 'Cinzel', serif;
+    font-weight: 500;
+    font-size: 1.1rem;
+    color: var(--accent);
+    margin: 2rem 0 0.5rem;
+    letter-spacing: 0.03em;
+  }
+  .formula {
+    display: inline-block;
+    background: var(--bg-surface);
+    border: 1px solid var(--border);
+    padding: 0.2em 0.6em;
+    border-radius: 3px;
+    font-size: 0.85rem;
+    color: var(--accent);
+    margin-bottom: 1rem;
+  }
+
+  .table-wrap {
+    overflow-x: auto;
+    margin-bottom: 1.5rem;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+  }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-variant-numeric: tabular-nums;
+    min-width: 640px;
+  }
+  th {
+    background: var(--bg-surface);
+    color: var(--fg-heading);
+    font-weight: 600;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    padding: 0.5rem 0.6rem;
+    text-align: right;
+    border-bottom: 2px solid var(--border);
+    white-space: nowrap;
+    position: sticky;
+    top: 0;
+  }
+  th:first-child { text-align: left; }
+  td {
+    padding: 0.4rem 0.6rem;
+    text-align: right;
+    border-bottom: 1px solid var(--border);
+    white-space: nowrap;
+  }
+  td:first-child {
+    text-align: left;
+    font-weight: 600;
+    color: var(--fg-heading);
+  }
+  tr:nth-child(odd) td { background: var(--bg-row-alt); }
+  tr:nth-child(even) td { background: var(--bg-row); }
+  tr:hover td { background: var(--bg-surface); }
+
+  .tag {
+    display: inline-block;
+    font-size: 0.7rem;
+    padding: 0.1em 0.4em;
+    border-radius: 2px;
+    font-weight: 600;
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+  }
+  .tag-light { color: var(--light-tag); border: 1px solid var(--light-tag); }
+  .tag-medium { color: var(--medium-tag); border: 1px solid var(--medium-tag); }
+  .tag-heavy { color: var(--heavy-tag); border: 1px solid var(--heavy-tag); }
+
+  .flag { font-size: 0.7rem; font-weight: 600; padding: 0.1em 0.3em; border-radius: 2px; margin-left: 0.3em; }
+  .flag-high { color: var(--yellow); background: var(--yellow-bg); }
+  .flag-low { color: var(--red); background: var(--red-bg); }
+  .flag-mismatch { color: var(--red); background: var(--red-bg); }
+  .flag-ok { color: var(--green); }
+
+  .dim { color: var(--fg-dim); }
+  .sum-col { color: var(--accent); font-weight: 600; }
+  .set-name { text-transform: capitalize; }
+
+  .tier-select {
+    display: flex;
+    gap: 0.4rem;
+    align-items: center;
+    margin-bottom: 1rem;
+    flex-wrap: wrap;
+  }
+  .tier-select label {
+    color: var(--fg-dim);
+    font-size: 0.8rem;
+    margin-right: 0.3rem;
+  }
+  .tier-btn {
+    background: var(--bg-surface);
+    border: 1px solid var(--border);
+    color: var(--fg);
+    padding: 0.25em 0.7em;
+    border-radius: 3px;
+    cursor: pointer;
+    font-family: inherit;
+    font-size: 0.85rem;
+    transition: all 0.15s;
+  }
+  .tier-btn:hover { border-color: var(--accent-dim); }
+  .tier-btn.active {
+    background: var(--accent);
+    color: var(--bg);
+    border-color: var(--accent);
+    font-weight: 600;
+  }
+
+  .outlier-section {
+    background: var(--bg-surface);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 1rem;
+    margin-bottom: 1rem;
+  }
+  .outlier-section h3 {
+    font-family: 'Cinzel', serif;
+    font-size: 0.9rem;
+    color: var(--fg-heading);
+    margin: 0 0 0.6rem;
+  }
+  .outlier-item {
+    display: flex;
+    gap: 0.5rem;
+    align-items: baseline;
+    padding: 0.2rem 0;
+    flex-wrap: wrap;
+  }
+  .outlier-item .name { color: var(--fg-heading); font-weight: 600; min-width: 0; }
+  .outlier-item .detail { color: var(--fg-dim); font-size: 0.85rem; }
+</style>
+
+<h1>Armor & Shield Quality Analysis</h1>
+<p class="subtitle">Quality formula: qualityMax &times; 2<sup>(tier&minus;1)</sup></p>
+
+<div class="tier-select">
+  <label>View tier:</label>
+  <button class="tier-btn active" data-tier="1">T1</button>
+  <button class="tier-btn" data-tier="2">T2</button>
+  <button class="tier-btn" data-tier="3">T3</button>
+  <button class="tier-btn" data-tier="4">T4</button>
+  <button class="tier-btn" data-tier="5">T5</button>
+  <button class="tier-btn" data-tier="6">T6</button>
+</div>
+
+<h2>Full Set Quality</h2>
+<p class="formula">Carry Capacity = 20 + &lfloor;(Might + Endurance) / 3&rfloor;</p>
+<p class="subtitle" style="margin-top:0.25rem">Slot cost: <span class="tag tag-light" style="margin:0 0.2em">light</span> = 1 &nbsp; <span class="tag tag-medium" style="margin:0 0.2em">medium</span> = 2 &nbsp; <span class="tag tag-heavy" style="margin:0 0.2em">heavy</span> = 4 &nbsp;&nbsp;|&nbsp;&nbsp; Min M/E shows minimum attributes for 15 free slots after armor + weapon</p>
+<div class="table-wrap" id="main-table-wrap"></div>
+
+<h2>Shield vs Armor Ratio</h2>
+<div class="table-wrap" id="ratio-table-wrap"></div>
+
+<h2>Outliers</h2>
+<div id="outliers"></div>
+
+<script>
+const SETS = {
+  cloth:      { Head: {q:70,s:"light"},  Chest: {q:70,s:"light"},  Legs: {q:70,s:"light"},  Cloak: {q:40,s:"light"} },
+  leather:    { Head: {q:150,s:"light"}, Chest: {q:150,s:"light"}, Legs: {q:150,s:"light"} },
+  chainmail:  { Head: {q:250,s:"medium"},Chest: {q:250,s:"medium"},Legs: {q:250,s:"medium"} },
+  iron:       { Head: {q:310,s:"medium"},Chest: {q:310,s:"medium"},Legs: {q:310,s:"medium"},Shield: {q:160,s:"medium"} },
+  chitin:     { Head: {q:310,s:"medium"},Chest: {q:310,s:"medium"},Legs: {q:310,s:"medium"},Shield: {q:270,s:"medium"} },
+  ebony:      { Head: {q:340,s:"medium"},Chest: {q:340,s:"medium"},Legs: {q:340,s:"medium"},Shield: {q:280,s:"medium"} },
+  meteoric_iron: { Head: {q:350,s:"heavy"},Chest: {q:350,s:"heavy"},Legs: {q:350,s:"heavy"},Shield: {q:340,s:"heavy"} },
+  darksteel:  { Head: {q:360,s:"heavy"},Chest: {q:360,s:"heavy"},Legs: {q:360,s:"heavy"},Shield: {q:350,s:"heavy"} },
+  fur:        { Cloak: {q:40,s:"light"} },
+  quilted:    { Cloak: {q:40,s:"light"} },
+  wooden:     { Shield: {q:40,s:"medium"} },
+  reinforced_wooden: { Shield: {q:110,s:"medium"} },
+};
+
+const SLOTS = ["Head","Chest","Legs","Cloak","Shield"];
+const ARMOR_ORDER = ["cloth","leather","chainmail","iron","chitin","ebony","meteoric_iron","darksteel"];
+const ORDER = [...ARMOR_ORDER,"fur","quilted","wooden","reinforced_wooden"];
+
+const WEIGHT = { tiny: 1, light: 1, medium: 2, heavy: 4 };
+
+// Sets without a shield get paired with a default shield for the weight column
+const DEFAULT_SHIELD = {
+  cloth: "wooden",
+  leather: "wooden",
+  chainmail: "reinforced_wooden",
+};
+
+function tag(s) {
+  return `<span class="tag tag-${s}">${s}</span>`;
+}
+function scale(base, tier) { return base * Math.pow(2, tier - 1); }
+function fmt(n) { return n.toLocaleString(); }
+
+function label(name) {
+  return name.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+}
+
+let currentTier = 1;
+
+function slotWeight(sizeClass) {
+  return WEIGHT[sizeClass] || 1;
+}
+
+const BASE_CAPACITY = 20;
+const FREE_TARGET = 15;
+
+function capacity(m, e) { return BASE_CAPACITY + Math.floor((m + e) / 3); }
+
+// Min M+E so that capacity >= weight + FREE_TARGET
+function minME(weight) {
+  const need = weight + FREE_TARGET;
+  const attrPart = need - BASE_CAPACITY;
+  if (attrPart <= 0) return 2; // any attributes
+  return Math.max(2, attrPart * 3);
+}
+function fmtME(me) {
+  if (me > 40) return '<span class="flag flag-low">impossible</span>';
+  if (me <= 2) return '<span class="dim">any</span>';
+  const half = Math.ceil(me / 2);
+  const other = me - half;
+  return `${half} / ${other}`;
+}
+
+function renderMainTable() {
+  const t = currentTier;
+  let html = '<table><thead><tr><th>Set</th>';
+  for (const sl of SLOTS) html += `<th>${sl}</th><th>${sl} Size</th>`;
+  html += `<th>Sum Quality</th><th>Carry Wt</th><th>+ Weapon 1H<br><span style="font-weight:400;font-size:0.65rem">medium (2)</span></th><th>Min M / E<br><span style="font-weight:400;font-size:0.65rem">for ${FREE_TARGET} free</span></th><th>Capacity</th><th>Free Slots</th></tr></thead><tbody>`;
+
+  for (const name of ORDER) {
+    const set = SETS[name];
+    html += `<tr><td class="set-name">${label(name)}</td>`;
+    let sum = 0;
+    let totalWeight = 0;
+    const sizes = new Set();
+    for (const sl of SLOTS) {
+      if (set[sl]) {
+        const v = scale(set[sl].q, t);
+        sum += v;
+        totalWeight += slotWeight(set[sl].s);
+        sizes.add(set[sl].s);
+        html += `<td>${fmt(v)}</td><td>${tag(set[sl].s)}</td>`;
+      } else {
+        html += '<td class="dim">&mdash;</td><td class="dim">&mdash;</td>';
+      }
+    }
+    let sumFlag = '';
+    if (sizes.size > 1) sumFlag = ' <span class="flag flag-mismatch">mixed sizes</span>';
+
+    // Carry weight column — for sets without shield, show "X / Y with <shield>"
+    let effectiveWeight = totalWeight;
+    let weightHtml;
+    if (!set.Shield && DEFAULT_SHIELD[name]) {
+      const pairedName = DEFAULT_SHIELD[name];
+      const pairedShield = SETS[pairedName]?.Shield;
+      if (pairedShield) {
+        const withShield = totalWeight + slotWeight(pairedShield.s);
+        weightHtml = `${totalWeight} <span class="dim">/ ${withShield} w/ ${label(pairedName)}</span>`;
+        effectiveWeight = withShield;
+      } else {
+        weightHtml = `${totalWeight}`;
+      }
+    } else {
+      weightHtml = `${totalWeight}`;
+    }
+
+    // Weapon 1H column (medium = 2 slots)
+    const WEAPON_1H = 2;
+    const totalWithWeapon = effectiveWeight + WEAPON_1H;
+
+    // Min M+E for FREE_TARGET free slots
+    const me = minME(totalWithWeapon);
+    const cap = capacity(Math.ceil(me/2), me - Math.ceil(me/2));
+    const free = cap - totalWithWeapon;
+    let freeHtml;
+    if (free < FREE_TARGET) freeHtml = `<span class="flag flag-low">${free}</span>`;
+    else freeHtml = `<span class="flag-ok">${free}</span>`;
+
+    html += `<td class="sum-col">${fmt(sum)}${sumFlag}</td><td>${weightHtml}</td>`;
+    html += `<td>${totalWithWeapon}</td><td>${fmtME(me)}</td><td>${cap}</td><td>${freeHtml}</td>`;
+    html += '</tr>';
+  }
+  html += '</tbody></table>';
+  document.getElementById('main-table-wrap').innerHTML = html;
+}
+
+function renderRatioTable() {
+  const t = currentTier;
+  const setsWithBoth = ORDER.filter(n => SETS[n].Shield && SETS[n].Head);
+  let html = '<table><thead><tr><th>Set</th><th>Armor Avg</th><th>Shield</th><th>Ratio</th><th>Assessment</th></tr></thead><tbody>';
+
+  for (const name of setsWithBoth) {
+    const set = SETS[name];
+    const armorSlots = ["Head","Chest","Legs"].filter(s => set[s]);
+    const armorAvg = armorSlots.reduce((s,sl) => s + scale(set[sl].q, t), 0) / armorSlots.length;
+    const shieldQ = scale(set.Shield.q, t);
+    const ratio = shieldQ / armorAvg;
+
+    let flag = '<span class="flag-ok">balanced</span>';
+    if (ratio > 1.5) flag = '<span class="flag flag-high">shield very high</span>';
+    else if (ratio > 1.3) flag = '<span class="flag flag-high">shield high</span>';
+    else if (ratio < 0.4) flag = '<span class="flag flag-low">shield very low</span>';
+    else if (ratio < 0.6) flag = '<span class="flag flag-low">shield low</span>';
+
+    html += `<tr><td class="set-name">${label(name)}</td><td>${fmt(Math.round(armorAvg))}</td><td>${fmt(shieldQ)}</td><td>${ratio.toFixed(2)}x</td><td>${flag}</td></tr>`;
+  }
+  html += '</tbody></table>';
+  document.getElementById('ratio-table-wrap').innerHTML = html;
+}
+
+function renderOutliers() {
+  let html = '';
+
+  // Size mismatches
+  const mismatches = ORDER.filter(name => {
+    const sizes = new Set(Object.values(SETS[name]).map(v => v.s));
+    return sizes.size > 1;
+  });
+  if (mismatches.length) {
+    html += '<div class="outlier-section"><h3>Size Class Mismatches</h3>';
+    for (const name of mismatches) {
+      const set = SETS[name];
+      const parts = Object.entries(set).map(([sl,v]) => `${sl}: ${v.s}`);
+      html += `<div class="outlier-item"><span class="name">${label(name)}</span><span class="detail">${parts.join(', ')}</span><span class="flag flag-mismatch">mixed</span></div>`;
+    }
+    html += '</div>';
+  }
+
+  // Shield quality outliers within same sizeClass
+  const shieldSets = ORDER.filter(n => SETS[n].Shield);
+  const bySize = {};
+  for (const n of shieldSets) {
+    const s = SETS[n].Shield.s;
+    (bySize[s] = bySize[s] || []).push({ name: n, q: SETS[n].Shield.q });
+  }
+  html += '<div class="outlier-section"><h3>Shield Quality Spread (by sizeClass)</h3>';
+  for (const [size, items] of Object.entries(bySize)) {
+    if (items.length < 2) continue;
+    const avg = items.reduce((s,i) => s + i.q, 0) / items.length;
+    html += `<div style="margin-bottom:0.5rem"><span class="detail">${tag(size)} avg base qualityMax = ${Math.round(avg)}</span></div>`;
+    for (const it of items.sort((a,b) => a.q - b.q)) {
+      const ratio = it.q / avg;
+      let flag = '';
+      if (ratio > 1.4) flag = '<span class="flag flag-high">high</span>';
+      else if (ratio < 0.6) flag = '<span class="flag flag-low">low</span>';
+      html += `<div class="outlier-item"><span class="name">${label(it.name)}</span><span class="detail">qualityMax = ${it.q}</span>${flag}</div>`;
+    }
+  }
+  html += '</div>';
+
+  // Armor head/chest/legs consistency (they should match within a set)
+  const armorSets = ORDER.filter(n => SETS[n].Head && SETS[n].Chest && SETS[n].Legs);
+  const inconsistent = armorSets.filter(n => {
+    const qs = [SETS[n].Head.q, SETS[n].Chest.q, SETS[n].Legs.q];
+    return new Set(qs).size > 1;
+  });
+  if (inconsistent.length) {
+    html += '<div class="outlier-section"><h3>Armor Slot Inconsistencies</h3>';
+    for (const name of inconsistent) {
+      const s = SETS[name];
+      html += `<div class="outlier-item"><span class="name">${label(name)}</span><span class="detail">Head=${s.Head.q}, Chest=${s.Chest.q}, Legs=${s.Legs.q}</span><span class="flag flag-mismatch">uneven</span></div>`;
+    }
+    html += '</div>';
+  } else {
+    html += '<div class="outlier-section"><h3>Armor Slot Consistency</h3><div class="outlier-item"><span class="flag-ok">All armor sets have matching Head/Chest/Legs qualityMax within each set.</span></div></div>';
+  }
+
+  document.getElementById('outliers').innerHTML = html;
+}
+
+function render() {
+  renderMainTable();
+  renderRatioTable();
+  renderOutliers();
+}
+
+document.querySelectorAll('.tier-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.tier-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    currentTier = parseInt(btn.dataset.tier);
+    render();
+  });
+});
+
+render();
+</script>

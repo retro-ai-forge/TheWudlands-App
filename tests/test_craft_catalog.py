@@ -52,15 +52,17 @@ def test_alchemist_offers_lapidary_bench_not_enchanters_table():
 
 def test_tool_pool_widened_by_eligible_item_blueprints():
     """soldier's item pool includes bow/cloth/crossbow (need workbench,
-    spinning_wheel, and kiln via anvil) and iron_ration/fishermans_ration
-    (need oven) - the tool pool should surface every one of those roots as
-    a selectable option, not just whichever tool family happens to share
-    Military's own category (kiln, via wrench)."""
+    spinning_wheel, and kiln via anvil), iron_ration/fishermans_ration
+    (need oven), and barding_iron/barding_leather (need tanning_rack) -
+    the tool pool should surface every one of those roots as a selectable
+    option, not just whichever tool family happens to share Military's own
+    category (kiln, via wrench)."""
     tool_options = set(_tool_pool_family_ids("soldier"))
     assert tool_options == {
         "blueprint_kiln",
         "blueprint_oven",
         "blueprint_spinning_wheel",
+        "blueprint_tanning_rack",
         "blueprint_workbench",
     }
 

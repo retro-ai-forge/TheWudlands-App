@@ -27,7 +27,7 @@
 .topBarBackground {
   width: 100%;
   box-sizing: border-box;
-  padding: 0.6rem 0.5rem 0.6rem 1.25rem;
+  padding: 0.4rem 0.5rem 0.4rem 1.25rem;
   background: rgba(10, 8, 4, 0.95);
   pointer-events: auto;
 }
@@ -64,12 +64,24 @@
   box-sizing: border-box;
 }
 
-/* Scrolls with the page now, as the first item in .sheet's flow - it used
-   to be pinned with position: fixed at the viewport top, which kept it
-   visible but meant it never scrolled away with the rest of the content. */
-.name {
+/* Name heading row - holds the adventure-status circle on the left and the
+   character name centered.  The toggle sits in normal flow; the heading is
+   position:absolute so it stays perfectly centered regardless of the
+   toggle's width. */
+.nameRow {
+  position: relative;
+  display: flex;
+  align-items: center;
   width: 100%;
   max-width: 56rem;
+  padding: 1rem 1rem 0;
+  box-sizing: border-box;
+}
+
+.name {
+  position: absolute;
+  left: 0;
+  right: 0;
   font-size: clamp(1.1rem, 4.5vw, 2.2rem);
   line-height: 1.1;
   letter-spacing: 0.1em;
@@ -77,7 +89,7 @@
   color: #c07a3a;
   text-align: center;
   margin: 0;
-  padding: 1rem 1rem 0;
+  pointer-events: none;
 }
 
 /* No reserved space for the fixed Delete button below - it floats over
@@ -159,8 +171,8 @@
 
 .tabRowButton .tabIcon,
 .closeButton .tabIcon {
-  width: clamp(30px, 9vw, 52px);
-  height: clamp(30px, 9vw, 52px);
+  width: clamp(26px, 8vw, 44px);
+  height: clamp(26px, 8vw, 44px);
 }
 
 /* Close's own exit.webp (see CharacterPreview.tsx). */
@@ -269,15 +281,12 @@
   box-sizing: border-box;
 }
 
-/* Body/Soul tabs' own corner toggle (see InAdventureToggle.tsx) - green
-   means free/at base, red means out on an adventure. Positioned against
-   .panel itself (position:relative above) rather than needing its own
-   wrapper. */
+/* Adventure status circle - sits in .nameRow's normal flow on the left,
+   next to the character name heading. Green = at home, red = on the road. */
 .inAdventureToggle {
-  position: absolute;
-  top: 0.5rem;
-  right: 0.5rem;
+  position: relative;
   z-index: 3;
+  flex-shrink: 0;
   width: 1.4rem;
   height: 1.4rem;
   border-radius: 50%;
@@ -587,7 +596,7 @@
   flex-shrink: 0;
   width: 10rem;
   aspect-ratio: 1 / 1;
-  border-radius: 8px;
+  border-radius: 0;
   border: 1px solid #6f532f;
   overflow: hidden;
   background: #0d0d0a;
@@ -977,6 +986,37 @@
   color: #c4b07a;
 }
 
+.carryCapacitySection {
+  margin-top: 1.2rem;
+  padding-top: 0.8rem;
+  border-top: 1px solid rgba(168, 153, 104, 0.15);
+}
+
+.carryCapacityRow {
+  display: flex;
+  justify-content: space-between;
+  width: 100%;
+  font: inherit;
+  font-size: 0.9rem;
+  color: #d4c9a8;
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+}
+
+.carryNormal {
+  color: #4caf50;
+}
+
+.carryEncumbered {
+  color: #e8b630;
+}
+
+.carryOverloaded {
+  color: #e05252;
+}
+
 /* XP level overlay — floats above the page, anchored to the clicked right-zone button */
 .xpOverlayBackdrop {
   position: fixed;
@@ -1083,10 +1123,11 @@
    actually framed against. */
 .bodyLayout {
   display: flex;
+  flex-direction: row;
   flex-wrap: wrap;
-  gap: 1.5rem;
   justify-content: center;
   align-items: flex-start;
+  gap: 1.5rem;
 }
 
 /* Stacks .frameStage (the portrait + its overlaid slots) above .handSlotRow -
@@ -1103,6 +1144,9 @@
   flex-shrink: 0;
   width: min(18rem, 70vw);
   transition: width 0.6s ease;
+  order: -1;
+  /* Takes a full row so companion+mount always wrap below the portrait. */
+  flex-basis: 100%;
 }
 
 .frameColumnFlipped {
@@ -1115,14 +1159,17 @@
    of it. Its own size must come from .frameBox alone (see .frameColumn). */
 .frameStage {
   position: relative;
-  width: 100%;
+  /* frameColumn is flex-basis:100% so this explicit cap prevents the stage
+     from filling the full viewport width; margin:0 auto centers it. */
+  width: min(18rem, 70vw);
+  margin: 0 auto;
 }
 
 .frameBox {
   position: relative;
   width: 100%;
   aspect-ratio: 2 / 3;
-  border-radius: 8px;
+  border-radius: 0;
   border: 1px solid #6f532f;
   overflow: hidden;
   background: #0d0d0a;
@@ -1175,7 +1222,7 @@
   overflow: hidden;
   aspect-ratio: 1 / 1;
   border: 1px dashed #4a3d28;
-  border-radius: 8px;
+  border-radius: 4px;
   background: rgba(10, 8, 4, 0.5);
 }
 
@@ -1328,9 +1375,16 @@
    elsewhere) so it stays readable over any portrait art underneath. */
 .campButtonBadge {
   position: absolute;
-  right: -0.25rem;
-  bottom: -0.25rem;
-  z-index: 3;
+  /* Lower-right corner of the camp circle: campButtonWrap is centered at
+     50% with width 6rem (left edge at 50%-3rem, right at 50%+3rem) and
+     its bottom sits at 0.25rem-3rem = -2.75rem (i.e. 2.75rem below
+     frameStage bottom) after translateY(50%). Badge sits just inside that
+     right/bottom corner. */
+  left: calc(50% + 1.25rem);
+  bottom: -2.75rem;
+  /* Highest z-index in this stacking context — renders above the Girdle
+     item (z-index:3) so the badge is always visible. */
+  z-index: 10;
   width: 2.25rem;
   height: 2.25rem;
   padding: 0.2rem;
@@ -1393,6 +1447,17 @@
      theirs - visually a bit behind/recessed relative to the hands rather
      than reaching as high. */
   margin-top: 1.75rem;
+  /* Paints above the camp circle button (z-index: 2 on .campButtonWrap)
+     so an equipped item visually overlaps it rather than sitting behind. */
+  position: relative;
+  z-index: 3;
+}
+
+/* When the Girdle slot holds an item, its icon casts a drop-shadow upward
+   onto the camp circle above it (the circle overlaps from frameStage down
+   into the handSlotRow area), reinforcing the layering depth. */
+.handSlotRow .equipSlotGirdleOffset .equipSlotIconWrap {
+  filter: drop-shadow(0 -3px 5px rgb(0, 0, 0));
 }
 
 .ringSlotRow {
@@ -1413,29 +1478,139 @@
    large enough to show a full companion/mount portrait later, not another
    small badge. Row wraps under that width on narrow screens instead of
    forcing two full-size boxes side by side. */
-.companionMountRow {
+/* Outer wrapper for companion/mount: stacks name label above the assembly. */
+.mountWrapper,
+.companionWrapper {
   display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: 1.5rem;
-  margin-top: 1.5rem;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.45rem;
+}
+
+/* Gold name headline shown above assembly only when a mount/companion is equipped. */
+.slotName {
+  color: #c8952a;
+  font-size: 0.78rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  font-weight: 600;
+  text-align: center;
+  line-height: 1;
+}
+
+/* Scale mount/companion assemblies to fit narrow viewports (330–440 px).
+   Companion natural width ≈ 21.25 rem; mount natural width ≈ 26.2 rem.
+   Below 330 px the zoom is clamped and the assembly just clips. */
+@media (max-width: 440px) {
+  .mountWrapper {
+    zoom: max(0.75, calc((100vw - 1.8rem) / 26.2rem));
+  }
+  .companionWrapper {
+    zoom: max(0.75, min(1, calc((100vw - 1.8rem) / 21.25rem)));
+  }
+}
+
+/* Companion and mount sit below the portrait at all widths below 1250px. */
+.companionLargeSlot,
+.mountLargeSlot {
+  margin-top: 0;
+}
+
+/* Wide layout ≥1250px: switch .bodyLayout to a 3-column grid so companion
+   and mount flank the body portrait in one row. */
+@media (min-width: 1250px) {
+  .bodyLayout {
+    display: grid;
+    grid-template-columns: max-content max-content max-content;
+    /* Body overlay slots (Head/Neck/etc.) protrude 4.875rem left+right of the
+       portrait at this viewport width — gap must exceed that to avoid overlap. */
+    column-gap: 6rem;
+    align-items: start;
+    padding-top: 4rem;
+  }
+
+  /* DOM order is already companion → frameColumn → mount, so no order overrides
+     needed — grid places them left | center | right naturally. */
+  .frameColumn {
+    order: unset;
+  }
+
+  .companionLargeSlot {
+    margin-right: 0;
+    margin-top: 0;
+    align-self: start;
+  }
+
+  .mountLargeSlot {
+    margin-left: 0;
+    margin-right: 0;
+    margin-top: 0;
+    align-self: start;
+  }
 }
 
 .largeEquipSlot {
   composes: equipSlot;
-  /* Was the same size as .faceFrame (10rem) - bumped larger so Mount has
-     more room for its own corner/edge sub-slots (see .mountSubSlot). */
   width: 14rem;
   aspect-ratio: 1 / 1;
-  /* min-height:0 for the same flex/aspect-ratio reason as .handSlotRow
-     .equipSlot above - .companionMountRow is a flex row too. */
   min-height: 0;
-  /* Positioning context for .mountSubSlot's four corners below - overrides
-     the composed .equipSlot's own overflow:hidden (there to crop a
-     cover-fit icon to the slot's rounded corners), which would otherwise
-     clip those corner boxes where they poke outside this one's own edge. */
   position: relative;
-  overflow: visible;
+  overflow: hidden;
+}
+
+/* Companion assembly: portrait + right column (Charm + Rune), mirrors mount layout. */
+.companionAssembly {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  gap: 0.35rem;
+}
+
+/* Mount assembly: three-column flex row — left gear column | portrait | right column.
+   Replaces the old absolute-position sub-slot approach. */
+.mountAssembly {
+  display: flex;
+  flex-direction: row;
+  align-items: stretch;
+  gap: 0.35rem;
+}
+
+.mountColumnLeft,
+.mountColumnRight {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.mountColumnLeft {
+  width: 4.5rem;
+}
+
+.mountColumnRight {
+  width: 7rem;
+}
+
+/* Companion right column: two square slots must total exactly the 14rem portrait
+   height. width = (14rem − gap) / 2 = (14 − 0.25) / 2 = 6.875rem. */
+.companionColumnRight {
+  composes: mountColumnLeft;
+  width: 6.875rem;
+  gap: 0.25rem;
+}
+
+/* Slots inside the columns — square, same size within each column.
+   aspect-ratio: 1/1 comes from the composed equipSlot. */
+.mountColumnSlot {
+  composes: equipSlot;
+  flex: 0 0 auto;
+  width: 100%;
+  min-height: 0;
+  overflow: hidden;
+  position: relative;
+}
+
+.mountColumnSlot[role="button"] {
+  cursor: pointer;
 }
 
 /* Tier badge in the large companion/mount slot (14rem) — the base 1rem
@@ -1446,17 +1621,11 @@
   left: 0.5rem;
 }
 
-/* The Mount box's own four corner slots (Mhead/Msaddle/Marmor/Mbagpack -
-   see BodyTab's MOUNT_SUB_SLOTS) - same "sits on the edge, overlapping a
-   bit" idea as .equipSlotOverlay's slots on the character's own portrait,
-   just one per corner (translated 35% outward on both axes) instead of
-   stacked down each side, since this parent is a square box, not a tall
-   portrait. Visual-only for now - no role="button"/onClick wired up yet,
-   see MOUNT_SUB_SLOTS' own comment for why. */
+/* Absolutely-positioned sub-slot used only by Companion (Charm).
+   Mount sub-slots use .mountColumnSlot in a flex column instead. */
 .mountSubSlot {
   composes: equipSlot;
   position: absolute;
-  /* Same size as .equipSlotOverlay's own body-side slots (Head/Neck/...). */
   width: 5rem;
   aspect-ratio: 1 / 1;
   background: rgba(10, 8, 4, 0.3);
@@ -1464,40 +1633,9 @@
   z-index: 1;
 }
 
-/* Left/right edge stacks now, not corners - same idea as .equipSlotHead/
-   .equipSlotBack etc. on the character's own portrait (two per side,
-   vertically centered on their own top%, pulled out past the box's edge
-   a bit rather than sitting flush on it). */
-.mountSubSlotHead {
-  top: 25%;
-  left: -3.5rem;
-  transform: translateY(-50%);
-}
-
-.mountSubSlotSaddle {
-  top: 25%;
-  right: -3.5rem;
-  transform: translateY(-50%);
-}
-
-.mountSubSlotArmor {
-  top: 75%;
-  left: -3.5rem;
-  transform: translateY(-50%);
-}
-
-.mountSubSlotBags {
-  top: 75%;
-  right: -3.5rem;
-  transform: translateY(-50%);
-}
-
-/* Companion's own one sub-slot (see BodyTab's COMPANION_SUB_SLOTS) - left
-   middle, same .mountSubSlot box/offset as the Mount ones above. */
-.companionSubSlotCharm {
-  top: 50%;
-  left: -3.5rem;
-  transform: translateY(-50%);
+.mountSubSlot[role="button"] {
+  background: rgba(10, 8, 4, 0.7);
+  cursor: pointer;
 }
 
 /* Same look as .equipSlotLabel, inlined rather than composed - that class
@@ -1640,7 +1778,7 @@
   display: block;
   width: 100%;
   height: auto;
-  border-radius: 8px;
+  border-radius: 0;
   /* Explicit lowest layer - .soulChakraSlot below establishes its own
      stacking context via position:absolute and comes after this in the
      DOM, which alone would already put it on top, but z-index here makes
@@ -2268,10 +2406,10 @@
   font: inherit;
   background: #0d0d0a;
   border: 1px solid #3a3020;
-  border-radius: 6px;
+  border-radius: 0;
   overflow: hidden;
   cursor: pointer;
-  /* The long press that opens RecycleDestroyPopup (see ItemGrid's
+  /* The long press that opens SalvageDestroyPopup (see ItemGrid's
      startLongPress) is exactly long enough for a phone's own long-press
      gesture (image save/share callout on iOS, text-selection handles
      elsewhere) to fire first and cover the popup - all three properties
@@ -2341,7 +2479,7 @@
 .itemIconLoadingSpinner {
   width: 58%;
   height: 58%;
-  animation: itemIconLoadingSpin 1.3s linear infinite;
+  animation: itemIconLoadingSpin 4.3s linear infinite;
 }
 
 .itemIconLoadingTrack {
@@ -2461,22 +2599,43 @@
 }
 
 /* A worn backpack's own popup (ItemDetailPopup's packedItems) - a
-   single-row, horizontally-scrolling peek at what's actually packed
-   inside, sitting between the popup's name and description. Same
-   .itemGridCell tiles as the Vault/Camp grid, just in a plain flex row
-   instead of that grid's own multi-row/auto-height layout - one row is
-   the whole point here, so there's no per-viewport height to measure. */
+   horizontally-scrolling matrix of what's actually packed inside, sitting
+   between the popup's name and description. Same .itemGridCell tiles as
+   the Vault/Camp grid, laid out as a grid with column-major auto-flow
+   (fills top-then-bottom within a column before starting the next one)
+   instead of that grid's own tall multi-row/auto-height layout - width
+   (via horizontal scroll), not height, is what grows with the backpack's
+   contents. grid-template-rows here is just the pre-measurement fallback
+   (2 rows) - PackedItemsRow's own JS measures how many FULL rows actually
+   fit against the live viewport (never a partially-cut one) and sets the
+   real row count as an inline style, same live-measurement idea as
+   ItemGrid's own gridHeight. */
 .packedItemsRow {
-  display: flex;
+  display: grid;
+  grid-template-rows: repeat(2, 100px);
+  grid-auto-flow: column;
+  grid-auto-columns: 100px;
   gap: 0.35rem;
   width: 100%;
   overflow-x: auto;
   overflow-y: hidden;
   padding-bottom: 0.25rem;
-}
-
-.packedItemsRow .itemGridCell {
-  flex: 0 0 100px;
+  /* .itemPopupCard (this element's flex-column parent) has overflow-y:
+     auto, not visible - per the flexbox spec, a flex item's own
+     automatic minimum size resolves to 0 (not its content size) the
+     moment IT ALSO sets a non-visible overflow (overflow-x:auto here).
+     Without flex-shrink:0, that 0 floor let the flex-shrink algorithm
+     silently compress this element below whatever height its own
+     grid-template-rows called for whenever the card's total content
+     (icon + name + matrix + description) exceeded its max-height -
+     clipping mid-row via this element's own overflow-y:hidden instead of
+     leaving the excess to the CARD's overflow-y:auto to scroll, which is
+     what should handle it. PackedItemsRow's own row-count measurement
+     (packedRowsRef) reads this element's rendered bottom edge - without
+     this, that measurement was reading its own already-shrunk height,
+     so it could never converge on a size that actually avoided a
+     cut-off row. */
+  flex-shrink: 0;
 }
 
 .packedItemsEmpty {
@@ -2522,7 +2681,7 @@
 .itemPopupCard {
   position: relative;
   width: 100%;
-  max-width: 320px;
+  max-width: min(450px, 100%);
   /* Caps how tall a long-description card can grow before it has to
      scroll internally instead - matches .itemPopupOverlay's top gap (4rem)
      plus its bottom footer reserve (6rem). */
@@ -2555,6 +2714,69 @@
   max-height: calc(100vh - 1.5rem);
 }
 
+/* BackpackSalvagePopup's own override (see HoldActionPopup's
+   overlayClassName/cardClassName/iconClassName props) - same idea as
+   .chopBlockOverlay/.chopBlockCard/.chopBlockIcon above, but shrunk
+   further: unlike CampView (which hides the page's fixed footer bar
+   entirely while open), this popup opens over the Body/Inventory tab,
+   where the footer stays on screen - and CANNOT be painted over despite
+   its own z-index:20 (.itemPopupOverlay), because it's nested inside
+   .sheet (position:relative; z-index:2), which - since setting z-index
+   on a positioned element always creates a new stacking context for its
+   OWN descendants - is itself out-ranked by .topBar's z-index:5 as a
+   WHOLE at the shared .wizard-level stacking order, trapping anything
+   inside .sheet (this popup included) behind the footer regardless of
+   how high its own z-index climbs. Reserving real room below the card
+   (rather than a React portal escaping .sheet entirely, the "correct"
+   general fix but untested/unused anywhere else in this codebase) is the
+   simple, safe way to keep the footer visible until/unless that's worth
+   doing. Icon shrinks to match. */
+.backpackSalvageOverlay {
+  padding-top: 1.5rem;
+  padding-bottom: 3.5rem;
+  overflow: hidden;
+}
+
+.backpackSalvageCard {
+  max-height: calc(100vh - 5rem) !important;
+  overflow-y: auto;
+  padding-bottom: 0.5rem;
+}
+
+/* A worn/camped backpack's own popup (see ItemDetailPopup's isBackpack) -
+   same "shrink the screen margin to almost nothing" idea as
+   .chopBlockOverlay/.chopBlockCard above, so its own .packedItemsRow
+   matrix gets real headroom. No scrolling here (unlike the base
+   .itemPopupCard) - PackedItemsRow's own measurement (packedRowsRef)
+   picks exactly as many full tile rows as fit above the fixed footer bar
+   (.topBar) and sets the card's own max-height inline to match (see its
+   card.style.maxHeight write), so everything - icon, name, matrix,
+   description - actually fits without needing to scroll to see any of
+   it. The max-height/overflow-y here are just the pre-JS/fallback
+   values. */
+.backpackPopupOverlay {
+  padding-top: 0.35rem;
+  padding-bottom: 0.5rem;
+}
+
+.backpackPopupCard {
+  max-height: calc(100vh - 0.85rem);
+  padding-top: 0.15rem;
+  padding-bottom: 0.5rem;
+  gap: 0.35rem;
+  overflow-y: hidden;
+}
+
+/* The container popup's icon size - what an EMPTY backpack/saddlepack/cart
+   shows (PackedItemsRow returns before measuring when nothing is packed),
+   and the steady size PackedItemsRow's useLayoutEffect keeps once items
+   are added, only shrinking it when the rows need the room. Keep in sync
+   with CONTAINER_ICON_PX in InventoryTab.tsx. */
+.backpackPopupCard > .itemPopupImg {
+  width: 140px;
+  height: 140px;
+}
+
 @media (max-width: 480px) {
   .itemPopupOverlay {
     padding: 0.5rem;
@@ -2569,10 +2791,11 @@
   }
 
   /* Re-asserted here, after the narrow-screen overrides above (same
-     specificity, later source order wins) - ChopBlockPopup wants the
-     shrunk top/bottom margin on every screen size, phones included, not
-     just wherever the base .itemPopupOverlay/.itemPopupCard rules would
-     otherwise leave more generous ones in place. */
+     specificity, later source order wins) - ChopBlockPopup/the backpack
+     popup both want their own shrunk top/bottom margin on every screen
+     size, phones included, not just wherever the base
+     .itemPopupOverlay/.itemPopupCard rules would otherwise leave more
+     generous ones in place. */
   .chopBlockOverlay {
     padding-top: 0.75rem;
     padding-bottom: 0.75rem;
@@ -2581,20 +2804,30 @@
   .chopBlockCard {
     max-height: calc(100vh - 1.5rem);
   }
-}
 
-/* Below 480px, .itemPopupCard's own 320px cap never actually binds (the
-   viewport itself is narrower), so a TransferButtons row's amount buttons
-   + ∞ + destination icon fit on one line there regardless. Above it, the
-   320px cap DOES bind and that same row is just wide enough to wrap onto a
-   second line, reshaping the fixed-width amount buttons into a lopsided
-   grid instead of one tidy row - a bit more width here keeps it on one
-   line without a special case in TransferButtons itself. */
-@media (min-width: 480px) {
-  .itemPopupCard {
-    max-width: 360px;
+  .backpackSalvageOverlay {
+    padding-top: 1rem;
+    padding-bottom: 3rem;
+  }
+
+  .backpackSalvageCard {
+    max-height: calc(100vh - 4rem);
+  }
+
+  .backpackPopupOverlay {
+    padding-top: 0.35rem;
+    padding-bottom: 0.5rem;
+  }
+
+  .backpackPopupCard {
+    max-height: calc(100vh - 0.85rem);
+    padding-top: 0.15rem;
+    padding-bottom: 0.5rem;
+    gap: 0.35rem;
+    overflow-y: hidden;
   }
 }
+
 
 .itemPopupImg {
   width: 200px;
@@ -2647,7 +2880,7 @@
 }
 
 /* Toggles the card's own content between the item-info view and the
-   recycle/destroy view (see ItemDetailPopup's showDestroy) - mirrors
+   salvage/destroy view (see ItemDetailPopup's showDestroy) - mirrors
    .itemPopupTierBadge's corner placement on the opposite side. */
 .itemPopupSettingsButton {
   position: absolute;
@@ -2823,17 +3056,72 @@
   transform: scale(1.3);
 }
 
-/* RecycleDestroyPopup (InventoryTab.tsx) - opened by a long press on an
+.containerMoveConfirm {
+  position: absolute;
+  left: 50%;
+  bottom: 1.2rem;
+  transform: translateX(-50%);
+  width: calc(100% - 1.6rem);
+  max-width: 280px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.8rem;
+  background: #1a1610;
+  border: 1px solid rgba(168, 153, 104, 0.5);
+  border-radius: 0.5rem;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.7);
+  z-index: 2;
+  padding: 1rem 1rem 0.8rem;
+}
+
+.containerMoveConfirmText {
+  margin: 0;
+  font-size: 0.82rem;
+  text-align: center;
+  color: #d4a060;
+  letter-spacing: 0.04em;
+  line-height: 1.4;
+}
+
+.containerMoveConfirmButtons {
+  display: flex;
+  justify-content: space-between;
+  width: 100%;
+  gap: 0.8rem;
+}
+
+.containerMoveCancel {
+  color: #8a7a60;
+  border-color: rgba(138, 122, 96, 0.4);
+}
+
+.containerMoveGo {
+  color: #60b070;
+  border-color: rgba(96, 176, 112, 0.5);
+}
+
+.containerMoveGo:hover:not(:disabled) {
+  background: #1a2a1a;
+  border-color: #60b070;
+}
+
+/* SalvageDestroyPopup (InventoryTab.tsx) - opened by a long press on an
    ItemGrid tile instead of the ordinary click. Reuses .itemPopupOverlay/
    .itemPopupCard for the dimmed backdrop and card shell, this just widens
    the gap between its two stacked sections. */
-.recycleDestroyCard {
+.salvageDestroyOverlay {
+  padding-top: 1.5rem;
+  padding-bottom: 1.5rem;
+}
+
+.salvageDestroyCard {
   gap: 1.1rem;
   padding-top: 1.75rem;
   padding-bottom: 1.75rem;
 }
 
-.recycleSection,
+.salvageSection,
 .destroySection {
   display: flex;
   flex-direction: column;
@@ -2841,12 +3129,12 @@
   gap: 0.4rem;
 }
 
-.recycleIcon {
+.salvageIcon {
   font-size: 3.4rem;
   line-height: 1;
 }
 
-.recycleResultText {
+.salvageResultText {
   margin: 0;
   font-size: 0.75rem;
   letter-spacing: 0.05em;
@@ -2854,11 +3142,11 @@
   color: #a89968;
 }
 
-/* GET .../recycle-preview's rendered breakdown - one row per raw material
+/* GET .../salvage-preview's rendered breakdown - one row per raw material
    family (name + total/recovered, then how that yield% was calculated),
    plus one combined line at the bottom listing every denomination the
-   recycle action would actually hand back. */
-.recycleMaterialsList {
+   salvage action would actually hand back. */
+.salvageMaterialsList {
   display: flex;
   flex-direction: column;
   align-items: stretch;
@@ -2867,13 +3155,13 @@
   text-align: left;
 }
 
-.recycleMaterialRow {
+.salvageMaterialRow {
   display: flex;
   flex-direction: column;
   gap: 0.1rem;
 }
 
-.recycleMaterialHeader {
+.salvageMaterialHeader {
   margin: 0;
   display: flex;
   justify-content: space-between;
@@ -2882,42 +3170,70 @@
   color: #d4c9a8;
 }
 
-.recycleMaterialAmounts {
+.salvageMaterialAmounts {
   color: #c07a3a;
   font-variant-numeric: tabular-nums;
 }
 
-.recycleFormulaLine {
+.salvageAmountZero {
+  color: #c0453a;
+  font-weight: 700;
+}
+
+.salvageAmountPositive {
+  color: #8fae7a;
+  font-weight: 700;
+}
+
+.salvageAmountMuted {
+  color: #8a7a60;
+  font-weight: 700;
+}
+
+.salvageFormulaLine {
   margin: 0;
   font-size: 0.7rem;
   letter-spacing: 0.02em;
   color: #8a7a60;
 }
 
-/* Flags a 0% component within .recycleFormulaLine (e.g. "0% tool") - same
+/* Flags a 0% component within .salvageFormulaLine (e.g. "0% tool") - same
    red as .destroyLabel, so a missing bonus reads as a warning worth
    fixing rather than blending into the line's own muted color. */
-.recycleFormulaZero {
+.salvageFormulaZero {
   color: #c0453a;
 }
 
-.recycleFinalLine {
+/* A worn item's yield penalty at the end of .salvageFormulaLine
+   ("-20% used" / "-50% dam") - same warning red as a 0% component. */
+.salvageFormulaPenalty {
+  color: #c0453a;
+}
+
+.salvageFinalLine {
   margin: 0.3rem 0 0;
   font-size: 0.8rem;
   font-weight: bold;
   color: #8fae7a;
 }
 
+.salvageFinalLineMuted {
+  margin: 0.3rem 0 0;
+  font-size: 0.8rem;
+  font-weight: bold;
+  color: #8a7a60;
+}
+
 /* Marker-only class, no rules of its own - lets InventoryTab.tsx's
-   handleClick tell "the recycle hold bar" (label+track+icon together,
+   handleClick tell "the salvage hold bar" (label+track+icon together,
    still one hold target) apart from .destroySection's other, now
    non-interactive use (destroy's own label+track, whose click area only
    returns to the item info view - see .destroyIcon for destroy's actual
    hold target). */
-.recycleHoldBar {
+.salvageHoldBar {
 }
 
-.recycleDestroyDivider {
+.salvageDestroyDivider {
   width: 100%;
   height: 3px;
   background: rgba(168, 153, 104, 0.2);
@@ -2932,12 +3248,12 @@
    to the text it introduces), the one BELOW wants more room above it
    (further from the text, more clearly its own separate line before the
    scrollable list starts). */
-.recycleDestroyDividerTight {
+.salvageDestroyDividerTight {
   height: 4px;
   margin-bottom: 0.15rem;
 }
 
-.recycleDestroyDividerSpaced {
+.salvageDestroyDividerSpaced {
   margin-top: 0.5rem;
 }
 
@@ -2958,9 +3274,9 @@
 }
 
 /* Same as .destroyLabel, but the app's own "healthy/recovered" green
-   (matching recycleFillColor's own end color) - "Hold to RECYCLE" never
+   (matching salvageFillColor's own end color) - "Hold to SALVE" never
    reads as a warning the way "Hold to DESTROY" does. */
-.recycleLabel {
+.salvageLabel {
   margin: 0;
   font-size: 0.8rem;
   letter-spacing: 0.08em;
@@ -2981,7 +3297,7 @@
    frame by InventoryTab.tsx's destroyFillColor (gold -> red -> blood red)
    rather than a fixed gradient image sliding into view. No CSS transition
    on width/background - both are already driven frame-by-frame by
-   RecycleDestroyPopup's own rAF loop, and a transition here would lag one
+   SalvageDestroyPopup's own rAF loop, and a transition here would lag one
    step behind that and make the last frame (release -> snap back to
    empty) visibly ease instead of resetting instantly. */
 .destroyProgressFill {
@@ -2992,19 +3308,29 @@
   display: inline-block;
   font-size: 3.6rem;
   line-height: 1;
-  /* .destroySection's own gap (0.4rem) already separates every child -
-     this adds extra space on top of that, specifically between the
-     progress bar and the icon below it. */
   margin-top: 0.5rem;
-  /* This is the actual hold target now (see InventoryTab.tsx's own
-     onPointerDown/Up), not .destroySection as a whole - same
-     touch/select handling that used to live on the whole section, now
-     scoped to just the icon. */
   cursor: pointer;
   user-select: none;
   -webkit-user-select: none;
   -webkit-touch-callout: none;
   touch-action: none;
+}
+
+.destroyIcon img {
+  width: 38%;
+  height: auto;
+  margin-top: -1.5rem;
+  image-rendering: pixelated;
+  pointer-events: none;
+}
+
+.destroyIcon .destroyFireImg {
+  width: 60%;
+  margin-top: -1.5rem;
+  position: relative;
+  z-index: 1;
+  background: radial-gradient(circle, rgba(255, 170, 50, 0.8) 0%, rgba(255, 110, 20, 0.48) 35%, rgba(255, 80, 20, 0) 65%);
+  animation: campfireGlowPulse 2.6s ease-in-out infinite;
 }
 
 /* Same role as .destroyIcon above, for HoldActionPopup's own hold bar
@@ -3014,7 +3340,7 @@
    .destroyProgressTrack right above it uses (no extra max-width cap of
    its own - .itemPopupCard's own max-width already ceilings the whole
    card, so this can't get silly on a wide screen either). Unlike
-   .destroySection in the original destroy/recycle bar, THIS is the
+   .destroySection in the original destroy/salvage bar, THIS is the
    actual hold target here (see InventoryTab.tsx's own onPointerDown/Up
    on this element) - same cursor/touch handling .destroySection itself
    carries, moved onto this element instead since it's what's actually
@@ -3036,10 +3362,29 @@
 /* ChopBlockPopup's own override (see HoldActionPopup's iconClassName
    prop) - smaller than the other two popups' shared 65% default. */
 .chopBlockIcon {
-  width: 58%;
+  width: 45%;
   /* Pulls it up past .destroySection's own gap (0.4rem) so the icon's
      own top edge overlaps .destroyProgressTrack above it, instead of
      sitting cleanly below it. */
+  margin-top: -1.5rem;
+}
+
+/* BackpackSalvagePopup's own override (see .backpackSalvageOverlay/Card
+   above, and HoldActionPopup's iconClassName prop) - defined here, AFTER
+   .holdActionIcon (not up alongside backpackSalvageOverlay/Card), same
+   reason .chopBlockIcon already has to live down here too: equal
+   specificity, later source order wins, and .holdActionIcon's own
+   width:65% is defined below where the other two backpack overrides
+   sit - a copy placed up there would silently lose to it. */
+.burnAllIcon {
+  width: 57%;
+  margin-top: -2rem;
+  overflow: visible;
+  animation: campfireGlowPulse 2.6s ease-in-out infinite;
+}
+
+.backpackSalvageIcon {
+  width: 45%;
   margin-top: -1.5rem;
 }
 
@@ -3073,8 +3418,8 @@
 }
 
 /* One checklist entry - the checkbox+name row (.chopBlockRowHeader) on
-   top, its own full recycle breakdown (.recycleMaterialsList, same
-   markup ItemDetailPopup's single-item recycle view uses) below,
+   top, its own full salvage breakdown (.salvageMaterialsList, same
+   markup ItemDetailPopup's single-item salvage view uses) below,
    separated from the next entry by a faint divider. */
 .chopBlockRow {
   display: flex;
@@ -3140,7 +3485,7 @@
    single-digit max. flex-wrap above (not nowrap, unlike .itemPopupActions)
    is deliberate: at 8 buttons wide (6 amounts + ∞ + a destination icon)
    this row doesn't fit one line at the popup's own max-width the way the
-   shorter 5-button destroy/recycle row does, so it wraps onto a second
+   shorter 5-button destroy/salvage row does, so it wraps onto a second
    line instead of shrinking illegibly or overflowing. */
 .transferButton {
   min-width: 2.1rem;

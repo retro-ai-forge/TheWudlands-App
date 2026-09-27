@@ -39,10 +39,10 @@ from backend.db import get_database  # noqa: E402
 PLAYER_ADDRESS = "1sFxBUESH2ztJzRFvP4s7Ehc8Sj8sFxpMxgA985yud1Yz34"
 RAW_MATERIAL_QTY = 3000
 
-DROP_BLUEPRINTS = False
-DROP_MATERIALS  = False    # raw materials → crafting.resources
+DROP_BLUEPRINTS = True
+DROP_MATERIALS  = True    # raw materials → crafting.resources
 DROP_ITEMS      = True   # instance items + vault.itemBalances (armor, weapons, food, potions, …)
-DROP_TOOLS      = False   # flat crafting tools (anvil, furnace, workbench, …)
+DROP_TOOLS      = True   # flat crafting tools (anvil, furnace, workbench, …)
 
 TIER_RANDOM     = False  # True = pick a random tier, overrides TIER_LVL
 TIER_LVL        = 6      # tier to drop when TIER_RANDOM is False (1–6)
@@ -107,7 +107,7 @@ def load_items(tier: int) -> tuple[list[dict], dict[str, int], dict[str, int]]:
                         "instanceId": uuid.uuid4().hex,
                         "itemId": it["id"],
                         "familyId": it["familyId"],
-                        "quality": fam_props.get("qualityMax", 1),
+                        "quality": (fam_props.get("qualityMax") or 0) * (2 ** (tier - 1)),
                         "location": "pool",
                         "slotRef": [],
                         "createdAt": now,

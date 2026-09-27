@@ -34,8 +34,8 @@ from backend.players import (
     check_in_resource,
     check_in_tool,
     check_in_resource_from_camp,
-    check_out_item_balance,
     check_out_item_balance_to_backpack,
+    check_out_item_balance_to_saddlepack,
     check_out_item_instance,
     check_out_resource_to_backpack,
     delete_character,
@@ -51,23 +51,47 @@ from backend.players import (
     get_player,
     grant_shared_resource,
     load_item_balance_to_backpack,
+    load_item_balance_to_saddlepack,
     load_resource_to_backpack,
     move_all_camp_to_backpack,
+    move_all_camp_to_bags,
     move_backpack_item_to_camp,
+    move_backpack_item_to_saddlepack,
     move_backpack_resource_to_camp,
+    move_backpack_resource_to_saddlepack,
+    move_saddlepack_resource_to_backpack,
+    move_saddlepack_resource_to_camp,
+    check_in_resource_from_saddlepack,
     move_camp_item_to_backpack,
+    move_camp_item_to_saddlepack,
+    move_item_balance_backpack_to_saddlepack,
+    move_item_balance_saddlepack_to_backpack,
+    move_saddlepack_item_to_backpack,
+    move_saddlepack_item_to_camp,
     move_camp_resource_to_backpack,
-    preview_camp_refine,
-    preview_recycle,
-    recycle_item_balance,
-    recycle_item_instance,
-    refine_camp,
+    preview_backpack_salvage,
+    preview_container_salvage,
+    preview_camp_salvage,
+    preview_salvage,
+    salvage_item_balance,
+    salvage_item_instance,
+    salvage_camp,
+    salvage_backpack,
+    salvage_container,
     set_in_adventure,
     set_prime_profession,
     start_craft,
     unequip_item,
     unload_item_balance_from_backpack,
+    unload_item_balance_from_saddlepack,
+    unload_item_balance_from_cart,
+    check_in_item_balance_from_cart,
+    load_item_balance_to_cart,
     unload_resource_from_backpack,
+    move_cart_item_to_camp,
+    move_camp_item_to_cart,
+    move_cart_resource_to_camp,
+    check_in_resource_from_cart,
     update_character_portrait,
 )
 from backend import items_catalog
@@ -238,7 +262,7 @@ class ItemInstanceResponse(BaseModel):
     location: str = Field(
         ...,
         description=(
-            "'backpack' | 'body' | 'soul' | 'pool' | 'crafting' | 'camp' | 'saddlepack' - 'crafting' means "
+            "'backpack' | 'body' | 'soul' | 'pool' | 'crafting' | 'camp' | 'saddlepack' | 'cart' - 'crafting' means "
             "this instance is currently borrowed for an in-progress craft (see activeCraft.borrowedInstances) "
             "and will return to wherever it came from once finish_craft releases it; 'camp'/'saddlepack' mean "
             "it's still this character's own, uncapped, not counted against backpack capacity (see "
@@ -271,6 +295,7 @@ class GearBalancesResponse(BaseModel):
     camp: Dict[str, int] = Field(default_factory=dict, description="Owned, not packed anywhere specific")
     backpack: Dict[str, int] = Field(default_factory=dict, description="Physically loaded into the backpack")
     saddlepack: Dict[str, int] = Field(default_factory=dict, description="Physically loaded into a mount's saddlepack")
+    cart: Dict[str, int] = Field(default_factory=dict, description="Physically loaded into a cart")
 
 
 class CharacterGearResponse(BaseModel):
@@ -292,6 +317,13 @@ class CharacterGearResponse(BaseModel):
             "nothing to carry it in"
         ),
     )
+    saddlepackSlotsUsed: int = Field(0, description="Total saddlepack slots currently occupied")
+    saddlepackCapacity: int = Field(0, description="Saddlepack slot ceiling, 0 with nothing equipped")
+    cartSlotsUsed: int = Field(0, description="Total cart slots currently occupied")
+    cartCapacity: int = Field(0, description="Cart slot ceiling, 0 with nothing equipped")
+    carryWeightUsed: int = Field(0, description="Total weight the character is personally carrying (body + backpack contents)")
+    carryWeightCapacity: int = Field(0, description="Max carry weight from attributes: 10 + (might + endurance) // 3")
+    encumbranceState: str = Field("normal", description="normal / encumbered / immobile")
 
 
 class CharacterResponse(BaseModel):
@@ -528,6 +560,7 @@ class ItemCatalogEntryResponse(BaseModel):
     gatheringBonuses: List[str] = Field(
         default_factory=list, description="Raw materials this family grants a foraging/gathering bonus for"
     )
+    capacitySlots: int = Field(0, description="Per-tier slot capacity of a backpack/saddlepack/cart, 0 otherwise")
 
 
 # Dependency: Extract and verify token from secure cookie
@@ -924,7 +957,7 @@ async def get_item_catalog():
             id=e.id, name=e.name, familyId=e.family_id, tier=e.tier, kind=list(e.kind), qualityMax=e.quality_max,
             icon=e.icon, stackSize=e.stack_size, description=e.description, sizeClass=e.size_class,
             equipSlots=[list(group) for group in e.equip_slots], backpackable=e.backpackable,
-            gatheringBonuses=list(e.gathering_bonuses),
+            gatheringBonuses=list(e.gathering_bonuses), capacitySlots=e.capacity_slots,
         )
         for e in items_catalog.ITEM_CATALOG_ENTRIES
     ]
@@ -1134,18 +1167,15 @@ class CheckOutItemInstanceRequest(BaseModel):
     )
 
 
-@player_router.post("/me/characters/{character_id}/items/{instance_id}/check-out", response_model=PlayerDataResponse)
-async def check_out_item_instance_route(
+@player_router.post("/me/characters/{character_id}/items/{instance_id}/vault-to-backpack", response_model=PlayerDataResponse)
+async def check_out_item_instance_to_backpack_route(
     character_id: str,
     instance_id: str,
-    payload: Optional[CheckOutItemInstanceRequest] = None,
     address: str = Depends(get_current_address),
 ):
-    """Move one item instance from the player's shared pool onto a character's backpack (capacity-gated) or saddlepack (uncapped)."""
+    """Move one item instance from the player's shared pool onto a character's backpack (capacity-gated)."""
     try:
-        player = await check_out_item_instance(
-            address, character_id, instance_id, payload.destination if payload else "backpack"
-        )
+        player = await check_out_item_instance(address, character_id, instance_id, "backpack")
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc))
 
@@ -1155,21 +1185,39 @@ async def check_out_item_instance_route(
     return player.to_dict()
 
 
-@player_router.post("/me/characters/{character_id}/items/{instance_id}/check-in", response_model=PlayerDataResponse)
-async def check_in_item_instance_route(character_id: str, instance_id: str, address: str = Depends(get_current_address)):
-    """Move one item instance from a character's backpack back into the player's shared pool."""
-    player = await check_in_item_instance(address, character_id, instance_id)
+@player_router.post("/me/characters/{character_id}/items/{instance_id}/vault-to-saddlepack", response_model=PlayerDataResponse)
+async def check_out_item_instance_to_saddlepack_route(
+    character_id: str,
+    instance_id: str,
+    address: str = Depends(get_current_address),
+):
+    """Move one item instance from the player's shared pool onto a character's saddlepack (capacity-gated)."""
+    try:
+        player = await check_out_item_instance(address, character_id, instance_id, "saddlepack")
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc))
+
     if player is None:
-        raise HTTPException(status_code=404, detail="No matching backpacked instance on that character")
+        raise HTTPException(status_code=404, detail="No matching instance in the shared vault")
 
     return player.to_dict()
 
 
-@player_router.post("/me/characters/{character_id}/items/{instance_id}/stow", response_model=PlayerDataResponse)
+@player_router.post("/me/characters/{character_id}/items/{instance_id}/to-vault", response_model=PlayerDataResponse)
+async def check_in_item_instance_route(character_id: str, instance_id: str, address: str = Depends(get_current_address)):
+    """Move one item instance from a character's backpack/saddlepack/camp back into the player's shared pool."""
+    player = await check_in_item_instance(address, character_id, instance_id)
+    if player is None:
+        raise HTTPException(status_code=404, detail="No matching instance on that character")
+
+    return player.to_dict()
+
+
+@player_router.post("/me/characters/{character_id}/items/{instance_id}/camp-to-backpack", response_model=PlayerDataResponse)
 async def move_camp_item_to_backpack_route(
     character_id: str, instance_id: str, address: str = Depends(get_current_address)
 ):
-    """Move one item instance straight from a character's camp storage into their backpack - stays on the character the whole way, so unlike check-out this works mid-adventure too."""
+    """Move one item instance straight from a character's camp storage into their backpack - stays on the character the whole way, so unlike vault-to-backpack this works mid-adventure too."""
     try:
         player = await move_camp_item_to_backpack(address, character_id, instance_id)
     except ValueError as exc:
@@ -1180,11 +1228,26 @@ async def move_camp_item_to_backpack_route(
     return player.to_dict()
 
 
-@player_router.post("/me/characters/{character_id}/items/{instance_id}/unstow", response_model=PlayerDataResponse)
+@player_router.post("/me/characters/{character_id}/items/{instance_id}/camp-to-saddlepack", response_model=PlayerDataResponse)
+async def move_camp_item_to_saddlepack_route(
+    character_id: str, instance_id: str, address: str = Depends(get_current_address)
+):
+    """Move one item instance straight from a character's camp storage into their saddlepack (capacity-gated)."""
+    try:
+        player = await move_camp_item_to_saddlepack(address, character_id, instance_id)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc))
+    if player is None:
+        raise HTTPException(status_code=404, detail="No matching camped instance on that character")
+
+    return player.to_dict()
+
+
+@player_router.post("/me/characters/{character_id}/items/{instance_id}/backpack-to-camp", response_model=PlayerDataResponse)
 async def move_backpack_item_to_camp_route(
     character_id: str, instance_id: str, address: str = Depends(get_current_address)
 ):
-    """Move one item instance straight from a character's backpack into their camp storage - stays on the character the whole way, so unlike check-in this works mid-adventure too."""
+    """Move one item instance straight from a character's backpack into their camp storage - stays on the character the whole way, so unlike to-vault this works mid-adventure too."""
     player = await move_backpack_item_to_camp(address, character_id, instance_id)
     if player is None:
         raise HTTPException(status_code=404, detail="No matching backpacked instance on that character")
@@ -1192,26 +1255,77 @@ async def move_backpack_item_to_camp_route(
     return player.to_dict()
 
 
-@player_router.post(
-    "/me/characters/{character_id}/item-balances/{item_id}/check-out", response_model=PlayerDataResponse
-)
-async def check_out_item_balance_route(
-    character_id: str, item_id: str, payload: TransferAmountRequest, address: str = Depends(get_current_address)
+@player_router.post("/me/characters/{character_id}/items/{instance_id}/backpack-to-saddlepack", response_model=PlayerDataResponse)
+async def move_backpack_item_to_saddlepack_route(
+    character_id: str, instance_id: str, address: str = Depends(get_current_address)
 ):
-    """Move `amount` of `item_id` from the player's shared vault onto one of their characters (uncapped)."""
+    """Move one item instance from a character's backpack into their saddlepack."""
     try:
-        player = await check_out_item_balance(address, character_id, item_id, payload.amount)
+        player = await move_backpack_item_to_saddlepack(address, character_id, instance_id)
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc))
-
     if player is None:
-        raise HTTPException(status_code=404, detail="No matching character, or not enough in the shared vault")
+        raise HTTPException(status_code=404, detail="No matching backpacked instance on that character")
+
+    return player.to_dict()
+
+
+@player_router.post("/me/characters/{character_id}/items/{instance_id}/saddlepack-to-backpack", response_model=PlayerDataResponse)
+async def move_saddlepack_item_to_backpack_route(
+    character_id: str, instance_id: str, address: str = Depends(get_current_address)
+):
+    """Move one item instance from a character's saddlepack into their backpack."""
+    try:
+        player = await move_saddlepack_item_to_backpack(address, character_id, instance_id)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc))
+    if player is None:
+        raise HTTPException(status_code=404, detail="No matching saddlepacked instance on that character")
+
+    return player.to_dict()
+
+
+@player_router.post("/me/characters/{character_id}/items/{instance_id}/saddlepack-to-camp", response_model=PlayerDataResponse)
+async def move_saddlepack_item_to_camp_route(
+    character_id: str, instance_id: str, address: str = Depends(get_current_address)
+):
+    """Move one item instance from a character's saddlepack into their camp storage."""
+    player = await move_saddlepack_item_to_camp(address, character_id, instance_id)
+    if player is None:
+        raise HTTPException(status_code=404, detail="No matching saddlepacked instance on that character")
+
+    return player.to_dict()
+
+
+@player_router.post("/me/characters/{character_id}/items/{instance_id}/cart-to-camp", response_model=PlayerDataResponse)
+async def move_cart_item_to_camp_route(
+    character_id: str, instance_id: str, address: str = Depends(get_current_address)
+):
+    """Move one item instance from a character's cart into their camp storage."""
+    player = await move_cart_item_to_camp(address, character_id, instance_id)
+    if player is None:
+        raise HTTPException(status_code=404, detail="No matching cart instance on that character")
+
+    return player.to_dict()
+
+
+@player_router.post("/me/characters/{character_id}/items/{instance_id}/camp-to-cart", response_model=PlayerDataResponse)
+async def move_camp_item_to_cart_route(
+    character_id: str, instance_id: str, address: str = Depends(get_current_address)
+):
+    """Move one item instance from camp into a character's cart."""
+    try:
+        player = await move_camp_item_to_cart(address, character_id, instance_id)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+    if player is None:
+        raise HTTPException(status_code=404, detail="No matching camp instance on that character")
 
     return player.to_dict()
 
 
 @player_router.post(
-    "/me/characters/{character_id}/item-balances/{item_id}/check-out-backpack", response_model=PlayerDataResponse
+    "/me/characters/{character_id}/item-balances/{item_id}/vault-to-backpack", response_model=PlayerDataResponse
 )
 async def check_out_item_balance_to_backpack_route(
     character_id: str, item_id: str, payload: TransferAmountRequest, address: str = Depends(get_current_address)
@@ -1229,7 +1343,25 @@ async def check_out_item_balance_to_backpack_route(
 
 
 @player_router.post(
-    "/me/characters/{character_id}/item-balances/{item_id}/check-in", response_model=PlayerDataResponse
+    "/me/characters/{character_id}/item-balances/{item_id}/vault-to-saddlepack", response_model=PlayerDataResponse
+)
+async def check_out_item_balance_to_saddlepack_route(
+    character_id: str, item_id: str, payload: TransferAmountRequest, address: str = Depends(get_current_address)
+):
+    """Move `amount` of `item_id` from the player's shared vault straight into this character's own saddlepack, in one all-or-nothing hop."""
+    try:
+        player = await check_out_item_balance_to_saddlepack(address, character_id, item_id, payload.amount)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc))
+
+    if player is None:
+        raise HTTPException(status_code=404, detail="No matching character, or not enough in the shared vault")
+
+    return player.to_dict()
+
+
+@player_router.post(
+    "/me/characters/{character_id}/item-balances/{item_id}/to-vault", response_model=PlayerDataResponse
 )
 async def check_in_item_balance_route(
     character_id: str,
@@ -1306,6 +1438,78 @@ async def move_backpack_resource_to_camp_route(
 
 
 @player_router.post(
+    "/me/characters/{character_id}/resources/{resource_id}/backpack-to-saddlepack", response_model=PlayerDataResponse
+)
+async def move_backpack_resource_to_saddlepack_route(
+    character_id: str, resource_id: str, payload: TransferAmountRequest, address: str = Depends(get_current_address)
+):
+    """Move `amount` of `resource_id` from the character's backpack into their saddlepack (capacity-gated)."""
+    try:
+        player = await move_backpack_resource_to_saddlepack(address, character_id, resource_id, payload.amount)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc))
+
+    if player is None:
+        raise HTTPException(status_code=404, detail="No matching character, or not enough in the backpack")
+
+    return player.to_dict()
+
+
+@player_router.post(
+    "/me/characters/{character_id}/resources/{resource_id}/saddlepack-to-backpack", response_model=PlayerDataResponse
+)
+async def move_saddlepack_resource_to_backpack_route(
+    character_id: str, resource_id: str, payload: TransferAmountRequest, address: str = Depends(get_current_address)
+):
+    """Move `amount` of `resource_id` from the character's saddlepack into their backpack (capacity-gated)."""
+    try:
+        player = await move_saddlepack_resource_to_backpack(address, character_id, resource_id, payload.amount)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc))
+
+    if player is None:
+        raise HTTPException(status_code=404, detail="No matching character, or not enough in the saddlepack")
+
+    return player.to_dict()
+
+
+@player_router.post(
+    "/me/characters/{character_id}/resources/{resource_id}/saddlepack-to-camp", response_model=PlayerDataResponse
+)
+async def move_saddlepack_resource_to_camp_route(
+    character_id: str, resource_id: str, payload: TransferAmountRequest, address: str = Depends(get_current_address)
+):
+    """Move `amount` of `resource_id` from the character's saddlepack into their camp. Works mid-adventure."""
+    try:
+        player = await move_saddlepack_resource_to_camp(address, character_id, resource_id, payload.amount)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc))
+
+    if player is None:
+        raise HTTPException(status_code=404, detail="No matching character, or not enough in the saddlepack")
+
+    return player.to_dict()
+
+
+@player_router.post(
+    "/me/characters/{character_id}/resources/{resource_id}/unload-saddlepack", response_model=PlayerDataResponse
+)
+async def check_in_resource_from_saddlepack_route(
+    character_id: str, resource_id: str, payload: TransferAmountRequest, address: str = Depends(get_current_address)
+):
+    """Move `amount` of `resource_id` from the character's saddlepack into the shared crafting stock (Party's Resources)."""
+    try:
+        player = await check_in_resource_from_saddlepack(address, character_id, resource_id, payload.amount)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc))
+
+    if player is None:
+        raise HTTPException(status_code=404, detail="No matching character, or not enough in the saddlepack")
+
+    return player.to_dict()
+
+
+@player_router.post(
     "/me/characters/{character_id}/resources/{resource_id}/stow", response_model=PlayerDataResponse
 )
 async def move_camp_resource_to_backpack_route(
@@ -1342,7 +1546,7 @@ async def check_in_resource_from_camp_route(
 
 
 @player_router.post(
-    "/me/characters/{character_id}/item-balances/{item_id}/load-backpack", response_model=PlayerDataResponse
+    "/me/characters/{character_id}/item-balances/{item_id}/camp-to-backpack", response_model=PlayerDataResponse
 )
 async def load_item_balance_to_backpack_route(
     character_id: str, item_id: str, payload: TransferAmountRequest, address: str = Depends(get_current_address)
@@ -1360,7 +1564,7 @@ async def load_item_balance_to_backpack_route(
 
 
 @player_router.post(
-    "/me/characters/{character_id}/item-balances/{item_id}/unload-backpack", response_model=PlayerDataResponse
+    "/me/characters/{character_id}/item-balances/{item_id}/backpack-to-camp", response_model=PlayerDataResponse
 )
 async def unload_item_balance_from_backpack_route(
     character_id: str, item_id: str, payload: TransferAmountRequest, address: str = Depends(get_current_address)
@@ -1374,6 +1578,134 @@ async def unload_item_balance_from_backpack_route(
     if player is None:
         raise HTTPException(status_code=404, detail="No matching character, or not enough in the backpack")
 
+    return player.to_dict()
+
+
+@player_router.post(
+    "/me/characters/{character_id}/item-balances/{item_id}/camp-to-saddlepack", response_model=PlayerDataResponse
+)
+async def load_item_balance_to_saddlepack_route(
+    character_id: str, item_id: str, payload: TransferAmountRequest, address: str = Depends(get_current_address)
+):
+    """Pack `amount` of `item_id` from a character's camp into their saddlepack (capacity-gated)."""
+    try:
+        player = await load_item_balance_to_saddlepack(address, character_id, item_id, payload.amount)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc))
+    if player is None:
+        raise HTTPException(status_code=404, detail="No matching character, or not enough in camp")
+    return player.to_dict()
+
+
+@player_router.post(
+    "/me/characters/{character_id}/item-balances/{item_id}/saddlepack-to-camp", response_model=PlayerDataResponse
+)
+async def unload_item_balance_from_saddlepack_route(
+    character_id: str, item_id: str, payload: TransferAmountRequest, address: str = Depends(get_current_address)
+):
+    """Move `amount` of `item_id` from a character's saddlepack back into camp."""
+    try:
+        player = await unload_item_balance_from_saddlepack(address, character_id, item_id, payload.amount)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc))
+    if player is None:
+        raise HTTPException(status_code=404, detail="No matching character, or not enough in the saddlepack")
+    return player.to_dict()
+
+
+@player_router.post(
+    "/me/characters/{character_id}/item-balances/{item_id}/backpack-to-saddlepack", response_model=PlayerDataResponse
+)
+async def move_item_balance_backpack_to_saddlepack_route(
+    character_id: str, item_id: str, payload: TransferAmountRequest, address: str = Depends(get_current_address)
+):
+    """Move `amount` of `item_id` from backpack itemBalances into saddlepack (capacity-gated)."""
+    try:
+        player = await move_item_balance_backpack_to_saddlepack(address, character_id, item_id, payload.amount)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc))
+    if player is None:
+        raise HTTPException(status_code=404, detail="No matching character, or not enough in the backpack")
+    return player.to_dict()
+
+
+@player_router.post(
+    "/me/characters/{character_id}/item-balances/{item_id}/saddlepack-to-backpack", response_model=PlayerDataResponse
+)
+async def move_item_balance_saddlepack_to_backpack_route(
+    character_id: str, item_id: str, payload: TransferAmountRequest, address: str = Depends(get_current_address)
+):
+    """Move `amount` of `item_id` from saddlepack itemBalances into backpack (capacity-gated)."""
+    try:
+        player = await move_item_balance_saddlepack_to_backpack(address, character_id, item_id, payload.amount)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc))
+    if player is None:
+        raise HTTPException(status_code=404, detail="No matching character, or not enough in the saddlepack")
+    return player.to_dict()
+
+
+@player_router.post(
+    "/me/characters/{character_id}/item-balances/{item_id}/cart-to-camp", response_model=PlayerDataResponse
+)
+async def unload_item_balance_from_cart_route(
+    character_id: str, item_id: str, payload: TransferAmountRequest, address: str = Depends(get_current_address)
+):
+    """Move `amount` of `item_id` from a character's cart back into camp."""
+    try:
+        player = await unload_item_balance_from_cart(address, character_id, item_id, payload.amount)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc))
+    if player is None:
+        raise HTTPException(status_code=404, detail="No matching character, or not enough in the cart")
+    return player.to_dict()
+
+
+@player_router.post(
+    "/me/characters/{character_id}/item-balances/{item_id}/cart-to-vault", response_model=PlayerDataResponse
+)
+async def check_in_item_balance_from_cart_route(
+    character_id: str, item_id: str, payload: TransferAmountRequest, address: str = Depends(get_current_address)
+):
+    """Move `amount` of `item_id` from a character's cart into the shared vault."""
+    try:
+        player = await check_in_item_balance_from_cart(address, character_id, item_id, payload.amount)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc))
+    if player is None:
+        raise HTTPException(status_code=404, detail="No matching character, or not enough in the cart")
+    return player.to_dict()
+
+
+@player_router.post(
+    "/me/characters/{character_id}/resources/{resource_id}/cart-to-camp", response_model=PlayerDataResponse
+)
+async def move_cart_resource_to_camp_route(
+    character_id: str, resource_id: str, payload: TransferAmountRequest, address: str = Depends(get_current_address)
+):
+    """Move `amount` of `resource_id` from a character's cart into camp."""
+    try:
+        player = await move_cart_resource_to_camp(address, character_id, resource_id, payload.amount)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc))
+    if player is None:
+        raise HTTPException(status_code=404, detail="No matching character, or not enough in the cart")
+    return player.to_dict()
+
+
+@player_router.post(
+    "/me/characters/{character_id}/resources/{resource_id}/cart-to-vault", response_model=PlayerDataResponse
+)
+async def check_in_resource_from_cart_route(
+    character_id: str, resource_id: str, payload: TransferAmountRequest, address: str = Depends(get_current_address)
+):
+    """Move `amount` of `resource_id` from a character's cart into the shared crafting stock."""
+    try:
+        player = await check_in_resource_from_cart(address, character_id, resource_id, payload.amount)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc))
+    if player is None:
+        raise HTTPException(status_code=404, detail="No matching character, or not enough in the cart")
     return player.to_dict()
 
 
@@ -1461,9 +1793,23 @@ async def move_all_camp_to_backpack_route(character_id: str, address: str = Depe
     return player.to_dict()
 
 
-class RecycleYieldResponse(BaseModel):
+@player_router.post("/me/characters/{character_id}/camp/move-all-to-bags", response_model=PlayerDataResponse)
+async def move_all_camp_to_bags_route(character_id: str, address: str = Depends(get_current_address)):
+    """Move camp contents into bags (backpack first, then saddlepack), vault the rest when not in adventure."""
+    try:
+        player = await move_all_camp_to_bags(address, character_id)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc))
+
+    if player is None:
+        raise HTTPException(status_code=404, detail="Camp is already empty")
+
+    return player.to_dict()
+
+
+class SalvageYieldResponse(BaseModel):
     """The four components _yield_breakdown.total adds up to - so the
-    recycle popup can print each contributing line, not just the total."""
+    salvage popup can print each contributing line, not just the total."""
 
     base: int
     skill: int
@@ -1472,7 +1818,7 @@ class RecycleYieldResponse(BaseModel):
     total: int
 
 
-class RecycleRecoveredLineResponse(BaseModel):
+class SalvageRecoveredLineResponse(BaseModel):
     """One line of a recovery breakdown, e.g. "1 iron bar" or the leftover
     "2 iron ore"."""
 
@@ -1484,30 +1830,31 @@ class RecycleRecoveredLineResponse(BaseModel):
     qty: int
 
 
-class RecycleMaterialResponse(BaseModel):
-    """One raw material's full recycling line: its full recoverable-chain
+class SalvageMaterialResponse(BaseModel):
+    """One raw material's full salvage line: its full recoverable-chain
     total for one unit of the item, the yield% that applies to it, and the
     denomination breakdown of what's actually handed back."""
 
     rawFamilyId: str
     rawName: str
     totalUnits: int
-    yieldBreakdown: RecycleYieldResponse
+    yieldBreakdown: SalvageYieldResponse
     recoveredUnits: int
-    recovered: List[RecycleRecoveredLineResponse]
+    recovered: List[SalvageRecoveredLineResponse]
 
 
-class RecyclePreviewResponse(BaseModel):
-    materials: List[RecycleMaterialResponse]
+class SalvagePreviewResponse(BaseModel):
+    materials: List[SalvageMaterialResponse]
+    condition: str = "new"
 
 
-def _to_recycle_preview_response(recoveries) -> RecyclePreviewResponse:
-    return RecyclePreviewResponse(materials=[
-        RecycleMaterialResponse(
+def _to_salvage_preview_response(recoveries) -> SalvagePreviewResponse:
+    return SalvagePreviewResponse(materials=[
+        SalvageMaterialResponse(
             rawFamilyId=r.raw_family_id,
             rawName=r.raw_name,
             totalUnits=r.total_units,
-            yieldBreakdown=RecycleYieldResponse(
+            yieldBreakdown=SalvageYieldResponse(
                 base=r.yield_breakdown.base,
                 skill=r.yield_breakdown.skill,
                 tool=r.yield_breakdown.tool,
@@ -1516,7 +1863,7 @@ def _to_recycle_preview_response(recoveries) -> RecyclePreviewResponse:
             ),
             recoveredUnits=r.recovered_units,
             recovered=[
-                RecycleRecoveredLineResponse(
+                SalvageRecoveredLineResponse(
                     familyId=line.family_id, id=line.concrete_id, name=line.name,
                     tier=line.tier, category=line.category, qty=line.qty,
                 )
@@ -1527,12 +1874,12 @@ def _to_recycle_preview_response(recoveries) -> RecyclePreviewResponse:
     ])
 
 
-class CampRefinePreviewRowResponse(BaseModel):
-    """One recyclable camp item instance/itemBalance - what recycling ALL
-    of it would hand back, "as if" (see preview_camp_refine), not yet
-    actually recycled. `materials` is the exact same per-raw-family
+class CampSalvagePreviewRowResponse(BaseModel):
+    """One salvageable camp item instance/itemBalance - what salvaging ALL
+    of it would hand back, "as if" (see preview_camp_salvage), not yet
+    actually salvaged. `materials` is the exact same per-raw-family
     breakdown (name, yield%, recovered/total units) a single item's own
-    recycle-preview popup shows, one row per raw family this thing's own
+    salvage-preview popup shows, one row per raw family this thing's own
     recipe chain touches."""
 
     id: str
@@ -1540,89 +1887,210 @@ class CampRefinePreviewRowResponse(BaseModel):
     name: str
     tier: int
     owned: int
-    materials: List[RecycleMaterialResponse]
+    materials: List[SalvageMaterialResponse]
+    preselected: bool = True
+    condition: str = "new"
 
 
-class CampRefinePreviewResponse(BaseModel):
-    rows: List[CampRefinePreviewRowResponse]
+class CampSalvagePreviewResponse(BaseModel):
+    rows: List[CampSalvagePreviewRowResponse]
 
 
-@player_router.get("/me/characters/{character_id}/camp/refine-preview", response_model=CampRefinePreviewResponse)
-async def preview_camp_refine_route(character_id: str, address: str = Depends(get_current_address)):
-    """What holding the chopping block down would recycle - every camp item/itemBalance with a recipe, one row per thing."""
-    rows = await preview_camp_refine(address, character_id)
+@player_router.get("/me/characters/{character_id}/camp/salvage-preview", response_model=CampSalvagePreviewResponse)
+async def preview_camp_salvage_route(character_id: str, address: str = Depends(get_current_address)):
+    """What holding the chopping block down would salvage - every camp item/itemBalance with a recipe, one row per thing."""
+    rows = await preview_camp_salvage(address, character_id)
     if rows is None:
         raise HTTPException(status_code=404, detail="No matching character")
 
-    return CampRefinePreviewResponse(
+    return CampSalvagePreviewResponse(
         rows=[
-            CampRefinePreviewRowResponse(
+            CampSalvagePreviewRowResponse(
                 id=row["id"],
                 kind=row["kind"],
                 name=row["name"],
                 tier=row["tier"],
                 owned=row["owned"],
-                materials=_to_recycle_preview_response(row["recoveries"]).materials,
+                materials=_to_salvage_preview_response(row["recoveries"]).materials,
+                preselected=row.get("preselected", True),
+                condition=row.get("condition", "new"),
             )
             for row in rows
         ]
     )
 
 
-class RefineCampRequest(BaseModel):
+class SalvageCampRequest(BaseModel):
     selected: List[str] = Field(
-        ..., description="Ids (instanceId or item_id) of the preview rows to actually recycle"
+        ..., description="Ids (instanceId or item_id) of the preview rows to actually salvage"
     )
 
 
-@player_router.post("/me/characters/{character_id}/camp/refine-all", response_model=PlayerDataResponse)
-async def refine_camp_route(
-    character_id: str, payload: RefineCampRequest, address: str = Depends(get_current_address)
+@player_router.post("/me/characters/{character_id}/camp/salvage-all", response_model=PlayerDataResponse)
+async def salvage_camp_route(
+    character_id: str, payload: SalvageCampRequest, address: str = Depends(get_current_address)
 ):
-    """Recycle every selected camp item/itemBalance at once, crediting recovered materials straight into camp."""
-    player = await refine_camp(address, character_id, payload.selected)
+    """Salvage every selected camp item/itemBalance at once, crediting recovered materials straight into camp."""
+    player = await salvage_camp(address, character_id, payload.selected)
     if player is None:
-        raise HTTPException(status_code=404, detail="Nothing selected recycled")
+        raise HTTPException(status_code=404, detail="Nothing selected salvaged")
+
+    return player.to_dict()
+
+
+class BackpackSalvagePreviewRowResponse(BaseModel):
+    """One recyclable row for the worn backpack's own Salvage popup - either
+    something packed inside it, or (isContainer=True, always row 0) the
+    backpack instance itself."""
+
+    id: str
+    kind: Literal["instance", "balance"]
+    name: str
+    tier: int
+    owned: int
+    isContainer: bool
+    materials: List[SalvageMaterialResponse]
+    condition: str = "new"
+
+
+class BackpackSalvagePreviewResponse(BaseModel):
+    rows: List[BackpackSalvagePreviewRowResponse]
+
+
+@player_router.get(
+    "/me/characters/{character_id}/backpack/salvage-preview", response_model=BackpackSalvagePreviewResponse
+)
+async def preview_backpack_salvage_route(character_id: str, address: str = Depends(get_current_address)):
+    """What holding the Salvage popup's icon down would salvage - the worn backpack itself (row 0, unchecked by default in the UI) plus every salvageable thing packed inside it."""
+    rows = await preview_backpack_salvage(address, character_id)
+    if rows is None:
+        raise HTTPException(status_code=404, detail="No matching character, or no backpack worn")
+
+    return BackpackSalvagePreviewResponse(
+        rows=[
+            BackpackSalvagePreviewRowResponse(
+                id=row["id"],
+                kind=row["kind"],
+                name=row["name"],
+                tier=row["tier"],
+                owned=row["owned"],
+                isContainer=row["isContainer"],
+                materials=_to_salvage_preview_response(row["recoveries"]).materials,
+                condition=row.get("condition", "new"),
+            )
+            for row in rows
+        ]
+    )
+
+
+class SalvageBackpackRequest(BaseModel):
+    selected: List[str] = Field(
+        ..., description="Ids (instanceId or item_id) of the preview rows to actually salvage - include the backpack's own row id to destroy it too"
+    )
+
+
+@player_router.post("/me/characters/{character_id}/backpack/salvage-all", response_model=PlayerDataResponse)
+async def salvage_backpack_route(
+    character_id: str, payload: SalvageBackpackRequest, address: str = Depends(get_current_address)
+):
+    """Salvage every selected packed item/itemBalance (and the backpack itself, if selected) at once - see salvage_backpack for the full destination logic."""
+    player = await salvage_backpack(address, character_id, payload.selected)
+    if player is None:
+        raise HTTPException(status_code=404, detail="Nothing selected salvaged")
 
     return player.to_dict()
 
 
 @player_router.get(
-    "/me/characters/{character_id}/recycle-preview/{item_id}", response_model=RecyclePreviewResponse
+    "/me/characters/{character_id}/{container_type}/salvage-preview", response_model=BackpackSalvagePreviewResponse
 )
-async def recycle_preview_route(
+async def preview_container_salvage_route(
+    character_id: str, container_type: str, address: str = Depends(get_current_address)
+):
+    """What holding the Salvage popup's icon down would salvage for a saddlepack or cart."""
+    if container_type not in ("saddlepack", "cart"):
+        raise HTTPException(status_code=400, detail="Invalid container type")
+    rows = await preview_container_salvage(address, character_id, container_type)
+    if rows is None:
+        raise HTTPException(status_code=404, detail=f"No matching character, or no {container_type} equipped")
+
+    return BackpackSalvagePreviewResponse(
+        rows=[
+            BackpackSalvagePreviewRowResponse(
+                id=row["id"],
+                kind=row["kind"],
+                name=row["name"],
+                tier=row["tier"],
+                owned=row["owned"],
+                isContainer=row["isContainer"],
+                materials=_to_salvage_preview_response(row["recoveries"]).materials,
+                condition=row.get("condition", "new"),
+            )
+            for row in rows
+        ]
+    )
+
+
+class SalvageContainerRequest(BaseModel):
+    selected: List[str] = Field(
+        ..., description="Ids (instanceId or item_id) of the preview rows to actually salvage"
+    )
+
+
+@player_router.post("/me/characters/{character_id}/{container_type}/salvage-all", response_model=PlayerDataResponse)
+async def salvage_container_route(
+    character_id: str, container_type: str, payload: SalvageContainerRequest, address: str = Depends(get_current_address)
+):
+    """Salvage every selected packed item/itemBalance (and the container itself, if selected) at once."""
+    if container_type not in ("saddlepack", "cart"):
+        raise HTTPException(status_code=400, detail="Invalid container type")
+    player = await salvage_container(address, character_id, container_type, payload.selected)
+    if player is None:
+        raise HTTPException(status_code=404, detail="Nothing selected salvaged")
+
+    return player.to_dict()
+
+
+@player_router.get(
+    "/me/characters/{character_id}/salvage-preview/{item_id}", response_model=SalvagePreviewResponse
+)
+async def salvage_preview_route(
     character_id: str,
     item_id: str,
     count: int = 1,
     fromVault: bool = False,
+    instanceId: Optional[str] = None,
     address: str = Depends(get_current_address),
 ):
     """
-    Read-only: what recycling `count` unit(s) of concrete item `item_id`
+    Read-only: what salvaging `count` unit(s) of concrete item `item_id`
     would hand back to this character right now - doesn't consume
-    anything. `fromVault` must match whichever recycle-from-vault/
-    non-vault action would actually be taken: recycling off the
+    anything. `fromVault` must match whichever salvage-from-vault/
+    non-vault action would actually be taken: salvaging off the
     character's own body/backpack only credits tools physically carried
     toward the station-tool bonus, never the player's shared pool.
     """
     try:
-        recoveries = await preview_recycle(address, character_id, item_id, count, fromVault)
+        result = await preview_salvage(address, character_id, item_id, count, fromVault, instance_id=instanceId)
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc))
 
-    if recoveries is None:
+    if result is None:
         raise HTTPException(status_code=404, detail="No matching character")
 
-    return _to_recycle_preview_response(recoveries)
+    recoveries, condition = result
+    resp = _to_salvage_preview_response(recoveries)
+    resp.condition = condition
+    return resp
 
 
-@player_router.post("/me/characters/{character_id}/items/{instance_id}/recycle", response_model=PlayerDataResponse)
-async def recycle_item_instance_route(
+@player_router.post("/me/characters/{character_id}/items/{instance_id}/salvage", response_model=PlayerDataResponse)
+async def salvage_item_instance_route(
     character_id: str, instance_id: str, address: str = Depends(get_current_address)
 ):
-    """Recycle one of the character's own item instances (backpack/body) into a fraction of its raw materials, credited to that character's own backpack."""
+    """Salvage one of the character's own item instances (backpack/body) into a fraction of its raw materials, credited to that character's own backpack."""
     try:
-        player = await recycle_item_instance(address, character_id, instance_id, from_vault=False)
+        player = await salvage_item_instance(address, character_id, instance_id, from_vault=False)
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc))
 
@@ -1633,14 +2101,14 @@ async def recycle_item_instance_route(
 
 
 @player_router.post(
-    "/me/characters/{character_id}/items/{instance_id}/recycle-from-vault", response_model=PlayerDataResponse
+    "/me/characters/{character_id}/items/{instance_id}/salvage-from-vault", response_model=PlayerDataResponse
 )
-async def recycle_item_instance_from_vault_route(
+async def salvage_item_instance_from_vault_route(
     character_id: str, instance_id: str, address: str = Depends(get_current_address)
 ):
-    """Recycle one of the player's shared-vault item instances, scored with this character's skills, credited to the shared vault."""
+    """Salvage one of the player's shared-vault item instances, scored with this character's skills, credited to the shared vault."""
     try:
-        player = await recycle_item_instance(address, character_id, instance_id, from_vault=True)
+        player = await salvage_item_instance(address, character_id, instance_id, from_vault=True)
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc))
 
@@ -1651,17 +2119,17 @@ async def recycle_item_instance_from_vault_route(
 
 
 @player_router.post(
-    "/me/characters/{character_id}/item-balances/{item_id}/recycle", response_model=PlayerDataResponse
+    "/me/characters/{character_id}/item-balances/{item_id}/salvage", response_model=PlayerDataResponse
 )
-async def recycle_item_balance_route(
+async def salvage_item_balance_route(
     character_id: str,
     item_id: str,
     payload: ItemBalanceLocationAmountRequest,
     address: str = Depends(get_current_address),
 ):
-    """Recycle `amount` of the character's own item_id balance (from `location`) into a fraction of its raw materials, credited to that character's own backpack."""
+    """Salvage `amount` of the character's own item_id balance (from `location`) into a fraction of its raw materials, credited to that character's own backpack."""
     try:
-        player = await recycle_item_balance(
+        player = await salvage_item_balance(
             address, character_id, item_id, payload.amount, from_vault=False, location=payload.location
         )
     except ValueError as exc:
@@ -1674,14 +2142,14 @@ async def recycle_item_balance_route(
 
 
 @player_router.post(
-    "/me/characters/{character_id}/item-balances/{item_id}/recycle-from-vault", response_model=PlayerDataResponse
+    "/me/characters/{character_id}/item-balances/{item_id}/salvage-from-vault", response_model=PlayerDataResponse
 )
-async def recycle_item_balance_from_vault_route(
+async def salvage_item_balance_from_vault_route(
     character_id: str, item_id: str, payload: TransferAmountRequest, address: str = Depends(get_current_address)
 ):
-    """Recycle `amount` of the player's shared-vault item_id balance, scored with this character's skills, credited to the shared vault."""
+    """Salvage `amount` of the player's shared-vault item_id balance, scored with this character's skills, credited to the shared vault."""
     try:
-        player = await recycle_item_balance(address, character_id, item_id, payload.amount, from_vault=True)
+        player = await salvage_item_balance(address, character_id, item_id, payload.amount, from_vault=True)
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc))
 

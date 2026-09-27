@@ -1,4 +1,36 @@
-## 1. Create virtual env
+## 1. After setup below, run the App on linux two terminals
+
+Run all commands from the **project root** (`TheWudlands/`).
+
+### Terminal 1 — Backend (FastAPI)
+
+```bash
+cd /path/to/TheWudlands
+source .venv/bin/activate
+uvicorn backend.main:app --reload
+# http://localhost:8000
+```
+
+Once it's running, open the Swagger UI at
+[http://localhost:8000/docs](http://localhost:8000/docs).
+
+### Terminal 2 — Frontend (Next.js)
+
+```bash
+cd /path/to/TheWudlands
+npm install   # first time only
+# not always needed, TODO check when
+# npm run build 
+npm run dev
+```
+
+| URL | Description |
+|-----|-------------|
+| [http://localhost:3000](http://localhost:3000) | Game frontend (Next.js) |
+| [http://localhost:8000/docs](http://localhost:8000/docs) | Swagger UI (interactive API docs) |
+| [http://localhost:8000/redoc](http://localhost:8000/redoc) | ReDoc (alternative API docs) |
+
+## 2. Create virtual env
 
 ### Prerequisites (Linux only)
 If you are on Linux and need to compile/install Python versions via `pyenv`, you must first install the required build dependencies:
@@ -11,6 +43,8 @@ If your system-wide `PYENV_ROOT` is locked to a read-only directory (like `/usr/
 
 1. Add the following lines to your `~/.bashrc` (Linux) or `~/.bash_profile` (Git-Bash):
    ```bash
+   curl https://pyenv.run | bash
+
    export PYENV_ROOT="$HOME/.pyenv"
    [[ -d $PYENV_ROOT/bin ]] && export PATH="$PYENV_ROOT/bin:$PATH"
    eval "$(pyenv init -)"
@@ -53,8 +87,9 @@ pyenv install 3.11.4
 4. Upgrade pip and install requirements:
    ```bash
    python -m pip install --upgrade pip
-   npm install
+   sudo apt install -y nodejs npm
    pip install -r requirements.txt
+   npm install
    rav run build
    ```
 
@@ -125,76 +160,38 @@ gcloud run services update serverless-wudlands \
     --project=thewudlands
 ```
 
-## 2. Run the App on linux two terminals
-
-Run all commands from the **project root** (`TheWudlands/`).
-
-### Terminal 1 — Backend (FastAPI)
-
-```bash
-cd /path/to/TheWudlands
-source .venv/bin/activate
-uvicorn backend.main:app --reload
-# http://localhost:8000
-```
-
-Once it's running, open the Swagger UI at
-[http://localhost:8000/docs](http://localhost:8000/docs).
-
-### Terminal 2 — Frontend (Next.js)
-
-```bash
-cd /path/to/TheWudlands
-npm install   # first time only
-# not always needed, TODO check when
-# npm run build 
-npm run dev
-```
-
-| URL | Description |
-|-----|-------------|
-| [http://localhost:3000](http://localhost:3000) | Game frontend (Next.js) |
-| [http://localhost:8000/docs](http://localhost:8000/docs) | Swagger UI (interactive API docs) |
-| [http://localhost:8000/redoc](http://localhost:8000/redoc) | ReDoc (alternative API docs) |
-
-
-## 3. Cloud setup
-https://www.codingforentrepreneurs.com/blog/google-cloud-cli-and-sdk-setup
-
-```bash
-gcloud --version
-gcloud auth login
-
-# if you cannot set quota
-gcloud auth application-default login
-gcloud auth application-default set-quota-project thewudlands
-
-gcloud config set project thewudlands
-gcloud config get-value project
-gcloud auth application-default set-quota-project thewudlands
-gcloud auth configure-docker europe-west1-docker.pkg.dev
-gcloud artifacts repositories list --location=europe-west1
-
-# Auth error, fix for access token!
-gcloud auth login
-gcloud auth print-access-token | docker login -u oauth2accesstoken --password-stdin https://europe-west1-docker.pkg.dev
- 
-gcloud config list
-```
-
-## 4. Docker & group
+## 3. Docker & group
 
 ```bash
 pip install rav
 
-Docker isn't installed. Here's what you need:
+# Install Docker from Ubuntu's apt packages (Ubuntu 25.10 "questing").
+# Do NOT use the Docker snap: its AppArmor profile blocks dockerd's DNS
+# lookups ("lookup registry-1.docker.io on 127.0.0.53:53 ... write:
+# permission denied"), so every pull, build and `docker login` fails.
+# If the snap is installed, remove it first:
+sudo snap remove docker
 
-On Linux:
+# apt must see the main Ubuntu archive (questing, -updates, -backports with
+# main/universe/restricted/multiverse) - docker.io lives in "universe".
+# If `apt-cache policy docker.io` shows "Candidate: (none)", the sources
+# file was trimmed; restore the installer's original and update:
+sudo cp /etc/apt/sources.list.d/ubuntu.sources /etc/apt/sources.list.d/ubuntu.sources.broken-2026-06-27
+sudo cp /etc/apt/sources.list.d/ubuntu.sources.curtin.orig /etc/apt/sources.list.d/ubuntu.sources
+sudo apt update
+apt-cache policy docker.io docker-compose-v2   # both need a Candidate version
 
-sudo apt-get update
-sudo apt-get install docker.io docker-compose
-sudo systemctl start docker
-sudo usermod -aG docker $USER  # Run Docker without sudo
+# Install Docker + Compose v2 (Compose is `docker compose`, with a space -
+# the old `docker-compose` package no longer exists on 25.10)
+sudo apt install docker.io docker-compose-v2
+sudo systemctl enable --now docker
+sudo usermod -aG docker $USER   # run Docker without sudo
+newgrp docker                   # or log out/in
+docker run hello-world          # must pull and run without errors
+
+# Log Docker in to the GCP Artifact Registry (needed for rav run gcp_*)
+gcloud auth configure-docker europe-west1-docker.pkg.dev
+gcloud auth print-access-token | docker login -u oauth2accesstoken --password-stdin https://europe-west1-docker.pkg.dev
 
 
 ### a Clean Node.js/npm
@@ -266,7 +263,7 @@ npm install
 npm run build
 
 # If that works locally, the Docker issue might be cache-related. Try:
-docker-compose down
+docker compose down
 docker system prune -a  # Remove unused images/containers
 rav run docker_build    # Rebuild from scratch
 
@@ -323,11 +320,10 @@ docker ps
 docker ps -a
 ```
 
-## 5. Run with Docker
+## 4. Run with Docker
 
 ### Prerequisites
-- [Docker](https://docs.docker.com/get-docker/) installed
-- [Docker Compose](https://docs.docker.com/compose/install/) installed
+- Docker and Compose v2 installed from apt (`docker.io`, `docker-compose-v2`) - see section 3, not the snap
 
 ### Build and Run
 
@@ -339,17 +335,17 @@ docker ps -a
 
 2. Build and start the application:
    ```bash
-   docker-compose up -d
+   docker compose up -d
    ```
 
 3. View logs:
    ```bash
-   docker-compose logs -f
+   docker compose logs -f
    ```
 
 4. Stop the application:
    ```bash
-   docker-compose down
+   docker compose down
    ```
 
 Both services (frontend and backend) will be running:
@@ -358,12 +354,12 @@ Both services (frontend and backend) will be running:
 
 ### Rebuild after code changes
 ```bash
-docker-compose up -d --build
+docker compose up -d --build
 ```
 
 ### Access container shell (if needed)
 ```bash
-docker-compose exec wudlands sh
+docker compose exec wudlands sh
 ```
 
 ## Create new app version:
