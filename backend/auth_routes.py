@@ -492,6 +492,7 @@ class ResourceItemResponse(BaseModel):
     tier: int
     resourceFamily: str = Field(..., description="The resource family (ore, wood, stone, etc.)")
     category: str = Field(..., description="'raw' | 'processed' - which catalog this id actually comes from")
+    icon: Optional[str] = Field(None, description="Real per-unit art, when this family has any (e.g. oil, arrow, bolt) - None for most processed families and always for raw ones")
 
 
 class ToolItemResponse(BaseModel):
@@ -887,6 +888,7 @@ async def get_resource_catalog():
             tier=item.tier,
             resourceFamily=item.family_id,
             category="processed",
+            icon=item.icon,
         )
         for item in PROCESSED_RESOURCE_ITEMS_BY_ID.values()
     ]
@@ -911,9 +913,11 @@ async def get_item_catalog():
     Reference data: every concrete tiered id belonging to an
     item-inventory-properties.json family (all 118 - weapons, armor,
     tools, ammo, misc trinkets, food, potions, adventuring gear), with its
-    tier/kind. Powers the shared vault's "Items" list, which reclassifies
-    matching resource-balance entries (e.g. arrow/bolt/oil) as items for
-    display even though they're physically stored in resources.
+    tier/kind/icon. A handful (arrow, bolt, oil) resolve their id/name/tier
+    /icon from the processed-resource catalog (that's simply where their
+    tiered rows live) but are credited into vault.itemBalances like any
+    other crafted item, not resources - see
+    items_catalog._load_item_catalog_entries.
     """
     return [
         ItemCatalogEntryResponse(

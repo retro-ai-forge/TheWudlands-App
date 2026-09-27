@@ -251,6 +251,127 @@ def _build_blueprint_category_index() -> dict[str, tuple[str, ...]]:
     return {family: tuple(sorted(cats)) for family, cats in index.items()}
 
 
+def _tool_is_blueprint_gated(family_id: str, recipes_by_family: dict[str, dict]) -> bool:
+    recipe = recipes_by_family.get(family_id)
+    return bool(recipe and recipe.get("blueprintFamilyId"))
+
+
+def _hard_gated_tool_deps(
+    family_id: str, recipes_by_family: dict[str, dict], seen: frozenset[str] = frozenset()
+) -> set[str]:
+    """Which OTHER blueprint-gated tool families family_id's production chain
+    can never avoid needing - i.e. every tool requirement along the way
+    (its own recipe's "tool", and every "processed" ingredient's own chain,
+    recursively) whose every alternative is itself blueprint-gated. A "tool"
+    alternatives list (e.g. plank's ["axe_stone", "axe"]) imposes no hard
+    dependency as long as at least one option needs no blueprint at all
+    (axe_stone's own blueprintFamilyId is null - anyone can craft one from
+    raw wood/stone/carcass), since that option is always free to obtain."""
+    if family_id in seen:
+        return set()
+    seen = seen | {family_id}
+    recipe = recipes_by_family.get(family_id)
+    if not recipe:
+        return set()
+    deps: set[str] = set()
+    tool = recipe.get("tool")
+    candidates = [tool] if isinstance(tool, str) else (tool if isinstance(tool, list) else [])
+    if candidates and not any(not _tool_is_blueprint_gated(c, recipes_by_family) for c in candidates):
+        deps.update(candidates)
+    for ingredient in _iter_ingredients(recipe.get("ingredients", [])):
+        if ingredient["category"] == "processed":
+            deps |= _hard_gated_tool_deps(ingredient["familyId"], recipes_by_family, seen)
+    return deps
+
+
+def _resolve_tool_root_families(
+    family_id: str, recipes_by_family: dict[str, dict], seen: frozenset[str] = frozenset()
+) -> frozenset[str]:
+    """The "lowest tool(s) required" to ever produce family_id - itself if
+    its production chain needs no other blueprint-gated tool, otherwise the
+    (recursively resolved) roots of whichever gated tool(s) it can't avoid
+    needing. E.g. a sword needs a furnace, but a furnace's own fired_brick
+    ingredient needs a kiln - furnace isn't a "lowest tool", kiln is."""
+    if family_id in seen:
+        return frozenset()
+    seen = seen | {family_id}
+    deps = _hard_gated_tool_deps(family_id, recipes_by_family)
+    if not deps:
+        return frozenset({family_id})
+    roots: set[str] = set()
+    for dep in deps:
+        roots |= _resolve_tool_root_families(dep, recipes_by_family, seen)
+    return roots
+
+
+def _build_tool_blueprint_root_index() -> dict[str, tuple[str, ...]]:
+    """Every "tool"-catalog-type family (base-tools.json) -> its resolved
+    root tool family id(s) - see resolve_blueprint_trapping_options' tool
+    pool, which substitutes these in so a new character's one permanent
+    tool blueprint pick is always something actually craftable from raw
+    materials (plus other blueprint-free tools), never a dead end."""
+    recipes = _load_recipes()
+    recipes_by_family = {r["familyId"]: r for r in recipes}
+    return {
+        family: tuple(sorted(_resolve_tool_root_families(family, recipes_by_family)))
+        for family, catalog_type in _FAMILY_CATALOG_TYPES.items()
+        if catalog_type == "tool"
+    }
+
+
+def _hard_tool_alternative_sets(
+    family_id: str, recipes_by_family: dict[str, dict], seen: frozenset[str] = frozenset()
+) -> set[frozenset[str]]:
+    """Every hard tool requirement point in family_id's full production
+    chain (its own recipe's "tool", and every "processed" ingredient's own
+    chain, recursively) whose every alternative is blueprint-gated - each
+    one kept as its own alternatives set (e.g. bow's frame step needing
+    {"spinning_wheel"} is a separate requirement from its string step
+    needing {"workbench"}; both must eventually be met, unlike a single
+    alternatives list where any one option suffices)."""
+    if family_id in seen:
+        return set()
+    seen = seen | {family_id}
+    recipe = recipes_by_family.get(family_id)
+    if not recipe:
+        return set()
+    reqs: set[frozenset[str]] = set()
+    tool = recipe.get("tool")
+    candidates = [tool] if isinstance(tool, str) else (tool if isinstance(tool, list) else [])
+    if candidates and not any(not _tool_is_blueprint_gated(c, recipes_by_family) for c in candidates):
+        reqs.add(frozenset(candidates))
+    for ingredient in _iter_ingredients(recipe.get("ingredients", [])):
+        if ingredient["category"] == "processed":
+            reqs |= _hard_tool_alternative_sets(ingredient["familyId"], recipes_by_family, seen)
+    return reqs
+
+
+def _build_item_blueprint_tool_hints(
+    recipes_by_family: dict[str, dict], tool_roots: dict[str, tuple[str, ...]]
+) -> dict[str, tuple[str, ...]]:
+    """blueprint familyId (of a FINAL item, e.g. "blueprint_cloth") -> the
+    root tool family id(s) that would help build it - the union, across
+    every hard tool requirement anywhere in its chain, of each
+    requirement's alternatives' own resolved roots. Used to widen the
+    Trappings step's tool pool: even when a profession's own
+    category-matched tools are exhausted (or self-sufficient already), a
+    tool that actually unlocks one of the items on offer (e.g. soldier's
+    cloth/bow/crossbow needing workbench/kiln/spinning_wheel) is worth
+    surfacing as a selectable option, not just the category match."""
+    hints: dict[str, set[str]] = {}
+    for recipe in recipes_by_family.values():
+        blueprint_family = recipe.get("blueprintFamilyId")
+        if not blueprint_family:
+            continue
+        if _blueprint_catalog_type(blueprint_family) not in _FINAL_CATALOG_TYPES:
+            continue
+        alt_sets = _hard_tool_alternative_sets(recipe["familyId"], recipes_by_family)
+        for alt_set in alt_sets:
+            for candidate in alt_set:
+                hints.setdefault(blueprint_family, set()).update(tool_roots.get(candidate, (candidate,)))
+    return {family: tuple(sorted(roots)) for family, roots in hints.items()}
+
+
 def _load_blueprint_pool_rules() -> dict[int, tuple[BlueprintPoolRule, ...]]:
     data = json.loads(_SELECTION_RULES_PATH.read_text())
     rules_by_count: dict[int, tuple[BlueprintPoolRule, ...]] = {}
@@ -277,6 +398,11 @@ BLUEPRINT_CATEGORIES: dict[str, tuple[str, ...]] = _build_blueprint_category_ind
 # picks rather than a spendable raw-material budget.
 BLUEPRINT_POOLS_BY_PROFESSION_COUNT: dict[int, tuple[BlueprintPoolRule, ...]] = _load_blueprint_pool_rules()
 
+# tool familyId -> its resolved root tool family id(s), e.g. "furnace" ->
+# ("kiln",) since a furnace's own fired_brick ingredient needs a kiln.
+# Self-sufficient tools (e.g. "kiln" itself, "workbench") map to themselves.
+TOOL_BLUEPRINT_ROOT_FAMILIES: dict[str, tuple[str, ...]] = _build_tool_blueprint_root_index()
+
 
 def _blueprint_catalog_type(blueprint_family_id: str) -> str | None:
     """Whether a blueprint family unlocks a "tool" or a final item, via what its recipe(s) produce."""
@@ -292,6 +418,13 @@ _SOURCE_PREDICATES = {
     "tool": lambda bp: _blueprint_catalog_type(bp.family_id) == "tool",
     "item": lambda bp: _blueprint_catalog_type(bp.family_id) in _FINAL_CATALOG_TYPES,
 }
+
+# item blueprint familyId -> root tool family id(s) that would help build it,
+# e.g. "blueprint_cloth" -> ("kiln", "spinning_wheel", "workbench"). See
+# _build_item_blueprint_tool_hints.
+ITEM_BLUEPRINT_TOOL_HINTS: dict[str, tuple[str, ...]] = _build_item_blueprint_tool_hints(
+    {r["familyId"]: r for r in _load_recipes()}, TOOL_BLUEPRINT_ROOT_FAMILIES
+)
 
 # Used only when a profession-category pool for a given source has nothing
 # eligible (e.g. Food has no tool blueprints, Trade has no item blueprints,
@@ -329,11 +462,37 @@ def resolve_blueprint_trapping_options(profession_ids: list[str]) -> BlueprintTr
         family for family, cats in BLUEPRINT_CATEGORIES.items() if categories & set(cats)
     }
 
+    def _effective_families(rule: BlueprintPoolRule) -> set[str]:
+        if rule.source != "tool":
+            return eligible_families
+        # Substitute every eligible tool family with its resolved root(s) -
+        # a mid-chain tool (e.g. furnace, which needs a kiln to make its own
+        # fired_brick ingredient) is a dead-end pick for a new character,
+        # who gets exactly one permanent tool blueprint ever (see
+        # TOOL_BLUEPRINT_ROOT_FAMILIES). Also pull in the root tool(s)
+        # behind every eligible ITEM family (e.g. Military's blueprint_bow/
+        # blueprint_cloth need workbench/spinning_wheel, on top of kiln
+        # already reached via a category-matched tool) - same one-tool-
+        # blueprint-ever constraint applies, so surfacing every tool that
+        # actually unlocks something on the item side is strictly more
+        # useful than only offering tools whose OWN category happens to
+        # match, per ITEM_BLUEPRINT_TOOL_HINTS.
+        resolved: set[str] = set()
+        for family in eligible_families:
+            if _blueprint_catalog_type(family) == "tool":
+                output_family = family[len("blueprint_"):]
+                roots = TOOL_BLUEPRINT_ROOT_FAMILIES.get(output_family, (output_family,))
+                resolved.update(f"blueprint_{root}" for root in roots)
+            else:
+                resolved.update(f"blueprint_{root}" for root in ITEM_BLUEPRINT_TOOL_HINTS.get(family, ()))
+        return resolved
+
     def _pool_items(rule: BlueprintPoolRule) -> tuple[BlueprintItem, ...]:
+        families = _effective_families(rule)
         items = tuple(
             bp
             for bp in BLUEPRINT_ITEMS
-            if bp.family_id in eligible_families
+            if bp.family_id in families
             and bp.tier == rule.tier
             and _SOURCE_PREDICATES[rule.source](bp)
         )

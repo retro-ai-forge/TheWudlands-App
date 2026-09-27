@@ -293,7 +293,7 @@
     "familyId": "manacles",
     "tier": 1,
     "description": "Hefty copper cuffs with a green patina, rough-forged links and a simple lock.",
-    "icon": "/images/items/xxx.png"
+    "icon": "/images/items/manacles_t1.png"
   },
   {
     "id": "manacles_2",
@@ -301,7 +301,7 @@
     "familyId": "manacles",
     "tier": 2,
     "description": "Dark bronze shackles with rounded edges and a sturdy chain, aged but secure.",
-    "icon": "/images/items/xxx.png"
+    "icon": "/images/items/manacles_t2.png"
   },
   {
     "id": "manacles_3",
@@ -309,7 +309,7 @@
     "familyId": "manacles",
     "tier": 3,
     "description": "Cold, rigid steel manacles with interlocking links and a basic keyhole.",
-    "icon": "/images/items/xxx.png"
+    "icon": "/images/items/manacles_t3.png"
   },
   {
     "id": "manacles_4",
@@ -317,7 +317,7 @@
     "familyId": "manacles",
     "tier": 4,
     "description": "Shining silver manacles engraved with runes and joined by a luminous chain.",
-    "icon": "/images/items/xxx.png"
+    "icon": "/images/items/manacles_t4.png"
   },
   {
     "id": "manacles_5",
@@ -325,7 +325,7 @@
     "familyId": "manacles",
     "tier": 5,
     "description": "Ornate gold manacles with filigreed cuffs and a slender, regal chain.",
-    "icon": "/images/items/xxx.png"
+    "icon": "/images/items/manacles_t5.png"
   },
   {
     "id": "manacles_6",
@@ -333,7 +333,7 @@
     "familyId": "manacles",
     "tier": 6,
     "description": "Star metal manacles glowing with cosmic patterns, their links shimmering with astral light.",
-    "icon": "/images/items/xxx.png"
+    "icon": "/images/items/manacles_t6.png"
   },
   {
     "id": "whetstone_1",
@@ -341,7 +341,7 @@
     "familyId": "whetstone",
     "tier": 1,
     "description": "A chipped, copper-hued stone with a rough texture, good for basic bladework.",
-    "icon": "/images/items/xxx.png"
+    "icon": "/images/items/whetstone_t1.png"
   },
   {
     "id": "whetstone_2",
@@ -349,7 +349,7 @@
     "familyId": "whetstone",
     "tier": 2,
     "description": "A smooth amber-bronze colored whetstone with rounded edges and fine metallic flecks.",
-    "icon": "/images/items/xxx.png"
+    "icon": "/images/items/whetstone_t2.png"
   },
   {
     "id": "whetstone_3",
@@ -357,7 +357,7 @@
     "familyId": "whetstone",
     "tier": 3,
     "description": "A steel-hard gray whetstone with a fine grain, made for precision edges.",
-    "icon": "/images/items/xxx.png"
+    "icon": "/images/items/whetstone_t3.png"
   },
   {
     "id": "whetstone_4",
@@ -365,7 +365,7 @@
     "familyId": "whetstone",
     "tier": 4,
     "description": "A pale silver elvish whetstone with an exquisitely smooth, gleaming surface.",
-    "icon": "/images/items/xxx.png"
+    "icon": "/images/items/whetstone_t4.png"
   },
   {
     "id": "whetstone_5",
@@ -373,7 +373,7 @@
     "familyId": "whetstone",
     "tier": 5,
     "description": "A gold-hued whetstone shot through with veins that glow softly as it hones.",
-    "icon": "/images/items/xxx.png"
+    "icon": "/images/items/whetstone_t5.png"
   },
   {
     "id": "whetstone_6",
@@ -381,7 +381,7 @@
     "familyId": "whetstone",
     "tier": 6,
     "description": "A star metallic whetstone of ultra-fine grit, swirling with cosmic sparks.",
-    "icon": "/images/items/xxx.png"
+    "icon": "/images/items/whetstone_t6.png"
   },
   {
     "id": "spyglass_1",
@@ -389,7 +389,7 @@
     "familyId": "spyglass",
     "tier": 1,
     "description": "A simple copper spyglass, tarnished and dented, with cloudy glass.",
-    "icon": "/images/items/xxx.png"
+    "icon": "/images/items/spyglass_t1.png"
   },
   {
     "id": "spyglass_2",
@@ -397,7 +397,7 @@
     "familyId": "spyglass",
     "tier": 2,
     "description": "A sturdy bronze spyglass embossed with nautical rings, its lens clear and warm-toned.",
-    "icon": "/images/items/xxx.png"
+    "icon": "/images/items/spyglass_t2.png"
   },
   {
     "id": "spyglass_3",
@@ -405,7 +405,7 @@
     "familyId": "spyglass",
     "tier": 3,
     "description": "A matte steel spyglass with a bright, seamless lens.",
-    "icon": "/images/items/xxx.png"
+    "icon": "/images/items/spyglass_t3.png"
   },
   {
     "id": "spyglass_4",
@@ -413,7 +413,7 @@
     "familyId": "spyglass",
     "tier": 4,
     "description": "A refined silver spyglass with astral engravings, its glass flecked with moonlight.",
-    "icon": "/images/items/xxx.png"
+    "icon": "/images/items/spyglass_t4.png"
   },
   {
     "id": "spyglass_5",
@@ -421,7 +421,7 @@
     "familyId": "spyglass",
     "tier": 5,
     "description": "An elaborate gold spyglass with decorative etching and radiant, clear optics.",
-    "icon": "/images/items/xxx.png"
+    "icon": "/images/items/spyglass_t5.png"
   },
   {
     "id": "spyglass_6",
@@ -429,7 +429,7 @@
     "familyId": "spyglass",
     "tier": 6,
     "description": "A star metal spyglass etched with celestial symbols, its enchanted lens seeing far beyond sight.",
-    "icon": "/images/items/xxx.png"
+    "icon": "/images/items/spyglass_t6.png"
   },
   {
     "id": "hourglass_1",
@@ -437,7 +437,7 @@
     "familyId": "hourglass",
     "tier": 1,
     "description": "A copper-framed hourglass with cloudy glass and coarse tan sand.",
-    "icon": "/images/items/xxx.png"
+    "icon": "/images/items/hourglass_t1.png"
   },
   {
     "id": "hourglass_2",
@@ -445,7 +445,7 @@
     "familyId": "hourglass",
     "tier": 2,
     "description": "A bronze hourglass with thick connectors and burnt-orange sand falling steadily.",
-    "icon": "/images/items/xxx.png"
+    "icon": "/images/items/hourglass_t2.png"
   },
   {
     "id": "hourglass_3",
@@ -453,7 +453,7 @@
     "familyId": "hourglass",
     "tier": 3,
     "description": "A crisp steel-framed hourglass with silvery-gray sand falling in perfect measure.",
-    "icon": "/images/items/xxx.png"
+    "icon": "/images/items/hourglass_t3.png"
   },
   {
     "id": "hourglass_4",
@@ -461,7 +461,7 @@
     "familyId": "hourglass",
     "tier": 4,
     "description": "An elegant hourglass with slender silver posts and sparkling white sand.",
-    "icon": "/images/items/xxx.png"
+    "icon": "/images/items/hourglass_t4.png"
   },
   {
     "id": "hourglass_5",
@@ -469,7 +469,7 @@
     "familyId": "hourglass",
     "tier": 5,
     "description": "A regal gold hourglass with filigreed supports and luminous golden sand.",
-    "icon": "/images/items/xxx.png"
+    "icon": "/images/items/hourglass_t5.png"
   },
   {
     "id": "hourglass_6",
@@ -477,7 +477,7 @@
     "familyId": "hourglass",
     "tier": 6,
     "description": "A star metal hourglass etched with cosmic runes, filled with glowing stardust.",
-    "icon": "/images/items/xxx.png"
+    "icon": "/images/items/hourglass_t6.png"
   },
   {
     "id": "chalk_1",
@@ -485,7 +485,7 @@
     "familyId": "chalk",
     "tier": 1,
     "description": "A coarse, copper-tinged stick of chalk, jagged and sturdy for marking rough stone.",
-    "icon": "/images/items/xxx.png"
+    "icon": "/images/items/chalk_t1.png"
   },
   {
     "id": "chalk_2",
@@ -493,7 +493,7 @@
     "familyId": "chalk",
     "tier": 2,
     "description": "A smooth, bronze-hued chalk stick speckled with metallic glints.",
-    "icon": "/images/items/xxx.png"
+    "icon": "/images/items/chalk_t2.png"
   },
   {
     "id": "chalk_3",
@@ -501,7 +501,7 @@
     "familyId": "chalk",
     "tier": 3,
     "description": "A dense, pale gray chalk that draws clean, bright lines.",
-    "icon": "/images/items/xxx.png"
+    "icon": "/images/items/chalk_t3.png"
   },
   {
     "id": "chalk_4",
@@ -509,7 +509,7 @@
     "familyId": "chalk",
     "tier": 4,
     "description": "A soft, shimmering silver chalk that leaves glowing sigils on any surface.",
-    "icon": "/images/items/xxx.png"
+    "icon": "/images/items/chalk_t4.png"
   },
   {
     "id": "chalk_5",
@@ -517,7 +517,7 @@
     "familyId": "chalk",
     "tier": 5,
     "description": "A radiant golden chalk whose lines shine faintly like sunbeams on stone.",
-    "icon": "/images/items/xxx.png"
+    "icon": "/images/items/chalk_t5.png"
   },
   {
     "id": "chalk_6",
@@ -525,7 +525,7 @@
     "familyId": "chalk",
     "tier": 6,
     "description": "A deep blue star chalk with sparks of light inside, leaving glowing celestial trails.",
-    "icon": "/images/items/xxx.png"
+    "icon": "/images/items/chalk_t6.png"
   },
   {
     "id": "lock_and_key_1",
@@ -533,7 +533,7 @@
     "familyId": "lock_and_key",
     "tier": 1,
     "description": "A battered copper lock with a simple warded key, its carvings worn smooth.",
-    "icon": "/images/items/xxx.png"
+    "icon": "/images/items/lock_and_key_t1.png"
   },
   {
     "id": "lock_and_key_2",
@@ -541,7 +541,7 @@
     "familyId": "lock_and_key",
     "tier": 2,
     "description": "A rounded bronze lock with an intricate mechanism and a heavy key on a loop.",
-    "icon": "/images/items/xxx.png"
+    "icon": "/images/items/lock_and_key_t2.png"
   },
   {
     "id": "lock_and_key_3",
@@ -549,7 +549,7 @@
     "familyId": "lock_and_key",
     "tier": 3,
     "description": "A robust matte steel lock with an angular key, cold and reliable.",
-    "icon": "/images/items/xxx.png"
+    "icon": "/images/items/lock_and_key_t3.png"
   },
   {
     "id": "lock_and_key_4",
@@ -557,7 +557,7 @@
     "familyId": "lock_and_key",
     "tier": 4,
     "description": "A filigreed silver lock engraved with glyphs, with a sparkling skeleton key.",
-    "icon": "/images/items/xxx.png"
+    "icon": "/images/items/lock_and_key_t4.png"
   },
   {
     "id": "lock_and_key_5",
@@ -565,7 +565,7 @@
     "familyId": "lock_and_key",
     "tier": 5,
     "description": "An ornate gold lock carved with vines, its key shaped like a tiny scepter.",
-    "icon": "/images/items/xxx.png"
+    "icon": "/images/items/lock_and_key_t5.png"
   },
   {
     "id": "lock_and_key_6",
@@ -573,7 +573,7 @@
     "familyId": "lock_and_key",
     "tier": 6,
     "description": "An enchanted star metal lock swirling with stellar designs, its key pulsing with cosmic light.",
-    "icon": "/images/items/xxx.png"
+    "icon": "/images/items/lock_and_key_t6.png"
   },
   {
     "id": "iron_spikes_1",
@@ -677,7 +677,7 @@
     "familyId": "waterskin",
     "tier": 1,
     "description": "A simple brown deer-hide waterskin with a rough copper stopper.",
-    "icon": "/images/items/xxx.png"
+    "icon": "/images/items/waterskin_t1.png"
   },
   {
     "id": "waterskin_2",
@@ -685,7 +685,7 @@
     "familyId": "waterskin",
     "tier": 2,
     "description": "A sturdy black goat-hide waterskin with reinforced seams and a bronze cap.",
-    "icon": "/images/items/xxx.png"
+    "icon": "/images/items/waterskin_t2.png"
   },
   {
     "id": "waterskin_3",
@@ -693,7 +693,7 @@
     "familyId": "waterskin",
     "tier": 3,
     "description": "A large, rugged elk-hide waterskin with iron bands at the neck and a steel stopper.",
-    "icon": "/images/items/xxx.png"
+    "icon": "/images/items/waterskin_t3.png"
   },
   {
     "id": "waterskin_4",
@@ -701,7 +701,7 @@
     "familyId": "waterskin",
     "tier": 4,
     "description": "A rare manticore-hide waterskin sewn with shimmering silver thread and a polished silver cap.",
-    "icon": "/images/items/xxx.png"
+    "icon": "/images/items/waterskin_t4.png"
   },
   {
     "id": "waterskin_5",
@@ -709,7 +709,7 @@
     "familyId": "waterskin",
     "tier": 5,
     "description": "An exotic green wyvern-hide waterskin with gold-tipped seams and a radiant gold spout.",
-    "icon": "/images/items/xxx.png"
+    "icon": "/images/items/waterskin_t5.png"
   },
   {
     "id": "waterskin_6",
@@ -717,7 +717,7 @@
     "familyId": "waterskin",
     "tier": 6,
     "description": "A magnificent phoenix-embossed waterskin with a star metal cap swirling with magical color.",
-    "icon": "/images/items/xxx.png"
+    "icon": "/images/items/waterskin_t6.png"
   },
   {
     "id": "rope_1",
@@ -725,7 +725,7 @@
     "familyId": "rope",
     "tier": 1,
     "description": "A rugged coil of natural fiber rope spun with copper thread, a little frayed but strong.",
-    "icon": "/images/items/xxx.png"
+    "icon": "/images/items/rope_t1.png"
   },
   {
     "id": "rope_2",
@@ -733,7 +733,7 @@
     "familyId": "rope",
     "tier": 2,
     "description": "A bronze-hued rope braided with fine metallic fibers for extra strength.",
-    "icon": "/images/items/xxx.png"
+    "icon": "/images/items/rope_t2.png"
   },
   {
     "id": "rope_3",
@@ -741,7 +741,7 @@
     "familyId": "rope",
     "tier": 3,
     "description": "A heavy gray rope with steel wire twisted through its core.",
-    "icon": "/images/items/xxx.png"
+    "icon": "/images/items/rope_t3.png"
   },
   {
     "id": "rope_4",
@@ -749,7 +749,7 @@
     "familyId": "rope",
     "tier": 4,
     "description": "A gleaming silver rope, soft yet immensely strong and resistant to magical wear.",
-    "icon": "/images/items/xxx.png"
+    "icon": "/images/items/rope_t4.png"
   },
   {
     "id": "rope_5",
@@ -757,7 +757,7 @@
     "familyId": "rope",
     "tier": 5,
     "description": "A dazzling rope braided with pure gold filament, nearly unbreakable.",
-    "icon": "/images/items/xxx.png"
+    "icon": "/images/items/rope_t5.png"
   },
   {
     "id": "rope_6",
@@ -765,7 +765,7 @@
     "familyId": "rope",
     "tier": 6,
     "description": "A star metal rope woven with celestial fibers that spark with faint cosmic light.",
-    "icon": "/images/items/xxx.png"
+    "icon": "/images/items/rope_t6.png"
   },
   {
     "id": "net_1",
@@ -773,7 +773,7 @@
     "familyId": "net",
     "tier": 1,
     "description": "A coarse fisher's net knotted from hemp and copper wire, good for snaring small prey.",
-    "icon": "/images/items/xxx.png"
+    "icon": "/images/items/net_t1.png"
   },
   {
     "id": "net_2",
@@ -781,7 +781,7 @@
     "familyId": "net",
     "tier": 2,
     "description": "A supple bronze-fibered net with knots reinforced by burnished beads.",
-    "icon": "/images/items/xxx.png"
+    "icon": "/images/items/net_t2.png"
   },
   {
     "id": "net_3",
@@ -789,7 +789,7 @@
     "familyId": "net",
     "tier": 3,
     "description": "A finely woven steel mesh net, heavy, cold and durable.",
-    "icon": "/images/items/xxx.png"
+    "icon": "/images/items/net_t3.png"
   },
   {
     "id": "net_4",
@@ -797,7 +797,7 @@
     "familyId": "net",
     "tier": 4,
     "description": "A lightweight silver mesh net that glints with every movement and resists magic.",
-    "icon": "/images/items/xxx.png"
+    "icon": "/images/items/net_t4.png"
   },
   {
     "id": "net_5",
@@ -805,7 +805,7 @@
     "familyId": "net",
     "tier": 5,
     "description": "A bright net of golden thread, soft in the hand but unyielding when cast.",
-    "icon": "/images/items/xxx.png"
+    "icon": "/images/items/net_t5.png"
   },
   {
     "id": "net_6",
@@ -813,7 +813,7 @@
     "familyId": "net",
     "tier": 6,
     "description": "A whisper-thin star metal net that glows like a constellation in the dark.",
-    "icon": "/images/items/xxx.png"
+    "icon": "/images/items/net_t6.png"
   },
   {
     "id": "bedroll_1",
@@ -821,7 +821,7 @@
     "familyId": "bedroll",
     "tier": 1,
     "description": "A patched hemp bedroll fastened with a copper clasp, faded but cozy.",
-    "icon": "/images/items/xxx.png"
+    "icon": "/images/items/bedroll_t1.png"
   },
   {
     "id": "bedroll_2",
@@ -829,7 +829,7 @@
     "familyId": "bedroll",
     "tier": 2,
     "description": "A rugged brown bedroll lined with coarse linen and secured by a bronze buckle.",
-    "icon": "/images/items/xxx.png"
+    "icon": "/images/items/bedroll_t2.png"
   },
   {
     "id": "bedroll_3",
@@ -837,7 +837,7 @@
     "familyId": "bedroll",
     "tier": 3,
     "description": "A thick gray woolen bedroll with neat iron clasps, warm against the cold.",
-    "icon": "/images/items/xxx.png"
+    "icon": "/images/items/bedroll_t3.png"
   },
   {
     "id": "bedroll_4",
@@ -845,7 +845,7 @@
     "familyId": "bedroll",
     "tier": 4,
     "description": "A smooth, deep-blue silk bedroll edged with silver embroidery, cool and luxurious.",
-    "icon": "/images/items/xxx.png"
+    "icon": "/images/items/bedroll_t4.png"
   },
   {
     "id": "bedroll_5",
@@ -853,7 +853,7 @@
     "familyId": "bedroll",
     "tier": 5,
     "description": "A dark bedroll with soft gold piping, its shadowy fabric seeming to swallow the light.",
-    "icon": "/images/items/xxx.png"
+    "icon": "/images/items/bedroll_t5.png"
   },
   {
     "id": "bedroll_6",
@@ -861,7 +861,7 @@
     "familyId": "bedroll",
     "tier": 6,
     "description": "A moon-pale bedroll woven with star metal threads that glow faintly at night.",
-    "icon": "/images/items/xxx.png"
+    "icon": "/images/items/bedroll_t6.png"
   },
   {
     "id": "tent_1",
@@ -869,7 +869,7 @@
     "familyId": "tent",
     "tier": 1,
     "description": "A simple patched canvas tent braced with copper pegs and a copper ridgepole.",
-    "icon": "/images/items/xxx.png"
+    "icon": "/images/items/tent_t1.png"
   },
   {
     "id": "tent_2",
@@ -877,7 +877,7 @@
     "familyId": "tent",
     "tier": 2,
     "description": "A sturdy khaki tent with bronze grommets and bronze-tipped stakes.",
-    "icon": "/images/items/xxx.png"
+    "icon": "/images/items/tent_t2.png"
   },
   {
     "id": "tent_3",
@@ -885,7 +885,7 @@
     "familyId": "tent",
     "tier": 3,
     "description": "A heavy canvas tent on a steel frame, built to endure storms.",
-    "icon": "/images/items/xxx.png"
+    "icon": "/images/items/tent_t3.png"
   },
   {
     "id": "tent_4",
@@ -893,7 +893,7 @@
     "familyId": "tent",
     "tier": 4,
     "description": "A sleek gray tent with silver seams and light silver rods, airy and elegant.",
-    "icon": "/images/items/xxx.png"
+    "icon": "/images/items/tent_t4.png"
   },
   {
     "id": "tent_5",
@@ -901,7 +901,7 @@
     "familyId": "tent",
     "tier": 5,
     "description": "An opulent black tent adorned with gold filigree and golden anchors.",
-    "icon": "/images/items/xxx.png"
+    "icon": "/images/items/tent_t5.png"
   },
   {
     "id": "tent_6",
@@ -909,7 +909,7 @@
     "familyId": "tent",
     "tier": 6,
     "description": "A midnight-blue tent laced with star metal that glows softly under the stars.",
-    "icon": "/images/items/xxx.png"
+    "icon": "/images/items/tent_t6.png"
   },
   {
     "id": "merchants_scale_1",
@@ -917,7 +917,7 @@
     "familyId": "merchants_scale",
     "tier": 1,
     "description": "A set of copper scales dulled by years of barter.",
-    "icon": "/images/items/xxx.png"
+    "icon": "/images/items/merchants_scale_t1.png"
   },
   {
     "id": "merchants_scale_2",
@@ -925,7 +925,7 @@
     "familyId": "merchants_scale",
     "tier": 2,
     "description": "A set of bronze scales with a patina worn smooth by trading hands.",
-    "icon": "/images/items/xxx.png"
+    "icon": "/images/items/merchants_scale_t2.png"
   },
   {
     "id": "merchants_scale_3",
@@ -933,7 +933,7 @@
     "familyId": "merchants_scale",
     "tier": 3,
     "description": "A set of iron scales, burnished from decades of trade.",
-    "icon": "/images/items/xxx.png"
+    "icon": "/images/items/merchants_scale_t3.png"
   },
   {
     "id": "merchants_scale_4",
@@ -941,7 +941,7 @@
     "familyId": "merchants_scale",
     "tier": 4,
     "description": "A set of gleaming silver scales etched with merchant runes.",
-    "icon": "/images/items/xxx.png"
+    "icon": "/images/items/merchants_scale_t4.png"
   },
   {
     "id": "merchants_scale_5",
@@ -949,7 +949,7 @@
     "familyId": "merchants_scale",
     "tier": 5,
     "description": "A set of brilliant gold scales, each pan embossed with a coin motif.",
-    "icon": "/images/items/xxx.png"
+    "icon": "/images/items/merchants_scale_t5.png"
   },
   {
     "id": "merchants_scale_6",
@@ -957,7 +957,7 @@
     "familyId": "merchants_scale",
     "tier": 6,
     "description": "A set of iridescent star metal scales shimmering with celestial light.",
-    "icon": "/images/items/xxx.png"
+    "icon": "/images/items/merchants_scale_t6.png"
   },
   {
     "id": "sparrow_quill",
@@ -965,7 +965,7 @@
     "familyId": "quill",
     "tier": 1,
     "description": "A small, delicate sparrow feather, finely barbed and swift as a whispered secret.",
-    "icon": "/images/items/xxx.png"
+    "icon": "/images/items/quill_t1.png"
   },
   {
     "id": "owl_quill",
@@ -973,7 +973,7 @@
     "familyId": "quill",
     "tier": 2,
     "description": "A short, softly rounded owl feather that writes without a sound.",
-    "icon": "/images/items/xxx.png"
+    "icon": "/images/items/quill_t2.png"
   },
   {
     "id": "hawk_quill",
@@ -981,7 +981,7 @@
     "familyId": "quill",
     "tier": 3,
     "description": "A keen, arrow-straight hawk feather, sharp and precise.",
-    "icon": "/images/items/xxx.png"
+    "icon": "/images/items/quill_t3.png"
   },
   {
     "id": "phoenix_quill",
@@ -989,7 +989,7 @@
     "familyId": "quill",
     "tier": 4,
     "description": "A radiant phoenix feather aglow with fiery hues, tipped with a living flame.",
-    "icon": "/images/items/xxx.png"
+    "icon": "/images/items/quill_t4.png"
   },
   {
     "id": "roc_quill",
@@ -997,7 +997,7 @@
     "familyId": "quill",
     "tier": 5,
     "description": "An immense roc feather, bold and unyielding, humming with ancient power.",
-    "icon": "/images/items/xxx.png"
+    "icon": "/images/items/quill_t5.png"
   },
   {
     "id": "celestial_quill",
@@ -1005,6 +1005,6 @@
     "familyId": "quill",
     "tier": 6,
     "description": "A shimmering celestial feather dusted with twinkling stardust and a subtle magical aura.",
-    "icon": "/images/items/xxx.png"
+    "icon": "/images/items/quill_t6.png"
   }
 ]
