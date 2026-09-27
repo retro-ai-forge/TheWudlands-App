@@ -1,11 +1,10 @@
-import { Fragment, useEffect, useMemo, useRef, useState } from "react";
+import { Fragment, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import type { ReactNode } from "react";
 import styles from "./CharacterTabs.module.css";
 import { formatRemainingCompactLong, useCraftCountdown } from "../craftTimer";
 import type { SlotCharacterSummary } from "../SoulSlotGrid";
 import type { ItemInstance } from "../SoulSlotGrid";
 export type { ItemInstance } from "../SoulSlotGrid";
-import { InAdventureToggle } from "./InAdventureToggle";
 
 // GET /api/auth/blueprint-categories - lore/reference data (not
 // player-specific), reused here purely to look up each known blueprint's own
@@ -35,6 +34,8 @@ export type BlueprintTierInfo = Record<
     backpackable?: boolean;
     /** Family-level (item-catalog only) - raw materials this family grants a foraging/gathering bonus for, e.g. ["ore","stone","crystal"] for a pickaxe. */
     gatheringBonuses?: string[];
+    /** Per-tier (item-catalog only) - slot capacity of a backpack/saddlepack/cart tier, 0 for anything else. */
+    capacitySlots?: number;
   }
 >;
 export type ResourceTierInfo = Record<
@@ -57,15 +58,15 @@ export type RawPlayerData = {
   };
 };
 
-// GET /me/characters/{characterId}/recycle-preview/{itemId} (backend.
-// recycling.RawMaterialRecovery, camelCased by auth_routes.py's
-// RecyclePreviewResponse) - what recycling would hand back, one entry per
+// GET /me/characters/{characterId}/salvage-preview/{itemId} (backend.
+// recycling.RawMaterialRecovery (module name), camelCased by auth_routes.py's
+// SalvagePreviewResponse) - what salvaging would hand back, one entry per
 // recoverable raw material family. Exported so CampView.tsx's own
-// ChopBlockPopup (the chopping block's bulk-recycle popup, which gets the
-// SAME per-material breakdown per row from GET .../camp/refine-preview)
+// ChopBlockPopup (the chopping block's bulk-salvage popup, which gets the
+// SAME per-material breakdown per row from GET .../camp/salvage-preview)
 // can reuse this exact shape instead of redeclaring a parallel one.
-export type RecycleYield = { base: number; skill: number; tool: number; charm: number; total: number };
-export type RecycleRecoveredLine = {
+export type SalvageYield = { base: number; skill: number; tool: number; charm: number; total: number };
+export type SalvageRecoveredLine = {
   familyId: string;
   id: string;
   name: string;
@@ -73,15 +74,51 @@ export type RecycleRecoveredLine = {
   category: "raw" | "processed";
   qty: number;
 };
-export type RecycleMaterial = {
+export type SalvageMaterial = {
   rawFamilyId: string;
   rawName: string;
   totalUnits: number;
-  yieldBreakdown: RecycleYield;
+  yieldBreakdown: SalvageYield;
   recoveredUnits: number;
-  recovered: RecycleRecoveredLine[];
+  recovered: SalvageRecoveredLine[];
 };
-type RecyclePreview = { materials: RecycleMaterial[] };
+/** An item instance's quality state as the salvage endpoints report it -
+ * balance items (no instance) are always "new". */
+export type SalvageCondition = "new" | "used" | "damaged";
+type SalvagePreview = { materials: SalvageMaterial[]; condition?: SalvageCondition };
+
+/** A worn instance's salvage penalty - mirrors backend.recycling.
+ * CONDITION_PERCENT (used keeps 80%, damaged 50%). Display only:
+ * recoveredUnits already has it applied server-side, rounded half up once
+ * over the whole formula. */
+const SALVAGE_CONDITION_PENALTY: Partial<Record<SalvageCondition, { percent: number; label: string }>> = {
+  used: { percent: 20, label: "used" },
+  damaged: { percent: 50, label: "dam" },
+};
+
+/** One raw material's yield formula, e.g. "25 + 0 skill + 5 tool + 0 charm
+ * -20% used = 24%" - the condition penalty sits inside the same formula
+ * (left out entirely for a "new" item) and the result is the effective
+ * percent. Shared by every salvage view (single item, camp, containers). */
+export function SalvageFormulaLine({ breakdown, condition }: { breakdown: SalvageYield; condition?: SalvageCondition }) {
+  const penalty = condition ? SALVAGE_CONDITION_PENALTY[condition] : undefined;
+  const effective = penalty ? Number(((breakdown.total * (100 - penalty.percent)) / 100).toFixed(1)) : breakdown.total;
+  return (
+    <p className={styles.salvageFormulaLine}>
+      {breakdown.base} + {breakdown.skill} skill +{" "}
+      <span className={breakdown.tool === 0 ? styles.salvageFormulaZero : undefined}>{breakdown.tool} tool</span> +{" "}
+      {breakdown.charm} charm{" "}
+      {penalty && (
+        <>
+          <span className={styles.salvageFormulaPenalty}>
+            -{penalty.percent}% {penalty.label}
+          </span>{" "}
+        </>
+      )}
+      = {effective}%
+    </p>
+  );
+}
 
 const TRANSFER_AMOUNTS = [1, 2, 5, 10, 20, 50] as const;
 // Tools' own quantity row keeps the full TRANSFER_AMOUNTS (drawing from a
@@ -716,6 +753,29 @@ const ITEM_TILE_PX = 100;
 // just blank space below the last row.
 const SCROLLBAR_OVERLAP_PX = 18;
 
+// Matches .packedItemsRow's own CSS `gap: 0.35rem` - PackedItemsRow's own
+// row-count math needs this in px to convert a target pixel budget into a
+// whole number of tile rows.
+const PACKED_ROW_GAP_PX = 5.6;
+
+// Small breathing room the backpack popup's own card - and its packed
+// item matrix - leave above the fixed footer bar, so the footer always
+// stays fully visible below the popup (no vertical scroll; the card's
+// own max-height and the matrix's own row count both target this same
+// footer-aware ceiling).
+const CARD_FOOTER_MARGIN_PX = 8;
+
+// For the backpack item popup (see PackedItemsRow's measure() below):
+// rows are maximised first; the icon keeps a steady CONTAINER_ICON_PX
+// (the same size an empty container shows - see .backpackPopupCard >
+// .itemPopupImg in CharacterTabs.module.css) and only shrinks below it
+// once the rows need that space, capped at the card's own client width
+// (the icon is square, so it never overflows sideways).
+// ICON_MIN_VISIBLE_PX is the floor below which the icon is hidden
+// entirely rather than rendered as a tiny unrecognisable sliver.
+const CONTAINER_ICON_PX = 140;
+const ICON_MIN_VISIBLE_PX = 48;
+
 /** Exported so BodyTab.tsx's equip slots can show the same tier badge
  * ItemGrid's tiles do, rather than duplicating the per-tier class/symbol
  * mapping. */
@@ -748,6 +808,8 @@ export function ItemGrid({
   source = "vault",
   hasBackpackEquipped,
   hasSaddlepackEquipped,
+  hasMountEquipped = false,
+  hasCompanionEquipped = false,
   inAdventure = false,
   characterId,
   characterFirstName,
@@ -755,11 +817,18 @@ export function ItemGrid({
   reserveBottomPx = 0,
   hideScrollbar = false,
   packedItems,
+  saddlepackPackedItems,
+  cartPackedItems,
   backpackSlotsUsed,
   backpackCapacity,
+  saddlepackSlotsUsed,
+  saddlepackCapacity,
+  cartSlotsUsed,
+  cartCapacity,
   resourceBalances,
   resourceTierInfo,
   resourceDestinations,
+  iconOverrides,
 }: {
   ids: string[];
   emptyLabel: string;
@@ -773,12 +842,14 @@ export function ItemGrid({
   instanceLocations?: Record<string, "backpack" | "body" | "camp">;
   /** Row ids with no working move-to-backpack/equip path yet (ammo living in resources, not items/itemBalances) - the popup shows info only, no action buttons, for these. */
   nonMovableIds?: Set<string>;
-  /** "vault" (default): rows live in the player's shared pool - the popup's move actions are equip-from-pool/move-to-backpack, recycle/destroy target the shared vault. "character": rows are this character's own backpack/body items or itemBalances - the popup's move actions are Unequip(-to-vault)/Move-to-backpack for a worn row, Equip/Check-in-to-vault for a backpacked one; recycle/destroy target this character's own holdings instead. */
+  /** "vault" (default): rows live in the player's shared pool - the popup's move actions are equip-from-pool/move-to-backpack, salvage/destroy target the shared vault. "character": rows are this character's own backpack/body items or itemBalances - the popup's move actions are Unequip(-to-vault)/Move-to-backpack for a worn row, Equip/Check-in-to-vault for a backpacked one; salvage/destroy target this character's own holdings instead. */
   source?: "vault" | "character";
   /** Whether this character currently has a backpack worn - greys out the popup's "Move to backpack" button instead of letting the click fail server-side with "No backpack equipped". */
   hasBackpackEquipped: boolean;
   /** Whether this character's mount currently has a saddlepack worn - hides the popup's "Move to saddlepack" button entirely when false (see ItemDetailPopup's identical prop). */
   hasSaddlepackEquipped: boolean;
+  hasMountEquipped?: boolean;
+  hasCompanionEquipped?: boolean;
   /** source:"character" only - hides the popup's "Check in to vault" button while true, since there's no path back to the shared vault mid-adventure (see ItemDetailPopup's identical prop). */
   inAdventure?: boolean;
   characterId: string;
@@ -810,8 +881,30 @@ export function ItemGrid({
     resourceBalances: Record<string, number>;
     resourceTierInfo: ResourceTierInfo;
   };
+  saddlepackPackedItems?: {
+    ids: string[];
+    tierInfo: BlueprintTierInfo;
+    balances: Record<string, number>;
+    lookupIds: Record<string, string>;
+    instanceQuality: Record<string, number | null>;
+    resourceBalances: Record<string, number>;
+    resourceTierInfo: ResourceTierInfo;
+  };
+  cartPackedItems?: {
+    ids: string[];
+    tierInfo: BlueprintTierInfo;
+    balances: Record<string, number>;
+    lookupIds: Record<string, string>;
+    instanceQuality: Record<string, number | null>;
+    resourceBalances: Record<string, number>;
+    resourceTierInfo: ResourceTierInfo;
+  };
   backpackSlotsUsed?: number;
   backpackCapacity?: number;
+  saddlepackSlotsUsed?: number;
+  saddlepackCapacity?: number;
+  cartSlotsUsed?: number;
+  cartCapacity?: number;
   /** Raw/processed materials sitting loose at this same location (e.g.
    * CampView's own gear.resources.camp) - rendered as their own tiles
    * (see ResourceTiles) INSIDE this same wrapping grid, alongside the
@@ -828,6 +921,7 @@ export function ItemGrid({
    * for why this varies by caller (a camp resource can reach both backpack
    * and vault; a packed one only ever reaches one of the two). */
   resourceDestinations?: ResourcePopupDestination[];
+  iconOverrides?: Record<string, string>;
 }) {
   // How tall the scroll container is allowed to be, measured against the
   // real remaining viewport space below it rather than a guessed vh
@@ -976,7 +1070,7 @@ export function ItemGrid({
           const currentQuality = instanceQuality?.[id];
           const qualityFraction =
             lookupIds?.[id] !== undefined && info?.qualityMax != null && currentQuality != null
-              ? Math.max(0, Math.min(1, info.qualityMax > 0 ? currentQuality / info.qualityMax : 1))
+              ? Math.max(0, Math.min(1, info.qualityMax > 0 ? currentQuality / (info.qualityMax * (2 ** (info.tier - 1))) : 1))
               : null;
           // Same cutoff as the quality bar's own red band (qualityState) -
           // a damaged instance gets a red-tinted tile background too, not
@@ -1003,7 +1097,7 @@ export function ItemGrid({
                   contextmenu/touch-callout CSS override can catch. No tag
                   for it to recognize as an image sidesteps that instead of
                   fighting it per-browser. */}
-              <ItemIcon icon={info?.icon} alt={name} className={styles.itemGridImg} />
+              <ItemIcon icon={iconOverrides?.[lookupIds?.[id] ?? id] ?? info?.icon} alt={name} className={styles.itemGridImg} />
               {!!info?.tier && (
                 <span className={`${styles.itemGridTierBadge} ${itemGridTierBadgeClass(info.tier)}`}>
                   {getTierIndicator(info.tier)}
@@ -1080,14 +1174,23 @@ export function ItemGrid({
           source={source}
           hasBackpackEquipped={hasBackpackEquipped}
           hasSaddlepackEquipped={hasSaddlepackEquipped}
+          hasMountEquipped={hasMountEquipped}
+          hasCompanionEquipped={hasCompanionEquipped}
           inAdventure={inAdventure}
           characterId={characterId}
           characterFirstName={characterFirstName}
           packedItems={packedItems}
+          saddlepackPackedItems={saddlepackPackedItems}
+          cartPackedItems={cartPackedItems}
           backpackSlotsUsed={backpackSlotsUsed}
           backpackCapacity={backpackCapacity}
+          saddlepackSlotsUsed={saddlepackSlotsUsed}
+          saddlepackCapacity={saddlepackCapacity}
+          cartSlotsUsed={cartSlotsUsed}
+          cartCapacity={cartCapacity}
           onPlayerDataUpdated={onPlayerDataUpdated}
           onClose={() => setSelectedId(null)}
+          iconOverride={iconOverrides?.[lookupIds?.[selectedId] ?? selectedId]}
         />
       )}
     </div>
@@ -1142,7 +1245,7 @@ export async function postJson(url: string, body?: object): Promise<PostJsonResu
 // How long the destroy control must be held before it actually fires -
 // long enough that it can't be triggered by a stray tap, matching the
 // weight of "for good" (see ItemDetailPopup's showDestroy view).
-const DESTROY_HOLD_MS = 2000;
+const DESTROY_HOLD_MS = 1000;
 
 // The fill's own solid color at hold-progress `t` (0-1) - gold deepening
 // through the app's own red (#c0453a) to blood red right as the hold
@@ -1160,11 +1263,11 @@ function destroyFillColor(t: number): string {
   return `rgb(${r}, ${g}, ${b})`;
 }
 
-// The recycle hold bar's own fill (see ItemDetailPopup's runRecycle) - same
+// The salvage hold bar's own fill (see ItemDetailPopup's runSalvage) - same
 // gold start as destroyFillColor, but deepening into the app's own
 // "healthy/recovered" green (QUALITY_STATE_COLORS.new, rgb(90, 156, 74))
 // instead of red, so a beneficial action never reads as a warning.
-function recycleFillColor(t: number): string {
+function salvageFillColor(t: number): string {
   const GOLD: [number, number, number] = [230, 184, 92];
   const GREEN: [number, number, number] = [90, 156, 74];
   const clamped = Math.min(1, Math.max(0, t));
@@ -1177,7 +1280,7 @@ function recycleFillColor(t: number): string {
  * Reuses ItemDetailPopup's exact hold-bar visual language (label +
  * progress track/fill + icon, same DESTROY_HOLD_MS duration) rather than
  * a second copy of that mechanic - just standalone instead of nested
- * inside one item's own recycle/destroy view, and the icon is an actual
+ * inside one item's own salvage/destroy view, and the icon is an actual
  * image (the same one that opened this popup) instead of an emoji. */
 export function HoldActionPopup({
   headline,
@@ -1196,7 +1299,7 @@ export function HoldActionPopup({
   headline: string;
   /** Extra content between the headline and the hold bar - e.g. the
    * chopping block's own scrollable checklist of what's about to be
-   * recycled (see CampView.tsx's ChopBlockPopup). Scrolls internally
+   * salvaged (see CampView.tsx's ChopBlockPopup). Scrolls internally
    * inside its own flex-grown wrapper if it's tall enough to need to
    * (see the children wrapper's own inline flex styling below) - the
    * hold bar/icon below it always stays on screen either way, never
@@ -1215,7 +1318,7 @@ export function HoldActionPopup({
    * ChopBlockPopup passes .chopBlockIcon to size the chopping block
    * icon down from the other two popups' shared default. */
   iconClassName?: string;
-  /** The hold bar's own label, e.g. "Hold to BURN ALL". */
+  /** The hold bar's own label, e.g. "Hold to cast things into flames". */
   label: string;
   /** Image shown inside the hold bar - CampView passes the same
    * campfire_lit.png/dropped.png icon the player just clicked. Sized to
@@ -1224,9 +1327,9 @@ export function HoldActionPopup({
    * one would, unlike .destroyIcon's own single-glyph emoji. */
   icon: string;
   /** "destroy": red-deepening fill (destroyFillColor), shown on a
-   * permanent, unrecoverable action. "recycle": gold-to-green fill
-   * (recycleFillColor), shown on a beneficial one. */
-  tone: "destroy" | "recycle";
+   * permanent, unrecoverable action. "salvage": gold-to-green fill
+   * (salvageFillColor), shown on a beneficial one. */
+  tone: "destroy" | "salvage";
   /** Prevents starting the hold at all (e.g. the chopping block's own
    * checklist hasn't loaded yet, or nothing on it is checked) - the icon
    * stays visible but dimmed, same as ItemDetailPopup's own disabled
@@ -1255,7 +1358,13 @@ export function HoldActionPopup({
     const result = await onConfirm();
     if (!result.ok) {
       setPending(false);
-      setError(tone === "destroy" ? "Couldn't burn that." : "Couldn't move that.");
+      setError(
+        tone === "destroy"
+          ? "Couldn't burn that."
+          : tone === "salvage"
+            ? "Couldn't salvage that."
+            : "Couldn't move that.",
+      );
       reset();
       return;
     }
@@ -1284,7 +1393,7 @@ export function HoldActionPopup({
     reset();
   };
 
-  // Unlike ItemDetailPopup's own destroy/recycle bar (where the whole
+  // Unlike ItemDetailPopup's own destroy/salvage bar (where the whole
   // .destroySection - label, track, and icon together - is the hold
   // target), only the icon itself starts/holds the fill here - a plain
   // click anywhere else on the card, including the label/track, dismisses
@@ -1303,8 +1412,8 @@ export function HoldActionPopup({
       <div
         className={
           cardClassName
-            ? `${styles.itemPopupCard} ${styles.recycleDestroyCard} ${cardClassName}`
-            : `${styles.itemPopupCard} ${styles.recycleDestroyCard}`
+            ? `${styles.itemPopupCard} ${styles.salvageDestroyCard} ${cardClassName}`
+            : `${styles.itemPopupCard} ${styles.salvageDestroyCard}`
         }
       >
         <h3 className={styles.itemPopupName}>{headline}</h3>
@@ -1333,7 +1442,7 @@ export function HoldActionPopup({
               className={styles.destroyProgressFill}
               style={{
                 width: `${progress * 100}%`,
-                backgroundColor: tone === "destroy" ? destroyFillColor(progress) : recycleFillColor(progress),
+                backgroundColor: tone === "destroy" ? destroyFillColor(progress) : salvageFillColor(progress),
               }}
             />
           </div>
@@ -1367,10 +1476,9 @@ export function HoldActionPopup({
 }
 
 // The three discrete condition brackets a quality fraction (current/max)
-// falls into - fixed steps, not a smooth blend, matching the dismantle
-// mechanic's own three fixed material-yield brackets (100% new, 50% used,
-// 10-0% damaged - see crafting-agent.md's "Dismantle mechanic" section)
-// that this same state is meant to drive once recycle yield is wired up.
+// falls into - fixed steps, not a smooth blend. The same cutoffs drive
+// salvage yield server-side (backend.recycling.quality_state/
+// CONDITION_PERCENT: new 100%, used -20%, damaged -50%).
 /** Exported so BodyTab.tsx's equip slots can apply the exact same
  * damaged-tile treatment ItemGrid uses below, rather than duplicating the
  * 10%/50% cutoffs. */
@@ -1406,9 +1514,14 @@ const ITEM_POPUP_FLASH_MS = 3000;
 // ResourcePopup so a failed move reads the same regardless of which one it
 // happened in.
 function transferFailureMessage(detail: string | null): string {
+  if (!detail) return "Couldn't move that.";
   if (detail === "No backpack equipped") return "No backpack found, equip one.";
   if (detail === "Backpack is full") return "Backpack full - remove items first.";
   if (detail === "No saddlepack equipped") return "No saddlepack found, equip one.";
+  if (detail === "Saddlepack is full") return "Saddlepack full - remove items first.";
+  if (detail.startsWith("You already have a ")) return detail;
+  if (detail === "Equip a mount first") return detail;
+  if (detail === "Equip a companion first") return detail;
   if (detail === "Character is out on an adventure - no reaching the shared vault") {
     return "Out on an adventure - the shared vault isn't reachable.";
   }
@@ -1431,32 +1544,51 @@ function transferFailureMessage(detail: string | null): string {
  * than merged in since resources use their own id space/tier lookup
  * (resourceTierInfo, not itemCatalogTierInfo) and render as a plain list,
  * not image tiles (see PackedResourcesList). */
-export function computeBackpackContents(character: {
-  gear: {
-    items: ItemInstance[];
-    itemBalances: { backpack: Record<string, number> };
-    resources: { backpack: Record<string, number> };
-  };
-}): {
+type ContainerContents = {
   ids: string[];
   balances: Record<string, number>;
   lookupIds: Record<string, string>;
   instanceQuality: Record<string, number | null>;
   resourceBalances: Record<string, number>;
-} {
-  const backpackBalances = character.gear.itemBalances.backpack;
-  const backpackInstances = character.gear.items.filter((instance) => instance.location === "backpack");
+};
+
+type ContainerCharacterGear = {
+  gear: {
+    items: ItemInstance[];
+    itemBalances: { backpack: Record<string, number>; saddlepack: Record<string, number>; cart: Record<string, number> };
+    resources: { backpack: Record<string, number>; saddlepack: Record<string, number>; cart: Record<string, number> };
+  };
+};
+
+function computeContainerContents(
+  character: ContainerCharacterGear,
+  location: "backpack" | "saddlepack" | "cart"
+): ContainerContents {
+  const itemBalances = character.gear.itemBalances[location];
+  const instances = character.gear.items.filter((instance) => instance.location === location);
   const lookupIds: Record<string, string> = {};
   const instanceRowBalances: Record<string, number> = {};
   const instanceQuality: Record<string, number | null> = {};
-  for (const instance of backpackInstances) {
+  for (const instance of instances) {
     lookupIds[instance.instanceId] = instance.itemId;
     instanceRowBalances[instance.instanceId] = 1;
     instanceQuality[instance.instanceId] = instance.quality;
   }
-  const balances: Record<string, number> = { ...backpackBalances, ...instanceRowBalances };
+  const balances: Record<string, number> = { ...itemBalances, ...instanceRowBalances };
   const ids = Object.keys(balances).filter((id) => balances[id] > 0);
-  return { ids, balances, lookupIds, instanceQuality, resourceBalances: character.gear.resources.backpack };
+  return { ids, balances, lookupIds, instanceQuality, resourceBalances: character.gear.resources[location] };
+}
+
+export function computeBackpackContents(character: ContainerCharacterGear): ContainerContents {
+  return computeContainerContents(character, "backpack");
+}
+
+export function computeSaddlepackContents(character: ContainerCharacterGear): ContainerContents {
+  return computeContainerContents(character, "saddlepack");
+}
+
+export function computeCartContents(character: ContainerCharacterGear): ContainerContents {
+  return computeContainerContents(character, "cart");
 }
 
 // Highest tier first, same ordering PackedItemsRow's own item tiles use.
@@ -1565,6 +1697,7 @@ function PackedItemsRow({
   inAdventure,
   characterId,
   onPlayerDataUpdated,
+  location = "backpack",
 }: {
   ids: string[];
   tierInfo: BlueprintTierInfo;
@@ -1586,6 +1719,7 @@ function PackedItemsRow({
   inAdventure: boolean;
   characterId: string;
   onPlayerDataUpdated?: (data: RawPlayerData) => void;
+  location?: "backpack" | "saddlepack" | "cart";
 }) {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   // See ItemGrid's identical selectedTileCap comment - which specific
@@ -1595,6 +1729,137 @@ function PackedItemsRow({
   const [selectedResourceId, setSelectedResourceId] = useState<string | null>(null);
   // Same idea, for a resource tile (see ResourceTiles' own tileCap).
   const [selectedResourceTileCap, setSelectedResourceTileCap] = useState<number>(0);
+
+  // How many full tile rows fit between the matrix's own top (wherever
+  // the popup's layout puts it - icon/name/tier badge above vary in
+  // height) and the fixed footer bar, which must stay visible below the
+  // whole popup (not just not-clip the matrix - the backpack card itself
+  // is capped there too, see the card.style.maxHeight write below; no
+  // scrolling either way, so everything has to actually fit).
+  //
+  // Probes ONCE at 1 row to measure "belowMatrix" - the space
+  // description/gathering/meta/the movable-buttons block below the
+  // matrix actually need - rather than iteratively re-probing at each
+  // candidate row count: that space is driven entirely by THOSE
+  // siblings, not by the matrix's own height, so it's the same number
+  // regardless of how many rows the matrix ends up with, and measuring
+  // it once avoids any risk of a large intermediate guess distorting the
+  // reading (e.g. via flex-shrink on some OTHER element if the guess
+  // temporarily overflows). Rounds DOWN so a row that would only be
+  // partially visible is never shown - one fewer full row instead of a
+  // cut-off one. useLayoutEffect (not useEffect) so this resolves before
+  // the browser ever paints the 1-row probe state.
+  const packedRowsRef = useRef<HTMLDivElement>(null);
+  const [packedRows, setPackedRows] = useState<number>(2);
+  useLayoutEffect(() => {
+    const measure = () => {
+      const el = packedRowsRef.current;
+      if (!el) return;
+      const card = el.closest(`.${styles.itemPopupCard}`) as HTMLElement | null;
+      if (!card) return;
+
+      const footer = document.querySelector('[data-role="character-preview-topbar"]');
+      const footerHeight = footer ? footer.getBoundingClientRect().height : 0;
+      const ceiling = window.innerHeight - footerHeight - CARD_FOOTER_MARGIN_PX;
+
+      // Backpack popup: rows are maximised first; icon fills the rest.
+      // Non-backpack popup: original fixed-icon measurement.
+      const iconEl = card.classList.contains(styles.backpackPopupCard)
+        ? (card.querySelector(`.${styles.itemPopupImg}`) as HTMLElement | null)
+        : null;
+
+      if (iconEl) {
+        // Collapse icon so the probe measures only fixed overhead.
+        iconEl.style.height = "0";
+      }
+
+      el.style.gridTemplateRows = `repeat(1, ${ITEM_TILE_PX}px)`;
+      const probeBottom = el.getBoundingClientRect().bottom;
+
+      if (iconEl) {
+        // Space below matrix occupied by fixed content (description, meta,
+        // buttons, bottom padding) - excludes position:fixed/absolute
+        // children (nested item popups opened from inside the backpack).
+        const cardStyle = getComputedStyle(card);
+        const cardGap = parseFloat(cardStyle.gap) || PACKED_ROW_GAP_PX;
+        const cardPaddingBottom = parseFloat(cardStyle.paddingBottom);
+        const matrixIdx = Array.from(card.children).indexOf(el);
+        const belowMatrix = Array.from(card.children)
+          .slice(matrixIdx + 1)
+          .filter((s) => {
+            const pos = getComputedStyle(s as HTMLElement).position;
+            return pos !== "fixed" && pos !== "absolute";
+          })
+          .reduce(
+            (sum, s) => sum + cardGap + (s as HTMLElement).getBoundingClientRect().height,
+            cardPaddingBottom
+          );
+
+        // rowBudget = room available for extra rows + icon (above the 1-row
+        // probe that's already positioned at probeBottom).
+        const rowBudget = ceiling - probeBottom - belowMatrix;
+
+        // Fixed 3 items per column; extra items add new columns that scroll
+        // horizontally. Never allocate more rows than tiles exist.
+        const tileCount = el.children.length;
+        const maxNeededRows = Math.min(3, Math.max(1, tileCount));
+        const extraRows = Math.max(0, Math.floor(rowBudget / (ITEM_TILE_PX + PACKED_ROW_GAP_PX)));
+        const rows = Math.min(1 + extraRows, maxNeededRows);
+        el.style.gridTemplateRows = `repeat(${rows}, ${ITEM_TILE_PX}px)`;
+        setPackedRows(rows);
+
+        // Icon (priority 2) stays at CONTAINER_ICON_PX - same as the empty
+        // popup - and only shrinks once the rows leave less room than
+        // that, capped at the card's own client width so the square icon
+        // never overflows sideways. Hidden entirely when too small to read
+        // as art.
+        const actualExtraRows = rows - 1;
+        const matrixExtraHeight = actualExtraRows * (ITEM_TILE_PX + PACKED_ROW_GAP_PX);
+        const iconSize = Math.max(0, Math.min(CONTAINER_ICON_PX, card.clientWidth, rowBudget - matrixExtraHeight));
+        if (iconSize < ICON_MIN_VISIBLE_PX) {
+          iconEl.style.display = "none";
+          // Cogwheel button is position:absolute; top:0.5rem; height:~2rem -
+          // without the icon the headline starts flush with the card top and
+          // overlaps it. Add a spacer so the headline clears the button.
+          const prevPadTop = parseFloat(getComputedStyle(card).paddingTop);
+          card.style.paddingTop = "2.5rem";
+          const newPadTop = parseFloat(getComputedStyle(card).paddingTop);
+          const netExtra = Math.max(0, newPadTop - prevPadTop - cardGap);
+          if (netExtra > 0) {
+            const shrunk = Math.max(1, rows - Math.ceil(netExtra / (ITEM_TILE_PX + PACKED_ROW_GAP_PX)));
+            el.style.gridTemplateRows = `repeat(${shrunk}, ${ITEM_TILE_PX}px)`;
+            setPackedRows(shrunk);
+          }
+        } else {
+          iconEl.style.display = "";
+          iconEl.style.width = `${iconSize}px`;
+          iconEl.style.height = `${iconSize}px`;
+          card.style.paddingTop = "";
+        }
+      } else {
+        // Original logic: icon is fixed by CSS; measure how many rows fit
+        // between matrix top and footer with the space below the matrix.
+        const tileCount = el.children.length;
+        const maxNeededRows = Math.max(1, tileCount);
+        const matrixTop = el.getBoundingClientRect().top;
+        const belowMatrix = card.getBoundingClientRect().bottom - probeBottom;
+        const matrixBudget = ceiling - matrixTop - belowMatrix;
+        const rows = Math.min(maxNeededRows, Math.max(1, Math.floor((matrixBudget + PACKED_ROW_GAP_PX) / (ITEM_TILE_PX + PACKED_ROW_GAP_PX))));
+        el.style.gridTemplateRows = `repeat(${rows}, ${ITEM_TILE_PX}px)`;
+        setPackedRows(rows);
+      }
+
+      const naturalBottom = card.scrollHeight + card.getBoundingClientRect().top;
+      if (naturalBottom > ceiling) {
+        card.style.maxHeight = `${Math.max(0, ceiling - card.getBoundingClientRect().top)}px`;
+      } else {
+        card.style.maxHeight = "";
+      }
+    };
+    measure();
+    window.addEventListener("resize", measure);
+    return () => window.removeEventListener("resize", measure);
+  }, []);
 
   const sortedResourceIds = sortResourceIds(resourceBalances, resourceTierInfo);
   if (ids.length === 0 && sortedResourceIds.length === 0) {
@@ -1635,14 +1900,18 @@ function PackedItemsRow({
   return (
     <>
       {(ids.length > 0 || sortedResourceIds.length > 0) && (
-      <div className={styles.packedItemsRow}>
+      <div
+        ref={packedRowsRef}
+        className={styles.packedItemsRow}
+        style={{ gridTemplateRows: `repeat(${packedRows}, ${ITEM_TILE_PX}px)` }}
+      >
         {expandedIds.map(({ key, id, displayCount, tileCap }) => {
           const info = tierInfo[lookupIds[id] ?? id];
           const name = info?.name ? stripBlueprintPrefix(info.name) : formatResourceLabel(lookupIds[id] ?? id);
           const currentQuality = instanceQuality[id];
           const qualityFraction =
             lookupIds[id] !== undefined && info?.qualityMax != null && currentQuality != null
-              ? Math.max(0, Math.min(1, info.qualityMax > 0 ? currentQuality / info.qualityMax : 1))
+              ? Math.max(0, Math.min(1, info.qualityMax > 0 ? currentQuality / (info.qualityMax * (2 ** (info.tier - 1))) : 1))
               : null;
           const isDamaged = qualityFraction !== null && qualityState(qualityFraction) === "damaged";
           return (
@@ -1692,9 +1961,29 @@ function PackedItemsRow({
           onPlayerDataUpdated={onPlayerDataUpdated}
           onClose={() => setSelectedResourceId(null)}
           destinations={
-            inAdventure
-              ? [{ key: "camp", icon: CAMP_ACTION_ICON, label: "Camp", endpoint: "unstow" }]
-              : [{ key: "vault", icon: VAULT_ACTION_ICON, label: "Vault", endpoint: "unload-backpack" }]
+            location === "cart"
+              ? [
+                  ...(inAdventure
+                    ? [{ key: "camp", icon: CAMP_ACTION_ICON, label: "Camp", endpoint: "cart-to-camp" }]
+                    : [{ key: "vault", icon: VAULT_ACTION_ICON, label: "Vault", endpoint: "cart-to-vault" }]),
+                ]
+              : location === "saddlepack"
+              ? [
+                  ...(inAdventure
+                    ? [{ key: "camp", icon: CAMP_ACTION_ICON, label: "Camp", endpoint: "saddlepack-to-camp" }]
+                    : [{ key: "vault", icon: VAULT_ACTION_ICON, label: "Vault", endpoint: "unload-saddlepack" }]),
+                  ...(hasBackpackEquipped
+                    ? [{ key: "backpack", icon: BACKPACK_ACTION_ICON, label: "Backpack", endpoint: "saddlepack-to-backpack" }]
+                    : [{ key: "backpack", icon: BACKPACK_ACTION_ICON, label: "No backpack equipped", endpoint: "saddlepack-to-backpack" }]),
+                ]
+              : [
+                  ...(inAdventure
+                    ? [{ key: "camp", icon: CAMP_ACTION_ICON, label: "Camp", endpoint: "unstow" }]
+                    : [{ key: "vault", icon: VAULT_ACTION_ICON, label: "Vault", endpoint: "unload-backpack" }]),
+                  ...(hasSaddlepackEquipped
+                    ? [{ key: "saddlepack", icon: SADDLEPACK_ACTION_ICON, label: "Saddlepack", endpoint: "backpack-to-saddlepack" }]
+                    : []),
+                ]
           }
         />
       )}
@@ -1708,7 +1997,7 @@ function PackedItemsRow({
           quality={instanceQuality[selectedId] ?? null}
           moveId={selectedId}
           catalogId={lookupIds[selectedId] ?? selectedId}
-          location="backpack"
+          location={location}
           source="character"
           hasBackpackEquipped={hasBackpackEquipped}
           hasSaddlepackEquipped={hasSaddlepackEquipped}
@@ -1723,15 +2012,14 @@ function PackedItemsRow({
 }
 
 /** One quantity-picker row's target for ResourcePopup below - endpoint is
- * the last path segment under .../resources/{resourceId}/..., e.g.
- * "unload-backpack" or "stow". */
+ * the last path segment under .../resources/{resourceId}/... */
 export type ResourcePopupDestination = { key: string; icon: string; label: string; endpoint: string };
 
 /** Opened by clicking a packed/camped resource tile (see PackedItemsRow and
  * CampView's own resource strip) - a deliberately stripped-down sibling of
- * ItemDetailPopup: no cogwheel/recycle-destroy view (raw/processed
- * materials have no recipe of their own to recycle - they're what
- * recycling something else already hands back), just a tier/name header
+ * ItemDetailPopup: no cogwheel/salvage-destroy view (raw/processed
+ * materials have no recipe of their own to salvage - they're what
+ * salvaging something else already hands back), just a tier/name header
  * and one quantity-picker row (same as Party's Resources' own) per
  * available move destination. A backpack resource only ever has ONE
  * reachable destination at a time (vault OR camp, whichever inAdventure
@@ -1831,6 +2119,172 @@ export function ResourcePopup({
   );
 }
 
+/** One recyclable row for a worn backpack's own Salvage popup, as GET
+ * .../backpack/salvage-preview returns it - the backpack instance itself
+ * (isContainer, always row 0) or something actually packed inside it.
+ * Same shape ChopBlockRow uses, plus isContainer. */
+type BackpackSalvageRow = {
+  id: string;
+  kind: "instance" | "balance";
+  name: string;
+  tier: number;
+  owned: number;
+  isContainer: boolean;
+  materials: SalvageMaterial[];
+  condition?: SalvageCondition;
+};
+
+/** Every raw material a row's (or several rows') materials would hand
+ * back, collapsed into one concrete-id -> qty list - same merge
+ * CampView.tsx's own flattenChopBlockMaterials does, duplicated locally
+ * rather than shared across files for one 10-line helper. */
+function flattenSalvageMaterials(materials: SalvageMaterial[]): { id: string; name: string; qty: number }[] {
+  const merged = new Map<string, { id: string; name: string; qty: number }>();
+  for (const material of materials) {
+    for (const line of material.recovered) {
+      const existing = merged.get(line.id);
+      if (existing) existing.qty += line.qty;
+      else merged.set(line.id, { id: line.id, name: line.name, qty: line.qty });
+    }
+  }
+  return [...merged.values()];
+}
+
+/** Opened by the cogwheel on a worn/camped backpack's own popup (see
+ * ItemDetailPopup's isBackpack branch) instead of the normal single-item
+ * salvage/destroy view - a HoldActionPopup very similar to CampView.tsx's
+ * own ChopBlockPopup (reuses its .chopBlockList/.chopBlockRow* content
+ * layout, so its own hold bar/icon stays visible above the footer no
+ * matter how long the scrollable checklist gets), but its own, smaller
+ * .backpackSalvageOverlay/Card/Icon instead of ChopBlockPopup's -
+ * unlike CampView (which hides the page's fixed footer bar entirely
+ * while open), this popup opens over the Body/Inventory tab, where the
+ * footer stays on screen AND can't be painted over just by raising this
+ * popup's own z-index - see .backpackSalvageCard's own comment for why
+ * (a stacking-context nesting quirk, not a simple z-index fix) - so real
+ * room has to stay reserved below the card instead. Scoped to one worn
+ * backpack's own contents. Row 0 is always the backpack instance itself
+ * (isContainer:true) - shown first, deliberately UNCHECKED by default
+ * (unlike every other row, which starts checked) since including it
+ * destroys the backpack itself, a much more drastic pick than salvaging
+ * whatever's merely packed inside it. Holding the icon salvages every
+ * still-checked row at once - see backend.players.salvage_backpack for
+ * exactly where the recovered materials (and, if the backpack itself is
+ * checked, everything else it was carrying) end up. */
+function BackpackSalvagePopup({
+  characterId,
+  containerType = "backpack",
+  onPlayerDataUpdated,
+  onClose,
+}: {
+  characterId: string;
+  containerType?: "backpack" | "saddlepack" | "cart";
+  onPlayerDataUpdated?: (data: RawPlayerData) => void;
+  onClose: () => void;
+}) {
+  const [rows, setRows] = useState<BackpackSalvageRow[] | null>(null);
+  const [selected, setSelected] = useState<Set<string>>(new Set());
+
+  useEffect(() => {
+    let cancelled = false;
+    fetch(`/api/auth/me/characters/${characterId}/${containerType}/salvage-preview`, { credentials: "include" })
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data: { rows: BackpackSalvageRow[] } | null) => {
+        if (cancelled) return;
+        const loaded = data?.rows ?? [];
+        setRows(loaded);
+        // Every row starts checked EXCEPT the backpack's own (isContainer) -
+        // see this component's own docstring for why.
+        setSelected(new Set(loaded.filter((row) => !row.isContainer).map((row) => row.id)));
+      })
+      .catch(() => {
+        if (!cancelled) setRows([]);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [characterId, containerType]);
+
+  const toggle = (id: string) => {
+    setSelected((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+
+  const grandTotal = flattenSalvageMaterials(
+    (rows ?? []).filter((row) => selected.has(row.id)).flatMap((row) => row.materials)
+  );
+
+  return (
+    <HoldActionPopup
+      headline="Salvage All"
+      overlayClassName={styles.backpackSalvageOverlay}
+      cardClassName={styles.backpackSalvageCard}
+      iconClassName={styles.backpackSalvageIcon}
+      label="Hold to unmake ALL"
+      icon="/images/character/chopping_block.png"
+      tone="salvage"
+      disabled={rows === null || selected.size === 0}
+      onConfirm={() =>
+        postJson(`/api/auth/me/characters/${characterId}/${containerType}/salvage-all`, { selected: [...selected] })
+      }
+      onPlayerDataUpdated={onPlayerDataUpdated}
+      onClose={onClose}
+    >
+      {rows === null ? (
+        <p className={styles.salvageResultText}>Checking what can be salvaged…</p>
+      ) : rows.length === 0 ? (
+        <p className={styles.salvageResultText}>Nothing in the {containerType} can be salvaged right now.</p>
+      ) : (
+        <>
+          <div className={`${styles.salvageDestroyDivider} ${styles.salvageDestroyDividerTight}`} />
+          <p className={styles.salvageFinalLine}>
+            Salvaged: {grandTotal.length > 0 ? grandTotal.map((line) => `${line.qty}× ${line.name}`).join(", ") : "nothing"}
+          </p>
+          <div className={`${styles.salvageDestroyDivider} ${styles.salvageDestroyDividerSpaced}`} />
+          <div className={styles.chopBlockList}>
+            {rows.map((row) => (
+              <div key={row.id} className={styles.chopBlockRow}>
+                <label className={styles.chopBlockRowHeader}>
+                  <input type="checkbox" checked={selected.has(row.id)} onChange={() => toggle(row.id)} />
+                  <span className={styles.chopBlockRowName}>
+                    {row.isContainer ? "⚠ " : ""}
+                    {row.name}
+                    {row.owned > 1 ? ` x${row.owned}` : ""}
+                    {row.isContainer ? ` (destroys the ${containerType} itself)` : ""}
+                  </span>
+                </label>
+                <div className={styles.salvageMaterialsList}>
+                  {row.materials.map((material) => (
+                    <div key={material.rawFamilyId} className={styles.salvageMaterialRow}>
+                      <p className={styles.salvageMaterialHeader}>
+                        <span>{material.rawName}</span>
+                        <span className={`${styles.salvageMaterialAmounts} ${material.recoveredUnits === 0 ? styles.salvageAmountZero : selected.has(row.id) ? styles.salvageAmountPositive : styles.salvageAmountMuted}`}>
+                          {material.recoveredUnits}/{material.totalUnits}
+                        </span>
+                      </p>
+                      <SalvageFormulaLine breakdown={material.yieldBreakdown} condition={row.condition} />
+                    </div>
+                  ))}
+                  <p className={selected.has(row.id) ? styles.salvageFinalLine : styles.salvageFinalLineMuted}>
+                    Salvaged:{" "}
+                    {flattenSalvageMaterials(row.materials)
+                      .map((line) => `${line.qty}× ${line.name}`)
+                      .join(", ") || "nothing"}
+                  </p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </>
+      )}
+    </HoldActionPopup>
+  );
+}
+
 /** The popup opened by clicking an ItemGrid tile - icon/name/description/
  * sizeClass/stackMax/two-handed/quality, plus (when `movable`) a quantity
  * picker for a stackable balance and one button per destination: this
@@ -1839,12 +2293,14 @@ export function ResourcePopup({
  * in one click (check-out, then equip for a slot button).
  *
  * The cogwheel in the corner swaps this same card's content over to a
- * recycle/destroy view instead of opening a second popup (see
- * showDestroy) - a recycle preview up top (still a placeholder, no
+ * salvage/destroy view instead of opening a second popup (see
+ * showDestroy) - a salvage preview up top (still a placeholder, no
  * dismantle endpoint exists yet) and a hold-to-confirm destroy control
  * below it. Holding that control for DESTROY_HOLD_MS fills a progress bar
  * above its flame icon and permanently deletes the item; releasing early
- * resets it with nothing destroyed. */
+ * resets it with nothing destroyed. For a BACKPACK's own popup, the
+ * cogwheel opens BackpackSalvagePopup instead (see isBackpack below) -
+ * this destroy view is never reached for one. */
 export function ItemDetailPopup({
   info,
   fallbackName,
@@ -1858,15 +2314,24 @@ export function ItemDetailPopup({
   source = "vault",
   hasBackpackEquipped,
   hasSaddlepackEquipped,
+  hasMountEquipped = false,
+  hasCompanionEquipped = false,
   inAdventure = false,
   currentSlots,
   characterId,
   characterFirstName,
   packedItems,
+  saddlepackPackedItems,
+  cartPackedItems,
   backpackSlotsUsed,
   backpackCapacity,
+  saddlepackSlotsUsed,
+  saddlepackCapacity,
+  cartSlotsUsed,
+  cartCapacity,
   onPlayerDataUpdated,
   onClose,
+  iconOverride,
 }: {
   info: BlueprintTierInfo[string] | undefined;
   fallbackName: string;
@@ -1880,16 +2345,18 @@ export function ItemDetailPopup({
   quality: number | null;
   /** The row id itself - an instanceId (isInstance) or a concrete itemBalances/resource id. */
   moveId: string;
-  /** The concrete catalog id (item-catalog familyId+tier) this row resolves to - same id used to look up `info` itself (lookupIds?.[id] ?? id), needed separately here since GET .../recycle-preview/{itemId} takes a concrete id, never an instanceId. */
+  /** The concrete catalog id (item-catalog familyId+tier) this row resolves to - same id used to look up `info` itself (lookupIds?.[id] ?? id), needed separately here since GET .../salvage-preview/{itemId} takes a concrete id, never an instanceId. */
   catalogId: string;
-  /** source:"character" instance rows only - "backpack", "camp", or "body" - decides whether the move actions offered are Equip/Check-in-to-vault (backpack/camp, treated the same) or Unequip (body). */
-  location?: "backpack" | "body" | "camp";
+  /** source:"character" instance rows only - "backpack", "camp", "saddlepack", "cart", or "body" - decides which move actions are offered. */
+  location?: "backpack" | "body" | "camp" | "saddlepack" | "cart";
   /** "vault" (default): `moveId` lives in the player's shared pool. "character": `moveId` is this character's own (backpack/body instance, or itemBalances row) - see ItemGrid's identical prop for what changes. */
   source?: "vault" | "character";
   /** Whether this character currently has a backpack worn - greys out any "Move to backpack" button instead of letting the click fail server-side with "No backpack equipped". */
   hasBackpackEquipped: boolean;
   /** Whether this character's mount currently has a saddlepack worn (see items_catalog.has_saddlepack_equipped) - any "Move to saddlepack" button is hidden entirely (not just greyed) when false, since there's no mount slot to blame the way a missing backpack gets a "No backpack equipped" message. */
   hasSaddlepackEquipped: boolean;
+  hasMountEquipped?: boolean;
+  hasCompanionEquipped?: boolean;
   /** location:"body" rows only - whether this character currently counts as out on an adventure (Character.availability.inAdventure). Picks the automatic-unequip icon: camp while true, the shared vault while false - see backend.players.unequip_item. */
   inAdventure?: boolean;
   /** location:"body" rows only - the slot(s) this instance currently occupies (its own slotRef) - used to exclude that same group from the reslot button list below (equipToSlots), since re-clicking your own current slot(s) would be a no-op. */
@@ -1917,23 +2384,40 @@ export function ItemDetailPopup({
     resourceBalances: Record<string, number>;
     resourceTierInfo: ResourceTierInfo;
   };
-  /** Same family:"backpack" rows as packedItems, same character-level
-   * source (Character.gear.backpackSlotsUsed/backpackCapacity, computed
-   * server-side by backend.items_catalog) - powers the "Filled: X/Y" meta
-   * line below. Passed separately (not folded into packedItems) since
-   * it's needed even when packedItems' own row would show nothing (e.g.
-   * an empty but equipped backpack still has a real capacity to report). */
+  saddlepackPackedItems?: {
+    ids: string[];
+    tierInfo: BlueprintTierInfo;
+    balances: Record<string, number>;
+    lookupIds: Record<string, string>;
+    instanceQuality: Record<string, number | null>;
+    resourceBalances: Record<string, number>;
+    resourceTierInfo: ResourceTierInfo;
+  };
+  cartPackedItems?: {
+    ids: string[];
+    tierInfo: BlueprintTierInfo;
+    balances: Record<string, number>;
+    lookupIds: Record<string, string>;
+    instanceQuality: Record<string, number | null>;
+    resourceBalances: Record<string, number>;
+    resourceTierInfo: ResourceTierInfo;
+  };
   backpackSlotsUsed?: number;
   backpackCapacity?: number;
+  saddlepackSlotsUsed?: number;
+  saddlepackCapacity?: number;
+  cartSlotsUsed?: number;
+  cartCapacity?: number;
   onPlayerDataUpdated?: (data: RawPlayerData) => void;
   onClose: () => void;
+  iconOverride?: string;
 }) {
   const stackSize = info?.stackSize ?? 1;
   const name = info?.name ? stripBlueprintPrefix(info.name) : fallbackName;
   const displayName = stackSize > 1 ? `${owned} ${name}` : name;
 
   // Clicking the cogwheel swaps this same card's content over to the
-  // recycle/destroy view instead of opening a second popup - toggling it
+  // salvage/destroy view instead of opening a second popup - toggling it
   // again (now an "info" glyph) swaps back.
   const [showDestroy, setShowDestroy] = useState(false);
 
@@ -1971,31 +2455,33 @@ export function ItemDetailPopup({
   // camp -> backpack, so a full backpack left the item stranded in camp
   // instead of the backpack the player actually asked for, with no way
   // back to the vault in one click. Dropping into camp on a full backpack
-  // is deliberately ONLY something recycling does, never a normal move -
+  // is deliberately ONLY something salvaging does, never a normal move -
   // see backend.players.check_out_item_balance_to_backpack.
   const moveToBackpack = async (amount: number) => {
     setPending(true);
     setFlashMessage(null);
     if (isInstance) {
-      return finish(await postJson(`/api/auth/me/characters/${characterId}/items/${moveId}/check-out`));
+      return finish(await postJson(`/api/auth/me/characters/${characterId}/items/${moveId}/vault-to-backpack`));
     }
     finish(
-      await postJson(`/api/auth/me/characters/${characterId}/item-balances/${moveId}/check-out-backpack`, {
+      await postJson(`/api/auth/me/characters/${characterId}/item-balances/${moveId}/vault-to-backpack`, {
         amount,
       })
     );
   };
 
-  // Pool -> this character's saddlepack, one step - instance rows only (no
-  // saddlepack equivalent of load-backpack exists for flat itemBalances
-  // yet, so this button never shows for a balance row - see its render
-  // guard below).
   const moveToSaddlepack = async () => {
     setPending(true);
     setFlashMessage(null);
+    finish(await postJson(`/api/auth/me/characters/${characterId}/items/${moveId}/vault-to-saddlepack`));
+  };
+
+  const moveBalanceToSaddlepack = async (amount: number) => {
+    setPending(true);
+    setFlashMessage(null);
     finish(
-      await postJson(`/api/auth/me/characters/${characterId}/items/${moveId}/check-out`, {
-        destination: "saddlepack",
+      await postJson(`/api/auth/me/characters/${characterId}/item-balances/${moveId}/vault-to-saddlepack`, {
+        amount,
       })
     );
   };
@@ -2013,7 +2499,13 @@ export function ItemDetailPopup({
   // both hands together for a two-handed item, or a single named slot for
   // an ordinary one) - one button per group, matching what equip_item
   // itself will accept.
-  const slotGroups: string[][] = isInstance && info?.equipSlots?.length ? info.equipSlots : [];
+  const MOUNT_SUB_SLOTS = new Set(["Bridle", "Saddle", "Barding", "Saddlepack", "Hitch"]);
+  const COMPANION_SUB_SLOTS = new Set(["Charm", "Rune"]);
+  const slotGroups: string[][] = (info?.equipSlots?.length ? info.equipSlots : []).filter((group) => {
+    if (!hasMountEquipped && group.some((s) => MOUNT_SUB_SLOTS.has(s))) return false;
+    if (!hasCompanionEquipped && group.some((s) => COMPANION_SUB_SLOTS.has(s))) return false;
+    return true;
+  });
 
   // location:"body" rows only - every OTHER group this family could be
   // equipped into, for the reslot buttons below (swap hands, move a dagger
@@ -2032,33 +2524,49 @@ export function ItemDetailPopup({
   const checkInToVault = async () => {
     setPending(true);
     setFlashMessage(null);
-    finish(await postJson(`/api/auth/me/characters/${characterId}/items/${moveId}/check-in`));
+    finish(await postJson(`/api/auth/me/characters/${characterId}/items/${moveId}/to-vault`));
   };
 
-  // source:"character", location:"camp" rows only - straight to this same
-  // character's backpack, staying off the shared pool entirely (unlike
-  // checkInToVault above) - see backend.players.move_camp_item_to_backpack.
-  // This is the only way a camped instance can reach the backpack while
-  // inAdventure, since checkInToVault is hidden then and check-out (the
-  // vault's own path to the backpack) is blocked mid-adventure server-side.
   const stowToBackpack = async () => {
     setPending(true);
     setFlashMessage(null);
-    finish(await postJson(`/api/auth/me/characters/${characterId}/items/${moveId}/stow`));
+    finish(await postJson(`/api/auth/me/characters/${characterId}/items/${moveId}/camp-to-backpack`));
   };
 
-  // source:"character", location:"backpack" rows only - straight to this
-  // same character's camp, staying off the shared pool entirely (the
-  // reverse of stowToBackpack above) - see backend.players.
-  // move_backpack_item_to_camp. This is the only way a backpacked
-  // instance can reach camp while inAdventure, since checkInToVault is
-  // unreachable then (there's no shared vault mid-adventure) and camp is
-  // always its automatic fallback, same as an equipped item's own
-  // unequip icon (see location:"body"'s automatic camp/vault icon above).
-  const unstowToCamp = async () => {
+  const stowToCamp = async () => {
     setPending(true);
     setFlashMessage(null);
-    finish(await postJson(`/api/auth/me/characters/${characterId}/items/${moveId}/unstow`));
+    finish(await postJson(`/api/auth/me/characters/${characterId}/items/${moveId}/backpack-to-camp`));
+  };
+
+  const stowToSaddlepackFromCamp = async () => {
+    setPending(true);
+    setFlashMessage(null);
+    finish(await postJson(`/api/auth/me/characters/${characterId}/items/${moveId}/camp-to-saddlepack`));
+  };
+
+  const stowToSaddlepack = async () => {
+    setPending(true);
+    setFlashMessage(null);
+    finish(await postJson(`/api/auth/me/characters/${characterId}/items/${moveId}/backpack-to-saddlepack`));
+  };
+
+  const saddlepackToBackpack = async () => {
+    setPending(true);
+    setFlashMessage(null);
+    finish(await postJson(`/api/auth/me/characters/${characterId}/items/${moveId}/saddlepack-to-backpack`));
+  };
+
+  const saddlepackToCamp = async () => {
+    setPending(true);
+    setFlashMessage(null);
+    finish(await postJson(`/api/auth/me/characters/${characterId}/items/${moveId}/saddlepack-to-camp`));
+  };
+
+  const cartToCamp = async () => {
+    setPending(true);
+    setFlashMessage(null);
+    finish(await postJson(`/api/auth/me/characters/${characterId}/items/${moveId}/cart-to-camp`));
   };
 
   // source:"character", NOT isInstance, location:"camp" only (a flat
@@ -2073,7 +2581,7 @@ export function ItemDetailPopup({
     setPending(true);
     setFlashMessage(null);
     finish(
-      await postJson(`/api/auth/me/characters/${characterId}/item-balances/${moveId}/load-backpack`, {
+      await postJson(`/api/auth/me/characters/${characterId}/item-balances/${moveId}/camp-to-backpack`, {
         amount,
       })
     );
@@ -2090,7 +2598,7 @@ export function ItemDetailPopup({
     setPending(true);
     setFlashMessage(null);
     finish(
-      await postJson(`/api/auth/me/characters/${characterId}/item-balances/${moveId}/check-in`, {
+      await postJson(`/api/auth/me/characters/${characterId}/item-balances/${moveId}/to-vault`, {
         amount,
         location: location ?? "camp",
       })
@@ -2108,7 +2616,67 @@ export function ItemDetailPopup({
     setPending(true);
     setFlashMessage(null);
     finish(
-      await postJson(`/api/auth/me/characters/${characterId}/item-balances/${moveId}/unload-backpack`, {
+      await postJson(`/api/auth/me/characters/${characterId}/item-balances/${moveId}/backpack-to-camp`, {
+        amount,
+      })
+    );
+  };
+
+  const stowBalanceToSaddlepack = async (amount: number) => {
+    setPending(true);
+    setFlashMessage(null);
+    finish(
+      await postJson(`/api/auth/me/characters/${characterId}/item-balances/${moveId}/camp-to-saddlepack`, {
+        amount,
+      })
+    );
+  };
+
+  const unloadBalanceFromSaddlepack = async (amount: number) => {
+    setPending(true);
+    setFlashMessage(null);
+    finish(
+      await postJson(`/api/auth/me/characters/${characterId}/item-balances/${moveId}/saddlepack-to-camp`, {
+        amount,
+      })
+    );
+  };
+
+  const moveBalanceBackpackToSaddlepack = async (amount: number) => {
+    setPending(true);
+    setFlashMessage(null);
+    finish(
+      await postJson(`/api/auth/me/characters/${characterId}/item-balances/${moveId}/backpack-to-saddlepack`, {
+        amount,
+      })
+    );
+  };
+
+  const moveBalanceSaddlepackToBackpack = async (amount: number) => {
+    setPending(true);
+    setFlashMessage(null);
+    finish(
+      await postJson(`/api/auth/me/characters/${characterId}/item-balances/${moveId}/saddlepack-to-backpack`, {
+        amount,
+      })
+    );
+  };
+
+  const unloadBalanceFromCart = async (amount: number) => {
+    setPending(true);
+    setFlashMessage(null);
+    finish(
+      await postJson(`/api/auth/me/characters/${characterId}/item-balances/${moveId}/cart-to-camp`, {
+        amount,
+      })
+    );
+  };
+
+  const checkInBalanceFromCart = async (amount: number) => {
+    setPending(true);
+    setFlashMessage(null);
+    finish(
+      await postJson(`/api/auth/me/characters/${characterId}/item-balances/${moveId}/cart-to-vault`, {
         amount,
       })
     );
@@ -2160,7 +2728,7 @@ export function ItemDetailPopup({
     finish(await postJson(`/api/auth/me/characters/${characterId}/items/${moveId}/equip`, { slots }));
   };
 
-  // --- Recycle/destroy view (swapped in over the info view above by the
+  // --- Salvage/destroy view (swapped in over the info view above by the
   // cogwheel button, rather than a second popup - see showDestroy). ---
   const [destroyProgress, setDestroyProgress] = useState(0);
   const [destroying, setDestroying] = useState(false);
@@ -2180,49 +2748,46 @@ export function ItemDetailPopup({
 
   // How many units the hold below would act on - always 1 for an instance
   // (never stacked), otherwise whatever the quantity row above has picked.
-  const recycleCount = isInstance ? 1 : destroyAll ? owned : destroyQuantity;
+  const salvageCount = isInstance ? 1 : destroyAll ? owned : destroyQuantity;
 
-  // Fetched fresh from GET .../recycle-preview whenever this view is open
-  // and count changes - fromVault must match whichever recycle action will
-  // actually run below (see runRecycle): a vault row's full shared tool
-  // pool counts toward the bonus, a character row's own carried-only tools
-  // do not (see backend.players.preview_recycle).
-  const [recyclePreview, setRecyclePreview] = useState<RecyclePreview | null>(null);
-  const [recyclePreviewLoading, setRecyclePreviewLoading] = useState(false);
+  // Prefetched on mount so the salvage yield is ready by the time the user
+  // clicks the cogwheel — re-fetches when count changes in the destroy view.
+  const [salvagePreview, setSalvagePreview] = useState<SalvagePreview | null>(null);
+  const [salvagePreviewLoading, setSalvagePreviewLoading] = useState(true);
 
   useEffect(() => {
-    if (!showDestroy || recycleCount <= 0) return;
+    if (salvageCount <= 0) return;
     let cancelled = false;
-    setRecyclePreviewLoading(true);
+    setSalvagePreviewLoading(true);
     fetch(
-      `/api/auth/me/characters/${characterId}/recycle-preview/${catalogId}?count=${recycleCount}&fromVault=${
+      `/api/auth/me/characters/${characterId}/salvage-preview/${catalogId}?count=${salvageCount}&fromVault=${
         source === "vault"
-      }`,
+      }${isInstance ? `&instanceId=${encodeURIComponent(moveId)}` : ""}`,
       { credentials: "include" }
     )
       .then((res) => (res.ok ? res.json() : null))
-      .then((data: RecyclePreview | null) => {
-        if (!cancelled) setRecyclePreview(data);
+      .then((data: SalvagePreview | null) => {
+        if (!cancelled) setSalvagePreview(data);
       })
       .catch(() => {
-        if (!cancelled) setRecyclePreview(null);
+        if (!cancelled) setSalvagePreview(null);
       })
       .finally(() => {
-        if (!cancelled) setRecyclePreviewLoading(false);
+        if (!cancelled) setSalvagePreviewLoading(false);
       });
     return () => {
       cancelled = true;
     };
-  }, [showDestroy, catalogId, characterId, recycleCount, source]);
+  }, [catalogId, characterId, salvageCount, source, isInstance, moveId]);
 
-  // Whether this item actually has anything to recycle (a known recipe) -
+  // Whether this item actually has anything to salvage (a known recipe) -
   // false for e.g. a starter item authored with no craft-recipes.json
-  // entry, which hides the recycle bar entirely (destroy below is still
+  // entry, which hides the salvage bar entirely (destroy below is still
   // always available either way).
-  const canRecycle = !!recyclePreview && recyclePreview.materials.length > 0;
+  const canSalvage = !!salvagePreview && salvagePreview.materials.length > 0;
 
   // Plain zero-recovery destroy - unconditional, always available, same
-  // behavior as before recycling existed. Targets the shared vault
+  // behavior as before salvaging existed. Targets the shared vault
   // (source:"vault") or this character's own backpack/body/itemBalances
   // (source:"character" - see destroy_character_item_instance/_balance).
   const destroySuffix = source === "vault" ? "destroy" : "destroy-from-character";
@@ -2244,66 +2809,66 @@ export function ItemDetailPopup({
     onClose();
   };
 
-  // --- Recycle hold - a separate action from destroy above, only shown
-  // when canRecycle: credits the previewed materials to the shared vault
+  // --- Salvage hold - a separate action from destroy above, only shown
+  // when canSalvage: credits the previewed materials to the shared vault
   // instead of giving up the item for nothing. Own progress/state so
   // holding one control never interferes with the other. ---
-  const [recycleHoldProgress, setRecycleHoldProgress] = useState(0);
-  const [recyclingItem, setRecyclingItem] = useState(false);
-  const [recycleActionError, setRecycleActionError] = useState<string | null>(null);
-  const recycleRafRef = useRef<number | null>(null);
+  const [salvageHoldProgress, setSalvageHoldProgress] = useState(0);
+  const [salvagingItem, setSalvagingItem] = useState(false);
+  const [salvageActionError, setSalvageActionError] = useState<string | null>(null);
+  const salvageRafRef = useRef<number | null>(null);
 
-  const resetRecycleHold = () => {
-    if (recycleRafRef.current !== null) cancelAnimationFrame(recycleRafRef.current);
-    recycleRafRef.current = null;
-    setRecycleHoldProgress(0);
+  const resetSalvageHold = () => {
+    if (salvageRafRef.current !== null) cancelAnimationFrame(salvageRafRef.current);
+    salvageRafRef.current = null;
+    setSalvageHoldProgress(0);
   };
-  useEffect(() => resetRecycleHold, []);
+  useEffect(() => resetSalvageHold, []);
 
-  const recycleSuffix = source === "vault" ? "recycle-from-vault" : "recycle";
-  const runRecycle = async () => {
-    setRecyclingItem(true);
+  const salvageSuffix = source === "vault" ? "salvage-from-vault" : "salvage";
+  const runSalvage = async () => {
+    setSalvagingItem(true);
     const amount = destroyAll ? owned : destroyQuantity;
     // A flat itemBalances row carries no location of its own the way an
-    // instance does (recycle_item_instance reads it straight off the
+    // instance does (salvage_item_instance reads it straight off the
     // instance) - this popup already knows which of the character's two
     // buckets it opened on (backpack or camp), so it has to say so
     // explicitly or the backend can't tell where to deduct from.
     const result = isInstance
-      ? await postJson(`/api/auth/me/characters/${characterId}/items/${moveId}/${recycleSuffix}`)
-      : await postJson(`/api/auth/me/characters/${characterId}/item-balances/${moveId}/${recycleSuffix}`, {
+      ? await postJson(`/api/auth/me/characters/${characterId}/items/${moveId}/${salvageSuffix}`)
+      : await postJson(`/api/auth/me/characters/${characterId}/item-balances/${moveId}/${salvageSuffix}`, {
           amount,
           ...(source === "character" ? { location: location ?? "camp" } : {}),
         });
     if (!result.ok) {
-      setRecyclingItem(false);
-      setRecycleActionError("Couldn't recycle that.");
-      resetRecycleHold();
+      setSalvagingItem(false);
+      setSalvageActionError("Couldn't salvage that.");
+      resetSalvageHold();
       return;
     }
     onPlayerDataUpdated?.(result.data);
     onClose();
   };
 
-  const recycleTick = (startedAt: number) => {
+  const salvageTick = (startedAt: number) => {
     const next = Math.min(1, (performance.now() - startedAt) / DESTROY_HOLD_MS);
-    setRecycleHoldProgress(next);
+    setSalvageHoldProgress(next);
     if (next >= 1) {
-      runRecycle();
+      runSalvage();
       return;
     }
-    recycleRafRef.current = requestAnimationFrame(() => recycleTick(startedAt));
+    salvageRafRef.current = requestAnimationFrame(() => salvageTick(startedAt));
   };
 
-  const startRecycleHold = () => {
-    if (recyclingItem) return;
-    setRecycleActionError(null);
+  const startSalvageHold = () => {
+    if (salvagingItem) return;
+    setSalvageActionError(null);
     const startedAt = performance.now();
-    recycleRafRef.current = requestAnimationFrame(() => recycleTick(startedAt));
+    salvageRafRef.current = requestAnimationFrame(() => salvageTick(startedAt));
   };
-  const cancelRecycleHold = () => {
-    if (recyclingItem) return;
-    resetRecycleHold();
+  const cancelSalvageHold = () => {
+    if (salvagingItem) return;
+    resetSalvageHold();
   };
 
   const destroyTick = (startedAt: number) => {
@@ -2330,9 +2895,9 @@ export function ItemDetailPopup({
   // Closes on a click anywhere - including inside the card itself (the
   // image, name, description, meta row) - except on a button, or (while
   // showDestroy is open) directly on one of the two hold icons
-  // (.destroyIcon - shared by both the ♻️ recycle and 🔥 destroy bars) -
+  // (.destroyIcon - shared by both the salvage and 🔥 destroy bars) -
   // only those two actually start/hold a fill now, so everything else in
-  // this view (the label/track text, the recycle breakdown list, ...) is
+  // this view (the label/track text, the salvage breakdown list, ...) is
   // just a dismiss click like the rest of the card, same as
   // HoldActionPopup's own identical redesign.
   //
@@ -2353,36 +2918,66 @@ export function ItemDetailPopup({
     if (showDestroy && target.closest(`.${styles.destroyIcon}`)) return;
     onClose();
   };
+  // A worn/camped backpack's own popup packs its own double-row scrollable
+  // item matrix (PackedItemsRow) in the middle - taller than a plain
+  // item's icon/description/meta stack, so it gets its own near-zero top
+  // gap and relaxed max-height (even past the fixed footer - see
+  // .backpackPopupOverlay/.backpackPopupCard) instead of the generic
+  // popup's usual headroom, which would force it to scroll far sooner
+  // than it has to.
+  const isBackpack = info?.familyId === "backpack";
+  const isSaddlepack = info?.familyId === "saddlepack";
+  const isCart = info?.familyId === "cart";
+  const isContainer = isBackpack || isSaddlepack || isCart;
+  const activePackedItems = isCart ? cartPackedItems : isSaddlepack ? saddlepackPackedItems : packedItems;
+  const containerHasContents =
+    activePackedItems != null &&
+    (activePackedItems.ids.length > 0 ||
+      Object.values(activePackedItems.resourceBalances).some((qty) => qty > 0));
+  const containerTitle = name;
+
+  const [confirmMove, setConfirmMove] = useState<{ label: string; action: () => void } | null>(null);
+
+  if (isContainer && showDestroy && containerHasContents) {
+    return <BackpackSalvagePopup characterId={characterId} containerType={isCart ? "cart" : isSaddlepack ? "saddlepack" : "backpack"} onPlayerDataUpdated={onPlayerDataUpdated} onClose={onClose} />;
+  }
   return (
-    <div className={styles.itemPopupOverlay} onClick={handleClick}>
-      <div className={`${styles.itemPopupCard} ${showDestroy ? styles.recycleDestroyCard : ""}`}>
+    <div
+      className={`${styles.itemPopupOverlay} ${isContainer ? styles.backpackPopupOverlay : ""} ${showDestroy ? styles.salvageDestroyOverlay : ""}`}
+      onClick={handleClick}
+    >
+      <div
+        className={`${styles.itemPopupCard} ${showDestroy ? styles.salvageDestroyCard : ""} ${
+          isContainer ? styles.backpackPopupCard : ""
+        }`}
+      >
         {!showDestroy && (
           <button
             type="button"
             className={styles.itemPopupSettingsButton}
             onClick={() => setShowDestroy(true)}
-            aria-label="Recycle or destroy this item"
-            title="Recycle or destroy this item"
+            aria-label="Salvage or destroy this item"
+            title="Salvage or destroy this item"
           >
             ⚙
           </button>
         )}
         {showDestroy ? (
           <>
-            {recyclePreviewLoading ? (
-              <div className={styles.recycleSection}>
-                <p className={styles.recycleResultText}>Checking recycle yield…</p>
+            {salvagePreviewLoading ? (
+              <div className={styles.salvageSection}>
+                <p className={styles.salvageResultText}>Checking salvage yield…</p>
               </div>
-            ) : canRecycle ? (
+            ) : canSalvage ? (
               <>
-                <div className={`${styles.destroySection} ${styles.recycleHoldBar}`}>
-                  <p className={styles.recycleLabel}>Hold to RECYCLE</p>
+                <div className={`${styles.destroySection} ${styles.salvageHoldBar}`}>
+                  <p className={styles.salvageLabel}>Hold to unmake</p>
                   <div className={styles.destroyProgressTrack}>
                     <div
                       className={styles.destroyProgressFill}
                       style={{
-                        width: `${recycleHoldProgress * 100}%`,
-                        backgroundColor: recycleFillColor(recycleHoldProgress),
+                        width: `${salvageHoldProgress * 100}%`,
+                        backgroundColor: salvageFillColor(salvageHoldProgress),
                       }}
                     />
                   </div>
@@ -2390,18 +2985,18 @@ export function ItemDetailPopup({
                     className={styles.destroyIcon}
                     role="button"
                     tabIndex={0}
-                    title="Hold to recycle"
-                    aria-label="Hold to recycle"
+                    title="Hold to unmake"
+                    aria-label="Hold to unmake"
                     onPointerDown={(e) => {
                       e.preventDefault();
-                      startRecycleHold();
+                      startSalvageHold();
                     }}
-                    onPointerUp={cancelRecycleHold}
-                    onPointerLeave={cancelRecycleHold}
-                    onPointerCancel={cancelRecycleHold}
+                    onPointerUp={cancelSalvageHold}
+                    onPointerLeave={cancelSalvageHold}
+                    onPointerCancel={cancelSalvageHold}
                     onContextMenu={(e) => e.preventDefault()}
                   >
-                    ♻️
+                    <img src="/images/character/chopping_block.png" alt="Salvage" draggable={false} />
                   </span>
                 </div>
                 {/* Outside .destroySection on purpose - only the bar above
@@ -2409,27 +3004,21 @@ export function ItemDetailPopup({
                     below it. Still exempted from handleClick's close-on-
                     click below, same as .destroySection, so reading it
                     doesn't dismiss the popup either. */}
-                <div className={styles.recycleMaterialsList}>
-                  {recyclePreview!.materials.map((material) => (
-                    <div key={material.rawFamilyId} className={styles.recycleMaterialRow}>
-                      <p className={styles.recycleMaterialHeader}>
+                <div className={styles.salvageMaterialsList}>
+                  {salvagePreview!.materials.map((material) => (
+                    <div key={material.rawFamilyId} className={styles.salvageMaterialRow}>
+                      <p className={styles.salvageMaterialHeader}>
                         <span>{material.rawName}</span>
-                        <span className={styles.recycleMaterialAmounts}>
+                        <span className={`${styles.salvageMaterialAmounts} ${material.recoveredUnits === 0 ? styles.salvageAmountZero : styles.salvageAmountPositive}`}>
                           {material.recoveredUnits}/{material.totalUnits}
                         </span>
                       </p>
-                      <p className={styles.recycleFormulaLine}>
-                        {material.yieldBreakdown.base} + {material.yieldBreakdown.skill} skill +{" "}
-                        <span className={material.yieldBreakdown.tool === 0 ? styles.recycleFormulaZero : undefined}>
-                          {material.yieldBreakdown.tool} tool
-                        </span>{" "}
-                        + {material.yieldBreakdown.charm} charm = {material.yieldBreakdown.total}%
-                      </p>
+                      <SalvageFormulaLine breakdown={material.yieldBreakdown} condition={salvagePreview!.condition} />
                     </div>
                   ))}
-                  <p className={styles.recycleFinalLine}>
-                    Recovered:{" "}
-                    {recyclePreview!.materials
+                  <p className={styles.salvageFinalLine}>
+                    Salvaged {name}:{" "}
+                    {salvagePreview!.materials
                       .flatMap((material) => material.recovered)
                       .map((line) => `${line.qty}× ${line.name}`)
                       .join(", ") || "nothing"}
@@ -2437,11 +3026,11 @@ export function ItemDetailPopup({
                 </div>
               </>
             ) : (
-              <div className={styles.recycleSection}>
-                <p className={styles.recycleResultText}>Nothing to recover from this item.</p>
+              <div className={styles.salvageSection}>
+                <p className={styles.salvageResultText}>Nothing to recover from this item.</p>
               </div>
             )}
-            {recycleActionError && <p className={styles.destroyError}>{recycleActionError}</p>}
+            {salvageActionError && <p className={styles.destroyError}>{salvageActionError}</p>}
             {!isInstance && stackSize > 1 && (
               <div className={styles.itemPopupActions} role="radiogroup" aria-label="How many to destroy">
                 {QUANTITY_OPTIONS.map((n) => (
@@ -2486,9 +3075,9 @@ export function ItemDetailPopup({
                 </button>
               </div>
             )}
-            <div className={styles.recycleDestroyDivider} />
+            <div className={styles.salvageDestroyDivider} />
             <div className={styles.destroySection}>
-              <p className={styles.destroyLabel}>Hold to DESTROY</p>
+              <p className={styles.destroyLabel}>Hold to cast into flames</p>
               <div className={styles.destroyProgressTrack}>
                 <div
                   className={styles.destroyProgressFill}
@@ -2502,8 +3091,8 @@ export function ItemDetailPopup({
                 className={styles.destroyIcon}
                 role="button"
                 tabIndex={0}
-                title="Hold to destroy"
-                aria-label="Hold to destroy"
+                title="Hold to cast into flames"
+                aria-label="Hold to cast into flames"
                 onPointerDown={(e) => {
                   e.preventDefault();
                   startDestroyHold();
@@ -2513,7 +3102,11 @@ export function ItemDetailPopup({
                 onPointerCancel={cancelDestroyHold}
                 onContextMenu={(e) => e.preventDefault()}
               >
-                🔥
+                <img
+                  src="/images/character/campfire_lit.png"
+                  alt="Destroy"
+                  className={styles.destroyFireImg}
+                />
               </span>
             </div>
             {destroyError && <p className={styles.destroyError}>{destroyError}</p>}
@@ -2528,16 +3121,17 @@ export function ItemDetailPopup({
             {/* background-image div, not a real <img> - see ItemGrid's tile
                 icon for why (mobile's native "save/share image" long-press
                 menu targets the <img> tag itself). */}
-            <ItemIcon icon={info?.icon} alt={name} className={styles.itemPopupImg} />
-            <h3 className={styles.itemPopupName}>{displayName}</h3>
-            {info?.familyId === "backpack" && packedItems && (
+            <ItemIcon icon={iconOverride ?? info?.icon} alt={name} className={styles.itemPopupImg} />
+            <h3 className={styles.itemPopupName}>{isContainer ? containerTitle : displayName}</h3>
+            {isContainer && activePackedItems && (
               <PackedItemsRow
-                {...packedItems}
+                {...activePackedItems}
                 hasBackpackEquipped={hasBackpackEquipped}
                 hasSaddlepackEquipped={hasSaddlepackEquipped}
                 inAdventure={inAdventure}
                 characterId={characterId}
                 onPlayerDataUpdated={onPlayerDataUpdated}
+                location={isCart ? "cart" : isSaddlepack ? "saddlepack" : "backpack"}
               />
             )}
             <p className={`${styles.itemPopupDescription} ${flashMessage ? styles.itemPopupFlash : ""}`}>
@@ -2550,12 +3144,24 @@ export function ItemDetailPopup({
             )}
             <div className={styles.itemPopupMeta}>
               <span>Size: {info?.sizeClass ?? "tiny"}</span>
-              <span>StackMax: {stackSize}</span>
               {isInstance && info?.qualityMax != null && (
-                <span>Quality: {quality ?? 0}/{info.qualityMax}</span>
+                <span>{info.kind === "mount" || info.kind === "companion" ? "HP" : "Quality"}: {quality ?? 0}/{info.qualityMax * (2 ** (info.tier - 1))}</span>
               )}
               {info?.familyId === "backpack" && backpackSlotsUsed != null && backpackCapacity != null && (
                 <span>Filled: {backpackSlotsUsed}/{backpackCapacity}</span>
+              )}
+              {info?.familyId === "saddlepack" && saddlepackSlotsUsed != null && saddlepackCapacity != null && (
+                <span>Filled: {saddlepackSlotsUsed}/{saddlepackCapacity}</span>
+              )}
+              {info?.familyId === "cart" && cartSlotsUsed != null && cartCapacity != null && (
+                <span>Filled: {cartSlotsUsed}/{cartCapacity}</span>
+              )}
+              {/* A container sitting in the shared vault holds nothing - its
+                  contents only ever live on the character who has it
+                  equipped (gear.itemBalances/resources.<location>) - so
+                  it's always empty against its own tier capacity. */}
+              {source === "vault" && (info?.familyId === "backpack" || info?.familyId === "saddlepack" || info?.familyId === "cart") && info.capacitySlots != null && (
+                <span>Filled: 0/{info.capacitySlots}</span>
               )}
             </div>
             {movable && source === "vault" && (
@@ -2569,24 +3175,38 @@ export function ItemDetailPopup({
                 </p>
               ) : (
                 stackSize > 1 ? (
-                  // A stackable itemBalance row - one TransferButtons row,
-                  // same one-click-moves-it, icon-moves-all behavior as the
-                  // resource popups (see ResourcePopup). No preselected
-                  // amount to confirm afterwards: every number/∞/backpack
-                  // click fires straight away.
+                  // A stackable itemBalance row - two TransferButtons rows
+                  // (backpack + saddlepack), same one-click-moves-it behavior
+                  // as the resource popups (see ResourcePopup). Saddlepack
+                  // row is greyed out when none is equipped.
                   info?.backpackable && (
-                    hasBackpackEquipped ? (
-                      <TransferButtons
-                        owned={owned}
-                        pending={pending}
-                        onPick={moveToBackpack}
-                        destinationIcon={BACKPACK_ACTION_ICON}
-                        destinationLabel="Backpack"
-                        amounts={RAW_RESOURCE_AMOUNTS}
-                        showInfinity={false}
-                      />
+                    !hasBackpackEquipped && !hasSaddlepackEquipped ? (
+                      <p className={styles.itemPopupAwayNotice}>Equip a backpack or saddlepack first</p>
                     ) : (
-                      <p className={styles.transferUnavailable}>No backpack equipped</p>
+                      <>
+                        {hasBackpackEquipped && (
+                          <TransferButtons
+                            owned={owned}
+                            pending={pending}
+                            onPick={moveToBackpack}
+                            destinationIcon={BACKPACK_ACTION_ICON}
+                            destinationLabel="Backpack"
+                            amounts={RAW_RESOURCE_AMOUNTS}
+                            showInfinity={false}
+                          />
+                        )}
+                        {hasSaddlepackEquipped && (
+                          <TransferButtons
+                            owned={owned}
+                            pending={pending}
+                            onPick={moveBalanceToSaddlepack}
+                            destinationIcon={SADDLEPACK_ACTION_ICON}
+                            destinationLabel="Saddlepack"
+                            amounts={RAW_RESOURCE_AMOUNTS}
+                            showInfinity={false}
+                          />
+                        )}
+                      </>
                     )
                   )
                 ) : (
@@ -2607,14 +3227,17 @@ export function ItemDetailPopup({
                         ))}
                       </button>
                     ))}
-                    {info?.backpackable && (
+                    {info?.backpackable && !hasBackpackEquipped && !hasSaddlepackEquipped && slotGroups.length === 0 && (
+                      <p className={styles.itemPopupAwayNotice}>Equip a backpack or saddlepack first</p>
+                    )}
+                    {info?.backpackable && hasBackpackEquipped && (
                       <button
                         type="button"
                         className={styles.itemPopupBackpackButton}
-                        disabled={pending || !hasBackpackEquipped}
+                        disabled={pending}
                         onClick={() => moveToBackpack(1)}
                         aria-label="Move to backpack"
-                        title={hasBackpackEquipped ? "Move to backpack" : "No backpack equipped"}
+                        title="Move to backpack"
                       >
                         <div
                           role="img"
@@ -2624,17 +3247,12 @@ export function ItemDetailPopup({
                         />
                       </button>
                     )}
-                    {/* Hidden outright (not greyed) when no saddlepack is
-                        equipped - unlike the backpack icon above, there's no
-                        "you could wear one" affordance to point at, so a
-                        disabled button here would just be dead weight.
-                        Instance rows only - see moveToSaddlepack. */}
-                    {info?.backpackable && isInstance && hasSaddlepackEquipped && (
+                    {info?.backpackable && hasSaddlepackEquipped && (
                       <button
                         type="button"
                         className={styles.itemPopupBackpackButton}
                         disabled={pending}
-                        onClick={moveToSaddlepack}
+                        onClick={isInstance ? moveToSaddlepack : () => moveBalanceToSaddlepack(1)}
                         aria-label="Move to saddlepack"
                         title="Move to saddlepack"
                       >
@@ -2681,7 +3299,9 @@ export function ItemDetailPopup({
                       type="button"
                       className={styles.itemPopupBackpackButton}
                       disabled={pending}
-                      onClick={unequip}
+                      onClick={isContainer
+                        ? () => setConfirmMove({ label: inAdventure ? "Camp" : "Vault", action: unequip })
+                        : unequip}
                       aria-label={inAdventure ? "Move to camp" : "Move to vault"}
                       title={inAdventure ? "Move to camp" : "Move to the shared vault"}
                     >
@@ -2754,39 +3374,130 @@ export function ItemDetailPopup({
                         outright (not greyed) with no backpack equipped -
                         camp items are only ever checked one at a time, so
                         a dead button here is just noise, not a nudge. */}
-                    {location === "camp" && info?.backpackable && hasBackpackEquipped && (
-                      <button
-                        type="button"
-                        className={styles.itemPopupBackpackButton}
-                        disabled={pending}
-                        onClick={stowToBackpack}
-                        aria-label="Move to backpack"
-                        title="Move to backpack"
-                      >
-                        <div
-                          role="img"
-                          aria-label="Backpack"
-                          className={styles.itemPopupBackpackIcon}
-                          style={{ backgroundImage: `url(${BACKPACK_ACTION_ICON})` }}
-                        />
-                      </button>
+                    {location === "camp" && info?.backpackable && (
+                      <>
+                        {hasBackpackEquipped && (
+                          <button
+                            type="button"
+                            className={styles.itemPopupBackpackButton}
+                            disabled={pending}
+                            onClick={stowToBackpack}
+                            aria-label="Move to backpack"
+                            title="Move to backpack"
+                          >
+                            <div
+                              role="img"
+                              aria-label="Backpack"
+                              className={styles.itemPopupBackpackIcon}
+                              style={{ backgroundImage: `url(${BACKPACK_ACTION_ICON})` }}
+                            />
+                          </button>
+                        )}
+                        {hasSaddlepackEquipped && (
+                          <button
+                            type="button"
+                            className={styles.itemPopupBackpackButton}
+                            disabled={pending}
+                            onClick={stowToSaddlepackFromCamp}
+                            aria-label="Move to saddlepack"
+                            title="Move to saddlepack"
+                          >
+                            <div
+                              role="img"
+                              aria-label="Saddlepack"
+                              className={styles.itemPopupBackpackIcon}
+                              style={{ backgroundImage: `url(${SADDLEPACK_ACTION_ICON})` }}
+                            />
+                          </button>
+                        )}
+                      </>
                     )}
                     {/* location:"backpack" only - same automatic camp/
                         vault switch as the body branch's own unequip icon
                         above: while inAdventure, there's no shared vault
                         to reach at all, so this offers the ACTUAL
-                        reachable move (camp - see unstowToCamp) instead of
+                        reachable move (camp - see stowToCamp) instead of
                         a permanently-greyed vault button that can never
                         be clicked mid-adventure. location:"camp" items
                         don't get this - they're already in camp, so the
                         alternative destination there is the backpack
                         (see the button above), not camp again. */}
                     {location === "backpack" ? (
+                      <>
+                        <button
+                          type="button"
+                          className={styles.itemPopupBackpackButton}
+                          disabled={pending}
+                          onClick={inAdventure ? stowToCamp : checkInToVault}
+                          aria-label={inAdventure ? "Move to camp" : "Check in to vault"}
+                          title={inAdventure ? "Move to camp" : "Check in to vault"}
+                        >
+                          <div
+                            role="img"
+                            aria-label={inAdventure ? "Camp" : "Vault"}
+                            className={styles.itemPopupBackpackIcon}
+                            style={{ backgroundImage: `url(${inAdventure ? CAMP_ACTION_ICON : VAULT_ACTION_ICON})` }}
+                          />
+                        </button>
+                        {info?.backpackable && hasSaddlepackEquipped && (
+                          <button
+                            type="button"
+                            className={styles.itemPopupBackpackButton}
+                            disabled={pending}
+                            onClick={stowToSaddlepack}
+                            aria-label="Move to saddlepack"
+                            title="Move to saddlepack"
+                          >
+                            <div
+                              role="img"
+                              aria-label="Saddlepack"
+                              className={styles.itemPopupBackpackIcon}
+                              style={{ backgroundImage: `url(${SADDLEPACK_ACTION_ICON})` }}
+                            />
+                          </button>
+                        )}
+                      </>
+                    ) : location === "saddlepack" ? (
+                      <>
+                        <button
+                          type="button"
+                          className={styles.itemPopupBackpackButton}
+                          disabled={pending}
+                          onClick={inAdventure ? saddlepackToCamp : checkInToVault}
+                          aria-label={inAdventure ? "Move to camp" : "Check in to vault"}
+                          title={inAdventure ? "Move to camp" : "Check in to vault"}
+                        >
+                          <div
+                            role="img"
+                            aria-label={inAdventure ? "Camp" : "Vault"}
+                            className={styles.itemPopupBackpackIcon}
+                            style={{ backgroundImage: `url(${inAdventure ? CAMP_ACTION_ICON : VAULT_ACTION_ICON})` }}
+                          />
+                        </button>
+                        {info?.backpackable && hasBackpackEquipped && (
+                          <button
+                            type="button"
+                            className={styles.itemPopupBackpackButton}
+                            disabled={pending}
+                            onClick={saddlepackToBackpack}
+                            aria-label="Move to backpack"
+                            title="Move to backpack"
+                          >
+                            <div
+                              role="img"
+                              aria-label="Backpack"
+                              className={styles.itemPopupBackpackIcon}
+                              style={{ backgroundImage: `url(${BACKPACK_ACTION_ICON})` }}
+                            />
+                          </button>
+                        )}
+                      </>
+                    ) : location === "cart" ? (
                       <button
                         type="button"
                         className={styles.itemPopupBackpackButton}
                         disabled={pending}
-                        onClick={inAdventure ? unstowToCamp : checkInToVault}
+                        onClick={inAdventure ? cartToCamp : checkInToVault}
                         aria-label={inAdventure ? "Move to camp" : "Check in to vault"}
                         title={inAdventure ? "Move to camp" : "Check in to vault"}
                       >
@@ -2798,19 +3509,14 @@ export function ItemDetailPopup({
                         />
                       </button>
                     ) : (
-                      // location:"camp" - no path back to the shared vault
-                      // while out on an adventure (same reasoning as
-                      // above), and camp has no OTHER camp to switch to,
-                      // so this is hidden outright rather than shown
-                      // greyed - a camp item's popup with nothing else to
-                      // offer (no equip slots) would otherwise show one
-                      // permanently-dead button.
                       !inAdventure && (
                         <button
                           type="button"
                           className={styles.itemPopupBackpackButton}
                           disabled={pending}
-                          onClick={checkInToVault}
+                          onClick={isContainer
+                            ? () => setConfirmMove({ label: "Vault", action: checkInToVault })
+                            : checkInToVault}
                           aria-label="Check in to vault"
                           title="Check in to vault"
                         >
@@ -2836,58 +3542,236 @@ export function ItemDetailPopup({
                 path for it (load_item_balance_to_backpack/
                 check_in_item_balance/unload_item_balance_from_backpack),
                 same as an item instance does. */}
-            {movable && source === "character" && !isInstance && (location === "camp" || location === "backpack") && (
-              // One TransferButtons row per available move destination -
-              // same pattern as ResourcePopup (a camp row can have BOTH
-              // backpack and vault at once; a backpack row only ever has
-              // camp) - each row's own number/∞/destination-icon click
-              // fires that amount immediately, no separate "Move" step.
-              <>
-                {location === "camp" ? (
-                  <>
-                    {hasBackpackEquipped && (
+            {movable && source === "character" && !isInstance && (location === "camp" || location === "backpack" || location === "saddlepack" || location === "cart") && (
+              stackSize > 1 ? (
+                // Stackable: quantity-picker rows per destination
+                <>
+                  {location === "camp" ? (
+                    <>
+                      {hasBackpackEquipped && (
+                        <TransferButtons
+                          owned={owned}
+                          pending={pending}
+                          onPick={stowBalanceToBackpack}
+                          destinationIcon={BACKPACK_ACTION_ICON}
+                          destinationLabel="Backpack"
+                          amounts={RAW_RESOURCE_AMOUNTS}
+                          showInfinity={false}
+                        />
+                      )}
+                      {hasSaddlepackEquipped && (
+                        <TransferButtons
+                          owned={owned}
+                          pending={pending}
+                          onPick={stowBalanceToSaddlepack}
+                          destinationIcon={SADDLEPACK_ACTION_ICON}
+                          destinationLabel="Saddlepack"
+                          amounts={RAW_RESOURCE_AMOUNTS}
+                          showInfinity={false}
+                        />
+                      )}
+                      {!inAdventure && (
+                        <TransferButtons
+                          owned={owned}
+                          pending={pending}
+                          onPick={checkInBalanceToVault}
+                          destinationIcon={VAULT_ACTION_ICON}
+                          destinationLabel="Vault"
+                          amounts={RAW_RESOURCE_AMOUNTS}
+                          showInfinity={false}
+                        />
+                      )}
+                    </>
+                  ) : location === "backpack" ? (
+                    <>
                       <TransferButtons
                         owned={owned}
                         pending={pending}
-                        onPick={stowBalanceToBackpack}
-                        destinationIcon={BACKPACK_ACTION_ICON}
-                        destinationLabel="Backpack"
+                        onPick={inAdventure ? unloadBalanceToCamp : checkInBalanceToVault}
+                        destinationIcon={inAdventure ? CAMP_ACTION_ICON : VAULT_ACTION_ICON}
+                        destinationLabel={inAdventure ? "Camp" : "Vault"}
                         amounts={RAW_RESOURCE_AMOUNTS}
                         showInfinity={false}
                       />
-                    )}
-                    {!inAdventure && (
+                      {hasSaddlepackEquipped && (
+                        <TransferButtons
+                          owned={owned}
+                          pending={pending}
+                          onPick={moveBalanceBackpackToSaddlepack}
+                          destinationIcon={SADDLEPACK_ACTION_ICON}
+                          destinationLabel="Saddlepack"
+                          amounts={RAW_RESOURCE_AMOUNTS}
+                          showInfinity={false}
+                        />
+                      )}
+                    </>
+                  ) : location === "saddlepack" ? (
+                    <>
                       <TransferButtons
                         owned={owned}
                         pending={pending}
-                        onPick={checkInBalanceToVault}
-                        destinationIcon={VAULT_ACTION_ICON}
-                        destinationLabel="Vault"
+                        onPick={inAdventure ? unloadBalanceFromSaddlepack : checkInBalanceToVault}
+                        destinationIcon={inAdventure ? CAMP_ACTION_ICON : VAULT_ACTION_ICON}
+                        destinationLabel={inAdventure ? "Camp" : "Vault"}
                         amounts={RAW_RESOURCE_AMOUNTS}
                         showInfinity={false}
                       />
-                    )}
-                  </>
-                ) : (
-                  // "backpack" - straight to the shared vault while not in
-                  // adventure (no reason to stage through camp first), or
-                  // camp while in adventure (no reaching the shared vault
-                  // mid-adventure) - one destination at a time, same
-                  // inAdventure-gated single-button choice an equipped
-                  // instance's own unequip icon already makes.
-                  <TransferButtons
-                    owned={owned}
-                    pending={pending}
-                    onPick={inAdventure ? unloadBalanceToCamp : checkInBalanceToVault}
-                    destinationIcon={inAdventure ? CAMP_ACTION_ICON : VAULT_ACTION_ICON}
-                    destinationLabel={inAdventure ? "Camp" : "Vault"}
-                    amounts={RAW_RESOURCE_AMOUNTS}
-                    showInfinity={false}
-                  />
-                )}
-              </>
+                      {hasBackpackEquipped && (
+                        <TransferButtons
+                          owned={owned}
+                          pending={pending}
+                          onPick={moveBalanceSaddlepackToBackpack}
+                          destinationIcon={BACKPACK_ACTION_ICON}
+                          destinationLabel="Backpack"
+                          amounts={RAW_RESOURCE_AMOUNTS}
+                          showInfinity={false}
+                        />
+                      )}
+                    </>
+                  ) : (
+                    <TransferButtons
+                      owned={owned}
+                      pending={pending}
+                      onPick={inAdventure ? unloadBalanceFromCart : checkInBalanceFromCart}
+                      destinationIcon={inAdventure ? CAMP_ACTION_ICON : VAULT_ACTION_ICON}
+                      destinationLabel={inAdventure ? "Camp" : "Vault"}
+                      amounts={RAW_RESOURCE_AMOUNTS}
+                      showInfinity={false}
+                    />
+                  )}
+                </>
+              ) : (
+                // Single-stack (stackSize <= 1): icon buttons only, no quantity picker
+                <div className={styles.itemPopupActions}>
+                  {location === "camp" ? (
+                    <>
+                      {hasBackpackEquipped && (
+                        <button
+                          type="button"
+                          className={styles.itemPopupBackpackButton}
+                          disabled={pending}
+                          onClick={() => stowBalanceToBackpack(1)}
+                          aria-label="Move to backpack"
+                          title="Move to backpack"
+                        >
+                          <div role="img" aria-label="Backpack" className={styles.itemPopupBackpackIcon} style={{ backgroundImage: `url(${BACKPACK_ACTION_ICON})` }} />
+                        </button>
+                      )}
+                      {hasSaddlepackEquipped && (
+                        <button
+                          type="button"
+                          className={styles.itemPopupBackpackButton}
+                          disabled={pending}
+                          onClick={() => stowBalanceToSaddlepack(1)}
+                          aria-label="Move to saddlepack"
+                          title="Move to saddlepack"
+                        >
+                          <div role="img" aria-label="Saddlepack" className={styles.itemPopupBackpackIcon} style={{ backgroundImage: `url(${SADDLEPACK_ACTION_ICON})` }} />
+                        </button>
+                      )}
+                      {!inAdventure && (
+                        <button
+                          type="button"
+                          className={styles.itemPopupBackpackButton}
+                          disabled={pending}
+                          onClick={() => checkInBalanceToVault(1)}
+                          aria-label="Move to vault"
+                          title="Move to vault"
+                        >
+                          <div role="img" aria-label="Vault" className={styles.itemPopupBackpackIcon} style={{ backgroundImage: `url(${VAULT_ACTION_ICON})` }} />
+                        </button>
+                      )}
+                    </>
+                  ) : location === "backpack" ? (
+                    <>
+                      <button
+                        type="button"
+                        className={styles.itemPopupBackpackButton}
+                        disabled={pending}
+                        onClick={() => inAdventure ? unloadBalanceToCamp(1) : checkInBalanceToVault(1)}
+                        aria-label={inAdventure ? "Move to camp" : "Move to vault"}
+                        title={inAdventure ? "Move to camp" : "Move to vault"}
+                      >
+                        <div role="img" aria-label={inAdventure ? "Camp" : "Vault"} className={styles.itemPopupBackpackIcon} style={{ backgroundImage: `url(${inAdventure ? CAMP_ACTION_ICON : VAULT_ACTION_ICON})` }} />
+                      </button>
+                      {hasSaddlepackEquipped && (
+                        <button
+                          type="button"
+                          className={styles.itemPopupBackpackButton}
+                          disabled={pending}
+                          onClick={() => moveBalanceBackpackToSaddlepack(1)}
+                          aria-label="Move to saddlepack"
+                          title="Move to saddlepack"
+                        >
+                          <div role="img" aria-label="Saddlepack" className={styles.itemPopupBackpackIcon} style={{ backgroundImage: `url(${SADDLEPACK_ACTION_ICON})` }} />
+                        </button>
+                      )}
+                    </>
+                  ) : location === "saddlepack" ? (
+                    <>
+                      <button
+                        type="button"
+                        className={styles.itemPopupBackpackButton}
+                        disabled={pending}
+                        onClick={() => inAdventure ? unloadBalanceFromSaddlepack(1) : checkInBalanceToVault(1)}
+                        aria-label={inAdventure ? "Move to camp" : "Move to vault"}
+                        title={inAdventure ? "Move to camp" : "Move to vault"}
+                      >
+                        <div role="img" aria-label={inAdventure ? "Camp" : "Vault"} className={styles.itemPopupBackpackIcon} style={{ backgroundImage: `url(${inAdventure ? CAMP_ACTION_ICON : VAULT_ACTION_ICON})` }} />
+                      </button>
+                      {hasBackpackEquipped && (
+                        <button
+                          type="button"
+                          className={styles.itemPopupBackpackButton}
+                          disabled={pending}
+                          onClick={() => moveBalanceSaddlepackToBackpack(1)}
+                          aria-label="Move to backpack"
+                          title="Move to backpack"
+                        >
+                          <div role="img" aria-label="Backpack" className={styles.itemPopupBackpackIcon} style={{ backgroundImage: `url(${BACKPACK_ACTION_ICON})` }} />
+                        </button>
+                      )}
+                    </>
+                  ) : (
+                    <button
+                      type="button"
+                      className={styles.itemPopupBackpackButton}
+                      disabled={pending}
+                      onClick={() => inAdventure ? unloadBalanceFromCart(1) : checkInBalanceFromCart(1)}
+                      aria-label={inAdventure ? "Move to camp" : "Move to vault"}
+                      title={inAdventure ? "Move to camp" : "Move to vault"}
+                    >
+                      <div role="img" aria-label={inAdventure ? "Camp" : "Vault"} className={styles.itemPopupBackpackIcon} style={{ backgroundImage: `url(${inAdventure ? CAMP_ACTION_ICON : VAULT_ACTION_ICON})` }} />
+                    </button>
+                  )}
+                </div>
+              )
             )}
           </>
+        )}
+        {confirmMove && (
+          <div className={styles.containerMoveConfirm} onClick={(e) => e.stopPropagation()}>
+            <p className={styles.containerMoveConfirmText}>
+              Move all to {confirmMove.label} and unpack everything?
+            </p>
+            <div className={styles.containerMoveConfirmButtons}>
+              <button
+                type="button"
+                className={`${styles.itemPopupActionButton} ${styles.containerMoveCancel}`}
+                onClick={() => setConfirmMove(null)}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                className={`${styles.itemPopupActionButton} ${styles.containerMoveGo}`}
+                disabled={pending}
+                onClick={() => { setConfirmMove(null); confirmMove.action(); }}
+              >
+                Move
+              </button>
+            </div>
+          </div>
         )}
       </div>
     </div>
@@ -3090,6 +3974,7 @@ export function InventoryTab({
             equipSlots: string[][];
             backpackable: boolean;
             gatheringBonuses: string[];
+            capacitySlots: number;
           }>
         ) => {
         const tierMap: BlueprintTierInfo = {};
@@ -3107,6 +3992,7 @@ export function InventoryTab({
             equipSlots: item.equipSlots,
             backpackable: item.backpackable,
             gatheringBonuses: item.gatheringBonuses,
+            capacitySlots: item.capacitySlots,
           };
         }
         setItemCatalogTierInfo(tierMap);
@@ -3247,10 +4133,14 @@ export function InventoryTab({
   // for a plain message when there's plainly no room left at all.
   const backpackFull =
     hasBackpackEquipped && character.gear.backpackSlotsUsed >= character.gear.backpackCapacity;
-  // Mirrors backend.items_catalog.has_saddlepack_equipped - hides (rather
-  // than greys) the vault popup's "Move to saddlepack" button when false.
   const hasSaddlepackEquipped = character.gear.items.some(
-    (instance) => instance.location === "body" && instance.familyId === "saddlepack"
+    (instance) => (instance.location === "body" || instance.location === "camp") && instance.familyId === "saddlepack"
+  );
+  const hasMountEquipped = character.gear.items.some(
+    (instance) => instance.location === "body" && instance.slotRef?.includes("Mount")
+  );
+  const hasCompanionEquipped = character.gear.items.some(
+    (instance) => instance.location === "body" && instance.slotRef?.includes("Companion")
   );
 
   // The embedded recipe viewer's own content height, in px - same-origin, so
@@ -3485,7 +4375,6 @@ export function InventoryTab({
 
   return (
     <div className={styles.panel}>
-      <InAdventureToggle character={character} onPlayerDataUpdated={onPlayerDataUpdated} />
       {section === "crafting" && (
         <>
           {/* Hidden entirely when nothing's cooking - only appears once a
@@ -3583,7 +4472,7 @@ export function InventoryTab({
           {knownBlueprints.length > 0 && (
             <div className={styles.accordionItem}>
               <button className={styles.accordionHeader} onClick={() => toggleSection("blueprints")}>
-                <span>{`${character.firstName}'s Recipes Known (${knownBlueprints.length})`}</span>
+                <span>{character.firstName}&apos;s Blueprints Known</span>
                 <span className={styles.accordionChevron}>{openSections.has("blueprints") ? "▴" : "▾"}</span>
               </button>
               {openSections.has("blueprints") && (
@@ -3748,6 +4637,8 @@ export function InventoryTab({
           source="vault"
           hasBackpackEquipped={hasBackpackEquipped}
           hasSaddlepackEquipped={hasSaddlepackEquipped}
+          hasMountEquipped={hasMountEquipped}
+          hasCompanionEquipped={hasCompanionEquipped}
           inAdventure={character.availability.inAdventure}
           characterId={character.id}
           characterFirstName={character.firstName}

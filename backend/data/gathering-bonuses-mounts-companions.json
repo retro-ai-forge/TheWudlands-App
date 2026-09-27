@@ -1,0 +1,57 @@
+{
+  "steed_mount": {
+    "professionGroups": ["Military", "Trade", "Rural"],
+    "bonusProfessions": ["Aristocratic"],
+    "gatheringItems": ["rope", "net", "hunters_charm"]
+  },
+  "beast_mount": {
+    "professionGroups": ["Military", "Rural"],
+    "bonusProfessions": ["Aristocratic"],
+    "gatheringItems": ["rope", "net", "monster_trap", "chain", "manacles", "hunters_charm"]
+  },
+  "exotic_mount": {
+    "professionGroups": ["Military", "Trade"],
+    "bonusProfessions": ["Aristocratic"],
+    "gatheringItems": ["monster_trap", "chain", "manacles", "rope", "net", "hunters_charm"]
+  },
+  "aquatic_mount": {
+    "professionGroups": ["Rural", "Trade"],
+    "bonusProfessions": ["Military"],
+    "gatheringItems": ["net", "rope", "chain", "hunters_charm"]
+  },
+  "winged_companion": {
+    "professionGroups": ["Aristocratic", "Artists"],
+    "bonusProfessions": ["Military"],
+    "gatheringItems": ["net", "bow", "crossbow", "spyglass", "hunters_charm"]
+  },
+  "critter_companion": {
+    "professionGroups": ["Trade", "Rural"],
+    "bonusProfessions": ["Artists"],
+    "gatheringItems": ["net", "monster_trap", "rope", "hunters_charm"]
+  },
+  "arcane_companion": {
+    "professionGroups": ["Alchemy"],
+    "bonusProfessions": ["Aristocratic"],
+    "gatheringItems": ["starlight_catcher", "hunters_charm"]
+  },
+  "fey_companion": {
+    "professionGroups": ["Alchemy", "Aristocratic"],
+    "bonusProfessions": ["Artists"],
+    "gatheringItems": ["starlight_catcher", "hunters_charm"]
+  },
+  "aquatic_companion": {
+    "professionGroups": ["Rural"],
+    "bonusProfessions": ["Trade"],
+    "gatheringItems": ["net", "fishing_pole", "rope", "hunters_charm"]
+  },
+  "dark_companion": {
+    "professionGroups": ["Alchemy"],
+    "bonusProfessions": ["Military"],
+    "gatheringItems": ["manacles", "chain", "monster_trap", "hunters_charm"]
+  },
+  "spirit_companion": {
+    "professionGroups": ["Alchemy"],
+    "bonusProfessions": ["Aristocratic"],
+    "gatheringItems": ["starlight_catcher", "manacles", "hunters_charm"]
+  }
+}

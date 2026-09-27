@@ -369,7 +369,7 @@
     "equipSlots": [
       ["Chest"]
     ],
-    "backpackable": false,
+    "backpackable": true,
     "qualityMax": 360
   },
   {
@@ -382,7 +382,7 @@
     "equipSlots": [
       ["Head"]
     ],
-    "backpackable": false,
+    "backpackable": true,
     "qualityMax": 360
   },
   {
@@ -395,7 +395,7 @@
     "equipSlots": [
       ["Legs"]
     ],
-    "backpackable": false,
+    "backpackable": true,
     "qualityMax": 360
   },
   {
@@ -525,7 +525,7 @@
     "equipSlots": [
       ["Chest"]
     ],
-    "backpackable": false,
+    "backpackable": true,
     "qualityMax": 350
   },
   {
@@ -538,7 +538,7 @@
     "equipSlots": [
       ["Head"]
     ],
-    "backpackable": false,
+    "backpackable": true,
     "qualityMax": 350
   },
   {
@@ -551,7 +551,7 @@
     "equipSlots": [
       ["Legs"]
     ],
-    "backpackable": false,
+    "backpackable": true,
     "qualityMax": 350
   },
   {
@@ -730,7 +730,7 @@
     "sizeClass": "light",
     "stackSize": 1,
     "needsItemDefinition": true,
-    "note": "Wears out with use.",
+    "note": "Wears out from damage.",
     "equipSlots": [
       ["Back"]
     ],
@@ -743,9 +743,9 @@
     "sizeClass": "light",
     "stackSize": 1,
     "needsItemDefinition": true,
-    "note": "Wears out with use. Equips onto a mount's own Mbagpack slot, not the character - the mount's own carry capacity.",
+    "note": "Wears out from damage. Equips onto a mount's Saddlepack slot - the mount's own carry capacity.",
     "equipSlots": [
-      ["Mbagpack"]
+      ["Saddlepack"]
     ],
     "backpackable": false,
     "qualityMax": 30
@@ -753,15 +753,106 @@
   {
     "familyId": "bridle",
     "kind": ["essentials"],
+    "sizeClass": "light",
+    "stackSize": 1,
+    "needsItemDefinition": true,
+    "note": "Wears out from damage. Equips onto a mount's Bridle slot.",
+    "equipSlots": [
+      ["Bridle"]
+    ],
+    "backpackable": true,
+    "qualityMax": 25
+  },
+  {
+    "familyId": "saddle",
+    "kind": ["essentials"],
+    "sizeClass": "medium",
+    "stackSize": 1,
+    "needsItemDefinition": true,
+    "note": "Wears out from damage. Equips onto a mount's Saddle slot.",
+    "equipSlots": [
+      ["Saddle"]
+    ],
+    "backpackable": true,
+    "qualityMax": 30
+  },
+  {
+    "familyId": "barding_leather",
+    "kind": ["essentials"],
+    "sizeClass": "medium",
+    "stackSize": 1,
+    "needsItemDefinition": true,
+    "note": "Wears out from damage. Equips onto a mount's Barding slot.",
+    "equipSlots": [
+      ["Barding"]
+    ],
+    "backpackable": true,
+    "qualityMax": 35
+  },
+  {
+    "familyId": "barding_iron",
+    "kind": ["essentials"],
+    "sizeClass": "heavy",
+    "stackSize": 1,
+    "needsItemDefinition": true,
+    "note": "Wears out from damage. Equips onto a mount's Barding slot.",
+    "equipSlots": [
+      ["Barding"]
+    ],
+    "backpackable": true,
+    "qualityMax": 50
+  },
+  {
+    "familyId": "charm_flying",
+    "kind": ["essentials"],
     "sizeClass": "tiny",
     "stackSize": 1,
     "needsItemDefinition": true,
-    "note": "Wears out with use. Equips onto a mount's own Mhead slot, not the character.",
+    "note": "Wears out from damage. For winged companions. Equips onto Ccharm slot.",
     "equipSlots": [
-      ["Mhead"]
+      ["Charm"]
     ],
-    "backpackable": false,
-    "qualityMax": 25
+    "backpackable": true,
+    "qualityMax": 15
+  },
+  {
+    "familyId": "charm_aquatic",
+    "kind": ["essentials"],
+    "sizeClass": "tiny",
+    "stackSize": 1,
+    "needsItemDefinition": true,
+    "note": "Wears out from damage. For aquatic companions. Equips onto Ccharm slot.",
+    "equipSlots": [
+      ["Charm"]
+    ],
+    "backpackable": true,
+    "qualityMax": 15
+  },
+  {
+    "familyId": "charm_ghost",
+    "kind": ["essentials"],
+    "sizeClass": "tiny",
+    "stackSize": 1,
+    "needsItemDefinition": true,
+    "note": "Wears out from damage. For spirit and dark companions. Equips onto Ccharm slot.",
+    "equipSlots": [
+      ["Charm"]
+    ],
+    "backpackable": true,
+    "qualityMax": 15
+  },
+  {
+    "familyId": "charm_other",
+    "kind": ["essentials"],
+    "sizeClass": "tiny",
+    "stackSize": 1,
+    "needsItemDefinition": true,
+    "note": "Wears out from damage. For critter, arcane and fey companions. Equips onto Ccharm slot.",
+    "equipSlots": [
+      ["Charm"]
+    ],
+    "backpackable": true,
+    "qualityMax": 15
   },
   {
     "familyId": "candle",
@@ -776,12 +867,16 @@
   {
     "familyId": "cart",
     "kind": ["essentials"],
-    "sizeClass": "light",
+    "sizeClass": "xLarge",
     "stackSize": 1,
-    "needsItemDefinition": false,
-    "note": "General trinket/utility - does not wear out, no durability tracking needed.",
-    "equipSlots": [],
-    "backpackable": true
+    "needsItemDefinition": true,
+    "note": "Wears out from damage. Equips onto a mount's Hitch slot - extends hauling capacity.",
+    "equipSlots": [
+      ["Hitch"],
+      ["Left Hand", "Right Hand"]
+    ],
+    "backpackable": false,
+    "qualityMax": 40
   },
   {
     "familyId": "cloth_cloak",
@@ -941,7 +1036,7 @@
   {
     "familyId": "chitin_shield",
     "kind": ["shield"],
-    "sizeClass": "heavy",
+    "sizeClass": "medium",
     "stackSize": 1,
     "needsItemDefinition": true,
     "note": "Wears out with use.",
@@ -949,8 +1044,8 @@
       ["Left Hand"],
       ["Right Hand"]
     ],
-    "backpackable": false,
-    "qualityMax": 500
+    "backpackable": true,
+    "qualityMax": 270
   },
   {
     "familyId": "darksteel_shield",
@@ -964,12 +1059,12 @@
       ["Right Hand"]
     ],
     "backpackable": false,
-    "qualityMax": 240
+    "qualityMax": 350
   },
   {
     "familyId": "ebony_shield",
     "kind": ["shield"],
-    "sizeClass": "heavy",
+    "sizeClass": "medium",
     "stackSize": 1,
     "needsItemDefinition": true,
     "note": "Wears out with use.",
@@ -977,8 +1072,8 @@
       ["Left Hand"],
       ["Right Hand"]
     ],
-    "backpackable": false,
-    "qualityMax": 530
+    "backpackable": true,
+    "qualityMax": 280
   },
   {
     "familyId": "iron_shield",
@@ -1006,7 +1101,7 @@
       ["Right Hand"]
     ],
     "backpackable": false,
-    "qualityMax": 210
+    "qualityMax": 340
   },
   {
     "familyId": "reinforced_wooden_shield",
@@ -1020,7 +1115,7 @@
       ["Right Hand"]
     ],
     "backpackable": true,
-    "qualityMax": 170
+    "qualityMax": 110
   },
   {
     "familyId": "wooden_shield",
@@ -1226,7 +1321,7 @@
       ["Left Hand", "Right Hand"],
       ["Side"]
     ],
-    "backpackable": false,
+    "backpackable": true,
     "qualityMax": 470
   },
   {
@@ -1268,7 +1363,7 @@
       ["Left Hand", "Right Hand"],
       ["Side"]
     ],
-    "backpackable": false,
+    "backpackable": true,
     "qualityMax": 170
   },
   {
@@ -1297,7 +1392,7 @@
       ["Left Hand", "Right Hand"],
       ["Side"]
     ],
-    "backpackable": false,
+    "backpackable": true,
     "qualityMax": 480
   },
   {
@@ -1396,7 +1491,7 @@
       ["Left Hand"],
       ["Right Hand"]
     ],
-    "backpackable": false,
+    "backpackable": true,
     "qualityMax": 160
   },
   {
@@ -1453,7 +1548,7 @@
       ["Left Hand", "Right Hand"],
       ["Side"]
     ],
-    "backpackable": false,
+    "backpackable": true,
     "qualityMax": 480
   },
   {
@@ -1487,6 +1582,26 @@
     "backpackable": true
   },
   {
+    "familyId": "parchment",
+    "kind": ["adventuring_gear"],
+    "sizeClass": "tiny",
+    "stackSize": 10,
+    "needsItemDefinition": false,
+    "note": "Stackable writing material - used for written_scroll.",
+    "equipSlots": [],
+    "backpackable": true
+  },
+  {
+    "familyId": "ink",
+    "kind": ["adventuring_gear"],
+    "sizeClass": "tiny",
+    "stackSize": 10,
+    "needsItemDefinition": false,
+    "note": "Stackable writing material - used for scriptorium and written_scroll.",
+    "equipSlots": [],
+    "backpackable": true
+  },
+  {
     "familyId": "smokehouse",
     "kind": ["tool"],
     "sizeClass": "xLarge",
@@ -1502,7 +1617,7 @@
     "sizeClass": "light",
     "stackSize": 1,
     "needsItemDefinition": true,
-    "note": "A living companion - bound to one character and may loose health.",
+    "note": "A living companion - bound to one character and may lose health.",
     "equipSlots": [
       ["Companion"]
     ],
@@ -1515,7 +1630,7 @@
     "sizeClass": "tiny",
     "stackSize": 1,
     "needsItemDefinition": true,
-    "note": "A living companion - bound to one character and may loose health.",
+    "note": "A living companion - bound to one character and may lose health.",
     "equipSlots": [
       ["Companion"]
     ],
@@ -1528,7 +1643,7 @@
     "sizeClass": "tiny",
     "stackSize": 1,
     "needsItemDefinition": true,
-    "note": "A living companion - bound to one character and may loose health.",
+    "note": "A living companion - bound to one character and may lose health.",
     "equipSlots": [
       ["Companion"]
     ],
@@ -1541,7 +1656,7 @@
     "sizeClass": "tiny",
     "stackSize": 1,
     "needsItemDefinition": true,
-    "note": "A living companion - bound to one character and may loose health.",
+    "note": "A living companion - bound to one character and may lose health.",
     "equipSlots": [
       ["Companion"]
     ],
@@ -1554,7 +1669,7 @@
     "sizeClass": "xLarge",
     "stackSize": 1,
     "needsItemDefinition": true,
-    "note": "A living mount - bound to one character and may loose health.",
+    "note": "A living mount - bound to one character and may lose health.",
     "equipSlots": [
       ["Mount"]
     ],
@@ -1567,7 +1682,7 @@
     "sizeClass": "xLarge",
     "stackSize": 1,
     "needsItemDefinition": true,
-    "note": "A living mount - bound to one character and may loose health.",
+    "note": "A living mount - bound to one character and may lose health.",
     "equipSlots": [
       ["Mount"]
     ],
@@ -1580,7 +1695,7 @@
     "sizeClass": "xLarge",
     "stackSize": 1,
     "needsItemDefinition": true,
-    "note": "A living mount - bound to one character and may loose health.",
+    "note": "A living mount - bound to one character and may lose health.",
     "equipSlots": [
       ["Mount"]
     ],
@@ -1593,7 +1708,7 @@
     "sizeClass": "xLarge",
     "stackSize": 1,
     "needsItemDefinition": true,
-    "note": "A living mount - bound to one character and may loose health.",
+    "note": "A living mount - bound to one character and may lose health.",
     "equipSlots": [
       ["Mount"]
     ],
@@ -1606,7 +1721,7 @@
     "sizeClass": "light",
     "stackSize": 1,
     "needsItemDefinition": true,
-    "note": "A living companion - bound to one character and may loose health.",
+    "note": "A living companion - bound to one character and may lose health.",
     "equipSlots": [
       ["Companion"]
     ],
@@ -1619,7 +1734,7 @@
     "sizeClass": "tiny",
     "stackSize": 1,
     "needsItemDefinition": true,
-    "note": "A living companion - bound to one character and may loose health.",
+    "note": "A living companion - bound to one character and may lose health.",
     "equipSlots": [
       ["Companion"]
     ],
@@ -1632,7 +1747,7 @@
     "sizeClass": "tiny",
     "stackSize": 1,
     "needsItemDefinition": true,
-    "note": "A living companion - bound to one character and may loose health.",
+    "note": "A living companion - bound to one character and may lose health.",
     "equipSlots": [
       ["Companion"]
     ],

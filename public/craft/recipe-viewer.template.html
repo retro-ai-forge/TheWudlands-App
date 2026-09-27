@@ -784,10 +784,16 @@ function showItemPopup(famId, tier) {
 
   const meta = el("div", "itemPopupMeta");
   meta.appendChild(el("span", "", "Size: " + (props.sizeClass || "tiny")));
-  meta.appendChild(el("span", "", "StackMax: " + (props.stackSize || 1)));
   if (props.twoHanded) meta.appendChild(el("span", "", "Two-Handed: true"));
   if (props.qualityMax != null) {
-    meta.appendChild(el("span", "", "Quality: " + props.qualityMax + "/" + props.qualityMax));
+    var scaledQuality = props.qualityMax * Math.pow(2, tier - 1);
+    meta.appendChild(el("span", "", "Quality: " + scaledQuality + "/" + scaledQuality));
+  }
+  // A backpack/saddlepack/cart preview is never anyone's equipped one, so
+  // it's always empty against its own tier capacity (same as the vault
+  // popup in InventoryTab.tsx).
+  if (t.capacitySlots != null) {
+    meta.appendChild(el("span", "", "Filled: 0/" + t.capacitySlots));
   }
   card.appendChild(meta);
 

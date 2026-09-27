@@ -4,8 +4,8 @@
     "name": "Riding Dog",
     "familyId": "steed_mount",
     "tier": 1,
-    "description": "A bristly huge dog with sharp tusks and a saddle strapped tight.",
-    "icon": "/images/items/xxx.png",
+    "description": "A loyal riding dog with copper fur, sturdy build, and a practical saddle-backed trotting pace.",
+    "icon": "/images/items/steed_mount_t1.png",
     "size": "Medium",
     "carryCapacity": 10
   },
@@ -14,8 +14,8 @@
     "name": "Horse",
     "familyId": "steed_mount",
     "tier": 2,
-    "description": "A sturdy brown horse, steady on long roads and calm in the face of danger.",
-    "icon": "/images/items/xxx.png",
+    "description": "A plain horse with bronze-brown coat, weathered tack, and a calm road-worn expression.",
+    "icon": "/images/items/steed_mount_t2.png",
     "size": "Medium",
     "carryCapacity": 20
   },
@@ -24,9 +24,9 @@
     "name": "Warhorse",
     "familyId": "steed_mount",
     "tier": 3,
-    "description": "A massive armored warhorse bred for battle, unshaken by steel, fire or the roar of the crowd.",
-    "icon": "/images/items/xxx.png",
-    "size": "Large",
+    "description": "A muscular warhorse with dark iron sheen, armored chest, and a bold battlefield snort.",
+    "icon": "/images/items/steed_mount_t3.png",
+    "size": "Heavy",
     "carryCapacity": 30
   },
   {
@@ -34,9 +34,9 @@
     "name": "Centaur",
     "familyId": "steed_mount",
     "tier": 4,
-    "description": "A proud centaur who lets only the worthy ride, bow in hand and bound by an oath of loyalty.",
-    "icon": "/images/items/xxx.png",
-    "size": "Large",
+    "description": "A silver-glimmering centaur with noble posture, flowing hair, and a half-human form carved from legend.",
+    "icon": "/images/items/steed_mount_t4.png",
+    "size": "Heavy",
     "carryCapacity": 40
   },
   {
@@ -44,8 +44,8 @@
     "name": "Unicorn",
     "familyId": "steed_mount",
     "tier": 5,
-    "description": "A pure white unicorn whose spiraled horn glows with healing light.",
-    "icon": "/images/items/xxx.png",
+    "description": "A golden unicorn with a radiant horn, pearl-white coat, and a gentle halo of sanctified light.",
+    "icon": "/images/items/steed_mount_t5.png",
     "size": "Huge",
     "carryCapacity": 50
   },
@@ -54,8 +54,8 @@
     "name": "Pegasus",
     "familyId": "steed_mount",
     "tier": 6,
-    "description": "A winged white horse that gallops across the clouds, swift as the wind itself.",
-    "icon": "/images/items/xxx.png",
+    "description": "A star-metal pegasus with translucent wings, moonlit hooves, and a celestial wind-riding grace.",
+    "icon": "/images/items/steed_mount_t6.png",
     "size": "Colossal",
     "carryCapacity": 60
   },
@@ -64,8 +64,8 @@
     "name": "Boar",
     "familyId": "beast_mount",
     "tier": 1,
-    "description": "A bristly giant boar with sharp tusks and a saddle strapped tight, stubborn and quick to charge.",
-    "icon": "/images/items/xxx.png",
+    "description": "A squat wild boar with bristled copper fur, tusks like worn iron, and a stubborn woodland charge.",
+    "icon": "/images/items/beast_mount_t1.png",
     "size": "Medium",
     "carryCapacity": 10
   },
@@ -74,8 +74,8 @@
     "name": "Dire Wolf",
     "familyId": "beast_mount",
     "tier": 2,
-    "description": "A towering gray dire wolf with a thick ruff, fast on the hunt and fierce in battle.",
-    "icon": "/images/items/xxx.png",
+    "description": "A lean dire wolf with bronze-tinted fur, amber eyes, and a hunter's prowling grace over stone and snow.",
+    "icon": "/images/items/beast_mount_t2.png",
     "size": "Medium",
     "carryCapacity": 20
   },
@@ -84,9 +84,9 @@
     "name": "Mammoth",
     "familyId": "beast_mount",
     "tier": 3,
-    "description": "A shaggy woolly mammoth with curling tusks, strong enough to carry a whole camp through the snow.",
-    "icon": "/images/items/xxx.png",
-    "size": "Large",
+    "description": "A young mammoth with gray hide, metal-capped tusks, and a heavy, earthshaking tread.",
+    "icon": "/images/items/beast_mount_t3.png",
+    "size": "Heavy",
     "carryCapacity": 30
   },
   {
@@ -94,9 +94,9 @@
     "name": "Griffin",
     "familyId": "beast_mount",
     "tier": 4,
-    "description": "A griffin with an eagle's head and a lion's body, carrying its rider high above the battlefield.",
-    "icon": "/images/items/xxx.png",
-    "size": "Large",
+    "description": "A gleaming silver griffin with eagle wings and lion form, its feathers and mane touched by starlight.",
+    "icon": "/images/items/beast_mount_t4.png",
+    "size": "Heavy",
     "carryCapacity": 40
   },
   {
@@ -104,8 +104,8 @@
     "name": "Roc",
     "familyId": "beast_mount",
     "tier": 5,
-    "description": "A colossal mythic bird whose wingbeats stir up storms, able to carry its rider across whole kingdoms.",
-    "icon": "/images/items/xxx.png",
+    "description": "A regal roc with gold-plated plumage, vast woodlike talons, and wings that command the sky.",
+    "icon": "/images/items/beast_mount_t5.png",
     "size": "Huge",
     "carryCapacity": 50
   },
@@ -114,8 +114,8 @@
     "name": "Dragon",
     "familyId": "beast_mount",
     "tier": 6,
-    "description": "A mighty dragon of scale and flame, the rarest of mounts and a legend in its own right.",
-    "icon": "/images/items/xxx.png",
+    "description": "A magnificent dragon of star metal scales, crystal horns, and a furnace-bright chest glowing with ancient magic.",
+    "icon": "/images/items/beast_mount_t6.png",
     "size": "Colossal",
     "carryCapacity": 60
   },
@@ -124,8 +124,8 @@
     "name": "Terror Bird",
     "familyId": "exotic_mount",
     "tier": 1,
-    "description": "A towering flightless bird with a hooked beak, fast across open plains and vicious in a fight.",
-    "icon": "/images/items/xxx.png",
+    "description": "A swift terror bird with copper feathers, a dagger beak, and an unsettling sprint through the grasslands.",
+    "icon": "/images/items/exotic_mount_t1.png",
     "size": "Medium",
     "carryCapacity": 10
   },
@@ -134,8 +134,8 @@
     "name": "Giant Scorpion",
     "familyId": "exotic_mount",
     "tier": 2,
-    "description": "A sand-colored giant scorpion with a saddle between its claws, its stinger raised over its rider.",
-    "icon": "/images/items/xxx.png",
+    "description": "A broad giant scorpion with bronze shell plates, a curved stinger, and a creeping desert-warrior stance.",
+    "icon": "/images/items/exotic_mount_t2.png",
     "size": "Medium",
     "carryCapacity": 20
   },
@@ -144,9 +144,9 @@
     "name": "Giant Spider",
     "familyId": "exotic_mount",
     "tier": 3,
-    "description": "A hairy cave spider that carries its rider along walls and ceilings where no horse could follow.",
-    "icon": "/images/items/xxx.png",
-    "size": "Large",
+    "description": "A hulking giant spider with iron-black legs, a glossy abdomen, and a silent web-weaving menace.",
+    "icon": "/images/items/exotic_mount_t3.png",
+    "size": "Heavy",
     "carryCapacity": 30
   },
   {
@@ -154,9 +154,9 @@
     "name": "Manticore",
     "familyId": "exotic_mount",
     "tier": 4,
-    "description": "A lion-bodied manticore with bat wings and a spiked tail, savage but loyal to a rider who tamed it.",
-    "icon": "/images/items/xxx.png",
-    "size": "Large",
+    "description": "A silver-maned manticore with glassy wings, leonine muscle, and a venomous tail poised like a spear.",
+    "icon": "/images/items/exotic_mount_t4.png",
+    "size": "Heavy",
     "carryCapacity": 40
   },
   {
@@ -164,8 +164,8 @@
     "name": "Chimera",
     "familyId": "exotic_mount",
     "tier": 5,
-    "description": "A three-headed chimera of lion, goat and serpent, breathing fire as it charges into battle.",
-    "icon": "/images/items/xxx.png",
+    "description": "A gold-scaled chimera with a lion's pride, dragon's fire, and a goat's cunning nestled in one impossible body.",
+    "icon": "/images/items/exotic_mount_t5.png",
     "size": "Huge",
     "carryCapacity": 50
   },
@@ -174,8 +174,8 @@
     "name": "Hydra",
     "familyId": "exotic_mount",
     "tier": 6,
-    "description": "A many-headed hydra that regrows every severed head, an unstoppable mount for the boldest of riders.",
-    "icon": "/images/items/xxx.png",
+    "description": "A star-metal hydra with many serpentine necks, shimmering scales, and each head crowned in eerie celestial light.",
+    "icon": "/images/items/exotic_mount_t6.png",
     "size": "Colossal",
     "carryCapacity": 60
   },
@@ -184,8 +184,8 @@
     "name": "Giant Turtle",
     "familyId": "aquatic_mount",
     "tier": 1,
-    "description": "A patient sea turtle with a barnacled shell, gliding calmly along coastlines and shallow reefs.",
-    "icon": "/images/items/xxx.png",
+    "description": "A sturdy young giant turtle with a mossy copper shell, muddy feet, and a slow, dependable river-hauling presence.",
+    "icon": "/images/items/aquatic_mount_t1.png",
     "size": "Medium",
     "carryCapacity": 10
   },
@@ -194,8 +194,8 @@
     "name": "Hippocampus",
     "familyId": "aquatic_mount",
     "tier": 2,
-    "description": "A sea-horse with a horse's front and a fish's tail, galloping through the waves.",
-    "icon": "/images/items/xxx.png",
+    "description": "A small hippocampus with bronze scales, a sleek fish tail, and a gentle tide-swaying gait fit for shallow waters.",
+    "icon": "/images/items/aquatic_mount_t2.png",
     "size": "Medium",
     "carryCapacity": 20
   },
@@ -204,9 +204,9 @@
     "name": "Giant Shark",
     "familyId": "aquatic_mount",
     "tier": 3,
-    "description": "A scarred giant shark fitted with a saddle harness, cutting through deep water at terrifying speed.",
-    "icon": "/images/items/xxx.png",
-    "size": "Large",
+    "description": "A compact giant shark with iron-gray hide, blunt fins, and a hard-edged predator's silhouette beneath the waves.",
+    "icon": "/images/items/aquatic_mount_t3.png",
+    "size": "Heavy",
     "carryCapacity": 30
   },
   {
@@ -214,9 +214,9 @@
     "name": "Kraken",
     "familyId": "aquatic_mount",
     "tier": 4,
-    "description": "A young kraken whose great tentacles pull its rider through the darkest ocean trenches.",
-    "icon": "/images/items/xxx.png",
-    "size": "Large",
+    "description": "A young kraken with dark sea-slick tentacles, barnacled limbs, and a deep-ocean menace still growing into its legend.",
+    "icon": "/images/items/aquatic_mount_t4.png",
+    "size": "Heavy",
     "carryCapacity": 40
   },
   {
@@ -224,8 +224,8 @@
     "name": "Sea Serpent",
     "familyId": "aquatic_mount",
     "tier": 5,
-    "description": "A glittering sea serpent that coils through storms and dives beneath the heaviest waves.",
-    "icon": "/images/items/xxx.png",
+    "description": "A silver-scaled sea serpent with luminous glassy fins and a sinuous body like a ribbon of moonlit surf.",
+    "icon": "/images/items/aquatic_mount_t5.png",
     "size": "Huge",
     "carryCapacity": 50
   },
@@ -234,8 +234,8 @@
     "name": "Leviathan",
     "familyId": "aquatic_mount",
     "tier": 6,
-    "description": "An ancient leviathan of the abyss, vast as an island and older than the oldest kingdoms.",
-    "icon": "/images/items/xxx.png",
+    "description": "A colossal leviathan of star metal scales and gilded ridges, vast as a floating island and radiant with abyssal power.",
+    "icon": "/images/items/aquatic_mount_t6.png",
     "size": "Colossal",
     "carryCapacity": 60
   }

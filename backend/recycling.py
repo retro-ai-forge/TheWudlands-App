@@ -27,7 +27,7 @@ The recovered amount is never handed back as raw units alone: it's
 converted into the highest-tier processed intermediates the recipe's own
 chain would make from that much raw material, greedily (as many of the
 biggest processed unit as fit, then the next tier down on the remainder,
-down to whatever raw units are left over) - see resolve_recycle_preview.
+down to whatever raw units are left over) - see resolve_salvage_preview.
 """
 
 from __future__ import annotations
@@ -54,6 +54,11 @@ def _load_recipes() -> dict[str, dict]:
 
 _RECIPES_BY_FAMILY: dict[str, dict] = _load_recipes()
 
+
+def has_recipe(family_id: str) -> bool:
+    return family_id in _RECIPES_BY_FAMILY
+
+
 _RAW_ID_BY_FAMILY_TIER: dict[tuple[str, int], str] = {
     (item.family_id, item.tier): item.id for item in RESOURCE_ITEMS
 }
@@ -71,7 +76,25 @@ _PROCESSED_ID_BY_FAMILY_TIER: dict[tuple[str, int], str] = {
 # reagent-only intermediates are identified.
 NON_RECOVERABLE_PROCESSED_FAMILIES: frozenset[str] = frozenset({"coal"})
 
-RECYCLE_BASE_PERCENT = 25
+# Salvage yield kept by an item instance's quality state (see
+# quality_state below), in whole percent so the whole yield formula stays
+# integer math - shown in the salvage popup as "-20% used" / "-50% dam"
+# (InventoryTab.tsx's SALVAGE_CONDITION_LABEL).
+CONDITION_PERCENT = {"new": 100, "used": 80, "damaged": 50}
+
+
+def quality_state(quality: int, quality_max: int) -> str:
+    if quality_max <= 0:
+        return "new"
+    f = quality / quality_max
+    if f > 0.5:
+        return "new"
+    if f > 0.1:
+        return "used"
+    return "damaged"
+
+
+SALVAGE_BASE_PERCENT = 25
 STATION_TOOL_PERCENT_PER_TIER = 5  # T1=5% ... T6=30%
 CHARM_PERCENT_PER_TIER = 1  # T1=1% ... T6=6%
 CHARM_FAMILY_ID = "hunters_charm"
@@ -99,7 +122,7 @@ def _best_owned_station_tool_tier(
     """
     Highest tier among every crafting-station tool family the character has
     access to - every station tool counts toward recycling equally
-    regardless of which raw material is being recycled, only its tier
+    regardless of which raw material is being salvaged, only its tier
     matters. `player_tools`/`player_items` are the player's shared pool
     (inventory.tools / inventory.items, location "pool") - the caller
     passes these empty to exclude the shared pool entirely (recycling off
@@ -176,7 +199,7 @@ def _profession_skill_percent(character: dict, raw_family_id: str) -> int:
 @dataclass(frozen=True)
 class YieldBreakdown:
     """The four components that add up to one raw material's recycling
-    yield percent - carried separately so the recycle popup can print each
+    yield percent - carried separately so the salvage popup can print each
     contributing line, not just the total."""
 
     base: int
@@ -193,7 +216,7 @@ def resolve_yield(
     character: dict, player_tools: Dict[str, int], player_items: List[dict], raw_family_id: str
 ) -> YieldBreakdown:
     return YieldBreakdown(
-        base=RECYCLE_BASE_PERCENT,
+        base=SALVAGE_BASE_PERCENT,
         skill=_profession_skill_percent(character, raw_family_id),
         tool=_best_owned_station_tool_tier(character, player_tools, player_items) * STATION_TOOL_PERCENT_PER_TIER,
         charm=_equipped_charm_tier(character) * CHARM_PERCENT_PER_TIER,
@@ -345,9 +368,10 @@ class RawMaterialRecovery:
     recovered: List[RecoveredLine]
 
 
-def resolve_recycle_preview(
+def resolve_salvage_preview(
     family_id: str, tier: int, character: dict, player_tools: Dict[str, int],
     player_items: Optional[List[dict]] = None, count: int = 1,
+    condition: str = "new",
 ) -> List[RawMaterialRecovery]:
     """
     What recycling `count` unit(s) of `family_id` at `tier` would hand back
@@ -356,19 +380,27 @@ def resolve_recycle_preview(
     contribute nothing - they never appear here at all, per
     NON_RECOVERABLE_PROCESSED_FAMILIES. `player_tools`/`player_items` -
     the player's shared pool - should be passed empty by a caller scoring a
-    recycle off the character's own body/backpack (see
+    salvage off the character's own body/backpack (see
     _best_owned_station_tool_tier).
+
+    `condition` ("new"/"used"/"damaged") scales the yield: new = 100%,
+    used = -20%, damaged = -50%. Units, yield% and condition% go through
+    ONE formula with a single half-up rounding at the end (x.5 rounds up,
+    anything below rounds down) - never rounded between steps.
     """
     if family_id not in _RECIPES_BY_FAMILY:
         raise ValueError(f"Unknown recipe family: {family_id}")
     player_items = player_items or []
+    condition_percent = CONDITION_PERCENT.get(condition, 100)
 
     buckets = _accumulate_recovery(family_id, "processed", count)
 
     results: List[RawMaterialRecovery] = []
     for raw_family, bucket in buckets.items():
         yield_breakdown = resolve_yield(character, player_tools, player_items, raw_family)
-        recovered_units = (bucket.total_units * yield_breakdown.total) // 100
+        # total_units * yield% * condition% / 10000, rounded half up -
+        # all-integer, so no float error can tip an exact .5 either way.
+        recovered_units = (bucket.total_units * yield_breakdown.total * condition_percent + 5000) // 10000
         recovered = _break_into_denominations(recovered_units, bucket.denominations, tier)
         raw_item = RESOURCE_ITEMS_BY_ID.get(_RAW_ID_BY_FAMILY_TIER.get((raw_family, tier)))
         results.append(RawMaterialRecovery(
