@@ -1,4 +1,36 @@
-## 1. Create virtual env
+## 1. AFter setup below, run the App on linux two terminals
+
+Run all commands from the **project root** (`TheWudlands/`).
+
+### Terminal 1 — Backend (FastAPI)
+
+```bash
+cd /path/to/TheWudlands
+source .venv/bin/activate
+uvicorn backend.main:app --reload
+# http://localhost:8000
+```
+
+Once it's running, open the Swagger UI at
+[http://localhost:8000/docs](http://localhost:8000/docs).
+
+### Terminal 2 — Frontend (Next.js)
+
+```bash
+cd /path/to/TheWudlands
+npm install   # first time only
+# not always needed, TODO check when
+# npm run build 
+npm run dev
+```
+
+| URL | Description |
+|-----|-------------|
+| [http://localhost:3000](http://localhost:3000) | Game frontend (Next.js) |
+| [http://localhost:8000/docs](http://localhost:8000/docs) | Swagger UI (interactive API docs) |
+| [http://localhost:8000/redoc](http://localhost:8000/redoc) | ReDoc (alternative API docs) |
+
+## 2. Create virtual env
 
 ### Prerequisites (Linux only)
 If you are on Linux and need to compile/install Python versions via `pyenv`, you must first install the required build dependencies:
@@ -124,39 +156,6 @@ gcloud run services update serverless-wudlands \
     --region=europe-west1 \
     --project=thewudlands
 ```
-
-## 2. Run the App on linux two terminals
-
-Run all commands from the **project root** (`TheWudlands/`).
-
-### Terminal 1 — Backend (FastAPI)
-
-```bash
-cd /path/to/TheWudlands
-source .venv/bin/activate
-uvicorn backend.main:app --reload
-# http://localhost:8000
-```
-
-Once it's running, open the Swagger UI at
-[http://localhost:8000/docs](http://localhost:8000/docs).
-
-### Terminal 2 — Frontend (Next.js)
-
-```bash
-cd /path/to/TheWudlands
-npm install   # first time only
-# not always needed, TODO check when
-# npm run build 
-npm run dev
-```
-
-| URL | Description |
-|-----|-------------|
-| [http://localhost:3000](http://localhost:3000) | Game frontend (Next.js) |
-| [http://localhost:8000/docs](http://localhost:8000/docs) | Swagger UI (interactive API docs) |
-| [http://localhost:8000/redoc](http://localhost:8000/redoc) | ReDoc (alternative API docs) |
-
 
 ## 3. Cloud setup
 https://www.codingforentrepreneurs.com/blog/google-cloud-cli-and-sdk-setup

@@ -13,7 +13,7 @@
     "name": "Ragged Backpack",
     "familyId": "backpack",
     "tier": 2,
-    "capacitySlots": 8,
+    "capacitySlots": 7,
     "description": "A patched and mended leather pack with straps worn from years of use.",
     "icon": "/images/items/backpack_t2.png"
   },
@@ -22,7 +22,7 @@
     "name": "Traveler's Backpack",
     "familyId": "backpack",
     "tier": 3,
-    "capacitySlots": 14,
+    "capacitySlots": 10,
     "description": "A sturdy canvas pack with brass buckles and handy outer pockets.",
     "icon": "/images/items/backpack_t3.png"
   },
@@ -31,7 +31,7 @@
     "name": "Journeyman's Backpack",
     "familyId": "backpack",
     "tier": 4,
-    "capacitySlots": 20,
+    "capacitySlots": 14,
     "description": "A reinforced leather rucksack hung with simple merchant charms.",
     "icon": "/images/items/backpack_t4.png"
   },
@@ -40,7 +40,7 @@
     "name": "Adventurer's Backpack",
     "familyId": "backpack",
     "tier": 5,
-    "capacitySlots": 28,
+    "capacitySlots": 17,
     "description": "A well-made backpack with many compartments and gear loops.",
     "icon": "/images/items/backpack_t5.png"
   },
@@ -49,7 +49,7 @@
     "name": "Explorer's Great Backpack",
     "familyId": "backpack",
     "tier": 6,
-    "capacitySlots": 40,
+    "capacitySlots": 20,
     "description": "An oversized pack of enchanted, reinforced fibers, made for legendary quests.",
     "icon": "/images/items/backpack_t6.png"
   },
@@ -59,8 +59,8 @@
     "familyId": "saddlepack",
     "tier": 1,
     "capacitySlots": 8,
-    "description": "A cracked leather saddlebag slung over the flank, patched more than once.",
-    "icon": "/images/items/xxx.png"
+    "description": "A worn saddlebag of frayed canvas and cracked leather, patched and practical from years on the road.",
+    "icon": "/images/items/saddlepack_t1.png"
   },
   {
     "id": "saddlepack_2",
@@ -68,8 +68,8 @@
     "familyId": "saddlepack",
     "tier": 2,
     "capacitySlots": 16,
-    "description": "A pair of stitched leather packs buckled snugly across the mount's back.",
-    "icon": "/images/items/xxx.png"
+    "description": "A sturdy leather saddlepack with clean stitching, rolled flaps, and dependable adventurer utility.",
+    "icon": "/images/items/saddlepack_t2.png"
   },
   {
     "id": "saddlepack_3",
@@ -77,8 +77,8 @@
     "familyId": "saddlepack",
     "tier": 3,
     "capacitySlots": 28,
-    "description": "A reinforced saddlepack with brass fittings, built for long trail routes.",
-    "icon": "/images/items/xxx.png"
+    "description": "A trail saddlepack of weathered hide and rope ties, compact and ready for mountain paths and far horizons.",
+    "icon": "/images/items/saddlepack_t3.png"
   },
   {
     "id": "saddlepack_4",
@@ -86,8 +86,8 @@
     "familyId": "saddlepack",
     "tier": 4,
     "capacitySlots": 40,
-    "description": "A heavy-duty saddlepack with iron buckles, steady even on a loaded mount.",
-    "icon": "/images/items/xxx.png"
+    "description": "A reinforced saddlepack of layered leather, silver buckles, and rugged corners built for heavy loads.",
+    "icon": "/images/items/saddlepack_t4.png"
   },
   {
     "id": "saddlepack_5",
@@ -95,8 +95,8 @@
     "familyId": "saddlepack",
     "tier": 5,
     "capacitySlots": 56,
-    "description": "A many-pouched expedition rig, packed by riders who never turn back early.",
-    "icon": "/images/items/xxx.png"
+    "description": "An expedition saddlepack of durable canvas, gold-toned hardware, and neatly arranged travel compartments.",
+    "icon": "/images/items/saddlepack_t5.png"
   },
   {
     "id": "saddlepack_6",
@@ -104,56 +104,56 @@
     "familyId": "saddlepack",
     "tier": 6,
     "capacitySlots": 80,
-    "description": "An enchanted caravan rig of reinforced fibers, carrying a small camp's worth of goods.",
-    "icon": "/images/items/xxx.png"
+    "description": "A grand caravan saddlepack of ornate leather, star-metal clasps, and spacious panniers fit for a merchant prince.",
+    "icon": "/images/items/saddlepack_t6.png"
   },
   {
     "id": "rope_halter_bridle",
     "name": "Rope Halter",
     "familyId": "bridle",
     "tier": 1,
-    "description": "A plain rope halter, just enough to keep a mount pointed the right way.",
-    "icon": "/images/items/xxx.png"
+    "description": "A rugged rope halter of braided hemp and rawhide knots, sun-faded and trail-worn, with a frontier charm.",
+    "icon": "/images/items/bridle_t1.png"
   },
   {
     "id": "leather_bridle",
     "name": "Leather Bridle",
     "familyId": "bridle",
     "tier": 2,
-    "description": "A well-fitted leather bridle with a soft bit, easy on the mount's mouth.",
-    "icon": "/images/items/xxx.png"
+    "description": "A supple leather bridle, oiled dark brown and stitched with neat artisan seams, fitted with plain brass buckles.",
+    "icon": "/images/items/bridle_t2.png"
   },
   {
     "id": "studded_bridle",
     "name": "Studded Bridle",
     "familyId": "bridle",
     "tier": 3,
-    "description": "A sturdy bridle set with metal studs, favored by riders who push hard and far.",
-    "icon": "/images/items/xxx.png"
+    "description": "A tough studded bridle of reinforced leather, dotted with iron studs and carved rivets, built for hard riding.",
+    "icon": "/images/items/bridle_t3.png"
   },
   {
     "id": "silvered_bridle",
     "name": "Silvered Bridle",
     "familyId": "bridle",
     "tier": 4,
-    "description": "A silver-fitted bridle, its bit cool and gentle, favored by careful riders.",
-    "icon": "/images/items/xxx.png"
+    "description": "A polished silvered bridle shimmering with moonlit highlights, delicate filigree clasps, and elegant courtly finish.",
+    "icon": "/images/items/bridle_t4.png"
   },
   {
     "id": "warbridle",
     "name": "Warbridle",
     "familyId": "bridle",
     "tier": 5,
-    "description": "A battle-hardened bridle reinforced for the chaos and noise of the front line.",
-    "icon": "/images/items/xxx.png"
+    "description": "A gold-fitted warbridle of blackened leather and heavy chain links, bristling with spiked fittings and battlefield strength.",
+    "icon": "/images/items/bridle_t5.png"
   },
   {
     "id": "radiant_bridle",
     "name": "Radiant Bridle",
     "familyId": "bridle",
     "tier": 6,
-    "description": "A bridle threaded with faintly glowing filigree, said to calm even the wildest mount.",
-    "icon": "/images/items/xxx.png"
+    "description": "A star-metal radiant bridle with luminous runes, celestial enamel, and a regal halo-like gleam.",
+    "icon": "/images/items/bridle_t6.png"
   },
   {
     "id": "rat_ear_hunters_charm",
@@ -256,7 +256,8 @@
     "name": "Pine Cart",
     "familyId": "cart",
     "tier": 1,
-    "description": "A rugged pine cart with pale grain, copper-plated corners and copper-rimmed wheels.",
+    "capacitySlots": 6,
+    "description": "A rugged pine cart with pale grain, copper-plated corners and copper-rimmed wheels. Loaded from camp.",
     "icon": "/images/items/cart_t1.png"
   },
   {
@@ -264,7 +265,8 @@
     "name": "Oak Cart",
     "familyId": "cart",
     "tier": 2,
-    "description": "A heavy cart of dark oak with bronze-banded edges and robust bronze wheels.",
+    "capacitySlots": 10,
+    "description": "A heavy cart of dark oak with bronze-banded edges and robust bronze wheels. Loaded from camp.",
     "icon": "/images/items/cart_t2.png"
   },
   {
@@ -272,7 +274,8 @@
     "name": "Ash Cart",
     "familyId": "cart",
     "tier": 3,
-    "description": "A slender pale ash cart with steel brackets and solid iron wheels.",
+    "capacitySlots": 14,
+    "description": "A slender pale ash cart with steel brackets and solid iron wheels. Loaded from camp.",
     "icon": "/images/items/cart_t3.png"
   },
   {
@@ -280,7 +283,8 @@
     "name": "Cedar Cart",
     "familyId": "cart",
     "tier": 4,
-    "description": "A fragrant red cedar cart with silver-capped joints and polished silver wheels.",
+    "capacitySlots": 18,
+    "description": "A fragrant red cedar cart with silver-capped joints and polished silver wheels. Loaded from camp.",
     "icon": "/images/items/cart_t4.png"
   },
   {
@@ -288,7 +292,8 @@
     "name": "Ebony Cart",
     "familyId": "cart",
     "tier": 5,
-    "description": "A sleek ebony cart with gold-trimmed panels and bright gold wheels.",
+    "capacitySlots": 22,
+    "description": "A sleek ebony cart with gold-trimmed panels and bright gold wheels. Loaded from camp.",
     "icon": "/images/items/cart_t5.png"
   },
   {
@@ -296,7 +301,8 @@
     "name": "Worldroot Cart",
     "familyId": "cart",
     "tier": 6,
-    "description": "An ancient worldroot cart entwined with glowing star metal veins and arcane runes.",
+    "capacitySlots": 26,
+    "description": "An ancient worldroot cart entwined with glowing star metal veins and arcane runes. Loaded from camp.",
     "icon": "/images/items/cart_t6.png"
   },
   {
@@ -634,5 +640,341 @@
     "tier": 6,
     "description": "A crystalline whistle, partially transparent, with spell runes swirling within as it sounds.",
     "icon": "/images/items/signal_whistle_t6.png"
+  },
+  {
+    "id": "rope_saddle",
+    "name": "Rope Saddle",
+    "familyId": "saddle",
+    "tier": 1,
+    "description": "A hardy rope saddle of braided cord and rawhide lashings, simple, lightweight, and made for long trail rides.",
+    "icon": "/images/items/saddle_t1.png"
+  },
+  {
+    "id": "leather_saddle",
+    "name": "Leather Saddle",
+    "familyId": "saddle",
+    "tier": 2,
+    "description": "A classic leather saddle with burnished panels, stitched edging, and a practical, time-tested riding form.",
+    "icon": "/images/items/saddle_t2.png"
+  },
+  {
+    "id": "cavalry_saddle",
+    "name": "Cavalry Saddle",
+    "familyId": "saddle",
+    "tier": 3,
+    "description": "A disciplined cavalry saddle of reinforced hide and metal fittings, broad-seated and ready for swift mounted charges.",
+    "icon": "/images/items/saddle_t3.png"
+  },
+  {
+    "id": "silver_saddle",
+    "name": "Silver Saddle",
+    "familyId": "saddle",
+    "tier": 4,
+    "description": "A graceful silver saddle with gleaming trim, moonlit clasps, and ornate embossed patterns of noble craft.",
+    "icon": "/images/items/saddle_t4.png"
+  },
+  {
+    "id": "champions_saddle",
+    "name": "Champion's Saddle",
+    "familyId": "saddle",
+    "tier": 5,
+    "description": "A gilded champion's saddle of gold-inlaid leather and banner-stitched armor panels, fit for a victorious knight.",
+    "icon": "/images/items/saddle_t5.png"
+  },
+  {
+    "id": "starweave_saddle",
+    "name": "Starweave Saddle",
+    "familyId": "saddle",
+    "tier": 6,
+    "description": "A shimmering starweave saddle of star-metal thread, astral leather, and faint constellations stitched into the seat.",
+    "icon": "/images/items/saddle_t6.png"
+  },
+  {
+    "id": "leather_barding",
+    "name": "Leather Barding",
+    "familyId": "barding_leather",
+    "tier": 1,
+    "description": "Practical leather barding of layered hides and sturdy straps, weatherproof and dependable for everyday travel.",
+    "icon": "/images/items/barding_leather_t1.png"
+  },
+  {
+    "id": "studded_barding",
+    "name": "Studded Barding",
+    "familyId": "barding_leather",
+    "tier": 2,
+    "description": "Heavy studded barding of thick leather plates, iron bosses, and reinforced seams for added defense.",
+    "icon": "/images/items/barding_leather_t2.png"
+  },
+  {
+    "id": "hardened_barding",
+    "name": "Hardened Barding",
+    "familyId": "barding_leather",
+    "tier": 3,
+    "description": "Hardened barding of boiled leather and metal bracing, dark and formidable with a battle-ready silhouette.",
+    "icon": "/images/items/barding_leather_t3.png"
+  },
+  {
+    "id": "scale_barding",
+    "name": "Scale Barding",
+    "familyId": "barding_leather",
+    "tier": 4,
+    "description": "A silver scale barding of overlapping metal plates, flexibly linked and catching the light like a fish's armor.",
+    "icon": "/images/items/barding_leather_t4.png"
+  },
+  {
+    "id": "dragonhide_barding",
+    "name": "Dragonhide Barding",
+    "familyId": "barding_leather",
+    "tier": 5,
+    "description": "A gilded dragonhide barding with ember-toned scales, embossed ridges, and draconic grandeur.",
+    "icon": "/images/items/barding_leather_t5.png"
+  },
+  {
+    "id": "celestial_hide_barding",
+    "name": "Celestial Hide Barding",
+    "familyId": "barding_leather",
+    "tier": 6,
+    "description": "A star-metal celestial hide barding of pearlescent leather and glowing thread, softly radiant with heavenly sigils.",
+    "icon": "/images/items/barding_leather_t6.png"
+  },
+  {
+    "id": "copper_barding",
+    "name": "Copper Barding",
+    "familyId": "barding_iron",
+    "tier": 1,
+    "description": "Copper barding with warm reddish sheen, hammered plates, and aged patina glowing like sunset metal.",
+    "icon": "/images/items/barding_iron_t1.png"
+  },
+  {
+    "id": "bronze_barding",
+    "name": "Bronze Barding",
+    "familyId": "barding_iron",
+    "tier": 2,
+    "description": "Bronze barding of noble antiquity, broad embossed plates and verdigris accents evoking ancient empires.",
+    "icon": "/images/items/barding_iron_t2.png"
+  },
+  {
+    "id": "iron_barding",
+    "name": "Iron Barding",
+    "familyId": "barding_iron",
+    "tier": 3,
+    "description": "Iron barding of dark forged plates, blunt, practical, and rugged with a stoic battlefield presence.",
+    "icon": "/images/items/barding_iron_t3.png"
+  },
+  {
+    "id": "silver_barding",
+    "name": "Silver Barding",
+    "familyId": "barding_iron",
+    "tier": 4,
+    "description": "Silver barding with mirror-bright segments, elegant edges, and a cool luminous finish worthy of nobility.",
+    "icon": "/images/items/barding_iron_t4.png"
+  },
+  {
+    "id": "gold_barding",
+    "name": "Gold Barding",
+    "familyId": "barding_iron",
+    "tier": 5,
+    "description": "Gold barding richly gilded and opulent, engraved with lavish scrollwork and royal heraldic details.",
+    "icon": "/images/items/barding_iron_t5.png"
+  },
+  {
+    "id": "starmetal_barding",
+    "name": "Star Metal Barding",
+    "familyId": "barding_iron",
+    "tier": 6,
+    "description": "Star metal barding of midnight alloy and twinkling inlays, as if forged from fallen constellations.",
+    "icon": "/images/items/barding_iron_t6.png"
+  },
+  {
+    "id": "bright_feather_charm_flying",
+    "name": "Bright Feather",
+    "familyId": "charm_flying",
+    "tier": 1,
+    "description": "A bright feather charm with iridescent plumage, a light breeze shimmer, and playful airborne elegance.",
+    "icon": "/images/items/charm_flying_t1.png"
+  },
+  {
+    "id": "jingle_bell_charm_flying",
+    "name": "Jingle Bell",
+    "familyId": "charm_flying",
+    "tier": 2,
+    "description": "A tiny jingle bell charm of polished brass, cheerful and tinkling like a guardian of the skies.",
+    "icon": "/images/items/charm_flying_t2.png"
+  },
+  {
+    "id": "falconers_lure_charm_flying",
+    "name": "Falconer's Lure",
+    "familyId": "charm_flying",
+    "tier": 3,
+    "description": "A falconer's lure charm of braided leather and feather tassels, practical and swift for trained birds.",
+    "icon": "/images/items/charm_flying_t3.png"
+  },
+  {
+    "id": "crystal_prism_charm_flying",
+    "name": "Crystal Prism",
+    "familyId": "charm_flying",
+    "tier": 4,
+    "description": "A crystal prism charm catching sunlight into rainbow shards, delicate and mesmerizing in the air.",
+    "icon": "/images/items/charm_flying_t4.png"
+  },
+  {
+    "id": "phoenix_plume_charm_flying",
+    "name": "Phoenix Plume",
+    "familyId": "charm_flying",
+    "tier": 5,
+    "description": "A phoenix plume charm of flame-gold feathers and ember glow, radiant with rebirth and fiery grace.",
+    "icon": "/images/items/charm_flying_t5.png"
+  },
+  {
+    "id": "starlight_windsock_charm_flying",
+    "name": "Starlight Windsock",
+    "familyId": "charm_flying",
+    "tier": 6,
+    "description": "A starlight windsock charm of silver silk and constellations, fluttering with cosmic wind and gentle brilliance.",
+    "icon": "/images/items/charm_flying_t6.png"
+  },
+  {
+    "id": "shiny_pebble_charm_aquatic",
+    "name": "Shiny Pebble",
+    "familyId": "charm_aquatic",
+    "tier": 1,
+    "description": "A shiny pebble charm, smooth and river-polished, with a wet gleam like treasure from the streambed.",
+    "icon": "/images/items/charm_aquatic_t1.png"
+  },
+  {
+    "id": "cork_bobber_charm_aquatic",
+    "name": "Cork Bobber",
+    "familyId": "charm_aquatic",
+    "tier": 2,
+    "description": "A cork bobber charm of buoyant driftwood and red paint, simple and cheerful as a fishing day.",
+    "icon": "/images/items/charm_aquatic_t2.png"
+  },
+  {
+    "id": "spiral_shell_charm_aquatic",
+    "name": "Spiral Shell",
+    "familyId": "charm_aquatic",
+    "tier": 3,
+    "description": "A spiral shell charm with pearly ridges and seafoam tint, echoing tides and hidden currents.",
+    "icon": "/images/items/charm_aquatic_t3.png"
+  },
+  {
+    "id": "glowing_coral_charm_aquatic",
+    "name": "Glowing Coral",
+    "familyId": "charm_aquatic",
+    "tier": 4,
+    "description": "A glowing coral charm of silver-tinged bioluminescent branches, softly lit with reef-born magic.",
+    "icon": "/images/items/charm_aquatic_t4.png"
+  },
+  {
+    "id": "deep_pearl_charm_aquatic",
+    "name": "Deep Pearl",
+    "familyId": "charm_aquatic",
+    "tier": 5,
+    "description": "A deep pearl charm, lustrous and mysterious, with gold-tinged abyssal sheen and ocean-deep elegance.",
+    "icon": "/images/items/charm_aquatic_t5.png"
+  },
+  {
+    "id": "abyssal_gem_charm_aquatic",
+    "name": "Abyssal Gem",
+    "familyId": "charm_aquatic",
+    "tier": 6,
+    "description": "An abyssal gem charm of star-metal blue crystal, faintly luminous like moonlight beneath the waves.",
+    "icon": "/images/items/charm_aquatic_t6.png"
+  },
+  {
+    "id": "tallow_candle_charm_ghost",
+    "name": "Tallow Candle",
+    "familyId": "charm_ghost",
+    "tier": 1,
+    "description": "A small tallow candle charm, wax-dripped and pale, flickering with mournful twilight warmth.",
+    "icon": "/images/items/charm_ghost_t1.png"
+  },
+  {
+    "id": "carved_bone_charm_ghost",
+    "name": "Carved Bone",
+    "familyId": "charm_ghost",
+    "tier": 2,
+    "description": "A carved bone charm etched with runes and hollow elegance, old as a forgotten grave.",
+    "icon": "/images/items/charm_ghost_t2.png"
+  },
+  {
+    "id": "black_ribbon_charm_ghost",
+    "name": "Black Ribbon",
+    "familyId": "charm_ghost",
+    "tier": 3,
+    "description": "A black ribbon charm flowing like a silent wisp, eerie, delicate, and hauntingly graceful.",
+    "icon": "/images/items/charm_ghost_t3.png"
+  },
+  {
+    "id": "soul_lantern_charm_ghost",
+    "name": "Soul Lantern",
+    "familyId": "charm_ghost",
+    "tier": 4,
+    "description": "A soul lantern charm glowing with silver ectoplasm, ornate and spectral with a gentle wraithlight.",
+    "icon": "/images/items/charm_ghost_t4.png"
+  },
+  {
+    "id": "shadow_crystal_charm_ghost",
+    "name": "Shadow Crystal",
+    "familyId": "charm_ghost",
+    "tier": 5,
+    "description": "A shadow necklace charm of gold links and smoky gemstone, draped in quiet phantasmal presence.",
+    "icon": "/images/items/charm_ghost_t5.png"
+  },
+  {
+    "id": "void_shard_charm_ghost",
+    "name": "Void Shard",
+    "familyId": "charm_ghost",
+    "tier": 6,
+    "description": "A void shard charm of star-metal-black crystal and starless depth, cold and uncanny.",
+    "icon": "/images/items/charm_ghost_t6.png"
+  },
+  {
+    "id": "old_stick_charm_other",
+    "name": "Old Stick",
+    "familyId": "charm_other",
+    "tier": 1,
+    "description": "An old stick charm of weathered wood and carved marks, humble, rustic, and full of found magic.",
+    "icon": "/images/items/charm_other_t1.png"
+  },
+  {
+    "id": "knuckle_bone_charm_other",
+    "name": "Knuckle Bone",
+    "familyId": "charm_other",
+    "tier": 2,
+    "description": "A knuckle bone charm of polished bone and cord wrap, simple and talismanic with a folk-amulet feel.",
+    "icon": "/images/items/charm_other_t2.png"
+  },
+  {
+    "id": "rabbits_foot_charm_other",
+    "name": "Rabbit's Foot",
+    "familyId": "charm_other",
+    "tier": 3,
+    "description": "A rabbit's foot charm of soft fur and stitched luck, a classic token of good fortune.",
+    "icon": "/images/items/charm_other_t3.png"
+  },
+  {
+    "id": "silver_bell_charm_other",
+    "name": "Silver Bell",
+    "familyId": "charm_other",
+    "tier": 4,
+    "description": "A silver bell charm, bright and clear, with a delicate chime and a touch of moonlit luck.",
+    "icon": "/images/items/charm_other_t4.png"
+  },
+  {
+    "id": "enchanted_plushie_charm_other",
+    "name": "Enchanted Plushie",
+    "familyId": "charm_other",
+    "tier": 5,
+    "description": "An enchanted plushie charm of soft fabric and glowing seams, cuddly, whimsical, and spellbound.",
+    "icon": "/images/items/charm_other_t5.png"
+  },
+  {
+    "id": "cosmic_bauble_charm_other",
+    "name": "Cosmic Bauble",
+    "familyId": "charm_other",
+    "tier": 6,
+    "description": "A cosmic bauble charm of swirling nebula glass and star-metal sparkles, tiny and infinitely wondrous.",
+    "icon": "/images/items/charm_other_t6.png"
   }
 ]

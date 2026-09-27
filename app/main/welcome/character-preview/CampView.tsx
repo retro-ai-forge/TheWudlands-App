@@ -6,6 +6,8 @@ import {
   ItemGrid,
   VAULT_ACTION_ICON,
   computeBackpackContents,
+  computeSaddlepackContents,
+  computeCartContents,
   postJson,
   type BlueprintTierInfo,
   type RawPlayerData,
@@ -260,6 +262,33 @@ export function CampView({
     ...computeBackpackContents(character),
   };
 
+  const saddlepackPackedItems = {
+    tierInfo: itemCatalogTierInfo,
+    resourceTierInfo,
+    ...computeSaddlepackContents(character),
+  };
+
+  const cartContents = computeCartContents(character);
+  const cartPackedItems = {
+    tierInfo: itemCatalogTierInfo,
+    resourceTierInfo,
+    ...cartContents,
+  };
+
+  const hasCartItems =
+    cartContents.ids.length > 0 ||
+    Object.values(cartContents.resourceBalances).some((qty) => qty > 0);
+
+  const cartIconOverrides: Record<string, string> = {};
+  if (hasCartItems) {
+    for (const instance of campInstances) {
+      if (instance.familyId === "cart") {
+        const icon = itemCatalogTierInfo[instance.itemId]?.icon;
+        if (icon) cartIconOverrides[instance.itemId] = icon.replace("/cart_t", "/cart_filled_t");
+      }
+    }
+  }
+
   return (
     <div className={styles.panel}>
       <ItemGrid
@@ -279,8 +308,14 @@ export function CampView({
         reserveBottomPx={CAMPFIRE_AREA_PX}
         hideScrollbar
         packedItems={packedItems}
+        saddlepackPackedItems={saddlepackPackedItems}
+        cartPackedItems={cartPackedItems}
         backpackSlotsUsed={character.gear.backpackSlotsUsed}
         backpackCapacity={character.gear.backpackCapacity}
+        saddlepackSlotsUsed={character.gear.saddlepackSlotsUsed}
+        saddlepackCapacity={character.gear.saddlepackCapacity}
+        cartSlotsUsed={character.gear.cartSlotsUsed}
+        cartCapacity={character.gear.cartCapacity}
         resourceBalances={campResourceBalances}
         resourceTierInfo={resourceTierInfo}
         resourceDestinations={[
@@ -291,6 +326,7 @@ export function CampView({
             ? [{ key: "vault", icon: VAULT_ACTION_ICON, label: "Vault", endpoint: "check-in-camp" }]
             : []),
         ]}
+        iconOverrides={Object.keys(cartIconOverrides).length > 0 ? cartIconOverrides : undefined}
       />
       <div className={styles.campfireStage} style={{ height: CAMPFIRE_AREA_PX }}>
         {/* Fire's position/size are relative to THIS group (i.e. to the
@@ -376,8 +412,8 @@ export function CampView({
             alt=""
             role="button"
             tabIndex={0}
-            title="Move everything to backpack"
-            aria-label="Move everything to backpack"
+            title="Pack everything up"
+            aria-label="Pack everything up"
             onClick={() => setCampAction("moveAll")}
             onKeyDown={(e) => {
               if (e.key === "Enter" || e.key === " ") setCampAction("moveAll");
@@ -398,11 +434,11 @@ export function CampView({
         )}
         {campAction === "moveAll" && (
           <HoldActionPopup
-            headline="Move all to backpack"
-            label="Hold to MOVE ALL"
+            headline="Store all"
+            label="Hold to START PACKING UP"
             icon="/images/character/dropped.png"
             tone="recycle"
-            onConfirm={() => postJson(`/api/auth/me/characters/${character.id}/camp/move-all-to-backpack`)}
+            onConfirm={() => postJson(`/api/auth/me/characters/${character.id}/camp/move-all-to-bags`)}
             onPlayerDataUpdated={onPlayerDataUpdated}
             onClose={() => setCampAction(null)}
           />
@@ -547,7 +583,7 @@ function ChopBlockPopup({
               list. */}
           <div className={`${styles.recycleDestroyDivider} ${styles.recycleDestroyDividerTight}`} />
           <p className={styles.recycleFinalLine}>
-            Recycling all: {grandTotal.length > 0 ? grandTotal.map((line) => `${line.qty}× ${line.name}`).join(", ") : "nothing"}
+            Salvaged: {grandTotal.length > 0 ? grandTotal.map((line) => `${line.qty}× ${line.name}`).join(", ") : "nothing"}
           </p>
           <div className={`${styles.recycleDestroyDivider} ${styles.recycleDestroyDividerSpaced}`} />
           {/* Scrolls on its own (see .chopBlockList) once the list is too
@@ -585,7 +621,7 @@ function ChopBlockPopup({
                     </div>
                   ))}
                   <p className={styles.recycleFinalLine}>
-                    Recovered:{" "}
+                    Salvaged:{" "}
                     {flattenChopBlockMaterials(row.materials)
                       .map((line) => `${line.qty}× ${line.name}`)
                       .join(", ") || "nothing"}

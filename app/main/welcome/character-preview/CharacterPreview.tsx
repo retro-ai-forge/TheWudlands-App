@@ -12,6 +12,7 @@ import { BodyTab } from "./BodyTab";
 import { AdventureTab } from "./AdventureTab";
 import { InventoryTab, type ItemInstance, type RawPlayerData } from "./InventoryTab";
 import { CampView } from "./CampView";
+import { InAdventureToggle } from "./InAdventureToggle";
 
 export type TabKey = "stats" | "body" | "crafting" | "adventure" | "inventory";
 
@@ -312,9 +313,12 @@ export function CharacterPreview({
       <div className={tabStyles.sheet}>
         {deleteError && <p className={styles.submitError}>{deleteError}</p>}
 
-        <h1 className={tabStyles.name}>
-          {showCamp ? `${character.firstName}'s Camp` : `${character.firstName} ${character.lastName}`}
-        </h1>
+        <div className={tabStyles.nameRow}>
+          <InAdventureToggle character={character} onPlayerDataUpdated={onPlayerDataUpdated} />
+          <h1 className={tabStyles.name}>
+            {showCamp ? `${character.firstName}'s Camp` : activeTab === "inventory" ? "Vault" : `${character.firstName} ${character.lastName}`}
+          </h1>
+        </div>
 
         <div className={showCamp || activeTab === "inventory" || activeTab === "crafting" ? tabStyles.mainColumn : `${tabStyles.mainColumn} ${tabStyles.mainColumnPadded}`}>
           {showCamp ? (

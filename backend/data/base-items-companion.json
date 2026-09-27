@@ -4,8 +4,8 @@
     "name": "Bat",
     "familyId": "winged_companion",
     "tier": 1,
-    "description": "A small cave bat that clings to its master's cloak and squeaks at hidden dangers in the dark.",
-    "icon": "/images/items/xxx.png",
+    "description": "A tiny bat with copper wings, velvet fur, and a twitchy caveborn flutter.",
+    "icon": "/images/items/winged_companion_t1.png",
     "carryCapacity": 3
   },
   {
@@ -13,8 +13,8 @@
     "name": "Raven",
     "familyId": "winged_companion",
     "tier": 2,
-    "description": "A clever black raven with sharp eyes, quick to steal shiny things and carry whispered messages.",
-    "icon": "/images/items/xxx.png",
+    "description": "A bronze raven with glossy feathers, a beady stare, and an omened croak.",
+    "icon": "/images/items/winged_companion_t2.png",
     "carryCapacity": 6
   },
   {
@@ -22,8 +22,8 @@
     "name": "Owl",
     "familyId": "winged_companion",
     "tier": 3,
-    "description": "A silent gray owl with golden eyes that keeps watch through the night and misses nothing.",
-    "icon": "/images/items/xxx.png",
+    "description": "A silent owl with iron-gray plumage, wide amber eyes, and a patient nightwatch posture.",
+    "icon": "/images/items/winged_companion_t3.png",
     "carryCapacity": 9
   },
   {
@@ -31,8 +31,8 @@
     "name": "Hawk",
     "familyId": "winged_companion",
     "tier": 4,
-    "description": "A swift red-tailed hawk that dives on prey and returns faithfully to its master's arm.",
-    "icon": "/images/items/xxx.png",
+    "description": "A silver hawk with razor wings, bright talons, and a hunter's clear sky focus.",
+    "icon": "/images/items/winged_companion_t4.png",
     "carryCapacity": 12
   },
   {
@@ -40,8 +40,8 @@
     "name": "Harpy",
     "familyId": "winged_companion",
     "tier": 5,
-    "description": "A shrieking harpy with a wild face and razor talons, fiercely protective of those it chooses.",
-    "icon": "/images/items/xxx.png",
+    "description": "A gold-feathered harpy with elegant claws, sweeping wings, and a fierce wind-carved silhouette.",
+    "icon": "/images/items/winged_companion_t5.png",
     "carryCapacity": 15
   },
   {
@@ -49,8 +49,8 @@
     "name": "Phoenix",
     "familyId": "winged_companion",
     "tier": 6,
-    "description": "A radiant bird of living flame that rises reborn from its own ashes, trailing golden embers.",
-    "icon": "/images/items/xxx.png",
+    "description": "A star-metal phoenix with flameglass plumage, blazing crest, and an immortal sunrise aura.",
+    "icon": "/images/items/winged_companion_t6.png",
     "carryCapacity": 18
   },
   {
@@ -58,8 +58,8 @@
     "name": "Rat",
     "familyId": "critter_companion",
     "tier": 1,
-    "description": "A scruffy sewer rat with twitching whiskers, small enough to squeeze through any crack.",
-    "icon": "/images/items/xxx.png",
+    "description": "A scrappy rat with copper fur, quick whiskers, and a bold scavenger's attitude.",
+    "icon": "/images/items/critter_companion_t1.png",
     "carryCapacity": 3
   },
   {
@@ -67,8 +67,8 @@
     "name": "Ferret",
     "familyId": "critter_companion",
     "tier": 2,
-    "description": "A sleek, playful ferret that slips into burrows and returns with things it was never meant to find.",
-    "icon": "/images/items/xxx.png",
+    "description": "A bronze ferret with a sleek body, dark mask, and darting ribbonlike movements.",
+    "icon": "/images/items/critter_companion_t2.png",
     "carryCapacity": 6
   },
   {
@@ -76,8 +76,8 @@
     "name": "Fox",
     "familyId": "critter_companion",
     "tier": 3,
-    "description": "A russet fox with a bushy tail and cunning eyes, silent on the trail and wary of traps.",
-    "icon": "/images/items/xxx.png",
+    "description": "A small fox with iron-red fur, sharp ears, and a clever woodland stare.",
+    "icon": "/images/items/critter_companion_t3.png",
     "carryCapacity": 9
   },
   {
@@ -85,8 +85,8 @@
     "name": "Shadowcat",
     "familyId": "critter_companion",
     "tier": 4,
-    "description": "A smoky black cat that melts into shadows and reappears wherever it pleases.",
-    "icon": "/images/items/xxx.png",
+    "description": "A silver-shadowcat with velvet-black fur and moonlit eyes glowing from the dark.",
+    "icon": "/images/items/critter_companion_t4.png",
     "carryCapacity": 12
   },
   {
@@ -94,8 +94,8 @@
     "name": "Moonhare",
     "familyId": "critter_companion",
     "tier": 5,
-    "description": "A silver-furred hare that glows faintly under the moon and bounds between places in a blink.",
-    "icon": "/images/items/xxx.png",
+    "description": "A gold moonhare with luminous fur, delicate ears, and a dreamy hop through twilight grass.",
+    "icon": "/images/items/critter_companion_t5.png",
     "carryCapacity": 15
   },
   {
@@ -103,8 +103,8 @@
     "name": "Kitsune",
     "familyId": "critter_companion",
     "tier": 6,
-    "description": "A nine-tailed spirit fox wreathed in pale blue foxfire, wise, mischievous and deeply magical.",
-    "icon": "/images/items/xxx.png",
+    "description": "A star-metal kitsune with nine glassy tails, ornate markings, and an aura of ancient trickster magic.",
+    "icon": "/images/items/critter_companion_t6.png",
     "carryCapacity": 18
   },
   {
@@ -112,8 +112,8 @@
     "name": "Glowmoth",
     "familyId": "arcane_companion",
     "tier": 1,
-    "description": "A pale moth whose wings shed soft arcane light, drawn to spellcasters like a flame.",
-    "icon": "/images/items/xxx.png",
+    "description": "A tiny glowmoth with coppery wings and a soft lantern-like shimmer in the dusk.",
+    "icon": "/images/items/arcane_companion_t1.png",
     "carryCapacity": 3
   },
   {
@@ -121,8 +121,8 @@
     "name": "Crystal Lizard",
     "familyId": "arcane_companion",
     "tier": 2,
-    "description": "A small lizard with gemstone scales that hum and glitter whenever magic is near.",
-    "icon": "/images/items/xxx.png",
+    "description": "A bronze crystal lizard with faceted scales, bright eyes, and a desert gem sparkle.",
+    "icon": "/images/items/arcane_companion_t2.png",
     "carryCapacity": 6
   },
   {
@@ -130,8 +130,8 @@
     "name": "Living Grimoire",
     "familyId": "arcane_companion",
     "tier": 3,
-    "description": "A floating spellbook that flaps its pages like wings and mutters forgotten incantations.",
-    "icon": "/images/items/xxx.png",
+    "description": "A compact living grimoire with leather-bound covers, brass corners, and twitching enchanted pages.",
+    "icon": "/images/items/arcane_companion_t3.png",
     "carryCapacity": 9
   },
   {
@@ -139,8 +139,8 @@
     "name": "Blink Hound",
     "familyId": "arcane_companion",
     "tier": 4,
-    "description": "A spectral hound that vanishes in a flash of violet light and reappears at its master's side.",
-    "icon": "/images/items/xxx.png",
+    "description": "A silver blur of a blink hound with prismatic fur and a sudden pop of spatial magic.",
+    "icon": "/images/items/arcane_companion_t4.png",
     "carryCapacity": 12
   },
   {
@@ -148,8 +148,8 @@
     "name": "Mandrake",
     "familyId": "arcane_companion",
     "tier": 5,
-    "description": "A root creature pulled from the soil whose scream can stun foes, loyal to whoever dared to unearth it.",
-    "icon": "/images/items/xxx.png",
+    "description": "A gold-leaf mandrake with root-legs, expressive face, and a small chorus of herbal mischief.",
+    "icon": "/images/items/arcane_companion_t5.png",
     "carryCapacity": 15
   },
   {
@@ -157,8 +157,8 @@
     "name": "Astral Familiar",
     "familyId": "arcane_companion",
     "tier": 6,
-    "description": "A shimmering being of starlight that shares its master's mind and bends the flow of magic itself.",
-    "icon": "/images/items/xxx.png",
+    "description": "A star-metal astral familiar with glassy wings, constellation markings, and a quiet orbit of cosmic light.",
+    "icon": "/images/items/arcane_companion_t6.png",
     "carryCapacity": 18
   },
   {
@@ -166,8 +166,8 @@
     "name": "Wisp",
     "familyId": "fey_companion",
     "tier": 1,
-    "description": "A flickering will-o'-the-wisp that lights the way and drifts ahead into the unknown.",
-    "icon": "/images/items/xxx.png",
+    "description": "A pale wisp with copper sparks, a drifting lantern glow, and a feather-light haunting flutter.",
+    "icon": "/images/items/fey_companion_t1.png",
     "carryCapacity": 3
   },
   {
@@ -175,8 +175,8 @@
     "name": "Fairy",
     "familyId": "fey_companion",
     "tier": 2,
-    "description": "A tiny winged fairy that sprinkles glittering dust and giggles at the misfortune of enemies.",
-    "icon": "/images/items/xxx.png",
+    "description": "A bright fairy with bronze wings, petal-soft dress, and a cheerful ring of forest magic.",
+    "icon": "/images/items/fey_companion_t2.png",
     "carryCapacity": 6
   },
   {
@@ -184,8 +184,8 @@
     "name": "Sprite",
     "familyId": "fey_companion",
     "tier": 3,
-    "description": "A tiny glimmering sprite that darts between flowers and streams, leaving trails of dewdrop light.",
-    "icon": "/images/items/xxx.png",
+    "description": "A tiny sprite with iron-green sheen, acorn cap, and a sparkling prankster grin.",
+    "icon": "/images/items/fey_companion_t3.png",
     "carryCapacity": 9
   },
   {
@@ -193,8 +193,8 @@
     "name": "Homunculus",
     "familyId": "fey_companion",
     "tier": 4,
-    "description": "An alchemically grown homunculus bound to its creator, sharing sight and whispered thoughts.",
-    "icon": "/images/items/xxx.png",
+    "description": "A silver homunculus with stitched charm, glass beads, and a diligent little alchemical body.",
+    "icon": "/images/items/fey_companion_t4.png",
     "carryCapacity": 12
   },
   {
@@ -202,8 +202,8 @@
     "name": "Djinn",
     "familyId": "fey_companion",
     "tier": 5,
-    "description": "A smoky blue djinn bound to a lamp-like seal, swirling with wind and old desert magic.",
-    "icon": "/images/items/xxx.png",
+    "description": "A gold djinn with swirling smoke, ornate ornaments, and a radiant command of wishfire.",
+    "icon": "/images/items/fey_companion_t5.png",
     "carryCapacity": 15
   },
   {
@@ -211,8 +211,8 @@
     "name": "Seraph",
     "familyId": "fey_companion",
     "tier": 6,
-    "description": "A six-winged celestial seraph wreathed in holy light, a guardian from beyond the stars.",
-    "icon": "/images/items/xxx.png",
+    "description": "A star-metal seraph with feathered glass wings, sacred brilliance, and a face of serene dawn.",
+    "icon": "/images/items/fey_companion_t6.png",
     "carryCapacity": 18
   },
   {
@@ -220,8 +220,8 @@
     "name": "Crab",
     "familyId": "aquatic_companion",
     "tier": 1,
-    "description": "A small shore crab with one oversized claw, snapping at anything that comes too close.",
-    "icon": "/images/items/xxx.png",
+    "description": "A small crab with copper shell, sharp claws, and a sideways skitter across wet stone.",
+    "icon": "/images/items/aquatic_companion_t1.png",
     "carryCapacity": 3
   },
   {
@@ -229,8 +229,8 @@
     "name": "Otter",
     "familyId": "aquatic_companion",
     "tier": 2,
-    "description": "A playful river otter that dives for fish and shiny pebbles and floats happily on its back.",
-    "icon": "/images/items/xxx.png",
+    "description": "A sleek otter with bronze fur, bright eyes, and playful riverbank energy.",
+    "icon": "/images/items/aquatic_companion_t2.png",
     "carryCapacity": 6
   },
   {
@@ -238,8 +238,8 @@
     "name": "Octopus",
     "familyId": "aquatic_companion",
     "tier": 3,
-    "description": "A clever octopus that changes color at will and slips its arms into every lock and crevice.",
-    "icon": "/images/items/xxx.png",
+    "description": "A compact octopus with dusky metal sheen, curling arms, and curious ink-dark intelligence.",
+    "icon": "/images/items/aquatic_companion_t3.png",
     "carryCapacity": 9
   },
   {
@@ -247,8 +247,8 @@
     "name": "Selkie",
     "familyId": "aquatic_companion",
     "tier": 4,
-    "description": "A gentle selkie that sheds its sealskin to walk ashore, singing softly of the deep.",
-    "icon": "/images/items/xxx.png",
+    "description": "A silver-skinned selkie with shimmering sealskin, sea-glass accents, and a wistful shoreline presence.",
+    "icon": "/images/items/aquatic_companion_t4.png",
     "carryCapacity": 12
   },
   {
@@ -256,8 +256,8 @@
     "name": "Siren",
     "familyId": "aquatic_companion",
     "tier": 5,
-    "description": "A haunting siren whose song lures foes to their doom and calms the stormiest seas.",
-    "icon": "/images/items/xxx.png",
+    "description": "A gold-haired siren with pearl scales, luminous eyes, and an enchanting tide-born elegance.",
+    "icon": "/images/items/aquatic_companion_t5.png",
     "carryCapacity": 15
   },
   {
@@ -265,8 +265,8 @@
     "name": "Water Elemental",
     "familyId": "aquatic_companion",
     "tier": 6,
-    "description": "A living wave of shimmering water that crashes over enemies and reforms from every spilled drop.",
-    "icon": "/images/items/xxx.png",
+    "description": "A star-metal water elemental with flowing glass limbs, rippling currents, and a body of living moonlit water.",
+    "icon": "/images/items/aquatic_companion_t6.png",
     "carryCapacity": 18
   },
   {
@@ -274,8 +274,8 @@
     "name": "Witch Toad",
     "familyId": "dark_companion",
     "tier": 1,
-    "description": "A warty black toad with glowing yellow eyes, the classic witch's familiar, croaking curses at its master's foes.",
-    "icon": "/images/items/xxx.png",
+    "description": "A squat witch toad with mossy copper skin, warted charm, and a damp little curse in its gaze.",
+    "icon": "/images/items/dark_companion_t1.png",
     "carryCapacity": 3
   },
   {
@@ -283,8 +283,8 @@
     "name": "Imp",
     "familyId": "dark_companion",
     "tier": 2,
-    "description": "A tiny glimmering sprite that darts between flowers and streams, leaving trails of dewdrop light.",
-    "icon": "/images/items/xxx.png",
+    "description": "A bronze imp with tiny horns, bat wings, and a mischievous ember-eyed grin.",
+    "icon": "/images/items/dark_companion_t2.png",
     "carryCapacity": 6
   },
   {
@@ -292,8 +292,8 @@
     "name": "Hellhound",
     "familyId": "dark_companion",
     "tier": 3,
-    "description": "A lean black hound with smoldering fur and burning eyes, leaving scorched pawprints wherever it hunts.",
-    "icon": "/images/items/xxx.png",
+    "description": "A lean hellhound with iron-black fur, glowing embers between the teeth, and a fiery stalking step.",
+    "icon": "/images/items/dark_companion_t3.png",
     "carryCapacity": 9
   },
   {
@@ -301,8 +301,8 @@
     "name": "Wraith",
     "familyId": "dark_companion",
     "tier": 4,
-    "description": "A hooded, shadowy wraith that drifts at its master's side and drains the warmth from anyone it touches.",
-    "icon": "/images/items/xxx.png",
+    "description": "A silver wraith with torn mist-ribbons, hollow eyes, and a chilling presence like grave wind.",
+    "icon": "/images/items/dark_companion_t4.png",
     "carryCapacity": 12
   },
   {
@@ -310,8 +310,8 @@
     "name": "Shadow Demon",
     "familyId": "dark_companion",
     "tier": 5,
-    "description": "A demon of living darkness that slips between shadows and whispers dreadful secrets to its master.",
-    "icon": "/images/items/xxx.png",
+    "description": "A gold-edged shadow demon with smoky limbs, jagged horns, and a regal nightmare silhouette.",
+    "icon": "/images/items/dark_companion_t5.png",
     "carryCapacity": 15
   },
   {
@@ -319,8 +319,8 @@
     "name": "Abyssal Horror",
     "familyId": "dark_companion",
     "tier": 6,
-    "description": "A tentacled horror from the abyss with countless eyes, bound to its master by a pact no mortal should make.",
-    "icon": "/images/items/xxx.png",
+    "description": "A star-metal abyssal horror with glassy eyes, void-dark flesh, and impossible angles from the deep.",
+    "icon": "/images/items/dark_companion_t6.png",
     "carryCapacity": 18
   },
   {
@@ -328,8 +328,8 @@
     "name": "Lost Soul",
     "familyId": "spirit_companion",
     "tier": 1,
-    "description": "A faint, flickering soul newly parted from its body, clinging close and unsure of where else to go.",
-    "icon": "/images/items/xxx.png",
+    "description": "A dim lost soul with copper haze, drifting form, and a sorrowful echo of forgotten life.",
+    "icon": "/images/items/spirit_companion_t1.png",
     "carryCapacity": 3
   },
   {
@@ -337,8 +337,8 @@
     "name": "Poltergeist",
     "familyId": "spirit_companion",
     "tier": 2,
-    "description": "A restless, unseen spirit that rattles doors and knocks objects loose, more prankster than threat.",
-    "icon": "/images/items/xxx.png",
+    "description": "A bronze poltergeist with rattling chains, flickering edges, and a mischievous spectral shove.",
+    "icon": "/images/items/spirit_companion_t2.png",
     "carryCapacity": 6
   },
   {
@@ -346,8 +346,8 @@
     "name": "Ancestral Shade",
     "familyId": "spirit_companion",
     "tier": 3,
-    "description": "The translucent form of a forebear, watching over its bloodline and murmuring half-remembered warnings.",
-    "icon": "/images/items/xxx.png",
+    "description": "A silver ancestral shade with dignified robes of mist and a gentle guardian's gaze.",
+    "icon": "/images/items/spirit_companion_t3.png",
     "carryCapacity": 9
   },
   {
@@ -355,8 +355,8 @@
     "name": "Banshee",
     "familyId": "spirit_companion",
     "tier": 4,
-    "description": "A wailing spirit whose cry rises before danger finds its charge, mourning deaths not yet come.",
-    "icon": "/images/items/xxx.png",
+    "description": "A gold-lit banshee with flowing ethereal hair, sharp mournful beauty, and stormy funeral air.",
+    "icon": "/images/items/spirit_companion_t4.png",
     "carryCapacity": 12
   },
   {
@@ -364,8 +364,8 @@
     "name": "Revenant",
     "familyId": "spirit_companion",
     "tier": 5,
-    "description": "A vengeful ancestor returned from the grave, standing between its descendant and any who'd harm them.",
-    "icon": "/images/items/xxx.png",
+    "description": "A star-metal revenant with cracked armor, ghost-fire seams, and an unyielding undeath.",
+    "icon": "/images/items/spirit_companion_t5.png",
     "carryCapacity": 15
   },
   {
@@ -373,8 +373,8 @@
     "name": "Lich",
     "familyId": "spirit_companion",
     "tier": 6,
-    "description": "An undead sorcerer of terrible age, bound not by fear but by an old debt, lending its master centuries of stolen power.",
-    "icon": "/images/items/xxx.png",
+    "description": "A regal lich with a crown of bone and gold, skeletal poise, and a throne-born aura of cold sorcery.",
+    "icon": "/images/items/spirit_companion_t6.png",
     "carryCapacity": 18
   }
 ]

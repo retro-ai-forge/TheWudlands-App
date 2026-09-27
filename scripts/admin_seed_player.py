@@ -36,16 +36,16 @@ from backend.db import get_database  # noqa: E402
 # Configuration
 # ---------------------------------------------------------------------------
 
-PLAYER_ADDRESS = "1sFxBUESH2ztJzRFvP4s7Ehc8Sj8sFxpMxgA985yud1Yz34"
+PLAYER_ADDRESS = "15wrCg3UKrzKsHnye4Q6HTiRPSVRRmZV7myDPjPPNorNBDq1"
 RAW_MATERIAL_QTY = 3000
 
-DROP_BLUEPRINTS = False
+DROP_BLUEPRINTS = True
 DROP_MATERIALS  = False    # raw materials → crafting.resources
-DROP_ITEMS      = True   # instance items + vault.itemBalances (armor, weapons, food, potions, …)
+DROP_ITEMS      = False   # instance items + vault.itemBalances (armor, weapons, food, potions, …)
 DROP_TOOLS      = False   # flat crafting tools (anvil, furnace, workbench, …)
 
 TIER_RANDOM     = False  # True = pick a random tier, overrides TIER_LVL
-TIER_LVL        = 6      # tier to drop when TIER_RANDOM is False (1–6)
+TIER_LVL        = 3      # tier to drop when TIER_RANDOM is False (1–6)
 
 # ---------------------------------------------------------------------------
 

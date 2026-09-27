@@ -120,12 +120,28 @@ def _load_backpack_capacity() -> dict[str, int]:
 # family-level one, so it needs its own lookup separate from ITEM_FAMILIES_BY_ID.
 BACKPACK_CAPACITY_BY_ID: dict[str, int] = _load_backpack_capacity()
 
-_GATHERING_BONUSES_PATH = _DATA_DIR / "raw-material-gathering-bonuses.json"
+
+def _load_saddlepack_capacity() -> dict[str, int]:
+    data = json.loads(_BACKPACK_TIERS_PATH.read_text())
+    return {row["id"]: row["capacitySlots"] for row in data if row.get("familyId") == "saddlepack"}
+
+
+SADDLEPACK_CAPACITY_BY_ID: dict[str, int] = _load_saddlepack_capacity()
+
+
+def _load_cart_capacity() -> dict[str, int]:
+    data = json.loads(_BACKPACK_TIERS_PATH.read_text())
+    return {row["id"]: row["capacitySlots"] for row in data if row.get("familyId") == "cart"}
+
+
+CART_CAPACITY_BY_ID: dict[str, int] = _load_cart_capacity()
+
+_GATHERING_BONUSES_PATH = _DATA_DIR / "gathering-bonuses-raw-material.json"
 
 
 def _load_gathering_bonuses_by_item() -> dict[str, tuple[str, ...]]:
     """
-    raw-material-gathering-bonuses.json is keyed the other way around (raw
+    gathering-bonuses-raw-material.json is keyed the other way around (raw
     material -> which item families help gather it) - inverted here into
     item family -> which raw materials it helps gather, since that's the
     direction the item detail popup actually needs (looking up one item's
@@ -179,8 +195,23 @@ FINAL_ITEM_ROWS_BY_FAMILY_TIER, FAMILY_ID_BY_FINAL_ITEM_ID = _load_final_catalog
 
 
 def resolve_output_row(family_id: str, tier: int) -> Optional[dict]:
-    """Concrete {"id", "name"} for crafting `family_id` at `tier`, or None."""
-    return FINAL_ITEM_ROWS_BY_FAMILY_TIER.get((family_id, tier))
+    """Concrete {"id", "name"} for crafting `family_id` at `tier`, or None.
+
+    Checked against the 9 "final" catalog files first, then - since a
+    dual-cataloged family (arrow, bolt, oil, and any other
+    item-inventory-properties.json family whose tiered rows actually live
+    in base-processed.json) can be referenced as a consumed "final"
+    ingredient elsewhere (e.g. written_scroll's own parchment/ink) even
+    though it was never in one of those 9 files to begin with - the
+    processed-resource catalog, same as backend.players._resolve_recipe_output
+    already does for a recipe's own OUTPUT."""
+    row = FINAL_ITEM_ROWS_BY_FAMILY_TIER.get((family_id, tier))
+    if row is not None:
+        return row
+    from backend.processed_catalog import PROCESSED_RESOURCE_ITEMS_BY_FAMILY_TIER
+
+    item = PROCESSED_RESOURCE_ITEMS_BY_FAMILY_TIER.get((family_id, tier))
+    return {"id": item.id, "name": item.name} if item else None
 
 
 @dataclass(frozen=True)
@@ -224,7 +255,7 @@ class ItemCatalogEntry:
     # Family-level (item-inventory-properties.json's own "backpackable") -
     # whether a "move to backpack" action makes sense for this family at all.
     backpackable: bool
-    # Family-level (raw-material-gathering-bonuses.json, inverted - see
+    # Family-level (gathering-bonuses-raw-material.json, inverted - see
     # GATHERING_BONUSES_BY_ITEM) - raw materials this family grants a
     # foraging/gathering bonus for, e.g. ("ore", "stone", "crystal") for a
     # pickaxe. Empty for the majority of families that aren't a gathering
@@ -423,23 +454,198 @@ def has_saddlepack_available(character: dict) -> bool:
 
 def backpack_capacity(character: dict) -> int:
     """
-    Total backpack slot ceiling for one character - 0 with nothing to carry
-    it in (a character can't stash anything in a "backpack" that doesn't
-    physically exist), otherwise base carry capacity from might/endurance
-    plus whichever "backpack"-family instance is currently worn OR sitting
-    in camp (see has_backpack_available) - the biggest one, if more than
-    one of either counts.
+    Total backpack slot ceiling - 0 when no backpack is available,
+    otherwise purely the tier capacity from the best equipped/camped
+    backpack (fixed per tier, no character-stat base).
     """
     if not has_backpack_available(character):
         return 0
 
-    bonus = 0
+    cap = 0
     for instance in character.get("gear", {}).get("items", []):
         if instance.get("location") in ("body", "camp") and instance.get("familyId") == "backpack":
-            bonus = max(bonus, BACKPACK_CAPACITY_BY_ID.get(instance["itemId"], 0))
+            cap = max(cap, BACKPACK_CAPACITY_BY_ID.get(instance["itemId"], 0))
 
+    return cap
+
+
+def saddlepack_slots_used(character: dict) -> int:
+    """
+    Total saddlepack slots currently occupied - mirrors backpack_slots_used
+    but for location:"saddlepack" items, resources, and itemBalances.
+    """
+    from backend.processed_catalog import PROCESSED_RESOURCE_ITEMS_BY_ID
+    from backend.resources_catalog import RESOURCE_ITEMS_BY_ID
+
+    total = 0
+    gear = character.get("gear", {})
+
+    for instance in gear.get("items", []):
+        if instance.get("location") == "saddlepack":
+            total += slot_cost_for_family(instance["familyId"])
+
+    for resource_id, qty in gear.get("resources", {}).get("saddlepack", {}).items():
+        if resource_id in RESOURCE_ITEMS_BY_ID:
+            stack_size = RAW_STACK_SIZE
+        elif resource_id in PROCESSED_RESOURCE_ITEMS_BY_ID:
+            stack_size = PROCESSED_STACK_SIZE
+        else:
+            stack_size = TINY_STACK_SIZE
+        total += math.ceil(qty / stack_size)
+
+    for item_id, qty in gear.get("itemBalances", {}).get("saddlepack", {}).items():
+        stack_size, slot_cost = resolve_item_balance_stack(item_id)
+        total += math.ceil(qty / stack_size) * slot_cost
+
+    return total
+
+
+def saddlepack_capacity(character: dict) -> int:
+    """
+    Total saddlepack slot ceiling - 0 when no saddlepack is available,
+    otherwise purely the tier bonus from the best equipped/camped
+    saddlepack (no character-stat base, unlike backpack).
+    """
+    if not has_saddlepack_available(character):
+        return 0
+
+    bonus = 0
+    for instance in character.get("gear", {}).get("items", []):
+        if instance.get("location") in ("body", "camp") and instance.get("familyId") == "saddlepack":
+            bonus = max(bonus, SADDLEPACK_CAPACITY_BY_ID.get(instance["itemId"], 0))
+
+    return bonus
+
+
+def cart_slots_used(character: dict) -> int:
+    """
+    Total cart slots currently occupied - mirrors backpack_slots_used
+    but for location:"cart" items, resources, and itemBalances.
+    """
+    from backend.processed_catalog import PROCESSED_RESOURCE_ITEMS_BY_ID
+    from backend.resources_catalog import RESOURCE_ITEMS_BY_ID
+
+    total = 0
+    gear = character.get("gear", {})
+
+    for instance in gear.get("items", []):
+        if instance.get("location") == "cart":
+            total += slot_cost_for_family(instance["familyId"])
+
+    for resource_id, qty in gear.get("resources", {}).get("cart", {}).items():
+        if resource_id in RESOURCE_ITEMS_BY_ID:
+            stack_size = RAW_STACK_SIZE
+        elif resource_id in PROCESSED_RESOURCE_ITEMS_BY_ID:
+            stack_size = PROCESSED_STACK_SIZE
+        else:
+            stack_size = TINY_STACK_SIZE
+        total += math.ceil(qty / stack_size)
+
+    for item_id, qty in gear.get("itemBalances", {}).get("cart", {}).items():
+        stack_size, slot_cost = resolve_item_balance_stack(item_id)
+        total += math.ceil(qty / stack_size) * slot_cost
+
+    return total
+
+
+def has_cart_equipped(character: dict) -> bool:
+    """Whether this character has a cart-family instance currently worn
+    (location:"body") on the mount's Hitch slot."""
+    return any(
+        instance.get("location") == "body" and instance.get("familyId") == "cart"
+        for instance in character.get("gear", {}).get("items", [])
+    )
+
+
+def has_cart_available(character: dict) -> bool:
+    """Whether this character has a cart-family instance equipped on the
+    mount's Hitch slot (location:"body") or sitting in camp (location:
+    "camp"). Same one-at-a-time pattern as backpack/saddlepack."""
+    return any(
+        instance.get("location") in ("body", "camp") and instance.get("familyId") == "cart"
+        for instance in character.get("gear", {}).get("items", [])
+    )
+
+
+def cart_capacity(character: dict) -> int:
+    """
+    Total cart slot ceiling - 0 when no cart is available, otherwise
+    purely the tier bonus from the best equipped/camped cart.
+    """
+    if not has_cart_available(character):
+        return 0
+
+    bonus = 0
+    for instance in character.get("gear", {}).get("items", []):
+        if instance.get("location") in ("body", "camp") and instance.get("familyId") == "cart":
+            bonus = max(bonus, CART_CAPACITY_BY_ID.get(instance["itemId"], 0))
+
+    return bonus
+
+
+ENCUMBERED_THRESHOLD = 1.3
+
+
+def carry_weight_capacity(character: dict) -> int:
+    """
+    How much total weight this character can carry based on attributes.
+    Body-worn gear + backpack (the item itself) + backpack contents all
+    count against this.  Saddlepack rides on the mount and is excluded.
+    """
     attr = character.get("attr", {})
     might = attr.get("migh", 1)
     endurance = attr.get("endu", 1)
-    base = 10 + (might + endurance) // 3
-    return base + bonus
+    return 10 + (might + endurance) // 3
+
+
+def carry_weight_used(character: dict) -> int:
+    """
+    Total slot-weight the character is personally carrying: everything
+    worn on body + the backpack item itself + everything packed inside
+    the backpack (items, itemBalances, resources).  Saddlepack and its
+    contents are on the mount and excluded.
+    """
+    from backend.processed_catalog import PROCESSED_RESOURCE_ITEMS_BY_ID
+    from backend.resources_catalog import RESOURCE_ITEMS_BY_ID
+
+    total = 0
+    gear = character.get("gear", {})
+
+    for instance in gear.get("items", []):
+        loc = instance.get("location")
+        if loc == "body":
+            total += slot_cost_for_family(instance["familyId"])
+        elif loc == "backpack":
+            total += slot_cost_for_family(instance["familyId"])
+
+    for resource_id, qty in gear.get("resources", {}).get("backpack", {}).items():
+        if resource_id in RESOURCE_ITEMS_BY_ID:
+            stack_size = RAW_STACK_SIZE
+        elif resource_id in PROCESSED_RESOURCE_ITEMS_BY_ID:
+            stack_size = PROCESSED_STACK_SIZE
+        else:
+            stack_size = TINY_STACK_SIZE
+        total += math.ceil(qty / stack_size)
+
+    for item_id, qty in gear.get("itemBalances", {}).get("backpack", {}).items():
+        stack_size, slot_cost = resolve_item_balance_stack(item_id)
+        total += math.ceil(qty / stack_size) * slot_cost
+
+    return total
+
+
+def encumbrance_state(character: dict) -> str:
+    """
+    "normal"     — weight <= capacity
+    "encumbered" — weight <= 130% capacity (allowed, penalised)
+    "immobile"   — weight > 130% capacity (cannot move)
+    """
+    cap = carry_weight_capacity(character)
+    used = carry_weight_used(character)
+    if cap <= 0:
+        return "immobile" if used > 0 else "normal"
+    if used <= cap:
+        return "normal"
+    if used <= cap * ENCUMBERED_THRESHOLD:
+        return "encumbered"
+    return "immobile"
