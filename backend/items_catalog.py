@@ -604,12 +604,21 @@ def carry_weight_capacity(character: dict) -> int:
     return 20 + (might + endurance) // 3
 
 
+_CARRY_WEIGHT_EXCLUDED_SLOTS = frozenset({
+    "Mount", "Companion",
+    "Bridle", "Saddle", "Barding", "Saddlepack", "Hitch",
+    "Charm", "Rune",
+})
+
+
 def carry_weight_used(character: dict) -> int:
     """
     Total slot-weight the character is personally carrying: everything
     worn on body + the backpack item itself + everything packed inside
-    the backpack (items, itemBalances, resources).  Saddlepack and its
-    contents are on the mount and excluded.
+    the backpack (items, itemBalances, resources).  Excluded from the
+    count: mount/companion slots and their sub-slots (Bridle, Saddle,
+    Barding, Saddlepack, Hitch, Charm, Rune), and anything
+    stored in saddlepack/cart locations.
     """
     from backend.processed_catalog import PROCESSED_RESOURCE_ITEMS_BY_ID
     from backend.resources_catalog import RESOURCE_ITEMS_BY_ID
@@ -620,6 +629,8 @@ def carry_weight_used(character: dict) -> int:
     for instance in gear.get("items", []):
         loc = instance.get("location")
         if loc == "body":
+            if _CARRY_WEIGHT_EXCLUDED_SLOTS.intersection(instance.get("slotRef", [])):
+                continue
             total += slot_cost_for_family(instance["familyId"])
         elif loc == "backpack":
             total += slot_cost_for_family(instance["familyId"])
