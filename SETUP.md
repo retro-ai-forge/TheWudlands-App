@@ -36,6 +36,7 @@ npm run dev
 If you are on Linux and need to compile/install Python versions via `pyenv`, you must first install the required build dependencies:
 ```bash
 sudo apt update && sudo apt install -y build-essential libssl-dev zlib1g-dev libbz2-dev libreadline-dev libsqlite3-dev wget curl llvm libncursesw5-dev xz-utils tk-dev libxml2-dev libxmlsec1-dev libffi-dev liblzma-dev
+
 ```
 
 ### Pyenv Environment Override (If using system-wide pyenv)
@@ -91,6 +92,7 @@ pyenv install 3.11.4
    pip install -r requirements.txt
    npm install
    rav run build
+   
    ```
 
 ## Create .env file for email credentials
@@ -118,6 +120,19 @@ Here is how to resolve this step-by-step:
 
 **Step 1: Enable the IAM API**
 ```bash
+# Install via apt (recommended for Ubuntu)
+sudo apt install -y apt-transport-https ca-certificates gnupg curl
+
+# Add Google Cloud repo
+curl https://packages.cloud.google.com/apt/doc/apt-key.gpg | sudo gpg --dearmor -o /usr/share/keyrings/cloud.google.gpg
+echo "deb [signed-by=/usr/share/keyrings/cloud.google.gpg] https://packages.cloud.google.com/apt cloud-sdk main" | sudo tee /etc/apt/sources.list.d/google-cloud-sdk.list
+
+# Install
+sudo apt update && sudo apt install -y google-cloud-cli
+
+# Verify
+gcloud --version
+
 gcloud auth login
 
 gcloud services enable iam.googleapis.com \
