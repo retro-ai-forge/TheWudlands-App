@@ -87,10 +87,9 @@ export type SalvageMaterial = {
 export type SalvageCondition = "new" | "used" | "damaged";
 type SalvagePreview = { materials: SalvageMaterial[]; condition?: SalvageCondition };
 
-/** A worn instance's salvage penalty - mirrors backend.recycling.
- * CONDITION_PERCENT (used keeps 80%, damaged 50%). Display only:
- * recoveredUnits already has it applied server-side, rounded half up once
- * over the whole formula. */
+/** A worn instance&apos;s salvage penalty - mirrors backend.recycling.
+ * CONDITION_PENALTY (used -20pp, damaged -50pp, floored at 0). Display
+ * only: recoveredUnits already has it applied server-side. */
 const SALVAGE_CONDITION_PENALTY: Partial<Record<SalvageCondition, { percent: number; label: string }>> = {
   used: { percent: 20, label: "used" },
   damaged: { percent: 50, label: "dam" },
@@ -102,7 +101,7 @@ const SALVAGE_CONDITION_PENALTY: Partial<Record<SalvageCondition, { percent: num
  * percent. Shared by every salvage view (single item, camp, containers). */
 export function SalvageFormulaLine({ breakdown, condition }: { breakdown: SalvageYield; condition?: SalvageCondition }) {
   const penalty = condition ? SALVAGE_CONDITION_PENALTY[condition] : undefined;
-  const effective = penalty ? Number(((breakdown.total * (100 - penalty.percent)) / 100).toFixed(1)) : breakdown.total;
+  const effective = penalty ? Math.max(breakdown.total - penalty.percent, 0) : breakdown.total;
   return (
     <p className={styles.salvageFormulaLine}>
       {breakdown.base} + {breakdown.skill} skill +{" "}
@@ -1478,7 +1477,7 @@ export function HoldActionPopup({
 // The three discrete condition brackets a quality fraction (current/max)
 // falls into - fixed steps, not a smooth blend. The same cutoffs drive
 // salvage yield server-side (backend.recycling.quality_state/
-// CONDITION_PERCENT: new 100%, used -20%, damaged -50%).
+// CONDITION_PENALTY: new 0, used -20pp, damaged -50pp).
 /** Exported so BodyTab.tsx's equip slots can apply the exact same
  * damaged-tile treatment ItemGrid uses below, rather than duplicating the
  * 10%/50% cutoffs. */
@@ -2224,7 +2223,7 @@ function BackpackSalvagePopup({
       overlayClassName={styles.backpackSalvageOverlay}
       cardClassName={styles.backpackSalvageCard}
       iconClassName={styles.backpackSalvageIcon}
-      label="Hold to unmake ALL"
+      label="Hold to unmake"
       icon="/images/character/chopping_block.png"
       tone="salvage"
       disabled={rows === null || selected.size === 0}

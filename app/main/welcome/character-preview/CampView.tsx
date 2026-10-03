@@ -563,7 +563,7 @@ function ChopBlockPopup({
       overlayClassName={styles.chopBlockOverlay}
       cardClassName={styles.chopBlockCard}
       iconClassName={styles.chopBlockIcon}
-      label="Hold to unmake ALL"
+      label="Hold to unmake"
       icon="/images/character/chopping_block.png"
       tone="salvage"
       disabled={rows === null || selected.size === 0}

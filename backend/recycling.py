@@ -76,11 +76,11 @@ _PROCESSED_ID_BY_FAMILY_TIER: dict[tuple[str, int], str] = {
 # reagent-only intermediates are identified.
 NON_RECOVERABLE_PROCESSED_FAMILIES: frozenset[str] = frozenset({"coal"})
 
-# Salvage yield kept by an item instance's quality state (see
-# quality_state below), in whole percent so the whole yield formula stays
-# integer math - shown in the salvage popup as "-20% used" / "-50% dam"
-# (InventoryTab.tsx's SALVAGE_CONDITION_LABEL).
-CONDITION_PERCENT = {"new": 100, "used": 80, "damaged": 50}
+# Flat percentage-point penalty subtracted from the yield total by an
+# item's quality state (see quality_state below) - shown in the salvage
+# popup as "-20% used" / "-50% dam" (InventoryTab.tsx's
+# SALVAGE_CONDITION_LABEL).  Result is floored at 0.
+CONDITION_PENALTY = {"new": 0, "used": 20, "damaged": 50}
 
 
 def quality_state(quality: int, quality_max: int) -> str:
@@ -383,24 +383,24 @@ def resolve_salvage_preview(
     salvage off the character's own body/backpack (see
     _best_owned_station_tool_tier).
 
-    `condition` ("new"/"used"/"damaged") scales the yield: new = 100%,
-    used = -20%, damaged = -50%. Units, yield% and condition% go through
-    ONE formula with a single half-up rounding at the end (x.5 rounds up,
-    anything below rounds down) - never rounded between steps.
+    `condition` ("new"/"used"/"damaged") subtracts a flat penalty from
+    the yield: new = 0, used = -20pp, damaged = -50pp, floored at 0.
+    Units * effective_yield% are rounded half-up at the end (x.5 rounds
+    up, anything below rounds down) - never rounded between steps.
     """
     if family_id not in _RECIPES_BY_FAMILY:
         raise ValueError(f"Unknown recipe family: {family_id}")
     player_items = player_items or []
-    condition_percent = CONDITION_PERCENT.get(condition, 100)
+    condition_penalty = CONDITION_PENALTY.get(condition, 0)
 
     buckets = _accumulate_recovery(family_id, "processed", count)
 
     results: List[RawMaterialRecovery] = []
     for raw_family, bucket in buckets.items():
         yield_breakdown = resolve_yield(character, player_tools, player_items, raw_family)
-        # total_units * yield% * condition% / 10000, rounded half up -
-        # all-integer, so no float error can tip an exact .5 either way.
-        recovered_units = (bucket.total_units * yield_breakdown.total * condition_percent + 5000) // 10000
+        effective_yield = max(yield_breakdown.total - condition_penalty, 0)
+        # total_units * effective_yield% / 100, rounded half up.
+        recovered_units = (bucket.total_units * effective_yield + 50) // 100
         recovered = _break_into_denominations(recovered_units, bucket.denominations, tier)
         raw_item = RESOURCE_ITEMS_BY_ID.get(_RAW_ID_BY_FAMILY_TIER.get((raw_family, tier)))
         results.append(RawMaterialRecovery(
