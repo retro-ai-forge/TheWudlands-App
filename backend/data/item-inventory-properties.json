@@ -205,7 +205,7 @@
   {
     "familyId": "tent",
     "kind": ["adventuring_gear"],
-    "sizeClass": "light",
+    "sizeClass": "medium",
     "stackSize": 1,
     "needsItemDefinition": false,
     "note": "Utility gear - does not wear out, no durability tracking needed.",
