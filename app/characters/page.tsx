@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import Image from "next/image";
 import styles from "./characters.module.css";
 import { GENDERS, racesByCategory, professionsByCategory, BODY_ATTRIBUTES, SOUL_ATTRIBUTES } from "@/app/lib/characterOptions";
@@ -11,9 +11,9 @@ type BlueprintCategoryItem = { id: string; name: string; tier: number };
 type BlueprintCategoryFamily = { familyId: string; name: string; kind: string; items: BlueprintCategoryItem[] };
 type BlueprintCategoryEntry = { category: string; families: BlueprintCategoryFamily[] };
 
-function getTierIndicator(tier: number): string {
-  const tierIcons = ["", "○", "●", "◉", "✦", "✨", "🌟"];
-  return tierIcons[tier] || "";
+function getTierIndicator(tier: number): React.ReactNode {
+  if (tier < 1 || tier > 6) return null;
+  return <img src={`/icons/t${tier}.png`} alt={`T${tier}`} className={styles.tierIcon} draggable={false} />;
 }
 
 function getKindIcon(kind: string): string {
@@ -317,27 +317,27 @@ export default function Characters() {
                     <td>Item (weapon, armor, shield, special equipment)</td>
                   </tr>
                   <tr>
-                    <td><span className={styles.tierSymbolT1}>○</span></td>
+                    <td>{getTierIndicator(1)}</td>
                     <td>Tier 1 (Mundane)</td>
                   </tr>
                   <tr>
-                    <td><span className={styles.tierSymbolT2}>●</span></td>
+                    <td>{getTierIndicator(2)}</td>
                     <td>Tier 2 (Mundane)</td>
                   </tr>
                   <tr>
-                    <td><span className={styles.tierSymbolT3}>◉</span></td>
+                    <td>{getTierIndicator(3)}</td>
                     <td>Tier 3 (Mundane)</td>
                   </tr>
                   <tr>
-                    <td><span className={styles.tierSymbolT4}>✦</span></td>
+                    <td>{getTierIndicator(4)}</td>
                     <td>Tier 4 (Enchantable)</td>
                   </tr>
                   <tr>
-                    <td><span className={styles.tierSymbolT5}>✨</span></td>
+                    <td>{getTierIndicator(5)}</td>
                     <td>Tier 5 (Enchantable)</td>
                   </tr>
                   <tr>
-                    <td><span className={styles.tierSymbolT6}>🌟</span></td>
+                    <td>{getTierIndicator(6)}</td>
                     <td>Tier 6 (Enchantable)</td>
                   </tr>
                 </tbody>
@@ -377,17 +377,15 @@ export default function Characters() {
                             <table className={styles.legendTable}>
                               <tbody>
                                 {family.items.map((item) => {
-                                  const label = getTierIndicator(item.tier);
                                   const displayName = trimRedundantLastWord(
-                                    label,
+                                    `T${item.tier}`,
                                     item.name.replace("Blueprint: ", ""),
                                     family.name,
                                     family.kind
                                   );
-                                  const tierClass = `tierSymbolT${item.tier}` as keyof typeof styles;
                                   return (
                                     <tr key={item.id}>
-                                      <td><span className={styles[tierClass]}>{label}</span></td>
+                                      <td>{getTierIndicator(item.tier)}</td>
                                       <td>{displayName}</td>
                                     </tr>
                                   );

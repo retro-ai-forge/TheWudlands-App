@@ -49,6 +49,13 @@ export const racesByCategory = RACES.reduce((acc, race) => {
   return acc;
 }, {} as Record<string, typeof RACES>);
 
+export const RACE_GROUP_RIDER_WEIGHT: Record<string, number> = {
+  Common: 4,
+  Mystical: 4,
+  Mixed: 4,
+  Giants: 32,
+};
+
 export const PROFESSIONS = [
   { id: "farmer", name: "Farmer", category: "Rural", description: "Land and soil. Crops, livestock, seasons. You know survival." },
   { id: "herder", name: "Herder", category: "Rural", description: "Goats, sheep, cattle. Wind and weather. Patience and care." },

@@ -213,6 +213,8 @@ class Character:
     # vault to send it back to mid-adventure); while False (safely at
     # base), it goes straight to the player's shared vault instead.
     in_adventure: bool = False
+    adventure_finished: int = 0
+    adventure_run_away: int = 0
 
     def to_dict(self) -> dict:
         return {
@@ -248,4 +250,8 @@ class Character:
             "blueprints": self.blueprints,
             "gear": self.gear,
             "equippedLight": self.equipped_light,
+            "stats": {
+                "adventureFinished": self.adventure_finished,
+                "adventureRunAway": self.adventure_run_away,
+            },
         }

@@ -1,53 +1,5 @@
 [
   {
-    "id": "grappling_hook_1",
-    "name": "Grappling Hook",
-    "familyId": "grappling_hook",
-    "tier": 1,
-    "description": "A rugged hook of hammered copper with three sturdy, rough-forged prongs and a thick rope eyelet.",
-    "icon": "/images/items/grappling_hook_t1.png"
-  },
-  {
-    "id": "grappling_hook_2",
-    "name": "Grappling Hook",
-    "familyId": "grappling_hook",
-    "tier": 2,
-    "description": "An antiqued bronze hook with smooth prongs, a green patina and a loop for easy tying.",
-    "icon": "/images/items/grappling_hook_t2.png"
-  },
-  {
-    "id": "grappling_hook_3",
-    "name": "Grappling Hook",
-    "familyId": "grappling_hook",
-    "tier": 3,
-    "description": "A classic steel hook with three precise claws and a brushed, utilitarian finish.",
-    "icon": "/images/items/grappling_hook_t3.png"
-  },
-  {
-    "id": "grappling_hook_4",
-    "name": "Grappling Hook",
-    "familyId": "grappling_hook",
-    "tier": 4,
-    "description": "A shining silver hook engraved with swirling patterns, its crescent prongs catching the light.",
-    "icon": "/images/items/grappling_hook_t4.png"
-  },
-  {
-    "id": "grappling_hook_5",
-    "name": "Grappling Hook",
-    "familyId": "grappling_hook",
-    "tier": 5,
-    "description": "A gleaming gold hook, ornate and polished, its prongs tipped with filigree.",
-    "icon": "/images/items/grappling_hook_t5.png"
-  },
-  {
-    "id": "grappling_hook_6",
-    "name": "Grappling Hook",
-    "familyId": "grappling_hook",
-    "tier": 6,
-    "description": "An ethereal star metal hook, shimmering with iridescence, its prongs sparking with cosmic energy.",
-    "icon": "/images/items/grappling_hook_t6.png"
-  },
-  {
     "id": "tinderbox_1",
     "name": "Tinderbox",
     "familyId": "tinderbox",
@@ -94,150 +46,6 @@
     "tier": 6,
     "description": "A star metal tinderbox swirling with starlit runes, its striker glowing faintly.",
     "icon": "/images/items/tinderbox_t6.png"
-  },
-  {
-    "id": "shovel_1",
-    "name": "Shovel",
-    "familyId": "shovel",
-    "tier": 1,
-    "description": "A copper-headed spade on a thick oak handle, its blade dented from years of digging.",
-    "icon": "/images/items/shovel_t1.png"
-  },
-  {
-    "id": "shovel_2",
-    "name": "Shovel",
-    "familyId": "shovel",
-    "tier": 2,
-    "description": "A broad bronze-bladed shovel on a mahogany shaft wrapped with bronze bands.",
-    "icon": "/images/items/shovel_t2.png"
-  },
-  {
-    "id": "shovel_3",
-    "name": "Shovel",
-    "familyId": "shovel",
-    "tier": 3,
-    "description": "A heavy-duty steel shovel with a matte blade and sturdy handle, built for hard labor.",
-    "icon": "/images/items/shovel_t3.png"
-  },
-  {
-    "id": "shovel_4",
-    "name": "Shovel",
-    "familyId": "shovel",
-    "tier": 4,
-    "description": "A sleek, gently curved silver shovel, engraved and light in the hand.",
-    "icon": "/images/items/shovel_t4.png"
-  },
-  {
-    "id": "shovel_5",
-    "name": "Shovel",
-    "familyId": "shovel",
-    "tier": 5,
-    "description": "A radiant gold shovel polished to a mirror sheen, its handle capped with fine goldwork.",
-    "icon": "/images/items/shovel_t5.png"
-  },
-  {
-    "id": "shovel_6",
-    "name": "Shovel",
-    "familyId": "shovel",
-    "tier": 6,
-    "description": "A star metal shovel shimmering with cosmic light, blade and shaft swirling with astral patterns.",
-    "icon": "/images/items/shovel_t6.png"
-  },
-  {
-    "id": "crowbar_1",
-    "name": "Crowbar",
-    "familyId": "crowbar",
-    "tier": 1,
-    "description": "A rugged copper crowbar, dulled by age and notched from many adventures.",
-    "icon": "/images/items/crowbar_t1.png"
-  },
-  {
-    "id": "crowbar_2",
-    "name": "Crowbar",
-    "familyId": "crowbar",
-    "tier": 2,
-    "description": "A solid bronze crowbar with a dark patina, its ends shaped for prying.",
-    "icon": "/images/items/crowbar_t2.png"
-  },
-  {
-    "id": "crowbar_3",
-    "name": "Crowbar",
-    "familyId": "crowbar",
-    "tier": 3,
-    "description": "A classic steel crowbar, heavy, cold and reliable, its ends chipped from use.",
-    "icon": "/images/items/crowbar_t3.png"
-  },
-  {
-    "id": "crowbar_4",
-    "name": "Crowbar",
-    "familyId": "crowbar",
-    "tier": 4,
-    "description": "A slender, polished silver crowbar with engravings that catch even faint light.",
-    "icon": "/images/items/crowbar_t4.png"
-  },
-  {
-    "id": "crowbar_5",
-    "name": "Crowbar",
-    "familyId": "crowbar",
-    "tier": 5,
-    "description": "A smoothly curved gold crowbar with finely etched detail along the shaft.",
-    "icon": "/images/items/crowbar_t5.png"
-  },
-  {
-    "id": "crowbar_6",
-    "name": "Crowbar",
-    "familyId": "crowbar",
-    "tier": 6,
-    "description": "A star metal crowbar shimmering with shifting colors, its edges glowing softly in the dark.",
-    "icon": "/images/items/crowbar_t6.png"
-  },
-  {
-    "id": "monster_trap_1",
-    "name": "Monster Trap",
-    "familyId": "monster_trap",
-    "tier": 1,
-    "description": "A crude oxidized copper-jawed trap with thick springs and spikes, green with age.",
-    "icon": "/images/items/monster_trap_t1.png"
-  },
-  {
-    "id": "monster_trap_2",
-    "name": "Monster Trap",
-    "familyId": "monster_trap",
-    "tier": 2,
-    "description": "A solid bronze jaw trap with snaring chains, engraved with warning runes.",
-    "icon": "/images/items/monster_trap_t2.png"
-  },
-  {
-    "id": "monster_trap_3",
-    "name": "Monster Trap",
-    "familyId": "monster_trap",
-    "tier": 3,
-    "description": "A vicious steel bear trap with razor-sharp jaws and reinforced hinges.",
-    "icon": "/images/items/monster_trap_t3.png"
-  },
-  {
-    "id": "monster_trap_4",
-    "name": "Monster Trap",
-    "familyId": "monster_trap",
-    "tier": 4,
-    "description": "An ornate silver trap with engraved fangs, sigils and moon motifs.",
-    "icon": "/images/items/monster_trap_t4.png"
-  },
-  {
-    "id": "monster_trap_5",
-    "name": "Monster Trap",
-    "familyId": "monster_trap",
-    "tier": 5,
-    "description": "A trap of brilliant gold with serrated jaws, glowing with a faint magical aura.",
-    "icon": "/images/items/monster_trap_t5.png"
-  },
-  {
-    "id": "monster_trap_6",
-    "name": "Monster Trap",
-    "familyId": "monster_trap",
-    "tier": 6,
-    "description": "A legendary star metal trap with glowing runes and spikes that shift as if alive.",
-    "icon": "/images/items/monster_trap_t6.png"
   },
   {
     "id": "starlight_catcher_1",
@@ -288,54 +96,6 @@
     "icon": "/images/items/starlight_catcher_t6.png"
   },
   {
-    "id": "manacles_1",
-    "name": "Manacles",
-    "familyId": "manacles",
-    "tier": 1,
-    "description": "Hefty copper cuffs with a green patina, rough-forged links and a simple lock.",
-    "icon": "/images/items/manacles_t1.png"
-  },
-  {
-    "id": "manacles_2",
-    "name": "Manacles",
-    "familyId": "manacles",
-    "tier": 2,
-    "description": "Dark bronze shackles with rounded edges and a sturdy chain, aged but secure.",
-    "icon": "/images/items/manacles_t2.png"
-  },
-  {
-    "id": "manacles_3",
-    "name": "Manacles",
-    "familyId": "manacles",
-    "tier": 3,
-    "description": "Cold, rigid steel manacles with interlocking links and a basic keyhole.",
-    "icon": "/images/items/manacles_t3.png"
-  },
-  {
-    "id": "manacles_4",
-    "name": "Manacles",
-    "familyId": "manacles",
-    "tier": 4,
-    "description": "Shining silver manacles engraved with runes and joined by a luminous chain.",
-    "icon": "/images/items/manacles_t4.png"
-  },
-  {
-    "id": "manacles_5",
-    "name": "Manacles",
-    "familyId": "manacles",
-    "tier": 5,
-    "description": "Ornate gold manacles with filigreed cuffs and a slender, regal chain.",
-    "icon": "/images/items/manacles_t5.png"
-  },
-  {
-    "id": "manacles_6",
-    "name": "Manacles",
-    "familyId": "manacles",
-    "tier": 6,
-    "description": "Star metal manacles glowing with cosmic patterns, their links shimmering with astral light.",
-    "icon": "/images/items/manacles_t6.png"
-  },
-  {
     "id": "whetstone_1",
     "name": "Whetstone",
     "familyId": "whetstone",
@@ -384,294 +144,6 @@
     "icon": "/images/items/whetstone_t6.png"
   },
   {
-    "id": "spyglass_1",
-    "name": "Spyglass",
-    "familyId": "spyglass",
-    "tier": 1,
-    "description": "A simple copper spyglass, tarnished and dented, with cloudy glass.",
-    "icon": "/images/items/spyglass_t1.png"
-  },
-  {
-    "id": "spyglass_2",
-    "name": "Spyglass",
-    "familyId": "spyglass",
-    "tier": 2,
-    "description": "A sturdy bronze spyglass embossed with nautical rings, its lens clear and warm-toned.",
-    "icon": "/images/items/spyglass_t2.png"
-  },
-  {
-    "id": "spyglass_3",
-    "name": "Spyglass",
-    "familyId": "spyglass",
-    "tier": 3,
-    "description": "A matte steel spyglass with a bright, seamless lens.",
-    "icon": "/images/items/spyglass_t3.png"
-  },
-  {
-    "id": "spyglass_4",
-    "name": "Spyglass",
-    "familyId": "spyglass",
-    "tier": 4,
-    "description": "A refined silver spyglass with astral engravings, its glass flecked with moonlight.",
-    "icon": "/images/items/spyglass_t4.png"
-  },
-  {
-    "id": "spyglass_5",
-    "name": "Spyglass",
-    "familyId": "spyglass",
-    "tier": 5,
-    "description": "An elaborate gold spyglass with decorative etching and radiant, clear optics.",
-    "icon": "/images/items/spyglass_t5.png"
-  },
-  {
-    "id": "spyglass_6",
-    "name": "Spyglass",
-    "familyId": "spyglass",
-    "tier": 6,
-    "description": "A star metal spyglass etched with celestial symbols, its enchanted lens seeing far beyond sight.",
-    "icon": "/images/items/spyglass_t6.png"
-  },
-  {
-    "id": "hourglass_1",
-    "name": "Hourglass",
-    "familyId": "hourglass",
-    "tier": 1,
-    "description": "A copper-framed hourglass with cloudy glass and coarse tan sand.",
-    "icon": "/images/items/hourglass_t1.png"
-  },
-  {
-    "id": "hourglass_2",
-    "name": "Hourglass",
-    "familyId": "hourglass",
-    "tier": 2,
-    "description": "A bronze hourglass with thick connectors and burnt-orange sand falling steadily.",
-    "icon": "/images/items/hourglass_t2.png"
-  },
-  {
-    "id": "hourglass_3",
-    "name": "Hourglass",
-    "familyId": "hourglass",
-    "tier": 3,
-    "description": "A crisp steel-framed hourglass with silvery-gray sand falling in perfect measure.",
-    "icon": "/images/items/hourglass_t3.png"
-  },
-  {
-    "id": "hourglass_4",
-    "name": "Hourglass",
-    "familyId": "hourglass",
-    "tier": 4,
-    "description": "An elegant hourglass with slender silver posts and sparkling white sand.",
-    "icon": "/images/items/hourglass_t4.png"
-  },
-  {
-    "id": "hourglass_5",
-    "name": "Hourglass",
-    "familyId": "hourglass",
-    "tier": 5,
-    "description": "A regal gold hourglass with filigreed supports and luminous golden sand.",
-    "icon": "/images/items/hourglass_t5.png"
-  },
-  {
-    "id": "hourglass_6",
-    "name": "Hourglass",
-    "familyId": "hourglass",
-    "tier": 6,
-    "description": "A star metal hourglass etched with cosmic runes, filled with glowing stardust.",
-    "icon": "/images/items/hourglass_t6.png"
-  },
-  {
-    "id": "chalk_1",
-    "name": "Chalk",
-    "familyId": "chalk",
-    "tier": 1,
-    "description": "A coarse, copper-tinged stick of chalk, jagged and sturdy for marking rough stone.",
-    "icon": "/images/items/chalk_t1.png"
-  },
-  {
-    "id": "chalk_2",
-    "name": "Chalk",
-    "familyId": "chalk",
-    "tier": 2,
-    "description": "A smooth, bronze-hued chalk stick speckled with metallic glints.",
-    "icon": "/images/items/chalk_t2.png"
-  },
-  {
-    "id": "chalk_3",
-    "name": "Chalk",
-    "familyId": "chalk",
-    "tier": 3,
-    "description": "A dense, pale gray chalk that draws clean, bright lines.",
-    "icon": "/images/items/chalk_t3.png"
-  },
-  {
-    "id": "chalk_4",
-    "name": "Chalk",
-    "familyId": "chalk",
-    "tier": 4,
-    "description": "A soft, shimmering silver chalk that leaves glowing sigils on any surface.",
-    "icon": "/images/items/chalk_t4.png"
-  },
-  {
-    "id": "chalk_5",
-    "name": "Chalk",
-    "familyId": "chalk",
-    "tier": 5,
-    "description": "A radiant golden chalk whose lines shine faintly like sunbeams on stone.",
-    "icon": "/images/items/chalk_t5.png"
-  },
-  {
-    "id": "chalk_6",
-    "name": "Chalk",
-    "familyId": "chalk",
-    "tier": 6,
-    "description": "A deep blue star chalk with sparks of light inside, leaving glowing celestial trails.",
-    "icon": "/images/items/chalk_t6.png"
-  },
-  {
-    "id": "lock_and_key_1",
-    "name": "Lock & Key",
-    "familyId": "lock_and_key",
-    "tier": 1,
-    "description": "A battered copper lock with a simple warded key, its carvings worn smooth.",
-    "icon": "/images/items/lock_and_key_t1.png"
-  },
-  {
-    "id": "lock_and_key_2",
-    "name": "Lock & Key",
-    "familyId": "lock_and_key",
-    "tier": 2,
-    "description": "A rounded bronze lock with an intricate mechanism and a heavy key on a loop.",
-    "icon": "/images/items/lock_and_key_t2.png"
-  },
-  {
-    "id": "lock_and_key_3",
-    "name": "Lock & Key",
-    "familyId": "lock_and_key",
-    "tier": 3,
-    "description": "A robust matte steel lock with an angular key, cold and reliable.",
-    "icon": "/images/items/lock_and_key_t3.png"
-  },
-  {
-    "id": "lock_and_key_4",
-    "name": "Lock & Key",
-    "familyId": "lock_and_key",
-    "tier": 4,
-    "description": "A filigreed silver lock engraved with glyphs, with a sparkling skeleton key.",
-    "icon": "/images/items/lock_and_key_t4.png"
-  },
-  {
-    "id": "lock_and_key_5",
-    "name": "Lock & Key",
-    "familyId": "lock_and_key",
-    "tier": 5,
-    "description": "An ornate gold lock carved with vines, its key shaped like a tiny scepter.",
-    "icon": "/images/items/lock_and_key_t5.png"
-  },
-  {
-    "id": "lock_and_key_6",
-    "name": "Lock & Key",
-    "familyId": "lock_and_key",
-    "tier": 6,
-    "description": "An enchanted star metal lock swirling with stellar designs, its key pulsing with cosmic light.",
-    "icon": "/images/items/lock_and_key_t6.png"
-  },
-  {
-    "id": "iron_spikes_1",
-    "name": "Iron Spikes",
-    "familyId": "iron_spikes",
-    "tier": 1,
-    "description": "A bundle of rugged, hand-forged copper-tipped spikes for climbing and anchoring gear.",
-    "icon": "/images/items/iron_spikes_t1.png"
-  },
-  {
-    "id": "iron_spikes_2",
-    "name": "Iron Spikes",
-    "familyId": "iron_spikes",
-    "tier": 2,
-    "description": "A bundle of bronze-plated spikes with a greenish patina, sharp and reliable on stone.",
-    "icon": "/images/items/iron_spikes_t2.png"
-  },
-  {
-    "id": "iron_spikes_3",
-    "name": "Iron Spikes",
-    "familyId": "iron_spikes",
-    "tier": 3,
-    "description": "A bundle of classic steel spikes, built for mountain climbs and dungeon delving.",
-    "icon": "/images/items/iron_spikes_t3.png"
-  },
-  {
-    "id": "iron_spikes_4",
-    "name": "Iron Spikes",
-    "familyId": "iron_spikes",
-    "tier": 4,
-    "description": "A bundle of finely tapered silver spikes engraved with warding runes.",
-    "icon": "/images/items/iron_spikes_t4.png"
-  },
-  {
-    "id": "iron_spikes_5",
-    "name": "Iron Spikes",
-    "familyId": "iron_spikes",
-    "tier": 5,
-    "description": "A bundle of bright gold spikes, each head marked with a sunburst.",
-    "icon": "/images/items/iron_spikes_t5.png"
-  },
-  {
-    "id": "iron_spikes_6",
-    "name": "Iron Spikes",
-    "familyId": "iron_spikes",
-    "tier": 6,
-    "description": "A bundle of star metal spikes shimmering with celestial light, their tips glowing.",
-    "icon": "/images/items/iron_spikes_t6.png"
-  },
-  {
-    "id": "chain_1",
-    "name": "Chain",
-    "familyId": "chain",
-    "tier": 1,
-    "description": "A length of sturdy copper chain with thick links mottled green with age.",
-    "icon": "/images/items/chain_t1.png"
-  },
-  {
-    "id": "chain_2",
-    "name": "Chain",
-    "familyId": "chain",
-    "tier": 2,
-    "description": "A heavy bronze chain with rounded links and subtle runic patterns.",
-    "icon": "/images/items/chain_t2.png"
-  },
-  {
-    "id": "chain_3",
-    "name": "Chain",
-    "familyId": "chain",
-    "tier": 3,
-    "description": "A robust steel chain with precisely forged, interlocking links.",
-    "icon": "/images/items/chain_t3.png"
-  },
-  {
-    "id": "chain_4",
-    "name": "Chain",
-    "familyId": "chain",
-    "tier": 4,
-    "description": "An elegant silver chain with glimmering links engraved with protective glyphs.",
-    "icon": "/images/items/chain_t4.png"
-  },
-  {
-    "id": "chain_5",
-    "name": "Chain",
-    "familyId": "chain",
-    "tier": 5,
-    "description": "An opulent gold chain, bright and beautifully linked, as decorative as it is secure.",
-    "icon": "/images/items/chain_t5.png"
-  },
-  {
-    "id": "chain_6",
-    "name": "Chain",
-    "familyId": "chain",
-    "tier": 6,
-    "description": "An enchanted star metal chain whose links pulse with cosmic light and swirling stardust.",
-    "icon": "/images/items/chain_t6.png"
-  },
-  {
     "id": "waterskin_1",
     "name": "Deer Waterskin",
     "familyId": "waterskin",
@@ -718,102 +190,6 @@
     "tier": 6,
     "description": "A magnificent phoenix-embossed waterskin with a star metal cap swirling with magical color.",
     "icon": "/images/items/waterskin_t6.png"
-  },
-  {
-    "id": "rope_1",
-    "name": "Rope",
-    "familyId": "rope",
-    "tier": 1,
-    "description": "A rugged coil of natural fiber rope spun with copper thread, a little frayed but strong.",
-    "icon": "/images/items/rope_t1.png"
-  },
-  {
-    "id": "rope_2",
-    "name": "Rope",
-    "familyId": "rope",
-    "tier": 2,
-    "description": "A bronze-hued rope braided with fine metallic fibers for extra strength.",
-    "icon": "/images/items/rope_t2.png"
-  },
-  {
-    "id": "rope_3",
-    "name": "Rope",
-    "familyId": "rope",
-    "tier": 3,
-    "description": "A heavy gray rope with steel wire twisted through its core.",
-    "icon": "/images/items/rope_t3.png"
-  },
-  {
-    "id": "rope_4",
-    "name": "Rope",
-    "familyId": "rope",
-    "tier": 4,
-    "description": "A gleaming silver rope, soft yet immensely strong and resistant to magical wear.",
-    "icon": "/images/items/rope_t4.png"
-  },
-  {
-    "id": "rope_5",
-    "name": "Rope",
-    "familyId": "rope",
-    "tier": 5,
-    "description": "A dazzling rope braided with pure gold filament, nearly unbreakable.",
-    "icon": "/images/items/rope_t5.png"
-  },
-  {
-    "id": "rope_6",
-    "name": "Rope",
-    "familyId": "rope",
-    "tier": 6,
-    "description": "A star metal rope woven with celestial fibers that spark with faint cosmic light.",
-    "icon": "/images/items/rope_t6.png"
-  },
-  {
-    "id": "net_1",
-    "name": "Net",
-    "familyId": "net",
-    "tier": 1,
-    "description": "A coarse fisher's net knotted from hemp and copper wire, good for snaring small prey.",
-    "icon": "/images/items/net_t1.png"
-  },
-  {
-    "id": "net_2",
-    "name": "Net",
-    "familyId": "net",
-    "tier": 2,
-    "description": "A supple bronze-fibered net with knots reinforced by burnished beads.",
-    "icon": "/images/items/net_t2.png"
-  },
-  {
-    "id": "net_3",
-    "name": "Net",
-    "familyId": "net",
-    "tier": 3,
-    "description": "A finely woven steel mesh net, heavy, cold and durable.",
-    "icon": "/images/items/net_t3.png"
-  },
-  {
-    "id": "net_4",
-    "name": "Net",
-    "familyId": "net",
-    "tier": 4,
-    "description": "A lightweight silver mesh net that glints with every movement and resists magic.",
-    "icon": "/images/items/net_t4.png"
-  },
-  {
-    "id": "net_5",
-    "name": "Net",
-    "familyId": "net",
-    "tier": 5,
-    "description": "A bright net of golden thread, soft in the hand but unyielding when cast.",
-    "icon": "/images/items/net_t5.png"
-  },
-  {
-    "id": "net_6",
-    "name": "Net",
-    "familyId": "net",
-    "tier": 6,
-    "description": "A whisper-thin star metal net that glows like a constellation in the dark.",
-    "icon": "/images/items/net_t6.png"
   },
   {
     "id": "bedroll_1",
@@ -910,54 +286,6 @@
     "tier": 6,
     "description": "A midnight-blue tent laced with star metal that glows softly under the stars.",
     "icon": "/images/items/tent_t6.png"
-  },
-  {
-    "id": "merchants_scale_1",
-    "name": "Merchant's Scale",
-    "familyId": "merchants_scale",
-    "tier": 1,
-    "description": "A set of copper scales dulled by years of barter.",
-    "icon": "/images/items/merchants_scale_t1.png"
-  },
-  {
-    "id": "merchants_scale_2",
-    "name": "Merchant's Scale",
-    "familyId": "merchants_scale",
-    "tier": 2,
-    "description": "A set of bronze scales with a patina worn smooth by trading hands.",
-    "icon": "/images/items/merchants_scale_t2.png"
-  },
-  {
-    "id": "merchants_scale_3",
-    "name": "Merchant's Scale",
-    "familyId": "merchants_scale",
-    "tier": 3,
-    "description": "A set of iron scales, burnished from decades of trade.",
-    "icon": "/images/items/merchants_scale_t3.png"
-  },
-  {
-    "id": "merchants_scale_4",
-    "name": "Merchant's Scale",
-    "familyId": "merchants_scale",
-    "tier": 4,
-    "description": "A set of gleaming silver scales etched with merchant runes.",
-    "icon": "/images/items/merchants_scale_t4.png"
-  },
-  {
-    "id": "merchants_scale_5",
-    "name": "Merchant's Scale",
-    "familyId": "merchants_scale",
-    "tier": 5,
-    "description": "A set of brilliant gold scales, each pan embossed with a coin motif.",
-    "icon": "/images/items/merchants_scale_t5.png"
-  },
-  {
-    "id": "merchants_scale_6",
-    "name": "Merchant's Scale",
-    "familyId": "merchants_scale",
-    "tier": 6,
-    "description": "A set of iridescent star metal scales shimmering with celestial light.",
-    "icon": "/images/items/merchants_scale_t6.png"
   },
   {
     "id": "sparrow_quill",
@@ -1102,5 +430,299 @@
     "tier": 6,
     "icon": "/images/items/ink_t6.png",
     "description": "A star-metal vial of shifting rainbow ink, iridescent and impossible, swirling with all colors at once."
+  },
+  {
+    "id": "backpack_1",
+    "name": "Bindle Backpack",
+    "familyId": "backpack",
+    "tier": 1,
+    "capacitySlots": 4,
+    "description": "A rough sackcloth bundle tied to a stick, made for roadside journeys.",
+    "icon": "/images/items/backpack_t1.png"
+  },
+  {
+    "id": "backpack_2",
+    "name": "Ragged Backpack",
+    "familyId": "backpack",
+    "tier": 2,
+    "capacitySlots": 7,
+    "description": "A patched and mended leather pack with straps worn from years of use.",
+    "icon": "/images/items/backpack_t2.png"
+  },
+  {
+    "id": "backpack_3",
+    "name": "Traveler's Backpack",
+    "familyId": "backpack",
+    "tier": 3,
+    "capacitySlots": 10,
+    "description": "A sturdy canvas pack with brass buckles and handy outer pockets.",
+    "icon": "/images/items/backpack_t3.png"
+  },
+  {
+    "id": "backpack_4",
+    "name": "Journeyman's Backpack",
+    "familyId": "backpack",
+    "tier": 4,
+    "capacitySlots": 14,
+    "description": "A reinforced leather rucksack hung with simple merchant charms.",
+    "icon": "/images/items/backpack_t4.png"
+  },
+  {
+    "id": "backpack_5",
+    "name": "Adventurer's Backpack",
+    "familyId": "backpack",
+    "tier": 5,
+    "capacitySlots": 17,
+    "description": "A well-made backpack with many compartments and gear loops.",
+    "icon": "/images/items/backpack_t5.png"
+  },
+  {
+    "id": "backpack_6",
+    "name": "Explorer's Great Backpack",
+    "familyId": "backpack",
+    "tier": 6,
+    "capacitySlots": 20,
+    "description": "An oversized pack of enchanted, reinforced fibers, made for legendary quests.",
+    "icon": "/images/items/backpack_t6.png"
+  },
+  {
+    "id": "fishing_pole_1",
+    "name": "Fishing Pole",
+    "familyId": "fishing_pole",
+    "tier": 1,
+    "description": "A plain wooden rod with a copper reel and simple twine line.",
+    "icon": "/images/items/fishing_pole_t1.png"
+  },
+  {
+    "id": "fishing_pole_2",
+    "name": "Fishing Pole",
+    "familyId": "fishing_pole",
+    "tier": 2,
+    "description": "An oiled wooden pole with a green-patina bronze reel and braided eyelets.",
+    "icon": "/images/items/fishing_pole_t2.png"
+  },
+  {
+    "id": "fishing_pole_3",
+    "name": "Fishing Pole",
+    "familyId": "fishing_pole",
+    "tier": 3,
+    "description": "A sturdy ash pole with a steel reel and metal rings, built to weather any storm.",
+    "icon": "/images/items/fishing_pole_t3.png"
+  },
+  {
+    "id": "fishing_pole_4",
+    "name": "Fishing Pole",
+    "familyId": "fishing_pole",
+    "tier": 4,
+    "description": "An elegant maple pole inlaid with silver filigree, its line glinting from a sleek silver reel.",
+    "icon": "/images/items/fishing_pole_t4.png"
+  },
+  {
+    "id": "fishing_pole_5",
+    "name": "Fishing Pole",
+    "familyId": "fishing_pole",
+    "tier": 5,
+    "description": "A distinguished yew pole with a gold-banded reel and gold-plated guides.",
+    "icon": "/images/items/fishing_pole_t5.png"
+  },
+  {
+    "id": "fishing_pole_6",
+    "name": "Fishing Pole",
+    "familyId": "fishing_pole",
+    "tier": 6,
+    "description": "A darkwood pole with a star metal reel, shimmering with a faint celestial glow.",
+    "icon": "/images/items/fishing_pole_t6.png"
+  },
+  {
+    "id": "tallow_torch",
+    "name": "Tallow Torch",
+    "familyId": "torch",
+    "tier": 1,
+    "description": "A rough pine torch smeared with thick white tallow and bound with copper wire.",
+    "icon": "/images/items/torch_t1.png"
+  },
+  {
+    "id": "pitch_torch",
+    "name": "Pitch Torch",
+    "familyId": "torch",
+    "tier": 2,
+    "description": "A sturdy oak torch coated in sticky black pitch, banded with bronze at the handle.",
+    "icon": "/images/items/torch_t2.png"
+  },
+  {
+    "id": "oilsoaked_torch",
+    "name": "Oilsoaked Torch",
+    "familyId": "torch",
+    "tier": 3,
+    "description": "A durable torch with an iron head packed with oil-soaked cloth and a rugged metal grip.",
+    "icon": "/images/items/torch_t3.png"
+  },
+  {
+    "id": "everflame_torch",
+    "name": "Everflame Torch",
+    "familyId": "torch",
+    "tier": 4,
+    "description": "A finely carved torch with a silver head and wick, enchanted to burn long.",
+    "icon": "/images/items/torch_t4.png"
+  },
+  {
+    "id": "phoenixfire_torch",
+    "name": "Phoenixfire Torch",
+    "familyId": "torch",
+    "tier": 5,
+    "description": "A gilded torch wrapped in spiraling golden filaments, ready to burst into magical flame.",
+    "icon": "/images/items/torch_t5.png"
+  },
+  {
+    "id": "sunfire_torch",
+    "name": "Sunfire Torch",
+    "familyId": "torch",
+    "tier": 6,
+    "description": "A star metal torch etched with arcane glyphs, its tip shimmering with dormant light.",
+    "icon": "/images/items/torch_t6.png"
+  },
+  {
+    "id": "beeswax_candle",
+    "name": "Beeswax Candle",
+    "familyId": "candle",
+    "tier": 1,
+    "description": "A classic yellow beeswax taper on a copper base, spiraled and faintly translucent.",
+    "icon": "/images/items/candle_t1.png"
+  },
+  {
+    "id": "honeywax_candle",
+    "name": "Honeywax Candle",
+    "familyId": "candle",
+    "tier": 2,
+    "description": "A thick amber candle in a bronze holder, glistening with a drop of honey at its base.",
+    "icon": "/images/items/candle_t2.png"
+  },
+  {
+    "id": "ambercomb_candle",
+    "name": "Ambercomb Candle",
+    "familyId": "candle",
+    "tier": 3,
+    "description": "A translucent orange candle in an iron holder, dotted with tiny bits of honeycomb.",
+    "icon": "/images/items/candle_t3.png"
+  },
+  {
+    "id": "moonlit_candle",
+    "name": "Moonlit Candle",
+    "familyId": "candle",
+    "tier": 4,
+    "description": "A slender pale candle in a gleaming silver holder, glowing softly like moonlight.",
+    "icon": "/images/items/candle_t4.png"
+  },
+  {
+    "id": "starwax_candle",
+    "name": "Starwax Candle",
+    "familyId": "candle",
+    "tier": 5,
+    "description": "A midnight-blue candle of gold-flecked wax on an elegant gold base, glitter swirling inside.",
+    "icon": "/images/items/candle_t5.png"
+  },
+  {
+    "id": "sunwax_candle",
+    "name": "Sunwax Candle",
+    "familyId": "candle",
+    "tier": 6,
+    "description": "A radiant white-gold candle in a star metal holder, celestial motes swirling in its wax.",
+    "icon": "/images/items/candle_t6.png"
+  },
+  {
+    "id": "travelers_glass_lantern",
+    "name": "Traveler's Glass Lantern",
+    "familyId": "glass_lantern",
+    "tier": 1,
+    "description": "A practical copper-framed lantern with simple glass panes and a sturdy wire handle.",
+    "icon": "/images/items/glass_lantern_t1.png"
+  },
+  {
+    "id": "miners_glass_lantern",
+    "name": "Miner's Glass Lantern",
+    "familyId": "glass_lantern",
+    "tier": 2,
+    "description": "A rugged bronze cage lantern with thick glass, made for dark tunnels.",
+    "icon": "/images/items/glass_lantern_t2.png"
+  },
+  {
+    "id": "watchmans_glass_lantern",
+    "name": "Watchman's Glass Lantern",
+    "familyId": "glass_lantern",
+    "tier": 3,
+    "description": "A square steel lantern with reinforced corners and cold, blue-tinted glass.",
+    "icon": "/images/items/glass_lantern_t3.png"
+  },
+  {
+    "id": "beacon_glass_lantern",
+    "name": "Beacon Glass Lantern",
+    "familyId": "glass_lantern",
+    "tier": 4,
+    "description": "An ornate lantern with a filigreed silver frame and crystal-clear glass.",
+    "icon": "/images/items/glass_lantern_t4.png"
+  },
+  {
+    "id": "lighthouse_glass_lantern",
+    "name": "Lighthouse Glass Lantern",
+    "familyId": "glass_lantern",
+    "tier": 5,
+    "description": "A grand gold-framed lantern with faceted glass and decorative anchorwork.",
+    "icon": "/images/items/glass_lantern_t5.png"
+  },
+  {
+    "id": "starlight_glass_lantern",
+    "name": "Starlight Glass Lantern",
+    "familyId": "glass_lantern",
+    "tier": 6,
+    "description": "A lantern of delicate star metal filigree and prismatic glass, glowing with trapped starlight.",
+    "icon": "/images/items/glass_lantern_t6.png"
+  },
+  {
+    "id": "rat_ear_hunters_charm",
+    "name": "Rat Ear Hunter's Charm",
+    "familyId": "hunters_charm",
+    "tier": 1,
+    "description": "A dried rat ear strung on a leather cord with copper wire, carried for luck.",
+    "icon": "/images/items/hunters_charm_t1.png"
+  },
+  {
+    "id": "troll_fat_hunters_charm",
+    "name": "Troll Fat Hunter's Charm",
+    "familyId": "hunters_charm",
+    "tier": 2,
+    "description": "A bronze locket holding a dollop of pale troll fat, its chain marked with crude sigils.",
+    "icon": "/images/items/hunters_charm_t2.png"
+  },
+  {
+    "id": "basilisk_eye_hunters_charm",
+    "name": "Basilisk Eye Hunter's Charm",
+    "familyId": "hunters_charm",
+    "tier": 3,
+    "description": "A steel vial holding a preserved basilisk eye, guarded by sharp iron thorns.",
+    "icon": "/images/items/hunters_charm_t3.png"
+  },
+  {
+    "id": "wyvern_tail_hunters_charm",
+    "name": "Wyvern Tail Hunter's Charm",
+    "familyId": "hunters_charm",
+    "tier": 4,
+    "description": "A shimmering wyvern tail scale on a woven silver chain.",
+    "icon": "/images/items/hunters_charm_t4.png"
+  },
+  {
+    "id": "gorgon_scale_hunters_charm",
+    "name": "Gorgon Scale Hunter's Charm",
+    "familyId": "hunters_charm",
+    "tier": 5,
+    "description": "A golden amulet set with a burnished gorgon scale that radiates protection.",
+    "icon": "/images/items/hunters_charm_t5.png"
+  },
+  {
+    "id": "umbral_heart_hunters_charm",
+    "name": "Umbral Heart Hunter's Charm",
+    "familyId": "hunters_charm",
+    "tier": 6,
+    "description": "A star metal pendant cradling a pulsing, shadowy core of dark cosmic energy.",
+    "icon": "/images/items/hunters_charm_t6.png"
   }
 ]

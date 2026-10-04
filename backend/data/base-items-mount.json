@@ -1,5 +1,305 @@
 [
   {
+    "id": "saddlepack_1",
+    "name": "Worn Saddlebag",
+    "familyId": "saddlepack",
+    "tier": 1,
+    "capacitySlots": 8,
+    "description": "A worn saddlebag of frayed canvas and cracked leather, patched and practical from years on the road.",
+    "icon": "/images/items/saddlepack_t1.png"
+  },
+  {
+    "id": "saddlepack_2",
+    "name": "Leather Saddlepack",
+    "familyId": "saddlepack",
+    "tier": 2,
+    "capacitySlots": 16,
+    "description": "A sturdy leather saddlepack with clean stitching, rolled flaps, and dependable adventurer utility.",
+    "icon": "/images/items/saddlepack_t2.png"
+  },
+  {
+    "id": "saddlepack_3",
+    "name": "Trail Saddlepack",
+    "familyId": "saddlepack",
+    "tier": 3,
+    "capacitySlots": 28,
+    "description": "A trail saddlepack of weathered hide and rope ties, compact and ready for mountain paths and far horizons.",
+    "icon": "/images/items/saddlepack_t3.png"
+  },
+  {
+    "id": "saddlepack_4",
+    "name": "Reinforced Saddlepack",
+    "familyId": "saddlepack",
+    "tier": 4,
+    "capacitySlots": 40,
+    "description": "A reinforced saddlepack of layered leather, silver buckles, and rugged corners built for heavy loads.",
+    "icon": "/images/items/saddlepack_t4.png"
+  },
+  {
+    "id": "saddlepack_5",
+    "name": "Expedition Saddlepack",
+    "familyId": "saddlepack",
+    "tier": 5,
+    "capacitySlots": 56,
+    "description": "An expedition saddlepack of durable canvas, gold-toned hardware, and neatly arranged travel compartments.",
+    "icon": "/images/items/saddlepack_t5.png"
+  },
+  {
+    "id": "saddlepack_6",
+    "name": "Grand Caravan Saddlepack",
+    "familyId": "saddlepack",
+    "tier": 6,
+    "capacitySlots": 80,
+    "description": "A grand caravan saddlepack of ornate leather, star-metal clasps, and spacious panniers fit for a merchant prince.",
+    "icon": "/images/items/saddlepack_t6.png"
+  },
+  {
+    "id": "rope_halter_bridle",
+    "name": "Rope Halter",
+    "familyId": "bridle",
+    "tier": 1,
+    "description": "A rugged rope halter of braided hemp and rawhide knots, sun-faded and trail-worn, with a frontier charm.",
+    "icon": "/images/items/bridle_t1.png"
+  },
+  {
+    "id": "leather_bridle",
+    "name": "Leather Bridle",
+    "familyId": "bridle",
+    "tier": 2,
+    "description": "A supple leather bridle, oiled dark brown and stitched with neat artisan seams, fitted with plain brass buckles.",
+    "icon": "/images/items/bridle_t2.png"
+  },
+  {
+    "id": "studded_bridle",
+    "name": "Studded Bridle",
+    "familyId": "bridle",
+    "tier": 3,
+    "description": "A tough studded bridle of reinforced leather, dotted with iron studs and carved rivets, built for hard riding.",
+    "icon": "/images/items/bridle_t3.png"
+  },
+  {
+    "id": "silvered_bridle",
+    "name": "Silvered Bridle",
+    "familyId": "bridle",
+    "tier": 4,
+    "description": "A polished silvered bridle shimmering with moonlit highlights, delicate filigree clasps, and elegant courtly finish.",
+    "icon": "/images/items/bridle_t4.png"
+  },
+  {
+    "id": "warbridle",
+    "name": "Warbridle",
+    "familyId": "bridle",
+    "tier": 5,
+    "description": "A gold-fitted warbridle of blackened leather and heavy chain links, bristling with spiked fittings and battlefield strength.",
+    "icon": "/images/items/bridle_t5.png"
+  },
+  {
+    "id": "radiant_bridle",
+    "name": "Radiant Bridle",
+    "familyId": "bridle",
+    "tier": 6,
+    "description": "A star-metal radiant bridle with luminous runes, celestial enamel, and a regal halo-like gleam.",
+    "icon": "/images/items/bridle_t6.png"
+  },
+  {
+    "id": "pine_cart",
+    "name": "Pine Cart",
+    "familyId": "cart",
+    "tier": 1,
+    "capacitySlots": 6,
+    "description": "A rugged pine cart with pale grain, copper-plated corners and copper-rimmed wheels. Loaded from camp.",
+    "icon": "/images/items/cart_t1.png"
+  },
+  {
+    "id": "oak_cart",
+    "name": "Oak Cart",
+    "familyId": "cart",
+    "tier": 2,
+    "capacitySlots": 10,
+    "description": "A heavy cart of dark oak with bronze-banded edges and robust bronze wheels. Loaded from camp.",
+    "icon": "/images/items/cart_t2.png"
+  },
+  {
+    "id": "ash_cart",
+    "name": "Ash Cart",
+    "familyId": "cart",
+    "tier": 3,
+    "capacitySlots": 14,
+    "description": "A slender pale ash cart with steel brackets and solid iron wheels. Loaded from camp.",
+    "icon": "/images/items/cart_t3.png"
+  },
+  {
+    "id": "cedar_cart",
+    "name": "Cedar Cart",
+    "familyId": "cart",
+    "tier": 4,
+    "capacitySlots": 18,
+    "description": "A fragrant red cedar cart with silver-capped joints and polished silver wheels. Loaded from camp.",
+    "icon": "/images/items/cart_t4.png"
+  },
+  {
+    "id": "ebony_cart",
+    "name": "Ebony Cart",
+    "familyId": "cart",
+    "tier": 5,
+    "capacitySlots": 22,
+    "description": "A sleek ebony cart with gold-trimmed panels and bright gold wheels. Loaded from camp.",
+    "icon": "/images/items/cart_t5.png"
+  },
+  {
+    "id": "worldroot_cart",
+    "name": "Worldroot Cart",
+    "familyId": "cart",
+    "tier": 6,
+    "capacitySlots": 26,
+    "description": "An ancient worldroot cart entwined with glowing star metal veins and arcane runes. Loaded from camp.",
+    "icon": "/images/items/cart_t6.png"
+  },
+  {
+    "id": "rope_saddle",
+    "name": "Rope Saddle",
+    "familyId": "saddle",
+    "tier": 1,
+    "description": "A hardy rope saddle of braided cord and rawhide lashings, simple, lightweight, and made for long trail rides.",
+    "icon": "/images/items/saddle_t1.png"
+  },
+  {
+    "id": "leather_saddle",
+    "name": "Leather Saddle",
+    "familyId": "saddle",
+    "tier": 2,
+    "description": "A classic leather saddle with burnished panels, stitched edging, and a practical, time-tested riding form.",
+    "icon": "/images/items/saddle_t2.png"
+  },
+  {
+    "id": "cavalry_saddle",
+    "name": "Cavalry Saddle",
+    "familyId": "saddle",
+    "tier": 3,
+    "description": "A disciplined cavalry saddle of reinforced hide and metal fittings, broad-seated and ready for swift mounted charges.",
+    "icon": "/images/items/saddle_t3.png"
+  },
+  {
+    "id": "silver_saddle",
+    "name": "Silver Saddle",
+    "familyId": "saddle",
+    "tier": 4,
+    "description": "A graceful silver saddle with gleaming trim, moonlit clasps, and ornate embossed patterns of noble craft.",
+    "icon": "/images/items/saddle_t4.png"
+  },
+  {
+    "id": "champions_saddle",
+    "name": "Champion's Saddle",
+    "familyId": "saddle",
+    "tier": 5,
+    "description": "A gilded champion's saddle of gold-inlaid leather and banner-stitched armor panels, fit for a victorious knight.",
+    "icon": "/images/items/saddle_t5.png"
+  },
+  {
+    "id": "starweave_saddle",
+    "name": "Starweave Saddle",
+    "familyId": "saddle",
+    "tier": 6,
+    "description": "A shimmering starweave saddle of star-metal thread, astral leather, and faint constellations stitched into the seat.",
+    "icon": "/images/items/saddle_t6.png"
+  },
+  {
+    "id": "leather_barding",
+    "name": "Leather Barding",
+    "familyId": "barding_leather",
+    "tier": 1,
+    "description": "Practical leather barding of layered hides and sturdy straps, weatherproof and dependable for everyday travel.",
+    "icon": "/images/items/barding_leather_t1.png"
+  },
+  {
+    "id": "studded_barding",
+    "name": "Studded Barding",
+    "familyId": "barding_leather",
+    "tier": 2,
+    "description": "Heavy studded barding of thick leather plates, iron bosses, and reinforced seams for added defense.",
+    "icon": "/images/items/barding_leather_t2.png"
+  },
+  {
+    "id": "hardened_barding",
+    "name": "Hardened Barding",
+    "familyId": "barding_leather",
+    "tier": 3,
+    "description": "Hardened barding of boiled leather and metal bracing, dark and formidable with a battle-ready silhouette.",
+    "icon": "/images/items/barding_leather_t3.png"
+  },
+  {
+    "id": "scale_barding",
+    "name": "Scale Barding",
+    "familyId": "barding_leather",
+    "tier": 4,
+    "description": "A silver scale barding of overlapping metal plates, flexibly linked and catching the light like a fish's armor.",
+    "icon": "/images/items/barding_leather_t4.png"
+  },
+  {
+    "id": "dragonhide_barding",
+    "name": "Dragonhide Barding",
+    "familyId": "barding_leather",
+    "tier": 5,
+    "description": "A gilded dragonhide barding with ember-toned scales, embossed ridges, and draconic grandeur.",
+    "icon": "/images/items/barding_leather_t5.png"
+  },
+  {
+    "id": "celestial_hide_barding",
+    "name": "Celestial Hide Barding",
+    "familyId": "barding_leather",
+    "tier": 6,
+    "description": "A star-metal celestial hide barding of pearlescent leather and glowing thread, softly radiant with heavenly sigils.",
+    "icon": "/images/items/barding_leather_t6.png"
+  },
+  {
+    "id": "copper_barding",
+    "name": "Copper Barding",
+    "familyId": "barding_iron",
+    "tier": 1,
+    "description": "Copper barding with warm reddish sheen, hammered plates, and aged patina glowing like sunset metal.",
+    "icon": "/images/items/barding_iron_t1.png"
+  },
+  {
+    "id": "bronze_barding",
+    "name": "Bronze Barding",
+    "familyId": "barding_iron",
+    "tier": 2,
+    "description": "Bronze barding of noble antiquity, broad embossed plates and verdigris accents evoking ancient empires.",
+    "icon": "/images/items/barding_iron_t2.png"
+  },
+  {
+    "id": "iron_barding",
+    "name": "Iron Barding",
+    "familyId": "barding_iron",
+    "tier": 3,
+    "description": "Iron barding of dark forged plates, blunt, practical, and rugged with a stoic battlefield presence.",
+    "icon": "/images/items/barding_iron_t3.png"
+  },
+  {
+    "id": "silver_barding",
+    "name": "Silver Barding",
+    "familyId": "barding_iron",
+    "tier": 4,
+    "description": "Silver barding with mirror-bright segments, elegant edges, and a cool luminous finish worthy of nobility.",
+    "icon": "/images/items/barding_iron_t4.png"
+  },
+  {
+    "id": "gold_barding",
+    "name": "Gold Barding",
+    "familyId": "barding_iron",
+    "tier": 5,
+    "description": "Gold barding richly gilded and opulent, engraved with lavish scrollwork and royal heraldic details.",
+    "icon": "/images/items/barding_iron_t5.png"
+  },
+  {
+    "id": "starmetal_barding",
+    "name": "Star Metal Barding",
+    "familyId": "barding_iron",
+    "tier": 6,
+    "description": "Star metal barding of midnight alloy and twinkling inlays, as if forged from fallen constellations.",
+    "icon": "/images/items/barding_iron_t6.png"
+  },
+  {
     "id": "dog_steed_mount",
     "name": "Riding Dog",
     "familyId": "steed_mount",

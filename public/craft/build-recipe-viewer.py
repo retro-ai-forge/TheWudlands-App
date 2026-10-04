@@ -110,6 +110,7 @@ def build_families() -> dict:
                     "twoHanded": props.get("twoHanded", False),
                     "backpackable": props.get("backpackable", False),
                     "gatheringBonuses": gathering_by_item.get(family_id, []),
+                    "armorClass": props.get("armorClass"),
                 }
             families[family_id] = family
     return families

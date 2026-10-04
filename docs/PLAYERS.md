@@ -72,23 +72,23 @@ Each of the 15 profession categories draws from 3 raw-material resource families
 
 A recipe's blueprint (when it has one) belongs to a category the same way the recipe itself does — whichever category supplies the most of the blueprint's *recipes'* raw-material inputs, with ties counting toward more than one. Metal (ore/wood/sand) and wood (wood/hide/bone) recipes are a deliberate exception: because charcoal (needed to smelt almost every metal item) is itself made from wood, an ore-or-wood-heavy recipe tends to win outright rather than tying, threatening to swallow unrelated tool blueprints (furnace, kiln, wrench, ...) that happen to also use wood or ore. So metal and wood each keep one unified, internal tie-break identity for that math, then split afterward by what the recipe actually produces: blacksmith (**CraftWeapon**), armorer (**CraftArmor**, covering both armor and shields), and tinsmith (**CraftTool**) share metal's win; carpenter (**CraftFurniture**, tools and equipment) and cooper (**CraftWood**, weapons/armor/shields made of wood) share wood's. Metal additionally requires a *sole* win before it's split and counted below (a metal/wood tie with another category, e.g. CraftGlass, isn't attributed to any of the three metal sub-categories) — wood keeps counting ties as before.
 
-| Category | Professions | Resource Families | Blueprints | Recipes | Blueprint Families |
-|-------|---|---|-------:|-------:|---|
-| CraftWeapon | blacksmith | ore, wood, sand | 11 | 11 | axe, battle_axe, dagger, greatsword, mace, quiver, short_sword, sickle, spear, sword, warhammer |
-| CraftGlass | glassblower, jeweler | sand, crystal, ore | 11 | 39 | alchemy_stand, furnace, grinding_stone, kiln, lapidary_bench, magic_staff, meteoric_iron, meteoric_iron_shield, mortar_and_pestle, wand, wrench |
-| CraftWood | cooper | wood, hide, bone | 8 | 52 | bolt_girdle, bow, ebony, ebony_shield, leather, magic_staff, wand, wooden_shield |
-| CraftGarment | leatherworker, tanner, weaver, dyer | skin, fiber, herbs | 8 | 33 | bolt_girdle, bow, chitin, chitin_shield, cloth, fishermans_ration, iron_ration, wooden_shield |
-| CraftArmor | armorer | ore, wood, sand | 6 | 12 | chainmail, darksteel, darksteel_shield, iron, iron_shield, reinforced_wooden_shield |
-| Military | soldier, guard | ore, fiber, monster_part | 6 | 32 | bow, cloth, crossbow, fishermans_ration, iron_ration, wrench |
-| Alchemy | alchemist, poisoner, enchanter | herbs, crystal, monster_part | 6 | 21 | bangers, chitin, chitin_shield, enchanters_table, magic_staff, wand |
-| CraftFurniture | carpenter | wood, hide, bone | 6 | 6 | enchanters_table, merchants_scale, oven, scriptorium, spinning_wheel, workbench |
-| Artists | painter, acrobat, clown, firespitter, storyteller, actor | feather, fiber, bone | 4 | 33 | bow, cloth, fishermans_ration, iron_ration |
-| CraftStone | mason, stonemason, potter | clay, stone, crystal | 4 | 11 | magic_staff, merchants_scale, oven, wand |
-| CraftTool | tinsmith | ore, wood, sand | 3 | 8 | anvil, loom, tanning_rack |
-| Food | baker, butcher, brewmaster, cook | meat, harvest, herbs | 3 | 21 | bangers, fish_chowder, hearty_stew |
-| Aristocratic | scribe, clerk, scholar | reed, feather, skin | 3 | 13 | bolt_girdle, wooden_shield, workbench |
-| Trade | merchant, trader | harvest, stone, monster_part | 2 | 12 | merchants_scale, oven |
-| Rural | farmer, herder, hunter, fisher, miner | hide, meat, harvest, fish | 1 | 16 | smokehouse |
+| Category | Professions | Resource Families | Tools | Tool Families | Items | Item Families |
+|---|---|---|---:|---|---:|---|
+| CraftGarment | dyer, leatherworker, tanner, weaver | skin, fiber, herbs | 6 | kiln, mortar_and_pestle, oven, spinning_wheel, tanning_rack, workbench | 12 | barding_iron, barding_leather, bolt_girdle, bow, bridle, chitin, chitin_shield, cloth, fishermans_ration, iron_ration, saddlepack, wooden_shield |
+| CraftWood | cooper | wood, hide, bone | 5 | lapidary_bench, mortar_and_pestle, spinning_wheel, tanning_rack, workbench | 10 | barding_leather, bolt_girdle, bow, ebony, ebony_shield, leather, magic_staff, saddle, wand, wooden_shield |
+| Military | guard, soldier | ore, fiber, monster_part | 5 | kiln, oven, spinning_wheel, tanning_rack, workbench | 8 | barding_iron, barding_leather, bow, bridle, cloth, crossbow, fishermans_ration, iron_ration |
+| CraftWeapon | blacksmith | ore, wood, sand | 2 | kiln, workbench | 11 | axe, battle_axe, dagger, greatsword, mace, quiver, short_sword, sickle, spear, sword, warhammer |
+| Alchemy | alchemist, enchanter, poisoner | herbs, crystal, monster_part | 5 | lapidary_bench, mortar_and_pestle, oven, tanning_rack, workbench | 6 | bangers, barding_leather, chitin, chitin_shield, magic_staff, wand |
+| CraftGlass | glassblower, jeweler | sand, crystal, ore | 5 | alchemy_stand, grinding_stone, kiln, lapidary_bench, mortar_and_pestle | 4 | magic_staff, meteoric_iron, meteoric_iron_shield, wand |
+| Artists | acrobat, actor, clown, firespitter, painter, storyteller | feather, fiber, bone | 4 | kiln, oven, spinning_wheel, workbench | 5 | bow, bridle, cloth, fishermans_ration, iron_ration |
+| CraftArmor | armorer | ore, wood, sand | 2 | kiln, workbench | 6 | chainmail, darksteel, darksteel_shield, iron, iron_shield, reinforced_wooden_shield |
+| CraftFurniture | carpenter | wood, hide, bone | 6 | kiln, lapidary_bench, oven, scriptorium, spinning_wheel, workbench | 1 | merchants_scale |
+| Rural | farmer, fisher, herder, hunter, miner | hide, meat, harvest, fish | 4 | smokehouse, spinning_wheel, tanning_rack, workbench | 2 | barding_leather, bridle |
+| CraftStone | mason, potter, stonemason | clay, stone, crystal | 3 | kiln, lapidary_bench, oven | 3 | magic_staff, merchants_scale, wand |
+| Aristocratic | clerk, scholar, scribe | reed, feather, skin | 2 | tanning_rack, workbench | 3 | barding_leather, bolt_girdle, wooden_shield |
+| Trade | merchant, trader | harvest, stone, monster_part | 3 | kiln, oven, tanning_rack | 2 | barding_leather, merchants_scale |
+| Food | baker, brewmaster, butcher, cook | meat, harvest, herbs | 2 | mortar_and_pestle, oven | 3 | bangers, fish_chowder, hearty_stew |
+| CraftTool | tinsmith | ore, wood, sand | 2 | kiln, tanning_rack | 2 | *dagger, cloth* |
 
 A blueprint family can appear in more than one row: it belongs to every category tied for the most raw-material hits across its own recipe(s) — except CraftWeapon/CraftArmor/CraftTool, which only count a *sole* metal win, so a blueprint never appears in more than one of those three.
 
@@ -102,7 +102,7 @@ Crafting pays out two kinds of XP, which can land on different professions from 
 
 **Final-item XP** only applies to genuinely blueprint-gated tools and items (not plain processing steps like refining ore or tanning leather): finishing one pays out a flat, tier-scaled assembly bonus — `10% × the item's full raw-material chain × its tier` — on top of whatever raw-material XP was already earned crafting its ingredients. Unlike raw-material XP, this bonus isn't tied to a fixed profession — the character's selected prime profession receives it.
 
-| Item | Blueprint | Raw XP | Raw Materials | T1 XP | T2 XP | T3 XP | T4 XP | T5 XP | T6 XP | T1 Total XP |
+| Item | Blueprint | Raw XP | Raw Materials | T1 Bonus | T2 Bonus | T3 Bonus | T4 Bonus | T5 Bonus | T6 Bonus | T1 Total XP |
 |---|---|---:|---|---:|---:|---:|---:|---:|---:|---:|
 | Ebony Shield | Ebony Shield | 530 | Pigment x240, Herbs x144, Wood x96, Bone x50 | 53 | 106 | 159 | 212 | 265 | 318 | 583 |
 | Chitin Shield | Chitin Shield | 507 | Pigment x240, Herbs x144, Skin x72, Wood x36, Monster Part x15 | 51 | 101 | 152 | 203 | 254 | 304 | 558 |

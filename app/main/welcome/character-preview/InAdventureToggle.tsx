@@ -57,7 +57,7 @@ export function InAdventureToggle({
         method: "PATCH",
         credentials: "include",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ inAdventure: !inAdventure }),
+        body: JSON.stringify({ inAdventure: !inAdventure, reason: "stop" }),
       });
       if (res.ok) {
         const data: RawPlayerData = await res.json();

@@ -85,6 +85,7 @@
     .panel { padding: 10px; }
     .tierButtons { gap: 2px; flex-wrap: wrap; }
     .tierButton { width: 32px; height: 32px; font-size: 12px; }
+    .tierButton .tierIcon { width: 22px; height: 22px; }
     .toggleLabel { font-size: 14px; }
   }
   .panel {
@@ -173,12 +174,7 @@
      a missing tool/blueprint should read as missing regardless of which
      category tag it's combined with. */
   .tag.missing { border-color: #c85555; color: #c85555; }
-  .tierSymbolT1 { font-size: 1.7em; letter-spacing: 0.03em; color: #c07a3a; }
-  .tierSymbolT2 { font-size: 1.7em; letter-spacing: 0.03em; color: #c07a3a; }
-  .tierSymbolT3 { font-size: 1.5em; letter-spacing: 0.03em; color: #c07a3a; }
-  .tierSymbolT4 { font-size: 2em; letter-spacing: -0.15em; color: #aa0000; text-shadow: 0 0 6px rgba(255, 165, 0, 0.7); }
-  .tierSymbolT5 { font-size: 1.2em; letter-spacing: -0.15em; filter: invert(1) hue-rotate(115deg) saturate(0.8) brightness(1.3); text-shadow: 0 0 6px rgba(255, 165, 0, 0.7); }
-  .tierSymbolT6 { font-size: 1.1em; letter-spacing: -0.15em; filter: invert(1) hue-rotate(115deg) saturate(0.8) brightness(1.2); text-shadow: 0 0 6px rgba(255, 165, 0, 0.7); }
+  .tierIcon { width: 1.4em; height: 1.4em; object-fit: contain; vertical-align: middle; image-rendering: auto; }
   .tierButtons {
     display: flex;
     gap: 4px;
@@ -201,12 +197,9 @@
     padding: 0;
     line-height: 1;
   }
-  .tierButton span {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 100%;
-    height: 100%;
+  .tierButton .tierIcon {
+    width: 28px;
+    height: 28px;
   }
   .tierButton:hover {
     border-color: var(--accent);
@@ -331,7 +324,11 @@
     position: absolute;
     top: 10px;
     left: 12px;
-    text-shadow: 0 0 3px #000, 0 0 3px #000;
+    line-height: 0;
+  }
+  .itemPopupTierBadge .tierIcon {
+    width: 36px;
+    height: 36px;
   }
   .itemPopupImg {
     width: 200px;
@@ -445,12 +442,12 @@
       <tr><td><span class="tag cat-processed">processed</span></td><td>crafted from raw</td></tr>
       <tr><td><span class="tag cat-raw">raw</span></td><td>mined/gathered material</td></tr>
       <tr><td><span class="tag missing">missing</span></td><td>missing tool / recipe</td></tr>
-      <tr><td><span class="tierSymbolT1">○</span></td><td>Tier 1 (Mundane)</td></tr>
-      <tr><td><span class="tierSymbolT2">●</span></td><td>Tier 2 (Mundane)</td></tr>
-      <tr><td><span class="tierSymbolT3">◉</span></td><td>Tier 3 (Mundane)</td></tr>
-      <tr><td><span class="tierSymbolT4">✦</span></td><td>Tier 4 (Enchantable)</td></tr>
-      <tr><td><span class="tierSymbolT5">✨</span></td><td>Tier 5 (Enchantable)</td></tr>
-      <tr><td><span class="tierSymbolT6">🌟</span></td><td>Tier 6 (Enchantable)</td></tr>
+      <tr><td><img src="/icons/t1.png" alt="T1" class="tierIcon"></td><td>Tier 1 (Mundane)</td></tr>
+      <tr><td><img src="/icons/t2.png" alt="T2" class="tierIcon"></td><td>Tier 2 (Mundane)</td></tr>
+      <tr><td><img src="/icons/t3.png" alt="T3" class="tierIcon"></td><td>Tier 3 (Mundane)</td></tr>
+      <tr><td><img src="/icons/t4.png" alt="T4" class="tierIcon"></td><td>Tier 4 (Enchantable)</td></tr>
+      <tr><td><img src="/icons/t5.png" alt="T5" class="tierIcon"></td><td>Tier 5 (Enchantable)</td></tr>
+      <tr><td><img src="/icons/t6.png" alt="T6" class="tierIcon"></td><td>Tier 6 (Enchantable)</td></tr>
     </table>
   </details>
 
@@ -458,20 +455,20 @@
     <input type="text" id="filterBox" placeholder="filter list...">
     <select id="recipeSelect"></select>
     <div class="tierButtons">
-      <button class="tierButton active" data-tier="1"><span class="tierSymbolT1">○</span></button>
-      <button class="tierButton" data-tier="2"><span class="tierSymbolT2">●</span></button>
-      <button class="tierButton" data-tier="3"><span class="tierSymbolT3">◉</span></button>
-      <button class="tierButton" data-tier="4"><span class="tierSymbolT4">✦</span></button>
-      <button class="tierButton" data-tier="5"><span class="tierSymbolT5">✨</span></button>
-      <button class="tierButton" data-tier="6"><span class="tierSymbolT6">🌟</span></button>
+      <button class="tierButton active" data-tier="1"><img src="/icons/t1.png" alt="T1" class="tierIcon"></button>
+      <button class="tierButton" data-tier="2"><img src="/icons/t2.png" alt="T2" class="tierIcon"></button>
+      <button class="tierButton" data-tier="3"><img src="/icons/t3.png" alt="T3" class="tierIcon"></button>
+      <button class="tierButton" data-tier="4"><img src="/icons/t4.png" alt="T4" class="tierIcon"></button>
+      <button class="tierButton" data-tier="5"><img src="/icons/t5.png" alt="T5" class="tierIcon"></button>
+      <button class="tierButton" data-tier="6"><img src="/icons/t6.png" alt="T6" class="tierIcon"></button>
     </div>
     <select id="tierSelect" style="display: none;">
-      <option value="1">○</option>
-      <option value="2">●</option>
-      <option value="3">◉</option>
-      <option value="4">✦</option>
-      <option value="5">✨</option>
-      <option value="6">🌟</option>
+      <option value="1">T1</option>
+      <option value="2">T2</option>
+      <option value="3">T3</option>
+      <option value="4">T4</option>
+      <option value="5">T5</option>
+      <option value="6">T6</option>
     </select>
   </div>
 
@@ -676,9 +673,14 @@ function famLabel(famId, tier) {
   const category = famCategory(famId);
   return getDisplayLabel(label, category);
 }
-const TIER_SYMBOLS = ["○", "●", "◉", "✦", "✨", "🌟"];
-function tierSymbol(tier) {
-  return TIER_SYMBOLS[tier - 1] || "";
+function tierIconNode(tier) {
+  if (tier < 1 || tier > 6) return document.createTextNode("");
+  const img = document.createElement("img");
+  img.src = `/icons/t${tier}.png`;
+  img.alt = `T${tier}`;
+  img.className = "tierIcon";
+  img.draggable = false;
+  return img;
 }
 // Mirrors character-preview/InventoryTab.tsx's formatSlotLabel - no
 // dedicated hand icon asset exists here either, so a hand slot renders as
@@ -727,15 +729,12 @@ function popupHostDocument() {
   }
 }
 
-// Copies this page's own popup rules (.itemPopup*, plus the .tierSymbolT*
-// badge colors) onto the host document once, so the popup looks the same
-// there as it does here.
 function ensurePopupStyles(doc) {
   if (doc.getElementById("recipeViewerPopupStyles")) return;
   const css = [];
   for (const sheet of document.styleSheets) {
     for (const rule of sheet.cssRules) {
-      if (rule.selectorText && /itemPopup|tierSymbol/.test(rule.selectorText)) css.push(rule.cssText);
+      if (rule.selectorText && /itemPopup|tierIcon/.test(rule.selectorText)) css.push(rule.cssText);
     }
   }
   const style = doc.createElement("style");
@@ -768,7 +767,9 @@ function showItemPopup(famId, tier) {
   });
 
   const card = el("div", "itemPopupCard");
-  card.appendChild(el("span", "itemPopupTierBadge tierSymbolT" + tier, tierSymbol(tier)));
+  const tierBadge = el("span", "itemPopupTierBadge");
+  tierBadge.appendChild(tierIconNode(tier));
+  card.appendChild(tierBadge);
   const img = document.createElement("img");
   img.src = t.icon || FALLBACK_ITEM_ICON;
   img.alt = t.name;
@@ -789,50 +790,10 @@ function showItemPopup(famId, tier) {
     var scaledQuality = props.qualityMax * Math.pow(2, tier - 1);
     meta.appendChild(el("span", "", "Quality: " + scaledQuality + "/" + scaledQuality));
   }
-  // A backpack/saddlepack/cart preview is never anyone's equipped one, so
-  // it's always empty against its own tier capacity (same as the vault
-  // popup in InventoryTab.tsx).
-  if (t.capacitySlots != null) {
-    meta.appendChild(el("span", "", "Filled: 0/" + t.capacitySlots));
+  if (props.armorClass != null && props.armorClass > 0) {
+    meta.appendChild(el("span", "", "AC: " + (props.armorClass * tier)));
   }
   card.appendChild(meta);
-
-  // Always disabled (see the doc comment above) - one button per equip
-  // slot group. props.equipSlots is already string[][] (each entry its own
-  // group - a twoHanded family's single group already lists both slots,
-  // e.g. [["Left Hand","Right Hand"]]), same as ItemDetailPopup's own
-  // slotGroups (InventoryTab.tsx) - used directly, not re-wrapped, which
-  // used to double-nest every group (crashing formatSlotLabel below on an
-  // array instead of a slot-name string, silently aborting the whole
-  // popup - see ItemDetailPopup's identical `info.equipSlots` usage).
-  const slotGroups = props.equipSlots && props.equipSlots.length ? props.equipSlots : [];
-  if (slotGroups.length || props.backpackable) {
-    const actions = el("div", "itemPopupActions");
-    for (const slots of slotGroups) {
-      const btn = el("button", "itemPopupActionButton");
-      slots.forEach((slot, i) => {
-        if (i > 0) btn.appendChild(document.createTextNode(" + "));
-        btn.appendChild(formatSlotLabel(slot));
-      });
-      btn.type = "button";
-      btn.disabled = true;
-      actions.appendChild(btn);
-    }
-    if (props.backpackable) {
-      const btn = el("button", "itemPopupBackpackButton");
-      btn.type = "button";
-      btn.disabled = true;
-      btn.title = "Move to backpack";
-      btn.setAttribute("aria-label", "Move to backpack");
-      const bpImg = document.createElement("img");
-      bpImg.src = "/images/character/backpack.png";
-      bpImg.alt = "";
-      bpImg.className = "itemPopupBackpackIcon";
-      btn.appendChild(bpImg);
-      actions.appendChild(btn);
-    }
-    card.appendChild(actions);
-  }
 
   overlay.appendChild(card);
   const host = popupHostDocument();
@@ -1624,10 +1585,8 @@ function renderTable(tableId, totals, tier, showMissing, checkBlueprint) {
       }
     }
     tr.appendChild(nameCell);
-    const tierIcons = ["○", "●", "◉", "✦", "✨", "🌟"];
-    const tierIcon = tierIcons[tier - 1] || "";
-    const tierCell = el("td", "", tierIcon);
-    tierCell.className = `tierSymbolT${tier}`;
+    const tierCell = document.createElement("td");
+    tierCell.appendChild(tierIconNode(tier));
     tr.appendChild(tierCell);
     if (showMissing && inventory) {
       // The character's own inventory is keyed by concrete item id (e.g.

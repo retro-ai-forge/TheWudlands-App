@@ -1,4 +1,4 @@
-import { Fragment, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { Fragment, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import type { ReactNode } from "react";
 import styles from "./CharacterTabs.module.css";
 import { formatRemainingCompactLong, useCraftCountdown } from "../craftTimer";
@@ -20,6 +20,7 @@ export type BlueprintTierInfo = Record<
     kind: string;
     name?: string;
     qualityMax?: number | null;
+    armorClass?: number | null;
     /** Per-tier art path (item-catalog only) - "" when this family/tier has no dedicated art yet. */
     icon?: string;
     /** Family-level stack size (item-catalog only) - 1 means never stacked, so the grid hides its owned-count badge. */
@@ -36,6 +37,10 @@ export type BlueprintTierInfo = Record<
     gatheringBonuses?: string[];
     /** Per-tier (item-catalog only) - slot capacity of a backpack/saddlepack/cart tier, 0 for anything else. */
     capacitySlots?: number;
+    /** Per-tier (item-catalog only) - mount/companion carry capacity (slot-weight limit), 0 otherwise. */
+    carryCapacity?: number;
+    /** Per-tier creature size (Medium/Heavy/Huge/Colossal) for mounts, empty otherwise. */
+    size?: string;
   }
 >;
 export type ResourceTierInfo = Record<
@@ -144,6 +149,43 @@ const RAW_RESOURCE_AMOUNTS = [1, 2, 5, 10, 20, 40] as const;
 // gets (see ItemGrid's own expandedIds).
 const RAW_STACK_SIZE = 40;
 const PROCESSED_STACK_SIZE = 20;
+
+const SLOT_COST_BY_SIZE: Record<string, number> = {
+  tiny: 1, light: 1, medium: 2, heavy: 4, xLarge: 16,
+};
+
+export function selectionWeight(
+  selectedIds: Set<string>,
+  tierInfo: BlueprintTierInfo,
+  balances: Record<string, number>,
+  lookupIds?: Record<string, string>,
+  resourceBalances?: Record<string, number>,
+  resourceTierInfo?: ResourceTierInfo,
+): number {
+  let total = 0;
+  for (const key of selectedIds) {
+    if (key.startsWith("res:")) {
+      const resId = key.slice(4);
+      const qty = resourceBalances?.[resId] ?? 0;
+      if (qty <= 0) continue;
+      const category = resourceTierInfo?.[resId]?.category;
+      const stackSize = category === "raw" ? RAW_STACK_SIZE : PROCESSED_STACK_SIZE;
+      total += Math.ceil(qty / stackSize);
+    } else {
+      const info = tierInfo[lookupIds?.[key] ?? key];
+      const slotCost = SLOT_COST_BY_SIZE[info?.sizeClass ?? "tiny"] ?? 1;
+      const isInstance = lookupIds?.[key] !== undefined;
+      if (isInstance) {
+        total += slotCost;
+      } else {
+        const qty = balances[key] ?? 0;
+        const stackSize = info?.stackSize ?? 1;
+        total += Math.ceil(qty / Math.max(1, stackSize)) * slotCost;
+      }
+    }
+  }
+  return total;
+}
 
 /** The row of quick-transfer quantity buttons revealed under a clicked resource/tool row. */
 function TransferButtons({
@@ -315,29 +357,11 @@ function getKindIcon(kind: string): string {
   }
 }
 
-export function getTierIndicator(tier: number): string {
-  switch (tier) {
-    case 1: return "○";
-    case 2: return "●";
-    case 3: return "◉";
-    case 4: return "✦";
-    case 5: return "✨";
-    case 6: return "🌟";
-    default: return "";
-  }
+export function getTierIndicator(tier: number): ReactNode {
+  if (tier < 1 || tier > 6) return null;
+  return <img src={`/icons/t${tier}.png`} alt={`T${tier}`} className={styles.tierIcon} draggable={false} />;
 }
 
-function getTierSymbolClass(tier: number): string {
-  switch (tier) {
-    case 1: return styles.tierSymbolT1;
-    case 2: return styles.tierSymbolT2;
-    case 3: return styles.tierSymbolT3;
-    case 4: return styles.tierSymbolT4;
-    case 5: return styles.tierSymbolT5;
-    case 6: return styles.tierSymbolT6;
-    default: return styles.tierSymbol;
-  }
-}
 
 // Reads the real category from /resource-catalog (fetched into
 // resourceTierInfo) rather than guessing from the id string - a
@@ -452,7 +476,6 @@ function ResourceList({
               const icon = getResourceIcon(id, tierInfo);
               const tierData = tierInfo?.[id];
               const tier = tierData?.tier ?? 0;
-              const tierDisplay = tier ? getTierIndicator(tier) : "";
               const isGreyed = tier > 0 && highestTierByFamily[family] > tier;
               const isExpanded = expandedId === id;
               const rows = [
@@ -462,7 +485,7 @@ function ResourceList({
                   className={onTransfer ? styles.transferableRow : undefined}
                 >
                   <td style={isGreyed ? { color: "#665b42" } : undefined}>{icon}</td>
-                  <td><span className={tier > 0 ? getTierSymbolClass(tier) : styles.tierSymbol}>{tierDisplay}</span></td>
+                  <td><span className={styles.tierSymbol}>{getTierIndicator(tier)}</span></td>
                   <td style={isGreyed ? { color: "#665b42" } : undefined}>{tierData?.name ?? formatResourceLabel(id)}</td>
                   <td>{qty}</td>
                 </tr>,
@@ -605,7 +628,6 @@ function IdList({
   const renderRow = (id: string) => {
     const canTransfer = canTransferList && (!transferableIds || transferableIds.has(id));
     const info = tierInfo?.[lookupIds?.[id] ?? id];
-    const tierDisplay = info ? getTierIndicator(info.tier) : "";
     const isGreyed = info && highestTierByFamily[info.familyId] > info.tier;
     const icon = fixedIcon ?? (info?.kind ? getKindIcon(info.kind) : "");
     const isExpanded = expandedId === id;
@@ -617,7 +639,7 @@ function IdList({
         className={canTransfer ? styles.transferableRow : undefined}
       >
         <td>{icon}</td>
-        <td><span className={info?.tier ? getTierSymbolClass(info.tier) : styles.tierSymbol}>{tierDisplay}</span></td>
+        <td><span className={styles.tierSymbol}>{info?.tier ? getTierIndicator(info.tier) : null}</span></td>
         <td style={{
           textAlign: "left",
           color: "#d4c9a8",
@@ -775,20 +797,6 @@ const CARD_FOOTER_MARGIN_PX = 8;
 const CONTAINER_ICON_PX = 140;
 const ICON_MIN_VISIBLE_PX = 48;
 
-/** Exported so BodyTab.tsx's equip slots can show the same tier badge
- * ItemGrid's tiles do, rather than duplicating the per-tier class/symbol
- * mapping. */
-export function itemGridTierBadgeClass(tier: number): string {
-  switch (tier) {
-    case 1: return styles.itemGridTierT1;
-    case 2: return styles.itemGridTierT2;
-    case 3: return styles.itemGridTierT3;
-    case 4: return styles.itemGridTierT4;
-    case 5: return styles.itemGridTierT5;
-    case 6: return styles.itemGridTierT6;
-    default: return "";
-  }
-}
 
 /** The Party's Vault tab's Items view - a horizontally-scrollable row of
  * 100x100 icon tiles (tier badge upper-left, owned-count badge lower-
@@ -824,10 +832,19 @@ export function ItemGrid({
   saddlepackCapacity,
   cartSlotsUsed,
   cartCapacity,
+  mountCarryWeightUsed,
+  mountCarryWeightCapacity,
   resourceBalances,
   resourceTierInfo,
   resourceDestinations,
   iconOverrides,
+  selectMode,
+  selectBusy,
+  selectedIds,
+  onLongPressItem,
+  onToggleSelectItem,
+  onLongPressResource,
+  onToggleSelectResource,
 }: {
   ids: string[];
   emptyLabel: string;
@@ -904,6 +921,8 @@ export function ItemGrid({
   saddlepackCapacity?: number;
   cartSlotsUsed?: number;
   cartCapacity?: number;
+  mountCarryWeightUsed?: number;
+  mountCarryWeightCapacity?: number;
   /** Raw/processed materials sitting loose at this same location (e.g.
    * CampView's own gear.resources.camp) - rendered as their own tiles
    * (see ResourceTiles) INSIDE this same wrapping grid, alongside the
@@ -921,6 +940,13 @@ export function ItemGrid({
    * and vault; a packed one only ever reaches one of the two). */
   resourceDestinations?: ResourcePopupDestination[];
   iconOverrides?: Record<string, string>;
+  selectMode?: boolean;
+  selectBusy?: boolean;
+  selectedIds?: Set<string>;
+  onLongPressItem?: (id: string) => void;
+  onToggleSelectItem?: (id: string) => void;
+  onLongPressResource?: (id: string) => void;
+  onToggleSelectResource?: (id: string) => void;
 }) {
   // How tall the scroll container is allowed to be, measured against the
   // real remaining viewport space below it rather than a guessed vh
@@ -972,6 +998,42 @@ export function ItemGrid({
   const [selectedResourceId, setSelectedResourceId] = useState<string | null>(null);
   // Same idea as selectedTileCap above, for a resource tile.
   const [selectedResourceTileCap, setSelectedResourceTileCap] = useState<number>(0);
+
+  const longPressTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const longPressFiredRef = useRef(false);
+  const longPressStartPos = useRef<{ x: number; y: number } | null>(null);
+
+  const cancelLongPress = useCallback(() => {
+    if (longPressTimerRef.current) {
+      clearTimeout(longPressTimerRef.current);
+      longPressTimerRef.current = null;
+    }
+  }, []);
+
+  const startLongPress = useCallback(
+    (id: string, isResource: boolean, e: React.PointerEvent) => {
+      if (selectMode) return;
+      longPressFiredRef.current = false;
+      longPressStartPos.current = { x: e.clientX, y: e.clientY };
+      longPressTimerRef.current = setTimeout(() => {
+        longPressFiredRef.current = true;
+        longPressTimerRef.current = null;
+        if (isResource) onLongPressResource?.(id);
+        else onLongPressItem?.(id);
+      }, 500);
+    },
+    [selectMode, onLongPressItem, onLongPressResource]
+  );
+
+  const handlePointerMove = useCallback(
+    (e: React.PointerEvent) => {
+      if (!longPressStartPos.current || !longPressTimerRef.current) return;
+      const dx = e.clientX - longPressStartPos.current.x;
+      const dy = e.clientY - longPressStartPos.current.y;
+      if (dx * dx + dy * dy > 100) cancelLongPress();
+    },
+    [cancelLongPress]
+  );
 
   const resourceIds = resourceBalances && resourceTierInfo ? sortResourceIds(resourceBalances, resourceTierInfo) : [];
 
@@ -1052,13 +1114,16 @@ export function ItemGrid({
     }
   }
 
+  let scrollClass = hideScrollbar ? `${styles.itemGridScroll} ${styles.itemGridScrollNoBar}` : styles.itemGridScroll;
+  if (selectBusy) scrollClass += ` ${styles.itemGridScrollBusy}`;
+
   return (
     <div
       ref={scrollRef}
-      className={hideScrollbar ? `${styles.itemGridScroll} ${styles.itemGridScrollNoBar}` : styles.itemGridScroll}
+      className={scrollClass}
       style={{ height: gridHeight }}
     >
-      <div className={styles.itemGrid}>
+      <div className={expandedIds.length + resourceIds.length <= Math.floor(gridHeight / ITEM_TILE_PX) ? styles.itemGridRow : styles.itemGrid}>
         {expandedIds.map(({ key, id, displayCount, tileCap }) => {
           const info = tierInfo[lookupIds?.[id] ?? id];
           const name = info?.name ? stripBlueprintPrefix(info.name) : formatResourceLabel(lookupIds?.[id] ?? id);
@@ -1077,32 +1142,37 @@ export function ItemGrid({
           // glance in a full grid instead of needing a close look at one
           // 5px sliver.
           const isDamaged = qualityFraction !== null && qualityState(qualityFraction) === "damaged";
+          const isSelected = selectMode && selectedIds?.has(id);
+          let cellClass = styles.itemGridCell;
+          if (isDamaged) cellClass += ` ${styles.itemGridCellDamaged}`;
+          if (isSelected) cellClass += ` ${styles.itemGridCellSelected}`;
           return (
             <button
               key={key}
               type="button"
-              className={isDamaged ? `${styles.itemGridCell} ${styles.itemGridCellDamaged}` : styles.itemGridCell}
+              className={cellClass}
               title={name}
               onClick={() => {
+                if (longPressFiredRef.current) { longPressFiredRef.current = false; return; }
+                if (selectMode) { onToggleSelectItem?.(id); return; }
                 setSelectedId(id);
                 setSelectedTileCap(tileCap);
               }}
+              onPointerDown={(e) => startLongPress(id, false, e)}
+              onPointerUp={cancelLongPress}
+              onPointerCancel={cancelLongPress}
+              onPointerLeave={cancelLongPress}
+              onPointerMove={handlePointerMove}
               onContextMenu={(e) => e.preventDefault()}
             >
-              {/* A background-image div, not a real <img> - mobile
-                  Chrome/Safari's long-press "save/share image" menu is
-                  tied to the <img> tag itself and fires from the browser's
-                  own native gesture recognizer, ahead of anything a
-                  contextmenu/touch-callout CSS override can catch. No tag
-                  for it to recognize as an image sidesteps that instead of
-                  fighting it per-browser. */}
               <ItemIcon icon={iconOverrides?.[lookupIds?.[id] ?? id] ?? info?.icon} alt={name} className={styles.itemGridImg} />
               {!!info?.tier && (
-                <span className={`${styles.itemGridTierBadge} ${itemGridTierBadgeClass(info.tier)}`}>
+                <span className={styles.itemGridTierBadge}>
                   {getTierIndicator(info.tier)}
                 </span>
               )}
               {displayCount !== null && <span className={styles.itemGridCountBadge}>{displayCount}</span>}
+              {isSelected && <span className={styles.itemGridCheckmark}>&#x2713;</span>}
               {qualityFraction !== null && (
                 <div
                   className={styles.itemGridQualityBar}
@@ -1116,34 +1186,38 @@ export function ItemGrid({
           const info = resourceTierInfo?.[id];
           const fullName = info?.name ?? formatResourceLabel(id);
           const label = fullName.split(" ").pop() ?? fullName;
+          const isResSelected = selectMode && selectedIds?.has(`res:${id}`);
           return (
             <button
               key={key}
               type="button"
-              className={styles.itemGridCell}
+              className={`${styles.itemGridCell}${isResSelected ? ` ${styles.itemGridCellSelected}` : ""}`}
               title={fullName}
               onClick={() => {
+                if (longPressFiredRef.current) { longPressFiredRef.current = false; return; }
+                if (selectMode) { onToggleSelectResource?.(id); return; }
                 setSelectedResourceId(id);
                 setSelectedResourceTileCap(tileCap);
               }}
+              onPointerDown={(e) => startLongPress(id, true, e)}
+              onPointerUp={cancelLongPress}
+              onPointerCancel={cancelLongPress}
+              onPointerLeave={cancelLongPress}
+              onPointerMove={handlePointerMove}
               onContextMenu={(e) => e.preventDefault()}
             >
-              {/* Most resource families have no per-unit art, so they fall
-                  back to a plain name-on-black tile (see the else branch)
-                  - a handful (oil, arrow, bolt) DO carry real icon art
-                  (backend.processed_catalog), same as item-catalog
-                  entries, and get the same ItemIcon treatment as those. */}
               {info?.icon ? (
                 <ItemIcon icon={info.icon} alt={fullName} className={styles.itemGridImg} />
               ) : (
                 <span className={styles.itemGridResourceLabel}>{label}</span>
               )}
               {!!info?.tier && (
-                <span className={`${styles.itemGridTierBadge} ${itemGridTierBadgeClass(info.tier)}`}>
+                <span className={styles.itemGridTierBadge}>
                   {getTierIndicator(info.tier)}
                 </span>
               )}
               <span className={styles.itemGridCountBadge}>{displayCount}</span>
+              {isResSelected && <span className={styles.itemGridCheckmark}>&#x2713;</span>}
             </button>
           );
         })}
@@ -1187,6 +1261,8 @@ export function ItemGrid({
           saddlepackCapacity={saddlepackCapacity}
           cartSlotsUsed={cartSlotsUsed}
           cartCapacity={cartCapacity}
+          mountCarryWeightUsed={mountCarryWeightUsed}
+          mountCarryWeightCapacity={mountCarryWeightCapacity}
           onPlayerDataUpdated={onPlayerDataUpdated}
           onClose={() => setSelectedId(null)}
           iconOverride={iconOverrides?.[lookupIds?.[selectedId] ?? selectedId]}
@@ -1203,7 +1279,7 @@ export function ItemGrid({
 // build the same "Backpack"/"Vault" destinations without a second copy of
 // these paths.
 export const BACKPACK_ACTION_ICON = "/images/character/backpack.png";
-const SADDLEPACK_ACTION_ICON = "/images/character/saddlebags.png";
+export const SADDLEPACK_ACTION_ICON = "/images/character/saddlebags.png";
 export const VAULT_ACTION_ICON = "/images/character/vault.png";
 const CAMP_ACTION_ICON = "/images/character/camp.png";
 
@@ -1211,7 +1287,7 @@ const QUANTITY_OPTIONS = [1, 2, 5, 10] as const;
 
 // No dedicated hand icon asset exists - a plain emoji glyph fits the same
 // convention every other icon in this file already uses (getKindIcon's
-// ⚔️/🛡️/🥋, getTierIndicator's ○●◉✦✨🌟), no image needed. No "Left"/"Right"
+// ⚔️/🛡️/🥋, getTierIndicator's SVG tier icons), no image needed. No "Left"/"Right"
 // text at all - the glyph alone flipped horizontally (scaleX(-1), matching
 // BodyTab.tsx's own EquipSlotIcon mirroring) for "Right Hand" is what tells
 // the two apart, read as a mirrored pair rather than two identical icons.
@@ -1288,6 +1364,7 @@ export function HoldActionPopup({
   cardClassName,
   iconClassName,
   label,
+  subtitle,
   icon,
   tone,
   disabled = false,
@@ -1319,6 +1396,8 @@ export function HoldActionPopup({
   iconClassName?: string;
   /** The hold bar's own label, e.g. "Hold to cast things into flames". */
   label: string;
+  /** Short helper text shown between the progress bar and the icon. */
+  subtitle?: string;
   /** Image shown inside the hold bar - CampView passes the same
    * campfire_lit.png/dropped.png icon the player just clicked. Sized to
    * fill the same width as the progress bar above it (see
@@ -1328,7 +1407,7 @@ export function HoldActionPopup({
   /** "destroy": red-deepening fill (destroyFillColor), shown on a
    * permanent, unrecoverable action. "salvage": gold-to-green fill
    * (salvageFillColor), shown on a beneficial one. */
-  tone: "destroy" | "salvage";
+  tone: "destroy" | "salvage" | "move";
   /** Prevents starting the hold at all (e.g. the chopping block's own
    * checklist hasn't loaded yet, or nothing on it is checked) - the icon
    * stays visible but dimmed, same as ItemDetailPopup's own disabled
@@ -1360,9 +1439,9 @@ export function HoldActionPopup({
       setError(
         tone === "destroy"
           ? "Couldn't burn that."
-          : tone === "salvage"
-            ? "Couldn't salvage that."
-            : "Couldn't move that.",
+          : tone === "move"
+            ? "Nothing to move."
+            : "Couldn't salvage that.",
       );
       reset();
       return;
@@ -1445,6 +1524,7 @@ export function HoldActionPopup({
               }}
             />
           </div>
+          {subtitle && <p className={styles.destroyLabel} style={{ fontSize: "0.7rem", marginTop: "0.2rem", color: "#d4a060" }}>{subtitle}</p>}
           <div
             role="button"
             tabIndex={0}
@@ -1471,6 +1551,152 @@ export function HoldActionPopup({
         {error && <p className={styles.destroyError}>{error}</p>}
       </div>
     </div>
+  );
+}
+
+export type ChopBlockRow = {
+  id: string;
+  kind: "instance" | "balance";
+  name: string;
+  tier: number;
+  owned: number;
+  materials: SalvageMaterial[];
+  preselected?: boolean;
+  condition?: SalvageCondition;
+};
+
+export function flattenChopBlockMaterials(materials: SalvageMaterial[]): { id: string; name: string; qty: number }[] {
+  const merged = new Map<string, { id: string; name: string; qty: number }>();
+  for (const material of materials) {
+    for (const line of material.recovered) {
+      const existing = merged.get(line.id);
+      if (existing) existing.qty += line.qty;
+      else merged.set(line.id, { id: line.id, name: line.name, qty: line.qty });
+    }
+  }
+  return [...merged.values()];
+}
+
+export function ChopBlockPopup({
+  characterId,
+  onPlayerDataUpdated,
+  onClose,
+  preSelectedIds,
+  source = "camp",
+}: {
+  characterId: string;
+  onPlayerDataUpdated?: (data: RawPlayerData) => void;
+  onClose: () => void;
+  preSelectedIds?: Set<string>;
+  source?: "camp" | "vault";
+}) {
+  const [rows, setRows] = useState<ChopBlockRow[] | null>(null);
+  const [selected, setSelected] = useState<Set<string>>(new Set());
+
+  useEffect(() => {
+    let cancelled = false;
+    let url = `/api/auth/me/characters/${characterId}/${source}/salvage-preview`;
+    if (preSelectedIds && preSelectedIds.size > 0) {
+      url += `?selected=${[...preSelectedIds].join(",")}`;
+    }
+    fetch(url, { credentials: "include" })
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data: { rows: ChopBlockRow[] } | null) => {
+        if (cancelled) return;
+        const loaded = data?.rows ?? [];
+        setRows(loaded);
+        if (preSelectedIds) {
+          setSelected(new Set(loaded.map((row) => row.id)));
+        } else {
+          setSelected(new Set(loaded.filter((row) => row.preselected !== false).map((row) => row.id)));
+        }
+      })
+      .catch(() => {
+        if (!cancelled) setRows([]);
+      });
+    return () => {
+      cancelled = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [characterId, source]);
+
+  const toggle = (id: string) => {
+    setSelected((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+
+  const grandTotal = flattenChopBlockMaterials(
+    (rows ?? []).filter((row) => selected.has(row.id)).flatMap((row) => row.materials)
+  );
+
+  const emptyLabel = source === "vault" ? "Nothing in the vault can be salvaged right now." : "Nothing in camp can be salvaged right now.";
+
+  return (
+    <HoldActionPopup
+      headline="Salvage All"
+      overlayClassName={styles.chopBlockOverlay}
+      cardClassName={styles.chopBlockCard}
+      iconClassName={styles.chopBlockIcon}
+      label="Hold to unmake"
+      icon="/images/character/chopping_block.png"
+      tone="salvage"
+      disabled={rows === null || selected.size === 0}
+      onConfirm={() =>
+        postJson(`/api/auth/me/characters/${characterId}/${source}/salvage-all`, { selected: [...selected] })
+      }
+      onPlayerDataUpdated={onPlayerDataUpdated}
+      onClose={onClose}
+    >
+      {rows === null ? (
+        <p className={styles.salvageResultText}>Checking what can be salvaged…</p>
+      ) : rows.length === 0 ? (
+        <p className={styles.salvageResultText}>{emptyLabel}</p>
+      ) : (
+        <>
+          <div className={`${styles.salvageDestroyDivider} ${styles.salvageDestroyDividerTight}`} />
+          <p className={styles.salvageFinalLine}>
+            Salvaged: {grandTotal.length > 0 ? grandTotal.map((line) => `${line.qty}× ${line.name}`).join(", ") : "nothing"}
+          </p>
+          <div className={`${styles.salvageDestroyDivider} ${styles.salvageDestroyDividerSpaced}`} />
+          <div className={styles.chopBlockList}>
+            {rows.map((row) => (
+              <div key={row.id} className={styles.chopBlockRow}>
+                <label className={styles.chopBlockRowHeader}>
+                  <input type="checkbox" checked={selected.has(row.id)} onChange={() => toggle(row.id)} />
+                  <span className={styles.chopBlockRowName}>
+                    {row.name}
+                    {row.owned > 1 ? ` x${row.owned}` : ""}
+                  </span>
+                </label>
+                <div className={styles.salvageMaterialsList}>
+                  {row.materials.map((material) => (
+                    <div key={material.rawFamilyId} className={styles.salvageMaterialRow}>
+                      <p className={styles.salvageMaterialHeader}>
+                        <span>{material.rawName}</span>
+                        <span className={`${styles.salvageMaterialAmounts} ${material.recoveredUnits === 0 ? styles.salvageAmountZero : selected.has(row.id) ? styles.salvageAmountPositive : styles.salvageAmountMuted}`}>
+                          {material.recoveredUnits}/{material.totalUnits}
+                        </span>
+                      </p>
+                      <SalvageFormulaLine breakdown={material.yieldBreakdown} condition={row.condition} />
+                    </div>
+                  ))}
+                  <p className={selected.has(row.id) ? styles.salvageFinalLine : styles.salvageFinalLineMuted}>
+                    Salvaged:{" "}
+                    {flattenChopBlockMaterials(row.materials)
+                      .map((line) => `${line.qty}× ${line.name}`)
+                      .join(", ") || "nothing"}
+                  </p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </>
+      )}
+    </HoldActionPopup>
   );
 }
 
@@ -1513,7 +1739,7 @@ const ITEM_POPUP_FLASH_MS = 3000;
 // ResourcePopup so a failed move reads the same regardless of which one it
 // happened in.
 function transferFailureMessage(detail: string | null): string {
-  if (!detail) return "Couldn't move that.";
+  if (!detail || typeof detail !== "string") return "Couldn't move that.";
   if (detail === "No backpack equipped") return "No backpack found, equip one.";
   if (detail === "Backpack is full") return "Backpack full - remove items first.";
   if (detail === "No saddlepack equipped") return "No saddlepack found, equip one.";
@@ -1660,7 +1886,7 @@ export function ResourceTiles({
               <span className={styles.itemGridResourceLabel}>{label}</span>
             )}
             {!!info?.tier && (
-              <span className={`${styles.itemGridTierBadge} ${itemGridTierBadgeClass(info.tier)}`}>
+              <span className={styles.itemGridTierBadge}>
                 {getTierIndicator(info.tier)}
               </span>
             )}
@@ -1927,7 +2153,7 @@ function PackedItemsRow({
             >
               <ItemIcon icon={info?.icon} alt={name} className={styles.itemGridImg} />
               {!!info?.tier && (
-                <span className={`${styles.itemGridTierBadge} ${itemGridTierBadgeClass(info.tier)}`}>
+                <span className={styles.itemGridTierBadge}>
                   {getTierIndicator(info.tier)}
                 </span>
               )}
@@ -2088,7 +2314,7 @@ export function ResourcePopup({
     <div className={styles.itemPopupOverlay} onClick={handleClick}>
       <div className={styles.itemPopupCard}>
         {!!info?.tier && (
-          <span className={`${styles.itemPopupTierBadge} ${itemGridTierBadgeClass(info.tier)}`}>
+          <span className={styles.itemPopupTierBadge}>
             {getTierIndicator(info.tier)}
           </span>
         )}
@@ -2328,6 +2554,8 @@ export function ItemDetailPopup({
   saddlepackCapacity,
   cartSlotsUsed,
   cartCapacity,
+  mountCarryWeightUsed,
+  mountCarryWeightCapacity,
   onPlayerDataUpdated,
   onClose,
   iconOverride,
@@ -2407,6 +2635,8 @@ export function ItemDetailPopup({
   saddlepackCapacity?: number;
   cartSlotsUsed?: number;
   cartCapacity?: number;
+  mountCarryWeightUsed?: number;
+  mountCarryWeightCapacity?: number;
   onPlayerDataUpdated?: (data: RawPlayerData) => void;
   onClose: () => void;
   iconOverride?: string;
@@ -3074,46 +3304,50 @@ export function ItemDetailPopup({
                 </button>
               </div>
             )}
-            <div className={styles.salvageDestroyDivider} />
-            <div className={styles.destroySection}>
-              <p className={styles.destroyLabel}>Hold to cast into flames</p>
-              <div className={styles.destroyProgressTrack}>
-                <div
-                  className={styles.destroyProgressFill}
-                  style={{
-                    width: `${destroyProgress * 100}%`,
-                    backgroundColor: destroyFillColor(destroyProgress),
-                  }}
-                />
-              </div>
-              <span
-                className={styles.destroyIcon}
-                role="button"
-                tabIndex={0}
-                title="Hold to cast into flames"
-                aria-label="Hold to cast into flames"
-                onPointerDown={(e) => {
-                  e.preventDefault();
-                  startDestroyHold();
-                }}
-                onPointerUp={cancelDestroyHold}
-                onPointerLeave={cancelDestroyHold}
-                onPointerCancel={cancelDestroyHold}
-                onContextMenu={(e) => e.preventDefault()}
-              >
-                <img
-                  src="/images/character/campfire_lit.png"
-                  alt="Destroy"
-                  className={styles.destroyFireImg}
-                />
-              </span>
-            </div>
-            {destroyError && <p className={styles.destroyError}>{destroyError}</p>}
+            {!isContainer && (
+              <>
+                <div className={styles.salvageDestroyDivider} />
+                <div className={styles.destroySection}>
+                  <p className={styles.destroyLabel}>Hold to cast into flames</p>
+                  <div className={styles.destroyProgressTrack}>
+                    <div
+                      className={styles.destroyProgressFill}
+                      style={{
+                        width: `${destroyProgress * 100}%`,
+                        backgroundColor: destroyFillColor(destroyProgress),
+                      }}
+                    />
+                  </div>
+                  <span
+                    className={styles.destroyIcon}
+                    role="button"
+                    tabIndex={0}
+                    title="Hold to cast into flames"
+                    aria-label="Hold to cast into flames"
+                    onPointerDown={(e) => {
+                      e.preventDefault();
+                      startDestroyHold();
+                    }}
+                    onPointerUp={cancelDestroyHold}
+                    onPointerLeave={cancelDestroyHold}
+                    onPointerCancel={cancelDestroyHold}
+                    onContextMenu={(e) => e.preventDefault()}
+                  >
+                    <img
+                      src="/images/character/campfire_lit.png"
+                      alt="Destroy"
+                      className={styles.destroyFireImg}
+                    />
+                  </span>
+                </div>
+                {destroyError && <p className={styles.destroyError}>{destroyError}</p>}
+              </>
+            )}
           </>
         ) : (
           <>
             {!!info?.tier && (
-              <span className={`${styles.itemPopupTierBadge} ${itemGridTierBadgeClass(info.tier)}`}>
+              <span className={styles.itemPopupTierBadge}>
                 {getTierIndicator(info.tier)}
               </span>
             )}
@@ -3143,6 +3377,17 @@ export function ItemDetailPopup({
             )}
             <div className={styles.itemPopupMeta}>
               <span>Size: {info?.sizeClass ?? "tiny"}</span>
+              {info?.armorClass != null && info.armorClass > 0 && (() => {
+                const maxAC = info.armorClass * (info.tier ?? 1);
+                if (!isInstance || quality == null || info.qualityMax == null || info.qualityMax <= 0) {
+                  return <span>AC: {maxAC}</span>;
+                }
+                const qf = Math.max(0, Math.min(1, quality / (info.qualityMax * (2 ** (info.tier - 1)))));
+                const cond = qualityState(qf);
+                const reduction = cond === "damaged" ? 0.5 : cond === "used" ? 0.2 : 0;
+                const currentAC = Math.max(0, Math.floor(maxAC * (1 - reduction)));
+                return <span>AC: {currentAC}/{maxAC}</span>;
+              })()}
               {isInstance && info?.qualityMax != null && (
                 <span>{info.kind === "mount" || info.kind === "companion" ? "HP" : "Quality"}: {quality ?? 0}/{info.qualityMax * (2 ** (info.tier - 1))}</span>
               )}
@@ -3155,12 +3400,18 @@ export function ItemDetailPopup({
               {info?.familyId === "cart" && cartSlotsUsed != null && cartCapacity != null && (
                 <span>Filled: {cartSlotsUsed}/{cartCapacity}</span>
               )}
+              {source !== "vault" && info?.kind === "mount" && info?.carryCapacity != null && info.carryCapacity > 0 && mountCarryWeightUsed != null && (
+                <span>Carry: {mountCarryWeightUsed}/{info.carryCapacity}</span>
+              )}
               {/* A container sitting in the shared vault holds nothing - its
                   contents only ever live on the character who has it
                   equipped (gear.itemBalances/resources.<location>) - so
                   it's always empty against its own tier capacity. */}
               {source === "vault" && (info?.familyId === "backpack" || info?.familyId === "saddlepack" || info?.familyId === "cart") && info.capacitySlots != null && (
                 <span>Filled: 0/{info.capacitySlots}</span>
+              )}
+              {source === "vault" && info?.kind === "mount" && info?.carryCapacity != null && info.carryCapacity > 0 && (
+                <span>Carry: 0/{info.carryCapacity}</span>
               )}
             </div>
             {movable && source === "vault" && (
@@ -3966,6 +4217,7 @@ export function InventoryTab({
             tier: number;
             kind: string[];
             qualityMax: number | null;
+            armorClass: number | null;
             icon: string;
             stackSize: number;
             description: string;
@@ -3974,6 +4226,7 @@ export function InventoryTab({
             backpackable: boolean;
             gatheringBonuses: string[];
             capacitySlots: number;
+            carryCapacity: number;
           }>
         ) => {
         const tierMap: BlueprintTierInfo = {};
@@ -3984,6 +4237,7 @@ export function InventoryTab({
             kind: item.kind[0] ?? "",
             name: item.name,
             qualityMax: item.qualityMax,
+            armorClass: item.armorClass,
             icon: item.icon,
             stackSize: item.stackSize,
             description: item.description,
@@ -3992,6 +4246,7 @@ export function InventoryTab({
             backpackable: item.backpackable,
             gatheringBonuses: item.gatheringBonuses,
             capacitySlots: item.capacitySlots,
+            carryCapacity: item.carryCapacity,
           };
         }
         setItemCatalogTierInfo(tierMap);
@@ -4029,6 +4284,31 @@ export function InventoryTab({
     setVaultTierFilter((prev) =>
       prev.includes(tier) ? prev.filter((t) => t !== tier) : [...prev, tier]
     );
+
+  const [vaultSelectMode, setVaultSelectMode] = useState(false);
+  const [vaultSelectedIds, setVaultSelectedIds] = useState<Set<string>>(new Set());
+  const [vaultBatchBusy, setVaultBatchBusy] = useState(false);
+  const [vaultConfirmDestroy, setVaultConfirmDestroy] = useState(false);
+  const [showVaultSalvagePopup, setShowVaultSalvagePopup] = useState(false);
+
+  const exitVaultSelectMode = useCallback(() => {
+    setVaultSelectMode(false);
+    setVaultSelectedIds(new Set());
+  }, []);
+
+  const toggleVaultSelectItem = useCallback((id: string) => {
+    setVaultSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  }, []);
+
+  const enterVaultSelectMode = useCallback((id: string) => {
+    setVaultSelectMode(true);
+    setVaultSelectedIds(new Set([id]));
+  }, []);
 
   // Independent of the Crafting accordion above - folding the recipe viewer
   // has nothing to do with toggling between the character's and party's stock.
@@ -4101,22 +4381,18 @@ export function InventoryTab({
   // instanceId is the row's own id (unique); lookupIds maps it back to the
   // concrete itemId for name/tier/kind lookups in tierInfo, which is keyed
   // by itemId, not instanceId.
-  const playerItemLookupIds: Record<string, string> = {};
-  const playerItemRowBalances: Record<string, number> = {};
-  // Current quality per pool instance (its family's own qualityMax comes
-  // from itemCatalogTierInfo instead - the item detail popup pairs the two
-  // for its own "Quality: current/max" line).
-  const playerItemRowQuality: Record<string, number | null> = {};
-  for (const instance of playerItems) {
-    playerItemLookupIds[instance.instanceId] = instance.itemId;
-    playerItemRowBalances[instance.instanceId] = 1; // one row = one physical unit
-    playerItemRowQuality[instance.instanceId] = instance.quality;
-  }
-
-  const playerItemsCombined: Record<string, number> = {
-    ...playerItemBalances,
-    ...playerItemRowBalances,
-  };
+  const { playerItemLookupIds, playerItemRowQuality, playerItemsCombined } = useMemo(() => {
+    const lookupIds: Record<string, string> = {};
+    const rowBalances: Record<string, number> = {};
+    const rowQuality: Record<string, number | null> = {};
+    for (const instance of playerItems) {
+      lookupIds[instance.instanceId] = instance.itemId;
+      rowBalances[instance.instanceId] = 1;
+      rowQuality[instance.instanceId] = instance.quality;
+    }
+    const combined: Record<string, number> = { ...playerItemBalances, ...rowBalances };
+    return { playerItemLookupIds: lookupIds, playerItemRowQuality: rowQuality, playerItemsCombined: combined };
+  }, [playerItems, playerItemBalances]);
 
   // Whether this character currently has a physical backpack worn -
   // mirrors backend.items_catalog.has_backpack_available - also counts a
@@ -4152,6 +4428,55 @@ export function InventoryTab({
   const hasCompanionEquipped = character.gear.items.some(
     (instance) => instance.location === "body" && instance.slotRef?.includes("Companion")
   );
+
+  const batchMoveVault = useCallback(
+    async (destination: "backpack" | "saddlepack") => {
+      if (vaultBatchBusy || vaultSelectedIds.size === 0) return;
+      setVaultBatchBusy(true);
+      const instanceIds: string[] = [];
+      const balances: { id: string; amount: number }[] = [];
+      for (const id of vaultSelectedIds) {
+        if (playerItemLookupIds[id] !== undefined) {
+          instanceIds.push(id);
+        } else {
+          const amount = playerItemsCombined[id] ?? 0;
+          if (amount > 0) balances.push({ id, amount });
+        }
+      }
+      const r = await postJson(
+        `/api/auth/me/characters/${character.id}/vault/bulk-move`,
+        { destination, instanceIds, balances }
+      );
+      if (r.ok) onPlayerDataUpdated?.(r.data);
+      setVaultBatchBusy(false);
+      exitVaultSelectMode();
+    },
+    [vaultBatchBusy, vaultSelectedIds, playerItemLookupIds, playerItemsCombined, character.id, onPlayerDataUpdated, exitVaultSelectMode]
+  );
+
+  const batchDestroyVault = useCallback(async () => {
+    if (vaultBatchBusy || vaultSelectedIds.size === 0) return;
+    setVaultBatchBusy(true);
+    let lastResult: RawPlayerData | null = null;
+    for (const id of vaultSelectedIds) {
+      const isInstance = playerItemLookupIds[id] !== undefined;
+      if (isInstance) {
+        const r = await postJson(`/api/auth/me/characters/${character.id}/items/${id}/destroy`);
+        if (r.ok) lastResult = r.data;
+      } else {
+        const amount = playerItemsCombined[id] ?? 0;
+        if (amount <= 0) continue;
+        const r = await postJson(
+          `/api/auth/me/characters/${character.id}/item-balances/${id}/destroy`,
+          { amount }
+        );
+        if (r.ok) lastResult = r.data;
+      }
+    }
+    if (lastResult) onPlayerDataUpdated?.(lastResult);
+    setVaultBatchBusy(false);
+    exitVaultSelectMode();
+  }, [vaultBatchBusy, vaultSelectedIds, playerItemLookupIds, playerItemsCombined, character.id, onPlayerDataUpdated, exitVaultSelectMode]);
 
   // The embedded recipe viewer's own content height, in px - same-origin, so
   // its body height can be read directly and mirrored onto the iframe
@@ -4645,39 +4970,12 @@ export function InventoryTab({
             .filter((k): k is string => !!k)
         );
         const kindsPresent = kindOrder.filter((k) => kindsInVault.has(k));
-        const mountSlots = ["Mount", "Barding", "Bridle", "Saddle", "Saddlepack", "Hitch"];
-        const companionSlots = ["Companion", "Charm"];
-        const companionFamilies = ["hunters_charm"];
-        const adventuringGearFamilies = ["backpack", "bedroll", "tent", "tinderbox", "waterskin", "whetstone", "candle", "torch", "glass_lantern", "fishing_pole", "quill", "ink", "parchment", "starlight_catcher", "oil"];
-        const weaponAmmoFamilies = ["arrow", "bolt"];
         const hasKindFilter = vaultKindFilter.length > 0;
         const hasTierFilter = vaultTierFilter.length > 0;
         const allActive = !hasKindFilter && !hasTierFilter;
         const matchesKind = (info: BlueprintTierInfo[string] | undefined): boolean => {
           if (!info) return false;
-          if (info.kind && vaultKindFilter.includes(info.kind)) {
-            if (info.kind === "essentials") {
-              if (info.familyId && companionFamilies.includes(info.familyId)) return false;
-              if (info.familyId && adventuringGearFamilies.includes(info.familyId)) return false;
-              if (info.equipSlots) {
-                const flat = info.equipSlots.flat();
-                if (flat.some((s) => mountSlots.includes(s))) return false;
-                if (flat.some((s) => companionSlots.includes(s))) return false;
-              }
-            }
-            if (info.kind === "adventuring_gear" && info.familyId && !adventuringGearFamilies.includes(info.familyId)) return false;
-            return true;
-          }
-          if (vaultKindFilter.includes("essentials") && info.kind === "adventuring_gear" && info.familyId && !adventuringGearFamilies.includes(info.familyId)) return true;
-          if (vaultKindFilter.includes("weapon") && info.familyId && weaponAmmoFamilies.includes(info.familyId)) return true;
-          if (vaultKindFilter.includes("companion") && info.familyId && companionFamilies.includes(info.familyId)) return true;
-          if (vaultKindFilter.includes("adventuring_gear") && info.familyId && adventuringGearFamilies.includes(info.familyId)) return true;
-          if (info.equipSlots) {
-            const flat = info.equipSlots.flat();
-            if (vaultKindFilter.includes("mount") && flat.some((s) => mountSlots.includes(s))) return true;
-            if (vaultKindFilter.includes("companion") && flat.some((s) => companionSlots.includes(s))) return true;
-          }
-          return false;
+          return !!(info.kind && vaultKindFilter.includes(info.kind));
         };
         const filteredIds = allActive
           ? allVaultIds
@@ -4690,31 +4988,124 @@ export function InventoryTab({
         return (
           <>
             {allVaultIds.length > 0 && (
-              <div className={styles.vaultFilterBar}>
-                <button
-                  type="button"
-                  className={`${styles.vaultFilterBtn} ${allActive ? styles.vaultFilterBtnActive : ""}`}
-                  onClick={() => { setVaultKindFilter([]); setVaultTierFilter([]); }}
-                  title="All"
-                >A</button>
-                {kindsPresent.map((kind) => (
+              vaultSelectMode ? (
+                <div className={styles.selectionBar}>
+                  <div className={styles.selectionBarActions}>
+                    {hasBackpackEquipped && (
+                      <button
+                        type="button"
+                        className={styles.selectionBarBtn}
+                        title="Move to backpack"
+                        disabled={vaultBatchBusy || vaultSelectedIds.size === 0}
+                        onClick={() => batchMoveVault("backpack")}
+                      >
+                        <div className={styles.selectionBarIcon} style={{ backgroundImage: `url(${BACKPACK_ACTION_ICON})` }} />
+                      </button>
+                    )}
+                    {hasSaddlepackEquipped && (
+                      <button
+                        type="button"
+                        className={styles.selectionBarBtn}
+                        title="Move to saddlepack"
+                        disabled={vaultBatchBusy || vaultSelectedIds.size === 0}
+                        onClick={() => batchMoveVault("saddlepack")}
+                      >
+                        <div className={styles.selectionBarIcon} style={{ backgroundImage: `url(${SADDLEPACK_ACTION_ICON})` }} />
+                      </button>
+                    )}
+                    <div className={styles.selectionBarGap} />
+                    <button
+                      type="button"
+                      className={styles.selectionBarBtn}
+                      title="Salvage selected"
+                      disabled={vaultBatchBusy || vaultSelectedIds.size === 0}
+                      onClick={() => setShowVaultSalvagePopup(true)}
+                    >
+                      <div className={styles.selectionBarIcon} style={{ backgroundImage: `url(/images/character/chopping_block.png)` }} />
+                    </button>
+                    <button
+                      type="button"
+                      className={styles.selectionBarBtn}
+                      title="Destroy selected"
+                      disabled={vaultBatchBusy || vaultSelectedIds.size === 0}
+                      onClick={() => setVaultConfirmDestroy(true)}
+                    >
+                      <div className={styles.selectionBarIcon} style={{ backgroundImage: `url(/images/character/campfire_lit.png)` }} />
+                    </button>
+                  </div>
+                  <span className={styles.selectionBarWeight}>
+                    Weight: {selectionWeight(vaultSelectedIds, itemCatalogTierInfo, playerItemsCombined, playerItemLookupIds)}
+                  </span>
                   <button
-                    key={kind}
                     type="button"
-                    className={`${styles.vaultFilterBtn} ${vaultKindFilter.includes(kind) ? styles.vaultFilterBtnActive : ""}`}
-                    onClick={() => toggleKindFilter(kind)}
-                    title={kind.replace(/_/g, " ")}
-                  >{getKindIcon(kind)}</button>
-                ))}
-                {[1, 2, 3, 4, 5, 6].map((tier) => (
+                    className={`${styles.selectionBarBtn} ${styles.selectionBarClose}`}
+                    title="Cancel selection"
+                    onClick={exitVaultSelectMode}
+                  >
+                    &#x2715;
+                  </button>
+                </div>
+              ) : (
+                <div className={styles.vaultFilterBar}>
                   <button
-                    key={`t${tier}`}
                     type="button"
-                    className={`${styles.vaultFilterBtn} ${styles[`vaultFilterT${tier}` as keyof typeof styles] ?? ""} ${vaultTierFilter.includes(tier) ? styles.vaultFilterBtnActive : ""}`}
-                    onClick={() => toggleTierFilter(tier)}
-                    title={`Tier ${tier}`}
-                  ><span>{getTierIndicator(tier)}</span></button>
-                ))}
+                    className={`${styles.vaultFilterBtn} ${allActive ? styles.vaultFilterBtnActive : ""}`}
+                    onClick={() => { setVaultKindFilter([]); setVaultTierFilter([]); }}
+                    title="All"
+                  >A</button>
+                  {kindsPresent.map((kind) => (
+                    <button
+                      key={kind}
+                      type="button"
+                      className={`${styles.vaultFilterBtn} ${vaultKindFilter.includes(kind) ? styles.vaultFilterBtnActive : ""}`}
+                      onClick={() => toggleKindFilter(kind)}
+                      title={kind.replace(/_/g, " ")}
+                    >{getKindIcon(kind)}</button>
+                  ))}
+                  {[1, 2, 3, 4, 5, 6].map((tier) => (
+                    <button
+                      key={`t${tier}`}
+                      type="button"
+                      className={`${styles.vaultFilterBtn} ${styles[`vaultFilterT${tier}` as keyof typeof styles] ?? ""} ${vaultTierFilter.includes(tier) ? styles.vaultFilterBtnActive : ""}`}
+                      onClick={() => toggleTierFilter(tier)}
+                      title={`Tier ${tier}`}
+                    ><span>{getTierIndicator(tier)}</span></button>
+                  ))}
+                </div>
+              )
+            )}
+            {showVaultSalvagePopup && (
+              <ChopBlockPopup
+                characterId={character.id}
+                source="vault"
+                onPlayerDataUpdated={(data) => { onPlayerDataUpdated?.(data); exitVaultSelectMode(); }}
+                onClose={() => setShowVaultSalvagePopup(false)}
+                preSelectedIds={vaultSelectedIds}
+              />
+            )}
+            {vaultConfirmDestroy && (
+              <div className={styles.confirmDestroyOverlay} onClick={() => setVaultConfirmDestroy(false)}>
+                <div className={styles.confirmDestroyCard} onClick={(e) => e.stopPropagation()}>
+                  <p className={styles.confirmDestroyText}>
+                    Destroy {vaultSelectedIds.size} selected?
+                  </p>
+                  <div className={styles.confirmDestroyButtons}>
+                    <button
+                      type="button"
+                      className={styles.confirmDestroyCancel}
+                      onClick={() => setVaultConfirmDestroy(false)}
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="button"
+                      className={styles.confirmDestroyConfirm}
+                      onClick={() => { setVaultConfirmDestroy(false); batchDestroyVault(); }}
+                    >
+                      Destroy
+                    </button>
+                  </div>
+                </div>
               </div>
             )}
             <ItemGrid
@@ -4733,6 +5124,11 @@ export function InventoryTab({
               characterId={character.id}
               characterFirstName={character.firstName}
               onPlayerDataUpdated={onPlayerDataUpdated}
+              selectMode={vaultSelectMode}
+              selectBusy={vaultBatchBusy}
+              selectedIds={vaultSelectedIds}
+              onLongPressItem={enterVaultSelectMode}
+              onToggleSelectItem={toggleVaultSelectItem}
             />
           </>
         );

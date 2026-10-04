@@ -1,12 +1,205 @@
 [
   {
+    "id": "bright_feather_charm_flying",
+    "name": "Bright Feather",
+    "familyId": "charm_flying",
+    "tier": 1,
+    "description": "A bright feather charm with iridescent plumage, a light breeze shimmer, and playful airborne elegance.",
+    "icon": "/images/items/charm_flying_t1.png"
+  },
+  {
+    "id": "jingle_bell_charm_flying",
+    "name": "Jingle Bell",
+    "familyId": "charm_flying",
+    "tier": 2,
+    "description": "A tiny jingle bell charm of polished brass, cheerful and tinkling like a guardian of the skies.",
+    "icon": "/images/items/charm_flying_t2.png"
+  },
+  {
+    "id": "falconers_lure_charm_flying",
+    "name": "Falconer's Lure",
+    "familyId": "charm_flying",
+    "tier": 3,
+    "description": "A falconer's lure charm of braided leather and feather tassels, practical and swift for trained birds.",
+    "icon": "/images/items/charm_flying_t3.png"
+  },
+  {
+    "id": "crystal_prism_charm_flying",
+    "name": "Crystal Prism",
+    "familyId": "charm_flying",
+    "tier": 4,
+    "description": "A silvered leaf pendant, delicately veined, capturing a breath of mountain air and dawn mist.",
+    "icon": "/images/items/charm_flying_t4.png"
+  },
+  {
+    "id": "phoenix_plume_charm_flying",
+    "name": "Phoenix Plume",
+    "familyId": "charm_flying",
+    "tier": 5,
+    "description": "A phoenix plume charm of flame-gold feathers and ember glow, radiant with rebirth and fiery grace.",
+    "icon": "/images/items/charm_flying_t5.png"
+  },
+  {
+    "id": "starlight_windsock_charm_flying",
+    "name": "Starlight Windsock",
+    "familyId": "charm_flying",
+    "tier": 6,
+    "description": "A starlight windsock charm of silver silk and constellations, fluttering with cosmic wind and gentle brilliance.",
+    "icon": "/images/items/charm_flying_t6.png"
+  },
+  {
+    "id": "shiny_pebble_charm_aquatic",
+    "name": "Shiny Pebble",
+    "familyId": "charm_aquatic",
+    "tier": 1,
+    "description": "A shiny pebble charm, smooth and river-polished, with a wet gleam like treasure from the streambed.",
+    "icon": "/images/items/charm_aquatic_t1.png"
+  },
+  {
+    "id": "cork_bobber_charm_aquatic",
+    "name": "Cork Bobber",
+    "familyId": "charm_aquatic",
+    "tier": 2,
+    "description": "A cork bobber charm of buoyant driftwood and red paint, simple and cheerful as a fishing day.",
+    "icon": "/images/items/charm_aquatic_t2.png"
+  },
+  {
+    "id": "spiral_shell_charm_aquatic",
+    "name": "Spiral Shell",
+    "familyId": "charm_aquatic",
+    "tier": 3,
+    "description": "A spiral shell charm with pearly ridges and seafoam tint, echoing tides and hidden currents.",
+    "icon": "/images/items/charm_aquatic_t3.png"
+  },
+  {
+    "id": "glowing_coral_charm_aquatic",
+    "name": "Glowing Coral",
+    "familyId": "charm_aquatic",
+    "tier": 4,
+    "description": "A glowing coral charm of silver-tinged bioluminescent branches, softly lit with reef-born magic.",
+    "icon": "/images/items/charm_aquatic_t4.png"
+  },
+  {
+    "id": "deep_pearl_charm_aquatic",
+    "name": "Deep Pearl",
+    "familyId": "charm_aquatic",
+    "tier": 5,
+    "description": "A deep pearl charm, lustrous and mysterious, with gold-tinged abyssal sheen and ocean-deep elegance.",
+    "icon": "/images/items/charm_aquatic_t5.png"
+  },
+  {
+    "id": "abyssal_gem_charm_aquatic",
+    "name": "Abyssal Gem",
+    "familyId": "charm_aquatic",
+    "tier": 6,
+    "description": "An abyssal gem charm of star-metal blue crystal, faintly luminous like moonlight beneath the waves.",
+    "icon": "/images/items/charm_aquatic_t6.png"
+  },
+  {
+    "id": "tallow_candle_charm_ghost",
+    "name": "Tallow Candle",
+    "familyId": "charm_ghost",
+    "tier": 1,
+    "description": "A hand-dipped wax candle charm, its flame a wisp of spectral blue, flickering with memories.",
+    "icon": "/images/items/charm_ghost_t1.png"
+  },
+  {
+    "id": "carved_bone_charm_ghost",
+    "name": "Carved Bone",
+    "familyId": "charm_ghost",
+    "tier": 2,
+    "description": "A moon-pale mask charm, delicately etched with sigils, carrying an aura of mystery and faded laughter.",
+    "icon": "/images/items/charm_ghost_t2.png"
+  },
+  {
+    "id": "black_ribbon_charm_ghost",
+    "name": "Black Ribbon",
+    "familyId": "charm_ghost",
+    "tier": 3,
+    "description": "A black ribbon charm flowing like a silent wisp, eerie, delicate, and hauntingly graceful.",
+    "icon": "/images/items/charm_ghost_t3.png"
+  },
+  {
+    "id": "soul_lantern_charm_ghost",
+    "name": "Soul Lantern",
+    "familyId": "charm_ghost",
+    "tier": 4,
+    "description": "A soul lantern charm glowing with silver ectoplasm, ornate and spectral with a gentle wraithlight.",
+    "icon": "/images/items/charm_ghost_t4.png"
+  },
+  {
+    "id": "shadow_crystal_charm_ghost",
+    "name": "Shadow Crystal",
+    "familyId": "charm_ghost",
+    "tier": 5,
+    "description": "A tiny locket containing silvered dust, chained with links of iron and worn by those who commune with spirits.",
+    "icon": "/images/items/charm_ghost_t5.png"
+  },
+  {
+    "id": "void_shard_charm_ghost",
+    "name": "Void Shard",
+    "familyId": "charm_ghost",
+    "tier": 6,
+    "description": "A void shard charm of star-metal-black crystal and starless depth, cold and uncanny.",
+    "icon": "/images/items/charm_ghost_t6.png"
+  },
+  {
+    "id": "old_stick_charm_other",
+    "name": "Old Stick",
+    "familyId": "charm_other",
+    "tier": 1,
+    "description": "A weathered driftwood piece, carved with tide-marks and wrapped gently in sea-grass cord full of found magic.",
+    "icon": "/images/items/charm_other_t1.png"
+  },
+  {
+    "id": "knuckle_bone_charm_other",
+    "name": "Knuckle Bone",
+    "familyId": "charm_other",
+    "tier": 2,
+    "description": "A knuckle bone charm of polished bone and cord wrap, simple and talismanic with a folk-amulet feel.",
+    "icon": "/images/items/charm_other_t2.png"
+  },
+  {
+    "id": "rabbits_foot_charm_other",
+    "name": "Rabbit's Foot",
+    "familyId": "charm_other",
+    "tier": 3,
+    "description": "A rabbit's foot charm of soft fur and stitched luck, a classic token of good fortune.",
+    "icon": "/images/items/charm_other_t3.png"
+  },
+  {
+    "id": "silver_bell_charm_other",
+    "name": "Silver Bell",
+    "familyId": "charm_other",
+    "tier": 4,
+    "description": "A sturdy acorn charm, capped in copper and painted with protective symbols, prized by wanderers and wayfarers.",
+    "icon": "/images/items/charm_other_t4.png"
+  },
+  {
+    "id": "enchanted_plushie_charm_other",
+    "name": "Enchanted Plushie",
+    "familyId": "charm_other",
+    "tier": 5,
+    "description": "An enchanted plushie charm of soft fabric and glowing seams, cuddly, whimsical, and spellbound.",
+    "icon": "/images/items/charm_other_t5.png"
+  },
+  {
+    "id": "cosmic_bauble_charm_other",
+    "name": "Cosmic Bauble",
+    "familyId": "charm_other",
+    "tier": 6,
+    "description": "A cosmic bauble charm of swirling nebula glass and star-metal sparkles, tiny and infinitely wondrous.",
+    "icon": "/images/items/charm_other_t6.png"
+  },
+  {
     "id": "bat_winged_companion",
     "name": "Bat",
     "familyId": "winged_companion",
     "tier": 1,
     "description": "A tiny bat with copper wings, velvet fur, and a twitchy caveborn flutter.",
     "icon": "/images/items/winged_companion_t1.png",
-    "carryCapacity": 3
+    "carryCapacity": 3,
+    "sizeClass": "tiny"
   },
   {
     "id": "raven_winged_companion",
@@ -15,7 +208,8 @@
     "tier": 2,
     "description": "A bronze raven with glossy feathers, a beady stare, and an omened croak.",
     "icon": "/images/items/winged_companion_t2.png",
-    "carryCapacity": 6
+    "carryCapacity": 6,
+    "sizeClass": "tiny"
   },
   {
     "id": "owl_winged_companion",
@@ -24,7 +218,8 @@
     "tier": 3,
     "description": "A silent owl with iron-gray plumage, wide amber eyes, and a patient nightwatch posture.",
     "icon": "/images/items/winged_companion_t3.png",
-    "carryCapacity": 9
+    "carryCapacity": 9,
+    "sizeClass": "light"
   },
   {
     "id": "hawk_winged_companion",
@@ -33,7 +228,8 @@
     "tier": 4,
     "description": "A silver hawk with razor wings, bright talons, and a hunter's clear sky focus.",
     "icon": "/images/items/winged_companion_t4.png",
-    "carryCapacity": 12
+    "carryCapacity": 12,
+    "sizeClass": "light"
   },
   {
     "id": "harpy_winged_companion",
@@ -42,7 +238,8 @@
     "tier": 5,
     "description": "A gold-feathered harpy with elegant claws, sweeping wings, and a fierce wind-carved silhouette.",
     "icon": "/images/items/winged_companion_t5.png",
-    "carryCapacity": 15
+    "carryCapacity": 15,
+    "sizeClass": "medium"
   },
   {
     "id": "phoenix_winged_companion",
@@ -51,7 +248,8 @@
     "tier": 6,
     "description": "A star-metal phoenix with flameglass plumage, blazing crest, and an immortal sunrise aura.",
     "icon": "/images/items/winged_companion_t6.png",
-    "carryCapacity": 18
+    "carryCapacity": 18,
+    "sizeClass": "heavy"
   },
   {
     "id": "rat_critter_companion",
@@ -60,7 +258,8 @@
     "tier": 1,
     "description": "A scrappy rat with copper fur, quick whiskers, and a bold scavenger's attitude.",
     "icon": "/images/items/critter_companion_t1.png",
-    "carryCapacity": 3
+    "carryCapacity": 3,
+    "sizeClass": "tiny"
   },
   {
     "id": "ferret_critter_companion",
@@ -69,7 +268,8 @@
     "tier": 2,
     "description": "A bronze ferret with a sleek body, dark mask, and darting ribbonlike movements.",
     "icon": "/images/items/critter_companion_t2.png",
-    "carryCapacity": 6
+    "carryCapacity": 6,
+    "sizeClass": "tiny"
   },
   {
     "id": "fox_critter_companion",
@@ -78,7 +278,8 @@
     "tier": 3,
     "description": "A small fox with iron-red fur, sharp ears, and a clever woodland stare.",
     "icon": "/images/items/critter_companion_t3.png",
-    "carryCapacity": 9
+    "carryCapacity": 9,
+    "sizeClass": "light"
   },
   {
     "id": "shadowcat_critter_companion",
@@ -87,7 +288,8 @@
     "tier": 4,
     "description": "A silver-shadowcat with velvet-black fur and moonlit eyes glowing from the dark.",
     "icon": "/images/items/critter_companion_t4.png",
-    "carryCapacity": 12
+    "carryCapacity": 12,
+    "sizeClass": "light"
   },
   {
     "id": "moonhare_critter_companion",
@@ -96,7 +298,8 @@
     "tier": 5,
     "description": "A gold moonhare with luminous fur, delicate ears, and a dreamy hop through twilight grass.",
     "icon": "/images/items/critter_companion_t5.png",
-    "carryCapacity": 15
+    "carryCapacity": 15,
+    "sizeClass": "light"
   },
   {
     "id": "kitsune_critter_companion",
@@ -105,7 +308,8 @@
     "tier": 6,
     "description": "A star-metal kitsune with nine glassy tails, ornate markings, and an aura of ancient trickster magic.",
     "icon": "/images/items/critter_companion_t6.png",
-    "carryCapacity": 18
+    "carryCapacity": 18,
+    "sizeClass": "medium"
   },
   {
     "id": "glowmoth_arcane_companion",
@@ -114,7 +318,8 @@
     "tier": 1,
     "description": "A tiny glowmoth with coppery wings and a soft lantern-like shimmer in the dusk.",
     "icon": "/images/items/arcane_companion_t1.png",
-    "carryCapacity": 3
+    "carryCapacity": 3,
+    "sizeClass": "tiny"
   },
   {
     "id": "crystal_lizard_arcane_companion",
@@ -123,7 +328,8 @@
     "tier": 2,
     "description": "A bronze crystal lizard with faceted scales, bright eyes, and a desert gem sparkle.",
     "icon": "/images/items/arcane_companion_t2.png",
-    "carryCapacity": 6
+    "carryCapacity": 6,
+    "sizeClass": "tiny"
   },
   {
     "id": "living_grimoire_arcane_companion",
@@ -132,7 +338,8 @@
     "tier": 3,
     "description": "A compact living grimoire with leather-bound covers, brass corners, and twitching enchanted pages.",
     "icon": "/images/items/arcane_companion_t3.png",
-    "carryCapacity": 9
+    "carryCapacity": 9,
+    "sizeClass": "light"
   },
   {
     "id": "blink_hound_arcane_companion",
@@ -141,7 +348,8 @@
     "tier": 4,
     "description": "A silver blur of a blink hound with prismatic fur and a sudden pop of spatial magic.",
     "icon": "/images/items/arcane_companion_t4.png",
-    "carryCapacity": 12
+    "carryCapacity": 12,
+    "sizeClass": "medium"
   },
   {
     "id": "mandrake_arcane_companion",
@@ -150,7 +358,8 @@
     "tier": 5,
     "description": "A gold-leaf mandrake with root-legs, expressive face, and a small chorus of herbal mischief.",
     "icon": "/images/items/arcane_companion_t5.png",
-    "carryCapacity": 15
+    "carryCapacity": 15,
+    "sizeClass": "light"
   },
   {
     "id": "astral_familiar_arcane_companion",
@@ -159,7 +368,8 @@
     "tier": 6,
     "description": "A star-metal astral familiar with glassy wings, constellation markings, and a quiet orbit of cosmic light.",
     "icon": "/images/items/arcane_companion_t6.png",
-    "carryCapacity": 18
+    "carryCapacity": 18,
+    "sizeClass": "medium"
   },
   {
     "id": "wisp_fey_companion",
@@ -168,7 +378,8 @@
     "tier": 1,
     "description": "A pale wisp with copper sparks, a drifting lantern glow, and a feather-light haunting flutter.",
     "icon": "/images/items/fey_companion_t1.png",
-    "carryCapacity": 3
+    "carryCapacity": 3,
+    "sizeClass": "tiny"
   },
   {
     "id": "fairy_fey_companion",
@@ -177,7 +388,8 @@
     "tier": 2,
     "description": "A bright fairy with bronze wings, petal-soft dress, and a cheerful ring of forest magic.",
     "icon": "/images/items/fey_companion_t2.png",
-    "carryCapacity": 6
+    "carryCapacity": 6,
+    "sizeClass": "tiny"
   },
   {
     "id": "sprite_fey_companion",
@@ -186,7 +398,8 @@
     "tier": 3,
     "description": "A tiny sprite with iron-green sheen, acorn cap, and a sparkling prankster grin.",
     "icon": "/images/items/fey_companion_t3.png",
-    "carryCapacity": 9
+    "carryCapacity": 9,
+    "sizeClass": "tiny"
   },
   {
     "id": "homunculus_fey_companion",
@@ -195,7 +408,8 @@
     "tier": 4,
     "description": "A silver homunculus with stitched charm, glass beads, and a diligent little alchemical body.",
     "icon": "/images/items/fey_companion_t4.png",
-    "carryCapacity": 12
+    "carryCapacity": 12,
+    "sizeClass": "light"
   },
   {
     "id": "djinn_fey_companion",
@@ -204,7 +418,8 @@
     "tier": 5,
     "description": "A gold djinn with swirling smoke, ornate ornaments, and a radiant command of wishfire.",
     "icon": "/images/items/fey_companion_t5.png",
-    "carryCapacity": 15
+    "carryCapacity": 15,
+    "sizeClass": "medium"
   },
   {
     "id": "seraph_fey_companion",
@@ -213,7 +428,8 @@
     "tier": 6,
     "description": "A star-metal seraph with feathered glass wings, sacred brilliance, and a face of serene dawn.",
     "icon": "/images/items/fey_companion_t6.png",
-    "carryCapacity": 18
+    "carryCapacity": 18,
+    "sizeClass": "heavy"
   },
   {
     "id": "crab_aquatic_companion",
@@ -222,7 +438,8 @@
     "tier": 1,
     "description": "A small crab with copper shell, sharp claws, and a sideways skitter across wet stone.",
     "icon": "/images/items/aquatic_companion_t1.png",
-    "carryCapacity": 3
+    "carryCapacity": 3,
+    "sizeClass": "tiny"
   },
   {
     "id": "otter_aquatic_companion",
@@ -231,7 +448,8 @@
     "tier": 2,
     "description": "A sleek otter with bronze fur, bright eyes, and playful riverbank energy.",
     "icon": "/images/items/aquatic_companion_t2.png",
-    "carryCapacity": 6
+    "carryCapacity": 6,
+    "sizeClass": "tiny"
   },
   {
     "id": "octopus_aquatic_companion",
@@ -240,7 +458,8 @@
     "tier": 3,
     "description": "A compact octopus with dusky metal sheen, curling arms, and curious ink-dark intelligence.",
     "icon": "/images/items/aquatic_companion_t3.png",
-    "carryCapacity": 9
+    "carryCapacity": 9,
+    "sizeClass": "light"
   },
   {
     "id": "selkie_aquatic_companion",
@@ -249,7 +468,8 @@
     "tier": 4,
     "description": "A silver-skinned selkie with shimmering sealskin, sea-glass accents, and a wistful shoreline presence.",
     "icon": "/images/items/aquatic_companion_t4.png",
-    "carryCapacity": 12
+    "carryCapacity": 12,
+    "sizeClass": "medium"
   },
   {
     "id": "siren_aquatic_companion",
@@ -258,7 +478,8 @@
     "tier": 5,
     "description": "A gold-haired siren with pearl scales, luminous eyes, and an enchanting tide-born elegance.",
     "icon": "/images/items/aquatic_companion_t5.png",
-    "carryCapacity": 15
+    "carryCapacity": 15,
+    "sizeClass": "medium"
   },
   {
     "id": "water_elemental_aquatic_companion",
@@ -267,7 +488,8 @@
     "tier": 6,
     "description": "A star-metal water elemental with flowing glass limbs, rippling currents, and a body of living moonlit water.",
     "icon": "/images/items/aquatic_companion_t6.png",
-    "carryCapacity": 18
+    "carryCapacity": 18,
+    "sizeClass": "heavy"
   },
   {
     "id": "witch_toad_dark_companion",
@@ -276,7 +498,8 @@
     "tier": 1,
     "description": "A squat witch toad with mossy copper skin, warted charm, and a damp little curse in its gaze.",
     "icon": "/images/items/dark_companion_t1.png",
-    "carryCapacity": 3
+    "carryCapacity": 3,
+    "sizeClass": "tiny"
   },
   {
     "id": "imp_dark_companion",
@@ -285,7 +508,8 @@
     "tier": 2,
     "description": "A bronze imp with tiny horns, bat wings, and a mischievous ember-eyed grin.",
     "icon": "/images/items/dark_companion_t2.png",
-    "carryCapacity": 6
+    "carryCapacity": 6,
+    "sizeClass": "tiny"
   },
   {
     "id": "hellhound_dark_companion",
@@ -294,7 +518,8 @@
     "tier": 3,
     "description": "A lean hellhound with iron-black fur, glowing embers between the teeth, and a fiery stalking step.",
     "icon": "/images/items/dark_companion_t3.png",
-    "carryCapacity": 9
+    "carryCapacity": 9,
+    "sizeClass": "medium"
   },
   {
     "id": "wraith_dark_companion",
@@ -303,7 +528,8 @@
     "tier": 4,
     "description": "A silver wraith with torn mist-ribbons, hollow eyes, and a chilling presence like grave wind.",
     "icon": "/images/items/dark_companion_t4.png",
-    "carryCapacity": 12
+    "carryCapacity": 12,
+    "sizeClass": "light"
   },
   {
     "id": "shadow_demon_dark_companion",
@@ -312,7 +538,8 @@
     "tier": 5,
     "description": "A gold-edged shadow demon with smoky limbs, jagged horns, and a regal nightmare silhouette.",
     "icon": "/images/items/dark_companion_t5.png",
-    "carryCapacity": 15
+    "carryCapacity": 15,
+    "sizeClass": "medium"
   },
   {
     "id": "abyssal_horror_dark_companion",
@@ -321,7 +548,8 @@
     "tier": 6,
     "description": "A star-metal abyssal horror with glassy eyes, void-dark flesh, and impossible angles from the deep.",
     "icon": "/images/items/dark_companion_t6.png",
-    "carryCapacity": 18
+    "carryCapacity": 18,
+    "sizeClass": "heavy"
   },
   {
     "id": "lost_soul_spirit_companion",
@@ -330,7 +558,8 @@
     "tier": 1,
     "description": "A dim lost soul with copper haze, drifting form, and a sorrowful echo of forgotten life.",
     "icon": "/images/items/spirit_companion_t1.png",
-    "carryCapacity": 3
+    "carryCapacity": 3,
+    "sizeClass": "tiny"
   },
   {
     "id": "poltergeist_spirit_companion",
@@ -339,7 +568,8 @@
     "tier": 2,
     "description": "A bronze poltergeist with rattling chains, flickering edges, and a mischievous spectral shove.",
     "icon": "/images/items/spirit_companion_t2.png",
-    "carryCapacity": 6
+    "carryCapacity": 6,
+    "sizeClass": "tiny"
   },
   {
     "id": "ancestral_shade_spirit_companion",
@@ -348,7 +578,8 @@
     "tier": 3,
     "description": "A silver ancestral shade with dignified robes of mist and a gentle guardian's gaze.",
     "icon": "/images/items/spirit_companion_t3.png",
-    "carryCapacity": 9
+    "carryCapacity": 9,
+    "sizeClass": "light"
   },
   {
     "id": "banshee_spirit_companion",
@@ -357,7 +588,8 @@
     "tier": 4,
     "description": "A gold-lit banshee with flowing ethereal hair, sharp mournful beauty, and stormy funeral air.",
     "icon": "/images/items/spirit_companion_t4.png",
-    "carryCapacity": 12
+    "carryCapacity": 12,
+    "sizeClass": "light"
   },
   {
     "id": "revenant_spirit_companion",
@@ -366,7 +598,8 @@
     "tier": 5,
     "description": "A star-metal revenant with cracked armor, ghost-fire seams, and an unyielding undeath.",
     "icon": "/images/items/spirit_companion_t5.png",
-    "carryCapacity": 15
+    "carryCapacity": 15,
+    "sizeClass": "medium"
   },
   {
     "id": "lich_spirit_companion",
@@ -375,6 +608,7 @@
     "tier": 6,
     "description": "A regal lich with a crown of bone and gold, skeletal poise, and a throne-born aura of cold sorcery.",
     "icon": "/images/items/spirit_companion_t6.png",
-    "carryCapacity": 18
+    "carryCapacity": 18,
+    "sizeClass": "heavy"
   }
 ]

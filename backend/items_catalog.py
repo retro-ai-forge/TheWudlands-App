@@ -15,7 +15,8 @@ from typing import Optional
 _DATA_DIR = Path(__file__).resolve().parent / "data"
 _FAMILIES_PATH = _DATA_DIR / "item-inventory-properties.json"
 _SIZE_CLASSES_PATH = _DATA_DIR / "item-size-classes.json"
-_BACKPACK_TIERS_PATH = _DATA_DIR / "base-items-essentials.json"
+_BACKPACK_TIERS_PATH = _DATA_DIR / "base-items-adventuring-gear.json"
+_MOUNT_ITEMS_PATH = _DATA_DIR / "base-items-mount.json"
 
 # Every "final" crafted-output catalog file, scanned to resolve a family+tier
 # to a concrete {id, name} - mirrors craft_catalog.py's _CATALOG_FILES, but
@@ -56,6 +57,7 @@ class ItemFamily:
     equip_slots: tuple[tuple[str, ...], ...]
     backpackable: bool
     quality_max: Optional[int]
+    armor_class: Optional[int]
     icon: str
 
 
@@ -73,6 +75,7 @@ def _load_families() -> dict[str, ItemFamily]:
             equip_slots=equip_slots,
             backpackable=row.get("backpackable", False),
             quality_max=row.get("qualityMax"),
+            armor_class=row.get("armorClass"),
             icon=row.get("icon", ""),
         )
         families[family.family_id] = family
@@ -122,15 +125,25 @@ BACKPACK_CAPACITY_BY_ID: dict[str, int] = _load_backpack_capacity()
 
 
 def _load_saddlepack_capacity() -> dict[str, int]:
-    data = json.loads(_BACKPACK_TIERS_PATH.read_text())
+    data = json.loads(_MOUNT_ITEMS_PATH.read_text())
     return {row["id"]: row["capacitySlots"] for row in data if row.get("familyId") == "saddlepack"}
 
 
 SADDLEPACK_CAPACITY_BY_ID: dict[str, int] = _load_saddlepack_capacity()
 
 
+def _load_mount_carry_capacity() -> dict[str, int]:
+    data = json.loads(_MOUNT_ITEMS_PATH.read_text())
+    return {row["id"]: row["carryCapacity"] for row in data if row.get("carryCapacity")}
+
+
+MOUNT_CARRY_CAPACITY_BY_ID: dict[str, int] = _load_mount_carry_capacity()
+
+_MOUNT_FAMILIES = frozenset({"steed_mount", "beast_mount", "exotic_mount", "aquatic_mount"})
+
+
 def _load_cart_capacity() -> dict[str, int]:
-    data = json.loads(_BACKPACK_TIERS_PATH.read_text())
+    data = json.loads(_MOUNT_ITEMS_PATH.read_text())
     return {row["id"]: row["capacitySlots"] for row in data if row.get("familyId") == "cart"}
 
 
@@ -195,6 +208,33 @@ def _load_final_catalog() -> tuple[dict[tuple[str, int], dict], dict[str, str]]:
 FINAL_ITEM_ROWS_BY_FAMILY_TIER, FAMILY_ID_BY_FINAL_ITEM_ID = _load_final_catalog()
 
 
+def _load_item_size_class_overrides() -> dict[str, str]:
+    """Per-item sizeClass overrides from catalog files (e.g. companions
+    whose size varies by tier instead of being flat across the family)."""
+    overrides: dict[str, str] = {}
+    for filename in _FINAL_CATALOG_FILES:
+        path = _DATA_DIR / filename
+        if not path.exists():
+            continue
+        for row in json.loads(path.read_text()):
+            sc = row.get("sizeClass")
+            if sc:
+                overrides[row["id"]] = sc
+    return overrides
+
+
+ITEM_SIZE_CLASS_BY_ID: dict[str, str] = _load_item_size_class_overrides()
+
+
+def slot_cost_for_item(item_id: str, family_id: str) -> int:
+    """Slot cost for one instance, checking per-item sizeClass first,
+    then falling back to the family-level size class."""
+    sc = ITEM_SIZE_CLASS_BY_ID.get(item_id)
+    if sc:
+        return SLOT_COST_BY_SIZE_CLASS.get(sc, 1)
+    return slot_cost_for_family(family_id)
+
+
 def resolve_output_row(family_id: str, tier: int) -> Optional[dict]:
     """Concrete {"id", "name"} for crafting `family_id` at `tier`, or None.
 
@@ -232,9 +272,7 @@ class ItemCatalogEntry:
     # all (needsItemDefinition:false families never degrade, so this is
     # only ever meaningful alongside a real Character.items instance).
     quality_max: Optional[int]
-    # Per-tier art (see base-items-weapon.json/base-tools.json's own
-    # "icon" field) - "" for a family/tier with no dedicated art yet, in
-    # which case the UI falls back to its own generic placeholder.
+    armor_class: Optional[int]
     icon: str
     # Family-level (item-inventory-properties.json's own "stackSize") -
     # whether the UI should show an owned-count badge at all: 1 means
@@ -263,10 +301,10 @@ class ItemCatalogEntry:
     # tool at all.
     gathering_bonuses: tuple[str, ...]
     # Per-tier (base-items-mount.json's own "size" field) - creature size on
-    # the Small/Medium/Large/Huge/Colossal scale, only meaningful for
+    # the Medium/Heavy/Huge/Colossal scale, only meaningful for
     # kind:["mount"] families. "" for anything else (companions aren't
-    # ridden, so they carry no size). Drives the Giants-race riding
-    # restriction in backend.players.equip_item.
+    # ridden, so they carry no size). Shown in the UI for Giants-race
+    # riding suitability.
     size: str
     # Per-tier (base-items-mount.json/base-items-companion.json's own
     # "carryCapacity" field) - extra backpack slots this mount/companion
@@ -298,11 +336,12 @@ def _load_item_catalog_entries() -> tuple[ItemCatalogEntry, ...]:
     for (family_id, tier), row in FINAL_ITEM_ROWS_BY_FAMILY_TIER.items():
         family = ITEM_FAMILIES_BY_ID.get(family_id)
         if family is not None:
+            item_sc = ITEM_SIZE_CLASS_BY_ID.get(row["id"], family.size_class)
             entries.append(
                 ItemCatalogEntry(
                     row["id"], row["name"], family_id, tier, family.kind, family.quality_max,
-                    row.get("icon", ""), family.stack_size,
-                    row.get("description", ""), family.size_class,
+                    family.armor_class, row.get("icon", ""), family.stack_size,
+                    row.get("description", ""), item_sc,
                     family.equip_slots, family.backpackable,
                     GATHERING_BONUSES_BY_ITEM.get(family_id, ()),
                     row.get("size", ""), row.get("carryCapacity", 0),
@@ -315,7 +354,7 @@ def _load_item_catalog_entries() -> tuple[ItemCatalogEntry, ...]:
             entries.append(
                 ItemCatalogEntry(
                     item.id, item.name, item.family_id, item.tier, family.kind, family.quality_max,
-                    item.icon or "", family.stack_size,
+                    family.armor_class, item.icon or "", family.stack_size,
                     "", family.size_class,
                     family.equip_slots, family.backpackable,
                     GATHERING_BONUSES_BY_ITEM.get(item.family_id, ()),
@@ -354,7 +393,7 @@ def resolve_item_balance_stack(item_id: str) -> tuple[int, int]:
     """
     entry = ITEM_CATALOG_ENTRIES_BY_ID.get(item_id)
     if entry is not None:
-        return entry.stack_size, slot_cost_for_family(entry.family_id)
+        return entry.stack_size, slot_cost_for_item(item_id, entry.family_id)
     family = ITEM_FAMILIES_BY_ID.get(item_id)
     stack_size = family.stack_size if family else 1
     return stack_size, slot_cost_for_family(item_id)
@@ -377,7 +416,7 @@ def backpack_slots_used(character: dict) -> int:
 
     for instance in gear.get("items", []):
         if instance.get("location") == "backpack":
-            total += slot_cost_for_family(instance["familyId"])
+            total += slot_cost_for_item(instance["itemId"], instance["familyId"])
 
     for resource_id, qty in gear.get("resources", {}).get("backpack", {}).items():
         if resource_id in RESOURCE_ITEMS_BY_ID:
@@ -488,7 +527,7 @@ def saddlepack_slots_used(character: dict) -> int:
 
     for instance in gear.get("items", []):
         if instance.get("location") == "saddlepack":
-            total += slot_cost_for_family(instance["familyId"])
+            total += slot_cost_for_item(instance["itemId"], instance["familyId"])
 
     for resource_id, qty in gear.get("resources", {}).get("saddlepack", {}).items():
         if resource_id in RESOURCE_ITEMS_BY_ID:
@@ -536,7 +575,7 @@ def cart_slots_used(character: dict) -> int:
 
     for instance in gear.get("items", []):
         if instance.get("location") == "cart":
-            total += slot_cost_for_family(instance["familyId"])
+            total += slot_cost_for_item(instance["itemId"], instance["familyId"])
 
     for resource_id, qty in gear.get("resources", {}).get("cart", {}).items():
         if resource_id in RESOURCE_ITEMS_BY_ID:
@@ -601,7 +640,7 @@ def carry_weight_capacity(character: dict) -> int:
     attr = character.get("attr", {})
     might = attr.get("migh", 1)
     endurance = attr.get("endu", 1)
-    return 20 + (might + endurance) // 3
+    return 10 + (might + endurance) // 3
 
 
 _CARRY_WEIGHT_EXCLUDED_SLOTS = frozenset({
@@ -631,9 +670,9 @@ def carry_weight_used(character: dict) -> int:
         if loc == "body":
             if _CARRY_WEIGHT_EXCLUDED_SLOTS.intersection(instance.get("slotRef", [])):
                 continue
-            total += slot_cost_for_family(instance["familyId"])
+            total += slot_cost_for_item(instance["itemId"], instance["familyId"])
         elif loc == "backpack":
-            total += slot_cost_for_family(instance["familyId"])
+            total += slot_cost_for_item(instance["itemId"], instance["familyId"])
 
     for resource_id, qty in gear.get("resources", {}).get("backpack", {}).items():
         if resource_id in RESOURCE_ITEMS_BY_ID:
@@ -648,6 +687,27 @@ def carry_weight_used(character: dict) -> int:
         stack_size, slot_cost = resolve_item_balance_stack(item_id)
         total += math.ceil(qty / stack_size) * slot_cost
 
+    return total
+
+
+def body_gear_weight(character: dict) -> int:
+    """Weight of body-worn gear only (no backpack contents, no mount/companion sub-slots)."""
+    total = 0
+    for instance in character.get("gear", {}).get("items", []):
+        if instance.get("location") == "body":
+            if _CARRY_WEIGHT_EXCLUDED_SLOTS.intersection(instance.get("slotRef", [])):
+                continue
+            total += slot_cost_for_item(instance["itemId"], instance["familyId"])
+    return total
+
+
+def mount_gear_weight(character: dict) -> int:
+    """Weight of mount sub-slot gear only (Bridle, Saddle, Barding, Saddlepack, Hitch) — no saddlepack contents."""
+    total = 0
+    for instance in character.get("gear", {}).get("items", []):
+        loc = instance.get("location")
+        if loc == "body" and _MOUNT_SUB_SLOTS.intersection(instance.get("slotRef", [])):
+            total += slot_cost_for_item(instance["itemId"], instance["familyId"])
     return total
 
 
@@ -666,3 +726,50 @@ def encumbrance_state(character: dict) -> str:
     if used <= cap * ENCUMBERED_THRESHOLD:
         return "encumbered"
     return "immobile"
+
+
+_MOUNT_SUB_SLOTS = frozenset({"Bridle", "Saddle", "Barding", "Saddlepack"})
+
+
+def mount_carry_weight_capacity(character: dict) -> int:
+    """Carry capacity of the currently equipped mount, or 0 if none."""
+    for instance in character.get("gear", {}).get("items", []):
+        if (
+            instance.get("location") == "body"
+            and instance.get("familyId") in _MOUNT_FAMILIES
+        ):
+            return MOUNT_CARRY_CAPACITY_BY_ID.get(instance["itemId"], 0)
+    return 0
+
+
+def mount_carry_weight_used(character: dict) -> int:
+    """Total slot-weight the mount is carrying: mount sub-slot gear
+    (Bridle, Saddle, Barding, Saddlepack, Hitch) plus everything
+    packed inside the saddlepack (items, itemBalances, resources)."""
+    from backend.processed_catalog import PROCESSED_RESOURCE_ITEMS_BY_ID
+    from backend.resources_catalog import RESOURCE_ITEMS_BY_ID
+
+    total = 0
+    gear = character.get("gear", {})
+
+    for instance in gear.get("items", []):
+        loc = instance.get("location")
+        if loc == "body" and _MOUNT_SUB_SLOTS.intersection(instance.get("slotRef", [])):
+            total += slot_cost_for_item(instance["itemId"], instance["familyId"])
+        elif loc == "saddlepack":
+            total += slot_cost_for_item(instance["itemId"], instance["familyId"])
+
+    for resource_id, qty in gear.get("resources", {}).get("saddlepack", {}).items():
+        if resource_id in RESOURCE_ITEMS_BY_ID:
+            stack_size = RAW_STACK_SIZE
+        elif resource_id in PROCESSED_RESOURCE_ITEMS_BY_ID:
+            stack_size = PROCESSED_STACK_SIZE
+        else:
+            stack_size = TINY_STACK_SIZE
+        total += math.ceil(qty / stack_size)
+
+    for item_id, qty in gear.get("itemBalances", {}).get("saddlepack", {}).items():
+        stack_size, slot_cost = resolve_item_balance_stack(item_id)
+        total += math.ceil(qty / stack_size) * slot_cost
+
+    return total

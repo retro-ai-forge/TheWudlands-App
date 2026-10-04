@@ -1,0 +1,6 @@
+{
+  "Common": { "riderWeight": 2 },
+  "Mystical": { "riderWeight": 4 },
+  "Mixed": { "riderWeight": 2 },
+  "Giants": { "riderWeight": 32 }
+}

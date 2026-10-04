@@ -6,8 +6,7 @@ Configuration flags (edit the block below):
   DROP_MATERIALS   True  → grant raw materials (RAW_MATERIAL_QTY each) to crafting.resources
   DROP_ITEMS       True  → grant instance items + balance items (armor/weapons/food/potions/gear)
   DROP_TOOLS       True  → grant flat crafting tools (anvil, furnace, …) to crafting.tools
-  TIER_LVL         1-6   → which tier to drop (used when TIER_RANDOM is False)
-  TIER_RANDOM      True  → pick a random tier each run, overrides TIER_LVL
+  TIER_MIN / TIER_MAX    → tier range to drop (loops from min to max inclusive)
 
 Usage:
     source .venv/bin/activate
@@ -18,7 +17,6 @@ from __future__ import annotations
 
 import asyncio
 import json
-import random
 import sys
 import uuid
 from datetime import datetime, timezone
@@ -36,7 +34,7 @@ from backend.db import get_database  # noqa: E402
 # Configuration
 # ---------------------------------------------------------------------------
 
-PLAYER_ADDRESS = "1sFxBUESH2ztJzRFvP4s7Ehc8Sj8sFxpMxgA985yud1Yz34"
+PLAYER_ADDRESS = "16SFhwDLW1nekebF1czsxqD3BsEr19JTPut8EcQtLD477jEW"
 RAW_MATERIAL_QTY = 3000
 
 DROP_BLUEPRINTS = True
@@ -44,8 +42,8 @@ DROP_MATERIALS  = True    # raw materials → crafting.resources
 DROP_ITEMS      = True   # instance items + vault.itemBalances (armor, weapons, food, potions, …)
 DROP_TOOLS      = True   # flat crafting tools (anvil, furnace, workbench, …)
 
-TIER_RANDOM     = False  # True = pick a random tier, overrides TIER_LVL
-TIER_LVL        = 6      # tier to drop when TIER_RANDOM is False (1–6)
+TIER_MIN        = 1      # lowest tier to drop (1–6)
+TIER_MAX        = 6      # highest tier to drop (1–6)
 
 # ---------------------------------------------------------------------------
 
@@ -53,10 +51,10 @@ ROOT = Path(__file__).parent.parent
 DATA = ROOT / "backend" / "data"
 
 ITEM_FILES = [
-    "base-tools.json",
+    "base-items-weapon.json",
     "base-items-armor.json",
     "base-items-shield.json",
-    "base-items-weapon.json",
+    "base-tools.json",
     "base-items-food.json",
     "base-items-potion.json",
     "base-items-adventuring-gear.json",
@@ -66,12 +64,8 @@ ITEM_FILES = [
 ]
 
 
-def resolve_tier() -> int:
-    if TIER_RANDOM:
-        tier = random.randint(1, 6)
-        print(f"TIER_RANDOM=True → using tier {tier}")
-        return tier
-    return TIER_LVL
+def resolve_tiers() -> list[int]:
+    return list(range(TIER_MIN, TIER_MAX + 1))
 
 
 def load_blueprints(tier: int) -> list[str]:
@@ -122,8 +116,8 @@ def load_items(tier: int) -> tuple[list[dict], dict[str, int], dict[str, int]]:
 
 
 async def main() -> None:
-    tier = resolve_tier()
-    print(f"Settings: DROP_BLUEPRINTS={DROP_BLUEPRINTS}  DROP_MATERIALS={DROP_MATERIALS}  DROP_ITEMS={DROP_ITEMS}  DROP_TOOLS={DROP_TOOLS}  tier={tier}\n")
+    tiers = resolve_tiers()
+    print(f"Settings: DROP_BLUEPRINTS={DROP_BLUEPRINTS}  DROP_MATERIALS={DROP_MATERIALS}  DROP_ITEMS={DROP_ITEMS}  DROP_TOOLS={DROP_TOOLS}  tiers={TIER_MIN}–{TIER_MAX}\n")
 
     db = get_database()
 
@@ -140,73 +134,74 @@ async def main() -> None:
     char_id = slot["id"]
     print(f"Character: {slot.get('firstName', '')} {slot.get('lastName', '')} (id={char_id})\n")
 
-    # 1 — Blueprints → character
-    if DROP_BLUEPRINTS:
-        blueprint_ids = load_blueprints(tier)
-        print(f"[blueprints] Adding {len(blueprint_ids)} tier-{tier} blueprints to character...")
-        result = await db.players.update_one(
-            {"address": PLAYER_ADDRESS, "characters.id": char_id},
-            {"$addToSet": {"characters.$.blueprints": {"$each": blueprint_ids}}},
-        )
-        print(f"  matched={result.matched_count} modified={result.modified_count}")
-    else:
-        print("[blueprints] skipped (DROP_BLUEPRINTS=False)")
+    for tier in tiers:
+        print(f"{'='*40} TIER {tier} {'='*40}")
 
-    # 2 — Raw materials
-    if DROP_MATERIALS:
-        raw_ids = load_raw_materials(tier)
-        print(f"\n[materials] Granting {len(raw_ids)} tier-{tier} raw materials ({RAW_MATERIAL_QTY} each)...")
-        if raw_ids:
-            inc_resources = {f"crafting.resources.{rid}": RAW_MATERIAL_QTY for rid in raw_ids}
-            result = await db.players.update_one({"address": PLAYER_ADDRESS}, {"$inc": inc_resources})
-            print(f"  matched={result.matched_count} modified={result.modified_count}")
-        else:
-            print("  (none found)")
-    else:
-        print("\n[materials] skipped (DROP_MATERIALS=False)")
-
-    # 3 — Instance items + balance items
-    if DROP_ITEMS:
-        instances, _, item_balances = load_items(tier)
-
-        print(f"\n[items] Pushing {len(instances)} tier-{tier} instance-tracked items to vault.items...")
-        if instances:
+        if DROP_BLUEPRINTS:
+            blueprint_ids = load_blueprints(tier)
+            print(f"[blueprints] Adding {len(blueprint_ids)} tier-{tier} blueprints to character...")
             result = await db.players.update_one(
-                {"address": PLAYER_ADDRESS},
-                {"$push": {"vault.items": {"$each": instances}}},
+                {"address": PLAYER_ADDRESS, "characters.id": char_id},
+                {"$addToSet": {"characters.$.blueprints": {"$each": blueprint_ids}}},
             )
             print(f"  matched={result.matched_count} modified={result.modified_count}")
         else:
-            print("  (none found)")
+            print("[blueprints] skipped")
 
-        print(f"\n[balances] Granting {len(item_balances)} tier-{tier} balance items to vault.itemBalances...")
-        if item_balances:
-            result = await db.players.update_one(
-                {"address": PLAYER_ADDRESS},
-                {"$inc": {f"vault.itemBalances.{iid}": qty for iid, qty in item_balances.items()}},
-            )
-            print(f"  matched={result.matched_count} modified={result.modified_count}")
+        if DROP_MATERIALS:
+            raw_ids = load_raw_materials(tier)
+            print(f"[materials] Granting {len(raw_ids)} tier-{tier} raw materials ({RAW_MATERIAL_QTY} each)...")
+            if raw_ids:
+                inc_resources = {f"crafting.resources.{rid}": RAW_MATERIAL_QTY for rid in raw_ids}
+                result = await db.players.update_one({"address": PLAYER_ADDRESS}, {"$inc": inc_resources})
+                print(f"  matched={result.matched_count} modified={result.modified_count}")
+            else:
+                print("  (none found)")
         else:
-            print("  (none found)")
-    else:
-        print("\n[items/balances] skipped (DROP_ITEMS=False)")
+            print("[materials] skipped")
 
-    # 3 — Crafting tools
-    if DROP_TOOLS:
-        _, crafting_tools, _ = load_items(tier)
-        print(f"\n[tools] Granting {len(crafting_tools)} tier-{tier} crafting tools to crafting.tools...")
-        if crafting_tools:
-            result = await db.players.update_one(
-                {"address": PLAYER_ADDRESS},
-                {"$inc": {f"crafting.tools.{tid}": qty for tid, qty in crafting_tools.items()}},
-            )
-            print(f"  matched={result.matched_count} modified={result.modified_count}")
+        if DROP_ITEMS:
+            instances, _, item_balances = load_items(tier)
+
+            print(f"[items] Pushing {len(instances)} tier-{tier} instance-tracked items to vault.items...")
+            if instances:
+                result = await db.players.update_one(
+                    {"address": PLAYER_ADDRESS},
+                    {"$push": {"vault.items": {"$each": instances}}},
+                )
+                print(f"  matched={result.matched_count} modified={result.modified_count}")
+            else:
+                print("  (none found)")
+
+            print(f"[balances] Granting {len(item_balances)} tier-{tier} balance items to vault.itemBalances...")
+            if item_balances:
+                result = await db.players.update_one(
+                    {"address": PLAYER_ADDRESS},
+                    {"$inc": {f"vault.itemBalances.{iid}": qty for iid, qty in item_balances.items()}},
+                )
+                print(f"  matched={result.matched_count} modified={result.modified_count}")
+            else:
+                print("  (none found)")
         else:
-            print("  (none found)")
-    else:
-        print("\n[tools] skipped (DROP_TOOLS=False)")
+            print("[items/balances] skipped")
 
-    print("\nDone.")
+        if DROP_TOOLS:
+            _, crafting_tools, _ = load_items(tier)
+            print(f"[tools] Granting {len(crafting_tools)} tier-{tier} crafting tools to crafting.tools...")
+            if crafting_tools:
+                result = await db.players.update_one(
+                    {"address": PLAYER_ADDRESS},
+                    {"$inc": {f"crafting.tools.{tid}": qty for tid, qty in crafting_tools.items()}},
+                )
+                print(f"  matched={result.matched_count} modified={result.modified_count}")
+            else:
+                print("  (none found)")
+        else:
+            print("[tools] skipped")
+
+        print()
+
+    print("Done.")
 
 
 if __name__ == "__main__":

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import localFont from "next/font/local";
 import styles from "./SoulCreation.module.css";
@@ -74,21 +74,9 @@ type TrappingsOptions = {
 
 const EMPTY_TRAPPINGS_OPTIONS: TrappingsOptions = { tierPools: {}, items: [], blueprintPools: [] };
 
-function getTierIndicator(tier: number): string {
-  switch (tier) {
-    case 1: return "○";
-    case 2: return "●";
-    case 3: return "◉";
-    case 4: return "✦";
-    case 5: return "✨";
-    case 6: return "🌟";
-    default: return "";
-  }
-}
-
-function getTierIconColor(tier: number): string {
-  if (tier <= 3) return "#c07a3a"; // Brown for T1-3
-  return "#e6b85c"; // Gold for T4-6
+function getTierIndicator(tier: number): React.ReactNode {
+  if (tier < 1 || tier > 6) return null;
+  return <img src={`/icons/t${tier}.png`} alt={`T${tier}`} className={styles.tierIcon} draggable={false} />;
 }
 
 const BLUEPRINT_SOURCE_LABELS: Record<string, string> = {
@@ -1308,7 +1296,7 @@ export function SoulCreation({
                             return (
                               <div key={item.id} className={styles.trappingsRow}>
                                 <div className={styles.trappingsItemInfo}>
-                                  <span style={{ fontSize: "1.2em", color: getTierIconColor(item.tier), flexShrink: 0, marginRight: "0.4rem" }}>
+                                  <span style={{ flexShrink: 0, marginRight: "0.4rem" }}>
                                     {getTierIndicator(item.tier)}
                                   </span>
                                   <div style={{ display: "flex", flexDirection: "column", gap: "0rem", flex: 1 }}>

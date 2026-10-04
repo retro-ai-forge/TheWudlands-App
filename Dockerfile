@@ -16,6 +16,9 @@ COPY tsconfig.json next.config.ts eslint.config.mjs ./
 # Copy backend data files referenced by the frontend build
 COPY backend/data ./backend/data
 
+# Python is needed by the recipe-viewer build script (public/craft/build-recipe-viewer.py)
+RUN apk add --no-cache python3
+
 # Build Next.js app
 RUN npm run build
 
