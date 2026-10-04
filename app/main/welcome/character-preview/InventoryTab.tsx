@@ -4019,6 +4019,17 @@ export function InventoryTab({
       return next;
     });
 
+  const [vaultKindFilter, setVaultKindFilter] = useState<string[]>([]);
+  const toggleKindFilter = (kind: string) =>
+    setVaultKindFilter((prev) =>
+      prev.includes(kind) ? prev.filter((k) => k !== kind) : [...prev, kind]
+    );
+  const [vaultTierFilter, setVaultTierFilter] = useState<number[]>([]);
+  const toggleTierFilter = (tier: number) =>
+    setVaultTierFilter((prev) =>
+      prev.includes(tier) ? prev.filter((t) => t !== tier) : [...prev, tier]
+    );
+
   // Independent of the Crafting accordion above - folding the recipe viewer
   // has nothing to do with toggling between the character's and party's stock.
   const [recipeViewerOpen, setRecipeViewerOpen] = useState(false);
@@ -4625,25 +4636,107 @@ export function InventoryTab({
         </>
       )}
 
-      {section === "vault" && (
-        <ItemGrid
-          ids={Object.keys(playerItemsCombined).filter((id) => playerItemsCombined[id] > 0)}
-          emptyLabel="Nothing crafted yet."
-          tierInfo={itemCatalogTierInfo}
-          balances={playerItemsCombined}
-          lookupIds={playerItemLookupIds}
-          instanceQuality={playerItemRowQuality}
-          source="vault"
-          hasBackpackEquipped={hasBackpackEquipped}
-          hasSaddlepackEquipped={hasSaddlepackEquipped}
-          hasMountEquipped={hasMountEquipped}
-          hasCompanionEquipped={hasCompanionEquipped}
-          inAdventure={character.availability.inAdventure}
-          characterId={character.id}
-          characterFirstName={character.firstName}
-          onPlayerDataUpdated={onPlayerDataUpdated}
-        />
-      )}
+      {section === "vault" && (() => {
+        const allVaultIds = Object.keys(playerItemsCombined).filter((id) => playerItemsCombined[id] > 0);
+        const kindOrder = ["weapon", "armor", "shield", "tool", "food", "potion", "adventuring_gear", "essentials", "companion", "mount"];
+        const kindsInVault = new Set(
+          allVaultIds
+            .map((id) => itemCatalogTierInfo[playerItemLookupIds[id] ?? id]?.kind)
+            .filter((k): k is string => !!k)
+        );
+        const kindsPresent = kindOrder.filter((k) => kindsInVault.has(k));
+        const mountSlots = ["Mount", "Barding", "Bridle", "Saddle", "Saddlepack", "Hitch"];
+        const companionSlots = ["Companion", "Charm"];
+        const companionFamilies = ["hunters_charm"];
+        const adventuringGearFamilies = ["backpack", "bedroll", "tent", "tinderbox", "waterskin", "whetstone", "candle", "torch", "glass_lantern", "fishing_pole", "quill", "ink", "parchment", "starlight_catcher", "oil"];
+        const weaponAmmoFamilies = ["arrow", "bolt"];
+        const hasKindFilter = vaultKindFilter.length > 0;
+        const hasTierFilter = vaultTierFilter.length > 0;
+        const allActive = !hasKindFilter && !hasTierFilter;
+        const matchesKind = (info: BlueprintTierInfo[string] | undefined): boolean => {
+          if (!info) return false;
+          if (info.kind && vaultKindFilter.includes(info.kind)) {
+            if (info.kind === "essentials") {
+              if (info.familyId && companionFamilies.includes(info.familyId)) return false;
+              if (info.familyId && adventuringGearFamilies.includes(info.familyId)) return false;
+              if (info.equipSlots) {
+                const flat = info.equipSlots.flat();
+                if (flat.some((s) => mountSlots.includes(s))) return false;
+                if (flat.some((s) => companionSlots.includes(s))) return false;
+              }
+            }
+            if (info.kind === "adventuring_gear" && info.familyId && !adventuringGearFamilies.includes(info.familyId)) return false;
+            return true;
+          }
+          if (vaultKindFilter.includes("essentials") && info.kind === "adventuring_gear" && info.familyId && !adventuringGearFamilies.includes(info.familyId)) return true;
+          if (vaultKindFilter.includes("weapon") && info.familyId && weaponAmmoFamilies.includes(info.familyId)) return true;
+          if (vaultKindFilter.includes("companion") && info.familyId && companionFamilies.includes(info.familyId)) return true;
+          if (vaultKindFilter.includes("adventuring_gear") && info.familyId && adventuringGearFamilies.includes(info.familyId)) return true;
+          if (info.equipSlots) {
+            const flat = info.equipSlots.flat();
+            if (vaultKindFilter.includes("mount") && flat.some((s) => mountSlots.includes(s))) return true;
+            if (vaultKindFilter.includes("companion") && flat.some((s) => companionSlots.includes(s))) return true;
+          }
+          return false;
+        };
+        const filteredIds = allActive
+          ? allVaultIds
+          : allVaultIds.filter((id) => {
+              const info = itemCatalogTierInfo[playerItemLookupIds[id] ?? id];
+              if (hasKindFilter && !matchesKind(info)) return false;
+              if (hasTierFilter && (!info?.tier || !vaultTierFilter.includes(info.tier))) return false;
+              return true;
+            });
+        return (
+          <>
+            {allVaultIds.length > 0 && (
+              <div className={styles.vaultFilterBar}>
+                <button
+                  type="button"
+                  className={`${styles.vaultFilterBtn} ${allActive ? styles.vaultFilterBtnActive : ""}`}
+                  onClick={() => { setVaultKindFilter([]); setVaultTierFilter([]); }}
+                  title="All"
+                >A</button>
+                {kindsPresent.map((kind) => (
+                  <button
+                    key={kind}
+                    type="button"
+                    className={`${styles.vaultFilterBtn} ${vaultKindFilter.includes(kind) ? styles.vaultFilterBtnActive : ""}`}
+                    onClick={() => toggleKindFilter(kind)}
+                    title={kind.replace(/_/g, " ")}
+                  >{getKindIcon(kind)}</button>
+                ))}
+                {[1, 2, 3, 4, 5, 6].map((tier) => (
+                  <button
+                    key={`t${tier}`}
+                    type="button"
+                    className={`${styles.vaultFilterBtn} ${styles[`vaultFilterT${tier}` as keyof typeof styles] ?? ""} ${vaultTierFilter.includes(tier) ? styles.vaultFilterBtnActive : ""}`}
+                    onClick={() => toggleTierFilter(tier)}
+                    title={`Tier ${tier}`}
+                  ><span>{getTierIndicator(tier)}</span></button>
+                ))}
+              </div>
+            )}
+            <ItemGrid
+              ids={filteredIds}
+              emptyLabel={allActive ? "Nothing crafted yet." : "No items match."}
+              tierInfo={itemCatalogTierInfo}
+              balances={playerItemsCombined}
+              lookupIds={playerItemLookupIds}
+              instanceQuality={playerItemRowQuality}
+              source="vault"
+              hasBackpackEquipped={hasBackpackEquipped}
+              hasSaddlepackEquipped={hasSaddlepackEquipped}
+              hasMountEquipped={hasMountEquipped}
+              hasCompanionEquipped={hasCompanionEquipped}
+              inAdventure={character.availability.inAdventure}
+              characterId={character.id}
+              characterFirstName={character.firstName}
+              onPlayerDataUpdated={onPlayerDataUpdated}
+            />
+          </>
+        );
+      })()}
     </div>
   );
 }
