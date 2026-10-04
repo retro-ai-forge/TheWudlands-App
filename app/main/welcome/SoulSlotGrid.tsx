@@ -160,9 +160,14 @@ export interface SlotCharacterSummary {
     cartCapacity: number;
     carryWeightUsed: number;
     carryWeightCapacity: number;
+    bodyGearWeight: number;
     encumbranceState: "normal" | "encumbered" | "immobile";
+    mountCarryWeightUsed: number;
+    mountCarryWeightCapacity: number;
+    mountGearWeight: number;
   };
   equippedLight: { family: string; tier: number; litAt: string; hand: string } | null;
+  stats: { adventureFinished: number; adventureRunAway: number };
 }
 
 interface SlotState {
@@ -604,6 +609,11 @@ function SoulSlotCard({
     }
   };
 
+  const isFreeCharacter =
+    showsOccupantPreview &&
+    !occupant.availability.inAdventure &&
+    remainingSeconds === null;
+
   return (
     // The requirement sits outside the button. Locked, it shows the real
     // (greyed) artwork with a padlock badge over it and the requirement
@@ -613,7 +623,7 @@ function SoulSlotCard({
     // made, same as the free slot.
     <div className={styles.slotCell}>
       <button
-        className={styles.characterSlot}
+        className={`${styles.characterSlot}${showsOccupantPreview ? (isFreeCharacter ? ` ${styles.slotGlowFree}` : ` ${styles.slotGlowBusy}`) : ""}`}
         disabled={!canInteract && !slot.link}
         onClick={canInteract || slot.link ? handleClick : undefined}
         title={
@@ -754,7 +764,9 @@ function SoulSlotCard({
 
       <span
         className={
-          isUnlocked ? styles.slotRequirementMet : styles.slotRequirement
+          showsOccupantPreview
+            ? (isFreeCharacter ? styles.slotRequirementMet : styles.slotNameBusy)
+            : isUnlocked ? styles.slotRequirementMet : styles.slotRequirement
         }
       >
         {showsOccupantPreview ? `${occupant.firstName} ${occupant.lastName}` : slot.label}

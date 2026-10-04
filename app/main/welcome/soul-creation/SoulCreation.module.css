@@ -1166,3 +1166,11 @@
 .middleOverlayFadeIn {
   opacity: 1;
 }
+
+.tierIcon {
+  width: 1.2em;
+  height: 1.2em;
+  object-fit: contain;
+  vertical-align: middle;
+  image-rendering: auto;
+}

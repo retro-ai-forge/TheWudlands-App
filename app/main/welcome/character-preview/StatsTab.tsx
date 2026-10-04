@@ -211,41 +211,82 @@ export function StatsTab({
   return (
     <div className={styles.panel}>
       <div className={styles.statsLayout}>
-        <button
-          type="button"
-          className={styles.faceFrame}
-          onClick={onEditPortrait}
-          title="Edit portrait"
-          aria-label="Edit portrait"
-        >
-          {character.portraitUrl && character.portraitUrl !== "empty" ? (
-            character.portraitFaceArea ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img
-                src={character.portraitUrl}
-                alt={character.firstName}
-                style={getPortraitCropImgStyle(character.portraitFaceArea)}
-              />
+        <div className={styles.portraitStatsGroup}>
+          <button
+            type="button"
+            className={styles.faceFrame}
+            onClick={onEditPortrait}
+            title="Edit portrait"
+            aria-label="Edit portrait"
+          >
+            {character.portraitUrl && character.portraitUrl !== "empty" ? (
+              character.portraitFaceArea ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={character.portraitUrl}
+                  alt={character.firstName}
+                  style={getPortraitCropImgStyle(character.portraitFaceArea)}
+                />
+              ) : (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={character.portraitUrl}
+                  alt={character.firstName}
+                  style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                />
+              )
             ) : (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img
-                src={character.portraitUrl}
-                alt={character.firstName}
-                style={{ width: "100%", height: "100%", objectFit: "cover" }}
-              />
-            )
-          ) : (
-            // No portrait was ever set for this character - same plain
-            // black square + label as the soul slot grid's own
-            // .slotNoPortrait (a different CSS module, so its own class
-            // here instead of importing across modules).
-            <span className={styles.noPortraitPlaceholder} aria-label="No portrait">
-              no
-              <br />
-              portrait
-            </span>
-          )}
-        </button>
+              <span className={styles.noPortraitPlaceholder} aria-label="No portrait">
+                no
+                <br />
+                portrait
+              </span>
+            )}
+          </button>
+
+          <div className={styles.characterStatsFrame}>
+            {(() => {
+              const f = character.stats?.adventureFinished ?? 0;
+              const r = character.stats?.adventureRunAway ?? 0;
+              const total = f + r;
+              const fPct = total > 0 ? (f / total) * 100 : 100;
+              const rPct = total > 0 ? (r / total) * 100 : 0;
+              return (
+                <>
+                  <div className={styles.characterStatsHeading}>
+                  {fPct >= 50 ? (
+                    <><span>Stalwart</span><span className={styles.stalwartPct}>{Math.round(fPct)}%</span></>
+                  ) : (
+                    <><span>Craven</span><span className={styles.cravenPct}>{Math.round(rPct)}%</span></>
+                  )}
+                </div>
+                  <div className={styles.storyBar}>
+                    <div
+                      className={styles.storyBarFinished}
+                      style={{ width: `${fPct}%` }}
+                    >
+                      <span className={styles.storyBarLabel}>STOOD</span>
+                    </div>
+                    <div
+                      className={styles.storyBarRunAway}
+                      style={{ width: `${rPct}%` }}
+                    >
+                      <span className={styles.storyBarLabel}>RUN</span>
+                    </div>
+                  </div>
+                  <div className={styles.miniStatsGrid}>
+                    <span>Adventures</span><span>{total}</span>
+                    <span>Crafted</span><span>0</span>
+                    <span>Blueprints</span><span>{character.blueprints.length}</span>
+                    <span>Items</span><span>{character.gear.items.length}</span>
+                    <span>Slain</span><span>0</span>
+                    <span>Deaths</span><span>0</span>
+                  </div>
+                </>
+              );
+            })()}
+          </div>
+        </div>
 
         <div className={styles.identityColumn}>
           <div className={styles.identityRow}>
@@ -360,11 +401,12 @@ export function StatsTab({
                 setCarryOverlay({ top: window.innerHeight - rect.top + 6, left: rect.left });
               }}
             >
-              <span>Carry Capacity</span>
+              <span>Carry Capacity {character.gear.encumbranceState === "immobile" ? "— Overloaded" : character.gear.encumbranceState === "encumbered" ? "— Encumbered" : "— Light"}</span>
               <span>{character.gear.carryWeightUsed}/{character.gear.carryWeightCapacity}</span>
             </button>
           </div>
         </div>
+
       </div>
 
       <div className={styles.attrColumns}>

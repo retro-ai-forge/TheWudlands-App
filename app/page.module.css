@@ -308,6 +308,28 @@
   background: rgba(0, 0, 0, 0.4);
 }
 
+.slotGlowFree {
+  border-style: solid;
+  box-shadow: 0 0 8px 2px rgba(76, 175, 80, 0.5), inset 0 0 6px 1px rgba(76, 175, 80, 0.15);
+  border-color: rgba(76, 175, 80, 0.6);
+}
+
+.slotGlowFree:hover {
+  box-shadow: 0 0 12px 3px rgba(76, 175, 80, 0.65), inset 0 0 8px 2px rgba(76, 175, 80, 0.2);
+  border-color: rgba(76, 175, 80, 0.8);
+}
+
+.slotGlowBusy {
+  border-style: solid;
+  box-shadow: 0 0 8px 2px rgba(200, 120, 50, 0.4), inset 0 0 6px 1px rgba(200, 120, 50, 0.1);
+  border-color: rgba(200, 120, 50, 0.5);
+}
+
+.slotGlowBusy:hover {
+  box-shadow: 0 0 12px 3px rgba(200, 120, 50, 0.55), inset 0 0 8px 2px rgba(200, 120, 50, 0.15);
+  border-color: rgba(200, 120, 50, 0.7);
+}
+
 .characterSlotIcon {
   width: 4.5rem;
   height: auto;
@@ -349,6 +371,11 @@
 /* Once earned, the requirement reads as a badge rather than a hurdle. */
 .slotRequirementMet {
   color: #4caf50;
+  font-weight: 700;
+}
+
+.slotNameBusy {
+  color: #c8783a;
   font-weight: 700;
 }
 

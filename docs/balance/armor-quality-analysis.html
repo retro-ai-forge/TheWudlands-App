@@ -154,6 +154,7 @@
   tr:nth-child(odd) td { background: var(--bg-row-alt); }
   tr:nth-child(even) td { background: var(--bg-row); }
   tr:hover td { background: var(--bg-surface); }
+  tr.no-bottom-border td { border-bottom: none; }
 
   .tag {
     display: inline-block;
@@ -247,8 +248,8 @@
 </div>
 
 <h2>Full Set Quality</h2>
-<p class="formula">Carry Capacity = 20 + &lfloor;(Might + Endurance) / 3&rfloor;</p>
-<p class="subtitle" style="margin-top:0.25rem">Slot cost: <span class="tag tag-light" style="margin:0 0.2em">light</span> = 1 &nbsp; <span class="tag tag-medium" style="margin:0 0.2em">medium</span> = 2 &nbsp; <span class="tag tag-heavy" style="margin:0 0.2em">heavy</span> = 4 &nbsp;&nbsp;|&nbsp;&nbsp; Min M/E shows minimum attributes for 15 free slots after armor + weapon</p>
+<p class="formula">Carry Capacity = 10 + &lfloor;(Might + Endurance) / 3&rfloor;</p>
+<p class="subtitle" style="margin-top:0.25rem">Slot cost: <span class="tag tag-light" style="margin:0 0.2em">light</span> = 1 &nbsp; <span class="tag tag-medium" style="margin:0 0.2em">medium</span> = 2 &nbsp; <span class="tag tag-heavy" style="margin:0 0.2em">heavy</span> = 4 &nbsp;&nbsp;|&nbsp;&nbsp; M/E fixed per class: light 10/10, medium 20/20, heavy 30/30</p>
 <div class="table-wrap" id="main-table-wrap"></div>
 
 <h2>Shield vs Armor Ratio</h2>
@@ -259,18 +260,18 @@
 
 <script>
 const SETS = {
-  cloth:      { Head: {q:70,s:"light"},  Chest: {q:70,s:"light"},  Legs: {q:70,s:"light"},  Cloak: {q:40,s:"light"} },
-  leather:    { Head: {q:150,s:"light"}, Chest: {q:150,s:"light"}, Legs: {q:150,s:"light"} },
-  chainmail:  { Head: {q:250,s:"medium"},Chest: {q:250,s:"medium"},Legs: {q:250,s:"medium"} },
-  iron:       { Head: {q:310,s:"medium"},Chest: {q:310,s:"medium"},Legs: {q:310,s:"medium"},Shield: {q:160,s:"medium"} },
-  chitin:     { Head: {q:310,s:"medium"},Chest: {q:310,s:"medium"},Legs: {q:310,s:"medium"},Shield: {q:270,s:"medium"} },
-  ebony:      { Head: {q:340,s:"medium"},Chest: {q:340,s:"medium"},Legs: {q:340,s:"medium"},Shield: {q:280,s:"medium"} },
-  meteoric_iron: { Head: {q:350,s:"heavy"},Chest: {q:350,s:"heavy"},Legs: {q:350,s:"heavy"},Shield: {q:340,s:"heavy"} },
-  darksteel:  { Head: {q:360,s:"heavy"},Chest: {q:360,s:"heavy"},Legs: {q:360,s:"heavy"},Shield: {q:350,s:"heavy"} },
-  fur:        { Cloak: {q:40,s:"light"} },
-  quilted:    { Cloak: {q:40,s:"light"} },
-  wooden:     { Shield: {q:40,s:"medium"} },
-  reinforced_wooden: { Shield: {q:110,s:"medium"} },
+  cloth:      { Head: {q:70,s:"light",ac:1},  Chest: {q:70,s:"light",ac:1},  Legs: {q:70,s:"light",ac:1},  Cloak: {q:40,s:"light",ac:1} },
+  leather:    { Head: {q:150,s:"light",ac:2}, Chest: {q:150,s:"light",ac:2}, Legs: {q:150,s:"light",ac:2}, Cloak: {q:40,s:"light",ac:1} },
+  chainmail:  { Head: {q:250,s:"medium",ac:3},Chest: {q:250,s:"medium",ac:3},Legs: {q:250,s:"medium",ac:3} },
+  iron:       { Head: {q:310,s:"medium",ac:4},Chest: {q:310,s:"medium",ac:4},Legs: {q:310,s:"medium",ac:4},Shield: {q:160,s:"medium",ac:3} },
+  chitin:     { Head: {q:310,s:"medium",ac:4},Chest: {q:310,s:"medium",ac:4},Legs: {q:310,s:"medium",ac:4},Shield: {q:270,s:"medium",ac:3} },
+  ebony:      { Head: {q:340,s:"medium",ac:4},Chest: {q:340,s:"medium",ac:4},Legs: {q:340,s:"medium",ac:4},Shield: {q:280,s:"medium",ac:4} },
+  meteoric_iron: { Head: {q:350,s:"heavy",ac:5},Chest: {q:350,s:"heavy",ac:5},Legs: {q:350,s:"heavy",ac:5},Shield: {q:340,s:"heavy",ac:5} },
+  darksteel:  { Head: {q:360,s:"heavy",ac:5},Chest: {q:360,s:"heavy",ac:5},Legs: {q:360,s:"heavy",ac:5},Shield: {q:350,s:"heavy",ac:5} },
+  fur:        { Cloak: {q:40,s:"light",ac:1} },
+  quilted:    { Cloak: {q:40,s:"light",ac:1} },
+  wooden:     { Shield: {q:40,s:"medium",ac:1} },
+  reinforced_wooden: { Shield: {q:110,s:"medium",ac:2} },
 };
 
 const SLOTS = ["Head","Chest","Legs","Cloak","Shield"];
@@ -278,6 +279,8 @@ const ARMOR_ORDER = ["cloth","leather","chainmail","iron","chitin","ebony","mete
 const ORDER = [...ARMOR_ORDER,"fur","quilted","wooden","reinforced_wooden"];
 
 const WEIGHT = { tiny: 1, light: 1, medium: 2, heavy: 4 };
+
+const MAGIC_SETS = { cloth: true, leather: true };
 
 // Sets without a shield get paired with a default shield for the weight column
 const DEFAULT_SHIELD = {
@@ -302,83 +305,118 @@ function slotWeight(sizeClass) {
   return WEIGHT[sizeClass] || 1;
 }
 
-const BASE_CAPACITY = 20;
+const BASE_CAPACITY = 10;
 const FREE_TARGET = 15;
 
 function capacity(m, e) { return BASE_CAPACITY + Math.floor((m + e) / 3); }
 
-// Min M+E so that capacity >= weight + FREE_TARGET
-function minME(weight) {
-  const need = weight + FREE_TARGET;
-  const attrPart = need - BASE_CAPACITY;
-  if (attrPart <= 0) return 2; // any attributes
-  return Math.max(2, attrPart * 3);
-}
-function fmtME(me) {
-  if (me > 40) return '<span class="flag flag-low">impossible</span>';
-  if (me <= 2) return '<span class="dim">any</span>';
-  const half = Math.ceil(me / 2);
-  const other = me - half;
-  return `${half} / ${other}`;
+// Fixed M/E per weight class
+const CLASS_ATTRS = { light: [10,10], medium: [20,20], heavy: [30,30] };
+
+function setWeightClass(set) {
+  const sizes = Object.values(set).map(v => v.s);
+  if (sizes.includes("heavy")) return "heavy";
+  if (sizes.includes("medium")) return "medium";
+  return "light";
 }
 
 function renderMainTable() {
   const t = currentTier;
   let html = '<table><thead><tr><th>Set</th>';
   for (const sl of SLOTS) html += `<th>${sl}</th><th>${sl} Size</th>`;
-  html += `<th>Sum Quality</th><th>Carry Wt</th><th>+ Weapon 1H<br><span style="font-weight:400;font-size:0.65rem">medium (2)</span></th><th>Min M / E<br><span style="font-weight:400;font-size:0.65rem">for ${FREE_TARGET} free</span></th><th>Capacity</th><th>Free Slots</th></tr></thead><tbody>`;
+  html += `<th>AC Armor</th><th>AC Shield</th><th>AC Total</th><th>Magic User<br><span style="font-weight:400;font-size:0.6rem">(strong soul)</span></th><th>Carry Wt</th><th>Weapon<br><span style="font-weight:400;font-size:0.6rem">(dagger/sword)</span></th><th>M / E</th><th>Capacity</th><th>Free Slots</th></tr></thead><tbody>`;
 
-  for (const name of ORDER) {
-    const set = SETS[name];
-    html += `<tr><td class="set-name">${label(name)}</td>`;
-    let sum = 0;
-    let totalWeight = 0;
-    const sizes = new Set();
+  // Reference rows: Cloth at fixed attribute levels
+  for (const [rm, re, withShield, withCloak] of [[1,1,false,false],[5,5,true,true]]) {
+    const refSet = SETS.cloth;
+    const refCap = capacity(rm, re);
+    let refWeight = 0;
+    let armorAcParts = [], shieldAc = null;
+    html += `<tr><td style="color:var(--accent)">Cloth (M${rm} / E${re})</td>`;
+    const pairedShield = withShield ? SETS.wooden?.Shield : null;
     for (const sl of SLOTS) {
-      if (set[sl]) {
-        const v = scale(set[sl].q, t);
-        sum += v;
-        totalWeight += slotWeight(set[sl].s);
-        sizes.add(set[sl].s);
-        html += `<td>${fmt(v)}</td><td>${tag(set[sl].s)}</td>`;
+      const skip = sl === "Cloak" && !withCloak;
+      const piece = skip ? null : (refSet[sl] || (sl === "Shield" && pairedShield ? pairedShield : null));
+      if (piece) {
+        const v = scale(piece.q, t);
+        refWeight += slotWeight(piece.s);
+        const ac = piece.ac * t;
+        if (sl === "Shield") shieldAc = ac;
+        else armorAcParts.push(ac);
+        html += `<td>${fmt(v)}</td><td>${tag(piece.s)}</td>`;
       } else {
         html += '<td class="dim">&mdash;</td><td class="dim">&mdash;</td>';
       }
     }
-    let sumFlag = '';
-    if (sizes.size > 1) sumFlag = ' <span class="flag flag-mismatch">mixed sizes</span>';
+    const refArmorAcSum = armorAcParts.reduce((a,b)=>a+b,0);
+    const refAcTotal = refArmorAcSum + (shieldAc ?? 0);
+    const weightHtml = `${refWeight}`;
+    const refTotal = refWeight + 1;
+    const refFree = refCap - refTotal;
+    let refFreeHtml;
+    if (refFree < 0) refFreeHtml = `<span class="flag flag-low">${refFree}</span>`;
+    else if (refFree < 5) refFreeHtml = `<span style="color:var(--yellow)">${refFree}</span>`;
+    else refFreeHtml = `<span class="flag-ok">${refFree}</span>`;
+    html += `<td class="sum-col">${refArmorAcSum}</td>`;
+    html += `<td class="sum-col">${shieldAc != null ? shieldAc : '<span class="dim">&mdash;</span>'}</td>`;
+    html += `<td class="sum-col">${refAcTotal}</td>`;
+    html += `<td class="flag-ok">true</td><td>${weightHtml}</td>`;
+    html += `<td>${refTotal}</td><td>${rm} / ${re}</td><td>${refCap}</td><td>${refFreeHtml}</td>`;
+    html += '</tr>';
+  }
 
-    // Carry weight column — for sets without shield, show "X / Y with <shield>"
-    let effectiveWeight = totalWeight;
-    let weightHtml;
-    if (!set.Shield && DEFAULT_SHIELD[name]) {
-      const pairedName = DEFAULT_SHIELD[name];
-      const pairedShield = SETS[pairedName]?.Shield;
-      if (pairedShield) {
-        const withShield = totalWeight + slotWeight(pairedShield.s);
-        weightHtml = `${totalWeight} <span class="dim">/ ${withShield} w/ ${label(pairedName)}</span>`;
-        effectiveWeight = withShield;
-      } else {
-        weightHtml = `${totalWeight}`;
-      }
-    } else {
-      weightHtml = `${totalWeight}`;
+  for (const name of ORDER) {
+    const set = SETS[name];
+    const isMetIron = name === "meteoric_iron";
+    const isDarksteel = name === "darksteel";
+    const highlight = isMetIron || isDarksteel;
+    let trStyle = '';
+    if (highlight) {
+      trStyle = 'border-left:2px solid var(--accent);border-right:2px solid var(--accent);';
+      if (isMetIron) trStyle += 'border-top:2px solid var(--accent);';
+      if (isDarksteel) trStyle += 'border-bottom:2px solid var(--accent);';
     }
+    html += `<tr${trStyle ? ` style="${trStyle}"` : ''}${isMetIron ? ' class="no-bottom-border"' : ''}><td class="set-name">${label(name)}</td>`;
+    let totalWeight = 0;
+    let armorAcParts = [], shieldAc = null;
+    const pairedShieldSet = !set.Shield && DEFAULT_SHIELD[name] ? SETS[DEFAULT_SHIELD[name]]?.Shield : null;
+    for (const sl of SLOTS) {
+      const piece = set[sl] || (sl === "Shield" && pairedShieldSet ? pairedShieldSet : null);
+      if (piece) {
+        const v = scale(piece.q, t);
+        totalWeight += slotWeight(piece.s);
+        const ac = piece.ac * t;
+        if (sl === "Shield") shieldAc = ac;
+        else armorAcParts.push(ac);
+        html += `<td>${fmt(v)}</td><td>${tag(piece.s)}</td>`;
+      } else {
+        html += '<td class="dim">&mdash;</td><td class="dim">&mdash;</td>';
+      }
+    }
+    const armorAcSum = armorAcParts.reduce((a,b)=>a+b,0);
+    const acTotal = armorAcSum + (shieldAc ?? 0);
+    const weightHtml = `${totalWeight}`;
+    const magic = !!MAGIC_SETS[name];
+    const magicHtml = magic ? '<span class="flag-ok">true</span>' : '<span class="flag flag-low">false</span>';
 
-    // Weapon 1H column (medium = 2 slots)
     const WEAPON_1H = 2;
-    const totalWithWeapon = effectiveWeight + WEAPON_1H;
+    const totalWithWeapon = totalWeight + WEAPON_1H;
 
-    // Min M+E for FREE_TARGET free slots
-    const me = minME(totalWithWeapon);
-    const cap = capacity(Math.ceil(me/2), me - Math.ceil(me/2));
+    const wc = setWeightClass(set);
+    const [m, e] = CLASS_ATTRS[wc];
+    const cap = capacity(m, e);
     const free = cap - totalWithWeapon;
     let freeHtml;
-    if (free < FREE_TARGET) freeHtml = `<span class="flag flag-low">${free}</span>`;
+    if (free < 0) freeHtml = `<span class="flag flag-low">${free}</span>`;
+    else if (free < 5) freeHtml = `<span style="color:var(--yellow)">${free}</span>`;
     else freeHtml = `<span class="flag-ok">${free}</span>`;
 
-    html += `<td class="sum-col">${fmt(sum)}${sumFlag}</td><td>${weightHtml}</td>`;
-    html += `<td>${totalWithWeapon}</td><td>${fmtME(me)}</td><td>${cap}</td><td>${freeHtml}</td>`;
+    html += `<td class="sum-col">${armorAcSum}</td>`;
+    html += `<td class="sum-col">${shieldAc != null ? shieldAc : '<span class="dim">&mdash;</span>'}</td>`;
+    html += `<td class="sum-col">${acTotal}</td>`;
+    html += `<td>${magicHtml}</td><td>${weightHtml}</td>`;
+    const meColor = wc === "heavy" ? 'color:var(--red);font-weight:700' : '';
+    html += `<td>${totalWithWeapon}</td><td${meColor ? ` style="${meColor}"` : ''}>${m} / ${e}</td><td>${cap}</td><td>${freeHtml}</td>`;
     html += '</tr>';
   }
   html += '</tbody></table>';

@@ -1,19 +1,19 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import styles from "./CharacterTabs.module.css";
 import {
   BACKPACK_ACTION_ICON,
+  ChopBlockPopup,
   HoldActionPopup,
   ItemGrid,
+  SADDLEPACK_ACTION_ICON,
   VAULT_ACTION_ICON,
   computeBackpackContents,
   computeSaddlepackContents,
   computeCartContents,
   postJson,
-  SalvageFormulaLine,
+  selectionWeight,
   type BlueprintTierInfo,
   type RawPlayerData,
-  type SalvageCondition,
-  type SalvageMaterial,
   type ResourceTierInfo,
 } from "./InventoryTab";
 import type { SlotCharacterSummary } from "../SoulSlotGrid";
@@ -88,6 +88,46 @@ export function CampView({
   // there's nothing to gate here beyond which of the three was clicked.
   const [campAction, setCampAction] = useState<"burn" | "moveAll" | "chop" | null>(null);
 
+  const [selectMode, setSelectMode] = useState(false);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [batchBusy, setBatchBusy] = useState(false);
+  const [confirmDestroy, setConfirmDestroy] = useState(false);
+  const [showSalvagePopup, setShowSalvagePopup] = useState(false);
+
+  const exitSelectMode = useCallback(() => {
+    setSelectMode(false);
+    setSelectedIds(new Set());
+  }, []);
+
+  const toggleSelectItem = useCallback((id: string) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  }, []);
+
+  const toggleSelectResource = useCallback((id: string) => {
+    const key = `res:${id}`;
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(key)) next.delete(key);
+      else next.add(key);
+      return next;
+    });
+  }, []);
+
+  const enterSelectMode = useCallback((id: string) => {
+    setSelectMode(true);
+    setSelectedIds(new Set([id]));
+  }, []);
+
+  const enterSelectModeResource = useCallback((id: string) => {
+    setSelectMode(true);
+    setSelectedIds(new Set([`res:${id}`]));
+  }, []);
+
   // Same item-catalog fetch BodyTab.tsx/InventoryTab.tsx each already do
   // independently for their own tierInfo - no shared ancestor state to
   // lift this into without a larger prop-threading change.
@@ -104,6 +144,7 @@ export function CampView({
             tier: number;
             kind: string[];
             qualityMax: number | null;
+            armorClass: number | null;
             icon: string;
             stackSize: number;
             description: string;
@@ -111,6 +152,8 @@ export function CampView({
             equipSlots: string[][];
             backpackable: boolean;
             gatheringBonuses: string[];
+            capacitySlots: number;
+            carryCapacity: number;
           }>
         ) => {
           const map: BlueprintTierInfo = {};
@@ -121,6 +164,7 @@ export function CampView({
               kind: item.kind[0] ?? "",
               name: item.name,
               qualityMax: item.qualityMax,
+              armorClass: item.armorClass,
               icon: item.icon,
               stackSize: item.stackSize,
               description: item.description,
@@ -128,6 +172,8 @@ export function CampView({
               equipSlots: item.equipSlots,
               backpackable: item.backpackable,
               gatheringBonuses: item.gatheringBonuses,
+              capacitySlots: item.capacitySlots,
+              carryCapacity: item.carryCapacity,
             };
           }
           setItemCatalogTierInfo(map);
@@ -185,27 +231,31 @@ export function CampView({
   // mid-adventure would be correctly stored but never show up here.
   const campBalances = character.gear.itemBalances.camp;
   const campInstances = character.gear.items.filter((instance) => instance.location === "camp");
-  const campInstanceLookupIds: Record<string, string> = {};
-  const campInstanceRowBalances: Record<string, number> = {};
-  const campInstanceQuality: Record<string, number | null> = {};
-  // Every row shown here - instance or flat-balance alike - is at
-  // location:"camp" by construction (this whole view only ever reads
-  // items/itemBalances.camp), so ItemDetailPopup's location-gated action
-  // buttons (e.g. "Move to backpack") work the same regardless of which
-  // kind of row was clicked. Balance ids are filled in below alongside
-  // campCombined, once both id sets are known.
-  const campLocations: Record<string, "camp"> = {};
-  for (const instance of campInstances) {
-    campInstanceLookupIds[instance.instanceId] = instance.itemId;
-    campInstanceRowBalances[instance.instanceId] = 1;
-    campInstanceQuality[instance.instanceId] = instance.quality;
-    campLocations[instance.instanceId] = "camp";
-  }
-  const campCombined: Record<string, number> = { ...campBalances, ...campInstanceRowBalances };
-  const campIds = Object.keys(campCombined).filter((id) => campCombined[id] > 0);
-  for (const id of Object.keys(campBalances)) {
-    campLocations[id] = "camp";
-  }
+
+  const { campInstanceLookupIds, campInstanceQuality, campLocations, campCombined, campIds } = useMemo(() => {
+    const lookupIds: Record<string, string> = {};
+    const rowBalances: Record<string, number> = {};
+    const quality: Record<string, number | null> = {};
+    const locations: Record<string, "camp"> = {};
+    for (const instance of campInstances) {
+      lookupIds[instance.instanceId] = instance.itemId;
+      rowBalances[instance.instanceId] = 1;
+      quality[instance.instanceId] = instance.quality;
+      locations[instance.instanceId] = "camp";
+    }
+    const combined: Record<string, number> = { ...campBalances, ...rowBalances };
+    const ids = Object.keys(combined).filter((id) => combined[id] > 0);
+    for (const id of Object.keys(campBalances)) {
+      locations[id] = "camp";
+    }
+    return {
+      campInstanceLookupIds: lookupIds,
+      campInstanceQuality: quality,
+      campLocations: locations,
+      campCombined: combined,
+      campIds: ids,
+    };
+  }, [campInstances, campBalances]);
 
   // Raw/processed materials sitting loose at camp - e.g. the backpack-full
   // fallback of check_out_resource_to_backpack, or an explicit "move to
@@ -291,8 +341,167 @@ export function CampView({
     }
   }
 
+  const batchMoveCamp = useCallback(
+    async (destination: "vault" | "backpack" | "saddlepack") => {
+      if (batchBusy || selectedIds.size === 0) return;
+      setBatchBusy(true);
+      const instanceIds: string[] = [];
+      const balances: { id: string; amount: number }[] = [];
+      const resources: { id: string; amount: number }[] = [];
+      for (const key of selectedIds) {
+        if (key.startsWith("res:")) {
+          const resId = key.slice(4);
+          const amount = campResourceBalances[resId] ?? 0;
+          if (amount > 0) resources.push({ id: resId, amount });
+        } else if (campInstanceLookupIds[key] !== undefined) {
+          instanceIds.push(key);
+        } else {
+          const amount = campCombined[key] ?? 0;
+          if (amount > 0) balances.push({ id: key, amount });
+        }
+      }
+      const r = await postJson(
+        `/api/auth/me/characters/${character.id}/camp/bulk-move`,
+        { destination, instanceIds, balances, resources }
+      );
+      if (r.ok) onPlayerDataUpdated?.(r.data);
+      setBatchBusy(false);
+      exitSelectMode();
+    },
+    [batchBusy, selectedIds, campResourceBalances, campInstanceLookupIds, campCombined, character.id, onPlayerDataUpdated, exitSelectMode]
+  );
+
+  const batchDestroyCamp = useCallback(async () => {
+    if (batchBusy || selectedIds.size === 0) return;
+    setBatchBusy(true);
+    let lastResult: RawPlayerData | null = null;
+    for (const key of selectedIds) {
+      if (key.startsWith("res:")) continue;
+      const isInstance = campInstanceLookupIds[key] !== undefined;
+      if (isInstance) {
+        const r = await postJson(
+          `/api/auth/me/characters/${character.id}/items/${key}/destroy-from-character`
+        );
+        if (r.ok) lastResult = r.data;
+      } else {
+        const amount = campCombined[key] ?? 0;
+        if (amount <= 0) continue;
+        const r = await postJson(
+          `/api/auth/me/characters/${character.id}/item-balances/${key}/destroy-from-character`,
+          { amount }
+        );
+        if (r.ok) lastResult = r.data;
+      }
+    }
+    if (lastResult) onPlayerDataUpdated?.(lastResult);
+    setBatchBusy(false);
+    exitSelectMode();
+  }, [batchBusy, selectedIds, campInstanceLookupIds, campCombined, character.id, onPlayerDataUpdated, exitSelectMode]);
+
   return (
     <div className={styles.panel}>
+      {selectMode && (
+        <div className={styles.selectionBar}>
+          <div className={styles.selectionBarActions}>
+            {!character.availability.inAdventure && (
+              <button
+                type="button"
+                className={styles.selectionBarBtn}
+                title="Move to vault"
+                disabled={batchBusy || selectedIds.size === 0}
+                onClick={() => batchMoveCamp("vault")}
+              >
+                <div className={styles.selectionBarIcon} style={{ backgroundImage: `url(${VAULT_ACTION_ICON})` }} />
+              </button>
+            )}
+            {hasBackpackEquipped && (
+              <button
+                type="button"
+                className={styles.selectionBarBtn}
+                title="Move to backpack"
+                disabled={batchBusy || selectedIds.size === 0}
+                onClick={() => batchMoveCamp("backpack")}
+              >
+                <div className={styles.selectionBarIcon} style={{ backgroundImage: `url(${BACKPACK_ACTION_ICON})` }} />
+              </button>
+            )}
+            {hasSaddlepackEquipped && (
+              <button
+                type="button"
+                className={styles.selectionBarBtn}
+                title="Move to saddlepack"
+                disabled={batchBusy || selectedIds.size === 0}
+                onClick={() => batchMoveCamp("saddlepack")}
+              >
+                <div className={styles.selectionBarIcon} style={{ backgroundImage: `url(${SADDLEPACK_ACTION_ICON})` }} />
+              </button>
+            )}
+            <div className={styles.selectionBarGap} />
+            <button
+              type="button"
+              className={styles.selectionBarBtn}
+              title="Salvage selected"
+              disabled={batchBusy || selectedIds.size === 0}
+              onClick={() => setShowSalvagePopup(true)}
+            >
+              <div className={styles.selectionBarIcon} style={{ backgroundImage: `url(/images/character/chopping_block.png)` }} />
+            </button>
+            <button
+              type="button"
+              className={styles.selectionBarBtn}
+              title="Destroy selected"
+              disabled={batchBusy || selectedIds.size === 0}
+              onClick={() => setConfirmDestroy(true)}
+            >
+              <div className={styles.selectionBarIcon} style={{ backgroundImage: `url(/images/character/campfire_lit.png)` }} />
+            </button>
+          </div>
+          <span className={styles.selectionBarWeight}>
+            Weight: {selectionWeight(selectedIds, itemCatalogTierInfo, campCombined, campInstanceLookupIds, campResourceBalances, resourceTierInfo)}
+          </span>
+          <button
+            type="button"
+            className={`${styles.selectionBarBtn} ${styles.selectionBarClose}`}
+            title="Cancel selection"
+            onClick={exitSelectMode}
+          >
+            &#x2715;
+          </button>
+        </div>
+      )}
+      {confirmDestroy && (
+        <div className={styles.confirmDestroyOverlay} onClick={() => setConfirmDestroy(false)}>
+          <div className={styles.confirmDestroyCard} onClick={(e) => e.stopPropagation()}>
+            <p className={styles.confirmDestroyText}>
+              Destroy {selectedIds.size} selected?
+            </p>
+            <div className={styles.confirmDestroyButtons}>
+              <button
+                type="button"
+                className={styles.confirmDestroyCancel}
+                onClick={() => setConfirmDestroy(false)}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                className={styles.confirmDestroyConfirm}
+                onClick={() => { setConfirmDestroy(false); batchDestroyCamp(); }}
+              >
+                Destroy
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      {showSalvagePopup && (
+        <ChopBlockPopup
+          characterId={character.id}
+          onPlayerDataUpdated={(data) => { onPlayerDataUpdated?.(data); exitSelectMode(); }}
+          onClose={() => setShowSalvagePopup(false)}
+          preSelectedIds={new Set([...selectedIds].filter((k) => !k.startsWith("res:")))}
+        />
+      )}
       <ItemGrid
         ids={campIds}
         emptyLabel="Nothing sitting at camp right now."
@@ -320,6 +529,8 @@ export function CampView({
         saddlepackCapacity={character.gear.saddlepackCapacity}
         cartSlotsUsed={character.gear.cartSlotsUsed}
         cartCapacity={character.gear.cartCapacity}
+        mountCarryWeightUsed={character.gear.mountCarryWeightUsed}
+        mountCarryWeightCapacity={character.gear.mountCarryWeightCapacity}
         resourceBalances={campResourceBalances}
         resourceTierInfo={resourceTierInfo}
         resourceDestinations={[
@@ -331,6 +542,13 @@ export function CampView({
             : []),
         ]}
         iconOverrides={Object.keys(cartIconOverrides).length > 0 ? cartIconOverrides : undefined}
+        selectMode={selectMode}
+        selectBusy={batchBusy}
+        selectedIds={selectedIds}
+        onLongPressItem={enterSelectMode}
+        onToggleSelectItem={toggleSelectItem}
+        onLongPressResource={enterSelectModeResource}
+        onToggleSelectResource={toggleSelectResource}
       />
       <div className={styles.campfireStage} style={{ height: CAMPFIRE_AREA_PX }}>
         {/* Fire's position/size are relative to THIS group (i.e. to the
@@ -441,8 +659,9 @@ export function CampView({
           <HoldActionPopup
             headline="Store all"
             label="Hold to START PACKING UP"
+            subtitle="Fills cart first, then saddlepack, then backpack"
             icon="/images/character/dropped.png"
-            tone="salvage"
+            tone="move"
             onConfirm={() => postJson(`/api/auth/me/characters/${character.id}/camp/move-all-to-bags`)}
             onPlayerDataUpdated={onPlayerDataUpdated}
             onClose={() => setCampAction(null)}
@@ -470,167 +689,6 @@ export function CampView({
   );
 }
 
-/** One salvageable camp item instance/itemBalance, as GET
- * .../camp/salvage-preview returns it - what salvaging ALL of it would
- * hand back, not yet actually salvaged. `materials` is the exact same
- * per-raw-family breakdown shape (name, yield%, recovered/total units)
- * a single item's own salvage preview uses. */
-type ChopBlockRow = {
-  id: string;
-  kind: "instance" | "balance";
-  name: string;
-  tier: number;
-  owned: number;
-  materials: SalvageMaterial[];
-  preselected?: boolean;
-  condition?: SalvageCondition;
-};
+// ChopBlockRow, flattenChopBlockMaterials, and ChopBlockPopup are now
+// imported from InventoryTab.tsx (shared with the vault's own salvage).
 
-/** Every raw material a row's (or several rows') materials would hand
- * back, collapsed into one concrete-id -> qty list - same merge
- * backend.recycling.flatten_recovery does server-side, done here so
- * ChopBlockPopup can total up just the currently-checked rows live,
- * without a round trip. */
-function flattenChopBlockMaterials(materials: SalvageMaterial[]): { id: string; name: string; qty: number }[] {
-  const merged = new Map<string, { id: string; name: string; qty: number }>();
-  for (const material of materials) {
-    for (const line of material.recovered) {
-      const existing = merged.get(line.id);
-      if (existing) existing.qty += line.qty;
-      else merged.set(line.id, { id: line.id, name: line.name, qty: line.qty });
-    }
-  }
-  return [...merged.values()];
-}
-
-/** The chopping block's own bulk-salvage popup (see CampView's own
- * onClick on chopping_block.png) - a HoldActionPopup whose extra
- * `children` content is a live grand total (what salvaging every
- * currently-checked row would hand back combined) plus a scrollable
- * checklist of every salvageable camp item/itemBalance, all checked by
- * default. Holding the icon salvages every still-checked row at once,
- * crediting recovered materials straight into camp - see
- * backend.players.salvage_camp. */
-function ChopBlockPopup({
-  characterId,
-  onPlayerDataUpdated,
-  onClose,
-}: {
-  characterId: string;
-  onPlayerDataUpdated?: (data: RawPlayerData) => void;
-  onClose: () => void;
-}) {
-  // null while the preview fetch is in flight - distinct from [] (fetch
-  // resolved, nothing recyclable), so the hold icon stays disabled until
-  // there's actually something to act on either way.
-  const [rows, setRows] = useState<ChopBlockRow[] | null>(null);
-  const [selected, setSelected] = useState<Set<string>>(new Set());
-
-  useEffect(() => {
-    let cancelled = false;
-    fetch(`/api/auth/me/characters/${characterId}/camp/salvage-preview`, { credentials: "include" })
-      .then((res) => (res.ok ? res.json() : null))
-      .then((data: { rows: ChopBlockRow[] } | null) => {
-        if (cancelled) return;
-        const loaded = data?.rows ?? [];
-        setRows(loaded);
-        setSelected(new Set(loaded.filter((row) => row.preselected !== false).map((row) => row.id)));
-      })
-      .catch(() => {
-        if (!cancelled) setRows([]);
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, [characterId]);
-
-  const toggle = (id: string) => {
-    setSelected((prev) => {
-      const next = new Set(prev);
-      if (next.has(id)) next.delete(id);
-      else next.add(id);
-      return next;
-    });
-  };
-
-  const grandTotal = flattenChopBlockMaterials(
-    (rows ?? []).filter((row) => selected.has(row.id)).flatMap((row) => row.materials)
-  );
-
-  return (
-    <HoldActionPopup
-      headline="Salvage All"
-      overlayClassName={styles.chopBlockOverlay}
-      cardClassName={styles.chopBlockCard}
-      iconClassName={styles.chopBlockIcon}
-      label="Hold to unmake"
-      icon="/images/character/chopping_block.png"
-      tone="salvage"
-      disabled={rows === null || selected.size === 0}
-      onConfirm={() =>
-        postJson(`/api/auth/me/characters/${characterId}/camp/salvage-all`, { selected: [...selected] })
-      }
-      onPlayerDataUpdated={onPlayerDataUpdated}
-      onClose={onClose}
-    >
-      {rows === null ? (
-        <p className={styles.salvageResultText}>Checking what can be salvaged…</p>
-      ) : rows.length === 0 ? (
-        <p className={styles.salvageResultText}>Nothing in camp can be salvaged right now.</p>
-      ) : (
-        <>
-          {/* Live total for whatever's still checked below - updates the
-              moment a checkbox is toggled, not just at load. Stays fixed
-              above the scrollable list below (see .chopBlockList's own
-              flex-grow) - never part of what scrolls. Bracketed by a
-              divider on each side - one here separating it from the
-              headline above, one below separating it from the scrollable
-              list. */}
-          <div className={`${styles.salvageDestroyDivider} ${styles.salvageDestroyDividerTight}`} />
-          <p className={styles.salvageFinalLine}>
-            Salvaged: {grandTotal.length > 0 ? grandTotal.map((line) => `${line.qty}× ${line.name}`).join(", ") : "nothing"}
-          </p>
-          <div className={`${styles.salvageDestroyDivider} ${styles.salvageDestroyDividerSpaced}`} />
-          {/* Scrolls on its own (see .chopBlockList) once the list is too
-              tall to fit - the hold bar/icon below it stays on screen
-              either way, never pushed off by a long list. */}
-          <div className={styles.chopBlockList}>
-            {rows.map((row) => (
-              <div key={row.id} className={styles.chopBlockRow}>
-                <label className={styles.chopBlockRowHeader}>
-                  <input type="checkbox" checked={selected.has(row.id)} onChange={() => toggle(row.id)} />
-                  <span className={styles.chopBlockRowName}>
-                    {row.name}
-                    {row.owned > 1 ? ` x${row.owned}` : ""}
-                  </span>
-                </label>
-                {/* Same per-raw-family breakdown (name, recovered/total
-                    units, yield% formula) a single item's own salvage
-                    view shows - see ItemDetailPopup's identical markup. */}
-                <div className={styles.salvageMaterialsList}>
-                  {row.materials.map((material) => (
-                    <div key={material.rawFamilyId} className={styles.salvageMaterialRow}>
-                      <p className={styles.salvageMaterialHeader}>
-                        <span>{material.rawName}</span>
-                        <span className={`${styles.salvageMaterialAmounts} ${material.recoveredUnits === 0 ? styles.salvageAmountZero : selected.has(row.id) ? styles.salvageAmountPositive : styles.salvageAmountMuted}`}>
-                          {material.recoveredUnits}/{material.totalUnits}
-                        </span>
-                      </p>
-                      <SalvageFormulaLine breakdown={material.yieldBreakdown} condition={row.condition} />
-                    </div>
-                  ))}
-                  <p className={selected.has(row.id) ? styles.salvageFinalLine : styles.salvageFinalLineMuted}>
-                    Salvaged:{" "}
-                    {flattenChopBlockMaterials(row.materials)
-                      .map((line) => `${line.qty}× ${line.name}`)
-                      .join(", ") || "nothing"}
-                  </p>
-                </div>
-              </div>
-            ))}
-          </div>
-        </>
-      )}
-    </HoldActionPopup>
-  );
-}

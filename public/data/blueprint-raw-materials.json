@@ -252,5 +252,41 @@
     "fish",
     "harvest",
     "herbs"
+  ],
+  "blueprint_short_sword": [
+    "ore",
+    "wood"
+  ],
+  "blueprint_smokehouse": [
+    "harvest",
+    "hide",
+    "meat"
+  ],
+  "blueprint_bridle": [
+    "fiber",
+    "hide",
+    "meat"
+  ],
+  "blueprint_saddle": [
+    "bone",
+    "hide",
+    "skin",
+    "wood"
+  ],
+  "blueprint_saddlepack": [
+    "fiber",
+    "hide",
+    "skin"
+  ],
+  "blueprint_barding_iron": [
+    "fiber",
+    "meat",
+    "ore",
+    "skin"
+  ],
+  "blueprint_barding_leather": [
+    "hide",
+    "monster_part",
+    "skin"
   ]
 }

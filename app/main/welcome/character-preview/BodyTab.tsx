@@ -8,7 +8,6 @@ import {
   computeSaddlepackContents,
   computeCartContents,
   getTierIndicator,
-  itemGridTierBadgeClass,
   qualityBarColor,
   qualityState,
   type BlueprintTierInfo,
@@ -17,6 +16,7 @@ import {
 } from "./InventoryTab";
 import type { ItemInstance, SlotCharacterSummary } from "../SoulSlotGrid";
 import { CHAKRA_SLOTS, activeChakraCount } from "./SoulTab";
+import { RACE_GROUP_RIDER_WEIGHT } from "@/app/lib/characterOptions";
 
 // Overlaid directly on the portrait: head/chest/legs down the left edge,
 // back/side down the right edge. The right-edge slot below Back used to be
@@ -101,7 +101,7 @@ function EquipSlotIcon({
         style={{ transform: mirrored ? "scaleX(-1)" : undefined }}
       />
       {!!entry?.tier && (
-        <span className={`${styles.itemGridTierBadge} ${itemGridTierBadgeClass(entry.tier)}`}>
+        <span className={styles.itemGridTierBadge}>
           {getTierIndicator(entry.tier)}
         </span>
       )}
@@ -151,13 +151,17 @@ export function BodyTab({
             tier: number;
             kind: string[];
             qualityMax: number | null;
+            armorClass: number | null;
             icon: string;
             stackSize: number;
             description: string;
             sizeClass: string;
+            size: string;
             equipSlots: string[][];
             backpackable: boolean;
             gatheringBonuses: string[];
+            capacitySlots: number;
+            carryCapacity: number;
           }>
         ) => {
           const map: BlueprintTierInfo = {};
@@ -168,13 +172,17 @@ export function BodyTab({
               kind: item.kind[0] ?? "",
               name: item.name,
               qualityMax: item.qualityMax,
+              armorClass: item.armorClass,
               icon: item.icon,
               stackSize: item.stackSize,
               description: item.description,
               sizeClass: item.sizeClass,
+              size: item.size,
               equipSlots: item.equipSlots,
               backpackable: item.backpackable,
               gatheringBonuses: item.gatheringBonuses,
+              capacitySlots: item.capacitySlots,
+              carryCapacity: item.carryCapacity,
             };
           }
           setCatalog(map);
@@ -217,6 +225,7 @@ export function BodyTab({
   // "Items" accordion uses (source:"character"), scoped to whatever's worn
   // right here rather than this character's whole backpack.
   const [selectedInstance, setSelectedInstance] = useState<ItemInstance | null>(null);
+  const [carryPopup, setCarryPopup] = useState<"body" | "mount" | null>(null);
 
   const [showSoul, setShowSoul] = useState(false);
   const [litSlots, setLitSlots] = useState<Set<number>>(new Set());
@@ -304,7 +313,7 @@ export function BodyTab({
         return (
           <div
             key={slotKey}
-            className={extraClass ? `${styles.mountColumnSlot} ${extraClass}` : styles.mountColumnSlot}
+            className={extraClass ?? styles.mountColumnSlot}
             role={subInst ? "button" : undefined}
             tabIndex={subInst ? 0 : undefined}
             onClick={subInst ? (e) => { e.stopPropagation(); setSelectedInstance(subInst); } : undefined}
@@ -333,11 +342,6 @@ export function BodyTab({
             </span>
           )}
           <div className={styles.mountAssembly}>
-            <div className={styles.mountColumnLeft}>
-              {renderMountSubSlot("Bridle")}
-              {renderMountSubSlot("Saddle")}
-              {renderMountSubSlot("Saddlepack")}
-            </div>
             <div
               className={styles.largeEquipSlot}
               role={instance ? "button" : undefined}
@@ -351,9 +355,14 @@ export function BodyTab({
               )}
             </div>
             <div className={styles.mountColumnRight}>
+              {renderMountSubSlot("Saddlepack")}
               {renderMountSubSlot("Barding")}
-              {renderMountSubSlot("Hitch")}
             </div>
+          </div>
+          <div className={styles.mountBottomRow}>
+            {renderMountSubSlot("Bridle", styles.mountBottomSlot)}
+            {renderMountSubSlot("Saddle", styles.mountBottomSlot)}
+            {renderMountSubSlot("Hitch", styles.mountBottomSlot)}
           </div>
         </div>
       );
@@ -502,6 +511,72 @@ export function BodyTab({
               );
             })}
 
+            {!showSoul && (() => {
+              const bodyUsed = character.gear.carryWeightUsed;
+              const bodyCap = character.gear.carryWeightCapacity;
+              const bodyRatio = bodyCap > 0 ? bodyUsed / bodyCap : 0;
+              const bodyFillHeight = Math.min(90, (bodyRatio / 1.3) * 90);
+              const bodyFillColor = bodyRatio > 1.3 ? "#c03030" : bodyRatio > 1 ? "#c8a020" : "#2a9a3a";
+
+              const mountUsed = character.gear.mountCarryWeightUsed ?? 0;
+              const mountCap = character.gear.mountCarryWeightCapacity ?? 0;
+              const mountRatio = mountCap > 0 ? mountUsed / mountCap : 0;
+              const mountFillHeight = mountCap > 0 ? Math.min(90, (mountRatio / 1.3) * 90) : 0;
+              const mountFillColor = mountRatio > 1.3 ? "#c03030" : mountRatio > 1 ? "#c8a020" : "#2a9a3a";
+
+              const backpackInst = character.gear.items.find(
+                (i) => i.location === "body" && i.familyId === "backpack"
+              );
+              const backpackIcon = backpackInst ? catalog[backpackInst.itemId]?.icon : null;
+
+              const mountFamilies = new Set(["steed_mount", "beast_mount", "exotic_mount", "aquatic_mount"]);
+              const mountInst = character.gear.items.find(
+                (i) => i.location === "body" && mountFamilies.has(i.familyId)
+              );
+              const mountIcon = mountInst ? catalog[mountInst.itemId]?.icon : null;
+
+              const usePortrait = !backpackIcon && character.portraitUrl && character.portraitUrl !== "empty";
+              const bodyIconSrc = backpackIcon ?? (usePortrait ? character.portraitUrl : "/images/character/char-preview-body.png");
+              const bodyImgClass = backpackIcon ? styles.carryIconImg : styles.carryIconImgDark;
+
+              return (
+                <div className={styles.carryBarsWrap}>
+                  <div className={usePortrait ? styles.carryIconFillPortrait : styles.carryIconFill} role="button" tabIndex={0} onClick={() => setCarryPopup("body")}>
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src={bodyIconSrc} alt="" className={usePortrait ? styles.carryIconImgPortrait : bodyImgClass} />
+                    <div className={styles.carryIconClip} style={{ height: `${bodyFillHeight}%` }}>
+                      <div
+                        className={styles.carryIconColor}
+                        style={{
+                          background: bodyFillColor,
+                          ...(usePortrait ? { height: "clamp(3.6rem, 12vw, 5.1rem)" } : {
+                            WebkitMaskImage: `url(${bodyIconSrc})`,
+                            maskImage: `url(${bodyIconSrc})`,
+                          }),
+                        }}
+                      />
+                    </div>
+                  </div>
+                  {mountIcon && (
+                    <div className={styles.carryIconFill} role="button" tabIndex={0} onClick={() => setCarryPopup("mount")}>
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img src={mountIcon} alt="" className={styles.carryIconImgDark} />
+                      <div className={styles.carryIconClip} style={{ height: `${mountFillHeight}%` }}>
+                        <div
+                          className={styles.carryIconColor}
+                          style={{
+                            background: mountFillColor,
+                            WebkitMaskImage: `url(${mountIcon})`,
+                            maskImage: `url(${mountIcon})`,
+                          }}
+                        />
+                      </div>
+                    </div>
+                  )}
+                </div>
+              );
+            })()}
+
             {!showSoul && (
               <div className={styles.campButtonWrap}>
                 <button
@@ -624,11 +699,126 @@ export function BodyTab({
           saddlepackCapacity={character.gear.saddlepackCapacity}
           cartSlotsUsed={character.gear.cartSlotsUsed}
           cartCapacity={character.gear.cartCapacity}
+          mountCarryWeightUsed={character.gear.mountCarryWeightUsed}
+          mountCarryWeightCapacity={character.gear.mountCarryWeightCapacity}
           onPlayerDataUpdated={onPlayerDataUpdated}
           onClose={() => setSelectedInstance(null)}
           iconOverride={cartFilledIcon(selectedInstance)}
         />
       )}
+
+      {carryPopup && (() => {
+        const mountFamilies = new Set(["steed_mount", "beast_mount", "exotic_mount", "aquatic_mount"]);
+        if (carryPopup === "body") {
+          const used = character.gear.carryWeightUsed;
+          const cap = character.gear.carryWeightCapacity;
+          const ratio = cap > 0 ? used / cap : 0;
+          const bodyWeight = character.gear.bodyGearWeight ?? 0;
+          const bpUsed = character.gear.backpackSlotsUsed;
+          const bpCap = character.gear.backpackCapacity;
+          const bpInst = character.gear.items.find(
+            (i) => i.location === "body" && i.familyId === "backpack"
+          );
+          const bpInfo = bpInst ? catalog[bpInst.itemId] : null;
+          const iconSrc = bpInfo?.icon ?? (character.portraitUrl && character.portraitUrl !== "empty" ? character.portraitUrl : "/images/character/char-preview-body.png");
+          const tier = bpInfo?.tier ?? 0;
+          const statusClass = ratio > 1.3 ? styles.carryPopupStatusRed : ratio > 1 ? styles.carryPopupStatusYellow : styles.carryPopupStatusGreen;
+          const statusText = ratio > 1.3
+            ? "Overloaded — salvage items or abandon"
+            : ratio > 1
+              ? "Encumbered — cannot run, jump, climb, swim"
+              : "Light Weight";
+          return (
+            <div className={styles.carryPopupOverlay} onClick={() => setCarryPopup(null)}>
+              <div className={styles.carryPopupCard}>
+                {tier > 0 && (
+                  <span className={styles.carryPopupTierBadge}>{getTierIndicator(tier)}</span>
+                )}
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={iconSrc} alt="" className={bpInfo ? styles.carryPopupImg : styles.carryPopupImgLarge} />
+                <h3 className={styles.carryPopupTitle}>Carry Weight</h3>
+                <div className={styles.carryPopupRows}>
+                  <div className={styles.carryPopupRow}>
+                    <span>Total Weight</span><span className={statusClass}>{used}/{cap}</span>
+                  </div>
+                  <div className={styles.carryPopupRow}>
+                    <span>Body</span><span>{bodyWeight}</span>
+                  </div>
+                  <div className={styles.carryPopupRow}>
+                    <span>Backpack</span><span>{bpUsed}/{bpCap}</span>
+                  </div>
+                </div>
+                <div className={styles.carryPopupDivider} />
+                <p className={`${styles.carryPopupStatus} ${statusClass}`}>{statusText}</p>
+              </div>
+            </div>
+          );
+        }
+        const used = character.gear.mountCarryWeightUsed ?? 0;
+        const cap = character.gear.mountCarryWeightCapacity ?? 0;
+        const ratio = cap > 0 ? used / cap : 0;
+        const mountWeight = character.gear.mountGearWeight ?? 0;
+        const spUsed = character.gear.saddlepackSlotsUsed;
+        const spCap = character.gear.saddlepackCapacity;
+        const mountInst = character.gear.items.find(
+          (i) => i.location === "body" && mountFamilies.has(i.familyId)
+        );
+        const mountInfo = mountInst ? catalog[mountInst.itemId] : null;
+        const iconSrc = mountInfo?.icon ?? "";
+        const tier = mountInfo?.tier ?? 0;
+        const statusClass = ratio > 1.3 ? styles.carryPopupStatusRed : ratio > 1 ? styles.carryPopupStatusYellow : styles.carryPopupStatusGreen;
+        const statusText = ratio > 1.3
+          ? "Overloaded — salvage items or abandon"
+          : ratio > 1
+            ? "Encumbered — cannot fly, climb, run"
+            : "Light Weight";
+        const riderWeight = RACE_GROUP_RIDER_WEIGHT[character.raceGroup] ?? 4;
+        const totalRidingUsed = riderWeight + character.gear.carryWeightUsed + used;
+        const totalRidingCap = cap;
+        const ridingRatio = totalRidingCap > 0 ? totalRidingUsed / totalRidingCap : 0;
+        const ridingClass = ridingRatio > 1.3 ? styles.carryPopupStatusRed : ridingRatio > 1 ? styles.carryPopupStatusYellow : styles.carryPopupStatusGreen;
+        return (
+          <div className={styles.carryPopupOverlay} onClick={() => setCarryPopup(null)}>
+            <div className={styles.carryPopupCard}>
+              {tier > 0 && (
+                <span className={styles.carryPopupTierBadge}>{getTierIndicator(tier)}</span>
+              )}
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={iconSrc} alt="" className={styles.carryPopupImgLarge} />
+              <h3 className={styles.carryPopupTitle}>Mount Carry Weight</h3>
+              <div className={styles.carryPopupRows}>
+                <div className={styles.carryPopupRow}>
+                  <span>Total Weight</span><span className={statusClass}>{used}/{cap}</span>
+                </div>
+                <div className={styles.carryPopupRow}>
+                  <span>Mount</span><span>{mountWeight}</span>
+                </div>
+                <div className={styles.carryPopupRow}>
+                  <span>Saddlepack</span><span>{spUsed}/{spCap}</span>
+                </div>
+              </div>
+              <div className={styles.carryPopupDivider} />
+              <p className={`${styles.carryPopupStatus} ${statusClass}`}>{statusText}</p>
+              <div className={styles.carryPopupDivider} />
+              {character.raceGroup === "Giants" && mountInfo?.size && !["Huge", "Colossal"].includes(mountInfo.size) ? (
+                <p className={`${styles.carryPopupStatus} ${styles.carryPopupStatusRed}`}>Mount too small to ride</p>
+              ) : (
+                <div className={styles.carryPopupRows}>
+                  <div className={styles.carryPopupRow}>
+                    <span>Total Weight Riding</span><span className={ridingClass}>{totalRidingUsed}/{totalRidingCap}</span>
+                  </div>
+                  <div className={styles.carryPopupCalc}>
+                    {riderWeight}{" + "}{character.gear.bodyGearWeight ?? 0}{" + "}{character.gear.backpackSlotsUsed}{" + "}{mountWeight}{" + "}{spUsed}
+                  </div>
+                  <div className={styles.carryPopupCalc}>
+                    rider{" + "}body{" + "}back{" + "}mount{" + "}pack
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        );
+      })()}
     </div>
   );
 }

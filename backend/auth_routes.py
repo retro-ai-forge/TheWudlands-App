@@ -76,6 +76,10 @@ from backend.players import (
     salvage_item_balance,
     salvage_item_instance,
     salvage_camp,
+    preview_vault_salvage,
+    salvage_vault,
+    bulk_move_camp,
+    bulk_move_vault,
     salvage_backpack,
     salvage_container,
     set_in_adventure,
@@ -323,7 +327,11 @@ class CharacterGearResponse(BaseModel):
     cartCapacity: int = Field(0, description="Cart slot ceiling, 0 with nothing equipped")
     carryWeightUsed: int = Field(0, description="Total weight the character is personally carrying (body + backpack contents)")
     carryWeightCapacity: int = Field(0, description="Max carry weight from attributes: 10 + (might + endurance) // 3")
+    bodyGearWeight: int = Field(0, description="Weight of body-worn gear only (no backpack contents)")
     encumbranceState: str = Field("normal", description="normal / encumbered / immobile")
+    mountCarryWeightUsed: int = Field(0, description="Total slot-weight the mount is carrying (sub-slot gear + saddlepack contents)")
+    mountCarryWeightCapacity: int = Field(0, description="Mount carry capacity, 0 if no mount equipped")
+    mountGearWeight: int = Field(0, description="Weight of mount sub-slot gear only (no saddlepack contents)")
 
 
 class CharacterResponse(BaseModel):
@@ -362,6 +370,10 @@ class CharacterResponse(BaseModel):
     gear: CharacterGearResponse = Field(default_factory=CharacterGearResponse)
     equippedLight: Optional[dict] = Field(
         None, description="Which light source (if any) is currently lit and held - {family, tier, litAt, hand}"
+    )
+    stats: Dict[str, int] = Field(
+        default_factory=lambda: {"adventureFinished": 0, "adventureRunAway": 0},
+        description="Cumulative adventure outcome counters: adventureFinished, adventureRunAway",
     )
 
 
@@ -549,6 +561,7 @@ class ItemCatalogEntryResponse(BaseModel):
     qualityMax: Optional[int] = Field(
         None, description="Max quality a fresh instance of this family starts at, if it degrades at all"
     )
+    armorClass: Optional[int] = Field(None, description="Base armor class for this material (armor/shield only)")
     icon: str = Field("", description="Per-tier art path, or empty if this family/tier has none yet")
     stackSize: int = Field(1, description="Family-level stack size - 1 means never stack, no owned-count badge")
     description: str = Field("", description="Per-tier flavor text, or empty if this family/tier has none yet")
@@ -561,6 +574,8 @@ class ItemCatalogEntryResponse(BaseModel):
         default_factory=list, description="Raw materials this family grants a foraging/gathering bonus for"
     )
     capacitySlots: int = Field(0, description="Per-tier slot capacity of a backpack/saddlepack/cart, 0 otherwise")
+    carryCapacity: int = Field(0, description="Per-tier mount/companion carry capacity (slot-weight limit), 0 otherwise")
+    size: str = Field("", description="Per-tier creature size (Medium/Heavy/Huge/Colossal) for mounts, empty otherwise")
 
 
 # Dependency: Extract and verify token from secure cookie
@@ -955,9 +970,10 @@ async def get_item_catalog():
     return [
         ItemCatalogEntryResponse(
             id=e.id, name=e.name, familyId=e.family_id, tier=e.tier, kind=list(e.kind), qualityMax=e.quality_max,
-            icon=e.icon, stackSize=e.stack_size, description=e.description, sizeClass=e.size_class,
+            armorClass=e.armor_class, icon=e.icon, stackSize=e.stack_size, description=e.description, sizeClass=e.size_class,
             equipSlots=[list(group) for group in e.equip_slots], backpackable=e.backpackable,
-            gatheringBonuses=list(e.gathering_bonuses), capacitySlots=e.capacity_slots,
+            gatheringBonuses=list(e.gathering_bonuses), capacitySlots=e.capacity_slots, carryCapacity=e.carry_capacity,
+            size=e.size,
         )
         for e in items_catalog.ITEM_CATALOG_ENTRIES
     ]
@@ -976,7 +992,7 @@ class ItemBalanceLocationAmountRequest(BaseModel):
     real location off of the way an item instance's own row carries it."""
 
     amount: int = Field(..., gt=0, description="Quantity to move - must be positive")
-    location: Literal["camp", "backpack"] = Field(
+    location: Literal["camp", "backpack", "saddlepack"] = Field(
         "camp", description="Which of the character's own itemBalances buckets to act on"
     )
 
@@ -1897,9 +1913,14 @@ class CampSalvagePreviewResponse(BaseModel):
 
 
 @player_router.get("/me/characters/{character_id}/camp/salvage-preview", response_model=CampSalvagePreviewResponse)
-async def preview_camp_salvage_route(character_id: str, address: str = Depends(get_current_address)):
-    """What holding the chopping block down would salvage - every camp item/itemBalance with a recipe, one row per thing."""
-    rows = await preview_camp_salvage(address, character_id)
+async def preview_camp_salvage_route(
+    character_id: str,
+    selected: Optional[str] = None,
+    address: str = Depends(get_current_address),
+):
+    """What holding the chopping block down would salvage. When `selected` is a comma-separated list of IDs, only those items (plus contents of selected containers) are returned."""
+    selected_ids = selected.split(",") if selected else None
+    rows = await preview_camp_salvage(address, character_id, selected_ids=selected_ids)
     if rows is None:
         raise HTTPException(status_code=404, detail="No matching character")
 
@@ -1935,6 +1956,99 @@ async def salvage_camp_route(
     if player is None:
         raise HTTPException(status_code=404, detail="Nothing selected salvaged")
 
+    return player.to_dict()
+
+
+@player_router.get("/me/characters/{character_id}/vault/salvage-preview", response_model=CampSalvagePreviewResponse)
+async def preview_vault_salvage_route(
+    character_id: str,
+    selected: Optional[str] = None,
+    address: str = Depends(get_current_address),
+):
+    """What salvaging vault items would recover. When `selected` is a comma-separated list of IDs, only those items are returned."""
+    selected_ids = selected.split(",") if selected else None
+    rows = await preview_vault_salvage(address, character_id, selected_ids=selected_ids)
+    if rows is None:
+        raise HTTPException(status_code=404, detail="No matching character")
+
+    return CampSalvagePreviewResponse(
+        rows=[
+            CampSalvagePreviewRowResponse(
+                id=row["id"],
+                kind=row["kind"],
+                name=row["name"],
+                tier=row["tier"],
+                owned=row["owned"],
+                materials=_to_salvage_preview_response(row["recoveries"]).materials,
+                condition=row.get("condition", "new"),
+            )
+            for row in rows
+        ]
+    )
+
+
+@player_router.post("/me/characters/{character_id}/vault/salvage-all", response_model=PlayerDataResponse)
+async def salvage_vault_route(
+    character_id: str, payload: SalvageCampRequest, address: str = Depends(get_current_address)
+):
+    """Salvage every selected vault item/itemBalance at once, crediting recovered materials into the shared crafting pool."""
+    player = await salvage_vault(address, character_id, payload.selected)
+    if player is None:
+        raise HTTPException(status_code=404, detail="Nothing selected salvaged")
+
+    return player.to_dict()
+
+
+class BulkMoveBalanceEntry(BaseModel):
+    id: str
+    amount: int = Field(..., gt=0)
+
+
+class BulkMoveCampRequest(BaseModel):
+    destination: str = Field(..., description="backpack | saddlepack | vault")
+    instanceIds: List[str] = Field(default_factory=list)
+    balances: List[BulkMoveBalanceEntry] = Field(default_factory=list)
+    resources: List[BulkMoveBalanceEntry] = Field(default_factory=list)
+
+
+@player_router.post("/me/characters/{character_id}/camp/bulk-move", response_model=PlayerDataResponse)
+async def bulk_move_camp_route(
+    character_id: str, payload: BulkMoveCampRequest, address: str = Depends(get_current_address)
+):
+    """Move multiple items/resources from camp to backpack, saddlepack, or vault in one call."""
+    if payload.destination not in ("backpack", "saddlepack", "vault"):
+        raise HTTPException(status_code=400, detail="destination must be backpack, saddlepack, or vault")
+    player = await bulk_move_camp(
+        address, character_id, payload.destination,
+        payload.instanceIds,
+        [e.model_dump() for e in payload.balances],
+        [e.model_dump() for e in payload.resources],
+    )
+    if player is None:
+        raise HTTPException(status_code=404, detail="Nothing moved")
+    return player.to_dict()
+
+
+class BulkMoveVaultRequest(BaseModel):
+    destination: str = Field(..., description="backpack | saddlepack")
+    instanceIds: List[str] = Field(default_factory=list)
+    balances: List[BulkMoveBalanceEntry] = Field(default_factory=list)
+
+
+@player_router.post("/me/characters/{character_id}/vault/bulk-move", response_model=PlayerDataResponse)
+async def bulk_move_vault_route(
+    character_id: str, payload: BulkMoveVaultRequest, address: str = Depends(get_current_address)
+):
+    """Move multiple items from vault to backpack or saddlepack in one call."""
+    if payload.destination not in ("backpack", "saddlepack"):
+        raise HTTPException(status_code=400, detail="destination must be backpack or saddlepack")
+    player = await bulk_move_vault(
+        address, character_id, payload.destination,
+        payload.instanceIds,
+        [e.model_dump() for e in payload.balances],
+    )
+    if player is None:
+        raise HTTPException(status_code=404, detail="Nothing moved")
     return player.to_dict()
 
 
@@ -2375,6 +2489,7 @@ class SetInAdventureRequest(BaseModel):
     """Whether this character currently counts as out on an adventure."""
 
     inAdventure: bool = Field(..., description="True = away from the shared vault")
+    reason: str = Field("stop", description="Why the adventure ended: 'stop' or 'run_away'")
 
 
 @player_router.patch("/me/characters/{character_id}/in-adventure", response_model=PlayerDataResponse)
@@ -2382,13 +2497,13 @@ async def update_my_character_in_adventure(
     character_id: str, payload: SetInAdventureRequest, address: str = Depends(get_current_address)
 ):
     """
-    Toggles Character.inAdventure - the small corner button on the Body/Soul
-    tabs. Changes where unequip_item sends a freed item (see there).
-    Switching to True raises 400 if the character has a craft still
-    running - see set_in_adventure's own docstring.
+    Toggles Character.inAdventure. Changes where unequip_item sends a
+    freed item (see there). Switching to True raises 400 if the character
+    has a craft still running. When switching to False, *reason* ("stop"
+    or "run_away") increments the matching adventure counter.
     """
     try:
-        player = await set_in_adventure(address, character_id, payload.inAdventure)
+        player = await set_in_adventure(address, character_id, payload.inAdventure, payload.reason)
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc))
     if player is None:
