@@ -222,7 +222,8 @@ rm -rf .next
 ### d Verify everything
 npm run type-check
 npm run build
-If you want a FULL reset (including global packages):
+
+#If you want a FULL reset (including global packages):
 
 ### Clear npm cache globally
 npm cache clean --force
@@ -234,7 +235,7 @@ npm install -g npm@latest
 If still having issues, check your Node.js version:
 node --version
 npm --version
-Your other laptop probably has the same or compatible versions. Make sure you have:
+# Your other laptop probably has the same or compatible versions. Make sure you have:
 
 Node.js 18+ (ideally 20.x)
 npm 9+

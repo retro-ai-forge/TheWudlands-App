@@ -2083,6 +2083,69 @@
   background: #0d0d0a;
 }
 
+.vaultFilterBar {
+  display: flex;
+  gap: 0.25rem;
+  padding: 0.25rem 0.25rem 0.4rem;
+  flex-wrap: wrap;
+}
+
+.vaultFilterBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.2rem;
+  height: 2.2rem;
+  font-size: 1.25rem;
+  line-height: 1;
+  background: #1a1a1a;
+  border: 1px solid #3a3020;
+  color: #7a6a3a;
+  cursor: pointer;
+  user-select: none;
+  border-radius: 4px;
+  padding: 0;
+}
+
+.vaultFilterBtn:hover {
+  background: #222215;
+  color: #9a8a5a;
+}
+
+.vaultFilterBtn:focus {
+  outline: none;
+}
+
+.vaultFilterBtnActive {
+  background: #2a2210;
+  border-color: #c07a3a;
+  color: #c07a3a;
+  box-shadow: inset 0 0 6px rgba(192, 122, 58, 0.3);
+}
+
+.vaultFilterSep {
+  width: 1px;
+  align-self: stretch;
+  background: #3a3020;
+  margin: 0.15rem 0.15rem;
+}
+
+.vaultFilterT1, .vaultFilterT2, .vaultFilterT3 {
+  color: #c07a3a;
+}
+
+.vaultFilterT4 {
+  color: #aa0000;
+}
+
+.vaultFilterT5 > span {
+  filter: invert(1) hue-rotate(115deg) saturate(0.8) brightness(1.3);
+}
+
+.vaultFilterT6 > span {
+  filter: invert(1) hue-rotate(115deg) saturate(0.8) brightness(1.2);
+}
+
 /* The Party's Vault tab's Items grid - one 100x100 icon tile per owned
    item, tier badge upper-left, owned-count badge lower-right (only when
    the family's own stackSize > 1 - a needsItemDefinition:true instance is
