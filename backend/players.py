@@ -2977,11 +2977,40 @@ async def equip_item(address: str, character_id: str, instance_id: str, slots: L
         ),
         None,
     )
-    if instance is None:
-        return None
-    source_location = instance["location"]
 
-    family = items_catalog.ITEM_FAMILIES_BY_ID.get(instance["familyId"])
+    is_balance_equip = False
+    balance_bucket: Optional[str] = None
+    if instance is None:
+        balance_id = instance_id
+        for bucket in ("backpack", "camp", "saddlepack", "cart"):
+            qty = character.get("gear", {}).get("itemBalances", {}).get(bucket, {}).get(balance_id, 0)
+            if qty > 0:
+                balance_bucket = bucket
+                break
+        if balance_bucket is None:
+            return None
+        entry = items_catalog.ITEM_CATALOG_ENTRIES_BY_ID.get(balance_id)
+        if entry is None:
+            return None
+        family = items_catalog.ITEM_FAMILIES_BY_ID.get(entry.family_id)
+        if family is None:
+            return None
+        if family.stack_size > 1:
+            raise ValueError("Stackable items cannot be equipped")
+        instance = {
+            "instanceId": uuid.uuid4().hex,
+            "itemId": balance_id,
+            "familyId": entry.family_id,
+            "quality": None,
+            "location": balance_bucket,
+            "slotRef": [],
+        }
+        is_balance_equip = True
+        source_location = balance_bucket
+    else:
+        source_location = instance["location"]
+        family = items_catalog.ITEM_FAMILIES_BY_ID.get(instance["familyId"])
+
     if family is None:
         raise ValueError(f"Unknown item family: {instance['familyId']}")
 
@@ -3020,32 +3049,60 @@ async def equip_item(address: str, character_id: str, instance_id: str, slots: L
     # was observed silently dropping the second of two array-filtered $set
     # keys in one update).
     equipped_instance = {**instance, "location": "body", "slotRef": slots}
-    doc = await db.players.find_one_and_update(
-        {
-            "address": address,
-            "characters": {
-                "$elemMatch": {
-                    "id": character_id,
-                    "$and": [
-                        {"gear.items": {"$elemMatch": {"instanceId": instance_id, "location": source_location}}},
-                        {
-                            "gear.items": {
-                                "$not": {
-                                    "$elemMatch": {
-                                        "instanceId": {"$ne": instance_id},
-                                        "slotRef": {"$in": slots},
-                                    }
+
+    if is_balance_equip:
+        char_idx = next(i for i, c in enumerate(doc["characters"]) if c["id"] == character_id)
+        balance_path = f"characters.{char_idx}.gear.itemBalances.{balance_bucket}.{balance_id}"
+        doc = await db.players.find_one_and_update(
+            {
+                "address": address,
+                "characters": {
+                    "$elemMatch": {
+                        "id": character_id,
+                        "gear.items": {
+                            "$not": {
+                                "$elemMatch": {
+                                    "slotRef": {"$in": slots},
                                 }
                             }
                         },
-                    ],
-                }
+                    }
+                },
+                balance_path: {"$gte": 1},
             },
-        },
-        {"$set": {"characters.$[char].gear.items.$[item]": equipped_instance}},
-        array_filters=[{"char.id": character_id}, {"item.instanceId": instance_id, "item.location": source_location}],
-        return_document=ReturnDocument.AFTER,
-    )
+            {
+                "$inc": {balance_path: -1},
+                "$push": {"characters.$.gear.items": equipped_instance},
+            },
+            return_document=ReturnDocument.AFTER,
+        )
+    else:
+        doc = await db.players.find_one_and_update(
+            {
+                "address": address,
+                "characters": {
+                    "$elemMatch": {
+                        "id": character_id,
+                        "$and": [
+                            {"gear.items": {"$elemMatch": {"instanceId": instance_id, "location": source_location}}},
+                            {
+                                "gear.items": {
+                                    "$not": {
+                                        "$elemMatch": {
+                                            "instanceId": {"$ne": instance_id},
+                                            "slotRef": {"$in": slots},
+                                        }
+                                    }
+                                }
+                            },
+                        ],
+                    }
+                },
+            },
+            {"$set": {"characters.$[char].gear.items.$[item]": equipped_instance}},
+            array_filters=[{"char.id": character_id}, {"item.instanceId": instance_id, "item.location": source_location}],
+            return_document=ReturnDocument.AFTER,
+        )
     if doc is None:
         return None
     return _doc_to_player(doc)
@@ -3088,10 +3145,36 @@ async def equip_item_from_pool(address: str, character_id: str, instance_id: str
         (i for i in doc.get("vault", {}).get("items", []) if i["instanceId"] == instance_id),
         None,
     )
-    if instance is None:
-        return None
 
-    family = items_catalog.ITEM_FAMILIES_BY_ID.get(instance["familyId"])
+    # Balance-item path: instance_id is actually a concrete item id (e.g.
+    # "rope_1") living in vault.itemBalances rather than vault.items.
+    # Promote one unit to a temporary instance so it can be equipped.
+    is_balance_equip = False
+    if instance is None:
+        balance_id = instance_id
+        balance_qty = doc.get("vault", {}).get("itemBalances", {}).get(balance_id, 0)
+        if balance_qty <= 0:
+            return None
+        entry = items_catalog.ITEM_CATALOG_ENTRIES_BY_ID.get(balance_id)
+        if entry is None:
+            return None
+        family = items_catalog.ITEM_FAMILIES_BY_ID.get(entry.family_id)
+        if family is None:
+            return None
+        if family.stack_size > 1:
+            raise ValueError("Stackable items cannot be equipped")
+        instance = {
+            "instanceId": uuid.uuid4().hex,
+            "itemId": balance_id,
+            "familyId": entry.family_id,
+            "quality": None,
+            "location": "pool",
+            "slotRef": [],
+        }
+        is_balance_equip = True
+    else:
+        family = items_catalog.ITEM_FAMILIES_BY_ID.get(instance["familyId"])
+
     if family is None:
         raise ValueError(f"Unknown item family: {instance['familyId']}")
 
@@ -3099,24 +3182,12 @@ async def equip_item_from_pool(address: str, character_id: str, instance_id: str
         options = " or ".join("+".join(group) for group in family.equip_slots)
         raise ValueError(f"{family.family_id} must be equipped into one of: {options}")
 
-
     slot_set = frozenset(slots)
     if slot_set & _MOUNT_SUB_SLOTS and not _has_parent_equipped(character, "Mount"):
         raise ValueError("Equip a mount first")
     if slot_set & _COMPANION_SUB_SLOTS and not _has_parent_equipped(character, "Companion"):
         raise ValueError("Equip a companion first")
 
-    # One backpack (and separately, one saddlepack) per character, total -
-    # not just one worn at a time. Slot occupancy alone (the query's own
-    # "$not $elemMatch slotRef" check below) only blocks a SECOND one from
-    # taking the same "Back"/"Mbagpack" slot while one is already worn -
-    # it says nothing about a first one currently sitting unequipped in
-    # camp (see items_catalog.has_backpack_available/
-    # has_saddlepack_available), which is exactly the gap this closes.
-    # Losing the one already held (salvage_item_instance/
-    # destroy_item_instance, or however an adventure might one day take
-    # one away) frees this back up again - nothing else needs to track it,
-    # both checks always read the character's current live state fresh.
     for container_fam, checker in (
         ("backpack", items_catalog.has_backpack_available),
         ("saddlepack", items_catalog.has_saddlepack_available),
@@ -3132,30 +3203,56 @@ async def equip_item_from_pool(address: str, character_id: str, instance_id: str
             raise ValueError(f"You already have a {container_fam} {where}")
 
     equipped_instance = {**instance, "location": "body", "slotRef": slots}
-    doc = await db.players.find_one_and_update(
-        {
-            "address": address,
-            "vault.items": {"$elemMatch": {"instanceId": instance_id, "location": "pool"}},
-            "characters": {
-                "$elemMatch": {
-                    "id": character_id,
-                    "gear.items": {
-                        "$not": {
-                            "$elemMatch": {
-                                "instanceId": {"$ne": instance_id},
-                                "slotRef": {"$in": slots},
+
+    if is_balance_equip:
+        doc = await db.players.find_one_and_update(
+            {
+                "address": address,
+                f"vault.itemBalances.{balance_id}": {"$gte": 1},
+                "characters": {
+                    "$elemMatch": {
+                        "id": character_id,
+                        "gear.items": {
+                            "$not": {
+                                "$elemMatch": {
+                                    "slotRef": {"$in": slots},
+                                }
                             }
-                        }
-                    },
-                }
+                        },
+                    }
+                },
             },
-        },
-        {
-            "$pull": {"vault.items": {"instanceId": instance_id}},
-            "$push": {"characters.$.gear.items": equipped_instance},
-        },
-        return_document=ReturnDocument.AFTER,
-    )
+            {
+                "$inc": {f"vault.itemBalances.{balance_id}": -1},
+                "$push": {"characters.$.gear.items": equipped_instance},
+            },
+            return_document=ReturnDocument.AFTER,
+        )
+    else:
+        doc = await db.players.find_one_and_update(
+            {
+                "address": address,
+                "vault.items": {"$elemMatch": {"instanceId": instance_id, "location": "pool"}},
+                "characters": {
+                    "$elemMatch": {
+                        "id": character_id,
+                        "gear.items": {
+                            "$not": {
+                                "$elemMatch": {
+                                    "instanceId": {"$ne": instance_id},
+                                    "slotRef": {"$in": slots},
+                                }
+                            }
+                        },
+                    }
+                },
+            },
+            {
+                "$pull": {"vault.items": {"instanceId": instance_id}},
+                "$push": {"characters.$.gear.items": equipped_instance},
+            },
+            return_document=ReturnDocument.AFTER,
+        )
     if doc is None:
         return None
     return _doc_to_player(doc)
@@ -3218,6 +3315,13 @@ async def unequip_item(
     if instance is None:
         return None
 
+    family_obj = items_catalog.ITEM_FAMILIES_BY_ID.get(instance.get("familyId", ""))
+    is_balance_origin = (
+        family_obj is not None
+        and not family_obj.needs_item_definition
+        and family_obj.stack_size <= 1
+    )
+
     if destination == "backpack" and not items_catalog.has_backpack_available(character):
         raise ValueError("No backpack equipped")
     if destination == "saddlepack":
@@ -3243,9 +3347,11 @@ async def unequip_item(
     is_mount_or_companion = is_mount or is_companion
 
     if target_location == "pool":
-        pooled_instances = [{**instance, "location": "pool", "slotRef": []}]
+        pooled_instances: list = [] if is_balance_origin else [{**instance, "location": "pool", "slotRef": []}]
         pull_ids = [instance_id]
         balance_inc: Dict[str, int] = {}
+        if is_balance_origin:
+            balance_inc[f"vault.itemBalances.{instance['itemId']}"] = 1
 
         # This instance IS the currently-equipped backpack (location:
         # "body" was just required to find it above), so its storage
@@ -3424,6 +3530,22 @@ async def unequip_item(
                     "characters.$[char].gear.resources.camp": _strip_zeros(camp_resources),
                     **extra_sets,
                 }},
+                array_filters=[{"char.id": character_id}],
+                return_document=ReturnDocument.AFTER,
+            )
+        elif is_balance_origin:
+            char_idx = next(i for i, c in enumerate(doc["characters"]) if c["id"] == character_id)
+            doc = await db.players.find_one_and_update(
+                {
+                    "address": address,
+                    "characters": {
+                        "$elemMatch": {"id": character_id, "gear.items": {"$elemMatch": {"instanceId": instance_id, "location": "body"}}}
+                    },
+                },
+                {
+                    "$pull": {"characters.$[char].gear.items": {"instanceId": instance_id}},
+                    "$inc": {f"characters.{char_idx}.gear.itemBalances.{target_location}.{instance['itemId']}": 1},
+                },
                 array_filters=[{"char.id": character_id}],
                 return_document=ReturnDocument.AFTER,
             )

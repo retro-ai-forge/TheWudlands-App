@@ -385,7 +385,7 @@ export function SoulSlotGrid({
   const tokenProgressBySlot = new Map<number, number>();
   if (state?.tokenProgress) {
     slots
-      .filter((s) => s.kind === "token")
+      .filter((s) => s.kind === "token" || s.kind === "nft_count")
       .forEach((s, i) => tokenProgressBySlot.set(s.number, state.tokenProgress[i] ?? 0));
   }
 

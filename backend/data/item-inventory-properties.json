@@ -18,10 +18,14 @@
     ],
     "sizeClass": "light",
     "stackSize": 1,
-    "needsItemDefinition": false,
-    "note": "Utility gear - does not wear out, no durability tracking needed.",
-    "equipSlots": [],
-    "backpackable": true
+    "needsItemDefinition": true,
+    "note": "Wears out with use.",
+    "equipSlots": [
+      ["Side"],
+      ["Girdle"]
+    ],
+    "backpackable": true,
+    "qualityMax": 20
   },
   {
     "familyId": "chalk",
@@ -42,10 +46,16 @@
     ],
     "sizeClass": "light",
     "stackSize": 1,
-    "needsItemDefinition": false,
-    "note": "Utility gear - does not wear out, no durability tracking needed.",
-    "equipSlots": [],
-    "backpackable": true
+    "needsItemDefinition": true,
+    "note": "Wears out with use.",
+    "equipSlots": [
+      ["Left Hand"],
+      ["Right Hand"],
+      ["Side"],
+      ["Girdle"]
+    ],
+    "backpackable": true,
+    "qualityMax": 20
   },
   {
     "familyId": "grappling_hook",
@@ -54,10 +64,14 @@
     ],
     "sizeClass": "light",
     "stackSize": 1,
-    "needsItemDefinition": false,
-    "note": "Utility gear - does not wear out, no durability tracking needed.",
-    "equipSlots": [],
-    "backpackable": true
+    "needsItemDefinition": true,
+    "note": "Wears out with use.",
+    "equipSlots": [
+      ["Side"],
+      ["Girdle"]
+    ],
+    "backpackable": true,
+    "qualityMax": 20
   },
   {
     "familyId": "hourglass",
@@ -66,10 +80,11 @@
     ],
     "sizeClass": "light",
     "stackSize": 1,
-    "needsItemDefinition": false,
-    "note": "Utility gear - does not wear out, no durability tracking needed.",
+    "needsItemDefinition": true,
+    "note": "Wears out with use.",
     "equipSlots": [],
-    "backpackable": true
+    "backpackable": true,
+    "qualityMax": 20
   },
   {
     "familyId": "hunters_charm",
@@ -136,10 +151,14 @@
     ],
     "sizeClass": "light",
     "stackSize": 1,
-    "needsItemDefinition": false,
-    "note": "Utility gear - does not wear out, no durability tracking needed.",
-    "equipSlots": [],
-    "backpackable": true
+    "needsItemDefinition": true,
+    "note": "Wears out with use.",
+    "equipSlots": [
+      ["Side"],
+      ["Girdle"]
+    ],
+    "backpackable": true,
+    "qualityMax": 20
   },
   {
     "familyId": "rope",
@@ -148,10 +167,13 @@
     ],
     "sizeClass": "light",
     "stackSize": 1,
-    "needsItemDefinition": false,
-    "note": "Utility gear - does not wear out, no durability tracking needed.",
-    "equipSlots": [],
-    "backpackable": true
+    "needsItemDefinition": true,
+    "note": "Wears out with use.",
+    "equipSlots": [
+      ["Side"]
+    ],
+    "backpackable": true,
+    "qualityMax": 20
   },
   {
     "familyId": "net",
@@ -160,10 +182,13 @@
     ],
     "sizeClass": "light",
     "stackSize": 1,
-    "needsItemDefinition": false,
-    "note": "Utility gear - does not wear out, no durability tracking needed.",
-    "equipSlots": [],
-    "backpackable": true
+    "needsItemDefinition": true,
+    "note": "Wears out with use.",
+    "equipSlots": [
+      ["Side"]
+    ],
+    "backpackable": true,
+    "qualityMax": 20
   },
   {
     "familyId": "pickaxe",
@@ -193,10 +218,13 @@
     ],
     "sizeClass": "medium",
     "stackSize": 1,
-    "needsItemDefinition": false,
-    "note": "Utility gear - does not wear out, no durability tracking needed.",
-    "equipSlots": [],
-    "backpackable": true
+    "needsItemDefinition": true,
+    "note": "Wears out with use.",
+    "equipSlots": [
+      ["Side"]
+    ],
+    "backpackable": true,
+    "qualityMax": 20
   },
   {
     "familyId": "starlight_catcher",
@@ -205,10 +233,13 @@
     ],
     "sizeClass": "light",
     "stackSize": 1,
-    "needsItemDefinition": false,
-    "note": "Utility gear - does not wear out, no durability tracking needed.",
-    "equipSlots": [],
-    "backpackable": true
+    "needsItemDefinition": true,
+    "note": "Wears out with use.",
+    "equipSlots": [
+      ["Side"]
+    ],
+    "backpackable": true,
+    "qualityMax": 20
   },
   {
     "familyId": "shovel",
@@ -217,10 +248,15 @@
     ],
     "sizeClass": "light",
     "stackSize": 1,
-    "needsItemDefinition": false,
-    "note": "Utility gear - does not wear out, no durability tracking needed.",
-    "equipSlots": [],
-    "backpackable": true
+    "needsItemDefinition": true,
+    "note": "Wears out with use.",
+    "equipSlots": [
+      ["Left Hand"],
+      ["Right Hand"],
+      ["Side"]
+    ],
+    "backpackable": true,
+    "qualityMax": 20
   },
   {
     "familyId": "signal_whistle",
@@ -246,10 +282,13 @@
     ],
     "sizeClass": "light",
     "stackSize": 1,
-    "needsItemDefinition": false,
-    "note": "Utility gear - does not wear out, no durability tracking needed.",
-    "equipSlots": [],
-    "backpackable": true
+    "needsItemDefinition": true,
+    "note": "Wears out with use.",
+    "equipSlots": [
+      ["Girdle"]
+    ],
+    "backpackable": true,
+    "qualityMax": 20
   },
   {
     "familyId": "tent",
