@@ -2226,7 +2226,7 @@
   composes: equipSlot;
   position: absolute;
   z-index: 1;
-  width: 12.5%;
+  width: 15%;
   aspect-ratio: 1 / 1;
   transform: translate(-50%, -50%);
   /* Overrides .equipSlot's own dashed border - these sit directly on the
@@ -2278,10 +2278,11 @@
 
 .chakraContentWrap {
   position: absolute;
-  inset: 0;
+  top: 50%;
+  left: 0;
+  transform: translateY(-50%);
+  width: 100%;
   z-index: 1;
-  display: flex;
-  align-items: center;
 }
 
 .chakraOverlayImg {
@@ -2293,7 +2294,7 @@
 .soulChakraInactiveImage {
   position: absolute;
   z-index: 2;
-  width: 35.5%;
+  width: 30%;
   height: auto;
   transform: translate(-50%, -50%);
   pointer-events: none;

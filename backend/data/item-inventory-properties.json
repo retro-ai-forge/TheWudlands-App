@@ -5,7 +5,7 @@
       "adventuring_gear"
     ],
     "sizeClass": "light",
-    "stackSize": 1,
+    "stackSize": 10,
     "needsItemDefinition": false,
     "note": "Utility gear - does not wear out, no durability tracking needed.",
     "equipSlots": [],
@@ -21,8 +21,12 @@
     "needsItemDefinition": true,
     "note": "Wears out with use.",
     "equipSlots": [
-      ["Side"],
-      ["Girdle"]
+      [
+        "Side"
+      ],
+      [
+        "Girdle"
+      ]
     ],
     "backpackable": true,
     "qualityMax": 20
@@ -49,10 +53,18 @@
     "needsItemDefinition": true,
     "note": "Wears out with use.",
     "equipSlots": [
-      ["Left Hand"],
-      ["Right Hand"],
-      ["Side"],
-      ["Girdle"]
+      [
+        "Left Hand"
+      ],
+      [
+        "Right Hand"
+      ],
+      [
+        "Side"
+      ],
+      [
+        "Girdle"
+      ]
     ],
     "backpackable": true,
     "qualityMax": 20
@@ -67,8 +79,12 @@
     "needsItemDefinition": true,
     "note": "Wears out with use.",
     "equipSlots": [
-      ["Side"],
-      ["Girdle"]
+      [
+        "Side"
+      ],
+      [
+        "Girdle"
+      ]
     ],
     "backpackable": true,
     "qualityMax": 20
@@ -154,8 +170,12 @@
     "needsItemDefinition": true,
     "note": "Wears out with use.",
     "equipSlots": [
-      ["Side"],
-      ["Girdle"]
+      [
+        "Side"
+      ],
+      [
+        "Girdle"
+      ]
     ],
     "backpackable": true,
     "qualityMax": 20
@@ -170,7 +190,9 @@
     "needsItemDefinition": true,
     "note": "Wears out with use.",
     "equipSlots": [
-      ["Side"]
+      [
+        "Side"
+      ]
     ],
     "backpackable": true,
     "qualityMax": 20
@@ -185,7 +207,9 @@
     "needsItemDefinition": true,
     "note": "Wears out with use.",
     "equipSlots": [
-      ["Side"]
+      [
+        "Side"
+      ]
     ],
     "backpackable": true,
     "qualityMax": 20
@@ -221,7 +245,9 @@
     "needsItemDefinition": true,
     "note": "Wears out with use.",
     "equipSlots": [
-      ["Side"]
+      [
+        "Side"
+      ]
     ],
     "backpackable": true,
     "qualityMax": 20
@@ -236,7 +262,9 @@
     "needsItemDefinition": true,
     "note": "Wears out with use.",
     "equipSlots": [
-      ["Side"]
+      [
+        "Side"
+      ]
     ],
     "backpackable": true,
     "qualityMax": 20
@@ -251,9 +279,15 @@
     "needsItemDefinition": true,
     "note": "Wears out with use.",
     "equipSlots": [
-      ["Left Hand"],
-      ["Right Hand"],
-      ["Side"]
+      [
+        "Left Hand"
+      ],
+      [
+        "Right Hand"
+      ],
+      [
+        "Side"
+      ]
     ],
     "backpackable": true,
     "qualityMax": 20
@@ -285,7 +319,9 @@
     "needsItemDefinition": true,
     "note": "Wears out with use.",
     "equipSlots": [
-      ["Girdle"]
+      [
+        "Girdle"
+      ]
     ],
     "backpackable": true,
     "qualityMax": 20
@@ -296,7 +332,7 @@
       "adventuring_gear"
     ],
     "sizeClass": "medium",
-    "stackSize": 1,
+    "stackSize": 2,
     "needsItemDefinition": false,
     "note": "Utility gear - does not wear out, no durability tracking needed.",
     "equipSlots": [],
@@ -308,7 +344,7 @@
       "adventuring_gear"
     ],
     "sizeClass": "light",
-    "stackSize": 1,
+    "stackSize": 10,
     "needsItemDefinition": false,
     "note": "Utility gear - does not wear out, no durability tracking needed.",
     "equipSlots": [],
@@ -320,7 +356,7 @@
       "adventuring_gear"
     ],
     "sizeClass": "light",
-    "stackSize": 1,
+    "stackSize": 10,
     "needsItemDefinition": false,
     "note": "Never equipped - carried as a backpack item, not an individually tracked instance.",
     "equipSlots": [],
@@ -332,7 +368,7 @@
       "adventuring_gear"
     ],
     "sizeClass": "light",
-    "stackSize": 1,
+    "stackSize": 10,
     "needsItemDefinition": false,
     "note": "Utility gear - does not wear out, no durability tracking needed.",
     "equipSlots": [],
@@ -776,7 +812,7 @@
       "essentials"
     ],
     "sizeClass": "medium",
-    "stackSize": 1,
+    "stackSize": 2,
     "needsItemDefinition": false,
     "note": "A trade tool - does not wear out, no durability tracking needed.",
     "equipSlots": [],
@@ -824,7 +860,7 @@
       "food"
     ],
     "sizeClass": "light",
-    "stackSize": 1,
+    "stackSize": 10,
     "needsItemDefinition": false,
     "note": "Consumed on use, not degraded - proposed as a simple backpackable food.",
     "equipSlots": [],
@@ -860,7 +896,7 @@
       "food"
     ],
     "sizeClass": "light",
-    "stackSize": 1,
+    "stackSize": 10,
     "needsItemDefinition": false,
     "note": "Consumed on use, not degraded - proposed as a simple backpackable food.",
     "equipSlots": [],

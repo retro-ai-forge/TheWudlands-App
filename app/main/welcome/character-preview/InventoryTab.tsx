@@ -154,6 +154,11 @@ const SLOT_COST_BY_SIZE: Record<string, number> = {
   tiny: 1, light: 1, medium: 2, heavy: 4, xLarge: 16,
 };
 
+export function stripStackSuffix(key: string): string {
+  const hash = key.lastIndexOf("#");
+  return hash === -1 ? key : key.slice(0, hash);
+}
+
 export function selectionWeight(
   selectedIds: Set<string>,
   tierInfo: BlueprintTierInfo,
@@ -163,24 +168,23 @@ export function selectionWeight(
   resourceTierInfo?: ResourceTierInfo,
 ): number {
   let total = 0;
-  for (const key of selectedIds) {
-    if (key.startsWith("res:")) {
-      const resId = key.slice(4);
-      const qty = resourceBalances?.[resId] ?? 0;
-      if (qty <= 0) continue;
-      const category = resourceTierInfo?.[resId]?.category;
-      const stackSize = category === "raw" ? RAW_STACK_SIZE : PROCESSED_STACK_SIZE;
-      total += Math.ceil(qty / stackSize);
+  for (const raw of selectedIds) {
+    if (raw.startsWith("res:")) {
+      total += 1;
     } else {
-      const info = tierInfo[lookupIds?.[key] ?? key];
+      const id = stripStackSuffix(raw);
+      const info = tierInfo[lookupIds?.[id] ?? id];
       const slotCost = SLOT_COST_BY_SIZE[info?.sizeClass ?? "tiny"] ?? 1;
-      const isInstance = lookupIds?.[key] !== undefined;
+      const isInstance = lookupIds?.[id] !== undefined;
       if (isInstance) {
         total += slotCost;
       } else {
-        const qty = balances[key] ?? 0;
-        const stackSize = info?.stackSize ?? 1;
-        total += Math.ceil(qty / Math.max(1, stackSize)) * slotCost;
+        const stackSize = Math.max(1, info?.stackSize ?? 1);
+        const qty = balances[id] ?? 0;
+        const hash = raw.lastIndexOf("#");
+        const tileIdx = hash === -1 ? 0 : parseInt(raw.slice(hash + 1), 10);
+        const itemsInTile = Math.max(0, Math.min(stackSize, qty - tileIdx * stackSize));
+        total += itemsInTile * slotCost;
       }
     }
   }
@@ -1012,8 +1016,8 @@ export function ItemGrid({
 
   const startLongPress = useCallback(
     (id: string, isResource: boolean, e: React.PointerEvent) => {
-      if (selectMode) return;
       longPressFiredRef.current = false;
+      if (selectMode) return;
       longPressStartPos.current = { x: e.clientX, y: e.clientY };
       longPressTimerRef.current = setTimeout(() => {
         longPressFiredRef.current = true;
@@ -1142,7 +1146,7 @@ export function ItemGrid({
           // glance in a full grid instead of needing a close look at one
           // 5px sliver.
           const isDamaged = qualityFraction !== null && qualityState(qualityFraction) === "damaged";
-          const isSelected = selectMode && selectedIds?.has(id);
+          const isSelected = selectMode && selectedIds?.has(key);
           let cellClass = styles.itemGridCell;
           if (isDamaged) cellClass += ` ${styles.itemGridCellDamaged}`;
           if (isSelected) cellClass += ` ${styles.itemGridCellSelected}`;
@@ -1154,11 +1158,11 @@ export function ItemGrid({
               title={name}
               onClick={() => {
                 if (longPressFiredRef.current) { longPressFiredRef.current = false; return; }
-                if (selectMode) { onToggleSelectItem?.(id); return; }
+                if (selectMode) { onToggleSelectItem?.(key); return; }
                 setSelectedId(id);
                 setSelectedTileCap(tileCap);
               }}
-              onPointerDown={(e) => startLongPress(id, false, e)}
+              onPointerDown={(e) => startLongPress(key, false, e)}
               onPointerUp={cancelLongPress}
               onPointerCancel={cancelLongPress}
               onPointerLeave={cancelLongPress}
@@ -1186,7 +1190,8 @@ export function ItemGrid({
           const info = resourceTierInfo?.[id];
           const fullName = info?.name ?? formatResourceLabel(id);
           const label = fullName.split(" ").pop() ?? fullName;
-          const isResSelected = selectMode && selectedIds?.has(`res:${id}`);
+          const resKey = `res:${key}`;
+          const isResSelected = selectMode && selectedIds?.has(resKey);
           return (
             <button
               key={key}
@@ -1195,11 +1200,11 @@ export function ItemGrid({
               title={fullName}
               onClick={() => {
                 if (longPressFiredRef.current) { longPressFiredRef.current = false; return; }
-                if (selectMode) { onToggleSelectResource?.(id); return; }
+                if (selectMode) { onToggleSelectResource?.(key); return; }
                 setSelectedResourceId(id);
                 setSelectedResourceTileCap(tileCap);
               }}
-              onPointerDown={(e) => startLongPress(id, true, e)}
+              onPointerDown={(e) => startLongPress(key, true, e)}
               onPointerUp={cancelLongPress}
               onPointerCancel={cancelLongPress}
               onPointerLeave={cancelLongPress}
@@ -4451,7 +4456,11 @@ export function InventoryTab({
       setVaultBatchBusy(true);
       const instanceIds: string[] = [];
       const balances: { id: string; amount: number }[] = [];
-      for (const id of vaultSelectedIds) {
+      const seen = new Set<string>();
+      for (const raw of vaultSelectedIds) {
+        const id = stripStackSuffix(raw);
+        if (seen.has(id)) continue;
+        seen.add(id);
         if (playerItemLookupIds[id] !== undefined) {
           instanceIds.push(id);
         } else {
@@ -4474,7 +4483,11 @@ export function InventoryTab({
     if (vaultBatchBusy || vaultSelectedIds.size === 0) return;
     setVaultBatchBusy(true);
     let lastResult: RawPlayerData | null = null;
-    for (const id of vaultSelectedIds) {
+    const seen = new Set<string>();
+    for (const raw of vaultSelectedIds) {
+      const id = stripStackSuffix(raw);
+      if (seen.has(id)) continue;
+      seen.add(id);
       const isInstance = playerItemLookupIds[id] !== undefined;
       if (isInstance) {
         const r = await postJson(`/api/auth/me/characters/${character.id}/items/${id}/destroy`);
@@ -5096,7 +5109,7 @@ export function InventoryTab({
                 source="vault"
                 onPlayerDataUpdated={(data) => { onPlayerDataUpdated?.(data); exitVaultSelectMode(); }}
                 onClose={() => setShowVaultSalvagePopup(false)}
-                preSelectedIds={vaultSelectedIds}
+                preSelectedIds={new Set([...vaultSelectedIds].map(stripStackSuffix))}
               />
             )}
             {vaultConfirmDestroy && (
