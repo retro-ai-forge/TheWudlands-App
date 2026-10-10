@@ -332,7 +332,7 @@
       "adventuring_gear"
     ],
     "sizeClass": "medium",
-    "stackSize": 2,
+    "stackSize": 1,
     "needsItemDefinition": false,
     "note": "Utility gear - does not wear out, no durability tracking needed.",
     "equipSlots": [],
@@ -812,7 +812,7 @@
       "essentials"
     ],
     "sizeClass": "medium",
-    "stackSize": 2,
+    "stackSize": 1,
     "needsItemDefinition": false,
     "note": "A trade tool - does not wear out, no durability tracking needed.",
     "equipSlots": [],

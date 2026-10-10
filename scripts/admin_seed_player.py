@@ -37,10 +37,10 @@ from backend.db import get_database  # noqa: E402
 PLAYER_ADDRESS = "xxx"
 RAW_MATERIAL_QTY = 3000
 
-DROP_BLUEPRINTS = True
-DROP_MATERIALS  = True    # raw materials → crafting.resources
+DROP_BLUEPRINTS = False
+DROP_MATERIALS  = False    # raw materials → crafting.resources
 DROP_ITEMS      = True   # instance items + vault.itemBalances (armor, weapons, food, potions, …)
-DROP_TOOLS      = True   # flat crafting tools (anvil, furnace, workbench, …)
+DROP_TOOLS      = False   # flat crafting tools (anvil, furnace, workbench, …)
 
 TIER_MIN        = 1      # lowest tier to drop (1–6)
 TIER_MAX        = 6      # highest tier to drop (1–6)

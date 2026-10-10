@@ -27,7 +27,6 @@ from datetime import datetime, timezone
 from typing import Any, Optional
 
 from backend.balances import (
-    CYBER_WIFEY_COLLECTION_IDS,
     DOT_SYMBOL,
     FIRST_ANNIVERSARY_COLLECTION_ID,
     OG_WUD_BURN_COLLECTION_ID,
@@ -53,7 +52,7 @@ REVERIFY_PROBABILITY = 0.03
 # of SOUL_SLOTS makes existing records mean something else. Bump this when
 # that happens: records stamped with an older version are re-verified on the
 # next login instead of being trusted.
-SLOT_LAYOUT_VERSION = 5
+SLOT_LAYOUT_VERSION = 6
 
 FREE = "free"
 NFT = "nft"
@@ -115,15 +114,13 @@ SOUL_SLOTS: tuple[SoulSlot, ...] = (
         image="nft-wud-og-burn.jpg", collection_id=OG_WUD_BURN_COLLECTION_ID,
         link="https://www.chaotic.art/ahp/collection/244",
     ),
-    SoulSlot(5, NFT_COUNT, "1 CYBER WIFEY", image="nft-cyber-wifey.jpg",
-             collection_ids=CYBER_WIFEY_COLLECTION_IDS, amount=1,
-             link="https://www.chaotic.art/ahp/collection/542"),
-    SoulSlot(6, NFT_COUNT, "5 CYBER WIFEY", image="nft-cyber-wifey.jpg",
-             collection_ids=CYBER_WIFEY_COLLECTION_IDS, amount=5,
-             link="https://www.chaotic.art/ahp/collection/542"),
-    SoulSlot(7, TOKEN, "2.5B WUD", image="assset-wud.jpg", symbol=WUD_SYMBOL, amount=2.5e9,
+    SoulSlot(5, TOKEN, "500M WUD", image="assset-wud.jpg", symbol=WUD_SYMBOL, amount=5e8,
              link="https://app.hydration.net/"),
-    SoulSlot(8, TOKEN, "2500 DOT", image="asset-dot.png", symbol=DOT_SYMBOL, amount=2500,
+    SoulSlot(6, TOKEN, "1B WUD", image="assset-wud.jpg", symbol=WUD_SYMBOL, amount=1e9,
+             link="https://app.hydration.net/"),
+    SoulSlot(7, TOKEN, "5B WUD", image="assset-wud.jpg", symbol=WUD_SYMBOL, amount=5e9,
+             link="https://app.hydration.net/"),
+    SoulSlot(8, TOKEN, "5000 DOT", image="asset-dot.png", symbol=DOT_SYMBOL, amount=5000,
              link="https://app.hydration.net/"),
     # Grid Miner slots sit last: they resolve on the slow IPFS pass, so their
     # spinners keep running after the rest of the grid has settled, and that
