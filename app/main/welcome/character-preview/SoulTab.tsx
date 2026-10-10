@@ -1,5 +1,6 @@
 import { useState } from "react";
 import styles from "./CharacterTabs.module.css";
+import { getPortraitCropImgStyle } from "@/app/lib/portraitCrop";
 import type { SlotCharacterSummary } from "../SoulSlotGrid";
 import type { RawPlayerData } from "./InventoryTab";
 
@@ -56,11 +57,20 @@ export function SoulTab({
     <div className={`${styles.panel} ${styles.soulPanel}`}>
       <div className={styles.soulImageBox}>
         <div className={styles.soulImageFrame}>
+          {character.portraitUrl && character.portraitUrl !== "empty" && (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={character.portraitUrl}
+              alt=""
+              className={`${styles.soulImage} ${styles.chakraPortraitBg}`}
+              style={character.portraitFrameArea ? getPortraitCropImgStyle(character.portraitFrameArea) : undefined}
+            />
+          )}
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src="/images/character/chakra-page-active.png"
             alt="Soul chakra"
-            className={styles.soulImage}
+            className={`${styles.soulImage} ${styles.chakraOverlay}`}
           />
 
           {/* Styled like BodyTab's .equipSlotOverlay (dashed border,
