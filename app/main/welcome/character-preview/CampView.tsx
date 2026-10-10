@@ -12,6 +12,7 @@ import {
   computeCartContents,
   postJson,
   selectionWeight,
+  stripStackSuffix,
   type BlueprintTierInfo,
   type RawPlayerData,
   type ResourceTierInfo,
@@ -99,21 +100,21 @@ export function CampView({
     setSelectedIds(new Set());
   }, []);
 
-  const toggleSelectItem = useCallback((id: string) => {
-    setSelectedIds((prev) => {
-      const next = new Set(prev);
-      if (next.has(id)) next.delete(id);
-      else next.add(id);
-      return next;
-    });
-  }, []);
-
-  const toggleSelectResource = useCallback((id: string) => {
-    const key = `res:${id}`;
+  const toggleSelectItem = useCallback((key: string) => {
     setSelectedIds((prev) => {
       const next = new Set(prev);
       if (next.has(key)) next.delete(key);
       else next.add(key);
+      return next;
+    });
+  }, []);
+
+  const toggleSelectResource = useCallback((key: string) => {
+    const rk = `res:${key}`;
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(rk)) next.delete(rk);
+      else next.add(rk);
       return next;
     });
   }, []);
@@ -348,9 +349,13 @@ export function CampView({
       const instanceIds: string[] = [];
       const balances: { id: string; amount: number }[] = [];
       const resources: { id: string; amount: number }[] = [];
-      for (const key of selectedIds) {
+      const seen = new Set<string>();
+      for (const raw of selectedIds) {
+        const key = raw.startsWith("res:") ? raw : stripStackSuffix(raw);
+        if (seen.has(key)) continue;
+        seen.add(key);
         if (key.startsWith("res:")) {
-          const resId = key.slice(4);
+          const resId = stripStackSuffix(key.slice(4));
           const amount = campResourceBalances[resId] ?? 0;
           if (amount > 0) resources.push({ id: resId, amount });
         } else if (campInstanceLookupIds[key] !== undefined) {
@@ -375,8 +380,12 @@ export function CampView({
     if (batchBusy || selectedIds.size === 0) return;
     setBatchBusy(true);
     let lastResult: RawPlayerData | null = null;
-    for (const key of selectedIds) {
-      if (key.startsWith("res:")) continue;
+    const seen = new Set<string>();
+    for (const raw of selectedIds) {
+      if (raw.startsWith("res:")) continue;
+      const key = stripStackSuffix(raw);
+      if (seen.has(key)) continue;
+      seen.add(key);
       const isInstance = campInstanceLookupIds[key] !== undefined;
       if (isInstance) {
         const r = await postJson(
@@ -499,7 +508,7 @@ export function CampView({
           characterId={character.id}
           onPlayerDataUpdated={(data) => { onPlayerDataUpdated?.(data); exitSelectMode(); }}
           onClose={() => setShowSalvagePopup(false)}
-          preSelectedIds={new Set([...selectedIds].filter((k) => !k.startsWith("res:")))}
+          preSelectedIds={new Set([...selectedIds].filter((k) => !k.startsWith("res:")).map(stripStackSuffix))}
         />
       )}
       <ItemGrid
