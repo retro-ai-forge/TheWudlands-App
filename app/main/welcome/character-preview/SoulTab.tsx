@@ -58,7 +58,7 @@ export function SoulTab({
         <div className={styles.soulImageFrame}>
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
-            src="/images/character/chakra-page-active.jpg"
+            src="/images/character/chakra-page-active.png"
             alt="Soul chakra"
             className={styles.soulImage}
           />

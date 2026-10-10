@@ -1535,7 +1535,7 @@
 .carryBarsWrap {
   position: absolute;
   top: 2%;
-  left: calc(100% + clamp(0.2rem, calc(4vw - 1.4rem), 1.8rem));
+  left: calc(100% + clamp(0.2rem, calc(3vw - 0.44rem), 1.8rem));
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -1543,17 +1543,23 @@
   z-index: 1;
 }
 
+@media (min-width: 1250px) {
+  .carryBarsWrap {
+    left: calc(100% + 1.1rem);
+  }
+}
+
 .carryIconFill {
   position: relative;
-  width: clamp(2.4rem, 8vw, 3.4rem);
-  height: clamp(2.4rem, 8vw, 3.4rem);
+  width: clamp(2.4rem, calc(3.5vw + 1.65rem), 3.4rem);
+  height: clamp(2.4rem, calc(3.5vw + 1.65rem), 3.4rem);
   cursor: pointer;
 }
 
 .carryIconFillPortrait {
   position: relative;
-  width: clamp(2.4rem, 8vw, 3.4rem);
-  height: clamp(3.6rem, 12vw, 5.1rem);
+  width: clamp(2.4rem, calc(3.5vw + 1.65rem), 3.4rem);
+  height: clamp(3.6rem, calc(5.2vw + 2.5rem), 5.1rem);
   cursor: pointer;
   overflow: hidden;
   border-radius: 3px;
