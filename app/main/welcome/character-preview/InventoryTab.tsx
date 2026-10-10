@@ -3934,6 +3934,22 @@ export function ItemDetailPopup({
                     </>
                   ) : location === "backpack" ? (
                     <>
+                      {slotGroups.map((slots) => (
+                        <button
+                          key={slots.join("+")}
+                          type="button"
+                          className={styles.itemPopupActionButton}
+                          disabled={pending}
+                          onClick={() => equipToSlots(slots)}
+                        >
+                          {slots.map((slot, i) => (
+                            <Fragment key={slot}>
+                              {i > 0 && " + "}
+                              {formatSlotLabel(slot)}
+                            </Fragment>
+                          ))}
+                        </button>
+                      ))}
                       <button
                         type="button"
                         className={styles.itemPopupBackpackButton}
