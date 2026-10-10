@@ -13,16 +13,16 @@ import type { RawPlayerData } from "./InventoryTab";
 // row (row of 1 in the center counts as one number, a left/right pair
 // counts as two, in reading order).
 export const CHAKRA_SLOTS: { number: number; label: string; top: number; left: number }[] = [
-  { number: 1, label: "Mind", top: 9.4, left: 50.0 },
-  { number: 2, label: "Prime", top: 26.7, left: 19.0 },
-  { number: 3, label: "Spirit", top: 26.7, left: 82.0 },
-  { number: 4, label: "Correspondence", top: 26.7, left: 50.0 },
-  { number: 5, label: "Entropy", top: 45.4, left: 19.0 },
-  { number: 6, label: "Life", top: 45.4, left: 82.0 },
-  { number: 7, label: "Forces", top: 45.4, left: 50.0 },
-  { number: 8, label: "Time", top: 64.5, left: 19.0 },
-  { number: 9, label: "Matter", top: 64.5, left: 82.0 },
-  { number: 10, label: "10th Sphere", top: 89.1, left: 50.0 },
+  { number: 1, label: "Mind", top: 10.2, left: 49.7 },
+  { number: 2, label: "Prime", top: 22.4, left: 21.8 },
+  { number: 3, label: "Spirit", top: 22.4, left: 77.4 },
+  { number: 4, label: "Correspondence", top: 35.4, left: 49.6 },
+  { number: 5, label: "Entropy", top: 47.8, left: 16.8 },
+  { number: 6, label: "Life", top: 47.8, left: 82.4 },
+  { number: 7, label: "Forces", top: 55.1, left: 49.6 },
+  { number: 8, label: "Time", top: 72.9, left: 25.9 },
+  { number: 9, label: "Matter", top: 72.9, left: 73.0 },
+  { number: 10, label: "10th Sphere", top: 88.6, left: 49.6 },
 ];
 
 // A slot is active once the character's total soul attributes (will +

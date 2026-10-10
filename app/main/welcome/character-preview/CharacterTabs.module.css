@@ -1424,6 +1424,7 @@
   height: 100%;
   transform: rotateY(180deg);
   border: none;
+  overflow: visible;
 }
 
 .equipSlot {
@@ -2226,7 +2227,7 @@
   composes: equipSlot;
   position: absolute;
   z-index: 1;
-  width: 15%;
+  width: calc(14.2% + 6px);
   aspect-ratio: 1 / 1;
   transform: translate(-50%, -50%);
   /* Overrides .equipSlot's own dashed border - these sit directly on the
@@ -2276,6 +2277,13 @@
   pointer-events: none;
 }
 
+.chakraPortraitClip {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  z-index: 0;
+}
+
 .chakraContentWrap {
   position: absolute;
   top: 50%;
@@ -2283,6 +2291,11 @@
   transform: translateY(-50%);
   width: 100%;
   z-index: 1;
+}
+
+.chakraSlotAnchor {
+  position: relative;
+  width: 100%;
 }
 
 .chakraOverlayImg {
@@ -2294,12 +2307,11 @@
 .soulChakraInactiveImage {
   position: absolute;
   z-index: 2;
-  width: 30%;
+  width: 45%;
   height: auto;
   transform: translate(-50%, -50%);
   pointer-events: none;
   display: block;
-  opacity: 0.965;
 }
 
 /* ---- Inventory tab ---- */

@@ -456,48 +456,52 @@ export function BodyTab({
                   className={`${styles.frameBox} ${styles.flipFace} ${styles.flipBack}`}
                   onClick={() => setShowSoul(false)}
                 >
-                  {character.portraitUrl && character.portraitUrl !== "empty" && (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img
-                      src={character.portraitUrl}
-                      alt=""
-                      className={`${styles.frameImage} ${styles.chakraPortraitBg}`}
-                      style={character.portraitFrameArea ? getPortraitCropImgStyle(character.portraitFrameArea) : undefined}
-                    />
-                  )}
-                  <div className={styles.chakraContentWrap}>
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img
-                      src="/images/character/chakra-page-active.png"
-                      alt="Soul chakra"
-                      className={styles.chakraOverlayImg}
-                    />
-                    {CHAKRA_SLOTS.map(({ number, label: slotLabel, top, left }) => {
-                      if (number > activeCount) return null;
-                      return (
-                        <button
-                          type="button"
-                          key={number}
-                          className={`${styles.soulChakraSlot} ${litSlots.has(number) ? styles.soulChakraSlotLit : ""}`}
-                          style={{ top: `${top}%`, left: `${left}%` }}
-                          title={`${number}. ${slotLabel}`}
-                          onClick={(e) => { e.stopPropagation(); toggleLit(number); }}
-                        >
-                          <span className={styles.equipSlotEmpty}>Empty</span>
-                        </button>
-                      );
-                    })}
-                    {CHAKRA_SLOTS.filter(({ number }) => number > activeCount).map(({ number, label: slotLabel, top, left }) => (
+                  <div className={styles.chakraPortraitClip}>
+                    {character.portraitUrl && character.portraitUrl !== "empty" && (
                       // eslint-disable-next-line @next/next/no-img-element
                       <img
-                        key={number}
-                        src="/images/character/chakra-inactive.png"
-                        alt={`${slotLabel} (inactive)`}
-                        title={`${number}. ${slotLabel} (inactive)`}
-                        className={styles.soulChakraInactiveImage}
-                        style={{ top: `${top}%`, left: `${left}%` }}
+                        src={character.portraitUrl}
+                        alt=""
+                        className={`${styles.frameImage} ${styles.chakraPortraitBg}`}
+                        style={character.portraitFrameArea ? getPortraitCropImgStyle(character.portraitFrameArea) : undefined}
                       />
-                    ))}
+                    )}
+                  </div>
+                  <div className={styles.chakraContentWrap}>
+                    <div className={styles.chakraSlotAnchor}>
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
+                        src="/images/character/chakra-page-active.png"
+                        alt="Soul chakra"
+                        className={styles.chakraOverlayImg}
+                      />
+                      {CHAKRA_SLOTS.map(({ number, label: slotLabel, top, left }) => {
+                        if (number > activeCount) return null;
+                        return (
+                          <button
+                            type="button"
+                            key={number}
+                            className={`${styles.soulChakraSlot} ${litSlots.has(number) ? styles.soulChakraSlotLit : ""}`}
+                            style={{ top: `${top}%`, left: `${left}%` }}
+                            title={`${number}. ${slotLabel}`}
+                            onClick={(e) => { e.stopPropagation(); toggleLit(number); }}
+                          >
+                            <span className={styles.equipSlotEmpty}>Empty</span>
+                          </button>
+                        );
+                      })}
+                      {CHAKRA_SLOTS.filter(({ number }) => number > activeCount).map(({ number, label: slotLabel, top, left }) => (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img
+                          key={number}
+                          src="/images/character/chakra-inactive.png"
+                          alt={`${slotLabel} (inactive)`}
+                          title={`${number}. ${slotLabel} (inactive)`}
+                          className={styles.soulChakraInactiveImage}
+                          style={{ top: `${top}%`, left: `${left}%` }}
+                        />
+                      ))}
+                    </div>
                   </div>
                 </div>
               </div>
