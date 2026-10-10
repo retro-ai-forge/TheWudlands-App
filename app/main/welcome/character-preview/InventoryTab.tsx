@@ -184,7 +184,10 @@ export function selectionWeight(
         const hash = raw.lastIndexOf("#");
         const tileIdx = hash === -1 ? 0 : parseInt(raw.slice(hash + 1), 10);
         const itemsInTile = Math.max(0, Math.min(stackSize, qty - tileIdx * stackSize));
-        total += itemsInTile * slotCost;
+        const sizeClass = info?.sizeClass ?? "tiny";
+        total += sizeClass === "tiny"
+          ? (itemsInTile > 0 ? slotCost : 0)
+          : itemsInTile * slotCost;
       }
     }
   }
