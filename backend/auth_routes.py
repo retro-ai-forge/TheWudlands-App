@@ -1945,6 +1945,9 @@ class SalvageCampRequest(BaseModel):
     selected: List[str] = Field(
         ..., description="Ids (instanceId or item_id) of the preview rows to actually salvage"
     )
+    amounts: Optional[Dict[str, int]] = Field(
+        None, description="Per-balance-item quantity caps (id -> count); omitted entries use the full balance"
+    )
 
 
 @player_router.post("/me/characters/{character_id}/camp/salvage-all", response_model=PlayerDataResponse)
@@ -1963,11 +1966,22 @@ async def salvage_camp_route(
 async def preview_vault_salvage_route(
     character_id: str,
     selected: Optional[str] = None,
+    amounts: Optional[str] = None,
     address: str = Depends(get_current_address),
 ):
-    """What salvaging vault items would recover. When `selected` is a comma-separated list of IDs, only those items are returned."""
+    """What salvaging vault items would recover. When `selected` is a comma-separated list of IDs, only those items are returned. `amounts` is a comma-separated list of id:count pairs that cap the quantity per balance item."""
     selected_ids = selected.split(",") if selected else None
-    rows = await preview_vault_salvage(address, character_id, selected_ids=selected_ids)
+    amount_caps: Optional[Dict[str, int]] = None
+    if amounts:
+        amount_caps = {}
+        for pair in amounts.split(","):
+            parts = pair.rsplit(":", 1)
+            if len(parts) == 2:
+                try:
+                    amount_caps[parts[0]] = int(parts[1])
+                except ValueError:
+                    pass
+    rows = await preview_vault_salvage(address, character_id, selected_ids=selected_ids, amount_caps=amount_caps)
     if rows is None:
         raise HTTPException(status_code=404, detail="No matching character")
 
@@ -1992,7 +2006,7 @@ async def salvage_vault_route(
     character_id: str, payload: SalvageCampRequest, address: str = Depends(get_current_address)
 ):
     """Salvage every selected vault item/itemBalance at once, crediting recovered materials into the shared crafting pool."""
-    player = await salvage_vault(address, character_id, payload.selected)
+    player = await salvage_vault(address, character_id, payload.selected, amount_caps=payload.amounts)
     if player is None:
         raise HTTPException(status_code=404, detail="Nothing selected salvaged")
 

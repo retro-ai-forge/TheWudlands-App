@@ -1590,12 +1590,14 @@ export function ChopBlockPopup({
   onPlayerDataUpdated,
   onClose,
   preSelectedIds,
+  preSelectedAmounts,
   source = "camp",
 }: {
   characterId: string;
   onPlayerDataUpdated?: (data: RawPlayerData) => void;
   onClose: () => void;
   preSelectedIds?: Set<string>;
+  preSelectedAmounts?: Map<string, number>;
   source?: "camp" | "vault";
 }) {
   const [rows, setRows] = useState<ChopBlockRow[] | null>(null);
@@ -1604,9 +1606,14 @@ export function ChopBlockPopup({
   useEffect(() => {
     let cancelled = false;
     let url = `/api/auth/me/characters/${characterId}/${source}/salvage-preview`;
+    const params: string[] = [];
     if (preSelectedIds && preSelectedIds.size > 0) {
-      url += `?selected=${[...preSelectedIds].join(",")}`;
+      params.push(`selected=${[...preSelectedIds].join(",")}`);
     }
+    if (preSelectedAmounts && preSelectedAmounts.size > 0) {
+      params.push(`amounts=${[...preSelectedAmounts].map(([id, n]) => `${id}:${n}`).join(",")}`);
+    }
+    if (params.length > 0) url += `?${params.join("&")}`;
     fetch(url, { credentials: "include" })
       .then((res) => (res.ok ? res.json() : null))
       .then((data: { rows: ChopBlockRow[] } | null) => {
@@ -1653,9 +1660,19 @@ export function ChopBlockPopup({
       icon="/images/character/chopping_block.png"
       tone="salvage"
       disabled={rows === null || selected.size === 0}
-      onConfirm={() =>
-        postJson(`/api/auth/me/characters/${characterId}/${source}/salvage-all`, { selected: [...selected] })
-      }
+      onConfirm={() => {
+        const amounts: Record<string, number> = {};
+        if (preSelectedAmounts) {
+          for (const id of selected) {
+            const cap = preSelectedAmounts.get(id);
+            if (cap !== undefined) amounts[id] = cap;
+          }
+        }
+        return postJson(`/api/auth/me/characters/${characterId}/${source}/salvage-all`, {
+          selected: [...selected],
+          ...(Object.keys(amounts).length > 0 ? { amounts } : {}),
+        });
+      }}
       onPlayerDataUpdated={onPlayerDataUpdated}
       onClose={onClose}
     >
@@ -4458,19 +4475,22 @@ export function InventoryTab({
       if (vaultBatchBusy || vaultSelectedIds.size === 0) return;
       setVaultBatchBusy(true);
       const instanceIds: string[] = [];
-      const balances: { id: string; amount: number }[] = [];
-      const seen = new Set<string>();
+      const balanceTotals = new Map<string, number>();
       for (const raw of vaultSelectedIds) {
         const id = stripStackSuffix(raw);
-        if (seen.has(id)) continue;
-        seen.add(id);
         if (playerItemLookupIds[id] !== undefined) {
-          instanceIds.push(id);
+          if (!balanceTotals.has(id)) instanceIds.push(id);
         } else {
-          const amount = playerItemsCombined[id] ?? 0;
-          if (amount > 0) balances.push({ id, amount });
+          const info = itemCatalogTierInfo[id];
+          const stackSize = Math.max(1, info?.stackSize ?? 1);
+          const qty = playerItemsCombined[id] ?? 0;
+          const hash = raw.lastIndexOf("#");
+          const tileIdx = hash === -1 ? 0 : parseInt(raw.slice(hash + 1), 10);
+          const itemsInTile = Math.max(0, Math.min(stackSize, qty - tileIdx * stackSize));
+          if (itemsInTile > 0) balanceTotals.set(id, (balanceTotals.get(id) ?? 0) + itemsInTile);
         }
       }
+      const balances = Array.from(balanceTotals, ([id, amount]) => ({ id, amount }));
       const r = await postJson(
         `/api/auth/me/characters/${character.id}/vault/bulk-move`,
         { destination, instanceIds, balances }
@@ -4479,36 +4499,45 @@ export function InventoryTab({
       setVaultBatchBusy(false);
       exitVaultSelectMode();
     },
-    [vaultBatchBusy, vaultSelectedIds, playerItemLookupIds, playerItemsCombined, character.id, onPlayerDataUpdated, exitVaultSelectMode]
+    [vaultBatchBusy, vaultSelectedIds, playerItemLookupIds, playerItemsCombined, itemCatalogTierInfo, character.id, onPlayerDataUpdated, exitVaultSelectMode]
   );
 
   const batchDestroyVault = useCallback(async () => {
     if (vaultBatchBusy || vaultSelectedIds.size === 0) return;
     setVaultBatchBusy(true);
     let lastResult: RawPlayerData | null = null;
-    const seen = new Set<string>();
+    const instancesSeen = new Set<string>();
+    const balanceTotals = new Map<string, number>();
     for (const raw of vaultSelectedIds) {
       const id = stripStackSuffix(raw);
-      if (seen.has(id)) continue;
-      seen.add(id);
       const isInstance = playerItemLookupIds[id] !== undefined;
       if (isInstance) {
-        const r = await postJson(`/api/auth/me/characters/${character.id}/items/${id}/destroy`);
-        if (r.ok) lastResult = r.data;
+        instancesSeen.add(id);
       } else {
-        const amount = playerItemsCombined[id] ?? 0;
-        if (amount <= 0) continue;
-        const r = await postJson(
-          `/api/auth/me/characters/${character.id}/item-balances/${id}/destroy`,
-          { amount }
-        );
-        if (r.ok) lastResult = r.data;
+        const info = itemCatalogTierInfo[id];
+        const stackSize = Math.max(1, info?.stackSize ?? 1);
+        const qty = playerItemsCombined[id] ?? 0;
+        const hash = raw.lastIndexOf("#");
+        const tileIdx = hash === -1 ? 0 : parseInt(raw.slice(hash + 1), 10);
+        const itemsInTile = Math.max(0, Math.min(stackSize, qty - tileIdx * stackSize));
+        if (itemsInTile > 0) balanceTotals.set(id, (balanceTotals.get(id) ?? 0) + itemsInTile);
       }
+    }
+    for (const id of instancesSeen) {
+      const r = await postJson(`/api/auth/me/characters/${character.id}/items/${id}/destroy`);
+      if (r.ok) lastResult = r.data;
+    }
+    for (const [id, amount] of balanceTotals) {
+      const r = await postJson(
+        `/api/auth/me/characters/${character.id}/item-balances/${id}/destroy`,
+        { amount }
+      );
+      if (r.ok) lastResult = r.data;
     }
     if (lastResult) onPlayerDataUpdated?.(lastResult);
     setVaultBatchBusy(false);
     exitVaultSelectMode();
-  }, [vaultBatchBusy, vaultSelectedIds, playerItemLookupIds, playerItemsCombined, character.id, onPlayerDataUpdated, exitVaultSelectMode]);
+  }, [vaultBatchBusy, vaultSelectedIds, playerItemLookupIds, playerItemsCombined, itemCatalogTierInfo, character.id, onPlayerDataUpdated, exitVaultSelectMode]);
 
   // The embedded recipe viewer's own content height, in px - same-origin, so
   // its body height can be read directly and mirrored onto the iframe
@@ -4620,6 +4649,18 @@ export function InventoryTab({
       window.location.origin
     );
   }, [recipeViewerLoaded, playerResourceBalances, playerItemBalances, ownedTools, vaultToolInstanceIds, knownBlueprints]);
+
+  const [recipePopupItemId, setRecipePopupItemId] = useState<string | null>(null);
+  useEffect(() => {
+    const handler = (e: MessageEvent) => {
+      if (e.data?.type === "recipe-viewer:show-item" && typeof e.data.itemId === "string") {
+        setRecipePopupItemId(e.data.itemId);
+      }
+    };
+    window.addEventListener("message", handler);
+    return () => window.removeEventListener("message", handler);
+  }, []);
+
   const canCraft = craftableCounts[craftCount] ?? false;
 
   const [crafting, setCrafting] = useState(false);
@@ -4990,6 +5031,24 @@ export function InventoryTab({
               }}
             />
           )}
+          {recipePopupItemId && itemCatalogTierInfo[recipePopupItemId] && (
+            <ItemDetailPopup
+              info={itemCatalogTierInfo[recipePopupItemId]}
+              fallbackName={formatResourceLabel(recipePopupItemId)}
+              owned={playerItemsCombined[recipePopupItemId] ?? 0}
+              isInstance={false}
+              movable={false}
+              quality={null}
+              moveId={recipePopupItemId}
+              catalogId={recipePopupItemId}
+              source="vault"
+              hasBackpackEquipped={false}
+              hasSaddlepackEquipped={false}
+              characterId={character.id}
+              onPlayerDataUpdated={onPlayerDataUpdated}
+              onClose={() => setRecipePopupItemId(null)}
+            />
+          )}
         </>
       )}
 
@@ -5113,6 +5172,21 @@ export function InventoryTab({
                 onPlayerDataUpdated={(data) => { onPlayerDataUpdated?.(data); exitVaultSelectMode(); }}
                 onClose={() => setShowVaultSalvagePopup(false)}
                 preSelectedIds={new Set([...vaultSelectedIds].map(stripStackSuffix))}
+                preSelectedAmounts={(() => {
+                  const amounts = new Map<string, number>();
+                  for (const raw of vaultSelectedIds) {
+                    const id = stripStackSuffix(raw);
+                    if (playerItemLookupIds[id] !== undefined) continue;
+                    const info = itemCatalogTierInfo[id];
+                    const stackSize = Math.max(1, info?.stackSize ?? 1);
+                    const qty = playerItemsCombined[id] ?? 0;
+                    const hash = raw.lastIndexOf("#");
+                    const tileIdx = hash === -1 ? 0 : parseInt(raw.slice(hash + 1), 10);
+                    const itemsInTile = Math.max(0, Math.min(stackSize, qty - tileIdx * stackSize));
+                    if (itemsInTile > 0) amounts.set(id, (amounts.get(id) ?? 0) + itemsInTile);
+                  }
+                  return amounts;
+                })()}
               />
             )}
             {vaultConfirmDestroy && (

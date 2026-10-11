@@ -5061,12 +5061,15 @@ def _recyclable_vault_entries(doc: dict, character: dict):
 
 
 async def preview_vault_salvage(
-    address: str, character_id: str, selected_ids: Optional[List[str]] = None
+    address: str, character_id: str,
+    selected_ids: Optional[List[str]] = None,
+    amount_caps: Optional[Dict[str, int]] = None,
 ) -> Optional[List[Dict[str, object]]]:
     """
     Read-only: every recyclable thing in the player's shared vault,
     one row per distinct thing. When selected_ids is provided, only
-    items whose id is in the set are included.
+    items whose id is in the set are included. amount_caps optionally
+    limits the quantity per balance item (partial-stack selection).
     """
     db = get_database()
     doc = await db.players.find_one({"address": address, "characters.id": character_id})
@@ -5085,6 +5088,8 @@ async def preview_vault_salvage(
     for kind, entry_id, entry, count in _recyclable_vault_entries(doc, character):
         if allow_ids is not None and entry_id not in allow_ids:
             continue
+        if amount_caps and kind == "balance" and entry_id in amount_caps:
+            count = min(count, max(1, amount_caps[entry_id]))
         condition = _instance_condition(vault_instances_by_id.get(entry_id), entry) if kind == "instance" else "new"
         try:
             recoveries = recycling.resolve_salvage_preview(entry.family_id, entry.tier, character, player_tools, player_items, count, condition=condition)
@@ -5104,12 +5109,16 @@ async def preview_vault_salvage(
     return rows
 
 
-async def salvage_vault(address: str, character_id: str, selected_ids: List[str]) -> Optional[Player]:
+async def salvage_vault(
+    address: str, character_id: str, selected_ids: List[str],
+    amount_caps: Optional[Dict[str, int]] = None,
+) -> Optional[Player]:
     """
     Bulk vault salvage: salvages every selected vault item instance/
     itemBalance at once, crediting recovered materials into the shared
     crafting.resources pool. Uses the character's profession/skill and
     the full shared tool pool (same as single-item from_vault salvage).
+    amount_caps optionally limits the quantity per balance item.
     """
     if not selected_ids:
         return None
@@ -5123,7 +5132,7 @@ async def salvage_vault(address: str, character_id: str, selected_ids: List[str]
         return None
 
     salvaged_instance_ids: set = set()
-    salvaged_balance_ids: set = set()
+    salvaged_balance_amounts: Dict[str, int] = {}
     recovered_totals: Dict[str, int] = {}
 
     player_tools = doc.get("crafting", {}).get("tools", {})
@@ -5133,6 +5142,8 @@ async def salvage_vault(address: str, character_id: str, selected_ids: List[str]
     for kind, entry_id, entry, count in _recyclable_vault_entries(doc, character):
         if entry_id not in selected:
             continue
+        if amount_caps and kind == "balance" and entry_id in amount_caps:
+            count = min(count, max(1, amount_caps[entry_id]))
         condition = _instance_condition(vault_instances_by_id.get(entry_id), entry) if kind == "instance" else "new"
         try:
             recoveries = recycling.resolve_salvage_preview(entry.family_id, entry.tier, character, player_tools, player_items, count, condition=condition)
@@ -5144,9 +5155,9 @@ async def salvage_vault(address: str, character_id: str, selected_ids: List[str]
         if kind == "instance":
             salvaged_instance_ids.add(entry_id)
         else:
-            salvaged_balance_ids.add(entry_id)
+            salvaged_balance_amounts[entry_id] = count
 
-    if not salvaged_instance_ids and not salvaged_balance_ids:
+    if not salvaged_instance_ids and not salvaged_balance_amounts:
         return None
 
     vault = doc.get("vault", {})
@@ -5154,10 +5165,14 @@ async def salvage_vault(address: str, character_id: str, selected_ids: List[str]
         instance for instance in vault.get("items", [])
         if instance["instanceId"] not in salvaged_instance_ids
     ]
-    new_vault_balances = {
-        item_id: qty for item_id, qty in vault.get("itemBalances", {}).items()
-        if item_id not in salvaged_balance_ids and qty > 0
-    }
+    new_vault_balances = {}
+    for item_id, qty in vault.get("itemBalances", {}).items():
+        if item_id in salvaged_balance_amounts:
+            remaining = qty - salvaged_balance_amounts[item_id]
+            if remaining > 0:
+                new_vault_balances[item_id] = remaining
+        elif qty > 0:
+            new_vault_balances[item_id] = qty
     new_crafting_resources = dict(doc.get("crafting", {}).get("resources", {}))
     for rid, qty in recovered_totals.items():
         new_crafting_resources[rid] = new_crafting_resources.get(rid, 0) + qty

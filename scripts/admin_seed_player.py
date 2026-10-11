@@ -110,7 +110,15 @@ def load_items(tier: int) -> tuple[list[dict], dict[str, int], dict[str, int]]:
             elif is_tool_file:
                 crafting_tools[it["id"]] = 1
             else:
-                item_balances[it["id"]] = 1
+                item_balances[it["id"]] = fam_props.get("stackSize", 1) or 1
+
+    processed = json.loads((DATA / "base-processed.json").read_text())
+    for it in processed:
+        if it.get("tier") != tier:
+            continue
+        fam_props = props_by_family.get(it["familyId"])
+        if fam_props is not None:
+            item_balances[it["id"]] = fam_props.get("stackSize", 1) or 1
 
     return instances, crafting_tools, item_balances
 
