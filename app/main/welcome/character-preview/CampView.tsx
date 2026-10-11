@@ -56,7 +56,7 @@ function fadeOutAudio(audio: HTMLAudioElement) {
 // BodyTab.tsx's own camp button, which opens this view) - same icon, just
 // shown much larger here as the screen's own centerpiece instead of a
 // small button.
-const CAMPFIRE_AREA_PX = 220;
+const CAMPFIRE_AREA_PX = 175;
 
 /** Opened by clicking the camp button on the Body tab - this character's
  * own gear.itemBalances.camp (finished goods owned but not yet packed into
@@ -68,6 +68,7 @@ export function CampView({
   character,
   onPlayerDataUpdated,
   onExitCamp,
+  footerVisible = false,
 }: {
   character: SlotCharacterSummary;
   onPlayerDataUpdated?: (data: RawPlayerData) => void;
@@ -76,8 +77,21 @@ export function CampView({
    * footer bar (tab row + its own exit.webp close button) while this
    * view is open, so this is the only way out of it once opened. */
   onExitCamp: () => void;
+  footerVisible?: boolean;
 }) {
   const { muted } = useSound();
+
+  const [footerBottomPx, setFooterBottomPx] = useState(0);
+  useEffect(() => {
+    if (!footerVisible) return;
+    const measure = () => {
+      const footer = document.querySelector('[data-role="character-preview-topbar"]');
+      setFooterBottomPx(footer ? footer.getBoundingClientRect().height : 0);
+    };
+    measure();
+    window.addEventListener("resize", measure);
+    return () => window.removeEventListener("resize", measure);
+  }, [footerVisible]);
 
   // Which camp-wide bulk action popup is open, if any - the lit campfire
   // opens "burn" (HoldActionPopup's own Burn All), the dropped-items icon
@@ -565,7 +579,7 @@ export function CampView({
         onLongPressResource={enterSelectModeResource}
         onToggleSelectResource={toggleSelectResource}
       />
-      <div className={styles.campfireStage} style={{ height: CAMPFIRE_AREA_PX }}>
+      <div className={styles.campfireStage} style={{ height: CAMPFIRE_AREA_PX, bottom: footerVisible ? Math.max(0, footerBottomPx - 8) : 0 }}>
         {/* Fire's position/size are relative to THIS group (i.e. to the
             tent itself - see .campfireStageFireIcon), not to .campfireStage's
             own corner, so moving/resizing the tent carries the fire along

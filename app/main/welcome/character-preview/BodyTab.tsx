@@ -592,24 +592,6 @@ export function BodyTab({
               );
             })()}
 
-            {!showSoul && (
-              <div className={styles.campButtonWrap}>
-                <button
-                  type="button"
-                  className={styles.campButton}
-                  title={hasCampItems ? "Camp (items waiting)" : "Camp"}
-                  aria-label={hasCampItems ? "Camp (items waiting)" : "Camp"}
-                  onClick={onOpenCamp}
-                >
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src="/images/character/camp.png" alt="" className={styles.campButtonIcon} />
-                </button>
-              </div>
-            )}
-            {!showSoul && hasCampItems && (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img src="/images/character/dropped.png" alt="" className={styles.campButtonBadge} />
-            )}
           </div>
 
           {!showSoul && (

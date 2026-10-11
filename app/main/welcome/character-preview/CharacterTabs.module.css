@@ -2753,8 +2753,8 @@
    the two drifting apart. */
 .campTentGroup {
   position: relative;
-  height: 18rem;
-  margin-bottom: 2.25rem;
+  height: 14rem;
+  margin-bottom: 1.5rem;
   display: flex;
   align-items: flex-end;
 }
@@ -2887,11 +2887,12 @@
      400px-wide viewport, then eases right (not far, capped at 40px) as
      the screen widens past that. The extra "- 0.4rem" nudges the whole
      thing a little further left than dead center, at every width. */
-  transform: translateX(calc(clamp(0px, (100vw - 400px) * 0.15, 40px) - 0.6rem));
+  transform: translateX(calc(clamp(0px, (100vw - 400px) * 0.15, 40px) + 1.5rem));
   z-index: 3;
-  height: 6.5rem;
+  height: 5rem;
   width: auto;
   image-rendering: pixelated;
+  filter: drop-shadow(0 0 8px rgba(0, 0, 0, 0.8));
   /* Clickable - opens the "Move all to backpack" popup (see
      CampView.tsx). Only ever rendered while hasCampItems, so there's
      nothing to gate here the way .campfireStageFireIconLit gates the
@@ -2917,14 +2918,14 @@
      a little further from the tent on a wider screen instead of tracking
      the actual viewport edge. */
   right: calc(-1 * clamp(0px, (100vw - 400px) * 0.15, 40px));
-  bottom: 9rem;
+  bottom: 7rem;
   transform: translateX(50%);
   /* Behind the tent (.campfireStageIcon's own z-index:2), not in front
      of it - the two sit close enough now that the tent's own silhouette
      overlaps this a bit, rather than this floating fully in the clear
      above/beside it. */
   z-index: 1;
-  height: 8.5rem;
+  height: 6.5rem;
   width: auto;
   image-rendering: pixelated;
   /* Clickable (opens ChopBlockPopup) - same pointer-events:auto
@@ -4140,10 +4141,10 @@
   font-size: 0.8rem;
   color: #b09a6a;
   white-space: nowrap;
-  padding: 0 0.15rem;
+  padding: 0 0.3rem;
   overflow: hidden;
   text-overflow: ellipsis;
-  min-width: 0;
+  min-width: 3rem;
   text-align: center;
 }
 
@@ -4155,9 +4156,9 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 2.8rem;
-  height: 2.8rem;
-  flex-shrink: 0;
+  width: clamp(2.4rem, 7vw, 2.8rem);
+  height: clamp(2.4rem, 7vw, 2.8rem);
+  flex-shrink: 1;
   background: #1a1810;
   border: 1px solid #3a3020;
   color: #7a6a3a;

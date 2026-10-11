@@ -20,7 +20,7 @@ const ICON_BASE = "/images/character/char-preview-";
 const TABS: { key: TabKey; label: string; icon: string; secondIcon?: string; emojiIcon?: string; lightenWhenActive?: boolean }[] = [
   { key: "stats", label: "Stats", icon: `${ICON_BASE}stats.png` },
   { key: "body", label: "Body & Soul", icon: `${ICON_BASE}body.png`, secondIcon: `${ICON_BASE}soul.png`, lightenWhenActive: true },
-  { key: "inventory", label: "Inventory", icon: "", emojiIcon: "🔧" },
+  { key: "inventory", label: "Inventory", icon: "/images/character/camp.png" },
   { key: "crafting", label: "Crafting", icon: "/images/character/vault.png" },
   { key: "adventure", label: "Adventure", icon: `${ICON_BASE}adventure.png`, lightenWhenActive: true },
 ];
@@ -314,7 +314,7 @@ export function CharacterPreview({
 
         <div className={tabStyles.nameRow}>
           <h1 className={tabStyles.name}>
-            {showCamp ? `${character.firstName}'s Camp` : activeTab === "inventory" ? "Vault" : `${character.firstName} ${character.lastName}`}
+            {showCamp ? `${character.firstName}'s Camp` : activeTab === "inventory" ? `${character.firstName}'s Camp` : activeTab === "crafting" ? "Vault" : `${character.firstName} ${character.lastName}`}
           </h1>
         </div>
 
@@ -360,15 +360,11 @@ export function CharacterPreview({
             <AdventureTab character={character} onPlayerDataUpdated={onPlayerDataUpdated} />
           )}
           {activeTab === "inventory" && (
-            <InventoryTab
+            <CampView
               character={character}
-              playerResourceBalances={playerResourceBalances}
-              playerTools={playerTools}
-              playerItemBalances={playerItemBalances}
-              playerItems={playerItems}
               onPlayerDataUpdated={onPlayerDataUpdated}
-              openCraftingSectionByDefault={openCraftingSectionByDefault}
-              section="crafting"
+              onExitCamp={() => setActiveTab("body")}
+              footerVisible
             />
           )}
             </>
