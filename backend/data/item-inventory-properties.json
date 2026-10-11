@@ -1452,7 +1452,7 @@
         "Right Hand"
       ]
     ],
-    "backpackable": false,
+    "backpackable": true,
     "qualityMax": 350,
     "armorClass": 5
   },
@@ -1515,7 +1515,7 @@
         "Right Hand"
       ]
     ],
-    "backpackable": false,
+    "backpackable": true,
     "qualityMax": 340,
     "armorClass": 5
   },

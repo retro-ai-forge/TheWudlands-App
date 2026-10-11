@@ -862,6 +862,7 @@ export function ItemGrid({
   hasSaddlepackEquipped,
   hasMountEquipped = false,
   hasCompanionEquipped = false,
+  hasCartEquipped = false,
   inAdventure = false,
   characterId,
   characterFirstName,
@@ -911,6 +912,7 @@ export function ItemGrid({
   hasSaddlepackEquipped: boolean;
   hasMountEquipped?: boolean;
   hasCompanionEquipped?: boolean;
+  hasCartEquipped?: boolean;
   /** source:"character" only - hides the popup's "Check in to vault" button while true, since there's no path back to the shared vault mid-adventure (see ItemDetailPopup's identical prop). */
   inAdventure?: boolean;
   characterId: string;
@@ -1308,6 +1310,14 @@ export function ItemGrid({
           hasMountEquipped={hasMountEquipped}
           hasCompanionEquipped={hasCompanionEquipped}
           inAdventure={inAdventure}
+          duplicateContainer={(() => {
+            const fam = tierInfo[lookupIds?.[selectedId] ?? selectedId]?.familyId;
+            if (!fam) return false;
+            if (fam === "backpack" && hasBackpackEquipped) return true;
+            if (fam === "saddlepack" && hasSaddlepackEquipped) return true;
+            if (fam === "cart" && hasCartEquipped) return true;
+            return false;
+          })()}
           characterId={characterId}
           characterFirstName={characterFirstName}
           packedItems={packedItems}
@@ -1340,6 +1350,7 @@ export const BACKPACK_ACTION_ICON = "/images/character/backpack.png";
 export const SADDLEPACK_ACTION_ICON = "/images/character/saddlebags.png";
 export const VAULT_ACTION_ICON = "/images/character/vault.png";
 const CAMP_ACTION_ICON = "/images/character/camp.png";
+export const CART_ACTION_ICON = "/images/items/cart_t1.png";
 
 const QUANTITY_OPTIONS = [1, 2, 5, 10] as const;
 
@@ -1732,12 +1743,12 @@ export function ChopBlockPopup({
         <p className={styles.salvageResultText}>{emptyLabel}</p>
       ) : (
         <>
-          <div className={`${styles.salvageDestroyDivider} ${styles.salvageDestroyDividerTight}`} />
-          <p className={styles.salvageFinalLine}>
-            Salvaged: {grandTotal.length > 0 ? grandTotal.map((line) => `${line.qty}× ${line.name}`).join(", ") : "nothing"}
-          </p>
-          <div className={`${styles.salvageDestroyDivider} ${styles.salvageDestroyDividerSpaced}`} />
           <div className={styles.chopBlockList}>
+            <div className={`${styles.salvageDestroyDivider} ${styles.salvageDestroyDividerTight}`} />
+            <p className={styles.salvageFinalLine}>
+              Salvaged: {grandTotal.length > 0 ? grandTotal.map((line) => `${line.qty}× ${line.name}`).join(", ") : "nothing"}
+            </p>
+            <div className={`${styles.salvageDestroyDivider} ${styles.salvageDestroyDividerSpaced}`} />
             {rows.map((row) => (
               <div key={row.id} className={styles.chopBlockRow}>
                 <label className={styles.chopBlockRowHeader}>
@@ -2617,6 +2628,7 @@ export function ItemDetailPopup({
   hasMountEquipped = false,
   hasCompanionEquipped = false,
   inAdventure = false,
+  duplicateContainer = false,
   currentSlots,
   characterId,
   characterFirstName,
@@ -2661,6 +2673,7 @@ export function ItemDetailPopup({
   hasCompanionEquipped?: boolean;
   /** location:"body" rows only - whether this character currently counts as out on an adventure (Character.availability.inAdventure). Picks the automatic-unequip icon: camp while true, the shared vault while false - see backend.players.unequip_item. */
   inAdventure?: boolean;
+  duplicateContainer?: boolean;
   /** location:"body" rows only - the slot(s) this instance currently occupies (its own slotRef) - used to exclude that same group from the reslot button list below (equipToSlots), since re-clicking your own current slot(s) would be a no-op. */
   currentSlots?: string[];
   characterId: string;
@@ -2803,6 +2816,19 @@ export function ItemDetailPopup({
     );
   };
 
+  const moveToCart = async (amount: number) => {
+    setPending(true);
+    setFlashMessage(null);
+    if (isInstance) {
+      return finish(await postJson(`/api/auth/me/characters/${characterId}/items/${moveId}/vault-to-cart`));
+    }
+    finish(
+      await postJson(`/api/auth/me/characters/${characterId}/item-balances/${moveId}/vault-to-cart`, {
+        amount,
+      })
+    );
+  };
+
   // Straight pool -> body, one call - never routes through the backpack
   // (see backend.players.equip_item_from_pool), unlike moveToBackpack
   // below which deliberately does.
@@ -2860,6 +2886,24 @@ export function ItemDetailPopup({
     setPending(true);
     setFlashMessage(null);
     finish(await postJson(`/api/auth/me/characters/${characterId}/items/${moveId}/camp-to-saddlepack`));
+  };
+
+  const stowToCartFromCamp = async () => {
+    setPending(true);
+    setFlashMessage(null);
+    finish(await postJson(`/api/auth/me/characters/${characterId}/items/${moveId}/camp-to-cart`));
+  };
+
+  const stowToCartFromBackpack = async () => {
+    setPending(true);
+    setFlashMessage(null);
+    finish(await postJson(`/api/auth/me/characters/${characterId}/items/${moveId}/backpack-to-cart`));
+  };
+
+  const stowToCartFromSaddlepack = async () => {
+    setPending(true);
+    setFlashMessage(null);
+    finish(await postJson(`/api/auth/me/characters/${characterId}/items/${moveId}/saddlepack-to-cart`));
   };
 
   const stowToSaddlepack = async () => {
@@ -2979,6 +3023,36 @@ export function ItemDetailPopup({
     );
   };
 
+  const stowBalanceToCart = async (amount: number) => {
+    setPending(true);
+    setFlashMessage(null);
+    finish(
+      await postJson(`/api/auth/me/characters/${characterId}/item-balances/${moveId}/camp-to-cart`, {
+        amount,
+      })
+    );
+  };
+
+  const moveBalanceBackpackToCart = async (amount: number) => {
+    setPending(true);
+    setFlashMessage(null);
+    finish(
+      await postJson(`/api/auth/me/characters/${characterId}/item-balances/${moveId}/backpack-to-cart`, {
+        amount,
+      })
+    );
+  };
+
+  const moveBalanceSaddlepackToCart = async (amount: number) => {
+    setPending(true);
+    setFlashMessage(null);
+    finish(
+      await postJson(`/api/auth/me/characters/${characterId}/item-balances/${moveId}/saddlepack-to-cart`, {
+        amount,
+      })
+    );
+  };
+
   const unloadBalanceFromCart = async (amount: number) => {
     setPending(true);
     setFlashMessage(null);
@@ -3027,6 +3101,20 @@ export function ItemDetailPopup({
     setFlashMessage(null);
     finish(
       await postJson(`/api/auth/me/characters/${characterId}/items/${moveId}/unequip`, { destination: "saddlepack" })
+    );
+  };
+  const unequipToCamp = async () => {
+    setPending(true);
+    setFlashMessage(null);
+    finish(
+      await postJson(`/api/auth/me/characters/${characterId}/items/${moveId}/unequip`, { destination: "camp" })
+    );
+  };
+  const unequipToCart = async () => {
+    setPending(true);
+    setFlashMessage(null);
+    finish(
+      await postJson(`/api/auth/me/characters/${characterId}/items/${moveId}/unequip`, { destination: "cart" })
     );
   };
 
@@ -3502,7 +3590,10 @@ export function ItemDetailPopup({
                 <span>Carry: 0/{info.carryCapacity}</span>
               )}
             </div>
-            {movable && source === "vault" && (
+            {movable && source === "vault" && duplicateContainer && (
+              <p className={styles.itemPopupAwayNotice}>Already equipped</p>
+            )}
+            {movable && source === "vault" && !duplicateContainer && (
               inAdventure ? (
                 // The shared vault isn't reachable at all mid-adventure
                 // (see equip_item_from_pool/check_out_item_instance/
@@ -3536,6 +3627,17 @@ export function ItemDetailPopup({
                         onPick={moveBalanceToSaddlepack}
                         destinationIcon={SADDLEPACK_ACTION_ICON}
                         destinationLabel="Saddlepack"
+                        amounts={RAW_RESOURCE_AMOUNTS}
+                        showInfinity={false}
+                      />
+                    )}
+                    {(cartCapacity ?? 0) > 0 && !isContainer && !info?.familyId?.endsWith("_mount") && !info?.familyId?.endsWith("_companion") && (
+                      <TransferButtons
+                        owned={owned}
+                        pending={pending}
+                        onPick={moveToCart}
+                        destinationIcon={CART_ACTION_ICON}
+                        destinationLabel="Cart"
                         amounts={RAW_RESOURCE_AMOUNTS}
                         showInfinity={false}
                       />
@@ -3599,6 +3701,23 @@ export function ItemDetailPopup({
                           aria-label="Saddlepack"
                           className={styles.itemPopupBackpackIcon}
                           style={{ backgroundImage: `url(${SADDLEPACK_ACTION_ICON})` }}
+                        />
+                      </button>
+                    )}
+                    {(cartCapacity ?? 0) > 0 && !isContainer && !info?.familyId?.endsWith("_mount") && !info?.familyId?.endsWith("_companion") && (
+                      <button
+                        type="button"
+                        className={styles.itemPopupBackpackButton}
+                        disabled={pending}
+                        onClick={() => moveToCart(1)}
+                        aria-label="Move to cart"
+                        title="Move to cart"
+                      >
+                        <div
+                          role="img"
+                          aria-label="Cart"
+                          className={styles.itemPopupBackpackIcon}
+                          style={{ backgroundImage: `url(${CART_ACTION_ICON})` }}
                         />
                       </button>
                     )}
@@ -3699,6 +3818,40 @@ export function ItemDetailPopup({
                         />
                       </button>
                     )}
+                    {(cartCapacity ?? 0) > 0 && !isContainer && !info?.familyId?.endsWith("_mount") && !info?.familyId?.endsWith("_companion") && (
+                      <button
+                        type="button"
+                        className={styles.itemPopupBackpackButton}
+                        disabled={pending}
+                        onClick={unequipToCart}
+                        aria-label="Move to cart"
+                        title="Move to cart"
+                      >
+                        <div
+                          role="img"
+                          aria-label="Cart"
+                          className={styles.itemPopupBackpackIcon}
+                          style={{ backgroundImage: `url(${CART_ACTION_ICON})` }}
+                        />
+                      </button>
+                    )}
+                    {isContainer && (
+                      <button
+                        type="button"
+                        className={styles.itemPopupBackpackButton}
+                        disabled={pending}
+                        onClick={() => setConfirmMove({ label: "Camp", action: unequipToCamp })}
+                        aria-label="Move to camp"
+                        title="Move to camp"
+                      >
+                        <div
+                          role="img"
+                          aria-label="Camp"
+                          className={styles.itemPopupBackpackIcon}
+                          style={{ backgroundImage: `url(${CAMP_ACTION_ICON})` }}
+                        />
+                      </button>
+                    )}
                   </>
                 ) : (
                   <>
@@ -3763,6 +3916,23 @@ export function ItemDetailPopup({
                             />
                           </button>
                         )}
+                        {(cartCapacity ?? 0) > 0 && !isContainer && !info?.familyId?.endsWith("_mount") && !info?.familyId?.endsWith("_companion") && (
+                          <button
+                            type="button"
+                            className={styles.itemPopupBackpackButton}
+                            disabled={pending}
+                            onClick={stowToCartFromCamp}
+                            aria-label="Move to cart"
+                            title="Move to cart"
+                          >
+                            <div
+                              role="img"
+                              aria-label="Cart"
+                              className={styles.itemPopupBackpackIcon}
+                              style={{ backgroundImage: `url(${CART_ACTION_ICON})` }}
+                            />
+                          </button>
+                        )}
                       </>
                     )}
                     {/* location:"backpack" only - same automatic camp/
@@ -3809,6 +3979,23 @@ export function ItemDetailPopup({
                             />
                           </button>
                         )}
+                        {(cartCapacity ?? 0) > 0 && !isContainer && !info?.familyId?.endsWith("_mount") && !info?.familyId?.endsWith("_companion") && (
+                          <button
+                            type="button"
+                            className={styles.itemPopupBackpackButton}
+                            disabled={pending}
+                            onClick={stowToCartFromBackpack}
+                            aria-label="Move to cart"
+                            title="Move to cart"
+                          >
+                            <div
+                              role="img"
+                              aria-label="Cart"
+                              className={styles.itemPopupBackpackIcon}
+                              style={{ backgroundImage: `url(${CART_ACTION_ICON})` }}
+                            />
+                          </button>
+                        )}
                       </>
                     ) : location === "saddlepack" ? (
                       <>
@@ -3841,6 +4028,23 @@ export function ItemDetailPopup({
                               aria-label="Backpack"
                               className={styles.itemPopupBackpackIcon}
                               style={{ backgroundImage: `url(${BACKPACK_ACTION_ICON})` }}
+                            />
+                          </button>
+                        )}
+                        {(cartCapacity ?? 0) > 0 && !isContainer && !info?.familyId?.endsWith("_mount") && !info?.familyId?.endsWith("_companion") && (
+                          <button
+                            type="button"
+                            className={styles.itemPopupBackpackButton}
+                            disabled={pending}
+                            onClick={stowToCartFromSaddlepack}
+                            aria-label="Move to cart"
+                            title="Move to cart"
+                          >
+                            <div
+                              role="img"
+                              aria-label="Cart"
+                              className={styles.itemPopupBackpackIcon}
+                              style={{ backgroundImage: `url(${CART_ACTION_ICON})` }}
                             />
                           </button>
                         )}
@@ -3923,6 +4127,17 @@ export function ItemDetailPopup({
                           showInfinity={false}
                         />
                       )}
+                      {(cartCapacity ?? 0) > 0 && !isContainer && !info?.familyId?.endsWith("_mount") && !info?.familyId?.endsWith("_companion") && (
+                        <TransferButtons
+                          owned={owned}
+                          pending={pending}
+                          onPick={stowBalanceToCart}
+                          destinationIcon={CART_ACTION_ICON}
+                          destinationLabel="Cart"
+                          amounts={RAW_RESOURCE_AMOUNTS}
+                          showInfinity={false}
+                        />
+                      )}
                       {!inAdventure && (
                         <TransferButtons
                           owned={owned}
@@ -3957,6 +4172,17 @@ export function ItemDetailPopup({
                           showInfinity={false}
                         />
                       )}
+                      {(cartCapacity ?? 0) > 0 && !isContainer && !info?.familyId?.endsWith("_mount") && !info?.familyId?.endsWith("_companion") && (
+                        <TransferButtons
+                          owned={owned}
+                          pending={pending}
+                          onPick={moveBalanceBackpackToCart}
+                          destinationIcon={CART_ACTION_ICON}
+                          destinationLabel="Cart"
+                          amounts={RAW_RESOURCE_AMOUNTS}
+                          showInfinity={false}
+                        />
+                      )}
                     </>
                   ) : location === "saddlepack" ? (
                     <>
@@ -3976,6 +4202,17 @@ export function ItemDetailPopup({
                           onPick={moveBalanceSaddlepackToBackpack}
                           destinationIcon={BACKPACK_ACTION_ICON}
                           destinationLabel="Backpack"
+                          amounts={RAW_RESOURCE_AMOUNTS}
+                          showInfinity={false}
+                        />
+                      )}
+                      {(cartCapacity ?? 0) > 0 && !isContainer && !info?.familyId?.endsWith("_mount") && !info?.familyId?.endsWith("_companion") && (
+                        <TransferButtons
+                          owned={owned}
+                          pending={pending}
+                          onPick={moveBalanceSaddlepackToCart}
+                          destinationIcon={CART_ACTION_ICON}
+                          destinationLabel="Cart"
                           amounts={RAW_RESOURCE_AMOUNTS}
                           showInfinity={false}
                         />
@@ -4387,8 +4624,50 @@ export function InventoryTab({
     (instance) => instance.location === "body" && instance.slotRef?.includes("Companion")
   );
 
+  const hasCartInBodyOrCamp = character.gear.items.some(
+    (instance) => (instance.location === "body" || instance.location === "camp") && instance.familyId === "cart"
+  );
+
+  const vaultSelectionHasDuplicateContainer = useMemo(() => {
+    if (vaultSelectedIds.size === 0) return false;
+    const existing: Record<string, boolean> = {
+      backpack: hasBackpackEquipped,
+      saddlepack: hasSaddlepackEquipped,
+      cart: hasCartInBodyOrCamp,
+    };
+    for (const id of vaultSelectedIds) {
+      const baseId = stripStackSuffix(id);
+      let fam: string | undefined;
+      if (playerItemLookupIds[baseId] !== undefined) {
+        fam = playerItems.find((i) => i.instanceId === baseId)?.familyId;
+      } else {
+        fam = itemCatalogTierInfo[baseId]?.familyId;
+      }
+      if (fam && existing[fam]) return true;
+    }
+    return false;
+  }, [vaultSelectedIds, playerItemLookupIds, playerItems, itemCatalogTierInfo, hasBackpackEquipped, hasSaddlepackEquipped, hasCartInBodyOrCamp]);
+
+  const vaultSelectionHasContainer = useMemo(() => {
+    if (vaultSelectedIds.size === 0) return false;
+    const blockedFamilies = new Set(["backpack", "saddlepack", "cart"]);
+    const isBlocked = (fam: string) =>
+      blockedFamilies.has(fam) || fam.endsWith("_mount") || fam.endsWith("_companion");
+    for (const id of vaultSelectedIds) {
+      const baseId = stripStackSuffix(id);
+      if (playerItemLookupIds[baseId] !== undefined) {
+        const inst = playerItems.find((i) => i.instanceId === baseId);
+        if (inst && isBlocked(inst.familyId)) return true;
+      } else {
+        const info = itemCatalogTierInfo[baseId];
+        if (info && isBlocked(info.familyId)) return true;
+      }
+    }
+    return false;
+  }, [vaultSelectedIds, playerItemLookupIds, playerItems, itemCatalogTierInfo]);
+
   const batchMoveVault = useCallback(
-    async (destination: "backpack" | "saddlepack" | "camp") => {
+    async (destination: "backpack" | "saddlepack" | "cart" | "camp") => {
       if (vaultBatchBusy || vaultSelectedIds.size === 0) return;
       setVaultBatchBusy(true);
       const instanceIds: string[] = [];
@@ -4457,7 +4736,7 @@ export function InventoryTab({
   }, [vaultBatchBusy, vaultSelectedIds, playerItemLookupIds, playerItemsCombined, itemCatalogTierInfo, character.id, onPlayerDataUpdated, exitVaultSelectMode]);
 
   return (
-    <div className={styles.panel} onContextMenu={(e) => e.preventDefault()}>
+    <div className={`${styles.panel}${section === "vault" ? ` ${styles.panelNoScroll}` : ""}`} onContextMenu={(e) => e.preventDefault()}>
       {section === "crafting" && (
         <p className={styles.inventoryEmpty}>Tools and resources moved to the vault tab.</p>
       )}
@@ -4497,7 +4776,7 @@ export function InventoryTab({
                         type="button"
                         className={styles.selectionBarBtn}
                         title="Move to backpack"
-                        disabled={vaultBatchBusy || vaultSelectedIds.size === 0}
+                        disabled={vaultBatchBusy || vaultSelectedIds.size === 0 || vaultSelectionHasContainer}
                         onClick={() => batchMoveVault("backpack")}
                       >
                         <div className={styles.selectionBarIcon} style={{ backgroundImage: `url(${BACKPACK_ACTION_ICON})` }} />
@@ -4508,10 +4787,21 @@ export function InventoryTab({
                         type="button"
                         className={styles.selectionBarBtn}
                         title="Move to saddlepack"
-                        disabled={vaultBatchBusy || vaultSelectedIds.size === 0}
+                        disabled={vaultBatchBusy || vaultSelectedIds.size === 0 || vaultSelectionHasContainer}
                         onClick={() => batchMoveVault("saddlepack")}
                       >
                         <div className={styles.selectionBarIcon} style={{ backgroundImage: `url(${SADDLEPACK_ACTION_ICON})` }} />
+                      </button>
+                    )}
+                    {!character.availability.inAdventure && (character.gear.cartCapacity ?? 0) > 0 && (
+                      <button
+                        type="button"
+                        className={styles.selectionBarBtn}
+                        title="Move to cart"
+                        disabled={vaultBatchBusy || vaultSelectedIds.size === 0 || vaultSelectionHasContainer}
+                        onClick={() => batchMoveVault("cart")}
+                      >
+                        <div className={styles.selectionBarIcon} style={{ backgroundImage: `url(${CART_ACTION_ICON})` }} />
                       </button>
                     )}
                     {!character.availability.inAdventure && (
@@ -4519,22 +4809,13 @@ export function InventoryTab({
                         type="button"
                         className={styles.selectionBarBtn}
                         title="Move to camp"
-                        disabled={vaultBatchBusy || vaultSelectedIds.size === 0}
+                        disabled={vaultBatchBusy || vaultSelectedIds.size === 0 || vaultSelectionHasDuplicateContainer}
                         onClick={() => batchMoveVault("camp")}
                       >
                         <div className={styles.selectionBarIcon} style={{ backgroundImage: `url(${CAMP_ACTION_ICON})` }} />
                       </button>
                     )}
                     <div className={styles.selectionBarGap} />
-                    <button
-                      type="button"
-                      className={styles.selectionBarBtn}
-                      title="Salvage selected"
-                      disabled={vaultBatchBusy || vaultSelectedIds.size === 0}
-                      onClick={() => setShowVaultSalvagePopup(true)}
-                    >
-                      <div className={styles.selectionBarIcon} style={{ backgroundImage: `url(/images/character/chopping_block.png)` }} />
-                    </button>
                     <button
                       type="button"
                       className={styles.selectionBarBtn}
@@ -4738,9 +5019,12 @@ export function InventoryTab({
                 hasSaddlepackEquipped={hasSaddlepackEquipped}
                 hasMountEquipped={hasMountEquipped}
                 hasCompanionEquipped={hasCompanionEquipped}
+                hasCartEquipped={hasCartInBodyOrCamp}
                 inAdventure={character.availability.inAdventure}
                 characterId={character.id}
                 characterFirstName={character.firstName}
+                cartSlotsUsed={character.gear.cartSlotsUsed}
+                cartCapacity={character.gear.cartCapacity}
                 onPlayerDataUpdated={onPlayerDataUpdated}
                 selectMode={vaultSelectMode}
                 selectBusy={vaultBatchBusy}

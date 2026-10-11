@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import styles from "./CharacterTabs.module.css";
 import {
   BACKPACK_ACTION_ICON,
+  CART_ACTION_ICON,
   ChopBlockPopup,
   HoldActionPopup,
   ItemGrid,
@@ -357,8 +358,26 @@ export function CampView({
     }
   }
 
+  const selectionHasContainer = useMemo(() => {
+    if (selectedIds.size === 0) return false;
+    const blockedFamilies = new Set(["backpack", "saddlepack", "cart"]);
+    const isBlocked = (fam: string) =>
+      blockedFamilies.has(fam) || fam.endsWith("_mount") || fam.endsWith("_companion");
+    for (const id of selectedIds) {
+      if (campInstanceLookupIds[id] !== undefined) {
+        const inst = campInstances.find((i) => i.instanceId === id);
+        if (inst && isBlocked(inst.familyId)) return true;
+      } else {
+        const baseId = id.replace(/#\d+$/, "").replace(/^res:/, "");
+        const info = itemCatalogTierInfo[baseId];
+        if (info && isBlocked(info.familyId)) return true;
+      }
+    }
+    return false;
+  }, [selectedIds, campInstanceLookupIds, campInstances, itemCatalogTierInfo]);
+
   const batchMoveCamp = useCallback(
-    async (destination: "vault" | "backpack" | "saddlepack") => {
+    async (destination: "vault" | "backpack" | "saddlepack" | "cart") => {
       if (batchBusy || selectedIds.size === 0) return;
       setBatchBusy(true);
       const instanceIds: string[] = [];
@@ -427,23 +446,12 @@ export function CampView({
       {selectMode && (
         <div className={styles.selectionBar}>
           <div className={styles.selectionBarActions}>
-            {!character.availability.inAdventure && (
-              <button
-                type="button"
-                className={styles.selectionBarBtn}
-                title="Move to vault"
-                disabled={batchBusy || selectedIds.size === 0}
-                onClick={() => batchMoveCamp("vault")}
-              >
-                <div className={styles.selectionBarIcon} style={{ backgroundImage: `url(${VAULT_ACTION_ICON})` }} />
-              </button>
-            )}
             {hasBackpackEquipped && (
               <button
                 type="button"
                 className={styles.selectionBarBtn}
                 title="Move to backpack"
-                disabled={batchBusy || selectedIds.size === 0}
+                disabled={batchBusy || selectedIds.size === 0 || selectionHasContainer}
                 onClick={() => batchMoveCamp("backpack")}
               >
                 <div className={styles.selectionBarIcon} style={{ backgroundImage: `url(${BACKPACK_ACTION_ICON})` }} />
@@ -454,10 +462,32 @@ export function CampView({
                 type="button"
                 className={styles.selectionBarBtn}
                 title="Move to saddlepack"
-                disabled={batchBusy || selectedIds.size === 0}
+                disabled={batchBusy || selectedIds.size === 0 || selectionHasContainer}
                 onClick={() => batchMoveCamp("saddlepack")}
               >
                 <div className={styles.selectionBarIcon} style={{ backgroundImage: `url(${SADDLEPACK_ACTION_ICON})` }} />
+              </button>
+            )}
+            {character.gear.cartCapacity > 0 && (
+              <button
+                type="button"
+                className={styles.selectionBarBtn}
+                title="Move to cart"
+                disabled={batchBusy || selectedIds.size === 0 || selectionHasContainer}
+                onClick={() => batchMoveCamp("cart")}
+              >
+                <div className={styles.selectionBarIcon} style={{ backgroundImage: `url(${CART_ACTION_ICON})` }} />
+              </button>
+            )}
+            {!character.availability.inAdventure && (
+              <button
+                type="button"
+                className={styles.selectionBarBtn}
+                title="Move to vault"
+                disabled={batchBusy || selectedIds.size === 0}
+                onClick={() => batchMoveCamp("vault")}
+              >
+                <div className={styles.selectionBarIcon} style={{ backgroundImage: `url(${VAULT_ACTION_ICON})` }} />
               </button>
             )}
             <div className={styles.selectionBarGap} />
@@ -470,19 +500,55 @@ export function CampView({
             >
               <div className={styles.selectionBarIcon} style={{ backgroundImage: `url(/images/character/chopping_block.png)` }} />
             </button>
-            <button
-              type="button"
-              className={styles.selectionBarBtn}
-              title="Destroy selected"
-              disabled={batchBusy || selectedIds.size === 0}
-              onClick={() => setConfirmDestroy(true)}
-            >
-              <div className={styles.selectionBarIcon} style={{ backgroundImage: `url(/images/character/campfire_lit.png)` }} />
-            </button>
           </div>
           <span className={styles.selectionBarWeight}>
             W: {selectionWeight(selectedIds, itemCatalogTierInfo, campCombined, campInstanceLookupIds, campResourceBalances, resourceTierInfo)}
           </span>
+          <button
+            type="button"
+            className={`${styles.selectionBarBtn} ${styles.selectionBarClose}`}
+            title="Select all"
+            onClick={() => {
+              const all = new Set<string>();
+              for (const id of campIds) {
+                const isInstance = campInstanceLookupIds[id] !== undefined;
+                if (isInstance) {
+                  all.add(id);
+                } else {
+                  const info = itemCatalogTierInfo[id];
+                  const stackSize = info?.stackSize ?? 1;
+                  const owned = campCombined[id] ?? 0;
+                  if (stackSize <= 1) {
+                    for (let i = 0; i < owned; i++) all.add(`${id}#${i}`);
+                  } else {
+                    let remaining = owned;
+                    let i = 0;
+                    while (remaining > 0) {
+                      all.add(`${id}#${i}`);
+                      remaining -= Math.min(stackSize, remaining);
+                      i++;
+                    }
+                  }
+                }
+              }
+              for (const resId of Object.keys(campResourceBalances)) {
+                const qty = campResourceBalances[resId] ?? 0;
+                if (qty <= 0) continue;
+                const info = resourceTierInfo[resId];
+                const stackSize = info?.category === "raw" ? 40 : 20;
+                let remaining = qty;
+                let i = 0;
+                while (remaining > 0) {
+                  all.add(`res:${resId}#${i}`);
+                  remaining -= Math.min(stackSize, remaining);
+                  i++;
+                }
+              }
+              setSelectedIds(all);
+            }}
+          >
+            A
+          </button>
           <button
             type="button"
             className={`${styles.selectionBarBtn} ${styles.selectionBarClose}`}

@@ -666,53 +666,67 @@ export function StatsTab({
               {craftRemainingSeconds ? formatRemainingCompactLong(craftRemainingSeconds) : inAdventure ? "away" : "now"}
             </span>
           </div>
-
-          {classes.length > 0 || professions.length > 0 ? (
-            <div className={styles.professionList}>
-              {classes.map((c) => (
-                <div className={styles.professionRow} key={c.name}>
-                  <div className={styles.professionRowMain}>
-                    <span>{c.name}</span>
-                    <span>Level {c.lvl}</span>
-                  </div>
-                </div>
-              ))}
-              {professions.map((p) => (
-                <div className={styles.professionRow} key={p.name}>
-                  <div className={styles.professionRowSplit}>
-                    <button
-                      type="button"
-                      className={styles.professionLeftZone}
-                      onClick={(e) => openDescOverlay(p, e)}
-                      disabled={settingPrime}
-                      title={p.isPrime ? undefined : "Click to make this the prime profession"}
-                    >
-                      <span className={p.isPrime ? styles.professionPrime : undefined}>
-                        {p.name}
-                        {p.isPrime && <span className={styles.professionPrimeTag}> (prime)</span>}
-                      </span>
-                      {p.resourceFamilies && (
-                        <span className={styles.professionResourceFamilies}>{p.resourceFamilies}</span>
-                      )}
-                    </button>
-                    <button
-                      type="button"
-                      className={`${styles.professionRightZone}${xpOverlay?.slot === p.slot ? ` ${styles.professionRightZoneActive}` : ""}`}
-                      onClick={(e) => openXpOverlay(p, e)}
-                      title="View XP table"
-                    >
-                      Lvl {p.lvl} — {p.exp.toLocaleString()} XP
-                    </button>
-                  </div>
-                </div>
-              ))}
+          <button
+            type="button"
+            className={`${styles.identityRow} ${styles.carryCapacityRow} ${
+              character.gear.encumbranceState === "immobile"
+                ? styles.carryOverloaded
+                : character.gear.encumbranceState === "encumbered"
+                ? styles.carryEncumbered
+                : styles.carryNormal
+            }`}
+            onClick={(e) => {
+              if (carryOverlay) { setCarryOverlay(null); return; }
+              const rect = e.currentTarget.getBoundingClientRect();
+              setCarryOverlay({ top: window.innerHeight - rect.top + 6, left: rect.left });
+            }}
+          >
+            <span>Burden {character.gear.encumbranceState === "immobile" ? "— Crushed" : character.gear.encumbranceState === "encumbered" ? "— Encumbered" : "— Light"}</span>
+            <span>{character.gear.carryWeightUsed}/{character.gear.carryWeightCapacity}</span>
+          </button>
+          <div className={styles.professionDivider} />
+          {classes.map((c) => (
+            <div className={styles.professionRow} key={c.name}>
+              <div className={styles.professionRowMain}>
+                <span>{c.name}</span>
+                <span>Level {c.lvl}</span>
+              </div>
             </div>
-          ) : null}
+          ))}
+          {professions.map((p, i) => (
+            <div className={`${styles.professionRow}${i === professions.length - 1 ? ` ${styles.professionRowLast}` : ""}`} key={p.name}>
+              <div className={styles.professionRowSplit}>
+                <button
+                  type="button"
+                  className={styles.professionLeftZone}
+                  onClick={(e) => openDescOverlay(p, e)}
+                  disabled={settingPrime}
+                  title={p.isPrime ? undefined : "Click to make this the prime profession"}
+                >
+                  <span className={p.isPrime ? styles.professionPrime : undefined}>
+                    {p.name}
+                    {p.isPrime && <span className={styles.professionPrimeTag}> (prime)</span>}
+                  </span>
+                </button>
+                <button
+                  type="button"
+                  className={`${styles.professionRightZone}${xpOverlay?.slot === p.slot ? ` ${styles.professionRightZoneActive}` : ""}`}
+                  onClick={(e) => openXpOverlay(p, e)}
+                  title="View XP table"
+                >
+                  Lvl {p.lvl} — {p.exp.toLocaleString()} XP
+                </button>
+              </div>
+              {p.resourceFamilies && (
+                <span className={styles.professionResourceFamilies}>{p.resourceFamilies}</span>
+              )}
+            </div>
+          ))}
 
           {character.blueprints.length > 0 && (
             <div className={`${styles.accordionItem} ${styles.accordionItemWide}`}>
               <button className={styles.accordionHeader} onClick={() => setBlueprintsOpen(!blueprintsOpen)}>
-                <span>{character.firstName}&apos;s Blueprints Known</span>
+                <span>Blueprints</span>
                 <span className={styles.accordionChevron}>{blueprintsOpen ? "▴" : "▾"}</span>
               </button>
               {blueprintsOpen && (
@@ -915,58 +929,28 @@ export function StatsTab({
             />
           )}
 
-          <div className={styles.carryCapacitySection}>
-            <button
-              type="button"
-              className={`${styles.carryCapacityRow} ${
-                character.gear.encumbranceState === "immobile"
-                  ? styles.carryOverloaded
-                  : character.gear.encumbranceState === "encumbered"
-                  ? styles.carryEncumbered
-                  : styles.carryNormal
-              }`}
-              onClick={(e) => {
-                if (carryOverlay) { setCarryOverlay(null); return; }
-                const rect = e.currentTarget.getBoundingClientRect();
-                setCarryOverlay({ top: window.innerHeight - rect.top + 6, left: rect.left });
-              }}
-            >
-              <span>Carry Capacity {character.gear.encumbranceState === "immobile" ? "— Overloaded" : character.gear.encumbranceState === "encumbered" ? "— Encumbered" : "— Light"}</span>
-              <span>{character.gear.carryWeightUsed}/{character.gear.carryWeightCapacity}</span>
-            </button>
-          </div>
         </div>
 
       </div>
 
       <div className={styles.attrColumns}>
-        <div className={styles.attrGroup}>
-          <div className={styles.attrGroupHeader}>
-            <span>Body</span>
-            <span className={styles.attrGroupTotal}>
-              {sumAttrs(BODY_ATTRS, character.attr)}/{sumAttrs(BODY_ATTRS, character.attr)}
-            </span>
-          </div>
-          {BODY_ATTRS.map(([key, label]) => (
-            <div className={styles.attrDisplayRow} key={key}>
-              <span>{label}</span>
-              <span className={styles.attrDisplayValue}>{character.attr[key]}</span>
-            </div>
-          ))}
+        <div className={styles.attrGroupHeader}>
+          <span>Body <span className={styles.attrGroupTotal}>{sumAttrs(BODY_ATTRS, character.attr)}/{sumAttrs(BODY_ATTRS, character.attr)}</span></span>
+          <span>Soul <span className={styles.attrGroupTotal}>{sumAttrs(SOUL_ATTRS, character.attr)}/{sumAttrs(SOUL_ATTRS, character.attr)}</span></span>
         </div>
-        <div className={styles.attrGroup}>
-          <div className={styles.attrGroupHeader}>
-            <span>Soul</span>
-            <span className={styles.attrGroupTotal}>
-              {sumAttrs(SOUL_ATTRS, character.attr)}/{sumAttrs(SOUL_ATTRS, character.attr)}
-            </span>
-          </div>
-          {SOUL_ATTRS.map(([key, label]) => (
-            <div className={styles.attrDisplayRow} key={key}>
-              <span>{label}</span>
-              <span className={styles.attrDisplayValue}>{character.attr[key]}</span>
-            </div>
-          ))}
+        <div className={styles.attrGrid}>
+          {BODY_ATTRS.map(([key, label], i) => {
+            const [sKey, sLabel] = SOUL_ATTRS[i];
+            return (
+              <div className={styles.attrGridRow} key={key}>
+                <span className={styles.attrLabel}>{label}</span>
+                <span className={styles.attrDisplayValue}>{character.attr[key]}</span>
+                <span />
+                <span className={styles.attrLabel}>{sLabel}</span>
+                <span className={styles.attrDisplayValue}>{character.attr[sKey]}</span>
+              </div>
+            );
+          })}
         </div>
       </div>
 

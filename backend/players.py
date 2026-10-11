@@ -3331,6 +3331,13 @@ async def unequip_item(
         sp_cost = items_catalog.slot_cost_for_family(instance["familyId"])
         if items_catalog.saddlepack_slots_used(character) + sp_cost > sp_cap:
             raise ValueError("Saddlepack is full")
+    if destination == "cart":
+        cart_cap = items_catalog.cart_capacity(character)
+        if cart_cap == 0:
+            raise ValueError("No cart equipped")
+        cart_cost = items_catalog.slot_cost_for_family(instance["familyId"])
+        if items_catalog.cart_slots_used(character) + cart_cost > cart_cap:
+            raise ValueError("Cart is full")
 
     target_location = destination or ("camp" if character.get("availability", {}).get("inAdventure", False) else "pool")
 
@@ -3650,7 +3657,14 @@ async def check_out_item_instance(
 
     if destination != "camp":
         cost = items_catalog.slot_cost_for_family(instance["familyId"])
-        if destination == "saddlepack":
+        if destination == "cart":
+            capacity = items_catalog.cart_capacity(character)
+            if capacity == 0:
+                raise ValueError("No cart equipped")
+            used = items_catalog.cart_slots_used(character)
+            if used + cost > capacity:
+                raise ValueError("Cart is full")
+        elif destination == "saddlepack":
             capacity = items_catalog.saddlepack_capacity(character)
             if capacity == 0:
                 raise ValueError("No saddlepack equipped")
@@ -4149,6 +4163,86 @@ async def move_camp_item_to_cart(address: str, character_id: str, instance_id: s
     return _doc_to_player(doc)
 
 
+async def move_backpack_item_to_cart(address: str, character_id: str, instance_id: str) -> Optional[Player]:
+    """Move one item instance from backpack into this character's cart. Capacity-gated."""
+    db = get_database()
+    doc = await db.players.find_one({"address": address, "characters.id": character_id})
+    if doc is None:
+        return None
+    character = next((c for c in doc["characters"] if c["id"] == character_id), None)
+    if character is None:
+        return None
+    instance = next(
+        (i for i in character.get("gear", {}).get("items", []) if i["instanceId"] == instance_id and i.get("location") == "backpack"),
+        None,
+    )
+    if instance is None:
+        return None
+
+    cart_cap = items_catalog.cart_capacity(character)
+    if cart_cap == 0:
+        raise ValueError("No cart equipped")
+    cost = items_catalog.slot_cost_for_family(instance["familyId"])
+    if items_catalog.cart_slots_used(character) + cost > cart_cap:
+        raise ValueError("Cart is full")
+
+    moved_instance = {**instance, "location": "cart", "slotRef": []}
+    doc = await db.players.find_one_and_update(
+        {
+            "address": address,
+            "characters": {
+                "$elemMatch": {"id": character_id, "gear.items": {"$elemMatch": {"instanceId": instance_id, "location": "backpack"}}}
+            },
+        },
+        {"$set": {"characters.$[char].gear.items.$[item]": moved_instance}},
+        array_filters=[{"char.id": character_id}, {"item.instanceId": instance_id, "item.location": "backpack"}],
+        return_document=ReturnDocument.AFTER,
+    )
+    if doc is None:
+        return None
+    return _doc_to_player(doc)
+
+
+async def move_saddlepack_item_to_cart(address: str, character_id: str, instance_id: str) -> Optional[Player]:
+    """Move one item instance from saddlepack into this character's cart. Capacity-gated."""
+    db = get_database()
+    doc = await db.players.find_one({"address": address, "characters.id": character_id})
+    if doc is None:
+        return None
+    character = next((c for c in doc["characters"] if c["id"] == character_id), None)
+    if character is None:
+        return None
+    instance = next(
+        (i for i in character.get("gear", {}).get("items", []) if i["instanceId"] == instance_id and i.get("location") == "saddlepack"),
+        None,
+    )
+    if instance is None:
+        return None
+
+    cart_cap = items_catalog.cart_capacity(character)
+    if cart_cap == 0:
+        raise ValueError("No cart equipped")
+    cost = items_catalog.slot_cost_for_family(instance["familyId"])
+    if items_catalog.cart_slots_used(character) + cost > cart_cap:
+        raise ValueError("Cart is full")
+
+    moved_instance = {**instance, "location": "cart", "slotRef": []}
+    doc = await db.players.find_one_and_update(
+        {
+            "address": address,
+            "characters": {
+                "$elemMatch": {"id": character_id, "gear.items": {"$elemMatch": {"instanceId": instance_id, "location": "saddlepack"}}}
+            },
+        },
+        {"$set": {"characters.$[char].gear.items.$[item]": moved_instance}},
+        array_filters=[{"char.id": character_id}, {"item.instanceId": instance_id, "item.location": "saddlepack"}],
+        return_document=ReturnDocument.AFTER,
+    )
+    if doc is None:
+        return None
+    return _doc_to_player(doc)
+
+
 async def check_out_item_balance(address: str, character_id: str, item_id: str, amount: int = 1) -> Optional[Player]:
     """
     Move `amount` of `item_id` (a concrete crafted-item id) from
@@ -4308,6 +4402,60 @@ async def check_out_item_balance_to_saddlepack(
         {"$inc": {
             f"vault.itemBalances.{item_id}": -amount,
             f"characters.$.gear.itemBalances.saddlepack.{item_id}": amount,
+        }},
+        return_document=ReturnDocument.AFTER,
+    )
+    if doc is None:
+        return None
+    await _prune_player_zeros(db, address, doc, [f"vault.itemBalances.{item_id}"])
+    return _doc_to_player(doc)
+
+
+async def check_out_item_balance_to_cart(
+    address: str, character_id: str, item_id: str, amount: int = 1
+) -> Optional[Player]:
+    """
+    Move `amount` of `item_id` straight from the player's shared vault.itemBalances
+    into one of their characters' own cart (gear.itemBalances.cart),
+    in one atomic hop — capacity checked BEFORE anything moves.
+    """
+    if amount <= 0:
+        raise ValueError("amount must be positive")
+    db = get_database()
+    doc = await db.players.find_one({"address": address, "characters.id": character_id})
+    if doc is None:
+        return None
+    character = next((c for c in doc["characters"] if c["id"] == character_id), None)
+    if character is None:
+        return None
+    if character.get("availability", {}).get("inAdventure", False):
+        raise ValueError("Character is out on an adventure - no reaching the shared vault")
+    if doc.get("vault", {}).get("itemBalances", {}).get(item_id, 0) < amount:
+        return None
+
+    stack_size, slot_cost = items_catalog.resolve_item_balance_stack(item_id)
+
+    existing = character.get("gear", {}).get("itemBalances", {}).get("cart", {}).get(item_id, 0)
+    marginal_slots = (
+        math.ceil((existing + amount) / stack_size) - math.ceil(existing / stack_size)
+    ) * slot_cost
+
+    capacity = items_catalog.cart_capacity(character)
+    if capacity == 0:
+        raise ValueError("No cart equipped")
+    used = items_catalog.cart_slots_used(character)
+    if used + marginal_slots > capacity:
+        raise ValueError("Cart is full")
+
+    doc = await db.players.find_one_and_update(
+        {
+            "address": address,
+            "characters.id": character_id,
+            f"vault.itemBalances.{item_id}": {"$gte": amount},
+        },
+        {"$inc": {
+            f"vault.itemBalances.{item_id}": -amount,
+            f"characters.$.gear.itemBalances.cart.{item_id}": amount,
         }},
         return_document=ReturnDocument.AFTER,
     )
@@ -5180,7 +5328,7 @@ async def bulk_move_camp(
     Move multiple items/resources from a character's camp to a destination
     in one DB operation.
 
-    destination: "backpack" | "saddlepack" | "vault"
+    destination: "backpack" | "saddlepack" | "cart" | "vault"
 
     instance_ids: list of instanceIds to move (items with location:"camp")
     balance_entries: list of {"id": item_id, "amount": int} for itemBalances.camp
@@ -5205,15 +5353,18 @@ async def bulk_move_camp(
     camp_balances = gear.get("itemBalances", {}).get("camp", {})
     camp_resources = gear.get("resources", {}).get("camp", {})
 
-    to_bag = destination in ("backpack", "saddlepack")
+    to_bag = destination in ("backpack", "saddlepack", "cart")
 
     if to_bag:
         if destination == "backpack":
             capacity = items_catalog.backpack_capacity(character)
             used = items_catalog.backpack_slots_used(character)
-        else:
+        elif destination == "saddlepack":
             capacity = items_catalog.saddlepack_capacity(character)
             used = items_catalog.saddlepack_slots_used(character)
+        else:
+            capacity = items_catalog.cart_capacity(character)
+            used = items_catalog.cart_slots_used(character)
         if capacity == 0:
             return None
         remaining = capacity - used
@@ -5263,7 +5414,7 @@ async def bulk_move_camp(
             remaining -= marginal
         moved_balance_ids[item_id] = amount
 
-    # Resources (only for backpack/vault — no camp-resource-to-saddlepack endpoint exists)
+    # Resources (only for backpack/cart/vault — no camp-resource-to-saddlepack endpoint exists)
     for entry in resource_entries:
         res_id = entry["id"]
         amount = entry.get("amount", 0)
@@ -5272,9 +5423,9 @@ async def bulk_move_camp(
             continue
         if destination == "saddlepack":
             continue
-        if destination == "backpack":
+        if destination in ("backpack", "cart"):
             stack_size = items_catalog.RAW_STACK_SIZE if res_id in RESOURCE_ITEMS_BY_ID else items_catalog.PROCESSED_STACK_SIZE
-            existing = gear.get("resources", {}).get("backpack", {}).get(res_id, 0)
+            existing = gear.get("resources", {}).get(destination, {}).get(res_id, 0)
             marginal = math.ceil((existing + amount) / stack_size) - math.ceil(existing / stack_size)
             if marginal > remaining:
                 continue
@@ -5387,12 +5538,12 @@ async def bulk_move_vault(
     Move multiple items from the player's shared vault to a destination
     in one DB operation.
 
-    destination: "backpack" | "saddlepack" | "camp"
+    destination: "backpack" | "saddlepack" | "cart" | "camp"
 
     instance_ids: list of instanceIds from vault.items
     balance_entries: list of {"id": item_id, "amount": int} from vault.itemBalances
 
-    For backpack/saddlepack: backpackable items fill the container up to
+    For backpack/saddlepack/cart: backpackable items fill the container up to
     capacity; anything that doesn't fit (or isn't backpackable) overflows
     into camp. For camp: everything goes straight to camp.
     """
@@ -5417,9 +5568,12 @@ async def bulk_move_vault(
         if destination == "backpack":
             capacity = items_catalog.backpack_capacity(character)
             used = items_catalog.backpack_slots_used(character)
-        else:
+        elif destination == "saddlepack":
             capacity = items_catalog.saddlepack_capacity(character)
             used = items_catalog.saddlepack_slots_used(character)
+        else:
+            capacity = items_catalog.cart_capacity(character)
+            used = items_catalog.cart_slots_used(character)
         remaining = max(0, capacity - used)
 
     dest_instance_ids: set = set()
@@ -6847,6 +7001,98 @@ async def load_item_balance_to_cart(
     if doc is None:
         return None
     await _prune_char_zeros(db, address, character_id, doc, [f"gear.itemBalances.camp.{item_id}"])
+    return _doc_to_player(doc)
+
+
+async def move_item_balance_backpack_to_cart(
+    address: str, character_id: str, item_id: str, amount: int = 1
+) -> Optional[Player]:
+    """Move `amount` of `item_id` from backpack itemBalances into cart. Capacity-gated."""
+    if amount <= 0:
+        raise ValueError("amount must be positive")
+    db = get_database()
+    doc = await db.players.find_one({"address": address, "characters.id": character_id})
+    if doc is None:
+        return None
+    character = next((c for c in doc["characters"] if c["id"] == character_id), None)
+    if character is None:
+        return None
+    if character.get("gear", {}).get("itemBalances", {}).get("backpack", {}).get(item_id, 0) < amount:
+        return None
+
+    stack_size, slot_cost = items_catalog.resolve_item_balance_stack(item_id)
+    existing = character.get("gear", {}).get("itemBalances", {}).get("cart", {}).get(item_id, 0)
+    marginal_slots = (
+        math.ceil((existing + amount) / stack_size) - math.ceil(existing / stack_size)
+    ) * slot_cost
+
+    capacity = items_catalog.cart_capacity(character)
+    if capacity == 0:
+        raise ValueError("No cart equipped")
+    used = items_catalog.cart_slots_used(character)
+    if used + marginal_slots > capacity:
+        raise ValueError("Cart is full")
+
+    doc = await db.players.find_one_and_update(
+        {
+            "address": address,
+            "characters": {"$elemMatch": {"id": character_id, f"gear.itemBalances.backpack.{item_id}": {"$gte": amount}}},
+        },
+        {"$inc": {
+            f"characters.$.gear.itemBalances.backpack.{item_id}": -amount,
+            f"characters.$.gear.itemBalances.cart.{item_id}": amount,
+        }},
+        return_document=ReturnDocument.AFTER,
+    )
+    if doc is None:
+        return None
+    await _prune_char_zeros(db, address, character_id, doc, [f"gear.itemBalances.backpack.{item_id}"])
+    return _doc_to_player(doc)
+
+
+async def move_item_balance_saddlepack_to_cart(
+    address: str, character_id: str, item_id: str, amount: int = 1
+) -> Optional[Player]:
+    """Move `amount` of `item_id` from saddlepack itemBalances into cart. Capacity-gated."""
+    if amount <= 0:
+        raise ValueError("amount must be positive")
+    db = get_database()
+    doc = await db.players.find_one({"address": address, "characters.id": character_id})
+    if doc is None:
+        return None
+    character = next((c for c in doc["characters"] if c["id"] == character_id), None)
+    if character is None:
+        return None
+    if character.get("gear", {}).get("itemBalances", {}).get("saddlepack", {}).get(item_id, 0) < amount:
+        return None
+
+    stack_size, slot_cost = items_catalog.resolve_item_balance_stack(item_id)
+    existing = character.get("gear", {}).get("itemBalances", {}).get("cart", {}).get(item_id, 0)
+    marginal_slots = (
+        math.ceil((existing + amount) / stack_size) - math.ceil(existing / stack_size)
+    ) * slot_cost
+
+    capacity = items_catalog.cart_capacity(character)
+    if capacity == 0:
+        raise ValueError("No cart equipped")
+    used = items_catalog.cart_slots_used(character)
+    if used + marginal_slots > capacity:
+        raise ValueError("Cart is full")
+
+    doc = await db.players.find_one_and_update(
+        {
+            "address": address,
+            "characters": {"$elemMatch": {"id": character_id, f"gear.itemBalances.saddlepack.{item_id}": {"$gte": amount}}},
+        },
+        {"$inc": {
+            f"characters.$.gear.itemBalances.saddlepack.{item_id}": -amount,
+            f"characters.$.gear.itemBalances.cart.{item_id}": amount,
+        }},
+        return_document=ReturnDocument.AFTER,
+    )
+    if doc is None:
+        return None
+    await _prune_char_zeros(db, address, character_id, doc, [f"gear.itemBalances.saddlepack.{item_id}"])
     return _doc_to_player(doc)
 
 
