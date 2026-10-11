@@ -3617,15 +3617,15 @@ async def check_out_item_instance(
     """
     Move one item instance from `address`'s shared pool (vault.items,
     location:"pool") onto one of their characters' own carry location -
-    "backpack" (default) or "saddlepack".
+    "backpack" (default), "saddlepack", or "camp".
 
-    Both destinations are capacity-gated: raises ValueError if the
+    Backpack and saddlepack are capacity-gated: raises ValueError if the
     character has no container equipped (capacity 0) or the container
-    has no free slot for this family's size class. Either way, also
-    raises ValueError if the character is currently out on an
-    adventure (Character.availability.inAdventure) - there's no reaching
-    the shared vault mid-adventure, so this is checked first, before
-    either container check.
+    has no free slot for this family's size class. Camp is never
+    capacity-gated. Either way, also raises ValueError if the character
+    is currently out on an adventure (Character.availability.inAdventure)
+    - there's no reaching the shared vault mid-adventure, so this is
+    checked first, before either container check.
 
     Returns None if the instance isn't in the pool (an instance borrowed
     for an in-progress craft is location:"crafting", not "pool" - see
@@ -3648,21 +3648,22 @@ async def check_out_item_instance(
     if instance is None:
         return None
 
-    cost = items_catalog.slot_cost_for_family(instance["familyId"])
-    if destination == "saddlepack":
-        capacity = items_catalog.saddlepack_capacity(character)
-        if capacity == 0:
-            raise ValueError("No saddlepack equipped")
-        used = items_catalog.saddlepack_slots_used(character)
-        if used + cost > capacity:
-            raise ValueError("Saddlepack is full")
-    else:
-        capacity = items_catalog.backpack_capacity(character)
-        if capacity == 0:
-            raise ValueError("No backpack equipped")
-        used = items_catalog.backpack_slots_used(character)
-        if used + cost > capacity:
-            raise ValueError("Backpack is full")
+    if destination != "camp":
+        cost = items_catalog.slot_cost_for_family(instance["familyId"])
+        if destination == "saddlepack":
+            capacity = items_catalog.saddlepack_capacity(character)
+            if capacity == 0:
+                raise ValueError("No saddlepack equipped")
+            used = items_catalog.saddlepack_slots_used(character)
+            if used + cost > capacity:
+                raise ValueError("Saddlepack is full")
+        else:
+            capacity = items_catalog.backpack_capacity(character)
+            if capacity == 0:
+                raise ValueError("No backpack equipped")
+            used = items_catalog.backpack_slots_used(character)
+            if used + cost > capacity:
+                raise ValueError("Backpack is full")
 
     # slotRef reset to [] - a pool instance can carry a stale non-empty
     # slotRef left over from before it was checked in (check_in_item_instance
@@ -4628,8 +4629,7 @@ async def move_all_camp_to_backpack(address: str, character_id: str) -> Optional
 async def move_all_camp_to_bags(address: str, character_id: str) -> Optional[Player]:
     """
     Best-effort bulk move: everything in camp moves into bags (cart first,
-    then saddlepack, then backpack), and whatever still doesn't fit goes
-    to the vault when the character is NOT in an adventure.
+    then saddlepack, then backpack). Whatever doesn't fit stays in camp.
     """
     db = get_database()
     doc = await db.players.find_one({"address": address, "characters.id": character_id})
@@ -4661,16 +4661,13 @@ async def move_all_camp_to_bags(address: str, character_id: str) -> Optional[Pla
     sp_free = max(0, sp_cap - items_catalog.saddlepack_slots_used(character)) if sp_cap else 0
     bp_cap = items_catalog.backpack_capacity(character)
     bp_free = max(0, bp_cap - items_catalog.backpack_slots_used(character)) if bp_cap else 0
-    in_adventure = character.get("availability", {}).get("inAdventure", False)
-
-    if ct_cap == 0 and sp_cap == 0 and bp_cap == 0 and in_adventure:
+    if ct_cap == 0 and sp_cap == 0 and bp_cap == 0:
         raise ValueError("No bags equipped")
 
-    # --- instances (fill order: cart -> saddlepack -> backpack -> vault) ---
+    # --- instances (fill order: cart -> saddlepack -> backpack, rest stays) ---
     moved_to_cart: set = set()
     moved_to_saddlepack: set = set()
     moved_to_backpack: set = set()
-    moved_to_vault: set = set()
     for instance in camp_instances:
         fam = instance["familyId"]
         cost = items_catalog.slot_cost_for_family(fam)
@@ -4685,11 +4682,8 @@ async def move_all_camp_to_bags(address: str, character_id: str) -> Optional[Pla
         elif is_backpackable and cost <= bp_free:
             moved_to_backpack.add(instance["instanceId"])
             bp_free -= cost
-        elif not in_adventure:
-            moved_to_vault.add(instance["instanceId"])
 
     new_items = []
-    vault_push: list = []
     for instance in all_items:
         iid = instance.get("instanceId")
         if iid in moved_to_cart:
@@ -4698,17 +4692,14 @@ async def move_all_camp_to_bags(address: str, character_id: str) -> Optional[Pla
             new_items.append({**instance, "location": "saddlepack", "slotRef": []})
         elif iid in moved_to_backpack:
             new_items.append({**instance, "location": "backpack", "slotRef": []})
-        elif iid in moved_to_vault:
-            vault_push.append({**instance, "location": "pool", "slotRef": []})
         else:
             new_items.append(instance)
 
-    # --- item balances (fill order: cart -> saddlepack -> backpack -> vault) ---
+    # --- item balances (fill order: cart -> saddlepack -> backpack, rest stays) ---
     new_ct_balances = dict(gear.get("itemBalances", {}).get("cart", {}))
     new_sp_balances = dict(gear.get("itemBalances", {}).get("saddlepack", {}))
     new_bp_balances = dict(gear.get("itemBalances", {}).get("backpack", {}))
     new_camp_balances = dict(camp_item_balances)
-    vault_balance_inc: dict = {}
     for item_id, qty in camp_item_balances.items():
         if qty <= 0:
             continue
@@ -4739,18 +4730,13 @@ async def move_all_camp_to_bags(address: str, character_id: str) -> Optional[Pla
                 remaining -= move
                 bp_free -= (math.ceil((existing + move) / stack_size) - math.ceil(existing / stack_size)) * slot_cost
 
-        if remaining > 0 and not in_adventure:
-            vault_balance_inc[f"vault.itemBalances.{item_id}"] = vault_balance_inc.get(f"vault.itemBalances.{item_id}", 0) + remaining
-            remaining = 0
-
         new_camp_balances[item_id] = remaining
 
-    # --- resources (fill order: cart -> saddlepack -> backpack -> vault) ---
+    # --- resources (fill order: cart -> saddlepack -> backpack, rest stays) ---
     new_ct_resources = dict(gear.get("resources", {}).get("cart", {}))
     new_sp_resources = dict(gear.get("resources", {}).get("saddlepack", {}))
     new_bp_resources = dict(gear.get("resources", {}).get("backpack", {}))
     new_camp_resources = dict(camp_resources)
-    resource_inc: dict = {}
     for resource_id, qty in camp_resources.items():
         if qty <= 0:
             continue
@@ -4783,10 +4769,6 @@ async def move_all_camp_to_bags(address: str, character_id: str) -> Optional[Pla
                 remaining -= move
                 bp_free -= math.ceil((existing + move) / stack_size) - math.ceil(existing / stack_size)
 
-        if remaining > 0 and not in_adventure:
-            resource_inc[f"crafting.resources.{resource_id}"] = resource_inc.get(f"crafting.resources.{resource_id}", 0) + remaining
-            remaining = 0
-
         new_camp_resources[resource_id] = remaining
 
     update_set: dict = {
@@ -4801,11 +4783,6 @@ async def move_all_camp_to_bags(address: str, character_id: str) -> Optional[Pla
         "characters.$.gear.resources.backpack": _strip_zeros(new_bp_resources),
     }
     update: dict = {"$set": update_set}
-    if vault_push:
-        update["$push"] = {"vault.items": {"$each": vault_push}}
-    inc_ops = {**vault_balance_inc, **resource_inc}
-    if inc_ops:
-        update["$inc"] = inc_ops
 
     doc = await db.players.find_one_and_update(
         {"address": address, "characters.id": character_id},
@@ -5410,13 +5387,14 @@ async def bulk_move_vault(
     Move multiple items from the player's shared vault to a destination
     in one DB operation.
 
-    destination: "backpack" | "saddlepack"
+    destination: "backpack" | "saddlepack" | "camp"
 
     instance_ids: list of instanceIds from vault.items
     balance_entries: list of {"id": item_id, "amount": int} from vault.itemBalances
 
-    Items whose family has backpackable=False are silently skipped.
-    Capacity is enforced; items that don't fit are silently skipped.
+    For backpack/saddlepack: backpackable items fill the container up to
+    capacity; anything that doesn't fit (or isn't backpackable) overflows
+    into camp. For camp: everything goes straight to camp.
     """
     db = get_database()
     doc = await db.players.find_one({"address": address, "characters.id": character_id})
@@ -5433,32 +5411,40 @@ async def bulk_move_vault(
     vault_items_by_iid = {i["instanceId"]: i for i in vault_items}
     vault_balances = vault.get("itemBalances", {})
 
-    if destination == "backpack":
-        capacity = items_catalog.backpack_capacity(character)
-        used = items_catalog.backpack_slots_used(character)
-    else:
-        capacity = items_catalog.saddlepack_capacity(character)
-        used = items_catalog.saddlepack_slots_used(character)
-    if capacity == 0:
-        return None
-    remaining = capacity - used
+    capacity_gated = destination != "camp"
+    remaining = 0
+    if capacity_gated:
+        if destination == "backpack":
+            capacity = items_catalog.backpack_capacity(character)
+            used = items_catalog.backpack_slots_used(character)
+        else:
+            capacity = items_catalog.saddlepack_capacity(character)
+            used = items_catalog.saddlepack_slots_used(character)
+        remaining = max(0, capacity - used)
 
-    moved_instance_ids: set = set()
-    moved_balance_ids: Dict[str, int] = {}
+    dest_instance_ids: set = set()
+    camp_instance_ids: set = set()
+    dest_balance_ids: Dict[str, int] = {}
+    camp_balance_ids: Dict[str, int] = {}
 
     for iid in instance_ids:
         inst = vault_items_by_iid.get(iid)
         if inst is None:
             continue
         family_id = inst.get("familyId", "")
-        family = items_catalog.ITEM_FAMILIES_BY_ID.get(family_id)
-        if family and not family.backpackable:
-            continue
-        cost = items_catalog.slot_cost_for_family(family_id)
-        if cost > remaining:
-            continue
-        remaining -= cost
-        moved_instance_ids.add(iid)
+        if capacity_gated:
+            family = items_catalog.ITEM_FAMILIES_BY_ID.get(family_id)
+            if family and not family.backpackable:
+                camp_instance_ids.add(iid)
+                continue
+            cost = items_catalog.slot_cost_for_family(family_id)
+            if cost > remaining:
+                camp_instance_ids.add(iid)
+                continue
+            remaining -= cost
+            dest_instance_ids.add(iid)
+        else:
+            dest_instance_ids.add(iid)
 
     for entry in balance_entries:
         item_id = entry["id"]
@@ -5466,35 +5452,47 @@ async def bulk_move_vault(
         held = vault_balances.get(item_id, 0)
         if amount <= 0 or held < amount:
             continue
-        catalog_entry = items_catalog.ITEM_CATALOG_ENTRIES_BY_ID.get(item_id)
-        if catalog_entry:
-            family = items_catalog.ITEM_FAMILIES_BY_ID.get(catalog_entry.family_id)
-            if family and not family.backpackable:
+        if capacity_gated:
+            catalog_entry = items_catalog.ITEM_CATALOG_ENTRIES_BY_ID.get(item_id)
+            if catalog_entry:
+                family = items_catalog.ITEM_FAMILIES_BY_ID.get(catalog_entry.family_id)
+                if family and not family.backpackable:
+                    camp_balance_ids[item_id] = amount
+                    continue
+            stack_size, slot_cost = items_catalog.resolve_item_balance_stack(item_id)
+            existing_dest = character.get("gear", {}).get("itemBalances", {}).get(destination, {}).get(item_id, 0)
+            marginal = (
+                math.ceil((existing_dest + amount) / stack_size) - math.ceil(existing_dest / stack_size)
+            ) * slot_cost
+            if marginal > remaining:
+                camp_balance_ids[item_id] = amount
                 continue
-        stack_size, slot_cost = items_catalog.resolve_item_balance_stack(item_id)
-        existing_dest = character.get("gear", {}).get("itemBalances", {}).get(destination, {}).get(item_id, 0)
-        marginal = (
-            math.ceil((existing_dest + amount) / stack_size) - math.ceil(existing_dest / stack_size)
-        ) * slot_cost
-        if marginal > remaining:
-            continue
-        remaining -= marginal
-        moved_balance_ids[item_id] = amount
+            remaining -= marginal
+            dest_balance_ids[item_id] = amount
+        else:
+            dest_balance_ids[item_id] = amount
 
-    if not moved_instance_ids and not moved_balance_ids:
+    all_moved_iids = dest_instance_ids | camp_instance_ids
+    if not all_moved_iids and not dest_balance_ids and not camp_balance_ids:
         return None
 
-    new_vault_items = [i for i in vault_items if i["instanceId"] not in moved_instance_ids]
+    new_vault_items = [i for i in vault_items if i["instanceId"] not in all_moved_iids]
     char_bound = [
         {**vault_items_by_iid[iid], "location": destination, "slotRef": []}
-        for iid in moved_instance_ids
+        for iid in dest_instance_ids
+    ] + [
+        {**vault_items_by_iid[iid], "location": "camp", "slotRef": []}
+        for iid in camp_instance_ids
     ]
 
     sets: Dict[str, object] = {"vault.items": new_vault_items}
     inc: Dict[str, int] = {}
-    for item_id, amount in moved_balance_ids.items():
+    for item_id, amount in dest_balance_ids.items():
         inc[f"vault.itemBalances.{item_id}"] = -amount
         inc[f"characters.$[char].gear.itemBalances.{destination}.{item_id}"] = amount
+    for item_id, amount in camp_balance_ids.items():
+        inc[f"vault.itemBalances.{item_id}"] = -amount
+        inc[f"characters.$[char].gear.itemBalances.camp.{item_id}"] = amount
 
     update: Dict = {"$set": sets}
     if char_bound:

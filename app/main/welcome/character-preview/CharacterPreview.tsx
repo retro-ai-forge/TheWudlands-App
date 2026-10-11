@@ -20,8 +20,8 @@ const ICON_BASE = "/images/character/char-preview-";
 const TABS: { key: TabKey; label: string; icon: string; secondIcon?: string; emojiIcon?: string; lightenWhenActive?: boolean }[] = [
   { key: "stats", label: "Stats", icon: `${ICON_BASE}stats.png` },
   { key: "body", label: "Body & Soul", icon: `${ICON_BASE}body.png`, secondIcon: `${ICON_BASE}soul.png`, lightenWhenActive: true },
-  { key: "inventory", label: "Inventory", icon: "/images/character/vault.png" },
-  { key: "crafting", label: "Crafting", icon: "", emojiIcon: "🔧" },
+  { key: "inventory", label: "Inventory", icon: "", emojiIcon: "🔧" },
+  { key: "crafting", label: "Crafting", icon: "/images/character/vault.png" },
   { key: "adventure", label: "Adventure", icon: `${ICON_BASE}adventure.png`, lightenWhenActive: true },
 ];
 
@@ -336,6 +336,10 @@ export function CharacterPreview({
                 setShowBirthsignPopup(true);
               }}
               onPlayerDataUpdated={onPlayerDataUpdated}
+              playerResourceBalances={playerResourceBalances}
+              playerTools={playerTools}
+              playerItemBalances={playerItemBalances}
+              playerItems={playerItems}
             />
           )}
           {activeTab === "body" && (
@@ -349,8 +353,7 @@ export function CharacterPreview({
               playerItemBalances={playerItemBalances}
               playerItems={playerItems}
               onPlayerDataUpdated={onPlayerDataUpdated}
-              openCraftingSectionByDefault={openCraftingSectionByDefault}
-              section="crafting"
+              section="vault"
             />
           )}
           {activeTab === "adventure" && (
@@ -364,7 +367,8 @@ export function CharacterPreview({
               playerItemBalances={playerItemBalances}
               playerItems={playerItems}
               onPlayerDataUpdated={onPlayerDataUpdated}
-              section="vault"
+              openCraftingSectionByDefault={openCraftingSectionByDefault}
+              section="crafting"
             />
           )}
             </>

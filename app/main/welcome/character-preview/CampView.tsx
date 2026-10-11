@@ -92,6 +92,7 @@ export function CampView({
   const [selectMode, setSelectMode] = useState(false);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [batchBusy, setBatchBusy] = useState(false);
+  const [campActionBusy, setCampActionBusy] = useState(false);
   const [confirmDestroy, setConfirmDestroy] = useState(false);
   const [showSalvagePopup, setShowSalvagePopup] = useState(false);
 
@@ -408,7 +409,7 @@ export function CampView({
   }, [batchBusy, selectedIds, campInstanceLookupIds, campCombined, character.id, onPlayerDataUpdated, exitSelectMode]);
 
   return (
-    <div className={styles.panel}>
+    <div className={styles.panel} onContextMenu={(e) => e.preventDefault()}>
       {selectMode && (
         <div className={styles.selectionBar}>
           <div className={styles.selectionBarActions}>
@@ -466,7 +467,7 @@ export function CampView({
             </button>
           </div>
           <span className={styles.selectionBarWeight}>
-            Weight: {selectionWeight(selectedIds, itemCatalogTierInfo, campCombined, campInstanceLookupIds, campResourceBalances, resourceTierInfo)}
+            W: {selectionWeight(selectedIds, itemCatalogTierInfo, campCombined, campInstanceLookupIds, campResourceBalances, resourceTierInfo)}
           </span>
           <button
             type="button"
@@ -510,6 +511,11 @@ export function CampView({
           onClose={() => setShowSalvagePopup(false)}
           preSelectedIds={new Set([...selectedIds].filter((k) => !k.startsWith("res:")).map(stripStackSuffix))}
         />
+      )}
+      {(batchBusy || campActionBusy) && (
+        <div className={styles.batchLoadingOverlay}>
+          <div className={styles.batchSpinner} />
+        </div>
       )}
       <ItemGrid
         ids={campIds}
@@ -580,11 +586,11 @@ export function CampView({
             tabIndex={hasCampItems ? 0 : undefined}
             title={hasCampItems ? "Burn everything in camp" : undefined}
             aria-label={hasCampItems ? "Burn everything in camp" : undefined}
-            onClick={hasCampItems ? () => setCampAction("burn") : undefined}
+            onClick={hasCampItems ? () => { exitSelectMode(); setCampAction("burn"); } : undefined}
             onKeyDown={
               hasCampItems
                 ? (e) => {
-                    if (e.key === "Enter" || e.key === " ") setCampAction("burn");
+                    if (e.key === "Enter" || e.key === " ") { exitSelectMode(); setCampAction("burn"); }
                   }
                 : undefined
             }
@@ -621,11 +627,11 @@ export function CampView({
             tabIndex={hasCampItems ? 0 : undefined}
             title={hasCampItems ? "Salvage everything in camp" : undefined}
             aria-label={hasCampItems ? "Salvage everything in camp" : undefined}
-            onClick={hasCampItems ? () => setCampAction("chop") : undefined}
+            onClick={hasCampItems ? () => { exitSelectMode(); setCampAction("chop"); } : undefined}
             onKeyDown={
               hasCampItems
                 ? (e) => {
-                    if (e.key === "Enter" || e.key === " ") setCampAction("chop");
+                    if (e.key === "Enter" || e.key === " ") { exitSelectMode(); setCampAction("chop"); }
                   }
                 : undefined
             }
@@ -645,9 +651,9 @@ export function CampView({
             tabIndex={0}
             title="Pack everything up"
             aria-label="Pack everything up"
-            onClick={() => setCampAction("moveAll")}
+            onClick={() => { exitSelectMode(); setCampAction("moveAll"); }}
             onKeyDown={(e) => {
-              if (e.key === "Enter" || e.key === " ") setCampAction("moveAll");
+              if (e.key === "Enter" || e.key === " ") { exitSelectMode(); setCampAction("moveAll"); }
             }}
             className={styles.campDroppedIcon}
           />
@@ -659,9 +665,9 @@ export function CampView({
             label="Hold to cast things into flames"
             icon="/images/character/campfire_lit.png"
             tone="destroy"
-            onConfirm={() => postJson(`/api/auth/me/characters/${character.id}/camp/burn-all`)}
-            onPlayerDataUpdated={onPlayerDataUpdated}
-            onClose={() => setCampAction(null)}
+            onConfirm={() => { setCampActionBusy(true); return postJson(`/api/auth/me/characters/${character.id}/camp/burn-all`); }}
+            onPlayerDataUpdated={(data) => { setCampActionBusy(false); onPlayerDataUpdated?.(data); }}
+            onClose={() => { setCampActionBusy(false); setCampAction(null); }}
           />
         )}
         {campAction === "moveAll" && (
@@ -671,9 +677,9 @@ export function CampView({
             subtitle="Fills cart first, then saddlepack, then backpack"
             icon="/images/character/dropped.png"
             tone="move"
-            onConfirm={() => postJson(`/api/auth/me/characters/${character.id}/camp/move-all-to-bags`)}
-            onPlayerDataUpdated={onPlayerDataUpdated}
-            onClose={() => setCampAction(null)}
+            onConfirm={() => { setCampActionBusy(true); return postJson(`/api/auth/me/characters/${character.id}/camp/move-all-to-bags`); }}
+            onPlayerDataUpdated={(data) => { setCampActionBusy(false); onPlayerDataUpdated?.(data); }}
+            onClose={() => { setCampActionBusy(false); setCampAction(null); }}
           />
         )}
         {campAction === "chop" && (

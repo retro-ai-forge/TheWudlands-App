@@ -1,17 +1,10 @@
 import { Fragment, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import type { ReactNode } from "react";
 import styles from "./CharacterTabs.module.css";
-import { formatRemainingCompactLong, useCraftCountdown } from "../craftTimer";
 import type { SlotCharacterSummary } from "../SoulSlotGrid";
 import type { ItemInstance } from "../SoulSlotGrid";
 export type { ItemInstance } from "../SoulSlotGrid";
 
-// GET /api/auth/blueprint-categories - lore/reference data (not
-// player-specific), reused here purely to look up each known blueprint's own
-// tier by id, since Character.blueprints is just a flat id list with no tier attached.
-type BlueprintCategoryItem = { id: string; name: string; tier: number };
-type BlueprintCategoryFamily = { familyId: string; kind: string; items: BlueprintCategoryItem[] };
-type BlueprintCategoryEntry = { families: BlueprintCategoryFamily[] };
 export type BlueprintTierInfo = Record<
   string,
   {
@@ -282,7 +275,7 @@ function TransferButtons({
 // mechanically formats the id itself for reading. The "blueprint_" prefix
 // is dropped since whichever list a blueprint id shows up in is already
 // headed "Blueprints Known"/"Starter Blueprints Known".
-function formatResourceLabel(id: string): string {
+export function formatResourceLabel(id: string): string {
   return id
     .replace(/^blueprint_/, "")
     .split("_")
@@ -295,7 +288,7 @@ function formatResourceLabel(id: string): string {
 // formatted the same mechanical way professions' resource-family caption
 // already does (there's no per-family display-name catalog for these,
 // just category ids like "ore"/"monster_part").
-function formatXpPreview(preview: { rawXp: Record<string, number>; finalXp: number } | null): string {
+export function formatXpPreview(preview: { rawXp: Record<string, number>; finalXp: number } | null): string {
   if (!preview) return "";
   const parts = Object.entries(preview.rawXp).map(([family, xp]) => `+${xp} ${formatResourceLabel(family)} XP`);
   if (preview.finalXp > 0) parts.push(`+${preview.finalXp} Final XP`);
@@ -305,7 +298,7 @@ function formatXpPreview(preview: { rawXp: Record<string, number>; finalXp: numb
 // How long the "Finished: ..." result line stays visible (fading out) after
 // a craft completes, before it's cleared entirely - matches the CSS fade
 // animation's own duration (see .craftResultFading in CharacterTabs.module.css).
-const CRAFT_RESULT_FADE_MS = 8000;
+export const CRAFT_RESULT_FADE_MS = 8000;
 
 // Resolves an active craft's {familyId, tier} to a display name - the same
 // question backend.players._resolve_recipe_output answers server-side, but
@@ -315,7 +308,7 @@ const CRAFT_RESULT_FADE_MS = 8000;
 // item-inventory-properties.json families, instance-tracked or not) for the
 // entry at that exact family+tier. Falls back to a mechanical label from
 // the family id if somehow neither catalog has it yet (e.g. mid-fetch).
-function resolveOutputName(
+export function resolveOutputName(
   familyId: string,
   tier: number,
   resourceTierInfo: ResourceTierInfo,
@@ -335,6 +328,27 @@ function resolveOutputName(
 // (e.g. "Blueprint: Cotton Cloth" -> "Cotton Cloth").
 function stripBlueprintPrefix(name: string): string {
   return name.replace(/^Blueprint:\s*/, "");
+}
+
+function getToolFamilyIcon(familyId: string): string {
+  switch (familyId) {
+    case "anvil": return "🔨";
+    case "furnace": return "🔥";
+    case "oven": return "🍞";
+    case "loom": return "🧵";
+    case "spinning_wheel": return "🌀";
+    case "alchemy_stand": return "⚗️";
+    case "mortar_and_pestle": return "🧂";
+    case "tanning_rack": return "🪶";
+    case "workbench": return "🪚";
+    case "kiln": return "🏺";
+    case "grinding_stone": return "💎";
+    case "lapidary_bench": return "💍";
+    case "smokehouse": return "🥩";
+    case "scriptorium": return "📜";
+    case "enchanters_table": return "✨";
+    default: return "🔧";
+  }
 }
 
 function getKindIcon(kind: string): string {
@@ -386,7 +400,7 @@ function getResourceIcon(id: string, tierInfo?: ResourceTierInfo): string {
   return isProcessedResource(id, tierInfo) ? "⚒️" : "🪨";
 }
 
-function ResourceList({
+export function ResourceList({
   balances,
   emptyLabel,
   tierInfo,
@@ -537,7 +551,7 @@ function ResourceList({
   );
 }
 
-function IdList({
+export function IdList({
   ids,
   emptyLabel,
   tierInfo,
@@ -805,6 +819,30 @@ const CONTAINER_ICON_PX = 140;
 const ICON_MIN_VISIBLE_PX = 48;
 
 
+function SpecialTileScroll({ children }: { children: (gridHeight: number) => React.ReactNode }) {
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const [gridHeight, setGridHeight] = useState<number>(ITEM_TILE_PX);
+  useEffect(() => {
+    const measure = () => {
+      const el = scrollRef.current;
+      if (!el) return;
+      const footer = document.querySelector('[data-role="character-preview-topbar"]');
+      const footerHeight = footer ? footer.getBoundingClientRect().height : 0;
+      const available =
+        window.innerHeight - el.getBoundingClientRect().top - footerHeight - 16 + SCROLLBAR_OVERLAP_PX;
+      setGridHeight(Math.max(ITEM_TILE_PX, available));
+    };
+    measure();
+    window.addEventListener("resize", measure);
+    return () => window.removeEventListener("resize", measure);
+  }, []);
+  return (
+    <div ref={scrollRef} className={styles.itemGridScroll} style={{ height: gridHeight }}>
+      {children(gridHeight)}
+    </div>
+  );
+}
+
 /** The Party's Vault tab's Items view - a horizontally-scrollable row of
  * 100x100 icon tiles (tier badge upper-left, owned-count badge lower-
  * right) replacing the old name/tier/quantity table. No name column and
@@ -1068,10 +1106,22 @@ export function ItemGrid({
     }
   }
 
+  const kindSortOrder: Record<string, number> = {
+    weapon: 0, armor: 1, shield: 2, tool: 3, food: 4,
+    potion: 5, adventuring_gear: 6, essentials: 7, companion: 8, mount: 9,
+  };
   const sortedIds = [...ids].sort((a, b) => {
     const infoA = tierInfo[lookupIds?.[a] ?? a];
     const infoB = tierInfo[lookupIds?.[b] ?? b];
-    return (infoB?.tier ?? 0) - (infoA?.tier ?? 0);
+    const tierDiff = (infoA?.tier ?? 0) - (infoB?.tier ?? 0);
+    if (tierDiff !== 0) return tierDiff;
+    const kindA = kindSortOrder[infoA?.kind ?? ""] ?? 99;
+    const kindB = kindSortOrder[infoB?.kind ?? ""] ?? 99;
+    if (kindA !== kindB) return kindA - kindB;
+    const acA = infoA?.armorClass ?? 0;
+    const acB = infoB?.armorClass ?? 0;
+    if (acA !== acB) return acA - acB;
+    return (infoA?.familyId ?? "").localeCompare(infoB?.familyId ?? "");
   });
 
   // A flat itemBalance row is split into one grid tile PER BACKPACK SLOT
@@ -2740,6 +2790,19 @@ export function ItemDetailPopup({
     );
   };
 
+  const moveToCamp = async (amount: number) => {
+    setPending(true);
+    setFlashMessage(null);
+    if (isInstance) {
+      return finish(await postJson(`/api/auth/me/characters/${characterId}/items/${moveId}/vault-to-camp`));
+    }
+    finish(
+      await postJson(`/api/auth/me/characters/${characterId}/item-balances/${moveId}/vault-to-camp`, {
+        amount,
+      })
+    );
+  };
+
   // Straight pool -> body, one call - never routes through the backpack
   // (see backend.players.equip_item_from_pool), unlike moveToBackpack
   // below which deliberately does.
@@ -3446,7 +3509,7 @@ export function ItemDetailPopup({
                 // check_out_item_balance) - no buttons, no hasBackpackEquipped/
                 // hasSaddlepackEquipped checks, just the status itself.
                 <p className={styles.itemPopupAwayNotice}>
-                  {characterFirstName ? `${characterFirstName} on the road` : "On the road"}
+                  {characterFirstName ? `${characterFirstName} is on the road` : "On the road"}
                 </p>
               ) : (
                 stackSize > 1 ? (
@@ -3454,36 +3517,39 @@ export function ItemDetailPopup({
                   // (backpack + saddlepack), same one-click-moves-it behavior
                   // as the resource popups (see ResourcePopup). Saddlepack
                   // row is greyed out when none is equipped.
-                  info?.backpackable && (
-                    !hasBackpackEquipped && !hasSaddlepackEquipped ? (
-                      <p className={styles.itemPopupAwayNotice}>Equip a backpack or saddlepack first</p>
-                    ) : (
-                      <>
-                        {hasBackpackEquipped && (
-                          <TransferButtons
-                            owned={owned}
-                            pending={pending}
-                            onPick={moveToBackpack}
-                            destinationIcon={BACKPACK_ACTION_ICON}
-                            destinationLabel="Backpack"
-                            amounts={RAW_RESOURCE_AMOUNTS}
-                            showInfinity={false}
-                          />
-                        )}
-                        {hasSaddlepackEquipped && (
-                          <TransferButtons
-                            owned={owned}
-                            pending={pending}
-                            onPick={moveBalanceToSaddlepack}
-                            destinationIcon={SADDLEPACK_ACTION_ICON}
-                            destinationLabel="Saddlepack"
-                            amounts={RAW_RESOURCE_AMOUNTS}
-                            showInfinity={false}
-                          />
-                        )}
-                      </>
-                    )
-                  )
+                  <>
+                    {info?.backpackable && hasBackpackEquipped && (
+                      <TransferButtons
+                        owned={owned}
+                        pending={pending}
+                        onPick={moveToBackpack}
+                        destinationIcon={BACKPACK_ACTION_ICON}
+                        destinationLabel="Backpack"
+                        amounts={RAW_RESOURCE_AMOUNTS}
+                        showInfinity={false}
+                      />
+                    )}
+                    {info?.backpackable && hasSaddlepackEquipped && (
+                      <TransferButtons
+                        owned={owned}
+                        pending={pending}
+                        onPick={moveBalanceToSaddlepack}
+                        destinationIcon={SADDLEPACK_ACTION_ICON}
+                        destinationLabel="Saddlepack"
+                        amounts={RAW_RESOURCE_AMOUNTS}
+                        showInfinity={false}
+                      />
+                    )}
+                    <TransferButtons
+                      owned={owned}
+                      pending={pending}
+                      onPick={moveToCamp}
+                      destinationIcon={CAMP_ACTION_ICON}
+                      destinationLabel="Camp"
+                      amounts={RAW_RESOURCE_AMOUNTS}
+                      showInfinity={false}
+                    />
+                  </>
                 ) : (
                   <div className={styles.itemPopupActions}>
                     {slotGroups.map((slots) => (
@@ -3502,9 +3568,6 @@ export function ItemDetailPopup({
                         ))}
                       </button>
                     ))}
-                    {info?.backpackable && !hasBackpackEquipped && !hasSaddlepackEquipped && slotGroups.length === 0 && (
-                      <p className={styles.itemPopupAwayNotice}>Equip a backpack or saddlepack first</p>
-                    )}
                     {info?.backpackable && hasBackpackEquipped && (
                       <button
                         type="button"
@@ -3539,6 +3602,21 @@ export function ItemDetailPopup({
                         />
                       </button>
                     )}
+                    <button
+                      type="button"
+                      className={styles.itemPopupBackpackButton}
+                      disabled={pending}
+                      onClick={() => moveToCamp(1)}
+                      aria-label="Move to camp"
+                      title="Move to camp"
+                    >
+                      <div
+                        role="img"
+                        aria-label="Camp"
+                        className={styles.itemPopupBackpackIcon}
+                        style={{ backgroundImage: `url(${CAMP_ACTION_ICON})` }}
+                      />
+                    </button>
                   </div>
                 )
               )
@@ -4072,7 +4150,7 @@ export function ItemDetailPopup({
 // Ids owned (quantity > 0) across one or more stackable pools, deduplicated -
 // used to build the recipe viewer's "?tools=" / "?blueprints=" ownership
 // lists, which only care whether something is owned at all, not how many.
-function ownedIds(...pools: Record<string, number>[]): string[] {
+export function ownedIds(...pools: Record<string, number>[]): string[] {
   const ids = new Set<string>();
   for (const pool of pools) {
     for (const [id, qty] of Object.entries(pool)) {
@@ -4090,7 +4168,6 @@ export function InventoryTab({
   playerItemBalances,
   playerItems,
   onPlayerDataUpdated,
-  openCraftingSectionByDefault = false,
   section,
 }: {
   character: SlotCharacterSummary;
@@ -4110,64 +4187,6 @@ export function InventoryTab({
    * "vault" for the shared item grid. Controlled by the parent's footer tab. */
   section: "crafting" | "vault";
 }) {
-  // Moves `amount` of a resource/tool from this character's own (temporary,
-  // crafting-session-only) vault back into the player's shared vault.
-  // check-out (shared -> character) no longer exists for resources/tools -
-  // a character's own vault is populated exclusively by start_craft now,
-  // never by a direct player-initiated transfer.
-  const transfer = async (
-    kind: "resources" | "tools",
-    id: string,
-    amount: number
-  ): Promise<boolean> => {
-    try {
-      const res = await fetch(
-        `/api/auth/me/characters/${character.id}/${kind}/${id}/check-in`,
-        {
-          method: "POST",
-          credentials: "include",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ amount }),
-        }
-      );
-      if (!res.ok) return false;
-      const data: RawPlayerData = await res.json();
-      onPlayerDataUpdated?.(data);
-      return true;
-    } catch {
-      return false;
-    }
-  };
-
-  // Party's Resources -> this character's own backpack, straight from the
-  // shared crafting stock (see backend.players.check_out_resource_to_
-  // backpack) - the resource equivalent of moveToBackpack's checkOut step,
-  // just direct instead of two calls since there's no character-level
-  // resources vault to land in along the way anymore.
-  const transferToBackpack = async (resourceId: string, amount: number): Promise<boolean> => {
-    try {
-      const res = await fetch(
-        `/api/auth/me/characters/${character.id}/resources/${resourceId}/check-out-backpack`,
-        {
-          method: "POST",
-          credentials: "include",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ amount }),
-        }
-      );
-      if (!res.ok) return false;
-      const data: RawPlayerData = await res.json();
-      onPlayerDataUpdated?.(data);
-      return true;
-    } catch {
-      return false;
-    }
-  };
-
-  // Fetched once - maps every blueprint id to its own tier and family info, so
-  // the Blueprints Known lists below can show tier information etc.
-  const [blueprintTierInfo, setBlueprintTierInfo] = useState<BlueprintTierInfo>({});
-
   // Resource tier info: id -> tier (for displaying tier indicators on resources)
   const [resourceTierInfo, setResourceTierInfo] = useState<ResourceTierInfo>({});
 
@@ -4183,26 +4202,6 @@ export function InventoryTab({
   const [itemCatalogTierInfo, setItemCatalogTierInfo] = useState<BlueprintTierInfo>({});
 
   useEffect(() => {
-    fetch("/api/auth/blueprint-categories")
-      .then((res) => (res.ok ? res.json() : []))
-      .then((data: BlueprintCategoryEntry[]) => {
-        const info: BlueprintTierInfo = {};
-        for (const entry of data) {
-          for (const family of entry.families) {
-            for (const item of family.items) {
-              info[item.id] = {
-                tier: item.tier,
-                familyId: family.familyId,
-                kind: family.kind,
-                name: item.name,
-              };
-            }
-          }
-        }
-        setBlueprintTierInfo(info);
-      })
-      .catch(() => setBlueprintTierInfo({}));
-
     // Fetch resource tier information from the backend
     fetch("/api/auth/resource-catalog")
       .then((res) => (res.ok ? res.json() : []))
@@ -4301,30 +4300,23 @@ export function InventoryTab({
   // Top-level accordion within the Crafting tab (Blueprints Known/this
   // character's own Crafting stock/the party's shared Tools/the party's
   // shared Resources) - any number can be open at once, toggled
-  // independently. The recipe viewer below is always visible, not part of
-  // this fold. Only the party's crafted Items live under the separate
-  // Vault footer tab (section="vault") - Tools/Resources stay here since they're
-  // what a craft actually draws on.
-  const [openSections, setOpenSections] = useState<
-    Set<"blueprints" | "character" | "partyTools" | "partyResources">
-  >(() => (openCraftingSectionByDefault ? new Set(["character"]) : new Set()));
-  const toggleSection = (id: "blueprints" | "character" | "partyTools" | "partyResources") =>
-    setOpenSections((prev) => {
-      const next = new Set(prev);
-      if (next.has(id)) next.delete(id); else next.add(id);
-      return next;
-    });
-
   const [vaultKindFilter, setVaultKindFilter] = useState<string[]>([]);
-  const toggleKindFilter = (kind: string) =>
+  const [vaultTierFilter, setVaultTierFilter] = useState<number[]>([]);
+  const [vaultSpecialFilter, setVaultSpecialFilter] = useState<"tools" | "resources" | null>(null);
+  const toggleKindFilter = (kind: string) => {
+    setVaultSpecialFilter(null);
     setVaultKindFilter((prev) =>
       prev.includes(kind) ? prev.filter((k) => k !== kind) : [...prev, kind]
     );
-  const [vaultTierFilter, setVaultTierFilter] = useState<number[]>([]);
+  };
   const toggleTierFilter = (tier: number) =>
     setVaultTierFilter((prev) =>
       prev.includes(tier) ? prev.filter((t) => t !== tier) : [...prev, tier]
     );
+  const toggleSpecialFilter = (mode: "tools" | "resources") => {
+    setVaultKindFilter([]);
+    setVaultSpecialFilter((prev) => (prev === mode ? null : mode));
+  };
 
   const [vaultSelectMode, setVaultSelectMode] = useState(false);
   const [vaultSelectedIds, setVaultSelectedIds] = useState<Set<string>>(new Set());
@@ -4350,70 +4342,6 @@ export function InventoryTab({
     setVaultSelectMode(true);
     setVaultSelectedIds(new Set([id]));
   }, []);
-
-  // Independent of the Crafting accordion above - folding the recipe viewer
-  // has nothing to do with toggling between the character's and party's stock.
-  const [recipeViewerOpen, setRecipeViewerOpen] = useState(false);
-
-  // Blueprints are soulbound to the character (never move to the player's
-  // shared pool), so this counts as "known" for the recipe viewer's
-  // missing-blueprint check.
-  const knownBlueprints = character.blueprints;
-  // Flat-balance tools (anvil, furnace, ...) only ever come from the
-  // player's shared vault now - the character vault is a temporary staging
-  // area for an active craft (populated/drained by start/finish_craft), not
-  // somewhere a player parks a tool ahead of time - so those are checked
-  // against playerTools only, matching backend.players.start_craft's
-  // check_character_flat_balance=False. Instance-tracked tool-weapons
-  // (axe_stone, axe, dagger - needsItemDefinition:true families that double
-  // as a recipe's tool) work the opposite way: backend._resolve_tool_for_craft
-  // never transfers those, it only ever checks whether the character is
-  // already physically holding one (backpack or equipped) - so those must
-  // come from this character's own items, never the shared pool, or an
-  // axe_stone sitting unassigned in the party's vault would incorrectly
-  // read as "owned" here. This set also backs ingredient-level "final"/
-  // unconsumed alternatives (e.g. carcass's bone_blade-or-dagger choice) -
-  // that path was never extended to draw from the vault, only a recipe's
-  // own "tool" field was (see vaultToolInstanceIds below), so keeping this
-  // one character-only keeps those checks matching what start_craft
-  // actually accepts.
-  const ownedTools = useMemo(() => {
-    const tools = ownedIds(playerTools);
-    for (const instance of character.gear.items) {
-      if (instance.location === "backpack" || instance.location === "body") {
-        tools.push(instance.itemId);
-      }
-    }
-    return tools;
-  }, [playerTools, character.gear.items]);
-
-  // Instance-tracked tools sitting in the shared vault - usable for a
-  // recipe's own "tool" field right where they sit: start_craft moves the
-  // specific instance onto this character (location:"crafting") for the
-  // duration, so anything currently borrowed by an OTHER character is
-  // already gone from playerItems entirely (not just marked - moved),
-  // leaving only what's genuinely still free here. Passed to the recipe
-  // viewer as a second, separate ownership list (see
-  // recipe-viewer.template.html's ownedToolsWithVault) rather than merged
-  // into ownedTools above.
-  const vaultToolInstanceIds = useMemo(
-    () => playerItems.filter((instance) => instance.location === "pool").map((instance) => instance.itemId),
-    [playerItems]
-  );
-
-  // Instance-tracked tools currently borrowed for this character's active
-  // craft (location:"crafting" - see start_craft/finish_craft's
-  // borrowedInstances) - shown right alongside the flat character.crafting.tools
-  // list above so a borrowed axe_stone is visibly "in the crafting
-  // section," not just gone from wherever it used to be.
-  const borrowedToolIds: string[] = [];
-  const borrowedToolCounts: Record<string, number> = {};
-  for (const instance of character.gear.items) {
-    if (instance.location === "crafting") {
-      if (!(instance.itemId in borrowedToolCounts)) borrowedToolIds.push(instance.itemId);
-      borrowedToolCounts[instance.itemId] = (borrowedToolCounts[instance.itemId] ?? 0) + 1;
-    }
-  }
 
   // Crafted-item instances in the player's shared vault - one row PER
   // PHYSICAL INSTANCE, not aggregated by concrete id: each one has its own
@@ -4449,17 +4377,6 @@ export function InventoryTab({
   const hasBackpackEquipped = character.gear.items.some(
     (instance) => (instance.location === "body" || instance.location === "camp") && instance.familyId === "backpack"
   );
-  // Coarse "is there room for ANYTHING at all right now" check for the
-  // Party's Resources check-out-to-backpack row below - backpackSlotsUsed/
-  // backpackCapacity are both already computed server-side off the
-  // character's current gear (items + resources + itemBalances, see
-  // backend.items_catalog.backpack_slots_used/backpack_capacity), so this
-  // doesn't need its own duplicated slot-cost math. Not amount-precise
-  // (a specific click can still fail server-side with "Backpack is full"
-  // if it doesn't quite fit) - just enough to swap the whole button row
-  // for a plain message when there's plainly no room left at all.
-  const backpackFull =
-    hasBackpackEquipped && character.gear.backpackSlotsUsed >= character.gear.backpackCapacity;
   const hasSaddlepackEquipped = character.gear.items.some(
     (instance) => (instance.location === "body" || instance.location === "camp") && instance.familyId === "saddlepack"
   );
@@ -4471,7 +4388,7 @@ export function InventoryTab({
   );
 
   const batchMoveVault = useCallback(
-    async (destination: "backpack" | "saddlepack") => {
+    async (destination: "backpack" | "saddlepack" | "camp") => {
       if (vaultBatchBusy || vaultSelectedIds.size === 0) return;
       setVaultBatchBusy(true);
       const instanceIds: string[] = [];
@@ -4539,517 +4456,10 @@ export function InventoryTab({
     exitVaultSelectMode();
   }, [vaultBatchBusy, vaultSelectedIds, playerItemLookupIds, playerItemsCombined, itemCatalogTierInfo, character.id, onPlayerDataUpdated, exitVaultSelectMode]);
 
-  // The embedded recipe viewer's own content height, in px - same-origin, so
-  // its body height can be read directly and mirrored onto the iframe
-  // element (see SoulCreation.tsx's identical pattern). The height-sync
-  // above is normally exact, but a brief mismatch (e.g. content reflowing
-  // taller after a narrow-screen media query settles, a tick after the
-  // initial measurement) used to show the iframe's own native scrollbar for
-  // that gap - a second scrollbar alongside the page's own. scrolling="no"
-  // below guarantees the iframe itself never scrolls, regardless of any
-  // such transient mismatch.
-  const [recipeViewerHeight, setRecipeViewerHeight] = useState(600);
-  const recipeViewerRef = useRef<HTMLIFrameElement>(null);
-  // The iframe's own src is short/fixed (no inv/tools/blueprints query
-  // string at all - see the effect below) - reset to false whenever the
-  // accordion closes (the iframe JSX below unmounts entirely, so the NEXT
-  // open is a genuinely fresh load needing its own onLoad/postMessage
-  // cycle again, not a leftover true from the last time it was open).
-  const [recipeViewerLoaded, setRecipeViewerLoaded] = useState(false);
-
-  // The viewer tracks its own selection (and, now, its own craftability
-  // check) internally - since the iframe is same-origin, these globals are
-  // read directly rather than this component duplicating that state via
-  // postMessage. Not part of Window's real type, hence the cast -
-  // recipe-viewer.template.html is the one place they actually get defined.
-  type RecipeViewerWindow = Window & {
-    getCurrentSelection?: () => { familyId: string; tier: number } | null;
-    isCurrentSelectionCraftable?: (count?: number) => boolean;
-    getCurrentSelectionXp?: (count?: number) => { rawXp: Record<string, number>; finalXp: number } | null;
-    getCurrentSelectionDuration?: (count?: number) => number | null;
-  };
-  const getRecipeViewerWindow = () =>
-    recipeViewerRef.current?.contentWindow as RecipeViewerWindow | null | undefined;
-
-  // How many units to craft in one batch - the row of quick-count buttons
-  // next to Craft. Ingredients scale with this; the server-side timer
-  // doesn't (see start_craft's own count parameter).
-  const CRAFT_COUNTS = [1, 2, 3, 4, 5, 10, 20, 25, 50] as const;
-  const [craftCount, setCraftCount] = useState<number>(1);
-
-  // Re-checked on an interval while the viewer is open, since there's no
-  // "selection changed" event fired out of it - a player can browse
-  // recipes/tiers freely and the button(s) should track whatever's on
-  // screen right now, not just what it was when last polled. Checked once
-  // per available count (1/2/5/10) so each quick-count button can be
-  // disabled independently once affording it runs out.
-  const [craftableCounts, setCraftableCounts] = useState<Record<number, boolean>>({});
-
-  // The Craft button's own label - what a single start_craft/finish_craft
-  // pair would actually pay out for whatever's selected in the viewer right
-  // now, at the current craftCount (see recipe-viewer.template.html's
-  // getCurrentSelectionXp, which mirrors backend.players' XP mechanics).
-  // Re-polled alongside craftableCounts below since both depend on the same
-  // "whatever's currently selected in the iframe" state with no change
-  // event of its own.
-  const [craftXpPreview, setCraftXpPreview] = useState<{ rawXp: Record<string, number>; finalXp: number } | null>(
-    null
-  );
-  // The crafting timer length for whatever's selected right now, at the
-  // current craftCount (see recipe-viewer.template.html's
-  // getCurrentSelectionDuration, which mirrors backend.players.
-  // _craft_duration_seconds - scaled by the recipe's own full raw-
-  // material chain AND craftCount, not a flat number) - polled alongside
-  // the XP preview above for the same reason.
-  const [craftDurationPreview, setCraftDurationPreview] = useState<number | null>(null);
-  useEffect(() => {
-    if (!recipeViewerOpen) {
-      setCraftableCounts({});
-      setCraftXpPreview(null);
-      setCraftDurationPreview(null);
-      setRecipeViewerLoaded(false);
-      return;
-    }
-    const check = () => {
-      const win = getRecipeViewerWindow();
-      const next: Record<number, boolean> = {};
-      for (const count of CRAFT_COUNTS) {
-        next[count] = win?.isCurrentSelectionCraftable?.(count) ?? false;
-      }
-      setCraftableCounts(next);
-      setCraftXpPreview(win?.getCurrentSelectionXp?.(craftCount) ?? null);
-      setCraftDurationPreview(win?.getCurrentSelectionDuration?.(craftCount) ?? null);
-    };
-    check();
-    const interval = setInterval(check, 500);
-    return () => clearInterval(interval);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [recipeViewerOpen, playerResourceBalances, playerItemBalances, playerTools, knownBlueprints, craftCount]);
-
-  // Sends the actual inv/itemBalances/tools/blueprints data to the iframe
-  // once it's loaded, via postMessage - same mechanism/message shape
-  // SoulCreation.tsx's own Trappings-step embed already uses for ITS live
-  // updates, just also doing the very first bootstrap send this way now
-  // instead of a giant query string on the iframe's own src (see there).
-  // A character who's learned a lot of blueprints (or owns a lot of
-  // distinct resources) could push that query string past what some
-  // mobile in-app-wallet browsers accept on a URL, silently failing to
-  // load the iframe at all - postMessage has no such length limit.
-  useEffect(() => {
-    if (!recipeViewerLoaded) return;
-    recipeViewerRef.current?.contentWindow?.postMessage(
-      {
-        type: "recipe-viewer:update",
-        inv: playerResourceBalances,
-        itemBalances: playerItemBalances,
-        tools: ownedTools,
-        vaultTools: vaultToolInstanceIds,
-        blueprints: knownBlueprints,
-      },
-      window.location.origin
-    );
-  }, [recipeViewerLoaded, playerResourceBalances, playerItemBalances, ownedTools, vaultToolInstanceIds, knownBlueprints]);
-
-  const [recipePopupItemId, setRecipePopupItemId] = useState<string | null>(null);
-  useEffect(() => {
-    const handler = (e: MessageEvent) => {
-      if (e.data?.type === "recipe-viewer:show-item" && typeof e.data.itemId === "string") {
-        setRecipePopupItemId(e.data.itemId);
-      }
-    };
-    window.addEventListener("message", handler);
-    return () => window.removeEventListener("message", handler);
-  }, []);
-
-  const canCraft = craftableCounts[craftCount] ?? false;
-
-  const [crafting, setCrafting] = useState(false);
-  const [craftError, setCraftError] = useState<string | null>(null);
-
-  // Begins crafting `craftCount` units of whatever's currently selected in
-  // the viewer, in one batch - checks ingredients (scaled by craftCount)/
-  // tool/blueprint against the player's shared vault, transfers what's
-  // needed onto the character, and starts the CRAFT_DURATION_SECONDS timer
-  // server-side (character.crafting.activeCraft) - one timer regardless of count.
-  // See the countdown effect below for what happens once that timer elapses.
-  const startCraft = async () => {
-    const win = getRecipeViewerWindow();
-    const selection = win?.getCurrentSelection?.();
-    if (!selection) {
-      setCraftError("Pick a recipe in the viewer first.");
-      return;
-    }
-    // The Craft button's enabled look is driven by craftableCounts, a
-    // poll that only re-checks every 500ms - if the tier/recipe selection
-    // changes and this fires before the next poll catches up, the button
-    // can still look clickable for a moment based on the PREVIOUS
-    // selection's craftability. Re-verify synchronously, against whatever
-    // is selected right now, before ever hitting the network - this is
-    // what actually decides whether to submit, not the polled state.
-    if (!(win?.isCurrentSelectionCraftable?.(craftCount) ?? false)) {
-      setCraftError("Couldn't craft that - check ingredients, tool, and blueprint.");
-      return;
-    }
-    setCrafting(true);
-    setCraftError(null);
-    try {
-      const res = await fetch(
-        `/api/auth/me/characters/${character.id}/craft/${selection.familyId}/start`,
-        {
-          method: "POST",
-          credentials: "include",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ tier: selection.tier, count: craftCount }),
-        }
-      );
-      if (!res.ok) {
-        const body = await res.json().catch(() => null);
-        setCraftError(body?.detail ?? "Couldn't craft that - check ingredients, tool, and blueprint.");
-        return;
-      }
-      const data: RawPlayerData = await res.json();
-      // A fresh craft starting means the last one's "Finished: ..." line
-      // (still fading, if the player was quick) is stale news now - clear
-      // it rather than let it linger alongside the new one starting up.
-      if (fadeTimeoutRef.current) clearTimeout(fadeTimeoutRef.current);
-      setLastCraftResult(null);
-      onPlayerDataUpdated?.(data);
-    } catch {
-      setCraftError("Couldn't reach the server.");
-    } finally {
-      setCrafting(false);
-    }
-  };
-
-  // Collects the output of an already-finished craft (server re-checks
-  // activeCraft.readyAt itself - this is only ever called once the local
-  // countdown below has already reached zero, or immediately on mount if
-  // it turns out to already be in the past, e.g. the player closed the tab
-  // mid-craft and came back later).
-  const [finishing, setFinishing] = useState(false);
-  // Keeps the "what just got made" line on screen a while after the
-  // ingredients/tools it's summing up have already been cleared out from
-  // under it - finish_craft's response has already dropped activeCraft by
-  // the time it comes back, so this is captured from the CraftItemRequest
-  // still in scope right before that call, not read back from the result.
-  const [lastCraftResult, setLastCraftResult] = useState<{ name: string; count: number } | null>(null);
-  const fadeTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  useEffect(() => () => {
-    if (fadeTimeoutRef.current) clearTimeout(fadeTimeoutRef.current);
-  }, []);
-  const finishCraft = async () => {
-    if (finishing) return;
-    setFinishing(true);
-    try {
-      const res = await fetch(`/api/auth/me/characters/${character.id}/craft/finish`, {
-        method: "POST",
-        credentials: "include",
-      });
-      if (res.ok) {
-        const data: RawPlayerData = await res.json();
-        if (character.crafting.activeCraft) {
-          setLastCraftResult({
-            name: resolveOutputName(
-              character.crafting.activeCraft.familyId,
-              character.crafting.activeCraft.tier,
-              resourceTierInfo,
-              itemCatalogTierInfo
-            ),
-            count: character.crafting.activeCraft.count,
-          });
-          if (fadeTimeoutRef.current) clearTimeout(fadeTimeoutRef.current);
-          fadeTimeoutRef.current = setTimeout(() => setLastCraftResult(null), CRAFT_RESULT_FADE_MS);
-        }
-        onPlayerDataUpdated?.(data);
-      }
-    } catch {
-      // Next tick's countdown effect will retry - no need to surface this.
-    } finally {
-      setFinishing(false);
-    }
-  };
-
-  // Countdown against character.crafting.activeCraft.readyAt - resolved lazily
-  // (matching backend.players' own "no background job" design), shared
-  // with the soul-slot grid's own compact badge. Unlike that display-only
-  // use, this tab is also responsible for actually collecting the craft:
-  // fires finishCraft the moment the countdown reaches zero, including
-  // immediately on mount if readyAt is already in the past.
-  const remainingSeconds = useCraftCountdown(character.crafting.activeCraft?.readyAt);
-  useEffect(() => {
-    if (remainingSeconds === 0) finishCraft();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [remainingSeconds === 0]);
-
   return (
-    <div className={styles.panel}>
+    <div className={styles.panel} onContextMenu={(e) => e.preventDefault()}>
       {section === "crafting" && (
-        <>
-          {/* Hidden entirely when nothing's cooking - only appears once a
-              craft is actively running (remainingSeconds !== null) and
-              stays up through the "Finished: ..." line's own fade-out
-              (lastCraftResult, cleared by the CRAFT_RESULT_FADE_MS timeout
-              above), rather than sitting empty/idle between crafts. First
-              in the list, ahead of Blueprints Known, when it's showing at
-              all - an in-progress craft is the most relevant thing here. */}
-          {(remainingSeconds !== null || lastCraftResult !== null) && (
-          <div className={styles.accordionItem}>
-            <button className={styles.accordionHeader} onClick={() => toggleSection("character")}>
-              <span>
-                {character.firstName}&apos;s Crafting
-                {remainingSeconds !== null && (
-                  <span className={styles.craftTimer}> {formatRemainingCompactLong(remainingSeconds)}</span>
-                )}
-              </span>
-              <span className={styles.accordionChevron}>{openSections.has("character") ? "▴" : "▾"}</span>
-            </button>
-            {openSections.has("character") && (
-              <div className={styles.accordionBody}>
-                {/* A borrowed instance tool (axe_stone, ...) is a tool in use
-                    too - just rendered in the separate list right below, since
-                    it's not a flat balance. Skip this list entirely (rather
-                    than showing its own empty-state message with padding)
-                    when it has nothing but a borrowed tool already covers the
-                    "using a tool" story - only claim "no tools" when BOTH
-                    lists are actually empty. */}
-                {(ownedIds(character.crafting.tools).length > 0 || borrowedToolIds.length === 0) && (
-                  <IdList
-                    ids={ownedIds(character.crafting.tools)}
-                    emptyLabel="Not currently using any tools."
-                    tierInfo={toolTierInfo}
-                    sortByTier
-                    fixedIcon="🔧"
-                    balances={character.crafting.tools}
-                    // Locked for the crafting duration - whatever start_craft
-                    // staged here isn't the player's to move back out until
-                    // the craft finishes (or the timer runs out and
-                    // finish_craft drains it), same "no check-out either"
-                    // rule these are already subject to.
-                    onTransfer={remainingSeconds === null ? (id, amount) => transfer("tools", id, amount) : undefined}
-                    textColor="#7eb8ff"
-                  />
-                )}
-                {borrowedToolIds.length > 0 && (
-                  <IdList
-                    ids={borrowedToolIds}
-                    emptyLabel=""
-                    tierInfo={itemCatalogTierInfo}
-                    sortByTier
-                    fixedIcon="🔧"
-                    balances={borrowedToolCounts}
-                    quantityHiddenIds={new Set(borrowedToolIds)}
-                    textColor="#7eb8ff"
-                  />
-                )}
-                {(ownedIds(character.crafting.tools).length > 0 || borrowedToolIds.length > 0) && (
-                  <div className={styles.toolsResourceDivider} />
-                )}
-                <ResourceList
-                  balances={character.crafting.resources}
-                  emptyLabel="No materials used."
-                  tierInfo={resourceTierInfo}
-                  onTransfer={remainingSeconds === null ? (id, amount) => transfer("resources", id, amount) : undefined}
-                />
-                {remainingSeconds !== null && character.crafting.activeCraft && (
-                  <>
-                    <div className={styles.craftOutputDivider} />
-                    <p className={styles.craftOutputLine}>
-                      Crafting {character.crafting.activeCraft.count}x{" "}
-                      {resolveOutputName(
-                        character.crafting.activeCraft.familyId,
-                        character.crafting.activeCraft.tier,
-                        resourceTierInfo,
-                        itemCatalogTierInfo
-                      )}
-                    </p>
-                  </>
-                )}
-                {!character.crafting.activeCraft && lastCraftResult && (
-                  <>
-                    <div className={styles.craftOutputDivider} />
-                    <p className={`${styles.craftOutputLine} ${styles.craftResultFading}`}>
-                      Finished: {lastCraftResult.count}x {lastCraftResult.name}
-                    </p>
-                  </>
-                )}
-              </div>
-            )}
-          </div>
-          )}
-
-          {knownBlueprints.length > 0 && (
-            <div className={styles.accordionItem}>
-              <button className={styles.accordionHeader} onClick={() => toggleSection("blueprints")}>
-                <span>{character.firstName}&apos;s Blueprints Known</span>
-                <span className={styles.accordionChevron}>{openSections.has("blueprints") ? "▴" : "▾"}</span>
-              </button>
-              {openSections.has("blueprints") && (
-                <div className={styles.accordionBody}>
-                  <IdList
-                    ids={knownBlueprints}
-                    emptyLabel=""
-                    tierInfo={blueprintTierInfo}
-                    sortByTier
-                    textColor="#7eb8ff"
-                    dividerClassName={styles.toolsResourceDivider}
-                  />
-                </div>
-              )}
-            </div>
-          )}
-
-          <div className={styles.accordionItem}>
-            <button className={styles.accordionHeader} onClick={() => toggleSection("partyTools")}>
-              <span>Party&apos;s Tools</span>
-              <span className={styles.accordionChevron}>{openSections.has("partyTools") ? "▴" : "▾"}</span>
-            </button>
-            {openSections.has("partyTools") && (
-              <div className={styles.accordionBody}>
-                <IdList
-                  ids={ownedIds(playerTools)}
-                  emptyLabel="Nothing in the shared tool pool."
-                  tierInfo={toolTierInfo}
-                  sortByTier
-                  fixedIcon="🔧"
-                  balances={playerTools}
-                  textColor="#7eb8ff"
-                />
-              </div>
-            )}
-          </div>
-
-          <div className={styles.accordionItem}>
-            <button className={styles.accordionHeader} onClick={() => toggleSection("partyResources")}>
-              <span>Party&apos;s Resources</span>
-              <span className={styles.accordionChevron}>{openSections.has("partyResources") ? "▴" : "▾"}</span>
-            </button>
-            {openSections.has("partyResources") && (
-              <div className={styles.accordionBody}>
-                <ResourceList
-                  balances={playerResourceBalances}
-                  emptyLabel="Nothing in the shared crafting stock."
-                  tierInfo={resourceTierInfo}
-                  onTransfer={transferToBackpack}
-                  amounts={RAW_RESOURCE_AMOUNTS}
-                  showInfinity={false}
-                  destinationIcon={BACKPACK_ACTION_ICON}
-                  destinationUnavailableLabel={
-                    !hasBackpackEquipped ? "No backpack equipped" : backpackFull ? "Backpack full" : undefined
-                  }
-                />
-              </div>
-            )}
-          </div>
-
-          <div className={styles.craftRow}>
-            <div className={styles.craftControlsRow}>
-              <div className={styles.craftButtonColumn}>
-                <button
-                  className={
-                    !character.availability.inAdventure && canCraft && remainingSeconds === null
-                      ? `${styles.craftButton} ${styles.craftButtonReady}`
-                      : styles.craftButton
-                  }
-                  onClick={startCraft}
-                  disabled={crafting || !canCraft || remainingSeconds !== null || character.availability.inAdventure}
-                  title={
-                    character.availability.inAdventure
-                      ? `${character.firstName}  and more text incoming here.`
-                      : canCraft && remainingSeconds === null
-                      ? "Selected recipe can be crafted right now"
-                      : undefined
-                  }
-                >
-                  {remainingSeconds !== null ? (
-                    <span className={styles.craftTimer}>Crafting… {formatRemainingCompactLong(remainingSeconds)}</span>
-                  ) : crafting ? (
-                    "Crafting…"
-                  ) : canCraft ? (
-                    <>
-                      Craft
-                      <span className={styles.craftButtonDetail}>
-                        {craftDurationPreview !== null && formatRemainingCompactLong(craftDurationPreview)}
-                        {craftXpPreview && formatXpPreview(craftXpPreview) && `, ${formatXpPreview(craftXpPreview)}`}
-                      </span>
-                    </>
-                  ) : (
-                    "Craft"
-                  )}
-                </button>
-                {character.availability.inAdventure ? (
-                  <span className={styles.craftUnavailable}>{character.firstName} is on the road.</span>
-                ) : (
-                  craftError && <span className={styles.craftError}>{craftError}</span>
-                )}
-              </div>
-              <div className={styles.craftCountRow} role="radiogroup" aria-label="How many to craft">
-                {CRAFT_COUNTS.map((count) => (
-                  <button
-                    key={count}
-                    type="button"
-                    role="radio"
-                    aria-checked={craftCount === count}
-                    className={[
-                      styles.craftCountButton,
-                      craftCount === count ? styles.craftCountButtonActive : "",
-                    ]
-                      .filter(Boolean)
-                      .join(" ")}
-                    disabled={crafting || remainingSeconds !== null || !(craftableCounts[count] ?? false)}
-                    onClick={() => setCraftCount(count)}
-                  >
-                    {count}
-                  </button>
-                ))}
-              </div>
-            </div>
-          </div>
-
-          <div className={styles.accordionItem}>
-            <button className={styles.accordionHeader} onClick={() => setRecipeViewerOpen((prev) => !prev)}>
-              <span>Crafting Recipe Viewer</span>
-              <span className={styles.accordionChevron}>{recipeViewerOpen ? "▴" : "▾"}</span>
-            </button>
-          </div>
-          {recipeViewerOpen && (
-            <iframe
-              ref={recipeViewerRef}
-              src="/craft/recipe-viewer.html?embedded=1"
-              title="Crafting Recipe Viewer"
-              className={styles.recipeViewerFrame}
-              style={{ height: recipeViewerHeight, overflow: "hidden" }}
-              scrolling="no"
-              onLoad={() => {
-                const doc = recipeViewerRef.current?.contentWindow?.document;
-                if (!doc?.body) return;
-                setRecipeViewerHeight(doc.body.scrollHeight);
-                const observer = new ResizeObserver(() => {
-                  setRecipeViewerHeight(doc.body.scrollHeight);
-                });
-                observer.observe(doc.body);
-                setRecipeViewerLoaded(true);
-              }}
-            />
-          )}
-          {recipePopupItemId && itemCatalogTierInfo[recipePopupItemId] && (
-            <ItemDetailPopup
-              info={itemCatalogTierInfo[recipePopupItemId]}
-              fallbackName={formatResourceLabel(recipePopupItemId)}
-              owned={playerItemsCombined[recipePopupItemId] ?? 0}
-              isInstance={false}
-              movable={false}
-              quality={null}
-              moveId={recipePopupItemId}
-              catalogId={recipePopupItemId}
-              source="vault"
-              hasBackpackEquipped={false}
-              hasSaddlepackEquipped={false}
-              characterId={character.id}
-              onPlayerDataUpdated={onPlayerDataUpdated}
-              onClose={() => setRecipePopupItemId(null)}
-            />
-          )}
-        </>
+        <p className={styles.inventoryEmpty}>Tools and resources moved to the vault tab.</p>
       )}
 
       {section === "vault" && (() => {
@@ -5063,7 +4473,7 @@ export function InventoryTab({
         const kindsPresent = kindOrder.filter((k) => kindsInVault.has(k));
         const hasKindFilter = vaultKindFilter.length > 0;
         const hasTierFilter = vaultTierFilter.length > 0;
-        const allActive = !hasKindFilter && !hasTierFilter;
+        const allActive = !hasKindFilter && !hasTierFilter && !vaultSpecialFilter;
         const matchesKind = (info: BlueprintTierInfo[string] | undefined): boolean => {
           if (!info) return false;
           return !!(info.kind && vaultKindFilter.includes(info.kind));
@@ -5082,7 +4492,7 @@ export function InventoryTab({
               vaultSelectMode ? (
                 <div className={styles.selectionBar}>
                   <div className={styles.selectionBarActions}>
-                    {hasBackpackEquipped && (
+                    {!character.availability.inAdventure && hasBackpackEquipped && (
                       <button
                         type="button"
                         className={styles.selectionBarBtn}
@@ -5093,7 +4503,7 @@ export function InventoryTab({
                         <div className={styles.selectionBarIcon} style={{ backgroundImage: `url(${BACKPACK_ACTION_ICON})` }} />
                       </button>
                     )}
-                    {hasSaddlepackEquipped && (
+                    {!character.availability.inAdventure && hasSaddlepackEquipped && (
                       <button
                         type="button"
                         className={styles.selectionBarBtn}
@@ -5102,6 +4512,17 @@ export function InventoryTab({
                         onClick={() => batchMoveVault("saddlepack")}
                       >
                         <div className={styles.selectionBarIcon} style={{ backgroundImage: `url(${SADDLEPACK_ACTION_ICON})` }} />
+                      </button>
+                    )}
+                    {!character.availability.inAdventure && (
+                      <button
+                        type="button"
+                        className={styles.selectionBarBtn}
+                        title="Move to camp"
+                        disabled={vaultBatchBusy || vaultSelectedIds.size === 0}
+                        onClick={() => batchMoveVault("camp")}
+                      >
+                        <div className={styles.selectionBarIcon} style={{ backgroundImage: `url(${CAMP_ACTION_ICON})` }} />
                       </button>
                     )}
                     <div className={styles.selectionBarGap} />
@@ -5125,7 +4546,7 @@ export function InventoryTab({
                     </button>
                   </div>
                   <span className={styles.selectionBarWeight}>
-                    Weight: {selectionWeight(vaultSelectedIds, itemCatalogTierInfo, playerItemsCombined, playerItemLookupIds)}
+                    W: {selectionWeight(vaultSelectedIds, itemCatalogTierInfo, playerItemsCombined, playerItemLookupIds)}
                   </span>
                   <button
                     type="button"
@@ -5138,12 +4559,6 @@ export function InventoryTab({
                 </div>
               ) : (
                 <div className={styles.vaultFilterBar}>
-                  <button
-                    type="button"
-                    className={`${styles.vaultFilterBtn} ${allActive ? styles.vaultFilterBtnActive : ""}`}
-                    onClick={() => { setVaultKindFilter([]); setVaultTierFilter([]); }}
-                    title="All"
-                  >A</button>
                   {kindsPresent.map((kind) => (
                     <button
                       key={kind}
@@ -5153,15 +4568,35 @@ export function InventoryTab({
                       title={kind.replace(/_/g, " ")}
                     >{getKindIcon(kind)}</button>
                   ))}
-                  {[1, 2, 3, 4, 5, 6].map((tier) => (
+                  <div className={styles.vaultFilterGroup}>
                     <button
-                      key={`t${tier}`}
                       type="button"
-                      className={`${styles.vaultFilterBtn} ${styles[`vaultFilterT${tier}` as keyof typeof styles] ?? ""} ${vaultTierFilter.includes(tier) ? styles.vaultFilterBtnActive : ""}`}
-                      onClick={() => toggleTierFilter(tier)}
-                      title={`Tier ${tier}`}
-                    ><span>{getTierIndicator(tier)}</span></button>
-                  ))}
+                      className={`${styles.vaultFilterBtn} ${allActive ? styles.vaultFilterBtnActive : ""}`}
+                      onClick={() => { setVaultKindFilter([]); setVaultTierFilter([]); setVaultSpecialFilter(null); }}
+                      title="All"
+                    >A</button>
+                    {[1, 2, 3, 4, 5, 6].map((tier) => (
+                      <button
+                        key={`t${tier}`}
+                        type="button"
+                        className={`${styles.vaultFilterBtn} ${styles[`vaultFilterT${tier}` as keyof typeof styles] ?? ""} ${vaultTierFilter.includes(tier) ? styles.vaultFilterBtnActive : ""}`}
+                        onClick={() => toggleTierFilter(tier)}
+                        title={`Tier ${tier}`}
+                      ><span>{getTierIndicator(tier)}</span></button>
+                    ))}
+                    <button
+                      type="button"
+                      className={`${styles.vaultFilterBtn} ${styles.vaultFilterBtnTools} ${vaultSpecialFilter === "tools" ? styles.vaultFilterBtnActive : ""}`}
+                      onClick={() => toggleSpecialFilter("tools")}
+                      title="Tools"
+                    >🔧</button>
+                    <button
+                      type="button"
+                      className={`${styles.vaultFilterBtn} ${styles.vaultFilterBtnResources} ${vaultSpecialFilter === "resources" ? styles.vaultFilterBtnActive : ""}`}
+                      onClick={() => toggleSpecialFilter("resources")}
+                      title="Resources"
+                    >🪨</button>
+                  </div>
                 </div>
               )
             )}
@@ -5214,28 +4649,106 @@ export function InventoryTab({
                 </div>
               </div>
             )}
-            <ItemGrid
-              ids={filteredIds}
-              emptyLabel={allActive ? "Nothing crafted yet." : "No items match."}
-              tierInfo={itemCatalogTierInfo}
-              balances={playerItemsCombined}
-              lookupIds={playerItemLookupIds}
-              instanceQuality={playerItemRowQuality}
-              source="vault"
-              hasBackpackEquipped={hasBackpackEquipped}
-              hasSaddlepackEquipped={hasSaddlepackEquipped}
-              hasMountEquipped={hasMountEquipped}
-              hasCompanionEquipped={hasCompanionEquipped}
-              inAdventure={character.availability.inAdventure}
-              characterId={character.id}
-              characterFirstName={character.firstName}
-              onPlayerDataUpdated={onPlayerDataUpdated}
-              selectMode={vaultSelectMode}
-              selectBusy={vaultBatchBusy}
-              selectedIds={vaultSelectedIds}
-              onLongPressItem={enterVaultSelectMode}
-              onToggleSelectItem={toggleVaultSelectItem}
-            />
+            {vaultBatchBusy && (
+              <div className={styles.batchLoadingOverlay}>
+                <div className={styles.batchSpinner} />
+              </div>
+            )}
+            {vaultSpecialFilter === "tools" ? (() => {
+              const toolIds = Object.keys(playerTools).filter((id) => playerTools[id] > 0);
+              const filtered = hasTierFilter
+                ? toolIds.filter((id) => { const t = toolTierInfo[id]?.tier; return t !== undefined && vaultTierFilter.includes(t); })
+                : toolIds;
+              const sorted = [...filtered].sort((a, b) => {
+                const tierDiff = (toolTierInfo[a]?.tier ?? 0) - (toolTierInfo[b]?.tier ?? 0);
+                if (tierDiff !== 0) return tierDiff;
+                return (toolTierInfo[a]?.familyId ?? "").localeCompare(toolTierInfo[b]?.familyId ?? "");
+              });
+              if (sorted.length === 0) return <p className={styles.inventoryEmpty}>No tools owned.</p>;
+              return (
+                <SpecialTileScroll>
+                  {(h) => (
+                    <div className={sorted.length <= Math.floor(h / ITEM_TILE_PX) ? styles.specialTileGridRow : styles.specialTileGrid}>
+                      {sorted.map((id) => {
+                        const info = toolTierInfo[id];
+                        const fullName = info?.name ?? formatResourceLabel(id);
+                        const words = fullName.split(" ");
+                        const shortName = words.length > 1 ? words.slice(1).join(" ") : fullName;
+                        return (
+                          <div key={id} className={`${styles.itemGridCell} ${styles.specialTile}`} title={fullName}>
+                            {!!info?.tier && (
+                              <span className={styles.itemGridTierBadge}>{getTierIndicator(info.tier)}</span>
+                            )}
+                            <span className={styles.specialTileLabel}>{shortName}</span>
+                            <span className={styles.specialTileKindBadge}>{getToolFamilyIcon(info?.familyId ?? "")}</span>
+                            {playerTools[id] > 1 && (
+                              <span className={styles.itemGridCountBadge}>{playerTools[id]}</span>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </SpecialTileScroll>
+              );
+            })() : vaultSpecialFilter === "resources" ? (() => {
+              const resIds = Object.keys(playerResourceBalances).filter((id) => playerResourceBalances[id] > 0);
+              const filtered = hasTierFilter
+                ? resIds.filter((id) => { const t = resourceTierInfo[id]?.tier; return t !== undefined && vaultTierFilter.includes(t); })
+                : resIds;
+              const sorted = [...filtered].sort((a, b) => {
+                const tierDiff = (resourceTierInfo[a]?.tier ?? 0) - (resourceTierInfo[b]?.tier ?? 0);
+                if (tierDiff !== 0) return tierDiff;
+                return (resourceTierInfo[a]?.family ?? "").localeCompare(resourceTierInfo[b]?.family ?? "");
+              });
+              if (sorted.length === 0) return <p className={styles.inventoryEmpty}>No resources owned.</p>;
+              return (
+                <SpecialTileScroll>
+                  {(h) => (
+                    <div className={sorted.length <= Math.floor(h / ITEM_TILE_PX) ? styles.specialTileGridRow : styles.specialTileGrid}>
+                      {sorted.map((id) => {
+                        const info = resourceTierInfo[id];
+                        const fullName = info?.name ?? formatResourceLabel(id);
+                        const words = fullName.split(" ");
+                        const shortName = words.length > 2 ? words.slice(-2).join(" ") : fullName;
+                        return (
+                          <div key={id} className={`${styles.itemGridCell} ${styles.specialTile}`} title={fullName}>
+                            {!!info?.tier && (
+                              <span className={styles.itemGridTierBadge}>{getTierIndicator(info.tier)}</span>
+                            )}
+                            <span className={styles.specialTileLabel}>{shortName}</span>
+                            <span className={styles.itemGridCountBadge}>{playerResourceBalances[id]}</span>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </SpecialTileScroll>
+              );
+            })() : (
+              <ItemGrid
+                ids={filteredIds}
+                emptyLabel={allActive ? "Nothing crafted yet." : "No items match."}
+                tierInfo={itemCatalogTierInfo}
+                balances={playerItemsCombined}
+                lookupIds={playerItemLookupIds}
+                instanceQuality={playerItemRowQuality}
+                source="vault"
+                hasBackpackEquipped={hasBackpackEquipped}
+                hasSaddlepackEquipped={hasSaddlepackEquipped}
+                hasMountEquipped={hasMountEquipped}
+                hasCompanionEquipped={hasCompanionEquipped}
+                inAdventure={character.availability.inAdventure}
+                characterId={character.id}
+                characterFirstName={character.firstName}
+                onPlayerDataUpdated={onPlayerDataUpdated}
+                selectMode={vaultSelectMode}
+                selectBusy={vaultBatchBusy}
+                selectedIds={vaultSelectedIds}
+                onLongPressItem={enterVaultSelectMode}
+                onToggleSelectItem={toggleVaultSelectItem}
+              />
+            )}
           </>
         );
       })()}

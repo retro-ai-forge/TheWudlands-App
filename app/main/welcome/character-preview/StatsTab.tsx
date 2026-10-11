@@ -2,10 +2,21 @@ import styles from "./CharacterTabs.module.css";
 import { getPortraitCropImgStyle } from "@/app/lib/portraitCrop";
 import { RACES, PROFESSIONS, BIRTHSIGNS, PROFESSION_RESOURCE_FAMILIES } from "@/app/lib/characterOptions";
 import { getDisplayedAge } from "@/app/lib/ageScaling";
-import { useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { formatRemainingCompactLong, useCraftCountdown } from "../craftTimer";
 import type { SlotCharacterSummary } from "../SoulSlotGrid";
-import type { RawPlayerData } from "./InventoryTab";
+import type { ItemInstance } from "../SoulSlotGrid";
+import {
+  IdList,
+  ResourceList,
+  ItemDetailPopup,
+  ownedIds,
+  resolveOutputName,
+  formatResourceLabel,
+  formatXpPreview,
+  CRAFT_RESULT_FADE_MS,
+} from "./InventoryTab";
+import type { BlueprintTierInfo, ResourceTierInfo, RawPlayerData } from "./InventoryTab";
 
 import baseLevelsData from "../../../../backend/data/base-levels.json";
 const XP_LEVELS = baseLevelsData.levels;
@@ -39,9 +50,6 @@ function professionDescription(id: string): string {
   return PROFESSIONS.find((p) => p.id === id)?.description ?? "";
 }
 
-// The profession's raw-material resource families (e.g. blacksmith ->
-// ["ore","wood","sand"]), formatted as a display caption - "Ore, Wood,
-// Sand". Empty for a blank/"none" profession slot.
 function professionResourceFamilies(id: string): string {
   if (!id || id === "none") return "";
   const category = PROFESSIONS.find((p) => p.id === id)?.category;
@@ -56,9 +64,6 @@ function birthsignName(id: string): string {
   return BIRTHSIGNS.find((b) => b.id === id)?.name ?? id;
 }
 
-// Sum of a group's 4 attributes - the full/base total. Shown as X/Y where Y
-// is always this full sum; X (current) has no separate temporary-stat pool
-// yet, so it's the same value until that system exists.
 function sumAttrs(
   keys: readonly (readonly [keyof SlotCharacterSummary["attr"], string])[],
   attr: SlotCharacterSummary["attr"]
@@ -66,41 +71,366 @@ function sumAttrs(
   return keys.reduce((total, [key]) => total + attr[key], 0);
 }
 
+const CRAFT_COUNTS = [1, 2, 3, 4, 5, 10, 20, 25, 50] as const;
+
+type RecipeViewerWindow = Window & {
+  getCurrentSelection?: () => { familyId: string; tier: number } | null;
+  isCurrentSelectionCraftable?: (count?: number) => boolean;
+  getCurrentSelectionXp?: (count?: number) => { rawXp: Record<string, number>; finalXp: number } | null;
+  getCurrentSelectionDuration?: (count?: number) => number | null;
+};
+
 /** Preview page: face portrait, identity, and the full attribute/profession sheet. */
 export function StatsTab({
   character,
   onEditPortrait,
   onOpenBirthsign,
   onPlayerDataUpdated,
+  playerResourceBalances,
+  playerTools,
+  playerItemBalances,
+  playerItems,
 }: {
   character: SlotCharacterSummary;
   onEditPortrait?: () => void;
   onOpenBirthsign?: () => void;
-  /** Called with the fresh roster/vault/pool after setting the prime profession. */
   onPlayerDataUpdated?: (data: RawPlayerData) => void;
+  playerResourceBalances: Record<string, number>;
+  playerTools: Record<string, number>;
+  playerItemBalances: Record<string, number>;
+  playerItems: ItemInstance[];
 }) {
   const birthsignInfo = BIRTHSIGNS.find((b) => b.id === character.birthsign) ?? null;
 
-  // This row reflects whatever's currently keeping this character busy -
-  // a craft timer (Character.activeCraft) or being out on a story
-  // (Character.availability.inAdventure), so the label reads "Crafting"
-  // with a countdown, "ON THE ROAD" while away, or falls back to "Ready"/
-  // "now" once neither applies. Backend.players.set_in_adventure/
-  // start_craft now enforce these as mutually exclusive (a crafting
-  // character can't start a story and vice versa), so in practice at
-  // most one of craftRemainingSeconds/inAdventure is ever true - checked
-  // in that order below only as a display-side tiebreak, not because
-  // both are expected simultaneously. A craft still counts as "running"
-  // right up through the moment its timer hits 0 (uncollected results
-  // don't block anything - see InventoryTab's own "Ready"/0:00 handling)
-  // - 0 is falsy, so it already falls through below without a separate
-  // check.
   const craftRemainingSeconds = useCraftCountdown(character.crafting.activeCraft?.readyAt);
   const inAdventure = character.availability.inAdventure;
 
-  // The sole slot ("prof1"|"prof2"|"prof3") that receives final-item
-  // assembly-bonus XP on finishing a blueprint-gated item - player-chosen
-  // by clicking a profession row below, persisted on the character.
+  const [blueprintTierInfo, setBlueprintTierInfo] = useState<BlueprintTierInfo>({});
+  const [blueprintsOpen, setBlueprintsOpen] = useState(false);
+
+  const [resourceTierInfo, setResourceTierInfo] = useState<ResourceTierInfo>({});
+  const [toolTierInfo, setToolTierInfo] = useState<BlueprintTierInfo>({});
+  const [itemCatalogTierInfo, setItemCatalogTierInfo] = useState<BlueprintTierInfo>({});
+
+  useEffect(() => {
+    fetch("/api/auth/blueprint-categories")
+      .then((res) => (res.ok ? res.json() : []))
+      .then((data: { families: { familyId: string; kind: string; items: { id: string; name: string; tier: number }[] }[] }[]) => {
+        const info: BlueprintTierInfo = {};
+        for (const entry of data) {
+          for (const family of entry.families) {
+            for (const item of family.items) {
+              info[item.id] = { tier: item.tier, familyId: family.familyId, kind: family.kind, name: item.name };
+            }
+          }
+        }
+        setBlueprintTierInfo(info);
+      })
+      .catch(() => setBlueprintTierInfo({}));
+
+    fetch("/api/auth/resource-catalog")
+      .then((res) => (res.ok ? res.json() : []))
+      .then(
+        (
+          data: Array<{
+            id: string;
+            name: string;
+            familyId: string;
+            tier: number;
+            resourceFamily: string;
+            category: "raw" | "processed";
+            icon?: string | null;
+          }>
+        ) => {
+          const tierMap: ResourceTierInfo = {};
+          for (const item of data) {
+            tierMap[item.id] = {
+              tier: item.tier,
+              family: item.resourceFamily,
+              category: item.category,
+              name: item.name,
+              icon: item.icon ?? undefined,
+            };
+          }
+          setResourceTierInfo(tierMap);
+        }
+      )
+      .catch(() => setResourceTierInfo({}));
+
+    fetch("/api/auth/tool-catalog")
+      .then((res) => (res.ok ? res.json() : []))
+      .then((data: Array<{ id: string; familyId: string; tier: number }>) => {
+        const tierMap: BlueprintTierInfo = {};
+        for (const item of data) {
+          tierMap[item.id] = { tier: item.tier, familyId: item.familyId, kind: "tool" };
+        }
+        setToolTierInfo(tierMap);
+      })
+      .catch(() => setToolTierInfo({}));
+
+    fetch("/api/auth/item-catalog")
+      .then((res) => (res.ok ? res.json() : []))
+      .then(
+        (
+          data: Array<{
+            id: string;
+            name: string;
+            familyId: string;
+            tier: number;
+            kind: string[];
+            qualityMax: number | null;
+            armorClass: number | null;
+            icon: string;
+            stackSize: number;
+            description: string;
+            sizeClass: string;
+            equipSlots: string[][];
+            backpackable: boolean;
+            gatheringBonuses: string[];
+            capacitySlots: number;
+            carryCapacity: number;
+          }>
+        ) => {
+          const tierMap: BlueprintTierInfo = {};
+          for (const item of data) {
+            tierMap[item.id] = {
+              tier: item.tier,
+              familyId: item.familyId,
+              kind: item.kind[0] ?? "",
+              name: item.name,
+              qualityMax: item.qualityMax,
+              armorClass: item.armorClass,
+              icon: item.icon,
+              stackSize: item.stackSize,
+              description: item.description,
+              sizeClass: item.sizeClass,
+              equipSlots: item.equipSlots,
+              backpackable: item.backpackable,
+              gatheringBonuses: item.gatheringBonuses,
+              capacitySlots: item.capacitySlots,
+              carryCapacity: item.carryCapacity,
+            };
+          }
+          setItemCatalogTierInfo(tierMap);
+        }
+      )
+      .catch(() => setItemCatalogTierInfo({}));
+  }, []);
+
+  // --- Crafting state ---
+
+  const transfer = async (
+    kind: "resources" | "tools",
+    id: string,
+    amount: number
+  ): Promise<boolean> => {
+    try {
+      const res = await fetch(
+        `/api/auth/me/characters/${character.id}/${kind}/${id}/check-in`,
+        {
+          method: "POST",
+          credentials: "include",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ amount }),
+        }
+      );
+      if (!res.ok) return false;
+      const data: RawPlayerData = await res.json();
+      onPlayerDataUpdated?.(data);
+      return true;
+    } catch {
+      return false;
+    }
+  };
+
+  const knownBlueprints = character.blueprints;
+
+  const ownedTools = useMemo(() => {
+    const tools = ownedIds(playerTools);
+    for (const instance of character.gear.items) {
+      if (instance.location === "backpack" || instance.location === "body") {
+        tools.push(instance.itemId);
+      }
+    }
+    return tools;
+  }, [playerTools, character.gear.items]);
+
+  const vaultToolInstanceIds = useMemo(
+    () => playerItems.filter((instance) => instance.location === "pool").map((instance) => instance.itemId),
+    [playerItems]
+  );
+
+  const borrowedToolIds: string[] = [];
+  const borrowedToolCounts: Record<string, number> = {};
+  for (const instance of character.gear.items) {
+    if (instance.location === "crafting") {
+      if (!(instance.itemId in borrowedToolCounts)) borrowedToolIds.push(instance.itemId);
+      borrowedToolCounts[instance.itemId] = (borrowedToolCounts[instance.itemId] ?? 0) + 1;
+    }
+  }
+
+  const playerItemsCombined = useMemo(() => {
+    const rowBalances: Record<string, number> = {};
+    for (const instance of playerItems) {
+      rowBalances[instance.instanceId] = 1;
+    }
+    return { ...playerItemBalances, ...rowBalances };
+  }, [playerItems, playerItemBalances]);
+
+  const [craftingAccordionOpen, setCraftingAccordionOpen] = useState(false);
+
+  const [recipeViewerOpen, setRecipeViewerOpen] = useState(false);
+  const [recipeViewerHeight, setRecipeViewerHeight] = useState(600);
+  const recipeViewerRef = useRef<HTMLIFrameElement>(null);
+  const [recipeViewerLoaded, setRecipeViewerLoaded] = useState(false);
+
+  const getRecipeViewerWindow = () =>
+    recipeViewerRef.current?.contentWindow as RecipeViewerWindow | null | undefined;
+
+  const [craftCount, setCraftCount] = useState<number>(1);
+  const [craftableCounts, setCraftableCounts] = useState<Record<number, boolean>>({});
+  const [craftXpPreview, setCraftXpPreview] = useState<{ rawXp: Record<string, number>; finalXp: number } | null>(null);
+  const [craftDurationPreview, setCraftDurationPreview] = useState<number | null>(null);
+
+  useEffect(() => {
+    if (!recipeViewerOpen) {
+      setCraftableCounts({});
+      setCraftXpPreview(null);
+      setCraftDurationPreview(null);
+      setRecipeViewerLoaded(false);
+      return;
+    }
+    const check = () => {
+      const win = getRecipeViewerWindow();
+      const next: Record<number, boolean> = {};
+      for (const count of CRAFT_COUNTS) {
+        next[count] = win?.isCurrentSelectionCraftable?.(count) ?? false;
+      }
+      setCraftableCounts(next);
+      setCraftXpPreview(win?.getCurrentSelectionXp?.(craftCount) ?? null);
+      setCraftDurationPreview(win?.getCurrentSelectionDuration?.(craftCount) ?? null);
+    };
+    check();
+    const interval = setInterval(check, 500);
+    return () => clearInterval(interval);
+  }, [recipeViewerOpen, playerResourceBalances, playerItemBalances, playerTools, knownBlueprints, craftCount]);
+
+  useEffect(() => {
+    if (!recipeViewerLoaded) return;
+    recipeViewerRef.current?.contentWindow?.postMessage(
+      {
+        type: "recipe-viewer:update",
+        inv: playerResourceBalances,
+        itemBalances: playerItemBalances,
+        tools: ownedTools,
+        vaultTools: vaultToolInstanceIds,
+        blueprints: knownBlueprints,
+      },
+      window.location.origin
+    );
+  }, [recipeViewerLoaded, playerResourceBalances, playerItemBalances, ownedTools, vaultToolInstanceIds, knownBlueprints]);
+
+  const [recipePopupItemId, setRecipePopupItemId] = useState<string | null>(null);
+  useEffect(() => {
+    const handler = (e: MessageEvent) => {
+      if (e.data?.type === "recipe-viewer:show-item" && typeof e.data.itemId === "string") {
+        setRecipePopupItemId(e.data.itemId);
+      }
+    };
+    window.addEventListener("message", handler);
+    return () => window.removeEventListener("message", handler);
+  }, []);
+
+  const canCraft = craftableCounts[craftCount] ?? false;
+  const [crafting, setCrafting] = useState(false);
+  const [craftError, setCraftError] = useState<string | null>(null);
+
+  const startCraft = async () => {
+    const win = getRecipeViewerWindow();
+    const selection = win?.getCurrentSelection?.();
+    if (!selection) {
+      setCraftError("Pick a recipe in the viewer first.");
+      return;
+    }
+    if (!(win?.isCurrentSelectionCraftable?.(craftCount) ?? false)) {
+      setCraftError("Couldn&apos;t craft that - check ingredients, tool, and blueprint.");
+      return;
+    }
+    setCrafting(true);
+    setCraftError(null);
+    try {
+      const res = await fetch(
+        `/api/auth/me/characters/${character.id}/craft/${selection.familyId}/start`,
+        {
+          method: "POST",
+          credentials: "include",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ tier: selection.tier, count: craftCount }),
+        }
+      );
+      if (!res.ok) {
+        const body = await res.json().catch(() => null);
+        setCraftError(body?.detail ?? "Couldn&apos;t craft that - check ingredients, tool, and blueprint.");
+        return;
+      }
+      const data: RawPlayerData = await res.json();
+      if (fadeTimeoutRef.current) clearTimeout(fadeTimeoutRef.current);
+      setLastCraftResult(null);
+      onPlayerDataUpdated?.(data);
+    } catch {
+      setCraftError("Couldn&apos;t reach the server.");
+    } finally {
+      setCrafting(false);
+    }
+  };
+
+  const [finishing, setFinishing] = useState(false);
+  const [lastCraftResult, setLastCraftResult] = useState<{ name: string; count: number } | null>(null);
+  const fadeTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  useEffect(() => () => {
+    if (fadeTimeoutRef.current) clearTimeout(fadeTimeoutRef.current);
+  }, []);
+
+  const finishCraft = async () => {
+    if (finishing) return;
+    setFinishing(true);
+    try {
+      const res = await fetch(`/api/auth/me/characters/${character.id}/craft/finish`, {
+        method: "POST",
+        credentials: "include",
+      });
+      if (res.ok) {
+        const data: RawPlayerData = await res.json();
+        if (character.crafting.activeCraft) {
+          setLastCraftResult({
+            name: resolveOutputName(
+              character.crafting.activeCraft.familyId,
+              character.crafting.activeCraft.tier,
+              resourceTierInfo,
+              itemCatalogTierInfo
+            ),
+            count: character.crafting.activeCraft.count,
+          });
+          if (fadeTimeoutRef.current) clearTimeout(fadeTimeoutRef.current);
+          fadeTimeoutRef.current = setTimeout(() => setLastCraftResult(null), CRAFT_RESULT_FADE_MS);
+        }
+        onPlayerDataUpdated?.(data);
+      }
+    } catch {
+      // Next tick's countdown effect will retry.
+    } finally {
+      setFinishing(false);
+    }
+  };
+
+  const remainingSeconds = useCraftCountdown(character.crafting.activeCraft?.readyAt);
+  useEffect(() => {
+    if (remainingSeconds === 0) finishCraft();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [remainingSeconds === 0]);
+
+  // --- Profession / prime state ---
+
   const [settingPrime, setSettingPrime] = useState(false);
   const [xpOverlay, setXpOverlay] = useState<{
     slot: "prof1" | "prof2" | "prof3";
@@ -161,10 +491,6 @@ export function StatsTab({
     }
   };
 
-  // Matches backend.players.finish_craft's own default: "prof1" until the
-  // player has ever explicitly picked a prime profession, so the Stats
-  // page shows the same slot as prime that's actually earning the
-  // assembly-bonus XP, not a blank state that doesn't match reality.
   const effectivePrime = ["prof1", "prof2", "prof3"].includes(character.profession.prime)
     ? character.profession.prime
     : "prof1";
@@ -198,8 +524,6 @@ export function StatsTab({
     ]
       .filter((p) => p.name)
       .map((p) => ({ ...p, isPrime: p.slot === effectivePrime }))
-      // The prime profession (if any) always sorts to the top - clicking a
-      // row to make it prime visibly promotes it, not just marks it.
       .sort((a, b) => (a.isPrime === b.isPrime ? 0 : a.isPrime ? -1 : 1))
   );
 
@@ -384,6 +708,212 @@ export function StatsTab({
               ))}
             </div>
           ) : null}
+
+          {character.blueprints.length > 0 && (
+            <div className={`${styles.accordionItem} ${styles.accordionItemWide}`}>
+              <button className={styles.accordionHeader} onClick={() => setBlueprintsOpen(!blueprintsOpen)}>
+                <span>{character.firstName}&apos;s Blueprints Known</span>
+                <span className={styles.accordionChevron}>{blueprintsOpen ? "▴" : "▾"}</span>
+              </button>
+              {blueprintsOpen && (
+                <div className={styles.accordionBody}>
+                  <IdList
+                    ids={character.blueprints}
+                    emptyLabel=""
+                    tierInfo={blueprintTierInfo}
+                    sortByTier
+                    textColor="#7eb8ff"
+                    dividerClassName={styles.toolsResourceDivider}
+                  />
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* --- Character's Crafting accordion (active craft timer + borrowed tools/resources) --- */}
+          {(remainingSeconds !== null || lastCraftResult !== null) && (
+          <div className={styles.accordionItem}>
+            <button className={styles.accordionHeader} onClick={() => setCraftingAccordionOpen(!craftingAccordionOpen)}>
+              <span>
+                {character.firstName}&apos;s Crafting
+                {remainingSeconds !== null && (
+                  <span className={styles.craftTimer}> {formatRemainingCompactLong(remainingSeconds)}</span>
+                )}
+              </span>
+              <span className={styles.accordionChevron}>{craftingAccordionOpen ? "▴" : "▾"}</span>
+            </button>
+            {craftingAccordionOpen && (
+              <div className={styles.accordionBody}>
+                {(ownedIds(character.crafting.tools).length > 0 || borrowedToolIds.length === 0) && (
+                  <IdList
+                    ids={ownedIds(character.crafting.tools)}
+                    emptyLabel="Not currently using any tools."
+                    tierInfo={toolTierInfo}
+                    sortByTier
+                    fixedIcon="🔧"
+                    balances={character.crafting.tools}
+                    onTransfer={remainingSeconds === null ? (id, amount) => transfer("tools", id, amount) : undefined}
+                    textColor="#7eb8ff"
+                  />
+                )}
+                {borrowedToolIds.length > 0 && (
+                  <IdList
+                    ids={borrowedToolIds}
+                    emptyLabel=""
+                    tierInfo={itemCatalogTierInfo}
+                    sortByTier
+                    fixedIcon="🔧"
+                    balances={borrowedToolCounts}
+                    quantityHiddenIds={new Set(borrowedToolIds)}
+                    textColor="#7eb8ff"
+                  />
+                )}
+                {(ownedIds(character.crafting.tools).length > 0 || borrowedToolIds.length > 0) && (
+                  <div className={styles.toolsResourceDivider} />
+                )}
+                <ResourceList
+                  balances={character.crafting.resources}
+                  emptyLabel="No materials used."
+                  tierInfo={resourceTierInfo}
+                  onTransfer={remainingSeconds === null ? (id, amount) => transfer("resources", id, amount) : undefined}
+                />
+                {remainingSeconds !== null && character.crafting.activeCraft && (
+                  <>
+                    <div className={styles.craftOutputDivider} />
+                    <p className={styles.craftOutputLine}>
+                      Crafting {character.crafting.activeCraft.count}x{" "}
+                      {resolveOutputName(
+                        character.crafting.activeCraft.familyId,
+                        character.crafting.activeCraft.tier,
+                        resourceTierInfo,
+                        itemCatalogTierInfo
+                      )}
+                    </p>
+                  </>
+                )}
+                {!character.crafting.activeCraft && lastCraftResult && (
+                  <>
+                    <div className={styles.craftOutputDivider} />
+                    <p className={`${styles.craftOutputLine} ${styles.craftResultFading}`}>
+                      Finished: {lastCraftResult.count}x {lastCraftResult.name}
+                    </p>
+                  </>
+                )}
+              </div>
+            )}
+          </div>
+          )}
+
+          {/* --- Craft button + count selector --- */}
+          <div className={styles.craftRow}>
+            <div className={styles.craftControlsRow}>
+              <div className={styles.craftButtonColumn}>
+                <button
+                  className={
+                    !character.availability.inAdventure && canCraft && remainingSeconds === null
+                      ? `${styles.craftButton} ${styles.craftButtonReady}`
+                      : styles.craftButton
+                  }
+                  onClick={startCraft}
+                  disabled={crafting || !canCraft || remainingSeconds !== null || character.availability.inAdventure}
+                  title={
+                    character.availability.inAdventure
+                      ? `${character.firstName} is on the road.`
+                      : canCraft && remainingSeconds === null
+                      ? "Selected recipe can be crafted right now"
+                      : undefined
+                  }
+                >
+                  {remainingSeconds !== null ? (
+                    <span className={styles.craftTimer}>Crafting… {formatRemainingCompactLong(remainingSeconds)}</span>
+                  ) : crafting ? (
+                    "Crafting…"
+                  ) : canCraft ? (
+                    <>
+                      Craft
+                      <span className={styles.craftButtonDetail}>
+                        {craftDurationPreview !== null && formatRemainingCompactLong(craftDurationPreview)}
+                        {craftXpPreview && formatXpPreview(craftXpPreview) && `, ${formatXpPreview(craftXpPreview)}`}
+                      </span>
+                    </>
+                  ) : (
+                    "Craft"
+                  )}
+                </button>
+                {character.availability.inAdventure ? (
+                  <span className={styles.craftUnavailable}>{character.firstName} is on the road.</span>
+                ) : (
+                  craftError && <span className={styles.craftError}>{craftError}</span>
+                )}
+              </div>
+              <div className={styles.craftCountRow} role="radiogroup" aria-label="How many to craft">
+                {CRAFT_COUNTS.map((count) => (
+                  <button
+                    key={count}
+                    type="button"
+                    role="radio"
+                    aria-checked={craftCount === count}
+                    className={[
+                      styles.craftCountButton,
+                      craftCount === count ? styles.craftCountButtonActive : "",
+                    ]
+                      .filter(Boolean)
+                      .join(" ")}
+                    disabled={crafting || remainingSeconds !== null || !(craftableCounts[count] ?? false)}
+                    onClick={() => setCraftCount(count)}
+                  >
+                    {count}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {/* --- Crafting Recipe Viewer --- */}
+          <div className={`${styles.accordionItem} ${styles.accordionItemWide}`} style={recipeViewerOpen ? { marginBottom: 0, borderBottom: "none" } : undefined}>
+            <button className={styles.accordionHeader} onClick={() => setRecipeViewerOpen((prev) => !prev)}>
+              <span>Crafting Recipe Viewer</span>
+              <span className={styles.accordionChevron}>{recipeViewerOpen ? "▴" : "▾"}</span>
+            </button>
+          </div>
+          {recipeViewerOpen && (
+            <iframe
+              ref={recipeViewerRef}
+              src="/craft/recipe-viewer.html?embedded=1"
+              title="Crafting Recipe Viewer"
+              className={styles.recipeViewerFrame}
+              style={{ height: recipeViewerHeight, overflow: "hidden" }}
+              scrolling="no"
+              onLoad={() => {
+                const doc = recipeViewerRef.current?.contentWindow?.document;
+                if (!doc?.body) return;
+                setRecipeViewerHeight(doc.body.scrollHeight);
+                const observer = new ResizeObserver(() => {
+                  setRecipeViewerHeight(doc.body.scrollHeight);
+                });
+                observer.observe(doc.body);
+                setRecipeViewerLoaded(true);
+              }}
+            />
+          )}
+          {recipePopupItemId && itemCatalogTierInfo[recipePopupItemId] && (
+            <ItemDetailPopup
+              info={itemCatalogTierInfo[recipePopupItemId]}
+              fallbackName={formatResourceLabel(recipePopupItemId)}
+              owned={playerItemsCombined[recipePopupItemId] ?? 0}
+              isInstance={false}
+              movable={false}
+              quality={null}
+              moveId={recipePopupItemId}
+              catalogId={recipePopupItemId}
+              source="vault"
+              hasBackpackEquipped={false}
+              hasSaddlepackEquipped={false}
+              characterId={character.id}
+              onPlayerDataUpdated={onPlayerDataUpdated}
+              onClose={() => setRecipePopupItemId(null)}
+            />
+          )}
 
           <div className={styles.carryCapacitySection}>
             <button
