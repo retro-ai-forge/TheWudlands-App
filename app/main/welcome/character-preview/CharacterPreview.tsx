@@ -103,7 +103,7 @@ export function CharacterPreview({
   // position would leave the name/tab-strip cut off above the fold with
   // no way back up. Snap to the top the moment Vault becomes active.
   useEffect(() => {
-    if (showCamp || activeTab === "inventory") {
+    if (showCamp || activeTab === "inventory" || activeTab === "crafting") {
       wizardScrollRef.current?.scrollTo(0, 0);
     }
   }, [activeTab, showCamp]);
@@ -246,7 +246,7 @@ export function CharacterPreview({
   return (
     <div
       className={`${styles.wizard} ${
-        showCamp || activeTab === "inventory" ? "" : styles.wizardScrollable
+        showCamp || activeTab === "inventory" || activeTab === "crafting" ? "" : styles.wizardScrollable
       }`}
       ref={wizardScrollRef}
       onScroll={checkScrolledToEnd}
@@ -345,7 +345,7 @@ export function CharacterPreview({
           {activeTab === "body" && (
             <BodyTab character={character} onPlayerDataUpdated={onPlayerDataUpdated} onOpenCamp={() => setShowCamp(true)} />
           )}
-          {activeTab === "crafting" && (
+          <div style={activeTab === "crafting" ? undefined : { display: "none" }}>
             <InventoryTab
               character={character}
               playerResourceBalances={playerResourceBalances}
@@ -355,7 +355,7 @@ export function CharacterPreview({
               onPlayerDataUpdated={onPlayerDataUpdated}
               section="vault"
             />
-          )}
+          </div>
           {activeTab === "adventure" && (
             <AdventureTab character={character} onPlayerDataUpdated={onPlayerDataUpdated} />
           )}

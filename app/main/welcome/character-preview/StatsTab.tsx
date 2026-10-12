@@ -919,7 +919,6 @@ export function StatsTab({
               movable={false}
               quality={null}
               moveId={recipePopupItemId}
-              catalogId={recipePopupItemId}
               source="vault"
               hasBackpackEquipped={false}
               hasSaddlepackEquipped={false}

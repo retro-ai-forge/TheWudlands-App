@@ -111,6 +111,9 @@ function EquipSlotIcon({
           style={{ backgroundColor: qualityBarColor(qualityFraction) }}
         />
       )}
+      {instance.quantity != null && instance.quantity > 1 && (
+        <span className={styles.equipSlotQuantity}>{instance.quantity}</span>
+      )}
     </div>
   );
 }
@@ -648,12 +651,11 @@ export function BodyTab({
         <ItemDetailPopup
           info={catalog[selectedInstance.itemId]}
           fallbackName={selectedInstance.familyId}
-          owned={1}
+          owned={selectedInstance.quantity ?? 1}
           isInstance
           movable
           quality={selectedInstance.quality}
           moveId={selectedInstance.instanceId}
-          catalogId={selectedInstance.itemId}
           location="body"
           source="character"
           hasBackpackEquipped={hasBackpackEquipped}

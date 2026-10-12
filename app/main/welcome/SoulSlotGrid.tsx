@@ -101,6 +101,7 @@ export type ItemInstance = {
   location: string;
   slotRef: string[];
   createdAt: string;
+  quantity?: number;
 };
 
 export interface SlotCharacterSummary {

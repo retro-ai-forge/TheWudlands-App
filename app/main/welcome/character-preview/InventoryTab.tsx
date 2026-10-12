@@ -825,7 +825,7 @@ function SpecialTileScroll({ children }: { children: (gridHeight: number) => Rea
   useEffect(() => {
     const measure = () => {
       const el = scrollRef.current;
-      if (!el) return;
+      if (!el || el.offsetParent === null) return;
       const footer = document.querySelector('[data-role="character-preview-topbar"]');
       const footerHeight = footer ? footer.getBoundingClientRect().height : 0;
       const available =
@@ -834,7 +834,16 @@ function SpecialTileScroll({ children }: { children: (gridHeight: number) => Rea
     };
     measure();
     window.addEventListener("resize", measure);
-    return () => window.removeEventListener("resize", measure);
+    const el = scrollRef.current;
+    let ro: ResizeObserver | undefined;
+    if (el) {
+      ro = new ResizeObserver(measure);
+      ro.observe(el);
+    }
+    return () => {
+      window.removeEventListener("resize", measure);
+      ro?.disconnect();
+    };
   }, []);
   return (
     <div ref={scrollRef} className={styles.itemGridScroll} style={{ height: gridHeight }}>
@@ -1006,18 +1015,7 @@ export function ItemGrid({
   useEffect(() => {
     const measure = () => {
       const el = scrollRef.current;
-      if (!el) return;
-      // The page's own fixed bottom icon bar (see CharacterTabs.module.css's
-      // .topBar, position: fixed; bottom: 0) sits on top of whatever's
-      // scrolled underneath it - window.innerHeight alone doesn't know
-      // about it, so a row of icons could otherwise land partly hidden
-      // behind it. Measured live (rather than a hardcoded guess) since its
-      // own height already flexes with viewport width (.tabIcon's clamp()
-      // sizing). Falls back to 0, not a guessed reserve, when it's not in
-      // the DOM - CharacterPreview.tsx now genuinely removes it while
-      // CampView is open (its own exit.webp replaces it there), so "not
-      // found" means "there's really nothing to reserve space for", not
-      // "measure this before it's mounted yet".
+      if (!el || el.offsetParent === null) return;
       const footer = document.querySelector('[data-role="character-preview-topbar"]');
       const footerHeight = footer ? footer.getBoundingClientRect().height : 0;
       const available =
@@ -1026,7 +1024,16 @@ export function ItemGrid({
     };
     measure();
     window.addEventListener("resize", measure);
-    return () => window.removeEventListener("resize", measure);
+    const el = scrollRef.current;
+    let ro: ResizeObserver | undefined;
+    if (el) {
+      ro = new ResizeObserver(measure);
+      ro.observe(el);
+    }
+    return () => {
+      window.removeEventListener("resize", measure);
+      ro?.disconnect();
+    };
   }, [reserveBottomPx]);
 
   // The clicked tile's own row id (not its lookupIds-resolved concrete id -
@@ -1302,7 +1309,6 @@ export function ItemGrid({
           movable={!nonMovableIds?.has(selectedId)}
           quality={instanceQuality?.[selectedId] ?? null}
           moveId={selectedId}
-          catalogId={lookupIds?.[selectedId] ?? selectedId}
           location={instanceLocations?.[selectedId]}
           source={source}
           hasBackpackEquipped={hasBackpackEquipped}
@@ -1352,7 +1358,6 @@ export const VAULT_ACTION_ICON = "/images/character/vault.png";
 const CAMP_ACTION_ICON = "/images/character/camp.png";
 export const CART_ACTION_ICON = "/images/items/cart_t1.png";
 
-const QUANTITY_OPTIONS = [1, 2, 5, 10] as const;
 
 // No dedicated hand icon asset exists - a plain emoji glyph fits the same
 // convention every other icon in this file already uses (getKindIcon's
@@ -1386,9 +1391,6 @@ export async function postJson(url: string, body?: object): Promise<PostJsonResu
   return { ok: true, data: await res.json() };
 }
 
-// How long the destroy control must be held before it actually fires -
-// long enough that it can't be triggered by a stray tap, matching the
-// weight of "for good" (see ItemDetailPopup's showDestroy view).
 const DESTROY_HOLD_MS = 1000;
 
 // The fill's own solid color at hold-progress `t` (0-1) - gold deepening
@@ -1833,6 +1835,8 @@ function transferFailureMessage(detail: string | null): string {
   if (detail.startsWith("You already have a ")) return detail;
   if (detail === "Equip a mount first") return detail;
   if (detail === "Equip a companion first") return detail;
+  if (detail === "Stackable items cannot be equipped") return detail;
+  if (detail === "No matching instance on that character, or slot(s) occupied") return "Slot already occupied.";
   if (detail === "Character is out on an adventure - no reaching the shared vault") {
     return "Out on an adventure - the shared vault isn't reachable.";
   }
@@ -2005,6 +2009,10 @@ function PackedItemsRow({
   resourceTierInfo,
   hasBackpackEquipped,
   hasSaddlepackEquipped,
+  hasMountEquipped = false,
+  hasCompanionEquipped = false,
+  cartCapacity,
+  cartSlotsUsed,
   inAdventure,
   characterId,
   onPlayerDataUpdated,
@@ -2027,6 +2035,10 @@ function PackedItemsRow({
   resourceTierInfo: ResourceTierInfo;
   hasBackpackEquipped: boolean;
   hasSaddlepackEquipped: boolean;
+  hasMountEquipped?: boolean;
+  hasCompanionEquipped?: boolean;
+  cartCapacity?: number;
+  cartSlotsUsed?: number;
   inAdventure: boolean;
   characterId: string;
   onPlayerDataUpdated?: (data: RawPlayerData) => void;
@@ -2307,11 +2319,14 @@ function PackedItemsRow({
           movable
           quality={instanceQuality[selectedId] ?? null}
           moveId={selectedId}
-          catalogId={lookupIds[selectedId] ?? selectedId}
           location={location}
           source="character"
           hasBackpackEquipped={hasBackpackEquipped}
           hasSaddlepackEquipped={hasSaddlepackEquipped}
+          hasMountEquipped={hasMountEquipped}
+          hasCompanionEquipped={hasCompanionEquipped}
+          cartCapacity={cartCapacity}
+          cartSlotsUsed={cartSlotsUsed}
           inAdventure={inAdventure}
           characterId={characterId}
           onPlayerDataUpdated={onPlayerDataUpdated}
@@ -2430,188 +2445,7 @@ export function ResourcePopup({
   );
 }
 
-/** One recyclable row for a worn backpack's own Salvage popup, as GET
- * .../backpack/salvage-preview returns it - the backpack instance itself
- * (isContainer, always row 0) or something actually packed inside it.
- * Same shape ChopBlockRow uses, plus isContainer. */
-type BackpackSalvageRow = {
-  id: string;
-  kind: "instance" | "balance";
-  name: string;
-  tier: number;
-  owned: number;
-  isContainer: boolean;
-  materials: SalvageMaterial[];
-  condition?: SalvageCondition;
-};
 
-/** Every raw material a row's (or several rows') materials would hand
- * back, collapsed into one concrete-id -> qty list - same merge
- * CampView.tsx's own flattenChopBlockMaterials does, duplicated locally
- * rather than shared across files for one 10-line helper. */
-function flattenSalvageMaterials(materials: SalvageMaterial[]): { id: string; name: string; qty: number }[] {
-  const merged = new Map<string, { id: string; name: string; qty: number }>();
-  for (const material of materials) {
-    for (const line of material.recovered) {
-      const existing = merged.get(line.id);
-      if (existing) existing.qty += line.qty;
-      else merged.set(line.id, { id: line.id, name: line.name, qty: line.qty });
-    }
-  }
-  return [...merged.values()];
-}
-
-/** Opened by the cogwheel on a worn/camped backpack's own popup (see
- * ItemDetailPopup's isBackpack branch) instead of the normal single-item
- * salvage/destroy view - a HoldActionPopup very similar to CampView.tsx's
- * own ChopBlockPopup (reuses its .chopBlockList/.chopBlockRow* content
- * layout, so its own hold bar/icon stays visible above the footer no
- * matter how long the scrollable checklist gets), but its own, smaller
- * .backpackSalvageOverlay/Card/Icon instead of ChopBlockPopup's -
- * unlike CampView (which hides the page's fixed footer bar entirely
- * while open), this popup opens over the Body/Inventory tab, where the
- * footer stays on screen AND can't be painted over just by raising this
- * popup's own z-index - see .backpackSalvageCard's own comment for why
- * (a stacking-context nesting quirk, not a simple z-index fix) - so real
- * room has to stay reserved below the card instead. Scoped to one worn
- * backpack's own contents. Row 0 is always the backpack instance itself
- * (isContainer:true) - shown first, deliberately UNCHECKED by default
- * (unlike every other row, which starts checked) since including it
- * destroys the backpack itself, a much more drastic pick than salvaging
- * whatever's merely packed inside it. Holding the icon salvages every
- * still-checked row at once - see backend.players.salvage_backpack for
- * exactly where the recovered materials (and, if the backpack itself is
- * checked, everything else it was carrying) end up. */
-function BackpackSalvagePopup({
-  characterId,
-  containerType = "backpack",
-  onPlayerDataUpdated,
-  onClose,
-}: {
-  characterId: string;
-  containerType?: "backpack" | "saddlepack" | "cart";
-  onPlayerDataUpdated?: (data: RawPlayerData) => void;
-  onClose: () => void;
-}) {
-  const [rows, setRows] = useState<BackpackSalvageRow[] | null>(null);
-  const [selected, setSelected] = useState<Set<string>>(new Set());
-
-  useEffect(() => {
-    let cancelled = false;
-    fetch(`/api/auth/me/characters/${characterId}/${containerType}/salvage-preview`, { credentials: "include" })
-      .then((res) => (res.ok ? res.json() : null))
-      .then((data: { rows: BackpackSalvageRow[] } | null) => {
-        if (cancelled) return;
-        const loaded = data?.rows ?? [];
-        setRows(loaded);
-        // Every row starts checked EXCEPT the backpack's own (isContainer) -
-        // see this component's own docstring for why.
-        setSelected(new Set(loaded.filter((row) => !row.isContainer).map((row) => row.id)));
-      })
-      .catch(() => {
-        if (!cancelled) setRows([]);
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, [characterId, containerType]);
-
-  const toggle = (id: string) => {
-    setSelected((prev) => {
-      const next = new Set(prev);
-      if (next.has(id)) next.delete(id);
-      else next.add(id);
-      return next;
-    });
-  };
-
-  const grandTotal = flattenSalvageMaterials(
-    (rows ?? []).filter((row) => selected.has(row.id)).flatMap((row) => row.materials)
-  );
-
-  return (
-    <HoldActionPopup
-      headline="Salvage All"
-      overlayClassName={styles.backpackSalvageOverlay}
-      cardClassName={styles.backpackSalvageCard}
-      iconClassName={styles.backpackSalvageIcon}
-      label="Hold to unmake"
-      icon="/images/character/chopping_block.png"
-      tone="salvage"
-      disabled={rows === null || selected.size === 0}
-      onConfirm={() =>
-        postJson(`/api/auth/me/characters/${characterId}/${containerType}/salvage-all`, { selected: [...selected] })
-      }
-      onPlayerDataUpdated={onPlayerDataUpdated}
-      onClose={onClose}
-    >
-      {rows === null ? (
-        <p className={styles.salvageResultText}>Checking what can be salvaged…</p>
-      ) : rows.length === 0 ? (
-        <p className={styles.salvageResultText}>Nothing in the {containerType} can be salvaged right now.</p>
-      ) : (
-        <>
-          <div className={`${styles.salvageDestroyDivider} ${styles.salvageDestroyDividerTight}`} />
-          <p className={styles.salvageFinalLine}>
-            Salvaged: {grandTotal.length > 0 ? grandTotal.map((line) => `${line.qty}× ${line.name}`).join(", ") : "nothing"}
-          </p>
-          <div className={`${styles.salvageDestroyDivider} ${styles.salvageDestroyDividerSpaced}`} />
-          <div className={styles.chopBlockList}>
-            {rows.map((row) => (
-              <div key={row.id} className={styles.chopBlockRow}>
-                <label className={styles.chopBlockRowHeader}>
-                  <input type="checkbox" checked={selected.has(row.id)} onChange={() => toggle(row.id)} />
-                  <span className={styles.chopBlockRowName}>
-                    {row.isContainer ? "⚠ " : ""}
-                    {row.name}
-                    {row.owned > 1 ? ` x${row.owned}` : ""}
-                    {row.isContainer ? ` (destroys the ${containerType} itself)` : ""}
-                  </span>
-                </label>
-                <div className={styles.salvageMaterialsList}>
-                  {row.materials.map((material) => (
-                    <div key={material.rawFamilyId} className={styles.salvageMaterialRow}>
-                      <p className={styles.salvageMaterialHeader}>
-                        <span>{material.rawName}</span>
-                        <span className={`${styles.salvageMaterialAmounts} ${material.recoveredUnits === 0 ? styles.salvageAmountZero : selected.has(row.id) ? styles.salvageAmountPositive : styles.salvageAmountMuted}`}>
-                          {material.recoveredUnits}/{material.totalUnits}
-                        </span>
-                      </p>
-                      <SalvageFormulaLine breakdown={material.yieldBreakdown} condition={row.condition} />
-                    </div>
-                  ))}
-                  <p className={selected.has(row.id) ? styles.salvageFinalLine : styles.salvageFinalLineMuted}>
-                    Salvaged:{" "}
-                    {flattenSalvageMaterials(row.materials)
-                      .map((line) => `${line.qty}× ${line.name}`)
-                      .join(", ") || "nothing"}
-                  </p>
-                </div>
-              </div>
-            ))}
-          </div>
-        </>
-      )}
-    </HoldActionPopup>
-  );
-}
-
-/** The popup opened by clicking an ItemGrid tile - icon/name/description/
- * sizeClass/stackMax/two-handed/quality, plus (when `movable`) a quantity
- * picker for a stackable balance and one button per destination: this
- * item's own equip slot(s), or a backpack icon when it's backpackable.
- * Each button moves it straight from the shared pool onto this character
- * in one click (check-out, then equip for a slot button).
- *
- * The cogwheel in the corner swaps this same card's content over to a
- * salvage/destroy view instead of opening a second popup (see
- * showDestroy) - a salvage preview up top (still a placeholder, no
- * dismantle endpoint exists yet) and a hold-to-confirm destroy control
- * below it. Holding that control for DESTROY_HOLD_MS fills a progress bar
- * above its flame icon and permanently deletes the item; releasing early
- * resets it with nothing destroyed. For a BACKPACK's own popup, the
- * cogwheel opens BackpackSalvagePopup instead (see isBackpack below) -
- * this destroy view is never reached for one. */
 export function ItemDetailPopup({
   info,
   fallbackName,
@@ -2620,7 +2454,6 @@ export function ItemDetailPopup({
   movable,
   quality,
   moveId,
-  catalogId,
   location,
   source = "vault",
   hasBackpackEquipped,
@@ -2659,8 +2492,6 @@ export function ItemDetailPopup({
   quality: number | null;
   /** The row id itself - an instanceId (isInstance) or a concrete itemBalances/resource id. */
   moveId: string;
-  /** The concrete catalog id (item-catalog familyId+tier) this row resolves to - same id used to look up `info` itself (lookupIds?.[id] ?? id), needed separately here since GET .../salvage-preview/{itemId} takes a concrete id, never an instanceId. */
-  catalogId: string;
   /** source:"character" instance rows only - "backpack", "camp", "saddlepack", "cart", or "body" - decides which move actions are offered. */
   location?: "backpack" | "body" | "camp" | "saddlepack" | "cart";
   /** "vault" (default): `moveId` lives in the player's shared pool. "character": `moveId` is this character's own (backpack/body instance, or itemBalances row) - see ItemGrid's identical prop for what changes. */
@@ -2733,11 +2564,6 @@ export function ItemDetailPopup({
   const name = info?.name ? stripBlueprintPrefix(info.name) : fallbackName;
   const displayName = stackSize > 1 ? `${owned} ${name}` : name;
 
-  // Clicking the cogwheel swaps this same card's content over to the
-  // salvage/destroy view instead of opening a second popup - toggling it
-  // again (now an "info" glyph) swaps back.
-  const [showDestroy, setShowDestroy] = useState(false);
-
   const [pending, setPending] = useState(false);
   // Replaces the description text for ITEM_POPUP_FLASH_MS after a failed
   // move/equip, then reverts on its own - see the render below, which
@@ -2774,35 +2600,6 @@ export function ItemDetailPopup({
   // back to the vault in one click. Dropping into camp on a full backpack
   // is deliberately ONLY something salvaging does, never a normal move -
   // see backend.players.check_out_item_balance_to_backpack.
-  const moveToBackpack = async (amount: number) => {
-    setPending(true);
-    setFlashMessage(null);
-    if (isInstance) {
-      return finish(await postJson(`/api/auth/me/characters/${characterId}/items/${moveId}/vault-to-backpack`));
-    }
-    finish(
-      await postJson(`/api/auth/me/characters/${characterId}/item-balances/${moveId}/vault-to-backpack`, {
-        amount,
-      })
-    );
-  };
-
-  const moveToSaddlepack = async () => {
-    setPending(true);
-    setFlashMessage(null);
-    finish(await postJson(`/api/auth/me/characters/${characterId}/items/${moveId}/vault-to-saddlepack`));
-  };
-
-  const moveBalanceToSaddlepack = async (amount: number) => {
-    setPending(true);
-    setFlashMessage(null);
-    finish(
-      await postJson(`/api/auth/me/characters/${characterId}/item-balances/${moveId}/vault-to-saddlepack`, {
-        amount,
-      })
-    );
-  };
-
   const moveToCamp = async (amount: number) => {
     setPending(true);
     setFlashMessage(null);
@@ -2814,28 +2611,6 @@ export function ItemDetailPopup({
         amount,
       })
     );
-  };
-
-  const moveToCart = async (amount: number) => {
-    setPending(true);
-    setFlashMessage(null);
-    if (isInstance) {
-      return finish(await postJson(`/api/auth/me/characters/${characterId}/items/${moveId}/vault-to-cart`));
-    }
-    finish(
-      await postJson(`/api/auth/me/characters/${characterId}/item-balances/${moveId}/vault-to-cart`, {
-        amount,
-      })
-    );
-  };
-
-  // Straight pool -> body, one call - never routes through the backpack
-  // (see backend.players.equip_item_from_pool), unlike moveToBackpack
-  // below which deliberately does.
-  const equipFromPool = async (slots: string[]) => {
-    setPending(true);
-    setFlashMessage(null);
-    finish(await postJson(`/api/auth/me/characters/${characterId}/items/${moveId}/equip-from-pool`, { slots }));
   };
 
   // Each equipSlots entry is already one full alternative slot-group (e.g.
@@ -2860,16 +2635,6 @@ export function ItemDetailPopup({
     a.length === b.length && [...a].sort().join("|") === [...b].sort().join("|");
   const otherSlotGroups = currentSlots ? slotGroups.filter((group) => !sameSlotGroup(group, currentSlots)) : slotGroups;
 
-  // source:"character", location:"backpack" rows only - straight to the
-  // player's shared pool (check_in_item_instance only ever accepts a
-  // backpacked/camped/saddlepacked instance, never an equipped one - see
-  // unequip below for the equipped case, which posts to the same endpoint.
-  const checkInToVault = async () => {
-    setPending(true);
-    setFlashMessage(null);
-    finish(await postJson(`/api/auth/me/characters/${characterId}/items/${moveId}/to-vault`));
-  };
-
   const stowToBackpack = async () => {
     setPending(true);
     setFlashMessage(null);
@@ -2880,6 +2645,12 @@ export function ItemDetailPopup({
     setPending(true);
     setFlashMessage(null);
     finish(await postJson(`/api/auth/me/characters/${characterId}/items/${moveId}/backpack-to-camp`));
+  };
+
+  const stowToVault = async () => {
+    setPending(true);
+    setFlashMessage(null);
+    finish(await postJson(`/api/auth/me/characters/${characterId}/items/${moveId}/to-vault`));
   };
 
   const stowToSaddlepackFromCamp = async () => {
@@ -2930,6 +2701,18 @@ export function ItemDetailPopup({
     finish(await postJson(`/api/auth/me/characters/${characterId}/items/${moveId}/cart-to-camp`));
   };
 
+  const cartToBackpack = async () => {
+    setPending(true);
+    setFlashMessage(null);
+    finish(await postJson(`/api/auth/me/characters/${characterId}/items/${moveId}/cart-to-backpack`));
+  };
+
+  const cartToSaddlepack = async () => {
+    setPending(true);
+    setFlashMessage(null);
+    finish(await postJson(`/api/auth/me/characters/${characterId}/items/${moveId}/cart-to-saddlepack`));
+  };
+
   // source:"character", NOT isInstance, location:"camp" only (a flat
   // gear.itemBalances.camp row, e.g. crafted goods like potions/food, or
   // ammo living in resources instead - see nonMovableIds) - camp -> this
@@ -2948,31 +2731,17 @@ export function ItemDetailPopup({
     );
   };
 
-  // source:"character", NOT isInstance, location:"camp" OR "backpack" -
-  // straight to the shared pool from whichever bucket this row is actually
-  // in, `amount` units at a time. The itemBalances equivalent of
-  // checkInToVault above - a backpack row reaches the vault in this same
-  // one direct hop now too (see backend.players.check_in_item_balance's
-  // own `location` param), matching how a packed item INSTANCE already
-  // could, rather than needing to stage through camp first.
-  const checkInBalanceToVault = async (amount: number) => {
+  const stowBalanceToVault = async (amount: number) => {
     setPending(true);
     setFlashMessage(null);
     finish(
       await postJson(`/api/auth/me/characters/${characterId}/item-balances/${moveId}/to-vault`, {
         amount,
-        location: location ?? "camp",
+        location: "camp",
       })
     );
   };
 
-  // source:"character", NOT isInstance, location:"backpack" only (a flat
-  // gear.itemBalances.backpack row - see BodyTab's packedItems) - backpack
-  // -> camp, `amount` units at a time, the reverse of
-  // stowBalanceToBackpack above. Only offered while inAdventure (see this
-  // popup's itemBalances render block below) - there's no shared vault to
-  // reach mid-adventure, same reason an equipped instance's own unequip
-  // icon falls back to camp then too.
   const unloadBalanceToCamp = async (amount: number) => {
     setPending(true);
     setFlashMessage(null);
@@ -3062,33 +2831,26 @@ export function ItemDetailPopup({
       })
     );
   };
-
-  const checkInBalanceFromCart = async (amount: number) => {
+  const moveBalanceCartToBackpack = async (amount: number) => {
     setPending(true);
     setFlashMessage(null);
     finish(
-      await postJson(`/api/auth/me/characters/${characterId}/item-balances/${moveId}/cart-to-vault`, {
+      await postJson(`/api/auth/me/characters/${characterId}/item-balances/${moveId}/cart-to-backpack`, {
+        amount,
+      })
+    );
+  };
+  const moveBalanceCartToSaddlepack = async (amount: number) => {
+    setPending(true);
+    setFlashMessage(null);
+    finish(
+      await postJson(`/api/auth/me/characters/${characterId}/item-balances/${moveId}/cart-to-saddlepack`, {
         amount,
       })
     );
   };
 
-  // source:"character", location:"body" rows' automatic move icon (vault
-  // or camp, picked by the popup's own render logic off `inAdventure`) -
-  // backend.players.unequip_item makes the same choice server-side off
-  // Character.availability.inAdventure when no explicit destination is
-  // given, so this call needs no body at all.
-  const unequip = async () => {
-    setPending(true);
-    setFlashMessage(null);
-    finish(await postJson(`/api/auth/me/characters/${characterId}/items/${moveId}/unequip`));
-  };
-
-  // source:"character", location:"body" rows' explicit "Move to
-  // backpack"/"Move to saddlepack" icons - bypass the automatic vault/camp
-  // choice above entirely, staying on this character regardless of
-  // in_adventure. Both post the same endpoint as `unequip`, just with a
-  // destination.
+  // source:"character", location:"body" rows' explicit destination icons
   const unequipToBackpack = async () => {
     setPending(true);
     setFlashMessage(null);
@@ -3127,200 +2889,16 @@ export function ItemDetailPopup({
   // equip_slots groups - swap hands, move a dagger to its Girdle slot,
   // ... - see backend.players.equip_item's reslot note and the
   // otherSlotGroups render guard below).
-  const equipToSlots = async (slots: string[]) => {
+  const equipToSlots = async (slots: string[], amount?: number) => {
     setPending(true);
     setFlashMessage(null);
-    finish(await postJson(`/api/auth/me/characters/${characterId}/items/${moveId}/equip`, { slots }));
+    finish(await postJson(`/api/auth/me/characters/${characterId}/items/${moveId}/equip`, { slots, ...(amount != null ? { amount } : {}), ...(location ? { location } : {}) }));
   };
 
-  // --- Salvage/destroy view (swapped in over the info view above by the
-  // cogwheel button, rather than a second popup - see showDestroy). ---
-  const [destroyProgress, setDestroyProgress] = useState(0);
-  const [destroying, setDestroying] = useState(false);
-  const [destroyError, setDestroyError] = useState<string | null>(null);
-  const [destroyQuantity, setDestroyQuantity] = useState(1);
-  // Set by the "∞" option - destroys everything currently owned rather
-  // than one of the fixed QUANTITY_OPTIONS amounts.
-  const [destroyAll, setDestroyAll] = useState(false);
-  const destroyRafRef = useRef<number | null>(null);
-
-  const resetDestroyHold = () => {
-    if (destroyRafRef.current !== null) cancelAnimationFrame(destroyRafRef.current);
-    destroyRafRef.current = null;
-    setDestroyProgress(0);
-  };
-  useEffect(() => resetDestroyHold, []);
-
-  // How many units the hold below would act on - always 1 for an instance
-  // (never stacked), otherwise whatever the quantity row above has picked.
-  const salvageCount = isInstance ? 1 : destroyAll ? owned : destroyQuantity;
-
-  // Prefetched on mount so the salvage yield is ready by the time the user
-  // clicks the cogwheel — re-fetches when count changes in the destroy view.
-  const [salvagePreview, setSalvagePreview] = useState<SalvagePreview | null>(null);
-  const [salvagePreviewLoading, setSalvagePreviewLoading] = useState(true);
-
-  useEffect(() => {
-    if (salvageCount <= 0) return;
-    let cancelled = false;
-    setSalvagePreviewLoading(true);
-    fetch(
-      `/api/auth/me/characters/${characterId}/salvage-preview/${catalogId}?count=${salvageCount}&fromVault=${
-        source === "vault"
-      }${isInstance ? `&instanceId=${encodeURIComponent(moveId)}` : ""}`,
-      { credentials: "include" }
-    )
-      .then((res) => (res.ok ? res.json() : null))
-      .then((data: SalvagePreview | null) => {
-        if (!cancelled) setSalvagePreview(data);
-      })
-      .catch(() => {
-        if (!cancelled) setSalvagePreview(null);
-      })
-      .finally(() => {
-        if (!cancelled) setSalvagePreviewLoading(false);
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, [catalogId, characterId, salvageCount, source, isInstance, moveId]);
-
-  // Whether this item actually has anything to salvage (a known recipe) -
-  // false for e.g. a starter item authored with no craft-recipes.json
-  // entry, which hides the salvage bar entirely (destroy below is still
-  // always available either way).
-  const canSalvage = !!salvagePreview && salvagePreview.materials.length > 0;
-
-  // Plain zero-recovery destroy - unconditional, always available, same
-  // behavior as before salvaging existed. Targets the shared vault
-  // (source:"vault") or this character's own backpack/body/itemBalances
-  // (source:"character" - see destroy_character_item_instance/_balance).
-  const destroySuffix = source === "vault" ? "destroy" : "destroy-from-character";
-  const runDestroy = async () => {
-    setDestroying(true);
-    const amount = destroyAll ? owned : destroyQuantity;
-    const result = isInstance
-      ? await postJson(`/api/auth/me/characters/${characterId}/items/${moveId}/${destroySuffix}`)
-      : await postJson(`/api/auth/me/characters/${characterId}/item-balances/${moveId}/${destroySuffix}`, {
-          amount,
-        });
-    if (!result.ok) {
-      setDestroying(false);
-      setDestroyError("Couldn't destroy that.");
-      resetDestroyHold();
-      return;
-    }
-    onPlayerDataUpdated?.(result.data);
-    onClose();
-  };
-
-  // --- Salvage hold - a separate action from destroy above, only shown
-  // when canSalvage: credits the previewed materials to the shared vault
-  // instead of giving up the item for nothing. Own progress/state so
-  // holding one control never interferes with the other. ---
-  const [salvageHoldProgress, setSalvageHoldProgress] = useState(0);
-  const [salvagingItem, setSalvagingItem] = useState(false);
-  const [salvageActionError, setSalvageActionError] = useState<string | null>(null);
-  const salvageRafRef = useRef<number | null>(null);
-
-  const resetSalvageHold = () => {
-    if (salvageRafRef.current !== null) cancelAnimationFrame(salvageRafRef.current);
-    salvageRafRef.current = null;
-    setSalvageHoldProgress(0);
-  };
-  useEffect(() => resetSalvageHold, []);
-
-  const salvageSuffix = source === "vault" ? "salvage-from-vault" : "salvage";
-  const runSalvage = async () => {
-    setSalvagingItem(true);
-    const amount = destroyAll ? owned : destroyQuantity;
-    // A flat itemBalances row carries no location of its own the way an
-    // instance does (salvage_item_instance reads it straight off the
-    // instance) - this popup already knows which of the character's two
-    // buckets it opened on (backpack or camp), so it has to say so
-    // explicitly or the backend can't tell where to deduct from.
-    const result = isInstance
-      ? await postJson(`/api/auth/me/characters/${characterId}/items/${moveId}/${salvageSuffix}`)
-      : await postJson(`/api/auth/me/characters/${characterId}/item-balances/${moveId}/${salvageSuffix}`, {
-          amount,
-          ...(source === "character" ? { location: location ?? "camp" } : {}),
-        });
-    if (!result.ok) {
-      setSalvagingItem(false);
-      setSalvageActionError("Couldn't salvage that.");
-      resetSalvageHold();
-      return;
-    }
-    onPlayerDataUpdated?.(result.data);
-    onClose();
-  };
-
-  const salvageTick = (startedAt: number) => {
-    const next = Math.min(1, (performance.now() - startedAt) / DESTROY_HOLD_MS);
-    setSalvageHoldProgress(next);
-    if (next >= 1) {
-      runSalvage();
-      return;
-    }
-    salvageRafRef.current = requestAnimationFrame(() => salvageTick(startedAt));
-  };
-
-  const startSalvageHold = () => {
-    if (salvagingItem) return;
-    setSalvageActionError(null);
-    const startedAt = performance.now();
-    salvageRafRef.current = requestAnimationFrame(() => salvageTick(startedAt));
-  };
-  const cancelSalvageHold = () => {
-    if (salvagingItem) return;
-    resetSalvageHold();
-  };
-
-  const destroyTick = (startedAt: number) => {
-    const next = Math.min(1, (performance.now() - startedAt) / DESTROY_HOLD_MS);
-    setDestroyProgress(next);
-    if (next >= 1) {
-      runDestroy();
-      return;
-    }
-    destroyRafRef.current = requestAnimationFrame(() => destroyTick(startedAt));
-  };
-
-  const startDestroyHold = () => {
-    if (destroying) return;
-    setDestroyError(null);
-    const startedAt = performance.now();
-    destroyRafRef.current = requestAnimationFrame(() => destroyTick(startedAt));
-  };
-  const cancelDestroyHold = () => {
-    if (destroying) return;
-    resetDestroyHold();
-  };
-
-  // Closes on a click anywhere - including inside the card itself (the
-  // image, name, description, meta row) - except on a button, or (while
-  // showDestroy is open) directly on one of the two hold icons
-  // (.destroyIcon - shared by both the salvage and 🔥 destroy bars) -
-  // only those two actually start/hold a fill now, so everything else in
-  // this view (the label/track text, the salvage breakdown list, ...) is
-  // just a dismiss click like the rest of the card, same as
-  // HoldActionPopup's own identical redesign.
-  //
-  // stopPropagation matters here specifically for a packed item's own
-  // nested popup (PackedItemsRow, opened from inside a worn/camped
-  // backpack's own popup) - with no portal, that nested popup's whole
-  // overlay/card tree renders as a literal DOM descendant of the
-  // backpack's own overlay. Without this, ANY click here - a plain
-  // dismiss click, or a button click whose async move later calls this
-  // same popup's own onClose - still bubbles up into the backpack
-  // popup's own overlay onClick too, closing that one right along with
-  // it (all the way back to the Body/Camp page) instead of leaving it
-  // open underneath, which is what should happen either way.
   const handleClick = (e: React.MouseEvent<HTMLElement>) => {
     e.stopPropagation();
     const target = e.target as HTMLElement;
     if (target.closest("button")) return;
-    if (showDestroy && target.closest(`.${styles.destroyIcon}`)) return;
     onClose();
   };
   // A worn/camped backpack's own popup packs its own double-row scrollable
@@ -3335,192 +2913,18 @@ export function ItemDetailPopup({
   const isCart = info?.familyId === "cart";
   const isContainer = isBackpack || isSaddlepack || isCart;
   const activePackedItems = isCart ? cartPackedItems : isSaddlepack ? saddlepackPackedItems : packedItems;
-  const containerHasContents =
-    activePackedItems != null &&
-    (activePackedItems.ids.length > 0 ||
-      Object.values(activePackedItems.resourceBalances).some((qty) => qty > 0));
   const containerTitle = name;
 
   const [confirmMove, setConfirmMove] = useState<{ label: string; action: () => void } | null>(null);
 
-  if (isContainer && showDestroy && containerHasContents) {
-    return <BackpackSalvagePopup characterId={characterId} containerType={isCart ? "cart" : isSaddlepack ? "saddlepack" : "backpack"} onPlayerDataUpdated={onPlayerDataUpdated} onClose={onClose} />;
-  }
   return (
     <div
-      className={`${styles.itemPopupOverlay} ${isContainer ? styles.backpackPopupOverlay : ""} ${showDestroy ? styles.salvageDestroyOverlay : ""}`}
+      className={`${styles.itemPopupOverlay} ${isContainer ? styles.backpackPopupOverlay : ""}`}
       onClick={handleClick}
     >
       <div
-        className={`${styles.itemPopupCard} ${showDestroy ? styles.salvageDestroyCard : ""} ${
-          isContainer ? styles.backpackPopupCard : ""
-        }`}
+        className={`${styles.itemPopupCard} ${isContainer ? styles.backpackPopupCard : ""}`}
       >
-        {!showDestroy && (
-          <button
-            type="button"
-            className={styles.itemPopupSettingsButton}
-            onClick={() => setShowDestroy(true)}
-            aria-label="Salvage or destroy this item"
-            title="Salvage or destroy this item"
-          >
-            ⚙
-          </button>
-        )}
-        {showDestroy ? (
-          <>
-            {salvagePreviewLoading ? (
-              <div className={styles.salvageSection}>
-                <p className={styles.salvageResultText}>Checking salvage yield…</p>
-              </div>
-            ) : canSalvage ? (
-              <>
-                <div className={`${styles.destroySection} ${styles.salvageHoldBar}`}>
-                  <p className={styles.salvageLabel}>Hold to unmake</p>
-                  <div className={styles.destroyProgressTrack}>
-                    <div
-                      className={styles.destroyProgressFill}
-                      style={{
-                        width: `${salvageHoldProgress * 100}%`,
-                        backgroundColor: salvageFillColor(salvageHoldProgress),
-                      }}
-                    />
-                  </div>
-                  <span
-                    className={styles.destroyIcon}
-                    role="button"
-                    tabIndex={0}
-                    title="Hold to unmake"
-                    aria-label="Hold to unmake"
-                    onPointerDown={(e) => {
-                      e.preventDefault();
-                      startSalvageHold();
-                    }}
-                    onPointerUp={cancelSalvageHold}
-                    onPointerLeave={cancelSalvageHold}
-                    onPointerCancel={cancelSalvageHold}
-                    onContextMenu={(e) => e.preventDefault()}
-                  >
-                    <img src="/images/character/chopping_block.png" alt="Salvage" draggable={false} />
-                  </span>
-                </div>
-                {/* Outside .destroySection on purpose - only the bar above
-                    should start the hold/fill, not the breakdown text
-                    below it. Still exempted from handleClick's close-on-
-                    click below, same as .destroySection, so reading it
-                    doesn't dismiss the popup either. */}
-                <div className={styles.salvageMaterialsList}>
-                  {salvagePreview!.materials.map((material) => (
-                    <div key={material.rawFamilyId} className={styles.salvageMaterialRow}>
-                      <p className={styles.salvageMaterialHeader}>
-                        <span>{material.rawName}</span>
-                        <span className={`${styles.salvageMaterialAmounts} ${material.recoveredUnits === 0 ? styles.salvageAmountZero : styles.salvageAmountPositive}`}>
-                          {material.recoveredUnits}/{material.totalUnits}
-                        </span>
-                      </p>
-                      <SalvageFormulaLine breakdown={material.yieldBreakdown} condition={salvagePreview!.condition} />
-                    </div>
-                  ))}
-                  <p className={styles.salvageFinalLine}>
-                    Salvaged {name}:{" "}
-                    {salvagePreview!.materials
-                      .flatMap((material) => material.recovered)
-                      .map((line) => `${line.qty}× ${line.name}`)
-                      .join(", ") || "nothing"}
-                  </p>
-                </div>
-              </>
-            ) : (
-              <div className={styles.salvageSection}>
-                <p className={styles.salvageResultText}>Nothing to recover from this item.</p>
-              </div>
-            )}
-            {salvageActionError && <p className={styles.destroyError}>{salvageActionError}</p>}
-            {!isInstance && stackSize > 1 && (
-              <div className={styles.itemPopupActions} role="radiogroup" aria-label="How many to destroy">
-                {QUANTITY_OPTIONS.map((n) => (
-                  <button
-                    key={n}
-                    type="button"
-                    role="radio"
-                    aria-checked={!destroyAll && destroyQuantity === n}
-                    className={[
-                      styles.craftCountButton,
-                      styles.itemPopupQuantityButton,
-                      !destroyAll && destroyQuantity === n ? styles.craftCountButtonActive : "",
-                    ]
-                      .filter(Boolean)
-                      .join(" ")}
-                    disabled={destroying || n > owned}
-                    onClick={() => {
-                      setDestroyAll(false);
-                      setDestroyQuantity(n);
-                    }}
-                  >
-                    {n}
-                  </button>
-                ))}
-                <button
-                  type="button"
-                  role="radio"
-                  aria-checked={destroyAll}
-                  className={[
-                    styles.craftCountButton,
-                    styles.itemPopupQuantityButton,
-                    destroyAll ? styles.craftCountButtonActive : "",
-                  ]
-                    .filter(Boolean)
-                    .join(" ")}
-                  disabled={destroying || owned <= 0}
-                  onClick={() => setDestroyAll(true)}
-                  title="Destroy all"
-                  aria-label="Destroy all"
-                >
-                  <span className={styles.itemPopupInfinityGlyph}>∞</span>
-                </button>
-              </div>
-            )}
-            {!isContainer && (
-              <>
-                <div className={styles.salvageDestroyDivider} />
-                <div className={styles.destroySection}>
-                  <p className={styles.destroyLabel}>Hold to cast into flames</p>
-                  <div className={styles.destroyProgressTrack}>
-                    <div
-                      className={styles.destroyProgressFill}
-                      style={{
-                        width: `${destroyProgress * 100}%`,
-                        backgroundColor: destroyFillColor(destroyProgress),
-                      }}
-                    />
-                  </div>
-                  <span
-                    className={styles.destroyIcon}
-                    role="button"
-                    tabIndex={0}
-                    title="Hold to cast into flames"
-                    aria-label="Hold to cast into flames"
-                    onPointerDown={(e) => {
-                      e.preventDefault();
-                      startDestroyHold();
-                    }}
-                    onPointerUp={cancelDestroyHold}
-                    onPointerLeave={cancelDestroyHold}
-                    onPointerCancel={cancelDestroyHold}
-                    onContextMenu={(e) => e.preventDefault()}
-                  >
-                    <img
-                      src="/images/character/campfire_lit.png"
-                      alt="Destroy"
-                      className={styles.destroyFireImg}
-                    />
-                  </span>
-                </div>
-                {destroyError && <p className={styles.destroyError}>{destroyError}</p>}
-              </>
-            )}
-          </>
-        ) : (
           <>
             {!!info?.tier && (
               <span className={styles.itemPopupTierBadge}>
@@ -3537,6 +2941,10 @@ export function ItemDetailPopup({
                 {...activePackedItems}
                 hasBackpackEquipped={hasBackpackEquipped}
                 hasSaddlepackEquipped={hasSaddlepackEquipped}
+                hasMountEquipped={hasMountEquipped}
+                hasCompanionEquipped={hasCompanionEquipped}
+                cartCapacity={cartCapacity}
+                cartSlotsUsed={cartSlotsUsed}
                 inAdventure={inAdventure}
                 characterId={characterId}
                 onPlayerDataUpdated={onPlayerDataUpdated}
@@ -3549,6 +2957,11 @@ export function ItemDetailPopup({
             {!!info?.gatheringBonuses?.length && (
               <p className={styles.itemPopupGathering}>
                 Helps gather: {info.gatheringBonuses.map(formatResourceLabel).join(", ")}
+              </p>
+            )}
+            {!!info?.equipSlots?.length && (
+              <p className={styles.itemPopupGathering}>
+                Slot{info.equipSlots[0].length > 1 ? "s" : ""}: {info.equipSlots.map((g) => g.join(" + ")).join(" / ")}
               </p>
             )}
             <div className={styles.itemPopupMeta}>
@@ -3595,692 +3008,181 @@ export function ItemDetailPopup({
             )}
             {movable && source === "vault" && !duplicateContainer && (
               inAdventure ? (
-                // The shared vault isn't reachable at all mid-adventure
-                // (see equip_item_from_pool/check_out_item_instance/
-                // check_out_item_balance) - no buttons, no hasBackpackEquipped/
-                // hasSaddlepackEquipped checks, just the status itself.
                 <p className={styles.itemPopupAwayNotice}>
                   {characterFirstName ? `${characterFirstName} is on the road` : "On the road"}
                 </p>
+              ) : stackSize > 1 ? (
+                <TransferButtons
+                  owned={owned}
+                  pending={pending}
+                  onPick={moveToCamp}
+                  destinationIcon={CAMP_ACTION_ICON}
+                  destinationLabel="Camp"
+                  amounts={RAW_RESOURCE_AMOUNTS}
+                  showInfinity={false}
+                />
               ) : (
-                stackSize > 1 ? (
-                  // A stackable itemBalance row - two TransferButtons rows
-                  // (backpack + saddlepack), same one-click-moves-it behavior
-                  // as the resource popups (see ResourcePopup). Saddlepack
-                  // row is greyed out when none is equipped.
-                  <>
-                    {info?.backpackable && hasBackpackEquipped && (
-                      <TransferButtons
-                        owned={owned}
-                        pending={pending}
-                        onPick={moveToBackpack}
-                        destinationIcon={BACKPACK_ACTION_ICON}
-                        destinationLabel="Backpack"
-                        amounts={RAW_RESOURCE_AMOUNTS}
-                        showInfinity={false}
-                      />
-                    )}
-                    {info?.backpackable && hasSaddlepackEquipped && (
-                      <TransferButtons
-                        owned={owned}
-                        pending={pending}
-                        onPick={moveBalanceToSaddlepack}
-                        destinationIcon={SADDLEPACK_ACTION_ICON}
-                        destinationLabel="Saddlepack"
-                        amounts={RAW_RESOURCE_AMOUNTS}
-                        showInfinity={false}
-                      />
-                    )}
-                    {(cartCapacity ?? 0) > 0 && !isContainer && !info?.familyId?.endsWith("_mount") && !info?.familyId?.endsWith("_companion") && (
-                      <TransferButtons
-                        owned={owned}
-                        pending={pending}
-                        onPick={moveToCart}
-                        destinationIcon={CART_ACTION_ICON}
-                        destinationLabel="Cart"
-                        amounts={RAW_RESOURCE_AMOUNTS}
-                        showInfinity={false}
-                      />
-                    )}
-                    <TransferButtons
-                      owned={owned}
-                      pending={pending}
-                      onPick={moveToCamp}
-                      destinationIcon={CAMP_ACTION_ICON}
-                      destinationLabel="Camp"
-                      amounts={RAW_RESOURCE_AMOUNTS}
-                      showInfinity={false}
+                <div className={styles.itemPopupActions}>
+                  <button
+                    type="button"
+                    className={styles.itemPopupBackpackButton}
+                    disabled={pending}
+                    onClick={() => moveToCamp(1)}
+                    aria-label="Move to camp"
+                    title="Move to camp"
+                  >
+                    <div
+                      role="img"
+                      aria-label="Camp"
+                      className={styles.itemPopupBackpackIcon}
+                      style={{ backgroundImage: `url(${CAMP_ACTION_ICON})` }}
                     />
-                  </>
-                ) : (
-                  <div className={styles.itemPopupActions}>
-                    {slotGroups.map((slots) => (
-                      <button
-                        key={slots.join("+")}
-                        type="button"
-                        className={styles.itemPopupActionButton}
-                        disabled={pending}
-                        onClick={() => equipFromPool(slots)}
-                      >
-                        {slots.map((slot, i) => (
-                          <Fragment key={slot}>
-                            {i > 0 && " + "}
-                            {formatSlotLabel(slot)}
-                          </Fragment>
-                        ))}
-                      </button>
-                    ))}
-                    {info?.backpackable && hasBackpackEquipped && (
-                      <button
-                        type="button"
-                        className={styles.itemPopupBackpackButton}
-                        disabled={pending}
-                        onClick={() => moveToBackpack(1)}
-                        aria-label="Move to backpack"
-                        title="Move to backpack"
-                      >
-                        <div
-                          role="img"
-                          aria-label="Backpack"
-                          className={styles.itemPopupBackpackIcon}
-                          style={{ backgroundImage: `url(${BACKPACK_ACTION_ICON})` }}
-                        />
-                      </button>
-                    )}
-                    {info?.backpackable && hasSaddlepackEquipped && (
-                      <button
-                        type="button"
-                        className={styles.itemPopupBackpackButton}
-                        disabled={pending}
-                        onClick={isInstance ? moveToSaddlepack : () => moveBalanceToSaddlepack(1)}
-                        aria-label="Move to saddlepack"
-                        title="Move to saddlepack"
-                      >
-                        <div
-                          role="img"
-                          aria-label="Saddlepack"
-                          className={styles.itemPopupBackpackIcon}
-                          style={{ backgroundImage: `url(${SADDLEPACK_ACTION_ICON})` }}
-                        />
-                      </button>
-                    )}
-                    {(cartCapacity ?? 0) > 0 && !isContainer && !info?.familyId?.endsWith("_mount") && !info?.familyId?.endsWith("_companion") && (
-                      <button
-                        type="button"
-                        className={styles.itemPopupBackpackButton}
-                        disabled={pending}
-                        onClick={() => moveToCart(1)}
-                        aria-label="Move to cart"
-                        title="Move to cart"
-                      >
-                        <div
-                          role="img"
-                          aria-label="Cart"
-                          className={styles.itemPopupBackpackIcon}
-                          style={{ backgroundImage: `url(${CART_ACTION_ICON})` }}
-                        />
-                      </button>
-                    )}
-                    <button
-                      type="button"
-                      className={styles.itemPopupBackpackButton}
-                      disabled={pending}
-                      onClick={() => moveToCamp(1)}
-                      aria-label="Move to camp"
-                      title="Move to camp"
-                    >
-                      <div
-                        role="img"
-                        aria-label="Camp"
-                        className={styles.itemPopupBackpackIcon}
-                        style={{ backgroundImage: `url(${CAMP_ACTION_ICON})` }}
-                      />
-                    </button>
-                  </div>
-                )
+                  </button>
+                </div>
               )
             )}
-            {movable && source === "character" && isInstance && (
-              <div className={styles.itemPopupActions}>
-                {location === "body" ? (
-                  <>
-                    {/* Reslot, still equipped - e.g. swap hands, or move a
-                        dagger from a hand to its Girdle slot. Same button
-                        style/handler as the backpack/camp -> body equip
-                        buttons elsewhere, since it's the exact same
-                        endpoint. Rendered before the destination icons
-                        below so those icons stay rightmost, same as every
-                        other branch here. */}
-                    {otherSlotGroups.map((slots) => (
-                      <button
-                        key={slots.join("+")}
-                        type="button"
-                        className={styles.itemPopupActionButton}
-                        disabled={pending}
-                        onClick={() => equipToSlots(slots)}
-                      >
-                        {slots.map((slot, i) => (
-                          <Fragment key={slot}>
-                            {i > 0 && " + "}
-                            {formatSlotLabel(slot)}
-                          </Fragment>
-                        ))}
-                      </button>
-                    ))}
+            {movable && source === "character" && isInstance && location === "body" && (
+              (isContainer || info?.familyId?.endsWith("_mount") || info?.familyId?.endsWith("_companion")) ? (
+                <div className={styles.itemPopupActions}>
+                  {isContainer && otherSlotGroups.map((slots) => (
+                    <button
+                      key={slots.join("+")}
+                      type="button"
+                      className={styles.itemPopupActionButton}
+                      disabled={pending}
+                      onClick={() => equipToSlots(slots)}
+                    >
+                      {slots.map((slot, i) => (
+                        <Fragment key={slot}>
+                          {i > 0 && " + "}
+                          {formatSlotLabel(slot)}
+                        </Fragment>
+                      ))}
+                    </button>
+                  ))}
+                  {!inAdventure && (
                     <button
                       type="button"
                       className={styles.itemPopupBackpackButton}
                       disabled={pending}
                       onClick={isContainer
-                        ? () => setConfirmMove({ label: inAdventure ? "Camp" : "Vault", action: unequip })
-                        : unequip}
-                      aria-label={inAdventure ? "Move to camp" : "Move to vault"}
-                      title={inAdventure ? "Move to camp" : "Move to the shared vault"}
+                        ? () => setConfirmMove({ label: "Camp", action: unequipToCamp })
+                        : unequipToCamp}
+                      aria-label="Move to camp"
+                      title="Move to camp"
                     >
-                      <div
-                        role="img"
-                        aria-label={inAdventure ? "Camp" : "Vault"}
-                        className={styles.itemPopupBackpackIcon}
-                        style={{ backgroundImage: `url(${inAdventure ? CAMP_ACTION_ICON : VAULT_ACTION_ICON})` }}
-                      />
+                      <div role="img" aria-label="Camp" className={styles.itemPopupBackpackIcon} style={{ backgroundImage: `url(${CAMP_ACTION_ICON})` }} />
                     </button>
-                    {info?.backpackable && (
-                      <button
-                        type="button"
-                        className={styles.itemPopupBackpackButton}
-                        disabled={pending || !hasBackpackEquipped}
-                        onClick={unequipToBackpack}
-                        aria-label="Move to backpack"
-                        title={hasBackpackEquipped ? "Move to backpack" : "No backpack equipped"}
-                      >
-                        <div
-                          role="img"
-                          aria-label="Backpack"
-                          className={styles.itemPopupBackpackIcon}
-                          style={{ backgroundImage: `url(${BACKPACK_ACTION_ICON})` }}
-                        />
-                      </button>
-                    )}
-                    {info?.backpackable && hasSaddlepackEquipped && (
-                      <button
-                        type="button"
-                        className={styles.itemPopupBackpackButton}
-                        disabled={pending}
-                        onClick={unequipToSaddlepack}
-                        aria-label="Move to saddlepack"
-                        title="Move to saddlepack"
-                      >
-                        <div
-                          role="img"
-                          aria-label="Saddlepack"
-                          className={styles.itemPopupBackpackIcon}
-                          style={{ backgroundImage: `url(${SADDLEPACK_ACTION_ICON})` }}
-                        />
-                      </button>
-                    )}
-                    {(cartCapacity ?? 0) > 0 && !isContainer && !info?.familyId?.endsWith("_mount") && !info?.familyId?.endsWith("_companion") && (
-                      <button
-                        type="button"
-                        className={styles.itemPopupBackpackButton}
-                        disabled={pending}
-                        onClick={unequipToCart}
-                        aria-label="Move to cart"
-                        title="Move to cart"
-                      >
-                        <div
-                          role="img"
-                          aria-label="Cart"
-                          className={styles.itemPopupBackpackIcon}
-                          style={{ backgroundImage: `url(${CART_ACTION_ICON})` }}
-                        />
-                      </button>
-                    )}
-                    {isContainer && (
-                      <button
-                        type="button"
-                        className={styles.itemPopupBackpackButton}
-                        disabled={pending}
-                        onClick={() => setConfirmMove({ label: "Camp", action: unequipToCamp })}
-                        aria-label="Move to camp"
-                        title="Move to camp"
-                      >
-                        <div
-                          role="img"
-                          aria-label="Camp"
-                          className={styles.itemPopupBackpackIcon}
-                          style={{ backgroundImage: `url(${CAMP_ACTION_ICON})` }}
-                        />
-                      </button>
-                    )}
-                  </>
-                ) : (
-                  <>
-                    {slotGroups.map((slots) => (
-                      <button
-                        key={slots.join("+")}
-                        type="button"
-                        className={styles.itemPopupActionButton}
-                        disabled={pending}
-                        onClick={() => equipToSlots(slots)}
-                      >
-                        {slots.map((slot, i) => (
-                          <Fragment key={slot}>
-                            {i > 0 && " + "}
-                            {formatSlotLabel(slot)}
-                          </Fragment>
-                        ))}
-                      </button>
+                  )}
+                </div>
+              ) : (
+                <div className={styles.itemPopupActions}>
+                  {otherSlotGroups.map((slots) => (
+                    <button
+                      key={slots.join("+")}
+                      type="button"
+                      className={styles.itemPopupActionButton}
+                      disabled={pending}
+                      onClick={() => equipToSlots(slots)}
+                    >
+                      {slots.map((slot, i) => (
+                        <Fragment key={slot}>
+                          {i > 0 && " + "}
+                          {formatSlotLabel(slot)}
+                        </Fragment>
+                      ))}
+                    </button>
+                  ))}
+                  {info?.backpackable && hasBackpackEquipped && (
+                    <button type="button" className={styles.itemPopupBackpackButton} disabled={pending} onClick={unequipToBackpack} aria-label="Move to backpack" title="Move to backpack">
+                      <div role="img" aria-label="Backpack" className={styles.itemPopupBackpackIcon} style={{ backgroundImage: `url(${BACKPACK_ACTION_ICON})` }} />
+                    </button>
+                  )}
+                  {info?.backpackable && hasSaddlepackEquipped && (
+                    <button type="button" className={styles.itemPopupBackpackButton} disabled={pending} onClick={unequipToSaddlepack} aria-label="Move to saddlepack" title="Move to saddlepack">
+                      <div role="img" aria-label="Saddlepack" className={styles.itemPopupBackpackIcon} style={{ backgroundImage: `url(${SADDLEPACK_ACTION_ICON})` }} />
+                    </button>
+                  )}
+                  {(cartCapacity ?? 0) > 0 && !isContainer && !info?.familyId?.endsWith("_mount") && !info?.familyId?.endsWith("_companion") && (
+                    <button type="button" className={styles.itemPopupBackpackButton} disabled={pending} onClick={unequipToCart} aria-label="Move to cart" title="Move to cart">
+                      <div role="img" aria-label="Cart" className={styles.itemPopupBackpackIcon} style={{ backgroundImage: `url(${CART_ACTION_ICON})` }} />
+                    </button>
+                  )}
+                  {!inAdventure && (
+                    <button type="button" className={styles.itemPopupBackpackButton} disabled={pending} onClick={unequipToCamp} aria-label="Move to camp" title="Move to camp">
+                      <div role="img" aria-label="Camp" className={styles.itemPopupBackpackIcon} style={{ backgroundImage: `url(${CAMP_ACTION_ICON})` }} />
+                    </button>
+                  )}
+                </div>
+              )
+            )}
+            {movable && source === "character" && isInstance && location !== "body" && (
+              <div className={styles.itemPopupActions}>
+                {slotGroups.map((slots) => (
+                  <button
+                    key={slots.join("+")}
+                    type="button"
+                    className={styles.itemPopupActionButton}
+                    disabled={pending}
+                    onClick={() => equipToSlots(slots)}
+                  >
+                    {slots.map((slot, i) => (
+                      <Fragment key={slot}>
+                        {i > 0 && " + "}
+                        {formatSlotLabel(slot)}
+                      </Fragment>
                     ))}
-                    {/* location:"camp" only - the other half of unequip's
-                        automatic camp drop (see the "body" branch's
-                        automatic icon above). Camp is this character's own
-                        overflow, not the shared vault, so this works
-                        mid-adventure unlike checkInToVault below - see
-                        backend.players.move_camp_item_to_backpack. Hidden
-                        outright (not greyed) with no backpack equipped -
-                        camp items are only ever checked one at a time, so
-                        a dead button here is just noise, not a nudge. */}
-                    {location === "camp" && info?.backpackable && (
-                      <>
-                        {hasBackpackEquipped && (
-                          <button
-                            type="button"
-                            className={styles.itemPopupBackpackButton}
-                            disabled={pending}
-                            onClick={stowToBackpack}
-                            aria-label="Move to backpack"
-                            title="Move to backpack"
-                          >
-                            <div
-                              role="img"
-                              aria-label="Backpack"
-                              className={styles.itemPopupBackpackIcon}
-                              style={{ backgroundImage: `url(${BACKPACK_ACTION_ICON})` }}
-                            />
-                          </button>
-                        )}
-                        {hasSaddlepackEquipped && (
-                          <button
-                            type="button"
-                            className={styles.itemPopupBackpackButton}
-                            disabled={pending}
-                            onClick={stowToSaddlepackFromCamp}
-                            aria-label="Move to saddlepack"
-                            title="Move to saddlepack"
-                          >
-                            <div
-                              role="img"
-                              aria-label="Saddlepack"
-                              className={styles.itemPopupBackpackIcon}
-                              style={{ backgroundImage: `url(${SADDLEPACK_ACTION_ICON})` }}
-                            />
-                          </button>
-                        )}
-                        {(cartCapacity ?? 0) > 0 && !isContainer && !info?.familyId?.endsWith("_mount") && !info?.familyId?.endsWith("_companion") && (
-                          <button
-                            type="button"
-                            className={styles.itemPopupBackpackButton}
-                            disabled={pending}
-                            onClick={stowToCartFromCamp}
-                            aria-label="Move to cart"
-                            title="Move to cart"
-                          >
-                            <div
-                              role="img"
-                              aria-label="Cart"
-                              className={styles.itemPopupBackpackIcon}
-                              style={{ backgroundImage: `url(${CART_ACTION_ICON})` }}
-                            />
-                          </button>
-                        )}
-                      </>
-                    )}
-                    {/* location:"backpack" only - same automatic camp/
-                        vault switch as the body branch's own unequip icon
-                        above: while inAdventure, there's no shared vault
-                        to reach at all, so this offers the ACTUAL
-                        reachable move (camp - see stowToCamp) instead of
-                        a permanently-greyed vault button that can never
-                        be clicked mid-adventure. location:"camp" items
-                        don't get this - they're already in camp, so the
-                        alternative destination there is the backpack
-                        (see the button above), not camp again. */}
-                    {location === "backpack" ? (
-                      <>
-                        <button
-                          type="button"
-                          className={styles.itemPopupBackpackButton}
-                          disabled={pending}
-                          onClick={inAdventure ? stowToCamp : checkInToVault}
-                          aria-label={inAdventure ? "Move to camp" : "Check in to vault"}
-                          title={inAdventure ? "Move to camp" : "Check in to vault"}
-                        >
-                          <div
-                            role="img"
-                            aria-label={inAdventure ? "Camp" : "Vault"}
-                            className={styles.itemPopupBackpackIcon}
-                            style={{ backgroundImage: `url(${inAdventure ? CAMP_ACTION_ICON : VAULT_ACTION_ICON})` }}
-                          />
-                        </button>
-                        {info?.backpackable && hasSaddlepackEquipped && (
-                          <button
-                            type="button"
-                            className={styles.itemPopupBackpackButton}
-                            disabled={pending}
-                            onClick={stowToSaddlepack}
-                            aria-label="Move to saddlepack"
-                            title="Move to saddlepack"
-                          >
-                            <div
-                              role="img"
-                              aria-label="Saddlepack"
-                              className={styles.itemPopupBackpackIcon}
-                              style={{ backgroundImage: `url(${SADDLEPACK_ACTION_ICON})` }}
-                            />
-                          </button>
-                        )}
-                        {(cartCapacity ?? 0) > 0 && !isContainer && !info?.familyId?.endsWith("_mount") && !info?.familyId?.endsWith("_companion") && (
-                          <button
-                            type="button"
-                            className={styles.itemPopupBackpackButton}
-                            disabled={pending}
-                            onClick={stowToCartFromBackpack}
-                            aria-label="Move to cart"
-                            title="Move to cart"
-                          >
-                            <div
-                              role="img"
-                              aria-label="Cart"
-                              className={styles.itemPopupBackpackIcon}
-                              style={{ backgroundImage: `url(${CART_ACTION_ICON})` }}
-                            />
-                          </button>
-                        )}
-                      </>
-                    ) : location === "saddlepack" ? (
-                      <>
-                        <button
-                          type="button"
-                          className={styles.itemPopupBackpackButton}
-                          disabled={pending}
-                          onClick={inAdventure ? saddlepackToCamp : checkInToVault}
-                          aria-label={inAdventure ? "Move to camp" : "Check in to vault"}
-                          title={inAdventure ? "Move to camp" : "Check in to vault"}
-                        >
-                          <div
-                            role="img"
-                            aria-label={inAdventure ? "Camp" : "Vault"}
-                            className={styles.itemPopupBackpackIcon}
-                            style={{ backgroundImage: `url(${inAdventure ? CAMP_ACTION_ICON : VAULT_ACTION_ICON})` }}
-                          />
-                        </button>
-                        {info?.backpackable && hasBackpackEquipped && (
-                          <button
-                            type="button"
-                            className={styles.itemPopupBackpackButton}
-                            disabled={pending}
-                            onClick={saddlepackToBackpack}
-                            aria-label="Move to backpack"
-                            title="Move to backpack"
-                          >
-                            <div
-                              role="img"
-                              aria-label="Backpack"
-                              className={styles.itemPopupBackpackIcon}
-                              style={{ backgroundImage: `url(${BACKPACK_ACTION_ICON})` }}
-                            />
-                          </button>
-                        )}
-                        {(cartCapacity ?? 0) > 0 && !isContainer && !info?.familyId?.endsWith("_mount") && !info?.familyId?.endsWith("_companion") && (
-                          <button
-                            type="button"
-                            className={styles.itemPopupBackpackButton}
-                            disabled={pending}
-                            onClick={stowToCartFromSaddlepack}
-                            aria-label="Move to cart"
-                            title="Move to cart"
-                          >
-                            <div
-                              role="img"
-                              aria-label="Cart"
-                              className={styles.itemPopupBackpackIcon}
-                              style={{ backgroundImage: `url(${CART_ACTION_ICON})` }}
-                            />
-                          </button>
-                        )}
-                      </>
-                    ) : location === "cart" ? (
-                      <button
-                        type="button"
-                        className={styles.itemPopupBackpackButton}
-                        disabled={pending}
-                        onClick={inAdventure ? cartToCamp : checkInToVault}
-                        aria-label={inAdventure ? "Move to camp" : "Check in to vault"}
-                        title={inAdventure ? "Move to camp" : "Check in to vault"}
-                      >
-                        <div
-                          role="img"
-                          aria-label={inAdventure ? "Camp" : "Vault"}
-                          className={styles.itemPopupBackpackIcon}
-                          style={{ backgroundImage: `url(${inAdventure ? CAMP_ACTION_ICON : VAULT_ACTION_ICON})` }}
-                        />
-                      </button>
-                    ) : (
-                      !inAdventure && (
-                        <button
-                          type="button"
-                          className={styles.itemPopupBackpackButton}
-                          disabled={pending}
-                          onClick={isContainer
-                            ? () => setConfirmMove({ label: "Vault", action: checkInToVault })
-                            : checkInToVault}
-                          aria-label="Check in to vault"
-                          title="Check in to vault"
-                        >
-                          <div
-                            role="img"
-                            aria-label="Vault"
-                            className={styles.itemPopupBackpackIcon}
-                            style={{ backgroundImage: `url(${VAULT_ACTION_ICON})` }}
-                          />
-                        </button>
-                      )
-                    )}
-                  </>
+                  </button>
+                ))}
+                {!inAdventure && location !== "camp" && (
+                  <button type="button" className={styles.itemPopupBackpackButton} disabled={pending}
+                    onClick={location === "backpack" ? stowToCamp : location === "saddlepack" ? saddlepackToCamp : cartToCamp}
+                    aria-label="Move to camp" title="Move to camp">
+                    <div role="img" aria-label="Camp" className={styles.itemPopupBackpackIcon} style={{ backgroundImage: `url(${CAMP_ACTION_ICON})` }} />
+                  </button>
+                )}
+                {location !== "backpack" && info?.backpackable && hasBackpackEquipped && (
+                  <button type="button" className={styles.itemPopupBackpackButton} disabled={pending}
+                    onClick={location === "camp" ? stowToBackpack : location === "saddlepack" ? saddlepackToBackpack : cartToBackpack}
+                    aria-label="Move to backpack" title="Move to backpack">
+                    <div role="img" aria-label="Backpack" className={styles.itemPopupBackpackIcon} style={{ backgroundImage: `url(${BACKPACK_ACTION_ICON})` }} />
+                  </button>
+                )}
+                {location !== "saddlepack" && info?.backpackable && hasSaddlepackEquipped && (
+                  <button type="button" className={styles.itemPopupBackpackButton} disabled={pending}
+                    onClick={location === "camp" ? stowToSaddlepackFromCamp : location === "backpack" ? stowToSaddlepack : cartToSaddlepack}
+                    aria-label="Move to saddlepack" title="Move to saddlepack">
+                    <div role="img" aria-label="Saddlepack" className={styles.itemPopupBackpackIcon} style={{ backgroundImage: `url(${SADDLEPACK_ACTION_ICON})` }} />
+                  </button>
+                )}
+                {location !== "cart" && (cartCapacity ?? 0) > 0 && !isContainer && !info?.familyId?.endsWith("_mount") && !info?.familyId?.endsWith("_companion") && (
+                  <button type="button" className={styles.itemPopupBackpackButton} disabled={pending}
+                    onClick={location === "camp" ? stowToCartFromCamp : location === "backpack" ? stowToCartFromBackpack : stowToCartFromSaddlepack}
+                    aria-label="Move to cart" title="Move to cart">
+                    <div role="img" aria-label="Cart" className={styles.itemPopupBackpackIcon} style={{ backgroundImage: `url(${CART_ACTION_ICON})` }} />
+                  </button>
+                )}
+                {!inAdventure && location === "camp" && (
+                  <button type="button" className={styles.itemPopupBackpackButton} disabled={pending}
+                    onClick={stowToVault}
+                    aria-label="Move to vault" title="Move to vault">
+                    <div role="img" aria-label="Vault" className={styles.itemPopupBackpackIcon} style={{ backgroundImage: `url(${VAULT_ACTION_ICON})` }} />
+                  </button>
                 )}
               </div>
             )}
-            {/* The itemBalances counterpart of the isInstance block above -
-                a flat gear.itemBalances.camp/backpack row (crafted goods
-                this character owns - see CampView/BodyTab's packedItems)
-                has no instanceId, so it fails isInstance and would
-                otherwise get zero action buttons here even though the
-                backend already has a full camp<->backpack/vault transfer
-                path for it (load_item_balance_to_backpack/
-                check_in_item_balance/unload_item_balance_from_backpack),
-                same as an item instance does. */}
             {movable && source === "character" && !isInstance && (location === "camp" || location === "backpack" || location === "saddlepack" || location === "cart") && (
               stackSize > 1 ? (
-                // Stackable: quantity-picker rows per destination
                 <>
-                  {location === "camp" ? (
-                    <>
-                      {hasBackpackEquipped && (
-                        <TransferButtons
-                          owned={owned}
-                          pending={pending}
-                          onPick={stowBalanceToBackpack}
-                          destinationIcon={BACKPACK_ACTION_ICON}
-                          destinationLabel="Backpack"
-                          amounts={RAW_RESOURCE_AMOUNTS}
-                          showInfinity={false}
-                        />
-                      )}
-                      {hasSaddlepackEquipped && (
-                        <TransferButtons
-                          owned={owned}
-                          pending={pending}
-                          onPick={stowBalanceToSaddlepack}
-                          destinationIcon={SADDLEPACK_ACTION_ICON}
-                          destinationLabel="Saddlepack"
-                          amounts={RAW_RESOURCE_AMOUNTS}
-                          showInfinity={false}
-                        />
-                      )}
-                      {(cartCapacity ?? 0) > 0 && !isContainer && !info?.familyId?.endsWith("_mount") && !info?.familyId?.endsWith("_companion") && (
-                        <TransferButtons
-                          owned={owned}
-                          pending={pending}
-                          onPick={stowBalanceToCart}
-                          destinationIcon={CART_ACTION_ICON}
-                          destinationLabel="Cart"
-                          amounts={RAW_RESOURCE_AMOUNTS}
-                          showInfinity={false}
-                        />
-                      )}
-                      {!inAdventure && (
-                        <TransferButtons
-                          owned={owned}
-                          pending={pending}
-                          onPick={checkInBalanceToVault}
-                          destinationIcon={VAULT_ACTION_ICON}
-                          destinationLabel="Vault"
-                          amounts={RAW_RESOURCE_AMOUNTS}
-                          showInfinity={false}
-                        />
-                      )}
-                    </>
-                  ) : location === "backpack" ? (
-                    <>
-                      <TransferButtons
-                        owned={owned}
-                        pending={pending}
-                        onPick={inAdventure ? unloadBalanceToCamp : checkInBalanceToVault}
-                        destinationIcon={inAdventure ? CAMP_ACTION_ICON : VAULT_ACTION_ICON}
-                        destinationLabel={inAdventure ? "Camp" : "Vault"}
-                        amounts={RAW_RESOURCE_AMOUNTS}
-                        showInfinity={false}
-                      />
-                      {hasSaddlepackEquipped && (
-                        <TransferButtons
-                          owned={owned}
-                          pending={pending}
-                          onPick={moveBalanceBackpackToSaddlepack}
-                          destinationIcon={SADDLEPACK_ACTION_ICON}
-                          destinationLabel="Saddlepack"
-                          amounts={RAW_RESOURCE_AMOUNTS}
-                          showInfinity={false}
-                        />
-                      )}
-                      {(cartCapacity ?? 0) > 0 && !isContainer && !info?.familyId?.endsWith("_mount") && !info?.familyId?.endsWith("_companion") && (
-                        <TransferButtons
-                          owned={owned}
-                          pending={pending}
-                          onPick={moveBalanceBackpackToCart}
-                          destinationIcon={CART_ACTION_ICON}
-                          destinationLabel="Cart"
-                          amounts={RAW_RESOURCE_AMOUNTS}
-                          showInfinity={false}
-                        />
-                      )}
-                    </>
-                  ) : location === "saddlepack" ? (
-                    <>
-                      <TransferButtons
-                        owned={owned}
-                        pending={pending}
-                        onPick={inAdventure ? unloadBalanceFromSaddlepack : checkInBalanceToVault}
-                        destinationIcon={inAdventure ? CAMP_ACTION_ICON : VAULT_ACTION_ICON}
-                        destinationLabel={inAdventure ? "Camp" : "Vault"}
-                        amounts={RAW_RESOURCE_AMOUNTS}
-                        showInfinity={false}
-                      />
-                      {hasBackpackEquipped && (
-                        <TransferButtons
-                          owned={owned}
-                          pending={pending}
-                          onPick={moveBalanceSaddlepackToBackpack}
-                          destinationIcon={BACKPACK_ACTION_ICON}
-                          destinationLabel="Backpack"
-                          amounts={RAW_RESOURCE_AMOUNTS}
-                          showInfinity={false}
-                        />
-                      )}
-                      {(cartCapacity ?? 0) > 0 && !isContainer && !info?.familyId?.endsWith("_mount") && !info?.familyId?.endsWith("_companion") && (
-                        <TransferButtons
-                          owned={owned}
-                          pending={pending}
-                          onPick={moveBalanceSaddlepackToCart}
-                          destinationIcon={CART_ACTION_ICON}
-                          destinationLabel="Cart"
-                          amounts={RAW_RESOURCE_AMOUNTS}
-                          showInfinity={false}
-                        />
-                      )}
-                    </>
-                  ) : (
-                    <TransferButtons
-                      owned={owned}
-                      pending={pending}
-                      onPick={inAdventure ? unloadBalanceFromCart : checkInBalanceFromCart}
-                      destinationIcon={inAdventure ? CAMP_ACTION_ICON : VAULT_ACTION_ICON}
-                      destinationLabel={inAdventure ? "Camp" : "Vault"}
-                      amounts={RAW_RESOURCE_AMOUNTS}
-                      showInfinity={false}
-                    />
-                  )}
-                </>
-              ) : (
-                // Single-stack (stackSize <= 1): icon buttons only, no quantity picker
-                <div className={styles.itemPopupActions}>
-                  {location === "camp" ? (
-                    <>
-                      {hasBackpackEquipped && (
-                        <button
-                          type="button"
-                          className={styles.itemPopupBackpackButton}
-                          disabled={pending}
-                          onClick={() => stowBalanceToBackpack(1)}
-                          aria-label="Move to backpack"
-                          title="Move to backpack"
-                        >
-                          <div role="img" aria-label="Backpack" className={styles.itemPopupBackpackIcon} style={{ backgroundImage: `url(${BACKPACK_ACTION_ICON})` }} />
-                        </button>
-                      )}
-                      {hasSaddlepackEquipped && (
-                        <button
-                          type="button"
-                          className={styles.itemPopupBackpackButton}
-                          disabled={pending}
-                          onClick={() => stowBalanceToSaddlepack(1)}
-                          aria-label="Move to saddlepack"
-                          title="Move to saddlepack"
-                        >
-                          <div role="img" aria-label="Saddlepack" className={styles.itemPopupBackpackIcon} style={{ backgroundImage: `url(${SADDLEPACK_ACTION_ICON})` }} />
-                        </button>
-                      )}
-                      {!inAdventure && (
-                        <button
-                          type="button"
-                          className={styles.itemPopupBackpackButton}
-                          disabled={pending}
-                          onClick={() => checkInBalanceToVault(1)}
-                          aria-label="Move to vault"
-                          title="Move to vault"
-                        >
-                          <div role="img" aria-label="Vault" className={styles.itemPopupBackpackIcon} style={{ backgroundImage: `url(${VAULT_ACTION_ICON})` }} />
-                        </button>
-                      )}
-                    </>
-                  ) : location === "backpack" ? (
-                    <>
+                  {!!slotGroups.length && (
+                    <div className={styles.itemPopupActions}>
                       {slotGroups.map((slots) => (
                         <button
                           key={slots.join("+")}
                           type="button"
                           className={styles.itemPopupActionButton}
                           disabled={pending}
-                          onClick={() => equipToSlots(slots)}
+                          onClick={() => equipToSlots(slots, owned)}
                         >
                           {slots.map((slot, i) => (
                             <Fragment key={slot}>
@@ -4290,71 +3192,91 @@ export function ItemDetailPopup({
                           ))}
                         </button>
                       ))}
-                      <button
-                        type="button"
-                        className={styles.itemPopupBackpackButton}
-                        disabled={pending}
-                        onClick={() => inAdventure ? unloadBalanceToCamp(1) : checkInBalanceToVault(1)}
-                        aria-label={inAdventure ? "Move to camp" : "Move to vault"}
-                        title={inAdventure ? "Move to camp" : "Move to vault"}
-                      >
-                        <div role="img" aria-label={inAdventure ? "Camp" : "Vault"} className={styles.itemPopupBackpackIcon} style={{ backgroundImage: `url(${inAdventure ? CAMP_ACTION_ICON : VAULT_ACTION_ICON})` }} />
-                      </button>
-                      {hasSaddlepackEquipped && (
-                        <button
-                          type="button"
-                          className={styles.itemPopupBackpackButton}
-                          disabled={pending}
-                          onClick={() => moveBalanceBackpackToSaddlepack(1)}
-                          aria-label="Move to saddlepack"
-                          title="Move to saddlepack"
-                        >
-                          <div role="img" aria-label="Saddlepack" className={styles.itemPopupBackpackIcon} style={{ backgroundImage: `url(${SADDLEPACK_ACTION_ICON})` }} />
-                        </button>
-                      )}
-                    </>
-                  ) : location === "saddlepack" ? (
-                    <>
-                      <button
-                        type="button"
-                        className={styles.itemPopupBackpackButton}
-                        disabled={pending}
-                        onClick={() => inAdventure ? unloadBalanceFromSaddlepack(1) : checkInBalanceToVault(1)}
-                        aria-label={inAdventure ? "Move to camp" : "Move to vault"}
-                        title={inAdventure ? "Move to camp" : "Move to vault"}
-                      >
-                        <div role="img" aria-label={inAdventure ? "Camp" : "Vault"} className={styles.itemPopupBackpackIcon} style={{ backgroundImage: `url(${inAdventure ? CAMP_ACTION_ICON : VAULT_ACTION_ICON})` }} />
-                      </button>
-                      {hasBackpackEquipped && (
-                        <button
-                          type="button"
-                          className={styles.itemPopupBackpackButton}
-                          disabled={pending}
-                          onClick={() => moveBalanceSaddlepackToBackpack(1)}
-                          aria-label="Move to backpack"
-                          title="Move to backpack"
-                        >
-                          <div role="img" aria-label="Backpack" className={styles.itemPopupBackpackIcon} style={{ backgroundImage: `url(${BACKPACK_ACTION_ICON})` }} />
-                        </button>
-                      )}
-                    </>
-                  ) : (
+                    </div>
+                  )}
+                  {!inAdventure && location !== "camp" && (
+                    <TransferButtons owned={owned} pending={pending}
+                      onPick={location === "backpack" ? unloadBalanceToCamp : location === "saddlepack" ? unloadBalanceFromSaddlepack : unloadBalanceFromCart}
+                      destinationIcon={CAMP_ACTION_ICON} destinationLabel="Camp" amounts={RAW_RESOURCE_AMOUNTS} showInfinity={false} />
+                  )}
+                  {location !== "backpack" && hasBackpackEquipped && (
+                    <TransferButtons owned={owned} pending={pending}
+                      onPick={location === "camp" ? stowBalanceToBackpack : location === "saddlepack" ? moveBalanceSaddlepackToBackpack : moveBalanceCartToBackpack}
+                      destinationIcon={BACKPACK_ACTION_ICON} destinationLabel="Backpack" amounts={RAW_RESOURCE_AMOUNTS} showInfinity={false} />
+                  )}
+                  {location !== "saddlepack" && hasSaddlepackEquipped && (
+                    <TransferButtons owned={owned} pending={pending}
+                      onPick={location === "camp" ? stowBalanceToSaddlepack : location === "backpack" ? moveBalanceBackpackToSaddlepack : moveBalanceCartToSaddlepack}
+                      destinationIcon={SADDLEPACK_ACTION_ICON} destinationLabel="Saddlepack" amounts={RAW_RESOURCE_AMOUNTS} showInfinity={false} />
+                  )}
+                  {location !== "cart" && (cartCapacity ?? 0) > 0 && !isContainer && !info?.familyId?.endsWith("_mount") && !info?.familyId?.endsWith("_companion") && (
+                    <TransferButtons owned={owned} pending={pending}
+                      onPick={location === "camp" ? stowBalanceToCart : location === "backpack" ? moveBalanceBackpackToCart : moveBalanceSaddlepackToCart}
+                      destinationIcon={CART_ACTION_ICON} destinationLabel="Cart" amounts={RAW_RESOURCE_AMOUNTS} showInfinity={false} />
+                  )}
+                  {!inAdventure && location === "camp" && (
+                    <TransferButtons owned={owned} pending={pending}
+                      onPick={stowBalanceToVault}
+                      destinationIcon={VAULT_ACTION_ICON} destinationLabel="Vault" amounts={RAW_RESOURCE_AMOUNTS} showInfinity={false} />
+                  )}
+                </>
+              ) : (
+                <div className={styles.itemPopupActions}>
+                  {slotGroups.map((slots) => (
                     <button
+                      key={slots.join("+")}
                       type="button"
-                      className={styles.itemPopupBackpackButton}
+                      className={styles.itemPopupActionButton}
                       disabled={pending}
-                      onClick={() => inAdventure ? unloadBalanceFromCart(1) : checkInBalanceFromCart(1)}
-                      aria-label={inAdventure ? "Move to camp" : "Move to vault"}
-                      title={inAdventure ? "Move to camp" : "Move to vault"}
+                      onClick={() => equipToSlots(slots)}
                     >
-                      <div role="img" aria-label={inAdventure ? "Camp" : "Vault"} className={styles.itemPopupBackpackIcon} style={{ backgroundImage: `url(${inAdventure ? CAMP_ACTION_ICON : VAULT_ACTION_ICON})` }} />
+                      {slots.map((slot, i) => (
+                        <Fragment key={slot}>
+                          {i > 0 && " + "}
+                          {formatSlotLabel(slot)}
+                        </Fragment>
+                      ))}
+                    </button>
+                  ))}
+                  {!inAdventure && location !== "camp" && (
+                    <button type="button" className={styles.itemPopupBackpackButton} disabled={pending}
+                      onClick={() => (location === "backpack" ? unloadBalanceToCamp : location === "saddlepack" ? unloadBalanceFromSaddlepack : unloadBalanceFromCart)(1)}
+                      aria-label="Move to camp" title="Move to camp">
+                      <div role="img" aria-label="Camp" className={styles.itemPopupBackpackIcon} style={{ backgroundImage: `url(${CAMP_ACTION_ICON})` }} />
+                    </button>
+                  )}
+                  {location !== "backpack" && hasBackpackEquipped && (
+                    <button type="button" className={styles.itemPopupBackpackButton} disabled={pending}
+                      onClick={() => (location === "camp" ? stowBalanceToBackpack : location === "saddlepack" ? moveBalanceSaddlepackToBackpack : moveBalanceCartToBackpack)(1)}
+                      aria-label="Move to backpack" title="Move to backpack">
+                      <div role="img" aria-label="Backpack" className={styles.itemPopupBackpackIcon} style={{ backgroundImage: `url(${BACKPACK_ACTION_ICON})` }} />
+                    </button>
+                  )}
+                  {location !== "saddlepack" && hasSaddlepackEquipped && (
+                    <button type="button" className={styles.itemPopupBackpackButton} disabled={pending}
+                      onClick={() => (location === "camp" ? stowBalanceToSaddlepack : location === "backpack" ? moveBalanceBackpackToSaddlepack : moveBalanceCartToSaddlepack)(1)}
+                      aria-label="Move to saddlepack" title="Move to saddlepack">
+                      <div role="img" aria-label="Saddlepack" className={styles.itemPopupBackpackIcon} style={{ backgroundImage: `url(${SADDLEPACK_ACTION_ICON})` }} />
+                    </button>
+                  )}
+                  {location !== "cart" && (cartCapacity ?? 0) > 0 && !isContainer && !info?.familyId?.endsWith("_mount") && !info?.familyId?.endsWith("_companion") && (
+                    <button type="button" className={styles.itemPopupBackpackButton} disabled={pending}
+                      onClick={() => (location === "camp" ? stowBalanceToCart : location === "backpack" ? moveBalanceBackpackToCart : moveBalanceSaddlepackToCart)(1)}
+                      aria-label="Move to cart" title="Move to cart">
+                      <div role="img" aria-label="Cart" className={styles.itemPopupBackpackIcon} style={{ backgroundImage: `url(${CART_ACTION_ICON})` }} />
+                    </button>
+                  )}
+                  {!inAdventure && location === "camp" && (
+                    <button type="button" className={styles.itemPopupBackpackButton} disabled={pending}
+                      onClick={() => stowBalanceToVault(1)}
+                      aria-label="Move to vault" title="Move to vault">
+                      <div role="img" aria-label="Vault" className={styles.itemPopupBackpackIcon} style={{ backgroundImage: `url(${VAULT_ACTION_ICON})` }} />
                     </button>
                   )}
                 </div>
               )
             )}
           </>
-        )}
         {confirmMove && (
           <div className={styles.containerMoveConfirm} onClick={(e) => e.stopPropagation()}>
             <p className={styles.containerMoveConfirmText}>
@@ -4555,11 +3477,12 @@ export function InventoryTab({
     setVaultSpecialFilter((prev) => (prev === mode ? null : mode));
   };
 
+  const [selectedToolId, setSelectedToolId] = useState<string | null>(null);
+
   const [vaultSelectMode, setVaultSelectMode] = useState(false);
   const [vaultSelectedIds, setVaultSelectedIds] = useState<Set<string>>(new Set());
   const [vaultBatchBusy, setVaultBatchBusy] = useState(false);
   const [vaultConfirmDestroy, setVaultConfirmDestroy] = useState(false);
-  const [showVaultSalvagePopup, setShowVaultSalvagePopup] = useState(false);
 
   const exitVaultSelectMode = useCallback(() => {
     setVaultSelectMode(false);
@@ -4648,23 +3571,6 @@ export function InventoryTab({
     return false;
   }, [vaultSelectedIds, playerItemLookupIds, playerItems, itemCatalogTierInfo, hasBackpackEquipped, hasSaddlepackEquipped, hasCartInBodyOrCamp]);
 
-  const vaultSelectionHasContainer = useMemo(() => {
-    if (vaultSelectedIds.size === 0) return false;
-    const blockedFamilies = new Set(["backpack", "saddlepack", "cart"]);
-    const isBlocked = (fam: string) =>
-      blockedFamilies.has(fam) || fam.endsWith("_mount") || fam.endsWith("_companion");
-    for (const id of vaultSelectedIds) {
-      const baseId = stripStackSuffix(id);
-      if (playerItemLookupIds[baseId] !== undefined) {
-        const inst = playerItems.find((i) => i.instanceId === baseId);
-        if (inst && isBlocked(inst.familyId)) return true;
-      } else {
-        const info = itemCatalogTierInfo[baseId];
-        if (info && isBlocked(info.familyId)) return true;
-      }
-    }
-    return false;
-  }, [vaultSelectedIds, playerItemLookupIds, playerItems, itemCatalogTierInfo]);
 
   const batchMoveVault = useCallback(
     async (destination: "backpack" | "saddlepack" | "cart" | "camp") => {
@@ -4771,39 +3677,6 @@ export function InventoryTab({
               vaultSelectMode ? (
                 <div className={styles.selectionBar}>
                   <div className={styles.selectionBarActions}>
-                    {!character.availability.inAdventure && hasBackpackEquipped && (
-                      <button
-                        type="button"
-                        className={styles.selectionBarBtn}
-                        title="Move to backpack"
-                        disabled={vaultBatchBusy || vaultSelectedIds.size === 0 || vaultSelectionHasContainer}
-                        onClick={() => batchMoveVault("backpack")}
-                      >
-                        <div className={styles.selectionBarIcon} style={{ backgroundImage: `url(${BACKPACK_ACTION_ICON})` }} />
-                      </button>
-                    )}
-                    {!character.availability.inAdventure && hasSaddlepackEquipped && (
-                      <button
-                        type="button"
-                        className={styles.selectionBarBtn}
-                        title="Move to saddlepack"
-                        disabled={vaultBatchBusy || vaultSelectedIds.size === 0 || vaultSelectionHasContainer}
-                        onClick={() => batchMoveVault("saddlepack")}
-                      >
-                        <div className={styles.selectionBarIcon} style={{ backgroundImage: `url(${SADDLEPACK_ACTION_ICON})` }} />
-                      </button>
-                    )}
-                    {!character.availability.inAdventure && (character.gear.cartCapacity ?? 0) > 0 && (
-                      <button
-                        type="button"
-                        className={styles.selectionBarBtn}
-                        title="Move to cart"
-                        disabled={vaultBatchBusy || vaultSelectedIds.size === 0 || vaultSelectionHasContainer}
-                        onClick={() => batchMoveVault("cart")}
-                      >
-                        <div className={styles.selectionBarIcon} style={{ backgroundImage: `url(${CART_ACTION_ICON})` }} />
-                      </button>
-                    )}
                     {!character.availability.inAdventure && (
                       <button
                         type="button"
@@ -4881,30 +3754,6 @@ export function InventoryTab({
                 </div>
               )
             )}
-            {showVaultSalvagePopup && (
-              <ChopBlockPopup
-                characterId={character.id}
-                source="vault"
-                onPlayerDataUpdated={(data) => { onPlayerDataUpdated?.(data); exitVaultSelectMode(); }}
-                onClose={() => setShowVaultSalvagePopup(false)}
-                preSelectedIds={new Set([...vaultSelectedIds].map(stripStackSuffix))}
-                preSelectedAmounts={(() => {
-                  const amounts = new Map<string, number>();
-                  for (const raw of vaultSelectedIds) {
-                    const id = stripStackSuffix(raw);
-                    if (playerItemLookupIds[id] !== undefined) continue;
-                    const info = itemCatalogTierInfo[id];
-                    const stackSize = Math.max(1, info?.stackSize ?? 1);
-                    const qty = playerItemsCombined[id] ?? 0;
-                    const hash = raw.lastIndexOf("#");
-                    const tileIdx = hash === -1 ? 0 : parseInt(raw.slice(hash + 1), 10);
-                    const itemsInTile = Math.max(0, Math.min(stackSize, qty - tileIdx * stackSize));
-                    if (itemsInTile > 0) amounts.set(id, (amounts.get(id) ?? 0) + itemsInTile);
-                  }
-                  return amounts;
-                })()}
-              />
-            )}
             {vaultConfirmDestroy && (
               <div className={styles.confirmDestroyOverlay} onClick={() => setVaultConfirmDestroy(false)}>
                 <div className={styles.confirmDestroyCard} onClick={(e) => e.stopPropagation()}>
@@ -4947,6 +3796,7 @@ export function InventoryTab({
               });
               if (sorted.length === 0) return <p className={styles.inventoryEmpty}>No tools owned.</p>;
               return (
+                <>
                 <SpecialTileScroll>
                   {(h) => (
                     <div className={sorted.length <= Math.floor(h / ITEM_TILE_PX) ? styles.specialTileGridRow : styles.specialTileGrid}>
@@ -4956,21 +3806,37 @@ export function InventoryTab({
                         const words = fullName.split(" ");
                         const shortName = words.length > 1 ? words.slice(1).join(" ") : fullName;
                         return (
-                          <div key={id} className={`${styles.itemGridCell} ${styles.specialTile}`} title={fullName}>
+                          <button key={id} type="button" className={`${styles.itemGridCell} ${styles.specialTile}`} title={fullName} onClick={() => setSelectedToolId(id)}>
                             {!!info?.tier && (
                               <span className={styles.itemGridTierBadge}>{getTierIndicator(info.tier)}</span>
                             )}
                             <span className={styles.specialTileLabel}>{shortName}</span>
                             <span className={styles.specialTileKindBadge}>{getToolFamilyIcon(info?.familyId ?? "")}</span>
-                            {playerTools[id] > 1 && (
-                              <span className={styles.itemGridCountBadge}>{playerTools[id]}</span>
-                            )}
-                          </div>
+                            <span className={styles.itemGridCountBadge}>{playerTools[id]}</span>
+                          </button>
                         );
                       })}
                     </div>
                   )}
                 </SpecialTileScroll>
+                {selectedToolId && toolTierInfo[selectedToolId] && (
+                  <ItemDetailPopup
+                    info={toolTierInfo[selectedToolId]}
+                    fallbackName={formatResourceLabel(selectedToolId)}
+                    owned={playerTools[selectedToolId] ?? 0}
+                    isInstance={false}
+                    movable={false}
+                    quality={null}
+                    moveId={selectedToolId}
+                    source="vault"
+                    hasBackpackEquipped={hasBackpackEquipped}
+                    hasSaddlepackEquipped={hasSaddlepackEquipped}
+                    characterId={character.id}
+                    onPlayerDataUpdated={onPlayerDataUpdated}
+                    onClose={() => setSelectedToolId(null)}
+                  />
+                )}
+              </>
               );
             })() : vaultSpecialFilter === "resources" ? (() => {
               const resIds = Object.keys(playerResourceBalances).filter((id) => playerResourceBalances[id] > 0);

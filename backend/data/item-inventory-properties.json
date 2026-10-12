@@ -8,7 +8,20 @@
     "stackSize": 1,
     "needsItemDefinition": false,
     "note": "Utility gear - does not wear out, no durability tracking needed.",
-    "equipSlots": [],
+    "equipSlots": [
+      [
+        "Left Hand"
+      ],
+      [
+        "Right Hand"
+      ],
+      [
+        "Girdle"
+      ],
+      [
+        "Side"
+      ]
+    ],
     "backpackable": true
   },
   {
@@ -21,10 +34,18 @@
     "needsItemDefinition": true,
     "note": "Wears out with use.",
     "equipSlots": [
-      ["Left Hand"],
-      ["Right Hand"],
-      ["Side"],
-      ["Girdle"]
+      [
+        "Left Hand"
+      ],
+      [
+        "Right Hand"
+      ],
+      [
+        "Side"
+      ],
+      [
+        "Girdle"
+      ]
     ],
     "backpackable": true,
     "qualityMax": 20
@@ -38,7 +59,20 @@
     "stackSize": 10,
     "needsItemDefinition": false,
     "note": "Utility gear - does not wear out, no durability tracking needed.",
-    "equipSlots": [],
+    "equipSlots": [
+      [
+        "Left Hand"
+      ],
+      [
+        "Right Hand"
+      ],
+      [
+        "Girdle"
+      ],
+      [
+        "Side"
+      ]
+    ],
     "backpackable": true
   },
   {
@@ -77,10 +111,18 @@
     "needsItemDefinition": true,
     "note": "Wears out with use.",
     "equipSlots": [
-      ["Left Hand"],
-      ["Right Hand"],
-      ["Side"],
-      ["Girdle"]
+      [
+        "Left Hand"
+      ],
+      [
+        "Right Hand"
+      ],
+      [
+        "Side"
+      ],
+      [
+        "Girdle"
+      ]
     ],
     "backpackable": true,
     "qualityMax": 20
@@ -94,7 +136,14 @@
     "stackSize": 1,
     "needsItemDefinition": true,
     "note": "Wears out with use.",
-    "equipSlots": [["Left Hand"], ["Right Hand"]],
+    "equipSlots": [
+      [
+        "Left Hand"
+      ],
+      [
+        "Right Hand"
+      ]
+    ],
     "backpackable": true,
     "qualityMax": 20
   },
@@ -124,7 +173,20 @@
     "stackSize": 10,
     "needsItemDefinition": false,
     "note": "Utility gear - does not wear out, no durability tracking needed.",
-    "equipSlots": [["Left Hand"], ["Right Hand"], ["Girdle"]],
+    "equipSlots": [
+      [
+        "Left Hand"
+      ],
+      [
+        "Right Hand"
+      ],
+      [
+        "Girdle"
+      ],
+      [
+        "Side"
+      ]
+    ],
     "backpackable": true
   },
   {
@@ -153,7 +215,20 @@
     "stackSize": 10,
     "needsItemDefinition": false,
     "note": "Utility gear - does not wear out, no durability tracking needed.",
-    "equipSlots": [],
+    "equipSlots": [
+      [
+        "Left Hand"
+      ],
+      [
+        "Right Hand"
+      ],
+      [
+        "Girdle"
+      ],
+      [
+        "Side"
+      ]
+    ],
     "backpackable": true
   },
   {
@@ -166,10 +241,18 @@
     "needsItemDefinition": true,
     "note": "Wears out with use.",
     "equipSlots": [
-      ["Left Hand"],
-      ["Right Hand"],
-      ["Side"],
-      ["Girdle"]
+      [
+        "Left Hand"
+      ],
+      [
+        "Right Hand"
+      ],
+      [
+        "Side"
+      ],
+      [
+        "Girdle"
+      ]
     ],
     "backpackable": true,
     "qualityMax": 20
@@ -184,9 +267,15 @@
     "needsItemDefinition": true,
     "note": "Wears out with use.",
     "equipSlots": [
-      ["Left Hand"],
-      ["Right Hand"],
-      ["Side"]
+      [
+        "Left Hand"
+      ],
+      [
+        "Right Hand"
+      ],
+      [
+        "Side"
+      ]
     ],
     "backpackable": true,
     "qualityMax": 20
@@ -201,9 +290,15 @@
     "needsItemDefinition": true,
     "note": "Wears out with use.",
     "equipSlots": [
-      ["Left Hand"],
-      ["Right Hand"],
-      ["Side"]
+      [
+        "Left Hand"
+      ],
+      [
+        "Right Hand"
+      ],
+      [
+        "Side"
+      ]
     ],
     "backpackable": true,
     "qualityMax": 20
@@ -239,9 +334,15 @@
     "needsItemDefinition": true,
     "note": "Wears out with use.",
     "equipSlots": [
-      ["Left Hand"],
-      ["Right Hand"],
-      ["Side"]
+      [
+        "Left Hand"
+      ],
+      [
+        "Right Hand"
+      ],
+      [
+        "Side"
+      ]
     ],
     "backpackable": true,
     "qualityMax": 20
@@ -256,10 +357,18 @@
     "needsItemDefinition": true,
     "note": "Wears out with use.",
     "equipSlots": [
-      ["Side"],
-      ["Left Hand"],
-      ["Right Hand"],
-      ["Girdle"]
+      [
+        "Side"
+      ],
+      [
+        "Left Hand"
+      ],
+      [
+        "Right Hand"
+      ],
+      [
+        "Girdle"
+      ]
     ],
     "backpackable": true,
     "qualityMax": 20
@@ -314,9 +423,15 @@
     "needsItemDefinition": true,
     "note": "Wears out with use.",
     "equipSlots": [
-      ["Left Hand"],
-      ["Right Hand"],
-      ["Girdle"]
+      [
+        "Left Hand"
+      ],
+      [
+        "Right Hand"
+      ],
+      [
+        "Girdle"
+      ]
     ],
     "backpackable": true,
     "qualityMax": 20
@@ -330,7 +445,20 @@
     "stackSize": 1,
     "needsItemDefinition": false,
     "note": "Utility gear - does not wear out, no durability tracking needed.",
-    "equipSlots": [],
+    "equipSlots": [
+      [
+        "Left Hand"
+      ],
+      [
+        "Right Hand"
+      ],
+      [
+        "Girdle"
+      ],
+      [
+        "Side"
+      ]
+    ],
     "backpackable": true
   },
   {
@@ -342,7 +470,20 @@
     "stackSize": 1,
     "needsItemDefinition": false,
     "note": "Utility gear - does not wear out, no durability tracking needed.",
-    "equipSlots": [],
+    "equipSlots": [
+      [
+        "Left Hand"
+      ],
+      [
+        "Right Hand"
+      ],
+      [
+        "Girdle"
+      ],
+      [
+        "Side"
+      ]
+    ],
     "backpackable": true
   },
   {
@@ -354,7 +495,20 @@
     "stackSize": 1,
     "needsItemDefinition": false,
     "note": "Never equipped - carried as a backpack item, not an individually tracked instance.",
-    "equipSlots": [],
+    "equipSlots": [
+      [
+        "Left Hand"
+      ],
+      [
+        "Right Hand"
+      ],
+      [
+        "Girdle"
+      ],
+      [
+        "Side"
+      ]
+    ],
     "backpackable": true
   },
   {
@@ -366,7 +520,20 @@
     "stackSize": 1,
     "needsItemDefinition": false,
     "note": "Utility gear - does not wear out, no durability tracking needed.",
-    "equipSlots": [],
+    "equipSlots": [
+      [
+        "Left Hand"
+      ],
+      [
+        "Right Hand"
+      ],
+      [
+        "Girdle"
+      ],
+      [
+        "Side"
+      ]
+    ],
     "backpackable": true
   },
   {
@@ -810,7 +977,20 @@
     "stackSize": 1,
     "needsItemDefinition": false,
     "note": "A trade tool - does not wear out, no durability tracking needed.",
-    "equipSlots": [],
+    "equipSlots": [
+      [
+        "Left Hand"
+      ],
+      [
+        "Right Hand"
+      ],
+      [
+        "Girdle"
+      ],
+      [
+        "Side"
+      ]
+    ],
     "backpackable": true
   },
   {
@@ -822,7 +1002,20 @@
     "stackSize": 10,
     "needsItemDefinition": false,
     "note": "Consumed on use, not degraded - proposed as a simple stackable count.",
-    "equipSlots": [],
+    "equipSlots": [
+      [
+        "Left Hand"
+      ],
+      [
+        "Right Hand"
+      ],
+      [
+        "Girdle"
+      ],
+      [
+        "Side"
+      ]
+    ],
     "backpackable": true
   },
   {
@@ -834,7 +1027,20 @@
     "stackSize": 10,
     "needsItemDefinition": false,
     "note": "Consumed on use, not degraded - proposed as a simple stackable count.",
-    "equipSlots": [],
+    "equipSlots": [
+      [
+        "Left Hand"
+      ],
+      [
+        "Right Hand"
+      ],
+      [
+        "Girdle"
+      ],
+      [
+        "Side"
+      ]
+    ],
     "backpackable": true
   },
   {
@@ -846,7 +1052,20 @@
     "stackSize": 10,
     "needsItemDefinition": false,
     "note": "Consumed on use, not degraded - proposed as a simple stackable count.",
-    "equipSlots": [],
+    "equipSlots": [
+      [
+        "Left Hand"
+      ],
+      [
+        "Right Hand"
+      ],
+      [
+        "Girdle"
+      ],
+      [
+        "Side"
+      ]
+    ],
     "backpackable": true
   },
   {
@@ -858,7 +1077,20 @@
     "stackSize": 1,
     "needsItemDefinition": false,
     "note": "Consumed on use, not degraded - proposed as a simple backpackable food.",
-    "equipSlots": [],
+    "equipSlots": [
+      [
+        "Left Hand"
+      ],
+      [
+        "Right Hand"
+      ],
+      [
+        "Girdle"
+      ],
+      [
+        "Side"
+      ]
+    ],
     "backpackable": true
   },
   {
@@ -870,7 +1102,20 @@
     "stackSize": 10,
     "needsItemDefinition": false,
     "note": "Consumed on use, not degraded - proposed as a simple stackable count.",
-    "equipSlots": [],
+    "equipSlots": [
+      [
+        "Left Hand"
+      ],
+      [
+        "Right Hand"
+      ],
+      [
+        "Girdle"
+      ],
+      [
+        "Side"
+      ]
+    ],
     "backpackable": true
   },
   {
@@ -882,7 +1127,20 @@
     "stackSize": 10,
     "needsItemDefinition": false,
     "note": "Consumed on use, not degraded - proposed as a simple stackable count.",
-    "equipSlots": [],
+    "equipSlots": [
+      [
+        "Left Hand"
+      ],
+      [
+        "Right Hand"
+      ],
+      [
+        "Girdle"
+      ],
+      [
+        "Side"
+      ]
+    ],
     "backpackable": true
   },
   {
@@ -894,7 +1152,20 @@
     "stackSize": 1,
     "needsItemDefinition": false,
     "note": "Consumed on use, not degraded - proposed as a simple backpackable food.",
-    "equipSlots": [],
+    "equipSlots": [
+      [
+        "Left Hand"
+      ],
+      [
+        "Right Hand"
+      ],
+      [
+        "Girdle"
+      ],
+      [
+        "Side"
+      ]
+    ],
     "backpackable": true
   },
   {
@@ -906,7 +1177,20 @@
     "stackSize": 10,
     "needsItemDefinition": false,
     "note": "Consumed on use, not degraded - proposed as a simple stackable count.",
-    "equipSlots": [],
+    "equipSlots": [
+      [
+        "Left Hand"
+      ],
+      [
+        "Right Hand"
+      ],
+      [
+        "Girdle"
+      ],
+      [
+        "Side"
+      ]
+    ],
     "backpackable": true
   },
   {
@@ -918,7 +1202,20 @@
     "stackSize": 10,
     "needsItemDefinition": false,
     "note": "Consumed on use, not degraded - proposed as a simple stackable count.",
-    "equipSlots": [],
+    "equipSlots": [
+      [
+        "Left Hand"
+      ],
+      [
+        "Right Hand"
+      ],
+      [
+        "Girdle"
+      ],
+      [
+        "Side"
+      ]
+    ],
     "backpackable": true
   },
   {
@@ -930,7 +1227,20 @@
     "stackSize": 10,
     "needsItemDefinition": false,
     "note": "Consumed on use, not degraded - proposed as a simple stackable count.",
-    "equipSlots": [],
+    "equipSlots": [
+      [
+        "Left Hand"
+      ],
+      [
+        "Right Hand"
+      ],
+      [
+        "Girdle"
+      ],
+      [
+        "Side"
+      ]
+    ],
     "backpackable": true
   },
   {
@@ -942,7 +1252,20 @@
     "stackSize": 10,
     "needsItemDefinition": false,
     "note": "Consumed on use, not degraded - proposed as a simple stackable count.",
-    "equipSlots": [],
+    "equipSlots": [
+      [
+        "Left Hand"
+      ],
+      [
+        "Right Hand"
+      ],
+      [
+        "Girdle"
+      ],
+      [
+        "Side"
+      ]
+    ],
     "backpackable": true
   },
   {
@@ -954,7 +1277,20 @@
     "stackSize": 10,
     "needsItemDefinition": false,
     "note": "Consumed on use, not degraded - proposed as a simple stackable count.",
-    "equipSlots": [],
+    "equipSlots": [
+      [
+        "Left Hand"
+      ],
+      [
+        "Right Hand"
+      ],
+      [
+        "Girdle"
+      ],
+      [
+        "Side"
+      ]
+    ],
     "backpackable": true
   },
   {
@@ -966,7 +1302,20 @@
     "stackSize": 10,
     "needsItemDefinition": false,
     "note": "Consumed on use, not degraded - proposed as a simple stackable count.",
-    "equipSlots": [],
+    "equipSlots": [
+      [
+        "Left Hand"
+      ],
+      [
+        "Right Hand"
+      ],
+      [
+        "Girdle"
+      ],
+      [
+        "Side"
+      ]
+    ],
     "backpackable": true
   },
   {
@@ -978,7 +1327,20 @@
     "stackSize": 10,
     "needsItemDefinition": false,
     "note": "Consumed on use, not degraded - proposed as a simple stackable count.",
-    "equipSlots": [],
+    "equipSlots": [
+      [
+        "Left Hand"
+      ],
+      [
+        "Right Hand"
+      ],
+      [
+        "Girdle"
+      ],
+      [
+        "Side"
+      ]
+    ],
     "backpackable": true
   },
   {
@@ -990,7 +1352,20 @@
     "stackSize": 10,
     "needsItemDefinition": false,
     "note": "Consumed on use, not degraded - proposed as a simple stackable count.",
-    "equipSlots": [],
+    "equipSlots": [
+      [
+        "Left Hand"
+      ],
+      [
+        "Right Hand"
+      ],
+      [
+        "Girdle"
+      ],
+      [
+        "Side"
+      ]
+    ],
     "backpackable": true
   },
   {
@@ -1002,7 +1377,20 @@
     "stackSize": 10,
     "needsItemDefinition": false,
     "note": "Consumed on use, not degraded - proposed as a simple stackable count.",
-    "equipSlots": [],
+    "equipSlots": [
+      [
+        "Left Hand"
+      ],
+      [
+        "Right Hand"
+      ],
+      [
+        "Girdle"
+      ],
+      [
+        "Side"
+      ]
+    ],
     "backpackable": true
   },
   {
@@ -1184,7 +1572,20 @@
     "stackSize": 10,
     "needsItemDefinition": false,
     "note": "Never equipped - carried as a stackable backpack item, not an individually tracked instance.",
-    "equipSlots": [],
+    "equipSlots": [
+      [
+        "Left Hand"
+      ],
+      [
+        "Right Hand"
+      ],
+      [
+        "Girdle"
+      ],
+      [
+        "Side"
+      ]
+    ],
     "backpackable": true
   },
   {
@@ -1351,7 +1752,20 @@
     "stackSize": 10,
     "needsItemDefinition": false,
     "note": "Consumed by use.",
-    "equipSlots": [],
+    "equipSlots": [
+      [
+        "Left Hand"
+      ],
+      [
+        "Right Hand"
+      ],
+      [
+        "Girdle"
+      ],
+      [
+        "Side"
+      ]
+    ],
     "backpackable": true
   },
   {
@@ -1363,7 +1777,20 @@
     "stackSize": 10,
     "needsItemDefinition": false,
     "note": "Never equipped - carried as a stackable backpack item, not an individually tracked instance.",
-    "equipSlots": [],
+    "equipSlots": [
+      [
+        "Left Hand"
+      ],
+      [
+        "Right Hand"
+      ],
+      [
+        "Girdle"
+      ],
+      [
+        "Side"
+      ]
+    ],
     "backpackable": true
   },
   {
@@ -1375,7 +1802,20 @@
     "stackSize": 10,
     "needsItemDefinition": false,
     "note": "Consumed on use, not degraded - proposed as a simple stackable count.",
-    "equipSlots": [],
+    "equipSlots": [
+      [
+        "Left Hand"
+      ],
+      [
+        "Right Hand"
+      ],
+      [
+        "Girdle"
+      ],
+      [
+        "Side"
+      ]
+    ],
     "backpackable": true
   },
   {
@@ -1387,7 +1827,20 @@
     "stackSize": 10,
     "needsItemDefinition": false,
     "note": "Consumed on use, not degraded - proposed as a simple stackable count.",
-    "equipSlots": [],
+    "equipSlots": [
+      [
+        "Left Hand"
+      ],
+      [
+        "Right Hand"
+      ],
+      [
+        "Girdle"
+      ],
+      [
+        "Side"
+      ]
+    ],
     "backpackable": true
   },
   {
@@ -1399,7 +1852,20 @@
     "stackSize": 10,
     "needsItemDefinition": false,
     "note": "Consumed on use, not degraded - proposed as a simple stackable count.",
-    "equipSlots": [],
+    "equipSlots": [
+      [
+        "Left Hand"
+      ],
+      [
+        "Right Hand"
+      ],
+      [
+        "Girdle"
+      ],
+      [
+        "Side"
+      ]
+    ],
     "backpackable": true
   },
   {
@@ -1411,7 +1877,20 @@
     "stackSize": 10,
     "needsItemDefinition": false,
     "note": "Consumed on use, not degraded - proposed as a simple stackable count.",
-    "equipSlots": [],
+    "equipSlots": [
+      [
+        "Left Hand"
+      ],
+      [
+        "Right Hand"
+      ],
+      [
+        "Girdle"
+      ],
+      [
+        "Side"
+      ]
+    ],
     "backpackable": true
   },
   {
@@ -1762,10 +2241,18 @@
     "needsItemDefinition": true,
     "note": "Wears out with use.",
     "equipSlots": [
-      ["Left Hand"],
-      ["Right Hand"],
-      ["Side"],
-      ["Girdle"]
+      [
+        "Left Hand"
+      ],
+      [
+        "Right Hand"
+      ],
+      [
+        "Side"
+      ],
+      [
+        "Girdle"
+      ]
     ],
     "backpackable": true,
     "qualityMax": 140
@@ -2159,7 +2646,20 @@
     "stackSize": 10,
     "needsItemDefinition": false,
     "note": "Stackable ammo for Quiver - consumed one at a time when fired.",
-    "equipSlots": [],
+    "equipSlots": [
+      [
+        "Left Hand"
+      ],
+      [
+        "Right Hand"
+      ],
+      [
+        "Girdle"
+      ],
+      [
+        "Side"
+      ]
+    ],
     "backpackable": true
   },
   {
@@ -2171,7 +2671,20 @@
     "stackSize": 10,
     "needsItemDefinition": false,
     "note": "Stackable ammo for Bolt Girdle - consumed one at a time when fired.",
-    "equipSlots": [],
+    "equipSlots": [
+      [
+        "Left Hand"
+      ],
+      [
+        "Right Hand"
+      ],
+      [
+        "Girdle"
+      ],
+      [
+        "Side"
+      ]
+    ],
     "backpackable": true
   },
   {
@@ -2183,7 +2696,20 @@
     "stackSize": 10,
     "needsItemDefinition": false,
     "note": "Stackable fuel for a lit lantern - burn duration bottlenecked by whichever of lantern/oil is the lower tier (see light-source-burn-hours.json). Not tied to one specific lantern instance.",
-    "equipSlots": [],
+    "equipSlots": [
+      [
+        "Left Hand"
+      ],
+      [
+        "Right Hand"
+      ],
+      [
+        "Girdle"
+      ],
+      [
+        "Side"
+      ]
+    ],
     "backpackable": true
   },
   {
@@ -2195,7 +2721,20 @@
     "stackSize": 10,
     "needsItemDefinition": false,
     "note": "Stackable writing material - used for written_scroll.",
-    "equipSlots": [],
+    "equipSlots": [
+      [
+        "Left Hand"
+      ],
+      [
+        "Right Hand"
+      ],
+      [
+        "Girdle"
+      ],
+      [
+        "Side"
+      ]
+    ],
     "backpackable": true
   },
   {
@@ -2207,7 +2746,20 @@
     "stackSize": 10,
     "needsItemDefinition": false,
     "note": "Stackable writing material - used for scriptorium and written_scroll.",
-    "equipSlots": [],
+    "equipSlots": [
+      [
+        "Left Hand"
+      ],
+      [
+        "Right Hand"
+      ],
+      [
+        "Girdle"
+      ],
+      [
+        "Side"
+      ]
+    ],
     "backpackable": true
   },
   {

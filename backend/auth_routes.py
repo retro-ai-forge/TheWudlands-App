@@ -91,12 +91,16 @@ from backend.players import (
     unload_item_balance_from_backpack,
     unload_item_balance_from_saddlepack,
     unload_item_balance_from_cart,
+    move_item_balance_cart_to_backpack,
+    move_item_balance_cart_to_saddlepack,
     check_in_item_balance_from_cart,
     load_item_balance_to_cart,
     move_item_balance_backpack_to_cart,
     move_item_balance_saddlepack_to_cart,
     unload_resource_from_backpack,
     move_cart_item_to_camp,
+    move_cart_item_to_backpack,
+    move_cart_item_to_saddlepack,
     move_backpack_item_to_cart,
     move_camp_item_to_cart,
     move_saddlepack_item_to_cart,
@@ -281,6 +285,7 @@ class ItemInstanceResponse(BaseModel):
     )
     slotRef: List[str] = Field(default_factory=list)
     createdAt: str
+    quantity: Optional[int] = None
 
 
 class CharacterCraftingResponse(BaseModel):
@@ -1112,6 +1117,8 @@ class EquipItemRequest(BaseModel):
     """Which body slot(s) to equip an item instance into."""
 
     slots: List[str] = Field(..., description="One slot for an ordinary item, or both for a twoHanded item")
+    amount: Optional[int] = Field(None, description="For stackable balance items: how many to equip (default 1)")
+    location: Optional[str] = Field(None, description="Source bucket for balance equips: camp, backpack, saddlepack, cart")
 
 
 @player_router.post("/me/characters/{character_id}/items/{instance_id}/equip", response_model=PlayerDataResponse)
@@ -1120,7 +1127,7 @@ async def equip_item_route(
 ):
     """Equip one of a character's own item instances into `slots` - also doubles as the reslot action for an already-equipped instance (e.g. swap hands, move a dagger to its Girdle slot)."""
     try:
-        player = await equip_item(address, character_id, instance_id, payload.slots)
+        player = await equip_item(address, character_id, instance_id, payload.slots, amount=payload.amount, from_location=payload.location)
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc))
 
@@ -1361,6 +1368,36 @@ async def move_cart_item_to_camp_route(
 ):
     """Move one item instance from a character's cart into their camp storage."""
     player = await move_cart_item_to_camp(address, character_id, instance_id)
+    if player is None:
+        raise HTTPException(status_code=404, detail="No matching cart instance on that character")
+
+    return player.to_dict()
+
+
+@player_router.post("/me/characters/{character_id}/items/{instance_id}/cart-to-backpack", response_model=PlayerDataResponse)
+async def move_cart_item_to_backpack_route(
+    character_id: str, instance_id: str, address: str = Depends(get_current_address)
+):
+    """Move one item instance from a character's cart into their backpack."""
+    try:
+        player = await move_cart_item_to_backpack(address, character_id, instance_id)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+    if player is None:
+        raise HTTPException(status_code=404, detail="No matching cart instance on that character")
+
+    return player.to_dict()
+
+
+@player_router.post("/me/characters/{character_id}/items/{instance_id}/cart-to-saddlepack", response_model=PlayerDataResponse)
+async def move_cart_item_to_saddlepack_route(
+    character_id: str, instance_id: str, address: str = Depends(get_current_address)
+):
+    """Move one item instance from a character's cart into their saddlepack."""
+    try:
+        player = await move_cart_item_to_saddlepack(address, character_id, instance_id)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
     if player is None:
         raise HTTPException(status_code=404, detail="No matching cart instance on that character")
 
@@ -1826,6 +1863,38 @@ async def unload_item_balance_from_cart_route(
     """Move `amount` of `item_id` from a character's cart back into camp."""
     try:
         player = await unload_item_balance_from_cart(address, character_id, item_id, payload.amount)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc))
+    if player is None:
+        raise HTTPException(status_code=404, detail="No matching character, or not enough in the cart")
+    return player.to_dict()
+
+
+@player_router.post(
+    "/me/characters/{character_id}/item-balances/{item_id}/cart-to-backpack", response_model=PlayerDataResponse
+)
+async def move_item_balance_cart_to_backpack_route(
+    character_id: str, item_id: str, payload: TransferAmountRequest, address: str = Depends(get_current_address)
+):
+    """Move `amount` of `item_id` from a character's cart into their backpack."""
+    try:
+        player = await move_item_balance_cart_to_backpack(address, character_id, item_id, payload.amount)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc))
+    if player is None:
+        raise HTTPException(status_code=404, detail="No matching character, or not enough in the cart")
+    return player.to_dict()
+
+
+@player_router.post(
+    "/me/characters/{character_id}/item-balances/{item_id}/cart-to-saddlepack", response_model=PlayerDataResponse
+)
+async def move_item_balance_cart_to_saddlepack_route(
+    character_id: str, item_id: str, payload: TransferAmountRequest, address: str = Depends(get_current_address)
+):
+    """Move `amount` of `item_id` from a character's cart into their saddlepack."""
+    try:
+        player = await move_item_balance_cart_to_saddlepack(address, character_id, item_id, payload.amount)
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc))
     if player is None:

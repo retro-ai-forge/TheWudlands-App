@@ -381,24 +381,35 @@ export function CampView({
       if (batchBusy || selectedIds.size === 0) return;
       setBatchBusy(true);
       const instanceIds: string[] = [];
-      const balances: { id: string; amount: number }[] = [];
-      const resources: { id: string; amount: number }[] = [];
-      const seen = new Set<string>();
+      const balanceTotals = new Map<string, number>();
+      const resourceTotals = new Map<string, number>();
       for (const raw of selectedIds) {
-        const key = raw.startsWith("res:") ? raw : stripStackSuffix(raw);
-        if (seen.has(key)) continue;
-        seen.add(key);
-        if (key.startsWith("res:")) {
-          const resId = stripStackSuffix(key.slice(4));
-          const amount = campResourceBalances[resId] ?? 0;
-          if (amount > 0) resources.push({ id: resId, amount });
-        } else if (campInstanceLookupIds[key] !== undefined) {
-          instanceIds.push(key);
+        if (raw.startsWith("res:")) {
+          const stripped = raw.slice(4);
+          const resId = stripStackSuffix(stripped);
+          const info = resourceTierInfo[resId];
+          const stackSize = info?.category === "raw" ? 40 : 20;
+          const qty = campResourceBalances[resId] ?? 0;
+          const hash = stripped.lastIndexOf("#");
+          const tileIdx = hash === -1 ? 0 : parseInt(stripped.slice(hash + 1), 10);
+          const itemsInTile = Math.max(0, Math.min(stackSize, qty - tileIdx * stackSize));
+          if (itemsInTile > 0) resourceTotals.set(resId, (resourceTotals.get(resId) ?? 0) + itemsInTile);
+        } else if (campInstanceLookupIds[stripStackSuffix(raw)] !== undefined) {
+          const key = stripStackSuffix(raw);
+          if (!balanceTotals.has(key)) instanceIds.push(key);
         } else {
-          const amount = campCombined[key] ?? 0;
-          if (amount > 0) balances.push({ id: key, amount });
+          const id = stripStackSuffix(raw);
+          const info = itemCatalogTierInfo[id];
+          const stackSize = Math.max(1, info?.stackSize ?? 1);
+          const qty = campCombined[id] ?? 0;
+          const hash = raw.lastIndexOf("#");
+          const tileIdx = hash === -1 ? 0 : parseInt(raw.slice(hash + 1), 10);
+          const itemsInTile = Math.max(0, Math.min(stackSize, qty - tileIdx * stackSize));
+          if (itemsInTile > 0) balanceTotals.set(id, (balanceTotals.get(id) ?? 0) + itemsInTile);
         }
       }
+      const balances = Array.from(balanceTotals, ([id, amount]) => ({ id, amount }));
+      const resources = Array.from(resourceTotals, ([id, amount]) => ({ id, amount }));
       const r = await postJson(
         `/api/auth/me/characters/${character.id}/camp/bulk-move`,
         { destination, instanceIds, balances, resources }
@@ -407,39 +418,48 @@ export function CampView({
       setBatchBusy(false);
       exitSelectMode();
     },
-    [batchBusy, selectedIds, campResourceBalances, campInstanceLookupIds, campCombined, character.id, onPlayerDataUpdated, exitSelectMode]
+    [batchBusy, selectedIds, campResourceBalances, campInstanceLookupIds, campCombined, itemCatalogTierInfo, resourceTierInfo, character.id, onPlayerDataUpdated, exitSelectMode]
   );
 
   const batchDestroyCamp = useCallback(async () => {
     if (batchBusy || selectedIds.size === 0) return;
     setBatchBusy(true);
     let lastResult: RawPlayerData | null = null;
-    const seen = new Set<string>();
+    const instancesSeen = new Set<string>();
+    const balanceTotals = new Map<string, number>();
     for (const raw of selectedIds) {
       if (raw.startsWith("res:")) continue;
-      const key = stripStackSuffix(raw);
-      if (seen.has(key)) continue;
-      seen.add(key);
-      const isInstance = campInstanceLookupIds[key] !== undefined;
+      const id = stripStackSuffix(raw);
+      const isInstance = campInstanceLookupIds[id] !== undefined;
       if (isInstance) {
-        const r = await postJson(
-          `/api/auth/me/characters/${character.id}/items/${key}/destroy-from-character`
-        );
-        if (r.ok) lastResult = r.data;
+        instancesSeen.add(id);
       } else {
-        const amount = campCombined[key] ?? 0;
-        if (amount <= 0) continue;
-        const r = await postJson(
-          `/api/auth/me/characters/${character.id}/item-balances/${key}/destroy-from-character`,
-          { amount }
-        );
-        if (r.ok) lastResult = r.data;
+        const info = itemCatalogTierInfo[id];
+        const stackSize = Math.max(1, info?.stackSize ?? 1);
+        const qty = campCombined[id] ?? 0;
+        const hash = raw.lastIndexOf("#");
+        const tileIdx = hash === -1 ? 0 : parseInt(raw.slice(hash + 1), 10);
+        const itemsInTile = Math.max(0, Math.min(stackSize, qty - tileIdx * stackSize));
+        if (itemsInTile > 0) balanceTotals.set(id, (balanceTotals.get(id) ?? 0) + itemsInTile);
       }
+    }
+    for (const id of instancesSeen) {
+      const r = await postJson(
+        `/api/auth/me/characters/${character.id}/items/${id}/destroy-from-character`
+      );
+      if (r.ok) lastResult = r.data;
+    }
+    for (const [id, amount] of balanceTotals) {
+      const r = await postJson(
+        `/api/auth/me/characters/${character.id}/item-balances/${id}/destroy-from-character`,
+        { amount }
+      );
+      if (r.ok) lastResult = r.data;
     }
     if (lastResult) onPlayerDataUpdated?.(lastResult);
     setBatchBusy(false);
     exitSelectMode();
-  }, [batchBusy, selectedIds, campInstanceLookupIds, campCombined, character.id, onPlayerDataUpdated, exitSelectMode]);
+  }, [batchBusy, selectedIds, campInstanceLookupIds, campCombined, itemCatalogTierInfo, character.id, onPlayerDataUpdated, exitSelectMode]);
 
   return (
     <div className={styles.panel} onContextMenu={(e) => e.preventDefault()}>

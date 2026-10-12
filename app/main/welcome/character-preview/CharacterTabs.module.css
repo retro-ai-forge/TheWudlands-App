@@ -641,7 +641,7 @@
   margin-left: -0.15rem;
   margin-right: -0.15rem;
   margin-top: -0.5rem;
-  margin-bottom: -1.5rem;
+  margin-bottom: 0;
   border: none;
 }
 
@@ -2184,6 +2184,24 @@
   width: 14px;
   height: 14px;
   clip-path: polygon(0 0, 100% 100%, 0 100%);
+  pointer-events: none;
+}
+
+.equipSlotQuantity {
+  position: absolute;
+  bottom: 2px;
+  right: 3px;
+  z-index: 3;
+  min-width: 1.1rem;
+  padding: 0 0.25rem;
+  font-size: 0.7rem;
+  font-weight: bold;
+  line-height: 1.3rem;
+  text-align: center;
+  color: #d4c9a8;
+  background: rgba(10, 8, 4, 0.85);
+  border: 1px solid #3a3020;
+  border-radius: 4px;
   pointer-events: none;
 }
 

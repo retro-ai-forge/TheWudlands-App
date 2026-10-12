@@ -130,6 +130,8 @@ def _doc_to_player(doc: dict) -> Player:
     if not isinstance(vault.get("items"), list):
         vault["items"] = []
     vault.setdefault("itemBalances", {})
+    for item in vault["items"]:
+        item.setdefault("createdAt", datetime.now(timezone.utc).isoformat())
 
     characters = doc.get("characters", [])
     for character in characters:
@@ -145,6 +147,8 @@ def _doc_to_player(doc: dict) -> Player:
         character.setdefault("stats", {})
         character["stats"].setdefault("adventureFinished", 0)
         character["stats"].setdefault("adventureRunAway", 0)
+        for item in character["gear"].get("items", []):
+            item.setdefault("createdAt", datetime.now(timezone.utc).isoformat())
         character["gear"]["backpackSlotsUsed"] = items_catalog.backpack_slots_used(character)
         character["gear"]["backpackCapacity"] = items_catalog.backpack_capacity(character)
         character["gear"]["saddlepackSlotsUsed"] = items_catalog.saddlepack_slots_used(character)
@@ -2930,7 +2934,7 @@ def _has_parent_equipped(character: dict, parent_slot: str) -> bool:
     )
 
 
-async def equip_item(address: str, character_id: str, instance_id: str, slots: List[str]) -> Optional[Player]:
+async def equip_item(address: str, character_id: str, instance_id: str, slots: List[str], amount: Optional[int] = None, from_location: Optional[str] = None) -> Optional[Player]:
     """
     Equip one of a character's own item instances into `slots` - exactly
     the slot names its family requires: one slot for an ordinary item, or
@@ -2979,10 +2983,16 @@ async def equip_item(address: str, character_id: str, instance_id: str, slots: L
     )
 
     is_balance_equip = False
+    is_balance_merge = False
+    equip_qty = 1
     balance_bucket: Optional[str] = None
+    existing_equipped: Optional[dict] = None
     if instance is None:
         balance_id = instance_id
-        for bucket in ("backpack", "camp", "saddlepack", "cart"):
+        buckets = ("backpack", "camp", "saddlepack", "cart")
+        if from_location and from_location in buckets:
+            buckets = (from_location,) + tuple(b for b in buckets if b != from_location)
+        for bucket in buckets:
             qty = character.get("gear", {}).get("itemBalances", {}).get(bucket, {}).get(balance_id, 0)
             if qty > 0:
                 balance_bucket = bucket
@@ -2995,18 +3005,40 @@ async def equip_item(address: str, character_id: str, instance_id: str, slots: L
         family = items_catalog.ITEM_FAMILIES_BY_ID.get(entry.family_id)
         if family is None:
             return None
-        if family.stack_size > 1:
+        if family.stack_size > 1 and not family.equip_slots:
             raise ValueError("Stackable items cannot be equipped")
-        instance = {
-            "instanceId": uuid.uuid4().hex,
-            "itemId": balance_id,
-            "familyId": entry.family_id,
-            "quality": None,
-            "location": balance_bucket,
-            "slotRef": [],
-        }
-        is_balance_equip = True
-        source_location = balance_bucket
+        equip_qty = min(amount or 1, qty) if family.stack_size > 1 else 1
+        existing_equipped = next(
+            (i for i in character.get("gear", {}).get("items", [])
+             if i.get("itemId") == balance_id and i.get("location") == "body"
+             and sorted(i.get("slotRef", [])) == sorted(slots)),
+            None,
+        ) if family.stack_size > 1 else None
+        if existing_equipped:
+            current_qty = existing_equipped.get("quantity", 1)
+            room = family.stack_size - current_qty
+            if room <= 0:
+                raise ValueError("Stack is full")
+            equip_qty = min(equip_qty, room)
+            instance = existing_equipped
+            is_balance_equip = True
+            source_location = balance_bucket
+            is_balance_merge = True
+        else:
+            instance = {
+                "instanceId": uuid.uuid4().hex,
+                "itemId": balance_id,
+                "familyId": entry.family_id,
+                "quality": None,
+                "location": balance_bucket,
+                "slotRef": [],
+                "createdAt": datetime.now(timezone.utc).isoformat(),
+            }
+            if family.stack_size > 1:
+                instance["quantity"] = equip_qty
+            is_balance_equip = True
+            source_location = balance_bucket
+            is_balance_merge = False
     else:
         source_location = instance["location"]
         family = items_catalog.ITEM_FAMILIES_BY_ID.get(instance["familyId"])
@@ -3050,7 +3082,25 @@ async def equip_item(address: str, character_id: str, instance_id: str, slots: L
     # keys in one update).
     equipped_instance = {**instance, "location": "body", "slotRef": slots}
 
-    if is_balance_equip:
+    if is_balance_equip and is_balance_merge:
+        char_idx = next(i for i, c in enumerate(doc["characters"]) if c["id"] == character_id)
+        balance_path = f"characters.{char_idx}.gear.itemBalances.{balance_bucket}.{balance_id}"
+        item_idx = next(
+            i for i, it in enumerate(character.get("gear", {}).get("items", []))
+            if it["instanceId"] == existing_equipped["instanceId"]
+        )
+        qty_path = f"characters.{char_idx}.gear.items.{item_idx}.quantity"
+        doc = await db.players.find_one_and_update(
+            {
+                "address": address,
+                balance_path: {"$gte": equip_qty},
+            },
+            {
+                "$inc": {balance_path: -equip_qty, qty_path: equip_qty},
+            },
+            return_document=ReturnDocument.AFTER,
+        )
+    elif is_balance_equip:
         char_idx = next(i for i, c in enumerate(doc["characters"]) if c["id"] == character_id)
         balance_path = f"characters.{char_idx}.gear.itemBalances.{balance_bucket}.{balance_id}"
         doc = await db.players.find_one_and_update(
@@ -3068,14 +3118,91 @@ async def equip_item(address: str, character_id: str, instance_id: str, slots: L
                         },
                     }
                 },
-                balance_path: {"$gte": 1},
+                balance_path: {"$gte": equip_qty},
             },
             {
-                "$inc": {balance_path: -1},
+                "$inc": {balance_path: -equip_qty},
                 "$push": {"characters.$.gear.items": equipped_instance},
             },
             return_document=ReturnDocument.AFTER,
         )
+    elif (
+        source_location == "body"
+        and family is not None
+        and family.stack_size > 1
+        and instance.get("quantity", 1) > 0
+    ):
+        target_instance = next(
+            (i for i in character.get("gear", {}).get("items", [])
+             if i["instanceId"] != instance_id
+             and i.get("itemId") == instance.get("itemId")
+             and i.get("location") == "body"
+             and any(s in (i.get("slotRef") or []) for s in slots)),
+            None,
+        )
+        if target_instance:
+            src_qty = instance.get("quantity", 1)
+            tgt_qty = target_instance.get("quantity", 1)
+            room = family.stack_size - tgt_qty
+            transfer = min(src_qty, room)
+            if transfer <= 0:
+                raise ValueError("Stack is full")
+            leftover = src_qty - transfer
+            char_idx = next(i for i, c in enumerate(doc["characters"]) if c["id"] == character_id)
+            src_item_idx = next(
+                i for i, it in enumerate(character.get("gear", {}).get("items", []))
+                if it["instanceId"] == instance_id
+            )
+            tgt_item_idx = next(
+                i for i, it in enumerate(character.get("gear", {}).get("items", []))
+                if it["instanceId"] == target_instance["instanceId"]
+            )
+            tgt_qty_path = f"characters.{char_idx}.gear.items.{tgt_item_idx}.quantity"
+            if leftover > 0:
+                src_qty_path = f"characters.{char_idx}.gear.items.{src_item_idx}.quantity"
+                doc = await db.players.find_one_and_update(
+                    {"address": address},
+                    {"$set": {src_qty_path: leftover, tgt_qty_path: tgt_qty + transfer}},
+                    return_document=ReturnDocument.AFTER,
+                )
+            else:
+                await db.players.update_one(
+                    {"address": address},
+                    {"$set": {tgt_qty_path: tgt_qty + transfer}},
+                )
+                doc = await db.players.find_one_and_update(
+                    {"address": address},
+                    {"$pull": {"characters.$[char].gear.items": {"instanceId": instance_id}}},
+                    array_filters=[{"char.id": character_id}],
+                    return_document=ReturnDocument.AFTER,
+                )
+        else:
+            doc = await db.players.find_one_and_update(
+                {
+                    "address": address,
+                    "characters": {
+                        "$elemMatch": {
+                            "id": character_id,
+                            "$and": [
+                                {"gear.items": {"$elemMatch": {"instanceId": instance_id, "location": source_location}}},
+                                {
+                                    "gear.items": {
+                                        "$not": {
+                                            "$elemMatch": {
+                                                "instanceId": {"$ne": instance_id},
+                                                "slotRef": {"$in": slots},
+                                            }
+                                        }
+                                    }
+                                },
+                            ],
+                        }
+                    },
+                },
+                {"$set": {"characters.$[char].gear.items.$[item]": equipped_instance}},
+                array_filters=[{"char.id": character_id}, {"item.instanceId": instance_id, "item.location": source_location}],
+                return_document=ReturnDocument.AFTER,
+            )
     else:
         doc = await db.players.find_one_and_update(
             {
@@ -3161,7 +3288,7 @@ async def equip_item_from_pool(address: str, character_id: str, instance_id: str
         family = items_catalog.ITEM_FAMILIES_BY_ID.get(entry.family_id)
         if family is None:
             return None
-        if family.stack_size > 1:
+        if family.stack_size > 1 and not family.equip_slots:
             raise ValueError("Stackable items cannot be equipped")
         instance = {
             "instanceId": uuid.uuid4().hex,
@@ -3170,6 +3297,7 @@ async def equip_item_from_pool(address: str, character_id: str, instance_id: str
             "quality": None,
             "location": "pool",
             "slotRef": [],
+            "createdAt": datetime.now(timezone.utc).isoformat(),
         }
         is_balance_equip = True
     else:
@@ -3319,7 +3447,7 @@ async def unequip_item(
     is_balance_origin = (
         family_obj is not None
         and not family_obj.needs_item_definition
-        and family_obj.stack_size <= 1
+        and (family_obj.stack_size <= 1 or bool(family_obj.equip_slots))
     )
 
     if destination == "backpack" and not items_catalog.has_backpack_available(character):
@@ -3358,7 +3486,7 @@ async def unequip_item(
         pull_ids = [instance_id]
         balance_inc: Dict[str, int] = {}
         if is_balance_origin:
-            balance_inc[f"vault.itemBalances.{instance['itemId']}"] = 1
+            balance_inc[f"vault.itemBalances.{instance['itemId']}"] = instance.get("quantity", 1)
 
         # This instance IS the currently-equipped backpack (location:
         # "body" was just required to find it above), so its storage
@@ -3551,7 +3679,7 @@ async def unequip_item(
                 },
                 {
                     "$pull": {"characters.$[char].gear.items": {"instanceId": instance_id}},
-                    "$inc": {f"characters.{char_idx}.gear.itemBalances.{target_location}.{instance['itemId']}": 1},
+                    "$inc": {f"characters.{char_idx}.gear.itemBalances.{target_location}.{instance['itemId']}": instance.get("quantity", 1)},
                 },
                 array_filters=[{"char.id": character_id}],
                 return_document=ReturnDocument.AFTER,
@@ -4107,6 +4235,86 @@ async def move_cart_item_to_camp(address: str, character_id: str, instance_id: s
         return None
 
     moved_instance = {**instance, "location": "camp", "slotRef": []}
+    doc = await db.players.find_one_and_update(
+        {
+            "address": address,
+            "characters": {
+                "$elemMatch": {"id": character_id, "gear.items": {"$elemMatch": {"instanceId": instance_id, "location": "cart"}}}
+            },
+        },
+        {"$set": {"characters.$[char].gear.items.$[item]": moved_instance}},
+        array_filters=[{"char.id": character_id}, {"item.instanceId": instance_id, "item.location": "cart"}],
+        return_document=ReturnDocument.AFTER,
+    )
+    if doc is None:
+        return None
+    return _doc_to_player(doc)
+
+
+async def move_cart_item_to_backpack(address: str, character_id: str, instance_id: str) -> Optional[Player]:
+    """Move one item instance from cart into this character's backpack. Capacity-gated."""
+    db = get_database()
+    doc = await db.players.find_one({"address": address, "characters.id": character_id})
+    if doc is None:
+        return None
+    character = next((c for c in doc["characters"] if c["id"] == character_id), None)
+    if character is None:
+        return None
+    instance = next(
+        (i for i in character.get("gear", {}).get("items", []) if i["instanceId"] == instance_id and i.get("location") == "cart"),
+        None,
+    )
+    if instance is None:
+        return None
+
+    capacity = items_catalog.backpack_capacity(character)
+    if capacity == 0:
+        raise ValueError("No backpack equipped")
+    cost = items_catalog.slot_cost_for_family(instance["familyId"])
+    if items_catalog.backpack_slots_used(character) + cost > capacity:
+        raise ValueError("Backpack is full")
+
+    moved_instance = {**instance, "location": "backpack", "slotRef": []}
+    doc = await db.players.find_one_and_update(
+        {
+            "address": address,
+            "characters": {
+                "$elemMatch": {"id": character_id, "gear.items": {"$elemMatch": {"instanceId": instance_id, "location": "cart"}}}
+            },
+        },
+        {"$set": {"characters.$[char].gear.items.$[item]": moved_instance}},
+        array_filters=[{"char.id": character_id}, {"item.instanceId": instance_id, "item.location": "cart"}],
+        return_document=ReturnDocument.AFTER,
+    )
+    if doc is None:
+        return None
+    return _doc_to_player(doc)
+
+
+async def move_cart_item_to_saddlepack(address: str, character_id: str, instance_id: str) -> Optional[Player]:
+    """Move one item instance from cart into this character's saddlepack. Capacity-gated."""
+    db = get_database()
+    doc = await db.players.find_one({"address": address, "characters.id": character_id})
+    if doc is None:
+        return None
+    character = next((c for c in doc["characters"] if c["id"] == character_id), None)
+    if character is None:
+        return None
+    instance = next(
+        (i for i in character.get("gear", {}).get("items", []) if i["instanceId"] == instance_id and i.get("location") == "cart"),
+        None,
+    )
+    if instance is None:
+        return None
+
+    capacity = items_catalog.saddlepack_capacity(character)
+    if capacity == 0:
+        raise ValueError("No saddlepack equipped")
+    cost = items_catalog.slot_cost_for_family(instance["familyId"])
+    if items_catalog.saddlepack_slots_used(character) + cost > capacity:
+        raise ValueError("Saddlepack is full")
+
+    moved_instance = {**instance, "location": "saddlepack", "slotRef": []}
     doc = await db.players.find_one_and_update(
         {
             "address": address,
@@ -6914,6 +7122,98 @@ async def unload_item_balance_from_cart(
         {"$inc": {
             f"characters.$.gear.itemBalances.cart.{item_id}": -amount,
             f"characters.$.gear.itemBalances.camp.{item_id}": amount,
+        }},
+        return_document=ReturnDocument.AFTER,
+    )
+    if doc is None:
+        return None
+    await _prune_char_zeros(db, address, character_id, doc, [f"gear.itemBalances.cart.{item_id}"])
+    return _doc_to_player(doc)
+
+
+async def move_item_balance_cart_to_backpack(
+    address: str, character_id: str, item_id: str, amount: int = 1
+) -> Optional[Player]:
+    """Move `amount` of `item_id` from cart itemBalances into backpack — capacity-gated on backpack."""
+    if amount <= 0:
+        raise ValueError("amount must be positive")
+    db = get_database()
+    doc = await db.players.find_one({"address": address, "characters.id": character_id})
+    if doc is None:
+        return None
+    character = next((c for c in doc["characters"] if c["id"] == character_id), None)
+    if character is None:
+        return None
+    if character.get("gear", {}).get("itemBalances", {}).get("cart", {}).get(item_id, 0) < amount:
+        return None
+
+    stack_size, slot_cost = items_catalog.resolve_item_balance_stack(item_id)
+    existing = character.get("gear", {}).get("itemBalances", {}).get("backpack", {}).get(item_id, 0)
+    marginal_slots = (
+        math.ceil((existing + amount) / stack_size) - math.ceil(existing / stack_size)
+    ) * slot_cost
+
+    capacity = items_catalog.backpack_capacity(character)
+    if capacity == 0:
+        raise ValueError("No backpack equipped")
+    used = items_catalog.backpack_slots_used(character)
+    if used + marginal_slots > capacity:
+        raise ValueError("Backpack is full")
+
+    doc = await db.players.find_one_and_update(
+        {
+            "address": address,
+            "characters": {"$elemMatch": {"id": character_id, f"gear.itemBalances.cart.{item_id}": {"$gte": amount}}},
+        },
+        {"$inc": {
+            f"characters.$.gear.itemBalances.cart.{item_id}": -amount,
+            f"characters.$.gear.itemBalances.backpack.{item_id}": amount,
+        }},
+        return_document=ReturnDocument.AFTER,
+    )
+    if doc is None:
+        return None
+    await _prune_char_zeros(db, address, character_id, doc, [f"gear.itemBalances.cart.{item_id}"])
+    return _doc_to_player(doc)
+
+
+async def move_item_balance_cart_to_saddlepack(
+    address: str, character_id: str, item_id: str, amount: int = 1
+) -> Optional[Player]:
+    """Move `amount` of `item_id` from cart itemBalances into saddlepack — capacity-gated on saddlepack."""
+    if amount <= 0:
+        raise ValueError("amount must be positive")
+    db = get_database()
+    doc = await db.players.find_one({"address": address, "characters.id": character_id})
+    if doc is None:
+        return None
+    character = next((c for c in doc["characters"] if c["id"] == character_id), None)
+    if character is None:
+        return None
+    if character.get("gear", {}).get("itemBalances", {}).get("cart", {}).get(item_id, 0) < amount:
+        return None
+
+    stack_size, slot_cost = items_catalog.resolve_item_balance_stack(item_id)
+    existing = character.get("gear", {}).get("itemBalances", {}).get("saddlepack", {}).get(item_id, 0)
+    marginal_slots = (
+        math.ceil((existing + amount) / stack_size) - math.ceil(existing / stack_size)
+    ) * slot_cost
+
+    capacity = items_catalog.saddlepack_capacity(character)
+    if capacity == 0:
+        raise ValueError("No saddlepack equipped")
+    used = items_catalog.saddlepack_slots_used(character)
+    if used + marginal_slots > capacity:
+        raise ValueError("Saddlepack is full")
+
+    doc = await db.players.find_one_and_update(
+        {
+            "address": address,
+            "characters": {"$elemMatch": {"id": character_id, f"gear.itemBalances.cart.{item_id}": {"$gte": amount}}},
+        },
+        {"$inc": {
+            f"characters.$.gear.itemBalances.cart.{item_id}": -amount,
+            f"characters.$.gear.itemBalances.saddlepack.{item_id}": amount,
         }},
         return_document=ReturnDocument.AFTER,
     )

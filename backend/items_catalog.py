@@ -649,6 +649,8 @@ _CARRY_WEIGHT_EXCLUDED_SLOTS = frozenset({
     "Charm", "Rune",
 })
 
+_CARRY_WEIGHT_EXCLUDED_FAMILIES = frozenset({"cart"})
+
 
 def carry_weight_used(character: dict) -> int:
     """
@@ -669,6 +671,8 @@ def carry_weight_used(character: dict) -> int:
         loc = instance.get("location")
         if loc == "body":
             if _CARRY_WEIGHT_EXCLUDED_SLOTS.intersection(instance.get("slotRef", [])):
+                continue
+            if instance.get("familyId") in _CARRY_WEIGHT_EXCLUDED_FAMILIES:
                 continue
             total += slot_cost_for_item(instance["itemId"], instance["familyId"])
         elif loc == "backpack":
@@ -691,11 +695,13 @@ def carry_weight_used(character: dict) -> int:
 
 
 def body_gear_weight(character: dict) -> int:
-    """Weight of body-worn gear only (no backpack contents, no mount/companion sub-slots)."""
+    """Weight of body-worn gear only (no backpack contents, no mount/companion sub-slots, no carts)."""
     total = 0
     for instance in character.get("gear", {}).get("items", []):
         if instance.get("location") == "body":
             if _CARRY_WEIGHT_EXCLUDED_SLOTS.intersection(instance.get("slotRef", [])):
+                continue
+            if instance.get("familyId") in _CARRY_WEIGHT_EXCLUDED_FAMILIES:
                 continue
             total += slot_cost_for_item(instance["itemId"], instance["familyId"])
     return total
