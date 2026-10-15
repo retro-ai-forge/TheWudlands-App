@@ -502,7 +502,7 @@
 }
 
 /* The time/XP preview shown under "Craft" once a craftable recipe is
-   selected - see InventoryTab.tsx's craftXpPreview. */
+   selected - see VaultTab.tsx's craftXpPreview. */
 .craftButtonDetail {
   display: block;
   margin-top: 0.15rem;
@@ -577,7 +577,7 @@
 
 /* "{name} is on the road." while the character is out on an adventure -
    same placement/sizing as .craftError (shown instead of it, never both
-   at once - see InventoryTab.tsx). The button itself just falls back to
+   at once - see VaultTab.tsx). The button itself just falls back to
    its own plain :disabled look then, no extra glow. */
 .craftUnavailable {
   font-size: 0.75rem;
@@ -628,7 +628,7 @@
 
 /* Embeds the standalone crafting recipe reference (public/craft/recipe-viewer.html)
    inline, same treatment as SoulCreation's .recipeViewerFrame - height is
-   set inline (see InventoryTab.tsx's recipeViewerHeight state), a
+   set inline (see VaultTab.tsx's recipeViewerHeight state), a
    ResizeObserver on the iframe's own (same-origin) body mirrors its real
    content height so there's never dead grey space or an inner scrollbar. */
 .recipeViewerFrame {
@@ -2357,7 +2357,7 @@
   display: block;
 }
 
-/* ---- Inventory tab ---- */
+/* ---- Vault / Camp tab ---- */
 
 .inventoryLayout {
   display: flex;
@@ -2469,7 +2469,7 @@
    in progress, but stays on screen a while after the ingredients/tools it
    was summing up are already gone, slowly fading out rather than just
    vanishing the instant the craft completes. Duration must match
-   CRAFT_RESULT_FADE_MS in InventoryTab.tsx, which clears it from state once
+   CRAFT_RESULT_FADE_MS in VaultTab.tsx, which clears it from state once
    the fade finishes. */
 .craftResultFading {
   animation: craftResultFadeOut 8s ease-in forwards;
@@ -2482,7 +2482,7 @@
 }
 
 /* Mirrors app/characters/page.tsx's accordion exactly (same palette/behavior
-   - mutual exclusivity within a group, handled in InventoryTab's own state
+   - mutual exclusivity within a group, handled in VaultTab's own state
    rather than native <details>, so opening one section closes its sibling). */
 .accordionItem {
   border: 1px solid #3a3020;
@@ -2527,8 +2527,8 @@
 
 .vaultFilterBar {
   display: flex;
-  gap: 0.25rem;
-  padding: 0.25rem 0.25rem 0.4rem;
+  gap: 0.15rem;
+  padding: 0.15rem 0.25rem 0.25rem;
   flex-wrap: wrap;
 }
 
@@ -2541,17 +2541,17 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  min-width: 1.6rem;
-  width: 2.2rem;
-  height: 2.2rem;
-  font-size: 1.25rem;
+  min-width: 1.4rem;
+  width: 1.8rem;
+  height: 1.6rem;
+  font-size: 0.95rem;
   line-height: 1;
   background: #1a1810;
   border: 1px solid #3a3020;
   color: #7a6a3a;
   cursor: pointer;
   user-select: none;
-  border-radius: 4px;
+  border-radius: 3px;
   padding: 0;
   flex-shrink: 1;
 }
@@ -2661,6 +2661,16 @@
   pointer-events: none;
 }
 
+.specialTileIcon {
+  position: absolute;
+  inset: 6px;
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
+  image-rendering: pixelated;
+  filter: brightness(1.15);
+}
+
 .specialTileLabel {
   display: flex;
   width: 100%;
@@ -2677,7 +2687,7 @@
 
 .vaultFilterGroup {
   display: flex;
-  gap: 0.25rem;
+  gap: 0.15rem;
   width: 100%;
 }
 
@@ -3119,7 +3129,7 @@
   pointer-events: none;
 }
 
-/* Shared "no real art yet" placeholder (see InventoryTab.tsx's ItemIcon
+/* Shared "no real art yet" placeholder (see VaultTab.tsx's ItemIcon
    component) - a dark tile with a spinning ring instead of
    FALLBACK_ITEM_ICON's own generic picture, across every real-item icon
    context (grid tile, equip slot, popup) - always composes with that
@@ -3290,7 +3300,7 @@
   position: fixed;
   inset: 0;
   z-index: 20;
-  /* Explicit, not just the default - HoldActionPopup (see InventoryTab.tsx)
+  /* Explicit, not just the default - HoldActionPopup (see VaultTab.tsx)
      renders this overlay as a child of .campfireStage (CampView.tsx's
      fixed-position campfire/dropped-items area), which sets
      pointer-events:none on itself so its own empty space doesn't block
@@ -3354,7 +3364,7 @@
    overlayClassName/cardClassName/iconClassName props) - same idea as
    .chopBlockOverlay/.chopBlockCard/.chopBlockIcon above, but shrunk
    further: unlike CampView (which hides the page's fixed footer bar
-   entirely while open), this popup opens over the Body/Inventory tab,
+   entirely while open), this popup opens over the Body/Vault tab,
    where the footer stays on screen - and CANNOT be painted over despite
    its own z-index:20 (.itemPopupOverlay), because it's nested inside
    .sheet (position:relative; z-index:2), which - since setting z-index
@@ -3407,7 +3417,7 @@
    shows (PackedItemsRow returns before measuring when nothing is packed),
    and the steady size PackedItemsRow's useLayoutEffect keeps once items
    are added, only shrinking it when the rows need the room. Keep in sync
-   with CONTAINER_ICON_PX in InventoryTab.tsx. */
+   with CONTAINER_ICON_PX in VaultTab.tsx. */
 .backpackPopupCard > .itemPopupImg {
   width: 140px;
   height: 140px;
@@ -3720,7 +3730,7 @@
   border-color: #60b070;
 }
 
-/* SalvageDestroyPopup (InventoryTab.tsx) - opened by a long press on an
+/* SalvageDestroyPopup (VaultTab.tsx) - opened by a long press on an
    ItemGrid tile instead of the ordinary click. Reuses .itemPopupOverlay/
    .itemPopupCard for the dimmed backdrop and card shell, this just widens
    the gap between its two stacked sections. */
@@ -3838,7 +3848,7 @@
   color: #8a7a60;
 }
 
-/* Marker-only class, no rules of its own - lets InventoryTab.tsx's
+/* Marker-only class, no rules of its own - lets VaultTab.tsx's
    handleClick tell "the salvage hold bar" (label+track+icon together,
    still one hold target) apart from .destroySection's other, now
    non-interactive use (destroy's own label+track, whose click area only
@@ -3908,7 +3918,7 @@
 }
 
 /* Grows from empty over the hold, its own solid color recomputed every
-   frame by InventoryTab.tsx's destroyFillColor (gold -> red -> blood red)
+   frame by VaultTab.tsx's destroyFillColor (gold -> red -> blood red)
    rather than a fixed gradient image sliding into view. No CSS transition
    on width/background - both are already driven frame-by-frame by
    SalvageDestroyPopup's own rAF loop, and a transition here would lag one
@@ -3948,14 +3958,14 @@
 }
 
 /* Same role as .destroyIcon above, for HoldActionPopup's own hold bar
-   (see InventoryTab.tsx) - an actual image (campfire_lit.png/
+   (see VaultTab.tsx) - an actual image (campfire_lit.png/
    dropped.png) instead of an emoji, so sized much bigger to actually
    read as art rather than a small glyph, though not the full 90% width
    .destroyProgressTrack right above it uses (no extra max-width cap of
    its own - .itemPopupCard's own max-width already ceilings the whole
    card, so this can't get silly on a wide screen either). Unlike
    .destroySection in the original destroy/salvage bar, THIS is the
-   actual hold target here (see InventoryTab.tsx's own onPointerDown/Up
+   actual hold target here (see VaultTab.tsx's own onPointerDown/Up
    on this element) - same cursor/touch handling .destroySection itself
    carries, moved onto this element instead since it's what's actually
    interactive now. */
@@ -4002,7 +4012,7 @@
   margin-top: -1.5rem;
 }
 
-/* HoldActionPopup's own disabled prop (see InventoryTab.tsx) - nothing
+/* HoldActionPopup's own disabled prop (see VaultTab.tsx) - nothing
    selected to act on yet, so the hold gesture is a no-op. Dimmed rather
    than hidden, same as any other disabled button elsewhere. */
 .holdActionIconDisabled {
@@ -4159,8 +4169,9 @@
 .selectionBar {
   display: flex;
   align-items: center;
-  padding: 0.2rem 0.2rem 0.35rem;
+  padding: 0.15rem 0.25rem 0.25rem;
   gap: 0.15rem;
+  min-height: 3.7rem;
 }
 
 .selectionBarActions {
@@ -4188,8 +4199,8 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  width: clamp(2.4rem, 7vw, 2.8rem);
-  height: clamp(2.4rem, 7vw, 2.8rem);
+  width: clamp(2.6rem, 8vw, 3.2rem);
+  height: clamp(2.6rem, 8vw, 3.2rem);
   flex-shrink: 1;
   background: #1a1810;
   border: 1px solid #3a3020;
@@ -4218,8 +4229,8 @@
 }
 
 .selectionBarIcon {
-  width: 30px;
-  height: 30px;
+  width: 36px;
+  height: 36px;
   background-size: contain;
   background-repeat: no-repeat;
   background-position: center;

@@ -7,7 +7,7 @@ from __future__ import annotations
 import uuid
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
-from typing import Dict, List, Optional
+from typing import Dict, Optional
 
 # Valid values for Character.vital_status, per the "Vital Status" lore
 # section on the world page (app/theworld/page.tsx). Nothing sets a
@@ -157,48 +157,21 @@ class Character:
     profession: ProfStats = field(default_factory=ProfStats)
     attr: AttributeStats = field(default_factory=AttributeStats)
     created_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
-    # Temporary crafting-session staging area: resources/tools/itemBalances
-    # borrowed from the player's shared crafting/vault pools by
-    # backend.players.start_craft to stage one active craft, and drained by
-    # finish_craft (or check_in_resource/check_in_tool as a manual escape
-    # hatch). Never a place a player parks materials directly - see the
-    # item-instance plan's "Backpack capacity" section for the full model.
-    # {"resources": {id: qty}, "tools": {id: qty}, "itemBalances": {id: qty},
+    # Temporary crafting-session staging area: itemBalances borrowed from
+    # camp (with vault as overflow) by start_craft, drained by finish_craft.
+    # {"itemBalances": {id: qty},
     #  "activeCraft": {"familyId", "tier", "readyAt", ...} | None}
     crafting: dict = field(default_factory=lambda: {
-        "resources": {},
-        "tools": {},
         "itemBalances": {},
         "activeCraft": None,
     })
-    # Blueprint ids this character has learned (see backend.craft_catalog) -
-    # chosen on the Trappings step from the pools their professions unlock.
-    # Soulbound: unlike tools, blueprints never move to the player's shared
-    # pool or to another character - knowing a technique is permanently tied
-    # to the character who learned it (eventual candidate for an on-chain
-    # soulbound token, one day). A one-time unlock, never a stackable
-    # quantity like a resource balance.
-    blueprints: List[str] = field(default_factory=list)
-    # Everything this character actually owns/carries for adventuring, as
+    # Everything this character carries for adventuring, as
     # opposed to what's staged for an active craft (see `crafting` above).
-    # `items` holds item instances (backend.items_catalog; only
-    # needsItemDefinition:true families ever appear here - location:
-    # "backpack"/"body"/"crafting"/"camp"/"saddlepack". "crafting" means
-    # borrowed for an active craft; "camp" means unequipped-but-not-
-    # backpack-capacity-counted (see in_adventure below and
-    # backend.players.unequip_item); "saddlepack" means moved into the
-    # mount's own saddlebags (see backend.players.unequip_item's
-    # `destination` param and items_catalog.has_saddlepack_equipped) -
-    # uncapped, same as "camp", since no slot-count model exists for it.
-    # `resources`/`itemBalances` are flat-count balances split by physical
-    # location: "camp" (owned, not packed anywhere specific), "backpack",
-    # and "saddlepack" (mount-side, see the Mbagpack equip slot) - moving a
-    # unit between locations never changes the total the character owns,
-    # only where it currently sits.
+    # camp itemBalances live in the character_camps collection (keyed by
+    # address + characterId), not here.
     gear: dict = field(default_factory=lambda: {
         "items": [],
-        "resources": {"camp": {}, "backpack": {}, "saddlepack": {}},
-        "itemBalances": {"camp": {}, "backpack": {}, "saddlepack": {}},
+        "itemBalances": {"backpack": {}, "saddlepack": {}, "cart": {}},
     })
     # Which light source (if any) is currently lit and held, e.g.
     # {"family": "torch", "tier": 4, "litAt": "<isoformat>", "hand": "Left Hand"}.
@@ -247,7 +220,6 @@ class Character:
                 "inAdventure": self.in_adventure,
             },
             "crafting": self.crafting,
-            "blueprints": self.blueprints,
             "gear": self.gear,
             "equippedLight": self.equipped_light,
             "stats": {

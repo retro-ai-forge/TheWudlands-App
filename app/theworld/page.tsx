@@ -3,7 +3,6 @@
 import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { PageVersionTag } from "../main/PageVersionTag";
 import styles from "./page.module.css";
 
 export default function About() {
@@ -239,7 +238,6 @@ export default function About() {
         </div>
 
       </section>
-      <PageVersionTag />
     </div>
   );
 }

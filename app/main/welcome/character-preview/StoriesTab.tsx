@@ -1,11 +1,11 @@
 import { useEffect, useRef, useState } from "react";
 import styles from "./CharacterTabs.module.css";
-import type { RawPlayerData } from "./InventoryTab";
+import type { RawPlayerData } from "./VaultTab";
 import type { SlotCharacterSummary } from "../SoulSlotGrid";
 
 const BLOCKED_FLASH_MS = 2500;
 
-export function AdventureTab({
+export function StoriesTab({
   character,
   onPlayerDataUpdated,
 }: {

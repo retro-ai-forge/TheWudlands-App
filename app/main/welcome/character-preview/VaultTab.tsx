@@ -4,6 +4,7 @@ import styles from "./CharacterTabs.module.css";
 import type { SlotCharacterSummary } from "../SoulSlotGrid";
 import type { ItemInstance } from "../SoulSlotGrid";
 export type { ItemInstance } from "../SoulSlotGrid";
+import { getResourceCatalog, getToolCatalog, getItemCatalog } from "./catalogCache";
 
 export type BlueprintTierInfo = Record<
   string,
@@ -43,17 +44,10 @@ export type ResourceTierInfo = Record<
 
 // The raw shape returned by /me/characters and every check-in/check-out
 // transfer endpoint (backend.players.Player.to_dict()) - enough to refresh
-// the whole roster plus the shared vault/tool pool after a transfer.
+// the whole roster after a transfer. The vault is now per-character and
+// lives inside each SlotCharacterSummary as character.vault.
 export type RawPlayerData = {
   characters: SlotCharacterSummary[];
-  crafting: {
-    tools: Record<string, number>;
-    resources: Record<string, number>;
-  };
-  vault: {
-    itemBalances: Record<string, number>;
-    items: ItemInstance[];
-  };
 };
 
 // GET /me/characters/{characterId}/salvage-preview/{itemId} (backend.
@@ -130,7 +124,7 @@ const TRANSFER_AMOUNTS = [1, 2, 5, 10, 20, 50] as const;
 // and gets swapped for a plain "40" instead (a full raw-material backpack
 // slot's worth - see the README's own Stacking Limits table), rather than
 // showing two buttons that both mean "move everything".
-const RAW_RESOURCE_AMOUNTS = [1, 2, 5, 10, 20, 40] as const;
+const RAW_RESOURCE_AMOUNTS = [1, 5, 10, 50] as const;
 
 // Backpack/camp stack sizes for raw vs processed materials (see backend.
 // items_catalog.RAW_STACK_SIZE/PROCESSED_STACK_SIZE, sourced from
@@ -196,33 +190,16 @@ function TransferButtons({
   destinationLabel = "Backpack",
   amounts = TRANSFER_AMOUNTS,
   showInfinity = true,
+  showHalf = false,
 }: {
   owned: number;
   pending: boolean;
   onPick: (amount: number) => void;
-  /** When given, a small icon tacked on after the ∞ button (if shown),
-   * showing where these amounts go (e.g. a backpack icon for a
-   * check-out-to-backpack row). Clicking it is a second way to fire the
-   * same "move everything" action as the ∞ button - a bigger, more
-   * obvious target for the same owned-amount transfer. */
   destinationIcon?: string;
-  /** Accessible label for destinationIcon - e.g. "Vault"/"Camp" for a
-   * packed resource's move-out popup, whose destination varies by
-   * inAdventure. Defaults to "Backpack", the original (and still most
-   * common) destinationIcon usage. */
   destinationLabel?: string;
-  /** The fixed-quantity buttons shown before the ∞ button - defaults to
-   * the full TRANSFER_AMOUNTS; ResourcePopup/Party's Resources and every
-   * stackable itemBalances row pass RAW_RESOURCE_AMOUNTS instead (see its
-   * own comment). */
   amounts?: readonly number[];
-  /** False when destinationIcon is guaranteed present and already covers
-   * "move everything" on its own (a genuine raw/processed resource row -
-   * see RAW_RESOURCE_AMOUNTS's own comment) - showing both would just be
-   * two buttons for the same action. True (the default) everywhere else,
-   * including a row with no destinationIcon at all (∞ is then the only
-   * way to move everything). */
   showInfinity?: boolean;
+  showHalf?: boolean;
 }) {
   return (
     <div className={styles.transferButtons}>
@@ -240,6 +217,19 @@ function TransferButtons({
           {amount}
         </button>
       ))}
+      {showHalf && (
+        <button
+          type="button"
+          className={styles.transferButton}
+          disabled={pending || owned < 2}
+          onClick={(e) => {
+            e.stopPropagation();
+            onPick(Math.floor(owned / 2));
+          }}
+        >
+          ½
+        </button>
+      )}
       {showInfinity && (
         <button
           type="button"
@@ -351,7 +341,7 @@ function getToolFamilyIcon(familyId: string): string {
   }
 }
 
-function getKindIcon(kind: string): string {
+export function getKindIcon(kind: string): string {
   switch (kind) {
     case "tool":
       return "🔧";
@@ -839,6 +829,7 @@ function SpecialTileScroll({ children }: { children: (gridHeight: number) => Rea
     if (el) {
       ro = new ResizeObserver(measure);
       ro.observe(el);
+      if (el.parentElement) ro.observe(el.parentElement);
     }
     return () => {
       window.removeEventListener("resize", measure);
@@ -900,6 +891,8 @@ export function ItemGrid({
   onToggleSelectItem,
   onLongPressResource,
   onToggleSelectResource,
+  skipResourceStackSplit = false,
+  resourceUrlPrefix,
 }: {
   ids: string[];
   emptyLabel: string;
@@ -980,7 +973,7 @@ export function ItemGrid({
   mountCarryWeightUsed?: number;
   mountCarryWeightCapacity?: number;
   /** Raw/processed materials sitting loose at this same location (e.g.
-   * CampView's own gear.resources.camp) - rendered as their own tiles
+   * CampView's own gear.itemBalances.camp) - rendered as their own tiles
    * (see ResourceTiles) INSIDE this same wrapping grid, alongside the
    * item/itemBalance tiles above, rather than in a separate horizontally-
    * scrolling row of their own (they used to get one - see CampView's own
@@ -1003,6 +996,8 @@ export function ItemGrid({
   onToggleSelectItem?: (id: string) => void;
   onLongPressResource?: (id: string) => void;
   onToggleSelectResource?: (id: string) => void;
+  skipResourceStackSplit?: boolean;
+  resourceUrlPrefix?: (id: string) => string;
 }) {
   // How tall the scroll container is allowed to be, measured against the
   // real remaining viewport space below it rather than a guessed vh
@@ -1022,15 +1017,23 @@ export function ItemGrid({
         window.innerHeight - el.getBoundingClientRect().top - footerHeight - 16 + SCROLLBAR_OVERLAP_PX - reserveBottomPx;
       setGridHeight(Math.max(ITEM_TILE_PX, available));
     };
-    measure();
+    // Defer the initial measure to the next animation frame so that any
+    // parent-level scroll-to-top effects (CharacterPreview scrolls the wizard
+    // back to 0 when switching tabs) finish before we read getBoundingClientRect.
+    // React flushes child effects before parent effects, so calling measure()
+    // synchronously here would read a stale scroll offset and produce a tiny
+    // available height, collapsing the grid to a single row.
+    const rafId = requestAnimationFrame(measure);
     window.addEventListener("resize", measure);
     const el = scrollRef.current;
     let ro: ResizeObserver | undefined;
     if (el) {
       ro = new ResizeObserver(measure);
       ro.observe(el);
+      if (el.parentElement) ro.observe(el.parentElement);
     }
     return () => {
+      cancelAnimationFrame(rafId);
       window.removeEventListener("resize", measure);
       ro?.disconnect();
     };
@@ -1091,9 +1094,9 @@ export function ItemGrid({
 
   const resourceIds = resourceBalances && resourceTierInfo ? sortResourceIds(resourceBalances, resourceTierInfo) : [];
 
-  if (ids.length === 0 && resourceIds.length === 0) {
-    return <p className={styles.inventoryEmpty}>{emptyLabel}</p>;
-  }
+  // Do NOT early-return here — scrollRef must always be in the DOM so the
+  // measure effect can read getBoundingClientRect() before items arrive.
+  // The empty label renders inside the container instead.
 
   // Same "one tile per backpack slot actually occupied" split as
   // expandedIds above, for raw/processed resources - stack size comes
@@ -1103,23 +1106,29 @@ export function ItemGrid({
   // other (see backend.items_catalog).
   const expandedResourceIds: { key: string; id: string; displayCount: number; tileCap: number }[] = [];
   for (const id of resourceIds) {
-    const category = resourceTierInfo?.[id]?.category;
-    const stackSize = category === "raw" ? RAW_STACK_SIZE : PROCESSED_STACK_SIZE;
-    let remaining = resourceBalances?.[id] ?? 0;
-    let i = 0;
-    while (remaining > 0) {
-      const inThisStack = Math.min(stackSize, remaining);
-      expandedResourceIds.push({ key: `${id}#${i}`, id, displayCount: inThisStack, tileCap: inThisStack });
-      remaining -= inThisStack;
-      i += 1;
+    const qty = resourceBalances?.[id] ?? 0;
+    if (skipResourceStackSplit) {
+      expandedResourceIds.push({ key: `${id}#0`, id, displayCount: qty, tileCap: qty });
+    } else {
+      const category = resourceTierInfo?.[id]?.category;
+      const stackSize = category === "raw" ? RAW_STACK_SIZE : PROCESSED_STACK_SIZE;
+      let remaining = qty;
+      let i = 0;
+      while (remaining > 0) {
+        const inThisStack = Math.min(stackSize, remaining);
+        expandedResourceIds.push({ key: `${id}#${i}`, id, displayCount: inThisStack, tileCap: inThisStack });
+        remaining -= inThisStack;
+        i += 1;
+      }
     }
   }
 
+  const idsExcludingResources = resourceTierInfo ? ids.filter((id) => !resourceTierInfo[lookupIds?.[id] ?? id]) : ids;
   const kindSortOrder: Record<string, number> = {
     weapon: 0, armor: 1, shield: 2, tool: 3, food: 4,
     potion: 5, adventuring_gear: 6, essentials: 7, companion: 8, mount: 9,
   };
-  const sortedIds = [...ids].sort((a, b) => {
+  const sortedIds = [...idsExcludingResources].sort((a, b) => {
     const infoA = tierInfo[lookupIds?.[a] ?? a];
     const infoB = tierInfo[lookupIds?.[b] ?? b];
     const tierDiff = (infoA?.tier ?? 0) - (infoB?.tier ?? 0);
@@ -1189,7 +1198,10 @@ export function ItemGrid({
       className={scrollClass}
       style={{ height: gridHeight }}
     >
-      <div className={expandedIds.length + resourceIds.length <= Math.floor(gridHeight / ITEM_TILE_PX) ? styles.itemGridRow : styles.itemGrid}>
+      {expandedIds.length === 0 && expandedResourceIds.length === 0 ? (
+        <p className={styles.inventoryEmpty}>{emptyLabel}</p>
+      ) : null}
+      <div className={expandedIds.length + expandedResourceIds.length <= Math.floor(gridHeight / ITEM_TILE_PX) ? styles.itemGridRow : styles.itemGrid}>
         {expandedIds.map(({ key, id, displayCount, tileCap }) => {
           const info = tierInfo[lookupIds?.[id] ?? id];
           const name = info?.name ? stripBlueprintPrefix(info.name) : formatResourceLabel(lookupIds?.[id] ?? id);
@@ -1237,7 +1249,7 @@ export function ItemGrid({
                   {getTierIndicator(info.tier)}
                 </span>
               )}
-              {displayCount !== null && <span className={styles.itemGridCountBadge}>{displayCount}</span>}
+              {displayCount !== null && displayCount > 1 && <span className={styles.itemGridCountBadge}>{displayCount}</span>}
               {isSelected && <span className={styles.itemGridCheckmark}>&#x2713;</span>}
               {qualityFraction !== null && (
                 <div
@@ -1283,7 +1295,7 @@ export function ItemGrid({
                   {getTierIndicator(info.tier)}
                 </span>
               )}
-              <span className={styles.itemGridCountBadge}>{displayCount}</span>
+              {displayCount > 1 && <span className={styles.itemGridCountBadge}>{displayCount}</span>}
               {isResSelected && <span className={styles.itemGridCheckmark}>&#x2713;</span>}
             </button>
           );
@@ -1298,6 +1310,7 @@ export function ItemGrid({
           onPlayerDataUpdated={onPlayerDataUpdated}
           onClose={() => setSelectedResourceId(null)}
           destinations={resourceDestinations ?? []}
+          urlPrefix={resourceUrlPrefix?.(selectedResourceId)}
         />
       )}
       {selectedId && (
@@ -1853,9 +1866,9 @@ function transferFailureMessage(detail: string | null): string {
  * the same way to feed ItemDetailPopup's packedItems/backpackSlotsUsed/
  * backpackCapacity props. Doesn't include tierInfo - each caller already
  * has its own independently-fetched item-catalog map to pair with this.
- * resourceBalances is the separate gear.resources.backpack bucket (raw/
+ * resourceBalances is the gear.itemBalances.backpack bucket (raw/
  * processed materials checked out straight from Party's Resources - see
- * InventoryTab's transferToBackpack) - kept apart from `balances` rather
+ * VaultTab's transferToBackpack) - kept apart from `balances` rather
  * than merged in since resources use their own id space/tier lookup
  * (resourceTierInfo, not itemCatalogTierInfo) and render as a plain list,
  * not image tiles (see PackedResourcesList). */
@@ -1870,8 +1883,7 @@ type ContainerContents = {
 type ContainerCharacterGear = {
   gear: {
     items: ItemInstance[];
-    itemBalances: { backpack: Record<string, number>; saddlepack: Record<string, number>; cart: Record<string, number> };
-    resources: { backpack: Record<string, number>; saddlepack: Record<string, number>; cart: Record<string, number> };
+    itemBalances: { backpack: Record<string, number>; saddlepack: Record<string, number>; cart: Record<string, number>; camp: Record<string, number> };
   };
 };
 
@@ -1891,7 +1903,7 @@ function computeContainerContents(
   }
   const balances: Record<string, number> = { ...itemBalances, ...instanceRowBalances };
   const ids = Object.keys(balances).filter((id) => balances[id] > 0);
-  return { ids, balances, lookupIds, instanceQuality, resourceBalances: character.gear.resources[location] };
+  return { ids, balances, lookupIds, instanceQuality, resourceBalances: character.gear.itemBalances[location] };
 }
 
 export function computeBackpackContents(character: ContainerCharacterGear): ContainerContents {
@@ -1909,7 +1921,7 @@ export function computeCartContents(character: ContainerCharacterGear): Containe
 // Highest tier first, same ordering PackedItemsRow's own item tiles use.
 function sortResourceIds(balances: Record<string, number>, tierInfo: ResourceTierInfo): string[] {
   return Object.keys(balances)
-    .filter((id) => (balances[id] ?? 0) > 0)
+    .filter((id) => (balances[id] ?? 0) > 0 && !!tierInfo[id])
     .sort((a, b) => (tierInfo[b]?.tier ?? 0) - (tierInfo[a]?.tier ?? 0));
 }
 
@@ -1980,7 +1992,7 @@ export function ResourceTiles({
                 {getTierIndicator(info.tier)}
               </span>
             )}
-            <span className={styles.itemGridCountBadge}>{displayCount}</span>
+            {displayCount > 1 && <span className={styles.itemGridCountBadge}>{displayCount}</span>}
           </button>
         );
       })}
@@ -2023,8 +2035,8 @@ function PackedItemsRow({
   balances: Record<string, number>;
   lookupIds: Record<string, string>;
   instanceQuality: Record<string, number | null>;
-  /** gear.resources.backpack - raw/processed materials checked out from
-   * Party's Resources (see InventoryTab's transferToBackpack). Rendered
+  /** gear.itemBalances.backpack - raw/processed materials checked out from
+   * Party's Resources (see VaultTab's transferToBackpack). Rendered
    * as a plain ResourceList below the item tiles instead of joining
    * `ids`/`balances` above - resources have no image icon and use their
    * own tier lookup (resourceTierInfo), so they don't fit the tile grid's
@@ -2255,7 +2267,7 @@ function PackedItemsRow({
                   {getTierIndicator(info.tier)}
                 </span>
               )}
-              {displayCount !== null && <span className={styles.itemGridCountBadge}>{displayCount}</span>}
+              {displayCount !== null && displayCount > 1 && <span className={styles.itemGridCountBadge}>{displayCount}</span>}
               {qualityFraction !== null && (
                 <div
                   className={styles.itemGridQualityBar}
@@ -2361,6 +2373,7 @@ export function ResourcePopup({
   onPlayerDataUpdated,
   onClose,
   destinations,
+  urlPrefix,
 }: {
   resourceId: string;
   tierInfo: ResourceTierInfo;
@@ -2369,6 +2382,7 @@ export function ResourcePopup({
   onPlayerDataUpdated?: (data: RawPlayerData) => void;
   onClose: () => void;
   destinations: ResourcePopupDestination[];
+  urlPrefix?: string;
 }) {
   const [pending, setPending] = useState(false);
   // Same failed-move flash as ItemDetailPopup's own (see
@@ -2387,7 +2401,7 @@ export function ResourcePopup({
     setPending(true);
     setFlashMessage(null);
     const result = await postJson(
-      `/api/auth/me/characters/${characterId}/resources/${resourceId}/${endpoint}`,
+      `${urlPrefix ?? `/api/auth/me/characters/${characterId}/resources/${resourceId}`}/${endpoint}`,
       { amount }
     );
     if (result.ok) {
@@ -2437,6 +2451,7 @@ export function ResourcePopup({
             destinationIcon={dest.icon}
             destinationLabel={dest.label}
             amounts={RAW_RESOURCE_AMOUNTS}
+            showHalf
             showInfinity={false}
           />
         ))}
@@ -2994,7 +3009,7 @@ export function ItemDetailPopup({
               )}
               {/* A container sitting in the shared vault holds nothing - its
                   contents only ever live on the character who has it
-                  equipped (gear.itemBalances/resources.<location>) - so
+                  equipped (gear.itemBalances.<location>) - so
                   it's always empty against its own tier capacity. */}
               {source === "vault" && (info?.familyId === "backpack" || info?.familyId === "saddlepack" || info?.familyId === "cart") && info.capacitySlots != null && (
                 <span>Filled: 0/{info.capacitySlots}</span>
@@ -3011,7 +3026,7 @@ export function ItemDetailPopup({
                 <p className={styles.itemPopupAwayNotice}>
                   {characterFirstName ? `${characterFirstName} is on the road` : "On the road"}
                 </p>
-              ) : stackSize > 1 ? (
+              ) : (stackSize > 1 || (!isInstance && owned > 1)) ? (
                 <TransferButtons
                   owned={owned}
                   pending={pending}
@@ -3019,6 +3034,7 @@ export function ItemDetailPopup({
                   destinationIcon={CAMP_ACTION_ICON}
                   destinationLabel="Camp"
                   amounts={RAW_RESOURCE_AMOUNTS}
+                  showHalf
                   showInfinity={false}
                 />
               ) : (
@@ -3197,27 +3213,27 @@ export function ItemDetailPopup({
                   {!inAdventure && location !== "camp" && (
                     <TransferButtons owned={owned} pending={pending}
                       onPick={location === "backpack" ? unloadBalanceToCamp : location === "saddlepack" ? unloadBalanceFromSaddlepack : unloadBalanceFromCart}
-                      destinationIcon={CAMP_ACTION_ICON} destinationLabel="Camp" amounts={RAW_RESOURCE_AMOUNTS} showInfinity={false} />
+                      destinationIcon={CAMP_ACTION_ICON} destinationLabel="Camp" amounts={RAW_RESOURCE_AMOUNTS} showHalf showInfinity={false} />
                   )}
                   {location !== "backpack" && hasBackpackEquipped && (
                     <TransferButtons owned={owned} pending={pending}
                       onPick={location === "camp" ? stowBalanceToBackpack : location === "saddlepack" ? moveBalanceSaddlepackToBackpack : moveBalanceCartToBackpack}
-                      destinationIcon={BACKPACK_ACTION_ICON} destinationLabel="Backpack" amounts={RAW_RESOURCE_AMOUNTS} showInfinity={false} />
+                      destinationIcon={BACKPACK_ACTION_ICON} destinationLabel="Backpack" amounts={RAW_RESOURCE_AMOUNTS} showHalf showInfinity={false} />
                   )}
                   {location !== "saddlepack" && hasSaddlepackEquipped && (
                     <TransferButtons owned={owned} pending={pending}
                       onPick={location === "camp" ? stowBalanceToSaddlepack : location === "backpack" ? moveBalanceBackpackToSaddlepack : moveBalanceCartToSaddlepack}
-                      destinationIcon={SADDLEPACK_ACTION_ICON} destinationLabel="Saddlepack" amounts={RAW_RESOURCE_AMOUNTS} showInfinity={false} />
+                      destinationIcon={SADDLEPACK_ACTION_ICON} destinationLabel="Saddlepack" amounts={RAW_RESOURCE_AMOUNTS} showHalf showInfinity={false} />
                   )}
                   {location !== "cart" && (cartCapacity ?? 0) > 0 && !isContainer && !info?.familyId?.endsWith("_mount") && !info?.familyId?.endsWith("_companion") && (
                     <TransferButtons owned={owned} pending={pending}
                       onPick={location === "camp" ? stowBalanceToCart : location === "backpack" ? moveBalanceBackpackToCart : moveBalanceSaddlepackToCart}
-                      destinationIcon={CART_ACTION_ICON} destinationLabel="Cart" amounts={RAW_RESOURCE_AMOUNTS} showInfinity={false} />
+                      destinationIcon={CART_ACTION_ICON} destinationLabel="Cart" amounts={RAW_RESOURCE_AMOUNTS} showHalf showInfinity={false} />
                   )}
                   {!inAdventure && location === "camp" && (
                     <TransferButtons owned={owned} pending={pending}
                       onPick={stowBalanceToVault}
-                      destinationIcon={VAULT_ACTION_ICON} destinationLabel="Vault" amounts={RAW_RESOURCE_AMOUNTS} showInfinity={false} />
+                      destinationIcon={VAULT_ACTION_ICON} destinationLabel="Vault" amounts={RAW_RESOURCE_AMOUNTS} showHalf showInfinity={false} />
                   )}
                 </>
               ) : (
@@ -3320,7 +3336,7 @@ export function ownedIds(...pools: Record<string, number>[]): string[] {
 }
 
 /** Exchange page: this character's own crafting stock next to the party's shared stock. */
-export function InventoryTab({
+export function VaultTab({
   character,
   playerResourceBalances,
   playerTools,
@@ -3359,104 +3375,22 @@ export function InventoryTab({
   // like any other item now, so there's no separate resources-reclassifying
   // step needed here anymore.
   const [itemCatalogTierInfo, setItemCatalogTierInfo] = useState<BlueprintTierInfo>({});
+  const [catalogsLoaded, setCatalogsLoaded] = useState(false);
 
   useEffect(() => {
-    // Fetch resource tier information from the backend
-    fetch("/api/auth/resource-catalog")
-      .then((res) => (res.ok ? res.json() : []))
-      .then(
-        (
-          data: Array<{
-            id: string;
-            name: string;
-            familyId: string;
-            tier: number;
-            resourceFamily: string;
-            category: "raw" | "processed";
-            icon?: string | null;
-          }>
-        ) => {
-          const tierMap: ResourceTierInfo = {};
-          for (const item of data) {
-            tierMap[item.id] = {
-              tier: item.tier,
-              family: item.resourceFamily,
-              category: item.category,
-              name: item.name,
-              icon: item.icon ?? undefined,
-            };
-          }
-          setResourceTierInfo(tierMap);
-        }
-      )
-      .catch(() => setResourceTierInfo({}));
-
-    // Fetch tool tier information from the backend
-    fetch("/api/auth/tool-catalog")
-      .then((res) => (res.ok ? res.json() : []))
-      .then((data: Array<{ id: string; familyId: string; tier: number }>) => {
-        const tierMap: BlueprintTierInfo = {};
-        for (const item of data) {
-          tierMap[item.id] = { tier: item.tier, familyId: item.familyId, kind: "tool" };
-        }
-        setToolTierInfo(tierMap);
-      })
-      .catch(() => setToolTierInfo({}));
-
-    // Fetch the item catalog (all 118 item-inventory-properties.json
-    // families' concrete ids) from the backend
-    fetch("/api/auth/item-catalog")
-      .then((res) => (res.ok ? res.json() : []))
-      .then(
-        (
-          data: Array<{
-            id: string;
-            name: string;
-            familyId: string;
-            tier: number;
-            kind: string[];
-            qualityMax: number | null;
-            armorClass: number | null;
-            icon: string;
-            stackSize: number;
-            description: string;
-            sizeClass: string;
-            equipSlots: string[][];
-            backpackable: boolean;
-            gatheringBonuses: string[];
-            capacitySlots: number;
-            carryCapacity: number;
-          }>
-        ) => {
-        const tierMap: BlueprintTierInfo = {};
-        for (const item of data) {
-          tierMap[item.id] = {
-            tier: item.tier,
-            familyId: item.familyId,
-            kind: item.kind[0] ?? "",
-            name: item.name,
-            qualityMax: item.qualityMax,
-            armorClass: item.armorClass,
-            icon: item.icon,
-            stackSize: item.stackSize,
-            description: item.description,
-            sizeClass: item.sizeClass,
-            equipSlots: item.equipSlots,
-            backpackable: item.backpackable,
-            gatheringBonuses: item.gatheringBonuses,
-            capacitySlots: item.capacitySlots,
-            carryCapacity: item.carryCapacity,
-          };
-        }
-        setItemCatalogTierInfo(tierMap);
-      })
-      .catch(() => {
-        setItemCatalogTierInfo({});
-      });
+    Promise.all([
+      getResourceCatalog().then(setResourceTierInfo).catch(() => setResourceTierInfo({})),
+      getToolCatalog().then(setToolTierInfo).catch(() => setToolTierInfo({})),
+      getItemCatalog().then(setItemCatalogTierInfo).catch(() => setItemCatalogTierInfo({})),
+    ]).then(() => setCatalogsLoaded(true));
   }, []);
 
+  const mergedCatalogTierInfo = useMemo<BlueprintTierInfo>(
+    () => ({ ...itemCatalogTierInfo, ...toolTierInfo }),
+    [itemCatalogTierInfo, toolTierInfo]
+  );
 
-  // Top-level accordion within the Crafting tab (Blueprints Known/this
+  // Top-level accordion within the Vault tab (Blueprints Known/this
   // character's own Crafting stock/the party's shared Tools/the party's
   // shared Resources) - any number can be open at once, toggled
   const [vaultKindFilter, setVaultKindFilter] = useState<string[]>([]);
@@ -3476,8 +3410,6 @@ export function InventoryTab({
     setVaultKindFilter([]);
     setVaultSpecialFilter((prev) => (prev === mode ? null : mode));
   };
-
-  const [selectedToolId, setSelectedToolId] = useState<string | null>(null);
 
   const [vaultSelectMode, setVaultSelectMode] = useState(false);
   const [vaultSelectedIds, setVaultSelectedIds] = useState<Set<string>>(new Set());
@@ -3503,6 +3435,21 @@ export function InventoryTab({
     setVaultSelectedIds(new Set([id]));
   }, []);
 
+  const enterVaultSelectResource = useCallback((key: string) => {
+    setVaultSelectMode(true);
+    setVaultSelectedIds(new Set([`res:${key}`]));
+  }, []);
+
+  const toggleVaultSelectResource = useCallback((key: string) => {
+    const resKey = `res:${key}`;
+    setVaultSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(resKey)) next.delete(resKey);
+      else next.add(resKey);
+      return next;
+    });
+  }, []);
+
   // Crafted-item instances in the player's shared vault - one row PER
   // PHYSICAL INSTANCE, not aggregated by concrete id: each one has its own
   // quality and its own instanceId, so two Iron Battle Axes at different
@@ -3519,9 +3466,9 @@ export function InventoryTab({
       rowBalances[instance.instanceId] = 1;
       rowQuality[instance.instanceId] = instance.quality;
     }
-    const combined: Record<string, number> = { ...playerItemBalances, ...rowBalances };
+    const combined: Record<string, number> = { ...playerItemBalances, ...playerTools, ...rowBalances };
     return { playerItemLookupIds: lookupIds, playerItemRowQuality: rowQuality, playerItemsCombined: combined };
-  }, [playerItems, playerItemBalances]);
+  }, [playerItems, playerItemBalances, playerTools]);
 
   // Whether this character currently has a physical backpack worn -
   // mirrors backend.items_catalog.has_backpack_available - also counts a
@@ -3564,12 +3511,12 @@ export function InventoryTab({
       if (playerItemLookupIds[baseId] !== undefined) {
         fam = playerItems.find((i) => i.instanceId === baseId)?.familyId;
       } else {
-        fam = itemCatalogTierInfo[baseId]?.familyId;
+        fam = mergedCatalogTierInfo[baseId]?.familyId;
       }
       if (fam && existing[fam]) return true;
     }
     return false;
-  }, [vaultSelectedIds, playerItemLookupIds, playerItems, itemCatalogTierInfo, hasBackpackEquipped, hasSaddlepackEquipped, hasCartInBodyOrCamp]);
+  }, [vaultSelectedIds, playerItemLookupIds, playerItems, mergedCatalogTierInfo, hasBackpackEquipped, hasSaddlepackEquipped, hasCartInBodyOrCamp]);
 
 
   const batchMoveVault = useCallback(
@@ -3579,15 +3526,20 @@ export function InventoryTab({
       const instanceIds: string[] = [];
       const balanceTotals = new Map<string, number>();
       for (const raw of vaultSelectedIds) {
-        const id = stripStackSuffix(raw);
-        if (playerItemLookupIds[id] !== undefined) {
+        const isRes = raw.startsWith("res:");
+        const stripped = isRes ? raw.slice(4) : raw;
+        const id = stripStackSuffix(stripped);
+        if (isRes) {
+          const qty = playerResourceBalances[id] ?? 0;
+          if (qty > 0) balanceTotals.set(id, (balanceTotals.get(id) ?? 0) + qty);
+        } else if (playerItemLookupIds[id] !== undefined) {
           if (!balanceTotals.has(id)) instanceIds.push(id);
         } else {
-          const info = itemCatalogTierInfo[id];
+          const info = mergedCatalogTierInfo[id];
           const stackSize = Math.max(1, info?.stackSize ?? 1);
           const qty = playerItemsCombined[id] ?? 0;
-          const hash = raw.lastIndexOf("#");
-          const tileIdx = hash === -1 ? 0 : parseInt(raw.slice(hash + 1), 10);
+          const hash = stripped.lastIndexOf("#");
+          const tileIdx = hash === -1 ? 0 : parseInt(stripped.slice(hash + 1), 10);
           const itemsInTile = Math.max(0, Math.min(stackSize, qty - tileIdx * stackSize));
           if (itemsInTile > 0) balanceTotals.set(id, (balanceTotals.get(id) ?? 0) + itemsInTile);
         }
@@ -3601,7 +3553,7 @@ export function InventoryTab({
       setVaultBatchBusy(false);
       exitVaultSelectMode();
     },
-    [vaultBatchBusy, vaultSelectedIds, playerItemLookupIds, playerItemsCombined, itemCatalogTierInfo, character.id, onPlayerDataUpdated, exitVaultSelectMode]
+    [vaultBatchBusy, vaultSelectedIds, playerItemLookupIds, playerItemsCombined, playerResourceBalances, mergedCatalogTierInfo, character.id, onPlayerDataUpdated, exitVaultSelectMode]
   );
 
   const batchDestroyVault = useCallback(async () => {
@@ -3611,16 +3563,20 @@ export function InventoryTab({
     const instancesSeen = new Set<string>();
     const balanceTotals = new Map<string, number>();
     for (const raw of vaultSelectedIds) {
-      const id = stripStackSuffix(raw);
-      const isInstance = playerItemLookupIds[id] !== undefined;
-      if (isInstance) {
+      const isRes = raw.startsWith("res:");
+      const stripped = isRes ? raw.slice(4) : raw;
+      const id = stripStackSuffix(stripped);
+      if (isRes) {
+        const qty = playerResourceBalances[id] ?? 0;
+        if (qty > 0) balanceTotals.set(id, (balanceTotals.get(id) ?? 0) + qty);
+      } else if (playerItemLookupIds[id] !== undefined) {
         instancesSeen.add(id);
       } else {
-        const info = itemCatalogTierInfo[id];
+        const info = mergedCatalogTierInfo[id];
         const stackSize = Math.max(1, info?.stackSize ?? 1);
         const qty = playerItemsCombined[id] ?? 0;
-        const hash = raw.lastIndexOf("#");
-        const tileIdx = hash === -1 ? 0 : parseInt(raw.slice(hash + 1), 10);
+        const hash = stripped.lastIndexOf("#");
+        const tileIdx = hash === -1 ? 0 : parseInt(stripped.slice(hash + 1), 10);
         const itemsInTile = Math.max(0, Math.min(stackSize, qty - tileIdx * stackSize));
         if (itemsInTile > 0) balanceTotals.set(id, (balanceTotals.get(id) ?? 0) + itemsInTile);
       }
@@ -3639,7 +3595,7 @@ export function InventoryTab({
     if (lastResult) onPlayerDataUpdated?.(lastResult);
     setVaultBatchBusy(false);
     exitVaultSelectMode();
-  }, [vaultBatchBusy, vaultSelectedIds, playerItemLookupIds, playerItemsCombined, itemCatalogTierInfo, character.id, onPlayerDataUpdated, exitVaultSelectMode]);
+  }, [vaultBatchBusy, vaultSelectedIds, playerItemLookupIds, playerItemsCombined, playerResourceBalances, mergedCatalogTierInfo, character.id, onPlayerDataUpdated, exitVaultSelectMode]);
 
   return (
     <div className={`${styles.panel}${section === "vault" ? ` ${styles.panelNoScroll}` : ""}`} onContextMenu={(e) => e.preventDefault()}>
@@ -3647,15 +3603,22 @@ export function InventoryTab({
         <p className={styles.inventoryEmpty}>Tools and resources moved to the vault tab.</p>
       )}
 
-      {section === "vault" && (() => {
+      {section === "vault" && !catalogsLoaded && (
+        <p className={styles.inventoryEmpty}>Loading vault&hellip;</p>
+      )}
+
+      {section === "vault" && catalogsLoaded && (() => {
         const allVaultIds = Object.keys(playerItemsCombined).filter((id) => playerItemsCombined[id] > 0);
-        const kindOrder = ["weapon", "armor", "shield", "tool", "food", "potion", "adventuring_gear", "essentials", "companion", "mount"];
+        // "tool", "raw_resource", "processed" have dedicated special-filter buttons — exclude from kind chips
+        const kindOrder = ["weapon", "armor", "shield", "food", "potion", "adventuring_gear", "essentials", "companion", "mount"];
+        const _specialKinds = new Set(["tool", "raw_resource", "processed"]);
         const kindsInVault = new Set(
           allVaultIds
-            .map((id) => itemCatalogTierInfo[playerItemLookupIds[id] ?? id]?.kind)
-            .filter((k): k is string => !!k)
+            .map((id) => mergedCatalogTierInfo[playerItemLookupIds[id] ?? id]?.kind)
+            .filter((k): k is string => !!k && !_specialKinds.has(k))
         );
-        const kindsPresent = kindOrder.filter((k) => kindsInVault.has(k));
+        const hasTools = allVaultIds.some((id) => mergedCatalogTierInfo[playerItemLookupIds[id] ?? id]?.kind === "tool");
+        const hasResources = Object.values(playerResourceBalances).some((qty) => qty > 0);
         const hasKindFilter = vaultKindFilter.length > 0;
         const hasTierFilter = vaultTierFilter.length > 0;
         const allActive = !hasKindFilter && !hasTierFilter && !vaultSpecialFilter;
@@ -3663,14 +3626,35 @@ export function InventoryTab({
           if (!info) return false;
           return !!(info.kind && vaultKindFilter.includes(info.kind));
         };
-        const filteredIds = allActive
-          ? allVaultIds
+        const filteredIds = vaultSpecialFilter === "tools"
+          ? allVaultIds.filter((id) => {
+              const info = mergedCatalogTierInfo[playerItemLookupIds[id] ?? id];
+              if (info?.kind !== "tool") return false;
+              if (hasTierFilter && (!info.tier || !vaultTierFilter.includes(info.tier))) return false;
+              return true;
+            })
+          : vaultSpecialFilter === "resources"
+          ? []
+          : allActive
+          ? allVaultIds.filter((id) => {
+              const kind = mergedCatalogTierInfo[playerItemLookupIds[id] ?? id]?.kind;
+              return !kind || !_specialKinds.has(kind);
+            })
           : allVaultIds.filter((id) => {
-              const info = itemCatalogTierInfo[playerItemLookupIds[id] ?? id];
+              const info = mergedCatalogTierInfo[playerItemLookupIds[id] ?? id];
               if (hasKindFilter && !matchesKind(info)) return false;
               if (hasTierFilter && (!info?.tier || !vaultTierFilter.includes(info.tier))) return false;
               return true;
             });
+        const vaultResourceBalances = vaultSpecialFilter === "resources"
+          ? (hasTierFilter
+            ? Object.fromEntries(Object.entries(playerResourceBalances).filter(([id]) => {
+                const t = resourceTierInfo[id]?.tier;
+                return t !== undefined && vaultTierFilter.includes(t);
+              }))
+            : playerResourceBalances)
+          : undefined;
+        const vaultResourceTierInfo = vaultSpecialFilter === "resources" ? resourceTierInfo : undefined;
         return (
           <>
             {allVaultIds.length > 0 && (
@@ -3700,8 +3684,48 @@ export function InventoryTab({
                     </button>
                   </div>
                   <span className={styles.selectionBarWeight}>
-                    W: {selectionWeight(vaultSelectedIds, itemCatalogTierInfo, playerItemsCombined, playerItemLookupIds)}
+                    W: {selectionWeight(vaultSelectedIds, mergedCatalogTierInfo, playerItemsCombined, playerItemLookupIds)}
                   </span>
+                  <button
+                    type="button"
+                    className={`${styles.selectionBarBtn} ${styles.selectionBarClose}`}
+                    title="Select all"
+                    onClick={() => {
+                      const all = new Set<string>();
+                      for (const id of filteredIds) {
+                        if ((playerItemsCombined[id] ?? 0) <= 0) continue;
+                        const isInstance = playerItemLookupIds[id] !== undefined;
+                        if (isInstance) {
+                          all.add(id);
+                        } else {
+                          const info = mergedCatalogTierInfo[id];
+                          const stackSize = info?.stackSize ?? 1;
+                          const owned = playerItemsCombined[id] ?? 0;
+                          if (stackSize <= 1) {
+                            for (let i = 0; i < owned; i++) all.add(`${id}#${i}`);
+                          } else {
+                            let remaining = owned;
+                            let i = 0;
+                            while (remaining > 0) {
+                              all.add(`${id}#${i}`);
+                              remaining -= Math.min(stackSize, remaining);
+                              i++;
+                            }
+                          }
+                        }
+                      }
+                      if (vaultResourceBalances) {
+                        for (const resId of Object.keys(vaultResourceBalances)) {
+                          const qty = vaultResourceBalances[resId] ?? 0;
+                          if (qty <= 0 || !resourceTierInfo[resId]) continue;
+                          all.add(`res:${resId}#0`);
+                        }
+                      }
+                      setVaultSelectedIds(all);
+                    }}
+                  >
+                    A
+                  </button>
                   <button
                     type="button"
                     className={`${styles.selectionBarBtn} ${styles.selectionBarClose}`}
@@ -3713,15 +3737,6 @@ export function InventoryTab({
                 </div>
               ) : (
                 <div className={styles.vaultFilterBar}>
-                  {kindsPresent.map((kind) => (
-                    <button
-                      key={kind}
-                      type="button"
-                      className={`${styles.vaultFilterBtn} ${vaultKindFilter.includes(kind) ? styles.vaultFilterBtnActive : ""}`}
-                      onClick={() => toggleKindFilter(kind)}
-                      title={kind.replace(/_/g, " ")}
-                    >{getKindIcon(kind)}</button>
-                  ))}
                   <div className={styles.vaultFilterGroup}>
                     <button
                       type="button"
@@ -3743,14 +3758,26 @@ export function InventoryTab({
                       className={`${styles.vaultFilterBtn} ${styles.vaultFilterBtnTools} ${vaultSpecialFilter === "tools" ? styles.vaultFilterBtnActive : ""}`}
                       onClick={() => toggleSpecialFilter("tools")}
                       title="Tools"
+                      style={!hasTools ? { opacity: 0.3 } : undefined}
                     >🔧</button>
                     <button
                       type="button"
                       className={`${styles.vaultFilterBtn} ${styles.vaultFilterBtnResources} ${vaultSpecialFilter === "resources" ? styles.vaultFilterBtnActive : ""}`}
                       onClick={() => toggleSpecialFilter("resources")}
                       title="Resources"
+                      style={!hasResources ? { opacity: 0.3 } : undefined}
                     >🪨</button>
                   </div>
+                  {kindOrder.map((kind) => (
+                    <button
+                      key={kind}
+                      type="button"
+                      className={`${styles.vaultFilterBtn} ${vaultKindFilter.includes(kind) ? styles.vaultFilterBtnActive : ""}`}
+                      onClick={() => toggleKindFilter(kind)}
+                      title={kind.replace(/_/g, " ")}
+                      style={!kindsInVault.has(kind) ? { opacity: 0.3 } : undefined}
+                    >{getKindIcon(kind)}</button>
+                  ))}
                 </div>
               )
             )}
@@ -3784,121 +3811,40 @@ export function InventoryTab({
                 <div className={styles.batchSpinner} />
               </div>
             )}
-            {vaultSpecialFilter === "tools" ? (() => {
-              const toolIds = Object.keys(playerTools).filter((id) => playerTools[id] > 0);
-              const filtered = hasTierFilter
-                ? toolIds.filter((id) => { const t = toolTierInfo[id]?.tier; return t !== undefined && vaultTierFilter.includes(t); })
-                : toolIds;
-              const sorted = [...filtered].sort((a, b) => {
-                const tierDiff = (toolTierInfo[a]?.tier ?? 0) - (toolTierInfo[b]?.tier ?? 0);
-                if (tierDiff !== 0) return tierDiff;
-                return (toolTierInfo[a]?.familyId ?? "").localeCompare(toolTierInfo[b]?.familyId ?? "");
-              });
-              if (sorted.length === 0) return <p className={styles.inventoryEmpty}>No tools owned.</p>;
-              return (
-                <>
-                <SpecialTileScroll>
-                  {(h) => (
-                    <div className={sorted.length <= Math.floor(h / ITEM_TILE_PX) ? styles.specialTileGridRow : styles.specialTileGrid}>
-                      {sorted.map((id) => {
-                        const info = toolTierInfo[id];
-                        const fullName = info?.name ?? formatResourceLabel(id);
-                        const words = fullName.split(" ");
-                        const shortName = words.length > 1 ? words.slice(1).join(" ") : fullName;
-                        return (
-                          <button key={id} type="button" className={`${styles.itemGridCell} ${styles.specialTile}`} title={fullName} onClick={() => setSelectedToolId(id)}>
-                            {!!info?.tier && (
-                              <span className={styles.itemGridTierBadge}>{getTierIndicator(info.tier)}</span>
-                            )}
-                            <span className={styles.specialTileLabel}>{shortName}</span>
-                            <span className={styles.specialTileKindBadge}>{getToolFamilyIcon(info?.familyId ?? "")}</span>
-                            <span className={styles.itemGridCountBadge}>{playerTools[id]}</span>
-                          </button>
-                        );
-                      })}
-                    </div>
-                  )}
-                </SpecialTileScroll>
-                {selectedToolId && toolTierInfo[selectedToolId] && (
-                  <ItemDetailPopup
-                    info={toolTierInfo[selectedToolId]}
-                    fallbackName={formatResourceLabel(selectedToolId)}
-                    owned={playerTools[selectedToolId] ?? 0}
-                    isInstance={false}
-                    movable={false}
-                    quality={null}
-                    moveId={selectedToolId}
-                    source="vault"
-                    hasBackpackEquipped={hasBackpackEquipped}
-                    hasSaddlepackEquipped={hasSaddlepackEquipped}
-                    characterId={character.id}
-                    onPlayerDataUpdated={onPlayerDataUpdated}
-                    onClose={() => setSelectedToolId(null)}
-                  />
-                )}
-              </>
-              );
-            })() : vaultSpecialFilter === "resources" ? (() => {
-              const resIds = Object.keys(playerResourceBalances).filter((id) => playerResourceBalances[id] > 0);
-              const filtered = hasTierFilter
-                ? resIds.filter((id) => { const t = resourceTierInfo[id]?.tier; return t !== undefined && vaultTierFilter.includes(t); })
-                : resIds;
-              const sorted = [...filtered].sort((a, b) => {
-                const tierDiff = (resourceTierInfo[a]?.tier ?? 0) - (resourceTierInfo[b]?.tier ?? 0);
-                if (tierDiff !== 0) return tierDiff;
-                return (resourceTierInfo[a]?.family ?? "").localeCompare(resourceTierInfo[b]?.family ?? "");
-              });
-              if (sorted.length === 0) return <p className={styles.inventoryEmpty}>No resources owned.</p>;
-              return (
-                <SpecialTileScroll>
-                  {(h) => (
-                    <div className={sorted.length <= Math.floor(h / ITEM_TILE_PX) ? styles.specialTileGridRow : styles.specialTileGrid}>
-                      {sorted.map((id) => {
-                        const info = resourceTierInfo[id];
-                        const fullName = info?.name ?? formatResourceLabel(id);
-                        const words = fullName.split(" ");
-                        const shortName = words.length > 2 ? words.slice(-2).join(" ") : fullName;
-                        return (
-                          <div key={id} className={`${styles.itemGridCell} ${styles.specialTile}`} title={fullName}>
-                            {!!info?.tier && (
-                              <span className={styles.itemGridTierBadge}>{getTierIndicator(info.tier)}</span>
-                            )}
-                            <span className={styles.specialTileLabel}>{shortName}</span>
-                            <span className={styles.itemGridCountBadge}>{playerResourceBalances[id]}</span>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  )}
-                </SpecialTileScroll>
-              );
-            })() : (
-              <ItemGrid
-                ids={filteredIds}
-                emptyLabel={allActive ? "Nothing crafted yet." : "No items match."}
-                tierInfo={itemCatalogTierInfo}
-                balances={playerItemsCombined}
-                lookupIds={playerItemLookupIds}
-                instanceQuality={playerItemRowQuality}
-                source="vault"
-                hasBackpackEquipped={hasBackpackEquipped}
-                hasSaddlepackEquipped={hasSaddlepackEquipped}
-                hasMountEquipped={hasMountEquipped}
-                hasCompanionEquipped={hasCompanionEquipped}
-                hasCartEquipped={hasCartInBodyOrCamp}
-                inAdventure={character.availability.inAdventure}
-                characterId={character.id}
-                characterFirstName={character.firstName}
-                cartSlotsUsed={character.gear.cartSlotsUsed}
-                cartCapacity={character.gear.cartCapacity}
-                onPlayerDataUpdated={onPlayerDataUpdated}
-                selectMode={vaultSelectMode}
-                selectBusy={vaultBatchBusy}
-                selectedIds={vaultSelectedIds}
-                onLongPressItem={enterVaultSelectMode}
-                onToggleSelectItem={toggleVaultSelectItem}
-              />
-            )}
+            <ItemGrid
+              ids={filteredIds}
+              emptyLabel={vaultSpecialFilter === "tools" ? "No tools owned." : vaultSpecialFilter === "resources" ? "No resources owned." : allActive ? "Shared Vault empty." : "No items match."}
+              tierInfo={mergedCatalogTierInfo}
+              balances={playerItemsCombined}
+              lookupIds={playerItemLookupIds}
+              instanceQuality={playerItemRowQuality}
+              source="vault"
+              hasBackpackEquipped={hasBackpackEquipped}
+              hasSaddlepackEquipped={hasSaddlepackEquipped}
+              hasMountEquipped={hasMountEquipped}
+              hasCompanionEquipped={hasCompanionEquipped}
+              hasCartEquipped={hasCartInBodyOrCamp}
+              inAdventure={character.availability.inAdventure}
+              characterId={character.id}
+              characterFirstName={character.firstName}
+              cartSlotsUsed={character.gear.cartSlotsUsed}
+              cartCapacity={character.gear.cartCapacity}
+              onPlayerDataUpdated={onPlayerDataUpdated}
+              selectMode={vaultSelectMode}
+              selectBusy={vaultBatchBusy}
+              selectedIds={vaultSelectedIds}
+              onLongPressItem={enterVaultSelectMode}
+              onToggleSelectItem={toggleVaultSelectItem}
+              resourceBalances={vaultResourceBalances}
+              resourceTierInfo={vaultResourceTierInfo}
+              resourceUrlPrefix={(id) => `/api/auth/me/characters/${character.id}/item-balances/${id}`}
+              resourceDestinations={character.availability.inAdventure ? [] : [
+                { key: "camp", icon: CAMP_ACTION_ICON, label: "Camp", endpoint: "vault-to-camp" },
+              ]}
+              onLongPressResource={enterVaultSelectResource}
+              onToggleSelectResource={toggleVaultSelectResource}
+              skipResourceStackSplit
+            />
           </>
         );
       })()}

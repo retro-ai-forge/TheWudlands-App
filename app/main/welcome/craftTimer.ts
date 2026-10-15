@@ -7,8 +7,8 @@ import { useEffect, useState } from "react";
 /** Ticks once a second against `readyAt` (ISO 8601, or null/undefined for
  * no active craft) - returns remaining whole seconds (clamped to >= 0), or
  * null when there's nothing to count down. Purely a display countdown -
- * unlike InventoryTab's own use of readyAt, this never calls finish_craft
- * itself; that stays the Inventory tab's responsibility. */
+ * unlike VaultTab's own use of readyAt, this never calls finish_craft
+ * itself; that stays the Vault tab's responsibility. */
 export function useCraftCountdown(readyAt: string | null | undefined): number | null {
   const [remainingSeconds, setRemainingSeconds] = useState<number | null>(null);
 

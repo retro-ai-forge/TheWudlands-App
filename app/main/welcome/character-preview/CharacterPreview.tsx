@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import styles from "../soul-creation/SoulCreation.module.css";
 import tabStyles from "./CharacterTabs.module.css";
 import { useHeaderVisibility } from "@/app/main/HeaderVisibilityProvider";
@@ -9,29 +9,37 @@ import { PortraitEditor, type PortraitEditorValue } from "../PortraitEditor";
 import { BIRTHSIGNS } from "@/app/lib/characterOptions";
 import { StatsTab } from "./StatsTab";
 import { BodyTab } from "./BodyTab";
-import { AdventureTab } from "./AdventureTab";
-import { InventoryTab, type ItemInstance, type RawPlayerData } from "./InventoryTab";
+import { StoriesTab } from "./StoriesTab";
+import { VaultTab, type ItemInstance, type RawPlayerData } from "./VaultTab";
 import { CampView } from "./CampView";
+import { TabErrorBoundary } from "./TabErrorBoundary";
 
-export type TabKey = "stats" | "body" | "crafting" | "adventure" | "inventory";
+export type TabKey = "stats" | "body" | "camp" | "vault" | "stories";
 
 const ICON_BASE = "/images/character/char-preview-";
+
+// Stable module-level fallbacks — avoids creating new object references on
+// every render, which would bust useMemo/useEffect dependency caches in child
+// components that receive these as props.
+const EMPTY_VAULT: { items: ItemInstance[]; itemBalances: Record<string, number> } = { items: [], itemBalances: {} };
+const EMPTY_CAMP_BALANCES: Record<string, number> = {};
 
 const TABS: { key: TabKey; label: string; icon: string; secondIcon?: string; emojiIcon?: string; lightenWhenActive?: boolean }[] = [
   { key: "stats", label: "Stats", icon: `${ICON_BASE}stats.png` },
   { key: "body", label: "Body & Soul", icon: `${ICON_BASE}body.png`, secondIcon: `${ICON_BASE}soul.png`, lightenWhenActive: true },
-  { key: "inventory", label: "Inventory", icon: "/images/character/camp.png" },
-  { key: "crafting", label: "Crafting", icon: "/images/character/vault.png" },
-  { key: "adventure", label: "Adventure", icon: `${ICON_BASE}adventure.png`, lightenWhenActive: true },
+  { key: "camp", label: "Camp", icon: "/images/character/camp.png" },
+  { key: "vault", label: "Vault", icon: "/images/character/vault.png" },
+  { key: "stories", label: "Stories", icon: `${ICON_BASE}adventure.png`, lightenWhenActive: true },
 ];
 
 // Opened by clicking an active soul slot's character. Five subpages - Stats
-// (attributes + face), Body (equipment slots), Soul (soul equipment),
-// Inventory (this character's vault vs. the player's shared vault), and
-// Adventure (addon selection) - reached by tapping one of TABS' icons, laid
-// out in a row above the character's name; the current one is highlighted,
-// the rest greyed out. Close sits fixed top-right, always visible regardless
-// of which page is showing. Delete only shows on Stats, fixed bottom-left.
+// (attributes + face), Body (equipment slots + soul equipment),
+// Camp (this character's camp items), Vault (the player's shared vault),
+// and Stories (addon selection) - reached by tapping one of TABS' icons,
+// laid out in a row above the character's name; the current one is
+// highlighted, the rest greyed out. Close sits fixed top-right, always
+// visible regardless of which page is showing. Delete only shows on Stats,
+// fixed bottom-left.
 export function CharacterPreview({
   character,
   playerResourceBalances,
@@ -53,14 +61,14 @@ export function CharacterPreview({
   onClose: () => void;
   onDeleted: () => void;
   onPortraitSaved: (character: SlotCharacterSummary) => void;
-  /** Called with the fresh roster/vault/pool after a resource/tool transfer on the Inventory tab. */
+  /** Called with the fresh roster/vault/pool after a resource/tool transfer on the Vault tab. */
   onPlayerDataUpdated?: (data: RawPlayerData) => void;
   /** Which page to open on - e.g. restoring from a link that sent the player
    * away to a full page (like the recipe viewer) and back. */
   initialTab?: TabKey;
-  /** Passed straight through to InventoryTab - opens its character Crafting
+  /** Passed straight through to VaultTab - opens its character crafting
    * section right away, for a soul slot click that came in with an active
-   * crafting timer showing. */
+   * timer showing. */
   openCraftingSectionByDefault?: boolean;
 }) {
   const { setHidden: setHeaderHidden } = useHeaderVisibility();
@@ -71,6 +79,50 @@ export function CharacterPreview({
   // tab) suspends .wizard's own vertical scroll so only its item grid
   // scrolls, horizontally. Cleared by switching to any of the 5 real tabs.
   const [showCamp, setShowCamp] = useState(false);
+
+  // Lazy-loaded supplemental data — fetched on demand the first time the
+  // relevant tab is opened; null means not yet loaded.
+  const [campItemBalances, setCampItemBalances] = useState<Record<string, number> | null>(null);
+  const [vaultData, setVaultData] = useState<{ items: ItemInstance[]; itemBalances: Record<string, number> } | null>(null);
+
+  // Trigger camp fetch the first time the camp view becomes visible.
+  useEffect(() => {
+    const needsCamp = showCamp || activeTab === "camp";
+    if (!needsCamp || campItemBalances !== null) return;
+    fetch(`/api/auth/me/characters/${character.id}/camp`, { credentials: "include" })
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => setCampItemBalances(data?.itemBalances ?? {}))
+      .catch(() => setCampItemBalances({}));
+  }, [showCamp, activeTab, campItemBalances, character.id]);
+
+  // Trigger vault fetch the first time the vault tab is opened.
+  useEffect(() => {
+    if (activeTab !== "vault" || vaultData !== null) return;
+    fetch("/api/auth/me/vault", { credentials: "include" })
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => setVaultData(data ?? { items: [], itemBalances: {} }))
+      .catch(() => setVaultData({ items: [], itemBalances: {} }));
+  }, [activeTab, vaultData]);
+
+  const handlePlayerDataUpdated = useCallback((data: RawPlayerData) => {
+    setVaultData(null);
+    setCampItemBalances(null);
+    onPlayerDataUpdated?.(data);
+  }, [onPlayerDataUpdated]);
+
+  // Merge lazily-loaded data back into the character prop so child tabs
+  // see the real data without needing their own fetches.
+  const augmentedCharacter: SlotCharacterSummary = {
+    ...character,
+    vault: vaultData ?? character.vault ?? EMPTY_VAULT,
+    gear: {
+      ...character.gear,
+      itemBalances: {
+        ...character.gear.itemBalances,
+        camp: campItemBalances ?? character.gear.itemBalances?.camp ?? EMPTY_CAMP_BALANCES,
+      },
+    },
+  };
   const [isDeleting, setIsDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
   const [showDeleteWarning, setShowDeleteWarning] = useState(false);
@@ -97,13 +149,12 @@ export function CharacterPreview({
     checkScrolledToEnd();
   }, [activeTab]);
 
-  // The Vault tab suspends .wizard's own vertical scroll entirely (see the
-  // className below) - if the page was already scrolled down from a
-  // longer Crafting view right before switching, freezing that scroll
-  // position would leave the name/tab-strip cut off above the fold with
-  // no way back up. Snap to the top the moment Vault becomes active.
-  useEffect(() => {
-    if (showCamp || activeTab === "inventory" || activeTab === "crafting") {
+  // Snap to the top before the browser paints whenever switching to a
+  // tab whose content fills the viewport (vault/camp) — useLayoutEffect
+  // ensures the scroll reset happens before the first paint so there's no
+  // visible flash of the old scroll position.
+  useLayoutEffect(() => {
+    if (showCamp || activeTab === "camp" || activeTab === "vault") {
       wizardScrollRef.current?.scrollTo(0, 0);
     }
   }, [activeTab, showCamp]);
@@ -136,6 +187,7 @@ export function CharacterPreview({
     setHeaderHidden(true);
     return () => setHeaderHidden(false);
   }, [setHeaderHidden]);
+
 
   // .wizard is a fixed full-viewport overlay, but the page behind it
   // (header + welcomeScreen + footer) can still exceed 100vh and scroll
@@ -199,37 +251,11 @@ export function CharacterPreview({
     setShowDeleteWarning(true);
   }
 
-  // A resource/tool id -> quantity pool, checked in one id at a time via the
-  // same per-id endpoints the Inventory tab's transfer buttons use - there's
-  // no bulk "check in everything" endpoint, so this just loops.
-  async function checkInAll(kind: "resources" | "tools", pool: Record<string, number>) {
-    for (const [id, amount] of Object.entries(pool)) {
-      if (amount <= 0) continue;
-      const res = await fetch(
-        `/api/auth/me/characters/${character.id}/${kind}/${id}/check-in`,
-        {
-          method: "POST",
-          credentials: "include",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ amount }),
-        }
-      );
-      if (!res.ok) throw new Error(`Failed to check in ${kind} ${id}`);
-    }
-  }
-
   async function handleConfirmDelete() {
     if (isDeleting) return;
     setDeleteError(null);
     setIsDeleting(true);
     try {
-      // Soulbound blueprints are lost either way (never transfer), but
-      // resources and tools this character is holding move to the shared
-      // vault first - otherwise deleting the character would just discard
-      // them, since nothing else can reach a deleted character's storage.
-      await checkInAll("resources", character.crafting.resources);
-      await checkInAll("tools", character.crafting.tools);
-
       const res = await fetch(`/api/auth/me/characters/${character.id}`, {
         method: "DELETE",
         credentials: "include",
@@ -246,22 +272,11 @@ export function CharacterPreview({
   return (
     <div
       className={`${styles.wizard} ${
-        showCamp || activeTab === "inventory" || activeTab === "crafting" ? "" : styles.wizardScrollable
+        showCamp || activeTab === "camp" || activeTab === "vault" ? "" : styles.wizardScrollable
       }`}
       ref={wizardScrollRef}
       onScroll={checkScrolledToEnd}
     >
-      {/* Sticky, not fixed - stays in normal flow (so nothing below it needs
-          manual top-padding to avoid sitting underneath) but pins to the top
-          of .wizard's own scroll once the page scrolls past it. Only the
-          icon row (.topBarBackground) carries a solid fill; the name below
-          it sits directly on .wizard's own tiled background. */}
-      {/* Hidden outright while CampView is showing - it gets its own
-          lower-right exit.webp button (CampView's onExitCamp) back to the
-          Body tab instead, and ItemGrid's own measure() already falls
-          back gracefully to a flat reserve when this isn't in the DOM to
-          measure (see its own comment) - see the "no bottom bar,
-          exit.webp only" request this replaced the fixed footer for. */}
       {!showCamp && (
         <div className={tabStyles.topBar} data-role="character-preview-topbar">
           <div className={tabStyles.topBarBackground}>
@@ -314,28 +329,28 @@ export function CharacterPreview({
 
         <div className={tabStyles.nameRow}>
           <h1 className={tabStyles.name}>
-            {showCamp ? `${character.firstName}'s Camp` : activeTab === "inventory" ? `${character.firstName}'s Camp` : activeTab === "crafting" ? "Vault" : `${character.firstName} ${character.lastName}`}
+            {showCamp ? `${character.firstName}'s Camp` : activeTab === "camp" ? `${character.firstName}'s Camp` : activeTab === "vault" ? "Vault" : `${character.firstName} ${character.lastName}`}
           </h1>
         </div>
 
-        <div className={showCamp || activeTab === "inventory" || activeTab === "crafting" ? tabStyles.mainColumn : `${tabStyles.mainColumn} ${tabStyles.mainColumnPadded}`}>
+        <div className={showCamp || activeTab === "camp" || activeTab === "vault" ? tabStyles.mainColumn : `${tabStyles.mainColumn} ${tabStyles.mainColumnPadded}`}>
           {showCamp ? (
             <CampView
-              character={character}
-              onPlayerDataUpdated={onPlayerDataUpdated}
+              character={augmentedCharacter}
+              onPlayerDataUpdated={handlePlayerDataUpdated}
               onExitCamp={() => setShowCamp(false)}
             />
           ) : (
             <>
           {activeTab === "stats" && (
             <StatsTab
-              character={character}
+              character={augmentedCharacter}
               onEditPortrait={() => setEditingPortrait(true)}
               onOpenBirthsign={() => {
                 setBirthsignFlipped(false);
                 setShowBirthsignPopup(true);
               }}
-              onPlayerDataUpdated={onPlayerDataUpdated}
+              onPlayerDataUpdated={handlePlayerDataUpdated}
               playerResourceBalances={playerResourceBalances}
               playerTools={playerTools}
               playerItemBalances={playerItemBalances}
@@ -343,26 +358,28 @@ export function CharacterPreview({
             />
           )}
           {activeTab === "body" && (
-            <BodyTab character={character} onPlayerDataUpdated={onPlayerDataUpdated} onOpenCamp={() => setShowCamp(true)} />
+            <BodyTab character={augmentedCharacter} onPlayerDataUpdated={handlePlayerDataUpdated} onOpenCamp={() => setShowCamp(true)} />
           )}
-          <div style={activeTab === "crafting" ? undefined : { display: "none" }}>
-            <InventoryTab
-              character={character}
-              playerResourceBalances={playerResourceBalances}
-              playerTools={playerTools}
-              playerItemBalances={playerItemBalances}
-              playerItems={playerItems}
-              onPlayerDataUpdated={onPlayerDataUpdated}
-              section="vault"
-            />
-          </div>
-          {activeTab === "adventure" && (
-            <AdventureTab character={character} onPlayerDataUpdated={onPlayerDataUpdated} />
+          {activeTab === "vault" && (
+            <TabErrorBoundary>
+              <VaultTab
+                character={augmentedCharacter}
+                playerResourceBalances={augmentedCharacter.vault.itemBalances}
+                playerTools={augmentedCharacter.vault.itemBalances}
+                playerItemBalances={augmentedCharacter.vault.itemBalances}
+                playerItems={augmentedCharacter.vault.items}
+                onPlayerDataUpdated={handlePlayerDataUpdated}
+                section="vault"
+              />
+            </TabErrorBoundary>
           )}
-          {activeTab === "inventory" && (
+          {activeTab === "stories" && (
+            <StoriesTab character={augmentedCharacter} onPlayerDataUpdated={handlePlayerDataUpdated} />
+          )}
+          {activeTab === "camp" && (
             <CampView
-              character={character}
-              onPlayerDataUpdated={onPlayerDataUpdated}
+              character={augmentedCharacter}
+              onPlayerDataUpdated={handlePlayerDataUpdated}
               onExitCamp={() => setActiveTab("body")}
               footerVisible
             />

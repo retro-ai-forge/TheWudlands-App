@@ -65,10 +65,26 @@ async def ensure_indexes() -> None:
     await db.active_players.create_index("address", unique=True)
     await db.active_players.create_index("last_active_at", expireAfterSeconds=8 * 60 * 60)
 
-    # `players` is the permanent record (no TTL) - unlike active_players,
-    # documents here must survive logout and idle eviction indefinitely.
-    await db.players.create_index("address", unique=True)
+    # `characters` stores one doc per character, keyed by (address, id).
+    await db.characters.create_index(
+        [("address", 1), ("id", 1)], unique=True
+    )
+    await db.characters.create_index(
+        [("address", 1), ("slotNumber", 1)], unique=True
+    )
 
     # soul_slots is read on nearly every welcome-page load - without an
     # index this is a full collection scan per lookup.
     await db.soul_slots.create_index("address", unique=True)
+
+    # Per-character camp (itemBalances only; gear.items with location:"camp"
+    # stay on the player doc) and blueprints, each in their own collection.
+    await db.character_camps.create_index(
+        [("address", 1), ("characterId", 1)], unique=True
+    )
+    await db.character_blueprints.create_index(
+        [("address", 1), ("characterId", 1)], unique=True
+    )
+    await db.player_vaults.create_index(
+        [("address", 1)], unique=True
+    )

@@ -15,8 +15,9 @@ import {
   formatResourceLabel,
   formatXpPreview,
   CRAFT_RESULT_FADE_MS,
-} from "./InventoryTab";
-import type { BlueprintTierInfo, ResourceTierInfo, RawPlayerData } from "./InventoryTab";
+} from "./VaultTab";
+import type { BlueprintTierInfo, ResourceTierInfo, RawPlayerData } from "./VaultTab";
+import { getBlueprintCatalog, getResourceCatalog, getToolCatalog, getItemCatalog } from "./catalogCache";
 
 import baseLevelsData from "../../../../backend/data/base-levels.json";
 const XP_LEVELS = baseLevelsData.levels;
@@ -113,114 +114,16 @@ export function StatsTab({
   const [itemCatalogTierInfo, setItemCatalogTierInfo] = useState<BlueprintTierInfo>({});
 
   useEffect(() => {
-    fetch("/api/auth/blueprint-categories")
-      .then((res) => (res.ok ? res.json() : []))
-      .then((data: { families: { familyId: string; kind: string; items: { id: string; name: string; tier: number }[] }[] }[]) => {
-        const info: BlueprintTierInfo = {};
-        for (const entry of data) {
-          for (const family of entry.families) {
-            for (const item of family.items) {
-              info[item.id] = { tier: item.tier, familyId: family.familyId, kind: family.kind, name: item.name };
-            }
-          }
-        }
-        setBlueprintTierInfo(info);
-      })
-      .catch(() => setBlueprintTierInfo({}));
-
-    fetch("/api/auth/resource-catalog")
-      .then((res) => (res.ok ? res.json() : []))
-      .then(
-        (
-          data: Array<{
-            id: string;
-            name: string;
-            familyId: string;
-            tier: number;
-            resourceFamily: string;
-            category: "raw" | "processed";
-            icon?: string | null;
-          }>
-        ) => {
-          const tierMap: ResourceTierInfo = {};
-          for (const item of data) {
-            tierMap[item.id] = {
-              tier: item.tier,
-              family: item.resourceFamily,
-              category: item.category,
-              name: item.name,
-              icon: item.icon ?? undefined,
-            };
-          }
-          setResourceTierInfo(tierMap);
-        }
-      )
-      .catch(() => setResourceTierInfo({}));
-
-    fetch("/api/auth/tool-catalog")
-      .then((res) => (res.ok ? res.json() : []))
-      .then((data: Array<{ id: string; familyId: string; tier: number }>) => {
-        const tierMap: BlueprintTierInfo = {};
-        for (const item of data) {
-          tierMap[item.id] = { tier: item.tier, familyId: item.familyId, kind: "tool" };
-        }
-        setToolTierInfo(tierMap);
-      })
-      .catch(() => setToolTierInfo({}));
-
-    fetch("/api/auth/item-catalog")
-      .then((res) => (res.ok ? res.json() : []))
-      .then(
-        (
-          data: Array<{
-            id: string;
-            name: string;
-            familyId: string;
-            tier: number;
-            kind: string[];
-            qualityMax: number | null;
-            armorClass: number | null;
-            icon: string;
-            stackSize: number;
-            description: string;
-            sizeClass: string;
-            equipSlots: string[][];
-            backpackable: boolean;
-            gatheringBonuses: string[];
-            capacitySlots: number;
-            carryCapacity: number;
-          }>
-        ) => {
-          const tierMap: BlueprintTierInfo = {};
-          for (const item of data) {
-            tierMap[item.id] = {
-              tier: item.tier,
-              familyId: item.familyId,
-              kind: item.kind[0] ?? "",
-              name: item.name,
-              qualityMax: item.qualityMax,
-              armorClass: item.armorClass,
-              icon: item.icon,
-              stackSize: item.stackSize,
-              description: item.description,
-              sizeClass: item.sizeClass,
-              equipSlots: item.equipSlots,
-              backpackable: item.backpackable,
-              gatheringBonuses: item.gatheringBonuses,
-              capacitySlots: item.capacitySlots,
-              carryCapacity: item.carryCapacity,
-            };
-          }
-          setItemCatalogTierInfo(tierMap);
-        }
-      )
-      .catch(() => setItemCatalogTierInfo({}));
+    getBlueprintCatalog().then(setBlueprintTierInfo).catch(() => setBlueprintTierInfo({}));
+    getResourceCatalog().then(setResourceTierInfo).catch(() => setResourceTierInfo({}));
+    getToolCatalog().then(setToolTierInfo).catch(() => setToolTierInfo({}));
+    getItemCatalog().then(setItemCatalogTierInfo).catch(() => setItemCatalogTierInfo({}));
   }, []);
 
   // --- Crafting state ---
 
   const transfer = async (
-    kind: "resources" | "tools",
+    kind: "itemBalances" | "resources" | "tools",
     id: string,
     amount: number
   ): Promise<boolean> => {
@@ -243,7 +146,7 @@ export function StatsTab({
     }
   };
 
-  const knownBlueprints = character.blueprints;
+  const knownBlueprints = character.blueprints ?? [];
 
   const ownedTools = useMemo(() => {
     const tools = ownedIds(playerTools);
@@ -298,8 +201,11 @@ export function StatsTab({
       setCraftXpPreview(null);
       setCraftDurationPreview(null);
       setRecipeViewerLoaded(false);
-      return;
     }
+  }, [recipeViewerOpen]);
+
+  useEffect(() => {
+    if (!recipeViewerOpen) return;
     const check = () => {
       const win = getRecipeViewerWindow();
       const next: Record<number, boolean> = {};
@@ -601,8 +507,8 @@ export function StatsTab({
                   <div className={styles.miniStatsGrid}>
                     <span>Adventures</span><span>{total}</span>
                     <span>Crafted</span><span>0</span>
-                    <span>Blueprints</span><span>{character.blueprints.length}</span>
-                    <span>Items</span><span>{character.gear.items.length}</span>
+                    <span>Blueprints</span><span>{character.blueprints?.length ?? 0}</span>
+                    <span>Items</span><span>{character.gear?.items?.length ?? 0}</span>
                     <span>Slain</span><span>0</span>
                     <span>Deaths</span><span>0</span>
                   </div>
@@ -682,7 +588,7 @@ export function StatsTab({
             }}
           >
             <span>Burden {character.gear.encumbranceState === "immobile" ? "— Crushed" : character.gear.encumbranceState === "encumbered" ? "— Encumbered" : "— Light"}</span>
-            <span>{character.gear.carryWeightUsed}/{character.gear.carryWeightCapacity}</span>
+            <span>{character.gear.carryWeightUsed ?? 0}/{character.gear.carryWeightCapacity ?? (10 + Math.floor((character.attr.migh + character.attr.endu) / 3))}</span>
           </button>
           <div className={styles.professionDivider} />
           {classes.map((c) => (
@@ -723,7 +629,7 @@ export function StatsTab({
             </div>
           ))}
 
-          {character.blueprints.length > 0 && (
+          {(character.blueprints?.length ?? 0) > 0 && (
             <div className={`${styles.accordionItem} ${styles.accordionItemWide}`}>
               <button className={styles.accordionHeader} onClick={() => setBlueprintsOpen(!blueprintsOpen)}>
                 <span>Blueprints</span>
@@ -758,15 +664,15 @@ export function StatsTab({
             </button>
             {craftingAccordionOpen && (
               <div className={styles.accordionBody}>
-                {(ownedIds(character.crafting.tools).length > 0 || borrowedToolIds.length === 0) && (
+                {(ownedIds(character.crafting.itemBalances).length > 0 || borrowedToolIds.length === 0) && (
                   <IdList
-                    ids={ownedIds(character.crafting.tools)}
+                    ids={ownedIds(character.crafting.itemBalances)}
                     emptyLabel="Not currently using any tools."
                     tierInfo={toolTierInfo}
                     sortByTier
                     fixedIcon="🔧"
-                    balances={character.crafting.tools}
-                    onTransfer={remainingSeconds === null ? (id, amount) => transfer("tools", id, amount) : undefined}
+                    balances={character.crafting.itemBalances}
+                    onTransfer={remainingSeconds === null ? (id, amount) => transfer("itemBalances", id, amount) : undefined}
                     textColor="#7eb8ff"
                   />
                 )}
@@ -782,14 +688,14 @@ export function StatsTab({
                     textColor="#7eb8ff"
                   />
                 )}
-                {(ownedIds(character.crafting.tools).length > 0 || borrowedToolIds.length > 0) && (
+                {(ownedIds(character.crafting.itemBalances).length > 0 || borrowedToolIds.length > 0) && (
                   <div className={styles.toolsResourceDivider} />
                 )}
                 <ResourceList
-                  balances={character.crafting.resources}
+                  balances={character.crafting.itemBalances}
                   emptyLabel="No materials used."
                   tierInfo={resourceTierInfo}
-                  onTransfer={remainingSeconds === null ? (id, amount) => transfer("resources", id, amount) : undefined}
+                  onTransfer={remainingSeconds === null ? (id, amount) => transfer("itemBalances", id, amount) : undefined}
                 />
                 {remainingSeconds !== null && character.crafting.activeCraft && (
                   <>
@@ -1005,7 +911,7 @@ export function StatsTab({
             style={{ bottom: carryOverlay.top, left: carryOverlay.left }}
           >
             <div className={styles.descOverlayText}>
-              {character.gear.carryWeightCapacity} = 10 + (might {character.attr.migh} + endur {character.attr.endu})/3
+              {character.gear.carryWeightCapacity ?? (10 + Math.floor((character.attr.migh + character.attr.endu) / 3))} = 10 + (might {character.attr.migh} + endur {character.attr.endu})/3
             </div>
           </div>
         </>

@@ -13,9 +13,10 @@ import {
   type BlueprintTierInfo,
   type RawPlayerData,
   type ResourceTierInfo,
-} from "./InventoryTab";
+} from "./VaultTab";
 import type { ItemInstance, SlotCharacterSummary } from "../SoulSlotGrid";
 import { CHAKRA_SLOTS, activeChakraCount } from "./SoulTab";
+import { getItemCatalog, getResourceCatalog } from "./catalogCache";
 import { RACE_GROUP_RIDER_WEIGHT } from "@/app/lib/characterOptions";
 
 // Overlaid directly on the portrait: head/chest/legs down the left edge,
@@ -137,94 +138,20 @@ export function BodyTab({
   const frameAspectRatio = character.portraitFrameArea?.aspectRatio;
 
   // Family name/icon lookup for whatever's equipped - fetched once, the
-  // same full catalog shape InventoryTab.tsx's own itemCatalogTierInfo
-  // uses (not just name/icon), since ItemDetailPopup's "info" prop needs
-  // the whole thing (equipSlots, qualityMax, description, ...) to open the
-  // same salvage/destroy view when a slot is clicked.
+  // Shared cached catalog - full shape including equipSlots, qualityMax, etc. for ItemDetailPopup.
   const [catalog, setCatalog] = useState<BlueprintTierInfo>({});
   useEffect(() => {
-    fetch("/api/auth/item-catalog")
-      .then((res) => (res.ok ? res.json() : []))
-      .then(
-        (
-          data: Array<{
-            id: string;
-            name: string;
-            familyId: string;
-            tier: number;
-            kind: string[];
-            qualityMax: number | null;
-            armorClass: number | null;
-            icon: string;
-            stackSize: number;
-            description: string;
-            sizeClass: string;
-            size: string;
-            equipSlots: string[][];
-            backpackable: boolean;
-            gatheringBonuses: string[];
-            capacitySlots: number;
-            carryCapacity: number;
-          }>
-        ) => {
-          const map: BlueprintTierInfo = {};
-          for (const item of data) {
-            map[item.id] = {
-              tier: item.tier,
-              familyId: item.familyId,
-              kind: item.kind[0] ?? "",
-              name: item.name,
-              qualityMax: item.qualityMax,
-              armorClass: item.armorClass,
-              icon: item.icon,
-              stackSize: item.stackSize,
-              description: item.description,
-              sizeClass: item.sizeClass,
-              size: item.size,
-              equipSlots: item.equipSlots,
-              backpackable: item.backpackable,
-              gatheringBonuses: item.gatheringBonuses,
-              capacitySlots: item.capacitySlots,
-              carryCapacity: item.carryCapacity,
-            };
-          }
-          setCatalog(map);
-        }
-      )
-      .catch(() => setCatalog({}));
+    getItemCatalog().then(setCatalog).catch(() => setCatalog({}));
   }, []);
 
-  // Same resource-catalog fetch InventoryTab.tsx already does independently
-  // for its own resourceTierInfo - needed here too now that a worn
-  // backpack's popup can show packed raw/processed materials (see
-  // packedItems below), not just packed items.
+  // Shared cached catalog - for showing packed raw/processed materials in a worn backpack popup.
   const [resourceTierInfo, setResourceTierInfo] = useState<ResourceTierInfo>({});
   useEffect(() => {
-    fetch("/api/auth/resource-catalog")
-      .then((res) => (res.ok ? res.json() : []))
-      .then(
-        (
-          data: Array<{
-            id: string;
-            name: string;
-            familyId: string;
-            tier: number;
-            resourceFamily: string;
-            category: "raw" | "processed";
-          }>
-        ) => {
-          const map: ResourceTierInfo = {};
-          for (const item of data) {
-            map[item.id] = { tier: item.tier, family: item.resourceFamily, category: item.category, name: item.name };
-          }
-          setResourceTierInfo(map);
-        }
-      )
-      .catch(() => setResourceTierInfo({}));
+    getResourceCatalog().then(setResourceTierInfo).catch(() => setResourceTierInfo({}));
   }, []);
 
   // The clicked slot's own equipped instance, if any - opens the same
-  // salvage/destroy(-from-character)/unequip popup InventoryTab.tsx's new
+  // salvage/destroy(-from-character)/unequip popup VaultTab.tsx's new
   // "Items" accordion uses (source:"character"), scoped to whatever's worn
   // right here rather than this character's whole backpack.
   const [selectedInstance, setSelectedInstance] = useState<ItemInstance | null>(null);
@@ -239,7 +166,7 @@ export function BodyTab({
   });
   const activeCount = activeChakraCount(character.attr);
 
-  // Mirrors InventoryTab.tsx's identical check (and backend.items_catalog.
+  // Mirrors VaultTab.tsx's identical check (and backend.items_catalog.
   // has_backpack_available) - greys out the popup's "Move to backpack"
   // button when there's no "backpack" family to pack into, instead of
   // letting the click fail server-side. A backpack still counts once
@@ -285,15 +212,12 @@ export function BodyTab({
 
   // Same emptiness check as CampView's own hasCampItems - lets the camp
   // button carry a small dropped.png badge (see below) so the player can
-  // tell camp holds something without having to open it first. Has to
-  // check gear.resources.camp too, not just items/itemBalances - a
-  // backpack-full salvage drop (see backend._salvage_resource_updates) or
-  // an explicit "move to camp" can leave camp holding ONLY raw/processed
-  // materials, with no item/itemBalance row at all.
+  // tell camp holds something without having to open it first. Checks
+  // gear.itemBalances.camp (which now includes raw/processed materials
+  // that used to live in gear.resources.camp) and gear.items at camp.
   const hasCampItems =
     character.gear.items.some((instance) => instance.location === "camp") ||
-    Object.values(character.gear.itemBalances.camp).some((amount) => amount > 0) ||
-    Object.values(character.gear.resources.camp).some((amount) => amount > 0);
+    Object.values(character.gear.itemBalances.camp ?? {}).some((amount) => amount > 0);
 
   const hasCartItems =
     cartIds.length > 0 ||

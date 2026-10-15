@@ -1,6 +1,6 @@
 """
 One-time data migration: renames the "age" key to "age_month" on every
-character embedded in players.characters, matching the Character/
+character document in the characters collection, matching the Character/
 CharacterResponse rename in backend.character and backend.auth_routes
 (the field was always canonical human-equivalent months, never years -
 the old "age" name was just misleading).
@@ -29,25 +29,12 @@ from backend.db import get_database  # noqa: E402
 async def main():
     db = get_database()
 
-    players_updated = 0
-    characters_updated = 0
+    result = await db.characters.update_many(
+        {"age": {"$exists": True}},
+        [{"$set": {"age_month": "$age"}}, {"$unset": "age"}],
+    )
 
-    async for player in db.players.find({"characters.age": {"$exists": True}}):
-        changed = False
-        for character in player.get("characters", []):
-            if "age" in character:
-                character["age_month"] = character.pop("age")
-                changed = True
-                characters_updated += 1
-
-        if changed:
-            await db.players.update_one(
-                {"_id": player["_id"]},
-                {"$set": {"characters": player["characters"]}},
-            )
-            players_updated += 1
-
-    print(f"Updated {characters_updated} character(s) across {players_updated} player(s).")
+    print(f"Updated {result.modified_count} character(s).")
 
 
 if __name__ == "__main__":

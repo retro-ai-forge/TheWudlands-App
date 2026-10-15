@@ -19,7 +19,7 @@ from backend.auth_routes import (
     player_router,
     statistics_router,
 )
-from backend.db import close_mongo_client
+from backend.db import close_mongo_client, get_database
 
 app = FastAPI(title="TheWudlands API")
 
@@ -36,6 +36,23 @@ app.add_middleware(
 app.include_router(auth_router)
 app.include_router(player_router)
 app.include_router(statistics_router)
+
+
+@app.on_event("startup")
+async def on_startup():
+    import asyncio
+    import time as _time
+    t0 = _time.perf_counter()
+    db = get_database()
+    await asyncio.gather(
+        db.characters.find_one(),
+        db.character_camps.find_one(),
+        db.character_blueprints.find_one(),
+        db.player_vaults.find_one(),
+        db.active_players.find_one(),
+        db.soul_slots.find_one(),
+    )
+    print(f"[startup] warmup all collections: {_time.perf_counter() - t0:.3f}s")
 
 
 @app.on_event("shutdown")

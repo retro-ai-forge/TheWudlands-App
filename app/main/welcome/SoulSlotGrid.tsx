@@ -128,8 +128,6 @@ export interface SlotCharacterSummary {
   attr: CharacterAttributes;
   /** Temporary crafting-session staging area - populated by start_craft, drained by finish_craft. */
   crafting: {
-    resources: Record<string, number>;
-    tools: Record<string, number>;
     /** Non-instance crafted items staged as a consumed "final" ingredient - concrete item id -> quantity. */
     itemBalances: Record<string, number>;
     /** In-progress craft, if any - one job at a time. Resolved lazily against readyAt, not a live server countdown. */
@@ -144,13 +142,16 @@ export interface SlotCharacterSummary {
   };
   /** Blueprint ids this character has learned - soulbound, never moves. */
   blueprints: string[];
+  /** This character&apos;s personal vault (items + itemBalances). */
+  vault: {
+    itemBalances: Record<string, number>;
+    items: ItemInstance[];
+  };
   /** Everything this character actually owns/carries for adventuring. */
   gear: {
     /** Item instances this character holds - backpacked or equipped (see location/slotRef). */
     items: ItemInstance[];
-    /** Raw/processed resources this character owns, split by physical carry location. */
-    resources: { camp: Record<string, number>; backpack: Record<string, number>; saddlepack: Record<string, number>; cart: Record<string, number> };
-    /** Non-instance crafted items (food, potions, misc trinkets) this character owns, split by physical carry location. */
+    /** All stackable items this character owns, split by physical carry location (camp injected from character_camps collection). */
     itemBalances: { camp: Record<string, number>; backpack: Record<string, number>; saddlepack: Record<string, number>; cart: Record<string, number> };
     /** Computed server-side (backend.items_catalog.backpack_slots_used/backpack_capacity) - total backpack slots currently occupied and the character's own ceiling (0 with nothing equipped). Powers a backpack-family item's own "Filled: X/Y" line - character-level, not tied to which specific backpack instance's popup is open. */
     backpackSlotsUsed: number;

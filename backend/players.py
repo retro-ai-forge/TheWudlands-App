@@ -9,6 +9,7 @@ survive logout and any amount of time between sessions.
 
 from __future__ import annotations
 
+import asyncio
 import json
 import math
 import uuid
@@ -22,9 +23,7 @@ from pymongo import ReturnDocument
 from backend import items_catalog, recycling
 from backend.character import Character
 from backend.db import get_database
-from backend.resources_catalog import RESOURCE_ITEMS, RESOURCE_ITEMS_BY_ID, PROFESSION_RESOURCE_FAMILIES
-from backend.processed_catalog import PROCESSED_RESOURCE_ITEMS, PROCESSED_RESOURCE_ITEMS_BY_ID
-from backend.tools_catalog import TOOL_ITEMS_BY_ID
+from backend.resources_catalog import PROFESSION_RESOURCE_FAMILIES
 from backend.professions_catalog import PROFESSION_CATEGORIES
 
 _RECIPES_PATH = Path(__file__).resolve().parent / "data" / "craft-recipes.json"
@@ -37,17 +36,6 @@ def _load_recipes() -> dict[str, dict]:
 
 # Loaded once at import time, same pattern as the other catalog modules.
 _RECIPES_BY_FAMILY: dict[str, dict] = _load_recipes()
-
-# (familyId, tier) -> concrete resource/processed id, resolved once at import
-# time the same way items_catalog.FINAL_ITEM_ROWS_BY_FAMILY_TIER resolves
-# crafted-output rows - craft-recipes.json ingredients reference a family+tier,
-# never a concrete id directly.
-_RAW_ID_BY_FAMILY_TIER: dict[tuple[str, int], str] = {
-    (item.family_id, item.tier): item.id for item in RESOURCE_ITEMS
-}
-_PROCESSED_ID_BY_FAMILY_TIER: dict[tuple[str, int], str] = {
-    (item.family_id, item.tier): item.id for item in PROCESSED_RESOURCE_ITEMS
-}
 
 
 def _load_blueprint_ids() -> dict[tuple[str, int], str]:
@@ -84,35 +72,15 @@ def _owns_blueprint_at_or_above(character: dict, blueprint_family_id: str, tier:
 
 @dataclass
 class Player:
-    """A permanent player record, keyed by wallet address."""
+    """A player record, keyed by wallet address."""
 
     address: str
-    first_login_at: datetime
     characters: List[dict] = field(default_factory=list)
-    # Crafting-only shared pool: raw/processed resources and tools, drawn on
-    # by start_craft to stage an active craft (see Character.crafting for
-    # the per-character staging side of that same transfer). Never holds a
-    # finished item - that's vault's job.
-    crafting: dict = field(default_factory=lambda: {
-        "resources": {},
-        "tools": {},
-    })
-    # Everything the player owns that isn't a raw/processed material and
-    # isn't soulbound to a specific character: unassigned item instances
-    # (location:"pool") and finished-good balances (food, potions, misc
-    # trinkets), pooled across every character this player owns.
-    vault: dict = field(default_factory=lambda: {
-        "items": [],
-        "itemBalances": {},
-    })
 
     def to_dict(self) -> dict:
         return {
             "address": self.address,
-            "firstLoginAt": self.first_login_at.isoformat(),
             "characters": self.characters,
-            "crafting": self.crafting,
-            "vault": self.vault,
         }
 
 
@@ -121,29 +89,65 @@ def _as_utc(value: datetime) -> datetime:
     return value if value.tzinfo is not None else value.replace(tzinfo=timezone.utc)
 
 
-def _doc_to_player(doc: dict) -> Player:
-    crafting = doc.get("crafting") or {"resources": {}, "tools": {}}
-    crafting.setdefault("resources", {})
-    crafting.setdefault("tools", {})
+async def _build_player(db, address: str) -> Player:
+    """Build a Player from the characters collection and related tables."""
+    import time as _time
+    _t0 = _time.perf_counter()
+    print(f"[_build_player] START for {address}")
 
-    vault = doc.get("vault") or {"items": [], "itemBalances": {}}
-    if not isinstance(vault.get("items"), list):
-        vault["items"] = []
-    vault.setdefault("itemBalances", {})
-    for item in vault["items"]:
+    async def _fetch_characters():
+        t = _time.perf_counter()
+        docs = []
+        async for doc in db.characters.find({"address": address}):
+            doc.pop("_id", None)
+            docs.append(doc)
+        print(f"  [characters] {_time.perf_counter() - t:.3f}s  count={len(docs)}")
+        return docs
+
+    async def _fetch_camps():
+        t = _time.perf_counter()
+        m = {}
+        async for doc in db.character_camps.find({"address": address}):
+            m[doc["characterId"]] = doc
+        print(f"  [camps] {_time.perf_counter() - t:.3f}s  count={len(m)}")
+        return m
+
+    async def _fetch_blueprints():
+        t = _time.perf_counter()
+        m = {}
+        async for doc in db.character_blueprints.find({"address": address}):
+            m[doc["characterId"]] = doc
+        print(f"  [blueprints] {_time.perf_counter() - t:.3f}s  count={len(m)}")
+        return m
+
+    async def _fetch_vault():
+        t = _time.perf_counter()
+        doc = await db.player_vaults.find_one({"address": address})
+        items = len(doc.get("items", [])) if doc else 0
+        print(f"  [vault] {_time.perf_counter() - t:.3f}s  items={items}")
+        return doc
+
+    characters, camp_map, bp_map, vault_doc = await asyncio.gather(
+        _fetch_characters(),
+        _fetch_camps(),
+        _fetch_blueprints(),
+        _fetch_vault(),
+    )
+    _t1 = _time.perf_counter()
+    print(f"[_build_player] TOTAL: {_t1 - _t0:.3f}s")
+    vault_items = vault_doc.get("items", []) if vault_doc else []
+    vault_balances = vault_doc.get("itemBalances", {}) if vault_doc else {}
+    for item in vault_items:
         item.setdefault("createdAt", datetime.now(timezone.utc).isoformat())
+    shared_vault = {"items": vault_items, "itemBalances": vault_balances}
 
-    characters = doc.get("characters", [])
     for character in characters:
-        # Computed, not stored - items_catalog.backpack_slots_used/
-        # backpack_capacity read straight off this same character dict's
-        # own gear/attr fields every time, so these two are always in sync
-        # with whatever else changed in this response. Read by the
-        # frontend's "Filled: X/Y" line on any backpack-family item's own
-        # popup (BodyTab/CampView) - character-level, not tied to which
-        # specific backpack instance was clicked, since backpack storage
-        # itself is (see Character.gear's own docstring).
+        cid = character["id"]
         character.setdefault("gear", {})
+        character["gear"].setdefault("itemBalances", {})
+        character["gear"]["itemBalances"]["camp"] = camp_map.get(cid, {}).get("itemBalances", {})
+        character["blueprints"] = bp_map.get(cid, {}).get("blueprints", [])
+        character["vault"] = shared_vault
         character.setdefault("stats", {})
         character["stats"].setdefault("adventureFinished", 0)
         character["stats"].setdefault("adventureRunAway", 0)
@@ -164,11 +168,8 @@ def _doc_to_player(doc: dict) -> Player:
         character["gear"]["mountGearWeight"] = items_catalog.mount_gear_weight(character)
 
     return Player(
-        address=doc["address"],
-        first_login_at=_as_utc(doc["first_login_at"]),
+        address=address,
         characters=characters,
-        crafting=crafting,
-        vault=vault,
     )
 
 
@@ -176,115 +177,191 @@ def _strip_zeros(d: dict) -> dict:
     return {k: v for k, v in d.items() if v > 0}
 
 
-async def _prune_player_zeros(db, address: str, doc: dict, paths: list):
-    unset = {}
-    for p in paths:
-        v = doc
-        for k in p.split("."):
-            v = v.get(k) if isinstance(v, dict) else None
-        if v == 0:
-            unset[p] = ""
-    if unset:
-        await db.players.update_one({"address": address}, {"$unset": unset})
+async def _set_camp_itembalances(db, address: str, character_id: str, balances: dict) -> None:
+    """Replace a character's camp itemBalances (zeros stripped)."""
+    await db.character_camps.update_one(
+        {"address": address, "characterId": character_id},
+        {"$set": {"itemBalances": _strip_zeros(balances)}},
+        upsert=True,
+    )
+
+
+async def _inc_camp_itembalances(db, address: str, character_id: str, amounts: Dict[str, int]) -> None:
+    """$inc a character's camp itemBalances, then prune any zeros."""
+    nonzero = {k: v for k, v in amounts.items() if v != 0}
+    if not nonzero:
+        return
+    await db.character_camps.update_one(
+        {"address": address, "characterId": character_id},
+        {"$inc": {f"itemBalances.{k}": v for k, v in nonzero.items()}},
+        upsert=True,
+    )
+    camp_doc = await db.character_camps.find_one({"address": address, "characterId": character_id})
+    if camp_doc:
+        zeros = [k for k, v in camp_doc.get("itemBalances", {}).items() if v <= 0]
+        if zeros:
+            await db.character_camps.update_one(
+                {"address": address, "characterId": character_id},
+                {"$unset": {f"itemBalances.{k}": "" for k in zeros}},
+            )
+
+
+async def _get_vault(db, address: str) -> dict:
+    """Fetch the vault doc for a player, defaulting to empty."""
+    doc = await db.player_vaults.find_one({"address": address})
+    if doc is None:
+        return {"items": [], "itemBalances": {}}
+    items = doc.get("items", [])
+    for item in items:
+        item.setdefault("createdAt", datetime.now(timezone.utc).isoformat())
+    return {"items": items, "itemBalances": doc.get("itemBalances", {})}
+
+
+async def _inc_vault_itembalances(db, address: str, amounts: Dict[str, int]) -> None:
+    """$inc player_vaults.itemBalances, prune zeros."""
+    nonzero = {k: v for k, v in amounts.items() if v != 0}
+    if not nonzero:
+        return
+    await db.player_vaults.update_one(
+        {"address": address},
+        {"$inc": {f"itemBalances.{k}": v for k, v in nonzero.items()}},
+        upsert=True,
+    )
+    vault_doc = await db.player_vaults.find_one({"address": address})
+    if vault_doc:
+        zeros = [k for k, v in vault_doc.get("itemBalances", {}).items() if v <= 0]
+        if zeros:
+            await db.player_vaults.update_one(
+                {"address": address},
+                {"$unset": {f"itemBalances.{k}": "" for k in zeros}},
+            )
 
 
 async def _prune_char_zeros(
     db, address: str, character_id: str, doc: dict,
-    char_paths: list, array_filter: bool = False,
+    char_paths: list, **_kwargs,
 ):
-    char = next((c for c in doc.get("characters", []) if c["id"] == character_id), None)
-    if not char:
-        return
     unset = {}
     for cp in char_paths:
-        v = char
+        v = doc
         for k in cp.split("."):
             v = v.get(k) if isinstance(v, dict) else None
         if v == 0:
-            pfx = "characters.$[char]" if array_filter else "characters.$"
-            unset[f"{pfx}.{cp}"] = ""
-    if not unset:
-        return
-    filt: dict = {"address": address}
-    kwargs: dict = {}
-    if array_filter:
-        kwargs["array_filters"] = [{"char.id": character_id}]
-    else:
-        filt["characters.id"] = character_id
-    await db.players.update_one(filt, {"$unset": unset}, **kwargs)
+            unset[cp] = ""
+    if unset:
+        await db.characters.update_one(
+            {"address": address, "id": character_id},
+            {"$unset": unset},
+        )
 
 
 async def get_or_create_player(address: str) -> Player:
-    """
-    Fetch the permanent record for `address`, creating it on first-ever
-    login. Called from the /api/auth/verify flow alongside add_active_player.
-    """
+    """Build the Player view for `address`. No separate player doc needed."""
     db = get_database()
-
-    doc = await db.players.find_one({"address": address})
-    if doc is not None:
-        return _doc_to_player(doc)
-
-    doc = {
-        "address": address,
-        "first_login_at": datetime.now(timezone.utc),
-        "characters": [],
-        "crafting": {"resources": {}, "tools": {}},
-        "vault": {"items": [], "itemBalances": {}},
-    }
-    await db.players.insert_one(doc)
-    return _doc_to_player(doc)
+    return await _build_player(db, address)
 
 
 async def get_player(address: str) -> Optional[Player]:
     db = get_database()
-    doc = await db.players.find_one({"address": address})
+    return await _build_player(db, address)
 
-    if doc is None:
-        return None
 
-    return _doc_to_player(doc)
+async def get_character_summaries(address: str) -> list[dict]:
+    """Lightweight read: just the character docs, no vault/camp/blueprint injection."""
+    db = get_database()
+    summaries = []
+    async for doc in db.characters.find({"address": address}):
+        doc.pop("_id", None)
+        summaries.append(doc)
+    return summaries
+
+
+async def get_character_camp(address: str, character_id: str) -> dict:
+    """Return only the camp itemBalances for one character."""
+    db = get_database()
+    doc = await db.character_camps.find_one({"address": address, "characterId": character_id})
+    return doc.get("itemBalances", {}) if doc else {}
+
+
+async def get_player_vault(address: str) -> dict:
+    """Return only the player vault (items + itemBalances)."""
+    db = get_database()
+    doc = await db.player_vaults.find_one({"address": address})
+    if not doc:
+        return {"items": [], "itemBalances": {}}
+    items = doc.get("items", [])
+    for item in items:
+        item.setdefault("createdAt", datetime.now(timezone.utc).isoformat())
+    return {"items": items, "itemBalances": doc.get("itemBalances", {})}
 
 
 async def add_character(address: str, character: Character) -> Optional[Player]:
-    """
-    Append a new character to `address`'s permanent roster. Requires the
-    player record to already exist (see get_or_create_player) - returns
-    None if it doesn't, same contract as the old active_players.add_character.
-    """
+    """Insert a new character document for `address`."""
     db = get_database()
-
-    doc = await db.players.find_one_and_update(
-        {"address": address},
-        {"$push": {"characters": character.to_dict()}},
-        return_document=ReturnDocument.AFTER,
-    )
-
-    if doc is None:
-        return None
-
-    return _doc_to_player(doc)
+    char_dict = character.to_dict()
+    char_dict["address"] = address
+    await db.characters.insert_one(char_dict)
+    return await _build_player(db, address)
 
 
 async def delete_character(address: str, character_id: str) -> Optional[Player]:
     """
-    Remove one character from `address`'s roster by id. Idempotent - pulling
-    a character_id that doesn't match anything just leaves the roster
-    unchanged, same as any other $pull. Returns None only if there's no
-    player record for `address` at all.
+    Delete a character. Dumps all gear and camp items into the shared
+    vault first, then deletes blueprints, camp doc, and the character doc.
     """
     db = get_database()
 
-    doc = await db.players.find_one_and_update(
-        {"address": address},
-        {"$pull": {"characters": {"id": character_id}}},
-        return_document=ReturnDocument.AFTER,
+    char_doc = await db.characters.find_one({"address": address, "id": character_id})
+    if char_doc is None:
+        return await _build_player(db, address)
+
+    gear = char_doc.get("gear", {})
+    gear_items = gear.get("items", [])
+    gear_balances = gear.get("itemBalances", {})
+
+    # --- instances (body, backpack, saddlepack, cart, camp) → vault ---
+    pooled_instances = [
+        {**item, "location": "pool", "slotRef": []}
+        for item in gear_items
+    ]
+    if pooled_instances:
+        await db.player_vaults.update_one(
+            {"address": address},
+            {"$push": {"items": {"$each": pooled_instances}}},
+            upsert=True,
+        )
+
+    # --- stackable balances (backpack, saddlepack, cart) → vault ---
+    vault_balance_inc: Dict[str, int] = {}
+    for bucket in ("backpack", "saddlepack", "cart"):
+        for item_id, qty in gear_balances.get(bucket, {}).items():
+            if qty > 0:
+                vault_balance_inc[item_id] = vault_balance_inc.get(item_id, 0) + qty
+
+    # --- camp balances → vault, then delete camp doc ---
+    camp_doc = await db.character_camps.find_one(
+        {"address": address, "characterId": character_id}
+    )
+    if camp_doc:
+        for item_id, qty in camp_doc.get("itemBalances", {}).items():
+            if qty > 0:
+                vault_balance_inc[item_id] = vault_balance_inc.get(item_id, 0) + qty
+        await db.character_camps.delete_one(
+            {"address": address, "characterId": character_id}
+        )
+
+    if vault_balance_inc:
+        await _inc_vault_itembalances(db, address, vault_balance_inc)
+
+    # --- delete blueprints ---
+    await db.character_blueprints.delete_one(
+        {"address": address, "characterId": character_id}
     )
 
-    if doc is None:
-        return None
+    # --- delete character doc ---
+    await db.characters.delete_one({"address": address, "id": character_id})
 
-    return _doc_to_player(doc)
+    return await _build_player(db, address)
 
 
 async def update_character_portrait(
@@ -305,15 +382,15 @@ async def update_character_portrait(
     """
     db = get_database()
 
-    doc = await db.players.find_one_and_update(
-        {"address": address, "characters.id": character_id},
+    doc = await db.characters.find_one_and_update(
+        {"address": address, "id": character_id},
         {
             "$set": {
-                "characters.$.portraitUrl": portrait_url,
-                "characters.$.portraitZoom": portrait_zoom,
-                "characters.$.portraitPan": portrait_pan,
-                "characters.$.portraitFrameArea": portrait_frame_area,
-                "characters.$.portraitFaceArea": portrait_face_area,
+                "portraitUrl": portrait_url,
+                "portraitZoom": portrait_zoom,
+                "portraitPan": portrait_pan,
+                "portraitFrameArea": portrait_frame_area,
+                "portraitFaceArea": portrait_face_area,
             }
         },
         return_document=ReturnDocument.AFTER,
@@ -322,7 +399,7 @@ async def update_character_portrait(
     if doc is None:
         return None
 
-    return _doc_to_player(doc)
+    return await _build_player(db, address)
 
 
 _PRIME_PROFESSION_SLOTS = ("prof1", "prof2", "prof3", "none")
@@ -342,255 +419,49 @@ async def set_prime_profession(address: str, character_id: str, slot: str) -> Op
     if slot not in _PRIME_PROFESSION_SLOTS:
         raise ValueError(f"Unknown profession slot: {slot}")
     db = get_database()
-    doc = await db.players.find_one({"address": address, "characters.id": character_id})
+    doc = await db.characters.find_one({"address": address, "id": character_id})
     if doc is None:
         return None
-    character = next((c for c in doc["characters"] if c["id"] == character_id), None)
-    if character is None:
-        return None
+    character = doc
     if slot != "none":
         prof_field = {"prof1": "prof1", "prof2": "prof2", "prof3": "prof3"}[slot]
         if character.get("profession", {}).get(prof_field, "none") == "none":
             raise ValueError(f"Character has no profession assigned to {slot}")
 
-    doc = await db.players.find_one_and_update(
-        {"address": address, "characters.id": character_id},
-        {"$set": {"characters.$.profession.prime": slot}},
+    doc = await db.characters.find_one_and_update(
+        {"address": address, "id": character_id},
+        {"$set": {"profession.prime": slot}},
         return_document=ReturnDocument.AFTER,
     )
     if doc is None:
         return None
-    return _doc_to_player(doc)
+    return await _build_player(db, address)
 
 
-def _validate_resource_grant(resource_id: str, amount: int) -> None:
-    if resource_id not in RESOURCE_ITEMS_BY_ID and resource_id not in PROCESSED_RESOURCE_ITEMS_BY_ID:
-        raise ValueError(f"Unknown resource id: {resource_id}")
+async def grant_item_balance(address: str, item_id: str, amount: int) -> Optional[Player]:
     if amount <= 0:
         raise ValueError("amount must be positive")
-
-
-async def grant_resource(
-    address: str, character_id: str, resource_id: str, amount: int
-) -> Optional[Player]:
-    """
-    Credit `amount` of `resource_id` to one of `address`'s characters'
-    own stacked resource storage (backpack) - a running total, never
-    per-unit item instances. Returns None if the address/character pair
-    doesn't match any player document.
-    """
-    _validate_resource_grant(resource_id, amount)
     db = get_database()
-
-    doc = await db.players.find_one_and_update(
-        {"address": address, "characters.id": character_id},
-        {"$inc": {f"characters.$.crafting.resources.{resource_id}": amount}},
-        return_document=ReturnDocument.AFTER,
-    )
-
-    if doc is None:
-        return None
-
-    return _doc_to_player(doc)
-
-
-async def grant_shared_resource(address: str, resource_id: str, amount: int) -> Optional[Player]:
-    """
-    Credit `amount` of `resource_id` to `address`'s shared resource vault -
-    pooled storage available to every character that player owns, separate
-    from any single character's own resources.
-    """
-    _validate_resource_grant(resource_id, amount)
-    db = get_database()
-
-    doc = await db.players.find_one_and_update(
+    await db.player_vaults.update_one(
         {"address": address},
-        {"$inc": {f"crafting.resources.{resource_id}": amount}},
-        return_document=ReturnDocument.AFTER,
+        {"$inc": {f"itemBalances.{item_id}": amount}},
+        upsert=True,
     )
-
-    if doc is None:
-        return None
-
-    return _doc_to_player(doc)
+    return await _build_player(db, address)
 
 
-# The player's shared tool pool, stacked and checked out/in identically
-# across all characters.
-_TOOL_POOLS = ("crafting.tools",)
-
-
-def _validate_tool_pool(pool: str) -> None:
-    if pool not in _TOOL_POOLS:
-        raise ValueError(f"Unknown tool pool: {pool}")
-
-
-async def grant_tool(address: str, tool_id: str, amount: int = 1, pool: str = "crafting.tools") -> Optional[Player]:
-    """
-    Credit `amount` of `tool_id` to `address`'s shared tool pool - stacked
-    the same way grant_shared_resource stacks resources, since a player can
-    own more than one of the same tool (e.g. two anvils).
-    """
-    _validate_tool_pool(pool)
+async def grant_character_item_balance(address: str, character_id: str, item_id: str, amount: int) -> Optional[Player]:
     if amount <= 0:
         raise ValueError("amount must be positive")
     db = get_database()
-
-    doc = await db.players.find_one_and_update(
-        {"address": address},
-        {"$inc": {f"{pool}.{tool_id}": amount}},
-        return_document=ReturnDocument.AFTER,
-    )
-
-    if doc is None:
-        return None
-
-    return _doc_to_player(doc)
-
-
-async def check_in_tool(
-    address: str, character_id: str, tool_id: str, amount: int = 1, pool: str = "crafting.tools"
-) -> Optional[Player]:
-    """
-    Move `amount` of `tool_id` from one of `address`'s characters back into
-    the shared tool pool. Requires that character to actually be holding
-    `amount`, and that it has no in-progress craft - whatever start_craft
-    staged there is locked for the crafting duration; pulling it back out
-    from under an active craft would leave finish_craft unable to find it.
-    The only direction this moves in now - a character's own tools are a
-    temporary crafting-session staging area (populated by start_craft,
-    never by a direct player-initiated transfer), so there's no
-    check_out_tool counterpart; this stays as the drain path for whatever a
-    finished craft left behind, or old data.
-    """
-    _validate_tool_pool(pool)
-    if amount <= 0:
-        raise ValueError("amount must be positive")
-    db = get_database()
-
-    # `pool` (e.g. "crafting.tools") is the player's own shared pool, but a
-    # character's own tools are always stored flatly as Character.tools
-    # ("tools", never nested under "inventory") - the two sides of this
-    # transfer are NOT the same path.
-    doc = await db.players.find_one_and_update(
-        {
-            "address": address,
-            "characters": {
-                "$elemMatch": {
-                    "id": character_id,
-                    f"crafting.tools.{tool_id}": {"$gte": amount},
-                    "$or": [{"crafting.activeCraft": {"$exists": False}}, {"crafting.activeCraft": None}],
-                }
-            },
-        },
-        {"$inc": {f"{pool}.{tool_id}": amount, f"characters.$.crafting.tools.{tool_id}": -amount}},
-        return_document=ReturnDocument.AFTER,
-    )
-
-    if doc is None:
-        return None
-
-    return _doc_to_player(doc)
-
-
-async def check_in_resource(
-    address: str, character_id: str, resource_id: str, amount: int = 1
-) -> Optional[Player]:
-    """
-    Move `amount` of `resource_id` from one of `address`'s characters' own
-    resources back into the shared inventory's resources pool. Requires
-    that character to actually be holding `amount`, and that it has no
-    in-progress craft - same reasoning as check_in_tool: pulling staged
-    materials back out from under an active craft would leave finish_craft
-    unable to find what start_craft transferred. The only direction this
-    moves in now - a character's own resources are a temporary
-    crafting-session staging area, not somewhere a player parks materials
-    directly.
-    """
-    _validate_resource_grant(resource_id, amount)
-    db = get_database()
-
-    doc = await db.players.find_one_and_update(
-        {
-            "address": address,
-            "characters": {
-                "$elemMatch": {
-                    "id": character_id,
-                    f"crafting.resources.{resource_id}": {"$gte": amount},
-                    "$or": [{"crafting.activeCraft": {"$exists": False}}, {"crafting.activeCraft": None}],
-                }
-            },
-        },
-        {"$inc": {
-            f"crafting.resources.{resource_id}": amount,
-            f"characters.$.crafting.resources.{resource_id}": -amount,
-        }},
-        return_document=ReturnDocument.AFTER,
-    )
-
-    if doc is None:
-        return None
-
-    return _doc_to_player(doc)
-
-
-async def check_out_resource_to_backpack(
-    address: str, character_id: str, resource_id: str, amount: int = 1
-) -> Optional[Player]:
-    """
-    Move `amount` of `resource_id` straight from the player's own shared
-    crafting stock (crafting.resources - the same pool check_in_resource
-    empties into, shown as "Party's Resources") into one of their
-    characters' own backpack (gear.resources.backpack) - physically
-    packing shared materials for that character to carry into an
-    adventure. Deliberately skips the character's own crafting.resources
-    entirely (that pool is populated exclusively by start_craft - see
-    check_in_resource's own docstring - not somewhere a direct transfer
-    should park materials even in passing). Capacity-gated exactly like
-    load_resource_to_backpack (same marginal-slot math, never a partial
-    fill) - this is the direct-to-backpack replacement for the old
-    check_out_resource (shared -> character's own vault), removed when the
-    character-level crafting vault itself went away.
-
-    Raises ValueError if the character has no backpack equipped, or the
-    backpack doesn't have room for the whole amount. Returns None if the
-    shared pool doesn't hold `amount`, or the address/character pair
-    doesn't match.
-    """
-    _validate_resource_grant(resource_id, amount)
-    db = get_database()
-    doc = await db.players.find_one({"address": address, "characters.id": character_id})
-    if doc is None:
-        return None
-    character = next((c for c in doc["characters"] if c["id"] == character_id), None)
-    if character is None:
-        return None
-    if doc.get("crafting", {}).get("resources", {}).get(resource_id, 0) < amount:
-        return None
-
-    capacity = items_catalog.backpack_capacity(character)
-    if capacity == 0:
-        raise ValueError("No backpack equipped")
-    used = items_catalog.backpack_slots_used(character)
-    marginal = _resource_marginal_backpack_slots(character, {resource_id: amount})
-    if used + marginal > capacity:
-        raise ValueError("Backpack is full")
-
-    doc = await db.players.find_one_and_update(
-        {
-            "address": address,
-            "characters.id": character_id,
-            f"crafting.resources.{resource_id}": {"$gte": amount},
-        },
-        {"$inc": {
-            f"crafting.resources.{resource_id}": -amount,
-            f"characters.$.gear.resources.backpack.{resource_id}": amount,
-        }},
+    doc = await db.characters.find_one_and_update(
+        {"address": address, "id": character_id},
+        {"$inc": {f"crafting.itemBalances.{item_id}": amount}},
         return_document=ReturnDocument.AFTER,
     )
     if doc is None:
         return None
-    return _doc_to_player(doc)
+    return await _build_player(db, address)
 
 
 def _instance_condition(instance: Optional[dict], entry) -> str:
@@ -612,22 +483,25 @@ async def preview_salvage(
     Read-only preview. Returns (recoveries, condition) or None.
     """
     db = get_database()
-    doc = await db.players.find_one({"address": address, "characters.id": character_id})
+    doc = await db.characters.find_one({"address": address, "id": character_id})
     if doc is None:
         return None
-    character = next((c for c in doc["characters"] if c["id"] == character_id), None)
-    if character is None:
-        return None
+    character = doc
     entry = items_catalog.ITEM_CATALOG_ENTRIES_BY_ID.get(item_id)
     if entry is None:
         raise ValueError(f"Unknown item id: {item_id}")
-    player_tools = doc.get("crafting", {}).get("tools", {}) if from_vault else {}
-    player_items = doc.get("vault", {}).get("items", []) if from_vault else []
+    if from_vault:
+        vault = await _get_vault(db, address)
+        player_tools = vault["itemBalances"]
+        player_items = vault["items"]
+    else:
+        player_tools = {}
+        player_items = []
 
     instance = None
     if instance_id:
         if from_vault:
-            instance = next((i for i in doc.get("vault", {}).get("items", []) if i["instanceId"] == instance_id), None)
+            instance = next((i for i in vault["items"] if i["instanceId"] == instance_id), None)
         else:
             instance = next((i for i in character.get("gear", {}).get("items", []) if i["instanceId"] == instance_id), None)
     condition = _instance_condition(instance, entry)
@@ -641,55 +515,6 @@ async def preview_salvage(
         return ([], condition)
     return (recoveries or [], condition)
 
-
-def _resource_marginal_backpack_slots(character: dict, amounts: Dict[str, int]) -> int:
-    """
-    Extra backpack slots the whole `amounts` batch (potentially several raw/
-    processed material ids at once, from one salvage) would cost on top of
-    whatever's already packed - same ceil(new/stack_size) - ceil(existing/
-    stack_size) math load_resource_to_backpack uses per id, just summed
-    across every id recycling handed back in one go.
-    """
-    existing_backpack = character.get("gear", {}).get("resources", {}).get("backpack", {})
-    total = 0
-    for rid, qty in amounts.items():
-        stack_size = items_catalog.RAW_STACK_SIZE if rid in RESOURCE_ITEMS_BY_ID else items_catalog.PROCESSED_STACK_SIZE
-        existing = existing_backpack.get(rid, 0)
-        total += math.ceil((existing + qty) / stack_size) - math.ceil(existing / stack_size)
-    return total
-
-
-def _salvage_resource_updates(character: dict, amounts: Dict[str, int], from_vault: bool) -> Dict[str, int]:
-    """
-    Ready-to-merge $inc fragment for recycling's recovered raw/processed
-    materials. Recycling a VAULT item (from_vault=True) credits the
-    player's own shared crafting stock directly (top-level crafting.
-    resources - the same "Party's Resources" pool check_in_resource moves
-    into) since there's no specific character standing there to hand
-    physically-carried materials to. Recycling something a character is
-    actually carrying (from_vault=False) hands the materials to THAT
-    character instead - preferring its own worn backpack when there's
-    room for the WHOLE batch (never a partial fill - same all-or-nothing
-    rule load_resource_to_backpack itself enforces), then a mount's
-    saddlepack (uncapped, no slot system of its own), and only camp
-    (also uncapped) when neither is equipped or the backpack has no room
-    left - so recycling never fails or discards materials just because
-    nothing's currently worn to carry them in, or what's worn is full.
-    """
-    if from_vault:
-        return {f"crafting.resources.{rid}": qty for rid, qty in amounts.items()}
-
-    bucket = "camp"
-    if items_catalog.has_backpack_equipped(character):
-        capacity = items_catalog.backpack_capacity(character)
-        used = items_catalog.backpack_slots_used(character)
-        if used + _resource_marginal_backpack_slots(character, amounts) <= capacity:
-            bucket = "backpack"
-        elif items_catalog.has_saddlepack_equipped(character):
-            bucket = "saddlepack"
-    elif items_catalog.has_saddlepack_equipped(character):
-        bucket = "saddlepack"
-    return {f"characters.$.gear.resources.{bucket}.{rid}": qty for rid, qty in amounts.items()}
 
 
 async def salvage_item_instance(
@@ -718,16 +543,15 @@ async def salvage_item_instance(
     character pair doesn't match.
     """
     db = get_database()
-    doc = await db.players.find_one({"address": address, "characters.id": character_id})
+    doc = await db.characters.find_one({"address": address, "id": character_id})
     if doc is None:
         return None
-    character = next((c for c in doc["characters"] if c["id"] == character_id), None)
-    if character is None:
-        return None
+    character = doc
 
     if from_vault:
+        vault = await _get_vault(db, address)
         instance = next(
-            (i for i in doc.get("vault", {}).get("items", []) if i["instanceId"] == instance_id),
+            (i for i in vault["items"] if i["instanceId"] == instance_id),
             None,
         )
     else:
@@ -745,13 +569,12 @@ async def salvage_item_instance(
     if entry is None:
         raise ValueError(f"Unknown item id: {instance['itemId']}")
 
-    # Off the character's own body/backpack: only tools physically carried
-    # (character.tools, or an owned instance in character.items) count
-    # toward the station-tool bonus - never the player's shared pool,
-    # sitting back at the vault. A vault item is salvaged right there at
-    # the vault, so the full shared pool applies.
-    player_tools = doc.get("crafting", {}).get("tools", {}) if from_vault else {}
-    player_items = doc.get("vault", {}).get("items", []) if from_vault else []
+    if from_vault:
+        player_tools = vault["itemBalances"]
+        player_items = vault["items"]
+    else:
+        player_tools = {}
+        player_items = []
     condition = _instance_condition(instance, entry)
     recoveries = recycling.resolve_salvage_preview(
         entry.family_id, entry.tier, character, player_tools, player_items,
@@ -760,57 +583,39 @@ async def salvage_item_instance(
     if not recoveries:
         raise ValueError(f"{entry.family_id} has no recipe to salvage materials from")
     amounts = recycling.flatten_recovery(recoveries)
-    inc_ops = _salvage_resource_updates(character, amounts, from_vault)
 
     if from_vault:
-        update: Dict[str, object] = {"$pull": {"vault.items": {"instanceId": instance_id}}}
-        if inc_ops:
-            update["$inc"] = inc_ops
-        doc = await db.players.find_one_and_update(
-            {
-                "address": address,
-                "characters.id": character_id,
-                "vault.items": {"$elemMatch": {"instanceId": instance_id, "location": "pool"}},
-            },
-            update,
-            return_document=ReturnDocument.AFTER,
+        pool_instance = next(
+            (i for i in vault["items"] if i["instanceId"] == instance_id and i.get("location") == "pool"),
+            None,
         )
+        if pool_instance is None:
+            return None
+        new_vault_items = [i for i in vault["items"] if i["instanceId"] != instance_id]
+        await db.player_vaults.update_one(
+            {"address": address},
+            {"$set": {"items": new_vault_items}},
+            upsert=True,
+        )
+        if amounts:
+            await _inc_vault_itembalances(db, address, amounts)
+        doc = await db.characters.find_one({"address": address, "id": character_id})
     else:
-        # Two sequential updates rather than one combined $pull+$inc - both
-        # would share the same bare positional "$" (resolved off this same
-        # "characters" $elemMatch), an operator combination not otherwise
-        # exercised elsewhere in this file. Every OTHER bare-"$" $inc in
-        # this module (see check_out_resource_to_backpack) is either alone
-        # in its own update or paired only with another $inc, never a
-        # $pull on a different subfield of the same matched element - given
-        # this environment's MongoDB-compatible backend's documented history
-        # of silently dropping one half of a combined update under subtler
-        # conditions than that (see finish_craft's own two-phase workaround
-        # for $pull+$set), crediting the recovered materials as its own
-        # separate call is the safe option rather than trusting this
-        # untested combination.
-        doc = await db.players.find_one_and_update(
-            {
-                "address": address,
-                "characters": {
-                    "$elemMatch": {
-                        "id": character_id,
-                        "gear.items": {"$elemMatch": {"instanceId": instance_id, "location": instance["location"]}},
-                    }
+        # Two sequential updates — pull instance, then credit recoveries to camp
+        # (separate collection, so can't be in the same $pull+$inc anyway).
+        doc = await db.characters.find_one_and_update(
+            {"address": address, "id": character_id,
+                        "gear.items": {"$elemMatch": {"instanceId": instance_id, "location": instance["location"]}
                 },
             },
-            {"$pull": {"characters.$.gear.items": {"instanceId": instance_id}}},
+            {"$pull": {"gear.items": {"instanceId": instance_id}}},
             return_document=ReturnDocument.AFTER,
         )
-        if doc is not None and inc_ops:
-            doc = await db.players.find_one_and_update(
-                {"address": address, "characters.id": character_id},
-                {"$inc": inc_ops},
-                return_document=ReturnDocument.AFTER,
-            )
+        if doc is not None and amounts:
+            await _inc_camp_itembalances(db, address, character_id, amounts)
     if doc is None:
         return None
-    return _doc_to_player(doc)
+    return await _build_player(db, address)
 
 
 async def salvage_item_balance(
@@ -837,15 +642,14 @@ async def salvage_item_balance(
         raise ValueError("amount must be positive")
 
     db = get_database()
-    doc = await db.players.find_one({"address": address, "characters.id": character_id})
+    doc = await db.characters.find_one({"address": address, "id": character_id})
     if doc is None:
         return None
-    character = next((c for c in doc["characters"] if c["id"] == character_id), None)
-    if character is None:
-        return None
+    character = doc
 
     if from_vault:
-        held = doc.get("vault", {}).get("itemBalances", {}).get(item_id, 0)
+        vault = await _get_vault(db, address)
+        held = vault["itemBalances"].get(item_id, 0)
     else:
         held = character.get("gear", {}).get("itemBalances", {}).get(location, {}).get(item_id, 0)
     if held < amount:
@@ -855,43 +659,52 @@ async def salvage_item_balance(
     if entry is None:
         raise ValueError(f"Unknown item id: {item_id}")
 
-    # Same physically-carried-tools-only restriction as salvage_item_instance.
-    player_tools = doc.get("crafting", {}).get("tools", {}) if from_vault else {}
-    player_items = doc.get("vault", {}).get("items", []) if from_vault else []
+    if from_vault:
+        player_tools = vault["itemBalances"]
+        player_items = vault["items"]
+    else:
+        player_tools = {}
+        player_items = []
     recoveries = recycling.resolve_salvage_preview(
         entry.family_id, entry.tier, character, player_tools, player_items, amount
     )
     if not recoveries:
         raise ValueError(f"{entry.family_id} has no recipe to salvage materials from")
     amounts = recycling.flatten_recovery(recoveries)
-    resource_inc_ops = _salvage_resource_updates(character, amounts, from_vault)
 
     if from_vault:
-        update: Dict[str, object] = {"$inc": {f"vault.itemBalances.{item_id}": -amount, **resource_inc_ops}}
-        doc = await db.players.find_one_and_update(
-            {"address": address, "characters.id": character_id, f"vault.itemBalances.{item_id}": {"$gte": amount}},
-            update,
-            return_document=ReturnDocument.AFTER,
-        )
+        net_amounts: Dict[str, int] = {item_id: -amount}
+        for rid, qty in amounts.items():
+            net_amounts[rid] = net_amounts.get(rid, 0) + qty
+        await _inc_vault_itembalances(db, address, net_amounts)
+        doc = await db.characters.find_one({"address": address, "id": character_id})
+        if doc is None:
+            return None
+    elif location == "camp":
+        # Deduct from camp, then credit recoveries back to camp.
+        camp_doc = await db.character_camps.find_one({"address": address, "characterId": character_id})
+        if not camp_doc or camp_doc.get("itemBalances", {}).get(item_id, 0) < amount:
+            return None
+        await _inc_camp_itembalances(db, address, character_id, {item_id: -amount})
+        if amounts:
+            await _inc_camp_itembalances(db, address, character_id, amounts)
+        doc = await db.characters.find_one({"address": address, "id": character_id})
     else:
-        update = {"$inc": {f"characters.$.gear.itemBalances.{location}.{item_id}": -amount, **resource_inc_ops}}
-        doc = await db.players.find_one_and_update(
-            {
-                "address": address,
-                "characters": {
-                    "$elemMatch": {"id": character_id, f"gear.itemBalances.{location}.{item_id}": {"$gte": amount}}
-                },
+        # backpack / saddlepack — deduct from player doc, credit recoveries to camp.
+        doc = await db.characters.find_one_and_update(
+            {"address": address, "id": character_id, f"gear.itemBalances.{location}.{item_id}": {"$gte": amount},
             },
-            update,
+            {"$inc": {f"gear.itemBalances.{location}.{item_id}": -amount}},
             return_document=ReturnDocument.AFTER,
         )
+        if doc is None:
+            return None
+        await _prune_char_zeros(db, address, character_id, doc, [f"gear.itemBalances.{location}.{item_id}"])
+        if amounts:
+            await _inc_camp_itembalances(db, address, character_id, amounts)
     if doc is None:
         return None
-    if from_vault:
-        await _prune_player_zeros(db, address, doc, [f"vault.itemBalances.{item_id}"])
-    else:
-        await _prune_char_zeros(db, address, character_id, doc, [f"gear.itemBalances.{location}.{item_id}"])
-    return _doc_to_player(doc)
+    return await _build_player(db, address)
 
 
 def _instance_tier(instance: dict) -> Optional[int]:
@@ -960,7 +773,7 @@ def _resolve_tool_for_craft(
     available in `player_tools` and would need transferring first. Returns
     None if nothing usable is found anywhere.
     """
-    held_tools = character.get("crafting", {}).get("tools", {})
+    held_tools = character.get("crafting", {}).get("itemBalances", {})
     held_items = character.get("gear", {}).get("items", []) or []
 
     # Tried in the order `tool_families` lists them - craft-recipes.json's
@@ -1014,12 +827,12 @@ def _resolve_tool_for_craft(
                 return ("instance_move", worst["instanceId"], worst.get("location"), worst.get("slotRef") or [])
             continue
         if check_character_flat_balance and any(
-            held_tools.get(tool.id, 0) > 0 for tool in TOOL_ITEMS_BY_ID.values() if tool.family_id == family_id
+            held_tools.get(entry.id, 0) > 0 for entry in items_catalog.ITEM_CATALOG_ENTRIES if entry.family_id == family_id
         ):
             return ("owned", None)
-        for tool in TOOL_ITEMS_BY_ID.values():
-            if tool.family_id == family_id and player_tools.get(tool.id, 0) > 0:
-                return ("flat_transfer", tool.id)
+        for entry in items_catalog.ITEM_CATALOG_ENTRIES:
+            if entry.family_id == family_id and player_tools.get(entry.id, 0) > 0:
+                return ("flat_transfer", entry.id)
     return None
 
 
@@ -1112,11 +925,11 @@ def _resolve_tool_instances_for_craft(
         # at all, so `count` is never affected by this branch. Mirrors
         # _resolve_tool_for_craft's own flat-balance branch called with
         # check_character_flat_balance=False (start_craft's own usage) -
-        # only the player's shared vault.tools pool counts, never
-        # Character.crafting.tools directly.
-        for tool in TOOL_ITEMS_BY_ID.values():
-            if tool.family_id == family_id and player_tools.get(tool.id, 0) > 0:
-                return ("flat_transfer", tool.id, count)
+        # only the player's shared vault.itemBalances pool counts, never
+        # Character.crafting.itemBalances directly.
+        for entry in items_catalog.ITEM_CATALOG_ENTRIES:
+            if entry.family_id == family_id and player_tools.get(entry.id, 0) > 0:
+                return ("flat_transfer", entry.id, count)
     return None
 
 
@@ -1266,14 +1079,14 @@ def _profession_daily_xp_cap(level: int) -> int:
 
 
 def _profession_xp_grant_set_ops(
-    character: dict, grants: Dict[str, int], prefix: str = "characters.$."
+    character: dict, grants: Dict[str, int], prefix: str = ""
 ) -> Dict[str, object]:
     """
     Turns {"exp1": 12, "exp2": 4}-style raw XP grants (see
     _crafting_xp_increments's raw-material XP and finish_craft's
     assembly-bonus grant) into concrete "$set" entries under `prefix`
-    (either "characters.$." for the plain-elemMatch update shape, or
-    "characters.$[char]." for the array-filter shape start_craft/
+    (either "" for the plain-elemMatch update shape, or
+    "" for the array-filter shape start_craft/
     finish_craft also use when an instance-tracked tool is involved) -
     applying the 30%-of-current-level-cost daily XP cap
     (_profession_daily_xp_cap, tracked per profession slot in
@@ -1382,17 +1195,15 @@ def _resolve_ingredient_option(
             "from_player": from_player,
         }
 
-    if category == "raw":
-        concrete_id = _RAW_ID_BY_FAMILY_TIER.get((family_id, tier))
-    elif category == "processed":
-        concrete_id = _PROCESSED_ID_BY_FAMILY_TIER.get((family_id, tier))
-    else:
+    if category not in ("raw", "processed"):
         raise ValueError(f"Unsupported ingredient category: {category}")
-    if concrete_id is None:
+    row = items_catalog.FINAL_ITEM_ROWS_BY_FAMILY_TIER.get((family_id, tier))
+    if row is None:
         raise ValueError(f"No tier {tier} id for ingredient family {family_id}")
+    concrete_id = row["id"]
 
-    held_by_character = character_resources.get(concrete_id, 0)
-    held_by_player = player_resources.get(concrete_id, 0)
+    held_by_character = (character_item_balances or {}).get(concrete_id, 0)
+    held_by_player = (player_item_balances or {}).get(concrete_id, 0)
     if held_by_character + held_by_player < qty:
         return None
     if not consumed:
@@ -1401,7 +1212,7 @@ def _resolve_ingredient_option(
     from_player = qty - from_character
     return {
         "held": False,
-        "bucket": "resources",
+        "bucket": "itemBalances",
         "concrete_id": concrete_id,
         "from_character": from_character,
         "from_player": from_player,
@@ -1502,8 +1313,6 @@ def _resolve_recipe_ingredients(
     Raises ValueError for an unsupported ingredient category or a missing
     tier row.
     """
-    character_resource_decrements: Dict[str, int] = {}
-    player_resource_decrements: Dict[str, int] = {}
     character_item_balance_decrements: Dict[str, int] = {}
     player_item_balance_decrements: Dict[str, int] = {}
     instance_moves: List[tuple] = []
@@ -1519,20 +1328,15 @@ def _resolve_recipe_ingredients(
 
         if not plan["held"]:
             concrete_id = plan["concrete_id"]
-            character_decrements, player_decrements = (
-                (character_item_balance_decrements, player_item_balance_decrements)
-                if plan["bucket"] == "itemBalances"
-                else (character_resource_decrements, player_resource_decrements)
-            )
             if plan["from_character"]:
-                character_decrements[concrete_id] = character_decrements.get(concrete_id, 0) + plan["from_character"]
+                character_item_balance_decrements[concrete_id] = character_item_balance_decrements.get(concrete_id, 0) + plan["from_character"]
             if plan["from_player"]:
-                player_decrements[concrete_id] = player_decrements.get(concrete_id, 0) + plan["from_player"]
+                player_item_balance_decrements[concrete_id] = player_item_balance_decrements.get(concrete_id, 0) + plan["from_player"]
         elif plan.get("move") is not None:
             instance_moves.append(plan["move"])
     return (
-        character_resource_decrements,
-        player_resource_decrements,
+        {},
+        {},
         character_item_balance_decrements,
         player_item_balance_decrements,
         instance_moves,
@@ -1699,9 +1503,9 @@ def _resolve_craft_chain(
                 # LATER step needing the same family is recognized as
                 # "already available" above, instead of needing its own
                 # separate unit.
-                character.setdefault("crafting", {}).setdefault("tools", {})
-                character["crafting"]["tools"][step_tool_transfer_id] = (
-                    character["crafting"]["tools"].get(step_tool_transfer_id, 0) + 1
+                character.setdefault("crafting", {}).setdefault("itemBalances", {})
+                character["crafting"]["itemBalances"][step_tool_transfer_id] = (
+                    character["crafting"]["itemBalances"].get(step_tool_transfer_id, 0) + 1
                 )
             else:
                 step_instance_moves, actual_count = found[1], found[2]
@@ -1737,11 +1541,12 @@ def _resolve_craft_chain(
             )
             if target is None:
                 return None
-            concrete_id = _PROCESSED_ID_BY_FAMILY_TIER.get((target["familyId"], tier))
-            if concrete_id is None:
+            row = items_catalog.FINAL_ITEM_ROWS_BY_FAMILY_TIER.get((target["familyId"], tier))
+            if row is None:
                 return None
+            concrete_id = row["id"]
             shortfall = target["qty"] * actual_count - (
-                character_resources.get(concrete_id, 0) + player_resources.get(concrete_id, 0)
+                (character_item_balances or {}).get(concrete_id, 0) + (player_item_balances or {}).get(concrete_id, 0)
             )
             if shortfall <= 0:
                 return None  # shouldn't happen (this option would already resolve above) - fail safe
@@ -1819,30 +1624,11 @@ def _resolve_craft_chain(
 
 def _resolve_recipe_output(family_id: str, tier: int) -> Optional[tuple[dict, bool]]:
     """
-    Resolves a recipe's output to a concrete {"id", "name"} row, checked
-    against the processed-resource catalog first (many recipes - plank,
-    metal_bar, leather, and 44 others - produce an ordinary processed
-    material, the exact same ids ingredients elsewhere resolve through
-    _PROCESSED_ID_BY_FAMILY_TIER, not a "final" weapon/armor/tool/food/etc.
-    row) and items_catalog's final-catalog files second. Returns
-    (output_row, is_processed_resource) - the bool tells the caller which
-    inventory bucket the output belongs in (resources vs items/itemBalances,
-    since a processed material was never in item-inventory-properties.json
-    to begin with, so `family.needs_item_definition` doesn't apply to it).
-
-    A handful of families (arrow, bolt, oil) are dual-cataloged: their
-    concrete ids/names are resolved via the processed-resource catalog like
-    any other processed material (that's simply where their tiered rows
-    live), but they're ALSO real item-inventory-properties.json families -
-    ammo belongs in the vault (itemBalances) like any other crafted item,
-    not in resources, so a family found in both catalogs reports
-    is_processed_resource=False despite resolving its id/name the
-    processed-resource way.
+    Resolves a recipe's output to a concrete {"id", "name"} row via the
+    unified items_catalog. Returns (output_row, False) — the bool is kept
+    for backward compatibility but is always False now that all outputs
+    (raw, processed, tools, final items) go to itemBalances.
     """
-    concrete_id = _PROCESSED_ID_BY_FAMILY_TIER.get((family_id, tier))
-    if concrete_id is not None:
-        is_processed_resource = items_catalog.ITEM_FAMILIES_BY_ID.get(family_id) is None
-        return {"id": concrete_id, "name": PROCESSED_RESOURCE_ITEMS_BY_ID[concrete_id].name}, is_processed_resource
     output_row = items_catalog.resolve_output_row(family_id, tier)
     if output_row is not None:
         return output_row, False
@@ -2077,12 +1863,10 @@ async def start_craft(
     recipe, _output_row, _output_is_processed = _validate_recipe(family_id, tier)
 
     db = get_database()
-    doc = await db.players.find_one({"address": address, "characters.id": character_id})
+    doc = await db.characters.find_one({"address": address, "id": character_id})
     if doc is None:
         return None
-    character = next((c for c in doc["characters"] if c["id"] == character_id), None)
-    if character is None:
-        return None
+    character = doc
 
     active = character.get("crafting", {}).get("activeCraft")
     if active and datetime.fromisoformat(active["readyAt"]) > datetime.now(timezone.utc):
@@ -2106,22 +1890,23 @@ async def start_craft(
     # recipe craft already built right here; `steps` has only that one
     # entry when the chain needed no auto-crafted intermediate at all (the
     # common case), reproducing today's single-recipe behavior exactly.
+    bp_doc = await db.character_blueprints.find_one({"address": address, "characterId": character_id})
     working_character = {
         **character,
+        "blueprints": bp_doc.get("blueprints", []) if bp_doc else [],
         "gear": {
             **character.get("gear", {}),
             "items": [dict(instance) for instance in character.get("gear", {}).get("items", [])],
         },
     }
-    working_player_resources = dict(doc.get("crafting", {}).get("resources", {}))
-    working_player_item_balances = dict(doc.get("vault", {}).get("itemBalances", {}))
-    working_player_tools = dict(doc.get("crafting", {}).get("tools", {}))
-    working_player_items = [dict(instance) for instance in doc.get("vault", {}).get("items", [])]
+    vault_sc = await _get_vault(db, address)
+    working_player_item_balances = dict(vault_sc["itemBalances"])
+    working_player_items = [dict(instance) for instance in vault_sc["items"]]
 
     chain = _resolve_craft_chain(
         family_id, tier, count, working_character,
-        {}, working_player_resources, {}, working_player_item_balances,
-        working_player_tools, working_player_items,
+        {}, {}, {}, working_player_item_balances,
+        working_player_item_balances, working_player_items,
         is_top_level=True,
     )
     if chain is None:
@@ -2136,17 +1921,20 @@ async def start_craft(
     match_filter: Dict = {"address": address}
     elem_match: Dict = {"id": character_id}
     inc_ops: Dict[str, int] = {}
+
+    # Check vault has sufficient balance before attempting atomic players update.
+    vault_balances_sc = vault_sc["itemBalances"]
     for concrete_id, qty in player_decrements.items():
-        match_filter[f"crafting.resources.{concrete_id}"] = {"$gte": qty}
-        inc_ops[f"crafting.resources.{concrete_id}"] = inc_ops.get(f"crafting.resources.{concrete_id}", 0) - qty
-        inc_ops[f"characters.$.crafting.resources.{concrete_id}"] = inc_ops.get(
-            f"characters.$.crafting.resources.{concrete_id}", 0
+        if vault_balances_sc.get(concrete_id, 0) < qty:
+            return None
+        inc_ops[f"crafting.itemBalances.{concrete_id}"] = inc_ops.get(
+            f"crafting.itemBalances.{concrete_id}", 0
         ) + qty
     for concrete_id, qty in player_item_balance_decrements.items():
-        match_filter[f"vault.itemBalances.{concrete_id}"] = {"$gte": qty}
-        inc_ops[f"vault.itemBalances.{concrete_id}"] = inc_ops.get(f"vault.itemBalances.{concrete_id}", 0) - qty
-        inc_ops[f"characters.$.crafting.itemBalances.{concrete_id}"] = inc_ops.get(
-            f"characters.$.crafting.itemBalances.{concrete_id}", 0
+        if vault_balances_sc.get(concrete_id, 0) < qty:
+            return None
+        inc_ops[f"crafting.itemBalances.{concrete_id}"] = inc_ops.get(
+            f"crafting.itemBalances.{concrete_id}", 0
         ) + qty
     # A flat-balance tool (anvil, furnace, ...) each step in the chain
     # borrowed - summed per concrete id rather than assuming at most one
@@ -2161,10 +1949,10 @@ async def start_craft(
         if transfer_id is not None:
             tool_transfer_counts[transfer_id] = tool_transfer_counts.get(transfer_id, 0) + 1
     for transfer_id, transfer_count in tool_transfer_counts.items():
-        match_filter[f"crafting.tools.{transfer_id}"] = {"$gte": transfer_count}
-        inc_ops[f"crafting.tools.{transfer_id}"] = inc_ops.get(f"crafting.tools.{transfer_id}", 0) - transfer_count
-        inc_ops[f"characters.$.crafting.tools.{transfer_id}"] = inc_ops.get(
-            f"characters.$.crafting.tools.{transfer_id}", 0
+        if vault_balances_sc.get(transfer_id, 0) < transfer_count:
+            return None
+        inc_ops[f"crafting.itemBalances.{transfer_id}"] = inc_ops.get(
+            f"crafting.itemBalances.{transfer_id}", 0
         ) + transfer_count
 
     # Raw-material crafting XP (see the README's "Crafting XP" section) -
@@ -2211,7 +1999,7 @@ async def start_craft(
         # ingredient auto-crafted from raw because it wasn't already owned
         # (see _resolve_craft_chain). finish_craft runs these first, in
         # order, crediting each one's own output into this character's own
-        # crafting.resources/itemBalances so the next queued step (or the
+        # crafting.itemBalances so the next queued step (or the
         # requested item itself) can consume it, exactly the way an
         # already-owned processed material would have been consumed.
         # Empty for a chain that needed no auto-crafted intermediate at
@@ -2221,39 +2009,48 @@ async def start_craft(
 
     if not all_moves:
         # No instance-tracked tool involved - the simple, original shape:
-        # plain positional $ against the query's own characters.$elemMatch.
+        # plain positional $ against the query's own .
         update: Dict = {
             "$set": {
-                "characters.$.crafting.activeCraft": active_craft,
-                **_profession_xp_grant_set_ops(character, xp_grants, "characters.$."),
+                "crafting.activeCraft": active_craft,
+                **_profession_xp_grant_set_ops(character, xp_grants, ""),
             }
         }
         if inc_ops:
             update["$inc"] = inc_ops
-        match_filter["characters"] = {"$elemMatch": elem_match}
-        doc = await db.players.find_one_and_update(match_filter, update, return_document=ReturnDocument.AFTER)
+        match_filter.update(elem_match)
+        doc = await db.characters.find_one_and_update(match_filter, update, return_document=ReturnDocument.AFTER)
         if doc is None:
             return None
-        if player_item_balance_decrements:
-            await _prune_player_zeros(db, address, doc, [f"vault.itemBalances.{cid}" for cid in player_item_balance_decrements])
-        return _doc_to_player(doc)
+        # Decrement vault balances after the players update.
+        vault_decrements: Dict[str, int] = {}
+        for cid, qty in player_decrements.items():
+            vault_decrements[cid] = vault_decrements.get(cid, 0) - qty
+        for cid, qty in player_item_balance_decrements.items():
+            vault_decrements[cid] = vault_decrements.get(cid, 0) - qty
+        for tid, tc in tool_transfer_counts.items():
+            vault_decrements[tid] = vault_decrements.get(tid, 0) - tc
+        if vault_decrements:
+            await _inc_vault_itembalances(db, address, vault_decrements)
+        return await _build_player(db, address)
 
     # At least one instance needs moving to "crafting" - switch every
     # characters-array field in this update to $[char]/array_filters
     # instead of mixing with plain $, since a backpack/body-sourced move
-    # also needs characters.$[char].gear.items.$[itemN] (a nested array filter
+    # also needs gear.items.$[itemN] (a nested array filter
     # on the SAME "characters" field) in the same update document.
-    # The vault-side sufficiency checks (crafting.resources.X >= qty,
-    # crafting.tools.X >= 1) already sit in match_filter above - nothing
-    # about the character's own current balance needs preconditioning
-    # here, these are increments landing on the character, not decrements.
-    set_ops: Dict = {"characters.$[char].crafting.activeCraft": active_craft}
-    set_ops.update(_profession_xp_grant_set_ops(character, xp_grants, "characters.$[char]."))
-    array_filters: List[Dict] = [{"char.id": character_id}]
+    # The vault-side sufficiency checks (vault.itemBalances.X >= qty)
+    # already sit in match_filter above - nothing about the character's
+    # own current balance needs preconditioning here, these are increments
+    # landing on the character, not decrements.
+    set_ops: Dict = {"crafting.activeCraft": active_craft}
+    set_ops.update(_profession_xp_grant_set_ops(character, xp_grants, ""))
+    array_filters: List[Dict] = []
 
     pool_pull_ids: List[str] = []
     pool_push_instances: List[dict] = []
-    inventory_items_by_id = {i["instanceId"]: i for i in doc.get("vault", {}).get("items", [])}
+    vault_items_sc = vault_sc["items"]
+    inventory_items_by_id = {i["instanceId"]: i for i in vault_items_sc}
     for idx, (instance_id, source, _slot_ref, _wear) in enumerate(all_moves):
         if source == "pool":
             pool_pull_ids.append(instance_id)
@@ -2262,31 +2059,43 @@ async def start_craft(
         else:
             filt_id = f"moveItem{idx}"
             array_filters.append({f"{filt_id}.instanceId": instance_id, f"{filt_id}.location": source})
-            set_ops[f"characters.$[char].gear.items.$[{filt_id}].location"] = "crafting"
-            set_ops[f"characters.$[char].gear.items.$[{filt_id}].slotRef"] = []
+            set_ops[f"gear.items.$[{filt_id}].location"] = "crafting"
+            set_ops[f"gear.items.$[{filt_id}].slotRef"] = []
 
     update = {"$set": set_ops}
     if inc_ops:
-        update["$inc"] = {k.replace("characters.$.", "characters.$[char]."): v for k, v in inc_ops.items()}
+        update["$inc"] = {k.replace("", ""): v for k, v in inc_ops.items()}
     if pool_pull_ids:
-        match_filter["$and"] = [
-            {"vault.items": {"$elemMatch": {"instanceId": iid, "location": "pool"}}} for iid in pool_pull_ids
-        ]
-        # Pull off the vault, push onto the character - different top-level
-        # fields, so no path collision (unlike pulling and pushing the
-        # same "vault.items" field, which Mongo rejects outright).
-        update["$pull"] = {"vault.items": {"instanceId": {"$in": pool_pull_ids}}}
-        update["$push"] = {"characters.$[char].gear.items": {"$each": pool_push_instances}}
+        # Verify vault has these instances; remove them from player_vaults first.
+        for iid in pool_pull_ids:
+            if iid not in inventory_items_by_id:
+                return None
+        new_vault_items_sc = [i for i in vault_items_sc if i["instanceId"] not in set(pool_pull_ids)]
+        await db.player_vaults.update_one(
+            {"address": address},
+            {"$set": {"items": new_vault_items_sc}},
+            upsert=True,
+        )
+        # Push the instances onto the character's gear.
+        update["$push"] = {"gear.items": {"$each": pool_push_instances}}
 
-    match_filter["characters"] = {"$elemMatch": elem_match}
-    doc = await db.players.find_one_and_update(
-        match_filter, update, array_filters=array_filters, return_document=ReturnDocument.AFTER
+    match_filter.update(elem_match)
+    doc = await db.characters.find_one_and_update(
+        match_filter, update, array_filters=array_filters or None, return_document=ReturnDocument.AFTER
     )
     if doc is None:
         return None
-    if player_item_balance_decrements:
-        await _prune_player_zeros(db, address, doc, [f"vault.itemBalances.{cid}" for cid in player_item_balance_decrements])
-    return _doc_to_player(doc)
+    # Decrement vault balances after the players update.
+    vault_decrements_am: Dict[str, int] = {}
+    for cid, qty in player_decrements.items():
+        vault_decrements_am[cid] = vault_decrements_am.get(cid, 0) - qty
+    for cid, qty in player_item_balance_decrements.items():
+        vault_decrements_am[cid] = vault_decrements_am.get(cid, 0) - qty
+    for tid, tc in tool_transfer_counts.items():
+        vault_decrements_am[tid] = vault_decrements_am.get(tid, 0) - tc
+    if vault_decrements_am:
+        await _inc_vault_itembalances(db, address, vault_decrements_am)
+    return await _build_player(db, address)
 
 
 async def _finish_craft_step(address: str, character_id: str, step: dict) -> bool:
@@ -2298,11 +2107,11 @@ async def _finish_craft_step(address: str, character_id: str, step: dict) -> boo
     start_craft already staged on the character, release any borrowed
     tool/weapon with its own recorded wear, pay this step's own assembly-
     bonus XP if genuinely blueprint-gated) with two differences: output is
-    credited into THIS character's own crafting.resources/tools/
-    itemBalances (so the next queued step, or the requested item itself,
-    can consume it - never the player's shared vault, which only ever
-    receives the requested item's own final output) via `_output_ops`
-    below - never an instance output, since _resolve_craft_chain only ever
+    credited into THIS character's own crafting.itemBalances (so the next
+    queued step, or the requested item itself, can consume it - never the
+    player's shared vault, which only ever receives the requested item's
+    own final output) via `_output_ops` below - never an instance output,
+    since _resolve_craft_chain only ever
     auto-crafts a "processed"-category ingredient, never a
     needsItemDefinition:true one; and Character.activeCraft itself is
     untouched here - only the requested item's own finish_craft call, at
@@ -2319,15 +2128,15 @@ async def _finish_craft_step(address: str, character_id: str, step: dict) -> boo
     count = step["count"]
     recipe, output_row, output_is_processed = _validate_recipe(family_id, tier)
 
-    doc = await db.players.find_one({"address": address, "characters.id": character_id})
+    doc = await db.characters.find_one({"address": address, "id": character_id})
     if doc is None:
         return False
-    character = next((c for c in doc["characters"] if c["id"] == character_id), None)
+    character = doc
     if character is None:
         return False
 
     resolved = _resolve_recipe_ingredients(
-        recipe, tier, character.get("crafting", {}).get("resources", {}), {}, character, count,
+        recipe, tier, {}, {}, character, count,
         character_item_balances=character.get("crafting", {}).get("itemBalances", {}), player_item_balances={},
     )
     if resolved is None:
@@ -2345,52 +2154,55 @@ async def _finish_craft_step(address: str, character_id: str, step: dict) -> boo
 
     def _output_ops(prefix: str) -> Dict[str, int]:
         """This step's own output, credited onto the CHARACTER's own
-        crafting pool under `prefix` ("characters.$." or
-        "characters.$[char]." depending on which update shape below is in
-        play) - resources for a processed material (the common, expected
-        case - this is what an auto-crafted intermediate always is, by
-        construction), tools for a flat-balance tool, itemBalances for
-        anything else."""
-        if output_is_processed:
-            return {f"{prefix}crafting.resources.{output_row['id']}": count}
-        if output_row["id"] in TOOL_ITEMS_BY_ID:
-            return {f"{prefix}crafting.tools.{output_row['id']}": count}
+        crafting.itemBalances under `prefix` ("" or
+        "" depending on which update shape below is in
+        play) - all balance outputs (processed materials, tools, and
+        everything else) go to the same itemBalances pool."""
         return {f"{prefix}crafting.itemBalances.{output_row['id']}": count}
 
     if not borrowed_instances:
         elem_match: Dict = {"id": character_id}
         inc_ops: Dict[str, int] = {}
         for concrete_id, qty in character_decrements.items():
-            elem_match[f"crafting.resources.{concrete_id}"] = {"$gte": qty}
-            inc_ops[f"characters.$.crafting.resources.{concrete_id}"] = -qty
+            elem_match[f"crafting.itemBalances.{concrete_id}"] = {"$gte": qty}
+            inc_ops[f"crafting.itemBalances.{concrete_id}"] = inc_ops.get(
+                f"crafting.itemBalances.{concrete_id}", 0
+            ) - qty
         for concrete_id, qty in character_item_balance_decrements.items():
             elem_match[f"crafting.itemBalances.{concrete_id}"] = {"$gte": qty}
-            inc_ops[f"characters.$.crafting.itemBalances.{concrete_id}"] = -qty
+            inc_ops[f"crafting.itemBalances.{concrete_id}"] = inc_ops.get(
+                f"crafting.itemBalances.{concrete_id}", 0
+            ) - qty
         tool_transfer_id = step.get("toolTransferId")
         if tool_transfer_id is not None:
-            elem_match[f"crafting.tools.{tool_transfer_id}"] = {"$gte": 1}
-            inc_ops[f"characters.$.crafting.tools.{tool_transfer_id}"] = inc_ops.get(
-                f"characters.$.crafting.tools.{tool_transfer_id}", 0
+            elem_match[f"crafting.itemBalances.{tool_transfer_id}"] = {"$gte": 1}
+            inc_ops[f"crafting.itemBalances.{tool_transfer_id}"] = inc_ops.get(
+                f"crafting.itemBalances.{tool_transfer_id}", 0
             ) - 1
-            inc_ops[f"crafting.tools.{tool_transfer_id}"] = 1
-        for path, qty in _output_ops("characters.$.").items():
+        for path, qty in _output_ops("").items():
             inc_ops[path] = inc_ops.get(path, 0) + qty
 
         update: Dict = {}
-        xp_set_ops = _profession_xp_grant_set_ops(character, assembly_grants, "characters.$.")
+        xp_set_ops = _profession_xp_grant_set_ops(character, assembly_grants, "")
         if xp_set_ops:
             update["$set"] = xp_set_ops
         if inc_ops:
             update["$inc"] = inc_ops
         if not update:
             return True
-        result = await db.players.find_one_and_update(
-            {"address": address, "characters": {"$elemMatch": elem_match}}, update,
+        result = await db.characters.find_one_and_update(
+            {"address": address, **elem_match}, update,
             return_document=ReturnDocument.AFTER,
         )
-        if result is not None and character_item_balance_decrements:
-            await _prune_char_zeros(db, address, character_id, result,
-                [f"crafting.itemBalances.{cid}" for cid in character_item_balance_decrements])
+        if result is not None:
+            all_char_decremented = set(character_decrements) | set(character_item_balance_decrements)
+            if tool_transfer_id is not None:
+                all_char_decremented.add(tool_transfer_id)
+            if all_char_decremented:
+                await _prune_char_zeros(db, address, character_id, result,
+                    [f"crafting.itemBalances.{cid}" for cid in all_char_decremented])
+            if tool_transfer_id is not None:
+                await _inc_vault_itembalances(db, address, {tool_transfer_id: 1})
         return result is not None
 
     # At least one instance-tracked tool was borrowed for this step -
@@ -2407,53 +2219,52 @@ async def _finish_craft_step(address: str, character_id: str, step: dict) -> boo
 
     elem_match = {"id": character_id}
     for concrete_id, qty in character_decrements.items():
-        elem_match[f"crafting.resources.{concrete_id}"] = {"$gte": qty}
+        elem_match[f"crafting.itemBalances.{concrete_id}"] = {"$gte": qty}
     for concrete_id, qty in character_item_balance_decrements.items():
         elem_match[f"crafting.itemBalances.{concrete_id}"] = {"$gte": qty}
     tool_transfer_id = step.get("toolTransferId")
     if tool_transfer_id is not None:
-        elem_match[f"crafting.tools.{tool_transfer_id}"] = {"$gte": 1}
+        elem_match[f"crafting.itemBalances.{tool_transfer_id}"] = {"$gte": 1}
 
     inc_ops = {}
     for concrete_id, qty in character_decrements.items():
-        inc_ops[f"characters.$[char].crafting.resources.{concrete_id}"] = -qty
+        inc_ops[f"crafting.itemBalances.{concrete_id}"] = inc_ops.get(
+            f"crafting.itemBalances.{concrete_id}", 0
+        ) - qty
     for concrete_id, qty in character_item_balance_decrements.items():
-        inc_ops[f"characters.$[char].crafting.itemBalances.{concrete_id}"] = -qty
+        inc_ops[f"crafting.itemBalances.{concrete_id}"] = inc_ops.get(
+            f"crafting.itemBalances.{concrete_id}", 0
+        ) - qty
     if tool_transfer_id is not None:
-        inc_ops[f"characters.$[char].crafting.tools.{tool_transfer_id}"] = inc_ops.get(
-            f"characters.$[char].crafting.tools.{tool_transfer_id}", 0
+        inc_ops[f"crafting.itemBalances.{tool_transfer_id}"] = inc_ops.get(
+            f"crafting.itemBalances.{tool_transfer_id}", 0
         ) - 1
-        inc_ops[f"crafting.tools.{tool_transfer_id}"] = 1
-    for path, qty in _output_ops("characters.$[char].").items():
+    for path, qty in _output_ops("").items():
         inc_ops[path] = inc_ops.get(path, 0) + qty
-    xp_set_ops = _profession_xp_grant_set_ops(character, assembly_grants, "characters.$[char].")
+    xp_set_ops = _profession_xp_grant_set_ops(character, assembly_grants, "")
 
-    array_filters: List[Dict] = [{"char.id": character_id}]
+    array_filters: List[Dict] = []
     update = {}
-    query: Dict = {"address": address, "characters": {"$elemMatch": elem_match}}
+    query: Dict = {"address": address, **elem_match}
 
     held_by_id = {i["instanceId"]: i for i in character.get("gear", {}).get("items", [])}
 
     broken_ids: List[str] = []
     surviving: List[dict] = []
+    returned_to_vault: List[dict] = []
     if source == "pool":
         instance_ids = [bi["instanceId"] for bi in borrowed_instances]
-        returned = []
         for bi in borrowed_instances:
             iid = bi["instanceId"]
             wear = bi.get("wear", count)
             new_quality = held_by_id[iid].get("quality", 0) - wear
             if new_quality > 0:
-                returned.append({**held_by_id[iid], "location": "pool", "slotRef": [], "quality": new_quality})
+                returned_to_vault.append({**held_by_id[iid], "location": "pool", "slotRef": [], "quality": new_quality})
             else:
                 broken_ids.append(iid)
-        update["$pull"] = {"characters.$[char].gear.items": {"instanceId": {"$in": instance_ids}}}
-        if returned:
-            update["$push"] = {"vault.items": {"$each": returned}}
+        update["$pull"] = {"gear.items": {"instanceId": {"$in": instance_ids}}}
         query["$and"] = [
-            {"characters": {"$elemMatch": {"id": character_id, "gear.items": {
-                "$elemMatch": {"instanceId": iid, "location": "crafting"}
-            }}}}
+            {"gear.items": {"$elemMatch": {"instanceId": iid, "location": "crafting"}}}
             for iid in instance_ids
         ]
     else:
@@ -2464,17 +2275,17 @@ async def _finish_craft_step(address: str, character_id: str, step: dict) -> boo
         surviving = [bi for bi in borrowed_instances if bi["instanceId"] not in broken_ids]
 
         if broken_ids:
-            update["$pull"] = {"characters.$[char].gear.items": {"instanceId": {"$in": broken_ids}}}
+            update["$pull"] = {"gear.items": {"instanceId": {"$in": broken_ids}}}
         if surviving and not broken_ids:
             set_ops: Dict = {}
             for idx, bi in enumerate(surviving):
                 filt_id = f"relItem{idx}"
                 array_filters.append({f"{filt_id}.instanceId": bi["instanceId"], f"{filt_id}.location": "crafting"})
-                set_ops[f"characters.$[char].gear.items.$[{filt_id}].location"] = bi["source"]
-                set_ops[f"characters.$[char].gear.items.$[{filt_id}].slotRef"] = bi.get("slotRef") or []
+                set_ops[f"gear.items.$[{filt_id}].location"] = bi["source"]
+                set_ops[f"gear.items.$[{filt_id}].slotRef"] = bi.get("slotRef") or []
                 wear_filt_id = f"wearItem{idx}"
                 array_filters.append({f"{wear_filt_id}.instanceId": bi["instanceId"]})
-                inc_ops[f"characters.$[char].gear.items.$[{wear_filt_id}].quality"] = -bi.get("wear", count)
+                inc_ops[f"gear.items.$[{wear_filt_id}].quality"] = -bi.get("wear", count)
             update["$set"] = set_ops
 
     if xp_set_ops:
@@ -2482,14 +2293,26 @@ async def _finish_craft_step(address: str, character_id: str, step: dict) -> boo
     if inc_ops:
         update["$inc"] = inc_ops
 
-    result = await db.players.find_one_and_update(
-        query, update, array_filters=array_filters, return_document=ReturnDocument.AFTER
+    result = await db.characters.find_one_and_update(
+        query, update, array_filters=array_filters or None, return_document=ReturnDocument.AFTER
     )
     if result is None:
         return False
-    if character_item_balance_decrements:
+    all_char_decremented = set(character_decrements) | set(character_item_balance_decrements)
+    if tool_transfer_id is not None:
+        all_char_decremented.add(tool_transfer_id)
+    if all_char_decremented:
         await _prune_char_zeros(db, address, character_id, result,
-            [f"crafting.itemBalances.{cid}" for cid in character_item_balance_decrements], array_filter=True)
+            [f"crafting.itemBalances.{cid}" for cid in all_char_decremented], array_filter=True)
+    # Return tool and instances to vault after the players update.
+    if tool_transfer_id is not None:
+        await _inc_vault_itembalances(db, address, {tool_transfer_id: 1})
+    if returned_to_vault:
+        await db.player_vaults.update_one(
+            {"address": address},
+            {"$push": {"items": {"$each": returned_to_vault}}},
+            upsert=True,
+        )
 
     # A backpack/body-sourced release with BOTH a broken and a surviving
     # instance needed the $pull above to go out on its own (same reasoning
@@ -2497,21 +2320,21 @@ async def _finish_craft_step(address: str, character_id: str, step: dict) -> boo
     # survivor(s) now, in a second call, with nothing left in the array to
     # conflict with.
     if source != "pool" and broken_ids and surviving:
-        survivor_array_filters: List[Dict] = [{"char.id": character_id}]
+        survivor_array_filters: List[Dict] = []
         survivor_set_ops: Dict = {}
         survivor_inc_ops: Dict[str, int] = {}
         for idx, bi in enumerate(surviving):
             rel_filt_id = f"survivorRel{idx}"
             survivor_array_filters.append({f"{rel_filt_id}.instanceId": bi["instanceId"]})
-            survivor_set_ops[f"characters.$[char].gear.items.$[{rel_filt_id}].location"] = bi["source"]
-            survivor_set_ops[f"characters.$[char].gear.items.$[{rel_filt_id}].slotRef"] = bi.get("slotRef") or []
+            survivor_set_ops[f"gear.items.$[{rel_filt_id}].location"] = bi["source"]
+            survivor_set_ops[f"gear.items.$[{rel_filt_id}].slotRef"] = bi.get("slotRef") or []
             wear_filt_id = f"survivorWear{idx}"
             survivor_array_filters.append({f"{wear_filt_id}.instanceId": bi["instanceId"]})
-            survivor_inc_ops[f"characters.$[char].gear.items.$[{wear_filt_id}].quality"] = -bi.get("wear", count)
-        result2 = await db.players.find_one_and_update(
-            {"address": address, "characters.id": character_id},
+            survivor_inc_ops[f"gear.items.$[{wear_filt_id}].quality"] = -bi.get("wear", count)
+        result2 = await db.characters.find_one_and_update(
+            {"address": address, "id": character_id},
             {"$set": survivor_set_ops, "$inc": survivor_inc_ops},
-            array_filters=survivor_array_filters,
+            array_filters=survivor_array_filters or None,
             return_document=ReturnDocument.AFTER,
         )
         if result2 is None:
@@ -2526,9 +2349,9 @@ async def finish_craft(address: str, character_id: str) -> Optional[Player]:
     auto-crafted intermediate step queued under `activeCraft.chain` FIRST,
     in order (see `_finish_craft_step` and `_resolve_craft_chain`/
     start_craft) - each one's own output is credited onto this character's
-    own crafting.resources/itemBalances so the next queued step, or the
-    requested item's own resolution below, can consume it exactly the way
-    an already-owned processed material would have been. `chain` is empty
+    own crafting.itemBalances so the next queued step, or the requested
+    item's own resolution below, can consume it exactly the way an
+    already-owned processed material would have been. `chain` is empty
     for a craft that needed no auto-crafted intermediate at all (the
     common, today-unchanged case), so the rest of this function is
     unaffected either way. Then, for the requested item itself: consumes
@@ -2538,12 +2361,9 @@ async def finish_craft(address: str, character_id: str) -> Optional[Player]:
     vault.items for a needsItemDefinition:true family (each unit its
     own instance, per the instance-per-physical-item invariant - never a
     single instance with a quantity); otherwise a flat-count output
-    incremented by `count` - crafting.tools if the concrete output id is
-    a known flat-balance tool (TOOL_ITEMS_BY_ID - an anvil, a furnace, a
-    tanning rack, ...), crafting.resources for a processed material,
-    vault.itemBalances for everything else (food, potions, misc
-    gear) - always into the player's shared vault, never straight onto
-    the character. Also pays out the README's final-item assembly-bonus XP
+    incremented by `count` into vault.itemBalances (processed materials,
+    tools, food, potions, misc gear alike) - always into the player's
+    shared vault, never straight onto the character. Also pays out the README's final-item assembly-bonus XP
     (see `_assembly_bonus_xp`) when the recipe is genuinely blueprint-gated -
     unlike raw-material XP (paid at start_craft time), this only pays out
     once the item is actually collected here. Goes to whichever profession
@@ -2575,12 +2395,10 @@ async def finish_craft(address: str, character_id: str) -> Optional[Player]:
     address/character pair doesn't match any player document.
     """
     db = get_database()
-    doc = await db.players.find_one({"address": address, "characters.id": character_id})
+    doc = await db.characters.find_one({"address": address, "id": character_id})
     if doc is None:
         return None
-    character = next((c for c in doc["characters"] if c["id"] == character_id), None)
-    if character is None:
-        return None
+    character = doc
 
     active = character.get("crafting", {}).get("activeCraft")
     if active is None or datetime.fromisoformat(active["readyAt"]) > datetime.now(timezone.utc):
@@ -2590,7 +2408,7 @@ async def finish_craft(address: str, character_id: str) -> Optional[Player]:
     # "chain" field/_resolve_craft_chain) - a "processed" ingredient
     # auto-crafted from raw because it wasn't already owned, run first, in
     # order, via _finish_craft_step (see there), so each one's own output
-    # is sitting in this character's own crafting.resources/itemBalances
+    # is sitting in this character's own crafting.itemBalances
     # by the time the NEXT queued step (or the requested item's own
     # resolution below) needs to consume it. Progress is persisted back
     # onto activeCraft.chain after every single step succeeds (a plain
@@ -2607,16 +2425,14 @@ async def finish_craft(address: str, character_id: str) -> Optional[Player]:
         if not await _finish_craft_step(address, character_id, step):
             return None
         remaining_chain = remaining_chain[1:]
-        doc = await db.players.find_one_and_update(
-            {"address": address, "characters.id": character_id},
-            {"$set": {"characters.$.crafting.activeCraft.chain": remaining_chain}},
+        doc = await db.characters.find_one_and_update(
+            {"address": address, "id": character_id},
+            {"$set": {"crafting.activeCraft.chain": remaining_chain}},
             return_document=ReturnDocument.AFTER,
         )
         if doc is None:
             return None
-        character = next((c for c in doc["characters"] if c["id"] == character_id), None)
-        if character is None:
-            return None
+        character = doc
         active = character.get("crafting", {}).get("activeCraft")
         if active is None:
             return None
@@ -2635,7 +2451,7 @@ async def finish_craft(address: str, character_id: str) -> Optional[Player]:
     # so an ingredient's unconsumed "final" alternative re-verifies
     # correctly here without trying to move anything again.
     resolved = _resolve_recipe_ingredients(
-        recipe, tier, character.get("crafting", {}).get("resources", {}), {}, character, count,
+        recipe, tier, {}, {}, character, count,
         character_item_balances=character.get("crafting", {}).get("itemBalances", {}), player_item_balances={},
     )
     if resolved is None:
@@ -2669,19 +2485,14 @@ async def finish_craft(address: str, character_id: str) -> Optional[Player]:
     assembly_bonus = _assembly_bonus_xp(recipe, family_id, tier, count, character)
     assembly_grants = {prime_exp_key: assembly_bonus} if assembly_bonus else {}
 
-    def _output_ops() -> tuple[Dict[str, int], Dict]:
-        """Returns (extra inc_ops, extra $push) for crediting this craft's output."""
-        inc: Dict[str, int] = {}
-        push: Dict = {}
-        if output_is_processed:
-            # A crafted processed material (plank, metal_bar, leather, ...)
-            # is the exact same kind of thing already stacked in
-            # crafting.resources - it belongs in the shared resources
-            # pool, not itemBalances, so other recipes' ingredient checks
-            # (which only ever look at resources) can actually see it.
-            inc[f"crafting.resources.{output_row['id']}"] = count
-        elif family and family.needs_item_definition:
-            instances = [
+    def _output_ops() -> tuple[Dict[str, int], list]:
+        """Returns (vault_inc, vault_push_items) for crediting this craft's
+        output - vault.items for instance-tracked families, otherwise
+        vault.itemBalances increments for all flat-count outputs."""
+        vault_inc: Dict[str, int] = {}
+        vault_push_items: list = []
+        if family and family.needs_item_definition:
+            vault_push_items = [
                 {
                     "instanceId": uuid.uuid4().hex,
                     "itemId": output_row["id"],
@@ -2693,66 +2504,71 @@ async def finish_craft(address: str, character_id: str) -> Optional[Player]:
                 }
                 for _ in range(count)
             ]
-            push["vault.items"] = {"$each": instances}
-        elif output_row["id"] in TOOL_ITEMS_BY_ID:
-            # A flat-balance tool (anvil, furnace, tanning_rack, ...) - the
-            # exact same catalog _resolve_tool_for_craft's own flat-balance
-            # branch reads from crafting.tools, so a crafted one has to
-            # land there too, not itemBalances, or it would never be
-            # recognized as an owned tool for a later recipe that needs it.
-            inc[f"crafting.tools.{output_row['id']}"] = count
         else:
-            inc[f"vault.itemBalances.{output_row['id']}"] = count
-        return inc, push
+            vault_inc[output_row['id']] = count
+        return vault_inc, vault_push_items
 
     if not borrowed_instances:
         # ORIGINAL simple shape - no instance-tracked tool was borrowed for
         # this craft, plain positional $ against the query's own
-        # characters.$elemMatch.
+        # .
         elem_match: Dict = {"id": character_id}
         inc_ops: Dict[str, int] = {}
         for concrete_id, qty in character_decrements.items():
-            elem_match[f"crafting.resources.{concrete_id}"] = {"$gte": qty}
-            inc_ops[f"characters.$.crafting.resources.{concrete_id}"] = -qty
+            elem_match[f"crafting.itemBalances.{concrete_id}"] = {"$gte": qty}
+            inc_ops[f"crafting.itemBalances.{concrete_id}"] = inc_ops.get(
+                f"crafting.itemBalances.{concrete_id}", 0
+            ) - qty
         for concrete_id, qty in character_item_balance_decrements.items():
             elem_match[f"crafting.itemBalances.{concrete_id}"] = {"$gte": qty}
-            inc_ops[f"characters.$.crafting.itemBalances.{concrete_id}"] = -qty
+            inc_ops[f"crafting.itemBalances.{concrete_id}"] = inc_ops.get(
+                f"crafting.itemBalances.{concrete_id}", 0
+            ) - qty
 
         # A flat-balance tool start_craft borrowed from the player's shared
-        # pool (not one the character already had) goes back once the
+        # vault (not one the character already had) goes back once the
         # craft is done - "locked" only for the crafting duration, not
         # indefinitely.
         tool_transfer_id = active.get("toolTransferId")
         if tool_transfer_id is not None:
-            elem_match[f"crafting.tools.{tool_transfer_id}"] = {"$gte": 1}
-            inc_ops[f"characters.$.crafting.tools.{tool_transfer_id}"] = inc_ops.get(
-                f"characters.$.crafting.tools.{tool_transfer_id}", 0
+            elem_match[f"crafting.itemBalances.{tool_transfer_id}"] = {"$gte": 1}
+            inc_ops[f"crafting.itemBalances.{tool_transfer_id}"] = inc_ops.get(
+                f"crafting.itemBalances.{tool_transfer_id}", 0
             ) - 1
-            inc_ops[f"crafting.tools.{tool_transfer_id}"] = 1
 
-        extra_inc, extra_push = _output_ops()
-        inc_ops.update(extra_inc)
+        vault_inc_fc, vault_push_items_fc = _output_ops()
 
-        update: Dict = {"$unset": {"characters.$.crafting.activeCraft": ""}}
-        xp_set_ops = _profession_xp_grant_set_ops(character, assembly_grants, "characters.$.")
+        update: Dict = {"$unset": {"crafting.activeCraft": ""}}
+        xp_set_ops = _profession_xp_grant_set_ops(character, assembly_grants, "")
         if xp_set_ops:
             update["$set"] = xp_set_ops
-        if extra_push:
-            update["$push"] = extra_push
         if inc_ops:
             update["$inc"] = inc_ops
 
-        doc = await db.players.find_one_and_update(
-            {"address": address, "characters": {"$elemMatch": elem_match}},
-            update,
+        doc = await db.characters.find_one_and_update(
+            {"address": address, **elem_match}, update,
             return_document=ReturnDocument.AFTER,
         )
         if doc is None:
             return None
-        if character_item_balance_decrements:
+        all_char_decremented = set(character_decrements) | set(character_item_balance_decrements)
+        if tool_transfer_id is not None:
+            all_char_decremented.add(tool_transfer_id)
+        if all_char_decremented:
             await _prune_char_zeros(db, address, character_id, doc,
-                [f"crafting.itemBalances.{cid}" for cid in character_item_balance_decrements])
-        return _doc_to_player(doc)
+                [f"crafting.itemBalances.{cid}" for cid in all_char_decremented])
+        # Return tool to vault and credit output after the players update.
+        if tool_transfer_id is not None:
+            vault_inc_fc[tool_transfer_id] = vault_inc_fc.get(tool_transfer_id, 0) + 1
+        if vault_inc_fc:
+            await _inc_vault_itembalances(db, address, vault_inc_fc)
+        if vault_push_items_fc:
+            await db.player_vaults.update_one(
+                {"address": address},
+                {"$push": {"items": {"$each": vault_push_items_fc}}},
+                upsert=True,
+            )
+        return await _build_player(db, address)
 
     # At least one instance-tracked tool was borrowed - release each back
     # to its recorded source (see start_craft's borrowedInstances). Same
@@ -2773,35 +2589,38 @@ async def finish_craft(address: str, character_id: str) -> Optional[Player]:
 
     elem_match = {"id": character_id}
     for concrete_id, qty in character_decrements.items():
-        elem_match[f"crafting.resources.{concrete_id}"] = {"$gte": qty}
+        elem_match[f"crafting.itemBalances.{concrete_id}"] = {"$gte": qty}
     for concrete_id, qty in character_item_balance_decrements.items():
         elem_match[f"crafting.itemBalances.{concrete_id}"] = {"$gte": qty}
     tool_transfer_id = active.get("toolTransferId")
     if tool_transfer_id is not None:
-        elem_match[f"crafting.tools.{tool_transfer_id}"] = {"$gte": 1}
+        elem_match[f"crafting.itemBalances.{tool_transfer_id}"] = {"$gte": 1}
 
     inc_ops = {}
     for concrete_id, qty in character_decrements.items():
-        inc_ops[f"characters.$[char].crafting.resources.{concrete_id}"] = -qty
+        inc_ops[f"crafting.itemBalances.{concrete_id}"] = inc_ops.get(
+            f"crafting.itemBalances.{concrete_id}", 0
+        ) - qty
     for concrete_id, qty in character_item_balance_decrements.items():
-        inc_ops[f"characters.$[char].crafting.itemBalances.{concrete_id}"] = -qty
+        inc_ops[f"crafting.itemBalances.{concrete_id}"] = inc_ops.get(
+            f"crafting.itemBalances.{concrete_id}", 0
+        ) - qty
     if tool_transfer_id is not None:
-        inc_ops[f"characters.$[char].crafting.tools.{tool_transfer_id}"] = inc_ops.get(
-            f"characters.$[char].crafting.tools.{tool_transfer_id}", 0
+        inc_ops[f"crafting.itemBalances.{tool_transfer_id}"] = inc_ops.get(
+            f"crafting.itemBalances.{tool_transfer_id}", 0
         ) - 1
-        inc_ops[f"crafting.tools.{tool_transfer_id}"] = 1
-    extra_inc, extra_push = _output_ops()
-    inc_ops.update(extra_inc)
-    xp_set_ops = _profession_xp_grant_set_ops(character, assembly_grants, "characters.$[char].")
+    vault_inc_fc2, vault_push_items_fc2 = _output_ops()
+    xp_set_ops = _profession_xp_grant_set_ops(character, assembly_grants, "")
 
-    array_filters: List[Dict] = [{"char.id": character_id}]
-    update: Dict = {"$unset": {"characters.$[char].crafting.activeCraft": ""}}
-    query: Dict = {"address": address, "characters": {"$elemMatch": elem_match}}
+    array_filters: List[Dict] = []
+    update: Dict = {"$unset": {"crafting.activeCraft": ""}}
+    query: Dict = {"address": address, **elem_match}
 
     held_by_id = {i["instanceId"]: i for i in character.get("gear", {}).get("items", [])}
 
     broken_ids: List[str] = []
     surviving: List[dict] = []
+    returned_fc2: List[dict] = []
     if source == "pool":
         # $pull the borrowed instance(s) off the character. A survivor
         # (quality still above 0 after ITS OWN recorded wear, see
@@ -2812,25 +2631,17 @@ async def finish_craft(address: str, character_id: str) -> Optional[Player]:
         # one dying while another (with more quality, or less wear, to
         # begin with) survives in the same release is normal.
         instance_ids = [bi["instanceId"] for bi in borrowed_instances]
-        returned = []
         for bi in borrowed_instances:
             iid = bi["instanceId"]
             wear = bi.get("wear", count)
             new_quality = held_by_id[iid].get("quality", 0) - wear
             if new_quality > 0:
-                returned.append({**held_by_id[iid], "location": "pool", "slotRef": [], "quality": new_quality})
+                returned_fc2.append({**held_by_id[iid], "location": "pool", "slotRef": [], "quality": new_quality})
             else:
                 broken_ids.append(iid)
-        update["$pull"] = {"characters.$[char].gear.items": {"instanceId": {"$in": instance_ids}}}
-        push_items = list(returned)
-        if extra_push:
-            push_items += extra_push["vault.items"]["$each"]
-        if push_items:
-            update["$push"] = {"vault.items": {"$each": push_items}}
+        update["$pull"] = {"gear.items": {"instanceId": {"$in": instance_ids}}}
         query["$and"] = [
-            {"characters": {"$elemMatch": {"id": character_id, "gear.items": {
-                "$elemMatch": {"instanceId": iid, "location": "crafting"}
-            }}}}
+            {"gear.items": {"$elemMatch": {"instanceId": iid, "location": "crafting"}}}
             for iid in instance_ids
         ]
     else:
@@ -2838,7 +2649,7 @@ async def finish_craft(address: str, character_id: str) -> Optional[Player]:
         # ITS OWN recorded wear) gets restored in place; one that drops to
         # 0 or below is $pull'd out entirely instead (same vanish rule as
         # the pool branch above), independent per instance same as there.
-        # A $pull and a $set can't both touch characters.$[char].gear.items
+        # A $pull and a $set can't both touch gear.items
         # in the SAME update (MongoDB rejects one path prefixing the
         # other) - when a batch has BOTH at least one broken and one
         # surviving instance, this update only removes the broken one(s);
@@ -2851,7 +2662,7 @@ async def finish_craft(address: str, character_id: str) -> Optional[Player]:
         surviving = [bi for bi in borrowed_instances if bi["instanceId"] not in broken_ids]
 
         if broken_ids:
-            update["$pull"] = {"characters.$[char].gear.items": {"instanceId": {"$in": broken_ids}}}
+            update["$pull"] = {"gear.items": {"instanceId": {"$in": broken_ids}}}
         if surviving and not broken_ids:
             # Nothing broke, so no conflicting $pull in THIS update -
             # restore every survivor in place here, in one call.
@@ -2859,8 +2670,8 @@ async def finish_craft(address: str, character_id: str) -> Optional[Player]:
             for idx, bi in enumerate(surviving):
                 filt_id = f"relItem{idx}"
                 array_filters.append({f"{filt_id}.instanceId": bi["instanceId"], f"{filt_id}.location": "crafting"})
-                set_ops[f"characters.$[char].gear.items.$[{filt_id}].location"] = bi["source"]
-                set_ops[f"characters.$[char].gear.items.$[{filt_id}].slotRef"] = bi.get("slotRef") or []
+                set_ops[f"gear.items.$[{filt_id}].location"] = bi["source"]
+                set_ops[f"gear.items.$[{filt_id}].slotRef"] = bi.get("slotRef") or []
                 # Deliberately a SEPARATE array-filter identifier (matched
                 # on instanceId alone, not also location:"crafting" like
                 # relItem's) rather than reusing relItem's own filt_id
@@ -2873,10 +2684,8 @@ async def finish_craft(address: str, character_id: str) -> Optional[Player]:
                 # isn't affected by that field changing mid-update.
                 wear_filt_id = f"wearItem{idx}"
                 array_filters.append({f"{wear_filt_id}.instanceId": bi["instanceId"]})
-                inc_ops[f"characters.$[char].gear.items.$[{wear_filt_id}].quality"] = -bi.get("wear", count)
+                inc_ops[f"gear.items.$[{wear_filt_id}].quality"] = -bi.get("wear", count)
             update["$set"] = set_ops
-        if extra_push:
-            update["$push"] = extra_push
 
     if xp_set_ops:
         update["$set"] = {**update.get("$set", {}), **xp_set_ops}
@@ -2884,41 +2693,56 @@ async def finish_craft(address: str, character_id: str) -> Optional[Player]:
     if inc_ops:
         update["$inc"] = inc_ops
 
-    doc = await db.players.find_one_and_update(
-        query, update, array_filters=array_filters, return_document=ReturnDocument.AFTER
+    doc = await db.characters.find_one_and_update(
+        query, update, array_filters=array_filters or None, return_document=ReturnDocument.AFTER
     )
     if doc is None:
         return None
-    if character_item_balance_decrements:
+    all_char_decremented = set(character_decrements) | set(character_item_balance_decrements)
+    if tool_transfer_id is not None:
+        all_char_decremented.add(tool_transfer_id)
+    if all_char_decremented:
         await _prune_char_zeros(db, address, character_id, doc,
-            [f"crafting.itemBalances.{cid}" for cid in character_item_balance_decrements], array_filter=True)
+            [f"crafting.itemBalances.{cid}" for cid in all_char_decremented], array_filter=True)
 
     # A backpack/body-sourced release with BOTH a broken and a surviving
     # instance needed the $pull above to go out on its own (see the
     # comment there) - restore the survivor(s) now, in a second call, with
     # nothing left in the array to conflict with.
     if source != "pool" and broken_ids and surviving:
-        survivor_array_filters: List[Dict] = [{"char.id": character_id}]
+        survivor_array_filters: List[Dict] = []
         survivor_set_ops: Dict = {}
         survivor_inc_ops: Dict[str, int] = {}
         for idx, bi in enumerate(surviving):
             rel_filt_id = f"survivorRel{idx}"
             survivor_array_filters.append({f"{rel_filt_id}.instanceId": bi["instanceId"]})
-            survivor_set_ops[f"characters.$[char].gear.items.$[{rel_filt_id}].location"] = bi["source"]
-            survivor_set_ops[f"characters.$[char].gear.items.$[{rel_filt_id}].slotRef"] = bi.get("slotRef") or []
+            survivor_set_ops[f"gear.items.$[{rel_filt_id}].location"] = bi["source"]
+            survivor_set_ops[f"gear.items.$[{rel_filt_id}].slotRef"] = bi.get("slotRef") or []
             wear_filt_id = f"survivorWear{idx}"
             survivor_array_filters.append({f"{wear_filt_id}.instanceId": bi["instanceId"]})
-            survivor_inc_ops[f"characters.$[char].gear.items.$[{wear_filt_id}].quality"] = -bi.get("wear", count)
-        doc = await db.players.find_one_and_update(
-            {"address": address, "characters.id": character_id},
+            survivor_inc_ops[f"gear.items.$[{wear_filt_id}].quality"] = -bi.get("wear", count)
+        doc = await db.characters.find_one_and_update(
+            {"address": address, "id": character_id},
             {"$set": survivor_set_ops, "$inc": survivor_inc_ops},
-            array_filters=survivor_array_filters,
+            array_filters=survivor_array_filters or None,
             return_document=ReturnDocument.AFTER,
         )
         if doc is None:
             return None
 
-    return _doc_to_player(doc)
+    # Return tool to vault and credit output to vault after the players update.
+    if tool_transfer_id is not None:
+        vault_inc_fc2[tool_transfer_id] = vault_inc_fc2.get(tool_transfer_id, 0) + 1
+    push_to_vault_fc2 = returned_fc2 + vault_push_items_fc2
+    if vault_inc_fc2:
+        await _inc_vault_itembalances(db, address, vault_inc_fc2)
+    if push_to_vault_fc2:
+        await db.player_vaults.update_one(
+            {"address": address},
+            {"$push": {"items": {"$each": push_to_vault_fc2}}},
+            upsert=True,
+        )
+    return await _build_player(db, address)
 
 
 
@@ -2964,12 +2788,10 @@ async def equip_item(address: str, character_id: str, instance_id: str, slots: L
     casing.
     """
     db = get_database()
-    doc = await db.players.find_one({"address": address, "characters.id": character_id})
+    doc = await db.characters.find_one({"address": address, "id": character_id})
     if doc is None:
         return None
-    character = next((c for c in doc["characters"] if c["id"] == character_id), None)
-    if character is None:
-        return None
+    character = doc
     # "camp"/"saddlepack" count as equippable sources too - unequip_item can
     # leave an instance there, and there's no other path back to "body" for
     # it, so it must be re-equippable directly from either. "body" itself is
@@ -3083,14 +2905,13 @@ async def equip_item(address: str, character_id: str, instance_id: str, slots: L
     equipped_instance = {**instance, "location": "body", "slotRef": slots}
 
     if is_balance_equip and is_balance_merge:
-        char_idx = next(i for i, c in enumerate(doc["characters"]) if c["id"] == character_id)
-        balance_path = f"characters.{char_idx}.gear.itemBalances.{balance_bucket}.{balance_id}"
+        balance_path = f"gear.itemBalances.{balance_bucket}.{balance_id}"
         item_idx = next(
             i for i, it in enumerate(character.get("gear", {}).get("items", []))
             if it["instanceId"] == existing_equipped["instanceId"]
         )
-        qty_path = f"characters.{char_idx}.gear.items.{item_idx}.quantity"
-        doc = await db.players.find_one_and_update(
+        qty_path = f"gear.items.{item_idx}.quantity"
+        doc = await db.characters.find_one_and_update(
             {
                 "address": address,
                 balance_path: {"$gte": equip_qty},
@@ -3101,28 +2922,20 @@ async def equip_item(address: str, character_id: str, instance_id: str, slots: L
             return_document=ReturnDocument.AFTER,
         )
     elif is_balance_equip:
-        char_idx = next(i for i, c in enumerate(doc["characters"]) if c["id"] == character_id)
-        balance_path = f"characters.{char_idx}.gear.itemBalances.{balance_bucket}.{balance_id}"
-        doc = await db.players.find_one_and_update(
-            {
-                "address": address,
-                "characters": {
-                    "$elemMatch": {
-                        "id": character_id,
+        balance_path = f"gear.itemBalances.{balance_bucket}.{balance_id}"
+        doc = await db.characters.find_one_and_update(
+            {"address": address, "id": character_id,
                         "gear.items": {
                             "$not": {
                                 "$elemMatch": {
-                                    "slotRef": {"$in": slots},
-                                }
-                            }
-                        },
+                                    "slotRef": {"$in": slots}},
                     }
                 },
                 balance_path: {"$gte": equip_qty},
             },
             {
                 "$inc": {balance_path: -equip_qty},
-                "$push": {"characters.$.gear.items": equipped_instance},
+                "$push": {"gear.items": equipped_instance},
             },
             return_document=ReturnDocument.AFTER,
         )
@@ -3148,7 +2961,6 @@ async def equip_item(address: str, character_id: str, instance_id: str, slots: L
             if transfer <= 0:
                 raise ValueError("Stack is full")
             leftover = src_qty - transfer
-            char_idx = next(i for i, c in enumerate(doc["characters"]) if c["id"] == character_id)
             src_item_idx = next(
                 i for i, it in enumerate(character.get("gear", {}).get("items", []))
                 if it["instanceId"] == instance_id
@@ -3157,82 +2969,55 @@ async def equip_item(address: str, character_id: str, instance_id: str, slots: L
                 i for i, it in enumerate(character.get("gear", {}).get("items", []))
                 if it["instanceId"] == target_instance["instanceId"]
             )
-            tgt_qty_path = f"characters.{char_idx}.gear.items.{tgt_item_idx}.quantity"
+            tgt_qty_path = f"gear.items.{tgt_item_idx}.quantity"
             if leftover > 0:
-                src_qty_path = f"characters.{char_idx}.gear.items.{src_item_idx}.quantity"
-                doc = await db.players.find_one_and_update(
+                src_qty_path = f"gear.items.{src_item_idx}.quantity"
+                doc = await db.characters.find_one_and_update(
                     {"address": address},
                     {"$set": {src_qty_path: leftover, tgt_qty_path: tgt_qty + transfer}},
                     return_document=ReturnDocument.AFTER,
                 )
             else:
-                await db.players.update_one(
+                await db.characters.update_one(
                     {"address": address},
                     {"$set": {tgt_qty_path: tgt_qty + transfer}},
                 )
-                doc = await db.players.find_one_and_update(
+                doc = await db.characters.find_one_and_update(
                     {"address": address},
-                    {"$pull": {"characters.$[char].gear.items": {"instanceId": instance_id}}},
-                    array_filters=[{"char.id": character_id}],
+                    {"$pull": {"gear.items": {"instanceId": instance_id}}},
                     return_document=ReturnDocument.AFTER,
                 )
         else:
-            doc = await db.players.find_one_and_update(
+            doc = await db.characters.find_one_and_update(
                 {
                     "address": address,
-                    "characters": {
-                        "$elemMatch": {
-                            "id": character_id,
-                            "$and": [
-                                {"gear.items": {"$elemMatch": {"instanceId": instance_id, "location": source_location}}},
-                                {
-                                    "gear.items": {
-                                        "$not": {
-                                            "$elemMatch": {
-                                                "instanceId": {"$ne": instance_id},
-                                                "slotRef": {"$in": slots},
-                                            }
-                                        }
-                                    }
-                                },
-                            ],
-                        }
-                    },
+                    "id": character_id,
+                    "$and": [
+                        {"gear.items": {"$elemMatch": {"instanceId": instance_id, "location": source_location}}},
+                        {"gear.items": {"$not": {"$elemMatch": {"instanceId": {"$ne": instance_id}, "slotRef": {"$in": slots}}}}},
+                    ],
                 },
-                {"$set": {"characters.$[char].gear.items.$[item]": equipped_instance}},
-                array_filters=[{"char.id": character_id}, {"item.instanceId": instance_id, "item.location": source_location}],
+                {"$set": {"gear.items.$[item]": equipped_instance}},
+                array_filters=[{"item.instanceId": instance_id, "item.location": source_location}],
                 return_document=ReturnDocument.AFTER,
             )
     else:
-        doc = await db.players.find_one_and_update(
+        doc = await db.characters.find_one_and_update(
             {
                 "address": address,
-                "characters": {
-                    "$elemMatch": {
-                        "id": character_id,
-                        "$and": [
-                            {"gear.items": {"$elemMatch": {"instanceId": instance_id, "location": source_location}}},
-                            {
-                                "gear.items": {
-                                    "$not": {
-                                        "$elemMatch": {
-                                            "instanceId": {"$ne": instance_id},
-                                            "slotRef": {"$in": slots},
-                                        }
-                                    }
-                                }
-                            },
-                        ],
-                    }
-                },
+                "id": character_id,
+                "$and": [
+                    {"gear.items": {"$elemMatch": {"instanceId": instance_id, "location": source_location}}},
+                    {"gear.items": {"$not": {"$elemMatch": {"instanceId": {"$ne": instance_id}, "slotRef": {"$in": slots}}}}},
+                ],
             },
-            {"$set": {"characters.$[char].gear.items.$[item]": equipped_instance}},
-            array_filters=[{"char.id": character_id}, {"item.instanceId": instance_id, "item.location": source_location}],
+            {"$set": {"gear.items.$[item]": equipped_instance}},
+            array_filters=[{"item.instanceId": instance_id, "item.location": source_location}],
             return_document=ReturnDocument.AFTER,
         )
     if doc is None:
         return None
-    return _doc_to_player(doc)
+    return await _build_player(db, address)
 
 
 async def equip_item_from_pool(address: str, character_id: str, instance_id: str, slots: List[str]) -> Optional[Player]:
@@ -3260,16 +3045,15 @@ async def equip_item_from_pool(address: str, character_id: str, instance_id: str
     occupied by another equipped instance.
     """
     db = get_database()
-    doc = await db.players.find_one({"address": address, "characters.id": character_id})
+    doc = await db.characters.find_one({"address": address, "id": character_id})
     if doc is None:
         return None
-    character = next((c for c in doc["characters"] if c["id"] == character_id), None)
-    if character is None:
-        return None
+    character = doc
     if character.get("availability", {}).get("inAdventure", False):
         raise ValueError("Character is out on an adventure - no reaching the shared vault")
+    vault_efp = await _get_vault(db, address)
     instance = next(
-        (i for i in doc.get("vault", {}).get("items", []) if i["instanceId"] == instance_id),
+        (i for i in vault_efp["items"] if i["instanceId"] == instance_id),
         None,
     )
 
@@ -3279,7 +3063,7 @@ async def equip_item_from_pool(address: str, character_id: str, instance_id: str
     is_balance_equip = False
     if instance is None:
         balance_id = instance_id
-        balance_qty = doc.get("vault", {}).get("itemBalances", {}).get(balance_id, 0)
+        balance_qty = vault_efp["itemBalances"].get(balance_id, 0)
         if balance_qty <= 0:
             return None
         entry = items_catalog.ITEM_CATALOG_ENTRIES_BY_ID.get(balance_id)
@@ -3333,57 +3117,52 @@ async def equip_item_from_pool(address: str, character_id: str, instance_id: str
     equipped_instance = {**instance, "location": "body", "slotRef": slots}
 
     if is_balance_equip:
-        doc = await db.players.find_one_and_update(
-            {
-                "address": address,
-                f"vault.itemBalances.{balance_id}": {"$gte": 1},
-                "characters": {
-                    "$elemMatch": {
-                        "id": character_id,
+        # Check balance, then do 2-step: decrement vault balance, then push to character gear.
+        if vault_efp["itemBalances"].get(balance_id, 0) < 1:
+            return None
+        await _inc_vault_itembalances(db, address, {balance_id: -1})
+        doc = await db.characters.find_one_and_update(
+            {"address": address, "id": character_id,
                         "gear.items": {
                             "$not": {
                                 "$elemMatch": {
-                                    "slotRef": {"$in": slots},
-                                }
-                            }
-                        },
+                                    "slotRef": {"$in": slots}},
                     }
                 },
             },
-            {
-                "$inc": {f"vault.itemBalances.{balance_id}": -1},
-                "$push": {"characters.$.gear.items": equipped_instance},
-            },
+            {"$push": {"gear.items": equipped_instance}},
             return_document=ReturnDocument.AFTER,
         )
     else:
-        doc = await db.players.find_one_and_update(
-            {
-                "address": address,
-                "vault.items": {"$elemMatch": {"instanceId": instance_id, "location": "pool"}},
-                "characters": {
-                    "$elemMatch": {
-                        "id": character_id,
+        # Pull instance from vault, push to character gear.
+        pool_instance_efp = next(
+            (i for i in vault_efp["items"] if i["instanceId"] == instance_id and i.get("location") == "pool"),
+            None,
+        )
+        if pool_instance_efp is None:
+            return None
+        new_vault_items_efp = [i for i in vault_efp["items"] if i["instanceId"] != instance_id]
+        await db.player_vaults.update_one(
+            {"address": address},
+            {"$set": {"items": new_vault_items_efp}},
+            upsert=True,
+        )
+        doc = await db.characters.find_one_and_update(
+            {"address": address, "id": character_id,
                         "gear.items": {
                             "$not": {
                                 "$elemMatch": {
                                     "instanceId": {"$ne": instance_id},
-                                    "slotRef": {"$in": slots},
-                                }
-                            }
-                        },
+                                    "slotRef": {"$in": slots}},
                     }
                 },
             },
-            {
-                "$pull": {"vault.items": {"instanceId": instance_id}},
-                "$push": {"characters.$.gear.items": equipped_instance},
-            },
+            {"$push": {"gear.items": equipped_instance}},
             return_document=ReturnDocument.AFTER,
         )
     if doc is None:
         return None
-    return _doc_to_player(doc)
+    return await _build_player(db, address)
 
 
 async def unequip_item(
@@ -3419,7 +3198,7 @@ async def unequip_item(
     Unequipping either container to "camp" cascades its contents to camp
     too (gear.items location:"backpack/saddlepack" → "camp",
     gear.itemBalances.backpack/saddlepack merged into
-    gear.itemBalances.camp, gear.resources same way) so items land at camp
+    gear.itemBalances.camp) so items land at camp
     individually rather than staying locked inside an unequipped container.
 
     Unequipping a mount or companion (slotRef contains "Mount"/"Companion")
@@ -3430,12 +3209,10 @@ async def unequip_item(
     were unequipped directly.
     """
     db = get_database()
-    doc = await db.players.find_one({"address": address, "characters.id": character_id})
+    doc = await db.characters.find_one({"address": address, "id": character_id})
     if doc is None:
         return None
-    character = next((c for c in doc["characters"] if c["id"] == character_id), None)
-    if character is None:
-        return None
+    character = doc
     instance = next(
         (i for i in character.get("gear", {}).get("items", []) if i["instanceId"] == instance_id and i.get("location") == "body"),
         None,
@@ -3484,9 +3261,9 @@ async def unequip_item(
     if target_location == "pool":
         pooled_instances: list = [] if is_balance_origin else [{**instance, "location": "pool", "slotRef": []}]
         pull_ids = [instance_id]
-        balance_inc: Dict[str, int] = {}
+        vault_balance_inc: Dict[str, int] = {}
         if is_balance_origin:
-            balance_inc[f"vault.itemBalances.{instance['itemId']}"] = instance.get("quantity", 1)
+            vault_balance_inc[instance['itemId']] = instance.get("quantity", 1)
 
         # This instance IS the currently-equipped backpack (location:
         # "body" was just required to find it above), so its storage
@@ -3500,12 +3277,8 @@ async def unequip_item(
                     pull_ids.append(other["instanceId"])
             for item_id, qty in character.get("gear", {}).get("itemBalances", {}).get("backpack", {}).items():
                 if qty > 0:
-                    balance_inc[f"vault.itemBalances.{item_id}"] = qty
-            for resource_id, qty in character.get("gear", {}).get("resources", {}).get("backpack", {}).items():
-                if qty > 0:
-                    balance_inc[f"crafting.resources.{resource_id}"] = qty
-            clear_sets["characters.$[char].gear.itemBalances.backpack"] = {}
-            clear_sets["characters.$[char].gear.resources.backpack"] = {}
+                    vault_balance_inc[item_id] = vault_balance_inc.get(item_id, 0) + qty
+            clear_sets["gear.itemBalances.backpack"] = {}
 
         if instance["familyId"] == "saddlepack":
             for other in character.get("gear", {}).get("items", []):
@@ -3514,12 +3287,8 @@ async def unequip_item(
                     pull_ids.append(other["instanceId"])
             for item_id, qty in character.get("gear", {}).get("itemBalances", {}).get("saddlepack", {}).items():
                 if qty > 0:
-                    balance_inc[f"vault.itemBalances.{item_id}"] = qty
-            for resource_id, qty in character.get("gear", {}).get("resources", {}).get("saddlepack", {}).items():
-                if qty > 0:
-                    balance_inc[f"crafting.resources.{resource_id}"] = qty
-            clear_sets["characters.$[char].gear.itemBalances.saddlepack"] = {}
-            clear_sets["characters.$[char].gear.resources.saddlepack"] = {}
+                    vault_balance_inc[item_id] = vault_balance_inc.get(item_id, 0) + qty
+            clear_sets["gear.itemBalances.saddlepack"] = {}
 
         if instance["familyId"] == "cart":
             for other in character.get("gear", {}).get("items", []):
@@ -3528,12 +3297,8 @@ async def unequip_item(
                     pull_ids.append(other["instanceId"])
             for item_id, qty in character.get("gear", {}).get("itemBalances", {}).get("cart", {}).items():
                 if qty > 0:
-                    balance_inc[f"vault.itemBalances.{item_id}"] = qty
-            for resource_id, qty in character.get("gear", {}).get("resources", {}).get("cart", {}).items():
-                if qty > 0:
-                    balance_inc[f"crafting.resources.{resource_id}"] = qty
-            clear_sets["characters.$[char].gear.itemBalances.cart"] = {}
-            clear_sets["characters.$[char].gear.resources.cart"] = {}
+                    vault_balance_inc[item_id] = vault_balance_inc.get(item_id, 0) + qty
+            clear_sets["gear.itemBalances.cart"] = {}
 
         if is_mount_or_companion:
             # Cascade every item occupying a mount/companion sub-slot to the vault.
@@ -3550,12 +3315,8 @@ async def unequip_item(
                                     pull_ids.append(si["instanceId"])
                             for item_id, qty in character.get("gear", {}).get("itemBalances", {}).get("saddlepack", {}).items():
                                 if qty > 0:
-                                    balance_inc[f"vault.itemBalances.{item_id}"] = qty
-                            for resource_id, qty in character.get("gear", {}).get("resources", {}).get("saddlepack", {}).items():
-                                if qty > 0:
-                                    balance_inc[f"crafting.resources.{resource_id}"] = qty
-                            clear_sets["characters.$[char].gear.itemBalances.saddlepack"] = {}
-                            clear_sets["characters.$[char].gear.resources.saddlepack"] = {}
+                                    vault_balance_inc[item_id] = vault_balance_inc.get(item_id, 0) + qty
+                            clear_sets["gear.itemBalances.saddlepack"] = {}
                         if other["familyId"] == "cart":
                             for ci in character.get("gear", {}).get("items", []):
                                 if ci.get("location") == "cart":
@@ -3563,33 +3324,29 @@ async def unequip_item(
                                     pull_ids.append(ci["instanceId"])
                             for item_id, qty in character.get("gear", {}).get("itemBalances", {}).get("cart", {}).items():
                                 if qty > 0:
-                                    balance_inc[f"vault.itemBalances.{item_id}"] = qty
-                            for resource_id, qty in character.get("gear", {}).get("resources", {}).get("cart", {}).items():
-                                if qty > 0:
-                                    balance_inc[f"crafting.resources.{resource_id}"] = qty
-                            clear_sets["characters.$[char].gear.itemBalances.cart"] = {}
-                            clear_sets["characters.$[char].gear.resources.cart"] = {}
+                                    vault_balance_inc[item_id] = vault_balance_inc.get(item_id, 0) + qty
+                            clear_sets["gear.itemBalances.cart"] = {}
 
         update: Dict = {
-            "$pull": {"characters.$[char].gear.items": {"instanceId": {"$in": pull_ids}}},
-            "$push": {"vault.items": {"$each": pooled_instances}},
+            "$pull": {"gear.items": {"instanceId": {"$in": pull_ids}}},
         }
-        if balance_inc:
-            update["$inc"] = balance_inc
         if clear_sets:
             update["$set"] = clear_sets
 
-        doc = await db.players.find_one_and_update(
-            {
-                "address": address,
-                "characters": {
-                    "$elemMatch": {"id": character_id, "gear.items": {"$elemMatch": {"instanceId": instance_id, "location": "body"}}}
-                },
-            },
+        doc = await db.characters.find_one_and_update(
+            {"address": address, "id": character_id, "gear.items": {"$elemMatch": {"instanceId": instance_id, "location": "body"}}},
             update,
-            array_filters=[{"char.id": character_id}],
             return_document=ReturnDocument.AFTER,
         )
+        if doc is not None:
+            if vault_balance_inc:
+                await _inc_vault_itembalances(db, address, vault_balance_inc)
+            if pooled_instances:
+                await db.player_vaults.update_one(
+                    {"address": address},
+                    {"$push": {"items": {"$each": pooled_instances}}},
+                    upsert=True,
+                )
     else:
         # "camp", "backpack", or "saddlepack" - all three stay on this
         # character, just changing location/slotRef.
@@ -3625,8 +3382,9 @@ async def unequip_item(
                 else:
                     new_items.append(it)
 
-            camp_balances = dict(gear.get("itemBalances", {}).get("camp", {}))
-            camp_resources = dict(gear.get("resources", {}).get("camp", {}))
+            # Camp lives in character_camps — fetch its current balances first.
+            camp_doc_ueq = await db.character_camps.find_one({"address": address, "characterId": character_id})
+            camp_balances = dict(camp_doc_ueq.get("itemBalances", {}) if camp_doc_ueq else {})
             extra_sets: Dict[str, object] = {}
 
             # Cascade balances for the directly unequipped container (non-mount path).
@@ -3635,70 +3393,44 @@ async def unequip_item(
                 for item_id, qty in gear.get("itemBalances", {}).get(bucket, {}).items():
                     if qty > 0:
                         camp_balances[item_id] = camp_balances.get(item_id, 0) + qty
-                for res_id, qty in gear.get("resources", {}).get(bucket, {}).items():
-                    if qty > 0:
-                        camp_resources[res_id] = camp_resources.get(res_id, 0) + qty
-                extra_sets[f"characters.$[char].gear.itemBalances.{bucket}"] = {}
-                extra_sets[f"characters.$[char].gear.resources.{bucket}"] = {}
+                extra_sets[f"gear.itemBalances.{bucket}"] = {}
 
             # Cascade balances for any saddlepack/cart among the sub-equipment.
             for bucket in sub_buckets_to_clear:
                 for item_id, qty in gear.get("itemBalances", {}).get(bucket, {}).items():
                     if qty > 0:
                         camp_balances[item_id] = camp_balances.get(item_id, 0) + qty
-                for res_id, qty in gear.get("resources", {}).get(bucket, {}).items():
-                    if qty > 0:
-                        camp_resources[res_id] = camp_resources.get(res_id, 0) + qty
-                extra_sets[f"characters.$[char].gear.itemBalances.{bucket}"] = {}
-                extra_sets[f"characters.$[char].gear.resources.{bucket}"] = {}
+                extra_sets[f"gear.itemBalances.{bucket}"] = {}
 
-            doc = await db.players.find_one_and_update(
-                {
-                    "address": address,
-                    "characters": {
-                        "$elemMatch": {"id": character_id, "gear.items": {"$elemMatch": {"instanceId": instance_id, "location": "body"}}}
-                    },
-                },
+            doc = await db.characters.find_one_and_update(
+                {"address": address, "id": character_id, "gear.items": {"$elemMatch": {"instanceId": instance_id, "location": "body"}}},
                 {"$set": {
-                    "characters.$[char].gear.items": new_items,
-                    "characters.$[char].gear.itemBalances.camp": _strip_zeros(camp_balances),
-                    "characters.$[char].gear.resources.camp": _strip_zeros(camp_resources),
+                    "gear.items": new_items,
                     **extra_sets,
                 }},
-                array_filters=[{"char.id": character_id}],
                 return_document=ReturnDocument.AFTER,
             )
+            if doc is not None:
+                await _set_camp_itembalances(db, address, character_id, camp_balances)
         elif is_balance_origin:
-            char_idx = next(i for i, c in enumerate(doc["characters"]) if c["id"] == character_id)
-            doc = await db.players.find_one_and_update(
+            doc = await db.characters.find_one_and_update(
+                {"address": address, "id": character_id, "gear.items": {"$elemMatch": {"instanceId": instance_id, "location": "body"}}},
                 {
-                    "address": address,
-                    "characters": {
-                        "$elemMatch": {"id": character_id, "gear.items": {"$elemMatch": {"instanceId": instance_id, "location": "body"}}}
-                    },
+                    "$pull": {"gear.items": {"instanceId": instance_id}},
+                    "$inc": {f"gear.itemBalances.{target_location}.{instance['itemId']}": instance.get("quantity", 1)},
                 },
-                {
-                    "$pull": {"characters.$[char].gear.items": {"instanceId": instance_id}},
-                    "$inc": {f"characters.{char_idx}.gear.itemBalances.{target_location}.{instance['itemId']}": instance.get("quantity", 1)},
-                },
-                array_filters=[{"char.id": character_id}],
                 return_document=ReturnDocument.AFTER,
             )
         else:
-            doc = await db.players.find_one_and_update(
-                {
-                    "address": address,
-                    "characters": {
-                        "$elemMatch": {"id": character_id, "gear.items": {"$elemMatch": {"instanceId": instance_id, "location": "body"}}}
-                    },
-                },
-                {"$set": {"characters.$[char].gear.items.$[item]": moved_instance}},
-                array_filters=[{"char.id": character_id}, {"item.instanceId": instance_id, "item.location": "body"}],
+            doc = await db.characters.find_one_and_update(
+                {"address": address, "id": character_id, "gear.items": {"$elemMatch": {"instanceId": instance_id, "location": "body"}}},
+                {"$set": {"gear.items.$[item]": moved_instance}},
+                array_filters=[{"item.instanceId": instance_id, "item.location": "body"}],
                 return_document=ReturnDocument.AFTER,
             )
     if doc is None:
         return None
-    return _doc_to_player(doc)
+    return await _build_player(db, address)
 
 
 async def set_in_adventure(
@@ -3722,28 +3454,28 @@ async def set_in_adventure(
     """
     db = get_database()
     if in_adventure:
-        character_doc = await db.players.find_one(
-            {"address": address, "characters.id": character_id}, {"characters.$": 1}
+        character_doc = await db.characters.find_one(
+            {"address": address, "id": character_id}
         )
         if character_doc is None:
             return None
-        active = character_doc["characters"][0].get("crafting", {}).get("activeCraft")
+        active = character_doc.get("crafting", {}).get("activeCraft")
         if active and datetime.fromisoformat(active["readyAt"]) > datetime.now(timezone.utc):
             raise ValueError("Character is still crafting")
 
-    update: dict = {"$set": {"characters.$.availability.inAdventure": in_adventure}}
+    update: dict = {"$set": {"availability.inAdventure": in_adventure}}
     if not in_adventure and reason in ("stop", "run_away"):
-        counter = "characters.$.stats.adventureFinished" if reason == "stop" else "characters.$.stats.adventureRunAway"
+        counter = "stats.adventureFinished" if reason == "stop" else "stats.adventureRunAway"
         update.setdefault("$inc", {})[counter] = 1
 
-    doc = await db.players.find_one_and_update(
-        {"address": address, "characters.id": character_id},
+    doc = await db.characters.find_one_and_update(
+        {"address": address, "id": character_id},
         update,
         return_document=ReturnDocument.AFTER,
     )
     if doc is None:
         return None
-    return _doc_to_player(doc)
+    return await _build_player(db, address)
 
 
 async def check_out_item_instance(
@@ -3768,16 +3500,15 @@ async def check_out_item_instance(
     needing its own check), or the address/character pair doesn't match.
     """
     db = get_database()
-    doc = await db.players.find_one({"address": address, "characters.id": character_id})
+    doc = await db.characters.find_one({"address": address, "id": character_id})
     if doc is None:
         return None
-    character = next((c for c in doc["characters"] if c["id"] == character_id), None)
-    if character is None:
-        return None
+    character = doc
     if character.get("availability", {}).get("inAdventure", False):
         raise ValueError("Character is out on an adventure - no reaching the shared vault")
+    vault_coii = await _get_vault(db, address)
     instance = next(
-        (i for i in doc.get("vault", {}).get("items", []) if i["instanceId"] == instance_id),
+        (i for i in vault_coii["items"] if i["instanceId"] == instance_id and i.get("location") == "pool"),
         None,
     )
     if instance is None:
@@ -3808,35 +3539,23 @@ async def check_out_item_instance(
                 raise ValueError("Backpack is full")
 
     # slotRef reset to [] - a pool instance can carry a stale non-empty
-    # slotRef left over from before it was checked in (check_in_item_instance
-    # already clears it there, but equip_item_from_pool's own pull doesn't -
-    # see that function), and neither carry location is ever a valid place
-    # for a non-empty slotRef to mean anything.
+    # slotRef left over from before it was checked in.
     backpacked_instance = {**instance, "location": destination, "slotRef": []}
-    # Query filters the characters array via a bare "characters.id" match
-    # alongside an UNRELATED $elemMatch on vault.items in the same
-    # query - a real (Firestore MongoDB-compat) bug was observed under
-    # exactly this shape: the bare positional $ in the update below
-    # resolved against the wrong array, padding characters with nulls and
-    # pushing items onto a bogus new element instead of the matched
-    # character. array_filters + $[char] removes the ambiguity, matching
-    # check_in_item_instance's already-reliable pattern.
-    doc = await db.players.find_one_and_update(
-        {
-            "address": address,
-            "characters": {"$elemMatch": {"id": character_id}},
-            "vault.items": {"$elemMatch": {"instanceId": instance_id, "location": "pool"}},
-        },
-        {
-            "$pull": {"vault.items": {"instanceId": instance_id}},
-            "$push": {"characters.$[char].gear.items": backpacked_instance},
-        },
-        array_filters=[{"char.id": character_id}],
+    # Remove from vault first, then push to character.
+    new_vault_items_coii = [i for i in vault_coii["items"] if i["instanceId"] != instance_id]
+    await db.player_vaults.update_one(
+        {"address": address},
+        {"$set": {"items": new_vault_items_coii}},
+        upsert=True,
+    )
+    doc = await db.characters.find_one_and_update(
+        {"address": address, "id": character_id},
+        {"$push": {"gear.items": backpacked_instance}},
         return_document=ReturnDocument.AFTER,
     )
     if doc is None:
         return None
-    return _doc_to_player(doc)
+    return await _build_player(db, address)
 
 
 async def check_in_item_instance(address: str, character_id: str, instance_id: str) -> Optional[Player]:
@@ -3848,7 +3567,7 @@ async def check_in_item_instance(address: str, character_id: str, instance_id: s
 
     Checking in a family:"backpack" instance also empties this character's
     whole backpack storage bucket (gear.items location:"backpack",
-    gear.itemBalances.backpack, gear.resources.backpack) into the vault
+    gear.itemBalances.backpack) into the vault
     first, in the same update - same cascade unequip_item's own "straight
     to vault" branch does, and for the same reason (see its docstring) -
     but ONLY if no OTHER backpack is currently equipped
@@ -3857,12 +3576,10 @@ async def check_in_item_instance(address: str, character_id: str, instance_id: s
     legitimately in use - left untouched.
     """
     db = get_database()
-    doc = await db.players.find_one({"address": address, "characters.id": character_id})
+    doc = await db.characters.find_one({"address": address, "id": character_id})
     if doc is None:
         return None
-    character = next((c for c in doc["characters"] if c["id"] == character_id), None)
-    if character is None:
-        return None
+    character = doc
     instance = next(
         (
             i for i in character.get("gear", {}).get("items", [])
@@ -3875,7 +3592,7 @@ async def check_in_item_instance(address: str, character_id: str, instance_id: s
 
     pooled_instances = [{**instance, "location": "pool", "slotRef": []}]
     pull_ids = [instance_id]
-    balance_inc: Dict[str, int] = {}
+    vault_balance_inc_cii: Dict[str, int] = {}
 
     clear_sets: Dict[str, object] = {}
     for fam, bucket, equipped_check in (
@@ -3890,34 +3607,32 @@ async def check_in_item_instance(address: str, character_id: str, instance_id: s
                     pull_ids.append(other["instanceId"])
             for item_id, qty in character.get("gear", {}).get("itemBalances", {}).get(bucket, {}).items():
                 if qty > 0:
-                    balance_inc[f"vault.itemBalances.{item_id}"] = qty
-            for resource_id, qty in character.get("gear", {}).get("resources", {}).get(bucket, {}).items():
-                if qty > 0:
-                    balance_inc[f"crafting.resources.{resource_id}"] = qty
-            clear_sets[f"characters.$[char].gear.itemBalances.{bucket}"] = {}
-            clear_sets[f"characters.$[char].gear.resources.{bucket}"] = {}
+                    vault_balance_inc_cii[item_id] = vault_balance_inc_cii.get(item_id, 0) + qty
+            clear_sets[f"gear.itemBalances.{bucket}"] = {}
 
     update: Dict = {
-        "$pull": {"characters.$[char].gear.items": {"instanceId": {"$in": pull_ids}}},
-        "$push": {"vault.items": {"$each": pooled_instances}},
+        "$pull": {"gear.items": {"instanceId": {"$in": pull_ids}}},
     }
-    if balance_inc:
-        update["$inc"] = balance_inc
     if clear_sets:
         update["$set"] = clear_sets
 
-    doc = await db.players.find_one_and_update(
-        {
-            "address": address,
-            "characters": {"$elemMatch": {"id": character_id, "gear.items.instanceId": instance_id}},
-        },
+    doc = await db.characters.find_one_and_update(
+            {"address": address, "id": character_id, "gear.items.instanceId": instance_id},
         update,
-        array_filters=[{"char.id": character_id}],
         return_document=ReturnDocument.AFTER,
     )
     if doc is None:
         return None
-    return _doc_to_player(doc)
+    # Push instances and increment balances in vault after the players update.
+    if vault_balance_inc_cii:
+        await _inc_vault_itembalances(db, address, vault_balance_inc_cii)
+    if pooled_instances:
+        await db.player_vaults.update_one(
+            {"address": address},
+            {"$push": {"items": {"$each": pooled_instances}}},
+            upsert=True,
+        )
+    return await _build_player(db, address)
 
 
 async def move_camp_item_to_backpack(address: str, character_id: str, instance_id: str) -> Optional[Player]:
@@ -3935,12 +3650,10 @@ async def move_camp_item_to_backpack(address: str, character_id: str, instance_i
     if the instance isn't sitting at location:"camp" on this character.
     """
     db = get_database()
-    doc = await db.players.find_one({"address": address, "characters.id": character_id})
+    doc = await db.characters.find_one({"address": address, "id": character_id})
     if doc is None:
         return None
-    character = next((c for c in doc["characters"] if c["id"] == character_id), None)
-    if character is None:
-        return None
+    character = doc
     instance = next(
         (
             i for i in character.get("gear", {}).get("items", [])
@@ -3964,20 +3677,15 @@ async def move_camp_item_to_backpack(address: str, character_id: str, instance_i
     # MongoDB-compatible backend was observed silently dropping the second
     # of two array-filtered $set keys in one update).
     moved_instance = {**instance, "location": "backpack", "slotRef": []}
-    doc = await db.players.find_one_and_update(
-        {
-            "address": address,
-            "characters": {
-                "$elemMatch": {"id": character_id, "gear.items": {"$elemMatch": {"instanceId": instance_id, "location": "camp"}}}
-            },
-        },
-        {"$set": {"characters.$[char].gear.items.$[item]": moved_instance}},
-        array_filters=[{"char.id": character_id}, {"item.instanceId": instance_id, "item.location": "camp"}],
+    doc = await db.characters.find_one_and_update(
+        {"address": address, "id": character_id, "gear.items": {"$elemMatch": {"instanceId": instance_id, "location": "camp"}}},
+        {"$set": {"gear.items.$[item]": moved_instance}},
+            array_filters=[{"item.instanceId": instance_id, "item.location": "camp"}],
         return_document=ReturnDocument.AFTER,
     )
     if doc is None:
         return None
-    return _doc_to_player(doc)
+    return await _build_player(db, address)
 
 
 async def move_camp_item_to_saddlepack(address: str, character_id: str, instance_id: str) -> Optional[Player]:
@@ -3986,12 +3694,10 @@ async def move_camp_item_to_saddlepack(address: str, character_id: str, instance
     into their saddlepack — capacity-gated, never touches the shared pool.
     """
     db = get_database()
-    doc = await db.players.find_one({"address": address, "characters.id": character_id})
+    doc = await db.characters.find_one({"address": address, "id": character_id})
     if doc is None:
         return None
-    character = next((c for c in doc["characters"] if c["id"] == character_id), None)
-    if character is None:
-        return None
+    character = doc
     instance = next(
         (
             i for i in character.get("gear", {}).get("items", [])
@@ -4011,20 +3717,15 @@ async def move_camp_item_to_saddlepack(address: str, character_id: str, instance
         raise ValueError("Saddlepack is full")
 
     moved_instance = {**instance, "location": "saddlepack", "slotRef": []}
-    doc = await db.players.find_one_and_update(
-        {
-            "address": address,
-            "characters": {
-                "$elemMatch": {"id": character_id, "gear.items": {"$elemMatch": {"instanceId": instance_id, "location": "camp"}}}
-            },
-        },
-        {"$set": {"characters.$[char].gear.items.$[item]": moved_instance}},
-        array_filters=[{"char.id": character_id}, {"item.instanceId": instance_id, "item.location": "camp"}],
+    doc = await db.characters.find_one_and_update(
+        {"address": address, "id": character_id, "gear.items": {"$elemMatch": {"instanceId": instance_id, "location": "camp"}}},
+        {"$set": {"gear.items.$[item]": moved_instance}},
+            array_filters=[{"item.instanceId": instance_id, "item.location": "camp"}],
         return_document=ReturnDocument.AFTER,
     )
     if doc is None:
         return None
-    return _doc_to_player(doc)
+    return await _build_player(db, address)
 
 
 async def move_backpack_item_to_camp(address: str, character_id: str, instance_id: str) -> Optional[Player]:
@@ -4043,12 +3744,10 @@ async def move_backpack_item_to_camp(address: str, character_id: str, instance_i
     location:"backpack" on this character.
     """
     db = get_database()
-    doc = await db.players.find_one({"address": address, "characters.id": character_id})
+    doc = await db.characters.find_one({"address": address, "id": character_id})
     if doc is None:
         return None
-    character = next((c for c in doc["characters"] if c["id"] == character_id), None)
-    if character is None:
-        return None
+    character = doc
     instance = next(
         (
             i for i in character.get("gear", {}).get("items", [])
@@ -4064,20 +3763,15 @@ async def move_backpack_item_to_camp(address: str, character_id: str, instance_i
     # MongoDB-compatible backend was observed silently dropping the second
     # of two array-filtered $set keys in one update).
     moved_instance = {**instance, "location": "camp", "slotRef": []}
-    doc = await db.players.find_one_and_update(
-        {
-            "address": address,
-            "characters": {
-                "$elemMatch": {"id": character_id, "gear.items": {"$elemMatch": {"instanceId": instance_id, "location": "backpack"}}}
-            },
-        },
-        {"$set": {"characters.$[char].gear.items.$[item]": moved_instance}},
-        array_filters=[{"char.id": character_id}, {"item.instanceId": instance_id, "item.location": "backpack"}],
+    doc = await db.characters.find_one_and_update(
+        {"address": address, "id": character_id, "gear.items": {"$elemMatch": {"instanceId": instance_id, "location": "backpack"}}},
+        {"$set": {"gear.items.$[item]": moved_instance}},
+            array_filters=[{"item.instanceId": instance_id, "item.location": "backpack"}],
         return_document=ReturnDocument.AFTER,
     )
     if doc is None:
         return None
-    return _doc_to_player(doc)
+    return await _build_player(db, address)
 
 
 async def move_backpack_item_to_saddlepack(address: str, character_id: str, instance_id: str) -> Optional[Player]:
@@ -4088,12 +3782,10 @@ async def move_backpack_item_to_saddlepack(address: str, character_id: str, inst
     isn't sitting at location:"backpack" on this character.
     """
     db = get_database()
-    doc = await db.players.find_one({"address": address, "characters.id": character_id})
+    doc = await db.characters.find_one({"address": address, "id": character_id})
     if doc is None:
         return None
-    character = next((c for c in doc["characters"] if c["id"] == character_id), None)
-    if character is None:
-        return None
+    character = doc
     instance = next(
         (
             i for i in character.get("gear", {}).get("items", [])
@@ -4113,20 +3805,15 @@ async def move_backpack_item_to_saddlepack(address: str, character_id: str, inst
         raise ValueError("Saddlepack is full")
 
     moved_instance = {**instance, "location": "saddlepack", "slotRef": []}
-    doc = await db.players.find_one_and_update(
-        {
-            "address": address,
-            "characters": {
-                "$elemMatch": {"id": character_id, "gear.items": {"$elemMatch": {"instanceId": instance_id, "location": "backpack"}}}
-            },
-        },
-        {"$set": {"characters.$[char].gear.items.$[item]": moved_instance}},
-        array_filters=[{"char.id": character_id}, {"item.instanceId": instance_id, "item.location": "backpack"}],
+    doc = await db.characters.find_one_and_update(
+        {"address": address, "id": character_id, "gear.items": {"$elemMatch": {"instanceId": instance_id, "location": "backpack"}}},
+        {"$set": {"gear.items.$[item]": moved_instance}},
+            array_filters=[{"item.instanceId": instance_id, "item.location": "backpack"}],
         return_document=ReturnDocument.AFTER,
     )
     if doc is None:
         return None
-    return _doc_to_player(doc)
+    return await _build_player(db, address)
 
 
 async def move_saddlepack_item_to_backpack(address: str, character_id: str, instance_id: str) -> Optional[Player]:
@@ -4137,12 +3824,10 @@ async def move_saddlepack_item_to_backpack(address: str, character_id: str, inst
     isn't sitting at location:"saddlepack" on this character.
     """
     db = get_database()
-    doc = await db.players.find_one({"address": address, "characters.id": character_id})
+    doc = await db.characters.find_one({"address": address, "id": character_id})
     if doc is None:
         return None
-    character = next((c for c in doc["characters"] if c["id"] == character_id), None)
-    if character is None:
-        return None
+    character = doc
     instance = next(
         (
             i for i in character.get("gear", {}).get("items", [])
@@ -4162,20 +3847,15 @@ async def move_saddlepack_item_to_backpack(address: str, character_id: str, inst
         raise ValueError("Backpack is full")
 
     moved_instance = {**instance, "location": "backpack", "slotRef": []}
-    doc = await db.players.find_one_and_update(
-        {
-            "address": address,
-            "characters": {
-                "$elemMatch": {"id": character_id, "gear.items": {"$elemMatch": {"instanceId": instance_id, "location": "saddlepack"}}}
-            },
-        },
-        {"$set": {"characters.$[char].gear.items.$[item]": moved_instance}},
-        array_filters=[{"char.id": character_id}, {"item.instanceId": instance_id, "item.location": "saddlepack"}],
+    doc = await db.characters.find_one_and_update(
+        {"address": address, "id": character_id, "gear.items": {"$elemMatch": {"instanceId": instance_id, "location": "saddlepack"}}},
+        {"$set": {"gear.items.$[item]": moved_instance}},
+            array_filters=[{"item.instanceId": instance_id, "item.location": "saddlepack"}],
         return_document=ReturnDocument.AFTER,
     )
     if doc is None:
         return None
-    return _doc_to_player(doc)
+    return await _build_player(db, address)
 
 
 async def move_saddlepack_item_to_camp(address: str, character_id: str, instance_id: str) -> Optional[Player]:
@@ -4185,12 +3865,10 @@ async def move_saddlepack_item_to_camp(address: str, character_id: str, instance
     instance isn't sitting at location:"saddlepack" on this character.
     """
     db = get_database()
-    doc = await db.players.find_one({"address": address, "characters.id": character_id})
+    doc = await db.characters.find_one({"address": address, "id": character_id})
     if doc is None:
         return None
-    character = next((c for c in doc["characters"] if c["id"] == character_id), None)
-    if character is None:
-        return None
+    character = doc
     instance = next(
         (
             i for i in character.get("gear", {}).get("items", [])
@@ -4202,31 +3880,24 @@ async def move_saddlepack_item_to_camp(address: str, character_id: str, instance
         return None
 
     moved_instance = {**instance, "location": "camp", "slotRef": []}
-    doc = await db.players.find_one_and_update(
-        {
-            "address": address,
-            "characters": {
-                "$elemMatch": {"id": character_id, "gear.items": {"$elemMatch": {"instanceId": instance_id, "location": "saddlepack"}}}
-            },
-        },
-        {"$set": {"characters.$[char].gear.items.$[item]": moved_instance}},
-        array_filters=[{"char.id": character_id}, {"item.instanceId": instance_id, "item.location": "saddlepack"}],
+    doc = await db.characters.find_one_and_update(
+        {"address": address, "id": character_id, "gear.items": {"$elemMatch": {"instanceId": instance_id, "location": "saddlepack"}}},
+        {"$set": {"gear.items.$[item]": moved_instance}},
+            array_filters=[{"item.instanceId": instance_id, "item.location": "saddlepack"}],
         return_document=ReturnDocument.AFTER,
     )
     if doc is None:
         return None
-    return _doc_to_player(doc)
+    return await _build_player(db, address)
 
 
 async def move_cart_item_to_camp(address: str, character_id: str, instance_id: str) -> Optional[Player]:
     """Move one item instance from this character's cart into camp."""
     db = get_database()
-    doc = await db.players.find_one({"address": address, "characters.id": character_id})
+    doc = await db.characters.find_one({"address": address, "id": character_id})
     if doc is None:
         return None
-    character = next((c for c in doc["characters"] if c["id"] == character_id), None)
-    if character is None:
-        return None
+    character = doc
     instance = next(
         (i for i in character.get("gear", {}).get("items", []) if i["instanceId"] == instance_id and i.get("location") == "cart"),
         None,
@@ -4235,31 +3906,24 @@ async def move_cart_item_to_camp(address: str, character_id: str, instance_id: s
         return None
 
     moved_instance = {**instance, "location": "camp", "slotRef": []}
-    doc = await db.players.find_one_and_update(
-        {
-            "address": address,
-            "characters": {
-                "$elemMatch": {"id": character_id, "gear.items": {"$elemMatch": {"instanceId": instance_id, "location": "cart"}}}
-            },
-        },
-        {"$set": {"characters.$[char].gear.items.$[item]": moved_instance}},
-        array_filters=[{"char.id": character_id}, {"item.instanceId": instance_id, "item.location": "cart"}],
+    doc = await db.characters.find_one_and_update(
+        {"address": address, "id": character_id, "gear.items": {"$elemMatch": {"instanceId": instance_id, "location": "cart"}}},
+        {"$set": {"gear.items.$[item]": moved_instance}},
+            array_filters=[{"item.instanceId": instance_id, "item.location": "cart"}],
         return_document=ReturnDocument.AFTER,
     )
     if doc is None:
         return None
-    return _doc_to_player(doc)
+    return await _build_player(db, address)
 
 
 async def move_cart_item_to_backpack(address: str, character_id: str, instance_id: str) -> Optional[Player]:
     """Move one item instance from cart into this character's backpack. Capacity-gated."""
     db = get_database()
-    doc = await db.players.find_one({"address": address, "characters.id": character_id})
+    doc = await db.characters.find_one({"address": address, "id": character_id})
     if doc is None:
         return None
-    character = next((c for c in doc["characters"] if c["id"] == character_id), None)
-    if character is None:
-        return None
+    character = doc
     instance = next(
         (i for i in character.get("gear", {}).get("items", []) if i["instanceId"] == instance_id and i.get("location") == "cart"),
         None,
@@ -4275,31 +3939,24 @@ async def move_cart_item_to_backpack(address: str, character_id: str, instance_i
         raise ValueError("Backpack is full")
 
     moved_instance = {**instance, "location": "backpack", "slotRef": []}
-    doc = await db.players.find_one_and_update(
-        {
-            "address": address,
-            "characters": {
-                "$elemMatch": {"id": character_id, "gear.items": {"$elemMatch": {"instanceId": instance_id, "location": "cart"}}}
-            },
-        },
-        {"$set": {"characters.$[char].gear.items.$[item]": moved_instance}},
-        array_filters=[{"char.id": character_id}, {"item.instanceId": instance_id, "item.location": "cart"}],
+    doc = await db.characters.find_one_and_update(
+        {"address": address, "id": character_id, "gear.items": {"$elemMatch": {"instanceId": instance_id, "location": "cart"}}},
+        {"$set": {"gear.items.$[item]": moved_instance}},
+            array_filters=[{"item.instanceId": instance_id, "item.location": "cart"}],
         return_document=ReturnDocument.AFTER,
     )
     if doc is None:
         return None
-    return _doc_to_player(doc)
+    return await _build_player(db, address)
 
 
 async def move_cart_item_to_saddlepack(address: str, character_id: str, instance_id: str) -> Optional[Player]:
     """Move one item instance from cart into this character's saddlepack. Capacity-gated."""
     db = get_database()
-    doc = await db.players.find_one({"address": address, "characters.id": character_id})
+    doc = await db.characters.find_one({"address": address, "id": character_id})
     if doc is None:
         return None
-    character = next((c for c in doc["characters"] if c["id"] == character_id), None)
-    if character is None:
-        return None
+    character = doc
     instance = next(
         (i for i in character.get("gear", {}).get("items", []) if i["instanceId"] == instance_id and i.get("location") == "cart"),
         None,
@@ -4315,31 +3972,24 @@ async def move_cart_item_to_saddlepack(address: str, character_id: str, instance
         raise ValueError("Saddlepack is full")
 
     moved_instance = {**instance, "location": "saddlepack", "slotRef": []}
-    doc = await db.players.find_one_and_update(
-        {
-            "address": address,
-            "characters": {
-                "$elemMatch": {"id": character_id, "gear.items": {"$elemMatch": {"instanceId": instance_id, "location": "cart"}}}
-            },
-        },
-        {"$set": {"characters.$[char].gear.items.$[item]": moved_instance}},
-        array_filters=[{"char.id": character_id}, {"item.instanceId": instance_id, "item.location": "cart"}],
+    doc = await db.characters.find_one_and_update(
+        {"address": address, "id": character_id, "gear.items": {"$elemMatch": {"instanceId": instance_id, "location": "cart"}}},
+        {"$set": {"gear.items.$[item]": moved_instance}},
+            array_filters=[{"item.instanceId": instance_id, "item.location": "cart"}],
         return_document=ReturnDocument.AFTER,
     )
     if doc is None:
         return None
-    return _doc_to_player(doc)
+    return await _build_player(db, address)
 
 
 async def move_camp_item_to_cart(address: str, character_id: str, instance_id: str) -> Optional[Player]:
     """Move one item instance from camp into this character's cart. Capacity-gated."""
     db = get_database()
-    doc = await db.players.find_one({"address": address, "characters.id": character_id})
+    doc = await db.characters.find_one({"address": address, "id": character_id})
     if doc is None:
         return None
-    character = next((c for c in doc["characters"] if c["id"] == character_id), None)
-    if character is None:
-        return None
+    character = doc
     instance = next(
         (i for i in character.get("gear", {}).get("items", []) if i["instanceId"] == instance_id and i.get("location") == "camp"),
         None,
@@ -4355,31 +4005,24 @@ async def move_camp_item_to_cart(address: str, character_id: str, instance_id: s
         raise ValueError("Cart is full")
 
     moved_instance = {**instance, "location": "cart", "slotRef": []}
-    doc = await db.players.find_one_and_update(
-        {
-            "address": address,
-            "characters": {
-                "$elemMatch": {"id": character_id, "gear.items": {"$elemMatch": {"instanceId": instance_id, "location": "camp"}}}
-            },
-        },
-        {"$set": {"characters.$[char].gear.items.$[item]": moved_instance}},
-        array_filters=[{"char.id": character_id}, {"item.instanceId": instance_id, "item.location": "camp"}],
+    doc = await db.characters.find_one_and_update(
+        {"address": address, "id": character_id, "gear.items": {"$elemMatch": {"instanceId": instance_id, "location": "camp"}}},
+        {"$set": {"gear.items.$[item]": moved_instance}},
+            array_filters=[{"item.instanceId": instance_id, "item.location": "camp"}],
         return_document=ReturnDocument.AFTER,
     )
     if doc is None:
         return None
-    return _doc_to_player(doc)
+    return await _build_player(db, address)
 
 
 async def move_backpack_item_to_cart(address: str, character_id: str, instance_id: str) -> Optional[Player]:
     """Move one item instance from backpack into this character's cart. Capacity-gated."""
     db = get_database()
-    doc = await db.players.find_one({"address": address, "characters.id": character_id})
+    doc = await db.characters.find_one({"address": address, "id": character_id})
     if doc is None:
         return None
-    character = next((c for c in doc["characters"] if c["id"] == character_id), None)
-    if character is None:
-        return None
+    character = doc
     instance = next(
         (i for i in character.get("gear", {}).get("items", []) if i["instanceId"] == instance_id and i.get("location") == "backpack"),
         None,
@@ -4395,31 +4038,24 @@ async def move_backpack_item_to_cart(address: str, character_id: str, instance_i
         raise ValueError("Cart is full")
 
     moved_instance = {**instance, "location": "cart", "slotRef": []}
-    doc = await db.players.find_one_and_update(
-        {
-            "address": address,
-            "characters": {
-                "$elemMatch": {"id": character_id, "gear.items": {"$elemMatch": {"instanceId": instance_id, "location": "backpack"}}}
-            },
-        },
-        {"$set": {"characters.$[char].gear.items.$[item]": moved_instance}},
-        array_filters=[{"char.id": character_id}, {"item.instanceId": instance_id, "item.location": "backpack"}],
+    doc = await db.characters.find_one_and_update(
+        {"address": address, "id": character_id, "gear.items": {"$elemMatch": {"instanceId": instance_id, "location": "backpack"}}},
+        {"$set": {"gear.items.$[item]": moved_instance}},
+            array_filters=[{"item.instanceId": instance_id, "item.location": "backpack"}],
         return_document=ReturnDocument.AFTER,
     )
     if doc is None:
         return None
-    return _doc_to_player(doc)
+    return await _build_player(db, address)
 
 
 async def move_saddlepack_item_to_cart(address: str, character_id: str, instance_id: str) -> Optional[Player]:
     """Move one item instance from saddlepack into this character's cart. Capacity-gated."""
     db = get_database()
-    doc = await db.players.find_one({"address": address, "characters.id": character_id})
+    doc = await db.characters.find_one({"address": address, "id": character_id})
     if doc is None:
         return None
-    character = next((c for c in doc["characters"] if c["id"] == character_id), None)
-    if character is None:
-        return None
+    character = doc
     instance = next(
         (i for i in character.get("gear", {}).get("items", []) if i["instanceId"] == instance_id and i.get("location") == "saddlepack"),
         None,
@@ -4435,20 +4071,15 @@ async def move_saddlepack_item_to_cart(address: str, character_id: str, instance
         raise ValueError("Cart is full")
 
     moved_instance = {**instance, "location": "cart", "slotRef": []}
-    doc = await db.players.find_one_and_update(
-        {
-            "address": address,
-            "characters": {
-                "$elemMatch": {"id": character_id, "gear.items": {"$elemMatch": {"instanceId": instance_id, "location": "saddlepack"}}}
-            },
-        },
-        {"$set": {"characters.$[char].gear.items.$[item]": moved_instance}},
-        array_filters=[{"char.id": character_id}, {"item.instanceId": instance_id, "item.location": "saddlepack"}],
+    doc = await db.characters.find_one_and_update(
+        {"address": address, "id": character_id, "gear.items": {"$elemMatch": {"instanceId": instance_id, "location": "saddlepack"}}},
+        {"$set": {"gear.items.$[item]": moved_instance}},
+            array_filters=[{"item.instanceId": instance_id, "item.location": "saddlepack"}],
         return_document=ReturnDocument.AFTER,
     )
     if doc is None:
         return None
-    return _doc_to_player(doc)
+    return await _build_player(db, address)
 
 
 async def check_out_item_balance(address: str, character_id: str, item_id: str, amount: int = 1) -> Optional[Player]:
@@ -4466,29 +4097,22 @@ async def check_out_item_balance(address: str, character_id: str, item_id: str, 
     if amount <= 0:
         raise ValueError("amount must be positive")
     db = get_database()
-    character_doc = await db.players.find_one(
-        {"address": address, "characters.id": character_id}, {"characters.$": 1}
+    character_doc = await db.characters.find_one(
+        {"address": address, "id": character_id}
     )
     if character_doc is None:
         return None
-    if character_doc["characters"][0].get("availability", {}).get("inAdventure", False):
+    if character_doc.get("availability", {}).get("inAdventure", False):
         raise ValueError("Character is out on an adventure - no reaching the shared vault")
-    doc = await db.players.find_one_and_update(
-        {
-            "address": address,
-            "characters.id": character_id,
-            f"vault.itemBalances.{item_id}": {"$gte": amount},
-        },
-        {"$inc": {
-            f"vault.itemBalances.{item_id}": -amount,
-            f"characters.$.gear.itemBalances.camp.{item_id}": amount,
-        }},
-        return_document=ReturnDocument.AFTER,
-    )
+    vault_coib = await _get_vault(db, address)
+    if vault_coib["itemBalances"].get(item_id, 0) < amount:
+        return None
+    await _inc_vault_itembalances(db, address, {item_id: -amount})
+    await _inc_camp_itembalances(db, address, character_id, {item_id: amount})
+    doc = await db.characters.find_one({"address": address, "id": character_id})
     if doc is None:
         return None
-    await _prune_player_zeros(db, address, doc, [f"vault.itemBalances.{item_id}"])
-    return _doc_to_player(doc)
+    return await _build_player(db, address)
 
 
 async def check_out_item_balance_to_backpack(
@@ -4517,15 +4141,14 @@ async def check_out_item_balance_to_backpack(
     if amount <= 0:
         raise ValueError("amount must be positive")
     db = get_database()
-    doc = await db.players.find_one({"address": address, "characters.id": character_id})
+    doc = await db.characters.find_one({"address": address, "id": character_id})
     if doc is None:
         return None
-    character = next((c for c in doc["characters"] if c["id"] == character_id), None)
-    if character is None:
-        return None
+    character = doc
     if character.get("availability", {}).get("inAdventure", False):
         raise ValueError("Character is out on an adventure - no reaching the shared vault")
-    if doc.get("vault", {}).get("itemBalances", {}).get(item_id, 0) < amount:
+    vault_coibp = await _get_vault(db, address)
+    if vault_coibp["itemBalances"].get(item_id, 0) < amount:
         return None
 
     stack_size, slot_cost = items_catalog.resolve_item_balance_stack(item_id)
@@ -4542,22 +4165,20 @@ async def check_out_item_balance_to_backpack(
     if used + marginal_slots > capacity:
         raise ValueError("Backpack is full")
 
-    doc = await db.players.find_one_and_update(
+    doc = await db.characters.find_one_and_update(
         {
             "address": address,
-            "characters.id": character_id,
-            f"vault.itemBalances.{item_id}": {"$gte": amount},
+            "id": character_id,
         },
         {"$inc": {
-            f"vault.itemBalances.{item_id}": -amount,
-            f"characters.$.gear.itemBalances.backpack.{item_id}": amount,
+            f"gear.itemBalances.backpack.{item_id}": amount,
         }},
         return_document=ReturnDocument.AFTER,
     )
     if doc is None:
         return None
-    await _prune_player_zeros(db, address, doc, [f"vault.itemBalances.{item_id}"])
-    return _doc_to_player(doc)
+    await _inc_vault_itembalances(db, address, {item_id: -amount})
+    return await _build_player(db, address)
 
 
 async def check_out_item_balance_to_saddlepack(
@@ -4576,15 +4197,14 @@ async def check_out_item_balance_to_saddlepack(
     if amount <= 0:
         raise ValueError("amount must be positive")
     db = get_database()
-    doc = await db.players.find_one({"address": address, "characters.id": character_id})
+    doc = await db.characters.find_one({"address": address, "id": character_id})
     if doc is None:
         return None
-    character = next((c for c in doc["characters"] if c["id"] == character_id), None)
-    if character is None:
-        return None
+    character = doc
     if character.get("availability", {}).get("inAdventure", False):
         raise ValueError("Character is out on an adventure - no reaching the shared vault")
-    if doc.get("vault", {}).get("itemBalances", {}).get(item_id, 0) < amount:
+    vault_coibs = await _get_vault(db, address)
+    if vault_coibs["itemBalances"].get(item_id, 0) < amount:
         return None
 
     stack_size, slot_cost = items_catalog.resolve_item_balance_stack(item_id)
@@ -4601,22 +4221,20 @@ async def check_out_item_balance_to_saddlepack(
     if used + marginal_slots > capacity:
         raise ValueError("Saddlepack is full")
 
-    doc = await db.players.find_one_and_update(
+    doc = await db.characters.find_one_and_update(
         {
             "address": address,
-            "characters.id": character_id,
-            f"vault.itemBalances.{item_id}": {"$gte": amount},
+            "id": character_id,
         },
         {"$inc": {
-            f"vault.itemBalances.{item_id}": -amount,
-            f"characters.$.gear.itemBalances.saddlepack.{item_id}": amount,
+            f"gear.itemBalances.saddlepack.{item_id}": amount,
         }},
         return_document=ReturnDocument.AFTER,
     )
     if doc is None:
         return None
-    await _prune_player_zeros(db, address, doc, [f"vault.itemBalances.{item_id}"])
-    return _doc_to_player(doc)
+    await _inc_vault_itembalances(db, address, {item_id: -amount})
+    return await _build_player(db, address)
 
 
 async def check_out_item_balance_to_cart(
@@ -4630,15 +4248,14 @@ async def check_out_item_balance_to_cart(
     if amount <= 0:
         raise ValueError("amount must be positive")
     db = get_database()
-    doc = await db.players.find_one({"address": address, "characters.id": character_id})
+    doc = await db.characters.find_one({"address": address, "id": character_id})
     if doc is None:
         return None
-    character = next((c for c in doc["characters"] if c["id"] == character_id), None)
-    if character is None:
-        return None
+    character = doc
     if character.get("availability", {}).get("inAdventure", False):
         raise ValueError("Character is out on an adventure - no reaching the shared vault")
-    if doc.get("vault", {}).get("itemBalances", {}).get(item_id, 0) < amount:
+    vault_coibc = await _get_vault(db, address)
+    if vault_coibc["itemBalances"].get(item_id, 0) < amount:
         return None
 
     stack_size, slot_cost = items_catalog.resolve_item_balance_stack(item_id)
@@ -4655,58 +4272,57 @@ async def check_out_item_balance_to_cart(
     if used + marginal_slots > capacity:
         raise ValueError("Cart is full")
 
-    doc = await db.players.find_one_and_update(
+    doc = await db.characters.find_one_and_update(
         {
             "address": address,
-            "characters.id": character_id,
-            f"vault.itemBalances.{item_id}": {"$gte": amount},
+            "id": character_id,
         },
         {"$inc": {
-            f"vault.itemBalances.{item_id}": -amount,
-            f"characters.$.gear.itemBalances.cart.{item_id}": amount,
+            f"gear.itemBalances.cart.{item_id}": amount,
         }},
         return_document=ReturnDocument.AFTER,
     )
     if doc is None:
         return None
-    await _prune_player_zeros(db, address, doc, [f"vault.itemBalances.{item_id}"])
-    return _doc_to_player(doc)
+    await _inc_vault_itembalances(db, address, {item_id: -amount})
+    return await _build_player(db, address)
 
 
 async def check_in_item_balance(
     address: str, character_id: str, item_id: str, amount: int = 1, location: str = "camp"
 ) -> Optional[Player]:
     """
-    The reverse of check_out_item_balance - `location` ("camp" or
-    "backpack") picks which of the character's own two itemBalances
-    buckets to deduct from, same reasoning as salvage_item_balance's own
-    `location` param. A backpack row reaching the vault in one direct hop
-    (rather than staging through camp first) matches how a packed item
-    INSTANCE already works (see check_in_item_instance, which accepts
-    "backpack"/"camp"/"saddlepack" alike) - there's no reason an itemBalance
-    row should need an extra step just because it has no instance of its
-    own to read a location off of.
+    The reverse of check_out_item_balance - `location` ("camp",
+    "backpack", "saddlepack", or "cart") picks which bucket to deduct
+    from. Camp lives in the character_camps collection; the others are
+    embedded in the player doc.
     """
     if amount <= 0:
         raise ValueError("amount must be positive")
     db = get_database()
-    doc = await db.players.find_one_and_update(
-        {
-            "address": address,
-            "characters": {
-                "$elemMatch": {"id": character_id, f"gear.itemBalances.{location}.{item_id}": {"$gte": amount}}
+    if location == "camp":
+        # Check camp has enough, decrement it, then increment vault.
+        camp_doc = await db.character_camps.find_one({"address": address, "characterId": character_id})
+        if not camp_doc or camp_doc.get("itemBalances", {}).get(item_id, 0) < amount:
+            return None
+        await _inc_camp_itembalances(db, address, character_id, {item_id: -amount})
+        await _inc_vault_itembalances(db, address, {item_id: amount})
+        doc = await db.characters.find_one({"address": address, "id": character_id})
+    else:
+        doc = await db.characters.find_one_and_update(
+            {"address": address, "id": character_id, f"gear.itemBalances.{location}.{item_id}": {"$gte": amount},
             },
-        },
-        {"$inc": {
-            f"vault.itemBalances.{item_id}": amount,
-            f"characters.$.gear.itemBalances.{location}.{item_id}": -amount,
-        }},
-        return_document=ReturnDocument.AFTER,
-    )
+            {"$inc": {
+                f"gear.itemBalances.{location}.{item_id}": -amount,
+            }},
+            return_document=ReturnDocument.AFTER,
+        )
+        if doc is not None:
+            await _prune_char_zeros(db, address, character_id, doc, [f"gear.itemBalances.{location}.{item_id}"])
+            await _inc_vault_itembalances(db, address, {item_id: amount})
     if doc is None:
         return None
-    await _prune_char_zeros(db, address, character_id, doc, [f"gear.itemBalances.{location}.{item_id}"])
-    return _doc_to_player(doc)
+    return await _build_player(db, address)
 
 
 async def destroy_item_instance(address: str, character_id: str, instance_id: str) -> Optional[Player]:
@@ -4721,18 +4337,28 @@ async def destroy_item_instance(address: str, character_id: str, instance_id: st
     instance exists, or the address/character pair doesn't match.
     """
     db = get_database()
-    doc = await db.players.find_one_and_update(
-        {
-            "address": address,
-            "characters.id": character_id,
-            "vault.items": {"$elemMatch": {"instanceId": instance_id, "location": "pool"}},
-        },
-        {"$pull": {"vault.items": {"instanceId": instance_id}}},
-        return_document=ReturnDocument.AFTER,
+    character_doc = await db.characters.find_one(
+        {"address": address, "id": character_id}, {"_id": 1}
     )
+    if character_doc is None:
+        return None
+    vault_dii = await _get_vault(db, address)
+    instance = next(
+        (i for i in vault_dii["items"] if i["instanceId"] == instance_id and i.get("location") == "pool"),
+        None,
+    )
+    if instance is None:
+        return None
+    new_vault_items_dii = [i for i in vault_dii["items"] if i["instanceId"] != instance_id]
+    await db.player_vaults.update_one(
+        {"address": address},
+        {"$set": {"items": new_vault_items_dii}},
+        upsert=True,
+    )
+    doc = await db.characters.find_one({"address": address, "id": character_id})
     if doc is None:
         return None
-    return _doc_to_player(doc)
+    return await _build_player(db, address)
 
 
 async def destroy_item_balance(address: str, character_id: str, item_id: str, amount: int = 1) -> Optional[Player]:
@@ -4742,19 +4368,19 @@ async def destroy_item_balance(address: str, character_id: str, item_id: str, am
     if amount <= 0:
         raise ValueError("amount must be positive")
     db = get_database()
-    doc = await db.players.find_one_and_update(
-        {
-            "address": address,
-            "characters.id": character_id,
-            f"vault.itemBalances.{item_id}": {"$gte": amount},
-        },
-        {"$inc": {f"vault.itemBalances.{item_id}": -amount}},
-        return_document=ReturnDocument.AFTER,
+    character_doc = await db.characters.find_one(
+        {"address": address, "id": character_id}, {"_id": 1}
     )
+    if character_doc is None:
+        return None
+    vault_dib = await _get_vault(db, address)
+    if vault_dib["itemBalances"].get(item_id, 0) < amount:
+        return None
+    await _inc_vault_itembalances(db, address, {item_id: -amount})
+    doc = await db.characters.find_one({"address": address, "id": character_id})
     if doc is None:
         return None
-    await _prune_player_zeros(db, address, doc, [f"vault.itemBalances.{item_id}"])
-    return _doc_to_player(doc)
+    return await _build_player(db, address)
 
 
 async def destroy_character_item_instance(address: str, character_id: str, instance_id: str) -> Optional[Player]:
@@ -4768,93 +4394,67 @@ async def destroy_character_item_instance(address: str, character_id: str, insta
     character.
     """
     db = get_database()
-    doc = await db.players.find_one_and_update(
-        {
-            "address": address,
-            "characters": {
-                "$elemMatch": {
-                    "id": character_id,
-                    "gear.items": {"$elemMatch": {"instanceId": instance_id, "location": {"$in": ["backpack", "body", "camp", "saddlepack"]}}},
+    doc = await db.characters.find_one_and_update(
+        {"address": address, "id": character_id,
+                    "gear.items": {"$elemMatch": {"instanceId": instance_id, "location": {"$in": ["backpack", "body", "camp", "saddlepack"]},
                 }
             },
         },
-        {"$pull": {"characters.$.gear.items": {"instanceId": instance_id}}},
+        {"$pull": {"gear.items": {"instanceId": instance_id}}},
         return_document=ReturnDocument.AFTER,
     )
     if doc is None:
         return None
-    return _doc_to_player(doc)
+    return await _build_player(db, address)
 
 
 async def destroy_character_item_balance(address: str, character_id: str, item_id: str, amount: int = 1) -> Optional[Player]:
     """Permanently remove `amount` of `item_id` from `character_id`'s own
-    itemBalances - the item-balance counterpart to
-    destroy_character_item_instance."""
+    camp itemBalances (character_camps collection)."""
     if amount <= 0:
         raise ValueError("amount must be positive")
     db = get_database()
-    doc = await db.players.find_one_and_update(
-        {
-            "address": address,
-            "characters": {"$elemMatch": {"id": character_id, f"gear.itemBalances.camp.{item_id}": {"$gte": amount}}},
-        },
-        {"$inc": {f"characters.$.gear.itemBalances.camp.{item_id}": -amount}},
-        return_document=ReturnDocument.AFTER,
-    )
+    camp_doc = await db.character_camps.find_one({"address": address, "characterId": character_id})
+    if not camp_doc or camp_doc.get("itemBalances", {}).get(item_id, 0) < amount:
+        return None
+    await _inc_camp_itembalances(db, address, character_id, {item_id: -amount})
+    doc = await db.characters.find_one({"address": address, "id": character_id})
     if doc is None:
         return None
-    await _prune_char_zeros(db, address, character_id, doc, [f"gear.itemBalances.camp.{item_id}"])
-    return _doc_to_player(doc)
+    return await _build_player(db, address)
 
 
 async def destroy_all_camp(address: str, character_id: str) -> Optional[Player]:
     """
     Permanently deletes everything currently sitting in a character's own
-    camp - gear.items at location:"camp", gear.itemBalances.camp, and
-    gear.resources.camp, all at once. The camp view's own "Burn All" hold
-    action (see CampView.tsx) - unlike a normal single-item destroy,
-    nothing here is ever recovered or credited anywhere, it's just gone.
-    Returns None if camp is already empty, or the address/character pair
-    doesn't match.
+    camp - gear.items at location:"camp" (player doc) and character_camps
+    itemBalances. Returns None if camp is already empty, or the address/
+    character pair doesn't match.
     """
     db = get_database()
-    doc = await db.players.find_one({"address": address, "characters.id": character_id})
+    doc = await db.characters.find_one({"address": address, "id": character_id})
     if doc is None:
         return None
-    character = next((c for c in doc["characters"] if c["id"] == character_id), None)
-    if character is None:
-        return None
+    character = doc
     gear = character.get("gear", {})
+    camp_doc = await db.character_camps.find_one({"address": address, "characterId": character_id})
     has_camp_instances = any(i.get("location") == "camp" for i in gear.get("items", []))
-    has_camp_item_balances = any(qty > 0 for qty in gear.get("itemBalances", {}).get("camp", {}).values())
-    has_camp_resources = any(qty > 0 for qty in gear.get("resources", {}).get("camp", {}).values())
-    if not has_camp_instances and not has_camp_item_balances and not has_camp_resources:
+    has_camp_item_balances = camp_doc and any(qty > 0 for qty in camp_doc.get("itemBalances", {}).values())
+    if not has_camp_instances and not has_camp_item_balances:
         return None
 
-    # Two sequential updates, not one combined $pull+$set - see
-    # salvage_item_instance's own two-phase workaround for the identical
-    # bare-"$" $pull-plus-another-operator combination on the same
-    # matched "characters.$" element; crediting nothing back here (unlike
-    # that case) still doesn't make trusting the untested combination
-    # worth the risk for a permanent, unrecoverable delete.
-    doc = await db.players.find_one_and_update(
-        {"address": address, "characters.id": character_id},
-        {"$pull": {"characters.$.gear.items": {"location": "camp"}}},
+    doc = await db.characters.find_one_and_update(
+        {"address": address, "id": character_id},
+        {"$pull": {"gear.items": {"location": "camp"}}},
         return_document=ReturnDocument.AFTER,
     )
     if doc is None:
         return None
-    doc = await db.players.find_one_and_update(
-        {"address": address, "characters.id": character_id},
-        {"$set": {
-            "characters.$.gear.itemBalances.camp": {},
-            "characters.$.gear.resources.camp": {},
-        }},
-        return_document=ReturnDocument.AFTER,
+    await db.character_camps.update_one(
+        {"address": address, "characterId": character_id},
+        {"$set": {"itemBalances": {}}},
     )
-    if doc is None:
-        return None
-    return _doc_to_player(doc)
+    return await _build_player(db, address)
 
 
 def _max_move_amount(existing: int, stack_size: int, slot_cost: int, free_slots: int, available: int) -> int:
@@ -4900,24 +4500,18 @@ async def move_all_camp_to_backpack(address: str, character_id: str) -> Optional
     or the address/character pair doesn't match.
     """
     db = get_database()
-    doc = await db.players.find_one({"address": address, "characters.id": character_id})
+    doc = await db.characters.find_one({"address": address, "id": character_id})
     if doc is None:
         return None
-    character = next((c for c in doc["characters"] if c["id"] == character_id), None)
-    if character is None:
-        return None
+    character = doc
 
     gear = character.get("gear", {})
     all_items = gear.get("items", [])
     camp_instances = [i for i in all_items if i.get("location") == "camp"]
-    camp_item_balances = gear.get("itemBalances", {}).get("camp", {})
-    camp_resources = gear.get("resources", {}).get("camp", {})
+    camp_doc = await db.character_camps.find_one({"address": address, "characterId": character_id})
+    camp_item_balances = camp_doc.get("itemBalances", {}) if camp_doc else {}
 
-    if (
-        not camp_instances
-        and not any(qty > 0 for qty in camp_item_balances.values())
-        and not any(qty > 0 for qty in camp_resources.values())
-    ):
+    if not camp_instances and not any(qty > 0 for qty in camp_item_balances.values()):
         return None
 
     capacity = items_catalog.backpack_capacity(character)
@@ -4950,36 +4544,18 @@ async def move_all_camp_to_backpack(address: str, character_id: str) -> Optional
         new_camp_item_balances[item_id] = qty - move_amount
         free_slots -= (math.ceil((existing + move_amount) / stack_size) - math.ceil(existing / stack_size)) * slot_cost
 
-    new_backpack_resources = dict(gear.get("resources", {}).get("backpack", {}))
-    new_camp_resources = dict(camp_resources)
-    for resource_id, qty in camp_resources.items():
-        if qty <= 0 or free_slots <= 0:
-            continue
-        stack_size = (
-            items_catalog.RAW_STACK_SIZE if resource_id in RESOURCE_ITEMS_BY_ID else items_catalog.PROCESSED_STACK_SIZE
-        )
-        existing = new_backpack_resources.get(resource_id, 0)
-        move_amount = _max_move_amount(existing, stack_size, 1, free_slots, qty)
-        if move_amount <= 0:
-            continue
-        new_backpack_resources[resource_id] = existing + move_amount
-        new_camp_resources[resource_id] = qty - move_amount
-        free_slots -= math.ceil((existing + move_amount) / stack_size) - math.ceil(existing / stack_size)
-
-    doc = await db.players.find_one_and_update(
-        {"address": address, "characters.id": character_id},
+    doc = await db.characters.find_one_and_update(
+        {"address": address, "id": character_id},
         {"$set": {
-            "characters.$.gear.items": new_items,
-            "characters.$.gear.itemBalances.camp": _strip_zeros(new_camp_item_balances),
-            "characters.$.gear.itemBalances.backpack": _strip_zeros(new_backpack_item_balances),
-            "characters.$.gear.resources.camp": _strip_zeros(new_camp_resources),
-            "characters.$.gear.resources.backpack": _strip_zeros(new_backpack_resources),
+            "gear.items": new_items,
+            "gear.itemBalances.backpack": _strip_zeros(new_backpack_item_balances),
         }},
         return_document=ReturnDocument.AFTER,
     )
     if doc is None:
         return None
-    return _doc_to_player(doc)
+    await _set_camp_itembalances(db, address, character_id, new_camp_item_balances)
+    return await _build_player(db, address)
 
 
 async def move_all_camp_to_bags(address: str, character_id: str) -> Optional[Player]:
@@ -4988,12 +4564,10 @@ async def move_all_camp_to_bags(address: str, character_id: str) -> Optional[Pla
     then saddlepack, then backpack). Whatever doesn't fit stays in camp.
     """
     db = get_database()
-    doc = await db.players.find_one({"address": address, "characters.id": character_id})
+    doc = await db.characters.find_one({"address": address, "id": character_id})
     if doc is None:
         return None
-    character = next((c for c in doc["characters"] if c["id"] == character_id), None)
-    if character is None:
-        return None
+    character = doc
 
     gear = character.get("gear", {})
     all_items = gear.get("items", [])
@@ -5001,13 +4575,12 @@ async def move_all_camp_to_bags(address: str, character_id: str) -> Optional[Pla
         i for i in all_items
         if i.get("location") == "camp" and i["familyId"] not in _CONTAINER_FAMILIES
     ]
-    camp_item_balances = gear.get("itemBalances", {}).get("camp", {})
-    camp_resources = gear.get("resources", {}).get("camp", {})
+    camp_doc = await db.character_camps.find_one({"address": address, "characterId": character_id})
+    camp_item_balances = camp_doc.get("itemBalances", {}) if camp_doc else {}
 
     if (
         not camp_instances
         and not any(qty > 0 for qty in camp_item_balances.values())
-        and not any(qty > 0 for qty in camp_resources.values())
     ):
         return None
 
@@ -5088,66 +4661,20 @@ async def move_all_camp_to_bags(address: str, character_id: str) -> Optional[Pla
 
         new_camp_balances[item_id] = remaining
 
-    # --- resources (fill order: cart -> saddlepack -> backpack, rest stays) ---
-    new_ct_resources = dict(gear.get("resources", {}).get("cart", {}))
-    new_sp_resources = dict(gear.get("resources", {}).get("saddlepack", {}))
-    new_bp_resources = dict(gear.get("resources", {}).get("backpack", {}))
-    new_camp_resources = dict(camp_resources)
-    for resource_id, qty in camp_resources.items():
-        if qty <= 0:
-            continue
-        remaining = qty
-        stack_size = (
-            items_catalog.RAW_STACK_SIZE if resource_id in RESOURCE_ITEMS_BY_ID else items_catalog.PROCESSED_STACK_SIZE
-        )
-
-        if remaining > 0 and ct_free > 0:
-            existing = new_ct_resources.get(resource_id, 0)
-            move = _max_move_amount(existing, stack_size, 1, ct_free, remaining)
-            if move > 0:
-                new_ct_resources[resource_id] = existing + move
-                remaining -= move
-                ct_free -= math.ceil((existing + move) / stack_size) - math.ceil(existing / stack_size)
-
-        if remaining > 0 and sp_free > 0:
-            existing = new_sp_resources.get(resource_id, 0)
-            move = _max_move_amount(existing, stack_size, 1, sp_free, remaining)
-            if move > 0:
-                new_sp_resources[resource_id] = existing + move
-                remaining -= move
-                sp_free -= math.ceil((existing + move) / stack_size) - math.ceil(existing / stack_size)
-
-        if remaining > 0 and bp_free > 0:
-            existing = new_bp_resources.get(resource_id, 0)
-            move = _max_move_amount(existing, stack_size, 1, bp_free, remaining)
-            if move > 0:
-                new_bp_resources[resource_id] = existing + move
-                remaining -= move
-                bp_free -= math.ceil((existing + move) / stack_size) - math.ceil(existing / stack_size)
-
-        new_camp_resources[resource_id] = remaining
-
-    update_set: dict = {
-        "characters.$.gear.items": new_items,
-        "characters.$.gear.itemBalances.camp": _strip_zeros(new_camp_balances),
-        "characters.$.gear.itemBalances.cart": _strip_zeros(new_ct_balances),
-        "characters.$.gear.itemBalances.saddlepack": _strip_zeros(new_sp_balances),
-        "characters.$.gear.itemBalances.backpack": _strip_zeros(new_bp_balances),
-        "characters.$.gear.resources.camp": _strip_zeros(new_camp_resources),
-        "characters.$.gear.resources.cart": _strip_zeros(new_ct_resources),
-        "characters.$.gear.resources.saddlepack": _strip_zeros(new_sp_resources),
-        "characters.$.gear.resources.backpack": _strip_zeros(new_bp_resources),
-    }
-    update: dict = {"$set": update_set}
-
-    doc = await db.players.find_one_and_update(
-        {"address": address, "characters.id": character_id},
-        update,
+    doc = await db.characters.find_one_and_update(
+        {"address": address, "id": character_id},
+        {"$set": {
+            "gear.items": new_items,
+            "gear.itemBalances.cart": _strip_zeros(new_ct_balances),
+            "gear.itemBalances.saddlepack": _strip_zeros(new_sp_balances),
+            "gear.itemBalances.backpack": _strip_zeros(new_bp_balances),
+        }},
         return_document=ReturnDocument.AFTER,
     )
     if doc is None:
         return None
-    return _doc_to_player(doc)
+    await _set_camp_itembalances(db, address, character_id, new_camp_balances)
+    return await _build_player(db, address)
 
 
 _CONTAINER_FAMILIES = frozenset({"backpack", "saddlepack", "cart"})
@@ -5223,12 +4750,15 @@ async def preview_camp_salvage(
     saddlepack, cart). This powers the multi-select salvage flow.
     """
     db = get_database()
-    doc = await db.players.find_one({"address": address, "characters.id": character_id})
+    doc = await db.characters.find_one({"address": address, "id": character_id})
     if doc is None:
         return None
-    character = next((c for c in doc["characters"] if c["id"] == character_id), None)
-    if character is None:
-        return None
+    character = doc
+    # Inject camp itemBalances from its own collection.
+    camp_preview_doc = await db.character_camps.find_one({"address": address, "characterId": character_id})
+    character.setdefault("gear", {})
+    character["gear"].setdefault("itemBalances", {})
+    character["gear"]["itemBalances"]["camp"] = camp_preview_doc.get("itemBalances", {}) if camp_preview_doc else {}
 
     # When filtering by selection, expand selected containers to include
     # their contents: find which container families are selected, then
@@ -5302,12 +4832,15 @@ async def salvage_camp(address: str, character_id: str, selected_ids: List[str])
         return None
     selected = set(selected_ids)
     db = get_database()
-    doc = await db.players.find_one({"address": address, "characters.id": character_id})
+    doc = await db.characters.find_one({"address": address, "id": character_id})
     if doc is None:
         return None
-    character = next((c for c in doc["characters"] if c["id"] == character_id), None)
-    if character is None:
-        return None
+    character = doc
+    # Inject camp itemBalances from its own collection.
+    camp_sc_doc = await db.character_camps.find_one({"address": address, "characterId": character_id})
+    character.setdefault("gear", {})
+    character["gear"].setdefault("itemBalances", {})
+    character["gear"]["itemBalances"]["camp"] = camp_sc_doc.get("itemBalances", {}) if camp_sc_doc else {}
 
     salvaged_instance_ids: set = set()
     salvaged_balance_ids: set = set()
@@ -5340,9 +4873,9 @@ async def salvage_camp(address: str, character_id: str, selected_ids: List[str])
         instance for instance in gear.get("items", [])
         if not (instance.get("location") in salvage_locations and instance["instanceId"] in salvaged_instance_ids)
     ]
-    # Remove salvaged balances from camp and container buckets.
+    # Remove salvaged balances from embedded buckets (backpack, saddlepack, cart).
     update_sets: Dict[str, object] = {}
-    for bucket in ("camp", "backpack", "saddlepack", "cart"):
+    for bucket in ("backpack", "saddlepack", "cart"):
         old_balances = gear.get("itemBalances", {}).get(bucket, {})
         if not old_balances:
             continue
@@ -5351,34 +4884,35 @@ async def salvage_camp(address: str, character_id: str, selected_ids: List[str])
             if item_id not in salvaged_balance_ids and qty > 0
         }
         if new_balances != old_balances:
-            update_sets[f"characters.$.gear.itemBalances.{bucket}"] = new_balances
-    new_camp_resources = dict(gear.get("resources", {}).get("camp", {}))
-    for rid, qty in recovered_totals.items():
-        new_camp_resources[rid] = new_camp_resources.get(rid, 0) + qty
-
-    sets = {
-        "characters.$.gear.items": new_items,
-        "characters.$.gear.resources.camp": new_camp_resources,
-        **update_sets,
+            update_sets[f"gear.itemBalances.{bucket}"] = new_balances
+    # Camp balances — remove salvaged ids, add recoveries, then write to character_camps.
+    old_camp = character["gear"]["itemBalances"].get("camp", {})
+    new_camp_balances = {
+        item_id: qty for item_id, qty in old_camp.items()
+        if item_id not in salvaged_balance_ids and qty > 0
     }
-    doc = await db.players.find_one_and_update(
-        {"address": address, "characters.id": character_id},
+    for rid, qty in recovered_totals.items():
+        new_camp_balances[rid] = new_camp_balances.get(rid, 0) + qty
+
+    sets: Dict[str, object] = {"gear.items": new_items}
+    sets.update(update_sets)
+    doc = await db.characters.find_one_and_update(
+        {"address": address, "id": character_id},
         {"$set": sets},
         return_document=ReturnDocument.AFTER,
     )
     if doc is None:
         return None
-    return _doc_to_player(doc)
+    await _set_camp_itembalances(db, address, character_id, new_camp_balances)
+    return await _build_player(db, address)
 
 
-def _recyclable_vault_entries(doc: dict, character: dict):
+def _recyclable_vault_entries(vault: dict, character: dict):
     """
     Yields (kind, id, entry, count) for every recyclable thing in the
-    player's shared vault (instances + itemBalances). All rows are
+    character's vault (instances + itemBalances). All rows are
     preselected - the vault has no container nesting to worry about.
     """
-    vault = doc.get("vault", {})
-    instances_by_id = {i["instanceId"]: i for i in vault.get("items", [])}
     for instance in vault.get("items", []):
         entry = items_catalog.ITEM_CATALOG_ENTRIES_BY_ID.get(instance["itemId"])
         if entry is None or not recycling.has_recipe(entry.family_id):
@@ -5405,20 +4939,19 @@ async def preview_vault_salvage(
     limits the quantity per balance item (partial-stack selection).
     """
     db = get_database()
-    doc = await db.players.find_one({"address": address, "characters.id": character_id})
+    doc = await db.characters.find_one({"address": address, "id": character_id})
     if doc is None:
         return None
-    character = next((c for c in doc["characters"] if c["id"] == character_id), None)
-    if character is None:
-        return None
+    character = doc
 
     allow_ids: Optional[set] = set(selected_ids) if selected_ids else None
-    player_tools = doc.get("crafting", {}).get("tools", {})
-    player_items = doc.get("vault", {}).get("items", [])
-    vault_instances_by_id = {i["instanceId"]: i for i in doc.get("vault", {}).get("items", [])}
+    vault_pvs = await _get_vault(db, address)
+    player_tools = vault_pvs["itemBalances"]
+    player_items = vault_pvs["items"]
+    vault_instances_by_id = {i["instanceId"]: i for i in vault_pvs["items"]}
 
     rows: List[Dict[str, object]] = []
-    for kind, entry_id, entry, count in _recyclable_vault_entries(doc, character):
+    for kind, entry_id, entry, count in _recyclable_vault_entries(vault_pvs, character):
         if allow_ids is not None and entry_id not in allow_ids:
             continue
         if amount_caps and kind == "balance" and entry_id in amount_caps:
@@ -5457,22 +4990,21 @@ async def salvage_vault(
         return None
     selected = set(selected_ids)
     db = get_database()
-    doc = await db.players.find_one({"address": address, "characters.id": character_id})
+    doc = await db.characters.find_one({"address": address, "id": character_id})
     if doc is None:
         return None
-    character = next((c for c in doc["characters"] if c["id"] == character_id), None)
-    if character is None:
-        return None
+    character = doc
 
     salvaged_instance_ids: set = set()
     salvaged_balance_amounts: Dict[str, int] = {}
     recovered_totals: Dict[str, int] = {}
 
-    player_tools = doc.get("crafting", {}).get("tools", {})
-    player_items = doc.get("vault", {}).get("items", [])
+    vault_sv = await _get_vault(db, address)
+    player_tools = vault_sv["itemBalances"]
+    player_items = vault_sv["items"]
     vault_instances_by_id = {i["instanceId"]: i for i in player_items}
 
-    for kind, entry_id, entry, count in _recyclable_vault_entries(doc, character):
+    for kind, entry_id, entry, count in _recyclable_vault_entries(vault_sv, character):
         if entry_id not in selected:
             continue
         if amount_caps and kind == "balance" and entry_id in amount_caps:
@@ -5493,36 +5025,28 @@ async def salvage_vault(
     if not salvaged_instance_ids and not salvaged_balance_amounts:
         return None
 
-    vault = doc.get("vault", {})
     new_vault_items = [
-        instance for instance in vault.get("items", [])
+        instance for instance in vault_sv["items"]
         if instance["instanceId"] not in salvaged_instance_ids
     ]
-    new_vault_balances = {}
-    for item_id, qty in vault.get("itemBalances", {}).items():
-        if item_id in salvaged_balance_amounts:
-            remaining = qty - salvaged_balance_amounts[item_id]
-            if remaining > 0:
-                new_vault_balances[item_id] = remaining
-        elif qty > 0:
-            new_vault_balances[item_id] = qty
-    new_crafting_resources = dict(doc.get("crafting", {}).get("resources", {}))
+    # Build net vault balance delta: deduct salvaged, credit recovered.
+    vault_balance_inc_sv: Dict[str, int] = {}
+    for item_id, count in salvaged_balance_amounts.items():
+        vault_balance_inc_sv[item_id] = vault_balance_inc_sv.get(item_id, 0) - count
     for rid, qty in recovered_totals.items():
-        new_crafting_resources[rid] = new_crafting_resources.get(rid, 0) + qty
+        vault_balance_inc_sv[rid] = vault_balance_inc_sv.get(rid, 0) + qty
 
-    sets = {
-        "vault.items": new_vault_items,
-        "vault.itemBalances": new_vault_balances,
-        "crafting.resources": new_crafting_resources,
-    }
-    doc = await db.players.find_one_and_update(
-        {"address": address, "characters.id": character_id},
-        {"$set": sets},
-        return_document=ReturnDocument.AFTER,
+    await db.player_vaults.update_one(
+        {"address": address},
+        {"$set": {"items": new_vault_items}},
+        upsert=True,
     )
+    if vault_balance_inc_sv:
+        await _inc_vault_itembalances(db, address, vault_balance_inc_sv)
+    doc = await db.characters.find_one({"address": address, "id": character_id})
     if doc is None:
         return None
-    return _doc_to_player(doc)
+    return await _build_player(db, address)
 
 
 async def bulk_move_camp(
@@ -5530,36 +5054,22 @@ async def bulk_move_camp(
     destination: str,
     instance_ids: List[str],
     balance_entries: List[dict],
-    resource_entries: List[dict],
 ) -> Optional[Player]:
     """
-    Move multiple items/resources from a character's camp to a destination
-    in one DB operation.
-
-    destination: "backpack" | "saddlepack" | "cart" | "vault"
-
-    instance_ids: list of instanceIds to move (items with location:"camp")
-    balance_entries: list of {"id": item_id, "amount": int} for itemBalances.camp
-    resource_entries: list of {"id": resource_id, "amount": int} for resources.camp
-
-    Items whose family has backpackable=False are silently skipped for
-    backpack/saddlepack destinations. Capacity is enforced: items that
-    don't fit are silently skipped. For vault destination, no capacity
-    limit applies.
+    Move multiple items from a character's camp to a destination in one
+    DB operation. destination: "backpack" | "saddlepack" | "cart" | "vault"
     """
     db = get_database()
-    doc = await db.players.find_one({"address": address, "characters.id": character_id})
+    doc = await db.characters.find_one({"address": address, "id": character_id})
     if doc is None:
         return None
-    character = next((c for c in doc["characters"] if c["id"] == character_id), None)
-    if character is None:
-        return None
+    character = doc
 
     gear = character.get("gear", {})
     items_list = gear.get("items", [])
     items_by_iid = {i["instanceId"]: i for i in items_list}
-    camp_balances = gear.get("itemBalances", {}).get("camp", {})
-    camp_resources = gear.get("resources", {}).get("camp", {})
+    camp_bmc_doc = await db.character_camps.find_one({"address": address, "characterId": character_id})
+    camp_balances = camp_bmc_doc.get("itemBalances", {}) if camp_bmc_doc else {}
 
     to_bag = destination in ("backpack", "saddlepack", "cart")
 
@@ -5581,7 +5091,6 @@ async def bulk_move_camp(
 
     moved_instance_ids: set = set()
     moved_balance_ids: Dict[str, int] = {}
-    moved_resource_ids: Dict[str, int] = {}
 
     # Instances
     for iid in instance_ids:
@@ -5622,25 +5131,7 @@ async def bulk_move_camp(
             remaining -= marginal
         moved_balance_ids[item_id] = amount
 
-    # Resources (only for backpack/cart/vault — no camp-resource-to-saddlepack endpoint exists)
-    for entry in resource_entries:
-        res_id = entry["id"]
-        amount = entry.get("amount", 0)
-        held = camp_resources.get(res_id, 0)
-        if amount <= 0 or held < amount:
-            continue
-        if destination == "saddlepack":
-            continue
-        if destination in ("backpack", "cart"):
-            stack_size = items_catalog.RAW_STACK_SIZE if res_id in RESOURCE_ITEMS_BY_ID else items_catalog.PROCESSED_STACK_SIZE
-            existing = gear.get("resources", {}).get(destination, {}).get(res_id, 0)
-            marginal = math.ceil((existing + amount) / stack_size) - math.ceil(existing / stack_size)
-            if marginal > remaining:
-                continue
-            remaining -= marginal
-        moved_resource_ids[res_id] = amount
-
-    if not moved_instance_ids and not moved_balance_ids and not moved_resource_ids:
+    if not moved_instance_ids and not moved_balance_ids:
         return None
 
     if destination == "vault":
@@ -5650,6 +5141,7 @@ async def bulk_move_camp(
             "cart": items_catalog.has_cart_equipped(character),
         }
         clear_sets: Dict[str, object] = {}
+        cascade_vault_inc: Dict[str, int] = {}
         for iid in list(moved_instance_ids):
             inst = items_by_iid.get(iid)
             if inst and inst.get("familyId") in _CONTAINER_FAMILIES:
@@ -5660,50 +5152,43 @@ async def bulk_move_camp(
                             moved_instance_ids.add(other["instanceId"])
                     for bal_id, qty in gear.get("itemBalances", {}).get(bucket, {}).items():
                         if qty > 0:
-                            clear_sets.setdefault("_bal_inc", {})[f"vault.itemBalances.{bal_id}"] = (
-                                clear_sets.get("_bal_inc", {}).get(f"vault.itemBalances.{bal_id}", 0) + qty
-                            )
-                    for rid, qty in gear.get("resources", {}).get(bucket, {}).items():
-                        if qty > 0:
-                            clear_sets.setdefault("_bal_inc", {})[f"crafting.resources.{rid}"] = (
-                                clear_sets.get("_bal_inc", {}).get(f"crafting.resources.{rid}", 0) + qty
-                            )
-                    clear_sets[f"characters.$[char].gear.itemBalances.{bucket}"] = {}
-                    clear_sets[f"characters.$[char].gear.resources.{bucket}"] = {}
-
-        cascade_inc = clear_sets.pop("_bal_inc", {})
+                            cascade_vault_inc[bal_id] = cascade_vault_inc.get(bal_id, 0) + qty
+                    clear_sets[f"gear.itemBalances.{bucket}"] = {}
 
         new_char_items = [i for i in items_list if i["instanceId"] not in moved_instance_ids]
         pooled = [
             {**items_by_iid[iid], "location": "pool", "slotRef": []}
             for iid in moved_instance_ids
         ]
-        inc: Dict[str, int] = {}
+        vault_balance_inc_bmc: Dict[str, int] = {}
         for item_id, amount in moved_balance_ids.items():
-            inc[f"characters.$[char].gear.itemBalances.camp.{item_id}"] = -amount
-            inc[f"vault.itemBalances.{item_id}"] = amount
-        for res_id, amount in moved_resource_ids.items():
-            inc[f"characters.$[char].gear.resources.camp.{res_id}"] = -amount
-            inc[f"crafting.resources.{res_id}"] = amount
-        for key, val in cascade_inc.items():
-            inc[key] = inc.get(key, 0) + val
+            vault_balance_inc_bmc[item_id] = amount
+        for bal_id, qty in cascade_vault_inc.items():
+            vault_balance_inc_bmc[bal_id] = vault_balance_inc_bmc.get(bal_id, 0) + qty
 
         update: Dict = {
-            "$set": {"characters.$[char].gear.items": new_char_items, **clear_sets},
+            "$set": {"gear.items": new_char_items, **clear_sets},
         }
-        if pooled:
-            update["$push"] = {"vault.items": {"$each": pooled}}
-        if inc:
-            update["$inc"] = inc
 
-        doc = await db.players.find_one_and_update(
-            {"address": address, "characters": {"$elemMatch": {"id": character_id}}},
+        doc = await db.characters.find_one_and_update(
+        {"address": address, "id": character_id},
             update,
-            array_filters=[{"char.id": character_id}],
             return_document=ReturnDocument.AFTER,
         )
+        if doc is not None:
+            if moved_balance_ids:
+                await _inc_camp_itembalances(db, address, character_id,
+                                             {k: -v for k, v in moved_balance_ids.items()})
+            if vault_balance_inc_bmc:
+                await _inc_vault_itembalances(db, address, vault_balance_inc_bmc)
+            if pooled:
+                await db.player_vaults.update_one(
+                    {"address": address},
+                    {"$push": {"items": {"$each": pooled}}},
+                    upsert=True,
+                )
     else:
-        # backpack or saddlepack — instances change location in place
+        # backpack/saddlepack/cart — instances change location in place
         new_items = []
         for i in items_list:
             if i["instanceId"] in moved_instance_ids:
@@ -5711,29 +5196,27 @@ async def bulk_move_camp(
             else:
                 new_items.append(i)
 
-        sets: Dict[str, object] = {"characters.$[char].gear.items": new_items}
-        inc = {}
+        sets: Dict[str, object] = {"gear.items": new_items}
+        dest_inc: Dict[str, int] = {}
         for item_id, amount in moved_balance_ids.items():
-            inc[f"characters.$[char].gear.itemBalances.camp.{item_id}"] = -amount
-            inc[f"characters.$[char].gear.itemBalances.{destination}.{item_id}"] = amount
-        for res_id, amount in moved_resource_ids.items():
-            inc[f"characters.$[char].gear.resources.camp.{res_id}"] = -amount
-            inc[f"characters.$[char].gear.resources.{destination}.{res_id}"] = amount
+            dest_inc[f"gear.itemBalances.{destination}.{item_id}"] = amount
 
         update = {"$set": sets}
-        if inc:
-            update["$inc"] = inc
+        if dest_inc:
+            update["$inc"] = dest_inc
 
-        doc = await db.players.find_one_and_update(
-            {"address": address, "characters": {"$elemMatch": {"id": character_id}}},
+        doc = await db.characters.find_one_and_update(
+        {"address": address, "id": character_id},
             update,
-            array_filters=[{"char.id": character_id}],
             return_document=ReturnDocument.AFTER,
         )
+        if doc is not None and moved_balance_ids:
+            await _inc_camp_itembalances(db, address, character_id,
+                                         {k: -v for k, v in moved_balance_ids.items()})
 
     if doc is None:
         return None
-    return _doc_to_player(doc)
+    return await _build_player(db, address)
 
 
 async def bulk_move_vault(
@@ -5756,19 +5239,17 @@ async def bulk_move_vault(
     into camp. For camp: everything goes straight to camp.
     """
     db = get_database()
-    doc = await db.players.find_one({"address": address, "characters.id": character_id})
+    doc = await db.characters.find_one({"address": address, "id": character_id})
     if doc is None:
         return None
-    character = next((c for c in doc["characters"] if c["id"] == character_id), None)
-    if character is None:
-        return None
+    character = doc
     if character.get("availability", {}).get("inAdventure", False):
         return None
 
-    vault = doc.get("vault", {})
-    vault_items = vault.get("items", [])
+    vault_bmv = await _get_vault(db, address)
+    vault_items = vault_bmv["items"]
     vault_items_by_iid = {i["instanceId"]: i for i in vault_items}
-    vault_balances = vault.get("itemBalances", {})
+    vault_balances = vault_bmv["itemBalances"]
 
     capacity_gated = destination != "camp"
     remaining = 0
@@ -5847,30 +5328,47 @@ async def bulk_move_vault(
         for iid in camp_instance_ids
     ]
 
-    sets: Dict[str, object] = {"vault.items": new_vault_items}
-    inc: Dict[str, int] = {}
+    char_inc: Dict[str, int] = {}
+    vault_dec_bmv: Dict[str, int] = {}
     for item_id, amount in dest_balance_ids.items():
-        inc[f"vault.itemBalances.{item_id}"] = -amount
-        inc[f"characters.$[char].gear.itemBalances.{destination}.{item_id}"] = amount
+        vault_dec_bmv[item_id] = vault_dec_bmv.get(item_id, 0) - amount
+        if destination != "camp":
+            char_inc[f"gear.itemBalances.{destination}.{item_id}"] = amount
     for item_id, amount in camp_balance_ids.items():
-        inc[f"vault.itemBalances.{item_id}"] = -amount
-        inc[f"characters.$[char].gear.itemBalances.camp.{item_id}"] = amount
+        vault_dec_bmv[item_id] = vault_dec_bmv.get(item_id, 0) - amount
 
-    update: Dict = {"$set": sets}
+    update: Dict = {}
     if char_bound:
-        update["$push"] = {"characters.$[char].gear.items": {"$each": char_bound}}
-    if inc:
-        update["$inc"] = inc
+        update["$push"] = {"gear.items": {"$each": char_bound}}
+    if char_inc:
+        update["$inc"] = char_inc
 
-    doc = await db.players.find_one_and_update(
-        {"address": address, "characters": {"$elemMatch": {"id": character_id}}},
-        update,
-        array_filters=[{"char.id": character_id}],
-        return_document=ReturnDocument.AFTER,
-    )
+    if update:
+        doc = await db.characters.find_one_and_update(
+        {"address": address, "id": character_id},
+            update,
+            return_document=ReturnDocument.AFTER,
+        )
+    else:
+        doc = await db.characters.find_one({"address": address, "id": character_id})
     if doc is None:
         return None
-    return _doc_to_player(doc)
+    # Update player_vaults: set new items list and decrement balances.
+    await db.player_vaults.update_one(
+        {"address": address},
+        {"$set": {"items": new_vault_items}},
+        upsert=True,
+    )
+    if vault_dec_bmv:
+        await _inc_vault_itembalances(db, address, vault_dec_bmv)
+    # Credit camp balances (destination="camp" dest_balance_ids, or overflow camp_balance_ids).
+    camp_credits = {}
+    if destination == "camp":
+        camp_credits.update(dest_balance_ids)
+    camp_credits.update(camp_balance_ids)
+    if camp_credits:
+        await _inc_camp_itembalances(db, address, character_id, camp_credits)
+    return await _build_player(db, address)
 
 
 def _container_recyclable_entries(character: dict, location: str):
@@ -5910,953 +5408,6 @@ def _equipped_container_instance(character: dict, family_id: str) -> Optional[di
     )
 
 
-def _worn_backpack_instance(character: dict) -> Optional[dict]:
-    return _equipped_container_instance(character, "backpack")
-
-
-async def preview_backpack_salvage(address: str, character_id: str) -> Optional[List[Dict[str, object]]]:
-    """
-    Read-only: the worn backpack's own salvage preview (what its own
-    recipe's recoverable chain would hand back) as row 0 (isContainer=
-    True), followed by every recyclable thing actually packed inside it
-    (_backpack_recyclable_entries) - the Salvage popup's own preview list
-    (see InventoryTab.tsx's BackpackSalvagePopup). Scored the same way a
-    character-side salvage always is (character.tools only - see
-    salvage_item_instance's own docstring). An entry whose family has no
-    recipe (can't be salvaged) is silently left out, same as
-    preview_camp_salvage. Returns None if the address/character pair
-    doesn't match, or no backpack is currently worn.
-    """
-    db = get_database()
-    doc = await db.players.find_one({"address": address, "characters.id": character_id})
-    if doc is None:
-        return None
-    character = next((c for c in doc["characters"] if c["id"] == character_id), None)
-    if character is None:
-        return None
-
-    backpack = _worn_backpack_instance(character)
-    if backpack is None:
-        return None
-
-    rows: List[Dict[str, object]] = []
-    backpack_entry = items_catalog.ITEM_CATALOG_ENTRIES_BY_ID.get(backpack["itemId"])
-    instances_by_id = {i["instanceId"]: i for i in character.get("gear", {}).get("items", [])}
-    if backpack_entry is not None:
-        bp_condition = _instance_condition(backpack, backpack_entry)
-        recoveries = recycling.resolve_salvage_preview(
-            backpack_entry.family_id, backpack_entry.tier, character, {}, [], 1,
-            condition=bp_condition,
-        )
-        if recoveries:
-            rows.append({
-                "id": backpack["instanceId"],
-                "kind": "instance",
-                "name": backpack_entry.name,
-                "tier": backpack_entry.tier,
-                "owned": 1,
-                "isContainer": True,
-                "recoveries": recoveries,
-                "condition": bp_condition,
-            })
-
-    for kind, entry_id, entry, count in _backpack_recyclable_entries(character):
-        condition = _instance_condition(instances_by_id.get(entry_id), entry) if kind == "instance" else "new"
-        recoveries = recycling.resolve_salvage_preview(entry.family_id, entry.tier, character, {}, [], count, condition=condition)
-        if not recoveries:
-            continue
-        rows.append({
-            "id": entry_id,
-            "kind": kind,
-            "name": entry.name,
-            "tier": entry.tier,
-            "owned": count,
-            "isContainer": False,
-            "recoveries": recoveries,
-            "condition": condition,
-        })
-    return rows
-
-
-async def salvage_backpack(address: str, character_id: str, selected_ids: List[str]) -> Optional[Player]:
-    """
-    The backpack's own Salvage popup bulk action (see
-    BackpackSalvagePopup in InventoryTab.tsx) - salvages every selected
-    packed item/itemBalance (ids from preview_backpack_salvage's own
-    rows), and the worn backpack instance itself too if ITS row was also
-    selected (unchecked by default in the UI - a much more drastic pick).
-
-    Where the recovered raw/processed materials (and, when the backpack
-    itself is selected, anything else it was carrying) end up:
-
-    - Backpack NOT selected (survives): every recovered material line is
-      packed back into the surviving backpack if there's room for that
-      WHOLE line - checked one line at a time against a RUNNING slot
-      count, since placing one line changes how much room is left for the
-      next (same never-a-partial-fill-per-line rule
-      _salvage_resource_updates/load_resource_to_backpack already
-      enforce, just applied per line instead of atomically for the whole
-      batch - a bulk salvage naturally recovers more than a single item
-      does, so some lines fitting while others overflow is the normal
-      case here, not an edge case). Whatever doesn't fit overflows to
-      camp (in_adventure) or the player's own shared crafting stock (not
-      in_adventure) - saddlepack is deliberately NOT part of this
-      fallback (unlike a single-item salvage's own chain); a bulk Salvage
-      always targets the backpack specifically.
-    - Backpack selected (destroyed): there's no backpack left to pack
-      anything back into, so every recovered material line (salvaged
-      items' output, the backpack's own recovery, AND any raw/processed
-      materials already sitting loose in gear.resources.backpack) goes
-      straight to camp (in_adventure) or the player's own shared crafting
-      stock (not in_adventure) - no capacity check needed, neither camp
-      nor the shared stock has a slot ceiling. Any packed item/
-      itemBalance that WASN'T selected for recycling is relocated there
-      too (as itself, not salvaged) rather than silently discarded along
-      with the backpack that held it - same "cascade the whole storage
-      bucket out" idea unequip_item's own vault-bound branch already
-      applies when the worn backpack leaves some other way, just also
-      landing in camp while in_adventure instead of only ever the vault.
-
-    An id that no longer qualifies (already gone, or no longer has a
-    recipe) is silently skipped, same as salvage_camp. Returns None if
-    nothing in `selected_ids` actually salvaged, no backpack is currently
-    worn, or the address/character pair doesn't match.
-    """
-    if not selected_ids:
-        return None
-    selected = set(selected_ids)
-    db = get_database()
-    doc = await db.players.find_one({"address": address, "characters.id": character_id})
-    if doc is None:
-        return None
-    character = next((c for c in doc["characters"] if c["id"] == character_id), None)
-    if character is None:
-        return None
-
-    backpack = _worn_backpack_instance(character)
-    if backpack is None:
-        return None
-    backpack_entry = items_catalog.ITEM_CATALOG_ENTRIES_BY_ID.get(backpack["itemId"])
-    backpack_selected = backpack["instanceId"] in selected
-
-    salvaged_instance_ids: set = set()
-    salvaged_balance_ids: set = set()
-    recovered_totals: Dict[str, int] = {}
-
-    instances_by_id = {i["instanceId"]: i for i in character.get("gear", {}).get("items", [])}
-    if backpack_selected and backpack_entry is not None:
-        bp_condition = _instance_condition(backpack, backpack_entry)
-        recoveries = recycling.resolve_salvage_preview(
-            backpack_entry.family_id, backpack_entry.tier, character, {}, [], 1,
-            condition=bp_condition,
-        )
-        for rid, qty in recycling.flatten_recovery(recoveries).items():
-            recovered_totals[rid] = recovered_totals.get(rid, 0) + qty
-
-    for kind, entry_id, entry, count in _backpack_recyclable_entries(character):
-        if entry_id not in selected:
-            continue
-        condition = _instance_condition(instances_by_id.get(entry_id), entry) if kind == "instance" else "new"
-        recoveries = recycling.resolve_salvage_preview(entry.family_id, entry.tier, character, {}, [], count, condition=condition)
-        amounts = recycling.flatten_recovery(recoveries) if recoveries else {}
-        for rid, qty in amounts.items():
-            recovered_totals[rid] = recovered_totals.get(rid, 0) + qty
-        if kind == "instance":
-            salvaged_instance_ids.add(entry_id)
-        else:
-            salvaged_balance_ids.add(entry_id)
-
-    if not backpack_selected and not salvaged_instance_ids and not salvaged_balance_ids:
-        return None
-
-    gear = character.get("gear", {})
-    in_adventure = character.get("availability", {}).get("inAdventure", False)
-
-    set_ops: Dict[str, object] = {}
-    inc_ops: Dict[str, int] = {}
-    push_ops: Dict[str, object] = {}
-
-    new_backpack_balances = {
-        item_id: qty for item_id, qty in gear.get("itemBalances", {}).get("backpack", {}).items()
-        if item_id not in salvaged_balance_ids and qty > 0
-    }
-
-    if backpack_selected:
-        remaining_instances = [
-            i for i in gear.get("items", [])
-            if i.get("location") == "backpack" and i["instanceId"] not in salvaged_instance_ids
-        ]
-        loose_resources = {
-            rid: qty for rid, qty in gear.get("resources", {}).get("backpack", {}).items() if qty > 0
-        }
-        remaining_ids = {i["instanceId"] for i in remaining_instances}
-        kept_items = [
-            i for i in gear.get("items", [])
-            if i["instanceId"] != backpack["instanceId"] and i["instanceId"] not in remaining_ids
-        ]
-
-        if in_adventure:
-            set_ops["characters.$[char].gear.items"] = kept_items + [
-                {**i, "location": "camp", "slotRef": []} for i in remaining_instances
-            ]
-            new_camp_balances = dict(gear.get("itemBalances", {}).get("camp", {}))
-            for item_id, qty in new_backpack_balances.items():
-                new_camp_balances[item_id] = new_camp_balances.get(item_id, 0) + qty
-            new_camp_resources = dict(gear.get("resources", {}).get("camp", {}))
-            for rid, qty in {**recovered_totals}.items():
-                new_camp_resources[rid] = new_camp_resources.get(rid, 0) + qty
-            for rid, qty in loose_resources.items():
-                new_camp_resources[rid] = new_camp_resources.get(rid, 0) + qty
-            set_ops["characters.$[char].gear.itemBalances.camp"] = _strip_zeros(new_camp_balances)
-            set_ops["characters.$[char].gear.resources.camp"] = _strip_zeros(new_camp_resources)
-        else:
-            set_ops["characters.$[char].gear.items"] = kept_items
-            if remaining_instances:
-                push_ops["vault.items"] = {
-                    "$each": [{**i, "location": "pool", "slotRef": []} for i in remaining_instances]
-                }
-            for item_id, qty in new_backpack_balances.items():
-                inc_ops[f"vault.itemBalances.{item_id}"] = inc_ops.get(f"vault.itemBalances.{item_id}", 0) + qty
-            for rid, qty in recovered_totals.items():
-                inc_ops[f"crafting.resources.{rid}"] = inc_ops.get(f"crafting.resources.{rid}", 0) + qty
-            for rid, qty in loose_resources.items():
-                inc_ops[f"crafting.resources.{rid}"] = inc_ops.get(f"crafting.resources.{rid}", 0) + qty
-
-        set_ops["characters.$[char].gear.itemBalances.backpack"] = {}
-        set_ops["characters.$[char].gear.resources.backpack"] = {}
-    else:
-        new_items = [
-            i for i in gear.get("items", [])
-            if not (i.get("location") == "backpack" and i["instanceId"] in salvaged_instance_ids)
-        ]
-        set_ops["characters.$[char].gear.items"] = new_items
-        set_ops["characters.$[char].gear.itemBalances.backpack"] = new_backpack_balances
-
-        character_after_removal = {
-            **character,
-            "gear": {**gear, "items": new_items, "itemBalances": {**gear.get("itemBalances", {}), "backpack": new_backpack_balances}},
-        }
-        used = items_catalog.backpack_slots_used(character_after_removal)
-        capacity = items_catalog.backpack_capacity(character)
-
-        new_backpack_resources = dict(gear.get("resources", {}).get("backpack", {}))
-        overflow: Dict[str, int] = {}
-        for rid, qty in recovered_totals.items():
-            stack_size = items_catalog.RAW_STACK_SIZE if rid in RESOURCE_ITEMS_BY_ID else items_catalog.PROCESSED_STACK_SIZE
-            existing = new_backpack_resources.get(rid, 0)
-            marginal = math.ceil((existing + qty) / stack_size) - math.ceil(existing / stack_size)
-            if used + marginal <= capacity:
-                new_backpack_resources[rid] = existing + qty
-                used += marginal
-            else:
-                overflow[rid] = overflow.get(rid, 0) + qty
-        set_ops["characters.$[char].gear.resources.backpack"] = new_backpack_resources
-
-        if overflow:
-            if in_adventure:
-                new_camp_resources = dict(gear.get("resources", {}).get("camp", {}))
-                for rid, qty in overflow.items():
-                    new_camp_resources[rid] = new_camp_resources.get(rid, 0) + qty
-                set_ops["characters.$[char].gear.resources.camp"] = new_camp_resources
-            else:
-                for rid, qty in overflow.items():
-                    inc_ops[f"crafting.resources.{rid}"] = inc_ops.get(f"crafting.resources.{rid}", 0) + qty
-
-    update: Dict = {"$set": set_ops}
-    if inc_ops:
-        update["$inc"] = inc_ops
-    if push_ops:
-        update["$push"] = push_ops
-
-    doc = await db.players.find_one_and_update(
-        {"address": address, "characters.id": character_id},
-        update,
-        array_filters=[{"char.id": character_id}],
-        return_document=ReturnDocument.AFTER,
-    )
-    if doc is None:
-        return None
-    return _doc_to_player(doc)
-
-
-_CONTAINER_META = {
-    "saddlepack": {
-        "location": "saddlepack",
-        "family_id": "saddlepack",
-        "slots_used_fn": items_catalog.saddlepack_slots_used,
-        "capacity_fn": items_catalog.saddlepack_capacity,
-    },
-    "cart": {
-        "location": "cart",
-        "family_id": "cart",
-        "slots_used_fn": items_catalog.cart_slots_used,
-        "capacity_fn": items_catalog.cart_capacity,
-    },
-}
-
-
-async def preview_container_salvage(
-    address: str, character_id: str, container_type: str
-) -> Optional[List[Dict[str, object]]]:
-    """Generalized salvage preview for saddlepack/cart containers."""
-    meta = _CONTAINER_META.get(container_type)
-    if meta is None:
-        return None
-    db = get_database()
-    doc = await db.players.find_one({"address": address, "characters.id": character_id})
-    if doc is None:
-        return None
-    character = next((c for c in doc["characters"] if c["id"] == character_id), None)
-    if character is None:
-        return None
-
-    container = _equipped_container_instance(character, meta["family_id"])
-    if container is None:
-        return None
-
-    rows: List[Dict[str, object]] = []
-    container_entry = items_catalog.ITEM_CATALOG_ENTRIES_BY_ID.get(container["itemId"])
-    instances_by_id = {i["instanceId"]: i for i in character.get("gear", {}).get("items", [])}
-    if container_entry is not None:
-        cond = _instance_condition(container, container_entry)
-        recoveries = recycling.resolve_salvage_preview(
-            container_entry.family_id, container_entry.tier, character, {}, [], 1,
-            condition=cond,
-        )
-        if recoveries:
-            rows.append({
-                "id": container["instanceId"],
-                "kind": "instance",
-                "name": container_entry.name,
-                "tier": container_entry.tier,
-                "owned": 1,
-                "isContainer": True,
-                "recoveries": recoveries,
-                "condition": cond,
-            })
-
-    for kind, entry_id, entry, count in _container_recyclable_entries(character, meta["location"]):
-        condition = _instance_condition(instances_by_id.get(entry_id), entry) if kind == "instance" else "new"
-        recoveries = recycling.resolve_salvage_preview(entry.family_id, entry.tier, character, {}, [], count, condition=condition)
-        if not recoveries:
-            continue
-        rows.append({
-            "id": entry_id,
-            "kind": kind,
-            "name": entry.name,
-            "tier": entry.tier,
-            "owned": count,
-            "isContainer": False,
-            "recoveries": recoveries,
-            "condition": condition,
-        })
-    return rows
-
-
-async def salvage_container(
-    address: str, character_id: str, container_type: str, selected_ids: List[str]
-) -> Optional[Player]:
-    """Generalized salvage for saddlepack/cart — mirrors salvage_backpack."""
-    meta = _CONTAINER_META.get(container_type)
-    if meta is None or not selected_ids:
-        return None
-    selected = set(selected_ids)
-    loc = meta["location"]
-    db = get_database()
-    doc = await db.players.find_one({"address": address, "characters.id": character_id})
-    if doc is None:
-        return None
-    character = next((c for c in doc["characters"] if c["id"] == character_id), None)
-    if character is None:
-        return None
-
-    container = _equipped_container_instance(character, meta["family_id"])
-    if container is None:
-        return None
-    container_entry = items_catalog.ITEM_CATALOG_ENTRIES_BY_ID.get(container["itemId"])
-    container_selected = container["instanceId"] in selected
-
-    salvaged_instance_ids: set = set()
-    salvaged_balance_ids: set = set()
-    recovered_totals: Dict[str, int] = {}
-
-    instances_by_id = {i["instanceId"]: i for i in character.get("gear", {}).get("items", [])}
-    if container_selected and container_entry is not None:
-        cond = _instance_condition(container, container_entry)
-        recoveries = recycling.resolve_salvage_preview(
-            container_entry.family_id, container_entry.tier, character, {}, [], 1,
-            condition=cond,
-        )
-        for rid, qty in recycling.flatten_recovery(recoveries).items():
-            recovered_totals[rid] = recovered_totals.get(rid, 0) + qty
-
-    for kind, entry_id, entry, count in _container_recyclable_entries(character, loc):
-        if entry_id not in selected:
-            continue
-        condition = _instance_condition(instances_by_id.get(entry_id), entry) if kind == "instance" else "new"
-        recoveries = recycling.resolve_salvage_preview(entry.family_id, entry.tier, character, {}, [], count, condition=condition)
-        amounts = recycling.flatten_recovery(recoveries) if recoveries else {}
-        for rid, qty in amounts.items():
-            recovered_totals[rid] = recovered_totals.get(rid, 0) + qty
-        if kind == "instance":
-            salvaged_instance_ids.add(entry_id)
-        else:
-            salvaged_balance_ids.add(entry_id)
-
-    if not container_selected and not salvaged_instance_ids and not salvaged_balance_ids:
-        return None
-
-    gear = character.get("gear", {})
-    in_adventure = character.get("availability", {}).get("inAdventure", False)
-
-    set_ops: Dict[str, object] = {}
-    inc_ops: Dict[str, int] = {}
-    push_ops: Dict[str, object] = {}
-
-    new_container_balances = {
-        item_id: qty for item_id, qty in gear.get("itemBalances", {}).get(loc, {}).items()
-        if item_id not in salvaged_balance_ids and qty > 0
-    }
-
-    if container_selected:
-        remaining_instances = [
-            i for i in gear.get("items", [])
-            if i.get("location") == loc and i["instanceId"] not in salvaged_instance_ids
-        ]
-        loose_resources = {
-            rid: qty for rid, qty in gear.get("resources", {}).get(loc, {}).items() if qty > 0
-        }
-        remaining_ids = {i["instanceId"] for i in remaining_instances}
-        kept_items = [
-            i for i in gear.get("items", [])
-            if i["instanceId"] != container["instanceId"] and i["instanceId"] not in remaining_ids
-        ]
-
-        if in_adventure:
-            set_ops["characters.$[char].gear.items"] = kept_items + [
-                {**i, "location": "camp", "slotRef": []} for i in remaining_instances
-            ]
-            new_camp_balances = dict(gear.get("itemBalances", {}).get("camp", {}))
-            for item_id, qty in new_container_balances.items():
-                new_camp_balances[item_id] = new_camp_balances.get(item_id, 0) + qty
-            new_camp_resources = dict(gear.get("resources", {}).get("camp", {}))
-            for rid, qty in {**recovered_totals}.items():
-                new_camp_resources[rid] = new_camp_resources.get(rid, 0) + qty
-            for rid, qty in loose_resources.items():
-                new_camp_resources[rid] = new_camp_resources.get(rid, 0) + qty
-            set_ops["characters.$[char].gear.itemBalances.camp"] = _strip_zeros(new_camp_balances)
-            set_ops["characters.$[char].gear.resources.camp"] = _strip_zeros(new_camp_resources)
-        else:
-            set_ops["characters.$[char].gear.items"] = kept_items
-            if remaining_instances:
-                push_ops["vault.items"] = {
-                    "$each": [{**i, "location": "pool", "slotRef": []} for i in remaining_instances]
-                }
-            for item_id, qty in new_container_balances.items():
-                inc_ops[f"vault.itemBalances.{item_id}"] = inc_ops.get(f"vault.itemBalances.{item_id}", 0) + qty
-            for rid, qty in recovered_totals.items():
-                inc_ops[f"crafting.resources.{rid}"] = inc_ops.get(f"crafting.resources.{rid}", 0) + qty
-            for rid, qty in loose_resources.items():
-                inc_ops[f"crafting.resources.{rid}"] = inc_ops.get(f"crafting.resources.{rid}", 0) + qty
-
-        set_ops[f"characters.$[char].gear.itemBalances.{loc}"] = {}
-        set_ops[f"characters.$[char].gear.resources.{loc}"] = {}
-    else:
-        new_items = [
-            i for i in gear.get("items", [])
-            if not (i.get("location") == loc and i["instanceId"] in salvaged_instance_ids)
-        ]
-        set_ops["characters.$[char].gear.items"] = new_items
-        set_ops[f"characters.$[char].gear.itemBalances.{loc}"] = new_container_balances
-
-        character_after_removal = {
-            **character,
-            "gear": {**gear, "items": new_items, "itemBalances": {**gear.get("itemBalances", {}), loc: new_container_balances}},
-        }
-        used = meta["slots_used_fn"](character_after_removal)
-        capacity = meta["capacity_fn"](character)
-
-        new_container_resources = dict(gear.get("resources", {}).get(loc, {}))
-        overflow: Dict[str, int] = {}
-        for rid, qty in recovered_totals.items():
-            stack_size = items_catalog.RAW_STACK_SIZE if rid in RESOURCE_ITEMS_BY_ID else items_catalog.PROCESSED_STACK_SIZE
-            existing = new_container_resources.get(rid, 0)
-            marginal = math.ceil((existing + qty) / stack_size) - math.ceil(existing / stack_size)
-            if used + marginal <= capacity:
-                new_container_resources[rid] = existing + qty
-                used += marginal
-            else:
-                overflow[rid] = overflow.get(rid, 0) + qty
-        set_ops[f"characters.$[char].gear.resources.{loc}"] = new_container_resources
-
-        if overflow:
-            if in_adventure:
-                new_camp_resources = dict(gear.get("resources", {}).get("camp", {}))
-                for rid, qty in overflow.items():
-                    new_camp_resources[rid] = new_camp_resources.get(rid, 0) + qty
-                set_ops["characters.$[char].gear.resources.camp"] = new_camp_resources
-            else:
-                for rid, qty in overflow.items():
-                    inc_ops[f"crafting.resources.{rid}"] = inc_ops.get(f"crafting.resources.{rid}", 0) + qty
-
-    update: Dict = {"$set": set_ops}
-    if inc_ops:
-        update["$inc"] = inc_ops
-    if push_ops:
-        update["$push"] = push_ops
-
-    doc = await db.players.find_one_and_update(
-        {"address": address, "characters.id": character_id},
-        update,
-        array_filters=[{"char.id": character_id}],
-        return_document=ReturnDocument.AFTER,
-    )
-    if doc is None:
-        return None
-    return _doc_to_player(doc)
-
-
-async def load_resource_to_backpack(
-    address: str, character_id: str, resource_id: str, amount: int = 1
-) -> Optional[Player]:
-    """
-    Move `amount` of `resource_id` from a character's own crafting vault
-    (resources - now only ever populated transiently by start_craft, since
-    check_out_resource no longer exists) into their backpack
-    (backpackResources, slot-limited) - physically packing materials for an
-    adventure. The marginal slot cost is ceil((existing+amount)/stack_size) -
-    ceil(existing/stack_size), since multiple units of the same id share a
-    slot up to its stack size (rawStackSize:40 / processedStackSize:20).
-    Returns None if the character doesn't hold `amount` in its vault, or
-    there isn't room.
-    """
-    _validate_resource_grant(resource_id, amount)
-    db = get_database()
-    doc = await db.players.find_one({"address": address, "characters.id": character_id})
-    if doc is None:
-        return None
-    character = next((c for c in doc["characters"] if c["id"] == character_id), None)
-    if character is None:
-        return None
-    if character.get("crafting", {}).get("resources", {}).get(resource_id, 0) < amount:
-        return None
-
-    if resource_id in RESOURCE_ITEMS_BY_ID:
-        stack_size = items_catalog.RAW_STACK_SIZE
-    else:
-        stack_size = items_catalog.PROCESSED_STACK_SIZE
-    existing = character.get("gear", {}).get("resources", {}).get("backpack", {}).get(resource_id, 0)
-    marginal_slots = math.ceil((existing + amount) / stack_size) - math.ceil(existing / stack_size)
-
-    capacity = items_catalog.backpack_capacity(character)
-    if capacity == 0:
-        raise ValueError("No backpack equipped")
-    used = items_catalog.backpack_slots_used(character)
-    if used + marginal_slots > capacity:
-        raise ValueError("Backpack is full")
-
-    doc = await db.players.find_one_and_update(
-        {
-            "address": address,
-            "characters": {"$elemMatch": {"id": character_id, f"crafting.resources.{resource_id}": {"$gte": amount}}},
-        },
-        {"$inc": {
-            f"characters.$.crafting.resources.{resource_id}": -amount,
-            f"characters.$.gear.resources.backpack.{resource_id}": amount,
-        }},
-        return_document=ReturnDocument.AFTER,
-    )
-    if doc is None:
-        return None
-    return _doc_to_player(doc)
-
-
-async def unload_resource_from_backpack(
-    address: str, character_id: str, resource_id: str, amount: int = 1
-) -> Optional[Player]:
-    """
-    Move `amount` of `resource_id` from a character's own backpack
-    (gear.resources.backpack) straight into the player's shared crafting
-    stock (crafting.resources - "Party's Resources", the same pool
-    check_out_resource_to_backpack draws from) - the reverse of that
-    function. Never capacity-gated on the shared-pool side (only backpacks
-    have a slot ceiling). Raises ValueError if the character is currently
-    out on an adventure - there's no reaching the shared vault mid-
-    adventure, same as check_out_item_balance; a packed resource popup
-    should offer move_backpack_resource_to_camp instead while inAdventure.
-    Returns None if the character doesn't hold `amount` in its backpack.
-    """
-    _validate_resource_grant(resource_id, amount)
-    db = get_database()
-    character_doc = await db.players.find_one(
-        {"address": address, "characters.id": character_id}, {"characters.$": 1}
-    )
-    if character_doc is None or not character_doc.get("characters"):
-        return None
-    if character_doc["characters"][0].get("availability", {}).get("inAdventure", False):
-        raise ValueError("Character is out on an adventure - no reaching the shared vault")
-
-    doc = await db.players.find_one_and_update(
-        {
-            "address": address,
-            "characters": {
-                "$elemMatch": {"id": character_id, f"gear.resources.backpack.{resource_id}": {"$gte": amount}}
-            },
-        },
-        {"$inc": {
-            f"characters.$.gear.resources.backpack.{resource_id}": -amount,
-            f"crafting.resources.{resource_id}": amount,
-        }},
-        return_document=ReturnDocument.AFTER,
-    )
-    if doc is None:
-        return None
-    return _doc_to_player(doc)
-
-
-async def move_backpack_resource_to_camp(
-    address: str, character_id: str, resource_id: str, amount: int = 1
-) -> Optional[Player]:
-    """
-    Move `amount` of `resource_id` straight from a character's own backpack
-    (gear.resources.backpack) into their own camp (gear.resources.camp) -
-    both ends already this character's own holdings, so (like
-    move_backpack_item_to_camp) this works fine mid-adventure, unlike
-    unload_resource_from_backpack which reaches the shared vault instead.
-    This is what lets a packed resource's own popup offer a real "move to
-    camp" action while out on a story, the same way a packed ITEM instance
-    already does (see unstowToCamp). Never capacity-gated (camp is
-    uncapped). Returns None if the character doesn't hold `amount` in its
-    backpack.
-    """
-    _validate_resource_grant(resource_id, amount)
-    db = get_database()
-    doc = await db.players.find_one_and_update(
-        {
-            "address": address,
-            "characters": {
-                "$elemMatch": {"id": character_id, f"gear.resources.backpack.{resource_id}": {"$gte": amount}}
-            },
-        },
-        {"$inc": {
-            f"characters.$.gear.resources.backpack.{resource_id}": -amount,
-            f"characters.$.gear.resources.camp.{resource_id}": amount,
-        }},
-        return_document=ReturnDocument.AFTER,
-    )
-    if doc is None:
-        return None
-    return _doc_to_player(doc)
-
-
-async def move_backpack_resource_to_saddlepack(
-    address: str, character_id: str, resource_id: str, amount: int = 1
-) -> Optional[Player]:
-    """
-    Move `amount` of `resource_id` from a character's backpack
-    (gear.resources.backpack) into their saddlepack (gear.resources.saddlepack)
-    - capacity-gated on the saddlepack. Never touches the shared vault or camp.
-    Returns None if the character doesn't hold `amount` in their backpack.
-    """
-    _validate_resource_grant(resource_id, amount)
-    db = get_database()
-    doc = await db.players.find_one({"address": address, "characters.id": character_id})
-    if doc is None:
-        return None
-    character = next((c for c in doc["characters"] if c["id"] == character_id), None)
-    if character is None:
-        return None
-    if character.get("gear", {}).get("resources", {}).get("backpack", {}).get(resource_id, 0) < amount:
-        return None
-
-    capacity = items_catalog.saddlepack_capacity(character)
-    if capacity == 0:
-        raise ValueError("No saddlepack equipped")
-    stack_size = items_catalog.RAW_STACK_SIZE if resource_id in RESOURCE_ITEMS_BY_ID else items_catalog.PROCESSED_STACK_SIZE
-    existing = character.get("gear", {}).get("resources", {}).get("saddlepack", {}).get(resource_id, 0)
-    marginal = math.ceil((existing + amount) / stack_size) - math.ceil(existing / stack_size)
-    used = items_catalog.saddlepack_slots_used(character)
-    if used + marginal > capacity:
-        raise ValueError("Saddlepack is full")
-
-    doc = await db.players.find_one_and_update(
-        {
-            "address": address,
-            "characters": {
-                "$elemMatch": {"id": character_id, f"gear.resources.backpack.{resource_id}": {"$gte": amount}}
-            },
-        },
-        {"$inc": {
-            f"characters.$.gear.resources.backpack.{resource_id}": -amount,
-            f"characters.$.gear.resources.saddlepack.{resource_id}": amount,
-        }},
-        return_document=ReturnDocument.AFTER,
-    )
-    if doc is None:
-        return None
-    return _doc_to_player(doc)
-
-
-async def move_saddlepack_resource_to_backpack(
-    address: str, character_id: str, resource_id: str, amount: int = 1
-) -> Optional[Player]:
-    """
-    Move `amount` of `resource_id` from a character's saddlepack
-    (gear.resources.saddlepack) into their backpack (gear.resources.backpack)
-    - capacity-gated on the backpack. Returns None if the character doesn't
-    hold `amount` in their saddlepack.
-    """
-    _validate_resource_grant(resource_id, amount)
-    db = get_database()
-    doc = await db.players.find_one({"address": address, "characters.id": character_id})
-    if doc is None:
-        return None
-    character = next((c for c in doc["characters"] if c["id"] == character_id), None)
-    if character is None:
-        return None
-    if character.get("gear", {}).get("resources", {}).get("saddlepack", {}).get(resource_id, 0) < amount:
-        return None
-
-    capacity = items_catalog.backpack_capacity(character)
-    if capacity == 0:
-        raise ValueError("No backpack equipped")
-    used = items_catalog.backpack_slots_used(character)
-    marginal = _resource_marginal_backpack_slots(character, {resource_id: amount})
-    if used + marginal > capacity:
-        raise ValueError("Backpack is full")
-
-    doc = await db.players.find_one_and_update(
-        {
-            "address": address,
-            "characters": {
-                "$elemMatch": {"id": character_id, f"gear.resources.saddlepack.{resource_id}": {"$gte": amount}}
-            },
-        },
-        {"$inc": {
-            f"characters.$.gear.resources.saddlepack.{resource_id}": -amount,
-            f"characters.$.gear.resources.backpack.{resource_id}": amount,
-        }},
-        return_document=ReturnDocument.AFTER,
-    )
-    if doc is None:
-        return None
-    return _doc_to_player(doc)
-
-
-async def move_saddlepack_resource_to_camp(
-    address: str, character_id: str, resource_id: str, amount: int = 1
-) -> Optional[Player]:
-    """
-    Move `amount` of `resource_id` from a character's saddlepack
-    (gear.resources.saddlepack) into their own camp (gear.resources.camp) -
-    works mid-adventure, never capacity-gated (camp is uncapped). Returns
-    None if the character doesn't hold `amount` in their saddlepack.
-    """
-    _validate_resource_grant(resource_id, amount)
-    db = get_database()
-    doc = await db.players.find_one_and_update(
-        {
-            "address": address,
-            "characters": {
-                "$elemMatch": {"id": character_id, f"gear.resources.saddlepack.{resource_id}": {"$gte": amount}}
-            },
-        },
-        {"$inc": {
-            f"characters.$.gear.resources.saddlepack.{resource_id}": -amount,
-            f"characters.$.gear.resources.camp.{resource_id}": amount,
-        }},
-        return_document=ReturnDocument.AFTER,
-    )
-    if doc is None:
-        return None
-    return _doc_to_player(doc)
-
-
-async def check_in_resource_from_saddlepack(
-    address: str, character_id: str, resource_id: str, amount: int = 1
-) -> Optional[Player]:
-    """
-    Move `amount` of `resource_id` from a character's saddlepack
-    (gear.resources.saddlepack) into the shared crafting stock
-    (crafting.resources - "Party's Resources"). Blocked mid-adventure
-    (same rule as unload_resource_from_backpack / check_in_resource_from_camp).
-    Returns None if the character doesn't hold `amount` in their saddlepack.
-    """
-    _validate_resource_grant(resource_id, amount)
-    db = get_database()
-    character_doc = await db.players.find_one(
-        {"address": address, "characters.id": character_id}, {"characters.$": 1}
-    )
-    if character_doc is None or not character_doc.get("characters"):
-        return None
-    if character_doc["characters"][0].get("availability", {}).get("inAdventure", False):
-        raise ValueError("Character is out on an adventure - no reaching the shared vault")
-
-    doc = await db.players.find_one_and_update(
-        {
-            "address": address,
-            "characters": {
-                "$elemMatch": {"id": character_id, f"gear.resources.saddlepack.{resource_id}": {"$gte": amount}}
-            },
-        },
-        {"$inc": {
-            f"characters.$.gear.resources.saddlepack.{resource_id}": -amount,
-            f"crafting.resources.{resource_id}": amount,
-        }},
-        return_document=ReturnDocument.AFTER,
-    )
-    if doc is None:
-        return None
-    return _doc_to_player(doc)
-
-
-async def move_cart_resource_to_camp(
-    address: str, character_id: str, resource_id: str, amount: int = 1
-) -> Optional[Player]:
-    """Move `amount` of `resource_id` from cart into camp."""
-    _validate_resource_grant(resource_id, amount)
-    db = get_database()
-    doc = await db.players.find_one_and_update(
-        {
-            "address": address,
-            "characters": {
-                "$elemMatch": {"id": character_id, f"gear.resources.cart.{resource_id}": {"$gte": amount}}
-            },
-        },
-        {"$inc": {
-            f"characters.$.gear.resources.cart.{resource_id}": -amount,
-            f"characters.$.gear.resources.camp.{resource_id}": amount,
-        }},
-        return_document=ReturnDocument.AFTER,
-    )
-    if doc is None:
-        return None
-    return _doc_to_player(doc)
-
-
-async def check_in_resource_from_cart(
-    address: str, character_id: str, resource_id: str, amount: int = 1
-) -> Optional[Player]:
-    """Move `amount` of `resource_id` from cart into the shared crafting stock.
-    Blocked mid-adventure."""
-    _validate_resource_grant(resource_id, amount)
-    db = get_database()
-    character_doc = await db.players.find_one(
-        {"address": address, "characters.id": character_id}, {"characters.$": 1}
-    )
-    if character_doc is None or not character_doc.get("characters"):
-        return None
-    if character_doc["characters"][0].get("availability", {}).get("inAdventure", False):
-        raise ValueError("Character is out on an adventure - no reaching the shared vault")
-
-    doc = await db.players.find_one_and_update(
-        {
-            "address": address,
-            "characters": {
-                "$elemMatch": {"id": character_id, f"gear.resources.cart.{resource_id}": {"$gte": amount}}
-            },
-        },
-        {"$inc": {
-            f"characters.$.gear.resources.cart.{resource_id}": -amount,
-            f"crafting.resources.{resource_id}": amount,
-        }},
-        return_document=ReturnDocument.AFTER,
-    )
-    if doc is None:
-        return None
-    return _doc_to_player(doc)
-
-
-async def move_camp_resource_to_backpack(
-    address: str, character_id: str, resource_id: str, amount: int = 1
-) -> Optional[Player]:
-    """
-    Move `amount` of `resource_id` straight from a character's own camp
-    (gear.resources.camp) into their own backpack (gear.resources.backpack)
-    - the reverse of move_backpack_resource_to_camp, and the resource
-    equivalent of move_camp_item_to_backpack. Capacity-gated exactly like
-    check_out_resource_to_backpack (same marginal-slot math, never a
-    partial fill) - camp itself stays uncapped either way. Raises
-    ValueError if the character has no backpack equipped, or the backpack
-    doesn't have room for the whole amount. Returns None if the character
-    doesn't hold `amount` in its camp.
-    """
-    _validate_resource_grant(resource_id, amount)
-    db = get_database()
-    doc = await db.players.find_one({"address": address, "characters.id": character_id})
-    if doc is None:
-        return None
-    character = next((c for c in doc["characters"] if c["id"] == character_id), None)
-    if character is None:
-        return None
-    if character.get("gear", {}).get("resources", {}).get("camp", {}).get(resource_id, 0) < amount:
-        return None
-
-    capacity = items_catalog.backpack_capacity(character)
-    if capacity == 0:
-        raise ValueError("No backpack equipped")
-    used = items_catalog.backpack_slots_used(character)
-    marginal = _resource_marginal_backpack_slots(character, {resource_id: amount})
-    if used + marginal > capacity:
-        raise ValueError("Backpack is full")
-
-    doc = await db.players.find_one_and_update(
-        {
-            "address": address,
-            "characters": {
-                "$elemMatch": {"id": character_id, f"gear.resources.camp.{resource_id}": {"$gte": amount}}
-            },
-        },
-        {"$inc": {
-            f"characters.$.gear.resources.camp.{resource_id}": -amount,
-            f"characters.$.gear.resources.backpack.{resource_id}": amount,
-        }},
-        return_document=ReturnDocument.AFTER,
-    )
-    if doc is None:
-        return None
-    return _doc_to_player(doc)
-
-
-async def check_in_resource_from_camp(
-    address: str, character_id: str, resource_id: str, amount: int = 1
-) -> Optional[Player]:
-    """
-    Move `amount` of `resource_id` straight from a character's own camp
-    (gear.resources.camp) into the player's shared crafting stock
-    (crafting.resources - "Party's Resources") - the camp equivalent of
-    unload_resource_from_backpack. Same inAdventure guard for the same
-    reason: there's no reaching the shared vault mid-adventure, so a camp
-    resource's own popup should offer move_camp_resource_to_backpack
-    instead while out on a story. Returns None if the character doesn't
-    hold `amount` in its camp.
-    """
-    _validate_resource_grant(resource_id, amount)
-    db = get_database()
-    character_doc = await db.players.find_one(
-        {"address": address, "characters.id": character_id}, {"characters.$": 1}
-    )
-    if character_doc is None or not character_doc.get("characters"):
-        return None
-    if character_doc["characters"][0].get("availability", {}).get("inAdventure", False):
-        raise ValueError("Character is out on an adventure - no reaching the shared vault")
-
-    doc = await db.players.find_one_and_update(
-        {
-            "address": address,
-            "characters": {
-                "$elemMatch": {"id": character_id, f"gear.resources.camp.{resource_id}": {"$gte": amount}}
-            },
-        },
-        {"$inc": {
-            f"characters.$.gear.resources.camp.{resource_id}": -amount,
-            f"crafting.resources.{resource_id}": amount,
-        }},
-        return_document=ReturnDocument.AFTER,
-    )
-    if doc is None:
-        return None
-    return _doc_to_player(doc)
 
 
 async def load_item_balance_to_backpack(
@@ -6875,13 +5426,12 @@ async def load_item_balance_to_backpack(
     if amount <= 0:
         raise ValueError("amount must be positive")
     db = get_database()
-    doc = await db.players.find_one({"address": address, "characters.id": character_id})
+    doc = await db.characters.find_one({"address": address, "id": character_id})
     if doc is None:
         return None
-    character = next((c for c in doc["characters"] if c["id"] == character_id), None)
-    if character is None:
-        return None
-    if character.get("gear", {}).get("itemBalances", {}).get("camp", {}).get(item_id, 0) < amount:
+    character = doc
+    camp_doc = await db.character_camps.find_one({"address": address, "characterId": character_id})
+    if (camp_doc or {}).get("itemBalances", {}).get(item_id, 0) < amount:
         return None
 
     stack_size, slot_cost = items_catalog.resolve_item_balance_stack(item_id)
@@ -6898,21 +5448,15 @@ async def load_item_balance_to_backpack(
     if used + marginal_slots > capacity:
         raise ValueError("Backpack is full")
 
-    doc = await db.players.find_one_and_update(
-        {
-            "address": address,
-            "characters": {"$elemMatch": {"id": character_id, f"gear.itemBalances.camp.{item_id}": {"$gte": amount}}},
-        },
-        {"$inc": {
-            f"characters.$.gear.itemBalances.camp.{item_id}": -amount,
-            f"characters.$.gear.itemBalances.backpack.{item_id}": amount,
-        }},
+    doc = await db.characters.find_one_and_update(
+        {"address": address, "id": character_id},
+        {"$inc": {f"gear.itemBalances.backpack.{item_id}": amount}},
         return_document=ReturnDocument.AFTER,
     )
     if doc is None:
         return None
-    await _prune_char_zeros(db, address, character_id, doc, [f"gear.itemBalances.camp.{item_id}"])
-    return _doc_to_player(doc)
+    await _inc_camp_itembalances(db, address, character_id, {item_id: -amount})
+    return await _build_player(db, address)
 
 
 async def unload_item_balance_from_backpack(
@@ -6922,23 +5466,17 @@ async def unload_item_balance_from_backpack(
     if amount <= 0:
         raise ValueError("amount must be positive")
     db = get_database()
-    doc = await db.players.find_one_and_update(
-        {
-            "address": address,
-            "characters": {
-                "$elemMatch": {"id": character_id, f"gear.itemBalances.backpack.{item_id}": {"$gte": amount}}
-            },
+    doc = await db.characters.find_one_and_update(
+        {"address": address, "id": character_id, f"gear.itemBalances.backpack.{item_id}": {"$gte": amount},
         },
-        {"$inc": {
-            f"characters.$.gear.itemBalances.backpack.{item_id}": -amount,
-            f"characters.$.gear.itemBalances.camp.{item_id}": amount,
-        }},
+        {"$inc": {f"gear.itemBalances.backpack.{item_id}": -amount}},
         return_document=ReturnDocument.AFTER,
     )
     if doc is None:
         return None
     await _prune_char_zeros(db, address, character_id, doc, [f"gear.itemBalances.backpack.{item_id}"])
-    return _doc_to_player(doc)
+    await _inc_camp_itembalances(db, address, character_id, {item_id: amount})
+    return await _build_player(db, address)
 
 
 async def load_item_balance_to_saddlepack(
@@ -6948,13 +5486,12 @@ async def load_item_balance_to_saddlepack(
     if amount <= 0:
         raise ValueError("amount must be positive")
     db = get_database()
-    doc = await db.players.find_one({"address": address, "characters.id": character_id})
+    doc = await db.characters.find_one({"address": address, "id": character_id})
     if doc is None:
         return None
-    character = next((c for c in doc["characters"] if c["id"] == character_id), None)
-    if character is None:
-        return None
-    if character.get("gear", {}).get("itemBalances", {}).get("camp", {}).get(item_id, 0) < amount:
+    character = doc
+    camp_doc = await db.character_camps.find_one({"address": address, "characterId": character_id})
+    if (camp_doc or {}).get("itemBalances", {}).get(item_id, 0) < amount:
         return None
 
     stack_size, slot_cost = items_catalog.resolve_item_balance_stack(item_id)
@@ -6970,21 +5507,15 @@ async def load_item_balance_to_saddlepack(
     if used + marginal_slots > capacity:
         raise ValueError("Saddlepack is full")
 
-    doc = await db.players.find_one_and_update(
-        {
-            "address": address,
-            "characters": {"$elemMatch": {"id": character_id, f"gear.itemBalances.camp.{item_id}": {"$gte": amount}}},
-        },
-        {"$inc": {
-            f"characters.$.gear.itemBalances.camp.{item_id}": -amount,
-            f"characters.$.gear.itemBalances.saddlepack.{item_id}": amount,
-        }},
+    doc = await db.characters.find_one_and_update(
+        {"address": address, "id": character_id},
+        {"$inc": {f"gear.itemBalances.saddlepack.{item_id}": amount}},
         return_document=ReturnDocument.AFTER,
     )
     if doc is None:
         return None
-    await _prune_char_zeros(db, address, character_id, doc, [f"gear.itemBalances.camp.{item_id}"])
-    return _doc_to_player(doc)
+    await _inc_camp_itembalances(db, address, character_id, {item_id: -amount})
+    return await _build_player(db, address)
 
 
 async def unload_item_balance_from_saddlepack(
@@ -6994,23 +5525,17 @@ async def unload_item_balance_from_saddlepack(
     if amount <= 0:
         raise ValueError("amount must be positive")
     db = get_database()
-    doc = await db.players.find_one_and_update(
-        {
-            "address": address,
-            "characters": {
-                "$elemMatch": {"id": character_id, f"gear.itemBalances.saddlepack.{item_id}": {"$gte": amount}}
-            },
+    doc = await db.characters.find_one_and_update(
+        {"address": address, "id": character_id, f"gear.itemBalances.saddlepack.{item_id}": {"$gte": amount},
         },
-        {"$inc": {
-            f"characters.$.gear.itemBalances.saddlepack.{item_id}": -amount,
-            f"characters.$.gear.itemBalances.camp.{item_id}": amount,
-        }},
+        {"$inc": {f"gear.itemBalances.saddlepack.{item_id}": -amount}},
         return_document=ReturnDocument.AFTER,
     )
     if doc is None:
         return None
     await _prune_char_zeros(db, address, character_id, doc, [f"gear.itemBalances.saddlepack.{item_id}"])
-    return _doc_to_player(doc)
+    await _inc_camp_itembalances(db, address, character_id, {item_id: amount})
+    return await _build_player(db, address)
 
 
 async def move_item_balance_backpack_to_saddlepack(
@@ -7020,12 +5545,10 @@ async def move_item_balance_backpack_to_saddlepack(
     if amount <= 0:
         raise ValueError("amount must be positive")
     db = get_database()
-    doc = await db.players.find_one({"address": address, "characters.id": character_id})
+    doc = await db.characters.find_one({"address": address, "id": character_id})
     if doc is None:
         return None
-    character = next((c for c in doc["characters"] if c["id"] == character_id), None)
-    if character is None:
-        return None
+    character = doc
     if character.get("gear", {}).get("itemBalances", {}).get("backpack", {}).get(item_id, 0) < amount:
         return None
 
@@ -7042,21 +5565,19 @@ async def move_item_balance_backpack_to_saddlepack(
     if used + marginal_slots > capacity:
         raise ValueError("Saddlepack is full")
 
-    doc = await db.players.find_one_and_update(
-        {
-            "address": address,
-            "characters": {"$elemMatch": {"id": character_id, f"gear.itemBalances.backpack.{item_id}": {"$gte": amount}}},
+    doc = await db.characters.find_one_and_update(
+        {"address": address, "id": character_id, f"gear.itemBalances.backpack.{item_id}": {"$gte": amount},
         },
         {"$inc": {
-            f"characters.$.gear.itemBalances.backpack.{item_id}": -amount,
-            f"characters.$.gear.itemBalances.saddlepack.{item_id}": amount,
+            f"gear.itemBalances.backpack.{item_id}": -amount,
+            f"gear.itemBalances.saddlepack.{item_id}": amount,
         }},
         return_document=ReturnDocument.AFTER,
     )
     if doc is None:
         return None
     await _prune_char_zeros(db, address, character_id, doc, [f"gear.itemBalances.backpack.{item_id}"])
-    return _doc_to_player(doc)
+    return await _build_player(db, address)
 
 
 async def move_item_balance_saddlepack_to_backpack(
@@ -7066,12 +5587,10 @@ async def move_item_balance_saddlepack_to_backpack(
     if amount <= 0:
         raise ValueError("amount must be positive")
     db = get_database()
-    doc = await db.players.find_one({"address": address, "characters.id": character_id})
+    doc = await db.characters.find_one({"address": address, "id": character_id})
     if doc is None:
         return None
-    character = next((c for c in doc["characters"] if c["id"] == character_id), None)
-    if character is None:
-        return None
+    character = doc
     if character.get("gear", {}).get("itemBalances", {}).get("saddlepack", {}).get(item_id, 0) < amount:
         return None
 
@@ -7088,21 +5607,19 @@ async def move_item_balance_saddlepack_to_backpack(
     if used + marginal_slots > capacity:
         raise ValueError("Backpack is full")
 
-    doc = await db.players.find_one_and_update(
-        {
-            "address": address,
-            "characters": {"$elemMatch": {"id": character_id, f"gear.itemBalances.saddlepack.{item_id}": {"$gte": amount}}},
+    doc = await db.characters.find_one_and_update(
+        {"address": address, "id": character_id, f"gear.itemBalances.saddlepack.{item_id}": {"$gte": amount},
         },
         {"$inc": {
-            f"characters.$.gear.itemBalances.saddlepack.{item_id}": -amount,
-            f"characters.$.gear.itemBalances.backpack.{item_id}": amount,
+            f"gear.itemBalances.saddlepack.{item_id}": -amount,
+            f"gear.itemBalances.backpack.{item_id}": amount,
         }},
         return_document=ReturnDocument.AFTER,
     )
     if doc is None:
         return None
     await _prune_char_zeros(db, address, character_id, doc, [f"gear.itemBalances.saddlepack.{item_id}"])
-    return _doc_to_player(doc)
+    return await _build_player(db, address)
 
 
 async def unload_item_balance_from_cart(
@@ -7112,23 +5629,17 @@ async def unload_item_balance_from_cart(
     if amount <= 0:
         raise ValueError("amount must be positive")
     db = get_database()
-    doc = await db.players.find_one_and_update(
-        {
-            "address": address,
-            "characters": {
-                "$elemMatch": {"id": character_id, f"gear.itemBalances.cart.{item_id}": {"$gte": amount}}
-            },
+    doc = await db.characters.find_one_and_update(
+        {"address": address, "id": character_id, f"gear.itemBalances.cart.{item_id}": {"$gte": amount},
         },
-        {"$inc": {
-            f"characters.$.gear.itemBalances.cart.{item_id}": -amount,
-            f"characters.$.gear.itemBalances.camp.{item_id}": amount,
-        }},
+        {"$inc": {f"gear.itemBalances.cart.{item_id}": -amount}},
         return_document=ReturnDocument.AFTER,
     )
     if doc is None:
         return None
     await _prune_char_zeros(db, address, character_id, doc, [f"gear.itemBalances.cart.{item_id}"])
-    return _doc_to_player(doc)
+    await _inc_camp_itembalances(db, address, character_id, {item_id: amount})
+    return await _build_player(db, address)
 
 
 async def move_item_balance_cart_to_backpack(
@@ -7138,12 +5649,10 @@ async def move_item_balance_cart_to_backpack(
     if amount <= 0:
         raise ValueError("amount must be positive")
     db = get_database()
-    doc = await db.players.find_one({"address": address, "characters.id": character_id})
+    doc = await db.characters.find_one({"address": address, "id": character_id})
     if doc is None:
         return None
-    character = next((c for c in doc["characters"] if c["id"] == character_id), None)
-    if character is None:
-        return None
+    character = doc
     if character.get("gear", {}).get("itemBalances", {}).get("cart", {}).get(item_id, 0) < amount:
         return None
 
@@ -7160,21 +5669,19 @@ async def move_item_balance_cart_to_backpack(
     if used + marginal_slots > capacity:
         raise ValueError("Backpack is full")
 
-    doc = await db.players.find_one_and_update(
-        {
-            "address": address,
-            "characters": {"$elemMatch": {"id": character_id, f"gear.itemBalances.cart.{item_id}": {"$gte": amount}}},
+    doc = await db.characters.find_one_and_update(
+        {"address": address, "id": character_id, f"gear.itemBalances.cart.{item_id}": {"$gte": amount},
         },
         {"$inc": {
-            f"characters.$.gear.itemBalances.cart.{item_id}": -amount,
-            f"characters.$.gear.itemBalances.backpack.{item_id}": amount,
+            f"gear.itemBalances.cart.{item_id}": -amount,
+            f"gear.itemBalances.backpack.{item_id}": amount,
         }},
         return_document=ReturnDocument.AFTER,
     )
     if doc is None:
         return None
     await _prune_char_zeros(db, address, character_id, doc, [f"gear.itemBalances.cart.{item_id}"])
-    return _doc_to_player(doc)
+    return await _build_player(db, address)
 
 
 async def move_item_balance_cart_to_saddlepack(
@@ -7184,12 +5691,10 @@ async def move_item_balance_cart_to_saddlepack(
     if amount <= 0:
         raise ValueError("amount must be positive")
     db = get_database()
-    doc = await db.players.find_one({"address": address, "characters.id": character_id})
+    doc = await db.characters.find_one({"address": address, "id": character_id})
     if doc is None:
         return None
-    character = next((c for c in doc["characters"] if c["id"] == character_id), None)
-    if character is None:
-        return None
+    character = doc
     if character.get("gear", {}).get("itemBalances", {}).get("cart", {}).get(item_id, 0) < amount:
         return None
 
@@ -7206,21 +5711,19 @@ async def move_item_balance_cart_to_saddlepack(
     if used + marginal_slots > capacity:
         raise ValueError("Saddlepack is full")
 
-    doc = await db.players.find_one_and_update(
-        {
-            "address": address,
-            "characters": {"$elemMatch": {"id": character_id, f"gear.itemBalances.cart.{item_id}": {"$gte": amount}}},
+    doc = await db.characters.find_one_and_update(
+        {"address": address, "id": character_id, f"gear.itemBalances.cart.{item_id}": {"$gte": amount},
         },
         {"$inc": {
-            f"characters.$.gear.itemBalances.cart.{item_id}": -amount,
-            f"characters.$.gear.itemBalances.saddlepack.{item_id}": amount,
+            f"gear.itemBalances.cart.{item_id}": -amount,
+            f"gear.itemBalances.saddlepack.{item_id}": amount,
         }},
         return_document=ReturnDocument.AFTER,
     )
     if doc is None:
         return None
     await _prune_char_zeros(db, address, character_id, doc, [f"gear.itemBalances.cart.{item_id}"])
-    return _doc_to_player(doc)
+    return await _build_player(db, address)
 
 
 async def check_in_item_balance_from_cart(
@@ -7231,31 +5734,27 @@ async def check_in_item_balance_from_cart(
     if amount <= 0:
         raise ValueError("amount must be positive")
     db = get_database()
-    character_doc = await db.players.find_one(
-        {"address": address, "characters.id": character_id}, {"characters.$": 1}
+    character_doc = await db.characters.find_one(
+        {"address": address, "id": character_id}
     )
-    if character_doc is None or not character_doc.get("characters"):
+    if character_doc is None:
         return None
-    if character_doc["characters"][0].get("availability", {}).get("inAdventure", False):
+    if character_doc.get("availability", {}).get("inAdventure", False):
         raise ValueError("Character is out on an adventure - no reaching the shared vault")
 
-    doc = await db.players.find_one_and_update(
-        {
-            "address": address,
-            "characters": {
-                "$elemMatch": {"id": character_id, f"gear.itemBalances.cart.{item_id}": {"$gte": amount}}
-            },
+    doc = await db.characters.find_one_and_update(
+        {"address": address, "id": character_id, f"gear.itemBalances.cart.{item_id}": {"$gte": amount},
         },
         {"$inc": {
-            f"vault.itemBalances.{item_id}": amount,
-            f"characters.$.gear.itemBalances.cart.{item_id}": -amount,
+            f"gear.itemBalances.cart.{item_id}": -amount,
         }},
         return_document=ReturnDocument.AFTER,
     )
     if doc is None:
         return None
     await _prune_char_zeros(db, address, character_id, doc, [f"gear.itemBalances.cart.{item_id}"])
-    return _doc_to_player(doc)
+    await _inc_vault_itembalances(db, address, {item_id: amount})
+    return await _build_player(db, address)
 
 
 async def load_item_balance_to_cart(
@@ -7265,13 +5764,12 @@ async def load_item_balance_to_cart(
     if amount <= 0:
         raise ValueError("amount must be positive")
     db = get_database()
-    doc = await db.players.find_one({"address": address, "characters.id": character_id})
+    doc = await db.characters.find_one({"address": address, "id": character_id})
     if doc is None:
         return None
-    character = next((c for c in doc["characters"] if c["id"] == character_id), None)
-    if character is None:
-        return None
-    if character.get("gear", {}).get("itemBalances", {}).get("camp", {}).get(item_id, 0) < amount:
+    character = doc
+    camp_doc = await db.character_camps.find_one({"address": address, "characterId": character_id})
+    if (camp_doc or {}).get("itemBalances", {}).get(item_id, 0) < amount:
         return None
 
     stack_size, slot_cost = items_catalog.resolve_item_balance_stack(item_id)
@@ -7287,21 +5785,15 @@ async def load_item_balance_to_cart(
     if used + marginal_slots > capacity:
         raise ValueError("Cart is full")
 
-    doc = await db.players.find_one_and_update(
-        {
-            "address": address,
-            "characters": {"$elemMatch": {"id": character_id, f"gear.itemBalances.camp.{item_id}": {"$gte": amount}}},
-        },
-        {"$inc": {
-            f"characters.$.gear.itemBalances.camp.{item_id}": -amount,
-            f"characters.$.gear.itemBalances.cart.{item_id}": amount,
-        }},
+    doc = await db.characters.find_one_and_update(
+        {"address": address, "id": character_id},
+        {"$inc": {f"gear.itemBalances.cart.{item_id}": amount}},
         return_document=ReturnDocument.AFTER,
     )
     if doc is None:
         return None
-    await _prune_char_zeros(db, address, character_id, doc, [f"gear.itemBalances.camp.{item_id}"])
-    return _doc_to_player(doc)
+    await _inc_camp_itembalances(db, address, character_id, {item_id: -amount})
+    return await _build_player(db, address)
 
 
 async def move_item_balance_backpack_to_cart(
@@ -7311,12 +5803,10 @@ async def move_item_balance_backpack_to_cart(
     if amount <= 0:
         raise ValueError("amount must be positive")
     db = get_database()
-    doc = await db.players.find_one({"address": address, "characters.id": character_id})
+    doc = await db.characters.find_one({"address": address, "id": character_id})
     if doc is None:
         return None
-    character = next((c for c in doc["characters"] if c["id"] == character_id), None)
-    if character is None:
-        return None
+    character = doc
     if character.get("gear", {}).get("itemBalances", {}).get("backpack", {}).get(item_id, 0) < amount:
         return None
 
@@ -7333,21 +5823,19 @@ async def move_item_balance_backpack_to_cart(
     if used + marginal_slots > capacity:
         raise ValueError("Cart is full")
 
-    doc = await db.players.find_one_and_update(
-        {
-            "address": address,
-            "characters": {"$elemMatch": {"id": character_id, f"gear.itemBalances.backpack.{item_id}": {"$gte": amount}}},
+    doc = await db.characters.find_one_and_update(
+        {"address": address, "id": character_id, f"gear.itemBalances.backpack.{item_id}": {"$gte": amount},
         },
         {"$inc": {
-            f"characters.$.gear.itemBalances.backpack.{item_id}": -amount,
-            f"characters.$.gear.itemBalances.cart.{item_id}": amount,
+            f"gear.itemBalances.backpack.{item_id}": -amount,
+            f"gear.itemBalances.cart.{item_id}": amount,
         }},
         return_document=ReturnDocument.AFTER,
     )
     if doc is None:
         return None
     await _prune_char_zeros(db, address, character_id, doc, [f"gear.itemBalances.backpack.{item_id}"])
-    return _doc_to_player(doc)
+    return await _build_player(db, address)
 
 
 async def move_item_balance_saddlepack_to_cart(
@@ -7357,12 +5845,10 @@ async def move_item_balance_saddlepack_to_cart(
     if amount <= 0:
         raise ValueError("amount must be positive")
     db = get_database()
-    doc = await db.players.find_one({"address": address, "characters.id": character_id})
+    doc = await db.characters.find_one({"address": address, "id": character_id})
     if doc is None:
         return None
-    character = next((c for c in doc["characters"] if c["id"] == character_id), None)
-    if character is None:
-        return None
+    character = doc
     if character.get("gear", {}).get("itemBalances", {}).get("saddlepack", {}).get(item_id, 0) < amount:
         return None
 
@@ -7379,21 +5865,19 @@ async def move_item_balance_saddlepack_to_cart(
     if used + marginal_slots > capacity:
         raise ValueError("Cart is full")
 
-    doc = await db.players.find_one_and_update(
-        {
-            "address": address,
-            "characters": {"$elemMatch": {"id": character_id, f"gear.itemBalances.saddlepack.{item_id}": {"$gte": amount}}},
+    doc = await db.characters.find_one_and_update(
+        {"address": address, "id": character_id, f"gear.itemBalances.saddlepack.{item_id}": {"$gte": amount},
         },
         {"$inc": {
-            f"characters.$.gear.itemBalances.saddlepack.{item_id}": -amount,
-            f"characters.$.gear.itemBalances.cart.{item_id}": amount,
+            f"gear.itemBalances.saddlepack.{item_id}": -amount,
+            f"gear.itemBalances.cart.{item_id}": amount,
         }},
         return_document=ReturnDocument.AFTER,
     )
     if doc is None:
         return None
     await _prune_char_zeros(db, address, character_id, doc, [f"gear.itemBalances.saddlepack.{item_id}"])
-    return _doc_to_player(doc)
+    return await _build_player(db, address)
 
 
 async def degrade_item_quality(
@@ -7407,15 +5891,15 @@ async def degrade_item_quality(
     read/displayed.
     """
     db = get_database()
-    doc = await db.players.find_one_and_update(
-        {"address": address, "characters": {"$elemMatch": {"id": character_id, "gear.items.instanceId": instance_id}}},
-        {"$inc": {"characters.$[char].gear.items.$[item].quality": -amount}},
-        array_filters=[{"char.id": character_id}, {"item.instanceId": instance_id}],
+    doc = await db.characters.find_one_and_update(
+        {"address": address, "id": character_id, "gear.items.instanceId": instance_id},
+        {"$inc": {"gear.items.$[item].quality": -amount}},
+        array_filters=[{"item.instanceId": instance_id}],
         return_document=ReturnDocument.AFTER,
     )
     if doc is None:
         return None
-    return _doc_to_player(doc)
+    return await _build_player(db, address)
 
 
 async def consume_ammo(
@@ -7423,39 +5907,38 @@ async def consume_ammo(
 ) -> Optional[Player]:
     """
     Internal-only - not registered as a route; no combat/adventure system
-    exists yet to legitimately call this. Ammo (arrow/bolt/oil) is an
-    ordinary tiered PROCESSED_RESOURCE_ITEMS_BY_ID entry flowing through
-    Character.resources, not an instance - draws from the highest tier the
-    character holds enough of.
+    exists yet to legitimately call this. Ammo (arrow/bolt/oil) is a
+    tiered itemBalance in the character's backpack - draws from the
+    highest tier the character holds enough of.
     """
     if amount <= 0:
         raise ValueError("amount must be positive")
     db = get_database()
-    doc = await db.players.find_one({"address": address, "characters.id": character_id})
+    doc = await db.characters.find_one({"address": address, "id": character_id})
     if doc is None:
         return None
-    character = next((c for c in doc["characters"] if c["id"] == character_id), None)
-    if character is None:
-        return None
+    character = doc
 
-    held = character.get("crafting", {}).get("resources", {})
+    held = character.get("gear", {}).get("itemBalances", {}).get("backpack", {})
     candidates = sorted(
-        (item for item in PROCESSED_RESOURCE_ITEMS if item.family_id == ammo_family_id),
-        key=lambda item: item.tier,
+        (
+            (fam_tier, row)
+            for fam_tier, row in items_catalog.FINAL_ITEM_ROWS_BY_FAMILY_TIER.items()
+            if fam_tier[0] == ammo_family_id
+        ),
+        key=lambda x: x[0][1],
         reverse=True,
     )
-    concrete_id = next((item.id for item in candidates if held.get(item.id, 0) >= amount), None)
+    concrete_id = next((row["id"] for (_, _), row in candidates if held.get(row["id"], 0) >= amount), None)
     if concrete_id is None:
         return None
 
-    doc = await db.players.find_one_and_update(
-        {
-            "address": address,
-            "characters": {"$elemMatch": {"id": character_id, f"crafting.resources.{concrete_id}": {"$gte": amount}}},
+    doc = await db.characters.find_one_and_update(
+        {"address": address, "id": character_id, f"gear.itemBalances.backpack.{concrete_id}": {"$gte": amount},
         },
-        {"$inc": {f"characters.$.crafting.resources.{concrete_id}": -amount}},
+        {"$inc": {f"gear.itemBalances.backpack.{concrete_id}": -amount}},
         return_document=ReturnDocument.AFTER,
     )
     if doc is None:
         return None
-    return _doc_to_player(doc)
+    return await _build_player(db, address)

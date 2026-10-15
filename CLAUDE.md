@@ -34,10 +34,14 @@ npm run type-check  # TypeScript check without emitting
 ## Conventions
 - ESLint's `react/no-unescaped-entities` rule is enabled — escape raw apostrophes/quotes in JSX text (e.g. `'` → `&apos;`, `"` → `&quot;`).
 
-## Known gaps
+## Schema layout (post-unification)
 
-- **Character has no `items` field yet** — only `resources` and `tools` exist per-character (see `backend/character.py`). When a `Character.items` concept (schema field + check-in/check-out endpoint pair, mirroring `resources`/`tools`) gets built:
-  - Wire it into `CharacterPreview.tsx`'s delete-confirmation flow (`checkInAll` calls for `resources` and `tools` before deleting — add `items` there too).
-  - Add its section to `InventoryTab.tsx`'s accordion ordering (currently Blueprints Known → Tools → Resources for the character side; Tools → Resources for the party side, per an explicit reorder request — Items was left out only because there was nothing to show).
+- **`characters` collection**: one doc per character, keyed by `(address, id)`. Each doc holds gear, stats, profession, crafting, availability, etc. No `players` collection — `_build_player` assembles a Player from `characters` + related tables.
+- **`active_players` collection**: TTL 8h, tracks who is online (address, last_active_at). Separate from character data.
+- **`player_vaults` collection**: `{ address, items: [...], itemBalances: {id: qty} }` — **per-player** (keyed by address only). Shared vault across all characters. `itemBalances` is the unified pool for all stackable items (raw materials, processed, crafting tools, food, potions, etc.). `items` holds instance-tracked items. Injected into every `character.vault` by `_build_player` at read time.
+- **`character_blueprints` collection**: `{ address, characterId, blueprints: [id, …] }` — soulbound blueprints per character.
+- **`character_camps` collection**: `{ address, characterId, itemBalances: {id: qty} }` — camp-held stackable items per character. Injected into `gear.itemBalances.camp` by `_build_player` at read time.
+- **`Character.gear.itemBalances`** covers `backpack`, `saddlepack`, `cart` on the persistent doc, with `camp` injected at read time from `character_camps`.
+- **Character deletion** dumps all gear (body, backpack, saddlepack, cart, camp, companions, mounts) into the shared vault, deletes blueprints and camp doc, then deletes the character doc. The vault persists.
 
 

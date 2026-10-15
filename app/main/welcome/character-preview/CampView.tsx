@@ -11,13 +11,16 @@ import {
   computeBackpackContents,
   computeSaddlepackContents,
   computeCartContents,
+  getKindIcon,
+  getTierIndicator,
   postJson,
   selectionWeight,
   stripStackSuffix,
   type BlueprintTierInfo,
   type RawPlayerData,
   type ResourceTierInfo,
-} from "./InventoryTab";
+} from "./VaultTab";
+import { getItemCatalog, getResourceCatalog, getToolCatalog } from "./catalogCache";
 import type { SlotCharacterSummary } from "../SoulSlotGrid";
 import { useSound } from "../../SoundProvider";
 
@@ -50,6 +53,10 @@ function fadeOutAudio(audio: HTMLAudioElement) {
   }, stepMs);
 }
 
+// Stable empty fallback — keeps useMemo([campInstances, campBalances])
+// caching intact when camp data hasn't loaded yet.
+const EMPTY_CAMP: Record<string, number> = {};
+
 // A fixed placeholder height for the campfire art at the bottom of the
 // screen - reserved out of ItemGrid's own fill-to-bottom measurement (see
 // its reserveBottomPx prop) so the two never fight over the same space.
@@ -63,7 +70,7 @@ const CAMPFIRE_AREA_PX = 175;
  * own gear.itemBalances.camp (finished goods owned but not yet packed into
  * a backpack/saddlepack) plus any gear.items instances sitting at
  * location:"camp" (e.g. dropped there by unequip_item mid-adventure),
- * styled like the Inventory tab's Vault grid, with a campfire centerpiece
+ * styled like the Vault tab's item grid, with a campfire centerpiece
  * filling the lower part of the screen below it. */
 export function CampView({
   character,
@@ -111,6 +118,24 @@ export function CampView({
   const [confirmDestroy, setConfirmDestroy] = useState(false);
   const [showSalvagePopup, setShowSalvagePopup] = useState(false);
 
+  const [campKindFilter, setCampKindFilter] = useState<string[]>([]);
+  const [campTierFilter, setCampTierFilter] = useState<number[]>([]);
+  const [campSpecialFilter, setCampSpecialFilter] = useState<"tools" | "resources" | null>(null);
+  const toggleCampKindFilter = (kind: string) => {
+    setCampSpecialFilter(null);
+    setCampKindFilter((prev) =>
+      prev.includes(kind) ? prev.filter((k) => k !== kind) : [...prev, kind]
+    );
+  };
+  const toggleCampTierFilter = (tier: number) =>
+    setCampTierFilter((prev) =>
+      prev.includes(tier) ? prev.filter((t) => t !== tier) : [...prev, tier]
+    );
+  const toggleCampSpecialFilter = (mode: "tools" | "resources") => {
+    setCampKindFilter([]);
+    setCampSpecialFilter((prev) => (prev === mode ? null : mode));
+  };
+
   const exitSelectMode = useCallback(() => {
     setSelectMode(false);
     setSelectedIds(new Set());
@@ -145,87 +170,21 @@ export function CampView({
     setSelectedIds(new Set([`res:${id}`]));
   }, []);
 
-  // Same item-catalog fetch BodyTab.tsx/InventoryTab.tsx each already do
-  // independently for their own tierInfo - no shared ancestor state to
-  // lift this into without a larger prop-threading change.
   const [itemCatalogTierInfo, setItemCatalogTierInfo] = useState<BlueprintTierInfo>({});
+  const [toolTierInfo, setToolTierInfo] = useState<BlueprintTierInfo>({});
   useEffect(() => {
-    fetch("/api/auth/item-catalog")
-      .then((res) => (res.ok ? res.json() : []))
-      .then(
-        (
-          data: Array<{
-            id: string;
-            name: string;
-            familyId: string;
-            tier: number;
-            kind: string[];
-            qualityMax: number | null;
-            armorClass: number | null;
-            icon: string;
-            stackSize: number;
-            description: string;
-            sizeClass: string;
-            equipSlots: string[][];
-            backpackable: boolean;
-            gatheringBonuses: string[];
-            capacitySlots: number;
-            carryCapacity: number;
-          }>
-        ) => {
-          const map: BlueprintTierInfo = {};
-          for (const item of data) {
-            map[item.id] = {
-              tier: item.tier,
-              familyId: item.familyId,
-              kind: item.kind[0] ?? "",
-              name: item.name,
-              qualityMax: item.qualityMax,
-              armorClass: item.armorClass,
-              icon: item.icon,
-              stackSize: item.stackSize,
-              description: item.description,
-              sizeClass: item.sizeClass,
-              equipSlots: item.equipSlots,
-              backpackable: item.backpackable,
-              gatheringBonuses: item.gatheringBonuses,
-              capacitySlots: item.capacitySlots,
-              carryCapacity: item.carryCapacity,
-            };
-          }
-          setItemCatalogTierInfo(map);
-        }
-      )
-      .catch(() => setItemCatalogTierInfo({}));
+    getItemCatalog().then(setItemCatalogTierInfo).catch(() => setItemCatalogTierInfo({}));
+    getToolCatalog().then(setToolTierInfo).catch(() => setToolTierInfo({}));
   }, []);
+  const mergedCatalogTierInfo = useMemo<BlueprintTierInfo>(
+    () => ({ ...itemCatalogTierInfo, ...toolTierInfo }),
+    [itemCatalogTierInfo, toolTierInfo]
+  );
 
-  // Same resource-catalog fetch InventoryTab.tsx already does independently
-  // for its own resourceTierInfo - needed here too now that a camp-located
-  // backpack's popup can show packed raw/processed materials (see
-  // packedItems below), not just packed items.
+  // Shared cached catalog - for showing packed raw/processed materials in a camp backpack popup.
   const [resourceTierInfo, setResourceTierInfo] = useState<ResourceTierInfo>({});
   useEffect(() => {
-    fetch("/api/auth/resource-catalog")
-      .then((res) => (res.ok ? res.json() : []))
-      .then(
-        (
-          data: Array<{
-            id: string;
-            name: string;
-            familyId: string;
-            tier: number;
-            resourceFamily: string;
-            category: "raw" | "processed";
-          }>
-        ) => {
-          const map: ResourceTierInfo = {};
-          for (const item of data) {
-            map[item.id] = { tier: item.tier, family: item.resourceFamily, category: item.category, name: item.name };
-          }
-          setResourceTierInfo(map);
-        }
-      )
-      .catch(() => setResourceTierInfo({}));
+    getResourceCatalog().then(setResourceTierInfo).catch(() => setResourceTierInfo({}));
   }, []);
 
   // Checked by familyId, not by "Back"/"Side" in slotRef - see BodyTab.tsx's
@@ -240,13 +199,13 @@ export function CampView({
   );
 
   // Camp holds two different kinds of things, same split as the Vault
-  // tab's own combining logic (see InventoryTab.tsx's playerItemsCombined):
+  // tab's own combining logic (see VaultTab.tsx's playerItemsCombined):
   // flat-count crafted goods (gear.itemBalances.camp) and individually-
   // tracked item instances sitting at location:"camp" - e.g. whatever
   // unequip_item just dropped here because this character is out on an
   // adventure. Without folding the instances in too, anything unequipped
   // mid-adventure would be correctly stored but never show up here.
-  const campBalances = character.gear.itemBalances.camp;
+  const campBalances = character.gear.itemBalances.camp ?? EMPTY_CAMP;
   const campInstances = character.gear.items.filter((instance) => instance.location === "camp");
 
   const { campInstanceLookupIds, campInstanceQuality, campLocations, campCombined, campIds } = useMemo(() => {
@@ -277,7 +236,7 @@ export function CampView({
   // Raw/processed materials sitting loose at camp - e.g. the backpack-full
   // fallback of check_out_resource_to_backpack, or an explicit "move to
   // camp" out of the backpack (see ResourcePopup's own "camp" destination).
-  const campResourceBalances = character.gear.resources.camp;
+  const campResourceBalances = character.gear.itemBalances.camp ?? EMPTY_CAMP;
   const hasCampResources = Object.values(campResourceBalances).some((qty) => qty > 0);
 
   // dropped.png (lower-left flavor icon), the campfire lit/unlit swap, the
@@ -326,20 +285,20 @@ export function CampView({
   // level, not tied to a specific instance) can be opened the same way
   // the worn one can on the Body tab - see ItemGrid's identical props.
   const packedItems = {
-    tierInfo: itemCatalogTierInfo,
+    tierInfo: mergedCatalogTierInfo,
     resourceTierInfo,
     ...computeBackpackContents(character),
   };
 
   const saddlepackPackedItems = {
-    tierInfo: itemCatalogTierInfo,
+    tierInfo: mergedCatalogTierInfo,
     resourceTierInfo,
     ...computeSaddlepackContents(character),
   };
 
   const cartContents = computeCartContents(character);
   const cartPackedItems = {
-    tierInfo: itemCatalogTierInfo,
+    tierInfo: mergedCatalogTierInfo,
     resourceTierInfo,
     ...cartContents,
   };
@@ -352,7 +311,7 @@ export function CampView({
   if (hasCartItems) {
     for (const instance of campInstances) {
       if (instance.familyId === "cart") {
-        const icon = itemCatalogTierInfo[instance.itemId]?.icon;
+        const icon = mergedCatalogTierInfo[instance.itemId]?.icon;
         if (icon) cartIconOverrides[instance.itemId] = icon.replace("/cart_t", "/cart_filled_t");
       }
     }
@@ -369,12 +328,12 @@ export function CampView({
         if (inst && isBlocked(inst.familyId)) return true;
       } else {
         const baseId = id.replace(/#\d+$/, "").replace(/^res:/, "");
-        const info = itemCatalogTierInfo[baseId];
+        const info = mergedCatalogTierInfo[baseId];
         if (info && isBlocked(info.familyId)) return true;
       }
     }
     return false;
-  }, [selectedIds, campInstanceLookupIds, campInstances, itemCatalogTierInfo]);
+  }, [selectedIds, campInstanceLookupIds, campInstances, mergedCatalogTierInfo]);
 
   const batchMoveCamp = useCallback(
     async (destination: "vault" | "backpack" | "saddlepack" | "cart") => {
@@ -382,24 +341,19 @@ export function CampView({
       setBatchBusy(true);
       const instanceIds: string[] = [];
       const balanceTotals = new Map<string, number>();
-      const resourceTotals = new Map<string, number>();
       for (const raw of selectedIds) {
         if (raw.startsWith("res:")) {
           const stripped = raw.slice(4);
           const resId = stripStackSuffix(stripped);
-          const info = resourceTierInfo[resId];
-          const stackSize = info?.category === "raw" ? 40 : 20;
+          if (!resourceTierInfo[resId]) continue;
           const qty = campResourceBalances[resId] ?? 0;
-          const hash = stripped.lastIndexOf("#");
-          const tileIdx = hash === -1 ? 0 : parseInt(stripped.slice(hash + 1), 10);
-          const itemsInTile = Math.max(0, Math.min(stackSize, qty - tileIdx * stackSize));
-          if (itemsInTile > 0) resourceTotals.set(resId, (resourceTotals.get(resId) ?? 0) + itemsInTile);
+          if (qty > 0) balanceTotals.set(resId, (balanceTotals.get(resId) ?? 0) + qty);
         } else if (campInstanceLookupIds[stripStackSuffix(raw)] !== undefined) {
           const key = stripStackSuffix(raw);
           if (!balanceTotals.has(key)) instanceIds.push(key);
         } else {
           const id = stripStackSuffix(raw);
-          const info = itemCatalogTierInfo[id];
+          const info = mergedCatalogTierInfo[id];
           const stackSize = Math.max(1, info?.stackSize ?? 1);
           const qty = campCombined[id] ?? 0;
           const hash = raw.lastIndexOf("#");
@@ -409,16 +363,15 @@ export function CampView({
         }
       }
       const balances = Array.from(balanceTotals, ([id, amount]) => ({ id, amount }));
-      const resources = Array.from(resourceTotals, ([id, amount]) => ({ id, amount }));
       const r = await postJson(
         `/api/auth/me/characters/${character.id}/camp/bulk-move`,
-        { destination, instanceIds, balances, resources }
+        { destination, instanceIds, balances }
       );
       if (r.ok) onPlayerDataUpdated?.(r.data);
       setBatchBusy(false);
       exitSelectMode();
     },
-    [batchBusy, selectedIds, campResourceBalances, campInstanceLookupIds, campCombined, itemCatalogTierInfo, resourceTierInfo, character.id, onPlayerDataUpdated, exitSelectMode]
+    [batchBusy, selectedIds, campResourceBalances, campInstanceLookupIds, campCombined, mergedCatalogTierInfo, resourceTierInfo, character.id, onPlayerDataUpdated, exitSelectMode]
   );
 
   const batchDestroyCamp = useCallback(async () => {
@@ -428,13 +381,19 @@ export function CampView({
     const instancesSeen = new Set<string>();
     const balanceTotals = new Map<string, number>();
     for (const raw of selectedIds) {
-      if (raw.startsWith("res:")) continue;
+      if (raw.startsWith("res:")) {
+        const resId = stripStackSuffix(raw.slice(4));
+        if (!resourceTierInfo[resId]) continue;
+        const qty = campResourceBalances[resId] ?? 0;
+        if (qty > 0) balanceTotals.set(resId, (balanceTotals.get(resId) ?? 0) + qty);
+        continue;
+      }
       const id = stripStackSuffix(raw);
       const isInstance = campInstanceLookupIds[id] !== undefined;
       if (isInstance) {
         instancesSeen.add(id);
       } else {
-        const info = itemCatalogTierInfo[id];
+        const info = mergedCatalogTierInfo[id];
         const stackSize = Math.max(1, info?.stackSize ?? 1);
         const qty = campCombined[id] ?? 0;
         const hash = raw.lastIndexOf("#");
@@ -459,7 +418,7 @@ export function CampView({
     if (lastResult) onPlayerDataUpdated?.(lastResult);
     setBatchBusy(false);
     exitSelectMode();
-  }, [batchBusy, selectedIds, campInstanceLookupIds, campCombined, itemCatalogTierInfo, character.id, onPlayerDataUpdated, exitSelectMode]);
+  }, [batchBusy, selectedIds, campInstanceLookupIds, campCombined, campResourceBalances, resourceTierInfo, mergedCatalogTierInfo, character.id, onPlayerDataUpdated, exitSelectMode]);
 
   return (
     <div className={styles.panel} onContextMenu={(e) => e.preventDefault()}>
@@ -522,20 +481,43 @@ export function CampView({
             </button>
           </div>
           <span className={styles.selectionBarWeight}>
-            W: {selectionWeight(selectedIds, itemCatalogTierInfo, campCombined, campInstanceLookupIds, campResourceBalances, resourceTierInfo)}
+            W: {selectionWeight(selectedIds, mergedCatalogTierInfo, campCombined, campInstanceLookupIds, campResourceBalances, resourceTierInfo)}
           </span>
           <button
             type="button"
             className={`${styles.selectionBarBtn} ${styles.selectionBarClose}`}
             title="Select all"
             onClick={() => {
+              const specialKinds = new Set(["tool", "raw_resource", "processed"]);
+              const hasKF = campKindFilter.length > 0;
+              const hasTF = campTierFilter.length > 0;
+              const noFilter = !hasKF && !hasTF && !campSpecialFilter;
+              const visibleIds = campSpecialFilter === "tools"
+                ? campIds.filter((id) => {
+                    const info = mergedCatalogTierInfo[campInstanceLookupIds[id] ?? id];
+                    if (!info || info.kind !== "tool") return false;
+                    return !hasTF || (info.tier !== undefined && campTierFilter.includes(info.tier));
+                  })
+                : campSpecialFilter === "resources"
+                ? []
+                : noFilter
+                ? campIds.filter((id) => {
+                    const kind = mergedCatalogTierInfo[campInstanceLookupIds[id] ?? id]?.kind;
+                    return !kind || !specialKinds.has(kind);
+                  })
+                : campIds.filter((id) => {
+                    const info = mergedCatalogTierInfo[campInstanceLookupIds[id] ?? id];
+                    if (hasKF && (!info?.kind || !campKindFilter.includes(info.kind))) return false;
+                    if (hasTF && (!info?.tier || !campTierFilter.includes(info.tier))) return false;
+                    return true;
+                  });
               const all = new Set<string>();
-              for (const id of campIds) {
+              for (const id of visibleIds) {
                 const isInstance = campInstanceLookupIds[id] !== undefined;
                 if (isInstance) {
                   all.add(id);
                 } else {
-                  const info = itemCatalogTierInfo[id];
+                  const info = mergedCatalogTierInfo[id];
                   const stackSize = info?.stackSize ?? 1;
                   const owned = campCombined[id] ?? 0;
                   if (stackSize <= 1) {
@@ -551,17 +533,17 @@ export function CampView({
                   }
                 }
               }
-              for (const resId of Object.keys(campResourceBalances)) {
-                const qty = campResourceBalances[resId] ?? 0;
-                if (qty <= 0) continue;
-                const info = resourceTierInfo[resId];
-                const stackSize = info?.category === "raw" ? 40 : 20;
-                let remaining = qty;
-                let i = 0;
-                while (remaining > 0) {
-                  all.add(`res:${resId}#${i}`);
-                  remaining -= Math.min(stackSize, remaining);
-                  i++;
+              if (campSpecialFilter === "resources") {
+                const resBalances = hasTF
+                  ? Object.fromEntries(Object.entries(campResourceBalances).filter(([id]) => {
+                      const t = resourceTierInfo[id]?.tier;
+                      return t !== undefined && campTierFilter.includes(t);
+                    }))
+                  : campResourceBalances;
+                for (const resId of Object.keys(resBalances)) {
+                  const qty = resBalances[resId] ?? 0;
+                  if (qty <= 0 || !resourceTierInfo[resId]) continue;
+                  all.add(`res:${resId}#0`);
                 }
               }
               setSelectedIds(all);
@@ -617,54 +599,147 @@ export function CampView({
           <div className={styles.batchSpinner} />
         </div>
       )}
-      <ItemGrid
-        ids={campIds}
-        emptyLabel="Nothing sitting at camp right now."
-        tierInfo={itemCatalogTierInfo}
-        balances={campCombined}
-        lookupIds={campInstanceLookupIds}
-        instanceQuality={campInstanceQuality}
-        instanceLocations={campLocations}
-        source="character"
-        hasBackpackEquipped={hasBackpackEquipped}
-        hasSaddlepackEquipped={hasSaddlepackEquipped}
-        hasMountEquipped={character.gear.items.some((i) => i.location === "body" && i.slotRef?.includes("Mount"))}
-        hasCompanionEquipped={character.gear.items.some((i) => i.location === "body" && i.slotRef?.includes("Companion"))}
-        inAdventure={character.availability.inAdventure}
-        characterId={character.id}
-        onPlayerDataUpdated={onPlayerDataUpdated}
-        reserveBottomPx={CAMPFIRE_AREA_PX}
-        hideScrollbar
-        packedItems={packedItems}
-        saddlepackPackedItems={saddlepackPackedItems}
-        cartPackedItems={cartPackedItems}
-        backpackSlotsUsed={character.gear.backpackSlotsUsed}
-        backpackCapacity={character.gear.backpackCapacity}
-        saddlepackSlotsUsed={character.gear.saddlepackSlotsUsed}
-        saddlepackCapacity={character.gear.saddlepackCapacity}
-        cartSlotsUsed={character.gear.cartSlotsUsed}
-        cartCapacity={character.gear.cartCapacity}
-        mountCarryWeightUsed={character.gear.mountCarryWeightUsed}
-        mountCarryWeightCapacity={character.gear.mountCarryWeightCapacity}
-        resourceBalances={campResourceBalances}
-        resourceTierInfo={resourceTierInfo}
-        resourceDestinations={[
-          ...(hasBackpackEquipped
-            ? [{ key: "backpack", icon: BACKPACK_ACTION_ICON, label: "Backpack", endpoint: "stow" }]
-            : []),
-          ...(!character.availability.inAdventure
-            ? [{ key: "vault", icon: VAULT_ACTION_ICON, label: "Vault", endpoint: "check-in-camp" }]
-            : []),
-        ]}
-        iconOverrides={Object.keys(cartIconOverrides).length > 0 ? cartIconOverrides : undefined}
-        selectMode={selectMode}
-        selectBusy={batchBusy}
-        selectedIds={selectedIds}
-        onLongPressItem={enterSelectMode}
-        onToggleSelectItem={toggleSelectItem}
-        onLongPressResource={enterSelectModeResource}
-        onToggleSelectResource={toggleSelectResource}
-      />
+      {(() => {
+        const kindOrder = ["weapon", "armor", "shield", "food", "potion", "adventuring_gear", "essentials", "companion", "mount"];
+        const specialKinds = new Set(["tool", "raw_resource", "processed"]);
+        const kindsInCamp = new Set(
+          campIds
+            .map((id) => mergedCatalogTierInfo[campInstanceLookupIds[id] ?? id]?.kind)
+            .filter((k): k is string => !!k && !specialKinds.has(k))
+        );
+        const hasTools = campIds.some((id) => mergedCatalogTierInfo[campInstanceLookupIds[id] ?? id]?.kind === "tool");
+        const hasResources = Object.values(campResourceBalances).some((qty) => qty > 0);
+        const hasKindFilter = campKindFilter.length > 0;
+        const hasTierFilter = campTierFilter.length > 0;
+        const allActive = !hasKindFilter && !hasTierFilter && !campSpecialFilter;
+        const filteredIds = allActive
+          ? campIds.filter((id) => {
+              const kind = mergedCatalogTierInfo[campInstanceLookupIds[id] ?? id]?.kind;
+              return !kind || !specialKinds.has(kind);
+            })
+          : campSpecialFilter === "tools"
+            ? campIds.filter((id) => {
+                const info = mergedCatalogTierInfo[campInstanceLookupIds[id] ?? id];
+                if (!info || info.kind !== "tool") return false;
+                return !hasTierFilter || (info.tier !== undefined && campTierFilter.includes(info.tier));
+              })
+            : campSpecialFilter === "resources"
+            ? []
+            : campIds.filter((id) => {
+                const info = mergedCatalogTierInfo[campInstanceLookupIds[id] ?? id];
+                if (hasKindFilter && (!info?.kind || !campKindFilter.includes(info.kind))) return false;
+                if (hasTierFilter && (!info?.tier || !campTierFilter.includes(info.tier))) return false;
+                return true;
+              });
+        const showResources = campSpecialFilter === "resources";
+        const filteredResourceBalances = !showResources
+          ? EMPTY_CAMP
+          : hasTierFilter
+            ? Object.fromEntries(Object.entries(campResourceBalances).filter(([id, qty]) => {
+                if (qty <= 0) return false;
+                const t = resourceTierInfo[id]?.tier;
+                return t !== undefined && campTierFilter.includes(t);
+              }))
+            : campResourceBalances;
+        return (
+          <>
+            {(campIds.length > 0 || hasCampResources) && !selectMode && (
+              <div className={styles.vaultFilterBar}>
+                <div className={styles.vaultFilterGroup}>
+                  <button
+                    type="button"
+                    className={`${styles.vaultFilterBtn} ${allActive ? styles.vaultFilterBtnActive : ""}`}
+                    onClick={() => { setCampKindFilter([]); setCampTierFilter([]); setCampSpecialFilter(null); }}
+                    title="All"
+                  >A</button>
+                  {[1, 2, 3, 4, 5, 6].map((tier) => (
+                    <button
+                      key={`t${tier}`}
+                      type="button"
+                      className={`${styles.vaultFilterBtn} ${styles[`vaultFilterT${tier}` as keyof typeof styles] ?? ""} ${campTierFilter.includes(tier) ? styles.vaultFilterBtnActive : ""}`}
+                      onClick={() => toggleCampTierFilter(tier)}
+                      title={`Tier ${tier}`}
+                    ><span>{getTierIndicator(tier)}</span></button>
+                  ))}
+                  <button
+                    type="button"
+                    className={`${styles.vaultFilterBtn} ${styles.vaultFilterBtnTools} ${campSpecialFilter === "tools" ? styles.vaultFilterBtnActive : ""}`}
+                    onClick={() => toggleCampSpecialFilter("tools")}
+                    title="Tools"
+                    style={!hasTools ? { opacity: 0.3 } : undefined}
+                  >🔧</button>
+                  <button
+                    type="button"
+                    className={`${styles.vaultFilterBtn} ${styles.vaultFilterBtnResources} ${campSpecialFilter === "resources" ? styles.vaultFilterBtnActive : ""}`}
+                    onClick={() => toggleCampSpecialFilter("resources")}
+                    title="Resources"
+                    style={!hasResources ? { opacity: 0.3 } : undefined}
+                  >🪨</button>
+                </div>
+                {kindOrder.map((kind) => (
+                  <button
+                    key={kind}
+                    type="button"
+                    className={`${styles.vaultFilterBtn} ${campKindFilter.includes(kind) ? styles.vaultFilterBtnActive : ""}`}
+                    onClick={() => toggleCampKindFilter(kind)}
+                    title={kind.replace(/_/g, " ")}
+                    style={!kindsInCamp.has(kind) ? { opacity: 0.3 } : undefined}
+                  >{getKindIcon(kind)}</button>
+                ))}
+              </div>
+            )}
+            <ItemGrid
+              ids={filteredIds}
+              emptyLabel={allActive ? "Nothing sitting at camp right now." : "No items match."}
+              tierInfo={mergedCatalogTierInfo}
+              balances={campCombined}
+              lookupIds={campInstanceLookupIds}
+              instanceQuality={campInstanceQuality}
+              instanceLocations={campLocations}
+              source="character"
+              hasBackpackEquipped={hasBackpackEquipped}
+              hasSaddlepackEquipped={hasSaddlepackEquipped}
+              hasMountEquipped={character.gear.items.some((i) => i.location === "body" && i.slotRef?.includes("Mount"))}
+              hasCompanionEquipped={character.gear.items.some((i) => i.location === "body" && i.slotRef?.includes("Companion"))}
+              inAdventure={character.availability.inAdventure}
+              characterId={character.id}
+              onPlayerDataUpdated={onPlayerDataUpdated}
+              reserveBottomPx={CAMPFIRE_AREA_PX}
+              hideScrollbar
+              packedItems={packedItems}
+              saddlepackPackedItems={saddlepackPackedItems}
+              cartPackedItems={cartPackedItems}
+              backpackSlotsUsed={character.gear.backpackSlotsUsed}
+              backpackCapacity={character.gear.backpackCapacity}
+              saddlepackSlotsUsed={character.gear.saddlepackSlotsUsed}
+              saddlepackCapacity={character.gear.saddlepackCapacity}
+              cartSlotsUsed={character.gear.cartSlotsUsed}
+              cartCapacity={character.gear.cartCapacity}
+              mountCarryWeightUsed={character.gear.mountCarryWeightUsed}
+              mountCarryWeightCapacity={character.gear.mountCarryWeightCapacity}
+              resourceBalances={showResources ? filteredResourceBalances : EMPTY_CAMP}
+              resourceTierInfo={resourceTierInfo}
+              resourceDestinations={[
+                ...(hasBackpackEquipped
+                  ? [{ key: "backpack", icon: BACKPACK_ACTION_ICON, label: "Backpack", endpoint: "stow" }]
+                  : []),
+                ...(!character.availability.inAdventure
+                  ? [{ key: "vault", icon: VAULT_ACTION_ICON, label: "Vault", endpoint: "check-in-camp" }]
+                  : []),
+              ]}
+              iconOverrides={Object.keys(cartIconOverrides).length > 0 ? cartIconOverrides : undefined}
+              selectMode={selectMode}
+              selectBusy={batchBusy}
+              selectedIds={selectedIds}
+              onLongPressItem={enterSelectMode}
+              onToggleSelectItem={toggleSelectItem}
+              onLongPressResource={enterSelectModeResource}
+              onToggleSelectResource={toggleSelectResource}
+              skipResourceStackSplit
+            />
+          </>
+        );
+      })()}
       <div className={styles.campfireStage} style={{ height: CAMPFIRE_AREA_PX, bottom: footerVisible ? Math.max(0, footerBottomPx - 8) : 0 }}>
         {/* Fire's position/size are relative to THIS group (i.e. to the
             tent itself - see .campfireStageFireIcon), not to .campfireStage's
@@ -805,5 +880,5 @@ export function CampView({
 }
 
 // ChopBlockRow, flattenChopBlockMaterials, and ChopBlockPopup are now
-// imported from InventoryTab.tsx (shared with the vault's own salvage).
+// imported from VaultTab.tsx (shared with the vault's own salvage).
 

@@ -2,10 +2,10 @@
 Admin script: seed a player's inventory for testing/admin purposes.
 
 Configuration flags (edit the block below):
-  DROP_BLUEPRINTS  True  → grant all blueprints of the chosen tier to character slot 1
-  DROP_MATERIALS   True  → grant raw materials (RAW_MATERIAL_QTY each) to crafting.resources
+  DROP_BLUEPRINTS  True  → grant all blueprints of the chosen tier to character_blueprints collection
+  DROP_MATERIALS   True  → grant raw materials (RAW_MATERIAL_QTY each) to player_vaults.itemBalances
   DROP_ITEMS       True  → grant instance items + balance items (armor/weapons/food/potions/gear)
-  DROP_TOOLS       True  → grant flat crafting tools (anvil, furnace, …) to crafting.tools
+  DROP_TOOLS       True  → grant flat crafting tools (anvil, furnace, …) to player_vaults.itemBalances
   TIER_MIN / TIER_MAX    → tier range to drop (loops from min to max inclusive)
 
 Usage:
@@ -34,13 +34,13 @@ from backend.db import get_database  # noqa: E402
 # Configuration
 # ---------------------------------------------------------------------------
 
-PLAYER_ADDRESS = "xxx"
+PLAYER_ADDRESS = "xxxh"
 RAW_MATERIAL_QTY = 3000
 
-DROP_BLUEPRINTS = False
-DROP_MATERIALS  = False    # raw materials → crafting.resources
-DROP_ITEMS      = False   # instance items + vault.itemBalances (armor, weapons, food, potions, …)
-DROP_TOOLS      = True   # flat crafting tools (anvil, furnace, workbench, …)
+DROP_BLUEPRINTS = True
+DROP_MATERIALS  = True    # raw materials → player_vaults.itemBalances
+DROP_ITEMS      = True   # instance items + player_vaults.itemBalances (armor, weapons, food, potions, …)
+DROP_TOOLS      = True   # flat crafting tools (anvil, furnace, workbench, …) → player_vaults.itemBalances
 
 TIER_MIN        = 1      # lowest tier to drop (1–6)
 TIER_MAX        = 6      # highest tier to drop (1–6)
@@ -129,28 +129,24 @@ async def main() -> None:
 
     db = get_database()
 
-    player = await db.players.find_one({"address": PLAYER_ADDRESS})
-    if not player:
-        print(f"ERROR: Player {PLAYER_ADDRESS} not found.")
+    char_doc = await db.characters.find_one({"address": PLAYER_ADDRESS, "slotNumber": 1})
+    if not char_doc:
+        print(f"ERROR: No character on slot 1 for {PLAYER_ADDRESS}.")
         return
 
-    characters = player.get("characters", [])
-    slot = next((c for c in characters if c.get("slotNumber") == 1), None)
-    if slot is None:
-        print("ERROR: No character on slot 1.")
-        return
-    char_id = slot["id"]
-    print(f"Character: {slot.get('firstName', '')} {slot.get('lastName', '')} (id={char_id})\n")
+    char_id = char_doc["id"]
+    print(f"Character: {char_doc.get('firstName', '')} {char_doc.get('lastName', '')} (id={char_id})\n")
 
     for tier in tiers:
         print(f"{'='*40} TIER {tier} {'='*40}")
 
         if DROP_BLUEPRINTS:
             blueprint_ids = load_blueprints(tier)
-            print(f"[blueprints] Adding {len(blueprint_ids)} tier-{tier} blueprints to character...")
-            result = await db.players.update_one(
-                {"address": PLAYER_ADDRESS, "characters.id": char_id},
-                {"$addToSet": {"characters.$.blueprints": {"$each": blueprint_ids}}},
+            print(f"[blueprints] Adding {len(blueprint_ids)} tier-{tier} blueprints to character_blueprints...")
+            result = await db.character_blueprints.update_one(
+                {"address": PLAYER_ADDRESS, "characterId": char_id},
+                {"$addToSet": {"blueprints": {"$each": blueprint_ids}}},
+                upsert=True,
             )
             print(f"  matched={result.matched_count} modified={result.modified_count}")
         else:
@@ -160,8 +156,12 @@ async def main() -> None:
             raw_ids = load_raw_materials(tier)
             print(f"[materials] Granting {len(raw_ids)} tier-{tier} raw materials ({RAW_MATERIAL_QTY} each)...")
             if raw_ids:
-                inc_resources = {f"crafting.resources.{rid}": RAW_MATERIAL_QTY for rid in raw_ids}
-                result = await db.players.update_one({"address": PLAYER_ADDRESS}, {"$inc": inc_resources})
+                inc_resources = {f"itemBalances.{rid}": RAW_MATERIAL_QTY for rid in raw_ids}
+                result = await db.player_vaults.update_one(
+                    {"address": PLAYER_ADDRESS},
+                    {"$inc": inc_resources},
+                    upsert=True,
+                )
                 print(f"  matched={result.matched_count} modified={result.modified_count}")
             else:
                 print("  (none found)")
@@ -173,9 +173,10 @@ async def main() -> None:
 
             print(f"[items] Pushing {len(instances)} tier-{tier} instance-tracked items to vault.items...")
             if instances:
-                result = await db.players.update_one(
+                result = await db.player_vaults.update_one(
                     {"address": PLAYER_ADDRESS},
-                    {"$push": {"vault.items": {"$each": instances}}},
+                    {"$push": {"items": {"$each": instances}}},
+                    upsert=True,
                 )
                 print(f"  matched={result.matched_count} modified={result.modified_count}")
             else:
@@ -183,9 +184,10 @@ async def main() -> None:
 
             print(f"[balances] Granting {len(item_balances)} tier-{tier} balance items to vault.itemBalances...")
             if item_balances:
-                result = await db.players.update_one(
+                result = await db.player_vaults.update_one(
                     {"address": PLAYER_ADDRESS},
-                    {"$inc": {f"vault.itemBalances.{iid}": qty for iid, qty in item_balances.items()}},
+                    {"$inc": {f"itemBalances.{iid}": qty for iid, qty in item_balances.items()}},
+                    upsert=True,
                 )
                 print(f"  matched={result.matched_count} modified={result.modified_count}")
             else:
@@ -195,11 +197,12 @@ async def main() -> None:
 
         if DROP_TOOLS:
             _, crafting_tools, _ = load_items(tier)
-            print(f"[tools] Granting {len(crafting_tools)} tier-{tier} crafting tools to crafting.tools...")
+            print(f"[tools] Granting {len(crafting_tools)} tier-{tier} crafting tools to vault.itemBalances...")
             if crafting_tools:
-                result = await db.players.update_one(
+                result = await db.player_vaults.update_one(
                     {"address": PLAYER_ADDRESS},
-                    {"$inc": {f"crafting.tools.{tid}": qty for tid, qty in crafting_tools.items()}},
+                    {"$inc": {f"itemBalances.{tid}": qty for tid, qty in crafting_tools.items()}},
+                    upsert=True,
                 )
                 print(f"  matched={result.matched_count} modified={result.modified_count}")
             else:

@@ -2,7 +2,7 @@ import { useState } from "react";
 import styles from "./CharacterTabs.module.css";
 import { getPortraitCropImgStyle } from "@/app/lib/portraitCrop";
 import type { SlotCharacterSummary } from "../SoulSlotGrid";
-import type { RawPlayerData } from "./InventoryTab";
+import type { RawPlayerData } from "./VaultTab";
 
 // The 10 dark squares baked into chakra-page-active.jpg (600x900) - found
 // by pixel-analyzing the image for near-black square regions, each

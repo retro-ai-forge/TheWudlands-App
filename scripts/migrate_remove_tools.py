@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Migration script to remove old 'tools' and 'toolStarter' fields from player documents.
+Migration script to remove old 'tools' and 'toolStarter' fields from character documents.
 
 These fields have been replaced with the nested 'inventory' structure:
   inventory:
@@ -27,32 +27,30 @@ from backend.db import get_database
 
 
 async def migrate():
-    """Remove old tools and toolStarter fields from all player documents."""
+    """Remove old tools and toolStarter fields from all character documents."""
     db = get_database()
 
     print("Starting migration: removing old 'tools' and 'toolStarter' fields...")
     print()
 
-    # First, check how many documents have these fields
-    docs_with_tools = await db.players.count_documents({"tools": {"$exists": True}})
-    docs_with_toolstarter = await db.players.count_documents({"toolStarter": {"$exists": True}})
+    docs_with_tools = await db.characters.count_documents({"tools": {"$exists": True}})
+    docs_with_toolstarter = await db.characters.count_documents({"toolStarter": {"$exists": True}})
 
     print(f"Documents with 'tools' field: {docs_with_tools}")
     print(f"Documents with 'toolStarter' field: {docs_with_toolstarter}")
     print()
 
     if docs_with_tools == 0 and docs_with_toolstarter == 0:
-        print("✓ No documents with old fields found. Migration complete!")
+        print("No documents with old fields found. Migration complete!")
         return
 
-    # Remove both fields
-    result = await db.players.update_many(
+    result = await db.characters.update_many(
         {},
         {"$unset": {"tools": "", "toolStarter": ""}}
     )
 
-    print(f"✓ Updated {result.modified_count} documents")
-    print(f"✓ Matched {result.matched_count} documents")
+    print(f"Updated {result.modified_count} documents")
+    print(f"Matched {result.matched_count} documents")
     print()
     print("Migration complete! Old fields removed.")
 

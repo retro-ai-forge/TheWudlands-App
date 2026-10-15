@@ -1,7 +1,10 @@
 """
 Catalog loader for backend/data/item-inventory-properties.json and
-item-size-classes.json - the equip/instance-tracking reference data for
-crafted items, mirroring resources_catalog.py's load-once-at-import pattern.
+item-size-classes.json - the unified reference data for every item family
+(weapons, armor, tools, raw resources, processed resources, etc.). All
+stackable balances (tools, raw materials, processed materials, food,
+potions) are stored in a single itemBalances dict; the `kind` field on
+each family drives display grouping, not storage routing.
 """
 
 from __future__ import annotations
@@ -25,6 +28,8 @@ _MOUNT_ITEMS_PATH = _DATA_DIR / "base-items-mount.json"
 # pointer to which base-*.json file its tiered rows actually live in.
 _FINAL_CATALOG_FILES = (
     "base-tools.json",
+    "base-resources.json",
+    "base-processed.json",
     "base-items-armor.json",
     "base-items-shield.json",
     "base-items-weapon.json",
@@ -102,12 +107,7 @@ TINY_STACK_SIZE: int = _SIZE_CLASS_DATA["tinyStackSize"]
 
 
 def slot_cost_for_family(family_id: str) -> int:
-    """
-    How many backpack slots one unit/instance of `family_id` costs. Falls
-    back to "tiny" (1 slot) for anything not in ITEM_FAMILIES_BY_ID -
-    raw/processed resources aren't catalogued there at all, per
-    item-size-classes.json's own documented fallback rule.
-    """
+    """How many backpack slots one unit/instance of `family_id` costs."""
     family = ITEM_FAMILIES_BY_ID.get(family_id)
     size_class = family.size_class if family else "tiny"
     return SLOT_COST_BY_SIZE_CLASS.get(size_class, 1)
@@ -236,23 +236,8 @@ def slot_cost_for_item(item_id: str, family_id: str) -> int:
 
 
 def resolve_output_row(family_id: str, tier: int) -> Optional[dict]:
-    """Concrete {"id", "name"} for crafting `family_id` at `tier`, or None.
-
-    Checked against the 9 "final" catalog files first, then - since a
-    dual-cataloged family (arrow, bolt, oil, and any other
-    item-inventory-properties.json family whose tiered rows actually live
-    in base-processed.json) can be referenced as a consumed "final"
-    ingredient elsewhere (e.g. written_scroll's own parchment/ink) even
-    though it was never in one of those 9 files to begin with - the
-    processed-resource catalog, same as backend.players._resolve_recipe_output
-    already does for a recipe's own OUTPUT."""
-    row = FINAL_ITEM_ROWS_BY_FAMILY_TIER.get((family_id, tier))
-    if row is not None:
-        return row
-    from backend.processed_catalog import PROCESSED_RESOURCE_ITEMS_BY_FAMILY_TIER
-
-    item = PROCESSED_RESOURCE_ITEMS_BY_FAMILY_TIER.get((family_id, tier))
-    return {"id": item.id, "name": item.name} if item else None
+    """Concrete {"id", "name"} for crafting `family_id` at `tier`, or None."""
+    return FINAL_ITEM_ROWS_BY_FAMILY_TIER.get((family_id, tier))
 
 
 @dataclass(frozen=True)
@@ -319,19 +304,9 @@ class ItemCatalogEntry:
 
 def _load_item_catalog_entries() -> tuple[ItemCatalogEntry, ...]:
     """
-    Every concrete tiered id across all 118 item-inventory-properties.json
-    families, resolved from whichever catalog actually holds that family's
-    rows - the 9 "final" files for most families, plus base-processed.json
-    for the handful (arrow, bolt, oil) that are kind:["processed"] ammo -
-    their id/name/tier/icon are resolved the processed-resource-catalog
-    way (that's simply where their tiered rows live), but they're credited
-    into vault.itemBalances like any other crafted item, not resources
-    (see backend.players._resolve_recipe_output). A family with no rows in
-    either (shouldn't happen, but not fatal) contributes nothing rather
-    than raising.
+    Every concrete tiered id across all item-inventory-properties.json
+    families, resolved from whichever catalog file holds that family's rows.
     """
-    from backend.processed_catalog import PROCESSED_RESOURCE_ITEMS
-
     entries: list[ItemCatalogEntry] = []
     for (family_id, tier), row in FINAL_ITEM_ROWS_BY_FAMILY_TIER.items():
         family = ITEM_FAMILIES_BY_ID.get(family_id)
@@ -346,19 +321,6 @@ def _load_item_catalog_entries() -> tuple[ItemCatalogEntry, ...]:
                     GATHERING_BONUSES_BY_ITEM.get(family_id, ()),
                     row.get("size", ""), row.get("carryCapacity", 0),
                     row.get("capacitySlots", 0),
-                )
-            )
-    for item in PROCESSED_RESOURCE_ITEMS:
-        family = ITEM_FAMILIES_BY_ID.get(item.family_id)
-        if family is not None:
-            entries.append(
-                ItemCatalogEntry(
-                    item.id, item.name, item.family_id, item.tier, family.kind, family.quality_max,
-                    family.armor_class, item.icon or "", family.stack_size,
-                    "", family.size_class,
-                    family.equip_slots, family.backpackable,
-                    GATHERING_BONUSES_BY_ITEM.get(item.family_id, ()),
-                    "", 0, 0,
                 )
             )
     return tuple(entries)
@@ -401,31 +363,16 @@ def resolve_item_balance_stack(item_id: str) -> tuple[int, int]:
 
 def backpack_slots_used(character: dict) -> int:
     """
-    Total backpack slots currently occupied on one character (as returned by
-    Character.to_dict()/read back from Mongo) - sums items[] where
-    location=="backpack" (never stacked, one slot cost per instance), plus
-    backpackResources/backpackItemBalances (ceil(qty/stack_size) per id -
-    see the "Backpack capacity" section of the item-instance plan for why
-    this is a stack, not a flat count).
+    Total backpack slots currently occupied on one character — sums
+    items[] where location=="backpack" plus all itemBalances.backpack
+    entries (ceil(qty/stack_size) per id).
     """
-    from backend.processed_catalog import PROCESSED_RESOURCE_ITEMS_BY_ID
-    from backend.resources_catalog import RESOURCE_ITEMS_BY_ID
-
     total = 0
     gear = character.get("gear", {})
 
     for instance in gear.get("items", []):
         if instance.get("location") == "backpack":
             total += slot_cost_for_item(instance["itemId"], instance["familyId"])
-
-    for resource_id, qty in gear.get("resources", {}).get("backpack", {}).items():
-        if resource_id in RESOURCE_ITEMS_BY_ID:
-            stack_size = RAW_STACK_SIZE
-        elif resource_id in PROCESSED_RESOURCE_ITEMS_BY_ID:
-            stack_size = PROCESSED_STACK_SIZE
-        else:
-            stack_size = TINY_STACK_SIZE
-        total += math.ceil(qty / stack_size)
 
     for item_id, qty in gear.get("itemBalances", {}).get("backpack", {}).items():
         stack_size, slot_cost = resolve_item_balance_stack(item_id)
@@ -516,27 +463,15 @@ def backpack_capacity(character: dict) -> int:
 
 def saddlepack_slots_used(character: dict) -> int:
     """
-    Total saddlepack slots currently occupied - mirrors backpack_slots_used
-    but for location:"saddlepack" items, resources, and itemBalances.
+    Total saddlepack slots currently occupied — mirrors backpack_slots_used
+    but for location:"saddlepack".
     """
-    from backend.processed_catalog import PROCESSED_RESOURCE_ITEMS_BY_ID
-    from backend.resources_catalog import RESOURCE_ITEMS_BY_ID
-
     total = 0
     gear = character.get("gear", {})
 
     for instance in gear.get("items", []):
         if instance.get("location") == "saddlepack":
             total += slot_cost_for_item(instance["itemId"], instance["familyId"])
-
-    for resource_id, qty in gear.get("resources", {}).get("saddlepack", {}).items():
-        if resource_id in RESOURCE_ITEMS_BY_ID:
-            stack_size = RAW_STACK_SIZE
-        elif resource_id in PROCESSED_RESOURCE_ITEMS_BY_ID:
-            stack_size = PROCESSED_STACK_SIZE
-        else:
-            stack_size = TINY_STACK_SIZE
-        total += math.ceil(qty / stack_size)
 
     for item_id, qty in gear.get("itemBalances", {}).get("saddlepack", {}).items():
         stack_size, slot_cost = resolve_item_balance_stack(item_id)
@@ -564,27 +499,15 @@ def saddlepack_capacity(character: dict) -> int:
 
 def cart_slots_used(character: dict) -> int:
     """
-    Total cart slots currently occupied - mirrors backpack_slots_used
-    but for location:"cart" items, resources, and itemBalances.
+    Total cart slots currently occupied — mirrors backpack_slots_used
+    but for location:"cart".
     """
-    from backend.processed_catalog import PROCESSED_RESOURCE_ITEMS_BY_ID
-    from backend.resources_catalog import RESOURCE_ITEMS_BY_ID
-
     total = 0
     gear = character.get("gear", {})
 
     for instance in gear.get("items", []):
         if instance.get("location") == "cart":
             total += slot_cost_for_item(instance["itemId"], instance["familyId"])
-
-    for resource_id, qty in gear.get("resources", {}).get("cart", {}).items():
-        if resource_id in RESOURCE_ITEMS_BY_ID:
-            stack_size = RAW_STACK_SIZE
-        elif resource_id in PROCESSED_RESOURCE_ITEMS_BY_ID:
-            stack_size = PROCESSED_STACK_SIZE
-        else:
-            stack_size = TINY_STACK_SIZE
-        total += math.ceil(qty / stack_size)
 
     for item_id, qty in gear.get("itemBalances", {}).get("cart", {}).items():
         stack_size, slot_cost = resolve_item_balance_stack(item_id)
@@ -656,14 +579,9 @@ def carry_weight_used(character: dict) -> int:
     """
     Total slot-weight the character is personally carrying: everything
     worn on body + the backpack item itself + everything packed inside
-    the backpack (items, itemBalances, resources).  Excluded from the
-    count: mount/companion slots and their sub-slots (Bridle, Saddle,
-    Barding, Saddlepack, Hitch, Charm, Rune), and anything
-    stored in saddlepack/cart locations.
+    the backpack.  Excluded: mount/companion sub-slots and
+    saddlepack/cart locations.
     """
-    from backend.processed_catalog import PROCESSED_RESOURCE_ITEMS_BY_ID
-    from backend.resources_catalog import RESOURCE_ITEMS_BY_ID
-
     total = 0
     gear = character.get("gear", {})
 
@@ -677,15 +595,6 @@ def carry_weight_used(character: dict) -> int:
             total += slot_cost_for_item(instance["itemId"], instance["familyId"])
         elif loc == "backpack":
             total += slot_cost_for_item(instance["itemId"], instance["familyId"])
-
-    for resource_id, qty in gear.get("resources", {}).get("backpack", {}).items():
-        if resource_id in RESOURCE_ITEMS_BY_ID:
-            stack_size = RAW_STACK_SIZE
-        elif resource_id in PROCESSED_RESOURCE_ITEMS_BY_ID:
-            stack_size = PROCESSED_STACK_SIZE
-        else:
-            stack_size = TINY_STACK_SIZE
-        total += math.ceil(qty / stack_size)
 
     for item_id, qty in gear.get("itemBalances", {}).get("backpack", {}).items():
         stack_size, slot_cost = resolve_item_balance_stack(item_id)
@@ -751,10 +660,7 @@ def mount_carry_weight_capacity(character: dict) -> int:
 def mount_carry_weight_used(character: dict) -> int:
     """Total slot-weight the mount is carrying: mount sub-slot gear
     (Bridle, Saddle, Barding, Saddlepack, Hitch) plus everything
-    packed inside the saddlepack (items, itemBalances, resources)."""
-    from backend.processed_catalog import PROCESSED_RESOURCE_ITEMS_BY_ID
-    from backend.resources_catalog import RESOURCE_ITEMS_BY_ID
-
+    packed inside the saddlepack."""
     total = 0
     gear = character.get("gear", {})
 
@@ -764,15 +670,6 @@ def mount_carry_weight_used(character: dict) -> int:
             total += slot_cost_for_item(instance["itemId"], instance["familyId"])
         elif loc == "saddlepack":
             total += slot_cost_for_item(instance["itemId"], instance["familyId"])
-
-    for resource_id, qty in gear.get("resources", {}).get("saddlepack", {}).items():
-        if resource_id in RESOURCE_ITEMS_BY_ID:
-            stack_size = RAW_STACK_SIZE
-        elif resource_id in PROCESSED_RESOURCE_ITEMS_BY_ID:
-            stack_size = PROCESSED_STACK_SIZE
-        else:
-            stack_size = TINY_STACK_SIZE
-        total += math.ceil(qty / stack_size)
 
     for item_id, qty in gear.get("itemBalances", {}).get("saddlepack", {}).items():
         stack_size, slot_cost = resolve_item_balance_stack(item_id)

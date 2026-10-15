@@ -1,10 +1,10 @@
 import { useEffect, useRef, useState } from "react";
 import styles from "./CharacterTabs.module.css";
-import type { RawPlayerData } from "./InventoryTab";
+import type { RawPlayerData } from "./VaultTab";
 import type { SlotCharacterSummary } from "../SoulSlotGrid";
 
 // How long the "still crafting" flash stays up before clearing itself -
-// mirrors InventoryTab's ItemDetailPopup ITEM_POPUP_FLASH_MS, just a local
+// mirrors VaultTab's ItemDetailPopup ITEM_POPUP_FLASH_MS, just a local
 // copy since that constant isn't exported and this is a much smaller flash.
 const BLOCKED_FLASH_MS = 2500;
 

@@ -38,10 +38,8 @@ from pathlib import Path
 from typing import Dict, List, Optional
 
 from backend import items_catalog
-from backend.processed_catalog import PROCESSED_RESOURCE_ITEMS, PROCESSED_RESOURCE_ITEMS_BY_ID
 from backend.professions_catalog import PROFESSION_CATEGORIES
-from backend.resources_catalog import RESOURCE_ITEMS, RESOURCE_ITEMS_BY_ID, PROFESSION_RESOURCE_FAMILIES
-from backend.tools_catalog import TOOL_ITEMS_BY_ID
+from backend.resources_catalog import PROFESSION_RESOURCE_FAMILIES
 
 _DATA_DIR = Path(__file__).resolve().parent / "data"
 _RECIPES_PATH = _DATA_DIR / "craft-recipes.json"
@@ -59,12 +57,11 @@ def has_recipe(family_id: str) -> bool:
     return family_id in _RECIPES_BY_FAMILY
 
 
-_RAW_ID_BY_FAMILY_TIER: dict[tuple[str, int], str] = {
-    (item.family_id, item.tier): item.id for item in RESOURCE_ITEMS
-}
-_PROCESSED_ID_BY_FAMILY_TIER: dict[tuple[str, int], str] = {
-    (item.family_id, item.tier): item.id for item in PROCESSED_RESOURCE_ITEMS
-}
+# Both raw and processed id lookups now go through the unified catalog.
+# FINAL_ITEM_ROWS_BY_FAMILY_TIER maps (family_id, tier) -> {"id": ...,
+# "name": ..., ...} for every tiered catalog row (raw, processed, tools,
+# etc.). The old separate _RAW / _PROCESSED dicts are no longer needed
+# because _concrete_id_and_name now reads from that single dict directly.
 
 # Processed families that represent a raw material being consumed as
 # fuel/reagent rather than staying physically present in whatever gets
@@ -113,7 +110,9 @@ MAX_YIELD_PERCENT = 91
 # tanning_rack, wrench, smokehouse) are flat-balance (Character.tools /
 # the player's shared inventory.tools), same as _resolve_tool_for_craft
 # already branches on family.needs_item_definition for crafting itself.
-_STATION_TOOL_FAMILY_IDS: frozenset[str] = frozenset(tool.family_id for tool in TOOL_ITEMS_BY_ID.values())
+_STATION_TOOL_FAMILY_IDS: frozenset[str] = frozenset(
+    entry.family_id for entry in items_catalog.ITEM_CATALOG_ENTRIES if "tool" in entry.kind
+)
 
 
 def _best_owned_station_tool_tier(
@@ -139,9 +138,11 @@ def _best_owned_station_tool_tier(
     # instance-tracked family, which will never actually have a flat entry.
     best = 0
     held_tools = character.get("crafting", {}).get("tools", {})
-    for tool_id, tool in TOOL_ITEMS_BY_ID.items():
-        if held_tools.get(tool_id, 0) > 0 or player_tools.get(tool_id, 0) > 0:
-            best = max(best, tool.tier)
+    for entry in items_catalog.ITEM_CATALOG_ENTRIES:
+        if "tool" not in entry.kind:
+            continue
+        if held_tools.get(entry.id, 0) > 0 or player_tools.get(entry.id, 0) > 0:
+            best = max(best, entry.tier)
 
     for instance in (character.get("gear", {}).get("items", []) or []):
         if instance.get("familyId") in _STATION_TOOL_FAMILY_IDS and instance.get("location") in (
@@ -314,15 +315,10 @@ class RecoveredLine:
 
 
 def _concrete_id_and_name(family_id: str, category: str, tier: int) -> Optional[tuple[str, str]]:
-    if category == "raw":
-        concrete_id = _RAW_ID_BY_FAMILY_TIER.get((family_id, tier))
-        item = RESOURCE_ITEMS_BY_ID.get(concrete_id) if concrete_id else None
-    else:
-        concrete_id = _PROCESSED_ID_BY_FAMILY_TIER.get((family_id, tier))
-        item = PROCESSED_RESOURCE_ITEMS_BY_ID.get(concrete_id) if concrete_id else None
-    if concrete_id is None or item is None:
+    row = items_catalog.FINAL_ITEM_ROWS_BY_FAMILY_TIER.get((family_id, tier))
+    if row is None:
         return None
-    return concrete_id, item.name
+    return row["id"], row["name"]
 
 
 def _break_into_denominations(
@@ -402,10 +398,10 @@ def resolve_salvage_preview(
         # total_units * effective_yield% / 100, rounded half up.
         recovered_units = (bucket.total_units * effective_yield + 50) // 100
         recovered = _break_into_denominations(recovered_units, bucket.denominations, tier)
-        raw_item = RESOURCE_ITEMS_BY_ID.get(_RAW_ID_BY_FAMILY_TIER.get((raw_family, tier)))
+        raw_row = items_catalog.FINAL_ITEM_ROWS_BY_FAMILY_TIER.get((raw_family, tier))
         results.append(RawMaterialRecovery(
             raw_family_id=raw_family,
-            raw_name=raw_item.name if raw_item else raw_family,
+            raw_name=raw_row["name"] if raw_row else raw_family,
             total_units=bucket.total_units,
             yield_breakdown=yield_breakdown,
             recovered_units=recovered_units,

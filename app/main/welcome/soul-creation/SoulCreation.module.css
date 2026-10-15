@@ -235,7 +235,7 @@
 /* The embedded recipe viewer's own <h1> is suppressed (see "?embedded=1" in
    SoulCreation.tsx) since it would just repeat this label - this is the
    only heading the section actually gets. Doubles as the fold toggle,
-   mirroring InventoryTab.tsx's identical recipe-viewer heading/fold. */
+   mirroring VaultTab.tsx's identical recipe-viewer heading/fold. */
 .recipeViewerHeading {
   display: flex;
   align-items: center;

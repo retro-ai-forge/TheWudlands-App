@@ -7,8 +7,14 @@ import styles from "../../page.module.css";
 import { FeedbackForm } from "./FeedbackForm";
 import { SoulCreation } from "./soul-creation/SoulCreation";
 import { CharacterPreview, type TabKey } from "./character-preview/CharacterPreview";
-import type { ItemInstance } from "./character-preview/InventoryTab";
+import type { ItemInstance } from "./character-preview/VaultTab";
 import type { SlotCharacterSummary } from "./SoulSlotGrid";
+
+// Stable empty fallbacks so `vault?.x ?? EMPTY_X` returns the same reference
+// on every render when vault is absent, instead of a fresh `{}` / `[]` that
+// would re-trigger any effect depending on these props.
+const EMPTY_BALANCES: Record<string, number> = {};
+const EMPTY_ITEMS: ItemInstance[] = [];
 
 // SoulSlotGrid reads localStorage (a wallet's cached slot unlocks) during
 // its very first render. Server-rendered HTML can never see that cache, so
@@ -65,49 +71,28 @@ export function WelcomeView() {
   const [viewingCharacter, setViewingCharacter] = useState<SlotCharacterSummary | null>(null);
   // null while loading the roster for the first time.
   const [characters, setCharacters] = useState<SlotCharacterSummary[] | null>(null);
-  // The player's own shared resource vault, pooled across every character -
-  // used by the character sheet's Inventory tab alongside that character's
-  // own resources.
-  const [playerResourceBalances, setPlayerResourceBalances] = useState<Record<string, number>>({});
-  // The player's own shared tool pool (id -> quantity), pooled across every
-  // character - same sharing model as playerResourceBalances.
-  const [playerTools, setPlayerTools] = useState<Record<string, number>>({});
-  // Crafted-item results sitting in the player's shared vault (not yet
-  // checked out to a character): flat counts for non-instance goods
-  // (itemBalances) plus individually-tracked instances (items, each with
-  // its own quality/instanceId) - together, "everything red in the
-  // crafting diagram" that isn't a raw/processed resource or a tool.
-  const [playerItemBalances, setPlayerItemBalances] = useState<Record<string, number>>({});
-  const [playerItems, setPlayerItems] = useState<ItemInstance[]>([]);
+  // The player's own shared resource vault (pooled across all characters in
+  // previous versions) is now per-character. These states are kept for the
+  // SoulCreation wizard which doesn't have a character context yet; vault
+  // data for CharacterPreview is read directly from viewingCharacter.vault.
+  const [playerResourceBalances] = useState<Record<string, number>>({});
+  const [playerTools] = useState<Record<string, number>>({});
   // Which tab CharacterPreview should open on - only meaningful alongside
   // viewingCharacter, set when restoring from a ?character=&tab= URL below.
   const [viewingTab, setViewingTab] = useState<TabKey>("stats");
-  // Set alongside viewingTab="inventory" when the soul slot clicked to get
+  // Set alongside viewingTab="vault" when the soul slot clicked to get
   // here was showing an active crafting timer - jumps straight to the
-  // Inventory tab's character Crafting section instead of just the tab.
+  // Vault tab's character crafting section instead of just the tab.
   const [viewingOpenCrafting, setViewingOpenCrafting] = useState(false);
 
-  // Applies a fresh roster/vault/pool snapshot (the shape returned by both
-  // /me/characters and every check-in/check-out transfer endpoint) to all
-  // three pieces of state at once, including re-syncing the open preview's
-  // `character` prop - which is otherwise a point-in-time snapshot, not live.
+  // Applies a fresh full roster snapshot (returned by /me/characters and
+  // every check-in/check-out transfer endpoint) to all relevant pieces of
+  // state, including re-syncing the open preview's character prop.
   const applyPlayerData = (data: {
     characters?: SlotCharacterSummary[];
-    crafting?: {
-      tools?: Record<string, number>;
-      resources?: Record<string, number>;
-    };
-    vault?: {
-      itemBalances?: Record<string, number>;
-      items?: ItemInstance[];
-    };
   } | null) => {
     const chars = data?.characters ?? [];
     setCharacters(chars);
-    setPlayerResourceBalances(data?.crafting?.resources ?? {});
-    setPlayerTools(data?.crafting?.tools ?? {});
-    setPlayerItemBalances(data?.vault?.itemBalances ?? {});
-    setPlayerItems(data?.vault?.items ?? []);
     setViewingCharacter((prev) => {
       if (!prev) return prev;
       const updated = chars.find((c) => c.id === prev.id);
@@ -115,15 +100,16 @@ export function WelcomeView() {
     });
   };
 
-  const refreshCharacters = () => {
-    fetch("/api/auth/me/characters", { credentials: "include" })
+  // Lightweight: just character docs for the soul slot grid portraits.
+  const refreshSummaries = () => {
+    fetch("/api/auth/me/characters/summaries", { credentials: "include" })
       .then((res) => (res.ok ? res.json() : null))
-      .then(applyPlayerData)
+      .then((data) => setCharacters(data?.characters ?? []))
       .catch(() => setCharacters([]));
   };
 
   useEffect(() => {
-    refreshCharacters();
+    refreshSummaries();
   }, []);
 
   // Restores the exact character/tab a player left from, e.g. via the
@@ -132,7 +118,7 @@ export function WelcomeView() {
   // loaded, since the character being linked to has to actually exist in
   // it. The URL is cleared right after so a later refresh doesn't keep
   // re-opening the same character.
-  const VALID_TABS: TabKey[] = ["stats", "body", "crafting", "adventure", "inventory"];
+  const VALID_TABS: TabKey[] = ["stats", "body", "camp", "vault", "stories"];
   useEffect(() => {
     if (characters === null) return;
     const params = new URLSearchParams(window.location.search);
@@ -155,12 +141,8 @@ export function WelcomeView() {
         playerTools={playerTools}
         playerResourceBalances={playerResourceBalances}
         onExit={() => {
-          // The wizard only calls onExit after a successful save, so the
-          // character roster just changed - refresh rather than relying on
-          // the mount-only fetch above, or the newly created soul wouldn't
-          // show in its slot until the next full page load.
           setCreatingSlot(null);
-          refreshCharacters();
+          refreshSummaries();
         }}
       />
     );
@@ -170,26 +152,21 @@ export function WelcomeView() {
     return (
       <CharacterPreview
         character={viewingCharacter}
-        playerResourceBalances={playerResourceBalances}
-        playerTools={playerTools}
-        playerItemBalances={playerItemBalances}
-        playerItems={playerItems}
+        playerResourceBalances={viewingCharacter.vault?.itemBalances ?? EMPTY_BALANCES}
+        playerTools={viewingCharacter.vault?.itemBalances ?? EMPTY_BALANCES}
+        playerItemBalances={viewingCharacter.vault?.itemBalances ?? EMPTY_BALANCES}
+        playerItems={viewingCharacter.vault?.items ?? EMPTY_ITEMS}
         initialTab={viewingTab}
         openCraftingSectionByDefault={viewingOpenCrafting}
         onPlayerDataUpdated={applyPlayerData}
         onClose={() => setViewingCharacter(null)}
         onDeleted={() => {
-          // The character is gone - close the preview and refresh the
-          // roster so its slot goes back to unlocked-but-empty.
           setViewingCharacter(null);
-          refreshCharacters();
+          refreshSummaries();
         }}
         onPortraitSaved={(updated) => {
-          // Update the open preview immediately (its `character` prop is a
-          // snapshot, not live) and refresh the roster so the soul slot grid
-          // picks up the new portrait too.
           setViewingCharacter(updated);
-          refreshCharacters();
+          refreshSummaries();
         }}
       />
     );
@@ -201,7 +178,7 @@ export function WelcomeView() {
         <h1 className={styles.welcomeHeadline}>Welcome to The Wudlands</h1>
         <p className={styles.welcomeMessage}>
           This is the <strong>beta</strong> version of
-          The Wudlands. Character creation is life. Check our{" "}
+          The Wudlands. Character creation and crafting is life. Check our{" "}
           <Link href="/dev-section#roadmap" className={styles.welcomeLink}>roadmap</Link>{" "}
           in the dev-section to see what&apos;s planned.
         </p>
@@ -220,7 +197,7 @@ export function WelcomeView() {
           onViewCharacter={(character, options) => {
             setViewingCharacter(character);
             if (options?.openCrafting) {
-              setViewingTab("crafting");
+              setViewingTab("vault");
               setViewingOpenCrafting(true);
             } else {
               setViewingTab("stats");
@@ -239,9 +216,7 @@ export function WelcomeView() {
         </p>
         <br/>
         <p className={styles.welcomeMessage}>
-          Nova wallet and Polkadot.js extension have been tested.
-          Metamask, Talisman, and SubWallet should work but
-          haven&apos;t been tested yet. If you have any issues
+          Nova wallet, Polkadot.js, Metamask, Talisman, and SubWallet extension have been tested.f you have any issues
           with wallet connection, please let us know.
         </p>
         <br/>

@@ -2960,5 +2960,709 @@
     ],
     "backpackable": false,
     "qualityMax": 150
+  },
+  {
+    "familyId": "bone",
+    "kind": [
+      "raw_resource"
+    ],
+    "sizeClass": "tiny",
+    "stackSize": 40,
+    "needsItemDefinition": false,
+    "equipSlots": [],
+    "backpackable": true
+  },
+  {
+    "familyId": "clay",
+    "kind": [
+      "raw_resource"
+    ],
+    "sizeClass": "tiny",
+    "stackSize": 40,
+    "needsItemDefinition": false,
+    "equipSlots": [],
+    "backpackable": true
+  },
+  {
+    "familyId": "clockwork",
+    "kind": [
+      "raw_resource"
+    ],
+    "sizeClass": "tiny",
+    "stackSize": 40,
+    "needsItemDefinition": false,
+    "equipSlots": [],
+    "backpackable": true
+  },
+  {
+    "familyId": "crystal",
+    "kind": [
+      "raw_resource"
+    ],
+    "sizeClass": "tiny",
+    "stackSize": 40,
+    "needsItemDefinition": false,
+    "equipSlots": [],
+    "backpackable": true
+  },
+  {
+    "familyId": "essence",
+    "kind": [
+      "raw_resource"
+    ],
+    "sizeClass": "tiny",
+    "stackSize": 40,
+    "needsItemDefinition": false,
+    "equipSlots": [],
+    "backpackable": true
+  },
+  {
+    "familyId": "feather",
+    "kind": [
+      "raw_resource"
+    ],
+    "sizeClass": "tiny",
+    "stackSize": 40,
+    "needsItemDefinition": false,
+    "equipSlots": [],
+    "backpackable": true
+  },
+  {
+    "familyId": "fiber",
+    "kind": [
+      "raw_resource"
+    ],
+    "sizeClass": "tiny",
+    "stackSize": 40,
+    "needsItemDefinition": false,
+    "equipSlots": [],
+    "backpackable": true
+  },
+  {
+    "familyId": "fish",
+    "kind": [
+      "raw_resource"
+    ],
+    "sizeClass": "tiny",
+    "stackSize": 40,
+    "needsItemDefinition": false,
+    "equipSlots": [],
+    "backpackable": true
+  },
+  {
+    "familyId": "harvest",
+    "kind": [
+      "raw_resource"
+    ],
+    "sizeClass": "tiny",
+    "stackSize": 40,
+    "needsItemDefinition": false,
+    "equipSlots": [],
+    "backpackable": true
+  },
+  {
+    "familyId": "herbs",
+    "kind": [
+      "raw_resource"
+    ],
+    "sizeClass": "tiny",
+    "stackSize": 40,
+    "needsItemDefinition": false,
+    "equipSlots": [],
+    "backpackable": true
+  },
+  {
+    "familyId": "hide",
+    "kind": [
+      "raw_resource"
+    ],
+    "sizeClass": "tiny",
+    "stackSize": 40,
+    "needsItemDefinition": false,
+    "equipSlots": [],
+    "backpackable": true
+  },
+  {
+    "familyId": "meat",
+    "kind": [
+      "raw_resource"
+    ],
+    "sizeClass": "tiny",
+    "stackSize": 40,
+    "needsItemDefinition": false,
+    "equipSlots": [],
+    "backpackable": true
+  },
+  {
+    "familyId": "monster_part",
+    "kind": [
+      "raw_resource"
+    ],
+    "sizeClass": "tiny",
+    "stackSize": 40,
+    "needsItemDefinition": false,
+    "equipSlots": [],
+    "backpackable": true
+  },
+  {
+    "familyId": "ore",
+    "kind": [
+      "raw_resource"
+    ],
+    "sizeClass": "tiny",
+    "stackSize": 40,
+    "needsItemDefinition": false,
+    "equipSlots": [],
+    "backpackable": true
+  },
+  {
+    "familyId": "pigment",
+    "kind": [
+      "raw_resource"
+    ],
+    "sizeClass": "tiny",
+    "stackSize": 40,
+    "needsItemDefinition": false,
+    "equipSlots": [],
+    "backpackable": true
+  },
+  {
+    "familyId": "reed",
+    "kind": [
+      "raw_resource"
+    ],
+    "sizeClass": "tiny",
+    "stackSize": 40,
+    "needsItemDefinition": false,
+    "equipSlots": [],
+    "backpackable": true
+  },
+  {
+    "familyId": "sand",
+    "kind": [
+      "raw_resource"
+    ],
+    "sizeClass": "tiny",
+    "stackSize": 40,
+    "needsItemDefinition": false,
+    "equipSlots": [],
+    "backpackable": true
+  },
+  {
+    "familyId": "skin",
+    "kind": [
+      "raw_resource"
+    ],
+    "sizeClass": "tiny",
+    "stackSize": 40,
+    "needsItemDefinition": false,
+    "equipSlots": [],
+    "backpackable": true
+  },
+  {
+    "familyId": "stone",
+    "kind": [
+      "raw_resource"
+    ],
+    "sizeClass": "tiny",
+    "stackSize": 40,
+    "needsItemDefinition": false,
+    "equipSlots": [],
+    "backpackable": true
+  },
+  {
+    "familyId": "venom",
+    "kind": [
+      "raw_resource"
+    ],
+    "sizeClass": "tiny",
+    "stackSize": 40,
+    "needsItemDefinition": false,
+    "equipSlots": [],
+    "backpackable": true
+  },
+  {
+    "familyId": "wood",
+    "kind": [
+      "raw_resource"
+    ],
+    "sizeClass": "tiny",
+    "stackSize": 40,
+    "needsItemDefinition": false,
+    "equipSlots": [],
+    "backpackable": true
+  },
+  {
+    "familyId": "alloy_dust",
+    "kind": [
+      "processed"
+    ],
+    "sizeClass": "tiny",
+    "stackSize": 20,
+    "needsItemDefinition": false,
+    "equipSlots": [],
+    "backpackable": true
+  },
+  {
+    "familyId": "arcane_dust",
+    "kind": [
+      "processed"
+    ],
+    "sizeClass": "tiny",
+    "stackSize": 20,
+    "needsItemDefinition": false,
+    "equipSlots": [],
+    "backpackable": true
+  },
+  {
+    "familyId": "baked_harvest",
+    "kind": [
+      "processed"
+    ],
+    "sizeClass": "tiny",
+    "stackSize": 20,
+    "needsItemDefinition": false,
+    "equipSlots": [],
+    "backpackable": true
+  },
+  {
+    "familyId": "beam",
+    "kind": [
+      "processed"
+    ],
+    "sizeClass": "tiny",
+    "stackSize": 20,
+    "needsItemDefinition": false,
+    "equipSlots": [],
+    "backpackable": true
+  },
+  {
+    "familyId": "bone_blade",
+    "kind": [
+      "processed"
+    ],
+    "sizeClass": "tiny",
+    "stackSize": 20,
+    "needsItemDefinition": false,
+    "equipSlots": [],
+    "backpackable": true
+  },
+  {
+    "familyId": "bone_shard",
+    "kind": [
+      "processed"
+    ],
+    "sizeClass": "tiny",
+    "stackSize": 20,
+    "needsItemDefinition": false,
+    "equipSlots": [],
+    "backpackable": true
+  },
+  {
+    "familyId": "carcass",
+    "kind": [
+      "processed"
+    ],
+    "sizeClass": "tiny",
+    "stackSize": 20,
+    "needsItemDefinition": false,
+    "equipSlots": [],
+    "backpackable": true
+  },
+  {
+    "familyId": "clean_fish",
+    "kind": [
+      "processed"
+    ],
+    "sizeClass": "tiny",
+    "stackSize": 20,
+    "needsItemDefinition": false,
+    "equipSlots": [],
+    "backpackable": true
+  },
+  {
+    "familyId": "clockwork_mechanism",
+    "kind": [
+      "processed"
+    ],
+    "sizeClass": "tiny",
+    "stackSize": 20,
+    "needsItemDefinition": false,
+    "equipSlots": [],
+    "backpackable": true
+  },
+  {
+    "familyId": "coal",
+    "kind": [
+      "processed"
+    ],
+    "sizeClass": "tiny",
+    "stackSize": 20,
+    "needsItemDefinition": false,
+    "equipSlots": [],
+    "backpackable": true
+  },
+  {
+    "familyId": "cooked_meat",
+    "kind": [
+      "processed"
+    ],
+    "sizeClass": "tiny",
+    "stackSize": 20,
+    "needsItemDefinition": false,
+    "equipSlots": [],
+    "backpackable": true
+  },
+  {
+    "familyId": "cured_chitin",
+    "kind": [
+      "processed"
+    ],
+    "sizeClass": "tiny",
+    "stackSize": 20,
+    "needsItemDefinition": false,
+    "equipSlots": [],
+    "backpackable": true
+  },
+  {
+    "familyId": "cut_crystal",
+    "kind": [
+      "processed"
+    ],
+    "sizeClass": "tiny",
+    "stackSize": 20,
+    "needsItemDefinition": false,
+    "equipSlots": [],
+    "backpackable": true
+  },
+  {
+    "familyId": "distilled_essence",
+    "kind": [
+      "processed"
+    ],
+    "sizeClass": "tiny",
+    "stackSize": 20,
+    "needsItemDefinition": false,
+    "equipSlots": [],
+    "backpackable": true
+  },
+  {
+    "familyId": "dressed_meat",
+    "kind": [
+      "processed"
+    ],
+    "sizeClass": "tiny",
+    "stackSize": 20,
+    "needsItemDefinition": false,
+    "equipSlots": [],
+    "backpackable": true
+  },
+  {
+    "familyId": "fired_brick",
+    "kind": [
+      "processed"
+    ],
+    "sizeClass": "tiny",
+    "stackSize": 20,
+    "needsItemDefinition": false,
+    "equipSlots": [],
+    "backpackable": true
+  },
+  {
+    "familyId": "firewood",
+    "kind": [
+      "processed"
+    ],
+    "sizeClass": "tiny",
+    "stackSize": 20,
+    "needsItemDefinition": false,
+    "equipSlots": [],
+    "backpackable": true
+  },
+  {
+    "familyId": "glass_bottle",
+    "kind": [
+      "processed"
+    ],
+    "sizeClass": "tiny",
+    "stackSize": 20,
+    "needsItemDefinition": false,
+    "equipSlots": [],
+    "backpackable": true
+  },
+  {
+    "familyId": "glass_pane",
+    "kind": [
+      "processed"
+    ],
+    "sizeClass": "tiny",
+    "stackSize": 20,
+    "needsItemDefinition": false,
+    "equipSlots": [],
+    "backpackable": true
+  },
+  {
+    "familyId": "ground_pigment",
+    "kind": [
+      "processed"
+    ],
+    "sizeClass": "tiny",
+    "stackSize": 20,
+    "needsItemDefinition": false,
+    "equipSlots": [],
+    "backpackable": true
+  },
+  {
+    "familyId": "ground_spice",
+    "kind": [
+      "processed"
+    ],
+    "sizeClass": "tiny",
+    "stackSize": 20,
+    "needsItemDefinition": false,
+    "equipSlots": [],
+    "backpackable": true
+  },
+  {
+    "familyId": "herbal_extract",
+    "kind": [
+      "processed"
+    ],
+    "sizeClass": "tiny",
+    "stackSize": 20,
+    "needsItemDefinition": false,
+    "equipSlots": [],
+    "backpackable": true
+  },
+  {
+    "familyId": "lacquer",
+    "kind": [
+      "processed"
+    ],
+    "sizeClass": "tiny",
+    "stackSize": 20,
+    "needsItemDefinition": false,
+    "equipSlots": [],
+    "backpackable": true
+  },
+  {
+    "familyId": "leather",
+    "kind": [
+      "processed"
+    ],
+    "sizeClass": "tiny",
+    "stackSize": 20,
+    "needsItemDefinition": false,
+    "equipSlots": [],
+    "backpackable": true
+  },
+  {
+    "familyId": "leather_lining",
+    "kind": [
+      "processed"
+    ],
+    "sizeClass": "tiny",
+    "stackSize": 20,
+    "needsItemDefinition": false,
+    "equipSlots": [],
+    "backpackable": true
+  },
+  {
+    "familyId": "medicinal_paste",
+    "kind": [
+      "processed"
+    ],
+    "sizeClass": "tiny",
+    "stackSize": 20,
+    "needsItemDefinition": false,
+    "equipSlots": [],
+    "backpackable": true
+  },
+  {
+    "familyId": "metal_bar",
+    "kind": [
+      "processed"
+    ],
+    "sizeClass": "tiny",
+    "stackSize": 20,
+    "needsItemDefinition": false,
+    "equipSlots": [],
+    "backpackable": true
+  },
+  {
+    "familyId": "metal_ingot",
+    "kind": [
+      "processed"
+    ],
+    "sizeClass": "tiny",
+    "stackSize": 20,
+    "needsItemDefinition": false,
+    "equipSlots": [],
+    "backpackable": true
+  },
+  {
+    "familyId": "panel",
+    "kind": [
+      "processed"
+    ],
+    "sizeClass": "tiny",
+    "stackSize": 20,
+    "needsItemDefinition": false,
+    "equipSlots": [],
+    "backpackable": true
+  },
+  {
+    "familyId": "plank",
+    "kind": [
+      "processed"
+    ],
+    "sizeClass": "tiny",
+    "stackSize": 20,
+    "needsItemDefinition": false,
+    "equipSlots": [],
+    "backpackable": true
+  },
+  {
+    "familyId": "quilted_thread",
+    "kind": [
+      "processed"
+    ],
+    "sizeClass": "tiny",
+    "stackSize": 20,
+    "needsItemDefinition": false,
+    "equipSlots": [],
+    "backpackable": true
+  },
+  {
+    "familyId": "refined_clay",
+    "kind": [
+      "processed"
+    ],
+    "sizeClass": "tiny",
+    "stackSize": 20,
+    "needsItemDefinition": false,
+    "equipSlots": [],
+    "backpackable": true
+  },
+  {
+    "familyId": "refined_ore",
+    "kind": [
+      "processed"
+    ],
+    "sizeClass": "tiny",
+    "stackSize": 20,
+    "needsItemDefinition": false,
+    "equipSlots": [],
+    "backpackable": true
+  },
+  {
+    "familyId": "reinforced_frame",
+    "kind": [
+      "processed"
+    ],
+    "sizeClass": "tiny",
+    "stackSize": 20,
+    "needsItemDefinition": false,
+    "equipSlots": [],
+    "backpackable": true
+  },
+  {
+    "familyId": "sponge",
+    "kind": [
+      "processed"
+    ],
+    "sizeClass": "tiny",
+    "stackSize": 20,
+    "needsItemDefinition": false,
+    "equipSlots": [],
+    "backpackable": true
+  },
+  {
+    "familyId": "thread",
+    "kind": [
+      "processed"
+    ],
+    "sizeClass": "tiny",
+    "stackSize": 20,
+    "needsItemDefinition": false,
+    "equipSlots": [],
+    "backpackable": true
+  },
+  {
+    "familyId": "tinkered_gearbox",
+    "kind": [
+      "processed"
+    ],
+    "sizeClass": "tiny",
+    "stackSize": 20,
+    "needsItemDefinition": false,
+    "equipSlots": [],
+    "backpackable": true
+  },
+  {
+    "familyId": "trimmed_pelt",
+    "kind": [
+      "processed"
+    ],
+    "sizeClass": "tiny",
+    "stackSize": 20,
+    "needsItemDefinition": false,
+    "equipSlots": [],
+    "backpackable": true
+  },
+  {
+    "familyId": "trophy_charm",
+    "kind": [
+      "processed"
+    ],
+    "sizeClass": "tiny",
+    "stackSize": 20,
+    "needsItemDefinition": false,
+    "equipSlots": [],
+    "backpackable": true
+  },
+  {
+    "familyId": "venomous_extract",
+    "kind": [
+      "processed"
+    ],
+    "sizeClass": "tiny",
+    "stackSize": 20,
+    "needsItemDefinition": false,
+    "equipSlots": [],
+    "backpackable": true
+  },
+  {
+    "familyId": "woven_cloth",
+    "kind": [
+      "processed"
+    ],
+    "sizeClass": "tiny",
+    "stackSize": 20,
+    "needsItemDefinition": false,
+    "equipSlots": [],
+    "backpackable": true
+  },
+  {
+    "familyId": "writers_table",
+    "kind": [
+      "processed"
+    ],
+    "sizeClass": "tiny",
+    "stackSize": 20,
+    "needsItemDefinition": false,
+    "equipSlots": [],
+    "backpackable": true
+  },
+  {
+    "familyId": "written_scroll",
+    "kind": [
+      "processed"
+    ],
+    "sizeClass": "tiny",
+    "stackSize": 20,
+    "needsItemDefinition": false,
+    "equipSlots": [],
+    "backpackable": true
   }
 ]
