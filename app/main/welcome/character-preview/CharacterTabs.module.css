@@ -4177,6 +4177,7 @@
 .selectionBarActions {
   display: flex;
   gap: 0.15rem;
+  flex-shrink: 0;
 }
 
 .selectionBarWeight {
@@ -4187,7 +4188,7 @@
   padding: 0 0.3rem;
   overflow: hidden;
   text-overflow: ellipsis;
-  min-width: 3rem;
+  min-width: 0;
   text-align: center;
 }
 
@@ -4201,7 +4202,7 @@
   justify-content: center;
   width: clamp(2.6rem, 8vw, 3.2rem);
   height: clamp(2.6rem, 8vw, 3.2rem);
-  flex-shrink: 1;
+  flex-shrink: 0;
   background: #1a1810;
   border: 1px solid #3a3020;
   color: #7a6a3a;
@@ -4240,6 +4241,7 @@
 }
 
 .selectionBarClose {
+  flex-shrink: 0;
   font-size: 1rem;
   line-height: 1;
   padding: 0 0.2rem;

@@ -2815,10 +2815,17 @@ async def equip_item(address: str, character_id: str, instance_id: str, slots: L
         if from_location and from_location in buckets:
             buckets = (from_location,) + tuple(b for b in buckets if b != from_location)
         for bucket in buckets:
-            qty = character.get("gear", {}).get("itemBalances", {}).get(bucket, {}).get(balance_id, 0)
-            if qty > 0:
-                balance_bucket = bucket
-                break
+            if bucket == "camp":
+                camp_doc = await db.character_camps.find_one({"address": address, "characterId": character_id})
+                qty = (camp_doc or {}).get("itemBalances", {}).get(balance_id, 0)
+                if qty > 0:
+                    balance_bucket = bucket
+                    break
+            else:
+                qty = character.get("gear", {}).get("itemBalances", {}).get(bucket, {}).get(balance_id, 0)
+                if qty > 0:
+                    balance_bucket = bucket
+                    break
         if balance_bucket is None:
             return None
         entry = items_catalog.ITEM_CATALOG_ENTRIES_BY_ID.get(balance_id)
@@ -2905,40 +2912,67 @@ async def equip_item(address: str, character_id: str, instance_id: str, slots: L
     equipped_instance = {**instance, "location": "body", "slotRef": slots}
 
     if is_balance_equip and is_balance_merge:
-        balance_path = f"gear.itemBalances.{balance_bucket}.{balance_id}"
         item_idx = next(
             i for i, it in enumerate(character.get("gear", {}).get("items", []))
             if it["instanceId"] == existing_equipped["instanceId"]
         )
         qty_path = f"gear.items.{item_idx}.quantity"
-        doc = await db.characters.find_one_and_update(
-            {
-                "address": address,
-                balance_path: {"$gte": equip_qty},
-            },
-            {
-                "$inc": {balance_path: -equip_qty, qty_path: equip_qty},
-            },
-            return_document=ReturnDocument.AFTER,
-        )
-    elif is_balance_equip:
-        balance_path = f"gear.itemBalances.{balance_bucket}.{balance_id}"
-        doc = await db.characters.find_one_and_update(
-            {"address": address, "id": character_id,
-                        "gear.items": {
-                            "$not": {
-                                "$elemMatch": {
-                                    "slotRef": {"$in": slots}},
-                    }
+        if balance_bucket == "camp":
+            await _inc_camp_itembalances(db, address, character_id, {balance_id: -equip_qty})
+            doc = await db.characters.find_one_and_update(
+                {"address": address, "id": character_id},
+                {"$inc": {qty_path: equip_qty}},
+                return_document=ReturnDocument.AFTER,
+            )
+        else:
+            balance_path = f"gear.itemBalances.{balance_bucket}.{balance_id}"
+            doc = await db.characters.find_one_and_update(
+                {
+                    "address": address,
+                    balance_path: {"$gte": equip_qty},
                 },
-                balance_path: {"$gte": equip_qty},
-            },
-            {
-                "$inc": {balance_path: -equip_qty},
-                "$push": {"gear.items": equipped_instance},
-            },
-            return_document=ReturnDocument.AFTER,
-        )
+                {
+                    "$inc": {balance_path: -equip_qty, qty_path: equip_qty},
+                },
+                return_document=ReturnDocument.AFTER,
+            )
+    elif is_balance_equip:
+        if balance_bucket == "camp":
+            await _inc_camp_itembalances(db, address, character_id, {balance_id: -equip_qty})
+            doc = await db.characters.find_one_and_update(
+                {"address": address, "id": character_id,
+                    "gear.items": {
+                        "$not": {
+                            "$elemMatch": {
+                                "slotRef": {"$in": slots}},
+                        }
+                    },
+                },
+                {
+                    "$push": {"gear.items": equipped_instance},
+                },
+                return_document=ReturnDocument.AFTER,
+            )
+            if doc is None:
+                await _inc_camp_itembalances(db, address, character_id, {balance_id: equip_qty})
+        else:
+            balance_path = f"gear.itemBalances.{balance_bucket}.{balance_id}"
+            doc = await db.characters.find_one_and_update(
+                {"address": address, "id": character_id,
+                            "gear.items": {
+                                "$not": {
+                                    "$elemMatch": {
+                                        "slotRef": {"$in": slots}},
+                        }
+                    },
+                    balance_path: {"$gte": equip_qty},
+                },
+                {
+                    "$inc": {balance_path: -equip_qty},
+                    "$push": {"gear.items": equipped_instance},
+                },
+                return_document=ReturnDocument.AFTER,
+            )
     elif (
         source_location == "body"
         and family is not None

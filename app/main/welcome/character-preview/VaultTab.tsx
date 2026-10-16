@@ -1174,13 +1174,14 @@ export function ItemGrid({
     if (isInstance) {
       expandedIds.push({ key: id, id, displayCount: null, tileCap: 1 });
     } else if (stackSize <= 1) {
-      for (let i = 0; i < owned; i++) {
+      const cap = Math.min(owned, 500);
+      for (let i = 0; i < cap; i++) {
         expandedIds.push({ key: `${id}#${i}`, id, displayCount: null, tileCap: 1 });
       }
     } else {
       let remaining = owned;
       let i = 0;
-      while (remaining > 0) {
+      while (remaining > 0 && i < 500) {
         const inThisStack = Math.min(stackSize, remaining);
         expandedIds.push({ key: `${id}#${i}`, id, displayCount: inThisStack, tileCap: inThisStack });
         remaining -= inThisStack;
@@ -2218,13 +2219,14 @@ function PackedItemsRow({
     if (isInstance) {
       expandedIds.push({ key: id, id, displayCount: null, tileCap: 1 });
     } else if (stackSize <= 1) {
-      for (let i = 0; i < owned; i++) {
+      const cap = Math.min(owned, 500);
+      for (let i = 0; i < cap; i++) {
         expandedIds.push({ key: `${id}#${i}`, id, displayCount: null, tileCap: 1 });
       }
     } else {
       let remaining = owned;
       let i = 0;
-      while (remaining > 0) {
+      while (remaining > 0 && i < 500) {
         const inThisStack = Math.min(stackSize, remaining);
         expandedIds.push({ key: `${id}#${i}`, id, displayCount: inThisStack, tileCap: inThisStack });
         remaining -= inThisStack;
@@ -3642,6 +3644,10 @@ export function VaultTab({
             })
           : allVaultIds.filter((id) => {
               const info = mergedCatalogTierInfo[playerItemLookupIds[id] ?? id];
+              if (!hasKindFilter && !vaultSpecialFilter) {
+                const kind = info?.kind;
+                if (kind && _specialKinds.has(kind)) return false;
+              }
               if (hasKindFilter && !matchesKind(info)) return false;
               if (hasTierFilter && (!info?.tier || !vaultTierFilter.includes(info.tier))) return false;
               return true;
