@@ -529,6 +529,8 @@ class ToolItemResponse(BaseModel):
     icon: str = Field("", description="Per-tier art path, or empty if this family/tier has none yet")
     sizeClass: str = Field("tiny", description="Family-level backpack slot-cost bucket")
     stackSize: int = Field(1, description="Family-level stack size (1 = never stacked)")
+    equipSlots: List[List[str]] = Field(default_factory=list, description="Alternative equip slot groups")
+    backpackable: bool = Field(False, description="Whether this item can be moved to a backpack")
 
 
 class ItemCatalogEntryResponse(BaseModel):
@@ -931,6 +933,7 @@ async def get_tool_catalog():
         ToolItemResponse(
             id=entry.id, name=entry.name, familyId=entry.family_id, tier=entry.tier,
             kind=list(entry.kind), icon=entry.icon, sizeClass=entry.size_class, stackSize=entry.stack_size,
+            equipSlots=[list(group) for group in entry.equip_slots], backpackable=entry.backpackable,
         )
         for entry in items_catalog.ITEM_CATALOG_ENTRIES
         if "tool" in entry.kind

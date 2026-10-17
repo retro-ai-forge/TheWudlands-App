@@ -517,20 +517,7 @@ export function CampView({
                 if (isInstance) {
                   all.add(id);
                 } else {
-                  const info = mergedCatalogTierInfo[id];
-                  const stackSize = info?.stackSize ?? 1;
-                  const owned = campCombined[id] ?? 0;
-                  if (stackSize <= 1) {
-                    for (let i = 0; i < owned; i++) all.add(`${id}#${i}`);
-                  } else {
-                    let remaining = owned;
-                    let i = 0;
-                    while (remaining > 0) {
-                      all.add(`${id}#${i}`);
-                      remaining -= Math.min(stackSize, remaining);
-                      i++;
-                    }
-                  }
+                  all.add(`${id}#0`);
                 }
               }
               if (campSpecialFilter === "resources") {
@@ -736,6 +723,7 @@ export function CampView({
               onLongPressResource={enterSelectModeResource}
               onToggleSelectResource={toggleSelectResource}
               skipResourceStackSplit
+              skipItemStackSplit
             />
           </>
         );

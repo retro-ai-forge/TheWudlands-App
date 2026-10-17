@@ -40,7 +40,8 @@ npm run type-check  # TypeScript check without emitting
 - **`active_players` collection**: TTL 8h, tracks who is online (address, last_active_at). Separate from character data.
 - **`player_vaults` collection**: `{ address, items: [...], itemBalances: {id: qty} }` — **per-player** (keyed by address only). Shared vault across all characters. `itemBalances` is the unified pool for all stackable items (raw materials, processed, crafting tools, food, potions, etc.). `items` holds instance-tracked items. Injected into every `character.vault` by `_build_player` at read time.
 - **`character_blueprints` collection**: `{ address, characterId, blueprints: [id, …] }` — soulbound blueprints per character.
-- **`character_camps` collection**: `{ address, characterId, itemBalances: {id: qty} }` — camp-held stackable items per character. Injected into `gear.itemBalances.camp` by `_build_player` at read time.
+- **`character_camps` collection**: `{ address, characterId, items: [...], itemBalances: {id: qty} }` — camp-held instance-tracked items and stackable balances per character. `items` holds instance-tracked gear stored in camp; `itemBalances` holds stackable counts. Both injected into the character by `_build_player` at read time (`items` → `gear.items`, `itemBalances` → `gear.itemBalances.camp`). When `inAdventure` is true, camp data is not loaded.
+- **`Character.gear.items`** on the persistent doc holds only items the character takes on adventure (body, backpack, saddlepack, cart, mount, companion, crafting locations). Camp instances live in `character_camps.items`.
 - **`Character.gear.itemBalances`** covers `backpack`, `saddlepack`, `cart` on the persistent doc, with `camp` injected at read time from `character_camps`.
 - **Character deletion** dumps all gear (body, backpack, saddlepack, cart, camp, companions, mounts) into the shared vault, deletes blueprints and camp doc, then deletes the character doc. The vault persists.
 

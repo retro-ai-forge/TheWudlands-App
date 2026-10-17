@@ -892,6 +892,7 @@ export function ItemGrid({
   onLongPressResource,
   onToggleSelectResource,
   skipResourceStackSplit = false,
+  skipItemStackSplit = false,
   resourceUrlPrefix,
 }: {
   ids: string[];
@@ -997,6 +998,7 @@ export function ItemGrid({
   onLongPressResource?: (id: string) => void;
   onToggleSelectResource?: (id: string) => void;
   skipResourceStackSplit?: boolean;
+  skipItemStackSplit?: boolean;
   resourceUrlPrefix?: (id: string) => string;
 }) {
   // How tall the scroll container is allowed to be, measured against the
@@ -1173,6 +1175,8 @@ export function ItemGrid({
     const owned = balances[id] ?? 0;
     if (isInstance) {
       expandedIds.push({ key: id, id, displayCount: null, tileCap: 1 });
+    } else if (skipItemStackSplit) {
+      expandedIds.push({ key: `${id}#0`, id, displayCount: owned > 1 ? owned : null, tileCap: owned });
     } else if (stackSize <= 1) {
       const cap = Math.min(owned, 500);
       for (let i = 0; i < cap; i++) {
@@ -1380,9 +1384,12 @@ export const CART_ACTION_ICON = "/images/items/cart_t1.png";
 // BodyTab.tsx's own EquipSlotIcon mirroring) for "Right Hand" is what tells
 // the two apart, read as a mirrored pair rather than two identical icons.
 function formatSlotLabel(slot: string): ReactNode {
-  if (!/\bHand\b/.test(slot)) return slot;
-  const isRight = slot.startsWith("Right");
-  return <span style={isRight ? { display: "inline-block", transform: "scaleX(-1)" } : undefined}>✋</span>;
+  if (/\bHand\b/.test(slot)) {
+    const isRight = slot.startsWith("Right");
+    return <span style={isRight ? { display: "inline-block", transform: "scaleX(-1)" } : undefined}>✋</span>;
+  }
+  if (slot === "Hitch") return <span>⛓️</span>;
+  return slot;
 }
 
 /** Exported so CampView.tsx's own bulk camp actions (HoldActionPopup's
@@ -2912,6 +2919,12 @@ export function ItemDetailPopup({
     finish(await postJson(`/api/auth/me/characters/${characterId}/items/${moveId}/equip`, { slots, ...(amount != null ? { amount } : {}), ...(location ? { location } : {}) }));
   };
 
+  const equipFromPool = async (slots: string[]) => {
+    setPending(true);
+    setFlashMessage(null);
+    finish(await postJson(`/api/auth/me/characters/${characterId}/items/${moveId}/equip-from-pool`, { slots }));
+  };
+
   const handleClick = (e: React.MouseEvent<HTMLElement>) => {
     e.stopPropagation();
     const target = e.target as HTMLElement;
@@ -3028,35 +3041,59 @@ export function ItemDetailPopup({
                 <p className={styles.itemPopupAwayNotice}>
                   {characterFirstName ? `${characterFirstName} is on the road` : "On the road"}
                 </p>
-              ) : (stackSize > 1 || (!isInstance && owned > 1)) ? (
-                <TransferButtons
-                  owned={owned}
-                  pending={pending}
-                  onPick={moveToCamp}
-                  destinationIcon={CAMP_ACTION_ICON}
-                  destinationLabel="Camp"
-                  amounts={RAW_RESOURCE_AMOUNTS}
-                  showHalf
-                  showInfinity={false}
-                />
               ) : (
-                <div className={styles.itemPopupActions}>
-                  <button
-                    type="button"
-                    className={styles.itemPopupBackpackButton}
-                    disabled={pending}
-                    onClick={() => moveToCamp(1)}
-                    aria-label="Move to camp"
-                    title="Move to camp"
-                  >
-                    <div
-                      role="img"
-                      aria-label="Camp"
-                      className={styles.itemPopupBackpackIcon}
-                      style={{ backgroundImage: `url(${CAMP_ACTION_ICON})` }}
+                <>
+                  {!!slotGroups.length && (
+                    <div className={styles.itemPopupActions}>
+                      {slotGroups.map((slots) => (
+                        <button
+                          key={slots.join("+")}
+                          type="button"
+                          className={styles.itemPopupActionButton}
+                          disabled={pending}
+                          onClick={() => equipFromPool(slots)}
+                        >
+                          {slots.map((slot, i) => (
+                            <Fragment key={slot}>
+                              {i > 0 && " + "}
+                              {formatSlotLabel(slot)}
+                            </Fragment>
+                          ))}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                  {(stackSize > 1 || (!isInstance && owned > 1)) ? (
+                    <TransferButtons
+                      owned={owned}
+                      pending={pending}
+                      onPick={moveToCamp}
+                      destinationIcon={CAMP_ACTION_ICON}
+                      destinationLabel="Camp"
+                      amounts={RAW_RESOURCE_AMOUNTS}
+                      showHalf
+                      showInfinity={false}
                     />
-                  </button>
-                </div>
+                  ) : (
+                    <div className={styles.itemPopupActions}>
+                      <button
+                        type="button"
+                        className={styles.itemPopupBackpackButton}
+                        disabled={pending}
+                        onClick={() => moveToCamp(1)}
+                        aria-label="Move to camp"
+                        title="Move to camp"
+                      >
+                        <div
+                          role="img"
+                          aria-label="Camp"
+                          className={styles.itemPopupBackpackIcon}
+                          style={{ backgroundImage: `url(${CAMP_ACTION_ICON})` }}
+                        />
+                      </button>
+                    </div>
+                  )}
+                </>
               )
             )}
             {movable && source === "character" && isInstance && location === "body" && (
@@ -3704,20 +3741,7 @@ export function VaultTab({
                         if (isInstance) {
                           all.add(id);
                         } else {
-                          const info = mergedCatalogTierInfo[id];
-                          const stackSize = info?.stackSize ?? 1;
-                          const owned = playerItemsCombined[id] ?? 0;
-                          if (stackSize <= 1) {
-                            for (let i = 0; i < owned; i++) all.add(`${id}#${i}`);
-                          } else {
-                            let remaining = owned;
-                            let i = 0;
-                            while (remaining > 0) {
-                              all.add(`${id}#${i}`);
-                              remaining -= Math.min(stackSize, remaining);
-                              i++;
-                            }
-                          }
+                          all.add(`${id}#0`);
                         }
                       }
                       if (vaultResourceBalances) {
@@ -3850,6 +3874,7 @@ export function VaultTab({
               onLongPressResource={enterVaultSelectResource}
               onToggleSelectResource={toggleVaultSelectResource}
               skipResourceStackSplit
+              skipItemStackSplit
             />
           </>
         );
