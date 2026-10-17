@@ -152,6 +152,7 @@ export function CharacterPreview({
       itemBalances: {
         ...character.gear.itemBalances,
         camp: campItemBalances ?? character.gear.itemBalances?.camp ?? EMPTY_CAMP_BALANCES,
+        rest: restItemBalances ?? character.gear.itemBalances?.rest ?? EMPTY_CAMP_BALANCES,
       },
     },
   };
@@ -429,15 +430,13 @@ export function CharacterPreview({
             />
           )}
           {activeTab === "camp" && resting && (
-            <div className={tabStyles.panel}>
-              <p className={tabStyles.placeholderNote}>
-                {restItemBalances === null
-                  ? "Loading rest supplies…"
-                  : Object.keys(restItemBalances).length === 0
-                    ? "No supplies at this rest site yet."
-                    : `${Object.keys(restItemBalances).length} item(s) stashed here.`}
-              </p>
-            </div>
+            <CampView
+              character={augmentedCharacter}
+              onPlayerDataUpdated={handlePlayerDataUpdated}
+              onExitCamp={() => setActiveTab("body")}
+              footerVisible
+              storageType="rest"
+            />
           )}
             </>
           )}

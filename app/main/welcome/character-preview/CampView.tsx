@@ -77,6 +77,7 @@ export function CampView({
   onPlayerDataUpdated,
   onExitCamp,
   footerVisible = false,
+  storageType = "camp",
 }: {
   character: SlotCharacterSummary;
   onPlayerDataUpdated?: (data: RawPlayerData) => void;
@@ -86,6 +87,7 @@ export function CampView({
    * view is open, so this is the only way out of it once opened. */
   onExitCamp: () => void;
   footerVisible?: boolean;
+  storageType?: "camp" | "rest";
 }) {
   const { muted } = useSound();
 
@@ -205,24 +207,24 @@ export function CampView({
   // unequip_item just dropped here because this character is out on an
   // adventure. Without folding the instances in too, anything unequipped
   // mid-adventure would be correctly stored but never show up here.
-  const campBalances = character.gear.itemBalances.camp ?? EMPTY_CAMP;
-  const campInstances = character.gear.items.filter((instance) => instance.location === "camp");
+  const campBalances = (storageType === "rest" ? character.gear.itemBalances.rest : character.gear.itemBalances.camp) ?? EMPTY_CAMP;
+  const campInstances = character.gear.items.filter((instance) => instance.location === storageType);
 
   const { campInstanceLookupIds, campInstanceQuality, campLocations, campCombined, campIds } = useMemo(() => {
     const lookupIds: Record<string, string> = {};
     const rowBalances: Record<string, number> = {};
     const quality: Record<string, number | null> = {};
-    const locations: Record<string, "camp"> = {};
+    const locations: Record<string, "camp" | "rest"> = {};
     for (const instance of campInstances) {
       lookupIds[instance.instanceId] = instance.itemId;
       rowBalances[instance.instanceId] = 1;
       quality[instance.instanceId] = instance.quality;
-      locations[instance.instanceId] = "camp";
+      locations[instance.instanceId] = storageType;
     }
     const combined: Record<string, number> = { ...campBalances, ...rowBalances };
     const ids = Object.keys(combined).filter((id) => combined[id] > 0);
     for (const id of Object.keys(campBalances)) {
-      locations[id] = "camp";
+      locations[id] = storageType;
     }
     return {
       campInstanceLookupIds: lookupIds,
@@ -231,12 +233,12 @@ export function CampView({
       campCombined: combined,
       campIds: ids,
     };
-  }, [campInstances, campBalances]);
+  }, [campInstances, campBalances, storageType]);
 
   // Raw/processed materials sitting loose at camp - e.g. the backpack-full
   // fallback of check_out_resource_to_backpack, or an explicit "move to
   // camp" out of the backpack (see ResourcePopup's own "camp" destination).
-  const campResourceBalances = character.gear.itemBalances.camp ?? EMPTY_CAMP;
+  const campResourceBalances = (storageType === "rest" ? character.gear.itemBalances.rest : character.gear.itemBalances.camp) ?? EMPTY_CAMP;
   const hasCampResources = Object.values(campResourceBalances).some((qty) => qty > 0);
 
   // dropped.png (lower-left flavor icon), the campfire lit/unlit swap, the
@@ -364,7 +366,7 @@ export function CampView({
       }
       const balances = Array.from(balanceTotals, ([id, amount]) => ({ id, amount }));
       const r = await postJson(
-        `/api/auth/me/characters/${character.id}/camp/bulk-move`,
+        `/api/auth/me/characters/${character.id}/${storageType}/bulk-move`,
         { destination, instanceIds, balances }
       );
       if (r.ok) onPlayerDataUpdated?.(r.data);
@@ -458,7 +460,7 @@ export function CampView({
                 <div className={styles.selectionBarIcon} style={{ backgroundImage: `url(${CART_ACTION_ICON})` }} />
               </button>
             )}
-            {!character.availability.inAdventure && (
+            {!character.availability.inAdventure && storageType !== "rest" && (
               <button
                 type="button"
                 className={styles.selectionBarBtn}
@@ -677,7 +679,7 @@ export function CampView({
             )}
             <ItemGrid
               ids={filteredIds}
-              emptyLabel={allActive ? "Nothing sitting at camp right now." : "No items match."}
+              emptyLabel={allActive ? (storageType === "rest" ? "Nothing stashed here yet." : "Nothing sitting at camp right now.") : "No items match."}
               tierInfo={mergedCatalogTierInfo}
               balances={campCombined}
               lookupIds={campInstanceLookupIds}
@@ -706,14 +708,16 @@ export function CampView({
               mountCarryWeightCapacity={character.gear.mountCarryWeightCapacity}
               resourceBalances={showResources ? filteredResourceBalances : EMPTY_CAMP}
               resourceTierInfo={resourceTierInfo}
+              resourceUrlPrefix={(id) => `/api/auth/me/characters/${character.id}/item-balances/${id}`}
               resourceDestinations={[
                 ...(hasBackpackEquipped
-                  ? [{ key: "backpack", icon: BACKPACK_ACTION_ICON, label: "Backpack", endpoint: "stow" }]
+                  ? [{ key: "backpack", icon: BACKPACK_ACTION_ICON, label: "Backpack", endpoint: `${storageType}-to-backpack` }]
                   : []),
-                ...(!character.availability.inAdventure
-                  ? [{ key: "vault", icon: VAULT_ACTION_ICON, label: "Vault", endpoint: "check-in-camp" }]
+                ...(!character.availability.inAdventure && storageType !== "rest"
+                  ? [{ key: "vault", icon: VAULT_ACTION_ICON, label: "Vault", endpoint: "to-vault" }]
                   : []),
               ]}
+              storageType={storageType}
               iconOverrides={Object.keys(cartIconOverrides).length > 0 ? cartIconOverrides : undefined}
               selectMode={selectMode}
               selectBusy={batchBusy}
@@ -828,7 +832,7 @@ export function CampView({
             label="Hold to cast things into flames"
             icon="/images/character/campfire_lit.png"
             tone="destroy"
-            onConfirm={() => { setCampActionBusy(true); return postJson(`/api/auth/me/characters/${character.id}/camp/burn-all`); }}
+            onConfirm={() => { setCampActionBusy(true); return postJson(`/api/auth/me/characters/${character.id}/${storageType}/burn-all`); }}
             onPlayerDataUpdated={(data) => { setCampActionBusy(false); onPlayerDataUpdated?.(data); }}
             onClose={() => { setCampActionBusy(false); setCampAction(null); }}
           />
@@ -840,7 +844,7 @@ export function CampView({
             subtitle="Fills cart first, then saddlepack, then backpack"
             icon="/images/character/dropped.png"
             tone="move"
-            onConfirm={() => { setCampActionBusy(true); return postJson(`/api/auth/me/characters/${character.id}/camp/move-all-to-bags`); }}
+            onConfirm={() => { setCampActionBusy(true); return postJson(`/api/auth/me/characters/${character.id}/${storageType}/move-all-to-bags`); }}
             onPlayerDataUpdated={(data) => { setCampActionBusy(false); onPlayerDataUpdated?.(data); }}
             onClose={() => { setCampActionBusy(false); setCampAction(null); }}
           />

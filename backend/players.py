@@ -236,6 +236,11 @@ STORAGE_COLLECTIONS = {
     "rest": "character_resting",
 }
 
+
+def _check_storage_type(storage_type: str) -> None:
+    if storage_type not in STORAGE_COLLECTIONS:
+        raise ValueError(f"Unknown storage_type: {storage_type}")
+
 CONTAINER_LOCATIONS = ("backpack", "saddlepack", "cart")
 
 
@@ -4869,32 +4874,15 @@ def _max_move_amount(existing: int, stack_size: int, slot_cost: int, free_slots:
     return max(0, min(available, max_total - existing))
 
 
-async def move_all_camp_to_backpack(address: str, character_id: str) -> Optional[Player]:
+async def move_all_storage_to_backpack(
+    address: str, character_id: str, storage_type: str = "camp",
+) -> Optional[Player]:
     """
     Best-effort bulk move: everything currently sitting in a character's
-    camp (gear.items location:"camp", gear.itemBalances.camp,
-    gear.resources.camp) moves into their own backpack, as much as
-    actually fits. The camp view's own "Move all to backpack" hold action
-    (see CampView.tsx) - deliberately NOT all-or-nothing the way a single
-    item/resource move is (see check_out_item_balance_to_backpack's own
-    docstring on why that one stays strict): whatever doesn't fit simply
-    stays behind in camp untouched, nothing is ever discarded or blocked
-    by one item that happens not to fit. Item instances move whole (each
-    one atomic - it either fits its own family's slot cost or it
-    doesn't); itemBalances and resources fill partially, in whatever
-    order backpack_slots_used already returns gear.items in dict order.
-
-    Computed once as a full replacement of gear.items/itemBalances.camp/
-    itemBalances.backpack/resources.camp/resources.backpack in a single
-    $set, rather than per-id $inc/$pull calls - simpler to reason about
-    for a bulk operation than chaining dozens of small updates, and avoids
-    any of this module's documented operator-combination quirks entirely
-    (this is a single $set, no $pull/$inc mixed in).
-
-    Raises ValueError if the character has no backpack equipped at all
-    while camp holds something. Returns None if camp is entirely empty,
-    or the address/character pair doesn't match.
+    storage (camp or rest) moves into their backpack, as much as fits.
+    Whatever doesn't fit stays in storage untouched.
     """
+    _check_storage_type(storage_type)
     db = get_database()
     doc = await db.characters.find_one({"address": address, "id": character_id})
     if doc is None:
@@ -4902,11 +4890,12 @@ async def move_all_camp_to_backpack(address: str, character_id: str) -> Optional
     character = doc
 
     gear = character.get("gear", {})
-    camp_doc = await db.character_camps.find_one({"address": address, "characterId": character_id})
-    camp_instances = (camp_doc or {}).get("items", [])
-    camp_item_balances = (camp_doc or {}).get("itemBalances", {})
+    coll = db[STORAGE_COLLECTIONS[storage_type]]
+    storage_doc = await coll.find_one({"address": address, "characterId": character_id})
+    storage_instances = (storage_doc or {}).get("items", [])
+    storage_item_balances = (storage_doc or {}).get("itemBalances", {})
 
-    if not camp_instances and not any(qty > 0 for qty in camp_item_balances.values()):
+    if not storage_instances and not any(qty > 0 for qty in storage_item_balances.values()):
         return None
 
     capacity = items_catalog.backpack_capacity(character)
@@ -4916,7 +4905,7 @@ async def move_all_camp_to_backpack(address: str, character_id: str) -> Optional
 
     moved_instance_ids: set = set()
     to_backpack: list = []
-    for instance in camp_instances:
+    for instance in storage_instances:
         cost = items_catalog.slot_cost_for_family(instance["familyId"])
         if cost <= free_slots:
             moved_instance_ids.add(instance["instanceId"])
@@ -4924,8 +4913,8 @@ async def move_all_camp_to_backpack(address: str, character_id: str) -> Optional
             free_slots -= cost
 
     new_backpack_item_balances = dict(gear.get("itemBalances", {}).get("backpack", {}))
-    new_camp_item_balances = dict(camp_item_balances)
-    for item_id, qty in camp_item_balances.items():
+    new_storage_item_balances = dict(storage_item_balances)
+    for item_id, qty in storage_item_balances.items():
         if qty <= 0 or free_slots <= 0:
             continue
         stack_size, slot_cost = items_catalog.resolve_item_balance_stack(item_id)
@@ -4934,7 +4923,7 @@ async def move_all_camp_to_backpack(address: str, character_id: str) -> Optional
         if move_amount <= 0:
             continue
         new_backpack_item_balances[item_id] = existing + move_amount
-        new_camp_item_balances[item_id] = qty - move_amount
+        new_storage_item_balances[item_id] = qty - move_amount
         free_slots -= (math.ceil((existing + move_amount) / stack_size) - math.ceil(existing / stack_size)) * slot_cost
 
     update_sets: Dict[str, object] = {
@@ -4950,17 +4939,21 @@ async def move_all_camp_to_backpack(address: str, character_id: str) -> Optional
     )
     if doc is None:
         return None
-    remaining_camp_items = [i for i in camp_instances if i["instanceId"] not in moved_instance_ids]
-    await _set_storage_items(db, "camp", address, character_id, remaining_camp_items)
-    await _set_storage_balances(db, "camp", address, character_id, new_camp_item_balances)
+    remaining_items = [i for i in storage_instances if i["instanceId"] not in moved_instance_ids]
+    await _set_storage_items(db, storage_type, address, character_id, remaining_items)
+    await _set_storage_balances(db, storage_type, address, character_id, new_storage_item_balances)
     return await _build_player(db, address)
 
 
-async def move_all_camp_to_bags(address: str, character_id: str) -> Optional[Player]:
+async def move_all_storage_to_bags(
+    address: str, character_id: str, storage_type: str = "camp",
+) -> Optional[Player]:
     """
-    Best-effort bulk move: everything in camp moves into bags (cart first,
-    then saddlepack, then backpack). Whatever doesn't fit stays in camp.
+    Best-effort bulk move: everything in storage (camp or rest) moves into
+    bags (cart first, then saddlepack, then backpack). Whatever doesn't
+    fit stays in storage.
     """
+    _check_storage_type(storage_type)
     db = get_database()
     doc = await db.characters.find_one({"address": address, "id": character_id})
     if doc is None:
@@ -4968,16 +4961,17 @@ async def move_all_camp_to_bags(address: str, character_id: str) -> Optional[Pla
     character = doc
 
     gear = character.get("gear", {})
-    camp_doc = await db.character_camps.find_one({"address": address, "characterId": character_id})
-    camp_instances = [
-        i for i in (camp_doc or {}).get("items", [])
+    coll = db[STORAGE_COLLECTIONS[storage_type]]
+    storage_doc = await coll.find_one({"address": address, "characterId": character_id})
+    storage_instances = [
+        i for i in (storage_doc or {}).get("items", [])
         if i.get("familyId") not in _CONTAINER_FAMILIES
     ]
-    camp_item_balances = (camp_doc or {}).get("itemBalances", {})
+    storage_item_balances = (storage_doc or {}).get("itemBalances", {})
 
     if (
-        not camp_instances
-        and not any(qty > 0 for qty in camp_item_balances.values())
+        not storage_instances
+        and not any(qty > 0 for qty in storage_item_balances.values())
     ):
         return None
 
@@ -4994,7 +4988,7 @@ async def move_all_camp_to_bags(address: str, character_id: str) -> Optional[Pla
     moved_to_saddlepack: list = []
     moved_to_backpack: list = []
     moved_ids: set = set()
-    for instance in camp_instances:
+    for instance in storage_instances:
         fam = instance["familyId"]
         cost = items_catalog.slot_cost_for_family(fam)
         backpackable = items_catalog.ITEM_FAMILIES_BY_ID.get(fam)
@@ -5017,8 +5011,8 @@ async def move_all_camp_to_bags(address: str, character_id: str) -> Optional[Pla
     new_ct_balances = dict(gear.get("itemBalances", {}).get("cart", {}))
     new_sp_balances = dict(gear.get("itemBalances", {}).get("saddlepack", {}))
     new_bp_balances = dict(gear.get("itemBalances", {}).get("backpack", {}))
-    new_camp_balances = dict(camp_item_balances)
-    for item_id, qty in camp_item_balances.items():
+    new_storage_balances = dict(storage_item_balances)
+    for item_id, qty in storage_item_balances.items():
         if qty <= 0:
             continue
         remaining = qty
@@ -5048,7 +5042,7 @@ async def move_all_camp_to_bags(address: str, character_id: str) -> Optional[Pla
                 remaining -= move
                 bp_free -= (math.ceil((existing + move) / stack_size) - math.ceil(existing / stack_size)) * slot_cost
 
-        new_camp_balances[item_id] = remaining
+        new_storage_balances[item_id] = remaining
 
     update_op: Dict = {"$set": {
         "gear.itemBalances.cart": _strip_zeros(new_ct_balances),
@@ -5064,9 +5058,9 @@ async def move_all_camp_to_bags(address: str, character_id: str) -> Optional[Pla
     )
     if doc is None:
         return None
-    remaining_camp_items = [i for i in (camp_doc or {}).get("items", []) if i["instanceId"] not in moved_ids]
-    await _set_storage_items(db, "camp", address, character_id, remaining_camp_items)
-    await _set_storage_balances(db, "camp", address, character_id, new_camp_balances)
+    remaining_items = [i for i in (storage_doc or {}).get("items", []) if i["instanceId"] not in moved_ids]
+    await _set_storage_items(db, storage_type, address, character_id, remaining_items)
+    await _set_storage_balances(db, storage_type, address, character_id, new_storage_balances)
     return await _build_player(db, address)
 
 

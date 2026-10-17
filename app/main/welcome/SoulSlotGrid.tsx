@@ -152,7 +152,7 @@ export interface SlotCharacterSummary {
     /** Item instances this character holds - backpacked or equipped (see location/slotRef). */
     items: ItemInstance[];
     /** All stackable items this character owns, split by physical carry location (camp injected from character_camps collection). */
-    itemBalances: { camp: Record<string, number>; backpack: Record<string, number>; saddlepack: Record<string, number>; cart: Record<string, number> };
+    itemBalances: { camp: Record<string, number>; rest: Record<string, number>; backpack: Record<string, number>; saddlepack: Record<string, number>; cart: Record<string, number> };
     /** Computed server-side (backend.items_catalog.backpack_slots_used/backpack_capacity) - total backpack slots currently occupied and the character's own ceiling (0 with nothing equipped). Powers a backpack-family item's own "Filled: X/Y" line - character-level, not tied to which specific backpack instance's popup is open. */
     backpackSlotsUsed: number;
     backpackCapacity: number;

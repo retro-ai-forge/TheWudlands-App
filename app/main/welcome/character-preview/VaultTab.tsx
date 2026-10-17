@@ -864,6 +864,7 @@ export function ItemGrid({
   hasCompanionEquipped = false,
   hasCartEquipped = false,
   inAdventure = false,
+  storageType = "camp" as "camp" | "rest",
   characterId,
   characterFirstName,
   onPlayerDataUpdated,
@@ -904,7 +905,7 @@ export function ItemGrid({
   /** Row id (instanceId) -> that specific instance's current quality, for rows lookupIds resolves to a real item instance. */
   instanceQuality?: Record<string, number | null>;
   /** Row id (instanceId) -> "backpack" | "body" | "camp" - source:"character" only, decides whether the popup offers Unequip or Equip(+Check-in-to-vault) ("backpack" and "camp" both get the equip view - see check_in_item_instance/equip_item, which treat the two the same). Unused for source:"vault" (every pool row is location:"pool" by definition). */
-  instanceLocations?: Record<string, "backpack" | "body" | "camp">;
+  instanceLocations?: Record<string, "backpack" | "body" | "camp" | "rest">;
   /** Row ids with no working move-to-backpack/equip path yet (ammo living in resources, not items/itemBalances) - the popup shows info only, no action buttons, for these. */
   nonMovableIds?: Set<string>;
   /** "vault" (default): rows live in the player's shared pool - the popup's move actions are equip-from-pool/move-to-backpack, salvage/destroy target the shared vault. "character": rows are this character's own backpack/body items or itemBalances - the popup's move actions are Unequip(-to-vault)/Move-to-backpack for a worn row, Equip/Check-in-to-vault for a backpacked one; salvage/destroy target this character's own holdings instead. */
@@ -918,6 +919,7 @@ export function ItemGrid({
   hasCartEquipped?: boolean;
   /** source:"character" only - hides the popup's "Check in to vault" button while true, since there's no path back to the shared vault mid-adventure (see ItemDetailPopup's identical prop). */
   inAdventure?: boolean;
+  storageType?: "camp" | "rest";
   characterId: string;
   /** source:"vault" only - passed straight through to ItemDetailPopup's identical prop. */
   characterFirstName?: string;
@@ -1334,6 +1336,7 @@ export function ItemGrid({
           hasMountEquipped={hasMountEquipped}
           hasCompanionEquipped={hasCompanionEquipped}
           inAdventure={inAdventure}
+          storageType={storageType}
           duplicateContainer={(() => {
             const fam = tierInfo[lookupIds?.[selectedId] ?? selectedId]?.familyId;
             if (!fam) return false;
@@ -2034,6 +2037,7 @@ function PackedItemsRow({
   cartCapacity,
   cartSlotsUsed,
   inAdventure,
+  storageType = "camp" as "camp" | "rest",
   characterId,
   onPlayerDataUpdated,
   location = "backpack",
@@ -2060,6 +2064,7 @@ function PackedItemsRow({
   cartCapacity?: number;
   cartSlotsUsed?: number;
   inAdventure: boolean;
+  storageType?: "camp" | "rest";
   characterId: string;
   onPlayerDataUpdated?: (data: RawPlayerData) => void;
   location?: "backpack" | "saddlepack" | "cart";
@@ -2308,22 +2313,22 @@ function PackedItemsRow({
             location === "cart"
               ? [
                   ...(inAdventure
-                    ? [{ key: "camp", icon: CAMP_ACTION_ICON, label: "Camp", endpoint: "cart-to-camp" }]
+                    ? [{ key: "storage", icon: CAMP_ACTION_ICON, label: storageType === "rest" ? "Rest" : "Camp", endpoint: `cart-to-${storageType}` }]
                     : [{ key: "vault", icon: VAULT_ACTION_ICON, label: "Vault", endpoint: "cart-to-vault" }]),
                 ]
               : location === "saddlepack"
               ? [
                   ...(inAdventure
-                    ? [{ key: "camp", icon: CAMP_ACTION_ICON, label: "Camp", endpoint: "saddlepack-to-camp" }]
-                    : [{ key: "vault", icon: VAULT_ACTION_ICON, label: "Vault", endpoint: "unload-saddlepack" }]),
+                    ? [{ key: "storage", icon: CAMP_ACTION_ICON, label: storageType === "rest" ? "Rest" : "Camp", endpoint: `saddlepack-to-${storageType}` }]
+                    : [{ key: "vault", icon: VAULT_ACTION_ICON, label: "Vault", endpoint: "to-vault" }]),
                   ...(hasBackpackEquipped
                     ? [{ key: "backpack", icon: BACKPACK_ACTION_ICON, label: "Backpack", endpoint: "saddlepack-to-backpack" }]
                     : [{ key: "backpack", icon: BACKPACK_ACTION_ICON, label: "No backpack equipped", endpoint: "saddlepack-to-backpack" }]),
                 ]
               : [
                   ...(inAdventure
-                    ? [{ key: "camp", icon: CAMP_ACTION_ICON, label: "Camp", endpoint: "unstow" }]
-                    : [{ key: "vault", icon: VAULT_ACTION_ICON, label: "Vault", endpoint: "unload-backpack" }]),
+                    ? [{ key: "storage", icon: CAMP_ACTION_ICON, label: storageType === "rest" ? "Rest" : "Camp", endpoint: `backpack-to-${storageType}` }]
+                    : [{ key: "vault", icon: VAULT_ACTION_ICON, label: "Vault", endpoint: "to-vault" }]),
                   ...(hasSaddlepackEquipped
                     ? [{ key: "saddlepack", icon: SADDLEPACK_ACTION_ICON, label: "Saddlepack", endpoint: "backpack-to-saddlepack" }]
                     : []),
@@ -2349,6 +2354,7 @@ function PackedItemsRow({
           cartCapacity={cartCapacity}
           cartSlotsUsed={cartSlotsUsed}
           inAdventure={inAdventure}
+          storageType={storageType}
           characterId={characterId}
           onPlayerDataUpdated={onPlayerDataUpdated}
           onClose={() => setSelectedId(null)}
@@ -2489,6 +2495,7 @@ export function ItemDetailPopup({
   currentSlots,
   characterId,
   characterFirstName,
+  storageType = "camp",
   packedItems,
   saddlepackPackedItems,
   cartPackedItems,
@@ -2516,10 +2523,11 @@ export function ItemDetailPopup({
   quality: number | null;
   /** The row id itself - an instanceId (isInstance) or a concrete itemBalances/resource id. */
   moveId: string;
-  /** source:"character" instance rows only - "backpack", "camp", "saddlepack", "cart", or "body" - decides which move actions are offered. */
-  location?: "backpack" | "body" | "camp" | "saddlepack" | "cart";
+  /** source:"character" instance rows only - "backpack", "camp", "rest", "saddlepack", "cart", or "body" - decides which move actions are offered. */
+  location?: "backpack" | "body" | "camp" | "rest" | "saddlepack" | "cart";
   /** "vault" (default): `moveId` lives in the player's shared pool. "character": `moveId` is this character's own (backpack/body instance, or itemBalances row) - see ItemGrid's identical prop for what changes. */
   source?: "vault" | "character";
+  storageType?: "camp" | "rest";
   /** Whether this character currently has a backpack worn - greys out any "Move to backpack" button instead of letting the click fail server-side with "No backpack equipped". */
   hasBackpackEquipped: boolean;
   /** Whether this character's mount currently has a saddlepack worn (see items_catalog.has_saddlepack_equipped) - any "Move to saddlepack" button is hidden entirely (not just greyed) when false, since there's no mount slot to blame the way a missing backpack gets a "No backpack equipped" message. */
@@ -2587,6 +2595,9 @@ export function ItemDetailPopup({
   const stackSize = info?.stackSize ?? 1;
   const name = info?.name ? stripBlueprintPrefix(info.name) : fallbackName;
   const displayName = stackSize > 1 ? `${owned} ${name}` : name;
+  const inStorage = location === "camp" || location === "rest";
+  const storageAccessible = (storageType === "camp" && !inAdventure) || storageType === "rest";
+  const storageLabel = storageType === "rest" ? "Rest" : "Camp";
 
   const [pending, setPending] = useState(false);
   // Replaces the description text for ITEM_POPUP_FLASH_MS after a failed
@@ -2662,13 +2673,13 @@ export function ItemDetailPopup({
   const stowToBackpack = async () => {
     setPending(true);
     setFlashMessage(null);
-    finish(await postJson(`/api/auth/me/characters/${characterId}/items/${moveId}/camp-to-backpack`));
+    finish(await postJson(`/api/auth/me/characters/${characterId}/items/${moveId}/${storageType}-to-backpack`));
   };
 
-  const stowToCamp = async () => {
+  const stowToStorage = async () => {
     setPending(true);
     setFlashMessage(null);
-    finish(await postJson(`/api/auth/me/characters/${characterId}/items/${moveId}/backpack-to-camp`));
+    finish(await postJson(`/api/auth/me/characters/${characterId}/items/${moveId}/backpack-to-${storageType}`));
   };
 
   const stowToVault = async () => {
@@ -2677,16 +2688,16 @@ export function ItemDetailPopup({
     finish(await postJson(`/api/auth/me/characters/${characterId}/items/${moveId}/to-vault`));
   };
 
-  const stowToSaddlepackFromCamp = async () => {
+  const stowToSaddlepackFromStorage = async () => {
     setPending(true);
     setFlashMessage(null);
-    finish(await postJson(`/api/auth/me/characters/${characterId}/items/${moveId}/camp-to-saddlepack`));
+    finish(await postJson(`/api/auth/me/characters/${characterId}/items/${moveId}/${storageType}-to-saddlepack`));
   };
 
-  const stowToCartFromCamp = async () => {
+  const stowToCartFromStorage = async () => {
     setPending(true);
     setFlashMessage(null);
-    finish(await postJson(`/api/auth/me/characters/${characterId}/items/${moveId}/camp-to-cart`));
+    finish(await postJson(`/api/auth/me/characters/${characterId}/items/${moveId}/${storageType}-to-cart`));
   };
 
   const stowToCartFromBackpack = async () => {
@@ -2713,16 +2724,16 @@ export function ItemDetailPopup({
     finish(await postJson(`/api/auth/me/characters/${characterId}/items/${moveId}/saddlepack-to-backpack`));
   };
 
-  const saddlepackToCamp = async () => {
+  const saddlepackToStorage = async () => {
     setPending(true);
     setFlashMessage(null);
-    finish(await postJson(`/api/auth/me/characters/${characterId}/items/${moveId}/saddlepack-to-camp`));
+    finish(await postJson(`/api/auth/me/characters/${characterId}/items/${moveId}/saddlepack-to-${storageType}`));
   };
 
-  const cartToCamp = async () => {
+  const cartToStorage = async () => {
     setPending(true);
     setFlashMessage(null);
-    finish(await postJson(`/api/auth/me/characters/${characterId}/items/${moveId}/cart-to-camp`));
+    finish(await postJson(`/api/auth/me/characters/${characterId}/items/${moveId}/cart-to-${storageType}`));
   };
 
   const cartToBackpack = async () => {
@@ -2749,7 +2760,7 @@ export function ItemDetailPopup({
     setPending(true);
     setFlashMessage(null);
     finish(
-      await postJson(`/api/auth/me/characters/${characterId}/item-balances/${moveId}/camp-to-backpack`, {
+      await postJson(`/api/auth/me/characters/${characterId}/item-balances/${moveId}/${storageType}-to-backpack`, {
         amount,
       })
     );
@@ -2761,16 +2772,16 @@ export function ItemDetailPopup({
     finish(
       await postJson(`/api/auth/me/characters/${characterId}/item-balances/${moveId}/to-vault`, {
         amount,
-        location: "camp",
+        location: storageType,
       })
     );
   };
 
-  const unloadBalanceToCamp = async (amount: number) => {
+  const unloadBalanceToStorage = async (amount: number) => {
     setPending(true);
     setFlashMessage(null);
     finish(
-      await postJson(`/api/auth/me/characters/${characterId}/item-balances/${moveId}/backpack-to-camp`, {
+      await postJson(`/api/auth/me/characters/${characterId}/item-balances/${moveId}/backpack-to-${storageType}`, {
         amount,
       })
     );
@@ -2780,7 +2791,7 @@ export function ItemDetailPopup({
     setPending(true);
     setFlashMessage(null);
     finish(
-      await postJson(`/api/auth/me/characters/${characterId}/item-balances/${moveId}/camp-to-saddlepack`, {
+      await postJson(`/api/auth/me/characters/${characterId}/item-balances/${moveId}/${storageType}-to-saddlepack`, {
         amount,
       })
     );
@@ -2790,7 +2801,7 @@ export function ItemDetailPopup({
     setPending(true);
     setFlashMessage(null);
     finish(
-      await postJson(`/api/auth/me/characters/${characterId}/item-balances/${moveId}/saddlepack-to-camp`, {
+      await postJson(`/api/auth/me/characters/${characterId}/item-balances/${moveId}/saddlepack-to-${storageType}`, {
         amount,
       })
     );
@@ -2820,7 +2831,7 @@ export function ItemDetailPopup({
     setPending(true);
     setFlashMessage(null);
     finish(
-      await postJson(`/api/auth/me/characters/${characterId}/item-balances/${moveId}/camp-to-cart`, {
+      await postJson(`/api/auth/me/characters/${characterId}/item-balances/${moveId}/${storageType}-to-cart`, {
         amount,
       })
     );
@@ -2850,7 +2861,7 @@ export function ItemDetailPopup({
     setPending(true);
     setFlashMessage(null);
     finish(
-      await postJson(`/api/auth/me/characters/${characterId}/item-balances/${moveId}/cart-to-camp`, {
+      await postJson(`/api/auth/me/characters/${characterId}/item-balances/${moveId}/cart-to-${storageType}`, {
         amount,
       })
     );
@@ -2889,11 +2900,11 @@ export function ItemDetailPopup({
       await postJson(`/api/auth/me/characters/${characterId}/items/${moveId}/unequip`, { destination: "saddlepack" })
     );
   };
-  const unequipToCamp = async () => {
+  const unequipToStorage = async () => {
     setPending(true);
     setFlashMessage(null);
     finish(
-      await postJson(`/api/auth/me/characters/${characterId}/items/${moveId}/unequip`, { destination: "camp" })
+      await postJson(`/api/auth/me/characters/${characterId}/items/${moveId}/unequip`, { destination: storageType })
     );
   };
   const unequipToCart = async () => {
@@ -2976,6 +2987,7 @@ export function ItemDetailPopup({
                 cartCapacity={cartCapacity}
                 cartSlotsUsed={cartSlotsUsed}
                 inAdventure={inAdventure}
+                storageType={storageType}
                 characterId={characterId}
                 onPlayerDataUpdated={onPlayerDataUpdated}
                 location={isCart ? "cart" : isSaddlepack ? "saddlepack" : "backpack"}
@@ -3069,7 +3081,7 @@ export function ItemDetailPopup({
                       pending={pending}
                       onPick={moveToCamp}
                       destinationIcon={CAMP_ACTION_ICON}
-                      destinationLabel="Camp"
+                      destinationLabel={storageLabel}
                       amounts={RAW_RESOURCE_AMOUNTS}
                       showHalf
                       showInfinity={false}
@@ -3081,12 +3093,12 @@ export function ItemDetailPopup({
                         className={styles.itemPopupBackpackButton}
                         disabled={pending}
                         onClick={() => moveToCamp(1)}
-                        aria-label="Move to camp"
-                        title="Move to camp"
+                        aria-label={`Move to ${storageLabel}`}
+                        title={`Move to ${storageLabel}`}
                       >
                         <div
                           role="img"
-                          aria-label="Camp"
+                          aria-label={storageLabel}
                           className={styles.itemPopupBackpackIcon}
                           style={{ backgroundImage: `url(${CAMP_ACTION_ICON})` }}
                         />
@@ -3115,18 +3127,18 @@ export function ItemDetailPopup({
                       ))}
                     </button>
                   ))}
-                  {!inAdventure && (
+                  {storageAccessible && (
                     <button
                       type="button"
                       className={styles.itemPopupBackpackButton}
                       disabled={pending}
                       onClick={isContainer
-                        ? () => setConfirmMove({ label: "Camp", action: unequipToCamp })
-                        : unequipToCamp}
-                      aria-label="Move to camp"
-                      title="Move to camp"
+                        ? () => setConfirmMove({ label: storageLabel, action: unequipToStorage })
+                        : unequipToStorage}
+                      aria-label={`Move to ${storageLabel}`}
+                      title={`Move to ${storageLabel}`}
                     >
-                      <div role="img" aria-label="Camp" className={styles.itemPopupBackpackIcon} style={{ backgroundImage: `url(${CAMP_ACTION_ICON})` }} />
+                      <div role="img" aria-label={storageLabel} className={styles.itemPopupBackpackIcon} style={{ backgroundImage: `url(${CAMP_ACTION_ICON})` }} />
                     </button>
                   )}
                 </div>
@@ -3163,9 +3175,9 @@ export function ItemDetailPopup({
                       <div role="img" aria-label="Cart" className={styles.itemPopupBackpackIcon} style={{ backgroundImage: `url(${CART_ACTION_ICON})` }} />
                     </button>
                   )}
-                  {!inAdventure && (
-                    <button type="button" className={styles.itemPopupBackpackButton} disabled={pending} onClick={unequipToCamp} aria-label="Move to camp" title="Move to camp">
-                      <div role="img" aria-label="Camp" className={styles.itemPopupBackpackIcon} style={{ backgroundImage: `url(${CAMP_ACTION_ICON})` }} />
+                  {storageAccessible && (
+                    <button type="button" className={styles.itemPopupBackpackButton} disabled={pending} onClick={unequipToStorage} aria-label={`Move to ${storageLabel}`} title={`Move to ${storageLabel}`}>
+                      <div role="img" aria-label={storageLabel} className={styles.itemPopupBackpackIcon} style={{ backgroundImage: `url(${CAMP_ACTION_ICON})` }} />
                     </button>
                   )}
                 </div>
@@ -3189,35 +3201,35 @@ export function ItemDetailPopup({
                     ))}
                   </button>
                 ))}
-                {!inAdventure && location !== "camp" && (
+                {storageAccessible && !inStorage && (
                   <button type="button" className={styles.itemPopupBackpackButton} disabled={pending}
-                    onClick={location === "backpack" ? stowToCamp : location === "saddlepack" ? saddlepackToCamp : cartToCamp}
-                    aria-label="Move to camp" title="Move to camp">
-                    <div role="img" aria-label="Camp" className={styles.itemPopupBackpackIcon} style={{ backgroundImage: `url(${CAMP_ACTION_ICON})` }} />
+                    onClick={location === "backpack" ? stowToStorage : location === "saddlepack" ? saddlepackToStorage : cartToStorage}
+                    aria-label={`Move to ${storageLabel}`} title={`Move to ${storageLabel}`}>
+                    <div role="img" aria-label={storageLabel} className={styles.itemPopupBackpackIcon} style={{ backgroundImage: `url(${CAMP_ACTION_ICON})` }} />
                   </button>
                 )}
                 {location !== "backpack" && info?.backpackable && hasBackpackEquipped && (
                   <button type="button" className={styles.itemPopupBackpackButton} disabled={pending}
-                    onClick={location === "camp" ? stowToBackpack : location === "saddlepack" ? saddlepackToBackpack : cartToBackpack}
+                    onClick={inStorage ? stowToBackpack : location === "saddlepack" ? saddlepackToBackpack : cartToBackpack}
                     aria-label="Move to backpack" title="Move to backpack">
                     <div role="img" aria-label="Backpack" className={styles.itemPopupBackpackIcon} style={{ backgroundImage: `url(${BACKPACK_ACTION_ICON})` }} />
                   </button>
                 )}
                 {location !== "saddlepack" && info?.backpackable && hasSaddlepackEquipped && (
                   <button type="button" className={styles.itemPopupBackpackButton} disabled={pending}
-                    onClick={location === "camp" ? stowToSaddlepackFromCamp : location === "backpack" ? stowToSaddlepack : cartToSaddlepack}
+                    onClick={inStorage ? stowToSaddlepackFromStorage : location === "backpack" ? stowToSaddlepack : cartToSaddlepack}
                     aria-label="Move to saddlepack" title="Move to saddlepack">
                     <div role="img" aria-label="Saddlepack" className={styles.itemPopupBackpackIcon} style={{ backgroundImage: `url(${SADDLEPACK_ACTION_ICON})` }} />
                   </button>
                 )}
                 {location !== "cart" && (cartCapacity ?? 0) > 0 && !isContainer && !info?.familyId?.endsWith("_mount") && !info?.familyId?.endsWith("_companion") && (
                   <button type="button" className={styles.itemPopupBackpackButton} disabled={pending}
-                    onClick={location === "camp" ? stowToCartFromCamp : location === "backpack" ? stowToCartFromBackpack : stowToCartFromSaddlepack}
+                    onClick={inStorage ? stowToCartFromStorage : location === "backpack" ? stowToCartFromBackpack : stowToCartFromSaddlepack}
                     aria-label="Move to cart" title="Move to cart">
                     <div role="img" aria-label="Cart" className={styles.itemPopupBackpackIcon} style={{ backgroundImage: `url(${CART_ACTION_ICON})` }} />
                   </button>
                 )}
-                {!inAdventure && location === "camp" && (
+                {!inAdventure && inStorage && (
                   <button type="button" className={styles.itemPopupBackpackButton} disabled={pending}
                     onClick={stowToVault}
                     aria-label="Move to vault" title="Move to vault">
@@ -3226,7 +3238,7 @@ export function ItemDetailPopup({
                 )}
               </div>
             )}
-            {movable && source === "character" && !isInstance && (location === "camp" || location === "backpack" || location === "saddlepack" || location === "cart") && (
+            {movable && source === "character" && !isInstance && (inStorage || location === "backpack" || location === "saddlepack" || location === "cart") && (
               stackSize > 1 ? (
                 <>
                   {!!slotGroups.length && (
@@ -3249,27 +3261,27 @@ export function ItemDetailPopup({
                       ))}
                     </div>
                   )}
-                  {!inAdventure && location !== "camp" && (
+                  {storageAccessible && !inStorage && (
                     <TransferButtons owned={owned} pending={pending}
-                      onPick={location === "backpack" ? unloadBalanceToCamp : location === "saddlepack" ? unloadBalanceFromSaddlepack : unloadBalanceFromCart}
-                      destinationIcon={CAMP_ACTION_ICON} destinationLabel="Camp" amounts={RAW_RESOURCE_AMOUNTS} showHalf showInfinity={false} />
+                      onPick={location === "backpack" ? unloadBalanceToStorage : location === "saddlepack" ? unloadBalanceFromSaddlepack : unloadBalanceFromCart}
+                      destinationIcon={CAMP_ACTION_ICON} destinationLabel={storageLabel} amounts={RAW_RESOURCE_AMOUNTS} showHalf showInfinity={false} />
                   )}
                   {location !== "backpack" && hasBackpackEquipped && (
                     <TransferButtons owned={owned} pending={pending}
-                      onPick={location === "camp" ? stowBalanceToBackpack : location === "saddlepack" ? moveBalanceSaddlepackToBackpack : moveBalanceCartToBackpack}
+                      onPick={inStorage ? stowBalanceToBackpack : location === "saddlepack" ? moveBalanceSaddlepackToBackpack : moveBalanceCartToBackpack}
                       destinationIcon={BACKPACK_ACTION_ICON} destinationLabel="Backpack" amounts={RAW_RESOURCE_AMOUNTS} showHalf showInfinity={false} />
                   )}
                   {location !== "saddlepack" && hasSaddlepackEquipped && (
                     <TransferButtons owned={owned} pending={pending}
-                      onPick={location === "camp" ? stowBalanceToSaddlepack : location === "backpack" ? moveBalanceBackpackToSaddlepack : moveBalanceCartToSaddlepack}
+                      onPick={inStorage ? stowBalanceToSaddlepack : location === "backpack" ? moveBalanceBackpackToSaddlepack : moveBalanceCartToSaddlepack}
                       destinationIcon={SADDLEPACK_ACTION_ICON} destinationLabel="Saddlepack" amounts={RAW_RESOURCE_AMOUNTS} showHalf showInfinity={false} />
                   )}
                   {location !== "cart" && (cartCapacity ?? 0) > 0 && !isContainer && !info?.familyId?.endsWith("_mount") && !info?.familyId?.endsWith("_companion") && (
                     <TransferButtons owned={owned} pending={pending}
-                      onPick={location === "camp" ? stowBalanceToCart : location === "backpack" ? moveBalanceBackpackToCart : moveBalanceSaddlepackToCart}
+                      onPick={inStorage ? stowBalanceToCart : location === "backpack" ? moveBalanceBackpackToCart : moveBalanceSaddlepackToCart}
                       destinationIcon={CART_ACTION_ICON} destinationLabel="Cart" amounts={RAW_RESOURCE_AMOUNTS} showHalf showInfinity={false} />
                   )}
-                  {!inAdventure && location === "camp" && (
+                  {!inAdventure && inStorage && (
                     <TransferButtons owned={owned} pending={pending}
                       onPick={stowBalanceToVault}
                       destinationIcon={VAULT_ACTION_ICON} destinationLabel="Vault" amounts={RAW_RESOURCE_AMOUNTS} showHalf showInfinity={false} />
@@ -3293,35 +3305,35 @@ export function ItemDetailPopup({
                       ))}
                     </button>
                   ))}
-                  {!inAdventure && location !== "camp" && (
+                  {storageAccessible && !inStorage && (
                     <button type="button" className={styles.itemPopupBackpackButton} disabled={pending}
-                      onClick={() => (location === "backpack" ? unloadBalanceToCamp : location === "saddlepack" ? unloadBalanceFromSaddlepack : unloadBalanceFromCart)(1)}
-                      aria-label="Move to camp" title="Move to camp">
-                      <div role="img" aria-label="Camp" className={styles.itemPopupBackpackIcon} style={{ backgroundImage: `url(${CAMP_ACTION_ICON})` }} />
+                      onClick={() => (location === "backpack" ? unloadBalanceToStorage : location === "saddlepack" ? unloadBalanceFromSaddlepack : unloadBalanceFromCart)(1)}
+                      aria-label={`Move to ${storageLabel}`} title={`Move to ${storageLabel}`}>
+                      <div role="img" aria-label={storageLabel} className={styles.itemPopupBackpackIcon} style={{ backgroundImage: `url(${CAMP_ACTION_ICON})` }} />
                     </button>
                   )}
                   {location !== "backpack" && hasBackpackEquipped && (
                     <button type="button" className={styles.itemPopupBackpackButton} disabled={pending}
-                      onClick={() => (location === "camp" ? stowBalanceToBackpack : location === "saddlepack" ? moveBalanceSaddlepackToBackpack : moveBalanceCartToBackpack)(1)}
+                      onClick={() => (inStorage ? stowBalanceToBackpack : location === "saddlepack" ? moveBalanceSaddlepackToBackpack : moveBalanceCartToBackpack)(1)}
                       aria-label="Move to backpack" title="Move to backpack">
                       <div role="img" aria-label="Backpack" className={styles.itemPopupBackpackIcon} style={{ backgroundImage: `url(${BACKPACK_ACTION_ICON})` }} />
                     </button>
                   )}
                   {location !== "saddlepack" && hasSaddlepackEquipped && (
                     <button type="button" className={styles.itemPopupBackpackButton} disabled={pending}
-                      onClick={() => (location === "camp" ? stowBalanceToSaddlepack : location === "backpack" ? moveBalanceBackpackToSaddlepack : moveBalanceCartToSaddlepack)(1)}
+                      onClick={() => (inStorage ? stowBalanceToSaddlepack : location === "backpack" ? moveBalanceBackpackToSaddlepack : moveBalanceCartToSaddlepack)(1)}
                       aria-label="Move to saddlepack" title="Move to saddlepack">
                       <div role="img" aria-label="Saddlepack" className={styles.itemPopupBackpackIcon} style={{ backgroundImage: `url(${SADDLEPACK_ACTION_ICON})` }} />
                     </button>
                   )}
                   {location !== "cart" && (cartCapacity ?? 0) > 0 && !isContainer && !info?.familyId?.endsWith("_mount") && !info?.familyId?.endsWith("_companion") && (
                     <button type="button" className={styles.itemPopupBackpackButton} disabled={pending}
-                      onClick={() => (location === "camp" ? stowBalanceToCart : location === "backpack" ? moveBalanceBackpackToCart : moveBalanceSaddlepackToCart)(1)}
+                      onClick={() => (inStorage ? stowBalanceToCart : location === "backpack" ? moveBalanceBackpackToCart : moveBalanceSaddlepackToCart)(1)}
                       aria-label="Move to cart" title="Move to cart">
                       <div role="img" aria-label="Cart" className={styles.itemPopupBackpackIcon} style={{ backgroundImage: `url(${CART_ACTION_ICON})` }} />
                     </button>
                   )}
-                  {!inAdventure && location === "camp" && (
+                  {!inAdventure && inStorage && (
                     <button type="button" className={styles.itemPopupBackpackButton} disabled={pending}
                       onClick={() => stowBalanceToVault(1)}
                       aria-label="Move to vault" title="Move to vault">
