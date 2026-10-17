@@ -170,6 +170,24 @@ export interface SlotCharacterSummary {
   };
   equippedLight: { family: string; tier: number; litAt: string; hand: string } | null;
   stats: { adventureFinished: number; adventureRunAway: number };
+  pcStatus?: string[];
+  pcTags?: string[];
+  pcTimers?: Record<string, string>;
+  pcCraftingTiers?: Record<string, number>;
+}
+
+export interface PlayerCharacterEntry {
+  characterId: string;
+  name: string;
+  status: string[];
+  tags: string[];
+  timers: Record<string, string>;
+  craftingTiers: Record<string, number>;
+}
+
+export interface PlayerCharactersDoc {
+  address: string;
+  characters: PlayerCharacterEntry[];
 }
 
 interface SlotState {

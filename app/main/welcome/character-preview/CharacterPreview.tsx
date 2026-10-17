@@ -9,7 +9,7 @@ import { PortraitEditor, type PortraitEditorValue } from "../PortraitEditor";
 import { BIRTHSIGNS } from "@/app/lib/characterOptions";
 import { StatsTab } from "./StatsTab";
 import { BodyTab } from "./BodyTab";
-import { StoriesTab } from "./StoriesTab";
+import { StoriesTab, REST_LOCATIONS } from "./StoriesTab";
 import { VaultTab, type ItemInstance, type RawPlayerData } from "./VaultTab";
 import { CampView } from "./CampView";
 import { TabErrorBoundary } from "./TabErrorBoundary";
@@ -72,6 +72,7 @@ export function CharacterPreview({
   openCraftingSectionByDefault?: boolean;
 }) {
   const { setHidden: setHeaderHidden } = useHeaderVisibility();
+  const inAdventure = character.availability.inAdventure;
   const [activeTab, setActiveTab] = useState<TabKey>(initialTab);
   // Opened via the camp button on the Body tab (see BodyTab.tsx's
   // onOpenCamp) - replaces the normal per-tab content below the name
@@ -79,21 +80,51 @@ export function CharacterPreview({
   // tab) suspends .wizard's own vertical scroll so only its item grid
   // scrolls, horizontally. Cleared by switching to any of the 5 real tabs.
   const [showCamp, setShowCamp] = useState(false);
+  const [resting, setResting] = useState(false);
+  const [restLocation, setRestLocation] = useState<string>(REST_LOCATIONS[0]);
+
+  useEffect(() => {
+    if (inAdventure && !resting && activeTab === "camp") {
+      setActiveTab("stories");
+    }
+    if (inAdventure && (activeTab === "vault")) {
+      setActiveTab("stories");
+    }
+    if (!inAdventure) {
+      setResting(false);
+      setRestItemBalances(null);
+      if (activeTab === "camp" || activeTab === "vault") {
+        setActiveTab("stories");
+      }
+      setShowCamp(false);
+    }
+  }, [inAdventure, resting]);
 
   // Lazy-loaded supplemental data — fetched on demand the first time the
   // relevant tab is opened; null means not yet loaded.
   const [campItemBalances, setCampItemBalances] = useState<Record<string, number> | null>(null);
+  const [restItemBalances, setRestItemBalances] = useState<Record<string, number> | null>(null);
   const [vaultData, setVaultData] = useState<{ items: ItemInstance[]; itemBalances: Record<string, number> } | null>(null);
 
   // Trigger camp fetch the first time the camp view becomes visible.
+  // When resting + camp tab, load rest data instead.
   useEffect(() => {
-    const needsCamp = showCamp || activeTab === "camp";
+    const needsCamp = showCamp || (activeTab === "camp" && !resting);
     if (!needsCamp || campItemBalances !== null) return;
     fetch(`/api/auth/me/characters/${character.id}/camp`, { credentials: "include" })
       .then((res) => (res.ok ? res.json() : null))
       .then((data) => setCampItemBalances(data?.itemBalances ?? {}))
       .catch(() => setCampItemBalances({}));
-  }, [showCamp, activeTab, campItemBalances, character.id]);
+  }, [showCamp, activeTab, campItemBalances, character.id, resting]);
+
+  // Trigger rest fetch when resting and camp tab is active.
+  useEffect(() => {
+    if (!(activeTab === "camp" && resting) || restItemBalances !== null) return;
+    fetch(`/api/auth/me/characters/${character.id}/rest`, { credentials: "include" })
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => setRestItemBalances(data?.itemBalances ?? {}))
+      .catch(() => setRestItemBalances({}));
+  }, [activeTab, resting, restItemBalances, character.id]);
 
   // Trigger vault fetch the first time the vault tab is opened.
   useEffect(() => {
@@ -107,6 +138,7 @@ export function CharacterPreview({
   const handlePlayerDataUpdated = useCallback((data: RawPlayerData) => {
     setVaultData(null);
     setCampItemBalances(null);
+    setRestItemBalances(null);
     onPlayerDataUpdated?.(data);
   }, [onPlayerDataUpdated]);
 
@@ -282,7 +314,9 @@ export function CharacterPreview({
           <div className={tabStyles.topBarBackground}>
             <div className={tabStyles.topBarRow}>
               <nav className={tabStyles.tabRow}>
-                {TABS.map((tab) => (
+                {TABS.map((tab) => {
+                  const locked = (tab.key === "vault" && inAdventure) || (tab.key === "camp" && inAdventure && !resting);
+                  return (
                   <button
                     key={tab.key}
                     type="button"
@@ -290,12 +324,14 @@ export function CharacterPreview({
                       tabStyles.tabRowButton,
                       activeTab === tab.key ? tabStyles.tabRowButtonActive : tabStyles.tabRowButtonInactive,
                       activeTab === tab.key && tab.lightenWhenActive ? tabStyles.tabRowButtonActiveLighten : "",
+                      locked ? tabStyles.tabRowButtonLocked : "",
                     ]
                       .filter(Boolean)
                       .join(" ")}
-                    onClick={() => setActiveTab(tab.key)}
+                    onClick={() => !locked && setActiveTab(tab.key)}
                     aria-pressed={activeTab === tab.key}
-                    title={tab.label}
+                    aria-disabled={locked || undefined}
+                    title={locked ? `${tab.label} (unavailable during adventure)` : tab.label}
                     aria-label={tab.label}
                   >
                     {tab.emojiIcon ? (
@@ -312,7 +348,8 @@ export function CharacterPreview({
                       <img src={tab.icon} alt="" className={tabStyles.tabIcon} />
                     )}
                   </button>
-                ))}
+                  );
+                })}
               </nav>
 
               <button type="button" className={tabStyles.closeButton} onClick={onClose} title="Close" aria-label="Close">
@@ -329,7 +366,7 @@ export function CharacterPreview({
 
         <div className={tabStyles.nameRow}>
           <h1 className={tabStyles.name}>
-            {showCamp ? `${character.firstName}'s Camp` : activeTab === "camp" ? `${character.firstName}'s Camp` : activeTab === "vault" ? "Vault" : `${character.firstName} ${character.lastName}`}
+            {showCamp ? `${character.firstName}'s Camp` : activeTab === "camp" && resting ? `Resting in ${restLocation.charAt(0).toUpperCase() + restLocation.slice(1)}` : activeTab === "camp" ? `${character.firstName}'s Camp` : activeTab === "vault" ? "Vault" : `${character.firstName} ${character.lastName}`}
           </h1>
         </div>
 
@@ -358,7 +395,7 @@ export function CharacterPreview({
             />
           )}
           {activeTab === "body" && (
-            <BodyTab character={augmentedCharacter} onPlayerDataUpdated={handlePlayerDataUpdated} onOpenCamp={() => setShowCamp(true)} />
+            <BodyTab character={augmentedCharacter} onPlayerDataUpdated={handlePlayerDataUpdated} onOpenCamp={inAdventure ? undefined : () => setShowCamp(true)} />
           )}
           {activeTab === "vault" && (
             <TabErrorBoundary>
@@ -374,15 +411,33 @@ export function CharacterPreview({
             </TabErrorBoundary>
           )}
           {activeTab === "stories" && (
-            <StoriesTab character={augmentedCharacter} onPlayerDataUpdated={handlePlayerDataUpdated} />
+            <StoriesTab
+              character={augmentedCharacter}
+              onPlayerDataUpdated={handlePlayerDataUpdated}
+              resting={resting}
+              onRestingChange={setResting}
+              restLocation={restLocation}
+              onRestLocationChange={setRestLocation}
+            />
           )}
-          {activeTab === "camp" && (
+          {activeTab === "camp" && !resting && (
             <CampView
               character={augmentedCharacter}
               onPlayerDataUpdated={handlePlayerDataUpdated}
               onExitCamp={() => setActiveTab("body")}
               footerVisible
             />
+          )}
+          {activeTab === "camp" && resting && (
+            <div className={tabStyles.panel}>
+              <p className={tabStyles.placeholderNote}>
+                {restItemBalances === null
+                  ? "Loading rest supplies…"
+                  : Object.keys(restItemBalances).length === 0
+                    ? "No supplies at this rest site yet."
+                    : `${Object.keys(restItemBalances).length} item(s) stashed here.`}
+              </p>
+            </div>
           )}
             </>
           )}

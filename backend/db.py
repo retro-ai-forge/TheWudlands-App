@@ -77,9 +77,15 @@ async def ensure_indexes() -> None:
     # index this is a full collection scan per lookup.
     await db.soul_slots.create_index("address", unique=True)
 
-    # Per-character camp (itemBalances only; gear.items with location:"camp"
-    # stay on the player doc) and blueprints, each in their own collection.
+    # Per-player summary: status, tags, timers, crafting tiers per character.
+    await db.player_characters.create_index("address", unique=True)
+
+    # Per-character storage (items + itemBalances) and blueprints, each in
+    # their own collection. Camp = out-of-adventure, rest = in-adventure.
     await db.character_camps.create_index(
+        [("address", 1), ("characterId", 1)], unique=True
+    )
+    await db.character_resting.create_index(
         [("address", 1), ("characterId", 1)], unique=True
     )
     await db.character_blueprints.create_index(

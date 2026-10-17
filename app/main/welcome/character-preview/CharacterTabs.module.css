@@ -205,6 +205,11 @@
   opacity: 0.45;
 }
 
+.tabRowButtonLocked {
+  opacity: 0.2;
+  pointer-events: none;
+}
+
 /* Delete only shows on the Stats page (see CharacterPreview.tsx) - bottom
    left corner above the footer bar. Red glow instead of gold, so a destructive
    action never reads as just another toggle. */
@@ -369,6 +374,90 @@
 .adventureButtonPair {
   display: flex;
   gap: 0.75rem;
+}
+
+.restButton {
+  margin-top: 1.8rem;
+  background: rgba(168, 153, 104, 0.08);
+  color: #4a4432;
+  border-color: rgba(168, 153, 104, 0.2);
+  cursor: default;
+}
+
+.restButton:disabled {
+  cursor: default;
+}
+
+.restButtonActive {
+  background: rgba(180, 140, 60, 0.15);
+  color: #d4a060;
+  border-color: #d4a060;
+  cursor: pointer;
+}
+
+.restButtonActive:hover:not(:disabled) {
+  background: rgba(180, 140, 60, 0.3);
+}
+
+.restButtonOn {
+  background: rgba(70, 130, 180, 0.15);
+  color: #4682b4;
+  border-color: #4682b4;
+  cursor: pointer;
+}
+
+.restButtonOn:hover:not(:disabled) {
+  background: rgba(70, 130, 180, 0.3);
+}
+
+.restLocationGroup {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.4rem;
+  margin-top: 0.5rem;
+  opacity: 0.35;
+}
+
+.restLocationGroupActive {
+  opacity: 1;
+}
+
+.restRadioInput {
+  display: none;
+}
+
+.restRadioLabel {
+  font-family: inherit;
+  font-size: 0.8rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding: 0.35rem 0.9rem;
+  border: 1px solid rgba(168, 153, 104, 0.2);
+  border-radius: 999px;
+  background: rgba(10, 8, 4, 0.5);
+  color: #4a4432;
+  cursor: default;
+  transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+}
+
+.restLocationGroupActive .restRadioLabel {
+  cursor: pointer;
+  color: #a89968;
+  border-color: rgba(168, 153, 104, 0.35);
+}
+
+.restLocationGroupActive .restRadioLabel:hover {
+  color: #d4a060;
+  border-color: #d4a060;
+  background: rgba(180, 140, 60, 0.12);
+}
+
+.restRadioLabelSelected {
+  background: rgba(180, 140, 60, 0.2);
+  color: #d4a060;
+  border-color: #d4a060;
+  box-shadow: 0 0 6px rgba(212, 160, 96, 0.4);
 }
 
 /* The Inventory panel's own Crafting/Party's Vault split - a plain website-

@@ -4,13 +4,22 @@ import type { RawPlayerData } from "./VaultTab";
 import type { SlotCharacterSummary } from "../SoulSlotGrid";
 
 const BLOCKED_FLASH_MS = 2500;
+export const REST_LOCATIONS = ["cave", "forest", "prairie", "ruin", "dungeon"] as const;
 
 export function StoriesTab({
   character,
   onPlayerDataUpdated,
+  resting,
+  onRestingChange,
+  restLocation,
+  onRestLocationChange,
 }: {
   character: SlotCharacterSummary;
   onPlayerDataUpdated?: (data: RawPlayerData) => void;
+  resting: boolean;
+  onRestingChange: (resting: boolean) => void;
+  restLocation: string;
+  onRestLocationChange: (location: string) => void;
 }) {
   const [pending, setPending] = useState(false);
   const [blockedFlash, setBlockedFlash] = useState(false);
@@ -35,6 +44,7 @@ export function StoriesTab({
         body: JSON.stringify({ inAdventure: false, reason }),
       });
       if (res.ok) {
+        onRestingChange(false);
         const data: RawPlayerData = await res.json();
         onPlayerDataUpdated?.(data);
       }
@@ -107,6 +117,30 @@ export function StoriesTab({
             Start Adventure
           </button>
         )}
+        <button
+          type="button"
+          className={`${styles.adventureToggleButton} ${styles.restButton} ${resting ? styles.restButtonOn : ""} ${inAdventure && !resting ? styles.restButtonActive : ""}`}
+          disabled={!inAdventure || pending}
+          onClick={() => onRestingChange(!resting)}
+        >
+          {resting ? "End Rest" : "Start Rest"}
+        </button>
+        <div className={`${styles.restLocationGroup} ${resting ? styles.restLocationGroupActive : ""}`}>
+          {REST_LOCATIONS.map((loc) => (
+            <label key={loc} className={`${styles.restRadioLabel} ${restLocation === loc && resting ? styles.restRadioLabelSelected : ""}`}>
+              <input
+                type="radio"
+                name="restLocation"
+                className={styles.restRadioInput}
+                value={loc}
+                checked={restLocation === loc}
+                disabled={!resting}
+                onChange={(e) => onRestLocationChange(e.target.value)}
+              />
+              {loc.charAt(0).toUpperCase() + loc.slice(1)}
+            </label>
+          ))}
+        </div>
         {blockedFlash && (
           <p className={styles.inAdventureToggleFlash} role="status">
             Still crafting &mdash; can&apos;t start a story yet.
