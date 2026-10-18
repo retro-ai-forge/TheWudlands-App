@@ -411,7 +411,7 @@ def has_backpack_available(character: dict) -> bool:
     check_in_item_instance cascade, which cares whether some OTHER worn
     backpack's storage is still in active use)."""
     return any(
-        instance.get("location") in ("body", "home", "rest") and instance.get("familyId") == "backpack"
+        instance.get("location") in ("body", "home", "camp") and instance.get("familyId") == "backpack"
         for instance in character.get("gear", {}).get("items", [])
     )
 
@@ -439,7 +439,7 @@ def has_saddlepack_available(character: dict) -> bool:
     equipped itself stays literal (only "body"/worn) for callers that
     specifically mean that."""
     return any(
-        instance.get("location") in ("body", "home", "rest") and instance.get("familyId") == "saddlepack"
+        instance.get("location") in ("body", "home", "camp") and instance.get("familyId") == "saddlepack"
         for instance in character.get("gear", {}).get("items", [])
     )
 
@@ -455,7 +455,7 @@ def backpack_capacity(character: dict) -> int:
 
     cap = 0
     for instance in character.get("gear", {}).get("items", []):
-        if instance.get("location") in ("body", "home", "rest") and instance.get("familyId") == "backpack":
+        if instance.get("location") in ("body", "home", "camp") and instance.get("familyId") == "backpack":
             cap = max(cap, BACKPACK_CAPACITY_BY_ID.get(instance["itemId"], 0))
 
     return cap
@@ -491,7 +491,7 @@ def saddlepack_capacity(character: dict) -> int:
 
     bonus = 0
     for instance in character.get("gear", {}).get("items", []):
-        if instance.get("location") in ("body", "home", "rest") and instance.get("familyId") == "saddlepack":
+        if instance.get("location") in ("body", "home", "camp") and instance.get("familyId") == "saddlepack":
             bonus = max(bonus, SADDLEPACK_CAPACITY_BY_ID.get(instance["itemId"], 0))
 
     return bonus
@@ -530,7 +530,7 @@ def has_cart_available(character: dict) -> bool:
     mount's Hitch slot (location:"body") or sitting at home (location:
     "home"). Same one-at-a-time pattern as backpack/saddlepack."""
     return any(
-        instance.get("location") in ("body", "home", "rest") and instance.get("familyId") == "cart"
+        instance.get("location") in ("body", "home", "camp") and instance.get("familyId") == "cart"
         for instance in character.get("gear", {}).get("items", [])
     )
 
@@ -545,7 +545,7 @@ def cart_capacity(character: dict) -> int:
 
     bonus = 0
     for instance in character.get("gear", {}).get("items", []):
-        if instance.get("location") in ("body", "home", "rest") and instance.get("familyId") == "cart":
+        if instance.get("location") in ("body", "home", "camp") and instance.get("familyId") == "cart":
             bonus = max(bonus, CART_CAPACITY_BY_ID.get(instance["itemId"], 0))
 
     return bonus

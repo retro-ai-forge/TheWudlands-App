@@ -865,7 +865,7 @@ export function ItemGrid({
   hasCompanionEquipped = false,
   hasCartEquipped = false,
   inAdventure = false,
-  storageType = "home" as "home" | "rest",
+  storageType = "home" as "home" | "camp",
   characterId,
   characterFirstName,
   onPlayerDataUpdated,
@@ -906,7 +906,7 @@ export function ItemGrid({
   /** Row id (instanceId) -> that specific instance's current quality, for rows lookupIds resolves to a real item instance. */
   instanceQuality?: Record<string, number | null>;
   /** Row id (instanceId) -> "backpack" | "body" | "home" - source:"character" only, decides whether the popup offers Unequip or Equip(+Check-in-to-vault) ("backpack" and "home" both get the equip view - see check_in_item_instance/equip_item, which treat the two the same). Unused for source:"vault" (every pool row is location:"pool" by definition). */
-  instanceLocations?: Record<string, "backpack" | "body" | "home" | "rest">;
+  instanceLocations?: Record<string, "backpack" | "body" | "home" | "camp">;
   /** Row ids with no working move-to-backpack/equip path yet (ammo living in resources, not items/itemBalances) - the popup shows info only, no action buttons, for these. */
   nonMovableIds?: Set<string>;
   /** "vault" (default): rows live in the player's shared pool - the popup's move actions are equip-from-pool/move-to-backpack, salvage/destroy target the shared vault. "character": rows are this character's own backpack/body items or itemBalances - the popup's move actions are Unequip(-to-vault)/Move-to-backpack for a worn row, Equip/Check-in-to-vault for a backpacked one; salvage/destroy target this character's own holdings instead. */
@@ -920,7 +920,7 @@ export function ItemGrid({
   hasCartEquipped?: boolean;
   /** source:"character" only - hides the popup's "Check in to vault" button while true, since there's no path back to the shared vault mid-adventure (see ItemDetailPopup's identical prop). */
   inAdventure?: boolean;
-  storageType?: "home" | "rest";
+  storageType?: "home" | "camp";
   characterId: string;
   /** source:"vault" only - passed straight through to ItemDetailPopup's identical prop. */
   characterFirstName?: string;
@@ -1378,7 +1378,7 @@ export const BACKPACK_ACTION_ICON = "/images/character/backpack.png";
 export const SADDLEPACK_ACTION_ICON = "/images/character/saddlebags.png";
 export const VAULT_ACTION_ICON = "/images/character/vault.png";
 const HOME_ACTION_ICON = "/images/character/camp.png";
-export const REST_ACTION_ICON = "/images/character/camp-inadventure.png";
+const CAMP_ACTION_ICON = "/images/character/camp-inadventure.png";
 export const CART_ACTION_ICON = "/images/items/cart_t1.png";
 
 
@@ -1701,7 +1701,7 @@ export function ChopBlockPopup({
   onClose: () => void;
   preSelectedIds?: Set<string>;
   preSelectedAmounts?: Map<string, number>;
-  source?: "home" | "vault" | "rest";
+  source?: "home" | "vault" | "camp";
 }) {
   const [rows, setRows] = useState<ChopBlockRow[] | null>(null);
   const [selected, setSelected] = useState<Set<string>>(new Set());
@@ -1751,7 +1751,7 @@ export function ChopBlockPopup({
     (rows ?? []).filter((row) => selected.has(row.id)).flatMap((row) => row.materials)
   );
 
-  const emptyLabel = source === "vault" ? "Nothing in the vault can be salvaged right now." : source === "rest" ? "Nothing at the rest stop can be salvaged right now." : "Nothing in home can be salvaged right now.";
+  const emptyLabel = source === "vault" ? "Nothing in the vault can be salvaged right now." : source === "camp" ? "Nothing at camp can be salvaged right now." : "Nothing in home can be salvaged right now.";
 
   return (
     <HoldActionPopup
@@ -2054,7 +2054,7 @@ function PackedItemsRow({
   cartCapacity,
   cartSlotsUsed,
   inAdventure,
-  storageType = "home" as "home" | "rest",
+  storageType = "home" as "home" | "camp",
   characterId,
   onPlayerDataUpdated,
   location = "backpack",
@@ -2081,7 +2081,7 @@ function PackedItemsRow({
   cartCapacity?: number;
   cartSlotsUsed?: number;
   inAdventure: boolean;
-  storageType?: "home" | "rest";
+  storageType?: "home" | "camp";
   characterId: string;
   onPlayerDataUpdated?: (data: RawPlayerData) => void;
   location?: "backpack" | "saddlepack" | "cart";
@@ -2330,7 +2330,7 @@ function PackedItemsRow({
             location === "cart"
               ? [
                   ...(inAdventure
-                    ? [{ key: "storage", icon: storageType === "rest" ? REST_ACTION_ICON : HOME_ACTION_ICON, label: storageType === "rest" ? "Rest" : "Home", endpoint: `cart-to-${storageType}` }]
+                    ? [{ key: "storage", icon: storageType === "camp" ? CAMP_ACTION_ICON : HOME_ACTION_ICON, label: storageType === "camp" ? "Camp" : "Home", endpoint: `cart-to-${storageType}` }]
                     : [
                         { key: "vault", icon: VAULT_ACTION_ICON, label: "Vault", endpoint: "cart-to-vault" },
                         { key: "storage", icon: HOME_ACTION_ICON, label: "Home", endpoint: "cart-to-home" },
@@ -2339,7 +2339,7 @@ function PackedItemsRow({
               : location === "saddlepack"
               ? [
                   ...(inAdventure
-                    ? [{ key: "storage", icon: storageType === "rest" ? REST_ACTION_ICON : HOME_ACTION_ICON, label: storageType === "rest" ? "Rest" : "Home", endpoint: `saddlepack-to-${storageType}` }]
+                    ? [{ key: "storage", icon: storageType === "camp" ? CAMP_ACTION_ICON : HOME_ACTION_ICON, label: storageType === "camp" ? "Camp" : "Home", endpoint: `saddlepack-to-${storageType}` }]
                     : [
                         { key: "vault", icon: VAULT_ACTION_ICON, label: "Vault", endpoint: "to-vault" },
                         { key: "storage", icon: HOME_ACTION_ICON, label: "Home", endpoint: `saddlepack-to-home` },
@@ -2350,7 +2350,7 @@ function PackedItemsRow({
                 ]
               : [
                   ...(inAdventure
-                    ? [{ key: "storage", icon: storageType === "rest" ? REST_ACTION_ICON : HOME_ACTION_ICON, label: storageType === "rest" ? "Rest" : "Home", endpoint: `backpack-to-${storageType}` }]
+                    ? [{ key: "storage", icon: storageType === "camp" ? CAMP_ACTION_ICON : HOME_ACTION_ICON, label: storageType === "camp" ? "Camp" : "Home", endpoint: `backpack-to-${storageType}` }]
                     : [
                         { key: "vault", icon: VAULT_ACTION_ICON, label: "Vault", endpoint: "to-vault" },
                         { key: "storage", icon: HOME_ACTION_ICON, label: "Home", endpoint: "backpack-to-home" },
@@ -2559,11 +2559,11 @@ export function ItemDetailPopup({
   quality: number | null;
   /** The row id itself - an instanceId (isInstance) or a concrete itemBalances/resource id. */
   moveId: string;
-  /** source:"character" instance rows only - "backpack", "home", "rest", "saddlepack", "cart", or "body" - decides which move actions are offered. */
-  location?: "backpack" | "body" | "home" | "rest" | "saddlepack" | "cart";
+  /** source:"character" instance rows only - "backpack", "home", "camp", "saddlepack", "cart", or "body" - decides which move actions are offered. */
+  location?: "backpack" | "body" | "home" | "camp" | "saddlepack" | "cart";
   /** "vault" (default): `moveId` lives in the player's shared pool. "character": `moveId` is this character's own (backpack/body instance, or itemBalances row) - see ItemGrid's identical prop for what changes. */
   source?: "vault" | "character";
-  storageType?: "home" | "rest";
+  storageType?: "home" | "camp";
   /** Whether this character currently has a backpack worn - greys out any "Move to backpack" button instead of letting the click fail server-side with "No backpack equipped". */
   hasBackpackEquipped: boolean;
   /** Whether this character's mount currently has a saddlepack worn (see items_catalog.has_saddlepack_equipped) - any "Move to saddlepack" button is hidden entirely (not just greyed) when false, since there's no mount slot to blame the way a missing backpack gets a "No backpack equipped" message. */
@@ -2631,10 +2631,10 @@ export function ItemDetailPopup({
   const stackSize = info?.stackSize ?? 1;
   const name = info?.name ? stripBlueprintPrefix(info.name) : fallbackName;
   const displayName = stackSize > 1 ? `${owned} ${name}` : name;
-  const inStorage = location === "home" || location === "rest";
-  const storageAccessible = (storageType === "home" && !inAdventure) || storageType === "rest";
-  const storageLabel = storageType === "rest" ? "Rest" : "Home";
-  const storageIcon = storageType === "rest" ? REST_ACTION_ICON : HOME_ACTION_ICON;
+  const inStorage = location === "home" || location === "camp";
+  const storageAccessible = (storageType === "home" && !inAdventure) || storageType === "camp";
+  const storageLabel = storageType === "camp" ? "Camp" : "Home";
+  const storageIcon = storageType === "camp" ? CAMP_ACTION_ICON : HOME_ACTION_ICON;
 
   const [pending, setPending] = useState(false);
   // Replaces the description text for ITEM_POPUP_FLASH_MS after a failed

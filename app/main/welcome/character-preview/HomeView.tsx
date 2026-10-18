@@ -87,7 +87,7 @@ export function HomeView({
    * view is open, so this is the only way out of it once opened. */
   onExitHome: () => void;
   footerVisible?: boolean;
-  storageType?: "home" | "rest";
+  storageType?: "home" | "camp";
 }) {
   const { muted } = useSound();
 
@@ -207,14 +207,14 @@ export function HomeView({
   // unequip_item just dropped here because this character is out on an
   // adventure. Without folding the instances in too, anything unequipped
   // mid-adventure would be correctly stored but never show up here.
-  const homeBalances = (storageType === "rest" ? character.gear.itemBalances.rest : character.gear.itemBalances.home) ?? EMPTY_HOME;
+  const homeBalances = (storageType === "camp" ? character.gear.itemBalances.camp : character.gear.itemBalances.home) ?? EMPTY_HOME;
   const homeInstances = character.gear.items.filter((instance) => instance.location === storageType);
 
   const { homeInstanceLookupIds, homeInstanceQuality, homeLocations, homeCombined, homeIds } = useMemo(() => {
     const lookupIds: Record<string, string> = {};
     const rowBalances: Record<string, number> = {};
     const quality: Record<string, number | null> = {};
-    const locations: Record<string, "home" | "rest"> = {};
+    const locations: Record<string, "home" | "camp"> = {};
     for (const instance of homeInstances) {
       lookupIds[instance.instanceId] = instance.itemId;
       rowBalances[instance.instanceId] = 1;
@@ -238,7 +238,7 @@ export function HomeView({
   // Raw/processed materials sitting loose at home - e.g. the backpack-full
   // fallback of check_out_resource_to_backpack, or an explicit "move to
   // home" out of the backpack (see ResourcePopup's own "home" destination).
-  const homeResourceBalances = (storageType === "rest" ? character.gear.itemBalances.rest : character.gear.itemBalances.home) ?? EMPTY_HOME;
+  const homeResourceBalances = (storageType === "camp" ? character.gear.itemBalances.camp : character.gear.itemBalances.home) ?? EMPTY_HOME;
   const hasHomeResources = Object.values(homeResourceBalances).some((qty) => qty > 0);
 
   // dropped.png (lower-left flavor icon), the campfire lit/unlit swap, the
@@ -460,7 +460,7 @@ export function HomeView({
                 <div className={styles.selectionBarIcon} style={{ backgroundImage: `url(${CART_ACTION_ICON})` }} />
               </button>
             )}
-            {!character.availability.inAdventure && storageType !== "rest" && (
+            {!character.availability.inAdventure && storageType !== "camp" && (
               <button
                 type="button"
                 className={styles.selectionBarBtn}
@@ -680,7 +680,7 @@ export function HomeView({
             )}
             <ItemGrid
               ids={filteredIds}
-              emptyLabel={allActive ? (storageType === "rest" ? "Nothing stashed here yet." : "Nothing sitting at home right now.") : "No items match."}
+              emptyLabel={allActive ? (storageType === "camp" ? "Nothing stashed here yet." : "Nothing sitting at home right now.") : "No items match."}
               tierInfo={mergedCatalogTierInfo}
               balances={homeCombined}
               lookupIds={homeInstanceLookupIds}
@@ -714,7 +714,7 @@ export function HomeView({
                 ...(hasBackpackEquipped
                   ? [{ key: "backpack", icon: BACKPACK_ACTION_ICON, label: "Backpack", endpoint: `${storageType}-to-backpack` }]
                   : []),
-                ...(!character.availability.inAdventure && storageType !== "rest"
+                ...(!character.availability.inAdventure && storageType !== "camp"
                   ? [{ key: "vault", icon: VAULT_ACTION_ICON, label: "Vault", endpoint: "to-vault" }]
                   : []),
               ]}

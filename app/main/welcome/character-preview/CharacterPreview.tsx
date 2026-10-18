@@ -93,7 +93,7 @@ export function CharacterPreview({
     }
     if (!inAdventure) {
       setResting(false);
-      setRestData(null);
+      setCampData(null);
       if (activeTab === "home" || activeTab === "vault") {
         setActiveTab("stories");
       }
@@ -104,7 +104,7 @@ export function CharacterPreview({
   // Lazy-loaded supplemental data — fetched on demand the first time the
   // relevant tab is opened; null means not yet loaded.
   const [homeData, setHomeData] = useState<{ items: ItemInstance[]; itemBalances: Record<string, number> } | null>(null);
-  const [restData, setRestData] = useState<{ items: ItemInstance[]; itemBalances: Record<string, number> } | null>(null);
+  const [campData, setCampData] = useState<{ items: ItemInstance[]; itemBalances: Record<string, number> } | null>(null);
   const [vaultData, setVaultData] = useState<{ items: ItemInstance[]; itemBalances: Record<string, number> } | null>(null);
 
   // Trigger home fetch the first time the home view becomes visible.
@@ -120,12 +120,12 @@ export function CharacterPreview({
 
   // Trigger rest fetch when resting and home tab is active.
   useEffect(() => {
-    if (!(activeTab === "home" && resting) || restData !== null) return;
-    fetch(`/api/auth/me/characters/${character.id}/rest`, { credentials: "include" })
+    if (!(activeTab === "home" && resting) || campData !== null) return;
+    fetch(`/api/auth/me/characters/${character.id}/camp`, { credentials: "include" })
       .then((res) => (res.ok ? res.json() : null))
-      .then((data) => setRestData(data ?? EMPTY_HOME))
-      .catch(() => setRestData(EMPTY_HOME));
-  }, [activeTab, resting, restData, character.id]);
+      .then((data) => setCampData(data ?? EMPTY_HOME))
+      .catch(() => setCampData(EMPTY_HOME));
+  }, [activeTab, resting, campData, character.id]);
 
   // Trigger vault fetch the first time the vault tab is opened.
   useEffect(() => {
@@ -139,7 +139,7 @@ export function CharacterPreview({
   const handlePlayerDataUpdated = useCallback((data: RawPlayerData) => {
     setVaultData(null);
     setHomeData(null);
-    setRestData(null);
+    setCampData(null);
     onPlayerDataUpdated?.(data);
   }, [onPlayerDataUpdated]);
 
@@ -151,14 +151,14 @@ export function CharacterPreview({
     gear: {
       ...character.gear,
       items: [
-        ...character.gear.items.filter((i) => i.location !== "home" && i.location !== "rest"),
+        ...character.gear.items.filter((i) => i.location !== "home" && i.location !== "camp"),
         ...(homeData?.items ?? []),
-        ...(restData?.items ?? []),
+        ...(campData?.items ?? []),
       ],
       itemBalances: {
         ...character.gear.itemBalances,
         home: homeData?.itemBalances ?? character.gear.itemBalances?.home ?? EMPTY_HOME_BALANCES,
-        rest: restData?.itemBalances ?? character.gear.itemBalances?.rest ?? EMPTY_HOME_BALANCES,
+        camp: campData?.itemBalances ?? character.gear.itemBalances?.camp ?? EMPTY_HOME_BALANCES,
       },
     },
   };
@@ -442,7 +442,7 @@ export function CharacterPreview({
               onPlayerDataUpdated={handlePlayerDataUpdated}
               onExitHome={() => setActiveTab("body")}
               footerVisible
-              storageType="rest"
+              storageType="camp"
             />
           )}
             </>

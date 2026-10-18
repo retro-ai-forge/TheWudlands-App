@@ -85,7 +85,7 @@ async def ensure_indexes() -> None:
     await db.character_homes.create_index(
         [("address", 1), ("characterId", 1)], unique=True
     )
-    await db.character_resting.create_index(
+    await db.character_camp.create_index(
         [("address", 1), ("characterId", 1)], unique=True
     )
     await db.character_blueprints.create_index(

@@ -30,7 +30,7 @@ from backend.character import AttributeStats, Character, PortraitArea, ProfStats
 from backend.db import get_database
 from backend.players import (
     get_character_home,
-    get_character_resting,
+    get_character_camp,
     get_player_characters,
     get_player_vault,
     add_character,
@@ -824,10 +824,10 @@ async def get_my_character_home(character_id: str, address: str = Depends(get_cu
     return await get_character_home(address, character_id)
 
 
-@player_router.get("/me/characters/{character_id}/rest")
-async def get_my_character_resting(character_id: str, address: str = Depends(get_current_address)):
-    """Lazy-load: this character's resting items and itemBalances."""
-    return await get_character_resting(address, character_id)
+@player_router.get("/me/characters/{character_id}/camp")
+async def get_my_character_camp(character_id: str, address: str = Depends(get_current_address)):
+    """Lazy-load: this character's camp items and itemBalances."""
+    return await get_character_camp(address, character_id)
 
 
 @player_router.get("/me/vault")
@@ -998,7 +998,7 @@ class ItemBalanceLocationAmountRequest(BaseModel):
     real location off of the way an item instance's own row carries it."""
 
     amount: int = Field(..., gt=0, description="Quantity to move - must be positive")
-    location: Literal["home", "rest", "backpack", "saddlepack", "cart"] = Field(
+    location: Literal["home", "camp", "backpack", "saddlepack", "cart"] = Field(
         "home", description="Which of the character's own itemBalances buckets to act on"
     )
 
@@ -1782,18 +1782,18 @@ class BulkMoveHomeRequest(BaseModel):
 
 
 # ---------------------------------------------------------------------------
-# Rest storage routes (mirror home routes with storage_type="rest")
+# Camp storage routes (mirror home routes with storage_type="camp")
 # ---------------------------------------------------------------------------
 
-@player_router.post("/me/characters/{character_id}/rest/bulk-move", response_model=PlayerDataResponse)
-async def bulk_move_rest_route(
+@player_router.post("/me/characters/{character_id}/camp/bulk-move", response_model=PlayerDataResponse)
+async def bulk_move_camp_route(
     character_id: str, payload: BulkMoveHomeRequest, address: str = Depends(get_current_address)
 ):
     if payload.destination not in ("backpack", "saddlepack", "cart"):
         raise HTTPException(status_code=400, detail="destination must be backpack, saddlepack, or cart")
     try:
         player = await bulk_move_storage(
-            address, character_id, "rest", payload.destination,
+            address, character_id, "camp", payload.destination,
             payload.instanceIds,
             [e.model_dump() for e in payload.balances],
         )
@@ -1804,22 +1804,22 @@ async def bulk_move_rest_route(
     return player.to_dict()
 
 
-@player_router.post("/me/characters/{character_id}/rest/burn-all", response_model=PlayerDataResponse)
-async def destroy_all_rest_route(character_id: str, address: str = Depends(get_current_address)):
-    player = await destroy_all_storage(address, character_id, "rest")
+@player_router.post("/me/characters/{character_id}/camp/burn-all", response_model=PlayerDataResponse)
+async def destroy_all_camp_route(character_id: str, address: str = Depends(get_current_address)):
+    player = await destroy_all_storage(address, character_id, "camp")
     if player is None:
-        raise HTTPException(status_code=404, detail="Rest storage is already empty")
+        raise HTTPException(status_code=404, detail="Camp storage is already empty")
     return player.to_dict()
 
 
-@player_router.get("/me/characters/{character_id}/rest/salvage-preview", response_model=HomeSalvagePreviewResponse)
-async def preview_rest_salvage_route(
+@player_router.get("/me/characters/{character_id}/camp/salvage-preview", response_model=HomeSalvagePreviewResponse)
+async def preview_camp_salvage_route(
     character_id: str,
     selected: Optional[str] = None,
     address: str = Depends(get_current_address),
 ):
     selected_ids = selected.split(",") if selected else None
-    rows = await preview_home_salvage(address, character_id, selected_ids=selected_ids, storage_type="rest")
+    rows = await preview_home_salvage(address, character_id, selected_ids=selected_ids, storage_type="camp")
     if rows is None:
         raise HTTPException(status_code=404, detail="No matching character")
     return HomeSalvagePreviewResponse(
@@ -1839,83 +1839,83 @@ async def preview_rest_salvage_route(
     )
 
 
-@player_router.post("/me/characters/{character_id}/rest/salvage-all", response_model=PlayerDataResponse)
-async def salvage_rest_route(
+@player_router.post("/me/characters/{character_id}/camp/salvage-all", response_model=PlayerDataResponse)
+async def salvage_camp_route(
     character_id: str, payload: SalvageHomeRequest, address: str = Depends(get_current_address)
 ):
-    player = await salvage_home(address, character_id, payload.selected, storage_type="rest")
+    player = await salvage_home(address, character_id, payload.selected, storage_type="camp")
     if player is None:
         raise HTTPException(status_code=404, detail="Nothing selected salvaged")
     return player.to_dict()
 
 
-@player_router.post("/me/characters/{character_id}/rest/move-all-to-backpack", response_model=PlayerDataResponse)
-async def move_all_rest_to_backpack_route(character_id: str, address: str = Depends(get_current_address)):
+@player_router.post("/me/characters/{character_id}/camp/move-all-to-backpack", response_model=PlayerDataResponse)
+async def move_all_camp_to_backpack_route(character_id: str, address: str = Depends(get_current_address)):
     try:
-        player = await move_all_storage_to_backpack(address, character_id, "rest")
+        player = await move_all_storage_to_backpack(address, character_id, "camp")
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc))
     if player is None:
-        raise HTTPException(status_code=404, detail="Rest storage is already empty")
+        raise HTTPException(status_code=404, detail="Camp storage is already empty")
     return player.to_dict()
 
 
-@player_router.post("/me/characters/{character_id}/rest/move-all-to-bags")
-async def move_all_rest_to_bags_route(character_id: str, address: str = Depends(get_current_address)):
+@player_router.post("/me/characters/{character_id}/camp/move-all-to-bags")
+async def move_all_camp_to_bags_route(character_id: str, address: str = Depends(get_current_address)):
     try:
-        result = await move_all_storage_to_bags(address, character_id, "rest")
+        result = await move_all_storage_to_bags(address, character_id, "camp")
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc))
     if result is None:
-        raise HTTPException(status_code=404, detail="Rest storage is already empty")
+        raise HTTPException(status_code=404, detail="Camp storage is already empty")
     return {"ok": True}
 
 
-@player_router.post("/me/characters/{character_id}/items/{instance_id}/rest-to-backpack", response_model=PlayerDataResponse)
-async def move_rest_item_to_backpack_route(
+@player_router.post("/me/characters/{character_id}/items/{instance_id}/camp-to-backpack", response_model=PlayerDataResponse)
+async def move_camp_item_to_backpack_route(
     character_id: str, instance_id: str, address: str = Depends(get_current_address)
 ):
     try:
-        player = await move_storage_item_to_container(address, character_id, instance_id, "rest", "backpack")
+        player = await move_storage_item_to_container(address, character_id, instance_id, "camp", "backpack")
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc))
     if player is None:
-        raise HTTPException(status_code=404, detail="No matching resting instance on that character")
+        raise HTTPException(status_code=404, detail="No matching camp instance on that character")
     return player.to_dict()
 
 
-@player_router.post("/me/characters/{character_id}/items/{instance_id}/rest-to-saddlepack", response_model=PlayerDataResponse)
-async def move_rest_item_to_saddlepack_route(
+@player_router.post("/me/characters/{character_id}/items/{instance_id}/camp-to-saddlepack", response_model=PlayerDataResponse)
+async def move_camp_item_to_saddlepack_route(
     character_id: str, instance_id: str, address: str = Depends(get_current_address)
 ):
     try:
-        player = await move_storage_item_to_container(address, character_id, instance_id, "rest", "saddlepack")
+        player = await move_storage_item_to_container(address, character_id, instance_id, "camp", "saddlepack")
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc))
     if player is None:
-        raise HTTPException(status_code=404, detail="No matching resting instance on that character")
+        raise HTTPException(status_code=404, detail="No matching camp instance on that character")
     return player.to_dict()
 
 
-@player_router.post("/me/characters/{character_id}/items/{instance_id}/rest-to-cart", response_model=PlayerDataResponse)
-async def move_rest_item_to_cart_route(
+@player_router.post("/me/characters/{character_id}/items/{instance_id}/camp-to-cart", response_model=PlayerDataResponse)
+async def move_camp_item_to_cart_route(
     character_id: str, instance_id: str, address: str = Depends(get_current_address)
 ):
     try:
-        player = await move_storage_item_to_container(address, character_id, instance_id, "rest", "cart")
+        player = await move_storage_item_to_container(address, character_id, instance_id, "camp", "cart")
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc))
     if player is None:
-        raise HTTPException(status_code=404, detail="No matching resting instance on that character")
+        raise HTTPException(status_code=404, detail="No matching camp instance on that character")
     return player.to_dict()
 
 
-@player_router.post("/me/characters/{character_id}/items/{instance_id}/backpack-to-rest", response_model=PlayerDataResponse)
-async def move_backpack_item_to_rest_route(
+@player_router.post("/me/characters/{character_id}/items/{instance_id}/backpack-to-camp", response_model=PlayerDataResponse)
+async def move_backpack_item_to_camp_route(
     character_id: str, instance_id: str, address: str = Depends(get_current_address)
 ):
     try:
-        player = await move_container_item_to_storage(address, character_id, instance_id, "backpack", "rest")
+        player = await move_container_item_to_storage(address, character_id, instance_id, "backpack", "camp")
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc))
     if player is None:
@@ -1923,12 +1923,12 @@ async def move_backpack_item_to_rest_route(
     return player.to_dict()
 
 
-@player_router.post("/me/characters/{character_id}/items/{instance_id}/saddlepack-to-rest", response_model=PlayerDataResponse)
-async def move_saddlepack_item_to_rest_route(
+@player_router.post("/me/characters/{character_id}/items/{instance_id}/saddlepack-to-camp", response_model=PlayerDataResponse)
+async def move_saddlepack_item_to_camp_route(
     character_id: str, instance_id: str, address: str = Depends(get_current_address)
 ):
     try:
-        player = await move_container_item_to_storage(address, character_id, instance_id, "saddlepack", "rest")
+        player = await move_container_item_to_storage(address, character_id, instance_id, "saddlepack", "camp")
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc))
     if player is None:
@@ -1936,12 +1936,12 @@ async def move_saddlepack_item_to_rest_route(
     return player.to_dict()
 
 
-@player_router.post("/me/characters/{character_id}/items/{instance_id}/cart-to-rest", response_model=PlayerDataResponse)
-async def move_cart_item_to_rest_route(
+@player_router.post("/me/characters/{character_id}/items/{instance_id}/cart-to-camp", response_model=PlayerDataResponse)
+async def move_cart_item_to_camp_route(
     character_id: str, instance_id: str, address: str = Depends(get_current_address)
 ):
     try:
-        player = await move_container_item_to_storage(address, character_id, instance_id, "cart", "rest")
+        player = await move_container_item_to_storage(address, character_id, instance_id, "cart", "camp")
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc))
     if player is None:
@@ -1950,13 +1950,13 @@ async def move_cart_item_to_rest_route(
 
 
 @player_router.post(
-    "/me/characters/{character_id}/item-balances/{item_id}/rest-to-backpack", response_model=PlayerDataResponse
+    "/me/characters/{character_id}/item-balances/{item_id}/camp-to-backpack", response_model=PlayerDataResponse
 )
-async def move_rest_balance_to_backpack_route(
+async def move_camp_balance_to_backpack_route(
     character_id: str, item_id: str, payload: TransferAmountRequest, address: str = Depends(get_current_address)
 ):
     try:
-        player = await load_balance_from_storage(address, character_id, item_id, payload.amount, "rest", "backpack")
+        player = await load_balance_from_storage(address, character_id, item_id, payload.amount, "camp", "backpack")
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc))
     if player is None:
@@ -1965,13 +1965,13 @@ async def move_rest_balance_to_backpack_route(
 
 
 @player_router.post(
-    "/me/characters/{character_id}/item-balances/{item_id}/backpack-to-rest", response_model=PlayerDataResponse
+    "/me/characters/{character_id}/item-balances/{item_id}/backpack-to-camp", response_model=PlayerDataResponse
 )
-async def move_backpack_balance_to_rest_route(
+async def move_backpack_balance_to_camp_route(
     character_id: str, item_id: str, payload: TransferAmountRequest, address: str = Depends(get_current_address)
 ):
     try:
-        player = await unload_balance_to_storage(address, character_id, item_id, payload.amount, "backpack", "rest")
+        player = await unload_balance_to_storage(address, character_id, item_id, payload.amount, "backpack", "camp")
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc))
     if player is None:
@@ -1980,13 +1980,13 @@ async def move_backpack_balance_to_rest_route(
 
 
 @player_router.post(
-    "/me/characters/{character_id}/item-balances/{item_id}/rest-to-saddlepack", response_model=PlayerDataResponse
+    "/me/characters/{character_id}/item-balances/{item_id}/camp-to-saddlepack", response_model=PlayerDataResponse
 )
-async def move_rest_balance_to_saddlepack_route(
+async def move_camp_balance_to_saddlepack_route(
     character_id: str, item_id: str, payload: TransferAmountRequest, address: str = Depends(get_current_address)
 ):
     try:
-        player = await load_balance_from_storage(address, character_id, item_id, payload.amount, "rest", "saddlepack")
+        player = await load_balance_from_storage(address, character_id, item_id, payload.amount, "camp", "saddlepack")
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc))
     if player is None:
@@ -1995,13 +1995,13 @@ async def move_rest_balance_to_saddlepack_route(
 
 
 @player_router.post(
-    "/me/characters/{character_id}/item-balances/{item_id}/saddlepack-to-rest", response_model=PlayerDataResponse
+    "/me/characters/{character_id}/item-balances/{item_id}/saddlepack-to-camp", response_model=PlayerDataResponse
 )
-async def move_saddlepack_balance_to_rest_route(
+async def move_saddlepack_balance_to_camp_route(
     character_id: str, item_id: str, payload: TransferAmountRequest, address: str = Depends(get_current_address)
 ):
     try:
-        player = await unload_balance_to_storage(address, character_id, item_id, payload.amount, "saddlepack", "rest")
+        player = await unload_balance_to_storage(address, character_id, item_id, payload.amount, "saddlepack", "camp")
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc))
     if player is None:
@@ -2010,13 +2010,13 @@ async def move_saddlepack_balance_to_rest_route(
 
 
 @player_router.post(
-    "/me/characters/{character_id}/item-balances/{item_id}/rest-to-cart", response_model=PlayerDataResponse
+    "/me/characters/{character_id}/item-balances/{item_id}/camp-to-cart", response_model=PlayerDataResponse
 )
-async def move_rest_balance_to_cart_route(
+async def move_camp_balance_to_cart_route(
     character_id: str, item_id: str, payload: TransferAmountRequest, address: str = Depends(get_current_address)
 ):
     try:
-        player = await load_balance_from_storage(address, character_id, item_id, payload.amount, "rest", "cart")
+        player = await load_balance_from_storage(address, character_id, item_id, payload.amount, "camp", "cart")
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc))
     if player is None:
@@ -2025,13 +2025,13 @@ async def move_rest_balance_to_cart_route(
 
 
 @player_router.post(
-    "/me/characters/{character_id}/item-balances/{item_id}/cart-to-rest", response_model=PlayerDataResponse
+    "/me/characters/{character_id}/item-balances/{item_id}/cart-to-camp", response_model=PlayerDataResponse
 )
-async def move_cart_balance_to_rest_route(
+async def move_cart_balance_to_camp_route(
     character_id: str, item_id: str, payload: TransferAmountRequest, address: str = Depends(get_current_address)
 ):
     try:
-        player = await unload_balance_to_storage(address, character_id, item_id, payload.amount, "cart", "rest")
+        player = await unload_balance_to_storage(address, character_id, item_id, payload.amount, "cart", "camp")
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc))
     if player is None:

@@ -589,7 +589,7 @@ export function BodyTab({
           hasMountEquipped={character.gear.items.some((i) => i.location === "body" && i.slotRef?.includes("Mount"))}
           hasCompanionEquipped={character.gear.items.some((i) => i.location === "body" && i.slotRef?.includes("Companion"))}
           inAdventure={character.availability.inAdventure}
-          storageType={resting ? "rest" : "home"}
+          storageType={resting ? "camp" : "home"}
           currentSlots={selectedInstance.slotRef}
           characterId={character.id}
           packedItems={{
