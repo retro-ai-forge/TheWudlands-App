@@ -124,10 +124,12 @@ export function BodyTab({
   character,
   onPlayerDataUpdated,
   onOpenCamp,
+  resting = false,
 }: {
   character: SlotCharacterSummary;
   onPlayerDataUpdated?: (data: RawPlayerData) => void;
   onOpenCamp?: () => void;
+  resting?: boolean;
 }) {
   // .frameBox's CSS aspect-ratio (2/3) is only a fallback for portraits
   // saved before portraitFrameArea carried its own aspectRatio - once that
@@ -587,6 +589,7 @@ export function BodyTab({
           hasMountEquipped={character.gear.items.some((i) => i.location === "body" && i.slotRef?.includes("Mount"))}
           hasCompanionEquipped={character.gear.items.some((i) => i.location === "body" && i.slotRef?.includes("Companion"))}
           inAdventure={character.availability.inAdventure}
+          storageType={resting ? "rest" : "camp"}
           currentSlots={selectedInstance.slotRef}
           characterId={character.id}
           packedItems={{

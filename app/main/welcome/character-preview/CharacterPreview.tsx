@@ -23,6 +23,7 @@ const ICON_BASE = "/images/character/char-preview-";
 // components that receive these as props.
 const EMPTY_VAULT: { items: ItemInstance[]; itemBalances: Record<string, number> } = { items: [], itemBalances: {} };
 const EMPTY_CAMP_BALANCES: Record<string, number> = {};
+const EMPTY_CAMP: { items: ItemInstance[]; itemBalances: Record<string, number> } = { items: [], itemBalances: {} };
 
 const TABS: { key: TabKey; label: string; icon: string; secondIcon?: string; emojiIcon?: string; lightenWhenActive?: boolean }[] = [
   { key: "stats", label: "Stats", icon: `${ICON_BASE}stats.png` },
@@ -80,8 +81,8 @@ export function CharacterPreview({
   // tab) suspends .wizard's own vertical scroll so only its item grid
   // scrolls, horizontally. Cleared by switching to any of the 5 real tabs.
   const [showCamp, setShowCamp] = useState(false);
-  const [resting, setResting] = useState(false);
-  const [restLocation, setRestLocation] = useState<string>(REST_LOCATIONS[0]);
+  const [resting, setResting] = useState(character.availability.resting ?? false);
+  const [restLocation, setRestLocation] = useState<string>(character.availability.restLocation ?? REST_LOCATIONS[0]);
 
   useEffect(() => {
     if (inAdventure && !resting && activeTab === "camp") {
@@ -92,7 +93,7 @@ export function CharacterPreview({
     }
     if (!inAdventure) {
       setResting(false);
-      setRestItemBalances(null);
+      setRestData(null);
       if (activeTab === "camp" || activeTab === "vault") {
         setActiveTab("stories");
       }
@@ -102,29 +103,29 @@ export function CharacterPreview({
 
   // Lazy-loaded supplemental data — fetched on demand the first time the
   // relevant tab is opened; null means not yet loaded.
-  const [campItemBalances, setCampItemBalances] = useState<Record<string, number> | null>(null);
-  const [restItemBalances, setRestItemBalances] = useState<Record<string, number> | null>(null);
+  const [campData, setCampData] = useState<{ items: ItemInstance[]; itemBalances: Record<string, number> } | null>(null);
+  const [restData, setRestData] = useState<{ items: ItemInstance[]; itemBalances: Record<string, number> } | null>(null);
   const [vaultData, setVaultData] = useState<{ items: ItemInstance[]; itemBalances: Record<string, number> } | null>(null);
 
   // Trigger camp fetch the first time the camp view becomes visible.
   // When resting + camp tab, load rest data instead.
   useEffect(() => {
     const needsCamp = showCamp || (activeTab === "camp" && !resting);
-    if (!needsCamp || campItemBalances !== null) return;
+    if (!needsCamp || campData !== null) return;
     fetch(`/api/auth/me/characters/${character.id}/camp`, { credentials: "include" })
       .then((res) => (res.ok ? res.json() : null))
-      .then((data) => setCampItemBalances(data?.itemBalances ?? {}))
-      .catch(() => setCampItemBalances({}));
-  }, [showCamp, activeTab, campItemBalances, character.id, resting]);
+      .then((data) => setCampData(data ?? EMPTY_CAMP))
+      .catch(() => setCampData(EMPTY_CAMP));
+  }, [showCamp, activeTab, campData, character.id, resting]);
 
   // Trigger rest fetch when resting and camp tab is active.
   useEffect(() => {
-    if (!(activeTab === "camp" && resting) || restItemBalances !== null) return;
+    if (!(activeTab === "camp" && resting) || restData !== null) return;
     fetch(`/api/auth/me/characters/${character.id}/rest`, { credentials: "include" })
       .then((res) => (res.ok ? res.json() : null))
-      .then((data) => setRestItemBalances(data?.itemBalances ?? {}))
-      .catch(() => setRestItemBalances({}));
-  }, [activeTab, resting, restItemBalances, character.id]);
+      .then((data) => setRestData(data ?? EMPTY_CAMP))
+      .catch(() => setRestData(EMPTY_CAMP));
+  }, [activeTab, resting, restData, character.id]);
 
   // Trigger vault fetch the first time the vault tab is opened.
   useEffect(() => {
@@ -137,8 +138,8 @@ export function CharacterPreview({
 
   const handlePlayerDataUpdated = useCallback((data: RawPlayerData) => {
     setVaultData(null);
-    setCampItemBalances(null);
-    setRestItemBalances(null);
+    setCampData(null);
+    setRestData(null);
     onPlayerDataUpdated?.(data);
   }, [onPlayerDataUpdated]);
 
@@ -149,10 +150,15 @@ export function CharacterPreview({
     vault: vaultData ?? character.vault ?? EMPTY_VAULT,
     gear: {
       ...character.gear,
+      items: [
+        ...character.gear.items.filter((i) => i.location !== "camp" && i.location !== "rest"),
+        ...(campData?.items ?? []),
+        ...(restData?.items ?? []),
+      ],
       itemBalances: {
         ...character.gear.itemBalances,
-        camp: campItemBalances ?? character.gear.itemBalances?.camp ?? EMPTY_CAMP_BALANCES,
-        rest: restItemBalances ?? character.gear.itemBalances?.rest ?? EMPTY_CAMP_BALANCES,
+        camp: campData?.itemBalances ?? character.gear.itemBalances?.camp ?? EMPTY_CAMP_BALANCES,
+        rest: restData?.itemBalances ?? character.gear.itemBalances?.rest ?? EMPTY_CAMP_BALANCES,
       },
     },
   };
@@ -397,7 +403,7 @@ export function CharacterPreview({
             />
           )}
           {activeTab === "body" && (
-            <BodyTab character={augmentedCharacter} onPlayerDataUpdated={handlePlayerDataUpdated} onOpenCamp={inAdventure ? undefined : () => setShowCamp(true)} />
+            <BodyTab character={augmentedCharacter} onPlayerDataUpdated={handlePlayerDataUpdated} onOpenCamp={inAdventure ? undefined : () => setShowCamp(true)} resting={resting} />
           )}
           {activeTab === "vault" && (
             <TabErrorBoundary>

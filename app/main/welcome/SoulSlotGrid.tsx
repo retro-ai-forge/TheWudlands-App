@@ -48,6 +48,10 @@ export interface CharacterAvailability {
   timeRdy: string;
   /** Player-toggled - whether this character is currently out on an adventure, away from the shared vault. See InAdventureToggle.tsx. */
   inAdventure: boolean;
+  /** Whether this character is currently resting at a rest stop during an adventure. */
+  resting?: boolean;
+  /** The type of rest location (cave, forest, prairie, ruin, dungeon). */
+  restLocation?: string | null;
 }
 
 /** Lightweight preview from player_characters — enough to render the soul slot grid. */
@@ -58,7 +62,7 @@ export interface SlotCharacterPreview {
   status: string[];
   tags: string[];
   timers: Record<string, string>;
-  availability: { inAdventure: boolean };
+  availability: { inAdventure: boolean; resting?: boolean; restLocation?: string | null };
   portraitUrl: string;
   portraitFaceArea: PortraitArea | null;
   portraitFrameArea: PortraitArea | null;

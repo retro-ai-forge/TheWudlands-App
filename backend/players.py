@@ -175,8 +175,8 @@ async def _build_player(db, address: str) -> Player:
             character["vault"] = {"items": [], "itemBalances": {}}
         else:
             rest_doc = rest_map.get(cid, {})
-            rest_allowed = character.get("availability", {}).get("restAllowed", False)
-            if rest_allowed and rest_doc:
+            resting = character.get("availability", {}).get("resting", False)
+            if resting and rest_doc:
                 character["gear"]["itemBalances"]["rest"] = rest_doc.get("itemBalances", {})
                 rest_items = rest_doc.get("items", [])
                 for ri in rest_items:
@@ -456,7 +456,7 @@ async def _create_pc_entry(
         "timers": {},
         "craftingTiers": {},
         "slotNumber": slot_number,
-        "availability": {"inAdventure": False},
+        "availability": {"inAdventure": False, "resting": False, "restLocation": None},
         "portraitUrl": portrait_url,
         "portraitFaceArea": portrait_face_area,
         "portraitFrameArea": portrait_frame_area,
@@ -561,6 +561,16 @@ async def _update_pc_availability(db, address: str, character_id: str, in_advent
     await db.player_characters.update_one(
         {"address": address, "characters.characterId": character_id},
         {"$set": {"characters.$.availability.inAdventure": in_adventure}},
+    )
+
+
+async def _update_pc_resting(db, address: str, character_id: str, resting: bool, rest_location: Optional[str] = None) -> None:
+    await db.player_characters.update_one(
+        {"address": address, "characters.characterId": character_id},
+        {"$set": {
+            "characters.$.availability.resting": resting,
+            "characters.$.availability.restLocation": rest_location if resting else None,
+        }},
     )
 
 
@@ -675,17 +685,21 @@ async def get_single_character(address: str, character_id: str) -> Optional[dict
 
 
 async def get_character_camp(address: str, character_id: str) -> dict:
-    """Return only the camp itemBalances for one character."""
+    """Return camp items and itemBalances for one character."""
     db = get_database()
     doc = await db.character_camps.find_one({"address": address, "characterId": character_id})
-    return doc.get("itemBalances", {}) if doc else {}
+    if not doc:
+        return {"items": [], "itemBalances": {}}
+    return {"items": doc.get("items", []), "itemBalances": doc.get("itemBalances", {})}
 
 
 async def get_character_resting(address: str, character_id: str) -> dict:
-    """Return only the rest itemBalances for one character."""
+    """Return rest items and itemBalances for one character."""
     db = get_database()
     doc = await db.character_resting.find_one({"address": address, "characterId": character_id})
-    return doc.get("itemBalances", {}) if doc else {}
+    if not doc:
+        return {"items": [], "itemBalances": {}}
+    return {"items": doc.get("items", []), "itemBalances": doc.get("itemBalances", {})}
 
 
 async def get_player_vault(address: str) -> dict:
@@ -3938,9 +3952,9 @@ async def unequip_item(
 
         # Container unequipped to camp: cascade its contents to camp too.
         # Mount/companion unequipped to camp: cascade all sub-slot items to camp.
-        if (instance["familyId"] in ("backpack", "saddlepack", "cart") or is_mount_or_companion) and target_location == "camp":
+        if (instance["familyId"] in ("backpack", "saddlepack", "cart") or is_mount_or_companion) and target_location in ("camp", "rest"):
+            stor = target_location
             gear = character.get("gear", {})
-            # Sub-slot items to also move to camp (only populated for mount/companion).
             sub_slot_ids: set[str] = set()
             sub_buckets_to_clear: set[str] = set()
             if is_mount_or_companion:
@@ -3952,34 +3966,35 @@ async def unequip_item(
                                 sub_buckets_to_clear.add(other["familyId"])
 
             new_items = []
-            camp_bound: list = []
+            storage_bound: list = []
             for it in gear.get("items", []):
                 if it["instanceId"] == instance_id:
-                    camp_bound.append(moved_instance)
+                    storage_bound.append(moved_instance)
                 elif it["instanceId"] in sub_slot_ids:
-                    camp_bound.append({**it, "location": "camp", "slotRef": []})
+                    storage_bound.append({**it, "location": stor, "slotRef": []})
                 elif not is_mount_or_companion and it.get("location") == instance["familyId"]:
-                    camp_bound.append({**it, "location": "camp", "slotRef": []})
+                    storage_bound.append({**it, "location": stor, "slotRef": []})
                 elif it.get("location") in sub_buckets_to_clear:
-                    camp_bound.append({**it, "location": "camp", "slotRef": []})
+                    storage_bound.append({**it, "location": stor, "slotRef": []})
                 else:
                     new_items.append(it)
 
-            camp_doc_ueq = await db.character_camps.find_one({"address": address, "characterId": character_id})
-            camp_balances = dict(camp_doc_ueq.get("itemBalances", {}) if camp_doc_ueq else {})
+            stor_coll = STORAGE_COLLECTIONS[stor]
+            stor_doc = await db[stor_coll].find_one({"address": address, "characterId": character_id})
+            stor_balances = dict(stor_doc.get("itemBalances", {}) if stor_doc else {})
             extra_sets: Dict[str, object] = {}
 
             if not is_mount_or_companion:
                 bucket = instance["familyId"]
                 for item_id, qty in gear.get("itemBalances", {}).get(bucket, {}).items():
                     if qty > 0:
-                        camp_balances[item_id] = camp_balances.get(item_id, 0) + qty
+                        stor_balances[item_id] = stor_balances.get(item_id, 0) + qty
                 extra_sets[f"gear.itemBalances.{bucket}"] = {}
 
             for bucket in sub_buckets_to_clear:
                 for item_id, qty in gear.get("itemBalances", {}).get(bucket, {}).items():
                     if qty > 0:
-                        camp_balances[item_id] = camp_balances.get(item_id, 0) + qty
+                        stor_balances[item_id] = stor_balances.get(item_id, 0) + qty
                 extra_sets[f"gear.itemBalances.{bucket}"] = {}
 
             doc = await db.characters.find_one_and_update(
@@ -3991,18 +4006,18 @@ async def unequip_item(
                 return_document=ReturnDocument.AFTER,
             )
             if doc is not None:
-                await _set_storage_balances(db, "camp", address, character_id, camp_balances)
-                await _push_storage_items(db, "camp", address, character_id, camp_bound)
+                await _set_storage_balances(db, stor, address, character_id, stor_balances)
+                await _push_storage_items(db, stor, address, character_id, storage_bound)
         elif is_balance_origin:
             unequip_qty = instance.get("quantity", 1)
-            if target_location == "camp":
+            if target_location in ("camp", "rest"):
                 doc = await db.characters.find_one_and_update(
                     {"address": address, "id": character_id, "gear.items": {"$elemMatch": {"instanceId": instance_id, "location": "body"}}},
                     {"$pull": {"gear.items": {"instanceId": instance_id}}},
                     return_document=ReturnDocument.AFTER,
                 )
                 if doc is not None:
-                    await _inc_storage_balances(db, "camp", address, character_id, {instance["itemId"]: unequip_qty})
+                    await _inc_storage_balances(db, target_location, address, character_id, {instance["itemId"]: unequip_qty})
             else:
                 doc = await db.characters.find_one_and_update(
                     {"address": address, "id": character_id, "gear.items": {"$elemMatch": {"instanceId": instance_id, "location": "body"}}},
@@ -4012,14 +4027,14 @@ async def unequip_item(
                     },
                     return_document=ReturnDocument.AFTER,
                 )
-        elif target_location == "camp":
+        elif target_location in ("camp", "rest"):
             doc = await db.characters.find_one_and_update(
                 {"address": address, "id": character_id, "gear.items": {"$elemMatch": {"instanceId": instance_id, "location": "body"}}},
                 {"$pull": {"gear.items": {"instanceId": instance_id}}},
                 return_document=ReturnDocument.AFTER,
             )
             if doc is not None:
-                await _push_storage_items(db, "camp", address, character_id, [moved_instance])
+                await _push_storage_items(db, target_location, address, character_id, [moved_instance])
         else:
             doc = await db.characters.find_one_and_update(
                 {"address": address, "id": character_id, "gear.items": {"$elemMatch": {"instanceId": instance_id, "location": "body"}}},
@@ -4057,9 +4072,12 @@ async def set_in_adventure(
             raise ValueError("Character is still crafting")
 
     update: dict = {"$set": {"availability.inAdventure": in_adventure}}
-    if not in_adventure and reason in ("stop", "run_away"):
-        counter = "stats.adventureFinished" if reason == "stop" else "stats.adventureRunAway"
-        update.setdefault("$inc", {})[counter] = 1
+    if not in_adventure:
+        update["$set"]["availability.resting"] = False
+        update["$set"]["availability.restLocation"] = None
+        if reason in ("stop", "run_away"):
+            counter = "stats.adventureFinished" if reason == "stop" else "stats.adventureRunAway"
+            update.setdefault("$inc", {})[counter] = 1
 
     doc = await db.characters.find_one_and_update(
         {"address": address, "id": character_id},
@@ -4076,11 +4094,64 @@ async def set_in_adventure(
     else:
         await asyncio.gather(
             _update_pc_status(db, address, character_id, "adventuring", "free"),
+            _remove_pc_status(db, address, character_id, "resting"),
             _update_pc_availability(db, address, character_id, False),
+            _update_pc_resting(db, address, character_id, False),
             db.character_resting.delete_one(
                 {"address": address, "characterId": character_id}
             ),
         )
+    return True
+
+
+async def set_resting(
+    address: str, character_id: str, resting: bool, location: Optional[str] = None
+) -> bool | None:
+    """Toggle resting state for a character that is currently in adventure.
+
+    When starting rest, ensures a ``character_resting`` doc exists (with
+    the chosen ``campType``). When stopping rest, clears the flag but
+    leaves the resting doc in place (items may still be there — the doc
+    is only deleted when the adventure itself ends).
+
+    Returns True on success, None if the character doesn't exist or
+    isn't in adventure.
+    """
+    db = get_database()
+    character_doc = await db.characters.find_one({"address": address, "id": character_id})
+    if character_doc is None:
+        return None
+    if not character_doc.get("availability", {}).get("inAdventure", False):
+        return None
+
+    set_fields: dict = {
+        "availability.resting": resting,
+        "availability.restLocation": location if resting else None,
+    }
+    await db.characters.update_one(
+        {"address": address, "id": character_id},
+        {"$set": set_fields},
+    )
+
+    pc_tasks = [_update_pc_resting(db, address, character_id, resting, location)]
+    if resting:
+        pc_tasks.append(_add_pc_status(db, address, character_id, "resting"))
+        pc_tasks.append(
+            db.character_resting.update_one(
+                {"address": address, "characterId": character_id},
+                {"$setOnInsert": {
+                    "address": address,
+                    "characterId": character_id,
+                    "items": [],
+                    "itemBalances": {},
+                    "campType": location or "cave",
+                }},
+                upsert=True,
+            )
+        )
+    else:
+        pc_tasks.append(_remove_pc_status(db, address, character_id, "resting"))
+    await asyncio.gather(*pc_tasks)
     return True
 
 
@@ -4278,7 +4349,7 @@ async def move_storage_item_to_container(
         return None
     character = doc
     in_adv = character.get("availability", {}).get("inAdventure", False)
-    rest_ok = character.get("availability", {}).get("restAllowed", False)
+    rest_ok = character.get("availability", {}).get("resting", False)
     if not _check_transfer(storage_type, container, in_adv, rest_ok):
         raise ValueError(f"Transfer from {storage_type} to {container} not allowed")
 
@@ -4315,7 +4386,7 @@ async def move_container_item_to_storage(
         return None
     character = doc
     in_adv = character.get("availability", {}).get("inAdventure", False)
-    rest_ok = character.get("availability", {}).get("restAllowed", False)
+    rest_ok = character.get("availability", {}).get("resting", False)
     if not _check_transfer(container, storage_type, in_adv, rest_ok):
         raise ValueError(f"Transfer from {container} to {storage_type} not allowed")
 
@@ -4350,7 +4421,7 @@ async def move_container_item(
         return None
     character = doc
     in_adv = character.get("availability", {}).get("inAdventure", False)
-    rest_ok = character.get("availability", {}).get("restAllowed", False)
+    rest_ok = character.get("availability", {}).get("resting", False)
     if not _check_transfer(from_container, to_container, in_adv, rest_ok):
         raise ValueError(f"Transfer from {from_container} to {to_container} not allowed")
 
@@ -4390,7 +4461,7 @@ async def load_balance_from_storage(
         return None
     character = doc
     in_adv = character.get("availability", {}).get("inAdventure", False)
-    rest_ok = character.get("availability", {}).get("restAllowed", False)
+    rest_ok = character.get("availability", {}).get("resting", False)
     if not _check_transfer(storage_type, container, in_adv, rest_ok):
         raise ValueError(f"Transfer from {storage_type} to {container} not allowed")
 
@@ -4429,7 +4500,7 @@ async def unload_balance_to_storage(
     if character is None:
         return None
     in_adv = character.get("availability", {}).get("inAdventure", False)
-    rest_ok = character.get("availability", {}).get("restAllowed", False)
+    rest_ok = character.get("availability", {}).get("resting", False)
     if not _check_transfer(container, storage_type, in_adv, rest_ok):
         raise ValueError(f"Transfer from {container} to {storage_type} not allowed")
 
@@ -4495,7 +4566,7 @@ async def bulk_move_storage(
         return None
     character = doc
     in_adv = character.get("availability", {}).get("inAdventure", False)
-    rest_ok = character.get("availability", {}).get("restAllowed", False)
+    rest_ok = character.get("availability", {}).get("resting", False)
     if not _check_transfer(storage_type, destination, in_adv, rest_ok):
         raise ValueError(f"Transfer from {storage_type} to {destination} not allowed")
 

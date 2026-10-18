@@ -88,6 +88,26 @@ export function StoriesTab({
     }
   };
 
+  const toggleResting = async () => {
+    if (pending) return;
+    const newResting = !resting;
+    setPending(true);
+    try {
+      const res = await fetch(`/api/auth/me/characters/${character.id}/resting`, {
+        method: "PATCH",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ resting: newResting, location: newResting ? restLocation : null }),
+      });
+      if (res.ok) {
+        onRestingChange(newResting);
+        await refreshAfterToggle();
+      }
+    } finally {
+      setPending(false);
+    }
+  };
+
   return (
     <div className={styles.panel}>
       <p className={styles.placeholderNote}>
@@ -127,7 +147,7 @@ export function StoriesTab({
           type="button"
           className={`${styles.adventureToggleButton} ${styles.restButton} ${resting ? styles.restButtonOn : ""} ${inAdventure && !resting ? styles.restButtonActive : ""}`}
           disabled={!inAdventure || pending}
-          onClick={() => onRestingChange(!resting)}
+          onClick={toggleResting}
         >
           {resting ? "End Rest" : "Start Rest"}
         </button>

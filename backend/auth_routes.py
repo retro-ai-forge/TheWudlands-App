@@ -67,6 +67,7 @@ from backend.players import (
     bulk_move_vault,
     set_in_adventure,
     set_prime_profession,
+    set_resting,
     start_craft,
     unequip_item,
     check_in_item_balance_from_cart,
@@ -819,16 +820,14 @@ async def get_my_character_full(character_id: str, address: str = Depends(get_cu
 
 @player_router.get("/me/characters/{character_id}/camp")
 async def get_my_character_camp(character_id: str, address: str = Depends(get_current_address)):
-    """Lazy-load: just this character's camp itemBalances."""
-    camp = await get_character_camp(address, character_id)
-    return {"itemBalances": camp}
+    """Lazy-load: this character's camp items and itemBalances."""
+    return await get_character_camp(address, character_id)
 
 
 @player_router.get("/me/characters/{character_id}/rest")
 async def get_my_character_resting(character_id: str, address: str = Depends(get_current_address)):
-    """Lazy-load: just this character's resting itemBalances."""
-    rest = await get_character_resting(address, character_id)
-    return {"itemBalances": rest}
+    """Lazy-load: this character's resting items and itemBalances."""
+    return await get_character_resting(address, character_id)
 
 
 @player_router.get("/me/vault")
@@ -2593,6 +2592,22 @@ async def update_my_character_in_adventure(
     if result is None:
         raise HTTPException(status_code=404, detail="No player record found for this address")
 
+    return {"ok": True}
+
+
+class SetRestingRequest(BaseModel):
+    resting: bool = Field(..., description="True to start resting, False to stop")
+    location: Optional[str] = Field(None, description="Rest location type (cave, forest, prairie, ruin, dungeon)")
+
+
+@player_router.patch("/me/characters/{character_id}/resting")
+async def update_my_character_resting(
+    character_id: str, payload: SetRestingRequest, address: str = Depends(get_current_address)
+):
+    """Toggle resting state for a character currently in adventure."""
+    result = await set_resting(address, character_id, payload.resting, payload.location)
+    if result is None:
+        raise HTTPException(status_code=400, detail="Character not found or not in adventure")
     return {"ok": True}
 
 

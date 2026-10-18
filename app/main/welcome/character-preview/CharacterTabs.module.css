@@ -202,11 +202,11 @@
 }
 
 .tabRowButtonInactive {
-  opacity: 0.45;
+  opacity: 0.55;
 }
 
 .tabRowButtonLocked {
-  opacity: 0.2;
+  opacity: 0.12;
   pointer-events: none;
 }
 

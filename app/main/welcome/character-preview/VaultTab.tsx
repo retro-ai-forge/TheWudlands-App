@@ -1377,6 +1377,7 @@ export const BACKPACK_ACTION_ICON = "/images/character/backpack.png";
 export const SADDLEPACK_ACTION_ICON = "/images/character/saddlebags.png";
 export const VAULT_ACTION_ICON = "/images/character/vault.png";
 const CAMP_ACTION_ICON = "/images/character/camp.png";
+export const REST_ACTION_ICON = "/images/character/camp-inadventure.png";
 export const CART_ACTION_ICON = "/images/items/cart_t1.png";
 
 
@@ -2313,13 +2314,13 @@ function PackedItemsRow({
             location === "cart"
               ? [
                   ...(inAdventure
-                    ? [{ key: "storage", icon: CAMP_ACTION_ICON, label: storageType === "rest" ? "Rest" : "Camp", endpoint: `cart-to-${storageType}` }]
+                    ? [{ key: "storage", icon: storageType === "rest" ? REST_ACTION_ICON : CAMP_ACTION_ICON, label: storageType === "rest" ? "Rest" : "Camp", endpoint: `cart-to-${storageType}` }]
                     : [{ key: "vault", icon: VAULT_ACTION_ICON, label: "Vault", endpoint: "cart-to-vault" }]),
                 ]
               : location === "saddlepack"
               ? [
                   ...(inAdventure
-                    ? [{ key: "storage", icon: CAMP_ACTION_ICON, label: storageType === "rest" ? "Rest" : "Camp", endpoint: `saddlepack-to-${storageType}` }]
+                    ? [{ key: "storage", icon: storageType === "rest" ? REST_ACTION_ICON : CAMP_ACTION_ICON, label: storageType === "rest" ? "Rest" : "Camp", endpoint: `saddlepack-to-${storageType}` }]
                     : [{ key: "vault", icon: VAULT_ACTION_ICON, label: "Vault", endpoint: "to-vault" }]),
                   ...(hasBackpackEquipped
                     ? [{ key: "backpack", icon: BACKPACK_ACTION_ICON, label: "Backpack", endpoint: "saddlepack-to-backpack" }]
@@ -2327,7 +2328,7 @@ function PackedItemsRow({
                 ]
               : [
                   ...(inAdventure
-                    ? [{ key: "storage", icon: CAMP_ACTION_ICON, label: storageType === "rest" ? "Rest" : "Camp", endpoint: `backpack-to-${storageType}` }]
+                    ? [{ key: "storage", icon: storageType === "rest" ? REST_ACTION_ICON : CAMP_ACTION_ICON, label: storageType === "rest" ? "Rest" : "Camp", endpoint: `backpack-to-${storageType}` }]
                     : [{ key: "vault", icon: VAULT_ACTION_ICON, label: "Vault", endpoint: "to-vault" }]),
                   ...(hasSaddlepackEquipped
                     ? [{ key: "saddlepack", icon: SADDLEPACK_ACTION_ICON, label: "Saddlepack", endpoint: "backpack-to-saddlepack" }]
@@ -2598,6 +2599,7 @@ export function ItemDetailPopup({
   const inStorage = location === "camp" || location === "rest";
   const storageAccessible = (storageType === "camp" && !inAdventure) || storageType === "rest";
   const storageLabel = storageType === "rest" ? "Rest" : "Camp";
+  const storageIcon = storageType === "rest" ? REST_ACTION_ICON : CAMP_ACTION_ICON;
 
   const [pending, setPending] = useState(false);
   // Replaces the description text for ITEM_POPUP_FLASH_MS after a failed
@@ -3080,7 +3082,7 @@ export function ItemDetailPopup({
                       owned={owned}
                       pending={pending}
                       onPick={moveToCamp}
-                      destinationIcon={CAMP_ACTION_ICON}
+                      destinationIcon={storageIcon}
                       destinationLabel={storageLabel}
                       amounts={RAW_RESOURCE_AMOUNTS}
                       showHalf
@@ -3100,7 +3102,7 @@ export function ItemDetailPopup({
                           role="img"
                           aria-label={storageLabel}
                           className={styles.itemPopupBackpackIcon}
-                          style={{ backgroundImage: `url(${CAMP_ACTION_ICON})` }}
+                          style={{ backgroundImage: `url(${storageIcon})` }}
                         />
                       </button>
                     </div>
@@ -3138,7 +3140,7 @@ export function ItemDetailPopup({
                       aria-label={`Move to ${storageLabel}`}
                       title={`Move to ${storageLabel}`}
                     >
-                      <div role="img" aria-label={storageLabel} className={styles.itemPopupBackpackIcon} style={{ backgroundImage: `url(${CAMP_ACTION_ICON})` }} />
+                      <div role="img" aria-label={storageLabel} className={styles.itemPopupBackpackIcon} style={{ backgroundImage: `url(${storageIcon})` }} />
                     </button>
                   )}
                 </div>
@@ -3177,7 +3179,7 @@ export function ItemDetailPopup({
                   )}
                   {storageAccessible && (
                     <button type="button" className={styles.itemPopupBackpackButton} disabled={pending} onClick={unequipToStorage} aria-label={`Move to ${storageLabel}`} title={`Move to ${storageLabel}`}>
-                      <div role="img" aria-label={storageLabel} className={styles.itemPopupBackpackIcon} style={{ backgroundImage: `url(${CAMP_ACTION_ICON})` }} />
+                      <div role="img" aria-label={storageLabel} className={styles.itemPopupBackpackIcon} style={{ backgroundImage: `url(${storageIcon})` }} />
                     </button>
                   )}
                 </div>
@@ -3205,7 +3207,7 @@ export function ItemDetailPopup({
                   <button type="button" className={styles.itemPopupBackpackButton} disabled={pending}
                     onClick={location === "backpack" ? stowToStorage : location === "saddlepack" ? saddlepackToStorage : cartToStorage}
                     aria-label={`Move to ${storageLabel}`} title={`Move to ${storageLabel}`}>
-                    <div role="img" aria-label={storageLabel} className={styles.itemPopupBackpackIcon} style={{ backgroundImage: `url(${CAMP_ACTION_ICON})` }} />
+                    <div role="img" aria-label={storageLabel} className={styles.itemPopupBackpackIcon} style={{ backgroundImage: `url(${storageIcon})` }} />
                   </button>
                 )}
                 {location !== "backpack" && info?.backpackable && hasBackpackEquipped && (
@@ -3264,7 +3266,7 @@ export function ItemDetailPopup({
                   {storageAccessible && !inStorage && (
                     <TransferButtons owned={owned} pending={pending}
                       onPick={location === "backpack" ? unloadBalanceToStorage : location === "saddlepack" ? unloadBalanceFromSaddlepack : unloadBalanceFromCart}
-                      destinationIcon={CAMP_ACTION_ICON} destinationLabel={storageLabel} amounts={RAW_RESOURCE_AMOUNTS} showHalf showInfinity={false} />
+                      destinationIcon={storageIcon} destinationLabel={storageLabel} amounts={RAW_RESOURCE_AMOUNTS} showHalf showInfinity={false} />
                   )}
                   {location !== "backpack" && hasBackpackEquipped && (
                     <TransferButtons owned={owned} pending={pending}
@@ -3309,7 +3311,7 @@ export function ItemDetailPopup({
                     <button type="button" className={styles.itemPopupBackpackButton} disabled={pending}
                       onClick={() => (location === "backpack" ? unloadBalanceToStorage : location === "saddlepack" ? unloadBalanceFromSaddlepack : unloadBalanceFromCart)(1)}
                       aria-label={`Move to ${storageLabel}`} title={`Move to ${storageLabel}`}>
-                      <div role="img" aria-label={storageLabel} className={styles.itemPopupBackpackIcon} style={{ backgroundImage: `url(${CAMP_ACTION_ICON})` }} />
+                      <div role="img" aria-label={storageLabel} className={styles.itemPopupBackpackIcon} style={{ backgroundImage: `url(${storageIcon})` }} />
                     </button>
                   )}
                   {location !== "backpack" && hasBackpackEquipped && (

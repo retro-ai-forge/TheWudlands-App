@@ -47,7 +47,11 @@ async def main():
 
             availability = char.get("availability", {})
             entry["slotNumber"] = char.get("slotNumber", 0)
-            entry["availability"] = {"inAdventure": availability.get("inAdventure", False)}
+            entry["availability"] = {
+                "inAdventure": availability.get("inAdventure", False),
+                "resting": availability.get("resting", False),
+                "restLocation": availability.get("restLocation"),
+            }
             entry["portraitUrl"] = char.get("portraitUrl", "")
             entry["portraitFaceArea"] = char.get("portraitFaceArea")
             entry["portraitFrameArea"] = char.get("portraitFrameArea")
