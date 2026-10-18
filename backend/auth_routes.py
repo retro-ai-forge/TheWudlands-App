@@ -49,8 +49,10 @@ from backend.players import (
     equip_item,
     equip_item_from_pool,
     finish_craft,
+    get_character_previews,
     get_character_summaries,
     get_or_create_player,
+    get_single_character,
     get_player,
     grant_item_balance,
     move_all_storage_to_backpack,
@@ -794,6 +796,25 @@ async def get_my_character_summaries(address: str = Depends(get_current_address)
     """Lightweight: just the character docs for the soul slot grid (no vault/camp/blueprint)."""
     summaries = await get_character_summaries(address)
     return {"address": address, "characters": summaries}
+
+
+@player_router.get("/me/characters/previews")
+async def get_my_character_previews(address: str = Depends(get_current_address)):
+    """Fastest possible grid load — reads only player_characters (one small doc)."""
+    previews = await get_character_previews(address)
+    return {"address": address, "characters": previews}
+
+
+@player_router.get("/me/characters/{character_id}/full")
+async def get_my_character_full(character_id: str, address: str = Depends(get_current_address)):
+    """Full single-character load (gear, stats, blueprints, pc-injected fields).
+
+    Camp/rest/vault are NOT included — the frontend lazy-loads those.
+    """
+    char = await get_single_character(address, character_id)
+    if char is None:
+        raise HTTPException(status_code=404, detail="Character not found")
+    return char
 
 
 @player_router.get("/me/characters/{character_id}/camp")
@@ -2556,24 +2577,23 @@ class SetInAdventureRequest(BaseModel):
     reason: str = Field("stop", description="Why the adventure ended: 'stop' or 'run_away'")
 
 
-@player_router.patch("/me/characters/{character_id}/in-adventure", response_model=PlayerDataResponse)
+@player_router.patch("/me/characters/{character_id}/in-adventure")
 async def update_my_character_in_adventure(
     character_id: str, payload: SetInAdventureRequest, address: str = Depends(get_current_address)
 ):
     """
-    Toggles Character.inAdventure. Changes where unequip_item sends a
-    freed item (see there). Switching to True raises 400 if the character
-    has a craft still running. When switching to False, *reason* ("stop"
-    or "run_away") increments the matching adventure counter.
+    Toggles Character.inAdventure. Lightweight — only flips the flag and
+    the player_characters status summary; returns ``{"ok": true}`` so the
+    frontend can patch its local state without a full player rebuild.
     """
     try:
-        player = await set_in_adventure(address, character_id, payload.inAdventure, payload.reason)
+        result = await set_in_adventure(address, character_id, payload.inAdventure, payload.reason)
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc))
-    if player is None:
+    if result is None:
         raise HTTPException(status_code=404, detail="No player record found for this address")
 
-    return player.to_dict()
+    return {"ok": True}
 
 
 @player_router.get("/me/soul-slots")

@@ -33,6 +33,14 @@ export function StoriesTab({
     !!character.crafting.activeCraft &&
     new Date(character.crafting.activeCraft.readyAt).getTime() > Date.now();
 
+  const refreshAfterToggle = async () => {
+    const res = await fetch(`/api/auth/me/characters/${character.id}/full`, { credentials: "include" });
+    if (res.ok) {
+      const data = await res.json();
+      onPlayerDataUpdated?.({ characters: [data] });
+    }
+  };
+
   const endAdventure = async (reason: "stop" | "run_away") => {
     if (pending) return;
     setPending(true);
@@ -45,8 +53,7 @@ export function StoriesTab({
       });
       if (res.ok) {
         onRestingChange(false);
-        const data: RawPlayerData = await res.json();
-        onPlayerDataUpdated?.(data);
+        await refreshAfterToggle();
       }
     } finally {
       setPending(false);
@@ -70,8 +77,7 @@ export function StoriesTab({
         body: JSON.stringify({ inAdventure: true }),
       });
       if (res.ok) {
-        const data: RawPlayerData = await res.json();
-        onPlayerDataUpdated?.(data);
+        await refreshAfterToggle();
       } else if (res.status === 400) {
         if (flashTimeoutRef.current) clearTimeout(flashTimeoutRef.current);
         setBlockedFlash(true);

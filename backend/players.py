@@ -90,7 +90,11 @@ def _as_utc(value: datetime) -> datetime:
 
 
 async def _build_player(db, address: str) -> Player:
-    """Build a Player from the characters collection and related tables."""
+    """Build a Player from the characters collection and related tables.
+
+    Vault data is never fetched here — the frontend lazy-loads it via
+    GET /api/auth/me/vault when the vault tab is actually opened.
+    """
     import time as _time
     _t0 = _time.perf_counter()
     print(f"[_build_player] START for {address}")
@@ -128,36 +132,22 @@ async def _build_player(db, address: str) -> Player:
         print(f"  [blueprints] {_time.perf_counter() - t:.3f}s  count={len(m)}")
         return m
 
-    async def _fetch_vault():
-        t = _time.perf_counter()
-        doc = await db.player_vaults.find_one({"address": address})
-        items = len(doc.get("items", [])) if doc else 0
-        print(f"  [vault] {_time.perf_counter() - t:.3f}s  items={items}")
-        return doc
-
     async def _fetch_pc():
         t = _time.perf_counter()
         doc = await db.player_characters.find_one({"address": address})
         print(f"  [player_characters] {_time.perf_counter() - t:.3f}s")
         return doc
 
-    characters, camp_map, rest_map, bp_map, vault_doc, pc_doc = await asyncio.gather(
+    characters, camp_map, rest_map, bp_map, pc_doc = await asyncio.gather(
         _fetch_characters(),
         _fetch_camps(),
         _fetch_rests(),
         _fetch_blueprints(),
-        _fetch_vault(),
         _fetch_pc(),
     )
     _t1 = _time.perf_counter()
     print(f"[_build_player] TOTAL: {_t1 - _t0:.3f}s")
     pc_entries = {e["characterId"]: e for e in (pc_doc or {}).get("characters", [])}
-
-    vault_items = vault_doc.get("items", []) if vault_doc else []
-    vault_balances = vault_doc.get("itemBalances", {}) if vault_doc else {}
-    for item in vault_items:
-        item.setdefault("createdAt", datetime.now(timezone.utc).isoformat())
-    shared_vault = {"items": vault_items, "itemBalances": vault_balances}
 
     for character in characters:
         cid = character["id"]
@@ -182,7 +172,7 @@ async def _build_player(db, address: str) -> Player:
             }
             character["restMeta"] = None
             character["blueprints"] = bp_map.get(cid, {}).get("blueprints", [])
-            character["vault"] = shared_vault
+            character["vault"] = {"items": [], "itemBalances": {}}
         else:
             rest_doc = rest_map.get(cid, {})
             rest_allowed = character.get("availability", {}).get("restAllowed", False)
@@ -446,7 +436,18 @@ async def _prune_char_zeros(
         )
 
 
-async def _create_pc_entry(db, address: str, character_id: str, name: str, vital_status: str = "alive") -> None:
+async def _create_pc_entry(
+    db,
+    address: str,
+    character_id: str,
+    name: str,
+    vital_status: str = "alive",
+    *,
+    slot_number: int = 0,
+    portrait_url: str = "",
+    portrait_face_area: Optional[dict] = None,
+    portrait_frame_area: Optional[dict] = None,
+) -> None:
     entry = {
         "characterId": character_id,
         "name": name,
@@ -454,6 +455,12 @@ async def _create_pc_entry(db, address: str, character_id: str, name: str, vital
         "tags": [vital_status],
         "timers": {},
         "craftingTiers": {},
+        "slotNumber": slot_number,
+        "availability": {"inAdventure": False},
+        "portraitUrl": portrait_url,
+        "portraitFaceArea": portrait_face_area,
+        "portraitFrameArea": portrait_frame_area,
+        "activeCraft": None,
     }
     await db.player_characters.update_one(
         {"address": address},
@@ -534,6 +541,47 @@ async def _sync_pc_crafting_tiers(db, address: str, character_id: str, character
             await _set_pc_crafting_tier(db, address, character_id, f"prof{n}", level)
 
 
+async def _update_pc_portrait(
+    db, address: str, character_id: str,
+    portrait_url: str,
+    portrait_face_area: Optional[dict],
+    portrait_frame_area: Optional[dict],
+) -> None:
+    await db.player_characters.update_one(
+        {"address": address, "characters.characterId": character_id},
+        {"$set": {
+            "characters.$.portraitUrl": portrait_url,
+            "characters.$.portraitFaceArea": portrait_face_area,
+            "characters.$.portraitFrameArea": portrait_frame_area,
+        }},
+    )
+
+
+async def _update_pc_availability(db, address: str, character_id: str, in_adventure: bool) -> None:
+    await db.player_characters.update_one(
+        {"address": address, "characters.characterId": character_id},
+        {"$set": {"characters.$.availability.inAdventure": in_adventure}},
+    )
+
+
+async def _update_pc_active_craft(db, address: str, character_id: str, active_craft: Optional[dict]) -> None:
+    if active_craft is None:
+        await db.player_characters.update_one(
+            {"address": address, "characters.characterId": character_id},
+            {"$set": {"characters.$.activeCraft": None}},
+        )
+    else:
+        await db.player_characters.update_one(
+            {"address": address, "characters.characterId": character_id},
+            {"$set": {"characters.$.activeCraft": {
+                "familyId": active_craft.get("familyId"),
+                "tier": active_craft.get("tier"),
+                "count": active_craft.get("count"),
+                "readyAt": active_craft.get("readyAt"),
+            }}},
+        )
+
+
 async def get_player_characters(address: str) -> Optional[dict]:
     db = get_database()
     doc = await db.player_characters.find_one({"address": address})
@@ -561,6 +609,69 @@ async def get_character_summaries(address: str) -> list[dict]:
         doc.pop("_id", None)
         summaries.append(doc)
     return summaries
+
+
+async def get_character_previews(address: str) -> list[dict]:
+    """Return lightweight preview data from player_characters only — one query."""
+    db = get_database()
+    doc = await db.player_characters.find_one({"address": address})
+    if not doc:
+        return []
+    return doc.get("characters", [])
+
+
+async def get_single_character(address: str, character_id: str) -> Optional[dict]:
+    """Fetch one fully-assembled character (with blueprints and pc-injected fields).
+
+    Camp, rest, and vault data are NOT included — the frontend lazy-loads
+    those from their own endpoints.
+    """
+    db = get_database()
+    char_doc, bp_doc, pc_doc = await asyncio.gather(
+        db.characters.find_one({"address": address, "id": character_id}),
+        db.character_blueprints.find_one({"address": address, "characterId": character_id}),
+        db.player_characters.find_one({"address": address}),
+    )
+    if char_doc is None:
+        return None
+    char_doc.pop("_id", None)
+
+    char_doc.setdefault("gear", {})
+    char_doc["gear"].setdefault("itemBalances", {})
+    char_doc.setdefault("stats", {})
+    char_doc["stats"].setdefault("adventureFinished", 0)
+    char_doc["stats"].setdefault("adventureRunAway", 0)
+    for item in char_doc["gear"].get("items", []):
+        item.setdefault("createdAt", datetime.now(timezone.utc).isoformat())
+
+    char_doc["blueprints"] = (bp_doc or {}).get("blueprints", [])
+    char_doc["vault"] = {"items": [], "itemBalances": {}}
+    char_doc["gear"]["itemBalances"].setdefault("camp", {})
+    char_doc["gear"]["itemBalances"].setdefault("rest", {})
+
+    char_doc["gear"]["backpackSlotsUsed"] = items_catalog.backpack_slots_used(char_doc)
+    char_doc["gear"]["backpackCapacity"] = items_catalog.backpack_capacity(char_doc)
+    char_doc["gear"]["saddlepackSlotsUsed"] = items_catalog.saddlepack_slots_used(char_doc)
+    char_doc["gear"]["saddlepackCapacity"] = items_catalog.saddlepack_capacity(char_doc)
+    char_doc["gear"]["cartSlotsUsed"] = items_catalog.cart_slots_used(char_doc)
+    char_doc["gear"]["cartCapacity"] = items_catalog.cart_capacity(char_doc)
+    char_doc["gear"]["carryWeightUsed"] = items_catalog.carry_weight_used(char_doc)
+    char_doc["gear"]["carryWeightCapacity"] = items_catalog.carry_weight_capacity(char_doc)
+    char_doc["gear"]["bodyGearWeight"] = items_catalog.body_gear_weight(char_doc)
+    char_doc["gear"]["encumbranceState"] = items_catalog.encumbrance_state(char_doc)
+    char_doc["gear"]["mountCarryWeightUsed"] = items_catalog.mount_carry_weight_used(char_doc)
+    char_doc["gear"]["mountCarryWeightCapacity"] = items_catalog.mount_carry_weight_capacity(char_doc)
+    char_doc["gear"]["mountGearWeight"] = items_catalog.mount_gear_weight(char_doc)
+
+    pc_entries = {e["characterId"]: e for e in (pc_doc or {}).get("characters", [])}
+    pc_entry = pc_entries.get(character_id)
+    if pc_entry:
+        char_doc["pcStatus"] = pc_entry.get("status", ["free"])
+        char_doc["pcTags"] = pc_entry.get("tags", ["alive"])
+        char_doc["pcTimers"] = pc_entry.get("timers", {})
+        char_doc["pcCraftingTiers"] = pc_entry.get("craftingTiers", {})
+
+    return char_doc
 
 
 async def get_character_camp(address: str, character_id: str) -> dict:
@@ -596,7 +707,15 @@ async def add_character(address: str, character: Character) -> Optional[Player]:
     char_dict["address"] = address
     await db.characters.insert_one(char_dict)
     name = f"{character.first_name} {character.last_name}".strip()
-    await _create_pc_entry(db, address, character.id, name, character.vital_status)
+    frame_area = character.portrait_frame_area.to_dict() if character.portrait_frame_area else None
+    face_area = character.portrait_face_area.to_dict() if character.portrait_face_area else None
+    await _create_pc_entry(
+        db, address, character.id, name, character.vital_status,
+        slot_number=character.slot_number,
+        portrait_url=character.portrait_url,
+        portrait_face_area=face_area,
+        portrait_frame_area=frame_area,
+    )
     return await _build_player(db, address)
 
 
@@ -712,6 +831,7 @@ async def update_character_portrait(
     if doc is None:
         return None
 
+    await _update_pc_portrait(db, address, character_id, portrait_url, portrait_face_area, portrait_frame_area)
     return await _build_player(db, address)
 
 
@@ -2357,6 +2477,7 @@ async def start_craft(
             await _inc_vault_itembalances(db, address, vault_decrements)
         await _add_pc_status(db, address, character_id, "crafting")
         await _set_pc_timer(db, address, character_id, "craftingReadyAt", ready_at.isoformat())
+        await _update_pc_active_craft(db, address, character_id, active_craft)
         await _sync_pc_crafting_tiers(db, address, character_id, doc)
         return await _build_player(db, address)
 
@@ -2437,6 +2558,7 @@ async def start_craft(
         await _inc_vault_itembalances(db, address, vault_decrements_am)
     await _add_pc_status(db, address, character_id, "crafting")
     await _set_pc_timer(db, address, character_id, "craftingReadyAt", ready_at.isoformat())
+    await _update_pc_active_craft(db, address, character_id, active_craft)
     await _sync_pc_crafting_tiers(db, address, character_id, doc)
     return await _build_player(db, address)
 
@@ -2937,6 +3059,7 @@ async def finish_craft(address: str, character_id: str) -> Optional[Player]:
             )
         await _remove_pc_status(db, address, character_id, "crafting")
         await _set_pc_timer(db, address, character_id, "craftingReadyAt", None)
+        await _update_pc_active_craft(db, address, character_id, None)
         await _sync_pc_crafting_tiers(db, address, character_id, doc)
         return await _build_player(db, address)
 
@@ -3135,6 +3258,7 @@ async def finish_craft(address: str, character_id: str) -> Optional[Player]:
         )
     await _remove_pc_status(db, address, character_id, "crafting")
     await _set_pc_timer(db, address, character_id, "craftingReadyAt", None)
+    await _update_pc_active_craft(db, address, character_id, None)
     await _sync_pc_crafting_tiers(db, address, character_id, doc)
     return await _build_player(db, address)
 
@@ -3910,22 +4034,16 @@ async def unequip_item(
 
 async def set_in_adventure(
     address: str, character_id: str, in_adventure: bool, reason: str = "stop"
-) -> Optional[Player]:
+) -> bool | None:
     """
-    Player-toggled flag — whether this character currently counts as out
-    on an adventure, away from the player's shared vault. Read by
-    unequip_item to decide where a freed item lands (see there). Returns
-    None if the address/character pair doesn't match any player document.
+    Lightweight toggle — flips Character.availability.inAdventure and
+    updates the player_characters status summary. Does NOT rebuild the
+    full Player (the vault and other heavy docs haven't changed); the
+    route returns ``{"ok": true}`` and the frontend patches its local
+    state.
 
-    Crafting and being out on a story are mutually exclusive (see
-    start_craft's own inAdventure check, the other half of this):
-    switching to True raises ValueError if the character has a craft
-    still running (Character.activeCraft with readyAt still in the
-    future) - a finished-but-uncollected craft doesn't block this, same
-    "running" definition start_craft/finish_craft already use elsewhere.
-    Switching back to False (returning from a story) is never blocked;
-    *reason* ("stop" or "run_away") determines which adventure counter
-    is incremented.
+    Returns True on success, None if the address/character pair doesn't
+    match, raises ValueError if the character has a craft still running.
     """
     db = get_database()
     if in_adventure:
@@ -3951,13 +4069,19 @@ async def set_in_adventure(
     if doc is None:
         return None
     if in_adventure:
-        await _update_pc_status(db, address, character_id, "free", "adventuring")
-    else:
-        await _update_pc_status(db, address, character_id, "adventuring", "free")
-        await db.character_resting.delete_one(
-            {"address": address, "characterId": character_id}
+        await asyncio.gather(
+            _update_pc_status(db, address, character_id, "free", "adventuring"),
+            _update_pc_availability(db, address, character_id, True),
         )
-    return await _build_player(db, address)
+    else:
+        await asyncio.gather(
+            _update_pc_status(db, address, character_id, "adventuring", "free"),
+            _update_pc_availability(db, address, character_id, False),
+            db.character_resting.delete_one(
+                {"address": address, "characterId": character_id}
+            ),
+        )
+    return True
 
 
 async def check_out_item_instance(

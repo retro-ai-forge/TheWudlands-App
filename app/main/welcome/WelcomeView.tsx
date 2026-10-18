@@ -8,7 +8,7 @@ import { FeedbackForm } from "./FeedbackForm";
 import { SoulCreation } from "./soul-creation/SoulCreation";
 import { CharacterPreview, type TabKey } from "./character-preview/CharacterPreview";
 import type { ItemInstance } from "./character-preview/VaultTab";
-import type { SlotCharacterSummary } from "./SoulSlotGrid";
+import type { SlotCharacterSummary, SlotCharacterPreview } from "./SoulSlotGrid";
 
 // Stable empty fallbacks so `vault?.x ?? EMPTY_X` returns the same reference
 // on every render when vault is absent, instead of a fresh `{}` / `[]` that
@@ -70,7 +70,9 @@ export function WelcomeView() {
   // The character whose preview is open; null means not viewing one.
   const [viewingCharacter, setViewingCharacter] = useState<SlotCharacterSummary | null>(null);
   // null while loading the roster for the first time.
-  const [characters, setCharacters] = useState<SlotCharacterSummary[] | null>(null);
+  const [previews, setPreviews] = useState<SlotCharacterPreview[] | null>(null);
+  // True while fetching a full character doc after a grid click.
+  const [loadingCharacter, setLoadingCharacter] = useState(false);
   // The player's own shared resource vault (pooled across all characters in
   // previous versions) is now per-character. These states are kept for the
   // SoulCreation wizard which doesn't have a character context yet; vault
@@ -85,14 +87,12 @@ export function WelcomeView() {
   // Vault tab's character crafting section instead of just the tab.
   const [viewingOpenCrafting, setViewingOpenCrafting] = useState(false);
 
-  // Applies a fresh full roster snapshot (returned by /me/characters and
-  // every check-in/check-out transfer endpoint) to all relevant pieces of
-  // state, including re-syncing the open preview's character prop.
+  // Applies a fresh full roster snapshot (returned by transfer endpoints)
+  // to the viewing character. Grid previews refresh on close.
   const applyPlayerData = (data: {
     characters?: SlotCharacterSummary[];
   } | null) => {
     const chars = data?.characters ?? [];
-    setCharacters(chars);
     setViewingCharacter((prev) => {
       if (!prev) return prev;
       const updated = chars.find((c) => c.id === prev.id);
@@ -100,17 +100,38 @@ export function WelcomeView() {
     });
   };
 
-  // Lightweight: just character docs for the soul slot grid portraits.
-  const refreshSummaries = () => {
-    fetch("/api/auth/me/characters/summaries", { credentials: "include" })
+  // Fast: reads only the player_characters doc (one small document).
+  const refreshPreviews = () => {
+    fetch("/api/auth/me/characters/previews", { credentials: "include" })
       .then((res) => (res.ok ? res.json() : null))
-      .then((data) => setCharacters(data?.characters ?? []))
-      .catch(() => setCharacters([]));
+      .then((data) => setPreviews(data?.characters ?? []))
+      .catch(() => setPreviews([]));
   };
 
   useEffect(() => {
-    refreshSummaries();
+    refreshPreviews();
   }, []);
+
+  // Fetch one character's full data and open the preview.
+  const openCharacter = async (characterId: string, options?: { openCrafting?: boolean }) => {
+    if (options?.openCrafting) {
+      setViewingTab("vault");
+      setViewingOpenCrafting(true);
+    } else {
+      setViewingTab("stats");
+      setViewingOpenCrafting(false);
+    }
+    setLoadingCharacter(true);
+    try {
+      const res = await fetch(`/api/auth/me/characters/${characterId}/full`, { credentials: "include" });
+      if (res.ok) {
+        const data = await res.json();
+        setViewingCharacter(data);
+      }
+    } finally {
+      setLoadingCharacter(false);
+    }
+  };
 
   // Restores the exact character/tab a player left from, e.g. via the
   // Inventory tab's link out to the recipe viewer's own full page - that
@@ -120,19 +141,20 @@ export function WelcomeView() {
   // re-opening the same character.
   const VALID_TABS: TabKey[] = ["stats", "body", "camp", "vault", "stories"];
   useEffect(() => {
-    if (characters === null) return;
+    if (previews === null) return;
     const params = new URLSearchParams(window.location.search);
     const characterId = params.get("character");
     const tabParam = params.get("tab");
     if (!characterId) return;
-    const match = characters.find((c) => c.id === characterId);
+    const match = previews.find((c) => c.characterId === characterId);
     if (match) {
-      setViewingCharacter(match);
-      setViewingTab(VALID_TABS.includes(tabParam as TabKey) ? (tabParam as TabKey) : "stats");
+      const tab = VALID_TABS.includes(tabParam as TabKey) ? (tabParam as TabKey) : "stats";
+      openCharacter(characterId, { openCrafting: tab === "vault" });
+      setViewingTab(tab);
     }
     window.history.replaceState(null, "", window.location.pathname);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [characters]);
+  }, [previews]);
 
   if (creatingSlot !== null) {
     return (
@@ -142,7 +164,7 @@ export function WelcomeView() {
         playerResourceBalances={playerResourceBalances}
         onExit={() => {
           setCreatingSlot(null);
-          refreshSummaries();
+          refreshPreviews();
         }}
       />
     );
@@ -159,14 +181,16 @@ export function WelcomeView() {
         initialTab={viewingTab}
         openCraftingSectionByDefault={viewingOpenCrafting}
         onPlayerDataUpdated={applyPlayerData}
-        onClose={() => setViewingCharacter(null)}
+        onClose={() => {
+          setViewingCharacter(null);
+          refreshPreviews();
+        }}
         onDeleted={() => {
           setViewingCharacter(null);
-          refreshSummaries();
+          refreshPreviews();
         }}
         onPortraitSaved={(updated) => {
           setViewingCharacter(updated);
-          refreshSummaries();
         }}
       />
     );
@@ -189,21 +213,12 @@ export function WelcomeView() {
           prose readability, which would squeeze the grid down to the same
           narrow column instead of letting it use the full 900px the page
           now allows. */}
-      {characters === null && <SoulSlotGridSkeleton />}
-      {characters !== null && (
+      {(previews === null || loadingCharacter) && <SoulSlotGridSkeleton />}
+      {previews !== null && !loadingCharacter && (
         <SoulSlotGrid
-          characters={characters}
+          characters={previews}
           onCreate={(slotNumber) => setCreatingSlot(slotNumber)}
-          onViewCharacter={(character, options) => {
-            setViewingCharacter(character);
-            if (options?.openCrafting) {
-              setViewingTab("vault");
-              setViewingOpenCrafting(true);
-            } else {
-              setViewingTab("stats");
-              setViewingOpenCrafting(false);
-            }
-          }}
+          onViewCharacter={openCharacter}
         />
       )}
 

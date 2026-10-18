@@ -50,6 +50,21 @@ export interface CharacterAvailability {
   inAdventure: boolean;
 }
 
+/** Lightweight preview from player_characters — enough to render the soul slot grid. */
+export interface SlotCharacterPreview {
+  characterId: string;
+  name: string;
+  slotNumber: number;
+  status: string[];
+  tags: string[];
+  timers: Record<string, string>;
+  availability: { inAdventure: boolean };
+  portraitUrl: string;
+  portraitFaceArea: PortraitArea | null;
+  portraitFrameArea: PortraitArea | null;
+  activeCraft: { familyId: string; tier: number; count: number; readyAt: string } | null;
+}
+
 export interface CharacterClasses {
   class1: string;
   lvl1: number;
@@ -263,8 +278,8 @@ export function SoulSlotGrid({
   /** `openCrafting` is true when the clicked slot was showing an active
    * crafting timer - the caller jumps straight to the Inventory tab's
    * character Crafting section instead of the default Stats page. */
-  onViewCharacter: (character: SlotCharacterSummary, options?: { openCrafting?: boolean }) => void;
-  characters: SlotCharacterSummary[];
+  onViewCharacter: (characterId: string, options?: { openCrafting?: boolean }) => void;
+  characters: SlotCharacterPreview[];
 }) {
   const { account } = useWallet();
   const { muted, toggleMuted } = useSound();
@@ -409,7 +424,7 @@ export function SoulSlotGrid({
       .forEach((s, i) => tokenProgressBySlot.set(s.number, state.tokenProgress[i] ?? 0));
   }
 
-  const charactersBySlot = new Map(characters.map((c) => [c.slotNumber, c]));
+  const charactersBySlot = new Map<number, SlotCharacterPreview>(characters.map((c) => [c.slotNumber, c]));
 
   return (
     <div className={styles.characterMatrix}>
@@ -521,15 +536,15 @@ function SoulSlotCard({
   isLoading: boolean;
   starsOwned: number;
   tokenProgress: number;
-  occupant?: SlotCharacterSummary;
+  occupant?: SlotCharacterPreview;
   onCreate: (slotNumber: number) => void;
-  onViewCharacter: (character: SlotCharacterSummary, options?: { openCrafting?: boolean }) => void;
+  onViewCharacter: (characterId: string, options?: { openCrafting?: boolean }) => void;
 }) {
   const isOccupied = occupant !== undefined;
   // Display-only - this grid never calls finish_craft itself, unlike the
   // Inventory tab's own use of this same hook. Just lets a player glance
   // at the grid and see who's still busy, without opening anyone's sheet.
-  const remainingSeconds = useCraftCountdown(occupant?.crafting.activeCraft?.readyAt);
+  const remainingSeconds = useCraftCountdown(occupant?.activeCraft?.readyAt);
   // True once occupant.portraitUrl has failed to load (a broken external
   // link, most likely) - drives the large "?" placeholder below instead of
   // a blank/broken image sitting in the slot.
@@ -619,7 +634,7 @@ function SoulSlotCard({
     // falls through below same as any other locked slot (send them to go
     // re-earn it) - showsOccupantPreview is false there.
     if (showsOccupantPreview) {
-      onViewCharacter(occupant, { openCrafting: remainingSeconds !== null });
+      onViewCharacter(occupant.characterId, { openCrafting: remainingSeconds !== null });
       return;
     }
     if (canInteract) {
@@ -648,7 +663,7 @@ function SoulSlotCard({
         onClick={canInteract || slot.link ? handleClick : undefined}
         title={
           showsOccupantPreview
-            ? `${occupant.firstName} ${occupant.lastName}`
+            ? occupant.name
             : !canInteract && slot.link
             ? "Opens in a new tab"
             : undefined
@@ -670,7 +685,7 @@ function SoulSlotCard({
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
                     src={occupant.portraitUrl}
-                    alt={occupant.firstName}
+                    alt={occupant.name}
                     style={getFaceCropImgStyle(occupant.portraitFaceArea)}
                     onError={() => setFaceCropFailed(true)}
                   />
@@ -683,7 +698,7 @@ function SoulSlotCard({
                 <img
                   className={`${styles.slotImageLocked} ${styles.slotImageColor}`}
                   src={occupant.portraitUrl}
-                  alt={occupant.firstName}
+                  alt={occupant.name}
                   onError={() => setFaceCropFailed(true)}
                 />
               )
@@ -789,7 +804,7 @@ function SoulSlotCard({
             : isUnlocked ? styles.slotRequirementMet : styles.slotRequirement
         }
       >
-        {showsOccupantPreview ? `${occupant.firstName} ${occupant.lastName}` : slot.label}
+        {showsOccupantPreview ? occupant.name : slot.label}
       </span>
     </div>
   );

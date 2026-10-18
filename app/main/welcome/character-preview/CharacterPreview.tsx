@@ -317,6 +317,7 @@ export function CharacterPreview({
               <nav className={tabStyles.tabRow}>
                 {TABS.map((tab) => {
                   const locked = (tab.key === "vault" && inAdventure) || (tab.key === "camp" && inAdventure && !resting);
+                  const icon = tab.key === "camp" && inAdventure ? "/images/character/camp-inadventure.png" : tab.icon;
                   return (
                   <button
                     key={tab.key}
@@ -342,11 +343,11 @@ export function CharacterPreview({
                         {/* eslint-disable-next-line @next/next/no-img-element */}
                         <img src={tab.secondIcon} alt="" className={`${tabStyles.tabIcon} ${tabStyles.tabIconBack}`} />
                         {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img src={tab.icon} alt="" className={`${tabStyles.tabIcon} ${tabStyles.tabIconFront}`} />
+                        <img src={icon} alt="" className={`${tabStyles.tabIcon} ${tabStyles.tabIconFront}`} />
                       </span>
                     ) : (
                       // eslint-disable-next-line @next/next/no-img-element
-                      <img src={tab.icon} alt="" className={tabStyles.tabIcon} />
+                      <img src={icon} alt="" className={tabStyles.tabIcon} />
                     )}
                   </button>
                   );
