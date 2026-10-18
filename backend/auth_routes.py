@@ -1812,6 +1812,43 @@ async def destroy_all_rest_route(character_id: str, address: str = Depends(get_c
     return player.to_dict()
 
 
+@player_router.get("/me/characters/{character_id}/rest/salvage-preview", response_model=HomeSalvagePreviewResponse)
+async def preview_rest_salvage_route(
+    character_id: str,
+    selected: Optional[str] = None,
+    address: str = Depends(get_current_address),
+):
+    selected_ids = selected.split(",") if selected else None
+    rows = await preview_home_salvage(address, character_id, selected_ids=selected_ids, storage_type="rest")
+    if rows is None:
+        raise HTTPException(status_code=404, detail="No matching character")
+    return HomeSalvagePreviewResponse(
+        rows=[
+            HomeSalvagePreviewRowResponse(
+                id=row["id"],
+                kind=row["kind"],
+                name=row["name"],
+                tier=row["tier"],
+                owned=row["owned"],
+                materials=_to_salvage_preview_response(row["recoveries"]).materials,
+                preselected=row.get("preselected", True),
+                condition=row.get("condition", "new"),
+            )
+            for row in rows
+        ]
+    )
+
+
+@player_router.post("/me/characters/{character_id}/rest/salvage-all", response_model=PlayerDataResponse)
+async def salvage_rest_route(
+    character_id: str, payload: SalvageHomeRequest, address: str = Depends(get_current_address)
+):
+    player = await salvage_home(address, character_id, payload.selected, storage_type="rest")
+    if player is None:
+        raise HTTPException(status_code=404, detail="Nothing selected salvaged")
+    return player.to_dict()
+
+
 @player_router.post("/me/characters/{character_id}/rest/move-all-to-backpack", response_model=PlayerDataResponse)
 async def move_all_rest_to_backpack_route(character_id: str, address: str = Depends(get_current_address)):
     try:

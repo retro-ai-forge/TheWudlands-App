@@ -5334,24 +5334,24 @@ async def move_all_storage_to_bags(
 _CONTAINER_FAMILIES = frozenset({"backpack", "saddlepack", "cart"})
 
 
-def _recyclable_home_entries(character: dict):
+def _recyclable_home_entries(character: dict, storage_type: str = "home"):
     """
-    Yields (kind, id, entry, count, preselected) for every home item
-    instance (location:"home") and itemBalances.home entry whose family
-    has a recipe to salvage. Also yields the contents of containers
-    (backpack/saddlepack/cart) sitting in home, plus the containers
-    themselves.
+    Yields (kind, id, entry, count, preselected) for every item
+    instance (location matching storage_type) and itemBalances entry
+    whose family has a recipe to salvage. Also yields the contents of
+    containers (backpack/saddlepack/cart) sitting in storage, plus the
+    containers themselves.
     """
     gear = character.get("gear", {})
 
-    # Which containers are sitting in home right now?
+    # Which containers are sitting in storage right now?
     home_containers: list[str] = []
     for instance in gear.get("items", []):
-        if instance.get("location") == "home" and instance.get("familyId") in _CONTAINER_FAMILIES:
+        if instance.get("location") == storage_type and instance.get("familyId") in _CONTAINER_FAMILIES:
             home_containers.append(instance["familyId"])
 
     for instance in gear.get("items", []):
-        if instance.get("location") != "home":
+        if instance.get("location") != storage_type:
             continue
         entry = items_catalog.ITEM_CATALOG_ENTRIES_BY_ID.get(instance["itemId"])
         if entry is None:
@@ -5364,7 +5364,7 @@ def _recyclable_home_entries(character: dict):
             continue
         yield "instance", instance["instanceId"], entry, 1, True
 
-    # Contents of containers sitting in home.
+    # Contents of containers sitting in storage.
     for container_fam in home_containers:
         for instance in gear.get("items", []):
             if instance.get("location") != container_fam:
@@ -5381,8 +5381,8 @@ def _recyclable_home_entries(character: dict):
                 continue
             yield "balance", item_id, entry, qty, True
 
-    # Camp's own balances (not inside a container).
-    for item_id, qty in gear.get("itemBalances", {}).get("home", {}).items():
+    # Storage's own balances (not inside a container).
+    for item_id, qty in gear.get("itemBalances", {}).get(storage_type, {}).items():
         if qty <= 0:
             continue
         entry = items_catalog.ITEM_CATALOG_ENTRIES_BY_ID.get(item_id)
@@ -5392,11 +5392,12 @@ def _recyclable_home_entries(character: dict):
 
 
 async def preview_home_salvage(
-    address: str, character_id: str, selected_ids: Optional[List[str]] = None
+    address: str, character_id: str, selected_ids: Optional[List[str]] = None,
+    storage_type: str = "home",
 ) -> Optional[List[Dict[str, object]]]:
     """
     Read-only: every recyclable thing currently sitting in a character's
-    own home (see _recyclable_home_entries), one row per distinct thing,
+    own storage (see _recyclable_home_entries), one row per distinct thing,
     with what recycling ALL of it would hand back.
 
     When selected_ids is provided, only items whose id is in the set are
@@ -5408,11 +5409,13 @@ async def preview_home_salvage(
     if doc is None:
         return None
     character = doc
-    home_preview_doc = await db.character_homes.find_one({"address": address, "characterId": character_id})
+    storage_doc = await _storage_coll(db, storage_type).find_one(
+        _storage_filter(address, character_id)
+    )
     character.setdefault("gear", {})
     character["gear"].setdefault("itemBalances", {})
-    character["gear"]["itemBalances"]["home"] = (home_preview_doc or {}).get("itemBalances", {})
-    character["gear"]["items"] = character["gear"].get("items", []) + (home_preview_doc or {}).get("items", [])
+    character["gear"]["itemBalances"][storage_type] = (storage_doc or {}).get("itemBalances", {})
+    character["gear"]["items"] = character["gear"].get("items", []) + (storage_doc or {}).get("items", [])
 
     # When filtering by selection, expand selected containers to include
     # their contents: find which container families are selected, then
@@ -5428,7 +5431,7 @@ async def preview_home_salvage(
 
     rows: List[Dict[str, object]] = []
     instances_by_id = {i["instanceId"]: i for i in character.get("gear", {}).get("items", [])}
-    for kind, entry_id, entry, count, preselected in _recyclable_home_entries(character):
+    for kind, entry_id, entry, count, preselected in _recyclable_home_entries(character, storage_type):
         if allow_ids is not None:
             if entry_id not in allow_ids:
                 # Check if this entry lives inside a selected container
@@ -5465,22 +5468,20 @@ async def preview_home_salvage(
     return rows
 
 
-async def salvage_home(address: str, character_id: str, selected_ids: List[str]) -> Optional[Player]:
+async def salvage_home(address: str, character_id: str, selected_ids: List[str], storage_type: str = "home") -> Optional[Player]:
     """
     The chopping block's own bulk action (see HomeView.tsx): salvages
-    every selected home item instance/itemBalance entry (ids from
+    every selected storage item instance/itemBalance entry (ids from
     preview_home_salvage's own rows) at once, crediting ALL the recovered
-    raw/processed materials straight into gear.resources.home - never the
+    raw/processed materials straight into the same storage - never the
     backpack (unlike a normal single-item salvage's own
-    _salvage_resource_updates fallback chain), since dropping it in home
-    is the whole point of a home-side chopping block. Computed once as a
-    full replacement of gear.items/itemBalances.home/resources.home in a
-    single $set (same reasoning as move_all_home_to_backpack's own
-    docstring) rather than per-id calls. An id that no longer qualifies
-    (already gone, or no longer has a recipe) is silently skipped rather
-    than failing the whole batch. Returns None if nothing in
-    `selected_ids` actually salvaged (none given, or none of it still
-    qualifies), or the address/character pair doesn't match.
+    _salvage_resource_updates fallback chain). Computed once as a
+    full replacement of gear.items/itemBalances in a single $set rather
+    than per-id calls. An id that no longer qualifies (already gone, or
+    no longer has a recipe) is silently skipped rather than failing the
+    whole batch. Returns None if nothing in `selected_ids` actually
+    salvaged (none given, or none of it still qualifies), or the
+    address/character pair doesn't match.
     """
     if not selected_ids:
         return None
@@ -5490,11 +5491,13 @@ async def salvage_home(address: str, character_id: str, selected_ids: List[str])
     if doc is None:
         return None
     character = doc
-    home_sc_doc = await db.character_homes.find_one({"address": address, "characterId": character_id})
+    storage_sc_doc = await _storage_coll(db, storage_type).find_one(
+        _storage_filter(address, character_id)
+    )
     character.setdefault("gear", {})
     character["gear"].setdefault("itemBalances", {})
-    character["gear"]["itemBalances"]["home"] = (home_sc_doc or {}).get("itemBalances", {})
-    home_items_sc = (home_sc_doc or {}).get("items", [])
+    character["gear"]["itemBalances"][storage_type] = (storage_sc_doc or {}).get("itemBalances", {})
+    home_items_sc = (storage_sc_doc or {}).get("items", [])
     home_item_iids = {i["instanceId"] for i in home_items_sc}
     character["gear"]["items"] = character["gear"].get("items", []) + home_items_sc
 
@@ -5503,7 +5506,7 @@ async def salvage_home(address: str, character_id: str, selected_ids: List[str])
     recovered_totals: Dict[str, int] = {}
 
     instances_by_id = {i["instanceId"]: i for i in character.get("gear", {}).get("items", [])}
-    for kind, entry_id, entry, count, _preselected in _recyclable_home_entries(character):
+    for kind, entry_id, entry, count, _preselected in _recyclable_home_entries(character, storage_type):
         if entry_id not in selected:
             continue
         condition = _instance_condition(instances_by_id.get(entry_id), entry) if kind == "instance" else "new"
@@ -5545,7 +5548,7 @@ async def salvage_home(address: str, character_id: str, selected_ids: List[str])
         if new_balances != old_balances:
             update_sets[f"gear.itemBalances.{bucket}"] = new_balances
 
-    old_home = character["gear"]["itemBalances"].get("home", {})
+    old_home = character["gear"]["itemBalances"].get(storage_type, {})
     new_home_balances = {
         item_id: qty for item_id, qty in old_home.items()
         if item_id not in salvaged_balance_ids and qty > 0
@@ -5562,8 +5565,8 @@ async def salvage_home(address: str, character_id: str, selected_ids: List[str])
     )
     if doc is None:
         return None
-    await _set_storage_items(db, "home", address, character_id, new_home_items_sc)
-    await _set_storage_balances(db, "home", address, character_id, new_home_balances)
+    await _set_storage_items(db, storage_type, address, character_id, new_home_items_sc)
+    await _set_storage_balances(db, storage_type, address, character_id, new_home_balances)
     return await _build_player(db, address)
 
 

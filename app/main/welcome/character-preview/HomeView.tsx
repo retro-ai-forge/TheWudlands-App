@@ -581,6 +581,7 @@ export function HomeView({
           onPlayerDataUpdated={(data) => { onPlayerDataUpdated?.(data); exitSelectMode(); }}
           onClose={() => setShowSalvagePopup(false)}
           preSelectedIds={new Set([...selectedIds].filter((k) => !k.startsWith("res:")).map(stripStackSuffix))}
+          source={storageType}
         />
       )}
       {(batchBusy || homeActionBusy) && (
@@ -833,7 +834,7 @@ export function HomeView({
             icon="/images/character/campfire_lit.png"
             tone="destroy"
             characterId={character.id}
-            onConfirm={() => { setHomeActionBusy(true); return postJson(`/api/auth/me/characters/${character.id}/${storageType}/burn-all`); }}
+            onConfirm={async () => { setHomeActionBusy(true); const r = await postJson(`/api/auth/me/characters/${character.id}/${storageType}/burn-all`); if (!r.ok) setHomeActionBusy(false); return r; }}
             onPlayerDataUpdated={(data) => { setHomeActionBusy(false); onPlayerDataUpdated?.(data); }}
             onClose={() => { setHomeActionBusy(false); setHomeAction(null); }}
           />
@@ -846,7 +847,7 @@ export function HomeView({
             icon="/images/character/dropped.png"
             tone="move"
             characterId={character.id}
-            onConfirm={() => { setHomeActionBusy(true); return postJson(`/api/auth/me/characters/${character.id}/${storageType}/move-all-to-bags`); }}
+            onConfirm={async () => { setHomeActionBusy(true); const r = await postJson(`/api/auth/me/characters/${character.id}/${storageType}/move-all-to-bags`); if (!r.ok) setHomeActionBusy(false); return r; }}
             onPlayerDataUpdated={(data) => { setHomeActionBusy(false); onPlayerDataUpdated?.(data); }}
             onClose={() => { setHomeActionBusy(false); setHomeAction(null); }}
           />
@@ -856,6 +857,7 @@ export function HomeView({
             characterId={character.id}
             onPlayerDataUpdated={onPlayerDataUpdated}
             onClose={() => setHomeAction(null)}
+            source={storageType}
           />
         )}
         <button

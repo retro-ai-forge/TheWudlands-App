@@ -1701,7 +1701,7 @@ export function ChopBlockPopup({
   onClose: () => void;
   preSelectedIds?: Set<string>;
   preSelectedAmounts?: Map<string, number>;
-  source?: "home" | "vault";
+  source?: "home" | "vault" | "rest";
 }) {
   const [rows, setRows] = useState<ChopBlockRow[] | null>(null);
   const [selected, setSelected] = useState<Set<string>>(new Set());
@@ -1751,7 +1751,7 @@ export function ChopBlockPopup({
     (rows ?? []).filter((row) => selected.has(row.id)).flatMap((row) => row.materials)
   );
 
-  const emptyLabel = source === "vault" ? "Nothing in the vault can be salvaged right now." : "Nothing in home can be salvaged right now.";
+  const emptyLabel = source === "vault" ? "Nothing in the vault can be salvaged right now." : source === "rest" ? "Nothing at the rest stop can be salvaged right now." : "Nothing in home can be salvaged right now.";
 
   return (
     <HoldActionPopup
