@@ -229,18 +229,6 @@
   filter: drop-shadow(0 0 10px rgba(181, 69, 58, 0.9));
 }
 
-/* Before the player has actually scrolled this page down to its end (see
-   CharacterPreview.tsx) - barely visible and (via the button's own
-   `disabled`) inert, so a stray tap can't trigger this permanent action
-   before they've had a chance to see the rest of the page. */
-.deleteButtonLocked {
-  opacity: 0.15;
-  cursor: default;
-}
-
-.deleteButtonLocked:hover {
-  transform: none;
-}
 
 .tabIcon {
   width: 52px;
@@ -460,52 +448,6 @@
   box-shadow: 0 0 6px rgba(212, 160, 96, 0.4);
 }
 
-/* The Inventory panel's own Crafting/Party's Vault split - a plain website-
-   style header tab strip (two even halves, underline on the active one),
-   distinct from .tabRow's icon-only top-level page tabs above the
-   character name. Sits as the first thing inside .panel, i.e. directly
-   under the name heading. */
-.invSubTabRow {
-  display: flex;
-  width: 100%;
-  border-bottom: 1px solid #3a3020;
-  margin-bottom: 0.4rem;
-}
-
-.invSubTabButton {
-  flex: 1 1 50%;
-  background: none;
-  border: none;
-  padding: 0.6rem 0.5rem;
-  font-family: inherit;
-  font-size: 0.85rem;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  color: #7a6a3a;
-  cursor: pointer;
-  border-bottom: 2px solid transparent;
-  margin-bottom: -1px;
-  transition: color 0.15s ease, border-color 0.15s ease;
-}
-
-.invSubTabButton:hover {
-  color: #d4a060;
-}
-
-.invSubTabButtonActive {
-  color: #c07a3a;
-  border-bottom-color: #c07a3a;
-}
-
-.panelHeading {
-  font-size: 0.75rem;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: #a89968;
-  margin: 0 0 1rem;
-  border-bottom: 1px solid rgba(168, 153, 104, 0.3);
-  padding-bottom: 0.5rem;
-}
 
 .placeholderNote {
   font-size: 0.85rem;
@@ -840,37 +782,6 @@
   text-align: right;
 }
 
-/* Birthsign is the one identity row that opens something (its flip-card
-   popup, see StatsTab.tsx) - a <button> rather than a <div>, reset back to
-   .identityRow's own look since browser button defaults would otherwise
-   override its padding/border/font. */
-.identityRowButton {
-  composes: identityRow;
-  width: 100%;
-  background: none;
-  border: none;
-  border-bottom: 1px solid rgba(168, 153, 104, 0.2);
-  /* font: inherit resets the <button>'s own UA font defaults to match its
-     surroundings, but as a shorthand it also wipes out the 0.85rem
-     .identityRow already set via `composes` above (same specificity,
-     this rule wins on source order) - set back explicitly so this row
-     reads the same size as every other identityRow, not the page's
-     larger base size. */
-  font: inherit;
-  font-size: 0.85rem;
-  text-align: inherit;
-  cursor: pointer;
-}
-
-.identityRowButton span:last-child {
-  color: #c07a3a;
-  text-decoration: underline;
-  text-underline-offset: 3px;
-}
-
-.identityRowButton:hover span:last-child {
-  color: #e6b85c;
-}
 
 /* Birthsign row split into label (left) and name (right) buttons */
 .birthsignLabelBtn {
@@ -1171,11 +1082,6 @@
   margin: -0.35rem 0 0;
 }
 
-.professionList {
-  display: flex;
-  flex-direction: column;
-  gap: 0.4rem;
-}
 
 .professionRow {
   display: flex;
@@ -1216,26 +1122,6 @@
   letter-spacing: 0.03em;
 }
 
-/* A profession row doubles as a button (click to make it prime) - resets
-   the browser's default button chrome so it reads exactly like the plain
-   .professionRow div it otherwise matches (Classes rows stay plain divs). */
-.professionRowClickable {
-  width: 100%;
-  background: none;
-  border: none;
-  border-bottom: 1px solid rgba(168, 153, 104, 0.15);
-  font: inherit;
-  text-align: left;
-  cursor: pointer;
-}
-
-.professionRowClickable:hover:not(:disabled) {
-  background: rgba(168, 153, 104, 0.08);
-}
-
-.professionRowClickable:disabled {
-  cursor: default;
-}
 
 /* The prime profession's name - green like the "ready"/earned state
    elsewhere on this page, since it's the one standing designation among
@@ -1311,11 +1197,6 @@
   color: #c4b07a;
 }
 
-.carryCapacitySection {
-  margin-top: 1.2rem;
-  padding-top: 0.8rem;
-  border-top: 1px solid rgba(168, 153, 104, 0.15);
-}
 
 .carryCapacityRow {
   width: 100%;
@@ -1427,14 +1308,6 @@
   line-height: 1.5;
 }
 
-.descOverlayEffect {
-  margin-top: 0.4rem;
-  padding-top: 0.35rem;
-  border-top: 1px solid rgba(168, 153, 104, 0.15);
-  font-size: 0.78rem;
-  color: #9a9078;
-  line-height: 1.5;
-}
 
 /* ---- Body tab ---- */
 
@@ -1864,67 +1737,6 @@
    (bottom:0 + translateY(50%) shifts it down by half its own height),
    so it overlaps the portrait above and .handSlotRow below by straddling
    that one seam, rather than sitting cleanly in the gap between them. */
-/* Wraps .homeButton (own containing block for its absolute positioning
-   against .frameStage, unchanged from before) so .homeButtonBadge below
-   can sit in its corner without being clipped by the button's own
-   overflow:hidden circular mask - a badge child of the button itself
-   would get cropped away near the edge. */
-.homeButtonWrap {
-  position: absolute;
-  left: 50%;
-  bottom: 0.25rem;
-  transform: translate(-50%, 50%);
-  width: 6rem;
-  aspect-ratio: 1 / 1;
-  z-index: 2;
-}
-
-.homeButton {
-  display: block;
-  width: 100%;
-  height: 100%;
-  border-radius: 50%;
-  border: 2px solid #6f6142;
-  background: #0d0d0a;
-  padding: 0;
-  cursor: pointer;
-  overflow: hidden;
-}
-
-/* Only rendered while home holds something (BodyTab's hasCampItems) -
-   same dropped.png flavor icon HomeView itself shows, repurposed here as
-   a small "there's stuff waiting" badge rather than a full-size scene
-   prop. Own dark circular backing (matching .itemGridCountBadge's look
-   elsewhere) so it stays readable over any portrait art underneath. */
-.homeButtonBadge {
-  position: absolute;
-  /* Lower-right corner of the camp circle: campButtonWrap is centered at
-     50% with width 6rem (left edge at 50%-3rem, right at 50%+3rem) and
-     its bottom sits at 0.25rem-3rem = -2.75rem (i.e. 2.75rem below
-     frameStage bottom) after translateY(50%). Badge sits just inside that
-     right/bottom corner. */
-  left: calc(50% + 1.25rem);
-  bottom: -2.75rem;
-  /* Highest z-index in this stacking context — renders above the Girdle
-     item (z-index:3) so the badge is always visible. */
-  z-index: 10;
-  width: 2.25rem;
-  height: 2.25rem;
-  padding: 0.2rem;
-  border-radius: 50%;
-  border: 1px solid #6f6142;
-  background: rgba(10, 8, 4, 0.85);
-  object-fit: contain;
-  image-rendering: pixelated;
-  pointer-events: none;
-}
-
-.homeButtonIcon {
-  display: block;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
 
 /* Two fixed rows now, not one wrapping row of 5 - Left Hand/Girdle/Right
    Hand on top, Left Ring/Right Ring on their own line below (see
@@ -1970,15 +1782,9 @@
      theirs - visually a bit behind/recessed relative to the hands rather
      than reaching as high. */
   margin-top: 1.75rem;
-  /* Paints above the camp circle button (z-index: 2 on .homeButtonWrap)
-     so an equipped item visually overlaps it rather than sitting behind. */
   position: relative;
   z-index: 3;
 }
-
-/* When the Girdle slot holds an item, its icon casts a drop-shadow upward
-   onto the camp circle above it (the circle overlaps from frameStage down
-   into the handSlotRow area), reinforcing the layering depth. */
 .handSlotRow .equipSlotGirdleOffset .equipSlotIconWrap {
   filter: drop-shadow(0 -3px 5px rgb(0, 0, 0));
 }
@@ -2448,27 +2254,6 @@
 
 /* ---- Vault / Home tab ---- */
 
-.inventoryLayout {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 1.5rem;
-}
-
-.inventoryColumn {
-  flex: 1 1 16rem;
-  display: flex;
-  flex-direction: column;
-  gap: 0.4rem;
-}
-
-.inventoryColumnHeading {
-  font-size: 0.75rem;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  color: #a89968;
-  padding-bottom: 0.4rem;
-  border-bottom: 1px solid rgba(168, 153, 104, 0.3);
-}
 
 .inventoryTable {
   width: 100%;
@@ -2654,14 +2439,6 @@
   outline: none;
 }
 
-.vaultFilterT1,
-.vaultFilterT2,
-.vaultFilterT3,
-.vaultFilterT4,
-.vaultFilterT5,
-.vaultFilterT6 {
-  background: #252218;
-}
 
 .vaultFilterBtnActive {
   background: #2a2210;
@@ -2706,73 +2483,6 @@
   box-shadow: inset 0 0 6px rgba(192, 122, 58, 0.3);
 }
 
-.specialTileGrid {
-  display: grid;
-  grid-auto-flow: column;
-  grid-template-rows: repeat(auto-fill, 100px);
-  grid-auto-columns: 100px;
-  justify-content: start;
-  gap: 0.35rem;
-  padding-left: 0.4rem;
-  height: 100%;
-  user-select: none;
-  -webkit-user-select: none;
-}
-
-.specialTileGridRow {
-  display: grid;
-  grid-auto-flow: row;
-  grid-template-columns: repeat(auto-fill, 100px);
-  grid-auto-rows: 100px;
-  justify-content: start;
-  gap: 0.35rem;
-  padding-left: 0.4rem;
-  user-select: none;
-  -webkit-user-select: none;
-}
-
-.specialTile {
-  cursor: default;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.specialTileKindBadge {
-  position: absolute;
-  inset: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 3rem;
-  line-height: 1;
-  opacity: 0.12;
-  pointer-events: none;
-}
-
-.specialTileIcon {
-  position: absolute;
-  inset: 6px;
-  background-size: contain;
-  background-repeat: no-repeat;
-  background-position: center;
-  image-rendering: pixelated;
-  filter: brightness(1.15);
-}
-
-.specialTileLabel {
-  display: flex;
-  width: 100%;
-  height: 100%;
-  align-items: center;
-  justify-content: center;
-  padding: 0.4rem;
-  text-align: center;
-  font-size: 0.9rem;
-  color: #d4a060;
-  word-break: break-word;
-  line-height: 1.15;
-}
 
 .vaultFilterGroup {
   display: flex;
@@ -2785,12 +2495,6 @@
   min-width: 0;
 }
 
-.vaultFilterSep {
-  width: 1px;
-  align-self: stretch;
-  background: #3a3020;
-  margin: 0.15rem 0.15rem;
-}
 
 
 /* The Party's Vault tab's Items grid - one 100x100 icon tile per owned
@@ -3011,8 +2715,8 @@
   }
 }
 
-/* Only rendered at all while the camp actually holds something (see
-   HomeView's hasCampItems) - a little "stuff dropped here" flavor cue,
+/* Only rendered at all while home actually holds something (see
+   HomeView's hasHomeItems) - a little "stuff dropped here" flavor cue,
    not a button. Bottom-center of the stage. */
 .homeDroppedIcon {
   position: absolute;
@@ -3336,7 +3040,7 @@
 /* A worn backpack's own popup (ItemDetailPopup's packedItems) - a
    horizontally-scrolling matrix of what's actually packed inside, sitting
    between the popup's name and description. Same .itemGridCell tiles as
-   the Vault/Camp grid, laid out as a grid with column-major auto-flow
+   the Vault/Home grid, laid out as a grid with column-major auto-flow
    (fills top-then-bottom within a column before starting the next one)
    instead of that grid's own tall multi-row/auto-height layout - width
    (via horizontal scroll), not height, is what grows with the backpack's
@@ -3449,34 +3153,6 @@
   max-height: calc(100vh - 4.25rem);
 }
 
-/* BackpackSalvagePopup's own override (see HoldActionPopup's
-   overlayClassName/cardClassName/iconClassName props) - same idea as
-   .chopBlockOverlay/.chopBlockCard/.chopBlockIcon above, but shrunk
-   further: unlike HomeView (which hides the page's fixed footer bar
-   entirely while open), this popup opens over the Body/Vault tab,
-   where the footer stays on screen - and CANNOT be painted over despite
-   its own z-index:20 (.itemPopupOverlay), because it's nested inside
-   .sheet (position:relative; z-index:2), which - since setting z-index
-   on a positioned element always creates a new stacking context for its
-   OWN descendants - is itself out-ranked by .topBar's z-index:5 as a
-   WHOLE at the shared .wizard-level stacking order, trapping anything
-   inside .sheet (this popup included) behind the footer regardless of
-   how high its own z-index climbs. Reserving real room below the card
-   (rather than a React portal escaping .sheet entirely, the "correct"
-   general fix but untested/unused anywhere else in this codebase) is the
-   simple, safe way to keep the footer visible until/unless that's worth
-   doing. Icon shrinks to match. */
-.backpackSalvageOverlay {
-  padding-top: 1.5rem;
-  padding-bottom: 3.5rem;
-  overflow: hidden;
-}
-
-.backpackSalvageCard {
-  max-height: calc(100vh - 5rem) !important;
-  overflow-y: auto;
-  padding-bottom: 0.5rem;
-}
 
 /* A worn/home-stored backpack's own popup (see ItemDetailPopup's isBackpack) -
    same "shrink the screen margin to almost nothing" idea as
@@ -3589,29 +3265,6 @@
   height: 36px;
 }
 
-/* Toggles the card's own content between the item-info view and the
-   salvage/destroy view (see ItemDetailPopup's showDestroy) - mirrors
-   .itemPopupTierBadge's corner placement on the opposite side. */
-.itemPopupSettingsButton {
-  position: absolute;
-  top: 0.5rem;
-  right: 0.6rem;
-  padding: 0.2rem;
-  background: none;
-  border: none;
-  font-size: 2rem;
-  line-height: 1;
-  cursor: pointer;
-  /* Rusty grey - text presentation (see the JSX's plain "⚙", not the
-     emoji "⚙️") so it actually takes this color instead of rendering as a
-     fixed-color emoji glyph. */
-  color: #8a7a60;
-  filter: drop-shadow(0 0 3px #000) drop-shadow(0 0 3px #000);
-}
-
-.itemPopupSettingsButton:hover {
-  color: #a6926f;
-}
 
 .itemPopupName {
   margin: 0;
@@ -3748,16 +3401,6 @@
   pointer-events: none;
 }
 
-/* Overrides .craftCountButton's fixed 2.4rem/0.3rem sizing (tuned for the
-   Craft page's own row, which needs room for 2-digit counts up to 50) -
-   here the row has to fit a 300px-wide popup alongside 3-4 siblings and a
-   backpack icon, so width shrinks to fit each digit's own content instead
-   of a fixed box, and the button is shorter top-to-bottom too. */
-.itemPopupQuantityButton {
-  width: 2.3rem;
-  padding: 0.3rem 0;
-  font-size: 0.85rem;
-}
 
 /* The ∞ glyph reads visually smaller than the digit buttons beside it at
    the same font-size. Scaling just the glyph (not the button's own
@@ -3819,14 +3462,6 @@
   border-color: #60b070;
 }
 
-/* SalvageDestroyPopup (VaultTab.tsx) - opened by a long press on an
-   ItemGrid tile instead of the ordinary click. Reuses .itemPopupOverlay/
-   .itemPopupCard for the dimmed backdrop and card shell, this just widens
-   the gap between its two stacked sections. */
-.salvageDestroyOverlay {
-  padding-top: 1.5rem;
-  padding-bottom: 1.5rem;
-}
 
 .salvageDestroyCard {
   gap: 1.1rem;
@@ -3834,7 +3469,6 @@
   padding-bottom: 1.75rem;
 }
 
-.salvageSection,
 .destroySection {
   display: flex;
   flex-direction: column;
@@ -3842,10 +3476,6 @@
   gap: 0.4rem;
 }
 
-.salvageIcon {
-  font-size: 3.4rem;
-  line-height: 1;
-}
 
 .salvageResultText {
   margin: 0;
@@ -3937,14 +3567,6 @@
   color: #8a7a60;
 }
 
-/* Marker-only class, no rules of its own - lets VaultTab.tsx's
-   handleClick tell "the salvage hold bar" (label+track+icon together,
-   still one hold target) apart from .destroySection's other, now
-   non-interactive use (destroy's own label+track, whose click area only
-   returns to the item info view - see .destroyIcon for destroy's actual
-   hold target). */
-.salvageHoldBar {
-}
 
 .salvageDestroyDivider {
   width: 100%;
@@ -3986,17 +3608,6 @@
   color: #c0453a;
 }
 
-/* Same as .destroyLabel, but the app's own "healthy/recovered" green
-   (matching salvageFillColor's own end color) - "Hold to SALVE" never
-   reads as a warning the way "Hold to DESTROY" does. */
-.salvageLabel {
-  margin: 0;
-  font-size: 0.8rem;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  font-weight: bold;
-  color: rgb(90, 156, 74);
-}
 
 .destroyProgressTrack {
   width: 90%;
@@ -4096,10 +3707,6 @@
   animation: campfireGlowPulse 2.6s ease-in-out infinite;
 }
 
-.backpackSalvageIcon {
-  width: 45%;
-  margin-top: -1.5rem;
-}
 
 /* HoldActionPopup's own disabled prop (see VaultTab.tsx) - nothing
    selected to act on yet, so the hold gesture is a no-op. Dimmed rather
@@ -4178,9 +3785,6 @@
   background: #1a1a10;
 }
 
-.transferButtonsWrap {
-  padding: 0.3rem 0;
-}
 
 .transferButtons {
   display: flex;

@@ -633,7 +633,7 @@ async def get_character_previews(address: str) -> list[dict]:
 async def get_single_character(address: str, character_id: str) -> Optional[dict]:
     """Fetch one fully-assembled character (with blueprints and pc-injected fields).
 
-    Camp, rest, and vault data are NOT included — the frontend lazy-loads
+    Home, rest, and vault data are NOT included — the frontend lazy-loads
     those from their own endpoints.
     """
     db = get_database()
@@ -4237,7 +4237,7 @@ async def check_out_item_instance(
 
     Backpack and saddlepack are capacity-gated: raises ValueError if the
     character has no container equipped (capacity 0) or the container
-    has no free slot for this family's size class. Camp is never
+    has no free slot for this family's size class. Home is never
     capacity-gated. Either way, also raises ValueError if the character
     is currently out on an adventure (Character.availability.inAdventure)
     - there's no reaching the shared vault mid-adventure, so this is
@@ -4992,7 +4992,7 @@ async def check_in_item_balance(
     """
     The reverse of check_out_item_balance - `location` ("home",
     "backpack", "saddlepack", or "cart") picks which bucket to deduct
-    from. Camp lives in the character_homes collection; the others are
+    from. Home lives in the character_homes collection; the others are
     embedded in the player doc.
     """
     if amount <= 0:

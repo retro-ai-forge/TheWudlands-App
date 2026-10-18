@@ -2682,7 +2682,7 @@ export function ItemDetailPopup({
   // back to the vault in one click. Dropping into home on a full backpack
   // is deliberately ONLY something salvaging does, never a normal move -
   // see backend.players.check_out_item_balance_to_backpack.
-  const moveToCamp = async (amount: number) => {
+  const moveToHome = async (amount: number) => {
     setPending(true);
     setFlashMessage(null);
     if (isInstance) {
@@ -3133,7 +3133,7 @@ export function ItemDetailPopup({
                     <TransferButtons
                       owned={owned}
                       pending={pending}
-                      onPick={moveToCamp}
+                      onPick={moveToHome}
                       destinationIcon={storageIcon}
                       destinationLabel={storageLabel}
                       amounts={RAW_RESOURCE_AMOUNTS}
@@ -3146,7 +3146,7 @@ export function ItemDetailPopup({
                         type="button"
                         className={styles.itemPopupBackpackButton}
                         disabled={pending}
-                        onClick={() => moveToCamp(1)}
+                        onClick={() => moveToHome(1)}
                         aria-label={`Move to ${storageLabel}`}
                         title={`Move to ${storageLabel}`}
                       >

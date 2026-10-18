@@ -200,7 +200,7 @@ export function HomeView({
     (instance) => (instance.location === "body" || instance.location === "home") && instance.familyId === "saddlepack"
   );
 
-  // Camp holds two different kinds of things, same split as the Vault
+  // Home holds two different kinds of things, same split as the Vault
   // tab's own combining logic (see VaultTab.tsx's playerItemsCombined):
   // flat-count crafted goods (gear.itemBalances.home) and individually-
   // tracked item instances sitting at location:"home" - e.g. whatever
@@ -592,7 +592,7 @@ export function HomeView({
       {(() => {
         const kindOrder = ["weapon", "armor", "shield", "food", "potion", "adventuring_gear", "essentials", "companion", "mount"];
         const specialKinds = new Set(["tool", "raw_resource", "processed"]);
-        const kindsInCamp = new Set(
+        const kindsInHome = new Set(
           homeIds
             .map((id) => mergedCatalogTierInfo[homeInstanceLookupIds[id] ?? id]?.kind)
             .filter((k): k is string => !!k && !specialKinds.has(k))
@@ -673,7 +673,7 @@ export function HomeView({
                     className={`${styles.vaultFilterBtn} ${homeKindFilter.includes(kind) ? styles.vaultFilterBtnActive : ""}`}
                     onClick={() => toggleHomeKindFilter(kind)}
                     title={kind.replace(/_/g, " ")}
-                    style={!kindsInCamp.has(kind) ? { opacity: 0.3 } : undefined}
+                    style={!kindsInHome.has(kind) ? { opacity: 0.3 } : undefined}
                   >{getKindIcon(kind)}</button>
                 ))}
               </div>
