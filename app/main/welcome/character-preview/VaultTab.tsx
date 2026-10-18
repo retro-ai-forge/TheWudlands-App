@@ -2438,7 +2438,7 @@ export function ResourcePopup({
           const char = await res.json();
           onPlayerDataUpdated?.({ characters: [char] });
         } else {
-          onPlayerDataUpdated?.(null);
+          onPlayerDataUpdated?.({ characters: [] });
         }
       }
       onClose();
@@ -2647,7 +2647,7 @@ export function ItemDetailPopup({
         const char = await res.json();
         onPlayerDataUpdated?.({ characters: [char] });
       } else {
-        onPlayerDataUpdated?.(null);
+        onPlayerDataUpdated?.({ characters: [] });
       }
     }
     onClose();

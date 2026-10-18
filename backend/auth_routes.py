@@ -1080,20 +1080,20 @@ class EquipItemRequest(BaseModel):
     location: Optional[str] = Field(None, description="Source bucket for balance equips: camp, backpack, saddlepack, cart")
 
 
-@player_router.post("/me/characters/{character_id}/items/{instance_id}/equip", response_model=PlayerDataResponse)
+@player_router.post("/me/characters/{character_id}/items/{instance_id}/equip")
 async def equip_item_route(
     character_id: str, instance_id: str, payload: EquipItemRequest, address: str = Depends(get_current_address)
 ):
     """Equip one of a character's own item instances into `slots` - also doubles as the reslot action for an already-equipped instance (e.g. swap hands, move a dagger to its Girdle slot)."""
     try:
-        player = await equip_item(address, character_id, instance_id, payload.slots, amount=payload.amount, from_location=payload.location)
+        result = await equip_item(address, character_id, instance_id, payload.slots, amount=payload.amount, from_location=payload.location)
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc))
 
-    if player is None:
+    if result is None:
         raise HTTPException(status_code=404, detail="No matching instance on that character, or slot(s) occupied")
 
-    return player.to_dict()
+    return {"ok": True}
 
 
 @player_router.post(
@@ -2510,7 +2510,7 @@ async def delete_my_character(character_id: str, address: str = Depends(get_curr
     return player.to_dict()
 
 
-@player_router.patch("/me/characters/{character_id}/portrait", response_model=PlayerDataResponse)
+@player_router.patch("/me/characters/{character_id}/portrait")
 async def update_my_character_portrait(
     character_id: str, payload: UpdatePortraitRequest, address: str = Depends(get_current_address)
 ):
@@ -2520,7 +2520,7 @@ async def update_my_character_portrait(
     character preview page (as opposed to the Soul Creation wizard, which
     sets these once at creation).
     """
-    player = await update_character_portrait(
+    result = await update_character_portrait(
         address,
         character_id,
         portrait_url=payload.portraitUrl,
@@ -2529,10 +2529,10 @@ async def update_my_character_portrait(
         portrait_frame_area=payload.portraitFrameArea.model_dump() if payload.portraitFrameArea else None,
         portrait_face_area=payload.portraitFaceArea.model_dump() if payload.portraitFaceArea else None,
     )
-    if player is None:
+    if result is None:
         raise HTTPException(status_code=404, detail="No player record found for this address")
 
-    return player.to_dict()
+    return {"ok": True}
 
 
 class SetPrimeProfessionRequest(BaseModel):

@@ -846,7 +846,7 @@ async def update_character_portrait(
         return None
 
     await _update_pc_portrait(db, address, character_id, portrait_url, portrait_face_area, portrait_frame_area)
-    return await _build_player(db, address)
+    return True
 
 
 _PRIME_PROFESSION_SLOTS = ("prof1", "prof2", "prof3", "none")
@@ -3341,6 +3341,12 @@ async def equip_item(address: str, character_id: str, instance_id: str, slots: L
             (i for i in camp_items_eq if i["instanceId"] == instance_id and i.get("location") == "camp"),
             None,
         )
+    if instance is None:
+        rest_items_eq = await _get_storage_items(db, "rest", address, character_id)
+        instance = next(
+            (i for i in rest_items_eq if i["instanceId"] == instance_id and i.get("location") == "rest"),
+            None,
+        )
 
     is_balance_equip = False
     is_balance_merge = False
@@ -3349,13 +3355,13 @@ async def equip_item(address: str, character_id: str, instance_id: str, slots: L
     existing_equipped: Optional[dict] = None
     if instance is None:
         balance_id = instance_id
-        buckets = ("backpack", "camp", "saddlepack", "cart")
+        buckets = ("backpack", "camp", "rest", "saddlepack", "cart")
         if from_location and from_location in buckets:
             buckets = (from_location,) + tuple(b for b in buckets if b != from_location)
         for bucket in buckets:
-            if bucket == "camp":
-                camp_doc = await db.character_camps.find_one({"address": address, "characterId": character_id})
-                qty = (camp_doc or {}).get("itemBalances", {}).get(balance_id, 0)
+            if bucket in ("camp", "rest"):
+                stor_doc = await db[STORAGE_COLLECTIONS[bucket]].find_one({"address": address, "characterId": character_id})
+                qty = (stor_doc or {}).get("itemBalances", {}).get(balance_id, 0)
                 if qty > 0:
                     balance_bucket = bucket
                     break
@@ -3463,8 +3469,8 @@ async def equip_item(address: str, character_id: str, instance_id: str, slots: L
             if it["instanceId"] == existing_equipped["instanceId"]
         )
         qty_path = f"gear.items.{item_idx}.quantity"
-        if balance_bucket == "camp":
-            await _inc_storage_balances(db, "camp", address, character_id, {balance_id: -equip_qty})
+        if balance_bucket in ("camp", "rest"):
+            await _inc_storage_balances(db, balance_bucket, address, character_id, {balance_id: -equip_qty})
             doc = await db.characters.find_one_and_update(
                 {"address": address, "id": character_id},
                 {"$inc": {qty_path: equip_qty}},
@@ -3483,8 +3489,8 @@ async def equip_item(address: str, character_id: str, instance_id: str, slots: L
                 return_document=ReturnDocument.AFTER,
             )
     elif is_balance_equip:
-        if balance_bucket == "camp":
-            await _inc_storage_balances(db, "camp", address, character_id, {balance_id: -equip_qty})
+        if balance_bucket in ("camp", "rest"):
+            await _inc_storage_balances(db, balance_bucket, address, character_id, {balance_id: -equip_qty})
             doc = await db.characters.find_one_and_update(
                 {"address": address, "id": character_id,
                     "gear.items": {
@@ -3500,7 +3506,7 @@ async def equip_item(address: str, character_id: str, instance_id: str, slots: L
                 return_document=ReturnDocument.AFTER,
             )
             if doc is None:
-                await _inc_storage_balances(db, "camp", address, character_id, {balance_id: equip_qty})
+                await _inc_storage_balances(db, balance_bucket, address, character_id, {balance_id: equip_qty})
         else:
             balance_path = f"gear.itemBalances.{balance_bucket}.{balance_id}"
             doc = await db.characters.find_one_and_update(
@@ -3581,8 +3587,8 @@ async def equip_item(address: str, character_id: str, instance_id: str, slots: L
                 array_filters=[{"item.instanceId": instance_id, "item.location": source_location}],
                 return_document=ReturnDocument.AFTER,
             )
-    elif source_location == "camp":
-        await _pull_storage_items(db, "camp", address, character_id, [instance_id])
+    elif source_location in ("camp", "rest"):
+        await _pull_storage_items(db, source_location, address, character_id, [instance_id])
         doc = await db.characters.find_one_and_update(
             {
                 "address": address,
@@ -3593,7 +3599,7 @@ async def equip_item(address: str, character_id: str, instance_id: str, slots: L
             return_document=ReturnDocument.AFTER,
         )
         if doc is None:
-            await _push_storage_items(db, "camp", address, character_id, [{**instance, "location": "camp", "slotRef": []}])
+            await _push_storage_items(db, source_location, address, character_id, [{**instance, "location": source_location, "slotRef": []}])
     else:
         doc = await db.characters.find_one_and_update(
             {
@@ -3610,7 +3616,7 @@ async def equip_item(address: str, character_id: str, instance_id: str, slots: L
         )
     if doc is None:
         return None
-    return await _build_player(db, address)
+    return True
 
 
 async def equip_item_from_pool(address: str, character_id: str, instance_id: str, slots: List[str]) -> Optional[Player]:

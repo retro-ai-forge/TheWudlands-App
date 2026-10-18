@@ -1682,6 +1682,13 @@ export function SoulCreation({
           </div>
         </div>
       )}
+
+      {isSubmitting && (
+        <div className={styles.savingOverlay}>
+          <div className={styles.savingSpinner} />
+          <span className={styles.savingLabel}>Creating soul...</span>
+        </div>
+      )}
     </div>
   );
 }
