@@ -1781,6 +1781,104 @@ class BulkMoveHomeRequest(BaseModel):
     balances: List[BulkMoveBalanceEntry] = Field(default_factory=list)
 
 
+class SalvageYieldResponse(BaseModel):
+    """The four components _yield_breakdown.total adds up to - so the
+    salvage popup can print each contributing line, not just the total."""
+
+    base: int
+    skill: int
+    tool: int
+    charm: int
+    total: int
+
+
+class SalvageRecoveredLineResponse(BaseModel):
+    """One line of a recovery breakdown, e.g. "1 iron bar" or the leftover
+    "2 iron ore"."""
+
+    familyId: str
+    id: str
+    name: str
+    tier: int
+    category: str
+    qty: int
+
+
+class SalvageMaterialResponse(BaseModel):
+    """One raw material's full salvage line: its full recoverable-chain
+    total for one unit of the item, the yield% that applies to it, and the
+    denomination breakdown of what's actually handed back."""
+
+    rawFamilyId: str
+    rawName: str
+    totalUnits: int
+    yieldBreakdown: SalvageYieldResponse
+    recoveredUnits: int
+    recovered: List[SalvageRecoveredLineResponse]
+
+
+class SalvagePreviewResponse(BaseModel):
+    materials: List[SalvageMaterialResponse]
+    condition: str = "new"
+
+
+def _to_salvage_preview_response(recoveries) -> SalvagePreviewResponse:
+    return SalvagePreviewResponse(materials=[
+        SalvageMaterialResponse(
+            rawFamilyId=r.raw_family_id,
+            rawName=r.raw_name,
+            totalUnits=r.total_units,
+            yieldBreakdown=SalvageYieldResponse(
+                base=r.yield_breakdown.base,
+                skill=r.yield_breakdown.skill,
+                tool=r.yield_breakdown.tool,
+                charm=r.yield_breakdown.charm,
+                total=r.yield_breakdown.total,
+            ),
+            recoveredUnits=r.recovered_units,
+            recovered=[
+                SalvageRecoveredLineResponse(
+                    familyId=line.family_id, id=line.concrete_id, name=line.name,
+                    tier=line.tier, category=line.category, qty=line.qty,
+                )
+                for line in r.recovered
+            ],
+        )
+        for r in recoveries
+    ])
+
+
+class HomeSalvagePreviewRowResponse(BaseModel):
+    """One salvageable home item instance/itemBalance - what salvaging ALL
+    of it would hand back, "as if" (see preview_home_salvage), not yet
+    actually salvaged. `materials` is the exact same per-raw-family
+    breakdown (name, yield%, recovered/total units) a single item's own
+    salvage-preview popup shows, one row per raw family this thing's own
+    recipe chain touches."""
+
+    id: str
+    kind: Literal["instance", "balance"]
+    name: str
+    tier: int
+    owned: int
+    materials: List[SalvageMaterialResponse]
+    preselected: bool = True
+    condition: str = "new"
+
+
+class HomeSalvagePreviewResponse(BaseModel):
+    rows: List[HomeSalvagePreviewRowResponse]
+
+
+class SalvageHomeRequest(BaseModel):
+    selected: List[str] = Field(
+        ..., description="Ids (instanceId or item_id) of the preview rows to actually salvage"
+    )
+    amounts: Optional[Dict[str, int]] = Field(
+        None, description="Per-balance-item quantity caps (id -> count); omitted entries use the full balance"
+    )
+
+
 # ---------------------------------------------------------------------------
 # Camp storage routes (mirror home routes with storage_type="camp")
 # ---------------------------------------------------------------------------
@@ -2039,95 +2137,6 @@ async def move_cart_balance_to_camp_route(
     return player.to_dict()
 
 
-class SalvageYieldResponse(BaseModel):
-    """The four components _yield_breakdown.total adds up to - so the
-    salvage popup can print each contributing line, not just the total."""
-
-    base: int
-    skill: int
-    tool: int
-    charm: int
-    total: int
-
-
-class SalvageRecoveredLineResponse(BaseModel):
-    """One line of a recovery breakdown, e.g. "1 iron bar" or the leftover
-    "2 iron ore"."""
-
-    familyId: str
-    id: str
-    name: str
-    tier: int
-    category: str
-    qty: int
-
-
-class SalvageMaterialResponse(BaseModel):
-    """One raw material's full salvage line: its full recoverable-chain
-    total for one unit of the item, the yield% that applies to it, and the
-    denomination breakdown of what's actually handed back."""
-
-    rawFamilyId: str
-    rawName: str
-    totalUnits: int
-    yieldBreakdown: SalvageYieldResponse
-    recoveredUnits: int
-    recovered: List[SalvageRecoveredLineResponse]
-
-
-class SalvagePreviewResponse(BaseModel):
-    materials: List[SalvageMaterialResponse]
-    condition: str = "new"
-
-
-def _to_salvage_preview_response(recoveries) -> SalvagePreviewResponse:
-    return SalvagePreviewResponse(materials=[
-        SalvageMaterialResponse(
-            rawFamilyId=r.raw_family_id,
-            rawName=r.raw_name,
-            totalUnits=r.total_units,
-            yieldBreakdown=SalvageYieldResponse(
-                base=r.yield_breakdown.base,
-                skill=r.yield_breakdown.skill,
-                tool=r.yield_breakdown.tool,
-                charm=r.yield_breakdown.charm,
-                total=r.yield_breakdown.total,
-            ),
-            recoveredUnits=r.recovered_units,
-            recovered=[
-                SalvageRecoveredLineResponse(
-                    familyId=line.family_id, id=line.concrete_id, name=line.name,
-                    tier=line.tier, category=line.category, qty=line.qty,
-                )
-                for line in r.recovered
-            ],
-        )
-        for r in recoveries
-    ])
-
-
-class HomeSalvagePreviewRowResponse(BaseModel):
-    """One salvageable home item instance/itemBalance - what salvaging ALL
-    of it would hand back, "as if" (see preview_home_salvage), not yet
-    actually salvaged. `materials` is the exact same per-raw-family
-    breakdown (name, yield%, recovered/total units) a single item's own
-    salvage-preview popup shows, one row per raw family this thing's own
-    recipe chain touches."""
-
-    id: str
-    kind: Literal["instance", "balance"]
-    name: str
-    tier: int
-    owned: int
-    materials: List[SalvageMaterialResponse]
-    preselected: bool = True
-    condition: str = "new"
-
-
-class HomeSalvagePreviewResponse(BaseModel):
-    rows: List[HomeSalvagePreviewRowResponse]
-
-
 @player_router.get("/me/characters/{character_id}/home/salvage-preview", response_model=HomeSalvagePreviewResponse)
 async def preview_home_salvage_route(
     character_id: str,
@@ -2154,15 +2163,6 @@ async def preview_home_salvage_route(
             )
             for row in rows
         ]
-    )
-
-
-class SalvageHomeRequest(BaseModel):
-    selected: List[str] = Field(
-        ..., description="Ids (instanceId or item_id) of the preview rows to actually salvage"
-    )
-    amounts: Optional[Dict[str, int]] = Field(
-        None, description="Per-balance-item quantity caps (id -> count); omitted entries use the full balance"
     )
 
 
