@@ -4232,7 +4232,7 @@ async def check_out_item_instance(
         )
         if doc is None:
             return None
-    return await _build_player(db, address)
+    return True
 
 
 async def check_in_item_instance(address: str, character_id: str, instance_id: str) -> Optional[Player]:

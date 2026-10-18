@@ -1155,7 +1155,7 @@ class CheckOutItemInstanceRequest(BaseModel):
     )
 
 
-@player_router.post("/me/characters/{character_id}/items/{instance_id}/vault-to-backpack", response_model=PlayerDataResponse)
+@player_router.post("/me/characters/{character_id}/items/{instance_id}/vault-to-backpack")
 async def check_out_item_instance_to_backpack_route(
     character_id: str,
     instance_id: str,
@@ -1163,17 +1163,15 @@ async def check_out_item_instance_to_backpack_route(
 ):
     """Move one item instance from the player's shared pool onto a character's backpack (capacity-gated)."""
     try:
-        player = await check_out_item_instance(address, character_id, instance_id, "backpack")
+        result = await check_out_item_instance(address, character_id, instance_id, "backpack")
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc))
-
-    if player is None:
+    if not result:
         raise HTTPException(status_code=404, detail="No matching instance in the shared vault")
+    return {"ok": True}
 
-    return player.to_dict()
 
-
-@player_router.post("/me/characters/{character_id}/items/{instance_id}/vault-to-saddlepack", response_model=PlayerDataResponse)
+@player_router.post("/me/characters/{character_id}/items/{instance_id}/vault-to-saddlepack")
 async def check_out_item_instance_to_saddlepack_route(
     character_id: str,
     instance_id: str,
@@ -1181,17 +1179,15 @@ async def check_out_item_instance_to_saddlepack_route(
 ):
     """Move one item instance from the player's shared pool onto a character's saddlepack (capacity-gated)."""
     try:
-        player = await check_out_item_instance(address, character_id, instance_id, "saddlepack")
+        result = await check_out_item_instance(address, character_id, instance_id, "saddlepack")
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc))
-
-    if player is None:
+    if not result:
         raise HTTPException(status_code=404, detail="No matching instance in the shared vault")
+    return {"ok": True}
 
-    return player.to_dict()
 
-
-@player_router.post("/me/characters/{character_id}/items/{instance_id}/vault-to-cart", response_model=PlayerDataResponse)
+@player_router.post("/me/characters/{character_id}/items/{instance_id}/vault-to-cart")
 async def check_out_item_instance_to_cart_route(
     character_id: str,
     instance_id: str,
@@ -1199,17 +1195,15 @@ async def check_out_item_instance_to_cart_route(
 ):
     """Move one item instance from the player's shared pool onto a character's cart (capacity-gated)."""
     try:
-        player = await check_out_item_instance(address, character_id, instance_id, "cart")
+        result = await check_out_item_instance(address, character_id, instance_id, "cart")
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc))
-
-    if player is None:
+    if not result:
         raise HTTPException(status_code=404, detail="No matching instance in the shared vault")
+    return {"ok": True}
 
-    return player.to_dict()
 
-
-@player_router.post("/me/characters/{character_id}/items/{instance_id}/vault-to-camp", response_model=PlayerDataResponse)
+@player_router.post("/me/characters/{character_id}/items/{instance_id}/vault-to-camp")
 async def check_out_item_instance_to_camp_route(
     character_id: str,
     instance_id: str,
@@ -1217,14 +1211,12 @@ async def check_out_item_instance_to_camp_route(
 ):
     """Move one item instance from the player's shared pool into a character's camp (no capacity limit)."""
     try:
-        player = await check_out_item_instance(address, character_id, instance_id, "camp")
+        result = await check_out_item_instance(address, character_id, instance_id, "camp")
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc))
-
-    if player is None:
+    if not result:
         raise HTTPException(status_code=404, detail="No matching instance in the shared vault")
-
-    return player.to_dict()
+    return {"ok": True}
 
 
 @player_router.post("/me/characters/{character_id}/items/{instance_id}/to-vault", response_model=PlayerDataResponse)

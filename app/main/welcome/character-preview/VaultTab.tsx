@@ -2315,13 +2315,19 @@ function PackedItemsRow({
               ? [
                   ...(inAdventure
                     ? [{ key: "storage", icon: storageType === "rest" ? REST_ACTION_ICON : CAMP_ACTION_ICON, label: storageType === "rest" ? "Rest" : "Camp", endpoint: `cart-to-${storageType}` }]
-                    : [{ key: "vault", icon: VAULT_ACTION_ICON, label: "Vault", endpoint: "cart-to-vault" }]),
+                    : [
+                        { key: "vault", icon: VAULT_ACTION_ICON, label: "Vault", endpoint: "cart-to-vault" },
+                        { key: "storage", icon: CAMP_ACTION_ICON, label: "Camp", endpoint: "cart-to-camp" },
+                      ]),
                 ]
               : location === "saddlepack"
               ? [
                   ...(inAdventure
                     ? [{ key: "storage", icon: storageType === "rest" ? REST_ACTION_ICON : CAMP_ACTION_ICON, label: storageType === "rest" ? "Rest" : "Camp", endpoint: `saddlepack-to-${storageType}` }]
-                    : [{ key: "vault", icon: VAULT_ACTION_ICON, label: "Vault", endpoint: "to-vault" }]),
+                    : [
+                        { key: "vault", icon: VAULT_ACTION_ICON, label: "Vault", endpoint: "to-vault" },
+                        { key: "storage", icon: CAMP_ACTION_ICON, label: "Camp", endpoint: `saddlepack-to-camp` },
+                      ]),
                   ...(hasBackpackEquipped
                     ? [{ key: "backpack", icon: BACKPACK_ACTION_ICON, label: "Backpack", endpoint: "saddlepack-to-backpack" }]
                     : [{ key: "backpack", icon: BACKPACK_ACTION_ICON, label: "No backpack equipped", endpoint: "saddlepack-to-backpack" }]),
@@ -2329,7 +2335,10 @@ function PackedItemsRow({
               : [
                   ...(inAdventure
                     ? [{ key: "storage", icon: storageType === "rest" ? REST_ACTION_ICON : CAMP_ACTION_ICON, label: storageType === "rest" ? "Rest" : "Camp", endpoint: `backpack-to-${storageType}` }]
-                    : [{ key: "vault", icon: VAULT_ACTION_ICON, label: "Vault", endpoint: "to-vault" }]),
+                    : [
+                        { key: "vault", icon: VAULT_ACTION_ICON, label: "Vault", endpoint: "to-vault" },
+                        { key: "storage", icon: CAMP_ACTION_ICON, label: "Camp", endpoint: "backpack-to-camp" },
+                      ]),
                   ...(hasSaddlepackEquipped
                     ? [{ key: "saddlepack", icon: SADDLEPACK_ACTION_ICON, label: "Saddlepack", endpoint: "backpack-to-saddlepack" }]
                     : []),
@@ -2421,7 +2430,17 @@ export function ResourcePopup({
       { amount }
     );
     if (result.ok) {
-      onPlayerDataUpdated?.(result.data);
+      if (result.data?.characters) {
+        onPlayerDataUpdated?.(result.data);
+      } else {
+        const res = await fetch(`/api/auth/me/characters/${characterId}/full`, { credentials: "include" });
+        if (res.ok) {
+          const char = await res.json();
+          onPlayerDataUpdated?.({ characters: [char] });
+        } else {
+          onPlayerDataUpdated?.(null);
+        }
+      }
       onClose();
       return;
     }
@@ -2618,9 +2637,19 @@ export function ItemDetailPopup({
     setPending(false);
   };
 
-  const finish = (result: PostJsonResult) => {
+  const finish = async (result: PostJsonResult) => {
     if (!result.ok) return fail(result.detail);
-    onPlayerDataUpdated?.(result.data);
+    if (result.data?.characters) {
+      onPlayerDataUpdated?.(result.data);
+    } else {
+      const res = await fetch(`/api/auth/me/characters/${characterId}/full`, { credentials: "include" });
+      if (res.ok) {
+        const char = await res.json();
+        onPlayerDataUpdated?.({ characters: [char] });
+      } else {
+        onPlayerDataUpdated?.(null);
+      }
+    }
     onClose();
   };
 
