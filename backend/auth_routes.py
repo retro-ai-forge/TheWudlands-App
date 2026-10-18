@@ -1104,7 +1104,7 @@ async def equip_item_from_pool_route(
 ):
     """Equip one item instance straight from the player's shared vault into `slots`, without routing through the backpack."""
     try:
-        player = await equip_item_from_pool(address, character_id, instance_id, payload.slots)
+        player = await equip_item_from_pool(address, character_id, instance_id, payload.slots, amount=payload.amount)
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc))
 

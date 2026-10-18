@@ -3619,7 +3619,7 @@ async def equip_item(address: str, character_id: str, instance_id: str, slots: L
     return True
 
 
-async def equip_item_from_pool(address: str, character_id: str, instance_id: str, slots: List[str]) -> Optional[Player]:
+async def equip_item_from_pool(address: str, character_id: str, instance_id: str, slots: List[str], amount: Optional[int] = None) -> Optional[Player]:
     """
     Equip one item instance straight from `address`'s shared pool
     (vault.items, location:"pool") into `slots` on one of their
@@ -3658,8 +3658,13 @@ async def equip_item_from_pool(address: str, character_id: str, instance_id: str
 
     # Balance-item path: instance_id is actually a concrete item id (e.g.
     # "rope_1") living in vault.itemBalances rather than vault.items.
-    # Promote one unit to a temporary instance so it can be equipped.
+    # Promote units to a temporary instance so they can be equipped, or
+    # merge into an existing equipped stack of the same item.
     is_balance_equip = False
+    is_balance_merge = False
+    equip_qty = 1
+    balance_id: Optional[str] = None
+    existing_equipped: Optional[dict] = None
     if instance is None:
         balance_id = instance_id
         balance_qty = vault_efp["itemBalances"].get(balance_id, 0)
@@ -3673,16 +3678,35 @@ async def equip_item_from_pool(address: str, character_id: str, instance_id: str
             return None
         if family.stack_size > 1 and not family.equip_slots:
             raise ValueError("Stackable items cannot be equipped")
-        instance = {
-            "instanceId": uuid.uuid4().hex,
-            "itemId": balance_id,
-            "familyId": entry.family_id,
-            "quality": None,
-            "location": "pool",
-            "slotRef": [],
-            "createdAt": datetime.now(timezone.utc).isoformat(),
-        }
-        is_balance_equip = True
+        equip_qty = min(amount or 1, balance_qty) if family.stack_size > 1 else 1
+        existing_equipped = next(
+            (i for i in character.get("gear", {}).get("items", [])
+             if i.get("itemId") == balance_id and i.get("location") == "body"
+             and sorted(i.get("slotRef", [])) == sorted(slots)),
+            None,
+        ) if family.stack_size > 1 else None
+        if existing_equipped:
+            current_qty = existing_equipped.get("quantity", 1)
+            room = family.stack_size - current_qty
+            if room <= 0:
+                raise ValueError("Stack is full")
+            equip_qty = min(equip_qty, room)
+            instance = existing_equipped
+            is_balance_equip = True
+            is_balance_merge = True
+        else:
+            instance = {
+                "instanceId": uuid.uuid4().hex,
+                "itemId": balance_id,
+                "familyId": entry.family_id,
+                "quality": None,
+                "location": "pool",
+                "slotRef": [],
+                "createdAt": datetime.now(timezone.utc).isoformat(),
+            }
+            if family.stack_size > 1:
+                instance["quantity"] = equip_qty
+            is_balance_equip = True
     else:
         family = items_catalog.ITEM_FAMILIES_BY_ID.get(instance["familyId"])
 
@@ -3720,11 +3744,24 @@ async def equip_item_from_pool(address: str, character_id: str, instance_id: str
 
     equipped_instance = {**instance, "location": "body", "slotRef": slots}
 
-    if is_balance_equip:
-        # Check balance, then do 2-step: decrement vault balance, then push to character gear.
-        if vault_efp["itemBalances"].get(balance_id, 0) < 1:
+    if is_balance_equip and is_balance_merge:
+        if vault_efp["itemBalances"].get(balance_id, 0) < equip_qty:
             return None
-        await _inc_vault_itembalances(db, address, {balance_id: -1})
+        item_idx = next(
+            i for i, it in enumerate(character.get("gear", {}).get("items", []))
+            if it["instanceId"] == existing_equipped["instanceId"]
+        )
+        qty_path = f"gear.items.{item_idx}.quantity"
+        await _inc_vault_itembalances(db, address, {balance_id: -equip_qty})
+        doc = await db.characters.find_one_and_update(
+            {"address": address, "id": character_id},
+            {"$inc": {qty_path: equip_qty}},
+            return_document=ReturnDocument.AFTER,
+        )
+    elif is_balance_equip:
+        if vault_efp["itemBalances"].get(balance_id, 0) < equip_qty:
+            return None
+        await _inc_vault_itembalances(db, address, {balance_id: -equip_qty})
         doc = await db.characters.find_one_and_update(
             {"address": address, "id": character_id,
                         "gear.items": {
@@ -3737,6 +3774,8 @@ async def equip_item_from_pool(address: str, character_id: str, instance_id: str
             {"$push": {"gear.items": equipped_instance}},
             return_document=ReturnDocument.AFTER,
         )
+        if doc is None:
+            await _inc_vault_itembalances(db, address, {balance_id: equip_qty})
     else:
         # Pull instance from vault, push to character gear.
         pool_instance_efp = next(

@@ -2984,10 +2984,10 @@ export function ItemDetailPopup({
     finish(await postJson(`/api/auth/me/characters/${characterId}/items/${moveId}/equip`, { slots, ...(amount != null ? { amount } : {}), ...(location ? { location } : {}) }));
   };
 
-  const equipFromPool = async (slots: string[]) => {
+  const equipFromPool = async (slots: string[], amount?: number) => {
     setPending(true);
     setFlashMessage(null);
-    finish(await postJson(`/api/auth/me/characters/${characterId}/items/${moveId}/equip-from-pool`, { slots }));
+    finish(await postJson(`/api/auth/me/characters/${characterId}/items/${moveId}/equip-from-pool`, { slots, ...(amount != null ? { amount } : {}) }));
   };
 
   const handleClick = (e: React.MouseEvent<HTMLElement>) => {
@@ -3117,7 +3117,7 @@ export function ItemDetailPopup({
                           type="button"
                           className={styles.itemPopupActionButton}
                           disabled={pending}
-                          onClick={() => equipFromPool(slots)}
+                          onClick={() => equipFromPool(slots, stackSize > 1 ? owned : undefined)}
                         >
                           {slots.map((slot, i) => (
                             <Fragment key={slot}>
