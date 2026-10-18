@@ -53,9 +53,9 @@ export type RawPlayerData = {
 // GET /me/characters/{characterId}/salvage-preview/{itemId} (backend.
 // recycling.RawMaterialRecovery (module name), camelCased by auth_routes.py's
 // SalvagePreviewResponse) - what salvaging would hand back, one entry per
-// recoverable raw material family. Exported so CampView.tsx's own
+// recoverable raw material family. Exported so HomeView.tsx's own
 // ChopBlockPopup (the chopping block's bulk-salvage popup, which gets the
-// SAME per-material breakdown per row from GET .../camp/salvage-preview)
+// SAME per-material breakdown per row from GET .../home/salvage-preview)
 // can reuse this exact shape instead of redeclaring a parallel one.
 export type SalvageYield = { base: number; skill: number; tool: number; charm: number; total: number };
 export type SalvageRecoveredLine = {
@@ -90,7 +90,7 @@ const SALVAGE_CONDITION_PENALTY: Partial<Record<SalvageCondition, { percent: num
 /** One raw material's yield formula, e.g. "25 + 0 skill + 5 tool + 0 charm
  * -20% used = 24%" - the condition penalty sits inside the same formula
  * (left out entirely for a "new" item) and the result is the effective
- * percent. Shared by every salvage view (single item, camp, containers). */
+ * percent. Shared by every salvage view (single item, home, containers). */
 export function SalvageFormulaLine({ breakdown, condition }: { breakdown: SalvageYield; condition?: SalvageCondition }) {
   const penalty = condition ? SALVAGE_CONDITION_PENALTY[condition] : undefined;
   const effective = penalty ? Math.max(breakdown.total - penalty.percent, 0) : breakdown.total;
@@ -115,8 +115,8 @@ const TRANSFER_AMOUNTS = [1, 2, 5, 10, 20, 50] as const;
 // Tools' own quantity row keeps the full TRANSFER_AMOUNTS (drawing from a
 // shared pool that can hold hundreds of units), but every resource/
 // processed-material move (Party's Resources' own row, and a single
-// packed/camped resource's popup - see ResourcePopup) drops 50 - at
-// typical backpack/camp quantities it's rarely reachable anyway, and the
+// packed/home-stored resource's popup - see ResourcePopup) drops 50 - at
+// typical backpack/home quantities it's rarely reachable anyway, and the
 // shorter row reads cleaner.
 // Raw/processed materials and stackable itemBalances rows alike - a
 // genuine resource/itemBalance row always pairs with a destinationIcon
@@ -126,7 +126,7 @@ const TRANSFER_AMOUNTS = [1, 2, 5, 10, 20, 50] as const;
 // showing two buttons that both mean "move everything".
 const RAW_RESOURCE_AMOUNTS = [1, 5, 10, 50] as const;
 
-// Backpack/camp stack sizes for raw vs processed materials (see backend.
+// Backpack/home stack sizes for raw vs processed materials (see backend.
 // items_catalog.RAW_STACK_SIZE/PROCESSED_STACK_SIZE, sourced from
 // item-size-classes.json - the same 40/20 the "40" button above and
 // RAW_RESOURCE_AMOUNTS' own comment already reference) - used to split a
@@ -865,7 +865,7 @@ export function ItemGrid({
   hasCompanionEquipped = false,
   hasCartEquipped = false,
   inAdventure = false,
-  storageType = "camp" as "camp" | "rest",
+  storageType = "home" as "home" | "rest",
   characterId,
   characterFirstName,
   onPlayerDataUpdated,
@@ -905,8 +905,8 @@ export function ItemGrid({
   lookupIds?: Record<string, string>;
   /** Row id (instanceId) -> that specific instance's current quality, for rows lookupIds resolves to a real item instance. */
   instanceQuality?: Record<string, number | null>;
-  /** Row id (instanceId) -> "backpack" | "body" | "camp" - source:"character" only, decides whether the popup offers Unequip or Equip(+Check-in-to-vault) ("backpack" and "camp" both get the equip view - see check_in_item_instance/equip_item, which treat the two the same). Unused for source:"vault" (every pool row is location:"pool" by definition). */
-  instanceLocations?: Record<string, "backpack" | "body" | "camp" | "rest">;
+  /** Row id (instanceId) -> "backpack" | "body" | "home" - source:"character" only, decides whether the popup offers Unequip or Equip(+Check-in-to-vault) ("backpack" and "home" both get the equip view - see check_in_item_instance/equip_item, which treat the two the same). Unused for source:"vault" (every pool row is location:"pool" by definition). */
+  instanceLocations?: Record<string, "backpack" | "body" | "home" | "rest">;
   /** Row ids with no working move-to-backpack/equip path yet (ammo living in resources, not items/itemBalances) - the popup shows info only, no action buttons, for these. */
   nonMovableIds?: Set<string>;
   /** "vault" (default): rows live in the player's shared pool - the popup's move actions are equip-from-pool/move-to-backpack, salvage/destroy target the shared vault. "character": rows are this character's own backpack/body items or itemBalances - the popup's move actions are Unequip(-to-vault)/Move-to-backpack for a worn row, Equip/Check-in-to-vault for a backpacked one; salvage/destroy target this character's own holdings instead. */
@@ -920,26 +920,26 @@ export function ItemGrid({
   hasCartEquipped?: boolean;
   /** source:"character" only - hides the popup's "Check in to vault" button while true, since there's no path back to the shared vault mid-adventure (see ItemDetailPopup's identical prop). */
   inAdventure?: boolean;
-  storageType?: "camp" | "rest";
+  storageType?: "home" | "rest";
   characterId: string;
   /** source:"vault" only - passed straight through to ItemDetailPopup's identical prop. */
   characterFirstName?: string;
   onPlayerDataUpdated?: (data: RawPlayerData) => void;
   /** Extra px subtracted off the fill-to-bottom height measurement below,
-   * for a caller (CampView's campfire) that reserves its own fixed-height
+   * for a caller (HomeView's campfire) that reserves its own fixed-height
    * region below this grid instead of letting it fill all the way down to
    * the footer bar the way the plain Vault tab usage does. */
   reserveBottomPx?: number;
   /** Hides the scroll container's own horizontal scrollbar track (still
    * scrolls via drag/touch/trackpad, just no visible bar) - off by
-   * default so the Vault tab's own usage is unaffected; CampView opts in. */
+   * default so the Vault tab's own usage is unaffected; HomeView opts in. */
   hideScrollbar?: boolean;
   /** source:"character" only - passed straight through to every tile's
    * own ItemDetailPopup (see its identical props) so a family:"backpack"
    * row - worn (BodyTab doesn't use ItemGrid) or sitting unequipped in
-   * camp (CampView does) - can show what's packed inside/how full it is.
+   * home (HomeView does) - can show what's packed inside/how full it is.
    * Character-level (see computeBackpackContents), so the SAME values
-   * apply no matter which row/instance was actually clicked - CampView
+   * apply no matter which row/instance was actually clicked - HomeView
    * computes this once per render and hands it to every tile alike. */
   packedItems?: {
     ids: string[];
@@ -977,10 +977,10 @@ export function ItemGrid({
   mountCarryWeightUsed?: number;
   mountCarryWeightCapacity?: number;
   /** Raw/processed materials sitting loose at this same location (e.g.
-   * CampView's own gear.itemBalances.camp) - rendered as their own tiles
+   * HomeView's own gear.itemBalances.home) - rendered as their own tiles
    * (see ResourceTiles) INSIDE this same wrapping grid, alongside the
    * item/itemBalance tiles above, rather than in a separate horizontally-
-   * scrolling row of their own (they used to get one - see CampView's own
+   * scrolling row of their own (they used to get one - see HomeView's own
    * history - but that read as a second, disconnected section instead of
    * "everything sitting here", which is what this grid is for). Omitted
    * entirely (no tiles, no popup) for a caller with nothing of this kind
@@ -989,7 +989,7 @@ export function ItemGrid({
   resourceTierInfo?: ResourceTierInfo;
   /** Passed straight through to the ResourcePopup opened by clicking one of
    * this grid's own resource tiles - see ResourcePopup's identical prop
-   * for why this varies by caller (a camp resource can reach both backpack
+   * for why this varies by caller (a home resource can reach both backpack
    * and vault; a packed one only ever reaches one of the two). */
   resourceDestinations?: ResourcePopupDestination[];
   iconOverrides?: Record<string, string>;
@@ -1371,13 +1371,13 @@ export function ItemGrid({
 // The item popup's own move-destination icons - one per carry location an
 // item can end up in. Swapped in place of the old generic footer-tab icon
 // (char-preview-inventory.png) previously reused here for "backpack".
-// Exported so CampView's own camp-resources popup (ResourcePopup) can
+// Exported so HomeView's own home-resources popup (ResourcePopup) can
 // build the same "Backpack"/"Vault" destinations without a second copy of
 // these paths.
 export const BACKPACK_ACTION_ICON = "/images/character/backpack.png";
 export const SADDLEPACK_ACTION_ICON = "/images/character/saddlebags.png";
 export const VAULT_ACTION_ICON = "/images/character/vault.png";
-const CAMP_ACTION_ICON = "/images/character/camp.png";
+const HOME_ACTION_ICON = "/images/character/camp.png";
 export const REST_ACTION_ICON = "/images/character/camp-inadventure.png";
 export const CART_ACTION_ICON = "/images/items/cart_t1.png";
 
@@ -1397,7 +1397,7 @@ function formatSlotLabel(slot: string): ReactNode {
   return slot;
 }
 
-/** Exported so CampView.tsx's own bulk camp actions (HoldActionPopup's
+/** Exported so HomeView.tsx's own bulk home actions (HoldActionPopup's
  * onConfirm) can share the exact same fetch/error-shape handling. */
 export type PostJsonResult =
   | { ok: true; data: RawPlayerData }
@@ -1448,7 +1448,7 @@ function salvageFillColor(t: number): string {
 }
 
 /** A standalone hold-to-confirm popup - "Burn All"/"Move all to backpack"
- * on the camp page (see CampView.tsx's campfire_lit.png/dropped.png).
+ * on the home page (see HomeView.tsx's campfire_lit.png/dropped.png).
  * Reuses ItemDetailPopup's exact hold-bar visual language (label +
  * progress track/fill + icon, same DESTROY_HOLD_MS duration) rather than
  * a second copy of that mechanic - just standalone instead of nested
@@ -1473,22 +1473,22 @@ export function HoldActionPopup({
   headline: string;
   /** Extra content between the headline and the hold bar - e.g. the
    * chopping block's own scrollable checklist of what's about to be
-   * salvaged (see CampView.tsx's ChopBlockPopup). Scrolls internally
+   * salvaged (see HomeView.tsx's ChopBlockPopup). Scrolls internally
    * inside its own flex-grown wrapper if it's tall enough to need to
    * (see the children wrapper's own inline flex styling below) - the
    * hold bar/icon below it always stays on screen either way, never
    * pushed off by a long list. */
   children?: ReactNode;
-  /** Extra class appended to .itemPopupOverlay - CampView's own
+  /** Extra class appended to .itemPopupOverlay - HomeView's own
    * ChopBlockPopup passes .chopBlockOverlay to shrink the usual top/
    * bottom screen margin, since its own scrollable checklist benefits
    * from using as much of the viewport as possible. */
   overlayClassName?: string;
   /** Extra class appended to .itemPopupCard - paired with
-   * overlayClassName above (CampView's own .chopBlockCard raises the
+   * overlayClassName above (HomeView's own .chopBlockCard raises the
    * card's own max-height to match the shrunk overlay margin). */
   cardClassName?: string;
-  /** Extra class appended to .holdActionIcon - CampView's own
+  /** Extra class appended to .holdActionIcon - HomeView's own
    * ChopBlockPopup passes .chopBlockIcon to size the chopping block
    * icon down from the other two popups' shared default. */
   iconClassName?: string;
@@ -1496,7 +1496,7 @@ export function HoldActionPopup({
   label: string;
   /** Short helper text shown between the progress bar and the icon. */
   subtitle?: string;
-  /** Image shown inside the hold bar - CampView passes the same
+  /** Image shown inside the hold bar - HomeView passes the same
    * campfire_lit.png/dropped.png icon the player just clicked. Sized to
    * fill the same width as the progress bar above it (see
    * .holdActionIcon) - a real icon reads better big here than a small
@@ -1694,14 +1694,14 @@ export function ChopBlockPopup({
   onClose,
   preSelectedIds,
   preSelectedAmounts,
-  source = "camp",
+  source = "home",
 }: {
   characterId: string;
   onPlayerDataUpdated?: (data: RawPlayerData) => void;
   onClose: () => void;
   preSelectedIds?: Set<string>;
   preSelectedAmounts?: Map<string, number>;
-  source?: "camp" | "vault";
+  source?: "home" | "vault";
 }) {
   const [rows, setRows] = useState<ChopBlockRow[] | null>(null);
   const [selected, setSelected] = useState<Set<string>>(new Set());
@@ -1751,7 +1751,7 @@ export function ChopBlockPopup({
     (rows ?? []).filter((row) => selected.has(row.id)).flatMap((row) => row.materials)
   );
 
-  const emptyLabel = source === "vault" ? "Nothing in the vault can be salvaged right now." : "Nothing in camp can be salvaged right now.";
+  const emptyLabel = source === "vault" ? "Nothing in the vault can be salvaged right now." : "Nothing in home can be salvaged right now.";
 
   return (
     <HoldActionPopup
@@ -1863,7 +1863,7 @@ const ITEM_POPUP_FLASH_MS = 3000;
 // "No backpack equipped" / "Backpack is full" / "No saddlepack equipped"
 // (see backend.players.check_out_item_instance/unequip_item/
 // load_item_balance_to_backpack/check_out_item_balance_to_backpack/
-// move_camp_resource_to_backpack) get their own specific wording; anything
+// move_home_resource_to_backpack) get their own specific wording; anything
 // else falls back to a generic message. Shared between ItemDetailPopup and
 // ResourcePopup so a failed move reads the same regardless of which one it
 // happened in.
@@ -1886,11 +1886,11 @@ function transferFailureMessage(detail: string | null): string {
 
 /** What's actually packed into a character's backpack storage - flat
  * gear.itemBalances.backpack rows plus individually-tracked gear.items
- * instances at location:"backpack", combined the same way CampView's own
- * campCombined merges the "camp" equivalents. Character-level (backpack
+ * instances at location:"backpack", combined the same way HomeView's own
+ * homeCombined merges the "home" equivalents. Character-level (backpack
  * storage isn't tied to which specific backpack instance is worn - see
  * Character.gear's own docstring), so BodyTab (the worn backpack's own
- * popup) and CampView (a camp-located backpack's popup) both call this
+ * popup) and HomeView (a home-located backpack's popup) both call this
  * the same way to feed ItemDetailPopup's packedItems/backpackSlotsUsed/
  * backpackCapacity props. Doesn't include tierInfo - each caller already
  * has its own independently-fetched item-catalog map to pair with this.
@@ -1911,7 +1911,7 @@ type ContainerContents = {
 type ContainerCharacterGear = {
   gear: {
     items: ItemInstance[];
-    itemBalances: { backpack: Record<string, number>; saddlepack: Record<string, number>; cart: Record<string, number>; camp: Record<string, number> };
+    itemBalances: { backpack: Record<string, number>; saddlepack: Record<string, number>; cart: Record<string, number>; home: Record<string, number> };
   };
 };
 
@@ -1954,7 +1954,7 @@ function sortResourceIds(balances: Record<string, number>, tierInfo: ResourceTie
 }
 
 /** One .itemGridCell tile per owned resource id, for embedding alongside
- * (PackedItemsRow) or instead of (CampView's own camp-resources strip)
+ * (PackedItemsRow) or instead of (HomeView's own home-resources strip)
  * item tiles in the same horizontally-scrolling row. Resources have no
  * catalog icon (they're raw/processed materials, not items - see
  * ResourceList's own getResourceIcon, which falls back to a plain emoji
@@ -2054,7 +2054,7 @@ function PackedItemsRow({
   cartCapacity,
   cartSlotsUsed,
   inAdventure,
-  storageType = "camp" as "camp" | "rest",
+  storageType = "home" as "home" | "rest",
   characterId,
   onPlayerDataUpdated,
   location = "backpack",
@@ -2081,7 +2081,7 @@ function PackedItemsRow({
   cartCapacity?: number;
   cartSlotsUsed?: number;
   inAdventure: boolean;
-  storageType?: "camp" | "rest";
+  storageType?: "home" | "rest";
   characterId: string;
   onPlayerDataUpdated?: (data: RawPlayerData) => void;
   location?: "backpack" | "saddlepack" | "cart";
@@ -2330,19 +2330,19 @@ function PackedItemsRow({
             location === "cart"
               ? [
                   ...(inAdventure
-                    ? [{ key: "storage", icon: storageType === "rest" ? REST_ACTION_ICON : CAMP_ACTION_ICON, label: storageType === "rest" ? "Rest" : "Camp", endpoint: `cart-to-${storageType}` }]
+                    ? [{ key: "storage", icon: storageType === "rest" ? REST_ACTION_ICON : HOME_ACTION_ICON, label: storageType === "rest" ? "Rest" : "Home", endpoint: `cart-to-${storageType}` }]
                     : [
                         { key: "vault", icon: VAULT_ACTION_ICON, label: "Vault", endpoint: "cart-to-vault" },
-                        { key: "storage", icon: CAMP_ACTION_ICON, label: "Camp", endpoint: "cart-to-camp" },
+                        { key: "storage", icon: HOME_ACTION_ICON, label: "Home", endpoint: "cart-to-home" },
                       ]),
                 ]
               : location === "saddlepack"
               ? [
                   ...(inAdventure
-                    ? [{ key: "storage", icon: storageType === "rest" ? REST_ACTION_ICON : CAMP_ACTION_ICON, label: storageType === "rest" ? "Rest" : "Camp", endpoint: `saddlepack-to-${storageType}` }]
+                    ? [{ key: "storage", icon: storageType === "rest" ? REST_ACTION_ICON : HOME_ACTION_ICON, label: storageType === "rest" ? "Rest" : "Home", endpoint: `saddlepack-to-${storageType}` }]
                     : [
                         { key: "vault", icon: VAULT_ACTION_ICON, label: "Vault", endpoint: "to-vault" },
-                        { key: "storage", icon: CAMP_ACTION_ICON, label: "Camp", endpoint: `saddlepack-to-camp` },
+                        { key: "storage", icon: HOME_ACTION_ICON, label: "Home", endpoint: `saddlepack-to-home` },
                       ]),
                   ...(hasBackpackEquipped
                     ? [{ key: "backpack", icon: BACKPACK_ACTION_ICON, label: "Backpack", endpoint: "saddlepack-to-backpack" }]
@@ -2350,10 +2350,10 @@ function PackedItemsRow({
                 ]
               : [
                   ...(inAdventure
-                    ? [{ key: "storage", icon: storageType === "rest" ? REST_ACTION_ICON : CAMP_ACTION_ICON, label: storageType === "rest" ? "Rest" : "Camp", endpoint: `backpack-to-${storageType}` }]
+                    ? [{ key: "storage", icon: storageType === "rest" ? REST_ACTION_ICON : HOME_ACTION_ICON, label: storageType === "rest" ? "Rest" : "Home", endpoint: `backpack-to-${storageType}` }]
                     : [
                         { key: "vault", icon: VAULT_ACTION_ICON, label: "Vault", endpoint: "to-vault" },
-                        { key: "storage", icon: CAMP_ACTION_ICON, label: "Camp", endpoint: "backpack-to-camp" },
+                        { key: "storage", icon: HOME_ACTION_ICON, label: "Home", endpoint: "backpack-to-home" },
                       ]),
                   ...(hasSaddlepackEquipped
                     ? [{ key: "saddlepack", icon: SADDLEPACK_ACTION_ICON, label: "Saddlepack", endpoint: "backpack-to-saddlepack" }]
@@ -2394,17 +2394,17 @@ function PackedItemsRow({
  * the last path segment under .../resources/{resourceId}/... */
 export type ResourcePopupDestination = { key: string; icon: string; label: string; endpoint: string };
 
-/** Opened by clicking a packed/camped resource tile (see PackedItemsRow and
- * CampView's own resource strip) - a deliberately stripped-down sibling of
+/** Opened by clicking a packed/home-stored resource tile (see PackedItemsRow and
+ * HomeView's own resource strip) - a deliberately stripped-down sibling of
  * ItemDetailPopup: no cogwheel/salvage-destroy view (raw/processed
  * materials have no recipe of their own to salvage - they're what
  * salvaging something else already hands back), just a tier/name header
  * and one quantity-picker row (same as Party's Resources' own) per
  * available move destination. A backpack resource only ever has ONE
- * reachable destination at a time (vault OR camp, whichever inAdventure
- * allows - see PackedItemsRow's own call), while a camp resource can have
+ * reachable destination at a time (vault OR home, whichever inAdventure
+ * allows - see PackedItemsRow's own call), while a home resource can have
  * BOTH at once (backpack if equipped, vault if not inAdventure - see
- * CampView's own call) - `destinations` covers either shape without the
+ * HomeView's own call) - `destinations` covers either shape without the
  * component needing to know which popup it's in. */
 export function ResourcePopup({
   resourceId,
@@ -2428,7 +2428,7 @@ export function ResourcePopup({
   const [pending, setPending] = useState(false);
   // Same failed-move flash as ItemDetailPopup's own (see
   // transferFailureMessage) - e.g. "Backpack full - remove items first."
-  // when a camp->backpack move can't fit, instead of just silently
+  // when a home->backpack move can't fit, instead of just silently
   // re-enabling the row with no explanation.
   const [flashMessage, setFlashMessage] = useState<string | null>(null);
   const flashTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -2467,8 +2467,8 @@ export function ResourcePopup({
   };
 
   // Same stopPropagation reasoning as ItemDetailPopup's own handleClick -
-  // this popup opens nested inside a backpack/camp's own ItemDetailPopup
-  // (via PackedItemsRow/CampView), so an unguarded click here would bubble
+  // this popup opens nested inside a backpack/home's own ItemDetailPopup
+  // (via PackedItemsRow/HomeView), so an unguarded click here would bubble
   // up and close that one too.
   const handleClick = (e: React.MouseEvent<HTMLElement>) => {
     e.stopPropagation();
@@ -2531,7 +2531,7 @@ export function ItemDetailPopup({
   currentSlots,
   characterId,
   characterFirstName,
-  storageType = "camp",
+  storageType = "home",
   packedItems,
   saddlepackPackedItems,
   cartPackedItems,
@@ -2559,18 +2559,18 @@ export function ItemDetailPopup({
   quality: number | null;
   /** The row id itself - an instanceId (isInstance) or a concrete itemBalances/resource id. */
   moveId: string;
-  /** source:"character" instance rows only - "backpack", "camp", "rest", "saddlepack", "cart", or "body" - decides which move actions are offered. */
-  location?: "backpack" | "body" | "camp" | "rest" | "saddlepack" | "cart";
+  /** source:"character" instance rows only - "backpack", "home", "rest", "saddlepack", "cart", or "body" - decides which move actions are offered. */
+  location?: "backpack" | "body" | "home" | "rest" | "saddlepack" | "cart";
   /** "vault" (default): `moveId` lives in the player's shared pool. "character": `moveId` is this character's own (backpack/body instance, or itemBalances row) - see ItemGrid's identical prop for what changes. */
   source?: "vault" | "character";
-  storageType?: "camp" | "rest";
+  storageType?: "home" | "rest";
   /** Whether this character currently has a backpack worn - greys out any "Move to backpack" button instead of letting the click fail server-side with "No backpack equipped". */
   hasBackpackEquipped: boolean;
   /** Whether this character's mount currently has a saddlepack worn (see items_catalog.has_saddlepack_equipped) - any "Move to saddlepack" button is hidden entirely (not just greyed) when false, since there's no mount slot to blame the way a missing backpack gets a "No backpack equipped" message. */
   hasSaddlepackEquipped: boolean;
   hasMountEquipped?: boolean;
   hasCompanionEquipped?: boolean;
-  /** location:"body" rows only - whether this character currently counts as out on an adventure (Character.availability.inAdventure). Picks the automatic-unequip icon: camp while true, the shared vault while false - see backend.players.unequip_item. */
+  /** location:"body" rows only - whether this character currently counts as out on an adventure (Character.availability.inAdventure). Picks the automatic-unequip icon: home while true, the shared vault while false - see backend.players.unequip_item. */
   inAdventure?: boolean;
   duplicateContainer?: boolean;
   /** location:"body" rows only - the slot(s) this instance currently occupies (its own slotRef) - used to exclude that same group from the reslot button list below (equipToSlots), since re-clicking your own current slot(s) would be a no-op. */
@@ -2579,7 +2579,7 @@ export function ItemDetailPopup({
   /** source:"vault" only - named in the "on the road" notice that replaces the whole action row while inAdventure is true. */
   characterFirstName?: string;
   /** A family:"backpack" instance only (worn, or sitting unequipped in
-   * camp - see BodyTab/CampView's own packedItems) - this character's own
+   * home - see BodyTab/HomeView's own packedItems) - this character's own
    * gear.items (location:"backpack") plus gear.itemBalances.backpack, in
    * the same {ids, tierInfo, balances, lookupIds, instanceQuality} shape
    * ItemGrid itself takes. Renders as a horizontally-scrolling row of
@@ -2631,10 +2631,10 @@ export function ItemDetailPopup({
   const stackSize = info?.stackSize ?? 1;
   const name = info?.name ? stripBlueprintPrefix(info.name) : fallbackName;
   const displayName = stackSize > 1 ? `${owned} ${name}` : name;
-  const inStorage = location === "camp" || location === "rest";
-  const storageAccessible = (storageType === "camp" && !inAdventure) || storageType === "rest";
-  const storageLabel = storageType === "rest" ? "Rest" : "Camp";
-  const storageIcon = storageType === "rest" ? REST_ACTION_ICON : CAMP_ACTION_ICON;
+  const inStorage = location === "home" || location === "rest";
+  const storageAccessible = (storageType === "home" && !inAdventure) || storageType === "rest";
+  const storageLabel = storageType === "rest" ? "Rest" : "Home";
+  const storageIcon = storageType === "rest" ? REST_ACTION_ICON : HOME_ACTION_ICON;
 
   const [pending, setPending] = useState(false);
   // Replaces the description text for ITEM_POPUP_FLASH_MS after a failed
@@ -2676,20 +2676,20 @@ export function ItemDetailPopup({
   //
   // A single all-or-nothing backend call (check-out-backpack), not the old
   // check-out-then-load-backpack pair - that chain moved the vault
-  // -> camp hop first (always uncapped) and only THEN checked capacity for
-  // camp -> backpack, so a full backpack left the item stranded in camp
+  // -> home hop first (always uncapped) and only THEN checked capacity for
+  // home -> backpack, so a full backpack left the item stranded in home
   // instead of the backpack the player actually asked for, with no way
-  // back to the vault in one click. Dropping into camp on a full backpack
+  // back to the vault in one click. Dropping into home on a full backpack
   // is deliberately ONLY something salvaging does, never a normal move -
   // see backend.players.check_out_item_balance_to_backpack.
   const moveToCamp = async (amount: number) => {
     setPending(true);
     setFlashMessage(null);
     if (isInstance) {
-      return finish(await postJson(`/api/auth/me/characters/${characterId}/items/${moveId}/vault-to-camp`));
+      return finish(await postJson(`/api/auth/me/characters/${characterId}/items/${moveId}/vault-to-home`));
     }
     finish(
-      await postJson(`/api/auth/me/characters/${characterId}/item-balances/${moveId}/vault-to-camp`, {
+      await postJson(`/api/auth/me/characters/${characterId}/item-balances/${moveId}/vault-to-home`, {
         amount,
       })
     );
@@ -2795,9 +2795,9 @@ export function ItemDetailPopup({
     finish(await postJson(`/api/auth/me/characters/${characterId}/items/${moveId}/cart-to-saddlepack`));
   };
 
-  // source:"character", NOT isInstance, location:"camp" only (a flat
-  // gear.itemBalances.camp row, e.g. crafted goods like potions/food, or
-  // ammo living in resources instead - see nonMovableIds) - camp -> this
+  // source:"character", NOT isInstance, location:"home" only (a flat
+  // gear.itemBalances.home row, e.g. crafted goods like potions/food, or
+  // ammo living in resources instead - see nonMovableIds) - home -> this
   // same character's backpack, `amount` units at a time (one TransferButtons
   // row's own onPick - see this popup's itemBalances render block below).
   // The itemBalances equivalent of stowToBackpack above - same backend.
@@ -2970,7 +2970,7 @@ export function ItemDetailPopup({
   };
 
   // source:"character" rows only - equip into `slots`, from wherever this
-  // instance currently is: backpack/camp/saddlepack -> body (the missing
+  // instance currently is: backpack/home/saddlepack -> body (the missing
   // other half of the unequip* actions above, without which a
   // character-owned item that's ever moved off the body had no way back
   // onto it except a manual database fix), OR body -> body (reslotting an
@@ -2996,7 +2996,7 @@ export function ItemDetailPopup({
     if (target.closest("button")) return;
     onClose();
   };
-  // A worn/camped backpack's own popup packs its own double-row scrollable
+  // A worn/home-stored backpack's own popup packs its own double-row scrollable
   // item matrix (PackedItemsRow) in the middle - taller than a plain
   // item's icon/description/meta stack, so it gets its own near-zero top
   // gap and relaxed max-height (even past the fixed footer - see
@@ -3582,7 +3582,7 @@ export function VaultTab({
 
   // Whether this character currently has a physical backpack worn -
   // mirrors backend.items_catalog.has_backpack_available - also counts a
-  // camp-located backpack, not just a worn one (unequip_item's "camp"
+  // home-located backpack, not just a worn one (unequip_item's "home"
   // destination never empties its storage bucket, so it's still a real
   // place to add more into). Checked by familyId, not by "Back"/"Side" in
   // slotRef - bolt_girdle/quiver/ladder also list "Side" as one of their
@@ -3592,10 +3592,10 @@ export function VaultTab({
   // grey that button out otherwise instead of letting the click fail
   // server-side with "No backpack equipped".
   const hasBackpackEquipped = character.gear.items.some(
-    (instance) => (instance.location === "body" || instance.location === "camp") && instance.familyId === "backpack"
+    (instance) => (instance.location === "body" || instance.location === "home") && instance.familyId === "backpack"
   );
   const hasSaddlepackEquipped = character.gear.items.some(
-    (instance) => (instance.location === "body" || instance.location === "camp") && instance.familyId === "saddlepack"
+    (instance) => (instance.location === "body" || instance.location === "home") && instance.familyId === "saddlepack"
   );
   const hasMountEquipped = character.gear.items.some(
     (instance) => instance.location === "body" && instance.slotRef?.includes("Mount")
@@ -3604,8 +3604,8 @@ export function VaultTab({
     (instance) => instance.location === "body" && instance.slotRef?.includes("Companion")
   );
 
-  const hasCartInBodyOrCamp = character.gear.items.some(
-    (instance) => (instance.location === "body" || instance.location === "camp") && instance.familyId === "cart"
+  const hasCartInBodyOrHome = character.gear.items.some(
+    (instance) => (instance.location === "body" || instance.location === "home") && instance.familyId === "cart"
   );
 
   const vaultSelectionHasDuplicateContainer = useMemo(() => {
@@ -3613,7 +3613,7 @@ export function VaultTab({
     const existing: Record<string, boolean> = {
       backpack: hasBackpackEquipped,
       saddlepack: hasSaddlepackEquipped,
-      cart: hasCartInBodyOrCamp,
+      cart: hasCartInBodyOrHome,
     };
     for (const id of vaultSelectedIds) {
       const baseId = stripStackSuffix(id);
@@ -3626,11 +3626,11 @@ export function VaultTab({
       if (fam && existing[fam]) return true;
     }
     return false;
-  }, [vaultSelectedIds, playerItemLookupIds, playerItems, mergedCatalogTierInfo, hasBackpackEquipped, hasSaddlepackEquipped, hasCartInBodyOrCamp]);
+  }, [vaultSelectedIds, playerItemLookupIds, playerItems, mergedCatalogTierInfo, hasBackpackEquipped, hasSaddlepackEquipped, hasCartInBodyOrHome]);
 
 
   const batchMoveVault = useCallback(
-    async (destination: "backpack" | "saddlepack" | "cart" | "camp") => {
+    async (destination: "backpack" | "saddlepack" | "cart" | "home") => {
       if (vaultBatchBusy || vaultSelectedIds.size === 0) return;
       setVaultBatchBusy(true);
       const instanceIds: string[] = [];
@@ -3779,11 +3779,11 @@ export function VaultTab({
                       <button
                         type="button"
                         className={styles.selectionBarBtn}
-                        title="Move to camp"
+                        title="Move to home"
                         disabled={vaultBatchBusy || vaultSelectedIds.size === 0 || vaultSelectionHasDuplicateContainer}
-                        onClick={() => batchMoveVault("camp")}
+                        onClick={() => batchMoveVault("home")}
                       >
-                        <div className={styles.selectionBarIcon} style={{ backgroundImage: `url(${CAMP_ACTION_ICON})` }} />
+                        <div className={styles.selectionBarIcon} style={{ backgroundImage: `url(${HOME_ACTION_ICON})` }} />
                       </button>
                     )}
                     <div className={styles.selectionBarGap} />
@@ -3924,7 +3924,7 @@ export function VaultTab({
               hasSaddlepackEquipped={hasSaddlepackEquipped}
               hasMountEquipped={hasMountEquipped}
               hasCompanionEquipped={hasCompanionEquipped}
-              hasCartEquipped={hasCartInBodyOrCamp}
+              hasCartEquipped={hasCartInBodyOrHome}
               inAdventure={character.availability.inAdventure}
               characterId={character.id}
               characterFirstName={character.firstName}
@@ -3940,7 +3940,7 @@ export function VaultTab({
               resourceTierInfo={vaultResourceTierInfo}
               resourceUrlPrefix={(id) => `/api/auth/me/characters/${character.id}/item-balances/${id}`}
               resourceDestinations={character.availability.inAdventure ? [] : [
-                { key: "camp", icon: CAMP_ACTION_ICON, label: "Camp", endpoint: "vault-to-camp" },
+                { key: "home", icon: HOME_ACTION_ICON, label: "Home", endpoint: "vault-to-home" },
               ]}
               onLongPressResource={enterVaultSelectResource}
               onToggleSelectResource={toggleVaultSelectResource}

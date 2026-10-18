@@ -148,7 +148,7 @@ def _best_owned_station_tool_tier(
         if instance.get("familyId") in _STATION_TOOL_FAMILY_IDS and instance.get("location") in (
             "backpack",
             "body",
-            "camp",
+            "home",
             "saddlepack",
         ):
             entry = items_catalog.ITEM_CATALOG_ENTRIES_BY_ID.get(instance.get("itemId"))

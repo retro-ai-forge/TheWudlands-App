@@ -108,12 +108,12 @@ async def _build_player(db, address: str) -> Player:
         print(f"  [characters] {_time.perf_counter() - t:.3f}s  count={len(docs)}")
         return docs
 
-    async def _fetch_camps():
+    async def _fetch_homes():
         t = _time.perf_counter()
         m = {}
-        async for doc in db.character_camps.find({"address": address}):
+        async for doc in db.character_homes.find({"address": address}):
             m[doc["characterId"]] = doc
-        print(f"  [camps] {_time.perf_counter() - t:.3f}s  count={len(m)}")
+        print(f"  [homes] {_time.perf_counter() - t:.3f}s  count={len(m)}")
         return m
 
     async def _fetch_rests():
@@ -138,9 +138,9 @@ async def _build_player(db, address: str) -> Player:
         print(f"  [player_characters] {_time.perf_counter() - t:.3f}s")
         return doc
 
-    characters, camp_map, rest_map, bp_map, pc_doc = await asyncio.gather(
+    characters, home_map, rest_map, bp_map, pc_doc = await asyncio.gather(
         _fetch_characters(),
-        _fetch_camps(),
+        _fetch_homes(),
         _fetch_rests(),
         _fetch_blueprints(),
         _fetch_pc(),
@@ -161,14 +161,14 @@ async def _build_player(db, address: str) -> Player:
             item.setdefault("createdAt", datetime.now(timezone.utc).isoformat())
 
         if not in_adventure:
-            camp_doc = camp_map.get(cid, {})
-            character["gear"]["itemBalances"]["camp"] = camp_doc.get("itemBalances", {})
-            camp_items = camp_doc.get("items", [])
-            for ci in camp_items:
+            home_doc = home_map.get(cid, {})
+            character["gear"]["itemBalances"]["home"] = home_doc.get("itemBalances", {})
+            home_items = home_doc.get("items", [])
+            for ci in home_items:
                 ci.setdefault("createdAt", datetime.now(timezone.utc).isoformat())
-            character["gear"]["items"] = character["gear"].get("items", []) + camp_items
-            character["campMeta"] = {
-                "campType": camp_doc.get("campType"),
+            character["gear"]["items"] = character["gear"].get("items", []) + home_items
+            character["homeMeta"] = {
+                "homeType": home_doc.get("homeType"),
             }
             character["restMeta"] = None
             character["blueprints"] = bp_map.get(cid, {}).get("blueprints", [])
@@ -183,11 +183,11 @@ async def _build_player(db, address: str) -> Player:
                     ri.setdefault("createdAt", datetime.now(timezone.utc).isoformat())
                 character["gear"]["items"] = character["gear"].get("items", []) + rest_items
                 character["restMeta"] = {
-                    "campType": rest_doc.get("campType"),
+                    "homeType": rest_doc.get("homeType"),
                 }
             else:
                 character["restMeta"] = None
-            character["campMeta"] = None
+            character["homeMeta"] = None
             character["blueprints"] = bp_map.get(cid, {}).get("blueprints", [])
             character["vault"] = {"items": [], "itemBalances": {}}
         character["gear"]["backpackSlotsUsed"] = items_catalog.backpack_slots_used(character)
@@ -222,7 +222,7 @@ def _strip_zeros(d: dict) -> dict:
 
 
 STORAGE_COLLECTIONS = {
-    "camp": "character_camps",
+    "home": "character_homes",
     "rest": "character_resting",
 }
 
@@ -243,50 +243,50 @@ def _storage_filter(address: str, character_id: str) -> dict:
 
 
 _TRANSFER_RULES = {
-    ("vault", "camp"):       "not_in_adventure",
+    ("vault", "home"):       "not_in_adventure",
     ("vault", "rest"):       "never",
     ("vault", "backpack"):   "never",
     ("vault", "saddlepack"): "never",
     ("vault", "cart"):       "never",
     ("vault", "body"):       "not_in_adventure",
 
-    ("camp", "vault"):       "not_in_adventure",
-    ("camp", "rest"):        "never",
-    ("camp", "backpack"):    "not_in_adventure",
-    ("camp", "saddlepack"):  "not_in_adventure",
-    ("camp", "cart"):        "not_in_adventure",
-    ("camp", "body"):        "not_in_adventure",
+    ("home", "vault"):       "not_in_adventure",
+    ("home", "rest"):        "never",
+    ("home", "backpack"):    "not_in_adventure",
+    ("home", "saddlepack"):  "not_in_adventure",
+    ("home", "cart"):        "not_in_adventure",
+    ("home", "body"):        "not_in_adventure",
 
     ("rest", "vault"):       "never",
-    ("rest", "camp"):        "never",
+    ("rest", "home"):        "never",
     ("rest", "backpack"):    "in_adventure_and_rest",
     ("rest", "saddlepack"):  "in_adventure_and_rest",
     ("rest", "cart"):        "in_adventure_and_rest",
     ("rest", "body"):        "in_adventure_and_rest",
 
     ("backpack", "vault"):      "never",
-    ("backpack", "camp"):       "not_in_adventure",
+    ("backpack", "home"):       "not_in_adventure",
     ("backpack", "rest"):       "in_adventure_and_rest",
     ("backpack", "saddlepack"): "always",
     ("backpack", "cart"):       "always",
     ("backpack", "body"):       "always",
 
     ("saddlepack", "vault"):    "never",
-    ("saddlepack", "camp"):     "not_in_adventure",
+    ("saddlepack", "home"):     "not_in_adventure",
     ("saddlepack", "rest"):     "in_adventure_and_rest",
     ("saddlepack", "backpack"): "always",
     ("saddlepack", "cart"):     "always",
     ("saddlepack", "body"):     "always",
 
     ("cart", "vault"):       "never",
-    ("cart", "camp"):        "not_in_adventure",
+    ("cart", "home"):        "not_in_adventure",
     ("cart", "rest"):        "in_adventure_and_rest",
     ("cart", "backpack"):    "always",
     ("cart", "saddlepack"):  "always",
     ("cart", "body"):        "always",
 
     ("body", "vault"):       "never",
-    ("body", "camp"):        "not_in_adventure",
+    ("body", "home"):        "not_in_adventure",
     ("body", "rest"):        "in_adventure_and_rest",
     ("body", "backpack"):    "always",
     ("body", "saddlepack"):  "always",
@@ -325,7 +325,7 @@ def _check_container_capacity_slots(character: dict, container: str, slot_cost) 
 
 
 # ---------------------------------------------------------------------------
-# Generic storage helpers — work for both "camp" and "rest" collections
+# Generic storage helpers — work for both "home" and "rest" collections
 # ---------------------------------------------------------------------------
 
 async def _set_storage_balances(db, storage_type: str, address: str, character_id: str, balances: dict) -> None:
@@ -612,7 +612,7 @@ async def get_player(address: str) -> Optional[Player]:
 
 
 async def get_character_summaries(address: str) -> list[dict]:
-    """Lightweight read: just the character docs, no vault/camp/blueprint injection."""
+    """Lightweight read: just the character docs, no vault/home/blueprint injection."""
     db = get_database()
     summaries = []
     async for doc in db.characters.find({"address": address}):
@@ -656,7 +656,7 @@ async def get_single_character(address: str, character_id: str) -> Optional[dict
 
     char_doc["blueprints"] = (bp_doc or {}).get("blueprints", [])
     char_doc["vault"] = {"items": [], "itemBalances": {}}
-    char_doc["gear"]["itemBalances"].setdefault("camp", {})
+    char_doc["gear"]["itemBalances"].setdefault("home", {})
     char_doc["gear"]["itemBalances"].setdefault("rest", {})
 
     char_doc["gear"]["backpackSlotsUsed"] = items_catalog.backpack_slots_used(char_doc)
@@ -684,10 +684,10 @@ async def get_single_character(address: str, character_id: str) -> Optional[dict
     return char_doc
 
 
-async def get_character_camp(address: str, character_id: str) -> dict:
-    """Return camp items and itemBalances for one character."""
+async def get_character_home(address: str, character_id: str) -> dict:
+    """Return home items and itemBalances for one character."""
     db = get_database()
-    doc = await db.character_camps.find_one({"address": address, "characterId": character_id})
+    doc = await db.character_homes.find_one({"address": address, "characterId": character_id})
     if not doc:
         return {"items": [], "itemBalances": {}}
     return {"items": doc.get("items", []), "itemBalances": doc.get("itemBalances", {})}
@@ -735,8 +735,8 @@ async def add_character(address: str, character: Character) -> Optional[Player]:
 
 async def delete_character(address: str, character_id: str) -> Optional[Player]:
     """
-    Delete a character. Dumps all gear and camp items into the shared vault
-    first, then deletes blueprints, camp doc, rest doc (discarded without
+    Delete a character. Dumps all gear and home items into the shared vault
+    first, then deletes blueprints, home doc, rest doc (discarded without
     salvage), and the character doc.
     """
     db = get_database()
@@ -749,7 +749,7 @@ async def delete_character(address: str, character_id: str) -> Optional[Player]:
     gear_items = gear.get("items", [])
     gear_balances = gear.get("itemBalances", {})
 
-    # --- instances (body, backpack, saddlepack, cart, camp) → vault ---
+    # --- instances (body, backpack, saddlepack, cart, home) → vault ---
     pooled_instances = [
         {**item, "location": "pool", "slotRef": []}
         for item in gear_items
@@ -768,25 +768,25 @@ async def delete_character(address: str, character_id: str) -> Optional[Player]:
             if qty > 0:
                 vault_balance_inc[item_id] = vault_balance_inc.get(item_id, 0) + qty
 
-    # --- camp items + balances → vault, then delete camp doc ---
-    camp_doc = await db.character_camps.find_one(
+    # --- home items + balances → vault, then delete home doc ---
+    home_doc = await db.character_homes.find_one(
         {"address": address, "characterId": character_id}
     )
-    if camp_doc:
-        camp_instances = [
+    if home_doc:
+        home_instances = [
             {**item, "location": "pool", "slotRef": []}
-            for item in camp_doc.get("items", [])
+            for item in home_doc.get("items", [])
         ]
-        if camp_instances:
+        if home_instances:
             await db.player_vaults.update_one(
                 {"address": address},
-                {"$push": {"items": {"$each": camp_instances}}},
+                {"$push": {"items": {"$each": home_instances}}},
                 upsert=True,
             )
-        for item_id, qty in camp_doc.get("itemBalances", {}).items():
+        for item_id, qty in home_doc.get("itemBalances", {}).items():
             if qty > 0:
                 vault_balance_inc[item_id] = vault_balance_inc.get(item_id, 0) + qty
-        await db.character_camps.delete_one(
+        await db.character_homes.delete_one(
             {"address": address, "characterId": character_id}
         )
 
@@ -1010,9 +1010,9 @@ async def salvage_item_instance(
             None,
         )
         if instance is None:
-            camp_items_sii = await _get_storage_items(db, "camp", address, character_id)
+            home_items_sii = await _get_storage_items(db, "home", address, character_id)
             instance = next(
-                (i for i in camp_items_sii if i["instanceId"] == instance_id),
+                (i for i in home_items_sii if i["instanceId"] == instance_id),
                 None,
             )
     if instance is None:
@@ -1054,8 +1054,8 @@ async def salvage_item_instance(
             await _inc_vault_itembalances(db, address, amounts)
         doc = await db.characters.find_one({"address": address, "id": character_id})
     else:
-        if instance.get("location") == "camp":
-            await _pull_storage_items(db, "camp", address, character_id, [instance_id])
+        if instance.get("location") == "home":
+            await _pull_storage_items(db, "home", address, character_id, [instance_id])
             doc = await db.characters.find_one({"address": address, "id": character_id})
         else:
             doc = await db.characters.find_one_and_update(
@@ -1066,21 +1066,21 @@ async def salvage_item_instance(
                 return_document=ReturnDocument.AFTER,
             )
         if doc is not None and amounts:
-            await _inc_storage_balances(db, "camp", address, character_id, amounts)
+            await _inc_storage_balances(db, "home", address, character_id, amounts)
     if doc is None:
         return None
     return await _build_player(db, address)
 
 
 async def salvage_item_balance(
-    address: str, character_id: str, item_id: str, amount: int = 1, from_vault: bool = False, location: str = "camp"
+    address: str, character_id: str, item_id: str, amount: int = 1, from_vault: bool = False, location: str = "home"
 ) -> Optional[Player]:
     """
     The item_balances/itemBalances equivalent of salvage_item_instance -
     same from_vault split for which pool `amount` is consumed FROM
     (character's own gear.itemBalances.{location} vs. the player's shared
     vault.itemBalances), for stackable finished goods (food, potions, misc
-    trinkets) rather than instance-tracked gear. `location` ("camp" or
+    trinkets) rather than instance-tracked gear. `location` ("home" or
     "backpack") is ignored when from_vault - it only matters for picking
     which of the character's own two itemBalances buckets to deduct from,
     matching whichever one the popup that triggered this actually opened
@@ -1134,17 +1134,17 @@ async def salvage_item_balance(
         doc = await db.characters.find_one({"address": address, "id": character_id})
         if doc is None:
             return None
-    elif location == "camp":
-        # Deduct from camp, then credit recoveries back to camp.
-        camp_doc = await db.character_camps.find_one({"address": address, "characterId": character_id})
-        if not camp_doc or camp_doc.get("itemBalances", {}).get(item_id, 0) < amount:
+    elif location == "home":
+        # Deduct from home, then credit recoveries back to home.
+        home_doc = await db.character_homes.find_one({"address": address, "characterId": character_id})
+        if not home_doc or home_doc.get("itemBalances", {}).get(item_id, 0) < amount:
             return None
-        await _inc_storage_balances(db, "camp", address, character_id, {item_id: -amount})
+        await _inc_storage_balances(db, "home", address, character_id, {item_id: -amount})
         if amounts:
-            await _inc_storage_balances(db, "camp", address, character_id, amounts)
+            await _inc_storage_balances(db, "home", address, character_id, amounts)
         doc = await db.characters.find_one({"address": address, "id": character_id})
     else:
-        # backpack / saddlepack — deduct from player doc, credit recoveries to camp.
+        # backpack / saddlepack — deduct from player doc, credit recoveries to home.
         doc = await db.characters.find_one_and_update(
             {"address": address, "id": character_id, f"gear.itemBalances.{location}.{item_id}": {"$gte": amount},
             },
@@ -1155,7 +1155,7 @@ async def salvage_item_balance(
             return None
         await _prune_char_zeros(db, address, character_id, doc, [f"gear.itemBalances.{location}.{item_id}"])
         if amounts:
-            await _inc_storage_balances(db, "camp", address, character_id, amounts)
+            await _inc_storage_balances(db, "home", address, character_id, amounts)
     if doc is None:
         return None
     return await _build_player(db, address)
@@ -1273,7 +1273,7 @@ def _resolve_tool_for_craft(
             held_candidates = [
                 instance for instance in held_items
                 if instance.get("familyId") == family_id
-                and instance.get("location") in ("backpack", "body", "camp", "saddlepack")
+                and instance.get("location") in ("backpack", "body", "home", "saddlepack")
                 and (_instance_tier(instance) or 0) >= tier
             ]
             if held_candidates:
@@ -1312,7 +1312,7 @@ def _resolve_tool_instances_for_craft(
     When that happens, this keeps pulling the next worst-quality eligible
     instance to make up the shortfall - but ONLY from the SAME source the
     first (worst) one came from (the shared vault pool, or this
-    character's own backpack/body/camp/saddlepack - never both in one
+    character's own backpack/body/home/saddlepack - never both in one
     craft, matching _resolve_tool_for_craft's own vault-checked-first
     priority: if the vault has ANY eligible instance, only the vault is
     ever drawn from for this craft, regardless of what the character
@@ -1351,7 +1351,7 @@ def _resolve_tool_instances_for_craft(
                 candidates = [
                     instance for instance in held_items
                     if instance.get("familyId") == family_id
-                    and instance.get("location") in ("backpack", "body", "camp", "saddlepack")
+                    and instance.get("location") in ("backpack", "body", "home", "saddlepack")
                     and (_instance_tier(instance) or 0) >= tier
                 ]
                 from_pool = False
@@ -2122,7 +2122,7 @@ def _resolve_recipe_direct_raw_totals(family_id: str, count: int, character: dic
                 continue
             family = items_catalog.ITEM_FAMILIES_BY_ID.get(opt["familyId"])
             if family and family.needs_item_definition and any(
-                item.get("familyId") == opt["familyId"] and item.get("location") in ("backpack", "body", "camp", "saddlepack", "crafting")
+                item.get("familyId") == opt["familyId"] and item.get("location") in ("backpack", "body", "home", "saddlepack", "crafting")
                 for item in held_items
             ):
                 chosen = opt
@@ -2206,7 +2206,7 @@ def _resolve_recipe_full_chain_raw_total(
                 continue
             family = items_catalog.ITEM_FAMILIES_BY_ID.get(opt["familyId"])
             if family and family.needs_item_definition and any(
-                item.get("familyId") == opt["familyId"] and item.get("location") in ("backpack", "body", "camp", "saddlepack", "crafting")
+                item.get("familyId") == opt["familyId"] and item.get("location") in ("backpack", "body", "home", "saddlepack", "crafting")
                 for item in held_items
             ):
                 chosen = opt
@@ -2331,8 +2331,8 @@ async def start_craft(
     if character.get("availability", {}).get("inAdventure", False):
         return None
 
-    camp_sc_doc = await db.character_camps.find_one({"address": address, "characterId": character_id})
-    character["gear"]["items"] = character.get("gear", {}).get("items", []) + (camp_sc_doc or {}).get("items", [])
+    home_sc_doc = await db.character_homes.find_one({"address": address, "characterId": character_id})
+    character["gear"]["items"] = character.get("gear", {}).get("items", []) + (home_sc_doc or {}).get("items", [])
 
     # Resolves the WHOLE ingredient tree in one action - for each
     # "processed" ingredient, whatever's already owned is used first, and
@@ -2510,20 +2510,20 @@ async def start_craft(
 
     pool_pull_ids: List[str] = []
     pool_push_instances: List[dict] = []
-    camp_pull_ids_sc: List[str] = []
-    camp_push_instances_sc: List[dict] = []
+    home_pull_ids_sc: List[str] = []
+    home_push_instances_sc: List[dict] = []
     vault_items_sc = vault_sc["items"]
     inventory_items_by_id = {i["instanceId"]: i for i in vault_items_sc}
-    camp_items_by_id_sc = {i["instanceId"]: i for i in (camp_sc_doc or {}).get("items", [])}
+    home_items_by_id_sc = {i["instanceId"]: i for i in (home_sc_doc or {}).get("items", [])}
     for idx, (instance_id, source, _slot_ref, _wear) in enumerate(all_moves):
         if source == "pool":
             pool_pull_ids.append(instance_id)
             src_instance = inventory_items_by_id[instance_id]
             pool_push_instances.append({**src_instance, "location": "crafting", "slotRef": []})
-        elif source == "camp":
-            camp_pull_ids_sc.append(instance_id)
-            src_instance = camp_items_by_id_sc[instance_id]
-            camp_push_instances_sc.append({**src_instance, "location": "crafting", "slotRef": []})
+        elif source == "home":
+            home_pull_ids_sc.append(instance_id)
+            src_instance = home_items_by_id_sc[instance_id]
+            home_push_instances_sc.append({**src_instance, "location": "crafting", "slotRef": []})
         else:
             filt_id = f"moveItem{idx}"
             array_filters.append({f"{filt_id}.instanceId": instance_id, f"{filt_id}.location": source})
@@ -2547,9 +2547,9 @@ async def start_craft(
         push_to_gear = pool_push_instances
     else:
         push_to_gear = []
-    if camp_pull_ids_sc:
-        await _pull_storage_items(db, "camp", address, character_id, camp_pull_ids_sc)
-        push_to_gear.extend(camp_push_instances_sc)
+    if home_pull_ids_sc:
+        await _pull_storage_items(db, "home", address, character_id, home_pull_ids_sc)
+        push_to_gear.extend(home_push_instances_sc)
     if push_to_gear:
         update.setdefault("$push", {})
         update["$push"]["gear.items"] = {"$each": push_to_gear}
@@ -2614,8 +2614,8 @@ async def _finish_craft_step(address: str, character_id: str, step: dict) -> boo
     if character is None:
         return False
 
-    camp_fcs_doc = await db.character_camps.find_one({"address": address, "characterId": character_id})
-    character["gear"]["items"] = character.get("gear", {}).get("items", []) + (camp_fcs_doc or {}).get("items", [])
+    home_fcs_doc = await db.character_homes.find_one({"address": address, "characterId": character_id})
+    character["gear"]["items"] = character.get("gear", {}).get("items", []) + (home_fcs_doc or {}).get("items", [])
 
     resolved = _resolve_recipe_ingredients(
         recipe, tier, {}, {}, character, count,
@@ -2734,7 +2734,7 @@ async def _finish_craft_step(address: str, character_id: str, step: dict) -> boo
     broken_ids: List[str] = []
     surviving: List[dict] = []
     returned_to_vault: List[dict] = []
-    returned_to_camp_fcs: List[dict] = []
+    returned_to_home_fcs: List[dict] = []
     if source == "pool":
         instance_ids = [bi["instanceId"] for bi in borrowed_instances]
         for bi in borrowed_instances:
@@ -2750,14 +2750,14 @@ async def _finish_craft_step(address: str, character_id: str, step: dict) -> boo
             {"gear.items": {"$elemMatch": {"instanceId": iid, "location": "crafting"}}}
             for iid in instance_ids
         ]
-    elif source == "camp":
+    elif source == "home":
         instance_ids = [bi["instanceId"] for bi in borrowed_instances]
         for bi in borrowed_instances:
             iid = bi["instanceId"]
             wear = bi.get("wear", count)
             new_quality = held_by_id[iid].get("quality", 0) - wear
             if new_quality > 0:
-                returned_to_camp_fcs.append({**held_by_id[iid], "location": "camp", "slotRef": [], "quality": new_quality})
+                returned_to_home_fcs.append({**held_by_id[iid], "location": "home", "slotRef": [], "quality": new_quality})
             else:
                 broken_ids.append(iid)
         update["$pull"] = {"gear.items": {"instanceId": {"$in": instance_ids}}}
@@ -2811,15 +2811,15 @@ async def _finish_craft_step(address: str, character_id: str, step: dict) -> boo
             {"$push": {"items": {"$each": returned_to_vault}}},
             upsert=True,
         )
-    if returned_to_camp_fcs:
-        await _push_storage_items(db, "camp", address, character_id, returned_to_camp_fcs)
+    if returned_to_home_fcs:
+        await _push_storage_items(db, "home", address, character_id, returned_to_home_fcs)
 
     # A backpack/body-sourced release with BOTH a broken and a surviving
     # instance needed the $pull above to go out on its own (same reasoning
     # as finish_craft's own top-level release below) - restore the
     # survivor(s) now, in a second call, with nothing left in the array to
     # conflict with.
-    if source not in ("pool", "camp") and broken_ids and surviving:
+    if source not in ("pool", "home") and broken_ids and surviving:
         survivor_array_filters: List[Dict] = []
         survivor_set_ops: Dict = {}
         survivor_inc_ops: Dict[str, int] = {}
@@ -2942,8 +2942,8 @@ async def finish_craft(address: str, character_id: str) -> Optional[Player]:
     count = active.get("count", 1)
     recipe, output_row, output_is_processed = _validate_recipe(family_id, tier)
 
-    camp_fc_doc = await db.character_camps.find_one({"address": address, "characterId": character_id})
-    character["gear"]["items"] = character.get("gear", {}).get("items", []) + (camp_fc_doc or {}).get("items", [])
+    home_fc_doc = await db.character_homes.find_one({"address": address, "characterId": character_id})
+    character["gear"]["items"] = character.get("gear", {}).get("items", []) + (home_fc_doc or {}).get("items", [])
 
     # Everything needed should already be sitting on the character (see
     # start_craft) - resolved purely against the character's own vault now,
@@ -3128,7 +3128,7 @@ async def finish_craft(address: str, character_id: str) -> Optional[Player]:
     broken_ids: List[str] = []
     surviving: List[dict] = []
     returned_fc2: List[dict] = []
-    returned_to_camp: List[dict] = []
+    returned_to_home: List[dict] = []
     if source == "pool":
         # $pull the borrowed instance(s) off the character. A survivor
         # (quality still above 0 after ITS OWN recorded wear, see
@@ -3152,15 +3152,15 @@ async def finish_craft(address: str, character_id: str) -> Optional[Player]:
             {"gear.items": {"$elemMatch": {"instanceId": iid, "location": "crafting"}}}
             for iid in instance_ids
         ]
-    elif source == "camp":
+    elif source == "home":
         instance_ids = [bi["instanceId"] for bi in borrowed_instances]
-        returned_to_camp: List[dict] = []
+        returned_to_home: List[dict] = []
         for bi in borrowed_instances:
             iid = bi["instanceId"]
             wear = bi.get("wear", count)
             new_quality = held_by_id[iid].get("quality", 0) - wear
             if new_quality > 0:
-                returned_to_camp.append({**held_by_id[iid], "location": "camp", "slotRef": [], "quality": new_quality})
+                returned_to_home.append({**held_by_id[iid], "location": "home", "slotRef": [], "quality": new_quality})
             else:
                 broken_ids.append(iid)
         update["$pull"] = {"gear.items": {"instanceId": {"$in": instance_ids}}}
@@ -3233,7 +3233,7 @@ async def finish_craft(address: str, character_id: str) -> Optional[Player]:
     # instance needed the $pull above to go out on its own (see the
     # comment there) - restore the survivor(s) now, in a second call, with
     # nothing left in the array to conflict with.
-    if source not in ("pool", "camp") and broken_ids and surviving:
+    if source not in ("pool", "home") and broken_ids and surviving:
         survivor_array_filters: List[Dict] = []
         survivor_set_ops: Dict = {}
         survivor_inc_ops: Dict[str, int] = {}
@@ -3254,9 +3254,9 @@ async def finish_craft(address: str, character_id: str) -> Optional[Player]:
         if doc is None:
             return None
 
-    # Return surviving camp-sourced tools to character_camps.
-    if source == "camp" and returned_to_camp:
-        await _push_storage_items(db, "camp", address, character_id, returned_to_camp)
+    # Return surviving home-sourced tools to character_homes.
+    if source == "home" and returned_to_home:
+        await _push_storage_items(db, "home", address, character_id, returned_to_home)
 
     # Return tool to vault and credit output to vault after the players update.
     if tool_transfer_id is not None:
@@ -3304,12 +3304,12 @@ async def equip_item(address: str, character_id: str, instance_id: str, slots: L
     family's equip_slots groups (e.g. both hands together for a two-handed
     item, or a single named slot for an ordinary one - see items_catalog.
     ItemFamily.equip_slots). Returns None if the instance isn't
-    found backpacked/camped/saddlepacked/equipped on this character (a
+    found backpacked/home-stored/saddlepacked/equipped on this character (a
     location:"crafting" one is borrowed for an in-progress craft and can't
     be touched until it's released - see start_craft/finish_craft), or if
     any of `slots` is already occupied by another equipped instance.
 
-    Source location:"body" is allowed too - not just backpack/camp/
+    Source location:"body" is allowed too - not just backpack/home/
     saddlepack - so this same function doubles as the reslot action: moving
     an already-equipped instance to a DIFFERENT one of its own family's
     equip_slots groups (swap hands, move a dagger from Left Hand to Girdle,
@@ -3324,7 +3324,7 @@ async def equip_item(address: str, character_id: str, instance_id: str, slots: L
     if doc is None:
         return None
     character = doc
-    # "camp"/"saddlepack" count as equippable sources too - unequip_item can
+    # "home"/"saddlepack" count as equippable sources too - unequip_item can
     # leave an instance there, and there's no other path back to "body" for
     # it, so it must be re-equippable directly from either. "body" itself is
     # also allowed - see the reslot note above.
@@ -3336,9 +3336,9 @@ async def equip_item(address: str, character_id: str, instance_id: str, slots: L
         None,
     )
     if instance is None:
-        camp_items_eq = await _get_storage_items(db, "camp", address, character_id)
+        home_items_eq = await _get_storage_items(db, "home", address, character_id)
         instance = next(
-            (i for i in camp_items_eq if i["instanceId"] == instance_id and i.get("location") == "camp"),
+            (i for i in home_items_eq if i["instanceId"] == instance_id and i.get("location") == "home"),
             None,
         )
     if instance is None:
@@ -3355,11 +3355,11 @@ async def equip_item(address: str, character_id: str, instance_id: str, slots: L
     existing_equipped: Optional[dict] = None
     if instance is None:
         balance_id = instance_id
-        buckets = ("backpack", "camp", "rest", "saddlepack", "cart")
+        buckets = ("backpack", "home", "rest", "saddlepack", "cart")
         if from_location and from_location in buckets:
             buckets = (from_location,) + tuple(b for b in buckets if b != from_location)
         for bucket in buckets:
-            if bucket in ("camp", "rest"):
+            if bucket in ("home", "rest"):
                 stor_doc = await db[STORAGE_COLLECTIONS[bucket]].find_one({"address": address, "characterId": character_id})
                 qty = (stor_doc or {}).get("itemBalances", {}).get(balance_id, 0)
                 if qty > 0:
@@ -3432,7 +3432,7 @@ async def equip_item(address: str, character_id: str, instance_id: str, slots: L
     # One backpack (and separately, one saddlepack) per character, total -
     # see equip_item_from_pool's identical check for why. Only relevant
     # when this instance is actually MOVING onto the body from somewhere
-    # else (camp/backpack/saddlepack) - a pure body->body reslot
+    # else (home/backpack/saddlepack) - a pure body->body reslot
     # (source_location == "body") is the SAME already-worn one changing
     # slots, never a second one appearing, so that case is exempt.
     if family.family_id in ("backpack", "saddlepack", "cart") and source_location != "body":
@@ -3444,15 +3444,15 @@ async def equip_item(address: str, character_id: str, instance_id: str, slots: L
             None,
         )
         if other is None:
-            camp_items_chk = await _get_storage_items(db, "camp", address, character_id)
+            home_items_chk = await _get_storage_items(db, "home", address, character_id)
             other = next(
-                (i for i in camp_items_chk
+                (i for i in home_items_chk
                  if i.get("familyId") == family.family_id
                  and i["instanceId"] != instance_id),
                 None,
             )
         if other:
-            where = "equipped" if other.get("location") == "body" else "in your camp"
+            where = "equipped" if other.get("location") == "body" else "in your home"
             raise ValueError(f"You already have a {family.family_id} {where}")
 
     # Replaces the whole matched array element in one $set, rather than two
@@ -3469,7 +3469,7 @@ async def equip_item(address: str, character_id: str, instance_id: str, slots: L
             if it["instanceId"] == existing_equipped["instanceId"]
         )
         qty_path = f"gear.items.{item_idx}.quantity"
-        if balance_bucket in ("camp", "rest"):
+        if balance_bucket in ("home", "rest"):
             await _inc_storage_balances(db, balance_bucket, address, character_id, {balance_id: -equip_qty})
             doc = await db.characters.find_one_and_update(
                 {"address": address, "id": character_id},
@@ -3489,7 +3489,7 @@ async def equip_item(address: str, character_id: str, instance_id: str, slots: L
                 return_document=ReturnDocument.AFTER,
             )
     elif is_balance_equip:
-        if balance_bucket in ("camp", "rest"):
+        if balance_bucket in ("home", "rest"):
             await _inc_storage_balances(db, balance_bucket, address, character_id, {balance_id: -equip_qty})
             doc = await db.characters.find_one_and_update(
                 {"address": address, "id": character_id,
@@ -3587,7 +3587,7 @@ async def equip_item(address: str, character_id: str, instance_id: str, slots: L
                 array_filters=[{"item.instanceId": instance_id, "item.location": source_location}],
                 return_document=ReturnDocument.AFTER,
             )
-    elif source_location in ("camp", "rest"):
+    elif source_location in ("home", "rest"):
         await _pull_storage_items(db, source_location, address, character_id, [instance_id])
         doc = await db.characters.find_one_and_update(
             {
@@ -3711,11 +3711,11 @@ async def equip_item_from_pool(address: str, character_id: str, instance_id: str
                 None,
             )
             if existing is None:
-                camp_items_efp = await _get_storage_items(db, "camp", address, character_id)
+                home_items_efp = await _get_storage_items(db, "home", address, character_id)
                 existing = next(
-                    (i for i in camp_items_efp if i.get("familyId") == container_fam), None,
+                    (i for i in home_items_efp if i.get("familyId") == container_fam), None,
                 )
-            where = "equipped" if existing and existing.get("location") == "body" else "in your camp"
+            where = "equipped" if existing and existing.get("location") == "body" else "in your home"
             raise ValueError(f"You already have a {container_fam} {where}")
 
     equipped_instance = {**instance, "location": "body", "slotRef": slots}
@@ -3778,12 +3778,12 @@ async def unequip_item(
 
     `destination` picks where it lands:
     - None (default) - automatic, based on Character.in_adventure
-      (player-toggled - see set_in_adventure): "camp" while True (still
+      (player-toggled - see set_in_adventure): "home" while True (still
       this character's own, but NOT counted against backpack capacity -
       there's no shared vault to send it back to mid-adventure), or the
       player's shared vault (location:"pool") while False - safely at
       base, there's no reason to keep it personally held at all.
-    - "backpack" / "saddlepack" - skips the vault/camp choice entirely,
+    - "backpack" / "saddlepack" - skips the vault/home choice entirely,
       landing straight in one of this character's own carry locations
       instead, regardless of in_adventure. Raises ValueError if the
       character doesn't actually have that container equipped (a worn
@@ -3799,16 +3799,16 @@ async def unequip_item(
     Unequipping a family:"backpack" or family:"saddlepack" instance
     straight to the shared vault (target_location "pool") also empties the
     corresponding storage bucket into the vault first, in the same update.
-    Unequipping either container to "camp" cascades its contents to camp
-    too (gear.items location:"backpack/saddlepack" → "camp",
+    Unequipping either container to "home" cascades its contents to home
+    too (gear.items location:"backpack/saddlepack" → "home",
     gear.itemBalances.backpack/saddlepack merged into
-    gear.itemBalances.camp) so items land at camp
+    gear.itemBalances.home) so items land at home
     individually rather than staying locked inside an unequipped container.
 
     Unequipping a mount or companion (slotRef contains "Mount"/"Companion")
     also cascades every item in its sub-slots (Bridle, Saddle, Barding,
     Saddlepack, Hitch, Charm) to the same destination - vault when not in
-    adventure, camp when in adventure.  If a saddlepack or cart is among
+    adventure, home when in adventure.  If a saddlepack or cart is among
     those sub-items its own storage bucket is emptied the same way as if it
     were unequipped directly.
     """
@@ -3848,7 +3848,7 @@ async def unequip_item(
         if items_catalog.cart_slots_used(character) + cart_cost > cart_cap:
             raise ValueError("Cart is full")
 
-    target_location = destination or ("camp" if character.get("availability", {}).get("inAdventure", False) else "pool")
+    target_location = destination or ("home" if character.get("availability", {}).get("inAdventure", False) else "pool")
 
     # Which sub-slots to cascade depends on what's being unequipped:
     # mount strips mount gear, companion strips companion gear.
@@ -3952,13 +3952,13 @@ async def unequip_item(
                     upsert=True,
                 )
     else:
-        # "camp", "backpack", or "saddlepack" - all three stay on this
+        # "home", "backpack", or "saddlepack" - all three stay on this
         # character, just changing location/slotRef.
         moved_instance = {**instance, "location": target_location, "slotRef": []}
 
-        # Container unequipped to camp: cascade its contents to camp too.
-        # Mount/companion unequipped to camp: cascade all sub-slot items to camp.
-        if (instance["familyId"] in ("backpack", "saddlepack", "cart") or is_mount_or_companion) and target_location in ("camp", "rest"):
+        # Container unequipped to home: cascade its contents to home too.
+        # Mount/companion unequipped to home: cascade all sub-slot items to home.
+        if (instance["familyId"] in ("backpack", "saddlepack", "cart") or is_mount_or_companion) and target_location in ("home", "rest"):
             stor = target_location
             gear = character.get("gear", {})
             sub_slot_ids: set[str] = set()
@@ -4018,7 +4018,7 @@ async def unequip_item(
             total_qty = instance.get("quantity", 1)
             unequip_qty = min(amount, total_qty) if amount is not None else total_qty
             leftover = total_qty - unequip_qty
-            if target_location in ("camp", "rest"):
+            if target_location in ("home", "rest"):
                 if leftover > 0:
                     item_idx = next(
                         i for i, it in enumerate(character.get("gear", {}).get("items", []))
@@ -4060,7 +4060,7 @@ async def unequip_item(
                         },
                         return_document=ReturnDocument.AFTER,
                     )
-        elif target_location in ("camp", "rest"):
+        elif target_location in ("home", "rest"):
             doc = await db.characters.find_one_and_update(
                 {"address": address, "id": character_id, "gear.items": {"$elemMatch": {"instanceId": instance_id, "location": "body"}}},
                 {"$pull": {"gear.items": {"instanceId": instance_id}}},
@@ -4143,7 +4143,7 @@ async def set_resting(
     """Toggle resting state for a character that is currently in adventure.
 
     When starting rest, ensures a ``character_resting`` doc exists (with
-    the chosen ``campType``). When stopping rest, clears the flag but
+    the chosen ``homeType``). When stopping rest, clears the flag but
     leaves the resting doc in place (items may still be there — the doc
     is only deleted when the adventure itself ends).
 
@@ -4177,7 +4177,7 @@ async def set_resting(
                     "characterId": character_id,
                     "items": [],
                     "itemBalances": {},
-                    "campType": location or "cave",
+                    "homeType": location or "cave",
                 }},
                 upsert=True,
             )
@@ -4194,7 +4194,7 @@ async def check_out_item_instance(
     """
     Move one item instance from `address`'s shared pool (vault.items,
     location:"pool") onto one of their characters' own carry location -
-    "backpack" (default), "saddlepack", or "camp".
+    "backpack" (default), "saddlepack", or "home".
 
     Backpack and saddlepack are capacity-gated: raises ValueError if the
     character has no container equipped (capacity 0) or the container
@@ -4224,7 +4224,7 @@ async def check_out_item_instance(
     if instance is None:
         return None
 
-    if destination != "camp":
+    if destination != "home":
         cost = items_catalog.slot_cost_for_family(instance["familyId"])
         if destination == "cart":
             capacity = items_catalog.cart_capacity(character)
@@ -4255,8 +4255,8 @@ async def check_out_item_instance(
         {"$set": {"items": new_vault_items_coii}},
         upsert=True,
     )
-    if destination == "camp":
-        await _push_storage_items(db, "camp", address, character_id, [moved_instance])
+    if destination == "home":
+        await _push_storage_items(db, "home", address, character_id, [moved_instance])
     else:
         doc = await db.characters.find_one_and_update(
             {"address": address, "id": character_id},
@@ -4271,9 +4271,9 @@ async def check_out_item_instance(
 async def check_in_item_instance(address: str, character_id: str, instance_id: str) -> Optional[Player]:
     """
     The reverse of check_out_item_instance: move one item instance from a
-    character's backpack, saddlepack, or camp (see unequip_item) back into the shared
+    character's backpack, saddlepack, or home (see unequip_item) back into the shared
     pool. Never capacity-gated (freeing space always succeeds). Returns
-    None if the instance isn't found backpacked/camped on this character.
+    None if the instance isn't found backpacked/home-stored on this character.
 
     Checking in a family:"backpack" instance also empties this character's
     whole backpack storage bucket (gear.items location:"backpack",
@@ -4290,7 +4290,7 @@ async def check_in_item_instance(address: str, character_id: str, instance_id: s
     if doc is None:
         return None
     character = doc
-    from_camp = False
+    from_home = False
     instance = next(
         (
             i for i in character.get("gear", {}).get("items", [])
@@ -4299,13 +4299,13 @@ async def check_in_item_instance(address: str, character_id: str, instance_id: s
         None,
     )
     if instance is None:
-        camp_items_cii = await _get_storage_items(db, "camp", address, character_id)
+        home_items_cii = await _get_storage_items(db, "home", address, character_id)
         instance = next(
-            (i for i in camp_items_cii if i["instanceId"] == instance_id and i.get("location") == "camp"),
+            (i for i in home_items_cii if i["instanceId"] == instance_id and i.get("location") == "home"),
             None,
         )
         if instance is not None:
-            from_camp = True
+            from_home = True
     if instance is None:
         return None
 
@@ -4329,8 +4329,8 @@ async def check_in_item_instance(address: str, character_id: str, instance_id: s
                     vault_balance_inc_cii[item_id] = vault_balance_inc_cii.get(item_id, 0) + qty
             clear_sets[f"gear.itemBalances.{bucket}"] = {}
 
-    if from_camp:
-        await _pull_storage_items(db, "camp", address, character_id, [instance_id])
+    if from_home:
+        await _pull_storage_items(db, "home", address, character_id, [instance_id])
         gear_pull_ids = [iid for iid in pull_ids if iid != instance_id]
         if gear_pull_ids or clear_sets:
             update_cii: Dict = {}
@@ -4369,7 +4369,7 @@ async def check_in_item_instance(address: str, character_id: str, instance_id: s
 
 
 # ---------------------------------------------------------------------------
-# Generic move functions — work for camp, rest, and all container pairs
+# Generic move functions — work for home, rest, and all container pairs
 # ---------------------------------------------------------------------------
 
 async def move_storage_item_to_container(
@@ -4767,7 +4767,7 @@ async def check_out_item_balance(address: str, character_id: str, item_id: str, 
     if vault_coib["itemBalances"].get(item_id, 0) < amount:
         return None
     await _inc_vault_itembalances(db, address, {item_id: -amount})
-    await _inc_storage_balances(db, "camp", address, character_id, {item_id: amount})
+    await _inc_storage_balances(db, "home", address, character_id, {item_id: amount})
     doc = await db.characters.find_one({"address": address, "id": character_id})
     if doc is None:
         return None
@@ -4783,11 +4783,11 @@ async def check_out_item_balance_to_backpack(
     (gear.itemBalances.backpack), in one atomic, all-or-nothing hop -
     capacity checked BEFORE anything moves. This is the "Move to backpack"
     action's own endpoint (see InventoryTab's moveToBackpack), deliberately
-    NOT the same as chaining check_out_item_balance (vault -> camp,
-    uncapped) with load_item_balance_to_backpack (camp -> backpack,
+    NOT the same as chaining check_out_item_balance (vault -> home,
+    uncapped) with load_item_balance_to_backpack (home -> backpack,
     capacity-gated): if the second hop failed, the item was left stranded
-    in camp instead of the backpack the player actually clicked for, with
-    no way back to the vault in one click either. Dropping into camp on a
+    in home instead of the backpack the player actually clicked for, with
+    no way back to the vault in one click either. Dropping into home on a
     full backpack is deliberately ONLY something recycling does (see
     _salvage_resource_updates) - a normal move either lands in the
     backpack whole, or doesn't move at all.
@@ -4948,23 +4948,23 @@ async def check_out_item_balance_to_cart(
 
 
 async def check_in_item_balance(
-    address: str, character_id: str, item_id: str, amount: int = 1, location: str = "camp"
+    address: str, character_id: str, item_id: str, amount: int = 1, location: str = "home"
 ) -> Optional[Player]:
     """
-    The reverse of check_out_item_balance - `location` ("camp",
+    The reverse of check_out_item_balance - `location` ("home",
     "backpack", "saddlepack", or "cart") picks which bucket to deduct
-    from. Camp lives in the character_camps collection; the others are
+    from. Camp lives in the character_homes collection; the others are
     embedded in the player doc.
     """
     if amount <= 0:
         raise ValueError("amount must be positive")
     db = get_database()
-    if location == "camp":
-        # Check camp has enough, decrement it, then increment vault.
-        camp_doc = await db.character_camps.find_one({"address": address, "characterId": character_id})
-        if not camp_doc or camp_doc.get("itemBalances", {}).get(item_id, 0) < amount:
+    if location == "home":
+        # Check home has enough, decrement it, then increment vault.
+        home_doc = await db.character_homes.find_one({"address": address, "characterId": character_id})
+        if not home_doc or home_doc.get("itemBalances", {}).get(item_id, 0) < amount:
             return None
-        await _inc_storage_balances(db, "camp", address, character_id, {item_id: -amount})
+        await _inc_storage_balances(db, "home", address, character_id, {item_id: -amount})
         await _inc_vault_itembalances(db, address, {item_id: amount})
         doc = await db.characters.find_one({"address": address, "id": character_id})
     else:
@@ -5045,7 +5045,7 @@ async def destroy_item_balance(address: str, character_id: str, item_id: str, am
 async def destroy_character_item_instance(address: str, character_id: str, instance_id: str) -> Optional[Player]:
     """
     Permanently remove one item instance from `character_id`'s own backpack,
-    body, or camp (not "crafting", borrowed for an in-progress craft) -
+    body, or home (not "crafting", borrowed for an in-progress craft) -
     character-owned counterpart to destroy_item_instance (which is vault-
     pool-only). The zero-recovery fallback the character-side item popup
     reaches for when salvage_item_instance(from_vault=False) finds no
@@ -5061,24 +5061,24 @@ async def destroy_character_item_instance(address: str, character_id: str, insta
         return_document=ReturnDocument.AFTER,
     )
     if doc is None:
-        camp_items_dci = await _get_storage_items(db, "camp", address, character_id)
-        found = any(i["instanceId"] == instance_id for i in camp_items_dci)
+        home_items_dci = await _get_storage_items(db, "home", address, character_id)
+        found = any(i["instanceId"] == instance_id for i in home_items_dci)
         if not found:
             return None
-        await _pull_storage_items(db, "camp", address, character_id, [instance_id])
+        await _pull_storage_items(db, "home", address, character_id, [instance_id])
     return await _build_player(db, address)
 
 
 async def destroy_character_item_balance(address: str, character_id: str, item_id: str, amount: int = 1) -> Optional[Player]:
     """Permanently remove `amount` of `item_id` from `character_id`'s own
-    camp itemBalances (character_camps collection)."""
+    home itemBalances (character_homes collection)."""
     if amount <= 0:
         raise ValueError("amount must be positive")
     db = get_database()
-    camp_doc = await db.character_camps.find_one({"address": address, "characterId": character_id})
-    if not camp_doc or camp_doc.get("itemBalances", {}).get(item_id, 0) < amount:
+    home_doc = await db.character_homes.find_one({"address": address, "characterId": character_id})
+    if not home_doc or home_doc.get("itemBalances", {}).get(item_id, 0) < amount:
         return None
-    await _inc_storage_balances(db, "camp", address, character_id, {item_id: -amount})
+    await _inc_storage_balances(db, "home", address, character_id, {item_id: -amount})
     doc = await db.characters.find_one({"address": address, "id": character_id})
     if doc is None:
         return None
@@ -5090,7 +5090,7 @@ def _max_move_amount(existing: int, stack_size: int, slot_cost: int, free_slots:
     """
     Same math as check_out_resource_to_backpack's own marginal-slot check,
     solved for the largest amount instead of checked against one fixed
-    amount - see move_all_camp_to_backpack, the only caller. Capped at
+    amount - see move_all_home_to_backpack, the only caller. Capped at
     `available` and never negative; 0 if there's no room for even one
     more unit.
     """
@@ -5103,11 +5103,11 @@ def _max_move_amount(existing: int, stack_size: int, slot_cost: int, free_slots:
 
 
 async def move_all_storage_to_backpack(
-    address: str, character_id: str, storage_type: str = "camp",
+    address: str, character_id: str, storage_type: str = "home",
 ) -> Optional[Player]:
     """
     Best-effort bulk move: everything currently sitting in a character's
-    storage (camp or rest) moves into their backpack, as much as fits.
+    storage (home or rest) moves into their backpack, as much as fits.
     Whatever doesn't fit stays in storage untouched.
     """
     _check_storage_type(storage_type)
@@ -5174,10 +5174,10 @@ async def move_all_storage_to_backpack(
 
 
 async def move_all_storage_to_bags(
-    address: str, character_id: str, storage_type: str = "camp",
+    address: str, character_id: str, storage_type: str = "home",
 ) -> Optional[Player]:
     """
-    Best-effort bulk move: everything in storage (camp or rest) moves into
+    Best-effort bulk move: everything in storage (home or rest) moves into
     bags (cart first, then saddlepack, then backpack). Whatever doesn't
     fit stays in storage.
     """
@@ -5295,24 +5295,24 @@ async def move_all_storage_to_bags(
 _CONTAINER_FAMILIES = frozenset({"backpack", "saddlepack", "cart"})
 
 
-def _recyclable_camp_entries(character: dict):
+def _recyclable_home_entries(character: dict):
     """
-    Yields (kind, id, entry, count, preselected) for every camp item
-    instance (location:"camp") and itemBalances.camp entry whose family
+    Yields (kind, id, entry, count, preselected) for every home item
+    instance (location:"home") and itemBalances.home entry whose family
     has a recipe to salvage. Also yields the contents of containers
-    (backpack/saddlepack/cart) sitting in camp, plus the containers
+    (backpack/saddlepack/cart) sitting in home, plus the containers
     themselves.
     """
     gear = character.get("gear", {})
 
-    # Which containers are sitting in camp right now?
-    camp_containers: list[str] = []
+    # Which containers are sitting in home right now?
+    home_containers: list[str] = []
     for instance in gear.get("items", []):
-        if instance.get("location") == "camp" and instance.get("familyId") in _CONTAINER_FAMILIES:
-            camp_containers.append(instance["familyId"])
+        if instance.get("location") == "home" and instance.get("familyId") in _CONTAINER_FAMILIES:
+            home_containers.append(instance["familyId"])
 
     for instance in gear.get("items", []):
-        if instance.get("location") != "camp":
+        if instance.get("location") != "home":
             continue
         entry = items_catalog.ITEM_CATALOG_ENTRIES_BY_ID.get(instance["itemId"])
         if entry is None:
@@ -5325,8 +5325,8 @@ def _recyclable_camp_entries(character: dict):
             continue
         yield "instance", instance["instanceId"], entry, 1, True
 
-    # Contents of containers sitting in camp.
-    for container_fam in camp_containers:
+    # Contents of containers sitting in home.
+    for container_fam in home_containers:
         for instance in gear.get("items", []):
             if instance.get("location") != container_fam:
                 continue
@@ -5343,7 +5343,7 @@ def _recyclable_camp_entries(character: dict):
             yield "balance", item_id, entry, qty, True
 
     # Camp's own balances (not inside a container).
-    for item_id, qty in gear.get("itemBalances", {}).get("camp", {}).items():
+    for item_id, qty in gear.get("itemBalances", {}).get("home", {}).items():
         if qty <= 0:
             continue
         entry = items_catalog.ITEM_CATALOG_ENTRIES_BY_ID.get(item_id)
@@ -5352,12 +5352,12 @@ def _recyclable_camp_entries(character: dict):
         yield "balance", item_id, entry, qty, True
 
 
-async def preview_camp_salvage(
+async def preview_home_salvage(
     address: str, character_id: str, selected_ids: Optional[List[str]] = None
 ) -> Optional[List[Dict[str, object]]]:
     """
     Read-only: every recyclable thing currently sitting in a character's
-    own camp (see _recyclable_camp_entries), one row per distinct thing,
+    own home (see _recyclable_home_entries), one row per distinct thing,
     with what recycling ALL of it would hand back.
 
     When selected_ids is provided, only items whose id is in the set are
@@ -5369,11 +5369,11 @@ async def preview_camp_salvage(
     if doc is None:
         return None
     character = doc
-    camp_preview_doc = await db.character_camps.find_one({"address": address, "characterId": character_id})
+    home_preview_doc = await db.character_homes.find_one({"address": address, "characterId": character_id})
     character.setdefault("gear", {})
     character["gear"].setdefault("itemBalances", {})
-    character["gear"]["itemBalances"]["camp"] = (camp_preview_doc or {}).get("itemBalances", {})
-    character["gear"]["items"] = character["gear"].get("items", []) + (camp_preview_doc or {}).get("items", [])
+    character["gear"]["itemBalances"]["home"] = (home_preview_doc or {}).get("itemBalances", {})
+    character["gear"]["items"] = character["gear"].get("items", []) + (home_preview_doc or {}).get("items", [])
 
     # When filtering by selection, expand selected containers to include
     # their contents: find which container families are selected, then
@@ -5389,7 +5389,7 @@ async def preview_camp_salvage(
 
     rows: List[Dict[str, object]] = []
     instances_by_id = {i["instanceId"]: i for i in character.get("gear", {}).get("items", [])}
-    for kind, entry_id, entry, count, preselected in _recyclable_camp_entries(character):
+    for kind, entry_id, entry, count, preselected in _recyclable_home_entries(character):
         if allow_ids is not None:
             if entry_id not in allow_ids:
                 # Check if this entry lives inside a selected container
@@ -5426,17 +5426,17 @@ async def preview_camp_salvage(
     return rows
 
 
-async def salvage_camp(address: str, character_id: str, selected_ids: List[str]) -> Optional[Player]:
+async def salvage_home(address: str, character_id: str, selected_ids: List[str]) -> Optional[Player]:
     """
-    The chopping block's own bulk action (see CampView.tsx): salvages
-    every selected camp item instance/itemBalance entry (ids from
-    preview_camp_salvage's own rows) at once, crediting ALL the recovered
-    raw/processed materials straight into gear.resources.camp - never the
+    The chopping block's own bulk action (see HomeView.tsx): salvages
+    every selected home item instance/itemBalance entry (ids from
+    preview_home_salvage's own rows) at once, crediting ALL the recovered
+    raw/processed materials straight into gear.resources.home - never the
     backpack (unlike a normal single-item salvage's own
-    _salvage_resource_updates fallback chain), since dropping it in camp
-    is the whole point of a camp-side chopping block. Computed once as a
-    full replacement of gear.items/itemBalances.camp/resources.camp in a
-    single $set (same reasoning as move_all_camp_to_backpack's own
+    _salvage_resource_updates fallback chain), since dropping it in home
+    is the whole point of a home-side chopping block. Computed once as a
+    full replacement of gear.items/itemBalances.home/resources.home in a
+    single $set (same reasoning as move_all_home_to_backpack's own
     docstring) rather than per-id calls. An id that no longer qualifies
     (already gone, or no longer has a recipe) is silently skipped rather
     than failing the whole batch. Returns None if nothing in
@@ -5451,20 +5451,20 @@ async def salvage_camp(address: str, character_id: str, selected_ids: List[str])
     if doc is None:
         return None
     character = doc
-    camp_sc_doc = await db.character_camps.find_one({"address": address, "characterId": character_id})
+    home_sc_doc = await db.character_homes.find_one({"address": address, "characterId": character_id})
     character.setdefault("gear", {})
     character["gear"].setdefault("itemBalances", {})
-    character["gear"]["itemBalances"]["camp"] = (camp_sc_doc or {}).get("itemBalances", {})
-    camp_items_sc = (camp_sc_doc or {}).get("items", [])
-    camp_item_iids = {i["instanceId"] for i in camp_items_sc}
-    character["gear"]["items"] = character["gear"].get("items", []) + camp_items_sc
+    character["gear"]["itemBalances"]["home"] = (home_sc_doc or {}).get("itemBalances", {})
+    home_items_sc = (home_sc_doc or {}).get("items", [])
+    home_item_iids = {i["instanceId"] for i in home_items_sc}
+    character["gear"]["items"] = character["gear"].get("items", []) + home_items_sc
 
     salvaged_instance_ids: set = set()
     salvaged_balance_ids: set = set()
     recovered_totals: Dict[str, int] = {}
 
     instances_by_id = {i["instanceId"]: i for i in character.get("gear", {}).get("items", [])}
-    for kind, entry_id, entry, count, _preselected in _recyclable_camp_entries(character):
+    for kind, entry_id, entry, count, _preselected in _recyclable_home_entries(character):
         if entry_id not in selected:
             continue
         condition = _instance_condition(instances_by_id.get(entry_id), entry) if kind == "instance" else "new"
@@ -5484,15 +5484,15 @@ async def salvage_camp(address: str, character_id: str, selected_ids: List[str])
         return None
 
     gear = character.get("gear", {})
-    salvaged_from_camp = salvaged_instance_ids & camp_item_iids
-    salvaged_from_gear = salvaged_instance_ids - camp_item_iids
+    salvaged_from_home = salvaged_instance_ids & home_item_iids
+    salvaged_from_gear = salvaged_instance_ids - home_item_iids
 
     new_gear_items = [
         instance for instance in gear.get("items", [])
-        if instance["instanceId"] not in camp_item_iids
+        if instance["instanceId"] not in home_item_iids
         and not (instance.get("location") in ("backpack", "saddlepack", "cart") and instance["instanceId"] in salvaged_from_gear)
     ]
-    new_camp_items_sc = [i for i in camp_items_sc if i["instanceId"] not in salvaged_from_camp]
+    new_home_items_sc = [i for i in home_items_sc if i["instanceId"] not in salvaged_from_home]
 
     update_sets: Dict[str, object] = {}
     for bucket in ("backpack", "saddlepack", "cart"):
@@ -5506,13 +5506,13 @@ async def salvage_camp(address: str, character_id: str, selected_ids: List[str])
         if new_balances != old_balances:
             update_sets[f"gear.itemBalances.{bucket}"] = new_balances
 
-    old_camp = character["gear"]["itemBalances"].get("camp", {})
-    new_camp_balances = {
-        item_id: qty for item_id, qty in old_camp.items()
+    old_home = character["gear"]["itemBalances"].get("home", {})
+    new_home_balances = {
+        item_id: qty for item_id, qty in old_home.items()
         if item_id not in salvaged_balance_ids and qty > 0
     }
     for rid, qty in recovered_totals.items():
-        new_camp_balances[rid] = new_camp_balances.get(rid, 0) + qty
+        new_home_balances[rid] = new_home_balances.get(rid, 0) + qty
 
     sets: Dict[str, object] = {"gear.items": new_gear_items}
     sets.update(update_sets)
@@ -5523,8 +5523,8 @@ async def salvage_camp(address: str, character_id: str, selected_ids: List[str])
     )
     if doc is None:
         return None
-    await _set_storage_items(db, "camp", address, character_id, new_camp_items_sc)
-    await _set_storage_balances(db, "camp", address, character_id, new_camp_balances)
+    await _set_storage_items(db, "home", address, character_id, new_home_items_sc)
+    await _set_storage_balances(db, "home", address, character_id, new_home_balances)
     return await _build_player(db, address)
 
 
@@ -5681,14 +5681,14 @@ async def bulk_move_vault(
     Move multiple items from the player's shared vault to a destination
     in one DB operation.
 
-    destination: "backpack" | "saddlepack" | "cart" | "camp"
+    destination: "backpack" | "saddlepack" | "cart" | "home"
 
     instance_ids: list of instanceIds from vault.items
     balance_entries: list of {"id": item_id, "amount": int} from vault.itemBalances
 
     For backpack/saddlepack/cart: backpackable items fill the container up to
     capacity; anything that doesn't fit (or isn't backpackable) overflows
-    into camp. For camp: everything goes straight to camp.
+    into home. For home: everything goes straight to home.
     """
     db = get_database()
     doc = await db.characters.find_one({"address": address, "id": character_id})
@@ -5703,7 +5703,7 @@ async def bulk_move_vault(
     vault_items_by_iid = {i["instanceId"]: i for i in vault_items}
     vault_balances = vault_bmv["itemBalances"]
 
-    capacity_gated = destination != "camp"
+    capacity_gated = destination != "home"
     remaining = 0
     if capacity_gated:
         if destination == "backpack":
@@ -5718,9 +5718,9 @@ async def bulk_move_vault(
         remaining = max(0, capacity - used)
 
     dest_instance_ids: set = set()
-    camp_instance_ids: set = set()
+    home_instance_ids: set = set()
     dest_balance_ids: Dict[str, int] = {}
-    camp_balance_ids: Dict[str, int] = {}
+    home_balance_ids: Dict[str, int] = {}
 
     for iid in instance_ids:
         inst = vault_items_by_iid.get(iid)
@@ -5730,11 +5730,11 @@ async def bulk_move_vault(
         if capacity_gated:
             family = items_catalog.ITEM_FAMILIES_BY_ID.get(family_id)
             if family and not family.backpackable:
-                camp_instance_ids.add(iid)
+                home_instance_ids.add(iid)
                 continue
             cost = items_catalog.slot_cost_for_family(family_id)
             if cost > remaining:
-                camp_instance_ids.add(iid)
+                home_instance_ids.add(iid)
                 continue
             remaining -= cost
             dest_instance_ids.add(iid)
@@ -5752,7 +5752,7 @@ async def bulk_move_vault(
             if catalog_entry:
                 family = items_catalog.ITEM_FAMILIES_BY_ID.get(catalog_entry.family_id)
                 if family and not family.backpackable:
-                    camp_balance_ids[item_id] = amount
+                    home_balance_ids[item_id] = amount
                     continue
             stack_size, slot_cost = items_catalog.resolve_item_balance_stack(item_id)
             existing_dest = character.get("gear", {}).get("itemBalances", {}).get(destination, {}).get(item_id, 0)
@@ -5760,15 +5760,15 @@ async def bulk_move_vault(
                 math.ceil((existing_dest + amount) / stack_size) - math.ceil(existing_dest / stack_size)
             ) * slot_cost
             if marginal > remaining:
-                camp_balance_ids[item_id] = amount
+                home_balance_ids[item_id] = amount
                 continue
             remaining -= marginal
             dest_balance_ids[item_id] = amount
         else:
             dest_balance_ids[item_id] = amount
 
-    all_moved_iids = dest_instance_ids | camp_instance_ids
-    if not all_moved_iids and not dest_balance_ids and not camp_balance_ids:
+    all_moved_iids = dest_instance_ids | home_instance_ids
+    if not all_moved_iids and not dest_balance_ids and not home_balance_ids:
         return None
 
     new_vault_items = [i for i in vault_items if i["instanceId"] not in all_moved_iids]
@@ -5776,15 +5776,15 @@ async def bulk_move_vault(
     gear_bound = [
         {**vault_items_by_iid[iid], "location": destination, "slotRef": []}
         for iid in dest_instance_ids
-        if destination != "camp"
+        if destination != "home"
     ]
-    camp_bound_instances = [
-        {**vault_items_by_iid[iid], "location": "camp", "slotRef": []}
-        for iid in camp_instance_ids
+    home_bound_instances = [
+        {**vault_items_by_iid[iid], "location": "home", "slotRef": []}
+        for iid in home_instance_ids
     ]
-    if destination == "camp":
-        camp_bound_instances += [
-            {**vault_items_by_iid[iid], "location": "camp", "slotRef": []}
+    if destination == "home":
+        home_bound_instances += [
+            {**vault_items_by_iid[iid], "location": "home", "slotRef": []}
             for iid in dest_instance_ids
         ]
 
@@ -5792,9 +5792,9 @@ async def bulk_move_vault(
     vault_dec_bmv: Dict[str, int] = {}
     for item_id, amount in dest_balance_ids.items():
         vault_dec_bmv[item_id] = vault_dec_bmv.get(item_id, 0) - amount
-        if destination != "camp":
+        if destination != "home":
             char_inc[f"gear.itemBalances.{destination}.{item_id}"] = amount
-    for item_id, amount in camp_balance_ids.items():
+    for item_id, amount in home_balance_ids.items():
         vault_dec_bmv[item_id] = vault_dec_bmv.get(item_id, 0) - amount
 
     update: Dict = {}
@@ -5821,14 +5821,14 @@ async def bulk_move_vault(
     )
     if vault_dec_bmv:
         await _inc_vault_itembalances(db, address, vault_dec_bmv)
-    if camp_bound_instances:
-        await _push_storage_items(db, "camp", address, character_id, camp_bound_instances)
-    camp_credits = {}
-    if destination == "camp":
-        camp_credits.update(dest_balance_ids)
-    camp_credits.update(camp_balance_ids)
-    if camp_credits:
-        await _inc_storage_balances(db, "camp", address, character_id, camp_credits)
+    if home_bound_instances:
+        await _push_storage_items(db, "home", address, character_id, home_bound_instances)
+    home_credits = {}
+    if destination == "home":
+        home_credits.update(dest_balance_ids)
+    home_credits.update(home_balance_ids)
+    if home_credits:
+        await _inc_storage_balances(db, "home", address, character_id, home_credits)
     return await _build_player(db, address)
 
 
@@ -5857,9 +5857,9 @@ def _backpack_recyclable_entries(character: dict):
 
 
 def _equipped_container_instance(character: dict, family_id: str) -> Optional[dict]:
-    """The character's own currently-equipped or camped container instance
+    """The character's own currently-equipped or home-stored container instance
     of the given family, or None."""
-    locations = ("body", "camp")
+    locations = ("body", "home")
     return next(
         (
             i for i in character.get("gear", {}).get("items", [])

@@ -12,7 +12,7 @@ const BLOCKED_FLASH_MS = 2500;
  * this character is free (at base), red means they're currently out on a
  * story. Flips Character.availability.inAdventure, which backend.
  * players.unequip_item reads to decide whether a freed item lands in this
- * character's own camp storage (in adventure) or goes straight back to the
+ * character's own home storage (in adventure) or goes straight back to the
  * player's shared vault (at base) - see that function's own docstring.
  *
  * Crafting and being out on a story are mutually exclusive (backend.

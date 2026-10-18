@@ -1864,12 +1864,12 @@
    (bottom:0 + translateY(50%) shifts it down by half its own height),
    so it overlaps the portrait above and .handSlotRow below by straddling
    that one seam, rather than sitting cleanly in the gap between them. */
-/* Wraps .campButton (own containing block for its absolute positioning
-   against .frameStage, unchanged from before) so .campButtonBadge below
+/* Wraps .homeButton (own containing block for its absolute positioning
+   against .frameStage, unchanged from before) so .homeButtonBadge below
    can sit in its corner without being clipped by the button's own
    overflow:hidden circular mask - a badge child of the button itself
    would get cropped away near the edge. */
-.campButtonWrap {
+.homeButtonWrap {
   position: absolute;
   left: 50%;
   bottom: 0.25rem;
@@ -1879,7 +1879,7 @@
   z-index: 2;
 }
 
-.campButton {
+.homeButton {
   display: block;
   width: 100%;
   height: 100%;
@@ -1891,12 +1891,12 @@
   overflow: hidden;
 }
 
-/* Only rendered while camp holds something (BodyTab's hasCampItems) -
-   same dropped.png flavor icon CampView itself shows, repurposed here as
+/* Only rendered while home holds something (BodyTab's hasCampItems) -
+   same dropped.png flavor icon HomeView itself shows, repurposed here as
    a small "there's stuff waiting" badge rather than a full-size scene
    prop. Own dark circular backing (matching .itemGridCountBadge's look
    elsewhere) so it stays readable over any portrait art underneath. */
-.campButtonBadge {
+.homeButtonBadge {
   position: absolute;
   /* Lower-right corner of the camp circle: campButtonWrap is centered at
      50% with width 6rem (left edge at 50%-3rem, right at 50%+3rem) and
@@ -1919,7 +1919,7 @@
   pointer-events: none;
 }
 
-.campButtonIcon {
+.homeButtonIcon {
   display: block;
   width: 100%;
   height: 100%;
@@ -1970,7 +1970,7 @@
      theirs - visually a bit behind/recessed relative to the hands rather
      than reaching as high. */
   margin-top: 1.75rem;
-  /* Paints above the camp circle button (z-index: 2 on .campButtonWrap)
+  /* Paints above the camp circle button (z-index: 2 on .homeButtonWrap)
      so an equipped item visually overlaps it rather than sitting behind. */
   position: relative;
   z-index: 3;
@@ -2446,7 +2446,7 @@
   display: block;
 }
 
-/* ---- Vault / Camp tab ---- */
+/* ---- Vault / Home tab ---- */
 
 .inventoryLayout {
   display: flex;
@@ -2811,7 +2811,7 @@
   -webkit-touch-callout: none;
 }
 
-/* CampView's own opt-in (ItemGrid's hideScrollbar) - still scrolls via
+/* HomeView's own opt-in (ItemGrid's hideScrollbar) - still scrolls via
    drag/touch/trackpad, just no visible track/thumb. Needs all three: the
    standard property (Firefox), the legacy MS one (old Edge/IE), and the
    WebKit pseudo-element (Chrome/Safari) - no single one covers every
@@ -2853,19 +2853,19 @@
   display: none;
 }
 
-/* CampView's own lower-screen centerpiece. Fixed to the true viewport
-   bottom (like .campExitButton already was) rather than flow-positioned
+/* HomeView's own lower-screen centerpiece. Fixed to the true viewport
+   bottom (like .homeExitButton already was) rather than flow-positioned
    below the ItemGrid above it - flow position made its actual on-screen
    spot depend on the grid's own JS-measured height, which drifted with
    content and repeatedly pushed these icons partly off-screen. Fixed
-   height (CampView's CAMPFIRE_AREA_PX, passed inline) + fixed position
+   height (HomeView's CAMPFIRE_AREA_PX, passed inline) + fixed position
    means everything inside it now always renders within that same fixed
    band at the bottom of the screen, independent of the grid above.
    ItemGrid's own reserveBottomPx still leaves this band clear of grid
    tiles by shrinking the scrollable grid area by the same height. Own
    positioning context for the fire tucked behind the tent and the
    dropped-loot icon. CharacterPreview.tsx hides its usual fixed footer
-   bar while this is showing, so .campExitButton here is the only way
+   bar while this is showing, so .homeExitButton here is the only way
    back to the Body tab. */
 .campfireStage {
   position: fixed;
@@ -2886,7 +2886,7 @@
    .campfireStage's own far corner - retuning the tent here (this height,
    or its margin-bottom lift) carries the fire along with it instead of
    the two drifting apart. */
-.campTentGroup {
+.homeTentGroup {
   position: relative;
   height: 14rem;
   margin-bottom: 1.5rem;
@@ -2902,14 +2902,14 @@
   image-rendering: pixelated;
 }
 
-/* Tent reads as "nothing to see here" once camp is empty - same idea as
+/* Tent reads as "nothing to see here" once home is empty - same idea as
    the campfire's own lit/unlit swap, just a dimming filter on the same
    camp.png rather than a second image. */
 .campfireStageIconEmpty {
   filter: brightness(0.55);
 }
 
-/* Anchored off the tent's own box (left/bottom:0 of .campTentGroup, which
+/* Anchored off the tent's own box (left/bottom:0 of .homeTentGroup, which
    is sized to the tent), pulled left via transform so it sits beside the
    tent rather than dead-center under it - both stay readable rather than
    the fire fully hidden. In front of the tent (z-index above its 2). */
@@ -2917,7 +2917,7 @@
   position: absolute;
   /* Holds still (extra shift is 0) at/below a 400px-wide viewport, then
      eases further left as the screen widens past that, capped at 40px
-     so it never drifts far - same clamp() shape .campDroppedIcon below
+     so it never drifts far - same clamp() shape .homeDroppedIcon below
      uses in the opposite direction, so both stay symmetric. */
   left: calc(-1 * clamp(0px, (100vw - 400px) * 0.15, 40px));
   bottom: -0.75rem;
@@ -2929,7 +2929,7 @@
   pointer-events: none;
 }
 
-/* Only applied for campfire_lit.png (see CampView's hasCampItems check) -
+/* Only applied for campfire_lit.png (see HomeView's hasCampItems check) -
    a radial-gradient `background` on the <img> itself, not a drop-shadow
    (which traces the flame sprite's own visible edges/outline instead of
    the image's actual center). A background paints behind an <img>'s own
@@ -2944,7 +2944,7 @@
 .campfireStageFireIconLit {
   background: radial-gradient(circle, rgba(255, 170, 50, 0.8) 0%, rgba(255, 110, 20, 0.48) 35%, rgba(255, 80, 20, 0) 65%);
   animation: campfireGlowPulse 2.6s ease-in-out infinite;
-  /* Only the lit fire opens the "Burn All" popup (see CampView.tsx) -
+  /* Only the lit fire opens the "Burn All" popup (see HomeView.tsx) -
      unlit stays purely decorative, inheriting the base rule's
      pointer-events:none above. */
   pointer-events: auto;
@@ -3012,9 +3012,9 @@
 }
 
 /* Only rendered at all while the camp actually holds something (see
-   CampView's hasCampItems) - a little "stuff dropped here" flavor cue,
+   HomeView's hasCampItems) - a little "stuff dropped here" flavor cue,
    not a button. Bottom-center of the stage. */
-.campDroppedIcon {
+.homeDroppedIcon {
   position: absolute;
   left: 50%;
   bottom: 1.25rem;
@@ -3029,7 +3029,7 @@
   image-rendering: pixelated;
   filter: drop-shadow(0 0 8px rgba(0, 0, 0, 0.8));
   /* Clickable - opens the "Move all to backpack" popup (see
-     CampView.tsx). Only ever rendered while hasCampItems, so there's
+     HomeView.tsx). Only ever rendered while hasCampItems, so there's
      nothing to gate here the way .campfireStageFireIconLit gates the
      fire icon. pointer-events:auto is required, not optional -
      .campfireStage (the fixed-position ancestor housing this) sets
@@ -3040,14 +3040,14 @@
   cursor: pointer;
 }
 
-/* Right of the tent (camp.png), mirroring .campDroppedIcon's own
+/* Right of the tent (camp.png), mirroring .homeDroppedIcon's own
    left-side placement but sitting higher off the ground (2.75rem vs its
    1.25rem) rather than at the same level. Purely decorative for now - no
    click handler, so no pointer-events override needed the way
-   .campDroppedIcon's own click target requires. */
-.campChoppingBlockIcon {
+   .homeDroppedIcon's own click target requires. */
+.homeChoppingBlockIcon {
   position: absolute;
-  /* Anchored against .campTentGroup itself (this is now a child of it,
+  /* Anchored against .homeTentGroup itself (this is now a child of it,
      next to the fire/tent images) - same clamp() easing
      .campfireStageFireIcon uses on the opposite side, so this only drifts
      a little further from the tent on a wider screen instead of tracking
@@ -3064,18 +3064,18 @@
   width: auto;
   image-rendering: pixelated;
   /* Clickable (opens ChopBlockPopup) - same pointer-events:auto
-     requirement as .campDroppedIcon's own identical comment: .campfireStage
+     requirement as .homeDroppedIcon's own identical comment: .campfireStage
      sets pointer-events:none on itself, which inherits down to every
      descendant unless overridden right here. */
   pointer-events: auto;
   cursor: pointer;
 }
 
-/* Same dimming as the tent's own .campfireStageIconEmpty while camp is
+/* Same dimming as the tent's own .campfireStageIconEmpty while home is
    empty. */
-.campChoppingBlockIconEmpty {
+.homeChoppingBlockIconEmpty {
   filter: brightness(0.55);
-  /* Not clickable while camp is empty (see CampView.tsx's own
+  /* Not clickable while home is empty (see HomeView.tsx's own
      hasCampItems gate) - overrides the base rule's pointer-events:auto/
      cursor:pointer back to non-interactive, same as
      .campfireStageFireIconUnlit staying non-interactive by simply never
@@ -3084,15 +3084,15 @@
   cursor: default;
 }
 
-/* Same exit.webp glyph as the page's own (now-hidden-while-in-camp)
-   .closeButton, repurposed here to back out of camp specifically rather
-   than close the whole character sheet - see CampView's onExitCamp. */
+/* Same exit.webp glyph as the page's own (now-hidden-while-in-home)
+   .closeButton, repurposed here to back out of home specifically rather
+   than close the whole character sheet - see HomeView's onExitHome. */
 /* Fixed to the viewport itself (like the page's own now-hidden .topBar),
    not absolute against .campfireStage like the other 3 icons here -
    .sheet caps out at 56rem wide and centers on anything wider, so an
    absolute position would land at the content column's own edge rather
    than the screen's actual corner on a wide viewport. */
-.campExitButton {
+.homeExitButton {
   position: fixed;
   right: 0.75rem;
   bottom: 0.75rem;
@@ -3110,7 +3110,7 @@
   cursor: pointer;
 }
 
-.campExitIcon {
+.homeExitIcon {
   display: block;
   width: 100%;
   height: 100%;
@@ -3390,7 +3390,7 @@
   inset: 0;
   z-index: 20;
   /* Explicit, not just the default - HoldActionPopup (see VaultTab.tsx)
-     renders this overlay as a child of .campfireStage (CampView.tsx's
+     renders this overlay as a child of .campfireStage (HomeView.tsx's
      fixed-position campfire/dropped-items area), which sets
      pointer-events:none on itself so its own empty space doesn't block
      the grid behind it - that value inherits to every descendant,
@@ -3452,7 +3452,7 @@
 /* BackpackSalvagePopup's own override (see HoldActionPopup's
    overlayClassName/cardClassName/iconClassName props) - same idea as
    .chopBlockOverlay/.chopBlockCard/.chopBlockIcon above, but shrunk
-   further: unlike CampView (which hides the page's fixed footer bar
+   further: unlike HomeView (which hides the page's fixed footer bar
    entirely while open), this popup opens over the Body/Vault tab,
    where the footer stays on screen - and CANNOT be painted over despite
    its own z-index:20 (.itemPopupOverlay), because it's nested inside
@@ -3478,7 +3478,7 @@
   padding-bottom: 0.5rem;
 }
 
-/* A worn/camped backpack's own popup (see ItemDetailPopup's isBackpack) -
+/* A worn/home-stored backpack's own popup (see ItemDetailPopup's isBackpack) -
    same "shrink the screen margin to almost nothing" idea as
    .chopBlockOverlay/.chopBlockCard above, so its own .packedItemsRow
    matrix gets real headroom. No scrolling here (unlike the base
@@ -3957,7 +3957,7 @@
 }
 
 /* ChopBlockPopup's own two dividers bracketing "Recycling all:" (see
-   CampView.tsx) - the one ABOVE the text wants less room below it (closer
+   HomeView.tsx) - the one ABOVE the text wants less room below it (closer
    to the text it introduces), the one BELOW wants more room above it
    (further from the text, more clearly its own separate line before the
    scrollable list starts). */
@@ -4109,7 +4109,7 @@
   cursor: default;
 }
 
-/* ChopBlockPopup's own checklist (see CampView.tsx) - scrolls on its own
+/* ChopBlockPopup's own checklist (see HomeView.tsx) - scrolls on its own
    once it's too tall, capped well under the popup card's own max-height
    so the hold bar/icon below it always stays on screen rather than being
    scrolled away with a long list. */
@@ -4230,7 +4230,7 @@
 
 /* Decorative only (see TransferButtons' destinationIcon prop) - labels
    where a row's amount buttons send the material. Same size as
-   .itemPopupBackpackIcon (the vault/camp/backpack icons every OTHER move
+   .itemPopupBackpackIcon (the vault/home/backpack icons every OTHER move
    button in these popups uses) for visual consistency, not shrunk to
    match .transferButton's own smaller height. */
 .transferDestinationIcon {

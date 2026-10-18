@@ -84,9 +84,9 @@ function EquipSlotIcon({
   iconOverride?: string;
 }) {
   const entry = catalog[instance.itemId];
-  // Same condition/damaged treatment as the Vault/Camp grid's ItemGrid
+  // Same condition/damaged treatment as the Vault/Home grid's ItemGrid
   // tiles (see qualityState/qualityBarColor there) - an equipped instance
-  // is just as much a "real" item instance as a backpacked/camped one, so
+  // is just as much a "real" item instance as a backpacked/home-stored one, so
   // it should wear down visibly here too, not only once unequipped.
   const qualityFraction =
     entry?.qualityMax != null && instance.quality != null
@@ -123,12 +123,12 @@ function EquipSlotIcon({
 export function BodyTab({
   character,
   onPlayerDataUpdated,
-  onOpenCamp,
+  onOpenHome,
   resting = false,
 }: {
   character: SlotCharacterSummary;
   onPlayerDataUpdated?: (data: RawPlayerData) => void;
-  onOpenCamp?: () => void;
+  onOpenHome?: () => void;
   resting?: boolean;
 }) {
   // .frameBox's CSS aspect-ratio (2/3) is only a fallback for portraits
@@ -172,7 +172,7 @@ export function BodyTab({
   // has_backpack_available) - greys out the popup's "Move to backpack"
   // button when there's no "backpack" family to pack into, instead of
   // letting the click fail server-side. A backpack still counts once
-  // unequipped to camp, not just worn - unequip_item's "camp" destination
+  // unequipped to home, not just worn - unequip_item's "home" destination
   // never empties its storage bucket, so it's still a real place to add
   // more into (see backend.players.unequip_item's own docstring). Checked
   // by familyId, not by "Back"/"Side" in slotRef - bolt_girdle/quiver/
@@ -180,10 +180,10 @@ export function BodyTab({
   // groups, so an equipped bolt_girdle sitting in "Side" must not count
   // as a backpack.
   const hasBackpackEquipped = character.gear.items.some(
-    (instance) => (instance.location === "body" || instance.location === "camp") && instance.familyId === "backpack"
+    (instance) => (instance.location === "body" || instance.location === "home") && instance.familyId === "backpack"
   );
   const hasSaddlepackEquipped = character.gear.items.some(
-    (instance) => (instance.location === "body" || instance.location === "camp") && instance.familyId === "saddlepack"
+    (instance) => (instance.location === "body" || instance.location === "home") && instance.familyId === "saddlepack"
   );
   // What's actually packed into whichever backpack is worn - handed to
   // ItemDetailPopup only for a worn family:"backpack" instance's own
@@ -212,14 +212,14 @@ export function BodyTab({
     resourceBalances: cartResourceBalances,
   } = computeCartContents(character);
 
-  // Same emptiness check as CampView's own hasCampItems - lets the camp
+  // Same emptiness check as HomeView's own hasHomeItems - lets the home
   // button carry a small dropped.png badge (see below) so the player can
-  // tell camp holds something without having to open it first. Checks
-  // gear.itemBalances.camp (which now includes raw/processed materials
-  // that used to live in gear.resources.camp) and gear.items at camp.
-  const hasCampItems =
-    character.gear.items.some((instance) => instance.location === "camp") ||
-    Object.values(character.gear.itemBalances.camp ?? {}).some((amount) => amount > 0);
+  // tell home holds something without having to open it first. Checks
+  // gear.itemBalances.home (which now includes raw/processed materials
+  // that used to live in gear.resources.home) and gear.items at home.
+  const hasHomeItems =
+    character.gear.items.some((instance) => instance.location === "home") ||
+    Object.values(character.gear.itemBalances.home ?? {}).some((amount) => amount > 0);
 
   const hasCartItems =
     cartIds.length > 0 ||
@@ -589,7 +589,7 @@ export function BodyTab({
           hasMountEquipped={character.gear.items.some((i) => i.location === "body" && i.slotRef?.includes("Mount"))}
           hasCompanionEquipped={character.gear.items.some((i) => i.location === "body" && i.slotRef?.includes("Companion"))}
           inAdventure={character.availability.inAdventure}
-          storageType={resting ? "rest" : "camp"}
+          storageType={resting ? "rest" : "home"}
           currentSlots={selectedInstance.slotRef}
           characterId={character.id}
           packedItems={{

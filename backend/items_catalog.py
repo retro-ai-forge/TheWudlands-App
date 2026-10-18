@@ -398,9 +398,9 @@ def has_backpack_equipped(character: dict) -> bool:
 def has_backpack_available(character: dict) -> bool:
     """Whether this character has a "backpack"-family instance to actually
     pack things into - either worn (location:"body", same as
-    has_backpack_equipped) OR sitting unequipped in camp (location:"camp").
-    A camp-located backpack still holds its own gear.itemBalances.backpack/
-    gear.items location:"backpack" storage bucket (unequip_item's "camp"
+    has_backpack_equipped) OR sitting unequipped at home (location:"home").
+    A home-located backpack still holds its own gear.itemBalances.backpack/
+    gear.items location:"backpack" storage bucket (unequip_item's "home"
     destination deliberately never cascades that away - see its own
     docstring), so it should count as available to add more into, not just
     the one currently on the character's back. Used wherever "can this
@@ -411,7 +411,7 @@ def has_backpack_available(character: dict) -> bool:
     check_in_item_instance cascade, which cares whether some OTHER worn
     backpack's storage is still in active use)."""
     return any(
-        instance.get("location") in ("body", "camp") and instance.get("familyId") == "backpack"
+        instance.get("location") in ("body", "home") and instance.get("familyId") == "backpack"
         for instance in character.get("gear", {}).get("items", [])
     )
 
@@ -433,13 +433,13 @@ def has_saddlepack_available(character: dict) -> bool:
     """The saddlepack counterpart to has_backpack_available - whether this
     character has a "saddlepack"-family instance worn on the mount's own
     Mbagpack slot (location:"body", same value backpack itself uses - see
-    has_saddlepack_equipped) OR sitting unequipped in camp (location:
-    "camp"). Used for the same "only one at a time" enforcement
+    has_saddlepack_equipped) OR sitting unequipped at home (location:
+    "home"). Used for the same "only one at a time" enforcement
     equip_item/equip_item_from_pool apply to "backpack" - has_saddlepack_
     equipped itself stays literal (only "body"/worn) for callers that
     specifically mean that."""
     return any(
-        instance.get("location") in ("body", "camp") and instance.get("familyId") == "saddlepack"
+        instance.get("location") in ("body", "home") and instance.get("familyId") == "saddlepack"
         for instance in character.get("gear", {}).get("items", [])
     )
 
@@ -447,7 +447,7 @@ def has_saddlepack_available(character: dict) -> bool:
 def backpack_capacity(character: dict) -> int:
     """
     Total backpack slot ceiling - 0 when no backpack is available,
-    otherwise purely the tier capacity from the best equipped/camped
+    otherwise purely the tier capacity from the best equipped/home-stored
     backpack (fixed per tier, no character-stat base).
     """
     if not has_backpack_available(character):
@@ -455,7 +455,7 @@ def backpack_capacity(character: dict) -> int:
 
     cap = 0
     for instance in character.get("gear", {}).get("items", []):
-        if instance.get("location") in ("body", "camp") and instance.get("familyId") == "backpack":
+        if instance.get("location") in ("body", "home") and instance.get("familyId") == "backpack":
             cap = max(cap, BACKPACK_CAPACITY_BY_ID.get(instance["itemId"], 0))
 
     return cap
@@ -483,7 +483,7 @@ def saddlepack_slots_used(character: dict) -> int:
 def saddlepack_capacity(character: dict) -> int:
     """
     Total saddlepack slot ceiling - 0 when no saddlepack is available,
-    otherwise purely the tier bonus from the best equipped/camped
+    otherwise purely the tier bonus from the best equipped/home-stored
     saddlepack (no character-stat base, unlike backpack).
     """
     if not has_saddlepack_available(character):
@@ -491,7 +491,7 @@ def saddlepack_capacity(character: dict) -> int:
 
     bonus = 0
     for instance in character.get("gear", {}).get("items", []):
-        if instance.get("location") in ("body", "camp") and instance.get("familyId") == "saddlepack":
+        if instance.get("location") in ("body", "home") and instance.get("familyId") == "saddlepack":
             bonus = max(bonus, SADDLEPACK_CAPACITY_BY_ID.get(instance["itemId"], 0))
 
     return bonus
@@ -527,10 +527,10 @@ def has_cart_equipped(character: dict) -> bool:
 
 def has_cart_available(character: dict) -> bool:
     """Whether this character has a cart-family instance equipped on the
-    mount's Hitch slot (location:"body") or sitting in camp (location:
-    "camp"). Same one-at-a-time pattern as backpack/saddlepack."""
+    mount's Hitch slot (location:"body") or sitting at home (location:
+    "home"). Same one-at-a-time pattern as backpack/saddlepack."""
     return any(
-        instance.get("location") in ("body", "camp") and instance.get("familyId") == "cart"
+        instance.get("location") in ("body", "home") and instance.get("familyId") == "cart"
         for instance in character.get("gear", {}).get("items", [])
     )
 
@@ -538,14 +538,14 @@ def has_cart_available(character: dict) -> bool:
 def cart_capacity(character: dict) -> int:
     """
     Total cart slot ceiling - 0 when no cart is available, otherwise
-    purely the tier bonus from the best equipped/camped cart.
+    purely the tier bonus from the best equipped/home-stored cart.
     """
     if not has_cart_available(character):
         return 0
 
     bonus = 0
     for instance in character.get("gear", {}).get("items", []):
-        if instance.get("location") in ("body", "camp") and instance.get("familyId") == "cart":
+        if instance.get("location") in ("body", "home") and instance.get("familyId") == "cart":
             bonus = max(bonus, CART_CAPACITY_BY_ID.get(instance["itemId"], 0))
 
     return bonus

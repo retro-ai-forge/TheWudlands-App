@@ -303,7 +303,7 @@ Total raw material cost to keep a light burning for a given duration, using tier
 
 ## Backpacks & Carry Capacity
 
-Every character has a base carry capacity from their own attributes, plus a bonus from whichever backpack they currently have equipped or sitting unequipped in camp (the two add together, they don't replace each other, and only the single biggest backpack bonus available counts if more than one qualifies).
+Every character has a base carry capacity from their own attributes, plus a bonus from whichever backpack they currently have equipped or sitting unequipped at home (the two add together, they don't replace each other, and only the single biggest backpack bonus available counts if more than one qualifies).
 
 **Base capacity** = `10 + (might + endurance) / 3` slots, always available even with no backpack at all.
 
@@ -318,7 +318,7 @@ Every character has a base carry capacity from their own attributes, plus a bonu
 | 5 | Adventurer's Backpack | +17 |
 | 6 | Explorer's Great Backpack | +20 |
 
-With no backpack equipped or in camp at all, backpack capacity is 0 — nothing can be carried there. Camp storage itself has no slot limit of its own and is available on resting as an overflow/staging area, regardless of backpack capacity.
+With no backpack equipped or at home at all, backpack capacity is 0 — nothing can be carried there. Home storage itself has no slot limit of its own and is available on resting as an overflow/staging area, regardless of backpack capacity.
 
 ### Size Classes & Slot Weight
 

@@ -158,7 +158,7 @@ class Character:
     attr: AttributeStats = field(default_factory=AttributeStats)
     created_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
     # Temporary crafting-session staging area: itemBalances borrowed from
-    # camp (with vault as overflow) by start_craft, drained by finish_craft.
+    # home (with vault as overflow) by start_craft, drained by finish_craft.
     # {"itemBalances": {id: qty},
     #  "activeCraft": {"familyId", "tier", "readyAt", ...} | None}
     crafting: dict = field(default_factory=lambda: {
@@ -167,7 +167,7 @@ class Character:
     })
     # Everything this character carries for adventuring, as
     # opposed to what's staged for an active craft (see `crafting` above).
-    # camp itemBalances live in the character_camps collection (keyed by
+    # home itemBalances live in the character_homes collection (keyed by
     # address + characterId), not here.
     gear: dict = field(default_factory=lambda: {
         "items": [],
@@ -182,7 +182,7 @@ class Character:
     # character is currently out on an adventure, away from the player's
     # shared vault. Changes what unequip_item does with a freed item: while
     # True, it's dropped into this character's own gear.items location:
-    # "camp" (still owned, not backpack-capacity-counted, since there's no
+    # "home" (still owned, not backpack-capacity-counted, since there's no
     # vault to send it back to mid-adventure); while False (safely at
     # base), it goes straight to the player's shared vault instead.
     in_adventure: bool = False

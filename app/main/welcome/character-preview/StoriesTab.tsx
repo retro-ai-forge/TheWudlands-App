@@ -111,7 +111,7 @@ export function StoriesTab({
   return (
     <div className={styles.panel}>
       <p className={styles.placeholderNote}>
-        Enter and leave adventures to test items in camp.
+        Enter and leave adventures to test items in home.
       </p>
       <div className={styles.adventureToggleWrap}>
         {inAdventure ? (

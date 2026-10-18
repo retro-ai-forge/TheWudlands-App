@@ -139,7 +139,7 @@ export function WelcomeView() {
   // loaded, since the character being linked to has to actually exist in
   // it. The URL is cleared right after so a later refresh doesn't keep
   // re-opening the same character.
-  const VALID_TABS: TabKey[] = ["stats", "body", "camp", "vault", "stories"];
+  const VALID_TABS: TabKey[] = ["stats", "body", "home", "vault", "stories"];
   useEffect(() => {
     if (previews === null) return;
     const params = new URLSearchParams(window.location.search);

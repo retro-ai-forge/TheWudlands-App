@@ -11,10 +11,10 @@ import { StatsTab } from "./StatsTab";
 import { BodyTab } from "./BodyTab";
 import { StoriesTab, REST_LOCATIONS } from "./StoriesTab";
 import { VaultTab, type ItemInstance, type RawPlayerData } from "./VaultTab";
-import { CampView } from "./CampView";
+import { HomeView } from "./HomeView";
 import { TabErrorBoundary } from "./TabErrorBoundary";
 
-export type TabKey = "stats" | "body" | "camp" | "vault" | "stories";
+export type TabKey = "stats" | "body" | "home" | "vault" | "stories";
 
 const ICON_BASE = "/images/character/char-preview-";
 
@@ -22,20 +22,20 @@ const ICON_BASE = "/images/character/char-preview-";
 // every render, which would bust useMemo/useEffect dependency caches in child
 // components that receive these as props.
 const EMPTY_VAULT: { items: ItemInstance[]; itemBalances: Record<string, number> } = { items: [], itemBalances: {} };
-const EMPTY_CAMP_BALANCES: Record<string, number> = {};
-const EMPTY_CAMP: { items: ItemInstance[]; itemBalances: Record<string, number> } = { items: [], itemBalances: {} };
+const EMPTY_HOME_BALANCES: Record<string, number> = {};
+const EMPTY_HOME: { items: ItemInstance[]; itemBalances: Record<string, number> } = { items: [], itemBalances: {} };
 
 const TABS: { key: TabKey; label: string; icon: string; secondIcon?: string; emojiIcon?: string; lightenWhenActive?: boolean }[] = [
   { key: "stats", label: "Stats", icon: `${ICON_BASE}stats.png` },
   { key: "body", label: "Body & Soul", icon: `${ICON_BASE}body.png`, secondIcon: `${ICON_BASE}soul.png`, lightenWhenActive: true },
-  { key: "camp", label: "Camp", icon: "/images/character/camp.png" },
+  { key: "home", label: "Home", icon: "/images/character/camp.png" },
   { key: "vault", label: "Vault", icon: "/images/character/vault.png" },
   { key: "stories", label: "Stories", icon: `${ICON_BASE}adventure.png`, lightenWhenActive: true },
 ];
 
 // Opened by clicking an active soul slot's character. Five subpages - Stats
 // (attributes + face), Body (equipment slots + soul equipment),
-// Camp (this character's camp items), Vault (the player's shared vault),
+// Home (this character's home items), Vault (the player's shared vault),
 // and Stories (addon selection) - reached by tapping one of TABS' icons,
 // laid out in a row above the character's name; the current one is
 // highlighted, the rest greyed out. Close sits fixed top-right, always
@@ -75,17 +75,17 @@ export function CharacterPreview({
   const { setHidden: setHeaderHidden } = useHeaderVisibility();
   const inAdventure = character.availability.inAdventure;
   const [activeTab, setActiveTab] = useState<TabKey>(initialTab);
-  // Opened via the camp button on the Body tab (see BodyTab.tsx's
-  // onOpenCamp) - replaces the normal per-tab content below the name
+  // Opened via the home button on the Body tab (see BodyTab.tsx's
+  // onOpenHome) - replaces the normal per-tab content below the name
   // heading rather than being its own TABS entry, and (like the Vault
   // tab) suspends .wizard's own vertical scroll so only its item grid
   // scrolls, horizontally. Cleared by switching to any of the 5 real tabs.
-  const [showCamp, setShowCamp] = useState(false);
+  const [showHome, setShowHome] = useState(false);
   const [resting, setResting] = useState(character.availability.resting ?? false);
   const [restLocation, setRestLocation] = useState<string>(character.availability.restLocation ?? REST_LOCATIONS[0]);
 
   useEffect(() => {
-    if (inAdventure && !resting && activeTab === "camp") {
+    if (inAdventure && !resting && activeTab === "home") {
       setActiveTab("stories");
     }
     if (inAdventure && (activeTab === "vault")) {
@@ -94,37 +94,37 @@ export function CharacterPreview({
     if (!inAdventure) {
       setResting(false);
       setRestData(null);
-      if (activeTab === "camp" || activeTab === "vault") {
+      if (activeTab === "home" || activeTab === "vault") {
         setActiveTab("stories");
       }
-      setShowCamp(false);
+      setShowHome(false);
     }
   }, [inAdventure, resting]);
 
   // Lazy-loaded supplemental data — fetched on demand the first time the
   // relevant tab is opened; null means not yet loaded.
-  const [campData, setCampData] = useState<{ items: ItemInstance[]; itemBalances: Record<string, number> } | null>(null);
+  const [homeData, setHomeData] = useState<{ items: ItemInstance[]; itemBalances: Record<string, number> } | null>(null);
   const [restData, setRestData] = useState<{ items: ItemInstance[]; itemBalances: Record<string, number> } | null>(null);
   const [vaultData, setVaultData] = useState<{ items: ItemInstance[]; itemBalances: Record<string, number> } | null>(null);
 
-  // Trigger camp fetch the first time the camp view becomes visible.
-  // When resting + camp tab, load rest data instead.
+  // Trigger home fetch the first time the home view becomes visible.
+  // When resting + home tab, load rest data instead.
   useEffect(() => {
-    const needsCamp = showCamp || (activeTab === "camp" && !resting);
-    if (!needsCamp || campData !== null) return;
-    fetch(`/api/auth/me/characters/${character.id}/camp`, { credentials: "include" })
+    const needsHome = showHome || (activeTab === "home" && !resting);
+    if (!needsHome || homeData !== null) return;
+    fetch(`/api/auth/me/characters/${character.id}/home`, { credentials: "include" })
       .then((res) => (res.ok ? res.json() : null))
-      .then((data) => setCampData(data ?? EMPTY_CAMP))
-      .catch(() => setCampData(EMPTY_CAMP));
-  }, [showCamp, activeTab, campData, character.id, resting]);
+      .then((data) => setHomeData(data ?? EMPTY_HOME))
+      .catch(() => setHomeData(EMPTY_HOME));
+  }, [showHome, activeTab, homeData, character.id, resting]);
 
-  // Trigger rest fetch when resting and camp tab is active.
+  // Trigger rest fetch when resting and home tab is active.
   useEffect(() => {
-    if (!(activeTab === "camp" && resting) || restData !== null) return;
+    if (!(activeTab === "home" && resting) || restData !== null) return;
     fetch(`/api/auth/me/characters/${character.id}/rest`, { credentials: "include" })
       .then((res) => (res.ok ? res.json() : null))
-      .then((data) => setRestData(data ?? EMPTY_CAMP))
-      .catch(() => setRestData(EMPTY_CAMP));
+      .then((data) => setRestData(data ?? EMPTY_HOME))
+      .catch(() => setRestData(EMPTY_HOME));
   }, [activeTab, resting, restData, character.id]);
 
   // Trigger vault fetch the first time the vault tab is opened.
@@ -138,7 +138,7 @@ export function CharacterPreview({
 
   const handlePlayerDataUpdated = useCallback((data: RawPlayerData) => {
     setVaultData(null);
-    setCampData(null);
+    setHomeData(null);
     setRestData(null);
     onPlayerDataUpdated?.(data);
   }, [onPlayerDataUpdated]);
@@ -151,14 +151,14 @@ export function CharacterPreview({
     gear: {
       ...character.gear,
       items: [
-        ...character.gear.items.filter((i) => i.location !== "camp" && i.location !== "rest"),
-        ...(campData?.items ?? []),
+        ...character.gear.items.filter((i) => i.location !== "home" && i.location !== "rest"),
+        ...(homeData?.items ?? []),
         ...(restData?.items ?? []),
       ],
       itemBalances: {
         ...character.gear.itemBalances,
-        camp: campData?.itemBalances ?? character.gear.itemBalances?.camp ?? EMPTY_CAMP_BALANCES,
-        rest: restData?.itemBalances ?? character.gear.itemBalances?.rest ?? EMPTY_CAMP_BALANCES,
+        home: homeData?.itemBalances ?? character.gear.itemBalances?.home ?? EMPTY_HOME_BALANCES,
+        rest: restData?.itemBalances ?? character.gear.itemBalances?.rest ?? EMPTY_HOME_BALANCES,
       },
     },
   };
@@ -189,14 +189,14 @@ export function CharacterPreview({
   }, [activeTab]);
 
   // Snap to the top before the browser paints whenever switching to a
-  // tab whose content fills the viewport (vault/camp) — useLayoutEffect
+  // tab whose content fills the viewport (vault/home) — useLayoutEffect
   // ensures the scroll reset happens before the first paint so there's no
   // visible flash of the old scroll position.
   useLayoutEffect(() => {
-    if (showCamp || activeTab === "camp" || activeTab === "vault") {
+    if (showHome || activeTab === "home" || activeTab === "vault") {
       wizardScrollRef.current?.scrollTo(0, 0);
     }
-  }, [activeTab, showCamp]);
+  }, [activeTab, showHome]);
 
   // Standalone portrait editor, opened by clicking the face portrait on the
   // Stats tab. The draft lives in a ref rather than state - PortraitEditor's
@@ -311,19 +311,19 @@ export function CharacterPreview({
   return (
     <div
       className={`${styles.wizard} ${
-        showCamp || activeTab === "camp" || activeTab === "vault" ? "" : styles.wizardScrollable
+        showHome || activeTab === "home" || activeTab === "vault" ? "" : styles.wizardScrollable
       }`}
       ref={wizardScrollRef}
       onScroll={checkScrolledToEnd}
     >
-      {!showCamp && (
+      {!showHome && (
         <div className={tabStyles.topBar} data-role="character-preview-topbar">
           <div className={tabStyles.topBarBackground}>
             <div className={tabStyles.topBarRow}>
               <nav className={tabStyles.tabRow}>
                 {TABS.map((tab) => {
-                  const locked = (tab.key === "vault" && inAdventure) || (tab.key === "camp" && inAdventure && !resting);
-                  const icon = tab.key === "camp" && inAdventure ? "/images/character/camp-inadventure.png" : tab.icon;
+                  const locked = (tab.key === "vault" && inAdventure) || (tab.key === "home" && inAdventure && !resting);
+                  const icon = tab.key === "home" && inAdventure ? "/images/character/camp-inadventure.png" : tab.icon;
                   return (
                   <button
                     key={tab.key}
@@ -374,16 +374,16 @@ export function CharacterPreview({
 
         <div className={tabStyles.nameRow}>
           <h1 className={tabStyles.name}>
-            {showCamp ? `${character.firstName}'s Camp` : activeTab === "camp" && resting ? `Resting in ${restLocation.charAt(0).toUpperCase() + restLocation.slice(1)}` : activeTab === "camp" ? `${character.firstName}'s Camp` : activeTab === "vault" ? "Vault" : `${character.firstName} ${character.lastName}`}
+            {showHome ? `${character.firstName}'s Home` : activeTab === "home" && resting ? `Resting in ${restLocation.charAt(0).toUpperCase() + restLocation.slice(1)}` : activeTab === "home" ? `${character.firstName}'s Home` : activeTab === "vault" ? "Vault" : `${character.firstName} ${character.lastName}`}
           </h1>
         </div>
 
-        <div className={showCamp || activeTab === "camp" || activeTab === "vault" ? tabStyles.mainColumn : `${tabStyles.mainColumn} ${tabStyles.mainColumnPadded}`}>
-          {showCamp ? (
-            <CampView
+        <div className={showHome || activeTab === "home" || activeTab === "vault" ? tabStyles.mainColumn : `${tabStyles.mainColumn} ${tabStyles.mainColumnPadded}`}>
+          {showHome ? (
+            <HomeView
               character={augmentedCharacter}
               onPlayerDataUpdated={handlePlayerDataUpdated}
-              onExitCamp={() => setShowCamp(false)}
+              onExitHome={() => setShowHome(false)}
             />
           ) : (
             <>
@@ -403,7 +403,7 @@ export function CharacterPreview({
             />
           )}
           {activeTab === "body" && (
-            <BodyTab character={augmentedCharacter} onPlayerDataUpdated={handlePlayerDataUpdated} onOpenCamp={inAdventure ? undefined : () => setShowCamp(true)} resting={resting} />
+            <BodyTab character={augmentedCharacter} onPlayerDataUpdated={handlePlayerDataUpdated} onOpenHome={inAdventure ? undefined : () => setShowHome(true)} resting={resting} />
           )}
           {activeTab === "vault" && (
             <TabErrorBoundary>
@@ -428,19 +428,19 @@ export function CharacterPreview({
               onRestLocationChange={setRestLocation}
             />
           )}
-          {activeTab === "camp" && !resting && (
-            <CampView
+          {activeTab === "home" && !resting && (
+            <HomeView
               character={augmentedCharacter}
               onPlayerDataUpdated={handlePlayerDataUpdated}
-              onExitCamp={() => setActiveTab("body")}
+              onExitHome={() => setActiveTab("body")}
               footerVisible
             />
           )}
-          {activeTab === "camp" && resting && (
-            <CampView
+          {activeTab === "home" && resting && (
+            <HomeView
               character={augmentedCharacter}
               onPlayerDataUpdated={handlePlayerDataUpdated}
-              onExitCamp={() => setActiveTab("body")}
+              onExitHome={() => setActiveTab("body")}
               footerVisible
               storageType="rest"
             />
@@ -450,7 +450,7 @@ export function CharacterPreview({
         </div>
       </div>
 
-      {!showCamp && activeTab === "stats" && isScrolledToEnd && (
+      {!showHome && activeTab === "stats" && isScrolledToEnd && (
         <button
           type="button"
           className={tabStyles.deleteButton}

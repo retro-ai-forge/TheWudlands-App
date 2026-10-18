@@ -46,7 +46,7 @@ async def on_startup():
     db = get_database()
     await asyncio.gather(
         db.characters.find_one(),
-        db.character_camps.find_one(),
+        db.character_homes.find_one(),
         db.character_blueprints.find_one(),
         db.player_vaults.find_one(),
         db.active_players.find_one(),
