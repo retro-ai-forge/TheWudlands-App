@@ -116,12 +116,12 @@ async def _build_player(db, address: str) -> Player:
         print(f"  [homes] {_time.perf_counter() - t:.3f}s  count={len(m)}")
         return m
 
-    async def _fetch_rests():
+    async def _fetch_camps():
         t = _time.perf_counter()
         m = {}
         async for doc in db.character_camp.find({"address": address}):
             m[doc["characterId"]] = doc
-        print(f"  [rests] {_time.perf_counter() - t:.3f}s  count={len(m)}")
+        print(f"  [camps] {_time.perf_counter() - t:.3f}s  count={len(m)}")
         return m
 
     async def _fetch_blueprints():
@@ -138,10 +138,10 @@ async def _build_player(db, address: str) -> Player:
         print(f"  [player_characters] {_time.perf_counter() - t:.3f}s")
         return doc
 
-    characters, home_map, rest_map, bp_map, pc_doc = await asyncio.gather(
+    characters, home_map, camp_map, bp_map, pc_doc = await asyncio.gather(
         _fetch_characters(),
         _fetch_homes(),
-        _fetch_rests(),
+        _fetch_camps(),
         _fetch_blueprints(),
         _fetch_pc(),
     )
@@ -174,17 +174,17 @@ async def _build_player(db, address: str) -> Player:
             character["blueprints"] = bp_map.get(cid, {}).get("blueprints", [])
             character["vault"] = {"items": [], "itemBalances": {}}
         else:
-            rest_doc = rest_map.get(cid, {})
+            camp_doc = camp_map.get(cid, {})
             resting = character.get("availability", {}).get("resting", False)
-            if resting and rest_doc:
-                character["gear"]["itemBalances"]["camp"] = rest_doc.get("itemBalances", {})
-                rest_items = rest_doc.get("items", [])
-                for ri in rest_items:
-                    ri.setdefault("createdAt", datetime.now(timezone.utc).isoformat())
-                    ri["location"] = "camp"
-                character["gear"]["items"] = character["gear"].get("items", []) + rest_items
+            if resting and camp_doc:
+                character["gear"]["itemBalances"]["camp"] = camp_doc.get("itemBalances", {})
+                camp_items = camp_doc.get("items", [])
+                for ci in camp_items:
+                    ci.setdefault("createdAt", datetime.now(timezone.utc).isoformat())
+                    ci["location"] = "camp"
+                character["gear"]["items"] = character["gear"].get("items", []) + camp_items
                 character["campMeta"] = {
-                    "homeType": rest_doc.get("homeType"),
+                    "homeType": camp_doc.get("homeType"),
                 }
             else:
                 character["campMeta"] = None
@@ -634,7 +634,7 @@ async def get_character_previews(address: str) -> list[dict]:
 async def get_single_character(address: str, character_id: str) -> Optional[dict]:
     """Fetch one fully-assembled character (with blueprints and pc-injected fields).
 
-    Home, rest, and vault data are NOT included — the frontend lazy-loads
+    Home, camp, and vault data are NOT included — the frontend lazy-loads
     those from their own endpoints.
     """
     db = get_database()
@@ -737,7 +737,7 @@ async def add_character(address: str, character: Character) -> Optional[Player]:
 async def delete_character(address: str, character_id: str) -> Optional[Player]:
     """
     Delete a character. Dumps all gear and home items into the shared vault
-    first, then deletes blueprints, home doc, rest doc (discarded without
+    first, then deletes blueprints, home doc, camp doc (discarded without
     salvage), and the character doc.
     """
     db = get_database()
@@ -4409,7 +4409,7 @@ async def check_in_item_instance(address: str, character_id: str, instance_id: s
 
 
 # ---------------------------------------------------------------------------
-# Generic move functions — work for home, rest, and all container pairs
+# Generic move functions — work for home, camp, and all container pairs
 # ---------------------------------------------------------------------------
 
 async def move_storage_item_to_container(
@@ -5147,7 +5147,7 @@ async def move_all_storage_to_backpack(
 ) -> Optional[Player]:
     """
     Best-effort bulk move: everything currently sitting in a character's
-    storage (home or rest) moves into their backpack, as much as fits.
+    storage (home or camp) moves into their backpack, as much as fits.
     Whatever doesn't fit stays in storage untouched.
     """
     _check_storage_type(storage_type)
@@ -5217,7 +5217,7 @@ async def move_all_storage_to_bags(
     address: str, character_id: str, storage_type: str = "home",
 ) -> Optional[Player]:
     """
-    Best-effort bulk move: everything in storage (home or rest) moves into
+    Best-effort bulk move: everything in storage (home or camp) moves into
     bags (cart first, then saddlepack, then backpack). Whatever doesn't
     fit stays in storage.
     """

@@ -108,7 +108,7 @@ export function CharacterPreview({
   const [vaultData, setVaultData] = useState<{ items: ItemInstance[]; itemBalances: Record<string, number> } | null>(null);
 
   // Trigger home fetch the first time the home view becomes visible.
-  // When resting + home tab, load rest data instead.
+  // When resting + home tab, load camp data instead.
   useEffect(() => {
     const needsHome = showHome || (activeTab === "home" && !resting);
     if (!needsHome || homeData !== null) return;
@@ -118,7 +118,7 @@ export function CharacterPreview({
       .catch(() => setHomeData(EMPTY_HOME));
   }, [showHome, activeTab, homeData, character.id, resting]);
 
-  // Trigger rest fetch when resting and home tab is active.
+  // Trigger camp fetch when resting and home tab is active.
   useEffect(() => {
     if (!(activeTab === "home" && resting) || campData !== null) return;
     fetch(`/api/auth/me/characters/${character.id}/camp`, { credentials: "include" })

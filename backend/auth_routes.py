@@ -810,7 +810,7 @@ async def get_my_character_previews(address: str = Depends(get_current_address))
 async def get_my_character_full(character_id: str, address: str = Depends(get_current_address)):
     """Full single-character load (gear, stats, blueprints, pc-injected fields).
 
-    Home/rest/vault are NOT included — the frontend lazy-loads those.
+    Home/camp/vault are NOT included — the frontend lazy-loads those.
     """
     char = await get_single_character(address, character_id)
     if char is None:

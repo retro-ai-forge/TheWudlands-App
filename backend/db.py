@@ -81,7 +81,7 @@ async def ensure_indexes() -> None:
     await db.player_characters.create_index("address", unique=True)
 
     # Per-character storage (items + itemBalances) and blueprints, each in
-    # their own collection. Home = out-of-adventure, rest = in-adventure.
+    # their own collection. Home = out-of-adventure, camp = in-adventure.
     await db.character_homes.create_index(
         [("address", 1), ("characterId", 1)], unique=True
     )
