@@ -4178,11 +4178,21 @@
   background: #1a1a10;
 }
 
+.transferButtonsWrap {
+  padding: 0.3rem 0;
+}
+
 .transferButtons {
   display: flex;
   flex-wrap: wrap;
+  justify-content: center;
   gap: 0.4rem;
   padding: 0.3rem 0;
+}
+
+.transferLineBreak {
+  flex-basis: 100%;
+  height: 0;
 }
 
 /* Round, same pill shape as .craftCountButton (the other itemBalance

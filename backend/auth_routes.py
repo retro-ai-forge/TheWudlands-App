@@ -1121,9 +1121,10 @@ class UnequipItemRequest(BaseModel):
         None,
         description='"backpack" or "saddlepack" to skip the automatic vault/camp choice and stay on this character',
     )
+    amount: Optional[int] = Field(None, description="For stackable balance items: how many to unequip (default all)")
 
 
-@player_router.post("/me/characters/{character_id}/items/{instance_id}/unequip", response_model=PlayerDataResponse)
+@player_router.post("/me/characters/{character_id}/items/{instance_id}/unequip")
 async def unequip_item_route(
     character_id: str,
     instance_id: str,
@@ -1138,13 +1139,13 @@ async def unequip_item_route(
     it straight to one of this character's own carry locations instead.
     """
     try:
-        player = await unequip_item(address, character_id, instance_id, payload.destination if payload else None)
+        result = await unequip_item(address, character_id, instance_id, payload.destination if payload else None, amount=payload.amount if payload else None)
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc))
-    if player is None:
+    if result is None:
         raise HTTPException(status_code=404, detail="No matching equipped instance on that character")
 
-    return player.to_dict()
+    return {"ok": True}
 
 
 class CheckOutItemInstanceRequest(BaseModel):
@@ -1757,16 +1758,16 @@ async def move_all_camp_to_backpack_route(character_id: str, address: str = Depe
     return player.to_dict()
 
 
-@player_router.post("/me/characters/{character_id}/camp/move-all-to-bags", response_model=PlayerDataResponse)
+@player_router.post("/me/characters/{character_id}/camp/move-all-to-bags")
 async def move_all_camp_to_bags_route(character_id: str, address: str = Depends(get_current_address)):
     """Move camp contents into bags (cart first, then saddlepack, then backpack)."""
     try:
-        player = await move_all_storage_to_bags(address, character_id, "camp")
+        result = await move_all_storage_to_bags(address, character_id, "camp")
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc))
-    if player is None:
+    if result is None:
         raise HTTPException(status_code=404, detail="Camp is already empty")
-    return player.to_dict()
+    return {"ok": True}
 
 
 class BulkMoveBalanceEntry(BaseModel):
@@ -1822,15 +1823,15 @@ async def move_all_rest_to_backpack_route(character_id: str, address: str = Depe
     return player.to_dict()
 
 
-@player_router.post("/me/characters/{character_id}/rest/move-all-to-bags", response_model=PlayerDataResponse)
+@player_router.post("/me/characters/{character_id}/rest/move-all-to-bags")
 async def move_all_rest_to_bags_route(character_id: str, address: str = Depends(get_current_address)):
     try:
-        player = await move_all_storage_to_bags(address, character_id, "rest")
+        result = await move_all_storage_to_bags(address, character_id, "rest")
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc))
-    if player is None:
+    if result is None:
         raise HTTPException(status_code=404, detail="Rest storage is already empty")
-    return player.to_dict()
+    return {"ok": True}
 
 
 @player_router.post("/me/characters/{character_id}/items/{instance_id}/rest-to-backpack", response_model=PlayerDataResponse)

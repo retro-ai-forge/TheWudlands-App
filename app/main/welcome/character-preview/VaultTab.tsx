@@ -203,6 +203,7 @@ function TransferButtons({
 }) {
   return (
     <div className={styles.transferButtons}>
+      <div className={styles.transferLineBreak} />
       {amounts.map((amount) => (
         <button
           key={amount}
@@ -227,20 +228,7 @@ function TransferButtons({
             onPick(Math.floor(owned / 2));
           }}
         >
-          ½
-        </button>
-      )}
-      {showInfinity && (
-        <button
-          type="button"
-          className={styles.transferButton}
-          disabled={pending || owned <= 0}
-          onClick={(e) => {
-            e.stopPropagation();
-            onPick(owned);
-          }}
-        >
-          <span className={styles.itemPopupInfinityGlyph}>∞</span>
+          <span style={{ fontSize: "1.15rem" }}>½</span>
         </button>
       )}
       {destinationIcon && (
@@ -256,6 +244,19 @@ function TransferButtons({
             onPick(owned);
           }}
         />
+      )}
+      {showInfinity && (
+        <button
+          type="button"
+          className={styles.transferButton}
+          disabled={pending || owned <= 0}
+          onClick={(e) => {
+            e.stopPropagation();
+            onPick(owned);
+          }}
+        >
+          <span className={styles.itemPopupInfinityGlyph}>∞</span>
+        </button>
       )}
     </div>
   );
@@ -1464,6 +1465,7 @@ export function HoldActionPopup({
   icon,
   tone,
   disabled = false,
+  characterId,
   onConfirm,
   onPlayerDataUpdated,
   onClose,
@@ -1509,6 +1511,9 @@ export function HoldActionPopup({
    * stays visible but dimmed, same as ItemDetailPopup's own disabled
    * buttons elsewhere, rather than hiding it outright. */
   disabled?: boolean;
+  /** When set, a lightweight {ok:true} response triggers a single-char
+   * re-fetch via /full instead of passing the raw payload through. */
+  characterId?: string;
   /** Fires once the hold completes - same PostJsonResult shape postJson
    * returns, so the caller can just wrap its own fetch in that helper. */
   onConfirm: () => Promise<PostJsonResult>;
@@ -1542,7 +1547,17 @@ export function HoldActionPopup({
       reset();
       return;
     }
-    onPlayerDataUpdated?.(result.data);
+    if (result.data?.characters) {
+      onPlayerDataUpdated?.(result.data);
+    } else if (characterId) {
+      const res = await fetch(`/api/auth/me/characters/${characterId}/full`, { credentials: "include" });
+      if (res.ok) {
+        const char = await res.json();
+        onPlayerDataUpdated?.({ characters: [char] });
+      } else {
+        onPlayerDataUpdated?.({ characters: [] });
+      }
+    }
     onClose();
   };
 
@@ -1747,6 +1762,7 @@ export function ChopBlockPopup({
       label="Hold to unmake"
       icon="/images/character/chopping_block.png"
       tone="salvage"
+      characterId={characterId}
       disabled={rows === null || selected.size === 0}
       onConfirm={() => {
         const amounts: Record<string, number> = {};
@@ -2938,6 +2954,13 @@ export function ItemDetailPopup({
       await postJson(`/api/auth/me/characters/${characterId}/items/${moveId}/unequip`, { destination: storageType })
     );
   };
+  const unequipToStorageAmount = async (amount: number) => {
+    setPending(true);
+    setFlashMessage(null);
+    finish(
+      await postJson(`/api/auth/me/characters/${characterId}/items/${moveId}/unequip`, { destination: storageType, amount })
+    );
+  };
   const unequipToCart = async () => {
     setPending(true);
     setFlashMessage(null);
@@ -3206,7 +3229,12 @@ export function ItemDetailPopup({
                       <div role="img" aria-label="Cart" className={styles.itemPopupBackpackIcon} style={{ backgroundImage: `url(${CART_ACTION_ICON})` }} />
                     </button>
                   )}
-                  {storageAccessible && (
+                  {storageAccessible && stackSize > 1 && owned > 1 && (
+                    <TransferButtons owned={owned} pending={pending}
+                      onPick={unequipToStorageAmount}
+                      destinationIcon={storageIcon} destinationLabel={storageLabel} amounts={RAW_RESOURCE_AMOUNTS} showHalf showInfinity={false} />
+                  )}
+                  {storageAccessible && !(stackSize > 1 && owned > 1) && (
                     <button type="button" className={styles.itemPopupBackpackButton} disabled={pending} onClick={unequipToStorage} aria-label={`Move to ${storageLabel}`} title={`Move to ${storageLabel}`}>
                       <div role="img" aria-label={storageLabel} className={styles.itemPopupBackpackIcon} style={{ backgroundImage: `url(${storageIcon})` }} />
                     </button>

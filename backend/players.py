@@ -3770,7 +3770,7 @@ async def equip_item_from_pool(address: str, character_id: str, instance_id: str
 
 
 async def unequip_item(
-    address: str, character_id: str, instance_id: str, destination: Optional[str] = None
+    address: str, character_id: str, instance_id: str, destination: Optional[str] = None, amount: Optional[int] = None
 ) -> Optional[Player]:
     """
     Unequip one of a character's item instances - clears slotRef to []
@@ -4015,24 +4015,51 @@ async def unequip_item(
                 await _set_storage_balances(db, stor, address, character_id, stor_balances)
                 await _push_storage_items(db, stor, address, character_id, storage_bound)
         elif is_balance_origin:
-            unequip_qty = instance.get("quantity", 1)
+            total_qty = instance.get("quantity", 1)
+            unequip_qty = min(amount, total_qty) if amount is not None else total_qty
+            leftover = total_qty - unequip_qty
             if target_location in ("camp", "rest"):
-                doc = await db.characters.find_one_and_update(
-                    {"address": address, "id": character_id, "gear.items": {"$elemMatch": {"instanceId": instance_id, "location": "body"}}},
-                    {"$pull": {"gear.items": {"instanceId": instance_id}}},
-                    return_document=ReturnDocument.AFTER,
-                )
+                if leftover > 0:
+                    item_idx = next(
+                        i for i, it in enumerate(character.get("gear", {}).get("items", []))
+                        if it["instanceId"] == instance_id
+                    )
+                    doc = await db.characters.find_one_and_update(
+                        {"address": address, "id": character_id, "gear.items": {"$elemMatch": {"instanceId": instance_id, "location": "body"}}},
+                        {"$set": {f"gear.items.{item_idx}.quantity": leftover}},
+                        return_document=ReturnDocument.AFTER,
+                    )
+                else:
+                    doc = await db.characters.find_one_and_update(
+                        {"address": address, "id": character_id, "gear.items": {"$elemMatch": {"instanceId": instance_id, "location": "body"}}},
+                        {"$pull": {"gear.items": {"instanceId": instance_id}}},
+                        return_document=ReturnDocument.AFTER,
+                    )
                 if doc is not None:
                     await _inc_storage_balances(db, target_location, address, character_id, {instance["itemId"]: unequip_qty})
             else:
-                doc = await db.characters.find_one_and_update(
-                    {"address": address, "id": character_id, "gear.items": {"$elemMatch": {"instanceId": instance_id, "location": "body"}}},
-                    {
-                        "$pull": {"gear.items": {"instanceId": instance_id}},
-                        "$inc": {f"gear.itemBalances.{target_location}.{instance['itemId']}": unequip_qty},
-                    },
-                    return_document=ReturnDocument.AFTER,
-                )
+                if leftover > 0:
+                    item_idx = next(
+                        i for i, it in enumerate(character.get("gear", {}).get("items", []))
+                        if it["instanceId"] == instance_id
+                    )
+                    doc = await db.characters.find_one_and_update(
+                        {"address": address, "id": character_id, "gear.items": {"$elemMatch": {"instanceId": instance_id, "location": "body"}}},
+                        {
+                            "$set": {f"gear.items.{item_idx}.quantity": leftover},
+                            "$inc": {f"gear.itemBalances.{target_location}.{instance['itemId']}": unequip_qty},
+                        },
+                        return_document=ReturnDocument.AFTER,
+                    )
+                else:
+                    doc = await db.characters.find_one_and_update(
+                        {"address": address, "id": character_id, "gear.items": {"$elemMatch": {"instanceId": instance_id, "location": "body"}}},
+                        {
+                            "$pull": {"gear.items": {"instanceId": instance_id}},
+                            "$inc": {f"gear.itemBalances.{target_location}.{instance['itemId']}": unequip_qty},
+                        },
+                        return_document=ReturnDocument.AFTER,
+                    )
         elif target_location in ("camp", "rest"):
             doc = await db.characters.find_one_and_update(
                 {"address": address, "id": character_id, "gear.items": {"$elemMatch": {"instanceId": instance_id, "location": "body"}}},
@@ -4050,7 +4077,7 @@ async def unequip_item(
             )
     if doc is None:
         return None
-    return await _build_player(db, address)
+    return True
 
 
 async def set_in_adventure(
@@ -5262,7 +5289,7 @@ async def move_all_storage_to_bags(
     remaining_items = [i for i in (storage_doc or {}).get("items", []) if i["instanceId"] not in moved_ids]
     await _set_storage_items(db, storage_type, address, character_id, remaining_items)
     await _set_storage_balances(db, storage_type, address, character_id, new_storage_balances)
-    return await _build_player(db, address)
+    return True
 
 
 _CONTAINER_FAMILIES = frozenset({"backpack", "saddlepack", "cart"})

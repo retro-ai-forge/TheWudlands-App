@@ -832,6 +832,7 @@ export function CampView({
             label="Hold to cast things into flames"
             icon="/images/character/campfire_lit.png"
             tone="destroy"
+            characterId={character.id}
             onConfirm={() => { setCampActionBusy(true); return postJson(`/api/auth/me/characters/${character.id}/${storageType}/burn-all`); }}
             onPlayerDataUpdated={(data) => { setCampActionBusy(false); onPlayerDataUpdated?.(data); }}
             onClose={() => { setCampActionBusy(false); setCampAction(null); }}
@@ -844,6 +845,7 @@ export function CampView({
             subtitle="Fills cart first, then saddlepack, then backpack"
             icon="/images/character/dropped.png"
             tone="move"
+            characterId={character.id}
             onConfirm={() => { setCampActionBusy(true); return postJson(`/api/auth/me/characters/${character.id}/${storageType}/move-all-to-bags`); }}
             onPlayerDataUpdated={(data) => { setCampActionBusy(false); onPlayerDataUpdated?.(data); }}
             onClose={() => { setCampActionBusy(false); setCampAction(null); }}
