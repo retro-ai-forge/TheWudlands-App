@@ -11,6 +11,8 @@ import {
   professionsByCategory,
   PROFESSIONS,
   BIRTHSIGNS,
+  BODY_ATTRIBUTES,
+  SOUL_ATTRIBUTES,
   type BirthsignId,
 } from "@/app/lib/characterOptions";
 import {
@@ -35,7 +37,7 @@ const pinyonScript = localFont({
   display: "swap",
 });
 
-const PAGE_COUNT = 6;
+const PAGE_COUNT = 7;
 
 const BODY_SLIDER_COLORS = ["#e88080", "#d45050", "#b83030", "#8a1a1a"] as const;
 const SOUL_SLIDER_COLORS = ["#80b0e8", "#5888d4", "#6858c0", "#8030a8"] as const;
@@ -234,7 +236,7 @@ export function SoulCreation({
   // whatever recipe/tier the player was looking at) - later picks are pushed
   // in via postMessage instead, see the effect below.
   useEffect(() => {
-    if (page !== 5) return;
+    if (page !== 6) return;
     setRecipeViewerLoaded(false);
     setRecipeViewerSrc(
       `/craft/recipe-viewer.html?embedded=1&inv=${encodeURIComponent(
@@ -267,7 +269,7 @@ export function SoulCreation({
   }, [selectedResources, playerResourceBalances, blueprintSelections, playerTools, recipeViewerLoaded]);
 
   useEffect(() => {
-    if (page !== 5) return;
+    if (page !== 6) return;
     let cancelled = false;
     setTrappingsLoaded(false);
     const params = new URLSearchParams({
@@ -759,8 +761,11 @@ export function SoulCreation({
     return result;
   }
 
-  function handleRandomizeAttributes() {
+  function handleRandomizeBodyAttributes() {
     setBodyAttributes(randomSpend(body, ["migh", "agil", "endu", "prec"] as const));
+  }
+
+  function handleRandomizeSoulAttributes() {
     setSoulAttributes(randomSpend(soul, ["will", "insi", "lore", "pres"] as const));
   }
 
@@ -788,9 +793,10 @@ export function SoulCreation({
     window.addEventListener("pointercancel", stopHold, { once: true });
   }
 
-  const isPage2Ready = bodyPointsRemaining === 0 && soulPointsRemaining === 0;
+  const isPage2Ready = bodyPointsRemaining === 0;
+  const isPage3Ready = soulPointsRemaining === 0;
 
-  const isPage5Ready =
+  const isPage6Ready =
     trappingsLoaded &&
     Object.keys(trappingsOptions.tierPools).every(
       (tier) => tierUnitsSpent(selectedResources, Number(tier)) >= (trappingsOptions.tierPools[tier] ?? 0)
@@ -945,18 +951,21 @@ export function SoulCreation({
     if (page === 2 && !isPage2Ready) {
       return;
     }
-    if (page === 3 && !isPortraitReady) {
+    if (page === 3 && !isPage3Ready) {
       return;
     }
-    if (page === 5 && !isPage5Ready) {
+    if (page === 4 && !isPortraitReady) {
       return;
     }
-    if (page === 4 && birthsign === null) {
+    if (page === 6 && !isPage6Ready) {
+      return;
+    }
+    if (page === 5 && birthsign === null) {
       flashMissingFields(["birthsign"]);
       return;
     }
     if (
-      page === 5 &&
+      page === 6 &&
       starterKitClaimed &&
       !starterKitWarningAcknowledged &&
       Object.keys(selectedResources).length > 0
@@ -969,8 +978,8 @@ export function SoulCreation({
 
   return (
     <div
-      className={`${styles.wizard} ${page === 1 || page === 3 ? styles.noTouchScroll : ""} ${
-        page === 0 || page === 2 || page === 4 || page === 5 ? styles.wizardScrollable : ""
+      className={`${styles.wizard} ${page === 1 || page === 4 ? styles.noTouchScroll : ""} ${
+        page === 0 || page === 2 || page === 3 || page === 5 || page === 6 ? styles.wizardScrollable : ""
       }`}
       onClick={handlePageClick}
       onPointerDown={handlePagePointerDown}
@@ -985,13 +994,13 @@ export function SoulCreation({
       <div className={styles.stage}>
         <div
           className={
-            page === 0 || page === 2
+            page === 0 || page === 2 || page === 3
               ? `${styles.content} ${styles.contentTop} ${styles.contentTopTight} ${styles.contentScrollable}`
-              : page === 4
-              ? `${styles.content} ${styles.contentTop} ${styles.contentTopTight} ${styles.contentScrollable} ${styles.contentWide}`
               : page === 5
+              ? `${styles.content} ${styles.contentTop} ${styles.contentTopTight} ${styles.contentScrollable} ${styles.contentWide}`
+              : page === 6
               ? `${styles.content} ${styles.contentTop} ${styles.contentTopTight} ${styles.contentScrollable} ${styles.contentWidest}`
-              : page === 1 || page === 3
+              : page === 1 || page === 4
               ? `${styles.content} ${styles.contentTop} ${styles.contentTopTight}`
               : styles.content
           }
@@ -1104,7 +1113,14 @@ export function SoulCreation({
             </>
           ) : page === 2 ? (
             <div className={styles.attrPage} onContextMenu={(e) => e.preventDefault()}>
-              <h1 className={styles.headline}>Attributes</h1>
+              <h1 className={styles.headline}>Body</h1>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                draggable={false}
+                className={styles.attrPageImage}
+                src="/images/soul-creation/attr_body.jpg"
+                alt="Body attributes"
+              />
               <div className={styles.attrPicker}>
                 <div className={styles.attrSection}>
                   <div className={styles.attrSectionHeader}>
@@ -1143,7 +1159,39 @@ export function SoulCreation({
                     );
                   })}
                 </div>
-
+              </div>
+              <button
+                type="button"
+                className={styles.randomizeButton}
+                onClick={handleRandomizeBodyAttributes}
+              >
+                Randomize
+              </button>
+              <div className={styles.attrDescriptions}>
+                {BODY_ATTRIBUTES.map((attr) => (
+                  <div key={attr.id} className={styles.attrDescItem}>
+                    <span className={styles.attrDescName}>{attr.name}</span>
+                    <p className={styles.attrDescText}>{attr.description}</p>
+                  </div>
+                ))}
+              </div>
+              <p className={styles.attrCarryNote}>
+                Carry Capacity = 10 + (Might + Endurance) / 3.
+                The sum of Might and Endurance decides what armor you can wear:
+                12 — Light (Cloth, Leather) · 24 — Medium (Chainmail, Iron, Chitin, Ebony) · 48 — Heavy (Meteoric Iron, Darksteel)
+              </p>
+            </div>
+          ) : page === 3 ? (
+            <div className={styles.attrPage} onContextMenu={(e) => e.preventDefault()}>
+              <h1 className={styles.headline}>Soul</h1>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                draggable={false}
+                className={styles.attrPageImage}
+                src="/images/soul-creation/attr_soul.jpg"
+                alt="Soul attributes"
+              />
+              <div className={styles.attrPicker}>
                 <div className={styles.attrSection}>
                   <div className={styles.attrSectionHeader}>
                     <span>Soul</span>
@@ -1185,12 +1233,20 @@ export function SoulCreation({
               <button
                 type="button"
                 className={styles.randomizeButton}
-                onClick={handleRandomizeAttributes}
+                onClick={handleRandomizeSoulAttributes}
               >
                 Randomize
               </button>
+              <div className={styles.attrDescriptions}>
+                {SOUL_ATTRIBUTES.map((attr) => (
+                  <div key={attr.id} className={styles.attrDescItem}>
+                    <span className={styles.attrDescName}>{attr.name}</span>
+                    <p className={styles.attrDescText}>{attr.description}</p>
+                  </div>
+                ))}
+              </div>
             </div>
-          ) : page === 3 ? (
+          ) : page === 4 ? (
             <>
               <h1 className={styles.headline}>Portrait</h1>
               <PortraitEditor
@@ -1207,7 +1263,7 @@ export function SoulCreation({
                 }}
               />
             </>
-          ) : page === 4 ? (
+          ) : page === 5 ? (
             <>
               <h1 className={styles.headline}>Birth Sign</h1>
               <div
@@ -1254,7 +1310,7 @@ export function SoulCreation({
                 death and revival, or regaining a lost soul, may grant a second or third charge.
               </p>
             </>
-          ) : page === 5 ? (
+          ) : page === 6 ? (
             <>
               <h1 className={styles.headline}>Trappings</h1>
               <p className={styles.introText}>
@@ -1424,7 +1480,7 @@ export function SoulCreation({
               )}
               <button
                 className={`${styles.navButton} ${styles.continueInline} ${
-                  !isPage5Ready ? styles.continueInactive : ""
+                  !isPage6Ready ? styles.continueInactive : ""
                 }`}
                 onClick={handleContinueClick}
                 disabled={isLastPage && isSubmitting}
@@ -1636,22 +1692,23 @@ export function SoulCreation({
           </>
         )}
 
-        {/* Page 5's own Continue button sits inline right under the recipe
+        {/* Page 6's own Continue button sits inline right under the recipe
             viewer instead - see the copy rendered there. */}
-        {page !== 5 && (
+        {page !== 6 && (
           <button
             className={`${styles.navButton} ${styles.continue} ${
               (page === 1 && !isPage1Ready) ||
               (page === 2 && !isPage2Ready) ||
-              (page === 3 && !isPortraitReady) ||
-              (page === 4 && birthsign === null)
+              (page === 3 && !isPage3Ready) ||
+              (page === 4 && !isPortraitReady) ||
+              (page === 5 && birthsign === null)
                 ? styles.continueInactive
                 : ""
             }`}
             onClick={handleContinueClick}
             disabled={isLastPage && isSubmitting}
           >
-            {isLastPage && isSubmitting ? "Saving…" : page === 3 && !isPortraitReady ? "Loading image…" : "Continue"}
+            {isLastPage && isSubmitting ? "Saving…" : page === 4 && !isPortraitReady ? "Loading image…" : "Continue"}
           </button>
         )}
       </div>

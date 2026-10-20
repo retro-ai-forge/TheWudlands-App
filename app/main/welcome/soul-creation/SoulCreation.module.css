@@ -441,6 +441,55 @@
   touch-action: manipulation;
 }
 
+.attrPageImage {
+  width: 100%;
+  max-width: 28rem;
+  height: auto;
+  border-radius: 8px;
+  border: 1px solid rgba(168, 153, 104, 0.3);
+  margin: 0.25rem 0 0.5rem;
+}
+
+.attrDescriptions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  width: 100%;
+  max-width: 28rem;
+  margin-top: 0.75rem;
+  border-top: 1px solid rgba(168, 153, 104, 0.25);
+  padding-top: 0.75rem;
+}
+
+.attrDescItem {
+  text-align: left;
+}
+
+.attrDescName {
+  font-size: clamp(0.8rem, 2vw, 0.9rem);
+  color: #c07a3a;
+  letter-spacing: 0.04em;
+}
+
+.attrDescText {
+  font-size: clamp(0.72rem, 1.8vw, 0.82rem);
+  line-height: 1.4;
+  color: #9a8e6e;
+  margin: 0.1rem 0 0;
+}
+
+.attrCarryNote {
+  width: 100%;
+  max-width: 28rem;
+  margin-top: 0.75rem;
+  border-top: 1px solid rgba(168, 153, 104, 0.25);
+  padding-top: 0.75rem;
+  font-size: clamp(0.72rem, 1.8vw, 0.82rem);
+  line-height: 1.5;
+  color: #9a8e6e;
+  text-align: left;
+}
+
 .attrPicker {
   display: flex;
   flex-direction: column;
