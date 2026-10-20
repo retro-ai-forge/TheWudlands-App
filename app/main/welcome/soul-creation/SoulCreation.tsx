@@ -37,6 +37,9 @@ const pinyonScript = localFont({
 
 const PAGE_COUNT = 6;
 
+const BODY_SLIDER_COLORS = ["#e88080", "#d45050", "#b83030", "#8a1a1a"] as const;
+const SOUL_SLIDER_COLORS = ["#80b0e8", "#5888d4", "#6858c0", "#8030a8"] as const;
+
 // Two professions from the same group (e.g. Mason + Potter, both
 // CraftStone) would double up on the same blueprint/resource pools rather
 // than broadening them, so profession picks must come from distinct groups.
@@ -1115,34 +1118,30 @@ export function SoulCreation({
                       ["endu", "Endurance"],
                       ["prec", "Precision"],
                     ] as const
-                  ).map(([key, label]) => (
-                    <div className={styles.attrRow} key={key}>
-                      <span className={styles.attrLabel}>{label}</span>
-                      <div className={styles.attrStepper}>
-                        <button
-                          type="button"
-                          className={styles.attrStepBtn}
-                          onPointerDown={() => startHold(() => handleBodyAttributeChange(key, -1))}
-                          onContextMenu={(e) => e.preventDefault()}
-                          disabled={bodyAttributes[key] <= 1}
-                          aria-label={`Decrease ${label}`}
-                        >
-                          ◀
-                        </button>
-                        <span className={styles.attrValueBox}>{bodyAttributes[key]}</span>
-                        <button
-                          type="button"
-                          className={styles.attrStepBtn}
-                          onPointerDown={() => startHold(() => handleBodyAttributeChange(key, 1))}
-                          onContextMenu={(e) => e.preventDefault()}
-                          disabled={bodyPointsRemaining <= 0}
-                          aria-label={`Increase ${label}`}
-                        >
-                          ▶
-                        </button>
+                  ).map(([key, label], i) => {
+                    const val = bodyAttributes[key];
+                    const sliderMax = val + bodyPointsRemaining;
+                    const fillPct = sliderMax <= 1 ? 100 : ((val - 1) / (sliderMax - 1)) * 100;
+                    return (
+                      <div
+                        className={styles.attrRow}
+                        key={key}
+                        style={{ "--attr-color": BODY_SLIDER_COLORS[i], "--fill": `${fillPct}%` } as React.CSSProperties}
+                      >
+                        <span className={styles.attrLabel}>{label}</span>
+                        <input
+                          type="range"
+                          className={styles.attrSlider}
+                          min={1}
+                          max={sliderMax}
+                          value={val}
+                          onChange={(e) => handleBodyAttributeChange(key, parseInt(e.target.value) - val)}
+                          aria-label={label}
+                        />
+                        <span className={styles.attrValueBox}>{val}</span>
                       </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
 
                 <div className={styles.attrSection}>
@@ -1157,34 +1156,30 @@ export function SoulCreation({
                       ["lore", "Lore"],
                       ["pres", "Presence"],
                     ] as const
-                  ).map(([key, label]) => (
-                    <div className={styles.attrRow} key={key}>
-                      <span className={styles.attrLabel}>{label}</span>
-                      <div className={styles.attrStepper}>
-                        <button
-                          type="button"
-                          className={styles.attrStepBtn}
-                          onPointerDown={() => startHold(() => handleSoulAttributeChange(key, -1))}
-                          onContextMenu={(e) => e.preventDefault()}
-                          disabled={soulAttributes[key] <= 1}
-                          aria-label={`Decrease ${label}`}
-                        >
-                          ◀
-                        </button>
-                        <span className={styles.attrValueBox}>{soulAttributes[key]}</span>
-                        <button
-                          type="button"
-                          className={styles.attrStepBtn}
-                          onPointerDown={() => startHold(() => handleSoulAttributeChange(key, 1))}
-                          onContextMenu={(e) => e.preventDefault()}
-                          disabled={soulPointsRemaining <= 0}
-                          aria-label={`Increase ${label}`}
-                        >
-                          ▶
-                        </button>
+                  ).map(([key, label], i) => {
+                    const val = soulAttributes[key];
+                    const sliderMax = val + soulPointsRemaining;
+                    const fillPct = sliderMax <= 1 ? 100 : ((val - 1) / (sliderMax - 1)) * 100;
+                    return (
+                      <div
+                        className={styles.attrRow}
+                        key={key}
+                        style={{ "--attr-color": SOUL_SLIDER_COLORS[i], "--fill": `${fillPct}%` } as React.CSSProperties}
+                      >
+                        <span className={styles.attrLabel}>{label}</span>
+                        <input
+                          type="range"
+                          className={styles.attrSlider}
+                          min={1}
+                          max={sliderMax}
+                          value={val}
+                          onChange={(e) => handleSoulAttributeChange(key, parseInt(e.target.value) - val)}
+                          aria-label={label}
+                        />
+                        <span className={styles.attrValueBox}>{val}</span>
                       </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               </div>
               <button
