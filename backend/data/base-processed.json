@@ -1,1158 +1,1542 @@
 [
   {
-    "id": "copper_refined_ore",
+    "id": "refined_ore_1",
     "name": "Refined Copper",
     "familyId": "refined_ore",
-    "tier": 1
+    "tier": 1,
+    "icon": "/images/items/refined_ore_tx.png",
+    "description": "Bright and polished, small bricks with edges still rough, cooling atop stone slabs, ready but unworked."
   },
   {
-    "id": "bronze_refined_ore",
+    "id": "refined_ore_2",
     "name": "Refined Bronze",
     "familyId": "refined_ore",
-    "tier": 2
+    "tier": 2,
+    "icon": "/images/items/refined_ore_tx.png",
+    "description": "Golden and lustrous, stacked as rough billets beside smelting tools, surface gleaming but not yet hammered thin."
   },
   {
-    "id": "iron_refined_ore",
+    "id": "refined_ore_3",
     "name": "Refined Iron",
     "familyId": "refined_ore",
-    "tier": 3
+    "tier": 3,
+    "icon": "/images/items/refined_ore_tx.png",
+    "description": "Heavy and dark, cooling in a line of mottled bars, streaks of slag clinging, unfinished."
   },
   {
-    "id": "silver_refined_ore",
+    "id": "refined_ore_4",
     "name": "Refined Silver",
     "familyId": "refined_ore",
-    "tier": 4
+    "tier": 4,
+    "icon": "/images/items/refined_ore_tx.png",
+    "description": "A bar of brilliant white gleam, resting in tongs over a water trough, magical runes just visible on the cooling surface."
   },
   {
-    "id": "gold_refined_ore",
+    "id": "refined_ore_5",
     "name": "Refined Gold",
     "familyId": "refined_ore",
-    "tier": 5
+    "tier": 5,
+    "icon": "/images/items/refined_ore_tx.png",
+    "description": "Pure and radiant, twisted into a crude ingot, lying atop a silken pad, edges untouched and glowing with promise."
   },
   {
-    "id": "star_metal_refined_ore",
+    "id": "refined_ore_6",
     "name": "Refined Star Metal",
     "familyId": "refined_ore",
-    "tier": 6
+    "tier": 6,
+    "icon": "/images/items/refined_ore_tx.png",
+    "description": "Midnight blue shot with radiant veins, a slab resting in a rune-marked mold, readiness echoing with cosmic potential, shaping yet to begin."
   },
   {
-    "id": "copper_metal_ingot",
+    "id": "metal_ingot_1",
     "name": "Copper Ingot",
     "familyId": "metal_ingot",
-    "tier": 1
+    "tier": 1,
+    "icon": "/images/items/metal_ingot_tx.png",
+    "description": "Irregular and bright, still crusted with black slag, cooling beside open flames in the smithy."
   },
   {
-    "id": "bronze_metal_ingot",
+    "id": "metal_ingot_2",
     "name": "Bronze Ingot",
     "familyId": "metal_ingot",
-    "tier": 2
+    "tier": 2,
+    "icon": "/images/items/metal_ingot_tx.png",
+    "description": "Rough and pitted, nestling in a bed of straw for slow cooling, awaiting further shaping."
   },
   {
-    "id": "iron_metal_ingot",
+    "id": "metal_ingot_3",
     "name": "Iron Ingot",
     "familyId": "metal_ingot",
-    "tier": 3
+    "tier": 3,
+    "icon": "/images/items/metal_ingot_tx.png",
+    "description": "Blocky and tarnished, steam rising from its sides, still bearing marks from the casting mold."
   },
   {
-    "id": "silver_metal_ingot",
+    "id": "metal_ingot_4",
     "name": "Silver Ingot",
     "familyId": "metal_ingot",
-    "tier": 4
+    "tier": 4,
+    "icon": "/images/items/metal_ingot_tx.png",
+    "description": "Shining yet tarnished, edges unfinished, resting in a basin of enchanted water—arcane etchings beginning to appear."
   },
   {
-    "id": "gold_metal_ingot",
+    "id": "metal_ingot_5",
     "name": "Gold Ingot",
     "familyId": "metal_ingot",
-    "tier": 5
+    "tier": 5,
+    "icon": "/images/items/metal_ingot_tx.png",
+    "description": "Heavy and radiant, cooling in a stone trough, surface swirling with hints of enchantment, unfinished purity."
   },
   {
-    "id": "star_metal_ingot",
+    "id": "metal_ingot_6",
     "name": "Star Metal Ingot",
     "familyId": "metal_ingot",
-    "tier": 6
+    "tier": 6,
+    "icon": "/images/items/metal_ingot_tx.png",
+    "description": "Shot through with veins of starlight, humming gently, not yet ground nor ready for legendary forging."
   },
   {
-    "id": "copper_metal_bar",
+    "id": "metal_bar_1",
     "name": "Copper Bar",
     "familyId": "metal_bar",
-    "tier": 1
+    "tier": 1,
+    "icon": "/images/items/metal_bar_tx.png",
+    "description": "Raw and reddish, resting on a blacksmith’s bench, lightly tarnished and still warm from the mold."
   },
   {
-    "id": "bronze_metal_bar",
+    "id": "metal_bar_2",
     "name": "Bronze Bar",
     "familyId": "metal_bar",
-    "tier": 2
+    "tier": 2,
+    "icon": "/images/items/metal_bar_tx.png",
+    "description": "Golden-brown and roughly rectangular, casting lines visible, set in a stack beside bellows, unshaped."
   },
   {
-    "id": "iron_metal_bar",
+    "id": "metal_bar_3",
     "name": "Iron Bar",
     "familyId": "metal_bar",
-    "tier": 3
+    "tier": 3,
+    "icon": "/images/items/metal_bar_tx.png",
+    "description": "Dull gray and heavy, cooling on a battered anvil, flecks of slag clinging to its edge, not yet refined."
   },
   {
-    "id": "silver_metal_bar",
+    "id": "metal_bar_4",
     "name": "Silver Bar",
     "familyId": "metal_bar",
-    "tier": 4
+    "tier": 4,
+    "icon": "/images/items/metal_bar_tx.png",
+    "description": "Gleaming but unpolished, freshly poured onto a stone slab, trace amounts of flux on the sides, beginnings of enchantment shimmering within."
   },
   {
-    "id": "gold_metal_bar",
+    "id": "metal_bar_5",
     "name": "Gold Bar",
     "familyId": "metal_bar",
-    "tier": 5
+    "tier": 5,
+    "icon": "/images/items/metal_bar_tx.png",
+    "description": "Deep yellow and faintly glimmering, resting atop silk in a noble’s vault, ends unfinished, warmth radiating."
   },
   {
-    "id": "star_metal_bar",
+    "id": "metal_bar_6",
     "name": "Star Metal Bar",
     "familyId": "metal_bar",
-    "tier": 6
+    "tier": 6,
+    "icon": "/images/items/metal_bar_tx.png",
+    "description": "Black with shifting nebula gleam, pulsing slightly, forged but not cut, runes faintly visible in the cool dusk of the forge."
   },
   {
-    "id": "copper_alloy_dust",
+    "id": "alloy_dust_1",
     "name": "Copper Alloy Dust",
     "familyId": "alloy_dust",
-    "tier": 1
+    "tier": 1,
+    "icon": "/images/items/alloy_dust_tx.png",
+    "description": "A scattered pile of dull dust glinting faintly on a cluttered blacksmith’s anvil, not yet ready for the crucible."
   },
   {
-    "id": "bronze_alloy_dust",
+    "id": "alloy_dust_2",
     "name": "Bronze Alloy Dust",
     "familyId": "alloy_dust",
-    "tier": 2
+    "tier": 2,
+    "icon": "/images/items/alloy_dust_tx.png",
+    "description": "Fine greenish and coarse dust, lying in a sturdy wooden scoop beside a half-melted ingot."
   },
   {
-    "id": "iron_alloy_dust",
+    "id": "alloy_dust_3",
     "name": "Iron Alloy Dust",
     "familyId": "alloy_dust",
-    "tier": 3
+    "tier": 3,
+    "icon": "/images/items/alloy_dust_tx.png",
+    "description": "Dark dust sprinkled across a cracked stone countertop, motes of gray swirling in the air with every stir."
   },
   {
-    "id": "silver_alloy_dust",
+    "id": "alloy_dust_4",
     "name": "Silver Alloy Dust",
     "familyId": "alloy_dust",
-    "tier": 4
+    "tier": 4,
+    "icon": "/images/items/alloy_dust_tx.png",
+    "description": "Shimmering bright and pure, resting in a shallow crystal bowl, metallic grains pulsating with arcane potential."
   },
   {
-    "id": "gold_alloy_dust",
+    "id": "alloy_dust_5",
     "name": "Gold Alloy Dust",
     "familyId": "alloy_dust",
-    "tier": 5
+    "tier": 5,
+    "icon": "/images/items/alloy_dust_tx.png",
+    "description": "A mound of gleaming dust atop an ornate goldscale, illuminated by a shaft of sunlight—clearly unfinished, awaiting enchantment."
   },
   {
-    "id": "star_metal_alloy_dust",
+    "id": "alloy_dust_6",
     "name": "Star Metal Alloy Dust",
     "familyId": "alloy_dust",
-    "tier": 6
+    "tier": 6,
+    "icon": "/images/items/alloy_dust_tx.png",
+    "description": "Mysterious and deep blue with flecks of starlight, laid out on a rune-etched obsidian slab, softly humming with nascent energy."
   },
   {
-    "id": "pine_coal",
+    "id": "coal_1",
     "name": "Pine Charcoal",
     "familyId": "coal",
-    "tier": 1
+    "tier": 1,
+    "icon": "/images/items/coal_tx.png",
+    "description": "Rough chunks of gray-ash coated charcoal, piled haphazardly beside a brick kiln—wood grain still visible on many pieces, warm to the touch."
   },
   {
-    "id": "oak_coal",
+    "id": "coal_2",
     "name": "Oak Charcoal",
     "familyId": "coal",
-    "tier": 2
+    "tier": 2,
+    "icon": "/images/items/coal_tx.png",
+    "description": "Dense and dark, cooling in heaps across a cobblestone floor, embers winking beneath the crust but not yet casked for transport."
   },
   {
-    "id": "ash_coal",
+    "id": "coal_3",
     "name": "Ash Charcoal",
     "familyId": "coal",
-    "tier": 3
+    "tier": 3,
+    "icon": "/images/items/coal_tx.png",
+    "description": "Brittle and silvery, laid out in rows atop a broad iron tray, edges ragged, dust motes drifting in morning light."
   },
   {
-    "id": "cedar_coal",
+    "id": "coal_4",
     "name": "Cedar Charcoal",
     "familyId": "coal",
-    "tier": 4
+    "tier": 4,
+    "icon": "/images/items/coal_tx.png",
+    "description": "Aromatic and reddish-black, arranged in neat rows on a perfumed board, smoke still curling faintly, awaiting magical infusion."
   },
   {
-    "id": "ebony_coal",
+    "id": "coal_5",
     "name": "Ebony Charcoal",
     "familyId": "coal",
-    "tier": 5
+    "tier": 5,
+    "icon": "/images/items/coal_tx.png",
+    "description": "Hard and shadow-deep, freshly drawn from an ornate arcane brazier, its core glimmering with latent energy, ready to serve grander crafts."
   },
   {
-    "id": "worldroot_coal",
+    "id": "coal_6",
     "name": "Worldroot Charcoal",
     "familyId": "coal",
-    "tier": 6
+    "tier": 6,
+    "icon": "/images/items/coal_tx.png",
+    "description": "Ancient and rune-scorched, each piece pulsating with primal life, heaped on a bed of moss in the heart of a grove—half charcoal, half relic."
   },
   {
-    "id": "pine_firewood",
+    "id": "firewood_1",
     "name": "Pine Firewood",
     "familyId": "firewood",
-    "tier": 1
+    "tier": 1,
+    "icon": "/images/items/firewood_tx.png",
+    "description": "Resinous and fragrant, freshly split with sap still dripping, stacked haphazardly beneath a timber eave."
   },
   {
-    "id": "oak_firewood",
+    "id": "firewood_2",
     "name": "Oak Firewood",
     "familyId": "firewood",
-    "tier": 2
+    "tier": 2,
+    "icon": "/images/items/firewood_tx.png",
+    "description": "Heavy and dark, bark peeling, logs arranged neatly on a wagon, edges rough and not yet seasoned."
   },
   {
-    "id": "ash_firewood",
+    "id": "firewood_3",
     "name": "Ash Firewood",
     "familyId": "firewood",
-    "tier": 3
+    "tier": 3,
+    "icon": "/images/items/firewood_tx.png",
+    "description": "Pale and splintered, small logs grouped atop a chopping block, dust swirling—wood still green."
   },
   {
-    "id": "cedar_firewood",
+    "id": "firewood_4",
     "name": "Cedar Firewood",
     "familyId": "firewood",
-    "tier": 4
+    "tier": 4,
+    "icon": "/images/items/firewood_tx.png",
+    "description": "Streaked red and gold, aromatic oils yet to be released, logs in tidy piles next to a stone hearth."
   },
   {
-    "id": "ebony_firewood",
+    "id": "firewood_5",
     "name": "Ebony Firewood",
     "familyId": "firewood",
-    "tier": 5
+    "tier": 5,
+    "icon": "/images/items/firewood_tx.png",
+    "description": "Jet-black and glossy, tough fibers resisting the axe, fanned out on an obsidian slab, magic latent within."
   },
   {
-    "id": "worldroot_firewood",
+    "id": "firewood_6",
     "name": "Worldroot Firewood",
     "familyId": "firewood",
-    "tier": 6
+    "tier": 6,
+    "icon": "/images/items/firewood_tx.png",
+    "description": "Twisted and engraved with faint runes, bark throbbing with green light, stacked at the edge of an ancient living circle, unfinished and powerfully alive."
   },
   {
-    "id": "pine_plank",
+    "id": "plank_1",
     "name": "Pine Plank",
     "familyId": "plank",
-    "tier": 1
+    "tier": 1,
+    "icon": "/images/items/plank_tx.png",
+    "description": "Soft and pale, knots and bark along the edges, stacked loosely beneath sawdust-covered rafters."
   },
   {
-    "id": "oak_plank",
+    "id": "plank_2",
     "name": "Oak Plank",
     "familyId": "plank",
-    "tier": 2
+    "tier": 2,
+    "icon": "/images/items/plank_tx.png",
+    "description": "Heavy, hard-grained, ends rough-cut and uneven, propped on a carpenter’s sawhorse, some bark clinging."
   },
   {
-    "id": "ash_plank",
+    "id": "plank_3",
     "name": "Ash Plank",
     "familyId": "plank",
-    "tier": 3
+    "tier": 3,
+    "icon": "/images/items/plank_tx.png",
+    "description": "Straight and smooth, pale sapwood showing, lying flat, not yet sanded or joined, fresh from the mill."
   },
   {
-    "id": "cedar_plank",
+    "id": "plank_4",
     "name": "Cedar Plank",
     "familyId": "plank",
-    "tier": 4
+    "tier": 4,
+    "icon": "/images/items/plank_tx.png",
+    "description": "Reddish and aromatic, thin shavings along one side, waiting finishing strokes beside a carving knife."
   },
   {
-    "id": "ebony_plank",
+    "id": "plank_5",
     "name": "Ebony Plank",
     "familyId": "plank",
-    "tier": 5
+    "tier": 5,
+    "icon": "/images/items/plank_tx.png",
+    "description": "Black, weighty, glossy surface marred by crude saw marks, positioned on display for final selection."
   },
   {
-    "id": "worldroot_plank",
+    "id": "plank_6",
     "name": "Worldroot Plank",
     "familyId": "plank",
-    "tier": 6
+    "tier": 6,
+    "icon": "/images/items/plank_tx.png",
+    "description": "Ancient and rune-carved, alive with faint green light, twisted edges spreading over an arcane workbench, awaiting shaping for legendary works."
   },
   {
-    "id": "pine_beam",
+    "id": "beam_1",
     "name": "Pine Beam",
     "familyId": "beam",
-    "tier": 1
+    "tier": 1,
+    "icon": "/images/items/beam_tx.png",
+    "description": "Rough-cut, pale and resinous, stacked on a carpenter’s bench, fresh sawdust scattered alongside."
   },
   {
-    "id": "oak_beam",
+    "id": "beam_2",
     "name": "Oak Beam",
     "familyId": "beam",
-    "tier": 2
+    "tier": 2,
+    "icon": "/images/items/beam_tx.png",
+    "description": "Massive, gnarled and heavy, propped on stone blocks, showing recent chisel marks from work in progress."
   },
   {
-    "id": "ash_beam",
+    "id": "beam_3",
     "name": "Ash Beam",
     "familyId": "beam",
-    "tier": 3
+    "tier": 3,
+    "icon": "/images/items/beam_tx.png",
+    "description": "Pale and smooth, set across a sawbuck, its ends still raw and unshaped."
   },
   {
-    "id": "cedar_beam",
+    "id": "beam_4",
     "name": "Cedar Beam",
     "familyId": "beam",
-    "tier": 4
+    "tier": 4,
+    "icon": "/images/items/beam_tx.png",
+    "description": "Red-toned and aromatic, lying flat on a joiner’s floor, with unfinished notches awaiting joinery."
   },
   {
-    "id": "ebony_beam",
+    "id": "beam_5",
     "name": "Ebony Beam",
     "familyId": "beam",
-    "tier": 5
+    "tier": 5,
+    "icon": "/images/items/beam_tx.png",
+    "description": "Lustrous and dark as midnight, set across golden clamps, the grain barely revealed through the first shavings."
   },
   {
-    "id": "worldroot_beam",
+    "id": "beam_6",
     "name": "Worldroot Beam",
     "familyId": "beam",
-    "tier": 6
+    "tier": 6,
+    "icon": "/images/items/beam_tx.png",
+    "description": "Majestic and swirling with ancient runes and untamed grain, sprawled across a circle of rune stones—a relic halfway between forest and artifact."
   },
   {
-    "id": "pine_reinforced_frame",
+    "id": "reinforced_frame_1",
     "name": "Pine Reinforced Frame",
     "familyId": "reinforced_frame",
-    "tier": 1
+    "tier": 1,
+    "icon": "/images/items/reinforced_frame_tx.png",
+    "description": "Light wood with fresh resin, iron brackets loosely attached, corners unpainted, propped against the workshop wall."
   },
   {
-    "id": "oak_reinforced_frame",
+    "id": "reinforced_frame_2",
     "name": "Oak Reinforced Frame",
     "familyId": "reinforced_frame",
-    "tier": 2
+    "tier": 2,
+    "icon": "/images/items/reinforced_frame_tx.png",
+    "description": "Thick and knotty, beams crisscrossed and clamped, metal joinery exposed, sturdiness aborning."
   },
   {
-    "id": "ash_reinforced_frame",
+    "id": "reinforced_frame_3",
     "name": "Ash Reinforced Frame",
     "familyId": "reinforced_frame",
-    "tier": 3
+    "tier": 3,
+    "icon": "/images/items/reinforced_frame_tx.png",
+    "description": "Pale and elegant, laths loosely bound with leather thongs, iron nails only half driven, unfinished structure apparent."
   },
   {
-    "id": "cedar_reinforced_frame",
+    "id": "reinforced_frame_4",
     "name": "Cedar Reinforced Frame",
     "familyId": "reinforced_frame",
-    "tier": 4
+    "tier": 4,
+    "icon": "/images/items/reinforced_frame_tx.png",
+    "description": "Aromatic and reddish, joined with bronze rods, shavings on the floor, bulk unshaped."
   },
   {
-    "id": "ebony_reinforced_frame",
+    "id": "reinforced_frame_5",
     "name": "Ebony Reinforced Frame",
     "familyId": "reinforced_frame",
-    "tier": 5
+    "tier": 5,
+    "icon": "/images/items/reinforced_frame_tx.png",
+    "description": "Glossy black wood braced with silver inlays, mortised joints still disassembled, laid in intricate patterns, awaiting assembly."
   },
   {
-    "id": "worldroot_reinforced_frame",
+    "id": "reinforced_frame_6",
     "name": "Worldroot Reinforced Frame",
     "familyId": "reinforced_frame",
-    "tier": 6
+    "tier": 6,
+    "icon": "/images/items/reinforced_frame_tx.png",
+    "description": "Gnarled and rune-etched, pulsing with living power, iron bands hovering nearby, mystical joinings incomplete—not yet awakened."
   },
   {
-    "id": "pine_writers_table",
+    "id": "writers_table_1",
     "name": "Crude Writer's Table",
     "familyId": "writers_table",
-    "tier": 1
+    "tier": 1,
+    "icon": "/images/items/writers_table_tx.png",
+    "description": "Battered planks and mismatched legs, ink stains spattered, with nails sticking out and tasks abandoned mid-assembly."
   },
   {
-    "id": "oak_writers_table",
+    "id": "writers_table_2",
     "name": "Oak Writer's Table",
     "familyId": "writers_table",
-    "tier": 2
+    "tier": 2,
+    "icon": "/images/items/writers_table_tx.png",
+    "description": "Robust but rough, rich brown grains exposed, surface half-planed, tool marks everywhere."
   },
   {
-    "id": "ash_writers_table",
+    "id": "writers_table_3",
     "name": "Ash Writer's Table",
     "familyId": "writers_table",
-    "tier": 3
+    "tier": 3,
+    "icon": "/images/items/writers_table_tx.png",
+    "description": "Pale and elegant, legs unjoined and writing surface uneven, sawdust across the top."
   },
   {
-    "id": "cedar_writers_table",
+    "id": "writers_table_4",
     "name": "Cedar Writer's Table",
     "familyId": "writers_table",
-    "tier": 4
+    "tier": 4,
+    "icon": "/images/items/writers_table_tx.png",
+    "description": "Red-toned planks perfumed and aromatic, drawer fronts open with bare wood showing, filigree carving incomplete."
   },
   {
-    "id": "ebony_writers_table",
+    "id": "writers_table_5",
     "name": "Ebony Writer's Table",
     "familyId": "writers_table",
-    "tier": 5
+    "tier": 5,
+    "icon": "/images/items/writers_table_tx.png",
+    "description": "Glossy black wood under a fine layer of dust, delicate inlay half-finished, awaiting final polish."
   },
   {
-    "id": "worldroot_writers_table",
+    "id": "writers_table_6",
     "name": "Worldroot Writer's Table",
     "familyId": "writers_table",
-    "tier": 6
+    "tier": 6,
+    "icon": "/images/items/writers_table_tx.png",
+    "description": "Sprawling roots and mystical symbols etched across its broad unfinished surface, magical energies pooling as it’s assembled."
   },
   {
-    "id": "small_bone_shard",
+    "id": "bone_shard_1",
     "name": "Small Bone Shard",
     "familyId": "bone_shard",
-    "tier": 1
+    "tier": 1,
+    "icon": "/images/items/bone_shard_tx.png",
+    "description": "Chalky and sharp, sitting amid a scatter of chips, unfinished and slightly bloodstained from recent carving."
   },
   {
-    "id": "large_bone_shard",
+    "id": "bone_shard_2",
     "name": "Large Bone Shard",
     "familyId": "bone_shard",
-    "tier": 2
+    "tier": 2,
+    "icon": "/images/items/bone_shard_tx.png",
+    "description": "Jagged and heavy, sprawling on a butcher’s table, yet to be filed or shaped."
   },
   {
-    "id": "beast_bone_shard",
+    "id": "bone_shard_3",
     "name": "Beast Bone Shard",
     "familyId": "bone_shard",
-    "tier": 3
+    "tier": 3,
+    "icon": "/images/items/bone_shard_tx.png",
+    "description": "Thick and twisted, jumbled amid a nest of sinew and splinters on a craftsman’s bench."
   },
   {
-    "id": "monster_bone_shard",
+    "id": "bone_shard_4",
     "name": "Monster Bone Shard",
     "familyId": "bone_shard",
-    "tier": 4
+    "tier": 4,
+    "icon": "/images/items/bone_shard_tx.png",
+    "description": "Grotesque and spined, partially cleaned but still rough, abandoned mid-cut."
   },
   {
-    "id": "ancient_bone_shard",
+    "id": "bone_shard_5",
     "name": "Ancient Bone Shard",
     "familyId": "bone_shard",
-    "tier": 5
+    "tier": 5,
+    "icon": "/images/items/bone_shard_tx.png",
+    "description": "Yellowed and runic-etched, half-buried in sawdust, timeworn but unrefined."
   },
   {
-    "id": "dragon_bone_shard",
+    "id": "bone_shard_6",
     "name": "Dragon Bone Shard",
     "familyId": "bone_shard",
-    "tier": 6
+    "tier": 6,
+    "icon": "/images/items/bone_shard_tx.png",
+    "description": "Gleaming with a translucent sheen and edged in gold, lying on a silk cloth, unfinished but brimming with mythic promise."
   },
   {
-    "id": "small_bone_blade",
+    "id": "bone_blade_1",
     "name": "Small Bone Blade",
     "familyId": "bone_blade",
-    "tier": 1
+    "tier": 1,
+    "icon": "/images/items/bone_blade_tx.png",
+    "description": "Pale and jagged, laying on a bench, freshly carved and unpolished, splinters yet to be sanded away."
   },
   {
-    "id": "large_bone_blade",
+    "id": "bone_blade_2",
     "name": "Large Bone Blade",
     "familyId": "bone_blade",
-    "tier": 2
+    "tier": 2,
+    "icon": "/images/items/bone_blade_tx.png",
+    "description": "Heavy and unwieldy, resting atop a stained leather mat, its edge still marked by rough carving."
   },
   {
-    "id": "beast_bone_blade",
+    "id": "bone_blade_3",
     "name": "Beast Bone Blade",
     "familyId": "bone_blade",
-    "tier": 3
+    "tier": 3,
+    "icon": "/images/items/bone_blade_tx.png",
+    "description": "Curved and robust, with notches yet to be filed smooth, pinned beneath iron clamps."
   },
   {
-    "id": "monster_bone_blade",
+    "id": "bone_blade_4",
     "name": "Monster Bone Blade",
     "familyId": "bone_blade",
-    "tier": 4
+    "tier": 4,
+    "icon": "/images/items/bone_blade_tx.png",
+    "description": "Massive and serrated, mounted on a blacksmith’s anvil, partially ground, primitive power apparent."
   },
   {
-    "id": "ancient_bone_blade",
+    "id": "bone_blade_5",
     "name": "Ancient Bone Blade",
     "familyId": "bone_blade",
-    "tier": 5
+    "tier": 5,
+    "icon": "/images/items/bone_blade_tx.png",
+    "description": "Dense with fossil veins, lying unfinished amid mystic runes, not yet unleashed to the world."
   },
   {
-    "id": "wyrm_bone_blade",
+    "id": "bone_blade_6",
     "name": "Wyrm Bone Blade",
     "familyId": "bone_blade",
-    "tier": 6
+    "tier": 6,
+    "icon": "/images/items/bone_blade_tx.png",
+    "description": "Sinuous and elongated, marbled with iridescent veins, awaiting final polishing beside a glowing forge."
   },
   {
-    "id": "hemp_thread",
+    "id": "thread_1",
     "name": "Hemp Thread",
     "familyId": "thread",
-    "tier": 1
+    "tier": 1,
+    "icon": "/images/items/thread_tx.png",
+    "description": "Greenish and rough, loosely twisted and sitting on a carving bench, tips fraying, not yet spooled."
   },
   {
-    "id": "cotton_thread",
+    "id": "thread_2",
     "name": "Cotton Thread",
     "familyId": "thread",
-    "tier": 2
+    "tier": 2,
+    "icon": "/images/items/thread_tx.png",
+    "description": "Soft white and slightly fluffy, looped over a spindle, with bits of seed yet to be carded out."
   },
   {
-    "id": "wool_thread",
+    "id": "thread_3",
     "name": "Wool Thread",
     "familyId": "thread",
-    "tier": 3
+    "tier": 3,
+    "icon": "/images/items/thread_tx.png",
+    "description": "Off-white and fuzzy, strands newly spun and lying coiled, some tufts still showing natural lanolin."
   },
   {
-    "id": "silk_thread",
+    "id": "thread_4",
     "name": "Silk Thread",
     "familyId": "thread",
-    "tier": 4
+    "tier": 4,
+    "icon": "/images/items/thread_tx.png",
+    "description": "Pearly and glistening, smooth but unspooled, shining faintly at the edge of a weaver’s loom, not yet wound into skeins."
   },
   {
-    "id": "shadow_thread",
+    "id": "thread_5",
     "name": "Shadow Thread",
     "familyId": "thread",
-    "tier": 5
+    "tier": 5,
+    "icon": "/images/items/thread_tx.png",
+    "description": "Jet-black and whisper-thin, trailing from the maw of a shadowy distaff, ends unraveling into mist, not yet woven."
   },
   {
-    "id": "moon_thread",
+    "id": "thread_6",
     "name": "Moon Thread",
     "familyId": "thread",
-    "tier": 6
+    "tier": 6,
+    "icon": "/images/items/thread_tx.png",
+    "description": "Glowing silver-blue, floating above an enchanted spindle, lengths swirling in lunar patterns, unfinished and haunting."
   },
   {
-    "id": "hemp_woven_cloth",
+    "id": "woven_cloth_1",
     "name": "Hemp Cloth",
     "familyId": "woven_cloth",
-    "tier": 1
+    "tier": 1,
+    "icon": "/images/items/woven_cloth_tx.png",
+    "description": "Rough and coarse, spun in uneven weave, pieces rolled atop a market cart with stray stalks caked in."
   },
   {
-    "id": "cotton_woven_cloth",
+    "id": "woven_cloth_2",
     "name": "Cotton Cloth",
     "familyId": "woven_cloth",
-    "tier": 2
+    "tier": 2,
+    "icon": "/images/items/woven_cloth_tx.png",
+    "description": "Creamy and soft, broad bolts resting in a weaving basket, threads sticking out along the frayed margin."
   },
   {
-    "id": "wool_woven_cloth",
+    "id": "woven_cloth_3",
     "name": "Wool Cloth",
     "familyId": "woven_cloth",
-    "tier": 3
+    "tier": 3,
+    "icon": "/images/items/woven_cloth_tx.png",
+    "description": "Thick, pale gray with nubs of lanolin, sheets half-folded and awaiting final carding and wash."
   },
   {
-    "id": "silk_woven_cloth",
+    "id": "woven_cloth_4",
     "name": "Silk Cloth",
     "familyId": "woven_cloth",
-    "tier": 4
+    "tier": 4,
+    "icon": "/images/items/woven_cloth_tx.png",
+    "description": "Glossy and light as air, sheer lengths draped over a maple dowel, unhemmed and trailing gossamer."
   },
   {
-    "id": "shadow_woven_cloth",
+    "id": "woven_cloth_5",
     "name": "Shadow Cloth",
     "familyId": "woven_cloth",
-    "tier": 5
+    "tier": 5,
+    "icon": "/images/items/woven_cloth_tx.png",
+    "description": "Nearly black, with whorls of deeper darkness, folded on stone with shifting sheen, unfinished and cool."
   },
   {
-    "id": "moon_woven_cloth",
+    "id": "woven_cloth_6",
     "name": "Moon Cloth",
     "familyId": "woven_cloth",
-    "tier": 6
+    "tier": 6,
+    "icon": "/images/items/woven_cloth_tx.png",
+    "description": "Shimmering silver-blue, floating lightly above a rune-bound loom, motes of moonlight drifting from the edges, not yet cut."
   },
   {
-    "id": "hemp_sponge",
+    "id": "sponge_1",
     "name": "Hemp Sponge",
     "familyId": "sponge",
-    "tier": 1
+    "tier": 1,
+    "icon": "/images/items/sponge_tx.png",
+    "description": "Pale green and coarse, recently netted and wrung, drying on a rough wooden rack, fibers tangled and soft."
   },
   {
-    "id": "cotton_sponge",
+    "id": "sponge_2",
     "name": "Cotton Sponge",
     "familyId": "sponge",
-    "tier": 2
+    "tier": 2,
+    "icon": "/images/items/sponge_tx.png",
+    "description": "Fluffy white and springy, soaking in a basin of clear water, portions uncut, naturally absorbent."
   },
   {
-    "id": "wool_sponge",
+    "id": "sponge_3",
     "name": "Wool Sponge",
     "familyId": "sponge",
-    "tier": 3
+    "tier": 3,
+    "icon": "/images/items/sponge_tx.png",
+    "description": "Gray and slightly oily, loosely packed and drying on a clay tile, scent of lanolin rising, yet to be shaped."
   },
   {
-    "id": "silk_sponge",
+    "id": "sponge_4",
     "name": "Silk Sponge",
     "familyId": "sponge",
-    "tier": 4
+    "tier": 4,
+    "icon": "/images/items/sponge_tx.png",
+    "description": "Pearly smooth and shimmering, draped over a bronze rod by a window, flowing edges untrimmed and delicate."
   },
   {
-    "id": "shadow_sponge",
+    "id": "sponge_5",
     "name": "Shadow Sponge",
     "familyId": "sponge",
-    "tier": 5
+    "tier": 5,
+    "icon": "/images/items/sponge_tx.png",
+    "description": "Deep black and cool to the touch, light pooling on its surface, ethereal strands swirling, not yet contained."
   },
   {
-    "id": "moon_sponge",
+    "id": "sponge_6",
     "name": "Moon Sponge",
     "familyId": "sponge",
-    "tier": 6
+    "tier": 6,
+    "icon": "/images/items/sponge_tx.png",
+    "description": "Silver-white with glints of iridescence, luminescent motes drifting from its surface, floating in a crystal bowl, far from finished."
   },
   {
-    "id": "healing_herb_herbal_extract",
+    "id": "herbal_extract_1",
     "name": "Healing Herb Extract",
     "familyId": "herbal_extract",
-    "tier": 1
+    "tier": 1,
+    "icon": "/images/items/herbal_extract_tx.png",
+    "description": "Bright green and cloudy, swirling in a half-corked glass bottle, droplets still condensing on the neck."
   },
   {
-    "id": "bitterroot_herbal_extract",
+    "id": "herbal_extract_2",
     "name": "Bitterroot Extract",
     "familyId": "herbal_extract",
-    "tier": 2
+    "tier": 2,
+    "icon": "/images/items/herbal_extract_tx.png",
+    "description": "Amber and dense, seeping through filter paper atop a copper funnel, essence pooling gradually below."
   },
   {
-    "id": "nightshade_herbal_extract",
+    "id": "herbal_extract_3",
     "name": "Nightshade Extract",
     "familyId": "herbal_extract",
-    "tier": 3
+    "tier": 3,
+    "icon": "/images/items/herbal_extract_tx.png",
+    "description": "Dark violet and viscous, oozing down the side of a crooked flask, mixing forbidden scents with cool night air."
   },
   {
-    "id": "fireleaf_herbal_extract",
+    "id": "herbal_extract_4",
     "name": "Fireleaf Extract",
     "familyId": "herbal_extract",
-    "tier": 4
+    "tier": 4,
+    "icon": "/images/items/herbal_extract_tx.png",
+    "description": "Glowing red in a narrow alembic, vapors swirling within, warmth radiating but the process unfinished."
   },
   {
-    "id": "starblossom_herbal_extract",
+    "id": "herbal_extract_5",
     "name": "Starblossom Extract",
     "familyId": "herbal_extract",
-    "tier": 5
+    "tier": 5,
+    "icon": "/images/items/herbal_extract_tx.png",
+    "description": "Pale blue and faintly sparkling, resting in a silver phial adorned with unfinished runes, essence yet to be decanted."
   },
   {
-    "id": "dreamcap_herbal_extract",
+    "id": "herbal_extract_6",
     "name": "Dreamcap Extract",
     "familyId": "herbal_extract",
-    "tier": 6
+    "tier": 6,
+    "icon": "/images/items/herbal_extract_tx.png",
+    "description": "Misty and opaline, contained within a corked round flask, somnolent fog swirling—alchemy only halfway complete."
   },
   {
-    "id": "healing_herb_medicinal_paste",
+    "id": "medicinal_paste_1",
     "name": "Healing Herb Paste",
     "familyId": "medicinal_paste",
-    "tier": 1
+    "tier": 1,
+    "icon": "/images/items/medicinal_paste_tx.png",
+    "description": "Bright green with uneven texture, mashed in a chipped mortar, fragments of leaf and stem still visible, unfinished."
   },
   {
-    "id": "bitterroot_medicinal_paste",
+    "id": "medicinal_paste_2",
     "name": "Bitterroot Paste",
     "familyId": "medicinal_paste",
-    "tier": 2
+    "tier": 2,
+    "icon": "/images/items/medicinal_paste_tx.png",
+    "description": "Gritty and brown, heaped in a wooden spoon, not yet spread or blended into tonics."
   },
   {
-    "id": "nightshade_medicinal_paste",
+    "id": "medicinal_paste_3",
     "name": "Nightshade Paste",
     "familyId": "medicinal_paste",
-    "tier": 3
+    "tier": 3,
+    "icon": "/images/items/medicinal_paste_tx.png",
+    "description": "Midnight-purple and viscous, clinging to a pestle, fumes rising from the bowl—lethal and not fully ground."
   },
   {
-    "id": "fireleaf_medicinal_paste",
+    "id": "medicinal_paste_4",
     "name": "Fireleaf Paste",
     "familyId": "medicinal_paste",
-    "tier": 4
+    "tier": 4,
+    "icon": "/images/items/medicinal_paste_tx.png",
+    "description": "Glowing red and fiery-hot, streaked in a clay bowl, embers crackling on the surface, pungency unfinished."
   },
   {
-    "id": "starblossom_medicinal_paste",
+    "id": "medicinal_paste_5",
     "name": "Starblossom Paste",
     "familyId": "medicinal_paste",
-    "tier": 5
+    "tier": 5,
+    "icon": "/images/items/medicinal_paste_tx.png",
+    "description": "Luminous blue and silky, newly scraped into an opal jar, faint stardust swirling above, still settling."
   },
   {
-    "id": "dreamcap_medicinal_paste",
+    "id": "medicinal_paste_6",
     "name": "Dreamcap Paste",
     "familyId": "medicinal_paste",
-    "tier": 6
+    "tier": 6,
+    "icon": "/images/items/medicinal_paste_tx.png",
+    "description": "Misty gray with silver motes, scooped in a crystal dish, strange vapors spiraling up, not yet stabilized for use."
   },
   {
-    "id": "healing_herb_ground_spice",
+    "id": "ground_spice_1",
     "name": "Healing Herb Spice",
     "familyId": "ground_spice",
-    "tier": 1
+    "tier": 1,
+    "icon": "/images/items/ground_spice_tx.png",
+    "description": "Green and crumbled, spread in a rough heap atop a linen cloth, herbal aroma yet to be sealed."
   },
   {
-    "id": "bitterroot_ground_spice",
+    "id": "ground_spice_2",
     "name": "Bitterroot Spice",
     "familyId": "ground_spice",
-    "tier": 2
+    "tier": 2,
+    "icon": "/images/items/ground_spice_tx.png",
+    "description": "Earthy and dark brown, scattered loosely inside a cracked clay basin, bitterness lingering in the air."
   },
   {
-    "id": "nightshade_ground_spice",
+    "id": "ground_spice_3",
     "name": "Nightshade Spice",
     "familyId": "ground_spice",
-    "tier": 3
+    "tier": 3,
+    "icon": "/images/items/ground_spice_tx.png",
+    "description": "Deep purple grains, drying on a shaded rack, dangerous shimmer untouched, not yet measured for concoctions."
   },
   {
-    "id": "fireleaf_ground_spice",
+    "id": "ground_spice_4",
     "name": "Fireleaf Spice",
     "familyId": "ground_spice",
-    "tier": 4
+    "tier": 4,
+    "icon": "/images/items/ground_spice_tx.png",
+    "description": "Bright red slivers exuding warmth, cooling beside a flame-forged skillet, scent smoldering, not quite ready for the mortar."
   },
   {
-    "id": "starblossom_ground_spice",
+    "id": "ground_spice_5",
     "name": "Starblossom Spice",
     "familyId": "ground_spice",
-    "tier": 5
+    "tier": 5,
+    "icon": "/images/items/ground_spice_tx.png",
+    "description": "Pale blue tufts sparkling faintly, gently heaped in a crystalline bowl, starlight glimmering off unfinished edges."
   },
   {
-    "id": "dreamcap_ground_spice",
+    "id": "ground_spice_6",
     "name": "Dreamcap Spice",
     "familyId": "ground_spice",
-    "tier": 6
+    "tier": 6,
+    "icon": "/images/items/ground_spice_tx.png",
+    "description": "Misty gray flakes, loosely gathered in a woven pouch, moonlit motes drifting off, awaiting refinement for potions or food."
   },
   {
-    "id": "rabbit_dressed_meat",
+    "id": "dressed_meat_1",
     "name": "Dressed Rabbit",
     "familyId": "dressed_meat",
-    "tier": 1
+    "tier": 1,
+    "icon": "/images/items/dressed_meat_tx.png",
+    "description": "Pale flesh exposed, limbs trussed, laid atop straw with tufts of fur fluttering beside, unfinished but ready for cooking."
   },
   {
-    "id": "boar_dressed_meat",
+    "id": "dressed_meat_2",
     "name": "Dressed Boar",
     "familyId": "dressed_meat",
-    "tier": 2
+    "tier": 2,
+    "icon": "/images/items/dressed_meat_tx.png",
+    "description": "Massive and gutted, hide mostly scraped, tusks intact, propped on a blood-washed stone slab for further butchery."
   },
   {
-    "id": "elk_dressed_meat",
+    "id": "dressed_meat_3",
     "name": "Dressed Elk",
     "familyId": "dressed_meat",
-    "tier": 3
+    "tier": 3,
+    "icon": "/images/items/dressed_meat_tx.png",
+    "description": "Antlers intact, sinew and muscle visible, hide sloughing away, suspended from a hook in a cool cellar, uncarved."
   },
   {
-    "id": "griffin_dressed_meat",
+    "id": "dressed_meat_4",
     "name": "Dressed Griffin",
     "familyId": "dressed_meat",
-    "tier": 4
+    "tier": 4,
+    "icon": "/images/items/dressed_meat_tx.png",
+    "description": "Down feathers plucked but wings left whole, talons shining, body stretched across a rune-marked table, magical energies lingering."
   },
   {
-    "id": "wyvern_dressed_meat",
+    "id": "dressed_meat_5",
     "name": "Dressed Wyvern",
     "familyId": "dressed_meat",
-    "tier": 5
+    "tier": 5,
+    "icon": "/images/items/dressed_meat_tx.png",
+    "description": "Grayish scales and membranous wings partially removed, coiled upon a tiled floor, violet blood trickling from its maw."
   },
   {
-    "id": "dragon_dressed_meat",
+    "id": "dressed_meat_6",
     "name": "Dressed Dragon",
     "familyId": "dressed_meat",
-    "tier": 6
+    "tier": 6,
+    "icon": "/images/items/dressed_meat_tx.png",
+    "description": "Colossal limbs disjointed, emerald scales and sinew exposed, laid on a dais of stone, preparation incomplete and awe-inspiring."
   },
   {
-    "id": "rabbit_carcass",
+    "id": "carcass_1",
     "name": "Rabbit Carcass",
     "familyId": "carcass",
-    "tier": 1
+    "tier": 1,
+    "icon": "/images/items/carcass_tx.png",
+    "description": "Limp and freshly slain, arranged atop a blood-stained wooden board, fur ruffled and eyes unclosed, untouched by the butcher’s knife."
   },
   {
-    "id": "boar_carcass",
+    "id": "carcass_2",
     "name": "Boar Carcass",
     "familyId": "carcass",
-    "tier": 2
+    "tier": 2,
+    "icon": "/images/items/carcass_tx.png",
+    "description": "Bristly and mud-caked, sprawled across a slab of rough stone, tusks yet to be removed, bearing the marks of fresh hunts."
   },
   {
-    "id": "elk_carcass",
+    "id": "carcass_3",
     "name": "Elk Carcass",
     "familyId": "carcass",
-    "tier": 3
+    "tier": 3,
+    "icon": "/images/items/carcass_tx.png",
+    "description": "Hulking, antlers tangled in burlap, hooves dangling over the butcher’s rack—muscle unsliced, hide still damp with dew."
   },
   {
-    "id": "griffin_carcass",
+    "id": "carcass_4",
     "name": "Griffin Carcass",
     "familyId": "carcass",
-    "tier": 4
+    "tier": 4,
+    "icon": "/images/items/carcass_tx.png",
+    "description": "Feathered and majestic, wings half-folded, talons curled, sprawled atop a gilded table, magical essence only beginning to wane—awaiting further preparation."
   },
   {
-    "id": "wyvern_carcass",
+    "id": "carcass_5",
     "name": "Wyvern Carcass",
     "familyId": "carcass",
-    "tier": 5
+    "tier": 5,
+    "icon": "/images/items/carcass_tx.png",
+    "description": "Serpent-like and scaled, barbed tail and venomous fangs unfurled on a rune-stamped iron grating, arcane energies lingering faintly, unprocessed."
   },
   {
-    "id": "dragon_carcass",
+    "id": "carcass_6",
     "name": "Dragon Carcass",
     "familyId": "carcass",
-    "tier": 6
+    "tier": 6,
+    "icon": "/images/items/carcass_tx.png",
+    "description": "Colossal and awe-inspiring, gleaming with ancient scales and smoldering wounds, stretched across an altar of black stone, not yet harvested for its legendary hoard."
   },
   {
-    "id": "rabbit_cooked_meat",
+    "id": "cooked_meat_1",
     "name": "Cooked Rabbit",
     "familyId": "cooked_meat",
-    "tier": 1
+    "tier": 1,
+    "icon": "/images/items/cooked_meat_tx.png",
+    "description": "Sizzling and browned but not yet seasoned, laid across a copper spit, juices dripping onto the glowing coals below."
   },
   {
-    "id": "boar_cooked_meat",
+    "id": "cooked_meat_2",
     "name": "Cooked Boar",
     "familyId": "cooked_meat",
-    "tier": 2
+    "tier": 2,
+    "icon": "/images/items/cooked_meat_tx.png",
+    "description": "A richly caramelized haunch, resting atop heated rocks, the aroma heartily wild, awaiting the carver’s blade and final garnishing."
   },
   {
-    "id": "elk_cooked_meat",
+    "id": "cooked_meat_3",
     "name": "Cooked Elk",
     "familyId": "cooked_meat",
-    "tier": 3
+    "tier": 3,
+    "icon": "/images/items/cooked_meat_tx.png",
+    "description": "Thick cuts steaming atop a pine plank, edges seared but interiors faintly rosy, not yet sliced for service."
   },
   {
-    "id": "griffin_cooked_meat",
+    "id": "cooked_meat_4",
     "name": "Cooked Griffin",
     "familyId": "cooked_meat",
-    "tier": 4
+    "tier": 4,
+    "icon": "/images/items/cooked_meat_tx.png",
+    "description": "Gold-feathered breast, aromatic, cooling on a silver tray, shimmering oils collecting beneath, ready for the feasting hall."
   },
   {
-    "id": "wyvern_cooked_meat",
+    "id": "cooked_meat_5",
     "name": "Cooked Wyvern",
     "familyId": "cooked_meat",
-    "tier": 5
+    "tier": 5,
+    "icon": "/images/items/cooked_meat_tx.png",
+    "description": "Scaled and succulent tail, piping hot on a drake-bone platter, faint wisps of magic still rising from within the flesh."
   },
   {
-    "id": "dragon_cooked_meat",
+    "id": "cooked_meat_6",
     "name": "Cooked Dragon",
     "familyId": "cooked_meat",
-    "tier": 6
+    "tier": 6,
+    "icon": "/images/items/cooked_meat_tx.png",
+    "description": "An immense and marbled rib, blazing atop a rune-engraved slab, rare and crackling with mystical flames—awaits only a hero to claim it."
   },
   {
-    "id": "grain_baked_harvest",
+    "id": "baked_harvest_1",
     "name": "Baked Grain Bread",
     "familyId": "baked_harvest",
-    "tier": 1
+    "tier": 1,
+    "icon": "/images/items/baked_harvest_tx.png",
+    "description": "Rustic, half-cooled loaves, rough-crusted and dusted in flour, resting in rows on a wooden tray."
   },
   {
-    "id": "root_vegetable_baked_harvest",
+    "id": "baked_harvest_2",
     "name": "Baked Root Vegetable",
     "familyId": "baked_harvest",
-    "tier": 2
+    "tier": 2,
+    "icon": "/images/items/baked_harvest_tx.png",
+    "description": "Steaming with skins split and juices bubbling, scattered over a blackened baking stone—unfinished, ready to be seasoned."
   },
   {
-    "id": "wild_mushroom_baked_harvest",
+    "id": "baked_harvest_3",
     "name": "Baked Wild Mushroom",
     "familyId": "baked_harvest",
-    "tier": 3
+    "tier": 3,
+    "icon": "/images/items/baked_harvest_tx.png",
+    "description": "Earthy and clustered on a charred iron tray, caps glossy but not yet fully plated."
   },
   {
-    "id": "orchard_fruit_baked_harvest",
+    "id": "baked_harvest_4",
     "name": "Baked Orchard Fruit",
     "familyId": "baked_harvest",
-    "tier": 4
+    "tier": 4,
+    "icon": "/images/items/baked_harvest_tx.png",
+    "description": "Glazed and caramelized, heaped in a carved wooden bowl, wafting sweet scents but not yet served."
   },
   {
-    "id": "honeycomb_baked_harvest",
+    "id": "baked_harvest_5",
     "name": "Baked Honeycomb",
     "familyId": "baked_harvest",
-    "tier": 5
+    "tier": 5,
+    "icon": "/images/items/baked_harvest_tx.png",
+    "description": "Dripping golden slabs, sticky and cooling on a latticed rack, raw honey still seeping but the dish unassembled."
   },
   {
-    "id": "ambrosia_baked_harvest",
+    "id": "baked_harvest_6",
     "name": "Baked Ambrosia",
     "familyId": "baked_harvest",
-    "tier": 6
+    "tier": 6,
+    "icon": "/images/items/baked_harvest_tx.png",
+    "description": "Glowing faintly gold on a tray, edges crisp but the center soft, the divine treat unfinished atop a marble counter."
   },
   {
-    "id": "quartz_cut_crystal",
+    "id": "cut_crystal_1",
     "name": "Cut Quartz Crystal",
     "familyId": "cut_crystal",
-    "tier": 1
+    "tier": 1,
+    "icon": "/images/items/cut_crystal_tx.png",
+    "description": "Pale and many-faceted, resting in a bed of dust, its clarity marred by flecks of raw stone—awaiting final polish."
   },
   {
-    "id": "amethyst_cut_crystal",
+    "id": "cut_crystal_2",
     "name": "Cut Amethyst Crystal",
     "familyId": "cut_crystal",
-    "tier": 2
+    "tier": 2,
+    "icon": "/images/items/cut_crystal_tx.png",
+    "description": "Deep violet with rough edges, lying atop a velvet work pad, inner fire yet to be fully revealed."
   },
   {
-    "id": "sapphire_cut_crystal",
+    "id": "cut_crystal_3",
     "name": "Cut Sapphire Crystal",
     "familyId": "cut_crystal",
-    "tier": 3
+    "tier": 3,
+    "icon": "/images/items/cut_crystal_tx.png",
+    "description": "Cold blue and angular, set among tools on a goldsmith’s bench, chips from recent cuts still scattered about."
   },
   {
-    "id": "ruby_cut_crystal",
+    "id": "cut_crystal_4",
     "name": "Cut Ruby Crystal",
     "familyId": "cut_crystal",
-    "tier": 4
+    "tier": 4,
+    "icon": "/images/items/cut_crystal_tx.png",
+    "description": "Blood-red with unshaped facets, gleaming on a silver anvil, the stone’s heart pulsing faintly—unfinished, full of latent power."
   },
   {
-    "id": "mana_cut_crystal",
+    "id": "cut_crystal_5",
     "name": "Cut Mana Crystal",
     "familyId": "cut_crystal",
-    "tier": 5
+    "tier": 5,
+    "icon": "/images/items/cut_crystal_tx.png",
+    "description": "Faintly luminous with shifting hues, propped in a wire cradle above arcane runes, unconnected, its magic slumbering within."
   },
   {
-    "id": "astral_cut_crystal",
+    "id": "cut_crystal_6",
     "name": "Cut Astral Crystal",
     "familyId": "cut_crystal",
-    "tier": 6
+    "tier": 6,
+    "icon": "/images/items/cut_crystal_tx.png",
+    "description": "Clear with shimmering starbursts, balancing on an ethereal loom, otherworldly glow incomplete—awaiting the touch of a master enchanter."
   },
   {
-    "id": "quartz_arcane_dust",
+    "id": "arcane_dust_1",
     "name": "Quartz Arcane Dust",
     "familyId": "arcane_dust",
-    "tier": 1
+    "tier": 1,
+    "icon": "/images/items/arcane_dust_tx.png",
+    "description": "Translucent and chalky, scattered over a parchment spell diagram, specks catching the lantern light."
   },
   {
-    "id": "amethyst_arcane_dust",
+    "id": "arcane_dust_2",
     "name": "Amethyst Arcane Dust",
     "familyId": "arcane_dust",
-    "tier": 2
+    "tier": 2,
+    "icon": "/images/items/arcane_dust_tx.png",
+    "description": "A violet haze collecting at the bottom of a glass phial, swirling softly with magical residue."
   },
   {
-    "id": "sapphire_arcane_dust",
+    "id": "arcane_dust_3",
     "name": "Sapphire Arcane Dust",
     "familyId": "arcane_dust",
-    "tier": 3
+    "tier": 3,
+    "icon": "/images/items/arcane_dust_tx.png",
+    "description": "Deep blue grains pooled in a brass mortar, half-ground by a mage’s pestle, awaiting further refinement."
   },
   {
-    "id": "ruby_arcane_dust",
+    "id": "arcane_dust_4",
     "name": "Ruby Arcane Dust",
     "familyId": "arcane_dust",
-    "tier": 4
+    "tier": 4,
+    "icon": "/images/items/arcane_dust_tx.png",
+    "description": "Luminous crimson, piled unceremoniously in a silver spoon, sparkling with arcane promise but unfinished."
   },
   {
-    "id": "mana_arcane_dust",
+    "id": "arcane_dust_5",
     "name": "Mana Arcane Dust",
     "familyId": "arcane_dust",
-    "tier": 5
+    "tier": 5,
+    "icon": "/images/items/arcane_dust_tx.png",
+    "description": "Pale blue and faintly glowing, spread out in runic patterns on a worn oak desk, raw energy yet untapped."
   },
   {
-    "id": "astral_arcane_dust",
+    "id": "arcane_dust_6",
     "name": "Astral Arcane Dust",
     "familyId": "arcane_dust",
-    "tier": 6
+    "tier": 6,
+    "icon": "/images/items/arcane_dust_tx.png",
+    "description": "Silvery and shimmering, gathered in a moonlit bowl, wisps rising and fading, as if not fully of this world."
   },
   {
-    "id": "rabbit_trimmed_pelt",
+    "id": "trimmed_pelt_1",
     "name": "Trimmed Rabbit Pelt",
     "familyId": "trimmed_pelt",
-    "tier": 1
+    "tier": 1,
+    "icon": "/images/items/trimmed_pelt_tx.png",
+    "description": "Soft white fur roughly cut, pinned flat on a stretching frame, corners curling where finishing waits."
   },
   {
-    "id": "fox_trimmed_pelt",
+    "id": "trimmed_pelt_2",
     "name": "Trimmed Fox Pelt",
     "familyId": "trimmed_pelt",
-    "tier": 2
+    "tier": 2,
+    "icon": "/images/items/trimmed_pelt_tx.png",
+    "description": "Russet-red and bushy, lying draped over a wooden bench, patches of longer fur needing care."
   },
   {
-    "id": "wolf_trimmed_pelt",
+    "id": "trimmed_pelt_3",
     "name": "Trimmed Wolf Pelt",
     "familyId": "trimmed_pelt",
-    "tier": 3
+    "tier": 3,
+    "icon": "/images/items/trimmed_pelt_tx.png",
+    "description": "Gray and wild, thick along the spine, drying in cool air with some edges showing remnants of bone."
   },
   {
-    "id": "warg_trimmed_pelt",
+    "id": "trimmed_pelt_4",
     "name": "Trimmed Warg Pelt",
     "familyId": "trimmed_pelt",
-    "tier": 4
+    "tier": 4,
+    "icon": "/images/items/trimmed_pelt_tx.png",
+    "description": "Coarse and ash-black, adorned with battle scars, heaped beside a bone-handled knife, an unfinished hide."
   },
   {
-    "id": "fenrir_trimmed_pelt",
+    "id": "trimmed_pelt_5",
     "name": "Trimmed Fenrir Pelt",
     "familyId": "trimmed_pelt",
-    "tier": 5
+    "tier": 5,
+    "icon": "/images/items/trimmed_pelt_tx.png",
+    "description": "Frost-tipped and sturdy, blue-gray strands bristling, suspended from iron nails, edges lined for further tanning."
   },
   {
-    "id": "frostmane_trimmed_pelt",
+    "id": "trimmed_pelt_6",
     "name": "Trimmed Frostmane Pelt",
     "familyId": "trimmed_pelt",
-    "tier": 6
+    "tier": 6,
+    "icon": "/images/items/trimmed_pelt_tx.png",
+    "description": "Radiant silver-white fur crackling with icy blue glints, splayed on an enchanted rack, magical chill swirling above, yet to be fully softened."
   },
   {
-    "id": "deer_leather",
+    "id": "leather_1",
     "name": "Deer Leather",
     "familyId": "leather",
-    "tier": 1
+    "tier": 1,
+    "icon": "/images/items/leather_tx.png",
+    "description": "Supple and pale, stretched across a wooden frame, faint marks of hair and sinew yet to be scraped away."
   },
   {
-    "id": "goat_leather",
+    "id": "leather_2",
     "name": "Goat Leather",
     "familyId": "leather",
-    "tier": 2
+    "tier": 2,
+    "icon": "/images/items/leather_tx.png",
+    "description": "Rough and bristled, pegged on a drying wall, edges curling, surface not yet fully scraped or tanned."
   },
   {
-    "id": "elk_leather",
+    "id": "leather_3",
     "name": "Elk Leather",
     "familyId": "leather",
-    "tier": 3
+    "tier": 3,
+    "icon": "/images/items/leather_tx.png",
+    "description": "Thick and spotted, tanning under weighted stones, part of the hide unprocessed and tacky to the touch."
   },
   {
-    "id": "manticore_leather",
+    "id": "leather_4",
     "name": "Manticore Leather",
     "familyId": "leather",
-    "tier": 4
+    "tier": 4,
+    "icon": "/images/items/leather_tx.png",
+    "description": "Tufted with spines, golden and dark-straked, hanging beside meat hooks, not yet stripped of its magical sheen."
   },
   {
-    "id": "wyvern_leather",
+    "id": "leather_5",
     "name": "Wyvern Leather",
     "familyId": "leather",
-    "tier": 5
+    "tier": 5,
+    "icon": "/images/items/leather_tx.png",
+    "description": "Glossy green with hard scales, suspended from iron nails, surface shimmering with latent venom, half-tanned and powerful."
   },
   {
-    "id": "phoenix_leather",
+    "id": "leather_6",
     "name": "Phoenix Leather",
     "familyId": "leather",
-    "tier": 6
+    "tier": 6,
+    "icon": "/images/items/leather_tx.png",
+    "description": "Fire-bright and nearly weightless, still steaming where feathered tufts linger, stretched gently atop a rack of enchanted willow, in process and radiant."
   },
   {
-    "id": "sparrow_quilted_thread",
+    "id": "quilted_thread_1",
     "name": "Sparrow Feather Thread",
     "familyId": "quilted_thread",
-    "tier": 1
+    "tier": 1,
+    "icon": "/images/items/quilted_thread_tx.png",
+    "description": "Fine and tawny, loosely wound on a wooden spindle, downy barbs still visible, not yet fully twisted or set."
   },
   {
-    "id": "owl_quilted_thread",
+    "id": "quilted_thread_2",
     "name": "Owl Feather Thread",
     "familyId": "quilted_thread",
-    "tier": 2
+    "tier": 2,
+    "icon": "/images/items/quilted_thread_tx.png",
+    "description": "Silvery-gray and soft, spooling in loose loops beside a candle-lit loom, tufted with wisps of nocturnal magic, unspun in stretches."
   },
   {
-    "id": "hawk_quilted_thread",
+    "id": "quilted_thread_3",
     "name": "Hawk Feather Thread",
     "familyId": "quilted_thread",
-    "tier": 3
+    "tier": 3,
+    "icon": "/images/items/quilted_thread_tx.png",
+    "description": "Dark and sleek, stretched taut over a spinning wheel, swift energies flickering along the length, tips still rough from plucking."
   },
   {
-    "id": "phoenix_quilted_thread",
+    "id": "quilted_thread_4",
     "name": "Phoenix Feather Thread",
     "familyId": "quilted_thread",
-    "tier": 4
+    "tier": 4,
+    "icon": "/images/items/quilted_thread_tx.png",
+    "description": "Radiant red-gold and warm to the touch, coils glowing faintly where they rest on a jeweler’s table, small sparks drifting off, unfinished and volatile."
   },
   {
-    "id": "roc_quilted_thread",
+    "id": "quilted_thread_5",
     "name": "Roc Feather Thread",
     "familyId": "quilted_thread",
-    "tier": 5
+    "tier": 5,
+    "icon": "/images/items/quilted_thread_tx.png",
+    "description": "Sky-blue and sturdy, thick strands twisting together, stacked uncut in a basket by an open casement, incredible strength not yet tested."
   },
   {
-    "id": "celestial_quilted_thread",
+    "id": "quilted_thread_6",
     "name": "Celestial Feather Thread",
     "familyId": "quilted_thread",
-    "tier": 6
+    "tier": 6,
+    "icon": "/images/items/quilted_thread_tx.png",
+    "description": "Pale and shimmering with starlight, nearly transparent, floating in a suspended skein above a rune-inscribed loom, not yet woven into the fabric of myth."
   },
   {
-    "id": "rat_ear_trophy_charm",
+    "id": "trophy_charm_1",
     "name": "Rat Ear Charm",
     "familyId": "trophy_charm",
-    "tier": 1
+    "tier": 1,
+    "icon": "/images/items/trophy_charm_tx.png",
+    "description": "A small, tattered ear threaded through coarse twine, scattered with bits of straw, the charm unfinished."
   },
   {
-    "id": "troll_fat_trophy_charm",
+    "id": "trophy_charm_2",
     "name": "Troll Fat Charm",
     "familyId": "trophy_charm",
-    "tier": 2
+    "tier": 2,
+    "icon": "/images/items/trophy_charm_tx.png",
+    "description": "Lumpy and greenish, smeared across a crude coin, twine unraveled, reeking of strange oils, the ritual incomplete."
   },
   {
-    "id": "basilisk_eye_trophy_charm",
+    "id": "trophy_charm_3",
     "name": "Basilisk Eye Charm",
     "familyId": "trophy_charm",
-    "tier": 3
+    "tier": 3,
+    "icon": "/images/items/trophy_charm_tx.png",
+    "description": "A cloudy yellow orb nested in twisted copper wire, glints of stone dust on its surface, enchantment midway."
   },
   {
-    "id": "wyvern_tail_trophy_charm",
+    "id": "trophy_charm_4",
     "name": "Wyvern Tail Charm",
     "familyId": "trophy_charm",
-    "tier": 4
+    "tier": 4,
+    "icon": "/images/items/trophy_charm_tx.png",
+    "description": "Hooked with a scale-tipped segment, leather thong loose and talon unpolished."
   },
   {
-    "id": "gorgon_scale_trophy_charm",
+    "id": "trophy_charm_5",
     "name": "Gorgon Scale Charm",
     "familyId": "trophy_charm",
-    "tier": 5
+    "tier": 5,
+    "icon": "/images/items/trophy_charm_tx.png",
+    "description": "Angular and shimmering, held in a bronze filigree partially wrapped in silver wire, ready for final blessing."
   },
   {
-    "id": "umbral_heart_trophy_charm",
+    "id": "trophy_charm_6",
     "name": "Umbral Heart Charm",
     "familyId": "trophy_charm",
-    "tier": 6
+    "tier": 6,
+    "icon": "/images/items/trophy_charm_tx.png",
+    "description": "A pulsing dark core held in misty glass, filament anchors yet to be tied, shadowy energy swirling unfinished."
   },
   {
-    "id": "common_refined_clay",
+    "id": "refined_clay_1",
     "name": "Refined Common Clay",
     "familyId": "refined_clay",
-    "tier": 1
+    "tier": 1,
+    "icon": "/images/items/refined_clay_tx.png",
+    "description": "Gray and smooth, kneaded into a soft mound, still bearing finger marks, resting on a potter’s bench—ready but not shaped."
   },
   {
-    "id": "red_refined_clay",
+    "id": "refined_clay_2",
     "name": "Refined Red Clay",
     "familyId": "refined_clay",
-    "tier": 2
+    "tier": 2,
+    "icon": "/images/items/refined_clay_tx.png",
+    "description": "Earthy and richly colored, heaped in a damp lump on a sanded trolley, not yet divided or worked into wares."
   },
   {
-    "id": "fire_refined_clay",
+    "id": "refined_clay_3",
     "name": "Refined Fire Clay",
     "familyId": "refined_clay",
-    "tier": 3
+    "tier": 3,
+    "icon": "/images/items/refined_clay_tx.png",
+    "description": "Golden-orange and dense, pressed flat for cooling, faint steam curling from its surface, unformed and unshaped."
   },
   {
-    "id": "porcelain_refined_clay",
+    "id": "refined_clay_4",
     "name": "Refined Porcelain Clay",
     "familyId": "refined_clay",
-    "tier": 4
+    "tier": 4,
+    "icon": "/images/items/refined_clay_tx.png",
+    "description": "Snow-white and gleaming wetly, slabbed out on a canvas, surface slick and pure, unworked."
   },
   {
-    "id": "spirit_refined_clay",
+    "id": "refined_clay_5",
     "name": "Refined Spirit Clay",
     "familyId": "refined_clay",
-    "tier": 5
+    "tier": 5,
+    "icon": "/images/items/refined_clay_tx.png",
+    "description": "Faintly luminescent and cool blue, shaped into a perfect ball, resting atop a crystal dish, not yet molded by arcane hands."
   },
   {
-    "id": "worldclay_refined_clay",
+    "id": "refined_clay_6",
     "name": "Refined Worldclay",
     "familyId": "refined_clay",
-    "tier": 6
+    "tier": 6,
+    "icon": "/images/items/refined_clay_tx.png",
+    "description": "Rich with entwined roots and flecks of green, pulsing softly, curled in a spiral—magical energy rising from within, awaiting ancient craft."
   },
   {
-    "id": "common_fired_brick",
+    "id": "fired_brick_1",
     "name": "Common Clay Brick",
     "familyId": "fired_brick",
-    "tier": 1
+    "tier": 1,
+    "icon": "/images/items/fired_brick_tx.png",
+    "description": "Pale and still moist, squared but not yet fired, stacked in rows near the potter’s worktable with wet clay clinging to the edges."
   },
   {
-    "id": "red_fired_brick",
+    "id": "fired_brick_2",
     "name": "Red Clay Brick",
     "familyId": "fired_brick",
-    "tier": 2
+    "tier": 2,
+    "icon": "/images/items/fired_brick_tx.png",
+    "description": "Unglazed, sun-warmed and earthy, lined up loosely along a drying board, rough to the touch and unfinished."
   },
   {
-    "id": "fire_fired_brick",
+    "id": "fired_brick_3",
     "name": "Fire Clay Brick",
     "familyId": "fired_brick",
-    "tier": 3
+    "tier": 3,
+    "icon": "/images/items/fired_brick_tx.png",
+    "description": "Yellow-orange and speckled, heat lines visible, resting beside a brick kiln, barely cool, edges needing smoothing."
   },
   {
-    "id": "porcelain_fired_brick",
+    "id": "fired_brick_4",
     "name": "Porcelain Clay Brick",
     "familyId": "fired_brick",
-    "tier": 4
+    "tier": 4,
+    "icon": "/images/items/fired_brick_tx.png",
+    "description": "Glossy white but pitted, cooling on a stone rack, still soft and easily marked, final glaze not applied."
   },
   {
-    "id": "spirit_fired_brick",
+    "id": "fired_brick_5",
     "name": "Spirit Clay Brick",
     "familyId": "fired_brick",
-    "tier": 5
+    "tier": 5,
+    "icon": "/images/items/fired_brick_tx.png",
+    "description": "Faintly glowing pale blue, humming with embedded sigils, resting atop a lattice of arcane iron, shape not fully set."
   },
   {
-    "id": "worldclay_fired_brick",
+    "id": "fired_brick_6",
     "name": "Worldclay Brick",
     "familyId": "fired_brick",
-    "tier": 6
+    "tier": 6,
+    "icon": "/images/items/fired_brick_tx.png",
+    "description": "Deep green-veined and primordial, shimmering with earth magic, half-cured and warm, exuding quiet power from within."
   },
   {
-    "id": "river_glass_pane",
+    "id": "glass_pane_1",
     "name": "River Glass Pane",
     "familyId": "glass_pane",
-    "tier": 1
+    "tier": 1,
+    "icon": "/images/items/glass_pane_tx.png",
+    "description": "Clear with faint wavering, propped up against a wooden beam, flecks of sand glimmering along unfinished edges, warm from the kiln."
   },
   {
-    "id": "white_glass_pane",
+    "id": "glass_pane_2",
     "name": "White Glass Pane",
     "familyId": "glass_pane",
-    "tier": 2
+    "tier": 2,
+    "icon": "/images/items/glass_pane_tx.png",
+    "description": "Milky and semi-opaque, cooling on a padded rack, smooth surface yet to be polished or framed."
   },
   {
-    "id": "quartz_glass_pane",
+    "id": "glass_pane_3",
     "name": "Quartz Glass Pane",
     "familyId": "glass_pane",
-    "tier": 3
+    "tier": 3,
+    "icon": "/images/items/glass_pane_tx.png",
+    "description": "Perfectly translucent with a subtle interior sparkle, resting atop a stone workbench, corners still sharp and untrimmed."
   },
   {
-    "id": "obsidian_glass_pane",
+    "id": "glass_pane_4",
     "name": "Obsidian Glass Pane",
     "familyId": "glass_pane",
-    "tier": 4
+    "tier": 4,
+    "icon": "/images/items/glass_pane_tx.png",
+    "description": "Midnight-black and mirror-bright, cooling on a bed of volcanic ash, edges oddly jagged, tool marks evident."
   },
   {
-    "id": "moonlit_glass_pane",
+    "id": "glass_pane_5",
     "name": "Moonlit Glass Pane",
     "familyId": "glass_pane",
-    "tier": 5
+    "tier": 5,
+    "icon": "/images/items/glass_pane_tx.png",
+    "description": "Glowing faintly with silvery radiance, halfway set on a celestial-forged frame, internal mist swirling beneath its surface."
   },
   {
-    "id": "astral_glass_pane",
+    "id": "glass_pane_6",
     "name": "Astral Glass Pane",
     "familyId": "glass_pane",
-    "tier": 6
+    "tier": 6,
+    "icon": "/images/items/glass_pane_tx.png",
+    "description": "Ethereal and prismatic, shimmering with motes of starlight—leaning unsupported in the air itself, not yet stabilized by enchantment."
   },
   {
-    "id": "river_glass_bottle",
+    "id": "glass_bottle_1",
     "name": "River Glass Bottle",
     "familyId": "glass_bottle",
-    "tier": 1
+    "tier": 1,
+    "icon": "/images/items/glass_bottle_tx.png",
+    "description": "Clear with tiny bubbles inside, neck uneven, cooling on a sand-scattered wooden bench."
   },
   {
-    "id": "white_glass_bottle",
+    "id": "glass_bottle_2",
     "name": "White Glass Bottle",
     "familyId": "glass_bottle",
-    "tier": 2
+    "tier": 2,
+    "icon": "/images/items/glass_bottle_tx.png",
+    "description": "Milky and translucent, spun thin but not yet capped, gleaming in the morning sun on a wire rack."
   },
   {
-    "id": "quartz_glass_bottle",
+    "id": "glass_bottle_3",
     "name": "Quartz Glass Bottle",
     "familyId": "glass_bottle",
-    "tier": 3
+    "tier": 3,
+    "icon": "/images/items/glass_bottle_tx.png",
+    "description": "Flawless and hard-edged, shimmering with crystals, standing upright in a bed of white ash, unfinished."
   },
   {
-    "id": "obsidian_glass_bottle",
+    "id": "glass_bottle_4",
     "name": "Obsidian Glass Bottle",
     "familyId": "glass_bottle",
-    "tier": 4
+    "tier": 4,
+    "icon": "/images/items/glass_bottle_tx.png",
+    "description": "Glossy black and sharply faceted, cooling beside a lava forge, edges rough from the mold."
   },
   {
-    "id": "moonlit_glass_bottle",
+    "id": "glass_bottle_5",
     "name": "Moonlit Glass Bottle",
     "familyId": "glass_bottle",
-    "tier": 5
+    "tier": 5,
+    "icon": "/images/items/glass_bottle_tx.png",
+    "description": "Faintly luminescent, shifting with internal silver fog, set on a lunar-etched silver platter, final stopper missing."
   },
   {
-    "id": "astral_glass_bottle",
+    "id": "glass_bottle_6",
     "name": "Astral Glass Bottle",
     "familyId": "glass_bottle",
-    "tier": 6
+    "tier": 6,
+    "icon": "/images/items/glass_bottle_tx.png",
+    "description": "Nearly invisible to mortal eyes, swirling with star-shard dust, floating just above a velvet altar—still open, power contained only by will."
   },
   {
-    "id": "river_written_scroll",
+    "id": "written_scroll_1",
     "name": "River Scroll",
     "familyId": "written_scroll",
     "tier": 1,
@@ -1160,7 +1544,7 @@
     "icon": "/images/items/written_scroll_t1.png"
   },
   {
-    "id": "marsh_written_scroll",
+    "id": "written_scroll_2",
     "name": "Marsh Scroll",
     "familyId": "written_scroll",
     "tier": 2,
@@ -1168,7 +1552,7 @@
     "icon": "/images/items/written_scroll_t2.png"
   },
   {
-    "id": "papyrus_written_scroll",
+    "id": "written_scroll_3",
     "name": "Papyrus Scroll",
     "familyId": "written_scroll",
     "tier": 3,
@@ -1176,7 +1560,7 @@
     "icon": "/images/items/written_scroll_t3.png"
   },
   {
-    "id": "silverreed_written_scroll",
+    "id": "written_scroll_4",
     "name": "Silverreed Scroll",
     "familyId": "written_scroll",
     "tier": 4,
@@ -1184,7 +1568,7 @@
     "icon": "/images/items/written_scroll_t4.png"
   },
   {
-    "id": "starreed_written_scroll",
+    "id": "written_scroll_5",
     "name": "Starreed Scroll",
     "familyId": "written_scroll",
     "tier": 5,
@@ -1192,7 +1576,7 @@
     "icon": "/images/items/written_scroll_t5.png"
   },
   {
-    "id": "worldreed_written_scroll",
+    "id": "written_scroll_6",
     "name": "Worldreed Scroll",
     "familyId": "written_scroll",
     "tier": 6,
@@ -1200,507 +1584,627 @@
     "icon": "/images/items/written_scroll_t6.png"
   },
   {
-    "id": "weak_venomous_extract",
+    "id": "venomous_extract_1",
     "name": "Weak Venom Extract",
     "familyId": "venomous_extract",
-    "tier": 1
+    "tier": 1,
+    "icon": "/images/items/venomous_extract_tx.png",
+    "description": "Dim green and watery, beaded at the bottom of a tiny jar, stratified and unpurified, not yet potent."
   },
   {
-    "id": "serpent_venomous_extract",
+    "id": "venomous_extract_2",
     "name": "Serpent Venom Extract",
     "familyId": "venomous_extract",
-    "tier": 2
+    "tier": 2,
+    "icon": "/images/items/venomous_extract_tx.png",
+    "description": "Pale yellow and viscous, slowly draining from a hollow fang into a cracked crystal phial, droplets clinging to the rim."
   },
   {
-    "id": "spider_venomous_extract",
+    "id": "venomous_extract_3",
     "name": "Spider Venom Extract",
     "familyId": "venomous_extract",
-    "tier": 3
+    "tier": 3,
+    "icon": "/images/items/venomous_extract_tx.png",
+    "description": "Deep black with silver threads, swirling inside an open flask beside broken spinnerets, consistency uneven."
   },
   {
-    "id": "basilisk_venomous_extract",
+    "id": "venomous_extract_4",
     "name": "Basilisk Venom Extract",
     "familyId": "venomous_extract",
-    "tier": 4
+    "tier": 4,
+    "icon": "/images/items/venomous_extract_tx.png",
+    "description": "Emerald liquid with shimmering flecks, bubbling slightly as it rests in a marble mortar, essence yet to be stabilized."
   },
   {
-    "id": "wyvern_venomous_extract",
+    "id": "venomous_extract_5",
     "name": "Wyvern Venom Extract",
     "familyId": "venomous_extract",
-    "tier": 5
+    "tier": 5,
+    "icon": "/images/items/venomous_extract_tx.png",
+    "description": "Iridescent blue and quick to fizz, sloshing in a rune-etched vial, stopper loose, fumes rising."
   },
   {
-    "id": "void_venomous_extract",
+    "id": "venomous_extract_6",
     "name": "Void Venom Extract",
     "familyId": "venomous_extract",
-    "tier": 6
+    "tier": 6,
+    "icon": "/images/items/venomous_extract_tx.png",
+    "description": "Pitch-black and thick as tar, suspended in an obsidian jar with a swirling shadow, containment ritual left unfinished."
   },
   {
-    "id": "common_ground_pigment",
+    "id": "ground_pigment_1",
     "name": "Ground Common Pigment",
     "familyId": "ground_pigment",
-    "tier": 1
+    "tier": 1,
+    "icon": "/images/items/ground_pigment_tx.png",
+    "description": "A muted brown powder gathered in a clay bowl, streaks left by a stone pestle across the surface—awaiting binder."
   },
   {
-    "id": "plant_dye_ground_pigment",
+    "id": "ground_pigment_2",
     "name": "Ground Plant Dye Pigment",
     "familyId": "ground_pigment",
-    "tier": 2
+    "tier": 2,
+    "icon": "/images/items/ground_pigment_tx.png",
+    "description": "Vibrant green flecks scattered across a sun-baked slab, leaves and stems visible in the mix, half-refined."
   },
   {
-    "id": "mineral_ground_pigment",
+    "id": "ground_pigment_3",
     "name": "Ground Mineral Pigment",
     "familyId": "ground_pigment",
-    "tier": 3
+    "tier": 3,
+    "icon": "/images/items/ground_pigment_tx.png",
+    "description": "Deep ochre and blue specks pooled in a wide dish, flecks of stone still visible in the coarsely ground mix."
   },
   {
-    "id": "rare_ground_pigment",
+    "id": "ground_pigment_4",
     "name": "Ground Rare Pigment",
     "familyId": "ground_pigment",
-    "tier": 4
+    "tier": 4,
+    "icon": "/images/items/ground_pigment_tx.png",
+    "description": "Bright violet and shimmering, resting in a crystal vial corked with beeswax, granules clumping from latent magic."
   },
   {
-    "id": "phoenix_ash_ground_pigment",
+    "id": "ground_pigment_5",
     "name": "Ground Phoenix Ash Pigment",
     "familyId": "ground_pigment",
-    "tier": 5
+    "tier": 5,
+    "icon": "/images/items/ground_pigment_tx.png",
+    "description": "Iridescent orange-red, contained in a charred silver cup, motes sparking faint embers—binding still to come."
   },
   {
-    "id": "chromatic_ground_pigment",
+    "id": "ground_pigment_6",
     "name": "Ground Chromatic Pigment",
     "familyId": "ground_pigment",
-    "tier": 6
+    "tier": 6,
+    "icon": "/images/items/ground_pigment_tx.png",
+    "description": "Swirling with every color of the rainbow, dust clouds shifting in a glass jar, not yet mixed or stabilized for paint."
   },
   {
-    "id": "common_lacquer",
+    "id": "lacquer_1",
     "name": "Common Lacquer",
     "familyId": "lacquer",
-    "tier": 1
+    "tier": 1,
+    "icon": "/images/items/lacquer_tx.png",
+    "description": "Clear and glossy, pooled thickly at the base of a wooden brush, open pot on a paint-splattered shelf."
   },
   {
-    "id": "plant_dye_lacquer",
+    "id": "lacquer_2",
     "name": "Plant Dye Lacquer",
     "familyId": "lacquer",
-    "tier": 2
+    "tier": 2,
+    "icon": "/images/items/lacquer_tx.png",
+    "description": "Green-tinted and aromatic, dripped across a raw wood panel, color deepening but finish tacky to the touch."
   },
   {
-    "id": "mineral_lacquer",
+    "id": "lacquer_3",
     "name": "Mineral Lacquer",
     "familyId": "lacquer",
-    "tier": 3
+    "tier": 3,
+    "icon": "/images/items/lacquer_tx.png",
+    "description": "Blue-gray hues swirling, half-brushed onto a cracked ceramic mask, surface not yet dry."
   },
   {
-    "id": "rare_lacquer",
+    "id": "lacquer_4",
     "name": "Rare Lacquer",
     "familyId": "lacquer",
-    "tier": 4
+    "tier": 4,
+    "icon": "/images/items/lacquer_tx.png",
+    "description": "Deep violet shimmering with faint sparkles, oozing from a silver-bound jar, already capturing light but curing incomplete."
   },
   {
-    "id": "phoenix_ash_lacquer",
+    "id": "lacquer_5",
     "name": "Phoenix Ash Lacquer",
     "familyId": "lacquer",
-    "tier": 5
+    "tier": 5,
+    "icon": "/images/items/lacquer_tx.png",
+    "description": "Swirling with gold and red, coating a rune-carved box in fiery sheens, still warm, flames flickering at edges."
   },
   {
-    "id": "chromatic_lacquer",
+    "id": "lacquer_6",
     "name": "Chromatic Lacquer",
     "familyId": "lacquer",
-    "tier": 6
+    "tier": 6,
+    "icon": "/images/items/lacquer_tx.png",
+    "description": "Prismatic and vibrant, running down a cloth-wrapped brush, pooled on a tile and shimmering with all colors as it dries unfinished."
   },
   {
-    "id": "faint_distilled_essence",
+    "id": "distilled_essence_1",
     "name": "Distilled Faint Essence",
     "familyId": "distilled_essence",
-    "tier": 1
+    "tier": 1,
+    "icon": "/images/items/distilled_essence_tx.png",
+    "description": "A misty liquid swirling at the bottom of a glass vial, barely visible and yet uncorked, hovering over a cool marble slab."
   },
   {
-    "id": "elemental_distilled_essence",
+    "id": "distilled_essence_2",
     "name": "Distilled Elemental Essence",
     "familyId": "distilled_essence",
-    "tier": 2
+    "tier": 2,
+    "icon": "/images/items/distilled_essence_tx.png",
+    "description": "Flecks of flame, water, earth, and air trapped in a flask, the elements roiling but not yet unified or infused."
   },
   {
-    "id": "spirit_distilled_essence",
+    "id": "distilled_essence_3",
     "name": "Distilled Spirit Essence",
     "familyId": "distilled_essence",
-    "tier": 3
+    "tier": 3,
+    "icon": "/images/items/distilled_essence_tx.png",
+    "description": "Pale blue vapor twisting within a sealed decanter, flashing with ephemeral faces, the binding wax still unset."
   },
   {
-    "id": "planar_distilled_essence",
+    "id": "distilled_essence_4",
     "name": "Distilled Planar Essence",
     "familyId": "distilled_essence",
-    "tier": 4
+    "tier": 4,
+    "icon": "/images/items/distilled_essence_tx.png",
+    "description": "Colors shifting between realities in a warped glass flask, world echoes flickering within—process not yet stabilized."
   },
   {
-    "id": "primordial_distilled_essence",
+    "id": "distilled_essence_5",
     "name": "Distilled Primordial Essence",
     "familyId": "distilled_essence",
-    "tier": 5
+    "tier": 5,
+    "icon": "/images/items/distilled_essence_tx.png",
+    "description": "Seething in a titan-sized jar, raw chaos crackling from its center, its form uncontained and just barely bottled."
   },
   {
-    "id": "void_distilled_essence",
+    "id": "distilled_essence_6",
     "name": "Distilled Void Essence",
     "familyId": "distilled_essence",
-    "tier": 6
+    "tier": 6,
+    "icon": "/images/items/distilled_essence_tx.png",
+    "description": "An ink-black droplet levitating in a crystal sphere, tendrils reaching into shadow—extraction unfinished, reality bending around it."
   },
   {
-    "id": "rusty_gearwork_clockwork_mechanism",
+    "id": "clockwork_mechanism_1",
     "name": "Assembled Rusty Gearwork",
     "familyId": "clockwork_mechanism",
-    "tier": 1
+    "tier": 1,
+    "icon": "/images/items/clockwork_mechanism_tx.png",
+    "description": "A jumble of pitted cogs and misshapen springs, laid open on an oil-stained rag, many teeth still unwelded."
   },
   {
-    "id": "bronze_clockwork_mechanism",
+    "id": "clockwork_mechanism_2",
     "name": "Assembled Bronze Clockwork",
     "familyId": "clockwork_mechanism",
-    "tier": 2
+    "tier": 2,
+    "icon": "/images/items/clockwork_mechanism_tx.png",
+    "description": "Intricate wheels and rods gleaming, half-joined around a central axis—parts misaligned, assembly incomplete."
   },
   {
-    "id": "precision_gearwork_clockwork_mechanism",
+    "id": "clockwork_mechanism_3",
     "name": "Assembled Precision Gearwork",
     "familyId": "clockwork_mechanism",
-    "tier": 3
+    "tier": 3,
+    "icon": "/images/items/clockwork_mechanism_tx.png",
+    "description": "Silvery and compact, interconnected but not yet housed within a casing, gears exposed on a velvet mat."
   },
   {
-    "id": "runic_clockwork_mechanism",
+    "id": "clockwork_mechanism_4",
     "name": "Assembled Runic Clockwork",
     "familyId": "clockwork_mechanism",
-    "tier": 4
+    "tier": 4,
+    "icon": "/images/items/clockwork_mechanism_tx.png",
+    "description": "Etched with swirling glyphs, ticking with subtle magical rhythms, but key components lie unfastened, waiting the mage-smith’s hand."
   },
   {
-    "id": "arcane_clockwork_mechanism",
+    "id": "clockwork_mechanism_5",
     "name": "Assembled Arcane Clockwork",
     "familyId": "clockwork_mechanism",
-    "tier": 5
+    "tier": 5,
+    "icon": "/images/items/clockwork_mechanism_tx.png",
+    "description": "Interlaced with wires of glowing ether, alive with swirling lights, the main gear floating above a runic ring—energy connections unfinished."
   },
   {
-    "id": "worldforge_clockwork_mechanism",
+    "id": "clockwork_mechanism_6",
     "name": "Assembled Worldforge Mechanism",
     "familyId": "clockwork_mechanism",
-    "tier": 6
+    "tier": 6,
+    "icon": "/images/items/clockwork_mechanism_tx.png",
+    "description": "Colossal and primordial, forged from metals unknown, gears thrumming with the pulse of the earth, sprawled across an anvil veined with ley lines—just beginning to awaken."
   },
   {
-    "id": "rusty_gearwork_tinkered_gearbox",
+    "id": "tinkered_gearbox_1",
     "name": "Rusty Gearwork Gearbox",
     "familyId": "tinkered_gearbox",
-    "tier": 1
+    "tier": 1,
+    "icon": "/images/items/tinkered_gearbox_tx.png",
+    "description": "A battered steel box with corroded cogs spilling from its open case, oil pooled beneath, gears still jammed and assembly incomplete."
   },
   {
-    "id": "bronze_clockwork_tinkered_gearbox",
+    "id": "tinkered_gearbox_2",
     "name": "Bronze Clockwork Gearbox",
     "familyId": "tinkered_gearbox",
-    "tier": 2
+    "tier": 2,
+    "icon": "/images/items/tinkered_gearbox_tx.png",
+    "description": "Shining dully, inner wheels laid bare, elegant teeth partly aligned but pins and screws scattered on a velvet-lined worktable."
   },
   {
-    "id": "precision_gearwork_tinkered_gearbox",
+    "id": "tinkered_gearbox_3",
     "name": "Precision Gearwork Gearbox",
     "familyId": "tinkered_gearbox",
-    "tier": 3
+    "tier": 3,
+    "icon": "/images/items/tinkered_gearbox_tx.png",
+    "description": "Sleek brushed-metal housing, exposed spinning gears microns apart, loose springs beside, some segments yet to be secured."
   },
   {
-    "id": "runic_clockwork_tinkered_gearbox",
+    "id": "tinkered_gearbox_4",
     "name": "Runic Clockwork Gearbox",
     "familyId": "tinkered_gearbox",
-    "tier": 4
+    "tier": 4,
+    "icon": "/images/items/tinkered_gearbox_tx.png",
+    "description": "Intricate gears marked with mysterious glyphs, powered by faint magical glow, crystalline bearings half-set, spellwork unfinished."
   },
   {
-    "id": "arcane_clockwork_tinkered_gearbox",
+    "id": "tinkered_gearbox_5",
     "name": "Arcane Clockwork Gearbox",
     "familyId": "tinkered_gearbox",
-    "tier": 5
+    "tier": 5,
+    "icon": "/images/items/tinkered_gearbox_tx.png",
+    "description": "Radiating with pulsing glyph-lights, wires trailing to open runestones, parts hovering by unseen force, mechanism incomplete."
   },
   {
-    "id": "worldforge_mechanism_tinkered_gearbox",
+    "id": "tinkered_gearbox_6",
     "name": "Worldforge Mechanism Gearbox",
     "familyId": "tinkered_gearbox",
-    "tier": 6
+    "tier": 6,
+    "icon": "/images/items/tinkered_gearbox_tx.png",
+    "description": "Massive stone-and-metal structure veined with elemental fire, ancient gears half-integrated, leylines pulsing beneath, primed for further assembly."
   },
   {
-    "id": "sundried_cured_chitin",
+    "id": "cured_chitin_1",
     "name": "Sundried Chitin Plate",
     "familyId": "cured_chitin",
-    "tier": 1
+    "tier": 1,
+    "icon": "/images/items/cured_chitin_tx.png",
+    "description": "Pale yellow and brittle, hanging from a sunbeam-lit rack, edges curling as it dries, yet to be shaped by armorers."
   },
   {
-    "id": "brine_cured_chitin",
+    "id": "cured_chitin_2",
     "name": "Brine-Cured Chitin Plate",
     "familyId": "cured_chitin",
-    "tier": 2
+    "tier": 2,
+    "icon": "/images/items/cured_chitin_tx.png",
+    "description": "Greenish and slick, submerged halfway in a salt-filled trough, glistening with droplets, the curing not yet complete."
   },
   {
-    "id": "smoke_cured_chitin",
+    "id": "cured_chitin_3",
     "name": "Smoke-Cured Chitin Plate",
     "familyId": "cured_chitin",
-    "tier": 3
+    "tier": 3,
+    "icon": "/images/items/cured_chitin_tx.png",
+    "description": "Deep brown and slightly warped, balanced atop a smoky rack, scent of resin lingering—still flexible, not cut to form."
   },
   {
-    "id": "hardened_cured_chitin",
+    "id": "cured_chitin_4",
     "name": "Hardened Chitin Plate",
     "familyId": "cured_chitin",
-    "tier": 4
+    "tier": 4,
+    "icon": "/images/items/cured_chitin_tx.png",
+    "description": "Black and iron-tough, locked in a crate of iron bands, the process unfinished, surface awaiting etching for magical runes."
   },
   {
-    "id": "resin_sealed_cured_chitin",
+    "id": "cured_chitin_5",
     "name": "Resin-Sealed Chitin Plate",
     "familyId": "cured_chitin",
-    "tier": 5
+    "tier": 5,
+    "icon": "/images/items/cured_chitin_tx.png",
+    "description": "Shimmering under a glass dome, amber resin oozing around the edges but not yet cured, spellwork half-finished."
   },
   {
-    "id": "voidwrought_cured_chitin",
+    "id": "cured_chitin_6",
     "name": "Voidwrought Chitin Plate",
     "familyId": "cured_chitin",
-    "tier": 6
+    "tier": 6,
+    "icon": "/images/items/cured_chitin_tx.png",
+    "description": "Inky and iridescent, suspended in a web of silver wire, energies from beyond flickering across its surface—halfway between matter and myth."
   },
   {
-    "id": "lashed_panel",
+    "id": "panel_1",
     "name": "Lashed Panel",
     "familyId": "panel",
-    "tier": 1
+    "tier": 1,
+    "icon": "/images/items/panel_tx.png",
+    "description": "Rough planks bound together with rawhide cords, knots loose and edges uneven—structure incomplete."
   },
   {
-    "id": "bound_panel",
+    "id": "panel_2",
     "name": "Bound Panel",
     "familyId": "panel",
-    "tier": 2
+    "tier": 2,
+    "icon": "/images/items/panel_tx.png",
+    "description": "Reinforced with leather straps, ends protruding and seams askew, spread on a splattered workbench."
   },
   {
-    "id": "laminated_panel",
+    "id": "panel_3",
     "name": "Laminated Panel",
     "familyId": "panel",
-    "tier": 3
+    "tier": 3,
+    "icon": "/images/items/panel_tx.png",
+    "description": "Thin layers of wood glued but not pressed, surfaces still sticky and curling at the corners atop a craftsman’s table."
   },
   {
-    "id": "trussed_panel",
+    "id": "panel_4",
     "name": "Trussed Panel",
     "familyId": "panel",
-    "tier": 4
+    "tier": 4,
+    "icon": "/images/items/panel_tx.png",
+    "description": "Supported with crude beams and rope, form evident but fastenings not tensioned, lying in a half-built frame."
   },
   {
-    "id": "girded_panel",
+    "id": "panel_5",
     "name": "Girded Panel",
     "familyId": "panel",
-    "tier": 5
+    "tier": 5,
+    "icon": "/images/items/panel_tx.png",
+    "description": "Rimmed with iron bands, bolts and rivets not yet tightened, propped upright for inspection."
   },
   {
-    "id": "bulwark_panel",
+    "id": "panel_6",
     "name": "Bulwark Panel",
     "familyId": "panel",
-    "tier": 6
+    "tier": 6,
+    "icon": "/images/items/panel_tx.png",
+    "description": "Massive and multi-layered, embedded with rune stones, bracing rods sticking out, unfinished yet imposing."
   },
   {
-    "id": "cinched_leather_lining",
+    "id": "leather_lining_1",
     "name": "Cinched Lining",
     "familyId": "leather_lining",
-    "tier": 1
+    "tier": 1,
+    "icon": "/images/items/leather_lining_tx.png",
+    "description": "Rough fabric gathered with basic cord, bunched atop a seamstress’s bench, loose threads dangling, not yet set into a garment."
   },
   {
-    "id": "padded_leather_lining",
+    "id": "leather_lining_2",
     "name": "Padded Lining",
     "familyId": "leather_lining",
-    "tier": 2
+    "tier": 2,
+    "icon": "/images/items/leather_lining_tx.png",
+    "description": "Thick layers of wool unevenly quilted, tossed in a pile beside needlework tools, some sections unstitched, awaiting placement."
   },
   {
-    "id": "layered_leather_lining",
+    "id": "leather_lining_3",
     "name": "Layered Lining",
     "familyId": "leather_lining",
-    "tier": 3
+    "tier": 3,
+    "icon": "/images/items/leather_lining_tx.png",
+    "description": "Multiple cloth layers pinned together, edges misaligned across the cutting board, in mid-assembly—awaiting final sewing."
   },
   {
-    "id": "stitched_leather_lining",
+    "id": "leather_lining_4",
     "name": "Stitched Lining",
     "familyId": "leather_lining",
-    "tier": 4
+    "tier": 4,
+    "icon": "/images/items/leather_lining_tx.png",
+    "description": "Rows of uneven hand-stitches visible, stretched over an armrest mold, some seams still unfinished."
   },
   {
-    "id": "corded_leather_lining",
+    "id": "leather_lining_5",
     "name": "Corded Lining",
     "familyId": "leather_lining",
-    "tier": 5
+    "tier": 5,
+    "icon": "/images/items/leather_lining_tx.png",
+    "description": "Thick cords threaded but not fully laced, parts still spilling out over a loom, ready to be shaped and affixed."
   },
   {
-    "id": "braced_leather_lining",
+    "id": "leather_lining_6",
     "name": "Braced Lining",
     "familyId": "leather_lining",
-    "tier": 6
+    "tier": 6,
+    "icon": "/images/items/leather_lining_tx.png",
+    "description": "Woven with stiff supports and bone strips, arrayed flat on a workbench, fastenings not yet secured."
   },
   {
-    "id": "stream_minnow_clean_fish",
+    "id": "clean_fish_1",
     "name": "Cleaned Stream Minnow",
     "familyId": "clean_fish",
-    "tier": 1
+    "tier": 1,
+    "icon": "/images/items/clean_fish_tx.png",
+    "description": "An array of silvery and slender fish, laid side-by-side on a worn plank, skins sparkling but bones yet to be removed."
   },
   {
-    "id": "river_trout_clean_fish",
+    "id": "clean_fish_2",
     "name": "Cleaned River Trout",
     "familyId": "clean_fish",
-    "tier": 2
+    "tier": 2,
+    "icon": "/images/items/clean_fish_tx.png",
+    "description": "Pink-fleshed and unseasoned, placed askew atop a mossy camp stone, scales absent but unused for stew."
   },
   {
-    "id": "sea_salmon_clean_fish",
+    "id": "clean_fish_3",
     "name": "Cleaned Sea Salmon",
     "familyId": "clean_fish",
-    "tier": 3
+    "tier": 3,
+    "icon": "/images/items/clean_fish_tx.png",
+    "description": "Cleaned and plump, resting belly-up in a shallow copper basin—gills red, but fillets not yet sliced."
   },
   {
-    "id": "runic_eel_clean_fish",
+    "id": "clean_fish_4",
     "name": "Cleaned Runic Eel",
     "familyId": "clean_fish",
-    "tier": 4
+    "tier": 4,
+    "icon": "/images/items/clean_fish_tx.png",
+    "description": "Long and iridescent, looped within a rune-carved trough, faint glyphs glowing along its spine—unfinished, still exuding electric arcs."
   },
   {
-    "id": "umbral_anglerfish_clean_fish",
+    "id": "clean_fish_5",
     "name": "Cleaned Umbral Anglerfish",
     "familyId": "clean_fish",
-    "tier": 5
+    "tier": 5,
+    "icon": "/images/items/clean_fish_tx.png",
+    "description": "Bulbous and black, fangs exposed upon a crystal board, faint otherworldly illumination gleaming from its lure, awaiting arcane extraction."
   },
   {
-    "id": "abyssal_leviathan_clean_fish",
+    "id": "clean_fish_6",
     "name": "Cleaned Abyssal Leviathan",
     "familyId": "clean_fish",
-    "tier": 6
+    "tier": 6,
+    "icon": "/images/items/clean_fish_tx.png",
+    "description": "A monstrous rib section cleaned but not butchered fully, its immense form curled in a boat-shaped trough, scales laced with eldritch sigils, preparation only begun."
   },
   {
-    "id": "rabbit_oil",
+    "id": "oil_1",
     "name": "Tallow Oil",
     "familyId": "oil",
     "tier": 1,
-    "description": "dummy",
+    "description": "A murky, pale yellow liquid slowly collecting in a rough clay jar, thick drops still dripping from a greasy iron cauldron—animal scent lingers, vessel unsealed.",
     "icon": "/images/items/oil_t1.png"
   },
   {
-    "id": "boar_oil",
+    "id": "oil_2",
     "name": "Pressed Oil",
     "familyId": "oil",
     "tier": 2,
-    "description": "dummy",
+    "description": "Golden, cloudy liquid trickling into a squat wooden tub from a primitive screw press, flecks of seed and pulp floating on the surface, extraction unfinished.",
     "icon": "/images/items/oil_t2.png"
   },
   {
-    "id": "elk_oil",
+    "id": "oil_3",
     "name": "Refined Lamp Oil",
     "familyId": "oil",
     "tier": 3,
-    "description": "dummy",
+    "description": "Clear and pale, poured midway into a glass bottle, unstoppered, a funnel and stained rag aside, some haze still swirling—process incomplete.",
     "icon": "/images/items/oil_t3.png"
   },
   {
-    "id": "griffin_oil",
+    "id": "oil_4",
     "name": "Sacred Oil",
     "familyId": "oil",
     "tier": 4,
-    "description": "dummy",
+    "description": "Faintly glowing, pooling inside an open silver chalice atop a stone altar, petals and herbs floating on the surface, ritual markings unfinished—anointing still to come.",
     "icon": "/images/items/oil_t4.png"
   },
   {
-    "id": "wyvern_oil",
+    "id": "oil_5",
     "name": "Phoenix Oil",
     "familyId": "oil",
     "tier": 5,
-    "description": "dummy",
+    "description": "Iridescent, fiery liquid seething in a charred bronze flask, smoky wisps hovering above, drops hissing where they touch bare stone—harvest incomplete, heat undimmed.",
     "icon": "/images/items/oil_t5.png"
   },
   {
-    "id": "dragon_oil",
+    "id": "oil_6",
     "name": "Starfire Oil",
     "familyId": "oil",
     "tier": 6,
-    "description": "dummy",
+    "description": "Ethereal, silvery-blue and swirling with tiny starlit motes, decanting from a crystal ampoule into a rune-marked dish, celestial glow pulsing—bottling not yet done.",
     "icon": "/images/items/oil_t6.png"
   },
   {
-    "id": "pine_arrow",
+    "id": "arrow_1",
     "name": "Pine Arrow",
     "familyId": "arrow",
     "tier": 1,
-    "description": "dummy",
+    "description": "Pale, sap-scented shaft, rough-hewn and light, unfinished wooden arrowpoint, untied fletchings of mottled gray feather scattered on the workbench.",
     "icon": "/images/items/arrow_t1.png"
   },
   {
-    "id": "oak_arrow",
+    "id": "arrow_2",
     "name": "Oak Arrow",
     "familyId": "arrow",
     "tier": 2,
-    "description": "dummy",
+    "description": "Heavy and dark-shafted, knotted wood, arrowhead only loosely fitted, tail end ringed with a single half-attached brown feather.",
     "icon": "/images/items/arrow_t2.png"
   },
   {
-    "id": "ash_arrow",
+    "id": "arrow_3",
     "name": "Ash Arrow",
     "familyId": "arrow",
     "tier": 3,
-    "description": "dummy",
+    "description": "Slender, flexible shaft resting atop a leather pad, crude iron head beside it, feather vanes untrimmed, arrangement unfinished.",
     "icon": "/images/items/arrow_t3.png"
   },
   {
-    "id": "cedar_arrow",
+    "id": "arrow_4",
     "name": "Cedar Arrow",
     "familyId": "arrow",
     "tier": 4,
-    "description": "dummy",
+    "description": "Red-toned and aromatic, notched but lacking a tip, a scatter of red feather plumes and binding twine at its base.",
     "icon": "/images/items/arrow_t4.png"
   },
   {
-    "id": "ebony_arrow",
+    "id": "arrow_5",
     "name": "Ebony Arrow",
     "familyId": "arrow",
     "tier": 5,
-    "description": "dummy",
+    "description": "Jet-black, gleaming shaft, arrowhead half-inserted, stark white binding thread and dark glossy feathers lying nearby, all slightly askew.",
     "icon": "/images/items/arrow_t5.png"
   },
   {
-    "id": "worldroot_arrow",
+    "id": "arrow_6",
     "name": "Worldroot Arrow",
     "familyId": "arrow",
     "tier": 6,
-    "description": "dummy",
+    "description": "Intricately veined ancient wood shaft, pulsing with faint green glow, featherless and headless, delicate runes swirling along unfinished sides.",
     "icon": "/images/items/arrow_t6.png"
   },
   {
-    "id": "pine_bolt",
+    "id": "bolt_1",
     "name": "Pine Bolt",
     "familyId": "bolt",
     "tier": 1,
-    "description": "dummy",
+    "description": "Stubby and pale, freshly cut with a flat tip unfinished, bark remnants clinging near the nock, scattered alongside simple iron points.",
     "icon": "/images/items/bolt_t1.png"
   },
   {
-    "id": "oak_bolt",
+    "id": "bolt_2",
     "name": "Oak Bolt",
     "familyId": "bolt",
     "tier": 2,
-    "description": "dummy",
+    "description": "Short and thick-shafted, coarse and weighty, tip unshod, fletching string still tangled, waiting for assembly.",
     "icon": "/images/items/bolt_t2.png"
   },
   {
-    "id": "ash_bolt",
+    "id": "bolt_3",
     "name": "Ash Bolt",
     "familyId": "bolt",
     "tier": 3,
-    "description": "dummy",
+    "description": "Long and straight, resting next to chisel marks, ends blunt, tail feathers laid in a bunch, binding sinew trailing off its end.",
     "icon": "/images/items/bolt_t3.png"
   },
   {
-    "id": "cedar_bolt",
+    "id": "bolt_4",
     "name": "Cedar Bolt",
     "familyId": "bolt",
     "tier": 4,
-    "description": "dummy",
+    "description": "Rich and red-streaked, half-fletched, shaft glistening with resin, a small pile of feathers and glue nearby, incomplete.",
     "icon": "/images/items/bolt_t4.png"
   },
   {
-    "id": "ebony_bolt",
+    "id": "bolt_5",
     "name": "Ebony Bolt",
     "familyId": "bolt",
     "tier": 5,
-    "description": "dummy",
+    "description": "Dense and dark-shafted, one end carved to a stub, heavy head only partly attached, black and white flights curled loosely around the body.",
     "icon": "/images/items/bolt_t5.png"
   },
   {
-    "id": "worldroot_bolt",
+    "id": "bolt_6",
     "name": "Worldroot Bolt",
     "familyId": "bolt",
     "tier": 6,
-    "description": "dummy",
+    "description": "Ancient and rune-etched, shaft entwined with faint green light, wood still alive, mechanism unexplained—head and fletching not present, radiating potential.",
     "icon": "/images/items/bolt_t6.png"
   }
 ]

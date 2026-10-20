@@ -1,6 +1,6 @@
 [
   {
-    "id": "bright_feather_charm_flying",
+    "id": "charm_flying_1",
     "name": "Bright Feather",
     "familyId": "charm_flying",
     "tier": 1,
@@ -8,7 +8,7 @@
     "icon": "/images/items/charm_flying_t1.png"
   },
   {
-    "id": "jingle_bell_charm_flying",
+    "id": "charm_flying_2",
     "name": "Jingle Bell",
     "familyId": "charm_flying",
     "tier": 2,
@@ -16,7 +16,7 @@
     "icon": "/images/items/charm_flying_t2.png"
   },
   {
-    "id": "falconers_lure_charm_flying",
+    "id": "charm_flying_3",
     "name": "Falconer's Lure",
     "familyId": "charm_flying",
     "tier": 3,
@@ -24,7 +24,7 @@
     "icon": "/images/items/charm_flying_t3.png"
   },
   {
-    "id": "crystal_prism_charm_flying",
+    "id": "charm_flying_4",
     "name": "Crystal Prism",
     "familyId": "charm_flying",
     "tier": 4,
@@ -32,7 +32,7 @@
     "icon": "/images/items/charm_flying_t4.png"
   },
   {
-    "id": "phoenix_plume_charm_flying",
+    "id": "charm_flying_5",
     "name": "Phoenix Plume",
     "familyId": "charm_flying",
     "tier": 5,
@@ -40,7 +40,7 @@
     "icon": "/images/items/charm_flying_t5.png"
   },
   {
-    "id": "starlight_windsock_charm_flying",
+    "id": "charm_flying_6",
     "name": "Starlight Windsock",
     "familyId": "charm_flying",
     "tier": 6,
@@ -48,7 +48,7 @@
     "icon": "/images/items/charm_flying_t6.png"
   },
   {
-    "id": "shiny_pebble_charm_aquatic",
+    "id": "charm_aquatic_1",
     "name": "Shiny Pebble",
     "familyId": "charm_aquatic",
     "tier": 1,
@@ -56,7 +56,7 @@
     "icon": "/images/items/charm_aquatic_t1.png"
   },
   {
-    "id": "cork_bobber_charm_aquatic",
+    "id": "charm_aquatic_2",
     "name": "Cork Bobber",
     "familyId": "charm_aquatic",
     "tier": 2,
@@ -64,7 +64,7 @@
     "icon": "/images/items/charm_aquatic_t2.png"
   },
   {
-    "id": "spiral_shell_charm_aquatic",
+    "id": "charm_aquatic_3",
     "name": "Spiral Shell",
     "familyId": "charm_aquatic",
     "tier": 3,
@@ -72,7 +72,7 @@
     "icon": "/images/items/charm_aquatic_t3.png"
   },
   {
-    "id": "glowing_coral_charm_aquatic",
+    "id": "charm_aquatic_4",
     "name": "Glowing Coral",
     "familyId": "charm_aquatic",
     "tier": 4,
@@ -80,7 +80,7 @@
     "icon": "/images/items/charm_aquatic_t4.png"
   },
   {
-    "id": "deep_pearl_charm_aquatic",
+    "id": "charm_aquatic_5",
     "name": "Deep Pearl",
     "familyId": "charm_aquatic",
     "tier": 5,
@@ -88,7 +88,7 @@
     "icon": "/images/items/charm_aquatic_t5.png"
   },
   {
-    "id": "abyssal_gem_charm_aquatic",
+    "id": "charm_aquatic_6",
     "name": "Abyssal Gem",
     "familyId": "charm_aquatic",
     "tier": 6,
@@ -96,7 +96,7 @@
     "icon": "/images/items/charm_aquatic_t6.png"
   },
   {
-    "id": "tallow_candle_charm_ghost",
+    "id": "charm_ghost_1",
     "name": "Tallow Candle",
     "familyId": "charm_ghost",
     "tier": 1,
@@ -104,7 +104,7 @@
     "icon": "/images/items/charm_ghost_t1.png"
   },
   {
-    "id": "carved_bone_charm_ghost",
+    "id": "charm_ghost_2",
     "name": "Carved Bone",
     "familyId": "charm_ghost",
     "tier": 2,
@@ -112,7 +112,7 @@
     "icon": "/images/items/charm_ghost_t2.png"
   },
   {
-    "id": "black_ribbon_charm_ghost",
+    "id": "charm_ghost_3",
     "name": "Black Ribbon",
     "familyId": "charm_ghost",
     "tier": 3,
@@ -120,7 +120,7 @@
     "icon": "/images/items/charm_ghost_t3.png"
   },
   {
-    "id": "soul_lantern_charm_ghost",
+    "id": "charm_ghost_4",
     "name": "Soul Lantern",
     "familyId": "charm_ghost",
     "tier": 4,
@@ -128,7 +128,7 @@
     "icon": "/images/items/charm_ghost_t4.png"
   },
   {
-    "id": "shadow_crystal_charm_ghost",
+    "id": "charm_ghost_5",
     "name": "Shadow Crystal",
     "familyId": "charm_ghost",
     "tier": 5,
@@ -136,7 +136,7 @@
     "icon": "/images/items/charm_ghost_t5.png"
   },
   {
-    "id": "void_shard_charm_ghost",
+    "id": "charm_ghost_6",
     "name": "Void Shard",
     "familyId": "charm_ghost",
     "tier": 6,
@@ -144,7 +144,7 @@
     "icon": "/images/items/charm_ghost_t6.png"
   },
   {
-    "id": "old_stick_charm_other",
+    "id": "charm_other_1",
     "name": "Old Stick",
     "familyId": "charm_other",
     "tier": 1,
@@ -152,7 +152,7 @@
     "icon": "/images/items/charm_other_t1.png"
   },
   {
-    "id": "knuckle_bone_charm_other",
+    "id": "charm_other_2",
     "name": "Knuckle Bone",
     "familyId": "charm_other",
     "tier": 2,
@@ -160,7 +160,7 @@
     "icon": "/images/items/charm_other_t2.png"
   },
   {
-    "id": "rabbits_foot_charm_other",
+    "id": "charm_other_3",
     "name": "Rabbit's Foot",
     "familyId": "charm_other",
     "tier": 3,
@@ -168,7 +168,7 @@
     "icon": "/images/items/charm_other_t3.png"
   },
   {
-    "id": "silver_bell_charm_other",
+    "id": "charm_other_4",
     "name": "Silver Bell",
     "familyId": "charm_other",
     "tier": 4,
@@ -176,7 +176,7 @@
     "icon": "/images/items/charm_other_t4.png"
   },
   {
-    "id": "enchanted_plushie_charm_other",
+    "id": "charm_other_5",
     "name": "Enchanted Plushie",
     "familyId": "charm_other",
     "tier": 5,
@@ -184,7 +184,7 @@
     "icon": "/images/items/charm_other_t5.png"
   },
   {
-    "id": "cosmic_bauble_charm_other",
+    "id": "charm_other_6",
     "name": "Cosmic Bauble",
     "familyId": "charm_other",
     "tier": 6,
@@ -192,7 +192,7 @@
     "icon": "/images/items/charm_other_t6.png"
   },
   {
-    "id": "bat_winged_companion",
+    "id": "winged_companion_1",
     "name": "Bat",
     "familyId": "winged_companion",
     "tier": 1,
@@ -202,7 +202,7 @@
     "sizeClass": "tiny"
   },
   {
-    "id": "raven_winged_companion",
+    "id": "winged_companion_2",
     "name": "Raven",
     "familyId": "winged_companion",
     "tier": 2,
@@ -212,7 +212,7 @@
     "sizeClass": "tiny"
   },
   {
-    "id": "owl_winged_companion",
+    "id": "winged_companion_3",
     "name": "Owl",
     "familyId": "winged_companion",
     "tier": 3,
@@ -222,7 +222,7 @@
     "sizeClass": "light"
   },
   {
-    "id": "hawk_winged_companion",
+    "id": "winged_companion_4",
     "name": "Hawk",
     "familyId": "winged_companion",
     "tier": 4,
@@ -232,7 +232,7 @@
     "sizeClass": "light"
   },
   {
-    "id": "harpy_winged_companion",
+    "id": "winged_companion_5",
     "name": "Harpy",
     "familyId": "winged_companion",
     "tier": 5,
@@ -242,7 +242,7 @@
     "sizeClass": "medium"
   },
   {
-    "id": "phoenix_winged_companion",
+    "id": "winged_companion_6",
     "name": "Phoenix",
     "familyId": "winged_companion",
     "tier": 6,
@@ -252,7 +252,7 @@
     "sizeClass": "heavy"
   },
   {
-    "id": "rat_critter_companion",
+    "id": "critter_companion_1",
     "name": "Rat",
     "familyId": "critter_companion",
     "tier": 1,
@@ -262,7 +262,7 @@
     "sizeClass": "tiny"
   },
   {
-    "id": "ferret_critter_companion",
+    "id": "critter_companion_2",
     "name": "Ferret",
     "familyId": "critter_companion",
     "tier": 2,
@@ -272,7 +272,7 @@
     "sizeClass": "tiny"
   },
   {
-    "id": "fox_critter_companion",
+    "id": "critter_companion_3",
     "name": "Fox",
     "familyId": "critter_companion",
     "tier": 3,
@@ -282,7 +282,7 @@
     "sizeClass": "light"
   },
   {
-    "id": "shadowcat_critter_companion",
+    "id": "critter_companion_4",
     "name": "Shadowcat",
     "familyId": "critter_companion",
     "tier": 4,
@@ -292,7 +292,7 @@
     "sizeClass": "light"
   },
   {
-    "id": "moonhare_critter_companion",
+    "id": "critter_companion_5",
     "name": "Moonhare",
     "familyId": "critter_companion",
     "tier": 5,
@@ -302,7 +302,7 @@
     "sizeClass": "light"
   },
   {
-    "id": "kitsune_critter_companion",
+    "id": "critter_companion_6",
     "name": "Kitsune",
     "familyId": "critter_companion",
     "tier": 6,
@@ -312,7 +312,7 @@
     "sizeClass": "medium"
   },
   {
-    "id": "glowmoth_arcane_companion",
+    "id": "arcane_companion_1",
     "name": "Glowmoth",
     "familyId": "arcane_companion",
     "tier": 1,
@@ -322,7 +322,7 @@
     "sizeClass": "tiny"
   },
   {
-    "id": "crystal_lizard_arcane_companion",
+    "id": "arcane_companion_2",
     "name": "Crystal Lizard",
     "familyId": "arcane_companion",
     "tier": 2,
@@ -332,7 +332,7 @@
     "sizeClass": "tiny"
   },
   {
-    "id": "living_grimoire_arcane_companion",
+    "id": "arcane_companion_3",
     "name": "Living Grimoire",
     "familyId": "arcane_companion",
     "tier": 3,
@@ -342,7 +342,7 @@
     "sizeClass": "light"
   },
   {
-    "id": "blink_hound_arcane_companion",
+    "id": "arcane_companion_4",
     "name": "Blink Hound",
     "familyId": "arcane_companion",
     "tier": 4,
@@ -352,7 +352,7 @@
     "sizeClass": "medium"
   },
   {
-    "id": "mandrake_arcane_companion",
+    "id": "arcane_companion_5",
     "name": "Mandrake",
     "familyId": "arcane_companion",
     "tier": 5,
@@ -362,7 +362,7 @@
     "sizeClass": "light"
   },
   {
-    "id": "astral_familiar_arcane_companion",
+    "id": "arcane_companion_6",
     "name": "Astral Familiar",
     "familyId": "arcane_companion",
     "tier": 6,
@@ -372,7 +372,7 @@
     "sizeClass": "medium"
   },
   {
-    "id": "wisp_fey_companion",
+    "id": "fey_companion_1",
     "name": "Wisp",
     "familyId": "fey_companion",
     "tier": 1,
@@ -382,7 +382,7 @@
     "sizeClass": "tiny"
   },
   {
-    "id": "fairy_fey_companion",
+    "id": "fey_companion_2",
     "name": "Fairy",
     "familyId": "fey_companion",
     "tier": 2,
@@ -392,7 +392,7 @@
     "sizeClass": "tiny"
   },
   {
-    "id": "sprite_fey_companion",
+    "id": "fey_companion_3",
     "name": "Sprite",
     "familyId": "fey_companion",
     "tier": 3,
@@ -402,7 +402,7 @@
     "sizeClass": "tiny"
   },
   {
-    "id": "homunculus_fey_companion",
+    "id": "fey_companion_4",
     "name": "Homunculus",
     "familyId": "fey_companion",
     "tier": 4,
@@ -412,7 +412,7 @@
     "sizeClass": "light"
   },
   {
-    "id": "djinn_fey_companion",
+    "id": "fey_companion_5",
     "name": "Djinn",
     "familyId": "fey_companion",
     "tier": 5,
@@ -422,7 +422,7 @@
     "sizeClass": "medium"
   },
   {
-    "id": "seraph_fey_companion",
+    "id": "fey_companion_6",
     "name": "Seraph",
     "familyId": "fey_companion",
     "tier": 6,
@@ -432,7 +432,7 @@
     "sizeClass": "heavy"
   },
   {
-    "id": "crab_aquatic_companion",
+    "id": "aquatic_companion_1",
     "name": "Crab",
     "familyId": "aquatic_companion",
     "tier": 1,
@@ -442,7 +442,7 @@
     "sizeClass": "tiny"
   },
   {
-    "id": "otter_aquatic_companion",
+    "id": "aquatic_companion_2",
     "name": "Otter",
     "familyId": "aquatic_companion",
     "tier": 2,
@@ -452,7 +452,7 @@
     "sizeClass": "tiny"
   },
   {
-    "id": "octopus_aquatic_companion",
+    "id": "aquatic_companion_3",
     "name": "Octopus",
     "familyId": "aquatic_companion",
     "tier": 3,
@@ -462,7 +462,7 @@
     "sizeClass": "light"
   },
   {
-    "id": "selkie_aquatic_companion",
+    "id": "aquatic_companion_4",
     "name": "Selkie",
     "familyId": "aquatic_companion",
     "tier": 4,
@@ -472,7 +472,7 @@
     "sizeClass": "medium"
   },
   {
-    "id": "siren_aquatic_companion",
+    "id": "aquatic_companion_5",
     "name": "Siren",
     "familyId": "aquatic_companion",
     "tier": 5,
@@ -482,7 +482,7 @@
     "sizeClass": "medium"
   },
   {
-    "id": "water_elemental_aquatic_companion",
+    "id": "aquatic_companion_6",
     "name": "Water Elemental",
     "familyId": "aquatic_companion",
     "tier": 6,
@@ -492,7 +492,7 @@
     "sizeClass": "heavy"
   },
   {
-    "id": "witch_toad_dark_companion",
+    "id": "dark_companion_1",
     "name": "Witch Toad",
     "familyId": "dark_companion",
     "tier": 1,
@@ -502,7 +502,7 @@
     "sizeClass": "tiny"
   },
   {
-    "id": "imp_dark_companion",
+    "id": "dark_companion_2",
     "name": "Imp",
     "familyId": "dark_companion",
     "tier": 2,
@@ -512,7 +512,7 @@
     "sizeClass": "tiny"
   },
   {
-    "id": "hellhound_dark_companion",
+    "id": "dark_companion_3",
     "name": "Hellhound",
     "familyId": "dark_companion",
     "tier": 3,
@@ -522,7 +522,7 @@
     "sizeClass": "medium"
   },
   {
-    "id": "wraith_dark_companion",
+    "id": "dark_companion_4",
     "name": "Wraith",
     "familyId": "dark_companion",
     "tier": 4,
@@ -532,7 +532,7 @@
     "sizeClass": "light"
   },
   {
-    "id": "shadow_demon_dark_companion",
+    "id": "dark_companion_5",
     "name": "Shadow Demon",
     "familyId": "dark_companion",
     "tier": 5,
@@ -542,7 +542,7 @@
     "sizeClass": "medium"
   },
   {
-    "id": "abyssal_horror_dark_companion",
+    "id": "dark_companion_6",
     "name": "Abyssal Horror",
     "familyId": "dark_companion",
     "tier": 6,
@@ -552,7 +552,7 @@
     "sizeClass": "heavy"
   },
   {
-    "id": "lost_soul_spirit_companion",
+    "id": "spirit_companion_1",
     "name": "Lost Soul",
     "familyId": "spirit_companion",
     "tier": 1,
@@ -562,7 +562,7 @@
     "sizeClass": "tiny"
   },
   {
-    "id": "poltergeist_spirit_companion",
+    "id": "spirit_companion_2",
     "name": "Poltergeist",
     "familyId": "spirit_companion",
     "tier": 2,
@@ -572,7 +572,7 @@
     "sizeClass": "tiny"
   },
   {
-    "id": "ancestral_shade_spirit_companion",
+    "id": "spirit_companion_3",
     "name": "Ancestral Shade",
     "familyId": "spirit_companion",
     "tier": 3,
@@ -582,7 +582,7 @@
     "sizeClass": "light"
   },
   {
-    "id": "banshee_spirit_companion",
+    "id": "spirit_companion_4",
     "name": "Banshee",
     "familyId": "spirit_companion",
     "tier": 4,
@@ -592,7 +592,7 @@
     "sizeClass": "light"
   },
   {
-    "id": "revenant_spirit_companion",
+    "id": "spirit_companion_5",
     "name": "Revenant",
     "familyId": "spirit_companion",
     "tier": 5,
@@ -602,7 +602,7 @@
     "sizeClass": "medium"
   },
   {
-    "id": "lich_spirit_companion",
+    "id": "spirit_companion_6",
     "name": "Lich",
     "familyId": "spirit_companion",
     "tier": 6,

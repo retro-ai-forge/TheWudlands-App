@@ -54,7 +54,7 @@ export default function DevSection() {
                   <li>Characters creation</li>
                   <li>Starter blueprints</li>
                   <li>Crafting system</li>
-                  <li>XP for professions</li>
+                  <li>XP for crafting</li>
                   <li>Data storage</li>
                   <li>Limited adventure content</li>
                   <li>Starting in Beta &gt; 1.0 </li>
@@ -70,6 +70,7 @@ export default function DevSection() {
                   <li>Weapon and armor stats</li>
                   <li>Carrying capacity</li>
                   <li>Soul slots for magic</li>
+                  <li>Companion - pets, mounts</li>
                   <li>Crafting to enchant items</li>
                   <li>Your legend stats</li>
                   <li>First adventure addons</li>

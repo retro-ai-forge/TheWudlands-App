@@ -1,6 +1,6 @@
 [
   {
-    "id": "farmhands_hearty_stew",
+    "id": "hearty_stew_1",
     "name": "Cheap Hearty Stew",
     "familyId": "hearty_stew",
     "tier": 1,
@@ -8,7 +8,7 @@
     "icon": "/images/items/hearty_stew_t1.png"
   },
   {
-    "id": "travelers_hearty_stew",
+    "id": "hearty_stew_2",
     "name": "Traveler's Hearty Stew",
     "familyId": "hearty_stew",
     "tier": 2,
@@ -16,7 +16,7 @@
     "icon": "/images/items/hearty_stew_t2.png"
   },
   {
-    "id": "innkeepers_hearty_stew",
+    "id": "hearty_stew_3",
     "name": "Innkeeper's Hearty Stew",
     "familyId": "hearty_stew",
     "tier": 3,
@@ -24,7 +24,7 @@
     "icon": "/images/items/hearty_stew_t3.png"
   },
   {
-    "id": "chieftains_hearty_stew",
+    "id": "hearty_stew_4",
     "name": "Chieftain's Hearty Stew",
     "familyId": "hearty_stew",
     "tier": 4,
@@ -32,7 +32,7 @@
     "icon": "/images/items/hearty_stew_t4.png"
   },
   {
-    "id": "highland_hearty_stew",
+    "id": "hearty_stew_5",
     "name": "Highland Hearty Stew",
     "familyId": "hearty_stew",
     "tier": 5,
@@ -40,7 +40,7 @@
     "icon": "/images/items/hearty_stew_t5.png"
   },
   {
-    "id": "harvestkings_hearty_stew",
+    "id": "hearty_stew_6",
     "name": "Harvestking's Hearty Stew",
     "familyId": "hearty_stew",
     "tier": 6,
@@ -48,7 +48,7 @@
     "icon": "/images/items/hearty_stew_t6.png"
   },
   {
-    "id": "cabin_boys_salt_horse",
+    "id": "salt_horse_1",
     "name": "Cabin Boy's Salt Horse",
     "familyId": "salt_horse",
     "tier": 1,
@@ -56,7 +56,7 @@
     "icon": "/images/items/salt_horse_t1.png"
   },
   {
-    "id": "sailors_salt_horse",
+    "id": "salt_horse_2",
     "name": "Sailor's Salt Horse",
     "familyId": "salt_horse",
     "tier": 2,
@@ -64,7 +64,7 @@
     "icon": "/images/items/salt_horse_t2.png"
   },
   {
-    "id": "boatswains_salt_horse",
+    "id": "salt_horse_3",
     "name": "Boatswain's Salt Horse",
     "familyId": "salt_horse",
     "tier": 3,
@@ -72,7 +72,7 @@
     "icon": "/images/items/salt_horse_t3.png"
   },
   {
-    "id": "first_mates_salt_horse",
+    "id": "salt_horse_4",
     "name": "First Mate's Salt Horse",
     "familyId": "salt_horse",
     "tier": 4,
@@ -80,7 +80,7 @@
     "icon": "/images/items/salt_horse_t4.png"
   },
   {
-    "id": "captains_salt_horse",
+    "id": "salt_horse_5",
     "name": "Captain's Salt Horse",
     "familyId": "salt_horse",
     "tier": 5,
@@ -88,7 +88,7 @@
     "icon": "/images/items/salt_horse_t5.png"
   },
   {
-    "id": "admirals_salt_horse",
+    "id": "salt_horse_6",
     "name": "Admiral's Salt Horse",
     "familyId": "salt_horse",
     "tier": 6,
@@ -96,7 +96,7 @@
     "icon": "/images/items/salt_horse_t6.png"
   },
   {
-    "id": "cabin_boys_smoked_salt_horse",
+    "id": "smoked_salt_horse_1",
     "name": "Smoked Cabin Boy's Salt Horse",
     "familyId": "smoked_salt_horse",
     "tier": 1,
@@ -104,7 +104,7 @@
     "icon": "/images/items/smoked_salt_horse_t1.png"
   },
   {
-    "id": "sailors_smoked_salt_horse",
+    "id": "smoked_salt_horse_2",
     "name": "Smoked Sailor's Salt Horse",
     "familyId": "smoked_salt_horse",
     "tier": 2,
@@ -112,7 +112,7 @@
     "icon": "/images/items/smoked_salt_horse_t2.png"
   },
   {
-    "id": "boatswains_smoked_salt_horse",
+    "id": "smoked_salt_horse_3",
     "name": "Smoked Boatswain's Salt Horse",
     "familyId": "smoked_salt_horse",
     "tier": 3,
@@ -120,7 +120,7 @@
     "icon": "/images/items/smoked_salt_horse_t3.png"
   },
   {
-    "id": "first_mates_smoked_salt_horse",
+    "id": "smoked_salt_horse_4",
     "name": "Smoked First Mate's Salt Horse",
     "familyId": "smoked_salt_horse",
     "tier": 4,
@@ -128,7 +128,7 @@
     "icon": "/images/items/smoked_salt_horse_t4.png"
   },
   {
-    "id": "captains_smoked_salt_horse",
+    "id": "smoked_salt_horse_5",
     "name": "Smoked Captain's Salt Horse",
     "familyId": "smoked_salt_horse",
     "tier": 5,
@@ -136,7 +136,7 @@
     "icon": "/images/items/smoked_salt_horse_t5.png"
   },
   {
-    "id": "admirals_smoked_salt_horse",
+    "id": "smoked_salt_horse_6",
     "name": "Smoked Admiral's Salt Horse",
     "familyId": "smoked_salt_horse",
     "tier": 6,
@@ -144,7 +144,7 @@
     "icon": "/images/items/smoked_salt_horse_t6.png"
   },
   {
-    "id": "campfire_roast_haunch",
+    "id": "roast_haunch_1",
     "name": "Campfire Roast Haunch",
     "familyId": "roast_haunch",
     "tier": 1,
@@ -152,7 +152,7 @@
     "icon": "/images/items/roast_haunch_t1.png"
   },
   {
-    "id": "hearthside_roast_haunch",
+    "id": "roast_haunch_2",
     "name": "Hearthside Roast Haunch",
     "familyId": "roast_haunch",
     "tier": 2,
@@ -160,7 +160,7 @@
     "icon": "/images/items/roast_haunch_t2.png"
   },
   {
-    "id": "tavern_roast_haunch",
+    "id": "roast_haunch_3",
     "name": "Tavern Roast Haunch",
     "familyId": "roast_haunch",
     "tier": 3,
@@ -168,7 +168,7 @@
     "icon": "/images/items/roast_haunch_t3.png"
   },
   {
-    "id": "banquet_roast_haunch",
+    "id": "roast_haunch_4",
     "name": "Banquet Roast Haunch",
     "familyId": "roast_haunch",
     "tier": 4,
@@ -176,7 +176,7 @@
     "icon": "/images/items/roast_haunch_t4.png"
   },
   {
-    "id": "feastday_roast_haunch",
+    "id": "roast_haunch_5",
     "name": "Feastday Roast Haunch",
     "familyId": "roast_haunch",
     "tier": 5,
@@ -184,7 +184,7 @@
     "icon": "/images/items/roast_haunch_t5.png"
   },
   {
-    "id": "mythic_roast_haunch",
+    "id": "roast_haunch_6",
     "name": "Mythic Roast Haunch",
     "familyId": "roast_haunch",
     "tier": 6,
@@ -192,7 +192,7 @@
     "icon": "/images/items/roast_haunch_t6.png"
   },
   {
-    "id": "prentice_bangers",
+    "id": "bangers_1",
     "name": "Beginner's Bangers",
     "familyId": "bangers",
     "tier": 1,
@@ -200,7 +200,7 @@
     "icon": "/images/items/bangers_t1.png"
   },
   {
-    "id": "butchers_bangers",
+    "id": "bangers_2",
     "name": "Butcher's Bangers",
     "familyId": "bangers",
     "tier": 2,
@@ -208,7 +208,7 @@
     "icon": "/images/items/bangers_t2.png"
   },
   {
-    "id": "master_butchers_bangers",
+    "id": "bangers_3",
     "name": "Master Butcher's Bangers",
     "familyId": "bangers",
     "tier": 3,
@@ -216,7 +216,7 @@
     "icon": "/images/items/bangers_t3.png"
   },
   {
-    "id": "guildmasters_bangers",
+    "id": "bangers_4",
     "name": "Guildmaster's Bangers",
     "familyId": "bangers",
     "tier": 4,
@@ -224,7 +224,7 @@
     "icon": "/images/items/bangers_t4.png"
   },
   {
-    "id": "imperial_bangers",
+    "id": "bangers_5",
     "name": "Imperial Bangers",
     "familyId": "bangers",
     "tier": 5,
@@ -232,7 +232,7 @@
     "icon": "/images/items/bangers_t5.png"
   },
   {
-    "id": "peerless_bangers",
+    "id": "bangers_6",
     "name": "Peerless Bangers",
     "familyId": "bangers",
     "tier": 6,
@@ -240,7 +240,7 @@
     "icon": "/images/items/bangers_t6.png"
   },
   {
-    "id": "foragers_squirrel_hoard",
+    "id": "squirrel_hoard_1",
     "name": "Forager's Squirrel Hoard",
     "familyId": "squirrel_hoard",
     "tier": 1,
@@ -248,7 +248,7 @@
     "icon": "/images/items/squirrel_hoard_t1.png"
   },
   {
-    "id": "scavengers_squirrel_hoard",
+    "id": "squirrel_hoard_2",
     "name": "Scavenger's Squirrel Hoard",
     "familyId": "squirrel_hoard",
     "tier": 2,
@@ -256,7 +256,7 @@
     "icon": "/images/items/squirrel_hoard_t2.png"
   },
   {
-    "id": "woodland_squirrel_hoard",
+    "id": "squirrel_hoard_3",
     "name": "Woodland Squirrel Hoard",
     "familyId": "squirrel_hoard",
     "tier": 3,
@@ -264,7 +264,7 @@
     "icon": "/images/items/squirrel_hoard_t3.png"
   },
   {
-    "id": "autumns_squirrel_hoard",
+    "id": "squirrel_hoard_4",
     "name": "Autumn's Squirrel Hoard",
     "familyId": "squirrel_hoard",
     "tier": 4,
@@ -272,7 +272,7 @@
     "icon": "/images/items/squirrel_hoard_t4.png"
   },
   {
-    "id": "bountiful_squirrel_hoard",
+    "id": "squirrel_hoard_5",
     "name": "Bountiful Squirrel Hoard",
     "familyId": "squirrel_hoard",
     "tier": 5,
@@ -280,7 +280,7 @@
     "icon": "/images/items/squirrel_hoard_t5.png"
   },
   {
-    "id": "ageless_squirrel_hoard",
+    "id": "squirrel_hoard_6",
     "name": "Ageless Squirrel Hoard",
     "familyId": "squirrel_hoard",
     "tier": 6,
@@ -288,7 +288,7 @@
     "icon": "/images/items/squirrel_hoard_t6.png"
   },
   {
-    "id": "foragers_smoked_squirrel_hoard",
+    "id": "smoked_squirrel_hoard_1",
     "name": "Smoked Forager's Squirrel Hoard",
     "familyId": "smoked_squirrel_hoard",
     "tier": 1,
@@ -296,7 +296,7 @@
     "icon": "/images/items/smoked_squirrel_hoard_t1.png"
   },
   {
-    "id": "scavengers_smoked_squirrel_hoard",
+    "id": "smoked_squirrel_hoard_2",
     "name": "Smoked Scavenger's Squirrel Hoard",
     "familyId": "smoked_squirrel_hoard",
     "tier": 2,
@@ -304,7 +304,7 @@
     "icon": "/images/items/smoked_squirrel_hoard_t2.png"
   },
   {
-    "id": "woodland_smoked_squirrel_hoard",
+    "id": "smoked_squirrel_hoard_3",
     "name": "Smoked Woodland Squirrel Hoard",
     "familyId": "smoked_squirrel_hoard",
     "tier": 3,
@@ -312,7 +312,7 @@
     "icon": "/images/items/smoked_squirrel_hoard_t3.png"
   },
   {
-    "id": "autumns_smoked_squirrel_hoard",
+    "id": "smoked_squirrel_hoard_4",
     "name": "Smoked Autumn's Squirrel Hoard",
     "familyId": "smoked_squirrel_hoard",
     "tier": 4,
@@ -320,7 +320,7 @@
     "icon": "/images/items/smoked_squirrel_hoard_t4.png"
   },
   {
-    "id": "bountiful_smoked_squirrel_hoard",
+    "id": "smoked_squirrel_hoard_5",
     "name": "Smoked Bountiful Squirrel Hoard",
     "familyId": "smoked_squirrel_hoard",
     "tier": 5,
@@ -328,7 +328,7 @@
     "icon": "/images/items/smoked_squirrel_hoard_t5.png"
   },
   {
-    "id": "ageless_smoked_squirrel_hoard",
+    "id": "smoked_squirrel_hoard_6",
     "name": "Smoked Ageless Squirrel Hoard",
     "familyId": "smoked_squirrel_hoard",
     "tier": 6,
@@ -336,7 +336,7 @@
     "icon": "/images/items/smoked_squirrel_hoard_t6.png"
   },
   {
-    "id": "sunfaded_wizened_figs",
+    "id": "wizened_figs_1",
     "name": "Sunfaded Wizened Figs",
     "familyId": "wizened_figs",
     "tier": 1,
@@ -344,7 +344,7 @@
     "icon": "/images/items/wizened_figs_t1.png"
   },
   {
-    "id": "windswept_wizened_figs",
+    "id": "wizened_figs_2",
     "name": "Windswept Wizened Figs",
     "familyId": "wizened_figs",
     "tier": 2,
@@ -352,7 +352,7 @@
     "icon": "/images/items/wizened_figs_t2.png"
   },
   {
-    "id": "shriveled_wizened_figs",
+    "id": "wizened_figs_3",
     "name": "Shriveled Wizened Figs",
     "familyId": "wizened_figs",
     "tier": 3,
@@ -360,7 +360,7 @@
     "icon": "/images/items/wizened_figs_t3.png"
   },
   {
-    "id": "amberfig_wizened_figs",
+    "id": "wizened_figs_4",
     "name": "Amberfig Wizened Figs",
     "familyId": "wizened_figs",
     "tier": 4,
@@ -368,7 +368,7 @@
     "icon": "/images/items/wizened_figs_t4.png"
   },
   {
-    "id": "honeyfig_wizened_figs",
+    "id": "wizened_figs_5",
     "name": "Honeyfig Wizened Figs",
     "familyId": "wizened_figs",
     "tier": 5,
@@ -376,7 +376,7 @@
     "icon": "/images/items/wizened_figs_t5.png"
   },
   {
-    "id": "ancient_wizened_figs",
+    "id": "wizened_figs_6",
     "name": "Ancient Wizened Figs",
     "familyId": "wizened_figs",
     "tier": 6,
@@ -384,7 +384,7 @@
     "icon": "/images/items/wizened_figs_t6.png"
   },
   {
-    "id": "sunfaded_smoked_wizened_figs",
+    "id": "smoked_wizened_figs_1",
     "name": "Smoked Sunfaded Wizened Figs",
     "familyId": "smoked_wizened_figs",
     "tier": 1,
@@ -392,7 +392,7 @@
     "icon": "/images/items/smoked_wizened_figs_t1.png"
   },
   {
-    "id": "windswept_smoked_wizened_figs",
+    "id": "smoked_wizened_figs_2",
     "name": "Smoked Windswept Wizened Figs",
     "familyId": "smoked_wizened_figs",
     "tier": 2,
@@ -400,7 +400,7 @@
     "icon": "/images/items/smoked_wizened_figs_t2.png"
   },
   {
-    "id": "shriveled_smoked_wizened_figs",
+    "id": "smoked_wizened_figs_3",
     "name": "Smoked Shriveled Wizened Figs",
     "familyId": "smoked_wizened_figs",
     "tier": 3,
@@ -408,7 +408,7 @@
     "icon": "/images/items/smoked_wizened_figs_t3.png"
   },
   {
-    "id": "amberfig_smoked_wizened_figs",
+    "id": "smoked_wizened_figs_4",
     "name": "Smoked Amberfig Wizened Figs",
     "familyId": "smoked_wizened_figs",
     "tier": 4,
@@ -416,7 +416,7 @@
     "icon": "/images/items/smoked_wizened_figs_t4.png"
   },
   {
-    "id": "honeyfig_smoked_wizened_figs",
+    "id": "smoked_wizened_figs_5",
     "name": "Smoked Honeyfig Wizened Figs",
     "familyId": "smoked_wizened_figs",
     "tier": 5,
@@ -424,7 +424,7 @@
     "icon": "/images/items/smoked_wizened_figs_t5.png"
   },
   {
-    "id": "ancient_smoked_wizened_figs",
+    "id": "smoked_wizened_figs_6",
     "name": "Smoked Ancient Wizened Figs",
     "familyId": "smoked_wizened_figs",
     "tier": 6,
@@ -432,7 +432,7 @@
     "icon": "/images/items/smoked_wizened_figs_t6.png"
   },
   {
-    "id": "skirmishers_iron_ration",
+    "id": "iron_ration_1",
     "name": "Plain Iron Ration",
     "familyId": "iron_ration",
     "tier": 1,
@@ -440,7 +440,7 @@
     "icon": "/images/items/iron_ration_t1.png"
   },
   {
-    "id": "soldiers_iron_ration",
+    "id": "iron_ration_2",
     "name": "Soldier's Iron Ration",
     "familyId": "iron_ration",
     "tier": 2,
@@ -448,7 +448,7 @@
     "icon": "/images/items/iron_ration_t2.png"
   },
   {
-    "id": "veterans_iron_ration",
+    "id": "iron_ration_3",
     "name": "Veteran's Iron Ration",
     "familyId": "iron_ration",
     "tier": 3,
@@ -456,7 +456,7 @@
     "icon": "/images/items/iron_ration_t3.png"
   },
   {
-    "id": "legionnaires_iron_ration",
+    "id": "iron_ration_4",
     "name": "Legionnaire's Iron Ration",
     "familyId": "iron_ration",
     "tier": 4,
@@ -464,7 +464,7 @@
     "icon": "/images/items/iron_ration_t4.png"
   },
   {
-    "id": "generals_iron_ration",
+    "id": "iron_ration_5",
     "name": "General's Iron Ration",
     "familyId": "iron_ration",
     "tier": 5,
@@ -472,7 +472,7 @@
     "icon": "/images/items/iron_ration_t5.png"
   },
   {
-    "id": "warlords_iron_ration",
+    "id": "iron_ration_6",
     "name": "Warlord's Iron Ration",
     "familyId": "iron_ration",
     "tier": 6,
@@ -480,7 +480,7 @@
     "icon": "/images/items/iron_ration_t6.png"
   },
   {
-    "id": "stream_minnow_cooked_fish",
+    "id": "cooked_fish_1",
     "name": "Cooked Stream Minnow",
     "familyId": "cooked_fish",
     "tier": 1,
@@ -488,7 +488,7 @@
     "icon": "/images/items/cooked_fish_t1.png"
   },
   {
-    "id": "river_trout_cooked_fish",
+    "id": "cooked_fish_2",
     "name": "Cooked River Trout",
     "familyId": "cooked_fish",
     "tier": 2,
@@ -496,7 +496,7 @@
     "icon": "/images/items/cooked_fish_t2.png"
   },
   {
-    "id": "sea_salmon_cooked_fish",
+    "id": "cooked_fish_3",
     "name": "Cooked Sea Salmon",
     "familyId": "cooked_fish",
     "tier": 3,
@@ -504,7 +504,7 @@
     "icon": "/images/items/cooked_fish_t3.png"
   },
   {
-    "id": "runic_eel_cooked_fish",
+    "id": "cooked_fish_4",
     "name": "Cooked Runic Eel",
     "familyId": "cooked_fish",
     "tier": 4,
@@ -512,7 +512,7 @@
     "icon": "/images/items/cooked_fish_t4.png"
   },
   {
-    "id": "umbral_anglerfish_cooked_fish",
+    "id": "cooked_fish_5",
     "name": "Cooked Umbral Anglerfish",
     "familyId": "cooked_fish",
     "tier": 5,
@@ -520,7 +520,7 @@
     "icon": "/images/items/cooked_fish_t5.png"
   },
   {
-    "id": "abyssal_leviathan_cooked_fish",
+    "id": "cooked_fish_6",
     "name": "Cooked Abyssal Leviathan",
     "familyId": "cooked_fish",
     "tier": 6,
@@ -528,7 +528,7 @@
     "icon": "/images/items/cooked_fish_t6.png"
   },
   {
-    "id": "campfire_fish_skewer",
+    "id": "grilled_fish_skewer_1",
     "name": "Campfire Fish Skewer",
     "familyId": "grilled_fish_skewer",
     "tier": 1,
@@ -536,7 +536,7 @@
     "icon": "/images/items/grilled_fish_skewer_t1.png"
   },
   {
-    "id": "hearthside_fish_skewer",
+    "id": "grilled_fish_skewer_2",
     "name": "Hearthside Fish Skewer",
     "familyId": "grilled_fish_skewer",
     "tier": 2,
@@ -544,7 +544,7 @@
     "icon": "/images/items/grilled_fish_skewer_t2.png"
   },
   {
-    "id": "tavern_fish_skewer",
+    "id": "grilled_fish_skewer_3",
     "name": "Tavern Fish Skewer",
     "familyId": "grilled_fish_skewer",
     "tier": 3,
@@ -552,7 +552,7 @@
     "icon": "/images/items/grilled_fish_skewer_t3.png"
   },
   {
-    "id": "banquet_fish_skewer",
+    "id": "grilled_fish_skewer_4",
     "name": "Banquet Fish Skewer",
     "familyId": "grilled_fish_skewer",
     "tier": 4,
@@ -560,7 +560,7 @@
     "icon": "/images/items/grilled_fish_skewer_t4.png"
   },
   {
-    "id": "feastday_fish_skewer",
+    "id": "grilled_fish_skewer_5",
     "name": "Feastday Fish Skewer",
     "familyId": "grilled_fish_skewer",
     "tier": 5,
@@ -568,7 +568,7 @@
     "icon": "/images/items/grilled_fish_skewer_t5.png"
   },
   {
-    "id": "mythic_fish_skewer",
+    "id": "grilled_fish_skewer_6",
     "name": "Mythic Fish Skewer",
     "familyId": "grilled_fish_skewer",
     "tier": 6,
@@ -576,7 +576,7 @@
     "icon": "/images/items/grilled_fish_skewer_t6.png"
   },
   {
-    "id": "dockside_fish_chowder",
+    "id": "fish_chowder_1",
     "name": "Dockside Fish Chowder",
     "familyId": "fish_chowder",
     "tier": 1,
@@ -584,7 +584,7 @@
     "icon": "/images/items/fish_chowder_t1.png"
   },
   {
-    "id": "fishermans_fish_chowder",
+    "id": "fish_chowder_2",
     "name": "Fisherman's Fish Chowder",
     "familyId": "fish_chowder",
     "tier": 2,
@@ -592,7 +592,7 @@
     "icon": "/images/items/fish_chowder_t2.png"
   },
   {
-    "id": "harbormasters_fish_chowder",
+    "id": "fish_chowder_3",
     "name": "Harbormaster's Fish Chowder",
     "familyId": "fish_chowder",
     "tier": 3,
@@ -600,7 +600,7 @@
     "icon": "/images/items/fish_chowder_t3.png"
   },
   {
-    "id": "coastal_fish_chowder",
+    "id": "fish_chowder_4",
     "name": "Coastal Fish Chowder",
     "familyId": "fish_chowder",
     "tier": 4,
@@ -608,7 +608,7 @@
     "icon": "/images/items/fish_chowder_t4.png"
   },
   {
-    "id": "deepwater_fish_chowder",
+    "id": "fish_chowder_5",
     "name": "Deepwater Fish Chowder",
     "familyId": "fish_chowder",
     "tier": 5,
@@ -616,7 +616,7 @@
     "icon": "/images/items/fish_chowder_t5.png"
   },
   {
-    "id": "leviathans_fish_chowder",
+    "id": "fish_chowder_6",
     "name": "Leviathan's Fish Chowder",
     "familyId": "fish_chowder",
     "tier": 6,
@@ -624,7 +624,7 @@
     "icon": "/images/items/fish_chowder_t6.png"
   },
   {
-    "id": "deckhands_ration",
+    "id": "fishermans_ration_1",
     "name": "Deckhand's Ration",
     "familyId": "fishermans_ration",
     "tier": 1,
@@ -632,7 +632,7 @@
     "icon": "/images/items/fishermans_ration_t1.png"
   },
   {
-    "id": "anglers_ration",
+    "id": "fishermans_ration_2",
     "name": "Angler's Ration",
     "familyId": "fishermans_ration",
     "tier": 2,
@@ -640,7 +640,7 @@
     "icon": "/images/items/fishermans_ration_t2.png"
   },
   {
-    "id": "netmasters_ration",
+    "id": "fishermans_ration_3",
     "name": "Netmaster's Ration",
     "familyId": "fishermans_ration",
     "tier": 3,
@@ -648,7 +648,7 @@
     "icon": "/images/items/fishermans_ration_t3.png"
   },
   {
-    "id": "harbor_guards_ration",
+    "id": "fishermans_ration_4",
     "name": "Harbor Guard's Ration",
     "familyId": "fishermans_ration",
     "tier": 4,
@@ -656,7 +656,7 @@
     "icon": "/images/items/fishermans_ration_t4.png"
   },
   {
-    "id": "fleet_captains_ration",
+    "id": "fishermans_ration_5",
     "name": "Fleet Captain's Ration",
     "familyId": "fishermans_ration",
     "tier": 5,
@@ -664,7 +664,7 @@
     "icon": "/images/items/fishermans_ration_t5.png"
   },
   {
-    "id": "tidekings_ration",
+    "id": "fishermans_ration_6",
     "name": "Tideking's Ration",
     "familyId": "fishermans_ration",
     "tier": 6,
@@ -672,7 +672,7 @@
     "icon": "/images/items/fishermans_ration_t6.png"
   },
   {
-    "id": "jarred_pickled_fish",
+    "id": "pickled_fish_1",
     "name": "Jarred Pickled Fish",
     "familyId": "pickled_fish",
     "tier": 1,
@@ -680,7 +680,7 @@
     "icon": "/images/items/pickled_fish_t1.png"
   },
   {
-    "id": "brined_pickled_fish",
+    "id": "pickled_fish_2",
     "name": "Brined Pickled Fish",
     "familyId": "pickled_fish",
     "tier": 2,
@@ -688,7 +688,7 @@
     "icon": "/images/items/pickled_fish_t2.png"
   },
   {
-    "id": "spiced_pickled_fish",
+    "id": "pickled_fish_3",
     "name": "Spiced Pickled Fish",
     "familyId": "pickled_fish",
     "tier": 3,
@@ -696,7 +696,7 @@
     "icon": "/images/items/pickled_fish_t3.png"
   },
   {
-    "id": "cask_aged_pickled_fish",
+    "id": "pickled_fish_4",
     "name": "Cask-Aged Pickled Fish",
     "familyId": "pickled_fish",
     "tier": 4,
@@ -704,7 +704,7 @@
     "icon": "/images/items/pickled_fish_t4.png"
   },
   {
-    "id": "deepbrine_pickled_fish",
+    "id": "pickled_fish_5",
     "name": "Deepbrine Pickled Fish",
     "familyId": "pickled_fish",
     "tier": 5,
@@ -712,7 +712,7 @@
     "icon": "/images/items/pickled_fish_t5.png"
   },
   {
-    "id": "ambrosial_pickled_fish",
+    "id": "pickled_fish_6",
     "name": "Ambrosial Pickled Fish",
     "familyId": "pickled_fish",
     "tier": 6,
@@ -720,7 +720,7 @@
     "icon": "/images/items/pickled_fish_t6.png"
   },
   {
-    "id": "stream_minnow_smoked_fish",
+    "id": "smoked_fish_1",
     "name": "Smoked Stream Minnow",
     "familyId": "smoked_fish",
     "tier": 1,
@@ -728,7 +728,7 @@
     "icon": "/images/items/smoked_fish_t1.png"
   },
   {
-    "id": "river_trout_smoked_fish",
+    "id": "smoked_fish_2",
     "name": "Smoked River Trout",
     "familyId": "smoked_fish",
     "tier": 2,
@@ -736,7 +736,7 @@
     "icon": "/images/items/smoked_fish_t2.png"
   },
   {
-    "id": "sea_salmon_smoked_fish",
+    "id": "smoked_fish_3",
     "name": "Smoked Sea Salmon",
     "familyId": "smoked_fish",
     "tier": 3,
@@ -744,7 +744,7 @@
     "icon": "/images/items/smoked_fish_t3.png"
   },
   {
-    "id": "runic_eel_smoked_fish",
+    "id": "smoked_fish_4",
     "name": "Smoked Runic Eel",
     "familyId": "smoked_fish",
     "tier": 4,
@@ -752,7 +752,7 @@
     "icon": "/images/items/smoked_fish_t4.png"
   },
   {
-    "id": "umbral_anglerfish_smoked_fish",
+    "id": "smoked_fish_5",
     "name": "Smoked Umbral Anglerfish",
     "familyId": "smoked_fish",
     "tier": 5,
@@ -760,7 +760,7 @@
     "icon": "/images/items/smoked_fish_t5.png"
   },
   {
-    "id": "abyssal_leviathan_smoked_fish",
+    "id": "smoked_fish_6",
     "name": "Smoked Abyssal Leviathan",
     "familyId": "smoked_fish",
     "tier": 6,

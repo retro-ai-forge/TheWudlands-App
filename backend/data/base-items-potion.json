@@ -1,6 +1,6 @@
 [
   {
-    "id": "minor_healing_potion",
+    "id": "healing_potion_1",
     "name": "Minor Healing Potion",
     "familyId": "healing_potion",
     "tier": 1,
@@ -8,7 +8,7 @@
     "icon": "/images/items/healing_potion_t1.png"
   },
   {
-    "id": "lesser_healing_potion",
+    "id": "healing_potion_2",
     "name": "Lesser Healing Potion",
     "familyId": "healing_potion",
     "tier": 2,
@@ -16,7 +16,7 @@
     "icon": "/images/items/healing_potion_t2.png"
   },
   {
-    "id": "common_healing_potion",
+    "id": "healing_potion_3",
     "name": "Common Healing Potion",
     "familyId": "healing_potion",
     "tier": 3,
@@ -24,7 +24,7 @@
     "icon": "/images/items/healing_potion_t3.png"
   },
   {
-    "id": "greater_healing_potion",
+    "id": "healing_potion_4",
     "name": "Greater Healing Potion",
     "familyId": "healing_potion",
     "tier": 4,
@@ -32,7 +32,7 @@
     "icon": "/images/items/healing_potion_t4.png"
   },
   {
-    "id": "superior_healing_potion",
+    "id": "healing_potion_5",
     "name": "Superior Healing Potion",
     "familyId": "healing_potion",
     "tier": 5,
@@ -40,7 +40,7 @@
     "icon": "/images/items/healing_potion_t5.png"
   },
   {
-    "id": "supreme_healing_potion",
+    "id": "healing_potion_6",
     "name": "Supreme Healing Potion",
     "familyId": "healing_potion",
     "tier": 6,
@@ -48,7 +48,7 @@
     "icon": "/images/items/healing_potion_t6.png"
   },
   {
-    "id": "minor_mana_potion",
+    "id": "mana_potion_1",
     "name": "Minor Mana Potion",
     "familyId": "mana_potion",
     "tier": 1,
@@ -56,7 +56,7 @@
     "icon": "/images/items/mana_potion_t1.png"
   },
   {
-    "id": "lesser_mana_potion",
+    "id": "mana_potion_2",
     "name": "Lesser Mana Potion",
     "familyId": "mana_potion",
     "tier": 2,
@@ -64,7 +64,7 @@
     "icon": "/images/items/mana_potion_t2.png"
   },
   {
-    "id": "common_mana_potion",
+    "id": "mana_potion_3",
     "name": "Common Mana Potion",
     "familyId": "mana_potion",
     "tier": 3,
@@ -72,7 +72,7 @@
     "icon": "/images/items/mana_potion_t3.png"
   },
   {
-    "id": "greater_mana_potion",
+    "id": "mana_potion_4",
     "name": "Greater Mana Potion",
     "familyId": "mana_potion",
     "tier": 4,
@@ -80,7 +80,7 @@
     "icon": "/images/items/mana_potion_t4.png"
   },
   {
-    "id": "superior_mana_potion",
+    "id": "mana_potion_5",
     "name": "Superior Mana Potion",
     "familyId": "mana_potion",
     "tier": 5,
@@ -88,7 +88,7 @@
     "icon": "/images/items/mana_potion_t5.png"
   },
   {
-    "id": "supreme_mana_potion",
+    "id": "mana_potion_6",
     "name": "Supreme Mana Potion",
     "familyId": "mana_potion",
     "tier": 6,
@@ -96,7 +96,7 @@
     "icon": "/images/items/mana_potion_t6.png"
   },
   {
-    "id": "simple_antidote_potion",
+    "id": "antidote_potion_1",
     "name": "Simple Antidote",
     "familyId": "antidote_potion",
     "tier": 1,
@@ -104,7 +104,7 @@
     "icon": "/images/items/antidote_potion_t1.png"
   },
   {
-    "id": "common_antidote_potion",
+    "id": "antidote_potion_2",
     "name": "Common Antidote",
     "familyId": "antidote_potion",
     "tier": 2,
@@ -112,7 +112,7 @@
     "icon": "/images/items/antidote_potion_t2.png"
   },
   {
-    "id": "refined_antidote_potion",
+    "id": "antidote_potion_3",
     "name": "Refined Antidote",
     "familyId": "antidote_potion",
     "tier": 3,
@@ -120,7 +120,7 @@
     "icon": "/images/items/antidote_potion_t3.png"
   },
   {
-    "id": "potent_antidote_potion",
+    "id": "antidote_potion_4",
     "name": "Potent Antidote",
     "familyId": "antidote_potion",
     "tier": 4,
@@ -128,7 +128,7 @@
     "icon": "/images/items/antidote_potion_t4.png"
   },
   {
-    "id": "concentrated_antidote_potion",
+    "id": "antidote_potion_5",
     "name": "Concentrated Antidote",
     "familyId": "antidote_potion",
     "tier": 5,
@@ -136,7 +136,7 @@
     "icon": "/images/items/antidote_potion_t5.png"
   },
   {
-    "id": "masters_antidote_potion",
+    "id": "antidote_potion_6",
     "name": "Master's Antidote",
     "familyId": "antidote_potion",
     "tier": 6,
@@ -144,7 +144,7 @@
     "icon": "/images/items/antidote_potion_t6.png"
   },
   {
-    "id": "weak_venom_vial",
+    "id": "venom_vial_1",
     "name": "Weak Venom Vial",
     "familyId": "venom_vial",
     "tier": 1,
@@ -152,7 +152,7 @@
     "icon": "/images/items/venom_vial_t1.png"
   },
   {
-    "id": "mild_venom_vial",
+    "id": "venom_vial_2",
     "name": "Mild Venom Vial",
     "familyId": "venom_vial",
     "tier": 2,
@@ -160,7 +160,7 @@
     "icon": "/images/items/venom_vial_t2.png"
   },
   {
-    "id": "sharp_venom_vial",
+    "id": "venom_vial_3",
     "name": "Sharp Venom Vial",
     "familyId": "venom_vial",
     "tier": 3,
@@ -168,7 +168,7 @@
     "icon": "/images/items/venom_vial_t3.png"
   },
   {
-    "id": "vicious_venom_vial",
+    "id": "venom_vial_4",
     "name": "Vicious Venom Vial",
     "familyId": "venom_vial",
     "tier": 4,
@@ -176,7 +176,7 @@
     "icon": "/images/items/venom_vial_t4.png"
   },
   {
-    "id": "deadly_venom_vial",
+    "id": "venom_vial_5",
     "name": "Deadly Venom Vial",
     "familyId": "venom_vial",
     "tier": 5,
@@ -184,7 +184,7 @@
     "icon": "/images/items/venom_vial_t5.png"
   },
   {
-    "id": "lethal_venom_vial",
+    "id": "venom_vial_6",
     "name": "Lethal Venom Vial",
     "familyId": "venom_vial",
     "tier": 6,

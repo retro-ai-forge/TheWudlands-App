@@ -1,6 +1,6 @@
 [
   {
-    "id": "pine_wooden_shield",
+    "id": "wooden_shield_1",
     "name": "Crude Wooden Shield",
     "familyId": "wooden_shield",
     "tier": 1,
@@ -8,7 +8,7 @@
     "icon": "/images/items/wooden_shield_t1.png"
   },
   {
-    "id": "oak_wooden_shield",
+    "id": "wooden_shield_2",
     "name": "Oak Wooden Shield",
     "familyId": "wooden_shield",
     "tier": 2,
@@ -16,7 +16,7 @@
     "icon": "/images/items/wooden_shield_t2.png"
   },
   {
-    "id": "ash_wooden_shield",
+    "id": "wooden_shield_3",
     "name": "Ash Wooden Shield",
     "familyId": "wooden_shield",
     "tier": 3,
@@ -24,7 +24,7 @@
     "icon": "/images/items/wooden_shield_t3.png"
   },
   {
-    "id": "cedar_wooden_shield",
+    "id": "wooden_shield_4",
     "name": "Cedar Wooden Shield",
     "familyId": "wooden_shield",
     "tier": 4,
@@ -32,7 +32,7 @@
     "icon": "/images/items/wooden_shield_t4.png"
   },
   {
-    "id": "ebony_wooden_shield",
+    "id": "wooden_shield_5",
     "name": "Ebony Wooden Shield",
     "familyId": "wooden_shield",
     "tier": 5,
@@ -40,7 +40,7 @@
     "icon": "/images/items/wooden_shield_t5.png"
   },
   {
-    "id": "worldroot_wooden_shield",
+    "id": "wooden_shield_6",
     "name": "Worldroot Wooden Shield",
     "familyId": "wooden_shield",
     "tier": 6,
@@ -48,7 +48,7 @@
     "icon": "/images/items/wooden_shield_t6.png"
   },
   {
-    "id": "banded_reinforced_wooden_shield",
+    "id": "reinforced_wooden_shield_1",
     "name": "Beginner's Reinforced Shield",
     "familyId": "reinforced_wooden_shield",
     "tier": 1,
@@ -56,7 +56,7 @@
     "icon": "/images/items/reinforced_wooden_shield_t1.png"
   },
   {
-    "id": "riveted_reinforced_wooden_shield",
+    "id": "reinforced_wooden_shield_2",
     "name": "Riveted Reinforced Shield",
     "familyId": "reinforced_wooden_shield",
     "tier": 2,
@@ -64,7 +64,7 @@
     "icon": "/images/items/reinforced_wooden_shield_t2.png"
   },
   {
-    "id": "bossed_reinforced_wooden_shield",
+    "id": "reinforced_wooden_shield_3",
     "name": "Bossed Reinforced Shield",
     "familyId": "reinforced_wooden_shield",
     "tier": 3,
@@ -72,7 +72,7 @@
     "icon": "/images/items/reinforced_wooden_shield_t3.png"
   },
   {
-    "id": "plated_reinforced_wooden_shield",
+    "id": "reinforced_wooden_shield_4",
     "name": "Plated Reinforced Shield",
     "familyId": "reinforced_wooden_shield",
     "tier": 4,
@@ -80,7 +80,7 @@
     "icon": "/images/items/reinforced_wooden_shield_t4.png"
   },
   {
-    "id": "barred_reinforced_wooden_shield",
+    "id": "reinforced_wooden_shield_5",
     "name": "Barred Reinforced Shield",
     "familyId": "reinforced_wooden_shield",
     "tier": 5,
@@ -88,7 +88,7 @@
     "icon": "/images/items/reinforced_wooden_shield_t5.png"
   },
   {
-    "id": "battleforged_reinforced_wooden_shield",
+    "id": "reinforced_wooden_shield_6",
     "name": "Battleforged Reinforced Shield",
     "familyId": "reinforced_wooden_shield",
     "tier": 6,
@@ -96,7 +96,7 @@
     "icon": "/images/items/reinforced_wooden_shield_t6.png"
   },
   {
-    "id": "ironclad_iron_shield",
+    "id": "iron_shield_1",
     "name": "Rusty Metal Shield",
     "familyId": "iron_shield",
     "tier": 1,
@@ -104,7 +104,7 @@
     "icon": "/images/items/iron_shield_t1.png"
   },
   {
-    "id": "steelbound_iron_shield",
+    "id": "iron_shield_2",
     "name": "Steelbound Shield",
     "familyId": "iron_shield",
     "tier": 2,
@@ -112,7 +112,7 @@
     "icon": "/images/items/iron_shield_t2.png"
   },
   {
-    "id": "warforged_iron_shield",
+    "id": "iron_shield_3",
     "name": "Warforged Iron Shield",
     "familyId": "iron_shield",
     "tier": 3,
@@ -120,7 +120,7 @@
     "icon": "/images/items/iron_shield_t3.png"
   },
   {
-    "id": "ironheart_iron_shield",
+    "id": "iron_shield_4",
     "name": "Ironheart Shield",
     "familyId": "iron_shield",
     "tier": 4,
@@ -128,7 +128,7 @@
     "icon": "/images/items/iron_shield_t4.png"
   },
   {
-    "id": "ironbound_iron_shield",
+    "id": "iron_shield_5",
     "name": "Ironbound Shield",
     "familyId": "iron_shield",
     "tier": 5,
@@ -136,7 +136,7 @@
     "icon": "/images/items/iron_shield_t5.png"
   },
   {
-    "id": "deathless_iron_shield",
+    "id": "iron_shield_6",
     "name": "Deathless Iron Shield",
     "familyId": "iron_shield",
     "tier": 6,
@@ -144,7 +144,7 @@
     "icon": "/images/items/iron_shield_t6.png"
   },
   {
-    "id": "dusk_ebony_shield",
+    "id": "ebony_shield_1",
     "name": "Dusk Ebony Shield",
     "familyId": "ebony_shield",
     "tier": 1,
@@ -152,7 +152,7 @@
     "icon": "/images/items/ebony_shield_t1.png"
   },
   {
-    "id": "twilight_ebony_shield",
+    "id": "ebony_shield_2",
     "name": "Twilight Ebony Shield",
     "familyId": "ebony_shield",
     "tier": 2,
@@ -160,7 +160,7 @@
     "icon": "/images/items/ebony_shield_t2.png"
   },
   {
-    "id": "shadow_ebony_shield",
+    "id": "ebony_shield_3",
     "name": "Shadow Ebony Shield",
     "familyId": "ebony_shield",
     "tier": 3,
@@ -168,7 +168,7 @@
     "icon": "/images/items/ebony_shield_t3.png"
   },
   {
-    "id": "midnight_ebony_shield",
+    "id": "ebony_shield_4",
     "name": "Midnight Ebony Shield",
     "familyId": "ebony_shield",
     "tier": 4,
@@ -176,7 +176,7 @@
     "icon": "/images/items/ebony_shield_t4.png"
   },
   {
-    "id": "umbral_ebony_shield",
+    "id": "ebony_shield_5",
     "name": "Umbral Ebony Shield",
     "familyId": "ebony_shield",
     "tier": 5,
@@ -184,7 +184,7 @@
     "icon": "/images/items/ebony_shield_t5.png"
   },
   {
-    "id": "eclipsed_ebony_shield",
+    "id": "ebony_shield_6",
     "name": "Eclipsed Ebony Shield",
     "familyId": "ebony_shield",
     "tier": 6,
@@ -192,7 +192,7 @@
     "icon": "/images/items/ebony_shield_t6.png"
   },
   {
-    "id": "beetle_chitin_shield",
+    "id": "chitin_shield_1",
     "name": "Beetle Chitin Shield",
     "familyId": "chitin_shield",
     "tier": 1,
@@ -200,7 +200,7 @@
     "icon": "/images/items/chitin_shield_t1.png"
   },
   {
-    "id": "mantis_chitin_shield",
+    "id": "chitin_shield_2",
     "name": "Mantis Chitin Shield",
     "familyId": "chitin_shield",
     "tier": 2,
@@ -208,7 +208,7 @@
     "icon": "/images/items/chitin_shield_t2.png"
   },
   {
-    "id": "scorpion_chitin_shield",
+    "id": "chitin_shield_3",
     "name": "Scorpion Chitin Shield",
     "familyId": "chitin_shield",
     "tier": 3,
@@ -216,7 +216,7 @@
     "icon": "/images/items/chitin_shield_t3.png"
   },
   {
-    "id": "spider_chitin_shield",
+    "id": "chitin_shield_4",
     "name": "Spider Chitin Shield",
     "familyId": "chitin_shield",
     "tier": 4,
@@ -224,7 +224,7 @@
     "icon": "/images/items/chitin_shield_t4.png"
   },
   {
-    "id": "wyrm_chitin_shield",
+    "id": "chitin_shield_5",
     "name": "Wyrm Chitin Shield",
     "familyId": "chitin_shield",
     "tier": 5,
@@ -232,7 +232,7 @@
     "icon": "/images/items/chitin_shield_t5.png"
   },
   {
-    "id": "voidling_chitin_shield",
+    "id": "chitin_shield_6",
     "name": "Voidling Chitin Shield",
     "familyId": "chitin_shield",
     "tier": 6,
@@ -240,7 +240,7 @@
     "icon": "/images/items/chitin_shield_t6.png"
   },
   {
-    "id": "copper_meteoric_iron_shield",
+    "id": "meteoric_iron_shield_1",
     "name": "Copper Meteoric Shield",
     "familyId": "meteoric_iron_shield",
     "tier": 1,
@@ -248,7 +248,7 @@
     "icon": "/images/items/meteoric_iron_shield_t1.png"
   },
   {
-    "id": "bronze_meteoric_iron_shield",
+    "id": "meteoric_iron_shield_2",
     "name": "Bronze Meteoric Shield",
     "familyId": "meteoric_iron_shield",
     "tier": 2,
@@ -256,7 +256,7 @@
     "icon": "/images/items/meteoric_iron_shield_t2.png"
   },
   {
-    "id": "iron_meteoric_iron_shield",
+    "id": "meteoric_iron_shield_3",
     "name": "Iron Meteoric Shield",
     "familyId": "meteoric_iron_shield",
     "tier": 3,
@@ -264,7 +264,7 @@
     "icon": "/images/items/meteoric_iron_shield_t3.png"
   },
   {
-    "id": "silver_meteoric_iron_shield",
+    "id": "meteoric_iron_shield_4",
     "name": "Silver Meteoric Shield",
     "familyId": "meteoric_iron_shield",
     "tier": 4,
@@ -272,7 +272,7 @@
     "icon": "/images/items/meteoric_iron_shield_t4.png"
   },
   {
-    "id": "gold_meteoric_iron_shield",
+    "id": "meteoric_iron_shield_5",
     "name": "Gold Meteoric Shield",
     "familyId": "meteoric_iron_shield",
     "tier": 5,
@@ -280,7 +280,7 @@
     "icon": "/images/items/meteoric_iron_shield_t5.png"
   },
   {
-    "id": "star_metal_meteoric_iron_shield",
+    "id": "meteoric_iron_shield_6",
     "name": "Star Metal Meteoric Shield",
     "familyId": "meteoric_iron_shield",
     "tier": 6,
@@ -288,7 +288,7 @@
     "icon": "/images/items/meteoric_iron_shield_t6.png"
   },
   {
-    "id": "tempered_darksteel_shield",
+    "id": "darksteel_shield_1",
     "name": "Tempered Darksteel Shield",
     "familyId": "darksteel_shield",
     "tier": 1,
@@ -296,7 +296,7 @@
     "icon": "/images/items/darksteel_shield_t1.png"
   },
   {
-    "id": "warded_darksteel_shield",
+    "id": "darksteel_shield_2",
     "name": "Warded Darksteel Shield",
     "familyId": "darksteel_shield",
     "tier": 2,
@@ -304,7 +304,7 @@
     "icon": "/images/items/darksteel_shield_t2.png"
   },
   {
-    "id": "runed_darksteel_shield",
+    "id": "darksteel_shield_3",
     "name": "Runed Darksteel Shield",
     "familyId": "darksteel_shield",
     "tier": 3,
@@ -312,7 +312,7 @@
     "icon": "/images/items/darksteel_shield_t3.png"
   },
   {
-    "id": "sigiled_darksteel_shield",
+    "id": "darksteel_shield_4",
     "name": "Sigiled Darksteel Shield",
     "familyId": "darksteel_shield",
     "tier": 4,
@@ -320,7 +320,7 @@
     "icon": "/images/items/darksteel_shield_t4.png"
   },
   {
-    "id": "shadowforged_darksteel_shield",
+    "id": "darksteel_shield_5",
     "name": "Shadowforged Darksteel Shield",
     "familyId": "darksteel_shield",
     "tier": 5,
@@ -328,7 +328,7 @@
     "icon": "/images/items/darksteel_shield_t5.png"
   },
   {
-    "id": "worldforged_darksteel_shield",
+    "id": "darksteel_shield_6",
     "name": "Worldforged Darksteel Shield",
     "familyId": "darksteel_shield",
     "tier": 6,

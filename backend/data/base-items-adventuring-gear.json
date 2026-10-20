@@ -288,7 +288,7 @@
     "icon": "/images/items/tent_t6.png"
   },
   {
-    "id": "sparrow_quill",
+    "id": "quill_1",
     "name": "Sparrow Quill",
     "familyId": "quill",
     "tier": 1,
@@ -296,7 +296,7 @@
     "icon": "/images/items/quill_t1.png"
   },
   {
-    "id": "owl_quill",
+    "id": "quill_2",
     "name": "Owl Quill",
     "familyId": "quill",
     "tier": 2,
@@ -304,7 +304,7 @@
     "icon": "/images/items/quill_t2.png"
   },
   {
-    "id": "hawk_quill",
+    "id": "quill_3",
     "name": "Hawk Quill",
     "familyId": "quill",
     "tier": 3,
@@ -312,7 +312,7 @@
     "icon": "/images/items/quill_t3.png"
   },
   {
-    "id": "phoenix_quill",
+    "id": "quill_4",
     "name": "Phoenix Quill",
     "familyId": "quill",
     "tier": 4,
@@ -320,7 +320,7 @@
     "icon": "/images/items/quill_t4.png"
   },
   {
-    "id": "roc_quill",
+    "id": "quill_5",
     "name": "Roc Quill",
     "familyId": "quill",
     "tier": 5,
@@ -328,7 +328,7 @@
     "icon": "/images/items/quill_t5.png"
   },
   {
-    "id": "celestial_quill",
+    "id": "quill_6",
     "name": "Celestial Quill",
     "familyId": "quill",
     "tier": 6,
@@ -336,7 +336,7 @@
     "icon": "/images/items/quill_t6.png"
   },
   {
-    "id": "river_parchment",
+    "id": "parchment_1",
     "name": "River Parchment",
     "familyId": "parchment",
     "tier": 1,
@@ -344,7 +344,7 @@
     "description": "A sheet of pale river-cured parchment with soft ripples, cool as wet reeds and bright as moonlit water."
   },
   {
-    "id": "marsh_parchment",
+    "id": "parchment_2",
     "name": "Marsh Parchment",
     "familyId": "parchment",
     "tier": 2,
@@ -352,7 +352,7 @@
     "description": "A damp bronze-tinted parchment, fibrous and earthy, smelling of peat, moss, and hidden rain."
   },
   {
-    "id": "papyrus_parchment",
+    "id": "parchment_3",
     "name": "Papyrus Parchment",
     "familyId": "parchment",
     "tier": 3,
@@ -360,7 +360,7 @@
     "description": "A rustic reed-bound papyrus sheet, sun-baked and layered, with the look of ancient desert script."
   },
   {
-    "id": "silverreed_parchment",
+    "id": "parchment_4",
     "name": "Silverreed Parchment",
     "familyId": "parchment",
     "tier": 4,
@@ -368,7 +368,7 @@
     "description": "Fine parchment threaded with silver reed veins, elegant and pale, shimmering with quiet enchantment."
   },
   {
-    "id": "starreed_parchment",
+    "id": "parchment_5",
     "name": "Starreed Parchment",
     "familyId": "parchment",
     "tier": 5,
@@ -376,7 +376,7 @@
     "description": "Luminous parchment woven from starreed fibers, dusted with starlight and a faint celestial glow."
   },
   {
-    "id": "worldreed_parchment",
+    "id": "parchment_6",
     "name": "Worldreed Parchment",
     "familyId": "parchment",
     "tier": 6,
@@ -384,7 +384,7 @@
     "description": "A grand living parchment of ancient worldreed, richly textured and alive with the breath of old forests."
   },
   {
-    "id": "common_ink",
+    "id": "ink_1",
     "name": "Common Ink",
     "familyId": "ink",
     "tier": 1,
@@ -392,7 +392,7 @@
     "description": "A humble copper inkwell of soot-black ink, smudged and practical, with a travel-worn stopper and the scent of old libraries."
   },
   {
-    "id": "plant_dye_ink",
+    "id": "ink_2",
     "name": "Plant Dye Ink",
     "familyId": "ink",
     "tier": 2,
@@ -400,7 +400,7 @@
     "description": "A bronze bottle of moss-green dye ink, steeped from leaves and roots, earthy and bright like a druid's workbench."
   },
   {
-    "id": "mineral_ink",
+    "id": "ink_3",
     "name": "Mineral Ink",
     "familyId": "ink",
     "tier": 3,
@@ -408,7 +408,7 @@
     "description": "A simple metal vial of slate-gray mineral ink, heavy and gritty, like ground stone suspended in oil."
   },
   {
-    "id": "rare_ink",
+    "id": "ink_4",
     "name": "Rare Ink",
     "familyId": "ink",
     "tier": 4,
@@ -416,7 +416,7 @@
     "description": "A silvered glass flask of deep midnight ink, faintly luminous and refined, fit for a master scribe."
   },
   {
-    "id": "phoenix_ash_ink",
+    "id": "ink_5",
     "name": "Phoenix Ash Ink",
     "familyId": "ink",
     "tier": 5,
@@ -424,7 +424,7 @@
     "description": "A golden ink phial holding ember-red ash and smoke, glowing with a warm, reborn firelight."
   },
   {
-    "id": "chromatic_ink",
+    "id": "ink_6",
     "name": "Chromatic Ink",
     "familyId": "ink",
     "tier": 6,
@@ -534,7 +534,7 @@
     "icon": "/images/items/fishing_pole_t6.png"
   },
   {
-    "id": "tallow_torch",
+    "id": "torch_1",
     "name": "Tallow Torch",
     "familyId": "torch",
     "tier": 1,
@@ -542,7 +542,7 @@
     "icon": "/images/items/torch_t1.png"
   },
   {
-    "id": "pitch_torch",
+    "id": "torch_2",
     "name": "Pitch Torch",
     "familyId": "torch",
     "tier": 2,
@@ -550,7 +550,7 @@
     "icon": "/images/items/torch_t2.png"
   },
   {
-    "id": "oilsoaked_torch",
+    "id": "torch_3",
     "name": "Oilsoaked Torch",
     "familyId": "torch",
     "tier": 3,
@@ -558,7 +558,7 @@
     "icon": "/images/items/torch_t3.png"
   },
   {
-    "id": "everflame_torch",
+    "id": "torch_4",
     "name": "Everflame Torch",
     "familyId": "torch",
     "tier": 4,
@@ -566,7 +566,7 @@
     "icon": "/images/items/torch_t4.png"
   },
   {
-    "id": "phoenixfire_torch",
+    "id": "torch_5",
     "name": "Phoenixfire Torch",
     "familyId": "torch",
     "tier": 5,
@@ -574,7 +574,7 @@
     "icon": "/images/items/torch_t5.png"
   },
   {
-    "id": "sunfire_torch",
+    "id": "torch_6",
     "name": "Sunfire Torch",
     "familyId": "torch",
     "tier": 6,
@@ -582,7 +582,7 @@
     "icon": "/images/items/torch_t6.png"
   },
   {
-    "id": "beeswax_candle",
+    "id": "candle_1",
     "name": "Beeswax Candle",
     "familyId": "candle",
     "tier": 1,
@@ -590,7 +590,7 @@
     "icon": "/images/items/candle_t1.png"
   },
   {
-    "id": "honeywax_candle",
+    "id": "candle_2",
     "name": "Honeywax Candle",
     "familyId": "candle",
     "tier": 2,
@@ -598,7 +598,7 @@
     "icon": "/images/items/candle_t2.png"
   },
   {
-    "id": "ambercomb_candle",
+    "id": "candle_3",
     "name": "Ambercomb Candle",
     "familyId": "candle",
     "tier": 3,
@@ -606,7 +606,7 @@
     "icon": "/images/items/candle_t3.png"
   },
   {
-    "id": "moonlit_candle",
+    "id": "candle_4",
     "name": "Moonlit Candle",
     "familyId": "candle",
     "tier": 4,
@@ -614,7 +614,7 @@
     "icon": "/images/items/candle_t4.png"
   },
   {
-    "id": "starwax_candle",
+    "id": "candle_5",
     "name": "Starwax Candle",
     "familyId": "candle",
     "tier": 5,
@@ -622,7 +622,7 @@
     "icon": "/images/items/candle_t5.png"
   },
   {
-    "id": "sunwax_candle",
+    "id": "candle_6",
     "name": "Sunwax Candle",
     "familyId": "candle",
     "tier": 6,
@@ -630,7 +630,7 @@
     "icon": "/images/items/candle_t6.png"
   },
   {
-    "id": "travelers_glass_lantern",
+    "id": "glass_lantern_1",
     "name": "Traveler's Glass Lantern",
     "familyId": "glass_lantern",
     "tier": 1,
@@ -638,7 +638,7 @@
     "icon": "/images/items/glass_lantern_t1.png"
   },
   {
-    "id": "miners_glass_lantern",
+    "id": "glass_lantern_2",
     "name": "Miner's Glass Lantern",
     "familyId": "glass_lantern",
     "tier": 2,
@@ -646,7 +646,7 @@
     "icon": "/images/items/glass_lantern_t2.png"
   },
   {
-    "id": "watchmans_glass_lantern",
+    "id": "glass_lantern_3",
     "name": "Watchman's Glass Lantern",
     "familyId": "glass_lantern",
     "tier": 3,
@@ -654,7 +654,7 @@
     "icon": "/images/items/glass_lantern_t3.png"
   },
   {
-    "id": "beacon_glass_lantern",
+    "id": "glass_lantern_4",
     "name": "Beacon Glass Lantern",
     "familyId": "glass_lantern",
     "tier": 4,
@@ -662,7 +662,7 @@
     "icon": "/images/items/glass_lantern_t4.png"
   },
   {
-    "id": "lighthouse_glass_lantern",
+    "id": "glass_lantern_5",
     "name": "Lighthouse Glass Lantern",
     "familyId": "glass_lantern",
     "tier": 5,
@@ -670,7 +670,7 @@
     "icon": "/images/items/glass_lantern_t5.png"
   },
   {
-    "id": "starlight_glass_lantern",
+    "id": "glass_lantern_6",
     "name": "Starlight Glass Lantern",
     "familyId": "glass_lantern",
     "tier": 6,
@@ -678,7 +678,7 @@
     "icon": "/images/items/glass_lantern_t6.png"
   },
   {
-    "id": "rat_ear_hunters_charm",
+    "id": "hunters_charm_1",
     "name": "Rat Ear Hunter's Charm",
     "familyId": "hunters_charm",
     "tier": 1,
@@ -686,7 +686,7 @@
     "icon": "/images/items/hunters_charm_t1.png"
   },
   {
-    "id": "troll_fat_hunters_charm",
+    "id": "hunters_charm_2",
     "name": "Troll Fat Hunter's Charm",
     "familyId": "hunters_charm",
     "tier": 2,
@@ -694,7 +694,7 @@
     "icon": "/images/items/hunters_charm_t2.png"
   },
   {
-    "id": "basilisk_eye_hunters_charm",
+    "id": "hunters_charm_3",
     "name": "Basilisk Eye Hunter's Charm",
     "familyId": "hunters_charm",
     "tier": 3,
@@ -702,7 +702,7 @@
     "icon": "/images/items/hunters_charm_t3.png"
   },
   {
-    "id": "wyvern_tail_hunters_charm",
+    "id": "hunters_charm_4",
     "name": "Wyvern Tail Hunter's Charm",
     "familyId": "hunters_charm",
     "tier": 4,
@@ -710,7 +710,7 @@
     "icon": "/images/items/hunters_charm_t4.png"
   },
   {
-    "id": "gorgon_scale_hunters_charm",
+    "id": "hunters_charm_5",
     "name": "Gorgon Scale Hunter's Charm",
     "familyId": "hunters_charm",
     "tier": 5,
@@ -718,7 +718,7 @@
     "icon": "/images/items/hunters_charm_t5.png"
   },
   {
-    "id": "umbral_heart_hunters_charm",
+    "id": "hunters_charm_6",
     "name": "Umbral Heart Hunter's Charm",
     "familyId": "hunters_charm",
     "tier": 6,

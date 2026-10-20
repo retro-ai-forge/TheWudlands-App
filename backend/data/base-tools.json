@@ -1,390 +1,390 @@
 [
   {
-    "id": "copper_anvil",
+    "id": "anvil_1",
     "name": "Hollow Anvil",
     "familyId": "anvil",
     "tier": 1,
-    "description": "dummy",
-    "icon": "/images/items/xxx.png"
+    "description": "A thin copper anvil, dented and ringing, barely heavy enough to hold its shape under the hammer.",
+    "icon": "/images/items/anvil_t1.png"
   },
   {
-    "id": "bronze_anvil",
+    "id": "anvil_2",
     "name": "Bronze Anvil",
     "familyId": "anvil",
     "tier": 2,
-    "description": "dummy",
-    "icon": "/images/items/xxx.png"
+    "description": "A sturdy bronze anvil with a warm golden sheen, forged for honest work and reliable strikes.",
+    "icon": "/images/items/anvil_t2.png"
   },
   {
-    "id": "iron_anvil",
+    "id": "anvil_3",
     "name": "Iron Anvil",
     "familyId": "anvil",
     "tier": 3,
-    "description": "dummy",
-    "icon": "/images/items/xxx.png"
+    "description": "A heavy iron anvil, dark and unyielding, its face scarred by countless blades brought to life.",
+    "icon": "/images/items/anvil_t3.png"
   },
   {
-    "id": "silver_anvil",
+    "id": "anvil_4",
     "name": "Silver Anvil",
     "familyId": "anvil",
     "tier": 4,
-    "description": "dummy",
-    "icon": "/images/items/xxx.png"
+    "description": "A silver-chased anvil, cool and precise, engraved with faint sigils of master smiths.",
+    "icon": "/images/items/anvil_t4.png"
   },
   {
-    "id": "gold_anvil",
+    "id": "anvil_5",
     "name": "Gold Anvil",
     "familyId": "anvil",
     "tier": 5,
-    "description": "dummy",
-    "icon": "/images/items/xxx.png"
+    "description": "A gold-trimmed anvil of imposing weight, radiant and regal, fit for forging arms of kings.",
+    "icon": "/images/items/anvil_t5.png"
   },
   {
-    "id": "star_metal_anvil",
+    "id": "anvil_6",
     "name": "Star Metal Anvil",
     "familyId": "anvil",
     "tier": 6,
-    "description": "dummy",
-    "icon": "/images/items/xxx.png"
+    "description": "A star metal anvil of legendary craft, thrumming with cosmic resonance and ancient forge-song.",
+    "icon": "/images/items/anvil_t6.png"
   },
   {
-    "id": "pine_workbench",
+    "id": "workbench_1",
     "name": "Crude Workbench",
     "familyId": "workbench",
     "tier": 1,
-    "description": "dummy",
-    "icon": "/images/items/xxx.png"
+    "description": "A rough pine workbench, splintered and uneven, but sturdy enough for a beginner's first projects.",
+    "icon": "/images/items/workbench_t1.png"
   },
   {
-    "id": "oak_workbench",
+    "id": "workbench_2",
     "name": "Oak Workbench",
     "familyId": "workbench",
     "tier": 2,
-    "description": "dummy",
-    "icon": "/images/items/xxx.png"
+    "description": "A solid oak workbench, broad and reliable, worn smooth by seasons of honest craftsmanship.",
+    "icon": "/images/items/workbench_t2.png"
   },
   {
-    "id": "ash_workbench",
+    "id": "workbench_3",
     "name": "Ash Workbench",
     "familyId": "workbench",
     "tier": 3,
-    "description": "dummy",
-    "icon": "/images/items/xxx.png"
+    "description": "A fine ash workbench, pale and limber, built with the care of a practiced artisan.",
+    "icon": "/images/items/workbench_t3.png"
   },
   {
-    "id": "cedar_workbench",
+    "id": "workbench_4",
     "name": "Cedar Workbench",
     "familyId": "workbench",
     "tier": 4,
-    "description": "dummy",
-    "icon": "/images/items/xxx.png"
+    "description": "A fragrant cedar workbench, red-brown and warm, fitted with precision clamps and tool slots.",
+    "icon": "/images/items/workbench_t4.png"
   },
   {
-    "id": "ebony_workbench",
+    "id": "workbench_5",
     "name": "Ebony Workbench",
     "familyId": "workbench",
     "tier": 5,
-    "description": "dummy",
-    "icon": "/images/items/xxx.png"
+    "description": "A polished ebony workbench, dark and stately, crafted for work that demands perfection.",
+    "icon": "/images/items/workbench_t5.png"
   },
   {
-    "id": "worldroot_workbench",
+    "id": "workbench_6",
     "name": "Worldroot Workbench",
     "familyId": "workbench",
     "tier": 6,
-    "description": "dummy",
-    "icon": "/images/items/xxx.png"
+    "description": "A worldroot workbench of ancient timber, faintly glowing with living energy and primeval craft.",
+    "icon": "/images/items/workbench_t6.png"
   },
   {
-    "id": "pine_loom",
+    "id": "loom_1",
     "name": "Beginner's Loom",
     "familyId": "loom",
     "tier": 1,
-    "description": "dummy",
-    "icon": "/images/items/xxx.png"
+    "description": "A wobbly pine loom, simple and slow, threaded with patience and rough-spun hope.",
+    "icon": "/images/items/loom_t1.png"
   },
   {
-    "id": "oak_loom",
+    "id": "loom_2",
     "name": "Oak Loom",
     "familyId": "loom",
     "tier": 2,
-    "description": "dummy",
-    "icon": "/images/items/xxx.png"
+    "description": "A sturdy oak loom, even-tensioned and dependable, built for cloth that holds together.",
+    "icon": "/images/items/loom_t2.png"
   },
   {
-    "id": "ash_loom",
+    "id": "loom_3",
     "name": "Ash Loom",
     "familyId": "loom",
     "tier": 3,
-    "description": "dummy",
-    "icon": "/images/items/xxx.png"
+    "description": "A smooth ash loom, light and responsive, capable of finer weaves and tighter patterns.",
+    "icon": "/images/items/loom_t3.png"
   },
   {
-    "id": "cedar_loom",
+    "id": "loom_4",
     "name": "Cedar Loom",
     "familyId": "loom",
     "tier": 4,
-    "description": "dummy",
-    "icon": "/images/items/xxx.png"
+    "description": "A fragrant cedar loom, warm-toned and precise, strung for fabrics of real artistry.",
+    "icon": "/images/items/loom_t4.png"
   },
   {
-    "id": "ebony_loom",
+    "id": "loom_5",
     "name": "Ebony Loom",
     "familyId": "loom",
     "tier": 5,
-    "description": "dummy",
-    "icon": "/images/items/xxx.png"
+    "description": "A grand ebony loom, dark and elegant, its mechanisms tuned for masterwork textiles.",
+    "icon": "/images/items/loom_t5.png"
   },
   {
-    "id": "worldroot_loom",
+    "id": "loom_6",
     "name": "Worldroot Loom",
     "familyId": "loom",
     "tier": 6,
-    "description": "dummy",
-    "icon": "/images/items/xxx.png"
+    "description": "A worldroot loom of living wood, its threads guided by ancient enchantment and primal rhythm.",
+    "icon": "/images/items/loom_t6.png"
   },
   {
-    "id": "letter_scriptorium",
+    "id": "scriptorium_1",
     "name": "Uneven Scriptorium",
     "familyId": "scriptorium",
     "tier": 1,
-    "description": "dummy",
-    "icon": "/images/items/xxx.png"
+    "description": "A crude writing desk with a tilted surface and stained inkwell, suited to simple notes and lists.",
+    "icon": "/images/items/scriptorium_t1.png"
   },
   {
-    "id": "journal_scriptorium",
+    "id": "scriptorium_2",
     "name": "Journal Scriptorium",
     "familyId": "scriptorium",
     "tier": 2,
-    "description": "dummy",
-    "icon": "/images/items/xxx.png"
+    "description": "A modest scribe's desk with compartments for ink and quill, built for keeping orderly records.",
+    "icon": "/images/items/scriptorium_t2.png"
   },
   {
-    "id": "treatise_scriptorium",
+    "id": "scriptorium_3",
     "name": "Treatise Scriptorium",
     "familyId": "scriptorium",
     "tier": 3,
-    "description": "dummy",
-    "icon": "/images/items/xxx.png"
+    "description": "A well-crafted writing station with ruled guides and fine-nib holders, made for serious scholarship.",
+    "icon": "/images/items/scriptorium_t3.png"
   },
   {
-    "id": "chronicle_scriptorium",
+    "id": "scriptorium_4",
     "name": "Chronicle Scriptorium",
     "familyId": "scriptorium",
     "tier": 4,
-    "description": "dummy",
-    "icon": "/images/items/xxx.png"
+    "description": "A stately chronicler's desk, fitted with brass fixtures and a magnifying lens, built for detailed histories.",
+    "icon": "/images/items/scriptorium_t4.png"
   },
   {
-    "id": "grimoire_scriptorium",
+    "id": "scriptorium_5",
     "name": "Grimoire Scriptorium",
     "familyId": "scriptorium",
     "tier": 5,
-    "description": "dummy",
-    "icon": "/images/items/xxx.png"
+    "description": "A sombre arcane writing desk, inlaid with rune-etched silver, designed for inscribing works of power.",
+    "icon": "/images/items/scriptorium_t5.png"
   },
   {
-    "id": "codex_scriptorium",
+    "id": "scriptorium_6",
     "name": "Codex Scriptorium",
     "familyId": "scriptorium",
     "tier": 6,
-    "description": "dummy",
-    "icon": "/images/items/xxx.png"
+    "description": "A legendary scriptorium of ancient design, its surface glowing with faint sigils, worthy of world-shaping texts.",
+    "icon": "/images/items/scriptorium_t6.png"
   },
   {
-    "id": "pine_spinning_wheel",
+    "id": "spinning_wheel_1",
     "name": "Loose Spinning Wheel",
     "familyId": "spinning_wheel",
     "tier": 1,
-    "description": "dummy",
-    "icon": "/images/items/xxx.png"
+    "description": "A rickety pine spinning wheel that wobbles with each turn, producing uneven but serviceable thread.",
+    "icon": "/images/items/spinning_wheel_t1.png"
   },
   {
-    "id": "oak_spinning_wheel",
+    "id": "spinning_wheel_2",
     "name": "Oak Spinning Wheel",
     "familyId": "spinning_wheel",
     "tier": 2,
-    "description": "dummy",
-    "icon": "/images/items/xxx.png"
+    "description": "A reliable oak spinning wheel with a steady treadle, built for consistent and patient work.",
+    "icon": "/images/items/spinning_wheel_t2.png"
   },
   {
-    "id": "ash_spinning_wheel",
+    "id": "spinning_wheel_3",
     "name": "Ash Spinning Wheel",
     "familyId": "spinning_wheel",
     "tier": 3,
-    "description": "dummy",
-    "icon": "/images/items/xxx.png"
+    "description": "A balanced ash spinning wheel, smooth and quiet, capable of spinning finer yarn with ease.",
+    "icon": "/images/items/spinning_wheel_t3.png"
   },
   {
-    "id": "cedar_spinning_wheel",
+    "id": "spinning_wheel_4",
     "name": "Cedar Spinning Wheel",
     "familyId": "spinning_wheel",
     "tier": 4,
-    "description": "dummy",
-    "icon": "/images/items/xxx.png"
+    "description": "A fragrant cedar spinning wheel, finely turned and true, made for threads of real quality.",
+    "icon": "/images/items/spinning_wheel_t4.png"
   },
   {
-    "id": "ebony_spinning_wheel",
+    "id": "spinning_wheel_5",
     "name": "Ebony Spinning Wheel",
     "familyId": "spinning_wheel",
     "tier": 5,
-    "description": "dummy",
-    "icon": "/images/items/xxx.png"
+    "description": "A magnificent ebony spinning wheel, dark and flawless, its spindle tuned for masterwork fibers.",
+    "icon": "/images/items/spinning_wheel_t5.png"
   },
   {
-    "id": "worldroot_spinning_wheel",
+    "id": "spinning_wheel_6",
     "name": "Worldroot Spinning Wheel",
     "familyId": "spinning_wheel",
     "tier": 6,
-    "description": "dummy",
-    "icon": "/images/items/xxx.png"
+    "description": "A worldroot spinning wheel of living wood, spinning thread imbued with ancient natural essence.",
+    "icon": "/images/items/spinning_wheel_t6.png"
   },
   {
-    "id": "pine_tanning_rack",
+    "id": "tanning_rack_1",
     "name": "Primitive Tanning Rack",
     "familyId": "tanning_rack",
     "tier": 1,
-    "description": "dummy",
-    "icon": "/images/items/xxx.png"
+    "description": "A crude pine tanning rack, lashed together with cord, barely holding hides flat for curing.",
+    "icon": "/images/items/tanning_rack_t1.png"
   },
   {
-    "id": "oak_tanning_rack",
+    "id": "tanning_rack_2",
     "name": "Oak Tanning Rack",
     "familyId": "tanning_rack",
     "tier": 2,
-    "description": "dummy",
-    "icon": "/images/items/xxx.png"
+    "description": "A solid oak tanning rack with iron pegs, built to stretch and cure hides evenly.",
+    "icon": "/images/items/tanning_rack_t2.png"
   },
   {
-    "id": "ash_tanning_rack",
+    "id": "tanning_rack_3",
     "name": "Ash Tanning Rack",
     "familyId": "tanning_rack",
     "tier": 3,
-    "description": "dummy",
-    "icon": "/images/items/xxx.png"
+    "description": "A well-made ash tanning rack, pale and smooth, designed for cleaner cuts and finer leather.",
+    "icon": "/images/items/tanning_rack_t3.png"
   },
   {
-    "id": "cedar_tanning_rack",
+    "id": "tanning_rack_4",
     "name": "Cedar Tanning Rack",
     "familyId": "tanning_rack",
     "tier": 4,
-    "description": "dummy",
-    "icon": "/images/items/xxx.png"
+    "description": "A fragrant cedar tanning rack, naturally pest-resistant, ideal for preserving delicate skins.",
+    "icon": "/images/items/tanning_rack_t4.png"
   },
   {
-    "id": "ebony_tanning_rack",
+    "id": "tanning_rack_5",
     "name": "Ebony Tanning Rack",
     "familyId": "tanning_rack",
     "tier": 5,
-    "description": "dummy",
-    "icon": "/images/items/xxx.png"
+    "description": "A grand ebony tanning rack, dark and imposing, fitted for preparing the rarest pelts.",
+    "icon": "/images/items/tanning_rack_t5.png"
   },
   {
-    "id": "worldroot_tanning_rack",
+    "id": "tanning_rack_6",
     "name": "Worldroot Tanning Rack",
     "familyId": "tanning_rack",
     "tier": 6,
-    "description": "dummy",
-    "icon": "/images/items/xxx.png"
+    "description": "A worldroot tanning rack of ancient timber, its living wood infusing hides with primal resilience.",
+    "icon": "/images/items/tanning_rack_t6.png"
   },
   {
-    "id": "rough_stone_furnace",
+    "id": "furnace_1",
     "name": "Uneven Stone Furnace",
     "familyId": "furnace",
     "tier": 1,
-    "description": "dummy",
-    "icon": "/images/items/xxx.png"
+    "description": "A lopsided stone furnace, cracked and smoking, that holds heat just long enough to smelt the basics.",
+    "icon": "/images/items/furnace_t1.png"
   },
   {
-    "id": "granite_furnace",
+    "id": "furnace_2",
     "name": "Granite Furnace",
     "familyId": "furnace",
     "tier": 2,
-    "description": "dummy",
-    "icon": "/images/items/xxx.png"
+    "description": "A speckled granite furnace, dense and reliable, built to withstand steady use and higher temperatures.",
+    "icon": "/images/items/furnace_t2.png"
   },
   {
-    "id": "marble_furnace",
+    "id": "furnace_3",
     "name": "Marble Furnace",
     "familyId": "furnace",
     "tier": 3,
-    "description": "dummy",
-    "icon": "/images/items/xxx.png"
+    "description": "A white marble furnace, elegant and efficient, channeling heat with surprising precision.",
+    "icon": "/images/items/furnace_t3.png"
   },
   {
-    "id": "deepslate_furnace",
+    "id": "furnace_4",
     "name": "Deepslate Furnace",
     "familyId": "furnace",
     "tier": 4,
-    "description": "dummy",
-    "icon": "/images/items/xxx.png"
+    "description": "A dark deepslate furnace, heavy and brooding, forged from stone pulled from the world's depths.",
+    "icon": "/images/items/furnace_t4.png"
   },
   {
-    "id": "basalt_furnace",
+    "id": "furnace_5",
     "name": "Basalt Furnace",
     "familyId": "furnace",
     "tier": 5,
-    "description": "dummy",
-    "icon": "/images/items/xxx.png"
+    "description": "A black basalt furnace, volcanic and fierce, radiating heat intense enough to melt the hardest ores.",
+    "icon": "/images/items/furnace_t5.png"
   },
   {
-    "id": "worldstone_furnace",
+    "id": "furnace_6",
     "name": "Worldstone Furnace",
     "familyId": "furnace",
     "tier": 6,
-    "description": "dummy",
-    "icon": "/images/items/xxx.png"
+    "description": "A worldstone furnace of primordial rock, aglow with rune-fire and capable of smelting any known metal.",
+    "icon": "/images/items/furnace_t6.png"
   },
   {
-    "id": "scullions_oven",
+    "id": "oven_1",
     "name": "Cracked Oven",
     "familyId": "oven",
     "tier": 1,
-    "description": "dummy",
-    "icon": "/images/items/xxx.png"
+    "description": "A humble clay oven with a hairline crack, uneven in heat but good enough for simple meals.",
+    "icon": "/images/items/oven_t1.png"
   },
   {
-    "id": "cooks_oven",
+    "id": "oven_2",
     "name": "Cook's Oven",
     "familyId": "oven",
     "tier": 2,
-    "description": "dummy",
-    "icon": "/images/items/xxx.png"
+    "description": "A proper cook's oven of fired brick, steady and serviceable, built for honest daily fare.",
+    "icon": "/images/items/oven_t2.png"
   },
   {
-    "id": "chefs_oven",
+    "id": "oven_3",
     "name": "Chef's Oven",
     "familyId": "oven",
     "tier": 3,
-    "description": "dummy",
-    "icon": "/images/items/xxx.png"
+    "description": "A well-built iron-doored oven, clean and balanced, suitable for dishes that require real skill.",
+    "icon": "/images/items/oven_t3.png"
   },
   {
-    "id": "master_chefs_oven",
+    "id": "oven_4",
     "name": "Master Chef's Oven",
     "familyId": "oven",
     "tier": 4,
-    "description": "dummy",
-    "icon": "/images/items/xxx.png"
+    "description": "A finely crafted oven with precise temperature control, lined with heat-stone for even baking.",
+    "icon": "/images/items/oven_t4.png"
   },
   {
-    "id": "royal_chefs_oven",
+    "id": "oven_5",
     "name": "Royal Chef's Oven",
     "familyId": "oven",
     "tier": 5,
-    "description": "dummy",
-    "icon": "/images/items/xxx.png"
+    "description": "A magnificent gold-trimmed oven, fit for palace kitchens, capable of extraordinary culinary feats.",
+    "icon": "/images/items/oven_t5.png"
   },
   {
-    "id": "feastmasters_oven",
+    "id": "oven_6",
     "name": "Feastmaster's Oven",
     "familyId": "oven",
     "tier": 6,
-    "description": "dummy",
-    "icon": "/images/items/xxx.png"
+    "description": "A legendary oven of enchanted stone, its fires never faltering, said to bring out the soul of any ingredient.",
+    "icon": "/images/items/oven_t6.png"
   },
   {
-    "id": "rough_stone_mortar_and_pestle",
+    "id": "mortar_and_pestle_1",
     "name": "Apprentice's Stone Mortar & Pestle",
     "familyId": "mortar_and_pestle",
     "tier": 1,
@@ -392,7 +392,7 @@
     "icon": "/images/items/mortar_and_pestle_t1.png"
   },
   {
-    "id": "granite_mortar_and_pestle",
+    "id": "mortar_and_pestle_2",
     "name": "Granite Mortar & Pestle",
     "familyId": "mortar_and_pestle",
     "tier": 2,
@@ -400,7 +400,7 @@
     "icon": "/images/items/mortar_and_pestle_t2.png"
   },
   {
-    "id": "marble_mortar_and_pestle",
+    "id": "mortar_and_pestle_3",
     "name": "Marble Mortar & Pestle",
     "familyId": "mortar_and_pestle",
     "tier": 3,
@@ -408,7 +408,7 @@
     "icon": "/images/items/mortar_and_pestle_t3.png"
   },
   {
-    "id": "deepslate_mortar_and_pestle",
+    "id": "mortar_and_pestle_4",
     "name": "Deepslate Mortar & Pestle",
     "familyId": "mortar_and_pestle",
     "tier": 4,
@@ -416,7 +416,7 @@
     "icon": "/images/items/mortar_and_pestle_t4.png"
   },
   {
-    "id": "basalt_mortar_and_pestle",
+    "id": "mortar_and_pestle_5",
     "name": "Basalt Mortar & Pestle",
     "familyId": "mortar_and_pestle",
     "tier": 5,
@@ -424,7 +424,7 @@
     "icon": "/images/items/mortar_and_pestle_t5.png"
   },
   {
-    "id": "worldstone_mortar_and_pestle",
+    "id": "mortar_and_pestle_6",
     "name": "Worldstone Mortar & Pestle",
     "familyId": "mortar_and_pestle",
     "tier": 6,
@@ -432,199 +432,199 @@
     "icon": "/images/items/mortar_and_pestle_t6.png"
   },
   {
-    "id": "quartz_enchanters_table",
+    "id": "enchanters_table_1",
     "name": "Apprentice's Enchanter's Table",
     "familyId": "enchanters_table",
     "tier": 1,
-    "description": "dummy",
-    "icon": "/images/items/xxx.png"
+    "description": "A simple quartz-topped table with faint etchings, barely able to hold a stable enchantment circle.",
+    "icon": "/images/items/enchanters_table_t1.png"
   },
   {
-    "id": "amethyst_enchanters_table",
+    "id": "enchanters_table_2",
     "name": "Amethyst Enchanter's Table",
     "familyId": "enchanters_table",
     "tier": 2,
-    "description": "dummy",
-    "icon": "/images/items/xxx.png"
+    "description": "An amethyst-inlaid enchanting table, its violet surface humming faintly with stored arcane potential.",
+    "icon": "/images/items/enchanters_table_t2.png"
   },
   {
-    "id": "sapphire_enchanters_table",
+    "id": "enchanters_table_3",
     "name": "Sapphire Enchanter's Table",
     "familyId": "enchanters_table",
     "tier": 3,
-    "description": "dummy",
-    "icon": "/images/items/xxx.png"
+    "description": "A sapphire-studded enchanting table, cool and focused, channeling magical energy with steady precision.",
+    "icon": "/images/items/enchanters_table_t3.png"
   },
   {
-    "id": "ruby_enchanters_table",
+    "id": "enchanters_table_4",
     "name": "Ruby Enchanter's Table",
     "familyId": "enchanters_table",
     "tier": 4,
-    "description": "dummy",
-    "icon": "/images/items/xxx.png"
+    "description": "A ruby-crowned enchanting table, warm with latent power, built for enchantments of real consequence.",
+    "icon": "/images/items/enchanters_table_t4.png"
   },
   {
-    "id": "mana_enchanters_table",
+    "id": "enchanters_table_5",
     "name": "Mana Enchanter's Table",
     "familyId": "enchanters_table",
     "tier": 5,
-    "description": "dummy",
-    "icon": "/images/items/xxx.png"
+    "description": "A mana crystal enchanting table, glowing with pure arcane light, attuned to the deepest magical currents.",
+    "icon": "/images/items/enchanters_table_t5.png"
   },
   {
-    "id": "astral_enchanters_table",
+    "id": "enchanters_table_6",
     "name": "Astral Enchanter's Table",
     "familyId": "enchanters_table",
     "tier": 6,
-    "description": "dummy",
-    "icon": "/images/items/xxx.png"
+    "description": "An astral crystal enchanting table, shimmering with cosmic energy, capable of weaving enchantments of legendary power.",
+    "icon": "/images/items/enchanters_table_t6.png"
   },
   {
-    "id": "quartz_lapidary_bench",
+    "id": "lapidary_bench_1",
     "name": "Crude Lapidary Bench",
     "familyId": "lapidary_bench",
     "tier": 1,
-    "description": "dummy",
-    "icon": "/images/items/xxx.png"
+    "description": "A rough quartz-topped cutting bench, chipped and unsteady, fit only for the crudest gem work.",
+    "icon": "/images/items/lapidary_bench_t1.png"
   },
   {
-    "id": "amethyst_lapidary_bench",
+    "id": "lapidary_bench_2",
     "name": "Amethyst Lapidary Bench",
     "familyId": "lapidary_bench",
     "tier": 2,
-    "description": "dummy",
-    "icon": "/images/items/xxx.png"
+    "description": "An amethyst-trimmed lapidary bench, stable and sure, made for cutting stones with growing confidence.",
+    "icon": "/images/items/lapidary_bench_t2.png"
   },
   {
-    "id": "sapphire_lapidary_bench",
+    "id": "lapidary_bench_3",
     "name": "Sapphire Lapidary Bench",
     "familyId": "lapidary_bench",
     "tier": 3,
-    "description": "dummy",
-    "icon": "/images/items/xxx.png"
+    "description": "A sapphire-inlaid lapidary bench, precise and cool, designed for facets that catch the light just so.",
+    "icon": "/images/items/lapidary_bench_t3.png"
   },
   {
-    "id": "ruby_lapidary_bench",
+    "id": "lapidary_bench_4",
     "name": "Ruby Lapidary Bench",
     "familyId": "lapidary_bench",
     "tier": 4,
-    "description": "dummy",
-    "icon": "/images/items/xxx.png"
+    "description": "A ruby-set lapidary bench, exacting and warm, built for gemwork that demands a master's eye.",
+    "icon": "/images/items/lapidary_bench_t4.png"
   },
   {
-    "id": "mana_lapidary_bench",
+    "id": "lapidary_bench_5",
     "name": "Mana Lapidary Bench",
     "familyId": "lapidary_bench",
     "tier": 5,
-    "description": "dummy",
-    "icon": "/images/items/xxx.png"
+    "description": "A mana crystal lapidary bench, aglow with arcane focus, capable of shaping stones of true magical power.",
+    "icon": "/images/items/lapidary_bench_t5.png"
   },
   {
-    "id": "astral_lapidary_bench",
+    "id": "lapidary_bench_6",
     "name": "Astral Lapidary Bench",
     "familyId": "lapidary_bench",
     "tier": 6,
-    "description": "dummy",
-    "icon": "/images/items/xxx.png"
+    "description": "An astral crystal lapidary bench, shimmering with starlight, fit for cutting gems of legendary brilliance.",
+    "icon": "/images/items/lapidary_bench_t6.png"
   },
   {
-    "id": "apprentices_alchemy_stand",
+    "id": "alchemy_stand_1",
     "name": "Beginner's Alchemy Stand",
     "familyId": "alchemy_stand",
     "tier": 1,
-    "description": "dummy",
-    "icon": "/images/items/xxx.png"
+    "description": "A rickety wooden alchemy stand with a single burner, good for boiling simple tinctures and little else.",
+    "icon": "/images/items/alchemy_stand_t1.png"
   },
   {
-    "id": "journeymans_alchemy_stand",
+    "id": "alchemy_stand_2",
     "name": "Journeyman's Alchemy Stand",
     "familyId": "alchemy_stand",
     "tier": 2,
-    "description": "dummy",
-    "icon": "/images/items/xxx.png"
+    "description": "A brass-fitted alchemy stand with twin burners and a condenser, built for proper distillation work.",
+    "icon": "/images/items/alchemy_stand_t2.png"
   },
   {
-    "id": "transmuters_alchemy_stand",
+    "id": "alchemy_stand_3",
     "name": "Transmuter's Alchemy Stand",
     "familyId": "alchemy_stand",
     "tier": 3,
-    "description": "dummy",
-    "icon": "/images/items/xxx.png"
+    "description": "A copper-and-glass alchemy stand, elegantly piped, designed for reactions requiring careful temperature control.",
+    "icon": "/images/items/alchemy_stand_t3.png"
   },
   {
-    "id": "philosophers_alchemy_stand",
+    "id": "alchemy_stand_4",
     "name": "Philosopher's Alchemy Stand",
     "familyId": "alchemy_stand",
     "tier": 4,
-    "description": "dummy",
-    "icon": "/images/items/xxx.png"
+    "description": "A silver-framed alchemy stand with precision instruments, made for experiments that push the boundaries of craft.",
+    "icon": "/images/items/alchemy_stand_t4.png"
   },
   {
-    "id": "arcanists_alchemy_stand",
+    "id": "alchemy_stand_5",
     "name": "Arcanist's Alchemy Stand",
     "familyId": "alchemy_stand",
     "tier": 5,
-    "description": "dummy",
-    "icon": "/images/items/xxx.png"
+    "description": "A gold-and-crystal alchemy stand, humming with faint magic, capable of producing elixirs of extraordinary potency.",
+    "icon": "/images/items/alchemy_stand_t5.png"
   },
   {
-    "id": "grandmasters_alchemy_stand",
+    "id": "alchemy_stand_6",
     "name": "Grandmaster's Alchemy Stand",
     "familyId": "alchemy_stand",
     "tier": 6,
-    "description": "dummy",
-    "icon": "/images/items/xxx.png"
+    "description": "A legendary star-metal alchemy stand, its vessels self-heating and rune-sealed, worthy of the world's greatest alchemists.",
+    "icon": "/images/items/alchemy_stand_t6.png"
   },
   {
-    "id": "common_clay_kiln",
+    "id": "kiln_1",
     "name": "Primitive Clay Kiln",
     "familyId": "kiln",
     "tier": 1,
-    "description": "dummy",
-    "icon": "/images/items/xxx.png"
+    "description": "A crude common-clay kiln, unevenly fired and prone to cracking, but hot enough for simple pottery.",
+    "icon": "/images/items/kiln_t1.png"
   },
   {
-    "id": "red_clay_kiln",
+    "id": "kiln_2",
     "name": "Red Clay Kiln",
     "familyId": "kiln",
     "tier": 2,
-    "description": "dummy",
-    "icon": "/images/items/xxx.png"
+    "description": "A sturdy red clay kiln, terracotta-warm and reliable, built for consistent firing of honest wares.",
+    "icon": "/images/items/kiln_t2.png"
   },
   {
-    "id": "fire_clay_kiln",
+    "id": "kiln_3",
     "name": "Fire Clay Kiln",
     "familyId": "kiln",
     "tier": 3,
-    "description": "dummy",
-    "icon": "/images/items/xxx.png"
+    "description": "A fire clay kiln, ember-orange and heat-hardened, capable of reaching temperatures needed for serious ceramics.",
+    "icon": "/images/items/kiln_t3.png"
   },
   {
-    "id": "porcelain_clay_kiln",
+    "id": "kiln_4",
     "name": "Porcelain Clay Kiln",
     "familyId": "kiln",
     "tier": 4,
-    "description": "dummy",
-    "icon": "/images/items/xxx.png"
+    "description": "A refined porcelain clay kiln, pale and precise, designed for delicate work that demands even heat.",
+    "icon": "/images/items/kiln_t4.png"
   },
   {
-    "id": "spirit_clay_kiln",
+    "id": "kiln_5",
     "name": "Spirit Clay Kiln",
     "familyId": "kiln",
     "tier": 5,
-    "description": "dummy",
-    "icon": "/images/items/xxx.png"
+    "description": "A spirit clay kiln, faintly glowing and ethereal, its fires burning with a strange, steady calm.",
+    "icon": "/images/items/kiln_t5.png"
   },
   {
-    "id": "worldclay_kiln",
+    "id": "kiln_6",
     "name": "Worldclay Kiln",
     "familyId": "kiln",
     "tier": 6,
-    "description": "dummy",
-    "icon": "/images/items/xxx.png"
+    "description": "A worldclay kiln of primordial make, rune-lit and eternal, capable of firing materials of legendary rarity.",
+    "icon": "/images/items/kiln_t6.png"
   },
   {
-    "id": "copper_grinding_stone",
+    "id": "grinding_stone_1",
     "name": "Curved Grinding Stone",
     "familyId": "grinding_stone",
     "tier": 1,
@@ -632,7 +632,7 @@
     "icon": "/images/items/grinding_stone_t1.png"
   },
   {
-    "id": "bronze_grinding_stone",
+    "id": "grinding_stone_2",
     "name": "Granite Grinding Stone",
     "familyId": "grinding_stone",
     "tier": 2,
@@ -640,7 +640,7 @@
     "icon": "/images/items/grinding_stone_t2.png"
   },
   {
-    "id": "iron_grinding_stone",
+    "id": "grinding_stone_3",
     "name": "Marble Grinding Stone",
     "familyId": "grinding_stone",
     "tier": 3,
@@ -648,7 +648,7 @@
     "icon": "/images/items/grinding_stone_t3.png"
   },
   {
-    "id": "silver_grinding_stone",
+    "id": "grinding_stone_4",
     "name": "Deepslate Grinding Stone",
     "familyId": "grinding_stone",
     "tier": 4,
@@ -656,7 +656,7 @@
     "icon": "/images/items/grinding_stone_t4.png"
   },
   {
-    "id": "gold_grinding_stone",
+    "id": "grinding_stone_5",
     "name": "Basalt Grinding Stone",
     "familyId": "grinding_stone",
     "tier": 5,
@@ -664,7 +664,7 @@
     "icon": "/images/items/grinding_stone_t5.png"
   },
   {
-    "id": "star_metal_grinding_stone",
+    "id": "grinding_stone_6",
     "name": "Worldstone Grinding Stone",
     "familyId": "grinding_stone",
     "tier": 6,
@@ -672,51 +672,51 @@
     "icon": "/images/items/grinding_stone_t6.png"
   },
   {
-    "id": "ramshackle_smokehouse",
+    "id": "smokehouse_1",
     "name": "Ramshackle Smokehouse",
     "familyId": "smokehouse",
     "tier": 1,
-    "description": "dummy",
-    "icon": "/images/items/xxx.png"
+    "description": "A drafty lean-to smokehouse of scrap wood, barely holding smoke long enough to preserve a meal.",
+    "icon": "/images/items/smokehouse_t1.png"
   },
   {
-    "id": "trappers_smokehouse",
+    "id": "smokehouse_2",
     "name": "Trapper's Smokehouse",
     "familyId": "smokehouse",
     "tier": 2,
-    "description": "dummy",
-    "icon": "/images/items/xxx.png"
+    "description": "A simple trapper's smokehouse, tight-sealed and functional, good for curing small game and fish.",
+    "icon": "/images/items/smokehouse_t2.png"
   },
   {
-    "id": "homestead_smokehouse",
+    "id": "smokehouse_3",
     "name": "Homestead Smokehouse",
     "familyId": "smokehouse",
     "tier": 3,
-    "description": "dummy",
-    "icon": "/images/items/xxx.png"
+    "description": "A well-built homestead smokehouse, stone-floored and chimneyed, made for steady, reliable preservation.",
+    "icon": "/images/items/smokehouse_t3.png"
   },
   {
-    "id": "wardens_smokehouse",
+    "id": "smokehouse_4",
     "name": "Warden's Smokehouse",
     "familyId": "smokehouse",
     "tier": 4,
-    "description": "dummy",
-    "icon": "/images/items/xxx.png"
+    "description": "A stout warden's smokehouse, iron-banded and spacious, built for curing large harvests from the wild.",
+    "icon": "/images/items/smokehouse_t4.png"
   },
   {
-    "id": "huntmasters_smokehouse",
+    "id": "smokehouse_5",
     "name": "Huntmaster's Smokehouse",
     "familyId": "smokehouse",
     "tier": 5,
-    "description": "dummy",
-    "icon": "/images/items/xxx.png"
+    "description": "A grand huntmaster's smokehouse, cedar-lined and aromatic, designed for curing the finest meats with expert care.",
+    "icon": "/images/items/smokehouse_t5.png"
   },
   {
-    "id": "legendary_smokehouse",
+    "id": "smokehouse_6",
     "name": "Legendary Smokehouse",
     "familyId": "smokehouse",
     "tier": 6,
-    "description": "dummy",
-    "icon": "/images/items/xxx.png"
+    "description": "A legendary smokehouse of ancient design, its smoke infused with preserving enchantments that never fade.",
+    "icon": "/images/items/smokehouse_t6.png"
   }
 ]

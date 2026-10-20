@@ -26,6 +26,7 @@ export function getResourceCatalog(): Promise<ResourceTierInfo> {
           resourceFamily: string;
           category: "raw" | "processed";
           icon?: string | null;
+          description?: string;
         }>) => {
           const map: ResourceTierInfo = {};
           for (const item of data) {
@@ -35,6 +36,7 @@ export function getResourceCatalog(): Promise<ResourceTierInfo> {
               category: item.category,
               name: item.name,
               icon: item.icon ?? undefined,
+              description: item.description || undefined,
             };
           }
           return map;
@@ -49,7 +51,7 @@ export function getToolCatalog(): Promise<BlueprintTierInfo> {
   if (!_toolCatalog) {
     _toolCatalog = fetch("/api/auth/tool-catalog")
       .then((res) => (res.ok ? res.json() : []))
-      .then((data: Array<{ id: string; name: string; familyId: string; tier: number; kind: string[]; icon: string; sizeClass: string; stackSize: number; equipSlots: string[][]; backpackable: boolean }>) => {
+      .then((data: Array<{ id: string; name: string; familyId: string; tier: number; kind: string[]; icon: string; sizeClass: string; stackSize: number; description?: string; equipSlots: string[][]; backpackable: boolean }>) => {
         const map: BlueprintTierInfo = {};
         for (const item of data) {
           map[item.id] = {
@@ -60,6 +62,7 @@ export function getToolCatalog(): Promise<BlueprintTierInfo> {
             icon: item.icon || undefined,
             sizeClass: item.sizeClass,
             stackSize: item.stackSize,
+            description: item.description || undefined,
             equipSlots: item.equipSlots,
             backpackable: item.backpackable,
           };

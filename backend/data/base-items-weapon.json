@@ -1,6 +1,6 @@
 [
   {
-    "id": "pine_club",
+    "id": "club_1",
     "name": "Pine Club",
     "familyId": "club",
     "tier": 1,
@@ -8,7 +8,7 @@
     "icon": "/images/items/club_t1.png"
   },
   {
-    "id": "oak_club",
+    "id": "club_2",
     "name": "Oak Club",
     "familyId": "club",
     "tier": 2,
@@ -16,7 +16,7 @@
     "icon": "/images/items/club_t2.png"
   },
   {
-    "id": "ash_club",
+    "id": "club_3",
     "name": "Ash Club",
     "familyId": "club",
     "tier": 3,
@@ -24,7 +24,7 @@
     "icon": "/images/items/club_t3.png"
   },
   {
-    "id": "cedar_club",
+    "id": "club_4",
     "name": "Cedar Club",
     "familyId": "club",
     "tier": 4,
@@ -32,7 +32,7 @@
     "icon": "/images/items/club_t4.png"
   },
   {
-    "id": "ebony_club",
+    "id": "club_5",
     "name": "Ebony Club",
     "familyId": "club",
     "tier": 5,
@@ -40,7 +40,7 @@
     "icon": "/images/items/club_t5.png"
   },
   {
-    "id": "worldroot_club",
+    "id": "club_6",
     "name": "Worldroot Club",
     "familyId": "club",
     "tier": 6,
@@ -48,7 +48,7 @@
     "icon": "/images/items/club_t6.png"
   },
   {
-    "id": "pine_sharpened_stick",
+    "id": "sharpened_stick_1",
     "name": "Crude Sharpened Stick",
     "familyId": "sharpened_stick",
     "tier": 1,
@@ -56,7 +56,7 @@
     "icon": "/images/items/sharpened_stick_t1.png"
   },
   {
-    "id": "oak_sharpened_stick",
+    "id": "sharpened_stick_2",
     "name": "Oak Sharpened Stick",
     "familyId": "sharpened_stick",
     "tier": 2,
@@ -64,7 +64,7 @@
     "icon": "/images/items/sharpened_stick_t2.png"
   },
   {
-    "id": "ash_sharpened_stick",
+    "id": "sharpened_stick_3",
     "name": "Ash Sharpened Stick",
     "familyId": "sharpened_stick",
     "tier": 3,
@@ -72,7 +72,7 @@
     "icon": "/images/items/sharpened_stick_t3.png"
   },
   {
-    "id": "cedar_sharpened_stick",
+    "id": "sharpened_stick_4",
     "name": "Cedar Sharpened Stick",
     "familyId": "sharpened_stick",
     "tier": 4,
@@ -80,7 +80,7 @@
     "icon": "/images/items/sharpened_stick_t4.png"
   },
   {
-    "id": "ebony_sharpened_stick",
+    "id": "sharpened_stick_5",
     "name": "Ebony Sharpened Stick",
     "familyId": "sharpened_stick",
     "tier": 5,
@@ -88,7 +88,7 @@
     "icon": "/images/items/sharpened_stick_t5.png"
   },
   {
-    "id": "worldroot_sharpened_stick",
+    "id": "sharpened_stick_6",
     "name": "Worldroot Sharpened Stick",
     "familyId": "sharpened_stick",
     "tier": 6,
@@ -96,7 +96,7 @@
     "icon": "/images/items/sharpened_stick_t6.png"
   },
   {
-    "id": "courtiers_dagger",
+    "id": "dagger_1",
     "name": "Apprentice's Dagger",
     "familyId": "dagger",
     "tier": 1,
@@ -104,7 +104,7 @@
     "icon": "/images/items/dagger_t1.png"
   },
   {
-    "id": "duchess_dagger",
+    "id": "dagger_2",
     "name": "Duchess's Dagger",
     "familyId": "dagger",
     "tier": 2,
@@ -112,7 +112,7 @@
     "icon": "/images/items/dagger_t2.png"
   },
   {
-    "id": "viscounts_dagger",
+    "id": "dagger_3",
     "name": "Viscount's Dagger",
     "familyId": "dagger",
     "tier": 3,
@@ -120,7 +120,7 @@
     "icon": "/images/items/dagger_t3.png"
   },
   {
-    "id": "marquess_dagger",
+    "id": "dagger_4",
     "name": "Marquess's Dagger",
     "familyId": "dagger",
     "tier": 4,
@@ -128,7 +128,7 @@
     "icon": "/images/items/dagger_t4.png"
   },
   {
-    "id": "chancellors_dagger",
+    "id": "dagger_5",
     "name": "Chancellor's Dagger",
     "familyId": "dagger",
     "tier": 5,
@@ -136,7 +136,7 @@
     "icon": "/images/items/dagger_t5.png"
   },
   {
-    "id": "sovereigns_dagger",
+    "id": "dagger_6",
     "name": "Sovereign's Dagger",
     "familyId": "dagger",
     "tier": 6,
@@ -144,7 +144,7 @@
     "icon": "/images/items/dagger_t6.png"
   },
   {
-    "id": "grovekeepers_sickle",
+    "id": "sickle_1",
     "name": "Apprentice's Sickle",
     "familyId": "sickle",
     "tier": 1,
@@ -152,7 +152,7 @@
     "icon": "/images/items/sickle_t1.png"
   },
   {
-    "id": "harvestmoon_sickle",
+    "id": "sickle_2",
     "name": "Harvestmoon Sickle",
     "familyId": "sickle",
     "tier": 2,
@@ -160,7 +160,7 @@
     "icon": "/images/items/sickle_t2.png"
   },
   {
-    "id": "wildroot_sickle",
+    "id": "sickle_3",
     "name": "Wildroot Sickle",
     "familyId": "sickle",
     "tier": 3,
@@ -168,7 +168,7 @@
     "icon": "/images/items/sickle_t3.png"
   },
   {
-    "id": "thornweave_sickle",
+    "id": "sickle_4",
     "name": "Thornweave Sickle",
     "familyId": "sickle",
     "tier": 4,
@@ -176,7 +176,7 @@
     "icon": "/images/items/sickle_t4.png"
   },
   {
-    "id": "lunarfang_sickle",
+    "id": "sickle_5",
     "name": "Lunarfang Sickle",
     "familyId": "sickle",
     "tier": 5,
@@ -184,7 +184,7 @@
     "icon": "/images/items/sickle_t5.png"
   },
   {
-    "id": "eldermoon_sickle",
+    "id": "sickle_6",
     "name": "Eldermoon Sickle",
     "familyId": "sickle",
     "tier": 6,
@@ -192,7 +192,7 @@
     "icon": "/images/items/sickle_t6.png"
   },
   {
-    "id": "tribesmans_spear",
+    "id": "spear_1",
     "name": "Blunt Spear",
     "familyId": "spear",
     "tier": 1,
@@ -200,7 +200,7 @@
     "icon": "/images/items/spear_t1.png"
   },
   {
-    "id": "bloodrite_spear",
+    "id": "spear_2",
     "name": "Bloodrite Spear",
     "familyId": "spear",
     "tier": 2,
@@ -208,7 +208,7 @@
     "icon": "/images/items/spear_t2.png"
   },
   {
-    "id": "skyfathers_spear",
+    "id": "spear_3",
     "name": "Skyfather's Spear",
     "familyId": "spear",
     "tier": 3,
@@ -216,7 +216,7 @@
     "icon": "/images/items/spear_t3.png"
   },
   {
-    "id": "totemcaller_spear",
+    "id": "spear_4",
     "name": "Totemcaller Spear",
     "familyId": "spear",
     "tier": 4,
@@ -224,7 +224,7 @@
     "icon": "/images/items/spear_t4.png"
   },
   {
-    "id": "wolfspirit_spear",
+    "id": "spear_5",
     "name": "Wolfspirit Spear",
     "familyId": "spear",
     "tier": 5,
@@ -232,7 +232,7 @@
     "icon": "/images/items/spear_t5.png"
   },
   {
-    "id": "godsblood_spear",
+    "id": "spear_6",
     "name": "Godsblood Spear",
     "familyId": "spear",
     "tier": 6,
@@ -240,7 +240,7 @@
     "icon": "/images/items/spear_t6.png"
   },
   {
-    "id": "mercenarys_crossbow",
+    "id": "crossbow_1",
     "name": "Uneven Crossbow",
     "familyId": "crossbow",
     "tier": 1,
@@ -248,7 +248,7 @@
     "icon": "/images/items/crossbow_t1.png"
   },
   {
-    "id": "arbalest_crossbow",
+    "id": "crossbow_2",
     "name": "Arbalest Crossbow",
     "familyId": "crossbow",
     "tier": 2,
@@ -256,7 +256,7 @@
     "icon": "/images/items/crossbow_t2.png"
   },
   {
-    "id": "deadeye_crossbow",
+    "id": "crossbow_3",
     "name": "Deadeye Crossbow",
     "familyId": "crossbow",
     "tier": 3,
@@ -264,7 +264,7 @@
     "icon": "/images/items/crossbow_t3.png"
   },
   {
-    "id": "siegebreaker_crossbow",
+    "id": "crossbow_4",
     "name": "Siegebreaker Crossbow",
     "familyId": "crossbow",
     "tier": 4,
@@ -272,7 +272,7 @@
     "icon": "/images/items/crossbow_t4.png"
   },
   {
-    "id": "executioners_crossbow",
+    "id": "crossbow_5",
     "name": "Executioner's Crossbow",
     "familyId": "crossbow",
     "tier": 5,
@@ -280,7 +280,7 @@
     "icon": "/images/items/crossbow_t5.png"
   },
   {
-    "id": "doomsight_crossbow",
+    "id": "crossbow_6",
     "name": "Doomsight Crossbow",
     "familyId": "crossbow",
     "tier": 6,
@@ -288,7 +288,7 @@
     "icon": "/images/items/crossbow_t6.png"
   },
   {
-    "id": "rusty_short_sword",
+    "id": "short_sword_1",
     "name": "Rusty Short Sword",
     "familyId": "short_sword",
     "tier": 1,
@@ -296,7 +296,7 @@
     "icon": "/images/items/short_sword_t1.png"
   },
   {
-    "id": "soldiers_short_sword",
+    "id": "short_sword_2",
     "name": "Soldier's Short Sword",
     "familyId": "short_sword",
     "tier": 2,
@@ -304,7 +304,7 @@
     "icon": "/images/items/short_sword_t2.png"
   },
   {
-    "id": "sergeants_short_sword",
+    "id": "short_sword_3",
     "name": "Sergeant's Short Sword",
     "familyId": "short_sword",
     "tier": 3,
@@ -312,7 +312,7 @@
     "icon": "/images/items/short_sword_t3.png"
   },
   {
-    "id": "captains_short_sword",
+    "id": "short_sword_4",
     "name": "Captain's Short Sword",
     "familyId": "short_sword",
     "tier": 4,
@@ -320,7 +320,7 @@
     "icon": "/images/items/short_sword_t4.png"
   },
   {
-    "id": "marshals_short_sword",
+    "id": "short_sword_5",
     "name": "Marshal's Short Sword",
     "familyId": "short_sword",
     "tier": 5,
@@ -328,7 +328,7 @@
     "icon": "/images/items/short_sword_t5.png"
   },
   {
-    "id": "peerless_short_sword",
+    "id": "short_sword_6",
     "name": "Peerless Short Sword",
     "familyId": "short_sword",
     "tier": 6,
@@ -336,7 +336,7 @@
     "icon": "/images/items/short_sword_t6.png"
   },
   {
-    "id": "pages_sword",
+    "id": "sword_1",
     "name": "Rusty Sword",
     "familyId": "sword",
     "tier": 1,
@@ -344,7 +344,7 @@
     "icon": "/images/items/sword_t1.png"
   },
   {
-    "id": "knights_sword",
+    "id": "sword_2",
     "name": "Knight's Sword",
     "familyId": "sword",
     "tier": 2,
@@ -352,7 +352,7 @@
     "icon": "/images/items/sword_t2.png"
   },
   {
-    "id": "barons_sword",
+    "id": "sword_3",
     "name": "Baron's Sword",
     "familyId": "sword",
     "tier": 3,
@@ -360,7 +360,7 @@
     "icon": "/images/items/sword_t3.png"
   },
   {
-    "id": "dukes_sword",
+    "id": "sword_4",
     "name": "Duke's Sword",
     "familyId": "sword",
     "tier": 4,
@@ -368,7 +368,7 @@
     "icon": "/images/items/sword_t4.png"
   },
   {
-    "id": "highlords_sword",
+    "id": "sword_5",
     "name": "Highlord's Sword",
     "familyId": "sword",
     "tier": 5,
@@ -376,7 +376,7 @@
     "icon": "/images/items/sword_t5.png"
   },
   {
-    "id": "ascendant_sword",
+    "id": "sword_6",
     "name": "Ascendant Sword",
     "familyId": "sword",
     "tier": 6,
@@ -384,7 +384,7 @@
     "icon": "/images/items/sword_t6.png"
   },
   {
-    "id": "squires_mace",
+    "id": "mace_1",
     "name": "Loose Mace",
     "familyId": "mace",
     "tier": 1,
@@ -392,7 +392,7 @@
     "icon": "/images/items/mace_t1.png"
   },
   {
-    "id": "vanguards_mace",
+    "id": "mace_2",
     "name": "Vanguard's Mace",
     "familyId": "mace",
     "tier": 2,
@@ -400,7 +400,7 @@
     "icon": "/images/items/mace_t2.png"
   },
   {
-    "id": "templars_mace",
+    "id": "mace_3",
     "name": "Templar's Mace",
     "familyId": "mace",
     "tier": 3,
@@ -408,7 +408,7 @@
     "icon": "/images/items/mace_t3.png"
   },
   {
-    "id": "crusaders_mace",
+    "id": "mace_4",
     "name": "Crusader's Mace",
     "familyId": "mace",
     "tier": 4,
@@ -416,7 +416,7 @@
     "icon": "/images/items/mace_t4.png"
   },
   {
-    "id": "zealots_mace",
+    "id": "mace_5",
     "name": "Zealot's Mace",
     "familyId": "mace",
     "tier": 5,
@@ -424,7 +424,7 @@
     "icon": "/images/items/mace_t5.png"
   },
   {
-    "id": "judgment_mace",
+    "id": "mace_6",
     "name": "Judgment Mace",
     "familyId": "mace",
     "tier": 6,
@@ -432,7 +432,7 @@
     "icon": "/images/items/mace_t6.png"
   },
   {
-    "id": "wyrmfang_battle_axe",
+    "id": "battle_axe_1",
     "name": "Blunt Battle Axe",
     "familyId": "battle_axe",
     "tier": 1,
@@ -440,7 +440,7 @@
     "icon": "/images/items/battle_axe_t1.png"
   },
   {
-    "id": "drakebiter_battle_axe",
+    "id": "battle_axe_2",
     "name": "Drakebiter Battle Axe",
     "familyId": "battle_axe",
     "tier": 2,
@@ -448,7 +448,7 @@
     "icon": "/images/items/battle_axe_t2.png"
   },
   {
-    "id": "scaleshredder_battle_axe",
+    "id": "battle_axe_3",
     "name": "Scaleshredder Battle Axe",
     "familyId": "battle_axe",
     "tier": 3,
@@ -456,7 +456,7 @@
     "icon": "/images/items/battle_axe_t3.png"
   },
   {
-    "id": "wyrmreaver_battle_axe",
+    "id": "battle_axe_4",
     "name": "Wyrmreaver Battle Axe",
     "familyId": "battle_axe",
     "tier": 4,
@@ -464,7 +464,7 @@
     "icon": "/images/items/battle_axe_t4.png"
   },
   {
-    "id": "drakebane_battle_axe",
+    "id": "battle_axe_5",
     "name": "Drakebane Battle Axe",
     "familyId": "battle_axe",
     "tier": 5,
@@ -472,7 +472,7 @@
     "icon": "/images/items/battle_axe_t5.png"
   },
   {
-    "id": "dragonbane_battle_axe",
+    "id": "battle_axe_6",
     "name": "Dragonbane Battle Axe",
     "familyId": "battle_axe",
     "tier": 6,
@@ -480,7 +480,7 @@
     "icon": "/images/items/battle_axe_t6.png"
   },
   {
-    "id": "cleaver_greatsword",
+    "id": "greatsword_1",
     "name": "Bent Greatsword",
     "familyId": "greatsword",
     "tier": 1,
@@ -488,7 +488,7 @@
     "icon": "/images/items/greatsword_t1.png"
   },
   {
-    "id": "direblade_greatsword",
+    "id": "greatsword_2",
     "name": "Direblade Greatsword",
     "familyId": "greatsword",
     "tier": 2,
@@ -496,7 +496,7 @@
     "icon": "/images/items/greatsword_t2.png"
   },
   {
-    "id": "doomcleaver_greatsword",
+    "id": "greatsword_3",
     "name": "Doomcleaver Greatsword",
     "familyId": "greatsword",
     "tier": 3,
@@ -504,7 +504,7 @@
     "icon": "/images/items/greatsword_t3.png"
   },
   {
-    "id": "dawnbringer_greatsword",
+    "id": "greatsword_4",
     "name": "Dawnbringer Greatsword",
     "familyId": "greatsword",
     "tier": 4,
@@ -512,7 +512,7 @@
     "icon": "/images/items/greatsword_t4.png"
   },
   {
-    "id": "soulrender_greatsword",
+    "id": "greatsword_5",
     "name": "Soulrender Greatsword",
     "familyId": "greatsword",
     "tier": 5,
@@ -520,7 +520,7 @@
     "icon": "/images/items/greatsword_t5.png"
   },
   {
-    "id": "godslayer_greatsword",
+    "id": "greatsword_6",
     "name": "Godslayer Greatsword",
     "familyId": "greatsword",
     "tier": 6,
@@ -528,7 +528,7 @@
     "icon": "/images/items/greatsword_t6.png"
   },
   {
-    "id": "bonecrusher_warhammer",
+    "id": "warhammer_1",
     "name": "Apprentice's Warhammer",
     "familyId": "warhammer",
     "tier": 1,
@@ -536,7 +536,7 @@
     "icon": "/images/items/warhammer_t1.png"
   },
   {
-    "id": "skullsplitter_warhammer",
+    "id": "warhammer_2",
     "name": "Skullsplitter Warhammer",
     "familyId": "warhammer",
     "tier": 2,
@@ -544,7 +544,7 @@
     "icon": "/images/items/warhammer_t2.png"
   },
   {
-    "id": "earthshaker_warhammer",
+    "id": "warhammer_3",
     "name": "Earthshaker Warhammer",
     "familyId": "warhammer",
     "tier": 3,
@@ -552,7 +552,7 @@
     "icon": "/images/items/warhammer_t3.png"
   },
   {
-    "id": "thunderstrike_warhammer",
+    "id": "warhammer_4",
     "name": "Thunderstrike Warhammer",
     "familyId": "warhammer",
     "tier": 4,
@@ -560,7 +560,7 @@
     "icon": "/images/items/warhammer_t4.png"
   },
   {
-    "id": "stormbreaker_warhammer",
+    "id": "warhammer_5",
     "name": "Stormbreaker Warhammer",
     "familyId": "warhammer",
     "tier": 5,
@@ -568,7 +568,7 @@
     "icon": "/images/items/warhammer_t5.png"
   },
   {
-    "id": "worldender_warhammer",
+    "id": "warhammer_6",
     "name": "Worldender Warhammer",
     "familyId": "warhammer",
     "tier": 6,
@@ -576,7 +576,7 @@
     "icon": "/images/items/warhammer_t6.png"
   },
   {
-    "id": "hunters_bow",
+    "id": "bow_1",
     "name": "Apprentice's Bow",
     "familyId": "bow",
     "tier": 1,
@@ -584,7 +584,7 @@
     "icon": "/images/items/bow_t1.png"
   },
   {
-    "id": "rangers_bow",
+    "id": "bow_2",
     "name": "Ranger's Bow",
     "familyId": "bow",
     "tier": 2,
@@ -592,7 +592,7 @@
     "icon": "/images/items/bow_t2.png"
   },
   {
-    "id": "marksmans_bow",
+    "id": "bow_3",
     "name": "Marksman's Bow",
     "familyId": "bow",
     "tier": 3,
@@ -600,7 +600,7 @@
     "icon": "/images/items/bow_t3.png"
   },
   {
-    "id": "sharpshooters_bow",
+    "id": "bow_4",
     "name": "Sharpshooter's Bow",
     "familyId": "bow",
     "tier": 4,
@@ -608,7 +608,7 @@
     "icon": "/images/items/bow_t4.png"
   },
   {
-    "id": "elven_bow",
+    "id": "bow_5",
     "name": "Elven Bow",
     "familyId": "bow",
     "tier": 5,
@@ -616,7 +616,7 @@
     "icon": "/images/items/bow_t5.png"
   },
   {
-    "id": "windsong_bow",
+    "id": "bow_6",
     "name": "Windsong Bow",
     "familyId": "bow",
     "tier": 6,
@@ -624,7 +624,7 @@
     "icon": "/images/items/bow_t6.png"
   },
   {
-    "id": "pine_quiver",
+    "id": "quiver_1",
     "name": "Tight Quiver",
     "familyId": "quiver",
     "tier": 1,
@@ -632,7 +632,7 @@
     "icon": "/images/items/quiver_t1.png"
   },
   {
-    "id": "oak_quiver",
+    "id": "quiver_2",
     "name": "Oak Quiver",
     "familyId": "quiver",
     "tier": 2,
@@ -640,7 +640,7 @@
     "icon": "/images/items/quiver_t2.png"
   },
   {
-    "id": "ash_quiver",
+    "id": "quiver_3",
     "name": "Ash Quiver",
     "familyId": "quiver",
     "tier": 3,
@@ -648,7 +648,7 @@
     "icon": "/images/items/quiver_t3.png"
   },
   {
-    "id": "cedar_quiver",
+    "id": "quiver_4",
     "name": "Cedar Quiver",
     "familyId": "quiver",
     "tier": 4,
@@ -656,7 +656,7 @@
     "icon": "/images/items/quiver_t4.png"
   },
   {
-    "id": "ebony_quiver",
+    "id": "quiver_5",
     "name": "Ebony Quiver",
     "familyId": "quiver",
     "tier": 5,
@@ -664,7 +664,7 @@
     "icon": "/images/items/quiver_t5.png"
   },
   {
-    "id": "worldroot_quiver",
+    "id": "quiver_6",
     "name": "Worldroot Quiver",
     "familyId": "quiver",
     "tier": 6,
@@ -672,7 +672,7 @@
     "icon": "/images/items/quiver_t6.png"
   },
   {
-    "id": "pine_bolt_girdle",
+    "id": "bolt_girdle_1",
     "name": "Crude Bolt Girdle",
     "familyId": "bolt_girdle",
     "tier": 1,
@@ -680,7 +680,7 @@
     "icon": "/images/items/bolt_girdle_t1.png"
   },
   {
-    "id": "oak_bolt_girdle",
+    "id": "bolt_girdle_2",
     "name": "Oak Bolt Girdle",
     "familyId": "bolt_girdle",
     "tier": 2,
@@ -688,7 +688,7 @@
     "icon": "/images/items/bolt_girdle_t2.png"
   },
   {
-    "id": "ash_bolt_girdle",
+    "id": "bolt_girdle_3",
     "name": "Ash Bolt Girdle",
     "familyId": "bolt_girdle",
     "tier": 3,
@@ -696,7 +696,7 @@
     "icon": "/images/items/bolt_girdle_t3.png"
   },
   {
-    "id": "cedar_bolt_girdle",
+    "id": "bolt_girdle_4",
     "name": "Cedar Bolt Girdle",
     "familyId": "bolt_girdle",
     "tier": 4,
@@ -704,7 +704,7 @@
     "icon": "/images/items/bolt_girdle_t4.png"
   },
   {
-    "id": "ebony_bolt_girdle",
+    "id": "bolt_girdle_5",
     "name": "Ebony Bolt Girdle",
     "familyId": "bolt_girdle",
     "tier": 5,
@@ -712,7 +712,7 @@
     "icon": "/images/items/bolt_girdle_t5.png"
   },
   {
-    "id": "worldroot_bolt_girdle",
+    "id": "bolt_girdle_6",
     "name": "Worldroot Bolt Girdle",
     "familyId": "bolt_girdle",
     "tier": 6,
@@ -720,7 +720,7 @@
     "icon": "/images/items/bolt_girdle_t6.png"
   },
   {
-    "id": "quartz_magic_staff",
+    "id": "magic_staff_1",
     "name": "Gnarled Magic Staff",
     "familyId": "magic_staff",
     "tier": 1,
@@ -728,7 +728,7 @@
     "icon": "/images/items/magic_staff_t1.png"
   },
   {
-    "id": "amethyst_magic_staff",
+    "id": "magic_staff_2",
     "name": "Amethyst Magic Staff",
     "familyId": "magic_staff",
     "tier": 2,
@@ -736,7 +736,7 @@
     "icon": "/images/items/magic_staff_t2.png"
   },
   {
-    "id": "sapphire_magic_staff",
+    "id": "magic_staff_3",
     "name": "Sapphire Magic Staff",
     "familyId": "magic_staff",
     "tier": 3,
@@ -744,7 +744,7 @@
     "icon": "/images/items/magic_staff_t3.png"
   },
   {
-    "id": "ruby_magic_staff",
+    "id": "magic_staff_4",
     "name": "Ruby Magic Staff",
     "familyId": "magic_staff",
     "tier": 4,
@@ -752,7 +752,7 @@
     "icon": "/images/items/magic_staff_t4.png"
   },
   {
-    "id": "mana_magic_staff",
+    "id": "magic_staff_5",
     "name": "Mana Magic Staff",
     "familyId": "magic_staff",
     "tier": 5,
@@ -760,7 +760,7 @@
     "icon": "/images/items/magic_staff_t5.png"
   },
   {
-    "id": "astral_magic_staff",
+    "id": "magic_staff_6",
     "name": "Astral Magic Staff",
     "familyId": "magic_staff",
     "tier": 6,
@@ -768,7 +768,7 @@
     "icon": "/images/items/magic_staff_t6.png"
   },
   {
-    "id": "quartz_wand",
+    "id": "wand_1",
     "name": "Beginner's Wand",
     "familyId": "wand",
     "tier": 1,
@@ -776,7 +776,7 @@
     "icon": "/images/items/wand_t1.png"
   },
   {
-    "id": "amethyst_wand",
+    "id": "wand_2",
     "name": "Amethyst Wand",
     "familyId": "wand",
     "tier": 2,
@@ -784,7 +784,7 @@
     "icon": "/images/items/wand_t2.png"
   },
   {
-    "id": "sapphire_wand",
+    "id": "wand_3",
     "name": "Sapphire Wand",
     "familyId": "wand",
     "tier": 3,
@@ -792,7 +792,7 @@
     "icon": "/images/items/wand_t3.png"
   },
   {
-    "id": "ruby_wand",
+    "id": "wand_4",
     "name": "Ruby Wand",
     "familyId": "wand",
     "tier": 4,
@@ -800,7 +800,7 @@
     "icon": "/images/items/wand_t4.png"
   },
   {
-    "id": "mana_wand",
+    "id": "wand_5",
     "name": "Mana Wand",
     "familyId": "wand",
     "tier": 5,
@@ -808,7 +808,7 @@
     "icon": "/images/items/wand_t5.png"
   },
   {
-    "id": "astral_wand",
+    "id": "wand_6",
     "name": "Astral Wand",
     "familyId": "wand",
     "tier": 6,
@@ -816,7 +816,7 @@
     "icon": "/images/items/wand_t6.png"
   },
   {
-    "id": "woodcutters_axe",
+    "id": "axe_1",
     "name": "Woodcutter's Axe",
     "familyId": "axe",
     "tier": 1,
@@ -824,7 +824,7 @@
     "icon": "/images/items/axe_t1.png"
   },
   {
-    "id": "foresters_axe",
+    "id": "axe_2",
     "name": "Forester's Axe",
     "familyId": "axe",
     "tier": 2,
@@ -832,7 +832,7 @@
     "icon": "/images/items/axe_t2.png"
   },
   {
-    "id": "rangers_axe",
+    "id": "axe_3",
     "name": "Ranger's Axe",
     "familyId": "axe",
     "tier": 3,
@@ -840,7 +840,7 @@
     "icon": "/images/items/axe_t3.png"
   },
   {
-    "id": "wardens_axe",
+    "id": "axe_4",
     "name": "Warden's Axe",
     "familyId": "axe",
     "tier": 4,
@@ -848,7 +848,7 @@
     "icon": "/images/items/axe_t4.png"
   },
   {
-    "id": "timberlords_axe",
+    "id": "axe_5",
     "name": "Timberlord's Axe",
     "familyId": "axe",
     "tier": 5,
@@ -856,7 +856,7 @@
     "icon": "/images/items/axe_t5.png"
   },
   {
-    "id": "ancient_grove_axe",
+    "id": "axe_6",
     "name": "Ancient Grove Axe",
     "familyId": "axe",
     "tier": 6,
@@ -864,7 +864,7 @@
     "icon": "/images/items/axe_t6.png"
   },
   {
-    "id": "pine_axe_stone",
+    "id": "axe_stone_1",
     "name": "Crude Stone Axe",
     "familyId": "axe_stone",
     "tier": 1,
@@ -872,7 +872,7 @@
     "icon": "/images/items/axe_stone_t1.png"
   },
   {
-    "id": "oak_axe_stone",
+    "id": "axe_stone_2",
     "name": "Oak Stone Axe",
     "familyId": "axe_stone",
     "tier": 2,
@@ -880,7 +880,7 @@
     "icon": "/images/items/axe_stone_t2.png"
   },
   {
-    "id": "ash_axe_stone",
+    "id": "axe_stone_3",
     "name": "Ash Stone Axe",
     "familyId": "axe_stone",
     "tier": 3,
@@ -888,7 +888,7 @@
     "icon": "/images/items/axe_stone_t3.png"
   },
   {
-    "id": "cedar_axe_stone",
+    "id": "axe_stone_4",
     "name": "Cedar Stone Axe",
     "familyId": "axe_stone",
     "tier": 4,
@@ -896,7 +896,7 @@
     "icon": "/images/items/axe_stone_t4.png"
   },
   {
-    "id": "ebony_axe_stone",
+    "id": "axe_stone_5",
     "name": "Ebony Stone Axe",
     "familyId": "axe_stone",
     "tier": 5,
@@ -904,7 +904,7 @@
     "icon": "/images/items/axe_stone_t5.png"
   },
   {
-    "id": "worldroot_axe_stone",
+    "id": "axe_stone_6",
     "name": "Worldroot Stone Axe",
     "familyId": "axe_stone",
     "tier": 6,
@@ -960,7 +960,7 @@
     "icon": "/images/items/pickaxe_t6.png"
   },
   {
-    "id": "copper_wrench",
+    "id": "wrench_1",
     "name": "Uneven Wrench",
     "familyId": "wrench",
     "tier": 1,
@@ -968,7 +968,7 @@
     "icon": "/images/items/wrench_t1.png"
   },
   {
-    "id": "bronze_wrench",
+    "id": "wrench_2",
     "name": "Bronze Wrench",
     "familyId": "wrench",
     "tier": 2,
@@ -976,7 +976,7 @@
     "icon": "/images/items/wrench_t2.png"
   },
   {
-    "id": "iron_wrench",
+    "id": "wrench_3",
     "name": "Iron Wrench",
     "familyId": "wrench",
     "tier": 3,
@@ -984,7 +984,7 @@
     "icon": "/images/items/wrench_t3.png"
   },
   {
-    "id": "silver_wrench",
+    "id": "wrench_4",
     "name": "Silver Wrench",
     "familyId": "wrench",
     "tier": 4,
@@ -992,7 +992,7 @@
     "icon": "/images/items/wrench_t4.png"
   },
   {
-    "id": "gold_wrench",
+    "id": "wrench_5",
     "name": "Gold Wrench",
     "familyId": "wrench",
     "tier": 5,
@@ -1000,7 +1000,7 @@
     "icon": "/images/items/wrench_t5.png"
   },
   {
-    "id": "star_metal_wrench",
+    "id": "wrench_6",
     "name": "Star Metal Wrench",
     "familyId": "wrench",
     "tier": 6,

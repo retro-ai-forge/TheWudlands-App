@@ -504,6 +504,7 @@ class ResourceItemResponse(BaseModel):
     resourceFamily: str = Field(..., description="The resource family (ore, wood, stone, etc.)")
     category: str = Field(..., description="'raw' | 'processed' - derived from the entry's kind tuple")
     icon: Optional[str] = Field(None, description="Real per-unit art, when this family has any (e.g. oil, arrow, bolt)")
+    description: str = Field("", description="In-game flavor text for this resource")
 
 
 class ToolItemResponse(BaseModel):
@@ -517,6 +518,7 @@ class ToolItemResponse(BaseModel):
     icon: str = Field("", description="Per-tier art path, or empty if this family/tier has none yet")
     sizeClass: str = Field("tiny", description="Family-level backpack slot-cost bucket")
     stackSize: int = Field(1, description="Family-level stack size (1 = never stacked)")
+    description: str = Field("", description="Per-tier flavor text")
     equipSlots: List[List[str]] = Field(default_factory=list, description="Alternative equip slot groups")
     backpackable: bool = Field(False, description="Whether this item can be moved to a backpack")
 
@@ -938,6 +940,7 @@ async def get_resource_catalog():
             resourceFamily=entry.family_id,
             category="raw" if "raw_resource" in entry.kind else "processed",
             icon=entry.icon or None,
+            description=entry.description,
         )
         for entry in items_catalog.ITEM_CATALOG_ENTRIES
         if "raw_resource" in entry.kind or "processed" in entry.kind
@@ -954,7 +957,7 @@ async def get_tool_catalog():
         ToolItemResponse(
             id=entry.id, name=entry.name, familyId=entry.family_id, tier=entry.tier,
             kind=list(entry.kind), icon=entry.icon, sizeClass=entry.size_class, stackSize=entry.stack_size,
-            equipSlots=[list(group) for group in entry.equip_slots], backpackable=entry.backpackable,
+            description=entry.description, equipSlots=[list(group) for group in entry.equip_slots], backpackable=entry.backpackable,
         )
         for entry in items_catalog.ITEM_CATALOG_ENTRIES
         if "tool" in entry.kind

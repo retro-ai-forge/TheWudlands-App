@@ -39,7 +39,7 @@ export type BlueprintTierInfo = Record<
 >;
 export type ResourceTierInfo = Record<
   string,
-  { tier: number; family: string; category: "raw" | "processed"; name?: string; icon?: string }
+  { tier: number; family: string; category: "raw" | "processed"; name?: string; icon?: string; description?: string }
 >;
 
 // The raw shape returned by /me/characters and every check-in/check-out
@@ -455,11 +455,11 @@ export function ResourceList({
       }
     }
 
-    // Sort families by highest tier descending
+    // Sort families by highest tier ascending
     const sortedFamilies = Object.keys(familyGroups).sort((a, b) => {
       const tierA = highestTierByFamily[a] ?? 0;
       const tierB = highestTierByFamily[b] ?? 0;
-      if (tierB !== tierA) return tierB - tierA;
+      if (tierA !== tierB) return tierA - tierB;
       return a.localeCompare(b);
     });
 
@@ -481,7 +481,7 @@ export function ResourceList({
             const familyItems = familyGroups[family].sort((a, b) => {
               const tierA = tierInfo?.[a[0]]?.tier ?? 0;
               const tierB = tierInfo?.[b[0]]?.tier ?? 0;
-              return tierB - tierA;
+              return tierA - tierB;
             });
 
             return familyItems.flatMap(([id, qty]) => {
@@ -1950,7 +1950,7 @@ export function computeCartContents(character: ContainerCharacterGear): Containe
 function sortResourceIds(balances: Record<string, number>, tierInfo: ResourceTierInfo): string[] {
   return Object.keys(balances)
     .filter((id) => (balances[id] ?? 0) > 0 && !!tierInfo[id])
-    .sort((a, b) => (tierInfo[b]?.tier ?? 0) - (tierInfo[a]?.tier ?? 0));
+    .sort((a, b) => (tierInfo[a]?.tier ?? 0) - (tierInfo[b]?.tier ?? 0));
 }
 
 /** One .itemGridCell tile per owned resource id, for embedding alongside
@@ -2489,9 +2489,9 @@ export function ResourcePopup({
             ItemDetailPopup gives a real item. */}
         {info?.icon && <ItemIcon icon={info.icon} alt={name} className={styles.itemPopupImg} />}
         <h3 className={styles.itemPopupName}>{owned} {name}</h3>
-        {flashMessage && (
-          <p className={`${styles.itemPopupDescription} ${styles.itemPopupFlash}`}>{flashMessage}</p>
-        )}
+        <p className={`${styles.itemPopupDescription} ${flashMessage ? styles.itemPopupFlash : ""}`}>
+          {flashMessage ?? (info?.description || "")}
+        </p>
         {destinations.map((dest) => (
           <TransferButtons
             key={dest.key}
@@ -3047,7 +3047,7 @@ export function ItemDetailPopup({
               />
             )}
             <p className={`${styles.itemPopupDescription} ${flashMessage ? styles.itemPopupFlash : ""}`}>
-              {flashMessage ?? (info?.description || "dummy")}
+              {flashMessage ?? (info?.description || "")}
             </p>
             {!!info?.gatheringBonuses?.length && (
               <p className={styles.itemPopupGathering}>
