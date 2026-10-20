@@ -714,6 +714,12 @@ export function HomeView({
                 ...(hasBackpackEquipped
                   ? [{ key: "backpack", icon: BACKPACK_ACTION_ICON, label: "Backpack", endpoint: `${storageType}-to-backpack` }]
                   : []),
+                ...(hasSaddlepackEquipped
+                  ? [{ key: "saddlepack", icon: SADDLEPACK_ACTION_ICON, label: "Saddlepack", endpoint: `${storageType}-to-saddlepack` }]
+                  : []),
+                ...(character.gear.cartCapacity > 0
+                  ? [{ key: "cart", icon: CART_ACTION_ICON, label: "Cart", endpoint: `${storageType}-to-cart` }]
+                  : []),
                 ...(!character.availability.inAdventure && storageType !== "camp"
                   ? [{ key: "vault", icon: VAULT_ACTION_ICON, label: "Vault", endpoint: "to-vault" }]
                   : []),

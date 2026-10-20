@@ -102,6 +102,32 @@ function ownedIds(...pools: Record<string, number>[]): string[] {
   return [...ids];
 }
 
+// Generates a single random starter kit: for each tier, picks up to 3
+// distinct raw materials and distributes that tier's full budget among them.
+// When `previous` is given, avoids reusing the same materials — items from
+// the old kit are pushed to the back of the candidate list so fresh ones
+// get picked first (falls back to old ones only when the tier has ≤3 items).
+function generateStarterKit(options: TrappingsOptions, previous?: Record<string, number> | null): Record<string, number> {
+  const kit: Record<string, number> = {};
+  const prevIds = previous ? new Set(Object.keys(previous).filter(id => (previous[id] ?? 0) > 0)) : new Set<string>();
+  for (const [tierStr, pool] of Object.entries(options.tierPools)) {
+    const tier = Number(tierStr);
+    const tierItems = options.items.filter(item => item.tier === tier);
+    if (tierItems.length === 0 || pool <= 0) continue;
+    const fresh = tierItems.filter(item => !prevIds.has(item.id));
+    const stale = tierItems.filter(item => prevIds.has(item.id));
+    const prioritized = [...fresh.sort(() => Math.random() - 0.5), ...stale.sort(() => Math.random() - 0.5)];
+    const picked = prioritized.slice(0, 3);
+    let remaining = pool;
+    while (remaining > 0) {
+      const item = picked[Math.floor(Math.random() * picked.length)];
+      kit[item.id] = (kit[item.id] ?? 0) + 1;
+      remaining--;
+    }
+  }
+  return kit;
+}
+
 // Summed quantities across one or more stackable pools - used for the
 // recipe viewer's "?inv=" resource check, where how many matters (have >=
 // needed), not just whether something is owned at all. Mirrors ownedTools'
@@ -164,6 +190,11 @@ export function SoulCreation({
   const [blueprintMaterials, setBlueprintMaterials] = useState<Record<string, string[]>>({});
   // Blueprint ID to family ID mapping
   const [blueprintIdMapping, setBlueprintIdMapping] = useState<Record<string, string>>({});
+
+  // Starter kit state — a single pre-built random resource allocation shown
+  // after blueprint selection, with limited shuffles.
+  const [starterKit, setStarterKit] = useState<Record<string, number> | null>(null);
+  const [shufflesRemaining, setShufflesRemaining] = useState(3);
 
   // Load blueprint materials mapping once on mount
   useEffect(() => {
@@ -281,9 +312,12 @@ export function SoulCreation({
       .then((res) => (res.ok ? res.json() : EMPTY_TRAPPINGS_OPTIONS))
       .then((data: TrappingsOptions) => {
         if (!cancelled) {
-          setTrappingsOptions(data ?? EMPTY_TRAPPINGS_OPTIONS);
+          const opts = data ?? EMPTY_TRAPPINGS_OPTIONS;
+          setTrappingsOptions(opts);
           setSelectedResources({});
           setBlueprintSelections({});
+          setStarterKit(null);
+          setShufflesRemaining(3);
           setTrappingsLoaded(true);
         }
       })
@@ -292,6 +326,8 @@ export function SoulCreation({
           setTrappingsOptions(EMPTY_TRAPPINGS_OPTIONS);
           setSelectedResources({});
           setBlueprintSelections({});
+          setStarterKit(null);
+          setShufflesRemaining(3);
           setTrappingsLoaded(true);
         }
       });
@@ -299,32 +335,6 @@ export function SoulCreation({
       cancelled = true;
     };
   }, [page, profession1, profession2, profession3]);
-
-  // Units of `tier` already allocated across `resources` (the player's picks
-  // so far) — used both to render each tier's remaining budget and to clamp
-  // further +/- clicks to what's left.
-  function tierUnitsSpent(resources: Record<string, number>, tier: number): number {
-    return trappingsOptions.items
-      .filter((item) => item.tier === tier)
-      .reduce((sum, item) => sum + (resources[item.id] ?? 0), 0);
-  }
-
-  function adjustSelectedResource(item: TrappingsItem, delta: number) {
-    setSelectedResources((prev) => {
-      const current = prev[item.id] ?? 0;
-      const pool = trappingsOptions.tierPools[String(item.tier)] ?? 0;
-      const spentByOthers = tierUnitsSpent(prev, item.tier) - current;
-      const next = Math.max(0, Math.min(current + delta, pool - spentByOthers));
-      if (next === current) return prev;
-      const updated = { ...prev };
-      if (next === 0) {
-        delete updated[item.id];
-      } else {
-        updated[item.id] = next;
-      }
-      return updated;
-    });
-  }
 
   // Page 4 (Birthsign) — a single required pick; null blocks Continue.
   const [birthsign, setBirthsign] = useState<BirthsignId | null>(null);
@@ -769,38 +779,36 @@ export function SoulCreation({
     setSoulAttributes(randomSpend(soul, ["will", "insi", "lore", "pres"] as const));
   }
 
-  // Press-and-hold repeat for the attribute stepper triangles: one immediate
-  // step, a short pause, then fast auto-repeat until release. Listens on
-  // `window` for the release rather than just the button, since a hold that
-  // ends because the button became disabled mid-repeat (hit the pool's cap)
-  // would otherwise never fire its own pointerup — disabled elements stop
-  // dispatching pointer events to themselves.
-  const holdTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const holdIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
-  function stopHold() {
-    if (holdTimeoutRef.current) clearTimeout(holdTimeoutRef.current);
-    if (holdIntervalRef.current) clearInterval(holdIntervalRef.current);
-    holdTimeoutRef.current = null;
-    holdIntervalRef.current = null;
-  }
-  function startHold(step: () => void) {
-    stopHold();
-    step();
-    holdTimeoutRef.current = setTimeout(() => {
-      holdIntervalRef.current = setInterval(step, 90);
-    }, 400);
-    window.addEventListener("pointerup", stopHold, { once: true });
-    window.addEventListener("pointercancel", stopHold, { once: true });
+  function handleShuffleKit() {
+    if (shufflesRemaining <= 0) return;
+    const kit = generateStarterKit(trappingsOptions, starterKit);
+    setStarterKit(kit);
+    setSelectedResources(kit);
+    setShufflesRemaining((n) => n - 1);
   }
 
   const isPage2Ready = bodyPointsRemaining === 0;
   const isPage3Ready = soulPointsRemaining === 0;
 
-  const isPage6Ready =
-    trappingsLoaded &&
-    Object.keys(trappingsOptions.tierPools).every(
-      (tier) => tierUnitsSpent(selectedResources, Number(tier)) >= (trappingsOptions.tierPools[tier] ?? 0)
+  // All blueprint slots filled (or no blueprint pools at all).
+  const allBlueprintsSelected =
+    trappingsOptions.blueprintPools.length === 0 ||
+    trappingsOptions.blueprintPools.every((pool, poolIdx) =>
+      Array.from({ length: pool.count }, (_, slotIdx) => `${poolIdx}:${slotIdx}`)
+        .every((key) => !!blueprintSelections[key])
     );
+
+  // Auto-generate the first kit once all blueprints are chosen (or immediately
+  // if there are no blueprint pools). Runs only once per options load — the
+  // starterKit being null is the trigger.
+  useEffect(() => {
+    if (!trappingsLoaded || !allBlueprintsSelected || starterKit !== null) return;
+    const kit = generateStarterKit(trappingsOptions);
+    setStarterKit(kit);
+    setSelectedResources(kit);
+  }, [trappingsLoaded, allBlueprintsSelected, starterKit, trappingsOptions]);
+
+  const isPage6Ready = trappingsLoaded && starterKit !== null;
 
   const isLastPage = page === PAGE_COUNT - 1;
 
@@ -1050,13 +1058,22 @@ export function SoulCreation({
                 Life Energy sets that reserve&apos;s size — more Energy rises your starting age. Body and Soul each range from 4-100.
               </p>
 
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                draggable={false}
-                className={styles.middleIllustration}
-                src="/images/soul-creation/equilize-middle-illu.png"
-                alt="The mystic triangle"
-              />
+              <button
+                type="button"
+                className={styles.middleIlluButton}
+                onClick={() => setPage(1)}
+              >
+                <div className={styles.middleIlluButtonWrap}>
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    draggable={false}
+                    className={styles.middleIlluButtonImg}
+                    src="/images/soul-creation/equilize-middle-illu.png"
+                    alt="The mystic triangle"
+                  />
+                  <div className={styles.middleIlluButtonShine} />
+                </div>
+              </button>
 
               <p className={`${styles.introText} ${styles.introTextLarge}`}>
                 Continue to activate the mystic triangle to balance Body, Soul, and Life Energy.
@@ -1175,11 +1192,15 @@ export function SoulCreation({
                   </div>
                 ))}
               </div>
-              <p className={styles.attrCarryNote}>
-                Carry Capacity = 10 + (Might + Endurance) / 3.
-                The sum of Might and Endurance decides what armor you can wear:
-                12 — Light (Cloth, Leather) · 24 — Medium (Chainmail, Iron, Chitin, Ebony) · 48 — Heavy (Meteoric Iron, Darksteel)
-              </p>
+              <div className={styles.attrCarryNote}>
+                <p className={styles.attrCarryFormula}>Carry Capacity=10+(Might+Endurance)/3.</p>
+                <p>
+                  The sum of Might and Endurance decides what armor you can wear:<br />
+                  12 — Light (Cloth, Leather)<br />
+                  24 — Medium (Iron, Chitin, Ebony)<br />
+                  48 — Heavy (Meteoric Iron, Darksteel)
+                </p>
+              </div>
             </div>
           ) : page === 3 ? (
             <div className={styles.attrPage} onContextMenu={(e) => e.preventDefault()}>
@@ -1323,79 +1344,9 @@ export function SoulCreation({
                   .filter(Boolean)
                   .join(" · ")}
               </p>
-              <div className={styles.trappingsPicker}>
-                {Object.keys(trappingsOptions.tierPools)
-                  .map(Number)
-                  .sort((a, b) => a - b)
-                  .map((tier) => {
-                    const pool = trappingsOptions.tierPools[String(tier)] ?? 0;
-                    const spent = tierUnitsSpent(selectedResources, tier);
-                    const remaining = pool - spent;
-                    return (
-                      <div key={tier} className={styles.trappingsTierGroup}>
-                        <div className={styles.trappingsTierHeader}>
-                          <span>Tier {tier}</span>
-                          <span>
-                            {remaining} / {pool} remaining
-                          </span>
-                        </div>
-                        {trappingsOptions.items
-                          .filter((item) => item.tier === tier)
-                          .map((item) => {
-                            const amount = selectedResources[item.id] ?? 0;
-                            const isRelevant = requiredMaterialIds.has(item.familyId);
-                            return (
-                              <div key={item.id} className={styles.trappingsRow}>
-                                <div className={styles.trappingsItemInfo}>
-                                  <span style={{ flexShrink: 0, marginRight: "0.4rem" }}>
-                                    {getTierIndicator(item.tier)}
-                                  </span>
-                                  <div style={{ display: "flex", flexDirection: "column", gap: "0rem", flex: 1 }}>
-                                    <span
-                                      className={styles.trappingsItemName}
-                                      style={isRelevant ? { color: "#4ade80", fontWeight: "bold" } : undefined}
-                                    >
-                                      {item.name}
-                                    </span>
-                                    <span className={styles.trappingsItemFamily}>{item.familyId}</span>
-                                  </div>
-                                </div>
-                                <div className={styles.trappingsStepper}>
-                                  <button
-                                    type="button"
-                                    className={styles.attrStepBtn}
-                                    onPointerDown={() => startHold(() => adjustSelectedResource(item, -1))}
-                                    onContextMenu={(e) => e.preventDefault()}
-                                    disabled={amount <= 0}
-                                    aria-label={`Decrease ${item.name}`}
-                                  >
-                                    ◀
-                                  </button>
-                                  <span className={styles.trappingsAmount}>{amount}</span>
-                                  <button
-                                    type="button"
-                                    className={styles.attrStepBtn}
-                                    onPointerDown={() => startHold(() => adjustSelectedResource(item, 1))}
-                                    onContextMenu={(e) => e.preventDefault()}
-                                    disabled={remaining <= 0}
-                                    aria-label={`Increase ${item.name}`}
-                                  >
-                                    ▶
-                                  </button>
-                                </div>
-                              </div>
-                            );
-                          })}
-                      </div>
-                    );
-                  })}
-              </div>
               {trappingsOptions.blueprintPools.length > 0 && (
                 <div className={styles.trappingsPicker}>
                   {trappingsOptions.blueprintPools.map((pool, poolIdx) => {
-                    // Slots within the same pool shouldn't offer each other's
-                    // already-picked item - two dropdowns both landing on
-                    // the exact same blueprint would waste a slot.
                     const slotKeys = Array.from({ length: pool.count }, (_, slotIdx) => `${poolIdx}:${slotIdx}`);
                     const pickedElsewhere = (thisKey: string) =>
                       new Set(slotKeys.filter((k) => k !== thisKey).map((k) => blueprintSelections[k]).filter(Boolean));
@@ -1434,12 +1385,50 @@ export function SoulCreation({
                   })}
                 </div>
               )}
+              {starterKit && (
+                <>
+                  <div className={styles.starterKitCard}>
+                    <span className={styles.starterKitLabel}>Starter Kit</span>
+                    {Object.keys(trappingsOptions.tierPools).map(Number).sort((a, b) => a - b).map(tier => {
+                      const tierItems = trappingsOptions.items
+                        .filter(item => item.tier === tier && (starterKit[item.id] ?? 0) > 0);
+                      if (tierItems.length === 0) return null;
+                      return (
+                        <div key={tier} className={styles.starterKitTier}>
+                          <span className={styles.starterKitTierLabel}>
+                            {getTierIndicator(tier)}
+                          </span>
+                          {tierItems.map(item => {
+                            const isRelevant = requiredMaterialIds.has(item.familyId);
+                            return (
+                              <div key={item.id} className={styles.starterKitItem}>
+                                <span
+                                  className={styles.starterKitItemName}
+                                  style={isRelevant ? { color: "#4ade80", fontWeight: "bold" } : undefined}
+                                >
+                                  {item.name}
+                                </span>
+                                <span className={styles.starterKitItemQty}>&times;{starterKit[item.id]}</span>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      );
+                    })}
+                  </div>
+                  {shufflesRemaining > 0 && (
+                    <button
+                      type="button"
+                      className={styles.randomizeButton}
+                      onClick={handleShuffleKit}
+                    >
+                      {shufflesRemaining === 3 ? "Shuffle 3 times" : shufflesRemaining === 2 ? "Shuffle twice" : "Shuffle last"}
+                    </button>
+                  )}
+                </>
+              )}
               {submitError && <p className={styles.submitError}>{submitError}</p>}
               {recipeViewerSrc && (
-                // A plain <div>, not a fragment - .content is a flex column
-                // with its own gap between children, which would otherwise
-                // insert a dead gap between the heading and the iframe on
-                // top of their own (zeroed) margins.
                 <div style={{ width: "100%" }}>
                   <button
                     type="button"
@@ -1694,7 +1683,7 @@ export function SoulCreation({
 
         {/* Page 6's own Continue button sits inline right under the recipe
             viewer instead - see the copy rendered there. */}
-        {page !== 6 && (
+        {page !== 0 && page !== 6 && (
           <button
             className={`${styles.navButton} ${styles.continue} ${
               (page === 1 && !isPage1Ready) ||

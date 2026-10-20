@@ -2230,7 +2230,8 @@ function PackedItemsRow({
   if (ids.length === 0 && sortedResourceIds.length === 0) {
     return <p className={styles.packedItemsEmpty}>Nothing packed in it yet.</p>;
   }
-  const sortedIds = [...ids].sort((a, b) => {
+  const idsExcludingResources = ids.filter((id) => !resourceTierInfo[lookupIds[id] ?? id]);
+  const sortedIds = [...idsExcludingResources].sort((a, b) => {
     const infoA = tierInfo[lookupIds[a] ?? a];
     const infoB = tierInfo[lookupIds[b] ?? b];
     return (infoB?.tier ?? 0) - (infoA?.tier ?? 0);
@@ -2326,37 +2327,35 @@ function PackedItemsRow({
           characterId={characterId}
           onPlayerDataUpdated={onPlayerDataUpdated}
           onClose={() => setSelectedResourceId(null)}
+          urlPrefix={`/api/auth/me/characters/${characterId}/item-balances/${selectedResourceId}`}
           destinations={
             location === "cart"
               ? [
-                  ...(inAdventure
-                    ? [{ key: "storage", icon: storageType === "camp" ? CAMP_ACTION_ICON : HOME_ACTION_ICON, label: storageType === "camp" ? "Camp" : "Home", endpoint: `cart-to-${storageType}` }]
-                    : [
-                        { key: "vault", icon: VAULT_ACTION_ICON, label: "Vault", endpoint: "cart-to-vault" },
-                        { key: "storage", icon: HOME_ACTION_ICON, label: "Home", endpoint: "cart-to-home" },
-                      ]),
+                  { key: "storage", icon: inAdventure && storageType === "camp" ? CAMP_ACTION_ICON : HOME_ACTION_ICON, label: inAdventure && storageType === "camp" ? "Camp" : "Home", endpoint: `cart-to-${inAdventure ? storageType : "home"}` },
+                  ...(hasBackpackEquipped
+                    ? [{ key: "backpack", icon: BACKPACK_ACTION_ICON, label: "Backpack", endpoint: "cart-to-backpack" }]
+                    : []),
+                  ...(hasSaddlepackEquipped
+                    ? [{ key: "saddlepack", icon: SADDLEPACK_ACTION_ICON, label: "Saddlepack", endpoint: "cart-to-saddlepack" }]
+                    : []),
                 ]
               : location === "saddlepack"
               ? [
-                  ...(inAdventure
-                    ? [{ key: "storage", icon: storageType === "camp" ? CAMP_ACTION_ICON : HOME_ACTION_ICON, label: storageType === "camp" ? "Camp" : "Home", endpoint: `saddlepack-to-${storageType}` }]
-                    : [
-                        { key: "vault", icon: VAULT_ACTION_ICON, label: "Vault", endpoint: "to-vault" },
-                        { key: "storage", icon: HOME_ACTION_ICON, label: "Home", endpoint: `saddlepack-to-home` },
-                      ]),
+                  { key: "storage", icon: inAdventure && storageType === "camp" ? CAMP_ACTION_ICON : HOME_ACTION_ICON, label: inAdventure && storageType === "camp" ? "Camp" : "Home", endpoint: `saddlepack-to-${inAdventure ? storageType : "home"}` },
                   ...(hasBackpackEquipped
                     ? [{ key: "backpack", icon: BACKPACK_ACTION_ICON, label: "Backpack", endpoint: "saddlepack-to-backpack" }]
-                    : [{ key: "backpack", icon: BACKPACK_ACTION_ICON, label: "No backpack equipped", endpoint: "saddlepack-to-backpack" }]),
+                    : []),
+                  ...((cartCapacity ?? 0) > 0
+                    ? [{ key: "cart", icon: CART_ACTION_ICON, label: "Cart", endpoint: "saddlepack-to-cart" }]
+                    : []),
                 ]
               : [
-                  ...(inAdventure
-                    ? [{ key: "storage", icon: storageType === "camp" ? CAMP_ACTION_ICON : HOME_ACTION_ICON, label: storageType === "camp" ? "Camp" : "Home", endpoint: `backpack-to-${storageType}` }]
-                    : [
-                        { key: "vault", icon: VAULT_ACTION_ICON, label: "Vault", endpoint: "to-vault" },
-                        { key: "storage", icon: HOME_ACTION_ICON, label: "Home", endpoint: "backpack-to-home" },
-                      ]),
+                  { key: "storage", icon: inAdventure && storageType === "camp" ? CAMP_ACTION_ICON : HOME_ACTION_ICON, label: inAdventure && storageType === "camp" ? "Camp" : "Home", endpoint: `backpack-to-${inAdventure ? storageType : "home"}` },
                   ...(hasSaddlepackEquipped
                     ? [{ key: "saddlepack", icon: SADDLEPACK_ACTION_ICON, label: "Saddlepack", endpoint: "backpack-to-saddlepack" }]
+                    : []),
+                  ...((cartCapacity ?? 0) > 0
+                    ? [{ key: "cart", icon: CART_ACTION_ICON, label: "Cart", endpoint: "backpack-to-cart" }]
                     : []),
                 ]
           }

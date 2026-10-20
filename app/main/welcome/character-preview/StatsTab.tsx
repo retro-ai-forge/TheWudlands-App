@@ -629,6 +629,27 @@ export function StatsTab({
             </div>
           ))}
 
+          <div className={styles.attrColumns}>
+            <div className={styles.attrGroupHeader}>
+              <span>Body <span className={styles.attrGroupTotal}>{sumAttrs(BODY_ATTRS, character.attr)}/{sumAttrs(BODY_ATTRS, character.attr)}</span></span>
+              <span>Soul <span className={styles.attrGroupTotal}>{sumAttrs(SOUL_ATTRS, character.attr)}/{sumAttrs(SOUL_ATTRS, character.attr)}</span></span>
+            </div>
+            <div className={styles.attrGrid}>
+              {BODY_ATTRS.map(([key, label], i) => {
+                const [sKey, sLabel] = SOUL_ATTRS[i];
+                return (
+                  <div className={styles.attrGridRow} key={key}>
+                    <span className={styles.attrLabel}>{label}</span>
+                    <span className={styles.attrDisplayValue}>{character.attr[key]}</span>
+                    <span />
+                    <span className={styles.attrLabel}>{sLabel}</span>
+                    <span className={styles.attrDisplayValue}>{character.attr[sKey]}</span>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
           {(character.blueprints?.length ?? 0) > 0 && (
             <div className={`${styles.accordionItem} ${styles.accordionItemWide}`}>
               <button className={styles.accordionHeader} onClick={() => setBlueprintsOpen(!blueprintsOpen)}>
@@ -836,27 +857,6 @@ export function StatsTab({
 
         </div>
 
-      </div>
-
-      <div className={styles.attrColumns}>
-        <div className={styles.attrGroupHeader}>
-          <span>Body <span className={styles.attrGroupTotal}>{sumAttrs(BODY_ATTRS, character.attr)}/{sumAttrs(BODY_ATTRS, character.attr)}</span></span>
-          <span>Soul <span className={styles.attrGroupTotal}>{sumAttrs(SOUL_ATTRS, character.attr)}/{sumAttrs(SOUL_ATTRS, character.attr)}</span></span>
-        </div>
-        <div className={styles.attrGrid}>
-          {BODY_ATTRS.map(([key, label], i) => {
-            const [sKey, sLabel] = SOUL_ATTRS[i];
-            return (
-              <div className={styles.attrGridRow} key={key}>
-                <span className={styles.attrLabel}>{label}</span>
-                <span className={styles.attrDisplayValue}>{character.attr[key]}</span>
-                <span />
-                <span className={styles.attrLabel}>{sLabel}</span>
-                <span className={styles.attrDisplayValue}>{character.attr[sKey]}</span>
-              </div>
-            );
-          })}
-        </div>
       </div>
 
       {xpOverlay && (

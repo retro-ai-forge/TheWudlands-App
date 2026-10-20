@@ -157,13 +157,14 @@ async def _build_player(db, address: str) -> Player:
         character.setdefault("stats", {})
         character["stats"].setdefault("adventureFinished", 0)
         character["stats"].setdefault("adventureRunAway", 0)
-        for item in character["gear"].get("items", []):
+        character["gear"]["items"] = [i for i in character["gear"].get("items", []) if isinstance(i, dict) and "instanceId" in i]
+        for item in character["gear"]["items"]:
             item.setdefault("createdAt", datetime.now(timezone.utc).isoformat())
 
         if not in_adventure:
             home_doc = home_map.get(cid, {})
             character["gear"]["itemBalances"]["home"] = home_doc.get("itemBalances", {})
-            home_items = home_doc.get("items", [])
+            home_items = [i for i in home_doc.get("items", []) if isinstance(i, dict) and "instanceId" in i]
             for ci in home_items:
                 ci.setdefault("createdAt", datetime.now(timezone.utc).isoformat())
             character["gear"]["items"] = character["gear"].get("items", []) + home_items
@@ -178,7 +179,7 @@ async def _build_player(db, address: str) -> Player:
             resting = character.get("availability", {}).get("resting", False)
             if resting and camp_doc:
                 character["gear"]["itemBalances"]["camp"] = camp_doc.get("itemBalances", {})
-                camp_items = camp_doc.get("items", [])
+                camp_items = [i for i in camp_doc.get("items", []) if isinstance(i, dict) and "instanceId" in i]
                 for ci in camp_items:
                     ci.setdefault("createdAt", datetime.now(timezone.utc).isoformat())
                     ci["location"] = "camp"
@@ -3544,34 +3545,31 @@ async def equip_item(address: str, character_id: str, instance_id: str, slots: L
             src_qty = instance.get("quantity", 1)
             tgt_qty = target_instance.get("quantity", 1)
             room = family.stack_size - tgt_qty
-            transfer = min(src_qty, room)
+            transfer = min(amount or src_qty, src_qty, room)
             if transfer <= 0:
                 raise ValueError("Stack is full")
             leftover = src_qty - transfer
-            src_item_idx = next(
-                i for i, it in enumerate(character.get("gear", {}).get("items", []))
-                if it["instanceId"] == instance_id
-            )
-            tgt_item_idx = next(
-                i for i, it in enumerate(character.get("gear", {}).get("items", []))
-                if it["instanceId"] == target_instance["instanceId"]
-            )
-            tgt_qty_path = f"gear.items.{tgt_item_idx}.quantity"
+            filt = {"address": address, "id": character_id}
+            src_iid = instance_id
+            tgt_iid = target_instance["instanceId"]
             if leftover > 0:
-                src_qty_path = f"gear.items.{src_item_idx}.quantity"
+                await db.characters.update_one(
+                    {**filt, "gear.items.instanceId": src_iid},
+                    {"$set": {"gear.items.$.quantity": leftover}},
+                )
                 doc = await db.characters.find_one_and_update(
-                    {"address": address},
-                    {"$set": {src_qty_path: leftover, tgt_qty_path: tgt_qty + transfer}},
+                    {**filt, "gear.items.instanceId": tgt_iid},
+                    {"$set": {"gear.items.$.quantity": tgt_qty + transfer}},
                     return_document=ReturnDocument.AFTER,
                 )
             else:
                 await db.characters.update_one(
-                    {"address": address},
-                    {"$set": {tgt_qty_path: tgt_qty + transfer}},
+                    {**filt, "gear.items.instanceId": tgt_iid},
+                    {"$set": {"gear.items.$.quantity": tgt_qty + transfer}},
                 )
                 doc = await db.characters.find_one_and_update(
-                    {"address": address},
-                    {"$pull": {"gear.items": {"instanceId": instance_id}}},
+                    filt,
+                    {"$pull": {"gear.items": {"instanceId": src_iid}}},
                     return_document=ReturnDocument.AFTER,
                 )
         else:

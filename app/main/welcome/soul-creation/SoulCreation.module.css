@@ -182,6 +182,67 @@
   font-size: 1.3rem;
 }
 
+/* Starter kit — a single pre-built resource allocation shown after
+   blueprints are chosen. */
+.starterKitCard {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  width: 100%;
+  max-width: 28rem;
+  padding: 0.75rem;
+  margin-top: 1rem;
+  background: rgba(10, 8, 4, 0.7);
+  border: 1px solid #6f532f;
+  border-radius: 8px;
+  text-align: left;
+  font-family: inherit;
+  color: #d4c9a8;
+}
+
+.starterKitLabel {
+  font-size: 0.85rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #c07a3a;
+  border-bottom: 1px solid rgba(168, 153, 104, 0.25);
+  padding-bottom: 0.35rem;
+}
+
+.starterKitTier {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.starterKitTierLabel {
+  font-size: 0.75rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #a89968;
+  margin-bottom: 0.1rem;
+}
+
+.starterKitItem {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.1rem 0.25rem;
+}
+
+.starterKitItemName {
+  font-size: clamp(0.78rem, 1.8vw, 0.88rem);
+  color: #d4c9a8;
+}
+
+.starterKitItemQty {
+  font-size: 0.85rem;
+  color: #c07a3a;
+  font-weight: bold;
+  flex-shrink: 0;
+  margin-left: 0.5rem;
+}
+
 .submitError {
   font-size: 0.85rem;
   color: #c0463a;
@@ -356,15 +417,75 @@
   color: #c4b07a;
 }
 
-.middleIllustration {
-  width: clamp(6.5rem, 15vw, 8rem);
-  height: auto;
+/* Page 0 — the illustration doubles as the Continue button. Styled as a
+   transparent button wrapper so the breathing/shine animations from page 1's
+   triangle center can play here too, making the image feel alive and
+   inviting the click. */
+.middleIlluButton {
+  display: inline-block;
+  padding: 0;
   margin: 0.25rem 0;
+  background: none;
+  border: none;
+  cursor: pointer;
+  line-height: 0;
+}
+
+.middleIlluButton:hover .middleIlluButtonImg {
+  filter: brightness(1.15) drop-shadow(0 0 10px rgba(255, 195, 90, 0.5));
+}
+
+.middleIlluButton:active .middleIlluButtonImg {
+  transform: scale(0.95);
+}
+
+.middleIlluButtonWrap {
+  position: relative;
+  display: inline-block;
+  width: clamp(6.5rem, 15vw, 8rem);
+  aspect-ratio: 208 / 213;
 }
 
 @media (min-height: 700px) {
-  .middleIllustration {
+  .middleIlluButtonWrap {
     width: clamp(9rem, 20vw, 11.5rem);
+  }
+}
+
+.middleIlluButtonImg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  mix-blend-mode: screen;
+  transform-origin: center;
+  animation: illuBreathe 3.2s ease-in-out infinite;
+  transition: filter 0.2s ease, transform 0.15s ease;
+}
+
+.middleIlluButtonShine {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  -webkit-mask-image: url("/images/soul-creation/equilize-middle-illu.png");
+  mask-image: url("/images/soul-creation/equilize-middle-illu.png");
+  -webkit-mask-size: 100% 100%;
+  mask-size: 100% 100%;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  background: linear-gradient(115deg, transparent 44%, rgba(255, 230, 170, 0.45) 50%, transparent 56%);
+  background-size: 300% 300%;
+  mix-blend-mode: screen;
+  animation: illuShineSweep 3.2s linear infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .middleIlluButtonImg {
+    animation: none;
+  }
+
+  .middleIlluButtonShine {
+    animation: none;
+    opacity: 0;
   }
 }
 
@@ -488,6 +609,15 @@
   line-height: 1.5;
   color: #9a8e6e;
   text-align: left;
+}
+
+.attrCarryNote p {
+  margin: 0;
+}
+
+.attrCarryFormula {
+  text-align: center;
+  margin-bottom: 0.35rem;
 }
 
 .attrPicker {
