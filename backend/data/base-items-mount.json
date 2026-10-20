@@ -107,7 +107,7 @@
     "familyId": "cart",
     "tier": 1,
     "capacitySlots": 6,
-    "description": "A rugged pine cart with pale grain, copper-plated corners and copper-rimmed wheels. Loaded from home.",
+    "description": "A rugged pine cart with pale grain, copper-plated corners and copper-rimmed wheels. Loaded from camp or home.",
     "icon": "/images/items/cart_t1.png"
   },
   {
@@ -116,7 +116,7 @@
     "familyId": "cart",
     "tier": 2,
     "capacitySlots": 10,
-    "description": "A heavy cart of dark oak with bronze-banded edges and robust bronze wheels. Loaded from home.",
+    "description": "A heavy cart of dark oak with bronze-banded edges and robust bronze wheels. Loaded from camp or home.",
     "icon": "/images/items/cart_t2.png"
   },
   {
@@ -125,7 +125,7 @@
     "familyId": "cart",
     "tier": 3,
     "capacitySlots": 14,
-    "description": "A slender pale ash cart with steel brackets and solid iron wheels. Loaded from home.",
+    "description": "A slender pale ash cart with steel brackets and solid iron wheels. Loaded from camp or home.",
     "icon": "/images/items/cart_t3.png"
   },
   {
@@ -134,7 +134,7 @@
     "familyId": "cart",
     "tier": 4,
     "capacitySlots": 18,
-    "description": "A fragrant red cedar cart with silver-capped joints and polished silver wheels. Loaded from home.",
+    "description": "A fragrant red cedar cart with silver-capped joints and polished silver wheels. Loaded from camp or home.",
     "icon": "/images/items/cart_t4.png"
   },
   {
@@ -143,7 +143,7 @@
     "familyId": "cart",
     "tier": 5,
     "capacitySlots": 22,
-    "description": "A sleek ebony cart with gold-trimmed panels and bright gold wheels. Loaded from home.",
+    "description": "A sleek ebony cart with gold-trimmed panels and bright gold wheels. Loaded from camp or home.",
     "icon": "/images/items/cart_t5.png"
   },
   {
@@ -152,7 +152,7 @@
     "familyId": "cart",
     "tier": 6,
     "capacitySlots": 26,
-    "description": "An ancient worldroot cart entwined with glowing star metal veins and arcane runes. Loaded from home.",
+    "description": "An ancient worldroot cart entwined with glowing star metal veins and arcane runes. Loaded from camp or home.",
     "icon": "/images/items/cart_t6.png"
   },
   {
