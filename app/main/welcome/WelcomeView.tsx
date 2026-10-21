@@ -231,8 +231,7 @@ export function WelcomeView() {
         </p>
         <br/>
         <p className={styles.welcomeMessage}>
-          Nova wallet, Polkadot.js, Metamask, Talisman, and SubWallet extension have been tested.f you have any issues
-          with wallet connection, please let us know.
+          Nova wallet, Polkadot.js, Metamask, Talisman, and SubWallet extension have been tested. If you have any issues with wallet connection, please let us know.
         </p>
         <br/>
         <p className={styles.welcomeMessage}>
