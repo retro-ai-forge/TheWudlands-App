@@ -108,24 +108,37 @@ function ownedIds(...pools: Record<string, number>[]): string[] {
 // the old kit are pushed to the back of the candidate list so fresh ones
 // get picked first (falls back to old ones only when the tier has ≤3 items).
 function generateStarterKit(options: TrappingsOptions, previous?: Record<string, number> | null): Record<string, number> {
-  const kit: Record<string, number> = {};
   const prevIds = previous ? new Set(Object.keys(previous).filter(id => (previous[id] ?? 0) > 0)) : new Set<string>();
-  for (const [tierStr, pool] of Object.entries(options.tierPools)) {
-    const tier = Number(tierStr);
-    const tierItems = options.items.filter(item => item.tier === tier);
-    if (tierItems.length === 0 || pool <= 0) continue;
-    const fresh = tierItems.filter(item => !prevIds.has(item.id));
-    const stale = tierItems.filter(item => prevIds.has(item.id));
-    const prioritized = [...fresh.sort(() => Math.random() - 0.5), ...stale.sort(() => Math.random() - 0.5)];
-    const picked = prioritized.slice(0, 3);
-    let remaining = pool;
-    while (remaining > 0) {
-      const item = picked[Math.floor(Math.random() * picked.length)];
-      kit[item.id] = (kit[item.id] ?? 0) + 1;
-      remaining--;
+
+  function roll(): Record<string, number> {
+    const kit: Record<string, number> = {};
+    for (const [tierStr, pool] of Object.entries(options.tierPools)) {
+      const tier = Number(tierStr);
+      const tierItems = options.items.filter(item => item.tier === tier);
+      if (tierItems.length === 0 || pool <= 0) continue;
+      const fresh = tierItems.filter(item => !prevIds.has(item.id));
+      const stale = tierItems.filter(item => prevIds.has(item.id));
+      const prioritized = [...fresh.sort(() => Math.random() - 0.5), ...stale.sort(() => Math.random() - 0.5)];
+      const picked = prioritized.slice(0, 3);
+      let remaining = pool;
+      while (remaining > 0) {
+        const item = picked[Math.floor(Math.random() * picked.length)];
+        kit[item.id] = (kit[item.id] ?? 0) + 1;
+        remaining--;
+      }
     }
+    return kit;
   }
-  return kit;
+
+  if (!previous) return roll();
+
+  for (let attempt = 0; attempt < 10; attempt++) {
+    const kit = roll();
+    const same = Object.keys(kit).length === Object.keys(previous).length &&
+      Object.entries(kit).every(([id, qty]) => previous[id] === qty);
+    if (!same) return kit;
+  }
+  return roll();
 }
 
 // Summed quantities across one or more stackable pools - used for the
@@ -1195,7 +1208,7 @@ export function SoulCreation({
               <div className={styles.attrCarryNote}>
                 <p className={styles.attrCarryFormula}>Carry Capacity=10+(Might+Endurance)/3.</p>
                 <p>
-                  The sum of Might and Endurance decides what armor you can wear:<br />
+                  The sum of Might and Endurance decides what armor you can wear comfortably:<br />
                   12 — Light (Cloth, Leather)<br />
                   24 — Medium (Iron, Chitin, Ebony)<br />
                   48 — Heavy (Meteoric Iron, Darksteel)
