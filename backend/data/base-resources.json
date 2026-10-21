@@ -1,148 +1,1010 @@
 [
-  { "id": "copper_ore", "name": "Copper Ore", "familyId": "ore", "tier": 1 },
-  { "id": "bronze_ore", "name": "Bronze Ore", "familyId": "ore", "tier": 2 },
-  { "id": "iron_ore", "name": "Iron Ore", "familyId": "ore", "tier": 3 },
-  { "id": "silver_ore", "name": "Silver Ore", "familyId": "ore", "tier": 4 },
-  { "id": "gold_ore", "name": "Gold Ore", "familyId": "ore", "tier": 5 },
-  { "id": "star_metal_ore", "name": "Star Metal Ore", "familyId": "ore", "tier": 6 },
-
-  { "id": "pine_wood", "name": "Pine Wood", "familyId": "wood", "tier": 1 },
-  { "id": "oak_wood", "name": "Oak Wood", "familyId": "wood", "tier": 2 },
-  { "id": "ash_wood", "name": "Ash Wood", "familyId": "wood", "tier": 3 },
-  { "id": "cedar_wood", "name": "Cedar Wood", "familyId": "wood", "tier": 4 },
-  { "id": "ebony_wood", "name": "Ebony Wood", "familyId": "wood", "tier": 5 },
-  { "id": "worldroot_wood", "name": "Worldroot Wood", "familyId": "wood", "tier": 6 },
-
-  { "id": "rough_stone", "name": "Rough Stone", "familyId": "stone", "tier": 1 },
-  { "id": "granite", "name": "Granite", "familyId": "stone", "tier": 2 },
-  { "id": "marble", "name": "Marble", "familyId": "stone", "tier": 3 },
-  { "id": "deepslate", "name": "Deepslate", "familyId": "stone", "tier": 4 },
-  { "id": "basalt", "name": "Basalt", "familyId": "stone", "tier": 5 },
-  { "id": "worldstone", "name": "Worldstone", "familyId": "stone", "tier": 6 },
-
-  { "id": "small_bone", "name": "Small Bone", "familyId": "bone", "tier": 1 },
-  { "id": "large_bone", "name": "Large Bone", "familyId": "bone", "tier": 2 },
-  { "id": "beast_bone", "name": "Beast Bone", "familyId": "bone", "tier": 3 },
-  { "id": "monster_bone", "name": "Monster Bone", "familyId": "bone", "tier": 4 },
-  { "id": "ancient_bone", "name": "Ancient Bone", "familyId": "bone", "tier": 5 },
-  { "id": "dragon_bone", "name": "Dragon Bone", "familyId": "bone", "tier": 6 },
-
-  { "id": "hemp_fiber", "name": "Hemp Fiber", "familyId": "fiber", "tier": 1 },
-  { "id": "cotton_fiber", "name": "Cotton Fiber", "familyId": "fiber", "tier": 2 },
-  { "id": "raw_wool", "name": "Raw Wool", "familyId": "fiber", "tier": 3 },
-  { "id": "raw_silk", "name": "Raw Silk", "familyId": "fiber", "tier": 4 },
-  { "id": "shadow_fiber", "name": "Shadow Fiber", "familyId": "fiber", "tier": 5 },
-  { "id": "moon_fiber", "name": "Moon Fiber", "familyId": "fiber", "tier": 6 },
-
-  { "id": "healing_herb", "name": "Healing Herb", "familyId": "herbs", "tier": 1 },
-  { "id": "bitterroot", "name": "Bitterroot", "familyId": "herbs", "tier": 2 },
-  { "id": "nightshade", "name": "Nightshade", "familyId": "herbs", "tier": 3 },
-  { "id": "fireleaf", "name": "Fireleaf", "familyId": "herbs", "tier": 4 },
-  { "id": "starblossom", "name": "Starblossom", "familyId": "herbs", "tier": 5 },
-  { "id": "dreamcap", "name": "Dreamcap", "familyId": "herbs", "tier": 6 },
-
-  { "id": "rabbit_meat", "name": "Rabbit Meat", "familyId": "meat", "tier": 1 },
-  { "id": "boar_meat", "name": "Boar Meat", "familyId": "meat", "tier": 2 },
-  { "id": "elk_meat", "name": "Elk Meat", "familyId": "meat", "tier": 3 },
-  { "id": "griffin_meat", "name": "Griffin Meat", "familyId": "meat", "tier": 4 },
-  { "id": "wyvern_meat", "name": "Wyvern Meat", "familyId": "meat", "tier": 5 },
-  { "id": "dragon_meat", "name": "Dragon Meat", "familyId": "meat", "tier": 6 },
-
-  { "id": "grain", "name": "Grain", "familyId": "harvest", "tier": 1 },
-  { "id": "root_vegetable", "name": "Root Vegetable", "familyId": "harvest", "tier": 2 },
-  { "id": "wild_mushroom", "name": "Wild Mushroom", "familyId": "harvest", "tier": 3 },
-  { "id": "orchard_fruit", "name": "Orchard Fruit", "familyId": "harvest", "tier": 4 },
-  { "id": "honeycomb", "name": "Honeycomb", "familyId": "harvest", "tier": 5 },
-  { "id": "ambrosia", "name": "Ambrosia", "familyId": "harvest", "tier": 6 },
-
-  { "id": "quartz_crystal", "name": "Quartz Crystal", "familyId": "crystal", "tier": 1 },
-  { "id": "amethyst_crystal", "name": "Amethyst Crystal", "familyId": "crystal", "tier": 2 },
-  { "id": "sapphire_crystal", "name": "Sapphire Crystal", "familyId": "crystal", "tier": 3 },
-  { "id": "ruby_crystal", "name": "Ruby Crystal", "familyId": "crystal", "tier": 4 },
-  { "id": "mana_crystal", "name": "Mana Crystal", "familyId": "crystal", "tier": 5 },
-  { "id": "astral_crystal", "name": "Astral Crystal", "familyId": "crystal", "tier": 6 },
-
-  { "id": "rabbit_hide", "name": "Rabbit Hide", "familyId": "hide", "tier": 1 },
-  { "id": "fox_hide", "name": "Fox Hide", "familyId": "hide", "tier": 2 },
-  { "id": "wolf_hide", "name": "Wolf Hide", "familyId": "hide", "tier": 3 },
-  { "id": "warg_hide", "name": "Warg Hide", "familyId": "hide", "tier": 4 },
-  { "id": "fenrir_hide", "name": "Fenrir Hide", "familyId": "hide", "tier": 5 },
-  { "id": "frostmane_hide", "name": "Frostmane Hide", "familyId": "hide", "tier": 6 },
-
-  { "id": "deer_skin", "name": "Deer Skin", "familyId": "skin", "tier": 1 },
-  { "id": "goat_skin", "name": "Goat Skin", "familyId": "skin", "tier": 2 },
-  { "id": "elk_skin", "name": "Elk Skin", "familyId": "skin", "tier": 3 },
-  { "id": "manticore_skin", "name": "Manticore Skin", "familyId": "skin", "tier": 4 },
-  { "id": "wyvern_skin", "name": "Wyvern Skin", "familyId": "skin", "tier": 5 },
-  { "id": "phoenix_skin", "name": "Phoenix Skin", "familyId": "skin", "tier": 6 },
-
-  { "id": "sparrow_feather", "name": "Sparrow Feather", "familyId": "feather", "tier": 1 },
-  { "id": "owl_feather", "name": "Owl Feather", "familyId": "feather", "tier": 2 },
-  { "id": "hawk_feather", "name": "Hawk Feather", "familyId": "feather", "tier": 3 },
-  { "id": "phoenix_feather", "name": "Phoenix Feather", "familyId": "feather", "tier": 4 },
-  { "id": "roc_feather", "name": "Roc Feather", "familyId": "feather", "tier": 5 },
-  { "id": "celestial_feather", "name": "Celestial Feather", "familyId": "feather", "tier": 6 },
-
-  { "id": "rat_ear", "name": "Rat Ear", "familyId": "monster_part", "tier": 1 },
-  { "id": "troll_fat", "name": "Troll Fat", "familyId": "monster_part", "tier": 2 },
-  { "id": "basilisk_eye", "name": "Basilisk Eye", "familyId": "monster_part", "tier": 3 },
-  { "id": "wyvern_tail", "name": "Wyvern Tail", "familyId": "monster_part", "tier": 4 },
-  { "id": "gorgon_scale", "name": "Gorgon Scale", "familyId": "monster_part", "tier": 5 },
-  { "id": "umbral_heart", "name": "Umbral Heart", "familyId": "monster_part", "tier": 6 },
-
-  { "id": "common_clay", "name": "Common Clay", "familyId": "clay", "tier": 1 },
-  { "id": "red_clay", "name": "Red Clay", "familyId": "clay", "tier": 2 },
-  { "id": "fire_clay", "name": "Fire Clay", "familyId": "clay", "tier": 3 },
-  { "id": "porcelain_clay", "name": "Porcelain Clay", "familyId": "clay", "tier": 4 },
-  { "id": "spirit_clay", "name": "Spirit Clay", "familyId": "clay", "tier": 5 },
-  { "id": "worldclay", "name": "Worldclay", "familyId": "clay", "tier": 6 },
-
-  { "id": "river_sand", "name": "River Sand", "familyId": "sand", "tier": 1 },
-  { "id": "white_sand", "name": "White Sand", "familyId": "sand", "tier": 2 },
-  { "id": "quartz_sand", "name": "Quartz Sand", "familyId": "sand", "tier": 3 },
-  { "id": "obsidian_sand", "name": "Obsidian Sand", "familyId": "sand", "tier": 4 },
-  { "id": "moonlit_sand", "name": "Moonlit Sand", "familyId": "sand", "tier": 5 },
-  { "id": "astral_sand", "name": "Astral Sand", "familyId": "sand", "tier": 6 },
-
-  { "id": "river_reed", "name": "River Reed", "familyId": "reed", "tier": 1 },
-  { "id": "marsh_reed", "name": "Marsh Reed", "familyId": "reed", "tier": 2 },
-  { "id": "papyrus_reed", "name": "Papyrus Reed", "familyId": "reed", "tier": 3 },
-  { "id": "silverreed", "name": "Silverreed", "familyId": "reed", "tier": 4 },
-  { "id": "starreed", "name": "Starreed", "familyId": "reed", "tier": 5 },
-  { "id": "worldreed", "name": "Worldreed", "familyId": "reed", "tier": 6 },
-
-  { "id": "weak_venom", "name": "Weak Venom", "familyId": "venom", "tier": 1 },
-  { "id": "serpent_venom", "name": "Serpent Venom", "familyId": "venom", "tier": 2 },
-  { "id": "spider_venom", "name": "Spider Venom", "familyId": "venom", "tier": 3 },
-  { "id": "basilisk_venom", "name": "Basilisk Venom", "familyId": "venom", "tier": 4 },
-  { "id": "wyvern_venom", "name": "Wyvern Venom", "familyId": "venom", "tier": 5 },
-  { "id": "void_venom", "name": "Void Venom", "familyId": "venom", "tier": 6 },
-
-  { "id": "common_pigment", "name": "Common Pigment", "familyId": "pigment", "tier": 1 },
-  { "id": "plant_dye", "name": "Plant Dye", "familyId": "pigment", "tier": 2 },
-  { "id": "mineral_pigment", "name": "Mineral Pigment", "familyId": "pigment", "tier": 3 },
-  { "id": "rare_pigment", "name": "Rare Pigment", "familyId": "pigment", "tier": 4 },
-  { "id": "phoenix_ash_pigment", "name": "Phoenix Ash Pigment", "familyId": "pigment", "tier": 5 },
-  { "id": "chromatic_pigment", "name": "Chromatic Pigment", "familyId": "pigment", "tier": 6 },
-
-  { "id": "faint_essence", "name": "Faint Essence", "familyId": "essence", "tier": 1 },
-  { "id": "elemental_essence", "name": "Elemental Essence", "familyId": "essence", "tier": 2 },
-  { "id": "spirit_essence", "name": "Spirit Essence", "familyId": "essence", "tier": 3 },
-  { "id": "planar_essence", "name": "Planar Essence", "familyId": "essence", "tier": 4 },
-  { "id": "primordial_essence", "name": "Primordial Essence", "familyId": "essence", "tier": 5 },
-  { "id": "void_essence", "name": "Void Essence", "familyId": "essence", "tier": 6 },
-
-  { "id": "rusty_gearwork", "name": "Rusty Gearwork", "familyId": "clockwork", "tier": 1 },
-  { "id": "bronze_clockwork", "name": "Bronze Clockwork", "familyId": "clockwork", "tier": 2 },
-  { "id": "precision_gearwork", "name": "Precision Gearwork", "familyId": "clockwork", "tier": 3 },
-  { "id": "runic_clockwork", "name": "Runic Clockwork", "familyId": "clockwork", "tier": 4 },
-  { "id": "arcane_clockwork", "name": "Arcane Clockwork", "familyId": "clockwork", "tier": 5 },
-  { "id": "worldforge_mechanism", "name": "Worldforge Mechanism", "familyId": "clockwork", "tier": 6 },
-
-  { "id": "stream_minnow", "name": "Stream Minnow", "familyId": "fish", "tier": 1 },
-  { "id": "river_trout", "name": "River Trout", "familyId": "fish", "tier": 2 },
-  { "id": "sea_salmon", "name": "Sea Salmon", "familyId": "fish", "tier": 3 },
-  { "id": "runic_eel", "name": "Runic Eel", "familyId": "fish", "tier": 4 },
-  { "id": "umbral_anglerfish", "name": "Umbral Anglerfish", "familyId": "fish", "tier": 5 },
-  { "id": "abyssal_leviathan", "name": "Abyssal Leviathan", "familyId": "fish", "tier": 6 }
+  {
+    "id": "copper_ore",
+    "name": "Copper Ore",
+    "familyId": "ore",
+    "tier": 1,
+    "description": "A rough chunk of oxidized copper ore, deep verdigris-green with warm orange metal seams.",
+    "icon": "/images/items/ore_t1.png"
+  },
+  {
+    "id": "bronze_ore",
+    "name": "Bronze Ore",
+    "familyId": "ore",
+    "tier": 2,
+    "description": "A rough chunk of bronze ore, muted amber-brown with a dense metallic core.",
+    "icon": "/images/items/ore_t2.png"
+  },
+  {
+    "id": "iron_ore",
+    "name": "Iron Ore",
+    "familyId": "ore",
+    "tier": 3,
+    "description": "A rough chunk of iron ore, dark steel-gray with dull rust flecks and a heavy, solid feel.",
+    "icon": "/images/items/ore_t3.png"
+  },
+  {
+    "id": "silver_ore",
+    "name": "Silver Ore",
+    "familyId": "ore",
+    "tier": 4,
+    "description": "A rough chunk of silver ore, pale moonlit gray with bright cool highlights and a clean shine.",
+    "icon": "/images/items/ore_t4.png"
+  },
+  {
+    "id": "gold_ore",
+    "name": "Gold Ore",
+    "familyId": "ore",
+    "tier": 5,
+    "description": "A rough chunk of gold ore, rich royal gold with gleaming sunlit edges.",
+    "icon": "/images/items/ore_t5.png"
+  },
+  {
+    "id": "star_metal_ore",
+    "name": "Star Metal Ore",
+    "familyId": "ore",
+    "tier": 6,
+    "description": "A rough chunk of star metal ore, deep cosmic violet-steel with faint starlike glints and a radiant core.",
+    "icon": "/images/items/ore_t6.png"
+  },
+  {
+    "id": "pine_wood",
+    "name": "Pine Wood",
+    "familyId": "wood",
+    "tier": 1,
+    "description": "A short pine log segment with fresh pale bark, straight grain, and a faint resin sheen.",
+    "icon": "/images/items/wood_t1.png"
+  },
+  {
+    "id": "oak_wood",
+    "name": "Oak Wood",
+    "familyId": "wood",
+    "tier": 2,
+    "description": "A short oak log segment with sturdy brown bark and dense rings.",
+    "icon": "/images/items/wood_t2.png"
+  },
+  {
+    "id": "ash_wood",
+    "name": "Ash Wood",
+    "familyId": "wood",
+    "tier": 3,
+    "description": "A short ash log segment with light gray bark and fine pale grain.",
+    "icon": "/images/items/wood_t3.png"
+  },
+  {
+    "id": "cedar_wood",
+    "name": "Cedar Wood",
+    "familyId": "wood",
+    "tier": 4,
+    "description": "A short cedar log segment with warm red-brown bark and fragrant-looking grain.",
+    "icon": "/images/items/wood_t4.png"
+  },
+  {
+    "id": "ebony_wood",
+    "name": "Ebony Wood",
+    "familyId": "wood",
+    "tier": 5,
+    "description": "A short ebony log segment with dark black-brown bark, polished deep grain, and a noble appearance.",
+    "icon": "/images/items/wood_t5.png"
+  },
+  {
+    "id": "worldroot_wood",
+    "name": "Worldroot Wood",
+    "familyId": "wood",
+    "tier": 6,
+    "description": "A short worldroot log segment with ancient bark and glowing emerald veins.",
+    "icon": "/images/items/wood_t6.png"
+  },
+  {
+    "id": "rough_stone",
+    "name": "Rough Stone",
+    "familyId": "stone",
+    "tier": 1,
+    "description": "A jagged stone fragment, pale gray and weathered with sharp edges.",
+    "icon": "/images/items/stone_t1.png"
+  },
+  {
+    "id": "granite",
+    "name": "Granite",
+    "familyId": "stone",
+    "tier": 2,
+    "description": "A jagged granite fragment, speckled gray with black flecks and a dense, firm texture.",
+    "icon": "/images/items/stone_t2.png"
+  },
+  {
+    "id": "marble",
+    "name": "Marble",
+    "familyId": "stone",
+    "tier": 3,
+    "description": "A jagged marble fragment, white stone with soft gray veins and an elegant cut.",
+    "icon": "/images/items/stone_t3.png"
+  },
+  {
+    "id": "deepslate",
+    "name": "Deepslate",
+    "familyId": "stone",
+    "tier": 4,
+    "description": "A jagged deepslate fragment, dark slate-blue stone with a heavy subterranean feel.",
+    "icon": "/images/items/stone_t4.png"
+  },
+  {
+    "id": "basalt",
+    "name": "Basalt",
+    "familyId": "stone",
+    "tier": 5,
+    "description": "A jagged basalt fragment, volcanic black stone with subtle smoky highlights.",
+    "icon": "/images/items/stone_t5.png"
+  },
+  {
+    "id": "worldstone",
+    "name": "Worldstone",
+    "familyId": "stone",
+    "tier": 6,
+    "description": "A jagged worldstone fragment, ancient pale stone with faint glowing runes.",
+    "icon": "/images/items/stone_t6.png"
+  },
+  {
+    "id": "small_bone",
+    "name": "Small Bone",
+    "familyId": "bone",
+    "tier": 1,
+    "description": "A small clean bone shard, ivory-white and lightly worn.",
+    "icon": "/images/items/bone_t1.png"
+  },
+  {
+    "id": "large_bone",
+    "name": "Large Bone",
+    "familyId": "bone",
+    "tier": 2,
+    "description": "A larger bone shard, ivory-white with thicker curves and a heavier ancient look.",
+    "icon": "/images/items/bone_t2.png"
+  },
+  {
+    "id": "beast_bone",
+    "name": "Beast Bone",
+    "familyId": "bone",
+    "tier": 3,
+    "description": "A rugged beast bone shard, slightly yellowed with natural ridges and a feral, toothlike form.",
+    "icon": "/images/items/bone_t3.png"
+  },
+  {
+    "id": "monster_bone",
+    "name": "Monster Bone",
+    "familyId": "bone",
+    "tier": 4,
+    "description": "A darkened monster bone shard, cracked and savage with faintly sinister markings.",
+    "icon": "/images/items/bone_t4.png"
+  },
+  {
+    "id": "ancient_bone",
+    "name": "Ancient Bone",
+    "familyId": "bone",
+    "tier": 5,
+    "description": "A timeworn ancient bone shard, bleached ivory with etched age marks and a delicate relic feel.",
+    "icon": "/images/items/bone_t5.png"
+  },
+  {
+    "id": "dragon_bone",
+    "name": "Dragon Bone",
+    "familyId": "bone",
+    "tier": 6,
+    "description": "A legendary dragon bone shard, massive ivory-white with ember-tinted cracks and an arcane presence.",
+    "icon": "/images/items/bone_t6.png"
+  },
+  {
+    "id": "hemp_fiber",
+    "name": "Hemp Fiber",
+    "familyId": "fiber",
+    "tier": 1,
+    "description": "A small bundle of coarse hemp fibers, tan and rustic with a rough woven look.",
+    "icon": "/images/items/fiber_t1.png"
+  },
+  {
+    "id": "cotton_fiber",
+    "name": "Cotton Fiber",
+    "familyId": "fiber",
+    "tier": 2,
+    "description": "A small bundle of soft cotton fibers, bright white and fluffy with a gentle, clean texture.",
+    "icon": "/images/items/fiber_t2.png"
+  },
+  {
+    "id": "raw_wool",
+    "name": "Raw Wool",
+    "familyId": "fiber",
+    "tier": 3,
+    "description": "A small bundle of raw wool, creamy off-white with a thick fuzzy texture.",
+    "icon": "/images/items/fiber_t3.png"
+  },
+  {
+    "id": "raw_silk",
+    "name": "Raw Silk",
+    "familyId": "fiber",
+    "tier": 4,
+    "description": "A small bundle of raw silk threads, pale cream with a smooth lustrous sheen.",
+    "icon": "/images/items/fiber_t4.png"
+  },
+  {
+    "id": "shadow_fiber",
+    "name": "Shadow Fiber",
+    "familyId": "fiber",
+    "tier": 5,
+    "description": "A small bundle of shadow fiber, dark charcoal-black with a faint eerie sheen.",
+    "icon": "/images/items/fiber_t5.png"
+  },
+  {
+    "id": "moon_fiber",
+    "name": "Moon Fiber",
+    "familyId": "fiber",
+    "tier": 6,
+    "description": "A small bundle of moon fiber, silvery white with a soft pearly glow.",
+    "icon": "/images/items/fiber_t6.png"
+  },
+  {
+    "id": "healing_herb",
+    "name": "Healing Herb",
+    "familyId": "herbs",
+    "tier": 1,
+    "description": "A small bunch of fresh green healing herbs with simple leafy sprigs and a soft natural glow.",
+    "icon": "/images/items/herbs_t1.png"
+  },
+  {
+    "id": "bitterroot",
+    "name": "Bitterroot",
+    "familyId": "herbs",
+    "tier": 2,
+    "description": "A small bunch of bitterroot with pale roots and muted green leaves, harsh and earthy.",
+    "icon": "/images/items/herbs_t2.png"
+  },
+  {
+    "id": "nightshade",
+    "name": "Nightshade",
+    "familyId": "herbs",
+    "tier": 3,
+    "description": "A small bunch of nightshade with dark purple leaves and tiny black berries, sinister and elegant.",
+    "icon": "/images/items/herbs_t3.png"
+  },
+  {
+    "id": "fireleaf",
+    "name": "Fireleaf",
+    "familyId": "herbs",
+    "tier": 4,
+    "description": "A small bunch of fireleaf with red-orange leaves and a warm ember-like glow.",
+    "icon": "/images/items/herbs_t4.png"
+  },
+  {
+    "id": "starblossom",
+    "name": "Starblossom",
+    "familyId": "herbs",
+    "tier": 5,
+    "description": "A small bunch of starblossom flowers, pale blue-white petals with a faint celestial shimmer.",
+    "icon": "/images/items/herbs_t5.png"
+  },
+  {
+    "id": "dreamcap",
+    "name": "Dreamcap",
+    "familyId": "herbs",
+    "tier": 6,
+    "description": "A small cluster of dreamcap mushrooms, soft lavender caps with a misty magical glow.",
+    "icon": "/images/items/herbs_t6.png"
+  },
+  {
+    "id": "rabbit_meat",
+    "name": "Rabbit Meat",
+    "familyId": "meat",
+    "tier": 1,
+    "description": "A small cut of pale fresh rabbit meat, tender and lean with a clean rustic look.",
+    "icon": "/images/items/meat_t1.png"
+  },
+  {
+    "id": "boar_meat",
+    "name": "Boar Meat",
+    "familyId": "meat",
+    "tier": 2,
+    "description": "A small cut of dark boar meat, rich and hearty with a rugged wild-hunt appearance.",
+    "icon": "/images/items/meat_t2.png"
+  },
+  {
+    "id": "elk_meat",
+    "name": "Elk Meat",
+    "familyId": "meat",
+    "tier": 3,
+    "description": "A small cut of deep red elk meat, bold and noble with a woodland-game feel.",
+    "icon": "/images/items/meat_t3.png"
+  },
+  {
+    "id": "griffin_meat",
+    "name": "Griffin Meat",
+    "familyId": "meat",
+    "tier": 4,
+    "description": "A rare cut of golden-tinted griffin meat, majestic with a mythical hunt aura.",
+    "icon": "/images/items/meat_t4.png"
+  },
+  {
+    "id": "wyvern_meat",
+    "name": "Wyvern Meat",
+    "familyId": "meat",
+    "tier": 5,
+    "description": "A dangerous cut of wyvern meat, tough and dark with a faintly scaled, draconic impression.",
+    "icon": "/images/items/meat_t5.png"
+  },
+  {
+    "id": "dragon_meat",
+    "name": "Dragon Meat",
+    "familyId": "meat",
+    "tier": 6,
+    "description": "An exceptional cut of dragon meat, richly crimson and arcane with a powerful legendary presence.",
+    "icon": "/images/items/meat_t6.png"
+  },
+  {
+    "id": "grain",
+    "name": "Grain",
+    "familyId": "harvest",
+    "tier": 1,
+    "description": "A small bundle of golden grain heads, dry and harvest-bright with a wholesome farmstead feel.",
+    "icon": "/images/items/harvest_t1.png"
+  },
+  {
+    "id": "root_vegetable",
+    "name": "Root Vegetable",
+    "familyId": "harvest",
+    "tier": 2,
+    "description": "A small cluster of earthy root vegetables, knobby and fresh with a sturdy field-harvest look.",
+    "icon": "/images/items/harvest_t2.png"
+  },
+  {
+    "id": "wild_mushroom",
+    "name": "Wild Mushroom",
+    "familyId": "harvest",
+    "tier": 3,
+    "description": "A small cluster of wild mushrooms, organic and foraged with a forest-floor mystique.",
+    "icon": "/images/items/harvest_t3.png"
+  },
+  {
+    "id": "orchard_fruit",
+    "name": "Orchard Fruit",
+    "familyId": "harvest",
+    "tier": 4,
+    "description": "A small cluster of ripe orchard fruit, round and sun-kissed with a sweet cultivated glow.",
+    "icon": "/images/items/harvest_t4.png"
+  },
+  {
+    "id": "honeycomb",
+    "name": "Honeycomb",
+    "familyId": "harvest",
+    "tier": 5,
+    "description": "A small golden honeycomb piece, waxy and glistening with a rich sticky sweetness.",
+    "icon": "/images/items/harvest_t5.png"
+  },
+  {
+    "id": "ambrosia",
+    "name": "Ambrosia",
+    "familyId": "harvest",
+    "tier": 6,
+    "description": "A small radiant offering of ambrosia, luminous and divine with a shimmering mythical sweetness.",
+    "icon": "/images/items/harvest_t6.png"
+  },
+  {
+    "id": "quartz_crystal",
+    "name": "Quartz Crystal",
+    "familyId": "crystal",
+    "tier": 1,
+    "description": "A clear quartz crystal shard, translucent and clean with sharp prismatic facets.",
+    "icon": "/images/items/crystal_t1.png"
+  },
+  {
+    "id": "amethyst_crystal",
+    "name": "Amethyst Crystal",
+    "familyId": "crystal",
+    "tier": 2,
+    "description": "A violet amethyst crystal shard, regal and mystical with a soft enchanted gleam.",
+    "icon": "/images/items/crystal_t2.png"
+  },
+  {
+    "id": "sapphire_crystal",
+    "name": "Sapphire Crystal",
+    "familyId": "crystal",
+    "tier": 3,
+    "description": "A deep blue sapphire crystal shard, cool and noble with oceanic brilliance.",
+    "icon": "/images/items/crystal_t3.png"
+  },
+  {
+    "id": "ruby_crystal",
+    "name": "Ruby Crystal",
+    "familyId": "crystal",
+    "tier": 4,
+    "description": "A fiery red ruby crystal shard, vivid and precious with a passionate inner glow.",
+    "icon": "/images/items/crystal_t4.png"
+  },
+  {
+    "id": "mana_crystal",
+    "name": "Mana Crystal",
+    "familyId": "crystal",
+    "tier": 5,
+    "description": "A bright arcane crystal shard, glowing with pure magical energy and a faint swirling aura.",
+    "icon": "/images/items/crystal_t5.png"
+  },
+  {
+    "id": "astral_crystal",
+    "name": "Astral Crystal",
+    "familyId": "crystal",
+    "tier": 6,
+    "description": "A celestial crystal shard, shimmering with starlight hues and cosmic radiance.",
+    "icon": "/images/items/crystal_t6.png"
+  },
+  {
+    "id": "rabbit_hide",
+    "name": "Rabbit Hide",
+    "familyId": "hide",
+    "tier": 1,
+    "description": "A small piece of soft rabbit hide, pale and supple with a delicate woodland texture.",
+    "icon": "/images/items/hide_t1.png"
+  },
+  {
+    "id": "fox_hide",
+    "name": "Fox Hide",
+    "familyId": "hide",
+    "tier": 2,
+    "description": "A small piece of sleek fox hide, russet and fine with a nimble predator's elegance.",
+    "icon": "/images/items/hide_t2.png"
+  },
+  {
+    "id": "wolf_hide",
+    "name": "Wolf Hide",
+    "familyId": "hide",
+    "tier": 3,
+    "description": "A small piece of rugged wolf hide, gray-brown and strong with a wild northern look.",
+    "icon": "/images/items/hide_t3.png"
+  },
+  {
+    "id": "warg_hide",
+    "name": "Warg Hide",
+    "familyId": "hide",
+    "tier": 4,
+    "description": "A large piece of heavy warg hide, dark and coarse with a savage beastly toughness.",
+    "icon": "/images/items/hide_t4.png"
+  },
+  {
+    "id": "fenrir_hide",
+    "name": "Fenrir Hide",
+    "familyId": "hide",
+    "tier": 5,
+    "description": "A legendary piece of ancient wolf hide, shadow-gray and immense with a frost-cursed aura.",
+    "icon": "/images/items/hide_t5.png"
+  },
+  {
+    "id": "frostmane_hide",
+    "name": "Frostmane Hide",
+    "familyId": "hide",
+    "tier": 6,
+    "description": "A rare piece of frostmane hide, icy white and thick with a chilling alpine majesty.",
+    "icon": "/images/items/hide_t6.png"
+  },
+  {
+    "id": "deer_skin",
+    "name": "Deer Skin",
+    "familyId": "skin",
+    "tier": 1,
+    "description": "A smooth piece of deer skin, light tan and refined with a gentle forest-game feel.",
+    "icon": "/images/items/skin_t1.png"
+  },
+  {
+    "id": "goat_skin",
+    "name": "Goat Skin",
+    "familyId": "skin",
+    "tier": 2,
+    "description": "A sturdy piece of goat skin, pale and weathered with a hardy mountain-crafted look.",
+    "icon": "/images/items/skin_t2.png"
+  },
+  {
+    "id": "elk_skin",
+    "name": "Elk Skin",
+    "familyId": "skin",
+    "tier": 3,
+    "description": "A broad piece of elk skin, rich brown and durable with a noble woodland presence.",
+    "icon": "/images/items/skin_t3.png"
+  },
+  {
+    "id": "manticore_skin",
+    "name": "Manticore Skin",
+    "familyId": "skin",
+    "tier": 4,
+    "description": "A rare manticore skin, tough and exotic with a dangerous striped-beast texture.",
+    "icon": "/images/items/skin_t4.png"
+  },
+  {
+    "id": "wyvern_skin",
+    "name": "Wyvern Skin",
+    "familyId": "skin",
+    "tier": 5,
+    "description": "A scaled wyvern skin, leathery and formidable with draconic ridges and a dark sheen.",
+    "icon": "/images/items/skin_t5.png"
+  },
+  {
+    "id": "phoenix_skin",
+    "name": "Phoenix Skin",
+    "familyId": "skin",
+    "tier": 6,
+    "description": "A sacred phoenix skin, radiant and feather-soft with ember-gold warmth and mythic brilliance.",
+    "icon": "/images/items/skin_t6.png"
+  },
+  {
+    "id": "sparrow_feather",
+    "name": "Sparrow Feather",
+    "familyId": "feather",
+    "tier": 1,
+    "description": "A small delicate sparrow feather, light tan and airy with a simple wind-touched grace.",
+    "icon": "/images/items/feather_t1.png"
+  },
+  {
+    "id": "owl_feather",
+    "name": "Owl Feather",
+    "familyId": "feather",
+    "tier": 2,
+    "description": "A soft owl feather, muted gray-brown and velvety with a quiet nocturnal elegance.",
+    "icon": "/images/items/feather_t2.png"
+  },
+  {
+    "id": "hawk_feather",
+    "name": "Hawk Feather",
+    "familyId": "feather",
+    "tier": 3,
+    "description": "A sleek hawk feather, sharp brown and amber with a proud raptor's edge.",
+    "icon": "/images/items/feather_t3.png"
+  },
+  {
+    "id": "phoenix_feather",
+    "name": "Phoenix Feather",
+    "familyId": "feather",
+    "tier": 4,
+    "description": "A radiant phoenix feather, glowing gold-red with ember-bright brilliance and a sacred aura.",
+    "icon": "/images/items/feather_t4.png"
+  },
+  {
+    "id": "roc_feather",
+    "name": "Roc Feather",
+    "familyId": "feather",
+    "tier": 5,
+    "description": "A massive roc feather, bold and storm-touched with deep earth tones and a mighty skyborn presence.",
+    "icon": "/images/items/feather_t5.png"
+  },
+  {
+    "id": "celestial_feather",
+    "name": "Celestial Feather",
+    "familyId": "feather",
+    "tier": 6,
+    "description": "A luminous celestial feather, pearly white with starlit shimmer and an otherworldly divine glow.",
+    "icon": "/images/items/feather_t6.png"
+  },
+  {
+    "id": "rat_ear",
+    "name": "Rat Ear",
+    "familyId": "monster_part",
+    "tier": 1,
+    "description": "A small grim rat ear, thin and slightly tattered with a gnarly scavenger's look.",
+    "icon": "/images/items/monster_part_t1.png"
+  },
+  {
+    "id": "troll_fat",
+    "name": "Troll Fat",
+    "familyId": "monster_part",
+    "tier": 2,
+    "description": "A lumpy greenish troll fat chunk, thick and greasy with a crude monstrous texture.",
+    "icon": "/images/items/monster_part_t2.png"
+  },
+  {
+    "id": "basilisk_eye",
+    "name": "Basilisk Eye",
+    "familyId": "monster_part",
+    "tier": 3,
+    "description": "A slick basilisk eye, glassy and sinister with a poisonous serpentine gleam.",
+    "icon": "/images/items/monster_part_t3.png"
+  },
+  {
+    "id": "wyvern_tail",
+    "name": "Wyvern Tail",
+    "familyId": "monster_part",
+    "tier": 4,
+    "description": "A severed wyvern tail, scaled and spined with a dangerous draconic curve.",
+    "icon": "/images/items/monster_part_t4.png"
+  },
+  {
+    "id": "gorgon_scale",
+    "name": "Gorgon Scale",
+    "familyId": "monster_part",
+    "tier": 5,
+    "description": "A dark gorgon scale, hard and polished with a stone-cursed sheen.",
+    "icon": "/images/items/monster_part_t5.png"
+  },
+  {
+    "id": "umbral_heart",
+    "name": "Umbral Heart",
+    "familyId": "monster_part",
+    "tier": 6,
+    "description": "A shadow-wreathed umbral heart, black and pulsing with a faint eerie glow.",
+    "icon": "/images/items/monster_part_t6.png"
+  },
+  {
+    "id": "common_clay",
+    "name": "Common Clay",
+    "familyId": "clay",
+    "tier": 1,
+    "description": "A small lump of common clay, earthy brown and plain with a soft moldable texture.",
+    "icon": "/images/items/clay_t1.png"
+  },
+  {
+    "id": "red_clay",
+    "name": "Red Clay",
+    "familyId": "clay",
+    "tier": 2,
+    "description": "A small lump of red clay, warm terracotta and rustic with a kiln-ready feel.",
+    "icon": "/images/items/clay_t2.png"
+  },
+  {
+    "id": "fire_clay",
+    "name": "Fire Clay",
+    "familyId": "clay",
+    "tier": 3,
+    "description": "A small lump of fire clay, deep ember-orange and heat-hardened with a furnace-born look.",
+    "icon": "/images/items/clay_t3.png"
+  },
+  {
+    "id": "porcelain_clay",
+    "name": "Porcelain Clay",
+    "familyId": "clay",
+    "tier": 4,
+    "description": "A small lump of porcelain clay, pale white and fine with a smooth refined finish.",
+    "icon": "/images/items/clay_t4.png"
+  },
+  {
+    "id": "spirit_clay",
+    "name": "Spirit Clay",
+    "familyId": "clay",
+    "tier": 5,
+    "description": "A small lump of spirit clay, misty blue-gray and softly glowing with an ethereal aura.",
+    "icon": "/images/items/clay_t5.png"
+  },
+  {
+    "id": "worldclay",
+    "name": "Worldclay",
+    "familyId": "clay",
+    "tier": 6,
+    "description": "A small lump of worldclay, ancient green-brown and rune-tinged with a primordial sacred presence.",
+    "icon": "/images/items/clay_t6.png"
+  },
+  {
+    "id": "river_sand",
+    "name": "River Sand",
+    "familyId": "sand",
+    "tier": 1,
+    "description": "A small pile of river sand, fine and pale with a wet sparkling softness.",
+    "icon": "/images/items/sand_t1.png"
+  },
+  {
+    "id": "white_sand",
+    "name": "White Sand",
+    "familyId": "sand",
+    "tier": 2,
+    "description": "A small pile of white sand, bright and clean with a sunlit desert purity.",
+    "icon": "/images/items/sand_t2.png"
+  },
+  {
+    "id": "quartz_sand",
+    "name": "Quartz Sand",
+    "familyId": "sand",
+    "tier": 3,
+    "description": "A small pile of quartz sand, translucent and glittering with crystalline flecks.",
+    "icon": "/images/items/sand_t3.png"
+  },
+  {
+    "id": "obsidian_sand",
+    "name": "Obsidian Sand",
+    "familyId": "sand",
+    "tier": 4,
+    "description": "A small pile of obsidian sand, black and glassy with a volcanic razor-fine shimmer.",
+    "icon": "/images/items/sand_t4.png"
+  },
+  {
+    "id": "moonlit_sand",
+    "name": "Moonlit Sand",
+    "familyId": "sand",
+    "tier": 5,
+    "description": "A small pile of moonlit sand, silver-blue and softly glowing with a nocturnal shimmer.",
+    "icon": "/images/items/sand_t5.png"
+  },
+  {
+    "id": "astral_sand",
+    "name": "Astral Sand",
+    "familyId": "sand",
+    "tier": 6,
+    "description": "A small pile of astral sand, starlit and iridescent with a cosmic sparkle.",
+    "icon": "/images/items/sand_t6.png"
+  },
+  {
+    "id": "river_reed",
+    "name": "River Reed",
+    "familyId": "reed",
+    "tier": 1,
+    "description": "A slender bundle of river reeds, green and water-fed with a fresh marshbank feel.",
+    "icon": "/images/items/reed_t1.png"
+  },
+  {
+    "id": "marsh_reed",
+    "name": "Marsh Reed",
+    "familyId": "reed",
+    "tier": 2,
+    "description": "A slender bundle of marsh reeds, muted olive and damp with a swampy wetland texture.",
+    "icon": "/images/items/reed_t2.png"
+  },
+  {
+    "id": "papyrus_reed",
+    "name": "Papyrus Reed",
+    "familyId": "reed",
+    "tier": 3,
+    "description": "A slender bundle of papyrus reeds, tall and papery with an ancient scholarly elegance.",
+    "icon": "/images/items/reed_t3.png"
+  },
+  {
+    "id": "silverreed",
+    "name": "Silverreed",
+    "familyId": "reed",
+    "tier": 4,
+    "description": "A slender bundle of silverreed, pale metallic and shimmering with an enchanted sheen.",
+    "icon": "/images/items/reed_t4.png"
+  },
+  {
+    "id": "starreed",
+    "name": "Starreed",
+    "familyId": "reed",
+    "tier": 5,
+    "description": "A slender bundle of starreed, glowing faintly with blue-white starlight and a celestial marsh aura.",
+    "icon": "/images/items/reed_t5.png"
+  },
+  {
+    "id": "worldreed",
+    "name": "Worldreed",
+    "familyId": "reed",
+    "tier": 6,
+    "description": "A slender bundle of worldreed, deep green and rune-touched with a primordial sacred presence.",
+    "icon": "/images/items/reed_t6.png"
+  },
+  {
+    "id": "weak_venom",
+    "name": "Weak Venom",
+    "familyId": "venom",
+    "tier": 1,
+    "description": "A small vial of pale toxic venom, thin and unstable with a faint greenish gleam.",
+    "icon": "/images/items/venom_t1.png"
+  },
+  {
+    "id": "serpent_venom",
+    "name": "Serpent Venom",
+    "familyId": "venom",
+    "tier": 2,
+    "description": "A small vial of serpent venom, slick and virulent with a rich jade tint.",
+    "icon": "/images/items/venom_t2.png"
+  },
+  {
+    "id": "spider_venom",
+    "name": "Spider Venom",
+    "familyId": "venom",
+    "tier": 3,
+    "description": "A small vial of spider venom, dark and glistening with a tar-like sheen.",
+    "icon": "/images/items/venom_t3.png"
+  },
+  {
+    "id": "basilisk_venom",
+    "name": "Basilisk Venom",
+    "familyId": "venom",
+    "tier": 4,
+    "description": "A small vial of basilisk venom, glassy and emerald-black with a petrifying mystical aura.",
+    "icon": "/images/items/venom_t4.png"
+  },
+  {
+    "id": "wyvern_venom",
+    "name": "Wyvern Venom",
+    "familyId": "venom",
+    "tier": 5,
+    "description": "A small vial of wyvern venom, heavy and draconic with a smoky teal glow.",
+    "icon": "/images/items/venom_t5.png"
+  },
+  {
+    "id": "void_venom",
+    "name": "Void Venom",
+    "familyId": "venom",
+    "tier": 6,
+    "description": "A small vial of void venom, black and light-devouring with a cold starless shimmer.",
+    "icon": "/images/items/venom_t6.png"
+  },
+  {
+    "id": "common_pigment",
+    "name": "Common Pigment",
+    "familyId": "pigment",
+    "tier": 1,
+    "description": "A small pot of common pigment, muted earth-toned powder with a plain artisan's finish.",
+    "icon": "/images/items/pigment_t1.png"
+  },
+  {
+    "id": "plant_dye",
+    "name": "Plant Dye",
+    "familyId": "pigment",
+    "tier": 2,
+    "description": "A small pot of plant dye, soft leaf-green and naturally bright with a handcrafted herbal look.",
+    "icon": "/images/items/pigment_t2.png"
+  },
+  {
+    "id": "mineral_pigment",
+    "name": "Mineral Pigment",
+    "familyId": "pigment",
+    "tier": 3,
+    "description": "A small pot of mineral pigment, richly textured and stone-toned with an earthy brilliance.",
+    "icon": "/images/items/pigment_t3.png"
+  },
+  {
+    "id": "rare_pigment",
+    "name": "Rare Pigment",
+    "familyId": "pigment",
+    "tier": 4,
+    "description": "A small pot of rare pigment, vivid and finely milled with a jewel-like color intensity.",
+    "icon": "/images/items/pigment_t4.png"
+  },
+  {
+    "id": "phoenix_ash_pigment",
+    "name": "Phoenix Ash Pigment",
+    "familyId": "pigment",
+    "tier": 5,
+    "description": "A small pot of phoenix ash pigment, ember-gold and red with a sacred ash-laced glow.",
+    "icon": "/images/items/pigment_t5.png"
+  },
+  {
+    "id": "chromatic_pigment",
+    "name": "Chromatic Pigment",
+    "familyId": "pigment",
+    "tier": 6,
+    "description": "A small pot of chromatic pigment, iridescent and shifting through rainbow hues with a dazzling sheen.",
+    "icon": "/images/items/pigment_t6.png"
+  },
+  {
+    "id": "faint_essence",
+    "name": "Faint Essence",
+    "familyId": "essence",
+    "tier": 1,
+    "description": "A small vial of faint essence, barely luminous and wispy with a soft spectral haze.",
+    "icon": "/images/items/essence_t1.png"
+  },
+  {
+    "id": "elemental_essence",
+    "name": "Elemental Essence",
+    "familyId": "essence",
+    "tier": 2,
+    "description": "A small vial of elemental essence, swirling with fire, frost, storm, or stone energy in a vivid primal glow.",
+    "icon": "/images/items/essence_t2.png"
+  },
+  {
+    "id": "spirit_essence",
+    "name": "Spirit Essence",
+    "familyId": "essence",
+    "tier": 3,
+    "description": "A small vial of spirit essence, pale and floating with a gentle ghostly radiance.",
+    "icon": "/images/items/essence_t3.png"
+  },
+  {
+    "id": "planar_essence",
+    "name": "Planar Essence",
+    "familyId": "essence",
+    "tier": 4,
+    "description": "A small vial of planar essence, shimmering with distant otherworldly colors and a thin rift-like aura.",
+    "icon": "/images/items/essence_t4.png"
+  },
+  {
+    "id": "primordial_essence",
+    "name": "Primordial Essence",
+    "familyId": "essence",
+    "tier": 5,
+    "description": "A small vial of primordial essence, ancient and dense with raw world-birth energy.",
+    "icon": "/images/items/essence_t5.png"
+  },
+  {
+    "id": "void_essence",
+    "name": "Void Essence",
+    "familyId": "essence",
+    "tier": 6,
+    "description": "A small vial of void essence, black-violet and abyssal with a cold cosmic pull and a lightless core.",
+    "icon": "/images/items/essence_t6.png"
+  },
+  {
+    "id": "rusty_gearwork",
+    "name": "Rusty Gearwork",
+    "familyId": "clockwork",
+    "tier": 1,
+    "description": "A small corroded gear assembly, red-brown and worn with a crude mechanical charm.",
+    "icon": "/images/items/clockwork_t1.png"
+  },
+  {
+    "id": "bronze_clockwork",
+    "name": "Bronze Clockwork",
+    "familyId": "clockwork",
+    "tier": 2,
+    "description": "A small polished bronze gear assembly, warm gold-brown and precise with a refined gleam.",
+    "icon": "/images/items/clockwork_t2.png"
+  },
+  {
+    "id": "precision_gearwork",
+    "name": "Precision Gearwork",
+    "familyId": "clockwork",
+    "tier": 3,
+    "description": "A small precision gear assembly, silver-steel and immaculate with fine interlocking teeth.",
+    "icon": "/images/items/clockwork_t3.png"
+  },
+  {
+    "id": "runic_clockwork",
+    "name": "Runic Clockwork",
+    "familyId": "clockwork",
+    "tier": 4,
+    "description": "A small runic gear assembly, engraved with glowing sigils and fine arcane engineering.",
+    "icon": "/images/items/clockwork_t4.png"
+  },
+  {
+    "id": "arcane_clockwork",
+    "name": "Arcane Clockwork",
+    "familyId": "clockwork",
+    "tier": 5,
+    "description": "A small arcane mechanism, luminous and intricate with swirling magic threaded through its gears.",
+    "icon": "/images/items/clockwork_t5.png"
+  },
+  {
+    "id": "worldforge_mechanism",
+    "name": "Worldforge Mechanism",
+    "familyId": "clockwork",
+    "tier": 6,
+    "description": "A legendary worldforge mechanism, ancient and immense in spirit with rune-lit brass and primordial power.",
+    "icon": "/images/items/clockwork_t6.png"
+  },
+  {
+    "id": "stream_minnow",
+    "name": "Stream Minnow",
+    "familyId": "fish",
+    "tier": 1,
+    "description": "A small silvery stream minnow, delicate and swift with a fresh-water shimmer.",
+    "icon": "/images/items/fish_t1.png"
+  },
+  {
+    "id": "river_trout",
+    "name": "River Trout",
+    "familyId": "fish",
+    "tier": 2,
+    "description": "A sleek river trout, spotted with a clean flowing-stream look.",
+    "icon": "/images/items/fish_t2.png"
+  },
+  {
+    "id": "sea_salmon",
+    "name": "Sea Salmon",
+    "familyId": "fish",
+    "tier": 3,
+    "description": "A sea salmon, deep pink-silver and muscular with a saltwater hunter's grace.",
+    "icon": "/images/items/fish_t3.png"
+  },
+  {
+    "id": "runic_eel",
+    "name": "Runic Eel",
+    "familyId": "fish",
+    "tier": 4,
+    "description": "A slender runic eel, glossy and elongated with glowing arcane markings along its body.",
+    "icon": "/images/items/fish_t4.png"
+  },
+  {
+    "id": "umbral_anglerfish",
+    "name": "Umbral Anglerfish",
+    "familyId": "fish",
+    "tier": 5,
+    "description": "A dark umbral anglerfish, sinister and deep-sea bound with a faint shadowy lure.",
+    "icon": "/images/items/fish_t5.png"
+  },
+  {
+    "id": "abyssal_leviathan",
+    "name": "Abyssal Leviathan",
+    "familyId": "fish",
+    "tier": 6,
+    "description": "A mythic abyssal leviathan, vast and dread-soaked with dark oceanic majesty.",
+    "icon": "/images/items/fish_t6.png"
+  }
 ]

@@ -26,6 +26,7 @@ export function getResourceCatalog(): Promise<ResourceTierInfo> {
           resourceFamily: string;
           category: "raw" | "processed";
           icon?: string | null;
+          description?: string;
         }>) => {
           const map: ResourceTierInfo = {};
           for (const item of data) {
@@ -35,6 +36,7 @@ export function getResourceCatalog(): Promise<ResourceTierInfo> {
               category: item.category,
               name: item.name,
               icon: item.icon ?? undefined,
+              description: item.description || undefined,
             };
           }
           return map;

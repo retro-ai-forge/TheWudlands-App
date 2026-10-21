@@ -39,7 +39,7 @@ export type BlueprintTierInfo = Record<
 >;
 export type ResourceTierInfo = Record<
   string,
-  { tier: number; family: string; category: "raw" | "processed"; name?: string; icon?: string }
+  { tier: number; family: string; category: "raw" | "processed"; name?: string; icon?: string; description?: string }
 >;
 
 // The raw shape returned by /me/characters and every check-in/check-out

@@ -504,6 +504,7 @@ class ResourceItemResponse(BaseModel):
     resourceFamily: str = Field(..., description="The resource family (ore, wood, stone, etc.)")
     category: str = Field(..., description="'raw' | 'processed' - derived from the entry's kind tuple")
     icon: Optional[str] = Field(None, description="Real per-unit art, when this family has any (e.g. oil, arrow, bolt)")
+    description: str = Field("", description="In-game flavor text for this resource")
 
 
 class ToolItemResponse(BaseModel):
@@ -938,6 +939,7 @@ async def get_resource_catalog():
             resourceFamily=entry.family_id,
             category="raw" if "raw_resource" in entry.kind else "processed",
             icon=entry.icon or None,
+            description=entry.description,
         )
         for entry in items_catalog.ITEM_CATALOG_ENTRIES
         if "raw_resource" in entry.kind or "processed" in entry.kind

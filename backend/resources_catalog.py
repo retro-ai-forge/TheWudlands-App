@@ -35,15 +35,19 @@ class ResourceItem:
     name: str
     family_id: str
     tier: int
+    description: str = ""
+    icon: str = ""
 
     def to_dict(self) -> dict:
-        return {"id": self.id, "name": self.name, "familyId": self.family_id, "tier": self.tier}
+        return {"id": self.id, "name": self.name, "familyId": self.family_id, "tier": self.tier,
+                "description": self.description, "icon": self.icon}
 
 
 def _load_catalog() -> tuple[ResourceItem, ...]:
     data = json.loads(_CATALOG_PATH.read_text())
     return tuple(
-        ResourceItem(id=item["id"], name=item["name"], family_id=item["familyId"], tier=item["tier"])
+        ResourceItem(id=item["id"], name=item["name"], family_id=item["familyId"], tier=item["tier"],
+                     description=item.get("description", ""), icon=item.get("icon", ""))
         for item in data
     )
 
