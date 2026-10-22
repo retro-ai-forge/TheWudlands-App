@@ -2489,9 +2489,9 @@ export function ResourcePopup({
             ItemDetailPopup gives a real item. */}
         {info?.icon && <ItemIcon icon={info.icon} alt={name} className={styles.itemPopupImg} />}
         <h3 className={styles.itemPopupName}>{owned} {name}</h3>
-        {flashMessage && (
-          <p className={`${styles.itemPopupDescription} ${styles.itemPopupFlash}`}>{flashMessage}</p>
-        )}
+        <p className={`${styles.itemPopupDescription} ${flashMessage ? styles.itemPopupFlash : ""}`}>
+          {flashMessage ?? (info?.description || "")}
+        </p>
         {destinations.map((dest) => (
           <TransferButtons
             key={dest.key}
@@ -3047,7 +3047,7 @@ export function ItemDetailPopup({
               />
             )}
             <p className={`${styles.itemPopupDescription} ${flashMessage ? styles.itemPopupFlash : ""}`}>
-              {flashMessage ?? (info?.description || "dummy")}
+              {flashMessage ?? (info?.description || "")}
             </p>
             {!!info?.gatheringBonuses?.length && (
               <p className={styles.itemPopupGathering}>

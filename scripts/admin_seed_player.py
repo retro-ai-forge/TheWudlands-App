@@ -34,7 +34,7 @@ from backend.db import get_database  # noqa: E402
 # Configuration
 # ---------------------------------------------------------------------------
 
-PLAYER_ADDRESS = "xxx"
+PLAYER_ADDRESS = "1sFxBUESH2ztJzRFvP4s7Ehc8Sj8sFxpMxgA985yud1Yz34"
 RAW_MATERIAL_QTY = 3000
 
 DROP_BLUEPRINTS = True
