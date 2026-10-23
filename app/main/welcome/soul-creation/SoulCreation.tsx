@@ -235,20 +235,28 @@ export function SoulCreation({
       return;
     }
 
+    // Build a quick id→familyId lookup from the pool items themselves,
+    // so blueprint_greatsword_1 resolves to blueprint_greatsword without
+    // needing every numbered variant in blueprintIdMapping.
+    const poolFamilyById: Record<string, string> = {};
+    for (const pool of trappingsOptions.blueprintPools) {
+      for (const item of pool.items) {
+        poolFamilyById[item.id] = item.familyId;
+      }
+    }
+
     const requiredIds = new Set<string>();
 
     for (const blueprintId of selectedBlueprintIds) {
-      // Map variant ID to family ID if needed
-      const familyId = blueprintIdMapping[blueprintId] || blueprintId;
+      const familyId = poolFamilyById[blueprintId] || blueprintIdMapping[blueprintId] || blueprintId;
       const materials = blueprintMaterials[familyId] || [];
       if (Array.isArray(materials)) {
-        // New format: array of raw material family IDs
         materials.forEach(materialId => requiredIds.add(materialId));
       }
     }
 
     setRequiredMaterialIds(requiredIds);
-  }, [blueprintSelections, blueprintMaterials, blueprintIdMapping]);
+  }, [blueprintSelections, blueprintMaterials, blueprintIdMapping, trappingsOptions.blueprintPools]);
 
   // The embedded recipe viewer's own content height, in px - the iframe is
   // same-origin, so its body height can be read directly and mirrored onto
