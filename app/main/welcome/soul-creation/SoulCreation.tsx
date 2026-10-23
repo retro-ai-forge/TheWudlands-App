@@ -59,6 +59,8 @@ type TrappingsItem = {
   name: string;
   familyId: string;
   tier: number;
+  icon?: string;
+  description?: string;
 };
 
 // One blueprintPoolsByProfessionCount rule (see resource-selection-rules.json),
@@ -207,6 +209,7 @@ export function SoulCreation({
   // Starter kit state — a single pre-built random resource allocation shown
   // after blueprint selection, with limited shuffles.
   const [starterKit, setStarterKit] = useState<Record<string, number> | null>(null);
+  const [starterKitPopupItem, setStarterKitPopupItem] = useState<TrappingsItem | null>(null);
   const [shufflesRemaining, setShufflesRemaining] = useState(3);
 
   // Load blueprint materials mapping once on mount
@@ -1375,7 +1378,7 @@ export function SoulCreation({
                           return (
                             <div key={slotKey} className={styles.trappingsRow}>
                               <select
-                                className={styles.trappingsBlueprintSelect}
+                                className={`${styles.trappingsBlueprintSelect}${value ? ` ${styles.trappingsBlueprintSelectChosen}` : ""}`}
                                 value={value}
                                 onChange={(e) =>
                                   setBlueprintSelections((prev) => ({ ...prev, [slotKey]: e.target.value }))
@@ -1408,23 +1411,39 @@ export function SoulCreation({
                       if (tierItems.length === 0) return null;
                       return (
                         <div key={tier} className={styles.starterKitTier}>
-                          <span className={styles.starterKitTierLabel}>
-                            {getTierIndicator(tier)}
-                          </span>
-                          {tierItems.map(item => {
-                            const isRelevant = requiredMaterialIds.has(item.familyId);
-                            return (
-                              <div key={item.id} className={styles.starterKitItem}>
-                                <span
-                                  className={styles.starterKitItemName}
-                                  style={isRelevant ? { color: "#4ade80", fontWeight: "bold" } : undefined}
+                          <div className={styles.starterKitTileRow}>
+                            {tierItems.map(item => {
+                              const qty = starterKit[item.id] ?? 0;
+                              const isRelevant = requiredMaterialIds.has(item.familyId);
+                              return (
+                                <button
+                                  key={item.id}
+                                  type="button"
+                                  className={`${styles.starterKitTile}${isRelevant ? ` ${styles.starterKitTileRelevant}` : ""}`}
+                                  onClick={() => setStarterKitPopupItem(item)}
                                 >
-                                  {item.name}
-                                </span>
-                                <span className={styles.starterKitItemQty}>&times;{starterKit[item.id]}</span>
-                              </div>
-                            );
-                          })}
+                                  {item.icon ? (
+                                    <div
+                                      className={styles.starterKitTileImg}
+                                      role="img"
+                                      aria-label={item.name}
+                                      style={{ backgroundImage: `url(${item.icon})` }}
+                                    />
+                                  ) : (
+                                    <span className={styles.starterKitTileLabel}>
+                                      {item.name.split(" ").pop()}
+                                    </span>
+                                  )}
+                                  <span className={styles.starterKitTileTier}>
+                                    {getTierIndicator(tier)}
+                                  </span>
+                                  {qty > 1 && (
+                                    <span className={styles.starterKitTileCount}>{qty}</span>
+                                  )}
+                                </button>
+                              );
+                            })}
+                          </div>
                         </div>
                       );
                     })}
@@ -1440,13 +1459,46 @@ export function SoulCreation({
                   )}
                 </>
               )}
+              {starterKitPopupItem && starterKit && (
+                <div
+                  className={styles.starterKitPopupOverlay}
+                  onClick={() => setStarterKitPopupItem(null)}
+                >
+                  <div className={styles.starterKitPopupCard}>
+                    {!!starterKitPopupItem.tier && (
+                      <span className={styles.starterKitPopupTier}>
+                        {getTierIndicator(starterKitPopupItem.tier)}
+                      </span>
+                    )}
+                    {starterKitPopupItem.icon && (
+                      <div
+                        className={styles.starterKitPopupImg}
+                        role="img"
+                        aria-label={starterKitPopupItem.name}
+                        style={{ backgroundImage: `url(${starterKitPopupItem.icon})` }}
+                      />
+                    )}
+                    <h3 className={styles.starterKitPopupName}>
+                      {starterKit[starterKitPopupItem.id] ?? 0} {starterKitPopupItem.name}
+                    </h3>
+                    {starterKitPopupItem.description && (
+                      <p className={styles.starterKitPopupDescription}>
+                        {starterKitPopupItem.description}
+                      </p>
+                    )}
+                  </div>
+                </div>
+              )}
               {submitError && <p className={styles.submitError}>{submitError}</p>}
               {recipeViewerSrc && (
                 <div style={{ width: "100%" }}>
                   <button
                     type="button"
                     className={styles.recipeViewerHeading}
-                    onClick={() => setRecipeViewerOpen((prev) => !prev)}
+                    onClick={() => setRecipeViewerOpen((prev) => {
+                      if (prev) setRecipeViewerLoaded(false);
+                      return !prev;
+                    })}
                   >
                     <span className={styles.recipeViewerChevron}>
                       {recipeViewerOpen ? "▴" : "▾"}

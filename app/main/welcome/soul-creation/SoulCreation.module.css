@@ -56,7 +56,7 @@
   gap: 0.75rem;
   width: 100%;
   max-width: 40rem;
-  padding: 1.5rem;
+  padding: 0.75rem;
   text-align: center;
   box-sizing: border-box;
 }
@@ -124,7 +124,6 @@
   text-transform: uppercase;
   color: #a89968;
   padding: 0.35rem 0.25rem;
-  border-bottom: 1px solid rgba(168, 153, 104, 0.35);
 }
 
 .trappingsRow {
@@ -132,7 +131,6 @@
   justify-content: space-between;
   align-items: center;
   padding: 0.3rem 0.25rem;
-  border-bottom: 1px solid rgba(168, 153, 104, 0.2);
 }
 
 .trappingsItemInfo {
@@ -174,6 +172,15 @@
   cursor: pointer;
 }
 
+.trappingsBlueprintSelectChosen {
+  border-color: #4ade80;
+}
+
+.trappingsBlueprintSelect:focus {
+  outline: none;
+  border-color: #4ade80;
+}
+
 
 .trappingsAmount {
   min-width: 2rem;
@@ -190,11 +197,11 @@
   gap: 0.5rem;
   width: 100%;
   max-width: 28rem;
-  padding: 0.75rem;
+  padding: 0;
   margin-top: 1rem;
-  background: rgba(10, 8, 4, 0.7);
-  border: 1px solid #6f532f;
-  border-radius: 8px;
+  background: none;
+  border: none;
+  border-radius: 0;
   text-align: left;
   font-family: inherit;
   color: #d4c9a8;
@@ -205,8 +212,6 @@
   letter-spacing: 0.1em;
   text-transform: uppercase;
   color: #c07a3a;
-  border-bottom: 1px solid rgba(168, 153, 104, 0.25);
-  padding-bottom: 0.35rem;
 }
 
 .starterKitTier {
@@ -223,24 +228,145 @@
   margin-bottom: 0.1rem;
 }
 
-.starterKitItem {
+.starterKitTileRow {
   display: flex;
-  justify-content: space-between;
+  gap: 0.35rem;
+  justify-content: center;
+  width: 330px;
+  max-width: 100%;
+}
+
+.starterKitTile {
+  position: relative;
+  flex: 1 1 0;
+  aspect-ratio: 1;
+  padding: 0;
+  margin: 0;
+  font: inherit;
+  background: #0d0d0a;
+  border: 1px solid #3a3020;
+  border-radius: 0;
+  overflow: hidden;
+  cursor: pointer;
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+.starterKitTile:hover {
+  border-color: #c07a3a;
+}
+
+.starterKitTileRelevant {
+  border-color: #4ade80;
+  box-shadow: inset 0 0 6px rgba(74, 222, 128, 0.25);
+}
+
+.starterKitTileImg {
+  width: 100%;
+  height: 100%;
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
+  image-rendering: pixelated;
+  pointer-events: none;
+}
+
+.starterKitTileLabel {
+  display: flex;
   align-items: center;
-  padding: 0.1rem 0.25rem;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #a89968;
+  pointer-events: none;
 }
 
-.starterKitItemName {
-  font-size: clamp(0.78rem, 1.8vw, 0.88rem);
-  color: #d4c9a8;
+.starterKitTileTier {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  pointer-events: none;
 }
 
-.starterKitItemQty {
-  font-size: 0.85rem;
-  color: #c07a3a;
+.starterKitTileTier .tierIcon {
+  width: 18px;
+  height: 18px;
+}
+
+.starterKitTileCount {
+  position: absolute;
+  bottom: 2px;
+  right: 4px;
+  font-size: 0.8rem;
   font-weight: bold;
-  flex-shrink: 0;
-  margin-left: 0.5rem;
+  color: #c07a3a;
+  text-shadow: 0 0 4px #000, 0 0 2px #000;
+  pointer-events: none;
+}
+
+/* Popup shown when a starter-kit tile is tapped */
+.starterKitPopupOverlay {
+  position: fixed;
+  inset: 0;
+  z-index: 20;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.65);
+  padding: 1rem;
+  padding-top: 4rem;
+  padding-bottom: 6rem;
+}
+
+.starterKitPopupCard {
+  position: relative;
+  width: 100%;
+  max-width: min(450px, 100%);
+  max-height: calc(100vh - 10rem);
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 1.5rem 1.25rem 1.25rem;
+  background: #14100a;
+  border: 1px solid #3a3020;
+  border-radius: 10px;
+  text-align: center;
+}
+
+.starterKitPopupTier {
+  position: absolute;
+  top: 0.5rem;
+  left: 0.6rem;
+}
+
+.starterKitPopupImg {
+  width: 140px;
+  height: 140px;
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
+  image-rendering: pixelated;
+}
+
+.starterKitPopupName {
+  margin: 0;
+  font-size: 1.1rem;
+  color: #d4c9a8;
+  font-weight: bold;
+}
+
+.starterKitPopupDescription {
+  margin: 0;
+  font-size: 0.85rem;
+  color: #a89968;
+  line-height: 1.45;
+  max-width: 30ch;
 }
 
 .submitError {
@@ -311,11 +437,9 @@
   cursor: pointer;
   margin: 1rem 0 0;
   padding: 0.5rem 0.15rem 0.25rem 0.75rem;
-  /* Bleeds to the same edge as .recipeViewerFrame below (.content's 1.5rem
-     padding) so the grey background lines up flush with the iframe. */
-  width: calc(100% + 3rem);
-  margin-left: -1.5rem;
-  margin-right: -1.5rem;
+  width: calc(100% + 1.5rem);
+  margin-left: -0.75rem;
+  margin-right: -0.75rem;
   box-sizing: border-box;
   text-align: left;
 }
@@ -330,12 +454,9 @@
 }
 
 .recipeViewerFrame {
-  /* Bleeds past .content's own 1.5rem padding on both sides, out to
-     .content's outer edge - which .contentWidest already caps at 900px, and
-     which equals the actual screen edge on any narrower viewport. */
-  width: calc(100% + 3rem);
-  margin-left: -1.5rem;
-  margin-right: -1.5rem;
+  width: calc(100% + 1.5rem);
+  margin-left: -0.75rem;
+  margin-right: -0.75rem;
   /* Height is set inline (see SoulCreation.tsx's recipeViewerHeight state) -
      a ResizeObserver on the iframe's own (same-origin) body mirrors its
      real content height, so there's never dead grey space or an inner

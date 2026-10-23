@@ -445,6 +445,8 @@ class TrappingsItemResponse(BaseModel):
     name: str = Field(..., description="Resource display name")
     familyId: str = Field(..., description="Resource family id")
     tier: int = Field(..., description="Resource tier")
+    icon: str = Field("", description="Icon image path")
+    description: str = Field("", description="Flavour description")
 
 
 class TrappingsBlueprintPoolResponse(BaseModel):
@@ -881,7 +883,10 @@ async def get_trappings_options(
     return TrappingsOptionsResponse(
         tierPools=options.tier_pools,
         items=[
-            TrappingsItemResponse(id=item.id, name=item.name, familyId=item.family_id, tier=item.tier)
+            TrappingsItemResponse(
+                id=item.id, name=item.name, familyId=item.family_id, tier=item.tier,
+                icon=item.icon, description=item.description,
+            )
             for item in options.items
         ],
         blueprintPools=[
