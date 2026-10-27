@@ -1,0 +1,3 @@
+[submodule "twinejs-integrated"]
+	path = twinejs-integrated
+	url = git@github.com:retro-ai-forge/twinejs-integrated.git
