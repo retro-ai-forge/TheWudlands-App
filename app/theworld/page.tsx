@@ -149,6 +149,11 @@ export default function About() {
           What the world writes of you does not fade. Every mark you leave — every choice, every scar, every name whispered in taverns — is recorded in the eternal ledger. These tales follow you from one adventure to the next, shaping how the world reads you before you have even spoken.
         </p>
 
+        <p className={styles.body}>
+          A crypto wallet is required to enter the Wudlands.{" "}
+          <Link href="/guide#wallet-guide" className={styles.externalLink}>Set one up →</Link>
+        </p>
+
         <div className={styles.accordion}>
           <div
             className={styles.accordionSummary}

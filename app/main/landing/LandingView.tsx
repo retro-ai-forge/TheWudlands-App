@@ -96,6 +96,14 @@ export function LandingView({ status, joining, onEnter, onError, onPending, onPe
         </ol>
       </section>
 
+      {/* 3b — WALLET REQUIRED */}
+      <section className={styles.section}>
+        <p className={styles.sectionBody}>
+          A crypto wallet is required to enter the Wudlands.{" "}
+          <Link href="/guide#wallet-guide" className={styles.trustLink}>Set one up →</Link>
+        </p>
+      </section>
+
       {/* 4 — TRUST / STATUS */}
       <section className={styles.trust}>
         <p className={styles.trustLine}>
