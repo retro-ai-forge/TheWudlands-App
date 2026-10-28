@@ -7,6 +7,7 @@
     "dev:next": "WATCHPACK_POLLING=1000 next dev",
     "dev:twine": "CHOKIDAR_USEPOLLING=1 CHOKIDAR_INTERVAL=1000 npm --prefix twinejs-integrated run start",
     "build": "python3 public/craft/build-recipe-viewer.py && npm run build:twine && next build",
+    "build:app": "python3 public/craft/build-recipe-viewer.py && next build",
     "build:twine": "npm --prefix twinejs-integrated install && npm --prefix twinejs-integrated run build:web && rm -rf public/twine && cp -r twinejs-integrated/dist/web public/twine",
     "start": "next start",
     "lint": "next lint",

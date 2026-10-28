@@ -15,3 +15,6 @@ POLKADOT_AUTH_GUIDE.md
 TheWudlands.code-workspace
 .DS_Store
 *.md
+
+# Generated locally; built fresh in the twine-builder stage
+public/twine

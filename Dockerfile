@@ -1,3 +1,24 @@
+# Build stage for the integrated Twine editor (served at /twine/).
+# Built in its own stage so its large dev-dependency tree never reaches the
+# frontend or runtime images.
+FROM node:20-alpine AS twine-builder
+WORKDIR /twine
+
+# The web build (vite + tsc) never uses Electron or Playwright, so skip their
+# heavy postinstall binary downloads. The EBADENGINE warnings from Electron
+# sub-packages are harmless here — they are not run.
+ENV ELECTRON_SKIP_BINARY_DOWNLOAD=1 \
+    PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1 \
+    HUSKY=0
+
+# Install submodule deps from its lockfile
+COPY twinejs-integrated/package.json twinejs-integrated/package-lock.json ./
+RUN npm ci
+
+# Build the web output (tsc && vite build -> dist/web, base /twine/)
+COPY twinejs-integrated/ ./
+RUN npm run build:web
+
 # Build stage for Next.js frontend
 FROM node:20-alpine AS frontend-builder
 WORKDIR /app
@@ -16,11 +37,15 @@ COPY tsconfig.json next.config.ts eslint.config.mjs ./
 # Copy backend data files referenced by the frontend build
 COPY backend/data ./backend/data
 
+# Bring in the prebuilt Twine editor so it ships under public/twine/
+COPY --from=twine-builder /twine/dist/web ./public/twine
+
 # Python is needed by the recipe-viewer build script (public/craft/build-recipe-viewer.py)
 RUN apk add --no-cache python3
 
-# Build Next.js app
-RUN npm run build
+# Build Next.js app. Twine is already built and copied above, so use build:app
+# (recipe + next build) rather than build:twine, which would rebuild it here.
+RUN npm run build:app
 
 # Python backend stage
 FROM python:3.11-slim AS backend-builder

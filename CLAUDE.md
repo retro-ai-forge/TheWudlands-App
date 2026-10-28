@@ -50,3 +50,9 @@ npm run type-check  # TypeScript check without emitting
 - **Character deletion** dumps all gear (body, backpack, saddlepack, cart, home, companions, mounts) into the shared vault, deletes blueprints and home doc, discards the rest doc without salvage (temporary adventure loot), then deletes the character doc. The vault persists.
 
 
+
+## Submodule: twinejs-integrated
+
+- The integrated Twine story editor lives in the `twinejs-integrated` git submodule (`retro-ai-forge/twinejs-integrated`). Its working branch is **`develop`** — commit and push changes there, not `main`/`master`.
+- After committing inside the submodule, record the new commit in the parent repo (`git add twinejs-integrated && git commit`) so the pointer is bumped. A detached-HEAD checkout means the parent is pinning an older commit; `git -C twinejs-integrated checkout develop` to get back on the branch.
+- It is served under `/twine/` in the Wudlands app (dev: Next proxies to the vite dev server; prod: built to `public/twine/`). `npm run dev` starts both; `npm run build` builds and copies the editor.
