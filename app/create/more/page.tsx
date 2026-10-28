@@ -138,7 +138,7 @@ export default function Storyteller() {
   }, [openSection]);
   return (
     <div className={styles.page}>
-      <section className={styles.guidelines}>
+      <section className={styles.guidelines}  style={{ maxWidth: "800px" }}>
         <h2 className={styles.heading}>Tools for Artists</h2>
 
         <p className={styles.authorIntro}>
@@ -146,13 +146,12 @@ export default function Storyteller() {
           Gather the images that bring it to life.
         </p>
 
-        <div className={styles.imageFrame}>
-          <img
-            src="/images/create/wudland-engine.jpg"
-            alt="The Wudlands Engine"
-            className={styles.sectionImage}
-          />
-        </div>
+        <img
+          src="/images/create/wudland-engine.jpg"
+          alt="The Wudlands Engine"
+          style={{ width: "100%", height: "auto", display: "block", border: "1px solid #7a6a3a", margin: "1.5rem 0", filter: "sepia(0.2) brightness(0.9)" }}
+        />
+
 
          <p className={styles.authorIntro}>
           Feed your vision into the Wudlands engine — and watch it transform
@@ -214,22 +213,20 @@ export default function Storyteller() {
           </li>
         </ol>
 
-        <div style={{ scrollMarginTop: "1rem", marginBottom: "1.5rem", padding: "2rem", background: "#0a0a0a", border: "1px solid #7a6a3a" }}>
-          <p className={styles.body}>
-            Get inspired by the story guidelines and romance traditions,
-            follow the sections below to find everything needed to build your story. 
-            They define the minimal, essential architecture: how to write scenes and choices, 
-            how to integrate images, and how to structure a complete addon—from your first scene to 
-            your final ending. Let&apos;s build an engine that powers the Wudlands.
-          </p>
-          <div className={styles.imageFrameClean}>
-            <img
-              src="/images/create/engine-beyond.jpg"
-              alt="The Wudlands Engine"
-              className={styles.sectionImageClean}
-            />
-          </div>
-        </div>
+        <p className={styles.body}>
+          Get inspired by the story guidelines and romance traditions,
+          follow the sections below to find everything needed to build your story. 
+          They define the minimal, essential architecture: how to write scenes and choices, 
+          how to integrate images, and how to structure a complete addon—from your first scene to 
+          your final ending. Let&apos;s build an engine that powers the Wudlands.
+        </p>
+
+
+        <img
+          src="/images/create/engine-beyond.jpg"
+          alt="The Wudlands Engine"
+          style={{ width: "100%", height: "auto", display: "block", border: "1px solid #7a6a3a", margin: "1.5rem 0", filter: "sepia(0.2) brightness(0.9)" }}
+        />
 
 
         <details ref={guidelinesRef} className={styles.group} style={{ scrollMarginTop: "1rem" }} open={openSection === "guidelines"}>
@@ -683,12 +680,21 @@ export default function Storyteller() {
           </p>
 
           <div style={{ marginTop: "1.5rem", marginBottom: "1.5rem", display: "flex", flexDirection: "column", gap: "1rem" }}>
-            <div style={{ display: "flex", gap: "1rem", alignItems: "flex-start" }}>
-              <img src="/images/create/feature-active.png" alt="Active" title="active" style={{ height: "2rem", width: "auto", flexShrink: 0 }} />
+
+           <div style={{ display: "flex", gap: "1rem", alignItems: "flex-start" }}>
+              <img src="/images/create/feature-active.png" alt="Idea" title="idea" style={{ height: "2rem", width: "auto", flexShrink: 0 }} />
               <div>
-                <strong>none</strong><br /><span style={{ fontSize: "0.9rem", color: "#a09080" }}>-</span>
+                <strong>Carrying capacity</strong><br /><span style={{ fontSize: "0.9rem", color: "#a09080" }}>Slot based inventory system allowing characters to carry a limited number of items.</span>
               </div>
             </div>
+            <div style={{ display: "flex", gap: "1rem", alignItems: "flex-start" }}>
+              <img src="/images/create/feature-active.png" alt="Idea" title="idea" style={{ height: "2rem", width: "auto", flexShrink: 0 }} />
+              <div>
+                <strong>Random Scene Choices</strong><br /><span style={{ fontSize: "0.9rem", color: "#a09080" }}>Random scene selection can create unique and unpredictable experiences for players. 
+                  Some events only happen rarely. Others create a unique flow through the narrative.</span>
+              </div>
+            </div>
+
             <hr style={{ border: "none", borderTop: "1px solid #3a3020", margin: "0" }} />
 
             <div style={{ display: "flex", gap: "1rem", alignItems: "flex-start" }}>
@@ -738,19 +744,6 @@ export default function Storyteller() {
             <div style={{ display: "flex", gap: "1rem", alignItems: "flex-start" }}>
               <img src="/images/create/feature-idea.png" alt="Idea" title="idea" style={{ height: "2rem", width: "auto", flexShrink: 0 }} />
               <div>
-                <strong>Carrying capacity</strong><br /><span style={{ fontSize: "0.9rem", color: "#a09080" }}>Slot based inventory system allowing characters to carry a limited number of items.</span>
-              </div>
-            </div>
-            <div style={{ display: "flex", gap: "1rem", alignItems: "flex-start" }}>
-              <img src="/images/create/feature-idea.png" alt="Idea" title="idea" style={{ height: "2rem", width: "auto", flexShrink: 0 }} />
-              <div>
-                <strong>Random Scene Choices</strong><br /><span style={{ fontSize: "0.9rem", color: "#a09080" }}>Random scene selection can create unique and unpredictable experiences for players. 
-                  Some events only happen rarely. Others create a unique flow through the narrative.</span>
-              </div>
-            </div>
-            <div style={{ display: "flex", gap: "1rem", alignItems: "flex-start" }}>
-              <img src="/images/create/feature-idea.png" alt="Idea" title="idea" style={{ height: "2rem", width: "auto", flexShrink: 0 }} />
-              <div>
                 <strong>Market Trading</strong><br /><span style={{ fontSize: "0.9rem", color: "#a09080" }}>Multiple choice buttons for item selection and trading in markets, allowing adventurers to buy, sell, and exchange goods</span>
               </div>
             </div>
@@ -780,14 +773,13 @@ export default function Storyteller() {
             </div>
           </div>
 
-            <div className={styles.imageFrameClean}>
-            <img
-              src="/images/create/wudland-engine2.jpg"
-              alt="The Wudlands Engine"
-              className={styles.sectionImageClean}
-            />
-          </div>
         </div>
+
+        <img
+          src="/images/create/wudland-engine2.jpg"
+          alt="The Wudlands Engine"
+          style={{ width: "100%", height: "auto", display: "block", border: "1px solid #7a6a3a", margin: "1.5rem 0", filter: "sepia(0.2) brightness(0.9)" }}
+        />
 
         <details id="the-legend" ref={storyimpactRef} className={styles.group} style={{ scrollMarginTop: "1rem" }} open={openSection === "storyimpact"}>
           <summary className={styles.groupSummary} onClick={(e) => {
