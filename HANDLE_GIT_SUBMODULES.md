@@ -14,7 +14,7 @@ git clone --recurse-submodules <url>
 git submodule update --init
 
 # Pull latest changes inside the submodule
-cd twinejs-integrated && git pull origin main && cd ..
+cd twinejs-integrated && git pull origin develop && cd ..
 
 # Record the submodule's new commit in the parent repo
 git add twinejs-integrated
