@@ -5,6 +5,10 @@ import { PageVersionTag } from "../../main/PageVersionTag";
 import styles from "../page.module.css";
 import ImageGallery from "../ImageGallery";
 
+// The integrated Twine editor, served under /twine/ in both dev (Next proxies to
+// the vite dev server started by `npm run dev`) and production (static build).
+const STORY_EDITOR_URL = "/twine/";
+
 function randomizeText(text: string): string {
   return text.replace(/\{([^}]+)\}/g, (match) => {
     const options = match.slice(1, -1).split(' | ');
@@ -156,12 +160,42 @@ export default function Storyteller() {
           Everything you need to know is below. Open a section when you&apos;re ready.
         </p>
 
+        <div style={{ marginBottom: "1.5rem", padding: "1rem 1.5rem", background: "#1a0f0a", border: "1px solid #7a4a2a" }}>
+          <p className={styles.body} style={{ margin: 0 }}>
+            <strong style={{ color: "#e6a55a" }}>Note:</strong> the Story Editor is built for large screens.
+            Create your adventure on a desktop or laptop — it is not suited to mobile devices.
+          </p>
+        </div>
+
         <ol className={styles.steps}>
           <li className={styles.step}>
             <span className={styles.stepNum}>1</span>
             <span className={styles.stepText}>
               <strong>Write your scenes as choices.</strong> Describe each scene and the choices that
               lead out of it — branching paths, loops, and dead ends that circle back.
+              <a
+                href={STORY_EDITOR_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{
+                  display: "block",
+                  width: "100%",
+                  boxSizing: "border-box",
+                  marginTop: "1rem",
+                  padding: "0.75rem 1rem",
+                  textAlign: "center",
+                  background: "#1a1a1a",
+                  color: "#d4c9a8",
+                  border: "2px solid #7a6a3a",
+                  fontFamily: "'Courier New', Courier, monospace",
+                  fontSize: "0.9rem",
+                  letterSpacing: "0.1em",
+                  textTransform: "uppercase",
+                  textDecoration: "none",
+                }}
+              >
+                Open the Story Editor &rarr;
+              </a>
             </span>
           </li>
           <li className={styles.step}>

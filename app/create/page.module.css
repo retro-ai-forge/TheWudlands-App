@@ -716,6 +716,9 @@
 
   .step {
     flex: 1;
+    /* Stack the number above the text paragraph on wide screens. */
+    flex-direction: column;
+    align-items: flex-start;
   }
 }
 

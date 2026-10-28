@@ -149,3 +149,6 @@ yarn-error.log*
 .pnpm-debug.log*
 *.tsbuildinfo
 next-env.d.ts
+
+# Generated: built Twine editor copied in by `npm run build:twine`
+/public/twine/
