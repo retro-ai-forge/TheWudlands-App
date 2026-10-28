@@ -19,6 +19,7 @@ cd twinejs-integrated && git pull origin develop && cd ..
 # Record the submodule's new commit in the parent repo
 git add twinejs-integrated
 git commit -m "update twinejs-integrated submodule"
+git push
 
 # Check what commit each submodule is pinned to
 git submodule status
