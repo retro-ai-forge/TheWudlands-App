@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { PageVersionTag } from "../main/PageVersionTag";
 import styles from "./page.module.css";
@@ -44,11 +44,29 @@ export default function Create() {
           a wide, open genre. Get creative.
         </p>
 
-        <img
-          src="/images/create/share-writers-80percent.jpg"
-          alt="Revenue share: 80% goes to writers and creators, 20% covers admin and platform costs."
-          style={{ width: "100%", height: "auto", display: "block", border: "1px solid #7a6a3a", margin: "1.5rem 0", filter: "sepia(0.2) brightness(0.9)" }}
-        />
+        <div className={styles.ctaRow}>
+          <a
+            href="/twine/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className={styles.editorCta}
+          >
+            <span className={styles.ctaLabelFull}>Open the Story Editor</span>
+            <span className={styles.ctaLabelSmall}>Open Editor on PC !</span>
+            {" "}<span className={styles.editorCtaArrow}>&rarr;</span>
+          </a>
+          <Link href="/create/tutorial" className={styles.editorCta}>
+            Tutorial <span className={styles.editorCtaArrow}>&rarr;</span>
+          </Link>
+        </div>
+
+        <div className={styles.imageFrame}>
+          <img
+            src="/images/create/share-writers-80percent.jpg"
+            alt="Revenue share: 80% goes to writers and creators, 20% covers admin and platform costs."
+            className={styles.sectionImage}
+          />
+        </div>
 
         <div style={{ marginBottom: "1.5rem", padding: "2rem", background: "#0a0a0a", border: "1px solid #7a6a3a" }}>
           <p className={styles.body}>
@@ -59,11 +77,13 @@ export default function Create() {
           </p>
         </div>
 
-        <img
-          src="/images/create/createstory.jpg"
-          alt="A magic book with a glowing red cover, open to a page with a quill pen poised above it. The text reads: 'Create your own story in the Wudlands.'"
-          style={{ width: "100%", height: "auto", display: "block", border: "1px solid #7a6a3a", margin: "1.5rem 0", filter: "sepia(0.2) brightness(0.9)" }}
-        />
+        <div className={styles.imageFrame}>
+          <img
+            src="/images/create/createstory.jpg"
+            alt="A magic book with a glowing red cover, open to a page with a quill pen poised above it. The text reads: 'Create your own story in the Wudlands.'"
+            className={styles.sectionImage}
+          />
+        </div>
 
         <div style={{ marginBottom: "1.5rem" }}>
           <p className={styles.body} style={{ textAlign: "center", marginBottom: "1.25rem" }}>

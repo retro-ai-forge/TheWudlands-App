@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import styles from "./page.module.css";
 
 const STEPS = [
@@ -16,11 +16,21 @@ const STEPS = [
 
 export default function WalletGuide() {
   const [enlarged, setEnlarged] = useState<string | null>(null);
+  const detailsRef = useRef<HTMLDetailsElement>(null);
+
+  useEffect(() => {
+    if (window.location.hash === "#wallet-guide" && detailsRef.current) {
+      detailsRef.current.open = true;
+      setTimeout(() => {
+        detailsRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+      }, 100);
+    }
+  }, []);
 
   return (
     <>
       <p className={styles.body}>Nova Wallet is recommended for the best experience.</p>
-      <details id="wallet-guide" className={styles.walletGuide}>
+      <details id="wallet-guide" ref={detailsRef} className={styles.walletGuide}>
         <summary className={styles.walletGuideSummary}>[ Get started ]</summary>
         <div className={styles.walletGuideGrid}>
           {STEPS.map((item) => (

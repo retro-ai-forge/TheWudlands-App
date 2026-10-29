@@ -205,33 +205,35 @@
 }
 
 .imageFrame {
-  max-width: min(95vw, 750px);
+  width: 90%;
   margin: 2rem auto;
-  margin-left: 50%;
-  transform: translateX(-50%);
-  padding: 0.75rem;
-  border: 1px solid #3a3020;
-  background: rgba(0, 0, 0, 0.4);
-  width: min(95vw, 750px);
+}
+
+@media (max-width: 749px) {
+  .imageFrame {
+    width: 100%;
+    margin: 2rem 0;
+  }
 }
 
 .sectionImage {
   width: 100%;
   height: auto;
   display: block;
-  border: 1px solid #7a6a3a;
-  margin-top: 0.5rem;
-  margin-bottom: 1.75rem;
   filter: sepia(0.2) brightness(0.9);
 }
 
 .imageFrameClean {
-  max-width: min(85vw, 750px);
+  width: 90%;
   margin: 2rem auto 0.5rem auto;
-  margin-left: 50%;
-  transform: translateX(-50%);
   padding: 0;
-  width: min(85vw, 750px);
+}
+
+@media (max-width: 749px) {
+  .imageFrameClean {
+    width: 100%;
+    margin: 2rem 0 0.5rem 0;
+  }
 }
 
 .sectionImageClean {
@@ -719,6 +721,89 @@
     /* Stack the number above the text paragraph on wide screens. */
     flex-direction: column;
     align-items: flex-start;
+  }
+}
+
+/* ── CTA button row (side-by-side pair) ─────────────── */
+.ctaRow {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+
+.ctaRow .editorCta {
+  flex: 1;
+  margin-bottom: 0;
+}
+
+@media (max-width: 500px) {
+  .ctaRow {
+    flex-direction: column;
+  }
+}
+
+/* ── Fancy Story Editor CTA ──────────────────────────── */
+.editorCta {
+  display: block;
+  width: 100%;
+  box-sizing: border-box;
+  margin: 0 0 2.5rem;
+  padding: 1.25rem 2rem;
+  text-align: center;
+  text-decoration: none;
+  font-family: "Courier New", Courier, monospace;
+  font-size: 1rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: #e6a55a;
+  background: linear-gradient(180deg, #1a140a 0%, #0d0a06 100%);
+  border: 2px solid #7a4a2a;
+  position: relative;
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+
+.editorCta::before {
+  content: "";
+  position: absolute;
+  inset: 3px;
+  border: 1px solid rgba(192, 122, 58, 0.25);
+  pointer-events: none;
+  transition: border-color 0.3s ease;
+}
+
+.editorCta:hover {
+  color: #ffd08a;
+  border-color: #c07a3a;
+  background: linear-gradient(180deg, #241a0e 0%, #140e06 100%);
+  box-shadow: 0 0 20px rgba(192, 122, 58, 0.15), inset 0 0 20px rgba(192, 122, 58, 0.05);
+}
+
+.editorCta:hover::before {
+  border-color: rgba(192, 122, 58, 0.5);
+}
+
+.editorCtaArrow {
+  display: inline-block;
+  margin-left: 0.6rem;
+  transition: transform 0.3s ease;
+}
+
+.editorCta:hover .editorCtaArrow {
+  transform: translateX(4px);
+}
+
+.ctaLabelSmall {
+  display: none;
+}
+
+@media (max-width: 999px) {
+  .ctaLabelFull {
+    display: none;
+  }
+
+  .ctaLabelSmall {
+    display: inline;
   }
 }
 

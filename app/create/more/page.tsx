@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
+import Link from "next/link";
 import { PageVersionTag } from "../../main/PageVersionTag";
 import styles from "../page.module.css";
 import ImageGallery from "../ImageGallery";
@@ -146,11 +147,13 @@ export default function Storyteller() {
           Gather the images that bring it to life.
         </p>
 
-        <img
-          src="/images/create/wudland-engine.jpg"
-          alt="The Wudlands Engine"
-          style={{ width: "100%", height: "auto", display: "block", border: "1px solid #7a6a3a", margin: "1.5rem 0", filter: "sepia(0.2) brightness(0.9)" }}
-        />
+        <div className={styles.imageFrame}>
+          <img
+            src="/images/create/wudland-engine.jpg"
+            alt="The Wudlands Engine"
+            className={styles.sectionImage}
+          />
+        </div>
 
 
          <p className={styles.authorIntro}>
@@ -172,29 +175,6 @@ export default function Storyteller() {
             <span className={styles.stepText}>
               <strong>Write your scenes as choices.</strong> Describe each scene and the choices that
               lead out of it — branching paths, loops, and dead ends that circle back.
-              <a
-                href={STORY_EDITOR_URL}
-                target="_blank"
-                rel="noopener noreferrer"
-                style={{
-                  display: "block",
-                  width: "100%",
-                  boxSizing: "border-box",
-                  marginTop: "1rem",
-                  padding: "0.75rem 1rem",
-                  textAlign: "center",
-                  background: "#1a1a1a",
-                  color: "#d4c9a8",
-                  border: "2px solid #7a6a3a",
-                  fontFamily: "'Courier New', Courier, monospace",
-                  fontSize: "0.9rem",
-                  letterSpacing: "0.1em",
-                  textTransform: "uppercase",
-                  textDecoration: "none",
-                }}
-              >
-                Open the Story Editor &rarr;
-              </a>
             </span>
           </li>
           <li className={styles.step}>
@@ -213,20 +193,35 @@ export default function Storyteller() {
           </li>
         </ol>
 
+        <div className={styles.ctaRow}>
+          <a
+            href={STORY_EDITOR_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+            className={styles.editorCta}
+          >
+            <span className={styles.ctaLabelFull}>Open the Story Editor</span>
+            <span className={styles.ctaLabelSmall}>Open Editor on PC !</span>
+            {" "}<span className={styles.editorCtaArrow}>&rarr;</span>
+          </a>
+          <Link href="/create/tutorial" className={styles.editorCta}>
+            Tutorial <span className={styles.editorCtaArrow}>&rarr;</span>
+          </Link>
+        </div>
+
         <p className={styles.body}>
-          Get inspired by the story guidelines and romance traditions,
-          follow the sections below to find everything needed to build your story. 
-          They define the minimal, essential architecture: how to write scenes and choices, 
-          how to integrate images, and how to structure a complete addon—from your first scene to 
-          your final ending. Let&apos;s build an engine that powers the Wudlands.
+          The sections below define the essential architecture: scenes, choices, images,
+          and story structure — from your first scene to your final ending.
         </p>
 
 
-        <img
-          src="/images/create/engine-beyond.jpg"
-          alt="The Wudlands Engine"
-          style={{ width: "100%", height: "auto", display: "block", border: "1px solid #7a6a3a", margin: "1.5rem 0", filter: "sepia(0.2) brightness(0.9)" }}
-        />
+        <div className={styles.imageFrame}>
+          <img
+            src="/images/create/engine-beyond.jpg"
+            alt="The Wudlands Engine"
+            className={styles.sectionImage}
+          />
+        </div>
 
 
         <details ref={guidelinesRef} className={styles.group} style={{ scrollMarginTop: "1rem" }} open={openSection === "guidelines"}>
@@ -237,75 +232,48 @@ export default function Storyteller() {
           <div className={styles.groupBody}>
 
         <p className={styles.body}>
-          The Wudlands is a dark, story-driven fantasy adventure rooted in the tradition of Fighting Fantasy gamebooks
-          and old-school dungeon crawling. It is a world of desperate choices, hidden dangers, and hard-earned survival.
-          Anyone can contribute an adventure addon — a self-contained story that players can enter, explore, and struggle through.
-          Addon creators are free to shape their own corner of the Wudlands: invent monsters, ancient ruins, secret factions,
-          forbidden magic, cursed artefacts, weather-battered wilderness, and whatever strange wonders or horrors they imagine.
-          The only rule is that everything must serve the story. In the future we will add more content like Sci-Fi, Cthulhu 
-          1920 horror, and more, but for now we are focused on the core fantasy experience.
+          The Wudlands is a dark, story-driven fantasy adventure rooted in Fighting Fantasy gamebooks
+          and old-school dungeon crawling. Anyone can contribute an addon — invent monsters, ancient ruins,
+          secret factions, forbidden magic, cursed artefacts, and whatever horrors they imagine.
+          The only rule is that everything must serve the story.
         </p>
 
-         <img
-          src="/images/create/createstory.jpg"
-          alt="A magic book with a glowing red cover, open to a page with a quill pen poised above it. The text on the page reads: &apos;Create your own story in the Wudlands.&apos;"
-          className={styles.sectionImage}
-        />
+        <div className={styles.imageFrame}>
+          <img
+            src="/images/create/createstory.jpg"
+            alt="A magic book with a glowing red cover, open to a page with a quill pen poised above it. The text on the page reads: &apos;Create your own story in the Wudlands.&apos;"
+            className={styles.sectionImage}
+          />
+        </div>
 
         <p className={styles.body}>
-          The Wudlands is not a sandbox. There is no base-building, no permanent home, no safe corner of the world to retreat to.
-          Temporary shelters, makeshift camps, collapsed forts, and story-driven structures are allowed when the narrative calls for them —
-          a cave to weather a storm, a barricaded inn to hold against the night, a ruined tower that becomes a brief refuge.
-          These places exist within the story, not as persistent player-owned properties.
-          Survival systems such as hunger, thirst, exhaustion, wounds, disease, and harsh weather are welcome additions
-          as long as they create tension, push decisions, and deepen the sense of danger rather than functioning as mechanical
-          busywork disconnected from the plot.
+          No base-building. No permanent home. No safe corner of the world to retreat to.
+          Temporary shelters exist within the story — a cave to weather a storm, a barricaded inn to hold against the night.
+          Survival systems like hunger, thirst, and disease are welcome as long as they create tension, not busywork.
         </p>
 
         <p className={styles.body}>
-          Stories in the Wudlands do not have to be linear. Addon creators are encouraged to build branching paths,
-          narrative loops, and N:M relationships between scenes and outcomes. A single choice may open into several possible
-          scenes. Several entirely different choices may converge back to the same location, encounter, or conclusion.
-          Players may revisit places, retrace steps, or circle back through the world in ways that feel natural rather than forced.
-          What matters is that the story remains clear and playable at every point — no dead ends, no broken loops,
-          no scenes that leave the player stranded without any path forward.
-        </p>
-
-
-        <p className={styles.body}>
-          Adventures in The Wudlands can depend on one another. An addon creator may declare that their adventure
-          requires one or more other adventures to have been completed first — and that completing a given adventure
-          opens the way to one specific continuation or branches into several, depending on how the player reached the end.
-          This means a player may need to finish an earlier story before a later one becomes accessible to them.
-          Creators are responsible for declaring these dependencies clearly when submitting their addon.
-          Where an adventure requires a prerequisite, that prerequisite must be reasonably completable on its own terms —
-          it cannot exist solely as a gate. The chain of adventures should feel like a natural progression through the world,
-          not an artificial lock. Dependencies between addons are resolved by the platform and presented to players before they begin.
+          Stories do not have to be linear. Build branching paths, narrative loops, and convergent outcomes.
+          What matters is that the story remains playable at every point — no dead ends, no broken loops,
+          no scenes that leave the player stranded.
         </p>
 
         <p className={styles.body}>
-          Every addon must include at least one ending and an escape route. This is not optional. When a player is overwhelmed,
-          badly wounded, out of resources, or simply lost, there must always be a valid path they can take to retreat,
-          recover, or reach some form of conclusion. This fallback path should work as a short, complete adventure on its own —
-          not a punishment for failure, but an honest exit that respects the player&apos;s experience.
-          A story without an escape route is an incomplete story.
+          Adventures can depend on one another. Declare prerequisites clearly — they must be completable on their own terms,
+          not exist solely as gates. The chain should feel like a natural progression, not an artificial lock.
         </p>
 
         <p className={styles.body}>
-          The engine that runs addon stories is built to handle missing or undefined scenes gracefully. If a requested node,
-          scene, or encounter cannot be found in the addon data, the system will not crash or break the session.
-          Instead it falls back to the addon&apos;s <span className={styles.code}>emergency_exit</span> scene — a dedicated
-          error-recovery scene that ends the story. 
-          The description of the emergency scene should contain a description of something unusual, unforeseen, blocking
-          the way forward — a collapsed tunnel, a sudden rockfall, an ambush by bandits,
-          a magical trap, or any other narrative obstacle that fits the tone of the story. 
-          Addon creators are responsible for defining this scene and ensuring a smooth narrative end.
-          A play through only counts against the limit of 3 replays, 
-          if any scene with <span className={styles.code}>ending: true</span> was encountered. 
-          Several endings should be available. <br/><br/>
-          Being redirected to 
-          the <span className={styles.code}>emergency_exit</span> does not count 
-          as a playthrough, and does not consume one of the three replays.
+          Every addon must include at least one ending and an escape route. When a player is overwhelmed or lost,
+          there must always be a valid path to retreat. A story without an escape route is an incomplete story.
+        </p>
+
+        <p className={styles.body}>
+          If a scene cannot be found, the engine falls back to
+          the <span className={styles.code}>emergency_exit</span> — a narrative dead end
+          (collapsed tunnel, rockfall, ambush) that ends the story gracefully.
+          A playthrough only counts if a scene with <span className={styles.code}>isEnding: true</span> was reached.
+          The <span className={styles.code}>emergency_exit</span> does not consume one of the three replays.
         </p>
 
         <table className={styles.table}>
@@ -358,7 +326,7 @@ export default function Storyteller() {
             </tr>
             <tr>
               <td>Escape Route</td>
-              <td>The <span className={styles.code}>default_exit</span> is the primary retreat ending. It must be marked <span className={styles.code}>{`"ending": true`}</span>. Players must always have a path to escape or recover. Warn in the current scene if the next scene disables the escape button.</td>
+              <td>The <span className={styles.code}>default_exit</span> is the primary retreat ending. It must be marked <span className={styles.code}>{`"isEnding": true`}</span>. Players must always have a path to escape or recover. Warn in the current scene if the next scene disables the escape button.</td>
             </tr>
             <tr>
               <td>Missing Scene Fallback</td>
@@ -394,59 +362,37 @@ export default function Storyteller() {
         {/* ── Story Elements ─────────────────────────────────────── */}
 
         <p className={styles.body}>
-          The Wudlands draws deep inspiration from the fantasy literature and interactive fiction of the 1980s and 1990s —
-          an era defined by the pulp paperbacks of Fighting Fantasy, the early Dungeons &amp; Dragons modules, and the illustrated
-          gamebooks that shaped a generation of adventurers. That tradition is vivid, atmospheric, and full of imagination.
-          It is also a product of its time. The storytelling conventions of that era carried with them the gender roles,
-          social assumptions, and romantic archetypes that were commonplace in popular fiction of the period.
-          Players returning to this style of adventure will recognise them. They are part of what makes the experience
-          feel authentic to its roots.
+          The Wudlands draws from 1980s and 1990s fantasy fiction — Fighting Fantasy, early D&amp;D modules, the illustrated
+          gamebooks that shaped a generation. That tradition carried gender roles and romantic archetypes common to the era.
+          Players returning to this style will recognise them. They are part of what makes it feel authentic to its roots.
         </p>
 
-        <img
-          src="/images/create/minne.jpg"
-          alt="A knight kneels before a noble lady in a candlelit castle hall — courtly love in the tradition of Minne."
-          className={styles.sectionImage}
-        />
+        <div className={styles.imageFrame}>
+          <img
+            src="/images/create/minne.jpg"
+            alt="A knight kneels before a noble lady in a candlelit castle hall — courtly love in the tradition of Minne."
+            className={styles.sectionImage}
+          />
+        </div>
 
         <p className={styles.body}>
-          Central to medieval fantasy — and to the literature that inspired it — is the concept of
-          <span className={styles.highlight}> Minne</span>: the courtly love tradition of the German-speaking world,
-          rooted in the poetry of the Minnesingers and the chivalric romances of the high Middle Ages.
-          In this tradition, a knight or wandering hero pledges his service and devotion to a noble lady —
-          often unattainable, often of higher station — and undertakes trials, quests, and feats of courage
-          in her name. The lady holds power not through force but through honour, favour, and the withholding or granting
-          of affection. This dynamic — the devoted wanderer and the compelling, unreachable figure — recurs throughout
-          The Wudlands in NPC relationships, quest structures, and story rewards.
-          It is intended as atmosphere, not instruction.
+          Central to medieval fantasy is <span className={styles.highlight}>Minne</span>: the courtly love tradition
+          of the Minnesingers. A wandering hero pledges devotion to a noble lady — often unattainable —
+          and undertakes trials in her name. She holds power through honour, favour, and the withholding of affection.
+          This dynamic recurs throughout The Wudlands. It is atmosphere, not instruction.
         </p>
 
         <p className={styles.body}>
-          Some content in The Wudlands and its addons can reflect the gender dynamics, stereotypes, and romantic conventions
-          common to 80s and 90s fantasy fiction. Female characters may be depicted as mysterious, seductive, or as objects
-          of chivalric pursuit. Male characters may be portrayed through the lens of the classic lone adventurer archetype.
-          Power imbalances rooted in social class, beauty, or magical allure may appear as narrative devices.
-          These elements can be presented as <span className={styles.highlight}>vintage atmosphere</span> — the deliberate aesthetic
-          of a genre that carries both charm and the limitations of its era.
-          They do not reflect the personal values of The Wudlands team, nor are they intended as endorsements of
-          real-world attitudes toward gender, relationships, or social hierarchy.
+          Content may reflect the gender dynamics and romantic conventions of 80s and 90s fantasy.
+          Mysterious seductresses, lone adventurer archetypes, power imbalances rooted in class or magical allure —
+          presented as <span className={styles.highlight}>vintage atmosphere</span>, the deliberate aesthetic of a genre
+          that carries both charm and the limitations of its era.
         </p>
 
         <p className={styles.body}>
-          Romantic storylines in addons may include flirtation, seduction, courtly intrigue, jealousy, unrequited devotion,
-          and morally ambiguous power dynamics between characters — all common tropes of the genre.
-          These may appear in text, dialogue, and branching choices. In adult-flagged addons, romantic storylines
-          may extend into explicit erotic territory under the rules described in Section Content Standards of the GTCs.
-          Where romance is present, creators are encouraged to give it weight and consequence within the story —
-          a kiss earned through three nights of danger means more than one handed out freely.
-          Romantic and erotic elements should feel like part of the world, not tacked-on rewards.
-        </p>
-
-        <p className={styles.body}>
-          Writers who prefer to avoid romantic or courtly love storylines entirely are free to do so —
-          no addon is required to contain them. If a specific story carries significant romantic themes,
-          creators are asked to indicate this clearly in the addon description so players can make informed choices
-          before entering.
+          Romantic storylines may include flirtation, seduction, courtly intrigue, and morally ambiguous power dynamics.
+          Give romance weight — a kiss earned through three nights of danger means more than one handed out freely.
+          Writers who prefer to avoid romance entirely are free to do so.
         </p>
 
           </div>
@@ -462,29 +408,16 @@ export default function Storyteller() {
         {/* ── Story Elements ─────────────────────────────────────── */}
 
         <p className={styles.body}>
-          Every addon submitted to The Wudlands is made up of two core elements: JSON file that defines the structure and 
-          flow of the story, images that give scenes a visual presence. Those addons will be listed as 
-          unapproved until they meet the platform requirements and pass the validation checks. Once approved, they 
-          become available to players worldwide. Below are the detailed specifications for each element, 
-          along with an example of a complete addon at the end.
+          Every addon is a JSON file defining scenes and choices, plus images that give them visual presence.
+          Addons are listed as unapproved until they pass validation. Once approved, they go live worldwide.
         </p>
 
         <p className={styles.body}>
-          The story itself is defined in a single JSON file. This file describes every scene, every choice, every
-          connection between scenes, and the metadata the engine needs to run the addon correctly. The file must be
-          valid JSON and must pass the platform schema validation before it can be published.
-        </p>
-
-        <p className={styles.body}>
-          A few rules that apply across the whole file:
-          the <span className={styles.code}>default_entry</span> scene must exist in <span className={styles.code}>scenes</span> and
-          must have at least one choice that eventually leads to the <span className={styles.code}>escape_route</span>. 
-          The <span className={styles.code}>escape_route</span> scene must be marked <span className={styles.code}>{`"ending": true`}</span>. 
-          The <span className={styles.code}>emergency_exit</span> scene must be provided to recover from errors, it must lead to 
-          the <span className={styles.code}>escape_route</span>. 
-          Every <span className={styles.code}>to</span> value in a choice must reference a valid scene id within the same addon —
-          cross-addon jumps are handled through <span className={styles.code}>unlocks</span>, not through choices.
-          Scene ids must be lowercase and may only contain letters, digits, and hyphens.
+          Rules: <span className={styles.code}>default_entry</span> must lead
+          to the <span className={styles.code}>escape_route</span> (marked <span className={styles.code}>{`"isEnding": true`}</span>).
+          The <span className={styles.code}>emergency_exit</span> must recover from errors and lead to the escape route.
+          Every <span className={styles.code}>to</span> value must reference a valid scene id.
+          Scene ids: lowercase, letters, digits, and hyphens only.
         </p>
 
           </div>
@@ -498,16 +431,14 @@ export default function Storyteller() {
           <div className={styles.groupBody}>
 
         <p className={styles.body}>
-          Each scene in your addon may reference one image. Images are not required for every scene and can be used
-          for several scenes, but they strongly reinforce atmosphere and help players orient themselves within the
-          world. The image is displayed above the scene text when the player enters that scene.
+          Each scene may reference one image, displayed above the scene text. Not required for every scene,
+          but they strongly reinforce atmosphere.
         </p>
 
         <h3 className={styles.subHeading}>Image Dimensions and Story Design</h3>
 
         <p className={styles.body}>
-          The aspect ratio of your image directly affects how much space remains on the screen for story text, choices,
-          and interactive buttons. Choose your image dimensions strategically based on the pacing and focus of each scene.
+          The aspect ratio affects how much space remains for text and choices. Choose dimensions based on each scene&apos;s pacing.
         </p>
 
         <button
@@ -585,37 +516,16 @@ export default function Storyteller() {
         )}
 
         <p className={styles.body}>
-          <span className={styles.highlight}>Landscape images (16:9, 3:2)</span> are best for deep immersion and longer narrative passages.
-          The wide frame lets you display substantial story text, complex choice sets, and detailed descriptions.
-          Use landscape dimensions when you just want to give a glimpse or overland journeys, vast vistas, establishing moments.
+          <span className={styles.highlight}>Landscape (16:9, 3:2)</span> — best for narrative passages, complex choices, vast vistas.
+          <span className={styles.highlight}> Portrait (1:1, 2:3, 4:5)</span> — prioritizes the image for character moments, close-ups, intimate encounters.
+          Vary ratios throughout your addon to pace the visual rhythm.
         </p>
 
         <p className={styles.body}>
-          <span className={styles.highlight}>Portrait images (1:1 Square, 2:3, 4:5)</span> prioritize the image itself.
-          Portrait dimensions leave less room for story text and choice buttons, so the visual impression carries more weight.
-          Use portrait dimensions for character moments, close-ups, intimate encounters, or when the image is the focal point and text is secondary.
-        </p>
-
-        <p className={styles.body}>
-          Vary your aspect ratios throughout your addon to pace the visual and narrative rhythm — wide scenes create a sense of wonder and exploration,
-          narrow scenes draw focus to character and emotion.
-        </p>
-
-        <p className={styles.body}>
-          Images must be submitted as <span className={styles.code}>.jpg</span> or <span className={styles.code}>.webp</span> files,
-          at a minimum resolution of <span className={styles.code}>600 × 340 px</span> (16:9 landscape).
-          Portrait or square crops are accepted but landscape is preferred as it fills the scene frame without letterboxing.
-          File size should not exceed <span className={styles.code}>400 KB</span> per image — compress before submitting.
-          Name each file after its scene id, for example <span className={styles.code}>ruined-gate.jpg</span> for a scene
-          with id <span className={styles.code}>ruined-gate</span>. This makes the link between scene and image unambiguous.
-        </p>
-
-        <p className={styles.body}>
-          Images should match the tone of the world: dark, painterly, atmospheric. Avoid bright, saturated modern renders
-          or photographs. Pencil illustrations, oil-style digital paintings, and desaturated fantasy art all work well.
-          The platform applies a subtle grayscale pulse and vignette overlay to all scene images at runtime, so images
-          that already lean dark and moody will read best. Avoid images with embedded text — all text is handled by the
-          scene content, not the image.
+          Submit as <span className={styles.code}>.jpg</span> or <span className={styles.code}>.webp</span>,
+          min <span className={styles.code}>600 × 340 px</span>, max <span className={styles.code}>400 KB</span>.
+          Name files after scene ids (e.g. <span className={styles.code}>ruined-gate.jpg</span>).
+          Dark, painterly, atmospheric — avoid bright renders or photographs. No embedded text.
         </p>
 
         <table className={styles.fieldTable}>
@@ -639,10 +549,8 @@ export default function Storyteller() {
         <h3 className={styles.subHeading}>CSS Image Style Preview</h3>
 
         <p className={styles.body}>
-          The following gallery shows all available <span className={styles.code}>image_style</span> presets
-          applied to a sample set of scene images. Click any image to enlarge it. Click again to close. Use the 
-          images filters below sparingly and intentionally to create mood and tone. A well-chosen image can make 
-          a scene memorable, while a poorly chosen one can feel out of place or even break immersion.
+          Available <span className={styles.code}>image_style</span> presets applied to sample images.
+          Click to enlarge. Use filters sparingly — a well-chosen image makes a scene memorable.
         </p>
 
         <ImageGallery />
@@ -658,16 +566,9 @@ export default function Storyteller() {
           <div className={styles.groupBody}>
 
         <p className={styles.body}>
-          Below is a complete minimal addon with three scenes. It demonstrates a starting scene with two choices,
-          a deeper scene that leads either forward or back, and an escape route marked as a terminal ending.
-          This structure is the smallest valid addon the platform will accept.
-        </p>
-
-        <p className={styles.body}>
-          This example is intentionally spare. A published addon will typically contain between sixty and five hundred scenes,
-          with multiple branching paths, several dead ends that loop back to earlier scenes, and at least two or three
-          distinct endings depending on the choices the player made. The escape route will always be reachable from
-          any scene. The escape route might be a short story in itself.
+          A minimal addon with three scenes: a starting scene, a deeper scene, and an escape route ending.
+          This is the smallest valid structure. Published addons typically contain 60–500 scenes with
+          multiple branching paths and several distinct endings.
         </p>
 
           </div>
@@ -789,11 +690,9 @@ export default function Storyteller() {
           <div className={styles.groupBody}>
 
         <p className={styles.body}>
-          Every decision leaves a mark that shapes how the world reads you.
-          Your stats are not numbers on a sheet — they are the reputation players build,
-          the bonds they forge, and the enemies they make. Every choice in your adventure leaves a mark that is permanently recorded.
-          These marks are stored and carried forward into every adventure that follows, accumulating into social forces that allow you aboard a pirate ship or deny entry.
-          The stats come with an opposing force: push too hard in one direction and the other diminishes into shadow.
+          Every decision leaves a permanent mark. Stats are not numbers — they are reputation, bonds, and enemies.
+          Carried forward into every adventure that follows. Push too hard in one direction
+          and its opposite diminishes into shadow.
         </p>
 
         <table className={styles.table}>
@@ -816,23 +715,16 @@ export default function Storyteller() {
         </table>
 
         <p className={styles.body}>
-          Stats are moved by attaching the stat key straight to a choice, alongside its <span className={styles.code}>text</span> and <span className={styles.code}>to</span>.
-          A positive value raises the stat, a negative value lowers it; since each stat has an opposing
-          force, raising one gently pulls its opposite down. You are not required to touch a stat on
-          every choice — only mark the ones where the decision should leave a lasting impression. The gap between two opposing stats is the measure of your reputation in that domain. A player with a high Fame and low Infamy is widely celebrated, while a player with low Fame and high Infamy is feared and revered.
+          Attach stat keys to choices. Positive raises, negative lowers — and each stat&apos;s opposing force shifts with it.
+          Only mark choices where the decision should leave a lasting impression.
+          Stats also steer the story: scenes can branch on thresholds, choices can be gated
+          behind <span className={styles.code}>show_if</span>.
         </p>
 
         <p className={styles.body}>
-          Stats can also steer the story itself. A scene&apos;s <span className={styles.code}>text</span> can branch on a
-          stat threshold, so the same location reads differently depending on what the player has built. A choice can
-          likewise be gated behind <span className={styles.code}>show_if</span>, so it only appears once the player has
-          earned — or sunk to — the reputation it requires.
-        </p>
-
-        <p className={styles.body}>
-          A leading <span style={{ color: "#c07a3a", fontWeight: "bold" }}>◆</span> marks any line of text or any choice
-          that only appears because of a stat — always visible, no hover needed. A grey <span className={styles.glyphFade} style={{ color: "#6b6b6b", fontWeight: "bold" }}>◆</span> in
-          the corner means other options exist here too, hidden until your stats qualify for them.
+          A leading <span style={{ color: "#c07a3a", fontWeight: "bold" }}>◆</span> marks stat-gated content.
+          A grey <span className={styles.glyphFade} style={{ color: "#6b6b6b", fontWeight: "bold" }}>◆</span> means
+          hidden options exist, locked until your stats qualify.
         </p>
 
         <h3 className={styles.subHeading}>Scene Preview: {LEGEND_PREVIEWS[legendSlide].heading}</h3>
@@ -949,36 +841,24 @@ export default function Storyteller() {
           <div className={styles.groupBody}>
 
         <p className={styles.body}>
-          Every true relationship your character builds persists across adventures. 
-          When your story introduces an <strong>important character</strong> — a pauper, 
-          lord, sorceress, a villain, a temptress, a betrayer that might reappear in the future,
-          you create them specifically. The platform will reach back into the player&apos;s history. 
-          If they have already charmed, scorned, saved, or wronged someone of that standing, 
-          those old feelings carry forward into your story, they arrive with a relationship already written. 
-          If none is found the new proposed person is added to the player&apos;s history and will be 
-          available for future stories.
+          Relationships persist across adventures. When your story introduces an <strong>important character</strong> —
+          lord, sorceress, villain, temptress — the platform reaches back into the player&apos;s history.
+          If they have already charmed, scorned, or wronged someone of that standing,
+          those feelings carry forward. If none is found, a new person is added to their history.
         </p>
 
         <p className={styles.body}>
-          Use this deliberately. A powerful figure who adores the player may offer shelter that should not exist, whisper secrets that change the shape of a scene, or step into danger on their behalf. One who despises them may close doors before they are reached, poison reputations, or arrive at the worst possible moment. If you want your story to feel connected to the broader world, lean on generic roles and let the player&apos;s history do the work. If you want a clean slate with no inherited baggage, name your character.
+          A figure who adores the player may whisper secrets or step into danger on their behalf.
+          One who despises them may close doors or arrive at the worst possible moment.
+          Lean on generic roles to connect to the broader world. Name your character for a clean slate.
         </p>
 
         <p className={styles.body}>
-          Allowing a person from a previous adventure to be reused is done by defining 
-          small <strong>matching requirements</strong> — a set of criteria the known 
-          person must satisfy before the platform considers them a valid match. 
-          Each criterion can be stated as a 
-          requirement (<span className={styles.code}>Standing: Legendary</span> means 
-          the character must know someone of exactly that 
-          level) or as an exclusion (<span className={styles.code}>!Shadow</span> means that 
-          affiliation is ruled out, so the match may be Spiritual or Power but not Shadow). You 
-          decide how many criteria must fit and how strict each one is. The more requirements 
-          you define, the more specific the match — the fewer, the broader 
-          the net. <strong>Any criterion left undefined accepts all values.</strong> A role with 
-          no requirements at all will match the first relevant person in the 
-          character&apos;s history regardless of their standing, affiliation, or faith. 
-          If no match is found, the role is treated as a new person and added to 
-          the character&apos;s list — ready to carry weight in adventures that follow.
+          Define <strong>matching requirements</strong> to reuse characters from previous adventures.
+          Each criterion is a requirement (<span className={styles.code}>Standing: Legendary</span>)
+          or exclusion (<span className={styles.code}>!Shadow</span>). More requirements mean a more specific match.
+          <strong> Any criterion left undefined accepts all values.</strong>
+          No match found? The role becomes a new person in the player&apos;s history.
         </p>
 
         <table className={styles.table}>
@@ -1066,13 +946,10 @@ export default function Storyteller() {
         <h3 className={styles.subHeading}>VIP Example: Lady Isolde</h3>
 
         <p className={styles.body}>
-          Below is a complete example of a VIP defined in JSON. Lady Isolde represents a <span className={styles.highlight}>Minne courtly love</span> —
-          a noble woman whose affection must be earned through deeds, not words. Her matching requirements ensure she only appears to players 
-          who have <strong>not</strong> previously encountered a notable female noble, creating continuity across adventures. &apos;new&apos; parameters will be used in 
-          case no match is found in the character history. Allowing her to enter as a new person in the history of the player. 
-          Visual description are optional, but recommended to give the player a sense of her appearance and presence in the world. 
-          When <span className={styles.code}>{'{vip.id-isolde.formal}'}</span> is used, one of the formal sentences is 
-          selected randomly and displayed to the player. Options in <span className={styles.code}>{'{ x | y | z }'}</span> vary each time.
+          Lady Isolde — a <span className={styles.highlight}>Minne courtly love</span> whose affection must be earned through deeds.
+          Her matching requirements ensure continuity across adventures. &apos;new&apos; parameters apply when no match exists.
+          Use <span className={styles.code}>{'{vip.id-isolde.formal}'}</span> for randomly selected formal sentences.
+          Options in <span className={styles.code}>{'{ x | y | z }'}</span> vary each time.
         </p>
 
         <h3 className={styles.subHeading}>Scene Preview</h3>

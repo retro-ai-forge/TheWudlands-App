@@ -197,6 +197,10 @@ export default function GTC() {
               <td>Portrait Images</td>
               <td>You are responsible for any image URL you display; personal use only, not hosted by The Wudlands.</td>
             </tr>
+            <tr>
+              <td>Third-Party Software</td>
+              <td>Story editor built on Twine (GPL-3.0) and SugarCube (BSD 2-clause), used under their open-source licenses.</td>
+            </tr>
           </tbody>
         </table>
 
@@ -213,6 +217,36 @@ export default function GTC() {
             ZapSplat
           </Link>{" "}
           under their Standard License.
+        </p>
+
+        <h3 className={styles.subheading}>10. Third-Party Software</h3>
+
+        <p className={styles.body}>
+          The Wudlands story editor is built on{" "}
+          <Link
+            href="https://twinery.org"
+            target="_blank"
+            rel="noopener noreferrer"
+            className={styles.highlight}
+          >
+            Twine
+          </Link>
+          , an open-source interactive fiction tool created by Chris Klimas,
+          licensed under the{" "}
+          <span className={styles.highlight}>GNU General Public License v3.0 (GPL-3.0)</span>.
+          Stories use the{" "}
+          <Link
+            href="https://www.motoslave.net/sugarcube/2/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className={styles.highlight}
+          >
+            SugarCube
+          </Link>{" "}
+          story format, created by Thomas Michael Edwards, licensed under the{" "}
+          <span className={styles.highlight}>Simplified BSD License (2-clause)</span>.
+          Both tools are used in accordance with their respective open-source licenses.
+          Full license texts are available in the project source.
         </p>
       </section>
 

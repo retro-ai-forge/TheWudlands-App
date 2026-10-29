@@ -2743,3 +2743,196 @@ async def get_active_player_count():
     more than the 8-hour inactivity timeout).
     """
     return ActivePlayerCountResponse(count=len(await list_active_players()))
+
+
+# ── Twine story cloud sync ──────────────────────────────────────────────
+
+
+class TwinePassage(BaseModel):
+    model_config = ConfigDict(extra="allow")
+    id: str
+    name: str
+    text: str = ""
+    tags: List[str] = []
+    left: float = 0
+    top: float = 0
+    width: float = 100
+    height: float = 100
+    story: str = ""
+
+
+class TwineStoryPayload(BaseModel):
+    model_config = ConfigDict(extra="allow")
+    storyId: str
+    ifid: str = ""
+    name: str = ""
+    lastUpdate: str = ""
+    storyData: dict = {}
+    passages: List[TwinePassage] = []
+
+
+@player_router.get("/me/twine-stories")
+async def list_twine_stories(address: str = Depends(get_current_address)):
+    """List all Twine stories for the authenticated user (metadata only, no passages)."""
+    db = get_database()
+    cursor = db.twine_stories.find(
+        {"address": address},
+        {"_id": 0, "address": 0, "passages": 0},
+    )
+    return [doc async for doc in cursor]
+
+
+@player_router.get("/me/twine-stories/{story_id}")
+async def get_twine_story(story_id: str, address: str = Depends(get_current_address)):
+    """Get a single Twine story with passages."""
+    db = get_database()
+    doc = await db.twine_stories.find_one(
+        {"address": address, "storyId": story_id},
+        {"_id": 0, "address": 0},
+    )
+    if not doc:
+        raise HTTPException(status_code=404, detail="Story not found")
+    return doc
+
+
+@player_router.put("/me/twine-stories/{story_id}")
+async def upsert_twine_story(
+    story_id: str,
+    payload: TwineStoryPayload,
+    address: str = Depends(get_current_address),
+):
+    """Create or update a Twine story (full upsert)."""
+    import json
+
+    doc = payload.model_dump()
+    doc["storyId"] = story_id
+    doc["address"] = address
+    doc["sizeBytes"] = len(json.dumps(doc, default=str).encode())
+
+    db = get_database()
+    await db.twine_stories.update_one(
+        {"address": address, "storyId": story_id},
+        {"$set": doc},
+        upsert=True,
+    )
+    return {"ok": True, "storyId": story_id, "sizeBytes": doc["sizeBytes"]}
+
+
+@player_router.delete("/me/twine-stories/{story_id}")
+async def delete_twine_story(story_id: str, address: str = Depends(get_current_address)):
+    """Delete a Twine story."""
+    db = get_database()
+    result = await db.twine_stories.delete_one(
+        {"address": address, "storyId": story_id},
+    )
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Story not found")
+    return {"ok": True, "storyId": story_id}
+
+
+import re as _re
+
+def _check_twine_syntax(doc: dict) -> dict:
+    """Run syntax checks on a saved Twine story document.
+
+    Returns {"errors": [...], "warnings": [...]}. Errors block submission.
+    """
+    errors: List[str] = []
+    warnings: List[str] = []
+    passages = doc.get("passages", [])
+    story_data = doc.get("storyData", {})
+    start_passage = story_data.get("startPassage", "")
+    story_format = story_data.get("storyFormat", "")
+
+    if not story_format or "sugarcube" not in story_format.lower():
+        errors.append(f"Story format is '{story_format or 'unknown'}' — only SugarCube stories are accepted")
+
+    if not passages:
+        errors.append("Story has no passages")
+        return {"errors": errors, "warnings": warnings}
+
+    passage_names = {p.get("name", "") for p in passages}
+    passage_ids = {p.get("id", "") for p in passages}
+
+    if start_passage and start_passage not in passage_ids:
+        errors.append(f"Start passage ID '{start_passage}' does not match any passage")
+
+    for p in passages:
+        name = p.get("name", "")
+        text = p.get("text", "")
+
+        if not text.strip():
+            warnings.append(f"Passage '{name}' is empty")
+
+        links = _re.findall(r'\[\[([^\]|]+?)(?:\|[^\]]+?)?\]\]', text)
+        outgoing_targets = []
+        for link_target in links:
+            target = link_target.strip()
+            if target not in passage_names:
+                errors.append(f"Passage '{name}' links to '{target}' which does not exist")
+            else:
+                outgoing_targets.append(target)
+
+        if not outgoing_targets:
+            has_ending_macro = "<<set $isEnding to true>>" in text
+            if not has_ending_macro:
+                errors.append(
+                    f"Passage '{name}' has no outgoing links and is missing "
+                    f"<<set $isEnding to true>> — all final nodes must be marked as endings"
+                )
+
+    return {"errors": errors, "warnings": warnings}
+
+
+@player_router.post("/me/twine-stories/{story_id}/submit")
+async def submit_twine_story_for_review(
+    story_id: str, address: str = Depends(get_current_address)
+):
+    """Run syntax checks on a Twine story and store a snapshot in twine_review."""
+    db = get_database()
+    doc = await db.twine_stories.find_one(
+        {"address": address, "storyId": story_id},
+    )
+    if not doc:
+        raise HTTPException(status_code=404, detail="Story not found — save to cloud first")
+
+    result = _check_twine_syntax(doc)
+    errors = result["errors"]
+    warnings = result["warnings"]
+
+    if errors:
+        return {
+            "ok": False,
+            "storyId": story_id,
+            "status": "rejected",
+            "errors": errors,
+            "warnings": warnings,
+        }
+
+    now = datetime.now(timezone.utc).isoformat()
+    review_doc = {
+        "address": address,
+        "storyId": story_id,
+        "name": doc.get("name", ""),
+        "ifid": doc.get("ifid", ""),
+        "lastUpdate": doc.get("lastUpdate", ""),
+        "storyData": doc.get("storyData", {}),
+        "passages": doc.get("passages", []),
+        "sizeBytes": doc.get("sizeBytes", 0),
+        "submittedAt": now,
+        "status": "submitted",
+        "warnings": warnings,
+    }
+
+    await db.twine_review.update_one(
+        {"address": address, "storyId": story_id},
+        {"$set": review_doc},
+        upsert=True,
+    )
+
+    return {
+        "ok": True,
+        "storyId": story_id,
+        "status": "submitted",
+        "warnings": warnings,
+    }

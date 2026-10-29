@@ -94,3 +94,14 @@ async def ensure_indexes() -> None:
     await db.player_vaults.create_index(
         [("address", 1)], unique=True
     )
+
+    # Twine story cloud sync: one doc per story per player.
+    await db.twine_stories.create_index(
+        [("address", 1), ("storyId", 1)], unique=True
+    )
+
+    # Twine review submissions: one doc per submission (a player can resubmit).
+    await db.twine_review.create_index(
+        [("address", 1), ("storyId", 1)], unique=True
+    )
+    await db.twine_review.create_index("submittedAt")

@@ -33,7 +33,7 @@ The scene graph is an addressable map of scene objects keyed by id. The engine l
 
 The engine is stateless at the request level. Each player action arrives as an independent HTTP request carrying the player's session token, the addon id, and the target scene id. The backend resolves the session, validates the transition, and returns the next scene. No shared in-memory state is held between requests. This means any number of players can be running through the same addon — or different addons — simultaneously, with no coordination overhead between their sessions. Horizontal scaling is straightforward: additional backend instances can be added without any session affinity requirement, as long as session state is stored in a shared persistence layer.
 
-Play counts are tracked per player per addon. When a player enters an adventure, the engine checks their remaining play count for that addon. If the count is zero, entry is refused until the player resets by paying the entry fee again. Play count decrements happens when the player reaches a scene with `ending: true` or using an `escape_route`. This mirrors the real-world model of paying for the seat, not the outcome.
+Play counts are tracked per player per addon. When a player enters an adventure, the engine checks their remaining play count for that addon. If the count is zero, entry is refused until the player resets by paying the entry fee again. Play count decrements happens when the player reaches a scene with `isEnding: true` or using an `escape_route`. This mirrors the real-world model of paying for the seat, not the outcome.
 
 ## Addon Loading & Validation
 

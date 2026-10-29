@@ -73,6 +73,14 @@ export default function Home() {
   async function enterGameSession() {
     setEntering(true);
     setStatus("Entering The Wudlands...");
+
+    const params = new URLSearchParams(window.location.search);
+    const redirect = params.get("redirect");
+    if (redirect && redirect.startsWith("/")) {
+      window.location.href = redirect;
+      return;
+    }
+
     // Simulate entry delay for UX
     await new Promise(resolve => setTimeout(resolve, 500));
     setView("game");
