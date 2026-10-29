@@ -48,7 +48,7 @@ export function WalletSelectModal({ onSelect, onClose }: WalletSelectModalProps)
             <p>No wallet extension detected.</p>
             <p>
               Install{" "}
-              <Link href="https://novawallet.io/" target="_blank" rel="noopener noreferrer">Nova Wallet</Link>,{" "}
+              <Link href="https://novawallet.io/" target="_blank" rel="noopener noreferrer">Nova Wallet</Link> (mobile),{" "}
               <Link href="https://www.talisman.xyz/" target="_blank" rel="noopener noreferrer">Talisman</Link>,{" "}
               <Link href="https://www.subwallet.app/" target="_blank" rel="noopener noreferrer">SubWallet</Link>, or{" "}
               <Link href="https://polkadot.js.org/extension/" target="_blank" rel="noopener noreferrer">Polkadot.js</Link>{" "}

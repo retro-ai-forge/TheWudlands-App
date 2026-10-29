@@ -293,7 +293,7 @@ export default function Create() {
 
         <div style={{ display: "flex", justifyContent: "center", marginTop: "2.5rem" }}>
           <Link
-            href="/create/more"
+            href="/create/tools"
             style={{
               padding: "0.9rem 3rem",
               background: "#1a1a1a",
@@ -306,7 +306,7 @@ export default function Create() {
               textDecoration: "none",
             }}
           >
-            [ More ]
+            [ Creator Tools ]
           </Link>
         </div>
       </section>

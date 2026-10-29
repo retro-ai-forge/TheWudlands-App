@@ -140,7 +140,7 @@ export default function Storyteller() {
   return (
     <div className={styles.page}>
       <section className={styles.guidelines}  style={{ maxWidth: "800px" }}>
-        <h2 className={styles.heading}>Tools for Artists</h2>
+        <h2 className={styles.heading}>Tools for Creators</h2>
 
         <p className={styles.authorIntro}>
           <strong>Imagine a world, create an immersive experience.</strong> Set its mood, sketch its dangers, map the choices that lead through it.
