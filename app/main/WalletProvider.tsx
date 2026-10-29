@@ -9,11 +9,12 @@
 
 import { createContext, useCallback, useContext, useEffect, useRef, useState, type ReactNode } from "react";
 import {
-  enableWalletExtension,
+  enableSpecificWallet,
   getAccounts,
   resetWalletState,
   type WalletAccount,
 } from "@/app/lib/wallet";
+import { WalletSelectModal } from "./WalletSelectModal";
 
 interface WalletContextValue {
   account: WalletAccount | null;
@@ -22,7 +23,7 @@ interface WalletContextValue {
   /** True once the user has signed the challenge and the backend verified it. */
   verified: boolean;
   setVerified: (value: boolean) => void;
-  /** Attempts to connect; resolves with the account on success, or null on failure. */
+  /** Opens the wallet selection modal; resolves with the account on success, or null on failure/cancel. */
   connect: () => Promise<WalletAccount | null>;
   disconnect: () => void;
   /** Full sign-out: disconnects the wallet and clears the verified session. */
@@ -36,7 +37,11 @@ export function WalletProvider({ children }: { children: ReactNode }) {
   const [isConnecting, setIsConnecting] = useState(false);
   const [connectError, setConnectError] = useState<string | null>(null);
   const [verified, setVerified] = useState(false);
+  const [showModal, setShowModal] = useState(false);
   const broadcastChannelRef = useRef<BroadcastChannel | null>(null);
+
+  // Promise resolve/reject for the connect() caller while modal is open
+  const connectResolveRef = useRef<((acct: WalletAccount | null) => void) | null>(null);
 
   const disconnect = useCallback(() => {
     resetWalletState();
@@ -46,12 +51,6 @@ export function WalletProvider({ children }: { children: ReactNode }) {
   }, []);
 
   // Restore session on page reload — validate with backend using secure cookie.
-  // Every localStorage/sessionStorage touch below is wrapped - some
-  // browser contexts (strict tracking protection, a sandboxed/embedded
-  // preview) throw "Access to storage is not allowed from this context"
-  // just from accessing either at all. The ones inside .then()/.catch()
-  // matter most: an uncaught throw there becomes an unhandled promise
-  // rejection, not just a crashed effect.
   useEffect(() => {
     let address: string | null = null;
     try {
@@ -62,7 +61,7 @@ export function WalletProvider({ children }: { children: ReactNode }) {
     if (!address) return;
 
     fetch("/api/auth/me", {
-      credentials: "include", // Send cookies with request
+      credentials: "include",
     }).then((res) => {
       if (res.ok) {
         setAccount({ address, meta: { source: "restored" } });
@@ -75,12 +74,11 @@ export function WalletProvider({ children }: { children: ReactNode }) {
         }
       }
     }).catch(() => {
-      // Backend unreachable — clear everything to avoid stuck state.
       try {
         localStorage.removeItem("player_address");
         sessionStorage.removeItem("user_id");
       } catch {
-        // Same as above - storage was never reachable, nothing to clear.
+        // Same as above.
       }
     });
   }, []);
@@ -89,7 +87,6 @@ export function WalletProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (typeof window === "undefined") return;
 
-    // Try to use BroadcastChannel for reliable cross-tab communication.
     if ("BroadcastChannel" in window) {
       const channel = new BroadcastChannel("wallet_auth");
       broadcastChannelRef.current = channel;
@@ -100,14 +97,12 @@ export function WalletProvider({ children }: { children: ReactNode }) {
             localStorage.removeItem("player_address");
             sessionStorage.removeItem("user_id");
           } catch {
-            // Storage unreachable in this context - disconnect() above
-            // already cleared the in-memory state either way.
+            // Storage unreachable.
           }
         }
       };
       return () => channel.close();
     } else {
-      // Fallback: listen for localStorage changes (for older browsers).
       const handleStorageChange = (e: StorageEvent) => {
         if (e.key === "player_address" && e.newValue === null) {
           disconnect();
@@ -124,38 +119,53 @@ export function WalletProvider({ children }: { children: ReactNode }) {
     }
   }, [disconnect]);
 
-  const connect = async (): Promise<WalletAccount | null> => {
+  const connect = (): Promise<WalletAccount | null> => {
     setIsConnecting(true);
+    setShowModal(true);
+
+    return new Promise<WalletAccount | null>((resolve) => {
+      connectResolveRef.current = resolve;
+    });
+  };
+
+  const handleWalletSelect = async (walletName: string) => {
+    setShowModal(false);
     try {
-      await enableWalletExtension("TheWudlands");
+      await enableSpecificWallet("TheWudlands", walletName);
       const accounts = await getAccounts();
       if (accounts.length === 0) {
         throw new Error("No accounts found in wallet");
       }
       setAccount(accounts[0]);
       setConnectError(null);
-      return accounts[0];
-    } catch {
-      // Always set the error message on failure (not toggle).
-      setConnectError("Select wallet in extension");
-      return null;
-    } finally {
       setIsConnecting(false);
+      connectResolveRef.current?.(accounts[0]);
+      connectResolveRef.current = null;
+    } catch {
+      setConnectError("Select wallet in extension");
+      setIsConnecting(false);
+      connectResolveRef.current?.(null);
+      connectResolveRef.current = null;
     }
   };
 
+  const handleModalClose = () => {
+    setShowModal(false);
+    setIsConnecting(false);
+    connectResolveRef.current?.(null);
+    connectResolveRef.current = null;
+  };
+
   const logout = async () => {
-    // Call backend logout to clear the session cookie
     try {
       await fetch("/api/auth/logout", {
         method: "POST",
-        credentials: "include", // Send cookies with request
+        credentials: "include",
       });
     } catch (e) {
       console.error("Logout error:", e);
     }
 
-    // Broadcast logout to other tabs.
     if (broadcastChannelRef.current) {
       broadcastChannelRef.current.postMessage({ type: "logout" });
     }
@@ -166,10 +176,7 @@ export function WalletProvider({ children }: { children: ReactNode }) {
         localStorage.removeItem("player_address");
         sessionStorage.removeItem("user_id");
       } catch {
-        // Storage unreachable in this context - disconnect() above already
-        // cleared the in-memory state either way, and logout() is async
-        // with no guarantee its caller awaits/catches it, so an uncaught
-        // throw here would surface as an unhandled promise rejection.
+        // Storage unreachable.
       }
     }
   };
@@ -179,6 +186,12 @@ export function WalletProvider({ children }: { children: ReactNode }) {
       value={{ account, isConnecting, connectError, verified, setVerified, connect, disconnect, logout }}
     >
       {children}
+      {showModal && (
+        <WalletSelectModal
+          onSelect={handleWalletSelect}
+          onClose={handleModalClose}
+        />
+      )}
     </WalletContext.Provider>
   );
 }

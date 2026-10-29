@@ -9,6 +9,12 @@ export interface WalletAccount {
   };
 }
 
+export interface DetectedWallet {
+  name: string;
+  version?: string;
+  icon?: string;
+}
+
 export interface ExternalSignerAdapter {
   signRaw: (payload: {
     address: string;
@@ -19,6 +25,49 @@ export interface ExternalSignerAdapter {
 
 let injectedExtension: InjectedExtension | null = null;
 let cachedAccounts: WalletAccount[] = [];
+
+const WALLET_META: Record<string, { label: string; icon: string }> = {
+  "polkadot-js":  { label: "Polkadot.js",  icon: "/icons/wallets/polkadot-js.svg" },
+  "nova-wallet":  { label: "Nova Wallet",   icon: "/icons/wallets/nova.svg" },
+  "talisman":     { label: "Talisman",      icon: "/icons/wallets/talisman.svg" },
+  "subwallet-js": { label: "SubWallet",     icon: "/icons/wallets/subwallet.svg" },
+};
+
+export async function detectWallets(dappName: string): Promise<{ extensions: InjectedExtension[]; wallets: DetectedWallet[] }> {
+  if (typeof window === "undefined") {
+    return { extensions: [], wallets: [] };
+  }
+
+  const { web3Enable } = await import("@polkadot/extension-dapp");
+  const extensions = await web3Enable(dappName);
+
+  const wallets: DetectedWallet[] = extensions.map((ext) => {
+    const meta = WALLET_META[ext.name];
+    return {
+      name: ext.name,
+      version: ext.version,
+      icon: meta?.icon,
+    };
+  });
+
+  return { extensions, wallets };
+}
+
+export async function enableSpecificWallet(dappName: string, walletName: string): Promise<void> {
+  if (typeof window === "undefined") {
+    throw new Error("Wallet extension only works in browser");
+  }
+
+  const { web3Enable } = await import("@polkadot/extension-dapp");
+  const extensions = await web3Enable(dappName);
+
+  const match = extensions.find((ext) => ext.name === walletName);
+  if (!match) {
+    throw new Error(`Wallet "${walletName}" not found among detected extensions.`);
+  }
+
+  injectedExtension = match;
+}
 
 export async function enableWalletExtension(dappName: string): Promise<void> {
   if (typeof window === "undefined") {
@@ -53,12 +102,17 @@ export async function getAccounts(): Promise<WalletAccount[]> {
 
   const { web3Accounts } = await import("@polkadot/extension-dapp");
 
-  // Force Polkadot mainnet encoding (prefix 0, addresses start with "1"),
-  // rather than each extension's default generic Substrate format
-  // (prefix 42, addresses start with "5").
   const accounts = await web3Accounts({ ss58Format: 0 });
 
-  cachedAccounts = accounts.map((account: InjectedAccountWithMeta) => ({
+  // Filter to only accounts from the selected wallet extension
+  const sourceName = injectedExtension.name;
+  const filtered = accounts.filter(
+    (a: InjectedAccountWithMeta) => a.meta.source === sourceName
+  );
+
+  const pool = filtered.length > 0 ? filtered : accounts;
+
+  cachedAccounts = pool.map((account: InjectedAccountWithMeta) => ({
     address: account.address,
     meta: {
       name: account.meta.name,

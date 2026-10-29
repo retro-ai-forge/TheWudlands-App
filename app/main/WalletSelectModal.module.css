@@ -1,0 +1,152 @@
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.85);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+  animation: fadeIn 0.15s ease-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+.modal {
+  background: #111108;
+  border: 1px solid #3a3020;
+  border-radius: 6px;
+  padding: 1.5rem;
+  min-width: 300px;
+  max-width: 400px;
+  width: 90vw;
+  position: relative;
+}
+
+.title {
+  font-family: "Courier New", Courier, monospace;
+  font-size: 0.9rem;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: #c07a3a;
+  margin: 0 0 1.25rem;
+  text-align: center;
+}
+
+.walletList {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.walletButton {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem 1rem;
+  background: #0a0a0a;
+  border: 1px solid #3a3020;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+  width: 100%;
+  text-align: left;
+}
+
+.walletButton:hover {
+  border-color: #c07a3a;
+  background: #1a1810;
+}
+
+.walletIcon {
+  width: 32px;
+  height: 32px;
+  border-radius: 4px;
+  object-fit: contain;
+  flex-shrink: 0;
+}
+
+.walletIconFallback {
+  width: 32px;
+  height: 32px;
+  border-radius: 4px;
+  flex-shrink: 0;
+  background: #3a3020;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: "Courier New", Courier, monospace;
+  font-size: 0.7rem;
+  color: #c07a3a;
+}
+
+.walletInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.walletName {
+  font-family: "Courier New", Courier, monospace;
+  font-size: 0.85rem;
+  color: #d4c9a8;
+  font-weight: bold;
+}
+
+.walletVersion {
+  font-family: "Courier New", Courier, monospace;
+  font-size: 0.65rem;
+  color: #7a6a3a;
+}
+
+.closeButton {
+  display: block;
+  margin: 1.25rem auto 0;
+  padding: 0.5rem 1.5rem;
+  background: none;
+  border: 1px solid #3a3020;
+  border-radius: 4px;
+  font-family: "Courier New", Courier, monospace;
+  font-size: 0.75rem;
+  letter-spacing: 0.1em;
+  color: #7a6a3a;
+  cursor: pointer;
+  text-transform: uppercase;
+}
+
+.closeButton:hover {
+  color: #c07a3a;
+  border-color: #c07a3a;
+}
+
+.noWallets {
+  font-family: "Courier New", Courier, monospace;
+  font-size: 0.82rem;
+  color: #d4c9a8;
+  text-align: center;
+  line-height: 1.6;
+  padding: 0.5rem 0;
+}
+
+.noWallets a {
+  color: #c07a3a;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.noWallets a:hover {
+  color: #e6a55a;
+}
+
+.spinner {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem 0;
+  font-family: "Courier New", Courier, monospace;
+  font-size: 0.82rem;
+  color: #7a6a3a;
+  letter-spacing: 0.1em;
+}

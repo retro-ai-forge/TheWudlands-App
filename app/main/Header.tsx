@@ -9,8 +9,8 @@ import { useHeaderVisibility } from "./HeaderVisibilityProvider";
 
 const NAV = [
   { label: "Play",       href: "/" },
-  { label: "The World",  href: "/theworld" },
   { label: "Guide",      href: "/guide" },
+  { label: "The World",  href: "/theworld" },
   { label: "Create",     href: "/create" },
 ];
 

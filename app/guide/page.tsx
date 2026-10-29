@@ -29,22 +29,20 @@ const StatusWithCountdown = ({ status, initialSeconds, showDays = false }: { sta
   );
 };
 
-const WORLD_ROWS = [
-  { key: "Choices", value: "Every decision carries weight. The story remembers what you did — and what you chose not to." },
-  { key: "Dependencies", value: "Some roads stay closed until you have walked the ones before them. Dependencies are shown clearly." },
-  { key: "Survival", value: "Hunger, thirst, cold, disease — push too hard and your hands will shake at the wrong moment." },
-  { key: "Combat", value: "Not every fight is one you are meant to win. Knowing when to run is as valuable as knowing when to stand." },
-  { key: "Shelter", value: "No permanent home. Caves, barricaded inns, collapsed watchtowers. The Wudlands does not hand out homes. It lets you find them." },
-  { key: "Escape Route", value: (<>Every adventure has a way out. It may cost you something to reach it. Using an <span className={styles.code}>escape_route</span> counts as a playthrough and consumes one of three replays.</>) },
-  { key: "Plays & Fee", value: "A small on-chain fee (~$1) grants three attempts. Runs out? Pay again." },
-];
-
 const CHARACTER_ROWS = [
   { key: "Race", value: "Permanent choice. Each race carries its own strengths, history, and the way the world reads you." },
   { key: "Class", value: "You begin classless. Classes unlock after enough experience — some require a teacher who may not find you worthy." },
   { key: "Age & Time", value: "Every adventure adds one month to your life. Old age accumulates. Life potions exist — but nothing here is free." },
   { key: "Equipment", value: "Soft carry limits. Exceed them and the weight tells — slower movement, quicker exhaustion." },
   { key: "Party", value: "Up to four adventurers. Set a marching order — the front takes threats, the rear gets taken first." },
+];
+
+const SURVIVAL_ROWS = [
+  { key: "Choices", value: "Every decision carries weight. The story remembers what you did — and what you chose not to." },
+  { key: "Survival", value: "Hunger, thirst, cold, disease — push too hard and your hands will shake at the wrong moment." },
+  { key: "Combat", value: "Not every fight is one you are meant to win. Knowing when to run is as valuable as knowing when to stand." },
+  { key: "Shelter", value: "No permanent home. Caves, barricaded inns, collapsed watchtowers. The Wudlands does not hand out homes." },
+  { key: "Escape Route", value: (<>Every adventure has a way out. It may cost you something to reach it. Using an <span className={styles.code}>escape_route</span> counts as a playthrough.</>) },
 ];
 
 export default function Guide() {
@@ -54,9 +52,11 @@ export default function Guide() {
         <h2 className={styles.heading}>The Adventurer&apos;s Guide</h2>
 
         <p className={styles.body}>
-          This guide covers the systems, mechanics, and rules that shape your experience in the Wudlands —
-          from survival and combat to reputation and party travel.
-          For the story behind the world and how to get started, visit the <Link href="/theworld" className={styles.externalLink}>The World</Link> section.
+          You are a wanderer in the Wudlands. What you carry, what you know, and what the world
+          whispers about you when you are not listening — this guide tells you how all of it works,
+          from your own eyes.
+          For how the world itself ticks behind the curtain, see{" "}
+          <Link href="/theworld" className={styles.externalLink}>The World</Link>.
         </p>
 
         <div className={styles.imageFrame}>
@@ -74,6 +74,7 @@ export default function Guide() {
 
         <WalletGuide />
 
+        {/* ── Minne ─────────────────────────────────────────── */}
         <h2 className={styles.sectionHeading}>Love, Admiration &amp; the Art of Minne</h2>
 
         <p className={styles.body}>
@@ -107,7 +108,47 @@ export default function Guide() {
           once made, belongs to the story.
         </p>
 
-        <GuideTable rows={WORLD_ROWS} />
+        {/* ── Your Nature ────────────────────────────────────── */}
+        <h2 className={styles.sectionHeading}>Your Nature</h2>
+
+        <p className={styles.body}>
+          Your <strong>origin</strong> — the blood that runs through your veins, the craft
+          your hands learned, the gender the world perceives — is written at your birth and does not change.
+          Your <strong>age</strong> advances with every adventure. Those months do not come back.
+          More on the{" "}
+          <Link href="/characters" className={styles.externalLink}>character creation</Link> page.
+        </p>
+
+        <p className={styles.body}>
+          Your <strong>vital status</strong> is the deepest mark. You may walk as{" "}
+          <span className={styles.statusAlive}>alive</span>, return as{" "}
+          <span className={styles.statusDead}>dead</span>, hunger as a{" "}
+          <span className={styles.statusVampire}>vampire</span> without aging, exist without a soul as{" "}
+          <span className={styles.statusSoulless}>soulless</span>, find yourself stripped of magic as{" "}
+          <span className={styles.statusMagicless}>magicless</span>, cursed by forces unseen as{" "}
+          <span className={styles.statusCursed}>cursed</span>, trapped in stone as{" "}
+          <span className={styles.statusPetrified}>petrified</span>, or drift unanchored as{" "}
+          <span className={styles.statusIncorporal}>incorporal</span>.
+          These conditions persist until a future adventure offers redemption.
+          The world knows what you are. The question is what you do about it.
+        </p>
+
+        <p className={styles.body}>
+          Your relationships — every person you have met, charmed, scorned, or loved — follow you
+          from one adventure to the next. The innkeeper who trusted you, the lord whose son you
+          failed to save. None of them forget. Neither does the record.
+        </p>
+
+        {/* ── Survival ───────────────────────────────────────── */}
+        <h2 className={styles.sectionHeading}>Survival &amp; Combat</h2>
+
+        <p className={styles.body}>
+          The Wudlands does not care whether you are ready. Hunger, thirst, cold — they arrive
+          whether you planned for them or not. A fight you cannot win is still a fight you walked into.
+          The wise learn when to run.
+        </p>
+
+        <GuideTable rows={SURVIVAL_ROWS} />
 
         {/* ── Character & Party ───────────────────────────────── */}
         <h2 className={styles.sectionHeading}>Character &amp; Party</h2>
@@ -149,16 +190,6 @@ export default function Guide() {
 
         <p className={styles.body}>
           Hunger, thirst, cold, buffs — temporary conditions that fade when you leave the adventure. They push your decisions during play, nothing more.
-        </p>
-
-        {/* ── Character & Origins (folded; full page at /characters) ───────── */}
-        <h2 className={styles.sectionHeading}>Character &amp; Origins</h2>
-
-        <p className={styles.body}>
-          Who you are before the road — your gender, race, former profession, the
-          marks your deeds leave, and the classes you can grow into. More details on the{" "}
-          <Link href="/characters" className={styles.externalLink}>character creation</Link>{" "}
-          page.
         </p>
 
       </section>

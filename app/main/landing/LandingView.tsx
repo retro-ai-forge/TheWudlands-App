@@ -18,7 +18,7 @@ const STEPS = [
     num: "1",
     icon: "/icons/front-1.jpg",
     title: "Pick an adventure",
-    text: "Choose a self-contained story — a haunted tower, a cursed merchant road, a dungeon that swallowed three expeditions before yours.",
+    text: "Create a character, choose a story — a haunted tower, a cursed merchant road, a dungeon that swallowed three expeditions before yours.",
   },
   {
     num: "2",
@@ -102,16 +102,7 @@ export function LandingView({ status, joining, onEnter, onError, onPending, onPe
           A crypto wallet is required to enter the Wudlands.{" "}
           <Link href="/guide#wallet-guide" className={styles.trustLink}>Set one up →</Link>
         </p>
-      </section>
-
-      {/* 4 — TRUST / STATUS */}
-      <section className={styles.trust}>
-        <p className={styles.trustLine}>
-          Free to play in beta · No coins spent before alpha
-        </p>
-        <Link href="/dev-section#roadmap" className={styles.trustLink}>
-          View the roadmap →
-        </Link>
+        <p className={styles.sectionBody}>Free to play.</p>
       </section>
 
       {/* 5 — FINAL CTA */}
