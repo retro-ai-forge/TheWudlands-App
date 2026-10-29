@@ -66,15 +66,17 @@ export default function DevSection() {
                 <div className={styles.phaseName}>Beta 2.0 October 2026</div>
                 <ul className={styles.phaseDetails}>
                   <li>Progress <strong><span style={{fontSize: '1.2em'}}>loss</span></strong> on major upgrades!</li>
+                  <li>Integrated Story Editor</li>
+                  <li>Tutorial for creators</li>
+                  <li>Submit stories &amp; review</li>
                   <li>Equip items</li>
                   <li>Weapon and armor stats</li>
                   <li>Carrying capacity</li>
-                  <li>Soul slots for magic</li>
+                  <li>Soul Attunement — bind runes</li>
                   <li>Companion - pets, mounts</li>
-                  <li>Crafting to enchant items</li>
                   <li>Your legend stats</li>
                   <li>First adventure addons</li>
-                  <li>Data migration to Alpha not guaranteed</li>
+                  <li>Salvage worn out items</li>
                   <li>Free to play</li>
                 </ul>
               </div>
