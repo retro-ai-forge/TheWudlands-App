@@ -201,8 +201,7 @@ export default function Storyteller() {
             className={styles.editorCta}
           >
             <span className={styles.ctaLabelFull}>Open the Story Editor</span>
-            <span className={styles.ctaLabelSmall}>Open Editor on PC !</span>
-            {" "}<span className={styles.editorCtaArrow}>&rarr;</span>
+            <span className={styles.ctaLabelSmall}>Open Editor on PC</span>
           </a>
           <Link href="/create/tutorial" className={styles.editorCta}>
             Tutorial <span className={styles.editorCtaArrow}>&rarr;</span>

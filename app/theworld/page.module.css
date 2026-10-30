@@ -32,6 +32,19 @@
   margin-bottom: 2rem;
 }
 
+.sectionHeading {
+  font-family: "Courier New", Courier, monospace;
+  font-size: 1rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  text-align: center;
+  color: #c07a3a;
+  border-bottom: 1px solid #3a3020;
+  padding-bottom: 0.5rem;
+  margin-top: 3rem;
+  margin-bottom: 1.25rem;
+}
+
 .body {
   font-family: "Courier New", Courier, monospace;
   font-size: 1rem;

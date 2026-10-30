@@ -17,7 +17,7 @@ const STEPS = [
   {
     num: "1",
     icon: "/icons/front-1.jpg",
-    title: "Pick an adventure",
+    title: "Step into the world",
     text: "Create a character, choose a story — a haunted tower, a cursed merchant road, a dungeon that swallowed three expeditions before yours.",
   },
   {
