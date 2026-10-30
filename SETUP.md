@@ -1,3 +1,23 @@
+# TheWudlands — Setup
+
+## Table of contents
+
+**Getting started**
+- [1. Run the App (two terminals)](#1-after-setup-below-run-the-app-on-linux-two-terminals)
+- [2. Create virtual env](#2-create-virtual-env)
+- [Create .env file for email credentials](#create-env-file-for-email-credentials)
+
+**Database & Google Cloud**
+- [On new firestore DB do](#on-new-firestore-db-do)
+- [GCP help: service account & IAM API](#gcp-help-how-to-create-a-service-account-and-enable-the-iam-api)
+- [Twine story images (Firebase Storage / GCS)](#twine-story-images-firebase-storage--gcs)
+  - [Reviewer / admin roles](#reviewer--admin-roles)
+
+**Docker & deployment**
+- [3. Docker & group](#3-docker--group)
+- [4. Run with Docker](#4-run-with-docker)
+- [Create new app version](#create-new-app-version)
+
 ## 1. After setup below, run the App on linux two terminals
 
 Run all commands from the **project root** (`TheWudlands/`).
@@ -173,6 +193,97 @@ gcloud run services update serverless-wudlands \
     --service-account=cloud-run-firestore-sa@thewudlands.iam.gserviceaccount.com \
     --region=europe-west1 \
     --project=thewudlands
+```
+
+## Twine story images (Firebase Storage / GCS)
+
+Twine games can show images at the top of a passage. Images live in a Firebase
+Storage bucket (a GCS bucket under the hood) and are referenced in passage text
+by bare filename, e.g. `[img[desert_dune.webp]]`. At play time the filename is
+rewritten to the full public bucket URL, so stored text stays clean. Uploads are
+converted to WebP and downscaled client-side (full <=600px, thumbnail 100px).
+
+Images move through three lifecycle stages, each a path segment:
+
+```
+twine-images/{wallet}/create/{storyId}/{file}   author's working copy (editor)
+twine-images/{wallet}/review/{storyId}/{file}   frozen copy made on submit
+twine-images/served/{storyId}/{file}            production copy (no wallet, public)
+```
+
+- **create** - the only stage the editor's "Images" button touches.
+- **review** - on submit, `create` is copied here and the wallet is stamped into
+  the story's `storyData`; the author no longer edits these.
+- **served** - on deploy (future step), `review` is copied here under a
+  wallet-less, story-id-only path for public play.
+
+- **Reads** (display, reviewers, players) come straight from the bucket URL - no
+  auth, no app bandwidth. **Writes** (upload/delete) go through FastAPI,
+  authorized owner-or-admin, and always land under the story owner's wallet.
+
+**Auth:** the backend uses Application Default Credentials - `gcloud auth
+application-default login` locally (see the deploy section above), or the
+attached service account on Cloud Run. No service-account key file is needed.
+
+**Step 1: Create the bucket.** Firebase console -> Build -> Storage -> Get
+started. This provisions a GCS bucket, by default `thewudlands.firebasestorage.app`.
+
+**Step 2: Public read by URL, without listing** (required - until this, uploads
+succeed but images won't display). A plain `objectViewer` grant to `allUsers`
+would also allow anyone to *enumerate* the bucket, so instead create a custom
+role with only `storage.objects.get` and grant that:
+```bash
+gcloud iam roles create twineImagePublicGet --project=thewudlands \
+    --title="Twine Image Public Get" \
+    --permissions=storage.objects.get \
+    --stage=GA
+
+gcloud storage buckets add-iam-policy-binding gs://thewudlands.firebasestorage.app \
+    --member=allUsers \
+    --role=projects/thewudlands/roles/twineImagePublicGet
+```
+Anyone with the exact URL (unguessable story UUID) can load an image, but nobody
+can list the bucket. (If granting a custom role to `allUsers` is rejected in your
+project, fall back to `roles/storage.objectViewer` and accept that listing is
+possible, or switch serving to Firebase download tokens.)
+
+**Step 3: Grant the Cloud Run service account write access** (for production
+uploads/deletes):
+```bash
+gcloud storage buckets add-iam-policy-binding gs://thewudlands.firebasestorage.app \
+    --member="serviceAccount:cloud-run-firestore-sa@thewudlands.iam.gserviceaccount.com" \
+    --role="roles/storage.objectAdmin"
+```
+
+**Step 4: Configure the backend.** In `.env` (see `.env-example`):
+```
+GCS_BUCKET_NAME=thewudlands.firebasestorage.app
+```
+Python deps `google-cloud-storage` and `python-multipart` are in
+`requirements.txt`; install with the usual `pip install -r requirements.txt`.
+
+### Reviewer / admin roles
+
+Privileged actions are controlled by a Firestore `roles` collection, one doc per
+wallet address: `{"address": "<wallet>", "roles": ["reviewer", "admin"]}`.
+
+- `reviewer` - may access (read) stories handed in for review.
+- `admin` - may delete/modify any story's images (not just their own). Admin
+  implies reviewer.
+
+Owners can always manage their own story's images regardless of roles. Grant a
+role from the project venv:
+```bash
+source .venv/bin/activate && python -c "
+import asyncio
+from backend.db import get_database
+async def go():
+    await get_database().roles.update_one(
+        {'address': 'YOUR_WALLET'},
+        {'\$addToSet': {'roles': {'\$each': ['admin', 'reviewer']}}},
+        upsert=True,
+    )
+asyncio.run(go())"
 ```
 
 ## 3. Docker & group

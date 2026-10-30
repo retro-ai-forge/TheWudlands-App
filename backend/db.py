@@ -105,3 +105,6 @@ async def ensure_indexes() -> None:
         [("address", 1), ("storyId", 1)], unique=True
     )
     await db.twine_review.create_index("submittedAt")
+
+    # Role grants (reviewer/admin): one doc per wallet address.
+    await db.roles.create_index("address", unique=True)

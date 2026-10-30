@@ -8,10 +8,11 @@ Provides:
 - POST /api/auth/logout - Clear session
 """
 
-from fastapi import APIRouter, BackgroundTasks, HTTPException, Request, Response, Depends
+from fastapi import APIRouter, BackgroundTasks, HTTPException, Request, Response, Depends, UploadFile, File, Form
 from pydantic import BaseModel, ConfigDict, Field
 from datetime import datetime, timedelta, timezone
 from typing import Dict, List, Literal, Optional
+import os
 import secrets
 import time
 from backend.auth import (
@@ -2910,13 +2911,36 @@ async def submit_twine_story_for_review(
         }
 
     now = datetime.now(timezone.utc).isoformat()
+
+    # Stamp the submitter's wallet into the story metadata (overwriting any
+    # existing value), so the review and serving pipelines know the owner and can
+    # resolve images under twine-images/{wallet}/.../{storyId}.
+    story_data = dict(doc.get("storyData", {}))
+    story_data["wallet"] = address
+    await db.twine_stories.update_one(
+        {"address": address, "storyId": story_id},
+        {"$set": {"storyData": story_data}},
+    )
+
+    # Freeze a copy of the author's images into the review stage. Do this before
+    # marking the story submitted so a storage failure doesn't leave a review
+    # without its images.
+    try:
+        twine_images.copy_stage(
+            address, story_id, twine_images.STAGE_CREATE, twine_images.STAGE_REVIEW
+        )
+    except Exception as exc:
+        raise HTTPException(
+            status_code=502, detail=f"Could not copy images for review: {exc}"
+        )
+
     review_doc = {
         "address": address,
         "storyId": story_id,
         "name": doc.get("name", ""),
         "ifid": doc.get("ifid", ""),
         "lastUpdate": doc.get("lastUpdate", ""),
-        "storyData": doc.get("storyData", {}),
+        "storyData": story_data,
         "passages": doc.get("passages", []),
         "sizeBytes": doc.get("sizeBytes", 0),
         "submittedAt": now,
@@ -2936,3 +2960,123 @@ async def submit_twine_story_for_review(
         "status": "submitted",
         "warnings": warnings,
     }
+
+
+# ── Twine story images ──────────────────────────────────────────────────
+
+from backend import twine_images, roles
+
+# Reject absurdly large uploads outright (full image). Thumbnails are tiny.
+_MAX_IMAGE_BYTES = 10 * 1024 * 1024
+
+
+async def _authorize_story_owner(story_id: str, address: str) -> str:
+    """Authorize image management and return the story OWNER's wallet.
+
+    Images live under the owner's wallet path, so an admin reviewing another
+    user's story still reads/writes the owner's folder, not their own. The
+    caller must be the owner or an admin. A story not yet synced to the cloud
+    has no recorded owner, so the caller is treated as the owner (local-first).
+    """
+    db = get_database()
+    existing = await db.twine_stories.find_one(
+        {"storyId": story_id}, {"_id": 0, "address": 1}
+    )
+    owner = existing.get("address") if existing else address
+
+    if owner != address and not await roles.is_admin(address):
+        raise HTTPException(status_code=403, detail="Not authorized for this story")
+
+    return owner
+
+
+@player_router.get("/me/twine-stories/{story_id}/images")
+async def list_twine_story_images(
+    story_id: str, address: str = Depends(get_current_address)
+):
+    """List a story's uploaded (create-stage) images (metadata + public URLs)."""
+    owner = await _authorize_story_owner(story_id, address)
+    return twine_images.list_images(owner, twine_images.STAGE_CREATE, story_id)
+
+
+@player_router.post("/me/twine-stories/{story_id}/images")
+async def upload_twine_story_image(
+    story_id: str,
+    file: UploadFile = File(...),
+    thumb: Optional[UploadFile] = File(None),
+    filename: Optional[str] = Form(None),
+    address: str = Depends(get_current_address),
+):
+    """Upload a full image (and optional client-generated thumbnail) for a story.
+
+    The stored filename is sanitised and returned; that is the token the author
+    references in passage text as `[img[<filename>]]`.
+    """
+    owner = await _authorize_story_owner(story_id, address)
+
+    if not twine_images.is_allowed_content_type(file.content_type or ""):
+        raise HTTPException(
+            status_code=400,
+            detail=f"Unsupported image type: {file.content_type}",
+        )
+
+    data = await file.read()
+    if len(data) > _MAX_IMAGE_BYTES:
+        raise HTTPException(status_code=413, detail="Image too large (max 10 MB)")
+    if not data:
+        raise HTTPException(status_code=400, detail="Empty image")
+
+    # Keep the author-facing name, but force its extension to match the content.
+    requested = filename or file.filename or "image"
+    ext = twine_images.extension_for_content_type(file.content_type or "") or ""
+    stem = twine_images.sanitize_filename(requested)
+    stem_no_ext, _ = os.path.splitext(stem)
+    final_name = f"{stem_no_ext}{ext}" if ext else stem
+
+    stage = twine_images.STAGE_CREATE
+    twine_images.upload_image(
+        owner,
+        stage,
+        story_id,
+        final_name,
+        data,
+        file.content_type or "application/octet-stream",
+    )
+
+    if thumb is not None:
+        thumb_data = await thumb.read()
+        if thumb_data:
+            twine_images.upload_image(
+                owner,
+                stage,
+                story_id,
+                final_name,
+                thumb_data,
+                thumb.content_type or file.content_type or "image/jpeg",
+                thumb=True,
+            )
+
+    return {
+        "ok": True,
+        "filename": final_name,
+        "url": twine_images.public_url(owner, stage, story_id, final_name),
+        "thumbUrl": twine_images.public_url(
+            owner, stage, story_id, final_name, thumb=True
+        ),
+    }
+
+
+@player_router.delete("/me/twine-stories/{story_id}/images/{filename}")
+async def delete_twine_story_image(
+    story_id: str, filename: str, address: str = Depends(get_current_address)
+):
+    """Delete a story's (create-stage) image (full + thumbnail)."""
+    owner = await _authorize_story_owner(story_id, address)
+
+    safe = twine_images.sanitize_filename(filename)
+    existed = twine_images.delete_image(
+        owner, twine_images.STAGE_CREATE, story_id, safe
+    )
+    if not existed:
+        raise HTTPException(status_code=404, detail="Image not found")
+    return {"ok": True, "filename": safe}

@@ -5,6 +5,8 @@ rav
 python-dotenv>=1.0.0
 motor>=3.5.0
 requests>=2.31.0
+google-cloud-storage>=2.16.0
+python-multipart>=0.0.9
 
 # Testing
 pytest>=8.2.0
