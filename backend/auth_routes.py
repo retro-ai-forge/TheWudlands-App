@@ -2939,7 +2939,10 @@ async def submit_twine_story_for_review(
         "storyId": story_id,
         "name": doc.get("name", ""),
         "ifid": doc.get("ifid", ""),
-        "lastUpdate": doc.get("lastUpdate", ""),
+        # lastUpdate is set to now on every submission, so it marks the last
+        # change to the review entry and anchors the 7-day review countdown -
+        # resubmitting restarts the timer.
+        "lastUpdate": now,
         "storyData": story_data,
         "passages": doc.get("passages", []),
         "sizeBytes": doc.get("sizeBytes", 0),
@@ -2960,6 +2963,32 @@ async def submit_twine_story_for_review(
         "status": "submitted",
         "warnings": warnings,
     }
+
+
+@player_router.get("/twine-reviews")
+async def list_twine_reviews():
+    """Public list of all stories submitted for review, from every author.
+
+    `lastUpdate` is refreshed on every submission, so it anchors the 7-day review
+    window - resubmitting a story restarts the countdown. This is a read-only
+    preview; opening/reviewing a submission happens via a separate gated UI.
+    """
+    db = get_database()
+    cursor = db.twine_review.find(
+        {},
+        {
+            "_id": 0,
+            "address": 1,
+            "storyId": 1,
+            "name": 1,
+            "lastUpdate": 1,
+            "submittedAt": 1,
+            "status": 1,
+        },
+    )
+    results = [doc async for doc in cursor]
+    results.sort(key=lambda d: d.get("lastUpdate", ""), reverse=True)
+    return results
 
 
 # ── Twine story images ──────────────────────────────────────────────────

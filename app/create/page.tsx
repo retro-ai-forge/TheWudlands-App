@@ -44,6 +44,14 @@ export default function Create() {
           a wide, open genre. Get creative.
         </p>
 
+        <div className={styles.imageFrame}>
+          <img
+            src="/images/create/share-writers-80percent.jpg"
+            alt="Revenue share: 80% goes to writers and creators, 20% covers admin and platform costs."
+            className={styles.sectionImage}
+          />
+        </div>
+
         <div className={styles.ctaRow}>
           <a
             href="/twine/"
@@ -55,16 +63,11 @@ export default function Create() {
             <span className={styles.ctaLabelSmall}>Open Editor on PC</span>
           </a>
           <Link href="/create/tutorial" className={styles.editorCta}>
-            Tutorial <span className={styles.editorCtaArrow}>&rarr;</span>
+            Tutorial
           </Link>
-        </div>
-
-        <div className={styles.imageFrame}>
-          <img
-            src="/images/create/share-writers-80percent.jpg"
-            alt="Revenue share: 80% goes to writers and creators, 20% covers admin and platform costs."
-            className={styles.sectionImage}
-          />
+          <Link href="/create/review" className={styles.editorCta}>
+            Review Status
+          </Link>
         </div>
 
         <div style={{ marginBottom: "1.5rem", padding: "2rem", background: "#0a0a0a", border: "1px solid #7a6a3a" }}>
@@ -290,22 +293,12 @@ export default function Create() {
           })()}
         </div>
 
-        <div style={{ display: "flex", justifyContent: "center", marginTop: "2.5rem" }}>
-          <Link
-            href="/create/tools"
-            style={{
-              padding: "0.9rem 3rem",
-              background: "#1a1a1a",
-              color: "#d4c9a8",
-              border: "2px solid #7a6a3a",
-              fontFamily: "'Courier New', Courier, monospace",
-              fontSize: "1rem",
-              letterSpacing: "0.2em",
-              textTransform: "uppercase",
-              textDecoration: "none",
-            }}
-          >
-            [ Creator Tools ]
+        <div className={styles.ctaRow} style={{ marginTop: "2.5rem" }}>
+          <Link href="/create/tools" className={styles.editorCta}>
+            Creator Tools
+          </Link>
+          <Link href="/create/tutorial" className={styles.editorCta}>
+            Tutorial
           </Link>
         </div>
       </section>

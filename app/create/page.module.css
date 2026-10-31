@@ -744,7 +744,9 @@
 
 /* ── Fancy Story Editor CTA ──────────────────────────── */
 .editorCta {
-  display: block;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   width: 100%;
   box-sizing: border-box;
   margin: 0 0 2.5rem;
