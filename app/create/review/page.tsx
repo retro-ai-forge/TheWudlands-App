@@ -156,7 +156,7 @@ export default function ReviewStatus() {
           Review Status
         </h2>
         <p style={{ fontFamily: mono, color: gold, fontSize: "0.85rem", marginBottom: "1.5rem" }}>
-          Herein lie all tales submitted for judgement. Each is granted seven days' grace — revise as you will, and the hourglass turns anew. When the last grain falls, the tale passes to the reviewers.
+          Herein lie all tales submitted for judgement. Each is granted seven days&rsquo; grace — revise as you will, and the hourglass turns anew. When the last grain falls, the tale passes to the reviewers.
         </p>
 
         {error && (
