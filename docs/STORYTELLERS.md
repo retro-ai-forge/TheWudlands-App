@@ -23,17 +23,15 @@ The Wudlands platform provides a Twine story format that maps Twine passages dir
 
 ## Scene Structure
 
-![Scene Graph Visualization](/public/images/create/twine-cluster.jpg)
-
 Every adventure is a graph of scenes, each identified by a unique id. The engine walks this graph one step at a time, driven by the player's choices.
 
 ### Required Scenes
 
 Every adventure must include three special scenes:
 
-- **default_entry** — the normal starting point when a player begins the adventure
-- **emergency_exit** — a fallback the engine uses if a scene link is broken or missing, so the player can always exit gracefully
-- **escape_route** — an always-available exit the player can use to leave mid-adventure
+- **start** — the normal starting point when a player begins the adventure
+- **LastResort** — a fallback the engine uses if a scene link is broken or missing, so the player can always exit gracefully
+- **retreat** — an always-available exit the player can use to leave mid-adventure
 
 ### Scene Content
 
@@ -62,14 +60,48 @@ Locked adventures are displayed with their missing prerequisites listed, so play
 
 Each scene may reference a single image by filename. At runtime, the frontend loads the image and applies CSS filters based on the scene's declared style preset. The exact visual style — dark, eerie, bright, washed-out — is controlled by the preset, not the raw image, so a single illustration can serve multiple moods.
 
+## Image Hotspots (clickable regions)
+
+A scene image can carry **clickable regions** that jump to another scene, exactly like a choice button — a left door and a right door, _climb_ or _jump_, a map the player taps to travel. You don't type coordinates: in the passage editor, press **Hotspots**, drag a box over the part of the image you mean, and pick the scene it leads to. The editor draws every region back onto the image as a numbered, labelled box, so you always _see_ where each link sits. The read-only image preview shows the same boxes without opening the editor.
+
+Under the hood each region is one `<<area>>` macro placed beneath the image:
+
+```
+[img[ruined-gate.webp]]
+<<area 0.00 0.20 0.45 0.80 [[The left door->leftDoor]]>>
+<<area 0.55 0.20 0.45 0.80 [[Climb the wall->wallTop]]>>
+```
+
+The four numbers are `x y width height` as fractions (0–1) of the image, and the `[[...]]` is an ordinary link, so a hotspot counts as a real choice: its target is validated on submit and it keeps a scene from being treated as a dead end. The label doubles as an accessible fallback button rendered beneath the image, so every hotspot is reachable by keyboard and screen reader too. Keep regions to two or three per image so choices stay clear.
+
+## Story Tags
+
+Tag your passages in Twine to tell players what kind of experience your adventure offers. When you submit, the platform gathers every distinct tag across your passages and shows them on the review queue. (Engine tags — `stylesheet` and `script` — are ignored.)
+
+Each curated tag has its own illustrated icon (`/icons/tag-<name>.png`) and sits in a colour-themed category, so a story's tags read as a palette. Keep tags short and clear; a story can carry several. They are grouped below by theme (the review queue shows the same grouping in its tag legend).
+
+**Combat & Peril** (red) — `gore` (blood splatter), `combat` (crossed swords), `beast` (beast skull), `lycan` (werewolf), `evil` (demon mask), `undead` (skull)
+
+**Magic & the Uncanny** (violet) — `magic` (rune sigil), `fate` (dice), `oracle` (crystal ball), `horror` (specter), `omen` (raven), `mystery` (magnifying glass)
+
+**Guile, Wits & Reward** (teal) — `treasure` (gems), `puzzle` (lock & key), `trickster` (joker card), `armor` (breastplate), `stealth` (hooded dagger)
+
+**Journey & Setting** (green) — `adventure` (compass), `travel` (backpack), `survival` (tent & campfire), `dungeon` (torch), `relic` (ancient urn), `sea` (wave & ship), `mountain` (peak), `cave` (cave mouth), `island` (palm isle), `fire` (flame), `ice` (ice crystal)
+
+**Tone** (gold + pink) — `comedy` (comedy mask), `court` (crown), `bard` (lute), `tragedy` (tragedy mask), `romance` (heart), `love` (two hearts), `erotic` (three hearts, adult), `vampire` (fangs)
+
+**Free** (silver) — `other` (spark): any theme you wish that no other tag captures.
+
+You can use **any** tag you like — tags outside this list still appear on the queue, just in a plain, dull colour. Tag names are matched case-insensitively.
+
 ## Submission
 
 Adventures are submitted alongside their image assets. The engine validates every adventure against the platform schema before making it available to players. Validation checks include:
 
 - Presence of all required fields
-- Existence of `default_entry`, `emergency_exit`, and `escape_route` scenes
+- Existence of `start`, `LastResort`, and `retreat` scenes
 - Validity of all choice targets (every `to` field must point to an existing scene)
-- Correct typing on `ending` flags
+- Correct typing on `isEnding` flags
 
 Adventures that fail validation are not published. Everything you need to know about the addon format, image specifications, style presets, and submission requirements is documented in the Storyteller section of the app.
 
@@ -79,4 +111,4 @@ When a player pays the entry fee for your adventure, the revenue split is applie
 
 ## Play Count Model
 
-Play counts are tracked per player per adventure. When a player enters your adventure, the engine checks their remaining play count. If the count is zero, entry is refused until the player pays the entry fee again. Play count decrements when the player reaches an ending scene or uses the escape route. This mirrors the real-world model of paying for the seat, not the outcome.
+Play counts are tracked per player per adventure. When a player enters your adventure, the engine checks their remaining play count. If the count is zero, entry is refused until the player pays the entry fee again. Play count decrements when the player reaches an ending scene or uses the retreat. This mirrors the real-world model of paying for the seat, not the outcome.

@@ -50,11 +50,27 @@ def _as_utc(value: datetime) -> datetime:
     return value if value.tzinfo is not None else value.replace(tzinfo=timezone.utc)
 
 
+def _last_active(doc: dict) -> Optional[datetime]:
+    """Normalised `last_active_at`, or None if the doc lacks a usable value.
+
+    A malformed/legacy doc without a datetime `last_active_at` is never swept by
+    the TTL index (TTL only deletes docs whose indexed field is a date), so the
+    read paths must tolerate it rather than KeyError on direct access.
+    """
+    value = doc.get("last_active_at")
+    return _as_utc(value) if isinstance(value, datetime) else None
+
+
 def _doc_to_player(doc: dict) -> ActivePlayer:
+    # last_active_at is validated by the caller; fall back for logged_in_at so a
+    # doc missing only that field still yields a usable player.
+    last_active = _last_active(doc) or datetime.now(timezone.utc)
+    logged_in = doc.get("logged_in_at")
+    logged_in = _as_utc(logged_in) if isinstance(logged_in, datetime) else last_active
     return ActivePlayer(
         address=doc["address"],
-        logged_in_at=_as_utc(doc["logged_in_at"]),
-        last_active_at=_as_utc(doc["last_active_at"]),
+        logged_in_at=logged_in,
+        last_active_at=last_active,
     )
 
 
@@ -110,8 +126,9 @@ async def get_active_player(address: str) -> Optional[ActivePlayer]:
     if doc is None:
         return None
 
-    if datetime.now(timezone.utc) - _as_utc(doc["last_active_at"]) > INACTIVITY_TIMEOUT:
-        # Idle past the timeout but not yet swept by the TTL index.
+    last_active = _last_active(doc)
+    if last_active is None or datetime.now(timezone.utc) - last_active > INACTIVITY_TIMEOUT:
+        # Idle past the timeout (or malformed, so never TTL-swept) - evict it.
         await db.active_players.delete_one({"address": address})
         return None
 
@@ -128,9 +145,20 @@ async def list_active_players() -> List[ActivePlayer]:
     now = datetime.now(timezone.utc)
     players = []
 
+    stale = []  # _id values of malformed docs the TTL index can't sweep
     async for doc in db.active_players.find({}):
-        if now - _as_utc(doc["last_active_at"]) > INACTIVITY_TIMEOUT:
+        last_active = _last_active(doc)
+        if last_active is None or not doc.get("address"):
+            # No usable timestamp or no address - can't represent it; drop it.
+            # Delete by _id so a missing address field can't break the cleanup.
+            if "_id" in doc:
+                stale.append(doc["_id"])
+            continue
+        if now - last_active > INACTIVITY_TIMEOUT:
             continue
         players.append(_doc_to_player(doc))
+
+    if stale:
+        await db.active_players.delete_many({"_id": {"$in": stale}})
 
     return players

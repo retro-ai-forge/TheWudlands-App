@@ -3,6 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
+    "predev": "rm -rf public/twine",
     "dev": "trap 'kill 0' INT TERM; npm run dev:next & npm run dev:twine & wait",
     "dev:next": "WATCHPACK_POLLING=1000 next dev",
     "dev:twine": "CHOKIDAR_USEPOLLING=1 CHOKIDAR_INTERVAL=1000 npm --prefix twinejs-integrated run start",

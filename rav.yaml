@@ -114,7 +114,6 @@ scripts:
   gcp_deploy: gcloud run deploy serverless-wudlands --image=europe-west1-docker.pkg.dev/thewudlands/serverless-wudlands-repo/serverless-wudlands:latest --allow-unauthenticated --region=europe-west1 --project=thewudlands --port=3000 --update-env-vars GCS_BUCKET_NAME=thewudlands.firebasestorage.app
 
   gcp_full:
-    - rav run frontend_build
     - rav run gcp_push
     - rav run gcp_deploy
 

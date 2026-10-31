@@ -43,7 +43,7 @@ const SURVIVAL_ROWS = [
   { key: "Survival", value: "Hunger, thirst, cold, disease — push too hard and your hands will shake at the wrong moment." },
   { key: "Combat", value: "Not every fight is one you are meant to win. Knowing when to run is as valuable as knowing when to stand." },
   { key: "Shelter", value: "No permanent home. Caves, barricaded inns, collapsed watchtowers. The Wudlands does not hand out homes." },
-  { key: "Escape Route", value: (<>Every adventure has a way out. It may cost you something to reach it. Using an <span className={styles.code}>escape_route</span> counts as a playthrough.</>) },
+  { key: "Retreat", value: (<>Every adventure has a way out. It may cost you something to reach it. Using the <span className={styles.code}>retreat</span> counts as a playthrough.</>) },
 ];
 
 export default function TheWorld() {

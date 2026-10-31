@@ -207,7 +207,7 @@ export default function Storyteller() {
             Tutorial
           </Link>
           <Link href="/create/review" className={styles.editorCta}>
-            Review Status
+            Submit Status
           </Link>
         </div>
 
@@ -266,16 +266,16 @@ export default function Storyteller() {
         </p>
 
         <p className={styles.body}>
-          Every addon must include at least one ending and an escape route. When a player is overwhelmed or lost,
-          there must always be a valid path to retreat. A story without an escape route is an incomplete story.
+          Every addon must include at least one ending and a retreat. When a player is overwhelmed or lost,
+          there must always be a valid path to retreat. A story without a retreat is an incomplete story.
         </p>
 
         <p className={styles.body}>
           If a scene cannot be found, the engine falls back to
-          the <span className={styles.code}>emergency_exit</span> — a narrative dead end
+          the <span className={styles.code}>LastResort</span> — a narrative dead end
           (collapsed tunnel, rockfall, ambush) that ends the story gracefully.
           A playthrough only counts if a scene with <span className={styles.code}>isEnding: true</span> was reached.
-          The <span className={styles.code}>emergency_exit</span> does not consume one of the three replays.
+          The <span className={styles.code}>LastResort</span> does not consume one of the three replays.
         </p>
 
         <table className={styles.table}>
@@ -320,20 +320,20 @@ export default function Storyteller() {
             </tr>
              <tr>
               <td>Combat Scenes</td>
-              <td>In all combat scenes the escape route remains available by default, though the author may impose consequences — injury, lost items, narrative fallout — for choosing to flee. The escape route may be disabled when the story has clearly forewarned the player of the danger through warnings, environmental cues, or an explicit threat of ambush. The player must always have a fair opportunity to prepare or withdraw before the fight begins.</td>
+              <td>In all combat scenes the retreat remains available by default, though the author may impose consequences — injury, lost items, narrative fallout — for choosing to flee. The retreat may be disabled when the story has clearly forewarned the player of the danger through warnings, environmental cues, or an explicit threat of ambush. The player must always have a fair opportunity to prepare or withdraw before the fight begins.</td>
             </tr>
             <tr>
               <td>Default Entry</td>
-              <td>The <span className={styles.code}>default_entry</span> is the scene id where every new session begins. It also acts as the non-error fallback when a requested scene cannot be resolved under normal conditions. It must exist in the scene map and must provide a path toward the escape route.</td>
+              <td><span className={styles.code}>Start</span> is the scene id where every new session begins. It also acts as the non-error fallback when a requested scene cannot be resolved under normal conditions. It must exist in the scene map and must provide a path toward the retreat.</td>
             </tr>
             <tr>
-              <td>Escape Route</td>
-              <td>The <span className={styles.code}>default_exit</span> is the primary retreat ending. It must be marked <span className={styles.code}>{`"isEnding": true`}</span>. Players must always have a path to escape or recover. Warn in the current scene if the next scene disables the escape button.</td>
+              <td>Retreat</td>
+              <td><span className={styles.code}>Retreat</span> is the primary voluntary-exit ending. It must be marked <span className={styles.code}>{`"isEnding": true`}</span>. Players must always have a path to retreat or recover. Warn in the current scene if the next scene disables the retreat button.</td>
             </tr>
             <tr>
               <td>Missing Scene Fallback</td>
-              <td>If a scene cannot be found, the engine redirects to the addon&apos;s <span className={styles.code}>emergency_exit</span> scene. 
-              It must be marked <span className={styles.code}>{`"ending": false`}</span>.</td>
+              <td>If a scene cannot be found, the engine redirects to the addon&apos;s <span className={styles.code}>LastResort</span> scene. 
+              It must be marked <span className={styles.code}>{`"isEnding": false`}</span>.</td>
             </tr>
             <tr>
               <td>Survival</td>
@@ -405,24 +405,19 @@ export default function Storyteller() {
             e.preventDefault();
             setOpenSection(openSection === "writing" ? null : "writing");
           }}>[ 1 Story scenes ]</summary>
-          <div className={styles.groupBody}>
 
         {/* ── Story Elements ─────────────────────────────────────── */}
+        <div className={styles.groupBody}>
+          <p className={styles.body}>
+            Every story is a <span className={styles.code}>.twee</span> file defining scenes and choices, plus images that give them visual presence. Submitted stories are listed as unapproved until they pass validation. Once approved, they go live worldwide.
+          </p>
 
-        <p className={styles.body}>
-          Every addon is a JSON file defining scenes and choices, plus images that give them visual presence.
-          Addons are listed as unapproved until they pass validation. Once approved, they go live worldwide.
-        </p>
-
-        <p className={styles.body}>
-          Rules: <span className={styles.code}>default_entry</span> must lead
-          to the <span className={styles.code}>escape_route</span> (marked <span className={styles.code}>{`"isEnding": true`}</span>).
-          The <span className={styles.code}>emergency_exit</span> must recover from errors and lead to the escape route.
-          Every <span className={styles.code}>to</span> value must reference a valid scene id.
-          Scene ids: lowercase, letters, digits, and hyphens only.
-        </p>
-
-          </div>
+          <p className={styles.body}>
+            Rules: A <span className={styles.code}>Retreat</span> can be a short story in itself but finally leads to a node with <span className={styles.code}>{`<<set $isEnding to true>>`}</span>.
+            The <span className={styles.code}>LastResort</span> must be marked <span className={styles.code}>{`<<set $isEnding to false>>`}</span>. 
+            Every other scene must contain <span className={styles.code}>[[jumpTo]]</span> decisions.
+          </p>
+        </div>
         </details>
 
         <details ref={imagesRef} className={styles.group} style={{ scrollMarginTop: "1rem" }} open={openSection === "images"}>
@@ -524,7 +519,7 @@ export default function Storyteller() {
         </p>
 
         <p className={styles.body}>
-          Submit as <span className={styles.code}>.jpg</span> or <span className={styles.code}>.webp</span>,
+          Submit as <span className={styles.code}>.jpg, .png</span> or <span className={styles.code}>.webp</span>,
           min <span className={styles.code}>600 × 340 px</span>, max <span className={styles.code}>400 KB</span>.
           Name files after scene ids (e.g. <span className={styles.code}>ruined-gate.jpg</span>).
           Dark, painterly, atmospheric — avoid bright renders or photographs. No embedded text.
@@ -535,14 +530,12 @@ export default function Storyteller() {
             <tr><th>Type</th><th>Value</th><th>Notes</th></tr>
           </thead>
           <tbody>
-            <tr><td>Format</td><td>.jpg / .webp / .gif</td><td>Other types not supported</td></tr>
-            <tr><td>Min res.</td><td>600 × 340 px</td><td>16:9 landscape</td></tr>
-            <tr><td>Max res.</td><td>1000 × 1250 px</td><td>4:5 portrait</td></tr>
-            <tr><td>Max file size</td><td>400 KB</td><td>Compress before submitting</td></tr>
-            <tr><td>Naming</td><td>scene.jpg / id.jpg</td><td>Must match the scene / id in your JSON.</td></tr>
+            <tr><td>Format</td><td>.jpg / .webp / .png</td><td>Other types not supported</td></tr>
+            <tr><td>Width</td><td>600 px</td><td>any format</td></tr>
+            <tr><td>Max file size</td><td>400 KB</td><td>compressed after submit</td></tr>
+            <tr><td>Naming</td><td>scene_num.jpg / id.jpg</td><td>free naming choice</td></tr>
             <tr><td>Style</td><td>Dark fantasy art</td><td>Painterly, desaturated, atmospheric</td></tr>
-            <tr><td>Required</td><td>No</td><td>Images are optional per scene but at least one is strongly recommended.</td></tr>
-
+            <tr><td>Required</td><td>No</td><td>Images are optional per scene but at least a title image is strongly recommended.</td></tr>
           </tbody>
         </table>
 
@@ -568,7 +561,7 @@ export default function Storyteller() {
           <div className={styles.groupBody}>
 
         <p className={styles.body}>
-          A minimal addon with three scenes: a starting scene, a deeper scene, and an escape route ending.
+          A minimal addon with three scenes: a starting scene, a deeper scene, and a retreat ending.
           This is the smallest valid structure. Published addons typically contain 60–500 scenes with
           multiple branching paths and several distinct endings.
         </p>

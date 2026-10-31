@@ -2802,7 +2802,12 @@ async def upsert_twine_story(
     payload: TwineStoryPayload,
     address: str = Depends(get_current_address),
 ):
-    """Create or update a Twine story (full upsert)."""
+    """Create or update a Twine story (full upsert).
+
+    Submitting snapshots the story's text at that moment into twine_review, so
+    saving the working copy afterward only changes the author's own copy and
+    never affects the frozen review.
+    """
     import json
 
     doc = payload.model_dump()
@@ -2821,7 +2826,12 @@ async def upsert_twine_story(
 
 @player_router.delete("/me/twine-stories/{story_id}")
 async def delete_twine_story(story_id: str, address: str = Depends(get_current_address)):
-    """Delete a Twine story."""
+    """Delete a Twine story.
+
+    This removes only the author's active working copy (twine_stories). A frozen
+    submission in twine_review is independent and is NOT touched here — it is
+    managed separately via the reviewer/admin review-delete endpoint.
+    """
     db = get_database()
     result = await db.twine_stories.delete_one(
         {"address": address, "storyId": story_id},
@@ -2833,10 +2843,331 @@ async def delete_twine_story(story_id: str, address: str = Depends(get_current_a
 
 import re as _re
 
+# SugarCube special passages. These carry runtime meaning (UI chrome, startup
+# code, per-passage hooks, widget definitions) rather than being navigable story
+# nodes, so the structural rules below (needs an ending / needs outgoing links /
+# must be reachable) do not apply to them. StoryTitle and StoryData are not in
+# this set because the editor folds them into story metadata — they are never
+# passages in a saved story.
+_RESERVED_PASSAGES = {
+    "StoryInit",
+    "PassageHeader",
+    "PassageFooter",
+    "PassageReady",
+    "PassageDone",
+    "StoryCaption",
+    "StoryMenu",
+    "StorySubtitle",
+    "StoryAuthor",
+    "StoryBanner",
+    "StoryInterface",
+    "StoryShare",
+    "StoryDisplayTitle",
+}
+
+# $isEnding records how a run concluded. true = the story officially ended, so
+# the playthrough counts and the player is charged; a terminal (link-less) story
+# passage must carry it so the story is known to be completable.
+_ENDING_MACRO = "<<set $isEnding to true>>"
+
+# false = the run ended through a platform fault (a broken/missing scene routed
+# the player to LastResort), so the playthrough does NOT count and the player is
+# not charged. LastResort must carry this.
+_NOT_ENDING_MACRO = "<<set $isEnding to false>>"
+
+# Story-metadata variables the author must initialise in StoryInit (names without
+# the leading $). These are author-provided, unlike the $char array / $lead which
+# the server injects at adventure start. They are shown on the public review queue.
+_METADATA_FIELDS: List[str] = [
+    "title",
+    "description",
+    "author",
+    "maxCharNum",
+    "adventureTier",
+    "durationWeeks",
+]
+
+# Mandatory in-game variables the author must also set in StoryInit, but which are
+# gameplay config rather than queue metadata (so they are required, not displayed).
+_REQUIRED_GAME_VARS: List[str] = [
+    "allowRunAway",
+]
+
+# Everything StoryInit must initialise = displayed metadata + game vars.
+_REQUIRED_VARS: List[str] = _METADATA_FIELDS + _REQUIRED_GAME_VARS
+
+# Optional metadata the author may set in StoryInit. These include PII (email,
+# real name, wallet) and must never be exposed on the public review queue — they
+# are stored separately for the gated reviewer UI only.
+_PRIVATE_META_FIELDS: List[str] = [
+    "msgForReviewer",
+    "email",
+    "realName",
+    "fallbackEthWallet",
+]
+
+# Tags at least one passage must carry. Empty = not enforced yet.
+_REQUIRED_TAGS: List[str] = []
+
+# Twine's Story Stylesheet / Story JavaScript are stored as passages carrying
+# these tags. They hold CSS/JS, not playable content, so they don't count as
+# scenes.
+_NONPLAYABLE_TAGS = {"stylesheet", "script"}
+
+# One link macro body, i.e. whatever sits between [[ and ]]. Non-greedy so each
+# [[...]] is captured separately; a trailing setter component ([[Text][$x to 1]])
+# is stripped in _link_target.
+_LINK_RE = _re.compile(r"\[\[(.+?)\]\]")
+
+
+def _link_target(body: str) -> str:
+    """Resolve the destination passage name from a link macro body.
+
+    Handles every SugarCube link form:
+        [[Target]]                -> Target
+        [[Display|Target]]        -> Target
+        [[Display->Target]]       -> Target
+        [[Target<-Display]]       -> Target
+        [[Display|Target][setter]]-> Target (setter component ignored)
+    """
+    # Drop a setter component: [[Text|Target][$x to 1]] -> "Text|Target".
+    if "][" in body:
+        body = body.split("][", 1)[0]
+    if "->" in body:
+        return body.split("->", 1)[1].strip()
+    if "<-" in body:
+        return body.split("<-", 1)[0].strip()
+    if "|" in body:
+        return body.split("|", 1)[1].strip()
+    return body.strip()
+
+
+# URL schemes a link target might carry. A scene link must name another scene,
+# never a URL, so any of these (or a protocol-relative "//" or a "www." host)
+# marks the target as an external link and is rejected.
+_URL_SCHEMES = (
+    "http:",
+    "https:",
+    "ftp:",
+    "ftps:",
+    "mailto:",
+    "tel:",
+    "data:",
+    "file:",
+    "ws:",
+    "wss:",
+    "javascript:",
+)
+
+
+def _looks_like_url(target: str) -> bool:
+    """True if a link target looks like a URL rather than a passage name."""
+    t = target.strip()
+    low = t.lower()
+
+    return (
+        "://" in t
+        or t.startswith("//")
+        or low.startswith(_URL_SCHEMES)
+        or low.startswith("www.")
+    )
+
+
+def _validate_link_target(passage_name: str, target: str, name_set, errors: list):
+    """Validate one resolved link target (from a [[link]] or image-link).
+
+    Returns the target when it is a usable internal passage exit, else None
+    after recording the appropriate error. Targets that look like URLs are
+    rejected — the engine only navigates between scenes.
+    """
+    if not target:
+        return None
+    if _looks_like_url(target):
+        errors.append(
+            f"Passage '{passage_name}' links to external URL '{target}' — "
+            "external links are not allowed"
+        )
+        return None
+    if target not in name_set:
+        errors.append(
+            f"Passage '{passage_name}' links to '{target}' which does not exist"
+        )
+        return None
+    return target
+
+
+# A hotspot macro: <<area X Y W H [[link]]>> placing a clickable region on the
+# passage image. X Y W H are fractions (0-1) of the image. The [[link]] inside
+# is an ordinary link, so _LINK_RE/_link_target already resolve its target and
+# count it as an outgoing edge; this only validates the geometry. Matched
+# loosely (grab everything up to the closing >>) so malformed macros surface as
+# errors rather than being silently ignored.
+_AREA_RE = _re.compile(r"<<area\b(.*?)>>", _re.DOTALL)
+
+
+def _check_area_macros(name: str, text: str, errors: list, warnings: list):
+    """Validate the geometry of every ``<<area>>`` hotspot macro in a passage."""
+    matches = list(_AREA_RE.finditer(text))
+
+    # Hotspots are clickable regions overlaid on the scene image, so a passage
+    # with <<area>> macros but no [img[...]] has nothing for them to sit on.
+    if matches and "[img[" not in text:
+        errors.append(
+            f"Passage '{name}': has <<area>> hotspots but no image "
+            "([img[...]]) for them to sit on"
+        )
+
+    for match in matches:
+        body = match.group(1).strip()
+        link = _re.search(r"\[\[.+?\]\]", body)
+
+        if not link:
+            errors.append(
+                f"Passage '{name}': <<area>> hotspot is missing its [[link]] target"
+            )
+            continue
+
+        coords = body[: link.start()].split()
+
+        if len(coords) != 4:
+            errors.append(
+                f"Passage '{name}': <<area>> needs 4 numbers (x y width height) "
+                "before its [[link]]"
+            )
+            continue
+
+        try:
+            x, y, w, h = (float(c) for c in coords)
+        except ValueError:
+            errors.append(
+                f"Passage '{name}': <<area>> coordinates must be numbers between 0 and 1"
+            )
+            continue
+
+        if not all(0.0 <= v <= 1.0 for v in (x, y, w, h)):
+            errors.append(
+                f"Passage '{name}': <<area>> coordinates must be between 0 and 1 "
+                "(fractions of the image)"
+            )
+        elif w <= 0 or h <= 0:
+            errors.append(
+                f"Passage '{name}': <<area>> width and height must be greater than 0"
+            )
+        elif x + w > 1.0 or y + h > 1.0:
+            warnings.append(
+                f"Passage '{name}': <<area>> hotspot extends past the image edge"
+            )
+
+
+# An image macro, up to its first `]`, capturing the source segment. Handles
+# [img[src]], [img[src][link]] and [img[title|src]] — the source is the last
+# pipe-delimited part.
+_IMG_MACRO_RE = _re.compile(r"\[img\[([^\[\]]+?)\]")
+
+# The destination of an image-link macro [img[src][passage]] (the second
+# bracket group). The passage name is parsed out of it with _link_target.
+_IMG_LINK_RE = _re.compile(r"\[img\[[^\]]*\]\[([^\]]+?)\]")
+
+
+def _collect_image_refs(passages) -> set:
+    """Bare image filenames referenced by [img[...]] across all passages.
+
+    External references (http(s):// or data:) are skipped — they aren't stored
+    in the story's image bucket, so they can't be validated against it.
+    """
+    refs: set = set()
+
+    for p in passages:
+        for match in _IMG_MACRO_RE.finditer(p.get("text", "")):
+            src = match.group(1).split("|")[-1].strip()
+
+            if not src or _re.match(r"^(https?:)?//", src) or src.startswith("data:"):
+                continue
+
+            refs.add(src)
+
+    return refs
+
+
+def _extract_set_value(text: str, name: str):
+    """Return the value of `<<set $name to VALUE>>` from a passage's text.
+
+    Strings (single/double quoted) come back unquoted; integers and floats are
+    coerced to numbers; anything else is returned as the raw expression. Returns
+    None if the variable is not set.
+    """
+    m = _re.search(rf"<<set\s+\${_re.escape(name)}\s+to\s+(.+?)>>", text, _re.DOTALL)
+    if not m:
+        return None
+    raw = m.group(1).strip()
+    if len(raw) >= 2 and raw[0] in ("'", '"') and raw[-1] == raw[0]:
+        return raw[1:-1]
+    try:
+        return int(raw)
+    except ValueError:
+        try:
+            return float(raw)
+        except ValueError:
+            return raw
+
+
+def _extract_storyinit_metadata(passages: list, fields: List[str]) -> dict:
+    """Pull the given StoryInit `<<set>>` variables into a plain dict."""
+    story_init = next((p for p in passages if p.get("name") == "StoryInit"), None)
+    if not story_init:
+        return {}
+    text = story_init.get("text", "")
+    out = {}
+    for field in fields:
+        value = _extract_set_value(text, field)
+        if value is not None:
+            out[field] = value
+    return out
+
+
+def _count_playable_scenes(passages: list) -> int:
+    """Count real, player-facing story scenes.
+
+    Excludes template/engine passages that aren't playable content: StoryInit,
+    LastResort, every reserved special passage (PassageHeader, StoryMenu, …),
+    and the Story Stylesheet / Story JavaScript nodes (tagged stylesheet/script).
+    """
+    nonplayable_names = _RESERVED_PASSAGES | {"LastResort"}
+    count = 0
+    for p in passages:
+        if p.get("name", "") in nonplayable_names:
+            continue
+        if any(t in _NONPLAYABLE_TAGS for t in (p.get("tags") or [])):
+            continue
+        count += 1
+    return count
+
+
+def _collect_story_tags(doc: dict) -> list:
+    """Distinct author tags for a story, sorted.
+
+    Combines the Twine Story's own tags (story-level tags, applied to the whole
+    story in the editor — the cloud payload nests these under `storyData.tags`)
+    with any tags on individual passages. The engine's stylesheet/script tags are
+    excluded — they mark CSS/JS passages, not authorial categorisation.
+    """
+    tags: set = set()
+    story_level = (doc.get("storyData") or {}).get("tags") or doc.get("tags") or []
+    for t in story_level:
+        if t and t not in _NONPLAYABLE_TAGS:
+            tags.add(t)
+    for p in (doc.get("passages") or []):
+        for t in (p.get("tags") or []):
+            if t and t not in _NONPLAYABLE_TAGS:
+                tags.add(t)
+    return sorted(tags)
+
+
 def _check_twine_syntax(doc: dict) -> dict:
     """Run syntax checks on a saved Twine story document.
 
-    Returns {"errors": [...], "warnings": [...]}. Errors block submission.
+    Returns {"errors": [...], "warnings": [...]}. Errors block submission;
+    warnings are advisory and still allow it.
     """
     errors: List[str] = []
     warnings: List[str] = []
@@ -2846,41 +3177,227 @@ def _check_twine_syntax(doc: dict) -> dict:
     story_format = story_data.get("storyFormat", "")
 
     if not story_format or "sugarcube" not in story_format.lower():
-        errors.append(f"Story format is '{story_format or 'unknown'}' — only SugarCube stories are accepted")
+        errors.append(
+            f"Story format is '{story_format or 'unknown'}' — only SugarCube stories are accepted"
+        )
 
     if not passages:
         errors.append("Story has no passages")
         return {"errors": errors, "warnings": warnings}
 
-    passage_names = {p.get("name", "") for p in passages}
+    passage_names = [p.get("name", "") for p in passages]
+    name_set = set(passage_names)
     passage_ids = {p.get("id", "") for p in passages}
+    by_name = {p.get("name", ""): p for p in passages}
 
-    if start_passage and start_passage not in passage_ids:
+    # Duplicate passage names — links become ambiguous.
+    seen: set = set()
+    for n in passage_names:
+        if n in seen:
+            errors.append(f"Duplicate passage name '{n}' — names must be unique")
+        seen.add(n)
+
+    # Start passage must be set and resolve to a real passage.
+    if not start_passage:
+        errors.append("No start passage is set for the story")
+    elif start_passage not in passage_ids:
         errors.append(f"Start passage ID '{start_passage}' does not match any passage")
+
+    # Required template passages. StoryInit is startup code; LastResort is the
+    # fault-recovery scene the engine routes to when a scene link is broken or
+    # missing, so the player can always exit gracefully; Retreat is the
+    # always-available voluntary-exit scene. (Retreat is an ordinary reachable
+    # scene, so the normal structural rules below also apply to it.)
+    for required in ("StoryInit", "LastResort", "Retreat"):
+        if required not in name_set:
+            errors.append(f"Missing required '{required}' passage")
+
+    # LastResort concludes a run through a platform fault, which must not be
+    # charged to the player, so it must mark the run as not counted.
+    LastResort = by_name.get("LastResort")
+    if LastResort and _NOT_ENDING_MACRO not in LastResort.get("text", ""):
+        errors.append(
+            f"LastResort must contain {_NOT_ENDING_MACRO} — a fault must not count as a playthrough"
+        )
+
+    # Required $variables must be initialised in StoryInit.
+    story_init = by_name.get("StoryInit")
+    if story_init and _REQUIRED_VARS:
+        init_text = story_init.get("text", "")
+        for var in _REQUIRED_VARS:
+            if not _re.search(rf"<<set\s+\${_re.escape(var)}\b", init_text):
+                errors.append(f"StoryInit must initialise ${var} (e.g. <<set ${var} to ...>>)")
+
+    # Required tags must appear on at least one passage.
+    for tag in _REQUIRED_TAGS:
+        if not any(tag in (p.get("tags") or []) for p in passages):
+            errors.append(f"No passage carries the required tag '{tag}'")
+
+    # A story must carry at least one author tag so players can find it. Engine
+    # tags (stylesheet/script) don't count — _collect_story_tags excludes them.
+    if not _collect_story_tags(doc):
+        errors.append(
+            "Story has no tags — add at least one tag so players can find it"
+        )
+
+    # Build the link graph while validating each passage.
+    outgoing: dict = {}
 
     for p in passages:
         name = p.get("name", "")
         text = p.get("text", "")
+        is_reserved = name in _RESERVED_PASSAGES
+
+        # Validate hotspot geometry; the [[links]] inside are checked below.
+        _check_area_macros(name, text, errors, warnings)
+
+        targets = []
+        for body in _LINK_RE.findall(text):
+            target = _validate_link_target(name, _link_target(body), name_set, errors)
+            if target:
+                targets.append(target)
+
+        # Image-link macros [img[src][passage]] navigate like a link when
+        # clicked, so the destination must exist and counts as an outgoing edge
+        # (the scene is not a dead end).
+        for body in _IMG_LINK_RE.findall(text):
+            target = _validate_link_target(name, _link_target(body), name_set, errors)
+            if target:
+                targets.append(target)
+
+        outgoing[name] = targets
+
+        # StoryInit is startup code: it must not navigate or mark an ending.
+        if name == "StoryInit":
+            if targets:
+                errors.append("StoryInit must not have outgoing links")
+            if _ENDING_MACRO in text:
+                errors.append(f"StoryInit must not contain {_ENDING_MACRO}")
+            continue
+
+        # LastResort is the fault-recovery scene. Its own rule (carry the
+        # not-counted marker) is checked above; it is exempt from the normal
+        # ending/terminal rules so it isn't required to be a counted ending.
+        if name == "LastResort":
+            continue
+
+        # Other reserved passages are exempt from the structural rules below.
+        if is_reserved:
+            continue
 
         if not text.strip():
             warnings.append(f"Passage '{name}' is empty")
 
-        links = _re.findall(r'\[\[([^\]|]+?)(?:\|[^\]]+?)?\]\]', text)
-        outgoing_targets = []
-        for link_target in links:
-            target = link_target.strip()
-            if target not in passage_names:
-                errors.append(f"Passage '{name}' links to '{target}' which does not exist")
-            else:
-                outgoing_targets.append(target)
+        # A terminal (link-less) node must declare itself an ending.
+        if not targets and _ENDING_MACRO not in text:
+            errors.append(
+                f"Passage '{name}' has no outgoing links and is missing "
+                f"{_ENDING_MACRO} — all final nodes must be marked as endings"
+            )
 
-        if not outgoing_targets:
-            has_ending_macro = "<<set $isEnding to true>>" in text
-            if not has_ending_macro:
-                errors.append(
-                    f"Passage '{name}' has no outgoing links and is missing "
-                    f"<<set $isEnding to true>> — all final nodes must be marked as endings"
-                )
+        # An ending is terminal: a node that still routes onward cannot be one.
+        if targets and _ENDING_MACRO in text:
+            errors.append(
+                f"Passage '{name}' is marked as an ending but has outgoing links — "
+                f"remove {_ENDING_MACRO} (an ending scene must be a dead end)"
+            )
+
+    # --- Graph structure: Start story, Retreat story, isolated LastResort -----
+    #
+    # The playable content is two INDEPENDENT scene graphs: the main story rooted
+    # at the start passage, and the Retreat story rooted at "Retreat" (the
+    # voluntary-exit adventure the engine offers on every scene). They must not
+    # interconnect; each must be internally reachable and reach at least one
+    # ending. LastResort is a single isolated fault-recovery node.
+
+    # Incoming edges, to police nodes that must have none.
+    incoming: dict = {}
+    for src, tgts in outgoing.items():
+        for tgt in tgts:
+            incoming.setdefault(tgt, set()).add(src)
+
+    def reachable_from(root: str) -> set:
+        """Scenes reachable by following links from root (root included)."""
+        seen: set = set()
+        stack = [root]
+        while stack:
+            current = stack.pop()
+            if current in seen:
+                continue
+            seen.add(current)
+            stack.extend(outgoing.get(current, []))
+        return seen
+
+    def graph_has_ending(nodes: set) -> bool:
+        """True if any scene in the set is a dead end marked as an ending."""
+        return any(
+            _ENDING_MACRO in by_name.get(n, {}).get("text", "")
+            and not outgoing.get(n)
+            for n in nodes
+        )
+
+    # LastResort is standalone: it links nowhere and nothing links to it.
+    if "LastResort" in name_set:
+        if outgoing.get("LastResort"):
+            errors.append(
+                "LastResort must not have outgoing links — it is a standalone "
+                "fault-recovery scene"
+            )
+        if incoming.get("LastResort"):
+            errors.append(
+                "Nothing may link to LastResort — the engine routes to it on a "
+                "fault; it is not a story destination"
+            )
+
+    # (A scene in one graph linking into the other is caught by the independence
+    # check below, so links WITHIN a graph — including a scene looping back to
+    # its own Start or Retreat root — are fine.)
+
+    # Resolve the start passage's name.
+    start_name = ""
+    for p in passages:
+        if p.get("id", "") == start_passage:
+            start_name = p.get("name", "")
+            break
+
+    start_reachable = reachable_from(start_name) if start_name else set()
+    retreat_reachable = (
+        reachable_from("Retreat") if "Retreat" in name_set else set()
+    )
+
+    # Each story must reach at least one ending (a dead end with $isEnding true).
+    if start_name and not graph_has_ending(start_reachable):
+        errors.append(
+            "The main story has no ending — at least one scene reachable from the "
+            f"start passage must be a dead end with {_ENDING_MACRO}"
+        )
+    if "Retreat" in name_set and not graph_has_ending(retreat_reachable):
+        errors.append(
+            "The Retreat story has no ending — at least one scene reachable from "
+            f"Retreat must be a dead end with {_ENDING_MACRO}"
+        )
+
+    # The two stories must be completely independent — no scene in both graphs.
+    overlap = sorted(start_reachable & retreat_reachable)
+    if overlap:
+        errors.append(
+            "The main story and the Retreat story must be independent graphs, but "
+            "these scenes are reachable from both: "
+            + ", ".join(f"'{n}'" for n in overlap)
+        )
+
+    # Any playable scene reached by neither root is detached (advisory).
+    for name in passage_names:
+        if (
+            name in _RESERVED_PASSAGES
+            or name in ("LastResort", "Retreat")
+            or name in start_reachable
+            or name in retreat_reachable
+        ):
+            continue
+        warnings.append(
+            f"Passage '{name}' is unreachable from the start passage or Retreat"
+        )
 
     return {"errors": errors, "warnings": warnings}
 
@@ -2900,6 +3417,39 @@ async def submit_twine_story_for_review(
     result = _check_twine_syntax(doc)
     errors = result["errors"]
     warnings = result["warnings"]
+
+    # Text verification first. If the story text itself is invalid, reject now —
+    # before touching images.
+    if errors:
+        return {
+            "ok": False,
+            "storyId": story_id,
+            "status": "rejected",
+            "errors": errors,
+            "warnings": warnings,
+        }
+
+    # Every [img[...]] must point at an image the author has actually uploaded
+    # (the create stage, which the review copy is made from).
+    image_refs = _collect_image_refs(doc.get("passages", []))
+    if image_refs:
+        try:
+            available = {
+                img["filename"]
+                for img in twine_images.list_images(
+                    address, twine_images.STAGE_CREATE, story_id
+                )
+            }
+        except Exception as exc:
+            raise HTTPException(
+                status_code=502, detail=f"Could not list story images: {exc}"
+            )
+
+        for ref in sorted(image_refs):
+            if ref not in available:
+                errors.append(
+                    f"Image '{ref}' is referenced in the story but has not been uploaded"
+                )
 
     if errors:
         return {
@@ -2922,9 +3472,9 @@ async def submit_twine_story_for_review(
         {"$set": {"storyData": story_data}},
     )
 
-    # Freeze a copy of the author's images into the review stage. Do this before
-    # marking the story submitted so a storage failure doesn't leave a review
-    # without its images.
+    # Freeze a copy of the author's images into the review stage. Done before
+    # writing the review doc so a storage failure doesn't leave a review without
+    # its images.
     try:
         twine_images.copy_stage(
             address, story_id, twine_images.STAGE_CREATE, twine_images.STAGE_REVIEW
@@ -2933,6 +3483,15 @@ async def submit_twine_story_for_review(
         raise HTTPException(
             status_code=502, detail=f"Could not copy images for review: {exc}"
         )
+
+    # Copy the text: build and store the frozen review snapshot. Displayed
+    # metadata is public (shown on the review queue); private metadata holds PII
+    # for the gated reviewer UI only and is never returned publicly.
+    passages_list = doc.get("passages", [])
+    metadata = _extract_storyinit_metadata(passages_list, _METADATA_FIELDS)
+    private_meta = _extract_storyinit_metadata(passages_list, _PRIVATE_META_FIELDS)
+    scene_count = _count_playable_scenes(passages_list)
+    story_tags = _collect_story_tags(doc)
 
     review_doc = {
         "address": address,
@@ -2944,11 +3503,16 @@ async def submit_twine_story_for_review(
         # resubmitting restarts the timer.
         "lastUpdate": now,
         "storyData": story_data,
-        "passages": doc.get("passages", []),
+        "passages": passages_list,
         "sizeBytes": doc.get("sizeBytes", 0),
         "submittedAt": now,
         "status": "submitted",
         "warnings": warnings,
+        "metadata": metadata,
+        "privateMeta": private_meta,
+        # Non-PII, public queue stats.
+        "sceneCount": scene_count,
+        "tags": story_tags,
     }
 
     await db.twine_review.update_one(
@@ -2984,11 +3548,61 @@ async def list_twine_reviews():
             "lastUpdate": 1,
             "submittedAt": 1,
             "status": 1,
+            # Public, author-provided metadata only. privateMeta (PII) is never
+            # projected here.
+            "metadata": 1,
+            "sceneCount": 1,
+            "tags": 1,
+            # Needed only to derive sceneCount/tags for older submissions that
+            # predate those fields; stripped from the response below.
+            "passages": 1,
+            "storyData": 1,
         },
     )
-    results = [doc async for doc in cursor]
+    results = []
+    async for doc in cursor:
+        passages = doc.pop("passages", [])
+        story_data = doc.pop("storyData", {})
+        # Back-fill on read for entries submitted before scenes/tags existed, so
+        # every preview shows its stats and tag symbols without a resubmit.
+        if doc.get("sceneCount") is None:
+            doc["sceneCount"] = _count_playable_scenes(passages)
+        if not doc.get("tags"):
+            doc["tags"] = _collect_story_tags({"storyData": story_data, "passages": passages})
+        results.append(doc)
     results.sort(key=lambda d: d.get("lastUpdate", ""), reverse=True)
     return results
+
+
+@player_router.delete("/twine-reviews/{owner}/{story_id}")
+async def delete_twine_review(
+    owner: str, story_id: str, address: str = Depends(get_current_address)
+):
+    """Remove a submission from the review queue (reviewer or admin only).
+
+    Deletes the frozen twine_review doc and purges its review-stage images. The
+    author's active story (twine_stories) and their working create-stage images
+    are left untouched — this only clears the submitted copy.
+    """
+    if not (await roles.is_reviewer(address) or await roles.is_admin(address)):
+        raise HTTPException(status_code=403, detail="Reviewer or admin only")
+
+    db = get_database()
+    result = await db.twine_review.delete_one(
+        {"address": owner, "storyId": story_id}
+    )
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Review submission not found")
+
+    # Purge the frozen review-stage images (best-effort; the DB removal, which
+    # takes the entry out of the queue, has already succeeded). The owner's
+    # create-stage working images are never touched.
+    try:
+        twine_images.delete_stage(owner, twine_images.STAGE_REVIEW, story_id)
+    except Exception:
+        pass
+
+    return {"ok": True, "owner": owner, "storyId": story_id}
 
 
 # ── Twine story images ──────────────────────────────────────────────────

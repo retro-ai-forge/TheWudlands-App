@@ -40,7 +40,7 @@ export default function Create() {
         <p className={styles.authorIntro}>
           <strong>Imagine a world, create an immersive experience.</strong> Write
           interactive stories for The Wudlands and earn from every wanderer who
-          plays them. We are starting with <strong>dark fantasy</strong> — and it is
+          plays them. We are starting with <strong>dark fantasy</strong> — it is
           a wide, open genre. Get creative.
         </p>
 
@@ -66,7 +66,7 @@ export default function Create() {
             Tutorial
           </Link>
           <Link href="/create/review" className={styles.editorCta}>
-            Review Status
+            Submit Status
           </Link>
         </div>
 

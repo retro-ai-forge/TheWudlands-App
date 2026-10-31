@@ -13,7 +13,7 @@ const STEPS = [
   },
   {
     title: "Metadata",
-    desc: "Tag your scenes with IDs, images, and flags the engine needs — entry points, escape routes, endings, and dependencies.",
+    desc: "Tag your scenes with IDs, images, and flags the engine needs — entry points, retreats, endings, and dependencies.",
   },
   {
     title: "Story Variables",
@@ -36,6 +36,13 @@ export default function Tutorial() {
           Wudlands story editor. Each section covers one layer of the process —
           from writing your first scene to submitting a finished story.
         </p>
+
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src="/images/tutorial/groupline.jpg"
+          alt="A party of adventurers setting out on the road"
+          className={styles.banner}
+        />
 
         <ol className={styles.stepList}>
           {STEPS.map((step, i) => (
