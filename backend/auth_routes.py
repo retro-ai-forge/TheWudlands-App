@@ -2878,23 +2878,43 @@ _NOT_ENDING_MACRO = "<<set $isEnding to false>>"
 # Story-metadata variables the author must initialise in StoryInit (names without
 # the leading $). These are author-provided, unlike the $char array / $lead which
 # the server injects at adventure start. They are shown on the public review queue.
+# The author sets them as $meta_<field> in StoryInit. The `meta_` prefix is kept on
+# the stored/queue key too, so system metadata stays namespaced apart from the
+# author's own story globals (a writer may use $durationWeeks for their own game).
 _METADATA_FIELDS: List[str] = [
-    "title",
-    "description",
-    "author",
-    "maxCharNum",
-    "adventureTier",
-    "durationWeeks",
+    "meta_title",
+    "meta_description",
+    "meta_author",
+    "meta_maxCharNum",
+    "meta_adventureTier",
+    "meta_durationWeeks",
 ]
 
 # Mandatory in-game variables the author must also set in StoryInit, but which are
 # gameplay config rather than queue metadata (so they are required, not displayed).
 _REQUIRED_GAME_VARS: List[str] = [
-    "allowRunAway",
+    "meta_allowRunAway",
 ]
 
 # Everything StoryInit must initialise = displayed metadata + game vars.
 _REQUIRED_VARS: List[str] = _METADATA_FIELDS + _REQUIRED_GAME_VARS
+
+# Numeric metadata fields that must fall within an inclusive [min, max] range.
+# Presence is already enforced via _REQUIRED_VARS; this additionally bounds the
+# value so e.g. an out-of-scale adventure tier can't be submitted.
+_NUMERIC_META_RANGES: dict = {
+    "meta_maxCharNum": (1, 4),
+    "meta_adventureTier": (1, 6),
+}
+
+# Free-text metadata fields that must carry some real content: at least one
+# non-whitespace character. A single letter or digit is fine; only an empty or
+# all-whitespace value is rejected.
+_STRING_META_FIELDS: List[str] = [
+    "meta_title",
+    "meta_description",
+    "meta_author",
+]
 
 # Optional metadata the author may set in StoryInit. These include PII (email,
 # real name, wallet) and must never be exposed on the public review queue — they
@@ -3121,6 +3141,10 @@ def _extract_storyinit_metadata(passages: list, fields: List[str]) -> dict:
     for field in fields:
         value = _extract_set_value(text, field)
         if value is not None:
+            # Keep the full variable name (incl. the meta_ prefix) as the key. The
+            # prefix namespaces system metadata away from the author's own story
+            # globals, so a writer can still use e.g. $durationWeeks freely without
+            # it being mistaken for $meta_durationWeeks.
             out[field] = value
     return out
 
@@ -3227,6 +3251,35 @@ def _check_twine_syntax(doc: dict) -> dict:
         for var in _REQUIRED_VARS:
             if not _re.search(rf"<<set\s+\${_re.escape(var)}\b", init_text):
                 errors.append(f"StoryInit must initialise ${var} (e.g. <<set ${var} to ...>>)")
+
+        # Bound the numeric metadata fields that carry a valid range. Only checked
+        # when the field is present (absence is already reported above) and parses
+        # as a whole number.
+        for var, (lo, hi) in _NUMERIC_META_RANGES.items():
+            value = _extract_set_value(init_text, var)
+            if value is None:
+                continue
+            if not isinstance(value, int) or isinstance(value, bool) or not (lo <= value <= hi):
+                errors.append(
+                    f"${var} must be a whole number from {lo} to {hi} (got {value!r})"
+                )
+
+        # Free-text fields must hold some content: at least one non-whitespace
+        # character (a single letter or digit is fine; blank/space-only is not).
+        for var in _STRING_META_FIELDS:
+            value = _extract_set_value(init_text, var)
+            if value is None:
+                continue
+            # A bare number (int/float) counts as content; a string must have at
+            # least one non-whitespace character.
+            has_content = (
+                isinstance(value, (int, float))
+                or (isinstance(value, str) and bool(value.strip()))
+            )
+            if not has_content:
+                errors.append(
+                    f"${var} must be non-empty text (not only spaces) (got {value!r})"
+                )
 
     # Required tags must appear on at least one passage.
     for tag in _REQUIRED_TAGS:

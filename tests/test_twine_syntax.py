@@ -37,13 +37,13 @@ def _p(id, name, text, tags=None):
 # A StoryInit body that initialises every mandatory metadata field, for fixtures
 # that expect a clean (error-free) result.
 VALID_INIT = (
-    "<<set $title to 'T'>>"
-    "<<set $description to 'D'>>"
-    "<<set $author to 'A'>>"
-    "<<set $maxCharNum to 1>>"
-    "<<set $adventureTier to 1>>"
-    "<<set $durationWeeks to 1>>"
-    "<<set $allowRunAway to true>>"
+    "<<set $meta_title to 'Title'>>"
+    "<<set $meta_description to 'Desc'>>"
+    "<<set $meta_author to 'Auth'>>"
+    "<<set $meta_maxCharNum to 1>>"
+    "<<set $meta_adventureTier to 1>>"
+    "<<set $meta_durationWeeks to 1>>"
+    "<<set $meta_allowRunAway to true>>"
 )
 
 
@@ -198,8 +198,8 @@ def test_duplicate_names():
 
 
 def test_missing_required_metadata_field():
-    # StoryInit sets everything except $durationWeeks.
-    partial_init = VALID_INIT.replace("<<set $durationWeeks to 1>>", "")
+    # StoryInit sets everything except $meta_durationWeeks.
+    partial_init = VALID_INIT.replace("<<set $meta_durationWeeks to 1>>", "")
     result = _check_twine_syntax(
         _story(
             [
@@ -211,6 +211,69 @@ def test_missing_required_metadata_field():
         )
     )
     assert any("durationWeeks" in e for e in result["errors"])
+
+
+def _init_with(replacement_from: str, replacement_to: str) -> str:
+    """VALID_INIT with one <<set>> line swapped, for range-bound fixtures."""
+    assert replacement_from in VALID_INIT, f"fixture did not contain {replacement_from!r}"
+    return VALID_INIT.replace(replacement_from, replacement_to)
+
+
+def _check_init(init_text: str) -> dict:
+    return _check_twine_syntax(
+        _story(
+            [
+                _p("0", "StoryInit", init_text),
+                _p("1", "Start", "[[End]]"),
+                _p("2", "End", "<<set $isEnding to true>>"),
+                _p("3", "LastResort", "Lost. <<set $isEnding to false>>"),
+            ]
+        )
+    )
+
+
+def test_adventure_tier_out_of_range_rejected():
+    for bad in ("0", "7"):
+        init = _init_with("<<set $meta_adventureTier to 1>>", f"<<set $meta_adventureTier to {bad}>>")
+        result = _check_init(init)
+        assert any("adventureTier" in e for e in result["errors"]), f"tier {bad} should be rejected"
+
+
+def test_adventure_tier_in_range_accepted():
+    for ok in ("1", "6"):
+        init = _init_with("<<set $meta_adventureTier to 1>>", f"<<set $meta_adventureTier to {ok}>>")
+        result = _check_init(init)
+        assert not any("adventureTier" in e for e in result["errors"]), f"tier {ok} should be accepted"
+
+
+def test_max_char_num_out_of_range_rejected():
+    for bad in ("0", "5"):
+        init = _init_with("<<set $meta_maxCharNum to 1>>", f"<<set $meta_maxCharNum to {bad}>>")
+        result = _check_init(init)
+        assert any("maxCharNum" in e for e in result["errors"]), f"maxCharNum {bad} should be rejected"
+
+
+def test_max_char_num_in_range_accepted():
+    for ok in ("1", "4"):
+        init = _init_with("<<set $meta_maxCharNum to 1>>", f"<<set $meta_maxCharNum to {ok}>>")
+        result = _check_init(init)
+        assert not any("maxCharNum" in e for e in result["errors"]), f"maxCharNum {ok} should be accepted"
+
+
+def test_string_meta_blank_rejected():
+    # Empty and whitespace-only values are invalid for a title.
+    for bad in ("''", "'  '"):
+        init = _init_with("<<set $meta_title to 'Title'>>", f"<<set $meta_title to {bad}>>")
+        result = _check_init(init)
+        assert any("meta_title" in e for e in result["errors"]), f"title {bad} should be rejected"
+
+
+def test_string_meta_valid_accepted():
+    # A single letter, a single number, and ordinary text are all fine.
+    for ok in ("'A'", "'4'", "4", "'Hi'", "'The Long Road'"):
+        init = _init_with("<<set $meta_title to 'Title'>>", f"<<set $meta_title to {ok}>>")
+        result = _check_init(init)
+        assert not any("meta_title" in e for e in result["errors"]), f"title {ok} should be accepted"
 
 
 # --- StoryInit special rules -------------------------------------------------

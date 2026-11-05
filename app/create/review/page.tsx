@@ -9,12 +9,12 @@ import { PageVersionTag } from "../../main/PageVersionTag";
 const REVIEW_WINDOW_MS = 7 * 24 * 60 * 60 * 1000;
 
 interface ReviewMetadata {
-  title?: string;
-  description?: string;
-  author?: string;
-  maxCharNum?: number;
-  adventureTier?: number;
-  durationWeeks?: number;
+  meta_title?: string;
+  meta_description?: string;
+  meta_author?: string;
+  meta_maxCharNum?: number;
+  meta_adventureTier?: number;
+  meta_durationWeeks?: number;
 }
 
 interface ReviewEntry {
@@ -600,7 +600,7 @@ function EntryCard({
   wide: boolean;
 }) {
   const md = entry.metadata || {};
-  const description = md.description || "";
+  const description = md.meta_description || "";
   const [expanded, setExpanded] = useState(false);
   const [overflowing, setOverflowing] = useState(false);
   const descRef = useRef<HTMLDivElement>(null);
@@ -628,14 +628,14 @@ function EntryCard({
             minWidth: 0,
           }}
         >
-          <span style={cardTitle}>{md.title || entry.name || "Untitled"}</span>
+          <span style={cardTitle}>{md.meta_title || entry.name || "Untitled"}</span>
           {entry.tags && entry.tags.length > 0 && <TagIcons tags={entry.tags} />}
         </div>
         <span style={{ ...cardTimer, color, flexShrink: 0 }}>{label}</span>
       </div>
 
       {(() => {
-        const author = <MetaItem label="Author" value={md.author} />;
+        const author = <MetaItem label="Author" value={md.meta_author} />;
         const wallet = (
           <MetaItem
             label="Wallet"
@@ -643,15 +643,15 @@ function EntryCard({
           />
         );
         const tier = (
-          <MetaItem label="Tier" value={<TierValue tier={md.adventureTier} />} center />
+          <MetaItem label="Tier" value={<TierValue tier={md.meta_adventureTier} />} center />
         );
         const duration = (
-          <MetaItem label="Weeks" value={<DurationTube weeks={md.durationWeeks} />} center />
+          <MetaItem label="Weeks" value={<DurationTube weeks={md.meta_durationWeeks} />} center />
         );
         const maxChars = (
           <MetaItem
-            label={md.maxCharNum === 1 ? "Solo" : "Group"}
-            value={<CharDots count={md.maxCharNum} />}
+            label={md.meta_maxCharNum === 1 ? "Solo" : "Group"}
+            value={<CharDots count={md.meta_maxCharNum} />}
             center
           />
         );
