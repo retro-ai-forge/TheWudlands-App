@@ -3459,6 +3459,33 @@ def _check_twine_syntax(doc: dict) -> dict:
     return {"errors": errors, "warnings": warnings}
 
 
+# How long a submission stays open for resubmission. Must match REVIEW_WINDOW_MS
+# in app/create/review/page.tsx, which shows the countdown.
+_REVIEW_WINDOW = timedelta(days=7)
+
+
+def _review_window_closed(review_doc: Optional[dict], now: datetime) -> bool:
+    """True once a submitted story's 7-day window has run out.
+
+    Until then the author may resubmit (which restarts the window). After it, the
+    frozen snapshot waits for review and must not be overwritten. The window is
+    anchored on lastUpdate (refreshed on every submit), falling back to
+    submittedAt for older entries; an entry with neither is never locked.
+    """
+    if not review_doc or review_doc.get("status") != "submitted":
+        return False
+    anchor = review_doc.get("lastUpdate") or review_doc.get("submittedAt")
+    if not anchor:
+        return False
+    try:
+        started = datetime.fromisoformat(anchor)
+    except (TypeError, ValueError):
+        return False
+    if started.tzinfo is None:
+        started = started.replace(tzinfo=timezone.utc)
+    return now >= started + _REVIEW_WINDOW
+
+
 @player_router.post("/me/twine-stories/{story_id}/submit")
 async def submit_twine_story_for_review(
     story_id: str, address: str = Depends(get_current_address)
@@ -3470,6 +3497,18 @@ async def submit_twine_story_for_review(
     )
     if not doc:
         raise HTTPException(status_code=404, detail="Story not found — save to cloud first")
+
+    # Checked before anything else - in particular before the image copy below,
+    # which would otherwise overwrite the frozen review images.
+    existing_review = await db.twine_review.find_one(
+        {"address": address, "storyId": story_id},
+        {"status": 1, "lastUpdate": 1, "submittedAt": 1},
+    )
+    if _review_window_closed(existing_review, datetime.now(timezone.utc)):
+        raise HTTPException(
+            status_code=409,
+            detail="Review window closed — this story is locked until it has been reviewed",
+        )
 
     result = _check_twine_syntax(doc)
     errors = result["errors"]
@@ -3660,6 +3699,92 @@ async def delete_twine_review(
         pass
 
     return {"ok": True, "owner": owner, "storyId": story_id}
+
+
+class RejectReviewRequest(BaseModel):
+    reason: str = Field(..., min_length=1, max_length=2000, description="Why the story was rejected")
+
+
+@player_router.post("/twine-reviews/{owner}/{story_id}/reject")
+async def reject_twine_review(
+    owner: str,
+    story_id: str,
+    payload: RejectReviewRequest,
+    address: str = Depends(get_current_address),
+):
+    """Reject a submission (reviewer or admin only).
+
+    Records a minimal line in twine_rejected (title, author name and wallet,
+    tier, scene count, reason) for the public rejected list, then removes the submission
+    from the queue exactly like delete_twine_review - which also unlocks the
+    author to fix the story and submit it again. One doc per rejection, so a
+    story rejected twice shows up twice.
+    """
+    if not await roles.is_reviewer(address):
+        raise HTTPException(status_code=403, detail="Reviewer or admin only")
+
+    reason = payload.reason.strip()
+    if not reason:
+        raise HTTPException(status_code=400, detail="A reason is required")
+
+    db = get_database()
+    review = await db.twine_review.find_one(
+        {"address": owner, "storyId": story_id},
+        {"name": 1, "metadata": 1, "sceneCount": 1, "passages": 1},
+    )
+    if not review:
+        raise HTTPException(status_code=404, detail="Review submission not found")
+
+    metadata = review.get("metadata") or {}
+    scene_count = review.get("sceneCount")
+    if scene_count is None:
+        scene_count = _count_playable_scenes(review.get("passages", []))
+
+    await db.twine_rejected.insert_one({
+        "address": owner,
+        "storyId": story_id,
+        "title": metadata.get("meta_title") or review.get("name") or "Untitled",
+        "author": metadata.get("meta_author"),
+        "tier": metadata.get("meta_adventureTier"),
+        "sceneCount": scene_count,
+        "reason": reason,
+        "rejectedAt": datetime.now(timezone.utc).isoformat(),
+        "rejectedBy": address,
+    })
+
+    # Remove the submission and its frozen review-stage images (images +
+    # thumbnails under twine-images/{owner}/review/{storyId}/). The author's own
+    # create-stage images and working copy stay, so they can fix and resubmit.
+    await db.twine_review.delete_one({"address": owner, "storyId": story_id})
+    try:
+        twine_images.delete_stage(owner, twine_images.STAGE_REVIEW, story_id)
+    except Exception as exc:
+        # Best-effort: the story is already out of the queue. Logged so leftover
+        # files in storage can be found and cleaned up.
+        print(f"[reject] review images not deleted for {owner}/{story_id}: {type(exc).__name__}: {exc}")
+
+    return {"ok": True, "owner": owner, "storyId": story_id}
+
+
+@player_router.get("/twine-rejected")
+async def list_twine_rejected():
+    """Public list of rejected stories, newest first - minimal fields only."""
+    db = get_database()
+    cursor = db.twine_rejected.find(
+        {},
+        {
+            "_id": 0,
+            "address": 1,
+            "storyId": 1,
+            "title": 1,
+            "author": 1,
+            "tier": 1,
+            "sceneCount": 1,
+            "reason": 1,
+            "rejectedAt": 1,
+        },
+    ).sort("rejectedAt", -1).limit(500)
+    return [doc async for doc in cursor]
 
 
 # ── Twine story images ──────────────────────────────────────────────────

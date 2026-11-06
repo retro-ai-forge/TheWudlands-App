@@ -4,9 +4,13 @@ import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { PageVersionTag } from "../../main/PageVersionTag";
 
-// A story stays in review for 7 days from its last submission. Resubmitting a
-// story refreshes submittedAt on the backend, which restarts this countdown.
+// A story stays open for 7 days from its last submission. Resubmitting a story
+// refreshes submittedAt on the backend, which restarts this countdown. Once it
+// runs out the story is "pending": the backend refuses further resubmissions
+// until it has been reviewed (see _REVIEW_WINDOW in backend/auth_routes.py,
+// which must match this value).
 const REVIEW_WINDOW_MS = 7 * 24 * 60 * 60 * 1000;
+const PENDING_COLOR = "#4aa85c";
 
 interface ReviewMetadata {
   meta_title?: string;
@@ -29,6 +33,18 @@ interface ReviewEntry {
   tags?: string[];
 }
 
+/** One line of the public rejected list (twine_rejected - minimal fields only). */
+interface RejectedEntry {
+  address: string;
+  storyId: string;
+  title: string;
+  author?: string | null;
+  tier?: number | null;
+  sceneCount?: number | null;
+  reason: string;
+  rejectedAt: string;
+}
+
 const gold = "#7a6a3a";
 const parchment = "#d4c9a8";
 const mono = "'Courier New', Courier, monospace";
@@ -45,7 +61,7 @@ function pad2(n: number): string {
 }
 
 function formatRemaining(ms: number): string {
-  if (ms <= 0) return "elapsed";
+  if (ms <= 0) return "pending";
   const d = Math.floor(ms / 86400000);
   const h = Math.floor((ms % 86400000) / 3600000);
   const m = Math.floor((ms % 3600000) / 60000);
@@ -381,6 +397,67 @@ function orderTags(tags: string[]): string[] {
   return [...tags.filter((t) => !isFreeTag(t)), ...tags.filter(isFreeTag)];
 }
 
+/**
+ * Rejected stories as plain text lines - folded by default, and each line's
+ * reason folded again inside it. Uses native <details> so it needs no state.
+ */
+function RejectedList({ entries }: { entries: RejectedEntry[] }) {
+  const summaryStyle: React.CSSProperties = { cursor: "pointer", listStyle: "revert" };
+  return (
+    <details style={{ marginTop: "2.5rem" }}>
+      <summary
+        style={{
+          ...summaryStyle,
+          // Same look as the section headings above.
+          fontFamily: mono,
+          fontSize: "1rem",
+          letterSpacing: "0.2em",
+          textTransform: "uppercase",
+          color: "#c07a3a",
+        }}
+      >
+        Returned to the Quill ({entries.length})
+      </summary>
+      <div
+        style={{
+          display: "flex",
+          flexDirection: "column",
+          gap: "0.4rem",
+          marginTop: "0.9rem",
+          fontFamily: mono,
+          fontSize: "0.85rem",
+          color: parchment,
+        }}
+      >
+        {entries.map((r) => {
+          const parts = [
+            r.title || "Untitled",
+            r.author || null,
+            shortAddress(r.address),
+            r.tier != null ? `Tier ${r.tier}` : null,
+            r.sceneCount != null ? `${r.sceneCount} scene${r.sceneCount === 1 ? "" : "s"}` : null,
+          ].filter(Boolean);
+          return (
+            <details key={`${r.storyId}-${r.rejectedAt}`}>
+              <summary style={summaryStyle}>{parts.join(" · ")}</summary>
+              <p
+                style={{
+                  margin: "0.3rem 0 0.4rem 1.2rem",
+                  color: gold,
+                  whiteSpace: "pre-wrap",
+                  wordBreak: "break-word",
+                }}
+              >
+                {r.reason}
+              </p>
+            </details>
+          );
+        })}
+      </div>
+    </details>
+  );
+}
+
 function TagLegend() {
   return (
     <div style={{ marginTop: "3rem", borderTop: `1px solid ${gold}`, paddingTop: "1.75rem" }}>
@@ -707,6 +784,7 @@ function EntryCard({
 
 export default function ReviewStatus() {
   const [entries, setEntries] = useState<ReviewEntry[] | null>(null);
+  const [rejected, setRejected] = useState<RejectedEntry[]>([]);
   const [error, setError] = useState<string>();
   const [now, setNow] = useState(() => Date.now());
   const [wide, setWide] = useState(false);
@@ -734,6 +812,22 @@ export default function ReviewStatus() {
         setEntries(await res.json());
       } catch (e) {
         if (!cancelled) setError((e as Error).message);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  // Loaded separately so a failure here never hides the review queue itself.
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await fetch("/api/auth/twine-rejected");
+        if (!cancelled && res.ok) setRejected(await res.json());
+      } catch {
+        /* the rejected list is optional - leave it empty */
       }
     })();
     return () => {
@@ -776,26 +870,72 @@ export default function ReviewStatus() {
           </p>
         )}
 
-        {entries !== null && entries.length > 0 && (
-          <div style={{ display: "flex", flexDirection: "column", gap: "0.9rem" }}>
-            {entries.map((e) => {
-              const anchor = e.lastUpdate || e.submittedAt;
-              const started = anchor ? new Date(anchor).getTime() : 0;
-              const remaining = started ? started + REVIEW_WINDOW_MS - now : 0;
-              const color = !started
-                ? parchment
-                : remaining <= 0
-                ? "#c55865"
-                : remaining < 86400000
-                ? "#d4a24a"
-                : parchment;
-              const label = started ? formatRemaining(remaining) : "—";
-              return (
-                <EntryCard key={e.storyId} entry={e} color={color} label={label} wide={wide} />
-              );
-            })}
-          </div>
-        )}
+        {entries !== null && entries.length > 0 && (() => {
+          // Split on the same rule the backend locks on: once the window has run
+          // out, the story is pending and listed under its own heading. `now`
+          // ticks every second, so a story moves across the moment it expires.
+          const rows = entries.map((e) => {
+            const anchor = e.lastUpdate || e.submittedAt;
+            const started = anchor ? new Date(anchor).getTime() : 0;
+            const remaining = started ? started + REVIEW_WINDOW_MS - now : 0;
+            return { entry: e, started, remaining, pending: !!started && remaining <= 0 };
+          });
+          const renderRow = ({ entry, started, remaining }: (typeof rows)[number]) => {
+            const color = !started
+              ? parchment
+              : remaining <= 0
+              ? PENDING_COLOR
+              : remaining < 86400000
+              ? "#d4a24a"
+              : parchment;
+            const label = started ? formatRemaining(remaining) : "—";
+            return (
+              <EntryCard key={entry.storyId} entry={entry} color={color} label={label} wide={wide} />
+            );
+          };
+          // Shortest timer first. Among pending stories that puts the one waiting
+          // longest on top; entries without a timestamp sink to the bottom.
+          const byRemaining = (a: (typeof rows)[number], b: (typeof rows)[number]) =>
+            (a.started ? a.remaining : Infinity) - (b.started ? b.remaining : Infinity);
+          const open = rows.filter((r) => !r.pending).sort(byRemaining);
+          const pending = rows.filter((r) => r.pending).sort(byRemaining);
+          const listStyle: React.CSSProperties = { display: "flex", flexDirection: "column", gap: "0.9rem" };
+          const sectionHeading = (title: string, first: boolean) => (
+            <h3
+              style={{
+                // Same look as the Story Tags heading below.
+                fontFamily: mono,
+                fontSize: "1rem",
+                letterSpacing: "0.2em",
+                textTransform: "uppercase",
+                color: "#c07a3a",
+                marginTop: first ? 0 : "2.5rem",
+                marginBottom: "0.9rem",
+              }}
+            >
+              {title}
+            </h3>
+          );
+          // Pending first: those are the ones the reviewers act on now.
+          return (
+            <>
+              {pending.length > 0 && (
+                <>
+                  {sectionHeading("Before the Reviewers", true)}
+                  <div style={listStyle}>{pending.map(renderRow)}</div>
+                </>
+              )}
+              {open.length > 0 && (
+                <>
+                  {sectionHeading("Days of Grace", pending.length === 0)}
+                  <div style={listStyle}>{open.map(renderRow)}</div>
+                </>
+              )}
+            </>
+          );
+        })()}
+
+        {rejected.length > 0 && <RejectedList entries={rejected} />}
 
         {entries !== null && <TagLegend />}
 

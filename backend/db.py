@@ -77,7 +77,7 @@ async def ensure_indexes() -> None:
     # index this is a full collection scan per lookup.
     await db.soul_slots.create_index("address", unique=True)
 
-    # Per-player summary: status, tags, timers, crafting tiers per character.
+    # Per-player summary: status, tags, timers, availability per character.
     await db.player_characters.create_index("address", unique=True)
 
     # Per-character storage (items + itemBalances) and blueprints, each in
@@ -105,6 +105,9 @@ async def ensure_indexes() -> None:
         [("address", 1), ("storyId", 1)], unique=True
     )
     await db.twine_review.create_index("submittedAt")
+
+    # Rejected submissions: one minimal doc per rejection, listed newest first.
+    await db.twine_rejected.create_index("rejectedAt")
 
     # Role grants (reviewer/admin): one doc per wallet address.
     await db.roles.create_index("address", unique=True)
