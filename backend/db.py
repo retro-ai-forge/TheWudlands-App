@@ -111,3 +111,9 @@ async def ensure_indexes() -> None:
 
     # Role grants (reviewer/admin): one doc per wallet address.
     await db.roles.create_index("address", unique=True)
+
+    # Running adventures (backend.adventures): looked up per player on every
+    # resume/recovery; the log is write-once history of finished runs.
+    await db.adventure_sessions.create_index("address")
+    await db.adventure_log.create_index([("address", 1), ("endedAt", -1)])
+    await db.adventure_log.create_index("storyId")

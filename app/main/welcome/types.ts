@@ -20,12 +20,19 @@ export interface CharacterAvailability {
   /** The type of rest location (cave, forest, prairie, ruin, dungeon). */
   restLocation?: string | null;
   /**
-   * The adventure_sessions doc this character is playing in, or null. The DB is
-   * the source of truth for a running adventure - fetch the session through this
-   * id on mount, never from React/localStorage state. Every party member of the
-   * same run carries the same id.
+   * The running adventure this character is in, or null. The DB is the source of
+   * truth for a running adventure - open it through this pointer on mount, never
+   * from React/localStorage state. Every party member of the same run carries the
+   * same sessionId, which is how characters are grouped by adventure.
    */
-  adventureSessionId?: string | null;
+  adventure?: AdventurePointer | null;
+}
+
+/** A character's back-pointer to its running adventure (backend.adventures). */
+export interface AdventurePointer {
+  sessionId: string;
+  storyId: string;
+  title: string;
 }
 
 /** Lightweight preview from player_characters — enough to render the soul slot grid. */
@@ -36,7 +43,12 @@ export interface SlotCharacterPreview {
   status: string[];
   tags: string[];
   timers: Record<string, string>;
-  availability: { inAdventure: boolean; resting?: boolean; restLocation?: string | null };
+  availability: {
+    inAdventure: boolean;
+    resting?: boolean;
+    restLocation?: string | null;
+    adventure?: AdventurePointer | null;
+  };
   portraitUrl: string;
   portraitFaceArea: PortraitArea | null;
   portraitFrameArea: PortraitArea | null;
@@ -162,6 +174,8 @@ export interface SlotCharacterSummary {
     mountGearWeight: number;
   };
   equippedLight: { family: string; tier: number; litAt: string; hand: string } | null;
+  /** storyIds of every adventure this character finished (not ran away from). */
+  completedStories?: string[];
   stats: { adventureFinished: number; adventureRunAway: number };
   pcStatus?: string[];
   pcTags?: string[];

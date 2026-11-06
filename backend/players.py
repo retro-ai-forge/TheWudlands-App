@@ -456,7 +456,7 @@ async def _create_pc_entry(
         "tags": [vital_status],
         "timers": {},
         "slotNumber": slot_number,
-        "availability": {"inAdventure": False, "resting": False, "restLocation": None},
+        "availability": {"inAdventure": False, "resting": False, "restLocation": None, "adventure": None},
         "portraitUrl": portrait_url,
         "portraitFaceArea": portrait_face_area,
         "portraitFrameArea": portrait_frame_area,
@@ -727,6 +727,8 @@ async def delete_character(address: str, character_id: str) -> Optional[Player]:
     char_doc = await db.characters.find_one({"address": address, "id": character_id})
     if char_doc is None:
         return await _build_player(db, address)
+    if char_doc.get("availability", {}).get("adventure"):
+        raise ValueError("Character is in a running adventure and can't be deleted")
 
     gear = char_doc.get("gear", {})
     gear_items = gear.get("items", [])
@@ -4106,15 +4108,19 @@ async def set_in_adventure(
     state.
 
     Returns True on success, None if the address/character pair doesn't
-    match, raises ValueError if the character has a craft still running.
+    match, raises ValueError if the character has a craft still running, or
+    is in a running adventure session (backend.adventures) - a session is
+    entered and left through the story, never by this toggle.
     """
     db = get_database()
+    character_doc = await db.characters.find_one(
+        {"address": address, "id": character_id}
+    )
+    if character_doc is None:
+        return None
+    if character_doc.get("availability", {}).get("adventure"):
+        raise ValueError("Character is in a running adventure - it ends through the story")
     if in_adventure:
-        character_doc = await db.characters.find_one(
-            {"address": address, "id": character_id}
-        )
-        if character_doc is None:
-            return None
         active = character_doc.get("crafting", {}).get("activeCraft")
         if active and datetime.fromisoformat(active["readyAt"]) > datetime.now(timezone.utc):
             raise ValueError("Character is still crafting")
@@ -4123,7 +4129,6 @@ async def set_in_adventure(
     if not in_adventure:
         update["$set"]["availability.resting"] = False
         update["$set"]["availability.restLocation"] = None
-        update["$set"]["availability.adventureSessionId"] = None
         if reason in ("stop", "run_away"):
             counter = "stats.adventureFinished" if reason == "stop" else "stats.adventureRunAway"
             update.setdefault("$inc", {})[counter] = 1

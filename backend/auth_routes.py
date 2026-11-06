@@ -29,6 +29,7 @@ from backend.active_players import (
 )
 from backend.character import AttributeStats, Character, PortraitArea, ProfStats
 from backend.db import get_database
+from backend import adventures
 from backend.players import (
     get_character_home,
     get_character_camp,
@@ -163,6 +164,14 @@ class ActivePlayerCountResponse(BaseModel):
     count: int = Field(..., description="Number of active players")
 
 
+class AdventurePointerResponse(BaseModel):
+    """A character's back-pointer to the adventure session it is playing in."""
+
+    sessionId: str = Field(..., description="adventure_sessions id, shared by the whole party")
+    storyId: str = Field(..., description="The story being played")
+    title: str = Field(..., description="The story's title, for display")
+
+
 class CharacterAvailabilityResponse(BaseModel):
     """Availability stats: name, ready timer, adventure flag"""
 
@@ -172,9 +181,9 @@ class CharacterAvailabilityResponse(BaseModel):
         False,
         description="Player-toggled - whether this character is currently out on an adventure, away from the shared vault. Changes where unequip_item sends a freed item.",
     )
-    adventureSessionId: Optional[str] = Field(
+    adventure: Optional[AdventurePointerResponse] = Field(
         None,
-        description="The adventure_sessions doc this character is playing in, or null. Shared by every party member of the same run; the frontend fetches the session through it on mount.",
+        description="The running adventure this character is in, or null. Every party member of the same run carries the same sessionId; the frontend opens the run through it.",
     )
 
 
@@ -365,6 +374,10 @@ class CharacterResponse(BaseModel):
     gear: CharacterGearResponse = Field(default_factory=CharacterGearResponse)
     equippedLight: Optional[dict] = Field(
         None, description="Which light source (if any) is currently lit and held - {family, tier, litAt, hand}"
+    )
+    completedStories: List[str] = Field(
+        default_factory=list,
+        description="storyIds of every adventure this character finished (not ran away from)",
     )
     stats: Dict[str, int] = Field(
         default_factory=lambda: {"adventureFinished": 0, "adventureRunAway": 0},
@@ -2554,7 +2567,10 @@ async def delete_my_character(character_id: str, address: str = Depends(get_curr
     Permanently delete one of the caller's characters. Called from the
     character preview page's Delete button - there's no undo.
     """
-    player = await delete_character(address, character_id)
+    try:
+        player = await delete_character(address, character_id)
+    except ValueError as exc:
+        raise HTTPException(status_code=409, detail=str(exc))
     if player is None:
         raise HTTPException(status_code=404, detail="No player record found for this address")
 
@@ -2847,37 +2863,15 @@ async def delete_twine_story(story_id: str, address: str = Depends(get_current_a
 
 import re as _re
 
-# SugarCube special passages. These carry runtime meaning (UI chrome, startup
-# code, per-passage hooks, widget definitions) rather than being navigable story
-# nodes, so the structural rules below (needs an ending / needs outgoing links /
-# must be reachable) do not apply to them. StoryTitle and StoryData are not in
-# this set because the editor folds them into story metadata — they are never
-# passages in a saved story.
-_RESERVED_PASSAGES = {
-    "StoryInit",
-    "PassageHeader",
-    "PassageFooter",
-    "PassageReady",
-    "PassageDone",
-    "StoryCaption",
-    "StoryMenu",
-    "StorySubtitle",
-    "StoryAuthor",
-    "StoryBanner",
-    "StoryInterface",
-    "StoryShare",
-    "StoryDisplayTitle",
-}
-
-# $isEnding records how a run concluded. true = the story officially ended, so
-# the playthrough counts and the player is charged; a terminal (link-less) story
-# passage must carry it so the story is known to be completable.
-_ENDING_MACRO = "<<set $isEnding to true>>"
-
-# false = the run ended through a platform fault (a broken/missing scene routed
-# the player to LastResort), so the playthrough does NOT count and the player is
-# not charged. LastResort must carry this.
-_NOT_ENDING_MACRO = "<<set $isEnding to false>>"
+from backend.twine_graph import (  # noqa: E402 - shared with backend.adventures
+    _ENDING_MACRO,
+    _IMG_LINK_RE,
+    _LINK_RE,
+    _NOT_ENDING_MACRO,
+    _RESERVED_PASSAGES,
+    _extract_set_value,
+    _link_target,
+)
 
 # Story-metadata variables the author must initialise in StoryInit (names without
 # the leading $). These are author-provided, unlike the $char array / $lead which
@@ -2937,34 +2931,6 @@ _REQUIRED_TAGS: List[str] = []
 # these tags. They hold CSS/JS, not playable content, so they don't count as
 # scenes.
 _NONPLAYABLE_TAGS = {"stylesheet", "script"}
-
-# One link macro body, i.e. whatever sits between [[ and ]]. Non-greedy so each
-# [[...]] is captured separately; a trailing setter component ([[Text][$x to 1]])
-# is stripped in _link_target.
-_LINK_RE = _re.compile(r"\[\[(.+?)\]\]")
-
-
-def _link_target(body: str) -> str:
-    """Resolve the destination passage name from a link macro body.
-
-    Handles every SugarCube link form:
-        [[Target]]                -> Target
-        [[Display|Target]]        -> Target
-        [[Display->Target]]       -> Target
-        [[Target<-Display]]       -> Target
-        [[Display|Target][setter]]-> Target (setter component ignored)
-    """
-    # Drop a setter component: [[Text|Target][$x to 1]] -> "Text|Target".
-    if "][" in body:
-        body = body.split("][", 1)[0]
-    if "->" in body:
-        return body.split("->", 1)[1].strip()
-    if "<-" in body:
-        return body.split("<-", 1)[0].strip()
-    if "|" in body:
-        return body.split("|", 1)[1].strip()
-    return body.strip()
-
 
 # URL schemes a link target might carry. A scene link must name another scene,
 # never a URL, so any of these (or a protocol-relative "//" or a "www." host)
@@ -3088,11 +3054,6 @@ def _check_area_macros(name: str, text: str, errors: list, warnings: list):
 # pipe-delimited part.
 _IMG_MACRO_RE = _re.compile(r"\[img\[([^\[\]]+?)\]")
 
-# The destination of an image-link macro [img[src][passage]] (the second
-# bracket group). The passage name is parsed out of it with _link_target.
-_IMG_LINK_RE = _re.compile(r"\[img\[[^\]]*\]\[([^\]]+?)\]")
-
-
 def _collect_image_refs(passages) -> set:
     """Bare image filenames referenced by [img[...]] across all passages.
 
@@ -3111,28 +3072,6 @@ def _collect_image_refs(passages) -> set:
             refs.add(src)
 
     return refs
-
-
-def _extract_set_value(text: str, name: str):
-    """Return the value of `<<set $name to VALUE>>` from a passage's text.
-
-    Strings (single/double quoted) come back unquoted; integers and floats are
-    coerced to numbers; anything else is returned as the raw expression. Returns
-    None if the variable is not set.
-    """
-    m = _re.search(rf"<<set\s+\${_re.escape(name)}\s+to\s+(.+?)>>", text, _re.DOTALL)
-    if not m:
-        return None
-    raw = m.group(1).strip()
-    if len(raw) >= 2 and raw[0] in ("'", '"') and raw[-1] == raw[0]:
-        return raw[1:-1]
-    try:
-        return int(raw)
-    except ValueError:
-        try:
-            return float(raw)
-        except ValueError:
-            return raw
 
 
 def _extract_storyinit_metadata(passages: list, fields: List[str]) -> dict:
@@ -3905,3 +3844,97 @@ async def delete_twine_story_image(
     if not existed:
         raise HTTPException(status_code=404, detail="Image not found")
     return {"ok": True, "filename": safe}
+
+
+# ── Adventures: a party playing a story ─────────────────────────────────────
+#
+# See backend/adventures.py for the session lifecycle. These routes are thin:
+# the DB is the only source of truth, so a reload that lands on another
+# container resumes through GET /me/adventures/{id}.
+
+
+class StartAdventureRequest(BaseModel):
+    """Send a party of the caller's characters into a story."""
+
+    storyAuthor: str = Field(..., description="Wallet address of the story's author")
+    storyId: str = Field(..., description="The story to play")
+    characterIds: List[str] = Field(..., description="The party, in marching order (front first)")
+    leadId: Optional[str] = Field(None, description="The party lead; defaults to the first character")
+
+
+class AdventureStepRequest(BaseModel):
+    """One move from scene to scene, as the client saw it."""
+
+    seq: int = Field(..., description="The step counter the client last received")
+    fromPassage: str = Field(..., description="The scene being left")
+    toPassage: str = Field(..., description="The scene being entered")
+    vars: Dict = Field(
+        default_factory=dict,
+        description="SugarCube State.variables after entering toPassage (server vars $char/$lead are ignored)",
+    )
+
+
+def _adventure_http_error(exc: adventures.AdventureError) -> HTTPException:
+    return HTTPException(status_code=exc.status_code, detail=str(exc))
+
+
+@player_router.post("/me/adventures")
+async def start_my_adventure(
+    payload: StartAdventureRequest, address: str = Depends(get_current_address)
+):
+    """Start an adventure. Returns the new session, ready to play from its start passage."""
+    try:
+        return await adventures.start_adventure(
+            address, payload.storyAuthor, payload.storyId, payload.characterIds, payload.leadId
+        )
+    except adventures.AdventureError as exc:
+        raise _adventure_http_error(exc)
+
+
+@player_router.get("/me/adventures")
+async def list_my_adventures(address: str = Depends(get_current_address)):
+    """The caller's running adventures - who is in which story, without variables.
+
+    Also finishes or undoes anything a crashed request left half done.
+    """
+    return {"adventures": await adventures.list_adventures(address)}
+
+
+@player_router.get("/me/adventures/{session_id}")
+async def get_my_adventure(session_id: str, address: str = Depends(get_current_address)):
+    """Full state of one adventure (passage, vars, serverVars, members) to resume it."""
+    try:
+        return await adventures.get_adventure(address, session_id)
+    except adventures.AdventureError as exc:
+        raise _adventure_http_error(exc)
+
+
+@player_router.get("/me/adventures/{session_id}/story")
+async def get_my_adventure_story(session_id: str, address: str = Depends(get_current_address)):
+    """The pinned story version (storyData + passages) this adventure plays."""
+    try:
+        return await adventures.get_adventure_story(address, session_id)
+    except adventures.AdventureError as exc:
+        raise _adventure_http_error(exc)
+
+
+@player_router.post("/me/adventures/{session_id}/step")
+async def step_my_adventure(
+    session_id: str, payload: AdventureStepRequest, address: str = Depends(get_current_address)
+):
+    """Record a move to the next scene.
+
+    409 = the client's state is stale (another tab, a lost reply, a finished
+    run); the response's `current` is the state to resync to. Reaching an
+    ending returns status "done" with the outcome.
+    """
+    try:
+        return await adventures.record_step(
+            address, session_id, payload.seq, payload.fromPassage, payload.toPassage, payload.vars
+        )
+    except adventures.StepConflict as exc:
+        raise HTTPException(
+            status_code=409, detail={"message": str(exc), "current": exc.view}
+        )
+    except adventures.AdventureError as exc:
+        raise _adventure_http_error(exc)

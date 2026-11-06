@@ -186,13 +186,18 @@ class Character:
     # vault to send it back to mid-adventure); while False (safely at
     # base), it goes straight to the player's shared vault instead.
     in_adventure: bool = False
-    # The adventure_sessions doc this character is currently playing in, or
-    # None. The DB is the only source of truth for a running adventure (Cloud
-    # Run may serve each request from a different container), so the frontend
-    # finds the session through this field on mount rather than from React or
-    # localStorage state - and every member of a party carries the same id,
-    # which is how they all open the same run. Cleared when the adventure ends.
-    adventure_session_id: Optional[str] = None
+    # The running adventure this character is in, or None:
+    # {"sessionId", "storyId", "title"} - a back-pointer to its
+    # adventure_sessions doc (see backend.adventures). The DB is the only
+    # source of truth for a running adventure (Cloud Run may serve each
+    # request from a different container), so the frontend finds the run
+    # through this field rather than React or localStorage state. Every
+    # member of a party carries the same sessionId, which is how the soul
+    # preview groups them. Cleared when the adventure ends.
+    adventure: Optional[dict] = None
+    # storyIds of every adventure this character finished (not ran away
+    # from) - for stories that require others to be completed first.
+    completed_stories: list = field(default_factory=list)
     adventure_finished: int = 0
     adventure_run_away: int = 0
 
@@ -225,11 +230,12 @@ class Character:
                 "name": "ready",
                 "timeRdy": self.created_at.isoformat(),
                 "inAdventure": self.in_adventure,
-                "adventureSessionId": self.adventure_session_id,
+                "adventure": self.adventure,
             },
             "crafting": self.crafting,
             "gear": self.gear,
             "equippedLight": self.equipped_light,
+            "completedStories": self.completed_stories,
             "stats": {
                 "adventureFinished": self.adventure_finished,
                 "adventureRunAway": self.adventure_run_away,
