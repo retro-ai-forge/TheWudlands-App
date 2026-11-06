@@ -19,6 +19,7 @@ interface ReviewMetadata {
   meta_maxCharNum?: number;
   meta_adventureTier?: number;
   meta_durationWeeks?: number;
+  meta_access?: string;
 }
 
 interface ReviewEntry {
@@ -101,18 +102,18 @@ const metaRow: React.CSSProperties = {
 // width, including below 400px, via four equal columns.
 const statsRow: React.CSSProperties = {
   ...metaRow,
-  gridTemplateColumns: "repeat(4, 1fr)",
+  gridTemplateColumns: "repeat(5, 1fr)",
 };
 // Author + Wallet sit side by side.
 const pairRow: React.CSSProperties = {
   ...metaRow,
   gridTemplateColumns: "1fr 1fr",
 };
-// Wide screens (>600px): Author · Wallet · Tier · Weeks · Solo · Scenes on one
+// Wide screens (>600px): Author · Wallet · Tier · Weeks · Solo · Scenes · Access on one
 // line. Author and Wallet get extra width (pseudonyms / addresses are longer).
 const authorStatsWide: React.CSSProperties = {
   ...metaRow,
-  gridTemplateColumns: "1.6fr 1.4fr 1fr 1fr 1fr 1fr",
+  gridTemplateColumns: "1.6fr 1.4fr 1fr 1fr 1fr 1fr 1fr",
 };
 const metaLabel: React.CSSProperties = {
   color: gold,
@@ -553,6 +554,25 @@ function TierValue({ tier }: { tier?: number }): React.ReactNode {
   );
 }
 
+// How players get runs of the story ($meta_access): free = unlimited, trial =
+// one free run then buy more, paid = buy runs before playing.
+const ACCESS_INFO: Record<string, { label: string; color: string; title: string }> = {
+  free: { label: "Free", color: PENDING_COLOR, title: "Free — play as often as you like" },
+  trial: { label: "Trial", color: "#e6c98a", title: "Trial — one free run, then buy more" },
+  paid: { label: "Paid", color: parchment, title: "Paid — buy runs to play" },
+};
+
+function AccessValue({ access }: { access?: string }): React.ReactNode {
+  if (!access) return null;
+  const info = ACCESS_INFO[access];
+  if (!info) return access;
+  return (
+    <span style={{ color: info.color }} title={info.title}>
+      {info.label}
+    </span>
+  );
+}
+
 // Duration shown as a 4-segment "thermometer" glass tube — one lit segment per
 // week (1–4). Clamped to the 1–4 range the author picks.
 function DurationTube({ weeks }: { weeks?: number }): React.ReactNode {
@@ -735,9 +755,12 @@ function EntryCard({
         const scenes = (
           <MetaItem label="Scenes" value={entry.sceneCount ?? null} center />
         );
+        const access = (
+          <MetaItem label="Access" value={<AccessValue access={md.meta_access} />} center />
+        );
 
         if (wide) {
-          // One line: Author · Wallet · Tier · Weeks · Solo · Scenes.
+          // One line: Author · Wallet · Tier · Weeks · Solo · Scenes · Access.
           return (
             <div style={authorStatsWide}>
               {author}
@@ -746,6 +769,7 @@ function EntryCard({
               {duration}
               {maxChars}
               {scenes}
+              {access}
             </div>
           );
         }
@@ -760,6 +784,7 @@ function EntryCard({
               {duration}
               {maxChars}
               {scenes}
+              {access}
             </div>
           </>
         );

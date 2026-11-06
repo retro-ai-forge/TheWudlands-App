@@ -45,6 +45,7 @@ VALID_INIT = (
     "<<set $meta_durationWeeks to 1>>"
     "<<set $meta_access to 'paid'>>"
     "<<set $meta_allowRunAway to true>>"
+    "[img[cover.webp]]"
 )
 
 
@@ -240,6 +241,21 @@ def test_access_accepts_free_trial_paid():
         assert not any("meta_access" in e for e in result["errors"]), f"{ok} should be accepted"
 
 
+def test_access_accepts_single_or_double_quotes():
+    for quoted in ("'trial'", '"trial"'):
+        init = _init_with("<<set $meta_access to 'paid'>>", f"<<set $meta_access to {quoted}>>")
+        result = _check_init(init)
+        assert not any("meta_access" in e for e in result["errors"]), f"{quoted} should be accepted"
+
+
+def test_access_must_be_quoted():
+    # Unquoted, SugarCube reads `trial` as an undefined variable and StoryInit
+    # breaks in play, so submit must refuse it even though the word is valid.
+    init = _init_with("<<set $meta_access to 'paid'>>", "<<set $meta_access to trial>>")
+    result = _check_init(init)
+    assert any("meta_access" in e and "quoted" in e for e in result["errors"])
+
+
 def test_access_rejects_unknown_value():
     for bad in ("'premium'", "'Paid'", "3"):
         init = _init_with("<<set $meta_access to 'paid'>>", f"<<set $meta_access to {bad}>>")
@@ -290,11 +306,67 @@ def test_string_meta_blank_rejected():
 
 
 def test_string_meta_valid_accepted():
-    # A single letter, a single number, and ordinary text are all fine.
-    for ok in ("'A'", "'4'", "4", "'Hi'", "'The Long Road'"):
+    # A single letter, a quoted number, and ordinary text are all fine, in
+    # either quote style.
+    for ok in ("'A'", "'4'", "'Hi'", "'The Long Road'", '"Double Quoted"'):
         init = _init_with("<<set $meta_title to 'Title'>>", f"<<set $meta_title to {ok}>>")
         result = _check_init(init)
         assert not any("meta_title" in e for e in result["errors"]), f"title {ok} should be accepted"
+
+
+def test_text_meta_must_be_quoted():
+    # Unquoted, SugarCube evaluates the value as JavaScript: a bare word is an
+    # undefined variable (StoryInit breaks in play), a bare number isn't text.
+    fields = {
+        "meta_title": "'Title'",
+        "meta_description": "'Desc'",
+        "meta_author": "'Auth'",
+        "meta_access": "'paid'",
+    }
+    for var, good in fields.items():
+        for bad in ("Word", "4", "'mismatched\""):
+            init = _init_with(f"<<set ${var} to {good}>>", f"<<set ${var} to {bad}>>")
+            result = _check_init(init)
+            assert any(var in e and "quoted" in e for e in result["errors"]), f"${var} to {bad}"
+
+
+def test_numeric_and_boolean_meta_stay_unquoted():
+    # The quote rule is only for text fields; VALID_INIT's bare numbers and
+    # true must not trip it.
+    result = _check_init(VALID_INIT)
+    assert not any("quoted" in e for e in result["errors"])
+
+
+def test_story_init_needs_a_cover_image():
+    init = VALID_INIT.replace("[img[cover.webp]]", "")
+    result = _check_init(init)
+    assert any("cover image" in e for e in result["errors"])
+
+
+def test_story_init_cover_accepted():
+    result = _check_init(VALID_INIT)
+    assert not any("cover" in e or "image" in e for e in result["errors"])
+
+
+def test_story_init_only_one_cover():
+    result = _check_init(VALID_INIT + "[img[second.webp]]")
+    assert any("exactly one image" in e for e in result["errors"])
+
+
+def test_story_init_cover_must_be_uploaded_not_a_url():
+    init = VALID_INIT.replace("[img[cover.webp]]", "[img[https://example.com/c.png]]")
+    result = _check_init(init)
+    assert any("uploaded images" in e for e in result["errors"])
+
+
+def test_story_cover_is_the_story_init_image():
+    from backend.auth_routes import _story_cover
+    passages = [
+        {"name": "Start", "text": "[img[scene.webp]]"},
+        {"name": "StoryInit", "text": "<<set $x to 1>>\n[img[cover.webp]]"},
+    ]
+    assert _story_cover(passages) == "cover.webp"
+    assert _story_cover([{"name": "StoryInit", "text": "no image"}]) is None
 
 
 # --- StoryInit special rules -------------------------------------------------

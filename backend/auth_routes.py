@@ -2924,6 +2924,11 @@ _STRING_META_FIELDS: List[str] = [
     "meta_author",
 ]
 
+# Every text metadata field, which must be written as a quoted string. Numeric
+# and true/false fields (maxCharNum, adventureTier, durationWeeks, allowRunAway)
+# are not in here - quoting those would turn them into text.
+_QUOTED_META_FIELDS: List[str] = _STRING_META_FIELDS + list(_ENUM_META_VALUES)
+
 # Optional metadata the author may set in StoryInit. These include PII (email,
 # real name, wallet) and must never be exposed on the public review queue — they
 # are stored separately for the gated reviewer UI only.
@@ -3084,6 +3089,40 @@ def _collect_image_refs(passages) -> set:
     return refs
 
 
+async def _other_free_story(db, address: str, story_id: str) -> Optional[dict]:
+    """Another story of this author's already in the queue as free, if any.
+
+    Each author may have one free story ($meta_access 'free'). Resubmitting that
+    same story is fine; a rejected story leaves the queue (twine_rejected), so it
+    doesn't count. Stories without $meta_access count as paid.
+    """
+    return await db.twine_review.find_one(
+        {
+            "address": address,
+            "storyId": {"$ne": story_id},
+            "metadata.meta_access": "free",
+        },
+        {"storyId": 1, "name": 1, "metadata.meta_title": 1},
+    )
+
+
+def _story_cover(passages) -> Optional[str]:
+    """The story's cover image: the filename of the [img[...]] in StoryInit.
+
+    Shown with the title and description wherever the story is listed. None if
+    StoryInit has no image (or only an external one). The submit validator
+    requires exactly one uploaded image here, so a submitted story has a cover.
+    """
+    story_init = next((p for p in passages if p.get("name") == "StoryInit"), None)
+    if not story_init:
+        return None
+    for match in _IMG_MACRO_RE.finditer(story_init.get("text", "")):
+        src = match.group(1).split("|")[-1].strip()
+        if src and not _re.match(r"^(https?:)?//", src) and not src.startswith("data:"):
+            return src
+    return None
+
+
 def _extract_storyinit_metadata(passages: list, fields: List[str]) -> dict:
     """Pull the given StoryInit `<<set>>` variables into a plain dict."""
     story_init = next((p for p in passages if p.get("name") == "StoryInit"), None)
@@ -3217,9 +3256,28 @@ def _check_twine_syntax(doc: dict) -> dict:
                     f"${var} must be a whole number from {lo} to {hi} (got {value!r})"
                 )
 
+        # Text metadata must be a quoted string ('...' or "..."). Unquoted,
+        # SugarCube evaluates the value as JavaScript: a bare word is an
+        # undefined variable and StoryInit fails when played ("trial is not
+        # defined"), even when the text itself would be valid.
+        unquoted: set = set()
+        for var in _QUOTED_META_FIELDS:
+            m = _re.search(
+                rf"<<set\s+\${_re.escape(var)}\s+to\s+(.+?)>>", init_text, _re.DOTALL
+            )
+            if not m:
+                continue  # missing is reported above
+            raw = m.group(1).strip()
+            if not (len(raw) >= 2 and raw[0] in ("'", '"') and raw[-1] == raw[0]):
+                unquoted.add(var)
+                errors.append(
+                    f"${var} must be a quoted string, e.g. <<set ${var} to 'text'>> "
+                    f"or \"text\" (got {raw})"
+                )
+
         for var, allowed in _ENUM_META_VALUES.items():
             value = _extract_set_value(init_text, var)
-            if value is None:
+            if value is None or var in unquoted:
                 continue
             if value not in allowed:
                 choices = ", ".join(f'"{a}"' for a in allowed)
@@ -3229,15 +3287,10 @@ def _check_twine_syntax(doc: dict) -> dict:
         # character (a single letter or digit is fine; blank/space-only is not).
         for var in _STRING_META_FIELDS:
             value = _extract_set_value(init_text, var)
-            if value is None:
+            if value is None or var in unquoted:
                 continue
-            # A bare number (int/float) counts as content; a string must have at
-            # least one non-whitespace character.
-            has_content = (
-                isinstance(value, (int, float))
-                or (isinstance(value, str) and bool(value.strip()))
-            )
-            if not has_content:
+            # A quoted string must have at least one non-whitespace character.
+            if not (isinstance(value, str) and value.strip()):
                 errors.append(
                     f"${var} must be non-empty text (not only spaces) (got {value!r})"
                 )
@@ -3287,6 +3340,27 @@ def _check_twine_syntax(doc: dict) -> dict:
                 errors.append("StoryInit must not have outgoing links")
             if _ENDING_MACRO in text:
                 errors.append(f"StoryInit must not contain {_ENDING_MACRO}")
+            # The story's cover: exactly one uploaded image, shown with the title
+            # and description wherever the story is listed. (That it was really
+            # uploaded is checked on submit, with every other [img[...]].)
+            covers = [
+                m.group(1).split("|")[-1].strip() for m in _IMG_MACRO_RE.finditer(text)
+            ]
+            if not covers:
+                errors.append(
+                    "StoryInit must contain the story's cover image as [img[filename]] "
+                    "(copy it from the Images list)"
+                )
+            elif len(covers) > 1:
+                errors.append(
+                    "StoryInit must contain exactly one image (the cover), found "
+                    + ", ".join(f"'{c}'" for c in covers)
+                )
+            elif _story_cover([{"name": "StoryInit", "text": text}]) is None:
+                errors.append(
+                    f"The StoryInit cover image must be one of the story's uploaded images, "
+                    f"not a web address (got '{covers[0]}')"
+                )
             continue
 
         # LastResort is the fault-recovery scene. Its own rule (carry the
@@ -3482,6 +3556,19 @@ async def submit_twine_story_for_review(
             "warnings": warnings,
         }
 
+    # One free story per author.
+    access = _extract_storyinit_metadata(doc.get("passages", []), ["meta_access"]).get(
+        "meta_access"
+    )
+    if access == "free":
+        other = await _other_free_story(db, address, story_id)
+        if other:
+            title = (other.get("metadata") or {}).get("meta_title") or other.get("name") or other["storyId"]
+            errors.append(
+                f"You already have a free story ('{title}') — each author may submit "
+                "one free story. Set $meta_access to 'trial' or 'paid'."
+            )
+
     # Every [img[...]] must point at an image the author has actually uploaded
     # (the create stage, which the review copy is made from).
     image_refs = _collect_image_refs(doc.get("passages", []))
@@ -3566,6 +3653,7 @@ async def submit_twine_story_for_review(
         # Non-PII, public queue stats.
         "sceneCount": scene_count,
         "tags": story_tags,
+        "coverImage": _story_cover(passages_list),
     }
 
     await db.twine_review.update_one(
@@ -3606,6 +3694,7 @@ async def list_twine_reviews():
             "metadata": 1,
             "sceneCount": 1,
             "tags": 1,
+            "coverImage": 1,
             # Needed only to derive sceneCount/tags for older submissions that
             # predate those fields; stripped from the response below.
             "passages": 1,
@@ -3622,6 +3711,14 @@ async def list_twine_reviews():
             doc["sceneCount"] = _count_playable_scenes(passages)
         if not doc.get("tags"):
             doc["tags"] = _collect_story_tags({"storyData": story_data, "passages": passages})
+        cover = doc.pop("coverImage", None) or _story_cover(passages)
+        if cover:
+            doc["imageUrl"] = twine_images.public_url(
+                doc["address"], twine_images.STAGE_REVIEW, doc["storyId"], cover
+            )
+            doc["imageThumbUrl"] = twine_images.public_url(
+                doc["address"], twine_images.STAGE_REVIEW, doc["storyId"], cover, thumb=True
+            )
         results.append(doc)
     results.sort(key=lambda d: d.get("lastUpdate", ""), reverse=True)
     return results
