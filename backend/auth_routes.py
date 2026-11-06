@@ -2886,6 +2886,7 @@ _METADATA_FIELDS: List[str] = [
     "meta_maxCharNum",
     "meta_adventureTier",
     "meta_durationWeeks",
+    "meta_access",
 ]
 
 # Mandatory in-game variables the author must also set in StoryInit, but which are
@@ -2903,6 +2904,15 @@ _REQUIRED_VARS: List[str] = _METADATA_FIELDS + _REQUIRED_GAME_VARS
 _NUMERIC_META_RANGES: dict = {
     "meta_maxCharNum": (1, 4),
     "meta_adventureTier": (1, 6),
+}
+
+# Metadata fields restricted to a fixed set of values.
+#   meta_access: how players get runs of the story (see backend.adventures):
+#     "free"  - unlimited, no run counter (foraging, gathering, ...)
+#     "trial" - every player starts with 1 free run; buying adds 3
+#     "paid"  - players start with 0 runs; buying adds 3
+_ENUM_META_VALUES: dict = {
+    "meta_access": ("free", "trial", "paid"),
 }
 
 # Free-text metadata fields that must carry some real content: at least one
@@ -3206,6 +3216,14 @@ def _check_twine_syntax(doc: dict) -> dict:
                 errors.append(
                     f"${var} must be a whole number from {lo} to {hi} (got {value!r})"
                 )
+
+        for var, allowed in _ENUM_META_VALUES.items():
+            value = _extract_set_value(init_text, var)
+            if value is None:
+                continue
+            if value not in allowed:
+                choices = ", ".join(f'"{a}"' for a in allowed)
+                errors.append(f"${var} must be one of {choices} (got {value!r})")
 
         # Free-text fields must hold some content: at least one non-whitespace
         # character (a single letter or digit is fine; blank/space-only is not).

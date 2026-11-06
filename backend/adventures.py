@@ -16,6 +16,8 @@ story_snapshots     Immutable copy of a story version (passages + the step
                     graph), shared by every session that plays that version.
                     A story edited or resubmitted mid-run can't strand a party
                     on a scene that no longer exists.
+story_plays         Runs a player has left of one story (`remaining`), plus the
+                    sessions currently holding a run (`open`). See "Run counter".
 
 Each member character points back at its session through
 `availability.adventure` = {sessionId, storyId, title}, on both the character
@@ -38,6 +40,19 @@ ending    An ending (or LastResort) was reached. The log is written and each
           one conditional write, so retries never count twice.
 done      Every member released; the session doc is deleted next.
 
+Run counter
+-----------
+A story's `$meta_access` decides how players get runs of it:
+    free   no counter - play as often as you like
+    trial  every player starts with 1 run; buying adds RUNS_PER_PURCHASE
+    paid   every player starts with 0 runs; buying adds RUNS_PER_PURCHASE
+Starting takes a run (refused at 0). Ending at `finished` or `run_away` keeps
+it spent; ending at LastResort (`aborted`, a platform fault) or a start that
+fails part-way gives it back. Taking and returning are conditional single-doc
+writes keyed on the session id in `open`, so retries never charge or refund
+twice. Charging at start (not at the end) also stops one remaining run from
+being played in two tabs at once.
+
 No multi-document transactions are used (Firestore's MongoDB layer is not
 relied on for them). Instead every step above is safe to repeat, and
 `recover_adventures` finishes whatever a crashed request left half done.
@@ -52,6 +67,7 @@ from datetime import datetime, timedelta, timezone
 from typing import List, Optional
 
 from pymongo import ReturnDocument
+from pymongo.errors import DuplicateKeyError
 
 from backend.db import get_database
 from backend.twine_graph import LAST_RESORT_PASSAGE, build_story_graph, step_allowed
@@ -77,6 +93,12 @@ STALE_START = timedelta(minutes=2)
 SERVER_VARS = ("char", "lead")
 
 ACTIVE_STATUSES = ("starting", "active")
+
+# $meta_access values (validated on submit) and the runs each one starts with.
+# A story without the field (submitted before it was required) counts as paid.
+ACCESS_TYPES = ("free", "trial", "paid")
+INITIAL_RUNS = {"trial": 1, "paid": 0}
+RUNS_PER_PURCHASE = 3
 
 
 class AdventureError(Exception):
@@ -104,6 +126,11 @@ def _now() -> str:
 # Snapshots never change, so each container can cache their graphs freely.
 _GRAPH_CACHE: dict = {}
 _GRAPH_CACHE_SIZE = 256
+
+
+def _story_access(metadata: dict) -> str:
+    value = metadata.get("meta_access")
+    return value if value in ACCESS_TYPES else "paid"
 
 
 def _max_party(metadata: dict) -> int:
@@ -147,7 +174,9 @@ async def _snapshot_story(db, story_author: str, story_id: str) -> dict:
         {"_id": snapshot_id}, {"$setOnInsert": snapshot}, upsert=True
     )
     _cache_graph(snapshot_id, graph)
-    return {"_id": snapshot_id, **snapshot, "graph": graph}
+    # Access is read from the live review doc each start (not stored in the
+    # snapshot), so a change to $meta_access applies to the next run.
+    return {"_id": snapshot_id, **snapshot, "graph": graph, "access": _story_access(metadata)}
 
 
 def _cache_graph(snapshot_id: str, graph: dict) -> None:
@@ -165,6 +194,111 @@ async def _story_graph(db, snapshot_id: str) -> dict:
         graph = json.loads(snapshot["graph"])
         _cache_graph(snapshot_id, graph)
     return graph
+
+
+# ── Run counter ─────────────────────────────────────────────────────────────
+
+def _plays_key(address: str, story_author: str, story_id: str) -> dict:
+    return {"address": address, "storyAuthor": story_author, "storyId": story_id}
+
+
+async def _ensure_plays(db, key: dict, access: str) -> None:
+    """Create the player's counter for a story on first use, at its starting runs."""
+    try:
+        await db.story_plays.update_one(
+            key,
+            {"$setOnInsert": {
+                "remaining": INITIAL_RUNS.get(access, 0),
+                "open": [],
+                "createdAt": _now(),
+            }},
+            upsert=True,
+        )
+    except DuplicateKeyError:
+        pass  # a concurrent request created it first
+
+
+async def _take_run(db, session: dict, access: str) -> bool:
+    """Spend one run on this session. False if none are left."""
+    key = _plays_key(session["address"], session["storyAuthor"], session["storyId"])
+    await _ensure_plays(db, key, access)
+    result = await db.story_plays.update_one(
+        {**key, "remaining": {"$gte": 1}, "open": {"$ne": session["_id"]}},
+        {
+            "$inc": {"remaining": -1},
+            "$push": {"open": session["_id"]},
+            "$set": {"updatedAt": _now()},
+        },
+    )
+    return result.modified_count == 1
+
+
+async def _return_run(db, session: dict) -> None:
+    """Give back the run this session took (a fault or a failed start)."""
+    key = _plays_key(session["address"], session.get("storyAuthor"), session.get("storyId"))
+    await db.story_plays.update_one(
+        {**key, "open": session["_id"]},
+        {
+            "$inc": {"remaining": 1},
+            "$pull": {"open": session["_id"]},
+            "$set": {"updatedAt": _now()},
+        },
+    )
+
+
+async def _settle_run(db, session: dict) -> None:
+    """The run counted: stop tracking it as open, keep it spent."""
+    key = _plays_key(session["address"], session.get("storyAuthor"), session.get("storyId"))
+    await db.story_plays.update_one(
+        {**key, "open": session["_id"]},
+        {"$pull": {"open": session["_id"]}, "$set": {"updatedAt": _now()}},
+    )
+
+
+async def story_runs(address: str, story_author: str, story_id: str) -> dict:
+    """How the player can play a story: its access type and runs left.
+
+    `remaining` is None for free stories (no limit).
+    """
+    db = get_database()
+    review = await db.twine_review.find_one(
+        {"address": story_author, "storyId": story_id}, {"metadata": 1}
+    )
+    if review is None:
+        raise AdventureError("Story not found", 404)
+    access = _story_access(review.get("metadata", {}))
+    if access == "free":
+        return {"access": access, "remaining": None}
+    plays = await db.story_plays.find_one(
+        _plays_key(address, story_author, story_id), {"remaining": 1}
+    )
+    remaining = plays["remaining"] if plays else INITIAL_RUNS.get(access, 0)
+    return {"access": access, "remaining": remaining}
+
+
+async def grant_runs(
+    address: str, story_author: str, story_id: str, runs: int = RUNS_PER_PURCHASE
+) -> dict:
+    """Add runs after a purchase. Called by the payment flow (not built yet)."""
+    if runs < 1:
+        raise AdventureError("runs must be at least 1")
+    db = get_database()
+    review = await db.twine_review.find_one(
+        {"address": story_author, "storyId": story_id}, {"metadata": 1}
+    )
+    if review is None:
+        raise AdventureError("Story not found", 404)
+    access = _story_access(review.get("metadata", {}))
+    if access == "free":
+        raise AdventureError("This story is free - there is nothing to buy")
+    key = _plays_key(address, story_author, story_id)
+    await _ensure_plays(db, key, access)
+    plays = await db.story_plays.find_one_and_update(
+        key,
+        {"$inc": {"remaining": runs}, "$set": {"updatedAt": _now()}},
+        return_document=ReturnDocument.AFTER,
+    )
+    return {"access": access, "remaining": plays["remaining"]}
 
 
 # ── Character <-> session links ─────────────────────────────────────────────
@@ -353,6 +487,7 @@ async def _rollback_start(db, session: dict) -> None:
     """Undo a session that never got all its members: free them, drop it."""
     for member in session.get("members", []):
         await _release_character(db, member["address"], member["characterId"], session["_id"])
+    await _return_run(db, session)
     await db.adventure_sessions.delete_one({"_id": session["_id"], "status": "starting"})
 
 
@@ -378,6 +513,12 @@ async def _finalize(db, session: dict) -> dict:
             "endedAt": session.get("endedAt"),
         }
         await db.adventure_log.replace_one({"_id": session_id}, log, upsert=True)
+
+        # LastResort (a platform fault) doesn't use up the run; any real ending does.
+        if session.get("outcome") == "aborted":
+            await _return_run(db, session)
+        else:
+            await _settle_run(db, session)
 
         for member in session.get("members", []):
             await _release_character(
@@ -509,6 +650,10 @@ async def start_adventure(
         "updatedAt": now,
     }
     await db.adventure_sessions.insert_one(session)
+
+    if snapshot["access"] != "free" and not await _take_run(db, session, snapshot["access"]):
+        await db.adventure_sessions.delete_one({"_id": session["_id"], "status": "starting"})
+        raise AdventureError("No runs of this story left - buy more to play it again", 402)
 
     stub = _adventure_stub(session)
     claimed: dict = {}

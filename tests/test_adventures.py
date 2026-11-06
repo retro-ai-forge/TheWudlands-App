@@ -24,11 +24,12 @@ PASSAGES = [
     {"id": "0", "name": "StoryInit", "text": (
         '<<set $meta_title to "Test Crypt">>\n'
         "<<set $meta_maxCharNum to 2>>\n"
+        "<<set $meta_access to 'free'>>\n"
         "<<set $meta_allowRunAway to true>>"
     )},
     {"id": "1", "name": "Start", "text": "A door. [[Enter->Hall]]"},
     {"id": "2", "name": "Hall", "text": "[[Fight|Victory]] [[Back->Start]] [img[door.png][Vault]]"},
-    {"id": "3", "name": "Vault", "text": "Gold. [[Hall]]"},
+    {"id": "3", "name": "Vault", "text": "Gold. [[Search again->Vault]] [[Hall]]"},
     {"id": "4", "name": "Victory", "text": "You win. <<set $isEnding to true>>"},
     {"id": "5", "name": "Retreat", "text": "You turn back. [[Flee->Fled]]"},
     {"id": "6", "name": "Fled", "text": "Safe. <<set $isEnding to true>>"},
@@ -56,6 +57,7 @@ def test_steps_follow_links_retreat_and_last_resort():
     assert step_allowed(graph, "Vault", "Retreat")  # run away from any scene
     assert not step_allowed(graph, "Retreat", "Retreat")  # Retreat isn't a main scene
     assert step_allowed(graph, "Hall", "LastResort")  # fault route
+    assert step_allowed(graph, "Vault", "Vault")  # a scene that links to itself
 
 
 def test_retreat_needs_allow_run_away():
@@ -76,6 +78,7 @@ _PLAYER_COLLECTIONS = (
     "character_blueprints",
     "adventure_sessions",
     "adventure_log",
+    "story_plays",
 )
 
 
@@ -98,10 +101,10 @@ async def world(mongodb_uri):
         "status": "submitted",
         "storyData": STORY_DATA,
         "passages": PASSAGES,
-        "metadata": {"meta_title": "Test Crypt", "meta_maxCharNum": 2},
+        "metadata": {"meta_title": "Test Crypt", "meta_maxCharNum": 2, "meta_access": "free"},
     })
-    await add_character(ADDRESS, Character(first_name="Ada", last_name="One"))
-    player = await add_character(ADDRESS, Character(first_name="Bo", last_name="Two"))
+    await add_character(ADDRESS, Character(first_name="Ada", last_name="One", slot_number=1))
+    player = await add_character(ADDRESS, Character(first_name="Bo", last_name="Two", slot_number=2))
     ids = [c["id"] for c in sorted(player.characters, key=lambda c: c["firstName"])]
     try:
         yield db, ids
@@ -192,6 +195,32 @@ async def test_steps_survive_reload_and_reject_stale_or_invalid(world):
     # Jumping to a scene that isn't linked is refused.
     with pytest.raises(adventures.AdventureError):
         await adventures.record_step(ADDRESS, sid, 1, "Hall", "Fled", {})
+
+
+async def test_self_loop_steps_apply_once_each(world):
+    """A scene linking to itself: passage and prevPassage stay the same, so
+    only `seq` tells consecutive loop steps apart from a retried one."""
+    _, ids = world
+    sid = (await _start(ids))["sessionId"]
+    await adventures.record_step(ADDRESS, sid, 0, "Start", "Hall", {})
+    await adventures.record_step(ADDRESS, sid, 1, "Hall", "Vault", {})
+
+    first = await adventures.record_step(ADDRESS, sid, 2, "Vault", "Vault", {"tries": 1})
+    assert (first["seq"], first["passage"], first["vars"]) == (3, "Vault", {"tries": 1})
+
+    # Retrying that same loop step is a replay, not a second loop.
+    retry = await adventures.record_step(ADDRESS, sid, 2, "Vault", "Vault", {"tries": 1})
+    assert retry["seq"] == 3
+
+    # Looping again with the new seq applies.
+    second = await adventures.record_step(ADDRESS, sid, 3, "Vault", "Vault", {"tries": 2})
+    assert (second["seq"], second["vars"]) == (4, {"tries": 2})
+    assert second["trail"][-3:] == ["Vault", "Vault", "Vault"]
+
+    # A late duplicate of the first loop step is now stale.
+    with pytest.raises(adventures.StepConflict) as conflict:
+        await adventures.record_step(ADDRESS, sid, 2, "Vault", "Vault", {"tries": 1})
+    assert conflict.value.view["seq"] == 4
 
 
 async def test_reaching_an_ending_logs_releases_and_counts(world):
@@ -296,3 +325,100 @@ async def test_toggle_and_delete_refuse_characters_in_a_session(world):
         await set_in_adventure(ADDRESS, ids[0], False)
     with pytest.raises(ValueError):
         await delete_character(ADDRESS, ids[0])
+
+
+# ── Run counter ─────────────────────────────────────────────────────────────
+
+async def _set_access(db, access):
+    await db.twine_review.update_one(
+        {"address": AUTHOR, "storyId": STORY_ID}, {"$set": {"metadata.meta_access": access}}
+    )
+
+
+async def _runs():
+    return (await adventures.story_runs(ADDRESS, AUTHOR, STORY_ID))["remaining"]
+
+
+async def _finish(sid):
+    await adventures.record_step(ADDRESS, sid, 0, "Start", "Hall", {})
+    return await adventures.record_step(ADDRESS, sid, 1, "Hall", "Victory", {})
+
+
+async def test_free_story_has_no_counter(world):
+    db, ids = world
+    assert await _runs() is None
+    await _finish((await _start([ids[0]]))["sessionId"])
+    await _finish((await _start([ids[0]]))["sessionId"])  # again and again
+    assert await db.story_plays.count_documents({"address": ADDRESS}) == 0
+
+
+async def test_trial_gives_one_run_then_refuses(world):
+    db, ids = world
+    await _set_access(db, "trial")
+    assert await _runs() == 1
+
+    sid = (await _start([ids[0]]))["sessionId"]
+    assert await _runs() == 0  # spent at start
+    await _finish(sid)
+    assert await _runs() == 0  # a finished run stays spent
+
+    with pytest.raises(adventures.AdventureError) as err:
+        await _start([ids[0]])
+    assert err.value.status_code == 402
+    assert len(await adventures.list_adventures(ADDRESS)) == 0  # nothing left behind
+
+
+async def test_paid_starts_at_zero_and_purchase_adds_three(world):
+    db, ids = world
+    await _set_access(db, "paid")
+    assert await _runs() == 0
+    with pytest.raises(adventures.AdventureError) as err:
+        await _start([ids[0]])
+    assert err.value.status_code == 402
+
+    assert (await adventures.grant_runs(ADDRESS, AUTHOR, STORY_ID))["remaining"] == 3
+    await _finish((await _start([ids[0]]))["sessionId"])
+    assert await _runs() == 2
+
+
+async def test_trial_purchase_adds_to_the_free_run(world):
+    db, ids = world
+    await _set_access(db, "trial")
+    assert (await adventures.grant_runs(ADDRESS, AUTHOR, STORY_ID))["remaining"] == 4
+
+
+async def test_run_away_uses_a_run(world):
+    db, ids = world
+    await _set_access(db, "trial")
+    sid = (await _start([ids[0]]))["sessionId"]
+    await adventures.record_step(ADDRESS, sid, 0, "Start", "Retreat", {})
+    done = await adventures.record_step(ADDRESS, sid, 1, "Retreat", "Fled", {})
+    assert done["outcome"] == "run_away"
+    assert await _runs() == 0
+
+
+async def test_last_resort_gives_the_run_back(world):
+    db, ids = world
+    await _set_access(db, "trial")
+    sid = (await _start([ids[0]]))["sessionId"]
+    assert await _runs() == 0
+    done = await adventures.record_step(ADDRESS, sid, 0, "Start", "LastResort", {})
+    assert done["outcome"] == "aborted"
+    assert await _runs() == 1
+    # Finishing it again (a retried request) doesn't refund twice.
+    await adventures.get_adventure(ADDRESS, sid)
+    assert await _runs() == 1
+
+
+async def test_failed_start_gives_the_run_back(world):
+    db, ids = world
+    await _set_access(db, "trial")
+    sid = (await _start([ids[0]]))["sessionId"]
+    long_ago = (datetime.now(timezone.utc) - timedelta(minutes=10)).isoformat()
+    await db.adventure_sessions.update_one(
+        {"_id": sid}, {"$set": {"status": "starting", "startedAt": long_ago}}
+    )
+    await adventures.recover_adventures(ADDRESS)  # rolls the stuck start back
+    assert await _runs() == 1
+    await adventures.recover_adventures(ADDRESS)
+    assert await _runs() == 1  # refunded once only

@@ -43,6 +43,7 @@ VALID_INIT = (
     "<<set $meta_maxCharNum to 1>>"
     "<<set $meta_adventureTier to 1>>"
     "<<set $meta_durationWeeks to 1>>"
+    "<<set $meta_access to 'paid'>>"
     "<<set $meta_allowRunAway to true>>"
 )
 
@@ -230,6 +231,26 @@ def _check_init(init_text: str) -> dict:
             ]
         )
     )
+
+
+def test_access_accepts_free_trial_paid():
+    for ok in ("free", "trial", "paid"):
+        init = _init_with("<<set $meta_access to 'paid'>>", f"<<set $meta_access to '{ok}'>>")
+        result = _check_init(init)
+        assert not any("meta_access" in e for e in result["errors"]), f"{ok} should be accepted"
+
+
+def test_access_rejects_unknown_value():
+    for bad in ("'premium'", "'Paid'", "3"):
+        init = _init_with("<<set $meta_access to 'paid'>>", f"<<set $meta_access to {bad}>>")
+        result = _check_init(init)
+        assert any("meta_access" in e for e in result["errors"]), f"{bad} should be rejected"
+
+
+def test_access_is_required():
+    init = _init_with("<<set $meta_access to 'paid'>>", "")
+    result = _check_init(init)
+    assert any("meta_access" in e for e in result["errors"])
 
 
 def test_adventure_tier_out_of_range_rejected():

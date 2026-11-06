@@ -117,3 +117,8 @@ async def ensure_indexes() -> None:
     await db.adventure_sessions.create_index("address")
     await db.adventure_log.create_index([("address", 1), ("endedAt", -1)])
     await db.adventure_log.create_index("storyId")
+
+    # Runs left per player per story (backend.adventures run counter).
+    await db.story_plays.create_index(
+        [("address", 1), ("storyAuthor", 1), ("storyId", 1)], unique=True
+    )

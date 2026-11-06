@@ -52,15 +52,16 @@ async def test_characters_persist_after_active_player_is_removed(mongodb_uri):
         assert again.characters == []
 
         with_char = await add_character(
-            TEST_ADDRESS, Character(first_name="Test", last_name="Hero")
+            TEST_ADDRESS, Character(first_name="Test", last_name="Hero", slot_number=1)
         )
         with_char = await add_character(
-            TEST_ADDRESS, Character(first_name="Second", last_name="Hero")
+            TEST_ADDRESS, Character(first_name="Second", last_name="Hero", slot_number=2)
         )
         assert with_char is not None
         assert len(with_char.characters) == 2
-        assert with_char.characters[0]["firstName"] == "Test"
-        assert with_char.characters[1]["firstName"] == "Second"
+        # Characters come back in no guaranteed order (the UI places them by
+        # slotNumber), so compare by name.
+        assert sorted(c["firstName"] for c in with_char.characters) == ["Second", "Test"]
 
         # Simulate the active-session ending (logout, or 2h idle eviction).
         await add_active_player(TEST_ADDRESS)
