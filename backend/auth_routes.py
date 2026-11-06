@@ -172,6 +172,10 @@ class CharacterAvailabilityResponse(BaseModel):
         False,
         description="Player-toggled - whether this character is currently out on an adventure, away from the shared vault. Changes where unequip_item sends a freed item.",
     )
+    adventureSessionId: Optional[str] = Field(
+        None,
+        description="The adventure_sessions doc this character is playing in, or null. Shared by every party member of the same run; the frontend fetches the session through it on mount.",
+    )
 
 
 class CharacterClassResponse(BaseModel):

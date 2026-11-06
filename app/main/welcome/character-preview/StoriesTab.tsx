@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import styles from "./CharacterTabs.module.css";
 import type { RawPlayerData } from "./VaultTab";
-import type { SlotCharacterSummary } from "../SoulSlotGrid";
+import type { SlotCharacterSummary } from "../types";
 
 const BLOCKED_FLASH_MS = 2500;
 export const REST_LOCATIONS = ["cave", "forest", "prairie", "ruin", "dungeon"] as const;

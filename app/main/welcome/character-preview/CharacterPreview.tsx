@@ -4,7 +4,7 @@ import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react
 import styles from "../soul-creation/SoulCreation.module.css";
 import tabStyles from "./CharacterTabs.module.css";
 import { useHeaderVisibility } from "@/app/main/HeaderVisibilityProvider";
-import type { SlotCharacterSummary } from "../SoulSlotGrid";
+import type { SlotCharacterSummary } from "../types";
 import { PortraitEditor, type PortraitEditorValue } from "../PortraitEditor";
 import { BIRTHSIGNS } from "@/app/lib/characterOptions";
 import { StatsTab } from "./StatsTab";

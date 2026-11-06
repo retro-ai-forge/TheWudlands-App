@@ -8,7 +8,7 @@ import { FeedbackForm } from "./FeedbackForm";
 import { SoulCreation } from "./soul-creation/SoulCreation";
 import { CharacterPreview, type TabKey } from "./character-preview/CharacterPreview";
 import type { ItemInstance } from "./character-preview/VaultTab";
-import type { SlotCharacterSummary, SlotCharacterPreview } from "./SoulSlotGrid";
+import type { SlotCharacterSummary, SlotCharacterPreview } from "./types";
 
 // Stable empty fallbacks so `vault?.x ?? EMPTY_X` returns the same reference
 // on every render when vault is absent, instead of a fresh `{}` / `[]` that

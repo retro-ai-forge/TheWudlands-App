@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import styles from "./CharacterTabs.module.css";
 import type { RawPlayerData } from "./VaultTab";
-import type { SlotCharacterSummary } from "../SoulSlotGrid";
+import type { SlotCharacterSummary } from "../types";
 
 // How long the "still crafting" flash stays up before clearing itself -
 // mirrors VaultTab's ItemDetailPopup ITEM_POPUP_FLASH_MS, just a local

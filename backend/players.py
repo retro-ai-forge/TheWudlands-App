@@ -211,7 +211,6 @@ async def _build_player(db, address: str) -> Player:
             character["pcStatus"] = pc_entry.get("status", ["free"])
             character["pcTags"] = pc_entry.get("tags", ["alive"])
             character["pcTimers"] = pc_entry.get("timers", {})
-            character["pcCraftingTiers"] = pc_entry.get("craftingTiers", {})
 
     return Player(
         address=address,
@@ -456,7 +455,6 @@ async def _create_pc_entry(
         "status": ["free"],
         "tags": [vital_status],
         "timers": {},
-        "craftingTiers": {},
         "slotNumber": slot_number,
         "availability": {"inAdventure": False, "resting": False, "restLocation": None},
         "portraitUrl": portrait_url,
@@ -525,22 +523,6 @@ async def _set_pc_timer(db, address: str, character_id: str, key: str, value) ->
             {"address": address, "characters.characterId": character_id},
             {"$set": {f"characters.$.timers.{key}": value}},
         )
-
-
-async def _set_pc_crafting_tier(db, address: str, character_id: str, slot: str, level: int) -> None:
-    await db.player_characters.update_one(
-        {"address": address, "characters.characterId": character_id},
-        {"$set": {f"characters.$.craftingTiers.{slot}": level}},
-    )
-
-
-async def _sync_pc_crafting_tiers(db, address: str, character_id: str, character: dict) -> None:
-    profession = character.get("profession", {})
-    for n in ("1", "2", "3"):
-        prof_name = profession.get(f"prof{n}", "none")
-        if prof_name != "none":
-            level = profession.get(f"lvl{n}", 0)
-            await _set_pc_crafting_tier(db, address, character_id, f"prof{n}", level)
 
 
 async def _update_pc_portrait(
@@ -681,7 +663,6 @@ async def get_single_character(address: str, character_id: str) -> Optional[dict
         char_doc["pcStatus"] = pc_entry.get("status", ["free"])
         char_doc["pcTags"] = pc_entry.get("tags", ["alive"])
         char_doc["pcTimers"] = pc_entry.get("timers", {})
-        char_doc["pcCraftingTiers"] = pc_entry.get("craftingTiers", {})
 
     return char_doc
 
@@ -2494,7 +2475,6 @@ async def start_craft(
         await _add_pc_status(db, address, character_id, "crafting")
         await _set_pc_timer(db, address, character_id, "craftingReadyAt", ready_at.isoformat())
         await _update_pc_active_craft(db, address, character_id, active_craft)
-        await _sync_pc_crafting_tiers(db, address, character_id, doc)
         return await _build_player(db, address)
 
     # At least one instance needs moving to "crafting" - switch every
@@ -2575,7 +2555,6 @@ async def start_craft(
     await _add_pc_status(db, address, character_id, "crafting")
     await _set_pc_timer(db, address, character_id, "craftingReadyAt", ready_at.isoformat())
     await _update_pc_active_craft(db, address, character_id, active_craft)
-    await _sync_pc_crafting_tiers(db, address, character_id, doc)
     return await _build_player(db, address)
 
 
@@ -3076,7 +3055,6 @@ async def finish_craft(address: str, character_id: str) -> Optional[Player]:
         await _remove_pc_status(db, address, character_id, "crafting")
         await _set_pc_timer(db, address, character_id, "craftingReadyAt", None)
         await _update_pc_active_craft(db, address, character_id, None)
-        await _sync_pc_crafting_tiers(db, address, character_id, doc)
         return await _build_player(db, address)
 
     # At least one instance-tracked tool was borrowed - release each back
@@ -3275,7 +3253,6 @@ async def finish_craft(address: str, character_id: str) -> Optional[Player]:
     await _remove_pc_status(db, address, character_id, "crafting")
     await _set_pc_timer(db, address, character_id, "craftingReadyAt", None)
     await _update_pc_active_craft(db, address, character_id, None)
-    await _sync_pc_crafting_tiers(db, address, character_id, doc)
     return await _build_player(db, address)
 
 
@@ -4146,6 +4123,7 @@ async def set_in_adventure(
     if not in_adventure:
         update["$set"]["availability.resting"] = False
         update["$set"]["availability.restLocation"] = None
+        update["$set"]["availability.adventureSessionId"] = None
         if reason in ("stop", "run_away"):
             counter = "stats.adventureFinished" if reason == "stop" else "stats.adventureRunAway"
             update.setdefault("$inc", {})[counter] = 1

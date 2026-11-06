@@ -1,9 +1,9 @@
 import { Fragment, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import type { ReactNode } from "react";
 import styles from "./CharacterTabs.module.css";
-import type { SlotCharacterSummary } from "../SoulSlotGrid";
-import type { ItemInstance } from "../SoulSlotGrid";
-export type { ItemInstance } from "../SoulSlotGrid";
+import type { SlotCharacterSummary } from "../types";
+import type { ItemInstance } from "../types";
+export type { ItemInstance } from "../types";
 import { getResourceCatalog, getToolCatalog, getItemCatalog } from "./catalogCache";
 
 export type BlueprintTierInfo = Record<

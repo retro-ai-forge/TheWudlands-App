@@ -1,6 +1,7 @@
 """
-Exercises stackable resource storage in backend.players: per-character
-crafting.resources (staging vault) and the player-level shared crafting pool.
+Exercises stackable item-balance storage in backend.players: the per-character
+crafting staging area (characters.crafting.itemBalances) and the player's shared
+vault (player_vaults.itemBalances, the unified pool for every stackable item).
 """
 
 import pytest
@@ -10,85 +11,107 @@ from backend.db import get_database
 from backend.players import (
     add_character,
     get_or_create_player,
-    grant_resource,
-    grant_shared_resource,
+    grant_character_item_balance,
+    grant_item_balance,
 )
 from backend.resources_catalog import resolve_trapping_options
 
 TEST_ADDRESS = "5TestResourcesAddress"
 
+# Every collection a test player's data can land in (see CLAUDE.md schema).
+_PLAYER_COLLECTIONS = (
+    "characters",
+    "player_characters",
+    "player_vaults",
+    "character_homes",
+    "character_camp",
+    "character_blueprints",
+)
+
+
+async def _purge_player(db) -> None:
+    for name in _PLAYER_COLLECTIONS:
+        await db[name].delete_many({"address": TEST_ADDRESS})
+
+
+async def _new_character(db) -> Character:
+    await _purge_player(db)
+    await get_or_create_player(TEST_ADDRESS)
+    character = Character(first_name="Test", last_name="Hero")
+    await add_character(TEST_ADDRESS, character)
+    return character
+
+
+async def _vault_balances(db) -> dict:
+    vault = await db.player_vaults.find_one({"address": TEST_ADDRESS}) or {}
+    return vault.get("itemBalances", {})
+
 
 @pytest.mark.asyncio
-async def test_grant_resource_accumulates_on_a_character(mongodb_uri):
+async def test_grant_character_item_balance_accumulates_on_a_character(mongodb_uri):
     db = get_database()
     try:
-        await get_or_create_player(TEST_ADDRESS)
-        character = Character(first_name="Test", last_name="Hero")
-        await add_character(TEST_ADDRESS, character)
+        character = await _new_character(db)
 
-        await grant_resource(TEST_ADDRESS, character.id, "pine_wood", 10)
-        player = await grant_resource(TEST_ADDRESS, character.id, "pine_wood", 5)
+        await grant_character_item_balance(TEST_ADDRESS, character.id, "wood_1", 10)
+        player = await grant_character_item_balance(TEST_ADDRESS, character.id, "wood_1", 5)
 
         assert player is not None
         stored = next(c for c in player.characters if c["id"] == character.id)
-        assert stored["crafting"]["resources"]["pine_wood"] == 15
+        assert stored["crafting"]["itemBalances"]["wood_1"] == 15
     finally:
-        await db.players.delete_one({"address": TEST_ADDRESS})
+        await _purge_player(db)
 
 
 @pytest.mark.asyncio
-async def test_grant_shared_resource_is_independent_of_characters(mongodb_uri):
+async def test_vault_grant_is_independent_of_characters(mongodb_uri):
     db = get_database()
     try:
-        await get_or_create_player(TEST_ADDRESS)
-        character = Character(first_name="Test", last_name="Hero")
-        await add_character(TEST_ADDRESS, character)
+        character = await _new_character(db)
 
-        await grant_resource(TEST_ADDRESS, character.id, "healing_herb", 3)
-        player = await grant_shared_resource(TEST_ADDRESS, "healing_herb", 7)
+        await grant_character_item_balance(TEST_ADDRESS, character.id, "herbs_1", 3)
+        await grant_item_balance(TEST_ADDRESS, "herbs_1", 7)
 
-        assert player is not None
-        assert player.crafting["resources"]["healing_herb"] == 7
-        stored = next(c for c in player.characters if c["id"] == character.id)
-        assert stored["crafting"]["resources"]["healing_herb"] == 3
+        assert (await _vault_balances(db))["herbs_1"] == 7
+        char_doc = await db.characters.find_one({"address": TEST_ADDRESS, "id": character.id})
+        assert char_doc["crafting"]["itemBalances"]["herbs_1"] == 3
     finally:
-        await db.players.delete_one({"address": TEST_ADDRESS})
+        await _purge_player(db)
 
 
 @pytest.mark.asyncio
-async def test_grant_resource_rejects_unknown_id(mongodb_uri):
+async def test_grants_reject_non_positive_amounts(mongodb_uri):
+    # Item-id validation lives in the character-creation route (it checks each
+    # pick against the profession's trapping pool); the grant helpers trust
+    # their caller and only guard the amount.
     db = get_database()
     try:
-        await get_or_create_player(TEST_ADDRESS)
-        character = Character(first_name="Test", last_name="Hero")
-        await add_character(TEST_ADDRESS, character)
+        character = await _new_character(db)
 
         with pytest.raises(ValueError):
-            await grant_resource(TEST_ADDRESS, character.id, "not_a_real_resource", 1)
+            await grant_character_item_balance(TEST_ADDRESS, character.id, "wood_1", 0)
         with pytest.raises(ValueError):
-            await grant_shared_resource(TEST_ADDRESS, "not_a_real_resource", 1)
+            await grant_item_balance(TEST_ADDRESS, "wood_1", -1)
     finally:
-        await db.players.delete_one({"address": TEST_ADDRESS})
+        await _purge_player(db)
 
 
 @pytest.mark.asyncio
-async def test_trapping_selection_grants_apply_to_a_new_character(mongodb_uri):
+async def test_trapping_selection_grants_land_in_the_vault(mongodb_uri):
+    # Mirrors the create-character route: a starter-kit pick is granted into
+    # the player's shared vault, not onto the character.
     db = get_database()
     try:
-        await get_or_create_player(TEST_ADDRESS)
-        character = Character(first_name="Test", last_name="Hero")
-        await add_character(TEST_ADDRESS, character)
+        await _new_character(db)
 
         options = resolve_trapping_options(["farmer"])
         tier1_item = next(item for item in options.items if item.tier == 1)
 
-        player = await grant_resource(TEST_ADDRESS, character.id, tier1_item.id, options.tier_pools[1])
+        await grant_item_balance(TEST_ADDRESS, tier1_item.id, options.tier_pools[1])
 
-        assert player is not None
-        stored = next(c for c in player.characters if c["id"] == character.id)
-        assert stored["crafting"]["resources"][tier1_item.id] == options.tier_pools[1]
+        assert (await _vault_balances(db))[tier1_item.id] == options.tier_pools[1]
     finally:
-        await db.players.delete_one({"address": TEST_ADDRESS})
+        await _purge_player(db)
 
 
 def test_resolve_trapping_options_scales_with_profession_count():

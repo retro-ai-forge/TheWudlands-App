@@ -21,7 +21,7 @@ import {
   type ResourceTierInfo,
 } from "./VaultTab";
 import { getItemCatalog, getResourceCatalog, getToolCatalog } from "./catalogCache";
-import type { SlotCharacterSummary } from "../SoulSlotGrid";
+import type { SlotCharacterSummary } from "../types";
 import { useSound } from "../../SoundProvider";
 
 const HOME_ITEMS_SOUND = "/sounds/campfire_west_wolf.mp3";

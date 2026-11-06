@@ -4,8 +4,8 @@ import { RACES, PROFESSIONS, BIRTHSIGNS, PROFESSION_RESOURCE_FAMILIES } from "@/
 import { getDisplayedAge } from "@/app/lib/ageScaling";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { formatRemainingCompactLong, useCraftCountdown } from "../craftTimer";
-import type { SlotCharacterSummary } from "../SoulSlotGrid";
-import type { ItemInstance } from "../SoulSlotGrid";
+import type { SlotCharacterSummary } from "../types";
+import type { ItemInstance } from "../types";
 import {
   IdList,
   ResourceList,

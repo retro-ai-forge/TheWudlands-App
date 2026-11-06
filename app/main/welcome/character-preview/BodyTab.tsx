@@ -14,7 +14,7 @@ import {
   type RawPlayerData,
   type ResourceTierInfo,
 } from "./VaultTab";
-import type { ItemInstance, SlotCharacterSummary } from "../SoulSlotGrid";
+import type { ItemInstance, SlotCharacterSummary } from "../types";
 import { CHAKRA_SLOTS, activeChakraCount } from "./SoulTab";
 import { getItemCatalog, getResourceCatalog } from "./catalogCache";
 import { RACE_GROUP_RIDER_WEIGHT } from "@/app/lib/characterOptions";

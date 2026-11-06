@@ -93,9 +93,9 @@ def test_each_label_matches_the_requirement_it_enforces():
         2: ("nft", "WUD 1st YEAR NFT", 441, None, 0),
         3: ("nft", "WUD 2nd YEAR NFT", 842, None, 0),
         4: ("nft", "OG WUD BURN NFT", 244, None, 0),
-        5: ("token", "1B WUD", None, WUD_SYMBOL, 1e9),
-        6: ("token", "5B WUD", None, WUD_SYMBOL, 5e9),
-        7: ("token", "1000 DOT", None, DOT_SYMBOL, 1000),
+        5: ("token", "500M WUD", None, WUD_SYMBOL, 5e8),
+        6: ("token", "1B WUD", None, WUD_SYMBOL, 1e9),
+        7: ("token", "5B WUD", None, WUD_SYMBOL, 5e9),
         8: ("token", "5000 DOT", None, DOT_SYMBOL, 5000),
         9: ("stars", "20 MINING STARS", None, None, 20),
         10: ("stars", "100 MINING STARS", None, None, 100),
@@ -210,14 +210,15 @@ def test_each_nft_unlocks_its_own_slot():
 
 
 def test_token_thresholds_are_inclusive_and_cumulative():
-    """Holding 5B WUD unlocks the 1B slot as well as the 5B one."""
-    assert unlocked_from_holdings(FakeHoldings(wud=999_999_999)) == [1]
-    assert unlocked_from_holdings(FakeHoldings(wud=1e9)) == [1, 5]
-    assert unlocked_from_holdings(FakeHoldings(wud=5e9)) == [1, 5, 6]
+    """Holding 5B WUD unlocks the 500M and 1B slots as well as the 5B one."""
+    assert unlocked_from_holdings(FakeHoldings(wud=499_999_999)) == [1]
+    assert unlocked_from_holdings(FakeHoldings(wud=5e8)) == [1, 5]
+    assert unlocked_from_holdings(FakeHoldings(wud=999_999_999)) == [1, 5]
+    assert unlocked_from_holdings(FakeHoldings(wud=1e9)) == [1, 5, 6]
+    assert unlocked_from_holdings(FakeHoldings(wud=5e9)) == [1, 5, 6, 7]
 
-    assert unlocked_from_holdings(FakeHoldings(dot=999)) == [1]
-    assert unlocked_from_holdings(FakeHoldings(dot=1000)) == [1, 7]
-    assert unlocked_from_holdings(FakeHoldings(dot=5000)) == [1, 7, 8]
+    assert unlocked_from_holdings(FakeHoldings(dot=4999)) == [1]
+    assert unlocked_from_holdings(FakeHoldings(dot=5000)) == [1, 8]
 
 
 def test_star_thresholds():

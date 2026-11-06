@@ -51,8 +51,6 @@ OG_WUD_BURN_COLLECTION_ID = 244
 FIRST_ANNIVERSARY_COLLECTION_ID = 441
 SECOND_ANNIVERSARY_COLLECTION_ID = 842
 
-CYBER_WIFEY_COLLECTION_IDS = (542, 551, 628, 791)
-
 # The collections the game actually cares about. Narrowing to these does not
 # make the lookup cheaper - Subscan ignores asset_id and category filters and
 # returns every holding regardless - it just makes the gate explicit.
@@ -60,7 +58,6 @@ TRACKED_NFT_COLLECTIONS = (
     OG_WUD_BURN_COLLECTION_ID,
     FIRST_ANNIVERSARY_COLLECTION_ID,
     SECOND_ANNIVERSARY_COLLECTION_ID,
-    *CYBER_WIFEY_COLLECTION_IDS,
 )
 
 REQUEST_TIMEOUT_SECONDS = 10
