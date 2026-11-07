@@ -163,7 +163,9 @@ def _load_gathering_bonuses_by_item() -> dict[str, tuple[str, ...]]:
     data = json.loads(_GATHERING_BONUSES_PATH.read_text())
     by_item: dict[str, list[str]] = {}
     for raw_material, info in data.items():
-        for item_family in info.get("gatheringItems", []):
+        # Weapons (+10% on a foraging trip, one at most) and items (+5% each)
+        # both "help gather" - see backend.foraging for the actual bonus.
+        for item_family in [*info.get("gatheringWeapons", []), *info.get("gatheringItems", [])]:
             by_item.setdefault(item_family, []).append(raw_material)
     return {item_family: tuple(materials) for item_family, materials in by_item.items()}
 

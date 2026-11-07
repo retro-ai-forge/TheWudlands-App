@@ -206,6 +206,12 @@ async def _build_player(db, address: str) -> Player:
         character["gear"]["mountCarryWeightCapacity"] = items_catalog.mount_carry_weight_capacity(character)
         character["gear"]["mountGearWeight"] = items_catalog.mount_gear_weight(character)
 
+        # A foraging trip's outcome is rolled when it starts but stays secret
+        # until collected (see backend.foraging).
+        active_forage = (character.get("foraging") or {}).get("activeForage")
+        if isinstance(active_forage, dict):
+            active_forage.pop("result", None)
+
         pc_entry = pc_entries.get(cid)
         if pc_entry:
             character["pcStatus"] = pc_entry.get("status", ["free"])
@@ -656,6 +662,11 @@ async def get_single_character(address: str, character_id: str) -> Optional[dict
     char_doc["gear"]["mountCarryWeightUsed"] = items_catalog.mount_carry_weight_used(char_doc)
     char_doc["gear"]["mountCarryWeightCapacity"] = items_catalog.mount_carry_weight_capacity(char_doc)
     char_doc["gear"]["mountGearWeight"] = items_catalog.mount_gear_weight(char_doc)
+
+    # A foraging trip's outcome stays secret until collected (see backend.foraging).
+    active_forage = (char_doc.get("foraging") or {}).get("activeForage")
+    if isinstance(active_forage, dict):
+        active_forage.pop("result", None)
 
     pc_entries = {e["characterId"]: e for e in (pc_doc or {}).get("characters", [])}
     pc_entry = pc_entries.get(character_id)

@@ -23,22 +23,36 @@ lowest base roll would yield 0 (or nothing remains), so every trip a player
 can start finds at least one unit. Each unit is rolled into a tier by the
 character's profession count (1 -> T1 only, 2 -> T1-T2, 3 -> T1-T3).
 
+Gathering gear (data/gathering-bonuses-raw-material.json) taken on the trip
+boosts the find by the gear's tier: one matching weapon anywhere on the
+character (+25% at T1 .. +75% at T6), plus every matching item family
+carried (+5% .. +18%) - weaponBonusByTier/itemBonusByTier in the rules.
+The base roll is set low enough that only geared trips beat the old yield.
+A bow needs a quiver and arrows, a crossbow a bolt girdle and bolts
+(weaponRequires). Every weapon's wear equals the units found; a bow or
+crossbow spreads it - one arrow/bolt per unit first, only the rest off the
+weapon's quality (weaponAmmo). Each quality-tracked item wears by 1; gear at
+quality <= 0 is destroyed. Only gear still on the character at collection
+counts.
+
 Every return carries a sentence fitted to the material and place
 (data/foraging-messages.json): "rich" while the family's pool is at least
 half full, "thin" once more than half is gone, and "depleted" on the last
 trip - the one after which the next trip would find nothing; that site is
 then no longer shown or offered.
 
-The finds are rolled when the trip is collected, not when it starts, so a
-character deleted mid-trip takes nothing from the pool. They land in the
-shared vault (player_vaults.itemBalances).
+The whole outcome - finds (taken from the pool), ammo shot, gear wear - is
+rolled the moment the trip starts, so changing equipment during the trip
+changes nothing. It stays hidden until the trip is collected, when the finds
+land in the character's home storage (character_homes.itemBalances). A character deleted
+mid-trip loses its pending finds.
 """
 
 from __future__ import annotations
 
-import asyncio
 import json
 import math
+import os
 import random
 from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
@@ -47,6 +61,7 @@ from typing import Optional
 
 from pymongo import ReturnDocument
 
+from backend import items_catalog
 from backend.db import get_database
 from backend.professions_catalog import PROFESSION_CATEGORIES
 from backend.resources_catalog import PROFESSION_RESOURCE_FAMILIES
@@ -61,6 +76,16 @@ BASE_YIELD_MIN: int = RULES["baseYieldMin"]
 BASE_YIELD_MAX: int = RULES["baseYieldMax"]
 HALF_LIFE: float = RULES["halfLife"]
 DURATION_HOURS: float = RULES["durationHours"]
+# Gathering-gear bonus by the gear's tier - one weapon at most, every item.
+WEAPON_BONUS_BY_TIER: dict[int, float] = {int(t): b for t, b in RULES["weaponBonusByTier"].items()}
+ITEM_BONUS_BY_TIER: dict[int, float] = {int(t): b for t, b in RULES["itemBonusByTier"].items()}
+# A weapon that only counts with its companions on the character too, e.g.
+# a bow needs a quiver and at least one arrow; a crossbow a bolt girdle and
+# at least one bolt.
+WEAPON_REQUIRES: dict[str, tuple[str, ...]] = {w: tuple(r) for w, r in RULES.get("weaponRequires", {}).items()}
+# Ammo a weapon shoots on a trip - one per unit found, standing in for the
+# weapon's own wear; only what the ammo can't cover comes off its quality.
+WEAPON_AMMO: dict[str, str] = dict(RULES.get("weaponAmmo", {}))
 TIER_WEIGHTS: dict[int, dict[int, int]] = {
     int(n): {int(tier): w for tier, w in weights.items()}
     for n, weights in RULES["tierWeightsByProfessionCount"].items()
@@ -111,6 +136,34 @@ GROUPS: dict[str, dict] = _load_groups()
 _MESSAGES: dict = json.loads((_DATA / "foraging-messages.json").read_text())
 DEPLETED_HINT: str = _MESSAGES["depletedHint"]
 MESSAGES_BY_FAMILY: dict[str, dict[str, list[str]]] = _MESSAGES["families"]
+
+
+def trip_duration() -> timedelta:
+    """How long a trip takes - durationHours from the rules, unless the
+    FORAGING_DURATION_MINUTES env var overrides it (local testing only;
+    never set it in the production environment)."""
+    override = os.getenv("FORAGING_DURATION_MINUTES")
+    if override:
+        return timedelta(minutes=float(override))
+    return timedelta(hours=DURATION_HOURS)
+
+
+# Gathering gear per resource family (data/gathering-bonuses-raw-material.json):
+# one matching weapon anywhere on the character adds its tier's weapon bonus
+# and wears by the units found; every matching item family carried adds its
+# tier's item bonus and, if quality-tracked, wears by 1. Gear that reaches
+# quality <= 0 is destroyed.
+def _load_gathering_gear() -> dict[str, dict[str, tuple[str, ...]]]:
+    data = json.loads((_DATA / "gathering-bonuses-raw-material.json").read_text())
+    return {family: {"weapons": tuple(info.get("gatheringWeapons", ())),
+                     "items": tuple(info.get("gatheringItems", ()))}
+            for family, info in data.items()}
+
+
+GATHERING_GEAR: dict[str, dict[str, tuple[str, ...]]] = _load_gathering_gear()
+# Where gear counts as "on the character" (not home, vault, or lent to a craft).
+CARRIED_LOCATIONS = ("body", "backpack", "saddlepack", "cart")
+CARRIED_BALANCE_BUCKETS = ("backpack", "saddlepack", "cart")
 
 
 class ForagingError(Exception):
@@ -179,19 +232,147 @@ def decay(count: int) -> float:
     return 0.5 ** (count / HALF_LIFE)
 
 
-def forage_reward(base: int, count: int) -> int:
-    """reward = floor(base * 0.5 ** (forage_count / half_life))"""
-    return math.floor(base * decay(count))
+def forage_reward(base: int, count: int, multiplier: float = 1.0) -> int:
+    """reward = floor(base * 0.5 ** (forage_count / half_life)), times the
+    gathering-gear multiplier (1.0 without gear)."""
+    return math.floor(base * decay(count) * multiplier + 1e-9)
 
 
-def yield_range(count: int, remaining: int) -> tuple[int, int]:
+def yield_range(count: int, remaining: int, multiplier: float = 1.0) -> tuple[int, int]:
     """(lowest, highest) units the next trip to a family can find."""
-    return (min(remaining, forage_reward(BASE_YIELD_MIN, count)),
-            min(remaining, forage_reward(BASE_YIELD_MAX, count)))
+    return (min(remaining, forage_reward(BASE_YIELD_MIN, count, multiplier)),
+            min(remaining, forage_reward(BASE_YIELD_MAX, count, multiplier)))
 
 
 def is_exhausted(count: int, remaining: int) -> bool:
+    """Judged without gear, so a site never vanishes or reappears just
+    because the character changed equipment."""
     return yield_range(count, remaining)[0] <= 0
+
+
+def _item_name(item_id: str, fallback: str) -> str:
+    entry = items_catalog.ITEM_CATALOG_ENTRIES_BY_ID.get(item_id)
+    return entry.name if entry else fallback.replace("_", " ")
+
+
+def _tier(item_id: str) -> int:
+    entry = items_catalog.ITEM_CATALOG_ENTRIES_BY_ID.get(item_id)
+    return entry.tier if entry else 1
+
+
+def _gear_percent(weapon: Optional[dict], items: list[dict]) -> float:
+    """Total bonus in percent - the weapon's tier bonus plus each item's."""
+    total = WEAPON_BONUS_BY_TIER.get(weapon["tier"], 0) if weapon else 0
+    total += sum(ITEM_BONUS_BY_TIER.get(i["tier"], 0) for i in items)
+    return round(total * 100, 1)
+
+
+def _with_bonus(weapon: Optional[dict], items: list[dict]) -> dict:
+    if weapon:
+        weapon = {**weapon, "percent": round(WEAPON_BONUS_BY_TIER.get(weapon["tier"], 0) * 100, 1)}
+    items = [{**i, "percent": round(ITEM_BONUS_BY_TIER.get(i["tier"], 0) * 100, 1)} for i in items]
+    return {"weapon": weapon, "items": items, "percent": _gear_percent(weapon, items)}
+
+
+def _usable(instance: dict) -> bool:
+    """Not broken - quality <= 0 is broken; no quality (missing or None,
+    e.g. an equipped stack of arrows) is fine. An equipped stack also needs
+    at least one unit left."""
+    quality = instance.get("quality")
+    if quality is not None and quality <= 0:
+        return False
+    return instance.get("quantity", 1) > 0
+
+
+def _carries_family(doc: dict, item_family: str) -> bool:
+    """Whether at least one usable `item_family` piece is on the character -
+    equipped or packed (an instance or a stacked count)."""
+    gear = doc.get("gear") or {}
+    if any(i.get("familyId") == item_family and i.get("location") in CARRIED_LOCATIONS and _usable(i)
+           for i in gear.get("items", [])):
+        return True
+    for bucket in CARRIED_BALANCE_BUCKETS:
+        for item_id, qty in ((gear.get("itemBalances") or {}).get(bucket) or {}).items():
+            entry = items_catalog.ITEM_CATALOG_ENTRIES_BY_ID.get(item_id)
+            if qty > 0 and entry and entry.family_id == item_family:
+                return True
+    return False
+
+
+def missing_for_weapon(doc: dict, weapon_family: str) -> list[str]:
+    """Companions this weapon still needs before it counts (empty = ready)."""
+    return [f for f in WEAPON_REQUIRES.get(weapon_family, ()) if not _carries_family(doc, f)]
+
+
+def gathering_gear(doc: dict, family_id: str) -> dict:
+    """The gear this character would bring on a trip for `family_id`:
+    {"weapon": {...} | None, "items": [{...}], "percent": int}. Each pick is
+    {"instanceId" | None, "itemId", "familyId", "name", "quality" | None};
+    instanceId None means a plain stacked item (no quality, never wears)."""
+    wanted = GATHERING_GEAR.get(family_id) or {"weapons": (), "items": ()}
+    gear = doc.get("gear") or {}
+    carried = [i for i in gear.get("items", [])
+               if i.get("location") in CARRIED_LOCATIONS and _usable(i)]
+    balances = gear.get("itemBalances") or {}
+
+    def pick(item_family: str) -> Optional[dict]:
+        """The best piece of this family on the character - highest tier,
+        then most quality."""
+        options = [
+            {"instanceId": i["instanceId"], "itemId": i.get("itemId", ""), "familyId": item_family,
+             "name": _item_name(i.get("itemId", ""), item_family), "quality": i.get("quality"),
+             "tier": _tier(i.get("itemId", ""))}
+            for i in carried if i.get("familyId") == item_family
+        ]
+        for bucket in CARRIED_BALANCE_BUCKETS:
+            for item_id, qty in (balances.get(bucket) or {}).items():
+                entry = items_catalog.ITEM_CATALOG_ENTRIES_BY_ID.get(item_id)
+                if qty > 0 and entry and entry.family_id == item_family:
+                    options.append({"instanceId": None, "itemId": item_id, "familyId": item_family,
+                                    "name": entry.name, "quality": None, "tier": entry.tier})
+        return max(options, key=lambda o: (o["tier"], o["quality"] or 0)) if options else None
+
+    weapons, blocked = [], []
+    for w in (pick(f) for f in wanted["weapons"]):
+        if not w:
+            continue
+        missing = missing_for_weapon(doc, w["familyId"])
+        if missing:
+            blocked.append({"name": w["name"], "missing": missing})
+        else:
+            weapons.append(w)
+    # Only one weapon counts - the highest tier, then the sturdiest.
+    weapon = max(weapons, key=lambda w: (w["tier"], w["quality"] or 0)) if weapons else None
+    items = [i for i in (pick(f) for f in wanted["items"]) if i]
+    return {**_with_bonus(weapon, items), "blockedWeapons": blocked}
+
+
+def gear_multiplier(gear: dict) -> float:
+    return 1 + (gear.get("percent") or 0) / 100
+
+
+def _still_carried(doc: dict, gear: dict) -> dict:
+    """The trip's gear, minus anything no longer on the character (moved
+    away or broken while out), with quality refreshed - only what actually
+    came back counts."""
+    items_by_id = {i["instanceId"]: i for i in (doc.get("gear") or {}).get("items", [])
+                   if i.get("location") in CARRIED_LOCATIONS and _usable(i)}
+    balances = (doc.get("gear") or {}).get("itemBalances") or {}
+
+    def present(g: Optional[dict]) -> Optional[dict]:
+        if not g:
+            return None
+        if g["instanceId"]:
+            inst = items_by_id.get(g["instanceId"])
+            return {**g, "quality": inst.get("quality")} if inst else None
+        held = any((balances.get(b) or {}).get(g["itemId"], 0) > 0 for b in CARRIED_BALANCE_BUCKETS)
+        return g if held else None
+
+    weapon = present(gear.get("weapon"))
+    if weapon and missing_for_weapon(doc, weapon["familyId"]):
+        weapon = None  # e.g. the arrows were moved away during the trip
+    items = [i for i in (present(g) for g in gear.get("items", [])) if i]
+    return _with_bonus(weapon, items)
 
 
 def roll_tiers(family_id: str, amount: int, profession_count: int,
@@ -241,6 +422,14 @@ def suggested_mission(family_id: str, groups: list[str], seed: str) -> Optional[
     if not options:
         return None
     return random.Random(f"{seed}:{family_id}").choice(options)
+
+
+def hide_pending_result(active: Optional[dict]) -> Optional[dict]:
+    """A trip as the client may see it - its outcome is rolled at the start
+    but stays secret until the trip is collected."""
+    if not active:
+        return active
+    return {k: v for k, v in active.items() if k != "result"}
 
 
 def forage_active(doc: dict, now: datetime | None = None) -> bool:
@@ -317,8 +506,10 @@ def _build_state(doc: dict, pool: Optional[dict]) -> dict:
         # offered - its last trip already said so (see return_outcome).
         if is_exhausted(count, remaining):
             continue
-        low, high = yield_range(count, remaining)
+        gear = gathering_gear(doc, family_id)
+        low, high = yield_range(count, remaining, gear_multiplier(gear))
         mission = suggested_mission(family_id, groups, seed)
+        wanted = GATHERING_GEAR.get(family_id) or {"weapons": (), "items": ()}
         sites.append({
             "familyId": family_id,
             "initial": entry["initial"],
@@ -326,6 +517,9 @@ def _build_state(doc: dict, pool: Optional[dict]) -> dict:
             "count": count,
             "yieldMin": low,
             "yieldMax": high,
+            "gear": gear,
+            "helpfulWeapons": list(wanted["weapons"]),
+            "helpfulItems": list(wanted["items"]),
             "mission": mission.to_dict() if mission else None,
         })
 
@@ -334,11 +528,11 @@ def _build_state(doc: dict, pool: Optional[dict]) -> dict:
         "characterId": doc["id"],
         "slotNumber": doc.get("slotNumber", 0),
         "hasPool": pool is not None,
-        "durationHours": DURATION_HOURS,
+        "durationMinutes": trip_duration().total_seconds() / 60,
         "groups": [GROUPS[g] for g in groups if g in GROUPS],
         "sites": sites,
         "dormantFamilies": sorted(f for f in pool_families if f not in own_families),
-        "activeForage": foraging.get("activeForage"),
+        "activeForage": hide_pending_result(foraging.get("activeForage")),
         "lastResult": foraging.get("lastResult"),
     }
 
@@ -383,13 +577,14 @@ async def start_forage(address: str, character_id: str, mission_id: str) -> dict
     if is_exhausted(entry["count"], entry["remaining"]):
         raise ForagingError(f"The {mission.family_id} sites near {name} are picked clean", 409)
 
-    ready_at = now + timedelta(hours=DURATION_HOURS)
+    ready_at = now + trip_duration()
     active = {
         **mission.to_dict(),
         "missionId": mission.id,
         "slotNumber": doc.get("slotNumber", 0),
         "startedAt": now.isoformat(),
         "readyAt": ready_at.isoformat(),
+        "gear": gathering_gear(doc, mission.family_id),
     }
     updated = await db.characters.find_one_and_update(
         {
@@ -405,20 +600,211 @@ async def start_forage(address: str, character_id: str, mission_id: str) -> dict
     if updated is None:
         raise ForagingError(f"{name} is busy", 409)
 
-    # Imported here: backend.players imports nothing from this module, but
-    # keeping the dependency one-way at import time avoids any cycle.
-    from backend.players import _add_pc_status, _set_pc_timer
-    await asyncio.gather(
-        _add_pc_status(db, address, character_id, "foraging"),
-        _set_pc_timer(db, address, character_id, "foragingReadyAt", ready_at.isoformat()),
-    )
+    # Roll the whole outcome now (finds, ammo, wear) and keep it with the
+    # trip - hidden until collected (see hide_pending_result).
+    result = await _roll_trip(db, address, character_id, doc, active, active["gear"])
+    updated = await db.characters.find_one_and_update(
+        {"address": address, "id": character_id, "foraging.activeForage.startedAt": active["startedAt"]},
+        {"$set": {"foraging.activeForage.result": result}},
+        return_document=ReturnDocument.AFTER,
+    ) or updated
+    pool = await get_slot_pool(address, doc.get("slotNumber", 0))
+
+    # One write for status + timer: parallel writes to the same
+    # player_characters doc stall ~20s on Firestore (see _pc_update).
+    await _pc_update(db, address, character_id, {
+        "$addToSet": {"characters.$.status": "foraging"},
+        "$set": {"characters.$.timers.foragingReadyAt": ready_at.isoformat()},
+    })
     return _build_state(updated, pool)
 
 
+async def _pc_update(db, address: str, character_id: str, update: dict) -> None:
+    """One update to this character's player_characters entry. Always a
+    single write: Firestore (MongoDB compatibility) stalls concurrent writes
+    to the same document on a ~20s lock timeout, and any read of it waits
+    behind them."""
+    await db.player_characters.update_one(
+        {"address": address, "characters.characterId": character_id}, update,
+    )
+
+
+async def _consume_ammo(db, address: str, character_id: str, ammo_family: str, units: int) -> tuple[dict, int]:
+    """Use `units` of `ammo_family` (arrows/bolts) from the character:
+    equipped stacks first, then backpack, saddlepack, cart - lowest tier
+    first, saving the better ammo. Returns ({item id: used}, shortfall)."""
+    if units <= 0:
+        return {}, 0
+    doc = await db.characters.find_one({"address": address, "id": character_id})
+    gear = (doc or {}).get("gear") or {}
+    need, used = units, {}
+    inc, set_ops, unset, pulls, filters = {}, {}, {}, [], []
+
+    stacks = sorted(
+        (i for i in gear.get("items", [])
+         if i.get("familyId") == ammo_family and i.get("location") in CARRIED_LOCATIONS and (i.get("quantity") or 0) > 0),
+        key=lambda i: _tier(i.get("itemId", "")),
+    )
+    for stack in stacks:
+        if need <= 0:
+            break
+        take = min(need, stack["quantity"])
+        used[stack["itemId"]] = used.get(stack["itemId"], 0) + take
+        need -= take
+        if take == stack["quantity"]:
+            pulls.append(stack["instanceId"])
+        else:
+            n = len(filters)
+            inc[f"gear.items.$[a{n}].quantity"] = -take
+            filters.append({f"a{n}.instanceId": stack["instanceId"]})
+
+    balances = gear.get("itemBalances") or {}
+    for bucket in CARRIED_BALANCE_BUCKETS:
+        held = sorted(
+            ((item_id, qty) for item_id, qty in (balances.get(bucket) or {}).items()
+             if qty > 0 and getattr(items_catalog.ITEM_CATALOG_ENTRIES_BY_ID.get(item_id), "family_id", None) == ammo_family),
+            key=lambda x: _tier(x[0]),
+        )
+        for item_id, qty in held:
+            if need <= 0:
+                break
+            take = min(need, qty)
+            used[item_id] = used.get(item_id, 0) + take
+            need -= take
+            path = f"gear.itemBalances.{bucket}.{item_id}"
+            if take == qty:
+                unset[path] = ""
+            else:
+                set_ops[path] = qty - take
+
+    update: dict = {}
+    if inc:
+        update["$inc"] = inc
+    if set_ops:
+        update["$set"] = set_ops
+    if unset:
+        update["$unset"] = unset
+    if update:
+        await db.characters.update_one({"address": address, "id": character_id}, update,
+                                       **({"array_filters": filters} if filters else {}))
+    if pulls:
+        await db.characters.update_one({"address": address, "id": character_id},
+                                       {"$pull": {"gear.items": {"instanceId": {"$in": pulls}}}})
+    return used, need
+
+
+async def _wear_gear(db, address: str, character_id: str, gear: dict, weapon_wear: int) -> tuple[list, list]:
+    """Wear the trip's gear: the weapon loses `weapon_wear` quality (the
+    units found - or, for a bow/crossbow, only what its arrows/bolts didn't
+    cover), each quality-tracked item loses 1. Anything at quality <= 0
+    afterwards is destroyed. Returns (worn, broken names)."""
+    wear: dict[str, int] = {}
+    worn: list[dict] = []
+    weapon = gear.get("weapon")
+    if weapon:
+        if weapon["instanceId"] and weapon.get("quality") is not None and weapon_wear > 0:
+            wear[weapon["instanceId"]] = weapon_wear
+        worn.append({"instanceId": weapon["instanceId"], "name": weapon["name"], "kind": "weapon",
+                     "wear": wear.get(weapon["instanceId"] or "", 0), "destroyed": False})
+    for item in gear.get("items", []):
+        if item["instanceId"] and item.get("quality") is not None:
+            wear[item["instanceId"]] = 1
+        worn.append({"instanceId": item["instanceId"], "name": item["name"], "kind": "item",
+                     "wear": wear.get(item["instanceId"] or "", 0), "destroyed": False})
+    if not wear:
+        return worn, []
+
+    ids = list(wear)
+    doc = await db.characters.find_one_and_update(
+        {"address": address, "id": character_id},
+        {"$inc": {f"gear.items.$[g{n}].quality": -wear[iid] for n, iid in enumerate(ids)}},
+        array_filters=[{f"g{n}.instanceId": iid} for n, iid in enumerate(ids)],
+        return_document=ReturnDocument.AFTER,
+    )
+    if doc is None:
+        return worn, []
+    broken_items = [i for i in doc.get("gear", {}).get("items", [])
+                    if i.get("instanceId") in wear and (i.get("quality") or 0) <= 0]
+    if broken_items:
+        await db.characters.update_one(
+            {"address": address, "id": character_id},
+            {"$pull": {"gear.items": {"instanceId": {"$in": [i["instanceId"] for i in broken_items]}}}},
+        )
+    broken_ids = {i["instanceId"] for i in broken_items}
+    for w in worn:
+        w["destroyed"] = w["instanceId"] in broken_ids
+    return worn, [_item_name(i.get("itemId", ""), i.get("familyId", "")) for i in broken_items]
+
+
+async def _roll_trip(db, address: str, character_id: str, doc: dict, active: dict, gear: dict) -> dict:
+    """Roll a trip's outcome: the finds (taken from the slot's pool right
+    away), the ammo shot and the gear's wear. Everything is settled here, so
+    swapping or removing equipment during the trip changes nothing. The
+    finds themselves only reach the character's home when the trip is
+    collected.
+    Returns the result (no returnedAt yet)."""
+    slot = active.get("slotNumber") or doc.get("slotNumber", 0)
+    family_id = active["familyId"]
+    profession_count = len(character_profession_ids(doc))
+    path = f"forage_pools.{slot}.families.{family_id}"
+    multiplier = gear_multiplier(gear)
+
+    found, entry = {}, None
+    for _ in range(3):
+        pool = await get_slot_pool(address, slot)
+        entry = ((pool or {}).get("families") or {}).get(family_id)
+        if entry is None:
+            break
+        amount = max(0, min(entry["remaining"], forage_reward(
+            random.randint(BASE_YIELD_MIN, BASE_YIELD_MAX), entry["count"], multiplier)))
+        # Conditional on the family being exactly as read - one writer wins.
+        res = await db.soul_slots.update_one(
+            {"address": address, f"{path}.count": entry["count"], f"{path}.remaining": entry["remaining"]},
+            {"$inc": {f"{path}.count": 1, f"{path}.remaining": -amount}},
+        )
+        if res.modified_count:
+            entry = {**entry, "count": entry["count"] + 1, "remaining": entry["remaining"] - amount}
+            found = roll_tiers(family_id, amount, profession_count) if amount else {}
+            break
+
+    units_found = sum(found.values())
+    ammo_family = WEAPON_AMMO.get(gear["weapon"]["familyId"]) if gear.get("weapon") else None
+    ammo_used, ammo_shortfall = (
+        await _consume_ammo(db, address, character_id, ammo_family, units_found) if ammo_family else ({}, 0)
+    )
+    # The wear is the units found either way; a bow/crossbow spreads it -
+    # its arrows/bolts take it first, the weapon only the rest.
+    weapon_wear = ammo_shortfall if ammo_family else units_found
+    worn, broken = await _wear_gear(db, address, character_id, gear, weapon_wear)
+
+    exhausted = entry is None or is_exhausted(entry["count"], entry["remaining"])
+    outcome = return_outcome(entry["initial"], entry["remaining"], exhausted) if entry else "depleted"
+    mission = MISSIONS_BY_ID.get(active["missionId"])
+    place = active.get("place") or (mission.place if mission else active["name"])
+    return {
+        "missionId": active["missionId"],
+        "name": active["name"],
+        "place": place,
+        "activity": active["activity"],
+        "familyId": family_id,
+        "found": found,
+        "total": units_found,
+        "exhausted": exhausted,
+        "outcome": outcome,
+        "message": return_message(outcome, family_id, doc.get("firstName") or "Your character",
+                                  place, active["activity"]),
+        "gearPercent": gear.get("percent", 0),
+        "gear": worn,
+        "broken": broken,
+        "ammoUsed": ammo_used,
+        "ammoShortfall": ammo_shortfall,
+    }
+
+
 async def finish_forage(address: str, character_id: str) -> dict:
-    """Collect a returned trip: roll the finds, take them from the slot's
-    pool, credit the shared vault. Returns {result, state}."""
-    from backend.players import _inc_vault_itembalances, _remove_pc_status, _set_pc_timer
+    """Collect a returned trip: reveal the finds rolled when it started and
+    drop them into the character's home storage. Returns {result, state}."""
+    from backend.players import _inc_storage_balances
 
     db = get_database()
     doc = await _load_character(address, character_id)
@@ -437,58 +823,26 @@ async def finish_forage(address: str, character_id: str) -> dict:
     if claimed is None:
         raise ForagingError("Already collected", 409)
 
-    slot = active.get("slotNumber") or doc.get("slotNumber", 0)
-    family_id = active["familyId"]
-    profession_count = len(character_profession_ids(doc))
-    path = f"forage_pools.{slot}.families.{family_id}"
+    result = active.get("result")
+    if result is None:
+        # A trip started before outcomes were rolled up front (or whose roll
+        # didn't get stored) - roll it now with the gear still on hand.
+        result = await _roll_trip(db, address, character_id, doc, active,
+                                  _still_carried(doc, active.get("gear") or {}))
+    result = {**result, "returnedAt": datetime.now(timezone.utc).isoformat()}
 
-    amount, found, entry = 0, {}, None
-    for _ in range(3):
-        pool = await get_slot_pool(address, slot)
-        entry = ((pool or {}).get("families") or {}).get(family_id)
-        if entry is None:
-            break
-        amount = min(entry["remaining"], forage_reward(random.randint(BASE_YIELD_MIN, BASE_YIELD_MAX), entry["count"]))
-        amount = max(amount, 0)
-        # Conditional on the family being exactly as read - one writer wins.
-        res = await db.soul_slots.update_one(
-            {"address": address, f"{path}.count": entry["count"], f"{path}.remaining": entry["remaining"]},
-            {"$inc": {f"{path}.count": 1, f"{path}.remaining": -amount}},
-        )
-        if res.modified_count:
-            entry = {**entry, "count": entry["count"] + 1, "remaining": entry["remaining"] - amount}
-            found = roll_tiers(family_id, amount, profession_count) if amount else {}
-            break
-        amount = 0
-
-    if found:
-        await _inc_vault_itembalances(db, address, found)
-
-    exhausted = entry is None or is_exhausted(entry["count"], entry["remaining"])
-    outcome = return_outcome(entry["initial"], entry["remaining"], exhausted) if entry else "depleted"
-    mission = MISSIONS_BY_ID.get(active["missionId"])
-    place = active.get("place") or (mission.place if mission else active["name"])
-    result = {
-        "missionId": active["missionId"],
-        "name": active["name"],
-        "place": place,
-        "activity": active["activity"],
-        "familyId": family_id,
-        "found": found,
-        "total": sum(found.values()),
-        "exhausted": exhausted,
-        "outcome": outcome,
-        "message": return_message(outcome, family_id, doc.get("firstName") or "Your character",
-                                  place, active["activity"]),
-        "returnedAt": datetime.now(timezone.utc).isoformat(),
-    }
+    if result["found"]:
+        # The character carries the finds home (character_homes.itemBalances).
+        await _inc_storage_balances(db, "home", address, character_id, result["found"])
     updated = await db.characters.find_one_and_update(
         {"address": address, "id": character_id},
-        {"$set": {"foraging.lastResult": result}, "$inc": {"stats.forageFinished": 1}},
+        {"$set": {"foraging.lastResult": result},
+         "$inc": {"stats.forageFinished": 1, "stats.forageUnits": result["total"]}},
         return_document=ReturnDocument.AFTER,
     )
-    await asyncio.gather(
-        _remove_pc_status(db, address, character_id, "foraging"),
-        _set_pc_timer(db, address, character_id, "foragingReadyAt", None),
-    )
+    await _pc_update(db, address, character_id, {
+        "$pull": {"characters.$.status": "foraging"},
+        "$unset": {"characters.$.timers.foragingReadyAt": ""},
+    })
+    slot = active.get("slotNumber") or doc.get("slotNumber", 0)
     return {"result": result, "state": _build_state(updated or claimed, await get_slot_pool(address, slot))}

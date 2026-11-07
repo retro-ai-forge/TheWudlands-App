@@ -1,14 +1,57 @@
 {
   "poolTotalBase": 180,
-  "poolMultiplierByProfessionCount": { "1": 1.0, "2": 1.2, "3": 1.5 },
+  "poolMultiplierByProfessionCount": {
+    "1": 1.0,
+    "2": 1.2,
+    "3": 1.5
+  },
   "poolVariation": 0.3,
-  "baseYieldMin": 8,
-  "baseYieldMax": 14,
+  "baseYieldMin": 6,
+  "baseYieldMax": 10,
   "halfLife": 5,
   "durationHours": 20,
+  "weaponBonusByTier": {
+    "1": 0.25,
+    "2": 0.35,
+    "3": 0.45,
+    "4": 0.55,
+    "5": 0.65,
+    "6": 0.75
+  },
+  "itemBonusByTier": {
+    "1": 0.05,
+    "2": 0.08,
+    "3": 0.1,
+    "4": 0.13,
+    "5": 0.15,
+    "6": 0.18
+  },
+  "weaponRequires": {
+    "bow": [
+      "quiver",
+      "arrow"
+    ],
+    "crossbow": [
+      "bolt_girdle",
+      "bolt"
+    ]
+  },
+  "weaponAmmo": {
+    "bow": "arrow",
+    "crossbow": "bolt"
+  },
   "tierWeightsByProfessionCount": {
-    "1": { "1": 100 },
-    "2": { "1": 80, "2": 20 },
-    "3": { "1": 70, "2": 22, "3": 8 }
+    "1": {
+      "1": 100
+    },
+    "2": {
+      "1": 80,
+      "2": 20
+    },
+    "3": {
+      "1": 70,
+      "2": 22,
+      "3": 8
+    }
   }
 }
