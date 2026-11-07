@@ -9,11 +9,39 @@ requests, plus a helper to fetch the app's database handle.
 from __future__ import annotations
 
 import os
+import socket
 from typing import Optional
 
 from motor.motor_asyncio import AsyncIOMotorClient, AsyncIOMotorDatabase
+from pymongo.uri_parser import parse_uri
 
 _client: Optional[AsyncIOMotorClient] = None
+
+
+def _prefer_ipv4_for(hosts: set[str]) -> None:
+    """Make connections to these hosts try their IPv4 address first.
+
+    The Firestore endpoint resolves to an IPv6 and an IPv4 address, and the
+    resolver lists IPv6 first. Where there is no IPv6 route (this dev box;
+    Cloud Run without IPv6 egress), every NEW pooled connection hangs on the
+    IPv6 address for PyMongo's full connectTimeoutMS (20s) before falling
+    back to IPv4 - so any request needing one more connection than the pool
+    had warm (parallel queries, e.g. _build_player's gather) stalled 20s.
+    IPv6 stays in the list as a fallback; other hosts are untouched.
+    """
+    original = socket.getaddrinfo
+    if getattr(original, "_ipv4_first_hosts", None) is not None:
+        original._ipv4_first_hosts.update(hosts)  # type: ignore[attr-defined]
+        return
+
+    def getaddrinfo(host, *args, **kwargs):
+        results = original(host, *args, **kwargs)
+        if host in getaddrinfo._ipv4_first_hosts:  # type: ignore[attr-defined]
+            results = sorted(results, key=lambda r: r[0] != socket.AF_INET)
+        return results
+
+    getaddrinfo._ipv4_first_hosts = set(hosts)  # type: ignore[attr-defined]
+    socket.getaddrinfo = getaddrinfo
 
 
 def get_mongo_client() -> AsyncIOMotorClient:
@@ -24,6 +52,8 @@ def get_mongo_client() -> AsyncIOMotorClient:
         uri = os.getenv("MONGODB_URI")
         if not uri:
             raise RuntimeError("MONGODB_URI environment variable is not set")
+        if not uri.startswith("mongodb+srv://"):
+            _prefer_ipv4_for({host for host, _port in parse_uri(uri)["nodelist"]})
         _client = AsyncIOMotorClient(uri)
 
     return _client

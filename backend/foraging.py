@@ -610,8 +610,7 @@ async def start_forage(address: str, character_id: str, mission_id: str) -> dict
     ) or updated
     pool = await get_slot_pool(address, doc.get("slotNumber", 0))
 
-    # One write for status + timer: parallel writes to the same
-    # player_characters doc stall ~20s on Firestore (see _pc_update).
+    # Status + timer in one write (see _pc_update).
     await _pc_update(db, address, character_id, {
         "$addToSet": {"characters.$.status": "foraging"},
         "$set": {"characters.$.timers.foragingReadyAt": ready_at.isoformat()},
@@ -620,10 +619,8 @@ async def start_forage(address: str, character_id: str, mission_id: str) -> dict
 
 
 async def _pc_update(db, address: str, character_id: str, update: dict) -> None:
-    """One update to this character's player_characters entry. Always a
-    single write: Firestore (MongoDB compatibility) stalls concurrent writes
-    to the same document on a ~20s lock timeout, and any read of it waits
-    behind them."""
+    """One update to this character's player_characters entry - status and
+    timer changes go together in a single write."""
     await db.player_characters.update_one(
         {"address": address, "characters.characterId": character_id}, update,
     )
