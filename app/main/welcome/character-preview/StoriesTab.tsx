@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import styles from "./CharacterTabs.module.css";
 import type { RawPlayerData } from "./VaultTab";
 import type { SlotCharacterSummary } from "../types";
+import { ForagingSection } from "./ForagingSection";
 
 const BLOCKED_FLASH_MS = 2500;
 export const REST_LOCATIONS = ["cave", "forest", "prairie", "ruin", "dungeon"] as const;
@@ -22,7 +23,7 @@ export function StoriesTab({
   onRestLocationChange: (location: string) => void;
 }) {
   const [pending, setPending] = useState(false);
-  const [blockedFlash, setBlockedFlash] = useState(false);
+  const [blockedFlash, setBlockedFlash] = useState<string | null>(null);
   const flashTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   useEffect(() => () => {
     if (flashTimeoutRef.current) clearTimeout(flashTimeoutRef.current);
@@ -32,6 +33,16 @@ export function StoriesTab({
   const isCrafting =
     !!character.crafting.activeCraft &&
     new Date(character.crafting.activeCraft.readyAt).getTime() > Date.now();
+  const activeForage = character.foraging?.activeForage ?? null;
+  // Out on a trip (timer still running, or back but not yet collected) -
+  // adventures and foraging exclude each other, see ForagingSection.
+  const isForaging = !!activeForage;
+
+  const flashBlocked = (message: string) => {
+    if (flashTimeoutRef.current) clearTimeout(flashTimeoutRef.current);
+    setBlockedFlash(message);
+    flashTimeoutRef.current = setTimeout(() => setBlockedFlash(null), BLOCKED_FLASH_MS);
+  };
 
   const refreshAfterToggle = async () => {
     const res = await fetch(`/api/auth/me/characters/${character.id}/full`, { credentials: "include" });
@@ -63,9 +74,11 @@ export function StoriesTab({
   const startAdventure = async () => {
     if (pending) return;
     if (isCrafting) {
-      if (flashTimeoutRef.current) clearTimeout(flashTimeoutRef.current);
-      setBlockedFlash(true);
-      flashTimeoutRef.current = setTimeout(() => setBlockedFlash(false), BLOCKED_FLASH_MS);
+      flashBlocked("Still crafting \u2014 can't start a story yet.");
+      return;
+    }
+    if (isForaging) {
+      flashBlocked("Out foraging \u2014 collect the finds before starting a story.");
       return;
     }
     setPending(true);
@@ -79,9 +92,8 @@ export function StoriesTab({
       if (res.ok) {
         await refreshAfterToggle();
       } else if (res.status === 400) {
-        if (flashTimeoutRef.current) clearTimeout(flashTimeoutRef.current);
-        setBlockedFlash(true);
-        flashTimeoutRef.current = setTimeout(() => setBlockedFlash(false), BLOCKED_FLASH_MS);
+        const detail = (await res.json().catch(() => null))?.detail;
+        flashBlocked(typeof detail === "string" ? detail : "Can't start a story right now.");
       }
     } finally {
       setPending(false);
@@ -169,7 +181,7 @@ export function StoriesTab({
         </div>
         {blockedFlash && (
           <p className={styles.inAdventureToggleFlash} role="status">
-            Still crafting &mdash; can&apos;t start a story yet.
+            {blockedFlash}
           </p>
         )}
       </div>
@@ -177,6 +189,7 @@ export function StoriesTab({
         Adventures {character.firstName} can enter will be listed here once addon selection
         is wired up to the character sheet.
       </p>
+      <ForagingSection character={character} isCrafting={isCrafting} onCharacterChanged={refreshAfterToggle} />
     </div>
   );
 }

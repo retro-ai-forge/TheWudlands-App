@@ -117,7 +117,7 @@ export function SoulSlotGrid({
   /** `openCrafting` is true when the clicked slot was showing an active
    * crafting timer - the caller jumps straight to the Inventory tab's
    * character Crafting section instead of the default Stats page. */
-  onViewCharacter: (characterId: string, options?: { openCrafting?: boolean }) => void;
+  onViewCharacter: (characterId: string, options?: { openCrafting?: boolean; openForaging?: boolean }) => void;
   characters: SlotCharacterPreview[];
 }) {
   const { account } = useWallet();
@@ -377,13 +377,16 @@ function SoulSlotCard({
   tokenProgress: number;
   occupant?: SlotCharacterPreview;
   onCreate: (slotNumber: number) => void;
-  onViewCharacter: (characterId: string, options?: { openCrafting?: boolean }) => void;
+  onViewCharacter: (characterId: string, options?: { openCrafting?: boolean; openForaging?: boolean }) => void;
 }) {
   const isOccupied = occupant !== undefined;
   // Display-only - this grid never calls finish_craft itself, unlike the
   // Inventory tab's own use of this same hook. Just lets a player glance
   // at the grid and see who's still busy, without opening anyone's sheet.
   const remainingSeconds = useCraftCountdown(occupant?.activeCraft?.readyAt);
+  // Out foraging - the player_characters summary carries the trip's return
+  // time (set when it starts, cleared once collected). 0 = back, uncollected.
+  const forageRemainingSeconds = useCraftCountdown(occupant?.timers?.foragingReadyAt);
   // True once occupant.portraitUrl has failed to load (a broken external
   // link, most likely) - drives the large "?" placeholder below instead of
   // a blank/broken image sitting in the slot.
@@ -473,7 +476,10 @@ function SoulSlotCard({
     // falls through below same as any other locked slot (send them to go
     // re-earn it) - showsOccupantPreview is false there.
     if (showsOccupantPreview) {
-      onViewCharacter(occupant.characterId, { openCrafting: remainingSeconds !== null });
+      onViewCharacter(occupant.characterId, {
+        openCrafting: remainingSeconds !== null,
+        openForaging: remainingSeconds === null && forageRemainingSeconds !== null,
+      });
       return;
     }
     if (canInteract) {
@@ -486,7 +492,8 @@ function SoulSlotCard({
   const isFreeCharacter =
     showsOccupantPreview &&
     !occupant.availability.inAdventure &&
-    remainingSeconds === null;
+    remainingSeconds === null &&
+    forageRemainingSeconds === null;
 
   return (
     // The requirement sits outside the button. Locked, it shows the real
@@ -516,6 +523,14 @@ function SoulSlotCard({
                 aria-hidden="true"
               >
                 {remainingSeconds === 0 ? "Ready" : `Crafting ${formatRemainingCompactLong(remainingSeconds)}`}
+              </span>
+            )}
+            {remainingSeconds === null && forageRemainingSeconds !== null && (
+              <span
+                className={forageRemainingSeconds === 0 ? styles.slotCraftBadgeReady : styles.slotCraftBadge}
+                aria-hidden="true"
+              >
+                {forageRemainingSeconds === 0 ? "Back" : `Foraging ${formatRemainingCompactLong(forageRemainingSeconds)}`}
               </span>
             )}
             {occupant.portraitUrl && occupant.portraitUrl !== "empty" && !faceCropFailed ? (

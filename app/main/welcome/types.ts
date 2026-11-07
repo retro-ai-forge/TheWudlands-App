@@ -145,6 +145,11 @@ export interface SlotCharacterSummary {
       borrowedInstances?: { instanceId: string; source: string; slotRef: string[] }[];
     } | null;
   };
+  /** Foraging trip state (see backend/foraging.py) - absent until the first trip. */
+  foraging?: {
+    activeForage: ActiveForage | null;
+    lastResult: ForageResult | null;
+  };
   /** Blueprint ids this character has learned - soulbound, never moves. */
   blueprints: string[];
   /** This character's personal vault (items + itemBalances). */
@@ -181,3 +186,103 @@ export interface SlotCharacterSummary {
   pcTags?: string[];
   pcTimers?: Record<string, string>;
 }
+
+/** One foraging mission (backend/data/foraging-missions.json). */
+export type ForageMission = {
+  id: string;
+  /** Profession group, e.g. "Rural". */
+  group: string;
+  /** The group's headline, e.g. "Fields, Folds & Fishponds". */
+  headline: string;
+  /** The group's foraging name for this family, e.g. "Fishing". */
+  activity: string;
+  familyId: string;
+  /** The mission's own headline, e.g. "Trout Pools Upstream". */
+  name: string;
+  /** Where it happens, phrased to sit mid-sentence, e.g. "the trout pools upstream". */
+  place: string;
+  text: string;
+};
+
+/** One piece of gathering gear and the bonus it gives (percent). */
+export type ForageGearPiece = {
+  instanceId: string | null;
+  itemId: string;
+  familyId: string;
+  name: string;
+  quality: number | null;
+  tier: number;
+  percent: number;
+};
+
+/** The gathering gear a trip uses: one weapon at most, every matching item. */
+export type ForageGear = {
+  weapon: ForageGearPiece | null;
+  items: ForageGearPiece[];
+  percent: number;
+  /** Weapons carried that don't count yet, e.g. a bow without quiver/arrows. */
+  blockedWeapons?: { name: string; missing: string[] }[];
+};
+
+/** A trip in progress - resolved lazily against readyAt. */
+export type ActiveForage = ForageMission & {
+  missionId: string;
+  slotNumber: number;
+  startedAt: string;
+  readyAt: string;
+  gear?: ForageGear;
+};
+
+/** What a collected trip brought home. */
+export type ForageResult = {
+  missionId: string;
+  name: string;
+  place: string;
+  activity: string;
+  familyId: string;
+  /** Concrete resource id (e.g. "ore_1") -> amount, dropped into the character's home storage. */
+  found: Record<string, number>;
+  total: number;
+  exhausted: boolean;
+  outcome: "rich" | "thin" | "depleted";
+  message: string;
+  returnedAt: string;
+  /** Gathering-gear bonus that applied, in percent. */
+  gearPercent?: number;
+  /** Gear used and how much quality it lost. */
+  gear?: { instanceId: string | null; name: string; kind: "weapon" | "item"; wear: number; destroyed: boolean }[];
+  /** Names of gear destroyed on this trip (quality reached 0). */
+  broken?: string[];
+  /** Arrows/bolts shot (item id -> amount) - one per unit found with a bow/crossbow. */
+  ammoUsed?: Record<string, number>;
+  /** Shots the character had no ammo for - taken from the weapon's quality instead. */
+  ammoShortfall?: number;
+};
+
+/** GET /api/auth/me/characters/{id}/foraging */
+export type ForagingState = {
+  characterId: string;
+  slotNumber: number;
+  hasPool: boolean;
+  /** Trip length - 20h by default (FORAGING_DURATION_MINUTES can shorten it for local testing). */
+  durationMinutes: number;
+  groups: { group: string; headline: string; activities: Record<string, string> }[];
+  /** One per family still worth a trip - picked-clean families are left out. */
+  sites: {
+    familyId: string;
+    initial: number;
+    remaining: number;
+    count: number;
+    /** Expected finds, including the gear bonus the character has right now. */
+    yieldMin: number;
+    yieldMax: number;
+    gear: ForageGear;
+    /** Weapon / item families that would help on this site. */
+    helpfulWeapons: string[];
+    helpfulItems: string[];
+    mission: ForageMission | null;
+  }[];
+  dormantFamilies: string[];
+  activeForage: ActiveForage | null;
+  lastResult: ForageResult | null;
+};

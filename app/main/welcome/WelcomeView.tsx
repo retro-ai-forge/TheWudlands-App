@@ -113,10 +113,14 @@ export function WelcomeView() {
   }, []);
 
   // Fetch one character's full data and open the preview.
-  const openCharacter = async (characterId: string, options?: { openCrafting?: boolean }) => {
+  const openCharacter = async (characterId: string, options?: { openCrafting?: boolean; openForaging?: boolean }) => {
     if (options?.openCrafting) {
       setViewingTab("vault");
       setViewingOpenCrafting(true);
+    } else if (options?.openForaging) {
+      // Foraging lives on the Stories tab (see ForagingSection).
+      setViewingTab("stories");
+      setViewingOpenCrafting(false);
     } else {
       setViewingTab("stats");
       setViewingOpenCrafting(false);

@@ -1,0 +1,231 @@
+/* Foraging block on the Stories tab - same warm parchment-on-dark palette
+   as CharacterTabs.module.css. */
+
+.section {
+  margin: 1.25rem 0.5rem 0;
+  padding-top: 1rem;
+  border-top: 1px solid rgba(185, 172, 134, 0.25);
+}
+
+.heading {
+  margin: 0;
+  font-size: 1rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #e8d9a8;
+  text-align: center;
+}
+
+.headlines {
+  margin: 0.25rem 0 0.9rem;
+  font-size: 0.8rem;
+  font-style: italic;
+  color: #b9ac86;
+  text-align: center;
+}
+
+.note {
+  margin: 0.5rem 0;
+  font-size: 0.85rem;
+  line-height: 1.5;
+  color: #b9ac86;
+  text-align: center;
+}
+
+.error {
+  margin: 0.5rem 0;
+  font-size: 0.8rem;
+  color: #c0453a;
+  text-align: center;
+}
+
+.siteGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+  gap: 0.6rem;
+  margin-top: 0.5rem;
+}
+
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  padding: 0.7rem 0.8rem;
+  background: rgba(20, 16, 8, 0.55);
+  border: 1px solid rgba(185, 172, 134, 0.3);
+  border-radius: 6px;
+  min-width: 0;
+}
+
+.activeCard {
+  border-color: rgba(76, 175, 80, 0.6);
+  align-items: center;
+  text-align: center;
+  margin-bottom: 0.6rem;
+}
+
+.resultCard {
+  margin-bottom: 0.6rem;
+}
+
+.result_rich {
+  border-color: rgba(76, 175, 80, 0.45);
+}
+
+.result_thin {
+  border-color: rgba(214, 170, 70, 0.5);
+}
+
+.result_depleted {
+  border-color: rgba(192, 69, 58, 0.5);
+}
+
+.cardTop {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 0.5rem;
+}
+
+.activity {
+  font-size: 0.7rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #8fa86b;
+}
+
+.missionName {
+  font-size: 0.95rem;
+  color: #e8d9a8;
+  overflow-wrap: anywhere;
+}
+
+.flavor {
+  margin: 0;
+  font-size: 0.8rem;
+  line-height: 1.45;
+  color: #b9ac86;
+  font-style: italic;
+}
+
+.message {
+  margin: 0;
+  font-size: 0.85rem;
+  line-height: 1.5;
+  color: #e8d9a8;
+}
+
+.yield {
+  margin: 0.15rem 0 0.35rem;
+  font-size: 0.75rem;
+  color: #b9ac86;
+}
+
+.richness {
+  font-size: 0.68rem;
+  padding: 0.05rem 0.4rem;
+  border-radius: 3px;
+  white-space: nowrap;
+}
+
+.richness_rich {
+  color: #4caf50;
+  background: rgba(76, 175, 80, 0.12);
+}
+
+.richness_thin {
+  color: #d6aa46;
+  background: rgba(214, 170, 70, 0.12);
+}
+
+.richness_last {
+  color: #c0453a;
+  background: rgba(192, 69, 58, 0.12);
+}
+
+.button {
+  margin-top: auto;
+  font-family: inherit;
+  font-size: 0.8rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 0.45rem 0.9rem;
+  border: 2px solid #4caf50;
+  border-radius: 4px;
+  background: rgba(76, 175, 80, 0.15);
+  color: #4caf50;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.button:hover:not(:disabled) {
+  background: rgba(76, 175, 80, 0.3);
+}
+
+.button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.collectButton {
+  margin-top: 0.4rem;
+  border-color: #d6aa46;
+  color: #d6aa46;
+  background: rgba(214, 170, 70, 0.15);
+}
+
+.collectButton:hover:not(:disabled) {
+  background: rgba(214, 170, 70, 0.3);
+}
+
+.countdown {
+  margin: 0.3rem 0 0;
+  font-size: 0.85rem;
+  color: #b9ac86;
+}
+
+.timer {
+  font-variant-numeric: tabular-nums;
+  color: #e8d9a8;
+}
+
+
+.amount {
+  margin: 0.2rem 0 0;
+  font-size: 0.85rem;
+  color: #e8d9a8;
+  font-weight: bold;
+}
+
+.gearLine {
+  margin: 0 0 0.25rem;
+  font-size: 0.72rem;
+  line-height: 1.4;
+  color: #b9ac86;
+}
+
+.gearPercent {
+  color: #4caf50;
+  font-weight: bold;
+}
+
+.gearHint {
+  margin: 0 0 0.25rem;
+  font-size: 0.7rem;
+  line-height: 1.4;
+  color: #8a7f62;
+}
+
+.broken {
+  margin: 0.2rem 0 0;
+  font-size: 0.75rem;
+  color: #c0453a;
+}
+
+/* Found resources as inventory tiles (ResourceTiles from VaultTab). */
+.foundTiles {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-top: 0.4rem;
+}

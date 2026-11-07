@@ -104,6 +104,9 @@ export function StatsTab({
   const birthsignInfo = BIRTHSIGNS.find((b) => b.id === character.birthsign) ?? null;
 
   const craftRemainingSeconds = useCraftCountdown(character.crafting.activeCraft?.readyAt);
+  // Out foraging (see ForagingSection) - counts down to the trip's return;
+  // 0 means back but not yet collected.
+  const forageRemainingSeconds = useCraftCountdown(character.foraging?.activeForage?.readyAt);
   const inAdventure = character.availability.inAdventure;
 
   const [blueprintTierInfo, setBlueprintTierInfo] = useState<BlueprintTierInfo>({});
@@ -559,17 +562,35 @@ export function StatsTab({
             <span>{character.vitalStatus}</span>
           </div>
           <div className={styles.identityRow}>
-            <span>{craftRemainingSeconds ? "Crafting" : inAdventure ? "ON THE ROAD" : "Ready"}</span>
+            <span>
+              {craftRemainingSeconds
+                ? "Crafting"
+                : forageRemainingSeconds !== null
+                ? "Foraging"
+                : inAdventure
+                ? "ON THE ROAD"
+                : "Ready"}
+            </span>
             <span
               className={
-                craftRemainingSeconds
+                craftRemainingSeconds || forageRemainingSeconds
                   ? styles.readyTimerValue
+                  : forageRemainingSeconds === 0
+                  ? styles.readyNowValue
                   : inAdventure
                   ? styles.readyAwayValue
                   : styles.readyNowValue
               }
             >
-              {craftRemainingSeconds ? formatRemainingCompactLong(craftRemainingSeconds) : inAdventure ? "away" : "now"}
+              {craftRemainingSeconds
+                ? formatRemainingCompactLong(craftRemainingSeconds)
+                : forageRemainingSeconds
+                ? formatRemainingCompactLong(forageRemainingSeconds)
+                : forageRemainingSeconds === 0
+                ? "back"
+                : inAdventure
+                ? "away"
+                : "now"}
             </span>
           </div>
           <button
