@@ -4149,16 +4149,22 @@ async def set_in_adventure(
     if doc is None:
         return None
     if in_adventure:
-        await asyncio.gather(
-            _update_pc_status(db, address, character_id, "free", "adventuring"),
-            _update_pc_availability(db, address, character_id, True),
-        )
+        # One after another, never gathered: parallel writes to the same
+        # player_characters doc stall ~20s on Firestore (lock timeout), and
+        # any read of it - e.g. _build_player - waits behind them.
+        await _update_pc_status(db, address, character_id, "free", "adventuring")
+        await _update_pc_availability(db, address, character_id, True)
     else:
+        # player_characters writes in sequence (see above); the camp delete
+        # is a different collection, so it can run alongside.
+        async def _pc_writes():
+            await _update_pc_status(db, address, character_id, "adventuring", "free")
+            await _remove_pc_status(db, address, character_id, "resting")
+            await _update_pc_availability(db, address, character_id, False)
+            await _update_pc_resting(db, address, character_id, False)
+
         await asyncio.gather(
-            _update_pc_status(db, address, character_id, "adventuring", "free"),
-            _remove_pc_status(db, address, character_id, "resting"),
-            _update_pc_availability(db, address, character_id, False),
-            _update_pc_resting(db, address, character_id, False),
+            _pc_writes(),
             db.character_camp.delete_one(
                 {"address": address, "characterId": character_id}
             ),
@@ -4195,9 +4201,18 @@ async def set_resting(
         {"$set": set_fields},
     )
 
-    pc_tasks = [_update_pc_resting(db, address, character_id, resting, location)]
+    # player_characters writes in sequence - parallel writes to the same doc
+    # stall ~20s on Firestore. Only the camp upsert (another collection)
+    # runs alongside.
+    async def _pc_writes():
+        await _update_pc_resting(db, address, character_id, resting, location)
+        if resting:
+            await _add_pc_status(db, address, character_id, "resting")
+        else:
+            await _remove_pc_status(db, address, character_id, "resting")
+
+    pc_tasks = [_pc_writes()]
     if resting:
-        pc_tasks.append(_add_pc_status(db, address, character_id, "resting"))
         pc_tasks.append(
             db.character_camp.update_one(
                 {"address": address, "characterId": character_id},
@@ -4211,8 +4226,6 @@ async def set_resting(
                 upsert=True,
             )
         )
-    else:
-        pc_tasks.append(_remove_pc_status(db, address, character_id, "resting"))
     await asyncio.gather(*pc_tasks)
     return True
 
