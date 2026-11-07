@@ -89,7 +89,11 @@ EXPOSE 3000 8000
 # Set environment variables (override in docker-compose or at runtime)
 ENV NODE_ENV=production
 
-# Start both services with a simple shell script
-RUN printf '#!/bin/sh\nnode server.js &\npython -m uvicorn backend.main:app --host 0.0.0.0 --port 8000\nwait\n' > /entrypoint.sh && chmod +x /entrypoint.sh
+# Start both services. If EITHER one exits (e.g. the backend is OOM-killed),
+# the script exits too, so Cloud Run replaces the instance - otherwise Next
+# keeps answering on :3000, the startup probe stays happy, and every /api
+# call fails with ECONNREFUSED until the instance is recycled. `wait -n`
+# needs bash (the image's /bin/sh is dash).
+RUN printf '#!/bin/bash\nnode server.js &\npython -m uvicorn backend.main:app --host 0.0.0.0 --port 8000 &\nwait -n\necho "A service exited ($?) - stopping container so Cloud Run restarts it" >&2\nexit 1\n' > /entrypoint.sh && chmod +x /entrypoint.sh
 
 CMD ["/entrypoint.sh"]
