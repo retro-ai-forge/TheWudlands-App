@@ -1,0 +1,91 @@
+{
+  "_comment": "Return sentences after a foraging trip, per resource family. Placeholders: {name} character first name, {place} the mission's place (lowercase-safe), {Place} the same capitalized, {activity} the foraging name in lowercase. rich = pool still at least half full after the trip; thin = more than half depleted; depleted = this was the last trip (the site is hidden afterwards) and depletedHint is appended.",
+  "depletedHint": "This location is depleted. New adventures may reveal better gathering places.",
+  "families": {
+    "ore": {
+      "rich": ["{name} came back from {activity} at {place} with a satchel heavy with ore.", "{name} worked {place} from dawn and hauled home good, rust-red ore."],
+      "thin": ["{name} searched {place}, but found little more than rust-flecked stones.", "{name} spent the day {activity} at {place}, but the good ore seems to be gone."],
+      "depleted": ["{name} scraped the last scraps of ore from {place}. Nothing worth a pick is left there.", "{Place} is picked clean; {name} gathered what little ore was left."]
+    },
+    "wood": {
+      "rich": ["{name} returned from {place} with an armful of sound, seasoned wood.", "A good day at {place}: {name} came home dragging straight timber."],
+      "thin": ["{name} searched {place}, but found mostly rot and kindling.", "{name} picked through {place} and found only a few usable sticks."],
+      "depleted": ["{name} carried home the last sound wood from {place}.", "Only stumps and sawdust remain at {place}; {name} took what little wood was left."]
+    },
+    "sand": {
+      "rich": ["{name} came back from {place} with sacks of clean, fine sand.", "{name} dug at {place} all day and filled every sack."],
+      "thin": ["{name} sifted {place} for hours, but most of it was mud and pebbles.", "{name} searched {place}, but found almost nothing fine enough to use."],
+      "depleted": ["{name} sieved the last good sand from {place}.", "{Place} has given up all its fine sand; {name} scraped together the last of it."]
+    },
+    "clay": {
+      "rich": ["{name} came back from {place} with slick lumps of good clay.", "{name} dug deep at {place} and filled the baskets with clay."],
+      "thin": ["{name} dug at {place}, but the clay was gritty and thin.", "{name} searched {place}, but found almost nothing a potter would want."],
+      "depleted": ["{name} pried the last workable clay from {place}.", "{Place} is dug out; {name} brought back the last of its clay."]
+    },
+    "stone": {
+      "rich": ["{name} returned from {place} with a cart of sound stone.", "{name} split good blocks at {place} all day."],
+      "thin": ["{name} searched {place}, but found mostly cracked and crumbling stone.", "{name} spent the day at {place} and found only a few usable stones."],
+      "depleted": ["{name} hauled the last sound stone away from {place}.", "Only rubble is left at {place}; {name} took the last good stone."]
+    },
+    "crystal": {
+      "rich": ["{name} came back from {place} with crystals glinting in every pocket.", "{name} found a rich pocket of crystal at {place}."],
+      "thin": ["{name} searched {place}, but found only dull chips and splinters.", "{name} tapped every rock at {place}; few held any crystal."],
+      "depleted": ["{name} chipped the last clear crystal from {place}.", "{Place} has lost its sparkle; {name} found the last of its crystal."]
+    },
+    "hide": {
+      "rich": ["{name} returned from {place} with a bundle of good hides.", "{name} had a fine day at {place} and came home with hides to spare."],
+      "thin": ["{name} searched {place}, but the hides were torn and scarce.", "{name} came back from {place} with only a few ragged hides."],
+      "depleted": ["{name} took the last decent hide from {place}.", "{Place} has nothing left to skin; {name} brought home the last of it."]
+    },
+    "meat": {
+      "rich": ["{name} came home from {place} with a fine haul for the larder.", "A good day at {place}: {name} returned with plenty of meat."],
+      "thin": ["{name} waited for hours at {place}, but the game had grown wary and scarce.", "{name} searched {place}, but came back with barely a meal."],
+      "depleted": ["{name} brought back the last meat from {place}; the game has moved on.", "{Place} is empty of game; {name} caught the last of it."]
+    },
+    "harvest": {
+      "rich": ["{name} came back from {place} with baskets brimming.", "{Place} was generous; {name} returned with full baskets."],
+      "thin": ["{name} searched {place}, but the best of it had already been picked.", "{name} gleaned {place} all day and found almost nothing worth keeping."],
+      "depleted": ["{name} gathered the very last of the harvest from {place}.", "{Place} is stripped bare; {name} found the final handful."]
+    },
+    "fish": {
+      "rich": ["{name} came back from {place} with a dripping, heavy catch.", "The fish were biting at {place}; {name} returned with a full creel."],
+      "thin": ["{name} waited long at {place}, but the water gave up only small fry.", "{name} fished {place} all day and caught almost nothing."],
+      "depleted": ["{name} pulled the last fish from {place}; the water is empty now.", "{Place} is fished out; {name} landed the final catch."]
+    },
+    "skin": {
+      "rich": ["{name} returned from {place} with soft, fine skins.", "{name} found good skins at {place} and brought plenty home."],
+      "thin": ["{name} searched {place}, but the skins were thin, scarred and few.", "{name} came back from {place} with almost nothing fine enough to use."],
+      "depleted": ["{name} took the last good skin from {place}.", "{Place} has no more fine skins; {name} brought back the last of them."]
+    },
+    "fiber": {
+      "rich": ["{name} came home from {place} with bundles of good fiber.", "{name} gathered strong fiber at {place} until the sacks were full."],
+      "thin": ["{name} searched {place}, but found only short, brittle strands.", "{name} picked through {place} and found almost nothing worth spinning."],
+      "depleted": ["{name} pulled the last useful strands from {place}.", "{Place} is picked bare; {name} found the final hank of fiber."]
+    },
+    "herbs": {
+      "rich": ["{name} returned from {place} smelling of fresh herbs, the basket full.", "{Place} was in full leaf; {name} gathered herbs aplenty."],
+      "thin": ["{name} searched {place}, but found only wilted and trampled leaves.", "{name} combed {place} and found almost nothing worth drying."],
+      "depleted": ["{name} cut the last good sprigs from {place}.", "{Place} is picked bare; {name} found the final sprigs."]
+    },
+    "reed": {
+      "rich": ["{name} came back from {place} with tall, straight bundles of reed.", "{name} cut fine reed at {place} all day."],
+      "thin": ["{name} waded through {place}, but most of the reed was broken or rotten.", "{name} searched {place} and found only a few usable stems."],
+      "depleted": ["{name} cut the last good stems from {place}.", "{Place} is cut back to stubble; {name} took the last of the reed."]
+    },
+    "feather": {
+      "rich": ["{name} returned from {place} with a pouch full of fine feathers.", "{name} had a lucky day at {place}: feathers everywhere."],
+      "thin": ["{name} searched {place}, but found only scruffy down and broken quills.", "{name} came back from {place} with barely a feather worth keeping."],
+      "depleted": ["{name} picked up the last fine feathers at {place}.", "The birds have left {place}; {name} found the last of their feathers."]
+    },
+    "bone": {
+      "rich": ["{name} came back from {place} with a sack of clean, sound bone.", "{name} found good bone at {place} and brought plenty home."],
+      "thin": ["{name} searched {place}, but found mostly splinters and brittle fragments.", "{name} dug around {place} and found almost nothing unbroken."],
+      "depleted": ["{name} took the last sound bone from {place}.", "{Place} has given up its bones; {name} found the final pieces."]
+    },
+    "monster_part": {
+      "rich": ["{name} returned from {place} with a grisly, valuable haul.", "{name} found strange remains aplenty at {place}."],
+      "thin": ["{name} searched {place}, but found only scraps of something long dead.", "{name} came back from {place} with almost nothing a buyer would want."],
+      "depleted": ["{name} took the last strange remains from {place}.", "Whatever lived around {place} is long gone; {name} found the final scraps."]
+    }
+  }
+}

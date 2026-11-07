@@ -1,0 +1,14 @@
+{
+  "poolTotalBase": 180,
+  "poolMultiplierByProfessionCount": { "1": 1.0, "2": 1.2, "3": 1.5 },
+  "poolVariation": 0.3,
+  "baseYieldMin": 8,
+  "baseYieldMax": 14,
+  "halfLife": 5,
+  "durationHours": 20,
+  "tierWeightsByProfessionCount": {
+    "1": { "1": 100 },
+    "2": { "1": 80, "2": 20 },
+    "3": { "1": 70, "2": 22, "3": 8 }
+  }
+}

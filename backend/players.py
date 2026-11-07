@@ -2316,6 +2316,11 @@ async def start_craft(
     if character.get("availability", {}).get("inAdventure", False):
         return None
 
+    # Can't craft while away foraging (see backend.foraging).
+    active_forage = (character.get("foraging") or {}).get("activeForage")
+    if active_forage and datetime.fromisoformat(active_forage["readyAt"]) > datetime.now(timezone.utc):
+        return None
+
     home_sc_doc = await db.character_homes.find_one({"address": address, "characterId": character_id})
     character["gear"]["items"] = character.get("gear", {}).get("items", []) + (home_sc_doc or {}).get("items", [])
 
@@ -4124,6 +4129,9 @@ async def set_in_adventure(
         active = character_doc.get("crafting", {}).get("activeCraft")
         if active and datetime.fromisoformat(active["readyAt"]) > datetime.now(timezone.utc):
             raise ValueError("Character is still crafting")
+        active_forage = (character_doc.get("foraging") or {}).get("activeForage")
+        if active_forage and datetime.fromisoformat(active_forage["readyAt"]) > datetime.now(timezone.utc):
+            raise ValueError("Character is out foraging")
 
     update: dict = {"$set": {"availability.inAdventure": in_adventure}}
     if not in_adventure:

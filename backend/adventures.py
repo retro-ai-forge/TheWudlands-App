@@ -625,6 +625,9 @@ async def start_adventure(
         active_craft = (doc.get("crafting") or {}).get("activeCraft")
         if active_craft and datetime.fromisoformat(active_craft["readyAt"]) > now_dt:
             raise AdventureError(f"{name} is still crafting", 409)
+        active_forage = (doc.get("foraging") or {}).get("activeForage")
+        if active_forage and datetime.fromisoformat(active_forage["readyAt"]) > now_dt:
+            raise AdventureError(f"{name} is out foraging", 409)
 
     now = _now()
     graph = snapshot["graph"]

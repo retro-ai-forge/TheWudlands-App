@@ -11,7 +11,7 @@ Provides:
 from fastapi import APIRouter, BackgroundTasks, HTTPException, Request, Response, Depends, UploadFile, File, Form
 from pydantic import BaseModel, ConfigDict, Field
 from datetime import datetime, timedelta, timezone
-from typing import Dict, List, Literal, Optional
+from typing import Any, Dict, List, Literal, Optional
 import os
 import secrets
 import time
@@ -29,7 +29,7 @@ from backend.active_players import (
 )
 from backend.character import AttributeStats, Character, PortraitArea, ProfStats
 from backend.db import get_database
-from backend import adventures
+from backend import adventures, foraging
 from backend.players import (
     get_character_home,
     get_character_camp,
@@ -367,6 +367,10 @@ class CharacterResponse(BaseModel):
     profession: CharacterProfessionResponse
     attr: CharacterAttributeResponse
     crafting: CharacterCraftingResponse = Field(default_factory=CharacterCraftingResponse)
+    foraging: Dict[str, Any] = Field(
+        default_factory=dict,
+        description="Foraging trip state - {activeForage: {...missionId, familyId, readyAt} | None, lastResult} (see backend.foraging)",
+    )
     blueprints: List[str] = Field(
         default_factory=list,
         description="Blueprint ids this character has learned, chosen on the Trappings step - soulbound, never moves",
@@ -1043,6 +1047,45 @@ async def check_in_tool_route(
         raise HTTPException(status_code=404, detail="No matching character, or not enough on that character")
 
     return player.to_dict()
+
+
+class StartForageRequest(BaseModel):
+    missionId: str = Field(..., description="Foraging mission id (see GET .../foraging - each site's mission.id)")
+
+
+def _foraging_http_error(exc: "foraging.ForagingError") -> HTTPException:
+    return HTTPException(status_code=exc.status, detail=str(exc))
+
+
+@player_router.get("/me/characters/{character_id}/foraging")
+async def get_foraging_route(character_id: str, address: str = Depends(get_current_address)):
+    """The character's foraging sites (one per resource family its
+    professions cover, each with a suggested mission and its remaining
+    pool), plus any trip in progress and the last trip's finds."""
+    try:
+        return await foraging.get_foraging_state(address, character_id)
+    except foraging.ForagingError as exc:
+        raise _foraging_http_error(exc)
+
+
+@player_router.post("/me/characters/{character_id}/foraging/start")
+async def start_foraging_route(
+    character_id: str, payload: StartForageRequest, address: str = Depends(get_current_address)
+):
+    """Send the character on a timed foraging trip. Collect with .../foraging/finish once it's back."""
+    try:
+        return await foraging.start_forage(address, character_id, payload.missionId)
+    except foraging.ForagingError as exc:
+        raise _foraging_http_error(exc)
+
+
+@player_router.post("/me/characters/{character_id}/foraging/finish")
+async def finish_foraging_route(character_id: str, address: str = Depends(get_current_address)):
+    """Collect a returned trip - the finds go to the shared vault. Returns {result, state}."""
+    try:
+        return await foraging.finish_forage(address, character_id)
+    except foraging.ForagingError as exc:
+        raise _foraging_http_error(exc)
 
 
 class CraftItemRequest(BaseModel):
@@ -2557,6 +2600,13 @@ async def create_character(
         for resource_id, amount in payload.selectedResources.items():
             player = await grant_item_balance(address, resource_id, amount)
         await mark_starter_kit_claimed(address, payload.slotNumber)
+
+    # The slot's one-time foraging pool (see backend.foraging) - created only
+    # if this slot has never had one; a pool left by a deleted character is
+    # inherited instead.
+    await foraging.ensure_slot_pool(
+        address, payload.slotNumber, [payload.profession1, payload.profession2, payload.profession3]
+    )
 
     return player.to_dict()
 
