@@ -19,9 +19,18 @@ from backend.auth_routes import (
     player_router,
     statistics_router,
 )
-from backend.db import close_mongo_client, get_database
+from fastapi.responses import JSONResponse
+
+from backend.db import TransactionConflict, close_mongo_client, get_database
 
 app = FastAPI(title="TheWudlands API")
+
+
+@app.exception_handler(TransactionConflict)
+async def transaction_conflict_handler(_request, exc: TransactionConflict):
+    """Other requests kept changing the same documents and nothing was
+    written (backend.db.run_in_transaction) - the player can simply retry."""
+    return JSONResponse(status_code=409, content={"detail": str(exc)})
 
 # Add CORS middleware for frontend-backend communication
 app.add_middleware(
@@ -58,6 +67,18 @@ async def on_startup():
 @app.on_event("shutdown")
 async def on_shutdown():
     await close_mongo_client()
+
+
+@app.get("/api/health")
+async def health():
+    """Cloud Run's startup probe (rav.yaml gcp_deploy) asks this through Next
+    on :3000, so an instance only gets traffic once Next AND this backend are
+    up - uvicorn answers only after on_startup (database warmed up). Probing
+    :3000 alone let traffic in while the backend was still starting (every
+    /api call ECONNREFUSED -> 500) and let Cloud Run throttle the CPU the
+    backend needed to finish starting. Never touches the database: a slow
+    database must not keep instances from starting."""
+    return {"ok": True}
 
 
 

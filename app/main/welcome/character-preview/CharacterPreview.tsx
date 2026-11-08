@@ -12,6 +12,7 @@ import { BodyTab } from "./BodyTab";
 import { StoriesTab, REST_LOCATIONS } from "./StoriesTab";
 import { VaultTab, type ItemInstance, type RawPlayerData } from "./VaultTab";
 import { HomeView } from "./HomeView";
+import { CraftingView, useCraftAutoFinish } from "./CraftingView";
 import { TabErrorBoundary } from "./TabErrorBoundary";
 
 export type TabKey = "stats" | "body" | "home" | "vault" | "stories";
@@ -24,6 +25,44 @@ const ICON_BASE = "/images/character/char-preview-";
 const EMPTY_VAULT: { items: ItemInstance[]; itemBalances: Record<string, number> } = { items: [], itemBalances: {} };
 const EMPTY_HOME_BALANCES: Record<string, number> = {};
 const EMPTY_HOME: { items: ItemInstance[]; itemBalances: Record<string, number> } = { items: [], itemBalances: {} };
+
+type StorageData = { items: ItemInstance[]; itemBalances: Record<string, number> };
+
+/** Vault / home / camp contents, loaded from `url` the first time `needed`
+ * turns true. Bumping `version` (after a move) reloads them in the
+ * background: what's on screen stays until the new contents arrive and
+ * replace it - only the tiles that changed redraw, nothing flashes empty.
+ * Returns null until the first load; `drop` forgets them (a camp that's
+ * gone). */
+function useStorageData(url: string, needed: boolean, version: number) {
+  const [state, setState] = useState<{ url: string; version: number; data: StorageData } | null>(null);
+  const requested = useRef<string | null>(null);
+  const current = state?.url === url ? state : null;
+
+  useEffect(() => {
+    if (!needed || (current && current.version === version)) return;
+    const key = `${url}#${version}`;
+    if (requested.current === key) return; // already on its way
+    requested.current = key;
+    fetch(url, { credentials: "include" })
+      .then((res) => (res.ok ? res.json() : null))
+      .catch(() => null)
+      .then((data: StorageData | null) => {
+        setState((prev) => {
+          const same = prev?.url === url ? prev : null;
+          if (same && same.version > version) return prev; // a newer load already landed
+          // A failed reload keeps what's shown rather than emptying it.
+          return { url, version, data: data ?? same?.data ?? EMPTY_HOME };
+        });
+      });
+  }, [url, needed, version, current]);
+
+  const drop = useCallback(() => {
+    requested.current = null;
+    setState(null);
+  }, []);
+  return [current?.data ?? null, drop] as const;
+}
 
 const TABS: { key: TabKey; label: string; icon: string; secondIcon?: string; emojiIcon?: string; lightenWhenActive?: boolean }[] = [
   { key: "stats", label: "Stats", icon: `${ICON_BASE}stats.png` },
@@ -43,10 +82,6 @@ const TABS: { key: TabKey; label: string; icon: string; secondIcon?: string; emo
 // fixed bottom-left.
 export function CharacterPreview({
   character,
-  playerResourceBalances,
-  playerTools,
-  playerItemBalances,
-  playerItems,
   onClose,
   onDeleted,
   onPortraitSaved,
@@ -55,10 +90,6 @@ export function CharacterPreview({
   openCraftingSectionByDefault = false,
 }: {
   character: SlotCharacterSummary;
-  playerResourceBalances: Record<string, number>;
-  playerTools: Record<string, number>;
-  playerItemBalances: Record<string, number>;
-  playerItems: ItemInstance[];
   onClose: () => void;
   onDeleted: () => void;
   onPortraitSaved: (character: SlotCharacterSummary) => void;
@@ -81,8 +112,24 @@ export function CharacterPreview({
   // tab) suspends .wizard's own vertical scroll so only its item grid
   // scrolls, horizontally. Cleared by switching to any of the 5 real tabs.
   const [showHome, setShowHome] = useState(false);
+  // The crafting page, opened from the workbench in the home camp -
+  // shown instead of the home view while true, back to it on exit.
+  // Opened straight away when the soul slot clicked was busy crafting.
+  const [showCrafting, setShowCrafting] = useState(openCraftingSectionByDefault && !inAdventure);
   const [resting, setResting] = useState(character.availability.resting ?? false);
   const [restLocation, setRestLocation] = useState<string>(character.availability.restLocation ?? REST_LOCATIONS[0]);
+
+  // Lazy-loaded supplemental data — fetched on demand the first time the
+  // relevant view is opened (null until then), and reloaded in place after
+  // every change (storageVersion) - see useStorageData.
+  const [storageVersion, setStorageVersion] = useState(0);
+  // The home view, and the crafting page when not on an adventure.
+  const needsHome = showHome || (activeTab === "home" && !resting) || (showCrafting && !inAdventure);
+  // The camp while resting on an adventure (home tab or crafting page).
+  const needsCamp = (activeTab === "home" && resting) || (showCrafting && inAdventure && resting);
+  const [homeData] = useStorageData(`/api/auth/me/characters/${character.id}/home`, needsHome, storageVersion);
+  const [campData, dropCampData] = useStorageData(`/api/auth/me/characters/${character.id}/camp`, needsCamp, storageVersion);
+  const [vaultData] = useStorageData("/api/auth/me/vault", activeTab === "vault", storageVersion);
 
   useEffect(() => {
     if (inAdventure && !resting && activeTab === "home") {
@@ -93,53 +140,18 @@ export function CharacterPreview({
     }
     if (!inAdventure) {
       setResting(false);
-      setCampData(null);
+      // The camp is gone once back home - forget it, don't reload it.
+      dropCampData();
       if (activeTab === "home" || activeTab === "vault") {
         setActiveTab("stories");
       }
       setShowHome(false);
     }
-  }, [inAdventure, resting]);
-
-  // Lazy-loaded supplemental data — fetched on demand the first time the
-  // relevant tab is opened; null means not yet loaded.
-  const [homeData, setHomeData] = useState<{ items: ItemInstance[]; itemBalances: Record<string, number> } | null>(null);
-  const [campData, setCampData] = useState<{ items: ItemInstance[]; itemBalances: Record<string, number> } | null>(null);
-  const [vaultData, setVaultData] = useState<{ items: ItemInstance[]; itemBalances: Record<string, number> } | null>(null);
-
-  // Trigger home fetch the first time the home view becomes visible.
-  // When resting + home tab, load camp data instead.
-  useEffect(() => {
-    const needsHome = showHome || (activeTab === "home" && !resting);
-    if (!needsHome || homeData !== null) return;
-    fetch(`/api/auth/me/characters/${character.id}/home`, { credentials: "include" })
-      .then((res) => (res.ok ? res.json() : null))
-      .then((data) => setHomeData(data ?? EMPTY_HOME))
-      .catch(() => setHomeData(EMPTY_HOME));
-  }, [showHome, activeTab, homeData, character.id, resting]);
-
-  // Trigger camp fetch when resting and home tab is active.
-  useEffect(() => {
-    if (!(activeTab === "home" && resting) || campData !== null) return;
-    fetch(`/api/auth/me/characters/${character.id}/camp`, { credentials: "include" })
-      .then((res) => (res.ok ? res.json() : null))
-      .then((data) => setCampData(data ?? EMPTY_HOME))
-      .catch(() => setCampData(EMPTY_HOME));
-  }, [activeTab, resting, campData, character.id]);
-
-  // Trigger vault fetch the first time the vault tab is opened.
-  useEffect(() => {
-    if (activeTab !== "vault" || vaultData !== null) return;
-    fetch("/api/auth/me/vault", { credentials: "include" })
-      .then((res) => (res.ok ? res.json() : null))
-      .then((data) => setVaultData(data ?? { items: [], itemBalances: {} }))
-      .catch(() => setVaultData({ items: [], itemBalances: {} }));
-  }, [activeTab, vaultData]);
+    if (inAdventure) setShowCrafting(false);
+  }, [inAdventure, resting, dropCampData]);
 
   const handlePlayerDataUpdated = useCallback((data: RawPlayerData) => {
-    setVaultData(null);
-    setHomeData(null);
-    setCampData(null);
+    setStorageVersion((version) => version + 1);
     onPlayerDataUpdated?.(data);
   }, [onPlayerDataUpdated]);
 
@@ -162,6 +174,12 @@ export function CharacterPreview({
       },
     },
   };
+  // A finished craft is collected as soon as its timer runs out, on any
+  // page of this view (the crafting page shows what came out).
+  const { lastCraftResult, clearLastCraftResult } = useCraftAutoFinish(character, handlePlayerDataUpdated);
+  // Pages that fill the viewport themselves (no outer scroll, no padding).
+  const fillsViewport = !showCrafting && (showHome || activeTab === "home" || activeTab === "vault");
+
   const [isDeleting, setIsDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
   const [showDeleteWarning, setShowDeleteWarning] = useState(false);
@@ -188,15 +206,14 @@ export function CharacterPreview({
     checkScrolledToEnd();
   }, [activeTab]);
 
-  // Snap to the top before the browser paints whenever switching to a
-  // tab whose content fills the viewport (vault/home) — useLayoutEffect
-  // ensures the scroll reset happens before the first paint so there's no
-  // visible flash of the old scroll position.
+  // Every tab (and the home/crafting views) opens at the top, not wherever
+  // the previous one was scrolled to - useLayoutEffect resets it before the
+  // browser paints, so there's no flash of the old position. The page
+  // itself is reset too, for layouts where the window scrolls instead.
   useLayoutEffect(() => {
-    if (showHome || activeTab === "home" || activeTab === "vault") {
-      wizardScrollRef.current?.scrollTo(0, 0);
-    }
-  }, [activeTab, showHome]);
+    wizardScrollRef.current?.scrollTo(0, 0);
+    window.scrollTo(0, 0);
+  }, [activeTab, showHome, showCrafting]);
 
   // Standalone portrait editor, opened by clicking the face portrait on the
   // Stats tab. The draft lives in a ref rather than state - PortraitEditor's
@@ -311,7 +328,7 @@ export function CharacterPreview({
   return (
     <div
       className={`${styles.wizard} ${
-        showHome || activeTab === "home" || activeTab === "vault" ? "" : styles.wizardScrollable
+        fillsViewport ? "" : styles.wizardScrollable
       }`}
       ref={wizardScrollRef}
       onScroll={checkScrolledToEnd}
@@ -336,7 +353,11 @@ export function CharacterPreview({
                     ]
                       .filter(Boolean)
                       .join(" ")}
-                    onClick={() => !locked && setActiveTab(tab.key)}
+                    onClick={() => {
+                      if (locked) return;
+                      setShowCrafting(false);
+                      setActiveTab(tab.key);
+                    }}
                     aria-pressed={activeTab === tab.key}
                     aria-disabled={locked || undefined}
                     title={locked ? `${tab.label} (unavailable during adventure)` : tab.label}
@@ -362,28 +383,50 @@ export function CharacterPreview({
 
               <button type="button" className={tabStyles.closeButton} onClick={onClose} title="Close" aria-label="Close">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src="/images/character/exit.webp" alt="" className={tabStyles.closeArrowIcon} />
+                <img src="/images/character/char-preview-close.png" alt="" className={tabStyles.closeArrowIcon} />
               </button>
             </div>
           </div>
         </div>
       )}
 
-      <div className={tabStyles.sheet}>
+      {/* Storage views (vault, home, camp) sit tighter under the tab bar -
+          more room for their selection icons and item matrix. */}
+      <div
+        className={
+          !showCrafting && (showHome || activeTab === "home" || activeTab === "vault")
+            ? `${tabStyles.sheet} ${tabStyles.sheetCompact}`
+            : tabStyles.sheet
+        }
+      >
         {deleteError && <p className={styles.submitError}>{deleteError}</p>}
 
-        <div className={tabStyles.nameRow}>
-          <h1 className={tabStyles.name}>
-            {showHome ? `${character.firstName}'s Home` : activeTab === "home" && resting ? `Resting in ${restLocation.charAt(0).toUpperCase() + restLocation.slice(1)}` : activeTab === "home" ? `${character.firstName}'s Home` : activeTab === "vault" ? "Vault" : `${character.firstName} ${character.lastName}`}
-          </h1>
-        </div>
+        {/* No headline on the storage views (vault, home, camp) - the space
+            goes to their selection buttons and item matrix. */}
+        {(showCrafting || !(showHome || activeTab === "home" || activeTab === "vault")) && (
+          <div className={tabStyles.nameRow}>
+            <h1 className={tabStyles.name}>
+              {showCrafting ? `${character.firstName}'s Crafting` : `${character.firstName} ${character.lastName}`}
+            </h1>
+          </div>
+        )}
 
-        <div className={showHome || activeTab === "home" || activeTab === "vault" ? tabStyles.mainColumn : `${tabStyles.mainColumn} ${tabStyles.mainColumnPadded}`}>
-          {showHome ? (
+        <div className={fillsViewport ? tabStyles.mainColumn : `${tabStyles.mainColumn} ${tabStyles.mainColumnPadded}`}>
+          {showCrafting ? (
+            <CraftingView
+              character={augmentedCharacter}
+              onPlayerDataUpdated={handlePlayerDataUpdated}
+              storageType={inAdventure ? "camp" : "home"}
+              lastCraftResult={lastCraftResult}
+              onCraftStarted={clearLastCraftResult}
+              onExit={() => setShowCrafting(false)}
+            />
+          ) : showHome ? (
             <HomeView
               character={augmentedCharacter}
               onPlayerDataUpdated={handlePlayerDataUpdated}
               onExitHome={() => setShowHome(false)}
+              onOpenCrafting={() => setShowCrafting(true)}
             />
           ) : (
             <>
@@ -396,10 +439,6 @@ export function CharacterPreview({
                 setShowBirthsignPopup(true);
               }}
               onPlayerDataUpdated={handlePlayerDataUpdated}
-              playerResourceBalances={playerResourceBalances}
-              playerTools={playerTools}
-              playerItemBalances={playerItemBalances}
-              playerItems={playerItems}
             />
           )}
           {activeTab === "body" && (
@@ -433,6 +472,7 @@ export function CharacterPreview({
               character={augmentedCharacter}
               onPlayerDataUpdated={handlePlayerDataUpdated}
               onExitHome={() => setActiveTab("body")}
+              onOpenCrafting={() => setShowCrafting(true)}
               footerVisible
             />
           )}
@@ -441,6 +481,7 @@ export function CharacterPreview({
               character={augmentedCharacter}
               onPlayerDataUpdated={handlePlayerDataUpdated}
               onExitHome={() => setActiveTab("body")}
+              onOpenCrafting={() => setShowCrafting(true)}
               footerVisible
               storageType="camp"
             />
@@ -450,7 +491,7 @@ export function CharacterPreview({
         </div>
       </div>
 
-      {!showHome && activeTab === "stats" && isScrolledToEnd && (
+      {!showHome && !showCrafting && activeTab === "stats" && isScrolledToEnd && (
         <button
           type="button"
           className={tabStyles.deleteButton}
@@ -548,19 +589,19 @@ export function CharacterPreview({
             <div className={tabStyles.deleteWarningActions}>
               <button
                 type="button"
-                className={tabStyles.deleteWarningCancel}
-                onClick={() => setShowDeleteWarning(false)}
-                disabled={isDeleting}
-              >
-                Cancel
-              </button>
-              <button
-                type="button"
                 className={tabStyles.deleteWarningContinue}
                 onClick={handleConfirmDelete}
                 disabled={isDeleting}
               >
                 {isDeleting ? "Deleting…" : "Continue"}
+              </button>
+              <button
+                type="button"
+                className={tabStyles.deleteWarningCancel}
+                onClick={() => setShowDeleteWarning(false)}
+                disabled={isDeleting}
+              >
+                Cancel
               </button>
             </div>
           </div>

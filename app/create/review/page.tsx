@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { PageVersionTag } from "../../main/PageVersionTag";
+import h from "@/app/styles/headings.module.css";
 
 // A story stays open for 7 days from its last submission. Resubmitting a story
 // refreshes submittedAt on the backend, which restarts this countdown. Once it
@@ -462,18 +463,9 @@ function RejectedList({ entries }: { entries: RejectedEntry[] }) {
 function TagLegend() {
   return (
     <div style={{ marginTop: "3rem", borderTop: `1px solid ${gold}`, paddingTop: "1.75rem" }}>
-      <h3
-        style={{
-          fontFamily: mono,
-          fontSize: "1rem",
-          letterSpacing: "0.2em",
-          textTransform: "uppercase",
-          color: "#c07a3a",
-          marginBottom: "0.9rem",
-        }}
-      >
+      <h2 className={h.section}>
         Story Tags
-      </h3>
+      </h2>
       <p
         style={{
           fontFamily: mono,
@@ -863,22 +855,9 @@ export default function ReviewStatus() {
   return (
     <div style={{ minHeight: "100vh", padding: "2rem 1rem", background: "#0a0a0a" }}>
       <section style={{ maxWidth: "800px", margin: "0 auto" }}>
-        <h2
-          style={{
-            // Standard page-header style, matching .heading in the other
-            // /create pages (app/create/page.module.css).
-            fontFamily: mono,
-            fontSize: "1.1rem",
-            letterSpacing: "0.2em",
-            textTransform: "uppercase",
-            color: "#c07a3a",
-            borderBottom: "1px solid #7a6a3a",
-            paddingBottom: "0.75rem",
-            marginBottom: "2rem",
-          }}
-        >
+        <h1 className={h.pageTitle}>
           Submit Status
-        </h2>
+        </h1>
         <p style={{ fontFamily: mono, color: gold, fontSize: "0.85rem", marginBottom: "1.5rem" }}>
           Herein lie all tales submitted for judgement. Each is granted seven days&rsquo; grace — revise as you will, and the hourglass turns anew. When the last grain falls, the tale passes to the reviewers.
         </p>
@@ -926,20 +905,12 @@ export default function ReviewStatus() {
           const pending = rows.filter((r) => r.pending).sort(byRemaining);
           const listStyle: React.CSSProperties = { display: "flex", flexDirection: "column", gap: "0.9rem" };
           const sectionHeading = (title: string, first: boolean) => (
-            <h3
-              style={{
-                // Same look as the Story Tags heading below.
-                fontFamily: mono,
-                fontSize: "1rem",
-                letterSpacing: "0.2em",
-                textTransform: "uppercase",
-                color: "#c07a3a",
-                marginTop: first ? 0 : "2.5rem",
-                marginBottom: "0.9rem",
-              }}
+            <h2
+              className={h.section}
+              style={first ? { marginTop: 0 } : undefined}
             >
               {title}
-            </h3>
+            </h2>
           );
           // Pending first: those are the ones the reviewers act on now.
           return (

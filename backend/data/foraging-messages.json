@@ -3,7 +3,7 @@
   "depletedHint": "This location is depleted. New adventures may reveal better gathering places.",
   "families": {
     "ore": {
-      "rich": ["{name} came back from {activity} at {place} with a satchel heavy with ore.", "{name} worked {place} from dawn and hauled home good, rust-red ore."],
+      "rich": ["{name} came back from {activity} at {place} with a satchel heavy with ore.", "{name} worked the rock face at {place} for hours and hauled home good, rust-red ore."],
       "thin": ["{name} searched {place}, but found little more than rust-flecked stones.", "{name} spent the day {activity} at {place}, but the good ore seems to be gone."],
       "depleted": ["{name} scraped the last scraps of ore from {place}. Nothing worth a pick is left there.", "{Place} is picked clean; {name} gathered what little ore was left."]
     },
@@ -87,5 +87,921 @@
       "thin": ["{name} searched {place}, but found only scraps of something long dead.", "{name} came back from {place} with almost nothing a buyer would want."],
       "depleted": ["{name} took the last strange remains from {place}.", "Whatever lived around {place} is long gone; {name} found the final scraps."]
     }
+  },
+  "nights": {
+    "both": [
+      "The icy night clamped down on {name}: fingers aching, and pale ghosts walking through every dream.",
+      "A storm howled over the camp. {name} lay shivering on stony ground, haunted by restless dreams.",
+      "Frost bit through every layer, and whispers in the dark kept {name} from any real sleep.",
+      "Hail drummed on the open camp; {name} spent the night soaked, frozen and haunted by grim dreams.",
+      "The freezing wind never stopped, and neither did the voices in {name}'s dreams.",
+      "{name} huddled against a rock as the storm raged, too cold to sleep and too frightened to rest.",
+      "Ice formed on {name}'s cloak, and nightmares of drowning came with every doze.",
+      "The bitter night stole the warmth from {name}'s limbs and the peace from {name}'s mind."
+    ],
+    "body": [
+      "{name} slept on cold, stony ground and woke stiff and aching.",
+      "The night chill crept into {name}'s bones; every joint complained at dawn.",
+      "Roots and stones dug into {name}'s back all night long."
+    ],
+    "soul": [
+      "Ghostly dreams stalked {name} through the night; the morning felt hollow.",
+      "Strange whispers kept {name} half awake until first light.",
+      "{name} dreamt of pale faces at the edge of the firelight and woke uneasy."
+    ],
+    "sheltered": [
+      "Wind and cold rattled the camp, but {name} slept warm and dry.",
+      "The night turned bitter, yet {name}'s camp kept the worst of it away."
+    ],
+    "calm": [
+      "A mild night: {name} slept soundly under the open sky.",
+      "Warm air and a clear sky; {name} hardly missed a bed.",
+      "Crickets sang {name} to sleep beneath a sky full of stars.",
+      "The night stayed gentle, and {name} woke rested and ready.",
+      "A soft breeze and the smell of warm grass; {name} slept like a child.",
+      "{name} dozed by the embers until dawn, warm and untroubled.",
+      "Not a cloud, not a chill: {name} barely needed a blanket.",
+      "The warm night passed quietly, and {name} woke with the birds."
+    ],
+    "wishNone": "{name} wished for a bedroll or a tent.",
+    "wishOne": "{name} wished for the {missing} as well.",
+    "tentDestroyed": [
+      "By morning the {tent} was in tatters, torn beyond any repair.",
+      "The {tent} held as long as it could, then ripped apart in the dark.",
+      "A last brutal gust tore the {tent} from its pegs and carried it away.",
+      "{name} saved the night but not the {tent}: it lay shredded in the mud at dawn.",
+      "The {tent} gave its all; nothing of it was worth carrying home.",
+      "Poles snapped and canvas split - the {tent} did not survive the night.",
+      "At first light {name} found only rags and broken poles where the {tent} had stood.",
+      "The {tent} was lost to the weather; {name} left its remains behind."
+    ],
+    "byWeather": {
+      "cool": {
+        "sheltered": [
+          "It was a cold night, but {name} kept warm in the {shelter}.",
+          "Frost settled on the grass outside; inside the {shelter}, {name} slept snug and warm.",
+          "The air bit cold after sunset, yet the {shelter} kept {name} warm till morning.",
+          "A chilly wind tugged at the {shelter}, but {name} slept warm through it all.",
+          "Mist crept over the ground, yet {name} stayed cosy in the {shelter}.",
+          "The night grew cold enough to frost the grass; snug in the {shelter}, {name} never felt it.",
+          "Outside, breath turned to fog; inside the {shelter}, {name} slept deep and warm.",
+          "The cold could not reach {name}, tucked away in the {shelter} until sunrise."
+        ],
+        "body": [
+          "A damp chill crept in before dawn; {name} woke with stiff, cold fingers.",
+          "The cold ground drew the warmth from {name}'s back all night.",
+          "Dew soaked through {name}'s clothes, and the morning brought aching knees.",
+          "{name} curled up against the cold and woke with a stiff neck and numb toes.",
+          "The fire died early; {name} spent the small hours shivering.",
+          "Cold fog settled over the camp, and {name} woke sore and sniffling.",
+          "{name} lay on hard, chilly earth and rose with a back full of complaints.",
+          "A raw wind found every gap; by morning {name}'s hands would barely close."
+        ],
+        "soul": [
+          "An owl's cry and a cold mist filled {name}'s dreams with restless shapes.",
+          "{name} lay awake in the cool dark, listening to whispers that weren't the wind.",
+          "Shadows moved at the edge of the dying fire, and {name} never quite slept.",
+          "{name} dreamt of a cold, empty house and woke with a heavy heart.",
+          "Something kept calling {name}'s name from the mist, softly, all night long.",
+          "Uneasy dreams of being followed left {name} tired and gloomy at dawn.",
+          "The cold night felt lonelier than it should; {name} woke with a hollow feeling.",
+          "Every rustle in the dark sounded like footsteps; {name}'s rest was thin and fearful."
+        ]
+      },
+      "harsh": {
+        "sheltered": [
+          "An icy storm raged all night, but {name} stayed warm and dry in the {shelter}.",
+          "Sleet hammered the camp while {name} lay warm in the {shelter}, untouched by the cold.",
+          "The wind howled and the frost bit hard, yet {name} woke rested in the {shelter}.",
+          "A blizzard swept the hills, but the {shelter} held, and {name} slept warm.",
+          "Thunder rolled all night; {name} listened from the warm {shelter} and drifted off.",
+          "Ice crusted over the camp while {name} slept warm and untroubled in the {shelter}.",
+          "The storm tore at the camp, yet {name} woke rested, safe in the {shelter}.",
+          "Freezing rain fell till dawn; snug in the {shelter}, {name} never felt a drop."
+        ],
+        "body": [
+          "The frost found its way to {name}'s bones; every joint ached at dawn.",
+          "Icy wind cut through the camp, and {name} woke numb and shivering.",
+          "Sleet seeped through to the skin; {name} woke stiff, sore and blue-lipped.",
+          "{name} spent the night shaking with cold and rose with chattering teeth.",
+          "The storm's cold settled into {name}'s joints and refused to leave by morning.",
+          "Frozen ground and biting wind left {name} with cramped muscles and cracked hands.",
+          "{name} woke to frost on the eyelashes and a body that ached in every joint.",
+          "The bitter cold gnawed at {name}'s fingers and toes until dawn."
+        ],
+        "soul": [
+          "The storm screamed all night; {name} hardly slept and dreamt of drowning.",
+          "Thunder and dark visions chased each other through {name}'s restless sleep.",
+          "Between the thunderclaps, {name} heard voices that had no business out here.",
+          "The howling wind sounded like wolves, then like screams; {name} barely slept.",
+          "Lightning lit strange figures among the trees, and they followed {name} into every dream.",
+          "{name} dreamt of being buried in snow, unable to call for help.",
+          "The storm rattled {name}'s nerves more than the cold did; dawn came grey and joyless.",
+          "All night the dark pressed close, and {name} woke feeling smaller than before."
+        ]
+      },
+      "rain": {
+        "sheltered": [
+          "Rain fell all night, steady and cold, but {name} stayed dry in the {shelter}.",
+          "The paths turned to mud, yet {name} slept dry and warm in the {shelter}.",
+          "Water dripped from every leaf; inside the {shelter}, {name} hardly noticed.",
+          "{name} slipped twice on the muddy trail, but the {shelter} made for a dry, easy night.",
+          "A long, grey drizzle soaked the land. The {shelter} kept {name} snug through it all.",
+          "Rain pattered on and on. {name} listened to it from the dry {shelter} and slept well.",
+          "Puddles grew around the camp, but the {shelter} kept {name} out of the wet.",
+          "It rained without pause, yet {name} woke dry thanks to the {shelter}."
+        ],
+        "body": [
+          "Steady rain soaked {name} to the skin; by dawn every joint ached with the damp.",
+          "{name} slipped on a muddy slope and landed hard, then spent a wet night nursing the bruises.",
+          "The rain never stopped. {name} woke wet, cold and stiff in every limb.",
+          "Mud sucked at {name}'s boots all evening; a fall on the slick path left a twisted ankle.",
+          "Water pooled under {name}'s bedding, and the chill went straight into the bones.",
+          "A sodden night on soaked ground left {name} sneezing and sore.",
+          "The trail turned to slick clay; {name} fell twice and limped back to a wet camp.",
+          "Rain ran down {name}'s neck all night. Morning came with stiff hands and aching knees."
+        ],
+        "soul": [
+          "The endless drumming of rain wore on {name}'s mind until dawn.",
+          "Grey rain, grey sky, grey thoughts: {name} woke heavy-hearted.",
+          "{name} lay awake listening to the rain, and old regrets crept back in.",
+          "The dripping never stopped. By morning {name} felt dull and dispirited.",
+          "Wet and miserable, {name} spent the night brooding by a fire that would not catch.",
+          "The rain whispered all night, and {name} dreamt of drowning in it.",
+          "Hours of rain washed the cheer out of {name}; the morning felt hopeless.",
+          "Every drop on the leaves sounded like footsteps. {name} hardly slept for unease."
+        ]
+      },
+      "fog": {
+        "sheltered": [
+          "A thick fog rolled in and {name} lost the path for hours, but slept well in the {shelter} at last.",
+          "The fog hid every landmark. {name} wandered far, yet the {shelter} made up for the long way.",
+          "Damp mist clung to everything; inside the {shelter}, {name} stayed dry.",
+          "{name} walked in circles through the fog, then crawled into the {shelter} and slept soundly.",
+          "Mist lay heavy over the camp, but the {shelter} kept the damp away from {name}.",
+          "The fog turned a short walk into a long one, but {name} rested well in the {shelter}.",
+          "Grey haze swallowed the trail. {name} found the way late, and the {shelter} was a welcome sight.",
+          "Cold mist crept in all night; the {shelter} kept {name} warm and dry."
+        ],
+        "body": [
+          "Deep fog hid the path and {name} walked for hours the wrong way; tired legs ached all night.",
+          "Lost in the mist, {name} trudged miles out of the way and collapsed at camp, worn out.",
+          "{name} stumbled over unseen roots in the fog and woke bruised and sore.",
+          "The damp mist soaked through every layer; {name} woke stiff and chilled.",
+          "Hours of wandering in the fog left {name}'s feet blistered and legs heavy.",
+          "In the white haze {name} missed a step and went down hard on the rocks.",
+          "The fog never lifted. {name} walked far too long and slept badly from sheer exhaustion.",
+          "Wet mist settled into {name}'s chest; the morning brought a rattling cough."
+        ],
+        "soul": [
+          "Shapes moved in the fog all night, and {name} could not shake the feeling of being watched.",
+          "Lost in the grey, {name} heard voices that were not there.",
+          "The fog muffled every sound until the silence itself felt wrong. {name} woke uneasy.",
+          "{name} wandered for hours in the mist, and the endless grey crept into the mind.",
+          "Pale figures seemed to drift past the camp in the fog. {name} barely slept.",
+          "The mist swallowed the world; {name} woke feeling lost in more ways than one.",
+          "In the fog every tree looked like a stranger. {name}'s nerves frayed through the night.",
+          "A cold mist and colder dreams: {name} woke with a hollow heart."
+        ]
+      },
+      "wind": {
+        "sheltered": [
+          "A strong wind tore at the trees all night, but {name} slept safe in the {shelter}.",
+          "Gusts rattled the camp until dawn; the {shelter} held and {name} rested well.",
+          "Branches cracked in the wind, but none came near the {shelter}. {name} slept on.",
+          "The wind howled through the valley; snug in the {shelter}, {name} barely heard it.",
+          "Cold gusts swept the hillside, but the {shelter} kept {name} warm.",
+          "Leaves and twigs flew past all night, yet {name} stayed snug in the {shelter}.",
+          "The wind whistled and moaned; in the {shelter}, {name} slept like a log.",
+          "A blustery night, but the {shelter} kept the worst of it off {name}."
+        ],
+        "body": [
+          "A gust snapped a branch overhead, and it struck {name} on the shoulder.",
+          "The wind blew the fire out and the cold in; {name} woke chilled and stiff.",
+          "{name} was knocked off balance by a gust and fell hard on the stony path.",
+          "The wind cut through every layer; {name} spent the night shivering.",
+          "Flying grit and twigs stung {name}'s face, and a falling branch bruised an arm.",
+          "Gusts tore at the bedding until dawn; {name} hardly slept and woke sore.",
+          "Fighting the wind all evening left {name}'s muscles aching.",
+          "A falling bough grazed {name}'s leg as the wind tore through the trees."
+        ],
+        "soul": [
+          "The wind moaned like a voice all night, and {name} could not stop listening.",
+          "Creaking trees and howling gusts kept {name} awake and on edge.",
+          "{name} heard names called in the wind and woke with a heavy heart.",
+          "The restless wind made restless dreams; {name} woke weary of mind.",
+          "Every gust sounded like someone at the edge of camp. {name} hardly closed an eye.",
+          "The wind whispered old stories in the dark, and none of them ended well.",
+          "Branches knocked and scraped all night, and {name}'s nerves wore thin.",
+          "A wild wind and wilder thoughts: {name} greeted the dawn exhausted in spirit."
+        ]
+      },
+      "heat": {
+        "sheltered": [
+          "The night stayed hot and dry, but the {shelter} gave {name} a cool place to rest.",
+          "Heat lingered long after sunset; in the shade of the {shelter}, {name} slept well.",
+          "A dry, sweltering night, but {name} rested comfortably in the {shelter}.",
+          "The air was still and hot. The {shelter} kept the biting insects off {name}.",
+          "Dust and heat filled the evening, yet {name} slept soundly in the {shelter}.",
+          "Even the stones were warm at midnight, but the {shelter} made it bearable for {name}.",
+          "A parched, airless night; the {shelter} let {name} rest despite it.",
+          "Heat shimmered over the land until dark. {name} found relief in the {shelter}."
+        ],
+        "body": [
+          "The heat never broke. {name} ran out of water and woke with a pounding head.",
+          "A dry, sweltering night left {name} parched and weak by morning.",
+          "{name} tossed and turned in the heat and woke drained and dizzy.",
+          "Sunburn from the day and no relief at night: {name} woke sore and feverish.",
+          "Biting insects swarmed in the hot air; {name} woke covered in welts.",
+          "The dry heat cracked {name}'s lips and left every muscle sluggish.",
+          "Sweat soaked the bedding; {name} woke more tired than before.",
+          "The air was thick and hot all night. {name} could barely stand at dawn."
+        ],
+        "soul": [
+          "The heat brought feverish dreams, and {name} woke unsure what had been real.",
+          "Airless and hot, the night dragged on; {name}'s temper frayed to nothing.",
+          "{name} lay awake in the heat, mind racing with dark thoughts.",
+          "Heat-haze dreams of endless deserts left {name} weary in spirit.",
+          "The still, burning air made every hour feel like ten. {name} woke hollow.",
+          "Strange visions shimmered in the hot dark; {name} slept badly.",
+          "The night was too hot to think, too hot to sleep. {name} woke listless.",
+          "Thirst and restless dreams chased {name} until sunrise."
+        ]
+      },
+      "storm": {
+        "sheltered": [
+          "A storm thundered over the camp, but the {shelter} held and {name} weathered it.",
+          "Lightning split the sky all night; inside the {shelter}, {name} stayed dry and safe.",
+          "Branches broke and crashed in the storm, yet the {shelter} kept {name} out of harm's way.",
+          "Rain lashed and thunder roared, but {name} rode out the storm in the {shelter}.",
+          "The storm raged until dawn. Thanks to the {shelter}, {name} came through unharmed.",
+          "Wind and rain beat at the camp; the {shelter} kept {name} warm through the worst of it.",
+          "Thunder shook the ground, but {name} slept, more or less, snug in the {shelter}.",
+          "A wild storm swept the hills; the {shelter} was all {name} needed to get through."
+        ],
+        "body": [
+          "A branch snapped in the storm and crashed down on {name}.",
+          "The storm soaked {name} to the bone, and the cold set in deep.",
+          "{name} slipped on the streaming trail while fleeing the storm and fell hard.",
+          "Hail hammered the open camp; {name} woke bruised and frozen.",
+          "Wind and rain tore at {name} all night; every limb ached by morning.",
+          "A falling limb from an old oak struck {name} in the dark.",
+          "The storm turned the slope to a river of mud; {name} went down and twisted a knee.",
+          "Lightning struck a tree nearby, and a splintered branch caught {name} on the arm."
+        ],
+        "soul": [
+          "Thunder rolled all night; {name} dreamt of the sky falling.",
+          "Lightning lit up faces in the trees, and {name} could not unsee them.",
+          "The storm screamed like something alive. {name} woke shaken.",
+          "Every thunderclap jolted {name} awake; by dawn the mind was frayed.",
+          "{name} cowered through the storm, sure that each flash was the last.",
+          "The storm's fury filled {name}'s dreams with drowning and fire.",
+          "Hours of thunder left {name} jumpy and hollow-eyed.",
+          "In the roar of the storm, {name} heard voices that were not the wind."
+        ],
+        "both": [
+          "The storm broke branches and nerves alike; {name} woke soaked, bruised and shaken.",
+          "A falling limb struck {name} in the dark, and thunder haunted every dream after.",
+          "Rain, hail and lightning all night: {name} came out of it frozen and frightened.",
+          "{name} fled the storm across a streaming slope, fell, and spent the rest of the night trembling.",
+          "The storm tore the camp apart; {name} huddled cold and terrified until dawn.",
+          "Soaked to the bone and jolted awake by every thunderclap, {name} barely made it through the night.",
+          "Branches crashed down all around, and {name} lay awake bruised and afraid.",
+          "Lightning, wind and freezing rain: the storm took its toll on {name}'s body and mind."
+        ]
+      },
+      "flood": {
+        "sheltered": [
+          "The river rose in the night, but {name} had pitched the {shelter} on high ground.",
+          "Water crept toward the camp, yet {name} stayed dry in the {shelter}.",
+          "The banks overflowed after dark; {name} moved the {shelter} uphill just in time.",
+          "Floodwater swirled past the camp, but the {shelter} kept {name} dry and warm.",
+          "The stream burst its banks, but {name} spent a dry night in the {shelter} above it.",
+          "Rising water forced {name} to higher ground, where the {shelter} made for a fair night.",
+          "The marsh flooded overnight; in the {shelter} on a dry knoll, {name} hardly noticed.",
+          "Muddy water covered the path by dawn, but {name} had slept dry in the {shelter}."
+        ],
+        "body": [
+          "The stream burst its banks in the dark; {name} scrambled to higher ground, soaked and bruised.",
+          "Floodwater swept through the camp, and {name} was dragged against the rocks.",
+          "{name} woke knee-deep in icy water and spent the rest of the night shivering.",
+          "The rising river forced {name} out in the dark; a slip in the mud left a wrenched leg.",
+          "Cold water poured into the camp; {name} lost the night to wet and cold.",
+          "{name} waded through the flood to safety and woke frozen to the core.",
+          "The current knocked {name} off balance; every limb ached by morning.",
+          "Mud and floodwater filled the hollow where {name} slept. Dawn found a cold, battered wanderer."
+        ],
+        "soul": [
+          "{name} watched the black water rise all night, afraid to close an eye.",
+          "The roar of the flood filled {name}'s dreams with drowning.",
+          "Swept-away belongings and rising water: {name} woke with a hopeless heart.",
+          "Things floated past in the dark flood that {name} would rather not have seen.",
+          "The flood's endless rushing wore {name}'s nerves to nothing.",
+          "{name} dreamt of being pulled under, again and again.",
+          "Pale shapes drifted in the floodwater, and {name} could not look away.",
+          "Hours of watching the water climb left {name} shaken and hollow."
+        ],
+        "both": [
+          "The flood came in the dark; {name} fought the current to the bank and lay shaking until dawn.",
+          "Swept off the path by rushing water, {name} woke bruised, frozen and haunted by the dark.",
+          "Floodwater filled the camp, and {name} spent a cold, terrifying night clinging to a tree.",
+          "{name} lost the camp to the flood and the night to fear and cold.",
+          "The river took the camp; {name} crawled out soaked and dreamt of drowning.",
+          "Waist-deep in black water, {name} waited out the night, numb in body and mind.",
+          "The flood struck without warning; {name} came through it battered and badly shaken.",
+          "Cold water, rushing noise and no sleep at all: the flood left {name} broken and weary."
+        ]
+      },
+      "sandstorm": {
+        "sheltered": [
+          "A sandstorm swept the dunes, but {name} rode it out sealed in the {shelter}.",
+          "Sand hissed against the {shelter} all night; {name} stayed safe inside.",
+          "The wind whipped up the sand, but the {shelter} kept {name}'s eyes and lungs clear.",
+          "Dust filled the air until dawn; inside the {shelter}, {name} slept through it.",
+          "The sandstorm buried half the camp, but {name} dug out of the {shelter} unharmed.",
+          "Grit and wind raged outside, but the {shelter} kept {name} safe.",
+          "The dunes moved in the night, yet {name} rested well in the {shelter}.",
+          "A wall of sand rolled over the camp; the {shelter} held and {name} came through fine."
+        ],
+        "body": [
+          "The sandstorm scoured {name}'s skin raw and filled every breath with grit.",
+          "Sand in the eyes, sand in the lungs: {name} woke coughing and sore.",
+          "{name} lost the path in the blowing sand and walked until the legs gave out.",
+          "The storm buried {name}'s bedding; the night was spent half choked and shivering.",
+          "Wind-driven sand flayed {name}'s hands and face until dawn.",
+          "{name} huddled in the open as the sandstorm raged, and woke battered and parched.",
+          "Grit worked into every joint and scratch; {name} woke aching all over.",
+          "Blinded by sand, {name} stumbled down a dune and landed hard."
+        ],
+        "soul": [
+          "The sandstorm's endless hiss filled {name}'s head until nothing else was left.",
+          "Shapes walked in the blowing sand, and {name} could not tell if they were real.",
+          "Buried alive: {name} dreamt it all night and woke gasping.",
+          "The howling dunes sang strange songs; {name} woke uneasy and hollow.",
+          "{name} lost all sense of direction in the storm, and with it, some hope.",
+          "Hours in the roaring dark left {name}'s mind raw.",
+          "The sand swallowed the stars, and {name} felt utterly alone.",
+          "Voices seemed to call from inside the storm. {name} did not sleep."
+        ],
+        "both": [
+          "The sandstorm flayed {name}'s skin and filled the night with whispering voices.",
+          "Half buried in sand, {name} spent the night choking, aching and afraid.",
+          "Blinded, battered and lost in the roaring dark, {name} barely made it to morning.",
+          "Sand scoured body and mind alike; {name} woke raw and hollow-eyed.",
+          "The storm swallowed the camp, and {name} lay through it coughing and terrified.",
+          "Wind-driven sand and endless hissing left {name} wounded and shaken.",
+          "{name} lost the way in the sandstorm and spent a parched, fearful night in the open.",
+          "Grit in every breath and dread in every dream: the sandstorm took its toll on {name}."
+        ]
+      },
+      "blizzard": {
+        "sheltered": [
+          "A blizzard swept the peaks, but {name} weathered it snug in the {shelter}.",
+          "Snow piled high around the {shelter}; inside, {name} stayed warm.",
+          "The wind drove snow sideways all night, but the {shelter} held and {name} slept.",
+          "Ice crusted the rocks by dawn, yet {name} had passed a warm night in the {shelter}.",
+          "Snow buried the trail, but the {shelter} kept {name} from the bitter cold.",
+          "A white wall of snow swallowed the mountain; {name} rode it out in the {shelter}.",
+          "The cold was cruel, but the {shelter} was kind. {name} woke warm.",
+          "Snowdrifts climbed around the {shelter} all night, and {name} slept through it."
+        ],
+        "body": [
+          "The blizzard froze {name}'s fingers stiff; by dawn they barely moved.",
+          "Snow buried {name}'s bedding, and the cold crept into every bone.",
+          "{name} lost the path in the whiteout and slipped on the ice below.",
+          "Frostbite nipped at {name}'s toes through the endless snowy night.",
+          "The wind drove ice into {name}'s face until the skin cracked.",
+          "{name} slept curled against a rock as the blizzard raged, and woke numb all over.",
+          "Every breath burned with cold; {name} woke stiff, sore and shaking.",
+          "An icy fall on the snowy slope left {name} bruised and frozen."
+        ],
+        "soul": [
+          "The endless white swallowed {name}'s thoughts; the morning felt empty.",
+          "{name} dreamt of sleeping forever in the snow, and nearly wanted to.",
+          "The howling blizzard filled {name}'s mind with a cold despair.",
+          "Lost in the whiteout, {name} felt the world shrink to nothing.",
+          "Pale shapes moved in the snow, and {name} could not shake the dread.",
+          "The cold reached past the skin into the heart; {name} woke hollow.",
+          "Hours of white noise and freezing dark left {name} dazed and dull.",
+          "{name} heard bells in the blizzard where no bells could be."
+        ],
+        "both": [
+          "The blizzard froze {name}'s limbs and filled the night with cold despair.",
+          "Buried in snow and lost in the whiteout, {name} barely lived to see the dawn.",
+          "Frostbitten and haunted by the howling white, {name} woke a shadow of the day before.",
+          "{name} slipped on the ice, then spent a freezing, hopeless night under a rock.",
+          "The blizzard took the warmth from {name}'s body and the hope from the heart.",
+          "Snow, ice and endless dark: {name} came through numb in body and mind.",
+          "Frozen to the bone and dreaming of sleeping in the snow forever, {name} shivered until morning.",
+          "The mountain showed no mercy; {name} woke frostbitten and broken in spirit."
+        ]
+      },
+      "rockslide": {
+        "sheltered": [
+          "Stones rattled down the slope in the night, but {name} had camped well clear in the {shelter}.",
+          "A rockslide thundered somewhere above; the {shelter}, pitched under an overhang, kept {name} safe.",
+          "Loose scree shifted all night, yet {name} rested safely in the {shelter}.",
+          "Rocks tumbled down the hill after dark, but none reached the {shelter}. {name} slept on.",
+          "The hillside groaned and shed stones until dawn; {name} weathered it in the {shelter}.",
+          "A slide of gravel swept past the camp, but {name} stayed safe in the {shelter}.",
+          "Pebbles pattered on the {shelter} all night, but nothing worse; {name} woke rested.",
+          "The slope crumbled in the dark, yet {name} slept sound in the {shelter} on solid ground."
+        ],
+        "body": [
+          "Stones came tumbling down the hill, and one caught {name} on the leg.",
+          "A rockslide sent {name} scrambling in the dark; a fall on the scree left bruises everywhere.",
+          "{name} was struck by a falling rock while climbing back to camp.",
+          "The slope gave way under {name}'s feet, and the slide carried {name} down hard.",
+          "Loose rocks rolled through the camp in the night; {name} woke battered.",
+          "A falling stone grazed {name}'s shoulder, and the ache lasted till dawn.",
+          "Scrambling clear of the slide, {name} twisted an ankle on the rocks.",
+          "Gravel and stones rained down; {name} took a nasty knock to the ribs."
+        ],
+        "soul": [
+          "The rumble of falling stones kept {name} awake and dreading the next.",
+          "{name} dreamt of being buried under the mountain and woke gasping.",
+          "Every crack of shifting rock set {name}'s heart racing until dawn.",
+          "The hill seemed to growl all night; {name} woke jumpy and weary.",
+          "Hours of listening for the next slide wore {name}'s nerves thin.",
+          "{name} lay awake waiting for the mountain to fall, and it nearly did.",
+          "The grinding of stone filled {name}'s dreams with dark tunnels.",
+          "A near miss in the dark left {name} shaken to the core."
+        ],
+        "both": [
+          "A rockslide swept through the camp; {name} woke bruised, bloodied and badly frightened.",
+          "Stones hammered down the slope all night, and {name} could neither hide nor sleep.",
+          "{name} was knocked down by falling rocks and lay awake shaking until dawn.",
+          "The hillside collapsed in the dark, leaving {name} battered and haunted by the roar.",
+          "Struck by a stone and terrified of the next, {name} spent a miserable night.",
+          "Half buried in gravel, {name} dug out at dawn, aching and hollow-eyed.",
+          "The mountain shed its stones on {name}, body and nerve alike.",
+          "Falling rocks, a bad fall and no sleep: {name} came through the night broken."
+        ]
+      },
+      "still": {
+        "calm": [
+          "The gallery was dry and still; {name} slept soundly deep in the rock.",
+          "Not a drop, not a draught: {name} rested well far below the ground.",
+          "Only the slow tick of cooling stone kept {name} company. A quiet night.",
+          "The tunnel held its breath all night, and {name} woke rested.",
+          "Deep in the hill the air stayed even and dry; {name} slept like a stone.",
+          "Far from wind and weather, {name} rested undisturbed in the quiet gallery.",
+          "The mine was silent but for {name}'s own breathing. A good night's sleep.",
+          "Cool, still air and solid rock all around; {name} woke rested and ready."
+        ]
+      },
+      "damp": {
+        "sheltered": [
+          "Water dripped from the roof all night, but the {shelter} kept {name} dry.",
+          "The gallery floor turned to cold mud; {name} slept above it on the {shelter}.",
+          "Damp crept through the tunnel, yet {name} stayed warm in the {shelter}.",
+          "Puddles spread across the gallery floor; {name} stayed dry in the {shelter}.",
+          "The walls sweated cold water all night, but none of it reached {name} in the {shelter}.",
+          "A thin trickle ran through the tunnel; {name} slept beside it, dry in the {shelter}.",
+          "Wet rock everywhere, except under the {shelter}, where {name} slept well.",
+          "The damp of the deep could not get past the {shelter}; {name} woke warm."
+        ],
+        "body": [
+          "Water dripped on {name} all night; the cold damp settled in every joint.",
+          "{name} slept on wet rock and woke stiff, chilled to the bone.",
+          "The damp of the deep soaked through {name}'s clothes before morning.",
+          "Cold drops ran down {name}'s neck all night; every muscle ached by morning.",
+          "The wet stone drew the warmth out of {name} hour by hour.",
+          "{name} woke in a puddle that had not been there at night, shivering hard.",
+          "Damp clothes and cold rock: {name}'s joints creaked like the old props.",
+          "The clammy air of the gallery left {name} sniffling and sore."
+        ],
+        "soul": [
+          "Drip. Drip. Drip. The endless water kept {name} from any real sleep.",
+          "In the dripping dark {name} heard footsteps that never came closer.",
+          "The wet walls whispered all night, and {name} woke hollow-eyed.",
+          "The dripping counted the hours, and {name} counted with it until dawn should have come.",
+          "Water ran somewhere unseen, sounding like quiet laughter; {name} did not sleep.",
+          "Each drop sounded like a step in the dark. {name} woke at every one.",
+          "The wet dark pressed close, and {name} dreamt of the mine filling with water.",
+          "Somewhere in the dripping, {name} was sure someone was crying."
+        ]
+      },
+      "draught": {
+        "sheltered": [
+          "This part of the cave has a strong wind current, but the {shelter} kept {name} warm.",
+          "The draught from the deep never stopped; {name} slept through it in the {shelter}.",
+          "Cold air streamed through the tunnel all night, yet {name} rested in the {shelter}.",
+          "The air current whistled through every crack, but the {shelter} held it off {name}.",
+          "Cold air came up from the deep in steady gusts; {name} stayed warm in the {shelter}.",
+          "The draught tugged at everything loose; the {shelter} kept {name} snug.",
+          "Wind moaned in the tunnels, and {name} slept through it in the {shelter}.",
+          "This gallery breathes like a chimney, yet {name} rested well in the {shelter}."
+        ],
+        "body": [
+          "This part of the cave has a strong wind current; it chilled {name} to the bone.",
+          "Icy air poured up from the deep all night; {name} woke shivering.",
+          "The draught stole every bit of warmth; {name} spent the night curled against the rock.",
+          "The cold current from the deep blew all night; {name} woke numb and stiff.",
+          "The draught found every gap in {name}'s clothes and stayed there until morning.",
+          "{name} could not get warm against the endless wind of the tunnel.",
+          "The air current blew dust and cold at {name} all night; morning brought a sore chest.",
+          "Cold air rushed through the passage, and {name} slept curled tight and woke aching."
+        ],
+        "soul": [
+          "The air moaned through the passages like a voice calling {name}'s name.",
+          "Air rushed up from somewhere far below, and {name} could not stop wondering what breathed it out.",
+          "The tunnels sang in the draught all night; {name} barely closed an eye.",
+          "The wind in the tunnels carried far-off sounds, like picks still working in the deep.",
+          "Every gust from below smelled of old smoke, and {name} kept waking.",
+          "The current whistled through the cracks in a tune {name} almost recognised.",
+          "{name} lay awake, feeling the deep breathe in and out through the passages.",
+          "The draught snuffed the lamp twice; in the dark that followed, {name} did not sleep."
+        ]
+      },
+      "dust": {
+        "sheltered": [
+          "Stone dust drifted through the gallery, but {name} slept wrapped in the {shelter}.",
+          "Fine dust settled on everything but {name}, snug in the {shelter}.",
+          "The air was thick with grit; the {shelter} kept the worst of it from {name}.",
+          "Dust sifted down from the roof, but {name} slept clean in the {shelter}.",
+          "A grey haze filled the gallery; the {shelter} kept {name}'s breath clear.",
+          "Stone dust coated the tools by morning, but not {name}, who slept in the {shelter}.",
+          "Grit drifted through the tunnel all night; {name} barely noticed it in the {shelter}.",
+          "The air tasted of stone, yet {name} rested well in the {shelter}."
+        ],
+        "body": [
+          "Stone dust hung in the air all night; {name} woke coughing.",
+          "{name} breathed grit until morning and woke with a raw throat.",
+          "Dust from the rock face settled in {name}'s lungs and eyes.",
+          "{name} woke with eyes full of grit and a cough that would not stop.",
+          "Dust settled in every fold of {name}'s clothes and every breath.",
+          "The dusty air left {name} hoarse and wheezing by morning.",
+          "Stone dust caked {name}'s throat; the water skin was empty before dawn.",
+          "Every breath brought more grit; {name} woke with a heavy chest."
+        ],
+        "soul": [
+          "In the dusty dark {name} kept waking, sure the air was running out.",
+          "The dust glittered in the last of the light like tiny eyes; {name} slept badly.",
+          "Every cough echoed down the gallery, and {name} lay awake listening to the echoes answer.",
+          "Shapes moved in the dust haze, and {name} could not tell what was real.",
+          "In the grey dust the lamp looked far away, and so did the way out.",
+          "{name} dreamt of being buried in dust, slowly, one grain at a time.",
+          "The dust swallowed every sound, and the silence gnawed at {name}.",
+          "Dust drifted like smoke, and {name} saw faces in it all night."
+        ]
+      },
+      "creaking": {
+        "sheltered": [
+          "The old timbers groaned all night, but {name} slept on in the {shelter}.",
+          "Rock creaked and settled overhead; in the {shelter} it was easier to ignore.",
+          "Somewhere a prop cracked; {name} turned over in the {shelter} and slept on.",
+          "The props creaked under the weight of the mountain, but {name} slept on in the {shelter}.",
+          "A long groan ran through the timbers; {name} only pulled the {shelter} tighter.",
+          "The old supports complained all night, and {name} slept through it in the {shelter}.",
+          "Creaks and cracks echoed down the gallery; the {shelter} made them feel far away.",
+          "The tunnel settled with loud creaks, yet {name} woke rested in the {shelter}."
+        ],
+        "body": [
+          "{name} jumped at every creak and slept crouched against the wall; morning brought aching limbs.",
+          "Grit trickled from the creaking roof onto {name} all night.",
+          "{name} spent the night half sitting, ready to run, and woke stiff.",
+          "A loose plank fell near {name} in the night; diving away left a bruised hip.",
+          "{name} slept in the narrowest spot, away from the creaking props, and woke cramped.",
+          "Small stones dropped from the groaning roof; one found {name}'s hand.",
+          "Every creak made {name} flinch; by morning every muscle was knotted.",
+          "{name} moved three times in the night to get away from the creaking, and slept on bare rock."
+        ],
+        "soul": [
+          "The props groaned like living things; {name} listened to them until morning.",
+          "Every creak of the old timbers sounded like the start of a collapse. {name} hardly slept.",
+          "The mountain muttered in its sleep, and {name} dreamt of being buried.",
+          "The timbers creaked in a rhythm, like slow footsteps overhead. {name} did not sleep.",
+          "{name} lay counting the creaks, waiting for the one that would bring the roof down.",
+          "The groaning props sounded like voices; {name} could almost make out the words.",
+          "Each crack of the old wood jolted {name} awake from dreams of falling rock.",
+          "The mountain shifted its weight all night, and {name} felt every bit of it."
+        ]
+      },
+      "hot_rock": {
+        "sheltered": [
+          "Deep down the rock was hot to the touch, but the {shelter} kept {name} off the warm stone.",
+          "The air was close and warm, yet {name} rested well in the {shelter}.",
+          "Hot water steamed through cracks nearby; the {shelter} kept {name} off the scalding floor.",
+          "The rock gave off heat like a banked fire; the {shelter} kept {name} off the worst of it.",
+          "Deep in the hill the air was warm and heavy, but {name} slept well in the {shelter}.",
+          "Hot vapour seeped from the walls; {name} rested in the {shelter}, a little sweaty but fine.",
+          "Warm stone and close air; the {shelter} made the night bearable for {name}.",
+          "The heat of the deep rose through the floor, but not through the {shelter}."
+        ],
+        "body": [
+          "The deep rock gave off heat all night; {name} woke parched and dizzy.",
+          "Hot, close air pressed on {name}: sweat and thirst until morning.",
+          "{name} slept on stone as warm as an oven and woke with cracked lips.",
+          "The heat sapped {name}'s strength; by morning every limb felt like lead.",
+          "{name} drank the last water before midnight and spent the rest of the night parched.",
+          "Hot stone burned through {name}'s clothes; red marks remained in the morning.",
+          "The deep warmth left {name} light-headed and weak.",
+          "Sweat soaked {name}'s clothes, and the hot rock never let up."
+        ],
+        "soul": [
+          "In the heat of the deep {name} dreamt of fire and could not shake it off.",
+          "The warm dark felt like the inside of something alive; {name} slept fitfully.",
+          "Steam hissed in the cracks all night, and {name} heard voices in it.",
+          "In the heat {name} dreamt of the mountain's burning heart, beating somewhere below.",
+          "The warm air shimmered in the lamplight, and {name} saw things that were not there.",
+          "{name} woke again and again, sure the rock around was glowing.",
+          "The heat pressed on {name}'s thoughts until they would not hold together.",
+          "Hot breath seemed to come from the cracks, and {name} lay awake listening to it."
+        ]
+      },
+      "ice_cave": {
+        "sheltered": [
+          "Deep down the cave turned to ice, cold and wet beyond belief, but {name} got through the night in the {shelter}.",
+          "Frost grew on the walls of the ice cave; inside the {shelter}, {name} stayed just warm enough.",
+          "Meltwater and ice everywhere, yet the {shelter} kept {name} dry.",
+          "The ice cave cracked and groaned in the cold, but {name} stayed warm enough in the {shelter}.",
+          "Icicles grew from the roof overnight; inside the {shelter}, {name} slept on.",
+          "Cold water froze on every rock, yet the {shelter} kept {name} from freezing with it.",
+          "Deep down the cold was fierce, but {name} got through it in the {shelter}.",
+          "Frost covered the {shelter} by morning; inside, {name} was cold but well."
+        ],
+        "body": [
+          "Extremely cold and wet, an icy cave deep down: by morning {name}'s fingers would not bend.",
+          "Ice water dripped onto {name} all night; the cold went straight into the bones.",
+          "{name} woke with frost in the hair and numb, aching feet.",
+          "The cold of the ice cave went into {name}'s chest; every breath hurt by morning.",
+          "{name} could not stop shivering; ice formed on the wet clothes.",
+          "Frozen water soaked {name}'s boots, and the toes went numb.",
+          "The icy cave froze {name} stiff; it took an hour to stand up.",
+          "{name} spent the night beating arms and legs against the cold, and lost."
+        ],
+        "soul": [
+          "The ice cave glowed faintly blue, and in its walls {name} saw faces frozen in the ice.",
+          "The silence of the ice was so complete that {name} began to hear things in it.",
+          "{name} dreamt of being frozen into the cave forever and woke still shaking.",
+          "In the blue glow of the ice {name} saw the shapes of those who froze here before.",
+          "The cold crept into {name}'s mind, slow and quiet, until hope felt frozen too.",
+          "Ice cracked like breaking glass all night, and every crack woke {name}.",
+          "{name} dreamt of the way out freezing shut behind and woke afraid.",
+          "The ice cave whispered as it froze, and {name} listened against their will."
+        ],
+        "both": [
+          "An icy cave deep down: freezing water, frost on every surface and nightmares that would not stop. {name} barely made it to morning.",
+          "{name} lay on ice in soaking clothes, too cold to sleep and too frightened to rest.",
+          "The cold of the ice cave bit through everything; whispers in the frozen dark did the rest.",
+          "Ice, water and dark: {name} came out of the night frozen to the bone and hollow inside.",
+          "The icy cave deep down nearly claimed {name}: numb limbs, a racing heart, dreams of never leaving.",
+          "{name} shivered all night in wet clothes on the ice, too afraid to close an eye.",
+          "Frost in the hair, ice in the boots and ghosts in the blue light; {name} barely held on.",
+          "The cold took {name}'s strength, and the silence of the ice took the rest."
+        ],
+        "tentDestroyed": [
+          "By morning the {tent} was frozen solid and split along every seam.",
+          "Meltwater froze into the {tent} overnight; it cracked apart when {name} tried to fold it.",
+          "The {tent} stayed behind, a sheet of ice on the cave floor.",
+          "Ice grew through the {tent}'s canvas and tore it apart.",
+          "The frozen {tent} snapped like glass when {name} tried to move it.",
+          "Dripping water froze the {tent} to the cave floor; {name} had to leave it.",
+          "By morning the {tent} was a stiff, split shell of ice.",
+          "The {tent} gave its warmth to {name} and froze to pieces doing it."
+        ]
+      },
+      "rising_water": {
+        "sheltered": [
+          "Water rose in the gallery overnight, but {name} had pitched the {shelter} on a ledge above it.",
+          "The tunnel flooded knee-deep; the {shelter}, on higher rock, kept {name} dry.",
+          "{name} heard the water creep closer all night, but it never reached the {shelter}.",
+          "Water seeped up through the floor, but {name} had camped high in the {shelter}.",
+          "The tunnel filled with a cold, slow flood; the {shelter} on the dry ledge stayed clear.",
+          "{name} moved the {shelter} once in the night as the water rose, and slept dry after that.",
+          "Water gurgled through the gallery until morning; {name} stayed dry in the {shelter}.",
+          "The flood came up to the ledge and stopped; {name} slept safe in the {shelter}."
+        ],
+        "body": [
+          "Water rose through the night, and {name} woke soaked and frozen in it.",
+          "The gallery flooded; {name} spent the night wading to higher rock.",
+          "Cold water seeped up from the deep and soaked {name} to the skin.",
+          "{name} woke with water to the hips and spent the rest of the night wet and cold.",
+          "The rising water forced {name} onto a narrow ledge, cramped and soaked until morning.",
+          "Cold floodwater filled {name}'s boots, and the feet stayed numb for hours.",
+          "{name} slipped climbing away from the water and scraped both knees on the rock.",
+          "The flood chilled {name} to the core; teeth chattered until morning."
+        ],
+        "soul": [
+          "The water kept rising, and {name} kept watching it, sure the way out would drown.",
+          "In the dark the rising water whispered against the rock; {name} could not look away.",
+          "{name} dreamt of the gallery filling to the roof and woke gasping.",
+          "The water rose without a sound, and {name} could only watch the way out sink.",
+          "In the dark {name} kept reaching out to feel how high the water had come.",
+          "The flooded gallery reflected the lamp like a second, drowned mine.",
+          "{name} dreamt of swimming in the dark and finding no air above.",
+          "The water lapped at the ledge all night; {name} listened to every wave."
+        ],
+        "both": [
+          "The gallery flooded in the night: {name} spent it soaked, freezing and certain of drowning.",
+          "Black water rose to {name}'s waist; there was no sleep, only cold and fear.",
+          "{name} clung to a ledge above the rising water until morning, frozen and shaken.",
+          "The water rose to {name}'s chest before it stopped. Wet, frozen and terrified, {name} waited for morning.",
+          "{name} spent the night on a shrinking island of rock, cold to the bone and sure of the end.",
+          "Floodwater, cold and darkness: {name} came through the night shaking in body and mind.",
+          "The gallery became a black lake, and {name} clung to the wall above it until morning.",
+          "Soaked and freezing, {name} watched the water all night and never once felt safe."
+        ],
+        "tentDestroyed": [
+          "The flood swept the {tent} off the ledge and into the dark.",
+          "By morning the {tent} lay drowned and torn at the bottom of the gallery.",
+          "The water took the {tent}; {name} never saw it again.",
+          "The water lifted the {tent} and pulled it into a flooded side passage.",
+          "The {tent} soaked through and tore under the weight of the water.",
+          "By morning the {tent} was a sodden rag caught on the rocks.",
+          "The flood took the {tent}; {name} was glad to have kept the rest.",
+          "The rising water dragged the {tent} from its stones and drowned it in the dark."
+        ]
+      },
+      "foul_air": {
+        "sheltered": [
+          "Bad air pooled along the floor, but the {shelter} kept {name} above the worst of it.",
+          "The lamp burned blue in the foul air, yet {name} rested safely in the {shelter}.",
+          "Stale air crept through the gallery; {name}, raised up in the {shelter}, woke with only a passing headache.",
+          "The air turned heavy and sour, but {name}'s {shelter} lay on a ledge where it was still fresh.",
+          "The lamp flickered in the bad air; {name} moved the {shelter} up the gallery and slept well.",
+          "Foul air rose from a side passage, but the {shelter} was pitched upwind of it.",
+          "A sour smell filled the tunnel; {name}, high up in the {shelter}, breathed easy.",
+          "Bad air crept along the floor all night and never reached {name} in the {shelter}."
+        ],
+        "body": [
+          "Bad air pooled in the gallery; {name} woke with a pounding head and weak legs.",
+          "The air was thin and stale; at first light {name} crawled toward fresher air, dizzy and sick.",
+          "Foul air from a side passage left {name} retching by morning.",
+          "The stale air left {name} gasping and weak, with a head like a split log.",
+          "{name} woke with blue lips and trembling hands, and crawled toward fresher air.",
+          "A night of bad air left {name} nauseous and dizzy.",
+          "The air was so thin that every step felt like a mile to {name} the next morning.",
+          "Foul air burned in {name}'s chest long after the night was over."
+        ],
+        "soul": [
+          "In the stale air {name}'s thoughts went strange and slow; the morning felt unreal.",
+          "The bad air brought dreams of the dead miners who never left this gallery.",
+          "{name} woke confused and, for a long while, unsure where the way out was.",
+          "In the bad air {name} heard the canary song of miners long dead.",
+          "{name}'s mind drifted in the stale dark, and fear came in its place.",
+          "The bad air brought strange, slow dreams, and {name} could not wake from them.",
+          "{name} saw lights where there were none and heard calls from empty tunnels.",
+          "The foul air made the walls seem to breathe, and {name} watched them all night."
+        ],
+        "both": [
+          "The air went bad in the night: {name} woke sick, dizzy and haunted by visions.",
+          "Foul air filled the gallery; {name} barely crawled to fresher air, head pounding, mind clouded.",
+          "A night of breathing the stale dark left {name} weak in body and lost in thought.",
+          "Bad air nearly took {name}: a heavy head, weak limbs and a mind full of fog.",
+          "{name} woke in the foul air barely able to move or think, and crawled for an hour toward fresher air.",
+          "The poisoned air left {name} sick in body and lost in the head.",
+          "In the stale dark {name} fainted twice and dreamt of dying both times.",
+          "The air went bad, and so did everything else: {name} came through the night broken."
+        ],
+        "tentDestroyed": [
+          "The foul air soaked into the {tent}; it stank so badly that {name} left it behind.",
+          "Something in the bad air rotted the {tent}'s canvas; it fell apart at dawn.",
+          "{name} cut the {tent} open to crawl out to fresher air; nothing of it was worth taking.",
+          "The {tent} soaked up the reek of the deep and had to be left behind.",
+          "Fleeing the bad air, {name} had no time to take the {tent}.",
+          "The foul air ate into the {tent}'s cloth; it crumbled in {name}'s hands.",
+          "{name} dragged the {tent} away from the bad air and tore it apart doing so.",
+          "The {tent} stayed where the air was poison; no one would go back for it."
+        ]
+      },
+      "tremor": {
+        "sheltered": [
+          "The mountain shook in the night and stones fell from the roof, but the {shelter} took the blows.",
+          "A tremor rolled through the rock; {name}, tucked into the {shelter} under a solid ledge, slept on.",
+          "Dust and pebbles rained down in the tremor, yet {name} stayed safe in the {shelter}.",
+          "The rock shook three times before morning, but the {shelter} sat well under solid stone.",
+          "A tremor rattled the tools; {name}, tucked in the {shelter}, only felt the floor sway.",
+          "Stones dropped in the dark all around, yet none came through the {shelter}.",
+          "The mountain shook itself awake, and {name} slept on in the {shelter}.",
+          "The tremor shook dust over everything; under the {shelter}, {name} stayed clean and safe."
+        ],
+        "body": [
+          "A tremor shook the gallery, and a falling stone caught {name} on the shoulder.",
+          "The rock shook loose in the night; {name} woke bruised under a scatter of stones.",
+          "{name} was thrown against the wall when the mountain shuddered.",
+          "A stone from the roof hit {name}'s back in the tremor; the bruise ached all morning.",
+          "{name} fell hard when the floor shook and twisted an ankle.",
+          "The tremor shook {name} awake against the rock, again and again.",
+          "Rubble from the tremor half buried {name}'s legs; digging free left raw hands.",
+          "A falling stone split {name}'s brow in the shaking dark."
+        ],
+        "soul": [
+          "The mountain shook, and for a long moment {name} was sure the way out had closed.",
+          "After the tremor the silence was worse; {name} lay awake waiting for the next one.",
+          "{name} dreamt of the tunnel closing like a mouth.",
+          "Each aftershock brought the fear back; {name} spent the night waiting for the roof.",
+          "The tremor passed, but {name} felt the ground moving for hours.",
+          "{name} dreamt the passage had closed behind and woke screaming in the dark.",
+          "The mountain shook, and in the dust {name} could not find the way out for a long time.",
+          "Every small sound after the tremor made {name}'s heart race."
+        ],
+        "both": [
+          "The ground heaved, stones fell and the dark filled with dust; {name} came through bruised and shaking.",
+          "A tremor brought half the roof down nearby; {name} spent the night hurt and terrified.",
+          "Rock fell all around in the shaking dark; {name} survived it, battered in body and mind.",
+          "The shaking threw {name} across the gallery; hurt and terrified, {name} waited for morning in the rubble.",
+          "Stones rained down in the tremor, and {name} came out of the night bruised, bleeding and shaken.",
+          "{name} spent the night half buried and wholly afraid after the mountain moved.",
+          "The tremor shook loose rock and nerve alike; {name} was left battered and hollow.",
+          "Dust, falling stone and the roar of the mountain: {name} survived, but only just."
+        ],
+        "tentDestroyed": [
+          "A slab from the roof crushed the {tent} flat.",
+          "Falling rock tore the {tent} apart; {name} crawled out just in time.",
+          "The tremor buried the {tent} under stones, and there it stayed.",
+          "The tremor dropped half the roof onto the {tent}.",
+          "Rubble pinned the {tent}, and it tore apart when {name} pulled it free.",
+          "The {tent} took the falling stones that would have hit {name}, and did not survive.",
+          "When the dust settled, the {tent} lay buried under the rock.",
+          "A falling slab split the {tent} from end to end."
+        ]
+      },
+      "ghosts": {
+        "sheltered": [
+          "Ghosts crept up from the depths and circled the camp, but {name}, wrapped in the {shelter}, would not look at them.",
+          "Cold shapes drifted up the shaft all night; {name} kept the {shelter} closed and the fear outside.",
+          "Pale lights rose from the deep and whispered at the {shelter}; {name} hummed an old song until they were gone.",
+          "The dead miners came up from the deep, looked at the {shelter} and passed by. {name} slept on.",
+          "Ghostly lanterns drifted past the {shelter} all night; {name} kept the eyes shut and was left alone.",
+          "Whispers rose from the shaft, but inside the {shelter} {name} could not make out a word.",
+          "Ghosts crept up from the depths and found nothing to take from {name} in the {shelter}.",
+          "Cold breath brushed the {shelter} all night, but {name} stayed warm and whole inside."
+        ],
+        "soul": [
+          "Ghosts crept up from the depths, the miners who never came back, and stood around {name} until morning.",
+          "Something rose from the deep shaft and whispered {name}'s name all night.",
+          "Cold hands brushed {name}'s face in the dark; the dead of the mine had come to look at the living.",
+          "Ghosts crept up from the depths and sat beside {name} until the lamp went out.",
+          "A pale miner stood at the edge of the light all night, pointing deeper into the mine.",
+          "The dead sang an old work song in the dark, and {name} could not stop listening.",
+          "{name} woke to see shapes kneeling at the rock face, still working after all these years.",
+          "The ghosts of the deep asked {name} the way out. {name} had no answer, and neither did they."
+        ],
+        "tentDestroyed": [
+          "When the ghosts sank back into the deep, they took the {tent} with them; only a few rags were left.",
+          "By morning the {tent} hung in shreds, as if torn by many cold hands.",
+          "The {tent} was gone at first light; something from the depths had wanted it.",
+          "The ghosts tore at the {tent} all night; by morning it was cold rags.",
+          "The {tent} was found at the bottom of the shaft, folded neatly, as if someone had put it there.",
+          "Something from the deep rotted the {tent} in a single night.",
+          "The dead do not like tents, it seems: the {tent} lay shredded at first light.",
+          "Ice-cold hands pulled at the {tent} until it gave way."
+        ]
+      }
+    }
+  },
+  "surprises": [
+    "Along the way, {name} stumbled upon {found}.",
+    "Something glinted beside the path: {name} picked up {found}.",
+    "Pure luck - {name} came across {found} where no one would have looked.",
+    "On the way back, {name} found {found} lying half hidden in the undergrowth.",
+    "A lucky turn off the trail brought {name} {found}.",
+    "{name} could hardly believe it: {found}, just there for the taking.",
+    "Tucked under a stone, {name} discovered {found}.",
+    "Not what {name} came for, but a welcome surprise: {found}."
+  ],
+  "surprisesRareIntro": [
+    "{name} was exceptionally lucky today!",
+    "Fortune smiled on {name} today!",
+    "What a stroke of luck!",
+    "The gods of the wild must favour {name} today!",
+    "A day to remember for {name}!",
+    "Some finds come once in a lifetime.",
+    "{name}'s heart skipped a beat.",
+    "Luck like this is rare indeed!"
+  ],
+  "oldGear": [
+    "Half buried in the moss, {name} found an old {item}, long forgotten and badly worn.",
+    "Someone came this way long ago: {name} found their {item}, battered but still in one piece.",
+    "Under a pile of leaves lay an old {item}. {name} brought it home, worn as it is.",
+    "{name} tripped over something hard - an abandoned {item}, rusted and scarred, but it might still serve.",
+    "Wedged between two rocks, {name} spotted a forgotten {item}. It has seen better days.",
+    "An old camp, long cold. Among the ashes {name} found a worn {item} and took it along.",
+    "{name} pulled a battered {item} out of the undergrowth. Whoever lost it never came back for it.",
+    "Not much to look at, but useful: {name} found an old {item}, worn nearly to breaking."
+  ],
+  "darkAccidents": {
+    "minor": [
+      "{name} stumbled in the dark shaft and came out bruised.",
+      "Without a light, {name} cracked a knee on a ledge no one could see.",
+      "{name} swung blind at the rock face and split a knuckle open."
+    ],
+    "serious": [
+      "In the pitch-dark tunnel {name} missed a step and fell hard onto the stone below.",
+      "Loose rock came down on {name} in the dark - there was no light to see it shift.",
+      "{name} groped through the dark, slipped into a crevice and dragged out a badly hurt leg."
+    ],
+    "hardcore": [
+      "The roof gave way above {name} in the dark. Hours later {name} clawed free of the rubble, broken and bleeding.",
+      "{name} fell down an unseen shaft. Nobody heard the screams until morning.",
+      "In the blackness {name} walked straight into a collapse. What crawled out was barely standing."
+    ],
+    "lost": [
+      "Then the way out was gone. {name} wandered the black tunnels for {days} before seeing daylight again.",
+      "{name} lost every sense of direction down there - {days} of darkness, hunger and whispering stone.",
+      "No light, no map, no way out: it took {name} {days} to find the surface again."
+    ]
   }
 }

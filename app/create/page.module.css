@@ -8,17 +8,6 @@
   margin: 0 auto;
 }
 
-.heading {
-  font-family: "Courier New", Courier, monospace;
-  font-size: 1.1rem;
-  letter-spacing: 0.2em;
-  text-transform: uppercase;
-  color: #c07a3a;
-  border-bottom: 1px solid #7a6a3a;
-  padding-bottom: 0.75rem;
-  margin-bottom: 2rem;
-}
-
 .body {
   font-family: "Courier New", Courier, monospace;
   font-size: 1rem;
@@ -170,16 +159,6 @@
   }
 }
 
-.subHeading {
-  font-family: "Courier New", Courier, monospace;
-  font-size: 0.82rem;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: #7a6a3a;
-  margin-top: 2rem;
-  margin-bottom: 0.6rem;
-}
-
 .code {
   font-family: "Courier New", Courier, monospace;
   font-size: 0.82rem;
@@ -187,6 +166,17 @@
   background: #111108;
   padding: 0.1em 0.35em;
   border: 1px solid #3a3020;
+}
+
+/* A link inside body text, in the page's orange instead of browser blue. */
+.inlineLink {
+  color: #c07a3a;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.inlineLink:hover {
+  color: #e6a55a;
 }
 
 .codeBlock {
@@ -221,6 +211,11 @@
   height: auto;
   display: block;
   filter: sepia(0.2) brightness(0.9);
+}
+
+/* Shows an image in its own colors, without the sepia tint above. */
+.imageNoFilter {
+  filter: none;
 }
 
 .imageFrameClean {
@@ -505,11 +500,6 @@
   50%     { filter: hue-rotate(25deg)  saturate(3) brightness(1.1) contrast(1.5); }
 }
 
-@keyframes glyphFade {
-  0%, 100% { opacity: 0.25; }
-  50%      { opacity: 0.85; }
-}
-
 @keyframes drunkSway {
   0%   { transform: rotate(0deg)    translate(0px,   0px);  }
   12%  { transform: rotate(-0.7deg) translate(-2px,  1px);  }
@@ -528,7 +518,6 @@
 .animFlicker { animation: flickerAnim        1.8s linear infinite; }
 .animHeat    { animation: heatDistort        2s ease-in-out infinite; }
 .animDrunk   { animation: drunkSway          8s ease-in-out infinite; }
-.glyphFade   { animation: glyphFade          2.5s ease-in-out infinite; display: inline-block; }
 
 /* ── Lightbox ──────────────────────────────────────── */
 .lightboxOverlay {

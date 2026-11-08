@@ -28,7 +28,7 @@ from backend.active_players import (
     list_active_players,
 )
 from backend.character import AttributeStats, Character, PortraitArea, ProfStats
-from backend.db import get_database
+from backend.db import get_database, run_in_transaction
 from backend import adventures, foraging
 from backend.players import (
     get_character_home,
@@ -56,20 +56,16 @@ from backend.players import (
     get_or_create_player,
     get_single_character,
     get_player,
-    grant_item_balance,
+    grant_home_starter_kit,
     move_all_storage_to_backpack,
     move_all_storage_to_bags,
     preview_home_salvage,
-    preview_salvage,
-    salvage_item_balance,
-    salvage_item_instance,
     salvage_home,
-    preview_vault_salvage,
-    salvage_vault,
     bulk_move_vault,
     set_in_adventure,
     set_prime_profession,
     set_resting,
+    CraftRefused,
     start_craft,
     unequip_item,
     check_in_item_balance_from_cart,
@@ -87,7 +83,7 @@ from backend.players import (
 from backend import items_catalog
 from backend.balances import log_login_balances
 from backend.resources_catalog import resolve_trapping_options
-from backend.craft_catalog import category_blueprint_summary, resolve_blueprint_trapping_options
+from backend.craft_catalog import blueprint_source, category_blueprint_summary, resolve_blueprint_trapping_options
 from backend.soul_slots import (
     SOUL_SLOTS,
     STAR_SLOT_NUMBERS,
@@ -345,7 +341,7 @@ class CharacterResponse(BaseModel):
     slotNumber: int = Field(..., description="Soul slot this character lives in")
     firstName: str = Field(..., description="Character's first name")
     lastName: str = Field(..., description="Character's last name")
-    vitalStatus: str = Field(..., description="Character's vital status")
+    vitalStatus: List[str] = Field(..., description="Life state (alive/dead), then conditions such as soulless")
     age_month: int = Field(..., description="Character's age in months (canonical, human-equivalent)")
     gender: str = Field(..., description="Character's gender")
     raceGroup: str = Field(..., description="Character's race group")
@@ -383,9 +379,25 @@ class CharacterResponse(BaseModel):
         default_factory=list,
         description="storyIds of every adventure this character finished (not ran away from)",
     )
+    attrNow: Optional[CharacterAttributeResponse] = Field(
+        None,
+        description="Current attribute values: attr (the maximum) minus temporary losses (backend.condition)",
+    )
+    attrLost: Dict[str, int] = Field(
+        default_factory=dict,
+        description="Temporary points lost per attribute, e.g. {'endu': 2}; heals 1 point per 20h free",
+    )
+    nextHealAt: Optional[str] = Field(
+        None,
+        description="When the next point heals (ISO), or null - nothing to heal, a drained group, or out foraging/crafting/adventuring",
+    )
     stats: Dict[str, int] = Field(
         default_factory=lambda: {"adventureFinished": 0, "adventureRunAway": 0},
         description="Cumulative adventure outcome counters: adventureFinished, adventureRunAway",
+    )
+    legend: Dict[str, float] = Field(
+        default_factory=dict,
+        description="Your Legend reputation values, {name: 0-100} as floats, e.g. {'mercy': 12.25, 'cruelty': 0} (backend.legend)",
     )
     vault: PlayerVaultResponse = Field(
         default_factory=PlayerVaultResponse,
@@ -469,13 +481,14 @@ class TrappingsItemResponse(BaseModel):
     tier: int = Field(..., description="Resource tier")
     icon: str = Field("", description="Icon image path")
     description: str = Field("", description="Flavour description")
+    kind: str = Field("", description="Blueprints only: 'tool' or 'item' - what it unlocks")
 
 
 class TrappingsBlueprintPoolResponse(BaseModel):
     """One blueprintPoolsByProfessionCount rule, paired with the blueprint
     items it makes eligible for the character's chosen professions."""
 
-    source: str = Field(..., description="'tool' | 'item'")
+    source: str = Field(..., description="'any' (tools and items in one list) | 'tool' | 'item'")
     tier: int = Field(..., description="Blueprint tier this rule draws from")
     count: int = Field(..., description="How many distinct blueprints the player may pick from this pool")
     items: List[TrappingsItemResponse]
@@ -558,9 +571,6 @@ class ItemCatalogEntryResponse(BaseModel):
     familyId: str
     tier: int
     kind: List[str]
-    qualityMax: Optional[int] = Field(
-        None, description="Max quality a fresh instance of this family starts at, if it degrades at all"
-    )
     armorClass: Optional[int] = Field(None, description="Base armor class for this material (armor/shield only)")
     icon: str = Field("", description="Per-tier art path, or empty if this family/tier has none yet")
     stackSize: int = Field(1, description="Family-level stack size - 1 means never stack, no owned-count badge")
@@ -841,6 +851,9 @@ async def get_my_character_full(character_id: str, address: str = Depends(get_cu
     char = await get_single_character(address, character_id)
     if char is None:
         raise HTTPException(status_code=404, detail="Character not found")
+    # Lost in the dark (backend.foraging): no looking in until back.
+    if ((char.get("foraging") or {}).get("activeForage") or {}).get("lost"):
+        raise HTTPException(status_code=423, detail=f"{char.get('firstName') or 'This character'} is lost")
     return char
 
 
@@ -917,7 +930,8 @@ async def get_trappings_options(
                 tier=pool.rule.tier,
                 count=pool.rule.count,
                 items=[
-                    TrappingsItemResponse(id=item.id, name=item.name, familyId=item.family_id, tier=item.tier)
+                    TrappingsItemResponse(id=item.id, name=item.name, familyId=item.family_id, tier=item.tier,
+                                          kind=blueprint_source(item.family_id) or "")
                     for item in pool.items
                 ],
             )
@@ -1005,7 +1019,7 @@ async def get_item_catalog():
     """
     return [
         ItemCatalogEntryResponse(
-            id=e.id, name=e.name, familyId=e.family_id, tier=e.tier, kind=list(e.kind), qualityMax=e.quality_max,
+            id=e.id, name=e.name, familyId=e.family_id, tier=e.tier, kind=list(e.kind),
             armorClass=e.armor_class, icon=e.icon, stackSize=e.stack_size, description=e.description, sizeClass=e.size_class,
             equipSlots=[list(group) for group in e.equip_slots], backpackable=e.backpackable,
             gatheringBonuses=list(e.gathering_bonuses), capacitySlots=e.capacity_slots, carryCapacity=e.carry_capacity,
@@ -1088,6 +1102,21 @@ async def finish_foraging_route(character_id: str, address: str = Depends(get_cu
         raise _foraging_http_error(exc)
 
 
+class ForgetSiteRequest(BaseModel):
+    familyId: str = Field(..., description="The site's resource family (see GET .../foraging - each site's familyId)")
+
+
+@player_router.post("/me/characters/{character_id}/foraging/forget")
+async def forget_foraging_site_route(
+    character_id: str, payload: ForgetSiteRequest, address: str = Depends(get_current_address)
+):
+    """Give up a foraging site for good - what it still holds is gone for the slot. Returns the state."""
+    try:
+        return await foraging.forget_site(address, character_id, payload.familyId)
+    except foraging.ForagingError as exc:
+        raise _foraging_http_error(exc)
+
+
 class CraftItemRequest(BaseModel):
     """Which tier of a recipe's output to craft, and how many units in one batch."""
 
@@ -1110,14 +1139,13 @@ async def start_craft_route(
     """
     try:
         player = await start_craft(address, character_id, family_id, payload.tier, payload.count)
+    except CraftRefused as exc:
+        raise HTTPException(status_code=409, detail=str(exc))
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc))
 
     if player is None:
-        raise HTTPException(
-            status_code=404,
-            detail="Already crafting, out on a story, missing ingredients/tool/blueprint in the shared vault, or unknown recipe",
-        )
+        raise HTTPException(status_code=404, detail="Character not found")
 
     return player.to_dict()
 
@@ -1807,11 +1835,30 @@ async def destroy_character_item_balance_route(
     return player.to_dict()
 
 
+class StorageShownSelection(BaseModel):
+    """What the storage grid showed when Burn all / Pack all was pressed:
+    only these instances and stacked amounts are acted on. No body at all =
+    everything in storage."""
+
+    instanceIds: List[str] = Field(default_factory=list)
+    balances: Dict[str, int] = Field(default_factory=dict)
+
+
+def _shown(payload: Optional[StorageShownSelection]) -> dict:
+    if payload is None:
+        return {}
+    return {"instance_ids": payload.instanceIds, "balances": payload.balances}
+
+
 @player_router.post("/me/characters/{character_id}/home/burn-all", response_model=PlayerDataResponse)
-async def destroy_all_home_route(character_id: str, address: str = Depends(get_current_address)):
-    player = await destroy_all_storage(address, character_id, "home")
+async def destroy_all_home_route(
+    character_id: str,
+    payload: Optional[StorageShownSelection] = None,
+    address: str = Depends(get_current_address),
+):
+    player = await destroy_all_storage(address, character_id, "home", **_shown(payload))
     if player is None:
-        raise HTTPException(status_code=404, detail="Home is already empty")
+        raise HTTPException(status_code=404, detail="Nothing to burn")
     return player.to_dict()
 
 
@@ -1828,10 +1875,14 @@ async def move_all_home_to_backpack_route(character_id: str, address: str = Depe
 
 
 @player_router.post("/me/characters/{character_id}/home/move-all-to-bags")
-async def move_all_home_to_bags_route(character_id: str, address: str = Depends(get_current_address)):
+async def move_all_home_to_bags_route(
+    character_id: str,
+    payload: Optional[StorageShownSelection] = None,
+    address: str = Depends(get_current_address),
+):
     """Move home contents into bags (cart first, then saddlepack, then backpack)."""
     try:
-        result = await move_all_storage_to_bags(address, character_id, "home")
+        result = await move_all_storage_to_bags(address, character_id, "home", **_shown(payload))
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc))
     if result is None:
@@ -1884,6 +1935,9 @@ class SalvageMaterialResponse(BaseModel):
     yieldBreakdown: SalvageYieldResponse
     recoveredUnits: int
     recovered: List[SalvageRecoveredLineResponse]
+    minimumBonus: int = Field(
+        0, description="Units added by the damaged/broken minimum (data/item-conditions.json salvageMinimum), already in recoveredUnits",
+    )
 
 
 class SalvagePreviewResponse(BaseModel):
@@ -1905,6 +1959,7 @@ def _to_salvage_preview_response(recoveries) -> SalvagePreviewResponse:
                 total=r.yield_breakdown.total,
             ),
             recoveredUnits=r.recovered_units,
+            minimumBonus=r.minimum_bonus,
             recovered=[
                 SalvageRecoveredLineResponse(
                     familyId=line.family_id, id=line.concrete_id, name=line.name,
@@ -1943,9 +1998,6 @@ class SalvageHomeRequest(BaseModel):
     selected: List[str] = Field(
         ..., description="Ids (instanceId or item_id) of the preview rows to actually salvage"
     )
-    amounts: Optional[Dict[str, int]] = Field(
-        None, description="Per-balance-item quantity caps (id -> count); omitted entries use the full balance"
-    )
 
 
 # ---------------------------------------------------------------------------
@@ -1972,10 +2024,14 @@ async def bulk_move_camp_route(
 
 
 @player_router.post("/me/characters/{character_id}/camp/burn-all", response_model=PlayerDataResponse)
-async def destroy_all_camp_route(character_id: str, address: str = Depends(get_current_address)):
-    player = await destroy_all_storage(address, character_id, "camp")
+async def destroy_all_camp_route(
+    character_id: str,
+    payload: Optional[StorageShownSelection] = None,
+    address: str = Depends(get_current_address),
+):
+    player = await destroy_all_storage(address, character_id, "camp", **_shown(payload))
     if player is None:
-        raise HTTPException(status_code=404, detail="Camp storage is already empty")
+        raise HTTPException(status_code=404, detail="Nothing to burn")
     return player.to_dict()
 
 
@@ -2028,9 +2084,13 @@ async def move_all_camp_to_backpack_route(character_id: str, address: str = Depe
 
 
 @player_router.post("/me/characters/{character_id}/camp/move-all-to-bags")
-async def move_all_camp_to_bags_route(character_id: str, address: str = Depends(get_current_address)):
+async def move_all_camp_to_bags_route(
+    character_id: str,
+    payload: Optional[StorageShownSelection] = None,
+    address: str = Depends(get_current_address),
+):
     try:
-        result = await move_all_storage_to_bags(address, character_id, "camp")
+        result = await move_all_storage_to_bags(address, character_id, "camp", **_shown(payload))
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc))
     if result is None:
@@ -2247,57 +2307,6 @@ async def salvage_home_route(
     return player.to_dict()
 
 
-@player_router.get("/me/characters/{character_id}/vault/salvage-preview", response_model=HomeSalvagePreviewResponse)
-async def preview_vault_salvage_route(
-    character_id: str,
-    selected: Optional[str] = None,
-    amounts: Optional[str] = None,
-    address: str = Depends(get_current_address),
-):
-    """What salvaging vault items would recover. When `selected` is a comma-separated list of IDs, only those items are returned. `amounts` is a comma-separated list of id:count pairs that cap the quantity per balance item."""
-    selected_ids = selected.split(",") if selected else None
-    amount_caps: Optional[Dict[str, int]] = None
-    if amounts:
-        amount_caps = {}
-        for pair in amounts.split(","):
-            parts = pair.rsplit(":", 1)
-            if len(parts) == 2:
-                try:
-                    amount_caps[parts[0]] = int(parts[1])
-                except ValueError:
-                    pass
-    rows = await preview_vault_salvage(address, character_id, selected_ids=selected_ids, amount_caps=amount_caps)
-    if rows is None:
-        raise HTTPException(status_code=404, detail="No matching character")
-
-    return HomeSalvagePreviewResponse(
-        rows=[
-            HomeSalvagePreviewRowResponse(
-                id=row["id"],
-                kind=row["kind"],
-                name=row["name"],
-                tier=row["tier"],
-                owned=row["owned"],
-                materials=_to_salvage_preview_response(row["recoveries"]).materials,
-                condition=row.get("condition", "new"),
-            )
-            for row in rows
-        ]
-    )
-
-
-@player_router.post("/me/characters/{character_id}/vault/salvage-all", response_model=PlayerDataResponse)
-async def salvage_vault_route(
-    character_id: str, payload: SalvageHomeRequest, address: str = Depends(get_current_address)
-):
-    """Salvage every selected vault item/itemBalance at once, crediting recovered materials into the shared crafting pool."""
-    player = await salvage_vault(address, character_id, payload.selected, amount_caps=payload.amounts)
-    if player is None:
-        raise HTTPException(status_code=404, detail="Nothing selected salvaged")
-
-    return player.to_dict()
-
-
 @player_router.post("/me/characters/{character_id}/home/bulk-move", response_model=PlayerDataResponse)
 async def bulk_move_home_route(
     character_id: str, payload: BulkMoveHomeRequest, address: str = Depends(get_current_address)
@@ -2337,114 +2346,6 @@ async def bulk_move_vault_route(
     )
     if player is None:
         raise HTTPException(status_code=404, detail="Nothing moved")
-    return player.to_dict()
-
-
-@player_router.get(
-    "/me/characters/{character_id}/salvage-preview/{item_id}", response_model=SalvagePreviewResponse
-)
-async def salvage_preview_route(
-    character_id: str,
-    item_id: str,
-    count: int = 1,
-    fromVault: bool = False,
-    instanceId: Optional[str] = None,
-    address: str = Depends(get_current_address),
-):
-    """
-    Read-only: what salvaging `count` unit(s) of concrete item `item_id`
-    would hand back to this character right now - doesn't consume
-    anything. `fromVault` must match whichever salvage-from-vault/
-    non-vault action would actually be taken: salvaging off the
-    character's own body/backpack only credits tools physically carried
-    toward the station-tool bonus, never the player's shared pool.
-    """
-    try:
-        result = await preview_salvage(address, character_id, item_id, count, fromVault, instance_id=instanceId)
-    except ValueError as exc:
-        raise HTTPException(status_code=400, detail=str(exc))
-
-    if result is None:
-        raise HTTPException(status_code=404, detail="No matching character")
-
-    recoveries, condition = result
-    resp = _to_salvage_preview_response(recoveries)
-    resp.condition = condition
-    return resp
-
-
-@player_router.post("/me/characters/{character_id}/items/{instance_id}/salvage", response_model=PlayerDataResponse)
-async def salvage_item_instance_route(
-    character_id: str, instance_id: str, address: str = Depends(get_current_address)
-):
-    """Salvage one of the character's own item instances (backpack/body) into a fraction of its raw materials, credited to that character's own backpack."""
-    try:
-        player = await salvage_item_instance(address, character_id, instance_id, from_vault=False)
-    except ValueError as exc:
-        raise HTTPException(status_code=400, detail=str(exc))
-
-    if player is None:
-        raise HTTPException(status_code=404, detail="No matching backpack/body instance on that character")
-
-    return player.to_dict()
-
-
-@player_router.post(
-    "/me/characters/{character_id}/items/{instance_id}/salvage-from-vault", response_model=PlayerDataResponse
-)
-async def salvage_item_instance_from_vault_route(
-    character_id: str, instance_id: str, address: str = Depends(get_current_address)
-):
-    """Salvage one of the player's shared-vault item instances, scored with this character's skills, credited to the shared vault."""
-    try:
-        player = await salvage_item_instance(address, character_id, instance_id, from_vault=True)
-    except ValueError as exc:
-        raise HTTPException(status_code=400, detail=str(exc))
-
-    if player is None:
-        raise HTTPException(status_code=404, detail="No matching instance in the shared vault")
-
-    return player.to_dict()
-
-
-@player_router.post(
-    "/me/characters/{character_id}/item-balances/{item_id}/salvage", response_model=PlayerDataResponse
-)
-async def salvage_item_balance_route(
-    character_id: str,
-    item_id: str,
-    payload: ItemBalanceLocationAmountRequest,
-    address: str = Depends(get_current_address),
-):
-    """Salvage `amount` of the character's own item_id balance (from `location`) into a fraction of its raw materials, credited to that character's own backpack."""
-    try:
-        player = await salvage_item_balance(
-            address, character_id, item_id, payload.amount, from_vault=False, location=payload.location
-        )
-    except ValueError as exc:
-        raise HTTPException(status_code=400, detail=str(exc))
-
-    if player is None:
-        raise HTTPException(status_code=404, detail="No matching character, or not enough on that character")
-
-    return player.to_dict()
-
-
-@player_router.post(
-    "/me/characters/{character_id}/item-balances/{item_id}/salvage-from-vault", response_model=PlayerDataResponse
-)
-async def salvage_item_balance_from_vault_route(
-    character_id: str, item_id: str, payload: TransferAmountRequest, address: str = Depends(get_current_address)
-):
-    """Salvage `amount` of the player's shared-vault item_id balance, scored with this character's skills, credited to the shared vault."""
-    try:
-        player = await salvage_item_balance(address, character_id, item_id, payload.amount, from_vault=True)
-    except ValueError as exc:
-        raise HTTPException(status_code=400, detail=str(exc))
-
-    if player is None:
-        raise HTTPException(status_code=404, detail="No matching character, or not enough in the shared vault")
-
     return player.to_dict()
 
 
@@ -2494,6 +2395,8 @@ async def create_character(
     # that pool's count - a blueprint id is never eligible for more than one
     # pool (its own fixed tier and catalog type pin it to exactly one
     # tool/item x tier combination), so match order doesn't matter.
+    if len(set(payload.selectedBlueprints)) != len(payload.selectedBlueprints):
+        raise HTTPException(status_code=400, detail="The same blueprint can only be picked once")
     remaining_by_pool = {i: pool.rule.count for i, pool in enumerate(blueprint_trappings.pools)}
     eligible_ids_by_pool = {i: {item.id for item in pool.items} for i, pool in enumerate(blueprint_trappings.pools)}
     for blueprint_id in payload.selectedBlueprints:
@@ -2573,41 +2476,47 @@ async def create_character(
         ),
     )
 
-    player = await add_character(address, character)
-    if player is None:
-        raise HTTPException(status_code=404, detail="No player record found for this address")
+    async def create() -> Optional[bool]:
+        # One transaction (backend.db.run_in_transaction): the character, its
+        # blueprints, the starter kit and the slot's foraging pool are all
+        # created, or none is - no half-made character, and two requests
+        # can't both claim the slot's starter kit.
+        if await add_character(address, character) is None:
+            return None
 
-    # Blueprints are soulbound to the character but live in their own
-    # collection (character_blueprints) rather than the character doc.
-    if payload.selectedBlueprints:
-        _db = get_database()
-        await _db.character_blueprints.update_one(
-            {"address": address, "characterId": character.id},
-            {"$set": {"blueprints": list(payload.selectedBlueprints)}},
-            upsert=True,
+        # Blueprints are soulbound to the character but live in their own
+        # collection (character_blueprints) rather than the character doc.
+        if payload.selectedBlueprints:
+            await get_database().character_blueprints.update_one(
+                {"address": address, "characterId": character.id},
+                {"$set": {"blueprints": list(payload.selectedBlueprints)}},
+                upsert=True,
+            )
+
+        # Each soul slot gets its starter kit exactly once, ever - tracked by
+        # slot number (not character id), so deleting this character and
+        # recreating one in the same slot can never re-claim it. Without this,
+        # a delete-and-recreate loop would mint resources for free. Blueprints
+        # aren't gated by this at all (see above, unconditional) - they're
+        # soulbound to whichever character is created, not a limited one-time
+        # slot bonus the way raw materials are.
+        # Raw materials go into the new character's home storage
+        # (character_homes) - not the player's shared vault.
+        if not await has_claimed_starter_kit(address, payload.slotNumber):
+            await grant_home_starter_kit(address, character.id, dict(payload.selectedResources))
+            await mark_starter_kit_claimed(address, payload.slotNumber)
+
+        # The slot's one-time foraging pool (see backend.foraging) - created only
+        # if this slot has never had one; a pool left by a deleted character is
+        # inherited instead.
+        await foraging.ensure_slot_pool(
+            address, payload.slotNumber, [payload.profession1, payload.profession2, payload.profession3]
         )
+        return True
 
-    # Each soul slot gets its starter kit exactly once, ever - tracked by
-    # slot number (not character id), so deleting this character and
-    # recreating one in the same slot can never re-claim it. Without this,
-    # a delete-and-recreate loop would mint resources for free. Blueprints
-    # aren't gated by this at all (see above, unconditional) - they're
-    # soulbound to whichever character is created, not a limited one-time
-    # slot bonus the way raw materials are.
-    # Raw materials go into the player's shared vault (player_vaults
-    # collection, keyed by address).
-    if not await has_claimed_starter_kit(address, payload.slotNumber):
-        for resource_id, amount in payload.selectedResources.items():
-            player = await grant_item_balance(address, resource_id, amount)
-        await mark_starter_kit_claimed(address, payload.slotNumber)
-
-    # The slot's one-time foraging pool (see backend.foraging) - created only
-    # if this slot has never had one; a pool left by a deleted character is
-    # inherited instead.
-    await foraging.ensure_slot_pool(
-        address, payload.slotNumber, [payload.profession1, payload.profession2, payload.profession3]
-    )
-
+    if await run_in_transaction(create) is None:
+        raise HTTPException(status_code=404, detail="No player record found for this address")
+    player = await get_player(address)
     return player.to_dict()
 
 
@@ -3832,34 +3741,44 @@ async def reject_twine_review(
         raise HTTPException(status_code=400, detail="A reason is required")
 
     db = get_database()
-    review = await db.twine_review.find_one(
-        {"address": owner, "storyId": story_id},
-        {"name": 1, "metadata": 1, "sceneCount": 1, "passages": 1},
-    )
-    if not review:
+
+    async def reject() -> Optional[bool]:
+        # One transaction: the submission leaves the queue and its rejection
+        # is recorded together - two reviewers rejecting at once record it
+        # once (the second finds nothing left to reject).
+        review = await db.twine_review.find_one(
+            {"address": owner, "storyId": story_id},
+            {"name": 1, "metadata": 1, "sceneCount": 1, "passages": 1},
+        )
+        if not review:
+            return None
+        if (await db.twine_review.delete_one({"address": owner, "storyId": story_id})).deleted_count != 1:
+            return None
+
+        metadata = review.get("metadata") or {}
+        scene_count = review.get("sceneCount")
+        if scene_count is None:
+            scene_count = _count_playable_scenes(review.get("passages", []))
+
+        await db.twine_rejected.insert_one({
+            "address": owner,
+            "storyId": story_id,
+            "title": metadata.get("meta_title") or review.get("name") or "Untitled",
+            "author": metadata.get("meta_author"),
+            "tier": metadata.get("meta_adventureTier"),
+            "sceneCount": scene_count,
+            "reason": reason,
+            "rejectedAt": datetime.now(timezone.utc).isoformat(),
+            "rejectedBy": address,
+        })
+        return True
+
+    if await run_in_transaction(reject) is None:
         raise HTTPException(status_code=404, detail="Review submission not found")
 
-    metadata = review.get("metadata") or {}
-    scene_count = review.get("sceneCount")
-    if scene_count is None:
-        scene_count = _count_playable_scenes(review.get("passages", []))
-
-    await db.twine_rejected.insert_one({
-        "address": owner,
-        "storyId": story_id,
-        "title": metadata.get("meta_title") or review.get("name") or "Untitled",
-        "author": metadata.get("meta_author"),
-        "tier": metadata.get("meta_adventureTier"),
-        "sceneCount": scene_count,
-        "reason": reason,
-        "rejectedAt": datetime.now(timezone.utc).isoformat(),
-        "rejectedBy": address,
-    })
-
-    # Remove the submission and its frozen review-stage images (images +
+    # Remove the submission's frozen review-stage images (images +
     # thumbnails under twine-images/{owner}/review/{storyId}/). The author's own
     # create-stage images and working copy stay, so they can fix and resubmit.
-    await db.twine_review.delete_one({"address": owner, "storyId": story_id})
     try:
         twine_images.delete_stage(owner, twine_images.STAGE_REVIEW, story_id)
     except Exception as exc:

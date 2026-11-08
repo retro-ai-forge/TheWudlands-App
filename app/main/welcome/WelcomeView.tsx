@@ -1,20 +1,23 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useLayoutEffect, useState } from "react";
 import Link from "next/link";
 import dynamic from "next/dynamic";
 import styles from "../../page.module.css";
+import h from "@/app/styles/headings.module.css";
 import { FeedbackForm } from "./FeedbackForm";
 import { SoulCreation } from "./soul-creation/SoulCreation";
 import { CharacterPreview, type TabKey } from "./character-preview/CharacterPreview";
-import type { ItemInstance } from "./character-preview/VaultTab";
 import type { SlotCharacterSummary, SlotCharacterPreview } from "./types";
 
-// Stable empty fallbacks so `vault?.x ?? EMPTY_X` returns the same reference
-// on every render when vault is absent, instead of a fresh `{}` / `[]` that
-// would re-trigger any effect depending on these props.
-const EMPTY_BALANCES: Record<string, number> = {};
-const EMPTY_ITEMS: ItemInstance[] = [];
+/** Milliseconds until an ISO time plus a second's grace (so the server's
+ * clock has passed it too), or null if it's already past or too far off
+ * for setTimeout (about 24 days). */
+function msUntil(iso: string): number | null {
+  const ms = new Date(iso).getTime() - Date.now() + 1000;
+  if (!Number.isFinite(ms) || ms <= 0 || ms > 2_147_483_647) return null;
+  return ms;
+}
 
 // SoulSlotGrid reads localStorage (a wallet's cached slot unlocks) during
 // its very first render. Server-rendered HTML can never see that cache, so
@@ -39,7 +42,7 @@ const SoulSlotGrid = dynamic(
 function SoulSlotGridSkeleton() {
   return (
     <div className={styles.characterMatrix}>
-      <h2 className={styles.characterMatrixHeading}>
+      <h2 className={`${h.hero} ${h.heroSmall} ${styles.soulSlotsHeading}`}>
         Soul Slots
         {/* Static placeholder matching the real SoulSlotGrid's sound
             toggle (see there) - same footprint so nothing shifts once
@@ -69,6 +72,9 @@ export function WelcomeView() {
   const [creatingSlot, setCreatingSlot] = useState<number | null>(null);
   // The character whose preview is open; null means not viewing one.
   const [viewingCharacter, setViewingCharacter] = useState<SlotCharacterSummary | null>(null);
+  // Shown above the soul slots after a character went missing on a trip
+  // (the screen dropped back here, or its slot was clicked meanwhile).
+  const [lostNotice, setLostNotice] = useState<string | null>(null);
   // null while loading the roster for the first time.
   const [previews, setPreviews] = useState<SlotCharacterPreview[] | null>(null);
   // True while fetching a full character doc after a grid click.
@@ -112,8 +118,55 @@ export function WelcomeView() {
     refreshPreviews();
   }, []);
 
+  // Back on the soul slots (or into a character, or the creation wizard):
+  // start at the top, not where the previous screen was scrolled to.
+  const showingGrid = viewingCharacter === null && creatingSlot === null;
+  useLayoutEffect(() => {
+    window.scrollTo(0, 0);
+  }, [showingGrid]);
+
+  // Lost in the dark (backend.foraging): the server only reveals it once the
+  // planned return has passed - before that a lost trip looks like any other.
+  // So at that moment ask again. While a character is open: if it didn't come
+  // back (/full answers 423), drop to the soul slots, which show it as lost.
+  const viewingId = viewingCharacter?.id;
+  const viewingReadyAt = viewingCharacter?.foraging?.activeForage?.readyAt;
+  const viewingName = viewingCharacter?.firstName || "Your character";
+  useEffect(() => {
+    if (!viewingId || !viewingReadyAt) return;
+    const wait = msUntil(viewingReadyAt);
+    if (wait === null) return;
+    const timer = setTimeout(async () => {
+      const res = await fetch(`/api/auth/me/characters/${viewingId}/full`, { credentials: "include" });
+      if (res.status === 423) {
+        setLostNotice(viewingName);
+        setViewingCharacter(null);
+        refreshPreviews();
+      } else if (res.ok) {
+        applyPlayerData({ characters: [await res.json()] });
+      }
+    }, wait);
+    return () => clearTimeout(timer);
+  }, [viewingId, viewingReadyAt, viewingName]);
+
+  // The same on the soul slots: reload them when the next trip is due, so a
+  // lost character shows as lost instead of "back".
+  const nextReadyAt = (previews ?? [])
+    .map((p) => p.timers?.foragingReadyAt)
+    .filter((t): t is string => !!t && msUntil(t) !== null)
+    .sort()[0];
+  useEffect(() => {
+    if (viewingCharacter !== null || !nextReadyAt) return;
+    const wait = msUntil(nextReadyAt);
+    if (wait === null) return;
+    const timer = setTimeout(refreshPreviews, wait);
+    return () => clearTimeout(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [nextReadyAt, viewingCharacter === null]);
+
   // Fetch one character's full data and open the preview.
   const openCharacter = async (characterId: string, options?: { openCrafting?: boolean; openForaging?: boolean }) => {
+    setLostNotice(null);
     if (options?.openCrafting) {
       setViewingTab("vault");
       setViewingOpenCrafting(true);
@@ -131,6 +184,12 @@ export function WelcomeView() {
       if (res.ok) {
         const data = await res.json();
         setViewingCharacter(data);
+      } else if (res.status === 423) {
+        // Lost in the dark since the grid loaded (backend.foraging): no
+        // looking in - refresh the grid so the slot shows it.
+        const preview = previews?.find((c) => c.characterId === characterId);
+        setLostNotice(preview?.name.split(" ")[0] || "Your character");
+        refreshPreviews();
       }
     } finally {
       setLoadingCharacter(false);
@@ -178,10 +237,6 @@ export function WelcomeView() {
     return (
       <CharacterPreview
         character={viewingCharacter}
-        playerResourceBalances={viewingCharacter.vault?.itemBalances ?? EMPTY_BALANCES}
-        playerTools={viewingCharacter.vault?.itemBalances ?? EMPTY_BALANCES}
-        playerItemBalances={viewingCharacter.vault?.itemBalances ?? EMPTY_BALANCES}
-        playerItems={viewingCharacter.vault?.items ?? EMPTY_ITEMS}
         initialTab={viewingTab}
         openCraftingSectionByDefault={viewingOpenCrafting}
         onPlayerDataUpdated={applyPlayerData}
@@ -203,7 +258,7 @@ export function WelcomeView() {
   return (
     <>
       <div className={styles.welcomeBody}>
-        <h1 className={styles.welcomeHeadline}>Welcome to The Wudlands</h1>
+        <h1 className={h.hero}>Welcome to The Wudlands</h1>
         <p className={styles.welcomeMessage}>
           This is the <strong>beta</strong> version of
           The Wudlands. Character creation and crafting is life. Check our{" "}
@@ -217,6 +272,19 @@ export function WelcomeView() {
           prose readability, which would squeeze the grid down to the same
           narrow column instead of letting it use the full 900px the page
           now allows. */}
+      {lostNotice && (
+        <div className={styles.lostNotice} role="status">
+          <span>{lostNotice} hasn&apos;t come back &ndash; lost in the dark.</span>
+          <button
+            type="button"
+            className={styles.lostNoticeClose}
+            aria-label="Dismiss"
+            onClick={() => setLostNotice(null)}
+          >
+            &#x2715;
+          </button>
+        </div>
+      )}
       {(previews === null || loadingCharacter) && <SoulSlotGridSkeleton />}
       {previews !== null && !loadingCharacter && (
         <SoulSlotGrid

@@ -9,6 +9,9 @@
   "baseYieldMin": 6,
   "baseYieldMax": 10,
   "halfLife": 5,
+  "siteTrips": 18,
+  "siteUnitsPerTrip": 4,
+  "_halfLifeComment": "Each site's half-life is worked out from its size (initial) so that it empties in about size / siteUnitsPerTrip trips, at most siteTrips (18 x 20h = about 15 days): every site thins out steadily from the first trip's 6-10 units, small sites are done in a few days, the biggest last about 15 days. halfLife is the fallback for a site without a known size.",
   "durationHours": 20,
   "weaponBonusByTier": {
     "1": 0.25,
@@ -40,6 +43,87 @@
     "bow": "arrow",
     "crossbow": "bolt"
   },
+  "lightSources": [
+    "glass_lantern",
+    "torch",
+    "candle"
+  ],
+  "lightRequires": [
+    "tinderbox"
+  ],
+  "lightFuel": {
+    "glass_lantern": "oil"
+  },
+  "lightHoursPerUnit": 1,
+  "maxLightHoursPerTrip": 24,
+  "_maxLightComment": "A trip burns at most this many hours of light (about a day of work). A dig bigger than that still brings everything home - the rest needs no more light.",
+  "_lightHoursComment": "Each unit the site gives needs this many hours of light (ore, crystal, clockwork) - the gear bonus on top needs none. A trip burns oil (only with a lantern), then torches, then candles, each lowest tier first, whole units - hours per unit in light-source-burn-hours.json (a lantern burns at the lower of lantern and oil). The light that burned with the highest bonus sets the bonus for the trip. What the light can't cover is dug as without it (on ore and crystal: in the dark).",
+  "_lightBonusComment": "A burning light counts like a weapon, by light and tier: candle the least, the glass lantern (at the lower of lantern and oil tier) the most - +10% between them, +10% per tier. With the burn hours (light-source-burn-hours.json) this makes candles the worst light (2 raw per hour at T1), torches the everyday one (1 per hour) and lantern + oil the best over time (0.5 per hour, plus the lantern).",
+  "lightBonusByTier": {
+    "candle": { "1": 0.15, "2": 0.25, "3": 0.35, "4": 0.45, "5": 0.55, "6": 0.65 },
+    "torch": { "1": 0.25, "2": 0.35, "3": 0.45, "4": 0.55, "5": 0.65, "6": 0.75 },
+    "glass_lantern": { "1": 0.35, "2": 0.45, "3": 0.55, "4": 0.65, "5": 0.75, "6": 0.85 }
+  },
+  "darkness": {
+    "_comment": "A trip to these materials without a light that counts finds `penalty` less (off the gear percent; only the smaller find leaves the site) and rolls once for an accident: the bands are tried in order, each with its own chance; a hit costs that many temporary Body points (backend.condition, applied on collect). A band with `lostDays` also leaves the character lost for that many days (rolled): the trip ends that much later, but the player only sees the planned return - after it the character shows as lost and can't be opened until back. Each lost day costs `lostPointsPerDay` more temporary points in the `lostGroup` attributes (Soul: trapped in the dark, no way out).",
+    "families": ["ore", "crystal"],
+    "penalty": 0.5,
+    "lostPointsPerDay": 1,
+    "lostGroup": "soul",
+    "accidents": [
+      { "severity": "minor", "chance": 0.15, "points": [1, 2] },
+      { "severity": "serious", "chance": 0.05, "points": [3, 5], "lostDays": [1, 7] },
+      { "severity": "hardcore", "chance": 0.01, "points": [6, 10], "lostDays": [1, 7] }
+    ]
+  },
+  "companionCharms": {
+    "charm_flying": {
+      "companions": [
+        "winged_companion"
+      ],
+      "families": [
+        "feather",
+        "meat",
+        "hide"
+      ]
+    },
+    "charm_aquatic": {
+      "companions": [
+        "aquatic_companion"
+      ],
+      "families": [
+        "fish",
+        "reed",
+        "clay",
+        "sand"
+      ]
+    },
+    "charm_ghost": {
+      "companions": [
+        "spirit_companion",
+        "dark_companion"
+      ],
+      "families": [
+        "essence",
+        "venom",
+        "bone"
+      ]
+    },
+    "charm_other": {
+      "companions": [
+        "critter_companion",
+        "arcane_companion",
+        "fey_companion"
+      ],
+      "families": [
+        "herbs",
+        "harvest",
+        "fiber",
+        "crystal",
+        "pigment"
+      ]
+    }
+  },
   "tierWeightsByProfessionCount": {
     "1": {
       "1": 100
@@ -53,5 +137,74 @@
       "2": 22,
       "3": 8
     }
+  },
+  "nights": {
+    "shelter": [
+      "tent",
+      "bedroll"
+    ],
+    "_undergroundComment": "Materials dug in mines and caves: their nights only roll the weathers marked \"underground\" (no sky, rain or wind up there), all others only the rest. \"group\": \"soul\" sends every point of that night to Soul.",
+    "underground": ["ore", "crystal"],
+    "weather": {
+      "warm": { "weight": 30, "severity": "none" },
+      "cool": { "weight": 20, "severity": "mild" },
+      "rain": { "weight": 15, "severity": "mild" },
+      "fog": { "weight": 8, "severity": "mild" },
+      "wind": { "weight": 8, "severity": "mild" },
+      "heat": { "weight": 8, "severity": "mild" },
+      "harsh": { "weight": 10, "severity": "severe" },
+      "storm": { "weight": 8, "severity": "severe" },
+      "flood": { "weight": 12, "severity": "severe", "families": ["fish", "reed", "clay"] },
+      "sandstorm": { "weight": 15, "severity": "severe", "families": ["sand"] },
+      "blizzard": { "weight": 8, "severity": "severe", "families": ["stone"] },
+      "rockslide": { "weight": 8, "severity": "severe", "families": ["stone", "pigment"] },
+      "still": { "weight": 30, "severity": "none", "underground": true },
+      "damp": { "weight": 18, "severity": "mild", "underground": true },
+      "draught": { "weight": 12, "severity": "mild", "underground": true },
+      "dust": { "weight": 8, "severity": "mild", "underground": true },
+      "creaking": { "weight": 8, "severity": "mild", "underground": true },
+      "hot_rock": { "weight": 6, "severity": "mild", "underground": true },
+      "ice_cave": { "weight": 8, "severity": "severe", "underground": true },
+      "rising_water": { "weight": 8, "severity": "severe", "underground": true },
+      "foul_air": { "weight": 6, "severity": "severe", "underground": true },
+      "tremor": { "weight": 6, "severity": "severe", "underground": true },
+      "ghosts": { "weight": 5, "severity": "severe", "underground": true, "group": "soul" }
+    },
+    "tentDestroyedChance": { "severe": 0.03 },
+    "pointsLost": {
+      "0": { "none": 0, "mild": 1, "severe": 2 },
+      "1": { "none": 0, "mild": 0.5, "severe": 1 },
+      "2": { "none": 0, "mild": 0, "severe": 0 }
+    }
+  },
+  "surprises": [
+    {
+      "tiers": [
+        1,
+        2,
+        3
+      ],
+      "chance": 0.05,
+      "amount": [
+        1,
+        3
+      ]
+    },
+    {
+      "tiers": [
+        4,
+        5,
+        6
+      ],
+      "chance": 0.01,
+      "amount": [
+        1,
+        1
+      ]
+    }
+  ],
+  "oldGear": {
+    "chance": 0.15,
+    "tier": 1
   }
 }

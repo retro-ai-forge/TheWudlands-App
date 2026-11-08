@@ -85,7 +85,6 @@ export function getItemCatalog(): Promise<BlueprintTierInfo> {
           familyId: string;
           tier: number;
           kind: string[];
-          qualityMax: number | null;
           armorClass: number | null;
           icon: string;
           stackSize: number;
@@ -105,7 +104,6 @@ export function getItemCatalog(): Promise<BlueprintTierInfo> {
               familyId: item.familyId,
               kind: item.kind[0] ?? "",
               name: item.name,
-              qualityMax: item.qualityMax,
               armorClass: item.armorClass,
               icon: item.icon,
               stackSize: item.stackSize,

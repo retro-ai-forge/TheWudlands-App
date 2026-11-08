@@ -96,6 +96,15 @@
 /* No reserved space for the fixed Delete button below - it floats over
    this content rather than pushing it, so the layout never shifts just
    because it exists. */
+/* Storage views (vault, home, camp): less space above the selection icons. */
+.sheetCompact {
+  padding-top: 0.2rem;
+}
+
+.sheetCompact .panel {
+  padding-top: 0.1rem;
+}
+
 .mainColumn {
   width: 100%;
   flex: 1 1 auto;
@@ -176,10 +185,10 @@
   height: clamp(26px, 8vw, 44px);
 }
 
-/* Close's own exit.webp (see CharacterPreview.tsx). */
+/* Close's own char-preview-close.png (see CharacterPreview.tsx). */
 .closeArrowIcon {
-  width: clamp(24px, 7vw, 40px);
-  height: clamp(24px, 7vw, 40px);
+  width: clamp(30px, 9vw, 52px);
+  height: clamp(30px, 9vw, 52px);
   flex-shrink: 0;
 }
 
@@ -652,6 +661,22 @@
   color: #d4a060;
 }
 
+/* The "Vital" row's value - same colors as the vital status words on the
+   guide and world pages (app/guide, app/theworld page.module.css). */
+.vitalAlive      { color: #66bb6a; font-weight: bold; }
+.vitalDead       { color: #000000; background-color: #ffffff; font-weight: bold; padding: 0 0.3em; border-radius: 2px; }
+.vitalVampire    { color: #757575; font-weight: bold; }
+.vitalSoulless   { color: #b71c1c; font-weight: bold; }
+.vitalMagicless  { color: #7c4dff; font-weight: bold; }
+.vitalCursed     { color: #ec407a; font-weight: bold; }
+.vitalPetrified  { color: #9a9a9a; font-weight: bold; background: repeating-linear-gradient(45deg, transparent, transparent 2px, rgba(154,154,154,0.2) 2px, rgba(154,154,154,0.2) 4px); padding: 0 0.2em; }
+.vitalIncorporal { color: #d4c9a8; font-weight: bold; font-style: italic; animation: vitalFadeInOut 4s ease-in-out infinite; }
+
+@keyframes vitalFadeInOut {
+  0%, 100% { opacity: 0.1; }
+  50% { opacity: 0.8; }
+}
+
 @keyframes readyTimerPulse {
   0%, 100% { text-shadow: 0 0 6px #f5e050, 0 0 12px rgba(245, 224, 80, 0.7); }
   50% { text-shadow: 0 0 10px #f5e050, 0 0 20px rgba(245, 224, 80, 0.9); }
@@ -765,7 +790,9 @@
   color: #d4c9a8;
 }
 
-.identityRow span:first-child {
+/* The row's label only (direct child) - not a first span nested inside the
+   value, e.g. "alive" in the Vital row's "alive, soulless". */
+.identityRow > span:first-child {
   letter-spacing: 0.08em;
   text-transform: uppercase;
   color: #a89968;
@@ -1034,35 +1061,76 @@
   margin-top: 1.5rem;
 }
 
-.attrGroupHeader {
-  display: flex;
-  justify-content: space-around;
-  font-size: 0.85rem;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  color: #a89968;
+/* Body | total | gap | Soul | total. A real table: label columns share
+   the free width and may wrap, value columns shrink to their content and
+   never wrap, so totals sit right above the values at any width. */
+.attrTable {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.attrTable th,
+.attrTable td {
+  padding: 0.3rem 0.1rem;
+  border-bottom: 1px solid rgba(168, 153, 104, 0.15);
+  vertical-align: middle;
+  font-weight: normal;
+  text-align: left;
+}
+
+.attrTable thead th {
   padding-bottom: 0.35rem;
   border-bottom: 2px solid rgba(168, 153, 104, 0.3);
 }
 
+.attrGroupName {
+  font-size: 0.85rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #a89968;
+}
+
+.attrTable .attrValueCell {
+  width: 1%;
+  white-space: nowrap;
+  text-align: right;
+  padding-left: 0.4rem;
+}
+
+.attrTable .attrGapCell {
+  width: 1.5rem;
+  min-width: 0.75rem;
+  padding: 0;
+}
+
 .attrGroupTotal {
+  font-size: 0.85rem;
   font-variant-numeric: tabular-nums;
-  letter-spacing: normal;
   color: #c07a3a;
 }
 
-.attrGrid {
-  display: flex;
-  flex-direction: column;
+/* Your Legend under the attributes - same table look (.attrTable). */
+.legendTable {
+  margin-top: 1.5rem;
 }
 
-.attrGridRow {
-  display: grid;
-  grid-template-columns: 1fr auto 1.5rem 1fr auto;
-  align-items: center;
-  padding: 0.3rem 0.1rem;
-  border-bottom: 1px solid rgba(168, 153, 104, 0.15);
-  gap: 0.4rem;
+.legendName {
+  color: #d4c9a8;
+  font-size: 0.85rem;
+  text-transform: capitalize;
+}
+
+.attrTable .legendLevel {
+  width: 1%;
+  white-space: nowrap;
+  text-align: right;
+  padding-left: 0.4rem;
+  color: #c07a3a;
+  font-size: 0.85rem;
+}
+
+.attrTable .legendLevelNone {
+  color: #6b6050;
 }
 
 .attrLabel {
@@ -1072,8 +1140,25 @@
 
 .attrDisplayValue {
   color: #c07a3a;
-  font-size: 1rem;
+  font-size: 0.85rem;
+  font-variant-numeric: tabular-nums;
   text-align: right;
+}
+
+/* At its maximum - same green as the "ready" state (.readyNowValue). */
+.attrFull {
+  color: #4ade80;
+}
+
+/* Below its maximum - a temporary loss that heals while free. */
+.attrReduced {
+  color: #d0574a;
+}
+
+.attrHealNote {
+  margin: 0.4rem 0 0;
+  font-size: 0.75rem;
+  color: #a89968;
 }
 
 .professionDivider {
@@ -2034,7 +2119,7 @@
    see its own comment on mobile's "save/share image" long-press menu).
    Sits above .equipSlotLabel (z-index 1) so the label only shows through
    an empty slot. */
-/* Wraps .equipSlotIcon so the quality bar/damaged overlay below can share
+/* Wraps .equipSlotIcon so the condition corner/broken overlay below can share
    its exact bounds without needing their own copy of .equipSlot's
    positioning - same idea as ItemGrid's tile button wrapping its own
    .itemGridImg. */
@@ -2053,8 +2138,8 @@
   image-rendering: pixelated;
 }
 
-/* Damaged equipped instances (qualityState's <=10% red band, mirroring
-   ItemGrid's own .itemGridCellDamaged) - .equipSlotIcon fills the slot
+/* Broken equipped instances (condition level 1, mirroring ItemGrid's own
+   .itemGridCellDamaged) - .equipSlotIcon fills the slot
    edge-to-edge with `cover` (unlike ItemGrid's `contain`), so a plain
    background color behind it would never show. A translucent red
    multiply-tint layered ON TOP of the icon instead. */
@@ -2069,9 +2154,9 @@
 }
 
 /* Condition indicator in the equipped icon's bottom-left corner - same
-   look as ItemGrid's .itemGridQualityBar, just above the icon's own
+   look as ItemGrid's .itemGridConditionCorner, just above the icon's own
    z-index (1) instead of flush against a tile border. */
-.equipSlotQualityBar {
+.equipSlotConditionCorner {
   position: absolute;
   left: 0;
   bottom: 0;
@@ -2758,7 +2843,7 @@
      the actual viewport edge. */
   right: calc(-1 * clamp(0px, (100vw - 400px) * 0.15, 40px));
   bottom: 7rem;
-  transform: translateX(50%);
+  transform: translateX(65%);
   /* Behind the tent (.campfireStageIcon's own z-index:2), not in front
      of it - the two sit close enough now that the tent's own silhouette
      overlaps this a bit, rather than this floating fully in the clear
@@ -2777,6 +2862,137 @@
 
 /* Same dimming as the tent's own .campfireStageIconEmpty while home is
    empty. */
+/* The workbench - the chopping block's counterpart on the tent's left:
+   same tent-relative anchoring and clamp() easing, behind the tent, above
+   the campfire. Always clickable (opens the crafting page). */
+.homeWorkbenchIcon {
+  position: absolute;
+  left: calc(-1 * clamp(0px, (100vw - 400px) * 0.15, 40px));
+  bottom: 6.5rem;
+  transform: translateX(-50%);
+  z-index: 1;
+  height: 7.5rem;
+  width: auto;
+  image-rendering: pixelated;
+  pointer-events: auto;
+  cursor: pointer;
+  transition: filter 0.15s ease;
+}
+
+/* Dimmed like the tent and chopping block while the storage is empty, but
+   still clickable: crafting can also use what the character carries. */
+.homeWorkbenchIconEmpty {
+  filter: brightness(0.55);
+}
+
+.homeWorkbenchIcon:hover,
+.homeWorkbenchIcon:focus-visible {
+  filter: brightness(1.25) drop-shadow(0 0 6px rgba(126, 184, 255, 0.6));
+  outline: none;
+}
+
+/* The crafting page (CraftingView): active craft, Craft button + count
+   matrix, then the recipe viewer - room at the bottom for the exit arrow. */
+.craftPage {
+  display: flex;
+  flex-direction: column;
+  padding-bottom: 3rem;
+}
+
+/* Asked before a craft spends higher-tier materials in place of the
+   selected tier (CraftingView): the list, then Craft (left) / Cancel (right). */
+.craftConfirmOverlay {
+  position: fixed;
+  inset: 0;
+  z-index: 20;
+  background: rgba(5, 4, 2, 0.8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.25rem;
+  box-sizing: border-box;
+}
+
+.craftConfirmCard {
+  background: #1a1810;
+  border: 1px solid #4a3a70;
+  border-radius: 6px;
+  padding: 1.2rem 1.5rem;
+  max-width: 20rem;
+  width: 100%;
+}
+
+.craftConfirmText {
+  margin: 0 0 0.75rem;
+  font-size: 0.95rem;
+  color: #d0b878;
+}
+
+.craftConfirmList {
+  list-style: none;
+  margin: 0 0 1.1rem;
+  padding: 0;
+  font-size: 0.9rem;
+  color: #d4c9a8;
+}
+
+.craftConfirmList li + li {
+  margin-top: 0.3rem;
+}
+
+.craftConfirmQty {
+  font-variant-numeric: tabular-nums;
+  color: #c07a3a;
+}
+
+/* Same purple as the viewer's "+higher tier" counts. */
+.craftConfirmTier {
+  color: #b98cff;
+  font-size: 0.8rem;
+}
+
+.craftConfirmButtons {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.craftConfirmCraft,
+.craftConfirmCancel {
+  padding: 0.4rem 1.2rem;
+  border-radius: 4px;
+  font: inherit;
+  font-size: 0.85rem;
+  cursor: pointer;
+  border: 1px solid #3a3020;
+}
+
+.craftConfirmCraft {
+  background: #1f3a1a;
+  border-color: #3f7a30;
+  color: #9be6a8;
+}
+
+.craftConfirmCraft:hover {
+  background: #28481f;
+  color: #c0f5c8;
+}
+
+.craftConfirmCancel {
+  background: #1a1810;
+  color: #8a7a52;
+}
+
+.craftConfirmCancel:hover {
+  background: #222215;
+  color: #b09a6a;
+}
+
+/* Breathing room between the count matrix and the recipe viewer below. */
+.craftPage .recipeViewerFrame {
+  margin-top: 1.25rem;
+}
+
 .homeChoppingBlockIconEmpty {
   filter: brightness(0.55);
   /* Not clickable while home is empty (see HomeView.tsx's own
@@ -2788,7 +3004,7 @@
   cursor: default;
 }
 
-/* Same exit.webp glyph as the page's own (now-hidden-while-in-home)
+/* Same char-preview-close.png glyph as the page's own (now-hidden-while-in-home)
    .closeButton, repurposed here to back out of home specifically rather
    than close the whole character sheet - see HomeView's onExitHome. */
 /* Fixed to the viewport itself (like the page's own now-hidden .topBar),
@@ -2801,7 +3017,7 @@
   right: 0.75rem;
   bottom: 0.75rem;
   z-index: 5;
-  width: 1.5rem;
+  width: 2rem;
   aspect-ratio: 1 / 1;
   padding: 0;
   /* .campfireStage (this button's parent) is pointer-events:none so it
@@ -2828,7 +3044,7 @@
   grid-template-rows: repeat(auto-fill, 100px);
   grid-auto-columns: 100px;
   justify-content: start;
-  gap: 0.35rem;
+  gap: 0.2rem;
   padding-left: 0.4rem;
   height: 100%;
   user-select: none;
@@ -2841,7 +3057,7 @@
   grid-template-columns: repeat(auto-fill, 100px);
   grid-auto-rows: 100px;
   justify-content: start;
-  gap: 0.35rem;
+  gap: 0.2rem;
   padding-left: 0.4rem;
   user-select: none;
   -webkit-user-select: none;
@@ -2873,10 +3089,9 @@
   border-color: #c07a3a;
 }
 
-/* Damaged instances (qualityState's <=10% red band - see ItemGrid's
-   isDamaged) get a red-tinted tile, not just the thin quality bar along
-   the bottom edge, so a wrecked item stands out at a glance in a full
-   grid. Kept dark/desaturated rather than a bright red wash so the icon
+/* Broken instances (condition level 1 - see ItemGrid's isDamaged) get a
+   red-tinted tile, not just the red condition corner, so an item about to
+   be lost stands out at a glance in a full grid. Kept dark/desaturated rather than a bright red wash so the icon
    itself (drawn over this) stays readable. */
 .itemGridCellDamaged {
   background: #2a0d0d;
@@ -3022,13 +3237,11 @@
 }
 
 /* Condition indicator in the tile's bottom-left corner (item instances
-   only - see ItemGrid's qualityFraction) - green/orange/red per
-   qualityBarColor (still set inline as background-color, same prop as
-   the old bar), a fixed-size triangle rather than a proportional bar -
-   the damaged red tile tint already carries the "how much is left" read
-   at a glance, this is just the color cue, corner-badge style. Left, not
+   only - see VaultTab's conditionOf) - green new, yellow used, red damaged
+   and broken per conditionColor (set inline as background-color), a
+   fixed-size triangle; a broken item also gets the red tile tint. Left, not
    right, to stay clear of .itemGridCountBadge's own bottom-right corner. */
-.itemGridQualityBar {
+.itemGridConditionCorner {
   position: absolute;
   left: 0;
   bottom: 0;
@@ -3054,7 +3267,7 @@
   grid-template-rows: repeat(2, 100px);
   grid-auto-flow: column;
   grid-auto-columns: 100px;
-  gap: 0.35rem;
+  gap: 0.2rem;
   width: 100%;
   overflow-x: auto;
   overflow-y: hidden;

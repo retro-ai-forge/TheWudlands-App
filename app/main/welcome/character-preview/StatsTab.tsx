@@ -2,24 +2,28 @@ import styles from "./CharacterTabs.module.css";
 import { getPortraitCropImgStyle } from "@/app/lib/portraitCrop";
 import { RACES, PROFESSIONS, BIRTHSIGNS, PROFESSION_RESOURCE_FAMILIES } from "@/app/lib/characterOptions";
 import { getDisplayedAge } from "@/app/lib/ageScaling";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { Fragment, useEffect, useState } from "react";
 import { formatRemainingCompactLong, useCraftCountdown } from "../craftTimer";
 import type { SlotCharacterSummary } from "../types";
-import type { ItemInstance } from "../types";
-import {
-  IdList,
-  ResourceList,
-  ItemDetailPopup,
-  ownedIds,
-  resolveOutputName,
-  formatResourceLabel,
-  formatXpPreview,
-  CRAFT_RESULT_FADE_MS,
-} from "./VaultTab";
-import type { BlueprintTierInfo, ResourceTierInfo, RawPlayerData } from "./VaultTab";
-import { getBlueprintCatalog, getResourceCatalog, getToolCatalog, getItemCatalog } from "./catalogCache";
+import { IdList } from "./VaultTab";
+import type { BlueprintTierInfo, RawPlayerData } from "./VaultTab";
+import { getBlueprintCatalog } from "./catalogCache";
 
+import { LEGEND_PAIRS, legendLevel, legendSide } from "@/app/lib/legend";
 import baseLevelsData from "../../../../backend/data/base-levels.json";
+
+// Vital status -> its color class (same colors as the guide / world pages).
+const VITAL_CLASS: Record<string, string | undefined> = {
+  alive: styles.vitalAlive,
+  dead: styles.vitalDead,
+  vampire: styles.vitalVampire,
+  soulless: styles.vitalSoulless,
+  magicless: styles.vitalMagicless,
+  cursed: styles.vitalCursed,
+  petrified: styles.vitalPetrified,
+  incorporal: styles.vitalIncorporal,
+};
+
 const XP_LEVELS = baseLevelsData.levels;
 
 
@@ -65,6 +69,16 @@ function birthsignName(id: string): string {
   return BIRTHSIGNS.find((b) => b.id === id)?.name ?? id;
 }
 
+/** Green at full, red while reduced. */
+function attrTone(now: number, max: number): string {
+  return now < max ? styles.attrReduced : styles.attrFull;
+}
+
+/** "3/5" - the current value over the maximum. */
+function AttrValue({ now, max }: { now: number; max: number }) {
+  return <span className={`${styles.attrDisplayValue} ${attrTone(now, max)}`}>{now}/{max}</span>;
+}
+
 function sumAttrs(
   keys: readonly (readonly [keyof SlotCharacterSummary["attr"], string])[],
   attr: SlotCharacterSummary["attr"]
@@ -72,34 +86,17 @@ function sumAttrs(
   return keys.reduce((total, [key]) => total + attr[key], 0);
 }
 
-const CRAFT_COUNTS = [1, 2, 3, 4, 5, 10, 20, 25, 50] as const;
-
-type RecipeViewerWindow = Window & {
-  getCurrentSelection?: () => { familyId: string; tier: number } | null;
-  isCurrentSelectionCraftable?: (count?: number) => boolean;
-  getCurrentSelectionXp?: (count?: number) => { rawXp: Record<string, number>; finalXp: number } | null;
-  getCurrentSelectionDuration?: (count?: number) => number | null;
-};
-
 /** Preview page: face portrait, identity, and the full attribute/profession sheet. */
 export function StatsTab({
   character,
   onEditPortrait,
   onOpenBirthsign,
   onPlayerDataUpdated,
-  playerResourceBalances,
-  playerTools,
-  playerItemBalances,
-  playerItems,
 }: {
   character: SlotCharacterSummary;
   onEditPortrait?: () => void;
   onOpenBirthsign?: () => void;
   onPlayerDataUpdated?: (data: RawPlayerData) => void;
-  playerResourceBalances: Record<string, number>;
-  playerTools: Record<string, number>;
-  playerItemBalances: Record<string, number>;
-  playerItems: ItemInstance[];
 }) {
   const birthsignInfo = BIRTHSIGNS.find((b) => b.id === character.birthsign) ?? null;
 
@@ -107,236 +104,18 @@ export function StatsTab({
   // Out foraging (see ForagingSection) - counts down to the trip's return;
   // 0 means back but not yet collected.
   const forageRemainingSeconds = useCraftCountdown(character.foraging?.activeForage?.readyAt);
+  // Temporary attribute losses (backend.condition): current vs maximum.
+  const attrNow = character.attrNow ?? character.attr;
+  const healSeconds = useCraftCountdown(character.nextHealAt);
+  const hasLoss = Object.values(character.attrLost ?? {}).some((n) => (n ?? 0) > 0);
   const inAdventure = character.availability.inAdventure;
 
   const [blueprintTierInfo, setBlueprintTierInfo] = useState<BlueprintTierInfo>({});
   const [blueprintsOpen, setBlueprintsOpen] = useState(false);
 
-  const [resourceTierInfo, setResourceTierInfo] = useState<ResourceTierInfo>({});
-  const [toolTierInfo, setToolTierInfo] = useState<BlueprintTierInfo>({});
-  const [itemCatalogTierInfo, setItemCatalogTierInfo] = useState<BlueprintTierInfo>({});
-
   useEffect(() => {
     getBlueprintCatalog().then(setBlueprintTierInfo).catch(() => setBlueprintTierInfo({}));
-    getResourceCatalog().then(setResourceTierInfo).catch(() => setResourceTierInfo({}));
-    getToolCatalog().then(setToolTierInfo).catch(() => setToolTierInfo({}));
-    getItemCatalog().then(setItemCatalogTierInfo).catch(() => setItemCatalogTierInfo({}));
   }, []);
-
-  // --- Crafting state ---
-
-  const transfer = async (
-    kind: "itemBalances" | "resources" | "tools",
-    id: string,
-    amount: number
-  ): Promise<boolean> => {
-    try {
-      const res = await fetch(
-        `/api/auth/me/characters/${character.id}/${kind}/${id}/check-in`,
-        {
-          method: "POST",
-          credentials: "include",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ amount }),
-        }
-      );
-      if (!res.ok) return false;
-      const data: RawPlayerData = await res.json();
-      onPlayerDataUpdated?.(data);
-      return true;
-    } catch {
-      return false;
-    }
-  };
-
-  const knownBlueprints = character.blueprints ?? [];
-
-  const ownedTools = useMemo(() => {
-    const tools = ownedIds(playerTools);
-    for (const instance of character.gear.items) {
-      if (instance.location === "backpack" || instance.location === "body") {
-        tools.push(instance.itemId);
-      }
-    }
-    return tools;
-  }, [playerTools, character.gear.items]);
-
-  const vaultToolInstanceIds = useMemo(
-    () => playerItems.filter((instance) => instance.location === "pool").map((instance) => instance.itemId),
-    [playerItems]
-  );
-
-  const borrowedToolIds: string[] = [];
-  const borrowedToolCounts: Record<string, number> = {};
-  for (const instance of character.gear.items) {
-    if (instance.location === "crafting") {
-      if (!(instance.itemId in borrowedToolCounts)) borrowedToolIds.push(instance.itemId);
-      borrowedToolCounts[instance.itemId] = (borrowedToolCounts[instance.itemId] ?? 0) + 1;
-    }
-  }
-
-  const playerItemsCombined = useMemo(() => {
-    const rowBalances: Record<string, number> = {};
-    for (const instance of playerItems) {
-      rowBalances[instance.instanceId] = 1;
-    }
-    return { ...playerItemBalances, ...rowBalances };
-  }, [playerItems, playerItemBalances]);
-
-  const [craftingAccordionOpen, setCraftingAccordionOpen] = useState(false);
-
-  const [recipeViewerOpen, setRecipeViewerOpen] = useState(false);
-  const [recipeViewerHeight, setRecipeViewerHeight] = useState(600);
-  const recipeViewerRef = useRef<HTMLIFrameElement>(null);
-  const [recipeViewerLoaded, setRecipeViewerLoaded] = useState(false);
-
-  const getRecipeViewerWindow = () =>
-    recipeViewerRef.current?.contentWindow as RecipeViewerWindow | null | undefined;
-
-  const [craftCount, setCraftCount] = useState<number>(1);
-  const [craftableCounts, setCraftableCounts] = useState<Record<number, boolean>>({});
-  const [craftXpPreview, setCraftXpPreview] = useState<{ rawXp: Record<string, number>; finalXp: number } | null>(null);
-  const [craftDurationPreview, setCraftDurationPreview] = useState<number | null>(null);
-
-  useEffect(() => {
-    if (!recipeViewerOpen) {
-      setCraftableCounts({});
-      setCraftXpPreview(null);
-      setCraftDurationPreview(null);
-      setRecipeViewerLoaded(false);
-    }
-  }, [recipeViewerOpen]);
-
-  useEffect(() => {
-    if (!recipeViewerOpen) return;
-    const check = () => {
-      const win = getRecipeViewerWindow();
-      const next: Record<number, boolean> = {};
-      for (const count of CRAFT_COUNTS) {
-        next[count] = win?.isCurrentSelectionCraftable?.(count) ?? false;
-      }
-      setCraftableCounts(next);
-      setCraftXpPreview(win?.getCurrentSelectionXp?.(craftCount) ?? null);
-      setCraftDurationPreview(win?.getCurrentSelectionDuration?.(craftCount) ?? null);
-    };
-    check();
-    const interval = setInterval(check, 500);
-    return () => clearInterval(interval);
-  }, [recipeViewerOpen, playerResourceBalances, playerItemBalances, playerTools, knownBlueprints, craftCount]);
-
-  useEffect(() => {
-    if (!recipeViewerLoaded) return;
-    recipeViewerRef.current?.contentWindow?.postMessage(
-      {
-        type: "recipe-viewer:update",
-        inv: playerResourceBalances,
-        itemBalances: playerItemBalances,
-        tools: ownedTools,
-        vaultTools: vaultToolInstanceIds,
-        blueprints: knownBlueprints,
-      },
-      window.location.origin
-    );
-  }, [recipeViewerLoaded, playerResourceBalances, playerItemBalances, ownedTools, vaultToolInstanceIds, knownBlueprints]);
-
-  const [recipePopupItemId, setRecipePopupItemId] = useState<string | null>(null);
-  useEffect(() => {
-    const handler = (e: MessageEvent) => {
-      if (e.data?.type === "recipe-viewer:show-item" && typeof e.data.itemId === "string") {
-        setRecipePopupItemId(e.data.itemId);
-      }
-    };
-    window.addEventListener("message", handler);
-    return () => window.removeEventListener("message", handler);
-  }, []);
-
-  const canCraft = craftableCounts[craftCount] ?? false;
-  const [crafting, setCrafting] = useState(false);
-  const [craftError, setCraftError] = useState<string | null>(null);
-
-  const startCraft = async () => {
-    const win = getRecipeViewerWindow();
-    const selection = win?.getCurrentSelection?.();
-    if (!selection) {
-      setCraftError("Pick a recipe in the viewer first.");
-      return;
-    }
-    if (!(win?.isCurrentSelectionCraftable?.(craftCount) ?? false)) {
-      setCraftError("Couldn&apos;t craft that - check ingredients, tool, and blueprint.");
-      return;
-    }
-    setCrafting(true);
-    setCraftError(null);
-    try {
-      const res = await fetch(
-        `/api/auth/me/characters/${character.id}/craft/${selection.familyId}/start`,
-        {
-          method: "POST",
-          credentials: "include",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ tier: selection.tier, count: craftCount }),
-        }
-      );
-      if (!res.ok) {
-        const body = await res.json().catch(() => null);
-        setCraftError(body?.detail ?? "Couldn&apos;t craft that - check ingredients, tool, and blueprint.");
-        return;
-      }
-      const data: RawPlayerData = await res.json();
-      if (fadeTimeoutRef.current) clearTimeout(fadeTimeoutRef.current);
-      setLastCraftResult(null);
-      onPlayerDataUpdated?.(data);
-    } catch {
-      setCraftError("Couldn&apos;t reach the server.");
-    } finally {
-      setCrafting(false);
-    }
-  };
-
-  const [finishing, setFinishing] = useState(false);
-  const [lastCraftResult, setLastCraftResult] = useState<{ name: string; count: number } | null>(null);
-  const fadeTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  useEffect(() => () => {
-    if (fadeTimeoutRef.current) clearTimeout(fadeTimeoutRef.current);
-  }, []);
-
-  const finishCraft = async () => {
-    if (finishing) return;
-    setFinishing(true);
-    try {
-      const res = await fetch(`/api/auth/me/characters/${character.id}/craft/finish`, {
-        method: "POST",
-        credentials: "include",
-      });
-      if (res.ok) {
-        const data: RawPlayerData = await res.json();
-        if (character.crafting.activeCraft) {
-          setLastCraftResult({
-            name: resolveOutputName(
-              character.crafting.activeCraft.familyId,
-              character.crafting.activeCraft.tier,
-              resourceTierInfo,
-              itemCatalogTierInfo
-            ),
-            count: character.crafting.activeCraft.count,
-          });
-          if (fadeTimeoutRef.current) clearTimeout(fadeTimeoutRef.current);
-          fadeTimeoutRef.current = setTimeout(() => setLastCraftResult(null), CRAFT_RESULT_FADE_MS);
-        }
-        onPlayerDataUpdated?.(data);
-      }
-    } catch {
-      // Next tick's countdown effect will retry.
-    } finally {
-      setFinishing(false);
-    }
-  };
-
-  const remainingSeconds = useCraftCountdown(character.crafting.activeCraft?.readyAt);
-  useEffect(() => {
-    if (remainingSeconds === 0) finishCraft();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [remainingSeconds === 0]);
 
   // --- Profession / prime state ---
 
@@ -559,7 +338,15 @@ export function StatsTab({
           )}
           <div className={styles.identityRow}>
             <span>Vital</span>
-            <span>{character.vitalStatus}</span>
+            {/* [life state, ...conditions], e.g. "alive, soulless" - each word in its own color. */}
+            <span>
+              {character.vitalStatus.map((status, i) => (
+                <Fragment key={status}>
+                  {i > 0 && ", "}
+                  <span className={VITAL_CLASS[status]}>{status}</span>
+                </Fragment>
+              ))}
+            </span>
           </div>
           <div className={styles.identityRow}>
             <span>
@@ -651,25 +438,83 @@ export function StatsTab({
           ))}
 
           <div className={styles.attrColumns}>
-            <div className={styles.attrGroupHeader}>
-              <span>Body <span className={styles.attrGroupTotal}>{sumAttrs(BODY_ATTRS, character.attr)}/{sumAttrs(BODY_ATTRS, character.attr)}</span></span>
-              <span>Soul <span className={styles.attrGroupTotal}>{sumAttrs(SOUL_ATTRS, character.attr)}/{sumAttrs(SOUL_ATTRS, character.attr)}</span></span>
-            </div>
-            <div className={styles.attrGrid}>
-              {BODY_ATTRS.map(([key, label], i) => {
-                const [sKey, sLabel] = SOUL_ATTRS[i];
+            <table className={styles.attrTable}>
+              <thead>
+                <tr>
+                  <th scope="col" className={styles.attrGroupName}>Body</th>
+                  <th scope="col" className={styles.attrValueCell}>
+                    <span className={`${styles.attrGroupTotal} ${attrTone(sumAttrs(BODY_ATTRS, attrNow), sumAttrs(BODY_ATTRS, character.attr))}`}>
+                      {sumAttrs(BODY_ATTRS, attrNow)}/{sumAttrs(BODY_ATTRS, character.attr)}
+                    </span>
+                  </th>
+                  <th className={styles.attrGapCell} aria-hidden="true" />
+                  <th scope="col" className={styles.attrGroupName}>Soul</th>
+                  <th scope="col" className={styles.attrValueCell}>
+                    <span className={`${styles.attrGroupTotal} ${attrTone(sumAttrs(SOUL_ATTRS, attrNow), sumAttrs(SOUL_ATTRS, character.attr))}`}>
+                      {sumAttrs(SOUL_ATTRS, attrNow)}/{sumAttrs(SOUL_ATTRS, character.attr)}
+                    </span>
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {BODY_ATTRS.map(([key, label], i) => {
+                  const [sKey, sLabel] = SOUL_ATTRS[i];
+                  return (
+                    <tr key={key}>
+                      <th scope="row" className={attrNow[key] <= 0 ? `${styles.attrLabel} ${styles.attrReduced}` : styles.attrLabel}>{label}</th>
+                      <td className={styles.attrValueCell}>
+                        <AttrValue now={attrNow[key]} max={character.attr[key]} />
+                      </td>
+                      <td className={styles.attrGapCell} aria-hidden="true" />
+                      <th scope="row" className={attrNow[sKey] <= 0 ? `${styles.attrLabel} ${styles.attrReduced}` : styles.attrLabel}>{sLabel}</th>
+                      <td className={styles.attrValueCell}>
+                        <AttrValue now={attrNow[sKey]} max={character.attr[sKey]} />
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+            {character.nextHealAt && healSeconds !== null && (
+              <p className={styles.attrHealNote}>
+                Next point heals in {formatRemainingCompactLong(healSeconds)}
+              </p>
+            )}
+            {!character.nextHealAt && hasLoss && character.vitalStatus.length === 1 && character.vitalStatus[0] === "alive" && (
+              <p className={styles.attrHealNote}>Heals only while free (not foraging, crafting or adventuring).</p>
+            )}
+          </div>
+
+          {/* Your Legend: one side per pair (the higher one) and its level name. */}
+          <table className={`${styles.attrTable} ${styles.legendTable}`}>
+            <thead>
+              <tr>
+                <th scope="col" colSpan={5} className={styles.attrGroupName}>Legend</th>
+              </tr>
+            </thead>
+            <tbody>
+              {LEGEND_PAIRS.slice(0, 5).map((pair, i) => {
+                const left = legendSide(character.legend, pair);
+                const right = legendSide(character.legend, LEGEND_PAIRS[i + 5]);
+                const cells = (side: { name: string; value: number }) => {
+                  const level = legendLevel(side.value);
+                  return (
+                    <>
+                      <th scope="row" className={styles.legendName}>{side.name}</th>
+                      <td className={level === "none" ? `${styles.legendLevel} ${styles.legendLevelNone}` : styles.legendLevel}>{level}</td>
+                    </>
+                  );
+                };
                 return (
-                  <div className={styles.attrGridRow} key={key}>
-                    <span className={styles.attrLabel}>{label}</span>
-                    <span className={styles.attrDisplayValue}>{character.attr[key]}</span>
-                    <span />
-                    <span className={styles.attrLabel}>{sLabel}</span>
-                    <span className={styles.attrDisplayValue}>{character.attr[sKey]}</span>
-                  </div>
+                  <tr key={pair[0]}>
+                    {cells(left)}
+                    <td className={styles.attrGapCell} aria-hidden="true" />
+                    {cells(right)}
+                  </tr>
                 );
               })}
-            </div>
-          </div>
+            </tbody>
+          </table>
 
           {(character.blueprints?.length ?? 0) > 0 && (
             <div className={`${styles.accordionItem} ${styles.accordionItemWide}`}>
@@ -690,190 +535,6 @@ export function StatsTab({
                 </div>
               )}
             </div>
-          )}
-
-          {/* --- Character's Crafting accordion (active craft timer + borrowed tools/resources) --- */}
-          {(remainingSeconds !== null || lastCraftResult !== null) && (
-          <div className={styles.accordionItem}>
-            <button className={styles.accordionHeader} onClick={() => setCraftingAccordionOpen(!craftingAccordionOpen)}>
-              <span>
-                {character.firstName}&apos;s Crafting
-                {remainingSeconds !== null && (
-                  <span className={styles.craftTimer}> {formatRemainingCompactLong(remainingSeconds)}</span>
-                )}
-              </span>
-              <span className={styles.accordionChevron}>{craftingAccordionOpen ? "▴" : "▾"}</span>
-            </button>
-            {craftingAccordionOpen && (
-              <div className={styles.accordionBody}>
-                {(ownedIds(character.crafting.itemBalances).length > 0 || borrowedToolIds.length === 0) && (
-                  <IdList
-                    ids={ownedIds(character.crafting.itemBalances)}
-                    emptyLabel="Not currently using any tools."
-                    tierInfo={toolTierInfo}
-                    sortByTier
-                    fixedIcon="🔧"
-                    balances={character.crafting.itemBalances}
-                    onTransfer={remainingSeconds === null ? (id, amount) => transfer("itemBalances", id, amount) : undefined}
-                    textColor="#7eb8ff"
-                  />
-                )}
-                {borrowedToolIds.length > 0 && (
-                  <IdList
-                    ids={borrowedToolIds}
-                    emptyLabel=""
-                    tierInfo={itemCatalogTierInfo}
-                    sortByTier
-                    fixedIcon="🔧"
-                    balances={borrowedToolCounts}
-                    quantityHiddenIds={new Set(borrowedToolIds)}
-                    textColor="#7eb8ff"
-                  />
-                )}
-                {(ownedIds(character.crafting.itemBalances).length > 0 || borrowedToolIds.length > 0) && (
-                  <div className={styles.toolsResourceDivider} />
-                )}
-                <ResourceList
-                  balances={character.crafting.itemBalances}
-                  emptyLabel="No materials used."
-                  tierInfo={resourceTierInfo}
-                  onTransfer={remainingSeconds === null ? (id, amount) => transfer("itemBalances", id, amount) : undefined}
-                />
-                {remainingSeconds !== null && character.crafting.activeCraft && (
-                  <>
-                    <div className={styles.craftOutputDivider} />
-                    <p className={styles.craftOutputLine}>
-                      Crafting {character.crafting.activeCraft.count}x{" "}
-                      {resolveOutputName(
-                        character.crafting.activeCraft.familyId,
-                        character.crafting.activeCraft.tier,
-                        resourceTierInfo,
-                        itemCatalogTierInfo
-                      )}
-                    </p>
-                  </>
-                )}
-                {!character.crafting.activeCraft && lastCraftResult && (
-                  <>
-                    <div className={styles.craftOutputDivider} />
-                    <p className={`${styles.craftOutputLine} ${styles.craftResultFading}`}>
-                      Finished: {lastCraftResult.count}x {lastCraftResult.name}
-                    </p>
-                  </>
-                )}
-              </div>
-            )}
-          </div>
-          )}
-
-          {/* --- Craft button + count selector --- */}
-          <div className={styles.craftRow}>
-            <div className={styles.craftControlsRow}>
-              <div className={styles.craftButtonColumn}>
-                <button
-                  className={
-                    !character.availability.inAdventure && canCraft && remainingSeconds === null
-                      ? `${styles.craftButton} ${styles.craftButtonReady}`
-                      : styles.craftButton
-                  }
-                  onClick={startCraft}
-                  disabled={crafting || !canCraft || remainingSeconds !== null || character.availability.inAdventure}
-                  title={
-                    character.availability.inAdventure
-                      ? `${character.firstName} is on the road.`
-                      : canCraft && remainingSeconds === null
-                      ? "Selected recipe can be crafted right now"
-                      : undefined
-                  }
-                >
-                  {remainingSeconds !== null ? (
-                    <span className={styles.craftTimer}>Crafting… {formatRemainingCompactLong(remainingSeconds)}</span>
-                  ) : crafting ? (
-                    "Crafting…"
-                  ) : canCraft ? (
-                    <>
-                      Craft
-                      <span className={styles.craftButtonDetail}>
-                        {craftDurationPreview !== null && formatRemainingCompactLong(craftDurationPreview)}
-                        {craftXpPreview && formatXpPreview(craftXpPreview) && `, ${formatXpPreview(craftXpPreview)}`}
-                      </span>
-                    </>
-                  ) : (
-                    "Craft"
-                  )}
-                </button>
-                {character.availability.inAdventure ? (
-                  <span className={styles.craftUnavailable}>{character.firstName} is on the road.</span>
-                ) : (
-                  craftError && <span className={styles.craftError}>{craftError}</span>
-                )}
-              </div>
-              <div className={styles.craftCountRow} role="radiogroup" aria-label="How many to craft">
-                {CRAFT_COUNTS.map((count) => (
-                  <button
-                    key={count}
-                    type="button"
-                    role="radio"
-                    aria-checked={craftCount === count}
-                    className={[
-                      styles.craftCountButton,
-                      craftCount === count ? styles.craftCountButtonActive : "",
-                    ]
-                      .filter(Boolean)
-                      .join(" ")}
-                    disabled={crafting || remainingSeconds !== null || !(craftableCounts[count] ?? false)}
-                    onClick={() => setCraftCount(count)}
-                  >
-                    {count}
-                  </button>
-                ))}
-              </div>
-            </div>
-          </div>
-
-          {/* --- Crafting Recipe Viewer --- */}
-          <div className={`${styles.accordionItem} ${styles.accordionItemWide}`} style={recipeViewerOpen ? { marginBottom: 0, borderBottom: "none" } : undefined}>
-            <button className={styles.accordionHeader} onClick={() => setRecipeViewerOpen((prev) => !prev)}>
-              <span>Crafting Recipe Viewer</span>
-              <span className={styles.accordionChevron}>{recipeViewerOpen ? "▴" : "▾"}</span>
-            </button>
-          </div>
-          {recipeViewerOpen && (
-            <iframe
-              ref={recipeViewerRef}
-              src="/craft/recipe-viewer.html?embedded=1"
-              title="Crafting Recipe Viewer"
-              className={styles.recipeViewerFrame}
-              style={{ height: recipeViewerHeight, overflow: "hidden" }}
-              scrolling="no"
-              onLoad={() => {
-                const doc = recipeViewerRef.current?.contentWindow?.document;
-                if (!doc?.body) return;
-                setRecipeViewerHeight(doc.body.scrollHeight);
-                const observer = new ResizeObserver(() => {
-                  setRecipeViewerHeight(doc.body.scrollHeight);
-                });
-                observer.observe(doc.body);
-                setRecipeViewerLoaded(true);
-              }}
-            />
-          )}
-          {recipePopupItemId && itemCatalogTierInfo[recipePopupItemId] && (
-            <ItemDetailPopup
-              info={itemCatalogTierInfo[recipePopupItemId]}
-              fallbackName={formatResourceLabel(recipePopupItemId)}
-              owned={playerItemsCombined[recipePopupItemId] ?? 0}
-              isInstance={false}
-              movable={false}
-              quality={null}
-              moveId={recipePopupItemId}
-              source="vault"
-              hasBackpackEquipped={false}
-              hasSaddlepackEquipped={false}
-              characterId={character.id}
-              onPlayerDataUpdated={onPlayerDataUpdated}
-              onClose={() => setRecipePopupItemId(null)}
-            />
           )}
 
         </div>

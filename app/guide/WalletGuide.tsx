@@ -29,7 +29,7 @@ export default function WalletGuide() {
 
   return (
     <>
-      <p className={styles.body}>Nova Wallet is recommended for the best experience.</p>
+      <p className={styles.body}>Nova Wallet mobile app is recommended for the best experience.</p>
       <details id="wallet-guide" ref={detailsRef} className={styles.walletGuide}>
         <summary className={styles.walletGuideSummary}>[ Get started ]</summary>
         <div className={styles.walletGuideGrid}>

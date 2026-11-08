@@ -9,10 +9,20 @@ from datetime import datetime, timedelta, timezone
 
 import pytest
 
+from backend import legend
 from backend.active_players import add_active_player, remove_active_player
 from backend.character import Character
 from backend.db import get_database
-from backend.players import add_character, finish_craft, get_or_create_player, get_player, start_craft
+from backend.players import (
+    CraftRefused,
+    _is_tracked_item,
+    _new_instance,
+    add_character,
+    finish_craft,
+    get_or_create_player,
+    get_player,
+    start_craft,
+)
 
 TEST_ADDRESS = "5TestPlayerAddress"
 CRAFT_TEST_ADDRESS = "5TestCraftChainAddress"
@@ -75,10 +85,38 @@ async def test_characters_persist_after_active_player_is_removed(mongodb_uri):
         await _purge_player(db, TEST_ADDRESS)
 
 
+@pytest.mark.asyncio
+async def test_new_character_has_legend_and_old_ones_get_it_on_read(mongodb_uri):
+    db = get_database()
+    await _purge_player(db, TEST_ADDRESS)
+    try:
+        await get_or_create_player(TEST_ADDRESS)
+        player = await add_character(
+            TEST_ADDRESS, Character(first_name="Legend", last_name="Test", slot_number=1)
+        )
+        char = player.characters[0]
+        assert char["legend"] == legend.default_legend()
+        assert len(char["legend"]) == 20 and "mercy" in char["legend"]
+        assert not any(k.startswith("meta_") for k in char["legend"])
+
+        # A character stored before the legend existed (or with names
+        # missing) reads back with every name, keeping what it had.
+        await db.characters.update_one(
+            {"address": TEST_ADDRESS, "id": char["id"]},
+            {"$set": {"legend": {"mercy": 7}}},
+        )
+        fetched = await get_player(TEST_ADDRESS)
+        read = fetched.characters[0]["legend"]
+        assert read["mercy"] == 7 and read["cruelty"] == 0
+        assert set(read) == set(legend.LEGEND_KEYS)
+    finally:
+        await _purge_player(db, TEST_ADDRESS)
+
+
 async def _setup_craft_character(db, item_balances=None) -> str:
     """
     Fresh player + one character for the full-chain-auto-crafting tests
-    below - seeds the player's shared vault (player_vaults.itemBalances, the
+    below - seeds the character's home storage (character_homes.itemBalances, the
     unified pool for raw materials, processed materials and flat-count tools
     alike) that start_craft draws the shortfall from. Returns the new
     character's id.
@@ -87,17 +125,29 @@ async def _setup_craft_character(db, item_balances=None) -> str:
     await get_or_create_player(CRAFT_TEST_ADDRESS)
     player = await add_character(CRAFT_TEST_ADDRESS, Character(first_name="Crafter", last_name="Test"))
     character_id = player.characters[-1]["id"]
-    await db.player_vaults.update_one(
-        {"address": CRAFT_TEST_ADDRESS},
-        {"$set": {"items": [], "itemBalances": item_balances or {}}},
+    # Crafting works from the character's home storage (not the vault). A
+    # condition-tracked item (a crafting station like the anvil) goes in as
+    # an item instance, everything else as a stacked count.
+    balances = {i: n for i, n in (item_balances or {}).items() if not _is_tracked_item(i)}
+    items = [_new_instance(i, "home") for i, n in (item_balances or {}).items() if _is_tracked_item(i) for _ in range(n)]
+    await db.character_homes.update_one(
+        {"address": CRAFT_TEST_ADDRESS, "characterId": character_id},
+        {"$set": {"items": items, "itemBalances": balances}},
         upsert=True,
     )
     return character_id
 
 
+async def _home_item_ids(db) -> list:
+    home = await db.character_homes.find_one({"address": CRAFT_TEST_ADDRESS}) or {}
+    return sorted(i["itemId"] for i in home.get("items", []))
+
+
 async def _vault_balances(db) -> dict:
-    vault = await db.player_vaults.find_one({"address": CRAFT_TEST_ADDRESS}) or {}
-    return vault.get("itemBalances", {})
+    """The home storage crafting draws from and returns to (name kept from
+    when crafting used the shared vault)."""
+    home = await db.character_homes.find_one({"address": CRAFT_TEST_ADDRESS}) or {}
+    return home.get("itemBalances", {})
 
 
 async def _character_doc(db, character_id: str) -> dict:
@@ -113,11 +163,6 @@ async def _force_craft_ready(db, character_id: str) -> None:
     )
 
 
-@pytest.mark.xfail(
-    reason="start_craft returns None when the chain must auto-craft refined_ore from raw ore - "
-    "not investigated, crafting is due for a rework (2026-11-06)",
-    strict=False,
-)
 @pytest.mark.asyncio
 async def test_craft_chain_auto_crafts_missing_intermediate_from_raw(mongodb_uri):
     # crowbar (tool: anvil, no blueprint) <- 2x refined_ore (processed, no
@@ -152,25 +197,24 @@ async def test_craft_chain_auto_crafts_missing_intermediate_from_raw(mongodb_uri
         started_at = ready_at - timedelta(seconds=600)
         assert abs((datetime.now(timezone.utc) - started_at).total_seconds()) < 5
 
-        # 10 ore spent (5 per refined_ore * 2), pulled from the shared vault
-        # into the character's own crafting staging area, anvil borrowed.
+        # 10 ore spent (5 per refined_ore * 2), pulled from home storage
+        # into the character's own crafting staging area; the anvil (an
+        # item instance) borrowed from home.
         vault = await _vault_balances(db)
         assert vault.get("ore_1", 0) == 90
-        assert vault.get("anvil_1", 0) == 0
+        assert await _home_item_ids(db) == []
         char_doc = await _character_doc(db, character_id)
         assert char_doc["crafting"]["itemBalances"].get("ore_1", 0) == 10
-        assert char_doc["crafting"]["itemBalances"].get("anvil_1", 0) == 1
+        assert [i["itemId"] for i in char_doc["gear"]["items"] if i.get("location") == "crafting"] == ["anvil_1"]
 
         await _force_craft_ready(db, character_id)
         finished = await finish_craft(CRAFT_TEST_ADDRESS, character_id)
         assert finished is not None
         finished_char = finished.characters[0]
         assert finished_char["crafting"].get("activeCraft") is None
-        # The anvil (never consumed, just borrowed) is back in the vault,
-        # next to the crafted crowbar.
-        vault = await _vault_balances(db)
-        assert vault.get("anvil_1", 0) == 1
-        assert vault.get("crowbar_1", 0) == 1
+        # The anvil (never consumed, just borrowed) is back home, next to
+        # the crafted crowbar.
+        assert await _home_item_ids(db) == ["anvil_1", "crowbar_1"]
     finally:
         await _purge_player(db, CRAFT_TEST_ADDRESS)
 
@@ -211,7 +255,7 @@ async def test_craft_chain_skips_already_owned_processed_material(mongodb_uri):
 async def test_craft_chain_fails_atomically_on_missing_intermediate_tool(mongodb_uri):
     # beam (tool: workbench) <- 3x plank (processed) <- raw wood, but plank
     # itself needs an instance-tracked axe_stone/axe the player has none
-    # of - the whole chain must fail outright (start_craft returns None),
+    # of - the whole chain must fail outright (start_craft raises CraftRefused),
     # with nothing staged, even though beam's own tool (workbench) IS
     # available.
     db = get_database()
@@ -219,24 +263,19 @@ async def test_craft_chain_fails_atomically_on_missing_intermediate_tool(mongodb
         character_id = await _setup_craft_character(
             db, item_balances={"wood_1": 100, "workbench_1": 1}
         )
-        result = await start_craft(CRAFT_TEST_ADDRESS, character_id, "beam", 1, count=1)
-        assert result is None
+        with pytest.raises(CraftRefused):
+            await start_craft(CRAFT_TEST_ADDRESS, character_id, "beam", 1, count=1)
 
         char_doc = await _character_doc(db, character_id)
         assert char_doc["crafting"]["activeCraft"] is None
         assert char_doc["crafting"]["itemBalances"] == {}
         vault = await _vault_balances(db)
         assert vault.get("wood_1", 0) == 100
-        assert vault.get("workbench_1", 0) == 1
+        assert await _home_item_ids(db) == ["workbench_1"]         # the workbench item stayed home
     finally:
         await _purge_player(db, CRAFT_TEST_ADDRESS)
 
 
-@pytest.mark.xfail(
-    reason="start_craft returns None when the chain must auto-craft refined_ore from raw ore - "
-    "not investigated, crafting is due for a rework (2026-11-06)",
-    strict=False,
-)
 @pytest.mark.asyncio
 async def test_craft_chain_multi_count_only_manufactures_the_shortfall(mongodb_uri):
     # count=3 crowbars need 6 refined_ore total; 2 already owned, so only
@@ -264,5 +303,42 @@ async def test_craft_chain_multi_count_only_manufactures_the_shortfall(mongodb_u
         char_doc = await _character_doc(db, character_id)
         assert char_doc["crafting"]["itemBalances"].get("refined_ore_1", 0) == 2
         assert char_doc["crafting"]["itemBalances"].get("ore_1", 0) == 20
+    finally:
+        await _purge_player(db, CRAFT_TEST_ADDRESS)
+
+
+@pytest.mark.asyncio
+async def test_craft_takes_from_home_then_backpack_and_finishes_into_home(mongodb_uri):
+    # crowbar = 2x refined_ore + anvil. One refined_ore at home, one in the
+    # backpack, the anvil at home; the vault holds plenty but is never used.
+    db = get_database()
+    try:
+        character_id = await _setup_craft_character(db, item_balances={"refined_ore_1": 1, "anvil_1": 1})
+        await db.characters.update_one(
+            {"address": CRAFT_TEST_ADDRESS, "id": character_id},
+            {"$set": {"gear.itemBalances.backpack": {"refined_ore_1": 1}}},
+        )
+        await db.player_vaults.update_one(
+            {"address": CRAFT_TEST_ADDRESS}, {"$set": {"itemBalances": {"refined_ore_1": 50}}}, upsert=True)
+
+        result = await start_craft(CRAFT_TEST_ADDRESS, character_id, "crowbar", 1, count=1)
+        assert result is not None
+        char_doc = await _character_doc(db, character_id)
+        assert char_doc["crafting"]["activeCraft"]["storage"] == "home"
+        assert char_doc["crafting"]["itemBalances"] == {"refined_ore_1": 2}
+        anvil = next(i for i in char_doc["gear"]["items"] if i["itemId"] == "anvil_1")
+        assert anvil["location"] == "crafting"                     # the anvil item is borrowed
+        assert "refined_ore_1" not in (char_doc["gear"]["itemBalances"].get("backpack") or {})
+        assert await _vault_balances(db) == {}                     # home emptied
+        vault = await db.player_vaults.find_one({"address": CRAFT_TEST_ADDRESS})
+        assert vault["itemBalances"]["refined_ore_1"] == 50          # vault untouched
+
+        await _force_craft_ready(db, character_id)
+        assert await finish_craft(CRAFT_TEST_ADDRESS, character_id) is not None
+        assert await _vault_balances(db) == {}
+        assert await _home_item_ids(db) == ["anvil_1", "crowbar_1"]  # the anvil came back home
+        home = await db.character_homes.find_one({"address": CRAFT_TEST_ADDRESS, "characterId": character_id})
+        crowbar = next(i for i in home["items"] if i["itemId"] == "crowbar_1")   # tracked item: an instance
+        assert crowbar["location"] == "home" and crowbar["quality"] == 4   # condition: new
     finally:
         await _purge_player(db, CRAFT_TEST_ADDRESS)

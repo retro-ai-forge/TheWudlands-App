@@ -9,17 +9,6 @@
   margin: 0 auto;
 }
 
-.heading {
-  font-family: "Courier New", Courier, monospace;
-  font-size: 1.1rem;
-  letter-spacing: 0.2em;
-  text-transform: uppercase;
-  color: #c07a3a;
-  border-bottom: 1px solid #7a6a3a;
-  padding-bottom: 0.75rem;
-  margin-bottom: 2rem;
-}
-
 .body {
   font-family: "Courier New", Courier, monospace;
   font-size: 1rem;
@@ -36,18 +25,6 @@
 
 .externalLink:hover {
   color: #e6a55a;
-}
-
-.sectionHeading {
-  font-family: "Courier New", Courier, monospace;
-  font-size: 1rem;
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
-  color: #c07a3a;
-  border-bottom: 1px solid #3a3020;
-  padding-bottom: 0.5rem;
-  margin-top: 3rem;
-  margin-bottom: 1.25rem;
 }
 
 .code {
@@ -170,12 +147,6 @@
   text-align: center;
   white-space: pre-line;
 }
-
-.statusFree       { color: #a1d82e; font-weight: bold; }
-.statusReady      { color: #5a8c2a; font-weight: bold; }
-.statusWorking    { color: #ffa726; font-weight: bold; }
-.statusTravelling { color: #29b6f6; font-weight: bold; }
-.statusImprisoned { color: #ef5350; font-weight: bold; }
 
 .statusAlive      { color: #66bb6a; font-weight: bold; }
 .statusDead       { color: #000000; background-color: #ffffff; font-weight: bold; padding: 0.1em 0.3em; border-radius: 2px; }

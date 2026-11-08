@@ -5,6 +5,36 @@ import type { SlotCharacterSummary } from "../types";
 import type { ItemInstance } from "../types";
 export type { ItemInstance } from "../types";
 import { getResourceCatalog, getToolCatalog, getItemCatalog } from "./catalogCache";
+import burnHoursData from "../../../../backend/data/light-source-burn-hours.json";
+
+// Hours one unit of a light burns, by family and tier - the same file
+// foraging burns light by (backend.foraging). "lantern" is the glass
+// lantern; a lit lantern burns as long as the lower of its own and its
+// oil's hours.
+const BURN_HOURS = burnHoursData as unknown as Record<string, Record<string, number>>;
+
+function hoursLabel(hours: number): string {
+  return `${hours} ${hours === 1 ? "hour" : "hours"}`;
+}
+
+/** The item popup's burn line for a light or its fuel, or null. */
+function burnLine(familyId: string | undefined, tier: number | undefined): string | null {
+  if (!familyId || tier == null) return null;
+  const hoursOf = (key: string) => BURN_HOURS[key]?.[String(tier)];
+  if (familyId === "candle" || familyId === "torch") {
+    const hours = hoursOf(familyId);
+    return hours ? `Burns: ${hoursLabel(hours)}` : null;
+  }
+  if (familyId === "oil") {
+    const hours = hoursOf("oil");
+    return hours ? `Burns: ${hoursLabel(hours)} in a lantern` : null;
+  }
+  if (familyId === "glass_lantern") {
+    const hours = hoursOf("lantern");
+    return hours ? `Oil burns: up to ${hoursLabel(hours)}` : null;
+  }
+  return null;
+}
 
 export type BlueprintTierInfo = Record<
   string,
@@ -13,7 +43,6 @@ export type BlueprintTierInfo = Record<
     familyId: string;
     kind: string;
     name?: string;
-    qualityMax?: number | null;
     armorClass?: number | null;
     /** Per-tier art path (item-catalog only) - "" when this family/tier has no dedicated art yet. */
     icon?: string;
@@ -50,13 +79,11 @@ export type RawPlayerData = {
   characters: SlotCharacterSummary[];
 };
 
-// GET /me/characters/{characterId}/salvage-preview/{itemId} (backend.
-// recycling.RawMaterialRecovery (module name), camelCased by auth_routes.py's
+// One row's materials from GET .../{home|camp}/salvage-preview (backend.
+// recycling.RawMaterialRecovery, camelCased by auth_routes.py's
 // SalvagePreviewResponse) - what salvaging would hand back, one entry per
-// recoverable raw material family. Exported so HomeView.tsx's own
-// ChopBlockPopup (the chopping block's bulk-salvage popup, which gets the
-// SAME per-material breakdown per row from GET .../home/salvage-preview)
-// can reuse this exact shape instead of redeclaring a parallel one.
+// recoverable raw material family. Used by ChopBlockPopup, the Salvage All
+// popup at home/camp.
 export type SalvageYield = { base: number; skill: number; tool: number; charm: number; total: number };
 export type SalvageRecoveredLine = {
   familyId: string;
@@ -73,18 +100,24 @@ export type SalvageMaterial = {
   yieldBreakdown: SalvageYield;
   recoveredUnits: number;
   recovered: SalvageRecoveredLine[];
+  /** Units a worn item gives back anyway (backend data/item-conditions.json
+   * "salvageMinimum": damaged recipe over 15 raw / broken over 50 -> at least
+   * 1 of its most common raw), already counted in recoveredUnits. */
+  minimumBonus?: number;
 };
 /** An item instance's quality state as the salvage endpoints report it -
  * balance items (no instance) are always "new". */
-export type SalvageCondition = "new" | "used" | "damaged";
+export type SalvageCondition = "new" | "used" | "damaged" | "broken";
 type SalvagePreview = { materials: SalvageMaterial[]; condition?: SalvageCondition };
 
-/** A worn instance&apos;s salvage penalty - mirrors backend.recycling.
- * CONDITION_PENALTY (used -20pp, damaged -50pp, floored at 0). Display
- * only: recoveredUnits already has it applied server-side. */
+/** A worn instance&apos;s salvage penalty - mirrors backend data/
+ * item-conditions.json "salvagePenalty" (used -10pp, damaged -25pp, broken
+ * -50pp, floored at 0). Display only: recoveredUnits already has it applied
+ * server-side. */
 const SALVAGE_CONDITION_PENALTY: Partial<Record<SalvageCondition, { percent: number; label: string }>> = {
-  used: { percent: 20, label: "used" },
-  damaged: { percent: 50, label: "dam" },
+  used: { percent: 10, label: "used" },
+  damaged: { percent: 25, label: "dam" },
+  broken: { percent: 50, label: "broken" },
 };
 
 /** One raw material's yield formula, e.g. "25 + 0 skill + 5 tool + 0 charm
@@ -166,15 +199,14 @@ export function selectionWeight(
       if (isInstance) {
         total += slotCost;
       } else {
+        // A marked tile is the whole stack (the grids don't split stacks):
+        // tiny items cost one slot per full stack, bigger ones per item.
         const stackSize = Math.max(1, info?.stackSize ?? 1);
         const qty = balances[id] ?? 0;
-        const hash = raw.lastIndexOf("#");
-        const tileIdx = hash === -1 ? 0 : parseInt(raw.slice(hash + 1), 10);
-        const itemsInTile = Math.max(0, Math.min(stackSize, qty - tileIdx * stackSize));
         const sizeClass = info?.sizeClass ?? "tiny";
         total += sizeClass === "tiny"
-          ? (itemsInTile > 0 ? slotCost : 0)
-          : itemsInTile * slotCost;
+          ? Math.ceil(qty / stackSize) * slotCost
+          : qty * slotCost;
       }
     }
   }
@@ -340,6 +372,20 @@ function getToolFamilyIcon(familyId: string): string {
     case "enchanters_table": return "✨";
     default: return "🔧";
   }
+}
+
+/**
+ * Empty-grid text for the "All" (A) filter of vault, home and camp. "All"
+ * leaves out tools and raw/processed materials - they have their own 🔧 and
+ * 🪨 buttons - so a storage holding only those would otherwise read as
+ * empty. When something is hidden, point at the filter that shows it.
+ */
+export function allFilterEmptyLabel(emptyLabel: string, hasTools: boolean, hasResources: boolean, hasOtherHidden: boolean): string {
+  if (hasTools && hasResources) return "Only tools and materials here - use 🔧 or 🪨 above to see them.";
+  if (hasTools) return "Only tools here - use 🔧 above to see them.";
+  if (hasResources) return "Only materials here - use 🪨 above to see them.";
+  if (hasOtherHidden) return "Use the filters above to find all items.";
+  return emptyLabel;
 }
 
 export function getKindIcon(kind: string): string {
@@ -786,10 +832,15 @@ const ITEM_TILE_PX = 100;
 // just blank space below the last row.
 const SCROLLBAR_OVERLAP_PX = 18;
 
-// Matches .packedItemsRow's own CSS `gap: 0.35rem` - PackedItemsRow's own
+// Matches .packedItemsRow's own CSS `gap: 0.2rem` - PackedItemsRow's own
 // row-count math needs this in px to convert a target pixel budget into a
 // whole number of tile rows.
-const PACKED_ROW_GAP_PX = 5.6;
+const PACKED_ROW_GAP_PX = 3.2;
+
+// ItemGrid fills rows at least this many tiles wide before it starts
+// stacking tiles in columns; .itemGrid/.itemGridRow's padding-left (0.4rem).
+const MIN_GRID_COLUMNS = 3;
+const GRID_PADDING_LEFT_PX = 6.4;
 
 // Small breathing room the backpack popup's own card - and its packed
 // item matrix - leave above the fixed footer bar, so the footer always
@@ -1012,6 +1063,7 @@ export function ItemGrid({
   // phone or a resized browser window changes how much space is left).
   const scrollRef = useRef<HTMLDivElement>(null);
   const [gridHeight, setGridHeight] = useState<number>(ITEM_TILE_PX);
+  const [gridWidth, setGridWidth] = useState<number>(0);
   useEffect(() => {
     const measure = () => {
       const el = scrollRef.current;
@@ -1021,6 +1073,7 @@ export function ItemGrid({
       const available =
         window.innerHeight - el.getBoundingClientRect().top - footerHeight - 16 + SCROLLBAR_OVERLAP_PX - reserveBottomPx;
       setGridHeight(Math.max(ITEM_TILE_PX, available));
+      setGridWidth(el.clientWidth);
     };
     // Defer the initial measure to the next animation frame so that any
     // parent-level scroll-to-top effects (CharacterPreview scrolls the wizard
@@ -1200,6 +1253,19 @@ export function ItemGrid({
   let scrollClass = hideScrollbar ? `${styles.itemGridScroll} ${styles.itemGridScrollNoBar}` : styles.itemGridScroll;
   if (selectBusy) scrollClass += ` ${styles.itemGridScrollBusy}`;
 
+  // Fill row by row - as many columns as fit the width, never fewer than
+  // MIN_GRID_COLUMNS - while every tile still fits in the rows on screen;
+  // only once they don't, switch to columns (top to bottom) that scroll
+  // sideways. The scrollbar slack below the last row doesn't count here.
+  const tileCount = expandedIds.length + expandedResourceIds.length;
+  const tileStep = ITEM_TILE_PX + PACKED_ROW_GAP_PX;
+  const rowsOnScreen = Math.max(1, Math.floor((gridHeight - SCROLLBAR_OVERLAP_PX + PACKED_ROW_GAP_PX) / tileStep));
+  const columnsOnScreen = Math.max(
+    MIN_GRID_COLUMNS,
+    Math.floor((gridWidth - GRID_PADDING_LEFT_PX + PACKED_ROW_GAP_PX) / tileStep),
+  );
+  const fillRows = tileCount <= rowsOnScreen * columnsOnScreen;
+
   return (
     <div
       ref={scrollRef}
@@ -1209,25 +1275,17 @@ export function ItemGrid({
       {expandedIds.length === 0 && expandedResourceIds.length === 0 ? (
         <p className={styles.inventoryEmpty}>{emptyLabel}</p>
       ) : null}
-      <div className={expandedIds.length + expandedResourceIds.length <= Math.floor(gridHeight / ITEM_TILE_PX) ? styles.itemGridRow : styles.itemGrid}>
+      <div
+        className={fillRows ? styles.itemGridRow : styles.itemGrid}
+        style={fillRows ? { gridTemplateColumns: `repeat(${columnsOnScreen}, ${ITEM_TILE_PX}px)` } : undefined}
+      >
         {expandedIds.map(({ key, id, displayCount, tileCap }) => {
           const info = tierInfo[lookupIds?.[id] ?? id];
           const name = info?.name ? stripBlueprintPrefix(info.name) : formatResourceLabel(lookupIds?.[id] ?? id);
-          // Only a real item instance carries a quality (isInstance rows -
-          // same condition ItemDetailPopup uses for its "Quality: X/Y"
-          // line) - a stackable balance row has no such concept, so it
-          // gets no bar at all rather than a misleading full-green one.
-          const currentQuality = instanceQuality?.[id];
-          const qualityFraction =
-            lookupIds?.[id] !== undefined && info?.qualityMax != null && currentQuality != null
-              ? Math.max(0, Math.min(1, info.qualityMax > 0 ? currentQuality / (info.qualityMax * (2 ** (info.tier - 1))) : 1))
-              : null;
-          // Same cutoff as the quality bar's own red band (qualityState) -
-          // a damaged instance gets a red-tinted tile background too, not
-          // just the thin bar along its bottom edge, so it reads at a
-          // glance in a full grid instead of needing a close look at one
-          // 5px sliver.
-          const isDamaged = qualityFraction !== null && qualityState(qualityFraction) === "damaged";
+          // Only a real item instance has a condition - a stackable balance
+          // row gets no corner at all. A broken one also gets the red tile.
+          const cond = lookupIds?.[id] !== undefined ? conditionOf(instanceQuality?.[id]) : null;
+          const isDamaged = cond === "broken";
           const isSelected = selectMode && selectedIds?.has(key);
           let cellClass = styles.itemGridCell;
           if (isDamaged) cellClass += ` ${styles.itemGridCellDamaged}`;
@@ -1259,10 +1317,10 @@ export function ItemGrid({
               )}
               {displayCount !== null && displayCount > 1 && <span className={styles.itemGridCountBadge}>{displayCount}</span>}
               {isSelected && <span className={styles.itemGridCheckmark}>&#x2713;</span>}
-              {qualityFraction !== null && (
+              {cond !== null && (
                 <div
-                  className={styles.itemGridQualityBar}
-                  style={{ backgroundColor: qualityBarColor(qualityFraction) }}
+                  className={styles.itemGridConditionCorner}
+                  style={{ backgroundColor: conditionColor(cond) }}
                 />
               )}
             </button>
@@ -1435,9 +1493,9 @@ function destroyFillColor(t: number): string {
   return `rgb(${r}, ${g}, ${b})`;
 }
 
-// The salvage hold bar's own fill (see ItemDetailPopup's runSalvage) - same
+// The salvage hold bar's own fill (the Salvage All popup, ChopBlockPopup) - same
 // gold start as destroyFillColor, but deepening into the app's own
-// "healthy/recovered" green (QUALITY_STATE_COLORS.new, rgb(90, 156, 74))
+// "healthy/recovered" green (the color family of QUALITY_STATE_COLORS.new)
 // instead of red, so a beneficial action never reads as a warning.
 function salvageFillColor(t: number): string {
   const GOLD: [number, number, number] = [230, 184, 92];
@@ -1693,28 +1751,31 @@ export function ChopBlockPopup({
   onPlayerDataUpdated,
   onClose,
   preSelectedIds,
-  preSelectedAmounts,
   source = "home",
 }: {
   characterId: string;
   onPlayerDataUpdated?: (data: RawPlayerData) => void;
   onClose: () => void;
   preSelectedIds?: Set<string>;
-  preSelectedAmounts?: Map<string, number>;
-  source?: "home" | "vault" | "camp";
+  /** Salvaging only happens at home or camp: the salvage icon, or the
+   * multi-select bar there (preSelectedIds). */
+  source?: "home" | "camp";
 }) {
   const [rows, setRows] = useState<ChopBlockRow[] | null>(null);
   const [selected, setSelected] = useState<Set<string>>(new Set());
 
   useEffect(() => {
+    // An empty pre-selection means nothing to salvage - not "everything",
+    // which is what the preview answers when no `selected` is sent.
+    if (preSelectedIds && preSelectedIds.size === 0) {
+      setRows([]);
+      return;
+    }
     let cancelled = false;
     let url = `/api/auth/me/characters/${characterId}/${source}/salvage-preview`;
     const params: string[] = [];
     if (preSelectedIds && preSelectedIds.size > 0) {
       params.push(`selected=${[...preSelectedIds].join(",")}`);
-    }
-    if (preSelectedAmounts && preSelectedAmounts.size > 0) {
-      params.push(`amounts=${[...preSelectedAmounts].map(([id, n]) => `${id}:${n}`).join(",")}`);
     }
     if (params.length > 0) url += `?${params.join("&")}`;
     fetch(url, { credentials: "include" })
@@ -1751,7 +1812,7 @@ export function ChopBlockPopup({
     (rows ?? []).filter((row) => selected.has(row.id)).flatMap((row) => row.materials)
   );
 
-  const emptyLabel = source === "vault" ? "Nothing in the vault can be salvaged right now." : source === "camp" ? "Nothing at camp can be salvaged right now." : "Nothing in home can be salvaged right now.";
+  const emptyLabel = source === "camp" ? "Nothing at camp can be salvaged right now." : "Nothing in home can be salvaged right now.";
 
   return (
     <HoldActionPopup
@@ -1760,23 +1821,15 @@ export function ChopBlockPopup({
       cardClassName={styles.chopBlockCard}
       iconClassName={styles.chopBlockIcon}
       label="Hold to unmake"
-      icon="/images/character/chopping_block.png"
+      icon="/images/character/salvage.png"
       tone="salvage"
       characterId={characterId}
       disabled={rows === null || selected.size === 0}
-      onConfirm={() => {
-        const amounts: Record<string, number> = {};
-        if (preSelectedAmounts) {
-          for (const id of selected) {
-            const cap = preSelectedAmounts.get(id);
-            if (cap !== undefined) amounts[id] = cap;
-          }
-        }
-        return postJson(`/api/auth/me/characters/${characterId}/${source}/salvage-all`, {
+      onConfirm={() =>
+        postJson(`/api/auth/me/characters/${characterId}/${source}/salvage-all`, {
           selected: [...selected],
-          ...(Object.keys(amounts).length > 0 ? { amounts } : {}),
-        });
-      }}
+        })
+      }
       onPlayerDataUpdated={onPlayerDataUpdated}
       onClose={onClose}
     >
@@ -1811,6 +1864,11 @@ export function ChopBlockPopup({
                         </span>
                       </p>
                       <SalvageFormulaLine breakdown={material.yieldBreakdown} condition={row.condition} />
+                      {(material.minimumBonus ?? 0) > 0 && (
+                        <p className={styles.salvageFormulaLine}>
+                          +{material.minimumBonus} saved from the {row.condition} item
+                        </p>
+                      )}
                     </div>
                   ))}
                   <p className={selected.has(row.id) ? styles.salvageFinalLine : styles.salvageFinalLineMuted}>
@@ -1829,31 +1887,45 @@ export function ChopBlockPopup({
   );
 }
 
-// The three discrete condition brackets a quality fraction (current/max)
-// falls into - fixed steps, not a smooth blend. The same cutoffs drive
-// salvage yield server-side (backend.recycling.quality_state/
-// CONDITION_PENALTY: new 0, used -20pp, damaged -50pp).
-/** Exported so BodyTab.tsx's equip slots can apply the exact same
- * damaged-tile treatment ItemGrid uses below, rather than duplicating the
- * 10%/50% cutoffs. */
-export type QualityState = "new" | "used" | "damaged";
+// Item condition (backend/item_condition.py): an instance's `quality` is a
+// level 4..1 - new, used, damaged, broken - the same for every tier; below
+// broken the item is gone. Stacked items have no condition (null).
+export type QualityState = "new" | "used" | "damaged" | "broken";
 
-export function qualityState(f: number): QualityState {
-  if (f > 0.5) return "new"; // 51-100%
-  if (f > 0.1) return "used"; // 11-50%
-  return "damaged"; // 1-10% (and 0)
+const CONDITION_BY_LEVEL: Record<number, QualityState> = { 4: "new", 3: "used", 2: "damaged", 1: "broken" };
+
+/** The condition of a stored quality level - null for a stack (no quality).
+ * Anything above 4 (an old point value not yet migrated) counts as new. */
+export function conditionOf(quality: number | null | undefined): QualityState | null {
+  if (quality == null) return null;
+  return CONDITION_BY_LEVEL[Math.max(1, Math.min(4, Math.round(quality)))];
 }
+
+export const CONDITION_LABEL: Record<QualityState, string> = {
+  new: "New",
+  used: "Used",
+  damaged: "Damaged",
+  broken: "Broken",
+};
+
+/** Mounts and companions themselves (slot Mount / Companion) show the same four levels as health. */
+export const HEALTH_LABEL: Record<QualityState, string> = {
+  new: "Good",
+  used: "Tired",
+  damaged: "Exhausted",
+  broken: "Dying",
+};
 
 const QUALITY_STATE_COLORS: Record<QualityState, string> = {
   new: "rgb(64, 158, 37)",
-  used: "rgb(200, 136, 57)",
+  used: "rgb(214, 178, 58)",
   damaged: "rgb(168, 29, 16)",
+  broken: "rgb(168, 29, 16)",
 };
 
-// The quality bar's own color at fraction `f` (current/max, 0-1) - one of
-// the three fixed QUALITY_STATE_COLORS, never blended between them.
-export function qualityBarColor(f: number): string {
-  return QUALITY_STATE_COLORS[qualityState(Math.max(0, Math.min(1, f)))];
+/** The corner triangle's color for a condition (green, yellow, red, red). */
+export function conditionColor(state: QualityState): string {
+  return QUALITY_STATE_COLORS[state];
 }
 
 // How long a failed move/equip's message replaces the description text
@@ -1881,6 +1953,8 @@ function transferFailureMessage(detail: string | null): string {
   if (detail === "Character is out on an adventure - no reaching the shared vault") {
     return "Out on an adventure - the shared vault isn't reachable.";
   }
+  // Another request kept changing the same things (backend.db.TransactionConflict).
+  if (detail.endsWith("please try again.")) return detail;
   return "Couldn't move that.";
 }
 
@@ -2028,10 +2102,45 @@ export function ResourceTiles({
   );
 }
 
+/** One display-only item tile (icon, tier badge, condition corner, broken
+ * tint) - the same look as ItemGrid's tiles, for places outside the
+ * inventory, e.g. lost equipment on a foraging result (optionally
+ * clickable). `condition` is null for items without one. */
+export function ItemTile({
+  icon,
+  name,
+  tier,
+  condition,
+  onClick,
+}: {
+  icon?: string | null;
+  name: string;
+  tier?: number;
+  condition: QualityState | null;
+  /** Makes the tile a button, e.g. to open an info popup. */
+  onClick?: () => void;
+}) {
+  const isDamaged = condition === "broken";
+  const Tag = onClick ? "button" : "div";
+  return (
+    <Tag
+      {...(onClick ? { type: "button" as const, onClick } : {})}
+      className={isDamaged ? `${styles.itemGridCell} ${styles.itemGridCellDamaged}` : styles.itemGridCell}
+      title={name}
+    >
+      <ItemIcon icon={icon} alt={name} className={styles.itemGridImg} />
+      {!!tier && <span className={styles.itemGridTierBadge}>{getTierIndicator(tier)}</span>}
+      {condition !== null && (
+        <div className={styles.itemGridConditionCorner} style={{ backgroundColor: conditionColor(condition) }} />
+      )}
+    </Tag>
+  );
+}
+
 /** Single-row, horizontally-scrolling strip of tiles - what a worn
  * backpack's own popup shows packed inside it (see ItemDetailPopup's
  * packedItems prop). Same 100px tile/icon/tier-badge/count-badge/
- * quality-bar-and-damaged-tint look as ItemGrid's own tiles (deliberately
+ * condition-corner-and-broken-tint look as ItemGrid's own tiles (deliberately
  * duplicated rather than shared - ItemGrid's own tiles measure/fill the
  * whole remaining viewport height, which makes no sense embedded in a
  * popup card's own fixed-size row). Clicking a tile opens a SECOND
@@ -2275,12 +2384,8 @@ function PackedItemsRow({
         {expandedIds.map(({ key, id, displayCount, tileCap }) => {
           const info = tierInfo[lookupIds[id] ?? id];
           const name = info?.name ? stripBlueprintPrefix(info.name) : formatResourceLabel(lookupIds[id] ?? id);
-          const currentQuality = instanceQuality[id];
-          const qualityFraction =
-            lookupIds[id] !== undefined && info?.qualityMax != null && currentQuality != null
-              ? Math.max(0, Math.min(1, info.qualityMax > 0 ? currentQuality / (info.qualityMax * (2 ** (info.tier - 1))) : 1))
-              : null;
-          const isDamaged = qualityFraction !== null && qualityState(qualityFraction) === "damaged";
+          const cond = lookupIds[id] !== undefined ? conditionOf(instanceQuality[id]) : null;
+          const isDamaged = cond === "broken";
           return (
             <button
               key={key}
@@ -2300,10 +2405,10 @@ function PackedItemsRow({
                 </span>
               )}
               {displayCount !== null && displayCount > 1 && <span className={styles.itemGridCountBadge}>{displayCount}</span>}
-              {qualityFraction !== null && (
+              {cond !== null && (
                 <div
-                  className={styles.itemGridQualityBar}
-                  style={{ backgroundColor: qualityBarColor(qualityFraction) }}
+                  className={styles.itemGridConditionCorner}
+                  style={{ backgroundColor: conditionColor(cond) }}
                 />
               )}
             </button>
@@ -2518,6 +2623,7 @@ export function ItemDetailPopup({
   isInstance,
   movable,
   quality,
+  ownedConditions,
   moveId,
   location,
   source = "vault",
@@ -2554,8 +2660,12 @@ export function ItemDetailPopup({
   isInstance: boolean;
   /** False for ammo (arrow/bolt/oil) - no working move-to-backpack path exists yet, so no action buttons show. */
   movable: boolean;
-  /** This exact instance's current quality (isInstance rows only) - paired with info.qualityMax for the "Quality: current/max" line. */
+  /** This exact instance's condition level 4..1 (isInstance rows only) - shown as "Condition: New/Used/Damaged/Broken". */
   quality: number | null;
+  /** Catalog popups (not isInstance) only - the condition levels of the
+   * pieces the character owns, e.g. the crafting page's tool popup; shown
+   * as "Condition: Used" or "Condition: 1 New, 2 Broken". */
+  ownedConditions?: number[];
   /** The row id itself - an instanceId (isInstance) or a concrete itemBalances/resource id. */
   moveId: string;
   /** source:"character" instance rows only - "backpack", "home", "camp", "saddlepack", "cart", or "body" - decides which move actions are offered. */
@@ -2627,6 +2737,10 @@ export function ItemDetailPopup({
   onClose: () => void;
   iconOverride?: string;
 }) {
+  // Health only for the creatures themselves (slot Mount or Companion);
+  // their gear - saddle, barding, bridle, saddlepack, cart, charms - and
+  // everything else shows Condition.
+  const isCreature = !!info?.equipSlots?.some((group) => group.includes("Mount") || group.includes("Companion"));
   const stackSize = info?.stackSize ?? 1;
   const name = info?.name ? stripBlueprintPrefix(info.name) : fallbackName;
   const displayName = stackSize > 1 ? `${owned} ${name}` : name;
@@ -3063,18 +3177,37 @@ export function ItemDetailPopup({
               <span>Size: {info?.sizeClass ?? "tiny"}</span>
               {info?.armorClass != null && info.armorClass > 0 && (() => {
                 const maxAC = info.armorClass * (info.tier ?? 1);
-                if (!isInstance || quality == null || info.qualityMax == null || info.qualityMax <= 0) {
+                const cond = isInstance ? conditionOf(quality) : null;
+                if (cond === null) {
                   return <span>AC: {maxAC}</span>;
                 }
-                const qf = Math.max(0, Math.min(1, quality / (info.qualityMax * (2 ** (info.tier - 1)))));
-                const cond = qualityState(qf);
-                const reduction = cond === "damaged" ? 0.5 : cond === "used" ? 0.2 : 0;
+                const reduction = cond === "damaged" || cond === "broken" ? 0.5 : cond === "used" ? 0.2 : 0;
                 const currentAC = Math.max(0, Math.floor(maxAC * (1 - reduction)));
                 return <span>AC: {currentAC}/{maxAC}</span>;
               })()}
-              {isInstance && info?.qualityMax != null && (
-                <span>{info.kind === "mount" || info.kind === "companion" ? "HP" : "Quality"}: {quality ?? 0}/{info.qualityMax * (2 ** (info.tier - 1))}</span>
+              {isInstance && conditionOf(quality) !== null && (
+                isCreature ? (
+                  <span>Health: {HEALTH_LABEL[conditionOf(quality) as QualityState]}</span>
+                ) : (
+                  <span>Condition: {CONDITION_LABEL[conditionOf(quality) as QualityState]}</span>
+                )
               )}
+              {!isInstance && !!ownedConditions?.length && (() => {
+                const labels = isCreature ? HEALTH_LABEL : CONDITION_LABEL;
+                const counts = new Map<QualityState, number>();
+                for (const level of ownedConditions) {
+                  const state = conditionOf(level);
+                  if (state) counts.set(state, (counts.get(state) ?? 0) + 1);
+                }
+                const parts = (["new", "used", "damaged", "broken"] as QualityState[])
+                  .filter((state) => counts.has(state))
+                  .map((state) => (ownedConditions.length === 1 ? labels[state] : `${counts.get(state)} ${labels[state]}`));
+                return parts.length ? <span>{isCreature ? "Health" : "Condition"}: {parts.join(", ")}</span> : null;
+              })()}
+              {(() => {
+                const burn = burnLine(info?.familyId, info?.tier);
+                return burn ? <span>{burn}</span> : null;
+              })()}
               {info?.familyId === "backpack" && backpackSlotsUsed != null && backpackCapacity != null && (
                 <span>Filled: {backpackSlotsUsed}/{backpackCapacity}</span>
               )}
@@ -3297,7 +3430,7 @@ export function ItemDetailPopup({
               </div>
             )}
             {movable && source === "character" && !isInstance && (inStorage || location === "backpack" || location === "saddlepack" || location === "cart") && (
-              stackSize > 1 ? (
+              (stackSize > 1 || (!isInstance && owned > 1)) ? (
                 <>
                   {!!slotGroups.length && (
                     <div className={styles.itemPopupActions}>
@@ -3644,12 +3777,9 @@ export function VaultTab({
         } else if (playerItemLookupIds[id] !== undefined) {
           if (!balanceTotals.has(id)) instanceIds.push(id);
         } else {
-          const info = mergedCatalogTierInfo[id];
-          const stackSize = Math.max(1, info?.stackSize ?? 1);
-          const qty = playerItemsCombined[id] ?? 0;
-          const hash = stripped.lastIndexOf("#");
-          const tileIdx = hash === -1 ? 0 : parseInt(stripped.slice(hash + 1), 10);
-          const itemsInTile = Math.max(0, Math.min(stackSize, qty - tileIdx * stackSize));
+          // The grid shows a whole stack as ONE tile (skipItemStackSplit), so a
+          // marked tile means all of it, not just one stack-size's worth.
+          const itemsInTile = playerItemsCombined[id] ?? 0;
           if (itemsInTile > 0) balanceTotals.set(id, (balanceTotals.get(id) ?? 0) + itemsInTile);
         }
       }
@@ -3662,7 +3792,7 @@ export function VaultTab({
       setVaultBatchBusy(false);
       exitVaultSelectMode();
     },
-    [vaultBatchBusy, vaultSelectedIds, playerItemLookupIds, playerItemsCombined, playerResourceBalances, mergedCatalogTierInfo, character.id, onPlayerDataUpdated, exitVaultSelectMode]
+    [vaultBatchBusy, vaultSelectedIds, playerItemLookupIds, playerItemsCombined, playerResourceBalances, character.id, onPlayerDataUpdated, exitVaultSelectMode]
   );
 
   const batchDestroyVault = useCallback(async () => {
@@ -3681,12 +3811,9 @@ export function VaultTab({
       } else if (playerItemLookupIds[id] !== undefined) {
         instancesSeen.add(id);
       } else {
-        const info = mergedCatalogTierInfo[id];
-        const stackSize = Math.max(1, info?.stackSize ?? 1);
-        const qty = playerItemsCombined[id] ?? 0;
-        const hash = stripped.lastIndexOf("#");
-        const tileIdx = hash === -1 ? 0 : parseInt(stripped.slice(hash + 1), 10);
-        const itemsInTile = Math.max(0, Math.min(stackSize, qty - tileIdx * stackSize));
+        // The grid shows a whole stack as ONE tile (skipItemStackSplit), so a
+        // marked tile means all of it, not just one stack-size's worth.
+        const itemsInTile = playerItemsCombined[id] ?? 0;
         if (itemsInTile > 0) balanceTotals.set(id, (balanceTotals.get(id) ?? 0) + itemsInTile);
       }
     }
@@ -3704,7 +3831,7 @@ export function VaultTab({
     if (lastResult) onPlayerDataUpdated?.(lastResult);
     setVaultBatchBusy(false);
     exitVaultSelectMode();
-  }, [vaultBatchBusy, vaultSelectedIds, playerItemLookupIds, playerItemsCombined, playerResourceBalances, mergedCatalogTierInfo, character.id, onPlayerDataUpdated, exitVaultSelectMode]);
+  }, [vaultBatchBusy, vaultSelectedIds, playerItemLookupIds, playerItemsCombined, playerResourceBalances, character.id, onPlayerDataUpdated, exitVaultSelectMode]);
 
   return (
     <div className={`${styles.panel}${section === "vault" ? ` ${styles.panelNoScroll}` : ""}`} onContextMenu={(e) => e.preventDefault()}>
@@ -3770,7 +3897,7 @@ export function VaultTab({
         const vaultResourceTierInfo = vaultSpecialFilter === "resources" ? resourceTierInfo : undefined;
         return (
           <>
-            {allVaultIds.length > 0 && (
+            {(allVaultIds.length > 0 || hasResources) && (
               vaultSelectMode ? (
                 <div className={styles.selectionBar}>
                   <div className={styles.selectionBarActions}>
@@ -3913,7 +4040,7 @@ export function VaultTab({
             )}
             <ItemGrid
               ids={filteredIds}
-              emptyLabel={vaultSpecialFilter === "tools" ? "No tools owned." : vaultSpecialFilter === "resources" ? "No resources owned." : allActive ? "Shared Vault empty." : "No items match."}
+              emptyLabel={vaultSpecialFilter === "tools" ? "No tools owned." : vaultSpecialFilter === "resources" ? "No resources owned." : allActive ? allFilterEmptyLabel("Shared Vault empty.", hasTools, hasResources, allVaultIds.length > 0) : "No items match."}
               tierInfo={mergedCatalogTierInfo}
               balances={playerItemsCombined}
               lookupIds={playerItemLookupIds}

@@ -5,8 +5,11 @@ import Image from "next/image";
 import Link from "next/link";
 import { PageVersionTag } from "../main/PageVersionTag";
 import styles from "./page.module.css";
+import h from "@/app/styles/headings.module.css";
 
 import GuideTable from "./GuideTable";
+
+const DONE_WORD: Record<string, string> = { crafting: "ready", foraging: "back", travelling: "arrived", imprisoned: "released" };
 
 const StatusWithCountdown = ({ status, initialSeconds, showDays = false }: { status: string; initialSeconds: number; showDays?: boolean }) => {
   const [remaining, setRemaining] = useState(initialSeconds);
@@ -14,8 +17,11 @@ const StatusWithCountdown = ({ status, initialSeconds, showDays = false }: { sta
     const timer = setInterval(() => setRemaining((prev) => (prev > 0 ? prev - 1 : 0)), 1000);
     return () => clearInterval(timer);
   }, []);
-  if (remaining === 0) return <span className={styles.statusReady}>ready</span>;
-  const statusClass = status === "working" ? styles.statusWorking : status === "travelling" ? styles.statusTravelling : styles.statusImprisoned;
+  // When the timer runs out it says how it ended: a craft is "ready" and a
+  // foraging trip is "back" (the game's own words), a journey has "arrived",
+  // a prisoner is "released".
+  if (remaining === 0) return <span className={styles.statusReady}>{DONE_WORD[status] ?? "ready"}</span>;
+  const statusClass = status === "crafting" ? styles.statusCrafting : status === "foraging" ? styles.statusForaging : status === "travelling" ? styles.statusTravelling : styles.statusImprisoned;
   const days = Math.floor(remaining / 86400);
   const hours = Math.floor((remaining % 86400) / 3600);
   const minutes = Math.floor((remaining % 3600) / 60);
@@ -50,7 +56,7 @@ export default function TheWorld() {
   return (
     <div className={styles.page}>
       <section className={styles.guidelines}>
-        <h2 className={styles.heading}>The World</h2>
+        <h1 className={h.pageTitle}>The World</h1>
 
         <p className={styles.body}>
           Behind the forests and the choices lies a power buried deep. Not a cold one — it breathes, it remembers, the Wudlands Engine has opinions about what you did last time. This page is the view behind the curtain: how the Wudlands works, what keeps it turning, and why the road never quite runs the same way twice.
@@ -92,7 +98,7 @@ export default function TheWorld() {
         </p>
 
        {/* ── Minne ─────────────────────────────────────────── */}
-        <h2 className={styles.sectionHeading}>Love, Admiration<br />&amp;<br />the Art of Minne</h2>
+        <h2 className={`${h.section} ${h.ruled} ${h.center}`}>Love, Admiration<br />&amp;<br />the Art of Minne</h2>
 
         <p className={styles.body}>
           Gold buys a bed. Scars prove you survived. But neither will get you through a locked gate
@@ -106,8 +112,11 @@ export default function TheWorld() {
         </p>
 
         <div className={styles.imageFrame}>
-          <img
+          <Image
             src="/images/guide/fame.jpg"
+            width={1536}
+            height={1024}
+            sizes="(max-width: 860px) 100vw, 860px"
             alt="Famous and infamous names written on a wall, some in gold and some in blood."
             className={styles.sectionImage}
           />
@@ -122,7 +131,7 @@ export default function TheWorld() {
         </p>
 
         {/* ── Your Nature ────────────────────────────────────── */}
-        <h2 className={styles.sectionHeading}>Your Nature</h2>
+        <h2 className={`${h.section} ${h.ruled} ${h.center}`}>Your Nature</h2>
         <p className={styles.body}>
           Your <strong>origin</strong> — the blood that runs through your veins, the craft
           your hands learned, the gender the world perceives — is written at your birth and does not change. Your <strong>age</strong> advances with every adventure. Those months do not come back. More on the{" "}
@@ -147,7 +156,7 @@ export default function TheWorld() {
         </p>
 
         {/* ── Survival ───────────────────────────────────────── */}
-        <h2 className={styles.sectionHeading}>Survival<br />&amp;<br />Combat</h2>
+        <h2 className={`${h.section} ${h.ruled} ${h.center}`}>Survival<br />&amp;<br />Combat</h2>
 
         <p className={styles.body}>
           The Wudlands does not care whether you are ready. Hunger, thirst, cold — they arrive
@@ -158,7 +167,7 @@ export default function TheWorld() {
         <GuideTable rows={SURVIVAL_ROWS} />
 
         {/* ── Character & Party ───────────────────────────────── */}
-        <h2 className={styles.sectionHeading}>Character<br />&amp;<br />Party</h2>
+        <h2 className={`${h.section} ${h.ruled} ${h.center}`}>Character<br />&amp;<br />Party</h2>
 
         <p className={styles.body}>
           Decide who you are before you set foot in the Wudlands. Choose carefully.
@@ -166,9 +175,12 @@ export default function TheWorld() {
         </p>
 
         <div className={styles.imageFrame}>
-          <img
+          <Image
             src="/images/guide/affection.jpg"
-            alt="Famous and infamous names written on a wall, some in gold and some in blood."
+            width={1000}
+            height={878}
+            sizes="(max-width: 860px) 100vw, 860px"
+            alt="Two lovers embrace at the heart of a dark story map, glowing paths leading out to towers, gates, caves and an inn - love and destiny, a choice that echoes beyond time."
             className={styles.sectionImage}
           />
         </div>
@@ -186,14 +198,14 @@ export default function TheWorld() {
         <GuideTable rows={CHARACTER_ROWS} />
 
         {/* ── Character Availability ──────────────────────────────────────── */}
-        <h2 className={styles.sectionHeading}>Character Availability</h2>
+        <h2 className={`${h.section} ${h.ruled} ${h.center}`}>Character Availability</h2>
 
         <p className={styles.body}>
-          Character status at a glance: <span className={styles.statusFree}>free</span>, <span className={styles.statusReady}>ready</span>, <StatusWithCountdown status="working" initialSeconds={67} />, <StatusWithCountdown status="travelling" initialSeconds={280} showDays />, <StatusWithCountdown status="imprisoned" initialSeconds={576} showDays /> — each with a countdown until available. Does not affect adventure content.
+          Character status at a glance: <span className={styles.statusFree}>ready now</span>, <StatusWithCountdown status="crafting" initialSeconds={45} />, <StatusWithCountdown status="foraging" initialSeconds={67} />, <StatusWithCountdown status="travelling" initialSeconds={280} showDays />, <StatusWithCountdown status="imprisoned" initialSeconds={576} showDays />, the busy ones with a countdown until available. Does not affect adventure content.
         </p>
 
         {/* ── Story Effects ───────────────────────────────────────────────── */}
-        <h2 className={styles.sectionHeading}>Story Effects</h2>
+        <h2 className={`${h.section} ${h.ruled} ${h.center}`}>Story Effects</h2>
 
         <p className={styles.body}>
           Hunger, thirst, cold, buffs — temporary conditions that fade when you leave the adventure. They push your decisions during play, nothing more.

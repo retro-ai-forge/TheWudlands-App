@@ -35,42 +35,119 @@
     "ore",
     "wood"
   ],
-  "blueprint_cloth": [
+  "blueprint_cloth_head_armor": [
     "fiber"
   ],
-  "blueprint_leather": [
+  "blueprint_cloth_chest_armor": [
+    "fiber"
+  ],
+  "blueprint_cloth_leg_armor": [
+    "fiber"
+  ],
+  "blueprint_leather_head_armor": [
     "bone",
-    "skin",
+    "hide",
     "wood"
   ],
-  "blueprint_chainmail": [
+  "blueprint_leather_chest_armor": [
+    "bone",
+    "hide",
+    "wood"
+  ],
+  "blueprint_leather_leg_armor": [
+    "bone",
+    "hide",
+    "wood"
+  ],
+  "blueprint_chainmail_head_armor": [
     "ore",
     "wood"
   ],
-  "blueprint_iron": [
+  "blueprint_chainmail_chest_armor": [
     "ore",
     "wood"
   ],
-  "blueprint_ebony": [
+  "blueprint_chainmail_leg_armor": [
+    "ore",
+    "wood"
+  ],
+  "blueprint_iron_head_armor": [
+    "ore",
+    "wood"
+  ],
+  "blueprint_iron_chest_armor": [
+    "ore",
+    "wood"
+  ],
+  "blueprint_iron_leg_armor": [
+    "ore",
+    "wood"
+  ],
+  "blueprint_ebony_head_armor": [
     "bone",
     "herbs",
     "pigment",
     "wood"
   ],
-  "blueprint_chitin": [
+  "blueprint_ebony_chest_armor": [
+    "bone",
     "herbs",
+    "pigment",
+    "wood"
+  ],
+  "blueprint_ebony_leg_armor": [
+    "bone",
+    "herbs",
+    "pigment",
+    "wood"
+  ],
+  "blueprint_chitin_head_armor": [
+    "herbs",
+    "hide",
     "monster_part",
     "pigment",
-    "skin",
     "wood"
   ],
-  "blueprint_meteoric_iron": [
+  "blueprint_chitin_chest_armor": [
+    "herbs",
+    "hide",
+    "monster_part",
+    "pigment",
+    "wood"
+  ],
+  "blueprint_chitin_leg_armor": [
+    "herbs",
+    "hide",
+    "monster_part",
+    "pigment",
+    "wood"
+  ],
+  "blueprint_meteoric_iron_head_armor": [
     "crystal",
     "essence",
+    "ore"
+  ],
+  "blueprint_meteoric_iron_chest_armor": [
+    "crystal",
+    "essence",
+    "ore"
+  ],
+  "blueprint_meteoric_iron_leg_armor": [
+    "crystal",
+    "essence",
+    "ore"
+  ],
+  "blueprint_darksteel_head_armor": [
+    "clockwork",
     "ore",
     "wood"
   ],
-  "blueprint_darksteel": [
+  "blueprint_darksteel_chest_armor": [
+    "clockwork",
+    "ore",
+    "wood"
+  ],
+  "blueprint_darksteel_leg_armor": [
     "clockwork",
     "ore",
     "wood"

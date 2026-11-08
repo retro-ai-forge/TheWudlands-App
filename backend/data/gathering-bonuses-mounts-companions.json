@@ -1,57 +1,46 @@
 {
   "steed_mount": {
-    "professionGroups": ["Military", "Trade", "Rural"],
-    "bonusProfessions": ["Aristocratic"],
-    "gatheringItems": ["rope", "net", "hunters_charm"]
+    "gatheringWeapons": [],
+    "gatheringItems": ["rope", "net", "hunters_charm", "saddle", "bridle", "saddlepack", "signal_whistle"]
   },
   "beast_mount": {
-    "professionGroups": ["Military", "Rural"],
-    "bonusProfessions": ["Aristocratic"],
-    "gatheringItems": ["rope", "net", "monster_trap", "chain", "manacles", "hunters_charm"]
+    "gatheringWeapons": [],
+    "gatheringItems": ["rope", "net", "monster_trap", "chain", "manacles", "hunters_charm", "saddle", "bridle", "saddlepack", "barding_leather", "shovel"]
   },
   "exotic_mount": {
-    "professionGroups": ["Military", "Trade"],
-    "bonusProfessions": ["Aristocratic"],
-    "gatheringItems": ["monster_trap", "chain", "manacles", "rope", "net", "hunters_charm"]
+    "gatheringWeapons": [],
+    "gatheringItems": ["monster_trap", "chain", "manacles", "rope", "net", "hunters_charm", "saddle", "bridle", "barding_leather"]
   },
   "aquatic_mount": {
-    "professionGroups": ["Rural", "Trade"],
-    "bonusProfessions": ["Military"],
-    "gatheringItems": ["net", "rope", "chain", "hunters_charm"]
+    "gatheringWeapons": [],
+    "gatheringItems": ["net", "rope", "chain", "hunters_charm", "saddle", "bridle", "fishing_pole"]
   },
   "winged_companion": {
-    "professionGroups": ["Aristocratic", "Artists"],
-    "bonusProfessions": ["Military"],
-    "gatheringItems": ["net", "bow", "crossbow", "spyglass", "hunters_charm"]
+    "gatheringWeapons": ["bow", "crossbow"],
+    "gatheringItems": ["net", "spyglass", "hunters_charm", "charm_flying"]
   },
   "critter_companion": {
-    "professionGroups": ["Trade", "Rural"],
-    "bonusProfessions": ["Artists"],
-    "gatheringItems": ["net", "monster_trap", "rope", "hunters_charm"]
+    "gatheringWeapons": [],
+    "gatheringItems": ["net", "monster_trap", "rope", "hunters_charm", "charm_other"]
   },
   "arcane_companion": {
-    "professionGroups": ["Alchemy"],
-    "bonusProfessions": ["Aristocratic"],
-    "gatheringItems": ["starlight_catcher", "hunters_charm"]
+    "gatheringWeapons": [],
+    "gatheringItems": ["starlight_catcher", "hunters_charm", "glass_lantern"]
   },
   "fey_companion": {
-    "professionGroups": ["Alchemy", "Aristocratic"],
-    "bonusProfessions": ["Artists"],
-    "gatheringItems": ["starlight_catcher", "hunters_charm"]
+    "gatheringWeapons": [],
+    "gatheringItems": ["starlight_catcher", "hunters_charm", "charm_ghost"]
   },
   "aquatic_companion": {
-    "professionGroups": ["Rural"],
-    "bonusProfessions": ["Trade"],
-    "gatheringItems": ["net", "fishing_pole", "rope", "hunters_charm"]
+    "gatheringWeapons": [],
+    "gatheringItems": ["net", "fishing_pole", "rope", "hunters_charm", "charm_aquatic"]
   },
   "dark_companion": {
-    "professionGroups": ["Alchemy"],
-    "bonusProfessions": ["Military"],
-    "gatheringItems": ["manacles", "chain", "monster_trap", "hunters_charm"]
+    "gatheringWeapons": [],
+    "gatheringItems": ["manacles", "chain", "monster_trap", "hunters_charm", "charm_other"]
   },
   "spirit_companion": {
-    "professionGroups": ["Alchemy"],
-    "bonusProfessions": ["Aristocratic"],
-    "gatheringItems": ["starlight_catcher", "manacles", "hunters_charm"]
+    "gatheringWeapons": [],
+    "gatheringItems": ["starlight_catcher", "manacles", "hunters_charm", "charm_ghost"]
   }
 }

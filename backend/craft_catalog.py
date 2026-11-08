@@ -120,7 +120,7 @@ class BlueprintItem:
 class BlueprintPoolRule:
     """One entry of blueprintPoolsByProfessionCount for a given profession count."""
 
-    source: str  # "tool" | "item"
+    source: str  # "tool" | "item" | "any" (both - the starting picks)
     tier: int
     count: int
 
@@ -169,16 +169,28 @@ def _load_recipes() -> tuple[dict, ...]:
     return tuple(json.loads(_RECIPES_PATH.read_text()))
 
 
-def _iter_ingredients(ingredients: list[dict]):
-    """Flatten an ingredient list, expanding any "alternatives" slot (e.g.
-    carcass's bone_blade-consumed-or-dagger-not-consumed choice) into its
-    individual options. A plain ingredient yields itself unchanged."""
+def _classic_ingredients(ingredients: list[dict]):
+    """One ingredient per slot: a plain ingredient itself; for an
+    "alternatives" slot its classic material - the option marked
+    "classic": true, else the last consumed one (e.g. skin for leather, fiber
+    for rope, the bone blade for carcass, sand for glass pane). The other
+    options are stand-ins (hide for skin...) that give crafters more ways
+    in, but don't move an item into other profession groups."""
     for ingredient in ingredients:
         alternatives = ingredient.get("alternatives")
-        if alternatives is not None:
-            yield from alternatives
-        else:
+        if alternatives is None:
             yield ingredient
+            continue
+        consumed = [o for o in alternatives if o.get("consumed", True)]
+        marked = [o for o in consumed if o.get("classic")]
+        if marked or consumed:
+            yield (marked or consumed)[-1]
+
+
+def _slot_options(ingredient: dict) -> list[dict]:
+    """The consumed options of one ingredient slot (a plain ingredient is its
+    own only option)."""
+    return [o for o in ingredient.get("alternatives", [ingredient]) if o.get("consumed", True)]
 
 
 def _resolve_raw_family_hits(
@@ -192,7 +204,7 @@ def _resolve_raw_family_hits(
         return []
     seen = seen | {family_id}
     hits: list[str] = []
-    for ingredient in _iter_ingredients(recipe["ingredients"]):
+    for ingredient in _classic_ingredients(recipe["ingredients"]):
         if ingredient["category"] == "raw":
             hits.append(ingredient["familyId"])
         elif ingredient["category"] == "processed":
@@ -203,7 +215,7 @@ def _resolve_raw_family_hits(
 
 def _recipe_categories(recipe: dict, recipes_by_family: dict[str, dict]) -> list[str]:
     hits: list[str] = []
-    for ingredient in _iter_ingredients(recipe["ingredients"]):
+    for ingredient in _classic_ingredients(recipe["ingredients"]):
         if ingredient["category"] == "raw":
             hits.append(ingredient["familyId"])
         elif ingredient["category"] == "processed":
@@ -278,9 +290,15 @@ def _hard_gated_tool_deps(
     candidates = [tool] if isinstance(tool, str) else (tool if isinstance(tool, list) else [])
     if candidates and not any(not _tool_is_blueprint_gated(c, recipes_by_family) for c in candidates):
         deps.update(candidates)
-    for ingredient in _iter_ingredients(recipe.get("ingredients", [])):
-        if ingredient["category"] == "processed":
-            deps |= _hard_gated_tool_deps(ingredient["familyId"], recipes_by_family, seen)
+    for ingredient in recipe.get("ingredients", []):
+        # A slot only forces a tool when every option of it needs that tool
+        # (rope from leather needs a tanning rack, rope from fiber nothing).
+        per_option = [
+            _hard_gated_tool_deps(o["familyId"], recipes_by_family, seen) if o["category"] == "processed" else set()
+            for o in _slot_options(ingredient)
+        ]
+        if per_option:
+            deps |= set.intersection(*per_option)
     return deps
 
 
@@ -340,16 +358,21 @@ def _hard_tool_alternative_sets(
     candidates = [tool] if isinstance(tool, str) else (tool if isinstance(tool, list) else [])
     if candidates and not any(not _tool_is_blueprint_gated(c, recipes_by_family) for c in candidates):
         reqs.add(frozenset(candidates))
-    for ingredient in _iter_ingredients(recipe.get("ingredients", [])):
-        if ingredient["category"] == "processed":
-            reqs |= _hard_tool_alternative_sets(ingredient["familyId"], recipes_by_family, seen)
+    for ingredient in recipe.get("ingredients", []):
+        # As in _hard_gated_tool_deps: only what every option of a slot needs.
+        per_option = [
+            _hard_tool_alternative_sets(o["familyId"], recipes_by_family, seen) if o["category"] == "processed" else set()
+            for o in _slot_options(ingredient)
+        ]
+        if per_option:
+            reqs |= set.intersection(*per_option)
     return reqs
 
 
 def _build_item_blueprint_tool_hints(
     recipes_by_family: dict[str, dict], tool_roots: dict[str, tuple[str, ...]]
 ) -> dict[str, tuple[str, ...]]:
-    """blueprint familyId (of a FINAL item, e.g. "blueprint_cloth") -> the
+    """blueprint familyId (of a FINAL item, e.g. "blueprint_cloth_chest_armor") -> the
     root tool family id(s) that would help build it - the union, across
     every hard tool requirement anywhere in its chain, of each
     requirement's alternatives' own resolved roots. Used to widen the
@@ -407,6 +430,8 @@ TOOL_BLUEPRINT_ROOT_FAMILIES: dict[str, tuple[str, ...]] = _build_tool_blueprint
 def _blueprint_catalog_type(blueprint_family_id: str) -> str | None:
     """Whether a blueprint family unlocks a "tool" or a final item, via what its recipe(s) produce."""
     suffix = blueprint_family_id[len("blueprint_"):]
+    # Every armor piece has its own blueprint (blueprint_iron_head_armor);
+    # the piece suffixes are only a fallback for a family named without one.
     for candidate in (suffix, f"{suffix}_head_armor", f"{suffix}_chest_armor", f"{suffix}_leg_armor"):
         catalog_type = _FAMILY_CATALOG_TYPES.get(candidate)
         if catalog_type:
@@ -418,9 +443,20 @@ _SOURCE_PREDICATES = {
     "tool": lambda bp: _blueprint_catalog_type(bp.family_id) == "tool",
     "item": lambda bp: _blueprint_catalog_type(bp.family_id) in _FINAL_CATALOG_TYPES,
 }
+_SOURCE_PREDICATES["any"] = lambda bp: _SOURCE_PREDICATES["tool"](bp) or _SOURCE_PREDICATES["item"](bp)
+
+
+def blueprint_source(blueprint_family_id: str) -> str | None:
+    """"tool" or "item" - what a blueprint family unlocks (None if neither)."""
+    catalog_type = _blueprint_catalog_type(blueprint_family_id)
+    if catalog_type == "tool":
+        return "tool"
+    if catalog_type in _FINAL_CATALOG_TYPES:
+        return "item"
+    return None
 
 # item blueprint familyId -> root tool family id(s) that would help build it,
-# e.g. "blueprint_cloth" -> ("kiln", "spinning_wheel", "workbench"). See
+# e.g. "blueprint_cloth_chest_armor" -> ("kiln", "spinning_wheel", "workbench"). See
 # _build_item_blueprint_tool_hints.
 ITEM_BLUEPRINT_TOOL_HINTS: dict[str, tuple[str, ...]] = _build_item_blueprint_tool_hints(
     {r["familyId"]: r for r in _load_recipes()}, TOOL_BLUEPRINT_ROOT_FAMILIES
@@ -433,7 +469,7 @@ ITEM_BLUEPRINT_TOOL_HINTS: dict[str, tuple[str, ...]] = _build_item_blueprint_to
 # which one is short, not a per-category thematic pick.
 UNIVERSAL_FALLBACK_BLUEPRINT_FAMILIES: dict[str, tuple[str, ...]] = {
     "tool": ("blueprint_workbench", "blueprint_kiln"),
-    "item": ("blueprint_dagger", "blueprint_cloth"),
+    "item": ("blueprint_dagger", "blueprint_cloth_chest_armor"),
 }
 
 
@@ -463,20 +499,31 @@ def resolve_blueprint_trapping_options(profession_ids: list[str]) -> BlueprintTr
     }
 
     def _effective_families(rule: BlueprintPoolRule) -> set[str]:
-        if rule.source != "tool":
+        if rule.source == "item":
             return eligible_families
+        if rule.source == "any":
+            # One list for both picks: the category's own blueprints - higher
+            # tools too (anvil, furnace...: any combination is allowed, the
+            # player picks the base tool with the other pick) - plus the base
+            # tools behind them, the same ones a tool pool offers (only real
+            # tools - an item like the wrench is offered only as the
+            # category's own item).
+            return eligible_families | {f for f in _tool_families() if _blueprint_catalog_type(f) == "tool"}
         # Substitute every eligible tool family with its resolved root(s) -
         # a mid-chain tool (e.g. furnace, which needs a kiln to make its own
         # fired_brick ingredient) is a dead-end pick for a new character,
         # who gets exactly one permanent tool blueprint ever (see
         # TOOL_BLUEPRINT_ROOT_FAMILIES). Also pull in the root tool(s)
         # behind every eligible ITEM family (e.g. Military's blueprint_bow/
-        # blueprint_cloth need workbench/spinning_wheel, on top of kiln
+        # blueprint_cloth_chest_armor need workbench/spinning_wheel, on top of kiln
         # already reached via a category-matched tool) - same one-tool-
         # blueprint-ever constraint applies, so surfacing every tool that
         # actually unlocks something on the item side is strictly more
         # useful than only offering tools whose OWN category happens to
         # match, per ITEM_BLUEPRINT_TOOL_HINTS.
+        return _tool_families()
+
+    def _tool_families() -> set[str]:
         resolved: set[str] = set()
         for family in eligible_families:
             if _blueprint_catalog_type(family) == "tool":
@@ -496,20 +543,21 @@ def resolve_blueprint_trapping_options(profession_ids: list[str]) -> BlueprintTr
             and bp.tier == rule.tier
             and _SOURCE_PREDICATES[rule.source](bp)
         )
-        if items:
-            return items
-
-        # Nothing eligible for this category/source combo (e.g. Food has no
-        # tool blueprints) - fall back to the universal set rather than
-        # handing the player an empty combo box.
-        fallback_families = set(UNIVERSAL_FALLBACK_BLUEPRINT_FAMILIES.get(rule.source, ()))
-        return tuple(
+        # A kind the category has none of (e.g. CraftTool has no item
+        # blueprints) gets the universal set for it, rather than leaving
+        # the player without that choice.
+        sources = ("tool", "item") if rule.source == "any" else (rule.source,)
+        missing = [source for source in sources if not any(_SOURCE_PREDICATES[source](bp) for bp in items)]
+        fallback_families = {f for source in missing for f in UNIVERSAL_FALLBACK_BLUEPRINT_FAMILIES.get(source, ())}
+        fallback = tuple(
             bp
             for bp in BLUEPRINT_ITEMS
             if bp.family_id in fallback_families
+            and bp.family_id not in families
             and bp.tier == rule.tier
             and _SOURCE_PREDICATES[rule.source](bp)
         )
+        return items + fallback
 
     pools = tuple(BlueprintPoolOption(rule=rule, items=_pool_items(rule)) for rule in rules)
     return BlueprintTrappingsOptions(pools=pools)

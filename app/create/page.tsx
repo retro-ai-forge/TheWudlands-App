@@ -2,8 +2,10 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { PageVersionTag } from "../main/PageVersionTag";
 import styles from "./page.module.css";
+import h from "@/app/styles/headings.module.css";
 
 export default function Create() {
   // Pick one of three fixed layouts by viewport width — bubbles keep a fixed
@@ -35,7 +37,7 @@ export default function Create() {
   return (
     <div className={styles.page}>
       <section className={styles.guidelines} style={{ maxWidth: "800px" }}>
-        <h2 className={styles.heading}>Call for Artists &amp; Writers</h2>
+        <h1 className={h.pageTitle}>Call for Artists &amp; Writers</h1>
 
         <p className={styles.authorIntro}>
           <strong>Imagine a world, create an immersive experience.</strong> Write
@@ -45,8 +47,11 @@ export default function Create() {
         </p>
 
         <div className={styles.imageFrame}>
-          <img
+          <Image
             src="/images/create/share-writers-80percent.jpg"
+            width={800}
+            height={800}
+            sizes="(max-width: 860px) 100vw, 860px"
             alt="Revenue share: 80% goes to writers and creators, 20% covers admin and platform costs."
             className={styles.sectionImage}
           />
@@ -80,8 +85,11 @@ export default function Create() {
         </div>
 
         <div className={styles.imageFrame}>
-          <img
+          <Image
             src="/images/create/createstory.jpg"
+            width={1000}
+            height={667}
+            sizes="(max-width: 860px) 100vw, 860px"
             alt="A magic book with a glowing red cover, open to a page with a quill pen poised above it. The text reads: 'Create your own story in the Wudlands.'"
             className={styles.sectionImage}
           />

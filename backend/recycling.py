@@ -37,7 +37,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Dict, List, Optional
 
-from backend import items_catalog
+from backend import item_condition, items_catalog
 from backend.professions_catalog import PROFESSION_CATEGORIES
 from backend.resources_catalog import PROFESSION_RESOURCE_FAMILIES
 
@@ -74,21 +74,11 @@ def has_recipe(family_id: str) -> bool:
 NON_RECOVERABLE_PROCESSED_FAMILIES: frozenset[str] = frozenset({"coal"})
 
 # Flat percentage-point penalty subtracted from the yield total by an
-# item's quality state (see quality_state below) - shown in the salvage
-# popup as "-20% used" / "-50% dam" (InventoryTab.tsx's
-# SALVAGE_CONDITION_LABEL).  Result is floored at 0.
-CONDITION_PENALTY = {"new": 0, "used": 20, "damaged": 50}
-
-
-def quality_state(quality: int, quality_max: int) -> str:
-    if quality_max <= 0:
-        return "new"
-    f = quality / quality_max
-    if f > 0.5:
-        return "new"
-    if f > 0.1:
-        return "used"
-    return "damaged"
+# item's condition (backend.item_condition: new / used / damaged / broken,
+# data/item-conditions.json "salvagePenalty") - shown in the salvage popup
+# (VaultTab.tsx's SALVAGE_CONDITION_LABEL). Result is floored at 0.
+CONDITION_PENALTY = item_condition.SALVAGE_PENALTY
+SALVAGE_MINIMUM = item_condition.SALVAGE_MINIMUM
 
 
 SALVAGE_BASE_PERCENT = 25
@@ -99,17 +89,12 @@ CHARM_FAMILY_ID = "hunters_charm"
 MAX_YIELD_PERCENT = 91
 
 
-# Of the 16 base-tools.json families, most (anvil, workbench, loom,
-# scriptorium, grinding_stone, alchemy_stand, enchanters_table,
-# lapidary_bench - exactly the "table-like" ones this feature was
-# originally scoped around) are needsItemDefinition:true in item-
-# inventory-properties.json: bulky portable crafting stations carried in
-# both hands or hauled on a mount, tracked as item instances (Character.
-# items / the player's shared inventory.items), never a flat balance. The
-# rest (furnace, oven, kiln, mortar_and_pestle, spinning_wheel,
-# tanning_rack, wrench, smokehouse) are flat-balance (Character.tools /
-# the player's shared inventory.tools), same as _resolve_tool_for_craft
-# already branches on family.needs_item_definition for crafting itself.
+# Every base-tools.json family (anvil, workbench, loom, furnace, kiln...) is
+# a crafting station (item kind "tool"), needsItemDefinition:true in item-
+# inventory-properties.json: a condition-tracked item instance (Character.
+# gear.items / home / camp / the vault's items), carried in both hands or
+# hauled on a mount - never a flat balance any more (scripts/
+# migrate_item_conditions.py converts the old stacked counts).
 _STATION_TOOL_FAMILY_IDS: frozenset[str] = frozenset(
     entry.family_id for entry in items_catalog.ITEM_CATALOG_ENTRIES if "tool" in entry.kind
 )
@@ -130,12 +115,10 @@ def _best_owned_station_tool_tier(
     right there at the vault). The character's own tools/backpack+body
     instances always count either way. 0 if none owned anywhere.
     """
-    # Checked regardless of family.needs_item_definition, not just for the
-    # flat-balance families - some accounts still hold an instance-tracked
-    # station (enchanters_table, lapidary_bench, ...) as a plain flat count
-    # in tools/inventory.tools from before those families were switched to
-    # equippable instances, never migrated. Costs nothing for a normal
-    # instance-tracked family, which will never actually have a flat entry.
+    # Flat counts are still checked: an account may hold a station as a
+    # stacked count from before stations became items, until
+    # scripts/migrate_item_conditions.py has converted it. Costs nothing
+    # once everything is an instance.
     best = 0
     held_tools = character.get("crafting", {}).get("tools", {})
     for entry in items_catalog.ITEM_CATALOG_ENTRIES:
@@ -149,7 +132,9 @@ def _best_owned_station_tool_tier(
             "backpack",
             "body",
             "home",
+            "camp",
             "saddlepack",
+            "cart",
         ):
             entry = items_catalog.ITEM_CATALOG_ENTRIES_BY_ID.get(instance.get("itemId"))
             if entry:
@@ -362,6 +347,9 @@ class RawMaterialRecovery:
     yield_breakdown: YieldBreakdown
     recovered_units: int
     recovered: List[RecoveredLine]
+    # Units added by the worn-item minimum (data/item-conditions.json
+    # "salvageMinimum"), already counted in recovered_units - 0 otherwise.
+    minimum_bonus: int = 0
 
 
 def resolve_salvage_preview(
@@ -379,10 +367,15 @@ def resolve_salvage_preview(
     salvage off the character's own body/backpack (see
     _best_owned_station_tool_tier).
 
-    `condition` ("new"/"used"/"damaged") subtracts a flat penalty from
-    the yield: new = 0, used = -20pp, damaged = -50pp, floored at 0.
+    `condition` ("new"/"used"/"damaged"/"broken") subtracts a flat penalty from
+    the yield (data/item-conditions.json "salvagePenalty"), floored at 0.
     Units * effective_yield% are rounded half-up at the end (x.5 rounds
     up, anything below rounds down) - never rounded between steps.
+
+    A damaged or broken item whose recipe holds more than that condition's
+    "salvageMinimum" minRawUnits raw units (per item) still gives back at
+    least "units" of its most common raw material per item; the units added
+    are in minimum_bonus.
     """
     if family_id not in _RECIPES_BY_FAMILY:
         raise ValueError(f"Unknown recipe family: {family_id}")
@@ -391,12 +384,26 @@ def resolve_salvage_preview(
 
     buckets = _accumulate_recovery(family_id, "processed", count)
 
+    # Worn-item minimum: the most common raw material of a big enough
+    # recipe (first one on a tie) always gives something back.
+    minimum_family, minimum_units = None, 0
+    minimum_rule = SALVAGE_MINIMUM.get(condition)
+    if minimum_rule and buckets and count > 0:
+        raw_per_item = sum(b.total_units for b in buckets.values()) / count
+        if raw_per_item > minimum_rule["minRawUnits"]:
+            minimum_family = max(buckets, key=lambda family: buckets[family].total_units)
+            minimum_units = minimum_rule["units"] * count
+
     results: List[RawMaterialRecovery] = []
     for raw_family, bucket in buckets.items():
         yield_breakdown = resolve_yield(character, player_tools, player_items, raw_family)
         effective_yield = max(yield_breakdown.total - condition_penalty, 0)
         # total_units * effective_yield% / 100, rounded half up.
         recovered_units = (bucket.total_units * effective_yield + 50) // 100
+        minimum_bonus = 0
+        if raw_family == minimum_family and recovered_units < minimum_units:
+            minimum_bonus = minimum_units - recovered_units
+            recovered_units = minimum_units
         recovered = _break_into_denominations(recovered_units, bucket.denominations, tier)
         raw_row = items_catalog.FINAL_ITEM_ROWS_BY_FAMILY_TIER.get((raw_family, tier))
         results.append(RawMaterialRecovery(
@@ -406,6 +413,7 @@ def resolve_salvage_preview(
             yield_breakdown=yield_breakdown,
             recovered_units=recovered_units,
             recovered=recovered,
+            minimum_bonus=minimum_bonus,
         ))
     return results
 

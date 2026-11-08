@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import styles from "./ForagingSection.module.css";
 import { formatRemainingCompactLong, useCraftCountdown } from "../craftTimer";
 import { getResourceCatalog } from "./catalogCache";
-import { ResourcePopup, ResourceTiles, type ResourceTierInfo } from "./VaultTab";
+import { ItemTile, ResourcePopup, ResourceTiles, conditionOf, type QualityState, type ResourceTierInfo } from "./VaultTab";
 import type { ForageGear, ForagingState, SlotCharacterSummary } from "../types";
 
 // Foraging lives on the Stories tab: like an adventure, a trip takes the
@@ -16,7 +16,11 @@ function formatTripLength(minutes: number): string {
 }
 
 const label = (familyId: string) => familyId.replace(/_/g, " ");
-const pct = (n: number) => `+${Number.isInteger(n) ? n : n.toFixed(1)}%`;
+const ATTR_NAMES: Record<string, string> = {
+  migh: "Might", agil: "Agility", endu: "Endurance", prec: "Precision",
+  will: "Will", insi: "Insight", lore: "Lore", pres: "Presence",
+};
+const pct = (n: number) => `${n < 0 ? "−" : "+"}${Number.isInteger(n) ? Math.abs(n) : Math.abs(n).toFixed(1)}%`;
 
 /** "+35% · Miner's Pickaxe +25%, Cart +5%" - or, without gear, which
  * weapon/item families would help here. */
@@ -26,11 +30,29 @@ function GearLine({ gear, helpfulWeapons, helpfulItems }: {
   helpfulItems?: string[];
 }) {
   const pieces = gear ? [...(gear.weapon ? [gear.weapon] : []), ...gear.items] : [];
-  // e.g. "Hunting Bow needs: quiver, arrow" - only while no other weapon counts.
-  const blocked = !gear?.weapon && gear?.blockedWeapons?.length ? (
-    <p className={styles.gearHint}>
-      {gear.blockedWeapons.map((b) => `${b.name} needs: ${b.missing.map(label).join(", ")}`).join(" · ")}
+  // e.g. "Hunting Bow needs: quiver, arrow" - only while no other weapon
+  // counts; "Torch needs: tinderbox" - only while no light counts.
+  const unready = [
+    ...(!gear?.weapon ? gear?.blockedWeapons ?? [] : []),
+    ...(gear?.blockedLights ?? []),
+    ...(gear?.blockedItems ?? []),
+  ];
+  // Ore without a light: a smaller find, the risk of an accident or of
+  // getting lost.
+  const dark = gear?.dark ? (
+    <p className={styles.darkHint}>
+      No light: {pct(gear.darkPercent ?? 0)}, you can have accidents or get lost.
     </p>
+  ) : null;
+  const blocked = unready.length || dark ? (
+    <>
+      {unready.length > 0 && (
+        <p className={styles.gearHint}>
+          {unready.map((b) => `${b.name} needs: ${b.missing.map(label).join(", ")}`).join(" · ")}
+        </p>
+      )}
+      {dark}
+    </>
   ) : null;
   if (gear && pieces.length > 0) {
     return (
@@ -39,6 +61,17 @@ function GearLine({ gear, helpfulWeapons, helpfulItems }: {
           <span className={styles.gearPercent}>{pct(gear.percent)}</span>{" "}
           {pieces.map((piece) => `${piece.name} ${pct(piece.percent)}`).join(", ")}
         </p>
+        {/* Each unit dug needs 1h of light - what's left over is dug without it. */}
+        {gear.light && (
+          // Green: lasts even the biggest dig; yellow: may run out within the
+          // range; red: runs out even on the smallest (site cards only).
+          <p
+            className={`${styles.gearLine} ${gear.light.cover ? styles[`light_${gear.light.cover}`] : ""}`}
+            title={gear.light.needMax !== undefined ? `This trip needs ${gear.light.needMin}–${gear.light.needMax}h` : undefined}
+          >
+            Light for {gear.light.hours}h
+          </p>
+        )}
         {blocked}
       </>
     );
@@ -52,6 +85,40 @@ function GearLine({ gear, helpfulWeapons, helpfulItems }: {
       </p>
       {blocked}
     </>
+  );
+}
+
+// The lit torch picture; without one the plain T1 torch would get a small
+// drawn flame on top.
+const LIT_TORCH_ICON: string | null = "/images/items/torch_lit_t1.png";
+const TORCH_ICON = "/images/items/torch_t1.png";
+
+/** The material's icon (its T1 raw), with a small lit torch in the lower
+ * right for materials dug in the dark (ore, crystal - see backend darkness). */
+function MaterialIcon({ familyId, needsLight, catalog }: {
+  familyId: string;
+  needsLight?: boolean;
+  catalog: ResourceTierInfo;
+}) {
+  const icon = catalog[`${familyId}_1`]?.icon;
+  if (!icon) return null;
+  return (
+    <span className={styles.materialIcon} title={needsLight ? `${label(familyId)} - dug in the dark, bring light` : label(familyId)}>
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img className={styles.materialImg} src={icon} alt={label(familyId)} />
+      {needsLight && (
+        <span className={styles.torchBadge} aria-hidden="true">
+          {!LIT_TORCH_ICON && (
+            <svg className={styles.torchFlame} viewBox="0 0 10 14">
+              <path d="M5 0C6.5 3 9 5 9 8.5A4 4 0 0 1 1 8.5C1 6 3 5 3 2.5 4 3.5 4.5 4.5 4.5 5.5 5.5 4 5.5 2 5 0Z" fill="#f08a24" />
+              <path d="M5 5.5C6 7 7 8 7 9.5A2 2 0 0 1 3 9.5C3 8.5 4 7.5 5 5.5Z" fill="#ffd45a" />
+            </svg>
+          )}
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img className={styles.torchImg} src={LIT_TORCH_ICON ?? TORCH_ICON} alt="" />
+        </span>
+      )}
+    </span>
   );
 }
 
@@ -76,15 +143,23 @@ export function ForagingSection({
   const [loadError, setLoadError] = useState<string | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
+  // The site whose "Forget site" was clicked - the popup asks first.
+  const [forgetting, setForgetting] = useState<ForagingState["sites"][number] | null>(null);
   const [catalog, setCatalog] = useState<ResourceTierInfo>({});
   // Which found resource's detail popup is open (info only - no moves).
   const [popupId, setPopupId] = useState<string | null>(null);
+  const [oldGearOpen, setOldGearOpen] = useState(false);
 
   const inAdventure = character.availability.inAdventure;
+  // Only the life state (first entry) counts - a soulless character still digs.
+  const isDead = character.vitalStatus[0] === "dead";
   const name = character.firstName || "This character";
   const active = state?.activeForage ?? null;
   const remainingSeconds = useCraftCountdown(active?.readyAt);
-  const isBack = active !== null && remainingSeconds === 0;
+  // Lost in the dark: past the planned return, but not back - and when
+  // they will be is the server's secret.
+  const isLost = !!active?.lost;
+  const isBack = active !== null && remainingSeconds === 0 && !isLost;
 
   const load = useCallback(async () => {
     try {
@@ -105,7 +180,7 @@ export function ForagingSection({
     getResourceCatalog().then(setCatalog).catch(() => {});
   }, []);
 
-  const act = async (path: "start" | "finish", body?: object) => {
+  const act = async (path: "start" | "finish" | "forget", body?: object) => {
     if (pending) return;
     setPending(true);
     setActionError(null);
@@ -146,7 +221,11 @@ export function ForagingSection({
           <span className={styles.missionName}>{active.name}</span>
           <p className={styles.flavor}>{active.text}</p>
           <GearLine gear={active.gear} />
-          {isBack ? (
+          {isLost ? (
+            <p className={styles.darkHint}>
+              {name} should have been back by now. Lost in the dark &ndash; no word yet.
+            </p>
+          ) : isBack ? (
             <button
               type="button"
               className={`${styles.button} ${styles.collectButton}`}
@@ -170,6 +249,19 @@ export function ForagingSection({
         <div className={`${styles.card} ${styles.resultCard} ${styles[`result_${lastResult.outcome}`]}`}>
           <span className={styles.activity}>Last return &middot; {lastResult.name}</span>
           <p className={styles.message}>{lastResult.message}</p>
+          {lastResult.night?.message && <p className={styles.message}>{lastResult.night.message}</p>}
+          {(lastResult.darkUnits ?? 0) > 0 && (lastResult.litUnits ?? 0) > 0 && (
+            <p className={styles.darkHint}>
+              The light ran out after {lastResult.lightHours}h &ndash; the last {lastResult.darkUnits}{" "}
+              {label(lastResult.familyId)} came out of the dark.
+            </p>
+          )}
+          {lastResult.accident?.message && <p className={styles.message}>{lastResult.accident.message}</p>}
+          {(lastResult.accident?.vitalStatus ?? lastResult.night?.vitalStatus) && (
+            <p className={styles.lostLine}>
+              {name} is now {lastResult.accident?.vitalStatus ?? lastResult.night?.vitalStatus}.
+            </p>
+          )}
           <p className={styles.amount}>
             Found {lastResult.total} {label(lastResult.familyId)}
             {lastResult.gearPercent ? ` (gear ${pct(lastResult.gearPercent)})` : ""}
@@ -181,19 +273,55 @@ export function ForagingSection({
               <ResourceTiles balances={lastResult.found} tierInfo={catalog} onSelect={(id) => setPopupId(id)} />
             </div>
           )}
+          {lastResult.surpriseMessage && Object.keys(lastResult.surprise ?? {}).length > 0 && (
+            <>
+              <p className={styles.message}>{lastResult.surpriseMessage}</p>
+              <div className={styles.foundTiles}>
+                <ResourceTiles balances={lastResult.surprise ?? {}} tierInfo={catalog} onSelect={(id) => setPopupId(id)} />
+              </div>
+            </>
+          )}
+          {lastResult.oldGear && lastResult.oldGearMessage && (
+            <>
+              <p className={styles.message}>{lastResult.oldGearMessage}</p>
+              <div className={styles.foundTiles}>
+                <ItemTile
+                  icon={lastResult.oldGear.icon}
+                  name={lastResult.oldGear.name}
+                  tier={lastResult.oldGear.tier}
+                  condition={(lastResult.oldGear.condition as QualityState | undefined) ?? conditionOf(lastResult.oldGear.quality)}
+                  onClick={() => setOldGearOpen(true)}
+                />
+              </div>
+            </>
+          )}
           {(() => {
-            // One plain line of what the trip cost: ammo shot, quality worn, gear broken.
+            // One plain line of what the trip cost: ammo shot, light burned, gear worn a level, gear lost.
             const ammoByFamily: Record<string, number> = {};
-            for (const [id, n] of Object.entries(lastResult.ammoUsed ?? {})) {
+            for (const [id, n] of [
+              ...Object.entries(lastResult.ammoUsed ?? {}),
+              ...Object.entries(lastResult.lightUsed ?? {}),
+            ]) {
               const family = id.replace(/_\d+$/, "");
               ammoByFamily[family] = (ammoByFamily[family] ?? 0) + n;
             }
             const lost = [
+              ...Object.entries(
+                [lastResult.night?.lost, lastResult.accident?.lost].reduce<Record<string, number>>((sum, part) => {
+                  for (const [key, n] of Object.entries(part ?? {})) sum[key] = (sum[key] ?? 0) + n;
+                  return sum;
+                }, {}),
+              ).map(([key, n]) => `${ATTR_NAMES[key] ?? key} −${n}`),
               ...Object.entries(ammoByFamily).map(([family, n]) => `${n} ${label(family)}${n === 1 ? "" : "s"}`),
+              // Only entries with a condition level: results from before the
+              // condition rework recorded wear as points, which no longer
+              // match the item (it was converted to a level afterwards).
               ...(lastResult.gear ?? [])
-                .filter((g) => g.wear > 0 && !g.destroyed)
-                .map((g) => `${g.name} −${g.wear} quality`),
-              ...(lastResult.broken ?? []).map((name) => `${name} (broken)`),
+                .filter((g) => g.wear > 0 && !g.destroyed && g.condition)
+                .map((g) => `${g.name} → ${g.condition}`),
+              // Gone for good (dropped below broken, or a stacked piece used up)
+              // - "lost", since "broken" is now a condition that still works.
+              ...(lastResult.broken ?? []).map((name) => `${name} (lost)`),
             ];
             return lost.length > 0 ? <p className={styles.lostLine}>Lost: {lost.join(" · ")}</p> : null;
           })()}
@@ -202,12 +330,17 @@ export function ForagingSection({
 
       {state && !active && (
         <>
-          {inAdventure && (
+          {isDead && (
+            <p className={styles.note}>
+              {name} lies cold beneath the earth. The dead gather nothing - no root, no stone, no ore.
+            </p>
+          )}
+          {!isDead && inAdventure && (
             <p className={styles.note}>
               {name} is out on an adventure. Foraging waits until the story ends.
             </p>
           )}
-          {!inAdventure && isCrafting && (
+          {!isDead && !inAdventure && isCrafting && (
             <p className={styles.note}>{name} is busy crafting. Foraging can start once the craft is done.</p>
           )}
           {!state.hasPool && (
@@ -223,14 +356,17 @@ export function ForagingSection({
             {state.sites.map((site) => {
               if (!site.mission) return null;
               const richness = siteRichness(site.remaining, site.initial, site.yieldMax);
-              const disabled = pending || inAdventure || isCrafting;
+              const disabled = pending || isDead || inAdventure || isCrafting;
               return (
                 <div key={site.familyId} className={styles.card}>
                   <div className={styles.cardTop}>
                     <span className={styles.activity}>{site.mission.activity}</span>
                     <span className={`${styles.richness} ${styles[`richness_${richness.tone}`]}`}>{richness.label}</span>
                   </div>
-                  <span className={styles.missionName}>{site.mission.name}</span>
+                  <div className={styles.nameRow}>
+                    <MaterialIcon familyId={site.familyId} needsLight={site.needsLight} catalog={catalog} />
+                    <span className={styles.missionName}>{site.mission.name}</span>
+                  </div>
                   <p className={styles.flavor}>{site.mission.text}</p>
                   <p className={styles.yield}>
                     {site.yieldMin === site.yieldMax
@@ -239,14 +375,24 @@ export function ForagingSection({
                     {label(site.familyId)}
                   </p>
                   <GearLine gear={site.gear} helpfulWeapons={site.helpfulWeapons} helpfulItems={site.helpfulItems} />
-                  <button
-                    type="button"
-                    className={styles.button}
-                    onClick={() => act("start", { missionId: site.mission!.id })}
-                    disabled={disabled}
-                  >
-                    Go &middot; {formatTripLength(state.durationMinutes)}
-                  </button>
+                  <div className={styles.cardActions}>
+                    <button
+                      type="button"
+                      className={styles.forgetButton}
+                      onClick={() => setForgetting(site)}
+                      disabled={pending}
+                    >
+                      Forget site
+                    </button>
+                    <button
+                      type="button"
+                      className={styles.button}
+                      onClick={() => act("start", { missionId: site.mission!.id })}
+                      disabled={disabled}
+                    >
+                      Go &middot; {formatTripLength(state.durationMinutes)}
+                    </button>
+                  </div>
                 </div>
               );
             })}
@@ -256,14 +402,66 @@ export function ForagingSection({
 
       {actionError && <p className={styles.error} role="status">{actionError}</p>}
 
+      {forgetting && (
+        // A site lasts until it's empty - forgetting is the way out of one
+        // that only gives a unit a trip. Gone for the slot, so ask first.
+        <div className={styles.confirmOverlay} onClick={() => setForgetting(null)}>
+          <div className={styles.confirmCard} role="dialog" aria-modal="true" onClick={(e) => e.stopPropagation()}>
+            <p className={styles.confirmText}>
+              Forget {forgetting.mission?.name ?? "this site"}?
+            </p>
+            <p className={styles.confirmNote}>
+              The {label(forgetting.familyId)} still there is lost for good &ndash; for {name} and every soul
+              after in this slot.
+            </p>
+            <div className={styles.confirmButtons}>
+              <button
+                type="button"
+                className={styles.confirmForget}
+                onClick={() => {
+                  const familyId = forgetting.familyId;
+                  setForgetting(null);
+                  act("forget", { familyId });
+                }}
+              >
+                Forget
+              </button>
+              <button type="button" className={styles.confirmKeep} onClick={() => setForgetting(null)} autoFocus>
+                Keep
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {popupId && lastResult && (
         <ResourcePopup
           resourceId={popupId}
           tierInfo={catalog}
-          owned={lastResult.found[popupId] ?? 0}
+          owned={(lastResult.found[popupId] ?? 0) + (lastResult.surprise?.[popupId] ?? 0)}
           characterId={character.id}
           destinations={[]}
           onClose={() => setPopupId(null)}
+        />
+      )}
+      {oldGearOpen && lastResult?.oldGear && (
+        // Same info popup as the raw finds (icon, tier, name, description) - no quality.
+        <ResourcePopup
+          resourceId={lastResult.oldGear.itemId}
+          tierInfo={{
+            [lastResult.oldGear.itemId]: {
+              tier: lastResult.oldGear.tier,
+              family: lastResult.oldGear.familyId,
+              category: "processed",
+              name: lastResult.oldGear.name,
+              icon: lastResult.oldGear.icon,
+              description: lastResult.oldGear.description,
+            },
+          }}
+          owned={1}
+          characterId={character.id}
+          destinations={[]}
+          onClose={() => setOldGearOpen(false)}
         />
       )}
     </section>

@@ -40,6 +40,7 @@ export interface SlotCharacterPreview {
   characterId: string;
   name: string;
   slotNumber: number;
+  /** e.g. ["free"], ["free", "foraging"]; "lost" while lost in the dark (no timer then - the return is secret). */
   status: string[];
   tags: string[];
   timers: Record<string, string>;
@@ -114,7 +115,8 @@ export interface SlotCharacterSummary {
   slotNumber: number;
   firstName: string;
   lastName: string;
-  vitalStatus: string;
+  /** Life state first ("alive" / "dead"), then conditions, e.g. ["alive", "soulless"]. */
+  vitalStatus: string[];
   age_month: number;
   gender: string;
   raceGroup: string;
@@ -181,7 +183,15 @@ export interface SlotCharacterSummary {
   equippedLight: { family: string; tier: number; litAt: string; hand: string } | null;
   /** storyIds of every adventure this character finished (not ran away from). */
   completedStories?: string[];
+  /** Current attribute values: attr (the maximum) minus temporary losses. */
+  attrNow?: CharacterAttributes;
+  /** Temporary points lost per attribute, e.g. { endu: 2 } - one heals per 20h free. */
+  attrLost?: Partial<Record<keyof CharacterAttributes, number>>;
+  /** When the next point heals (ISO), or null: nothing to heal, a drained group, or out foraging/crafting/adventuring. */
+  nextHealAt?: string | null;
   stats: { adventureFinished: number; adventureRunAway: number };
+  /** Your Legend reputation values, {name: 0-100} (backend/legend.py), e.g. { mercy: 12, cruelty: 0 }. */
+  legend?: Record<string, number>;
   pcStatus?: string[];
   pcTags?: string[];
   pcTimers?: Record<string, string>;
@@ -190,11 +200,7 @@ export interface SlotCharacterSummary {
 /** One foraging mission (backend/data/foraging-missions.json). */
 export type ForageMission = {
   id: string;
-  /** Profession group, e.g. "Rural". */
-  group: string;
-  /** The group's headline, e.g. "Fields, Folds & Fishponds". */
-  headline: string;
-  /** The group's foraging name for this family, e.g. "Fishing". */
+  /** The material's foraging name (foraging-missions.json "materials"), e.g. "Fishing". */
   activity: string;
   familyId: string;
   /** The mission's own headline, e.g. "Trout Pools Upstream". */
@@ -222,6 +228,17 @@ export type ForageGear = {
   percent: number;
   /** Weapons carried that don't count yet, e.g. a bow without quiver/arrows. */
   blockedWeapons?: { name: string; missing: string[] }[];
+  /** Lights carried that don't count, e.g. a torch without a tinderbox or a lantern without oil. */
+  blockedLights?: { name: string; missing: string[] }[];
+  /** Items that would help but don't count, e.g. a flying charm on a rat (needs: winged companion). */
+  blockedItems?: { name: string; missing: string[] }[];
+  /** A dark material (ore) without a light: `percent` already includes `darkPercent` (e.g. -50), and accidents may happen. */
+  dark?: boolean;
+  darkPercent?: number;
+  /** Hours of light carried (oil with a lantern, torches, candles; each unit dug needs 1h). Null without a light.
+   * On a site card also what the next trip's lowest/highest lit dig needs, and how far the light reaches:
+   * full (covers the highest), partial (may run out within the range), none (runs out even on the lowest). */
+  light?: { hours: number; needMin?: number; needMax?: number; cover?: "full" | "partial" | "none" } | null;
 };
 
 /** A trip in progress - resolved lazily against readyAt. */
@@ -229,11 +246,28 @@ export type ActiveForage = ForageMission & {
   missionId: string;
   slotNumber: number;
   startedAt: string;
+  /** The planned return. A character lost in the dark comes back later - when, the server never says. */
   readyAt: string;
+  /** Past readyAt but not back: lost in the dark (a serious/hardcore accident). */
+  lost?: boolean;
   gear?: ForageGear;
 };
 
 /** What a collected trip brought home. */
+export type ForageOldGear = {
+  instanceId: string;
+  itemId: string;
+  familyId: string;
+  name: string;
+  tier: number;
+  icon: string;
+  description?: string;
+  /** Condition level 4..1 (found broken). */
+  quality: number;
+  /** "new" / "used" / "damaged" / "broken". */
+  condition?: string;
+};
+
 export type ForageResult = {
   missionId: string;
   name: string;
@@ -249,14 +283,57 @@ export type ForageResult = {
   returnedAt: string;
   /** Gathering-gear bonus that applied, in percent. */
   gearPercent?: number;
-  /** Gear used and how much quality it lost. */
-  gear?: { instanceId: string | null; name: string; kind: "weapon" | "item"; wear: number; destroyed: boolean }[];
-  /** Names of gear destroyed on this trip (quality reached 0). */
+  /** Gear used: condition levels lost this trip (0 or 1) and its condition after. */
+  gear?: { instanceId: string | null; name: string; kind: "weapon" | "item"; wear: number; destroyed: boolean; condition?: string }[];
+  /** Names of gear lost on this trip (dropped below broken, or a stacked piece used up). */
   broken?: string[];
   /** Arrows/bolts shot (item id -> amount) - one per unit found with a bow/crossbow. */
   ammoUsed?: Record<string, number>;
-  /** Finds no arrow/bolt could cover (none left, or none of a high enough tier) - the weapon wears for those at or above its tier. */
+  /** Finds no arrow/bolt could cover (none left, or none of a high enough tier) - the weapon wears for those, whatever its tier. */
   ammoShortfall?: number;
+  /** What the trip's light burned (item id -> amount): one oil for a lantern, one torch or candle. */
+  lightUsed?: Record<string, number>;
+  /** Hours of light burned, units dug in that light, and units dug in the dark once it ran out (ore). */
+  lightHours?: number;
+  /** Units the site lost - `total` minus the gear's bonus, which comes on top. */
+  fromSite?: number;
+  litUnits?: number;
+  darkUnits?: number;
+  /** Rare extra raw materials found on the way (item id -> amount) - a bonus outside the pool, also taken home. */
+  surprise?: Record<string, number>;
+  /** The sentence for the surprise finds, or null when there were none. */
+  surpriseMessage?: string | null;
+  /** A forgotten, damaged T1 piece of gathering gear found on the way (sent home), or null. */
+  oldGear?: ForageOldGear | null;
+  /** The sentence for the old gear, or null when none was found. */
+  oldGearMessage?: string | null;
+  /** The night out: weather, tent/bedroll carried, and the temporary Body/Soul points it cost. */
+  night?: {
+    /** foraging-rules.json "nights.weather" id, e.g. "warm", "rain", "sandstorm" - or underground (ore, crystal) "damp", "ice_cave", "ghosts". */
+    weather: string;
+    shelter: string[];
+    kind: "both" | "body" | "soul" | "sheltered" | "calm";
+    message: string;
+    /** Points actually lost when the trip was collected (attr key -> amount). */
+    lost?: Record<string, number>;
+    /** Name of the tent the night destroyed (also listed in `broken`). */
+    tentLost?: string;
+    /** "dead" / "soulless" if the night drained Body / Soul completely. */
+    vitalStatus?: string | null;
+  };
+  /** An accident while mining in the dark (foraging-rules.json "darkness"). */
+  accident?: {
+    severity: "minor" | "serious" | "hardcore";
+    message: string;
+    points: Record<string, number>;
+    /** Points actually lost when the trip was collected (attr key -> amount). */
+    lost?: Record<string, number>;
+    vitalStatus?: string | null;
+    /** Days lost in the dark after a serious/hardcore accident (the trip came back that much later). */
+    lostDays?: number;
+    /** A Soul point per day lost (attr key -> amount), part of `lost` once collected. */
+    lostPoints?: Record<string, number>;
+  } | null;
 };
 
 /** GET /api/auth/me/characters/{id}/foraging */
@@ -266,7 +343,7 @@ export type ForagingState = {
   hasPool: boolean;
   /** Trip length - 20h by default (FORAGING_DURATION_MINUTES can shorten it for local testing). */
   durationMinutes: number;
-  groups: { group: string; headline: string; activities: Record<string, string> }[];
+  groups: { group: string; headline: string }[];
   /** One per family still worth a trip - picked-clean families are left out. */
   sites: {
     familyId: string;
@@ -281,6 +358,8 @@ export type ForagingState = {
     helpfulWeapons: string[];
     helpfulItems: string[];
     mission: ForageMission | null;
+    /** Dug in the dark (foraging-rules.json "darkness": ore, crystal) - light needed. */
+    needsLight?: boolean;
   }[];
   dormantFamilies: string[];
   activeForage: ActiveForage | null;

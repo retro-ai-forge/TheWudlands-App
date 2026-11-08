@@ -11,6 +11,7 @@ import {
   computeBackpackContents,
   computeSaddlepackContents,
   computeCartContents,
+  allFilterEmptyLabel,
   getKindIcon,
   getTierIndicator,
   postJson,
@@ -56,6 +57,8 @@ function fadeOutAudio(audio: HTMLAudioElement) {
 // Stable empty fallback — keeps useMemo([homeInstances, homeBalances])
 // caching intact when home data hasn't loaded yet.
 const EMPTY_HOME: Record<string, number> = {};
+/** Kinds the "All" filter leaves out - each has its own 🔧 / 🪨 button. */
+const HIDDEN_FROM_ALL_KINDS = new Set(["tool", "raw_resource", "processed"]);
 
 // A fixed placeholder height for the campfire art at the bottom of the
 // screen - reserved out of ItemGrid's own fill-to-bottom measurement (see
@@ -76,16 +79,19 @@ export function HomeView({
   character,
   onPlayerDataUpdated,
   onExitHome,
+  onOpenCrafting,
   footerVisible = false,
   storageType = "home",
 }: {
   character: SlotCharacterSummary;
   onPlayerDataUpdated?: (data: RawPlayerData) => void;
-  /** The lower-right exit.webp button's own handler - takes the player
+  /** The lower-right char-preview-close.png button's own handler - takes the player
    * back to the Body tab. CharacterPreview.tsx hides its own fixed
-   * footer bar (tab row + its own exit.webp close button) while this
+   * footer bar (tab row + its own char-preview-close.png close button) while this
    * view is open, so this is the only way out of it once opened. */
   onExitHome: () => void;
+  /** Opens the crafting page - the workbench left of the tent. */
+  onOpenCrafting?: () => void;
   footerVisible?: boolean;
   storageType?: "home" | "camp";
 }) {
@@ -251,6 +257,63 @@ export function HomeView({
   // home, or to opening an already-empty home).
   const hasHomeItems = homeIds.length > 0 || hasHomeResources;
 
+  // What the grid shows under the current filters - "All" (A) leaves out
+  // tools and raw/processed materials, which have their own 🔧/🪨 buttons.
+  // The grid, "select all", and the bulk actions (burn, pack, salvage) all
+  // read this, so a bulk action only touches what the player can see.
+  const homeVisible = useMemo(() => {
+    const hasKindFilter = homeKindFilter.length > 0;
+    const hasTierFilter = homeTierFilter.length > 0;
+    const allActive = !hasKindFilter && !hasTierFilter && !homeSpecialFilter;
+    const infoOf = (id: string) => mergedCatalogTierInfo[homeInstanceLookupIds[id] ?? id];
+    const ids = allActive
+      ? homeIds.filter((id) => {
+          const kind = infoOf(id)?.kind;
+          return !kind || !HIDDEN_FROM_ALL_KINDS.has(kind);
+        })
+      : homeSpecialFilter === "tools"
+        ? homeIds.filter((id) => {
+            const info = infoOf(id);
+            if (!info || info.kind !== "tool") return false;
+            return !hasTierFilter || (info.tier !== undefined && homeTierFilter.includes(info.tier));
+          })
+        : homeSpecialFilter === "resources"
+          ? []
+          : homeIds.filter((id) => {
+              const info = infoOf(id);
+              if (hasKindFilter && (!info?.kind || !homeKindFilter.includes(info.kind))) return false;
+              if (hasTierFilter && (!info?.tier || !homeTierFilter.includes(info.tier))) return false;
+              return true;
+            });
+    const showResources = homeSpecialFilter === "resources";
+    const resourceBalances: Record<string, number> = !showResources
+      ? EMPTY_HOME
+      : hasTierFilter
+        ? Object.fromEntries(Object.entries(homeResourceBalances).filter(([id, qty]) => {
+            if (qty <= 0) return false;
+            const t = resourceTierInfo[id]?.tier;
+            return t !== undefined && homeTierFilter.includes(t);
+          }))
+        : homeResourceBalances;
+
+    // The same, as the burn-all / move-all-to-bags request body: instances
+    // by instanceId, stacks with the amount on screen (a whole stack is one
+    // tile). Resources the grid can't name aren't shown, so they're left out.
+    const instanceIds: string[] = [];
+    const balances: Record<string, number> = {};
+    for (const id of ids) {
+      if (homeInstanceLookupIds[id] !== undefined) instanceIds.push(id);
+      else if ((homeCombined[id] ?? 0) > 0) balances[id] = homeCombined[id];
+    }
+    for (const [id, qty] of Object.entries(resourceBalances)) {
+      if (qty > 0 && resourceTierInfo[id]) balances[id] = qty;
+    }
+    const hasAny = instanceIds.length > 0 || Object.keys(balances).length > 0;
+    return { allActive, hasKindFilter, hasTierFilter, ids, showResources, resourceBalances, shown: { instanceIds, balances }, hasAny };
+  }, [homeKindFilter, homeTierFilter, homeSpecialFilter, homeIds, homeInstanceLookupIds, homeCombined, homeResourceBalances, mergedCatalogTierInfo, resourceTierInfo]);
+  // Burn, pack and salvage only work on what's shown - nothing shown, nothing to do.
+  const canBulk = homeVisible.hasAny;
+
   // Tracks hasHomeItems live, not just at open - one ambient loop or the
   // other is always playing (HOME_ITEMS_SOUND with something here,
   // HOME_EMPTY_SOUND's night wind otherwise), switching the moment
@@ -355,12 +418,9 @@ export function HomeView({
           if (!balanceTotals.has(key)) instanceIds.push(key);
         } else {
           const id = stripStackSuffix(raw);
-          const info = mergedCatalogTierInfo[id];
-          const stackSize = Math.max(1, info?.stackSize ?? 1);
-          const qty = homeCombined[id] ?? 0;
-          const hash = raw.lastIndexOf("#");
-          const tileIdx = hash === -1 ? 0 : parseInt(raw.slice(hash + 1), 10);
-          const itemsInTile = Math.max(0, Math.min(stackSize, qty - tileIdx * stackSize));
+          // The grid shows a whole stack as ONE tile (skipItemStackSplit), so a
+          // marked tile means all of it, not just one stack-size's worth.
+          const itemsInTile = homeCombined[id] ?? 0;
           if (itemsInTile > 0) balanceTotals.set(id, (balanceTotals.get(id) ?? 0) + itemsInTile);
         }
       }
@@ -395,12 +455,9 @@ export function HomeView({
       if (isInstance) {
         instancesSeen.add(id);
       } else {
-        const info = mergedCatalogTierInfo[id];
-        const stackSize = Math.max(1, info?.stackSize ?? 1);
-        const qty = homeCombined[id] ?? 0;
-        const hash = raw.lastIndexOf("#");
-        const tileIdx = hash === -1 ? 0 : parseInt(raw.slice(hash + 1), 10);
-        const itemsInTile = Math.max(0, Math.min(stackSize, qty - tileIdx * stackSize));
+        // The grid shows a whole stack as ONE tile (skipItemStackSplit), so a
+        // marked tile means all of it, not just one stack-size's worth.
+        const itemsInTile = homeCombined[id] ?? 0;
         if (itemsInTile > 0) balanceTotals.set(id, (balanceTotals.get(id) ?? 0) + itemsInTile);
       }
     }
@@ -420,7 +477,7 @@ export function HomeView({
     if (lastResult) onPlayerDataUpdated?.(lastResult);
     setBatchBusy(false);
     exitSelectMode();
-  }, [batchBusy, selectedIds, homeInstanceLookupIds, homeCombined, homeResourceBalances, resourceTierInfo, mergedCatalogTierInfo, character.id, onPlayerDataUpdated, exitSelectMode]);
+  }, [batchBusy, selectedIds, homeInstanceLookupIds, homeCombined, homeResourceBalances, resourceTierInfo, character.id, onPlayerDataUpdated, exitSelectMode]);
 
   return (
     <div className={styles.panel} onContextMenu={(e) => e.preventDefault()}>
@@ -479,7 +536,7 @@ export function HomeView({
               disabled={batchBusy || selectedIds.size === 0}
               onClick={() => setShowSalvagePopup(true)}
             >
-              <div className={styles.selectionBarIcon} style={{ backgroundImage: `url(/images/character/chopping_block.png)` }} />
+              <div className={styles.selectionBarIcon} style={{ backgroundImage: `url(/images/character/salvage.png)` }} />
             </button>
           </div>
           <span className={styles.selectionBarWeight}>
@@ -490,50 +547,13 @@ export function HomeView({
             className={`${styles.selectionBarBtn} ${styles.selectionBarClose}`}
             title="Select all"
             onClick={() => {
-              const specialKinds = new Set(["tool", "raw_resource", "processed"]);
-              const hasKF = homeKindFilter.length > 0;
-              const hasTF = homeTierFilter.length > 0;
-              const noFilter = !hasKF && !hasTF && !homeSpecialFilter;
-              const visibleIds = homeSpecialFilter === "tools"
-                ? homeIds.filter((id) => {
-                    const info = mergedCatalogTierInfo[homeInstanceLookupIds[id] ?? id];
-                    if (!info || info.kind !== "tool") return false;
-                    return !hasTF || (info.tier !== undefined && homeTierFilter.includes(info.tier));
-                  })
-                : homeSpecialFilter === "resources"
-                ? []
-                : noFilter
-                ? homeIds.filter((id) => {
-                    const kind = mergedCatalogTierInfo[homeInstanceLookupIds[id] ?? id]?.kind;
-                    return !kind || !specialKinds.has(kind);
-                  })
-                : homeIds.filter((id) => {
-                    const info = mergedCatalogTierInfo[homeInstanceLookupIds[id] ?? id];
-                    if (hasKF && (!info?.kind || !homeKindFilter.includes(info.kind))) return false;
-                    if (hasTF && (!info?.tier || !homeTierFilter.includes(info.tier))) return false;
-                    return true;
-                  });
               const all = new Set<string>();
-              for (const id of visibleIds) {
-                const isInstance = homeInstanceLookupIds[id] !== undefined;
-                if (isInstance) {
-                  all.add(id);
-                } else {
-                  all.add(`${id}#0`);
-                }
+              for (const id of homeVisible.ids) {
+                all.add(homeInstanceLookupIds[id] !== undefined ? id : `${id}#0`);
               }
-              if (homeSpecialFilter === "resources") {
-                const resBalances = hasTF
-                  ? Object.fromEntries(Object.entries(homeResourceBalances).filter(([id]) => {
-                      const t = resourceTierInfo[id]?.tier;
-                      return t !== undefined && homeTierFilter.includes(t);
-                    }))
-                  : homeResourceBalances;
-                for (const resId of Object.keys(resBalances)) {
-                  const qty = resBalances[resId] ?? 0;
-                  if (qty <= 0 || !resourceTierInfo[resId]) continue;
-                  all.add(`res:${resId}#0`);
-                }
+              for (const [resId, qty] of Object.entries(homeVisible.resourceBalances)) {
+                if (qty <= 0 || !resourceTierInfo[resId]) continue;
+                all.add(`res:${resId}#0`);
               }
               setSelectedIds(all);
             }}
@@ -591,46 +611,14 @@ export function HomeView({
       )}
       {(() => {
         const kindOrder = ["weapon", "armor", "shield", "food", "potion", "adventuring_gear", "essentials", "companion", "mount"];
-        const specialKinds = new Set(["tool", "raw_resource", "processed"]);
         const kindsInHome = new Set(
           homeIds
             .map((id) => mergedCatalogTierInfo[homeInstanceLookupIds[id] ?? id]?.kind)
-            .filter((k): k is string => !!k && !specialKinds.has(k))
+            .filter((k): k is string => !!k && !HIDDEN_FROM_ALL_KINDS.has(k))
         );
         const hasTools = homeIds.some((id) => mergedCatalogTierInfo[homeInstanceLookupIds[id] ?? id]?.kind === "tool");
         const hasResources = Object.values(homeResourceBalances).some((qty) => qty > 0);
-        const hasKindFilter = homeKindFilter.length > 0;
-        const hasTierFilter = homeTierFilter.length > 0;
-        const allActive = !hasKindFilter && !hasTierFilter && !homeSpecialFilter;
-        const filteredIds = allActive
-          ? homeIds.filter((id) => {
-              const kind = mergedCatalogTierInfo[homeInstanceLookupIds[id] ?? id]?.kind;
-              return !kind || !specialKinds.has(kind);
-            })
-          : homeSpecialFilter === "tools"
-            ? homeIds.filter((id) => {
-                const info = mergedCatalogTierInfo[homeInstanceLookupIds[id] ?? id];
-                if (!info || info.kind !== "tool") return false;
-                return !hasTierFilter || (info.tier !== undefined && homeTierFilter.includes(info.tier));
-              })
-            : homeSpecialFilter === "resources"
-            ? []
-            : homeIds.filter((id) => {
-                const info = mergedCatalogTierInfo[homeInstanceLookupIds[id] ?? id];
-                if (hasKindFilter && (!info?.kind || !homeKindFilter.includes(info.kind))) return false;
-                if (hasTierFilter && (!info?.tier || !homeTierFilter.includes(info.tier))) return false;
-                return true;
-              });
-        const showResources = homeSpecialFilter === "resources";
-        const filteredResourceBalances = !showResources
-          ? EMPTY_HOME
-          : hasTierFilter
-            ? Object.fromEntries(Object.entries(homeResourceBalances).filter(([id, qty]) => {
-                if (qty <= 0) return false;
-                const t = resourceTierInfo[id]?.tier;
-                return t !== undefined && homeTierFilter.includes(t);
-              }))
-            : homeResourceBalances;
+        const { allActive, ids: filteredIds, showResources, resourceBalances: filteredResourceBalances } = homeVisible;
         return (
           <>
             {(homeIds.length > 0 || hasHomeResources) && !selectMode && (
@@ -680,7 +668,14 @@ export function HomeView({
             )}
             <ItemGrid
               ids={filteredIds}
-              emptyLabel={allActive ? (storageType === "camp" ? "Nothing stashed here yet." : "Nothing sitting at home right now.") : "No items match."}
+              emptyLabel={allActive
+                ? allFilterEmptyLabel(
+                    storageType === "camp" ? "Nothing stashed here yet." : "Nothing sitting at home right now.",
+                    hasTools,
+                    hasResources,
+                    homeIds.length > 0,
+                  )
+                : "No items match."}
               tierInfo={mergedCatalogTierInfo}
               balances={homeCombined}
               lookupIds={homeInstanceLookupIds}
@@ -756,13 +751,14 @@ export function HomeView({
           <img
             src={hasHomeItems ? "/images/character/campfire_lit.png" : "/images/character/campfire_unlit.png"}
             alt=""
-            role={hasHomeItems ? "button" : undefined}
-            tabIndex={hasHomeItems ? 0 : undefined}
-            title={hasHomeItems ? "Burn everything in home" : undefined}
-            aria-label={hasHomeItems ? "Burn everything in home" : undefined}
-            onClick={hasHomeItems ? () => { exitSelectMode(); setHomeAction("burn"); } : undefined}
+            role={canBulk ? "button" : undefined}
+            tabIndex={canBulk ? 0 : undefined}
+            title={canBulk ? "Burn everything shown" : undefined}
+            aria-label={canBulk ? "Burn everything shown" : undefined}
+            onClick={canBulk ? () => { exitSelectMode(); setHomeAction("burn"); } : undefined}
+            style={canBulk ? undefined : { cursor: "default" }}
             onKeyDown={
-              hasHomeItems
+              canBulk
                 ? (e) => {
                     if (e.key === "Enter" || e.key === " ") { exitSelectMode(); setHomeAction("burn"); }
                   }
@@ -784,6 +780,29 @@ export function HomeView({
                 : `${styles.campfireStageIcon} ${styles.campfireStageIconEmpty}`
             }
           />
+          {/* The workbench, left of the tent (the chopping block's
+              counterpart on the right) - opens the crafting page, which
+              works from this storage (home, or the camp while resting). */}
+          {onOpenCrafting && (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src="/images/character/crafting.png"
+              alt=""
+              role="button"
+              tabIndex={0}
+              title="Crafting"
+              aria-label="Crafting"
+              onClick={() => { exitSelectMode(); onOpenCrafting(); }}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === " ") { exitSelectMode(); onOpenCrafting(); }
+              }}
+              className={
+                hasHomeItems
+                  ? styles.homeWorkbenchIcon
+                  : `${styles.homeWorkbenchIcon} ${styles.homeWorkbenchIconEmpty}`
+              }
+            />
+          )}
           {/* Bound to the tent group itself (like .campfireStageFireIcon
               above), not the screen edge - sits right of the tent, easing
               only a little further out on wider screens instead of
@@ -795,15 +814,16 @@ export function HomeView({
               via .campfireStageIconEmpty). */}
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
-            src="/images/character/chopping_block.png"
+            src="/images/character/salvage.png"
             alt=""
-            role={hasHomeItems ? "button" : undefined}
-            tabIndex={hasHomeItems ? 0 : undefined}
-            title={hasHomeItems ? "Salvage everything in home" : undefined}
-            aria-label={hasHomeItems ? "Salvage everything in home" : undefined}
-            onClick={hasHomeItems ? () => { exitSelectMode(); setHomeAction("chop"); } : undefined}
+            role={canBulk ? "button" : undefined}
+            tabIndex={canBulk ? 0 : undefined}
+            title={canBulk ? "Salvage everything shown" : undefined}
+            aria-label={canBulk ? "Salvage everything shown" : undefined}
+            onClick={canBulk ? () => { exitSelectMode(); setHomeAction("chop"); } : undefined}
+            style={canBulk ? undefined : { cursor: "default" }}
             onKeyDown={
-              hasHomeItems
+              canBulk
                 ? (e) => {
                     if (e.key === "Enter" || e.key === " ") { exitSelectMode(); setHomeAction("chop"); }
                   }
@@ -821,13 +841,14 @@ export function HomeView({
           <img
             src="/images/character/dropped.png"
             alt=""
-            role="button"
-            tabIndex={0}
-            title="Pack everything up"
-            aria-label="Pack everything up"
-            onClick={() => { exitSelectMode(); setHomeAction("moveAll"); }}
+            role={canBulk ? "button" : undefined}
+            tabIndex={canBulk ? 0 : undefined}
+            title={canBulk ? "Pack up everything shown" : undefined}
+            aria-label={canBulk ? "Pack up everything shown" : undefined}
+            style={canBulk ? undefined : { cursor: "default" }}
+            onClick={canBulk ? () => { exitSelectMode(); setHomeAction("moveAll"); } : undefined}
             onKeyDown={(e) => {
-              if (e.key === "Enter" || e.key === " ") { exitSelectMode(); setHomeAction("moveAll"); }
+              if (canBulk && (e.key === "Enter" || e.key === " ")) { exitSelectMode(); setHomeAction("moveAll"); }
             }}
             className={styles.homeDroppedIcon}
           />
@@ -840,7 +861,7 @@ export function HomeView({
             icon="/images/character/campfire_lit.png"
             tone="destroy"
             characterId={character.id}
-            onConfirm={async () => { setHomeActionBusy(true); const r = await postJson(`/api/auth/me/characters/${character.id}/${storageType}/burn-all`); if (!r.ok) setHomeActionBusy(false); return r; }}
+            onConfirm={async () => { setHomeActionBusy(true); const r = await postJson(`/api/auth/me/characters/${character.id}/${storageType}/burn-all`, homeVisible.shown); if (!r.ok) setHomeActionBusy(false); return r; }}
             onPlayerDataUpdated={(data) => { setHomeActionBusy(false); onPlayerDataUpdated?.(data); }}
             onClose={() => { setHomeActionBusy(false); setHomeAction(null); }}
           />
@@ -853,7 +874,7 @@ export function HomeView({
             icon="/images/character/dropped.png"
             tone="move"
             characterId={character.id}
-            onConfirm={async () => { setHomeActionBusy(true); const r = await postJson(`/api/auth/me/characters/${character.id}/${storageType}/move-all-to-bags`); if (!r.ok) setHomeActionBusy(false); return r; }}
+            onConfirm={async () => { setHomeActionBusy(true); const r = await postJson(`/api/auth/me/characters/${character.id}/${storageType}/move-all-to-bags`, homeVisible.shown); if (!r.ok) setHomeActionBusy(false); return r; }}
             onPlayerDataUpdated={(data) => { setHomeActionBusy(false); onPlayerDataUpdated?.(data); }}
             onClose={() => { setHomeActionBusy(false); setHomeAction(null); }}
           />
@@ -863,6 +884,7 @@ export function HomeView({
             characterId={character.id}
             onPlayerDataUpdated={onPlayerDataUpdated}
             onClose={() => setHomeAction(null)}
+            preSelectedIds={new Set([...homeVisible.shown.instanceIds, ...Object.keys(homeVisible.shown.balances)])}
             source={storageType}
           />
         )}
@@ -874,7 +896,7 @@ export function HomeView({
           onClick={onExitHome}
         >
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/images/character/exit.webp" alt="" className={styles.homeExitIcon} />
+          <img src="/images/character/char-preview-close.png" alt="" className={styles.homeExitIcon} />
         </button>
       </div>
     </div>

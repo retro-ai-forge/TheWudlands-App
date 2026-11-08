@@ -161,7 +161,7 @@
       }
     ],
     "tool": "workbench",
-    "blueprintFamilyId": "blueprint_cloth"
+    "blueprintFamilyId": "blueprint_cloth_head_armor"
   },
   {
     "familyId": "cloth_chest_armor",
@@ -174,7 +174,7 @@
       }
     ],
     "tool": "workbench",
-    "blueprintFamilyId": "blueprint_cloth"
+    "blueprintFamilyId": "blueprint_cloth_chest_armor"
   },
   {
     "familyId": "cloth_leg_armor",
@@ -187,7 +187,7 @@
       }
     ],
     "tool": "workbench",
-    "blueprintFamilyId": "blueprint_cloth"
+    "blueprintFamilyId": "blueprint_cloth_leg_armor"
   },
   {
     "familyId": "leather_head_armor",
@@ -206,7 +206,7 @@
       }
     ],
     "tool": "workbench",
-    "blueprintFamilyId": "blueprint_leather"
+    "blueprintFamilyId": "blueprint_leather_head_armor"
   },
   {
     "familyId": "leather_chest_armor",
@@ -225,7 +225,7 @@
       }
     ],
     "tool": "workbench",
-    "blueprintFamilyId": "blueprint_leather"
+    "blueprintFamilyId": "blueprint_leather_chest_armor"
   },
   {
     "familyId": "leather_leg_armor",
@@ -244,7 +244,7 @@
       }
     ],
     "tool": "workbench",
-    "blueprintFamilyId": "blueprint_leather"
+    "blueprintFamilyId": "blueprint_leather_leg_armor"
   },
   {
     "familyId": "chainmail_head_armor",
@@ -263,7 +263,7 @@
       }
     ],
     "tool": "anvil",
-    "blueprintFamilyId": "blueprint_chainmail"
+    "blueprintFamilyId": "blueprint_chainmail_head_armor"
   },
   {
     "familyId": "chainmail_chest_armor",
@@ -282,7 +282,7 @@
       }
     ],
     "tool": "anvil",
-    "blueprintFamilyId": "blueprint_chainmail"
+    "blueprintFamilyId": "blueprint_chainmail_chest_armor"
   },
   {
     "familyId": "chainmail_leg_armor",
@@ -301,7 +301,7 @@
       }
     ],
     "tool": "anvil",
-    "blueprintFamilyId": "blueprint_chainmail"
+    "blueprintFamilyId": "blueprint_chainmail_leg_armor"
   },
   {
     "familyId": "iron_head_armor",
@@ -314,7 +314,7 @@
       }
     ],
     "tool": "anvil",
-    "blueprintFamilyId": "blueprint_iron"
+    "blueprintFamilyId": "blueprint_iron_head_armor"
   },
   {
     "familyId": "iron_chest_armor",
@@ -327,7 +327,7 @@
       }
     ],
     "tool": "anvil",
-    "blueprintFamilyId": "blueprint_iron"
+    "blueprintFamilyId": "blueprint_iron_chest_armor"
   },
   {
     "familyId": "iron_leg_armor",
@@ -340,7 +340,7 @@
       }
     ],
     "tool": "anvil",
-    "blueprintFamilyId": "blueprint_iron"
+    "blueprintFamilyId": "blueprint_iron_leg_armor"
   },
   {
     "familyId": "ebony_head_armor",
@@ -359,7 +359,7 @@
       }
     ],
     "tool": "workbench",
-    "blueprintFamilyId": "blueprint_ebony"
+    "blueprintFamilyId": "blueprint_ebony_head_armor"
   },
   {
     "familyId": "ebony_chest_armor",
@@ -378,7 +378,7 @@
       }
     ],
     "tool": "workbench",
-    "blueprintFamilyId": "blueprint_ebony"
+    "blueprintFamilyId": "blueprint_ebony_chest_armor"
   },
   {
     "familyId": "ebony_leg_armor",
@@ -397,7 +397,7 @@
       }
     ],
     "tool": "workbench",
-    "blueprintFamilyId": "blueprint_ebony"
+    "blueprintFamilyId": "blueprint_ebony_leg_armor"
   },
   {
     "familyId": "chitin_head_armor",
@@ -422,7 +422,7 @@
       }
     ],
     "tool": "workbench",
-    "blueprintFamilyId": "blueprint_chitin"
+    "blueprintFamilyId": "blueprint_chitin_head_armor"
   },
   {
     "familyId": "chitin_chest_armor",
@@ -447,7 +447,7 @@
       }
     ],
     "tool": "workbench",
-    "blueprintFamilyId": "blueprint_chitin"
+    "blueprintFamilyId": "blueprint_chitin_chest_armor"
   },
   {
     "familyId": "chitin_leg_armor",
@@ -472,7 +472,7 @@
       }
     ],
     "tool": "workbench",
-    "blueprintFamilyId": "blueprint_chitin"
+    "blueprintFamilyId": "blueprint_chitin_leg_armor"
   },
   {
     "familyId": "meteoric_iron_head_armor",
@@ -497,7 +497,7 @@
       }
     ],
     "tool": "anvil",
-    "blueprintFamilyId": "blueprint_meteoric_iron"
+    "blueprintFamilyId": "blueprint_meteoric_iron_head_armor"
   },
   {
     "familyId": "meteoric_iron_chest_armor",
@@ -522,7 +522,7 @@
       }
     ],
     "tool": "anvil",
-    "blueprintFamilyId": "blueprint_meteoric_iron"
+    "blueprintFamilyId": "blueprint_meteoric_iron_chest_armor"
   },
   {
     "familyId": "meteoric_iron_leg_armor",
@@ -547,7 +547,7 @@
       }
     ],
     "tool": "anvil",
-    "blueprintFamilyId": "blueprint_meteoric_iron"
+    "blueprintFamilyId": "blueprint_meteoric_iron_leg_armor"
   },
   {
     "familyId": "darksteel_head_armor",
@@ -566,7 +566,7 @@
       }
     ],
     "tool": "anvil",
-    "blueprintFamilyId": "blueprint_darksteel"
+    "blueprintFamilyId": "blueprint_darksteel_head_armor"
   },
   {
     "familyId": "darksteel_chest_armor",
@@ -585,7 +585,7 @@
       }
     ],
     "tool": "anvil",
-    "blueprintFamilyId": "blueprint_darksteel"
+    "blueprintFamilyId": "blueprint_darksteel_chest_armor"
   },
   {
     "familyId": "darksteel_leg_armor",
@@ -604,7 +604,7 @@
       }
     ],
     "tool": "anvil",
-    "blueprintFamilyId": "blueprint_darksteel"
+    "blueprintFamilyId": "blueprint_darksteel_leg_armor"
   },
   {
     "familyId": "workbench",
@@ -692,14 +692,20 @@
     "ingredients": [
       {
         "category": "processed",
-        "familyId": "refined_clay",
-        "qty": 3,
+        "familyId": "refined_ore",
+        "qty": 1,
+        "consumed": true
+      },
+      {
+        "category": "raw",
+        "familyId": "stone",
+        "qty": 2,
         "consumed": true
       },
       {
         "category": "processed",
-        "familyId": "refined_ore",
-        "qty": 2,
+        "familyId": "refined_clay",
+        "qty": 3,
         "consumed": true
       }
     ],
@@ -749,7 +755,13 @@
       {
         "category": "processed",
         "familyId": "refined_ore",
-        "qty": 10,
+        "qty": 2,
+        "consumed": true
+      },
+      {
+        "category": "raw",
+        "familyId": "stone",
+        "qty": 16,
         "consumed": true
       },
       {
@@ -768,7 +780,13 @@
       {
         "category": "processed",
         "familyId": "refined_ore",
-        "qty": 8,
+        "qty": 1,
+        "consumed": true
+      },
+      {
+        "category": "raw",
+        "familyId": "stone",
+        "qty": 14,
         "consumed": true
       },
       {
@@ -804,15 +822,15 @@
     "familyId": "kiln",
     "ingredients": [
       {
-        "category": "processed",
-        "familyId": "refined_clay",
-        "qty": 10,
+        "category": "raw",
+        "familyId": "stone",
+        "qty": 6,
         "consumed": true
       },
       {
         "category": "processed",
-        "familyId": "refined_ore",
-        "qty": 3,
+        "familyId": "refined_clay",
+        "qty": 10,
         "consumed": true
       }
     ],
@@ -825,7 +843,13 @@
       {
         "category": "processed",
         "familyId": "refined_ore",
-        "qty": 8,
+        "qty": 2,
+        "consumed": true
+      },
+      {
+        "category": "raw",
+        "familyId": "stone",
+        "qty": 12,
         "consumed": true
       },
       {
@@ -849,8 +873,14 @@
       },
       {
         "category": "processed",
-        "familyId": "clockwork_mechanism",
-        "qty": 1,
+        "familyId": "reinforced_frame",
+        "qty": 2,
+        "consumed": true
+      },
+      {
+        "category": "processed",
+        "familyId": "thread",
+        "qty": 2,
         "consumed": true
       }
     ],
@@ -861,9 +891,9 @@
     "familyId": "mortar_and_pestle",
     "ingredients": [
       {
-        "category": "processed",
-        "familyId": "refined_ore",
-        "qty": 2,
+        "category": "raw",
+        "familyId": "stone",
+        "qty": 4,
         "consumed": true
       },
       {
@@ -1590,16 +1620,48 @@
     "familyId": "candle",
     "ingredients": [
       {
-        "category": "raw",
-        "familyId": "harvest",
-        "qty": 3,
-        "consumed": true
+        "alternatives": [
+          {
+            "category": "raw",
+            "familyId": "hide",
+            "qty": 1,
+            "consumed": true
+          },
+          {
+            "category": "raw",
+            "familyId": "monster_part",
+            "qty": 1,
+            "consumed": true
+          },
+          {
+            "category": "raw",
+            "familyId": "meat",
+            "qty": 1,
+            "consumed": true
+          },
+          {
+            "category": "raw",
+            "familyId": "harvest",
+            "qty": 2,
+            "consumed": true
+          }
+        ]
       },
       {
-        "category": "raw",
-        "familyId": "fiber",
-        "qty": 2,
-        "consumed": true
+        "alternatives": [
+          {
+            "category": "raw",
+            "familyId": "reed",
+            "qty": 1,
+            "consumed": true
+          },
+          {
+            "category": "raw",
+            "familyId": "fiber",
+            "qty": 1,
+            "consumed": true
+          }
+        ]
       }
     ],
     "tool": null,
@@ -1714,14 +1776,14 @@
     "familyId": "holy_symbol",
     "ingredients": [
       {
-        "category": "raw",
-        "familyId": "wood",
-        "qty": 2,
+        "category": "processed",
+        "familyId": "cut_crystal",
+        "qty": 1,
         "consumed": true
       },
       {
-        "category": "raw",
-        "familyId": "pigment",
+        "category": "processed",
+        "familyId": "leather",
         "qty": 1,
         "consumed": true
       }
@@ -1803,10 +1865,20 @@
     "familyId": "rope",
     "ingredients": [
       {
-        "category": "raw",
-        "familyId": "fiber",
-        "qty": 6,
-        "consumed": true
+        "alternatives": [
+          {
+            "category": "processed",
+            "familyId": "leather",
+            "qty": 1,
+            "consumed": true
+          },
+          {
+            "category": "raw",
+            "familyId": "fiber",
+            "qty": 6,
+            "consumed": true
+          }
+        ]
       }
     ],
     "tool": null,
@@ -1923,22 +1995,42 @@
     "familyId": "torch",
     "ingredients": [
       {
-        "category": "raw",
-        "familyId": "wood",
-        "qty": 2,
-        "consumed": true
+        "alternatives": [
+          {
+            "category": "raw",
+            "familyId": "bone",
+            "qty": 1,
+            "consumed": true
+          },
+          {
+            "category": "raw",
+            "familyId": "wood",
+            "qty": 1,
+            "consumed": true
+          }
+        ]
       },
       {
-        "category": "raw",
-        "familyId": "fiber",
-        "qty": 3,
-        "consumed": true
-      },
-      {
-        "category": "processed",
-        "familyId": "carcass",
-        "qty": 1,
-        "consumed": true
+        "alternatives": [
+          {
+            "category": "raw",
+            "familyId": "reed",
+            "qty": 1,
+            "consumed": true
+          },
+          {
+            "category": "raw",
+            "familyId": "hide",
+            "qty": 1,
+            "consumed": true
+          },
+          {
+            "category": "raw",
+            "familyId": "fiber",
+            "qty": 1,
+            "consumed": true
+          }
+        ]
       }
     ],
     "tool": null,
@@ -2201,10 +2293,20 @@
     "familyId": "leather",
     "ingredients": [
       {
-        "category": "raw",
-        "familyId": "skin",
-        "qty": 6,
-        "consumed": true
+        "alternatives": [
+          {
+            "category": "raw",
+            "familyId": "hide",
+            "qty": 6,
+            "consumed": true
+          },
+          {
+            "category": "raw",
+            "familyId": "skin",
+            "qty": 6,
+            "consumed": true
+          }
+        ]
       }
     ],
     "tool": "tanning_rack",
@@ -2355,10 +2457,21 @@
     "familyId": "coal",
     "ingredients": [
       {
-        "category": "raw",
-        "familyId": "wood",
-        "qty": 3,
-        "consumed": true
+        "alternatives": [
+          {
+            "category": "raw",
+            "familyId": "wood",
+            "qty": 3,
+            "consumed": true,
+            "classic": true
+          },
+          {
+            "category": "raw",
+            "familyId": "monster_part",
+            "qty": 3,
+            "consumed": true
+          }
+        ]
       }
     ],
     "tool": null,
@@ -2497,10 +2610,21 @@
     "familyId": "glass_pane",
     "ingredients": [
       {
-        "category": "raw",
-        "familyId": "sand",
-        "qty": 6,
-        "consumed": true
+        "alternatives": [
+          {
+            "category": "raw",
+            "familyId": "sand",
+            "qty": 6,
+            "consumed": true,
+            "classic": true
+          },
+          {
+            "category": "raw",
+            "familyId": "crystal",
+            "qty": 6,
+            "consumed": true
+          }
+        ]
       }
     ],
     "tool": "kiln",
@@ -2550,8 +2674,14 @@
     "ingredients": [
       {
         "category": "processed",
-        "familyId": "ground_pigment",
-        "qty": 3,
+        "familyId": "coal",
+        "qty": 2,
+        "consumed": true
+      },
+      {
+        "category": "processed",
+        "familyId": "herbal_extract",
+        "qty": 1,
         "consumed": true
       },
       {
@@ -3137,16 +3267,48 @@
     "familyId": "oil",
     "ingredients": [
       {
-        "category": "raw",
-        "familyId": "meat",
-        "qty": 2,
-        "consumed": true
+        "alternatives": [
+          {
+            "category": "raw",
+            "familyId": "fish",
+            "qty": 1,
+            "consumed": true
+          },
+          {
+            "category": "raw",
+            "familyId": "monster_part",
+            "qty": 1,
+            "consumed": true
+          },
+          {
+            "category": "raw",
+            "familyId": "meat",
+            "qty": 1,
+            "consumed": true
+          }
+        ]
       },
       {
-        "category": "raw",
-        "familyId": "fiber",
-        "qty": 1,
-        "consumed": true
+        "alternatives": [
+          {
+            "category": "raw",
+            "familyId": "bone",
+            "qty": 1,
+            "consumed": true
+          },
+          {
+            "category": "raw",
+            "familyId": "harvest",
+            "qty": 1,
+            "consumed": true
+          },
+          {
+            "category": "raw",
+            "familyId": "fiber",
+            "qty": 1,
+            "consumed": true
+          }
+        ]
       }
     ],
     "tool": null,
@@ -3156,16 +3318,43 @@
     "familyId": "arrow",
     "ingredients": [
       {
-        "category": "raw",
-        "familyId": "wood",
-        "qty": 1,
-        "consumed": true
+        "alternatives": [
+          {
+            "category": "raw",
+            "familyId": "bone",
+            "qty": 1,
+            "consumed": true
+          },
+          {
+            "category": "raw",
+            "familyId": "reed",
+            "qty": 1,
+            "consumed": true
+          },
+          {
+            "category": "raw",
+            "familyId": "wood",
+            "qty": 1,
+            "consumed": true
+          }
+        ]
       },
       {
-        "category": "raw",
-        "familyId": "feather",
-        "qty": 1,
-        "consumed": true
+        "alternatives": [
+          {
+            "category": "raw",
+            "familyId": "feather",
+            "qty": 1,
+            "consumed": true,
+            "classic": true
+          },
+          {
+            "category": "raw",
+            "familyId": "hide",
+            "qty": 1,
+            "consumed": true
+          }
+        ]
       }
     ],
     "tool": null,
@@ -3175,16 +3364,48 @@
     "familyId": "bolt",
     "ingredients": [
       {
-        "category": "raw",
-        "familyId": "wood",
-        "qty": 1,
-        "consumed": true
+        "alternatives": [
+          {
+            "category": "raw",
+            "familyId": "bone",
+            "qty": 1,
+            "consumed": true
+          },
+          {
+            "category": "raw",
+            "familyId": "wood",
+            "qty": 1,
+            "consumed": true
+          }
+        ]
       },
       {
-        "category": "raw",
-        "familyId": "ore",
-        "qty": 1,
-        "consumed": true
+        "alternatives": [
+          {
+            "category": "raw",
+            "familyId": "stone",
+            "qty": 1,
+            "consumed": true
+          },
+          {
+            "category": "raw",
+            "familyId": "monster_part",
+            "qty": 1,
+            "consumed": true
+          },
+          {
+            "category": "raw",
+            "familyId": "crystal",
+            "qty": 1,
+            "consumed": true
+          },
+          {
+            "category": "raw",
+            "familyId": "ore",
+            "qty": 1,
+            "consumed": true
+          }
+        ]
       }
     ],
     "tool": null,

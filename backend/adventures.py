@@ -69,7 +69,9 @@ from typing import List, Optional
 from pymongo import ReturnDocument
 from pymongo.errors import DuplicateKeyError
 
-from backend.db import get_database
+from backend import condition, foraging
+from backend.character import vital_status_list
+from backend.db import find_one_and_update_checked, get_database
 from backend.twine_graph import LAST_RESORT_PASSAGE, build_story_graph, step_allowed
 
 # Review statuses a story may be played from. Stories are only "submitted" today;
@@ -293,7 +295,8 @@ async def grant_runs(
         raise AdventureError("This story is free - there is nothing to buy")
     key = _plays_key(address, story_author, story_id)
     await _ensure_plays(db, key, access)
-    plays = await db.story_plays.find_one_and_update(
+    plays = await find_one_and_update_checked(
+        db.story_plays,
         key,
         {"$inc": {"remaining": runs}, "$set": {"updatedAt": _now()}},
         return_document=ReturnDocument.AFTER,
@@ -358,7 +361,8 @@ def _pc_in_sync(entry: dict, char_doc: dict) -> bool:
 
 async def _claim_character(db, address: str, character_id: str, stub: dict) -> Optional[dict]:
     """Put a free character into the session. None if it isn't free (anymore)."""
-    doc = await db.characters.find_one_and_update(
+    doc = await find_one_and_update_checked(
+        db.characters,
         {
             "address": address,
             "id": character_id,
@@ -375,6 +379,7 @@ async def _claim_character(db, address: str, character_id: str, stub: dict) -> O
     )
     if doc is not None:
         await _sync_pc(db, address, character_id, doc)
+        await condition.pause_healing(address, character_id, db)  # no healing while out
     return doc
 
 
@@ -402,17 +407,21 @@ async def _release_character(
     elif outcome == "run_away":
         update["$inc"] = {"stats.adventureRunAway": 1}
 
-    doc = await db.characters.find_one_and_update(
+    doc = await find_one_and_update_checked(
+        db.characters,
         {"address": address, "id": character_id, "availability.adventure.sessionId": session_id},
         update,
         return_document=ReturnDocument.AFTER,
     )
+    released = doc is not None
     if doc is None:
         # Already released (a retry), or the character was deleted.
         doc = await db.characters.find_one({"address": address, "id": character_id})
         if doc is None:
             return
     await _sync_pc(db, address, character_id, doc)
+    if released:
+        await condition.resume_healing(address, character_id, db)  # back and free: clock restarts
     if not doc.get("availability", {}).get("inAdventure"):
         await db.character_camp.delete_one({"address": address, "characterId": character_id})
 
@@ -474,7 +483,7 @@ def _character_var(doc: dict, lead_id: str) -> dict:
         "race": doc.get("race"),
         "raceGroup": doc.get("raceGroup"),
         "birthsign": doc.get("birthsign"),
-        "vitalStatus": doc.get("vitalStatus"),
+        "vitalStatus": vital_status_list(doc.get("vitalStatus")),
         "attr": doc.get("attr", {}),
         "classes": doc.get("classes", {}),
         "lead": doc.get("id") == lead_id,
@@ -618,15 +627,14 @@ async def start_adventure(
             raise AdventureError("Character not found", 404)
         name = doc.get("firstName") or character_id
         availability = doc.get("availability", {})
-        if doc.get("vitalStatus", "alive") != "alive":
-            raise AdventureError(f"{name} can't go on an adventure ({doc.get('vitalStatus')})", 409)
+        if condition.is_dead(doc):
+            raise AdventureError(f"{name} sleeps among the dead. No road calls to one who no longer draws breath.", 409)
         if availability.get("inAdventure") or availability.get("adventure"):
             raise AdventureError(f"{name} is already on an adventure", 409)
         active_craft = (doc.get("crafting") or {}).get("activeCraft")
         if active_craft and datetime.fromisoformat(active_craft["readyAt"]) > now_dt:
             raise AdventureError(f"{name} is still crafting", 409)
-        active_forage = (doc.get("foraging") or {}).get("activeForage")
-        if active_forage and datetime.fromisoformat(active_forage["readyAt"]) > now_dt:
+        if foraging.forage_active(doc, now_dt):
             raise AdventureError(f"{name} is out foraging", 409)
 
     now = _now()
@@ -672,7 +680,8 @@ async def start_adventure(
         "char": [_character_var(claimed[cid], lead_id) for cid in character_ids],
         "lead": lead_id,
     }
-    active = await db.adventure_sessions.find_one_and_update(
+    active = await find_one_and_update_checked(
+        db.adventure_sessions,
         {"_id": session["_id"], "status": "starting"},
         {"$set": {"status": "active", "serverVars": server_vars, "updatedAt": _now()}},
         return_document=ReturnDocument.AFTER,
@@ -824,7 +833,8 @@ async def record_step(
             "endedAt": now,
         })
 
-    updated = await db.adventure_sessions.find_one_and_update(
+    updated = await find_one_and_update_checked(
+        db.adventure_sessions,
         {
             "_id": session_id,
             "address": address,

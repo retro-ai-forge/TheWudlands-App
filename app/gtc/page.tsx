@@ -1,11 +1,20 @@
+import type { Metadata } from "next";
+import { pageMetadata } from "../lib/seo";
 import Link from "next/link";
 import styles from "./page.module.css";
+import h from "@/app/styles/headings.module.css";
+
+export const metadata: Metadata = pageMetadata({
+  title: "Terms & Conditions",
+  description: "Terms and conditions of The Wudlands: rights to submitted content, revenue share, wallets, content standards, age restrictions and third-party credits.",
+  path: "/gtc",
+});
 
 export default function GTC() {
   return (
     <div className={styles.page}>
       <section className={styles.guidelines}>
-        <h2 className={styles.heading}>Terms &amp; Conditions</h2>
+        <h1 className={h.pageTitle}>Terms &amp; Conditions</h1>
 
         <p className={styles.body}>
           By submitting an adventure addon to The Wudlands, you agree to the terms set out on this page in full.
@@ -13,7 +22,7 @@ export default function GTC() {
           growing, and free to evolve as the project develops. If you do not agree, please do not submit content.
         </p>
 
-        <h3 className={styles.subheading}>1. Rights to Submitted Content</h3>
+        <h3 className={`${h.sub} ${h.muted}`}>1. Rights to Submitted Content</h3>
 
         <p className={styles.body}>
           When you submit an adventure, story, scene, encounter, character, or any other content to The Wudlands,
@@ -33,7 +42,7 @@ export default function GTC() {
           the project team sees fit.
         </p>
 
-        <h3 className={styles.subheading}>2. Romantic Storyline &amp; Minne</h3>
+        <h3 className={`${h.sub} ${h.muted}`}>2. Romantic Storyline &amp; Minne</h3>
 
         <p className={styles.body}>
           The Wudlands uses courtly-love tropes (historically called &quot;Minne&quot;) as a deliberate, genre-specific
@@ -44,7 +53,7 @@ export default function GTC() {
           platform content policies (see Section 5).
         </p>
 
-        <h3 className={styles.subheading}>3. Revenue Share</h3>
+        <h3 className={`${h.sub} ${h.muted}`}>3. Revenue Share</h3>
 
         <p className={styles.body}>
           The Wudlands may offer a revenue split with contributors, as described on the{" "}
@@ -54,7 +63,7 @@ export default function GTC() {
           reserves final say on pricing. Each adventure allows 3 plays; further plays require paying the fee again.
         </p>
 
-        <h3 className={styles.subheading}>4. Blockchain &amp; Wallet Addresses</h3>
+        <h3 className={`${h.sub} ${h.muted}`}>4. Blockchain &amp; Wallet Addresses</h3>
 
         <p className={styles.body}>
           The Wudlands currently uses Polkadot with optional Ethereum addresses for revenue distribution.
@@ -63,7 +72,7 @@ export default function GTC() {
           does not guarantee any payment, and you may see your address reflected in smart contracts.
         </p>
 
-        <h3 className={styles.subheading}>5. Content Standards, Age Restrictions &amp; Player Warnings</h3>
+        <h3 className={`${h.sub} ${h.muted}`}>5. Content Standards, Age Restrictions &amp; Player Warnings</h3>
 
         <p className={styles.body}>
           The Wudlands is a dark fantasy adventure platform. By its nature it contains mature themes including
@@ -106,7 +115,7 @@ export default function GTC() {
           content that crosses this line without warning or appeal.
         </p>
 
-        <h3 className={styles.subheading}>6. Erotic Content</h3>
+        <h3 className={`${h.sub} ${h.muted}`}>6. Erotic Content</h3>
 
         <p className={styles.body}>
           Erotic content is permitted exclusively in addons that have been explicitly flagged as adult content
@@ -142,7 +151,7 @@ export default function GTC() {
           mechanic, reward, or feature across platform updates.
         </p>
 
-        <h3 className={styles.subheading}>7. Character Portrait Images</h3>
+        <h3 className={`${h.sub} ${h.muted}`}>7. Character Portrait Images</h3>
 
         <p className={styles.body}>
           Character creation lets you supply a portrait by pasting an image URL. This image is loaded and displayed
@@ -155,7 +164,7 @@ export default function GTC() {
           image content that a user chooses to link.
         </p>
 
-        <h3 className={styles.subheading}>8. Summary</h3>
+        <h3 className={`${h.sub} ${h.muted}`}>8. Summary</h3>
 
         <table className={styles.table}>
           <thead>
@@ -204,7 +213,7 @@ export default function GTC() {
           </tbody>
         </table>
 
-        <h3 className={styles.subheading}>9. Third-Party Sound Credits</h3>
+        <h3 className={`${h.sub} ${h.muted}`}>9. Third-Party Sound Credits</h3>
 
         <p className={styles.body}>
           Some sound effects and music used in The Wudlands are sourced from{" "}
@@ -219,7 +228,7 @@ export default function GTC() {
           under their Standard License.
         </p>
 
-        <h3 className={styles.subheading}>10. Third-Party Software</h3>
+        <h3 className={`${h.sub} ${h.muted}`}>10. Third-Party Software</h3>
 
         <p className={styles.body}>
           The Wudlands story editor is built on{" "}

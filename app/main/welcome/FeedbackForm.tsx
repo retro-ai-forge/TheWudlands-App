@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import styles from "./FeedbackForm.module.css";
+import h from "@/app/styles/headings.module.css";
 
 export function FeedbackForm() {
   const [feedback, setFeedback] = useState("");
@@ -51,7 +52,7 @@ export function FeedbackForm() {
   return (
     <div className={styles.feedbackContainer}>
       <div className={styles.feedbackSection}>
-        <h2 className={styles.title}>Player Feedback &amp; Reviews</h2>
+        <h2 className={h.sub}>Player Feedback &amp; Reviews</h2>
         <p className={styles.rewardInfo}>
           <span className={styles.highlight}>Constructive feedback will be rewarded in-game.</span>
           {" "}Help shape The Wudlands by sharing your thoughts, suggestions, and reviews.

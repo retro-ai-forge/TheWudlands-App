@@ -1,10 +1,19 @@
+import type { Metadata } from "next";
+import { pageMetadata } from "../lib/seo";
 import styles from "./page.module.css";
+import h from "@/app/styles/headings.module.css";
+
+export const metadata: Metadata = pageMetadata({
+  title: "Developers",
+  description: "The Wudlands is open source: technical docs, GitHub, Telegram and the development roadmap.",
+  path: "/dev-section",
+});
 
 export default function DevSection() {
   return (
     <div className={styles.page}>
       <section className={styles.guidelines}>
-        <h2 className={styles.heading}>Developers</h2>
+        <h1 className={h.pageTitle}>Developers</h1>
 
         <p className={styles.body}>
           The Wudlands is open source. Full technical docs live in the{" "}
@@ -38,7 +47,7 @@ export default function DevSection() {
         </div>
 
         <div id="roadmap" className={styles.roadmapSection}>
-          <h3 className={styles.roadmapTitle}>Development Roadmap</h3>
+          <h3 className={h.sub}>Development Roadmap</h3>
 
           <div className={styles.timelineContainer}>
             <div className={styles.timelineLine}></div>

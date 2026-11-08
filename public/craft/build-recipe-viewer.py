@@ -58,11 +58,11 @@ def build_families() -> dict:
     # ">= recipe tier" minimum backend.players._resolve_tool_for_craft
     # enforces for these, while a flat-balance tool (an anvil, a furnace,
     # ...) stays any-tier-satisfies. The rest (sizeClass/stackSize/
-    # qualityMax/equipSlots/twoHanded/backpackable/gatheringBonuses) is
+    # equipSlots/twoHanded/backpackable/gatheringBonuses) is
     # embedded as each family's "props" below, feeding the item-detail
-    # popup opened by clicking the root row of the Recipe Tree - only a
-    # family with a props entry (an equippable/instance-tracked item, not a
-    # raw/processed material) gets that popup at all.
+    # popup opened by clicking the root row of the Recipe Tree - every
+    # family with a props entry gets that popup (every craftable item has
+    # one: final items, processed materials, tools and crafting stations).
     props_by_family: dict[str, dict] = {
         row["familyId"]: row
         for row in json.loads((DATA_DIR / "item-inventory-properties.json").read_text())
@@ -95,17 +95,10 @@ def build_families() -> dict:
                     for it in family_items
                 ],
             }
-            # A pure crafting-station tool (kind == ["tool"] exactly, e.g.
-            # anvil/furnace/workbench) gets no popup - still all "dummy"
-            # placeholder descriptions with nothing worth previewing. A
-            # dual-role item (kind includes "weapon" too, e.g. axe_stone/
-            # axe/dagger) keeps its popup same as any other equippable item.
-            has_popup = bool(props) and sorted(props.get("kind", [])) != ["tool"]
-            if has_popup:
+            if props:
                 family["props"] = {
                     "sizeClass": props.get("sizeClass"),
                     "stackSize": props.get("stackSize", 1),
-                    "qualityMax": props.get("qualityMax"),
                     "equipSlots": props.get("equipSlots", []),
                     "twoHanded": props.get("twoHanded", False),
                     "backpackable": props.get("backpackable", False),
@@ -121,8 +114,15 @@ def build_recipes() -> dict:
     return {r["familyId"]: r for r in recipes}
 
 
+def build_burn_hours() -> dict:
+    # Hours one unit of a light burns, by family and tier (the "_" keys are
+    # comments) - shown in the item popup, same numbers foraging uses.
+    burn = json.loads((DATA_DIR / "light-source-burn-hours.json").read_text())
+    return {k: v for k, v in burn.items() if not k.startswith("_")}
+
+
 def main() -> None:
-    data = {"families": build_families(), "recipes": build_recipes()}
+    data = {"families": build_families(), "recipes": build_recipes(), "burnHours": build_burn_hours()}
     template = TEMPLATE.read_text()
     output = template.replace("__DATA__", json.dumps(data))
     OUTPUT.write_text(output)

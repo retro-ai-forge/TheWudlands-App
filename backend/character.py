@@ -9,14 +9,46 @@ from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from typing import Dict, Optional
 
-# Valid values for Character.vital_status, per the "Vital Status" lore
-# section on the world page (app/theworld/page.tsx). Nothing sets a
-# character to anything but "alive" yet, but the set is recorded here so
-# future writers have a single place to validate against.
+from backend.legend import default_legend
+
+# Valid values in Character.vital_status, per the "Vital Status" lore
+# section on the world page (app/theworld/page.tsx).
 VITAL_STATUSES = (
     "alive", "dead", "vampire", "soulless",
     "magicless", "cursed", "petrified", "incorporal",
 )
+
+# vitalStatus is a list: the first entry is the life state (alive or dead),
+# the rest are conditions on top of it, e.g. ["alive", "soulless"] or
+# ["dead", "soulless"]. The life state alone decides physical actions
+# (foraging, adventures); conditions decide their own kind - soulless
+# blocks soul actions such as magic.
+LIFE_STATES = ("alive", "dead")
+
+
+def vital_status_list(value) -> list:
+    """Any stored vitalStatus as the list form. Older docs hold one word:
+    "dead" -> ["dead"], "soulless" -> ["alive", "soulless"] (a condition on
+    a living character), missing -> ["alive"]."""
+    if isinstance(value, (list, tuple)):
+        items = [str(v) for v in value if v]
+    elif isinstance(value, str) and value:
+        items = [value]
+    else:
+        items = []
+    life = next((s for s in items if s in LIFE_STATES), "alive")
+    conditions = list(dict.fromkeys(s for s in items if s not in LIFE_STATES))
+    return [life, *conditions]
+
+
+def is_alive(value) -> bool:
+    """Can take physical actions: the life state (first entry) is alive."""
+    return vital_status_list(value)[0] == "alive"
+
+
+def has_soul(value) -> bool:
+    """Can take soul actions such as magic: not soulless."""
+    return "soulless" not in vital_status_list(value)
 
 @dataclass
 class ClassStats:
@@ -137,7 +169,8 @@ class Character:
     slot_number: int = 0
     first_name: str = ''
     last_name: str = ''
-    vital_status: str = 'alive'
+    # See vital_status_list: [life state, *conditions].
+    vital_status: list = field(default_factory=lambda: ["alive"])
     age_month: int = 23
     gender: str = 'd'
     race_group: str = 'common'
@@ -200,6 +233,11 @@ class Character:
     completed_stories: list = field(default_factory=list)
     adventure_finished: int = 0
     adventure_run_away: int = 0
+    # Your Legend reputation values, {name: 0-100} without the story's
+    # meta_ prefix (see backend.legend). Kept apart from `stats`.
+    legend: dict = field(default_factory=default_legend)
+    # Last write of `legend`; Renown fades from here (backend.legend.decayed).
+    legend_updated_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
 
     def to_dict(self) -> dict:
         return {
@@ -207,7 +245,7 @@ class Character:
             "slotNumber": self.slot_number,
             "firstName": self.first_name,
             "lastName": self.last_name,
-            "vitalStatus": self.vital_status,
+            "vitalStatus": vital_status_list(self.vital_status),
             "age_month": self.age_month,
             "gender": self.gender,
             "raceGroup": self.race_group,
@@ -240,4 +278,6 @@ class Character:
                 "adventureFinished": self.adventure_finished,
                 "adventureRunAway": self.adventure_run_away,
             },
+            "legend": self.legend,
+            "legendUpdatedAt": self.legend_updated_at.isoformat(),
         }

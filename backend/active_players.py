@@ -24,7 +24,7 @@ from typing import List, Optional
 
 from pymongo import ReturnDocument
 
-from backend.db import get_database
+from backend.db import find_one_and_update_checked, get_database
 
 INACTIVITY_TIMEOUT = timedelta(hours=8)
 
@@ -107,7 +107,8 @@ async def touch_player(address: str) -> Optional[ActivePlayer]:
     db = get_database()
     now = datetime.now(timezone.utc)
 
-    doc = await db.active_players.find_one_and_update(
+    doc = await find_one_and_update_checked(
+        db.active_players,
         {"address": address},
         {"$set": {"last_active_at": now}},
         return_document=ReturnDocument.AFTER,
