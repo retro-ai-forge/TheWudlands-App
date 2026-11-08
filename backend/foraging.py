@@ -29,9 +29,11 @@ character (+25% at T1 .. +75% at T6), plus every matching item family
 carried (+5% .. +18%) - weaponBonusByTier/itemBonusByTier in the rules.
 The base roll is set low enough that only geared trips beat the old yield.
 A bow needs a quiver and arrows, a crossbow a bolt girdle and bolts
-(weaponRequires). Every weapon's wear equals the units found; a bow or
-crossbow spreads it - one arrow/bolt per unit first, only the rest off the
-weapon's quality (weaponAmmo). Each quality-tracked item wears by 1; gear at
+(weaponRequires). Gear only wears on finds of at least its own tier: a
+weapon loses 1 quality per such unit, an item 1 per trip if the trip found
+any. A bow/crossbow shoots one arrow/bolt per unit - an arrow covers finds
+of its tier or lower - and wears only for uncovered finds at or above its
+tier (weaponAmmo). Gear at
 quality <= 0 is destroyed. Only gear still on the character at collection
 counts.
 
@@ -626,53 +628,75 @@ async def _pc_update(db, address: str, character_id: str, update: dict) -> None:
     )
 
 
-async def _consume_ammo(db, address: str, character_id: str, ammo_family: str, units: int) -> tuple[dict, int]:
-    """Use `units` of `ammo_family` (arrows/bolts) from the character:
-    equipped stacks first, then backpack, saddlepack, cart - lowest tier
-    first, saving the better ammo. Returns ({item id: used}, shortfall)."""
-    if units <= 0:
-        return {}, 0
+def unit_tiers(found: dict[str, int]) -> list[int]:
+    """One tier per unit found, e.g. {"ore_1": 2, "ore_2": 1} -> [1, 1, 2]."""
+    return [_tier(item_id) for item_id, n in found.items() for _ in range(n)]
+
+
+def allocate_ammo(pieces: list[dict], tiers: list[int]) -> tuple[dict[str, int], list[int]]:
+    """Shoot one arrow/bolt per unit found. An arrow only covers finds of its
+    own tier or lower; the highest finds are matched first, each with the
+    lowest-tier arrow that still fits (saving better ammo, covering the
+    most). `pieces` are [{"itemId", "tier", "left", "order"}] - lower order
+    is used first within a tier (equipped stacks before packs); "left" is
+    decremented in place. Returns ({item id: used}, tiers left uncovered)."""
+    used: dict[str, int] = {}
+    uncovered: list[int] = []
+    for tier in sorted(tiers, reverse=True):
+        fits = [p for p in pieces if p["left"] > 0 and p["tier"] >= tier]
+        if not fits:
+            uncovered.append(tier)
+            continue
+        piece = min(fits, key=lambda p: (p["tier"], p["order"]))
+        piece["left"] -= 1
+        used[piece["itemId"]] = used.get(piece["itemId"], 0) + 1
+    return used, uncovered
+
+
+async def _consume_ammo(db, address: str, character_id: str, ammo_family: str,
+                        tiers: list[int]) -> tuple[dict, list[int]]:
+    """Use `ammo_family` (arrows/bolts) from the character for the units
+    found (see allocate_ammo) - equipped stacks first, then backpack,
+    saddlepack, cart. Returns ({item id: used}, tiers left uncovered)."""
+    if not tiers:
+        return {}, []
     doc = await db.characters.find_one({"address": address, "id": character_id})
     gear = (doc or {}).get("gear") or {}
-    need, used = units, {}
-    inc, set_ops, unset, pulls, filters = {}, {}, {}, [], []
 
-    stacks = sorted(
-        (i for i in gear.get("items", [])
-         if i.get("familyId") == ammo_family and i.get("location") in CARRIED_LOCATIONS and (i.get("quantity") or 0) > 0),
-        key=lambda i: _tier(i.get("itemId", "")),
-    )
-    for stack in stacks:
-        if need <= 0:
-            break
-        take = min(need, stack["quantity"])
-        used[stack["itemId"]] = used.get(stack["itemId"], 0) + take
-        need -= take
-        if take == stack["quantity"]:
-            pulls.append(stack["instanceId"])
-        else:
-            n = len(filters)
-            inc[f"gear.items.$[a{n}].quantity"] = -take
-            filters.append({f"a{n}.instanceId": stack["instanceId"]})
-
+    pieces: list[dict] = []
+    for stack in gear.get("items", []):
+        if (stack.get("familyId") == ammo_family and stack.get("location") in CARRIED_LOCATIONS
+                and (stack.get("quantity") or 0) > 0):
+            pieces.append({"itemId": stack.get("itemId", ""), "tier": _tier(stack.get("itemId", "")),
+                           "left": stack["quantity"], "had": stack["quantity"], "order": 0,
+                           "instanceId": stack["instanceId"]})
     balances = gear.get("itemBalances") or {}
-    for bucket in CARRIED_BALANCE_BUCKETS:
-        held = sorted(
-            ((item_id, qty) for item_id, qty in (balances.get(bucket) or {}).items()
-             if qty > 0 and getattr(items_catalog.ITEM_CATALOG_ENTRIES_BY_ID.get(item_id), "family_id", None) == ammo_family),
-            key=lambda x: _tier(x[0]),
-        )
-        for item_id, qty in held:
-            if need <= 0:
-                break
-            take = min(need, qty)
-            used[item_id] = used.get(item_id, 0) + take
-            need -= take
-            path = f"gear.itemBalances.{bucket}.{item_id}"
-            if take == qty:
+    for order, bucket in enumerate(CARRIED_BALANCE_BUCKETS, start=1):
+        for item_id, qty in (balances.get(bucket) or {}).items():
+            entry = items_catalog.ITEM_CATALOG_ENTRIES_BY_ID.get(item_id)
+            if qty > 0 and entry and entry.family_id == ammo_family:
+                pieces.append({"itemId": item_id, "tier": entry.tier, "left": qty, "had": qty,
+                               "order": order, "bucket": bucket})
+
+    used, uncovered = allocate_ammo(pieces, tiers)
+
+    inc, set_ops, unset, pulls, filters = {}, {}, {}, [], []
+    for piece in pieces:
+        if piece["left"] == piece["had"]:
+            continue
+        if "instanceId" in piece:
+            if piece["left"] == 0:
+                pulls.append(piece["instanceId"])
+            else:
+                n = len(filters)
+                inc[f"gear.items.$[a{n}].quantity"] = piece["left"] - piece["had"]
+                filters.append({f"a{n}.instanceId": piece["instanceId"]})
+        else:
+            path = f"gear.itemBalances.{piece['bucket']}.{piece['itemId']}"
+            if piece["left"] == 0:
                 unset[path] = ""
             else:
-                set_ops[path] = qty - take
+                set_ops[path] = piece["left"]
 
     update: dict = {}
     if inc:
@@ -687,14 +711,15 @@ async def _consume_ammo(db, address: str, character_id: str, ammo_family: str, u
     if pulls:
         await db.characters.update_one({"address": address, "id": character_id},
                                        {"$pull": {"gear.items": {"instanceId": {"$in": pulls}}}})
-    return used, need
+    return used, uncovered
 
 
-async def _wear_gear(db, address: str, character_id: str, gear: dict, weapon_wear: int) -> tuple[list, list]:
-    """Wear the trip's gear: the weapon loses `weapon_wear` quality (the
-    units found - or, for a bow/crossbow, only what its arrows/bolts didn't
-    cover), each quality-tracked item loses 1. Anything at quality <= 0
-    afterwards is destroyed. Returns (worn, broken names)."""
+async def _wear_gear(db, address: str, character_id: str, gear: dict, weapon_wear: int,
+                     top_tier: int) -> tuple[list, list]:
+    """Wear the trip's gear: the weapon loses `weapon_wear` quality (see
+    _roll_trip); each quality-tracked item loses 1, but only if the trip
+    found something of at least its tier (`top_tier`). Anything at quality
+    <= 0 afterwards is destroyed. Returns (worn, broken names)."""
     wear: dict[str, int] = {}
     worn: list[dict] = []
     weapon = gear.get("weapon")
@@ -704,7 +729,7 @@ async def _wear_gear(db, address: str, character_id: str, gear: dict, weapon_wea
         worn.append({"instanceId": weapon["instanceId"], "name": weapon["name"], "kind": "weapon",
                      "wear": wear.get(weapon["instanceId"] or "", 0), "destroyed": False})
     for item in gear.get("items", []):
-        if item["instanceId"] and item.get("quality") is not None:
+        if item["instanceId"] and item.get("quality") is not None and top_tier >= item.get("tier", 1):
             wear[item["instanceId"]] = 1
         worn.append({"instanceId": item["instanceId"], "name": item["name"], "kind": "item",
                      "wear": wear.get(item["instanceId"] or "", 0), "destroyed": False})
@@ -765,14 +790,18 @@ async def _roll_trip(db, address: str, character_id: str, doc: dict, active: dic
             break
 
     units_found = sum(found.values())
-    ammo_family = WEAPON_AMMO.get(gear["weapon"]["familyId"]) if gear.get("weapon") else None
-    ammo_used, ammo_shortfall = (
-        await _consume_ammo(db, address, character_id, ammo_family, units_found) if ammo_family else ({}, 0)
+    tiers = unit_tiers(found)
+    weapon = gear.get("weapon")
+    ammo_family = WEAPON_AMMO.get(weapon["familyId"]) if weapon else None
+    ammo_used, uncovered = (
+        await _consume_ammo(db, address, character_id, ammo_family, tiers) if ammo_family else ({}, tiers)
     )
-    # The wear is the units found either way; a bow/crossbow spreads it -
-    # its arrows/bolts take it first, the weapon only the rest.
-    weapon_wear = ammo_shortfall if ammo_family else units_found
-    worn, broken = await _wear_gear(db, address, character_id, gear, weapon_wear)
+    # Gear only wears on finds of at least its own tier. A bow/crossbow's
+    # arrows/bolts cover what they can (their tier or lower); the weapon only
+    # wears for the uncovered finds at or above its tier.
+    weapon_wear = sum(1 for t in uncovered if weapon and t >= weapon.get("tier", 1))
+    ammo_shortfall = len(uncovered) if ammo_family else 0
+    worn, broken = await _wear_gear(db, address, character_id, gear, weapon_wear, max(tiers, default=0))
 
     exhausted = entry is None or is_exhausted(entry["count"], entry["remaining"])
     outcome = return_outcome(entry["initial"], entry["remaining"], exhausted) if entry else "depleted"

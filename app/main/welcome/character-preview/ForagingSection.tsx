@@ -181,30 +181,22 @@ export function ForagingSection({
               <ResourceTiles balances={lastResult.found} tierInfo={catalog} onSelect={(id) => setPopupId(id)} />
             </div>
           )}
-          {!!lastResult.gear?.some((g) => g.wear > 0 && !g.destroyed) && (
-            <p className={styles.gearHint}>
-              {lastResult.gear
-                .filter((g) => g.wear > 0 && !g.destroyed)
-                .map((g) => `${g.name} −${g.wear} quality`)
-                .join(", ")}
-            </p>
-          )}
           {(() => {
-            const used = Object.entries(lastResult.ammoUsed ?? {});
-            const shortfall = lastResult.ammoShortfall ?? 0;
-            if (used.length === 0 && shortfall === 0) return null;
-            const ammo = label((used[0]?.[0] ?? "").replace(/_\d+$/, "")) || "ammo";
-            const total = used.reduce((sum, [, n]) => sum + n, 0);
-            return (
-              <p className={styles.gearHint}>
-                Shot {total} {ammo}s
-                {shortfall > 0 ? ` · ran out, the remaining ${shortfall} came off the weapon` : ""}
-              </p>
-            );
+            // One plain line of what the trip cost: ammo shot, quality worn, gear broken.
+            const ammoByFamily: Record<string, number> = {};
+            for (const [id, n] of Object.entries(lastResult.ammoUsed ?? {})) {
+              const family = id.replace(/_\d+$/, "");
+              ammoByFamily[family] = (ammoByFamily[family] ?? 0) + n;
+            }
+            const lost = [
+              ...Object.entries(ammoByFamily).map(([family, n]) => `${n} ${label(family)}${n === 1 ? "" : "s"}`),
+              ...(lastResult.gear ?? [])
+                .filter((g) => g.wear > 0 && !g.destroyed)
+                .map((g) => `${g.name} −${g.wear} quality`),
+              ...(lastResult.broken ?? []).map((name) => `${name} (broken)`),
+            ];
+            return lost.length > 0 ? <p className={styles.lostLine}>Lost: {lost.join(" · ")}</p> : null;
           })()}
-          {!!lastResult.broken?.length && (
-            <p className={styles.broken}>Broke on the trip: {lastResult.broken.join(", ")}</p>
-          )}
         </div>
       )}
 

@@ -216,10 +216,11 @@
   color: #8a7f62;
 }
 
-.broken {
+.lostLine {
   margin: 0.2rem 0 0;
   font-size: 0.75rem;
-  color: #c0453a;
+  line-height: 1.4;
+  color: #c9a27a;
 }
 
 /* Found resources as inventory tiles (ResourceTiles from VaultTab). */

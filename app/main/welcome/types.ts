@@ -255,7 +255,7 @@ export type ForageResult = {
   broken?: string[];
   /** Arrows/bolts shot (item id -> amount) - one per unit found with a bow/crossbow. */
   ammoUsed?: Record<string, number>;
-  /** Shots the character had no ammo for - taken from the weapon's quality instead. */
+  /** Finds no arrow/bolt could cover (none left, or none of a high enough tier) - the weapon wears for those at or above its tier. */
   ammoShortfall?: number;
 };
 

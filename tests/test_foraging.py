@@ -378,3 +378,49 @@ async def test_missing_arrows_come_off_the_bow(db, monkeypatch):
     assert not any(i["familyId"] == "arrow" for i in doc["gear"]["items"])  # empty stack removed
     bow = next(i for i in doc["gear"]["items"] if i["familyId"] == "bow")
     assert bow["quality"] == 100 - 4                            # only what the 8 arrows didn't cover
+
+
+# ── Tier-aware wear ─────────────────────────────────────────────────────
+
+
+def _ammo(item_id: str, qty: int, order: int = 1) -> dict:
+    return {"itemId": item_id, "tier": int(item_id.rsplit("_", 1)[1]), "left": qty, "had": qty, "order": order}
+
+
+def test_arrows_only_cover_finds_of_their_tier_or_lower():
+    pieces = [_ammo("arrow_1", 3), _ammo("arrow_3", 1)]
+    used, uncovered = foraging.allocate_ammo(pieces, [2, 2, 1, 1, 1])
+    # The T3 arrow takes one T2 find; nothing fits the other T2; T1 arrows take the T1 finds.
+    assert used == {"arrow_3": 1, "arrow_1": 3}
+    assert uncovered == [2]
+
+
+def test_lowest_fitting_arrow_is_used_first_equipped_before_packed():
+    pieces = [_ammo("arrow_2", 5, order=1), _ammo("arrow_1", 2, order=1), _ammo("arrow_1", 2, order=0)]
+    used, uncovered = foraging.allocate_ammo(pieces, [1, 1, 1])
+    assert used == {"arrow_1": 3} and uncovered == []
+    assert pieces[2]["left"] == 0 and pieces[1]["left"] == 1 and pieces[0]["left"] == 5
+
+
+async def test_higher_tier_gear_does_not_wear_on_lower_tier_finds(db, monkeypatch):
+    cid = await _make(1, "blacksmith")                              # 1 profession: T1 finds only
+    await db.characters.update_one({"address": ADDRESS, "id": cid}, {"$set": {
+        "gear.items": [_instance("pickaxe", 200, tier=2), _instance("cart", 30, "cart", tier=2),
+                       _instance("grappling_hook", 30, tier=1)],
+    }})
+    monkeypatch.setattr(foraging.random, "randint", lambda a, b: 10)
+    await foraging.start_forage(ADDRESS, cid, "craftweapon_01")
+    items = {i["familyId"]: i for i in (await db.characters.find_one({"address": ADDRESS, "id": cid}))["gear"]["items"]}
+    assert items["pickaxe"]["quality"] == 200                        # T2 weapon, T1 finds: no wear
+    assert items["cart"]["quality"] == 30                            # T2 item: no wear
+    assert items["grappling_hook"]["quality"] == 29                  # T1 item: wears 1
+
+
+async def test_bow_only_wears_for_uncovered_finds_at_its_tier(db, monkeypatch):
+    # T1 finds, T2 bow, only 3 arrows: the uncovered finds are T1 - below the bow's tier, so no bow wear.
+    stack = {**_instance("arrow", 0, "body"), "quality": None, "quantity": 3}
+    result, doc = await _bow_trip(db, monkeypatch,
+                                  [_instance("bow", 100, "body", tier=2), _instance("quiver", 40, "body"), stack], {})
+    assert result["ammoUsed"] == {"arrow_1": 3} and result["ammoShortfall"] == result["total"] - 3
+    bow = next(i for i in doc["gear"]["items"] if i["familyId"] == "bow")
+    assert bow["quality"] == 100
