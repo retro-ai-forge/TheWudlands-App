@@ -424,3 +424,18 @@ async def test_bow_only_wears_for_uncovered_finds_at_its_tier(db, monkeypatch):
     assert result["ammoUsed"] == {"arrow_1": 3} and result["ammoShortfall"] == result["total"] - 3
     bow = next(i for i in doc["gear"]["items"] if i["familyId"] == "bow")
     assert bow["quality"] == 100
+
+
+def test_highest_tier_then_most_worn_piece_is_used():
+    doc = {"gear": {"items": [
+        {**_instance("rope", 15), "instanceId": "rope-fresh"},
+        {**_instance("rope", 5), "instanceId": "rope-worn"},
+        {**_instance("rope", 2, tier=2), "instanceId": "rope-t2"},
+        {**_instance("pickaxe", 150), "instanceId": "pick-fresh"},
+        {**_instance("pickaxe", 40), "instanceId": "pick-worn"},
+    ]}}
+    reed = foraging.gathering_gear(doc, "reed")
+    assert reed["items"][0]["instanceId"] == "rope-t2"            # higher tier wins even if almost broken
+    del doc["gear"]["items"][2]
+    assert foraging.gathering_gear(doc, "reed")["items"][0]["instanceId"] == "rope-worn"
+    assert foraging.gathering_gear(doc, "ore")["weapon"]["instanceId"] == "pick-worn"

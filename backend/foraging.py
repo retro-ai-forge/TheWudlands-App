@@ -306,6 +306,13 @@ def missing_for_weapon(doc: dict, weapon_family: str) -> list[str]:
     return [f for f in WEAPON_REQUIRES.get(weapon_family, ()) if not _carries_family(doc, f)]
 
 
+def _wear_order(piece: dict) -> tuple:
+    """Sort key (use max): highest tier first, then the lowest quality -
+    pieces without quality (plain stacks) only when nothing else is left."""
+    quality = piece.get("quality")
+    return (piece["tier"], -quality if quality is not None else -math.inf)
+
+
 def gathering_gear(doc: dict, family_id: str) -> dict:
     """The gear this character would bring on a trip for `family_id`:
     {"weapon": {...} | None, "items": [{...}], "percent": int}. Each pick is
@@ -318,8 +325,9 @@ def gathering_gear(doc: dict, family_id: str) -> dict:
     balances = gear.get("itemBalances") or {}
 
     def pick(item_family: str) -> Optional[dict]:
-        """The best piece of this family on the character - highest tier,
-        then most quality."""
+        """The piece of this family used on the trip - highest tier, then
+        the LOWEST quality (it's the one that wears, so worn pieces get used
+        up first; a stack without quality comes last)."""
         options = [
             {"instanceId": i["instanceId"], "itemId": i.get("itemId", ""), "familyId": item_family,
              "name": _item_name(i.get("itemId", ""), item_family), "quality": i.get("quality"),
@@ -332,7 +340,7 @@ def gathering_gear(doc: dict, family_id: str) -> dict:
                 if qty > 0 and entry and entry.family_id == item_family:
                     options.append({"instanceId": None, "itemId": item_id, "familyId": item_family,
                                     "name": entry.name, "quality": None, "tier": entry.tier})
-        return max(options, key=lambda o: (o["tier"], o["quality"] or 0)) if options else None
+        return max(options, key=_wear_order) if options else None
 
     weapons, blocked = [], []
     for w in (pick(f) for f in wanted["weapons"]):
@@ -343,8 +351,8 @@ def gathering_gear(doc: dict, family_id: str) -> dict:
             blocked.append({"name": w["name"], "missing": missing})
         else:
             weapons.append(w)
-    # Only one weapon counts - the highest tier, then the sturdiest.
-    weapon = max(weapons, key=lambda w: (w["tier"], w["quality"] or 0)) if weapons else None
+    # Only one weapon counts - the highest tier, then the most worn.
+    weapon = max(weapons, key=_wear_order) if weapons else None
     items = [i for i in (pick(f) for f in wanted["items"]) if i]
     return {**_with_bonus(weapon, items), "blockedWeapons": blocked}
 
