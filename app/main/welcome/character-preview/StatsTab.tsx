@@ -65,6 +65,15 @@ function birthsignName(id: string): string {
   return BIRTHSIGNS.find((b) => b.id === id)?.name ?? id;
 }
 
+/** "3/5" - the current value, and the maximum when it's reduced. */
+function AttrValue({ now, max }: { now: number; max: number }) {
+  return (
+    <span className={`${styles.attrDisplayValue} ${now < max ? styles.attrReduced : ""}`}>
+      {now}/{max}
+    </span>
+  );
+}
+
 function sumAttrs(
   keys: readonly (readonly [keyof SlotCharacterSummary["attr"], string])[],
   attr: SlotCharacterSummary["attr"]
@@ -107,6 +116,10 @@ export function StatsTab({
   // Out foraging (see ForagingSection) - counts down to the trip's return;
   // 0 means back but not yet collected.
   const forageRemainingSeconds = useCraftCountdown(character.foraging?.activeForage?.readyAt);
+  // Temporary attribute losses (backend.condition): current vs maximum.
+  const attrNow = character.attrNow ?? character.attr;
+  const healSeconds = useCraftCountdown(character.nextHealAt);
+  const hasLoss = Object.values(character.attrLost ?? {}).some((n) => (n ?? 0) > 0);
   const inAdventure = character.availability.inAdventure;
 
   const [blueprintTierInfo, setBlueprintTierInfo] = useState<BlueprintTierInfo>({});
@@ -652,8 +665,8 @@ export function StatsTab({
 
           <div className={styles.attrColumns}>
             <div className={styles.attrGroupHeader}>
-              <span>Body <span className={styles.attrGroupTotal}>{sumAttrs(BODY_ATTRS, character.attr)}/{sumAttrs(BODY_ATTRS, character.attr)}</span></span>
-              <span>Soul <span className={styles.attrGroupTotal}>{sumAttrs(SOUL_ATTRS, character.attr)}/{sumAttrs(SOUL_ATTRS, character.attr)}</span></span>
+              <span>Body <span className={styles.attrGroupTotal}>{sumAttrs(BODY_ATTRS, attrNow)}/{sumAttrs(BODY_ATTRS, character.attr)}</span></span>
+              <span>Soul <span className={styles.attrGroupTotal}>{sumAttrs(SOUL_ATTRS, attrNow)}/{sumAttrs(SOUL_ATTRS, character.attr)}</span></span>
             </div>
             <div className={styles.attrGrid}>
               {BODY_ATTRS.map(([key, label], i) => {
@@ -661,14 +674,22 @@ export function StatsTab({
                 return (
                   <div className={styles.attrGridRow} key={key}>
                     <span className={styles.attrLabel}>{label}</span>
-                    <span className={styles.attrDisplayValue}>{character.attr[key]}</span>
+                    <AttrValue now={attrNow[key]} max={character.attr[key]} />
                     <span />
                     <span className={styles.attrLabel}>{sLabel}</span>
-                    <span className={styles.attrDisplayValue}>{character.attr[sKey]}</span>
+                    <AttrValue now={attrNow[sKey]} max={character.attr[sKey]} />
                   </div>
                 );
               })}
             </div>
+            {character.nextHealAt && healSeconds !== null && (
+              <p className={styles.attrHealNote}>
+                Next point heals in {formatRemainingCompactLong(healSeconds)}
+              </p>
+            )}
+            {!character.nextHealAt && hasLoss && character.vitalStatus === "alive" && (
+              <p className={styles.attrHealNote}>Heals only while free (not foraging, crafting or adventuring).</p>
+            )}
           </div>
 
           {(character.blueprints?.length ?? 0) > 0 && (

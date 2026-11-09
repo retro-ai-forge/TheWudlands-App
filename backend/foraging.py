@@ -34,8 +34,24 @@ weapon loses 1 quality per such unit, an item 1 per trip if the trip found
 any. A bow/crossbow shoots one arrow/bolt per unit - an arrow covers finds
 of its tier or lower - and wears only for uncovered finds at or above its
 tier (weaponAmmo). Gear at
-quality <= 0 is destroyed. Only gear still on the character at collection
+quality <= 0 is destroyed.
+
+Companion charms (companionCharms): the charm worn in the companion's Charm
+slot adds its tier's item bonus on the materials that suit its companion
+(e.g. a flying charm on a winged companion: feather, meat, hide) - only on a
+matching companion - and wears like any item (1 per trip).
+
+Light (lightSources): at most one light counts per trip - a glass lantern
+with oil, else a torch, else a candle - and only with a tinderbox carried
+(lightRequires). It adds the item bonus of its tier; a lantern counts at the
+lower of its own and its oil's tier. The trip burns one unit: one oil for a
+lantern (lightFuel), one torch or candle otherwise. Only gear still on the character at collection
 counts.
+
+A trip spends a night out (rules "nights"): weather is rolled (warm, cool,
+harsh), and without a tent and bedroll it may cost a temporary Body and/or
+Soul point (backend.condition) - none with both, at most one with either.
+The night gets its own sentence (foraging-messages.json "nights").
 
 Every return carries a sentence fitted to the material and place
 (data/foraging-messages.json): "rich" while the family's pool is at least
@@ -63,7 +79,7 @@ from typing import Optional
 
 from pymongo import ReturnDocument
 
-from backend import items_catalog
+from backend import condition, items_catalog
 from backend.db import get_database
 from backend.professions_catalog import PROFESSION_CATEGORIES
 from backend.resources_catalog import PROFESSION_RESOURCE_FAMILIES
@@ -88,6 +104,24 @@ WEAPON_REQUIRES: dict[str, tuple[str, ...]] = {w: tuple(r) for w, r in RULES.get
 # Ammo a weapon shoots on a trip - one per unit found, standing in for the
 # weapon's own wear; only what the ammo can't cover comes off its quality.
 WEAPON_AMMO: dict[str, str] = dict(RULES.get("weaponAmmo", {}))
+# Light sources (ore, crystal, clockwork): at most one counts per trip, the
+# first of LIGHT_SOURCES the character can light - only with everything in
+# LIGHT_REQUIRES carried (a tinderbox). Each trip burns one unit of its fuel:
+# a lantern one oil (LIGHT_FUEL), a torch or candle one of itself.
+LIGHT_SOURCES: tuple[str, ...] = tuple(RULES.get("lightSources", ()))
+LIGHT_REQUIRES: tuple[str, ...] = tuple(RULES.get("lightRequires", ()))
+LIGHT_FUEL: dict[str, str] = dict(RULES.get("lightFuel", {}))
+# Companion charms (rules "companionCharms"): a charm worn in the companion's
+# Charm slot adds its tier's item bonus on the materials that suit its
+# companion - only on a matching companion - and wears like any item.
+COMPANION_CHARMS: dict[str, dict] = {
+    charm: {"companions": tuple(c["companions"]), "families": tuple(c["families"])}
+    for charm, c in RULES.get("companionCharms", {}).items()
+}
+# The night out (rules "nights"): a tent and a bedroll keep the weather off;
+# without them the night may cost temporary Body/Soul points (backend.condition).
+NIGHTS: dict = RULES["nights"]
+SHELTER: tuple[str, ...] = tuple(NIGHTS["shelter"])
 TIER_WEIGHTS: dict[int, dict[int, int]] = {
     int(n): {int(tier): w for tier, w in weights.items()}
     for n, weights in RULES["tierWeightsByProfessionCount"].items()
@@ -138,6 +172,7 @@ GROUPS: dict[str, dict] = _load_groups()
 _MESSAGES: dict = json.loads((_DATA / "foraging-messages.json").read_text())
 DEPLETED_HINT: str = _MESSAGES["depletedHint"]
 MESSAGES_BY_FAMILY: dict[str, dict[str, list[str]]] = _MESSAGES["families"]
+NIGHT_MESSAGES: dict = _MESSAGES["nights"]
 
 
 def trip_duration() -> timedelta:
@@ -262,17 +297,23 @@ def _tier(item_id: str) -> int:
     return entry.tier if entry else 1
 
 
+def _item_bonus(item: dict) -> float:
+    """An item's bonus by its tier - a lantern's by `bonusTier`, the lower of
+    its own and its oil's tier."""
+    return ITEM_BONUS_BY_TIER.get(item.get("bonusTier", item["tier"]), 0)
+
+
 def _gear_percent(weapon: Optional[dict], items: list[dict]) -> float:
     """Total bonus in percent - the weapon's tier bonus plus each item's."""
     total = WEAPON_BONUS_BY_TIER.get(weapon["tier"], 0) if weapon else 0
-    total += sum(ITEM_BONUS_BY_TIER.get(i["tier"], 0) for i in items)
+    total += sum(_item_bonus(i) for i in items)
     return round(total * 100, 1)
 
 
 def _with_bonus(weapon: Optional[dict], items: list[dict]) -> dict:
     if weapon:
         weapon = {**weapon, "percent": round(WEAPON_BONUS_BY_TIER.get(weapon["tier"], 0) * 100, 1)}
-    items = [{**i, "percent": round(ITEM_BONUS_BY_TIER.get(i["tier"], 0) * 100, 1)} for i in items]
+    items = [{**i, "percent": round(_item_bonus(i) * 100, 1)} for i in items]
     return {"weapon": weapon, "items": items, "percent": _gear_percent(weapon, items)}
 
 
@@ -313,34 +354,79 @@ def _wear_order(piece: dict) -> tuple:
     return (piece["tier"], -quality if quality is not None else -math.inf)
 
 
+def _carried_pieces(doc: dict, item_family: str) -> list[dict]:
+    """Every usable piece of `item_family` on the character, as gear picks:
+    {"instanceId" | None, "itemId", "familyId", "name", "quality" | None, "tier"}."""
+    gear = doc.get("gear") or {}
+    pieces = [
+        {"instanceId": i["instanceId"], "itemId": i.get("itemId", ""), "familyId": item_family,
+         "name": _item_name(i.get("itemId", ""), item_family), "quality": i.get("quality"),
+         "tier": _tier(i.get("itemId", ""))}
+        for i in gear.get("items", [])
+        if i.get("familyId") == item_family and i.get("location") in CARRIED_LOCATIONS and _usable(i)
+    ]
+    balances = gear.get("itemBalances") or {}
+    for bucket in CARRIED_BALANCE_BUCKETS:
+        for item_id, qty in (balances.get(bucket) or {}).items():
+            entry = items_catalog.ITEM_CATALOG_ENTRIES_BY_ID.get(item_id)
+            if qty > 0 and entry and entry.family_id == item_family:
+                pieces.append({"instanceId": None, "itemId": item_id, "familyId": item_family,
+                               "name": entry.name, "quality": None, "tier": entry.tier})
+    return pieces
+
+
+def _pick(doc: dict, item_family: str) -> Optional[dict]:
+    """The piece of this family used on the trip - highest tier, then the
+    LOWEST quality (it's the one that wears, so worn pieces get used up
+    first; a stack without quality comes last)."""
+    pieces = _carried_pieces(doc, item_family)
+    return max(pieces, key=_wear_order) if pieces else None
+
+
+def missing_for_light(doc: dict) -> list[str]:
+    """What a light still needs before it counts (empty = ready): a tinderbox."""
+    return [f for f in LIGHT_REQUIRES if not _carries_family(doc, f)]
+
+
+def _light(doc: dict, light_family: str) -> tuple[Optional[dict], list[str]]:
+    """This light as a gear pick, ready to burn - or (None, what's missing).
+
+    The pick carries `fuel` {"familyId", "itemId", "tier"}: what one trip
+    burns. A torch or candle burns one of itself (its highest tier). A
+    lantern burns one oil - the best oil up to the lantern's own tier (better
+    oil would be wasted, as the lower tier sets the light), else the weakest
+    one there is - and counts at the lower of the two tiers (`bonusTier`)."""
+    piece = _pick(doc, light_family)
+    if piece is None:
+        return None, []
+    missing = missing_for_light(doc)
+    fuel_family = LIGHT_FUEL.get(light_family)
+    if fuel_family is None:
+        fuel = {"familyId": light_family, "itemId": piece["itemId"], "tier": piece["tier"]}
+    else:
+        oils = _carried_pieces(doc, fuel_family)
+        if not oils:
+            missing = [*missing, fuel_family]
+            fuel = None
+        else:
+            fitting = [o for o in oils if o["tier"] <= piece["tier"]]
+            oil = max(fitting, key=lambda o: o["tier"]) if fitting else min(oils, key=lambda o: o["tier"])
+            fuel = {"familyId": fuel_family, "itemId": oil["itemId"], "tier": oil["tier"]}
+    if missing:
+        return None, missing
+    return {**piece, "fuel": fuel, "bonusTier": min(piece["tier"], fuel["tier"])}, []
+
+
 def gathering_gear(doc: dict, family_id: str) -> dict:
     """The gear this character would bring on a trip for `family_id`:
     {"weapon": {...} | None, "items": [{...}], "percent": int}. Each pick is
     {"instanceId" | None, "itemId", "familyId", "name", "quality" | None};
-    instanceId None means a plain stacked item (no quality, never wears)."""
+    instanceId None means a plain stacked item (no quality, never wears).
+    At most one light is among the items (see _light)."""
     wanted = GATHERING_GEAR.get(family_id) or {"weapons": (), "items": ()}
-    gear = doc.get("gear") or {}
-    carried = [i for i in gear.get("items", [])
-               if i.get("location") in CARRIED_LOCATIONS and _usable(i)]
-    balances = gear.get("itemBalances") or {}
 
     def pick(item_family: str) -> Optional[dict]:
-        """The piece of this family used on the trip - highest tier, then
-        the LOWEST quality (it's the one that wears, so worn pieces get used
-        up first; a stack without quality comes last)."""
-        options = [
-            {"instanceId": i["instanceId"], "itemId": i.get("itemId", ""), "familyId": item_family,
-             "name": _item_name(i.get("itemId", ""), item_family), "quality": i.get("quality"),
-             "tier": _tier(i.get("itemId", ""))}
-            for i in carried if i.get("familyId") == item_family
-        ]
-        for bucket in CARRIED_BALANCE_BUCKETS:
-            for item_id, qty in (balances.get(bucket) or {}).items():
-                entry = items_catalog.ITEM_CATALOG_ENTRIES_BY_ID.get(item_id)
-                if qty > 0 and entry and entry.family_id == item_family:
-                    options.append({"instanceId": None, "itemId": item_id, "familyId": item_family,
-                                    "name": entry.name, "quality": None, "tier": entry.tier})
-        return max(options, key=_wear_order) if options else None
+        return _pick(doc, item_family)
 
     weapons, blocked = [], []
     for w in (pick(f) for f in wanted["weapons"]):
@@ -353,8 +439,47 @@ def gathering_gear(doc: dict, family_id: str) -> dict:
             weapons.append(w)
     # Only one weapon counts - the highest tier, then the most worn.
     weapon = max(weapons, key=_wear_order) if weapons else None
-    items = [i for i in (pick(f) for f in wanted["items"]) if i]
-    return {**_with_bonus(weapon, items), "blockedWeapons": blocked}
+    items = [i for i in (pick(f) for f in wanted["items"] if f not in LIGHT_SOURCES) if i]
+
+    # At most one light - the first in LIGHT_SOURCES order that can be lit.
+    blocked_lights = []
+    for light_family in (f for f in LIGHT_SOURCES if f in wanted["items"]):
+        light, missing = _light(doc, light_family)
+        if light:
+            items.append(light)
+            blocked_lights = []
+            break
+        if missing:
+            blocked_lights.append({"name": _pick(doc, light_family)["name"], "missing": missing})
+    charm, blocked_charm = _companion_charm(doc, family_id)
+    if charm:
+        items.append(charm)
+    return {**_with_bonus(weapon, items), "blockedWeapons": blocked, "blockedLights": blocked_lights,
+            "blockedItems": [blocked_charm] if blocked_charm else []}
+
+
+def _equipped_in(doc: dict, slot: str) -> Optional[dict]:
+    """The usable item worn in this body slot, if any."""
+    return next((i for i in (doc.get("gear") or {}).get("items", [])
+                 if i.get("location") == "body" and slot in (i.get("slotRef") or []) and _usable(i)), None)
+
+
+def _companion_charm(doc: dict, family_id: str) -> tuple[Optional[dict], Optional[dict]]:
+    """The charm worn by the character's companion, if it helps with
+    `family_id`: (gear pick, None), or (None, a hint) when it would help but
+    sits on the wrong kind of companion."""
+    worn = _equipped_in(doc, "Charm")
+    rule = COMPANION_CHARMS.get((worn or {}).get("familyId", ""))
+    if not worn or not rule or family_id not in rule["families"]:
+        return None, None
+    item_id = worn.get("itemId", "")
+    pick = {"instanceId": worn.get("instanceId"), "itemId": item_id, "familyId": worn["familyId"],
+            "name": _item_name(item_id, worn["familyId"]), "quality": worn.get("quality"),
+            "tier": _tier(item_id)}
+    companion = _equipped_in(doc, "Companion")
+    if companion and companion.get("familyId") in rule["companions"]:
+        return pick, None
+    return None, {"name": pick["name"], "missing": list(rule["companions"])}
 
 
 def gear_multiplier(gear: dict) -> float:
@@ -382,6 +507,9 @@ def _still_carried(doc: dict, gear: dict) -> dict:
     if weapon and missing_for_weapon(doc, weapon["familyId"]):
         weapon = None  # e.g. the arrows were moved away during the trip
     items = [i for i in (present(g) for g in gear.get("items", [])) if i]
+    # A light also needs its tinderbox and fuel still on hand.
+    items = [i for i in items
+             if not i.get("fuel") or (not missing_for_light(doc) and _carries_family(doc, i["fuel"]["familyId"]))]
     return _with_bonus(weapon, items)
 
 
@@ -419,6 +547,42 @@ def return_message(outcome: str, family_id: str, character_name: str, place: str
         name=character_name, place=place, Place=place[:1].upper() + place[1:], activity=activity.lower(),
     )
     return f"{message} {DEPLETED_HINT}" if outcome == "depleted" else message
+
+
+def night_message(night: dict, missing_shelter: list[str], character_name: str,
+                  rng: random.Random | None = None) -> str:
+    """The night's sentence, plus a wish for the missing tent/bedroll - only
+    when the lack, not bad luck, cost points: the weather's certain loss for
+    the shelter carried (the whole part of pointsLost) is at least 1. So a
+    bare cool or harsh night wishes for either, a harsh night with one of
+    them wishes for the other, and a cool night with one (a 50% chance) wishes
+    for nothing."""
+    rng = rng or random.Random()
+    # Weather-specific lines first (e.g. a cold night the tent kept warm),
+    # else the general ones for the outcome.
+    by_weather = (NIGHT_MESSAGES.get("byWeather") or {}).get(night.get("weather")) or {}
+    templates = by_weather.get(night["kind"]) or NIGHT_MESSAGES[night["kind"]]
+    carried = [f.replace("_", " ") for f in SHELTER if f not in missing_shelter]
+    text = rng.choice(templates).format(name=character_name, shelter=" and ".join(carried) or "camp")
+    shelter_count = len(SHELTER) - len(missing_shelter)
+    certain = int(float(NIGHTS["pointsLost"][str(min(shelter_count, 2))].get(night.get("weather"), 0)))
+    if night["points"] and missing_shelter and certain >= 1:
+        wish = NIGHT_MESSAGES["wishNone"] if not shelter_count else NIGHT_MESSAGES["wishOne"]
+        text = f"{text} {wish.format(name=character_name, missing=missing_shelter[0].replace('_', ' '))}"
+    return text
+
+
+def roll_trip_night(doc: dict, rng: random.Random | None = None) -> dict:
+    """The trip's night: weather, what the tent/bedroll carried saved, and the
+    temporary Body/Soul points it costs (applied when the trip is collected)."""
+    rng = rng or random.Random()
+    carried = [f for f in SHELTER if _carries_family(doc, f)]
+    lost, _ = condition.settle(doc.get("attr") or {}, doc.get("attrLost"), doc.get("healFrom"),
+                               datetime.now(timezone.utc), doc.get("id", ""))
+    night = condition.roll_night(NIGHTS, len(carried), doc.get("attr") or {}, lost, rng)
+    missing = [f for f in SHELTER if f not in carried]
+    return {**night, "shelter": carried,
+            "message": night_message(night, missing, doc.get("firstName") or "Your character", rng)}
 
 
 def suggested_mission(family_id: str, groups: list[str], seed: str) -> Optional[Mission]:
@@ -529,7 +693,8 @@ def _build_state(doc: dict, pool: Optional[dict]) -> dict:
             "yieldMax": high,
             "gear": gear,
             "helpfulWeapons": list(wanted["weapons"]),
-            "helpfulItems": list(wanted["items"]),
+            "helpfulItems": list(wanted["items"]) + [c for c, r in COMPANION_CHARMS.items()
+                                                      if family_id in r["families"]],
             "mission": mission.to_dict() if mission else None,
         })
 
@@ -609,6 +774,7 @@ async def start_forage(address: str, character_id: str, mission_id: str) -> dict
     )
     if updated is None:
         raise ForagingError(f"{name} is busy", 409)
+    await condition.pause_healing(address, character_id, db)
 
     # Roll the whole outcome now (finds, ammo, wear) and keep it with the
     # trip - hidden until collected (see hide_pending_result).
@@ -777,6 +943,19 @@ async def _roll_trip(db, address: str, character_id: str, doc: dict, active: dic
     family_id = active["familyId"]
     profession_count = len(character_profession_ids(doc))
     path = f"forage_pools.{slot}.families.{family_id}"
+
+    # Burn the light first: one oil for a lantern, one torch or candle. With
+    # nothing left to burn (moved away since the gear was picked), the light
+    # adds nothing.
+    light_used: dict[str, int] = {}
+    for light in [i for i in gear.get("items", []) if i.get("fuel")]:
+        fuel = light["fuel"]
+        used, unburned = await _consume_ammo(db, address, character_id, fuel["familyId"], [fuel["tier"]])
+        if unburned:
+            gear = {**gear, **_with_bonus(gear.get("weapon"),
+                                          [i for i in gear["items"] if i is not light])}
+        for item_id, n in used.items():
+            light_used[item_id] = light_used.get(item_id, 0) + n
     multiplier = gear_multiplier(gear)
 
     found, entry = {}, None
@@ -832,6 +1011,8 @@ async def _roll_trip(db, address: str, character_id: str, doc: dict, active: dic
         "broken": broken,
         "ammoUsed": ammo_used,
         "ammoShortfall": ammo_shortfall,
+        "lightUsed": light_used,
+        "night": roll_trip_night(doc),
     }
 
 
@@ -868,6 +1049,12 @@ async def finish_forage(address: str, character_id: str) -> dict:
     if result["found"]:
         # The character carries the finds home (character_homes.itemBalances).
         await _inc_storage_balances(db, "home", address, character_id, result["found"])
+    # Back home and free: the night's toll lands now, and the healing clock
+    # (re)starts - it never runs while out (backend.condition).
+    night = result.get("night")
+    lost, vital_status = await condition.apply_loss(address, character_id, (night or {}).get("points") or {}, db)
+    if night is not None:
+        result = {**result, "night": {**night, "lost": lost, "vitalStatus": vital_status}}
     updated = await db.characters.find_one_and_update(
         {"address": address, "id": character_id},
         {"$set": {"foraging.lastResult": result},

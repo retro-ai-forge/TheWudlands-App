@@ -20,7 +20,7 @@ from typing import Dict, List, Optional
 
 from pymongo import ReturnDocument
 
-from backend import items_catalog, recycling
+from backend import condition, items_catalog, recycling
 from backend.character import Character
 from backend.db import get_database
 from backend.resources_catalog import PROFESSION_RESOURCE_FAMILIES
@@ -157,6 +157,7 @@ async def _build_player(db, address: str) -> Player:
         character.setdefault("stats", {})
         character["stats"].setdefault("adventureFinished", 0)
         character["stats"].setdefault("adventureRunAway", 0)
+        condition.annotate(character)
         character["gear"]["items"] = [i for i in character["gear"].get("items", []) if isinstance(i, dict) and "instanceId" in i]
         for item in character["gear"]["items"]:
             item.setdefault("createdAt", datetime.now(timezone.utc).isoformat())
@@ -641,6 +642,7 @@ async def get_single_character(address: str, character_id: str) -> Optional[dict
     char_doc.setdefault("stats", {})
     char_doc["stats"].setdefault("adventureFinished", 0)
     char_doc["stats"].setdefault("adventureRunAway", 0)
+    condition.annotate(char_doc)
     for item in char_doc["gear"].get("items", []):
         item.setdefault("createdAt", datetime.now(timezone.utc).isoformat())
 
@@ -2258,6 +2260,17 @@ def _validate_recipe(family_id: str, tier: int) -> tuple[dict, dict, bool]:
 async def start_craft(
     address: str, character_id: str, family_id: str, tier: int, count: int = 1
 ) -> Optional[Player]:
+    """Start a craft (see _start_craft). Crafting stops the healing clock
+    (backend.condition) - a character only heals while free."""
+    player = await _start_craft(address, character_id, family_id, tier, count)
+    if player is not None:
+        await condition.pause_healing(address, character_id)
+    return player
+
+
+async def _start_craft(
+    address: str, character_id: str, family_id: str, tier: int, count: int = 1
+) -> Optional[Player]:
     """
     Begins crafting `count` units of `family_id` at `tier` in one batch for
     one of `address`'s characters: one job at a time (rejects if the
@@ -2842,6 +2855,15 @@ async def _finish_craft_step(address: str, character_id: str, step: dict) -> boo
 
 
 async def finish_craft(address: str, character_id: str) -> Optional[Player]:
+    """Collect a craft (see _finish_craft). Free again, the character's
+    healing clock restarts (backend.condition)."""
+    player = await _finish_craft(address, character_id)
+    if player is not None and await condition.resume_healing(address, character_id):
+        player = await _build_player(get_database(), address)
+    return player
+
+
+async def _finish_craft(address: str, character_id: str) -> Optional[Player]:
     """
     Completes one of `address`'s character's in-progress craft
     (Character.activeCraft), once its timer has elapsed. Runs every
@@ -4160,11 +4182,13 @@ async def set_in_adventure(
     if doc is None:
         return None
     if in_adventure:
+        await condition.pause_healing(address, character_id, db)
         await asyncio.gather(
             _update_pc_status(db, address, character_id, "free", "adventuring"),
             _update_pc_availability(db, address, character_id, True),
         )
     else:
+        await condition.resume_healing(address, character_id, db)
         await asyncio.gather(
             _update_pc_status(db, address, character_id, "adventuring", "free"),
             _remove_pc_status(db, address, character_id, "resting"),

@@ -1076,6 +1076,17 @@
   text-align: right;
 }
 
+/* Below its maximum - a temporary loss that heals while free. */
+.attrReduced {
+  color: #d0574a;
+}
+
+.attrHealNote {
+  margin: 0.4rem 0 0;
+  font-size: 0.75rem;
+  color: #a89968;
+}
+
 .professionDivider {
   height: 2px;
   background: rgba(168, 153, 104, 0.3);

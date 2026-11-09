@@ -439,3 +439,126 @@ def test_highest_tier_then_most_worn_piece_is_used():
     del doc["gear"]["items"][2]
     assert foraging.gathering_gear(doc, "reed")["items"][0]["instanceId"] == "rope-worn"
     assert foraging.gathering_gear(doc, "ore")["weapon"]["instanceId"] == "pick-worn"
+
+
+# ── Light (ore, crystal, clockwork) ────────────────────────────────────
+
+
+def _lit(items: list, balances: dict) -> dict:
+    return foraging.gathering_gear({"gear": {"items": items, "itemBalances": {"backpack": balances}}}, "ore")
+
+
+def _light_of(gear: dict):
+    return next((i for i in gear["items"] if i["familyId"] in foraging.LIGHT_SOURCES), None)
+
+
+def test_light_needs_a_tinderbox():
+    gear = _lit([], {"torch_1": 3})
+    assert _light_of(gear) is None
+    assert gear["blockedLights"] == [{"name": gear["blockedLights"][0]["name"], "missing": ["tinderbox"]}]
+
+    gear = _lit([], {"torch_1": 3, "tinderbox_1": 1})
+    assert _light_of(gear)["familyId"] == "torch"
+    assert gear["blockedLights"] == []
+    assert gear["percent"] == 5                    # the tinderbox only lights it - no bonus of its own on ore
+
+
+def test_only_one_light_counts_lantern_with_oil_first():
+    lantern = _instance("glass_lantern", 20, tier=2)
+    kit = {"tinderbox_1": 1, "torch_3": 2, "candle_1": 5}
+
+    with_oil = _lit([lantern], {**kit, "oil_2": 1})
+    lights = [i for i in with_oil["items"] if i["familyId"] in foraging.LIGHT_SOURCES]
+    assert [i["familyId"] for i in lights] == ["glass_lantern"]
+    assert lights[0]["fuel"] == {"familyId": "oil", "itemId": "oil_2", "tier": 2}
+
+    # No oil: the lantern doesn't count, the next light (a torch) does.
+    no_oil = _lit([lantern], kit)
+    assert _light_of(no_oil)["familyId"] == "torch"
+    assert _light_of(no_oil)["fuel"] == {"familyId": "torch", "itemId": "torch_3", "tier": 3}
+
+
+def test_lantern_counts_at_the_lower_tier_of_lantern_and_oil():
+    lantern = _instance("glass_lantern", 20, tier=3)
+    # Best oil up to the lantern's tier - T5 oil would be wasted on a T3 lantern.
+    light = _light_of(_lit([lantern], {"tinderbox_1": 1, "oil_1": 4, "oil_2": 1, "oil_5": 1}))
+    assert light["fuel"]["itemId"] == "oil_2" and light["bonusTier"] == 2
+    assert light["percent"] == round(foraging.ITEM_BONUS_BY_TIER[2] * 100, 1)
+
+    # Only better oil than the lantern: the lantern's tier is the limit.
+    light = _light_of(_lit([lantern], {"tinderbox_1": 1, "oil_5": 1}))
+    assert light["fuel"]["itemId"] == "oil_5" and light["bonusTier"] == 3
+
+
+async def test_trip_burns_one_torch(db, monkeypatch):
+    cid = await _make(1, "blacksmith")
+    await db.characters.update_one({"address": ADDRESS, "id": cid}, {"$set": {
+        "gear.itemBalances.backpack": {"torch_2": 3, "tinderbox_1": 1},
+    }})
+    monkeypatch.setattr(foraging.random, "randint", lambda a, b: 10)
+    await foraging.start_forage(ADDRESS, cid, "craftweapon_01")  # ore
+    await _fast_forward(db, cid)
+    result = (await foraging.finish_forage(ADDRESS, cid))["result"]
+
+    assert result["lightUsed"] == {"torch_2": 1}
+    assert result["gearPercent"] == round(foraging.ITEM_BONUS_BY_TIER[2] * 100, 1)
+    doc = await db.characters.find_one({"address": ADDRESS, "id": cid})
+    assert doc["gear"]["itemBalances"]["backpack"] == {"torch_2": 2, "tinderbox_1": 1}
+
+
+async def test_trip_burns_one_oil_and_wears_the_lantern(db, monkeypatch):
+    cid = await _make(1, "blacksmith")
+    await db.characters.update_one({"address": ADDRESS, "id": cid}, {"$set": {
+        "gear.items": [_instance("glass_lantern", 20, "body")],
+        "gear.itemBalances.backpack": {"oil_1": 2, "tinderbox_1": 1},
+    }})
+    monkeypatch.setattr(foraging.random, "randint", lambda a, b: 10)
+    await foraging.start_forage(ADDRESS, cid, "craftweapon_01")
+    await _fast_forward(db, cid)
+    result = (await foraging.finish_forage(ADDRESS, cid))["result"]
+
+    assert result["lightUsed"] == {"oil_1": 1}
+    doc = await db.characters.find_one({"address": ADDRESS, "id": cid})
+    assert doc["gear"]["itemBalances"]["backpack"]["oil_1"] == 1
+    assert doc["gear"]["items"][0]["quality"] == 19             # the lantern wears like any item
+
+
+# ── Companion charms ───────────────────────────────────────────────────
+
+
+def _worn(family: str, slot: str, tier: int = 1, quality: int = 15) -> dict:
+    return {**_instance(family, quality, "body", tier=tier), "slotRef": [slot]}
+
+
+def test_charm_on_a_matching_companion_adds_its_bonus():
+    doc = {"gear": {"items": [_worn("winged_companion", "Companion"), _worn("charm_flying", "Charm", tier=2)]}}
+    gear = foraging.gathering_gear(doc, "feather")
+    assert any(i["familyId"] == "charm_flying" for i in gear["items"])
+    assert gear["percent"] == round(foraging.ITEM_BONUS_BY_TIER[2] * 100, 1)
+    # Not a material that suits a winged companion: no bonus.
+    assert foraging.gathering_gear(doc, "ore")["percent"] == 0
+
+
+def test_charm_on_the_wrong_companion_or_in_the_pack_does_not_count():
+    rat = {"gear": {"items": [_worn("critter_companion", "Companion"), _worn("charm_flying", "Charm")]}}
+    gear = foraging.gathering_gear(rat, "feather")
+    assert gear["percent"] == 0
+    assert gear["blockedItems"][0]["missing"] == ["winged_companion"]
+
+    packed = {"gear": {"items": [_worn("winged_companion", "Companion"), _instance("charm_flying", 15)]}}
+    assert foraging.gathering_gear(packed, "feather")["percent"] == 0
+
+
+async def test_charm_wears_like_any_item(db, monkeypatch):
+    cid = await _make(1, "hunter")
+    await db.characters.update_one({"address": ADDRESS, "id": cid}, {"$set": {
+        "gear.items": [_worn("winged_companion", "Companion"), _worn("charm_flying", "Charm", quality=5)],
+    }})
+    monkeypatch.setattr(foraging.random, "randint", lambda a, b: 10)
+    await foraging.start_forage(ADDRESS, cid, "rural_06")  # meat
+    await _fast_forward(db, cid)
+    result = (await foraging.finish_forage(ADDRESS, cid))["result"]
+    assert result["gearPercent"] == 5 and result["broken"] == []
+    doc = await db.characters.find_one({"address": ADDRESS, "id": cid})
+    charm = next(i for i in doc["gear"]["items"] if i["familyId"] == "charm_flying")
+    assert charm["quality"] == 4                                # T1 finds wear a T1 charm by 1

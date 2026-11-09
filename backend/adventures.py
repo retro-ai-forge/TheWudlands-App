@@ -69,6 +69,7 @@ from typing import List, Optional
 from pymongo import ReturnDocument
 from pymongo.errors import DuplicateKeyError
 
+from backend import condition
 from backend.db import get_database
 from backend.twine_graph import LAST_RESORT_PASSAGE, build_story_graph, step_allowed
 
@@ -375,6 +376,7 @@ async def _claim_character(db, address: str, character_id: str, stub: dict) -> O
     )
     if doc is not None:
         await _sync_pc(db, address, character_id, doc)
+        await condition.pause_healing(address, character_id, db)  # no healing while out
     return doc
 
 
@@ -407,12 +409,15 @@ async def _release_character(
         update,
         return_document=ReturnDocument.AFTER,
     )
+    released = doc is not None
     if doc is None:
         # Already released (a retry), or the character was deleted.
         doc = await db.characters.find_one({"address": address, "id": character_id})
         if doc is None:
             return
     await _sync_pc(db, address, character_id, doc)
+    if released:
+        await condition.resume_healing(address, character_id, db)  # back and free: clock restarts
     if not doc.get("availability", {}).get("inAdventure"):
         await db.character_camp.delete_one({"address": address, "characterId": character_id})
 

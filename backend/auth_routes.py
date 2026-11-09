@@ -383,6 +383,18 @@ class CharacterResponse(BaseModel):
         default_factory=list,
         description="storyIds of every adventure this character finished (not ran away from)",
     )
+    attrNow: Optional[CharacterAttributeResponse] = Field(
+        None,
+        description="Current attribute values: attr (the maximum) minus temporary losses (backend.condition)",
+    )
+    attrLost: Dict[str, int] = Field(
+        default_factory=dict,
+        description="Temporary points lost per attribute, e.g. {'endu': 2}; heals 1 point per 20h free",
+    )
+    nextHealAt: Optional[str] = Field(
+        None,
+        description="When the next point heals (ISO), or null - nothing to heal, a drained group, or out foraging/crafting/adventuring",
+    )
     stats: Dict[str, int] = Field(
         default_factory=lambda: {"adventureFinished": 0, "adventureRunAway": 0},
         description="Cumulative adventure outcome counters: adventureFinished, adventureRunAway",

@@ -1,54 +1,54 @@
 {
   "ore": {
     "gatheringWeapons": ["pickaxe", "warhammer"],
-    "gatheringItems": ["cart", "grappling_hook", "iron_spikes", "hunters_charm"]
+    "gatheringItems": ["cart", "grappling_hook", "iron_spikes", "hunters_charm", "glass_lantern", "torch", "candle"]
   },
   "wood": {
     "gatheringWeapons": ["axe", "axe_stone", "battle_axe"],
     "gatheringItems": ["cart", "hunters_charm"]
   },
   "stone": {
-    "gatheringWeapons": ["pickaxe", "warhammer"],
+    "gatheringWeapons": ["pickaxe", "warhammer", "mace"],
     "gatheringItems": ["cart", "hunters_charm"]
   },
   "bone": {
-    "gatheringWeapons": ["dagger", "axe_stone", "axe", "battle_axe", "warhammer", "spear"],
-    "gatheringItems": ["net", "monster_trap", "spyglass", "hunters_charm"]
+    "gatheringWeapons": ["dagger", "axe_stone", "axe", "battle_axe", "warhammer", "spear", "mace"],
+    "gatheringItems": ["net", "monster_trap", "spyglass", "hunters_charm", "whetstone"]
   },
   "fiber": {
-    "gatheringWeapons": ["sickle"],
+    "gatheringWeapons": ["sickle", "short_sword"],
     "gatheringItems": ["cart", "hunters_charm"]
   },
   "herbs": {
-    "gatheringWeapons": ["sickle"],
-    "gatheringItems": ["hunters_charm"]
+    "gatheringWeapons": ["sickle", "dagger"],
+    "gatheringItems": ["hunters_charm", "shovel"]
   },
   "meat": {
     "gatheringWeapons": ["bow", "spear", "sharpened_stick", "crossbow"],
-    "gatheringItems": ["spyglass", "hunters_charm"]
+    "gatheringItems": ["spyglass", "hunters_charm", "monster_trap", "signal_whistle", "whetstone"]
   },
   "harvest": {
     "gatheringWeapons": ["sickle"],
-    "gatheringItems": ["cart", "hunters_charm"]
+    "gatheringItems": ["cart", "hunters_charm", "shovel", "ladder"]
   },
   "crystal": {
     "gatheringWeapons": ["pickaxe"],
-    "gatheringItems": ["grappling_hook", "iron_spikes", "hunters_charm"]
+    "gatheringItems": ["grappling_hook", "iron_spikes", "hunters_charm", "glass_lantern", "torch", "candle"]
   },
   "hide": {
     "gatheringWeapons": ["dagger", "bow", "crossbow"],
-    "gatheringItems": ["net", "monster_trap", "spyglass", "hunters_charm"]
+    "gatheringItems": ["net", "monster_trap", "spyglass", "hunters_charm", "whetstone"]
   },
   "skin": {
     "gatheringWeapons": ["dagger", "bow", "crossbow"],
-    "gatheringItems": ["net", "monster_trap", "spyglass", "hunters_charm"]
+    "gatheringItems": ["net", "monster_trap", "spyglass", "hunters_charm", "whetstone"]
   },
   "feather": {
     "gatheringWeapons": ["bow", "crossbow"],
-    "gatheringItems": ["net", "spyglass", "hunters_charm"]
+    "gatheringItems": ["net", "spyglass", "hunters_charm", "ladder", "grappling_hook", "signal_whistle", "mirror"]
   },
   "monster_part": {
-    "gatheringWeapons": ["spear", "bow", "crossbow"],
+    "gatheringWeapons": ["spear", "bow", "crossbow", "sword", "greatsword"],
     "gatheringItems": ["monster_trap", "chain", "rope", "manacles", "spyglass", "hunters_charm"]
   },
   "clay": {
@@ -60,27 +60,27 @@
     "gatheringItems": ["shovel", "cart", "hunters_charm"]
   },
   "reed": {
-    "gatheringWeapons": ["sickle"],
+    "gatheringWeapons": ["sickle", "short_sword"],
     "gatheringItems": ["rope", "hunters_charm"]
   },
   "fish": {
-    "gatheringWeapons": ["spear"],
+    "gatheringWeapons": ["spear", "club"],
     "gatheringItems": ["fishing_pole", "net", "rope", "hunters_charm"]
   },
   "venom": {
     "gatheringWeapons": ["dagger"],
-    "gatheringItems": ["net", "rope", "manacles", "hunters_charm"]
+    "gatheringItems": ["net", "rope", "manacles", "hunters_charm", "tinderbox"]
   },
   "pigment": {
-    "gatheringWeapons": [],
-    "gatheringItems": ["shovel", "hunters_charm"]
+    "gatheringWeapons": ["pickaxe"],
+    "gatheringItems": ["shovel", "hunters_charm", "mirror"]
   },
   "essence": {
-    "gatheringWeapons": [],
-    "gatheringItems": ["starlight_catcher", "hunters_charm"]
+    "gatheringWeapons": ["magic_staff", "wand"],
+    "gatheringItems": ["starlight_catcher", "hunters_charm", "holy_symbol"]
   },
   "clockwork": {
     "gatheringWeapons": ["wrench"],
-    "gatheringItems": ["crowbar", "hourglass", "hunters_charm"]
+    "gatheringItems": ["crowbar", "hourglass", "hunters_charm", "lock_and_key", "glass_lantern", "torch", "candle"]
   }
 }

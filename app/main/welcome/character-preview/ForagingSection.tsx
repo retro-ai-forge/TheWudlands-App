@@ -16,6 +16,10 @@ function formatTripLength(minutes: number): string {
 }
 
 const label = (familyId: string) => familyId.replace(/_/g, " ");
+const ATTR_NAMES: Record<string, string> = {
+  migh: "Might", agil: "Agility", endu: "Endurance", prec: "Precision",
+  will: "Will", insi: "Insight", lore: "Lore", pres: "Presence",
+};
 const pct = (n: number) => `+${Number.isInteger(n) ? n : n.toFixed(1)}%`;
 
 /** "+35% · Miner's Pickaxe +25%, Cart +5%" - or, without gear, which
@@ -26,10 +30,16 @@ function GearLine({ gear, helpfulWeapons, helpfulItems }: {
   helpfulItems?: string[];
 }) {
   const pieces = gear ? [...(gear.weapon ? [gear.weapon] : []), ...gear.items] : [];
-  // e.g. "Hunting Bow needs: quiver, arrow" - only while no other weapon counts.
-  const blocked = !gear?.weapon && gear?.blockedWeapons?.length ? (
+  // e.g. "Hunting Bow needs: quiver, arrow" - only while no other weapon
+  // counts; "Torch needs: tinderbox" - only while no light counts.
+  const unready = [
+    ...(!gear?.weapon ? gear?.blockedWeapons ?? [] : []),
+    ...(gear?.blockedLights ?? []),
+    ...(gear?.blockedItems ?? []),
+  ];
+  const blocked = unready.length ? (
     <p className={styles.gearHint}>
-      {gear.blockedWeapons.map((b) => `${b.name} needs: ${b.missing.map(label).join(", ")}`).join(" · ")}
+      {unready.map((b) => `${b.name} needs: ${b.missing.map(label).join(", ")}`).join(" · ")}
     </p>
   ) : null;
   if (gear && pieces.length > 0) {
@@ -170,6 +180,12 @@ export function ForagingSection({
         <div className={`${styles.card} ${styles.resultCard} ${styles[`result_${lastResult.outcome}`]}`}>
           <span className={styles.activity}>Last return &middot; {lastResult.name}</span>
           <p className={styles.message}>{lastResult.message}</p>
+          {lastResult.night?.message && <p className={styles.message}>{lastResult.night.message}</p>}
+          {lastResult.night?.vitalStatus && (
+            <p className={styles.lostLine}>
+              {name} is now {lastResult.night.vitalStatus}.
+            </p>
+          )}
           <p className={styles.amount}>
             Found {lastResult.total} {label(lastResult.familyId)}
             {lastResult.gearPercent ? ` (gear ${pct(lastResult.gearPercent)})` : ""}
@@ -182,13 +198,17 @@ export function ForagingSection({
             </div>
           )}
           {(() => {
-            // One plain line of what the trip cost: ammo shot, quality worn, gear broken.
+            // One plain line of what the trip cost: ammo shot, light burned, quality worn, gear broken.
             const ammoByFamily: Record<string, number> = {};
-            for (const [id, n] of Object.entries(lastResult.ammoUsed ?? {})) {
+            for (const [id, n] of [
+              ...Object.entries(lastResult.ammoUsed ?? {}),
+              ...Object.entries(lastResult.lightUsed ?? {}),
+            ]) {
               const family = id.replace(/_\d+$/, "");
               ammoByFamily[family] = (ammoByFamily[family] ?? 0) + n;
             }
             const lost = [
+              ...Object.entries(lastResult.night?.lost ?? {}).map(([key, n]) => `${ATTR_NAMES[key] ?? key} −${n}`),
               ...Object.entries(ammoByFamily).map(([family, n]) => `${n} ${label(family)}${n === 1 ? "" : "s"}`),
               ...(lastResult.gear ?? [])
                 .filter((g) => g.wear > 0 && !g.destroyed)

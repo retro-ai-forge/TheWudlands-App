@@ -40,6 +40,65 @@
     "bow": "arrow",
     "crossbow": "bolt"
   },
+  "lightSources": [
+    "glass_lantern",
+    "torch",
+    "candle"
+  ],
+  "lightRequires": [
+    "tinderbox"
+  ],
+  "lightFuel": {
+    "glass_lantern": "oil"
+  },
+  "companionCharms": {
+    "charm_flying": {
+      "companions": [
+        "winged_companion"
+      ],
+      "families": [
+        "feather",
+        "meat",
+        "hide"
+      ]
+    },
+    "charm_aquatic": {
+      "companions": [
+        "aquatic_companion"
+      ],
+      "families": [
+        "fish",
+        "reed",
+        "clay",
+        "sand"
+      ]
+    },
+    "charm_ghost": {
+      "companions": [
+        "spirit_companion",
+        "dark_companion"
+      ],
+      "families": [
+        "essence",
+        "venom",
+        "bone"
+      ]
+    },
+    "charm_other": {
+      "companions": [
+        "critter_companion",
+        "arcane_companion",
+        "fey_companion"
+      ],
+      "families": [
+        "herbs",
+        "harvest",
+        "fiber",
+        "crystal",
+        "pigment"
+      ]
+    }
+  },
   "tierWeightsByProfessionCount": {
     "1": {
       "1": 100
@@ -52,6 +111,34 @@
       "1": 70,
       "2": 22,
       "3": 8
+    }
+  },
+  "nights": {
+    "shelter": [
+      "tent",
+      "bedroll"
+    ],
+    "weather": {
+      "warm": 40,
+      "cool": 35,
+      "harsh": 25
+    },
+    "pointsLost": {
+      "0": {
+        "warm": 0,
+        "cool": 1,
+        "harsh": 2
+      },
+      "1": {
+        "warm": 0,
+        "cool": 0.5,
+        "harsh": 1
+      },
+      "2": {
+        "warm": 0,
+        "cool": 0,
+        "harsh": 0
+      }
     }
   }
 }

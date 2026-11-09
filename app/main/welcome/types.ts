@@ -181,6 +181,12 @@ export interface SlotCharacterSummary {
   equippedLight: { family: string; tier: number; litAt: string; hand: string } | null;
   /** storyIds of every adventure this character finished (not ran away from). */
   completedStories?: string[];
+  /** Current attribute values: attr (the maximum) minus temporary losses. */
+  attrNow?: CharacterAttributes;
+  /** Temporary points lost per attribute, e.g. { endu: 2 } - one heals per 20h free. */
+  attrLost?: Partial<Record<keyof CharacterAttributes, number>>;
+  /** When the next point heals (ISO), or null: nothing to heal, a drained group, or out foraging/crafting/adventuring. */
+  nextHealAt?: string | null;
   stats: { adventureFinished: number; adventureRunAway: number };
   pcStatus?: string[];
   pcTags?: string[];
@@ -222,6 +228,10 @@ export type ForageGear = {
   percent: number;
   /** Weapons carried that don't count yet, e.g. a bow without quiver/arrows. */
   blockedWeapons?: { name: string; missing: string[] }[];
+  /** Lights carried that don't count, e.g. a torch without a tinderbox or a lantern without oil. */
+  blockedLights?: { name: string; missing: string[] }[];
+  /** Items that would help but don't count, e.g. a flying charm on a rat (needs: winged companion). */
+  blockedItems?: { name: string; missing: string[] }[];
 };
 
 /** A trip in progress - resolved lazily against readyAt. */
@@ -257,6 +267,19 @@ export type ForageResult = {
   ammoUsed?: Record<string, number>;
   /** Finds no arrow/bolt could cover (none left, or none of a high enough tier) - the weapon wears for those at or above its tier. */
   ammoShortfall?: number;
+  /** What the trip's light burned (item id -> amount): one oil for a lantern, one torch or candle. */
+  lightUsed?: Record<string, number>;
+  /** The night out: weather, tent/bedroll carried, and the temporary Body/Soul points it cost. */
+  night?: {
+    weather: "warm" | "cool" | "harsh";
+    shelter: string[];
+    kind: "both" | "body" | "soul" | "sheltered" | "calm";
+    message: string;
+    /** Points actually lost when the trip was collected (attr key -> amount). */
+    lost?: Record<string, number>;
+    /** "dead" / "soulless" if the night drained Body / Soul completely. */
+    vitalStatus?: string | null;
+  };
 };
 
 /** GET /api/auth/me/characters/{id}/foraging */
