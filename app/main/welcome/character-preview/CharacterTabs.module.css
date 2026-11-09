@@ -1034,9 +1034,15 @@
   margin-top: 1.5rem;
 }
 
+/* Same columns as .attrGridRow, so each group total sits right above the
+   stat values below it. */
 .attrGroupHeader {
-  display: flex;
-  justify-content: space-around;
+  display: grid;
+  grid-template-columns: 1fr 3.5rem 1.5rem 1fr 3.5rem;
+  align-items: center;
+  gap: 0.4rem;
+  padding-left: 0.1rem;
+  padding-right: 0.1rem;
   font-size: 0.85rem;
   letter-spacing: 0.1em;
   text-transform: uppercase;
@@ -1047,6 +1053,7 @@
 
 .attrGroupTotal {
   font-variant-numeric: tabular-nums;
+  text-align: right;
   letter-spacing: normal;
   color: #c07a3a;
 }
@@ -1058,7 +1065,9 @@
 
 .attrGridRow {
   display: grid;
-  grid-template-columns: 1fr auto 1.5rem 1fr auto;
+  /* Fixed value columns (as in .attrGroupHeader): every row's values and
+     the group totals line up whatever the numbers' widths. */
+  grid-template-columns: 1fr 3.5rem 1.5rem 1fr 3.5rem;
   align-items: center;
   padding: 0.3rem 0.1rem;
   border-bottom: 1px solid rgba(168, 153, 104, 0.15);
@@ -1072,8 +1081,14 @@
 
 .attrDisplayValue {
   color: #c07a3a;
-  font-size: 1rem;
+  font-size: 0.85rem;
+  font-variant-numeric: tabular-nums;
   text-align: right;
+}
+
+/* At its maximum - same green as the "ready" state (.readyNowValue). */
+.attrFull {
+  color: #4ade80;
 }
 
 /* Below its maximum - a temporary loss that heals while free. */

@@ -269,6 +269,10 @@ export type ForageResult = {
   ammoShortfall?: number;
   /** What the trip's light burned (item id -> amount): one oil for a lantern, one torch or candle. */
   lightUsed?: Record<string, number>;
+  /** Rare extra raw materials found on the way (item id -> amount) - a bonus outside the pool, also taken home. */
+  surprise?: Record<string, number>;
+  /** The sentence for the surprise finds, or null when there were none. */
+  surpriseMessage?: string | null;
   /** The night out: weather, tent/bedroll carried, and the temporary Body/Soul points it cost. */
   night?: {
     weather: "warm" | "cool" | "harsh";

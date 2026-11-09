@@ -65,13 +65,14 @@ function birthsignName(id: string): string {
   return BIRTHSIGNS.find((b) => b.id === id)?.name ?? id;
 }
 
-/** "3/5" - the current value, and the maximum when it's reduced. */
+/** Green at full, red while reduced. */
+function attrTone(now: number, max: number): string {
+  return now < max ? styles.attrReduced : styles.attrFull;
+}
+
+/** "3/5" - the current value over the maximum. */
 function AttrValue({ now, max }: { now: number; max: number }) {
-  return (
-    <span className={`${styles.attrDisplayValue} ${now < max ? styles.attrReduced : ""}`}>
-      {now}/{max}
-    </span>
-  );
+  return <span className={`${styles.attrDisplayValue} ${attrTone(now, max)}`}>{now}/{max}</span>;
 }
 
 function sumAttrs(
@@ -665,8 +666,15 @@ export function StatsTab({
 
           <div className={styles.attrColumns}>
             <div className={styles.attrGroupHeader}>
-              <span>Body <span className={styles.attrGroupTotal}>{sumAttrs(BODY_ATTRS, attrNow)}/{sumAttrs(BODY_ATTRS, character.attr)}</span></span>
-              <span>Soul <span className={styles.attrGroupTotal}>{sumAttrs(SOUL_ATTRS, attrNow)}/{sumAttrs(SOUL_ATTRS, character.attr)}</span></span>
+              <span>Body</span>
+              <span className={`${styles.attrGroupTotal} ${attrTone(sumAttrs(BODY_ATTRS, attrNow), sumAttrs(BODY_ATTRS, character.attr))}`}>
+                {sumAttrs(BODY_ATTRS, attrNow)}/{sumAttrs(BODY_ATTRS, character.attr)}
+              </span>
+              <span />
+              <span>Soul</span>
+              <span className={`${styles.attrGroupTotal} ${attrTone(sumAttrs(SOUL_ATTRS, attrNow), sumAttrs(SOUL_ATTRS, character.attr))}`}>
+                {sumAttrs(SOUL_ATTRS, attrNow)}/{sumAttrs(SOUL_ATTRS, character.attr)}
+              </span>
             </div>
             <div className={styles.attrGrid}>
               {BODY_ATTRS.map(([key, label], i) => {

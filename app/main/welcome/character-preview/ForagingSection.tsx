@@ -197,6 +197,14 @@ export function ForagingSection({
               <ResourceTiles balances={lastResult.found} tierInfo={catalog} onSelect={(id) => setPopupId(id)} />
             </div>
           )}
+          {lastResult.surpriseMessage && Object.keys(lastResult.surprise ?? {}).length > 0 && (
+            <>
+              <p className={styles.message}>{lastResult.surpriseMessage}</p>
+              <div className={styles.foundTiles}>
+                <ResourceTiles balances={lastResult.surprise ?? {}} tierInfo={catalog} onSelect={(id) => setPopupId(id)} />
+              </div>
+            </>
+          )}
           {(() => {
             // One plain line of what the trip cost: ammo shot, light burned, quality worn, gear broken.
             const ammoByFamily: Record<string, number> = {};

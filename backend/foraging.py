@@ -53,6 +53,10 @@ harsh), and without a tent and bedroll it may cost a temporary Body and/or
 Soul point (backend.condition) - none with both, at most one with either.
 The night gets its own sentence (foraging-messages.json "nights").
 
+Surprise finds (surprises): each trip rolls a 5% chance of 1-3 units of a
+random T1-T3 raw material of any family, and separately a 1% chance of a
+single T4-T6 one - a bonus on top, outside the pool, with no gear wear.
+
 Every return carries a sentence fitted to the material and place
 (data/foraging-messages.json): "rich" while the family's pool is at least
 half full, "thin" once more than half is gone, and "depleted" on the last
@@ -82,7 +86,7 @@ from pymongo import ReturnDocument
 from backend import condition, items_catalog
 from backend.db import get_database
 from backend.professions_catalog import PROFESSION_CATEGORIES
-from backend.resources_catalog import PROFESSION_RESOURCE_FAMILIES
+from backend.resources_catalog import PROFESSION_RESOURCE_FAMILIES, RESOURCE_ITEMS, RESOURCE_ITEMS_BY_ID
 
 _DATA = Path(__file__).resolve().parent / "data"
 RULES: dict = json.loads((_DATA / "foraging-rules.json").read_text())
@@ -118,6 +122,10 @@ COMPANION_CHARMS: dict[str, dict] = {
     charm: {"companions": tuple(c["companions"]), "families": tuple(c["families"])}
     for charm, c in RULES.get("companionCharms", {}).items()
 }
+# Surprise finds (rules "surprises"): per trip, each tier band rolls its own
+# small chance of an extra raw material of any family - a separate bonus that
+# doesn't drain the pool, wear gear, or shoot ammo.
+SURPRISES: tuple[dict, ...] = tuple(RULES.get("surprises", ()))
 # The night out (rules "nights"): a tent and a bedroll keep the weather off;
 # without them the night may cost temporary Body/Soul points (backend.condition).
 NIGHTS: dict = RULES["nights"]
@@ -173,6 +181,10 @@ _MESSAGES: dict = json.loads((_DATA / "foraging-messages.json").read_text())
 DEPLETED_HINT: str = _MESSAGES["depletedHint"]
 MESSAGES_BY_FAMILY: dict[str, dict[str, list[str]]] = _MESSAGES["families"]
 NIGHT_MESSAGES: dict = _MESSAGES["nights"]
+SURPRISE_MESSAGES: list[str] = _MESSAGES["surprises"]
+# Opening line when a surprise holds a rare (T4+) material.
+SURPRISE_RARE_INTROS: list[str] = _MESSAGES["surprisesRareIntro"]
+RARE_SURPRISE_TIER = 4
 
 
 def trip_duration() -> timedelta:
@@ -569,6 +581,38 @@ def night_message(night: dict, missing_shelter: list[str], character_name: str,
     if night["points"] and missing_shelter and certain >= 1:
         wish = NIGHT_MESSAGES["wishNone"] if not shelter_count else NIGHT_MESSAGES["wishOne"]
         text = f"{text} {wish.format(name=character_name, missing=missing_shelter[0].replace('_', ' '))}"
+    return text
+
+
+def roll_surprises(rng: random.Random | None = None) -> dict[str, int]:
+    """Rare extra finds: each band in SURPRISES rolls its chance once; a hit
+    is a random raw material (any family) of one of the band's tiers, in an
+    amount within the band's range. {item id: amount} - usually empty."""
+    rng = rng or random.Random()
+    found: dict[str, int] = {}
+    for band in SURPRISES:
+        if rng.random() >= band["chance"]:
+            continue
+        options = [r for r in RESOURCE_ITEMS if r.tier in band["tiers"]]
+        item = rng.choice(options)
+        low, high = band["amount"]
+        found[item.id] = found.get(item.id, 0) + rng.randint(low, high)
+    return found
+
+
+def surprise_message(surprise: dict[str, int], character_name: str,
+                     rng: random.Random | None = None) -> Optional[str]:
+    """One sentence for the surprise finds, e.g. "...picked up 2 Copper Ore." -
+    opened by a "you were exceptionally lucky" line when a find is T4 or higher."""
+    if not surprise:
+        return None
+    rng = rng or random.Random()
+    parts = [f"{n} {RESOURCE_ITEMS_BY_ID[item_id].name}" if item_id in RESOURCE_ITEMS_BY_ID else f"{n} {item_id}"
+             for item_id, n in surprise.items()]
+    found = parts[0] if len(parts) == 1 else f"{', '.join(parts[:-1])} and {parts[-1]}"
+    text = rng.choice(SURPRISE_MESSAGES).format(name=character_name, found=found)
+    if any(_tier(item_id) >= RARE_SURPRISE_TIER for item_id in surprise):
+        text = f"{rng.choice(SURPRISE_RARE_INTROS).format(name=character_name)} {text}"
     return text
 
 
@@ -1013,7 +1057,14 @@ async def _roll_trip(db, address: str, character_id: str, doc: dict, active: dic
         "ammoShortfall": ammo_shortfall,
         "lightUsed": light_used,
         "night": roll_trip_night(doc),
+        **_surprise_fields(doc),
     }
+
+
+def _surprise_fields(doc: dict) -> dict:
+    surprise = roll_surprises()
+    return {"surprise": surprise,
+            "surpriseMessage": surprise_message(surprise, doc.get("firstName") or "Your character")}
 
 
 async def finish_forage(address: str, character_id: str) -> dict:
@@ -1046,9 +1097,13 @@ async def finish_forage(address: str, character_id: str) -> dict:
                                   _still_carried(doc, active.get("gear") or {}))
     result = {**result, "returnedAt": datetime.now(timezone.utc).isoformat()}
 
-    if result["found"]:
-        # The character carries the finds home (character_homes.itemBalances).
-        await _inc_storage_balances(db, "home", address, character_id, result["found"])
+    # The character carries the finds home (character_homes.itemBalances),
+    # surprise finds included.
+    home_finds = dict(result["found"])
+    for item_id, n in (result.get("surprise") or {}).items():
+        home_finds[item_id] = home_finds.get(item_id, 0) + n
+    if home_finds:
+        await _inc_storage_balances(db, "home", address, character_id, home_finds)
     # Back home and free: the night's toll lands now, and the healing clock
     # (re)starts - it never runs while out (backend.condition).
     night = result.get("night")

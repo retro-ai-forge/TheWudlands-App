@@ -562,3 +562,58 @@ async def test_charm_wears_like_any_item(db, monkeypatch):
     doc = await db.characters.find_one({"address": ADDRESS, "id": cid})
     charm = next(i for i in doc["gear"]["items"] if i["familyId"] == "charm_flying")
     assert charm["quality"] == 4                                # T1 finds wear a T1 charm by 1
+
+
+# ── Surprise finds ─────────────────────────────────────────────────────
+
+
+def test_surprise_bands_roll_separately_at_their_chances():
+    rng = random.Random(11)
+    low = high = 0
+    runs = 20000
+    for _ in range(runs):
+        found = foraging.roll_surprises(rng)
+        tiers = [foraging._tier(i) for i in found]
+        low += any(t <= 3 for t in tiers)
+        high += any(t >= 4 for t in tiers)
+        for item_id, n in found.items():
+            assert 1 <= n <= (3 if foraging._tier(item_id) <= 3 else 1)
+    assert low / runs == pytest.approx(0.05, abs=0.006)
+    assert high / runs == pytest.approx(0.01, abs=0.003)
+
+
+def test_surprise_can_be_any_family():
+    rng = random.Random(5)
+    families = set()
+    for _ in range(20000):
+        families |= {i.rsplit("_", 1)[0] for i in foraging.roll_surprises(rng)}
+    assert len(families) >= 18                                   # of 21 raw families
+
+
+def test_surprise_message_names_the_finds():
+    text = foraging.surprise_message({"ore_1": 2, "crystal_5": 1}, "Mira", random.Random(0))
+    assert "Mira" in text and "2 Copper Ore" in text and " and 1 " in text
+    assert foraging.surprise_message({}, "Mira") is None
+    # A rare (T4+) find opens with a lucky line; a common one doesn't.
+    rare = foraging.surprise_message({"crystal_5": 1}, "Mira", random.Random(0))
+    intros = [t.format(name="Mira") for t in foraging.SURPRISE_RARE_INTROS]
+    assert any(rare.startswith(i) for i in intros)
+    common = foraging.surprise_message({"ore_1": 2}, "Mira", random.Random(0))
+    assert not any(common.startswith(i) for i in intros)
+
+
+async def test_surprise_goes_home_without_draining_the_pool_or_wearing_gear(db, monkeypatch):
+    cid = await _make(1, "blacksmith")
+    await db.characters.update_one({"address": ADDRESS, "id": cid}, {"$set": {"gear.items": [_instance("pickaxe", 200)]}})
+    monkeypatch.setattr(foraging.random, "randint", lambda a, b: 10)
+    monkeypatch.setattr(foraging, "roll_surprises", lambda rng=None: {"crystal_5": 1})
+    await foraging.start_forage(ADDRESS, cid, "craftweapon_01")  # ore
+    await _fast_forward(db, cid)
+    result = (await foraging.finish_forage(ADDRESS, cid))["result"]
+
+    assert result["surprise"] == {"crystal_5": 1} and "crystal_5" not in result["found"]
+    assert result["total"] == sum(result["found"].values())        # surprise not counted in the trip total
+    home = await db.character_homes.find_one({"address": ADDRESS, "characterId": cid})
+    assert home["itemBalances"]["crystal_5"] == 1
+    doc = await db.characters.find_one({"address": ADDRESS, "id": cid})
+    assert doc["gear"]["items"][0]["quality"] == 200 - result["total"]   # T5 surprise adds no wear
