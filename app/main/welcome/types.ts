@@ -251,6 +251,7 @@ export type ForageOldGear = {
   name: string;
   tier: number;
   icon: string;
+  description?: string;
   quality: number;
   /** Full quality at this tier. */
   qualityMax: number;

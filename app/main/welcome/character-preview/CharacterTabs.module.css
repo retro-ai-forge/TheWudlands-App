@@ -1034,44 +1034,52 @@
   margin-top: 1.5rem;
 }
 
-/* Same columns as .attrGridRow, so each group total sits right above the
-   stat values below it. */
-.attrGroupHeader {
-  display: grid;
-  grid-template-columns: 1fr 3.5rem 1.5rem 1fr 3.5rem;
-  align-items: center;
-  gap: 0.4rem;
-  padding-left: 0.1rem;
-  padding-right: 0.1rem;
-  font-size: 0.85rem;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  color: #a89968;
+/* Body | total | gap | Soul | total. A real table: label columns share
+   the free width and may wrap, value columns shrink to their content and
+   never wrap, so totals sit right above the values at any width. */
+.attrTable {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.attrTable th,
+.attrTable td {
+  padding: 0.3rem 0.1rem;
+  border-bottom: 1px solid rgba(168, 153, 104, 0.15);
+  vertical-align: middle;
+  font-weight: normal;
+  text-align: left;
+}
+
+.attrTable thead th {
   padding-bottom: 0.35rem;
   border-bottom: 2px solid rgba(168, 153, 104, 0.3);
 }
 
-.attrGroupTotal {
-  font-variant-numeric: tabular-nums;
+.attrGroupName {
+  font-size: 0.85rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #a89968;
+}
+
+.attrTable .attrValueCell {
+  width: 1%;
+  white-space: nowrap;
   text-align: right;
-  letter-spacing: normal;
+  padding-left: 0.4rem;
+}
+
+.attrTable .attrGapCell {
+  width: 1.5rem;
+  min-width: 0.75rem;
+  padding: 0;
+}
+
+.attrGroupTotal {
+  font-size: 0.85rem;
+  font-variant-numeric: tabular-nums;
   color: #c07a3a;
-}
-
-.attrGrid {
-  display: flex;
-  flex-direction: column;
-}
-
-.attrGridRow {
-  display: grid;
-  /* Fixed value columns (as in .attrGroupHeader): every row's values and
-     the group totals line up whatever the numbers' widths. */
-  grid-template-columns: 1fr 3.5rem 1.5rem 1fr 3.5rem;
-  align-items: center;
-  padding: 0.3rem 0.1rem;
-  border-bottom: 1px solid rgba(168, 153, 104, 0.15);
-  gap: 0.4rem;
 }
 
 .attrLabel {

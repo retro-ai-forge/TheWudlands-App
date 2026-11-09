@@ -665,31 +665,43 @@ export function StatsTab({
           ))}
 
           <div className={styles.attrColumns}>
-            <div className={styles.attrGroupHeader}>
-              <span>Body</span>
-              <span className={`${styles.attrGroupTotal} ${attrTone(sumAttrs(BODY_ATTRS, attrNow), sumAttrs(BODY_ATTRS, character.attr))}`}>
-                {sumAttrs(BODY_ATTRS, attrNow)}/{sumAttrs(BODY_ATTRS, character.attr)}
-              </span>
-              <span />
-              <span>Soul</span>
-              <span className={`${styles.attrGroupTotal} ${attrTone(sumAttrs(SOUL_ATTRS, attrNow), sumAttrs(SOUL_ATTRS, character.attr))}`}>
-                {sumAttrs(SOUL_ATTRS, attrNow)}/{sumAttrs(SOUL_ATTRS, character.attr)}
-              </span>
-            </div>
-            <div className={styles.attrGrid}>
-              {BODY_ATTRS.map(([key, label], i) => {
-                const [sKey, sLabel] = SOUL_ATTRS[i];
-                return (
-                  <div className={styles.attrGridRow} key={key}>
-                    <span className={styles.attrLabel}>{label}</span>
-                    <AttrValue now={attrNow[key]} max={character.attr[key]} />
-                    <span />
-                    <span className={styles.attrLabel}>{sLabel}</span>
-                    <AttrValue now={attrNow[sKey]} max={character.attr[sKey]} />
-                  </div>
-                );
-              })}
-            </div>
+            <table className={styles.attrTable}>
+              <thead>
+                <tr>
+                  <th scope="col" className={styles.attrGroupName}>Body</th>
+                  <th scope="col" className={styles.attrValueCell}>
+                    <span className={`${styles.attrGroupTotal} ${attrTone(sumAttrs(BODY_ATTRS, attrNow), sumAttrs(BODY_ATTRS, character.attr))}`}>
+                      {sumAttrs(BODY_ATTRS, attrNow)}/{sumAttrs(BODY_ATTRS, character.attr)}
+                    </span>
+                  </th>
+                  <th className={styles.attrGapCell} aria-hidden="true" />
+                  <th scope="col" className={styles.attrGroupName}>Soul</th>
+                  <th scope="col" className={styles.attrValueCell}>
+                    <span className={`${styles.attrGroupTotal} ${attrTone(sumAttrs(SOUL_ATTRS, attrNow), sumAttrs(SOUL_ATTRS, character.attr))}`}>
+                      {sumAttrs(SOUL_ATTRS, attrNow)}/{sumAttrs(SOUL_ATTRS, character.attr)}
+                    </span>
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {BODY_ATTRS.map(([key, label], i) => {
+                  const [sKey, sLabel] = SOUL_ATTRS[i];
+                  return (
+                    <tr key={key}>
+                      <th scope="row" className={styles.attrLabel}>{label}</th>
+                      <td className={styles.attrValueCell}>
+                        <AttrValue now={attrNow[key]} max={character.attr[key]} />
+                      </td>
+                      <td className={styles.attrGapCell} aria-hidden="true" />
+                      <th scope="row" className={styles.attrLabel}>{sLabel}</th>
+                      <td className={styles.attrValueCell}>
+                        <AttrValue now={attrNow[sKey]} max={character.attr[sKey]} />
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
             {character.nextHealAt && healSeconds !== null && (
               <p className={styles.attrHealNote}>
                 Next point heals in {formatRemainingCompactLong(healSeconds)}

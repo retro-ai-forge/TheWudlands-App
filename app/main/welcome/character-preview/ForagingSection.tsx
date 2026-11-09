@@ -89,6 +89,7 @@ export function ForagingSection({
   const [catalog, setCatalog] = useState<ResourceTierInfo>({});
   // Which found resource's detail popup is open (info only - no moves).
   const [popupId, setPopupId] = useState<string | null>(null);
+  const [oldGearOpen, setOldGearOpen] = useState(false);
 
   const inAdventure = character.availability.inAdventure;
   const name = character.firstName || "This character";
@@ -214,6 +215,7 @@ export function ForagingSection({
                   name={lastResult.oldGear.name}
                   tier={lastResult.oldGear.tier}
                   qualityFraction={lastResult.oldGear.quality / lastResult.oldGear.qualityMax}
+                  onClick={() => setOldGearOpen(true)}
                 />
               </div>
             </>
@@ -301,10 +303,30 @@ export function ForagingSection({
         <ResourcePopup
           resourceId={popupId}
           tierInfo={catalog}
-          owned={lastResult.found[popupId] ?? 0}
+          owned={(lastResult.found[popupId] ?? 0) + (lastResult.surprise?.[popupId] ?? 0)}
           characterId={character.id}
           destinations={[]}
           onClose={() => setPopupId(null)}
+        />
+      )}
+      {oldGearOpen && lastResult?.oldGear && (
+        // Same info popup as the raw finds (icon, tier, name, description) - no quality.
+        <ResourcePopup
+          resourceId={lastResult.oldGear.itemId}
+          tierInfo={{
+            [lastResult.oldGear.itemId]: {
+              tier: lastResult.oldGear.tier,
+              family: lastResult.oldGear.familyId,
+              category: "processed",
+              name: lastResult.oldGear.name,
+              icon: lastResult.oldGear.icon,
+              description: lastResult.oldGear.description,
+            },
+          }}
+          owned={1}
+          characterId={character.id}
+          destinations={[]}
+          onClose={() => setOldGearOpen(false)}
         />
       )}
     </section>

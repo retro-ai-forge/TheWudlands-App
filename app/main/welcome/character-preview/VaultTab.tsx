@@ -2030,22 +2030,28 @@ export function ResourceTiles({
 
 /** One display-only item tile (icon, tier badge, quality bar, damaged
  * tint) - the same look as ItemGrid's tiles, for places outside the
- * inventory, e.g. lost equipment on a foraging result. `qualityFraction`
+ * inventory, e.g. lost equipment on a foraging result (optionally
+ * clickable). `qualityFraction`
  * is current / full quality (0-1), or null for items without quality. */
 export function ItemTile({
   icon,
   name,
   tier,
   qualityFraction,
+  onClick,
 }: {
   icon?: string | null;
   name: string;
   tier?: number;
   qualityFraction: number | null;
+  /** Makes the tile a button, e.g. to open an info popup. */
+  onClick?: () => void;
 }) {
   const isDamaged = qualityFraction !== null && qualityState(qualityFraction) === "damaged";
+  const Tag = onClick ? "button" : "div";
   return (
-    <div
+    <Tag
+      {...(onClick ? { type: "button" as const, onClick } : {})}
       className={isDamaged ? `${styles.itemGridCell} ${styles.itemGridCellDamaged}` : styles.itemGridCell}
       title={name}
     >
@@ -2054,7 +2060,7 @@ export function ItemTile({
       {qualityFraction !== null && (
         <div className={styles.itemGridQualityBar} style={{ backgroundColor: qualityBarColor(qualityFraction) }} />
       )}
-    </div>
+    </Tag>
   );
 }
 

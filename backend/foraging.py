@@ -645,7 +645,8 @@ def old_gear_options(family_id: str) -> list[tuple[str, dict, int]]:
 
 def roll_old_gear(family_id: str, rng: random.Random | None = None) -> Optional[dict]:
     """Maybe a forgotten piece of gathering gear for `family_id`, damaged:
-    {"instanceId", "itemId", "familyId", "name", "tier", "icon", "quality", "qualityMax"}
+    {"instanceId", "itemId", "familyId", "name", "tier", "icon", "description", "quality",
+    "qualityMax"}
     or None (qualityMax is the full quality at that tier)."""
     rng = rng or random.Random()
     if not OLD_GEAR or rng.random() >= OLD_GEAR.get("chance", 0):
@@ -657,7 +658,7 @@ def roll_old_gear(family_id: str, rng: random.Random | None = None) -> Optional[
     top = max(1, math.floor(quality_max * OLD_GEAR.get("maxQualityFraction", 0.1)))
     return {"instanceId": uuid.uuid4().hex, "itemId": row["id"], "familyId": item_family,
             "name": row["name"], "tier": int(OLD_GEAR.get("tier", 1)), "icon": row.get("icon", ""),
-            "quality": rng.randint(1, top), "qualityMax": quality_max}
+            "description": row.get("description", ""), "quality": rng.randint(1, top), "qualityMax": quality_max}
 
 
 def old_gear_message(old: Optional[dict], character_name: str,
