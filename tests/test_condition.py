@@ -92,6 +92,13 @@ def test_a_drained_group_never_heals():
 # ── The night out ──────────────────────────────────────────────────────
 
 
+def _share(severity: str, family_id=None) -> float:
+    """Chance of a weather of `severity` at a site, from the rules."""
+    weights = condition.weathers_for(RULES, family_id)
+    hit = sum(w for name, w in weights.items() if RULES["weather"][name]["severity"] == severity)
+    return hit / sum(weights.values())
+
+
 def _nights(shelter: int, n: int = 6000) -> Counter:
     rng = random.Random(7)
     return Counter(sum(condition.roll_night(RULES, shelter, MAX, {}, rng)["points"].values()) for _ in range(n))
@@ -104,13 +111,13 @@ def test_tent_and_bedroll_together_always_protect():
 def test_one_piece_of_shelter_costs_at_most_one_point():
     losses = _nights(1)
     assert set(losses) == {0, 1}
-    assert losses[1] / 6000 == pytest.approx(0.35 * 0.5 + 0.25, abs=0.03)
+    assert losses[1] / 6000 == pytest.approx(_share("mild") * 0.5 + _share("severe"), abs=0.03)
 
 
 def test_no_shelter_costs_up_to_one_body_and_one_soul():
     losses = _nights(0)
     assert set(losses) == {0, 1, 2}
-    assert losses[2] / 6000 == pytest.approx(0.25, abs=0.03)
+    assert losses[2] / 6000 == pytest.approx(_share("severe"), abs=0.03)
     rng = random.Random(3)
     for _ in range(200):
         night = condition.roll_night(RULES, 0, MAX, {}, rng)
@@ -196,7 +203,7 @@ async def test_draining_body_kills_and_tags_the_character(db):
 async def test_foraging_night_lands_on_collect(db, monkeypatch):
     cid = await _make()
     await foraging.ensure_slot_pool(ADDRESS, 1, ["blacksmith"])
-    monkeypatch.setattr(foraging, "roll_trip_night", lambda doc, rng=None: {
+    monkeypatch.setattr(foraging, "roll_trip_night", lambda doc, family_id=None, rng=None: {
         "weather": "harsh", "points": {"endu": 1, "will": 1}, "kind": "both",
         "shelter": [], "message": "Cold."})
     await foraging.start_forage(ADDRESS, cid, "craftweapon_01")
@@ -227,4 +234,63 @@ def test_every_night_sentence_formats():
     groups += [v for weather in foraging.NIGHT_MESSAGES["byWeather"].values() for v in weather.values()]
     for templates in groups:
         for t in templates:
-            t.format(name="N", shelter="tent")  # no unknown placeholders
+            t.format(name="N", shelter="tent", tent="Tent")  # no unknown placeholders
+
+
+def test_site_weather_only_where_it_fits():
+    def seen(family_id):
+        rng = random.Random(9)
+        return {condition.roll_night(RULES, 0, MAX, {}, rng, family_id)["weather"] for _ in range(3000)}
+
+    anywhere = {w for w, c in RULES["weather"].items() if not c.get("families")}
+    assert seen("sand") == anywhere | {"sandstorm"}
+    assert seen("fish") == anywhere | {"flood"}
+    assert seen("ore") == anywhere | {"blizzard", "rockslide"}
+    assert seen("herbs") == anywhere
+
+
+def test_every_harmful_weather_has_its_own_sentences():
+    by_weather = foraging.NIGHT_MESSAGES["byWeather"]
+    for weather, cfg in RULES["weather"].items():
+        if cfg["severity"] == "none":
+            continue
+        kinds = ["sheltered", "body", "soul"]
+        # Severe weathers get their own lines for losing both points too
+        # (the first two existed before and use the general ones).
+        if cfg["severity"] == "severe" and weather != "harsh":
+            kinds.append("both")
+        for kind in kinds:
+            assert len(by_weather[weather][kind]) >= 8, (weather, kind)
+
+
+def test_only_severe_weather_can_wreck_a_carried_tent():
+    assert foraging.TENT_DESTROYED_CHANCE == {"severe": 0.03}
+    with_tent = {"attr": MAX, "gear": {"itemBalances": {"backpack": {"tent_1": 1}}}}
+    rng = random.Random(4)
+    nights = [foraging.roll_trip_night(with_tent, "sand", rng) for _ in range(20000)]
+    wrecked = [n for n in nights if n["tentDestroyed"]]
+    assert all(RULES["weather"][n["weather"]]["severity"] == "severe" for n in wrecked)
+    severe = sum(RULES["weather"][n["weather"]]["severity"] == "severe" for n in nights)
+    assert len(wrecked) / severe == pytest.approx(0.03, abs=0.01)
+    # No tent carried: nothing to wreck.
+    bare = {"attr": MAX, "gear": {}}
+    assert not any(foraging.roll_trip_night(bare, "sand", rng)["tentDestroyed"] for _ in range(3000))
+
+
+async def test_wrecked_tent_leaves_the_pack(db, monkeypatch):
+    cid = await _make()
+    await foraging.ensure_slot_pool(ADDRESS, 1, ["blacksmith"])
+    await db.characters.update_one({"address": ADDRESS, "id": cid},
+                                   {"$set": {"gear.itemBalances.backpack": {"tent_1": 1}}})
+    monkeypatch.setattr(foraging, "roll_trip_night", lambda doc, family_id=None, rng=None: {
+        "weather": "storm", "points": {}, "kind": "sheltered", "shelter": ["tent"],
+        "message": "Storm.", "tentDestroyed": True})
+    await foraging.start_forage(ADDRESS, cid, "craftweapon_01")
+    doc = await _doc(db, cid)
+    assert "tent_1" not in ((doc["gear"].get("itemBalances") or {}).get("backpack") or {})
+    past = (datetime.now(timezone.utc) - timedelta(seconds=1)).isoformat()
+    await db.characters.update_one({"address": ADDRESS, "id": cid},
+                                   {"$set": {"foraging.activeForage.readyAt": past}})
+    result = (await foraging.finish_forage(ADDRESS, cid))["result"]
+    assert result["night"]["tentLost"] in result["broken"]
+    assert result["night"]["message"].startswith("Storm. ")

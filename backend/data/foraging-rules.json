@@ -119,26 +119,24 @@
       "bedroll"
     ],
     "weather": {
-      "warm": 40,
-      "cool": 35,
-      "harsh": 25
+      "warm": { "weight": 30, "severity": "none" },
+      "cool": { "weight": 20, "severity": "mild" },
+      "rain": { "weight": 15, "severity": "mild" },
+      "fog": { "weight": 8, "severity": "mild" },
+      "wind": { "weight": 8, "severity": "mild" },
+      "heat": { "weight": 8, "severity": "mild" },
+      "harsh": { "weight": 10, "severity": "severe" },
+      "storm": { "weight": 8, "severity": "severe" },
+      "flood": { "weight": 12, "severity": "severe", "families": ["fish", "reed", "clay"] },
+      "sandstorm": { "weight": 15, "severity": "severe", "families": ["sand"] },
+      "blizzard": { "weight": 8, "severity": "severe", "families": ["ore", "stone", "crystal"] },
+      "rockslide": { "weight": 8, "severity": "severe", "families": ["ore", "stone", "crystal", "pigment"] }
     },
+    "tentDestroyedChance": { "severe": 0.03 },
     "pointsLost": {
-      "0": {
-        "warm": 0,
-        "cool": 1,
-        "harsh": 2
-      },
-      "1": {
-        "warm": 0,
-        "cool": 0.5,
-        "harsh": 1
-      },
-      "2": {
-        "warm": 0,
-        "cool": 0,
-        "harsh": 0
-      }
+      "0": { "none": 0, "mild": 1, "severe": 2 },
+      "1": { "none": 0, "mild": 0.5, "severe": 1 },
+      "2": { "none": 0, "mild": 0, "severe": 0 }
     }
   },
   "surprises": [

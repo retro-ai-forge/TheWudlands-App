@@ -292,12 +292,15 @@ export type ForageResult = {
   oldGearMessage?: string | null;
   /** The night out: weather, tent/bedroll carried, and the temporary Body/Soul points it cost. */
   night?: {
-    weather: "warm" | "cool" | "harsh";
+    /** foraging-rules.json "nights.weather" id, e.g. "warm", "rain", "sandstorm". */
+    weather: string;
     shelter: string[];
     kind: "both" | "body" | "soul" | "sheltered" | "calm";
     message: string;
     /** Points actually lost when the trip was collected (attr key -> amount). */
     lost?: Record<string, number>;
+    /** Name of the tent the night destroyed (also listed in `broken`). */
+    tentLost?: string;
     /** "dead" / "soulless" if the night drained Body / Soul completely. */
     vitalStatus?: string | null;
   };

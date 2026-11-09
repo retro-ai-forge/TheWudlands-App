@@ -295,22 +295,37 @@ async def _set_vital_status(db, address: str, character_id: str, old: str, new: 
 # ── A night out (foraging) ──────────────────────────────────────────────
 
 
+def night_cost(rules: dict, shelter_count: int, weather: str) -> float:
+    """Expected points a night costs: pointsLost by shelter count (tent/
+    bedroll carried: 0, 1, 2) and the weather's severity (none/mild/severe).
+    The whole part is certain, a fraction is the chance of one more point."""
+    severity = (rules["weather"].get(weather) or {}).get("severity", "none")
+    return float(rules["pointsLost"][str(min(shelter_count, 2))].get(severity, 0))
+
+
+def weathers_for(rules: dict, family_id: Optional[str]) -> dict[str, float]:
+    """{weather: weight} possible at a site: weathers without "families"
+    happen anywhere, the others only when foraging one of their families
+    (e.g. a sandstorm only on sand)."""
+    return {w: float(c["weight"]) for w, c in rules["weather"].items()
+            if not c.get("families") or family_id in c["families"]}
+
+
 def roll_night(rules: dict, shelter_count: int, attr_max: dict, lost: Optional[dict],
-               rng: random.Random) -> dict:
+               rng: random.Random, family_id: Optional[str] = None) -> dict:
     """Roll one night's weather and what it costs.
 
-    `rules` = foraging-rules.json "nights": weather weights and pointsLost
-    by shelter count (tent/bedroll carried: 0, 1, 2) and weather - a fraction
-    is the chance of one more point. Two points = one Body + one Soul; one
-    point = Body or Soul, 50/50. Returns {"weather", "points": {attr: 1},
+    `rules` = foraging-rules.json "nights": weathers ({weight, severity,
+    families?}) and pointsLost by shelter count and severity (night_cost).
+    Two points = one Body + one Soul; one point = Body or Soul, 50/50.
+    Returns {"weather", "points": {attr: 1},
     "kind": "both"|"body"|"soul"|"sheltered"|"calm"}.
     """
-    weather_weights = rules["weather"]
-    weathers = list(weather_weights)
-    weather = rng.choices(weathers, weights=[weather_weights[w] for w in weathers], k=1)[0]
+    weights = weathers_for(rules, family_id)
+    weathers = list(weights)
+    weather = rng.choices(weathers, weights=[weights[w] for w in weathers], k=1)[0]
 
-    table = rules["pointsLost"][str(min(shelter_count, 2))]
-    expected = float(table.get(weather, 0))
+    expected = night_cost(rules, shelter_count, weather)
     n = int(math.floor(expected))
     if rng.random() < expected - n:
         n += 1
@@ -332,6 +347,6 @@ def roll_night(rules: dict, shelter_count: int, attr_max: dict, lost: Optional[d
     else:
         # Nothing lost: thanks to the shelter on a night that would have
         # cost something without it, else simply a harmless night.
-        harmless = float(rules["pointsLost"]["0"].get(weather, 0)) == 0
+        harmless = night_cost(rules, 0, weather) == 0
         kind = "sheltered" if shelter_count and not harmless else "calm"
     return {"weather": weather, "points": points, "kind": kind}

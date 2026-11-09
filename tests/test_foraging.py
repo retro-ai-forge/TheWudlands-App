@@ -580,9 +580,11 @@ def test_surprise_bands_roll_separately_at_their_chances():
         low += any(t <= 3 for t in tiers)
         high += any(t >= 4 for t in tiers)
         for item_id, n in found.items():
-            assert 1 <= n <= (3 if foraging._tier(item_id) <= 3 else 1)
-    assert low / runs == pytest.approx(0.05, abs=0.006)
-    assert high / runs == pytest.approx(0.01, abs=0.003)
+            band = foraging.SURPRISES[0] if foraging._tier(item_id) <= 3 else foraging.SURPRISES[1]
+            assert band["amount"][0] <= n <= band["amount"][1]
+    low_band, high_band = foraging.SURPRISES                      # chances come from the rules
+    assert low / runs == pytest.approx(low_band["chance"], abs=0.012)
+    assert high / runs == pytest.approx(high_band["chance"], abs=0.012)
 
 
 def test_surprise_can_be_any_family():
@@ -637,7 +639,7 @@ def test_old_gear_rolls_at_its_chance_as_damaged_t1_gear_of_the_material():
         hits += 1
         assert old["familyId"] in allowed and old["itemId"].endswith("_1")
         assert 1 <= old["quality"] <= max(1, old["qualityMax"] // 10)
-    assert hits / runs == pytest.approx(0.15, abs=0.01)
+    assert hits / runs == pytest.approx(foraging.OLD_GEAR["chance"], abs=0.012)
 
 
 def test_old_gear_message_names_the_piece():

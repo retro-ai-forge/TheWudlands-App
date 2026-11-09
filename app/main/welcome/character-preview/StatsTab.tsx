@@ -688,12 +688,12 @@ export function StatsTab({
                   const [sKey, sLabel] = SOUL_ATTRS[i];
                   return (
                     <tr key={key}>
-                      <th scope="row" className={styles.attrLabel}>{label}</th>
+                      <th scope="row" className={attrNow[key] <= 0 ? `${styles.attrLabel} ${styles.attrReduced}` : styles.attrLabel}>{label}</th>
                       <td className={styles.attrValueCell}>
                         <AttrValue now={attrNow[key]} max={character.attr[key]} />
                       </td>
                       <td className={styles.attrGapCell} aria-hidden="true" />
-                      <th scope="row" className={styles.attrLabel}>{sLabel}</th>
+                      <th scope="row" className={attrNow[sKey] <= 0 ? `${styles.attrLabel} ${styles.attrReduced}` : styles.attrLabel}>{sLabel}</th>
                       <td className={styles.attrValueCell}>
                         <AttrValue now={attrNow[sKey]} max={character.attr[sKey]} />
                       </td>

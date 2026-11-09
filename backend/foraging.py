@@ -48,9 +48,11 @@ lower of its own and its oil's tier. The trip burns one unit: one oil for a
 lantern (lightFuel), one torch or candle otherwise. Only gear still on the character at collection
 counts.
 
-A trip spends a night out (rules "nights"): weather is rolled (warm, cool,
-harsh), and without a tent and bedroll it may cost a temporary Body and/or
-Soul point (backend.condition) - none with both, at most one with either.
+A trip spends a night out (rules "nights"): weather is rolled from the ones
+possible at the site (rain, fog, storm... anywhere; flood, sandstorm,
+blizzard, rockslide only on fitting materials), each mild or severe; without
+a tent and bedroll it may cost a temporary Body and/or Soul point
+(backend.condition) - none with both, at most one with either.
 The night gets its own sentence (foraging-messages.json "nights").
 
 Surprise finds (surprises): each trip rolls a 5% chance of 1-3 units of a
@@ -139,6 +141,8 @@ OLD_GEAR: dict = dict(RULES.get("oldGear", {}))
 # without them the night may cost temporary Body/Soul points (backend.condition).
 NIGHTS: dict = RULES["nights"]
 SHELTER: tuple[str, ...] = tuple(NIGHTS["shelter"])
+# Chance (by weather severity) that the night destroys the pitched tent.
+TENT_DESTROYED_CHANCE: dict[str, float] = dict(NIGHTS.get("tentDestroyedChance", {}))
 TIER_WEIGHTS: dict[int, dict[int, int]] = {
     int(n): {int(tier): w for tier, w in weights.items()}
     for n, weights in RULES["tierWeightsByProfessionCount"].items()
@@ -587,7 +591,7 @@ def night_message(night: dict, missing_shelter: list[str], character_name: str,
     carried = [f.replace("_", " ") for f in SHELTER if f not in missing_shelter]
     text = rng.choice(templates).format(name=character_name, shelter=" and ".join(carried) or "camp")
     shelter_count = len(SHELTER) - len(missing_shelter)
-    certain = int(float(NIGHTS["pointsLost"][str(min(shelter_count, 2))].get(night.get("weather"), 0)))
+    certain = int(condition.night_cost(NIGHTS, shelter_count, night.get("weather") or ""))
     if night["points"] and missing_shelter and certain >= 1:
         wish = NIGHT_MESSAGES["wishNone"] if not shelter_count else NIGHT_MESSAGES["wishOne"]
         text = f"{text} {wish.format(name=character_name, missing=missing_shelter[0].replace('_', ' '))}"
@@ -669,17 +673,25 @@ def old_gear_message(old: Optional[dict], character_name: str,
     return rng.choice(OLD_GEAR_MESSAGES).format(name=character_name, item=old["name"])
 
 
-def roll_trip_night(doc: dict, rng: random.Random | None = None) -> dict:
+def roll_trip_night(doc: dict, family_id: Optional[str] = None, rng: random.Random | None = None) -> dict:
     """The trip's night: weather, what the tent/bedroll carried saved, and the
     temporary Body/Soul points it costs (applied when the trip is collected)."""
     rng = rng or random.Random()
     carried = [f for f in SHELTER if _carries_family(doc, f)]
     lost, _ = condition.settle(doc.get("attr") or {}, doc.get("attrLost"), doc.get("healFrom"),
                                datetime.now(timezone.utc), doc.get("id", ""))
-    night = condition.roll_night(NIGHTS, len(carried), doc.get("attr") or {}, lost, rng)
+    night = condition.roll_night(NIGHTS, len(carried), doc.get("attr") or {}, lost, rng, family_id)
     missing = [f for f in SHELTER if f not in carried]
-    return {**night, "shelter": carried,
+    severity = (NIGHTS["weather"].get(night["weather"]) or {}).get("severity", "none")
+    # The tent still kept that night off - but rough weather may wreck it.
+    tent_destroyed = "tent" in carried and rng.random() < TENT_DESTROYED_CHANCE.get(severity, 0)
+    return {**night, "shelter": carried, "tentDestroyed": tent_destroyed,
             "message": night_message(night, missing, doc.get("firstName") or "Your character", rng)}
+
+
+def tent_destroyed_message(tent_name: str, character_name: str, rng: random.Random | None = None) -> str:
+    rng = rng or random.Random()
+    return rng.choice(NIGHT_MESSAGES["tentDestroyed"]).format(name=character_name, tent=tent_name)
 
 
 def suggested_mission(family_id: str, groups: list[str], seed: str) -> Optional[Mission]:
@@ -1087,6 +1099,19 @@ async def _roll_trip(db, address: str, character_id: str, doc: dict, active: dic
     ammo_shortfall = len(uncovered) if ammo_family else 0
     worn, broken = await _wear_gear(db, address, character_id, gear, weapon_wear, max(tiers, default=0))
 
+    # The night: a severe one may wreck the pitched tent (the best one
+    # carried) - it's gone from the pack right away, like burnt fuel.
+    night = roll_trip_night(doc, family_id)
+    if night.pop("tentDestroyed", False):
+        tent = _pick(doc, "tent")
+        used, _ = (await _consume_ammo(db, address, character_id, "tent", [tent["tier"]])
+                   if tent else ({}, []))
+        if used:
+            night["tentLost"] = tent["name"]
+            night["message"] = (f"{night['message']} "
+                                f"{tent_destroyed_message(tent['name'], doc.get('firstName') or 'Your character')}")
+            broken = [*broken, tent["name"]]
+
     exhausted = entry is None or is_exhausted(entry["count"], entry["remaining"])
     outcome = return_outcome(entry["initial"], entry["remaining"], exhausted) if entry else "depleted"
     mission = MISSIONS_BY_ID.get(active["missionId"])
@@ -1109,7 +1134,7 @@ async def _roll_trip(db, address: str, character_id: str, doc: dict, active: dic
         "ammoUsed": ammo_used,
         "ammoShortfall": ammo_shortfall,
         "lightUsed": light_used,
-        "night": roll_trip_night(doc),
+        "night": night,
         **_surprise_fields(doc),
         **_old_gear_fields(doc, family_id),
     }
