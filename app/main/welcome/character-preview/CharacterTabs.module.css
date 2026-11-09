@@ -2798,7 +2798,7 @@
      overlaps this a bit, rather than this floating fully in the clear
      above/beside it. */
   z-index: 1;
-  height: 6.5rem;
+  height: 5.5rem;
   width: auto;
   image-rendering: pixelated;
   /* Clickable (opens ChopBlockPopup) - same pointer-events:auto
@@ -2811,6 +2811,131 @@
 
 /* Same dimming as the tent's own .campfireStageIconEmpty while home is
    empty. */
+/* The workbench - the chopping block's counterpart on the tent's left:
+   same tent-relative anchoring and clamp() easing, behind the tent, above
+   the campfire. Always clickable (opens the crafting page). */
+.homeWorkbenchIcon {
+  position: absolute;
+  left: calc(-1 * clamp(0px, (100vw - 400px) * 0.15, 40px));
+  bottom: 6.5rem;
+  transform: translateX(-60%);
+  z-index: 1;
+  height: 6.5rem;
+  width: auto;
+  image-rendering: pixelated;
+  pointer-events: auto;
+  cursor: pointer;
+  transition: filter 0.15s ease;
+}
+
+.homeWorkbenchIcon:hover,
+.homeWorkbenchIcon:focus-visible {
+  filter: brightness(1.25) drop-shadow(0 0 6px rgba(126, 184, 255, 0.6));
+  outline: none;
+}
+
+/* The crafting page (CraftingView): active craft, Craft button + count
+   matrix, then the recipe viewer - room at the bottom for the exit arrow. */
+.craftPage {
+  display: flex;
+  flex-direction: column;
+  padding-bottom: 3rem;
+}
+
+/* Asked before a craft spends higher-tier materials in place of the
+   selected tier (CraftingView): the list, then Craft (left) / Cancel (right). */
+.craftConfirmOverlay {
+  position: fixed;
+  inset: 0;
+  z-index: 20;
+  background: rgba(5, 4, 2, 0.8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.25rem;
+  box-sizing: border-box;
+}
+
+.craftConfirmCard {
+  background: #1a1810;
+  border: 1px solid #4a3a70;
+  border-radius: 6px;
+  padding: 1.2rem 1.5rem;
+  max-width: 20rem;
+  width: 100%;
+}
+
+.craftConfirmText {
+  margin: 0 0 0.75rem;
+  font-size: 0.95rem;
+  color: #d0b878;
+}
+
+.craftConfirmList {
+  list-style: none;
+  margin: 0 0 1.1rem;
+  padding: 0;
+  font-size: 0.9rem;
+  color: #d4c9a8;
+}
+
+.craftConfirmList li + li {
+  margin-top: 0.3rem;
+}
+
+.craftConfirmQty {
+  font-variant-numeric: tabular-nums;
+  color: #c07a3a;
+}
+
+/* Same purple as the viewer's "+higher tier" counts. */
+.craftConfirmTier {
+  color: #b98cff;
+  font-size: 0.8rem;
+}
+
+.craftConfirmButtons {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.craftConfirmCraft,
+.craftConfirmCancel {
+  padding: 0.4rem 1.2rem;
+  border-radius: 4px;
+  font: inherit;
+  font-size: 0.85rem;
+  cursor: pointer;
+  border: 1px solid #3a3020;
+}
+
+.craftConfirmCraft {
+  background: #1f3a1a;
+  border-color: #3f7a30;
+  color: #9be6a8;
+}
+
+.craftConfirmCraft:hover {
+  background: #28481f;
+  color: #c0f5c8;
+}
+
+.craftConfirmCancel {
+  background: #1a1810;
+  color: #8a7a52;
+}
+
+.craftConfirmCancel:hover {
+  background: #222215;
+  color: #b09a6a;
+}
+
+/* Breathing room between the count matrix and the recipe viewer below. */
+.craftPage .recipeViewerFrame {
+  margin-top: 1.25rem;
+}
+
 .homeChoppingBlockIconEmpty {
   filter: brightness(0.55);
   /* Not clickable while home is empty (see HomeView.tsx's own

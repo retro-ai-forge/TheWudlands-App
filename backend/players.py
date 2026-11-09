@@ -1168,6 +1168,48 @@ def _instance_tier(instance: dict) -> Optional[int]:
     return entry.tier if entry else None
 
 
+# Where crafting may take from (besides the active storage's own stacked
+# balances): instances the character wears or carries, plus the ones in its
+# home or camp storage (merged into gear.items for the resolution).
+CRAFT_HELD_LOCATIONS = ("backpack", "body", "saddlepack", "cart", "home", "camp")
+CRAFT_CARRIED_BUCKETS = ("backpack", "saddlepack", "cart")
+
+
+def _craft_storage_type(character: dict) -> Optional[str]:
+    """The storage crafting works from: home when free, camp while resting
+    on an adventure; None when crafting isn't possible (on the road)."""
+    availability = character.get("availability", {}) or {}
+    if not availability.get("inAdventure", False):
+        return "home"
+    return "camp" if availability.get("resting", False) else None
+
+
+def _split_craft_take(
+    totals: Dict[str, int], storage_balances: Dict[str, int], carried: Dict[str, Dict[str, int]]
+) -> Optional[tuple[Dict[str, int], Dict[str, Dict[str, int]]]]:
+    """Splits what a craft takes ({id: qty}) between the active storage
+    (first) and the carried backpack/saddlepack/cart balances, in that
+    order. Returns (from_storage, {bucket: {id: qty}}) or None if they
+    don't hold enough together."""
+    from_storage: Dict[str, int] = {}
+    from_carried: Dict[str, Dict[str, int]] = {}
+    for concrete_id, qty in totals.items():
+        take = min(storage_balances.get(concrete_id, 0), qty)
+        if take:
+            from_storage[concrete_id] = take
+        remaining = qty - take
+        for bucket in CRAFT_CARRIED_BUCKETS:
+            if remaining <= 0:
+                break
+            take = min((carried.get(bucket) or {}).get(concrete_id, 0), remaining)
+            if take:
+                from_carried.setdefault(bucket, {})[concrete_id] = take
+                remaining -= take
+        if remaining > 0:
+            return None
+    return from_storage, from_carried
+
+
 def _resolve_tool_for_craft(
     character: dict,
     player_tools: Dict[str, int],
@@ -1271,7 +1313,7 @@ def _resolve_tool_for_craft(
             held_candidates = [
                 instance for instance in held_items
                 if instance.get("familyId") == family_id
-                and instance.get("location") in ("backpack", "body", "home", "saddlepack")
+                and instance.get("location") in CRAFT_HELD_LOCATIONS
                 and (_instance_tier(instance) or 0) >= tier
             ]
             if held_candidates:
@@ -1349,7 +1391,7 @@ def _resolve_tool_instances_for_craft(
                 candidates = [
                     instance for instance in held_items
                     if instance.get("familyId") == family_id
-                    and instance.get("location") in ("backpack", "body", "home", "saddlepack")
+                    and instance.get("location") in CRAFT_HELD_LOCATIONS
                     and (_instance_tier(instance) or 0) >= tier
                 ]
                 from_pool = False
@@ -1578,6 +1620,47 @@ def _profession_xp_grant_set_ops(
     return ops
 
 
+def _ingredient_tier_ids(family_id: str, tier: int) -> List[str]:
+    """Concrete ids that can fill a `family_id` requirement at `tier`: the
+    exact tier first, then every higher tier in order - a higher-tier
+    material (raw, processed, or a consumed final item) can always stand in
+    for a lower-tier requirement; the craft's own tier, the lowest one
+    allowed, decides the outcome. Raises ValueError when the family has no
+    row at `tier` at all."""
+    if items_catalog.FINAL_ITEM_ROWS_BY_FAMILY_TIER.get((family_id, tier)) is None:
+        raise ValueError(f"No tier {tier} id for ingredient family {family_id}")
+    ids = []
+    for t in range(tier, 7):
+        row = items_catalog.FINAL_ITEM_ROWS_BY_FAMILY_TIER.get((family_id, t))
+        if row is not None:
+            ids.append(row["id"])
+    return ids
+
+
+def _take_across_tiers(
+    ids: List[str], qty: int, character_balances: Dict[str, int], player_balances: Dict[str, int]
+) -> Optional[List[tuple]]:
+    """Covers `qty` from `ids` (exact tier first, then higher ones - saving
+    the best material for last), the character's own stock before the
+    shared vault at each tier. Returns [(concrete_id, from_character,
+    from_player), ...] or None if all of them together fall short."""
+    total = sum(character_balances.get(i, 0) + player_balances.get(i, 0) for i in ids)
+    if total < qty:
+        return None
+    parts = []
+    remaining = qty
+    for concrete_id in ids:
+        if remaining <= 0:
+            break
+        from_character = min(character_balances.get(concrete_id, 0), remaining)
+        remaining -= from_character
+        from_player = min(player_balances.get(concrete_id, 0), remaining)
+        remaining -= from_player
+        if from_character or from_player:
+            parts.append((concrete_id, from_character, from_player))
+    return parts
+
+
 def _resolve_ingredient_option(
     option: dict,
     tier: int,
@@ -1629,45 +1712,25 @@ def _resolve_ingredient_option(
                 return None
             return {"held": True, "move": found if found[0] == "instance_move" else None}
 
-        output_row = items_catalog.resolve_output_row(family_id, tier)
-        if output_row is None:
-            raise ValueError(f"No tier {tier} id for ingredient family {family_id}")
-        concrete_id = output_row["id"]
-        held_by_character = (character_item_balances or {}).get(concrete_id, 0)
-        held_by_player = (player_item_balances or {}).get(concrete_id, 0)
-        if held_by_character + held_by_player < qty:
-            return None
-        from_character = min(held_by_character, qty)
-        from_player = qty - from_character
-        return {
-            "held": False,
-            "bucket": "itemBalances",
-            "concrete_id": concrete_id,
-            "from_character": from_character,
-            "from_player": from_player,
-        }
-
-    if category not in ("raw", "processed"):
+    elif category not in ("raw", "processed"):
         raise ValueError(f"Unsupported ingredient category: {category}")
-    row = items_catalog.FINAL_ITEM_ROWS_BY_FAMILY_TIER.get((family_id, tier))
-    if row is None:
-        raise ValueError(f"No tier {tier} id for ingredient family {family_id}")
-    concrete_id = row["id"]
 
-    held_by_character = (character_item_balances or {}).get(concrete_id, 0)
-    held_by_player = (player_item_balances or {}).get(concrete_id, 0)
-    if held_by_character + held_by_player < qty:
+    # Consumed final item, or a raw/processed material: the exact tier or
+    # any higher one (see _ingredient_tier_ids / _take_across_tiers).
+    ids = _ingredient_tier_ids(family_id, tier)
+    parts = _take_across_tiers(ids, qty, character_item_balances or {}, player_item_balances or {})
+    if parts is None:
         return None
     if not consumed:
         return {"held": True}
-    from_character = min(held_by_character, qty)
-    from_player = qty - from_character
     return {
         "held": False,
         "bucket": "itemBalances",
-        "concrete_id": concrete_id,
-        "from_character": from_character,
-        "from_player": from_player,
+        # The exact-tier id (what an auto-crafted shortfall is made as).
+        "concrete_id": ids[0],
+        "parts": parts,
+        "from_character": sum(p[1] for p in parts),
+        "from_player": sum(p[2] for p in parts),
     }
 
 
@@ -1779,11 +1842,11 @@ def _resolve_recipe_ingredients(
             return None
 
         if not plan["held"]:
-            concrete_id = plan["concrete_id"]
-            if plan["from_character"]:
-                character_item_balance_decrements[concrete_id] = character_item_balance_decrements.get(concrete_id, 0) + plan["from_character"]
-            if plan["from_player"]:
-                player_item_balance_decrements[concrete_id] = player_item_balance_decrements.get(concrete_id, 0) + plan["from_player"]
+            for concrete_id, from_character, from_player in plan["parts"]:
+                if from_character:
+                    character_item_balance_decrements[concrete_id] = character_item_balance_decrements.get(concrete_id, 0) + from_character
+                if from_player:
+                    player_item_balance_decrements[concrete_id] = player_item_balance_decrements.get(concrete_id, 0) + from_player
         elif plan.get("move") is not None:
             instance_moves.append(plan["move"])
     return (
@@ -1997,8 +2060,11 @@ def _resolve_craft_chain(
             if row is None:
                 return None
             concrete_id = row["id"]
-            shortfall = target["qty"] * actual_count - (
-                (character_item_balances or {}).get(concrete_id, 0) + (player_item_balances or {}).get(concrete_id, 0)
+            # Everything usable already owned counts - the exact tier and
+            # any higher one; only the rest gets made (at the exact tier).
+            shortfall = target["qty"] * actual_count - sum(
+                (character_item_balances or {}).get(i, 0) + (player_item_balances or {}).get(i, 0)
+                for i in _ingredient_tier_ids(target["familyId"], tier)
             )
             if shortfall <= 0:
                 return None  # shouldn't happen (this option would already resolve above) - fail safe
@@ -2045,21 +2111,21 @@ def _resolve_craft_chain(
                 _reserve_tool_instances(character, player_items, [ingredient_move])
             continue
 
-        concrete_id = plan["concrete_id"]
         is_item_balance = plan["bucket"] == "itemBalances"
         char_bucket = character_item_balances if is_item_balance else character_resources
         player_bucket = player_item_balances if is_item_balance else player_resources
         decrement_bucket = player_item_balance_decrements if is_item_balance else player_resource_decrements
-        if plan["from_character"]:
-            char_bucket[concrete_id] = char_bucket.get(concrete_id, 0) - plan["from_character"]
-        if plan["from_player"]:
-            player_bucket[concrete_id] = player_bucket.get(concrete_id, 0) - plan["from_player"]
-            virtual_available = virtual_stock.get(concrete_id, 0)
-            from_virtual = min(plan["from_player"], virtual_available)
-            from_real = plan["from_player"] - from_virtual
-            virtual_stock[concrete_id] = virtual_available - from_virtual
-            if from_real:
-                decrement_bucket[concrete_id] = decrement_bucket.get(concrete_id, 0) + from_real
+        for concrete_id, from_character, from_player in plan["parts"]:
+            if from_character:
+                char_bucket[concrete_id] = char_bucket.get(concrete_id, 0) - from_character
+            if from_player:
+                player_bucket[concrete_id] = player_bucket.get(concrete_id, 0) - from_player
+                virtual_available = virtual_stock.get(concrete_id, 0)
+                from_virtual = min(from_player, virtual_available)
+                from_real = from_player - from_virtual
+                virtual_stock[concrete_id] = virtual_available - from_virtual
+                if from_real:
+                    decrement_bucket[concrete_id] = decrement_bucket.get(concrete_id, 0) + from_real
 
     steps.append({
         "familyId": family_id,
@@ -2335,9 +2401,10 @@ async def _start_craft(
     if active and datetime.fromisoformat(active["readyAt"]) > datetime.now(timezone.utc):
         return None
 
-    # Mutually exclusive with being out on a story - see set_in_adventure's
-    # own matching check (the other half of this).
-    if character.get("availability", {}).get("inAdventure", False):
+    # Crafting works from the character's active storage: home when free,
+    # camp while resting on an adventure - not at all while on the road.
+    storage_type = _craft_storage_type(character)
+    if storage_type is None:
         return None
 
     # Can't craft while away foraging (see backend.foraging).
@@ -2345,7 +2412,10 @@ async def _start_craft(
     if active_forage and datetime.fromisoformat(active_forage["readyAt"]) > datetime.now(timezone.utc):
         return None
 
-    home_sc_doc = await db.character_homes.find_one({"address": address, "characterId": character_id})
+    # The active storage's instances join the character's own for the tool
+    # lookup (CRAFT_HELD_LOCATIONS); its stacked balances, plus what the
+    # character carries in backpack/saddlepack/cart, are the stock.
+    home_sc_doc = await _storage_coll(db, storage_type).find_one(_storage_filter(address, character_id))
     character["gear"]["items"] = character.get("gear", {}).get("items", []) + (home_sc_doc or {}).get("items", [])
 
     # Resolves the WHOLE ingredient tree in one action - for each
@@ -2370,9 +2440,18 @@ async def _start_craft(
             "items": [dict(instance) for instance in character.get("gear", {}).get("items", [])],
         },
     }
-    vault_sc = await _get_vault(db, address)
-    working_player_item_balances = dict(vault_sc["itemBalances"])
-    working_player_items = [dict(instance) for instance in vault_sc["items"]]
+    storage_balances = dict((home_sc_doc or {}).get("itemBalances", {}))
+    carried_balances = {
+        bucket: dict(((character.get("gear") or {}).get("itemBalances") or {}).get(bucket) or {})
+        for bucket in CRAFT_CARRIED_BUCKETS
+    }
+    working_player_item_balances = dict(storage_balances)
+    for bucket_balances in carried_balances.values():
+        for concrete_id, qty in bucket_balances.items():
+            working_player_item_balances[concrete_id] = working_player_item_balances.get(concrete_id, 0) + qty
+    # No shared-vault instances: tool items come from storage or the
+    # character itself (merged into gear.items above).
+    working_player_items: List[dict] = []
 
     chain = _resolve_craft_chain(
         family_id, tier, count, working_character,
@@ -2386,45 +2465,39 @@ async def _start_craft(
     top_step = steps[-1]
     actual_count = top_step["count"]
 
-    # Only the shortfall drawn from the player's shared vault actually
-    # moves - whatever was already on the character (character_decrements)
-    # stays put until finish_craft consumes it.
+    # Everything the chain takes (ingredients and flat-balance tools) moves
+    # into the character's crafting staging area: from the active storage
+    # first, then from the carried backpack/saddlepack/cart balances.
     match_filter: Dict = {"address": address}
     elem_match: Dict = {"id": character_id}
     inc_ops: Dict[str, int] = {}
 
-    # Check vault has sufficient balance before attempting atomic players update.
-    vault_balances_sc = vault_sc["itemBalances"]
-    for concrete_id, qty in player_decrements.items():
-        if vault_balances_sc.get(concrete_id, 0) < qty:
-            return None
-        inc_ops[f"crafting.itemBalances.{concrete_id}"] = inc_ops.get(
-            f"crafting.itemBalances.{concrete_id}", 0
-        ) + qty
-    for concrete_id, qty in player_item_balance_decrements.items():
-        if vault_balances_sc.get(concrete_id, 0) < qty:
-            return None
-        inc_ops[f"crafting.itemBalances.{concrete_id}"] = inc_ops.get(
-            f"crafting.itemBalances.{concrete_id}", 0
-        ) + qty
     # A flat-balance tool (anvil, furnace, ...) each step in the chain
-    # borrowed - summed per concrete id rather than assuming at most one
-    # transfer the way a single-recipe craft always could, since more than
-    # one step can need the same tool id (see _resolve_craft_chain's own
-    # note on this - each such step already reserved a SEPARATE unit
-    # against its own working copy while planning, so this really is the
-    # true combined requirement, not a double-count).
+    # borrowed - summed per concrete id, since more than one step can need
+    # the same tool id (each reserved a SEPARATE unit while planning).
     tool_transfer_counts: Dict[str, int] = {}
     for step in steps:
         transfer_id = step["toolTransferId"]
         if transfer_id is not None:
             tool_transfer_counts[transfer_id] = tool_transfer_counts.get(transfer_id, 0) + 1
-    for transfer_id, transfer_count in tool_transfer_counts.items():
-        if vault_balances_sc.get(transfer_id, 0) < transfer_count:
-            return None
-        inc_ops[f"crafting.itemBalances.{transfer_id}"] = inc_ops.get(
-            f"crafting.itemBalances.{transfer_id}", 0
-        ) + transfer_count
+
+    take_totals: Dict[str, int] = {}
+    for source_dict in (player_decrements, player_item_balance_decrements, tool_transfer_counts):
+        for concrete_id, qty in source_dict.items():
+            take_totals[concrete_id] = take_totals.get(concrete_id, 0) + qty
+    split = _split_craft_take(take_totals, storage_balances, carried_balances)
+    if split is None:
+        return None
+    from_storage, from_carried = split
+    for concrete_id, qty in take_totals.items():
+        inc_ops[f"crafting.itemBalances.{concrete_id}"] = inc_ops.get(f"crafting.itemBalances.{concrete_id}", 0) + qty
+    carried_paths: List[str] = []
+    for bucket, taken in from_carried.items():
+        for concrete_id, qty in taken.items():
+            path = f"gear.itemBalances.{bucket}.{concrete_id}"
+            inc_ops[path] = -qty
+            elem_match[path] = {"$gte": qty}
+            carried_paths.append(path)
 
     # Raw-material crafting XP (see the README's "Crafting XP" section) -
     # summed across EVERY step in the chain, not just the top-level
@@ -2476,6 +2549,9 @@ async def _start_craft(
         # Empty for a chain that needed no auto-crafted intermediate at
         # all - the common, today-unchanged case.
         "chain": steps[:-1],
+        # Where everything came from - and where the output, borrowed tools
+        # and items go back to (finish_craft).
+        "storage": storage_type,
     }
 
     if not all_moves:
@@ -2493,16 +2569,11 @@ async def _start_craft(
         doc = await db.characters.find_one_and_update(match_filter, update, return_document=ReturnDocument.AFTER)
         if doc is None:
             return None
-        # Decrement vault balances after the players update.
-        vault_decrements: Dict[str, int] = {}
-        for cid, qty in player_decrements.items():
-            vault_decrements[cid] = vault_decrements.get(cid, 0) - qty
-        for cid, qty in player_item_balance_decrements.items():
-            vault_decrements[cid] = vault_decrements.get(cid, 0) - qty
-        for tid, tc in tool_transfer_counts.items():
-            vault_decrements[tid] = vault_decrements.get(tid, 0) - tc
-        if vault_decrements:
-            await _inc_vault_itembalances(db, address, vault_decrements)
+        if carried_paths:
+            await _prune_char_zeros(db, address, character_id, doc, carried_paths)
+        if from_storage:
+            await _inc_storage_balances(db, storage_type, address, character_id,
+                                        {cid: -qty for cid, qty in from_storage.items()})
         await _add_pc_status(db, address, character_id, "crafting")
         await _set_pc_timer(db, address, character_id, "craftingReadyAt", ready_at.isoformat())
         await _update_pc_active_craft(db, address, character_id, active_craft)
@@ -2513,10 +2584,9 @@ async def _start_craft(
     # instead of mixing with plain $, since a backpack/body-sourced move
     # also needs gear.items.$[itemN] (a nested array filter
     # on the SAME "characters" field) in the same update document.
-    # The vault-side sufficiency checks (vault.itemBalances.X >= qty)
-    # already sit in match_filter above - nothing about the character's
-    # own current balance needs preconditioning here, these are increments
-    # landing on the character, not decrements.
+    # The carried-balance sufficiency checks (gear.itemBalances.<bucket>.X
+    # >= qty) already sit in elem_match above; the active storage's own
+    # balances are decremented right after this update.
     set_ops: Dict = {"crafting.activeCraft": active_craft}
     set_ops.update(_profession_xp_grant_set_ops(character, xp_grants, ""))
     array_filters: List[Dict] = []
@@ -2525,15 +2595,17 @@ async def _start_craft(
     pool_push_instances: List[dict] = []
     home_pull_ids_sc: List[str] = []
     home_push_instances_sc: List[dict] = []
-    vault_items_sc = vault_sc["items"]
-    inventory_items_by_id = {i["instanceId"]: i for i in vault_items_sc}
+    # No shared-vault ("pool") instances any more - crafting only borrows
+    # from the active storage or the character itself.
+    vault_items_sc: List[dict] = []
+    inventory_items_by_id: Dict[str, dict] = {}
     home_items_by_id_sc = {i["instanceId"]: i for i in (home_sc_doc or {}).get("items", [])}
     for idx, (instance_id, source, _slot_ref, _wear) in enumerate(all_moves):
         if source == "pool":
             pool_pull_ids.append(instance_id)
             src_instance = inventory_items_by_id[instance_id]
             pool_push_instances.append({**src_instance, "location": "crafting", "slotRef": []})
-        elif source == "home":
+        elif source in ("home", "camp"):
             home_pull_ids_sc.append(instance_id)
             src_instance = home_items_by_id_sc[instance_id]
             home_push_instances_sc.append({**src_instance, "location": "crafting", "slotRef": []})
@@ -2561,7 +2633,7 @@ async def _start_craft(
     else:
         push_to_gear = []
     if home_pull_ids_sc:
-        await _pull_storage_items(db, "home", address, character_id, home_pull_ids_sc)
+        await _pull_storage_items(db, storage_type, address, character_id, home_pull_ids_sc)
         push_to_gear.extend(home_push_instances_sc)
     if push_to_gear:
         update.setdefault("$push", {})
@@ -2573,20 +2645,52 @@ async def _start_craft(
     )
     if doc is None:
         return None
-    # Decrement vault balances after the players update.
-    vault_decrements_am: Dict[str, int] = {}
-    for cid, qty in player_decrements.items():
-        vault_decrements_am[cid] = vault_decrements_am.get(cid, 0) - qty
-    for cid, qty in player_item_balance_decrements.items():
-        vault_decrements_am[cid] = vault_decrements_am.get(cid, 0) - qty
-    for tid, tc in tool_transfer_counts.items():
-        vault_decrements_am[tid] = vault_decrements_am.get(tid, 0) - tc
-    if vault_decrements_am:
-        await _inc_vault_itembalances(db, address, vault_decrements_am)
+    if carried_paths:
+        await _prune_char_zeros(db, address, character_id, doc, carried_paths)
+    if from_storage:
+        await _inc_storage_balances(db, storage_type, address, character_id,
+                                    {cid: -qty for cid, qty in from_storage.items()})
     await _add_pc_status(db, address, character_id, "crafting")
     await _set_pc_timer(db, address, character_id, "craftingReadyAt", ready_at.isoformat())
     await _update_pc_active_craft(db, address, character_id, active_craft)
     return await _build_player(db, address)
+
+
+def _craft_return_storage(character: dict) -> Optional[str]:
+    """Where a craft's output, flat tools and borrowed storage items go back
+    to: the storage it was started from (activeCraft.storage) - or home when
+    a camp craft outlives its adventure (the camp is gone). None for a craft
+    started before crafting worked from storage (it returns to the vault)."""
+    active = (character.get("crafting") or {}).get("activeCraft") or {}
+    storage = active.get("storage")
+    if storage == "camp" and not (character.get("availability") or {}).get("inAdventure", False):
+        return "home"
+    return storage
+
+
+async def _return_craft_balances(db, address: str, character_id: str, storage: Optional[str],
+                                 amounts: Dict[str, int]) -> None:
+    if not amounts:
+        return
+    if storage:
+        await _inc_storage_balances(db, storage, address, character_id, amounts)
+    else:
+        await _inc_vault_itembalances(db, address, amounts)
+
+
+async def _return_craft_items(db, address: str, character_id: str, storage: Optional[str],
+                              items: List[dict]) -> None:
+    if not items:
+        return
+    if storage:
+        await _push_storage_items(db, storage, address, character_id,
+                                  [{**i, "location": storage, "slotRef": []} for i in items])
+    else:
+        await db.player_vaults.update_one(
+            {"address": address},
+            {"$push": {"items": {"$each": [{**i, "location": "pool", "slotRef": []} for i in items]}}},
+            upsert=True,
+        )
 
 
 async def _finish_craft_step(address: str, character_id: str, step: dict) -> bool:
@@ -2628,6 +2732,7 @@ async def _finish_craft_step(address: str, character_id: str, step: dict) -> boo
 
     home_fcs_doc = await db.character_homes.find_one({"address": address, "characterId": character_id})
     character["gear"]["items"] = character.get("gear", {}).get("items", []) + (home_fcs_doc or {}).get("items", [])
+    return_storage = _craft_return_storage(character)
 
     resolved = _resolve_recipe_ingredients(
         recipe, tier, {}, {}, character, count,
@@ -2696,7 +2801,7 @@ async def _finish_craft_step(address: str, character_id: str, step: dict) -> boo
                 await _prune_char_zeros(db, address, character_id, result,
                     [f"crafting.itemBalances.{cid}" for cid in all_char_decremented])
             if tool_transfer_id is not None:
-                await _inc_vault_itembalances(db, address, {tool_transfer_id: 1})
+                await _return_craft_balances(db, address, character_id, return_storage, {tool_transfer_id: 1})
         return result is not None
 
     # At least one instance-tracked tool was borrowed for this step -
@@ -2762,14 +2867,14 @@ async def _finish_craft_step(address: str, character_id: str, step: dict) -> boo
             {"gear.items": {"$elemMatch": {"instanceId": iid, "location": "crafting"}}}
             for iid in instance_ids
         ]
-    elif source == "home":
+    elif source in ("home", "camp"):
         instance_ids = [bi["instanceId"] for bi in borrowed_instances]
         for bi in borrowed_instances:
             iid = bi["instanceId"]
             wear = bi.get("wear", count)
             new_quality = held_by_id[iid].get("quality", 0) - wear
             if new_quality > 0:
-                returned_to_home_fcs.append({**held_by_id[iid], "location": "home", "slotRef": [], "quality": new_quality})
+                returned_to_home_fcs.append({**held_by_id[iid], "quality": new_quality})
             else:
                 broken_ids.append(iid)
         update["$pull"] = {"gear.items": {"instanceId": {"$in": instance_ids}}}
@@ -2816,7 +2921,7 @@ async def _finish_craft_step(address: str, character_id: str, step: dict) -> boo
             [f"crafting.itemBalances.{cid}" for cid in all_char_decremented], array_filter=True)
     # Return tool and instances to vault after the players update.
     if tool_transfer_id is not None:
-        await _inc_vault_itembalances(db, address, {tool_transfer_id: 1})
+        await _return_craft_balances(db, address, character_id, return_storage, {tool_transfer_id: 1})
     if returned_to_vault:
         await db.player_vaults.update_one(
             {"address": address},
@@ -2824,14 +2929,14 @@ async def _finish_craft_step(address: str, character_id: str, step: dict) -> boo
             upsert=True,
         )
     if returned_to_home_fcs:
-        await _push_storage_items(db, "home", address, character_id, returned_to_home_fcs)
+        await _return_craft_items(db, address, character_id, return_storage or source, returned_to_home_fcs)
 
     # A backpack/body-sourced release with BOTH a broken and a surviving
     # instance needed the $pull above to go out on its own (same reasoning
     # as finish_craft's own top-level release below) - restore the
     # survivor(s) now, in a second call, with nothing left in the array to
     # conflict with.
-    if source not in ("pool", "home") and broken_ids and surviving:
+    if source not in ("pool", "home", "camp") and broken_ids and surviving:
         survivor_array_filters: List[Dict] = []
         survivor_set_ops: Dict = {}
         survivor_inc_ops: Dict[str, int] = {}
@@ -2965,6 +3070,9 @@ async def _finish_craft(address: str, character_id: str) -> Optional[Player]:
 
     home_fc_doc = await db.character_homes.find_one({"address": address, "characterId": character_id})
     character["gear"]["items"] = character.get("gear", {}).get("items", []) + (home_fc_doc or {}).get("items", [])
+    # The output, flat tools and borrowed storage items go back to the
+    # storage the craft was started from (None: an older craft - the vault).
+    return_storage = _craft_return_storage(character)
 
     # Everything needed should already be sitting on the character (see
     # start_craft) - resolved purely against the character's own vault now,
@@ -3022,7 +3130,7 @@ async def _finish_craft(address: str, character_id: str) -> Optional[Player]:
                     "itemId": output_row["id"],
                     "familyId": family_id,
                     "quality": (family.quality_max or 0) * (2 ** (tier - 1)),
-                    "location": "pool",
+                    "location": return_storage or "pool",
                     "slotRef": [],
                     "createdAt": datetime.now(timezone.utc).isoformat(),
                 }
@@ -3084,14 +3192,8 @@ async def _finish_craft(address: str, character_id: str) -> Optional[Player]:
         # Return tool to vault and credit output after the players update.
         if tool_transfer_id is not None:
             vault_inc_fc[tool_transfer_id] = vault_inc_fc.get(tool_transfer_id, 0) + 1
-        if vault_inc_fc:
-            await _inc_vault_itembalances(db, address, vault_inc_fc)
-        if vault_push_items_fc:
-            await db.player_vaults.update_one(
-                {"address": address},
-                {"$push": {"items": {"$each": vault_push_items_fc}}},
-                upsert=True,
-            )
+        await _return_craft_balances(db, address, character_id, return_storage, vault_inc_fc)
+        await _return_craft_items(db, address, character_id, return_storage, vault_push_items_fc)
         await _remove_pc_status(db, address, character_id, "crafting")
         await _set_pc_timer(db, address, character_id, "craftingReadyAt", None)
         await _update_pc_active_craft(db, address, character_id, None)
@@ -3172,7 +3274,7 @@ async def _finish_craft(address: str, character_id: str) -> Optional[Player]:
             {"gear.items": {"$elemMatch": {"instanceId": iid, "location": "crafting"}}}
             for iid in instance_ids
         ]
-    elif source == "home":
+    elif source in ("home", "camp"):
         instance_ids = [bi["instanceId"] for bi in borrowed_instances]
         returned_to_home: List[dict] = []
         for bi in borrowed_instances:
@@ -3180,7 +3282,7 @@ async def _finish_craft(address: str, character_id: str) -> Optional[Player]:
             wear = bi.get("wear", count)
             new_quality = held_by_id[iid].get("quality", 0) - wear
             if new_quality > 0:
-                returned_to_home.append({**held_by_id[iid], "location": "home", "slotRef": [], "quality": new_quality})
+                returned_to_home.append({**held_by_id[iid], "quality": new_quality})
             else:
                 broken_ids.append(iid)
         update["$pull"] = {"gear.items": {"instanceId": {"$in": instance_ids}}}
@@ -3253,7 +3355,7 @@ async def _finish_craft(address: str, character_id: str) -> Optional[Player]:
     # instance needed the $pull above to go out on its own (see the
     # comment there) - restore the survivor(s) now, in a second call, with
     # nothing left in the array to conflict with.
-    if source not in ("pool", "home") and broken_ids and surviving:
+    if source not in ("pool", "home", "camp") and broken_ids and surviving:
         survivor_array_filters: List[Dict] = []
         survivor_set_ops: Dict = {}
         survivor_inc_ops: Dict[str, int] = {}
@@ -3275,19 +3377,19 @@ async def _finish_craft(address: str, character_id: str) -> Optional[Player]:
             return None
 
     # Return surviving home-sourced tools to character_homes.
-    if source == "home" and returned_to_home:
-        await _push_storage_items(db, "home", address, character_id, returned_to_home)
+    if source in ("home", "camp") and returned_to_home:
+        await _return_craft_items(db, address, character_id, return_storage or source, returned_to_home)
 
     # Return tool to vault and credit output to vault after the players update.
     if tool_transfer_id is not None:
         vault_inc_fc2[tool_transfer_id] = vault_inc_fc2.get(tool_transfer_id, 0) + 1
-    push_to_vault_fc2 = returned_fc2 + vault_push_items_fc2
-    if vault_inc_fc2:
-        await _inc_vault_itembalances(db, address, vault_inc_fc2)
-    if push_to_vault_fc2:
+    await _return_craft_balances(db, address, character_id, return_storage, vault_inc_fc2)
+    await _return_craft_items(db, address, character_id, return_storage, vault_push_items_fc2)
+    # Tools borrowed from the shared vault by an older craft go back there.
+    if returned_fc2:
         await db.player_vaults.update_one(
             {"address": address},
-            {"$push": {"items": {"$each": push_to_vault_fc2}}},
+            {"$push": {"items": {"$each": returned_fc2}}},
             upsert=True,
         )
     await _remove_pc_status(db, address, character_id, "crafting")

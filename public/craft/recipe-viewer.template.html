@@ -63,6 +63,14 @@
     font-size: 13px;
   }
   select { min-width: 340px; max-width: 100%; }
+  /* All / Craftable / My blueprints - only on the crafting page
+     (?filters=1); character creation always lists everything. */
+  .listFilters { display: flex; flex-wrap: wrap; gap: 6px 10px; margin-bottom: 10px; font-size: 13px; }
+  .listFilters[hidden] { display: none; }
+  .listFilters label { display: inline-flex; align-items: center; gap: 6px; cursor: pointer; color: var(--text); }
+  .listFilters input[type="radio"] { padding: 0; margin: 0; accent-color: var(--accent); cursor: pointer; }
+  /* Owned at a higher tier - usable in place of the selected tier. */
+  .higherTier { color: #b98cff; }
   input[type="text"] { min-width: 200px; max-width: 100%; }
   .layout {
     display: grid;
@@ -451,6 +459,12 @@
     </table>
   </details>
 
+  <div class="listFilters" id="listFilters" role="radiogroup" aria-label="Show recipes" hidden>
+    <label><input type="radio" name="listFilter" value="all" checked> All</label>
+    <label><input type="radio" name="listFilter" value="craftable"> Craftable</label>
+    <label><input type="radio" name="listFilter" value="blueprints"> My blueprints</label>
+  </div>
+
   <div class="toolbar">
     <input type="text" id="filterBox" placeholder="filter list...">
     <select id="recipeSelect"></select>
@@ -594,6 +608,45 @@ function ownsFamily(ownedSet, famId, requiredTier) {
 function toolIds(tool) {
   if (!tool) return [];
   return Array.isArray(tool) ? tool : [tool];
+}
+
+// Item ids that can fill a `famId` requirement at `tier`: the exact tier
+// first, then every higher one - a higher-tier material (raw, processed or
+// a consumed final item) can always stand in for a lower-tier requirement;
+// the selected tier, the lowest allowed, decides the outcome. Mirrors
+// backend.players._ingredient_tier_ids.
+function tierIdsFrom(famId, tier) {
+  const f = families[famId];
+  if (!f) return [];
+  return f.tiers.filter(t => t && t.tier >= tier).sort((a, b) => a.tier - b.tier).map(t => t.id);
+}
+
+// Total usable for `famId` at `tier` in `balances` (exact + higher tiers).
+function usableAcrossTiers(balances, famId, tier) {
+  return tierIdsFrom(famId, tier).reduce((sum, id) => sum + (balances[id] || 0), 0);
+}
+
+// While set (see getCurrentSelectionHigherTierUse), every take from a tier
+// above the one required is recorded here: {itemId: {id, name, tier, qty}}.
+let higherTierUse = null;
+
+// Takes `qty` out of `balances`, exact tier first, then the next ones up
+// (mirrors backend.players._take_across_tiers).
+function takeAcrossTiers(balances, famId, tier, qty) {
+  let remaining = qty;
+  const f = families[famId];
+  for (const id of tierIdsFrom(famId, tier)) {
+    if (remaining <= 0) break;
+    const take = Math.min(balances[id] || 0, remaining);
+    balances[id] = (balances[id] || 0) - take;
+    remaining -= take;
+    const entry = f && f.tiers.find(t => t && t.id === id);
+    if (higherTierUse && take > 0 && entry && entry.tier > tier) {
+      const used = higherTierUse[id] || { id, name: famLabel(famId, entry.tier), tier: entry.tier, qty: 0 };
+      used.qty += take;
+      higherTierUse[id] = used;
+    }
+  }
 }
 
 // True if the player owns at least one of the tool's alternatives (or
@@ -844,6 +897,22 @@ window.isCurrentSelectionCraftable = function (count) {
   return resolveChainPlan(famId, tier, count, { ...inventory }, { ...(itemBalances || {}) }, true, true) !== null;
 };
 
+// The higher-tier materials crafting `count` of the current selection would
+// use in place of the selected tier ([{id, name, tier, qty}], empty when it
+// only needs the exact tier or can't be crafted at all) - the embedding
+// crafting page asks the player before spending them.
+window.getCurrentSelectionHigherTierUse = function (count) {
+  count = count || 1;
+  if (!select.value || !inventory || !ownedTools || !ownedBlueprints) return [];
+  higherTierUse = {};
+  try {
+    const plan = resolveChainPlan(select.value, currentTier(), count, { ...inventory }, { ...(itemBalances || {}) }, true, true);
+    return plan ? Object.values(higherTierUse).sort((a, b) => a.tier - b.tier || a.name.localeCompare(b.name)) : [];
+  } finally {
+    higherTierUse = null;
+  }
+};
+
 // These 2 constants MUST be kept in sync with backend.players' own
 // CRAFT_SECONDS_PER_RAW/CRAFT_BLUEPRINT_MAX_SECONDS - update both
 // together if either changes.
@@ -1024,7 +1093,77 @@ function recipeUses(recipeId, famId) {
   return toolIds(recipe.tool).includes(famId);
 }
 
+// --- List filter (All / Craftable / My blueprints) ---
+// Only shown on the crafting page (?filters=1); elsewhere always "all".
+const showListFilters = !!new URLSearchParams(window.location.search).get("filters");
+if (showListFilters) document.getElementById("listFilters").hidden = false;
+
+function listFilter() {
+  if (!showListFilters) return "all";
+  const checked = document.querySelector('input[name="listFilter"]:checked');
+  return checked ? checked.value : "all";
+}
+
+// Recipes whose blueprint the character has learned (any tier), plus every
+// recipe that uses one of those items.
+function blueprintFamilies() {
+  const known = new Set();
+  if (!ownedBlueprints) return known;
+  for (const id of recipeFamIds) {
+    const bp = recipes[id] && recipes[id].blueprintFamilyId;
+    if (bp && ownsFamily(ownedBlueprints, bp, 1)) known.add(id);
+  }
+  const all = new Set(known);
+  for (const id of recipeFamIds) {
+    for (const k of known) {
+      if (recipeUses(id, k)) { all.add(id); break; }
+    }
+  }
+  return all;
+}
+
+function passesListFilter(famId, tier, mode, bpSet) {
+  if (mode === "craftable") {
+    if (!recipes[famId] || !inventory || !ownedTools || !ownedBlueprints) return false;
+    return resolveChainPlan(famId, tier, 1, { ...inventory }, { ...(itemBalances || {}) }, true, true) !== null;
+  }
+  if (mode === "blueprints") return bpSet.has(famId);
+  return true;
+}
+
 function populateSelect(filterText, tier) {
+  const prev = select.value;
+  populateSelectBase(filterText, tier);
+  const mode = listFilter();
+  if (mode === "all") return;
+  const bpSet = mode === "blueprints" ? blueprintFamilies() : null;
+  for (const opt of [...select.options]) {
+    if (!passesListFilter(opt.value, tier, mode, bpSet)) opt.remove();
+  }
+  for (const og of [...select.querySelectorAll("optgroup")]) {
+    if (!og.children.length) og.remove();
+  }
+  if ([...select.options].some(o => o.value === prev)) select.value = prev;
+}
+
+function setTier(tier) {
+  document.querySelectorAll(".tierButton").forEach(b => {
+    b.classList.toggle("active", parseInt(b.dataset.tier, 10) === tier);
+  });
+  tierSelect.value = String(tier);
+}
+
+// Switching the filter always starts from T1, with the search text cleared.
+document.querySelectorAll('input[name="listFilter"]').forEach(radio => {
+  radio.addEventListener("change", () => {
+    setTier(1);
+    filterBox.value = "";
+    populateSelect(filterBox.value, currentTier());
+    render(select.value, currentTier());
+  });
+});
+
+function populateSelectBase(filterText, tier) {
   const prev = select.value;
   select.innerHTML = "";
   const ft = (filterText || "").toLowerCase();
@@ -1502,9 +1641,10 @@ function resolveChainPlan(famId, tier, count, workingInventory, workingItemBalan
       if (!item) continue;
       const balances = opt.category === "final" ? workingItemBalances : workingInventory;
       const qty = opt.qty * needed;
-      const have = hasContext ? balances[item.id] || 0 : Infinity;
+      // The exact tier or any higher one counts (see tierIdsFrom).
+      const have = hasContext ? usableAcrossTiers(balances, opt.familyId, tier) : Infinity;
       if (have >= qty) {
-        if (hasContext) balances[item.id] = have - qty;
+        if (hasContext) takeAcrossTiers(balances, opt.familyId, tier, qty);
         resolved = true;
         break;
       }
@@ -1519,7 +1659,7 @@ function resolveChainPlan(famId, tier, count, workingInventory, workingItemBalan
         // elsewhere in the tree to also draw from (same "no leftover
         // virtual stock persists" simplification the backend's own
         // _resolve_craft_chain makes, see its own docstring).
-        if (hasContext) balances[item.id] = 0;
+        if (hasContext) takeAcrossTiers(balances, opt.familyId, tier, have);
         resolved = true;
         break;
       }
@@ -1592,11 +1732,21 @@ function renderTable(tableId, totals, tier, showMissing, checkBlueprint) {
       // The character's own inventory is keyed by concrete item id (e.g.
       // "iron_ore"), not family id - resolve the family to whichever item
       // sits at the currently-selected tier to look it up.
+      // Owned at the selected tier, then (purple) what's owned at higher
+      // tiers that can be used instead, then what's needed: "3 +5 / 4".
       const f = families[famId];
       const itemId = f && f.tiers[tier - 1] ? f.tiers[tier - 1].id : null;
       const have = itemId ? inventory[itemId] || 0 : 0;
-      const td = el("td", "n", have + " / " + qty);
-      if (have >= qty) td.classList.add("have-enough");
+      const higher = itemId ? usableAcrossTiers(inventory, famId, tier) - have : 0;
+      const td = el("td", "n");
+      td.appendChild(document.createTextNode(String(have)));
+      if (higher > 0) {
+        const extra = el("span", "higherTier", " +" + higher);
+        extra.title = "owned at a higher tier - usable here";
+        td.appendChild(extra);
+      }
+      td.appendChild(document.createTextNode(" / " + qty));
+      if (have + higher >= qty) td.classList.add("have-enough");
       tr.appendChild(td);
     } else {
       tr.appendChild(el("td", "n", String(qty)));
@@ -1704,7 +1854,10 @@ window.addEventListener("message", (event) => {
   // whatever ownedTools alone now is, same as before this existed.
   vaultTools = msg.vaultTools ? new Set(msg.vaultTools) : null;
   ownedToolsWithVault = ownedTools ? new Set([...ownedTools, ...(vaultTools || [])]) : null;
+  // What's craftable / which blueprints are known may have changed.
+  if (listFilter() !== "all") populateSelect(filterBox.value, currentTier());
   if (select.value) render(select.value, currentTier());
+  else render("", currentTier());
 });
 </script>
 </body>

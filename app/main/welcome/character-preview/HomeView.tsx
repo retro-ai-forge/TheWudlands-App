@@ -76,6 +76,7 @@ export function HomeView({
   character,
   onPlayerDataUpdated,
   onExitHome,
+  onOpenCrafting,
   footerVisible = false,
   storageType = "home",
 }: {
@@ -86,6 +87,8 @@ export function HomeView({
    * footer bar (tab row + its own exit.webp close button) while this
    * view is open, so this is the only way out of it once opened. */
   onExitHome: () => void;
+  /** Opens the crafting page - the workbench left of the tent. */
+  onOpenCrafting?: () => void;
   footerVisible?: boolean;
   storageType?: "home" | "camp";
 }) {
@@ -355,12 +358,9 @@ export function HomeView({
           if (!balanceTotals.has(key)) instanceIds.push(key);
         } else {
           const id = stripStackSuffix(raw);
-          const info = mergedCatalogTierInfo[id];
-          const stackSize = Math.max(1, info?.stackSize ?? 1);
-          const qty = homeCombined[id] ?? 0;
-          const hash = raw.lastIndexOf("#");
-          const tileIdx = hash === -1 ? 0 : parseInt(raw.slice(hash + 1), 10);
-          const itemsInTile = Math.max(0, Math.min(stackSize, qty - tileIdx * stackSize));
+          // The grid shows a whole stack as ONE tile (skipItemStackSplit), so a
+          // marked tile means all of it, not just one stack-size's worth.
+          const itemsInTile = homeCombined[id] ?? 0;
           if (itemsInTile > 0) balanceTotals.set(id, (balanceTotals.get(id) ?? 0) + itemsInTile);
         }
       }
@@ -395,12 +395,9 @@ export function HomeView({
       if (isInstance) {
         instancesSeen.add(id);
       } else {
-        const info = mergedCatalogTierInfo[id];
-        const stackSize = Math.max(1, info?.stackSize ?? 1);
-        const qty = homeCombined[id] ?? 0;
-        const hash = raw.lastIndexOf("#");
-        const tileIdx = hash === -1 ? 0 : parseInt(raw.slice(hash + 1), 10);
-        const itemsInTile = Math.max(0, Math.min(stackSize, qty - tileIdx * stackSize));
+        // The grid shows a whole stack as ONE tile (skipItemStackSplit), so a
+        // marked tile means all of it, not just one stack-size's worth.
+        const itemsInTile = homeCombined[id] ?? 0;
         if (itemsInTile > 0) balanceTotals.set(id, (balanceTotals.get(id) ?? 0) + itemsInTile);
       }
     }
@@ -420,7 +417,7 @@ export function HomeView({
     if (lastResult) onPlayerDataUpdated?.(lastResult);
     setBatchBusy(false);
     exitSelectMode();
-  }, [batchBusy, selectedIds, homeInstanceLookupIds, homeCombined, homeResourceBalances, resourceTierInfo, mergedCatalogTierInfo, character.id, onPlayerDataUpdated, exitSelectMode]);
+  }, [batchBusy, selectedIds, homeInstanceLookupIds, homeCombined, homeResourceBalances, resourceTierInfo, character.id, onPlayerDataUpdated, exitSelectMode]);
 
   return (
     <div className={styles.panel} onContextMenu={(e) => e.preventDefault()}>
@@ -784,6 +781,25 @@ export function HomeView({
                 : `${styles.campfireStageIcon} ${styles.campfireStageIconEmpty}`
             }
           />
+          {/* The workbench, left of the tent (the chopping block's
+              counterpart on the right) - opens the crafting page, which
+              works from this storage (home, or the camp while resting). */}
+          {onOpenCrafting && (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src="/images/items/workbench_t1.png"
+              alt=""
+              role="button"
+              tabIndex={0}
+              title="Crafting"
+              aria-label="Crafting"
+              onClick={() => { exitSelectMode(); onOpenCrafting(); }}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === " ") { exitSelectMode(); onOpenCrafting(); }
+              }}
+              className={styles.homeWorkbenchIcon}
+            />
+          )}
           {/* Bound to the tent group itself (like .campfireStageFireIcon
               above), not the screen edge - sits right of the tent, easing
               only a little further out on wider screens instead of

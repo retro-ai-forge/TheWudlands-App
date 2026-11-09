@@ -12,6 +12,7 @@ import { BodyTab } from "./BodyTab";
 import { StoriesTab, REST_LOCATIONS } from "./StoriesTab";
 import { VaultTab, type ItemInstance, type RawPlayerData } from "./VaultTab";
 import { HomeView } from "./HomeView";
+import { CraftingView, useCraftAutoFinish } from "./CraftingView";
 import { TabErrorBoundary } from "./TabErrorBoundary";
 
 export type TabKey = "stats" | "body" | "home" | "vault" | "stories";
@@ -43,10 +44,6 @@ const TABS: { key: TabKey; label: string; icon: string; secondIcon?: string; emo
 // fixed bottom-left.
 export function CharacterPreview({
   character,
-  playerResourceBalances,
-  playerTools,
-  playerItemBalances,
-  playerItems,
   onClose,
   onDeleted,
   onPortraitSaved,
@@ -55,10 +52,6 @@ export function CharacterPreview({
   openCraftingSectionByDefault = false,
 }: {
   character: SlotCharacterSummary;
-  playerResourceBalances: Record<string, number>;
-  playerTools: Record<string, number>;
-  playerItemBalances: Record<string, number>;
-  playerItems: ItemInstance[];
   onClose: () => void;
   onDeleted: () => void;
   onPortraitSaved: (character: SlotCharacterSummary) => void;
@@ -81,6 +74,10 @@ export function CharacterPreview({
   // tab) suspends .wizard's own vertical scroll so only its item grid
   // scrolls, horizontally. Cleared by switching to any of the 5 real tabs.
   const [showHome, setShowHome] = useState(false);
+  // The crafting page, opened from the workbench in the home camp -
+  // shown instead of the home view while true, back to it on exit.
+  // Opened straight away when the soul slot clicked was busy crafting.
+  const [showCrafting, setShowCrafting] = useState(openCraftingSectionByDefault && !inAdventure);
   const [resting, setResting] = useState(character.availability.resting ?? false);
   const [restLocation, setRestLocation] = useState<string>(character.availability.restLocation ?? REST_LOCATIONS[0]);
 
@@ -99,6 +96,7 @@ export function CharacterPreview({
       }
       setShowHome(false);
     }
+    if (inAdventure) setShowCrafting(false);
   }, [inAdventure, resting]);
 
   // Lazy-loaded supplemental data — fetched on demand the first time the
@@ -110,22 +108,24 @@ export function CharacterPreview({
   // Trigger home fetch the first time the home view becomes visible.
   // When resting + home tab, load camp data instead.
   useEffect(() => {
-    const needsHome = showHome || (activeTab === "home" && !resting);
+    // The crafting page works from home storage when not on an adventure.
+    const needsHome = showHome || (activeTab === "home" && !resting) || (showCrafting && !inAdventure);
     if (!needsHome || homeData !== null) return;
     fetch(`/api/auth/me/characters/${character.id}/home`, { credentials: "include" })
       .then((res) => (res.ok ? res.json() : null))
       .then((data) => setHomeData(data ?? EMPTY_HOME))
       .catch(() => setHomeData(EMPTY_HOME));
-  }, [showHome, activeTab, homeData, character.id, resting]);
+  }, [showHome, activeTab, homeData, character.id, resting, showCrafting, inAdventure]);
 
   // Trigger camp fetch when resting and home tab is active.
   useEffect(() => {
-    if (!(activeTab === "home" && resting) || campData !== null) return;
+    // ...and from the camp while resting on one.
+    if (!((activeTab === "home" && resting) || (showCrafting && inAdventure && resting)) || campData !== null) return;
     fetch(`/api/auth/me/characters/${character.id}/camp`, { credentials: "include" })
       .then((res) => (res.ok ? res.json() : null))
       .then((data) => setCampData(data ?? EMPTY_HOME))
       .catch(() => setCampData(EMPTY_HOME));
-  }, [activeTab, resting, campData, character.id]);
+  }, [activeTab, resting, campData, character.id, showCrafting, inAdventure]);
 
   // Trigger vault fetch the first time the vault tab is opened.
   useEffect(() => {
@@ -162,6 +162,12 @@ export function CharacterPreview({
       },
     },
   };
+  // A finished craft is collected as soon as its timer runs out, on any
+  // page of this view (the crafting page shows what came out).
+  const { lastCraftResult, clearLastCraftResult } = useCraftAutoFinish(character, handlePlayerDataUpdated);
+  // Pages that fill the viewport themselves (no outer scroll, no padding).
+  const fillsViewport = !showCrafting && (showHome || activeTab === "home" || activeTab === "vault");
+
   const [isDeleting, setIsDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
   const [showDeleteWarning, setShowDeleteWarning] = useState(false);
@@ -193,10 +199,10 @@ export function CharacterPreview({
   // ensures the scroll reset happens before the first paint so there's no
   // visible flash of the old scroll position.
   useLayoutEffect(() => {
-    if (showHome || activeTab === "home" || activeTab === "vault") {
+    if (showCrafting || showHome || activeTab === "home" || activeTab === "vault") {
       wizardScrollRef.current?.scrollTo(0, 0);
     }
-  }, [activeTab, showHome]);
+  }, [activeTab, showHome, showCrafting]);
 
   // Standalone portrait editor, opened by clicking the face portrait on the
   // Stats tab. The draft lives in a ref rather than state - PortraitEditor's
@@ -311,7 +317,7 @@ export function CharacterPreview({
   return (
     <div
       className={`${styles.wizard} ${
-        showHome || activeTab === "home" || activeTab === "vault" ? "" : styles.wizardScrollable
+        fillsViewport ? "" : styles.wizardScrollable
       }`}
       ref={wizardScrollRef}
       onScroll={checkScrolledToEnd}
@@ -336,7 +342,11 @@ export function CharacterPreview({
                     ]
                       .filter(Boolean)
                       .join(" ")}
-                    onClick={() => !locked && setActiveTab(tab.key)}
+                    onClick={() => {
+                      if (locked) return;
+                      setShowCrafting(false);
+                      setActiveTab(tab.key);
+                    }}
                     aria-pressed={activeTab === tab.key}
                     aria-disabled={locked || undefined}
                     title={locked ? `${tab.label} (unavailable during adventure)` : tab.label}
@@ -374,16 +384,26 @@ export function CharacterPreview({
 
         <div className={tabStyles.nameRow}>
           <h1 className={tabStyles.name}>
-            {showHome ? `${character.firstName}'s Home` : activeTab === "home" && resting ? `Resting in ${restLocation.charAt(0).toUpperCase() + restLocation.slice(1)}` : activeTab === "home" ? `${character.firstName}'s Home` : activeTab === "vault" ? "Vault" : `${character.firstName} ${character.lastName}`}
+            {showCrafting ? `${character.firstName}'s Crafting` : showHome ? `${character.firstName}'s Home` : activeTab === "home" && resting ? `Resting in ${restLocation.charAt(0).toUpperCase() + restLocation.slice(1)}` : activeTab === "home" ? `${character.firstName}'s Home` : activeTab === "vault" ? "Vault" : `${character.firstName} ${character.lastName}`}
           </h1>
         </div>
 
-        <div className={showHome || activeTab === "home" || activeTab === "vault" ? tabStyles.mainColumn : `${tabStyles.mainColumn} ${tabStyles.mainColumnPadded}`}>
-          {showHome ? (
+        <div className={fillsViewport ? tabStyles.mainColumn : `${tabStyles.mainColumn} ${tabStyles.mainColumnPadded}`}>
+          {showCrafting ? (
+            <CraftingView
+              character={augmentedCharacter}
+              onPlayerDataUpdated={handlePlayerDataUpdated}
+              storageType={inAdventure ? "camp" : "home"}
+              lastCraftResult={lastCraftResult}
+              onCraftStarted={clearLastCraftResult}
+              onExit={() => setShowCrafting(false)}
+            />
+          ) : showHome ? (
             <HomeView
               character={augmentedCharacter}
               onPlayerDataUpdated={handlePlayerDataUpdated}
               onExitHome={() => setShowHome(false)}
+              onOpenCrafting={() => setShowCrafting(true)}
             />
           ) : (
             <>
@@ -396,10 +416,6 @@ export function CharacterPreview({
                 setShowBirthsignPopup(true);
               }}
               onPlayerDataUpdated={handlePlayerDataUpdated}
-              playerResourceBalances={playerResourceBalances}
-              playerTools={playerTools}
-              playerItemBalances={playerItemBalances}
-              playerItems={playerItems}
             />
           )}
           {activeTab === "body" && (
@@ -433,6 +449,7 @@ export function CharacterPreview({
               character={augmentedCharacter}
               onPlayerDataUpdated={handlePlayerDataUpdated}
               onExitHome={() => setActiveTab("body")}
+              onOpenCrafting={() => setShowCrafting(true)}
               footerVisible
             />
           )}
@@ -441,6 +458,7 @@ export function CharacterPreview({
               character={augmentedCharacter}
               onPlayerDataUpdated={handlePlayerDataUpdated}
               onExitHome={() => setActiveTab("body")}
+              onOpenCrafting={() => setShowCrafting(true)}
               footerVisible
               storageType="camp"
             />
@@ -450,7 +468,7 @@ export function CharacterPreview({
         </div>
       </div>
 
-      {!showHome && activeTab === "stats" && isScrolledToEnd && (
+      {!showHome && !showCrafting && activeTab === "stats" && isScrolledToEnd && (
         <button
           type="button"
           className={tabStyles.deleteButton}
@@ -548,19 +566,19 @@ export function CharacterPreview({
             <div className={tabStyles.deleteWarningActions}>
               <button
                 type="button"
-                className={tabStyles.deleteWarningCancel}
-                onClick={() => setShowDeleteWarning(false)}
-                disabled={isDeleting}
-              >
-                Cancel
-              </button>
-              <button
-                type="button"
                 className={tabStyles.deleteWarningContinue}
                 onClick={handleConfirmDelete}
                 disabled={isDeleting}
               >
                 {isDeleting ? "Deleting…" : "Continue"}
+              </button>
+              <button
+                type="button"
+                className={tabStyles.deleteWarningCancel}
+                onClick={() => setShowDeleteWarning(false)}
+                disabled={isDeleting}
+              >
+                Cancel
               </button>
             </div>
           </div>

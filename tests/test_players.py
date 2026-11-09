@@ -78,7 +78,7 @@ async def test_characters_persist_after_active_player_is_removed(mongodb_uri):
 async def _setup_craft_character(db, item_balances=None) -> str:
     """
     Fresh player + one character for the full-chain-auto-crafting tests
-    below - seeds the player's shared vault (player_vaults.itemBalances, the
+    below - seeds the character's home storage (character_homes.itemBalances, the
     unified pool for raw materials, processed materials and flat-count tools
     alike) that start_craft draws the shortfall from. Returns the new
     character's id.
@@ -87,8 +87,9 @@ async def _setup_craft_character(db, item_balances=None) -> str:
     await get_or_create_player(CRAFT_TEST_ADDRESS)
     player = await add_character(CRAFT_TEST_ADDRESS, Character(first_name="Crafter", last_name="Test"))
     character_id = player.characters[-1]["id"]
-    await db.player_vaults.update_one(
-        {"address": CRAFT_TEST_ADDRESS},
+    # Crafting works from the character's home storage (not the vault).
+    await db.character_homes.update_one(
+        {"address": CRAFT_TEST_ADDRESS, "characterId": character_id},
         {"$set": {"items": [], "itemBalances": item_balances or {}}},
         upsert=True,
     )
@@ -96,8 +97,10 @@ async def _setup_craft_character(db, item_balances=None) -> str:
 
 
 async def _vault_balances(db) -> dict:
-    vault = await db.player_vaults.find_one({"address": CRAFT_TEST_ADDRESS}) or {}
-    return vault.get("itemBalances", {})
+    """The home storage crafting draws from and returns to (name kept from
+    when crafting used the shared vault)."""
+    home = await db.character_homes.find_one({"address": CRAFT_TEST_ADDRESS}) or {}
+    return home.get("itemBalances", {})
 
 
 async def _character_doc(db, character_id: str) -> dict:
@@ -264,5 +267,39 @@ async def test_craft_chain_multi_count_only_manufactures_the_shortfall(mongodb_u
         char_doc = await _character_doc(db, character_id)
         assert char_doc["crafting"]["itemBalances"].get("refined_ore_1", 0) == 2
         assert char_doc["crafting"]["itemBalances"].get("ore_1", 0) == 20
+    finally:
+        await _purge_player(db, CRAFT_TEST_ADDRESS)
+
+
+@pytest.mark.asyncio
+async def test_craft_takes_from_home_then_backpack_and_finishes_into_home(mongodb_uri):
+    # crowbar = 2x refined_ore + anvil. One refined_ore at home, one in the
+    # backpack, the anvil at home; the vault holds plenty but is never used.
+    db = get_database()
+    try:
+        character_id = await _setup_craft_character(db, item_balances={"refined_ore_1": 1, "anvil_1": 1})
+        await db.characters.update_one(
+            {"address": CRAFT_TEST_ADDRESS, "id": character_id},
+            {"$set": {"gear.itemBalances.backpack": {"refined_ore_1": 1}}},
+        )
+        await db.player_vaults.update_one(
+            {"address": CRAFT_TEST_ADDRESS}, {"$set": {"itemBalances": {"refined_ore_1": 50}}}, upsert=True)
+
+        result = await start_craft(CRAFT_TEST_ADDRESS, character_id, "crowbar", 1, count=1)
+        assert result is not None
+        char_doc = await _character_doc(db, character_id)
+        assert char_doc["crafting"]["activeCraft"]["storage"] == "home"
+        assert char_doc["crafting"]["itemBalances"] == {"refined_ore_1": 2, "anvil_1": 1}
+        assert "refined_ore_1" not in (char_doc["gear"]["itemBalances"].get("backpack") or {})
+        assert await _vault_balances(db) == {}                     # home emptied
+        vault = await db.player_vaults.find_one({"address": CRAFT_TEST_ADDRESS})
+        assert vault["itemBalances"]["refined_ore_1"] == 50          # vault untouched
+
+        await _force_craft_ready(db, character_id)
+        assert await finish_craft(CRAFT_TEST_ADDRESS, character_id) is not None
+        assert await _vault_balances(db) == {"anvil_1": 1}           # the anvil came back
+        home = await db.character_homes.find_one({"address": CRAFT_TEST_ADDRESS, "characterId": character_id})
+        crowbar = next(i for i in home["items"] if i["itemId"] == "crowbar_1")   # tracked item: an instance
+        assert crowbar["location"] == "home" and crowbar["quality"] == 20
     finally:
         await _purge_player(db, CRAFT_TEST_ADDRESS)

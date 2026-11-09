@@ -7,14 +7,7 @@ import styles from "../../page.module.css";
 import { FeedbackForm } from "./FeedbackForm";
 import { SoulCreation } from "./soul-creation/SoulCreation";
 import { CharacterPreview, type TabKey } from "./character-preview/CharacterPreview";
-import type { ItemInstance } from "./character-preview/VaultTab";
 import type { SlotCharacterSummary, SlotCharacterPreview } from "./types";
-
-// Stable empty fallbacks so `vault?.x ?? EMPTY_X` returns the same reference
-// on every render when vault is absent, instead of a fresh `{}` / `[]` that
-// would re-trigger any effect depending on these props.
-const EMPTY_BALANCES: Record<string, number> = {};
-const EMPTY_ITEMS: ItemInstance[] = [];
 
 // SoulSlotGrid reads localStorage (a wallet's cached slot unlocks) during
 // its very first render. Server-rendered HTML can never see that cache, so
@@ -178,10 +171,6 @@ export function WelcomeView() {
     return (
       <CharacterPreview
         character={viewingCharacter}
-        playerResourceBalances={viewingCharacter.vault?.itemBalances ?? EMPTY_BALANCES}
-        playerTools={viewingCharacter.vault?.itemBalances ?? EMPTY_BALANCES}
-        playerItemBalances={viewingCharacter.vault?.itemBalances ?? EMPTY_BALANCES}
-        playerItems={viewingCharacter.vault?.items ?? EMPTY_ITEMS}
         initialTab={viewingTab}
         openCraftingSectionByDefault={viewingOpenCrafting}
         onPlayerDataUpdated={applyPlayerData}

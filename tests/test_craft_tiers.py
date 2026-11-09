@@ -1,0 +1,70 @@
+"""
+A higher-tier material can always fill a lower-tier requirement; the craft's
+own tier (the lowest allowed) decides the outcome. Exact tier is used first,
+then the next tiers up, the character's stock before the shared vault.
+"""
+
+import pytest
+
+from backend import players
+
+CROWBAR = players._RECIPES_BY_FAMILY["crowbar"]   # 2x refined_ore, anvil
+
+
+def _resolve(tier, character=None, player=None, count=1):
+    return players._resolve_recipe_ingredients(
+        CROWBAR, tier, {}, {}, character={}, count=count,
+        character_item_balances=character or {}, player_item_balances=player or {},
+    )
+
+
+def test_higher_tier_fills_a_lower_requirement():
+    resolved = _resolve(2, player={"refined_ore_4": 5})
+    assert resolved is not None
+    assert resolved[3] == {"refined_ore_4": 2}
+
+
+def test_exact_tier_first_then_the_lowest_higher_one():
+    resolved = _resolve(2, player={"refined_ore_2": 1, "refined_ore_3": 1, "refined_ore_5": 3}, count=2)
+    assert resolved[3] == {"refined_ore_2": 1, "refined_ore_3": 1, "refined_ore_5": 2}
+
+
+def test_character_stock_before_the_vault_at_each_tier():
+    resolved = _resolve(1, character={"refined_ore_1": 1}, player={"refined_ore_1": 5})
+    assert resolved[2] == {"refined_ore_1": 1} and resolved[3] == {"refined_ore_1": 1}
+
+
+def test_lower_tier_never_fills_a_higher_requirement():
+    assert _resolve(3, player={"refined_ore_2": 10}) is None
+
+
+def test_tier_ids_run_from_the_exact_tier_up():
+    assert players._ingredient_tier_ids("refined_ore", 5) == ["refined_ore_5", "refined_ore_6"]
+    with pytest.raises(ValueError):
+        players._ingredient_tier_ids("no_such_family", 1)
+
+
+# ── Where crafting takes from ──────────────────────────────────────────
+
+
+def test_craft_storage_is_home_or_resting_camp():
+    assert players._craft_storage_type({"availability": {"inAdventure": False}}) == "home"
+    assert players._craft_storage_type({"availability": {"inAdventure": True, "resting": True}}) == "camp"
+    assert players._craft_storage_type({"availability": {"inAdventure": True, "resting": False}}) is None
+
+
+def test_take_from_storage_first_then_carried_bags():
+    split = players._split_craft_take(
+        {"ore_1": 7, "anvil_1": 1},
+        {"ore_1": 3, "anvil_1": 1},
+        {"backpack": {"ore_1": 2}, "saddlepack": {}, "cart": {"ore_1": 5}},
+    )
+    assert split == ({"ore_1": 3, "anvil_1": 1}, {"backpack": {"ore_1": 2}, "cart": {"ore_1": 2}})
+    assert players._split_craft_take({"ore_1": 20}, {"ore_1": 3}, {"backpack": {"ore_1": 2}}) is None
+
+
+def test_camp_craft_returns_home_once_the_adventure_is_over():
+    camp = {"crafting": {"activeCraft": {"storage": "camp"}}}
+    assert players._craft_return_storage({**camp, "availability": {"inAdventure": True}}) == "camp"
+    assert players._craft_return_storage({**camp, "availability": {"inAdventure": False}}) == "home"
+    assert players._craft_return_storage({"crafting": {"activeCraft": {}}}) is None   # older craft: vault

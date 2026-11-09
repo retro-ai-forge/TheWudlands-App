@@ -166,15 +166,14 @@ export function selectionWeight(
       if (isInstance) {
         total += slotCost;
       } else {
+        // A marked tile is the whole stack (the grids don't split stacks):
+        // tiny items cost one slot per full stack, bigger ones per item.
         const stackSize = Math.max(1, info?.stackSize ?? 1);
         const qty = balances[id] ?? 0;
-        const hash = raw.lastIndexOf("#");
-        const tileIdx = hash === -1 ? 0 : parseInt(raw.slice(hash + 1), 10);
-        const itemsInTile = Math.max(0, Math.min(stackSize, qty - tileIdx * stackSize));
         const sizeClass = info?.sizeClass ?? "tiny";
         total += sizeClass === "tiny"
-          ? (itemsInTile > 0 ? slotCost : 0)
-          : itemsInTile * slotCost;
+          ? Math.ceil(qty / stackSize) * slotCost
+          : qty * slotCost;
       }
     }
   }
@@ -3333,7 +3332,7 @@ export function ItemDetailPopup({
               </div>
             )}
             {movable && source === "character" && !isInstance && (inStorage || location === "backpack" || location === "saddlepack" || location === "cart") && (
-              stackSize > 1 ? (
+              (stackSize > 1 || (!isInstance && owned > 1)) ? (
                 <>
                   {!!slotGroups.length && (
                     <div className={styles.itemPopupActions}>
@@ -3680,12 +3679,9 @@ export function VaultTab({
         } else if (playerItemLookupIds[id] !== undefined) {
           if (!balanceTotals.has(id)) instanceIds.push(id);
         } else {
-          const info = mergedCatalogTierInfo[id];
-          const stackSize = Math.max(1, info?.stackSize ?? 1);
-          const qty = playerItemsCombined[id] ?? 0;
-          const hash = stripped.lastIndexOf("#");
-          const tileIdx = hash === -1 ? 0 : parseInt(stripped.slice(hash + 1), 10);
-          const itemsInTile = Math.max(0, Math.min(stackSize, qty - tileIdx * stackSize));
+          // The grid shows a whole stack as ONE tile (skipItemStackSplit), so a
+          // marked tile means all of it, not just one stack-size's worth.
+          const itemsInTile = playerItemsCombined[id] ?? 0;
           if (itemsInTile > 0) balanceTotals.set(id, (balanceTotals.get(id) ?? 0) + itemsInTile);
         }
       }
@@ -3698,7 +3694,7 @@ export function VaultTab({
       setVaultBatchBusy(false);
       exitVaultSelectMode();
     },
-    [vaultBatchBusy, vaultSelectedIds, playerItemLookupIds, playerItemsCombined, playerResourceBalances, mergedCatalogTierInfo, character.id, onPlayerDataUpdated, exitVaultSelectMode]
+    [vaultBatchBusy, vaultSelectedIds, playerItemLookupIds, playerItemsCombined, playerResourceBalances, character.id, onPlayerDataUpdated, exitVaultSelectMode]
   );
 
   const batchDestroyVault = useCallback(async () => {
@@ -3717,12 +3713,9 @@ export function VaultTab({
       } else if (playerItemLookupIds[id] !== undefined) {
         instancesSeen.add(id);
       } else {
-        const info = mergedCatalogTierInfo[id];
-        const stackSize = Math.max(1, info?.stackSize ?? 1);
-        const qty = playerItemsCombined[id] ?? 0;
-        const hash = stripped.lastIndexOf("#");
-        const tileIdx = hash === -1 ? 0 : parseInt(stripped.slice(hash + 1), 10);
-        const itemsInTile = Math.max(0, Math.min(stackSize, qty - tileIdx * stackSize));
+        // The grid shows a whole stack as ONE tile (skipItemStackSplit), so a
+        // marked tile means all of it, not just one stack-size's worth.
+        const itemsInTile = playerItemsCombined[id] ?? 0;
         if (itemsInTile > 0) balanceTotals.set(id, (balanceTotals.get(id) ?? 0) + itemsInTile);
       }
     }
@@ -3740,7 +3733,7 @@ export function VaultTab({
     if (lastResult) onPlayerDataUpdated?.(lastResult);
     setVaultBatchBusy(false);
     exitVaultSelectMode();
-  }, [vaultBatchBusy, vaultSelectedIds, playerItemLookupIds, playerItemsCombined, playerResourceBalances, mergedCatalogTierInfo, character.id, onPlayerDataUpdated, exitVaultSelectMode]);
+  }, [vaultBatchBusy, vaultSelectedIds, playerItemLookupIds, playerItemsCombined, playerResourceBalances, character.id, onPlayerDataUpdated, exitVaultSelectMode]);
 
   return (
     <div className={`${styles.panel}${section === "vault" ? ` ${styles.panelNoScroll}` : ""}`} onContextMenu={(e) => e.preventDefault()}>
