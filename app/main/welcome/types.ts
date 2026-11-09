@@ -244,6 +244,18 @@ export type ActiveForage = ForageMission & {
 };
 
 /** What a collected trip brought home. */
+export type ForageOldGear = {
+  instanceId: string;
+  itemId: string;
+  familyId: string;
+  name: string;
+  tier: number;
+  icon: string;
+  quality: number;
+  /** Full quality at this tier. */
+  qualityMax: number;
+};
+
 export type ForageResult = {
   missionId: string;
   name: string;
@@ -273,6 +285,10 @@ export type ForageResult = {
   surprise?: Record<string, number>;
   /** The sentence for the surprise finds, or null when there were none. */
   surpriseMessage?: string | null;
+  /** A forgotten, damaged T1 piece of gathering gear found on the way (sent home), or null. */
+  oldGear?: ForageOldGear | null;
+  /** The sentence for the old gear, or null when none was found. */
+  oldGearMessage?: string | null;
   /** The night out: weather, tent/bedroll carried, and the temporary Body/Soul points it cost. */
   night?: {
     weather: "warm" | "cool" | "harsh";

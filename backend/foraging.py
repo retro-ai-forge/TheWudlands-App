@@ -57,6 +57,11 @@ Surprise finds (surprises): each trip rolls a 5% chance of 1-3 units of a
 random T1-T3 raw material of any family, and separately a 1% chance of a
 single T4-T6 one - a bonus on top, outside the pool, with no gear wear.
 
+Old gear (oldGear): each trip also has a 15% chance of turning up one
+forgotten T1 weapon or item from the gathering-gear list of the material
+foraged - only quality-tracked pieces, found in the damaged range (at most
+10% of their quality). It lands in home storage (character_homes.items).
+
 Every return carries a sentence fitted to the material and place
 (data/foraging-messages.json): "rich" while the family's pool is at least
 half full, "thin" once more than half is gone, and "depleted" on the last
@@ -76,6 +81,7 @@ import json
 import math
 import os
 import random
+import uuid
 from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
@@ -126,6 +132,9 @@ COMPANION_CHARMS: dict[str, dict] = {
 # small chance of an extra raw material of any family - a separate bonus that
 # doesn't drain the pool, wear gear, or shoot ammo.
 SURPRISES: tuple[dict, ...] = tuple(RULES.get("surprises", ()))
+# Old gear (rules "oldGear"): per trip, one chance of a forgotten, damaged
+# T1 piece of the foraged material's gathering gear.
+OLD_GEAR: dict = dict(RULES.get("oldGear", {}))
 # The night out (rules "nights"): a tent and a bedroll keep the weather off;
 # without them the night may cost temporary Body/Soul points (backend.condition).
 NIGHTS: dict = RULES["nights"]
@@ -184,6 +193,7 @@ NIGHT_MESSAGES: dict = _MESSAGES["nights"]
 SURPRISE_MESSAGES: list[str] = _MESSAGES["surprises"]
 # Opening line when a surprise holds a rare (T4+) material.
 SURPRISE_RARE_INTROS: list[str] = _MESSAGES["surprisesRareIntro"]
+OLD_GEAR_MESSAGES: list[str] = _MESSAGES["oldGear"]
 RARE_SURPRISE_TIER = 4
 
 
@@ -614,6 +624,48 @@ def surprise_message(surprise: dict[str, int], character_name: str,
     if any(_tier(item_id) >= RARE_SURPRISE_TIER for item_id in surprise):
         text = f"{rng.choice(SURPRISE_RARE_INTROS).format(name=character_name)} {text}"
     return text
+
+
+def old_gear_options(family_id: str) -> list[tuple[str, dict, int]]:
+    """The pieces old gear can be for `family_id`: its gathering weapons and
+    items that are quality-tracked instances, at the rule's tier, as
+    (item family, catalog row, full quality at that tier)."""
+    tier = int(OLD_GEAR.get("tier", 1))
+    gear = GATHERING_GEAR.get(family_id) or {}
+    options = []
+    for item_family in dict.fromkeys(gear.get("weapons", ()) + gear.get("items", ())):
+        family = items_catalog.ITEM_FAMILIES_BY_ID.get(item_family)
+        if family is None or not family.quality_max or not family.needs_item_definition:
+            continue
+        row = items_catalog.resolve_output_row(item_family, tier)
+        if row is not None:
+            options.append((item_family, row, family.quality_max * (2 ** (tier - 1))))
+    return options
+
+
+def roll_old_gear(family_id: str, rng: random.Random | None = None) -> Optional[dict]:
+    """Maybe a forgotten piece of gathering gear for `family_id`, damaged:
+    {"instanceId", "itemId", "familyId", "name", "tier", "icon", "quality", "qualityMax"}
+    or None (qualityMax is the full quality at that tier)."""
+    rng = rng or random.Random()
+    if not OLD_GEAR or rng.random() >= OLD_GEAR.get("chance", 0):
+        return None
+    options = old_gear_options(family_id)
+    if not options:
+        return None
+    item_family, row, quality_max = rng.choice(options)
+    top = max(1, math.floor(quality_max * OLD_GEAR.get("maxQualityFraction", 0.1)))
+    return {"instanceId": uuid.uuid4().hex, "itemId": row["id"], "familyId": item_family,
+            "name": row["name"], "tier": int(OLD_GEAR.get("tier", 1)), "icon": row.get("icon", ""),
+            "quality": rng.randint(1, top), "qualityMax": quality_max}
+
+
+def old_gear_message(old: Optional[dict], character_name: str,
+                     rng: random.Random | None = None) -> Optional[str]:
+    if not old:
+        return None
+    rng = rng or random.Random()
+    return rng.choice(OLD_GEAR_MESSAGES).format(name=character_name, item=old["name"])
 
 
 def roll_trip_night(doc: dict, rng: random.Random | None = None) -> dict:
@@ -1058,6 +1110,7 @@ async def _roll_trip(db, address: str, character_id: str, doc: dict, active: dic
         "lightUsed": light_used,
         "night": roll_trip_night(doc),
         **_surprise_fields(doc),
+        **_old_gear_fields(doc, family_id),
     }
 
 
@@ -1067,10 +1120,16 @@ def _surprise_fields(doc: dict) -> dict:
             "surpriseMessage": surprise_message(surprise, doc.get("firstName") or "Your character")}
 
 
+def _old_gear_fields(doc: dict, family_id: str) -> dict:
+    old = roll_old_gear(family_id)
+    return {"oldGear": old,
+            "oldGearMessage": old_gear_message(old, doc.get("firstName") or "Your character")}
+
+
 async def finish_forage(address: str, character_id: str) -> dict:
     """Collect a returned trip: reveal the finds rolled when it started and
     drop them into the character's home storage. Returns {result, state}."""
-    from backend.players import _inc_storage_balances
+    from backend.players import _inc_storage_balances, _push_storage_items
 
     db = get_database()
     doc = await _load_character(address, character_id)
@@ -1104,6 +1163,13 @@ async def finish_forage(address: str, character_id: str) -> dict:
         home_finds[item_id] = home_finds.get(item_id, 0) + n
     if home_finds:
         await _inc_storage_balances(db, "home", address, character_id, home_finds)
+    old = result.get("oldGear")
+    if old:
+        await _push_storage_items(db, "home", address, character_id, [{
+            "instanceId": old["instanceId"], "itemId": old["itemId"], "familyId": old["familyId"],
+            "quality": old["quality"], "location": "home", "slotRef": [],
+            "createdAt": datetime.now(timezone.utc).isoformat(),
+        }])
     # Back home and free: the night's toll lands now, and the healing clock
     # (re)starts - it never runs while out (backend.condition).
     night = result.get("night")

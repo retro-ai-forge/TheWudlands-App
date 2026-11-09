@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import styles from "./ForagingSection.module.css";
 import { formatRemainingCompactLong, useCraftCountdown } from "../craftTimer";
 import { getResourceCatalog } from "./catalogCache";
-import { ResourcePopup, ResourceTiles, type ResourceTierInfo } from "./VaultTab";
+import { ItemTile, ResourcePopup, ResourceTiles, type ResourceTierInfo } from "./VaultTab";
 import type { ForageGear, ForagingState, SlotCharacterSummary } from "../types";
 
 // Foraging lives on the Stories tab: like an adventure, a trip takes the
@@ -202,6 +202,19 @@ export function ForagingSection({
               <p className={styles.message}>{lastResult.surpriseMessage}</p>
               <div className={styles.foundTiles}>
                 <ResourceTiles balances={lastResult.surprise ?? {}} tierInfo={catalog} onSelect={(id) => setPopupId(id)} />
+              </div>
+            </>
+          )}
+          {lastResult.oldGear && lastResult.oldGearMessage && (
+            <>
+              <p className={styles.message}>{lastResult.oldGearMessage}</p>
+              <div className={styles.foundTiles}>
+                <ItemTile
+                  icon={lastResult.oldGear.icon}
+                  name={lastResult.oldGear.name}
+                  tier={lastResult.oldGear.tier}
+                  qualityFraction={lastResult.oldGear.quality / lastResult.oldGear.qualityMax}
+                />
               </div>
             </>
           )}

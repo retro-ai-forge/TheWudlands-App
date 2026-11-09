@@ -106,7 +106,10 @@ def test_every_forageable_family_has_sentences_and_every_mission_a_place():
 
 
 @pytest.fixture
-async def db(mongodb_uri):
+async def db(mongodb_uri, monkeypatch):
+    # Random extras (surprise finds, old gear) are off unless a test patches them in.
+    monkeypatch.setattr(foraging, "roll_surprises", lambda rng=None: {})
+    monkeypatch.setattr(foraging, "roll_old_gear", lambda family_id, rng=None: None)
     db = get_database()
     for name in _COLLECTIONS:
         await db[name].delete_many({"address": ADDRESS})
@@ -617,3 +620,44 @@ async def test_surprise_goes_home_without_draining_the_pool_or_wearing_gear(db, 
     assert home["itemBalances"]["crystal_5"] == 1
     doc = await db.characters.find_one({"address": ADDRESS, "id": cid})
     assert doc["gear"]["items"][0]["quality"] == 200 - result["total"]   # T5 surprise adds no wear
+
+
+# ── Old gear ───────────────────────────────────────────────────────────
+
+
+def test_old_gear_rolls_at_its_chance_as_damaged_t1_gear_of_the_material():
+    rng = random.Random(3)
+    runs, hits = 20000, 0
+    allowed = {fam for fam, _, _ in foraging.old_gear_options("ore")}
+    assert "pickaxe" in allowed and "torch" not in allowed and "iron_spikes" not in allowed  # stacks can't be damaged
+    for _ in range(runs):
+        old = foraging.roll_old_gear("ore", rng)
+        if old is None:
+            continue
+        hits += 1
+        assert old["familyId"] in allowed and old["itemId"].endswith("_1")
+        assert 1 <= old["quality"] <= max(1, old["qualityMax"] // 10)
+    assert hits / runs == pytest.approx(0.15, abs=0.01)
+
+
+def test_old_gear_message_names_the_piece():
+    old = {"name": "Stone Pickaxe"}
+    assert "Stone Pickaxe" in foraging.old_gear_message(old, "Mira", random.Random(0))
+    assert foraging.old_gear_message(None, "Mira") is None
+    for t in foraging.OLD_GEAR_MESSAGES:
+        t.format(name="N", item="I")
+
+
+async def test_old_gear_goes_home_as_a_damaged_instance(db, monkeypatch):
+    cid = await _make(1, "blacksmith")
+    old = {"instanceId": "old-1", "itemId": "pickaxe_1", "familyId": "pickaxe",
+           "name": "Pickaxe", "quality": 3, "qualityMax": 160}
+    monkeypatch.setattr(foraging, "roll_old_gear", lambda family_id, rng=None: old)
+    await foraging.start_forage(ADDRESS, cid, "craftweapon_01")  # ore
+    await _fast_forward(db, cid)
+    result = (await foraging.finish_forage(ADDRESS, cid))["result"]
+
+    assert result["oldGear"] == old and result["oldGearMessage"]
+    home = await db.character_homes.find_one({"address": ADDRESS, "characterId": cid})
+    piece = next(i for i in home["items"] if i["instanceId"] == "old-1")
+    assert piece["quality"] == 3 and piece["location"] == "home"

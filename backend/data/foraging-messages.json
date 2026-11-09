@@ -211,5 +211,15 @@
     "Some finds come once in a lifetime.",
     "{name}'s heart skipped a beat.",
     "Luck like this is rare indeed!"
+  ],
+  "oldGear": [
+    "Half buried in the moss, {name} found an old {item}, long forgotten and badly worn.",
+    "Someone came this way long ago: {name} found their {item}, battered but still in one piece.",
+    "Under a pile of leaves lay an old {item}. {name} brought it home, worn as it is.",
+    "{name} tripped over something hard - an abandoned {item}, rusted and scarred, but it might still serve.",
+    "Wedged between two rocks, {name} spotted a forgotten {item}. It has seen better days.",
+    "An old camp, long cold. Among the ashes {name} found a worn {item} and took it along.",
+    "{name} pulled a battered {item} out of the undergrowth. Whoever lost it never came back for it.",
+    "Not much to look at, but useful: {name} found an old {item}, worn nearly to breaking."
   ]
 }

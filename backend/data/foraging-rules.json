@@ -166,5 +166,10 @@
         1
       ]
     }
-  ]
+  ],
+  "oldGear": {
+    "chance": 0.15,
+    "tier": 1,
+    "maxQualityFraction": 0.1
+  }
 }

@@ -2028,6 +2028,36 @@ export function ResourceTiles({
   );
 }
 
+/** One display-only item tile (icon, tier badge, quality bar, damaged
+ * tint) - the same look as ItemGrid's tiles, for places outside the
+ * inventory, e.g. lost equipment on a foraging result. `qualityFraction`
+ * is current / full quality (0-1), or null for items without quality. */
+export function ItemTile({
+  icon,
+  name,
+  tier,
+  qualityFraction,
+}: {
+  icon?: string | null;
+  name: string;
+  tier?: number;
+  qualityFraction: number | null;
+}) {
+  const isDamaged = qualityFraction !== null && qualityState(qualityFraction) === "damaged";
+  return (
+    <div
+      className={isDamaged ? `${styles.itemGridCell} ${styles.itemGridCellDamaged}` : styles.itemGridCell}
+      title={name}
+    >
+      <ItemIcon icon={icon} alt={name} className={styles.itemGridImg} />
+      {!!tier && <span className={styles.itemGridTierBadge}>{getTierIndicator(tier)}</span>}
+      {qualityFraction !== null && (
+        <div className={styles.itemGridQualityBar} style={{ backgroundColor: qualityBarColor(qualityFraction) }} />
+      )}
+    </div>
+  );
+}
+
 /** Single-row, horizontally-scrolling strip of tiles - what a worn
  * backpack's own popup shows packed inside it (see ItemDetailPopup's
  * packedItems prop). Same 100px tile/icon/tier-badge/count-badge/
