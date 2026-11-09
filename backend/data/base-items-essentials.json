@@ -676,7 +676,7 @@
     "name": "Holy Symbol",
     "familyId": "holy_symbol",
     "tier": 1,
-    "description": "A simple copper disk engraved with a humble sunburst, worn on a leather cord.",
+    "description": "A rough-cut quartz sunburst on a leather cord. Held up to the dark, it catches even faint light, and the restless dead shy from its glint.",
     "icon": "/images/items/holy_symbol_t1.png"
   },
   {
@@ -684,7 +684,7 @@
     "name": "Holy Symbol",
     "familyId": "holy_symbol",
     "tier": 2,
-    "description": "A small bronze amulet shaped like a balanced scale, hung from a braided strap.",
+    "description": "A clear crystal shard cut in the shape of a balanced scale, bound to a braided leather strap. Vampires will not meet the gleam of its judgement.",
     "icon": "/images/items/holy_symbol_t2.png"
   },
   {
@@ -692,7 +692,7 @@
     "name": "Holy Symbol",
     "familyId": "holy_symbol",
     "tier": 3,
-    "description": "A solid iron hammer-shaped holy symbol with runes etched along its sides.",
+    "description": "A smoky crystal hammer, its faces etched with warding runes. Struck against the ground, it rings with a clear note that makes ghouls and shades recoil.",
     "icon": "/images/items/holy_symbol_t3.png"
   },
   {
@@ -700,7 +700,7 @@
     "name": "Holy Symbol",
     "familyId": "holy_symbol",
     "tier": 4,
-    "description": "An ornate silver medallion of a rising dawn, strung on a silk cord.",
+    "description": "A faceted rose crystal medallion of a rising dawn, set in tooled leather. It glows softly at night, and undead feel its warmth as a burning sun.",
     "icon": "/images/items/holy_symbol_t4.png"
   },
   {
@@ -708,7 +708,7 @@
     "name": "Holy Symbol",
     "familyId": "holy_symbol",
     "tier": 5,
-    "description": "A radiant gold holy symbol shaped like a tree of light, hung on a golden chain.",
+    "description": "A radiant amber crystal shaped like a tree of light, hung on a gilded leather thong. Its glow fills a room, and no vampire can cross the threshold it guards.",
     "icon": "/images/items/holy_symbol_t5.png"
   },
   {
@@ -716,7 +716,7 @@
     "name": "Holy Symbol",
     "familyId": "holy_symbol",
     "tier": 6,
-    "description": "A legendary comet-shaped star metal holy symbol, glowing with tiny inlaid stars.",
+    "description": "A legendary comet of flawless starcrystal, sparkling with tiny captured stars. Its light pierces any darkness, and the oldest undead crumble before it.",
     "icon": "/images/items/holy_symbol_t6.png"
   },
   {

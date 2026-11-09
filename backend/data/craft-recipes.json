@@ -849,12 +849,18 @@
       },
       {
         "category": "processed",
-        "familyId": "clockwork_mechanism",
-        "qty": 1,
+        "familyId": "reinforced_frame",
+        "qty": 2,
+        "consumed": true
+      },
+      {
+        "category": "processed",
+        "familyId": "thread",
+        "qty": 2,
         "consumed": true
       }
     ],
-    "tool": null,
+    "tool": "workbench",
     "blueprintFamilyId": "blueprint_loom"
   },
   {
@@ -1714,14 +1720,14 @@
     "familyId": "holy_symbol",
     "ingredients": [
       {
-        "category": "raw",
-        "familyId": "wood",
-        "qty": 2,
+        "category": "processed",
+        "familyId": "cut_crystal",
+        "qty": 1,
         "consumed": true
       },
       {
-        "category": "raw",
-        "familyId": "pigment",
+        "category": "processed",
+        "familyId": "leather",
         "qty": 1,
         "consumed": true
       }
@@ -2550,8 +2556,14 @@
     "ingredients": [
       {
         "category": "processed",
-        "familyId": "ground_pigment",
-        "qty": 3,
+        "familyId": "coal",
+        "qty": 2,
+        "consumed": true
+      },
+      {
+        "category": "processed",
+        "familyId": "herbal_extract",
+        "qty": 1,
         "consumed": true
       },
       {
