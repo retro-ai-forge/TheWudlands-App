@@ -61,7 +61,6 @@ class ItemFamily:
     # json's own "equipSlots" is already this list-of-groups shape.
     equip_slots: tuple[tuple[str, ...], ...]
     backpackable: bool
-    quality_max: Optional[int]
     armor_class: Optional[int]
     icon: str
 
@@ -79,7 +78,6 @@ def _load_families() -> dict[str, ItemFamily]:
             needs_item_definition=row["needsItemDefinition"],
             equip_slots=equip_slots,
             backpackable=row.get("backpackable", False),
-            quality_max=row.get("qualityMax"),
             armor_class=row.get("armorClass"),
             icon=row.get("icon", ""),
         )
@@ -254,11 +252,6 @@ class ItemCatalogEntry:
     family_id: str
     tier: int
     kind: tuple[str, ...]
-    # Flat across all 6 tiers of a family (unlike damage/defense, which
-    # would scale by tier) - None for a family with no qualityMax row at
-    # all (needsItemDefinition:false families never degrade, so this is
-    # only ever meaningful alongside a real Character.items instance).
-    quality_max: Optional[int]
     armor_class: Optional[int]
     icon: str
     # Family-level (item-inventory-properties.json's own "stackSize") -
@@ -316,7 +309,7 @@ def _load_item_catalog_entries() -> tuple[ItemCatalogEntry, ...]:
             item_sc = ITEM_SIZE_CLASS_BY_ID.get(row["id"], family.size_class)
             entries.append(
                 ItemCatalogEntry(
-                    row["id"], row["name"], family_id, tier, family.kind, family.quality_max,
+                    row["id"], row["name"], family_id, tier, family.kind,
                     family.armor_class, row.get("icon", ""), family.stack_size,
                     row.get("description", ""), item_sc,
                     family.equip_slots, family.backpackable,
@@ -333,7 +326,7 @@ ITEM_CATALOG_ENTRIES: tuple[ItemCatalogEntry, ...] = _load_item_catalog_entries(
 # regardless of storage bucket - a UI uses this to reclassify a resource
 # balance entry (e.g. arrow/bolt/oil) as "really an item" for display.
 ITEM_CATALOG_ID_SET: frozenset[str] = frozenset(entry.id for entry in ITEM_CATALOG_ENTRIES)
-# Concrete id -> its own entry (family/tier/kind/qualityMax) - used to
+# Concrete id -> its own entry (family/tier/kind) - used to
 # resolve a Character.items instance's own tier from its stored itemId
 # (e.g. deciding whether an owned T1 dagger is high enough tier to serve
 # as a T3 recipe's own "tool" requirement - see backend.players.

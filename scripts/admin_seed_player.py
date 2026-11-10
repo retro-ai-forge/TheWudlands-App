@@ -101,7 +101,7 @@ def load_items(tier: int) -> tuple[list[dict], dict[str, int], dict[str, int]]:
                         "instanceId": uuid.uuid4().hex,
                         "itemId": it["id"],
                         "familyId": it["familyId"],
-                        "quality": (fam_props.get("qualityMax") or 0) * (2 ** (tier - 1)),
+                        "quality": 4,  # condition: new (backend.item_condition)
                         "location": "pool",
                         "slotRef": [],
                         "createdAt": now,

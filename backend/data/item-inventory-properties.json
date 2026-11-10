@@ -47,8 +47,7 @@
         "Girdle"
       ]
     ],
-    "backpackable": true,
-    "qualityMax": 20
+    "backpackable": true
   },
   {
     "familyId": "chalk",
@@ -98,8 +97,7 @@
         "Girdle"
       ]
     ],
-    "backpackable": true,
-    "qualityMax": 20
+    "backpackable": true
   },
   {
     "familyId": "grappling_hook",
@@ -124,8 +122,7 @@
         "Girdle"
       ]
     ],
-    "backpackable": true,
-    "qualityMax": 20
+    "backpackable": true
   },
   {
     "familyId": "hourglass",
@@ -144,8 +141,7 @@
         "Right Hand"
       ]
     ],
-    "backpackable": true,
-    "qualityMax": 20
+    "backpackable": true
   },
   {
     "familyId": "hunters_charm",
@@ -161,8 +157,7 @@
         "Neck"
       ]
     ],
-    "backpackable": true,
-    "qualityMax": 40
+    "backpackable": true
   },
   {
     "familyId": "iron_spikes",
@@ -203,8 +198,7 @@
         "Side"
       ]
     ],
-    "backpackable": false,
-    "qualityMax": 20
+    "backpackable": false
   },
   {
     "familyId": "lock_and_key",
@@ -254,8 +248,7 @@
         "Girdle"
       ]
     ],
-    "backpackable": true,
-    "qualityMax": 20
+    "backpackable": true
   },
   {
     "familyId": "rope",
@@ -277,8 +270,7 @@
         "Side"
       ]
     ],
-    "backpackable": true,
-    "qualityMax": 20
+    "backpackable": true
   },
   {
     "familyId": "net",
@@ -300,8 +292,7 @@
         "Side"
       ]
     ],
-    "backpackable": true,
-    "qualityMax": 20
+    "backpackable": true
   },
   {
     "familyId": "pickaxe",
@@ -321,8 +312,7 @@
         "Side"
       ]
     ],
-    "backpackable": true,
-    "qualityMax": 160
+    "backpackable": true
   },
   {
     "familyId": "monster_trap",
@@ -344,8 +334,7 @@
         "Side"
       ]
     ],
-    "backpackable": true,
-    "qualityMax": 20
+    "backpackable": true
   },
   {
     "familyId": "starlight_catcher",
@@ -370,8 +359,7 @@
         "Girdle"
       ]
     ],
-    "backpackable": true,
-    "qualityMax": 20
+    "backpackable": true
   },
   {
     "familyId": "shovel",
@@ -393,8 +381,7 @@
         "Side"
       ]
     ],
-    "backpackable": true,
-    "qualityMax": 20
+    "backpackable": true
   },
   {
     "familyId": "signal_whistle",
@@ -410,8 +397,7 @@
         "Neck"
       ]
     ],
-    "backpackable": true,
-    "qualityMax": 10
+    "backpackable": true
   },
   {
     "familyId": "spyglass",
@@ -433,8 +419,7 @@
         "Girdle"
       ]
     ],
-    "backpackable": true,
-    "qualityMax": 20
+    "backpackable": true
   },
   {
     "familyId": "tent",
@@ -551,7 +536,6 @@
       ]
     ],
     "backpackable": true,
-    "qualityMax": 250,
     "armorClass": 3
   },
   {
@@ -569,7 +553,6 @@
       ]
     ],
     "backpackable": true,
-    "qualityMax": 250,
     "armorClass": 3
   },
   {
@@ -587,7 +570,6 @@
       ]
     ],
     "backpackable": true,
-    "qualityMax": 250,
     "armorClass": 3
   },
   {
@@ -605,7 +587,6 @@
       ]
     ],
     "backpackable": true,
-    "qualityMax": 310,
     "armorClass": 4
   },
   {
@@ -623,7 +604,6 @@
       ]
     ],
     "backpackable": true,
-    "qualityMax": 310,
     "armorClass": 4
   },
   {
@@ -641,7 +621,6 @@
       ]
     ],
     "backpackable": true,
-    "qualityMax": 310,
     "armorClass": 4
   },
   {
@@ -659,7 +638,6 @@
       ]
     ],
     "backpackable": true,
-    "qualityMax": 70,
     "armorClass": 1
   },
   {
@@ -677,7 +655,6 @@
       ]
     ],
     "backpackable": true,
-    "qualityMax": 70,
     "armorClass": 1
   },
   {
@@ -695,7 +672,6 @@
       ]
     ],
     "backpackable": true,
-    "qualityMax": 70,
     "armorClass": 1
   },
   {
@@ -713,7 +689,6 @@
       ]
     ],
     "backpackable": true,
-    "qualityMax": 360,
     "armorClass": 5
   },
   {
@@ -731,7 +706,6 @@
       ]
     ],
     "backpackable": true,
-    "qualityMax": 360,
     "armorClass": 5
   },
   {
@@ -749,7 +723,6 @@
       ]
     ],
     "backpackable": true,
-    "qualityMax": 360,
     "armorClass": 5
   },
   {
@@ -767,7 +740,6 @@
       ]
     ],
     "backpackable": true,
-    "qualityMax": 340,
     "armorClass": 4
   },
   {
@@ -785,7 +757,6 @@
       ]
     ],
     "backpackable": true,
-    "qualityMax": 340,
     "armorClass": 4
   },
   {
@@ -803,7 +774,6 @@
       ]
     ],
     "backpackable": true,
-    "qualityMax": 340,
     "armorClass": 4
   },
   {
@@ -821,7 +791,6 @@
       ]
     ],
     "backpackable": true,
-    "qualityMax": 310,
     "armorClass": 4
   },
   {
@@ -839,7 +808,6 @@
       ]
     ],
     "backpackable": true,
-    "qualityMax": 310,
     "armorClass": 4
   },
   {
@@ -857,7 +825,6 @@
       ]
     ],
     "backpackable": true,
-    "qualityMax": 310,
     "armorClass": 4
   },
   {
@@ -875,7 +842,6 @@
       ]
     ],
     "backpackable": true,
-    "qualityMax": 150,
     "armorClass": 2
   },
   {
@@ -893,7 +859,6 @@
       ]
     ],
     "backpackable": true,
-    "qualityMax": 150,
     "armorClass": 2
   },
   {
@@ -911,7 +876,6 @@
       ]
     ],
     "backpackable": true,
-    "qualityMax": 150,
     "armorClass": 2
   },
   {
@@ -929,7 +893,6 @@
       ]
     ],
     "backpackable": true,
-    "qualityMax": 350,
     "armorClass": 5
   },
   {
@@ -947,7 +910,6 @@
       ]
     ],
     "backpackable": true,
-    "qualityMax": 350,
     "armorClass": 5
   },
   {
@@ -965,7 +927,6 @@
       ]
     ],
     "backpackable": true,
-    "qualityMax": 350,
     "armorClass": 5
   },
   {
@@ -1407,8 +1368,7 @@
         "Back"
       ]
     ],
-    "backpackable": false,
-    "qualityMax": 20
+    "backpackable": false
   },
   {
     "familyId": "saddlepack",
@@ -1424,8 +1384,7 @@
         "Saddlepack"
       ]
     ],
-    "backpackable": false,
-    "qualityMax": 30
+    "backpackable": false
   },
   {
     "familyId": "bridle",
@@ -1441,8 +1400,7 @@
         "Bridle"
       ]
     ],
-    "backpackable": true,
-    "qualityMax": 25
+    "backpackable": true
   },
   {
     "familyId": "saddle",
@@ -1458,8 +1416,7 @@
         "Saddle"
       ]
     ],
-    "backpackable": true,
-    "qualityMax": 30
+    "backpackable": true
   },
   {
     "familyId": "barding_leather",
@@ -1475,8 +1432,7 @@
         "Barding"
       ]
     ],
-    "backpackable": true,
-    "qualityMax": 35
+    "backpackable": true
   },
   {
     "familyId": "barding_iron",
@@ -1492,8 +1448,7 @@
         "Barding"
       ]
     ],
-    "backpackable": true,
-    "qualityMax": 50
+    "backpackable": true
   },
   {
     "familyId": "charm_flying",
@@ -1509,8 +1464,7 @@
         "Charm"
       ]
     ],
-    "backpackable": true,
-    "qualityMax": 15
+    "backpackable": true
   },
   {
     "familyId": "charm_aquatic",
@@ -1526,8 +1480,7 @@
         "Charm"
       ]
     ],
-    "backpackable": true,
-    "qualityMax": 15
+    "backpackable": true
   },
   {
     "familyId": "charm_ghost",
@@ -1543,8 +1496,7 @@
         "Charm"
       ]
     ],
-    "backpackable": true,
-    "qualityMax": 15
+    "backpackable": true
   },
   {
     "familyId": "charm_other",
@@ -1560,8 +1512,7 @@
         "Charm"
       ]
     ],
-    "backpackable": true,
-    "qualityMax": 15
+    "backpackable": true
   },
   {
     "familyId": "candle",
@@ -1606,8 +1557,7 @@
         "Right Hand"
       ]
     ],
-    "backpackable": false,
-    "qualityMax": 40
+    "backpackable": false
   },
   {
     "familyId": "cloth_cloak",
@@ -1624,7 +1574,6 @@
       ]
     ],
     "backpackable": true,
-    "qualityMax": 40,
     "armorClass": 1
   },
   {
@@ -1644,8 +1593,7 @@
         "Right Hand"
       ]
     ],
-    "backpackable": true,
-    "qualityMax": 20
+    "backpackable": true
   },
   {
     "familyId": "fur_cloak",
@@ -1662,7 +1610,6 @@
       ]
     ],
     "backpackable": true,
-    "qualityMax": 40,
     "armorClass": 1
   },
   {
@@ -1680,7 +1627,6 @@
       ]
     ],
     "backpackable": true,
-    "qualityMax": 40,
     "armorClass": 1
   },
   {
@@ -1703,8 +1649,7 @@
         "Side"
       ]
     ],
-    "backpackable": true,
-    "qualityMax": 28
+    "backpackable": true
   },
   {
     "familyId": "holy_symbol",
@@ -1720,8 +1665,7 @@
         "Neck"
       ]
     ],
-    "backpackable": true,
-    "qualityMax": 40
+    "backpackable": true
   },
   {
     "familyId": "mirror",
@@ -1740,8 +1684,7 @@
         "Right Hand"
       ]
     ],
-    "backpackable": true,
-    "qualityMax": 10
+    "backpackable": true
   },
   {
     "familyId": "quill",
@@ -1911,7 +1854,6 @@
       ]
     ],
     "backpackable": true,
-    "qualityMax": 270,
     "armorClass": 3
   },
   {
@@ -1932,7 +1874,6 @@
       ]
     ],
     "backpackable": true,
-    "qualityMax": 350,
     "armorClass": 5
   },
   {
@@ -1953,7 +1894,6 @@
       ]
     ],
     "backpackable": true,
-    "qualityMax": 280,
     "armorClass": 4
   },
   {
@@ -1974,7 +1914,6 @@
       ]
     ],
     "backpackable": true,
-    "qualityMax": 160,
     "armorClass": 3
   },
   {
@@ -1995,7 +1934,6 @@
       ]
     ],
     "backpackable": true,
-    "qualityMax": 340,
     "armorClass": 5
   },
   {
@@ -2016,7 +1954,6 @@
       ]
     ],
     "backpackable": true,
-    "qualityMax": 110,
     "armorClass": 2
   },
   {
@@ -2037,7 +1974,6 @@
       ]
     ],
     "backpackable": true,
-    "qualityMax": 40,
     "armorClass": 1
   },
   {
@@ -2047,7 +1983,7 @@
     ],
     "sizeClass": "xLarge",
     "stackSize": 1,
-    "needsItemDefinition": false,
+    "needsItemDefinition": true,
     "note": "A crafting station bulky enough to need both hands to carry, or a mount to haul it instead - degrades with use like any other equippable tool.",
     "equipSlots": [
       [
@@ -2067,7 +2003,7 @@
     ],
     "sizeClass": "xLarge",
     "stackSize": 1,
-    "needsItemDefinition": false,
+    "needsItemDefinition": true,
     "note": "A crafting station bulky enough to need both hands to carry, or a mount to haul it instead - degrades with use like any other equippable tool.",
     "equipSlots": [
       [
@@ -2100,8 +2036,7 @@
         "Girdle"
       ]
     ],
-    "backpackable": true,
-    "qualityMax": 20
+    "backpackable": true
   },
   {
     "familyId": "enchanters_table",
@@ -2110,7 +2045,7 @@
     ],
     "sizeClass": "xLarge",
     "stackSize": 1,
-    "needsItemDefinition": false,
+    "needsItemDefinition": true,
     "note": "A crafting station bulky enough to need both hands to carry, or a mount to haul it instead - degrades with use like any other equippable tool.",
     "equipSlots": [
       [
@@ -2130,7 +2065,7 @@
     ],
     "sizeClass": "xLarge",
     "stackSize": 1,
-    "needsItemDefinition": false,
+    "needsItemDefinition": true,
     "note": "TBD - a placed crafting station, not personal gear; may not use carry/backpack rules at all.",
     "equipSlots": [
       [
@@ -2150,7 +2085,7 @@
     ],
     "sizeClass": "xLarge",
     "stackSize": 1,
-    "needsItemDefinition": false,
+    "needsItemDefinition": true,
     "note": "A crafting station bulky enough to need both hands to carry, or a mount to haul it instead - degrades with use like any other equippable tool.",
     "equipSlots": [
       [
@@ -2170,7 +2105,7 @@
     ],
     "sizeClass": "xLarge",
     "stackSize": 1,
-    "needsItemDefinition": false,
+    "needsItemDefinition": true,
     "note": "TBD - a placed crafting station, not personal gear; may not use carry/backpack rules at all.",
     "equipSlots": [
       [
@@ -2190,7 +2125,7 @@
     ],
     "sizeClass": "xLarge",
     "stackSize": 1,
-    "needsItemDefinition": false,
+    "needsItemDefinition": true,
     "note": "A crafting station bulky enough to need both hands to carry, or a mount to haul it instead - degrades with use like any other equippable tool.",
     "equipSlots": [
       [
@@ -2210,7 +2145,7 @@
     ],
     "sizeClass": "xLarge",
     "stackSize": 1,
-    "needsItemDefinition": false,
+    "needsItemDefinition": true,
     "note": "A crafting station bulky enough to need both hands to carry, or a mount to haul it instead - degrades with use like any other equippable tool.",
     "equipSlots": [
       [
@@ -2230,7 +2165,7 @@
     ],
     "sizeClass": "medium",
     "stackSize": 1,
-    "needsItemDefinition": false,
+    "needsItemDefinition": true,
     "note": "TBD - a placed crafting station, not personal gear; may not use carry/backpack rules at all.",
     "equipSlots": [
       [
@@ -2247,7 +2182,7 @@
     ],
     "sizeClass": "xLarge",
     "stackSize": 1,
-    "needsItemDefinition": false,
+    "needsItemDefinition": true,
     "note": "TBD - a placed crafting station, not personal gear; may not use carry/backpack rules at all.",
     "equipSlots": [
       [
@@ -2267,7 +2202,7 @@
     ],
     "sizeClass": "xLarge",
     "stackSize": 1,
-    "needsItemDefinition": false,
+    "needsItemDefinition": true,
     "note": "A crafting station bulky enough to need both hands to carry, or a mount to haul it instead - degrades with use like any other equippable tool.",
     "equipSlots": [
       [
@@ -2287,7 +2222,7 @@
     ],
     "sizeClass": "heavy",
     "stackSize": 1,
-    "needsItemDefinition": false,
+    "needsItemDefinition": true,
     "note": "TBD - a placed crafting station, not personal gear; may not use carry/backpack rules at all.",
     "equipSlots": [
       [
@@ -2304,7 +2239,7 @@
     ],
     "sizeClass": "heavy",
     "stackSize": 1,
-    "needsItemDefinition": false,
+    "needsItemDefinition": true,
     "note": "TBD - a placed crafting station, not personal gear; may not use carry/backpack rules at all.",
     "equipSlots": [
       [
@@ -2321,7 +2256,7 @@
     ],
     "sizeClass": "xLarge",
     "stackSize": 1,
-    "needsItemDefinition": false,
+    "needsItemDefinition": true,
     "note": "A crafting station bulky enough to need both hands to carry, or a mount to haul it instead - degrades with use like any other equippable tool.",
     "equipSlots": [
       [
@@ -2357,8 +2292,7 @@
         "Girdle"
       ]
     ],
-    "backpackable": true,
-    "qualityMax": 140
+    "backpackable": true
   },
   {
     "familyId": "axe",
@@ -2377,8 +2311,7 @@
         "Right Hand"
       ]
     ],
-    "backpackable": true,
-    "qualityMax": 220
+    "backpackable": true
   },
   {
     "familyId": "battle_axe",
@@ -2398,8 +2331,7 @@
         "Side"
       ]
     ],
-    "backpackable": true,
-    "qualityMax": 470
+    "backpackable": true
   },
   {
     "familyId": "bow",
@@ -2419,8 +2351,7 @@
         "Side"
       ]
     ],
-    "backpackable": true,
-    "qualityMax": 150
+    "backpackable": true
   },
   {
     "familyId": "club",
@@ -2439,8 +2370,7 @@
         "Right Hand"
       ]
     ],
-    "backpackable": true,
-    "qualityMax": 20
+    "backpackable": true
   },
   {
     "familyId": "crossbow",
@@ -2460,8 +2390,7 @@
         "Side"
       ]
     ],
-    "backpackable": true,
-    "qualityMax": 170
+    "backpackable": true
   },
   {
     "familyId": "dagger",
@@ -2486,8 +2415,7 @@
         "Side"
       ]
     ],
-    "backpackable": true,
-    "qualityMax": 150
+    "backpackable": true
   },
   {
     "familyId": "greatsword",
@@ -2507,8 +2435,7 @@
         "Side"
       ]
     ],
-    "backpackable": true,
-    "qualityMax": 480
+    "backpackable": true
   },
   {
     "familyId": "mace",
@@ -2527,8 +2454,7 @@
         "Right Hand"
       ]
     ],
-    "backpackable": true,
-    "qualityMax": 320
+    "backpackable": true
   },
   {
     "familyId": "magic_staff",
@@ -2547,8 +2473,7 @@
         "Right Hand"
       ]
     ],
-    "backpackable": true,
-    "qualityMax": 40
+    "backpackable": true
   },
   {
     "familyId": "quiver",
@@ -2564,8 +2489,7 @@
         "Side"
       ]
     ],
-    "backpackable": true,
-    "qualityMax": 200
+    "backpackable": true
   },
   {
     "familyId": "bolt_girdle",
@@ -2584,8 +2508,7 @@
         "Girdle"
       ]
     ],
-    "backpackable": true,
-    "qualityMax": 200
+    "backpackable": true
   },
   {
     "familyId": "sharpened_stick",
@@ -2607,8 +2530,7 @@
         "Girdle"
       ]
     ],
-    "backpackable": true,
-    "qualityMax": 20
+    "backpackable": true
   },
   {
     "familyId": "sickle",
@@ -2633,8 +2555,7 @@
         "Side"
       ]
     ],
-    "backpackable": true,
-    "qualityMax": 160
+    "backpackable": true
   },
   {
     "familyId": "spear",
@@ -2653,8 +2574,7 @@
         "Right Hand"
       ]
     ],
-    "backpackable": true,
-    "qualityMax": 160
+    "backpackable": true
   },
   {
     "familyId": "short_sword",
@@ -2673,8 +2593,7 @@
         "Right Hand"
       ]
     ],
-    "backpackable": true,
-    "qualityMax": 220
+    "backpackable": true
   },
   {
     "familyId": "sword",
@@ -2693,8 +2612,7 @@
         "Right Hand"
       ]
     ],
-    "backpackable": true,
-    "qualityMax": 320
+    "backpackable": true
   },
   {
     "familyId": "wand",
@@ -2716,8 +2634,7 @@
         "Girdle"
       ]
     ],
-    "backpackable": true,
-    "qualityMax": 20
+    "backpackable": true
   },
   {
     "familyId": "warhammer",
@@ -2737,8 +2654,7 @@
         "Side"
       ]
     ],
-    "backpackable": true,
-    "qualityMax": 480
+    "backpackable": true
   },
   {
     "familyId": "arrow",
@@ -2872,7 +2788,7 @@
     ],
     "sizeClass": "xLarge",
     "stackSize": 1,
-    "needsItemDefinition": false,
+    "needsItemDefinition": true,
     "note": "A placed crafting station, not personal gear - Rural's own station, mirroring Oven/Tanning Rack for other categories.",
     "equipSlots": [
       [
@@ -2899,8 +2815,7 @@
         "Companion"
       ]
     ],
-    "backpackable": false,
-    "qualityMax": 120
+    "backpackable": false
   },
   {
     "familyId": "critter_companion",
@@ -2916,8 +2831,7 @@
         "Companion"
       ]
     ],
-    "backpackable": false,
-    "qualityMax": 60
+    "backpackable": false
   },
   {
     "familyId": "arcane_companion",
@@ -2933,8 +2847,7 @@
         "Companion"
       ]
     ],
-    "backpackable": false,
-    "qualityMax": 150
+    "backpackable": false
   },
   {
     "familyId": "fey_companion",
@@ -2950,8 +2863,7 @@
         "Companion"
       ]
     ],
-    "backpackable": false,
-    "qualityMax": 150
+    "backpackable": false
   },
   {
     "familyId": "steed_mount",
@@ -2967,8 +2879,7 @@
         "Mount"
       ]
     ],
-    "backpackable": false,
-    "qualityMax": 300
+    "backpackable": false
   },
   {
     "familyId": "beast_mount",
@@ -2984,8 +2895,7 @@
         "Mount"
       ]
     ],
-    "backpackable": false,
-    "qualityMax": 500
+    "backpackable": false
   },
   {
     "familyId": "exotic_mount",
@@ -3001,8 +2911,7 @@
         "Mount"
       ]
     ],
-    "backpackable": false,
-    "qualityMax": 400
+    "backpackable": false
   },
   {
     "familyId": "aquatic_mount",
@@ -3018,8 +2927,7 @@
         "Mount"
       ]
     ],
-    "backpackable": false,
-    "qualityMax": 400
+    "backpackable": false
   },
   {
     "familyId": "aquatic_companion",
@@ -3035,8 +2943,7 @@
         "Companion"
       ]
     ],
-    "backpackable": false,
-    "qualityMax": 120
+    "backpackable": false
   },
   {
     "familyId": "dark_companion",
@@ -3052,8 +2959,7 @@
         "Companion"
       ]
     ],
-    "backpackable": false,
-    "qualityMax": 150
+    "backpackable": false
   },
   {
     "familyId": "spirit_companion",
@@ -3069,8 +2975,7 @@
         "Companion"
       ]
     ],
-    "backpackable": false,
-    "qualityMax": 150
+    "backpackable": false
   },
   {
     "familyId": "bone",

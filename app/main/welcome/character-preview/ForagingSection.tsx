@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import styles from "./ForagingSection.module.css";
 import { formatRemainingCompactLong, useCraftCountdown } from "../craftTimer";
 import { getResourceCatalog } from "./catalogCache";
-import { ItemTile, ResourcePopup, ResourceTiles, type ResourceTierInfo } from "./VaultTab";
+import { ItemTile, ResourcePopup, ResourceTiles, conditionOf, type QualityState, type ResourceTierInfo } from "./VaultTab";
 import type { ForageGear, ForagingState, SlotCharacterSummary } from "../types";
 
 // Foraging lives on the Stories tab: like an adventure, a trip takes the
@@ -214,14 +214,14 @@ export function ForagingSection({
                   icon={lastResult.oldGear.icon}
                   name={lastResult.oldGear.name}
                   tier={lastResult.oldGear.tier}
-                  qualityFraction={lastResult.oldGear.quality / lastResult.oldGear.qualityMax}
+                  condition={(lastResult.oldGear.condition as QualityState | undefined) ?? conditionOf(lastResult.oldGear.quality)}
                   onClick={() => setOldGearOpen(true)}
                 />
               </div>
             </>
           )}
           {(() => {
-            // One plain line of what the trip cost: ammo shot, light burned, quality worn, gear broken.
+            // One plain line of what the trip cost: ammo shot, light burned, gear worn a level, gear lost.
             const ammoByFamily: Record<string, number> = {};
             for (const [id, n] of [
               ...Object.entries(lastResult.ammoUsed ?? {}),
@@ -235,7 +235,7 @@ export function ForagingSection({
               ...Object.entries(ammoByFamily).map(([family, n]) => `${n} ${label(family)}${n === 1 ? "" : "s"}`),
               ...(lastResult.gear ?? [])
                 .filter((g) => g.wear > 0 && !g.destroyed)
-                .map((g) => `${g.name} −${g.wear} quality`),
+                .map((g) => `${g.name} → ${g.condition ?? "worn"}`),
               ...(lastResult.broken ?? []).map((name) => `${name} (broken)`),
             ];
             return lost.length > 0 ? <p className={styles.lostLine}>Lost: {lost.join(" · ")}</p> : null;

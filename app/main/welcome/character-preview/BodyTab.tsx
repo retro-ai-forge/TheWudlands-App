@@ -8,8 +8,8 @@ import {
   computeSaddlepackContents,
   computeCartContents,
   getTierIndicator,
-  qualityBarColor,
-  qualityState,
+  conditionColor,
+  conditionOf,
   type BlueprintTierInfo,
   type RawPlayerData,
   type ResourceTierInfo,
@@ -84,15 +84,11 @@ function EquipSlotIcon({
   iconOverride?: string;
 }) {
   const entry = catalog[instance.itemId];
-  // Same condition/damaged treatment as the Vault/Home grid's ItemGrid
-  // tiles (see qualityState/qualityBarColor there) - an equipped instance
-  // is just as much a "real" item instance as a backpacked/home-stored one, so
-  // it should wear down visibly here too, not only once unequipped.
-  const qualityFraction =
-    entry?.qualityMax != null && instance.quality != null
-      ? Math.max(0, Math.min(1, entry.qualityMax > 0 ? instance.quality / (entry.qualityMax * (2 ** (entry.tier - 1))) : 1))
-      : null;
-  const isDamaged = qualityFraction !== null && qualityState(qualityFraction) === "damaged";
+  // Same condition corner/broken tile as the Vault/Home grid's ItemGrid
+  // tiles (see conditionOf/conditionColor there) - an equipped instance
+  // wears visibly here too, not only once unequipped.
+  const cond = conditionOf(instance.quality);
+  const isDamaged = cond === "broken";
   return (
     <div className={isDamaged ? `${styles.equipSlotIconWrap} ${styles.equipSlotIconWrapDamaged}` : styles.equipSlotIconWrap}>
       <ItemIcon
@@ -106,10 +102,10 @@ function EquipSlotIcon({
           {getTierIndicator(entry.tier)}
         </span>
       )}
-      {qualityFraction !== null && (
+      {cond !== null && (
         <div
           className={styles.equipSlotQualityBar}
-          style={{ backgroundColor: qualityBarColor(qualityFraction) }}
+          style={{ backgroundColor: conditionColor(cond) }}
         />
       )}
       {instance.quantity != null && instance.quantity > 1 && (
@@ -140,7 +136,7 @@ export function BodyTab({
   const frameAspectRatio = character.portraitFrameArea?.aspectRatio;
 
   // Family name/icon lookup for whatever's equipped - fetched once, the
-  // Shared cached catalog - full shape including equipSlots, qualityMax, etc. for ItemDetailPopup.
+  // Shared cached catalog - full shape including equipSlots etc. for ItemDetailPopup.
   const [catalog, setCatalog] = useState<BlueprintTierInfo>({});
   useEffect(() => {
     getItemCatalog().then(setCatalog).catch(() => setCatalog({}));

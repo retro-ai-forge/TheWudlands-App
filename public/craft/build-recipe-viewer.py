@@ -58,7 +58,7 @@ def build_families() -> dict:
     # ">= recipe tier" minimum backend.players._resolve_tool_for_craft
     # enforces for these, while a flat-balance tool (an anvil, a furnace,
     # ...) stays any-tier-satisfies. The rest (sizeClass/stackSize/
-    # qualityMax/equipSlots/twoHanded/backpackable/gatheringBonuses) is
+    # equipSlots/twoHanded/backpackable/gatheringBonuses) is
     # embedded as each family's "props" below, feeding the item-detail
     # popup opened by clicking the root row of the Recipe Tree - only a
     # family with a props entry (an equippable/instance-tracked item, not a
@@ -105,7 +105,6 @@ def build_families() -> dict:
                 family["props"] = {
                     "sizeClass": props.get("sizeClass"),
                     "stackSize": props.get("stackSize", 1),
-                    "qualityMax": props.get("qualityMax"),
                     "equipSlots": props.get("equipSlots", []),
                     "twoHanded": props.get("twoHanded", False),
                     "backpackable": props.get("backpackable", False),

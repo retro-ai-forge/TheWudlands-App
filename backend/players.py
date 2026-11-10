@@ -20,7 +20,7 @@ from typing import Dict, List, Optional
 
 from pymongo import ReturnDocument
 
-from backend import condition, items_catalog, recycling
+from backend import condition, item_condition, items_catalog, recycling
 from backend.character import Character
 from backend.db import get_database
 from backend.resources_catalog import PROFESSION_RESOURCE_FAMILIES
@@ -883,10 +883,40 @@ async def set_prime_profession(address: str, character_id: str, slot: str) -> Op
     return await _build_player(db, address)
 
 
+def _is_tracked_item(item_id: str) -> bool:
+    """True for an item id whose family is condition-tracked (one instance
+    per piece - weapons, armor, crafting stations...), never a stacked count."""
+    entry = items_catalog.ITEM_CATALOG_ENTRIES_BY_ID.get(item_id)
+    family = items_catalog.ITEM_FAMILIES_BY_ID.get(entry.family_id) if entry else None
+    return bool(family and family.needs_item_definition)
+
+
+def _new_instance(item_id: str, location: str = "pool") -> dict:
+    """A fresh item instance in new condition (backend.item_condition)."""
+    entry = items_catalog.ITEM_CATALOG_ENTRIES_BY_ID[item_id]
+    return {
+        "instanceId": uuid.uuid4().hex,
+        "itemId": item_id,
+        "familyId": entry.family_id,
+        "quality": item_condition.NEW,
+        "location": location,
+        "slotRef": [],
+        "createdAt": datetime.now(timezone.utc).isoformat(),
+    }
+
+
 async def grant_item_balance(address: str, item_id: str, amount: int) -> Optional[Player]:
     if amount <= 0:
         raise ValueError("amount must be positive")
     db = get_database()
+    if _is_tracked_item(item_id):
+        # A condition-tracked item is one instance per piece, never a count.
+        await db.player_vaults.update_one(
+            {"address": address},
+            {"$push": {"items": {"$each": [_new_instance(item_id) for _ in range(amount)]}}},
+            upsert=True,
+        )
+        return await _build_player(db, address)
     await db.player_vaults.update_one(
         {"address": address},
         {"$inc": {f"itemBalances.{item_id}": amount}},
@@ -910,14 +940,11 @@ async def grant_character_item_balance(address: str, character_id: str, item_id:
 
 
 def _instance_condition(instance: Optional[dict], entry) -> str:
-    """Quality state of an item instance: "new", "used", or "damaged".
-    Balance items (no instance) and items without qualityMax are always "new"."""
-    if instance is None or entry is None or entry.quality_max is None:
+    """Condition of an item instance: "new", "used", "damaged" or "broken"
+    (backend.item_condition). Balance items (no instance) are always "new"."""
+    if instance is None:
         return "new"
-    quality_max_scaled = entry.quality_max * (2 ** (entry.tier - 1))
-    if quality_max_scaled <= 0:
-        return "new"
-    return recycling.quality_state(instance.get("quality", quality_max_scaled), quality_max_scaled)
+    return item_condition.label(instance.get("quality"))
 
 
 async def preview_salvage(
@@ -1210,6 +1237,14 @@ def _split_craft_take(
     return from_storage, from_carried
 
 
+def _is_station(family_id: str) -> bool:
+    """A crafting station (anvil, furnace, loom... - item kind "tool"): it
+    works for any recipe tier, unlike a tool item (axe, dagger...) which
+    must be at least the recipe's tier."""
+    family = items_catalog.ITEM_FAMILIES_BY_ID.get(family_id)
+    return bool(family and "tool" in family.kind)
+
+
 def _resolve_tool_for_craft(
     character: dict,
     player_tools: Dict[str, int],
@@ -1305,7 +1340,7 @@ def _resolve_tool_for_craft(
                     instance for instance in player_items
                     if instance.get("familyId") == family_id
                     and instance.get("location") == "pool"
-                    and (_instance_tier(instance) or 0) >= tier
+                    and (_is_station(family_id) or (_instance_tier(instance) or 0) >= tier)
                 ]
                 if pool_candidates:
                     worst = min(pool_candidates, key=lambda i: i.get("quality", 0))
@@ -1314,7 +1349,7 @@ def _resolve_tool_for_craft(
                 instance for instance in held_items
                 if instance.get("familyId") == family_id
                 and instance.get("location") in CRAFT_HELD_LOCATIONS
-                and (_instance_tier(instance) or 0) >= tier
+                and (_is_station(family_id) or (_instance_tier(instance) or 0) >= tier)
             ]
             if held_candidates:
                 worst = min(held_candidates, key=lambda i: i.get("quality", 0))
@@ -1339,40 +1374,18 @@ def _resolve_tool_instances_for_craft(
     player_items: List[dict],
 ) -> Optional[tuple]:
     """
-    start_craft's own resolution of the recipe's top-level "tool" field -
-    quality-aware and, unlike _resolve_tool_for_craft (used for an
-    ingredient-level "final" alternative, which only ever needs a tool
-    OWNED, never scaled by count), able to span more than one instance of
-    the same family. The recipe's own tool wears down by 1 quality per
-    unit actually crafted (see finish_craft), so a single worn instance -
-    _resolve_tool_for_craft's own "always pick the worst-quality eligible
-    one" choice - might not have enough quality left to cover the whole
-    requested `count` on its own.
+    start_craft's own resolution of the recipe's top-level "tool" field.
+    For an instance-tracked tool (axe, dagger...) the most worn eligible
+    piece (at least `tier`, condition above 0) does the job - from the
+    pool if any is there, else from the character's own carried/storage
+    pieces - and one roll per craft (backend.item_condition,
+    crafting_tool_chance) decides whether it drops a condition level: the
+    returned wear is 0 or 1, applied when the craft finishes. The batch is
+    never capped by the tool.
 
-    When that happens, this keeps pulling the next worst-quality eligible
-    instance to make up the shortfall - but ONLY from the SAME source the
-    first (worst) one came from (the shared vault pool, or this
-    character's own backpack/body/home/saddlepack - never both in one
-    craft, matching _resolve_tool_for_craft's own vault-checked-first
-    priority: if the vault has ANY eligible instance, only the vault is
-    ever drawn from for this craft, regardless of what the character
-    might also be holding). If even every eligible instance in that one
-    source together can't cover `count`, the craft proceeds at whatever
-    REDUCED count they combined can actually support instead of failing
-    outright - "however many the tool(s) on hand can actually do".
-
-    Returns `("flat_transfer", tool_id, count)` for a flat-balance tool
-    (never quality-gated, so `count` always comes back unchanged) - only
-    ever this shape, never _resolve_tool_for_craft's own "owned" case,
-    since start_craft (this function's only caller) never already has one
-    sitting on Character.crafting.tools the way that check needs. Returns
-    `("instance_moves", [(instance_id, source, slot_ref, wear), ...],
-    actual_count)` for an instance-tracked tool - one entry per instance
-    actually needed (worst-quality first), each with exactly how much of
-    its own quality this batch spends; `actual_count` is `count` itself
-    unless quality forced it down. Returns None if nothing usable exists
-    at all (same failure the caller already returns None for), the same
-    as _resolve_tool_for_craft.
+    Returns `("flat_transfer", tool_id, count)` for a flat-balance tool,
+    `("instance_moves", [(instance_id, source, slot_ref, wear)], count)` for
+    an instance-tracked one, or None if nothing usable exists at all.
     """
     held_items = character.get("gear", {}).get("items", []) or []
 
@@ -1383,7 +1396,7 @@ def _resolve_tool_instances_for_craft(
                 instance for instance in player_items
                 if instance.get("familyId") == family_id
                 and instance.get("location") == "pool"
-                and (_instance_tier(instance) or 0) >= tier
+                and (_is_station(family_id) or (_instance_tier(instance) or 0) >= tier)
             ]
             if pool_candidates:
                 candidates, from_pool = pool_candidates, True
@@ -1392,28 +1405,23 @@ def _resolve_tool_instances_for_craft(
                     instance for instance in held_items
                     if instance.get("familyId") == family_id
                     and instance.get("location") in CRAFT_HELD_LOCATIONS
-                    and (_instance_tier(instance) or 0) >= tier
+                    and (_is_station(family_id) or (_instance_tier(instance) or 0) >= tier)
                 ]
                 from_pool = False
             if not candidates:
                 continue
 
-            moves: List[tuple] = []
-            remaining = count
-            for instance in sorted(candidates, key=lambda i: i.get("quality", 0)):
-                if remaining <= 0:
-                    break
-                available = instance.get("quality", 0)
-                if available <= 0:
-                    continue
-                wear = min(available, remaining)
-                source = "pool" if from_pool else instance.get("location")
-                slot_ref = [] if from_pool else (instance.get("slotRef") or [])
-                moves.append((instance["instanceId"], source, slot_ref, wear))
-                remaining -= wear
-            if not moves:
+            # Condition (backend.item_condition): the most worn eligible
+            # piece does the job; one roll per craft decides whether it
+            # drops a level (wear 1) - the batch is never capped by it.
+            usable = [i for i in candidates if (i.get("quality") or 0) > 0]
+            if not usable:
                 continue
-            return ("instance_moves", moves, count - remaining)
+            instance = min(usable, key=lambda i: i.get("quality", 0))
+            wear = 1 if item_condition.roll(item_condition.crafting_tool_chance(count, _is_station(family_id))) else 0
+            source = "pool" if from_pool else instance.get("location")
+            slot_ref = [] if from_pool else (instance.get("slotRef") or [])
+            return ("instance_moves", [(instance["instanceId"], source, slot_ref, wear)], count)
 
         # Flat-balance tool (anvil, furnace, ...) - no quality/wear concept
         # at all, so `count` is never affected by this branch. Mirrors
@@ -2106,7 +2114,9 @@ def _resolve_craft_chain(
                 # "tool" field would if it only needed one instance (see
                 # start_craft's own identical ingredient_moves handling).
                 _kind, move_instance_id, move_source, move_slot_ref = plan["move"]
-                ingredient_move = (move_instance_id, move_source, move_slot_ref, actual_count)
+                # Same one roll per craft as a recipe's own tool item.
+                ingredient_wear = 1 if item_condition.roll(item_condition.crafting_tool_chance(actual_count)) else 0
+                ingredient_move = (move_instance_id, move_source, move_slot_ref, ingredient_wear)
                 instance_moves.append(ingredient_move)
                 _reserve_tool_instances(character, player_items, [ingredient_move])
             continue
@@ -2656,6 +2666,13 @@ async def _start_craft(
     return await _build_player(db, address)
 
 
+def _station_tool_survives() -> bool:
+    """A station borrowed as a stack (only by a craft started before
+    stations became condition-tracked items) may be worn out by it
+    (crafting.stationWear) - it then isn't returned."""
+    return not item_condition.roll(float(item_condition.CRAFTING["stationWear"]))
+
+
 def _craft_return_storage(character: dict) -> Optional[str]:
     """Where a craft's output, flat tools and borrowed storage items go back
     to: the storage it was started from (activeCraft.storage) - or home when
@@ -2670,6 +2687,13 @@ def _craft_return_storage(character: dict) -> Optional[str]:
 
 async def _return_craft_balances(db, address: str, character_id: str, storage: Optional[str],
                                  amounts: Dict[str, int]) -> None:
+    # A condition-tracked family (e.g. a station borrowed as a stack by an
+    # older craft) goes back as new item instances instead of a count.
+    tracked = {i: n for i, n in amounts.items() if n > 0 and _is_tracked_item(i)}
+    amounts = {i: n for i, n in amounts.items() if i not in tracked}
+    if tracked:
+        await _return_craft_items(db, address, character_id, storage,
+                                  [_new_instance(i) for i, n in tracked.items() for _ in range(n)])
     if not amounts:
         return
     if storage:
@@ -2801,7 +2825,8 @@ async def _finish_craft_step(address: str, character_id: str, step: dict) -> boo
                 await _prune_char_zeros(db, address, character_id, result,
                     [f"crafting.itemBalances.{cid}" for cid in all_char_decremented])
             if tool_transfer_id is not None:
-                await _return_craft_balances(db, address, character_id, return_storage, {tool_transfer_id: 1})
+                if _station_tool_survives():
+                    await _return_craft_balances(db, address, character_id, return_storage, {tool_transfer_id: 1})
         return result is not None
 
     # At least one instance-tracked tool was borrowed for this step -
@@ -2921,7 +2946,8 @@ async def _finish_craft_step(address: str, character_id: str, step: dict) -> boo
             [f"crafting.itemBalances.{cid}" for cid in all_char_decremented], array_filter=True)
     # Return tool and instances to vault after the players update.
     if tool_transfer_id is not None:
-        await _return_craft_balances(db, address, character_id, return_storage, {tool_transfer_id: 1})
+        if _station_tool_survives():
+            await _return_craft_balances(db, address, character_id, return_storage, {tool_transfer_id: 1})
     if returned_to_vault:
         await db.player_vaults.update_one(
             {"address": address},
@@ -3129,7 +3155,7 @@ async def _finish_craft(address: str, character_id: str) -> Optional[Player]:
                     "instanceId": uuid.uuid4().hex,
                     "itemId": output_row["id"],
                     "familyId": family_id,
-                    "quality": (family.quality_max or 0) * (2 ** (tier - 1)),
+                    "quality": item_condition.NEW,
                     "location": return_storage or "pool",
                     "slotRef": [],
                     "createdAt": datetime.now(timezone.utc).isoformat(),
@@ -3191,7 +3217,8 @@ async def _finish_craft(address: str, character_id: str) -> Optional[Player]:
                 [f"crafting.itemBalances.{cid}" for cid in all_char_decremented])
         # Return tool to vault and credit output after the players update.
         if tool_transfer_id is not None:
-            vault_inc_fc[tool_transfer_id] = vault_inc_fc.get(tool_transfer_id, 0) + 1
+            if _station_tool_survives():
+                vault_inc_fc[tool_transfer_id] = vault_inc_fc.get(tool_transfer_id, 0) + 1
         await _return_craft_balances(db, address, character_id, return_storage, vault_inc_fc)
         await _return_craft_items(db, address, character_id, return_storage, vault_push_items_fc)
         await _remove_pc_status(db, address, character_id, "crafting")
@@ -3382,7 +3409,8 @@ async def _finish_craft(address: str, character_id: str) -> Optional[Player]:
 
     # Return tool to vault and credit output to vault after the players update.
     if tool_transfer_id is not None:
-        vault_inc_fc2[tool_transfer_id] = vault_inc_fc2.get(tool_transfer_id, 0) + 1
+        if _station_tool_survives():
+            vault_inc_fc2[tool_transfer_id] = vault_inc_fc2.get(tool_transfer_id, 0) + 1
     await _return_craft_balances(db, address, character_id, return_storage, vault_inc_fc2)
     await _return_craft_items(db, address, character_id, return_storage, vault_push_items_fc2)
     # Tools borrowed from the shared vault by an older craft go back there.
@@ -6076,9 +6104,9 @@ async def degrade_item_quality(
     """
     Internal-only - not registered as a route; no combat/adventure system
     exists yet to legitimately call this. Lowers one item instance's
-    quality by `amount`. A plain relative $inc, not floor-clamped at 0 -
-    quality can go negative; treat quality <= 0 as broken wherever it's
-    read/displayed.
+    condition by `amount` levels (backend.item_condition: 4 new .. 1
+    broken). A plain relative $inc - at 0 or below the item counts as gone
+    wherever it's read.
     """
     db = get_database()
     doc = await db.characters.find_one_and_update(

@@ -252,9 +252,10 @@ export type ForageOldGear = {
   tier: number;
   icon: string;
   description?: string;
+  /** Condition level 4..1 (found broken). */
   quality: number;
-  /** Full quality at this tier. */
-  qualityMax: number;
+  /** "new" / "used" / "damaged" / "broken". */
+  condition?: string;
 };
 
 export type ForageResult = {
@@ -272,9 +273,9 @@ export type ForageResult = {
   returnedAt: string;
   /** Gathering-gear bonus that applied, in percent. */
   gearPercent?: number;
-  /** Gear used and how much quality it lost. */
-  gear?: { instanceId: string | null; name: string; kind: "weapon" | "item"; wear: number; destroyed: boolean }[];
-  /** Names of gear destroyed on this trip (quality reached 0). */
+  /** Gear used: condition levels lost this trip (0 or 1) and its condition after. */
+  gear?: { instanceId: string | null; name: string; kind: "weapon" | "item"; wear: number; destroyed: boolean; condition?: string }[];
+  /** Names of gear lost on this trip (dropped below broken, or a stacked piece used up). */
   broken?: string[];
   /** Arrows/bolts shot (item id -> amount) - one per unit found with a bow/crossbow. */
   ammoUsed?: Record<string, number>;

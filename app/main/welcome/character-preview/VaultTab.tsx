@@ -13,7 +13,6 @@ export type BlueprintTierInfo = Record<
     familyId: string;
     kind: string;
     name?: string;
-    qualityMax?: number | null;
     armorClass?: number | null;
     /** Per-tier art path (item-catalog only) - "" when this family/tier has no dedicated art yet. */
     icon?: string;
@@ -76,15 +75,17 @@ export type SalvageMaterial = {
 };
 /** An item instance's quality state as the salvage endpoints report it -
  * balance items (no instance) are always "new". */
-export type SalvageCondition = "new" | "used" | "damaged";
+export type SalvageCondition = "new" | "used" | "damaged" | "broken";
 type SalvagePreview = { materials: SalvageMaterial[]; condition?: SalvageCondition };
 
-/** A worn instance&apos;s salvage penalty - mirrors backend.recycling.
- * CONDITION_PENALTY (used -20pp, damaged -50pp, floored at 0). Display
- * only: recoveredUnits already has it applied server-side. */
+/** A worn instance&apos;s salvage penalty - mirrors backend data/
+ * item-conditions.json "salvagePenalty" (used -10pp, damaged -25pp, broken
+ * -50pp, floored at 0). Display only: recoveredUnits already has it applied
+ * server-side. */
 const SALVAGE_CONDITION_PENALTY: Partial<Record<SalvageCondition, { percent: number; label: string }>> = {
-  used: { percent: 20, label: "used" },
-  damaged: { percent: 50, label: "dam" },
+  used: { percent: 10, label: "used" },
+  damaged: { percent: 25, label: "dam" },
+  broken: { percent: 50, label: "broken" },
 };
 
 /** One raw material's yield formula, e.g. "25 + 0 skill + 5 tool + 0 charm
@@ -1212,21 +1213,10 @@ export function ItemGrid({
         {expandedIds.map(({ key, id, displayCount, tileCap }) => {
           const info = tierInfo[lookupIds?.[id] ?? id];
           const name = info?.name ? stripBlueprintPrefix(info.name) : formatResourceLabel(lookupIds?.[id] ?? id);
-          // Only a real item instance carries a quality (isInstance rows -
-          // same condition ItemDetailPopup uses for its "Quality: X/Y"
-          // line) - a stackable balance row has no such concept, so it
-          // gets no bar at all rather than a misleading full-green one.
-          const currentQuality = instanceQuality?.[id];
-          const qualityFraction =
-            lookupIds?.[id] !== undefined && info?.qualityMax != null && currentQuality != null
-              ? Math.max(0, Math.min(1, info.qualityMax > 0 ? currentQuality / (info.qualityMax * (2 ** (info.tier - 1))) : 1))
-              : null;
-          // Same cutoff as the quality bar's own red band (qualityState) -
-          // a damaged instance gets a red-tinted tile background too, not
-          // just the thin bar along its bottom edge, so it reads at a
-          // glance in a full grid instead of needing a close look at one
-          // 5px sliver.
-          const isDamaged = qualityFraction !== null && qualityState(qualityFraction) === "damaged";
+          // Only a real item instance has a condition - a stackable balance
+          // row gets no corner at all. A broken one also gets the red tile.
+          const cond = lookupIds?.[id] !== undefined ? conditionOf(instanceQuality?.[id]) : null;
+          const isDamaged = cond === "broken";
           const isSelected = selectMode && selectedIds?.has(key);
           let cellClass = styles.itemGridCell;
           if (isDamaged) cellClass += ` ${styles.itemGridCellDamaged}`;
@@ -1258,10 +1248,10 @@ export function ItemGrid({
               )}
               {displayCount !== null && displayCount > 1 && <span className={styles.itemGridCountBadge}>{displayCount}</span>}
               {isSelected && <span className={styles.itemGridCheckmark}>&#x2713;</span>}
-              {qualityFraction !== null && (
+              {cond !== null && (
                 <div
                   className={styles.itemGridQualityBar}
-                  style={{ backgroundColor: qualityBarColor(qualityFraction) }}
+                  style={{ backgroundColor: conditionColor(cond) }}
                 />
               )}
             </button>
@@ -1828,31 +1818,45 @@ export function ChopBlockPopup({
   );
 }
 
-// The three discrete condition brackets a quality fraction (current/max)
-// falls into - fixed steps, not a smooth blend. The same cutoffs drive
-// salvage yield server-side (backend.recycling.quality_state/
-// CONDITION_PENALTY: new 0, used -20pp, damaged -50pp).
-/** Exported so BodyTab.tsx's equip slots can apply the exact same
- * damaged-tile treatment ItemGrid uses below, rather than duplicating the
- * 10%/50% cutoffs. */
-export type QualityState = "new" | "used" | "damaged";
+// Item condition (backend/item_condition.py): an instance's `quality` is a
+// level 4..1 - new, used, damaged, broken - the same for every tier; below
+// broken the item is gone. Stacked items have no condition (null).
+export type QualityState = "new" | "used" | "damaged" | "broken";
 
-export function qualityState(f: number): QualityState {
-  if (f > 0.5) return "new"; // 51-100%
-  if (f > 0.1) return "used"; // 11-50%
-  return "damaged"; // 1-10% (and 0)
+const CONDITION_BY_LEVEL: Record<number, QualityState> = { 4: "new", 3: "used", 2: "damaged", 1: "broken" };
+
+/** The condition of a stored quality level - null for a stack (no quality).
+ * Anything above 4 (an old point value not yet migrated) counts as new. */
+export function conditionOf(quality: number | null | undefined): QualityState | null {
+  if (quality == null) return null;
+  return CONDITION_BY_LEVEL[Math.max(1, Math.min(4, Math.round(quality)))];
 }
+
+export const CONDITION_LABEL: Record<QualityState, string> = {
+  new: "New",
+  used: "Used",
+  damaged: "Damaged",
+  broken: "Broken",
+};
+
+/** Mounts and companions show the same four levels as health. */
+export const HEALTH_LABEL: Record<QualityState, string> = {
+  new: "Good",
+  used: "Tired",
+  damaged: "Exhausted",
+  broken: "Dying",
+};
 
 const QUALITY_STATE_COLORS: Record<QualityState, string> = {
   new: "rgb(64, 158, 37)",
-  used: "rgb(200, 136, 57)",
+  used: "rgb(214, 178, 58)",
   damaged: "rgb(168, 29, 16)",
+  broken: "rgb(168, 29, 16)",
 };
 
-// The quality bar's own color at fraction `f` (current/max, 0-1) - one of
-// the three fixed QUALITY_STATE_COLORS, never blended between them.
-export function qualityBarColor(f: number): string {
-  return QUALITY_STATE_COLORS[qualityState(Math.max(0, Math.min(1, f)))];
+/** The corner triangle's color for a condition (green, yellow, red, red). */
+export function conditionColor(state: QualityState): string {
+  return QUALITY_STATE_COLORS[state];
 }
 
 // How long a failed move/equip's message replaces the description text
@@ -2027,26 +2031,25 @@ export function ResourceTiles({
   );
 }
 
-/** One display-only item tile (icon, tier badge, quality bar, damaged
+/** One display-only item tile (icon, tier badge, condition corner, broken
  * tint) - the same look as ItemGrid's tiles, for places outside the
  * inventory, e.g. lost equipment on a foraging result (optionally
- * clickable). `qualityFraction`
- * is current / full quality (0-1), or null for items without quality. */
+ * clickable). `condition` is null for items without one. */
 export function ItemTile({
   icon,
   name,
   tier,
-  qualityFraction,
+  condition,
   onClick,
 }: {
   icon?: string | null;
   name: string;
   tier?: number;
-  qualityFraction: number | null;
+  condition: QualityState | null;
   /** Makes the tile a button, e.g. to open an info popup. */
   onClick?: () => void;
 }) {
-  const isDamaged = qualityFraction !== null && qualityState(qualityFraction) === "damaged";
+  const isDamaged = condition === "broken";
   const Tag = onClick ? "button" : "div";
   return (
     <Tag
@@ -2056,8 +2059,8 @@ export function ItemTile({
     >
       <ItemIcon icon={icon} alt={name} className={styles.itemGridImg} />
       {!!tier && <span className={styles.itemGridTierBadge}>{getTierIndicator(tier)}</span>}
-      {qualityFraction !== null && (
-        <div className={styles.itemGridQualityBar} style={{ backgroundColor: qualityBarColor(qualityFraction) }} />
+      {condition !== null && (
+        <div className={styles.itemGridQualityBar} style={{ backgroundColor: conditionColor(condition) }} />
       )}
     </Tag>
   );
@@ -2310,12 +2313,8 @@ function PackedItemsRow({
         {expandedIds.map(({ key, id, displayCount, tileCap }) => {
           const info = tierInfo[lookupIds[id] ?? id];
           const name = info?.name ? stripBlueprintPrefix(info.name) : formatResourceLabel(lookupIds[id] ?? id);
-          const currentQuality = instanceQuality[id];
-          const qualityFraction =
-            lookupIds[id] !== undefined && info?.qualityMax != null && currentQuality != null
-              ? Math.max(0, Math.min(1, info.qualityMax > 0 ? currentQuality / (info.qualityMax * (2 ** (info.tier - 1))) : 1))
-              : null;
-          const isDamaged = qualityFraction !== null && qualityState(qualityFraction) === "damaged";
+          const cond = lookupIds[id] !== undefined ? conditionOf(instanceQuality[id]) : null;
+          const isDamaged = cond === "broken";
           return (
             <button
               key={key}
@@ -2335,10 +2334,10 @@ function PackedItemsRow({
                 </span>
               )}
               {displayCount !== null && displayCount > 1 && <span className={styles.itemGridCountBadge}>{displayCount}</span>}
-              {qualityFraction !== null && (
+              {cond !== null && (
                 <div
                   className={styles.itemGridQualityBar}
-                  style={{ backgroundColor: qualityBarColor(qualityFraction) }}
+                  style={{ backgroundColor: conditionColor(cond) }}
                 />
               )}
             </button>
@@ -2589,7 +2588,7 @@ export function ItemDetailPopup({
   isInstance: boolean;
   /** False for ammo (arrow/bolt/oil) - no working move-to-backpack path exists yet, so no action buttons show. */
   movable: boolean;
-  /** This exact instance's current quality (isInstance rows only) - paired with info.qualityMax for the "Quality: current/max" line. */
+  /** This exact instance's condition level 4..1 (isInstance rows only) - shown as "Condition: New/Used/Damaged/Broken". */
   quality: number | null;
   /** The row id itself - an instanceId (isInstance) or a concrete itemBalances/resource id. */
   moveId: string;
@@ -3098,17 +3097,20 @@ export function ItemDetailPopup({
               <span>Size: {info?.sizeClass ?? "tiny"}</span>
               {info?.armorClass != null && info.armorClass > 0 && (() => {
                 const maxAC = info.armorClass * (info.tier ?? 1);
-                if (!isInstance || quality == null || info.qualityMax == null || info.qualityMax <= 0) {
+                const cond = isInstance ? conditionOf(quality) : null;
+                if (cond === null) {
                   return <span>AC: {maxAC}</span>;
                 }
-                const qf = Math.max(0, Math.min(1, quality / (info.qualityMax * (2 ** (info.tier - 1)))));
-                const cond = qualityState(qf);
-                const reduction = cond === "damaged" ? 0.5 : cond === "used" ? 0.2 : 0;
+                const reduction = cond === "damaged" || cond === "broken" ? 0.5 : cond === "used" ? 0.2 : 0;
                 const currentAC = Math.max(0, Math.floor(maxAC * (1 - reduction)));
                 return <span>AC: {currentAC}/{maxAC}</span>;
               })()}
-              {isInstance && info?.qualityMax != null && (
-                <span>{info.kind === "mount" || info.kind === "companion" ? "HP" : "Quality"}: {quality ?? 0}/{info.qualityMax * (2 ** (info.tier - 1))}</span>
+              {isInstance && conditionOf(quality) !== null && (
+                info?.kind === "mount" || info?.kind === "companion" ? (
+                  <span>Health: {HEALTH_LABEL[conditionOf(quality) as QualityState]}</span>
+                ) : (
+                  <span>Condition: {CONDITION_LABEL[conditionOf(quality) as QualityState]}</span>
+                )
               )}
               {info?.familyId === "backpack" && backpackSlotsUsed != null && backpackCapacity != null && (
                 <span>Filled: {backpackSlotsUsed}/{backpackCapacity}</span>

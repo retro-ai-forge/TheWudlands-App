@@ -29,12 +29,13 @@ character (+25% at T1 .. +75% at T6), plus every matching item family
 carried (+5% .. +18%) - weaponBonusByTier/itemBonusByTier in the rules.
 The base roll is set low enough that only geared trips beat the old yield.
 A bow needs a quiver and arrows, a crossbow a bolt girdle and bolts
-(weaponRequires). Gear only wears on finds of at least its own tier: a
-weapon loses 1 quality per such unit, an item 1 per trip if the trip found
-any. A bow/crossbow shoots one arrow/bolt per unit - an arrow covers finds
-of its tier or lower - and wears only for uncovered finds at or above its
-tier (weaponAmmo). Gear at
-quality <= 0 is destroyed.
+(weaponRequires). Gear only wears on finds of at least its own tier: once
+per trip it may drop one condition level (backend.item_condition - new,
+used, damaged, broken, then gone; chances in data/item-conditions.json); a
+stacked gathering item may lose a unit instead. A bow/crossbow shoots one
+arrow/bolt per unit - an arrow covers finds of its tier or lower - and only
+risks wear when a find at or above its tier was left uncovered
+(weaponAmmo).
 
 Companion charms (companionCharms): the charm worn in the companion's Charm
 slot adds its tier's item bonus on the materials that suit its companion
@@ -61,8 +62,8 @@ single T4-T6 one - a bonus on top, outside the pool, with no gear wear.
 
 Old gear (oldGear): each trip also has a 15% chance of turning up one
 forgotten T1 weapon or item from the gathering-gear list of the material
-foraged - only quality-tracked pieces, found in the damaged range (at most
-10% of their quality). It lands in home storage (character_homes.items).
+foraged - only condition-tracked pieces, found broken (item-conditions.json
+"lostEquipment"). It lands in home storage (character_homes.items).
 
 Every return carries a sentence fitted to the material and place
 (data/foraging-messages.json): "rich" while the family's pool is at least
@@ -91,7 +92,7 @@ from typing import Optional
 
 from pymongo import ReturnDocument
 
-from backend import condition, items_catalog
+from backend import condition, item_condition, items_catalog
 from backend.db import get_database
 from backend.professions_catalog import PROFESSION_CATEGORIES
 from backend.resources_catalog import PROFESSION_RESOURCE_FAMILIES, RESOURCE_ITEMS, RESOURCE_ITEMS_BY_ID
@@ -114,7 +115,7 @@ ITEM_BONUS_BY_TIER: dict[int, float] = {int(t): b for t, b in RULES["itemBonusBy
 # at least one bolt.
 WEAPON_REQUIRES: dict[str, tuple[str, ...]] = {w: tuple(r) for w, r in RULES.get("weaponRequires", {}).items()}
 # Ammo a weapon shoots on a trip - one per unit found, standing in for the
-# weapon's own wear; only what the ammo can't cover comes off its quality.
+# weapon's own wear; the weapon only risks wear for what the ammo can't cover.
 WEAPON_AMMO: dict[str, str] = dict(RULES.get("weaponAmmo", {}))
 # Light sources (ore, crystal, clockwork): at most one counts per trip, the
 # first of LIGHT_SOURCES the character can light - only with everything in
@@ -213,9 +214,8 @@ def trip_duration() -> timedelta:
 
 # Gathering gear per resource family (data/gathering-bonuses-raw-material.json):
 # one matching weapon anywhere on the character adds its tier's weapon bonus
-# and wears by the units found; every matching item family carried adds its
-# tier's item bonus and, if quality-tracked, wears by 1. Gear that reaches
-# quality <= 0 is destroyed.
+# and every matching item family carried adds its tier's item bonus; each
+# may drop a condition level per trip (see _wear_gear).
 def _load_gathering_gear() -> dict[str, dict[str, tuple[str, ...]]]:
     data = json.loads((_DATA / "gathering-bonuses-raw-material.json").read_text())
     return {family: {"weapons": tuple(info.get("gatheringWeapons", ())),
@@ -632,37 +632,36 @@ def surprise_message(surprise: dict[str, int], character_name: str,
 
 def old_gear_options(family_id: str) -> list[tuple[str, dict, int]]:
     """The pieces old gear can be for `family_id`: its gathering weapons and
-    items that are quality-tracked instances, at the rule's tier, as
-    (item family, catalog row, full quality at that tier)."""
+    items that are condition-tracked instances, at the rule's tier, as
+    (item family, catalog row, condition level when new)."""
     tier = int(OLD_GEAR.get("tier", 1))
     gear = GATHERING_GEAR.get(family_id) or {}
     options = []
     for item_family in dict.fromkeys(gear.get("weapons", ()) + gear.get("items", ())):
         family = items_catalog.ITEM_FAMILIES_BY_ID.get(item_family)
-        if family is None or not family.quality_max or not family.needs_item_definition:
+        if family is None or not family.needs_item_definition:
             continue
         row = items_catalog.resolve_output_row(item_family, tier)
         if row is not None:
-            options.append((item_family, row, family.quality_max * (2 ** (tier - 1))))
+            options.append((item_family, row, item_condition.NEW))
     return options
 
 
 def roll_old_gear(family_id: str, rng: random.Random | None = None) -> Optional[dict]:
-    """Maybe a forgotten piece of gathering gear for `family_id`, damaged:
-    {"instanceId", "itemId", "familyId", "name", "tier", "icon", "description", "quality",
-    "qualityMax"}
-    or None (qualityMax is the full quality at that tier)."""
+    """Maybe a forgotten piece of gathering gear for `family_id`, found
+    broken: {"instanceId", "itemId", "familyId", "name", "tier", "icon",
+    "description", "quality" (condition level), "condition"} or None."""
     rng = rng or random.Random()
     if not OLD_GEAR or rng.random() >= OLD_GEAR.get("chance", 0):
         return None
     options = old_gear_options(family_id)
     if not options:
         return None
-    item_family, row, quality_max = rng.choice(options)
-    top = max(1, math.floor(quality_max * OLD_GEAR.get("maxQualityFraction", 0.1)))
+    item_family, row, _ = rng.choice(options)
     return {"instanceId": uuid.uuid4().hex, "itemId": row["id"], "familyId": item_family,
             "name": row["name"], "tier": int(OLD_GEAR.get("tier", 1)), "icon": row.get("icon", ""),
-            "description": row.get("description", ""), "quality": rng.randint(1, top), "qualityMax": quality_max}
+            "description": row.get("description", ""), "quality": item_condition.LOST_EQUIPMENT_LEVEL,
+            "condition": item_condition.label(item_condition.LOST_EQUIPMENT_LEVEL)}
 
 
 def old_gear_message(old: Optional[dict], character_name: str,
@@ -685,7 +684,9 @@ def roll_trip_night(doc: dict, family_id: Optional[str] = None, rng: random.Rand
     severity = (NIGHTS["weather"].get(night["weather"]) or {}).get("severity", "none")
     # The tent still kept that night off - but rough weather may wreck it.
     tent_destroyed = "tent" in carried and rng.random() < TENT_DESTROYED_CHANCE.get(severity, 0)
-    return {**night, "shelter": carried, "tentDestroyed": tent_destroyed,
+    # Any night may also simply wear a carried tent or bedroll out.
+    worn_out = [f for f in carried if item_condition.roll(float(item_condition.NIGHTS["shelterLoss"]), rng)]
+    return {**night, "shelter": carried, "tentDestroyed": tent_destroyed, "shelterWornOut": worn_out,
             "message": night_message(night, missing, doc.get("firstName") or "Your character", rng)}
 
 
@@ -998,26 +999,45 @@ async def _consume_ammo(db, address: str, character_id: str, ammo_family: str,
 
 
 async def _wear_gear(db, address: str, character_id: str, gear: dict, weapon_wear: int,
-                     top_tier: int) -> tuple[list, list]:
-    """Wear the trip's gear: the weapon loses `weapon_wear` quality (see
-    _roll_trip); each quality-tracked item loses 1, but only if the trip
-    found something of at least its tier (`top_tier`). Anything at quality
-    <= 0 afterwards is destroyed. Returns (worn, broken names)."""
+                     top_tier: int, rng: random.Random | None = None) -> tuple[list, list]:
+    """Wear the trip's gear (backend.item_condition, data/item-conditions.json
+    "foraging"): the weapon - only if it had to work for a find of at least
+    its tier (`weapon_wear` > 0, see _roll_trip) - and each condition-tracked
+    item that a find of at least its tier (`top_tier`) used may drop one
+    level; below broken it's gone. A stacked item (whetstone, iron spikes...)
+    that counted may lose one unit instead. A light's own fuel already
+    burned, so it's left out. Returns (worn, broken names) - worn entries
+    {instanceId, name, kind, wear (levels lost), destroyed, condition}."""
+    rng = rng or random.Random()
     wear: dict[str, int] = {}
     worn: list[dict] = []
+    stacks_lost: list[dict] = []
     weapon = gear.get("weapon")
     if weapon:
-        if weapon["instanceId"] and weapon.get("quality") is not None and weapon_wear > 0:
-            wear[weapon["instanceId"]] = weapon_wear
+        if (weapon["instanceId"] and weapon.get("quality") is not None and weapon_wear > 0
+                and item_condition.roll(float(item_condition.FORAGING["weapon"]), rng)):
+            wear[weapon["instanceId"]] = 1
         worn.append({"instanceId": weapon["instanceId"], "name": weapon["name"], "kind": "weapon",
-                     "wear": wear.get(weapon["instanceId"] or "", 0), "destroyed": False})
+                     "wear": wear.get(weapon["instanceId"] or "", 0), "destroyed": False,
+                     "condition": item_condition.label(weapon.get("quality"))})
     for item in gear.get("items", []):
-        if item["instanceId"] and item.get("quality") is not None and top_tier >= item.get("tier", 1):
-            wear[item["instanceId"]] = 1
+        if item["instanceId"] and item.get("quality") is not None:
+            if top_tier >= item.get("tier", 1) and item_condition.roll(float(item_condition.FORAGING["item"]), rng):
+                wear[item["instanceId"]] = 1
+        elif not item.get("fuel") and item_condition.roll(float(item_condition.FORAGING["stackLoss"]), rng):
+            stacks_lost.append(item)
         worn.append({"instanceId": item["instanceId"], "name": item["name"], "kind": "item",
-                     "wear": wear.get(item["instanceId"] or "", 0), "destroyed": False})
+                     "wear": wear.get(item["instanceId"] or "", 0), "destroyed": False,
+                     "condition": item_condition.label(item.get("quality"))})
+
+    broken_names: list[str] = []
+    # A stacked piece used up: one unit leaves the pack.
+    for item in stacks_lost:
+        used, _ = await _consume_ammo(db, address, character_id, item["familyId"], [item.get("tier", 1)])
+        if used:
+            broken_names.append(item["name"])
     if not wear:
-        return worn, []
+        return worn, broken_names
 
     ids = list(wear)
     doc = await db.characters.find_one_and_update(
@@ -1027,9 +1047,9 @@ async def _wear_gear(db, address: str, character_id: str, gear: dict, weapon_wea
         return_document=ReturnDocument.AFTER,
     )
     if doc is None:
-        return worn, []
-    broken_items = [i for i in doc.get("gear", {}).get("items", [])
-                    if i.get("instanceId") in wear and (i.get("quality") or 0) <= 0]
+        return worn, broken_names
+    after = {i.get("instanceId"): i for i in doc.get("gear", {}).get("items", [])}
+    broken_items = [i for iid, i in after.items() if iid in wear and (i.get("quality") or 0) <= 0]
     if broken_items:
         await db.characters.update_one(
             {"address": address, "id": character_id},
@@ -1038,7 +1058,9 @@ async def _wear_gear(db, address: str, character_id: str, gear: dict, weapon_wea
     broken_ids = {i["instanceId"] for i in broken_items}
     for w in worn:
         w["destroyed"] = w["instanceId"] in broken_ids
-    return worn, [_item_name(i.get("itemId", ""), i.get("familyId", "")) for i in broken_items]
+        if w["instanceId"] in after and not w["destroyed"]:
+            w["condition"] = item_condition.label(after[w["instanceId"]].get("quality"))
+    return worn, broken_names + [_item_name(i.get("itemId", ""), i.get("familyId", "")) for i in broken_items]
 
 
 async def _roll_trip(db, address: str, character_id: str, doc: dict, active: dict, gear: dict) -> dict:
@@ -1099,8 +1121,18 @@ async def _roll_trip(db, address: str, character_id: str, doc: dict, active: dic
     ammo_shortfall = len(uncovered) if ammo_family else 0
     worn, broken = await _wear_gear(db, address, character_id, gear, weapon_wear, max(tiers, default=0))
 
+    # Lighting a light may use up the tinderbox (a stacked item).
+    if light_used:
+        for required in LIGHT_REQUIRES:
+            piece = _pick(doc, required)
+            if piece and piece["instanceId"] is None and item_condition.roll(float(item_condition.FORAGING["stackLoss"])):
+                used, _ = await _consume_ammo(db, address, character_id, required, [piece["tier"]])
+                if used:
+                    broken = [*broken, piece["name"]]
+
     # The night: a severe one may wreck the pitched tent (the best one
-    # carried) - it's gone from the pack right away, like burnt fuel.
+    # carried), and any night may wear out the tent or bedroll - gone from
+    # the pack right away, like burnt fuel.
     night = roll_trip_night(doc, family_id)
     if night.pop("tentDestroyed", False):
         tent = _pick(doc, "tent")
@@ -1111,6 +1143,14 @@ async def _roll_trip(db, address: str, character_id: str, doc: dict, active: dic
             night["message"] = (f"{night['message']} "
                                 f"{tent_destroyed_message(tent['name'], doc.get('firstName') or 'Your character')}")
             broken = [*broken, tent["name"]]
+    for shelter in night.pop("shelterWornOut", []):
+        if shelter == "tent" and night.get("tentLost"):
+            continue
+        piece = _pick(doc, shelter)
+        used, _ = (await _consume_ammo(db, address, character_id, shelter, [piece["tier"]])
+                   if piece and piece["instanceId"] is None else ({}, []))
+        if used:
+            broken = [*broken, piece["name"]]
 
     exhausted = entry is None or is_exhausted(entry["count"], entry["remaining"])
     outcome = return_outcome(entry["initial"], entry["remaining"], exhausted) if entry else "depleted"

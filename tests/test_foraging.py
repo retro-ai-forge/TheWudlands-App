@@ -11,7 +11,7 @@ from pathlib import Path
 
 import pytest
 
-from backend import foraging
+from backend import foraging, item_condition
 from backend.character import Character, ProfStats
 from backend.db import get_database
 from backend.players import add_character, delete_character, get_single_character, set_in_adventure
@@ -110,6 +110,10 @@ async def db(mongodb_uri, monkeypatch):
     # Random extras (surprise finds, old gear) are off unless a test patches them in.
     monkeypatch.setattr(foraging, "roll_surprises", lambda rng=None: {})
     monkeypatch.setattr(foraging, "roll_old_gear", lambda family_id, rng=None: None)
+    # Condition wear and stack losses are off too; a test sets the chance it checks to 1.
+    for key in ("weapon", "item", "stackLoss"):
+        monkeypatch.setitem(item_condition.FORAGING, key, 0.0)
+    monkeypatch.setitem(item_condition.NIGHTS, "shelterLoss", 0.0)
     db = get_database()
     for name in _COLLECTIONS:
         await db[name].delete_many({"address": ADDRESS})
@@ -235,6 +239,12 @@ def test_gathering_file_splits_weapons_from_items():
             assert "weapon" not in items_catalog.ITEM_FAMILIES_BY_ID[i].kind, (family, i)
 
 
+def _always(monkeypatch, *keys: str) -> None:
+    """Make these foraging wear chances certain (item-conditions.json "foraging")."""
+    for key in keys:
+        monkeypatch.setitem(item_condition.FORAGING, key, 1.0)
+
+
 def _instance(family: str, quality: int, location: str = "backpack", tier: int = 1) -> dict:
     return {"instanceId": f"{family}-{quality}-{location}", "itemId": f"{family}_{tier}", "familyId": family,
             "quality": quality, "location": location, "slotRef": []}
@@ -273,9 +283,10 @@ def test_basic_kit_matches_and_better_gear_beats_the_old_yield():
 async def test_gear_boosts_yield_wears_and_breaks(db, monkeypatch):
     cid = await _make(1, "blacksmith")
     await db.characters.update_one({"address": ADDRESS, "id": cid}, {"$set": {
-        "gear.items": [_instance("pickaxe", 200), _instance("cart", 1, "cart")],
+        "gear.items": [_instance("pickaxe", 4), _instance("cart", 1, "cart")],
         "gear.itemBalances.backpack": {"hunters_charm_1": 1},
     }})
+    _always(monkeypatch, "weapon", "item")
     state = await foraging.get_foraging_state(ADDRESS, cid)
     ore = next(s for s in state["sites"] if s["familyId"] == "ore")
     assert ore["gear"]["percent"] == 25 + 5 + 5
@@ -287,23 +298,26 @@ async def test_gear_boosts_yield_wears_and_breaks(db, monkeypatch):
 
     assert out["result"]["total"] == 13                         # floor(10 * 1.35)
     assert out["result"]["gearPercent"] == 35
-    assert len(out["result"]["broken"]) == 1                    # cart at quality 1 -> 0
+    assert len(out["result"]["broken"]) == 1                    # broken cart drops once more: gone
     doc = await db.characters.find_one({"address": ADDRESS, "id": cid})
     items = {i["familyId"]: i for i in doc["gear"]["items"]}
-    assert items["pickaxe"]["quality"] == 200 - 13              # weapon wears by units found
-    assert "cart" not in items                                  # destroyed at 0
-    assert doc["gear"]["itemBalances"]["backpack"]["hunters_charm_1"] == 1  # stacked item: no wear
+    assert items["pickaxe"]["quality"] == 3                     # new -> used, one level per trip
+    worn = {w["name"]: w for w in out["result"]["gear"]}
+    assert any(w["condition"] == "used" and w["wear"] == 1 for w in worn.values())
+    assert "cart" not in items                                  # gone below broken
+    assert doc["gear"]["itemBalances"]["backpack"]["hunters_charm_1"] == 1  # stack loss chance is 0
 
 
 async def test_outcome_is_rolled_at_start_and_revealed_at_collect(db, monkeypatch):
     cid = await _make(1, "blacksmith")
-    await db.characters.update_one({"address": ADDRESS, "id": cid}, {"$set": {"gear.items": [_instance("pickaxe", 200)]}})
+    await db.characters.update_one({"address": ADDRESS, "id": cid}, {"$set": {"gear.items": [_instance("pickaxe", 4)]}})
     monkeypatch.setattr(foraging.random, "randint", lambda a, b: 10)
+    _always(monkeypatch, "weapon")
     state = await foraging.start_forage(ADDRESS, cid, "craftweapon_01")
 
     # Wear and pool are settled already; the finds are hidden and not in the vault yet.
     doc = await db.characters.find_one({"address": ADDRESS, "id": cid})
-    assert doc["gear"]["items"][0]["quality"] == 200 - 12        # floor(10 * 1.25)
+    assert doc["gear"]["items"][0]["quality"] == 3               # already worn a level at start
     assert "result" not in state["activeForage"]
     assert "result" not in (await foraging.get_foraging_state(ADDRESS, cid))["activeForage"]
     full = await get_single_character(ADDRESS, cid)
@@ -361,26 +375,28 @@ async def _bow_trip(db, monkeypatch, items: list, balances: dict) -> tuple[dict,
 
 
 async def test_bow_shoots_one_arrow_per_unit_found(db, monkeypatch):
+    _always(monkeypatch, "weapon")
     result, doc = await _bow_trip(db, monkeypatch,
-                                  [_instance("bow", 100, "body"), _instance("quiver", 40, "body")],
+                                  [_instance("bow", 4, "body"), _instance("quiver", 4, "body")],
                                   {"arrow_1": 20})
     assert result["total"] == 12                                # floor(10 * 1.25)
     assert result["ammoUsed"] == {"arrow_1": 12} and result["ammoShortfall"] == 0
     assert doc["gear"]["itemBalances"]["backpack"]["arrow_1"] == 8
     bow = next(i for i in doc["gear"]["items"] if i["familyId"] == "bow")
-    assert bow["quality"] == 100                                # arrows took all the wear
+    assert bow["quality"] == 4                                  # arrows covered every find: no wear roll
 
 
 async def test_missing_arrows_come_off_the_bow(db, monkeypatch):
     stack = {**_instance("arrow", 0, "body"), "quality": None, "quantity": 3}  # equipped, used first
+    _always(monkeypatch, "weapon")
     result, doc = await _bow_trip(db, monkeypatch,
-                                  [_instance("bow", 100, "body"), _instance("quiver", 40, "body"), stack],
+                                  [_instance("bow", 4, "body"), _instance("quiver", 4, "body"), stack],
                                   {"arrow_2": 5})
     assert result["ammoUsed"] == {"arrow_1": 3, "arrow_2": 5} and result["ammoShortfall"] == 4
     assert "arrow_2" not in doc["gear"]["itemBalances"]["backpack"]
     assert not any(i["familyId"] == "arrow" for i in doc["gear"]["items"])  # empty stack removed
     bow = next(i for i in doc["gear"]["items"] if i["familyId"] == "bow")
-    assert bow["quality"] == 100 - 4                            # only what the 8 arrows didn't cover
+    assert bow["quality"] == 3                                  # finds the arrows didn't cover: the bow wore
 
 
 # ── Tier-aware wear ─────────────────────────────────────────────────────
@@ -408,25 +424,27 @@ def test_lowest_fitting_arrow_is_used_first_equipped_before_packed():
 async def test_higher_tier_gear_does_not_wear_on_lower_tier_finds(db, monkeypatch):
     cid = await _make(1, "blacksmith")                              # 1 profession: T1 finds only
     await db.characters.update_one({"address": ADDRESS, "id": cid}, {"$set": {
-        "gear.items": [_instance("pickaxe", 200, tier=2), _instance("cart", 30, "cart", tier=2),
-                       _instance("grappling_hook", 30, tier=1)],
+        "gear.items": [_instance("pickaxe", 4, tier=2), _instance("cart", 4, "cart", tier=2),
+                       _instance("grappling_hook", 4, tier=1)],
     }})
     monkeypatch.setattr(foraging.random, "randint", lambda a, b: 10)
+    _always(monkeypatch, "weapon", "item")
     await foraging.start_forage(ADDRESS, cid, "craftweapon_01")
     items = {i["familyId"]: i for i in (await db.characters.find_one({"address": ADDRESS, "id": cid}))["gear"]["items"]}
-    assert items["pickaxe"]["quality"] == 200                        # T2 weapon, T1 finds: no wear
-    assert items["cart"]["quality"] == 30                            # T2 item: no wear
-    assert items["grappling_hook"]["quality"] == 29                  # T1 item: wears 1
+    assert items["pickaxe"]["quality"] == 4                          # T2 weapon, T1 finds: no wear roll
+    assert items["cart"]["quality"] == 4                             # T2 item: no wear roll
+    assert items["grappling_hook"]["quality"] == 3                   # T1 item: drops a level
 
 
 async def test_bow_only_wears_for_uncovered_finds_at_its_tier(db, monkeypatch):
     # T1 finds, T2 bow, only 3 arrows: the uncovered finds are T1 - below the bow's tier, so no bow wear.
     stack = {**_instance("arrow", 0, "body"), "quality": None, "quantity": 3}
+    _always(monkeypatch, "weapon")
     result, doc = await _bow_trip(db, monkeypatch,
-                                  [_instance("bow", 100, "body", tier=2), _instance("quiver", 40, "body"), stack], {})
+                                  [_instance("bow", 4, "body", tier=2), _instance("quiver", 4, "body"), stack], {})
     assert result["ammoUsed"] == {"arrow_1": 3} and result["ammoShortfall"] == result["total"] - 3
     bow = next(i for i in doc["gear"]["items"] if i["familyId"] == "bow")
-    assert bow["quality"] == 100
+    assert bow["quality"] == 4
 
 
 def test_highest_tier_then_most_worn_piece_is_used():
@@ -512,10 +530,11 @@ async def test_trip_burns_one_torch(db, monkeypatch):
 async def test_trip_burns_one_oil_and_wears_the_lantern(db, monkeypatch):
     cid = await _make(1, "blacksmith")
     await db.characters.update_one({"address": ADDRESS, "id": cid}, {"$set": {
-        "gear.items": [_instance("glass_lantern", 20, "body")],
+        "gear.items": [_instance("glass_lantern", 4, "body")],
         "gear.itemBalances.backpack": {"oil_1": 2, "tinderbox_1": 1},
     }})
     monkeypatch.setattr(foraging.random, "randint", lambda a, b: 10)
+    _always(monkeypatch, "item")
     await foraging.start_forage(ADDRESS, cid, "craftweapon_01")
     await _fast_forward(db, cid)
     result = (await foraging.finish_forage(ADDRESS, cid))["result"]
@@ -523,7 +542,8 @@ async def test_trip_burns_one_oil_and_wears_the_lantern(db, monkeypatch):
     assert result["lightUsed"] == {"oil_1": 1}
     doc = await db.characters.find_one({"address": ADDRESS, "id": cid})
     assert doc["gear"]["itemBalances"]["backpack"]["oil_1"] == 1
-    assert doc["gear"]["items"][0]["quality"] == 19             # the lantern wears like any item
+    assert doc["gear"]["items"][0]["quality"] == 3              # the lantern wears like any item
+    assert doc["gear"]["itemBalances"]["backpack"]["tinderbox_1"] == 1   # stack loss chance is 0
 
 
 # ── Companion charms ───────────────────────────────────────────────────
@@ -555,16 +575,17 @@ def test_charm_on_the_wrong_companion_or_in_the_pack_does_not_count():
 async def test_charm_wears_like_any_item(db, monkeypatch):
     cid = await _make(1, "hunter")
     await db.characters.update_one({"address": ADDRESS, "id": cid}, {"$set": {
-        "gear.items": [_worn("winged_companion", "Companion"), _worn("charm_flying", "Charm", quality=5)],
+        "gear.items": [_worn("winged_companion", "Companion"), _worn("charm_flying", "Charm", quality=4)],
     }})
     monkeypatch.setattr(foraging.random, "randint", lambda a, b: 10)
+    _always(monkeypatch, "item")
     await foraging.start_forage(ADDRESS, cid, "rural_06")  # meat
     await _fast_forward(db, cid)
     result = (await foraging.finish_forage(ADDRESS, cid))["result"]
     assert result["gearPercent"] == 5 and result["broken"] == []
     doc = await db.characters.find_one({"address": ADDRESS, "id": cid})
     charm = next(i for i in doc["gear"]["items"] if i["familyId"] == "charm_flying")
-    assert charm["quality"] == 4                                # T1 finds wear a T1 charm by 1
+    assert charm["quality"] == 3                                # T1 finds: a T1 charm drops a level
 
 
 # ── Surprise finds ─────────────────────────────────────────────────────
@@ -621,13 +642,13 @@ async def test_surprise_goes_home_without_draining_the_pool_or_wearing_gear(db, 
     home = await db.character_homes.find_one({"address": ADDRESS, "characterId": cid})
     assert home["itemBalances"]["crystal_5"] == 1
     doc = await db.characters.find_one({"address": ADDRESS, "id": cid})
-    assert doc["gear"]["items"][0]["quality"] == 200 - result["total"]   # T5 surprise adds no wear
+    assert doc["gear"]["items"][0]["quality"] == 200            # wear chances are 0: untouched
 
 
 # ── Old gear ───────────────────────────────────────────────────────────
 
 
-def test_old_gear_rolls_at_its_chance_as_damaged_t1_gear_of_the_material():
+def test_old_gear_rolls_at_its_chance_as_broken_t1_gear_of_the_material():
     rng = random.Random(3)
     runs, hits = 20000, 0
     allowed = {fam for fam, _, _ in foraging.old_gear_options("ore")}
@@ -638,7 +659,7 @@ def test_old_gear_rolls_at_its_chance_as_damaged_t1_gear_of_the_material():
             continue
         hits += 1
         assert old["familyId"] in allowed and old["itemId"].endswith("_1")
-        assert 1 <= old["quality"] <= max(1, old["qualityMax"] // 10)
+        assert old["quality"] == item_condition.BROKEN and old["condition"] == "broken"
     assert hits / runs == pytest.approx(foraging.OLD_GEAR["chance"], abs=0.012)
 
 
@@ -653,7 +674,7 @@ def test_old_gear_message_names_the_piece():
 async def test_old_gear_goes_home_as_a_damaged_instance(db, monkeypatch):
     cid = await _make(1, "blacksmith")
     old = {"instanceId": "old-1", "itemId": "pickaxe_1", "familyId": "pickaxe",
-           "name": "Pickaxe", "quality": 3, "qualityMax": 160}
+           "name": "Pickaxe", "quality": 1, "condition": "broken"}
     monkeypatch.setattr(foraging, "roll_old_gear", lambda family_id, rng=None: old)
     await foraging.start_forage(ADDRESS, cid, "craftweapon_01")  # ore
     await _fast_forward(db, cid)
@@ -662,4 +683,32 @@ async def test_old_gear_goes_home_as_a_damaged_instance(db, monkeypatch):
     assert result["oldGear"] == old and result["oldGearMessage"]
     home = await db.character_homes.find_one({"address": ADDRESS, "characterId": cid})
     piece = next(i for i in home["items"] if i["instanceId"] == "old-1")
-    assert piece["quality"] == 3 and piece["location"] == "home"
+    assert piece["quality"] == 1 and piece["location"] == "home"
+
+
+# ── Condition: stacked items and shelter ───────────────────────────────
+
+
+async def test_stacked_gathering_item_may_be_used_up(db, monkeypatch):
+    cid = await _make(1, "blacksmith")
+    await db.characters.update_one({"address": ADDRESS, "id": cid}, {"$set": {
+        "gear.itemBalances.backpack": {"iron_spikes_1": 2}}})
+    _always(monkeypatch, "stackLoss")
+    monkeypatch.setattr(foraging.random, "randint", lambda a, b: 10)
+    await foraging.start_forage(ADDRESS, cid, "craftweapon_01")   # ore: iron spikes help
+    await _fast_forward(db, cid)
+    result = (await foraging.finish_forage(ADDRESS, cid))["result"]
+    doc = await db.characters.find_one({"address": ADDRESS, "id": cid})
+    assert doc["gear"]["itemBalances"]["backpack"]["iron_spikes_1"] == 1
+    assert len(result["broken"]) == 1
+
+
+async def test_a_night_may_wear_out_the_bedroll(db, monkeypatch):
+    cid = await _make(1, "blacksmith")
+    await db.characters.update_one({"address": ADDRESS, "id": cid}, {"$set": {
+        "gear.itemBalances.backpack": {"bedroll_1": 1}}})
+    monkeypatch.setitem(item_condition.NIGHTS, "shelterLoss", 1.0)
+    await foraging.start_forage(ADDRESS, cid, "craftweapon_01")
+    doc = await db.characters.find_one({"address": ADDRESS, "id": cid})
+    assert "bedroll_1" not in (doc["gear"]["itemBalances"].get("backpack") or {})
+    assert doc["foraging"]["activeForage"]["result"]["night"]["shelter"] == ["bedroll"]   # it still sheltered that night

@@ -68,3 +68,43 @@ def test_camp_craft_returns_home_once_the_adventure_is_over():
     assert players._craft_return_storage({**camp, "availability": {"inAdventure": True}}) == "camp"
     assert players._craft_return_storage({**camp, "availability": {"inAdventure": False}}) == "home"
     assert players._craft_return_storage({"crafting": {"activeCraft": {}}}) is None   # older craft: vault
+
+
+
+# ── Item condition ─────────────────────────────────────────────────────
+
+from backend import item_condition  # noqa: E402
+
+
+def test_condition_levels_and_labels():
+    assert [item_condition.label(q) for q in (4, 3, 2, 1)] == ["new", "used", "damaged", "broken"]
+    assert item_condition.label(None) == "new"            # a stack has no condition
+    assert item_condition.level(180) == 4                 # an unmigrated point value counts as new
+
+
+def test_crafting_tool_chance_grows_with_the_batch_up_to_the_cap():
+    assert item_condition.crafting_tool_chance(1) == pytest.approx(0.02)
+    assert item_condition.crafting_tool_chance(10) == pytest.approx(0.2)
+    assert item_condition.crafting_tool_chance(50) == pytest.approx(0.5)
+
+
+def test_salvage_penalty_by_condition():
+    from backend import recycling
+    assert recycling.CONDITION_PENALTY == {"new": 0, "used": 10, "damaged": 25, "broken": 50}
+
+
+def test_stations_are_tracked_items_that_work_at_any_tier():
+    assert players._is_station("anvil") and players._is_station("loom")
+    assert not players._is_station("axe")
+    assert players._is_tracked_item("anvil_1") and not players._is_tracked_item("ore_1")
+    t1_anvil = {"instanceId": "a", "itemId": "anvil_1", "familyId": "anvil", "quality": 4, "location": "home"}
+    character = {"gear": {"items": [t1_anvil]}}
+    found = players._resolve_tool_instances_for_craft(character, {}, ["anvil"], 5, 3, [])
+    assert found[0] == "instance_moves" and found[1][0][0] == "a" and found[2] == 3   # a T1 anvil does a T5 craft
+    t1_axe = {"instanceId": "x", "itemId": "axe_1", "familyId": "axe", "quality": 4, "location": "home"}
+    assert players._resolve_tool_instances_for_craft({"gear": {"items": [t1_axe]}}, {}, ["axe"], 3, 1, []) is None
+
+
+def test_station_wear_is_flat_per_craft():
+    assert item_condition.crafting_tool_chance(1, station=True) == pytest.approx(0.02)
+    assert item_condition.crafting_tool_chance(50, station=True) == pytest.approx(0.02)

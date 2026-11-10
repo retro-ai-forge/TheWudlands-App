@@ -570,9 +570,6 @@ class ItemCatalogEntryResponse(BaseModel):
     familyId: str
     tier: int
     kind: List[str]
-    qualityMax: Optional[int] = Field(
-        None, description="Max quality a fresh instance of this family starts at, if it degrades at all"
-    )
     armorClass: Optional[int] = Field(None, description="Base armor class for this material (armor/shield only)")
     icon: str = Field("", description="Per-tier art path, or empty if this family/tier has none yet")
     stackSize: int = Field(1, description="Family-level stack size - 1 means never stack, no owned-count badge")
@@ -1017,7 +1014,7 @@ async def get_item_catalog():
     """
     return [
         ItemCatalogEntryResponse(
-            id=e.id, name=e.name, familyId=e.family_id, tier=e.tier, kind=list(e.kind), qualityMax=e.quality_max,
+            id=e.id, name=e.name, familyId=e.family_id, tier=e.tier, kind=list(e.kind),
             armorClass=e.armor_class, icon=e.icon, stackSize=e.stack_size, description=e.description, sizeClass=e.size_class,
             equipSlots=[list(group) for group in e.equip_slots], backpackable=e.backpackable,
             gatheringBonuses=list(e.gathering_bonuses), capacitySlots=e.capacity_slots, carryCapacity=e.carry_capacity,

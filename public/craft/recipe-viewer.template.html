@@ -655,7 +655,8 @@ function takeAcrossTiers(balances, famId, tier, qty) {
 function ownsAnyTool(ownedSet, ids, requiredTier) {
   if (!ownedSet) return true;
   if (!ids.length) return true;
-  return ids.some(id => ownsFamily(ownedSet, id, requiredTier));
+  // Crafting stations (category "tool") count at any tier.
+  return ids.some(id => ownsFamily(ownedSet, id, families[id] && families[id].category === "tool" ? 1 : requiredTier));
 }
 
 // For an ingredient's "alternatives" slot (e.g. carcass's bone_blade-or-
@@ -798,7 +799,8 @@ function ensurePopupStyles(doc) {
 
 /** Read-only preview of the vault's item-detail popup, opened by clicking
  * the Recipe Tree's root row (see buildInteractiveNode). Nothing here is a
- * real owned instance: quality always reads as full (current == qualityMax)
+ * real owned instance: a tracked item always reads as new (mounts and
+ * companions: health good)
  * and every action button is rendered but disabled - equipping or moving to
  * a backpack only makes sense for an item you actually own. */
 function showItemPopup(famId, tier) {
@@ -839,9 +841,9 @@ function showItemPopup(famId, tier) {
   const meta = el("div", "itemPopupMeta");
   meta.appendChild(el("span", "", "Size: " + (props.sizeClass || "tiny")));
   if (props.twoHanded) meta.appendChild(el("span", "", "Two-Handed: true"));
-  if (props.qualityMax != null) {
-    var scaledQuality = props.qualityMax * Math.pow(2, tier - 1);
-    meta.appendChild(el("span", "", "Quality: " + scaledQuality + "/" + scaledQuality));
+  if (f.needsItemDefinition) {
+    const living = f.category === "mount" || f.category === "companion";
+    meta.appendChild(el("span", "", living ? "Health: Good" : "Condition: New"));
   }
   if (props.armorClass != null && props.armorClass > 0) {
     meta.appendChild(el("span", "", "AC: " + (props.armorClass * tier)));
@@ -1600,7 +1602,9 @@ function resolveChainPlan(famId, tier, count, workingInventory, workingItemBalan
       const hasTool = tIds.some(toolFamId => {
         const f = families[toolFamId];
         if (!f) return ownedToolsWithVault.has(toolFamId);
-        if (f.needsItemDefinition) return ownsFamily(ownedToolsWithVault, toolFamId, tier);
+        // A tool item (axe, dagger...) must be at least the recipe tier; a
+        // crafting station (category "tool": anvil, loom...) works at any tier.
+        if (f.needsItemDefinition && f.category !== "tool") return ownsFamily(ownedToolsWithVault, toolFamId, tier);
         return f.tiers.some(t => ownedToolsWithVault.has(t.id));
       });
       if (!hasTool) return null;

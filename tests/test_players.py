@@ -12,7 +12,15 @@ import pytest
 from backend.active_players import add_active_player, remove_active_player
 from backend.character import Character
 from backend.db import get_database
-from backend.players import add_character, finish_craft, get_or_create_player, get_player, start_craft
+from backend.players import (
+    _is_tracked_item,
+    _new_instance,
+    add_character,
+    finish_craft,
+    get_or_create_player,
+    get_player,
+    start_craft,
+)
 
 TEST_ADDRESS = "5TestPlayerAddress"
 CRAFT_TEST_ADDRESS = "5TestCraftChainAddress"
@@ -87,13 +95,22 @@ async def _setup_craft_character(db, item_balances=None) -> str:
     await get_or_create_player(CRAFT_TEST_ADDRESS)
     player = await add_character(CRAFT_TEST_ADDRESS, Character(first_name="Crafter", last_name="Test"))
     character_id = player.characters[-1]["id"]
-    # Crafting works from the character's home storage (not the vault).
+    # Crafting works from the character's home storage (not the vault). A
+    # condition-tracked item (a crafting station like the anvil) goes in as
+    # an item instance, everything else as a stacked count.
+    balances = {i: n for i, n in (item_balances or {}).items() if not _is_tracked_item(i)}
+    items = [_new_instance(i, "home") for i, n in (item_balances or {}).items() if _is_tracked_item(i) for _ in range(n)]
     await db.character_homes.update_one(
         {"address": CRAFT_TEST_ADDRESS, "characterId": character_id},
-        {"$set": {"items": [], "itemBalances": item_balances or {}}},
+        {"$set": {"items": items, "itemBalances": balances}},
         upsert=True,
     )
     return character_id
+
+
+async def _home_item_ids(db) -> list:
+    home = await db.character_homes.find_one({"address": CRAFT_TEST_ADDRESS}) or {}
+    return sorted(i["itemId"] for i in home.get("items", []))
 
 
 async def _vault_balances(db) -> dict:
@@ -230,7 +247,7 @@ async def test_craft_chain_fails_atomically_on_missing_intermediate_tool(mongodb
         assert char_doc["crafting"]["itemBalances"] == {}
         vault = await _vault_balances(db)
         assert vault.get("wood_1", 0) == 100
-        assert vault.get("workbench_1", 0) == 1
+        assert await _home_item_ids(db) == ["workbench_1"]         # the workbench item stayed home
     finally:
         await _purge_player(db, CRAFT_TEST_ADDRESS)
 
@@ -289,7 +306,9 @@ async def test_craft_takes_from_home_then_backpack_and_finishes_into_home(mongod
         assert result is not None
         char_doc = await _character_doc(db, character_id)
         assert char_doc["crafting"]["activeCraft"]["storage"] == "home"
-        assert char_doc["crafting"]["itemBalances"] == {"refined_ore_1": 2, "anvil_1": 1}
+        assert char_doc["crafting"]["itemBalances"] == {"refined_ore_1": 2}
+        anvil = next(i for i in char_doc["gear"]["items"] if i["itemId"] == "anvil_1")
+        assert anvil["location"] == "crafting"                     # the anvil item is borrowed
         assert "refined_ore_1" not in (char_doc["gear"]["itemBalances"].get("backpack") or {})
         assert await _vault_balances(db) == {}                     # home emptied
         vault = await db.player_vaults.find_one({"address": CRAFT_TEST_ADDRESS})
@@ -297,9 +316,10 @@ async def test_craft_takes_from_home_then_backpack_and_finishes_into_home(mongod
 
         await _force_craft_ready(db, character_id)
         assert await finish_craft(CRAFT_TEST_ADDRESS, character_id) is not None
-        assert await _vault_balances(db) == {"anvil_1": 1}           # the anvil came back
+        assert await _vault_balances(db) == {}
+        assert await _home_item_ids(db) == ["anvil_1", "crowbar_1"]  # the anvil came back home
         home = await db.character_homes.find_one({"address": CRAFT_TEST_ADDRESS, "characterId": character_id})
         crowbar = next(i for i in home["items"] if i["itemId"] == "crowbar_1")   # tracked item: an instance
-        assert crowbar["location"] == "home" and crowbar["quality"] == 20
+        assert crowbar["location"] == "home" and crowbar["quality"] == 4   # condition: new
     finally:
         await _purge_player(db, CRAFT_TEST_ADDRESS)

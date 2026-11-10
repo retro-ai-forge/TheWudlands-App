@@ -37,7 +37,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Dict, List, Optional
 
-from backend import items_catalog
+from backend import item_condition, items_catalog
 from backend.professions_catalog import PROFESSION_CATEGORIES
 from backend.resources_catalog import PROFESSION_RESOURCE_FAMILIES
 
@@ -74,21 +74,10 @@ def has_recipe(family_id: str) -> bool:
 NON_RECOVERABLE_PROCESSED_FAMILIES: frozenset[str] = frozenset({"coal"})
 
 # Flat percentage-point penalty subtracted from the yield total by an
-# item's quality state (see quality_state below) - shown in the salvage
-# popup as "-20% used" / "-50% dam" (InventoryTab.tsx's
-# SALVAGE_CONDITION_LABEL).  Result is floored at 0.
-CONDITION_PENALTY = {"new": 0, "used": 20, "damaged": 50}
-
-
-def quality_state(quality: int, quality_max: int) -> str:
-    if quality_max <= 0:
-        return "new"
-    f = quality / quality_max
-    if f > 0.5:
-        return "new"
-    if f > 0.1:
-        return "used"
-    return "damaged"
+# item's condition (backend.item_condition: new / used / damaged / broken,
+# data/item-conditions.json "salvagePenalty") - shown in the salvage popup
+# (VaultTab.tsx's SALVAGE_CONDITION_LABEL). Result is floored at 0.
+CONDITION_PENALTY = item_condition.SALVAGE_PENALTY
 
 
 SALVAGE_BASE_PERCENT = 25
@@ -149,7 +138,9 @@ def _best_owned_station_tool_tier(
             "backpack",
             "body",
             "home",
+            "camp",
             "saddlepack",
+            "cart",
         ):
             entry = items_catalog.ITEM_CATALOG_ENTRIES_BY_ID.get(instance.get("itemId"))
             if entry:
@@ -379,8 +370,8 @@ def resolve_salvage_preview(
     salvage off the character's own body/backpack (see
     _best_owned_station_tool_tier).
 
-    `condition` ("new"/"used"/"damaged") subtracts a flat penalty from
-    the yield: new = 0, used = -20pp, damaged = -50pp, floored at 0.
+    `condition` ("new"/"used"/"damaged"/"broken") subtracts a flat penalty from
+    the yield (data/item-conditions.json "salvagePenalty"), floored at 0.
     Units * effective_yield% are rounded half-up at the end (x.5 rounds
     up, anything below rounds down) - never rounded between steps.
     """
