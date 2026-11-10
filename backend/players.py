@@ -4448,12 +4448,15 @@ async def check_out_item_instance(
                 raise ValueError("Backpack is full")
 
     moved_instance = {**instance, "location": destination, "slotRef": []}
-    new_vault_items_coii = [i for i in vault_coii["items"] if i["instanceId"] != instance_id]
-    await db.player_vaults.update_one(
-        {"address": address},
-        {"$set": {"items": new_vault_items_coii}},
-        upsert=True,
+    # Pull just this one instance (only if it's still in the pool) instead
+    # of rewriting the whole vault item list - cheaper on a big vault, and
+    # two moves of the same item can't both succeed.
+    pulled = await db.player_vaults.update_one(
+        {"address": address, "items": {"$elemMatch": {"instanceId": instance_id, "location": "pool"}}},
+        {"$pull": {"items": {"instanceId": instance_id}}},
     )
+    if pulled.modified_count != 1:
+        return None
     if destination == "home":
         await _push_storage_items(db, "home", address, character_id, [moved_instance])
     else:

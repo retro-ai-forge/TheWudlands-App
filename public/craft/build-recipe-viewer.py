@@ -60,9 +60,9 @@ def build_families() -> dict:
     # ...) stays any-tier-satisfies. The rest (sizeClass/stackSize/
     # equipSlots/twoHanded/backpackable/gatheringBonuses) is
     # embedded as each family's "props" below, feeding the item-detail
-    # popup opened by clicking the root row of the Recipe Tree - only a
-    # family with a props entry (an equippable/instance-tracked item, not a
-    # raw/processed material) gets that popup at all.
+    # popup opened by clicking the root row of the Recipe Tree - every
+    # family with a props entry gets that popup (every craftable item has
+    # one: final items, processed materials, tools and crafting stations).
     props_by_family: dict[str, dict] = {
         row["familyId"]: row
         for row in json.loads((DATA_DIR / "item-inventory-properties.json").read_text())
@@ -95,13 +95,7 @@ def build_families() -> dict:
                     for it in family_items
                 ],
             }
-            # A pure crafting-station tool (kind == ["tool"] exactly, e.g.
-            # anvil/furnace/workbench) gets no popup - still all "dummy"
-            # placeholder descriptions with nothing worth previewing. A
-            # dual-role item (kind includes "weapon" too, e.g. axe_stone/
-            # axe/dagger) keeps its popup same as any other equippable item.
-            has_popup = bool(props) and sorted(props.get("kind", [])) != ["tool"]
-            if has_popup:
+            if props:
                 family["props"] = {
                     "sizeClass": props.get("sizeClass"),
                     "stackSize": props.get("stackSize", 1),

@@ -150,8 +150,7 @@
   .row.blueprint { background: #241b2e; }
   .row.root { background: var(--panel2); border: 1px solid var(--accent); padding: 8px 10px; }
   /* Only set when the root's family has an item-detail popup to open (see
-     buildInteractiveNode/showItemPopup) - a raw/processed material's root
-     row stays inert. */
+     buildInteractiveNode/showItemPopup) - every craftable item does. */
   .row.root.hasPopup { cursor: pointer; }
   .row.root.hasPopup:hover { border-color: #e8c778; }
   .qty {
@@ -170,6 +169,9 @@
     white-space: nowrap;
   }
   .tag.tool { border-color: var(--tool); color: #8fb3e8; }
+  /* A tool/item name that opens its item-detail popup (popupLink). */
+  .popupLink.hasPopup { cursor: pointer; text-decoration: underline dotted; text-underline-offset: 2px; }
+  .popupLink.hasPopup:hover { color: #e8c778; }
   .tag.blueprint { border-color: var(--blueprint); color: #e0b5f0; }
   .tag.unconsumed { border-color: var(--text-dim); color: var(--text-dim); }
   .tag.alt-ingredient { border-color: var(--accent); color: var(--accent); font-style: italic; }
@@ -806,7 +808,7 @@ function showItemPopup(famId, tier) {
   const f = families[famId];
   const props = f && f.props;
   if (!props) return;
-  const t = f.tiers[tier - 1];
+  const t = f.tiers.find((row) => row.tier === tier) || f.tiers[0];
   if (!t) return;
 
   const overlay = el("div", "itemPopupOverlay");
@@ -1329,6 +1331,32 @@ function el(tag, cls, text) {
   return e;
 }
 
+// An item's name that opens its item-detail popup on click (when its family
+// has one) - without also toggling the tree row it sits in.
+function popupLink(famId, tier, text) {
+  const span = el("span", "popupLink", text);
+  if (families[famId] && families[famId].props) {
+    span.classList.add("hasPopup");
+    span.addEventListener("click", (e) => {
+      e.stopPropagation();
+      showItemPopup(famId, tier);
+    });
+  }
+  return span;
+}
+
+// A hammer-icon tool tag ("anvil or ...") whose every tool name opens its
+// item-detail popup.
+function toolTagNode(ids, tier, before, after) {
+  const tag = el("span", "tag tool", "\u{1F528} " + (before || ""));
+  ids.forEach((id, i) => {
+    if (i) tag.appendChild(document.createTextNode(" or "));
+    tag.appendChild(popupLink(id, tier, id));
+  });
+  if (after) tag.appendChild(document.createTextNode(after));
+  return tag;
+}
+
 // Interactive tree: clicking an expandable ingredient reveals ITS OWN recipe
 // (quantities are per 1 unit of that ingredient, not multiplied by how many
 // the parent needs) - the fully multiplied grand total lives in the side
@@ -1346,7 +1374,13 @@ function buildInteractiveNode(famId, qty, category, tier, isRoot) {
   if (!isRoot && category !== "blueprint") {
     row.appendChild(el("span", "qty", qty + "x"));
   }
-  const nameSpan = el("span", "name", famLabel(famId, tier));
+  // Below the root, a finished item (a tool, weapon, ... - not a raw or
+  // processed material, whose row click expands its own recipe) opens its
+  // popup from its name, same as the root row does.
+  const nameSpan = !isRoot && !["raw", "processed", "blueprint"].includes(famCategory(famId))
+    ? popupLink(famId, tier, famLabel(famId, tier))
+    : el("span", "", famLabel(famId, tier));
+  nameSpan.classList.add("name");
   row.appendChild(nameSpan);
   const tagCategory = isRoot ? "final" : category;
   // Displayed text says "recipe", not "blueprint" - matches the "Crafting
@@ -1357,7 +1391,7 @@ function buildInteractiveNode(famId, qty, category, tier, isRoot) {
   row.appendChild(el("span", "tag cat-" + (tagCategory === "final" ? "final" : tagCategory), tagLabel));
   if (recipe && recipe.tool) {
     const tIds = toolIds(recipe.tool);
-    const toolTag = el("span", "tag tool", "\u{1F528} " + tIds.join(" or "));
+    const toolTag = toolTagNode(tIds, tier);
     if (!ownsAnyTool(ownedToolsWithVault, tIds, tier)) toolTag.classList.add("missing");
     row.appendChild(toolTag);
   }
@@ -1370,17 +1404,16 @@ function buildInteractiveNode(famId, qty, category, tier, isRoot) {
       const opts = ing0.alternatives || [ing0];
       if (opts.every(o => !o.consumed)) {
         const ids = opts.map(o => o.familyId);
-        const heldTag = el("span", "tag tool", "\u{1F528} " + ids.join(" or "));
+        const heldTag = toolTagNode(ids, tier);
         if (!ownsAnyTool(ownedToolsWithVault, ids, tier)) heldTag.classList.add("missing");
         row.appendChild(heldTag);
       }
     }
   }
   // The root row doubles as a button opening a read-only preview of this
-  // item's vault item-detail popup - only when its family has a "props"
-  // entry (item-inventory-properties.json), i.e. it's an actual
-  // equippable/instance-tracked item rather than a raw/processed material
-  // with no popup to show.
+  // item's vault item-detail popup - whenever its family has a "props"
+  // entry (item-inventory-properties.json), which every craftable item
+  // has (final items, processed materials, tools, crafting stations).
   if (isRoot && families[famId] && families[famId].props) {
     row.classList.add("hasPopup");
     row.addEventListener("click", () => showItemPopup(famId, tier));
@@ -1433,7 +1466,7 @@ function buildInteractiveNode(famId, qty, category, tier, isRoot) {
             // nothing to craft, so this whole slot is just a compact
             // "held item" tag on this node's own row, same as a plain
             // tool requirement, instead of a full expandable child.
-            const heldTag = el("span", "tag tool", "\u{1F528} " + ing.familyId);
+            const heldTag = toolTagNode([ing.familyId], tier);
             row.appendChild(heldTag);
             for (const alt of ing0.alternatives) {
               if (alt === ing) continue;
@@ -1459,7 +1492,7 @@ function buildInteractiveNode(famId, qty, category, tier, isRoot) {
               // compact "icon id" way, not as a quantified ingredient, and
               // check ownership the same way (ownedToolsWithVault).
               if (!alt.consumed) {
-                const altTag = el("span", "tag tool", "\u{1F528} (or " + alt.familyId + ")");
+                const altTag = toolTagNode([alt.familyId], tier, "(or ", ")");
                 if (!ownsFamily(ownedToolsWithVault, alt.familyId, tier)) altTag.classList.add("missing");
                 child.row.appendChild(altTag);
               } else {
@@ -1802,7 +1835,7 @@ function render(famId, tier) {
   } else {
     for (const key of [...toolSet].sort()) {
       const tIds = key.split("|");
-      const toolTag = el("span", "tag tool", "\u{1F528} " + tIds.join(" or "));
+      const toolTag = toolTagNode(tIds, tier);
       if (!ownsAnyTool(ownedToolsWithVault, tIds, tier)) toolTag.classList.add("missing");
       toolListEl.appendChild(toolTag);
     }
