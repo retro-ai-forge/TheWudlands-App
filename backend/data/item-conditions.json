@@ -12,10 +12,9 @@
     "shelterLoss": 0.02
   },
   "crafting": {
-    "_comment": "Rolled once per craft. A borrowed tool item (axe, dagger...) drops one level with toolPerUnit x units crafted, at most toolMax. A crafting station (anvil, furnace, loom... - kind 'tool') drops one level with stationWear, whatever the batch size; stations work at any tier.",
+    "_comment": "A borrowed tool - a tool item (axe, dagger...) or a crafting station (anvil, furnace, loom...) - drops one level with toolPerUnit for each item crafted, added up over the batch into one roll at the end, at most toolMax. Every tool only crafts recipes at its own tier or below.",
     "toolPerUnit": 0.02,
-    "toolMax": 0.5,
-    "stationWear": 0.02
+    "toolMax": 0.5
   },
   "salvagePenalty": { "new": 0, "used": 10, "damaged": 25, "broken": 50 },
   "lostEquipment": 1

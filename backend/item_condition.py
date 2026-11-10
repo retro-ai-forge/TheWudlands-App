@@ -48,10 +48,8 @@ def roll(chance: float, rng: random.Random | None = None) -> bool:
     return (rng or random).random() < chance
 
 
-def crafting_tool_chance(units: int, station: bool = False) -> float:
-    """Chance a borrowed tool drops a level over one craft of `units`: a
-    crafting station a flat stationWear, a tool item (axe, dagger...)
-    toolPerUnit per unit, at most toolMax."""
-    if station:
-        return float(CRAFTING["stationWear"])
+def crafting_tool_chance(units: int) -> float:
+    """Chance a borrowed tool (tool item or crafting station) drops a level
+    over a craft of `units`: toolPerUnit for each item crafted, added up
+    into one roll, at most toolMax."""
     return min(float(CRAFTING["toolMax"]), float(CRAFTING["toolPerUnit"]) * max(1, units))

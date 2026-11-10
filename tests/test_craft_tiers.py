@@ -93,18 +93,20 @@ def test_salvage_penalty_by_condition():
     assert recycling.CONDITION_PENALTY == {"new": 0, "used": 10, "damaged": 25, "broken": 50}
 
 
-def test_stations_are_tracked_items_that_work_at_any_tier():
-    assert players._is_station("anvil") and players._is_station("loom")
-    assert not players._is_station("axe")
+def test_stations_are_tracked_items_that_craft_their_tier_and_below():
     assert players._is_tracked_item("anvil_1") and not players._is_tracked_item("ore_1")
     t1_anvil = {"instanceId": "a", "itemId": "anvil_1", "familyId": "anvil", "quality": 4, "location": "home"}
     character = {"gear": {"items": [t1_anvil]}}
-    found = players._resolve_tool_instances_for_craft(character, {}, ["anvil"], 5, 3, [])
-    assert found[0] == "instance_moves" and found[1][0][0] == "a" and found[2] == 3   # a T1 anvil does a T5 craft
+    assert players._resolve_tool_instances_for_craft(character, {}, ["anvil"], 5, 3, []) is None  # T1 anvil, T5 recipe
+    t5_anvil = {**t1_anvil, "instanceId": "b", "itemId": "anvil_5"}
+    found = players._resolve_tool_instances_for_craft({"gear": {"items": [t1_anvil, t5_anvil]}}, {}, ["anvil"], 3, 3, [])
+    assert found[0] == "instance_moves" and found[1][0][0] == "b" and found[2] == 3   # T5 anvil does a T3 recipe
     t1_axe = {"instanceId": "x", "itemId": "axe_1", "familyId": "axe", "quality": 4, "location": "home"}
     assert players._resolve_tool_instances_for_craft({"gear": {"items": [t1_axe]}}, {}, ["axe"], 3, 1, []) is None
 
 
-def test_station_wear_is_flat_per_craft():
-    assert item_condition.crafting_tool_chance(1, station=True) == pytest.approx(0.02)
-    assert item_condition.crafting_tool_chance(50, station=True) == pytest.approx(0.02)
+def test_station_wear_adds_up_per_item_like_any_tool():
+    # 2% per item crafted, one roll for the batch, capped at 50%.
+    assert item_condition.crafting_tool_chance(1) == pytest.approx(0.02)
+    assert item_condition.crafting_tool_chance(10) == pytest.approx(0.2)
+    assert item_condition.crafting_tool_chance(40) == pytest.approx(0.5)

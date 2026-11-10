@@ -1237,14 +1237,6 @@ def _split_craft_take(
     return from_storage, from_carried
 
 
-def _is_station(family_id: str) -> bool:
-    """A crafting station (anvil, furnace, loom... - item kind "tool"): it
-    works for any recipe tier, unlike a tool item (axe, dagger...) which
-    must be at least the recipe's tier."""
-    family = items_catalog.ITEM_FAMILIES_BY_ID.get(family_id)
-    return bool(family and "tool" in family.kind)
-
-
 def _resolve_tool_for_craft(
     character: dict,
     player_tools: Dict[str, int],
@@ -1285,10 +1277,10 @@ def _resolve_tool_for_craft(
     `check_character_flat_balance` is left True, which also accepts one
     already sitting in Character.tools; finish_craft uses that to
     re-verify what start_craft transferred is still there, passing
-    `player_tools={}` so it can only ever find it on the character. A
-    flat-balance tool (an anvil, a furnace, ...) is generic work
-    infrastructure, not personal gear that scales with the item being
-    made - ANY tier satisfies ANY recipe tier here, no minimum at all.
+    `player_tools={}` so it can only ever find it on the character. Like
+    every tool, a flat-balance one (only a station left over from before
+    stations became items) must be at least the recipe's tier - a tool
+    only crafts recipes at its own tier or below.
 
     Returns `("instance_move", instance_id, source, slot_ref)` for an
     instance-tracked tool that needs moving to "crafting" - `source` is
@@ -1340,7 +1332,7 @@ def _resolve_tool_for_craft(
                     instance for instance in player_items
                     if instance.get("familyId") == family_id
                     and instance.get("location") == "pool"
-                    and (_is_station(family_id) or (_instance_tier(instance) or 0) >= tier)
+                    and (_instance_tier(instance) or 0) >= tier
                 ]
                 if pool_candidates:
                     worst = min(pool_candidates, key=lambda i: i.get("quality", 0))
@@ -1349,18 +1341,19 @@ def _resolve_tool_for_craft(
                 instance for instance in held_items
                 if instance.get("familyId") == family_id
                 and instance.get("location") in CRAFT_HELD_LOCATIONS
-                and (_is_station(family_id) or (_instance_tier(instance) or 0) >= tier)
+                and (_instance_tier(instance) or 0) >= tier
             ]
             if held_candidates:
                 worst = min(held_candidates, key=lambda i: i.get("quality", 0))
                 return ("instance_move", worst["instanceId"], worst.get("location"), worst.get("slotRef") or [])
             continue
         if check_character_flat_balance and any(
-            held_tools.get(entry.id, 0) > 0 for entry in items_catalog.ITEM_CATALOG_ENTRIES if entry.family_id == family_id
+            held_tools.get(entry.id, 0) > 0 for entry in items_catalog.ITEM_CATALOG_ENTRIES
+            if entry.family_id == family_id and entry.tier >= tier
         ):
             return ("owned", None)
         for entry in items_catalog.ITEM_CATALOG_ENTRIES:
-            if entry.family_id == family_id and player_tools.get(entry.id, 0) > 0:
+            if entry.family_id == family_id and entry.tier >= tier and player_tools.get(entry.id, 0) > 0:
                 return ("flat_transfer", entry.id)
     return None
 
@@ -1396,7 +1389,7 @@ def _resolve_tool_instances_for_craft(
                 instance for instance in player_items
                 if instance.get("familyId") == family_id
                 and instance.get("location") == "pool"
-                and (_is_station(family_id) or (_instance_tier(instance) or 0) >= tier)
+                and (_instance_tier(instance) or 0) >= tier
             ]
             if pool_candidates:
                 candidates, from_pool = pool_candidates, True
@@ -1405,7 +1398,7 @@ def _resolve_tool_instances_for_craft(
                     instance for instance in held_items
                     if instance.get("familyId") == family_id
                     and instance.get("location") in CRAFT_HELD_LOCATIONS
-                    and (_is_station(family_id) or (_instance_tier(instance) or 0) >= tier)
+                    and (_instance_tier(instance) or 0) >= tier
                 ]
                 from_pool = False
             if not candidates:
@@ -1418,7 +1411,7 @@ def _resolve_tool_instances_for_craft(
             if not usable:
                 continue
             instance = min(usable, key=lambda i: i.get("quality", 0))
-            wear = 1 if item_condition.roll(item_condition.crafting_tool_chance(count, _is_station(family_id))) else 0
+            wear = 1 if item_condition.roll(item_condition.crafting_tool_chance(count)) else 0
             source = "pool" if from_pool else instance.get("location")
             slot_ref = [] if from_pool else (instance.get("slotRef") or [])
             return ("instance_moves", [(instance["instanceId"], source, slot_ref, wear)], count)
@@ -1430,7 +1423,7 @@ def _resolve_tool_instances_for_craft(
         # only the player's shared vault.itemBalances pool counts, never
         # Character.crafting.itemBalances directly.
         for entry in items_catalog.ITEM_CATALOG_ENTRIES:
-            if entry.family_id == family_id and player_tools.get(entry.id, 0) > 0:
+            if entry.family_id == family_id and entry.tier >= tier and player_tools.get(entry.id, 0) > 0:
                 return ("flat_transfer", entry.id, count)
     return None
 
@@ -2668,9 +2661,9 @@ async def _start_craft(
 
 def _station_tool_survives() -> bool:
     """A station borrowed as a stack (only by a craft started before
-    stations became condition-tracked items) may be worn out by it
-    (crafting.stationWear) - it then isn't returned."""
-    return not item_condition.roll(float(item_condition.CRAFTING["stationWear"]))
+    stations became condition-tracked items) may be worn out by it - one
+    unit's worth of the crafting tool chance - and then isn't returned."""
+    return not item_condition.roll(item_condition.crafting_tool_chance(1))
 
 
 def _craft_return_storage(character: dict) -> Optional[str]:

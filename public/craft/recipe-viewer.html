@@ -655,8 +655,7 @@ function takeAcrossTiers(balances, famId, tier, qty) {
 function ownsAnyTool(ownedSet, ids, requiredTier) {
   if (!ownedSet) return true;
   if (!ids.length) return true;
-  // Crafting stations (category "tool") count at any tier.
-  return ids.some(id => ownsFamily(ownedSet, id, families[id] && families[id].category === "tool" ? 1 : requiredTier));
+  return ids.some(id => ownsFamily(ownedSet, id, requiredTier));
 }
 
 // For an ingredient's "alternatives" slot (e.g. carcass's bone_blade-or-
@@ -1602,10 +1601,9 @@ function resolveChainPlan(famId, tier, count, workingInventory, workingItemBalan
       const hasTool = tIds.some(toolFamId => {
         const f = families[toolFamId];
         if (!f) return ownedToolsWithVault.has(toolFamId);
-        // A tool item (axe, dagger...) must be at least the recipe tier; a
-        // crafting station (category "tool": anvil, loom...) works at any tier.
-        if (f.needsItemDefinition && f.category !== "tool") return ownsFamily(ownedToolsWithVault, toolFamId, tier);
-        return f.tiers.some(t => ownedToolsWithVault.has(t.id));
+        // Every tool - tool item or crafting station - only crafts recipes at
+        // its own tier or below (backend.players._resolve_tool_for_craft).
+        return ownsFamily(ownedToolsWithVault, toolFamId, tier);
       });
       if (!hasTool) return null;
     }
