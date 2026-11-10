@@ -483,6 +483,9 @@ export function CraftingView({
             isInstance={false}
             movable={false}
             quality={null}
+            ownedConditions={stockInstances
+              .filter((instance) => instance.itemId === recipePopupItemId && instance.quality != null)
+              .map((instance) => instance.quality as number)}
             moveId={recipePopupItemId}
             source="vault"
             hasBackpackEquipped={false}

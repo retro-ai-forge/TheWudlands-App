@@ -1839,7 +1839,7 @@ export const CONDITION_LABEL: Record<QualityState, string> = {
   broken: "Broken",
 };
 
-/** Mounts and companions show the same four levels as health. */
+/** Mounts and companions themselves (slot Mount / Companion) show the same four levels as health. */
 export const HEALTH_LABEL: Record<QualityState, string> = {
   new: "Good",
   used: "Tired",
@@ -2552,6 +2552,7 @@ export function ItemDetailPopup({
   isInstance,
   movable,
   quality,
+  ownedConditions,
   moveId,
   location,
   source = "vault",
@@ -2590,6 +2591,10 @@ export function ItemDetailPopup({
   movable: boolean;
   /** This exact instance's condition level 4..1 (isInstance rows only) - shown as "Condition: New/Used/Damaged/Broken". */
   quality: number | null;
+  /** Catalog popups (not isInstance) only - the condition levels of the
+   * pieces the character owns, e.g. the crafting page's tool popup; shown
+   * as "Condition: Used" or "Condition: 1 New, 2 Broken". */
+  ownedConditions?: number[];
   /** The row id itself - an instanceId (isInstance) or a concrete itemBalances/resource id. */
   moveId: string;
   /** source:"character" instance rows only - "backpack", "home", "camp", "saddlepack", "cart", or "body" - decides which move actions are offered. */
@@ -2661,6 +2666,10 @@ export function ItemDetailPopup({
   onClose: () => void;
   iconOverride?: string;
 }) {
+  // Health only for the creatures themselves (slot Mount or Companion);
+  // their gear - saddle, barding, bridle, saddlepack, cart, charms - and
+  // everything else shows Condition.
+  const isCreature = !!info?.equipSlots?.some((group) => group.includes("Mount") || group.includes("Companion"));
   const stackSize = info?.stackSize ?? 1;
   const name = info?.name ? stripBlueprintPrefix(info.name) : fallbackName;
   const displayName = stackSize > 1 ? `${owned} ${name}` : name;
@@ -3106,12 +3115,24 @@ export function ItemDetailPopup({
                 return <span>AC: {currentAC}/{maxAC}</span>;
               })()}
               {isInstance && conditionOf(quality) !== null && (
-                info?.kind === "mount" || info?.kind === "companion" ? (
+                isCreature ? (
                   <span>Health: {HEALTH_LABEL[conditionOf(quality) as QualityState]}</span>
                 ) : (
                   <span>Condition: {CONDITION_LABEL[conditionOf(quality) as QualityState]}</span>
                 )
               )}
+              {!isInstance && !!ownedConditions?.length && (() => {
+                const labels = isCreature ? HEALTH_LABEL : CONDITION_LABEL;
+                const counts = new Map<QualityState, number>();
+                for (const level of ownedConditions) {
+                  const state = conditionOf(level);
+                  if (state) counts.set(state, (counts.get(state) ?? 0) + 1);
+                }
+                const parts = (["new", "used", "damaged", "broken"] as QualityState[])
+                  .filter((state) => counts.has(state))
+                  .map((state) => (ownedConditions.length === 1 ? labels[state] : `${counts.get(state)} ${labels[state]}`));
+                return parts.length ? <span>{isCreature ? "Health" : "Condition"}: {parts.join(", ")}</span> : null;
+              })()}
               {info?.familyId === "backpack" && backpackSlotsUsed != null && backpackCapacity != null && (
                 <span>Filled: {backpackSlotsUsed}/{backpackCapacity}</span>
               )}
