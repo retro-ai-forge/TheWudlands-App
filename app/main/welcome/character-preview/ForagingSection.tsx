@@ -233,9 +233,12 @@ export function ForagingSection({
             const lost = [
               ...Object.entries(lastResult.night?.lost ?? {}).map(([key, n]) => `${ATTR_NAMES[key] ?? key} −${n}`),
               ...Object.entries(ammoByFamily).map(([family, n]) => `${n} ${label(family)}${n === 1 ? "" : "s"}`),
+              // Only entries with a condition level: results from before the
+              // condition rework recorded wear as points, which no longer
+              // match the item (it was converted to a level afterwards).
               ...(lastResult.gear ?? [])
-                .filter((g) => g.wear > 0 && !g.destroyed)
-                .map((g) => `${g.name} → ${g.condition ?? "worn"}`),
+                .filter((g) => g.wear > 0 && !g.destroyed && g.condition)
+                .map((g) => `${g.name} → ${g.condition}`),
               ...(lastResult.broken ?? []).map((name) => `${name} (broken)`),
             ];
             return lost.length > 0 ? <p className={styles.lostLine}>Lost: {lost.join(" · ")}</p> : null;

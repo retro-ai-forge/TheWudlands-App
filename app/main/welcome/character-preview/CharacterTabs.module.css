@@ -96,6 +96,15 @@
 /* No reserved space for the fixed Delete button below - it floats over
    this content rather than pushing it, so the layout never shifts just
    because it exists. */
+/* Storage views (vault, home, camp): less space above the selection icons. */
+.sheetCompact {
+  padding-top: 0.2rem;
+}
+
+.sheetCompact .panel {
+  padding-top: 0.1rem;
+}
+
 .mainColumn {
   width: 100%;
   flex: 1 1 auto;
@@ -176,10 +185,10 @@
   height: clamp(26px, 8vw, 44px);
 }
 
-/* Close's own exit.webp (see CharacterPreview.tsx). */
+/* Close's own char-preview-close.png (see CharacterPreview.tsx). */
 .closeArrowIcon {
-  width: clamp(24px, 7vw, 40px);
-  height: clamp(24px, 7vw, 40px);
+  width: clamp(30px, 9vw, 52px);
+  height: clamp(30px, 9vw, 52px);
   flex-shrink: 0;
 }
 
@@ -2818,9 +2827,9 @@
   position: absolute;
   left: calc(-1 * clamp(0px, (100vw - 400px) * 0.15, 40px));
   bottom: 6.5rem;
-  transform: translateX(-60%);
+  transform: translateX(-36%);
   z-index: 1;
-  height: 6.5rem;
+  height: 8.5rem;
   width: auto;
   image-rendering: pixelated;
   pointer-events: auto;
@@ -2947,7 +2956,7 @@
   cursor: default;
 }
 
-/* Same exit.webp glyph as the page's own (now-hidden-while-in-home)
+/* Same char-preview-close.png glyph as the page's own (now-hidden-while-in-home)
    .closeButton, repurposed here to back out of home specifically rather
    than close the whole character sheet - see HomeView's onExitHome. */
 /* Fixed to the viewport itself (like the page's own now-hidden .topBar),
@@ -2960,7 +2969,7 @@
   right: 0.75rem;
   bottom: 0.75rem;
   z-index: 5;
-  width: 1.5rem;
+  width: 2rem;
   aspect-ratio: 1 / 1;
   padding: 0;
   /* .campfireStage (this button's parent) is pointer-events:none so it
@@ -2987,7 +2996,7 @@
   grid-template-rows: repeat(auto-fill, 100px);
   grid-auto-columns: 100px;
   justify-content: start;
-  gap: 0.35rem;
+  gap: 0.2rem;
   padding-left: 0.4rem;
   height: 100%;
   user-select: none;
@@ -3000,7 +3009,7 @@
   grid-template-columns: repeat(auto-fill, 100px);
   grid-auto-rows: 100px;
   justify-content: start;
-  gap: 0.35rem;
+  gap: 0.2rem;
   padding-left: 0.4rem;
   user-select: none;
   -webkit-user-select: none;
@@ -3213,7 +3222,7 @@
   grid-template-rows: repeat(2, 100px);
   grid-auto-flow: column;
   grid-auto-columns: 100px;
-  gap: 0.35rem;
+  gap: 0.2rem;
   width: 100%;
   overflow-x: auto;
   overflow-y: hidden;

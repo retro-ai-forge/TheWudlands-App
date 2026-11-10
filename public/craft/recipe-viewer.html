@@ -1504,7 +1504,7 @@ function wireAccordionClick(controller, siblingGroup) {
   });
 }
 
-// The selected recipe's OWN direct ingredients only - one level, never
+// The selected recipe's OWN direct processed ingredients only - one level, never
 // recursing into a "processed" ingredient's own sub-recipe the way
 // computeTotals does. This is "what do I need in hand for this exact
 // crafting step" (may already be satisfied by processed materials the
@@ -1512,12 +1512,12 @@ function wireAccordionClick(controller, siblingGroup) {
 // cost built up from nothing" - genuinely different, useful information
 // once a recipe has any processed ingredient at all. A "final"/tool
 // ingredient is skipped here - those already have their own sections
-// (Tools Used / Other Items Required).
+// (Tools Used / Other Items Required) - and so is a direct "raw" one: it's
+// already listed in Raw Total, so it's shown only there.
 //
 // Returns {materials, hasProcessed} - hasProcessed tells the caller
-// whether this section is worth showing at all: if every direct
-// ingredient is already "raw", this table would just duplicate Raw Total
-// row for row, so the caller hides it in that case.
+// whether this section is worth showing at all (no processed ingredient,
+// nothing to list).
 function computeDirectMaterials(famId, tier) {
   const recipe = recipes[famId];
   const materials = {};
@@ -1525,8 +1525,8 @@ function computeDirectMaterials(famId, tier) {
   if (!recipe) return { materials, hasProcessed };
   for (const ing0 of recipe.ingredients) {
     const ing = ing0.alternatives ? pickBestAlternative(ing0.alternatives, tier) : ing0;
-    if (ing.category === "raw" || ing.category === "processed") {
-      if (ing.category === "processed") hasProcessed = true;
+    if (ing.category === "processed") {
+      hasProcessed = true;
       materials[ing.familyId] = (materials[ing.familyId] || 0) + ing.qty;
     }
     // "final"/"final_unresolved" (an unconsumed tool-role ingredient like

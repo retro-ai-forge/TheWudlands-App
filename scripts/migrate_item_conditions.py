@@ -11,8 +11,8 @@ finishes (players._return_craft_balances). Safe to run again - a converted
 stack is gone.
 
 (The earlier one-off conversion of item quality points to condition levels
-already ran - marker "item_conditions_v1" in the `migrations` collection -
-and needed the since-removed qualityMax data, so it's no longer here.)
+already ran and needed the since-removed qualityMax data, so it's no longer
+here.)
 
 Usage:
     source .venv/bin/activate

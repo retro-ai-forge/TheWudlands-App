@@ -372,21 +372,33 @@ export function CharacterPreview({
 
               <button type="button" className={tabStyles.closeButton} onClick={onClose} title="Close" aria-label="Close">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src="/images/character/exit.webp" alt="" className={tabStyles.closeArrowIcon} />
+                <img src="/images/character/char-preview-close.png" alt="" className={tabStyles.closeArrowIcon} />
               </button>
             </div>
           </div>
         </div>
       )}
 
-      <div className={tabStyles.sheet}>
+      {/* Storage views (vault, home, camp) sit tighter under the tab bar -
+          more room for their selection icons and item matrix. */}
+      <div
+        className={
+          !showCrafting && (showHome || activeTab === "home" || activeTab === "vault")
+            ? `${tabStyles.sheet} ${tabStyles.sheetCompact}`
+            : tabStyles.sheet
+        }
+      >
         {deleteError && <p className={styles.submitError}>{deleteError}</p>}
 
-        <div className={tabStyles.nameRow}>
-          <h1 className={tabStyles.name}>
-            {showCrafting ? `${character.firstName}'s Crafting` : showHome ? `${character.firstName}'s Home` : activeTab === "home" && resting ? `Resting in ${restLocation.charAt(0).toUpperCase() + restLocation.slice(1)}` : activeTab === "home" ? `${character.firstName}'s Home` : activeTab === "vault" ? "Vault" : `${character.firstName} ${character.lastName}`}
-          </h1>
-        </div>
+        {/* No headline on the storage views (vault, home, camp) - the space
+            goes to their selection buttons and item matrix. */}
+        {(showCrafting || !(showHome || activeTab === "home" || activeTab === "vault")) && (
+          <div className={tabStyles.nameRow}>
+            <h1 className={tabStyles.name}>
+              {showCrafting ? `${character.firstName}'s Crafting` : `${character.firstName} ${character.lastName}`}
+            </h1>
+          </div>
+        )}
 
         <div className={fillsViewport ? tabStyles.mainColumn : `${tabStyles.mainColumn} ${tabStyles.mainColumnPadded}`}>
           {showCrafting ? (

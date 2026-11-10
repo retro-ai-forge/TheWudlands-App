@@ -544,7 +544,7 @@ export function CraftingView({
         onClick={onExit}
       >
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src="/images/character/exit.webp" alt="" className={styles.homeExitIcon} />
+        <img src="/images/character/char-preview-close.png" alt="" className={styles.homeExitIcon} />
       </button>
     </div>
   );

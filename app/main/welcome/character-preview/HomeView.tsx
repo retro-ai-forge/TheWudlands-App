@@ -82,9 +82,9 @@ export function HomeView({
 }: {
   character: SlotCharacterSummary;
   onPlayerDataUpdated?: (data: RawPlayerData) => void;
-  /** The lower-right exit.webp button's own handler - takes the player
+  /** The lower-right char-preview-close.png button's own handler - takes the player
    * back to the Body tab. CharacterPreview.tsx hides its own fixed
-   * footer bar (tab row + its own exit.webp close button) while this
+   * footer bar (tab row + its own char-preview-close.png close button) while this
    * view is open, so this is the only way out of it once opened. */
   onExitHome: () => void;
   /** Opens the crafting page - the workbench left of the tent. */
@@ -890,7 +890,7 @@ export function HomeView({
           onClick={onExitHome}
         >
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/images/character/exit.webp" alt="" className={styles.homeExitIcon} />
+          <img src="/images/character/char-preview-close.png" alt="" className={styles.homeExitIcon} />
         </button>
       </div>
     </div>

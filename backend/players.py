@@ -2083,12 +2083,16 @@ def _resolve_craft_chain(
             for cid, qty in sub_player_ib_dec.items():
                 player_item_balance_decrements[cid] = player_item_balance_decrements.get(cid, 0) + qty
             instance_moves.extend(sub_moves)
-            # Not really in the vault yet (finish_craft produces it into
-            # character.crafting.resources when the sub-step above actually
-            # runs) - topped up here just long enough for the ingredient
-            # choice below to resolve; `virtual_stock` remembers how much of
-            # it is fake so the real vault-transfer amount stays correct.
-            player_resources[concrete_id] = player_resources.get(concrete_id, 0) + shortfall
+            # Not really in stock yet (finish_craft produces it into
+            # character.crafting.itemBalances when the sub-step above
+            # actually runs) - topped up here just long enough for the
+            # ingredient choice below to resolve; `virtual_stock` remembers
+            # how much of it is fake so the real take stays correct. Every
+            # ingredient resolves against the itemBalances bucket now, so
+            # that's where the top-up has to go.
+            if player_item_balances is None:
+                return None
+            player_item_balances[concrete_id] = player_item_balances.get(concrete_id, 0) + shortfall
             virtual_stock[concrete_id] = virtual_stock.get(concrete_id, 0) + shortfall
             plan, _chosen = _choose_ingredient_option(
                 options, tier, character, character_resources, player_resources, actual_count, player_items,
@@ -2312,6 +2316,11 @@ def _assembly_bonus_xp(recipe: dict, family_id: str, tier: int, count: int, char
     return round(0.10 * full_chain_total * tier)
 
 
+class CraftRefused(Exception):
+    """start_craft can't start this craft - the message says why (shown to
+    the player as-is)."""
+
+
 def _validate_recipe(family_id: str, tier: int) -> tuple[dict, dict, bool]:
     """Shared start_craft/finish_craft validation: known recipe, known tier
     row. Raises ValueError otherwise. Returns
@@ -2397,23 +2406,23 @@ async def _start_craft(
     db = get_database()
     doc = await db.characters.find_one({"address": address, "id": character_id})
     if doc is None:
-        return None
+        raise CraftRefused("Character not found.")
     character = doc
 
     active = character.get("crafting", {}).get("activeCraft")
     if active and datetime.fromisoformat(active["readyAt"]) > datetime.now(timezone.utc):
-        return None
+        raise CraftRefused("Already crafting.")
 
     # Crafting works from the character's active storage: home when free,
     # camp while resting on an adventure - not at all while on the road.
     storage_type = _craft_storage_type(character)
     if storage_type is None:
-        return None
+        raise CraftRefused("Out on a story - crafting only works at home or at a rest camp.")
 
     # Can't craft while away foraging (see backend.foraging).
     active_forage = (character.get("foraging") or {}).get("activeForage")
     if active_forage and datetime.fromisoformat(active_forage["readyAt"]) > datetime.now(timezone.utc):
-        return None
+        raise CraftRefused("Away foraging.")
 
     # The active storage's instances join the character's own for the tool
     # lookup (CRAFT_HELD_LOCATIONS); its stacked balances, plus what the
@@ -2463,7 +2472,10 @@ async def _start_craft(
         is_top_level=True,
     )
     if chain is None:
-        return None
+        raise CraftRefused(
+            f"Missing ingredients, tool or blueprint for that - looked in {storage_type} storage"
+            " and the carried backpack/saddlepack/cart."
+        )
     steps, player_decrements, player_item_balance_decrements, all_moves = chain
     top_step = steps[-1]
     actual_count = top_step["count"]
@@ -2490,7 +2502,7 @@ async def _start_craft(
             take_totals[concrete_id] = take_totals.get(concrete_id, 0) + qty
     split = _split_craft_take(take_totals, storage_balances, carried_balances)
     if split is None:
-        return None
+        raise CraftRefused(f"Not enough materials in {storage_type} storage and the carried bags.")
     from_storage, from_carried = split
     for concrete_id, qty in take_totals.items():
         inc_ops[f"crafting.itemBalances.{concrete_id}"] = inc_ops.get(f"crafting.itemBalances.{concrete_id}", 0) + qty
@@ -2571,7 +2583,7 @@ async def _start_craft(
         match_filter.update(elem_match)
         doc = await db.characters.find_one_and_update(match_filter, update, return_document=ReturnDocument.AFTER)
         if doc is None:
-            return None
+            raise CraftRefused("Something changed while starting the craft - please try again.")
         if carried_paths:
             await _prune_char_zeros(db, address, character_id, doc, carried_paths)
         if from_storage:
@@ -2625,7 +2637,7 @@ async def _start_craft(
         # Verify vault has these instances; remove them from player_vaults first.
         for iid in pool_pull_ids:
             if iid not in inventory_items_by_id:
-                return None
+                raise CraftRefused("A tool moved while starting the craft - please try again.")
         new_vault_items_sc = [i for i in vault_items_sc if i["instanceId"] not in set(pool_pull_ids)]
         await db.player_vaults.update_one(
             {"address": address},
@@ -2647,7 +2659,7 @@ async def _start_craft(
         match_filter, update, array_filters=array_filters or None, return_document=ReturnDocument.AFTER
     )
     if doc is None:
-        return None
+        raise CraftRefused("Something changed while starting the craft - please try again.")
     if carried_paths:
         await _prune_char_zeros(db, address, character_id, doc, carried_paths)
     if from_storage:

@@ -70,6 +70,7 @@ from backend.players import (
     set_in_adventure,
     set_prime_profession,
     set_resting,
+    CraftRefused,
     start_craft,
     unequip_item,
     check_in_item_balance_from_cart,
@@ -1119,14 +1120,13 @@ async def start_craft_route(
     """
     try:
         player = await start_craft(address, character_id, family_id, payload.tier, payload.count)
+    except CraftRefused as exc:
+        raise HTTPException(status_code=409, detail=str(exc))
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc))
 
     if player is None:
-        raise HTTPException(
-            status_code=404,
-            detail="Already crafting, out on a story, missing ingredients/tool/blueprint in the shared vault, or unknown recipe",
-        )
+        raise HTTPException(status_code=404, detail="Character not found")
 
     return player.to_dict()
 

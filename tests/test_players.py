@@ -13,6 +13,7 @@ from backend.active_players import add_active_player, remove_active_player
 from backend.character import Character
 from backend.db import get_database
 from backend.players import (
+    CraftRefused,
     _is_tracked_item,
     _new_instance,
     add_character,
@@ -133,11 +134,6 @@ async def _force_craft_ready(db, character_id: str) -> None:
     )
 
 
-@pytest.mark.xfail(
-    reason="start_craft returns None when the chain must auto-craft refined_ore from raw ore - "
-    "not investigated, crafting is due for a rework (2026-11-06)",
-    strict=False,
-)
 @pytest.mark.asyncio
 async def test_craft_chain_auto_crafts_missing_intermediate_from_raw(mongodb_uri):
     # crowbar (tool: anvil, no blueprint) <- 2x refined_ore (processed, no
@@ -172,25 +168,24 @@ async def test_craft_chain_auto_crafts_missing_intermediate_from_raw(mongodb_uri
         started_at = ready_at - timedelta(seconds=600)
         assert abs((datetime.now(timezone.utc) - started_at).total_seconds()) < 5
 
-        # 10 ore spent (5 per refined_ore * 2), pulled from the shared vault
-        # into the character's own crafting staging area, anvil borrowed.
+        # 10 ore spent (5 per refined_ore * 2), pulled from home storage
+        # into the character's own crafting staging area; the anvil (an
+        # item instance) borrowed from home.
         vault = await _vault_balances(db)
         assert vault.get("ore_1", 0) == 90
-        assert vault.get("anvil_1", 0) == 0
+        assert await _home_item_ids(db) == []
         char_doc = await _character_doc(db, character_id)
         assert char_doc["crafting"]["itemBalances"].get("ore_1", 0) == 10
-        assert char_doc["crafting"]["itemBalances"].get("anvil_1", 0) == 1
+        assert [i["itemId"] for i in char_doc["gear"]["items"] if i.get("location") == "crafting"] == ["anvil_1"]
 
         await _force_craft_ready(db, character_id)
         finished = await finish_craft(CRAFT_TEST_ADDRESS, character_id)
         assert finished is not None
         finished_char = finished.characters[0]
         assert finished_char["crafting"].get("activeCraft") is None
-        # The anvil (never consumed, just borrowed) is back in the vault,
-        # next to the crafted crowbar.
-        vault = await _vault_balances(db)
-        assert vault.get("anvil_1", 0) == 1
-        assert vault.get("crowbar_1", 0) == 1
+        # The anvil (never consumed, just borrowed) is back home, next to
+        # the crafted crowbar.
+        assert await _home_item_ids(db) == ["anvil_1", "crowbar_1"]
     finally:
         await _purge_player(db, CRAFT_TEST_ADDRESS)
 
@@ -231,7 +226,7 @@ async def test_craft_chain_skips_already_owned_processed_material(mongodb_uri):
 async def test_craft_chain_fails_atomically_on_missing_intermediate_tool(mongodb_uri):
     # beam (tool: workbench) <- 3x plank (processed) <- raw wood, but plank
     # itself needs an instance-tracked axe_stone/axe the player has none
-    # of - the whole chain must fail outright (start_craft returns None),
+    # of - the whole chain must fail outright (start_craft raises CraftRefused),
     # with nothing staged, even though beam's own tool (workbench) IS
     # available.
     db = get_database()
@@ -239,8 +234,8 @@ async def test_craft_chain_fails_atomically_on_missing_intermediate_tool(mongodb
         character_id = await _setup_craft_character(
             db, item_balances={"wood_1": 100, "workbench_1": 1}
         )
-        result = await start_craft(CRAFT_TEST_ADDRESS, character_id, "beam", 1, count=1)
-        assert result is None
+        with pytest.raises(CraftRefused):
+            await start_craft(CRAFT_TEST_ADDRESS, character_id, "beam", 1, count=1)
 
         char_doc = await _character_doc(db, character_id)
         assert char_doc["crafting"]["activeCraft"] is None
@@ -252,11 +247,6 @@ async def test_craft_chain_fails_atomically_on_missing_intermediate_tool(mongodb
         await _purge_player(db, CRAFT_TEST_ADDRESS)
 
 
-@pytest.mark.xfail(
-    reason="start_craft returns None when the chain must auto-craft refined_ore from raw ore - "
-    "not investigated, crafting is due for a rework (2026-11-06)",
-    strict=False,
-)
 @pytest.mark.asyncio
 async def test_craft_chain_multi_count_only_manufactures_the_shortfall(mongodb_uri):
     # count=3 crowbars need 6 refined_ore total; 2 already owned, so only

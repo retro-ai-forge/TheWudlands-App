@@ -786,10 +786,15 @@ const ITEM_TILE_PX = 100;
 // just blank space below the last row.
 const SCROLLBAR_OVERLAP_PX = 18;
 
-// Matches .packedItemsRow's own CSS `gap: 0.35rem` - PackedItemsRow's own
+// Matches .packedItemsRow's own CSS `gap: 0.2rem` - PackedItemsRow's own
 // row-count math needs this in px to convert a target pixel budget into a
 // whole number of tile rows.
-const PACKED_ROW_GAP_PX = 5.6;
+const PACKED_ROW_GAP_PX = 3.2;
+
+// ItemGrid fills rows at least this many tiles wide before it starts
+// stacking tiles in columns; .itemGrid/.itemGridRow's padding-left (0.4rem).
+const MIN_GRID_COLUMNS = 3;
+const GRID_PADDING_LEFT_PX = 6.4;
 
 // Small breathing room the backpack popup's own card - and its packed
 // item matrix - leave above the fixed footer bar, so the footer always
@@ -1012,6 +1017,7 @@ export function ItemGrid({
   // phone or a resized browser window changes how much space is left).
   const scrollRef = useRef<HTMLDivElement>(null);
   const [gridHeight, setGridHeight] = useState<number>(ITEM_TILE_PX);
+  const [gridWidth, setGridWidth] = useState<number>(0);
   useEffect(() => {
     const measure = () => {
       const el = scrollRef.current;
@@ -1021,6 +1027,7 @@ export function ItemGrid({
       const available =
         window.innerHeight - el.getBoundingClientRect().top - footerHeight - 16 + SCROLLBAR_OVERLAP_PX - reserveBottomPx;
       setGridHeight(Math.max(ITEM_TILE_PX, available));
+      setGridWidth(el.clientWidth);
     };
     // Defer the initial measure to the next animation frame so that any
     // parent-level scroll-to-top effects (CharacterPreview scrolls the wizard
@@ -1200,6 +1207,19 @@ export function ItemGrid({
   let scrollClass = hideScrollbar ? `${styles.itemGridScroll} ${styles.itemGridScrollNoBar}` : styles.itemGridScroll;
   if (selectBusy) scrollClass += ` ${styles.itemGridScrollBusy}`;
 
+  // Fill row by row - as many columns as fit the width, never fewer than
+  // MIN_GRID_COLUMNS - while every tile still fits in the rows on screen;
+  // only once they don't, switch to columns (top to bottom) that scroll
+  // sideways. The scrollbar slack below the last row doesn't count here.
+  const tileCount = expandedIds.length + expandedResourceIds.length;
+  const tileStep = ITEM_TILE_PX + PACKED_ROW_GAP_PX;
+  const rowsOnScreen = Math.max(1, Math.floor((gridHeight - SCROLLBAR_OVERLAP_PX + PACKED_ROW_GAP_PX) / tileStep));
+  const columnsOnScreen = Math.max(
+    MIN_GRID_COLUMNS,
+    Math.floor((gridWidth - GRID_PADDING_LEFT_PX + PACKED_ROW_GAP_PX) / tileStep),
+  );
+  const fillRows = tileCount <= rowsOnScreen * columnsOnScreen;
+
   return (
     <div
       ref={scrollRef}
@@ -1209,7 +1229,10 @@ export function ItemGrid({
       {expandedIds.length === 0 && expandedResourceIds.length === 0 ? (
         <p className={styles.inventoryEmpty}>{emptyLabel}</p>
       ) : null}
-      <div className={expandedIds.length + expandedResourceIds.length <= Math.floor(gridHeight / ITEM_TILE_PX) ? styles.itemGridRow : styles.itemGrid}>
+      <div
+        className={fillRows ? styles.itemGridRow : styles.itemGrid}
+        style={fillRows ? { gridTemplateColumns: `repeat(${columnsOnScreen}, ${ITEM_TILE_PX}px)` } : undefined}
+      >
         {expandedIds.map(({ key, id, displayCount, tileCap }) => {
           const info = tierInfo[lookupIds?.[id] ?? id];
           const name = info?.name ? stripBlueprintPrefix(info.name) : formatResourceLabel(lookupIds?.[id] ?? id);
