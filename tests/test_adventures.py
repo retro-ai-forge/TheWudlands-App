@@ -67,6 +67,35 @@ def test_retreat_needs_allow_run_away():
     assert not step_allowed(graph, "Hall", "Retreat")
 
 
+def test_scene_can_switch_off_run_away():
+    passages = [dict(p) for p in PASSAGES]
+    passages[2]["text"] += " <<set $meta_allowRunAway to false>>"  # Hall: an ambush
+    passages[3]["text"] += " <<set $meta_allowRunAway to true>>"  # Vault: after it
+    graph = build_story_graph(passages, STORY_DATA)
+    assert graph["noRetreat"] == ["Hall"]
+    assert not step_allowed(graph, "Hall", "Retreat")
+    assert step_allowed(graph, "Vault", "Retreat")
+    assert step_allowed(graph, "Start", "Retreat")  # no own value: story default
+    assert step_allowed(graph, "Hall", "LastResort")  # the fault route stays
+
+
+def test_scene_can_switch_on_run_away():
+    passages = [dict(p) for p in PASSAGES]
+    passages[0]["text"] = passages[0]["text"].replace("to true", "to false")
+    passages[3]["text"] += " <<set $meta_allowRunAway to true>>"  # Vault only
+    graph = build_story_graph(passages, STORY_DATA)
+    assert step_allowed(graph, "Vault", "Retreat")
+    assert not step_allowed(graph, "Hall", "Retreat")
+
+
+def test_graph_saved_before_per_scene_run_away():
+    graph = build_story_graph(PASSAGES, STORY_DATA)
+    del graph["noRetreat"]
+    assert step_allowed(graph, "Hall", "Retreat")
+    graph["allowRunAway"] = False
+    assert not step_allowed(graph, "Hall", "Retreat")
+
+
 # ── Sessions (live DB) ──────────────────────────────────────────────────────
 
 _PLAYER_COLLECTIONS = (

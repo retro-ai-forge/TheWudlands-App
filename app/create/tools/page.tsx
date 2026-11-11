@@ -25,23 +25,31 @@ const FLIRT_LINES = [
   "Her hair falls {unbound | loosely braided | tumbling past her shoulders}, damp at the nape, intertwined with {silk ribbons | golden threads | fresh flowers} that frame her face like an invitation."
 ];
 
+// Your Legend: ten reputation axes, rows in pairs (the table frames each pair).
+// Every name is a story variable $meta_<name in lower case>, 0-100. Both names
+// of a pair can be used; except for Fame/Infamy the engine keeps a pair as one
+// scale, so only one side of it is ever above 0.
 const STORY_STATS = [
-  { stat: "Fame",         description: "Known as a hero — trusted, admired, celebrated",    storyUse: "Nobility welcomes you with honor, strangers offer aid" },
-  { stat: "Infamy",     description: "Feared by the powerful — a weapon in the shadows",   storyUse: "Noble houses employ you for dark deeds, finest vintage wines flow freely" },
-  { stat: "Faith",        description: "Devoted to a god or cosmic force, earning divine favour", storyUse: "Temples offer shelter, clergy grant healing, holy orders call on you" },
-  { stat: "Heresy",       description: "Denounced by the faithful, touched by forbidden powers", storyUse: "Inquisitors hunt you, holy temples bar entry, but dark shrines grant power to the condemned" },
-  { stat: "Notoriety",    description: "Bards sing your legend in every tavern and kingdom", storyUse: "Doors open without asking, nobles and merchants gift you gold" },
-  { stat: "Obscurity",    description: "Unknown, hidden, forgotten, walking unseen through the world", storyUse: "Slip past guards unnoticed, enemies cannot find you" },
-  { stat: "Loyality",     description: "Bonds of loyalty and deep romance",        storyUse: "Allies risk their lives for you, secret aid flows freely" },
-  { stat: "Treachery",       description: "Scorned lovers and betrayed allies",       storyUse: "Ambushed by those who once knew you, reputation poisoned" },
-  { stat: "Honor",        description: "Esteemed by peers for integrity and strength", storyUse: "Duels avoided through reputation, lead honor guard" },
-  { stat: "Disdain",      description: "Scorned and disrespected by worthy foes",  storyUse: "Challenged constantly, betrayed by allies" },
-  { stat: "Persuasion",   description: "Words that sway hearts and minds",           storyUse: "Enemies lay down arms, merchants offer discounts" },
-  { stat: "Intimidation", description: "Rule through fear and force of will",      storyUse: "Enemies flee in terror, merchants comply quickly" },
-  { stat: "Wealth",       description: "Gold, treasures, and assets accumulated",  storyUse: "Buy out rivals, commission grand works" },
-  { stat: "Debt",         description: "Owe gold or favors to powerful forces",    storyUse: "Creditors demand payment in blood" },
-  { stat: "Manipulation", description: "Master of deception and cunning schemes",   storyUse: "Turn enemies against each other, blackmail nobles" },
-  { stat: "Sincerity",    description: "Known for truth and unwavering honor",      storyUse: "Enemies trust your word, easier treaties" },
+  { stat: "Fame",       description: "Known among the common folk as a hero: trusted, admired, celebrated", storyUse: "Strangers offer aid, villagers share food and secrets" },
+  { stat: "Infamy",     description: "Known among the common folk as a threat: feared, cursed, whispered about", storyUse: "Doors close, prices rise, but the desperate seek you for dark deeds" },
+  { stat: "Renown",     description: "Your tales travel far, even distant lands have heard of you", storyUse: "Guards recognise you, nobles know your name before you speak it" },
+  { stat: "Obscurity",  description: "Unknown, forgotten, walking unseen through the world", storyUse: "Slip past guards unnoticed, enemies cannot find you" },
+  { stat: "Faith",      description: "Devoted to a god or cosmic force, earning divine favour", storyUse: "Temples offer shelter, clergy grant healing, holy orders call on you" },
+  { stat: "Heresy",     description: "Denounced by the faithful, touched by forbidden powers", storyUse: "Inquisitors hunt you, temples bar entry, dark shrines grant power" },
+  { stat: "Honor",      description: "Oaths kept, truth told, fair fights fought", storyUse: "Your word is accepted as bond, duels are avoided through reputation" },
+  { stat: "Shame",      description: "Broken oaths, lies and dishonest victories", storyUse: "Challenged constantly, no one takes your word" },
+  { stat: "Loyalty",    description: "Bonds with allies and companions that hold", storyUse: "Allies risk their lives for you, secret aid flows freely" },
+  { stat: "Treachery",  description: "Betrayed allies and abandoned companions", storyUse: "Ambushed by those who once knew you, help comes at a price" },
+  { stat: "Mercy",      description: "Sparing the defeated, protecting the weak", storyUse: "Former foes repay you, the oppressed take your side" },
+  { stat: "Cruelty",    description: "Tormenting the defeated, preying on the weak", storyUse: "Enemies surrender in terror, but no one pleads for you" },
+  { stat: "Courage",    description: "Standing your ground when others flee", storyUse: "Soldiers follow you, champions accept your challenge" },
+  { stat: "Cowardice",  description: "Fleeing when it mattered most", storyUse: "Mocked in taverns, left out of the great quests" },
+  { stat: "Favour",     description: "Standing at court with kings, queens and vampire lords", storyUse: "Audiences granted, titles and courtly love within reach" },
+  { stat: "Disgrace",   description: "Banished from court, out of royal grace", storyUse: "Court gates closed, the crown's agents watch you" },
+  { stat: "Purity",     description: "Untouched by blood magic, curses and undeath", storyUse: "Holy relics answer you, the undead shy away" },
+  { stat: "Corruption", description: "Tainted by dark powers, blood and cursed relics", storyUse: "Vampires call you kin, dark rites open, holy ground burns" },
+  { stat: "Wildkin",    description: "Trusted by the wild, the fae and those who live off the land", storyUse: "Hidden paths open, druids and herbfolk share their lore" },
+  { stat: "Despoiler",  description: "Plunderer of forests, fields and sacred groves", storyUse: "The wild turns against you, fae lead you astray" },
 ];
 
 const LEGEND_PREVIEWS = [
@@ -50,32 +58,29 @@ const LEGEND_PREVIEWS = [
     image: "/images/create/legend-1.jpg",
     alt: "City gates, no stats",
     text: "The gate guards eye you like any other traveler and ask to pay a toll before entering the city.",
-    textGated: false,
     choices: [
-      { label: "Greet and walk to the front gate", gated: false },
-      { label: "Walk to the west gate", gated: false },
+      { label: "Greet and walk to the front gate" },
+      { label: "Walk to the west gate" },
     ],
   },
   {
-    heading: "Obscurity",
+    heading: "Obscurity known",
     image: "/images/create/legend-2.jpg",
-    alt: "City gates, Obscurity greater than 30",
+    alt: "City gates, Obscurity known (Renown -30 or lower)",
     text: "The gate guards eye you like any other traveler and ask to pay a toll before entering the city.",
-    textGated: false,
     choices: [
-      { label: "Greet and walk to the front gate", gated: false },
-      { label: "Walk to the west gate", gated: false },
-      { label: "Slip in through the smugglers' tunnel", gated: true },
+      { label: "Greet and walk to the front gate" },
+      { label: "Walk to the west gate" },
+      { label: "Slip in through the smugglers' tunnel" },
     ],
   },
   {
-    heading: "High Fame or Infamy",
+    heading: "Fame or Infamy known",
     image: "/images/create/legend-3.jpg",
-    alt: "City gates, Fame greater than 40",
+    alt: "City gates, Fame or Infamy known (30 or higher)",
     text: "The gate guards recognize you at once and wave you through with a salute.",
-    textGated: true,
     choices: [
-      { label: "Greet the guard and walk through the main gate", gated: true },
+      { label: "Greet the guard and walk through the main gate" },
     ],
   },
 ];
@@ -305,11 +310,11 @@ export default function Storyteller() {
             </tr>
             <tr>
               <td>Fame</td>
-              <td>The adventurer&apos;s reputation — famed heroes earn trust and open doors, while infamous wanderers earn darker renown. Use fame to shape how VIP and NPCs react, what they know, and what stories follow the adventurer.</td>
+              <td>The adventurer&apos;s reputation among the common folk — famed heroes earn trust and open doors, while infamous wanderers earn darker renown. Use Fame and Infamy to shape how NPCs react, what they know, and what stories follow the adventurer (see Your Legend).</td>
             </tr>
             <tr>
-              <td>Notoriety</td>
-              <td>How far the adventurer&apos;s reputation has travelled. Low notoriety means renown is local; high notoriety means even distant lands have heard the tales. Creators use this to determine what NPCs already know.</td>
+              <td>Renown</td>
+              <td>How far the adventurer&apos;s reputation has travelled. Low renown means the tales stay local or the adventurer walks in obscurity; high renown means even distant lands have heard them. Creators use this to determine what NPCs already know.</td>
             </tr>
             <tr>
               <td>Story Structure</td>
@@ -319,17 +324,21 @@ export default function Storyteller() {
               <td>Adventure Dependencies</td>
               <td>Addons may require other adventures to be completed first. Finishing one adventure can unlock one or more others, as declared by the creator.</td>
             </tr>
-             <tr>
-              <td>Combat Scenes</td>
-              <td>In all combat scenes the retreat remains available by default, though the author may impose consequences — injury, lost items, narrative fallout — for choosing to flee. The retreat may be disabled when the story has clearly forewarned the player of the danger through warnings, environmental cues, or an explicit threat of ambush. The player must always have a fair opportunity to prepare or withdraw before the fight begins.</td>
-            </tr>
             <tr>
               <td>Default Entry</td>
               <td><span className={styles.code}>Start</span> is the scene id where every new session begins. It also acts as the non-error fallback when a requested scene cannot be resolved under normal conditions. It must exist in the scene map and must provide a path toward the retreat.</td>
             </tr>
             <tr>
               <td>Retreat</td>
-              <td><span className={styles.code}>Retreat</span> is the primary voluntary-exit ending. It must be marked <span className={styles.code}>{`"isEnding": true`}</span>. Players must always have a path to retreat or recover. Warn in the current scene if the next scene disables the retreat button.</td>
+              <td><span className={styles.code}>Retreat</span> is the primary voluntary exit. It can be a single scene marked <span className={styles.code}>$isEnding: true</span>, or a story of its own that branches into several scenes with several endings. It needs at least one ending and stays separate from the main story. Whether players can reach it is set by <span className={styles.code}>$meta_allowRunAway</span> (see Restricted).</td>
+            </tr>
+            <tr>
+              <td>Combat Scenes</td>
+              <td>In most combat scenes the player can still retreat, though the author may impose consequences — injury, lost items, narrative fallout — for choosing to flee. Taking the retreat away (see Restricted) is fair only when the story has clearly forewarned the danger through warnings, environmental cues, or an explicit threat of ambush, and the player had a chance to prepare or withdraw before the fight begins.</td>
+            </tr>
+            <tr>
+              <td>Restricted</td>
+              <td><span className={styles.code}>$meta_allowRunAway</span> controls the retreat button. It is required in <span className={styles.code}>StoryInit</span>, where <span className={styles.code}>$meta_allowRunAway: true</span> allows running away in every scene. A scene without a retreat sets <span className={styles.code}>$meta_allowRunAway: false</span>, and the scenes after it set <span className={styles.code}>$meta_allowRunAway: true</span> again, since a Twine variable keeps its value from scene to scene.</td>
             </tr>
             <tr>
               <td>Missing Scene Fallback</td>
@@ -374,7 +383,7 @@ export default function Storyteller() {
           <img
             src="/images/create/minne.jpg"
             alt="A knight kneels before a noble lady in a candlelit castle hall — courtly love in the tradition of Minne."
-            className={styles.sectionImage}
+            className={`${styles.sectionImage} ${styles.imageNoFilter}`}
           />
         </div>
 
@@ -417,6 +426,7 @@ export default function Storyteller() {
             Rules: A <span className={styles.code}>Retreat</span> can be a short story in itself but finally leads to a node with <span className={styles.code}>{`<<set $isEnding to true>>`}</span>.
             The <span className={styles.code}>LastResort</span> must be marked <span className={styles.code}>{`<<set $isEnding to false>>`}</span>. 
             Every other scene must contain <span className={styles.code}>[[jumpTo]]</span> decisions.
+            A scene with <span className={styles.code}>{`<<set $meta_allowRunAway to false>>`}</span> has no retreat option.
           </p>
         </div>
         </details>
@@ -591,6 +601,14 @@ export default function Storyteller() {
                   Some events only happen rarely. Others create a unique flow through the narrative.</span>
               </div>
             </div>
+            <div style={{ display: "flex", gap: "1rem", alignItems: "flex-start" }}>
+              <img src="/images/create/feature-active.png" alt="Active" title="active" style={{ height: "2rem", width: "auto", flexShrink: 0 }} />
+              <div>
+                <strong>Foraging</strong><br /><span style={{ fontSize: "0.9rem", color: "#a09080" }}>Between adventures, characters go out to gather raw materials for crafting. Each soul has its own foraging sites that slowly run dry,
+                  and nights outside bring weather, worn gear, and sometimes a surprise find.</span>
+              </div>
+            </div>
+            
 
             <hr style={{ border: "none", borderTop: "1px solid #3a3020", margin: "0" }} />
 
@@ -686,9 +704,9 @@ export default function Storyteller() {
           <div className={styles.groupBody}>
 
         <p className={styles.body}>
-          Every decision leaves a permanent mark. Stats are not numbers — they are reputation, bonds, and enemies.
-          Carried forward into every adventure that follows. Push too hard in one direction
-          and its opposite diminishes into shadow.
+          Every decision leaves a permanent mark. Over many adventures each character forms a legend of its own:
+          reputation, bonds and enemies, carried forward into every adventure that follows.
+          Push too hard in one direction and its opposite diminishes into shadow.
         </p>
 
         <table className={styles.table}>
@@ -702,7 +720,7 @@ export default function Storyteller() {
           <tbody>
             {STORY_STATS.map((row, index) => (
               <tr key={row.stat} data-pair={Math.floor(index / 2)} className={styles.statRow}>
-                <td className={styles.statName}>{row.stat}</td>
+                <td className={styles.statName}>{row.stat}<br /><span className={styles.code}>{"$meta_" + row.stat.toLowerCase()}</span></td>
                 <td>{row.description}</td>
                 <td>{row.storyUse}</td>
               </tr>
@@ -711,16 +729,29 @@ export default function Storyteller() {
         </table>
 
         <p className={styles.body}>
-          Attach stat keys to choices. Positive raises, negative lowers — and each stat&apos;s opposing force shifts with it.
-          Only mark choices where the decision should leave a lasting impression.
-          Stats also steer the story: scenes can branch on thresholds, choices can be gated
-          behind <span className={styles.code}>show_if</span>.
+          The legend follows a few simple rules:
         </p>
 
+        <ul className={styles.body}>
+          <li><strong>Opposites share one scale.</strong> Mercy and Cruelty are two ends of the same scale, so a character is never both: raising Cruelty first wears Mercy down to 0. Every pair works this way, except Fame and Infamy.</li>
+          <li><strong>Fame and Infamy pull against each other.</strong> They are two values from 0 to 100, so a hero to the villagers can still be a butcher to the bandits. Raising one lowers the other by half as much.</li>
+          <li><strong>Some deeds echo.</strong> A quarter of a change carries over: Fame and Infamy raise Renown, Cruelty raises Infamy, Treachery brings Shame, Corruption brings Heresy, Courage brings Fame. An echo never echoes again.</li>
+          <li><strong>One adventure, one step.</strong> An adventure changes each value by at most 10; review checks this. Foraging only touches Wildkin, by 1 per trip, and never past 25.</li>
+          <li><strong>Out of sight, out of mind.</strong> Renown fades slowly, about one point every four weeks, unless new deeds feed it.</li>
+          <li><strong>Bands, not numbers.</strong> 10 whispered, 30 known, 60 renowned, 90 legendary, on either side of a scale.</li>
+          <li><strong>Running away has a price.</strong> The Retreat story decides what fleeing costs, for example Courage. If it sets none, one may be added after review.</li>
+        </ul>
+
         <p className={styles.body}>
-          A leading <span style={{ color: "#c07a3a", fontWeight: "bold" }}>◆</span> marks stat-gated content.
-          A grey <span className={styles.glyphFade} style={{ color: "#6b6b6b", fontWeight: "bold" }}>◆</span> means
-          hidden options exist, locked until your stats qualify.
+          Scenes read and change the values with <span className={styles.code}>$meta_</span> variables
+          and can branch or gate choices on the bands. The <Link href="/create/tutorial#legend" className={styles.inlineLink}>tutorial</Link> shows how.
+</p>
+
+        <p className={styles.body}>
+          The preview shows the same city gate for three different legends. Without a reputation the guards
+          ask for the toll. With Obscurity known, a hidden way in appears: the smugglers&apos; tunnel. With Fame or
+          Infamy known, the guards recognise you and wave you through. A choice that needs a level simply does not
+          show until the character reaches it.
         </p>
 
         <h3 className={`${h.sub} ${h.muted}`}>Scene Preview: {LEGEND_PREVIEWS[legendSlide].heading}</h3>
@@ -744,20 +775,6 @@ export default function Storyteller() {
                 lineHeight: "1.8"
               }}
             >
-              {i === 0 && (
-                <span
-                  title="Other options exist but are hidden until your stats qualify"
-                  className={styles.glyphFade}
-                  style={{
-                    position: "absolute",
-                    bottom: "0.75rem",
-                    left: "0.75rem",
-                    color: "#6b6b6b",
-                    fontWeight: "bold",
-                    fontSize: "1.1rem"
-                  }}
-                >◆</span>
-              )}
 
               <img
                 src={preview.image}
@@ -770,9 +787,6 @@ export default function Storyteller() {
               />
 
               <p style={{ marginBottom: "1.5rem" }}>
-                {preview.textGated && (
-                  <span style={{ marginRight: "0.5em", color: "#c07a3a", fontWeight: "bold" }}>◆</span>
-                )}
                 {preview.text}
               </p>
 
@@ -801,9 +815,6 @@ export default function Storyteller() {
                       transition: "all 0.2s"
                     }}
                   >
-                    {choice.gated && (
-                      <span style={{ marginRight: "0.5em", color: "#c07a3a", fontWeight: "bold" }}>◆</span>
-                    )}
                     {choice.label}
                   </button>
                 ))}

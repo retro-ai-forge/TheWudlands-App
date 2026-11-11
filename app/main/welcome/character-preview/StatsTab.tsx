@@ -9,6 +9,7 @@ import { IdList } from "./VaultTab";
 import type { BlueprintTierInfo, RawPlayerData } from "./VaultTab";
 import { getBlueprintCatalog } from "./catalogCache";
 
+import { LEGEND_PAIRS, legendLevel, legendSide } from "@/app/lib/legend";
 import baseLevelsData from "../../../../backend/data/base-levels.json";
 
 // Vital status -> its color class (same colors as the guide / world pages).
@@ -475,6 +476,37 @@ export function StatsTab({
               <p className={styles.attrHealNote}>Heals only while free (not foraging, crafting or adventuring).</p>
             )}
           </div>
+
+          {/* Your Legend: one side per pair (the higher one) and its level name. */}
+          <table className={`${styles.attrTable} ${styles.legendTable}`}>
+            <thead>
+              <tr>
+                <th scope="col" colSpan={5} className={styles.attrGroupName}>Legend</th>
+              </tr>
+            </thead>
+            <tbody>
+              {LEGEND_PAIRS.slice(0, 5).map((pair, i) => {
+                const left = legendSide(character.legend, pair);
+                const right = legendSide(character.legend, LEGEND_PAIRS[i + 5]);
+                const cells = (side: { name: string; value: number }) => {
+                  const level = legendLevel(side.value);
+                  return (
+                    <>
+                      <th scope="row" className={styles.legendName}>{side.name}</th>
+                      <td className={level === "none" ? `${styles.legendLevel} ${styles.legendLevelNone}` : styles.legendLevel}>{level}</td>
+                    </>
+                  );
+                };
+                return (
+                  <tr key={pair[0]}>
+                    {cells(left)}
+                    <td className={styles.attrGapCell} aria-hidden="true" />
+                    {cells(right)}
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
 
           {(character.blueprints?.length ?? 0) > 0 && (
             <div className={`${styles.accordionItem} ${styles.accordionItemWide}`}>

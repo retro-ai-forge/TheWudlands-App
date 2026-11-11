@@ -9,6 +9,8 @@ from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from typing import Dict, Optional
 
+from backend.legend import default_legend
+
 # Valid values for Character.vital_status, per the "Vital Status" lore
 # section on the world page (app/theworld/page.tsx). Nothing sets a
 # character to anything but "alive" yet, but the set is recorded here so
@@ -200,6 +202,11 @@ class Character:
     completed_stories: list = field(default_factory=list)
     adventure_finished: int = 0
     adventure_run_away: int = 0
+    # Your Legend reputation values, {name: 0-100} without the story's
+    # meta_ prefix (see backend.legend). Kept apart from `stats`.
+    legend: dict = field(default_factory=default_legend)
+    # Last write of `legend`; Renown fades from here (backend.legend.decayed).
+    legend_updated_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
 
     def to_dict(self) -> dict:
         return {
@@ -240,4 +247,6 @@ class Character:
                 "adventureFinished": self.adventure_finished,
                 "adventureRunAway": self.adventure_run_away,
             },
+            "legend": self.legend,
+            "legendUpdatedAt": self.legend_updated_at.isoformat(),
         }

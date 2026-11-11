@@ -94,6 +94,96 @@
   color: #c07a3a;
 }
 
+/* ── Your Legend section ── */
+.section {
+  margin-top: 3rem;
+  scroll-margin-top: 1rem;
+}
+
+.body,
+.pairList,
+.ruleList {
+  font-family: "Courier New", Courier, monospace;
+  font-size: 0.95rem;
+  line-height: 1.8;
+  color: #d4c9a8;
+  margin-bottom: 1.25rem;
+}
+
+.pairList {
+  columns: 2;
+  column-gap: 2rem;
+  padding-left: 1.25rem;
+}
+
+.ruleList {
+  padding-left: 1.25rem;
+}
+
+.inlineLink {
+  color: #c07a3a;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.code {
+  font-family: "Courier New", Courier, monospace;
+  font-size: 0.85rem;
+  color: #c07a3a;
+  background: #111108;
+  padding: 0.1em 0.35em;
+  border: 1px solid #3a3020;
+}
+
+.codeBlock {
+  font-family: "Courier New", Courier, monospace;
+  font-size: 0.82rem;
+  line-height: 1.7;
+  color: #d4c9a8;
+  background: #0e0e0b;
+  border: 1px solid #7a6a3a;
+  border-left: 3px solid #c07a3a;
+  padding: 1rem 1.25rem;
+  overflow-x: auto;
+  white-space: pre;
+  margin: 0 0 1.25rem;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-family: "Courier New", Courier, monospace;
+  font-size: 0.9rem;
+  margin-bottom: 1.5rem;
+}
+
+.table th {
+  background: #1a1a1a;
+  color: #c07a3a;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid #7a6a3a;
+  text-align: left;
+}
+
+.table td {
+  color: #d4c9a8;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid #3a3020;
+  vertical-align: top;
+}
+
+.table td:first-child {
+  white-space: nowrap;
+}
+
+@media (max-width: 749px) {
+  .pairList {
+    columns: 1;
+  }
+}
+
 .backLink {
   display: inline-block;
   margin-top: 2.5rem;

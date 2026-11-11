@@ -400,6 +400,10 @@ class CharacterResponse(BaseModel):
         default_factory=lambda: {"adventureFinished": 0, "adventureRunAway": 0},
         description="Cumulative adventure outcome counters: adventureFinished, adventureRunAway",
     )
+    legend: Dict[str, float] = Field(
+        default_factory=dict,
+        description="Your Legend reputation values, {name: 0-100} as floats, e.g. {'mercy': 12.25, 'cruelty': 0} (backend.legend)",
+    )
     vault: PlayerVaultResponse = Field(
         default_factory=PlayerVaultResponse,
         description="This character's personal vault (items, itemBalances)",

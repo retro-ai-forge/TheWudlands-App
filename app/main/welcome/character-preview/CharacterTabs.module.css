@@ -1107,6 +1107,30 @@
   color: #c07a3a;
 }
 
+/* Your Legend under the attributes - same table look (.attrTable). */
+.legendTable {
+  margin-top: 1.5rem;
+}
+
+.legendName {
+  color: #d4c9a8;
+  font-size: 0.85rem;
+  text-transform: capitalize;
+}
+
+.attrTable .legendLevel {
+  width: 1%;
+  white-space: nowrap;
+  text-align: right;
+  padding-left: 0.4rem;
+  color: #c07a3a;
+  font-size: 0.85rem;
+}
+
+.attrTable .legendLevelNone {
+  color: #6b6050;
+}
+
 .attrLabel {
   color: #d4c9a8;
   font-size: 0.85rem;

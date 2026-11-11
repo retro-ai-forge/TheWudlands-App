@@ -9,6 +9,7 @@ from datetime import datetime, timedelta, timezone
 
 import pytest
 
+from backend import legend
 from backend.active_players import add_active_player, remove_active_player
 from backend.character import Character
 from backend.db import get_database
@@ -80,6 +81,34 @@ async def test_characters_persist_after_active_player_is_removed(mongodb_uri):
         fetched = await get_player(TEST_ADDRESS)
         assert fetched is not None
         assert len(fetched.characters) == 2
+    finally:
+        await _purge_player(db, TEST_ADDRESS)
+
+
+@pytest.mark.asyncio
+async def test_new_character_has_legend_and_old_ones_get_it_on_read(mongodb_uri):
+    db = get_database()
+    await _purge_player(db, TEST_ADDRESS)
+    try:
+        await get_or_create_player(TEST_ADDRESS)
+        player = await add_character(
+            TEST_ADDRESS, Character(first_name="Legend", last_name="Test", slot_number=1)
+        )
+        char = player.characters[0]
+        assert char["legend"] == legend.default_legend()
+        assert len(char["legend"]) == 20 and "mercy" in char["legend"]
+        assert not any(k.startswith("meta_") for k in char["legend"])
+
+        # A character stored before the legend existed (or with names
+        # missing) reads back with every name, keeping what it had.
+        await db.characters.update_one(
+            {"address": TEST_ADDRESS, "id": char["id"]},
+            {"$set": {"legend": {"mercy": 7}}},
+        )
+        fetched = await get_player(TEST_ADDRESS)
+        read = fetched.characters[0]["legend"]
+        assert read["mercy"] == 7 and read["cruelty"] == 0
+        assert set(read) == set(legend.LEGEND_KEYS)
     finally:
         await _purge_player(db, TEST_ADDRESS)
 

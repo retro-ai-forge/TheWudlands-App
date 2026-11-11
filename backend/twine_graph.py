@@ -126,6 +126,13 @@ def _truthy(value) -> bool:
     return bool(value)
 
 
+def _scene_allows_run_away(text: str, story_default: bool) -> bool:
+    """A scene may set $meta_allowRunAway itself (false for an ambush, true
+    again in the scenes after it); otherwise the StoryInit value applies."""
+    value = _extract_set_value(text, "meta_allowRunAway")
+    return story_default if value is None else _truthy(value)
+
+
 def build_story_graph(passages: list, story_data: dict) -> dict:
     """The navigation graph the adventure runtime validates steps against.
 
@@ -136,8 +143,11 @@ def build_story_graph(passages: list, story_data: dict) -> dict:
                      marked with $isEnding true. Endings reached from the start
                      passage finish the story; those in the Retreat graph mean
                      the party ran away.
-        allowRunAway - whether Retreat may be entered from any main-story scene
-                     ($meta_allowRunAway in StoryInit)
+        allowRunAway - whether Retreat may be entered from main-story scenes
+                     ($meta_allowRunAway in StoryInit, the story default)
+        noRetreat  - main-story scenes where Retreat can't be entered: a scene
+                     that sets $meta_allowRunAway itself uses its own value
+                     (e.g. false for an ambush), every other scene the default
 
     Only meaningful for a story that passed _check_twine_syntax (the submit
     validator), which guarantees unique names, a start passage, Retreat and
@@ -181,6 +191,10 @@ def build_story_graph(passages: list, story_data: dict) -> dict:
         "endings": endings,
         "mainScenes": sorted(main),
         "allowRunAway": allow_run_away,
+        "noRetreat": sorted(
+            name for name in main
+            if not _scene_allows_run_away(by_name[name].get("text", ""), allow_run_away)
+        ),
     }
 
 
@@ -189,7 +203,8 @@ def step_allowed(graph: dict, from_passage: str, to_passage: str) -> bool:
 
     Allowed: a literal link out of the current scene; LastResort from anywhere
     (the engine's fault route); Retreat from any main-story scene when the
-    story allows running away.
+    story allows running away, unless that scene sets $meta_allowRunAway to
+    false (or the story default is false and the scene doesn't set it true).
     """
     if to_passage == LAST_RESORT_PASSAGE:
         return True
@@ -197,8 +212,13 @@ def step_allowed(graph: dict, from_passage: str, to_passage: str) -> bool:
         return True
     if (
         to_passage == RETREAT_PASSAGE
-        and graph.get("allowRunAway")
         and from_passage in graph.get("mainScenes", [])
+        and (
+            from_passage not in graph["noRetreat"]
+            if "noRetreat" in graph
+            # graphs saved before per-scene $meta_allowRunAway
+            else graph.get("allowRunAway")
+        )
     ):
         return True
     return False

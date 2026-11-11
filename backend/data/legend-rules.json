@@ -1,0 +1,34 @@
+{
+  "_comment": "Your Legend rules (backend/legend.py). Every value is 0-100, stored as a float so shares of small changes are kept. Pairs are in legend.LEGEND_PAIRS; all but the tension pairs are one scale.",
+  "max": 100,
+  "tension": {
+    "_comment": "Two separate values that pull against each other: raising one lowers the other by share of the amount.",
+    "pairs": [["fame", "infamy"]],
+    "share": 0.5
+  },
+  "echoes": {
+    "_comment": "A rise of `from` also raises `to` by share of the amount. An echo never echoes again. Falls don't echo.",
+    "share": 0.25,
+    "links": [
+      {"from": "fame", "to": "renown"},
+      {"from": "infamy", "to": "renown"},
+      {"from": "cruelty", "to": "infamy"},
+      {"from": "treachery", "to": "shame"},
+      {"from": "corruption", "to": "heresy"},
+      {"from": "courage", "to": "fame"}
+    ]
+  },
+  "decay": {
+    "_comment": "Out of sight, out of mind: these names fade by points per days since the legend was last written (legendUpdatedAt), smoothly and never below 0. Only that side fades - Obscurity doesn't grow from it.",
+    "names": [
+      {"name": "renown", "points": 1, "days": 28}
+    ]
+  },
+  "foraging": {
+    "_comment": "Foraging only touches this name: perTrip on every collected trip, emptySite on the trip that empties a site; it never raises it past cap.",
+    "name": "wildkin",
+    "perTrip": 1,
+    "emptySite": -1,
+    "cap": 25
+  }
+}

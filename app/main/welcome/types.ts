@@ -188,6 +188,8 @@ export interface SlotCharacterSummary {
   /** When the next point heals (ISO), or null: nothing to heal, a drained group, or out foraging/crafting/adventuring. */
   nextHealAt?: string | null;
   stats: { adventureFinished: number; adventureRunAway: number };
+  /** Your Legend reputation values, {name: 0-100} (backend/legend.py), e.g. { mercy: 12, cruelty: 0 }. */
+  legend?: Record<string, number>;
   pcStatus?: string[];
   pcTags?: string[];
   pcTimers?: Record<string, string>;

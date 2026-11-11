@@ -20,7 +20,7 @@ from typing import Dict, List, Optional
 
 from pymongo import ReturnDocument
 
-from backend import condition, item_condition, items_catalog, recycling
+from backend import condition, item_condition, items_catalog, legend, recycling
 from backend.character import Character
 from backend.db import get_database
 from backend.resources_catalog import PROFESSION_RESOURCE_FAMILIES
@@ -157,6 +157,7 @@ async def _build_player(db, address: str) -> Player:
         character.setdefault("stats", {})
         character["stats"].setdefault("adventureFinished", 0)
         character["stats"].setdefault("adventureRunAway", 0)
+        character["legend"] = legend.decayed(character.get("legend"), character.get("legendUpdatedAt"))
         condition.annotate(character)
         character["gear"]["items"] = [i for i in character["gear"].get("items", []) if isinstance(i, dict) and "instanceId" in i]
         for item in character["gear"]["items"]:
@@ -642,6 +643,7 @@ async def get_single_character(address: str, character_id: str) -> Optional[dict
     char_doc.setdefault("stats", {})
     char_doc["stats"].setdefault("adventureFinished", 0)
     char_doc["stats"].setdefault("adventureRunAway", 0)
+    char_doc["legend"] = legend.decayed(char_doc.get("legend"), char_doc.get("legendUpdatedAt"))
     condition.annotate(char_doc)
     for item in char_doc["gear"].get("items", []):
         item.setdefault("createdAt", datetime.now(timezone.utc).isoformat())

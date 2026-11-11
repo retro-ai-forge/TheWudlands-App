@@ -497,8 +497,6 @@ export default function Characters() {
         </div>
 
       </div>
-
-      <p className={styles.footer}>— character creation in beta 1.0 —</p>
     </main>
   );
 }
