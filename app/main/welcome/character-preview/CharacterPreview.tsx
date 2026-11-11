@@ -26,6 +26,44 @@ const EMPTY_VAULT: { items: ItemInstance[]; itemBalances: Record<string, number>
 const EMPTY_HOME_BALANCES: Record<string, number> = {};
 const EMPTY_HOME: { items: ItemInstance[]; itemBalances: Record<string, number> } = { items: [], itemBalances: {} };
 
+type StorageData = { items: ItemInstance[]; itemBalances: Record<string, number> };
+
+/** Vault / home / camp contents, loaded from `url` the first time `needed`
+ * turns true. Bumping `version` (after a move) reloads them in the
+ * background: what's on screen stays until the new contents arrive and
+ * replace it - only the tiles that changed redraw, nothing flashes empty.
+ * Returns null until the first load; `drop` forgets them (a camp that's
+ * gone). */
+function useStorageData(url: string, needed: boolean, version: number) {
+  const [state, setState] = useState<{ url: string; version: number; data: StorageData } | null>(null);
+  const requested = useRef<string | null>(null);
+  const current = state?.url === url ? state : null;
+
+  useEffect(() => {
+    if (!needed || (current && current.version === version)) return;
+    const key = `${url}#${version}`;
+    if (requested.current === key) return; // already on its way
+    requested.current = key;
+    fetch(url, { credentials: "include" })
+      .then((res) => (res.ok ? res.json() : null))
+      .catch(() => null)
+      .then((data: StorageData | null) => {
+        setState((prev) => {
+          const same = prev?.url === url ? prev : null;
+          if (same && same.version > version) return prev; // a newer load already landed
+          // A failed reload keeps what's shown rather than emptying it.
+          return { url, version, data: data ?? same?.data ?? EMPTY_HOME };
+        });
+      });
+  }, [url, needed, version, current]);
+
+  const drop = useCallback(() => {
+    requested.current = null;
+    setState(null);
+  }, []);
+  return [current?.data ?? null, drop] as const;
+}
+
 const TABS: { key: TabKey; label: string; icon: string; secondIcon?: string; emojiIcon?: string; lightenWhenActive?: boolean }[] = [
   { key: "stats", label: "Stats", icon: `${ICON_BASE}stats.png` },
   { key: "body", label: "Body & Soul", icon: `${ICON_BASE}body.png`, secondIcon: `${ICON_BASE}soul.png`, lightenWhenActive: true },
@@ -81,6 +119,18 @@ export function CharacterPreview({
   const [resting, setResting] = useState(character.availability.resting ?? false);
   const [restLocation, setRestLocation] = useState<string>(character.availability.restLocation ?? REST_LOCATIONS[0]);
 
+  // Lazy-loaded supplemental data — fetched on demand the first time the
+  // relevant view is opened (null until then), and reloaded in place after
+  // every change (storageVersion) - see useStorageData.
+  const [storageVersion, setStorageVersion] = useState(0);
+  // The home view, and the crafting page when not on an adventure.
+  const needsHome = showHome || (activeTab === "home" && !resting) || (showCrafting && !inAdventure);
+  // The camp while resting on an adventure (home tab or crafting page).
+  const needsCamp = (activeTab === "home" && resting) || (showCrafting && inAdventure && resting);
+  const [homeData] = useStorageData(`/api/auth/me/characters/${character.id}/home`, needsHome, storageVersion);
+  const [campData, dropCampData] = useStorageData(`/api/auth/me/characters/${character.id}/camp`, needsCamp, storageVersion);
+  const [vaultData] = useStorageData("/api/auth/me/vault", activeTab === "vault", storageVersion);
+
   useEffect(() => {
     if (inAdventure && !resting && activeTab === "home") {
       setActiveTab("stories");
@@ -90,56 +140,18 @@ export function CharacterPreview({
     }
     if (!inAdventure) {
       setResting(false);
-      setCampData(null);
+      // The camp is gone once back home - forget it, don't reload it.
+      dropCampData();
       if (activeTab === "home" || activeTab === "vault") {
         setActiveTab("stories");
       }
       setShowHome(false);
     }
     if (inAdventure) setShowCrafting(false);
-  }, [inAdventure, resting]);
-
-  // Lazy-loaded supplemental data — fetched on demand the first time the
-  // relevant tab is opened; null means not yet loaded.
-  const [homeData, setHomeData] = useState<{ items: ItemInstance[]; itemBalances: Record<string, number> } | null>(null);
-  const [campData, setCampData] = useState<{ items: ItemInstance[]; itemBalances: Record<string, number> } | null>(null);
-  const [vaultData, setVaultData] = useState<{ items: ItemInstance[]; itemBalances: Record<string, number> } | null>(null);
-
-  // Trigger home fetch the first time the home view becomes visible.
-  // When resting + home tab, load camp data instead.
-  useEffect(() => {
-    // The crafting page works from home storage when not on an adventure.
-    const needsHome = showHome || (activeTab === "home" && !resting) || (showCrafting && !inAdventure);
-    if (!needsHome || homeData !== null) return;
-    fetch(`/api/auth/me/characters/${character.id}/home`, { credentials: "include" })
-      .then((res) => (res.ok ? res.json() : null))
-      .then((data) => setHomeData(data ?? EMPTY_HOME))
-      .catch(() => setHomeData(EMPTY_HOME));
-  }, [showHome, activeTab, homeData, character.id, resting, showCrafting, inAdventure]);
-
-  // Trigger camp fetch when resting and home tab is active.
-  useEffect(() => {
-    // ...and from the camp while resting on one.
-    if (!((activeTab === "home" && resting) || (showCrafting && inAdventure && resting)) || campData !== null) return;
-    fetch(`/api/auth/me/characters/${character.id}/camp`, { credentials: "include" })
-      .then((res) => (res.ok ? res.json() : null))
-      .then((data) => setCampData(data ?? EMPTY_HOME))
-      .catch(() => setCampData(EMPTY_HOME));
-  }, [activeTab, resting, campData, character.id, showCrafting, inAdventure]);
-
-  // Trigger vault fetch the first time the vault tab is opened.
-  useEffect(() => {
-    if (activeTab !== "vault" || vaultData !== null) return;
-    fetch("/api/auth/me/vault", { credentials: "include" })
-      .then((res) => (res.ok ? res.json() : null))
-      .then((data) => setVaultData(data ?? { items: [], itemBalances: {} }))
-      .catch(() => setVaultData({ items: [], itemBalances: {} }));
-  }, [activeTab, vaultData]);
+  }, [inAdventure, resting, dropCampData]);
 
   const handlePlayerDataUpdated = useCallback((data: RawPlayerData) => {
-    setVaultData(null);
-    setHomeData(null);
-    setCampData(null);
+    setStorageVersion((version) => version + 1);
     onPlayerDataUpdated?.(data);
   }, [onPlayerDataUpdated]);
 
