@@ -6,6 +6,7 @@ The graph tests are pure. The session tests run against the real database
 updates, idempotent finishing - is the database's behaviour.
 """
 
+import asyncio
 from datetime import datetime, timedelta, timezone
 
 import pytest
@@ -250,6 +251,48 @@ async def test_self_loop_steps_apply_once_each(world):
     with pytest.raises(adventures.StepConflict) as conflict:
         await adventures.record_step(ADDRESS, sid, 2, "Vault", "Vault", {"tries": 1})
     assert conflict.value.view["seq"] == 4
+
+
+async def test_concurrent_starts_never_share_characters(world, warm_pool):
+    """Two starts with the same characters at the same moment: at most one
+    adventure runs, and every character points at it (or at nothing). On
+    Firestore a plain find_one_and_update let both claim the characters."""
+    db, ids = world
+    for _ in range(4):
+        results = await asyncio.gather(_start(ids), _start(ids), return_exceptions=True)
+        assert all(isinstance(r, (dict, adventures.AdventureError)) for r in results), results
+        sessions = await db.adventure_sessions.find({"address": ADDRESS}).to_list(None)
+        started = [r for r in results if isinstance(r, dict)]
+        assert len(sessions) <= 1 and len(started) == len(sessions)
+        running = sessions[0]["_id"] if sessions else None
+        if running:
+            assert sessions[0]["status"] == "active"
+        for cid in ids:
+            link = (await _char(db, cid))["availability"].get("adventure")
+            assert (link or {}).get("sessionId") == running
+        if running:
+            await adventures.record_step(ADDRESS, running, 0, "Start", "LastResort", {})
+
+
+async def test_concurrent_steps_one_applies_one_conflicts(world, warm_pool):
+    """Two tabs leave the same scene for different scenes at the same moment:
+    one step applies, the other is told to resync to it."""
+    db, ids = world
+    for _ in range(3):
+        sid = (await _start(ids))["sessionId"]
+        await adventures.record_step(ADDRESS, sid, 0, "Start", "Hall", {})
+        results = await asyncio.gather(
+            adventures.record_step(ADDRESS, sid, 1, "Hall", "Vault", {}),
+            adventures.record_step(ADDRESS, sid, 1, "Hall", "Start", {}),
+            return_exceptions=True,
+        )
+        applied = [r for r in results if isinstance(r, dict)]
+        conflicts = [r for r in results if isinstance(r, adventures.StepConflict)]
+        assert len(applied) == 1 and len(conflicts) == 1, results
+        stored = await db.adventure_sessions.find_one({"_id": sid})
+        assert (stored["seq"], stored["passage"]) == (2, applied[0]["passage"])
+        assert conflicts[0].view["passage"] == stored["passage"]
+        await adventures.record_step(ADDRESS, sid, 2, stored["passage"], "LastResort", {})
 
 
 async def test_reaching_an_ending_logs_releases_and_counts(world):

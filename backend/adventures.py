@@ -70,7 +70,7 @@ from pymongo import ReturnDocument
 from pymongo.errors import DuplicateKeyError
 
 from backend import condition
-from backend.db import get_database
+from backend.db import find_one_and_update_checked, get_database
 from backend.twine_graph import LAST_RESORT_PASSAGE, build_story_graph, step_allowed
 
 # Review statuses a story may be played from. Stories are only "submitted" today;
@@ -294,7 +294,8 @@ async def grant_runs(
         raise AdventureError("This story is free - there is nothing to buy")
     key = _plays_key(address, story_author, story_id)
     await _ensure_plays(db, key, access)
-    plays = await db.story_plays.find_one_and_update(
+    plays = await find_one_and_update_checked(
+        db.story_plays,
         key,
         {"$inc": {"remaining": runs}, "$set": {"updatedAt": _now()}},
         return_document=ReturnDocument.AFTER,
@@ -359,7 +360,8 @@ def _pc_in_sync(entry: dict, char_doc: dict) -> bool:
 
 async def _claim_character(db, address: str, character_id: str, stub: dict) -> Optional[dict]:
     """Put a free character into the session. None if it isn't free (anymore)."""
-    doc = await db.characters.find_one_and_update(
+    doc = await find_one_and_update_checked(
+        db.characters,
         {
             "address": address,
             "id": character_id,
@@ -404,7 +406,8 @@ async def _release_character(
     elif outcome == "run_away":
         update["$inc"] = {"stats.adventureRunAway": 1}
 
-    doc = await db.characters.find_one_and_update(
+    doc = await find_one_and_update_checked(
+        db.characters,
         {"address": address, "id": character_id, "availability.adventure.sessionId": session_id},
         update,
         return_document=ReturnDocument.AFTER,
@@ -677,7 +680,8 @@ async def start_adventure(
         "char": [_character_var(claimed[cid], lead_id) for cid in character_ids],
         "lead": lead_id,
     }
-    active = await db.adventure_sessions.find_one_and_update(
+    active = await find_one_and_update_checked(
+        db.adventure_sessions,
         {"_id": session["_id"], "status": "starting"},
         {"$set": {"status": "active", "serverVars": server_vars, "updatedAt": _now()}},
         return_document=ReturnDocument.AFTER,
@@ -829,7 +833,8 @@ async def record_step(
             "endedAt": now,
         })
 
-    updated = await db.adventure_sessions.find_one_and_update(
+    updated = await find_one_and_update_checked(
+        db.adventure_sessions,
         {
             "_id": session_id,
             "address": address,

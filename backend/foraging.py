@@ -93,7 +93,7 @@ from typing import Optional
 from pymongo import ReturnDocument
 
 from backend import condition, item_condition, items_catalog
-from backend.db import get_database
+from backend.db import find_one_and_update_checked, get_database
 from backend.professions_catalog import PROFESSION_CATEGORIES
 from backend.resources_catalog import PROFESSION_RESOURCE_FAMILIES, RESOURCE_ITEMS, RESOURCE_ITEMS_BY_ID
 
@@ -873,7 +873,8 @@ async def start_forage(address: str, character_id: str, mission_id: str) -> dict
         "readyAt": ready_at.isoformat(),
         "gear": gathering_gear(doc, mission.family_id),
     }
-    updated = await db.characters.find_one_and_update(
+    updated = await find_one_and_update_checked(
+        db.characters,
         {
             "address": address,
             "id": character_id,
@@ -891,7 +892,8 @@ async def start_forage(address: str, character_id: str, mission_id: str) -> dict
     # Roll the whole outcome now (finds, ammo, wear) and keep it with the
     # trip - hidden until collected (see hide_pending_result).
     result = await _roll_trip(db, address, character_id, doc, active, active["gear"])
-    updated = await db.characters.find_one_and_update(
+    updated = await find_one_and_update_checked(
+        db.characters,
         {"address": address, "id": character_id, "foraging.activeForage.startedAt": active["startedAt"]},
         {"$set": {"foraging.activeForage.result": result}},
         return_document=ReturnDocument.AFTER,
@@ -1042,7 +1044,8 @@ async def _wear_gear(db, address: str, character_id: str, gear: dict, weapon_wea
         return worn, broken_names
 
     ids = list(wear)
-    doc = await db.characters.find_one_and_update(
+    doc = await find_one_and_update_checked(
+        db.characters,
         {"address": address, "id": character_id},
         {"$inc": {f"gear.items.$[g{n}].quality": -wear[iid] for n, iid in enumerate(ids)}},
         array_filters=[{f"g{n}.instanceId": iid} for n, iid in enumerate(ids)],
@@ -1208,7 +1211,8 @@ async def finish_forage(address: str, character_id: str) -> dict:
         raise ForagingError("Still out foraging", 409)
 
     # Claim the trip first, so a double-click can't pay out twice.
-    claimed = await db.characters.find_one_and_update(
+    claimed = await find_one_and_update_checked(
+        db.characters,
         {"address": address, "id": character_id, "foraging.activeForage.startedAt": active["startedAt"]},
         {"$set": {"foraging.activeForage": None}},
         return_document=ReturnDocument.AFTER,
@@ -1244,7 +1248,8 @@ async def finish_forage(address: str, character_id: str) -> dict:
     lost, vital_status = await condition.apply_loss(address, character_id, (night or {}).get("points") or {}, db)
     if night is not None:
         result = {**result, "night": {**night, "lost": lost, "vitalStatus": vital_status}}
-    updated = await db.characters.find_one_and_update(
+    updated = await find_one_and_update_checked(
+        db.characters,
         {"address": address, "id": character_id},
         {"$set": {"foraging.lastResult": result},
          "$inc": {"stats.forageFinished": 1, "stats.forageUnits": result["total"]}},

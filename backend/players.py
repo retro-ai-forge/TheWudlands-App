@@ -22,7 +22,7 @@ from pymongo import ReturnDocument
 
 from backend import condition, item_condition, items_catalog, legend, recycling
 from backend.character import Character
-from backend.db import get_database
+from backend.db import find_one_and_update_checked, get_database
 from backend.resources_catalog import PROFESSION_RESOURCE_FAMILIES
 from backend.professions_catalog import PROFESSION_CATEGORIES
 
@@ -828,7 +828,8 @@ async def update_character_portrait(
     """
     db = get_database()
 
-    doc = await db.characters.find_one_and_update(
+    doc = await find_one_and_update_checked(
+        db.characters,
         {"address": address, "id": character_id},
         {
             "$set": {
@@ -875,7 +876,8 @@ async def set_prime_profession(address: str, character_id: str, slot: str) -> Op
         if character.get("profession", {}).get(prof_field, "none") == "none":
             raise ValueError(f"Character has no profession assigned to {slot}")
 
-    doc = await db.characters.find_one_and_update(
+    doc = await find_one_and_update_checked(
+        db.characters,
         {"address": address, "id": character_id},
         {"$set": {"profession.prime": slot}},
         return_document=ReturnDocument.AFTER,
@@ -931,7 +933,8 @@ async def grant_character_item_balance(address: str, character_id: str, item_id:
     if amount <= 0:
         raise ValueError("amount must be positive")
     db = get_database()
-    doc = await db.characters.find_one_and_update(
+    doc = await find_one_and_update_checked(
+        db.characters,
         {"address": address, "id": character_id},
         {"$inc": {f"crafting.itemBalances.{item_id}": amount}},
         return_document=ReturnDocument.AFTER,
@@ -1085,7 +1088,8 @@ async def salvage_item_instance(
             await _pull_storage_items(db, "home", address, character_id, [instance_id])
             doc = await db.characters.find_one({"address": address, "id": character_id})
         else:
-            doc = await db.characters.find_one_and_update(
+            doc = await find_one_and_update_checked(
+                db.characters,
                 {"address": address, "id": character_id,
                     "gear.items": {"$elemMatch": {"instanceId": instance_id, "location": instance["location"]}},
                 },
@@ -1172,7 +1176,8 @@ async def salvage_item_balance(
         doc = await db.characters.find_one({"address": address, "id": character_id})
     else:
         # backpack / saddlepack — deduct from player doc, credit recoveries to home.
-        doc = await db.characters.find_one_and_update(
+        doc = await find_one_and_update_checked(
+            db.characters,
             {"address": address, "id": character_id, f"gear.itemBalances.{location}.{item_id}": {"$gte": amount},
             },
             {"$inc": {f"gear.itemBalances.{location}.{item_id}": -amount}},
@@ -2572,7 +2577,7 @@ async def _start_craft(
         if inc_ops:
             update["$inc"] = inc_ops
         match_filter.update(elem_match)
-        doc = await db.characters.find_one_and_update(match_filter, update, return_document=ReturnDocument.AFTER)
+        doc = await find_one_and_update_checked(db.characters, match_filter, update, return_document=ReturnDocument.AFTER)
         if doc is None:
             raise CraftRefused("Something changed while starting the craft - please try again.")
         if carried_paths:
@@ -2646,7 +2651,8 @@ async def _start_craft(
         update["$push"]["gear.items"] = {"$each": push_to_gear}
 
     match_filter.update(elem_match)
-    doc = await db.characters.find_one_and_update(
+    doc = await find_one_and_update_checked(
+        db.characters,
         match_filter, update, array_filters=array_filters or None, return_document=ReturnDocument.AFTER
     )
     if doc is None:
@@ -2816,7 +2822,8 @@ async def _finish_craft_step(address: str, character_id: str, step: dict) -> boo
             update["$inc"] = inc_ops
         if not update:
             return True
-        result = await db.characters.find_one_and_update(
+        result = await find_one_and_update_checked(
+            db.characters,
             {"address": address, **elem_match}, update,
             return_document=ReturnDocument.AFTER,
         )
@@ -2936,7 +2943,8 @@ async def _finish_craft_step(address: str, character_id: str, step: dict) -> boo
     if inc_ops:
         update["$inc"] = inc_ops
 
-    result = await db.characters.find_one_and_update(
+    result = await find_one_and_update_checked(
+        db.characters,
         query, update, array_filters=array_filters or None, return_document=ReturnDocument.AFTER
     )
     if result is None:
@@ -2977,7 +2985,8 @@ async def _finish_craft_step(address: str, character_id: str, step: dict) -> boo
             wear_filt_id = f"survivorWear{idx}"
             survivor_array_filters.append({f"{wear_filt_id}.instanceId": bi["instanceId"]})
             survivor_inc_ops[f"gear.items.$[{wear_filt_id}].quality"] = -_borrow_wear(bi)
-        result2 = await db.characters.find_one_and_update(
+        result2 = await find_one_and_update_checked(
+            db.characters,
             {"address": address, "id": character_id},
             {"$set": survivor_set_ops, "$inc": survivor_inc_ops},
             array_filters=survivor_array_filters or None,
@@ -3074,7 +3083,8 @@ async def _finish_craft(address: str, character_id: str) -> Optional[Player]:
         if not await _finish_craft_step(address, character_id, step):
             return None
         remaining_chain = remaining_chain[1:]
-        doc = await db.characters.find_one_and_update(
+        doc = await find_one_and_update_checked(
+            db.characters,
             {"address": address, "id": character_id},
             {"$set": {"crafting.activeCraft.chain": remaining_chain}},
             return_document=ReturnDocument.AFTER,
@@ -3200,7 +3210,8 @@ async def _finish_craft(address: str, character_id: str) -> Optional[Player]:
         if inc_ops:
             update["$inc"] = inc_ops
 
-        doc = await db.characters.find_one_and_update(
+        doc = await find_one_and_update_checked(
+            db.characters,
             {"address": address, **elem_match}, update,
             return_document=ReturnDocument.AFTER,
         )
@@ -3361,7 +3372,8 @@ async def _finish_craft(address: str, character_id: str) -> Optional[Player]:
     if inc_ops:
         update["$inc"] = inc_ops
 
-    doc = await db.characters.find_one_and_update(
+    doc = await find_one_and_update_checked(
+        db.characters,
         query, update, array_filters=array_filters or None, return_document=ReturnDocument.AFTER
     )
     if doc is None:
@@ -3389,7 +3401,8 @@ async def _finish_craft(address: str, character_id: str) -> Optional[Player]:
             wear_filt_id = f"survivorWear{idx}"
             survivor_array_filters.append({f"{wear_filt_id}.instanceId": bi["instanceId"]})
             survivor_inc_ops[f"gear.items.$[{wear_filt_id}].quality"] = -_borrow_wear(bi)
-        doc = await db.characters.find_one_and_update(
+        doc = await find_one_and_update_checked(
+            db.characters,
             {"address": address, "id": character_id},
             {"$set": survivor_set_ops, "$inc": survivor_inc_ops},
             array_filters=survivor_array_filters or None,
@@ -3615,14 +3628,16 @@ async def equip_item(address: str, character_id: str, instance_id: str, slots: L
         qty_path = f"gear.items.{item_idx}.quantity"
         if balance_bucket in ("home", "camp"):
             await _inc_storage_balances(db, balance_bucket, address, character_id, {balance_id: -equip_qty})
-            doc = await db.characters.find_one_and_update(
+            doc = await find_one_and_update_checked(
+                db.characters,
                 {"address": address, "id": character_id},
                 {"$inc": {qty_path: equip_qty}},
                 return_document=ReturnDocument.AFTER,
             )
         else:
             balance_path = f"gear.itemBalances.{balance_bucket}.{balance_id}"
-            doc = await db.characters.find_one_and_update(
+            doc = await find_one_and_update_checked(
+                db.characters,
                 {
                     "address": address,
                     balance_path: {"$gte": equip_qty},
@@ -3635,7 +3650,8 @@ async def equip_item(address: str, character_id: str, instance_id: str, slots: L
     elif is_balance_equip:
         if balance_bucket in ("home", "camp"):
             await _inc_storage_balances(db, balance_bucket, address, character_id, {balance_id: -equip_qty})
-            doc = await db.characters.find_one_and_update(
+            doc = await find_one_and_update_checked(
+                db.characters,
                 {"address": address, "id": character_id,
                     "gear.items": {
                         "$not": {
@@ -3653,7 +3669,8 @@ async def equip_item(address: str, character_id: str, instance_id: str, slots: L
                 await _inc_storage_balances(db, balance_bucket, address, character_id, {balance_id: equip_qty})
         else:
             balance_path = f"gear.itemBalances.{balance_bucket}.{balance_id}"
-            doc = await db.characters.find_one_and_update(
+            doc = await find_one_and_update_checked(
+                db.characters,
                 {"address": address, "id": character_id,
                             "gear.items": {
                                 "$not": {
@@ -3699,7 +3716,8 @@ async def equip_item(address: str, character_id: str, instance_id: str, slots: L
                     {**filt, "gear.items.instanceId": src_iid},
                     {"$set": {"gear.items.$.quantity": leftover}},
                 )
-                doc = await db.characters.find_one_and_update(
+                doc = await find_one_and_update_checked(
+                    db.characters,
                     {**filt, "gear.items.instanceId": tgt_iid},
                     {"$set": {"gear.items.$.quantity": tgt_qty + transfer}},
                     return_document=ReturnDocument.AFTER,
@@ -3709,13 +3727,15 @@ async def equip_item(address: str, character_id: str, instance_id: str, slots: L
                     {**filt, "gear.items.instanceId": tgt_iid},
                     {"$set": {"gear.items.$.quantity": tgt_qty + transfer}},
                 )
-                doc = await db.characters.find_one_and_update(
+                doc = await find_one_and_update_checked(
+                    db.characters,
                     filt,
                     {"$pull": {"gear.items": {"instanceId": src_iid}}},
                     return_document=ReturnDocument.AFTER,
                 )
         else:
-            doc = await db.characters.find_one_and_update(
+            doc = await find_one_and_update_checked(
+                db.characters,
                 {
                     "address": address,
                     "id": character_id,
@@ -3730,7 +3750,8 @@ async def equip_item(address: str, character_id: str, instance_id: str, slots: L
             )
     elif source_location in ("home", "camp"):
         await _pull_storage_items(db, source_location, address, character_id, [instance_id])
-        doc = await db.characters.find_one_and_update(
+        doc = await find_one_and_update_checked(
+            db.characters,
             {
                 "address": address,
                 "id": character_id,
@@ -3742,7 +3763,8 @@ async def equip_item(address: str, character_id: str, instance_id: str, slots: L
         if doc is None:
             await _push_storage_items(db, source_location, address, character_id, [{**instance, "location": source_location, "slotRef": []}])
     else:
-        doc = await db.characters.find_one_and_update(
+        doc = await find_one_and_update_checked(
+            db.characters,
             {
                 "address": address,
                 "id": character_id,
@@ -3894,7 +3916,8 @@ async def equip_item_from_pool(address: str, character_id: str, instance_id: str
         )
         qty_path = f"gear.items.{item_idx}.quantity"
         await _inc_vault_itembalances(db, address, {balance_id: -equip_qty})
-        doc = await db.characters.find_one_and_update(
+        doc = await find_one_and_update_checked(
+            db.characters,
             {"address": address, "id": character_id},
             {"$inc": {qty_path: equip_qty}},
             return_document=ReturnDocument.AFTER,
@@ -3903,7 +3926,8 @@ async def equip_item_from_pool(address: str, character_id: str, instance_id: str
         if vault_efp["itemBalances"].get(balance_id, 0) < equip_qty:
             return None
         await _inc_vault_itembalances(db, address, {balance_id: -equip_qty})
-        doc = await db.characters.find_one_and_update(
+        doc = await find_one_and_update_checked(
+            db.characters,
             {"address": address, "id": character_id,
                         "gear.items": {
                             "$not": {
@@ -3931,7 +3955,8 @@ async def equip_item_from_pool(address: str, character_id: str, instance_id: str
             {"$set": {"items": new_vault_items_efp}},
             upsert=True,
         )
-        doc = await db.characters.find_one_and_update(
+        doc = await find_one_and_update_checked(
+            db.characters,
             {"address": address, "id": character_id,
                         "gear.items": {
                             "$not": {
@@ -4117,7 +4142,8 @@ async def unequip_item(
         if clear_sets:
             update["$set"] = clear_sets
 
-        doc = await db.characters.find_one_and_update(
+        doc = await find_one_and_update_checked(
+            db.characters,
             {"address": address, "id": character_id, "gear.items": {"$elemMatch": {"instanceId": instance_id, "location": "body"}}},
             update,
             return_document=ReturnDocument.AFTER,
@@ -4183,7 +4209,8 @@ async def unequip_item(
                         stor_balances[item_id] = stor_balances.get(item_id, 0) + qty
                 extra_sets[f"gear.itemBalances.{bucket}"] = {}
 
-            doc = await db.characters.find_one_and_update(
+            doc = await find_one_and_update_checked(
+                db.characters,
                 {"address": address, "id": character_id, "gear.items": {"$elemMatch": {"instanceId": instance_id, "location": "body"}}},
                 {"$set": {
                     "gear.items": new_items,
@@ -4204,13 +4231,15 @@ async def unequip_item(
                         i for i, it in enumerate(character.get("gear", {}).get("items", []))
                         if it["instanceId"] == instance_id
                     )
-                    doc = await db.characters.find_one_and_update(
+                    doc = await find_one_and_update_checked(
+                        db.characters,
                         {"address": address, "id": character_id, "gear.items": {"$elemMatch": {"instanceId": instance_id, "location": "body"}}},
                         {"$set": {f"gear.items.{item_idx}.quantity": leftover}},
                         return_document=ReturnDocument.AFTER,
                     )
                 else:
-                    doc = await db.characters.find_one_and_update(
+                    doc = await find_one_and_update_checked(
+                        db.characters,
                         {"address": address, "id": character_id, "gear.items": {"$elemMatch": {"instanceId": instance_id, "location": "body"}}},
                         {"$pull": {"gear.items": {"instanceId": instance_id}}},
                         return_document=ReturnDocument.AFTER,
@@ -4223,7 +4252,8 @@ async def unequip_item(
                         i for i, it in enumerate(character.get("gear", {}).get("items", []))
                         if it["instanceId"] == instance_id
                     )
-                    doc = await db.characters.find_one_and_update(
+                    doc = await find_one_and_update_checked(
+                        db.characters,
                         {"address": address, "id": character_id, "gear.items": {"$elemMatch": {"instanceId": instance_id, "location": "body"}}},
                         {
                             "$set": {f"gear.items.{item_idx}.quantity": leftover},
@@ -4232,7 +4262,8 @@ async def unequip_item(
                         return_document=ReturnDocument.AFTER,
                     )
                 else:
-                    doc = await db.characters.find_one_and_update(
+                    doc = await find_one_and_update_checked(
+                        db.characters,
                         {"address": address, "id": character_id, "gear.items": {"$elemMatch": {"instanceId": instance_id, "location": "body"}}},
                         {
                             "$pull": {"gear.items": {"instanceId": instance_id}},
@@ -4241,7 +4272,8 @@ async def unequip_item(
                         return_document=ReturnDocument.AFTER,
                     )
         elif target_location in ("home", "camp"):
-            doc = await db.characters.find_one_and_update(
+            doc = await find_one_and_update_checked(
+                db.characters,
                 {"address": address, "id": character_id, "gear.items": {"$elemMatch": {"instanceId": instance_id, "location": "body"}}},
                 {"$pull": {"gear.items": {"instanceId": instance_id}}},
                 return_document=ReturnDocument.AFTER,
@@ -4249,7 +4281,8 @@ async def unequip_item(
             if doc is not None:
                 await _push_storage_items(db, target_location, address, character_id, [moved_instance])
         else:
-            doc = await db.characters.find_one_and_update(
+            doc = await find_one_and_update_checked(
+                db.characters,
                 {"address": address, "id": character_id, "gear.items": {"$elemMatch": {"instanceId": instance_id, "location": "body"}}},
                 {"$set": {"gear.items.$[item]": moved_instance}},
                 array_filters=[{"item.instanceId": instance_id, "item.location": "body"}],
@@ -4299,7 +4332,8 @@ async def set_in_adventure(
             counter = "stats.adventureFinished" if reason == "stop" else "stats.adventureRunAway"
             update.setdefault("$inc", {})[counter] = 1
 
-    doc = await db.characters.find_one_and_update(
+    doc = await find_one_and_update_checked(
+        db.characters,
         {"address": address, "id": character_id},
         update,
         return_document=ReturnDocument.AFTER,
@@ -4450,7 +4484,8 @@ async def check_out_item_instance(
     if destination == "home":
         await _push_storage_items(db, "home", address, character_id, [moved_instance])
     else:
-        doc = await db.characters.find_one_and_update(
+        doc = await find_one_and_update_checked(
+            db.characters,
             {"address": address, "id": character_id},
             {"$push": {"gear.items": moved_instance}},
             return_document=ReturnDocument.AFTER,
@@ -4541,7 +4576,8 @@ async def check_in_item_instance(address: str, character_id: str, instance_id: s
         }
         if clear_sets:
             update_cii["$set"] = clear_sets
-        doc = await db.characters.find_one_and_update(
+        doc = await find_one_and_update_checked(
+            db.characters,
             {"address": address, "id": character_id, "gear.items.instanceId": instance_id},
             update_cii,
             return_document=ReturnDocument.AFTER,
@@ -4591,7 +4627,8 @@ async def move_storage_item_to_container(
 
     moved = {**instance, "location": container, "slotRef": []}
     await _pull_storage_items(db, storage_type, address, character_id, [instance_id])
-    doc = await db.characters.find_one_and_update(
+    doc = await find_one_and_update_checked(
+        db.characters,
         {"address": address, "id": character_id},
         {"$push": {"gear.items": moved}},
         return_document=ReturnDocument.AFTER,
@@ -4624,7 +4661,8 @@ async def move_container_item_to_storage(
         return None
 
     moved = {**instance, "location": storage_type, "slotRef": []}
-    doc = await db.characters.find_one_and_update(
+    doc = await find_one_and_update_checked(
+        db.characters,
         {"address": address, "id": character_id,
          "gear.items": {"$elemMatch": {"instanceId": instance_id, "location": container}}},
         {"$pull": {"gear.items": {"instanceId": instance_id}}},
@@ -4662,7 +4700,8 @@ async def move_container_item(
     _check_container_capacity_slots(character, to_container, cost)
 
     moved = {**instance, "location": to_container, "slotRef": []}
-    doc = await db.characters.find_one_and_update(
+    doc = await find_one_and_update_checked(
+        db.characters,
         {"address": address, "id": character_id,
          "gear.items": {"$elemMatch": {"instanceId": instance_id, "location": from_container}}},
         {"$set": {"gear.items.$[item]": moved}},
@@ -4703,7 +4742,8 @@ async def load_balance_from_storage(
     ) * slot_cost
     _check_container_capacity_slots(character, container, marginal)
 
-    doc = await db.characters.find_one_and_update(
+    doc = await find_one_and_update_checked(
+        db.characters,
         {"address": address, "id": character_id},
         {"$inc": {f"gear.itemBalances.{container}.{item_id}": amount}},
         return_document=ReturnDocument.AFTER,
@@ -4729,7 +4769,8 @@ async def unload_balance_to_storage(
     if not _check_transfer(container, storage_type, in_adv, rest_ok):
         raise ValueError(f"Transfer from {container} to {storage_type} not allowed")
 
-    doc = await db.characters.find_one_and_update(
+    doc = await find_one_and_update_checked(
+        db.characters,
         {"address": address, "id": character_id,
          f"gear.itemBalances.{container}.{item_id}": {"$gte": amount}},
         {"$inc": {f"gear.itemBalances.{container}.{item_id}": -amount}},
@@ -4763,7 +4804,8 @@ async def move_container_balance(
     ) * slot_cost
     _check_container_capacity_slots(character, to_container, marginal)
 
-    doc = await db.characters.find_one_and_update(
+    doc = await find_one_and_update_checked(
+        db.characters,
         {"address": address, "id": character_id,
          f"gear.itemBalances.{from_container}.{item_id}": {"$gte": amount}},
         {"$inc": {
@@ -4899,7 +4941,8 @@ async def bulk_move_storage(
         if dest_inc:
             update_op["$inc"] = dest_inc
         if update_op:
-            doc = await db.characters.find_one_and_update(
+            doc = await find_one_and_update_checked(
+                db.characters,
                 {"address": address, "id": character_id},
                 update_op,
                 return_document=ReturnDocument.AFTER,
@@ -5016,7 +5059,8 @@ async def check_out_item_balance_to_backpack(
     if used + marginal_slots > capacity:
         raise ValueError("Backpack is full")
 
-    doc = await db.characters.find_one_and_update(
+    doc = await find_one_and_update_checked(
+        db.characters,
         {
             "address": address,
             "id": character_id,
@@ -5072,7 +5116,8 @@ async def check_out_item_balance_to_saddlepack(
     if used + marginal_slots > capacity:
         raise ValueError("Saddlepack is full")
 
-    doc = await db.characters.find_one_and_update(
+    doc = await find_one_and_update_checked(
+        db.characters,
         {
             "address": address,
             "id": character_id,
@@ -5123,7 +5168,8 @@ async def check_out_item_balance_to_cart(
     if used + marginal_slots > capacity:
         raise ValueError("Cart is full")
 
-    doc = await db.characters.find_one_and_update(
+    doc = await find_one_and_update_checked(
+        db.characters,
         {
             "address": address,
             "id": character_id,
@@ -5160,7 +5206,8 @@ async def check_in_item_balance(
         await _inc_vault_itembalances(db, address, {item_id: amount})
         doc = await db.characters.find_one({"address": address, "id": character_id})
     else:
-        doc = await db.characters.find_one_and_update(
+        doc = await find_one_and_update_checked(
+            db.characters,
             {"address": address, "id": character_id, f"gear.itemBalances.{location}.{item_id}": {"$gte": amount},
             },
             {"$inc": {
@@ -5245,7 +5292,8 @@ async def destroy_character_item_instance(address: str, character_id: str, insta
     character.
     """
     db = get_database()
-    doc = await db.characters.find_one_and_update(
+    doc = await find_one_and_update_checked(
+        db.characters,
         {"address": address, "id": character_id,
             "gear.items": {"$elemMatch": {"instanceId": instance_id, "location": {"$in": ["backpack", "body", "saddlepack"]}}},
         },
@@ -5352,7 +5400,8 @@ async def move_all_storage_to_backpack(
     update_op: Dict = {"$set": update_sets}
     if to_backpack:
         update_op["$push"] = {"gear.items": {"$each": to_backpack}}
-    doc = await db.characters.find_one_and_update(
+    doc = await find_one_and_update_checked(
+        db.characters,
         {"address": address, "id": character_id},
         update_op,
         return_document=ReturnDocument.AFTER,
@@ -5471,7 +5520,8 @@ async def move_all_storage_to_bags(
     }}
     if to_gear:
         update_op["$push"] = {"gear.items": {"$each": to_gear}}
-    doc = await db.characters.find_one_and_update(
+    doc = await find_one_and_update_checked(
+        db.characters,
         {"address": address, "id": character_id},
         update_op,
         return_document=ReturnDocument.AFTER,
@@ -5711,7 +5761,8 @@ async def salvage_home(address: str, character_id: str, selected_ids: List[str],
 
     sets: Dict[str, object] = {"gear.items": new_gear_items}
     sets.update(update_sets)
-    doc = await db.characters.find_one_and_update(
+    doc = await find_one_and_update_checked(
+        db.characters,
         {"address": address, "id": character_id},
         {"$set": sets},
         return_document=ReturnDocument.AFTER,
@@ -5999,7 +6050,8 @@ async def bulk_move_vault(
         update["$inc"] = char_inc
 
     if update:
-        doc = await db.characters.find_one_and_update(
+        doc = await find_one_and_update_checked(
+            db.characters,
             {"address": address, "id": character_id},
             update,
             return_document=ReturnDocument.AFTER,
@@ -6080,7 +6132,8 @@ async def check_in_item_balance_from_cart(
     if character_doc.get("availability", {}).get("inAdventure", False):
         raise ValueError("Character is out on an adventure - no reaching the shared vault")
 
-    doc = await db.characters.find_one_and_update(
+    doc = await find_one_and_update_checked(
+        db.characters,
         {"address": address, "id": character_id, f"gear.itemBalances.cart.{item_id}": {"$gte": amount},
         },
         {"$inc": {
@@ -6107,7 +6160,8 @@ async def degrade_item_quality(
     wherever it's read.
     """
     db = get_database()
-    doc = await db.characters.find_one_and_update(
+    doc = await find_one_and_update_checked(
+        db.characters,
         {"address": address, "id": character_id, "gear.items.instanceId": instance_id},
         {"$inc": {"gear.items.$[item].quality": -amount}},
         array_filters=[{"item.instanceId": instance_id}],
@@ -6149,7 +6203,8 @@ async def consume_ammo(
     if concrete_id is None:
         return None
 
-    doc = await db.characters.find_one_and_update(
+    doc = await find_one_and_update_checked(
+        db.characters,
         {"address": address, "id": character_id, f"gear.itemBalances.backpack.{concrete_id}": {"$gte": amount},
         },
         {"$inc": {f"gear.itemBalances.backpack.{concrete_id}": -amount}},

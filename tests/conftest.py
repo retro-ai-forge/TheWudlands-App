@@ -1,3 +1,4 @@
+import asyncio
 import os
 from pathlib import Path
 
@@ -36,3 +37,17 @@ def subscan_test_address() -> str:
 # run - creating them takes minutes on Firestore's MongoDB-compatibility
 # layer (real server-side index builds), far too slow to redo on every
 # `pytest` invocation.
+
+
+@pytest.fixture
+async def warm_pool(mongodb_uri):
+    """Open enough pooled connections for truly parallel requests. The driver
+    opens two connections at a time, and Firestore's wrong findAndModify
+    answers (CLAUDE.md, "Firestore note") only show once the requests really
+    run side by side - a cold pool runs a race almost one by one."""
+    from backend.db import get_database
+
+    db = get_database()
+    for _ in range(4):
+        await asyncio.gather(*(db.command("ping") for _ in range(12)))
+    return db

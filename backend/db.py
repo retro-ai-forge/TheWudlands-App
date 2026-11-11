@@ -10,9 +10,11 @@ from __future__ import annotations
 
 import os
 import socket
+import uuid
 from typing import Optional
 
 from motor.motor_asyncio import AsyncIOMotorClient, AsyncIOMotorDatabase
+from pymongo import ReturnDocument
 from pymongo.uri_parser import parse_uri
 
 _client: Optional[AsyncIOMotorClient] = None
@@ -63,6 +65,50 @@ def get_database() -> AsyncIOMotorDatabase:
     """Return the app's database handle from the shared client."""
     db_name = os.getenv("MONGODB_DB_NAME", "thewudlands")
     return get_mongo_client()[db_name]
+
+
+# ── Conditional writes on Firestore ─────────────────────────────────────────
+#
+# Firestore with MongoDB compatibility answers findAndModify wrongly when
+# several hit the same document at once: only the writes that should land do
+# land, but callers whose condition no longer held still get a document back
+# (and updatedExisting: true) - the winner's. Measured reliable instead: a
+# token the caller writes itself and finds in the returned document,
+# update_one's modified_count and delete_one's deleted_count; matched_count
+# is NOT reliable. See CLAUDE.md ("Firestore note").
+
+WRITE_TOKEN_FIELD = "_writeToken"
+
+
+async def find_one_and_update_checked(collection, filter, update, *, return_document=ReturnDocument.AFTER, **kwargs):
+    """`collection.find_one_and_update(...)` that returns the document only if
+    THIS call's update landed, and None otherwise - what MongoDB itself does.
+
+    Every find_one_and_update in the backend goes through here. It writes a
+    fresh token with the update and asks for the document after it; the call
+    won only if that document carries its own token. One round trip, and the
+    caller gets the state its own write produced. Holds for conditional and
+    unconditional updates and for guards with several winners alike
+    (measured: 16 concurrent callers, no false win and no false loss). The
+    token stays on the document (overwritten by the next write) and is taken
+    off the returned copy.
+    """
+    if return_document is not ReturnDocument.AFTER:
+        raise ValueError("find_one_and_update_checked returns the document after the update only")
+    if "projection" in kwargs:
+        # A projection could leave the token out and turn every win into a loss.
+        raise ValueError("find_one_and_update_checked does not take a projection")
+    if not isinstance(update, dict) or not update or not all(key.startswith("$") for key in update):
+        raise ValueError("update must be a non-empty dict of update operators")
+    token = uuid.uuid4().hex
+    marked = dict(update)  # the caller's dict stays as it was
+    marked["$set"] = {**update.get("$set", {}), WRITE_TOKEN_FIELD: token}
+    doc = await collection.find_one_and_update(
+        filter, marked, return_document=ReturnDocument.AFTER, **kwargs
+    )
+    if doc is None or doc.pop(WRITE_TOKEN_FIELD, None) != token:
+        return None
+    return doc
 
 
 async def close_mongo_client() -> None:
