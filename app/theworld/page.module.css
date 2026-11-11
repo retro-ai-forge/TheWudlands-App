@@ -96,6 +96,13 @@
   color: #c07a3a;
 }
 
+.statusFree       { color: #a1d82e; font-weight: bold; }
+.statusReady      { color: #5a8c2a; font-weight: bold; }
+.statusCrafting   { color: #f5e050; font-weight: bold; }
+.statusForaging   { color: #ffa726; font-weight: bold; }
+.statusTravelling { color: #29b6f6; font-weight: bold; }
+.statusImprisoned { color: #ef5350; font-weight: bold; }
+
 .statusAlive {
   color: #66bb6a;
   font-weight: bold;

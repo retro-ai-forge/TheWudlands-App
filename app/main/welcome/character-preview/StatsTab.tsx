@@ -10,6 +10,19 @@ import type { BlueprintTierInfo, RawPlayerData } from "./VaultTab";
 import { getBlueprintCatalog } from "./catalogCache";
 
 import baseLevelsData from "../../../../backend/data/base-levels.json";
+
+// Vital status -> its color class (same colors as the guide / world pages).
+const VITAL_CLASS: Record<string, string | undefined> = {
+  alive: styles.vitalAlive,
+  dead: styles.vitalDead,
+  vampire: styles.vitalVampire,
+  soulless: styles.vitalSoulless,
+  magicless: styles.vitalMagicless,
+  cursed: styles.vitalCursed,
+  petrified: styles.vitalPetrified,
+  incorporal: styles.vitalIncorporal,
+};
+
 const XP_LEVELS = baseLevelsData.levels;
 
 
@@ -324,7 +337,7 @@ export function StatsTab({
           )}
           <div className={styles.identityRow}>
             <span>Vital</span>
-            <span>{character.vitalStatus}</span>
+            <span className={VITAL_CLASS[character.vitalStatus]}>{character.vitalStatus}</span>
           </div>
           <div className={styles.identityRow}>
             <span>

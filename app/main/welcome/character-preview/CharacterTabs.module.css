@@ -661,6 +661,22 @@
   color: #d4a060;
 }
 
+/* The "Vital" row's value - same colors as the vital status words on the
+   guide and world pages (app/guide, app/theworld page.module.css). */
+.vitalAlive      { color: #66bb6a; font-weight: bold; }
+.vitalDead       { color: #000000; background-color: #ffffff; font-weight: bold; padding: 0 0.3em; border-radius: 2px; }
+.vitalVampire    { color: #757575; font-weight: bold; }
+.vitalSoulless   { color: #b71c1c; font-weight: bold; }
+.vitalMagicless  { color: #7c4dff; font-weight: bold; }
+.vitalCursed     { color: #ec407a; font-weight: bold; }
+.vitalPetrified  { color: #9a9a9a; font-weight: bold; background: repeating-linear-gradient(45deg, transparent, transparent 2px, rgba(154,154,154,0.2) 2px, rgba(154,154,154,0.2) 4px); padding: 0 0.2em; }
+.vitalIncorporal { color: #d4c9a8; font-weight: bold; font-style: italic; animation: vitalFadeInOut 4s ease-in-out infinite; }
+
+@keyframes vitalFadeInOut {
+  0%, 100% { opacity: 0.1; }
+  50% { opacity: 0.8; }
+}
+
 @keyframes readyTimerPulse {
   0%, 100% { text-shadow: 0 0 6px #f5e050, 0 0 12px rgba(245, 224, 80, 0.7); }
   50% { text-shadow: 0 0 10px #f5e050, 0 0 20px rgba(245, 224, 80, 0.9); }

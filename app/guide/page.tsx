@@ -80,13 +80,14 @@ export default function Guide() {
         <h2 className={`${h.section} ${h.ruled}`}>Death Is Not the End</h2>
 
         <p className={styles.body}>
-          In the Wudlands, dying does not erase you. Your vital status shifts — from{" "}
-          <span className={styles.statusAlive}>alive</span> to{" "}
-          <span className={styles.statusDead}>dead</span>, or something stranger:{" "}
-          <span className={styles.statusVampire}>vampire</span>,{" "}
+          In the Wudlands, dying does not erase you. You start out{" "}
+          <span className={styles.statusAlive}>alive</span>, but you may end up{" "}
+          <span className={styles.statusDead}>dead</span> or become something stranger: a{" "}
+          <span className={styles.statusVampire}>vampire</span>, or{" "}
           <span className={styles.statusSoulless}>soulless</span>,{" "}
+          <span className={styles.statusMagicless}>magicless</span>,{" "}
           <span className={styles.statusCursed}>cursed</span>,{" "}
-          <span className={styles.statusPetrified}>petrified</span>,{" "}
+          <span className={styles.statusPetrified}>petrified</span> or{" "}
           <span className={styles.statusIncorporal}>incorporal</span>.
           Each status changes which ways lead forward, what the people around you say, what stories are available. An undead adventurer still walks. They simply walk differently. Redemption exists — but only when a future adventure offers it.
         </p>

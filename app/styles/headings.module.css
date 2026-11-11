@@ -68,3 +68,18 @@
 .muted {
   color: #7a6a3a;
 }
+
+/* In the HTML for search engines and screen readers, but takes no space on
+   screen (the standard "visually hidden" pattern, not display:none, which
+   both would skip). Use only for text that matches what the page shows. */
+.visuallyHidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}

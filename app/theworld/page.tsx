@@ -9,14 +9,19 @@ import h from "@/app/styles/headings.module.css";
 
 import GuideTable from "./GuideTable";
 
+const DONE_WORD: Record<string, string> = { crafting: "ready", foraging: "back", travelling: "arrived", imprisoned: "released" };
+
 const StatusWithCountdown = ({ status, initialSeconds, showDays = false }: { status: string; initialSeconds: number; showDays?: boolean }) => {
   const [remaining, setRemaining] = useState(initialSeconds);
   useEffect(() => {
     const timer = setInterval(() => setRemaining((prev) => (prev > 0 ? prev - 1 : 0)), 1000);
     return () => clearInterval(timer);
   }, []);
-  if (remaining === 0) return <span className={styles.statusReady}>ready</span>;
-  const statusClass = status === "working" ? styles.statusWorking : status === "travelling" ? styles.statusTravelling : styles.statusImprisoned;
+  // When the timer runs out it says how it ended: a craft is "ready" and a
+  // foraging trip is "back" (the game's own words), a journey has "arrived",
+  // a prisoner is "released".
+  if (remaining === 0) return <span className={styles.statusReady}>{DONE_WORD[status] ?? "ready"}</span>;
+  const statusClass = status === "crafting" ? styles.statusCrafting : status === "foraging" ? styles.statusForaging : status === "travelling" ? styles.statusTravelling : styles.statusImprisoned;
   const days = Math.floor(remaining / 86400);
   const hours = Math.floor((remaining % 86400) / 3600);
   const minutes = Math.floor((remaining % 3600) / 60);
@@ -196,7 +201,7 @@ export default function TheWorld() {
         <h2 className={`${h.section} ${h.ruled} ${h.center}`}>Character Availability</h2>
 
         <p className={styles.body}>
-          Character status at a glance: <span className={styles.statusFree}>free</span>, <span className={styles.statusReady}>ready</span>, <StatusWithCountdown status="working" initialSeconds={67} />, <StatusWithCountdown status="travelling" initialSeconds={280} showDays />, <StatusWithCountdown status="imprisoned" initialSeconds={576} showDays /> — each with a countdown until available. Does not affect adventure content.
+          Character status at a glance: <span className={styles.statusFree}>ready now</span>, <StatusWithCountdown status="crafting" initialSeconds={45} />, <StatusWithCountdown status="foraging" initialSeconds={67} />, <StatusWithCountdown status="travelling" initialSeconds={280} showDays />, <StatusWithCountdown status="imprisoned" initialSeconds={576} showDays />, the busy ones with a countdown until available. Does not affect adventure content.
         </p>
 
         {/* ── Story Effects ───────────────────────────────────────────────── */}

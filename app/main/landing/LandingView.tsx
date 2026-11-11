@@ -65,7 +65,7 @@ export function LandingView({ status, joining, onEnter, onError, onPending, onPe
       {/* 1 — HERO (above the fold) */}
       <section className={styles.hero}>
         <div className={styles.heroCta}>
-          <h1 className={h.section}>The Wudlands — Old-School Fantasy RPG</h1>
+          <h1 className={h.visuallyHidden}>The Wudlands: Old-School Fantasy RPG</h1>
           {cta}
           <span className={styles.scrollHint}><span className={styles.scrollTriangle}>▾</span> what is the wudlands</span>
         </div>
