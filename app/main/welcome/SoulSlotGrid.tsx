@@ -26,6 +26,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import styles from "../../page.module.css";
+import h from "@/app/styles/headings.module.css";
 import { useWallet } from "../WalletProvider";
 import { useSound } from "../SoundProvider";
 import { formatRemainingCompactLong, useCraftCountdown } from "./craftTimer";
@@ -279,7 +280,7 @@ export function SoulSlotGrid({
         </defs>
       </svg>
 
-      <h2 className={styles.characterMatrixHeading}>
+      <h2 className={`${h.hero} ${h.heroSmall} ${styles.soulSlotsHeading}`}>
         Soul Slots
         <button
           type="button"

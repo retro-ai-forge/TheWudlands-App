@@ -4,6 +4,7 @@ import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import { PageVersionTag } from "../../main/PageVersionTag";
 import styles from "../page.module.css";
+import h from "@/app/styles/headings.module.css";
 import ImageGallery from "../ImageGallery";
 
 // The integrated Twine editor, served under /twine/ in both dev (Next proxies to
@@ -140,7 +141,7 @@ export default function Storyteller() {
   return (
     <div className={styles.page}>
       <section className={styles.guidelines}  style={{ maxWidth: "800px" }}>
-        <h2 className={styles.heading}>Tools for Creators</h2>
+        <h1 className={h.pageTitle}>Tools for Creators</h1>
 
         <p className={styles.authorIntro}>
           <strong>Imagine a world, create an immersive experience.</strong> Set its mood, sketch its dangers, map the choices that lead through it.
@@ -432,7 +433,7 @@ export default function Storyteller() {
           but they strongly reinforce atmosphere.
         </p>
 
-        <h3 className={styles.subHeading}>Image Dimensions and Story Design</h3>
+        <h3 className={`${h.sub} ${h.muted}`}>Image Dimensions and Story Design</h3>
 
         <p className={styles.body}>
           The aspect ratio affects how much space remains for text and choices. Choose dimensions based on each scene&apos;s pacing.
@@ -541,7 +542,7 @@ export default function Storyteller() {
 
 
         {/* 2b — CSS Style Preview */}
-        <h3 className={styles.subHeading}>CSS Image Style Preview</h3>
+        <h3 className={`${h.sub} ${h.muted}`}>CSS Image Style Preview</h3>
 
         <p className={styles.body}>
           Available <span className={styles.code}>image_style</span> presets applied to sample images.
@@ -722,7 +723,7 @@ export default function Storyteller() {
           hidden options exist, locked until your stats qualify.
         </p>
 
-        <h3 className={styles.subHeading}>Scene Preview: {LEGEND_PREVIEWS[legendSlide].heading}</h3>
+        <h3 className={`${h.sub} ${h.muted}`}>Scene Preview: {LEGEND_PREVIEWS[legendSlide].heading}</h3>
 
         <div style={{ display: "grid", maxWidth: "500px", marginTop: "1.5rem" }}>
           {LEGEND_PREVIEWS.map((preview, i) => (
@@ -938,7 +939,7 @@ export default function Storyteller() {
         </table>
         
 
-        <h3 className={styles.subHeading}>VIP Example: Lady Isolde</h3>
+        <h3 className={`${h.sub} ${h.muted}`}>VIP Example: Lady Isolde</h3>
 
         <p className={styles.body}>
           Lady Isolde — a <span className={styles.highlight}>Minne courtly love</span> whose affection must be earned through deeds.
@@ -947,7 +948,7 @@ export default function Storyteller() {
           Options in <span className={styles.code}>{'{ x | y | z }'}</span> vary each time.
         </p>
 
-        <h3 className={styles.subHeading}>Scene Preview</h3>
+        <h3 className={`${h.sub} ${h.muted}`}>Scene Preview</h3>
 
         <div style={{
           border: "2px solid #7a6a3a",

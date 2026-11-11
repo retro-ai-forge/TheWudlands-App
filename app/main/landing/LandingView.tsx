@@ -2,6 +2,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { useState } from "react";
 import styles from "../../page.module.css";
+import h from "@/app/styles/headings.module.css";
 import { EnterWudlandsButton } from "./EnterWudlandsButton";
 
 interface LandingViewProps {
@@ -64,6 +65,7 @@ export function LandingView({ status, joining, onEnter, onError, onPending, onPe
       {/* 1 — HERO (above the fold) */}
       <section className={styles.hero}>
         <div className={styles.heroCta}>
+          <h1 className={h.section}>The Wudlands — Old-School Fantasy RPG</h1>
           {cta}
           <span className={styles.scrollHint}><span className={styles.scrollTriangle}>▾</span> what is the wudlands</span>
         </div>
@@ -71,7 +73,7 @@ export function LandingView({ status, joining, onEnter, onError, onPending, onPe
 
       {/* 2 — WHAT IS THE WUDLANDS */}
       <section className={styles.section}>
-        <h2 className={styles.sectionHeading}>What is the Wudlands?</h2>
+        <h2 className={h.section}>What is the Wudlands?</h2>
         <p className={styles.sectionBody}>
           An old-school, round-based adventure in the tradition of Fighting Fantasy and the
           Lone Wolf saga — a world of dark forests, crumbling dungeons, and desperate choices.
@@ -84,7 +86,7 @@ export function LandingView({ status, joining, onEnter, onError, onPending, onPe
 
       {/* 3 — HOW IT WORKS */}
       <section className={styles.section}>
-        <h2 className={styles.sectionHeading}>How it works</h2>
+        <h2 className={h.section}>How it works</h2>
         <ol className={styles.steps}>
           {STEPS.map((s) => (
             <li key={s.num} className={styles.step}>
@@ -107,7 +109,7 @@ export function LandingView({ status, joining, onEnter, onError, onPending, onPe
 
       {/* 5 — FINAL CTA */}
       <section className={styles.finalCta}>
-        <h2 className={styles.sectionHeading}>Step into the Wudlands</h2>
+        <h2 className={h.section}>Step into the Wudlands</h2>
         {cta}
       </section>
     </div>

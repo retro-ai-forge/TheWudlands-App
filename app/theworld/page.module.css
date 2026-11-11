@@ -21,30 +21,6 @@
   margin: 0 auto;
 }
 
-.heading {
-  font-family: "Courier New", Courier, monospace;
-  font-size: 1.1rem;
-  letter-spacing: 0.2em;
-  text-transform: uppercase;
-  color: #c07a3a;
-  border-bottom: 1px solid #7a6a3a;
-  padding-bottom: 0.75rem;
-  margin-bottom: 2rem;
-}
-
-.sectionHeading {
-  font-family: "Courier New", Courier, monospace;
-  font-size: 1rem;
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
-  text-align: center;
-  color: #c07a3a;
-  border-bottom: 1px solid #3a3020;
-  padding-bottom: 0.5rem;
-  margin-top: 3rem;
-  margin-bottom: 1.25rem;
-}
-
 .body {
   font-family: "Courier New", Courier, monospace;
   font-size: 1rem;

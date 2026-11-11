@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import dynamic from "next/dynamic";
 import styles from "../../page.module.css";
+import h from "@/app/styles/headings.module.css";
 import { FeedbackForm } from "./FeedbackForm";
 import { SoulCreation } from "./soul-creation/SoulCreation";
 import { CharacterPreview, type TabKey } from "./character-preview/CharacterPreview";
@@ -32,7 +33,7 @@ const SoulSlotGrid = dynamic(
 function SoulSlotGridSkeleton() {
   return (
     <div className={styles.characterMatrix}>
-      <h2 className={styles.characterMatrixHeading}>
+      <h2 className={`${h.hero} ${h.heroSmall} ${styles.soulSlotsHeading}`}>
         Soul Slots
         {/* Static placeholder matching the real SoulSlotGrid's sound
             toggle (see there) - same footprint so nothing shifts once
@@ -192,7 +193,7 @@ export function WelcomeView() {
   return (
     <>
       <div className={styles.welcomeBody}>
-        <h1 className={styles.welcomeHeadline}>Welcome to The Wudlands</h1>
+        <h1 className={h.hero}>Welcome to The Wudlands</h1>
         <p className={styles.welcomeMessage}>
           This is the <strong>beta</strong> version of
           The Wudlands. Character creation and crafting is life. Check our{" "}

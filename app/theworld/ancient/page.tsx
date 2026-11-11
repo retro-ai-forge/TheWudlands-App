@@ -1,6 +1,15 @@
+import type { Metadata } from "next";
+import { pageMetadata } from "../../lib/seo";
 import Link from "next/link";
 import { PageVersionTag } from "../../main/PageVersionTag";
 import styles from "./page.module.css";
+import h from "@/app/styles/headings.module.css";
+
+export const metadata: Metadata = pageMetadata({
+  title: "The Ancient Background",
+  description: "The ancient history of the Wudlands: the Chain-Lord, the drowned thrones, the occupied woods, the broken sky and the old powers that still shape the world.",
+  path: "/theworld/ancient",
+});
 
 const SECTIONS = [
   {
@@ -81,12 +90,12 @@ export default function AncientBackground() {
   return (
     <div className={styles.page}>
       <section className={styles.content}>
-        <h2 className={styles.heading}>The Ancient Background of Wudlands</h2>
+        <h1 className={h.pageTitle}>The Ancient Background of Wudlands</h1>
 
         {SECTIONS.map((section, i) => (
           <div key={section.title}>
             {i > 0 && <div className={styles.divider}>~ ~ ~</div>}
-            <h3 className={styles.sectionTitle}>{section.title}</h3>
+            <h3 className={h.sub}>{section.title}</h3>
             <p className={styles.body}>{section.text}</p>
           </div>
         ))}

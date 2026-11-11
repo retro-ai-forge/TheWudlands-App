@@ -2,7 +2,9 @@
 
 import { PageVersionTag } from "../main/PageVersionTag";
 import styles from "./page.module.css";
+import h from "@/app/styles/headings.module.css";
 import Link from "next/link";
+import Image from "next/image";
 import WalletGuide from "./WalletGuide";
 
 export default function Guide() {
@@ -10,14 +12,17 @@ export default function Guide() {
     <div className={styles.page}>
       <section className={styles.guidelines}>
 
-        <h2 className={styles.heading}>Guide</h2>
+        <h1 className={h.pageTitle}>Guide</h1>
 
         <p className={styles.body}>
           You are a wanderer in the Wudlands. What you carry, what you know, and what the world whispers about you when you are not listening — this guide tells you how all of it works, from your own eyes.</p>
 
         <div className={styles.imageFrame}>
-          <img
+          <Image
             src="/images/guide/adventurer-guide.jpg"
+            width={900}
+            height={900}
+            sizes="(max-width: 860px) 100vw, 860px"
             alt="The Adventurer's Guide"
             className={styles.sectionImage}
           />
@@ -30,8 +35,11 @@ export default function Guide() {
 
         {/* ── Adventures ─────────────────────────────────────── */}
         <div className={styles.imageFrame}>
-          <img
+          <Image
             src="/images/theworld/the-world-adventures.jpg"
+            width={1024}
+            height={1024}
+            sizes="(max-width: 860px) 100vw, 860px"
             alt="The Wudlands Adventures"
             className={styles.sectionImage}
           />
@@ -43,8 +51,11 @@ export default function Guide() {
 
         {/* ── Dependencies ───────────────────────────────────── */}
         <div className={styles.imageFrame}>
-          <img
+          <Image
             src="/images/theworld/the-world-locked.jpg"
+            width={1024}
+            height={1024}
+            sizes="(max-width: 860px) 100vw, 860px"
             alt="The Wudlands Locked Gates"
             className={styles.sectionImage}
           />
@@ -55,15 +66,18 @@ export default function Guide() {
         </p>
 
         <div className={styles.imageFrame}>
-          <img
+          <Image
             src="/images/theworld/the-world-awaits.jpg"
+            width={1024}
+            height={1024}
+            sizes="(max-width: 860px) 100vw, 860px"
             alt="The Wudlands Await"
             className={styles.sectionImage}
             />
         </div>
 
         {/* ── Death is not the end ───────────────────────────── */}
-        <h2 className={styles.sectionHeading}>Death Is Not the End</h2>
+        <h2 className={`${h.section} ${h.ruled}`}>Death Is Not the End</h2>
 
         <p className={styles.body}>
           In the Wudlands, dying does not erase you. Your vital status shifts — from{" "}
@@ -79,8 +93,11 @@ export default function Guide() {
 
         {/* ── The Eternal Record ─────────────────────────────── */}
         <div className={styles.imageFrame}>
-          <img
+          <Image
             src="/images/theworld/the-world-eternal.jpg"
+            width={1024}
+            height={1024}
+            sizes="(max-width: 860px) 100vw, 860px"
             alt="The Wudlands Eternal Record"
             className={styles.sectionImage}
           />
@@ -95,8 +112,11 @@ export default function Guide() {
 
         {/* ── Price of Play ──────────────────────────────────── */}
         <div className={styles.imageFrame}>
-          <img
+          <Image
             src="/images/theworld/the-world-price.jpg"
+            width={1024}
+            height={1024}
+            sizes="(max-width: 860px) 100vw, 860px"
             alt="The Wudlands Price of Play"
             className={styles.sectionImage}
           />
@@ -109,14 +129,14 @@ export default function Guide() {
         </p>
 
         {/* ── Forged Together ────────────────────────────────── */}
-        <h2 className={styles.sectionHeading}>Forged Together</h2>
+        <h2 className={`${h.section} ${h.ruled}`}>Forged Together</h2>
 
         <p className={styles.body}>
           Some of the greatest deeds cannot be accomplished alone. Building a bridge across the chasm, crafting a sky vessel, re-opening the ancient mines — these demand many hands working together. Gathering stone and timber, forging steel, binding magical essence. Only builders who have proven themselves gain access to these creations, carrying them into future adventures.
         </p>
 
         {/* ── Wallet ────────────────────────────────── */}
-        <h2 className={styles.sectionHeading}>How to Enter</h2>
+        <h2 className={`${h.section} ${h.ruled}`}>How to Enter</h2>
         <p className={styles.body}>
           Connect a wallet to store your adventure progress on the blockchain. Your character, the deeds you have done,
           and the choices you have made are permanently recorded — no one can take them from you.

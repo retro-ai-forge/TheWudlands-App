@@ -6,23 +6,20 @@ import { WalletProvider } from "./main/WalletProvider";
 import { HeaderVisibilityProvider } from "./main/HeaderVisibilityProvider";
 import { SoundProvider } from "./main/SoundProvider";
 import { VersionBadge } from "./main/VersionBadge";
+import { SITE_DESCRIPTION, SITE_NAME, SITE_TAGLINE, SITE_URL, pageMetadata } from "./lib/seo";
+
+// Defaults for every page; each page sets its own title/description/canonical
+// through pageMetadata() (app/lib/seo.ts).
 export const metadata: Metadata = {
-  title: "The Wudlands | Old School Fantasy RPG",
-  description: "A decision based, choice driven narrative RPG with fatal consequences. Experience old school round-based Fighting Fantasy style adventures inspired by UltraQuest, EverQuest, and GAVUN WUD meme. Browser-based fantasy RPG with pixel-art, ASCII-art, and onchain character progression.",
-  keywords: "RPG, fantasy, choice-driven, narrative RPG, fatal, old school, round-based, Fighting Fantasy, UltraQuest, EverQuest, GAVUN WUD, browser game, pixel-art, ASCII-art, adventure game, onchain, blockchain",
+  ...pageMetadata({ description: SITE_DESCRIPTION, path: "/" }),
+  metadataBase: new URL(SITE_URL),
+  title: { default: `${SITE_NAME} | ${SITE_TAGLINE}`, template: `%s | ${SITE_NAME}` },
+  applicationName: SITE_NAME,
+  // Canonical URLs are per page only - a page without its own must not
+  // point at the home page.
+  alternates: undefined,
   icons: {
     icon: "/favicon.ico",
-  },
-  openGraph: {
-    title: "The Wudlands",
-    description: "A choice-driven narrative RPG with fatal consequences. Old-school Fantasy style adventures with onchain character progression.",
-    type: "website",
-    url: "https://thewudlands.eu",
-  },
-  twitter: {
-    card: "summary_large_image",
-    title: "The Wudlands | Old School Fantasy RPG",
-    description: "Decision based, choice driven narrative RPG inspired by Fighting Fantasy and EverQuest.",
   },
 };
 

@@ -8,17 +8,6 @@
   margin: 0 auto;
 }
 
-.heading {
-  font-family: "Courier New", Courier, monospace;
-  font-size: 1.1rem;
-  letter-spacing: 0.2em;
-  text-transform: uppercase;
-  color: #c07a3a;
-  border-bottom: 1px solid #7a6a3a;
-  padding-bottom: 0.75rem;
-  margin-bottom: 2rem;
-}
-
 .banner {
   display: block;
   width: 90%;

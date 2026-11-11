@@ -1,6 +1,15 @@
+import type { Metadata } from "next";
+import { pageMetadata } from "../../lib/seo";
 import Link from "next/link";
 import { PageVersionTag } from "../../main/PageVersionTag";
 import styles from "./page.module.css";
+import h from "@/app/styles/headings.module.css";
+
+export const metadata: Metadata = pageMetadata({
+  title: "Story Editor Tutorial",
+  description: "A step-by-step walkthrough for building your first adventure in the Wudlands story editor - from your first scene to submitting a finished story.",
+  path: "/create/tutorial",
+});
 
 const STEPS = [
   {
@@ -29,7 +38,7 @@ export default function Tutorial() {
   return (
     <div className={styles.page}>
       <section className={styles.content}>
-        <h2 className={styles.heading}>Story Editor Tutorial</h2>
+        <h1 className={h.pageTitle}>Story Editor Tutorial</h1>
 
         <p className={styles.intro}>
           A step-by-step walkthrough for building your first adventure in the

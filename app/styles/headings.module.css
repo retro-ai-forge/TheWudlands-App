@@ -1,0 +1,70 @@
+/* Shared heading styles for the website pages (landing, guide, the world,
+   create, gtc, dev section, soul page). Use these instead of a page-local
+   heading rule; a page only adds a local class for real layout needs (e.g.
+   .soulSlotsHeading's inline icon), never for size/colour/spacing.
+
+   Levels: .hero (big welcome headline) > .pageTitle (one per page, <h1>) >
+   .section (<h2>) > .sub (<h3>). Modifiers: .heroSmall, .ruled (underline
+   for long text pages), .center, .muted (gold instead of orange).
+   The font comes from body (globals.css). */
+
+.hero,
+.pageTitle,
+.section,
+.sub {
+  text-transform: uppercase;
+  color: #c07a3a;
+}
+
+.hero {
+  font-size: 2rem;
+  letter-spacing: 0.12em;
+  margin-bottom: 1.25rem;
+}
+
+.heroSmall {
+  font-size: 1.5rem;
+  letter-spacing: 0.16em;
+}
+
+.pageTitle {
+  font-size: 1.1rem;
+  letter-spacing: 0.2em;
+  border-bottom: 1px solid #7a6a3a;
+  padding-bottom: 0.75rem;
+  margin-bottom: 2rem;
+}
+
+.section {
+  font-size: 1rem;
+  letter-spacing: 0.18em;
+  margin-top: 2.5rem;
+  margin-bottom: 1.25rem;
+}
+
+.sub {
+  font-size: 0.88rem;
+  letter-spacing: 0.15em;
+  margin-top: 2.5rem;
+  margin-bottom: 0.75rem;
+}
+
+/* No top gap when the heading opens its box/section. */
+.section:first-child,
+.sub:first-child {
+  margin-top: 0;
+}
+
+.ruled {
+  border-bottom: 1px solid #3a3020;
+  padding-bottom: 0.5rem;
+  margin-top: 3rem;
+}
+
+.center {
+  text-align: center;
+}
+
+.muted {
+  color: #7a6a3a;
+}

@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from "react";
 import Image from "next/image";
 import styles from "./characters.module.css";
+import h from "@/app/styles/headings.module.css";
 import { GENDERS, racesByCategory, professionsByCategory, BODY_ATTRIBUTES, SOUL_ATTRIBUTES } from "@/app/lib/characterOptions";
 
 // GET /api/auth/blueprint-categories - lore/reference data, not player-specific:
@@ -91,7 +92,7 @@ export default function Characters() {
   return (
     <main className={styles.screen}>
       <header className={styles.header}>
-        <p className={styles.title}>[ Origins ]</p>
+        <h1 className={`${h.hero} ${h.heroSmall} ${h.center}`}>[ Origins ]</h1>
         <p className={styles.divider}>— — — — — — — — — — — — — — — — —</p>
       </header>
 

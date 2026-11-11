@@ -33,6 +33,8 @@ npm run type-check  # TypeScript check without emitting
 
 ## Conventions
 - ESLint's `react/no-unescaped-entities` rule is enabled — escape raw apostrophes/quotes in JSX text (e.g. `'` → `&apos;`, `"` → `&quot;`).
+- Website headings use the shared `app/styles/headings.module.css` (`hero`, `pageTitle`, `section`, `sub` + modifiers) — no page-local heading rules. One `<h1>` per page.
+- New public pages: set metadata with `pageMetadata()` from `app/lib/seo.ts` (client pages via a folder `layout.tsx`) and add the path to `PUBLIC_PAGES` there (feeds `app/sitemap.ts`). `app/robots.ts` allows all crawlers incl. AI bots, except `/api/` and `/twine/`.
 
 ## Schema layout (post-unification)
 
