@@ -93,7 +93,7 @@ from typing import Optional
 from pymongo import ReturnDocument
 
 from backend import condition, item_condition, items_catalog
-from backend.db import find_one_and_update_checked, get_database
+from backend.db import find_one_and_update_checked, get_database, transactional
 from backend.professions_catalog import PROFESSION_CATEGORIES
 from backend.resources_catalog import PROFESSION_RESOURCE_FAMILIES, RESOURCE_ITEMS, RESOURCE_ITEMS_BY_ID
 
@@ -833,6 +833,7 @@ async def get_foraging_state(address: str, character_id: str) -> dict:
     return _build_state(doc, pool)
 
 
+@transactional
 async def start_forage(address: str, character_id: str, mission_id: str) -> dict:
     db = get_database()
     doc = await _load_character(address, character_id)
@@ -1197,6 +1198,7 @@ def _old_gear_fields(doc: dict, family_id: str) -> dict:
             "oldGearMessage": old_gear_message(old, doc.get("firstName") or "Your character")}
 
 
+@transactional
 async def finish_forage(address: str, character_id: str) -> dict:
     """Collect a returned trip: reveal the finds rolled when it started and
     drop them into the character's home storage. Returns {result, state}."""

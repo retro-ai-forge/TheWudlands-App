@@ -10,6 +10,8 @@ survive logout and any amount of time between sessions.
 from __future__ import annotations
 
 import asyncio
+import functools
+import inspect
 import json
 import math
 import uuid
@@ -22,7 +24,7 @@ from pymongo import ReturnDocument
 
 from backend import condition, item_condition, items_catalog, legend, recycling
 from backend.character import Character
-from backend.db import find_one_and_update_checked, get_database
+from backend.db import find_one_and_update_checked, get_database, run_in_transaction
 from backend.resources_catalog import PROFESSION_RESOURCE_FAMILIES
 from backend.professions_catalog import PROFESSION_CATEGORIES
 
@@ -396,6 +398,33 @@ async def _set_storage_items(db, storage_type: str, address: str, character_id: 
     )
 
 
+# ── Transactions ─────────────────────────────────────────────────────────────
+#
+# A flow that writes several documents (an item leaving one place and
+# arriving in another, a craft taking materials, ...) is decorated with
+# @_in_transaction: all its writes land together or none does
+# (backend.db.run_in_transaction). Inside, it returns None to refuse
+# (everything rolled back), BUILD_PLAYER for "done, answer with the player"
+# (built after the commit, so that read isn't part of the conflict check),
+# or any other value, returned as is. Raising rolls back too.
+
+BUILD_PLAYER = object()
+
+
+def _in_transaction(fn):
+    signature = inspect.signature(fn)
+
+    @functools.wraps(fn)
+    async def wrapper(*args, **kwargs):
+        address = signature.bind(*args, **kwargs).arguments["address"]
+        result = await run_in_transaction(lambda: fn(*args, **kwargs))
+        if result is BUILD_PLAYER:
+            return await _build_player(get_database(), address)
+        return result
+
+    return wrapper
+
+
 async def _get_vault(db, address: str) -> dict:
     """Fetch the vault doc for a player, defaulting to empty."""
     doc = await db.player_vaults.find_one({"address": address})
@@ -712,6 +741,7 @@ async def get_player_vault(address: str) -> dict:
     return {"items": items, "itemBalances": doc.get("itemBalances", {})}
 
 
+@_in_transaction
 async def add_character(address: str, character: Character) -> Optional[Player]:
     """Insert a new character document for `address`."""
     db = get_database()
@@ -728,9 +758,10 @@ async def add_character(address: str, character: Character) -> Optional[Player]:
         portrait_face_area=face_area,
         portrait_frame_area=frame_area,
     )
-    return await _build_player(db, address)
+    return BUILD_PLAYER
 
 
+@_in_transaction
 async def delete_character(address: str, character_id: str) -> Optional[Player]:
     """
     Delete a character. Dumps all gear and home items into the shared vault
@@ -741,7 +772,7 @@ async def delete_character(address: str, character_id: str) -> Optional[Player]:
 
     char_doc = await db.characters.find_one({"address": address, "id": character_id})
     if char_doc is None:
-        return await _build_player(db, address)
+        return BUILD_PLAYER
     if char_doc.get("availability", {}).get("adventure"):
         raise ValueError("Character is in a running adventure and can't be deleted")
 
@@ -807,9 +838,10 @@ async def delete_character(address: str, character_id: str) -> Optional[Player]:
     await db.characters.delete_one({"address": address, "id": character_id})
     await _remove_pc_entry(db, address, character_id)
 
-    return await _build_player(db, address)
+    return BUILD_PLAYER
 
 
+@_in_transaction
 async def update_character_portrait(
     address: str,
     character_id: str,
@@ -994,6 +1026,7 @@ async def preview_salvage(
 
 
 
+@_in_transaction
 async def salvage_item_instance(
     address: str, character_id: str, instance_id: str, from_vault: bool = False
 ) -> Optional[Player]:
@@ -1100,9 +1133,10 @@ async def salvage_item_instance(
             await _inc_storage_balances(db, "home", address, character_id, amounts)
     if doc is None:
         return None
-    return await _build_player(db, address)
+    return BUILD_PLAYER
 
 
+@_in_transaction
 async def salvage_item_balance(
     address: str, character_id: str, item_id: str, amount: int = 1, from_vault: bool = False, location: str = "home"
 ) -> Optional[Player]:
@@ -1190,7 +1224,7 @@ async def salvage_item_balance(
             await _inc_storage_balances(db, "home", address, character_id, amounts)
     if doc is None:
         return None
-    return await _build_player(db, address)
+    return BUILD_PLAYER
 
 
 def _instance_tier(instance: dict) -> Optional[int]:
@@ -2338,15 +2372,18 @@ def _validate_recipe(family_id: str, tier: int) -> tuple[dict, dict, bool]:
     return recipe, output_row, output_is_processed
 
 
+@_in_transaction
 async def start_craft(
     address: str, character_id: str, family_id: str, tier: int, count: int = 1
 ) -> Optional[Player]:
     """Start a craft (see _start_craft). Crafting stops the healing clock
-    (backend.condition) - a character only heals while free."""
-    player = await _start_craft(address, character_id, family_id, tier, count)
-    if player is not None:
+    (backend.condition) - a character only heals while free. One
+    transaction: materials and tools taken, craft started and healing
+    paused all land together, or nothing does."""
+    result = await _start_craft(address, character_id, family_id, tier, count)
+    if result is not None:
         await condition.pause_healing(address, character_id)
-    return player
+    return result
 
 
 async def _start_craft(
@@ -2588,7 +2625,7 @@ async def _start_craft(
         await _add_pc_status(db, address, character_id, "crafting")
         await _set_pc_timer(db, address, character_id, "craftingReadyAt", ready_at.isoformat())
         await _update_pc_active_craft(db, address, character_id, active_craft)
-        return await _build_player(db, address)
+        return BUILD_PLAYER
 
     # At least one instance needs moving to "crafting" - switch every
     # characters-array field in this update to $[char]/array_filters
@@ -2665,7 +2702,7 @@ async def _start_craft(
     await _add_pc_status(db, address, character_id, "crafting")
     await _set_pc_timer(db, address, character_id, "craftingReadyAt", ready_at.isoformat())
     await _update_pc_active_craft(db, address, character_id, active_craft)
-    return await _build_player(db, address)
+    return BUILD_PLAYER
 
 
 def _borrow_wear(borrowed: dict) -> int:
@@ -2997,13 +3034,16 @@ async def _finish_craft_step(address: str, character_id: str, step: dict) -> boo
     return True
 
 
+@_in_transaction
 async def finish_craft(address: str, character_id: str) -> Optional[Player]:
     """Collect a craft (see _finish_craft). Free again, the character's
-    healing clock restarts (backend.condition)."""
-    player = await _finish_craft(address, character_id)
-    if player is not None and await condition.resume_healing(address, character_id):
-        player = await _build_player(get_database(), address)
-    return player
+    healing clock restarts (backend.condition). One transaction: every
+    chain step, the output, returned tools and the healing restart land
+    together, or nothing does."""
+    result = await _finish_craft(address, character_id)
+    if result is not None:
+        await condition.resume_healing(address, character_id)
+    return result
 
 
 async def _finish_craft(address: str, character_id: str) -> Optional[Player]:
@@ -3232,7 +3272,7 @@ async def _finish_craft(address: str, character_id: str) -> Optional[Player]:
         await _remove_pc_status(db, address, character_id, "crafting")
         await _set_pc_timer(db, address, character_id, "craftingReadyAt", None)
         await _update_pc_active_craft(db, address, character_id, None)
-        return await _build_player(db, address)
+        return BUILD_PLAYER
 
     # At least one instance-tracked tool was borrowed - release each back
     # to its recorded source (see start_craft's borrowedInstances). Same
@@ -3431,7 +3471,7 @@ async def _finish_craft(address: str, character_id: str) -> Optional[Player]:
     await _remove_pc_status(db, address, character_id, "crafting")
     await _set_pc_timer(db, address, character_id, "craftingReadyAt", None)
     await _update_pc_active_craft(db, address, character_id, None)
-    return await _build_player(db, address)
+    return BUILD_PLAYER
 
 
 
@@ -3447,6 +3487,7 @@ def _has_parent_equipped(character: dict, parent_slot: str) -> bool:
     )
 
 
+@_in_transaction
 async def equip_item(address: str, character_id: str, instance_id: str, slots: List[str], amount: Optional[int] = None, from_location: Optional[str] = None) -> Optional[Player]:
     """
     Equip one of a character's own item instances into `slots` - exactly
@@ -3782,6 +3823,7 @@ async def equip_item(address: str, character_id: str, instance_id: str, slots: L
     return True
 
 
+@_in_transaction
 async def equip_item_from_pool(address: str, character_id: str, instance_id: str, slots: List[str], amount: Optional[int] = None) -> Optional[Player]:
     """
     Equip one item instance straight from `address`'s shared pool
@@ -3971,9 +4013,10 @@ async def equip_item_from_pool(address: str, character_id: str, instance_id: str
         )
     if doc is None:
         return None
-    return await _build_player(db, address)
+    return BUILD_PLAYER
 
 
+@_in_transaction
 async def unequip_item(
     address: str, character_id: str, instance_id: str, destination: Optional[str] = None, amount: Optional[int] = None
 ) -> Optional[Player]:
@@ -4293,6 +4336,7 @@ async def unequip_item(
     return True
 
 
+@_in_transaction
 async def set_in_adventure(
     address: str, character_id: str, in_adventure: bool, reason: str = "stop"
 ) -> bool | None:
@@ -4360,6 +4404,7 @@ async def set_in_adventure(
     return True
 
 
+@_in_transaction
 async def set_resting(
     address: str, character_id: str, resting: bool, location: Optional[str] = None
 ) -> bool | None:
@@ -4411,6 +4456,7 @@ async def set_resting(
     return True
 
 
+@_in_transaction
 async def check_out_item_instance(
     address: str, character_id: str, instance_id: str, destination: str = "backpack"
 ) -> Optional[Player]:
@@ -4495,6 +4541,7 @@ async def check_out_item_instance(
     return True
 
 
+@_in_transaction
 async def check_in_item_instance(address: str, character_id: str, instance_id: str) -> Optional[Player]:
     """
     The reverse of check_out_item_instance: move one item instance from a
@@ -4593,13 +4640,14 @@ async def check_in_item_instance(address: str, character_id: str, instance_id: s
             {"$push": {"items": {"$each": pooled_instances}}},
             upsert=True,
         )
-    return await _build_player(db, address)
+    return BUILD_PLAYER
 
 
 # ---------------------------------------------------------------------------
 # Generic move functions — work for home, camp, and all container pairs
 # ---------------------------------------------------------------------------
 
+@_in_transaction
 async def move_storage_item_to_container(
     address: str, character_id: str, instance_id: str,
     storage_type: str, container: str,
@@ -4635,9 +4683,10 @@ async def move_storage_item_to_container(
     )
     if doc is None:
         return None
-    return await _build_player(db, address)
+    return BUILD_PLAYER
 
 
+@_in_transaction
 async def move_container_item_to_storage(
     address: str, character_id: str, instance_id: str,
     container: str, storage_type: str,
@@ -4671,7 +4720,7 @@ async def move_container_item_to_storage(
     if doc is None:
         return None
     await _push_storage_items(db, storage_type, address, character_id, [moved])
-    return await _build_player(db, address)
+    return BUILD_PLAYER
 
 
 async def move_container_item(
@@ -4713,6 +4762,7 @@ async def move_container_item(
     return await _build_player(db, address)
 
 
+@_in_transaction
 async def load_balance_from_storage(
     address: str, character_id: str, item_id: str, amount: int,
     storage_type: str, container: str,
@@ -4751,9 +4801,10 @@ async def load_balance_from_storage(
     if doc is None:
         return None
     await _inc_storage_balances(db, storage_type, address, character_id, {item_id: -amount})
-    return await _build_player(db, address)
+    return BUILD_PLAYER
 
 
+@_in_transaction
 async def unload_balance_to_storage(
     address: str, character_id: str, item_id: str, amount: int,
     container: str, storage_type: str,
@@ -4780,7 +4831,7 @@ async def unload_balance_to_storage(
         return None
     await _prune_char_zeros(db, address, character_id, doc, [f"gear.itemBalances.{container}.{item_id}"])
     await _inc_storage_balances(db, storage_type, address, character_id, {item_id: amount})
-    return await _build_player(db, address)
+    return BUILD_PLAYER
 
 
 async def move_container_balance(
@@ -4820,6 +4871,7 @@ async def move_container_balance(
     return await _build_player(db, address)
 
 
+@_in_transaction
 async def bulk_move_storage(
     address: str, character_id: str,
     storage_type: str,
@@ -4954,7 +5006,7 @@ async def bulk_move_storage(
             await _inc_storage_balances(db, storage_type, address, character_id,
                                         {k: -v for k, v in moved_balance_ids.items()})
 
-    return await _build_player(db, address)
+    return BUILD_PLAYER
 
 
 async def destroy_all_storage(address: str, character_id: str, storage_type: str) -> Optional[Player]:
@@ -4976,6 +5028,7 @@ async def destroy_all_storage(address: str, character_id: str, storage_type: str
     return await _build_player(db, address)
 
 
+@_in_transaction
 async def check_out_item_balance(address: str, character_id: str, item_id: str, amount: int = 1) -> Optional[Player]:
     """
     Move `amount` of `item_id` (a concrete crafted-item id) from
@@ -5006,9 +5059,10 @@ async def check_out_item_balance(address: str, character_id: str, item_id: str, 
     doc = await db.characters.find_one({"address": address, "id": character_id})
     if doc is None:
         return None
-    return await _build_player(db, address)
+    return BUILD_PLAYER
 
 
+@_in_transaction
 async def check_out_item_balance_to_backpack(
     address: str, character_id: str, item_id: str, amount: int = 1
 ) -> Optional[Player]:
@@ -5073,9 +5127,10 @@ async def check_out_item_balance_to_backpack(
     if doc is None:
         return None
     await _inc_vault_itembalances(db, address, {item_id: -amount})
-    return await _build_player(db, address)
+    return BUILD_PLAYER
 
 
+@_in_transaction
 async def check_out_item_balance_to_saddlepack(
     address: str, character_id: str, item_id: str, amount: int = 1
 ) -> Optional[Player]:
@@ -5130,9 +5185,10 @@ async def check_out_item_balance_to_saddlepack(
     if doc is None:
         return None
     await _inc_vault_itembalances(db, address, {item_id: -amount})
-    return await _build_player(db, address)
+    return BUILD_PLAYER
 
 
+@_in_transaction
 async def check_out_item_balance_to_cart(
     address: str, character_id: str, item_id: str, amount: int = 1
 ) -> Optional[Player]:
@@ -5182,9 +5238,10 @@ async def check_out_item_balance_to_cart(
     if doc is None:
         return None
     await _inc_vault_itembalances(db, address, {item_id: -amount})
-    return await _build_player(db, address)
+    return BUILD_PLAYER
 
 
+@_in_transaction
 async def check_in_item_balance(
     address: str, character_id: str, item_id: str, amount: int = 1, location: str = "home"
 ) -> Optional[Player]:
@@ -5220,7 +5277,7 @@ async def check_in_item_balance(
             await _inc_vault_itembalances(db, address, {item_id: amount})
     if doc is None:
         return None
-    return await _build_player(db, address)
+    return BUILD_PLAYER
 
 
 async def destroy_item_instance(address: str, character_id: str, instance_id: str) -> Optional[Player]:
@@ -5281,6 +5338,7 @@ async def destroy_item_balance(address: str, character_id: str, item_id: str, am
     return await _build_player(db, address)
 
 
+@_in_transaction
 async def destroy_character_item_instance(address: str, character_id: str, instance_id: str) -> Optional[Player]:
     """
     Permanently remove one item instance from `character_id`'s own backpack,
@@ -5306,7 +5364,7 @@ async def destroy_character_item_instance(address: str, character_id: str, insta
         if not found:
             return None
         await _pull_storage_items(db, "home", address, character_id, [instance_id])
-    return await _build_player(db, address)
+    return BUILD_PLAYER
 
 
 async def destroy_character_item_balance(address: str, character_id: str, item_id: str, amount: int = 1) -> Optional[Player]:
@@ -5342,6 +5400,7 @@ def _max_move_amount(existing: int, stack_size: int, slot_cost: int, free_slots:
     return max(0, min(available, max_total - existing))
 
 
+@_in_transaction
 async def move_all_storage_to_backpack(
     address: str, character_id: str, storage_type: str = "home",
 ) -> Optional[Player]:
@@ -5411,9 +5470,10 @@ async def move_all_storage_to_backpack(
     remaining_items = [i for i in storage_instances if i["instanceId"] not in moved_instance_ids]
     await _set_storage_items(db, storage_type, address, character_id, remaining_items)
     await _set_storage_balances(db, storage_type, address, character_id, new_storage_item_balances)
-    return await _build_player(db, address)
+    return BUILD_PLAYER
 
 
+@_in_transaction
 async def move_all_storage_to_bags(
     address: str, character_id: str, storage_type: str = "home",
 ) -> Optional[Player]:
@@ -5671,6 +5731,7 @@ async def preview_home_salvage(
     return rows
 
 
+@_in_transaction
 async def salvage_home(address: str, character_id: str, selected_ids: List[str], storage_type: str = "home") -> Optional[Player]:
     """
     The chopping block's own bulk action (see HomeView.tsx): salvages
@@ -5771,7 +5832,7 @@ async def salvage_home(address: str, character_id: str, selected_ids: List[str],
         return None
     await _set_storage_items(db, storage_type, address, character_id, new_home_items_sc)
     await _set_storage_balances(db, storage_type, address, character_id, new_home_balances)
-    return await _build_player(db, address)
+    return BUILD_PLAYER
 
 
 def _recyclable_vault_entries(vault: dict, character: dict):
@@ -5917,6 +5978,7 @@ async def salvage_vault(
 
 
 
+@_in_transaction
 async def bulk_move_vault(
     address: str, character_id: str,
     destination: str,
@@ -6076,7 +6138,7 @@ async def bulk_move_vault(
     home_credits.update(home_balance_ids)
     if home_credits:
         await _inc_storage_balances(db, "home", address, character_id, home_credits)
-    return await _build_player(db, address)
+    return BUILD_PLAYER
 
 
 def _container_recyclable_entries(character: dict, location: str):
@@ -6116,6 +6178,7 @@ def _equipped_container_instance(character: dict, family_id: str) -> Optional[di
     )
 
 
+@_in_transaction
 async def check_in_item_balance_from_cart(
     address: str, character_id: str, item_id: str, amount: int = 1
 ) -> Optional[Player]:
@@ -6145,7 +6208,7 @@ async def check_in_item_balance_from_cart(
         return None
     await _prune_char_zeros(db, address, character_id, doc, [f"gear.itemBalances.cart.{item_id}"])
     await _inc_vault_itembalances(db, address, {item_id: amount})
-    return await _build_player(db, address)
+    return BUILD_PLAYER
 
 
 

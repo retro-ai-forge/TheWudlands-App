@@ -19,9 +19,18 @@ from backend.auth_routes import (
     player_router,
     statistics_router,
 )
-from backend.db import close_mongo_client, get_database
+from fastapi.responses import JSONResponse
+
+from backend.db import TransactionConflict, close_mongo_client, get_database
 
 app = FastAPI(title="TheWudlands API")
+
+
+@app.exception_handler(TransactionConflict)
+async def transaction_conflict_handler(_request, exc: TransactionConflict):
+    """Other requests kept changing the same documents and nothing was
+    written (backend.db.run_in_transaction) - the player can simply retry."""
+    return JSONResponse(status_code=409, content={"detail": str(exc)})
 
 # Add CORS middleware for frontend-backend communication
 app.add_middleware(

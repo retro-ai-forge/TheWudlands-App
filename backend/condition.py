@@ -40,7 +40,7 @@ import random
 from datetime import datetime, timedelta, timezone
 from typing import Optional
 
-from backend.db import get_database
+from backend.db import get_database, transactional
 
 BODY_ATTRS = ("migh", "agil", "endu", "prec")
 SOUL_ATTRS = ("will", "insi", "lore", "pres")
@@ -238,6 +238,7 @@ async def resume_healing(address: str, character_id: str, db=None) -> bool:
     return True
 
 
+@transactional
 async def apply_loss(address: str, character_id: str, points: dict, db=None,
                      rng: random.Random | None = None) -> tuple[dict, Optional[str]]:
     """Take `points` ({attr: n}) off the current values and restart the

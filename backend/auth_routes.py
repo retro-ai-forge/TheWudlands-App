@@ -28,7 +28,7 @@ from backend.active_players import (
     list_active_players,
 )
 from backend.character import AttributeStats, Character, PortraitArea, ProfStats
-from backend.db import get_database
+from backend.db import get_database, run_in_transaction
 from backend import adventures, foraging
 from backend.players import (
     get_character_home,
@@ -2586,41 +2586,48 @@ async def create_character(
         ),
     )
 
-    player = await add_character(address, character)
-    if player is None:
-        raise HTTPException(status_code=404, detail="No player record found for this address")
+    async def create() -> Optional[bool]:
+        # One transaction (backend.db.run_in_transaction): the character, its
+        # blueprints, the starter kit and the slot's foraging pool are all
+        # created, or none is - no half-made character, and two requests
+        # can't both claim the slot's starter kit.
+        if await add_character(address, character) is None:
+            return None
 
-    # Blueprints are soulbound to the character but live in their own
-    # collection (character_blueprints) rather than the character doc.
-    if payload.selectedBlueprints:
-        _db = get_database()
-        await _db.character_blueprints.update_one(
-            {"address": address, "characterId": character.id},
-            {"$set": {"blueprints": list(payload.selectedBlueprints)}},
-            upsert=True,
+        # Blueprints are soulbound to the character but live in their own
+        # collection (character_blueprints) rather than the character doc.
+        if payload.selectedBlueprints:
+            await get_database().character_blueprints.update_one(
+                {"address": address, "characterId": character.id},
+                {"$set": {"blueprints": list(payload.selectedBlueprints)}},
+                upsert=True,
+            )
+
+        # Each soul slot gets its starter kit exactly once, ever - tracked by
+        # slot number (not character id), so deleting this character and
+        # recreating one in the same slot can never re-claim it. Without this,
+        # a delete-and-recreate loop would mint resources for free. Blueprints
+        # aren't gated by this at all (see above, unconditional) - they're
+        # soulbound to whichever character is created, not a limited one-time
+        # slot bonus the way raw materials are.
+        # Raw materials go into the player's shared vault (player_vaults
+        # collection, keyed by address).
+        if not await has_claimed_starter_kit(address, payload.slotNumber):
+            for resource_id, amount in payload.selectedResources.items():
+                await grant_item_balance(address, resource_id, amount)
+            await mark_starter_kit_claimed(address, payload.slotNumber)
+
+        # The slot's one-time foraging pool (see backend.foraging) - created only
+        # if this slot has never had one; a pool left by a deleted character is
+        # inherited instead.
+        await foraging.ensure_slot_pool(
+            address, payload.slotNumber, [payload.profession1, payload.profession2, payload.profession3]
         )
+        return True
 
-    # Each soul slot gets its starter kit exactly once, ever - tracked by
-    # slot number (not character id), so deleting this character and
-    # recreating one in the same slot can never re-claim it. Without this,
-    # a delete-and-recreate loop would mint resources for free. Blueprints
-    # aren't gated by this at all (see above, unconditional) - they're
-    # soulbound to whichever character is created, not a limited one-time
-    # slot bonus the way raw materials are.
-    # Raw materials go into the player's shared vault (player_vaults
-    # collection, keyed by address).
-    if not await has_claimed_starter_kit(address, payload.slotNumber):
-        for resource_id, amount in payload.selectedResources.items():
-            player = await grant_item_balance(address, resource_id, amount)
-        await mark_starter_kit_claimed(address, payload.slotNumber)
-
-    # The slot's one-time foraging pool (see backend.foraging) - created only
-    # if this slot has never had one; a pool left by a deleted character is
-    # inherited instead.
-    await foraging.ensure_slot_pool(
-        address, payload.slotNumber, [payload.profession1, payload.profession2, payload.profession3]
-    )
-
+    if await run_in_transaction(create) is None:
+        raise HTTPException(status_code=404, detail="No player record found for this address")
+    player = await get_player(address)
     return player.to_dict()
 
 
@@ -3845,34 +3852,44 @@ async def reject_twine_review(
         raise HTTPException(status_code=400, detail="A reason is required")
 
     db = get_database()
-    review = await db.twine_review.find_one(
-        {"address": owner, "storyId": story_id},
-        {"name": 1, "metadata": 1, "sceneCount": 1, "passages": 1},
-    )
-    if not review:
+
+    async def reject() -> Optional[bool]:
+        # One transaction: the submission leaves the queue and its rejection
+        # is recorded together - two reviewers rejecting at once record it
+        # once (the second finds nothing left to reject).
+        review = await db.twine_review.find_one(
+            {"address": owner, "storyId": story_id},
+            {"name": 1, "metadata": 1, "sceneCount": 1, "passages": 1},
+        )
+        if not review:
+            return None
+        if (await db.twine_review.delete_one({"address": owner, "storyId": story_id})).deleted_count != 1:
+            return None
+
+        metadata = review.get("metadata") or {}
+        scene_count = review.get("sceneCount")
+        if scene_count is None:
+            scene_count = _count_playable_scenes(review.get("passages", []))
+
+        await db.twine_rejected.insert_one({
+            "address": owner,
+            "storyId": story_id,
+            "title": metadata.get("meta_title") or review.get("name") or "Untitled",
+            "author": metadata.get("meta_author"),
+            "tier": metadata.get("meta_adventureTier"),
+            "sceneCount": scene_count,
+            "reason": reason,
+            "rejectedAt": datetime.now(timezone.utc).isoformat(),
+            "rejectedBy": address,
+        })
+        return True
+
+    if await run_in_transaction(reject) is None:
         raise HTTPException(status_code=404, detail="Review submission not found")
 
-    metadata = review.get("metadata") or {}
-    scene_count = review.get("sceneCount")
-    if scene_count is None:
-        scene_count = _count_playable_scenes(review.get("passages", []))
-
-    await db.twine_rejected.insert_one({
-        "address": owner,
-        "storyId": story_id,
-        "title": metadata.get("meta_title") or review.get("name") or "Untitled",
-        "author": metadata.get("meta_author"),
-        "tier": metadata.get("meta_adventureTier"),
-        "sceneCount": scene_count,
-        "reason": reason,
-        "rejectedAt": datetime.now(timezone.utc).isoformat(),
-        "rejectedBy": address,
-    })
-
-    # Remove the submission and its frozen review-stage images (images +
+    # Remove the submission's frozen review-stage images (images +
     # thumbnails under twine-images/{owner}/review/{storyId}/). The author's own
     # create-stage images and working copy stay, so they can fix and resubmit.
-    await db.twine_review.delete_one({"address": owner, "storyId": story_id})
     try:
         twine_images.delete_stage(owner, twine_images.STAGE_REVIEW, story_id)
     except Exception as exc:

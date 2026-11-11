@@ -1907,6 +1907,8 @@ function transferFailureMessage(detail: string | null): string {
   if (detail === "Character is out on an adventure - no reaching the shared vault") {
     return "Out on an adventure - the shared vault isn't reachable.";
   }
+  // Another request kept changing the same things (backend.db.TransactionConflict).
+  if (detail.endsWith("please try again.")) return detail;
   return "Couldn't move that.";
 }
 
