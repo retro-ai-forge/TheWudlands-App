@@ -344,7 +344,8 @@ def _with_bonus(weapon: Optional[dict], items: list[dict]) -> dict:
 
 
 def _usable(instance: dict) -> bool:
-    """Not broken - quality <= 0 is broken; no quality (missing or None,
+    """Not gone - a condition level of 0 or below means the item is gone (1
+    is broken but still works); no quality (missing or None,
     e.g. an equipped stack of arrows) is fine. An equipped stack also needs
     at least one unit left."""
     quality = instance.get("quality")
@@ -374,8 +375,9 @@ def missing_for_weapon(doc: dict, weapon_family: str) -> list[str]:
 
 
 def _wear_order(piece: dict) -> tuple:
-    """Sort key (use max): highest tier first, then the lowest quality -
-    pieces without quality (plain stacks) only when nothing else is left."""
+    """Sort key (use max): highest tier first, then the lowest condition
+    level (most worn) - pieces without condition (plain stacks) only when
+    nothing else is left."""
     quality = piece.get("quality")
     return (piece["tier"], -quality if quality is not None else -math.inf)
 
@@ -403,8 +405,8 @@ def _carried_pieces(doc: dict, item_family: str) -> list[dict]:
 
 def _pick(doc: dict, item_family: str) -> Optional[dict]:
     """The piece of this family used on the trip - highest tier, then the
-    LOWEST quality (it's the one that wears, so worn pieces get used up
-    first; a stack without quality comes last)."""
+    lowest condition level (worn pieces get used up first; a stack without
+    condition comes last)."""
     pieces = _carried_pieces(doc, item_family)
     return max(pieces, key=_wear_order) if pieces else None
 

@@ -239,7 +239,9 @@ export function ForagingSection({
               ...(lastResult.gear ?? [])
                 .filter((g) => g.wear > 0 && !g.destroyed && g.condition)
                 .map((g) => `${g.name} → ${g.condition}`),
-              ...(lastResult.broken ?? []).map((name) => `${name} (broken)`),
+              // Gone for good (dropped below broken, or a stacked piece used up)
+              // - "lost", since "broken" is now a condition that still works.
+              ...(lastResult.broken ?? []).map((name) => `${name} (lost)`),
             ];
             return lost.length > 0 ? <p className={styles.lostLine}>Lost: {lost.join(" · ")}</p> : null;
           })()}

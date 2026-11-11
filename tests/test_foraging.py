@@ -252,9 +252,9 @@ def _instance(family: str, quality: int, location: str = "backpack", tier: int =
 
 def test_gear_bonus_one_weapon_plus_each_item_scaled_by_tier():
     doc = {"gear": {
-        "items": [_instance("pickaxe", 50, tier=3), _instance("warhammer", 900, "body"),
-                  _instance("cart", 10, "cart", tier=2),
-                  _instance("grappling_hook", 0), _instance("iron_spikes", 5, "home")],
+        "items": [_instance("pickaxe", 4, tier=3), _instance("warhammer", 4, "body"),
+                  _instance("cart", 4, "cart", tier=2),
+                  _instance("grappling_hook", 0), _instance("iron_spikes", 4, "home")],
         "itemBalances": {"backpack": {"hunters_charm_1": 1}},
     }}
     gear = foraging.gathering_gear(doc, "ore")
@@ -334,31 +334,31 @@ async def test_outcome_is_rolled_at_start_and_revealed_at_collect(db, monkeypatc
 
 
 def test_bow_needs_quiver_and_arrows_crossbow_needs_girdle_and_bolts():
-    bow = _instance("bow", 100, "body")
+    bow = _instance("bow", 4, "body")
     alone = foraging.gathering_gear({"gear": {"items": [bow]}}, "meat")
     assert alone["weapon"] is None
     assert alone["blockedWeapons"][0]["missing"] == ["quiver", "arrow"]
 
     # Quiver plus arrows packed in the backpack.
-    packed = {"gear": {"items": [bow, _instance("quiver", 40)], "itemBalances": {"backpack": {"arrow_1": 12}}}}
+    packed = {"gear": {"items": [bow, _instance("quiver", 4)], "itemBalances": {"backpack": {"arrow_1": 12}}}}
     assert foraging.gathering_gear(packed, "meat")["weapon"]["familyId"] == "bow"
 
     # Arrows equipped as a stack (quality None, a quantity) count too - but not an empty one.
     stack = {**_instance("arrow", 0, "body"), "quality": None, "quantity": 5}
-    equipped = {"gear": {"items": [bow, _instance("quiver", 40, "body"), stack]}}
+    equipped = {"gear": {"items": [bow, _instance("quiver", 4, "body"), stack]}}
     assert foraging.gathering_gear(equipped, "meat")["weapon"]["familyId"] == "bow"
-    empty = {"gear": {"items": [bow, _instance("quiver", 40, "body"), {**stack, "quantity": 0}]}}
+    empty = {"gear": {"items": [bow, _instance("quiver", 4, "body"), {**stack, "quantity": 0}]}}
     assert foraging.gathering_gear(empty, "meat")["weapon"] is None
 
-    crossbow = _instance("crossbow", 100, "body")
-    no_bolts = {"gear": {"items": [crossbow, _instance("bolt_girdle", 40)]}}
+    crossbow = _instance("crossbow", 4, "body")
+    no_bolts = {"gear": {"items": [crossbow, _instance("bolt_girdle", 4)]}}
     assert foraging.gathering_gear(no_bolts, "meat")["blockedWeapons"][0]["missing"] == ["bolt"]
-    ready = {"gear": {"items": [crossbow, _instance("bolt_girdle", 40)], "itemBalances": {"saddlepack": {"bolt_2": 3}}}}
+    ready = {"gear": {"items": [crossbow, _instance("bolt_girdle", 4)], "itemBalances": {"saddlepack": {"bolt_2": 3}}}}
     assert foraging.gathering_gear(ready, "meat")["weapon"]["familyId"] == "crossbow"
 
 
 def test_other_weapon_counts_when_bow_is_not_ready():
-    gear = foraging.gathering_gear({"gear": {"items": [_instance("bow", 100, tier=3), _instance("spear", 50)]}}, "meat")
+    gear = foraging.gathering_gear({"gear": {"items": [_instance("bow", 4, tier=3), _instance("spear", 4)]}}, "meat")
     assert gear["weapon"]["familyId"] == "spear"
 
 
@@ -449,11 +449,11 @@ async def test_bow_only_wears_for_uncovered_finds_at_its_tier(db, monkeypatch):
 
 def test_highest_tier_then_most_worn_piece_is_used():
     doc = {"gear": {"items": [
-        {**_instance("rope", 15), "instanceId": "rope-fresh"},
-        {**_instance("rope", 5), "instanceId": "rope-worn"},
-        {**_instance("rope", 2, tier=2), "instanceId": "rope-t2"},
-        {**_instance("pickaxe", 150), "instanceId": "pick-fresh"},
-        {**_instance("pickaxe", 40), "instanceId": "pick-worn"},
+        {**_instance("rope", 4), "instanceId": "rope-fresh"},
+        {**_instance("rope", 2), "instanceId": "rope-worn"},
+        {**_instance("rope", 1, tier=2), "instanceId": "rope-t2"},
+        {**_instance("pickaxe", 4), "instanceId": "pick-fresh"},
+        {**_instance("pickaxe", 3), "instanceId": "pick-worn"},
     ]}}
     reed = foraging.gathering_gear(doc, "reed")
     assert reed["items"][0]["instanceId"] == "rope-t2"            # higher tier wins even if almost broken
@@ -485,7 +485,7 @@ def test_light_needs_a_tinderbox():
 
 
 def test_only_one_light_counts_lantern_with_oil_first():
-    lantern = _instance("glass_lantern", 20, tier=2)
+    lantern = _instance("glass_lantern", 4, tier=2)
     kit = {"tinderbox_1": 1, "torch_3": 2, "candle_1": 5}
 
     with_oil = _lit([lantern], {**kit, "oil_2": 1})
@@ -500,7 +500,7 @@ def test_only_one_light_counts_lantern_with_oil_first():
 
 
 def test_lantern_counts_at_the_lower_tier_of_lantern_and_oil():
-    lantern = _instance("glass_lantern", 20, tier=3)
+    lantern = _instance("glass_lantern", 4, tier=3)
     # Best oil up to the lantern's tier - T5 oil would be wasted on a T3 lantern.
     light = _light_of(_lit([lantern], {"tinderbox_1": 1, "oil_1": 4, "oil_2": 1, "oil_5": 1}))
     assert light["fuel"]["itemId"] == "oil_2" and light["bonusTier"] == 2
@@ -549,7 +549,7 @@ async def test_trip_burns_one_oil_and_wears_the_lantern(db, monkeypatch):
 # ── Companion charms ───────────────────────────────────────────────────
 
 
-def _worn(family: str, slot: str, tier: int = 1, quality: int = 15) -> dict:
+def _worn(family: str, slot: str, tier: int = 1, quality: int = 4) -> dict:
     return {**_instance(family, quality, "body", tier=tier), "slotRef": [slot]}
 
 
@@ -568,7 +568,7 @@ def test_charm_on_the_wrong_companion_or_in_the_pack_does_not_count():
     assert gear["percent"] == 0
     assert gear["blockedItems"][0]["missing"] == ["winged_companion"]
 
-    packed = {"gear": {"items": [_worn("winged_companion", "Companion"), _instance("charm_flying", 15)]}}
+    packed = {"gear": {"items": [_worn("winged_companion", "Companion"), _instance("charm_flying", 4)]}}
     assert foraging.gathering_gear(packed, "feather")["percent"] == 0
 
 
@@ -630,7 +630,7 @@ def test_surprise_message_names_the_finds():
 
 async def test_surprise_goes_home_without_draining_the_pool_or_wearing_gear(db, monkeypatch):
     cid = await _make(1, "blacksmith")
-    await db.characters.update_one({"address": ADDRESS, "id": cid}, {"$set": {"gear.items": [_instance("pickaxe", 200)]}})
+    await db.characters.update_one({"address": ADDRESS, "id": cid}, {"$set": {"gear.items": [_instance("pickaxe", 4)]}})
     monkeypatch.setattr(foraging.random, "randint", lambda a, b: 10)
     monkeypatch.setattr(foraging, "roll_surprises", lambda rng=None: {"crystal_5": 1})
     await foraging.start_forage(ADDRESS, cid, "craftweapon_01")  # ore
@@ -642,7 +642,7 @@ async def test_surprise_goes_home_without_draining_the_pool_or_wearing_gear(db, 
     home = await db.character_homes.find_one({"address": ADDRESS, "characterId": cid})
     assert home["itemBalances"]["crystal_5"] == 1
     doc = await db.characters.find_one({"address": ADDRESS, "id": cid})
-    assert doc["gear"]["items"][0]["quality"] == 200            # wear chances are 0: untouched
+    assert doc["gear"]["items"][0]["quality"] == 4              # wear chances are 0: untouched
 
 
 # ── Old gear ───────────────────────────────────────────────────────────
@@ -671,7 +671,7 @@ def test_old_gear_message_names_the_piece():
         t.format(name="N", item="I")
 
 
-async def test_old_gear_goes_home_as_a_damaged_instance(db, monkeypatch):
+async def test_old_gear_goes_home_as_a_broken_instance(db, monkeypatch):
     cid = await _make(1, "blacksmith")
     old = {"instanceId": "old-1", "itemId": "pickaxe_1", "familyId": "pickaxe",
            "name": "Pickaxe", "quality": 1, "condition": "broken"}

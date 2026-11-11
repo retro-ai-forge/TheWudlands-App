@@ -104,7 +104,7 @@ function EquipSlotIcon({
       )}
       {cond !== null && (
         <div
-          className={styles.equipSlotQualityBar}
+          className={styles.equipSlotConditionCorner}
           style={{ backgroundColor: conditionColor(cond) }}
         />
       )}

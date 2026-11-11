@@ -1273,7 +1273,7 @@ export function ItemGrid({
               {isSelected && <span className={styles.itemGridCheckmark}>&#x2713;</span>}
               {cond !== null && (
                 <div
-                  className={styles.itemGridQualityBar}
+                  className={styles.itemGridConditionCorner}
                   style={{ backgroundColor: conditionColor(cond) }}
                 />
               )}
@@ -1449,7 +1449,7 @@ function destroyFillColor(t: number): string {
 
 // The salvage hold bar's own fill (see ItemDetailPopup's runSalvage) - same
 // gold start as destroyFillColor, but deepening into the app's own
-// "healthy/recovered" green (QUALITY_STATE_COLORS.new, rgb(90, 156, 74))
+// "healthy/recovered" green (the color family of QUALITY_STATE_COLORS.new)
 // instead of red, so a beneficial action never reads as a warning.
 function salvageFillColor(t: number): string {
   const GOLD: [number, number, number] = [230, 184, 92];
@@ -2083,7 +2083,7 @@ export function ItemTile({
       <ItemIcon icon={icon} alt={name} className={styles.itemGridImg} />
       {!!tier && <span className={styles.itemGridTierBadge}>{getTierIndicator(tier)}</span>}
       {condition !== null && (
-        <div className={styles.itemGridQualityBar} style={{ backgroundColor: conditionColor(condition) }} />
+        <div className={styles.itemGridConditionCorner} style={{ backgroundColor: conditionColor(condition) }} />
       )}
     </Tag>
   );
@@ -2092,7 +2092,7 @@ export function ItemTile({
 /** Single-row, horizontally-scrolling strip of tiles - what a worn
  * backpack's own popup shows packed inside it (see ItemDetailPopup's
  * packedItems prop). Same 100px tile/icon/tier-badge/count-badge/
- * quality-bar-and-damaged-tint look as ItemGrid's own tiles (deliberately
+ * condition-corner-and-broken-tint look as ItemGrid's own tiles (deliberately
  * duplicated rather than shared - ItemGrid's own tiles measure/fill the
  * whole remaining viewport height, which makes no sense embedded in a
  * popup card's own fixed-size row). Clicking a tile opens a SECOND
@@ -2359,7 +2359,7 @@ function PackedItemsRow({
               {displayCount !== null && displayCount > 1 && <span className={styles.itemGridCountBadge}>{displayCount}</span>}
               {cond !== null && (
                 <div
-                  className={styles.itemGridQualityBar}
+                  className={styles.itemGridConditionCorner}
                   style={{ backgroundColor: conditionColor(cond) }}
                 />
               )}

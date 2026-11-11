@@ -88,17 +88,12 @@ CHARM_FAMILY_ID = "hunters_charm"
 MAX_YIELD_PERCENT = 91
 
 
-# Of the 16 base-tools.json families, most (anvil, workbench, loom,
-# scriptorium, grinding_stone, alchemy_stand, enchanters_table,
-# lapidary_bench - exactly the "table-like" ones this feature was
-# originally scoped around) are needsItemDefinition:true in item-
-# inventory-properties.json: bulky portable crafting stations carried in
-# both hands or hauled on a mount, tracked as item instances (Character.
-# items / the player's shared inventory.items), never a flat balance. The
-# rest (furnace, oven, kiln, mortar_and_pestle, spinning_wheel,
-# tanning_rack, wrench, smokehouse) are flat-balance (Character.tools /
-# the player's shared inventory.tools), same as _resolve_tool_for_craft
-# already branches on family.needs_item_definition for crafting itself.
+# Every base-tools.json family (anvil, workbench, loom, furnace, kiln...) is
+# a crafting station (item kind "tool"), needsItemDefinition:true in item-
+# inventory-properties.json: a condition-tracked item instance (Character.
+# gear.items / home / camp / the vault's items), carried in both hands or
+# hauled on a mount - never a flat balance any more (scripts/
+# migrate_item_conditions.py converts the old stacked counts).
 _STATION_TOOL_FAMILY_IDS: frozenset[str] = frozenset(
     entry.family_id for entry in items_catalog.ITEM_CATALOG_ENTRIES if "tool" in entry.kind
 )
@@ -119,12 +114,10 @@ def _best_owned_station_tool_tier(
     right there at the vault). The character's own tools/backpack+body
     instances always count either way. 0 if none owned anywhere.
     """
-    # Checked regardless of family.needs_item_definition, not just for the
-    # flat-balance families - some accounts still hold an instance-tracked
-    # station (enchanters_table, lapidary_bench, ...) as a plain flat count
-    # in tools/inventory.tools from before those families were switched to
-    # equippable instances, never migrated. Costs nothing for a normal
-    # instance-tracked family, which will never actually have a flat entry.
+    # Flat counts are still checked: an account may hold a station as a
+    # stacked count from before stations became items, until
+    # scripts/migrate_item_conditions.py has converted it. Costs nothing
+    # once everything is an instance.
     best = 0
     held_tools = character.get("crafting", {}).get("tools", {})
     for entry in items_catalog.ITEM_CATALOG_ENTRIES:

@@ -2077,7 +2077,7 @@
    see its own comment on mobile's "save/share image" long-press menu).
    Sits above .equipSlotLabel (z-index 1) so the label only shows through
    an empty slot. */
-/* Wraps .equipSlotIcon so the quality bar/damaged overlay below can share
+/* Wraps .equipSlotIcon so the condition corner/broken overlay below can share
    its exact bounds without needing their own copy of .equipSlot's
    positioning - same idea as ItemGrid's tile button wrapping its own
    .itemGridImg. */
@@ -2096,8 +2096,8 @@
   image-rendering: pixelated;
 }
 
-/* Damaged equipped instances (qualityState's <=10% red band, mirroring
-   ItemGrid's own .itemGridCellDamaged) - .equipSlotIcon fills the slot
+/* Broken equipped instances (condition level 1, mirroring ItemGrid's own
+   .itemGridCellDamaged) - .equipSlotIcon fills the slot
    edge-to-edge with `cover` (unlike ItemGrid's `contain`), so a plain
    background color behind it would never show. A translucent red
    multiply-tint layered ON TOP of the icon instead. */
@@ -2112,9 +2112,9 @@
 }
 
 /* Condition indicator in the equipped icon's bottom-left corner - same
-   look as ItemGrid's .itemGridQualityBar, just above the icon's own
+   look as ItemGrid's .itemGridConditionCorner, just above the icon's own
    z-index (1) instead of flush against a tile border. */
-.equipSlotQualityBar {
+.equipSlotConditionCorner {
   position: absolute;
   left: 0;
   bottom: 0;
@@ -3041,10 +3041,9 @@
   border-color: #c07a3a;
 }
 
-/* Damaged instances (qualityState's <=10% red band - see ItemGrid's
-   isDamaged) get a red-tinted tile, not just the thin quality bar along
-   the bottom edge, so a wrecked item stands out at a glance in a full
-   grid. Kept dark/desaturated rather than a bright red wash so the icon
+/* Broken instances (condition level 1 - see ItemGrid's isDamaged) get a
+   red-tinted tile, not just the red condition corner, so an item about to
+   be lost stands out at a glance in a full grid. Kept dark/desaturated rather than a bright red wash so the icon
    itself (drawn over this) stays readable. */
 .itemGridCellDamaged {
   background: #2a0d0d;
@@ -3190,13 +3189,11 @@
 }
 
 /* Condition indicator in the tile's bottom-left corner (item instances
-   only - see ItemGrid's qualityFraction) - green/orange/red per
-   qualityBarColor (still set inline as background-color, same prop as
-   the old bar), a fixed-size triangle rather than a proportional bar -
-   the damaged red tile tint already carries the "how much is left" read
-   at a glance, this is just the color cue, corner-badge style. Left, not
+   only - see VaultTab's conditionOf) - green new, yellow used, red damaged
+   and broken per conditionColor (set inline as background-color), a
+   fixed-size triangle; a broken item also gets the red tile tint. Left, not
    right, to stay clear of .itemGridCountBadge's own bottom-right corner. */
-.itemGridQualityBar {
+.itemGridConditionCorner {
   position: absolute;
   left: 0;
   bottom: 0;
