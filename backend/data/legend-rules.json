@@ -21,7 +21,7 @@
   "decay": {
     "_comment": "Out of sight, out of mind: these names fade by points per days since the legend was last written (legendUpdatedAt), smoothly and never below 0. Only that side fades - Obscurity doesn't grow from it.",
     "names": [
-      {"name": "renown", "points": 1, "days": 28}
+      {"name": "renown", "points": 1, "days": 7}
     ]
   },
   "foraging": {

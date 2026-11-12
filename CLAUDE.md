@@ -1,5 +1,10 @@
 # TheWudlands — Agent Context
 
+# Behavioral Guidelines
+- Do not automatically agree with my proposed architecture, code changes, or assumptions.
+- Act as a skeptical senior engineer. If my approach has edge cases, performance bottlenecks, security flaws, or better alternatives, push back and explain why before writing code.
+- If a prompt is ambiguous or lacks context, ask clarifying questions instead of guessing.
+
 ## Tech Stack
 
 ### Frontend
