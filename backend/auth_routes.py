@@ -1897,6 +1897,9 @@ class SalvageMaterialResponse(BaseModel):
     yieldBreakdown: SalvageYieldResponse
     recoveredUnits: int
     recovered: List[SalvageRecoveredLineResponse]
+    minimumBonus: int = Field(
+        0, description="Units added by the damaged/broken minimum (data/item-conditions.json salvageMinimum), already in recoveredUnits",
+    )
 
 
 class SalvagePreviewResponse(BaseModel):
@@ -1918,6 +1921,7 @@ def _to_salvage_preview_response(recoveries) -> SalvagePreviewResponse:
                 total=r.yield_breakdown.total,
             ),
             recoveredUnits=r.recovered_units,
+            minimumBonus=r.minimum_bonus,
             recovered=[
                 SalvageRecoveredLineResponse(
                     familyId=line.family_id, id=line.concrete_id, name=line.name,

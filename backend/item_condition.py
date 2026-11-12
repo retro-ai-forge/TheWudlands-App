@@ -24,6 +24,7 @@ FORAGING: dict = RULES["foraging"]
 NIGHTS: dict = RULES["nights"]
 CRAFTING: dict = RULES["crafting"]
 SALVAGE_PENALTY: dict[str, int] = dict(RULES["salvagePenalty"])
+SALVAGE_MINIMUM: dict = {k: v for k, v in RULES["salvageMinimum"].items() if not k.startswith("_")}
 LOST_EQUIPMENT_LEVEL: int = int(RULES.get("lostEquipment", BROKEN))
 
 

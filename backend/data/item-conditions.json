@@ -17,5 +17,10 @@
     "toolMax": 0.5
   },
   "salvagePenalty": { "new": 0, "used": 10, "damaged": 25, "broken": 50 },
+  "salvageMinimum": {
+    "_comment": "A worn item whose recipe holds more than minRawUnits raw units in total still gives back at least `units` of its most common raw material per item, even when the condition penalty leaves nothing.",
+    "damaged": { "minRawUnits": 15, "units": 1 },
+    "broken": { "minRawUnits": 50, "units": 1 }
+  },
   "lostEquipment": 1
 }

@@ -72,6 +72,10 @@ export type SalvageMaterial = {
   yieldBreakdown: SalvageYield;
   recoveredUnits: number;
   recovered: SalvageRecoveredLine[];
+  /** Units a worn item gives back anyway (backend data/item-conditions.json
+   * "salvageMinimum": damaged recipe over 15 raw / broken over 50 -> at least
+   * 1 of its most common raw), already counted in recoveredUnits. */
+  minimumBonus?: number;
 };
 /** An item instance's quality state as the salvage endpoints report it -
  * balance items (no instance) are always "new". */
@@ -1823,6 +1827,11 @@ export function ChopBlockPopup({
                         </span>
                       </p>
                       <SalvageFormulaLine breakdown={material.yieldBreakdown} condition={row.condition} />
+                      {(material.minimumBonus ?? 0) > 0 && (
+                        <p className={styles.salvageFormulaLine}>
+                          +{material.minimumBonus} saved from the {row.condition} item
+                        </p>
+                      )}
                     </div>
                   ))}
                   <p className={selected.has(row.id) ? styles.salvageFinalLine : styles.salvageFinalLineMuted}>
