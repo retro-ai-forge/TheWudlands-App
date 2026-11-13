@@ -10,7 +10,8 @@ from interchangeable raws (see "Light"). Recipes or professions changing will sh
 **Not yet in the percentages below** (recipes changed later on 2026-11-13; the item table further down already
 shows them): leather from 6 hide or skin, rope from leather or fiber, glass pane from sand or crystal, coal from
 wood or monster parts, and stone instead of most refined ore in six stations (grinding stone, lapidary bench,
-furnace, mortar & pestle, kiln, alchemy stand - 135 ore less for all six). Expect less need for ore, skin, fiber
+furnace, mortar & pestle, kiln, alchemy stand - 135 ore less for all six); arrows and bolts from bone, reed, stone and
+other stand-ins (see "Ammo"). Expect less need for ore, skin, fiber
 and sand, and more for stone, hide, crystal and monster parts; the need calculation still has to be rebuilt from
 the recipes for exact figures.
 
@@ -78,6 +79,22 @@ With the first choices and a mix of 60% torches, 20% candles and 20% oil, mining
 390 hide (200 of it where reed runs out), 240 reed (all there is) and 180 fish. Before, the old torch (2 wood, 3 fiber, 3 meat) and the other lights
 burned more wood, fiber and meat than foraging gives at all. Higher-tier lights burn twice as long per tier for the same recipe.
 
+## Ammo
+
+Arrows and bolts are used up on every adventure, so their wood and ore went on top of the two scarcest raws.
+They now list each ingredient as options too (crafting takes the first one the crafter has enough of):
+
+| Ammo | Slot | Options, in order |
+|---|---|---|
+| arrow | shaft | bone 1, reed 1, wood 1 |
+| | fletching | feather 1, hide 1 |
+| bolt | shaft | bone 1, wood 1 |
+| | head | stone 1, monster part 1, crystal 1, ore 1 |
+
+Bone and reed are also the first choices for torches and candles, so arrows compete with light for them. Bolt heads
+take stone first, the most unused raw. For the profession groups, arrows still count as wood and feather and bolts as
+wood and ore.
+
 ## Why ore and wood are short
 
 - **Metal is expensive.** A metal bar is 125 ore and 33 wood (5 ore → refined ore, 5 refined ore + coal → ingot, 5 ingots → bar). Every metal weapon, shield, chainmail or iron armor piece and the anvil are built from bars.
@@ -85,7 +102,7 @@ burned more wood, fiber and meat than foraging gives at all. Higher-tier lights 
 - **Few professions find ore.** Only 7 of 39 professions have ore sites (blacksmith, armorer, tinsmith, glassblower, jeweler, soldier, guard), and only 5 have wood (blacksmith, armorer, tinsmith, carpenter, cooper).
 - **Many professions find little-used raws.** Artists (6 professions) and Rural (5) mostly find feather, bone, hide and harvest.
 - **Fiber** is mostly tents (96 fiber) and bows (132).
-- **Upkeep** is mostly potions (herbs, and 12 sand per glass bottle), arrows (wood, feather) and rations. Lights now cost bone, reed, hide and fish.
+- **Upkeep** is mostly potions (herbs, and 12 sand per glass bottle), arrows and rations. Lights now cost bone, reed, hide and fish; arrows and bolts take wood and ore only when the crafter has none of the other options (see "Ammo").
 
 ## Assumptions behind "need"
 
@@ -225,7 +242,7 @@ Same for every tier: the output tier follows the ingredients, the amounts don't 
 | mana_potion | 42 | crystal 15, sand 12, essence 9, monster_part 6 |
 | antidote_potion | 44 | herbs 26, sand 12, venom 6 |
 | **Processed (for reference)** | | |
-| arrow, bolt | 2 | wood 1, feather 1 / wood 1, ore 1 |
+| arrow, bolt | 2 | bone 1, feather 1 / bone 1, stone 1 (first options; see "Ammo") |
 | oil | 2 | fish 1, bone 1 (or monster part / meat; harvest) |
 | coal | 3 | wood 3, or monster_part 3 |
 | plank | 4 | wood 4 |

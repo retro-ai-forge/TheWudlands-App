@@ -3318,16 +3318,43 @@
     "familyId": "arrow",
     "ingredients": [
       {
-        "category": "raw",
-        "familyId": "wood",
-        "qty": 1,
-        "consumed": true
+        "alternatives": [
+          {
+            "category": "raw",
+            "familyId": "bone",
+            "qty": 1,
+            "consumed": true
+          },
+          {
+            "category": "raw",
+            "familyId": "reed",
+            "qty": 1,
+            "consumed": true
+          },
+          {
+            "category": "raw",
+            "familyId": "wood",
+            "qty": 1,
+            "consumed": true
+          }
+        ]
       },
       {
-        "category": "raw",
-        "familyId": "feather",
-        "qty": 1,
-        "consumed": true
+        "alternatives": [
+          {
+            "category": "raw",
+            "familyId": "feather",
+            "qty": 1,
+            "consumed": true,
+            "classic": true
+          },
+          {
+            "category": "raw",
+            "familyId": "hide",
+            "qty": 1,
+            "consumed": true
+          }
+        ]
       }
     ],
     "tool": null,
@@ -3337,16 +3364,48 @@
     "familyId": "bolt",
     "ingredients": [
       {
-        "category": "raw",
-        "familyId": "wood",
-        "qty": 1,
-        "consumed": true
+        "alternatives": [
+          {
+            "category": "raw",
+            "familyId": "bone",
+            "qty": 1,
+            "consumed": true
+          },
+          {
+            "category": "raw",
+            "familyId": "wood",
+            "qty": 1,
+            "consumed": true
+          }
+        ]
       },
       {
-        "category": "raw",
-        "familyId": "ore",
-        "qty": 1,
-        "consumed": true
+        "alternatives": [
+          {
+            "category": "raw",
+            "familyId": "stone",
+            "qty": 1,
+            "consumed": true
+          },
+          {
+            "category": "raw",
+            "familyId": "monster_part",
+            "qty": 1,
+            "consumed": true
+          },
+          {
+            "category": "raw",
+            "familyId": "crystal",
+            "qty": 1,
+            "consumed": true
+          },
+          {
+            "category": "raw",
+            "familyId": "ore",
+            "qty": 1,
+            "consumed": true
+          }
+        ]
       }
     ],
     "tool": null,

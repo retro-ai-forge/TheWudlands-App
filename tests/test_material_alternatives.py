@@ -62,3 +62,29 @@ def test_coal_from_wood_or_monster_parts():
     assert _resolve("coal", {"wood_1": 3, "monster_part_1": 3}) == {"wood_1": 3}      # wood first
     assert _resolve("coal", {"monster_part_1": 3}) == {"monster_part_1": 3}
     assert [i["familyId"] for i in C._classic_ingredients(recipe["ingredients"])] == ["wood"]
+
+
+def test_arrow_shaft_from_bone_reed_or_wood_fletching_from_feather_or_hide():
+    from backend import craft_catalog as C
+    recipe = players._RECIPES_BY_FAMILY["arrow"]
+    assert recipe["tool"] is None and recipe["blueprintFamilyId"] is None
+    stock = {"bone_1": 1, "reed_1": 1, "wood_1": 1, "feather_1": 1, "hide_1": 1}
+    assert _resolve("arrow", stock) == {"bone_1": 1, "feather_1": 1}                 # surplus raws first
+    assert _resolve("arrow", {"reed_1": 1, "wood_1": 1, "hide_1": 1}) == {"reed_1": 1, "hide_1": 1}
+    assert _resolve("arrow", {"wood_1": 10, "feather_1": 10}, count=10) == {"wood_1": 10, "feather_1": 10}
+    assert _resolve("arrow", {"wood_1": 1}) is None                                  # no fletching
+    # Still a wood-and-feather item for the profession groups.
+    assert [i["familyId"] for i in C._classic_ingredients(recipe["ingredients"])] == ["wood", "feather"]
+
+
+def test_bolt_shaft_from_bone_or_wood_head_from_stone_monster_part_crystal_or_ore():
+    from backend import craft_catalog as C
+    recipe = players._RECIPES_BY_FAMILY["bolt"]
+    assert recipe["tool"] is None and recipe["blueprintFamilyId"] is None
+    stock = {"bone_1": 1, "wood_1": 1, "stone_1": 1, "monster_part_1": 1, "crystal_1": 1, "ore_1": 1}
+    assert _resolve("bolt", stock) == {"bone_1": 1, "stone_1": 1}                    # surplus raws first
+    assert _resolve("bolt", {"wood_1": 1, "monster_part_1": 1}) == {"wood_1": 1, "monster_part_1": 1}
+    assert _resolve("bolt", {"wood_1": 1, "crystal_1": 1, "ore_1": 1}) == {"wood_1": 1, "crystal_1": 1}
+    assert _resolve("bolt", {"wood_1": 1, "ore_1": 1}) == {"wood_1": 1, "ore_1": 1}
+    assert _resolve("bolt", {"bone_1": 1}) is None                                   # no head
+    assert [i["familyId"] for i in C._classic_ingredients(recipe["ingredients"])] == ["wood", "ore"]
