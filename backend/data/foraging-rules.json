@@ -9,6 +9,8 @@
   "baseYieldMin": 6,
   "baseYieldMax": 10,
   "halfLife": 5,
+  "siteTrips": 18,
+  "_halfLifeComment": "Each site's half-life is worked out from its size (initial) so that it empties in about siteTrips trips (18 x 20h = about 15 days) whatever its size: small sites drop to 1-2 units a trip, big ones thin out slowly. halfLife is the fallback for a site without a known size.",
   "durationHours": 20,
   "weaponBonusByTier": {
     "1": 0.25,

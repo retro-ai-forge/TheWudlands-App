@@ -18,6 +18,9 @@ exact total.
 
 Yield per trip, per family (`count` = trips already made to that family):
     reward = floor(base * 0.5 ** (count / halfLife)),  base = randint(min, max)
+with each site's own half-life worked out from its size so that it empties
+in about siteTrips (18) trips, about 15 days - small sites give 1-2 units a
+trip, big ones thin out slowly (site_half_life),
 capped by what the family still holds, and at least 1 unit - that is what
 leaves the site. Gear's bonus comes on top of it and never leaves the site
 (rounded with a chance: +70% on 1 unit gives 2 units 70% of the time);
@@ -94,6 +97,7 @@ mid-trip loses its pending finds.
 
 from __future__ import annotations
 
+import functools
 import json
 import math
 import os
@@ -120,6 +124,8 @@ POOL_VARIATION: float = RULES["poolVariation"]
 BASE_YIELD_MIN: int = RULES["baseYieldMin"]
 BASE_YIELD_MAX: int = RULES["baseYieldMax"]
 HALF_LIFE: float = RULES["halfLife"]
+# Trips a site should last, whatever its size (site_half_life).
+SITE_TRIPS: int = int(RULES.get("siteTrips", 0))
 DURATION_HOURS: float = RULES["durationHours"]
 # Gathering-gear bonus by the gear's tier - one weapon at most, every item.
 WEAPON_BONUS_BY_TIER: dict[int, float] = {int(t): b for t, b in RULES["weaponBonusByTier"].items()}
@@ -329,42 +335,76 @@ def roll_pool(profession_ids: list[str], rng: random.Random | None = None) -> di
     return dict(zip(families, shares))
 
 
-def decay(count: int) -> float:
-    return 0.5 ** (count / HALF_LIFE)
+def _trips_to_empty(initial: int, half_life: float) -> int:
+    """Trips a site of `initial` units lasts with the average base roll."""
+    base = (BASE_YIELD_MIN + BASE_YIELD_MAX) / 2
+    remaining, count = initial, 0
+    while remaining > 0 and count < 10 * initial:
+        remaining -= min(remaining, max(1, math.floor(base * 0.5 ** (count / half_life) + 1e-9)))
+        count += 1
+    return count
 
 
-def forage_reward(base: int, count: int, multiplier: float = 1.0) -> int:
+@functools.lru_cache(maxsize=None)
+def site_half_life(initial: Optional[int]) -> float:
+    """A site's half-life, worked out from its size so that it empties in
+    about SITE_TRIPS trips (rules "siteTrips") whatever its size - small
+    sites drop to 1-2 units a trip, big ones thin out slowly. Deterministic
+    (the same site always gets the same), cached per size. A site without a
+    known size gets halfLife."""
+    if not initial or not SITE_TRIPS:
+        return HALF_LIFE
+    low, high = 0.2, 500.0
+    for _ in range(50):
+        mid = (low + high) / 2
+        if _trips_to_empty(initial, mid) > SITE_TRIPS:
+            low = mid            # too many trips: decay slower
+        else:
+            high = mid
+    return round(high, 2)
+
+
+def decay(count: int, half_life: Optional[float] = None) -> float:
+    return 0.5 ** (count / (half_life or HALF_LIFE))
+
+
+def forage_reward(base: int, count: int, multiplier: float = 1.0, half_life: Optional[float] = None) -> int:
     """reward = floor(base * 0.5 ** (forage_count / half_life)), times the
     gathering-gear multiplier (1.0 without gear)."""
-    return math.floor(base * decay(count) * multiplier + 1e-9)
+    return math.floor(base * decay(count, half_life) * multiplier + 1e-9)
 
 
-def trip_amount(base: int, count: int, remaining: int, multiplier: float = 1.0) -> int:
+def trip_amount(base: int, count: int, remaining: int, multiplier: float = 1.0,
+                half_life: Optional[float] = None) -> int:
     """Units the site gives on one trip (with multiplier 1: the base find,
     gear aside - see plan_trip): the reward, capped by what's left - and at
     least 1 while the site isn't empty, so neither the fading reward nor a
-    penalty (darkness) ever turns a trip into nothing."""
+    penalty (darkness) ever turns a trip into nothing. `half_life`: the
+    site's own (site_half_life), else the rules' minimum."""
     if is_exhausted(remaining):
         return 0
-    return min(remaining, max(1, forage_reward(base, count, multiplier)))
+    return min(remaining, max(1, forage_reward(base, count, multiplier, half_life)))
 
 
-def site_plans(doc: dict, family_id: str, count: int, remaining: int, gear: dict) -> tuple[dict, dict]:
+def site_plans(doc: dict, family_id: str, count: int, remaining: int, gear: dict,
+               half_life: Optional[float] = None) -> tuple[dict, dict]:
     """plan_trip for the next trip's lowest and highest base roll, with the
     gear and the light carried."""
     supply, _, lantern = light_supply(doc, family_id)
     plain = [i for i in gear.get("items", []) if not i.get("fuel")]
     # Lowest roll with the bonus rounded down, highest with it rounded up.
-    low = plan_trip(BASE_YIELD_MIN, count, remaining, gear.get("weapon"), plain, supply, lantern, family_id, 1.0)
-    high = plan_trip(BASE_YIELD_MAX, count, remaining, gear.get("weapon"), plain, supply, lantern, family_id, 0.0)
+    low = plan_trip(BASE_YIELD_MIN, count, remaining, gear.get("weapon"), plain, supply, lantern, family_id, 1.0,
+                    half_life=half_life)
+    high = plan_trip(BASE_YIELD_MAX, count, remaining, gear.get("weapon"), plain, supply, lantern, family_id, 0.0,
+                     half_life=half_life)
     return low, high
 
 
 def planned_yield_range(doc: dict, family_id: str, count: int, remaining: int,
-                        gear: dict) -> tuple[int, int]:
+                        gear: dict, half_life: Optional[float] = None) -> tuple[int, int]:
     """(lowest, highest) units the next trip can find with the gear and the
     light carried - what the light can't cover counted as dug without it."""
-    low, high = site_plans(doc, family_id, count, remaining, gear)
+    low, high = site_plans(doc, family_id, count, remaining, gear, half_life)
     return low["amount"], high["amount"]
 
 
@@ -632,7 +672,8 @@ def bonus_draw() -> float:
 
 
 def plan_trip(base: int, count: int, remaining: int, weapon: Optional[dict], items: list[dict],
-              supply: list[dict], lantern: Optional[dict], family_id: str, draw: float = 1.0) -> dict:
+              supply: list[dict], lantern: Optional[dict], family_id: str, draw: float = 1.0,
+              half_life: Optional[float] = None) -> dict:
     """One trip's dig. The site gives the base find (trip_amount without
     gear: decayed, at least 1, at most what's left); gear adds its bonus on
     top without taking more from the site, a penalty (darkness) shrinks the
@@ -648,12 +689,12 @@ def plan_trip(base: int, count: int, remaining: int, weapon: Optional[dict], ite
     id: units}, "lightHours" (burned), "lightNeed" (units that need light),
     "gear" (as _with_bonus, the light that counted among its items)}."""
     no_light = _with_bonus(weapon, items, family_id)
-    site = trip_amount(base, count, remaining)                  # the base find, gear aside
+    site = trip_amount(base, count, remaining, half_life=half_life)   # the base find, gear aside
     if not supply:
         mult = gear_multiplier(no_light)
         if mult < 1:
             # The whole find shrinks - and only the smaller find leaves.
-            found = trip_amount(base, count, remaining, mult)
+            found = trip_amount(base, count, remaining, mult, half_life)
             taken, home = found, found
         else:
             taken, home = dig(site, mult, draw)
@@ -1102,7 +1143,7 @@ def _build_state(doc: dict, pool: Optional[dict]) -> dict:
         if is_exhausted(remaining):
             continue
         gear = gathering_gear(doc, family_id)
-        low_plan, high_plan = site_plans(doc, family_id, count, remaining, gear)
+        low_plan, high_plan = site_plans(doc, family_id, count, remaining, gear, site_half_life(entry["initial"]))
         low, high = low_plan["amount"], high_plan["amount"]
         if gear.get("light"):
             gear["light"] = {**gear["light"], **light_cover(gear["light"]["hours"], low_plan, high_plan)}
@@ -1417,7 +1458,8 @@ async def _roll_trip(db, address: str, character_id: str, doc: dict, active: dic
         if entry is None:
             break
         plan = plan_trip(random.randint(BASE_YIELD_MIN, BASE_YIELD_MAX), entry["count"], entry["remaining"],
-                         weapon, plain_items, supply, lantern, family_id, bonus_draw())
+                         weapon, plain_items, supply, lantern, family_id, bonus_draw(),
+                         half_life=site_half_life(entry.get("initial")))
         amount, taken = plan["amount"], plan["taken"]
         # Conditional on the family being exactly as read - one writer wins.
         # Only the base find leaves the site; the gear's bonus is extra.

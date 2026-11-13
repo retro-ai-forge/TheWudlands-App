@@ -1162,3 +1162,47 @@ def test_ore_and_crystal_missions_are_underground():
         if mission.family_id in ("ore", "crystal"):
             text = f"{mission.name} {mission.place} {mission.text}".lower()
             assert any(w in text for w in words), mission.id
+
+
+def test_a_site_s_half_life_follows_its_size():
+    assert foraging.site_half_life(None) == foraging.HALF_LIFE == 5
+    sizes = (25, 39, 60, 90, 130)
+    lives = [foraging.site_half_life(s) for s in sizes]
+    assert lives == sorted(lives) and lives[0] < 2 and lives[-1] > 100   # bigger sites thin out slower
+    # The same trip into a big site finds more than into a small one; the first trip is the same.
+    assert foraging.trip_amount(10, 0, 999, half_life=10) == foraging.trip_amount(10, 0, 999) == 10
+    assert foraging.trip_amount(10, 10, 999, half_life=10) == 5 > foraging.trip_amount(10, 10, 999) == 2
+
+
+def test_every_site_lasts_about_two_weeks():
+    def days(initial, rng):
+        h = foraging.site_half_life(initial)
+        remaining, count = initial, 0
+        while not foraging.is_exhausted(remaining):
+            remaining -= foraging.trip_amount(rng.randint(foraging.BASE_YIELD_MIN, foraging.BASE_YIELD_MAX),
+                                              count, remaining, half_life=h)
+            count += 1
+        return count * foraging.DURATION_HOURS / 24
+    rng = random.Random(5)
+    for initial in (25, 39, 60, 90, 130):
+        avg = sum(days(initial, rng) for _ in range(400)) / 400
+        assert 13 <= avg <= 17, (initial, avg)
+
+
+async def test_a_trip_uses_the_site_s_own_half_life(db, monkeypatch):
+    cid = await _make(1, "blacksmith")
+    # A big site on its 10th trip finds more than the default half-life would give.
+    await db.soul_slots.update_one({"address": ADDRESS}, {"$set": {
+        "forage_pools.1.families.ore.initial": 90, "forage_pools.1.families.ore.remaining": 50,
+        "forage_pools.1.families.ore.count": 10}})
+    monkeypatch.setattr(foraging.random, "randint", lambda a, b: 10)
+    h = foraging.site_half_life(90)
+    dark = foraging.trip_amount(10, 10, 50, 1 - foraging.DARK_PENALTY, h)   # ore without a light
+    assert dark > foraging.trip_amount(10, 10, 50, 1 - foraging.DARK_PENALTY)
+    state = await foraging.get_foraging_state(ADDRESS, cid)
+    ore = next(s for s in state["sites"] if s["familyId"] == "ore")
+    assert ore["yieldMax"] == dark
+    await foraging.start_forage(ADDRESS, cid, "craftweapon_01")
+    await _fast_forward(db, cid)
+    result = (await foraging.finish_forage(ADDRESS, cid))["result"]
+    assert result["fromSite"] == dark and result["total"] == dark
