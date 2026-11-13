@@ -75,22 +75,24 @@ A recipe's blueprint (when it has one) belongs to a category the same way the re
 <!-- BEGIN generated: categories -->
 | Category | Professions | Resource Families | Tools | Tool Families | Items | Item Families |
 |---|---|---|---:|---|---:|---|
-| CraftGarment | dyer, leatherworker, tanner, weaver | skin, fiber, herbs | 6 | kiln, mortar_and_pestle, oven, spinning_wheel, tanning_rack, workbench | 12 | barding_iron, barding_leather, bolt_girdle, bow, bridle, chitin, chitin_shield, cloth, fishermans_ration, iron_ration, saddlepack, wooden_shield |
-| CraftWood | cooper | wood, hide, bone | 5 | lapidary_bench, mortar_and_pestle, spinning_wheel, tanning_rack, workbench | 10 | barding_leather, bolt_girdle, bow, ebony, ebony_shield, leather, magic_staff, saddle, wand, wooden_shield |
-| Military | guard, soldier | ore, fiber, monster_part | 5 | kiln, oven, spinning_wheel, tanning_rack, workbench | 9 | barding_iron, barding_leather, bow, bridle, cloth, crossbow, fishermans_ration, iron_ration, wrench |
+| CraftGarment | dyer, leatherworker, tanner, weaver | skin, fiber, herbs | 6 | kiln, mortar_and_pestle, oven, spinning_wheel, tanning_rack, workbench | 16 | barding_iron, barding_leather, bolt_girdle, bow, bridle, chitin_chest_armor, chitin_head_armor, chitin_leg_armor, chitin_shield, cloth_chest_armor, cloth_head_armor, cloth_leg_armor, fishermans_ration, iron_ration, saddlepack, wooden_shield |
+| CraftWood | cooper | wood, hide, bone | 5 | lapidary_bench, mortar_and_pestle, spinning_wheel, tanning_rack, workbench | 14 | barding_leather, bolt_girdle, bow, ebony_chest_armor, ebony_head_armor, ebony_leg_armor, ebony_shield, leather_chest_armor, leather_head_armor, leather_leg_armor, magic_staff, saddle, wand, wooden_shield |
+| Military | guard, soldier | ore, fiber, monster_part | 5 | kiln, oven, spinning_wheel, tanning_rack, workbench | 11 | barding_iron, barding_leather, bow, bridle, cloth_chest_armor, cloth_head_armor, cloth_leg_armor, crossbow, fishermans_ration, iron_ration, wrench |
+| CraftArmor | armorer | ore, wood, sand | 2 | kiln, workbench | 12 | chainmail_chest_armor, chainmail_head_armor, chainmail_leg_armor, darksteel_chest_armor, darksteel_head_armor, darksteel_leg_armor, darksteel_shield, iron_chest_armor, iron_head_armor, iron_leg_armor, iron_shield, reinforced_wooden_shield |
+| Alchemy | alchemist, enchanter, poisoner | herbs, crystal, monster_part | 5 | lapidary_bench, mortar_and_pestle, oven, tanning_rack, workbench | 8 | bangers, barding_leather, chitin_chest_armor, chitin_head_armor, chitin_leg_armor, chitin_shield, magic_staff, wand |
 | CraftWeapon | blacksmith | ore, wood, sand | 2 | kiln, workbench | 11 | axe, battle_axe, dagger, greatsword, mace, quiver, short_sword, sickle, spear, sword, warhammer |
-| Alchemy | alchemist, enchanter, poisoner | herbs, crystal, monster_part | 5 | lapidary_bench, mortar_and_pestle, oven, tanning_rack, workbench | 6 | bangers, barding_leather, chitin, chitin_shield, magic_staff, wand |
-| CraftGlass | glassblower, jeweler | sand, crystal, ore | 4 | alchemy_stand, grinding_stone, kiln, lapidary_bench | 5 | magic_staff, meteoric_iron, meteoric_iron_shield, wand, wrench |
+| CraftGlass | glassblower, jeweler | sand, crystal, ore | 4 | alchemy_stand, grinding_stone, kiln, lapidary_bench | 7 | magic_staff, meteoric_iron_chest_armor, meteoric_iron_head_armor, meteoric_iron_leg_armor, meteoric_iron_shield, wand, wrench |
+| Artists | acrobat, actor, clown, firespitter, painter, storyteller | feather, fiber, bone | 3 | oven, spinning_wheel, workbench | 7 | bow, bridle, cloth_chest_armor, cloth_head_armor, cloth_leg_armor, fishermans_ration, iron_ration |
 | CraftStone | mason, potter, stonemason | clay, stone, crystal | 6 | alchemy_stand, grinding_stone, kiln, lapidary_bench, mortar_and_pestle, oven | 3 | magic_staff, merchants_scale, wand |
-| Artists | acrobat, actor, clown, firespitter, painter, storyteller | feather, fiber, bone | 3 | oven, spinning_wheel, workbench | 5 | bow, bridle, cloth, fishermans_ration, iron_ration |
-| CraftArmor | armorer | ore, wood, sand | 2 | kiln, workbench | 6 | chainmail, darksteel, darksteel_shield, iron, iron_shield, reinforced_wooden_shield |
 | CraftFurniture | carpenter | wood, hide, bone | 5 | lapidary_bench, oven, scriptorium, spinning_wheel, workbench | 1 | merchants_scale |
 | Rural | farmer, fisher, herder, hunter, miner | hide, meat, harvest, fish | 4 | smokehouse, spinning_wheel, tanning_rack, workbench | 2 | barding_leather, bridle |
 | Aristocratic | clerk, scholar, scribe | reed, feather, skin | 2 | tanning_rack, workbench | 3 | barding_leather, bolt_girdle, wooden_shield |
 | Food | baker, brewmaster, butcher, cook | meat, harvest, herbs | 2 | mortar_and_pestle, oven | 3 | bangers, fish_chowder, hearty_stew |
-| CraftTool | tinsmith | ore, wood, sand | 2 | kiln, tanning_rack | 0 | *cloth, dagger* |
+| CraftTool | tinsmith | ore, wood, sand | 2 | kiln, tanning_rack | 0 | *cloth_chest_armor, dagger* |
 | Trade | merchant, trader | harvest, stone, monster_part | 2 | oven, tanning_rack | 2 | barding_leather, merchants_scale |
 <!-- END generated: categories -->
+
+Every armor piece has its own blueprint: an iron helmet, breastplate and greaves are three blueprints, learned and picked separately (at character creation too).
 
 A blueprint family can appear in more than one row: it belongs to every category tied for the most raw-material hits across its own recipe(s) — except CraftWeapon/CraftArmor/CraftTool, which only count a *sole* metal win, so a blueprint never appears in more than one of those three.
 
@@ -113,26 +115,26 @@ Crafting pays out two kinds of XP, which can land on different professions from 
 | Warhammer | Warhammer | 486 | Ore x375, Wood x111 | 49 | 97 | 146 | 194 | 243 | 292 | 535 |
 | Battle Axe | Battle Axe | 478 | Ore x375, Wood x103 | 48 | 96 | 143 | 191 | 239 | 287 | 526 |
 | Anvil | Anvil | 376 | Ore x310, Wood x66 | 38 | 75 | 113 | 150 | 188 | 226 | 414 |
-| Darksteel Chest Armor | Darksteel | 361 | Ore x300, Wood x33, Clockwork x28 | 36 | 72 | 108 | 144 | 180 | 217 | 397 |
-| Darksteel Head Armor | Darksteel | 361 | Ore x300, Wood x33, Clockwork x28 | 36 | 72 | 108 | 144 | 180 | 217 | 397 |
-| Darksteel Leg Armor | Darksteel | 361 | Ore x300, Wood x33, Clockwork x28 | 36 | 72 | 108 | 144 | 180 | 217 | 397 |
-| Meteoric Iron Chest Armor | Meteoric Iron | 350 | Crystal x140, Ore x120, Essence x90 | 35 | 70 | 105 | 140 | 175 | 210 | 385 |
-| Meteoric Iron Head Armor | Meteoric Iron | 350 | Crystal x140, Ore x120, Essence x90 | 35 | 70 | 105 | 140 | 175 | 210 | 385 |
-| Meteoric Iron Leg Armor | Meteoric Iron | 350 | Crystal x140, Ore x120, Essence x90 | 35 | 70 | 105 | 140 | 175 | 210 | 385 |
-| Ebony Chest Armor | Ebony | 340 | Wood x132, Bone x80, Pigment x80, Herbs x48 | 34 | 68 | 102 | 136 | 170 | 204 | 374 |
-| Ebony Head Armor | Ebony | 340 | Wood x132, Bone x80, Pigment x80, Herbs x48 | 34 | 68 | 102 | 136 | 170 | 204 | 374 |
-| Ebony Leg Armor | Ebony | 340 | Wood x132, Bone x80, Pigment x80, Herbs x48 | 34 | 68 | 102 | 136 | 170 | 204 | 374 |
+| Darksteel Chest Armor | Darksteel Chest Armor | 361 | Ore x300, Wood x33, Clockwork x28 | 36 | 72 | 108 | 144 | 180 | 217 | 397 |
+| Darksteel Head Armor | Darksteel Head Armor | 361 | Ore x300, Wood x33, Clockwork x28 | 36 | 72 | 108 | 144 | 180 | 217 | 397 |
+| Darksteel Leg Armor | Darksteel Leg Armor | 361 | Ore x300, Wood x33, Clockwork x28 | 36 | 72 | 108 | 144 | 180 | 217 | 397 |
+| Meteoric Iron Chest Armor | Meteoric Iron Chest Armor | 350 | Crystal x140, Ore x120, Essence x90 | 35 | 70 | 105 | 140 | 175 | 210 | 385 |
+| Meteoric Iron Head Armor | Meteoric Iron Head Armor | 350 | Crystal x140, Ore x120, Essence x90 | 35 | 70 | 105 | 140 | 175 | 210 | 385 |
+| Meteoric Iron Leg Armor | Meteoric Iron Leg Armor | 350 | Crystal x140, Ore x120, Essence x90 | 35 | 70 | 105 | 140 | 175 | 210 | 385 |
+| Ebony Chest Armor | Ebony Chest Armor | 340 | Wood x132, Bone x80, Pigment x80, Herbs x48 | 34 | 68 | 102 | 136 | 170 | 204 | 374 |
+| Ebony Head Armor | Ebony Head Armor | 340 | Wood x132, Bone x80, Pigment x80, Herbs x48 | 34 | 68 | 102 | 136 | 170 | 204 | 374 |
+| Ebony Leg Armor | Ebony Leg Armor | 340 | Wood x132, Bone x80, Pigment x80, Herbs x48 | 34 | 68 | 102 | 136 | 170 | 204 | 374 |
 | Mace | Mace | 320 | Ore x250, Wood x70 | 32 | 64 | 96 | 128 | 160 | 192 | 352 |
 | Sword | Sword | 320 | Ore x250, Wood x70 | 32 | 64 | 96 | 128 | 160 | 192 | 352 |
-| Iron Chest Armor | Iron | 316 | Ore x250, Wood x66 | 32 | 63 | 95 | 126 | 158 | 190 | 348 |
-| Iron Head Armor | Iron | 316 | Ore x250, Wood x66 | 32 | 63 | 95 | 126 | 158 | 190 | 348 |
-| Iron Leg Armor | Iron | 316 | Ore x250, Wood x66 | 32 | 63 | 95 | 126 | 158 | 190 | 348 |
-| Chitin Chest Armor | Chitin | 314 | Hide x144, Pigment x80, Herbs x48, Monster Part x30, Wood x12 | 31 | 63 | 94 | 126 | 157 | 188 | 345 |
-| Chitin Head Armor | Chitin | 314 | Hide x144, Pigment x80, Herbs x48, Monster Part x30, Wood x12 | 31 | 63 | 94 | 126 | 157 | 188 | 345 |
-| Chitin Leg Armor | Chitin | 314 | Hide x144, Pigment x80, Herbs x48, Monster Part x30, Wood x12 | 31 | 63 | 94 | 126 | 157 | 188 | 345 |
-| Chainmail Chest Armor | Chainmail | 258 | Ore x225, Wood x33 | 26 | 52 | 77 | 103 | 129 | 155 | 284 |
-| Chainmail Head Armor | Chainmail | 258 | Ore x225, Wood x33 | 26 | 52 | 77 | 103 | 129 | 155 | 284 |
-| Chainmail Leg Armor | Chainmail | 258 | Ore x225, Wood x33 | 26 | 52 | 77 | 103 | 129 | 155 | 284 |
+| Iron Chest Armor | Iron Chest Armor | 316 | Ore x250, Wood x66 | 32 | 63 | 95 | 126 | 158 | 190 | 348 |
+| Iron Head Armor | Iron Head Armor | 316 | Ore x250, Wood x66 | 32 | 63 | 95 | 126 | 158 | 190 | 348 |
+| Iron Leg Armor | Iron Leg Armor | 316 | Ore x250, Wood x66 | 32 | 63 | 95 | 126 | 158 | 190 | 348 |
+| Chitin Chest Armor | Chitin Chest Armor | 314 | Hide x144, Pigment x80, Herbs x48, Monster Part x30, Wood x12 | 31 | 63 | 94 | 126 | 157 | 188 | 345 |
+| Chitin Head Armor | Chitin Head Armor | 314 | Hide x144, Pigment x80, Herbs x48, Monster Part x30, Wood x12 | 31 | 63 | 94 | 126 | 157 | 188 | 345 |
+| Chitin Leg Armor | Chitin Leg Armor | 314 | Hide x144, Pigment x80, Herbs x48, Monster Part x30, Wood x12 | 31 | 63 | 94 | 126 | 157 | 188 | 345 |
+| Chainmail Chest Armor | Chainmail Chest Armor | 258 | Ore x225, Wood x33 | 26 | 52 | 77 | 103 | 129 | 155 | 284 |
+| Chainmail Head Armor | Chainmail Head Armor | 258 | Ore x225, Wood x33 | 26 | 52 | 77 | 103 | 129 | 155 | 284 |
+| Chainmail Leg Armor | Chainmail Leg Armor | 258 | Ore x225, Wood x33 | 26 | 52 | 77 | 103 | 129 | 155 | 284 |
 | Darksteel Shield | Darksteel Shield | 245 | Ore x200, Wood x33, Clockwork x12 | 24 | 49 | 74 | 98 | 122 | 147 | 269 |
 | Axe | Axe | 229 | Ore x180, Wood x49 | 23 | 46 | 69 | 92 | 115 | 137 | 252 |
 | Meteoric Iron Shield | Meteoric Iron Shield | 215 | Crystal x86, Ore x75, Essence x54 | 22 | 43 | 64 | 86 | 108 | 129 | 237 |
@@ -144,14 +146,14 @@ Crafting pays out two kinds of XP, which can land on different professions from 
 | Sickle | Sickle | 162 | Ore x125, Wood x37 | 16 | 32 | 49 | 65 | 81 | 97 | 178 |
 | Dagger | Dagger | 158 | Ore x125, Wood x33 | 16 | 32 | 47 | 63 | 79 | 95 | 174 |
 | Bow | Bow | 152 | Fiber x132, Wood x20 | 15 | 30 | 46 | 61 | 76 | 91 | 167 |
-| Leather Chest Armor | Leather | 150 | Hide x120, Wood x18, Bone x12 | 15 | 30 | 45 | 60 | 75 | 90 | 165 |
-| Leather Head Armor | Leather | 150 | Hide x120, Wood x18, Bone x12 | 15 | 30 | 45 | 60 | 75 | 90 | 165 |
-| Leather Leg Armor | Leather | 150 | Hide x120, Wood x18, Bone x12 | 15 | 30 | 45 | 60 | 75 | 90 | 165 |
+| Leather Chest Armor | Leather Chest Armor | 150 | Hide x120, Wood x18, Bone x12 | 15 | 30 | 45 | 60 | 75 | 90 | 165 |
+| Leather Head Armor | Leather Head Armor | 150 | Hide x120, Wood x18, Bone x12 | 15 | 30 | 45 | 60 | 75 | 90 | 165 |
+| Leather Leg Armor | Leather Leg Armor | 150 | Hide x120, Wood x18, Bone x12 | 15 | 30 | 45 | 60 | 75 | 90 | 165 |
 | Kiln | Kiln | 86 | Clay x60, Sand x20, Stone x6 | 9 | 17 | 26 | 34 | 43 | 52 | 95 |
 | Furnace | Furnace | 74 | Clay x36, Stone x16, Sand x12, Ore x10 | 7 | 15 | 22 | 30 | 37 | 44 | 81 |
-| Cloth Chest Armor | Cloth | 72 | Fiber x72 | 7 | 14 | 22 | 29 | 36 | 43 | 79 |
-| Cloth Head Armor | Cloth | 72 | Fiber x72 | 7 | 14 | 22 | 29 | 36 | 43 | 79 |
-| Cloth Leg Armor | Cloth | 72 | Fiber x72 | 7 | 14 | 22 | 29 | 36 | 43 | 79 |
+| Cloth Chest Armor | Cloth Chest Armor | 72 | Fiber x72 | 7 | 14 | 22 | 29 | 36 | 43 | 79 |
+| Cloth Head Armor | Cloth Head Armor | 72 | Fiber x72 | 7 | 14 | 22 | 29 | 36 | 43 | 79 |
+| Cloth Leg Armor | Cloth Leg Armor | 72 | Fiber x72 | 7 | 14 | 22 | 29 | 36 | 43 | 79 |
 | Loom | Loom | 62 | Wood x46, Fiber x12, Bone x4 | 6 | 12 | 19 | 25 | 31 | 37 | 68 |
 | Barding Leather | Barding Leather | 58 | Hide x48, Monster Part x10 | 6 | 12 | 17 | 23 | 29 | 35 | 64 |
 | Lapidary Bench | Lapidary Bench | 54 | Clay x24, Stone x12, Ore x10, Sand x8 | 5 | 11 | 16 | 22 | 27 | 32 | 59 |

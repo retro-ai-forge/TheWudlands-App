@@ -372,7 +372,7 @@ def _hard_tool_alternative_sets(
 def _build_item_blueprint_tool_hints(
     recipes_by_family: dict[str, dict], tool_roots: dict[str, tuple[str, ...]]
 ) -> dict[str, tuple[str, ...]]:
-    """blueprint familyId (of a FINAL item, e.g. "blueprint_cloth") -> the
+    """blueprint familyId (of a FINAL item, e.g. "blueprint_cloth_chest_armor") -> the
     root tool family id(s) that would help build it - the union, across
     every hard tool requirement anywhere in its chain, of each
     requirement's alternatives' own resolved roots. Used to widen the
@@ -430,6 +430,8 @@ TOOL_BLUEPRINT_ROOT_FAMILIES: dict[str, tuple[str, ...]] = _build_tool_blueprint
 def _blueprint_catalog_type(blueprint_family_id: str) -> str | None:
     """Whether a blueprint family unlocks a "tool" or a final item, via what its recipe(s) produce."""
     suffix = blueprint_family_id[len("blueprint_"):]
+    # Every armor piece has its own blueprint (blueprint_iron_head_armor);
+    # the piece suffixes are only a fallback for a family named without one.
     for candidate in (suffix, f"{suffix}_head_armor", f"{suffix}_chest_armor", f"{suffix}_leg_armor"):
         catalog_type = _FAMILY_CATALOG_TYPES.get(candidate)
         if catalog_type:
@@ -443,7 +445,7 @@ _SOURCE_PREDICATES = {
 }
 
 # item blueprint familyId -> root tool family id(s) that would help build it,
-# e.g. "blueprint_cloth" -> ("kiln", "spinning_wheel", "workbench"). See
+# e.g. "blueprint_cloth_chest_armor" -> ("kiln", "spinning_wheel", "workbench"). See
 # _build_item_blueprint_tool_hints.
 ITEM_BLUEPRINT_TOOL_HINTS: dict[str, tuple[str, ...]] = _build_item_blueprint_tool_hints(
     {r["familyId"]: r for r in _load_recipes()}, TOOL_BLUEPRINT_ROOT_FAMILIES
@@ -456,7 +458,7 @@ ITEM_BLUEPRINT_TOOL_HINTS: dict[str, tuple[str, ...]] = _build_item_blueprint_to
 # which one is short, not a per-category thematic pick.
 UNIVERSAL_FALLBACK_BLUEPRINT_FAMILIES: dict[str, tuple[str, ...]] = {
     "tool": ("blueprint_workbench", "blueprint_kiln"),
-    "item": ("blueprint_dagger", "blueprint_cloth"),
+    "item": ("blueprint_dagger", "blueprint_cloth_chest_armor"),
 }
 
 
@@ -494,7 +496,7 @@ def resolve_blueprint_trapping_options(profession_ids: list[str]) -> BlueprintTr
         # who gets exactly one permanent tool blueprint ever (see
         # TOOL_BLUEPRINT_ROOT_FAMILIES). Also pull in the root tool(s)
         # behind every eligible ITEM family (e.g. Military's blueprint_bow/
-        # blueprint_cloth need workbench/spinning_wheel, on top of kiln
+        # blueprint_cloth_chest_armor need workbench/spinning_wheel, on top of kiln
         # already reached via a category-matched tool) - same one-tool-
         # blueprint-ever constraint applies, so surfacing every tool that
         # actually unlocks something on the item side is strictly more

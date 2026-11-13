@@ -161,7 +161,7 @@
       }
     ],
     "tool": "workbench",
-    "blueprintFamilyId": "blueprint_cloth"
+    "blueprintFamilyId": "blueprint_cloth_head_armor"
   },
   {
     "familyId": "cloth_chest_armor",
@@ -174,7 +174,7 @@
       }
     ],
     "tool": "workbench",
-    "blueprintFamilyId": "blueprint_cloth"
+    "blueprintFamilyId": "blueprint_cloth_chest_armor"
   },
   {
     "familyId": "cloth_leg_armor",
@@ -187,7 +187,7 @@
       }
     ],
     "tool": "workbench",
-    "blueprintFamilyId": "blueprint_cloth"
+    "blueprintFamilyId": "blueprint_cloth_leg_armor"
   },
   {
     "familyId": "leather_head_armor",
@@ -206,7 +206,7 @@
       }
     ],
     "tool": "workbench",
-    "blueprintFamilyId": "blueprint_leather"
+    "blueprintFamilyId": "blueprint_leather_head_armor"
   },
   {
     "familyId": "leather_chest_armor",
@@ -225,7 +225,7 @@
       }
     ],
     "tool": "workbench",
-    "blueprintFamilyId": "blueprint_leather"
+    "blueprintFamilyId": "blueprint_leather_chest_armor"
   },
   {
     "familyId": "leather_leg_armor",
@@ -244,7 +244,7 @@
       }
     ],
     "tool": "workbench",
-    "blueprintFamilyId": "blueprint_leather"
+    "blueprintFamilyId": "blueprint_leather_leg_armor"
   },
   {
     "familyId": "chainmail_head_armor",
@@ -263,7 +263,7 @@
       }
     ],
     "tool": "anvil",
-    "blueprintFamilyId": "blueprint_chainmail"
+    "blueprintFamilyId": "blueprint_chainmail_head_armor"
   },
   {
     "familyId": "chainmail_chest_armor",
@@ -282,7 +282,7 @@
       }
     ],
     "tool": "anvil",
-    "blueprintFamilyId": "blueprint_chainmail"
+    "blueprintFamilyId": "blueprint_chainmail_chest_armor"
   },
   {
     "familyId": "chainmail_leg_armor",
@@ -301,7 +301,7 @@
       }
     ],
     "tool": "anvil",
-    "blueprintFamilyId": "blueprint_chainmail"
+    "blueprintFamilyId": "blueprint_chainmail_leg_armor"
   },
   {
     "familyId": "iron_head_armor",
@@ -314,7 +314,7 @@
       }
     ],
     "tool": "anvil",
-    "blueprintFamilyId": "blueprint_iron"
+    "blueprintFamilyId": "blueprint_iron_head_armor"
   },
   {
     "familyId": "iron_chest_armor",
@@ -327,7 +327,7 @@
       }
     ],
     "tool": "anvil",
-    "blueprintFamilyId": "blueprint_iron"
+    "blueprintFamilyId": "blueprint_iron_chest_armor"
   },
   {
     "familyId": "iron_leg_armor",
@@ -340,7 +340,7 @@
       }
     ],
     "tool": "anvil",
-    "blueprintFamilyId": "blueprint_iron"
+    "blueprintFamilyId": "blueprint_iron_leg_armor"
   },
   {
     "familyId": "ebony_head_armor",
@@ -359,7 +359,7 @@
       }
     ],
     "tool": "workbench",
-    "blueprintFamilyId": "blueprint_ebony"
+    "blueprintFamilyId": "blueprint_ebony_head_armor"
   },
   {
     "familyId": "ebony_chest_armor",
@@ -378,7 +378,7 @@
       }
     ],
     "tool": "workbench",
-    "blueprintFamilyId": "blueprint_ebony"
+    "blueprintFamilyId": "blueprint_ebony_chest_armor"
   },
   {
     "familyId": "ebony_leg_armor",
@@ -397,7 +397,7 @@
       }
     ],
     "tool": "workbench",
-    "blueprintFamilyId": "blueprint_ebony"
+    "blueprintFamilyId": "blueprint_ebony_leg_armor"
   },
   {
     "familyId": "chitin_head_armor",
@@ -422,7 +422,7 @@
       }
     ],
     "tool": "workbench",
-    "blueprintFamilyId": "blueprint_chitin"
+    "blueprintFamilyId": "blueprint_chitin_head_armor"
   },
   {
     "familyId": "chitin_chest_armor",
@@ -447,7 +447,7 @@
       }
     ],
     "tool": "workbench",
-    "blueprintFamilyId": "blueprint_chitin"
+    "blueprintFamilyId": "blueprint_chitin_chest_armor"
   },
   {
     "familyId": "chitin_leg_armor",
@@ -472,7 +472,7 @@
       }
     ],
     "tool": "workbench",
-    "blueprintFamilyId": "blueprint_chitin"
+    "blueprintFamilyId": "blueprint_chitin_leg_armor"
   },
   {
     "familyId": "meteoric_iron_head_armor",
@@ -497,7 +497,7 @@
       }
     ],
     "tool": "anvil",
-    "blueprintFamilyId": "blueprint_meteoric_iron"
+    "blueprintFamilyId": "blueprint_meteoric_iron_head_armor"
   },
   {
     "familyId": "meteoric_iron_chest_armor",
@@ -522,7 +522,7 @@
       }
     ],
     "tool": "anvil",
-    "blueprintFamilyId": "blueprint_meteoric_iron"
+    "blueprintFamilyId": "blueprint_meteoric_iron_chest_armor"
   },
   {
     "familyId": "meteoric_iron_leg_armor",
@@ -547,7 +547,7 @@
       }
     ],
     "tool": "anvil",
-    "blueprintFamilyId": "blueprint_meteoric_iron"
+    "blueprintFamilyId": "blueprint_meteoric_iron_leg_armor"
   },
   {
     "familyId": "darksteel_head_armor",
@@ -566,7 +566,7 @@
       }
     ],
     "tool": "anvil",
-    "blueprintFamilyId": "blueprint_darksteel"
+    "blueprintFamilyId": "blueprint_darksteel_head_armor"
   },
   {
     "familyId": "darksteel_chest_armor",
@@ -585,7 +585,7 @@
       }
     ],
     "tool": "anvil",
-    "blueprintFamilyId": "blueprint_darksteel"
+    "blueprintFamilyId": "blueprint_darksteel_chest_armor"
   },
   {
     "familyId": "darksteel_leg_armor",
@@ -604,7 +604,7 @@
       }
     ],
     "tool": "anvil",
-    "blueprintFamilyId": "blueprint_darksteel"
+    "blueprintFamilyId": "blueprint_darksteel_leg_armor"
   },
   {
     "familyId": "workbench",

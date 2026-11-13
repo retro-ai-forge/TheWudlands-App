@@ -252,291 +252,867 @@
     "tier": 6
   },
   {
-    "id": "blueprint_cloth_1",
-    "name": "Blueprint: Used Cloth",
-    "familyId": "blueprint_cloth",
+    "id": "blueprint_cloth_head_armor_1",
+    "name": "Blueprint: Tight Hood",
+    "familyId": "blueprint_cloth_head_armor",
     "tier": 1
   },
   {
-    "id": "blueprint_cloth_2",
-    "name": "Blueprint: Cotton Cloth",
-    "familyId": "blueprint_cloth",
+    "id": "blueprint_cloth_head_armor_2",
+    "name": "Blueprint: Cotton Cloth Hood",
+    "familyId": "blueprint_cloth_head_armor",
     "tier": 2
   },
   {
-    "id": "blueprint_cloth_3",
-    "name": "Blueprint: Wool Cloth",
-    "familyId": "blueprint_cloth",
+    "id": "blueprint_cloth_head_armor_3",
+    "name": "Blueprint: Wool Cloth Hood",
+    "familyId": "blueprint_cloth_head_armor",
     "tier": 3
   },
   {
-    "id": "blueprint_cloth_4",
-    "name": "Blueprint: Silk Cloth",
-    "familyId": "blueprint_cloth",
+    "id": "blueprint_cloth_head_armor_4",
+    "name": "Blueprint: Silk Cloth Hood",
+    "familyId": "blueprint_cloth_head_armor",
     "tier": 4
   },
   {
-    "id": "blueprint_cloth_5",
-    "name": "Blueprint: Shadow Cloth",
-    "familyId": "blueprint_cloth",
+    "id": "blueprint_cloth_head_armor_5",
+    "name": "Blueprint: Shadow Cloth Hood",
+    "familyId": "blueprint_cloth_head_armor",
     "tier": 5
   },
   {
-    "id": "blueprint_cloth_6",
-    "name": "Blueprint: Moon Cloth",
-    "familyId": "blueprint_cloth",
+    "id": "blueprint_cloth_head_armor_6",
+    "name": "Blueprint: Moon Cloth Hood",
+    "familyId": "blueprint_cloth_head_armor",
     "tier": 6
   },
   {
-    "id": "blueprint_leather_1",
-    "name": "Blueprint: Thin Leather Armor",
-    "familyId": "blueprint_leather",
+    "id": "blueprint_cloth_chest_armor_1",
+    "name": "Blueprint: Small Robe",
+    "familyId": "blueprint_cloth_chest_armor",
     "tier": 1
   },
   {
-    "id": "blueprint_leather_2",
-    "name": "Blueprint: Goat Leather Armor",
-    "familyId": "blueprint_leather",
+    "id": "blueprint_cloth_chest_armor_2",
+    "name": "Blueprint: Cotton Cloth Robe",
+    "familyId": "blueprint_cloth_chest_armor",
     "tier": 2
   },
   {
-    "id": "blueprint_leather_3",
-    "name": "Blueprint: Elk Leather Armor",
-    "familyId": "blueprint_leather",
+    "id": "blueprint_cloth_chest_armor_3",
+    "name": "Blueprint: Wool Cloth Robe",
+    "familyId": "blueprint_cloth_chest_armor",
     "tier": 3
   },
   {
-    "id": "blueprint_leather_4",
-    "name": "Blueprint: Panther Leather Armor",
-    "familyId": "blueprint_leather",
+    "id": "blueprint_cloth_chest_armor_4",
+    "name": "Blueprint: Silk Cloth Robe",
+    "familyId": "blueprint_cloth_chest_armor",
     "tier": 4
   },
   {
-    "id": "blueprint_leather_5",
-    "name": "Blueprint: Wyvern Leather Armor",
-    "familyId": "blueprint_leather",
+    "id": "blueprint_cloth_chest_armor_5",
+    "name": "Blueprint: Shadow Cloth Robe",
+    "familyId": "blueprint_cloth_chest_armor",
     "tier": 5
   },
   {
-    "id": "blueprint_leather_6",
-    "name": "Blueprint: Phoenix Leather Armor",
-    "familyId": "blueprint_leather",
+    "id": "blueprint_cloth_chest_armor_6",
+    "name": "Blueprint: Moon Cloth Robe",
+    "familyId": "blueprint_cloth_chest_armor",
     "tier": 6
   },
   {
-    "id": "blueprint_chainmail_1",
-    "name": "Blueprint: Ripped Chainmail",
-    "familyId": "blueprint_chainmail",
+    "id": "blueprint_cloth_leg_armor_1",
+    "name": "Blueprint: Wide Trousers",
+    "familyId": "blueprint_cloth_leg_armor",
     "tier": 1
   },
   {
-    "id": "blueprint_chainmail_2",
-    "name": "Blueprint: Bronze Chainmail Armor",
-    "familyId": "blueprint_chainmail",
+    "id": "blueprint_cloth_leg_armor_2",
+    "name": "Blueprint: Cotton Cloth Trousers",
+    "familyId": "blueprint_cloth_leg_armor",
     "tier": 2
   },
   {
-    "id": "blueprint_chainmail_3",
-    "name": "Blueprint: Iron Chainmail Armor",
-    "familyId": "blueprint_chainmail",
+    "id": "blueprint_cloth_leg_armor_3",
+    "name": "Blueprint: Wool Cloth Trousers",
+    "familyId": "blueprint_cloth_leg_armor",
     "tier": 3
   },
   {
-    "id": "blueprint_chainmail_4",
-    "name": "Blueprint: Silver Chainmail Armor",
-    "familyId": "blueprint_chainmail",
+    "id": "blueprint_cloth_leg_armor_4",
+    "name": "Blueprint: Silk Cloth Trousers",
+    "familyId": "blueprint_cloth_leg_armor",
     "tier": 4
   },
   {
-    "id": "blueprint_chainmail_5",
-    "name": "Blueprint: Gold Chainmail Armor",
-    "familyId": "blueprint_chainmail",
+    "id": "blueprint_cloth_leg_armor_5",
+    "name": "Blueprint: Shadow Cloth Trousers",
+    "familyId": "blueprint_cloth_leg_armor",
     "tier": 5
   },
   {
-    "id": "blueprint_chainmail_6",
-    "name": "Blueprint: Star Metal Chainmail Armor",
-    "familyId": "blueprint_chainmail",
+    "id": "blueprint_cloth_leg_armor_6",
+    "name": "Blueprint: Moon Cloth Trousers",
+    "familyId": "blueprint_cloth_leg_armor",
     "tier": 6
   },
   {
-    "id": "blueprint_iron_1",
-    "name": "Blueprint: Apprentice's Metal Armor",
-    "familyId": "blueprint_iron",
+    "id": "blueprint_leather_head_armor_1",
+    "name": "Blueprint: Rotten Leather Cap",
+    "familyId": "blueprint_leather_head_armor",
     "tier": 1
   },
   {
-    "id": "blueprint_iron_2",
-    "name": "Blueprint: Steelbound Armor",
-    "familyId": "blueprint_iron",
+    "id": "blueprint_leather_head_armor_2",
+    "name": "Blueprint: Goat Leather Cap",
+    "familyId": "blueprint_leather_head_armor",
     "tier": 2
   },
   {
-    "id": "blueprint_iron_3",
-    "name": "Blueprint: Warforged Iron Armor",
-    "familyId": "blueprint_iron",
+    "id": "blueprint_leather_head_armor_3",
+    "name": "Blueprint: Elk Leather Cap",
+    "familyId": "blueprint_leather_head_armor",
     "tier": 3
   },
   {
-    "id": "blueprint_iron_4",
-    "name": "Blueprint: Ironheart Armor",
-    "familyId": "blueprint_iron",
+    "id": "blueprint_leather_head_armor_4",
+    "name": "Blueprint: Manticore Leather Cap",
+    "familyId": "blueprint_leather_head_armor",
     "tier": 4
   },
   {
-    "id": "blueprint_iron_5",
-    "name": "Blueprint: Ironbound Armor",
-    "familyId": "blueprint_iron",
+    "id": "blueprint_leather_head_armor_5",
+    "name": "Blueprint: Wyvern Leather Cap",
+    "familyId": "blueprint_leather_head_armor",
     "tier": 5
   },
   {
-    "id": "blueprint_iron_6",
-    "name": "Blueprint: Deathless Iron Armor",
-    "familyId": "blueprint_iron",
+    "id": "blueprint_leather_head_armor_6",
+    "name": "Blueprint: Phoenix Leather Cap",
+    "familyId": "blueprint_leather_head_armor",
     "tier": 6
   },
   {
-    "id": "blueprint_ebony_1",
-    "name": "Blueprint: Dusk Ebony Armor",
-    "familyId": "blueprint_ebony",
+    "id": "blueprint_leather_chest_armor_1",
+    "name": "Blueprint: Primitive Leather Jerkin",
+    "familyId": "blueprint_leather_chest_armor",
     "tier": 1
   },
   {
-    "id": "blueprint_ebony_2",
-    "name": "Blueprint: Twilight Ebony Armor",
-    "familyId": "blueprint_ebony",
+    "id": "blueprint_leather_chest_armor_2",
+    "name": "Blueprint: Goat Leather Jerkin",
+    "familyId": "blueprint_leather_chest_armor",
     "tier": 2
   },
   {
-    "id": "blueprint_ebony_3",
-    "name": "Blueprint: Shadow Ebony Armor",
-    "familyId": "blueprint_ebony",
+    "id": "blueprint_leather_chest_armor_3",
+    "name": "Blueprint: Elk Leather Jerkin",
+    "familyId": "blueprint_leather_chest_armor",
     "tier": 3
   },
   {
-    "id": "blueprint_ebony_4",
-    "name": "Blueprint: Midnight Ebony Armor",
-    "familyId": "blueprint_ebony",
+    "id": "blueprint_leather_chest_armor_4",
+    "name": "Blueprint: Manticore Leather Jerkin",
+    "familyId": "blueprint_leather_chest_armor",
     "tier": 4
   },
   {
-    "id": "blueprint_ebony_5",
-    "name": "Blueprint: Umbral Ebony Armor",
-    "familyId": "blueprint_ebony",
+    "id": "blueprint_leather_chest_armor_5",
+    "name": "Blueprint: Wyvern Leather Jerkin",
+    "familyId": "blueprint_leather_chest_armor",
     "tier": 5
   },
   {
-    "id": "blueprint_ebony_6",
-    "name": "Blueprint: Eclipsed Ebony Armor",
-    "familyId": "blueprint_ebony",
+    "id": "blueprint_leather_chest_armor_6",
+    "name": "Blueprint: Phoenix Leather Jerkin",
+    "familyId": "blueprint_leather_chest_armor",
     "tier": 6
   },
   {
-    "id": "blueprint_chitin_1",
-    "name": "Blueprint: Beetle Chitin Armor",
-    "familyId": "blueprint_chitin",
+    "id": "blueprint_leather_leg_armor_1",
+    "name": "Blueprint: Long Leather Leggings",
+    "familyId": "blueprint_leather_leg_armor",
     "tier": 1
   },
   {
-    "id": "blueprint_chitin_2",
-    "name": "Blueprint: Mantis Chitin Armor",
-    "familyId": "blueprint_chitin",
+    "id": "blueprint_leather_leg_armor_2",
+    "name": "Blueprint: Goat Leather Leggings",
+    "familyId": "blueprint_leather_leg_armor",
     "tier": 2
   },
   {
-    "id": "blueprint_chitin_3",
-    "name": "Blueprint: Scorpion Chitin Armor",
-    "familyId": "blueprint_chitin",
+    "id": "blueprint_leather_leg_armor_3",
+    "name": "Blueprint: Elk Leather Leggings",
+    "familyId": "blueprint_leather_leg_armor",
     "tier": 3
   },
   {
-    "id": "blueprint_chitin_4",
-    "name": "Blueprint: Spider Chitin Armor",
-    "familyId": "blueprint_chitin",
+    "id": "blueprint_leather_leg_armor_4",
+    "name": "Blueprint: Manticore Leather Leggings",
+    "familyId": "blueprint_leather_leg_armor",
     "tier": 4
   },
   {
-    "id": "blueprint_chitin_5",
-    "name": "Blueprint: Wyrm Chitin Armor",
-    "familyId": "blueprint_chitin",
+    "id": "blueprint_leather_leg_armor_5",
+    "name": "Blueprint: Wyvern Leather Leggings",
+    "familyId": "blueprint_leather_leg_armor",
     "tier": 5
   },
   {
-    "id": "blueprint_chitin_6",
-    "name": "Blueprint: Voidling Chitin Armor",
-    "familyId": "blueprint_chitin",
+    "id": "blueprint_leather_leg_armor_6",
+    "name": "Blueprint: Phoenix Leather Leggings",
+    "familyId": "blueprint_leather_leg_armor",
     "tier": 6
   },
   {
-    "id": "blueprint_meteoric_iron_1",
-    "name": "Blueprint: Copper Meteoric Armor",
-    "familyId": "blueprint_meteoric_iron",
+    "id": "blueprint_chainmail_head_armor_1",
+    "name": "Blueprint: Ripped Chainmail Coif",
+    "familyId": "blueprint_chainmail_head_armor",
     "tier": 1
   },
   {
-    "id": "blueprint_meteoric_iron_2",
-    "name": "Blueprint: Bronze Meteoric Armor",
-    "familyId": "blueprint_meteoric_iron",
+    "id": "blueprint_chainmail_head_armor_2",
+    "name": "Blueprint: Bronze Chainmail Coif",
+    "familyId": "blueprint_chainmail_head_armor",
     "tier": 2
   },
   {
-    "id": "blueprint_meteoric_iron_3",
-    "name": "Blueprint: Iron Meteoric Armor",
-    "familyId": "blueprint_meteoric_iron",
+    "id": "blueprint_chainmail_head_armor_3",
+    "name": "Blueprint: Iron Chainmail Coif",
+    "familyId": "blueprint_chainmail_head_armor",
     "tier": 3
   },
   {
-    "id": "blueprint_meteoric_iron_4",
-    "name": "Blueprint: Silver Meteoric Armor",
-    "familyId": "blueprint_meteoric_iron",
+    "id": "blueprint_chainmail_head_armor_4",
+    "name": "Blueprint: Silver Chainmail Coif",
+    "familyId": "blueprint_chainmail_head_armor",
     "tier": 4
   },
   {
-    "id": "blueprint_meteoric_iron_5",
-    "name": "Blueprint: Gold Meteoric Armor",
-    "familyId": "blueprint_meteoric_iron",
+    "id": "blueprint_chainmail_head_armor_5",
+    "name": "Blueprint: Gold Chainmail Coif",
+    "familyId": "blueprint_chainmail_head_armor",
     "tier": 5
   },
   {
-    "id": "blueprint_meteoric_iron_6",
-    "name": "Blueprint: Star Metal Meteoric Armor",
-    "familyId": "blueprint_meteoric_iron",
+    "id": "blueprint_chainmail_head_armor_6",
+    "name": "Blueprint: Star Metal Chainmail Coif",
+    "familyId": "blueprint_chainmail_head_armor",
     "tier": 6
   },
   {
-    "id": "blueprint_darksteel_1",
-    "name": "Blueprint: Tempered Darksteel Armor",
-    "familyId": "blueprint_darksteel",
+    "id": "blueprint_chainmail_chest_armor_1",
+    "name": "Blueprint: Ripped Chainmail Hauberk",
+    "familyId": "blueprint_chainmail_chest_armor",
     "tier": 1
   },
   {
-    "id": "blueprint_darksteel_2",
-    "name": "Blueprint: Warded Darksteel Armor",
-    "familyId": "blueprint_darksteel",
+    "id": "blueprint_chainmail_chest_armor_2",
+    "name": "Blueprint: Bronze Chainmail Hauberk",
+    "familyId": "blueprint_chainmail_chest_armor",
     "tier": 2
   },
   {
-    "id": "blueprint_darksteel_3",
-    "name": "Blueprint: Runed Darksteel Armor",
-    "familyId": "blueprint_darksteel",
+    "id": "blueprint_chainmail_chest_armor_3",
+    "name": "Blueprint: Iron Chainmail Hauberk",
+    "familyId": "blueprint_chainmail_chest_armor",
     "tier": 3
   },
   {
-    "id": "blueprint_darksteel_4",
-    "name": "Blueprint: Sigiled Darksteel Armor",
-    "familyId": "blueprint_darksteel",
+    "id": "blueprint_chainmail_chest_armor_4",
+    "name": "Blueprint: Silver Chainmail Hauberk",
+    "familyId": "blueprint_chainmail_chest_armor",
     "tier": 4
   },
   {
-    "id": "blueprint_darksteel_5",
-    "name": "Blueprint: Shadowforged Darksteel Armor",
-    "familyId": "blueprint_darksteel",
+    "id": "blueprint_chainmail_chest_armor_5",
+    "name": "Blueprint: Gold Chainmail Hauberk",
+    "familyId": "blueprint_chainmail_chest_armor",
     "tier": 5
   },
   {
-    "id": "blueprint_darksteel_6",
-    "name": "Blueprint: Worldforged Darksteel Armor",
-    "familyId": "blueprint_darksteel",
+    "id": "blueprint_chainmail_chest_armor_6",
+    "name": "Blueprint: Star Metal Chainmail Hauberk",
+    "familyId": "blueprint_chainmail_chest_armor",
+    "tier": 6
+  },
+  {
+    "id": "blueprint_chainmail_leg_armor_1",
+    "name": "Blueprint: Ripped Chainmail Chausses",
+    "familyId": "blueprint_chainmail_leg_armor",
+    "tier": 1
+  },
+  {
+    "id": "blueprint_chainmail_leg_armor_2",
+    "name": "Blueprint: Bronze Chainmail Chausses",
+    "familyId": "blueprint_chainmail_leg_armor",
+    "tier": 2
+  },
+  {
+    "id": "blueprint_chainmail_leg_armor_3",
+    "name": "Blueprint: Iron Chainmail Chausses",
+    "familyId": "blueprint_chainmail_leg_armor",
+    "tier": 3
+  },
+  {
+    "id": "blueprint_chainmail_leg_armor_4",
+    "name": "Blueprint: Silver Chainmail Chausses",
+    "familyId": "blueprint_chainmail_leg_armor",
+    "tier": 4
+  },
+  {
+    "id": "blueprint_chainmail_leg_armor_5",
+    "name": "Blueprint: Gold Chainmail Chausses",
+    "familyId": "blueprint_chainmail_leg_armor",
+    "tier": 5
+  },
+  {
+    "id": "blueprint_chainmail_leg_armor_6",
+    "name": "Blueprint: Star Metal Chainmail Chausses",
+    "familyId": "blueprint_chainmail_leg_armor",
+    "tier": 6
+  },
+  {
+    "id": "blueprint_iron_head_armor_1",
+    "name": "Blueprint: Apprentice's Iron Helmet",
+    "familyId": "blueprint_iron_head_armor",
+    "tier": 1
+  },
+  {
+    "id": "blueprint_iron_head_armor_2",
+    "name": "Blueprint: Steelbound Helmet",
+    "familyId": "blueprint_iron_head_armor",
+    "tier": 2
+  },
+  {
+    "id": "blueprint_iron_head_armor_3",
+    "name": "Blueprint: Warforged Iron Helmet",
+    "familyId": "blueprint_iron_head_armor",
+    "tier": 3
+  },
+  {
+    "id": "blueprint_iron_head_armor_4",
+    "name": "Blueprint: Ironheart Helmet",
+    "familyId": "blueprint_iron_head_armor",
+    "tier": 4
+  },
+  {
+    "id": "blueprint_iron_head_armor_5",
+    "name": "Blueprint: Ironbound Helmet",
+    "familyId": "blueprint_iron_head_armor",
+    "tier": 5
+  },
+  {
+    "id": "blueprint_iron_head_armor_6",
+    "name": "Blueprint: Deathless Iron Helmet",
+    "familyId": "blueprint_iron_head_armor",
+    "tier": 6
+  },
+  {
+    "id": "blueprint_iron_chest_armor_1",
+    "name": "Blueprint: Apprentice's Iron Breastplate",
+    "familyId": "blueprint_iron_chest_armor",
+    "tier": 1
+  },
+  {
+    "id": "blueprint_iron_chest_armor_2",
+    "name": "Blueprint: Steelbound Breastplate",
+    "familyId": "blueprint_iron_chest_armor",
+    "tier": 2
+  },
+  {
+    "id": "blueprint_iron_chest_armor_3",
+    "name": "Blueprint: Warforged Iron Breastplate",
+    "familyId": "blueprint_iron_chest_armor",
+    "tier": 3
+  },
+  {
+    "id": "blueprint_iron_chest_armor_4",
+    "name": "Blueprint: Ironheart Breastplate",
+    "familyId": "blueprint_iron_chest_armor",
+    "tier": 4
+  },
+  {
+    "id": "blueprint_iron_chest_armor_5",
+    "name": "Blueprint: Ironbound Breastplate",
+    "familyId": "blueprint_iron_chest_armor",
+    "tier": 5
+  },
+  {
+    "id": "blueprint_iron_chest_armor_6",
+    "name": "Blueprint: Deathless Iron Breastplate",
+    "familyId": "blueprint_iron_chest_armor",
+    "tier": 6
+  },
+  {
+    "id": "blueprint_iron_leg_armor_1",
+    "name": "Blueprint: Apprentice's Iron Greaves",
+    "familyId": "blueprint_iron_leg_armor",
+    "tier": 1
+  },
+  {
+    "id": "blueprint_iron_leg_armor_2",
+    "name": "Blueprint: Steelbound Greaves",
+    "familyId": "blueprint_iron_leg_armor",
+    "tier": 2
+  },
+  {
+    "id": "blueprint_iron_leg_armor_3",
+    "name": "Blueprint: Warforged Iron Greaves",
+    "familyId": "blueprint_iron_leg_armor",
+    "tier": 3
+  },
+  {
+    "id": "blueprint_iron_leg_armor_4",
+    "name": "Blueprint: Ironheart Greaves",
+    "familyId": "blueprint_iron_leg_armor",
+    "tier": 4
+  },
+  {
+    "id": "blueprint_iron_leg_armor_5",
+    "name": "Blueprint: Ironbound Greaves",
+    "familyId": "blueprint_iron_leg_armor",
+    "tier": 5
+  },
+  {
+    "id": "blueprint_iron_leg_armor_6",
+    "name": "Blueprint: Deathless Iron Greaves",
+    "familyId": "blueprint_iron_leg_armor",
+    "tier": 6
+  },
+  {
+    "id": "blueprint_ebony_head_armor_1",
+    "name": "Blueprint: Dusk Ebony Helmet",
+    "familyId": "blueprint_ebony_head_armor",
+    "tier": 1
+  },
+  {
+    "id": "blueprint_ebony_head_armor_2",
+    "name": "Blueprint: Twilight Ebony Helmet",
+    "familyId": "blueprint_ebony_head_armor",
+    "tier": 2
+  },
+  {
+    "id": "blueprint_ebony_head_armor_3",
+    "name": "Blueprint: Shadow Ebony Helmet",
+    "familyId": "blueprint_ebony_head_armor",
+    "tier": 3
+  },
+  {
+    "id": "blueprint_ebony_head_armor_4",
+    "name": "Blueprint: Midnight Ebony Helmet",
+    "familyId": "blueprint_ebony_head_armor",
+    "tier": 4
+  },
+  {
+    "id": "blueprint_ebony_head_armor_5",
+    "name": "Blueprint: Umbral Ebony Helmet",
+    "familyId": "blueprint_ebony_head_armor",
+    "tier": 5
+  },
+  {
+    "id": "blueprint_ebony_head_armor_6",
+    "name": "Blueprint: Eclipsed Ebony Helmet",
+    "familyId": "blueprint_ebony_head_armor",
+    "tier": 6
+  },
+  {
+    "id": "blueprint_ebony_chest_armor_1",
+    "name": "Blueprint: Dusk Ebony Breastplate",
+    "familyId": "blueprint_ebony_chest_armor",
+    "tier": 1
+  },
+  {
+    "id": "blueprint_ebony_chest_armor_2",
+    "name": "Blueprint: Twilight Ebony Breastplate",
+    "familyId": "blueprint_ebony_chest_armor",
+    "tier": 2
+  },
+  {
+    "id": "blueprint_ebony_chest_armor_3",
+    "name": "Blueprint: Shadow Ebony Breastplate",
+    "familyId": "blueprint_ebony_chest_armor",
+    "tier": 3
+  },
+  {
+    "id": "blueprint_ebony_chest_armor_4",
+    "name": "Blueprint: Midnight Ebony Breastplate",
+    "familyId": "blueprint_ebony_chest_armor",
+    "tier": 4
+  },
+  {
+    "id": "blueprint_ebony_chest_armor_5",
+    "name": "Blueprint: Umbral Ebony Breastplate",
+    "familyId": "blueprint_ebony_chest_armor",
+    "tier": 5
+  },
+  {
+    "id": "blueprint_ebony_chest_armor_6",
+    "name": "Blueprint: Eclipsed Ebony Breastplate",
+    "familyId": "blueprint_ebony_chest_armor",
+    "tier": 6
+  },
+  {
+    "id": "blueprint_ebony_leg_armor_1",
+    "name": "Blueprint: Dusk Ebony Greaves",
+    "familyId": "blueprint_ebony_leg_armor",
+    "tier": 1
+  },
+  {
+    "id": "blueprint_ebony_leg_armor_2",
+    "name": "Blueprint: Twilight Ebony Greaves",
+    "familyId": "blueprint_ebony_leg_armor",
+    "tier": 2
+  },
+  {
+    "id": "blueprint_ebony_leg_armor_3",
+    "name": "Blueprint: Shadow Ebony Greaves",
+    "familyId": "blueprint_ebony_leg_armor",
+    "tier": 3
+  },
+  {
+    "id": "blueprint_ebony_leg_armor_4",
+    "name": "Blueprint: Midnight Ebony Greaves",
+    "familyId": "blueprint_ebony_leg_armor",
+    "tier": 4
+  },
+  {
+    "id": "blueprint_ebony_leg_armor_5",
+    "name": "Blueprint: Umbral Ebony Greaves",
+    "familyId": "blueprint_ebony_leg_armor",
+    "tier": 5
+  },
+  {
+    "id": "blueprint_ebony_leg_armor_6",
+    "name": "Blueprint: Eclipsed Ebony Greaves",
+    "familyId": "blueprint_ebony_leg_armor",
+    "tier": 6
+  },
+  {
+    "id": "blueprint_chitin_head_armor_1",
+    "name": "Blueprint: Beetle Chitin Carapace Helm",
+    "familyId": "blueprint_chitin_head_armor",
+    "tier": 1
+  },
+  {
+    "id": "blueprint_chitin_head_armor_2",
+    "name": "Blueprint: Mantis Chitin Carapace Helm",
+    "familyId": "blueprint_chitin_head_armor",
+    "tier": 2
+  },
+  {
+    "id": "blueprint_chitin_head_armor_3",
+    "name": "Blueprint: Scorpion Chitin Carapace Helm",
+    "familyId": "blueprint_chitin_head_armor",
+    "tier": 3
+  },
+  {
+    "id": "blueprint_chitin_head_armor_4",
+    "name": "Blueprint: Spider Chitin Carapace Helm",
+    "familyId": "blueprint_chitin_head_armor",
+    "tier": 4
+  },
+  {
+    "id": "blueprint_chitin_head_armor_5",
+    "name": "Blueprint: Wyrm Chitin Carapace Helm",
+    "familyId": "blueprint_chitin_head_armor",
+    "tier": 5
+  },
+  {
+    "id": "blueprint_chitin_head_armor_6",
+    "name": "Blueprint: Voidling Chitin Carapace Helm",
+    "familyId": "blueprint_chitin_head_armor",
+    "tier": 6
+  },
+  {
+    "id": "blueprint_chitin_chest_armor_1",
+    "name": "Blueprint: Beetle Chitin Carapace Plate",
+    "familyId": "blueprint_chitin_chest_armor",
+    "tier": 1
+  },
+  {
+    "id": "blueprint_chitin_chest_armor_2",
+    "name": "Blueprint: Mantis Chitin Carapace Plate",
+    "familyId": "blueprint_chitin_chest_armor",
+    "tier": 2
+  },
+  {
+    "id": "blueprint_chitin_chest_armor_3",
+    "name": "Blueprint: Scorpion Chitin Carapace Plate",
+    "familyId": "blueprint_chitin_chest_armor",
+    "tier": 3
+  },
+  {
+    "id": "blueprint_chitin_chest_armor_4",
+    "name": "Blueprint: Spider Chitin Carapace Plate",
+    "familyId": "blueprint_chitin_chest_armor",
+    "tier": 4
+  },
+  {
+    "id": "blueprint_chitin_chest_armor_5",
+    "name": "Blueprint: Wyrm Chitin Carapace Plate",
+    "familyId": "blueprint_chitin_chest_armor",
+    "tier": 5
+  },
+  {
+    "id": "blueprint_chitin_chest_armor_6",
+    "name": "Blueprint: Voidling Chitin Carapace Plate",
+    "familyId": "blueprint_chitin_chest_armor",
+    "tier": 6
+  },
+  {
+    "id": "blueprint_chitin_leg_armor_1",
+    "name": "Blueprint: Beetle Chitin Carapace Greaves",
+    "familyId": "blueprint_chitin_leg_armor",
+    "tier": 1
+  },
+  {
+    "id": "blueprint_chitin_leg_armor_2",
+    "name": "Blueprint: Mantis Chitin Carapace Greaves",
+    "familyId": "blueprint_chitin_leg_armor",
+    "tier": 2
+  },
+  {
+    "id": "blueprint_chitin_leg_armor_3",
+    "name": "Blueprint: Scorpion Chitin Carapace Greaves",
+    "familyId": "blueprint_chitin_leg_armor",
+    "tier": 3
+  },
+  {
+    "id": "blueprint_chitin_leg_armor_4",
+    "name": "Blueprint: Spider Chitin Carapace Greaves",
+    "familyId": "blueprint_chitin_leg_armor",
+    "tier": 4
+  },
+  {
+    "id": "blueprint_chitin_leg_armor_5",
+    "name": "Blueprint: Wyrm Chitin Carapace Greaves",
+    "familyId": "blueprint_chitin_leg_armor",
+    "tier": 5
+  },
+  {
+    "id": "blueprint_chitin_leg_armor_6",
+    "name": "Blueprint: Voidling Chitin Carapace Greaves",
+    "familyId": "blueprint_chitin_leg_armor",
+    "tier": 6
+  },
+  {
+    "id": "blueprint_meteoric_iron_head_armor_1",
+    "name": "Blueprint: Copper Meteoric Helmet",
+    "familyId": "blueprint_meteoric_iron_head_armor",
+    "tier": 1
+  },
+  {
+    "id": "blueprint_meteoric_iron_head_armor_2",
+    "name": "Blueprint: Bronze Meteoric Helmet",
+    "familyId": "blueprint_meteoric_iron_head_armor",
+    "tier": 2
+  },
+  {
+    "id": "blueprint_meteoric_iron_head_armor_3",
+    "name": "Blueprint: Iron Meteoric Helmet",
+    "familyId": "blueprint_meteoric_iron_head_armor",
+    "tier": 3
+  },
+  {
+    "id": "blueprint_meteoric_iron_head_armor_4",
+    "name": "Blueprint: Silver Meteoric Helmet",
+    "familyId": "blueprint_meteoric_iron_head_armor",
+    "tier": 4
+  },
+  {
+    "id": "blueprint_meteoric_iron_head_armor_5",
+    "name": "Blueprint: Gold Meteoric Helmet",
+    "familyId": "blueprint_meteoric_iron_head_armor",
+    "tier": 5
+  },
+  {
+    "id": "blueprint_meteoric_iron_head_armor_6",
+    "name": "Blueprint: Star Metal Meteoric Helmet",
+    "familyId": "blueprint_meteoric_iron_head_armor",
+    "tier": 6
+  },
+  {
+    "id": "blueprint_meteoric_iron_chest_armor_1",
+    "name": "Blueprint: Copper Meteoric Breastplate",
+    "familyId": "blueprint_meteoric_iron_chest_armor",
+    "tier": 1
+  },
+  {
+    "id": "blueprint_meteoric_iron_chest_armor_2",
+    "name": "Blueprint: Bronze Meteoric Breastplate",
+    "familyId": "blueprint_meteoric_iron_chest_armor",
+    "tier": 2
+  },
+  {
+    "id": "blueprint_meteoric_iron_chest_armor_3",
+    "name": "Blueprint: Iron Meteoric Breastplate",
+    "familyId": "blueprint_meteoric_iron_chest_armor",
+    "tier": 3
+  },
+  {
+    "id": "blueprint_meteoric_iron_chest_armor_4",
+    "name": "Blueprint: Silver Meteoric Breastplate",
+    "familyId": "blueprint_meteoric_iron_chest_armor",
+    "tier": 4
+  },
+  {
+    "id": "blueprint_meteoric_iron_chest_armor_5",
+    "name": "Blueprint: Gold Meteoric Breastplate",
+    "familyId": "blueprint_meteoric_iron_chest_armor",
+    "tier": 5
+  },
+  {
+    "id": "blueprint_meteoric_iron_chest_armor_6",
+    "name": "Blueprint: Star Metal Meteoric Breastplate",
+    "familyId": "blueprint_meteoric_iron_chest_armor",
+    "tier": 6
+  },
+  {
+    "id": "blueprint_meteoric_iron_leg_armor_1",
+    "name": "Blueprint: Copper Meteoric Greaves",
+    "familyId": "blueprint_meteoric_iron_leg_armor",
+    "tier": 1
+  },
+  {
+    "id": "blueprint_meteoric_iron_leg_armor_2",
+    "name": "Blueprint: Bronze Meteoric Greaves",
+    "familyId": "blueprint_meteoric_iron_leg_armor",
+    "tier": 2
+  },
+  {
+    "id": "blueprint_meteoric_iron_leg_armor_3",
+    "name": "Blueprint: Iron Meteoric Greaves",
+    "familyId": "blueprint_meteoric_iron_leg_armor",
+    "tier": 3
+  },
+  {
+    "id": "blueprint_meteoric_iron_leg_armor_4",
+    "name": "Blueprint: Silver Meteoric Greaves",
+    "familyId": "blueprint_meteoric_iron_leg_armor",
+    "tier": 4
+  },
+  {
+    "id": "blueprint_meteoric_iron_leg_armor_5",
+    "name": "Blueprint: Gold Meteoric Greaves",
+    "familyId": "blueprint_meteoric_iron_leg_armor",
+    "tier": 5
+  },
+  {
+    "id": "blueprint_meteoric_iron_leg_armor_6",
+    "name": "Blueprint: Star Metal Meteoric Greaves",
+    "familyId": "blueprint_meteoric_iron_leg_armor",
+    "tier": 6
+  },
+  {
+    "id": "blueprint_darksteel_head_armor_1",
+    "name": "Blueprint: Tempered Darksteel Helmet",
+    "familyId": "blueprint_darksteel_head_armor",
+    "tier": 1
+  },
+  {
+    "id": "blueprint_darksteel_head_armor_2",
+    "name": "Blueprint: Warded Darksteel Helmet",
+    "familyId": "blueprint_darksteel_head_armor",
+    "tier": 2
+  },
+  {
+    "id": "blueprint_darksteel_head_armor_3",
+    "name": "Blueprint: Runed Darksteel Helmet",
+    "familyId": "blueprint_darksteel_head_armor",
+    "tier": 3
+  },
+  {
+    "id": "blueprint_darksteel_head_armor_4",
+    "name": "Blueprint: Sigiled Darksteel Helmet",
+    "familyId": "blueprint_darksteel_head_armor",
+    "tier": 4
+  },
+  {
+    "id": "blueprint_darksteel_head_armor_5",
+    "name": "Blueprint: Shadowforged Darksteel Helmet",
+    "familyId": "blueprint_darksteel_head_armor",
+    "tier": 5
+  },
+  {
+    "id": "blueprint_darksteel_head_armor_6",
+    "name": "Blueprint: Worldforged Darksteel Helmet",
+    "familyId": "blueprint_darksteel_head_armor",
+    "tier": 6
+  },
+  {
+    "id": "blueprint_darksteel_chest_armor_1",
+    "name": "Blueprint: Tempered Darksteel Breastplate",
+    "familyId": "blueprint_darksteel_chest_armor",
+    "tier": 1
+  },
+  {
+    "id": "blueprint_darksteel_chest_armor_2",
+    "name": "Blueprint: Warded Darksteel Breastplate",
+    "familyId": "blueprint_darksteel_chest_armor",
+    "tier": 2
+  },
+  {
+    "id": "blueprint_darksteel_chest_armor_3",
+    "name": "Blueprint: Runed Darksteel Breastplate",
+    "familyId": "blueprint_darksteel_chest_armor",
+    "tier": 3
+  },
+  {
+    "id": "blueprint_darksteel_chest_armor_4",
+    "name": "Blueprint: Sigiled Darksteel Breastplate",
+    "familyId": "blueprint_darksteel_chest_armor",
+    "tier": 4
+  },
+  {
+    "id": "blueprint_darksteel_chest_armor_5",
+    "name": "Blueprint: Shadowforged Darksteel Breastplate",
+    "familyId": "blueprint_darksteel_chest_armor",
+    "tier": 5
+  },
+  {
+    "id": "blueprint_darksteel_chest_armor_6",
+    "name": "Blueprint: Worldforged Darksteel Breastplate",
+    "familyId": "blueprint_darksteel_chest_armor",
+    "tier": 6
+  },
+  {
+    "id": "blueprint_darksteel_leg_armor_1",
+    "name": "Blueprint: Tempered Darksteel Greaves",
+    "familyId": "blueprint_darksteel_leg_armor",
+    "tier": 1
+  },
+  {
+    "id": "blueprint_darksteel_leg_armor_2",
+    "name": "Blueprint: Warded Darksteel Greaves",
+    "familyId": "blueprint_darksteel_leg_armor",
+    "tier": 2
+  },
+  {
+    "id": "blueprint_darksteel_leg_armor_3",
+    "name": "Blueprint: Runed Darksteel Greaves",
+    "familyId": "blueprint_darksteel_leg_armor",
+    "tier": 3
+  },
+  {
+    "id": "blueprint_darksteel_leg_armor_4",
+    "name": "Blueprint: Sigiled Darksteel Greaves",
+    "familyId": "blueprint_darksteel_leg_armor",
+    "tier": 4
+  },
+  {
+    "id": "blueprint_darksteel_leg_armor_5",
+    "name": "Blueprint: Shadowforged Darksteel Greaves",
+    "familyId": "blueprint_darksteel_leg_armor",
+    "tier": 5
+  },
+  {
+    "id": "blueprint_darksteel_leg_armor_6",
+    "name": "Blueprint: Worldforged Darksteel Greaves",
+    "familyId": "blueprint_darksteel_leg_armor",
     "tier": 6
   },
   {
