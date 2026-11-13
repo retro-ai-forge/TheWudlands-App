@@ -86,6 +86,31 @@ async def test_reads_see_the_transactions_own_writes_and_calls_side_by_side_work
     assert not in_transaction()
 
 
+async def test_cursors_side_by_side_inside_a_transaction(db):
+    # What _build_player does inside character creation: several find()
+    # cursors read in parallel (asyncio.gather) on the transaction's one
+    # session. Without taking turns their replies got mixed up on the shared
+    # connection (pymongo ProtocolError "Got response id ... but expected ...").
+    await _seed(db, 3)
+
+    async def rows(coll):
+        return [doc async for doc in coll.find({"address": ADDRESS})]
+
+    async def flow():
+        await db.characters.update_one(CHAR, {"$push": {"got": 1}})
+        results = []
+        for _ in range(10):
+            chars, homes, listed, more = await asyncio.gather(
+                rows(db.characters), rows(db.character_homes),
+                db.characters.find({"address": ADDRESS}).sort("id", 1).to_list(None),
+                rows(db.character_homes),
+            )
+            results.append((chars[0]["got"], homes[0]["stock"], listed[0]["got"], more[0]["stock"]))
+        return results
+
+    assert await run_in_transaction(flow) == [([1], 3, [1], 3)] * 10
+
+
 async def test_a_nested_call_joins_the_running_transaction(db):
     await _seed(db, 3)
 

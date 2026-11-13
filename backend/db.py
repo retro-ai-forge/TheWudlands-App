@@ -122,6 +122,45 @@ def in_transaction() -> bool:
     return _current_txn.get() is not None
 
 
+class _TxnCursor:
+    """A find()/aggregate() cursor inside a transaction. Its batches travel
+    over the transaction's one session, so - like every other call there -
+    it takes turns: the whole result is fetched under the transaction's lock,
+    then handed out. Cursors read side by side (asyncio.gather, e.g.
+    _build_player inside character creation) otherwise mix up their replies
+    on the shared connection (pymongo ProtocolError "Got response id ... but
+    expected ...", or a broken SSL connection). The lock is released before
+    the documents are handed out, so the loop body may use the database.
+    Chaining (sort, limit, skip, ...) works as on Motor's cursor."""
+
+    __slots__ = ("_cursor", "_txn")
+
+    def __init__(self, cursor, txn: "_Txn"):
+        self._cursor = cursor
+        self._txn = txn
+
+    def __getattr__(self, name: str):
+        attr = getattr(self._cursor, name)
+        if not callable(attr):
+            return attr
+
+        def call(*args, **kwargs):
+            result = attr(*args, **kwargs)
+            return self if result is self._cursor else result
+        return call
+
+    async def to_list(self, length: Optional[int] = None) -> list:
+        async with self._txn.lock:
+            return await self._cursor.to_list(length)
+
+    def __aiter__(self):
+        return self._iterate()
+
+    async def _iterate(self):
+        for doc in await self.to_list(None):
+            yield doc
+
+
 class Collection:
     """Motor collection that joins the running transaction, if any."""
 
@@ -143,9 +182,9 @@ class Collection:
         if name in _CURSOR_METHODS:
             def call_cursor(*args, **kwargs):
                 txn = _current_txn.get()
-                if txn is not None and "session" not in kwargs:
-                    kwargs["session"] = txn.session
-                return attr(*args, **kwargs)
+                if txn is None or "session" in kwargs:
+                    return attr(*args, **kwargs)
+                return _TxnCursor(attr(*args, session=txn.session, **kwargs), txn)
             return call_cursor
         return attr
 
