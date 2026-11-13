@@ -666,15 +666,40 @@ function ownsAnyTool(ownedSet, ids, requiredTier) {
 // Prefers an unconsumed option (a reusable tool/item like dagger - free to
 // use, nothing to craft) that's already owned, since there's no reason to
 // spend materials crafting bone_blade when a dagger is sitting right
-// there. Falls back to the first consumed option (today's behavior) when
-// nothing unconsumed is owned - that becomes the expanded child node,
-// showing its own sub-requirements (e.g. 2x small_bone for bone_blade).
-// With no character context at all, still defaults to the first option,
-// same as before.
-function pickBestAlternative(alts, tier) {
+// there. Otherwise the first consumed option the player has enough of for
+// `units` of the parent (exact tier or higher, see usableAcrossTiers) -
+// the option crafting will really take (backend _resolve_craft_chain /
+// resolveChainPlan try them in listed order), e.g. a torch from wood and
+// hide when that's what is owned, not the listed-first bone and reed.
+// Falls back to the first consumed option when none is affordable - that
+// becomes the expanded child node, showing its own sub-requirements (e.g.
+// 2x small_bone for bone_blade). With no character context at all, still
+// defaults to the first option. Each slot is checked on its own, against
+// the full stock (no running deduction across the tree).
+// The old rule - an owned unconsumed option, else the first consumed one,
+// whatever the player has. Kept for the XP preview (directRawTotals), which
+// mirrors backend _resolve_recipe_direct_raw_totals and that one still
+// credits the listed-first option.
+function pickListedAlternative(alts, tier) {
   if (ownedToolsWithVault) {
     const owned = alts.find(alt => !alt.consumed && ownsFamily(ownedToolsWithVault, alt.familyId, tier));
     if (owned) return owned;
+  }
+  return alts.find(alt => alt.consumed) || alts[0];
+}
+
+function pickBestAlternative(alts, tier, units = 1) {
+  if (ownedToolsWithVault) {
+    const owned = alts.find(alt => !alt.consumed && ownsFamily(ownedToolsWithVault, alt.familyId, tier));
+    if (owned) return owned;
+  }
+  if (inventory) {
+    const affordable = alts.find(alt => {
+      if (!alt.consumed) return false;
+      const balances = alt.category === "final" ? itemBalances : inventory;
+      return !!balances && usableAcrossTiers(balances, alt.familyId, tier) >= alt.qty * units;
+    });
+    if (affordable) return affordable;
   }
   return alts.find(alt => alt.consumed) || alts[0];
 }
@@ -1362,7 +1387,9 @@ function toolTagNode(ids, tier, before, after) {
 // the parent needs) - the fully multiplied grand total lives in the side
 // panel, computed separately by computeTotals(). Siblings under the same
 // parent behave as an accordion: opening one closes any open sibling.
-function buildInteractiveNode(famId, qty, category, tier, isRoot) {
+// `units`: how many of famId the whole selection needs (qty times every
+// parent's qty) - only used to pick an alternative the player can afford.
+function buildInteractiveNode(famId, qty, category, tier, isRoot, units = qty) {
   const recipe = recipes[famId];
   const expandable = !!(recipe && recipe.ingredients && recipe.ingredients.length);
 
@@ -1459,7 +1486,7 @@ function buildInteractiveNode(famId, qty, category, tier, isRoot) {
           // bone_blade), then appends the other option(s) as a small
           // "or ..." note on that same row - informational only, not
           // interactive.
-          const ing = ing0.alternatives ? pickBestAlternative(ing0.alternatives, tier) : ing0;
+          const ing = ing0.alternatives ? pickBestAlternative(ing0.alternatives, tier, units) : ing0;
           if (ing0.alternatives && !ing.consumed) {
             // The chosen alternative is unconsumed and already owned
             // (that's the only way pickBestAlternative returns one) -
@@ -1475,7 +1502,7 @@ function buildInteractiveNode(famId, qty, category, tier, isRoot) {
             continue;
           }
           const childCat = ing.category === "final_unresolved" ? "final" : ing.category;
-          const child = buildInteractiveNode(ing.familyId, ing.qty, childCat, tier, false);
+          const child = buildInteractiveNode(ing.familyId, ing.qty, childCat, tier, false, ing.qty * units);
           // A tool being referenced as an ingredient (e.g. the axe_stone a
           // sharpened stick needs on hand) is understood to never be
           // consumed, same as blueprints - no need to say so explicitly.
@@ -1580,7 +1607,7 @@ function directRawTotals(famId, tier) {
   const totals = {};
   if (!recipe) return totals;
   for (const ing0 of recipe.ingredients) {
-    const ing = ing0.alternatives ? pickBestAlternative(ing0.alternatives, tier) : ing0;
+    const ing = ing0.alternatives ? pickListedAlternative(ing0.alternatives, tier) : ing0;
     if (ing.category === "raw") {
       totals[ing.familyId] = (totals[ing.familyId] || 0) + ing.qty;
     }
@@ -1730,7 +1757,7 @@ function computeTotals(famId, qty, category, rawTotals, finalTotals, toolSet, ti
     // interactive tree uses) - counting both would double up on a single
     // ingredient slot, and always assuming bone_blade regardless of
     // owning a dagger would show materials that aren't actually needed.
-    const ing = ing0.alternatives ? pickBestAlternative(ing0.alternatives, tier) : ing0;
+    const ing = ing0.alternatives ? pickBestAlternative(ing0.alternatives, tier, qty) : ing0;
     const childCat = ing.category === "final_unresolved" ? "final" : ing.category;
     computeTotals(ing.familyId, ing.qty * qty, childCat, rawTotals, finalTotals, toolSet, tier);
   }
