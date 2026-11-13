@@ -2,7 +2,7 @@ import styles from "./CharacterTabs.module.css";
 import { getPortraitCropImgStyle } from "@/app/lib/portraitCrop";
 import { RACES, PROFESSIONS, BIRTHSIGNS, PROFESSION_RESOURCE_FAMILIES } from "@/app/lib/characterOptions";
 import { getDisplayedAge } from "@/app/lib/ageScaling";
-import { useEffect, useState } from "react";
+import { Fragment, useEffect, useState } from "react";
 import { formatRemainingCompactLong, useCraftCountdown } from "../craftTimer";
 import type { SlotCharacterSummary } from "../types";
 import { IdList } from "./VaultTab";
@@ -338,7 +338,15 @@ export function StatsTab({
           )}
           <div className={styles.identityRow}>
             <span>Vital</span>
-            <span className={VITAL_CLASS[character.vitalStatus]}>{character.vitalStatus}</span>
+            {/* [life state, ...conditions], e.g. "alive, soulless" - each word in its own color. */}
+            <span>
+              {character.vitalStatus.map((status, i) => (
+                <Fragment key={status}>
+                  {i > 0 && ", "}
+                  <span className={VITAL_CLASS[status]}>{status}</span>
+                </Fragment>
+              ))}
+            </span>
           </div>
           <div className={styles.identityRow}>
             <span>
@@ -472,7 +480,7 @@ export function StatsTab({
                 Next point heals in {formatRemainingCompactLong(healSeconds)}
               </p>
             )}
-            {!character.nextHealAt && hasLoss && character.vitalStatus === "alive" && (
+            {!character.nextHealAt && hasLoss && character.vitalStatus.length === 1 && character.vitalStatus[0] === "alive" && (
               <p className={styles.attrHealNote}>Heals only while free (not foraging, crafting or adventuring).</p>
             )}
           </div>

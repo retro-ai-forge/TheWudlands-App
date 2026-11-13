@@ -115,7 +115,8 @@ export interface SlotCharacterSummary {
   slotNumber: number;
   firstName: string;
   lastName: string;
-  vitalStatus: string;
+  /** Life state first ("alive" / "dead"), then conditions, e.g. ["alive", "soulless"]. */
+  vitalStatus: string[];
   age_month: number;
   gender: string;
   raceGroup: string;

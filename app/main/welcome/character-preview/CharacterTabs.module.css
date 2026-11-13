@@ -790,7 +790,9 @@
   color: #d4c9a8;
 }
 
-.identityRow span:first-child {
+/* The row's label only (direct child) - not a first span nested inside the
+   value, e.g. "alive" in the Vital row's "alive, soulless". */
+.identityRow > span:first-child {
   letter-spacing: 0.08em;
   text-transform: uppercase;
   color: #a89968;
@@ -2841,13 +2843,13 @@
      the actual viewport edge. */
   right: calc(-1 * clamp(0px, (100vw - 400px) * 0.15, 40px));
   bottom: 7rem;
-  transform: translateX(50%);
+  transform: translateX(65%);
   /* Behind the tent (.campfireStageIcon's own z-index:2), not in front
      of it - the two sit close enough now that the tent's own silhouette
      overlaps this a bit, rather than this floating fully in the clear
      above/beside it. */
   z-index: 1;
-  height: 5.5rem;
+  height: 6.5rem;
   width: auto;
   image-rendering: pixelated;
   /* Clickable (opens ChopBlockPopup) - same pointer-events:auto
@@ -2867,14 +2869,20 @@
   position: absolute;
   left: calc(-1 * clamp(0px, (100vw - 400px) * 0.15, 40px));
   bottom: 6.5rem;
-  transform: translateX(-36%);
+  transform: translateX(-50%);
   z-index: 1;
-  height: 8.5rem;
+  height: 7.5rem;
   width: auto;
   image-rendering: pixelated;
   pointer-events: auto;
   cursor: pointer;
   transition: filter 0.15s ease;
+}
+
+/* Dimmed like the tent and chopping block while the storage is empty, but
+   still clickable: crafting can also use what the character carries. */
+.homeWorkbenchIconEmpty {
+  filter: brightness(0.55);
 }
 
 .homeWorkbenchIcon:hover,

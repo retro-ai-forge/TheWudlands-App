@@ -12,6 +12,7 @@ from backend.players import (
     add_character,
     get_or_create_player,
     grant_character_item_balance,
+    grant_home_starter_kit,
     grant_item_balance,
 )
 from backend.resources_catalog import resolve_trapping_options
@@ -129,3 +130,20 @@ def test_resolve_trapping_options_scales_with_profession_count():
 def test_resolve_trapping_options_rejects_unknown_profession():
     with pytest.raises(ValueError):
         resolve_trapping_options(["not_a_real_profession"])
+
+
+@pytest.mark.asyncio
+async def test_starter_kit_lands_in_the_character_home_not_the_vault(mongodb_uri):
+    db = get_database()
+    try:
+        character = await _new_character(db)
+
+        await grant_home_starter_kit(TEST_ADDRESS, character.id, {"wood_1": 6, "hide_1": 4, "anvil_1": 1})
+
+        home = await db.character_homes.find_one({"address": TEST_ADDRESS, "characterId": character.id})
+        assert home["itemBalances"] == {"wood_1": 6, "hide_1": 4}
+        # A condition-tracked station arrives as one new instance at home.
+        assert [(i["itemId"], i["location"]) for i in home["items"]] == [("anvil_1", "home")]
+        assert await _vault_balances(db) == {}
+    finally:
+        await _purge_player(db)

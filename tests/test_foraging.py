@@ -204,6 +204,36 @@ async def test_foraging_blocks_adventure_and_double_start(db):
         await set_in_adventure(ADDRESS, cid, True)
 
 
+@pytest.mark.parametrize("stored", ["soulless", ["alive", "soulless"]])
+async def test_soulless_character_can_still_forage(db, stored):
+    """Soulless is a condition, not death: only the life state (first entry)
+    counts for physical actions. The old one-word form reads the same."""
+    cid = await _make(1, "blacksmith")
+    await db.characters.update_one({"address": ADDRESS, "id": cid}, {"$set": {"vitalStatus": stored}})
+    mission = (await foraging.get_foraging_state(ADDRESS, cid))["sites"][0]["mission"]["id"]
+    state = await foraging.start_forage(ADDRESS, cid, mission)
+    assert state["activeForage"] is not None
+
+
+@pytest.mark.parametrize("stored", ["dead", ["dead"], ["dead", "soulless"]])
+async def test_dead_character_cannot_forage(db, stored):
+    cid = await _make(1, "blacksmith")
+    await db.characters.update_one({"address": ADDRESS, "id": cid}, {"$set": {"vitalStatus": stored}})
+    mission = (await foraging.get_foraging_state(ADDRESS, cid))["sites"][0]["mission"]["id"]
+    with pytest.raises(foraging.ForagingError, match="The dead gather nothing"):
+        await foraging.start_forage(ADDRESS, cid, mission)
+
+
+async def test_body_at_zero_cannot_forage_even_if_not_marked_dead(db):
+    cid = await _make(1, "blacksmith")
+    doc = await db.characters.find_one({"address": ADDRESS, "id": cid})
+    body_gone = {k: doc["attr"][k] for k in condition.BODY_ATTRS}
+    await db.characters.update_one({"address": ADDRESS, "id": cid}, {"$set": {"attrLost": body_gone}})
+    mission = (await foraging.get_foraging_state(ADDRESS, cid))["sites"][0]["mission"]["id"]
+    with pytest.raises(foraging.ForagingError, match="The dead gather nothing"):
+        await foraging.start_forage(ADDRESS, cid, mission)
+
+
 async def test_mission_outside_professions_is_refused(db):
     cid = await _make(1, "blacksmith")
     with pytest.raises(foraging.ForagingError):

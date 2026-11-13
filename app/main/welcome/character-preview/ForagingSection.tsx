@@ -151,6 +151,8 @@ export function ForagingSection({
   const [oldGearOpen, setOldGearOpen] = useState(false);
 
   const inAdventure = character.availability.inAdventure;
+  // Only the life state (first entry) counts - a soulless character still digs.
+  const isDead = character.vitalStatus[0] === "dead";
   const name = character.firstName || "This character";
   const active = state?.activeForage ?? null;
   const remainingSeconds = useCraftCountdown(active?.readyAt);
@@ -328,12 +330,17 @@ export function ForagingSection({
 
       {state && !active && (
         <>
-          {inAdventure && (
+          {isDead && (
+            <p className={styles.note}>
+              {name} lies cold beneath the earth. The dead gather nothing - no root, no stone, no ore.
+            </p>
+          )}
+          {!isDead && inAdventure && (
             <p className={styles.note}>
               {name} is out on an adventure. Foraging waits until the story ends.
             </p>
           )}
-          {!inAdventure && isCrafting && (
+          {!isDead && !inAdventure && isCrafting && (
             <p className={styles.note}>{name} is busy crafting. Foraging can start once the craft is done.</p>
           )}
           {!state.hasPool && (
@@ -349,7 +356,7 @@ export function ForagingSection({
             {state.sites.map((site) => {
               if (!site.mission) return null;
               const richness = siteRichness(site.remaining, site.initial, site.yieldMax);
-              const disabled = pending || inAdventure || isCrafting;
+              const disabled = pending || isDead || inAdventure || isCrafting;
               return (
                 <div key={site.familyId} className={styles.card}>
                   <div className={styles.cardTop}>

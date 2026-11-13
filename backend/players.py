@@ -23,7 +23,7 @@ from typing import Dict, List, Optional
 from pymongo import ReturnDocument
 
 from backend import condition, foraging, item_condition, items_catalog, legend, recycling
-from backend.character import Character
+from backend.character import Character, vital_status_list
 from backend.db import find_one_and_update_checked, get_database, run_in_transaction
 from backend.resources_catalog import PROFESSION_RESOURCE_FAMILIES
 from backend.professions_catalog import PROFESSION_CATEGORIES
@@ -216,6 +216,9 @@ async def _build_player(db, address: str) -> Player:
         active_forage = (character.get("foraging") or {}).get("activeForage")
         if isinstance(active_forage, dict):
             character["foraging"]["activeForage"] = foraging.hide_pending_result(active_forage)
+
+        # Older docs hold one word ("soulless"); the client always gets the list.
+        character["vitalStatus"] = vital_status_list(character.get("vitalStatus"))
 
         pc_entry = pc_entries.get(cid)
         if pc_entry:
@@ -481,7 +484,7 @@ async def _create_pc_entry(
     address: str,
     character_id: str,
     name: str,
-    vital_status: str = "alive",
+    vital_status: Optional[List[str]] = None,
     *,
     slot_number: int = 0,
     portrait_url: str = "",
@@ -492,7 +495,7 @@ async def _create_pc_entry(
         "characterId": character_id,
         "name": name,
         "status": ["free"],
-        "tags": [vital_status],
+        "tags": vital_status_list(vital_status),
         "timers": {},
         "slotNumber": slot_number,
         "availability": {"inAdventure": False, "resting": False, "restLocation": None, "adventure": None},
@@ -705,6 +708,8 @@ async def get_single_character(address: str, character_id: str) -> Optional[dict
     active_forage = (char_doc.get("foraging") or {}).get("activeForage")
     if isinstance(active_forage, dict):
         char_doc["foraging"]["activeForage"] = foraging.hide_pending_result(active_forage)
+
+    char_doc["vitalStatus"] = vital_status_list(char_doc.get("vitalStatus"))
 
     pc_entries = {e["characterId"]: e for e in (pc_doc or {}).get("characters", [])}
     pc_entry = pc_entries.get(character_id)
@@ -965,6 +970,26 @@ async def grant_item_balance(address: str, item_id: str, amount: int) -> Optiona
         upsert=True,
     )
     return await _build_player(db, address)
+
+
+async def grant_home_starter_kit(address: str, character_id: str, resources: Dict[str, int]) -> None:
+    """A new character's starter materials, chosen at creation: they land in
+    the character's own home storage (character_homes), the campfire screen
+    it starts at - not the shared vault. Condition-tracked items arrive as
+    new instances, everything else as stacked counts. Writes one collection;
+    the creation route runs it inside its transaction."""
+    db = get_database()
+    balances: Dict[str, int] = {}
+    instances: list = []
+    for item_id, amount in resources.items():
+        if amount <= 0:
+            raise ValueError("amount must be positive")
+        if _is_tracked_item(item_id):
+            instances.extend(_new_instance(item_id, "home") for _ in range(amount))
+        else:
+            balances[item_id] = balances.get(item_id, 0) + amount
+    await _inc_storage_balances(db, "home", address, character_id, balances)
+    await _push_storage_items(db, "home", address, character_id, instances)
 
 
 async def grant_character_item_balance(address: str, character_id: str, item_id: str, amount: int) -> Optional[Player]:
@@ -2448,6 +2473,11 @@ async def _start_craft(
     if doc is None:
         raise CraftRefused("Character not found.")
     character = doc
+
+    # The dead don't work - only the life state counts (soulless may craft).
+    if condition.is_dead(character):
+        name = character.get("firstName") or "This character"
+        raise CraftRefused(f"{name}'s hands are cold and still. The dead work no bench and forge no steel.")
 
     active = character.get("crafting", {}).get("activeCraft")
     if active and datetime.fromisoformat(active["readyAt"]) > datetime.now(timezone.utc):
@@ -5013,7 +5043,44 @@ async def bulk_move_storage(
     return BUILD_PLAYER
 
 
-async def destroy_all_storage(address: str, character_id: str, storage_type: str) -> Optional[Player]:
+def _storage_selection(
+    storage_doc: Optional[dict],
+    instance_ids: Optional[List[str]],
+    balances: Optional[Dict[str, int]],
+) -> tuple:
+    """
+    What a storage-wide bulk action (burn all, pack all) works on: the
+    instances and stacked amounts the player had on screen. Both None =
+    everything in storage. A stacked amount is capped at what storage still
+    holds, so something that arrived after the grid was drawn is left alone.
+    Returns (instance id set, {item id: amount}).
+    """
+    items = (storage_doc or {}).get("items", [])
+    held = (storage_doc or {}).get("itemBalances", {})
+    if instance_ids is None and balances is None:
+        return (
+            {i["instanceId"] for i in items},
+            {k: q for k, q in held.items() if q > 0},
+        )
+    wanted = set(instance_ids or [])
+    chosen_instances = {i["instanceId"] for i in items if i["instanceId"] in wanted}
+    chosen_balances = {
+        k: min(q, held.get(k, 0))
+        for k, q in (balances or {}).items()
+        if q > 0 and held.get(k, 0) > 0
+    }
+    return chosen_instances, chosen_balances
+
+
+@_in_transaction
+async def destroy_all_storage(
+    address: str, character_id: str, storage_type: str,
+    instance_ids: Optional[List[str]] = None,
+    balances: Optional[Dict[str, int]] = None,
+) -> Optional[Player]:
+    """Burn all: destroys what storage holds - only the given instances and
+    stacked amounts when a selection is passed (see _storage_selection)."""
+    _check_storage_type(storage_type)
     db = get_database()
     doc = await db.characters.find_one({"address": address, "id": character_id})
     if doc is None:
@@ -5021,15 +5088,19 @@ async def destroy_all_storage(address: str, character_id: str, storage_type: str
     storage_doc = await _storage_coll(db, storage_type).find_one(
         _storage_filter(address, character_id)
     )
-    has_instances = storage_doc and len(storage_doc.get("items", [])) > 0
-    has_balances = storage_doc and any(qty > 0 for qty in storage_doc.get("itemBalances", {}).values())
-    if not has_instances and not has_balances:
+    burn_iids, burn_balances = _storage_selection(storage_doc, instance_ids, balances)
+    if not burn_iids and not burn_balances:
         return None
-    await _storage_coll(db, storage_type).update_one(
-        _storage_filter(address, character_id),
-        {"$set": {"itemBalances": {}, "items": []}},
-    )
-    return await _build_player(db, address)
+    if burn_iids:
+        remaining = [i for i in (storage_doc or {}).get("items", []) if i["instanceId"] not in burn_iids]
+        await _set_storage_items(db, storage_type, address, character_id, remaining)
+    if burn_balances:
+        held = (storage_doc or {}).get("itemBalances", {})
+        await _set_storage_balances(
+            db, storage_type, address, character_id,
+            {k: q - burn_balances.get(k, 0) for k, q in held.items()},
+        )
+    return BUILD_PLAYER
 
 
 @_in_transaction
@@ -5480,11 +5551,14 @@ async def move_all_storage_to_backpack(
 @_in_transaction
 async def move_all_storage_to_bags(
     address: str, character_id: str, storage_type: str = "home",
+    instance_ids: Optional[List[str]] = None,
+    balances: Optional[Dict[str, int]] = None,
 ) -> Optional[Player]:
     """
     Best-effort bulk move: everything in storage (home or camp) moves into
-    bags (cart first, then saddlepack, then backpack). Whatever doesn't
-    fit stays in storage.
+    bags (cart first, then saddlepack, then backpack) - only the given
+    instances and stacked amounts when a selection is passed (see
+    _storage_selection). Whatever doesn't fit stays in storage.
     """
     _check_storage_type(storage_type)
     db = get_database()
@@ -5496,16 +5570,14 @@ async def move_all_storage_to_bags(
     gear = character.get("gear", {})
     coll = db[STORAGE_COLLECTIONS[storage_type]]
     storage_doc = await coll.find_one({"address": address, "characterId": character_id})
+    chosen_iids, chosen_balances = _storage_selection(storage_doc, instance_ids, balances)
     storage_instances = [
         i for i in (storage_doc or {}).get("items", [])
-        if i.get("familyId") not in _CONTAINER_FAMILIES
+        if i.get("familyId") not in _CONTAINER_FAMILIES and i["instanceId"] in chosen_iids
     ]
     storage_item_balances = (storage_doc or {}).get("itemBalances", {})
 
-    if (
-        not storage_instances
-        and not any(qty > 0 for qty in storage_item_balances.values())
-    ):
+    if not storage_instances and not chosen_balances:
         return None
 
     ct_cap = items_catalog.cart_capacity(character)
@@ -5545,7 +5617,7 @@ async def move_all_storage_to_bags(
     new_sp_balances = dict(gear.get("itemBalances", {}).get("saddlepack", {}))
     new_bp_balances = dict(gear.get("itemBalances", {}).get("backpack", {}))
     new_storage_balances = dict(storage_item_balances)
-    for item_id, qty in storage_item_balances.items():
+    for item_id, qty in chosen_balances.items():
         if qty <= 0:
             continue
         remaining = qty
@@ -5575,7 +5647,8 @@ async def move_all_storage_to_bags(
                 remaining -= move
                 bp_free -= (math.ceil((existing + move) / stack_size) - math.ceil(existing / stack_size)) * slot_cost
 
-        new_storage_balances[item_id] = remaining
+        # Only part of the stack may have been chosen - the rest stays put.
+        new_storage_balances[item_id] = storage_item_balances.get(item_id, 0) - (qty - remaining)
 
     update_op: Dict = {"$set": {
         "gear.itemBalances.cart": _strip_zeros(new_ct_balances),
@@ -5603,18 +5676,38 @@ _CONTAINER_FAMILIES = frozenset({"backpack", "saddlepack", "cart"})
 
 def _recyclable_home_entries(character: dict, storage_type: str = "home"):
     """
-    Yields (kind, id, entry, count, preselected) for every item
+    Yields (kind, id, entry, count, preselected, bucket) for every item
     instance (location matching storage_type) and itemBalances entry
     whose family has a recipe to salvage. Also yields the contents of
     containers (backpack/saddlepack/cart) sitting in storage, plus the
-    containers themselves.
+    containers themselves. `bucket` is where the thing lies: storage_type,
+    or the container family for its contents.
+
+    A character owns at most one backpack, saddlepack and cart, so a
+    stored container's contents are its own. As a safety net, contents are
+    never offered for a family that is also equipped (location "body") -
+    an equipped bag's contents are never salvaged from storage. A stack
+    inside a container gets the id "<family>:<itemId>", so it never merges
+    with the same item lying loose in storage.
     """
     gear = character.get("gear", {})
 
-    # Which containers are sitting in storage right now?
+    # Equipped = sitting in an equip slot (Back, the mount's bag slot, the
+    # mount's Hitch): location "body" with a slotRef. Either one counts.
+    equipped_containers = {
+        instance.get("familyId") for instance in gear.get("items", [])
+        if instance.get("familyId") in _CONTAINER_FAMILIES
+        and (instance.get("location") == "body" or instance.get("slotRef"))
+    }
+    # Which containers are sitting in storage right now (and not worn)?
     home_containers: list[str] = []
     for instance in gear.get("items", []):
-        if instance.get("location") == storage_type and instance.get("familyId") in _CONTAINER_FAMILIES:
+        if (
+            instance.get("location") == storage_type
+            and instance.get("familyId") in _CONTAINER_FAMILIES
+            and instance["familyId"] not in equipped_containers
+            and instance["familyId"] not in home_containers
+        ):
             home_containers.append(instance["familyId"])
 
     for instance in gear.get("items", []):
@@ -5625,11 +5718,11 @@ def _recyclable_home_entries(character: dict, storage_type: str = "home"):
             continue
         if instance.get("familyId") in _CONTAINER_FAMILIES:
             if recycling.has_recipe(entry.family_id):
-                yield "instance", instance["instanceId"], entry, 1, True
+                yield "instance", instance["instanceId"], entry, 1, True, storage_type
             continue
         if not recycling.has_recipe(entry.family_id):
             continue
-        yield "instance", instance["instanceId"], entry, 1, True
+        yield "instance", instance["instanceId"], entry, 1, True, storage_type
 
     # Contents of containers sitting in storage.
     for container_fam in home_containers:
@@ -5639,14 +5732,14 @@ def _recyclable_home_entries(character: dict, storage_type: str = "home"):
             entry = items_catalog.ITEM_CATALOG_ENTRIES_BY_ID.get(instance["itemId"])
             if entry is None or not recycling.has_recipe(entry.family_id):
                 continue
-            yield "instance", instance["instanceId"], entry, 1, True
+            yield "instance", instance["instanceId"], entry, 1, True, container_fam
         for item_id, qty in gear.get("itemBalances", {}).get(container_fam, {}).items():
             if qty <= 0:
                 continue
             entry = items_catalog.ITEM_CATALOG_ENTRIES_BY_ID.get(item_id)
             if entry is None or not recycling.has_recipe(entry.family_id):
                 continue
-            yield "balance", item_id, entry, qty, True
+            yield "balance", f"{container_fam}:{item_id}", entry, qty, True, container_fam
 
     # Storage's own balances (not inside a container).
     for item_id, qty in gear.get("itemBalances", {}).get(storage_type, {}).items():
@@ -5655,7 +5748,7 @@ def _recyclable_home_entries(character: dict, storage_type: str = "home"):
         entry = items_catalog.ITEM_CATALOG_ENTRIES_BY_ID.get(item_id)
         if entry is None or not recycling.has_recipe(entry.family_id):
             continue
-        yield "balance", item_id, entry, qty, True
+        yield "balance", item_id, entry, qty, True, storage_type
 
 
 async def preview_home_salvage(
@@ -5698,23 +5791,15 @@ async def preview_home_salvage(
 
     rows: List[Dict[str, object]] = []
     instances_by_id = {i["instanceId"]: i for i in character.get("gear", {}).get("items", [])}
-    for kind, entry_id, entry, count, preselected in _recyclable_home_entries(character, storage_type):
+    for kind, entry_id, entry, count, preselected, bucket in _recyclable_home_entries(character, storage_type):
         if allow_ids is not None:
-            if entry_id not in allow_ids:
-                # Check if this entry lives inside a selected container
-                inst = instances_by_id.get(entry_id)
-                if inst is not None:
-                    if inst.get("location") not in allow_locations:
-                        continue
-                else:
-                    # Balance entry — check if its bucket is a selected container
-                    found = False
-                    for loc in allow_locations:
-                        if entry_id in character.get("gear", {}).get("itemBalances", {}).get(loc, {}):
-                            found = True
-                            break
-                    if not found:
-                        continue
+            # Lying in storage: only when selected itself. Inside a stored
+            # container: only when that container is selected.
+            if bucket == storage_type:
+                if entry_id not in allow_ids:
+                    continue
+            elif bucket not in allow_locations:
+                continue
         condition = _instance_condition(instances_by_id.get(entry_id), entry) if kind == "instance" else "new"
         try:
             recoveries = recycling.resolve_salvage_preview(entry.family_id, entry.tier, character, {}, [], count, condition=condition)
@@ -5774,7 +5859,7 @@ async def salvage_home(address: str, character_id: str, selected_ids: List[str],
     recovered_totals: Dict[str, int] = {}
 
     instances_by_id = {i["instanceId"]: i for i in character.get("gear", {}).get("items", [])}
-    for kind, entry_id, entry, count, _preselected in _recyclable_home_entries(character, storage_type):
+    for kind, entry_id, entry, count, _preselected, bucket in _recyclable_home_entries(character, storage_type):
         if entry_id not in selected:
             continue
         condition = _instance_condition(instances_by_id.get(entry_id), entry) if kind == "instance" else "new"
@@ -5788,7 +5873,7 @@ async def salvage_home(address: str, character_id: str, selected_ids: List[str],
         if kind == "instance":
             salvaged_instance_ids.add(entry_id)
         else:
-            salvaged_balance_ids.add(entry_id)
+            salvaged_balance_ids.add((bucket, entry.id))
 
     if not salvaged_instance_ids and not salvaged_balance_ids:
         return None
@@ -5811,7 +5896,7 @@ async def salvage_home(address: str, character_id: str, selected_ids: List[str],
             continue
         new_balances = {
             item_id: qty for item_id, qty in old_balances.items()
-            if item_id not in salvaged_balance_ids and qty > 0
+            if (bucket, item_id) not in salvaged_balance_ids and qty > 0
         }
         if new_balances != old_balances:
             update_sets[f"gear.itemBalances.{bucket}"] = new_balances
@@ -5819,7 +5904,7 @@ async def salvage_home(address: str, character_id: str, selected_ids: List[str],
     old_home = character["gear"]["itemBalances"].get(storage_type, {})
     new_home_balances = {
         item_id: qty for item_id, qty in old_home.items()
-        if item_id not in salvaged_balance_ids and qty > 0
+        if (storage_type, item_id) not in salvaged_balance_ids and qty > 0
     }
     for rid, qty in recovered_totals.items():
         new_home_balances[rid] = new_home_balances.get(rid, 0) + qty

@@ -20,9 +20,10 @@ weighted by points lost, so the worst-hit attribute tends to heal first.
 Losing: a point aimed at an attribute already at 0 goes to another attribute
 of its group, and once the whole group is at 0, to the other group - a lost
 point is always lost until every attribute is 0. When all Body attributes
-reach 0 the character is dead, when all Soul attributes do it is soulless
-(vitalStatus, mirrored as a player_characters tag); a drained group never
-heals again.
+reach 0 the character is dead, when all Soul attributes do it is soulless.
+Both are yes/no and stack: vitalStatus ["alive"] (soul intact is not
+written), ["alive", "soulless"], ["dead"], ["dead", "soulless"] - mirrored
+as the leading player_characters tags. A drained group never heals again.
 
 The heal picks are seeded by the clock time, so working out the current
 state is a pure function of the stored fields and the time: reads never need
@@ -40,6 +41,7 @@ import random
 from datetime import datetime, timedelta, timezone
 from typing import Optional
 
+from backend.character import VITAL_STATUSES, is_alive, vital_status_list
 from backend.db import get_database, transactional
 
 BODY_ATTRS = ("migh", "agil", "endu", "prec")
@@ -152,15 +154,30 @@ def settle(attr_max: dict, lost: Optional[dict], heal_from: Optional[str], now: 
     return lost, (clock.isoformat() if healable else None)
 
 
-def vital_status_for(attr_max: dict, lost: Optional[dict], current: str = "alive") -> str:
-    """dead once Body is drained, soulless once Soul is (dead wins); other
-    states (vampire, cursed, ...) are kept while both groups hold points."""
+def is_dead(doc: dict) -> bool:
+    """No physical actions (foraging, crafting, adventures): the life state
+    is dead, or every Body attribute is at 0 (a drained group never heals,
+    so the stored loss is enough). Soulless alone doesn't count."""
+    if not is_alive(doc.get("vitalStatus")):
+        return True
+    lost = doc.get("attrLost")
+    if not lost:   # nothing lost (or no attributes stored): Body is whole
+        return False
+    return "body" in drained_groups(doc.get("attr") or {}, lost)
+
+
+def vital_status_for(attr_max: dict, lost: Optional[dict], current=("alive",)) -> list:
+    """The vitalStatus list (see backend.character.vital_status_list): the
+    life state turns dead once Body is drained, and soulless is added once
+    Soul is - the two stack (["dead", "soulless"]). Other conditions
+    (vampire, cursed, ...) are kept."""
+    status = vital_status_list(current)
     drained = drained_groups(attr_max, lost)
-    if "body" in drained:
-        return "dead"
-    if "soul" in drained:
-        return "soulless"
-    return current
+    life = "dead" if "body" in drained else status[0]
+    conditions = status[1:]
+    if "soul" in drained and "soulless" not in conditions:
+        conditions = [*conditions, "soulless"]
+    return [life, *conditions]
 
 
 def condition_view(doc: dict, now: Optional[datetime] = None) -> dict:
@@ -244,8 +261,9 @@ async def apply_loss(address: str, character_id: str, points: dict, db=None,
     """Take `points` ({attr: n}) off the current values and restart the
     healing clock (if the character is free). A point aimed at an attribute
     already at 0 spills over (place_point). Draining Body makes the character
-    dead, draining Soul soulless. Returns (what was actually lost, the new
-    vital status if it changed)."""
+    dead, draining Soul soulless. Returns (what was actually lost, what the
+    vital status newly gained - e.g. "soulless" or "dead, soulless" - or
+    None)."""
     db = db if db is not None else get_database()
     rng = rng or random.Random()
     doc = await _load(db, address, character_id)
@@ -267,16 +285,18 @@ async def apply_loss(address: str, character_id: str, points: dict, db=None,
     clock = now.isoformat() if healable and not is_busy(doc) else None
     await _save(db, address, character_id, lost, clock)
 
-    old_status = doc.get("vitalStatus", "alive")
+    old_status = vital_status_list(doc.get("vitalStatus"))
     new_status = vital_status_for(attr_max, lost, old_status)
     if new_status != old_status:
-        await _set_vital_status(db, address, character_id, old_status, new_status)
-        return taken, new_status
+        await _set_vital_status(db, address, character_id, new_status)
+        gained = [s for s in new_status if s not in old_status]
+        return taken, ", ".join(gained) or None
     return taken, None
 
 
-async def _set_vital_status(db, address: str, character_id: str, old: str, new: str) -> None:
-    """Set vitalStatus on the character and swap its tag on the summary entry."""
+async def _set_vital_status(db, address: str, character_id: str, new: list) -> None:
+    """Set the vitalStatus list on the character, and as the leading tags of
+    its summary entry (any older vital tags are replaced)."""
     await db.characters.update_one({"address": address, "id": character_id},
                                    {"$set": {"vitalStatus": new}})
     pc = await db.player_characters.find_one(
@@ -284,9 +304,7 @@ async def _set_vital_status(db, address: str, character_id: str, old: str, new: 
     if not pc:
         return
     entry = next(e for e in pc["characters"] if e.get("characterId") == character_id)
-    tags = [t for t in entry.get("tags", []) if t != old]
-    if new not in tags:
-        tags.insert(0, new)
+    tags = [*new, *(t for t in entry.get("tags", []) if t not in VITAL_STATUSES)]
     await db.player_characters.update_one(
         {"address": address, "characters.characterId": character_id},
         {"$set": {"characters.$.tags": tags}},

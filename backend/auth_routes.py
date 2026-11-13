@@ -56,7 +56,7 @@ from backend.players import (
     get_or_create_player,
     get_single_character,
     get_player,
-    grant_item_balance,
+    grant_home_starter_kit,
     move_all_storage_to_backpack,
     move_all_storage_to_bags,
     preview_home_salvage,
@@ -346,7 +346,7 @@ class CharacterResponse(BaseModel):
     slotNumber: int = Field(..., description="Soul slot this character lives in")
     firstName: str = Field(..., description="Character's first name")
     lastName: str = Field(..., description="Character's last name")
-    vitalStatus: str = Field(..., description="Character's vital status")
+    vitalStatus: List[str] = Field(..., description="Life state (alive/dead), then conditions such as soulless")
     age_month: int = Field(..., description="Character's age in months (canonical, human-equivalent)")
     gender: str = Field(..., description="Character's gender")
     raceGroup: str = Field(..., description="Character's race group")
@@ -1838,11 +1838,30 @@ async def destroy_character_item_balance_route(
     return player.to_dict()
 
 
+class StorageShownSelection(BaseModel):
+    """What the storage grid showed when Burn all / Pack all was pressed:
+    only these instances and stacked amounts are acted on. No body at all =
+    everything in storage."""
+
+    instanceIds: List[str] = Field(default_factory=list)
+    balances: Dict[str, int] = Field(default_factory=dict)
+
+
+def _shown(payload: Optional[StorageShownSelection]) -> dict:
+    if payload is None:
+        return {}
+    return {"instance_ids": payload.instanceIds, "balances": payload.balances}
+
+
 @player_router.post("/me/characters/{character_id}/home/burn-all", response_model=PlayerDataResponse)
-async def destroy_all_home_route(character_id: str, address: str = Depends(get_current_address)):
-    player = await destroy_all_storage(address, character_id, "home")
+async def destroy_all_home_route(
+    character_id: str,
+    payload: Optional[StorageShownSelection] = None,
+    address: str = Depends(get_current_address),
+):
+    player = await destroy_all_storage(address, character_id, "home", **_shown(payload))
     if player is None:
-        raise HTTPException(status_code=404, detail="Home is already empty")
+        raise HTTPException(status_code=404, detail="Nothing to burn")
     return player.to_dict()
 
 
@@ -1859,10 +1878,14 @@ async def move_all_home_to_backpack_route(character_id: str, address: str = Depe
 
 
 @player_router.post("/me/characters/{character_id}/home/move-all-to-bags")
-async def move_all_home_to_bags_route(character_id: str, address: str = Depends(get_current_address)):
+async def move_all_home_to_bags_route(
+    character_id: str,
+    payload: Optional[StorageShownSelection] = None,
+    address: str = Depends(get_current_address),
+):
     """Move home contents into bags (cart first, then saddlepack, then backpack)."""
     try:
-        result = await move_all_storage_to_bags(address, character_id, "home")
+        result = await move_all_storage_to_bags(address, character_id, "home", **_shown(payload))
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc))
     if result is None:
@@ -2007,10 +2030,14 @@ async def bulk_move_camp_route(
 
 
 @player_router.post("/me/characters/{character_id}/camp/burn-all", response_model=PlayerDataResponse)
-async def destroy_all_camp_route(character_id: str, address: str = Depends(get_current_address)):
-    player = await destroy_all_storage(address, character_id, "camp")
+async def destroy_all_camp_route(
+    character_id: str,
+    payload: Optional[StorageShownSelection] = None,
+    address: str = Depends(get_current_address),
+):
+    player = await destroy_all_storage(address, character_id, "camp", **_shown(payload))
     if player is None:
-        raise HTTPException(status_code=404, detail="Camp storage is already empty")
+        raise HTTPException(status_code=404, detail="Nothing to burn")
     return player.to_dict()
 
 
@@ -2063,9 +2090,13 @@ async def move_all_camp_to_backpack_route(character_id: str, address: str = Depe
 
 
 @player_router.post("/me/characters/{character_id}/camp/move-all-to-bags")
-async def move_all_camp_to_bags_route(character_id: str, address: str = Depends(get_current_address)):
+async def move_all_camp_to_bags_route(
+    character_id: str,
+    payload: Optional[StorageShownSelection] = None,
+    address: str = Depends(get_current_address),
+):
     try:
-        result = await move_all_storage_to_bags(address, character_id, "camp")
+        result = await move_all_storage_to_bags(address, character_id, "camp", **_shown(payload))
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc))
     if result is None:
@@ -2632,11 +2663,10 @@ async def create_character(
         # aren't gated by this at all (see above, unconditional) - they're
         # soulbound to whichever character is created, not a limited one-time
         # slot bonus the way raw materials are.
-        # Raw materials go into the player's shared vault (player_vaults
-        # collection, keyed by address).
+        # Raw materials go into the new character's home storage
+        # (character_homes) - not the player's shared vault.
         if not await has_claimed_starter_kit(address, payload.slotNumber):
-            for resource_id, amount in payload.selectedResources.items():
-                await grant_item_balance(address, resource_id, amount)
+            await grant_home_starter_kit(address, character.id, dict(payload.selectedResources))
             await mark_starter_kit_claimed(address, payload.slotNumber)
 
         # The slot's one-time foraging pool (see backend.foraging) - created only

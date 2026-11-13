@@ -346,6 +346,20 @@ function getToolFamilyIcon(familyId: string): string {
   }
 }
 
+/**
+ * Empty-grid text for the "All" (A) filter of vault, home and camp. "All"
+ * leaves out tools and raw/processed materials - they have their own 🔧 and
+ * 🪨 buttons - so a storage holding only those would otherwise read as
+ * empty. When something is hidden, point at the filter that shows it.
+ */
+export function allFilterEmptyLabel(emptyLabel: string, hasTools: boolean, hasResources: boolean, hasOtherHidden: boolean): string {
+  if (hasTools && hasResources) return "Only tools and materials here - use 🔧 or 🪨 above to see them.";
+  if (hasTools) return "Only tools here - use 🔧 above to see them.";
+  if (hasResources) return "Only materials here - use 🪨 above to see them.";
+  if (hasOtherHidden) return "Use the filters above to find all items.";
+  return emptyLabel;
+}
+
 export function getKindIcon(kind: string): string {
   switch (kind) {
     case "tool":
@@ -1723,6 +1737,12 @@ export function ChopBlockPopup({
   const [selected, setSelected] = useState<Set<string>>(new Set());
 
   useEffect(() => {
+    // An empty pre-selection means nothing to salvage - not "everything",
+    // which is what the preview answers when no `selected` is sent.
+    if (preSelectedIds && preSelectedIds.size === 0) {
+      setRows([]);
+      return;
+    }
     let cancelled = false;
     let url = `/api/auth/me/characters/${characterId}/${source}/salvage-preview`;
     const params: string[] = [];
@@ -3856,7 +3876,7 @@ export function VaultTab({
         const vaultResourceTierInfo = vaultSpecialFilter === "resources" ? resourceTierInfo : undefined;
         return (
           <>
-            {allVaultIds.length > 0 && (
+            {(allVaultIds.length > 0 || hasResources) && (
               vaultSelectMode ? (
                 <div className={styles.selectionBar}>
                   <div className={styles.selectionBarActions}>
@@ -3999,7 +4019,7 @@ export function VaultTab({
             )}
             <ItemGrid
               ids={filteredIds}
-              emptyLabel={vaultSpecialFilter === "tools" ? "No tools owned." : vaultSpecialFilter === "resources" ? "No resources owned." : allActive ? "Shared Vault empty." : "No items match."}
+              emptyLabel={vaultSpecialFilter === "tools" ? "No tools owned." : vaultSpecialFilter === "resources" ? "No resources owned." : allActive ? allFilterEmptyLabel("Shared Vault empty.", hasTools, hasResources, allVaultIds.length > 0) : "No items match."}
               tierInfo={mergedCatalogTierInfo}
               balances={playerItemsCombined}
               lookupIds={playerItemLookupIds}

@@ -70,6 +70,7 @@ from pymongo import ReturnDocument
 from pymongo.errors import DuplicateKeyError
 
 from backend import condition, foraging
+from backend.character import vital_status_list
 from backend.db import find_one_and_update_checked, get_database
 from backend.twine_graph import LAST_RESORT_PASSAGE, build_story_graph, step_allowed
 
@@ -482,7 +483,7 @@ def _character_var(doc: dict, lead_id: str) -> dict:
         "race": doc.get("race"),
         "raceGroup": doc.get("raceGroup"),
         "birthsign": doc.get("birthsign"),
-        "vitalStatus": doc.get("vitalStatus"),
+        "vitalStatus": vital_status_list(doc.get("vitalStatus")),
         "attr": doc.get("attr", {}),
         "classes": doc.get("classes", {}),
         "lead": doc.get("id") == lead_id,
@@ -626,8 +627,8 @@ async def start_adventure(
             raise AdventureError("Character not found", 404)
         name = doc.get("firstName") or character_id
         availability = doc.get("availability", {})
-        if doc.get("vitalStatus", "alive") != "alive":
-            raise AdventureError(f"{name} can't go on an adventure ({doc.get('vitalStatus')})", 409)
+        if condition.is_dead(doc):
+            raise AdventureError(f"{name} sleeps among the dead. No road calls to one who no longer draws breath.", 409)
         if availability.get("inAdventure") or availability.get("adventure"):
             raise AdventureError(f"{name} is already on an adventure", 409)
         active_craft = (doc.get("crafting") or {}).get("activeCraft")

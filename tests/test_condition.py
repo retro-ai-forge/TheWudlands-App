@@ -11,7 +11,7 @@ from datetime import datetime, timedelta, timezone
 import pytest
 
 from backend import condition, foraging
-from backend.character import AttributeStats, Character, ProfStats
+from backend.character import AttributeStats, Character, ProfStats, has_soul, is_alive, vital_status_list
 from backend.db import get_database
 from backend.players import add_character
 
@@ -74,10 +74,24 @@ def test_point_spills_to_the_group_then_the_other_group():
 def test_drained_body_is_dead_and_drained_soul_soulless():
     body_gone = {k: MAX[k] for k in condition.BODY_ATTRS}
     soul_gone = {k: MAX[k] for k in condition.SOUL_ATTRS}
-    assert condition.vital_status_for(MAX, {"endu": 1}) == "alive"
-    assert condition.vital_status_for(MAX, body_gone) == "dead"
-    assert condition.vital_status_for(MAX, soul_gone) == "soulless"
-    assert condition.vital_status_for(MAX, {**body_gone, **soul_gone}, "soulless") == "dead"
+    assert condition.vital_status_for(MAX, {"endu": 1}) == ["alive"]
+    assert condition.vital_status_for(MAX, body_gone) == ["dead"]
+    # Soulless is a condition on top of the life state - still alive.
+    assert condition.vital_status_for(MAX, soul_gone) == ["alive", "soulless"]
+    # Both stack; an old one-word "soulless" reads as alive + soulless.
+    assert condition.vital_status_for(MAX, {**body_gone, **soul_gone}, "soulless") == ["dead", "soulless"]
+    assert condition.vital_status_for(MAX, {**body_gone, **soul_gone}) == ["dead", "soulless"]
+
+
+def test_vital_status_list_reads_old_and_new_forms():
+    assert vital_status_list(None) == ["alive"]
+    assert vital_status_list("dead") == ["dead"]
+    assert vital_status_list("soulless") == ["alive", "soulless"]
+    assert vital_status_list(["dead", "soulless"]) == ["dead", "soulless"]
+    assert vital_status_list(["soulless", "dead"]) == ["dead", "soulless"]
+    # Only the life state counts for physical actions; soulless for soul ones.
+    assert is_alive(["alive", "soulless"]) and not has_soul(["alive", "soulless"])
+    assert not is_alive(["dead"]) and has_soul(["dead"])
 
 
 def test_a_drained_group_never_heals():
@@ -194,9 +208,10 @@ async def test_draining_body_kills_and_tags_the_character(db):
     _, status = await condition.apply_loss(ADDRESS, cid, {"migh": 2, "agil": 1, "endu": 1, "prec": 1})
     assert status == "dead"
     doc = await _doc(db, cid)
-    assert doc["vitalStatus"] == "dead" and doc["healFrom"] is None   # Body never heals
+    assert doc["vitalStatus"] == ["dead"] and doc["healFrom"] is None   # Body never heals
     pc = await db.player_characters.find_one({"address": ADDRESS})
     assert pc["characters"][0]["tags"][0] == "dead"
+    assert "alive" not in pc["characters"][0]["tags"]
 
     # A further point can only land on Soul now.
     taken, _ = await condition.apply_loss(ADDRESS, cid, {"endu": 1})

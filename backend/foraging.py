@@ -1214,8 +1214,8 @@ async def start_forage(address: str, character_id: str, mission_id: str) -> dict
     if mission.family_id not in profession_families(profession_ids):
         raise ForagingError(f"{name}'s professions don't lead to {mission.name}")
 
-    if doc.get("vitalStatus", "alive") != "alive":
-        raise ForagingError(f"{name} can't go foraging ({doc.get('vitalStatus')})", 409)
+    if condition.is_dead(doc):
+        raise ForagingError(f"{name} lies cold beneath the earth. The dead gather nothing - no root, no stone, no ore.", 409)
     availability = doc.get("availability") or {}
     if availability.get("inAdventure") or availability.get("adventure"):
         raise ForagingError(f"{name} is out on an adventure", 409)
