@@ -199,11 +199,7 @@ export interface SlotCharacterSummary {
 /** One foraging mission (backend/data/foraging-missions.json). */
 export type ForageMission = {
   id: string;
-  /** Profession group, e.g. "Rural". */
-  group: string;
-  /** The group's headline, e.g. "Fields, Folds & Fishponds". */
-  headline: string;
-  /** The group's foraging name for this family, e.g. "Fishing". */
+  /** The material's foraging name (foraging-missions.json "materials"), e.g. "Fishing". */
   activity: string;
   familyId: string;
   /** The mission's own headline, e.g. "Trout Pools Upstream". */
@@ -312,7 +308,7 @@ export type ForageResult = {
   oldGearMessage?: string | null;
   /** The night out: weather, tent/bedroll carried, and the temporary Body/Soul points it cost. */
   night?: {
-    /** foraging-rules.json "nights.weather" id, e.g. "warm", "rain", "sandstorm". */
+    /** foraging-rules.json "nights.weather" id, e.g. "warm", "rain", "sandstorm" - or underground (ore, crystal) "damp", "ice_cave", "ghosts". */
     weather: string;
     shelter: string[];
     kind: "both" | "body" | "soul" | "sheltered" | "calm";
@@ -346,7 +342,7 @@ export type ForagingState = {
   hasPool: boolean;
   /** Trip length - 20h by default (FORAGING_DURATION_MINUTES can shorten it for local testing). */
   durationMinutes: number;
-  groups: { group: string; headline: string; activities: Record<string, string> }[];
+  groups: { group: string; headline: string }[];
   /** One per family still worth a trip - picked-clean families are left out. */
   sites: {
     familyId: string;
@@ -361,6 +357,8 @@ export type ForagingState = {
     helpfulWeapons: string[];
     helpfulItems: string[];
     mission: ForageMission | null;
+    /** Dug in the dark (foraging-rules.json "darkness": ore, crystal) - light needed. */
+    needsLight?: boolean;
   }[];
   dormantFamilies: string[];
   activeForage: ActiveForage | null;

@@ -142,6 +142,8 @@
       "tent",
       "bedroll"
     ],
+    "_undergroundComment": "Materials dug in mines and caves: their nights only roll the weathers marked \"underground\" (no sky, rain or wind up there), all others only the rest. \"group\": \"soul\" sends every point of that night to Soul.",
+    "underground": ["ore", "crystal"],
     "weather": {
       "warm": { "weight": 30, "severity": "none" },
       "cool": { "weight": 20, "severity": "mild" },
@@ -153,8 +155,19 @@
       "storm": { "weight": 8, "severity": "severe" },
       "flood": { "weight": 12, "severity": "severe", "families": ["fish", "reed", "clay"] },
       "sandstorm": { "weight": 15, "severity": "severe", "families": ["sand"] },
-      "blizzard": { "weight": 8, "severity": "severe", "families": ["ore", "stone", "crystal"] },
-      "rockslide": { "weight": 8, "severity": "severe", "families": ["ore", "stone", "crystal", "pigment"] }
+      "blizzard": { "weight": 8, "severity": "severe", "families": ["stone"] },
+      "rockslide": { "weight": 8, "severity": "severe", "families": ["stone", "pigment"] },
+      "still": { "weight": 30, "severity": "none", "underground": true },
+      "damp": { "weight": 18, "severity": "mild", "underground": true },
+      "draught": { "weight": 12, "severity": "mild", "underground": true },
+      "dust": { "weight": 8, "severity": "mild", "underground": true },
+      "creaking": { "weight": 8, "severity": "mild", "underground": true },
+      "hot_rock": { "weight": 6, "severity": "mild", "underground": true },
+      "ice_cave": { "weight": 8, "severity": "severe", "underground": true },
+      "rising_water": { "weight": 8, "severity": "severe", "underground": true },
+      "foul_air": { "weight": 6, "severity": "severe", "underground": true },
+      "tremor": { "weight": 6, "severity": "severe", "underground": true },
+      "ghosts": { "weight": 5, "severity": "severe", "underground": true, "group": "soul" }
     },
     "tentDestroyedChance": { "severe": 0.03 },
     "pointsLost": {

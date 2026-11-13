@@ -79,14 +79,20 @@ def test_tiers_follow_profession_count(count, allowed):
     assert {int(k.rsplit("_", 1)[1]) for k in found} == allowed
 
 
-def test_every_group_has_missions_names_and_headline_for_each_family():
-    for group, families in _FAMILIES.items():
-        g = foraging.GROUPS[group]
-        assert g["headline"]
-        assert set(g["activities"]) == set(families)
-        missions = [m for m in foraging.MISSIONS_BY_ID.values() if m.group == group]
-        assert len(missions) >= 20
-        assert {m.family_id for m in missions} == set(families)
+def test_every_group_has_a_headline_and_every_material_its_missions():
+    for group in _FAMILIES:
+        assert foraging.GROUPS[group]["headline"]
+    for family in {f for fams in _FAMILIES.values() for f in fams}:
+        missions = [m for m in foraging.MISSIONS_BY_ID.values() if m.family_id == family]
+        assert len(missions) >= 5, family
+        assert len({m.activity for m in missions}) == 1 and missions[0].activity   # one name per material
+
+
+def test_every_character_draws_from_the_whole_list_of_its_material():
+    ore = {m.id for m in foraging.MISSIONS_BY_ID.values() if m.family_id == "ore"}
+    assert len(ore) == 35
+    offered = {foraging.suggested_mission("ore", f"seed-{n}").id for n in range(2000)}
+    assert offered == ore
 
 
 def test_return_outcome_thresholds():
@@ -201,7 +207,13 @@ async def test_foraging_blocks_adventure_and_double_start(db):
 async def test_mission_outside_professions_is_refused(db):
     cid = await _make(1, "blacksmith")
     with pytest.raises(foraging.ForagingError):
-        await foraging.start_forage(ADDRESS, cid, "alchemy_01")
+        await foraging.start_forage(ADDRESS, cid, "alchemy_01")          # herbs - not a blacksmith's
+
+
+async def test_any_mission_of_one_s_own_material_can_be_started(db):
+    cid = await _make(1, "blacksmith")
+    state = await foraging.start_forage(ADDRESS, cid, "military_01")     # an ore mission, once soldiers' only
+    assert state["activeForage"]["familyId"] == "ore" and state["activeForage"]["activity"] == "Mining"
 
 
 async def test_pool_is_created_once_per_slot_and_inherited(db):
@@ -240,7 +252,7 @@ async def test_last_trip_says_depleted_and_hides_the_site(db):
     assert out["result"]["total"] == 1
     assert out["result"]["outcome"] == "depleted"
     assert out["result"]["message"].endswith(foraging.DEPLETED_HINT)
-    assert "Sword-Grave Hill" in out["result"]["message"] and "Mira" in out["result"]["message"]
+    assert "Sword-Grave Mine" in out["result"]["message"] and "Mira" in out["result"]["message"]
     assert "ore" not in {s["familyId"] for s in out["state"]["sites"]}
 
 
@@ -1103,3 +1115,57 @@ def test_a_trip_burns_at_most_24h_of_light_but_keeps_the_whole_find():
     assert plan["gear"]["percent"] == 75 + 4 * 18 + 25 and plan["amount"] == 28
     assert plan["burned"] == {"torch_1": 12} and plan["lightHours"] == 24 and not plan["inDark"]
     assert foraging.light_needed(30) == 24
+
+
+# ── Underground nights ─────────────────────────────────────────────────
+
+
+def test_mines_get_only_underground_nights():
+    from backend import condition as C
+    nights = foraging.NIGHTS
+    below = {w for w, c in nights["weather"].items() if c.get("underground")}
+    for family in nights["underground"]:
+        assert set(C.weathers_for(nights, family)) == below      # no rain, wind or sky down there
+    for family in ("wood", "stone", "sand", "clockwork"):
+        assert not set(C.weathers_for(nights, family)) & below
+    assert set(nights["underground"]) == {"ore", "crystal"}
+
+
+def test_every_underground_night_has_its_own_sentences():
+    by_weather = foraging.NIGHT_MESSAGES["byWeather"]
+    for weather, rule in foraging.NIGHTS["weather"].items():
+        if not rule.get("underground"):
+            continue
+        kinds = {"none": {"calm"}, "mild": {"sheltered", "body", "soul"},
+                 "severe": {"sheltered", "body", "soul", "both", "tentDestroyed"}}[rule["severity"]]
+        if rule.get("group") == "soul":
+            kinds = {"sheltered", "soul", "tentDestroyed"}
+        assert kinds <= set(by_weather[weather]), weather
+
+
+def test_ghost_nights_cost_soul_only():
+    from backend import condition as C
+    attr = {k: 5 for k in C.ATTR_KEYS}
+    for seed in range(50):
+        night = C.roll_night({**foraging.NIGHTS, "weather": {"ghosts": foraging.NIGHTS["weather"]["ghosts"]},
+                              "underground": ["ore"]}, 0, attr, {}, random.Random(seed), "ore")
+        assert sum(night["points"].values()) == 2 and all(k in C.SOUL_ATTRS for k in night["points"])
+        assert night["kind"] == "soul"
+        text = foraging.night_message(night, ["tent", "bedroll"], "Mira", random.Random(seed))
+        assert "Mira" in text and "{" not in text
+
+
+def test_a_tent_lost_underground_gets_the_condition_s_sentence():
+    text = foraging.tent_destroyed_message("Canvas Tent", "Mira", random.Random(1), weather="rising_water")
+    assert text in [t.format(name="Mira", tent="Canvas Tent")
+                    for t in foraging.NIGHT_MESSAGES["byWeather"]["rising_water"]["tentDestroyed"]]
+
+
+def test_ore_and_crystal_missions_are_underground():
+    words = ("mine", "gallery", "cave", "cavern", "shaft", "tunnel", "adit", "drift", "deep", "grotto",
+             "vault", "workings", "pit", "hole", "crawl", "chamber", "burrow", "cellar", "undercroft",
+             "crypt", "tube", "druse", "pockets")
+    for mission in foraging.MISSIONS_BY_ID.values():
+        if mission.family_id in ("ore", "crystal"):
+            text = f"{mission.name} {mission.place} {mission.text}".lower()
+            assert any(w in text for w in words), mission.id

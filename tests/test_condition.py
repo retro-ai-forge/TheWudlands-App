@@ -242,11 +242,14 @@ def test_site_weather_only_where_it_fits():
         rng = random.Random(9)
         return {condition.roll_night(RULES, 0, MAX, {}, rng, family_id)["weather"] for _ in range(3000)}
 
-    anywhere = {w for w, c in RULES["weather"].items() if not c.get("families")}
+    anywhere = {w for w, c in RULES["weather"].items() if not c.get("families") and not c.get("underground")}
+    below = {w for w, c in RULES["weather"].items() if c.get("underground")}
     assert seen("sand") == anywhere | {"sandstorm"}
     assert seen("fish") == anywhere | {"flood"}
-    assert seen("ore") == anywhere | {"blizzard", "rockslide"}
+    assert seen("stone") == anywhere | {"blizzard", "rockslide"}
     assert seen("herbs") == anywhere
+    # Mines and caves: only what happens underground - no sky up there.
+    assert seen("ore") == below and seen("crystal") == below
 
 
 def test_every_harmful_weather_has_its_own_sentences():
@@ -259,6 +262,10 @@ def test_every_harmful_weather_has_its_own_sentences():
         # (the first two existed before and use the general ones).
         if cfg["severity"] == "severe" and weather != "harsh":
             kinds.append("both")
+        # A night whose points all go to one group (ghosts: Soul) never
+        # reaches the other kinds.
+        if cfg.get("group"):
+            kinds = ["sheltered", cfg["group"]]
         for kind in kinds:
             assert len(by_weather[weather][kind]) >= 8, (weather, kind)
 

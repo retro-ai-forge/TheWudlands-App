@@ -88,6 +88,40 @@ function GearLine({ gear, helpfulWeapons, helpfulItems }: {
   );
 }
 
+// The lit torch picture; without one the plain T1 torch would get a small
+// drawn flame on top.
+const LIT_TORCH_ICON: string | null = "/images/items/torch_lit_t1.png";
+const TORCH_ICON = "/images/items/torch_t1.png";
+
+/** The material's icon (its T1 raw), with a small lit torch in the lower
+ * right for materials dug in the dark (ore, crystal - see backend darkness). */
+function MaterialIcon({ familyId, needsLight, catalog }: {
+  familyId: string;
+  needsLight?: boolean;
+  catalog: ResourceTierInfo;
+}) {
+  const icon = catalog[`${familyId}_1`]?.icon;
+  if (!icon) return null;
+  return (
+    <span className={styles.materialIcon} title={needsLight ? `${label(familyId)} - dug in the dark, bring light` : label(familyId)}>
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img className={styles.materialImg} src={icon} alt={label(familyId)} />
+      {needsLight && (
+        <span className={styles.torchBadge} aria-hidden="true">
+          {!LIT_TORCH_ICON && (
+            <svg className={styles.torchFlame} viewBox="0 0 10 14">
+              <path d="M5 0C6.5 3 9 5 9 8.5A4 4 0 0 1 1 8.5C1 6 3 5 3 2.5 4 3.5 4.5 4.5 4.5 5.5 5.5 4 5.5 2 5 0Z" fill="#f08a24" />
+              <path d="M5 5.5C6 7 7 8 7 9.5A2 2 0 0 1 3 9.5C3 8.5 4 7.5 5 5.5Z" fill="#ffd45a" />
+            </svg>
+          )}
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img className={styles.torchImg} src={LIT_TORCH_ICON ?? TORCH_ICON} alt="" />
+        </span>
+      )}
+    </span>
+  );
+}
+
 function siteRichness(remaining: number, initial: number, yieldMax: number): { label: string; tone: "rich" | "thin" | "last" } {
   if (yieldMax <= 1) return { label: "Nearly gone", tone: "last" };
   if (remaining * 2 < initial) return { label: "Thinning", tone: "thin" };
@@ -322,7 +356,10 @@ export function ForagingSection({
                     <span className={styles.activity}>{site.mission.activity}</span>
                     <span className={`${styles.richness} ${styles[`richness_${richness.tone}`]}`}>{richness.label}</span>
                   </div>
-                  <span className={styles.missionName}>{site.mission.name}</span>
+                  <div className={styles.nameRow}>
+                    <MaterialIcon familyId={site.familyId} needsLight={site.needsLight} catalog={catalog} />
+                    <span className={styles.missionName}>{site.mission.name}</span>
+                  </div>
                   <p className={styles.flavor}>{site.mission.text}</p>
                   <p className={styles.yield}>
                     {site.yieldMin === site.yieldMax

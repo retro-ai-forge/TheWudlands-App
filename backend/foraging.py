@@ -193,8 +193,6 @@ TIER_WEIGHTS: dict[int, dict[int, int]] = {
 @dataclass(frozen=True)
 class Mission:
     id: str
-    group: str
-    headline: str
     activity: str
     family_id: str
     name: str
@@ -202,33 +200,32 @@ class Mission:
     text: str
 
     def to_dict(self) -> dict:
-        return {"id": self.id, "group": self.group, "headline": self.headline, "activity": self.activity,
-                "familyId": self.family_id, "name": self.name, "place": self.place, "text": self.text}
+        return {"id": self.id, "activity": self.activity, "familyId": self.family_id, "name": self.name,
+                "place": self.place, "text": self.text}
+
+
+_MISSION_DATA: dict = json.loads((_DATA / "foraging-missions.json").read_text())
 
 
 def _load_missions() -> dict[str, Mission]:
-    data = json.loads((_DATA / "foraging-missions.json").read_text())
+    """One list per material (foraging-missions.json "materials") - every
+    character foraging that material draws from all of it."""
     missions: dict[str, Mission] = {}
-    for group, entry in data.items():
+    for family_id, entry in _MISSION_DATA["materials"].items():
         for m in entry["missions"]:
-            missions[m["id"]] = Mission(id=m["id"], group=group, headline=entry["headline"],
-                                        activity=entry["activities"][m["familyId"]],
-                                        family_id=m["familyId"], name=m["name"], place=m["place"],
-                                        text=m["text"])
+            if m.get("familyId", family_id) != family_id:
+                raise ValueError(f"foraging mission {m['id']} is {m['familyId']} but listed under {family_id}")
+            missions[m["id"]] = Mission(id=m["id"], activity=entry["activity"], family_id=family_id,
+                                        name=m["name"], place=m["place"], text=m["text"])
     return missions
 
 
-def _load_groups() -> dict[str, dict]:
-    data = json.loads((_DATA / "foraging-missions.json").read_text())
-    return {group: {"group": group, "headline": e["headline"], "activities": e["activities"]}
-            for group, e in data.items()}
-
-
-# Each profession group has a headline and one foraging name per resource
-# family (e.g. Rural: "Fields, Folds & Fishponds" - Trapping/Hunting/
-# Gleaning/Fishing); each mission has its own name (its headline) and text.
+# Each mission has its own name and text; its material gives the foraging
+# name (e.g. ore: "Mining"). Each profession group has a headline shown above
+# the sites (e.g. Rural: "Fields, Folds & Fishponds").
 MISSIONS_BY_ID: dict[str, Mission] = _load_missions()
-GROUPS: dict[str, dict] = _load_groups()
+GROUPS: dict[str, dict] = {group: {"group": group, "headline": headline}
+                           for group, headline in _MISSION_DATA["headlines"].items()}
 
 # Return sentences per family and outcome (data/foraging-messages.json).
 _MESSAGES: dict = json.loads((_DATA / "foraging-messages.json").read_text())
@@ -979,19 +976,19 @@ def roll_dark_accident(doc: dict, rng: random.Random | None = None) -> Optional[
     return None
 
 
-def tent_destroyed_message(tent_name: str, character_name: str, rng: random.Random | None = None) -> str:
+def tent_destroyed_message(tent_name: str, character_name: str, rng: random.Random | None = None,
+                           weather: Optional[str] = None) -> str:
+    """How the tent was lost - the weather's own lines first (a flooded
+    gallery, a tremor...), else the general ones."""
     rng = rng or random.Random()
-    return rng.choice(NIGHT_MESSAGES["tentDestroyed"]).format(name=character_name, tent=tent_name)
+    by_weather = ((NIGHT_MESSAGES.get("byWeather") or {}).get(weather or "") or {}).get("tentDestroyed")
+    return rng.choice(by_weather or NIGHT_MESSAGES["tentDestroyed"]).format(name=character_name, tent=tent_name)
 
 
-def suggested_mission(family_id: str, groups: list[str], seed: str) -> Optional[Mission]:
-    """One mission for this family from the character's own profession
-    groups - stable for a given seed, so the offer doesn't reshuffle on
-    every reload but changes after each trip."""
-    options = sorted(
-        (m for m in MISSIONS_BY_ID.values() if m.family_id == family_id and m.group in groups),
-        key=lambda m: m.id,
-    )
+def suggested_mission(family_id: str, seed: str) -> Optional[Mission]:
+    """One mission from this material's list - stable for a given seed, so
+    the offer doesn't reshuffle on every reload but changes after each trip."""
+    options = sorted((m for m in MISSIONS_BY_ID.values() if m.family_id == family_id), key=lambda m: m.id)
     if not options:
         return None
     return random.Random(f"{seed}:{family_id}").choice(options)
@@ -1123,7 +1120,7 @@ def _build_state(doc: dict, pool: Optional[dict]) -> dict:
         low, high = low_plan["amount"], high_plan["amount"]
         if gear.get("light"):
             gear["light"] = {**gear["light"], **light_cover(gear["light"]["hours"], low_plan, high_plan)}
-        mission = suggested_mission(family_id, groups, seed)
+        mission = suggested_mission(family_id, seed)
         wanted = GATHERING_GEAR.get(family_id) or {"weapons": (), "items": ()}
         sites.append({
             "familyId": family_id,
@@ -1137,6 +1134,8 @@ def _build_state(doc: dict, pool: Optional[dict]) -> dict:
             "helpfulItems": list(wanted["items"]) + [c for c, r in COMPANION_CHARMS.items()
                                                       if family_id in r["families"]],
             "mission": mission.to_dict() if mission else None,
+            # Dug in the dark (ore, crystal): the site card marks it with a lit torch.
+            "needsLight": family_id in DARK_FAMILIES,
         })
 
     foraging = doc.get("foraging") or {}
@@ -1173,7 +1172,7 @@ async def start_forage(address: str, character_id: str, mission_id: str) -> dict
     if mission is None:
         raise ForagingError("Unknown foraging mission")
     profession_ids = character_profession_ids(doc)
-    if mission.group not in profession_groups(profession_ids):
+    if mission.family_id not in profession_families(profession_ids):
         raise ForagingError(f"{name}'s professions don't lead to {mission.name}")
 
     if doc.get("vitalStatus", "alive") != "alive":
@@ -1490,7 +1489,7 @@ async def _roll_trip(db, address: str, character_id: str, doc: dict, active: dic
         if used:
             night["tentLost"] = tent["name"]
             night["message"] = (f"{night['message']} "
-                                f"{tent_destroyed_message(tent['name'], doc.get('firstName') or 'Your character')}")
+                                f"{tent_destroyed_message(tent['name'], doc.get('firstName') or 'Your character', weather=night.get('weather'))}")
             broken = [*broken, tent["name"]]
     for shelter in night.pop("shelterWornOut", []):
         if shelter == "tent" and night.get("tentLost"):

@@ -305,11 +305,15 @@ def night_cost(rules: dict, shelter_count: int, weather: str) -> float:
 
 
 def weathers_for(rules: dict, family_id: Optional[str]) -> dict[str, float]:
-    """{weather: weight} possible at a site: weathers without "families"
-    happen anywhere, the others only when foraging one of their families
-    (e.g. a sandstorm only on sand)."""
+    """{weather: weight} possible at a site. Materials dug underground
+    (rules "underground": mines and caves) only get the weathers marked
+    "underground", every other material only the rest. Weathers without
+    "families" happen anywhere on their side, the others only when foraging
+    one of their families (e.g. a sandstorm only on sand)."""
+    below = family_id in (rules.get("underground") or ())
     return {w: float(c["weight"]) for w, c in rules["weather"].items()
-            if not c.get("families") or family_id in c["families"]}
+            if bool(c.get("underground")) == below
+            and (not c.get("families") or family_id in c["families"])}
 
 
 def roll_night(rules: dict, shelter_count: int, attr_max: dict, lost: Optional[dict],
@@ -318,7 +322,8 @@ def roll_night(rules: dict, shelter_count: int, attr_max: dict, lost: Optional[d
 
     `rules` = foraging-rules.json "nights": weathers ({weight, severity,
     families?}) and pointsLost by shelter count and severity (night_cost).
-    Two points = one Body + one Soul; one point = Body or Soul, 50/50.
+    Two points = one Body + one Soul; one point = Body or Soul, 50/50 - a
+    weather with "group" (e.g. ghosts: "soul") sends every point there.
     Returns {"weather", "points": {attr: 1},
     "kind": "both"|"body"|"soul"|"sheltered"|"calm"}.
     """
@@ -331,7 +336,11 @@ def roll_night(rules: dict, shelter_count: int, attr_max: dict, lost: Optional[d
     if rng.random() < expected - n:
         n += 1
 
-    groups = ["body", "soul"] if n >= 2 else ([rng.choice(["body", "soul"])] if n == 1 else [])
+    only = (rules["weather"].get(weather) or {}).get("group")
+    if only:
+        groups = [only] * n
+    else:
+        groups = ["body", "soul"] if n >= 2 else ([rng.choice(["body", "soul"])] if n == 1 else [])
     points: dict = {}
     running = dict(lost or {})
     for group in groups:
