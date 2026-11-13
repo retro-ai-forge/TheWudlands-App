@@ -71,11 +71,11 @@ def test_levels():
 def test_renown_fades_with_time_since_the_last_write():
     start = datetime(2026, 1, 1, tzinfo=timezone.utc)
     stored = {"renown": 10, "mercy": 10}
-    out = legend.decayed(stored, start.isoformat(), start + timedelta(days=28))
+    out = legend.decayed(stored, start.isoformat(), start + timedelta(days=7))
     assert out["renown"] == 9 and out["mercy"] == 10  # only renown fades
-    out = legend.decayed(stored, start.isoformat(), start + timedelta(days=14))
+    out = legend.decayed(stored, start.isoformat(), start + timedelta(days=3.5))
     assert out["renown"] == 9.5  # smoothly, not in steps
-    out = legend.decayed(stored, start.isoformat(), start + timedelta(days=28 * 50))
+    out = legend.decayed(stored, start.isoformat(), start + timedelta(days=7 * 50))
     assert out["renown"] == 0  # never below 0
     out = legend.decayed({"obscurity": 10}, start.isoformat(), start + timedelta(days=280))
     assert out["obscurity"] == 10  # obscurity doesn't grow or fade
@@ -114,7 +114,7 @@ async def test_change_goes_straight_into_the_character(mongodb_uri):
         assert await legend.change_legend(ADDRESS, "no-such-character", [("mercy", 1)]) is None
 
         # a write folds in what faded and restarts the clock, so nothing fades twice
-        old = (datetime.now(timezone.utc) - timedelta(days=28)).isoformat()
+        old = (datetime.now(timezone.utc) - timedelta(days=7)).isoformat()
         await db.characters.update_one(
             {"address": ADDRESS, "id": cid},
             {"$set": {"legend.renown": 10, "legendUpdatedAt": old}},
