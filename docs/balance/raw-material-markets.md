@@ -3,49 +3,80 @@
 Reference for designing city markets and the exchange of goods ("give me 20 reed, I give you an ore").
 The imbalance between foraging and recipes is part of the design; trade is where players even it out.
 
-Measured on 2026-11-12 from `backend/data/craft-recipes.json` and the foraging rules of that day.
-Recipes or professions changing will shift the numbers.
+First measured on 2026-11-12 from `backend/data/craft-recipes.json`; updated on 2026-11-13 for the foraging rules of that day:
+the gear bonus comes on top of the site's find, mining light is burned per site unit, and torch, candle and oil are made
+from interchangeable raws (see "Light"). Recipes or professions changing will shift the numbers.
+
+**Not yet in the percentages below** (recipes changed later on 2026-11-13; the item table further down already
+shows them): leather from 6 hide or skin, rope from leather or fiber, glass pane from sand or crystal, coal from
+wood or monster parts, and stone instead of most refined ore in six stations (grinding stone, lapidary bench,
+furnace, mortar & pestle, kiln, alchemy stand - 135 ore less for all six). Expect less need for ore, skin, fiber
+and sand, and more for stone, hide, crystal and monster parts; the need calculation still has to be rebuilt from
+the recipes for exact figures.
 
 ## Needed against found
 
-| Raw | Need | Equip once | Per adventure | Foraging gives | Supply / need | Units for 1 ore |
-|---|---|---|---|---|---|---|
-| ore | 30.5% | 48.7% | 14.5% | 6.0% | 0.2× | 1 |
-| wood | 17.6% | 17.4% | 17.8% | 4.3% | 0.2× | 1 |
-| fiber | 14.3% | 17.3% | 11.7% | 10.3% | 0.7× | 4 |
-| herbs | 7.5% | 0.1% | 13.9% | 9.4% | 1.3× | 6 |
-| sand | 5.8% | 1.0% | 10.2% | 4.3% | 0.7× | 4 |
-| skin | 4.5% | 7.8% | 1.7% | 6.0% | 1.3× | 7 |
-| meat | 4.3% | 0.7% | 7.5% | 6.6% | 1.5× | 8 |
-| harvest | 4.0% | 0.0% | 7.5% | 8.3% | 2.1× | 11 |
-| feather | 2.9% | 1.6% | 4.0% | 7.7% | 2.7× | 14 |
-| fish | 1.6% | 0.0% | 3.0% | 3.2% | 2.0× | 10 |
-| crystal | 1.4% | 0.1% | 2.5% | 6.8% | 4.8× | 25 |
-| monster_part | 1.1% | 0.9% | 1.2% | 6.0% | 5.7× | 29 |
-| clay | 0.9% | 1.8% | 0.2% | 2.6% | 2.8× | 14 |
-| bone | 0.9% | 1.7% | 0.2% | 6.8% | 7.9× | 40 |
-| hide | 0.3% | 0.6% | 0.1% | 4.9% | 15× | 77 |
-| stone | 0.2% | 0.4% | 0.0% | 4.3% | 22× | 111 |
-| reed | ~0% | 0.0% | 0.0% | 2.6% | – | – |
-| venom | 1.3% | 0.0% | 2.5% | stories only | – | – |
-| essence | 0.8% | 0.0% | 1.5% | stories only | – | – |
-| pigment | ~0% | 0.0% | 0.0% | stories only | – | – |
-| clockwork | ~0% | 0.0% | 0.0% | stories only | – | – |
+| Raw | Need | Equip once | Per adventure | Foraging, no gear | Foraging, full T1 | Supply / need | Units for 1 ore |
+|---|---|---|---|---|---|---|---|
+| ore | 31.6% | 49.3% | 15.4% | 3.2% | 8.0% | 0.3× | 1 |
+| wood | 17.2% | 17.2% | 17.2% | 4.6% | 4.5% | 0.3× | 1 |
+| fiber | 12.7% | 16.8% | 9.0% | 11.0% | 10.8% | 0.9× | 3 |
+| herbs | 7.8% | 0.1% | 14.8% | 10.0% | 9.9% | 1.3× | 5 |
+| sand | 6.2% | 1.0% | 10.8% | 4.6% | 3.8% | 0.6× | 2 |
+| skin | 4.7% | 7.9% | 1.8% | 6.4% | 7.0% | 1.5× | 6 |
+| harvest | 3.7% | 0.0% | 7.1% | 8.9% | 9.5% | 2.5× | 10 |
+| feather | 3.0% | 1.6% | 4.2% | 8.2% | 9.6% | 3.2× | 13 |
+| meat | 2.5% | 0.0% | 4.9% | 7.1% | 7.8% | 3.1× | 12 |
+| fish | 1.8% | 0.0% | 3.5% | 3.4% | 1.6% | 0.9× | 4 |
+| bone | 1.6% | 2.0% | 1.3% | 7.3% | 3.0% | 1.8× | 7 |
+| crystal | 1.4% | 0.1% | 2.7% | 3.7% | 8.8% | 6.1× | 24 |
+| monster_part | 1.1% | 0.9% | 1.3% | 6.4% | 7.3% | 6.6× | 26 |
+| clay | 1.0% | 1.8% | 0.2% | 2.7% | 2.3% | 2.4× | 9 |
+| reed | 0.7% | 0.2% | 1.1% | 2.7% | 0.0% | all burned | – |
+| hide | 0.5% | 0.6% | 0.4% | 5.3% | 1.5% | 2.9× | 12 |
+| stone | 0.2% | 0.4% | 0.0% | 4.6% | 4.5% | 23.4× | 93 |
+| venom | 1.4% | 0.0% | 2.7% | stories only | stories only | – | – |
+| essence | 0.8% | 0.0% | 1.6% | stories only | stories only | – | – |
+| pigment | ~0% | 0.0% | 0.0% | stories only | stories only | – | – |
+| clockwork | ~0% | 0.0% | 0.0% | stories only | stories only | – | – |
 
 - **Need** is one character equipping once and then playing 20 adventures, as a share of all raw units used.
-- **Foraging gives** is each raw's share of all foraging pools, with every profession picked equally often.
-- **Supply / need** above 1 means foraging gives more than the game uses. Below 1 means the raw is scarce.
-- **Units for 1 ore** is a starting point for exchange rates: how many units of a raw are worth one ore, by scarcity. For example, 4 fiber, 25 crystal or 40 bone buy 1 ore. Wood is as scarce as ore.
-- **Off-scale raws:** stone, hide and reed are off the scale, because almost no recipe uses them. Markets probably want a floor price for those instead of the computed rate.
+- **Foraging** is each raw's share of everything foraging brings home, with every profession picked equally often:
+  - **no gear:** what the sites give; ore and crystal at half, as they are dug in the dark.
+  - **full T1:** every material with its whole T1 gathering kit (weapon, items, light on ore and crystal), so the gear bonus comes on top, minus the raws burned as mining light (see "Light").
+- **Supply / need** (from the full T1 column) above 1 means foraging gives more than the game uses. Below 1 means the raw is scarce.
+- **Units for 1 ore** is a starting point for exchange rates: how many units of a raw are worth one ore, by scarcity. For example, 3 fiber, 24 crystal or 7 bone buy 1 ore. Wood is as scarce as ore.
+- **Off-scale raws:** stone is off the scale, because almost no recipe uses it. Markets probably want a floor price for it instead of the computed rate.
+- **Reed** was useless before; now light burns all of it (see "Light"), so it has no rate of its own yet - it trades like hide, its fallback.
 - **Story-only raws:** pigment, essence, venom and clockwork are never foraged; stories hand them out. Their price is for the stories and markets to set.
 
 ## Scale
 
 - Equipping one character costs about **1,300 raw units**: weapon, armor set, shield, gear, essentials and two crafting stations.
-- One adventure uses up about **75 raw units**: food, potions, arrows, lights and wear.
-- A whole foraging pool, once per soul slot, is about 135–270 units, depending on rules and professions.
+- One adventure uses up about **70 raw units**: food, potions, arrows, lights and wear.
+- A whole foraging pool, once per soul slot, is 180–270 site units, depending on the number of professions; with gear a character brings home more than that (about 1.4× on average with full T1 gear, up to about 3× at T6).
 
 So foraging is a small source. Most raws have to come from adventures and trade.
+
+## Light
+
+Mining ore and crystal needs light: 1 hour per unit the site gives (the gear bonus on top needs none).
+All ore and crystal sites of the 39 professions together need about 900 hours. Light is a sink for the raws
+that overflow, because torch, candle and oil list their ingredients as options - crafting takes the first
+one the crafter has enough of:
+
+| Light (T1 hours) | Slot | Options, in order |
+|---|---|---|
+| torch (2h) | shaft | bone 1, wood 1 |
+| | head | reed 1, hide 1, fiber 1 |
+| candle (1h) | tallow | hide 1, monster part 1, meat 1, harvest 2 |
+| | wick | reed 1, fiber 1 |
+| oil (1h, lantern) | fat | fish 1, monster part 1, meat 1 |
+| | base | bone 1, harvest 1 |
+
+With the first choices and a mix of 60% torches, 20% candles and 20% oil, mining burns about 450 bone,
+390 hide (200 of it where reed runs out), 240 reed (all there is) and 180 fish. Before, the old torch (2 wood, 3 fiber, 3 meat) and the other lights
+burned more wood, fiber and meat than foraging gives at all. Higher-tier lights burn twice as long per tier for the same recipe.
 
 ## Why ore and wood are short
 
@@ -54,7 +85,7 @@ So foraging is a small source. Most raws have to come from adventures and trade.
 - **Few professions find ore.** Only 7 of 39 professions have ore sites (blacksmith, armorer, tinsmith, glassblower, jeweler, soldier, guard), and only 5 have wood (blacksmith, armorer, tinsmith, carpenter, cooper).
 - **Many professions find little-used raws.** Artists (6 professions) and Rural (5) mostly find feather, bone, hide and harvest.
 - **Fiber** is mostly tents (96 fiber) and bows (132).
-- **Upkeep** is mostly potions (herbs, and 12 sand per glass bottle), arrows (wood, feather), torches and rations.
+- **Upkeep** is mostly potions (herbs, and 12 sand per glass bottle), arrows (wood, feather) and rations. Lights now cost bone, reed, hide and fish.
 
 ## Assumptions behind "need"
 
@@ -67,7 +98,7 @@ Adventures don't consume items yet, so these rates are design guesses. Change th
 - **Essentials and stations:** 3 essentials and 2 crafting stations, averaged over all of them.
 
 **Per adventure:**
-- **Consumables:** 2 meals, one light (torch 60%, candle 20%, oil 20%), 3 arrows and 1 bolt, and half a potion.
+- **Consumables:** 2 meals, one light (torch 60%, candle 20%, oil 20%, each made from its first options), 3 arrows and 1 bolt, and half a potion.
 - **Wear:** a melee weapon every 40 adventures; each armor piece and the shield every 80; tent and bedroll 2% each; backpack, waterskin, rope and essentials a little; and station wear from crafting.
 
 **How recipes are counted:**
@@ -122,16 +153,17 @@ Same for every tier: the output tier follows the ingredients, the amounts don't 
 | smokehouse | 9 | hide 4, meat 3, harvest 2 |
 | oven | 13 | wood 8, stone 5 |
 | spinning_wheel | 25 | wood 23, bone 2 |
-| mortar_and_pestle | 26 | clay 12, ore 10, sand 4 |
-| alchemy_stand | 34 | clay 18, ore 10, sand 6 |
+| mortar_and_pestle | 20 | clay 12, stone 4, sand 4 |
+| alchemy_stand | 31 | clay 18, sand 6, ore 5, stone 2 |
 | tanning_rack | 34 | wood 24, ore 10 |
 | workbench | 37 | wood 30, bone 4, reed 1, feather 1, skin 1 |
 | enchanters_table | 42 | wood 30, crystal 6, bone 4, herbs 1, monster_part 1 |
 | loom | 62 | wood 46, fiber 12, bone 4 |
-| grinding_stone, lapidary_bench | 72 | ore 40, clay 24, sand 8 |
+| grinding_stone | 51 | clay 24, stone 14, sand 8, ore 5 |
+| lapidary_bench | 54 | clay 24, stone 12, ore 10, sand 8 |
 | scriptorium | 79 | wood 42, herbs 12, sand 12, fiber 5, feather 4, bone 4 |
-| kiln | 95 | clay 60, sand 20, ore 15 |
-| furnace | 98 | ore 50, clay 36, sand 12 |
+| kiln | 86 | clay 60, sand 20, stone 6 |
+| furnace | 74 | clay 36, stone 16, sand 12, ore 10 |
 | anvil | 376 | ore 310, wood 66 |
 | **Adventuring gear** | | |
 | whetstone | 2 | stone 2 |
@@ -141,8 +173,8 @@ Same for every tier: the output tier follows the ingredients, the amounts don't 
 | quill | 4 | feather 4 |
 | parchment | 4 | reed 4 |
 | bedroll | 5 | hide 3, fiber 2 |
-| candle | 5 | harvest 3, fiber 2 |
-| torch | 8 | fiber 3, meat 3, wood 2 |
+| candle | 2 | hide 1, reed 1 (or monster part / meat / 2 harvest; fiber) |
+| torch | 2 | bone 1, reed 1 (or wood; hide / fiber) |
 | backpack | 10 | skin 6, hide 4 |
 | starlight_catcher | 17 | sand 12, crystal 3, reed 2 |
 | ink | 18 | wood 6, herbs 6, sand 6 |
@@ -152,7 +184,7 @@ Same for every tier: the output tier follows the ingredients, the amounts don't 
 | **Essentials** | | |
 | chalk, signal_whistle | 2 | stone 2 / bone 2 |
 | merchants_scale | 4 | wood 2, stone 2 |
-| rope | 6 | fiber 6 |
+| rope | 6 | 1 leather (6 hide or skin), or fiber 6 |
 | hourglass | 7 | sand 7 |
 | ladder | 8 | wood 6, fiber 2 |
 | spyglass | 8 | ore 5, crystal 3 |
@@ -194,10 +226,10 @@ Same for every tier: the output tier follows the ingredients, the amounts don't 
 | antidote_potion | 44 | herbs 26, sand 12, venom 6 |
 | **Processed (for reference)** | | |
 | arrow, bolt | 2 | wood 1, feather 1 / wood 1, ore 1 |
-| oil | 3 | meat 2, fiber 1 |
-| coal | 3 | wood 3 |
+| oil | 2 | fish 1, bone 1 (or monster part / meat; harvest) |
+| coal | 3 | wood 3, or monster_part 3 |
 | plank | 4 | wood 4 |
-| leather | 6 | skin 6 |
+| leather | 6 | hide 6 or skin 6 |
 | glass_bottle | 12 | sand 12 |
 | woven_cloth | 24 | fiber 24 |
 | metal_ingot | 31 | ore 25, wood 6 |

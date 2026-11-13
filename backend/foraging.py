@@ -47,8 +47,9 @@ slot adds its tier's item bonus on the materials that suit its companion
 (e.g. a flying charm on a winged companion: feather, meat, hide) - only on a
 matching companion - and wears like any item (1 per trip).
 
-Light (lightSources, only with a tinderbox - lightRequires): every unit dug
-on ore, crystal or clockwork needs lightHoursPerUnit (1) hour of light. A
+Light (lightSources, only with a tinderbox - lightRequires): every unit the
+site gives on ore, crystal or clockwork needs lightHoursPerUnit (1) hour of
+light - the gear's bonus on top needs none. A
 trip burns whole units in order - oil (only with a glass lantern, at the
 lower of lantern and oil), then torches, then candles, each lowest tier
 first - with the hours per unit from light-source-burn-hours.json (a T1
@@ -369,11 +370,11 @@ def planned_yield_range(doc: dict, family_id: str, count: int, remaining: int,
 
 def light_cover(hours: int, low: dict, high: dict) -> dict:
     """How far the light carried reaches on the next trip: the hours the
-    lowest and highest fully lit dig would need, and "full" (covers even
+    lowest and highest site find would need (light is per site unit), and "full" (covers even
     the highest), "partial" (covers the lowest, may run out within the
     range) or "none" (runs out even on the lowest)."""
-    need_min = light_needed(low["litTarget"]) * LIGHT_HOURS_PER_UNIT
-    need_max = light_needed(high["litTarget"]) * LIGHT_HOURS_PER_UNIT
+    need_min = low["lightNeed"] * LIGHT_HOURS_PER_UNIT
+    need_max = high["lightNeed"] * LIGHT_HOURS_PER_UNIT
     cover = "full" if hours >= need_max else "partial" if hours >= need_min else "none"
     return {"needMin": need_min, "needMax": need_max, "cover": cover}
 
@@ -635,15 +636,16 @@ def plan_trip(base: int, count: int, remaining: int, weapon: Optional[dict], ite
     """One trip's dig. The site gives the base find (trip_amount without
     gear: decayed, at least 1, at most what's left); gear adds its bonus on
     top without taking more from the site, a penalty (darkness) shrinks the
-    find and only the smaller find leaves the site. With light every unit
-    brought home needs LIGHT_HOURS_PER_UNIT hours; the units the light covers
-    are dug with the best light burned as bonus, the rest of the site's find
-    as without a light (on ore and crystal: in the dark). `items` without lights.
-    Returns {"amount" (brought home), "taken" (from the site), "litUnits",
-    "darkUnits", "inDark" (any of it dug in the dark on a dark material),
-    `draw` rounds the gear bonus (see dig - 1.0 rounds down, 0.0 up),
-    "burned" {item id: units}, "lightHours" (burned), "litTarget" (units a
-    fully lit dig brings home - its hours are what the light must cover),
+    find and only the smaller find leaves the site. Light is needed per unit
+    the site gives (LIGHT_HOURS_PER_UNIT hours each) - the gear's bonus
+    comes on top without more light, so what burns doesn't depend on it. The
+    units the light covers are dug with the best light burned as bonus, the
+    rest of the site's find as without a light (on ore and crystal: in the
+    dark). `items` without lights; `draw` rounds the gear bonus (see dig -
+    1.0 rounds down, 0.0 up). Returns {"amount" (brought home), "taken"
+    (from the site), "litUnits", "darkUnits" (brought home lit / unlit),
+    "inDark" (any of it dug in the dark on a dark material), "burned" {item
+    id: units}, "lightHours" (burned), "lightNeed" (units that need light),
     "gear" (as _with_bonus, the light that counted among its items)}."""
     no_light = _with_bonus(weapon, items, family_id)
     site = trip_amount(base, count, remaining)                  # the base find, gear aside
@@ -657,41 +659,25 @@ def plan_trip(base: int, count: int, remaining: int, weapon: Optional[dict], ite
             taken, home = dig(site, mult, draw)
         return {"amount": home, "taken": taken, "litUnits": 0, "darkUnits": home,
                 "inDark": no_light["dark"] and home > 0, "burned": {}, "lightHours": 0,
-                "litTarget": 0, "gear": no_light}
-    # The bonus depends on what burns, what burns on how much is dug - start
-    # with the first light in line and settle (the bonus only ever goes up).
-    tier = supply[0]["bonusTier"]
-    for _ in range(len(LIGHT_BONUS_BY_TIER) + 1):
-        lit_gear = _with_bonus(weapon, items + [_light_pick(supply, lantern, tier)], family_id)
-        _, target = dig(site, gear_multiplier(lit_gear), draw)
-        need = light_needed(target)
-        burned, lit, best = plan_burn(supply, need)
-        if best <= tier:
-            break
-        tier = best
+                "lightNeed": 0, "gear": no_light}
+    need = light_needed(site)
+    burned, lit_site, best = plan_burn(supply, need)
     if not burned:
         # Nothing dug, nothing burned - a light only counts once it burns.
         return {"amount": 0, "taken": 0, "litUnits": 0, "darkUnits": 0, "inDark": False,
-                "burned": {}, "lightHours": 0, "litTarget": 0, "gear": no_light}
+                "burned": {}, "lightHours": 0, "lightNeed": 0, "gear": no_light}
+    if lit_site >= need:
+        lit_site = site            # past MAX_LIGHT_HOURS_PER_TRIP the dig goes on without more light
     # Only a light that actually burned sets the bonus (carried, unburned
     # light never counts).
-    tier = best
-    lit_mult = gear_multiplier(lit_gear)
-    if lit >= need:
-        # Lit throughout - past MAX_LIGHT_HOURS_PER_TRIP the dig goes on
-        # without burning more.
-        taken, home, dark_home, lit = site, target, 0, target
-    else:
-        # The light ran out: the site units it covered gave `lit` units; the
-        # rest of the site's find is dug as without a light.
-        taken_lit = min(site, math.ceil(lit / lit_mult - 1e-9))
-        dark_taken, dark_home = dig(site - taken_lit, gear_multiplier(no_light), draw)
-        taken, home = taken_lit + dark_taken, lit + dark_home
-    gear = _with_bonus(weapon, items + [_light_pick(supply, lantern, tier, burned)], family_id)
+    lit_gear = _with_bonus(weapon, items + [_light_pick(supply, lantern, best, burned)], family_id)
+    _, lit_home = dig(lit_site, gear_multiplier(lit_gear), draw)
+    dark_site = site - lit_site
+    dark_taken, dark_home = dig(dark_site, gear_multiplier(no_light), draw) if dark_site else (0, 0)
     hours = sum(u["hours"] * burned[u["itemId"]] for u in supply if u["itemId"] in burned)
-    return {"amount": home, "taken": taken, "litUnits": lit, "darkUnits": dark_home,
-            "inDark": lit < target and family_id in DARK_FAMILIES,
-            "burned": burned, "lightHours": hours, "litTarget": target, "gear": gear}
+    return {"amount": lit_home + dark_home, "taken": lit_site + dark_taken, "litUnits": lit_home,
+            "darkUnits": dark_home, "inDark": dark_site > 0 and family_id in DARK_FAMILIES,
+            "burned": burned, "lightHours": hours, "lightNeed": need, "gear": lit_gear}
 
 
 def gathering_gear(doc: dict, family_id: str) -> dict:

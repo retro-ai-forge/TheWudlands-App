@@ -54,7 +54,7 @@
   "lightHoursPerUnit": 1,
   "maxLightHoursPerTrip": 24,
   "_maxLightComment": "A trip burns at most this many hours of light (about a day of work). A dig bigger than that still brings everything home - the rest needs no more light.",
-  "_lightHoursComment": "Each unit dug needs this many hours of light (ore, crystal, clockwork). A trip burns oil (only with a lantern), then torches, then candles, each lowest tier first, whole units - hours per unit in light-source-burn-hours.json (a lantern burns at the lower of lantern and oil). The best light that burned sets the bonus for the trip. What the light can't cover is dug as without it (on ore: in the dark).",
+  "_lightHoursComment": "Each unit the site gives needs this many hours of light (ore, crystal, clockwork) - the gear bonus on top needs none. A trip burns oil (only with a lantern), then torches, then candles, each lowest tier first, whole units - hours per unit in light-source-burn-hours.json (a lantern burns at the lower of lantern and oil). The best light that burned sets the bonus for the trip. What the light can't cover is dug as without it (on ore and crystal: in the dark).",
   "lightBonusByTier": {
     "1": 0.25,
     "2": 0.35,

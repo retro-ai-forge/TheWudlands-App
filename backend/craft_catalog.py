@@ -169,16 +169,28 @@ def _load_recipes() -> tuple[dict, ...]:
     return tuple(json.loads(_RECIPES_PATH.read_text()))
 
 
-def _iter_ingredients(ingredients: list[dict]):
-    """Flatten an ingredient list, expanding any "alternatives" slot (e.g.
-    carcass's bone_blade-consumed-or-dagger-not-consumed choice) into its
-    individual options. A plain ingredient yields itself unchanged."""
+def _classic_ingredients(ingredients: list[dict]):
+    """One ingredient per slot: a plain ingredient itself; for an
+    "alternatives" slot its classic material - the option marked
+    "classic": true, else the last consumed one (e.g. skin for leather, fiber
+    for rope, the bone blade for carcass, sand for glass pane). The other
+    options are stand-ins (hide for skin...) that give crafters more ways
+    in, but don't move an item into other profession groups."""
     for ingredient in ingredients:
         alternatives = ingredient.get("alternatives")
-        if alternatives is not None:
-            yield from alternatives
-        else:
+        if alternatives is None:
             yield ingredient
+            continue
+        consumed = [o for o in alternatives if o.get("consumed", True)]
+        marked = [o for o in consumed if o.get("classic")]
+        if marked or consumed:
+            yield (marked or consumed)[-1]
+
+
+def _slot_options(ingredient: dict) -> list[dict]:
+    """The consumed options of one ingredient slot (a plain ingredient is its
+    own only option)."""
+    return [o for o in ingredient.get("alternatives", [ingredient]) if o.get("consumed", True)]
 
 
 def _resolve_raw_family_hits(
@@ -192,7 +204,7 @@ def _resolve_raw_family_hits(
         return []
     seen = seen | {family_id}
     hits: list[str] = []
-    for ingredient in _iter_ingredients(recipe["ingredients"]):
+    for ingredient in _classic_ingredients(recipe["ingredients"]):
         if ingredient["category"] == "raw":
             hits.append(ingredient["familyId"])
         elif ingredient["category"] == "processed":
@@ -203,7 +215,7 @@ def _resolve_raw_family_hits(
 
 def _recipe_categories(recipe: dict, recipes_by_family: dict[str, dict]) -> list[str]:
     hits: list[str] = []
-    for ingredient in _iter_ingredients(recipe["ingredients"]):
+    for ingredient in _classic_ingredients(recipe["ingredients"]):
         if ingredient["category"] == "raw":
             hits.append(ingredient["familyId"])
         elif ingredient["category"] == "processed":
@@ -278,9 +290,15 @@ def _hard_gated_tool_deps(
     candidates = [tool] if isinstance(tool, str) else (tool if isinstance(tool, list) else [])
     if candidates and not any(not _tool_is_blueprint_gated(c, recipes_by_family) for c in candidates):
         deps.update(candidates)
-    for ingredient in _iter_ingredients(recipe.get("ingredients", [])):
-        if ingredient["category"] == "processed":
-            deps |= _hard_gated_tool_deps(ingredient["familyId"], recipes_by_family, seen)
+    for ingredient in recipe.get("ingredients", []):
+        # A slot only forces a tool when every option of it needs that tool
+        # (rope from leather needs a tanning rack, rope from fiber nothing).
+        per_option = [
+            _hard_gated_tool_deps(o["familyId"], recipes_by_family, seen) if o["category"] == "processed" else set()
+            for o in _slot_options(ingredient)
+        ]
+        if per_option:
+            deps |= set.intersection(*per_option)
     return deps
 
 
@@ -340,9 +358,14 @@ def _hard_tool_alternative_sets(
     candidates = [tool] if isinstance(tool, str) else (tool if isinstance(tool, list) else [])
     if candidates and not any(not _tool_is_blueprint_gated(c, recipes_by_family) for c in candidates):
         reqs.add(frozenset(candidates))
-    for ingredient in _iter_ingredients(recipe.get("ingredients", [])):
-        if ingredient["category"] == "processed":
-            reqs |= _hard_tool_alternative_sets(ingredient["familyId"], recipes_by_family, seen)
+    for ingredient in recipe.get("ingredients", []):
+        # As in _hard_gated_tool_deps: only what every option of a slot needs.
+        per_option = [
+            _hard_tool_alternative_sets(o["familyId"], recipes_by_family, seen) if o["category"] == "processed" else set()
+            for o in _slot_options(ingredient)
+        ]
+        if per_option:
+            reqs |= set.intersection(*per_option)
     return reqs
 
 

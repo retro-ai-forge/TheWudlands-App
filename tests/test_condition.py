@@ -150,7 +150,10 @@ _COLLECTIONS = ("characters", "player_characters", "player_vaults", "character_h
 
 
 @pytest.fixture
-async def db(mongodb_uri):
+async def db(mongodb_uri, monkeypatch):
+    # Trips here go to ore without a light: no random accident in the dark
+    # on top of the night a test sets up (see foraging "darkness").
+    monkeypatch.setattr(foraging, "DARK_ACCIDENTS", ())
     db = get_database()
     for name in _COLLECTIONS:
         await db[name].delete_many({"address": ADDRESS})

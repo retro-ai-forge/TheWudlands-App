@@ -692,14 +692,20 @@
     "ingredients": [
       {
         "category": "processed",
-        "familyId": "refined_clay",
-        "qty": 3,
+        "familyId": "refined_ore",
+        "qty": 1,
+        "consumed": true
+      },
+      {
+        "category": "raw",
+        "familyId": "stone",
+        "qty": 2,
         "consumed": true
       },
       {
         "category": "processed",
-        "familyId": "refined_ore",
-        "qty": 2,
+        "familyId": "refined_clay",
+        "qty": 3,
         "consumed": true
       }
     ],
@@ -749,7 +755,13 @@
       {
         "category": "processed",
         "familyId": "refined_ore",
-        "qty": 10,
+        "qty": 2,
+        "consumed": true
+      },
+      {
+        "category": "raw",
+        "familyId": "stone",
+        "qty": 16,
         "consumed": true
       },
       {
@@ -768,7 +780,13 @@
       {
         "category": "processed",
         "familyId": "refined_ore",
-        "qty": 8,
+        "qty": 1,
+        "consumed": true
+      },
+      {
+        "category": "raw",
+        "familyId": "stone",
+        "qty": 14,
         "consumed": true
       },
       {
@@ -804,15 +822,15 @@
     "familyId": "kiln",
     "ingredients": [
       {
-        "category": "processed",
-        "familyId": "refined_clay",
-        "qty": 10,
+        "category": "raw",
+        "familyId": "stone",
+        "qty": 6,
         "consumed": true
       },
       {
         "category": "processed",
-        "familyId": "refined_ore",
-        "qty": 3,
+        "familyId": "refined_clay",
+        "qty": 10,
         "consumed": true
       }
     ],
@@ -825,7 +843,13 @@
       {
         "category": "processed",
         "familyId": "refined_ore",
-        "qty": 8,
+        "qty": 2,
+        "consumed": true
+      },
+      {
+        "category": "raw",
+        "familyId": "stone",
+        "qty": 12,
         "consumed": true
       },
       {
@@ -867,9 +891,9 @@
     "familyId": "mortar_and_pestle",
     "ingredients": [
       {
-        "category": "processed",
-        "familyId": "refined_ore",
-        "qty": 2,
+        "category": "raw",
+        "familyId": "stone",
+        "qty": 4,
         "consumed": true
       },
       {
@@ -1596,16 +1620,48 @@
     "familyId": "candle",
     "ingredients": [
       {
-        "category": "raw",
-        "familyId": "harvest",
-        "qty": 3,
-        "consumed": true
+        "alternatives": [
+          {
+            "category": "raw",
+            "familyId": "hide",
+            "qty": 1,
+            "consumed": true
+          },
+          {
+            "category": "raw",
+            "familyId": "monster_part",
+            "qty": 1,
+            "consumed": true
+          },
+          {
+            "category": "raw",
+            "familyId": "meat",
+            "qty": 1,
+            "consumed": true
+          },
+          {
+            "category": "raw",
+            "familyId": "harvest",
+            "qty": 2,
+            "consumed": true
+          }
+        ]
       },
       {
-        "category": "raw",
-        "familyId": "fiber",
-        "qty": 2,
-        "consumed": true
+        "alternatives": [
+          {
+            "category": "raw",
+            "familyId": "reed",
+            "qty": 1,
+            "consumed": true
+          },
+          {
+            "category": "raw",
+            "familyId": "fiber",
+            "qty": 1,
+            "consumed": true
+          }
+        ]
       }
     ],
     "tool": null,
@@ -1809,10 +1865,20 @@
     "familyId": "rope",
     "ingredients": [
       {
-        "category": "raw",
-        "familyId": "fiber",
-        "qty": 6,
-        "consumed": true
+        "alternatives": [
+          {
+            "category": "processed",
+            "familyId": "leather",
+            "qty": 1,
+            "consumed": true
+          },
+          {
+            "category": "raw",
+            "familyId": "fiber",
+            "qty": 6,
+            "consumed": true
+          }
+        ]
       }
     ],
     "tool": null,
@@ -1929,22 +1995,42 @@
     "familyId": "torch",
     "ingredients": [
       {
-        "category": "raw",
-        "familyId": "wood",
-        "qty": 2,
-        "consumed": true
+        "alternatives": [
+          {
+            "category": "raw",
+            "familyId": "bone",
+            "qty": 1,
+            "consumed": true
+          },
+          {
+            "category": "raw",
+            "familyId": "wood",
+            "qty": 1,
+            "consumed": true
+          }
+        ]
       },
       {
-        "category": "raw",
-        "familyId": "fiber",
-        "qty": 3,
-        "consumed": true
-      },
-      {
-        "category": "processed",
-        "familyId": "carcass",
-        "qty": 1,
-        "consumed": true
+        "alternatives": [
+          {
+            "category": "raw",
+            "familyId": "reed",
+            "qty": 1,
+            "consumed": true
+          },
+          {
+            "category": "raw",
+            "familyId": "hide",
+            "qty": 1,
+            "consumed": true
+          },
+          {
+            "category": "raw",
+            "familyId": "fiber",
+            "qty": 1,
+            "consumed": true
+          }
+        ]
       }
     ],
     "tool": null,
@@ -2207,10 +2293,20 @@
     "familyId": "leather",
     "ingredients": [
       {
-        "category": "raw",
-        "familyId": "skin",
-        "qty": 6,
-        "consumed": true
+        "alternatives": [
+          {
+            "category": "raw",
+            "familyId": "hide",
+            "qty": 6,
+            "consumed": true
+          },
+          {
+            "category": "raw",
+            "familyId": "skin",
+            "qty": 6,
+            "consumed": true
+          }
+        ]
       }
     ],
     "tool": "tanning_rack",
@@ -2361,10 +2457,21 @@
     "familyId": "coal",
     "ingredients": [
       {
-        "category": "raw",
-        "familyId": "wood",
-        "qty": 3,
-        "consumed": true
+        "alternatives": [
+          {
+            "category": "raw",
+            "familyId": "wood",
+            "qty": 3,
+            "consumed": true,
+            "classic": true
+          },
+          {
+            "category": "raw",
+            "familyId": "monster_part",
+            "qty": 3,
+            "consumed": true
+          }
+        ]
       }
     ],
     "tool": null,
@@ -2503,10 +2610,21 @@
     "familyId": "glass_pane",
     "ingredients": [
       {
-        "category": "raw",
-        "familyId": "sand",
-        "qty": 6,
-        "consumed": true
+        "alternatives": [
+          {
+            "category": "raw",
+            "familyId": "sand",
+            "qty": 6,
+            "consumed": true,
+            "classic": true
+          },
+          {
+            "category": "raw",
+            "familyId": "crystal",
+            "qty": 6,
+            "consumed": true
+          }
+        ]
       }
     ],
     "tool": "kiln",
@@ -3149,16 +3267,48 @@
     "familyId": "oil",
     "ingredients": [
       {
-        "category": "raw",
-        "familyId": "meat",
-        "qty": 2,
-        "consumed": true
+        "alternatives": [
+          {
+            "category": "raw",
+            "familyId": "fish",
+            "qty": 1,
+            "consumed": true
+          },
+          {
+            "category": "raw",
+            "familyId": "monster_part",
+            "qty": 1,
+            "consumed": true
+          },
+          {
+            "category": "raw",
+            "familyId": "meat",
+            "qty": 1,
+            "consumed": true
+          }
+        ]
       },
       {
-        "category": "raw",
-        "familyId": "fiber",
-        "qty": 1,
-        "consumed": true
+        "alternatives": [
+          {
+            "category": "raw",
+            "familyId": "bone",
+            "qty": 1,
+            "consumed": true
+          },
+          {
+            "category": "raw",
+            "familyId": "harvest",
+            "qty": 1,
+            "consumed": true
+          },
+          {
+            "category": "raw",
+            "familyId": "fiber",
+            "qty": 1,
+            "consumed": true
+          }
+        ]
       }
     ],
     "tool": null,

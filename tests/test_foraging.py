@@ -555,28 +555,28 @@ def test_lantern_burns_at_the_lower_tier_of_lantern_and_oil():
 
 def test_the_best_light_that_burned_sets_the_bonus():
     supply = _supply([], {"tinderbox_1": 1, "torch_1": 3, "candle_2": 2})  # 6h of T1 torch, then 2h candles
-    small = foraging.plan_trip(4, 0, 100, None, [], supply, None, "ore")    # 4 * 1.25 = 5 units: torches only
-    assert small["burned"] == {"torch_1": 3} and small["amount"] == 5
+    small = foraging.plan_trip(4, 0, 100, None, [], supply, None, "ore")    # the site gives 4: 4h, torches only
+    assert small["burned"] == {"torch_1": 2} and small["amount"] == 5      # 4 + 25%
     assert small["gear"]["percent"] == 25
-    big = foraging.plan_trip(6, 0, 100, None, [], supply, None, "ore")      # needs the T2 candle -> +35%
-    assert big["burned"] == {"torch_1": 3, "candle_2": 1} and big["amount"] == 8 and big["litUnits"] == 8
+    big = foraging.plan_trip(8, 0, 100, None, [], supply, None, "ore")      # 8h: needs the T2 candle -> +35%
+    assert big["burned"] == {"torch_1": 3, "candle_2": 1} and big["amount"] == 8 + 2 and big["litUnits"] == 10
     assert big["gear"]["percent"] == 35 and not big["inDark"]
 
 
 def test_ore_past_the_light_is_dug_in_the_dark():
     supply = _supply([], {"tinderbox_1": 1, "torch_1": 3})                 # 6h
-    plan = foraging.plan_trip(10, 0, 100, None, [], supply, None, "ore")    # site 10, lit: 10 + 2 (+25%) = 12
-    assert plan["litTarget"] == 12 and plan["litUnits"] == 6
-    # 6 lit units came from 5 site units (5 * 1.25); the other 5 are dug in
-    # the dark at -50%: 2, and only those 2 leave the site.
-    assert plan["darkUnits"] == 2 and plan["amount"] == 8 and plan["taken"] == 5 + 2
-    assert plan["inDark"] and plan["burned"] == {"torch_1": 3} and plan["lightHours"] == 6
+    plan = foraging.plan_trip(10, 0, 100, None, [], supply, None, "ore")    # the site gives 10: 10h needed
+    assert plan["lightNeed"] == 10 and plan["burned"] == {"torch_1": 3} and plan["lightHours"] == 6
+    # 6 site units lit (+25%: 7 home); the other 4 dug in the dark at -50%:
+    # 2, and only those 2 leave the site.
+    assert plan["litUnits"] == 7 and plan["darkUnits"] == 2 and plan["amount"] == 9
+    assert plan["taken"] == 6 + 2 and plan["inDark"]
     # Not on a material without darkness (clockwork): the rest is just dug
     # without the light's bonus.
     clockwork = foraging.light_supply({"gear": {"items": [], "itemBalances": {"backpack": {
         "tinderbox_1": 1, "torch_1": 3}}}}, "clockwork")[0]
     plan = foraging.plan_trip(10, 0, 100, None, [], clockwork, None, "clockwork")
-    assert plan["litUnits"] == 6 and plan["amount"] == 6 + 5 and plan["taken"] == 10 and not plan["inDark"]
+    assert plan["litUnits"] == 7 and plan["amount"] == 7 + 4 and plan["taken"] == 10 and not plan["inDark"]
 
 
 def test_the_gear_bonus_comes_on_top_and_never_leaves_the_site():
@@ -597,13 +597,13 @@ def test_the_site_card_range_counts_the_light_running_short():
     doc = {"gear": {"items": [], "itemBalances": {"backpack": {"tinderbox_1": 1, "torch_1": 2}}}}  # 4h
     gear = foraging.gathering_gear(doc, "ore")
     low, high = foraging.planned_yield_range(doc, "ore", 0, 100, gear)
-    # Lowest: site 6, lit 7 - 4 lit units (from 4 site units), the other 2 site units dark: 1.
-    assert low == 4 + 1
-    # Highest: site 10, lit 12 - 4 lit units, the other 6 site units dark: 3.
-    assert high == 4 + 3
+    # Lowest: the site gives 6 - 4 lit (+25%: 5), 2 in the dark (1).
+    assert low == 5 + 1
+    # Highest: the site gives 10 - 4 lit (5), 6 in the dark (3).
+    assert high == 5 + 3
 
 
-async def test_a_trip_burns_one_hour_of_light_per_unit(db, monkeypatch):
+async def test_a_trip_burns_one_hour_of_light_per_site_unit(db, monkeypatch):
     cid = await _make(1, "blacksmith")
     await db.characters.update_one({"address": ADDRESS, "id": cid}, {"$set": {
         "gear.itemBalances.backpack": {"torch_2": 5, "tinderbox_1": 1},    # 5 x 4h
@@ -617,11 +617,12 @@ async def test_a_trip_burns_one_hour_of_light_per_unit(db, monkeypatch):
     slot = await db.soul_slots.find_one({"address": ADDRESS})
     ore = slot["forage_pools"]["1"]["families"]["ore"]
     assert ore["initial"] - ore["remaining"] == 10
-    assert result["lightUsed"] == {"torch_2": 4} and result["lightHours"] == 16
+    # Light for the site's 10, not for the bonus: 10h -> 3 torches (12h).
+    assert result["lightUsed"] == {"torch_2": 3} and result["lightHours"] == 12
     assert result["litUnits"] == 13 and result["darkUnits"] == 0 and result["accident"] is None
     assert result["gearPercent"] == round(foraging.LIGHT_BONUS_BY_TIER[2] * 100, 1)
     doc = await db.characters.find_one({"address": ADDRESS, "id": cid})
-    assert doc["gear"]["itemBalances"]["backpack"] == {"torch_2": 1, "tinderbox_1": 1}
+    assert doc["gear"]["itemBalances"]["backpack"] == {"torch_2": 2, "tinderbox_1": 1}
 
 
 async def test_running_out_of_light_digs_the_rest_in_the_dark(db, monkeypatch):
@@ -635,13 +636,13 @@ async def test_running_out_of_light_digs_the_rest_in_the_dark(db, monkeypatch):
     await _fast_forward(db, cid)
     result = (await foraging.finish_forage(ADDRESS, cid))["result"]
 
-    # Site 10, lit 12: 6 lit (from 5 site units), the other 5 site units in the dark: 2.
-    assert result["litUnits"] == 6 and result["darkUnits"] == 2 and result["total"] == 8
+    # The site gives 10: 6 lit (+25%: 7), the other 4 in the dark: 2.
+    assert result["litUnits"] == 7 and result["darkUnits"] == 2 and result["total"] == 9
     assert result["lightUsed"] == {"torch_1": 3}
     assert result["accident"]["severity"] == "minor"                        # the dark part rolls
     slot = await db.soul_slots.find_one({"address": ADDRESS})
     ore = slot["forage_pools"]["1"]["families"]["ore"]
-    assert ore["initial"] - ore["remaining"] == result["fromSite"] == 5 + 2  # only what was dug leaves
+    assert ore["initial"] - ore["remaining"] == result["fromSite"] == 6 + 2  # only what was dug leaves
 
 
 async def test_trip_burns_oil_and_wears_the_lantern(db, monkeypatch):
@@ -656,9 +657,9 @@ async def test_trip_burns_oil_and_wears_the_lantern(db, monkeypatch):
     await _fast_forward(db, cid)
     result = (await foraging.finish_forage(ADDRESS, cid))["result"]
 
-    assert result["lightUsed"] == {"oil_1": 12}                             # 12 units, 1h per T1 oil
+    assert result["lightUsed"] == {"oil_1": 10}                             # the site's 10, 1h per T1 oil
     doc = await db.characters.find_one({"address": ADDRESS, "id": cid})
-    assert doc["gear"]["itemBalances"]["backpack"]["oil_1"] == 8
+    assert doc["gear"]["itemBalances"]["backpack"]["oil_1"] == 10
     assert doc["gear"]["items"][0]["quality"] == 3              # the lantern wears like any item
     assert doc["gear"]["itemBalances"]["backpack"]["tinderbox_1"] == 1   # stack loss chance is 0
 
@@ -885,7 +886,7 @@ async def test_no_accident_with_a_light(db, monkeypatch):
     await foraging.start_forage(ADDRESS, cid, "craftweapon_01")
     await _fast_forward(db, cid)
     result = (await foraging.finish_forage(ADDRESS, cid))["result"]
-    assert result["accident"] is None and result["lightUsed"] == {"torch_1": 6}   # 12 units, 2h a torch
+    assert result["accident"] is None and result["lightUsed"] == {"torch_1": 5}   # the site's 10, 2h a torch
 
 
 def test_a_lost_band_adds_days_and_a_soul_point_per_day(monkeypatch):
@@ -1025,7 +1026,7 @@ async def test_the_trip_that_uses_up_the_tinderbox_stays_lit(db, monkeypatch):
     result = (await foraging.finish_forage(ADDRESS, cid))["result"]
     # Already lit when it broke: the bonus counts and nothing happens in the dark.
     assert result["gearPercent"] == foraging.LIGHT_BONUS_BY_TIER[1] * 100
-    assert result["accident"] is None and result["lightUsed"] == {"torch_1": 6}
+    assert result["accident"] is None and result["lightUsed"] == {"torch_1": 5}
     assert any("inderbox" in name for name in result["broken"])
     # The next trip has nothing to light the torch with - dark.
     doc = await db.characters.find_one({"address": ADDRESS, "id": cid})
@@ -1036,8 +1037,8 @@ async def test_the_trip_that_uses_up_the_tinderbox_stays_lit(db, monkeypatch):
 def test_a_carried_light_that_does_not_burn_gives_no_bonus():
     # A T6 candle in the pack, but the T1 torches cover the whole dig.
     supply = _supply([], {"tinderbox_1": 1, "torch_1": 10, "candle_6": 1})
-    plan = foraging.plan_trip(6, 0, 100, None, [], supply, None, "ore")       # 6 * 1.25 = 7 units: 4 torches
-    assert plan["burned"] == {"torch_1": 4}
+    plan = foraging.plan_trip(6, 0, 100, None, [], supply, None, "ore")       # the site gives 6: 3 torches
+    assert plan["burned"] == {"torch_1": 3}
     light = next(i for i in plan["gear"]["items"] if i.get("fuel"))
     assert light["itemId"] == "torch_1" and light["bonusTier"] == 1
     assert plan["gear"]["percent"] == foraging.LIGHT_BONUS_BY_TIER[1] * 100
@@ -1052,15 +1053,15 @@ def test_a_carried_light_that_does_not_burn_gives_no_bonus():
     assert not any(i.get("fuel") for i in plan["gear"]["items"])
 
 
-@pytest.mark.parametrize("torches, cover", [(10, "full"), (4, "partial"), (2, "none")])
+@pytest.mark.parametrize("torches, cover", [(5, "full"), (4, "partial"), (2, "none")])
 def test_light_cover_on_the_site_card(torches, cover):
-    # No gear, a T1 torch (2h, +25%): lowest dig 6 + 1.5 rounded down = 7 units (7h),
-    # highest 10 + 2.5 rounded up = 13 (13h).
+    # Light is per site unit: the site gives 6 to 10 on the first trip, so it
+    # needs 6h to 10h whatever the gear. T1 torches burn 2h.
     doc = {"gear": {"items": [], "itemBalances": {"backpack": {"tinderbox_1": 1, "torch_1": torches}}}}
     gear = foraging.gathering_gear(doc, "ore")
     low, high = foraging.site_plans(doc, "ore", 0, 100, gear)
     light = foraging.light_cover(gear["light"]["hours"], low, high)
-    assert (light["needMin"], light["needMax"]) == (7, 13)
+    assert (light["needMin"], light["needMax"]) == (6, 10)
     assert light["cover"] == cover
 
 
@@ -1094,27 +1095,19 @@ def test_the_site_card_range_rounds_the_bonus_down_low_and_up_high():
     assert foraging.planned_yield_range(doc, "ore", 30, 100, gear) == (1, 2)
 
 
-def test_a_trip_burns_at_most_24h_of_light_but_keeps_the_whole_find():
-    assert foraging.MAX_LIGHT_HOURS_PER_TRIP == 24
+def test_light_is_per_site_unit_and_the_bonus_needs_none():
+    assert foraging.MAX_LIGHT_HOURS_PER_TRIP == 24 and foraging.light_needed(30) == 24
     assert foraging.dig(10, 2.9, 0.0) == (10, 29)          # no cap on the find
-    supply = _supply([], {"tinderbox_1": 1, "torch_1": 20})   # 40h of T1 torches
     pickaxe = {"instanceId": "p", "itemId": "pickaxe_6", "familyId": "pickaxe", "name": "Pickaxe",
-               "quality": 4, "tier": 6}                     # +75%, +25% torch = +100%
-    plan = foraging.plan_trip(10, 0, 100, None, [], supply, None, "ore", 0.0)
-    assert plan["amount"] == 13 and plan["burned"] == {"torch_1": 7}  # 13h -> 7 torches
-    supply = _supply([], {"tinderbox_1": 1, "torch_6": 3})      # 64h each, +75%
-    plan = foraging.plan_trip(10, 0, 100, pickaxe, [], supply, None, "ore", 0.0)
-    assert plan["amount"] == 25 and plan["taken"] == 10    # 10 + 150%: all of it comes home
-    assert plan["burned"] == {"torch_6": 1} and not plan["inDark"] and plan["darkUnits"] == 0
-    # A 28-unit dig on cheap light: 12 T1 torches (24h) light it, the rest needs
-    # no more - the T6 candle stays in the pack and the T1 bonus counts.
+               "quality": 4, "tier": 6}                     # +75%
     items = [{"instanceId": f, "itemId": f"{f}_6", "familyId": f, "name": f, "quality": 4, "tier": 6}
              for f in ("cart", "grappling_hook", "hunters_charm", "iron_spikes")]  # 4 x +18%
+    # A 28-unit dig on cheap light: the site gives 10, so 10h - 5 T1 torches;
+    # the T6 candle stays in the pack and the T1 light's +25% counts.
     supply = _supply([], {"tinderbox_1": 1, "torch_1": 12, "candle_6": 1})
     plan = foraging.plan_trip(10, 0, 100, pickaxe, items, supply, None, "ore", 0.0)
-    assert plan["gear"]["percent"] == 75 + 4 * 18 + 25 and plan["amount"] == 28
-    assert plan["burned"] == {"torch_1": 12} and plan["lightHours"] == 24 and not plan["inDark"]
-    assert foraging.light_needed(30) == 24
+    assert plan["gear"]["percent"] == 75 + 4 * 18 + 25 and plan["amount"] == 28 and plan["taken"] == 10
+    assert plan["burned"] == {"torch_1": 5} and plan["lightHours"] == 10 and not plan["inDark"]
 
 
 # ── Underground nights ─────────────────────────────────────────────────
