@@ -99,7 +99,7 @@ You can use **any** tag you like — tags outside this list still appear on the 
 Adventures are submitted alongside their image assets. The engine validates every adventure against the platform schema before making it available to players. Validation checks include:
 
 - Presence of all required fields
-- Existence of `start`, `LastResort`, and `retreat` scenes
+- Existence of `Start`, `LastResort`, and `Retreat` scenes
 - Validity of all choice targets (every `to` field must point to an existing scene)
 - Correct typing on `isEnding` flags
 

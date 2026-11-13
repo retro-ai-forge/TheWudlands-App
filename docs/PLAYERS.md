@@ -389,4 +389,4 @@ Equip your mount with specialized gear to enhance its capabilities. Each piece i
 
 An interactive tool to explore all crafting recipes, search by item name or ingredient, and see detailed breakdowns of raw materials needed. Download to enlarge.
 
-![Crafting Recipes](/public/craft/crafting-261002.jpg)
+![Crafting Recipes](/public/craft/crafting-image.jpg)
