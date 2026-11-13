@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useLayoutEffect, useState } from "react";
 import Link from "next/link";
 import dynamic from "next/dynamic";
 import styles from "../../page.module.css";
@@ -117,6 +117,13 @@ export function WelcomeView() {
   useEffect(() => {
     refreshPreviews();
   }, []);
+
+  // Back on the soul slots (or into a character, or the creation wizard):
+  // start at the top, not where the previous screen was scrolled to.
+  const showingGrid = viewingCharacter === null && creatingSlot === null;
+  useLayoutEffect(() => {
+    window.scrollTo(0, 0);
+  }, [showingGrid]);
 
   // Lost in the dark (backend.foraging): the server only reveals it once the
   // planned return has passed - before that a lost trip looks like any other.

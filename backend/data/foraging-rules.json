@@ -57,14 +57,12 @@
   "lightHoursPerUnit": 1,
   "maxLightHoursPerTrip": 24,
   "_maxLightComment": "A trip burns at most this many hours of light (about a day of work). A dig bigger than that still brings everything home - the rest needs no more light.",
-  "_lightHoursComment": "Each unit the site gives needs this many hours of light (ore, crystal, clockwork) - the gear bonus on top needs none. A trip burns oil (only with a lantern), then torches, then candles, each lowest tier first, whole units - hours per unit in light-source-burn-hours.json (a lantern burns at the lower of lantern and oil). The best light that burned sets the bonus for the trip. What the light can't cover is dug as without it (on ore and crystal: in the dark).",
+  "_lightHoursComment": "Each unit the site gives needs this many hours of light (ore, crystal, clockwork) - the gear bonus on top needs none. A trip burns oil (only with a lantern), then torches, then candles, each lowest tier first, whole units - hours per unit in light-source-burn-hours.json (a lantern burns at the lower of lantern and oil). The light that burned with the highest bonus sets the bonus for the trip. What the light can't cover is dug as without it (on ore and crystal: in the dark).",
+  "_lightBonusComment": "A burning light counts like a weapon, by light and tier: candle the least, the glass lantern (at the lower of lantern and oil tier) the most - +10% between them, +10% per tier. With the burn hours (light-source-burn-hours.json) this makes candles the worst light (2 raw per hour at T1), torches the everyday one (1 per hour) and lantern + oil the best over time (0.5 per hour, plus the lantern).",
   "lightBonusByTier": {
-    "1": 0.25,
-    "2": 0.35,
-    "3": 0.45,
-    "4": 0.55,
-    "5": 0.65,
-    "6": 0.75
+    "candle": { "1": 0.15, "2": 0.25, "3": 0.35, "4": 0.45, "5": 0.55, "6": 0.65 },
+    "torch": { "1": 0.25, "2": 0.35, "3": 0.45, "4": 0.55, "5": 0.65, "6": 0.75 },
+    "glass_lantern": { "1": 0.35, "2": 0.45, "3": 0.55, "4": 0.65, "5": 0.75, "6": 0.85 }
   },
   "darkness": {
     "_comment": "A trip to these materials without a light that counts finds `penalty` less (off the gear percent; only the smaller find leaves the site) and rolls once for an accident: the bands are tried in order, each with its own chance; a hit costs that many temporary Body points (backend.condition, applied on collect). A band with `lostDays` also leaves the character lost for that many days (rolled): the trip ends that much later, but the player only sees the planned return - after it the character shows as lost and can't be opened until back. Each lost day costs `lostPointsPerDay` more temporary points in the `lostGroup` attributes (Soul: trapped in the dark, no way out).",

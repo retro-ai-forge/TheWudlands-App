@@ -114,8 +114,15 @@ def build_recipes() -> dict:
     return {r["familyId"]: r for r in recipes}
 
 
+def build_burn_hours() -> dict:
+    # Hours one unit of a light burns, by family and tier (the "_" keys are
+    # comments) - shown in the item popup, same numbers foraging uses.
+    burn = json.loads((DATA_DIR / "light-source-burn-hours.json").read_text())
+    return {k: v for k, v in burn.items() if not k.startswith("_")}
+
+
 def main() -> None:
-    data = {"families": build_families(), "recipes": build_recipes()}
+    data = {"families": build_families(), "recipes": build_recipes(), "burnHours": build_burn_hours()}
     template = TEMPLATE.read_text()
     output = template.replace("__DATA__", json.dumps(data))
     OUTPUT.write_text(output)

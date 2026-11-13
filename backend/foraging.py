@@ -159,7 +159,17 @@ LIGHT_HOURS: dict[str, dict[int, int]] = {
 # The lantern's row in the burn-hours table is "lantern"; its family is glass_lantern.
 _LIGHT_HOURS_ROW: dict[str, str] = {"glass_lantern": "lantern"}
 # A light counts like a weapon (lightBonusByTier), not like an item.
-LIGHT_BONUS_BY_TIER: dict[int, float] = {int(t): b for t, b in RULES["lightBonusByTier"].items()}
+# By light (candle / torch / glass_lantern), then tier - a lantern at the
+# lower of its own and its oil's tier.
+LIGHT_BONUS_BY_TIER: dict[str, dict[int, float]] = {
+    light: {int(t): b for t, b in by_tier.items()}
+    for light, by_tier in RULES["lightBonusByTier"].items()
+}
+
+
+def light_bonus(light_family: str, tier: int) -> float:
+    """A burning light's bonus (LIGHT_BONUS_BY_TIER), 0 for an unknown one."""
+    return LIGHT_BONUS_BY_TIER.get(light_family, {}).get(tier, 0)
 # Darkness (rules "darkness"): on these materials a trip without a light
 # finds `penalty` less (taken off the gear percent; only the smaller find
 # leaves the site) and risks one accident - a band rolled from `accidents`,
@@ -450,10 +460,12 @@ def _tier(item_id: str) -> int:
 
 def _item_bonus(item: dict) -> float:
     """An item's bonus by its tier. A light (it has `fuel`) counts like a
-    weapon (LIGHT_BONUS_BY_TIER), a lantern at `bonusTier`, the lower of its
-    own and its oil's tier."""
-    table = LIGHT_BONUS_BY_TIER if item.get("fuel") else ITEM_BONUS_BY_TIER
-    return table.get(item.get("bonusTier", item["tier"]), 0)
+    weapon, by its own table (LIGHT_BONUS_BY_TIER - its familyId is the
+    light: candle / torch / glass_lantern), a lantern at `bonusTier`, the
+    lower of its own and its oil's tier."""
+    if item.get("fuel"):
+        return light_bonus(item["familyId"], item.get("bonusTier", item["tier"]))
+    return ITEM_BONUS_BY_TIER.get(item.get("bonusTier", item["tier"]), 0)
 
 
 def is_dark(family_id: Optional[str], items: list[dict]) -> bool:
@@ -579,7 +591,7 @@ def light_supply(doc: dict, family_id: str) -> tuple[list[dict], list[dict], Opt
     order: a lantern's oil, then torches, then candles - each lowest tier
     first. Entries {"light" (glass_lantern/torch/candle), "familyId" (what
     burns: oil/torch/candle), "itemId", "name", "tier", "bonusTier", "hours"
-    (per unit), "count"}. A lantern burns at the lower of lantern and oil
+    (per unit), "count", "bonus" (light_bonus)}. A lantern burns at the lower of lantern and oil
     tier, for its hours and its bonus. Nothing burns without a tinderbox.
     Returns (supply, blocked lights [{"name", "missing"}], lantern pick)."""
     wanted = (GATHERING_GEAR.get(family_id) or {"items": ()})["items"]
@@ -608,7 +620,7 @@ def light_supply(doc: dict, family_id: str) -> tuple[list[dict], list[dict], Opt
                                "name": _item_name(item_id, light_family), "tier": _tier(item_id),
                                "bonusTier": _tier(item_id), "hours": _burn_hours(light_family, _tier(item_id)),
                                "count": n})
-    supply = [u for u in supply if u["hours"] > 0]
+    supply = [{**u, "bonus": light_bonus(u["light"], u["bonusTier"])} for u in supply if u["hours"] > 0]
     missing = missing_for_light(doc)
     if supply and missing:
         return [], [{"name": supply[0]["name"], "missing": missing}], lantern
@@ -621,13 +633,14 @@ def light_needed(units: int) -> int:
     return min(units, MAX_LIGHT_HOURS_PER_TRIP // LIGHT_HOURS_PER_UNIT)
 
 
-def plan_burn(supply: list[dict], units: int) -> tuple[dict[str, int], int, int]:
+def plan_burn(supply: list[dict], units: int) -> tuple[dict[str, int], int, Optional[dict]]:
     """Burn whole units of `supply` in order until `units` units of work are
     lit (LIGHT_HOURS_PER_UNIT hours each; callers cap `units` with
-    light_needed). Returns ({item id: burned}, units lit, best bonusTier
-    burned - 0 if nothing)."""
+    light_needed). Returns ({item id: burned}, units lit, the supply entry
+    with the highest bonus that burned - None if nothing; on a tie the
+    higher tier)."""
     needed = units * LIGHT_HOURS_PER_UNIT
-    covered, best = 0, 0
+    covered, best = 0, None
     burned: dict[str, int] = {}
     for unit in supply:
         n = 0
@@ -636,21 +649,22 @@ def plan_burn(supply: list[dict], units: int) -> tuple[dict[str, int], int, int]
             covered += unit["hours"]
         if n:
             burned[unit["itemId"]] = burned.get(unit["itemId"], 0) + n
-            best = max(best, unit["bonusTier"])
+            if best is None or (unit["bonus"], unit["tier"]) > (best["bonus"], best["tier"]):
+                best = unit
         if covered >= needed:
             break
     return burned, min(units, covered // LIGHT_HOURS_PER_UNIT), best
 
 
-def _light_pick(supply: list[dict], lantern: Optional[dict], bonus_tier: int,
+def _light_pick(supply: list[dict], lantern: Optional[dict], best: dict,
                 burned: Optional[dict[str, int]] = None) -> dict:
-    """The light as one gear item: named after the best light that burns
-    (the first in line before a trip), carrying the whole trip's hours. The
-    lantern itself (an item instance, it wears) stands in when its oil
-    burned."""
+    """The light as one gear item: `best` - the supply entry whose bonus
+    counts (plan_burn's pick, or the first in line before a trip) - carrying
+    the whole trip's hours. The lantern itself (an item instance, it wears)
+    stands in when its oil burned."""
     burned_ids = set(burned) if burned else {supply[0]["itemId"]}
     used = [u for u in supply if u["itemId"] in burned_ids]
-    best = max((u for u in used if u["bonusTier"] == bonus_tier), key=lambda u: u["tier"], default=used[0])
+    bonus_tier = best["bonusTier"]
     oil_used = any(u["light"] in LIGHT_FUEL for u in used)
     holder = lantern if (lantern and oil_used) else None
     return {"instanceId": holder["instanceId"] if holder else None,
@@ -766,7 +780,7 @@ def gathering_gear(doc: dict, family_id: str) -> dict:
     supply, blocked_lights, lantern = light_supply(doc, family_id)
     light = None
     if supply:
-        items.append(_light_pick(supply, lantern, supply[0]["bonusTier"]))
+        items.append(_light_pick(supply, lantern, supply[0]))
         light = {"hours": sum(u["hours"] * u["count"] for u in supply)}
     return {**_with_bonus(weapon, items, family_id), "light": light, "blockedWeapons": blocked,
             "blockedLights": blocked_lights, "blockedItems": [blocked_charm] if blocked_charm else []}

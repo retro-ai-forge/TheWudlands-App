@@ -219,8 +219,12 @@ async def test_a_collect_failing_halfway_keeps_the_trip_and_its_finds(warm_pool,
         site = next(s for s in state["sites"] if s["familyId"] == "ore")
         await foraging.start_forage(ADDRESS, cid, site["mission"]["id"])
         past = (datetime.now(timezone.utc) - timedelta(seconds=1)).isoformat()
+        # An ore trip without light is dark: 6% of the time its accident
+        # leaves the character lost (a hidden later returnAt) and collecting
+        # is refused. Drop that, so the trip is always back.
         await db.characters.update_one({"address": ADDRESS, "id": cid},
-                                       {"$set": {"foraging.activeForage.readyAt": past}})
+                                       {"$set": {"foraging.activeForage.readyAt": past},
+                                        "$unset": {"foraging.activeForage.returnAt": ""}})
 
         async def broken(*_args, **_kwargs):
             raise RuntimeError("connection dropped")

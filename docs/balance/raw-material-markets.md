@@ -68,15 +68,17 @@ one the crafter has enough of:
 
 | Light (T1 hours) | Slot | Options, in order |
 |---|---|---|
-| torch (2h) | shaft | bone 1, wood 1 |
+| torch (2h, +25%) | shaft | bone 1, wood 1 |
 | | head | reed 1, hide 1, fiber 1 |
-| candle (1h) | tallow | hide 1, monster part 1, meat 1, harvest 2 |
+| candle (1h, +15%) | tallow | hide 1, monster part 1, meat 1, harvest 2 |
 | | wick | reed 1, fiber 1 |
-| oil (1h, lantern) | fat | fish 1, monster part 1, meat 1 |
+| oil (4h in a lantern, +35%) | fat | fish 1, monster part 1, meat 1 |
 | | base | bone 1, harvest 1 |
 
-With the first choices and a mix of 60% torches, 20% candles and 20% oil, mining burns about 450 bone,
-390 hide (200 of it where reed runs out), 240 reed (all there is) and 180 fish. Before, the old torch (2 wood, 3 fiber, 3 meat) and the other lights
+Per hour at T1 a candle costs 2 raws, a torch 1 and lantern oil 0.5 (plus 30 raws once for the lantern), and the
+bonus goes the other way - candle +15%, torch +25%, lantern +35% (+10% per tier each). With the first choices and a mix
+of 60% torches, 20% candles and 20% oil (by hours), mining burns about 315 bone, 390 hide (200 of it where reed runs
+out), 240 reed (all there is) and 45 fish. Before, the old torch (2 wood, 3 fiber, 3 meat) and the other lights
 burned more wood, fiber and meat than foraging gives at all. Higher-tier lights burn twice as long per tier for the same recipe.
 
 ## Ammo

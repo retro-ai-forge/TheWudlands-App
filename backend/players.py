@@ -1015,249 +1015,6 @@ def _instance_condition(instance: Optional[dict], entry) -> str:
     return item_condition.label(instance.get("quality"))
 
 
-async def preview_salvage(
-    address: str, character_id: str, item_id: str, count: int = 1, from_vault: bool = False,
-    instance_id: Optional[str] = None,
-) -> Optional[tuple]:
-    """
-    Read-only preview. Returns (recoveries, condition) or None.
-    """
-    db = get_database()
-    doc = await db.characters.find_one({"address": address, "id": character_id})
-    if doc is None:
-        return None
-    character = doc
-    entry = items_catalog.ITEM_CATALOG_ENTRIES_BY_ID.get(item_id)
-    if entry is None:
-        raise ValueError(f"Unknown item id: {item_id}")
-    if from_vault:
-        vault = await _get_vault(db, address)
-        player_tools = vault["itemBalances"]
-        player_items = vault["items"]
-    else:
-        player_tools = {}
-        player_items = []
-
-    instance = None
-    if instance_id:
-        if from_vault:
-            instance = next((i for i in vault["items"] if i["instanceId"] == instance_id), None)
-        else:
-            instance = next((i for i in character.get("gear", {}).get("items", []) if i["instanceId"] == instance_id), None)
-    condition = _instance_condition(instance, entry)
-
-    try:
-        recoveries = recycling.resolve_salvage_preview(
-            entry.family_id, entry.tier, character, player_tools, player_items, count,
-            condition=condition,
-        )
-    except ValueError:
-        return ([], condition)
-    return (recoveries or [], condition)
-
-
-
-@_in_transaction
-async def salvage_item_instance(
-    address: str, character_id: str, instance_id: str, from_vault: bool = False
-) -> Optional[Player]:
-    """
-    Break one item instance down into a fraction of its recipe's raw-
-    material chain (backend.recycling), using `character_id`'s own
-    profession/skill and worn charm either way - but NOT the same tool
-    access. `from_vault=False` (default) salvages one of the CHARACTER's
-    own instances (backpack or body - not "crafting", which is borrowed
-    for an in-progress craft), scored using only tools physically carried
-    (character.tools, never the player's shared pool). `from_vault=True`
-    salvages one of the PLAYER's shared pool instances instead, scored
-    with the full shared tool pool too (the character is right there at
-    the vault). Where the recovered materials land depends on which of
-    those two: a vault item's materials go straight into the player's own
-    shared crafting stock (crafting.resources, same pool "Party's
-    Resources" reads); a character-carried item's materials go to THAT
-    character instead, into whichever of its own gear.resources buckets
-    it can actually carry them in right now (see
-    _salvage_resource_updates).
-
-    Raises ValueError if the item's family has no recipe. Returns None if
-    no matching instance exists in the searched location, or the address/
-    character pair doesn't match.
-    """
-    db = get_database()
-    doc = await db.characters.find_one({"address": address, "id": character_id})
-    if doc is None:
-        return None
-    character = doc
-
-    if from_vault:
-        vault = await _get_vault(db, address)
-        instance = next(
-            (i for i in vault["items"] if i["instanceId"] == instance_id),
-            None,
-        )
-    else:
-        instance = next(
-            (
-                i for i in character.get("gear", {}).get("items", [])
-                if i["instanceId"] == instance_id and i.get("location") in ("backpack", "body", "saddlepack")
-            ),
-            None,
-        )
-        if instance is None:
-            home_items_sii = await _get_storage_items(db, "home", address, character_id)
-            instance = next(
-                (i for i in home_items_sii if i["instanceId"] == instance_id),
-                None,
-            )
-    if instance is None:
-        return None
-
-    entry = items_catalog.ITEM_CATALOG_ENTRIES_BY_ID.get(instance["itemId"])
-    if entry is None:
-        raise ValueError(f"Unknown item id: {instance['itemId']}")
-
-    if from_vault:
-        player_tools = vault["itemBalances"]
-        player_items = vault["items"]
-    else:
-        player_tools = {}
-        player_items = []
-    condition = _instance_condition(instance, entry)
-    recoveries = recycling.resolve_salvage_preview(
-        entry.family_id, entry.tier, character, player_tools, player_items,
-        condition=condition,
-    )
-    if not recoveries:
-        raise ValueError(f"{entry.family_id} has no recipe to salvage materials from")
-    amounts = recycling.flatten_recovery(recoveries)
-
-    if from_vault:
-        pool_instance = next(
-            (i for i in vault["items"] if i["instanceId"] == instance_id and i.get("location") == "pool"),
-            None,
-        )
-        if pool_instance is None:
-            return None
-        new_vault_items = [i for i in vault["items"] if i["instanceId"] != instance_id]
-        await db.player_vaults.update_one(
-            {"address": address},
-            {"$set": {"items": new_vault_items}},
-            upsert=True,
-        )
-        if amounts:
-            await _inc_vault_itembalances(db, address, amounts)
-        doc = await db.characters.find_one({"address": address, "id": character_id})
-    else:
-        if instance.get("location") == "home":
-            await _pull_storage_items(db, "home", address, character_id, [instance_id])
-            doc = await db.characters.find_one({"address": address, "id": character_id})
-        else:
-            doc = await find_one_and_update_checked(
-                db.characters,
-                {"address": address, "id": character_id,
-                    "gear.items": {"$elemMatch": {"instanceId": instance_id, "location": instance["location"]}},
-                },
-                {"$pull": {"gear.items": {"instanceId": instance_id}}},
-                return_document=ReturnDocument.AFTER,
-            )
-        if doc is not None and amounts:
-            await _inc_storage_balances(db, "home", address, character_id, amounts)
-    if doc is None:
-        return None
-    return BUILD_PLAYER
-
-
-@_in_transaction
-async def salvage_item_balance(
-    address: str, character_id: str, item_id: str, amount: int = 1, from_vault: bool = False, location: str = "home"
-) -> Optional[Player]:
-    """
-    The item_balances/itemBalances equivalent of salvage_item_instance -
-    same from_vault split for which pool `amount` is consumed FROM
-    (character's own gear.itemBalances.{location} vs. the player's shared
-    vault.itemBalances), for stackable finished goods (food, potions, misc
-    trinkets) rather than instance-tracked gear. `location` ("home" or
-    "backpack") is ignored when from_vault - it only matters for picking
-    which of the character's own two itemBalances buckets to deduct from,
-    matching whichever one the popup that triggered this actually opened
-    on (see ItemDetailPopup's own `location` prop). Where the recovered
-    materials land follows the same from_vault split as
-    salvage_item_instance (see _salvage_resource_updates) - independent of
-    which bucket the source amount came out of.
-    Raises ValueError for a non-positive amount, an unknown item id, or a
-    family with no recipe. Returns None if `amount` isn't held wherever
-    this looks.
-    """
-    if amount <= 0:
-        raise ValueError("amount must be positive")
-
-    db = get_database()
-    doc = await db.characters.find_one({"address": address, "id": character_id})
-    if doc is None:
-        return None
-    character = doc
-
-    if from_vault:
-        vault = await _get_vault(db, address)
-        held = vault["itemBalances"].get(item_id, 0)
-    else:
-        held = character.get("gear", {}).get("itemBalances", {}).get(location, {}).get(item_id, 0)
-    if held < amount:
-        return None
-
-    entry = items_catalog.ITEM_CATALOG_ENTRIES_BY_ID.get(item_id)
-    if entry is None:
-        raise ValueError(f"Unknown item id: {item_id}")
-
-    if from_vault:
-        player_tools = vault["itemBalances"]
-        player_items = vault["items"]
-    else:
-        player_tools = {}
-        player_items = []
-    recoveries = recycling.resolve_salvage_preview(
-        entry.family_id, entry.tier, character, player_tools, player_items, amount
-    )
-    if not recoveries:
-        raise ValueError(f"{entry.family_id} has no recipe to salvage materials from")
-    amounts = recycling.flatten_recovery(recoveries)
-
-    if from_vault:
-        net_amounts: Dict[str, int] = {item_id: -amount}
-        for rid, qty in amounts.items():
-            net_amounts[rid] = net_amounts.get(rid, 0) + qty
-        await _inc_vault_itembalances(db, address, net_amounts)
-        doc = await db.characters.find_one({"address": address, "id": character_id})
-        if doc is None:
-            return None
-    elif location == "home":
-        # Deduct from home, then credit recoveries back to home.
-        home_doc = await db.character_homes.find_one({"address": address, "characterId": character_id})
-        if not home_doc or home_doc.get("itemBalances", {}).get(item_id, 0) < amount:
-            return None
-        await _inc_storage_balances(db, "home", address, character_id, {item_id: -amount})
-        if amounts:
-            await _inc_storage_balances(db, "home", address, character_id, amounts)
-        doc = await db.characters.find_one({"address": address, "id": character_id})
-    else:
-        # backpack / saddlepack — deduct from player doc, credit recoveries to home.
-        doc = await find_one_and_update_checked(
-            db.characters,
-            {"address": address, "id": character_id, f"gear.itemBalances.{location}.{item_id}": {"$gte": amount},
-            },
-            {"$inc": {f"gear.itemBalances.{location}.{item_id}": -amount}},
-            return_document=ReturnDocument.AFTER,
-        )
-        if doc is None:
-            return None
-        await _prune_char_zeros(db, address, character_id, doc, [f"gear.itemBalances.{location}.{item_id}"])
-        if amounts:
-            await _inc_storage_balances(db, "home", address, character_id, amounts)
-    if doc is None:
-        return None
-    return BUILD_PLAYER
-
-
 def _instance_tier(instance: dict) -> Optional[int]:
     """An item instance's own tier, resolved from its stored itemId via
     items_catalog.ITEM_CATALOG_ENTRIES_BY_ID - None if somehow not found
@@ -5151,10 +4908,8 @@ async def check_out_item_balance_to_backpack(
     uncapped) with load_item_balance_to_backpack (home -> backpack,
     capacity-gated): if the second hop failed, the item was left stranded
     in home instead of the backpack the player actually clicked for, with
-    no way back to the vault in one click either. Dropping into home on a
-    full backpack is deliberately ONLY something recycling does (see
-    _salvage_resource_updates) - a normal move either lands in the
-    backpack whole, or doesn't move at all.
+    no way back to the vault in one click either. A normal move either
+    lands in the backpack whole, or doesn't move at all.
 
     Raises ValueError if the character is out on an adventure, has no
     backpack equipped, or the backpack has no room for the whole amount.
@@ -5419,9 +5174,7 @@ async def destroy_character_item_instance(address: str, character_id: str, insta
     Permanently remove one item instance from `character_id`'s own backpack,
     body, or home (not "crafting", borrowed for an in-progress craft) -
     character-owned counterpart to destroy_item_instance (which is vault-
-    pool-only). The zero-recovery fallback the character-side item popup
-    reaches for when salvage_item_instance(from_vault=False) finds no
-    recipe to salvage. Returns None if no matching instance exists on this
+    pool-only). Returns None if no matching instance exists on this
     character.
     """
     db = get_database()
@@ -5827,8 +5580,8 @@ async def salvage_home(address: str, character_id: str, selected_ids: List[str],
     every selected storage item instance/itemBalance entry (ids from
     preview_home_salvage's own rows) at once, crediting ALL the recovered
     raw/processed materials straight into the same storage - never the
-    backpack (unlike a normal single-item salvage's own
-    _salvage_resource_updates fallback chain). Computed once as a
+    backpack. Together with the multi-select bar (same popup, a chosen
+    set) this is the only way to salvage. Computed once as a
     full replacement of gear.items/itemBalances in a single $set rather
     than per-id calls. An id that no longer qualifies (already gone, or
     no longer has a recipe) is silently skipped rather than failing the
@@ -5922,149 +5675,6 @@ async def salvage_home(address: str, character_id: str, selected_ids: List[str],
     await _set_storage_items(db, storage_type, address, character_id, new_home_items_sc)
     await _set_storage_balances(db, storage_type, address, character_id, new_home_balances)
     return BUILD_PLAYER
-
-
-def _recyclable_vault_entries(vault: dict, character: dict):
-    """
-    Yields (kind, id, entry, count) for every recyclable thing in the
-    character's vault (instances + itemBalances). All rows are
-    preselected - the vault has no container nesting to worry about.
-    """
-    for instance in vault.get("items", []):
-        entry = items_catalog.ITEM_CATALOG_ENTRIES_BY_ID.get(instance["itemId"])
-        if entry is None or not recycling.has_recipe(entry.family_id):
-            continue
-        yield "instance", instance["instanceId"], entry, 1
-    for item_id, qty in vault.get("itemBalances", {}).items():
-        if qty <= 0:
-            continue
-        entry = items_catalog.ITEM_CATALOG_ENTRIES_BY_ID.get(item_id)
-        if entry is None or not recycling.has_recipe(entry.family_id):
-            continue
-        yield "balance", item_id, entry, qty
-
-
-async def preview_vault_salvage(
-    address: str, character_id: str,
-    selected_ids: Optional[List[str]] = None,
-    amount_caps: Optional[Dict[str, int]] = None,
-) -> Optional[List[Dict[str, object]]]:
-    """
-    Read-only: every recyclable thing in the player's shared vault,
-    one row per distinct thing. When selected_ids is provided, only
-    items whose id is in the set are included. amount_caps optionally
-    limits the quantity per balance item (partial-stack selection).
-    """
-    db = get_database()
-    doc = await db.characters.find_one({"address": address, "id": character_id})
-    if doc is None:
-        return None
-    character = doc
-
-    allow_ids: Optional[set] = set(selected_ids) if selected_ids else None
-    vault_pvs = await _get_vault(db, address)
-    player_tools = vault_pvs["itemBalances"]
-    player_items = vault_pvs["items"]
-    vault_instances_by_id = {i["instanceId"]: i for i in vault_pvs["items"]}
-
-    rows: List[Dict[str, object]] = []
-    for kind, entry_id, entry, count in _recyclable_vault_entries(vault_pvs, character):
-        if allow_ids is not None and entry_id not in allow_ids:
-            continue
-        if amount_caps and kind == "balance" and entry_id in amount_caps:
-            count = min(count, max(1, amount_caps[entry_id]))
-        condition = _instance_condition(vault_instances_by_id.get(entry_id), entry) if kind == "instance" else "new"
-        try:
-            recoveries = recycling.resolve_salvage_preview(entry.family_id, entry.tier, character, player_tools, player_items, count, condition=condition)
-        except ValueError:
-            continue
-        if not recoveries:
-            continue
-        rows.append({
-            "id": entry_id,
-            "kind": kind,
-            "name": entry.name,
-            "tier": entry.tier,
-            "owned": count,
-            "recoveries": recoveries,
-            "condition": condition,
-        })
-    return rows
-
-
-async def salvage_vault(
-    address: str, character_id: str, selected_ids: List[str],
-    amount_caps: Optional[Dict[str, int]] = None,
-) -> Optional[Player]:
-    """
-    Bulk vault salvage: salvages every selected vault item instance/
-    itemBalance at once, crediting recovered materials into the shared
-    crafting.resources pool. Uses the character's profession/skill and
-    the full shared tool pool (same as single-item from_vault salvage).
-    amount_caps optionally limits the quantity per balance item.
-    """
-    if not selected_ids:
-        return None
-    selected = set(selected_ids)
-    db = get_database()
-    doc = await db.characters.find_one({"address": address, "id": character_id})
-    if doc is None:
-        return None
-    character = doc
-
-    salvaged_instance_ids: set = set()
-    salvaged_balance_amounts: Dict[str, int] = {}
-    recovered_totals: Dict[str, int] = {}
-
-    vault_sv = await _get_vault(db, address)
-    player_tools = vault_sv["itemBalances"]
-    player_items = vault_sv["items"]
-    vault_instances_by_id = {i["instanceId"]: i for i in player_items}
-
-    for kind, entry_id, entry, count in _recyclable_vault_entries(vault_sv, character):
-        if entry_id not in selected:
-            continue
-        if amount_caps and kind == "balance" and entry_id in amount_caps:
-            count = min(count, max(1, amount_caps[entry_id]))
-        condition = _instance_condition(vault_instances_by_id.get(entry_id), entry) if kind == "instance" else "new"
-        try:
-            recoveries = recycling.resolve_salvage_preview(entry.family_id, entry.tier, character, player_tools, player_items, count, condition=condition)
-        except ValueError:
-            continue
-        amounts = recycling.flatten_recovery(recoveries) if recoveries else {}
-        for rid, qty in amounts.items():
-            recovered_totals[rid] = recovered_totals.get(rid, 0) + qty
-        if kind == "instance":
-            salvaged_instance_ids.add(entry_id)
-        else:
-            salvaged_balance_amounts[entry_id] = count
-
-    if not salvaged_instance_ids and not salvaged_balance_amounts:
-        return None
-
-    new_vault_items = [
-        instance for instance in vault_sv["items"]
-        if instance["instanceId"] not in salvaged_instance_ids
-    ]
-    # Build net vault balance delta: deduct salvaged, credit recovered.
-    vault_balance_inc_sv: Dict[str, int] = {}
-    for item_id, count in salvaged_balance_amounts.items():
-        vault_balance_inc_sv[item_id] = vault_balance_inc_sv.get(item_id, 0) - count
-    for rid, qty in recovered_totals.items():
-        vault_balance_inc_sv[rid] = vault_balance_inc_sv.get(rid, 0) + qty
-
-    await db.player_vaults.update_one(
-        {"address": address},
-        {"$set": {"items": new_vault_items}},
-        upsert=True,
-    )
-    if vault_balance_inc_sv:
-        await _inc_vault_itembalances(db, address, vault_balance_inc_sv)
-    doc = await db.characters.find_one({"address": address, "id": character_id})
-    if doc is None:
-        return None
-    return await _build_player(db, address)
-
 
 
 @_in_transaction
@@ -6228,30 +5838,6 @@ async def bulk_move_vault(
     if home_credits:
         await _inc_storage_balances(db, "home", address, character_id, home_credits)
     return BUILD_PLAYER
-
-
-def _container_recyclable_entries(character: dict, location: str):
-    """Yields (kind, entry_id, catalog_entry, count) for every recyclable
-    thing packed inside a container at the given location."""
-    gear = character.get("gear", {})
-    for instance in gear.get("items", []):
-        if instance.get("location") != location:
-            continue
-        entry = items_catalog.ITEM_CATALOG_ENTRIES_BY_ID.get(instance["itemId"])
-        if entry is None:
-            continue
-        yield "instance", instance["instanceId"], entry, 1
-    for item_id, qty in gear.get("itemBalances", {}).get(location, {}).items():
-        if qty <= 0:
-            continue
-        entry = items_catalog.ITEM_CATALOG_ENTRIES_BY_ID.get(item_id)
-        if entry is None:
-            continue
-        yield "balance", item_id, entry, qty
-
-
-def _backpack_recyclable_entries(character: dict):
-    return _container_recyclable_entries(character, "backpack")
 
 
 def _equipped_container_instance(character: dict, family_id: str) -> Optional[dict]:

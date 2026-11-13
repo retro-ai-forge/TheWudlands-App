@@ -206,14 +206,13 @@ export function CharacterPreview({
     checkScrolledToEnd();
   }, [activeTab]);
 
-  // Snap to the top before the browser paints whenever switching to a
-  // tab whose content fills the viewport (vault/home) — useLayoutEffect
-  // ensures the scroll reset happens before the first paint so there's no
-  // visible flash of the old scroll position.
+  // Every tab (and the home/crafting views) opens at the top, not wherever
+  // the previous one was scrolled to - useLayoutEffect resets it before the
+  // browser paints, so there's no flash of the old position. The page
+  // itself is reset too, for layouts where the window scrolls instead.
   useLayoutEffect(() => {
-    if (showCrafting || showHome || activeTab === "home" || activeTab === "vault") {
-      wizardScrollRef.current?.scrollTo(0, 0);
-    }
+    wizardScrollRef.current?.scrollTo(0, 0);
+    window.scrollTo(0, 0);
   }, [activeTab, showHome, showCrafting]);
 
   // Standalone portrait editor, opened by clicking the face portrait on the

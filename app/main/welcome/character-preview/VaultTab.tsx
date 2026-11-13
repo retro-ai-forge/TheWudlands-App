@@ -5,6 +5,36 @@ import type { SlotCharacterSummary } from "../types";
 import type { ItemInstance } from "../types";
 export type { ItemInstance } from "../types";
 import { getResourceCatalog, getToolCatalog, getItemCatalog } from "./catalogCache";
+import burnHoursData from "../../../../backend/data/light-source-burn-hours.json";
+
+// Hours one unit of a light burns, by family and tier - the same file
+// foraging burns light by (backend.foraging). "lantern" is the glass
+// lantern; a lit lantern burns as long as the lower of its own and its
+// oil's hours.
+const BURN_HOURS = burnHoursData as unknown as Record<string, Record<string, number>>;
+
+function hoursLabel(hours: number): string {
+  return `${hours} ${hours === 1 ? "hour" : "hours"}`;
+}
+
+/** The item popup's burn line for a light or its fuel, or null. */
+function burnLine(familyId: string | undefined, tier: number | undefined): string | null {
+  if (!familyId || tier == null) return null;
+  const hoursOf = (key: string) => BURN_HOURS[key]?.[String(tier)];
+  if (familyId === "candle" || familyId === "torch") {
+    const hours = hoursOf(familyId);
+    return hours ? `Burns: ${hoursLabel(hours)}` : null;
+  }
+  if (familyId === "oil") {
+    const hours = hoursOf("oil");
+    return hours ? `Burns: ${hoursLabel(hours)} in a lantern` : null;
+  }
+  if (familyId === "glass_lantern") {
+    const hours = hoursOf("lantern");
+    return hours ? `Oil burns: up to ${hoursLabel(hours)}` : null;
+  }
+  return null;
+}
 
 export type BlueprintTierInfo = Record<
   string,
@@ -49,13 +79,11 @@ export type RawPlayerData = {
   characters: SlotCharacterSummary[];
 };
 
-// GET /me/characters/{characterId}/salvage-preview/{itemId} (backend.
-// recycling.RawMaterialRecovery (module name), camelCased by auth_routes.py's
+// One row's materials from GET .../{home|camp}/salvage-preview (backend.
+// recycling.RawMaterialRecovery, camelCased by auth_routes.py's
 // SalvagePreviewResponse) - what salvaging would hand back, one entry per
-// recoverable raw material family. Exported so HomeView.tsx's own
-// ChopBlockPopup (the chopping block's bulk-salvage popup, which gets the
-// SAME per-material breakdown per row from GET .../home/salvage-preview)
-// can reuse this exact shape instead of redeclaring a parallel one.
+// recoverable raw material family. Used by ChopBlockPopup, the Salvage All
+// popup at home/camp.
 export type SalvageYield = { base: number; skill: number; tool: number; charm: number; total: number };
 export type SalvageRecoveredLine = {
   familyId: string;
@@ -1465,7 +1493,7 @@ function destroyFillColor(t: number): string {
   return `rgb(${r}, ${g}, ${b})`;
 }
 
-// The salvage hold bar's own fill (see ItemDetailPopup's runSalvage) - same
+// The salvage hold bar's own fill (the Salvage All popup, ChopBlockPopup) - same
 // gold start as destroyFillColor, but deepening into the app's own
 // "healthy/recovered" green (the color family of QUALITY_STATE_COLORS.new)
 // instead of red, so a beneficial action never reads as a warning.
@@ -1723,15 +1751,15 @@ export function ChopBlockPopup({
   onPlayerDataUpdated,
   onClose,
   preSelectedIds,
-  preSelectedAmounts,
   source = "home",
 }: {
   characterId: string;
   onPlayerDataUpdated?: (data: RawPlayerData) => void;
   onClose: () => void;
   preSelectedIds?: Set<string>;
-  preSelectedAmounts?: Map<string, number>;
-  source?: "home" | "vault" | "camp";
+  /** Salvaging only happens at home or camp: the salvage icon, or the
+   * multi-select bar there (preSelectedIds). */
+  source?: "home" | "camp";
 }) {
   const [rows, setRows] = useState<ChopBlockRow[] | null>(null);
   const [selected, setSelected] = useState<Set<string>>(new Set());
@@ -1748,9 +1776,6 @@ export function ChopBlockPopup({
     const params: string[] = [];
     if (preSelectedIds && preSelectedIds.size > 0) {
       params.push(`selected=${[...preSelectedIds].join(",")}`);
-    }
-    if (preSelectedAmounts && preSelectedAmounts.size > 0) {
-      params.push(`amounts=${[...preSelectedAmounts].map(([id, n]) => `${id}:${n}`).join(",")}`);
     }
     if (params.length > 0) url += `?${params.join("&")}`;
     fetch(url, { credentials: "include" })
@@ -1787,7 +1812,7 @@ export function ChopBlockPopup({
     (rows ?? []).filter((row) => selected.has(row.id)).flatMap((row) => row.materials)
   );
 
-  const emptyLabel = source === "vault" ? "Nothing in the vault can be salvaged right now." : source === "camp" ? "Nothing at camp can be salvaged right now." : "Nothing in home can be salvaged right now.";
+  const emptyLabel = source === "camp" ? "Nothing at camp can be salvaged right now." : "Nothing in home can be salvaged right now.";
 
   return (
     <HoldActionPopup
@@ -1800,19 +1825,11 @@ export function ChopBlockPopup({
       tone="salvage"
       characterId={characterId}
       disabled={rows === null || selected.size === 0}
-      onConfirm={() => {
-        const amounts: Record<string, number> = {};
-        if (preSelectedAmounts) {
-          for (const id of selected) {
-            const cap = preSelectedAmounts.get(id);
-            if (cap !== undefined) amounts[id] = cap;
-          }
-        }
-        return postJson(`/api/auth/me/characters/${characterId}/${source}/salvage-all`, {
+      onConfirm={() =>
+        postJson(`/api/auth/me/characters/${characterId}/${source}/salvage-all`, {
           selected: [...selected],
-          ...(Object.keys(amounts).length > 0 ? { amounts } : {}),
-        });
-      }}
+        })
+      }
       onPlayerDataUpdated={onPlayerDataUpdated}
       onClose={onClose}
     >
@@ -3186,6 +3203,10 @@ export function ItemDetailPopup({
                   .filter((state) => counts.has(state))
                   .map((state) => (ownedConditions.length === 1 ? labels[state] : `${counts.get(state)} ${labels[state]}`));
                 return parts.length ? <span>{isCreature ? "Health" : "Condition"}: {parts.join(", ")}</span> : null;
+              })()}
+              {(() => {
+                const burn = burnLine(info?.familyId, info?.tier);
+                return burn ? <span>{burn}</span> : null;
               })()}
               {info?.familyId === "backpack" && backpackSlotsUsed != null && backpackCapacity != null && (
                 <span>Filled: {backpackSlotsUsed}/{backpackCapacity}</span>

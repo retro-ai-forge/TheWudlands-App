@@ -528,6 +528,29 @@
 const DATA = __DATA__;
 const families = DATA.families;
 const recipes = DATA.recipes;
+// Hours one unit of a light burns, by family and tier (backend/data/
+// light-source-burn-hours.json; "lantern" is the glass lantern, which
+// burns as long as the lower of its own and its oil's hours). Same lines
+// as the app's item popup (VaultTab.tsx burnLine).
+const burnHours = DATA.burnHours || {};
+
+function burnLine(famId, tier) {
+  const hoursOf = (key) => (burnHours[key] || {})[String(tier)];
+  const label = (h) => h + (h === 1 ? " hour" : " hours");
+  if (famId === "candle" || famId === "torch") {
+    const h = hoursOf(famId);
+    return h ? "Burns: " + label(h) : null;
+  }
+  if (famId === "oil") {
+    const h = hoursOf("oil");
+    return h ? "Burns: " + label(h) + " in a lantern" : null;
+  }
+  if (famId === "glass_lantern") {
+    const h = hoursOf("lantern");
+    return h ? "Oil burns: up to " + label(h) : null;
+  }
+  return null;
+}
 
 // Passed by the character preview's Inventory tab as ?inv=<json>, mapping
 // item id -> quantity owned. Absent (null) when this page is opened on its
@@ -874,6 +897,8 @@ function showItemPopup(famId, tier) {
   if (props.armorClass != null && props.armorClass > 0) {
     meta.appendChild(el("span", "", "AC: " + (props.armorClass * tier)));
   }
+  const burn = burnLine(famId, tier);
+  if (burn) meta.appendChild(el("span", "", burn));
   card.appendChild(meta);
 
   overlay.appendChild(card);

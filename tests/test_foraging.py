@@ -329,8 +329,26 @@ def test_higher_tiers_always_add_more():
     assert [w[t] for t in range(1, 7)] == sorted(w[t] for t in range(1, 7))
     assert [i[t] for t in range(1, 7)] == sorted(i[t] for t in range(1, 7))
     assert len(set(w.values())) == 6 and len(set(i.values())) == 6
-    light = foraging.LIGHT_BONUS_BY_TIER
-    assert [light[t] for t in range(1, 7)] == sorted(light.values()) and len(set(light.values())) == 6
+    for light in foraging.LIGHT_BONUS_BY_TIER.values():
+        assert [light[t] for t in range(1, 7)] == sorted(light.values()) and len(set(light.values())) == 6
+
+
+def test_candle_is_the_worst_light_and_lantern_oil_the_best():
+    """Per tier: candle < torch < glass lantern by bonus (+10% apart), and by
+    raw cost per hour of light (recipes' raw units / burn hours) the other
+    way round - lantern oil the cheapest, candles the dearest."""
+    bonus = foraging.LIGHT_BONUS_BY_TIER
+    for t in range(1, 7):
+        assert bonus["candle"][t] < bonus["torch"][t] < bonus["glass_lantern"][t]
+        assert round(bonus["torch"][t] - bonus["candle"][t], 2) == 0.10
+        assert round(bonus["glass_lantern"][t] - bonus["torch"][t], 2) == 0.10
+    hours = foraging.LIGHT_HOURS
+    raw_per_unit = {"candle": 2, "torch": 2, "oil": 2}            # first options, see craft-recipes.json
+    for t in range(1, 7):
+        per_hour = {f: raw_per_unit[f] / hours[f][t] for f in raw_per_unit}
+        assert per_hour["oil"] < per_hour["torch"] < per_hour["candle"]
+        # A lantern never cuts its own oil short at the same tier.
+        assert hours["lantern"][t] >= hours["oil"][t]
 
 
 def test_basic_kit_matches_and_better_gear_beats_the_old_yield():
@@ -552,8 +570,8 @@ def test_light_needs_a_tinderbox():
 
 def test_burn_hours_come_from_the_table():
     assert foraging._burn_hours("torch", 1) == 2 and foraging._burn_hours("torch", 3) == 8
-    assert foraging._burn_hours("candle", 1) == 1 and foraging._burn_hours("oil", 2) == 2
-    assert foraging._burn_hours("glass_lantern", 3) == 4
+    assert foraging._burn_hours("candle", 1) == 1 and foraging._burn_hours("oil", 2) == 8
+    assert foraging._burn_hours("glass_lantern", 3) == 16
 
 
 def _supply(items: list, balances: dict) -> list:
@@ -569,7 +587,7 @@ def test_light_burns_oil_then_torches_then_candles_lowest_tier_first():
     # The site card shows the first light in line and everything's hours.
     gear = _lit([lantern], {"tinderbox_1": 1, "candle_1": 5, "torch_3": 2, "oil_1": 3})
     assert _light_of(gear)["fuel"]["itemId"] == "oil_1" and _light_of(gear)["instanceId"] == lantern["instanceId"]
-    assert gear["light"] == {"hours": 3 * 1 + 2 * 8 + 5 * 1}
+    assert gear["light"] == {"hours": 3 * 4 + 2 * 8 + 5 * 1}                # T1 oil 4h in the T2 lantern
 
     # No oil: the lantern is left out and the torches come first.
     no_oil = _supply([lantern], {"tinderbox_1": 1, "torch_3": 2, "candle_1": 5})
@@ -577,19 +595,19 @@ def test_light_burns_oil_then_torches_then_candles_lowest_tier_first():
 
 
 def test_lantern_burns_at_the_lower_tier_of_lantern_and_oil():
-    lantern = _instance("glass_lantern", 4, tier=3)                        # a T3 lantern: 4h
+    lantern = _instance("glass_lantern", 4, tier=3)                        # a T3 lantern: 16h
     supply = _supply([lantern], {"tinderbox_1": 1, "oil_1": 4, "oil_2": 1, "oil_5": 1})
     assert [(u["itemId"], u["hours"], u["bonusTier"]) for u in supply] == [
-        ("oil_1", 1, 1), ("oil_2", 2, 2), ("oil_5", 4, 3)]                  # T5 oil burns as T3
+        ("oil_1", 4, 1), ("oil_2", 8, 2), ("oil_5", 16, 3)]                 # T5 oil burns as T3
 
 
 def test_the_best_light_that_burned_sets_the_bonus():
-    supply = _supply([], {"tinderbox_1": 1, "torch_1": 3, "candle_2": 2})  # 6h of T1 torch, then 2h candles
+    supply = _supply([], {"tinderbox_1": 1, "torch_1": 3, "candle_3": 2})  # 6h of T1 torch, then 4h candles
     small = foraging.plan_trip(4, 0, 100, None, [], supply, None, "ore")    # the site gives 4: 4h, torches only
     assert small["burned"] == {"torch_1": 2} and small["amount"] == 5      # 4 + 25%
     assert small["gear"]["percent"] == 25
-    big = foraging.plan_trip(8, 0, 100, None, [], supply, None, "ore")      # 8h: needs the T2 candle -> +35%
-    assert big["burned"] == {"torch_1": 3, "candle_2": 1} and big["amount"] == 8 + 2 and big["litUnits"] == 10
+    big = foraging.plan_trip(8, 0, 100, None, [], supply, None, "ore")      # 8h: needs the T3 candle -> +35%
+    assert big["burned"] == {"torch_1": 3, "candle_3": 1} and big["amount"] == 8 + 2 and big["litUnits"] == 10
     assert big["gear"]["percent"] == 35 and not big["inDark"]
 
 
@@ -650,7 +668,7 @@ async def test_a_trip_burns_one_hour_of_light_per_site_unit(db, monkeypatch):
     # Light for the site's 10, not for the bonus: 10h -> 3 torches (12h).
     assert result["lightUsed"] == {"torch_2": 3} and result["lightHours"] == 12
     assert result["litUnits"] == 13 and result["darkUnits"] == 0 and result["accident"] is None
-    assert result["gearPercent"] == round(foraging.LIGHT_BONUS_BY_TIER[2] * 100, 1)
+    assert result["gearPercent"] == round(foraging.LIGHT_BONUS_BY_TIER["torch"][2] * 100, 1)
     doc = await db.characters.find_one({"address": ADDRESS, "id": cid})
     assert doc["gear"]["itemBalances"]["backpack"] == {"torch_2": 2, "tinderbox_1": 1}
 
@@ -687,9 +705,9 @@ async def test_trip_burns_oil_and_wears_the_lantern(db, monkeypatch):
     await _fast_forward(db, cid)
     result = (await foraging.finish_forage(ADDRESS, cid))["result"]
 
-    assert result["lightUsed"] == {"oil_1": 10}                             # the site's 10, 1h per T1 oil
+    assert result["lightUsed"] == {"oil_1": 3}                              # the site's 10h, 4h per T1 oil
     doc = await db.characters.find_one({"address": ADDRESS, "id": cid})
-    assert doc["gear"]["itemBalances"]["backpack"]["oil_1"] == 10
+    assert doc["gear"]["itemBalances"]["backpack"]["oil_1"] == 17
     assert doc["gear"]["items"][0]["quality"] == 3              # the lantern wears like any item
     assert doc["gear"]["itemBalances"]["backpack"]["tinderbox_1"] == 1   # stack loss chance is 0
 
@@ -1055,7 +1073,7 @@ async def test_the_trip_that_uses_up_the_tinderbox_stays_lit(db, monkeypatch):
     await _fast_forward(db, cid)
     result = (await foraging.finish_forage(ADDRESS, cid))["result"]
     # Already lit when it broke: the bonus counts and nothing happens in the dark.
-    assert result["gearPercent"] == foraging.LIGHT_BONUS_BY_TIER[1] * 100
+    assert result["gearPercent"] == foraging.LIGHT_BONUS_BY_TIER["torch"][1] * 100
     assert result["accident"] is None and result["lightUsed"] == {"torch_1": 5}
     assert any("inderbox" in name for name in result["broken"])
     # The next trip has nothing to light the torch with - dark.
@@ -1071,12 +1089,12 @@ def test_a_carried_light_that_does_not_burn_gives_no_bonus():
     assert plan["burned"] == {"torch_1": 3}
     light = next(i for i in plan["gear"]["items"] if i.get("fuel"))
     assert light["itemId"] == "torch_1" and light["bonusTier"] == 1
-    assert plan["gear"]["percent"] == foraging.LIGHT_BONUS_BY_TIER[1] * 100
+    assert plan["gear"]["percent"] == foraging.LIGHT_BONUS_BY_TIER["torch"][1] * 100
     # Only once the torches run out does the candle burn - and then it counts.
     supply = _supply([], {"tinderbox_1": 1, "torch_1": 1, "candle_6": 1})
     plan = foraging.plan_trip(6, 0, 100, None, [], supply, None, "ore")
     assert plan["burned"] == {"torch_1": 1, "candle_6": 1}
-    assert plan["gear"]["percent"] == foraging.LIGHT_BONUS_BY_TIER[6] * 100
+    assert plan["gear"]["percent"] == foraging.LIGHT_BONUS_BY_TIER["candle"][6] * 100
     # Nothing dug, nothing burned: no light bonus at all.
     plan = foraging.plan_trip(6, 0, 0, None, [], supply, None, "ore")
     assert plan["burned"] == {} and plan["amount"] == 0
@@ -1256,3 +1274,17 @@ async def test_a_trip_uses_the_site_s_own_half_life(db, monkeypatch):
     await _fast_forward(db, cid)
     result = (await foraging.finish_forage(ADDRESS, cid))["result"]
     assert result["fromSite"] == dark and result["total"] == dark
+
+
+def test_on_a_tie_in_tier_the_lantern_beats_the_torch():
+    """Lights have their own bonus tables: a T1 lantern (+35%) counts more
+    than a T1 torch (+25%) - the light with the highest bonus that burned
+    sets it, not the highest tier."""
+    lantern = _instance("glass_lantern", 4, tier=1)
+    supply = _supply([lantern], {"tinderbox_1": 1, "oil_1": 1, "torch_2": 1})   # 4h oil, then 4h torch
+    plan = foraging.plan_trip(8, 0, 100, None, [], supply, lantern, "ore")       # 8h: both burn
+    assert plan["burned"] == {"oil_1": 1, "torch_2": 1}
+    # T2 torch +35% ties the T1 lantern +35%: the higher tier (the torch) is named.
+    assert plan["gear"]["percent"] == 35
+    candle = foraging.plan_trip(2, 0, 100, None, [], _supply([], {"tinderbox_1": 1, "candle_1": 2}), None, "ore")
+    assert candle["gear"]["percent"] == 15                                        # the worst light

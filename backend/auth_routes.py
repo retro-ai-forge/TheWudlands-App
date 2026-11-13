@@ -60,12 +60,7 @@ from backend.players import (
     move_all_storage_to_backpack,
     move_all_storage_to_bags,
     preview_home_salvage,
-    preview_salvage,
-    salvage_item_balance,
-    salvage_item_instance,
     salvage_home,
-    preview_vault_salvage,
-    salvage_vault,
     bulk_move_vault,
     set_in_adventure,
     set_prime_profession,
@@ -2001,9 +1996,6 @@ class SalvageHomeRequest(BaseModel):
     selected: List[str] = Field(
         ..., description="Ids (instanceId or item_id) of the preview rows to actually salvage"
     )
-    amounts: Optional[Dict[str, int]] = Field(
-        None, description="Per-balance-item quantity caps (id -> count); omitted entries use the full balance"
-    )
 
 
 # ---------------------------------------------------------------------------
@@ -2313,57 +2305,6 @@ async def salvage_home_route(
     return player.to_dict()
 
 
-@player_router.get("/me/characters/{character_id}/vault/salvage-preview", response_model=HomeSalvagePreviewResponse)
-async def preview_vault_salvage_route(
-    character_id: str,
-    selected: Optional[str] = None,
-    amounts: Optional[str] = None,
-    address: str = Depends(get_current_address),
-):
-    """What salvaging vault items would recover. When `selected` is a comma-separated list of IDs, only those items are returned. `amounts` is a comma-separated list of id:count pairs that cap the quantity per balance item."""
-    selected_ids = selected.split(",") if selected else None
-    amount_caps: Optional[Dict[str, int]] = None
-    if amounts:
-        amount_caps = {}
-        for pair in amounts.split(","):
-            parts = pair.rsplit(":", 1)
-            if len(parts) == 2:
-                try:
-                    amount_caps[parts[0]] = int(parts[1])
-                except ValueError:
-                    pass
-    rows = await preview_vault_salvage(address, character_id, selected_ids=selected_ids, amount_caps=amount_caps)
-    if rows is None:
-        raise HTTPException(status_code=404, detail="No matching character")
-
-    return HomeSalvagePreviewResponse(
-        rows=[
-            HomeSalvagePreviewRowResponse(
-                id=row["id"],
-                kind=row["kind"],
-                name=row["name"],
-                tier=row["tier"],
-                owned=row["owned"],
-                materials=_to_salvage_preview_response(row["recoveries"]).materials,
-                condition=row.get("condition", "new"),
-            )
-            for row in rows
-        ]
-    )
-
-
-@player_router.post("/me/characters/{character_id}/vault/salvage-all", response_model=PlayerDataResponse)
-async def salvage_vault_route(
-    character_id: str, payload: SalvageHomeRequest, address: str = Depends(get_current_address)
-):
-    """Salvage every selected vault item/itemBalance at once, crediting recovered materials into the shared crafting pool."""
-    player = await salvage_vault(address, character_id, payload.selected, amount_caps=payload.amounts)
-    if player is None:
-        raise HTTPException(status_code=404, detail="Nothing selected salvaged")
-
-    return player.to_dict()
-
-
 @player_router.post("/me/characters/{character_id}/home/bulk-move", response_model=PlayerDataResponse)
 async def bulk_move_home_route(
     character_id: str, payload: BulkMoveHomeRequest, address: str = Depends(get_current_address)
@@ -2403,114 +2344,6 @@ async def bulk_move_vault_route(
     )
     if player is None:
         raise HTTPException(status_code=404, detail="Nothing moved")
-    return player.to_dict()
-
-
-@player_router.get(
-    "/me/characters/{character_id}/salvage-preview/{item_id}", response_model=SalvagePreviewResponse
-)
-async def salvage_preview_route(
-    character_id: str,
-    item_id: str,
-    count: int = 1,
-    fromVault: bool = False,
-    instanceId: Optional[str] = None,
-    address: str = Depends(get_current_address),
-):
-    """
-    Read-only: what salvaging `count` unit(s) of concrete item `item_id`
-    would hand back to this character right now - doesn't consume
-    anything. `fromVault` must match whichever salvage-from-vault/
-    non-vault action would actually be taken: salvaging off the
-    character's own body/backpack only credits tools physically carried
-    toward the station-tool bonus, never the player's shared pool.
-    """
-    try:
-        result = await preview_salvage(address, character_id, item_id, count, fromVault, instance_id=instanceId)
-    except ValueError as exc:
-        raise HTTPException(status_code=400, detail=str(exc))
-
-    if result is None:
-        raise HTTPException(status_code=404, detail="No matching character")
-
-    recoveries, condition = result
-    resp = _to_salvage_preview_response(recoveries)
-    resp.condition = condition
-    return resp
-
-
-@player_router.post("/me/characters/{character_id}/items/{instance_id}/salvage", response_model=PlayerDataResponse)
-async def salvage_item_instance_route(
-    character_id: str, instance_id: str, address: str = Depends(get_current_address)
-):
-    """Salvage one of the character's own item instances (backpack/body) into a fraction of its raw materials, credited to that character's own backpack."""
-    try:
-        player = await salvage_item_instance(address, character_id, instance_id, from_vault=False)
-    except ValueError as exc:
-        raise HTTPException(status_code=400, detail=str(exc))
-
-    if player is None:
-        raise HTTPException(status_code=404, detail="No matching backpack/body instance on that character")
-
-    return player.to_dict()
-
-
-@player_router.post(
-    "/me/characters/{character_id}/items/{instance_id}/salvage-from-vault", response_model=PlayerDataResponse
-)
-async def salvage_item_instance_from_vault_route(
-    character_id: str, instance_id: str, address: str = Depends(get_current_address)
-):
-    """Salvage one of the player's shared-vault item instances, scored with this character's skills, credited to the shared vault."""
-    try:
-        player = await salvage_item_instance(address, character_id, instance_id, from_vault=True)
-    except ValueError as exc:
-        raise HTTPException(status_code=400, detail=str(exc))
-
-    if player is None:
-        raise HTTPException(status_code=404, detail="No matching instance in the shared vault")
-
-    return player.to_dict()
-
-
-@player_router.post(
-    "/me/characters/{character_id}/item-balances/{item_id}/salvage", response_model=PlayerDataResponse
-)
-async def salvage_item_balance_route(
-    character_id: str,
-    item_id: str,
-    payload: ItemBalanceLocationAmountRequest,
-    address: str = Depends(get_current_address),
-):
-    """Salvage `amount` of the character's own item_id balance (from `location`) into a fraction of its raw materials, credited to that character's own backpack."""
-    try:
-        player = await salvage_item_balance(
-            address, character_id, item_id, payload.amount, from_vault=False, location=payload.location
-        )
-    except ValueError as exc:
-        raise HTTPException(status_code=400, detail=str(exc))
-
-    if player is None:
-        raise HTTPException(status_code=404, detail="No matching character, or not enough on that character")
-
-    return player.to_dict()
-
-
-@player_router.post(
-    "/me/characters/{character_id}/item-balances/{item_id}/salvage-from-vault", response_model=PlayerDataResponse
-)
-async def salvage_item_balance_from_vault_route(
-    character_id: str, item_id: str, payload: TransferAmountRequest, address: str = Depends(get_current_address)
-):
-    """Salvage `amount` of the player's shared-vault item_id balance, scored with this character's skills, credited to the shared vault."""
-    try:
-        player = await salvage_item_balance(address, character_id, item_id, payload.amount, from_vault=True)
-    except ValueError as exc:
-        raise HTTPException(status_code=400, detail=str(exc))
-
-    if player is None:
-        raise HTTPException(status_code=404, detail="No matching character, or not enough in the shared vault")
-
     return player.to_dict()
 
 
