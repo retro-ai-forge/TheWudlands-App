@@ -476,7 +476,7 @@ export function HomeView({
               disabled={batchBusy || selectedIds.size === 0}
               onClick={() => setShowSalvagePopup(true)}
             >
-              <div className={styles.selectionBarIcon} style={{ backgroundImage: `url(/images/character/chopping_block.png)` }} />
+              <div className={styles.selectionBarIcon} style={{ backgroundImage: `url(/images/character/salvage.png)` }} />
             </button>
           </div>
           <span className={styles.selectionBarWeight}>
@@ -787,7 +787,7 @@ export function HomeView({
           {onOpenCrafting && (
             // eslint-disable-next-line @next/next/no-img-element
             <img
-              src="/images/items/workbench_t1.png"
+              src="/images/character/crafting.png"
               alt=""
               role="button"
               tabIndex={0}
@@ -811,7 +811,7 @@ export function HomeView({
               via .campfireStageIconEmpty). */}
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
-            src="/images/character/chopping_block.png"
+            src="/images/character/salvage.png"
             alt=""
             role={hasHomeItems ? "button" : undefined}
             tabIndex={hasHomeItems ? 0 : undefined}

@@ -1776,7 +1776,7 @@ export function ChopBlockPopup({
       cardClassName={styles.chopBlockCard}
       iconClassName={styles.chopBlockIcon}
       label="Hold to unmake"
-      icon="/images/character/chopping_block.png"
+      icon="/images/character/salvage.png"
       tone="salvage"
       characterId={characterId}
       disabled={rows === null || selected.size === 0}
