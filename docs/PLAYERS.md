@@ -78,19 +78,21 @@ A recipe's blueprint (when it has one) belongs to a category the same way the re
 | CraftGarment | dyer, leatherworker, tanner, weaver | skin, fiber, herbs | 6 | kiln, mortar_and_pestle, oven, spinning_wheel, tanning_rack, workbench | 16 | barding_iron, barding_leather, bolt_girdle, bow, bridle, chitin_chest_armor, chitin_head_armor, chitin_leg_armor, chitin_shield, cloth_chest_armor, cloth_head_armor, cloth_leg_armor, fishermans_ration, iron_ration, saddlepack, wooden_shield |
 | CraftWood | cooper | wood, hide, bone | 5 | lapidary_bench, mortar_and_pestle, spinning_wheel, tanning_rack, workbench | 14 | barding_leather, bolt_girdle, bow, ebony_chest_armor, ebony_head_armor, ebony_leg_armor, ebony_shield, leather_chest_armor, leather_head_armor, leather_leg_armor, magic_staff, saddle, wand, wooden_shield |
 | Military | guard, soldier | ore, fiber, monster_part | 5 | kiln, oven, spinning_wheel, tanning_rack, workbench | 11 | barding_iron, barding_leather, bow, bridle, cloth_chest_armor, cloth_head_armor, cloth_leg_armor, crossbow, fishermans_ration, iron_ration, wrench |
+| Alchemy | alchemist, enchanter, poisoner | herbs, crystal, monster_part | 6 | enchanters_table, lapidary_bench, mortar_and_pestle, oven, tanning_rack, workbench | 8 | bangers, barding_leather, chitin_chest_armor, chitin_head_armor, chitin_leg_armor, chitin_shield, magic_staff, wand |
 | CraftArmor | armorer | ore, wood, sand | 2 | kiln, workbench | 12 | chainmail_chest_armor, chainmail_head_armor, chainmail_leg_armor, darksteel_chest_armor, darksteel_head_armor, darksteel_leg_armor, darksteel_shield, iron_chest_armor, iron_head_armor, iron_leg_armor, iron_shield, reinforced_wooden_shield |
-| Alchemy | alchemist, enchanter, poisoner | herbs, crystal, monster_part | 5 | lapidary_bench, mortar_and_pestle, oven, tanning_rack, workbench | 8 | bangers, barding_leather, chitin_chest_armor, chitin_head_armor, chitin_leg_armor, chitin_shield, magic_staff, wand |
 | CraftWeapon | blacksmith | ore, wood, sand | 2 | kiln, workbench | 11 | axe, battle_axe, dagger, greatsword, mace, quiver, short_sword, sickle, spear, sword, warhammer |
-| CraftGlass | glassblower, jeweler | sand, crystal, ore | 4 | alchemy_stand, grinding_stone, kiln, lapidary_bench | 7 | magic_staff, meteoric_iron_chest_armor, meteoric_iron_head_armor, meteoric_iron_leg_armor, meteoric_iron_shield, wand, wrench |
+| CraftGlass | glassblower, jeweler | sand, crystal, ore | 5 | alchemy_stand, furnace, grinding_stone, kiln, lapidary_bench | 7 | magic_staff, meteoric_iron_chest_armor, meteoric_iron_head_armor, meteoric_iron_leg_armor, meteoric_iron_shield, wand, wrench |
 | Artists | acrobat, actor, clown, firespitter, painter, storyteller | feather, fiber, bone | 3 | oven, spinning_wheel, workbench | 7 | bow, bridle, cloth_chest_armor, cloth_head_armor, cloth_leg_armor, fishermans_ration, iron_ration |
-| CraftStone | mason, potter, stonemason | clay, stone, crystal | 6 | alchemy_stand, grinding_stone, kiln, lapidary_bench, mortar_and_pestle, oven | 3 | magic_staff, merchants_scale, wand |
-| CraftFurniture | carpenter | wood, hide, bone | 5 | lapidary_bench, oven, scriptorium, spinning_wheel, workbench | 1 | merchants_scale |
+| CraftStone | mason, potter, stonemason | clay, stone, crystal | 7 | alchemy_stand, furnace, grinding_stone, kiln, lapidary_bench, mortar_and_pestle, oven | 3 | magic_staff, merchants_scale, wand |
+| CraftFurniture | carpenter | wood, hide, bone | 7 | enchanters_table, lapidary_bench, loom, oven, scriptorium, spinning_wheel, workbench | 1 | merchants_scale |
 | Rural | farmer, fisher, herder, hunter, miner | hide, meat, harvest, fish | 4 | smokehouse, spinning_wheel, tanning_rack, workbench | 2 | barding_leather, bridle |
 | Aristocratic | clerk, scholar, scribe | reed, feather, skin | 2 | tanning_rack, workbench | 3 | barding_leather, bolt_girdle, wooden_shield |
+| CraftTool | tinsmith | ore, wood, sand | 3 | anvil, kiln, tanning_rack | 0 | *cloth_chest_armor, dagger* |
 | Food | baker, brewmaster, butcher, cook | meat, harvest, herbs | 2 | mortar_and_pestle, oven | 3 | bangers, fish_chowder, hearty_stew |
-| CraftTool | tinsmith | ore, wood, sand | 2 | kiln, tanning_rack | 0 | *cloth_chest_armor, dagger* |
 | Trade | merchant, trader | harvest, stone, monster_part | 2 | oven, tanning_rack | 2 | barding_leather, merchants_scale |
 <!-- END generated: categories -->
+
+At character creation you pick **2 starting blueprints** from one list, at the tier of your number of professions: your categories' tools and items, plus the base tools behind them. The table shows that list per category. Any combination is allowed - two items, two tools, or a higher tool with its base tool (kiln + anvil or furnace, lapidary bench + enchanter's table, spinning wheel + loom). A higher tool without its base tool can't be built until the base tool is learned. *Italic* entries are the universal fallback for a category with nothing of that kind.
 
 Every armor piece has its own blueprint: an iron helmet, breastplate and greaves are three blueprints, learned and picked separately (at character creation too).
 

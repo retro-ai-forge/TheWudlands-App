@@ -44,11 +44,11 @@ def test_piece_blueprints_exist_for_every_tier_named_after_the_piece():
 
 def test_creation_offers_each_piece_separately():
     pools = craft_catalog.resolve_blueprint_trapping_options(["armorer"]).pools
-    items = {i.id for p in pools if p.rule.source == "item" for i in p.items}
+    items = {i.id for p in pools for i in p.items}
     assert {"blueprint_iron_head_armor_1", "blueprint_iron_chest_armor_1", "blueprint_iron_leg_armor_1"} <= items
     # The fallback item set (a category without item blueprints) uses the cloth chest piece.
     fallback = craft_catalog.resolve_blueprint_trapping_options(["tinsmith"]).pools
-    assert "blueprint_cloth_chest_armor_1" in {i.id for p in fallback if p.rule.source == "item" for i in p.items}
+    assert "blueprint_cloth_chest_armor_1" in {i.id for p in fallback for i in p.items}
 
 
 def _migration():

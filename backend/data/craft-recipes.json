@@ -884,7 +884,7 @@
         "consumed": true
       }
     ],
-    "tool": "workbench",
+    "tool": null,
     "blueprintFamilyId": "blueprint_loom"
   },
   {

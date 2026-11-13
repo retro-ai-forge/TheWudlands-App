@@ -1,9 +1,9 @@
 """
 Regenerates the crafting tables in docs/PLAYERS.md from the game data:
 
-  - "categories":       blueprints each profession category starts with
-                         (backend.craft_catalog.resolve_blueprint_trapping_options,
-                         the same pools character creation offers)
+  - "categories":       the starting blueprints each profession category may
+                         pick 2 of (backend.craft_catalog.resolve_blueprint_trapping_options,
+                         the same list character creation offers), split into tools and items
   - "blueprint-xp":     blueprint-gated recipes - raw-material XP of their full
                          chain and the tier-scaled assembly bonus
   - "no-blueprint-xp":  recipes without a blueprint - raw-material XP only
@@ -93,26 +93,27 @@ def categories_table() -> str:
     rows = []
     for category, professions in professions_by_category.items():
         options = craft_catalog.resolve_blueprint_trapping_options([sorted(professions)[0]])
-        eligible = {f for f, cats in craft_catalog.BLUEPRINT_CATEGORIES.items() if category in cats}
-        own_kinds = {craft_catalog._blueprint_catalog_type(f) for f in eligible}
-        by_source: dict[str, tuple[list[str], bool]] = {}
-        for pool in options.pools:
-            source = pool.rule.source
-            families = sorted({b.family_id.removeprefix("blueprint_") for b in pool.items})
-            # The universal fallback stands in when the category has none of its own.
-            fallback = (source == "item" and not (own_kinds & craft_catalog._FINAL_CATALOG_TYPES)) or (
-                source == "tool" and not families_from_own(category, eligible))
-            merged, was_fallback = by_source.get(source, ([], fallback))
-            by_source[source] = (sorted(set(merged) | set(families)), was_fallback and fallback)
-        tools, tools_fallback = by_source.get("tool", ([], False))
-        items, items_fallback = by_source.get("item", ([], False))
-        rows.append((category, sorted(professions), PROFESSION_RESOURCE_FAMILIES.get(category, ()),
-                     tools, tools_fallback, items, items_fallback))
+        offered = {b.family_id for pool in options.pools for b in pool.items}
+        own = {f for f, cats in craft_catalog.BLUEPRINT_CATEGORIES.items() if category in cats}
+        columns = []
+        for kind in ("tool", "item"):
+            families = sorted(f.removeprefix("blueprint_") for f in offered
+                              if craft_catalog.blueprint_source(f) == kind)
+            # The universal fallback stands in only when nothing of this kind
+            # comes from the category itself: no tool blueprint of its own and
+            # no base tool behind its items, or no item blueprint of its own.
+            if kind == "tool":
+                has_own = any(craft_catalog.blueprint_source(f) == "tool" or craft_catalog.ITEM_BLUEPRINT_TOOL_HINTS.get(f)
+                              for f in own)
+            else:
+                has_own = any(craft_catalog.blueprint_source(f) == "item" for f in own)
+            columns.append((families, bool(families) and not has_own))
+        rows.append((category, sorted(professions), PROFESSION_RESOURCE_FAMILIES.get(category, ()), *columns))
 
-    rows.sort(key=lambda r: (-(len(r[3]) + len(r[5])), r[0]))
+    rows.sort(key=lambda r: (-(len(r[3][0]) + len(r[4][0])), r[0]))
     lines = ["| Category | Professions | Resource Families | Tools | Tool Families | Items | Item Families |",
              "|---|---|---|---:|---|---:|---|"]
-    for category, professions, resources, tools, tools_fb, items, items_fb in rows:
+    for category, professions, resources, (tools, tools_fb), (items, items_fb) in rows:
         def cell(names: list[str], fallback: bool) -> str:
             text = ", ".join(names)
             return f"*{text}*" if fallback and text else text
@@ -120,18 +121,6 @@ def categories_table() -> str:
                      f"{0 if tools_fb else len(tools)} | {cell(tools, tools_fb)} | "
                      f"{0 if items_fb else len(items)} | {cell(items, items_fb)} |")
     return "\n".join(lines)
-
-
-def families_from_own(category: str, eligible: set[str]) -> bool:
-    """Whether a category's tool pool comes from its own blueprints (a tool
-    blueprint of its own, or a tool its items need) rather than the
-    universal fallback."""
-    for family in eligible:
-        if craft_catalog._blueprint_catalog_type(family) == "tool":
-            return True
-        if craft_catalog.ITEM_BLUEPRINT_TOOL_HINTS.get(family):
-            return True
-    return False
 
 
 def blueprint_xp_table() -> str:

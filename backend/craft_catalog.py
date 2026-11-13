@@ -120,7 +120,7 @@ class BlueprintItem:
 class BlueprintPoolRule:
     """One entry of blueprintPoolsByProfessionCount for a given profession count."""
 
-    source: str  # "tool" | "item"
+    source: str  # "tool" | "item" | "any" (both - the starting picks)
     tier: int
     count: int
 
@@ -443,6 +443,17 @@ _SOURCE_PREDICATES = {
     "tool": lambda bp: _blueprint_catalog_type(bp.family_id) == "tool",
     "item": lambda bp: _blueprint_catalog_type(bp.family_id) in _FINAL_CATALOG_TYPES,
 }
+_SOURCE_PREDICATES["any"] = lambda bp: _SOURCE_PREDICATES["tool"](bp) or _SOURCE_PREDICATES["item"](bp)
+
+
+def blueprint_source(blueprint_family_id: str) -> str | None:
+    """"tool" or "item" - what a blueprint family unlocks (None if neither)."""
+    catalog_type = _blueprint_catalog_type(blueprint_family_id)
+    if catalog_type == "tool":
+        return "tool"
+    if catalog_type in _FINAL_CATALOG_TYPES:
+        return "item"
+    return None
 
 # item blueprint familyId -> root tool family id(s) that would help build it,
 # e.g. "blueprint_cloth_chest_armor" -> ("kiln", "spinning_wheel", "workbench"). See
@@ -488,8 +499,16 @@ def resolve_blueprint_trapping_options(profession_ids: list[str]) -> BlueprintTr
     }
 
     def _effective_families(rule: BlueprintPoolRule) -> set[str]:
-        if rule.source != "tool":
+        if rule.source == "item":
             return eligible_families
+        if rule.source == "any":
+            # One list for both picks: the category's own blueprints - higher
+            # tools too (anvil, furnace...: any combination is allowed, the
+            # player picks the base tool with the other pick) - plus the base
+            # tools behind them, the same ones a tool pool offers (only real
+            # tools - an item like the wrench is offered only as the
+            # category's own item).
+            return eligible_families | {f for f in _tool_families() if _blueprint_catalog_type(f) == "tool"}
         # Substitute every eligible tool family with its resolved root(s) -
         # a mid-chain tool (e.g. furnace, which needs a kiln to make its own
         # fired_brick ingredient) is a dead-end pick for a new character,
@@ -502,6 +521,9 @@ def resolve_blueprint_trapping_options(profession_ids: list[str]) -> BlueprintTr
         # actually unlocks something on the item side is strictly more
         # useful than only offering tools whose OWN category happens to
         # match, per ITEM_BLUEPRINT_TOOL_HINTS.
+        return _tool_families()
+
+    def _tool_families() -> set[str]:
         resolved: set[str] = set()
         for family in eligible_families:
             if _blueprint_catalog_type(family) == "tool":
@@ -521,20 +543,21 @@ def resolve_blueprint_trapping_options(profession_ids: list[str]) -> BlueprintTr
             and bp.tier == rule.tier
             and _SOURCE_PREDICATES[rule.source](bp)
         )
-        if items:
-            return items
-
-        # Nothing eligible for this category/source combo (e.g. Food has no
-        # tool blueprints) - fall back to the universal set rather than
-        # handing the player an empty combo box.
-        fallback_families = set(UNIVERSAL_FALLBACK_BLUEPRINT_FAMILIES.get(rule.source, ()))
-        return tuple(
+        # A kind the category has none of (e.g. CraftTool has no item
+        # blueprints) gets the universal set for it, rather than leaving
+        # the player without that choice.
+        sources = ("tool", "item") if rule.source == "any" else (rule.source,)
+        missing = [source for source in sources if not any(_SOURCE_PREDICATES[source](bp) for bp in items)]
+        fallback_families = {f for source in missing for f in UNIVERSAL_FALLBACK_BLUEPRINT_FAMILIES.get(source, ())}
+        fallback = tuple(
             bp
             for bp in BLUEPRINT_ITEMS
             if bp.family_id in fallback_families
+            and bp.family_id not in families
             and bp.tier == rule.tier
             and _SOURCE_PREDICATES[rule.source](bp)
         )
+        return items + fallback
 
     pools = tuple(BlueprintPoolOption(rule=rule, items=_pool_items(rule)) for rule in rules)
     return BlueprintTrappingsOptions(pools=pools)

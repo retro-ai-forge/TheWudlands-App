@@ -61,6 +61,8 @@ type TrappingsItem = {
   tier: number;
   icon?: string;
   description?: string;
+  /** Blueprints only: "tool" or "item" - groups the starting picks' list. */
+  kind?: string;
 };
 
 // One blueprintPoolsByProfessionCount rule (see resource-selection-rules.json),
@@ -87,6 +89,7 @@ function getTierIndicator(tier: number): React.ReactNode {
 }
 
 const BLUEPRINT_SOURCE_LABELS: Record<string, string> = {
+  any: "Blueprints",
   tool: "Tool Blueprint",
   item: "Item Blueprint",
 };
@@ -1393,13 +1396,25 @@ export function SoulCreation({
                                 }
                               >
                                 <option value="">— choose —</option>
-                                {pool.items
-                                  .filter((item) => item.id === value || !taken.has(item.id))
-                                  .map((item) => (
+                                {(() => {
+                                  const choices = pool.items.filter((item) => item.id === value || !taken.has(item.id));
+                                  const option = (item: TrappingsItem) => (
                                     <option key={item.id} value={item.id}>
                                       {item.name.replace("Blueprint: ", "")} (T{item.tier})
                                     </option>
-                                  ))}
+                                  );
+                                  // One list of tools and items (source "any"): grouped, tools first.
+                                  if (pool.source !== "any") return choices.map(option);
+                                  const byName = (a: TrappingsItem, b: TrappingsItem) => a.name.localeCompare(b.name);
+                                  const tools = choices.filter((item) => item.kind === "tool").sort(byName);
+                                  const items = choices.filter((item) => item.kind !== "tool").sort(byName);
+                                  return (
+                                    <>
+                                      {tools.length > 0 && <optgroup label="Tools">{tools.map(option)}</optgroup>}
+                                      {items.length > 0 && <optgroup label="Items">{items.map(option)}</optgroup>}
+                                    </>
+                                  );
+                                })()}
                               </select>
                             </div>
                           );

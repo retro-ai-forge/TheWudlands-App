@@ -83,7 +83,7 @@ from backend.players import (
 from backend import items_catalog
 from backend.balances import log_login_balances
 from backend.resources_catalog import resolve_trapping_options
-from backend.craft_catalog import category_blueprint_summary, resolve_blueprint_trapping_options
+from backend.craft_catalog import blueprint_source, category_blueprint_summary, resolve_blueprint_trapping_options
 from backend.soul_slots import (
     SOUL_SLOTS,
     STAR_SLOT_NUMBERS,
@@ -481,13 +481,14 @@ class TrappingsItemResponse(BaseModel):
     tier: int = Field(..., description="Resource tier")
     icon: str = Field("", description="Icon image path")
     description: str = Field("", description="Flavour description")
+    kind: str = Field("", description="Blueprints only: 'tool' or 'item' - what it unlocks")
 
 
 class TrappingsBlueprintPoolResponse(BaseModel):
     """One blueprintPoolsByProfessionCount rule, paired with the blueprint
     items it makes eligible for the character's chosen professions."""
 
-    source: str = Field(..., description="'tool' | 'item'")
+    source: str = Field(..., description="'any' (tools and items in one list) | 'tool' | 'item'")
     tier: int = Field(..., description="Blueprint tier this rule draws from")
     count: int = Field(..., description="How many distinct blueprints the player may pick from this pool")
     items: List[TrappingsItemResponse]
@@ -929,7 +930,8 @@ async def get_trappings_options(
                 tier=pool.rule.tier,
                 count=pool.rule.count,
                 items=[
-                    TrappingsItemResponse(id=item.id, name=item.name, familyId=item.family_id, tier=item.tier)
+                    TrappingsItemResponse(id=item.id, name=item.name, familyId=item.family_id, tier=item.tier,
+                                          kind=blueprint_source(item.family_id) or "")
                     for item in pool.items
                 ],
             )
@@ -2393,6 +2395,8 @@ async def create_character(
     # that pool's count - a blueprint id is never eligible for more than one
     # pool (its own fixed tier and catalog type pin it to exactly one
     # tool/item x tier combination), so match order doesn't matter.
+    if len(set(payload.selectedBlueprints)) != len(payload.selectedBlueprints):
+        raise HTTPException(status_code=400, detail="The same blueprint can only be picked once")
     remaining_by_pool = {i: pool.rule.count for i, pool in enumerate(blueprint_trappings.pools)}
     eligible_ids_by_pool = {i: {item.id for item in pool.items} for i, pool in enumerate(blueprint_trappings.pools)}
     for blueprint_id in payload.selectedBlueprints:
