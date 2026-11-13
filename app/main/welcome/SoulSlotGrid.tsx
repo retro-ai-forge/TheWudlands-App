@@ -471,7 +471,12 @@ function SoulSlotCard({
   // token, play the mining game) instead of doing nothing. Placeholder
   // destinations for now - see SoulSlot.link - expected to be replaced
   // once in-app soul creation covers this itself.
+  // Lost in the dark on a foraging trip (backend.foraging): the slot can't
+  // be opened until the character is back - and when that is stays secret.
+  const isLost = showsOccupantPreview && occupant.status.includes("lost");
+
   const handleClick = () => {
+    if (isLost) return;
     // An unlocked occupied slot already has its soul made - open its
     // preview instead of the creation wizard. A re-locked occupied slot
     // falls through below same as any other locked slot (send them to go
@@ -493,6 +498,7 @@ function SoulSlotCard({
   const isFreeCharacter =
     showsOccupantPreview &&
     !occupant.availability.inAdventure &&
+    !isLost &&
     remainingSeconds === null &&
     forageRemainingSeconds === null;
 
@@ -506,10 +512,12 @@ function SoulSlotCard({
     <div className={styles.slotCell}>
       <button
         className={`${styles.characterSlot}${showsOccupantPreview ? (isFreeCharacter ? ` ${styles.slotGlowFree}` : ` ${styles.slotGlowBusy}`) : ""}`}
-        disabled={!canInteract && !slot.link}
+        disabled={isLost || (!canInteract && !slot.link)}
         onClick={canInteract || slot.link ? handleClick : undefined}
         title={
-          showsOccupantPreview
+          isLost
+            ? `${occupant.name} is lost in the dark`
+            : showsOccupantPreview
             ? occupant.name
             : !canInteract && slot.link
             ? "Opens in a new tab"
@@ -524,6 +532,11 @@ function SoulSlotCard({
                 aria-hidden="true"
               >
                 {remainingSeconds === 0 ? "Ready" : `Crafting ${formatRemainingCompactLong(remainingSeconds)}`}
+              </span>
+            )}
+            {isLost && (
+              <span className={styles.slotCraftBadge} aria-hidden="true">
+                Lost
               </span>
             )}
             {remainingSeconds === null && forageRemainingSeconds !== null && (

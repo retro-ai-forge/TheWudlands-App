@@ -2,7 +2,7 @@
   "_comment": "Item condition (backend/item_condition.py): every quality-tracked item instance carries quality 4..1 = new, used, damaged, broken, whatever its tier. Each use may drop it one level; below broken the item is gone. Broken still works like new - it's the warning before it's lost. Stacked items (no quality) instead have a small chance to lose one unit per use. Chances are 0..1.",
   "levels": { "4": "new", "3": "used", "2": "damaged", "1": "broken" },
   "foraging": {
-    "_comment": "Rolled once per trip per gear piece, only when the trip found something of at least its tier (a bow's weapon roll only when its ammo didn't cover a find). stackLoss: a stacked gathering item (whetstone, iron spikes, tinderbox for a light...) loses one unit.",
+    "_comment": "Rolled once per trip per gear piece of any tier, whenever the trip found something (a bow's weapon roll only when its ammo didn't cover a find). stackLoss: a stacked gathering item (whetstone, iron spikes, tinderbox for a light...) loses one unit.",
     "weapon": 0.10,
     "item": 0.05,
     "stackLoss": 0.02

@@ -69,7 +69,7 @@ from typing import List, Optional
 from pymongo import ReturnDocument
 from pymongo.errors import DuplicateKeyError
 
-from backend import condition
+from backend import condition, foraging
 from backend.db import find_one_and_update_checked, get_database
 from backend.twine_graph import LAST_RESORT_PASSAGE, build_story_graph, step_allowed
 
@@ -633,8 +633,7 @@ async def start_adventure(
         active_craft = (doc.get("crafting") or {}).get("activeCraft")
         if active_craft and datetime.fromisoformat(active_craft["readyAt"]) > now_dt:
             raise AdventureError(f"{name} is still crafting", 409)
-        active_forage = (doc.get("foraging") or {}).get("activeForage")
-        if active_forage and datetime.fromisoformat(active_forage["readyAt"]) > now_dt:
+        if foraging.forage_active(doc, now_dt):
             raise AdventureError(f"{name} is out foraging", 409)
 
     now = _now()

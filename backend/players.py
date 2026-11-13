@@ -22,7 +22,7 @@ from typing import Dict, List, Optional
 
 from pymongo import ReturnDocument
 
-from backend import condition, item_condition, items_catalog, legend, recycling
+from backend import condition, foraging, item_condition, items_catalog, legend, recycling
 from backend.character import Character
 from backend.db import find_one_and_update_checked, get_database, run_in_transaction
 from backend.resources_catalog import PROFESSION_RESOURCE_FAMILIES
@@ -211,13 +211,15 @@ async def _build_player(db, address: str) -> Player:
         character["gear"]["mountGearWeight"] = items_catalog.mount_gear_weight(character)
 
         # A foraging trip's outcome is rolled when it starts but stays secret
-        # until collected (see backend.foraging).
+        # until collected, and so does a lost character's real return
+        # (see backend.foraging).
         active_forage = (character.get("foraging") or {}).get("activeForage")
         if isinstance(active_forage, dict):
-            active_forage.pop("result", None)
+            character["foraging"]["activeForage"] = foraging.hide_pending_result(active_forage)
 
         pc_entry = pc_entries.get(cid)
         if pc_entry:
+            pc_entry = foraging.public_pc_entry(pc_entry)
             character["pcStatus"] = pc_entry.get("status", ["free"])
             character["pcTags"] = pc_entry.get("tags", ["alive"])
             character["pcTimers"] = pc_entry.get("timers", {})
@@ -618,6 +620,7 @@ async def get_player_characters(address: str) -> Optional[dict]:
     doc = await db.player_characters.find_one({"address": address})
     if doc:
         doc.pop("_id", None)
+        doc["characters"] = [foraging.public_pc_entry(e) for e in doc.get("characters", [])]
     return doc
 
 
@@ -648,7 +651,8 @@ async def get_character_previews(address: str) -> list[dict]:
     doc = await db.player_characters.find_one({"address": address})
     if not doc:
         return []
-    return doc.get("characters", [])
+    # A lost character's real return stays on the server (backend.foraging).
+    return [foraging.public_pc_entry(e) for e in doc.get("characters", [])]
 
 
 async def get_single_character(address: str, character_id: str) -> Optional[dict]:
@@ -696,14 +700,16 @@ async def get_single_character(address: str, character_id: str) -> Optional[dict
     char_doc["gear"]["mountCarryWeightCapacity"] = items_catalog.mount_carry_weight_capacity(char_doc)
     char_doc["gear"]["mountGearWeight"] = items_catalog.mount_gear_weight(char_doc)
 
-    # A foraging trip's outcome stays secret until collected (see backend.foraging).
+    # A foraging trip's outcome stays secret until collected, and so does a
+    # lost character's real return (see backend.foraging).
     active_forage = (char_doc.get("foraging") or {}).get("activeForage")
     if isinstance(active_forage, dict):
-        active_forage.pop("result", None)
+        char_doc["foraging"]["activeForage"] = foraging.hide_pending_result(active_forage)
 
     pc_entries = {e["characterId"]: e for e in (pc_doc or {}).get("characters", [])}
     pc_entry = pc_entries.get(character_id)
     if pc_entry:
+        pc_entry = foraging.public_pc_entry(pc_entry)
         char_doc["pcStatus"] = pc_entry.get("status", ["free"])
         char_doc["pcTags"] = pc_entry.get("tags", ["alive"])
         char_doc["pcTimers"] = pc_entry.get("timers", {})
@@ -2454,8 +2460,7 @@ async def _start_craft(
         raise CraftRefused("Out on a story - crafting only works at home or at a rest camp.")
 
     # Can't craft while away foraging (see backend.foraging).
-    active_forage = (character.get("foraging") or {}).get("activeForage")
-    if active_forage and datetime.fromisoformat(active_forage["readyAt"]) > datetime.now(timezone.utc):
+    if foraging.forage_active(character):
         raise CraftRefused("Away foraging.")
 
     # The active storage's instances join the character's own for the tool
@@ -4364,8 +4369,7 @@ async def set_in_adventure(
         active = character_doc.get("crafting", {}).get("activeCraft")
         if active and datetime.fromisoformat(active["readyAt"]) > datetime.now(timezone.utc):
             raise ValueError("Character is still crafting")
-        active_forage = (character_doc.get("foraging") or {}).get("activeForage")
-        if active_forage and datetime.fromisoformat(active_forage["readyAt"]) > datetime.now(timezone.utc):
+        if foraging.forage_active(character_doc):
             raise ValueError("Character is out foraging")
 
     update: dict = {"$set": {"availability.inAdventure": in_adventure}}

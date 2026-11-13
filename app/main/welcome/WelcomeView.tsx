@@ -125,6 +125,10 @@ export function WelcomeView() {
       if (res.ok) {
         const data = await res.json();
         setViewingCharacter(data);
+      } else if (res.status === 423) {
+        // Lost in the dark since the grid loaded (backend.foraging): no
+        // looking in - refresh the grid so the slot shows it.
+        refreshPreviews();
       }
     } finally {
       setLoadingCharacter(false);

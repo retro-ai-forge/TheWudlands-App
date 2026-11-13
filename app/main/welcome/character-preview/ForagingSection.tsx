@@ -20,7 +20,7 @@ const ATTR_NAMES: Record<string, string> = {
   migh: "Might", agil: "Agility", endu: "Endurance", prec: "Precision",
   will: "Will", insi: "Insight", lore: "Lore", pres: "Presence",
 };
-const pct = (n: number) => `+${Number.isInteger(n) ? n : n.toFixed(1)}%`;
+const pct = (n: number) => `${n < 0 ? "−" : "+"}${Number.isInteger(n) ? Math.abs(n) : Math.abs(n).toFixed(1)}%`;
 
 /** "+35% · Miner's Pickaxe +25%, Cart +5%" - or, without gear, which
  * weapon/item families would help here. */
@@ -37,10 +37,22 @@ function GearLine({ gear, helpfulWeapons, helpfulItems }: {
     ...(gear?.blockedLights ?? []),
     ...(gear?.blockedItems ?? []),
   ];
-  const blocked = unready.length ? (
-    <p className={styles.gearHint}>
-      {unready.map((b) => `${b.name} needs: ${b.missing.map(label).join(", ")}`).join(" · ")}
+  // Ore without a light: a smaller find, the risk of an accident or of
+  // getting lost.
+  const dark = gear?.dark ? (
+    <p className={styles.darkHint}>
+      No light: {pct(gear.darkPercent ?? 0)}, you can have accidents or get lost.
     </p>
+  ) : null;
+  const blocked = unready.length || dark ? (
+    <>
+      {unready.length > 0 && (
+        <p className={styles.gearHint}>
+          {unready.map((b) => `${b.name} needs: ${b.missing.map(label).join(", ")}`).join(" · ")}
+        </p>
+      )}
+      {dark}
+    </>
   ) : null;
   if (gear && pieces.length > 0) {
     return (
@@ -49,6 +61,17 @@ function GearLine({ gear, helpfulWeapons, helpfulItems }: {
           <span className={styles.gearPercent}>{pct(gear.percent)}</span>{" "}
           {pieces.map((piece) => `${piece.name} ${pct(piece.percent)}`).join(", ")}
         </p>
+        {/* Each unit dug needs 1h of light - what's left over is dug without it. */}
+        {gear.light && (
+          // Green: lasts even the biggest dig; yellow: may run out within the
+          // range; red: runs out even on the smallest (site cards only).
+          <p
+            className={`${styles.gearLine} ${gear.light.cover ? styles[`light_${gear.light.cover}`] : ""}`}
+            title={gear.light.needMax !== undefined ? `This trip needs ${gear.light.needMin}–${gear.light.needMax}h` : undefined}
+          >
+            Light for {gear.light.hours}h
+          </p>
+        )}
         {blocked}
       </>
     );
@@ -86,6 +109,8 @@ export function ForagingSection({
   const [loadError, setLoadError] = useState<string | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
+  // The site whose "Forget site" was clicked - the popup asks first.
+  const [forgetting, setForgetting] = useState<ForagingState["sites"][number] | null>(null);
   const [catalog, setCatalog] = useState<ResourceTierInfo>({});
   // Which found resource's detail popup is open (info only - no moves).
   const [popupId, setPopupId] = useState<string | null>(null);
@@ -95,7 +120,10 @@ export function ForagingSection({
   const name = character.firstName || "This character";
   const active = state?.activeForage ?? null;
   const remainingSeconds = useCraftCountdown(active?.readyAt);
-  const isBack = active !== null && remainingSeconds === 0;
+  // Lost in the dark: past the planned return, but not back - and when
+  // they will be is the server's secret.
+  const isLost = !!active?.lost;
+  const isBack = active !== null && remainingSeconds === 0 && !isLost;
 
   const load = useCallback(async () => {
     try {
@@ -116,7 +144,7 @@ export function ForagingSection({
     getResourceCatalog().then(setCatalog).catch(() => {});
   }, []);
 
-  const act = async (path: "start" | "finish", body?: object) => {
+  const act = async (path: "start" | "finish" | "forget", body?: object) => {
     if (pending) return;
     setPending(true);
     setActionError(null);
@@ -157,7 +185,11 @@ export function ForagingSection({
           <span className={styles.missionName}>{active.name}</span>
           <p className={styles.flavor}>{active.text}</p>
           <GearLine gear={active.gear} />
-          {isBack ? (
+          {isLost ? (
+            <p className={styles.darkHint}>
+              {name} should have been back by now. Lost in the dark &ndash; no word yet.
+            </p>
+          ) : isBack ? (
             <button
               type="button"
               className={`${styles.button} ${styles.collectButton}`}
@@ -182,9 +214,16 @@ export function ForagingSection({
           <span className={styles.activity}>Last return &middot; {lastResult.name}</span>
           <p className={styles.message}>{lastResult.message}</p>
           {lastResult.night?.message && <p className={styles.message}>{lastResult.night.message}</p>}
-          {lastResult.night?.vitalStatus && (
+          {(lastResult.darkUnits ?? 0) > 0 && (lastResult.litUnits ?? 0) > 0 && (
+            <p className={styles.darkHint}>
+              The light ran out after {lastResult.lightHours}h &ndash; the last {lastResult.darkUnits}{" "}
+              {label(lastResult.familyId)} came out of the dark.
+            </p>
+          )}
+          {lastResult.accident?.message && <p className={styles.message}>{lastResult.accident.message}</p>}
+          {(lastResult.accident?.vitalStatus ?? lastResult.night?.vitalStatus) && (
             <p className={styles.lostLine}>
-              {name} is now {lastResult.night.vitalStatus}.
+              {name} is now {lastResult.accident?.vitalStatus ?? lastResult.night?.vitalStatus}.
             </p>
           )}
           <p className={styles.amount}>
@@ -231,7 +270,12 @@ export function ForagingSection({
               ammoByFamily[family] = (ammoByFamily[family] ?? 0) + n;
             }
             const lost = [
-              ...Object.entries(lastResult.night?.lost ?? {}).map(([key, n]) => `${ATTR_NAMES[key] ?? key} −${n}`),
+              ...Object.entries(
+                [lastResult.night?.lost, lastResult.accident?.lost].reduce<Record<string, number>>((sum, part) => {
+                  for (const [key, n] of Object.entries(part ?? {})) sum[key] = (sum[key] ?? 0) + n;
+                  return sum;
+                }, {}),
+              ).map(([key, n]) => `${ATTR_NAMES[key] ?? key} −${n}`),
               ...Object.entries(ammoByFamily).map(([family, n]) => `${n} ${label(family)}${n === 1 ? "" : "s"}`),
               // Only entries with a condition level: results from before the
               // condition rework recorded wear as points, which no longer
@@ -287,14 +331,24 @@ export function ForagingSection({
                     {label(site.familyId)}
                   </p>
                   <GearLine gear={site.gear} helpfulWeapons={site.helpfulWeapons} helpfulItems={site.helpfulItems} />
-                  <button
-                    type="button"
-                    className={styles.button}
-                    onClick={() => act("start", { missionId: site.mission!.id })}
-                    disabled={disabled}
-                  >
-                    Go &middot; {formatTripLength(state.durationMinutes)}
-                  </button>
+                  <div className={styles.cardActions}>
+                    <button
+                      type="button"
+                      className={styles.forgetButton}
+                      onClick={() => setForgetting(site)}
+                      disabled={pending}
+                    >
+                      Forget site
+                    </button>
+                    <button
+                      type="button"
+                      className={styles.button}
+                      onClick={() => act("start", { missionId: site.mission!.id })}
+                      disabled={disabled}
+                    >
+                      Go &middot; {formatTripLength(state.durationMinutes)}
+                    </button>
+                  </div>
                 </div>
               );
             })}
@@ -303,6 +357,38 @@ export function ForagingSection({
       )}
 
       {actionError && <p className={styles.error} role="status">{actionError}</p>}
+
+      {forgetting && (
+        // A site lasts until it's empty - forgetting is the way out of one
+        // that only gives a unit a trip. Gone for the slot, so ask first.
+        <div className={styles.confirmOverlay} onClick={() => setForgetting(null)}>
+          <div className={styles.confirmCard} role="dialog" aria-modal="true" onClick={(e) => e.stopPropagation()}>
+            <p className={styles.confirmText}>
+              Forget {forgetting.mission?.name ?? "this site"}?
+            </p>
+            <p className={styles.confirmNote}>
+              The {label(forgetting.familyId)} still there is lost for good &ndash; for {name} and every soul
+              after in this slot.
+            </p>
+            <div className={styles.confirmButtons}>
+              <button
+                type="button"
+                className={styles.confirmForget}
+                onClick={() => {
+                  const familyId = forgetting.familyId;
+                  setForgetting(null);
+                  act("forget", { familyId });
+                }}
+              >
+                Forget
+              </button>
+              <button type="button" className={styles.confirmKeep} onClick={() => setForgetting(null)} autoFocus>
+                Keep
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {popupId && lastResult && (
         <ResourcePopup

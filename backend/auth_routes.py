@@ -855,6 +855,9 @@ async def get_my_character_full(character_id: str, address: str = Depends(get_cu
     char = await get_single_character(address, character_id)
     if char is None:
         raise HTTPException(status_code=404, detail="Character not found")
+    # Lost in the dark (backend.foraging): no looking in until back.
+    if ((char.get("foraging") or {}).get("activeForage") or {}).get("lost"):
+        raise HTTPException(status_code=423, detail=f"{char.get('firstName') or 'This character'} is lost")
     return char
 
 
@@ -1098,6 +1101,21 @@ async def finish_foraging_route(character_id: str, address: str = Depends(get_cu
     """Collect a returned trip - the finds go to the shared vault. Returns {result, state}."""
     try:
         return await foraging.finish_forage(address, character_id)
+    except foraging.ForagingError as exc:
+        raise _foraging_http_error(exc)
+
+
+class ForgetSiteRequest(BaseModel):
+    familyId: str = Field(..., description="The site's resource family (see GET .../foraging - each site's familyId)")
+
+
+@player_router.post("/me/characters/{character_id}/foraging/forget")
+async def forget_foraging_site_route(
+    character_id: str, payload: ForgetSiteRequest, address: str = Depends(get_current_address)
+):
+    """Give up a foraging site for good - what it still holds is gone for the slot. Returns the state."""
+    try:
+        return await foraging.forget_site(address, character_id, payload.familyId)
     except foraging.ForagingError as exc:
         raise _foraging_http_error(exc)
 

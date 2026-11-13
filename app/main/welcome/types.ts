@@ -40,6 +40,7 @@ export interface SlotCharacterPreview {
   characterId: string;
   name: string;
   slotNumber: number;
+  /** e.g. ["free"], ["free", "foraging"]; "lost" while lost in the dark (no timer then - the return is secret). */
   status: string[];
   tags: string[];
   timers: Record<string, string>;
@@ -234,6 +235,13 @@ export type ForageGear = {
   blockedLights?: { name: string; missing: string[] }[];
   /** Items that would help but don't count, e.g. a flying charm on a rat (needs: winged companion). */
   blockedItems?: { name: string; missing: string[] }[];
+  /** A dark material (ore) without a light: `percent` already includes `darkPercent` (e.g. -50), and accidents may happen. */
+  dark?: boolean;
+  darkPercent?: number;
+  /** Hours of light carried (oil with a lantern, torches, candles; each unit dug needs 1h). Null without a light.
+   * On a site card also what the next trip's lowest/highest lit dig needs, and how far the light reaches:
+   * full (covers the highest), partial (may run out within the range), none (runs out even on the lowest). */
+  light?: { hours: number; needMin?: number; needMax?: number; cover?: "full" | "partial" | "none" } | null;
 };
 
 /** A trip in progress - resolved lazily against readyAt. */
@@ -241,7 +249,10 @@ export type ActiveForage = ForageMission & {
   missionId: string;
   slotNumber: number;
   startedAt: string;
+  /** The planned return. A character lost in the dark comes back later - when, the server never says. */
   readyAt: string;
+  /** Past readyAt but not back: lost in the dark (a serious/hardcore accident). */
+  lost?: boolean;
   gear?: ForageGear;
 };
 
@@ -281,10 +292,16 @@ export type ForageResult = {
   broken?: string[];
   /** Arrows/bolts shot (item id -> amount) - one per unit found with a bow/crossbow. */
   ammoUsed?: Record<string, number>;
-  /** Finds no arrow/bolt could cover (none left, or none of a high enough tier) - the weapon wears for those at or above its tier. */
+  /** Finds no arrow/bolt could cover (none left, or none of a high enough tier) - the weapon wears for those, whatever its tier. */
   ammoShortfall?: number;
   /** What the trip's light burned (item id -> amount): one oil for a lantern, one torch or candle. */
   lightUsed?: Record<string, number>;
+  /** Hours of light burned, units dug in that light, and units dug in the dark once it ran out (ore). */
+  lightHours?: number;
+  /** Units the site lost - `total` minus the gear's bonus, which comes on top. */
+  fromSite?: number;
+  litUnits?: number;
+  darkUnits?: number;
   /** Rare extra raw materials found on the way (item id -> amount) - a bonus outside the pool, also taken home. */
   surprise?: Record<string, number>;
   /** The sentence for the surprise finds, or null when there were none. */
@@ -307,6 +324,19 @@ export type ForageResult = {
     /** "dead" / "soulless" if the night drained Body / Soul completely. */
     vitalStatus?: string | null;
   };
+  /** An accident while mining in the dark (foraging-rules.json "darkness"). */
+  accident?: {
+    severity: "minor" | "serious" | "hardcore";
+    message: string;
+    points: Record<string, number>;
+    /** Points actually lost when the trip was collected (attr key -> amount). */
+    lost?: Record<string, number>;
+    vitalStatus?: string | null;
+    /** Days lost in the dark after a serious/hardcore accident (the trip came back that much later). */
+    lostDays?: number;
+    /** A Soul point per day lost (attr key -> amount), part of `lost` once collected. */
+    lostPoints?: Record<string, number>;
+  } | null;
 };
 
 /** GET /api/auth/me/characters/{id}/foraging */

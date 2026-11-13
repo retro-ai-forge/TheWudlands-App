@@ -18,9 +18,13 @@ exact total.
 
 Yield per trip, per family (`count` = trips already made to that family):
     reward = floor(base * 0.5 ** (count / halfLife)),  base = randint(min, max)
-capped by what the family still holds. A family is exhausted once even the
-lowest base roll would yield 0 (or nothing remains), so every trip a player
-can start finds at least one unit. Each unit is rolled into a tier by the
+capped by what the family still holds, and at least 1 unit - that is what
+leaves the site. Gear's bonus comes on top of it and never leaves the site
+(rounded with a chance: +70% on 1 unit gives 2 units 70% of the time);
+a penalty (darkness) shrinks the find, and only the smaller find leaves
+(plan_trip / dig). A site lasts until it is empty (late trips find a unit
+at a time) or the player forgets it (forget_site - what's left is gone for
+the slot). Each unit is rolled into a tier by the
 character's profession count (1 -> T1 only, 2 -> T1-T2, 3 -> T1-T3).
 
 Gathering gear (data/gathering-bonuses-raw-material.json) taken on the trip
@@ -29,12 +33,13 @@ character (+25% at T1 .. +75% at T6), plus every matching item family
 carried (+5% .. +18%) - weaponBonusByTier/itemBonusByTier in the rules.
 The base roll is set low enough that only geared trips beat the old yield.
 A bow needs a quiver and arrows, a crossbow a bolt girdle and bolts
-(weaponRequires). Gear only wears on finds of at least its own tier: once
-per trip it may drop one condition level (backend.item_condition - new,
-used, damaged, broken, then gone; chances in data/item-conditions.json); a
-stacked gathering item may lose a unit instead. A bow/crossbow shoots one
-arrow/bolt per unit - an arrow covers finds of its tier or lower - and only
-risks wear when a find at or above its tier was left uncovered
+(weaponRequires). Gear of any tier wears on any trip that finds something:
+once per trip it may drop one condition level (backend.item_condition -
+new, used, damaged, broken, then gone; chances in data/item-conditions.json);
+a stacked gathering item may lose a unit instead. So better gear finds
+more but wears just as fast - cheap tools are the thrifty choice. A
+bow/crossbow shoots one arrow/bolt per unit - an arrow covers finds of its
+tier or lower - and only risks wear when a find was left uncovered
 (weaponAmmo).
 
 Companion charms (companionCharms): the charm worn in the companion's Charm
@@ -42,12 +47,21 @@ slot adds its tier's item bonus on the materials that suit its companion
 (e.g. a flying charm on a winged companion: feather, meat, hide) - only on a
 matching companion - and wears like any item (1 per trip).
 
-Light (lightSources): at most one light counts per trip - a glass lantern
-with oil, else a torch, else a candle - and only with a tinderbox carried
-(lightRequires). It adds the item bonus of its tier; a lantern counts at the
-lower of its own and its oil's tier. The trip burns one unit: one oil for a
-lantern (lightFuel), one torch or candle otherwise. Only gear still on the character at collection
-counts.
+Light (lightSources, only with a tinderbox - lightRequires): every unit dug
+on ore, crystal or clockwork needs lightHoursPerUnit (1) hour of light. A
+trip burns whole units in order - oil (only with a glass lantern, at the
+lower of lantern and oil), then torches, then candles, each lowest tier
+first - with the hours per unit from light-source-burn-hours.json (a T1
+torch lasts 2h). The best light that burned counts like a weapon
+(lightBonusByTier, +25% at T1 .. +75% at T6) for the whole trip. Units the
+light can't cover are dug as without it: on ore and crystal (rules
+"darkness") with 50%
+less, only that leaving the site, plus one accident roll - minor (1-2),
+serious (3-5) or hardcore (6-10 temporary Body points, enough to kill;
+serious and hardcore also get the character lost), applied on collect. A
+trip with any light shows "Light for Xh" (gear.light.hours). Every trip finds
+at least one unit while the site holds anything. Only gear still on the
+character at collection counts.
 
 A trip spends a night out (rules "nights"): weather is rolled from the ones
 possible at the site (rain, fog, storm... anywhere; flood, sandstorm,
@@ -68,8 +82,7 @@ foraged - only condition-tracked pieces, found broken (item-conditions.json
 Every return carries a sentence fitted to the material and place
 (data/foraging-messages.json): "rich" while the family's pool is at least
 half full, "thin" once more than half is gone, and "depleted" on the last
-trip - the one after which the next trip would find nothing; that site is
-then no longer shown or offered.
+trip - the one that empties it; that site is then no longer shown or offered.
 
 The whole outcome - finds (taken from the pool), ammo shot, gear wear - is
 rolled the moment the trip starts, so changing equipment during the trip
@@ -117,13 +130,40 @@ WEAPON_REQUIRES: dict[str, tuple[str, ...]] = {w: tuple(r) for w, r in RULES.get
 # Ammo a weapon shoots on a trip - one per unit found, standing in for the
 # weapon's own wear; the weapon only risks wear for what the ammo can't cover.
 WEAPON_AMMO: dict[str, str] = dict(RULES.get("weaponAmmo", {}))
-# Light sources (ore, crystal, clockwork): at most one counts per trip, the
-# first of LIGHT_SOURCES the character can light - only with everything in
-# LIGHT_REQUIRES carried (a tinderbox). Each trip burns one unit of its fuel:
-# a lantern one oil (LIGHT_FUEL), a torch or candle one of itself.
+# Light sources (ore, crystal, clockwork), burned in LIGHT_SOURCES order -
+# a lantern's oil (LIGHT_FUEL), then torches, then candles, lowest tier
+# first - only with everything in LIGHT_REQUIRES carried (a tinderbox). Each
+# unit dug needs LIGHT_HOURS_PER_UNIT hours; LIGHT_HOURS gives a unit's burn
+# time by family and tier (a lantern burns at min(lantern, oil)).
 LIGHT_SOURCES: tuple[str, ...] = tuple(RULES.get("lightSources", ()))
 LIGHT_REQUIRES: tuple[str, ...] = tuple(RULES.get("lightRequires", ()))
 LIGHT_FUEL: dict[str, str] = dict(RULES.get("lightFuel", {}))
+LIGHT_HOURS_PER_UNIT: int = int(RULES.get("lightHoursPerUnit", 1))
+# A trip burns at most this many hours of light (about a day's work); a dig
+# bigger than that still brings everything home without more light.
+MAX_LIGHT_HOURS_PER_TRIP: int = int(RULES.get("maxLightHoursPerTrip", 24))
+LIGHT_HOURS: dict[str, dict[int, int]] = {
+    family: {int(t): int(h) for t, h in hours.items()}
+    for family, hours in json.loads((_DATA / "light-source-burn-hours.json").read_text()).items()
+    if not family.startswith("_")
+}
+# The lantern's row in the burn-hours table is "lantern"; its family is glass_lantern.
+_LIGHT_HOURS_ROW: dict[str, str] = {"glass_lantern": "lantern"}
+# A light counts like a weapon (lightBonusByTier), not like an item.
+LIGHT_BONUS_BY_TIER: dict[int, float] = {int(t): b for t, b in RULES["lightBonusByTier"].items()}
+# Darkness (rules "darkness"): on these materials a trip without a light
+# finds `penalty` less (taken off the gear percent; only the smaller find
+# leaves the site) and risks one accident - a band rolled from `accidents`,
+# costing that many temporary Body points (backend.condition).
+DARKNESS: dict = RULES["darkness"]
+DARK_FAMILIES: tuple[str, ...] = tuple(DARKNESS["families"])
+DARK_PENALTY: float = float(DARKNESS["penalty"])
+DARK_ACCIDENTS: tuple[dict, ...] = tuple(DARKNESS["accidents"])
+# A band with "lostDays" also leaves the character lost underground: the trip
+# ends that many days later (kept secret - see hide_pending_result), and each
+# day costs lostPointsPerDay temporary points in the lostGroup (Soul).
+DARK_LOST_PER_DAY: int = int(DARKNESS.get("lostPointsPerDay", 1))
+DARK_LOST_GROUP: str = DARKNESS.get("lostGroup", "soul")
 # Companion charms (rules "companionCharms"): a charm worn in the companion's
 # Charm slot adds its tier's item bonus on the materials that suit its
 # companion - only on a matching companion - and wears like any item.
@@ -301,16 +341,51 @@ def forage_reward(base: int, count: int, multiplier: float = 1.0) -> int:
     return math.floor(base * decay(count) * multiplier + 1e-9)
 
 
-def yield_range(count: int, remaining: int, multiplier: float = 1.0) -> tuple[int, int]:
-    """(lowest, highest) units the next trip to a family can find."""
-    return (min(remaining, forage_reward(BASE_YIELD_MIN, count, multiplier)),
-            min(remaining, forage_reward(BASE_YIELD_MAX, count, multiplier)))
+def trip_amount(base: int, count: int, remaining: int, multiplier: float = 1.0) -> int:
+    """Units the site gives on one trip (with multiplier 1: the base find,
+    gear aside - see plan_trip): the reward, capped by what's left - and at
+    least 1 while the site isn't empty, so neither the fading reward nor a
+    penalty (darkness) ever turns a trip into nothing."""
+    if is_exhausted(remaining):
+        return 0
+    return min(remaining, max(1, forage_reward(base, count, multiplier)))
 
 
-def is_exhausted(count: int, remaining: int) -> bool:
-    """Judged without gear, so a site never vanishes or reappears just
-    because the character changed equipment."""
-    return yield_range(count, remaining)[0] <= 0
+def site_plans(doc: dict, family_id: str, count: int, remaining: int, gear: dict) -> tuple[dict, dict]:
+    """plan_trip for the next trip's lowest and highest base roll, with the
+    gear and the light carried."""
+    supply, _, lantern = light_supply(doc, family_id)
+    plain = [i for i in gear.get("items", []) if not i.get("fuel")]
+    # Lowest roll with the bonus rounded down, highest with it rounded up.
+    low = plan_trip(BASE_YIELD_MIN, count, remaining, gear.get("weapon"), plain, supply, lantern, family_id, 1.0)
+    high = plan_trip(BASE_YIELD_MAX, count, remaining, gear.get("weapon"), plain, supply, lantern, family_id, 0.0)
+    return low, high
+
+
+def planned_yield_range(doc: dict, family_id: str, count: int, remaining: int,
+                        gear: dict) -> tuple[int, int]:
+    """(lowest, highest) units the next trip can find with the gear and the
+    light carried - what the light can't cover counted as dug without it."""
+    low, high = site_plans(doc, family_id, count, remaining, gear)
+    return low["amount"], high["amount"]
+
+
+def light_cover(hours: int, low: dict, high: dict) -> dict:
+    """How far the light carried reaches on the next trip: the hours the
+    lowest and highest fully lit dig would need, and "full" (covers even
+    the highest), "partial" (covers the lowest, may run out within the
+    range) or "none" (runs out even on the lowest)."""
+    need_min = light_needed(low["litTarget"]) * LIGHT_HOURS_PER_UNIT
+    need_max = light_needed(high["litTarget"]) * LIGHT_HOURS_PER_UNIT
+    cover = "full" if hours >= need_max else "partial" if hours >= need_min else "none"
+    return {"needMin": need_min, "needMax": need_max, "cover": cover}
+
+
+def is_exhausted(remaining: int) -> bool:
+    """A site is done once it's empty - not when finds get small (every trip
+    finds at least 1, see trip_amount). Judged without gear, so a site never
+    vanishes or reappears because the character changed equipment."""
+    return remaining <= 0
 
 
 def _item_name(item_id: str, fallback: str) -> str:
@@ -324,23 +399,35 @@ def _tier(item_id: str) -> int:
 
 
 def _item_bonus(item: dict) -> float:
-    """An item's bonus by its tier - a lantern's by `bonusTier`, the lower of
-    its own and its oil's tier."""
-    return ITEM_BONUS_BY_TIER.get(item.get("bonusTier", item["tier"]), 0)
+    """An item's bonus by its tier. A light (it has `fuel`) counts like a
+    weapon (LIGHT_BONUS_BY_TIER), a lantern at `bonusTier`, the lower of its
+    own and its oil's tier."""
+    table = LIGHT_BONUS_BY_TIER if item.get("fuel") else ITEM_BONUS_BY_TIER
+    return table.get(item.get("bonusTier", item["tier"]), 0)
 
 
-def _gear_percent(weapon: Optional[dict], items: list[dict]) -> float:
-    """Total bonus in percent - the weapon's tier bonus plus each item's."""
+def is_dark(family_id: Optional[str], items: list[dict]) -> bool:
+    """A trip to a dark material (DARK_FAMILIES) without a light that counts."""
+    return family_id in DARK_FAMILIES and not any(i.get("fuel") for i in items)
+
+
+def _gear_percent(weapon: Optional[dict], items: list[dict], dark: bool = False) -> float:
+    """Total in percent - the weapon's tier bonus plus each item's, minus the
+    darkness penalty."""
     total = WEAPON_BONUS_BY_TIER.get(weapon["tier"], 0) if weapon else 0
     total += sum(_item_bonus(i) for i in items)
+    if dark:
+        total -= DARK_PENALTY
     return round(total * 100, 1)
 
 
-def _with_bonus(weapon: Optional[dict], items: list[dict]) -> dict:
+def _with_bonus(weapon: Optional[dict], items: list[dict], family_id: Optional[str] = None) -> dict:
     if weapon:
         weapon = {**weapon, "percent": round(WEAPON_BONUS_BY_TIER.get(weapon["tier"], 0) * 100, 1)}
     items = [{**i, "percent": round(_item_bonus(i) * 100, 1)} for i in items]
-    return {"weapon": weapon, "items": items, "percent": _gear_percent(weapon, items)}
+    dark = is_dark(family_id, items)
+    return {"weapon": weapon, "items": items, "percent": _gear_percent(weapon, items, dark), "dark": dark,
+            "darkPercent": -round(DARK_PENALTY * 100, 1) if dark else 0}
 
 
 def _usable(instance: dict) -> bool:
@@ -416,41 +503,207 @@ def missing_for_light(doc: dict) -> list[str]:
     return [f for f in LIGHT_REQUIRES if not _carries_family(doc, f)]
 
 
-def _light(doc: dict, light_family: str) -> tuple[Optional[dict], list[str]]:
-    """This light as a gear pick, ready to burn - or (None, what's missing).
+def _carried_counts(doc: dict, item_family: str) -> dict[str, int]:
+    """{item id: units} of a stacked family on the character - packed counts
+    plus equipped stacks (instances with a quantity)."""
+    gear = doc.get("gear") or {}
+    counts: dict[str, int] = {}
+    for i in gear.get("items", []):
+        if (i.get("familyId") == item_family and i.get("location") in CARRIED_LOCATIONS
+                and (i.get("quantity") or 0) > 0):
+            counts[i.get("itemId", "")] = counts.get(i.get("itemId", ""), 0) + i["quantity"]
+    for bucket in CARRIED_BALANCE_BUCKETS:
+        for item_id, qty in ((gear.get("itemBalances") or {}).get(bucket) or {}).items():
+            entry = items_catalog.ITEM_CATALOG_ENTRIES_BY_ID.get(item_id)
+            if qty > 0 and entry and entry.family_id == item_family:
+                counts[item_id] = counts.get(item_id, 0) + qty
+    return counts
 
-    The pick carries `fuel` {"familyId", "itemId", "tier"}: what one trip
-    burns. A torch or candle burns one of itself (its highest tier). A
-    lantern burns one oil - the best oil up to the lantern's own tier (better
-    oil would be wasted, as the lower tier sets the light), else the weakest
-    one there is - and counts at the lower of the two tiers (`bonusTier`)."""
-    piece = _pick(doc, light_family)
-    if piece is None:
-        return None, []
-    missing = missing_for_light(doc)
-    fuel_family = LIGHT_FUEL.get(light_family)
-    if fuel_family is None:
-        fuel = {"familyId": light_family, "itemId": piece["itemId"], "tier": piece["tier"]}
-    else:
-        oils = _carried_pieces(doc, fuel_family)
-        if not oils:
-            missing = [*missing, fuel_family]
-            fuel = None
+
+def _burn_hours(light_family: str, tier: int) -> int:
+    return LIGHT_HOURS.get(_LIGHT_HOURS_ROW.get(light_family, light_family), {}).get(tier, 0)
+
+
+def light_supply(doc: dict, family_id: str) -> tuple[list[dict], list[dict], Optional[dict]]:
+    """Everything the character can burn on a trip for `family_id`, in burn
+    order: a lantern's oil, then torches, then candles - each lowest tier
+    first. Entries {"light" (glass_lantern/torch/candle), "familyId" (what
+    burns: oil/torch/candle), "itemId", "name", "tier", "bonusTier", "hours"
+    (per unit), "count"}. A lantern burns at the lower of lantern and oil
+    tier, for its hours and its bonus. Nothing burns without a tinderbox.
+    Returns (supply, blocked lights [{"name", "missing"}], lantern pick)."""
+    wanted = (GATHERING_GEAR.get(family_id) or {"items": ()})["items"]
+    supply: list[dict] = []
+    blocked: list[dict] = []
+    lantern = None
+    for light_family in (f for f in LIGHT_SOURCES if f in wanted):
+        fuel_family = LIGHT_FUEL.get(light_family)
+        if fuel_family:
+            lantern = _pick(doc, light_family)
+            if lantern is None:
+                continue
+            oils = _carried_counts(doc, fuel_family)
+            if not oils:
+                blocked.append({"name": lantern["name"], "missing": [fuel_family]})
+            for item_id, n in sorted(oils.items(), key=lambda kv: _tier(kv[0])):
+                tier = min(lantern["tier"], _tier(item_id))
+                supply.append({"light": light_family, "familyId": fuel_family, "itemId": item_id,
+                               "name": lantern["name"], "tier": _tier(item_id), "bonusTier": tier,
+                               "hours": min(_burn_hours(light_family, lantern["tier"]),
+                                            _burn_hours(fuel_family, _tier(item_id))),
+                               "count": n})
         else:
-            fitting = [o for o in oils if o["tier"] <= piece["tier"]]
-            oil = max(fitting, key=lambda o: o["tier"]) if fitting else min(oils, key=lambda o: o["tier"])
-            fuel = {"familyId": fuel_family, "itemId": oil["itemId"], "tier": oil["tier"]}
-    if missing:
-        return None, missing
-    return {**piece, "fuel": fuel, "bonusTier": min(piece["tier"], fuel["tier"])}, []
+            for item_id, n in sorted(_carried_counts(doc, light_family).items(), key=lambda kv: _tier(kv[0])):
+                supply.append({"light": light_family, "familyId": light_family, "itemId": item_id,
+                               "name": _item_name(item_id, light_family), "tier": _tier(item_id),
+                               "bonusTier": _tier(item_id), "hours": _burn_hours(light_family, _tier(item_id)),
+                               "count": n})
+    supply = [u for u in supply if u["hours"] > 0]
+    missing = missing_for_light(doc)
+    if supply and missing:
+        return [], [{"name": supply[0]["name"], "missing": missing}], lantern
+    return supply, ([] if supply else blocked), lantern
+
+
+def light_needed(units: int) -> int:
+    """Units of a dig that need light: all of them, up to what
+    MAX_LIGHT_HOURS_PER_TRIP covers - the rest needs no more light."""
+    return min(units, MAX_LIGHT_HOURS_PER_TRIP // LIGHT_HOURS_PER_UNIT)
+
+
+def plan_burn(supply: list[dict], units: int) -> tuple[dict[str, int], int, int]:
+    """Burn whole units of `supply` in order until `units` units of work are
+    lit (LIGHT_HOURS_PER_UNIT hours each; callers cap `units` with
+    light_needed). Returns ({item id: burned}, units lit, best bonusTier
+    burned - 0 if nothing)."""
+    needed = units * LIGHT_HOURS_PER_UNIT
+    covered, best = 0, 0
+    burned: dict[str, int] = {}
+    for unit in supply:
+        n = 0
+        while n < unit["count"] and covered < needed:
+            n += 1
+            covered += unit["hours"]
+        if n:
+            burned[unit["itemId"]] = burned.get(unit["itemId"], 0) + n
+            best = max(best, unit["bonusTier"])
+        if covered >= needed:
+            break
+    return burned, min(units, covered // LIGHT_HOURS_PER_UNIT), best
+
+
+def _light_pick(supply: list[dict], lantern: Optional[dict], bonus_tier: int,
+                burned: Optional[dict[str, int]] = None) -> dict:
+    """The light as one gear item: named after the best light that burns
+    (the first in line before a trip), carrying the whole trip's hours. The
+    lantern itself (an item instance, it wears) stands in when its oil
+    burned."""
+    burned_ids = set(burned) if burned else {supply[0]["itemId"]}
+    used = [u for u in supply if u["itemId"] in burned_ids]
+    best = max((u for u in used if u["bonusTier"] == bonus_tier), key=lambda u: u["tier"], default=used[0])
+    oil_used = any(u["light"] in LIGHT_FUEL for u in used)
+    holder = lantern if (lantern and oil_used) else None
+    return {"instanceId": holder["instanceId"] if holder else None,
+            "itemId": holder["itemId"] if holder else best["itemId"],
+            "familyId": best["light"], "name": best["name"],
+            "quality": holder.get("quality") if holder else None,
+            "tier": bonus_tier, "bonusTier": bonus_tier,
+            "fuel": {"familyId": best["familyId"], "itemId": best["itemId"], "tier": best["tier"]}}
+
+
+def dig(site_units: int, multiplier: float, draw: float = 1.0) -> tuple[int, int]:
+    """(taken from the site, brought home) for `site_units` dug with this
+    gear multiplier. A bonus is extra on top - it never leaves the site -
+    rounded with a chance: its fraction adds one more unit when it beats
+    `draw` (a roll in [0, 1): 1.0 always rounds down, 0.0 always up), so
+    +70% on 1 unit gives 2 units 70% of the time. A penalty (darkness)
+    shrinks the find (rounded down), and only the smaller find leaves."""
+    if multiplier >= 1:
+        extra = site_units * (multiplier - 1)
+        whole = math.floor(extra + 1e-9)
+        if extra - whole > 1e-9 and extra - whole > draw:
+            whole += 1
+        return site_units, site_units + whole
+    found = math.floor(site_units * multiplier + 1e-9)
+    return found, found
+
+
+def bonus_draw() -> float:
+    """The roll that rounds a trip's gear bonus (see dig) - one per trip."""
+    return random.random()
+
+
+def plan_trip(base: int, count: int, remaining: int, weapon: Optional[dict], items: list[dict],
+              supply: list[dict], lantern: Optional[dict], family_id: str, draw: float = 1.0) -> dict:
+    """One trip's dig. The site gives the base find (trip_amount without
+    gear: decayed, at least 1, at most what's left); gear adds its bonus on
+    top without taking more from the site, a penalty (darkness) shrinks the
+    find and only the smaller find leaves the site. With light every unit
+    brought home needs LIGHT_HOURS_PER_UNIT hours; the units the light covers
+    are dug with the best light burned as bonus, the rest of the site's find
+    as without a light (on ore and crystal: in the dark). `items` without lights.
+    Returns {"amount" (brought home), "taken" (from the site), "litUnits",
+    "darkUnits", "inDark" (any of it dug in the dark on a dark material),
+    `draw` rounds the gear bonus (see dig - 1.0 rounds down, 0.0 up),
+    "burned" {item id: units}, "lightHours" (burned), "litTarget" (units a
+    fully lit dig brings home - its hours are what the light must cover),
+    "gear" (as _with_bonus, the light that counted among its items)}."""
+    no_light = _with_bonus(weapon, items, family_id)
+    site = trip_amount(base, count, remaining)                  # the base find, gear aside
+    if not supply:
+        mult = gear_multiplier(no_light)
+        if mult < 1:
+            # The whole find shrinks - and only the smaller find leaves.
+            found = trip_amount(base, count, remaining, mult)
+            taken, home = found, found
+        else:
+            taken, home = dig(site, mult, draw)
+        return {"amount": home, "taken": taken, "litUnits": 0, "darkUnits": home,
+                "inDark": no_light["dark"] and home > 0, "burned": {}, "lightHours": 0,
+                "litTarget": 0, "gear": no_light}
+    # The bonus depends on what burns, what burns on how much is dug - start
+    # with the first light in line and settle (the bonus only ever goes up).
+    tier = supply[0]["bonusTier"]
+    for _ in range(len(LIGHT_BONUS_BY_TIER) + 1):
+        lit_gear = _with_bonus(weapon, items + [_light_pick(supply, lantern, tier)], family_id)
+        _, target = dig(site, gear_multiplier(lit_gear), draw)
+        need = light_needed(target)
+        burned, lit, best = plan_burn(supply, need)
+        if best <= tier:
+            break
+        tier = best
+    if not burned:
+        # Nothing dug, nothing burned - a light only counts once it burns.
+        return {"amount": 0, "taken": 0, "litUnits": 0, "darkUnits": 0, "inDark": False,
+                "burned": {}, "lightHours": 0, "litTarget": 0, "gear": no_light}
+    # Only a light that actually burned sets the bonus (carried, unburned
+    # light never counts).
+    tier = best
+    lit_mult = gear_multiplier(lit_gear)
+    if lit >= need:
+        # Lit throughout - past MAX_LIGHT_HOURS_PER_TRIP the dig goes on
+        # without burning more.
+        taken, home, dark_home, lit = site, target, 0, target
+    else:
+        # The light ran out: the site units it covered gave `lit` units; the
+        # rest of the site's find is dug as without a light.
+        taken_lit = min(site, math.ceil(lit / lit_mult - 1e-9))
+        dark_taken, dark_home = dig(site - taken_lit, gear_multiplier(no_light), draw)
+        taken, home = taken_lit + dark_taken, lit + dark_home
+    gear = _with_bonus(weapon, items + [_light_pick(supply, lantern, tier, burned)], family_id)
+    hours = sum(u["hours"] * burned[u["itemId"]] for u in supply if u["itemId"] in burned)
+    return {"amount": home, "taken": taken, "litUnits": lit, "darkUnits": dark_home,
+            "inDark": lit < target and family_id in DARK_FAMILIES,
+            "burned": burned, "lightHours": hours, "litTarget": target, "gear": gear}
 
 
 def gathering_gear(doc: dict, family_id: str) -> dict:
     """The gear this character would bring on a trip for `family_id`:
-    {"weapon": {...} | None, "items": [{...}], "percent": int}. Each pick is
-    {"instanceId" | None, "itemId", "familyId", "name", "quality" | None};
-    instanceId None means a plain stacked item (no quality, never wears).
-    At most one light is among the items (see _light)."""
+    {"weapon": {...} | None, "items": [{...}], "percent": int, "light":
+    {"hours"} | None}. Each pick is {"instanceId" | None, "itemId",
+    "familyId", "name", "quality" | None}; instanceId None means a plain
+    stacked item (no quality, never wears). At most one light is among the
+    items (it has "fuel"; see light_supply)."""
     wanted = GATHERING_GEAR.get(family_id) or {"weapons": (), "items": ()}
 
     def pick(item_family: str) -> Optional[dict]:
@@ -469,21 +722,18 @@ def gathering_gear(doc: dict, family_id: str) -> dict:
     weapon = max(weapons, key=_wear_order) if weapons else None
     items = [i for i in (pick(f) for f in wanted["items"] if f not in LIGHT_SOURCES) if i]
 
-    # At most one light - the first in LIGHT_SOURCES order that can be lit.
-    blocked_lights = []
-    for light_family in (f for f in LIGHT_SOURCES if f in wanted["items"]):
-        light, missing = _light(doc, light_family)
-        if light:
-            items.append(light)
-            blocked_lights = []
-            break
-        if missing:
-            blocked_lights.append({"name": _pick(doc, light_family)["name"], "missing": missing})
     charm, blocked_charm = _companion_charm(doc, family_id)
     if charm:
         items.append(charm)
-    return {**_with_bonus(weapon, items), "blockedWeapons": blocked, "blockedLights": blocked_lights,
-            "blockedItems": [blocked_charm] if blocked_charm else []}
+    # The light: shown as the first one in line (it always burns), with the
+    # hours everything carried would last (see light_supply / plan_trip).
+    supply, blocked_lights, lantern = light_supply(doc, family_id)
+    light = None
+    if supply:
+        items.append(_light_pick(supply, lantern, supply[0]["bonusTier"]))
+        light = {"hours": sum(u["hours"] * u["count"] for u in supply)}
+    return {**_with_bonus(weapon, items, family_id), "light": light, "blockedWeapons": blocked,
+            "blockedLights": blocked_lights, "blockedItems": [blocked_charm] if blocked_charm else []}
 
 
 def _equipped_in(doc: dict, slot: str) -> Optional[dict]:
@@ -511,10 +761,10 @@ def _companion_charm(doc: dict, family_id: str) -> tuple[Optional[dict], Optiona
 
 
 def gear_multiplier(gear: dict) -> float:
-    return 1 + (gear.get("percent") or 0) / 100
+    return max(0.0, 1 + (gear.get("percent") or 0) / 100)
 
 
-def _still_carried(doc: dict, gear: dict) -> dict:
+def _still_carried(doc: dict, gear: dict, family_id: Optional[str] = None) -> dict:
     """The trip's gear, minus anything no longer on the character (moved
     away or broken while out), with quality refreshed - only what actually
     came back counts."""
@@ -538,7 +788,7 @@ def _still_carried(doc: dict, gear: dict) -> dict:
     # A light also needs its tinderbox and fuel still on hand.
     items = [i for i in items
              if not i.get("fuel") or (not missing_for_light(doc) and _carries_family(doc, i["fuel"]["familyId"]))]
-    return _with_bonus(weapon, items)
+    return _with_bonus(weapon, items, family_id)
 
 
 def roll_tiers(family_id: str, amount: int, profession_count: int,
@@ -556,7 +806,7 @@ def roll_tiers(family_id: str, amount: int, profession_count: int,
 
 def return_outcome(initial: int, remaining_after: int, exhausted_after: bool) -> str:
     """How a trip's return reads: "depleted" if it was the site's last
-    trip (the next would find nothing, so the site disappears), "thin" once
+    trip (it's empty now, so the site disappears), "thin" once
     more than half the pool is gone, else "rich"."""
     if exhausted_after:
         return "depleted"
@@ -692,6 +942,43 @@ def roll_trip_night(doc: dict, family_id: Optional[str] = None, rng: random.Rand
             "message": night_message(night, missing, doc.get("firstName") or "Your character", rng)}
 
 
+def roll_dark_accident(doc: dict, rng: random.Random | None = None) -> Optional[dict]:
+    """Maybe an accident in the dark (rules "darkness" "accidents"): one roll,
+    the bands tried in order, each with its own chance. A hit costs a random
+    number of points in its range, each on a random Body attribute (applied
+    on collect; backend.condition spills a point over once an attribute is
+    at 0 - a big accident can kill). A band with "lostDays" adds
+    "lostDays" (the trip's hidden delay) and "lostPoints" (a point per day on
+    the lostGroup - Soul). {"severity", "points", "message", "lostDays"?,
+    "lostPoints"?} or None."""
+    rng = rng or random.Random()
+    roll = rng.random()
+    for band in DARK_ACCIDENTS:
+        if roll >= band["chance"]:
+            roll -= band["chance"]
+            continue
+        low, high = band["points"]
+        points: dict[str, int] = {}
+        for _ in range(rng.randint(low, high)):
+            attr = rng.choice(condition.BODY_ATTRS)
+            points[attr] = points.get(attr, 0) + 1
+        name = doc.get("firstName") or "Your character"
+        text = rng.choice(_MESSAGES["darkAccidents"][band["severity"]]).format(name=name)
+        accident = {"severity": band["severity"], "points": points, "message": text}
+        if band.get("lostDays"):
+            days = rng.randint(*band["lostDays"])
+            lost_points: dict[str, int] = {}
+            for _ in range(days * DARK_LOST_PER_DAY):
+                attr = rng.choice(condition.ATTR_GROUPS[DARK_LOST_GROUP])
+                lost_points[attr] = lost_points.get(attr, 0) + 1
+            day_text = f"{days} day" if days == 1 else f"{days} days"
+            lost_text = rng.choice(_MESSAGES["darkAccidents"]["lost"]).format(name=name, days=day_text)
+            accident.update({"lostDays": days, "lostPoints": lost_points,
+                             "message": f"{text} {lost_text}"})
+        return accident
+    return None
+
+
 def tent_destroyed_message(tent_name: str, character_name: str, rng: random.Random | None = None) -> str:
     rng = rng or random.Random()
     return rng.choice(NIGHT_MESSAGES["tentDestroyed"]).format(name=character_name, tent=tent_name)
@@ -710,18 +997,57 @@ def suggested_mission(family_id: str, groups: list[str], seed: str) -> Optional[
     return random.Random(f"{seed}:{family_id}").choice(options)
 
 
-def hide_pending_result(active: Optional[dict]) -> Optional[dict]:
+def return_at(active: dict) -> datetime:
+    """When a trip really ends: its readyAt, or later when the character got
+    lost in the dark (returnAt, secret)."""
+    return datetime.fromisoformat(active.get("returnAt") or active["readyAt"])
+
+
+def is_lost(active: Optional[dict], now: datetime | None = None) -> bool:
+    """Past the planned return but not back yet - lost in the dark."""
+    if not active or not active.get("returnAt"):
+        return False
+    now = now or datetime.now(timezone.utc)
+    return datetime.fromisoformat(active["readyAt"]) <= now < return_at(active)
+
+
+def hide_pending_result(active: Optional[dict], now: datetime | None = None) -> Optional[dict]:
     """A trip as the client may see it - its outcome is rolled at the start
-    but stays secret until the trip is collected."""
+    but stays secret until the trip is collected, and so does how long a lost
+    character stays away: the client gets the planned readyAt, and `lost`
+    once that has passed."""
     if not active:
         return active
-    return {k: v for k, v in active.items() if k != "result"}
+    shown = {k: v for k, v in active.items() if k not in ("result", "returnAt")}
+    if is_lost(active, now):
+        shown["lost"] = True
+    return shown
+
+
+def public_pc_entry(entry: dict, now: datetime | None = None) -> dict:
+    """A player_characters entry as the client may see it: the real return
+    time of a lost character (timers.foragingReturnAt) never leaves the
+    server; once the planned return has passed, status "foraging" reads
+    "lost" and the foraging timer is gone (no countdown, no "Back")."""
+    timers = entry.get("timers") or {}
+    real = timers.get("foragingReturnAt")
+    if not real:
+        return entry
+    timers = {k: v for k, v in timers.items() if k != "foragingReturnAt"}
+    now = now or datetime.now(timezone.utc)
+    planned = timers.get("foragingReadyAt")
+    status = entry.get("status") or []
+    if planned and datetime.fromisoformat(planned) <= now < datetime.fromisoformat(real):
+        timers.pop("foragingReadyAt", None)
+        status = ["lost" if s == "foraging" else s for s in status]
+    return {**entry, "timers": timers, "status": status}
 
 
 def forage_active(doc: dict, now: datetime | None = None) -> bool:
-    """Whether the character is out on a trip that hasn't returned yet."""
+    """Whether the character is out on a trip that hasn't returned yet (lost
+    included)."""
     active = (doc.get("foraging") or {}).get("activeForage")
-    return bool(active) and datetime.fromisoformat(active["readyAt"]) > (now or datetime.now(timezone.utc))
+    return bool(active) and return_at(active) > (now or datetime.now(timezone.utc))
 
 
 # ── Slot pools (soul_slots.forage_pools.<slot>) ─────────────────────────
@@ -788,12 +1114,15 @@ def _build_state(doc: dict, pool: Optional[dict]) -> dict:
         if entry is None:
             continue
         remaining, count = entry["remaining"], entry["count"]
-        # A site whose next trip would find nothing is no longer shown or
-        # offered - its last trip already said so (see return_outcome).
-        if is_exhausted(count, remaining):
+        # An empty (or forgotten) site is no longer shown or offered - its
+        # last trip already said so (see return_outcome).
+        if is_exhausted(remaining):
             continue
         gear = gathering_gear(doc, family_id)
-        low, high = yield_range(count, remaining, gear_multiplier(gear))
+        low_plan, high_plan = site_plans(doc, family_id, count, remaining, gear)
+        low, high = low_plan["amount"], high_plan["amount"]
+        if gear.get("light"):
+            gear["light"] = {**gear["light"], **light_cover(gear["light"]["hours"], low_plan, high_plan)}
         mission = suggested_mission(family_id, groups, seed)
         wanted = GATHERING_GEAR.get(family_id) or {"weapons": (), "items": ()}
         sites.append({
@@ -862,7 +1191,7 @@ async def start_forage(address: str, character_id: str, mission_id: str) -> dict
     entry = ((pool or {}).get("families") or {}).get(mission.family_id)
     if entry is None:
         raise ForagingError(f"There is no {mission.family_id} left to find for {name}", 409)
-    if is_exhausted(entry["count"], entry["remaining"]):
+    if is_exhausted(entry["remaining"]):
         raise ForagingError(f"The {mission.family_id} sites near {name} are picked clean", 409)
 
     ready_at = now + trip_duration()
@@ -893,10 +1222,19 @@ async def start_forage(address: str, character_id: str, mission_id: str) -> dict
     # Roll the whole outcome now (finds, ammo, wear) and keep it with the
     # trip - hidden until collected (see hide_pending_result).
     result = await _roll_trip(db, address, character_id, doc, active, active["gear"])
+    # Lost in the dark: the trip really ends days later - kept next to the
+    # result, as secret as it (hide_pending_result / public_pc_entry).
+    lost_days = (result.get("accident") or {}).get("lostDays") or 0
+    trip_set: dict = {"foraging.activeForage.result": result}
+    pc_set: dict = {"characters.$.timers.foragingReadyAt": ready_at.isoformat()}
+    if lost_days:
+        real_return = (ready_at + timedelta(days=lost_days)).isoformat()
+        trip_set["foraging.activeForage.returnAt"] = real_return
+        pc_set["characters.$.timers.foragingReturnAt"] = real_return
     updated = await find_one_and_update_checked(
         db.characters,
         {"address": address, "id": character_id, "foraging.activeForage.startedAt": active["startedAt"]},
-        {"$set": {"foraging.activeForage.result": result}},
+        {"$set": trip_set},
         return_document=ReturnDocument.AFTER,
     ) or updated
     pool = await get_slot_pool(address, doc.get("slotNumber", 0))
@@ -904,7 +1242,7 @@ async def start_forage(address: str, character_id: str, mission_id: str) -> dict
     # Status + timer in one write (see _pc_update).
     await _pc_update(db, address, character_id, {
         "$addToSet": {"characters.$.status": "foraging"},
-        "$set": {"characters.$.timers.foragingReadyAt": ready_at.isoformat()},
+        "$set": pc_set,
     })
     return _build_state(updated, pool)
 
@@ -1004,12 +1342,12 @@ async def _consume_ammo(db, address: str, character_id: str, ammo_family: str,
 
 
 async def _wear_gear(db, address: str, character_id: str, gear: dict, weapon_wear: int,
-                     top_tier: int, rng: random.Random | None = None) -> tuple[list, list]:
+                     found: bool, rng: random.Random | None = None) -> tuple[list, list]:
     """Wear the trip's gear (backend.item_condition, data/item-conditions.json
-    "foraging"): the weapon - only if it had to work for a find of at least
-    its tier (`weapon_wear` > 0, see _roll_trip) - and each condition-tracked
-    item that a find of at least its tier (`top_tier`) used may drop one
-    level; below broken it's gone. A stacked item (whetstone, iron spikes...)
+    "foraging"), whatever its tier: the weapon - only if it had to work for
+    a find (`weapon_wear` > 0, see _roll_trip) - and each condition-tracked
+    item, if the trip found anything (`found`), may drop one level; below
+    broken it's gone. A stacked item (whetstone, iron spikes...)
     that counted may lose one unit instead. A light's own fuel already
     burned, so it's left out. Returns (worn, broken names) - worn entries
     {instanceId, name, kind, wear (levels lost), destroyed, condition}."""
@@ -1027,7 +1365,7 @@ async def _wear_gear(db, address: str, character_id: str, gear: dict, weapon_wea
                      "condition": item_condition.label(weapon.get("quality"))})
     for item in gear.get("items", []):
         if item["instanceId"] and item.get("quality") is not None:
-            if top_tier >= item.get("tier", 1) and item_condition.roll(float(item_condition.FORAGING["item"]), rng):
+            if found and item_condition.roll(float(item_condition.FORAGING["item"]), rng):
                 wear[item["instanceId"]] = 1
         elif not item.get("fuel") and item_condition.roll(float(item_condition.FORAGING["stackLoss"]), rng):
             stacks_lost.append(item)
@@ -1081,37 +1419,42 @@ async def _roll_trip(db, address: str, character_id: str, doc: dict, active: dic
     profession_count = len(character_profession_ids(doc))
     path = f"forage_pools.{slot}.families.{family_id}"
 
-    # Burn the light first: one oil for a lantern, one torch or candle. With
-    # nothing left to burn (moved away since the gear was picked), the light
-    # adds nothing.
-    light_used: dict[str, int] = {}
-    for light in [i for i in gear.get("items", []) if i.get("fuel")]:
-        fuel = light["fuel"]
-        used, unburned = await _consume_ammo(db, address, character_id, fuel["familyId"], [fuel["tier"]])
-        if unburned:
-            gear = {**gear, **_with_bonus(gear.get("weapon"),
-                                          [i for i in gear["items"] if i is not light])}
-        for item_id, n in used.items():
-            light_used[item_id] = light_used.get(item_id, 0) + n
-    multiplier = gear_multiplier(gear)
+    # Light: everything carried that can burn (light_supply) - how much of it
+    # burns depends on how much is dug (plan_trip, 1h per unit).
+    weapon = gear.get("weapon")
+    plain_items = [i for i in gear.get("items", []) if not i.get("fuel")]
+    supply, _, lantern = light_supply(doc, family_id)
 
-    found, entry = {}, None
+    found, entry, plan = {}, None, None
     for _ in range(3):
         pool = await get_slot_pool(address, slot)
         entry = ((pool or {}).get("families") or {}).get(family_id)
         if entry is None:
             break
-        amount = max(0, min(entry["remaining"], forage_reward(
-            random.randint(BASE_YIELD_MIN, BASE_YIELD_MAX), entry["count"], multiplier)))
+        plan = plan_trip(random.randint(BASE_YIELD_MIN, BASE_YIELD_MAX), entry["count"], entry["remaining"],
+                         weapon, plain_items, supply, lantern, family_id, bonus_draw())
+        amount, taken = plan["amount"], plan["taken"]
         # Conditional on the family being exactly as read - one writer wins.
+        # Only the base find leaves the site; the gear's bonus is extra.
         res = await db.soul_slots.update_one(
             {"address": address, f"{path}.count": entry["count"], f"{path}.remaining": entry["remaining"]},
-            {"$inc": {f"{path}.count": 1, f"{path}.remaining": -amount}},
+            {"$inc": {f"{path}.count": 1, f"{path}.remaining": -taken}},
         )
         if res.modified_count:
-            entry = {**entry, "count": entry["count"] + 1, "remaining": entry["remaining"] - amount}
+            entry = {**entry, "count": entry["count"] + 1, "remaining": entry["remaining"] - taken}
             found = roll_tiers(family_id, amount, profession_count) if amount else {}
             break
+    if plan is not None:
+        gear = {**gear, **plan["gear"]}
+
+    # Burn what lit the dig: whole units, oil first, lowest tier first.
+    light_used: dict[str, int] = {}
+    for unit in supply:
+        n = (plan or {}).get("burned", {}).get(unit["itemId"], 0)
+        if n:
+            used, _ = await _consume_ammo(db, address, character_id, unit["familyId"], [unit["tier"]] * n)
+            for item_id, k in used.items():
+                light_used[item_id] = light_used.get(item_id, 0) + k
 
     units_found = sum(found.values())
     tiers = unit_tiers(found)
@@ -1120,12 +1463,12 @@ async def _roll_trip(db, address: str, character_id: str, doc: dict, active: dic
     ammo_used, uncovered = (
         await _consume_ammo(db, address, character_id, ammo_family, tiers) if ammo_family else ({}, tiers)
     )
-    # Gear only wears on finds of at least its own tier. A bow/crossbow's
-    # arrows/bolts cover what they can (their tier or lower); the weapon only
-    # wears for the uncovered finds at or above its tier.
-    weapon_wear = sum(1 for t in uncovered if weapon and t >= weapon.get("tier", 1))
+    # Gear of any tier wears on any find. A bow/crossbow's arrows/bolts cover
+    # what they can (their tier or lower); the weapon only wears for the
+    # finds they left uncovered.
+    weapon_wear = len(uncovered) if weapon else 0
     ammo_shortfall = len(uncovered) if ammo_family else 0
-    worn, broken = await _wear_gear(db, address, character_id, gear, weapon_wear, max(tiers, default=0))
+    worn, broken = await _wear_gear(db, address, character_id, gear, weapon_wear, bool(tiers))
 
     # Lighting a light may use up the tinderbox (a stacked item).
     if light_used:
@@ -1158,7 +1501,10 @@ async def _roll_trip(db, address: str, character_id: str, doc: dict, active: dic
         if used:
             broken = [*broken, piece["name"]]
 
-    exhausted = entry is None or is_exhausted(entry["count"], entry["remaining"])
+    # Mining in the dark: the find was already smaller, and it may go wrong.
+    accident = roll_dark_accident(doc) if (plan or {}).get("inDark") else None
+
+    exhausted = entry is None or is_exhausted(entry["remaining"])
     outcome = return_outcome(entry["initial"], entry["remaining"], exhausted) if entry else "depleted"
     mission = MISSIONS_BY_ID.get(active["missionId"])
     place = active.get("place") or (mission.place if mission else active["name"])
@@ -1180,7 +1526,12 @@ async def _roll_trip(db, address: str, character_id: str, doc: dict, active: dic
         "ammoUsed": ammo_used,
         "ammoShortfall": ammo_shortfall,
         "lightUsed": light_used,
+        "lightHours": (plan or {}).get("lightHours", 0),
+        "litUnits": (plan or {}).get("litUnits", 0),
+        "darkUnits": (plan or {}).get("darkUnits", 0) if (plan or {}).get("inDark") else 0,
+        "fromSite": (plan or {}).get("taken", 0),
         "night": night,
+        "accident": accident,
         **_surprise_fields(doc),
         **_old_gear_fields(doc, family_id),
     }
@@ -1209,7 +1560,10 @@ async def finish_forage(address: str, character_id: str) -> dict:
     active = (doc.get("foraging") or {}).get("activeForage")
     if not active:
         raise ForagingError("Not out foraging", 404)
-    if datetime.fromisoformat(active["readyAt"]) > datetime.now(timezone.utc):
+    if is_lost(active):
+        raise ForagingError(f"{doc.get('firstName') or 'This character'} hasn't come back - "
+                            "lost somewhere in the dark", 409)
+    if return_at(active) > datetime.now(timezone.utc):
         raise ForagingError("Still out foraging", 409)
 
     # Claim the trip first, so a double-click can't pay out twice.
@@ -1227,7 +1581,7 @@ async def finish_forage(address: str, character_id: str) -> dict:
         # A trip started before outcomes were rolled up front (or whose roll
         # didn't get stored) - roll it now with the gear still on hand.
         result = await _roll_trip(db, address, character_id, doc, active,
-                                  _still_carried(doc, active.get("gear") or {}))
+                                  _still_carried(doc, active.get("gear") or {}, active.get("familyId")))
     result = {**result, "returnedAt": datetime.now(timezone.utc).isoformat()}
 
     # The character carries the finds home (character_homes.itemBalances),
@@ -1250,6 +1604,14 @@ async def finish_forage(address: str, character_id: str) -> dict:
     lost, vital_status = await condition.apply_loss(address, character_id, (night or {}).get("points") or {}, db)
     if night is not None:
         result = {**result, "night": {**night, "lost": lost, "vitalStatus": vital_status}}
+    accident = result.get("accident")
+    if accident:
+        # The accident's Body points, then a Soul point per day lost.
+        points = dict(accident.get("points") or {})
+        for attr, n in (accident.get("lostPoints") or {}).items():
+            points[attr] = points.get(attr, 0) + n
+        lost, vital_status = await condition.apply_loss(address, character_id, points, db)
+        result = {**result, "accident": {**accident, "lost": lost, "vitalStatus": vital_status}}
     updated = await find_one_and_update_checked(
         db.characters,
         {"address": address, "id": character_id},
@@ -1259,7 +1621,37 @@ async def finish_forage(address: str, character_id: str) -> dict:
     )
     await _pc_update(db, address, character_id, {
         "$pull": {"characters.$.status": "foraging"},
-        "$unset": {"characters.$.timers.foragingReadyAt": ""},
+        "$unset": {"characters.$.timers.foragingReadyAt": "", "characters.$.timers.foragingReturnAt": ""},
     })
     slot = active.get("slotNumber") or doc.get("slotNumber", 0)
     return {"result": result, "state": _build_state(updated or claimed, await get_slot_pool(address, slot))}
+
+
+async def forget_site(address: str, character_id: str, family_id: str) -> dict:
+    """Give up one of the character's sites for good: what it still holds is
+    dropped (remaining 0, kept as `forgotten`), so it's gone for every
+    character the slot will ever have. Refused while a trip to it is out (a
+    lost character included). One conditional write on soul_slots - checked
+    by modified_count (see backend.db's Firestore note). Returns the state."""
+    db = get_database()
+    doc = await _load_character(address, character_id)
+    name = doc.get("firstName") or "This character"
+    if family_id not in profession_families(character_profession_ids(doc)):
+        raise ForagingError(f"{name} has no {family_id} site to forget", 404)
+    active = (doc.get("foraging") or {}).get("activeForage")
+    if active and active.get("familyId") == family_id:
+        raise ForagingError(f"{name} is out at that site", 409)
+
+    slot = doc.get("slotNumber", 0)
+    pool = await get_slot_pool(address, slot)
+    entry = ((pool or {}).get("families") or {}).get(family_id)
+    if entry is None or is_exhausted(entry["remaining"]):
+        raise ForagingError(f"That {family_id} site is already gone", 409)
+    path = f"forage_pools.{slot}.families.{family_id}"
+    res = await db.soul_slots.update_one(
+        {"address": address, f"{path}.remaining": entry["remaining"], f"{path}.count": entry["count"]},
+        {"$set": {f"{path}.remaining": 0, f"{path}.forgotten": entry["remaining"]}},
+    )
+    if not res.modified_count:
+        raise ForagingError("The site changed - please try again", 409)
+    return _build_state(doc, await get_slot_pool(address, slot))

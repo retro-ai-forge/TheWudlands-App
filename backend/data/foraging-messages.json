@@ -569,5 +569,27 @@
     "An old camp, long cold. Among the ashes {name} found a worn {item} and took it along.",
     "{name} pulled a battered {item} out of the undergrowth. Whoever lost it never came back for it.",
     "Not much to look at, but useful: {name} found an old {item}, worn nearly to breaking."
-  ]
+  ],
+  "darkAccidents": {
+    "minor": [
+      "{name} stumbled in the dark shaft and came out bruised.",
+      "Without a light, {name} cracked a knee on a ledge no one could see.",
+      "{name} swung blind at the rock face and split a knuckle open."
+    ],
+    "serious": [
+      "In the pitch-dark tunnel {name} missed a step and fell hard onto the stone below.",
+      "Loose rock came down on {name} in the dark - there was no light to see it shift.",
+      "{name} groped through the dark, slipped into a crevice and dragged out a badly hurt leg."
+    ],
+    "hardcore": [
+      "The roof gave way above {name} in the dark. Hours later {name} clawed free of the rubble, broken and bleeding.",
+      "{name} fell down an unseen shaft. Nobody heard the screams until morning.",
+      "In the blackness {name} walked straight into a collapse. What crawled out was barely standing."
+    ],
+    "lost": [
+      "Then the way out was gone. {name} wandered the black tunnels for {days} before seeing daylight again.",
+      "{name} lost every sense of direction down there - {days} of darkness, hunger and whispering stone.",
+      "No light, no map, no way out: it took {name} {days} to find the surface again."
+    ]
+  }
 }

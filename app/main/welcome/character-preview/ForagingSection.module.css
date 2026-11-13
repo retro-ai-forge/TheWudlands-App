@@ -167,6 +167,109 @@
   cursor: not-allowed;
 }
 
+/* Site card bottom row: "Forget site" lower left, "Go" lower right. */
+.cardActions {
+  margin-top: auto;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.forgetButton {
+  font-family: inherit;
+  font-size: 0.7rem;
+  padding: 0.3rem 0.5rem;
+  border: 1px solid rgba(192, 69, 58, 0.45);
+  border-radius: 4px;
+  background: transparent;
+  color: #c97a5a;
+  cursor: pointer;
+}
+
+.forgetButton:hover:not(:disabled) {
+  background: rgba(192, 69, 58, 0.15);
+}
+
+.forgetButton:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* "Forget this site?" - same look as the home's destroy confirmation. */
+.confirmOverlay {
+  position: fixed;
+  inset: 0;
+  z-index: 20;
+  background: rgba(5, 4, 2, 0.8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.25rem;
+  box-sizing: border-box;
+}
+
+.confirmCard {
+  background: #1a1810;
+  border: 1px solid #5a3020;
+  border-radius: 6px;
+  padding: 1.2rem 1.5rem;
+  max-width: 20rem;
+  width: 100%;
+  text-align: center;
+}
+
+.confirmText {
+  margin: 0 0 0.5rem;
+  font-size: 0.95rem;
+  color: #d0b878;
+}
+
+.confirmNote {
+  margin: 0 0 1rem;
+  font-size: 0.8rem;
+  line-height: 1.45;
+  color: #b9ac86;
+}
+
+/* Forget lower left, Keep lower right. */
+.confirmButtons {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.confirmForget,
+.confirmKeep {
+  padding: 0.4rem 1.2rem;
+  border-radius: 4px;
+  font: inherit;
+  font-size: 0.85rem;
+  cursor: pointer;
+  border: 1px solid #3a3020;
+}
+
+.confirmForget {
+  background: #3a1510;
+  border-color: #7a2a20;
+  color: #d06050;
+}
+
+.confirmForget:hover {
+  background: #4a1a12;
+  color: #f07060;
+}
+
+.confirmKeep {
+  background: #1a1810;
+  color: #b9ac86;
+}
+
+.confirmKeep:hover {
+  background: #222215;
+  color: #e8d9a8;
+}
+
 .collectButton {
   margin-top: 0.4rem;
   border-color: #d6aa46;
@@ -214,6 +317,27 @@
   font-size: 0.7rem;
   line-height: 1.4;
   color: #8a7f62;
+}
+
+/* "Light for Xh" against the next trip's range (each unit dug needs 1h). */
+.light_full {
+  color: #4caf50;
+}
+
+.light_partial {
+  color: #d6aa46;
+}
+
+.light_none {
+  color: #c0453a;
+}
+
+/* Ore without a light - a warning, not a hint. */
+.darkHint {
+  margin: 0 0 0.25rem;
+  font-size: 0.7rem;
+  line-height: 1.4;
+  color: #c97a5a;
 }
 
 .lostLine {

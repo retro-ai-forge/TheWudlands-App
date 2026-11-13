@@ -51,6 +51,30 @@
   "lightFuel": {
     "glass_lantern": "oil"
   },
+  "lightHoursPerUnit": 1,
+  "maxLightHoursPerTrip": 24,
+  "_maxLightComment": "A trip burns at most this many hours of light (about a day of work). A dig bigger than that still brings everything home - the rest needs no more light.",
+  "_lightHoursComment": "Each unit dug needs this many hours of light (ore, crystal, clockwork). A trip burns oil (only with a lantern), then torches, then candles, each lowest tier first, whole units - hours per unit in light-source-burn-hours.json (a lantern burns at the lower of lantern and oil). The best light that burned sets the bonus for the trip. What the light can't cover is dug as without it (on ore: in the dark).",
+  "lightBonusByTier": {
+    "1": 0.25,
+    "2": 0.35,
+    "3": 0.45,
+    "4": 0.55,
+    "5": 0.65,
+    "6": 0.75
+  },
+  "darkness": {
+    "_comment": "A trip to these materials without a light that counts finds `penalty` less (off the gear percent; only the smaller find leaves the site) and rolls once for an accident: the bands are tried in order, each with its own chance; a hit costs that many temporary Body points (backend.condition, applied on collect). A band with `lostDays` also leaves the character lost for that many days (rolled): the trip ends that much later, but the player only sees the planned return - after it the character shows as lost and can't be opened until back. Each lost day costs `lostPointsPerDay` more temporary points in the `lostGroup` attributes (Soul: trapped in the dark, no way out).",
+    "families": ["ore", "crystal"],
+    "penalty": 0.5,
+    "lostPointsPerDay": 1,
+    "lostGroup": "soul",
+    "accidents": [
+      { "severity": "minor", "chance": 0.15, "points": [1, 2] },
+      { "severity": "serious", "chance": 0.05, "points": [3, 5], "lostDays": [1, 7] },
+      { "severity": "hardcore", "chance": 0.01, "points": [6, 10], "lostDays": [1, 7] }
+    ]
+  },
   "companionCharms": {
     "charm_flying": {
       "companions": [
