@@ -19,8 +19,9 @@ exact total.
 Yield per trip, per family (`count` = trips already made to that family):
     reward = floor(base * 0.5 ** (count / halfLife)),  base = randint(min, max)
 with each site's own half-life worked out from its size so that it empties
-in about siteTrips (18) trips, about 15 days - small sites give 1-2 units a
-trip, big ones thin out slowly (site_half_life),
+in about size / siteUnitsPerTrip (4) trips, at most siteTrips (18, about 15
+days) - every site thins out steadily, small ones are done in a few days,
+the biggest last about 15 days (site_trips / site_half_life),
 capped by what the family still holds, and at least 1 unit - that is what
 leaves the site. Gear's bonus comes on top of it and never leaves the site
 (rounded with a chance: +70% on 1 unit gives 2 units 70% of the time);
@@ -124,8 +125,9 @@ POOL_VARIATION: float = RULES["poolVariation"]
 BASE_YIELD_MIN: int = RULES["baseYieldMin"]
 BASE_YIELD_MAX: int = RULES["baseYieldMax"]
 HALF_LIFE: float = RULES["halfLife"]
-# Trips a site should last, whatever its size (site_half_life).
+# Trips a site lasts: about its size / SITE_UNITS_PER_TRIP, at most SITE_TRIPS (site_trips).
 SITE_TRIPS: int = int(RULES.get("siteTrips", 0))
+SITE_UNITS_PER_TRIP: float = float(RULES.get("siteUnitsPerTrip", 0))
 DURATION_HOURS: float = RULES["durationHours"]
 # Gathering-gear bonus by the gear's tier - one weapon at most, every item.
 WEAPON_BONUS_BY_TIER: dict[int, float] = {int(t): b for t, b in RULES["weaponBonusByTier"].items()}
@@ -345,19 +347,29 @@ def _trips_to_empty(initial: int, half_life: float) -> int:
     return count
 
 
+def site_trips(initial: int) -> int:
+    """Trips a site of `initial` units should last: about initial /
+    siteUnitsPerTrip (so small sites are done in a few days), at most
+    siteTrips (the biggest last about 15 days)."""
+    if not SITE_UNITS_PER_TRIP:
+        return SITE_TRIPS
+    return max(1, min(SITE_TRIPS, round(initial / SITE_UNITS_PER_TRIP)))
+
+
 @functools.lru_cache(maxsize=None)
 def site_half_life(initial: Optional[int]) -> float:
     """A site's half-life, worked out from its size so that it empties in
-    about SITE_TRIPS trips (rules "siteTrips") whatever its size - small
-    sites drop to 1-2 units a trip, big ones thin out slowly. Deterministic
-    (the same site always gets the same), cached per size. A site without a
-    known size gets halfLife."""
+    about site_trips(initial) trips - every site thins out steadily from the
+    first trip's 6-10 units instead of dropping to 1 unit a trip.
+    Deterministic (the same site always gets the same), cached per size. A
+    site without a known size gets halfLife."""
     if not initial or not SITE_TRIPS:
         return HALF_LIFE
+    target = site_trips(initial)
     low, high = 0.2, 500.0
     for _ in range(50):
         mid = (low + high) / 2
-        if _trips_to_empty(initial, mid) > SITE_TRIPS:
+        if _trips_to_empty(initial, mid) > target:
             low = mid            # too many trips: decay slower
         else:
             high = mid

@@ -1166,27 +1166,47 @@ def test_ore_and_crystal_missions_are_underground():
 
 def test_a_site_s_half_life_follows_its_size():
     assert foraging.site_half_life(None) == foraging.HALF_LIFE == 5
-    sizes = (25, 39, 60, 90, 130)
+    # About size / siteUnitsPerTrip trips, at most siteTrips.
+    assert [foraging.site_trips(s) for s in (17, 37, 60, 72, 130)] == [4, 9, 15, 18, 18]
+    sizes = (20, 37, 60, 90, 130)
     lives = [foraging.site_half_life(s) for s in sizes]
-    assert lives == sorted(lives) and lives[0] < 2 and lives[-1] > 100   # bigger sites thin out slower
+    assert lives == sorted(lives) and lives[-1] > 100   # bigger sites thin out slower
     # The same trip into a big site finds more than into a small one; the first trip is the same.
     assert foraging.trip_amount(10, 0, 999, half_life=10) == foraging.trip_amount(10, 0, 999) == 10
     assert foraging.trip_amount(10, 10, 999, half_life=10) == 5 > foraging.trip_amount(10, 10, 999) == 2
 
 
-def test_every_site_lasts_about_two_weeks():
-    def days(initial, rng):
-        h = foraging.site_half_life(initial)
-        remaining, count = initial, 0
-        while not foraging.is_exhausted(remaining):
-            remaining -= foraging.trip_amount(rng.randint(foraging.BASE_YIELD_MIN, foraging.BASE_YIELD_MAX),
-                                              count, remaining, half_life=h)
-            count += 1
-        return count * foraging.DURATION_HOURS / 24
+def _days_to_empty(initial, rng):
+    h = foraging.site_half_life(initial)
+    remaining, count = initial, 0
+    while not foraging.is_exhausted(remaining):
+        remaining -= foraging.trip_amount(rng.randint(foraging.BASE_YIELD_MIN, foraging.BASE_YIELD_MAX),
+                                          count, remaining, half_life=h)
+        count += 1
+    return count * foraging.DURATION_HOURS / 24
+
+
+def test_small_sites_empty_fast_big_ones_last_about_two_weeks():
     rng = random.Random(5)
-    for initial in (25, 39, 60, 90, 130):
-        avg = sum(days(initial, rng) for _ in range(400)) / 400
-        assert 13 <= avg <= 17, (initial, avg)
+    avg = {s: sum(_days_to_empty(s, rng) for _ in range(400)) / 400 for s in (20, 37, 60, 90, 130)}
+    assert list(avg.values()) == sorted(avg.values()), avg
+    assert avg[20] <= 5 and 6 <= avg[37] <= 10, avg
+    for initial in (90, 130):
+        assert 13 <= avg[initial] <= 17, (initial, avg[initial])
+
+
+def test_a_site_thins_out_steadily():
+    # With the average roll: no trip finds more than 2 less than the one before,
+    # and at most the last two trips are down to 1 unit (no long tail).
+    for initial in range(25, 131):
+        h = foraging.site_half_life(initial)
+        remaining, count, finds = initial, 0, []
+        while not foraging.is_exhausted(remaining):
+            finds.append(foraging.trip_amount(8, count, remaining, half_life=h))
+            remaining -= finds[-1]
+            count += 1
+        assert all(a - b <= 2 for a, b in zip(finds, finds[1:-1])), (initial, finds)
+        assert finds.count(1) <= 2 and 1 not in finds[:-2], (initial, finds)
 
 
 async def test_a_trip_uses_the_site_s_own_half_life(db, monkeypatch):
