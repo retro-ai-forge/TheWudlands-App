@@ -4,20 +4,16 @@ import React, { useState, useEffect } from "react";
 import Image from "next/image";
 import styles from "./characters.module.css";
 import h from "@/app/styles/headings.module.css";
-import { GENDERS, PROFESSIONS, racesByCategory, professionsByCategory, BODY_ATTRIBUTES, SOUL_ATTRIBUTES } from "@/app/lib/characterOptions";
+import { GENDERS, racesByCategory, professionsByCategory, BODY_ATTRIBUTES, SOUL_ATTRIBUTES } from "@/app/lib/characterOptions";
 
-// GET /api/auth/blueprint-categories - lore/reference data, not player-specific:
-// every blueprint family, grouped by the category of the professions whose
-// trade it is (`owners`), tiers 1-6.
-type BlueprintCategoryItem = { id: string; name: string; tier: number };
-type BlueprintCategoryFamily = {
-  familyId: string;
-  name: string;
-  kind: string;
-  owners?: string[];
-  items: BlueprintCategoryItem[];
+// GET /api/auth/profession-blueprints - lore/reference data, not player-specific:
+// the blueprints of every profession's trade, each family with its tiers 1-6.
+type BlueprintItem = { id: string; name: string; tier: number };
+type BlueprintFamily = { name: string; kind: string; items: BlueprintItem[] };
+type ProfessionBlueprints = {
+  families: Record<string, BlueprintFamily>;
+  professions: { id: string; category: string; own: string[] }[];
 };
-type BlueprintCategoryEntry = { category: string; families: BlueprintCategoryFamily[] };
 
 function getTierIndicator(tier: number): React.ReactNode {
   if (tier < 1 || tier > 6) return null;
@@ -32,35 +28,14 @@ function getKindIcon(kind: string): string {
     case "armor":
     case "shield":
     case "essentials":
+    case "food":
+    case "potion":
+    case "mount":
+    case "adventuring_gear":
       return "📦";
     default:
       return "";
   }
-}
-
-// Past 19 letters a line (including its "T1:"/"S:" label, always 4 chars)
-// gets crowded - if the display name's last word just repeats the family
-// headline above it (e.g. "Master Butcher's Bangers" under the "bangers"
-// family) or its kind badge (e.g. "Beetle Chitin Armor" under "ARMOR"), drop
-// that word instead of wrapping.
-function trimRedundantLastWord(
-  label: string,
-  displayName: string,
-  familyHeadline: string,
-  kind: string
-): string {
-  const lineLength = `${label}: ${displayName}`.length;
-  if (lineLength <= 19) return displayName;
-  const words = displayName.split(" ");
-  const lastWord = words[words.length - 1].toLowerCase();
-  const headlineWords = familyHeadline.toLowerCase().split(" ");
-  const headlineLastWord = headlineWords[headlineWords.length - 1];
-  const redundantWords = new Set([headlineLastWord, `${headlineLastWord}s`, kind.toLowerCase(), `${kind.toLowerCase()}s`]);
-  if (!redundantWords.has(lastWord)) return displayName;
-  const trimmed = words.slice(0, -1);
-  const danglingConnectors = new Set(["of", "&", "and", "reinforced"]);
-  while (danglingConnectors.has(trimmed[trimmed.length - 1]?.toLowerCase())) trimmed.pop();
-  return trimmed.join(" ");
 }
 
 export default function Characters() {
@@ -70,13 +45,13 @@ export default function Characters() {
   const [openAttributeCategory, setOpenAttributeCategory] = useState<string | null>(null);
   const [openGender, setOpenGender] = useState<string | null>(null);
   const [openBlueprintCategory, setOpenBlueprintCategory] = useState<string | null>(null);
-  const [blueprintCategories, setBlueprintCategories] = useState<BlueprintCategoryEntry[]>([]);
+  const [professionBlueprints, setProfessionBlueprints] = useState<ProfessionBlueprints | null>(null);
 
   useEffect(() => {
-    fetch("/api/auth/blueprint-categories")
-      .then((res) => (res.ok ? res.json() : []))
-      .then((data: BlueprintCategoryEntry[]) => setBlueprintCategories(data ?? []))
-      .catch(() => setBlueprintCategories([]));
+    fetch("/api/auth/profession-blueprints")
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data: ProfessionBlueprints | null) => setProfessionBlueprints(data))
+      .catch(() => setProfessionBlueprints(null));
   }, []);
 
   useEffect(() => {
@@ -307,9 +282,9 @@ export default function Characters() {
           {openSection === "blueprints" && (
             <div className={styles.accordionBody}>
               <p className={styles.sectionIntro}>
-                A trade leaves you with more than know-how — it leaves you with the plans to build its
-                tools and wares. What your professions unlock here is what you may carry into the world
-                at creation.
+                Every trade has its blueprints — the plans for the tools and wares it makes. What one trade
+                makes, another needs: a sword wants a potter&apos;s kiln, a mason&apos;s furnace and a
+                smith&apos;s anvil before the blade is ever forged.
               </p>
               <p className={styles.sectionIntro}>
                 <strong>Legend:</strong>
@@ -322,96 +297,64 @@ export default function Characters() {
                   </tr>
                   <tr>
                     <td><strong>📦</strong></td>
-                    <td>Item (weapon, armor, shield, special equipment)</td>
+                    <td>Item (weapon, armor, shield, food, potion, gear)</td>
                   </tr>
                   <tr>
                     <td>{getTierIndicator(1)}</td>
-                    <td>Tier 1 (Mundane)</td>
-                  </tr>
-                  <tr>
-                    <td>{getTierIndicator(2)}</td>
-                    <td>Tier 2 (Mundane)</td>
-                  </tr>
-                  <tr>
-                    <td>{getTierIndicator(3)}</td>
-                    <td>Tier 3 (Mundane)</td>
-                  </tr>
-                  <tr>
-                    <td>{getTierIndicator(4)}</td>
-                    <td>Tier 4 (Enchantable)</td>
-                  </tr>
-                  <tr>
-                    <td>{getTierIndicator(5)}</td>
-                    <td>Tier 5 (Enchantable)</td>
-                  </tr>
-                  <tr>
-                    <td>{getTierIndicator(6)}</td>
-                    <td>Tier 6 (Enchantable)</td>
+                    <td>Shown at tier 1 - every blueprint goes up to tier 6 (T1-T3 mundane, T4-T6 enchantable)</td>
                   </tr>
                 </tbody>
               </table>
-              {blueprintCategories.map((entry) => (
-                <div key={entry.category} className={styles.subAccordionItem}>
-                  <button
-                    className={styles.subAccordionHeader}
-                    onClick={() =>
-                      setOpenBlueprintCategory(openBlueprintCategory === entry.category ? null : entry.category)
-                    }
-                  >
-                    <span>
-                      {entry.category} ({entry.families.length})
-                    </span>
-                    <span className={styles.accordionChevron}>
-                      {openBlueprintCategory === entry.category ? "▴" : "▾"}
-                    </span>
-                  </button>
-                  {openBlueprintCategory === entry.category && (
-                    <div className={styles.subAccordionBody}>
-                      {entry.families.length === 0 ? (
-                        <div className={styles.raceEntry}>
-                          <p className={styles.raceDescription}>
-                            No profession of {entry.category} makes blueprint items of its own - its professions pick
-                            from what they use.
-                          </p>
-                        </div>
-                      ) : (
-                        entry.families.map((family) => (
-                          <div key={family.familyId} className={styles.raceEntry}>
-                            <p className={styles.raceName}>
-                              {getKindIcon(family.kind)} {family.name}{" "}
-                              <span className={styles.blueprintKind}>{family.kind}</span>
-                              {family.owners && family.owners.length > 0 && (
-                                <span className={styles.blueprintKind}>
-                                  {" "}
-                                  · {family.owners.map((id) => PROFESSIONS.find((p) => p.id === id)?.name ?? id).join(", ")}
-                                </span>
-                              )}
-                            </p>
-                            <table className={styles.legendTable}>
-                              <tbody>
-                                {family.items.map((item) => {
-                                  const displayName = trimRedundantLastWord(
-                                    `T${item.tier}`,
-                                    item.name.replace("Blueprint: ", ""),
-                                    family.name,
-                                    family.kind
-                                  );
-                                  return (
-                                    <tr key={item.id}>
-                                      <td>{getTierIndicator(item.tier)}</td>
-                                      <td>{displayName}</td>
-                                    </tr>
-                                  );
-                                })}
-                              </tbody>
-                            </table>
+              {Object.entries(professionsByCategory).map(([category, professions]) => {
+                const trades = professions.map((profession) => ({
+                  profession,
+                  own: professionBlueprints?.professions.find((entry) => entry.id === profession.id)?.own ?? [],
+                }));
+                const familyCount = new Set(trades.flatMap((trade) => trade.own)).size;
+                return (
+                  <div key={category} className={styles.subAccordionItem}>
+                    <button
+                      className={styles.subAccordionHeader}
+                      onClick={() => setOpenBlueprintCategory(openBlueprintCategory === category ? null : category)}
+                    >
+                      <span>
+                        {category} ({familyCount})
+                      </span>
+                      <span className={styles.accordionChevron}>
+                        {openBlueprintCategory === category ? "▴" : "▾"}
+                      </span>
+                    </button>
+                    {openBlueprintCategory === category && (
+                      <div className={styles.subAccordionBody}>
+                        {trades.map(({ profession, own }) => (
+                          <div key={profession.id} className={styles.raceEntry}>
+                            <p className={styles.raceName}>{profession.name}</p>
+                            {own.length === 0 ? (
+                              <p className={styles.raceDescription}>
+                                No blueprints of its own — this trade works with what others make.
+                              </p>
+                            ) : (
+                              own.map((familyId) => {
+                                const family = professionBlueprints?.families[familyId];
+                                if (!family) return null;
+                                return (
+                                  <p key={familyId} className={styles.blueprintItemLine}>
+                                    {getTierIndicator(1)}
+                                    <span>
+                                      {getKindIcon(family.kind)} {family.items[0]?.name.replace("Blueprint: ", "") ?? family.name}
+                                    </span>
+                                    <span className={styles.blueprintKind}>{family.kind.replace("_", " ")}</span>
+                                  </p>
+                                );
+                              })
+                            )}
                           </div>
-                        ))
-                      )}
-                    </div>
-                  )}
-                </div>
-              ))}
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
             </div>
           )}
         </div>

@@ -77,7 +77,7 @@ export const PROFESSIONS = [
   { id: "carpenter", name: "Carpenter", category: "CraftFurniture", description: "Lumberjack builds roofs, ships and houses. You built the bones of the world." },
   { id: "cooper", name: "Cooper", category: "CraftWood", description: "Cabinet maker, barrels and casks. Wooden vessels, mechanics and tools, great demand." },
   { id: "scribe", name: "Scribe", category: "Aristocratic", description: "Words and ink. Record-keeping and documents. Knowledge flows through your hands." },
-  { id: "clerk", name: "Clerk", category: "Aristocratic", description: "Numbers and ledgers. Accounts and records. Order is your domain." },
+  { id: "clerk", name: "Clerk", category: "Aristocratic", description: "Ledgers and liturgy. Keeper of records for temple and court. Order is your domain." },
   { id: "scholar", name: "Scholar", category: "Aristocratic", description: "Books and learning. Your mind is your wealth. Questions guide your life." },
   { id: "merchant", name: "Merchant", category: "Trade", description: "Buy and sell. Travel and negotiation. Money and goods pass through your hands." },
   { id: "trader", name: "Trader", category: "Trade", description: "Exchange and profit. Fair deals and sharp eyes. You know value." },

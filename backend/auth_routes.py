@@ -84,7 +84,12 @@ from backend.players import (
 from backend import items_catalog
 from backend.balances import log_login_balances
 from backend.resources_catalog import resolve_trapping_options
-from backend.craft_catalog import blueprint_source, category_blueprint_summary, resolve_blueprint_trapping_options
+from backend.craft_catalog import (
+    blueprint_source,
+    category_blueprint_summary,
+    profession_blueprint_summary,
+    resolve_blueprint_trapping_options,
+)
 from backend.soul_slots import (
     SOUL_SLOTS,
     STAR_SLOT_NUMBERS,
@@ -985,6 +990,17 @@ async def get_blueprint_categories():
         )
         for entry in category_blueprint_summary(max_tier=6)
     ]
+
+
+@player_router.get("/profession-blueprints")
+async def get_profession_blueprints():
+    """
+    Lore/reference data: the blueprints of every profession's trade (its own
+    list in data/profession-blueprints.json), with each blueprint family's
+    name, kind and tier names. Powers the "Blueprints" section of the
+    /characters page. No auth needed.
+    """
+    return profession_blueprint_summary()
 
 
 @player_router.get("/resource-catalog", response_model=List[ResourceItemResponse])

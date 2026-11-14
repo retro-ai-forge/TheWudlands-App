@@ -80,7 +80,7 @@ Every armor piece has its own blueprint: an iron helmet, breastplate and greaves
 | Alchemy | alchemist | herbs, essence, crystal | alchemy_stand, antidote_potion, healing_potion, mana_potion, meteoric_iron_chest_armor, meteoric_iron_head_armor, meteoric_iron_leg_armor, meteoric_iron_shield, mortar_and_pestle | - |
 | Alchemy | enchanter | essence, crystal, wood | enchanters_table, lapidary_bench, magic_staff, starlight_catcher, wand | holy_symbol, mana_potion, meteoric_iron_chest_armor, meteoric_iron_head_armor, meteoric_iron_leg_armor, meteoric_iron_shield |
 | Alchemy | poisoner | venom, herbs, monster_part | alchemy_stand, antidote_potion, mortar_and_pestle, venom_vial | chitin_chest_armor, chitin_head_armor, chitin_leg_armor, dagger |
-| Aristocratic | clerk | reed, skin, feather | - | bridle, hourglass, lock_and_key, merchants_scale, scriptorium |
+| Aristocratic | clerk | reed, skin, feather | holy_symbol | bridle, hourglass, lock_and_key, merchants_scale, scriptorium |
 | Aristocratic | scholar | crystal, reed, feather | spyglass | chalk, enchanters_table, holy_symbol, hourglass, magic_staff, scriptorium, starlight_catcher, wand, written_scroll |
 | Aristocratic | scribe | reed, skin, feather | scriptorium, written_scroll | wand, workbench |
 | Artists | acrobat | feather, fiber, bone | - | bridle, cloth_chest_armor, cloth_cloak, cloth_head_armor, cloth_leg_armor, quilted_cloak, saddlepack |
@@ -96,7 +96,7 @@ Every armor piece has its own blueprint: an iron helmet, breastplate and greaves
 | CraftGarment | tanner | hide, skin, monster_part | barding_leather, chitin_chest_armor, chitin_head_armor, chitin_leg_armor, chitin_shield, fur_cloak, tanning_rack | - |
 | CraftGarment | weaver | fiber, feather, reed | bridle, cloth_chest_armor, cloth_cloak, cloth_head_armor, cloth_leg_armor, loom, quilted_cloak, spinning_wheel | - |
 | CraftGlass | glassblower | sand, crystal, ore | alchemy_stand, furnace, glass_lantern, hourglass, kiln, lapidary_bench, mirror | - |
-| CraftGlass | jeweler | crystal, ore, sand | grinding_stone, holy_symbol, lapidary_bench, magic_staff, mirror, wand | meteoric_iron_chest_armor, meteoric_iron_head_armor, meteoric_iron_leg_armor, meteoric_iron_shield |
+| CraftGlass | jeweler | crystal, ore, sand | grinding_stone, lapidary_bench, magic_staff, mirror, wand | holy_symbol, meteoric_iron_chest_armor, meteoric_iron_head_armor, meteoric_iron_leg_armor, meteoric_iron_shield |
 | CraftStone | mason | stone, clay, sand | furnace, grinding_stone, kiln, oven | pickaxe |
 | CraftStone | potter | clay, sand, stone | alchemy_stand, kiln, mortar_and_pestle | shovel |
 | CraftStone | stonemason | stone, crystal, clay | furnace, grinding_stone, lapidary_bench, mortar_and_pestle | pickaxe |

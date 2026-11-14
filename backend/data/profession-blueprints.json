@@ -65,8 +65,8 @@
     "offered": []
   },
   "jeweler": {
-    "own": ["lapidary_bench", "grinding_stone", "holy_symbol", "mirror", "wand", "magic_staff"],
-    "offered": ["meteoric_iron_head_armor", "meteoric_iron_chest_armor", "meteoric_iron_leg_armor", "meteoric_iron_shield"]
+    "own": ["lapidary_bench", "grinding_stone", "mirror", "wand", "magic_staff"],
+    "offered": ["meteoric_iron_head_armor", "meteoric_iron_chest_armor", "meteoric_iron_leg_armor", "meteoric_iron_shield", "holy_symbol"]
   },
   "carpenter": {
     "own": ["workbench", "spinning_wheel", "loom", "tanning_rack", "oven", "scriptorium", "enchanters_table", "ladder"],
@@ -81,7 +81,7 @@
     "offered": ["workbench", "wand"]
   },
   "clerk": {
-    "own": [],
+    "own": ["holy_symbol"],
     "offered": ["merchants_scale", "scriptorium", "lock_and_key", "hourglass", "bridle"]
   },
   "scholar": {

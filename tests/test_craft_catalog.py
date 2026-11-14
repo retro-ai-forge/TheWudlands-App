@@ -111,3 +111,14 @@ def test_every_blueprint_unlocks_exactly_the_recipe_of_its_name():
     assert set(gated) == {b.family_id for b in BLUEPRINT_ITEMS}
     for family, outputs in gated.items():
         assert outputs == [family.removeprefix("blueprint_")], family
+
+
+def test_lore_lists_every_profession_with_its_own_trade():
+    summary = craft_catalog.profession_blueprint_summary()
+    assert {p["id"] for p in summary["professions"]} == set(PROFESSION_CATEGORIES)
+    for profession in summary["professions"]:
+        assert profession["own"] == [f.removeprefix("blueprint_") for f in PROFESSION_BLUEPRINTS[profession["id"]].own]
+        for family in profession["own"]:
+            assert summary["families"][family]["items"][0]["tier"] == 1
+    assert summary["families"]["fishermans_ration"]["name"] == "Fisherman's Ration"
+    assert summary["families"]["lock_and_key"]["name"] == "Lock and Key"

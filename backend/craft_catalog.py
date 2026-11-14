@@ -251,3 +251,41 @@ def category_blueprint_summary(max_tier: int = 3) -> list[dict]:
             })
         summary.append({"category": category, "families": families})
     return summary
+
+
+_NAME_FIXES = {"Fishermans": "Fisherman's", "Hunters": "Hunter's", "Merchants": "Merchant's",
+               "Enchanters": "Enchanter's", "And": "and", "Of": "of"}
+
+
+def family_display_name(blueprint_family_id: str) -> str:
+    """A blueprint family as a plain name for the whole family, every tier
+    ("blueprint_fishermans_ration" -> "Fisherman's Ration")."""
+    words = blueprint_family_id.removeprefix("blueprint_").split("_")
+    return " ".join(_NAME_FIXES.get(w.title(), w.title()) for w in words)
+
+
+def profession_blueprint_summary() -> dict:
+    """The blueprints of every profession's trade (its `own` list) - lore data
+    for the /characters page. {"families": {familyId: {name, kind, items}},
+    "professions": [{id, category, own}]}, family ids without the blueprint_
+    prefix, each family's items its tiers 1-6."""
+    items_by_family: dict[str, list[BlueprintItem]] = {}
+    for item in BLUEPRINT_ITEMS:
+        items_by_family.setdefault(item.family_id, []).append(item)
+    families = {
+        family.removeprefix("blueprint_"): {
+            "name": family_display_name(family),
+            "kind": _blueprint_catalog_type(family) or "?",
+            "items": [{"id": i.id, "name": i.name, "tier": i.tier} for i in sorted(items, key=lambda i: i.tier)],
+        }
+        for family, items in items_by_family.items()
+    }
+    professions = [
+        {
+            "id": profession_id,
+            "category": PROFESSION_CATEGORIES[profession_id],
+            "own": [f.removeprefix("blueprint_") for f in lists.own],
+        }
+        for profession_id, lists in PROFESSION_BLUEPRINTS.items()
+    ]
+    return {"families": families, "professions": professions}
