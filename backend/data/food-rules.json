@@ -1,0 +1,26 @@
+{
+  "_comment": "Food (backend/food.py). Rations: carried on an adventure they are the member's provisions, and after it each member's ration is used up with rationLossChance. Preserved: stored, eaten any time from home/camp storage or the carried bags, each unit heals preservedHealPoints lost points in its group; all carried preserved food is used up when an adventure ends. Fresh: eaten the moment its craft is collected (never stored), heals freshHealPoints in its group, each dish once per character per freshMealHours (3 Body + 3 Soul dishes: at most 3 Body + 3 Soul points a day). Groups: body / soul (backend.condition).",
+  "rations": [
+    "iron_ration",
+    "fishermans_ration"
+  ],
+  "rationLossChance": 0.1,
+  "preserved": {
+    "jerky": "body",
+    "smoked_fish": "body",
+    "pickled_fish": "body",
+    "roasted_nuts": "soul",
+    "fig_cake": "soul"
+  },
+  "preservedHealPoints": 3,
+  "fresh": {
+    "cooked_fish": "body",
+    "roast_haunch": "body",
+    "bangers": "body",
+    "grilled_fish_skewer": "soul",
+    "fish_chowder": "soul",
+    "hearty_stew": "soul"
+  },
+  "freshHealPoints": 1,
+  "freshMealHours": 24
+}

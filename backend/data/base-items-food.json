@@ -48,100 +48,52 @@
     "icon": "/images/items/hearty_stew_t6.png"
   },
   {
-    "id": "salt_horse_1",
-    "name": "Cabin Boy's Salt Horse",
-    "familyId": "salt_horse",
+    "id": "jerky_1",
+    "name": "Cabin Boy's Jerky",
+    "familyId": "jerky",
     "tier": 1,
-    "description": "A greasy tin plate of tough salted meat with a few meager pickles.",
-    "icon": "/images/items/salt_horse_t1.png"
+    "description": "A rusty tin of rough, dark strips of smoked meat, salty enough to last a voyage.",
+    "icon": "/images/items/jerky_t1.png"
   },
   {
-    "id": "salt_horse_2",
-    "name": "Sailor's Salt Horse",
-    "familyId": "salt_horse",
+    "id": "jerky_2",
+    "name": "Sailor's Jerky",
+    "familyId": "jerky",
     "tier": 2,
-    "description": "A wooden bowl of salty beef chunks with hardtack crumbs.",
-    "icon": "/images/items/salt_horse_t2.png"
+    "description": "A wooden box of peppered jerky, cured over oak smoke and tied with twine.",
+    "icon": "/images/items/jerky_t2.png"
   },
   {
-    "id": "salt_horse_3",
-    "name": "Boatswain's Salt Horse",
-    "familyId": "salt_horse",
+    "id": "jerky_3",
+    "name": "Boatswain's Jerky",
+    "familyId": "jerky",
     "tier": 3,
-    "description": "An iron platter of thick, well-cured salt meat with a pepper crust.",
-    "icon": "/images/items/salt_horse_t3.png"
+    "description": "A pewter case of thick, richly smoked strips that keep for a season.",
+    "icon": "/images/items/jerky_t3.png"
   },
   {
-    "id": "salt_horse_4",
-    "name": "First Mate's Salt Horse",
-    "familyId": "salt_horse",
+    "id": "jerky_4",
+    "name": "First Mate's Jerky",
+    "familyId": "jerky",
     "tier": 4,
-    "description": "A silver tray of pink salted beef ringed with spiced beans.",
-    "icon": "/images/items/salt_horse_t4.png"
+    "description": "A silver case of tender spiced jerky glazed with herbs.",
+    "icon": "/images/items/jerky_t4.png"
   },
   {
-    "id": "salt_horse_5",
-    "name": "Captain's Salt Horse",
-    "familyId": "salt_horse",
+    "id": "jerky_5",
+    "name": "Captain's Jerky",
+    "familyId": "jerky",
     "tier": 5,
-    "description": "A gilded plate of tender, gold-glazed salt beef with exotic fruits.",
-    "icon": "/images/items/salt_horse_t5.png"
+    "description": "A gold-clasped pouch of thin-cut jerky under a sparkling, enchanted glaze.",
+    "icon": "/images/items/jerky_t5.png"
   },
   {
-    "id": "salt_horse_6",
-    "name": "Admiral's Salt Horse",
-    "familyId": "salt_horse",
+    "id": "jerky_6",
+    "name": "Admiral's Jerky",
+    "familyId": "jerky",
     "tier": 6,
-    "description": "A star metal dish of marbled salt beef with jeweled garnish, crackling with arcane energy.",
-    "icon": "/images/items/salt_horse_t6.png"
-  },
-  {
-    "id": "smoked_salt_horse_1",
-    "name": "Smoked Cabin Boy's Salt Horse",
-    "familyId": "smoked_salt_horse",
-    "tier": 1,
-    "description": "A rusty tin dish of rough-smoked salted meat with charred edges.",
-    "icon": "/images/items/smoked_salt_horse_t1.png"
-  },
-  {
-    "id": "smoked_salt_horse_2",
-    "name": "Smoked Sailor's Salt Horse",
-    "familyId": "smoked_salt_horse",
-    "tier": 2,
-    "description": "A wooden slab of dark-smoked beef flecked with pepper.",
-    "icon": "/images/items/smoked_salt_horse_t2.png"
-  },
-  {
-    "id": "smoked_salt_horse_3",
-    "name": "Smoked Boatswain's Salt Horse",
-    "familyId": "smoked_salt_horse",
-    "tier": 3,
-    "description": "A pewter platter of richly smoked salt meat with a thick, rising aroma.",
-    "icon": "/images/items/smoked_salt_horse_t3.png"
-  },
-  {
-    "id": "smoked_salt_horse_4",
-    "name": "Smoked First Mate's Salt Horse",
-    "familyId": "smoked_salt_horse",
-    "tier": 4,
-    "description": "A silver plate of aromatic smoked beef with bright spices and parsley.",
-    "icon": "/images/items/smoked_salt_horse_t4.png"
-  },
-  {
-    "id": "smoked_salt_horse_5",
-    "name": "Smoked Captain's Salt Horse",
-    "familyId": "smoked_salt_horse",
-    "tier": 5,
-    "description": "A gold plate of thin-sliced smoked beef under a sparkling glaze and fragrant smoke.",
-    "icon": "/images/items/smoked_salt_horse_t5.png"
-  },
-  {
-    "id": "smoked_salt_horse_6",
-    "name": "Smoked Admiral's Salt Horse",
-    "familyId": "smoked_salt_horse",
-    "tier": 6,
-    "description": "A star metal board of deep-purple smoked beef with glowing edges and magical vapor.",
-    "icon": "/images/items/smoked_salt_horse_t6.png"
+    "description": "A star metal case of deep-purple jerky that never spoils, its edges faintly glowing.",
+    "icon": "/images/items/jerky_t6.png"
   },
   {
     "id": "roast_haunch_1",
@@ -240,196 +192,100 @@
     "icon": "/images/items/bangers_t6.png"
   },
   {
-    "id": "squirrel_hoard_1",
-    "name": "Forager's Squirrel Hoard",
-    "familyId": "squirrel_hoard",
+    "id": "roasted_nuts_1",
+    "name": "Forager's Roasted Nuts",
+    "familyId": "roasted_nuts",
     "tier": 1,
-    "description": "A wicker basket of small breads, roots and roasted squirrel bits.",
-    "icon": "/images/items/squirrel_hoard_t1.png"
+    "description": "A cracked tin of smoke-roasted hazelnuts and acorns, hard and filling.",
+    "icon": "/images/items/roasted_nuts_t1.png"
   },
   {
-    "id": "squirrel_hoard_2",
-    "name": "Scavenger's Squirrel Hoard",
-    "familyId": "squirrel_hoard",
+    "id": "roasted_nuts_2",
+    "name": "Scavenger's Roasted Nuts",
+    "familyId": "roasted_nuts",
     "tier": 2,
-    "description": "A leaden dish containing nuts, dried berries and fire-roasted squirrel.",
-    "icon": "/images/items/squirrel_hoard_t2.png"
+    "description": "A wooden box of mixed wild nuts roasted dark over embers.",
+    "icon": "/images/items/roasted_nuts_t2.png"
   },
   {
-    "id": "squirrel_hoard_3",
-    "name": "Woodland Squirrel Hoard",
-    "familyId": "squirrel_hoard",
+    "id": "roasted_nuts_3",
+    "name": "Woodland Roasted Nuts",
+    "familyId": "roasted_nuts",
     "tier": 3,
-    "description": "A clay bowl of roasted squirrel with fresh greens and wild mushrooms.",
-    "icon": "/images/items/squirrel_hoard_t3.png"
+    "description": "A pewter tin of chestnuts and walnuts roasted with pine needles.",
+    "icon": "/images/items/roasted_nuts_t3.png"
   },
   {
-    "id": "squirrel_hoard_4",
-    "name": "Autumn's Squirrel Hoard",
-    "familyId": "squirrel_hoard",
+    "id": "roasted_nuts_4",
+    "name": "Autumn's Roasted Nuts",
+    "familyId": "roasted_nuts",
     "tier": 4,
-    "description": "A silver pan of acorn-studded squirrel over root vegetables and maple leaves.",
-    "icon": "/images/items/squirrel_hoard_t4.png"
+    "description": "A silver bowl of golden roasted nuts tossed in sweet smoke.",
+    "icon": "/images/items/roasted_nuts_t4.png"
   },
   {
-    "id": "squirrel_hoard_5",
-    "name": "Bountiful Squirrel Hoard",
-    "familyId": "squirrel_hoard",
+    "id": "roasted_nuts_5",
+    "name": "Bountiful Roasted Nuts",
+    "familyId": "roasted_nuts",
     "tier": 5,
-    "description": "A golden platter of honey-glazed squirrel with candied nuts and enchanted greens.",
-    "icon": "/images/items/squirrel_hoard_t5.png"
+    "description": "A gold basket of glazed roasted nuts that glimmer with enchantment.",
+    "icon": "/images/items/roasted_nuts_t5.png"
   },
   {
-    "id": "squirrel_hoard_6",
-    "name": "Ageless Squirrel Hoard",
-    "familyId": "squirrel_hoard",
+    "id": "roasted_nuts_6",
+    "name": "Ageless Roasted Nuts",
+    "familyId": "roasted_nuts",
     "tier": 6,
-    "description": "A star metal cornucopia of ethereal squirrel cuts, glowing herbs and shimmering autumn fruits.",
-    "icon": "/images/items/squirrel_hoard_t6.png"
+    "description": "A star metal chest of radiant roasted chestnuts that stay warm in a blue mist.",
+    "icon": "/images/items/roasted_nuts_t6.png"
   },
   {
-    "id": "smoked_squirrel_hoard_1",
-    "name": "Smoked Forager's Squirrel Hoard",
-    "familyId": "smoked_squirrel_hoard",
+    "id": "fig_cake_1",
+    "name": "Sunfaded Fig Cake",
+    "familyId": "fig_cake",
     "tier": 1,
-    "description": "A cracked tin dish of smoked squirrel, hard nuts and blackened leaves.",
-    "icon": "/images/items/smoked_squirrel_hoard_t1.png"
+    "description": "A dense cake of pressed figs and herbs, baked hard and wrapped in reed leaves.",
+    "icon": "/images/items/fig_cake_t1.png"
   },
   {
-    "id": "smoked_squirrel_hoard_2",
-    "name": "Smoked Scavenger's Squirrel Hoard",
-    "familyId": "smoked_squirrel_hoard",
+    "id": "fig_cake_2",
+    "name": "Windswept Fig Cake",
+    "familyId": "fig_cake",
     "tier": 2,
-    "description": "A charred wooden box of smoky meat strips and dried wild greens.",
-    "icon": "/images/items/smoked_squirrel_hoard_t2.png"
+    "description": "A wind-dried fig cake bound in reed, firm enough to carry for weeks.",
+    "icon": "/images/items/fig_cake_t2.png"
   },
   {
-    "id": "smoked_squirrel_hoard_3",
-    "name": "Smoked Woodland Squirrel Hoard",
-    "familyId": "smoked_squirrel_hoard",
+    "id": "fig_cake_3",
+    "name": "Shriveled Fig Cake",
+    "familyId": "fig_cake",
     "tier": 3,
-    "description": "A pewter tray of nicely smoked squirrel with root chips and pine needles.",
-    "icon": "/images/items/smoked_squirrel_hoard_t3.png"
+    "description": "A dark, chewy cake of shriveled figs pressed with thyme and baked twice.",
+    "icon": "/images/items/fig_cake_t3.png"
   },
   {
-    "id": "smoked_squirrel_hoard_4",
-    "name": "Smoked Autumn's Squirrel Hoard",
-    "familyId": "smoked_squirrel_hoard",
+    "id": "fig_cake_4",
+    "name": "Amber Fig Cake",
+    "familyId": "fig_cake",
     "tier": 4,
-    "description": "A silver platter of golden smoked squirrel with sweet smoke curling up.",
-    "icon": "/images/items/smoked_squirrel_hoard_t4.png"
+    "description": "A gleaming amber cake of pressed figs, sealed in a sweet herbal glaze.",
+    "icon": "/images/items/fig_cake_t4.png"
   },
   {
-    "id": "smoked_squirrel_hoard_5",
-    "name": "Smoked Bountiful Squirrel Hoard",
-    "familyId": "smoked_squirrel_hoard",
+    "id": "fig_cake_5",
+    "name": "Honey Fig Cake",
+    "familyId": "fig_cake",
     "tier": 5,
-    "description": "A gold basket of tender smoked squirrel and enchanted berries in wisps of glowing smoke.",
-    "icon": "/images/items/smoked_squirrel_hoard_t5.png"
+    "description": "A golden fig cake soaked in honey, giving off a warm magical glow.",
+    "icon": "/images/items/fig_cake_t5.png"
   },
   {
-    "id": "smoked_squirrel_hoard_6",
-    "name": "Smoked Ageless Squirrel Hoard",
-    "familyId": "smoked_squirrel_hoard",
+    "id": "fig_cake_6",
+    "name": "Ancient Fig Cake",
+    "familyId": "fig_cake",
     "tier": 6,
-    "description": "A star metal chest of radiant smoked squirrel and sparkling chestnuts in a blue mist.",
-    "icon": "/images/items/smoked_squirrel_hoard_t6.png"
-  },
-  {
-    "id": "wizened_figs_1",
-    "name": "Sunfaded Wizened Figs",
-    "familyId": "wizened_figs",
-    "tier": 1,
-    "description": "A faded clay bowl of wrinkled, sun-baked figs with a dusty surface.",
-    "icon": "/images/items/wizened_figs_t1.png"
-  },
-  {
-    "id": "wizened_figs_2",
-    "name": "Windswept Wizened Figs",
-    "familyId": "wizened_figs",
-    "tier": 2,
-    "description": "A woven reed tray of lean, wind-dried figs with pale skins.",
-    "icon": "/images/items/wizened_figs_t2.png"
-  },
-  {
-    "id": "wizened_figs_3",
-    "name": "Shriveled Wizened Figs",
-    "familyId": "wizened_figs",
-    "tier": 3,
-    "description": "A tin bucket of cracked, brittle, shriveled figs.",
-    "icon": "/images/items/wizened_figs_t3.png"
-  },
-  {
-    "id": "wizened_figs_4",
-    "name": "Amberfig Wizened Figs",
-    "familyId": "wizened_figs",
-    "tier": 4,
-    "description": "A polished silver dish of glistening amber figs drizzled with honey.",
-    "icon": "/images/items/wizened_figs_t4.png"
-  },
-  {
-    "id": "wizened_figs_5",
-    "name": "Honeyfig Wizened Figs",
-    "familyId": "wizened_figs",
-    "tier": 5,
-    "description": "A golden plate of plump honey-glazed figs dripping with glowing nectar.",
-    "icon": "/images/items/wizened_figs_t5.png"
-  },
-  {
-    "id": "wizened_figs_6",
-    "name": "Ancient Wizened Figs",
-    "familyId": "wizened_figs",
-    "tier": 6,
-    "description": "A star metal chalice of deep-purple figs with shimmering cracks and a golden mist.",
-    "icon": "/images/items/wizened_figs_t6.png"
-  },
-  {
-    "id": "smoked_wizened_figs_1",
-    "name": "Smoked Sunfaded Wizened Figs",
-    "familyId": "smoked_wizened_figs",
-    "tier": 1,
-    "description": "A blackened tin plate of smoky, sun-withered figs.",
-    "icon": "/images/items/smoked_wizened_figs_t1.png"
-  },
-  {
-    "id": "smoked_wizened_figs_2",
-    "name": "Smoked Windswept Wizened Figs",
-    "familyId": "smoked_wizened_figs",
-    "tier": 2,
-    "description": "A rough wooden tray of wind-dried smoked figs flecked with ash.",
-    "icon": "/images/items/smoked_wizened_figs_t2.png"
-  },
-  {
-    "id": "smoked_wizened_figs_3",
-    "name": "Smoked Shriveled Wizened Figs",
-    "familyId": "smoked_wizened_figs",
-    "tier": 3,
-    "description": "A pewter cup of shriveled, burnt-edged figs wrapped in dense smoke.",
-    "icon": "/images/items/smoked_wizened_figs_t3.png"
-  },
-  {
-    "id": "smoked_wizened_figs_4",
-    "name": "Smoked Amberfig Wizened Figs",
-    "familyId": "smoked_wizened_figs",
-    "tier": 4,
-    "description": "A silver tray of gleaming amber figs in a smoky glaze.",
-    "icon": "/images/items/smoked_wizened_figs_t4.png"
-  },
-  {
-    "id": "smoked_wizened_figs_5",
-    "name": "Smoked Honeyfig Wizened Figs",
-    "familyId": "smoked_wizened_figs",
-    "tier": 5,
-    "description": "A gold bowl of honey-coated smoked figs with a warm magical glow.",
-    "icon": "/images/items/smoked_wizened_figs_t5.png"
-  },
-  {
-    "id": "smoked_wizened_figs_6",
-    "name": "Smoked Ancient Wizened Figs",
-    "familyId": "smoked_wizened_figs",
-    "tier": 6,
-    "description": "A star metal dish of smoky black-purple figs trailing spectral golden tendrils.",
-    "icon": "/images/items/smoked_wizened_figs_t6.png"
+    "description": "A black-purple fig cake from a forgotten recipe, trailing faint golden tendrils.",
+    "icon": "/images/items/fig_cake_t6.png"
   },
   {
     "id": "iron_ration_1",

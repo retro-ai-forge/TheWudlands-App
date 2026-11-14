@@ -198,15 +198,16 @@ raw-material or tool family is proposed:
   of them should just be renamed/merged into the other instead of kept as
   a second option.
 
-## Profession categories need a real family fit, not a workaround
+## Professions need a real family fit, not a workaround
 
-If a profession category's starting-kit grant doesn't actually serve the
-professions in it (e.g. a cooking category granted a fuel material and a
-broth ingredient but nothing anyone would call food), that's the signal to
-add a proper resource family and swap it in - not keep reaching for
-whatever stand-in family happened to be available. Check
-`backend/data/profession-resource-families.json` against what each
-profession in a category actually needs.
+If a profession's raw families don't actually serve its trade (e.g. a
+cook granted a fuel material and a broth ingredient but nothing anyone
+would call food), that's the signal to add a proper resource family and
+swap it in - not keep reaching for whatever stand-in family happened to be
+available. Check `backend/data/profession-raw-families.json` against what
+each profession actually makes, and give every new blueprint an owner in
+`backend/data/profession-blueprints.json` (the backend refuses to load a
+blueprint without one).
 
 ## Naming collisions to watch for
 

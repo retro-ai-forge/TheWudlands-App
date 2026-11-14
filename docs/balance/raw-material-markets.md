@@ -223,21 +223,20 @@ Same for every tier: the output tier follows the ingredients, the amounts don't 
 | barding_iron | 38 | ore 20, skin 12, meat 4, fiber 2 |
 | saddlepack | 44 | skin 18, fiber 18, hide 8 |
 | barding_leather | 58 | skin 36, hide 12, monster_part 10 |
-| **Food** | | |
+| **Food** (fresh: free, eaten on collect; preserved and rations: blueprint - see backend/data/food-rules.json) | | |
 | cooked_fish | 2 | fish 2 |
-| salt_horse | 3 | meat 3 |
-| grilled_fish_skewer | 4 | fish 4 |
-| squirrel_hoard, wizened_figs | 4 | harvest 4 / harvest 3, herbs 1 |
-| smoked_fish | 7 | wood 5, fish 2 |
-| smoked_salt_horse | 8 | wood 5, meat 3 |
-| roast_haunch | 9 | meat 9 |
-| smoked_squirrel_hoard, smoked_wizened_figs | 9 | wood 5, harvest 4 / harvest 3, herbs 1 |
-| bangers | 12 | meat 6, herbs 5, monster_part 1 |
-| fish_chowder | 13 | harvest 6, herbs 5, fish 2 |
-| hearty_stew | 14 | harvest 6, herbs 5, meat 3 |
-| pickled_fish | 14 | sand 12, fish 2 |
-| fishermans_ration | 25 | fiber 10, fish 6, wood 5, harvest 3, herbs 1 |
-| iron_ration | 36 | wood 15, fiber 10, harvest 7, meat 3, herbs 1 |
+| grilled_fish_skewer | 3 | fish 2, wood 1 |
+| roast_haunch | 3 | meat 3 |
+| bangers | 5 | meat 3, herbs 2 |
+| fish_chowder | 5 | fish 2, harvest 2, herbs 1 |
+| hearty_stew | 6 | meat 3, harvest 2, herbs 1 |
+| smoked_fish | 10 | fish 5, wood 5 |
+| roasted_nuts | 15 | harvest 10, wood 5 |
+| fig_cake | 15 | harvest 8, reed 4, herbs 3 |
+| pickled_fish | 15 | sand 12, fish 2, herbs 1 |
+| jerky | 16 | meat 9, wood 5, herbs 2 |
+| fishermans_ration | 55 | fish 15, wood 15, fiber 10, harvest 8, reed 4, herbs 3 |
+| iron_ration | 56 | harvest 18, fiber 10, wood 10, meat 9, herbs 5, reed 4 |
 | **Potions** | | |
 | venom_vial | 33 | herbs 12, sand 12, venom 9 |
 | healing_potion | 42 | herbs 26, sand 12, harvest 4 |

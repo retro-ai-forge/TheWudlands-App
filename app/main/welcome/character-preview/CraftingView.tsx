@@ -11,6 +11,7 @@ import {
   formatResourceLabel,
   formatXpPreview,
   CRAFT_RESULT_FADE_MS,
+  healedText,
 } from "./VaultTab";
 import type { BlueprintTierInfo, ResourceTierInfo, RawPlayerData } from "./VaultTab";
 import { getResourceCatalog, getToolCatalog, getItemCatalog } from "./catalogCache";
@@ -34,7 +35,9 @@ type RecipeViewerWindow = Window & {
 /** A higher-tier material a craft would use in place of the selected tier. */
 type HigherTierUse = { id: string; name: string; tier: number; qty: number };
 
-export type CraftResult = { name: string; count: number };
+/** `eaten`: a fresh dish (backend/food.py) is eaten on collect, never
+ * stored - what it healed, e.g. "Might +1" (empty when nothing was lost). */
+export type CraftResult = { name: string; count: number; eaten?: string };
 
 /** Collects a craft as soon as its timer runs out, wherever the player is in
  * the character view (not only on the crafting page), and remembers what
@@ -74,9 +77,13 @@ export function useCraftAutoFinish(
         const data: RawPlayerData = await res.json();
         const active = character.crafting.activeCraft;
         if (active) {
+          const fresh = itemCatalogTierInfo[`${active.familyId}_${active.tier}`]?.foodKind === "fresh";
+          const meal = (data.characters as Array<{ id: string; meals?: { last?: { healed?: Record<string, number> } } }>)
+            .find((c) => c.id === character.id)?.meals?.last;
           setLastCraftResult({
             name: resolveOutputName(active.familyId, active.tier, resourceTierInfo, itemCatalogTierInfo),
             count: active.count,
+            ...(fresh ? { eaten: healedText(meal?.healed) } : {}),
           });
           if (fadeTimeoutRef.current) clearTimeout(fadeTimeoutRef.current);
           fadeTimeoutRef.current = setTimeout(() => setLastCraftResult(null), CRAFT_RESULT_FADE_MS);
@@ -215,18 +222,22 @@ export function CraftingView({
   useEffect(() => {
     const check = () => {
       const win = getRecipeViewerWindow();
+      // A fresh dish is eaten right away (backend/food.py) - one at a time.
+      const selection = win?.getCurrentSelection?.();
+      const fresh = !!selection && itemCatalogTierInfo[`${selection.familyId}_${selection.tier}`]?.foodKind === "fresh";
       const next: Record<number, boolean> = {};
       for (const count of CRAFT_COUNTS) {
-        next[count] = win?.isCurrentSelectionCraftable?.(count) ?? false;
+        next[count] = (!fresh || count === 1) && (win?.isCurrentSelectionCraftable?.(count) ?? false);
       }
       setCraftableCounts(next);
+      if (fresh && craftCount !== 1) setCraftCount(1);
       setCraftXpPreview(win?.getCurrentSelectionXp?.(craftCount) ?? null);
       setCraftDurationPreview(win?.getCurrentSelectionDuration?.(craftCount) ?? null);
     };
     check();
     const interval = setInterval(check, 500);
     return () => clearInterval(interval);
-  }, [stockBalances, ownedTools, knownBlueprints, craftCount]);
+  }, [stockBalances, ownedTools, knownBlueprints, craftCount, itemCatalogTierInfo]);
 
   useEffect(() => {
     if (!recipeViewerLoaded) return;
@@ -385,7 +396,9 @@ export function CraftingView({
                   <>
                     <div className={styles.craftOutputDivider} />
                     <p className={`${styles.craftOutputLine} ${styles.craftResultFading}`}>
-                      Finished: {lastCraftResult.count}x {lastCraftResult.name}
+                      {lastCraftResult.eaten !== undefined
+                        ? `Eaten: ${lastCraftResult.name} - ${lastCraftResult.eaten || "nothing to heal"}`
+                        : `Finished: ${lastCraftResult.count}x ${lastCraftResult.name}`}
                     </p>
                   </>
                 )}

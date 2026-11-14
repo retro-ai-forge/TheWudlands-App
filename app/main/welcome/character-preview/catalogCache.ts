@@ -96,6 +96,8 @@ export function getItemCatalog(): Promise<BlueprintTierInfo> {
           gatheringBonuses: string[];
           capacitySlots: number;
           carryCapacity: number;
+          foodKind?: string;
+          feeds?: string;
         }>) => {
           const map: BlueprintTierInfo = {};
           for (const item of data) {
@@ -115,6 +117,8 @@ export function getItemCatalog(): Promise<BlueprintTierInfo> {
               gatheringBonuses: item.gatheringBonuses,
               capacitySlots: item.capacitySlots,
               carryCapacity: item.carryCapacity,
+              foodKind: item.foodKind || undefined,
+              feeds: item.feeds || undefined,
             };
           }
           return map;

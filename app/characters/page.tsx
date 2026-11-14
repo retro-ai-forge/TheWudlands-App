@@ -4,12 +4,19 @@ import React, { useState, useEffect } from "react";
 import Image from "next/image";
 import styles from "./characters.module.css";
 import h from "@/app/styles/headings.module.css";
-import { GENDERS, racesByCategory, professionsByCategory, BODY_ATTRIBUTES, SOUL_ATTRIBUTES } from "@/app/lib/characterOptions";
+import { GENDERS, PROFESSIONS, racesByCategory, professionsByCategory, BODY_ATTRIBUTES, SOUL_ATTRIBUTES } from "@/app/lib/characterOptions";
 
 // GET /api/auth/blueprint-categories - lore/reference data, not player-specific:
-// every profession category's tool and item blueprint families (tiers 1-3).
+// every blueprint family, grouped by the category of the professions whose
+// trade it is (`owners`), tiers 1-6.
 type BlueprintCategoryItem = { id: string; name: string; tier: number };
-type BlueprintCategoryFamily = { familyId: string; name: string; kind: string; items: BlueprintCategoryItem[] };
+type BlueprintCategoryFamily = {
+  familyId: string;
+  name: string;
+  kind: string;
+  owners?: string[];
+  items: BlueprintCategoryItem[];
+};
 type BlueprintCategoryEntry = { category: string; families: BlueprintCategoryFamily[] };
 
 function getTierIndicator(tier: number): React.ReactNode {
@@ -363,9 +370,8 @@ export default function Characters() {
                       {entry.families.length === 0 ? (
                         <div className={styles.raceEntry}>
                           <p className={styles.raceDescription}>
-                            No blueprint family belongs to {entry.category} yet.
-                            {entry.category === "Rural" &&
-                              " This mostly reflects how many Rural items just don't need a blueprint at all — e.g. the fishing pole is craftable straight from raw wood and fiber, no unlock required."}
+                            No profession of {entry.category} makes blueprint items of its own - its professions pick
+                            from what they use.
                           </p>
                         </div>
                       ) : (
@@ -374,6 +380,12 @@ export default function Characters() {
                             <p className={styles.raceName}>
                               {getKindIcon(family.kind)} {family.name}{" "}
                               <span className={styles.blueprintKind}>{family.kind}</span>
+                              {family.owners && family.owners.length > 0 && (
+                                <span className={styles.blueprintKind}>
+                                  {" "}
+                                  · {family.owners.map((id) => PROFESSIONS.find((p) => p.id === id)?.name ?? id).join(", ")}
+                                </span>
+                              )}
                             </p>
                             <table className={styles.legendTable}>
                               <tbody>

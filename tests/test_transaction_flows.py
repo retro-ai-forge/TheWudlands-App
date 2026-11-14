@@ -109,7 +109,7 @@ async def test_a_failure_halfway_leaves_the_item_where_it_was(warm_pool, charact
 
 
 async def test_parallel_craft_starts_take_materials_and_tool_once(warm_pool, character_id):
-    # crowbar: anvil (an item at home) + 2 refined_ore. Six starts at once:
+    # crowbar (blueprint learned): anvil (an item at home) + 2 refined_ore. Six starts at once:
     # one craft, materials taken once, the anvil exactly once (borrowed).
     db = warm_pool
     anvil = _new_instance("anvil_1", "home")
@@ -117,6 +117,10 @@ async def test_parallel_craft_starts_take_materials_and_tool_once(warm_pool, cha
         {"address": ADDRESS, "characterId": character_id},
         {"$set": {"items": [anvil], "itemBalances": {"refined_ore_1": 10}}},
         upsert=True,
+    )
+    await db.character_blueprints.update_one(
+        {"address": ADDRESS, "characterId": character_id},
+        {"$set": {"blueprints": ["blueprint_crowbar_1"]}}, upsert=True,
     )
     results = await asyncio.gather(
         *(start_craft(ADDRESS, character_id, "crowbar", 1, count=1) for _ in range(6)),
@@ -183,6 +187,10 @@ async def test_parallel_collects_hand_out_the_craft_once(warm_pool, character_id
     await db.character_homes.update_one(
         {"address": ADDRESS, "characterId": character_id},
         {"$set": {"items": [anvil], "itemBalances": {"refined_ore_1": 2}}}, upsert=True,
+    )
+    await db.character_blueprints.update_one(
+        {"address": ADDRESS, "characterId": character_id},
+        {"$set": {"blueprints": ["blueprint_crowbar_1"]}}, upsert=True,
     )
     assert await start_craft(ADDRESS, character_id, "crowbar", 1, count=1) is not None
     await db.characters.update_one(

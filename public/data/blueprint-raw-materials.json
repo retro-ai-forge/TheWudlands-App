@@ -290,24 +290,8 @@
     "crystal",
     "wood"
   ],
-  "blueprint_hearty_stew": [
-    "bone",
-    "harvest",
-    "herbs",
-    "meat"
-  ],
-  "blueprint_bangers": [
-    "bone",
-    "herbs",
-    "meat",
-    "monster_part"
-  ],
   "blueprint_iron_ration": [
-    "bone",
-    "fiber",
-    "harvest",
-    "herbs",
-    "meat"
+    "fiber"
   ],
   "blueprint_merchants_scale": [
     "stone",
@@ -317,18 +301,8 @@
     "ore",
     "wood"
   ],
-  "blueprint_fish_chowder": [
-    "bone",
-    "fish",
-    "harvest",
-    "herbs"
-  ],
   "blueprint_fishermans_ration": [
-    "bone",
-    "fiber",
-    "fish",
-    "harvest",
-    "herbs"
+    "fiber"
   ],
   "blueprint_short_sword": [
     "ore",
@@ -365,5 +339,173 @@
     "hide",
     "monster_part",
     "skin"
+  ],
+  "blueprint_healing_potion": [
+    "crystal",
+    "harvest",
+    "herbs",
+    "sand"
+  ],
+  "blueprint_mana_potion": [
+    "crystal",
+    "essence",
+    "monster_part",
+    "sand"
+  ],
+  "blueprint_antidote_potion": [
+    "crystal",
+    "herbs",
+    "sand",
+    "venom"
+  ],
+  "blueprint_venom_vial": [
+    "crystal",
+    "herbs",
+    "sand",
+    "venom"
+  ],
+  "blueprint_starlight_catcher": [
+    "crystal",
+    "reed",
+    "sand"
+  ],
+  "blueprint_holy_symbol": [
+    "crystal",
+    "hide",
+    "skin"
+  ],
+  "blueprint_written_scroll": [
+    "skin"
+  ],
+  "blueprint_spyglass": [
+    "crystal",
+    "ore"
+  ],
+  "blueprint_hourglass": [
+    "crystal",
+    "sand"
+  ],
+  "blueprint_mirror": [
+    "crystal",
+    "ore",
+    "sand"
+  ],
+  "blueprint_glass_lantern": [
+    "bone",
+    "crystal",
+    "meat",
+    "ore",
+    "sand"
+  ],
+  "blueprint_lock_and_key": [
+    "ore"
+  ],
+  "blueprint_manacles": [
+    "ore"
+  ],
+  "blueprint_chain": [
+    "ore"
+  ],
+  "blueprint_crowbar": [
+    "ore"
+  ],
+  "blueprint_grappling_hook": [
+    "ore"
+  ],
+  "blueprint_signal_whistle": [
+    "bone",
+    "fiber",
+    "fish",
+    "harvest",
+    "meat",
+    "monster_part",
+    "reed"
+  ],
+  "blueprint_whetstone": [
+    "sand",
+    "stone"
+  ],
+  "blueprint_pickaxe": [
+    "monster_part",
+    "ore",
+    "wood"
+  ],
+  "blueprint_shovel": [
+    "monster_part",
+    "ore",
+    "wood"
+  ],
+  "blueprint_fishing_pole": [
+    "fiber",
+    "wood"
+  ],
+  "blueprint_net": [
+    "fiber",
+    "wood"
+  ],
+  "blueprint_monster_trap": [
+    "fiber",
+    "wood"
+  ],
+  "blueprint_hunters_charm": [
+    "bone",
+    "monster_part"
+  ],
+  "blueprint_cart": [
+    "wood"
+  ],
+  "blueprint_ladder": [
+    "fiber",
+    "wood"
+  ],
+  "blueprint_cloth_cloak": [
+    "fiber"
+  ],
+  "blueprint_quilted_cloak": [
+    "feather"
+  ],
+  "blueprint_fur_cloak": [
+    "hide"
+  ],
+  "blueprint_chalk": [
+    "pigment",
+    "stone"
+  ],
+  "blueprint_pickled_fish": [
+    "bone",
+    "crystal",
+    "fish",
+    "herbs",
+    "sand"
+  ],
+  "blueprint_leather_cloak": [
+    "bone",
+    "fiber",
+    "fish",
+    "harvest",
+    "hide",
+    "meat",
+    "monster_part",
+    "skin"
+  ],
+  "blueprint_jerky": [
+    "bone",
+    "herbs",
+    "meat",
+    "wood"
+  ],
+  "blueprint_roasted_nuts": [
+    "harvest",
+    "wood"
+  ],
+  "blueprint_fig_cake": [
+    "harvest",
+    "herbs",
+    "reed"
+  ],
+  "blueprint_smoked_fish": [
+    "bone",
+    "fish",
+    "wood"
   ]
 }

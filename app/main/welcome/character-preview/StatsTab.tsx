@@ -1,6 +1,6 @@
 import styles from "./CharacterTabs.module.css";
 import { getPortraitCropImgStyle } from "@/app/lib/portraitCrop";
-import { RACES, PROFESSIONS, BIRTHSIGNS, PROFESSION_RESOURCE_FAMILIES } from "@/app/lib/characterOptions";
+import { RACES, PROFESSIONS, BIRTHSIGNS, PROFESSION_RAW_FAMILIES } from "@/app/lib/characterOptions";
 import { getDisplayedAge } from "@/app/lib/ageScaling";
 import { Fragment, useEffect, useState } from "react";
 import { formatRemainingCompactLong, useCraftCountdown } from "../craftTimer";
@@ -57,8 +57,7 @@ function professionDescription(id: string): string {
 
 function professionResourceFamilies(id: string): string {
   if (!id || id === "none") return "";
-  const category = PROFESSIONS.find((p) => p.id === id)?.category;
-  const families = category ? PROFESSION_RESOURCE_FAMILIES[category] : undefined;
+  const families = PROFESSION_RAW_FAMILIES[id];
   if (!families) return "";
   return families
     .map((family) => family.split("_").map((w) => w.charAt(0).toUpperCase() + w.slice(1)).join(" "))

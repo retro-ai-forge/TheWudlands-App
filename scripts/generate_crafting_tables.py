@@ -30,7 +30,7 @@ sys.path.insert(0, str(ROOT))
 from backend import craft_catalog  # noqa: E402
 from backend.players import _RECIPES_BY_FAMILY  # noqa: E402
 from backend.professions_catalog import PROFESSION_CATEGORIES  # noqa: E402
-from backend.resources_catalog import PROFESSION_RESOURCE_FAMILIES  # noqa: E402
+from backend.resources_catalog import PROFESSION_RAW_FAMILIES  # noqa: E402
 
 DOC = ROOT / "docs" / "PLAYERS.md"
 
@@ -85,41 +85,15 @@ def blueprint_name(blueprint_family_id: str) -> str:
 # ── Tables ─────────────────────────────────────────────────────────────
 
 
-def categories_table() -> str:
-    professions_by_category: dict[str, list[str]] = {}
-    for profession, category in PROFESSION_CATEGORIES.items():
-        professions_by_category.setdefault(category, []).append(profession)
+def professions_table() -> str:
+    def names(families: tuple[str, ...]) -> str:
+        return ", ".join(sorted(f.removeprefix("blueprint_") for f in families)) or "-"
 
-    rows = []
-    for category, professions in professions_by_category.items():
-        options = craft_catalog.resolve_blueprint_trapping_options([sorted(professions)[0]])
-        offered = {b.family_id for pool in options.pools for b in pool.items}
-        own = {f for f, cats in craft_catalog.BLUEPRINT_CATEGORIES.items() if category in cats}
-        columns = []
-        for kind in ("tool", "item"):
-            families = sorted(f.removeprefix("blueprint_") for f in offered
-                              if craft_catalog.blueprint_source(f) == kind)
-            # The universal fallback stands in only when nothing of this kind
-            # comes from the category itself: no tool blueprint of its own and
-            # no base tool behind its items, or no item blueprint of its own.
-            if kind == "tool":
-                has_own = any(craft_catalog.blueprint_source(f) == "tool" or craft_catalog.ITEM_BLUEPRINT_TOOL_HINTS.get(f)
-                              for f in own)
-            else:
-                has_own = any(craft_catalog.blueprint_source(f) == "item" for f in own)
-            columns.append((families, bool(families) and not has_own))
-        rows.append((category, sorted(professions), PROFESSION_RESOURCE_FAMILIES.get(category, ()), *columns))
-
-    rows.sort(key=lambda r: (-(len(r[3][0]) + len(r[4][0])), r[0]))
-    lines = ["| Category | Professions | Resource Families | Tools | Tool Families | Items | Item Families |",
-             "|---|---|---|---:|---|---:|---|"]
-    for category, professions, resources, (tools, tools_fb), (items, items_fb) in rows:
-        def cell(names: list[str], fallback: bool) -> str:
-            text = ", ".join(names)
-            return f"*{text}*" if fallback and text else text
-        lines.append(f"| {category} | {', '.join(professions)} | {', '.join(resources)} | "
-                     f"{0 if tools_fb else len(tools)} | {cell(tools, tools_fb)} | "
-                     f"{0 if items_fb else len(items)} | {cell(items, items_fb)} |")
+    lines = ["| Category | Profession | Raw Materials | Own Blueprints | Also Offered |", "|---|---|---|---|---|"]
+    for category, profession in sorted((PROFESSION_CATEGORIES[p], p) for p in PROFESSION_RAW_FAMILIES):
+        lists = craft_catalog.PROFESSION_BLUEPRINTS[profession]
+        lines.append(f"| {category} | {profession} | {', '.join(PROFESSION_RAW_FAMILIES[profession])} | "
+                     f"{names(lists.own)} | {names(lists.offered)} |")
     return "\n".join(lines)
 
 
@@ -156,7 +130,7 @@ def no_blueprint_xp_table() -> str:
 
 
 TABLES = {
-    "categories": categories_table,
+    "professions": professions_table,
     "blueprint-xp": blueprint_xp_table,
     "no-blueprint-xp": no_blueprint_xp_table,
 }

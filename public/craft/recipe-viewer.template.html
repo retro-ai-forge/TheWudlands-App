@@ -572,7 +572,7 @@ if (inventory) {
 
 // Same shape as `inventory`, but for the player's shared inventory.itemBalances
 // - a consumed "final" ingredient (e.g. iron_ration consuming a whole
-// salt_horse) is checked against this instead of `inventory`, mirroring
+// jerky) is checked against this instead of `inventory`, mirroring
 // backend.players._resolve_ingredient_option's own resources-vs-itemBalances
 // bucket split. "?itemBalances=" - absent (null) same as `inventory`.
 function readItemBalancesFromQuery() {
@@ -1928,7 +1928,7 @@ window.addEventListener("message", (event) => {
   document.querySelector("#rawTotals thead th:last-child").textContent = inventory ? "owned/needed" : "";
   document.querySelector("#materialsTotals thead th:last-child").textContent = inventory ? "owned/needed" : "";
   // Only InventoryTab.tsx's own embed ever sends this (a "final"-category
-  // ingredient, e.g. iron_ration's salt_horse, lives here rather than in
+  // ingredient, e.g. iron_ration's jerky, lives here rather than in
   // `inventory`) - Soul Creation's Trappings step has never had a reason
   // to, so this simply stays null there, same as before itemBalances
   // existed on this message at all.

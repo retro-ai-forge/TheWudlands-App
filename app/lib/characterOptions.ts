@@ -106,28 +106,53 @@ export const professionsByCategory = PROFESSIONS.reduce((acc, profession) => {
   return acc;
 }, {} as Record<string, typeof PROFESSIONS>);
 
-// Mirror of backend/data/profession-resource-families.json - the 3 raw
-// resource families each profession category draws from for its Trappings
-// starter-material pool. The backend has no reason to expose this over an
-// endpoint just for a display caption, so it's kept in sync here by hand,
-// same "small reference table duplicated rather than fetched" convention
-// backend/professions_catalog.py already uses for PROFESSIONS itself.
-export const PROFESSION_RESOURCE_FAMILIES: Record<string, string[]> = {
-  Rural: ["hide", "meat", "harvest", "fish"],
-  CraftWeapon: ["ore", "wood", "sand"],
-  CraftArmor: ["ore", "wood", "sand"],
-  CraftTool: ["ore", "wood", "sand"],
-  CraftStone: ["clay", "stone", "crystal"],
-  CraftGarment: ["skin", "fiber", "herbs"],
-  CraftGlass: ["sand", "crystal", "ore"],
-  CraftFurniture: ["wood", "hide", "bone"],
-  CraftWood: ["wood", "hide", "bone"],
-  Aristocratic: ["reed", "feather", "skin"],
-  Trade: ["harvest", "stone", "monster_part"],
-  Food: ["meat", "harvest", "herbs"],
-  Military: ["ore", "fiber", "monster_part"],
-  Artists: ["feather", "fiber", "bone"],
-  Alchemy: ["herbs", "crystal", "monster_part"],
+// Mirror of backend/data/profession-raw-families.json - the 3 raw
+// resource families each profession works with: what its soul slot forages,
+// its crafting XP and its Trappings starter-material pool. The backend has
+// no reason to expose this over an endpoint just for a display caption, so
+// it's kept in sync here by hand (tests/test_profession_raw_families.py
+// checks it), same "small reference table duplicated rather than fetched"
+// convention backend/professions_catalog.py already uses for PROFESSIONS.
+export const PROFESSION_RAW_FAMILIES: Record<string, string[]> = {
+  farmer: ["harvest", "fiber", "herbs"],
+  herder: ["hide", "meat", "fiber"],
+  hunter: ["meat", "hide", "feather"],
+  fisher: ["fish", "reed", "fiber"],
+  miner: ["ore", "stone", "crystal"],
+  baker: ["harvest", "herbs", "wood"],
+  butcher: ["meat", "bone", "herbs"],
+  brewmaster: ["harvest", "herbs", "fish"],
+  cook: ["meat", "fish", "harvest"],
+  blacksmith: ["ore", "wood", "sand"],
+  armorer: ["ore", "wood", "sand"],
+  tinsmith: ["ore", "clockwork", "wood"],
+  mason: ["stone", "clay", "sand"],
+  stonemason: ["stone", "crystal", "clay"],
+  potter: ["clay", "sand", "stone"],
+  leatherworker: ["hide", "skin", "bone"],
+  tanner: ["hide", "skin", "monster_part"],
+  weaver: ["fiber", "feather", "reed"],
+  dyer: ["pigment", "herbs", "fiber"],
+  glassblower: ["sand", "crystal", "ore"],
+  jeweler: ["crystal", "ore", "sand"],
+  carpenter: ["wood", "fiber", "bone"],
+  cooper: ["wood", "bone", "pigment"],
+  alchemist: ["herbs", "essence", "crystal"],
+  poisoner: ["venom", "herbs", "monster_part"],
+  enchanter: ["essence", "crystal", "wood"],
+  scribe: ["reed", "skin", "feather"],
+  clerk: ["reed", "skin", "feather"],
+  scholar: ["crystal", "reed", "feather"],
+  merchant: ["wood", "harvest", "monster_part"],
+  trader: ["harvest", "stone", "monster_part"],
+  soldier: ["ore", "fiber", "monster_part"],
+  guard: ["ore", "hide", "monster_part"],
+  painter: ["pigment", "stone", "feather"],
+  acrobat: ["feather", "fiber", "bone"],
+  clown: ["feather", "fiber", "bone"],
+  firespitter: ["feather", "fiber", "bone"],
+  storyteller: ["feather", "fiber", "bone"],
+  actor: ["feather", "fiber", "bone"],
 };
 
 // Body and Soul share one reserve of points at creation - strengthening one

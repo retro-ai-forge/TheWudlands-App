@@ -416,6 +416,54 @@
         {"id": "alchemy_20", "familyId": "monster_part", "name": "Harpy Roost Cliffs", "place": "the harpy cliffs", "text": "Talons and pinions under the screaming cliffs."},
         {"id": "alchemy_21", "familyId": "monster_part", "name": "Toad King's Pond", "place": "the Toad King's pond", "text": "Venomous toad glands from the cursed pond."}
       ]
+    },
+    "pigment": {
+      "activity": "Ochre-Digging",
+      "missions": [
+        {"id": "pigment_01", "familyId": "pigment", "name": "Ochre Cliffs at Redbank", "place": "the ochre cliffs", "text": "Soft red earth that stains the hands for days."},
+        {"id": "pigment_02", "familyId": "pigment", "name": "Lapis Seam in the Old Quarry", "place": "the old quarry", "text": "A thin blue vein the masons never bothered with."},
+        {"id": "pigment_03", "familyId": "pigment", "name": "Umber Pits by the Tannery", "place": "the umber pits", "text": "Brown earth for shadows and leather stain."},
+        {"id": "pigment_04", "familyId": "pigment", "name": "Malachite Scree", "place": "the green scree", "text": "Green stones to crush into paint."},
+        {"id": "pigment_05", "familyId": "pigment", "name": "Oak-Gall Grove", "place": "the oak-gall grove", "text": "Galls for black ink and dark dye."},
+        {"id": "pigment_06", "familyId": "pigment", "name": "Dyer's Woad Patch", "place": "the woad patch", "text": "Leaves the dyers ferment into blue."},
+        {"id": "pigment_07", "familyId": "pigment", "name": "Madder Hedge Behind the Inn", "place": "the madder hedge", "text": "Roots that bleed red when cut."}
+      ]
+    },
+    "venom": {
+      "activity": "Venom-Milking",
+      "missions": [
+        {"id": "venom_01", "familyId": "venom", "name": "Adder Banks on the Heath", "place": "the heath", "text": "Warm stones where the adders sun themselves."},
+        {"id": "venom_02", "familyId": "venom", "name": "Black Widow Cellars", "place": "the old cellars", "text": "Every barrel hides a red-marked spider."},
+        {"id": "venom_03", "familyId": "venom", "name": "Scorpion Flats", "place": "the scorpion flats", "text": "Turn every stone, carefully."},
+        {"id": "venom_04", "familyId": "venom", "name": "Hornet Gully", "place": "the hornet gully", "text": "A nest the size of a cart, humming in the heat."},
+        {"id": "venom_05", "familyId": "venom", "name": "Wasp Tree in the Orchard", "place": "the orchard", "text": "A nest the farmer pays you to take."},
+        {"id": "venom_06", "familyId": "venom", "name": "Viper Ravine", "place": "the viper ravine", "text": "Narrow rocks and quick fangs."},
+        {"id": "venom_07", "familyId": "venom", "name": "Eel Shallows of the Black Fen", "place": "the black fen", "text": "Stinging eels in the dark water."}
+      ]
+    },
+    "essence": {
+      "activity": "Essence-Gathering",
+      "missions": [
+        {"id": "essence_01", "familyId": "essence", "name": "Ley-Line Spring", "place": "the ley-line spring", "text": "Water that hums when the moon is full."},
+        {"id": "essence_02", "familyId": "essence", "name": "Standing Stones at Dusk", "place": "the standing stones", "text": "The air between the stones glimmers after sunset."},
+        {"id": "essence_03", "familyId": "essence", "name": "Fallen Star Crater", "place": "the star crater", "text": "Scorched ground still warm with something old."},
+        {"id": "essence_04", "familyId": "essence", "name": "Moonwell Glade", "place": "the moonwell glade", "text": "Silver light pools in the hollow and can be bottled."},
+        {"id": "essence_05", "familyId": "essence", "name": "Shrine of the Forgotten Saint", "place": "the forgotten shrine", "text": "Prayer still clings to the stones."},
+        {"id": "essence_06", "familyId": "essence", "name": "Fey Ring in the Birchwood", "place": "the fey ring", "text": "Step in, take what drifts, step out quickly."},
+        {"id": "essence_07", "familyId": "essence", "name": "Battlefield Barrows", "place": "the old barrows", "text": "Where many fell, something lingers."}
+      ]
+    },
+    "clockwork": {
+      "activity": "Clockwork-Salvaging",
+      "missions": [
+        {"id": "clockwork_01", "familyId": "clockwork", "name": "Collapsed Clocktower", "place": "the collapsed clocktower", "text": "Gears scattered through the rubble."},
+        {"id": "clockwork_02", "familyId": "clockwork", "name": "Dwarven Workshop Ruins", "place": "the dwarven ruins", "text": "Rusted engines no one remembers how to start."},
+        {"id": "clockwork_03", "familyId": "clockwork", "name": "Abandoned Mill Wheelhouse", "place": "the old wheelhouse", "text": "Cogs and shafts, swollen but sound."},
+        {"id": "clockwork_04", "familyId": "clockwork", "name": "Tinker's Junkyard", "place": "the tinker's junkyard", "text": "Broken mechanisms sold by the barrow."},
+        {"id": "clockwork_05", "familyId": "clockwork", "name": "Wrecked Automaton Field", "place": "the automaton field", "text": "Fallen iron soldiers from a forgotten war."},
+        {"id": "clockwork_06", "familyId": "clockwork", "name": "Gnomish Vault Beneath the Hill", "place": "the gnomish vault", "text": "Locks within locks, and treasures of springs."},
+        {"id": "clockwork_07", "familyId": "clockwork", "name": "Sunken Orrery", "place": "the sunken orrery", "text": "A bronze sky machine, half-buried in moss."}
+      ]
     }
   }
 }

@@ -113,7 +113,7 @@ async def test_new_character_has_legend_and_old_ones_get_it_on_read(mongodb_uri)
         await _purge_player(db, TEST_ADDRESS)
 
 
-async def _setup_craft_character(db, item_balances=None) -> str:
+async def _setup_craft_character(db, item_balances=None, blueprints=()) -> str:
     """
     Fresh player + one character for the full-chain-auto-crafting tests
     below - seeds the character's home storage (character_homes.itemBalances, the
@@ -135,6 +135,12 @@ async def _setup_craft_character(db, item_balances=None) -> str:
         {"$set": {"items": items, "itemBalances": balances}},
         upsert=True,
     )
+    if blueprints:
+        await db.character_blueprints.update_one(
+            {"address": CRAFT_TEST_ADDRESS, "characterId": character_id},
+            {"$set": {"blueprints": list(blueprints)}},
+            upsert=True,
+        )
     return character_id
 
 
@@ -165,14 +171,15 @@ async def _force_craft_ready(db, character_id: str) -> None:
 
 @pytest.mark.asyncio
 async def test_craft_chain_auto_crafts_missing_intermediate_from_raw(mongodb_uri):
-    # crowbar (tool: anvil, no blueprint) <- 2x refined_ore (processed, no
+    # crowbar (tool: anvil, blueprint_crowbar learned) <- 2x refined_ore (processed, no
     # tool) <- 5x raw ore per refined_ore - a clean 2-level chain with no
     # processed material pre-owned, so the whole thing must be auto-crafted
     # from raw in one start_craft call.
     db = get_database()
     try:
         character_id = await _setup_craft_character(
-            db, item_balances={"ore_1": 100, "anvil_1": 1}
+            db, item_balances={"ore_1": 100, "anvil_1": 1},
+            blueprints=["blueprint_crowbar_1"],
         )
         result = await start_craft(CRAFT_TEST_ADDRESS, character_id, "crowbar", 1, count=1)
         assert result is not None
@@ -232,7 +239,8 @@ async def test_craft_chain_skips_already_owned_processed_material(mongodb_uri):
     db = get_database()
     try:
         character_id = await _setup_craft_character(
-            db, item_balances={"refined_ore_1": 5, "anvil_1": 1}
+            db, item_balances={"refined_ore_1": 5, "anvil_1": 1},
+            blueprints=["blueprint_crowbar_1"],
         )
         result = await start_craft(CRAFT_TEST_ADDRESS, character_id, "crowbar", 1, count=1)
         assert result is not None
@@ -284,7 +292,8 @@ async def test_craft_chain_multi_count_only_manufactures_the_shortfall(mongodb_u
     db = get_database()
     try:
         character_id = await _setup_craft_character(
-            db, item_balances={"refined_ore_1": 2, "ore_1": 100, "anvil_1": 1}
+            db, item_balances={"refined_ore_1": 2, "ore_1": 100, "anvil_1": 1},
+            blueprints=["blueprint_crowbar_1"],
         )
         result = await start_craft(CRAFT_TEST_ADDRESS, character_id, "crowbar", 1, count=3)
         assert result is not None
@@ -313,7 +322,7 @@ async def test_craft_takes_from_home_then_backpack_and_finishes_into_home(mongod
     # backpack, the anvil at home; the vault holds plenty but is never used.
     db = get_database()
     try:
-        character_id = await _setup_craft_character(db, item_balances={"refined_ore_1": 1, "anvil_1": 1})
+        character_id = await _setup_craft_character(db, item_balances={"refined_ore_1": 1, "anvil_1": 1}, blueprints=["blueprint_crowbar_1"])
         await db.characters.update_one(
             {"address": CRAFT_TEST_ADDRESS, "id": character_id},
             {"$set": {"gear.itemBalances.backpack": {"refined_ore_1": 1}}},

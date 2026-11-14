@@ -3516,6 +3516,14 @@
   color: #e6b85c;
 }
 
+/* ItemInfoCard: the popup card shown in place (Soul Creation's blueprint
+   preview) - grows with its content instead of scrolling inside the page. */
+.itemInfoCardInline {
+  margin: 0.75rem auto 0;
+  max-height: none;
+  overflow-y: visible;
+}
+
 .itemPopupGathering {
   margin: 0;
   font-size: 0.75rem;

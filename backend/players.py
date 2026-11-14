@@ -22,11 +22,10 @@ from typing import Dict, List, Optional
 
 from pymongo import ReturnDocument
 
-from backend import condition, foraging, item_condition, items_catalog, legend, recycling
+from backend import condition, food, foraging, item_condition, items_catalog, legend, recycling
 from backend.character import Character, vital_status_list
 from backend.db import find_one_and_update_checked, get_database, run_in_transaction
-from backend.resources_catalog import PROFESSION_RESOURCE_FAMILIES
-from backend.professions_catalog import PROFESSION_CATEGORIES
+from backend.resources_catalog import PROFESSION_RAW_FAMILIES
 
 _RECIPES_PATH = Path(__file__).resolve().parent / "data" / "craft-recipes.json"
 
@@ -1520,7 +1519,7 @@ def _resolve_ingredient_option(
     for something that would actually be consumed - `bucket` is
     "resources" for a raw/processed ingredient, or "itemBalances" for a
     consumed "final" ingredient (e.g. iron_ration consuming a whole
-    salt_horse) - a genuinely finished, needsItemDefinition:false item,
+    jerky) - a genuinely finished, needsItemDefinition:false item,
     checked/decremented against character_item_balances/
     player_item_balances instead of the resources dicts, mirroring the
     exact same "character vault first, shared vault for the shortfall"
@@ -1634,7 +1633,7 @@ def _resolve_recipe_ingredients(
     first, shared vault only for whatever's still short), split into the
     "resources" bucket (raw/processed ingredients) and the "itemBalances"
     bucket (a consumed "final" ingredient - e.g. iron_ration consuming a
-    whole salt_horse - see _resolve_ingredient_option's own `bucket` tag),
+    whole jerky - see _resolve_ingredient_option's own `bucket` tag),
     plus any instance-tracked tools an unconsumed "final" alternative
     resolved to a move (see `_resolve_tool_for_craft`'s `instance_move`
     tuples) - or None if there isn't enough even combined.
@@ -2040,9 +2039,10 @@ def _crafting_xp_increments(character: dict, family_id: str, count: int) -> Dict
     none; the raw materials it's ultimately built from already paid out
     when the processed intermediate was crafted as its own step. Each raw
     family used grants XP equal to the amount consumed to EVERY profession
-    slot (prof1/2/3) whose category lists that family - a single craft can
-    pay out to more than one profession slot at once if the recipe's raw
-    materials span more than one category. Returns {"exp1": ..., "exp2":
+    slot (prof1/2/3) whose profession works that family
+    (data/profession-raw-families.json) - a single craft can pay out to more
+    than one profession slot at once if the recipe's raw materials span more
+    than one profession. Returns {"exp1": ..., "exp2":
     ..., "exp3": ...} deltas to add, only for slots that actually gained
     something. Paid out at start_craft time (see there) - the separate
     final-item assembly bonus (_assembly_bonus_xp) pays out at finish_craft
@@ -2054,11 +2054,7 @@ def _crafting_xp_increments(character: dict, family_id: str, count: int) -> Dict
     profession = character.get("profession", {})
     increments: Dict[str, int] = {}
     for prof_key, exp_key in (("prof1", "exp1"), ("prof2", "exp2"), ("prof3", "exp3")):
-        profession_id = profession.get(prof_key)
-        category = PROFESSION_CATEGORIES.get(profession_id) if profession_id else None
-        if not category:
-            continue
-        families = PROFESSION_RESOURCE_FAMILIES.get(category, ())
+        families = PROFESSION_RAW_FAMILIES.get(profession.get(prof_key) or "", ())
         gained = sum(qty for fam, qty in raw_totals.items() if fam in families)
         if gained:
             increments[exp_key] = gained
@@ -2239,6 +2235,18 @@ async def _start_craft(
     active = character.get("crafting", {}).get("activeCraft")
     if active and datetime.fromisoformat(active["readyAt"]) > datetime.now(timezone.utc):
         raise CraftRefused("Already crafting.")
+
+    # A fresh dish is eaten the moment it's collected (backend.food): one at
+    # a time, and each dish once per character per day.
+    if food.is_fresh(family_id):
+        name = character.get("firstName") or "This character"
+        if count != 1:
+            raise CraftRefused("A fresh dish is eaten right away - cook one at a time.")
+        ready = food.next_fresh_meal(character, family_id)
+        if ready is not None:
+            raise CraftRefused(
+                f"{name} has had this dish already today - again from {ready:%Y-%m-%d %H:%M} UTC."
+            )
 
     # Crafting works from the character's active storage: home when free,
     # camp while resting on an adventure - not at all while on the road.
@@ -2832,8 +2840,15 @@ async def finish_craft(address: str, character_id: str) -> Optional[Player]:
     healing clock restarts (backend.condition). One transaction: every
     chain step, the output, returned tools and the healing restart land
     together, or nothing does."""
+    active = ((await get_database().characters.find_one(
+        {"address": address, "id": character_id}, {"crafting.activeCraft": 1}
+    ) or {}).get("crafting") or {}).get("activeCraft") or {}
     result = await _finish_craft(address, character_id)
     if result is not None:
+        # A fresh dish isn't stored (see _output_ops) - it's eaten right here.
+        if food.is_fresh(active.get("familyId")):
+            item_id = _validate_recipe(active["familyId"], active["tier"])[1]["id"]
+            await food.eat_fresh(address, character_id, active["familyId"], item_id)
         await condition.resume_healing(address, character_id)
     return result
 
@@ -2988,6 +3003,8 @@ async def _finish_craft(address: str, character_id: str) -> Optional[Player]:
         vault.itemBalances increments for all flat-count outputs."""
         vault_inc: Dict[str, int] = {}
         vault_push_items: list = []
+        if food.is_fresh(family_id):
+            return vault_inc, vault_push_items  # eaten on collect (finish_craft), never stored
         if family and family.needs_item_definition:
             vault_push_items = [
                 {

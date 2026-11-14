@@ -86,6 +86,26 @@
       "rich": ["{name} returned from {place} with a grisly, valuable haul.", "{name} found strange remains aplenty at {place}."],
       "thin": ["{name} searched {place}, but found only scraps of something long dead.", "{name} came back from {place} with almost nothing a buyer would want."],
       "depleted": ["{name} took the last strange remains from {place}.", "Whatever lived around {place} is long gone; {name} found the final scraps."]
+    },
+    "pigment": {
+      "rich": ["{name} came back from {place} with sacks of bright, rich color.", "{name} dug good pigment at {place} and brought plenty home."],
+      "thin": ["{name} searched {place}, but the color there was dull and muddy.", "{name} scraped at {place} and found only a few faded lumps."],
+      "depleted": ["{name} dug out the last bright seam at {place}.", "{Place} has given up its colors; {name} took the final handful."]
+    },
+    "venom": {
+      "rich": ["{name} came back from {place} with vials full of venom and every finger intact.", "{name} milked a good many fangs and stings at {place}."],
+      "thin": ["{name} hunted {place} for hours, but the creatures there were few and dry.", "{name} came back from {place} with barely a few drops."],
+      "depleted": ["{name} milked the last venomous thing at {place}.", "Nothing at {place} bites any more; {name} took the final drops."]
+    },
+    "essence": {
+      "rich": ["{name} returned from {place} with jars that glow faintly in the dark.", "{name} gathered strong, humming essence at {place}."],
+      "thin": ["{name} waited long at {place}, but the power there was faint.", "{name} came back from {place} with only a few weak wisps."],
+      "depleted": ["{name} gathered the last trace of power at {place}.", "{Place} has gone quiet; {name} caught the final glimmer."]
+    },
+    "clockwork": {
+      "rich": ["{name} came back from {place} with a clanking sack of sound gears and springs.", "{name} salvaged fine clockwork at {place}."],
+      "thin": ["{name} picked through {place}, but most parts were rusted solid.", "{name} came back from {place} with only a few bent cogs."],
+      "depleted": ["{name} pried the last working gear out of {place}.", "{Place} is stripped bare; {name} took the final springs."]
     }
   },
   "nights": {

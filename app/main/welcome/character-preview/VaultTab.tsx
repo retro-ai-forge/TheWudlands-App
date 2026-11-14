@@ -6,6 +6,7 @@ import type { ItemInstance } from "../types";
 export type { ItemInstance } from "../types";
 import { getResourceCatalog, getToolCatalog, getItemCatalog } from "./catalogCache";
 import burnHoursData from "../../../../backend/data/light-source-burn-hours.json";
+import { BODY_ATTRIBUTES, SOUL_ATTRIBUTES } from "@/app/lib/characterOptions";
 
 // Hours one unit of a light burns, by family and tier - the same file
 // foraging burns light by (backend.foraging). "lantern" is the glass
@@ -64,6 +65,10 @@ export type BlueprintTierInfo = Record<
     carryCapacity?: number;
     /** Per-tier creature size (Medium/Heavy/Huge/Colossal) for mounts, empty otherwise. */
     size?: string;
+    /** Food only (item-catalog): "ration" | "preserved" | "fresh" - see backend/food.py. */
+    foodKind?: string;
+    /** Food only (item-catalog): the group it heals, "body" | "soul" - empty for rations. */
+    feeds?: string;
   }
 >;
 export type ResourceTierInfo = Record<
@@ -2616,6 +2621,115 @@ export function ResourcePopup({
 }
 
 
+const ATTRIBUTE_NAMES: Record<string, string> = Object.fromEntries(
+  [...BODY_ATTRIBUTES, ...SOUL_ATTRIBUTES].map((a) => [a.id, a.name])
+);
+
+/** What a food is for (backend/food.py) - one line in the item popup. */
+function foodLine(kind: string, feeds?: string): string {
+  const group = feeds === "soul" ? "Soul" : "Body";
+  if (kind === "ration") return "Ration - provisions for an adventure, rarely used up";
+  if (kind === "preserved") return `Preserved - feeds the ${group}, eat any time; used up after an adventure`;
+  return `Fresh dish - feeds the ${group}, eaten when cooked (each dish once a day)`;
+}
+
+/** "Might +1, Will +1" from a meal's {attr: n}. */
+export function healedText(healed: Record<string, number> | undefined): string {
+  return Object.entries(healed ?? {})
+    .map(([key, n]) => `${ATTRIBUTE_NAMES[key] ?? key} +${n}`)
+    .join(", ");
+}
+
+/**
+ * The display part of an item popup - tier badge, image, name, description,
+ * what it helps gather, its slots and the size/AC meta row - without any of
+ * ItemDetailPopup's inventory actions. Shared by ItemDetailPopup and the Soul
+ * Creation blueprint preview so both show an item the same way. `meta`
+ * replaces the default AC (full, by tier) and light-burn spans after Size.
+ */
+export function ItemInfoBody({
+  info,
+  name,
+  heading,
+  iconOverride,
+  afterName,
+  description,
+  descriptionClassName,
+  meta,
+}: {
+  info: BlueprintTierInfo[string] | undefined;
+  /** Accessible name of the image. */
+  name: string;
+  /** The heading text - defaults to `name`. */
+  heading?: ReactNode;
+  iconOverride?: string;
+  /** Rendered between the heading and the description. */
+  afterName?: ReactNode;
+  /** Replaces info.description. */
+  description?: ReactNode;
+  descriptionClassName?: string;
+  meta?: ReactNode;
+}) {
+  const burn = burnLine(info?.familyId, info?.tier);
+  return (
+    <>
+      {!!info?.tier && <span className={styles.itemPopupTierBadge}>{getTierIndicator(info.tier)}</span>}
+      {/* background-image div, not a real <img> - see ItemGrid's tile
+          icon for why (mobile's native "save/share image" long-press
+          menu targets the <img> tag itself). */}
+      <ItemIcon icon={iconOverride ?? info?.icon} alt={name} className={styles.itemPopupImg} />
+      <h3 className={styles.itemPopupName}>{heading ?? name}</h3>
+      {afterName}
+      <p className={`${styles.itemPopupDescription} ${descriptionClassName ?? ""}`}>
+        {description ?? (info?.description || "")}
+      </p>
+      {!!info?.gatheringBonuses?.length && (
+        <p className={styles.itemPopupGathering}>
+          Helps gather: {info.gatheringBonuses.map(formatResourceLabel).join(", ")}
+        </p>
+      )}
+      {!!info?.equipSlots?.length && (
+        <p className={styles.itemPopupGathering}>
+          Slot{info.equipSlots[0].length > 1 ? "s" : ""}: {info.equipSlots.map((g) => g.join(" + ")).join(" / ")}
+        </p>
+      )}
+      {!!info?.foodKind && <p className={styles.itemPopupGathering}>{foodLine(info.foodKind, info.feeds)}</p>}
+      <div className={styles.itemPopupMeta}>
+        <span>Size: {info?.sizeClass ?? "tiny"}</span>
+        {meta ?? (
+          <>
+            {info?.armorClass != null && info.armorClass > 0 && <span>AC: {info.armorClass * (info.tier ?? 1)}</span>}
+            {burn && <span>{burn}</span>}
+          </>
+        )}
+      </div>
+    </>
+  );
+}
+
+
+/**
+ * An item shown in place rather than as an overlay - the same card, size and
+ * body (ItemInfoBody) as ItemDetailPopup, plus optional extra info lines
+ * under it. Used by Soul Creation to preview what a starting blueprint makes.
+ */
+export function ItemInfoCard({
+  extraLines,
+  ...body
+}: Parameters<typeof ItemInfoBody>[0] & { extraLines?: string[] }) {
+  return (
+    <div className={`${styles.itemPopupCard} ${styles.itemInfoCardInline}`}>
+      <ItemInfoBody {...body} />
+      {extraLines?.map((line) => (
+        <p key={line} className={styles.itemPopupGathering}>
+          {line}
+        </p>
+      ))}
+    </div>
+  );
+}
+
+
 export function ItemDetailPopup({
   info,
   fallbackName,
@@ -2764,6 +2878,33 @@ export function ItemDetailPopup({
     setFlashMessage(transferFailureMessage(detail));
     flashTimeoutRef.current = setTimeout(() => setFlashMessage(null), ITEM_POPUP_FLASH_MS);
     setPending(false);
+  };
+
+  // Preserved food in reach - the active storage's own rows (no instance
+  // location) or a bag's rows - can be eaten (POST .../eat, backend/food.py).
+  const eatLocation =
+    info?.foodKind === "preserved" && source === "character" && !isInstance
+      ? location === "backpack" || location === "saddlepack" || location === "cart"
+        ? location
+        : location === undefined
+          ? storageType
+          : null
+      : null;
+
+  const eat = async () => {
+    if (!eatLocation) return;
+    setPending(true);
+    setFlashMessage(null);
+    const result = await postJson(`/api/auth/me/characters/${characterId}/eat`, { itemId: moveId, location: eatLocation });
+    if (!result.ok) return fail(result.detail);
+    onPlayerDataUpdated?.(result.data);
+    setPending(false);
+    if (owned <= 1) return onClose();
+    const meal = (result.data?.characters as Array<{ id: string; meals?: { last?: { healed?: Record<string, number> } } }> | undefined)
+      ?.find((c) => c.id === characterId)?.meals?.last;
+    if (flashTimeoutRef.current) clearTimeout(flashTimeoutRef.current);
+    setFlashMessage(`Eaten - ${healedText(meal?.healed) || "nothing left to heal"}`);
+    flashTimeoutRef.current = setTimeout(() => setFlashMessage(null), ITEM_POPUP_FLASH_MS);
   };
 
   const finish = async (result: PostJsonResult) => {
@@ -3134,103 +3275,100 @@ export function ItemDetailPopup({
         className={`${styles.itemPopupCard} ${isContainer ? styles.backpackPopupCard : ""}`}
       >
           <>
-            {!!info?.tier && (
-              <span className={styles.itemPopupTierBadge}>
-                {getTierIndicator(info.tier)}
-              </span>
+            <ItemInfoBody
+              info={info}
+              name={name}
+              heading={isContainer ? containerTitle : displayName}
+              iconOverride={iconOverride}
+              afterName={
+                <>
+                  {isContainer && activePackedItems && (
+                    <PackedItemsRow
+                      {...activePackedItems}
+                      hasBackpackEquipped={hasBackpackEquipped}
+                      hasSaddlepackEquipped={hasSaddlepackEquipped}
+                      hasMountEquipped={hasMountEquipped}
+                      hasCompanionEquipped={hasCompanionEquipped}
+                      cartCapacity={cartCapacity}
+                      cartSlotsUsed={cartSlotsUsed}
+                      inAdventure={inAdventure}
+                      storageType={storageType}
+                      characterId={characterId}
+                      onPlayerDataUpdated={onPlayerDataUpdated}
+                      location={isCart ? "cart" : isSaddlepack ? "saddlepack" : "backpack"}
+                    />
+                  )}
+                </>
+              }
+              description={flashMessage ?? undefined}
+              descriptionClassName={flashMessage ? styles.itemPopupFlash : undefined}
+              meta={
+                <>
+                  {info?.armorClass != null && info.armorClass > 0 && (() => {
+                    const maxAC = info.armorClass * (info.tier ?? 1);
+                    const cond = isInstance ? conditionOf(quality) : null;
+                    if (cond === null) {
+                      return <span>AC: {maxAC}</span>;
+                    }
+                    const reduction = cond === "damaged" || cond === "broken" ? 0.5 : cond === "used" ? 0.2 : 0;
+                    const currentAC = Math.max(0, Math.floor(maxAC * (1 - reduction)));
+                    return <span>AC: {currentAC}/{maxAC}</span>;
+                  })()}
+                  {isInstance && conditionOf(quality) !== null && (
+                    isCreature ? (
+                      <span>Health: {HEALTH_LABEL[conditionOf(quality) as QualityState]}</span>
+                    ) : (
+                      <span>Condition: {CONDITION_LABEL[conditionOf(quality) as QualityState]}</span>
+                    )
+                  )}
+                  {!isInstance && !!ownedConditions?.length && (() => {
+                    const labels = isCreature ? HEALTH_LABEL : CONDITION_LABEL;
+                    const counts = new Map<QualityState, number>();
+                    for (const level of ownedConditions) {
+                      const state = conditionOf(level);
+                      if (state) counts.set(state, (counts.get(state) ?? 0) + 1);
+                    }
+                    const parts = (["new", "used", "damaged", "broken"] as QualityState[])
+                      .filter((state) => counts.has(state))
+                      .map((state) => (ownedConditions.length === 1 ? labels[state] : `${counts.get(state)} ${labels[state]}`));
+                    return parts.length ? <span>{isCreature ? "Health" : "Condition"}: {parts.join(", ")}</span> : null;
+                  })()}
+                  {(() => {
+                    const burn = burnLine(info?.familyId, info?.tier);
+                    return burn ? <span>{burn}</span> : null;
+                  })()}
+                  {info?.familyId === "backpack" && backpackSlotsUsed != null && backpackCapacity != null && (
+                    <span>Filled: {backpackSlotsUsed}/{backpackCapacity}</span>
+                  )}
+                  {info?.familyId === "saddlepack" && saddlepackSlotsUsed != null && saddlepackCapacity != null && (
+                    <span>Filled: {saddlepackSlotsUsed}/{saddlepackCapacity}</span>
+                  )}
+                  {info?.familyId === "cart" && cartSlotsUsed != null && cartCapacity != null && (
+                    <span>Filled: {cartSlotsUsed}/{cartCapacity}</span>
+                  )}
+                  {source !== "vault" && info?.kind === "mount" && info?.carryCapacity != null && info.carryCapacity > 0 && mountCarryWeightUsed != null && (
+                    <span>Carry: {mountCarryWeightUsed}/{info.carryCapacity}</span>
+                  )}
+                  {/* A container sitting in the shared vault holds nothing - its
+                      contents only ever live on the character who has it
+                      equipped (gear.itemBalances.<location>) - so
+                      it's always empty against its own tier capacity. */}
+                  {source === "vault" && (info?.familyId === "backpack" || info?.familyId === "saddlepack" || info?.familyId === "cart") && info.capacitySlots != null && (
+                    <span>Filled: 0/{info.capacitySlots}</span>
+                  )}
+                  {source === "vault" && info?.kind === "mount" && info?.carryCapacity != null && info.carryCapacity > 0 && (
+                    <span>Carry: 0/{info.carryCapacity}</span>
+                  )}
+                </>
+              }
+            />
+            {eatLocation && (
+              <div className={styles.itemPopupActions}>
+                <button type="button" className={styles.itemPopupActionButton} disabled={pending} onClick={eat}>
+                  Eat ({info?.feeds === "soul" ? "heals Soul" : "heals Body"})
+                </button>
+              </div>
             )}
-            {/* background-image div, not a real <img> - see ItemGrid's tile
-                icon for why (mobile's native "save/share image" long-press
-                menu targets the <img> tag itself). */}
-            <ItemIcon icon={iconOverride ?? info?.icon} alt={name} className={styles.itemPopupImg} />
-            <h3 className={styles.itemPopupName}>{isContainer ? containerTitle : displayName}</h3>
-            {isContainer && activePackedItems && (
-              <PackedItemsRow
-                {...activePackedItems}
-                hasBackpackEquipped={hasBackpackEquipped}
-                hasSaddlepackEquipped={hasSaddlepackEquipped}
-                hasMountEquipped={hasMountEquipped}
-                hasCompanionEquipped={hasCompanionEquipped}
-                cartCapacity={cartCapacity}
-                cartSlotsUsed={cartSlotsUsed}
-                inAdventure={inAdventure}
-                storageType={storageType}
-                characterId={characterId}
-                onPlayerDataUpdated={onPlayerDataUpdated}
-                location={isCart ? "cart" : isSaddlepack ? "saddlepack" : "backpack"}
-              />
-            )}
-            <p className={`${styles.itemPopupDescription} ${flashMessage ? styles.itemPopupFlash : ""}`}>
-              {flashMessage ?? (info?.description || "")}
-            </p>
-            {!!info?.gatheringBonuses?.length && (
-              <p className={styles.itemPopupGathering}>
-                Helps gather: {info.gatheringBonuses.map(formatResourceLabel).join(", ")}
-              </p>
-            )}
-            {!!info?.equipSlots?.length && (
-              <p className={styles.itemPopupGathering}>
-                Slot{info.equipSlots[0].length > 1 ? "s" : ""}: {info.equipSlots.map((g) => g.join(" + ")).join(" / ")}
-              </p>
-            )}
-            <div className={styles.itemPopupMeta}>
-              <span>Size: {info?.sizeClass ?? "tiny"}</span>
-              {info?.armorClass != null && info.armorClass > 0 && (() => {
-                const maxAC = info.armorClass * (info.tier ?? 1);
-                const cond = isInstance ? conditionOf(quality) : null;
-                if (cond === null) {
-                  return <span>AC: {maxAC}</span>;
-                }
-                const reduction = cond === "damaged" || cond === "broken" ? 0.5 : cond === "used" ? 0.2 : 0;
-                const currentAC = Math.max(0, Math.floor(maxAC * (1 - reduction)));
-                return <span>AC: {currentAC}/{maxAC}</span>;
-              })()}
-              {isInstance && conditionOf(quality) !== null && (
-                isCreature ? (
-                  <span>Health: {HEALTH_LABEL[conditionOf(quality) as QualityState]}</span>
-                ) : (
-                  <span>Condition: {CONDITION_LABEL[conditionOf(quality) as QualityState]}</span>
-                )
-              )}
-              {!isInstance && !!ownedConditions?.length && (() => {
-                const labels = isCreature ? HEALTH_LABEL : CONDITION_LABEL;
-                const counts = new Map<QualityState, number>();
-                for (const level of ownedConditions) {
-                  const state = conditionOf(level);
-                  if (state) counts.set(state, (counts.get(state) ?? 0) + 1);
-                }
-                const parts = (["new", "used", "damaged", "broken"] as QualityState[])
-                  .filter((state) => counts.has(state))
-                  .map((state) => (ownedConditions.length === 1 ? labels[state] : `${counts.get(state)} ${labels[state]}`));
-                return parts.length ? <span>{isCreature ? "Health" : "Condition"}: {parts.join(", ")}</span> : null;
-              })()}
-              {(() => {
-                const burn = burnLine(info?.familyId, info?.tier);
-                return burn ? <span>{burn}</span> : null;
-              })()}
-              {info?.familyId === "backpack" && backpackSlotsUsed != null && backpackCapacity != null && (
-                <span>Filled: {backpackSlotsUsed}/{backpackCapacity}</span>
-              )}
-              {info?.familyId === "saddlepack" && saddlepackSlotsUsed != null && saddlepackCapacity != null && (
-                <span>Filled: {saddlepackSlotsUsed}/{saddlepackCapacity}</span>
-              )}
-              {info?.familyId === "cart" && cartSlotsUsed != null && cartCapacity != null && (
-                <span>Filled: {cartSlotsUsed}/{cartCapacity}</span>
-              )}
-              {source !== "vault" && info?.kind === "mount" && info?.carryCapacity != null && info.carryCapacity > 0 && mountCarryWeightUsed != null && (
-                <span>Carry: {mountCarryWeightUsed}/{info.carryCapacity}</span>
-              )}
-              {/* A container sitting in the shared vault holds nothing - its
-                  contents only ever live on the character who has it
-                  equipped (gear.itemBalances.<location>) - so
-                  it's always empty against its own tier capacity. */}
-              {source === "vault" && (info?.familyId === "backpack" || info?.familyId === "saddlepack" || info?.familyId === "cart") && info.capacitySlots != null && (
-                <span>Filled: 0/{info.capacitySlots}</span>
-              )}
-              {source === "vault" && info?.kind === "mount" && info?.carryCapacity != null && info.carryCapacity > 0 && (
-                <span>Carry: 0/{info.carryCapacity}</span>
-              )}
-            </div>
             {movable && source === "vault" && duplicateContainer && (
               <p className={styles.itemPopupAwayNotice}>Already equipped</p>
             )}

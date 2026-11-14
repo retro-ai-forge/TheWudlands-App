@@ -69,7 +69,7 @@ from typing import List, Optional
 from pymongo import ReturnDocument
 from pymongo.errors import DuplicateKeyError
 
-from backend import condition, foraging
+from backend import condition, food, foraging
 from backend.character import vital_status_list
 from backend.db import find_one_and_update_checked, get_database
 from backend.twine_graph import LAST_RESORT_PASSAGE, build_story_graph, step_allowed
@@ -393,7 +393,22 @@ async def _release_character(
     character still pointing at this session - repeating it is a no-op. The
     camp (temporary adventure storage) is discarded once the character is
     out, as when an adventure is ended by hand.
+
+    Food (backend.food), only for a real ending (finished / run away - not a
+    failed start, a recovered orphan or a platform fault): every preserved
+    stack in the bags goes in that same write; a ration is used up afterwards
+    with its loss chance - both only on the release that actually happened.
+    Each member's provisions (ration / preserved / none) are written to the
+    adventure log.
     """
+    food_unset: dict = {}
+    ration_path: Optional[str] = None
+    provisions: Optional[str] = None
+    if outcome in ("finished", "run_away"):
+        before = await db.characters.find_one(
+            {"address": address, "id": character_id, "availability.adventure.sessionId": session_id}
+        )
+        food_unset, ration_path, provisions = food.adventure_end(before or {})
     update: dict = {"$set": {
         "availability.inAdventure": False,
         "availability.adventure": None,
@@ -406,6 +421,8 @@ async def _release_character(
             update["$addToSet"] = {"completedStories": story_id}
     elif outcome == "run_away":
         update["$inc"] = {"stats.adventureRunAway": 1}
+    if food_unset:
+        update["$unset"] = food_unset
 
     doc = await find_one_and_update_checked(
         db.characters,
@@ -421,6 +438,18 @@ async def _release_character(
             return
     await _sync_pc(db, address, character_id, doc)
     if released:
+        if ration_path:
+            used = await db.characters.update_one(
+                {"address": address, "id": character_id, ration_path: {"$gte": 1}}, {"$inc": {ration_path: -1}}
+            )
+            if used.modified_count:
+                await db.characters.update_one(
+                    {"address": address, "id": character_id, ration_path: {"$lte": 0}}, {"$unset": {ration_path: ""}}
+                )
+        if provisions is not None:
+            await db.adventure_log.update_one(
+                {"_id": session_id}, {"$set": {f"provisions.{character_id}": provisions}}
+            )
         await condition.resume_healing(address, character_id, db)  # back and free: clock restarts
     if not doc.get("availability", {}).get("inAdventure"):
         await db.character_camp.delete_one({"address": address, "characterId": character_id})
@@ -521,7 +550,7 @@ async def _finalize(db, session: dict) -> dict:
             "startedAt": session.get("startedAt"),
             "endedAt": session.get("endedAt"),
         }
-        await db.adventure_log.replace_one({"_id": session_id}, log, upsert=True)
+        await db.adventure_log.update_one({"_id": session_id}, {"$set": log}, upsert=True)
 
         # LastResort (a platform fault) doesn't use up the run; any real ending does.
         if session.get("outcome") == "aborted":

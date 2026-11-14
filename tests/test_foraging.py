@@ -15,14 +15,18 @@ import pytest
 from backend import condition, foraging, item_condition
 from backend.character import Character, ProfStats
 from backend.db import get_database
+from backend.professions_catalog import PROFESSION_CATEGORIES
 from backend.players import add_character, delete_character, get_single_character, set_in_adventure
 
 ADDRESS = "5TestForagingAddress"
 _COLLECTIONS = ("characters", "player_characters", "player_vaults", "character_homes",
                 "character_camp", "character_blueprints", "soul_slots")
-_FAMILIES = json.loads(
-    (Path(__file__).resolve().parent.parent / "backend" / "data" / "profession-resource-families.json").read_text()
-)
+_DATA = Path(__file__).resolve().parent.parent / "backend" / "data"
+# Every raw family some profession forages (data/profession-raw-families.json).
+_FORAGED = {
+    f for p, fams in json.loads((_DATA / "profession-raw-families.json").read_text()).items()
+    if not p.startswith("_") for f in fams
+}
 
 
 # ── Pure rules ──────────────────────────────────────────────────────────
@@ -80,9 +84,9 @@ def test_tiers_follow_profession_count(count, allowed):
 
 
 def test_every_group_has_a_headline_and_every_material_its_missions():
-    for group in _FAMILIES:
+    for group in set(PROFESSION_CATEGORIES.values()):
         assert foraging.GROUPS[group]["headline"]
-    for family in {f for fams in _FAMILIES.values() for f in fams}:
+    for family in _FORAGED:
         missions = [m for m in foraging.MISSIONS_BY_ID.values() if m.family_id == family]
         assert len(missions) >= 5, family
         assert len({m.activity for m in missions}) == 1 and missions[0].activity   # one name per material
@@ -110,8 +114,7 @@ def test_return_message_fits_material_place_and_activity():
 
 
 def test_every_forageable_family_has_sentences_and_every_mission_a_place():
-    families = {f for fams in _FAMILIES.values() for f in fams}
-    for family in families:
+    for family in _FORAGED:
         for outcome in ("rich", "thin", "depleted"):
             templates = foraging.MESSAGES_BY_FAMILY[family][outcome]
             assert len(templates) >= 2

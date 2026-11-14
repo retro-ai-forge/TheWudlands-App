@@ -12,7 +12,7 @@ families its own professions cover (the rest lie dormant).
 Pool size (data/foraging-rules.json):
     total = poolTotalBase x poolMultiplierByProfessionCount[n]   (1.0/1.2/1.5)
 split across the character's UNIQUE resource families (union of
-data/profession-resource-families.json over its profession categories), each
+data/profession-raw-families.json over its professions), each
 share randomly varied by +-poolVariation, the shares always summing to the
 exact total.
 
@@ -114,7 +114,7 @@ from pymongo import ReturnDocument
 from backend import condition, item_condition, items_catalog
 from backend.db import find_one_and_update_checked, get_database, transactional
 from backend.professions_catalog import PROFESSION_CATEGORIES
-from backend.resources_catalog import PROFESSION_RESOURCE_FAMILIES, RESOURCE_ITEMS, RESOURCE_ITEMS_BY_ID
+from backend.resources_catalog import RESOURCE_ITEMS, RESOURCE_ITEMS_BY_ID, raw_families_for
 
 _DATA = Path(__file__).resolve().parent / "data"
 RULES: dict = json.loads((_DATA / "foraging-rules.json").read_text())
@@ -315,13 +315,9 @@ def profession_groups(profession_ids: list[str]) -> list[str]:
 
 
 def profession_families(profession_ids: list[str]) -> list[str]:
-    """Unique resource families across these professions, in first-seen order."""
-    families: list[str] = []
-    for group in profession_groups(profession_ids):
-        for family in PROFESSION_RESOURCE_FAMILIES.get(group, ()):
-            if family not in families:
-                families.append(family)
-    return families
+    """Unique resource families across these professions, in first-seen order
+    (data/profession-raw-families.json)."""
+    return raw_families_for(profession_ids)
 
 
 def pool_total(profession_count: int) -> int:

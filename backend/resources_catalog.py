@@ -16,7 +16,7 @@ from pathlib import Path
 from backend.professions_catalog import PROFESSION_CATEGORIES
 
 _CATALOG_PATH = Path(__file__).resolve().parent / "data" / "base-resources.json"
-_PROFESSION_FAMILIES_PATH = Path(__file__).resolve().parent / "data" / "profession-resource-families.json"
+_PROFESSION_RAW_FAMILIES_PATH = Path(__file__).resolve().parent / "data" / "profession-raw-families.json"
 _SELECTION_RULES_PATH = Path(__file__).resolve().parent / "data" / "resource-selection-rules.json"
 
 # How many units of a raw resource share one backpack/carry slot (see
@@ -52,9 +52,13 @@ def _load_catalog() -> tuple[ResourceItem, ...]:
     )
 
 
-def _load_profession_families() -> dict[str, tuple[str, ...]]:
-    data = json.loads(_PROFESSION_FAMILIES_PATH.read_text())
-    return {category: tuple(family_ids) for category, family_ids in data.items()}
+def _load_profession_raw_families(resource_family_ids: set[str]) -> dict[str, tuple[str, ...]]:
+    data = {k: v for k, v in json.loads(_PROFESSION_RAW_FAMILIES_PATH.read_text()).items() if not k.startswith("_")}
+    missing = set(PROFESSION_CATEGORIES) - set(data)
+    unknown = {f for families in data.values() for f in families} - resource_family_ids
+    if missing or unknown:
+        raise ValueError(f"profession-raw-families.json: missing professions {missing}, unknown families {unknown}")
+    return {profession_id: tuple(families) for profession_id, families in data.items()}
 
 
 def _load_selection_rules() -> dict[int, dict[int, int]]:
@@ -68,16 +72,29 @@ def _load_selection_rules() -> dict[int, dict[int, int]]:
 RESOURCE_ITEMS: tuple[ResourceItem, ...] = _load_catalog()
 RESOURCE_ITEMS_BY_ID: dict[str, ResourceItem] = {item.id: item for item in RESOURCE_ITEMS}
 
-# Resource families (3 per category) available to a character through each of
-# their professions, keyed by profession category - e.g. "Rural", "CraftWood".
-PROFESSION_RESOURCE_FAMILIES: dict[str, tuple[str, ...]] = _load_profession_families()
+# The 3 raw families each profession works with, keyed by profession id -
+# foraging, crafting XP, the salvage bonus and the starter kit all read this.
+PROFESSION_RAW_FAMILIES: dict[str, tuple[str, ...]] = _load_profession_raw_families(
+    {item.family_id for item in RESOURCE_ITEMS}
+)
+
+
+def raw_families_for(profession_ids: list[str]) -> list[str]:
+    """Unique raw families across these professions, in first-seen order.
+    Blank, "none" and unknown ids add nothing."""
+    families: list[str] = []
+    for profession_id in profession_ids:
+        for family in PROFESSION_RAW_FAMILIES.get(profession_id or "", ()):
+            if family not in families:
+                families.append(family)
+    return families
 
 # Starting-resource selection rules for the soul-creation "Trappings" step:
 # the number of professions a character has determines which resource tiers
 # they may pick from, and a total unit pool per tier that they freely
 # allocate across the eligible familyIds of that tier (e.g. with 1
 # profession: a 15-unit Tier 1 pool spendable across that profession's 3
-# familyIds however the player likes).
+# raw families (PROFESSION_RAW_FAMILIES) however the player likes).
 RESOURCE_POOLS_BY_PROFESSION_COUNT: dict[int, dict[int, int]] = _load_selection_rules()
 
 
@@ -110,7 +127,6 @@ def resolve_trapping_options(profession_ids: list[str]) -> TrappingsOptions:
     if not tier_pools:
         return TrappingsOptions(tier_pools={}, items=())
 
-    categories = {PROFESSION_CATEGORIES[p] for p in chosen}
-    family_ids = {family_id for category in categories for family_id in PROFESSION_RESOURCE_FAMILIES[category]}
+    family_ids = set(raw_families_for(chosen))
     items = tuple(item for item in RESOURCE_ITEMS if item.family_id in family_ids and item.tier in tier_pools)
     return TrappingsOptions(tier_pools=tier_pools, items=items)

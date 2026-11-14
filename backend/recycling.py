@@ -5,9 +5,8 @@ recipe outright.
 
 Yield formula (per raw material family, capped at 91% until a future magic
 bonus can push past that): 25% base + the character's profession level
-(1-30) in whichever profession category that raw family belongs to (see
-professions_catalog.PROFESSION_CATEGORIES / resources_catalog.
-PROFESSION_RESOURCE_FAMILIES) as a flat percent, 0 with no matching
+(1-30) in whichever profession works that raw family (see
+resources_catalog.PROFESSION_RAW_FAMILIES) as a flat percent, 0 with no matching
 profession + a station-tool bonus (0/5/10/15/20/25/30% for
 none/T1/.../T6) from the single BEST-tier crafting-station tool the
 character has access to - every station works for every raw material
@@ -38,8 +37,7 @@ from pathlib import Path
 from typing import Dict, List, Optional
 
 from backend import item_condition, items_catalog
-from backend.professions_catalog import PROFESSION_CATEGORIES
-from backend.resources_catalog import PROFESSION_RESOURCE_FAMILIES
+from backend.resources_catalog import PROFESSION_RAW_FAMILIES
 
 _DATA_DIR = Path(__file__).resolve().parent / "data"
 _RECIPES_PATH = _DATA_DIR / "craft-recipes.json"
@@ -164,20 +162,15 @@ def _equipped_charm_tier(character: dict) -> int:
 
 def _profession_skill_percent(character: dict, raw_family_id: str) -> int:
     """
-    Highest level (1-30) among the character's own professions whose
-    category lists `raw_family_id` (resources_catalog.
-    PROFESSION_RESOURCE_FAMILIES) - the same category match _crafting_xp_
-    increments uses to decide which profession slot(s) a raw material grants
-    XP to. 0 if no profession slot matches.
+    Highest level (1-30) among the character's own professions that work
+    `raw_family_id` (resources_catalog.PROFESSION_RAW_FAMILIES) - the same
+    match _crafting_xp_increments uses to decide which profession slot(s) a
+    raw material grants XP to. 0 if no profession slot matches.
     """
     profession = character.get("profession", {})
     best = 0
     for n in (1, 2, 3):
-        profession_id = profession.get(f"prof{n}")
-        category = PROFESSION_CATEGORIES.get(profession_id) if profession_id else None
-        if not category:
-            continue
-        if raw_family_id in PROFESSION_RESOURCE_FAMILIES.get(category, ()):
+        if raw_family_id in PROFESSION_RAW_FAMILIES.get(profession.get(f"prof{n}") or "", ()):
             best = max(best, profession.get(f"lvl{n}") or 0)
     return best
 

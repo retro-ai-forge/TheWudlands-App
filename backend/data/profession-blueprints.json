@@ -1,0 +1,159 @@
+{
+  "_comment": "Starting blueprints per profession for Soul Creation: `own` are the blueprints of the profession's trade (it makes them), `offered` what it may also pick because it uses them. A new character picks one from the union of its professions' lists, at the tier of its profession count (resource-selection-rules.json blueprintPick). Family ids without the blueprint_ prefix. Every blueprint is owned by at least one profession.",
+  "farmer": {
+    "own": ["smokehouse", "spinning_wheel", "oven", "sickle", "shovel"],
+    "offered": ["ladder", "roasted_nuts"]
+  },
+  "herder": {
+    "own": ["spinning_wheel", "tanning_rack", "bridle", "saddle", "signal_whistle"],
+    "offered": ["cart", "fur_cloak", "leather_cloak", "barding_leather"]
+  },
+  "hunter": {
+    "own": ["tanning_rack", "smokehouse", "bow", "quiver", "spear", "monster_trap", "hunters_charm"],
+    "offered": ["spyglass", "net", "whetstone", "fur_cloak", "leather_cloak", "leather_head_armor", "leather_chest_armor", "leather_leg_armor", "jerky"]
+  },
+  "fisher": {
+    "own": ["smokehouse", "fishermans_ration", "fishing_pole", "net", "smoked_fish"],
+    "offered": ["spear", "pickled_fish"]
+  },
+  "miner": {
+    "own": ["kiln", "furnace", "grinding_stone", "pickaxe"],
+    "offered": ["warhammer", "glass_lantern", "crowbar", "shovel"]
+  },
+  "blacksmith": {
+    "own": ["anvil", "sword", "short_sword", "greatsword", "dagger", "axe", "battle_axe", "mace", "warhammer", "spear", "sickle", "whetstone"],
+    "offered": []
+  },
+  "armorer": {
+    "own": ["anvil", "iron_head_armor", "iron_chest_armor", "iron_leg_armor", "chainmail_head_armor", "chainmail_chest_armor", "chainmail_leg_armor", "darksteel_head_armor", "darksteel_chest_armor", "darksteel_leg_armor", "iron_shield", "darksteel_shield"],
+    "offered": ["reinforced_wooden_shield"]
+  },
+  "tinsmith": {
+    "own": ["wrench", "merchants_scale", "crossbow", "barding_iron", "quiver", "lock_and_key", "manacles", "chain", "crowbar", "grappling_hook"],
+    "offered": ["darksteel_head_armor", "darksteel_chest_armor", "darksteel_leg_armor", "darksteel_shield"]
+  },
+  "mason": {
+    "own": ["kiln", "furnace", "oven", "grinding_stone"],
+    "offered": ["pickaxe"]
+  },
+  "stonemason": {
+    "own": ["grinding_stone", "lapidary_bench", "mortar_and_pestle", "furnace"],
+    "offered": ["pickaxe"]
+  },
+  "potter": {
+    "own": ["kiln", "mortar_and_pestle", "alchemy_stand"],
+    "offered": ["shovel"]
+  },
+  "leatherworker": {
+    "own": ["workbench", "leather_head_armor", "leather_chest_armor", "leather_leg_armor", "saddle", "saddlepack", "bolt_girdle", "leather_cloak"],
+    "offered": []
+  },
+  "tanner": {
+    "own": ["tanning_rack", "barding_leather", "chitin_head_armor", "chitin_chest_armor", "chitin_leg_armor", "chitin_shield", "fur_cloak"],
+    "offered": []
+  },
+  "weaver": {
+    "own": ["spinning_wheel", "loom", "cloth_head_armor", "cloth_chest_armor", "cloth_leg_armor", "bridle", "cloth_cloak", "quilted_cloak"],
+    "offered": []
+  },
+  "dyer": {
+    "own": ["mortar_and_pestle"],
+    "offered": ["ebony_head_armor", "ebony_chest_armor", "ebony_leg_armor", "ebony_shield", "chitin_shield", "cloth_cloak", "quilted_cloak"]
+  },
+  "glassblower": {
+    "own": ["kiln", "furnace", "alchemy_stand", "lapidary_bench", "hourglass", "mirror", "glass_lantern"],
+    "offered": []
+  },
+  "jeweler": {
+    "own": ["lapidary_bench", "grinding_stone", "holy_symbol", "mirror", "wand", "magic_staff"],
+    "offered": ["meteoric_iron_head_armor", "meteoric_iron_chest_armor", "meteoric_iron_leg_armor", "meteoric_iron_shield"]
+  },
+  "carpenter": {
+    "own": ["workbench", "spinning_wheel", "loom", "tanning_rack", "oven", "scriptorium", "enchanters_table", "ladder"],
+    "offered": ["cart"]
+  },
+  "cooper": {
+    "own": ["workbench", "wooden_shield", "reinforced_wooden_shield", "ebony_head_armor", "ebony_chest_armor", "ebony_leg_armor", "ebony_shield", "bow", "crossbow", "quiver", "bolt_girdle"],
+    "offered": []
+  },
+  "scribe": {
+    "own": ["scriptorium", "written_scroll"],
+    "offered": ["workbench", "wand"]
+  },
+  "clerk": {
+    "own": [],
+    "offered": ["merchants_scale", "scriptorium", "lock_and_key", "hourglass", "bridle"]
+  },
+  "scholar": {
+    "own": ["spyglass"],
+    "offered": ["scriptorium", "enchanters_table", "wand", "magic_staff", "starlight_catcher", "holy_symbol", "written_scroll", "hourglass", "chalk"]
+  },
+  "merchant": {
+    "own": ["cart"],
+    "offered": ["merchants_scale", "saddle", "saddlepack", "bridle", "barding_leather", "leather_cloak"]
+  },
+  "trader": {
+    "own": ["cart"],
+    "offered": ["merchants_scale", "saddlepack", "bridle", "smokehouse", "iron_ration", "leather_cloak", "jerky", "roasted_nuts", "fig_cake", "smoked_fish", "pickled_fish"]
+  },
+  "baker": {
+    "own": ["oven", "fig_cake", "iron_ration", "fishermans_ration"],
+    "offered": ["mortar_and_pestle"]
+  },
+  "butcher": {
+    "own": ["smokehouse", "jerky"],
+    "offered": ["whetstone"]
+  },
+  "brewmaster": {
+    "own": ["mortar_and_pestle", "oven", "pickled_fish"],
+    "offered": ["alchemy_stand"]
+  },
+  "cook": {
+    "own": ["oven", "roasted_nuts"],
+    "offered": ["iron_ration", "fig_cake", "smoked_fish", "pickled_fish"]
+  },
+  "soldier": {
+    "own": [],
+    "offered": ["sword", "short_sword", "spear", "cloth_head_armor", "cloth_chest_armor", "cloth_leg_armor", "iron_head_armor", "iron_chest_armor", "iron_leg_armor", "iron_shield", "iron_ration", "barding_iron", "spyglass", "grappling_hook", "signal_whistle"]
+  },
+  "guard": {
+    "own": [],
+    "offered": ["spear", "mace", "crossbow", "chainmail_head_armor", "chainmail_chest_armor", "chainmail_leg_armor", "wooden_shield", "reinforced_wooden_shield", "lock_and_key", "manacles", "chain", "signal_whistle"]
+  },
+  "painter": {
+    "own": ["chalk"],
+    "offered": ["mortar_and_pestle", "lapidary_bench", "workbench"]
+  },
+  "acrobat": {
+    "own": [],
+    "offered": ["cloth_head_armor", "cloth_chest_armor", "cloth_leg_armor", "cloth_cloak", "quilted_cloak", "bridle", "saddlepack"]
+  },
+  "clown": {
+    "own": [],
+    "offered": ["cloth_head_armor", "cloth_chest_armor", "cloth_leg_armor", "cloth_cloak", "quilted_cloak", "bolt_girdle", "saddlepack", "signal_whistle"]
+  },
+  "firespitter": {
+    "own": [],
+    "offered": ["wand", "alchemy_stand", "cloth_head_armor", "cloth_chest_armor", "cloth_leg_armor", "cloth_cloak", "quilted_cloak"]
+  },
+  "storyteller": {
+    "own": [],
+    "offered": ["scriptorium", "wand", "bridle", "saddlepack", "written_scroll", "cloth_cloak", "quilted_cloak"]
+  },
+  "actor": {
+    "own": [],
+    "offered": ["cloth_head_armor", "cloth_chest_armor", "cloth_leg_armor", "cloth_cloak", "quilted_cloak", "dagger", "saddlepack", "mirror"]
+  },
+  "alchemist": {
+    "own": ["alchemy_stand", "mortar_and_pestle", "healing_potion", "mana_potion", "antidote_potion", "meteoric_iron_head_armor", "meteoric_iron_chest_armor", "meteoric_iron_leg_armor", "meteoric_iron_shield"],
+    "offered": []
+  },
+  "poisoner": {
+    "own": ["alchemy_stand", "mortar_and_pestle", "venom_vial", "antidote_potion"],
+    "offered": ["chitin_head_armor", "chitin_chest_armor", "chitin_leg_armor", "dagger"]
+  },
+  "enchanter": {
+    "own": ["enchanters_table", "lapidary_bench", "wand", "magic_staff", "starlight_catcher"],
+    "offered": ["mana_potion", "holy_symbol", "meteoric_iron_head_armor", "meteoric_iron_chest_armor", "meteoric_iron_leg_armor", "meteoric_iron_shield"]
+  }
+}

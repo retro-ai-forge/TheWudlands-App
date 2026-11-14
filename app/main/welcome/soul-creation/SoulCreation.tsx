@@ -24,6 +24,8 @@ import {
 import SoulBulb from "./SoulBulb";
 import { useHeaderVisibility } from "@/app/main/HeaderVisibilityProvider";
 import { PortraitEditor, type PortraitArea } from "../PortraitEditor";
+import { ItemInfoCard, formatResourceLabel, type BlueprintTierInfo } from "../character-preview/VaultTab";
+import { getItemCatalog } from "../character-preview/catalogCache";
 
 // Self-hosted rather than pulled from Google Fonts at build time: next/font/google
 // downloads the file during `next build`, so a momentary network blip failed the
@@ -61,8 +63,12 @@ type TrappingsItem = {
   tier: number;
   icon?: string;
   description?: string;
-  /** Blueprints only: "tool" or "item" - groups the starting picks' list. */
+  /** Blueprints only: "tool" or "item" - what it unlocks. */
   kind?: string;
+  /** Blueprints only: one of the chosen professions makes it (its trade) rather than only using it. */
+  own?: boolean;
+  /** Blueprints only: the station(s) its item is crafted at (any one of them) - empty when it needs none. */
+  station?: string[];
 };
 
 // One blueprintPoolsByProfessionCount rule (see resource-selection-rules.json),
@@ -89,6 +95,7 @@ function getTierIndicator(tier: number): React.ReactNode {
 }
 
 const BLUEPRINT_SOURCE_LABELS: Record<string, string> = {
+  profession: "Starting Blueprint",
   any: "Blueprints",
   tool: "Tool Blueprint",
   item: "Item Blueprint",
@@ -214,6 +221,12 @@ export function SoulCreation({
   const [starterKit, setStarterKit] = useState<Record<string, number> | null>(null);
   const [starterKitPopupItem, setStarterKitPopupItem] = useState<TrappingsItem | null>(null);
   const [shufflesRemaining, setShufflesRemaining] = useState(3);
+
+  // Item catalog for the starting blueprint's preview card (what it makes).
+  const [itemCatalog, setItemCatalog] = useState<BlueprintTierInfo>({});
+  useEffect(() => {
+    getItemCatalog().then(setItemCatalog);
+  }, []);
 
   // Load blueprint materials mapping once on mount
   useEffect(() => {
@@ -1387,7 +1400,7 @@ export function SoulCreation({
                           const taken = pickedElsewhere(slotKey);
                           const value = blueprintSelections[slotKey] ?? "";
                           return (
-                            <div key={slotKey} className={styles.trappingsRow}>
+                            <div key={slotKey} className={`${styles.trappingsRow} ${styles.trappingsBlueprintRow}`}>
                               <select
                                 className={`${styles.trappingsBlueprintSelect}${value ? ` ${styles.trappingsBlueprintSelectChosen}` : ""}`}
                                 value={value}
@@ -1403,19 +1416,45 @@ export function SoulCreation({
                                       {item.name.replace("Blueprint: ", "")} (T{item.tier})
                                     </option>
                                   );
-                                  // One list of tools and items (source "any"): grouped, tools first.
-                                  if (pool.source !== "any") return choices.map(option);
+                                  // The professions' own trade first, then what they also use.
                                   const byName = (a: TrappingsItem, b: TrappingsItem) => a.name.localeCompare(b.name);
-                                  const tools = choices.filter((item) => item.kind === "tool").sort(byName);
-                                  const items = choices.filter((item) => item.kind !== "tool").sort(byName);
+                                  const own = choices.filter((item) => item.own).sort(byName);
+                                  const offered = choices.filter((item) => !item.own).sort(byName);
                                   return (
                                     <>
-                                      {tools.length > 0 && <optgroup label="Tools">{tools.map(option)}</optgroup>}
-                                      {items.length > 0 && <optgroup label="Items">{items.map(option)}</optgroup>}
+                                      {own.length > 0 && <optgroup label="Your trade">{own.map(option)}</optgroup>}
+                                      {offered.length > 0 && <optgroup label="Also useful">{offered.map(option)}</optgroup>}
                                     </>
                                   );
                                 })()}
                               </select>
+                              {(() => {
+                                const picked = pool.items.find((item) => item.id === value);
+                                if (!picked) return null;
+                                // blueprint_X unlocks item X of the same tier (tests/test_craft_catalog.py).
+                                const outputFamily = picked.familyId.replace(/^blueprint_/, "");
+                                const info = itemCatalog[`${outputFamily}_${picked.tier}`];
+                                const name = info?.name ?? picked.name.replace("Blueprint: ", "");
+                                const station = picked.station ?? [];
+                                const raws = blueprintMaterials[picked.familyId] ?? [];
+                                return (
+                                  <ItemInfoCard
+                                    info={info}
+                                    name={name}
+                                    afterName={
+                                      <p className={styles.blueprintPreviewTag}>
+                                        {picked.own ? "Your trade" : "Also useful - another trade makes it"}
+                                      </p>
+                                    }
+                                    extraLines={[
+                                      station.length
+                                        ? `Crafted at: ${station.map(formatResourceLabel).join(" or ")}`
+                                        : "Crafted at: no station needed",
+                                      ...(raws.length ? [`Made from: ${raws.map(formatResourceLabel).join(", ")}`] : []),
+                                    ]}
+                                  />
+                                );
+                              })()}
                             </div>
                           );
                         })}

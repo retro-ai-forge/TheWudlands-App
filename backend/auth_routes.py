@@ -29,8 +29,9 @@ from backend.active_players import (
 )
 from backend.character import AttributeStats, Character, PortraitArea, ProfStats
 from backend.db import get_database, run_in_transaction
-from backend import adventures, foraging
+from backend import adventures, food, foraging
 from backend.players import (
+    _RECIPES_BY_FAMILY,
     get_character_home,
     get_character_camp,
     get_player_characters,
@@ -482,13 +483,18 @@ class TrappingsItemResponse(BaseModel):
     icon: str = Field("", description="Icon image path")
     description: str = Field("", description="Flavour description")
     kind: str = Field("", description="Blueprints only: 'tool' or 'item' - what it unlocks")
+    own: bool = Field(False, description="Blueprints only: one of the chosen professions makes it (its trade) rather than only using it")
+    station: List[str] = Field(
+        default_factory=list,
+        description="Blueprints only: the station(s) its item is crafted at (any one of them) - empty when it needs none",
+    )
 
 
 class TrappingsBlueprintPoolResponse(BaseModel):
     """One blueprintPoolsByProfessionCount rule, paired with the blueprint
     items it makes eligible for the character's chosen professions."""
 
-    source: str = Field(..., description="'any' (tools and items in one list) | 'tool' | 'item'")
+    source: str = Field(..., description="'profession' - the chosen professions' own and offered blueprints")
     tier: int = Field(..., description="Blueprint tier this rule draws from")
     count: int = Field(..., description="How many distinct blueprints the player may pick from this pool")
     items: List[TrappingsItemResponse]
@@ -521,11 +527,12 @@ class BlueprintCategoryFamilyResponse(BaseModel):
         ..., description="Family-level display name - no such name exists in the data, so this is the lowest tier's own flavor name with the 'Blueprint: ' prefix stripped"
     )
     kind: str = Field(..., description="'tool' | 'weapon' | 'armor' | 'shield' | 'food'")
+    owners: List[str] = Field(default_factory=list, description="Profession ids of this category whose trade it is")
     items: List[BlueprintCategoryItemResponse]
 
 
 class BlueprintCategoryResponse(BaseModel):
-    """One profession category's blueprint families - may be empty (e.g. Rural)."""
+    """The blueprint families one profession category's professions own - may be empty."""
 
     category: str
     families: List[BlueprintCategoryFamilyResponse]
@@ -583,6 +590,8 @@ class ItemCatalogEntryResponse(BaseModel):
     gatheringBonuses: List[str] = Field(
         default_factory=list, description="Raw materials this family grants a foraging/gathering bonus for"
     )
+    foodKind: str = Field("", description="Food only: 'ration' | 'preserved' | 'fresh' (backend.food), else empty")
+    feeds: str = Field("", description="Food only: the group it heals - 'body' | 'soul' - empty for rations")
     capacitySlots: int = Field(0, description="Per-tier slot capacity of a backpack/saddlepack/cart, 0 otherwise")
     carryCapacity: int = Field(0, description="Per-tier mount/companion carry capacity (slot-weight limit), 0 otherwise")
     size: str = Field("", description="Per-tier creature size (Medium/Heavy/Huge/Colossal) for mounts, empty otherwise")
@@ -895,6 +904,15 @@ async def get_my_characters(address: str = Depends(get_current_address)):
     return player.to_dict()
 
 
+def _blueprint_station(blueprint_family_id: str) -> List[str]:
+    """The station(s) the item a blueprint unlocks is crafted at - its recipe's
+    tool (one, or a list of alternatives), [] when it needs none. Every
+    blueprint_X gates exactly the recipe X (tests/test_craft_catalog.py)."""
+    recipe = _RECIPES_BY_FAMILY.get(blueprint_family_id.removeprefix("blueprint_")) or {}
+    tool = recipe.get("tool")
+    return [tool] if isinstance(tool, str) else list(tool or [])
+
+
 @player_router.get("/me/trappings-options", response_model=TrappingsOptionsResponse)
 async def get_trappings_options(
     profession1: str = "none",
@@ -931,7 +949,9 @@ async def get_trappings_options(
                 count=pool.rule.count,
                 items=[
                     TrappingsItemResponse(id=item.id, name=item.name, familyId=item.family_id, tier=item.tier,
-                                          kind=blueprint_source(item.family_id) or "")
+                                          kind=blueprint_source(item.family_id) or "",
+                                          own=item.family_id in pool.own_families,
+                                          station=_blueprint_station(item.family_id))
                     for item in pool.items
                 ],
             )
@@ -957,6 +977,7 @@ async def get_blueprint_categories():
                     familyId=family["familyId"],
                     name=family["name"],
                     kind=family["kind"],
+                    owners=family["owners"],
                     items=[BlueprintCategoryItemResponse(**item) for item in family["items"]],
                 )
                 for family in entry["families"]
@@ -1023,7 +1044,7 @@ async def get_item_catalog():
             armorClass=e.armor_class, icon=e.icon, stackSize=e.stack_size, description=e.description, sizeClass=e.size_class,
             equipSlots=[list(group) for group in e.equip_slots], backpackable=e.backpackable,
             gatheringBonuses=list(e.gathering_bonuses), capacitySlots=e.capacity_slots, carryCapacity=e.carry_capacity,
-            size=e.size,
+            size=e.size, foodKind=food.kind_of(e.family_id) or "", feeds=food.feeds(e.family_id) or "",
         )
         for e in items_catalog.ITEM_CATALOG_ENTRIES
     ]
@@ -1115,6 +1136,25 @@ async def forget_foraging_site_route(
         return await foraging.forget_site(address, character_id, payload.familyId)
     except foraging.ForagingError as exc:
         raise _foraging_http_error(exc)
+
+
+class EatRequest(BaseModel):
+    """One unit of preserved food to eat, and where it's taken from."""
+
+    itemId: str = Field(..., description="Concrete food id, e.g. jerky_2")
+    location: str = Field(..., description="'home' | 'camp' | 'backpack' | 'saddlepack' | 'cart'")
+
+
+@player_router.post("/me/characters/{character_id}/eat", response_model=PlayerDataResponse)
+async def eat_route(character_id: str, payload: EatRequest, address: str = Depends(get_current_address)):
+    """Eat one unit of preserved food (backend.food.eat_preserved): it heals
+    lost points in its group. The meal is on the character as meals.last."""
+    try:
+        await food.eat_preserved(address, character_id, payload.itemId, payload.location)
+    except food.FoodError as exc:
+        raise HTTPException(status_code=exc.status, detail=str(exc))
+    player = await get_player(address)
+    return player.to_dict()
 
 
 class CraftItemRequest(BaseModel):
@@ -2393,10 +2433,14 @@ async def create_character(
 
     # Greedily match each pick against the pool it's eligible for, consuming
     # that pool's count - a blueprint id is never eligible for more than one
-    # pool (its own fixed tier and catalog type pin it to exactly one
-    # tool/item x tier combination), so match order doesn't matter.
+    # pool (each pool is one tier), so match order doesn't matter.
     if len(set(payload.selectedBlueprints)) != len(payload.selectedBlueprints):
         raise HTTPException(status_code=400, detail="The same blueprint can only be picked once")
+    allowed_picks = sum(pool.rule.count for pool in blueprint_trappings.pools)
+    if len(payload.selectedBlueprints) > allowed_picks:
+        raise HTTPException(
+            status_code=400, detail=f"Only {allowed_picks} starting blueprint(s) can be picked"
+        )
     remaining_by_pool = {i: pool.rule.count for i, pool in enumerate(blueprint_trappings.pools)}
     eligible_ids_by_pool = {i: {item.id for item in pool.items} for i, pool in enumerate(blueprint_trappings.pools)}
     for blueprint_id in payload.selectedBlueprints:

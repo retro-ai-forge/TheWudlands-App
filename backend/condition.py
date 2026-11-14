@@ -294,6 +294,46 @@ async def apply_loss(address: str, character_id: str, points: dict, db=None,
     return taken, None
 
 
+async def apply_heal(address: str, character_id: str, group: str, points: int, db=None,
+                     rng: random.Random | None = None) -> dict:
+    """Heal up to `points` lost points in `group` ("body" / "soul") at once -
+    eating (backend.food). Clock heals that came due are settled first; the
+    clock keeps running for whatever is still lost. A drained group (dead /
+    soulless) never heals, same as over time. Returns {attr: n} healed
+    ({} when nothing in the group was lost)."""
+    db = db if db is not None else get_database()
+    rng = rng or random.Random()
+    doc = await _load(db, address, character_id)
+    if doc is None:
+        return {}
+    now = datetime.now(timezone.utc)
+    attr_max = doc.get("attr") or {}
+    lost, clock = settle(attr_max, doc.get("attrLost"), doc.get("healFrom"), now, character_id)
+    locked = frozenset(drained_groups(attr_max, lost)) | {g for g in ATTR_GROUPS if g != group}
+    healed: dict = {}
+    for _ in range(int(points)):
+        key = pick_attr_to_heal(lost, rng, locked)
+        if key is None:
+            break
+        lost[key] -= 1
+        healed[key] = healed.get(key, 0) + 1
+        lost = _clean(lost)
+    if not healed:
+        return {}
+    healable = pick_attr_to_heal(lost, random.Random(0), frozenset(drained_groups(attr_max, lost)))
+    await _save(db, address, character_id, lost, clock if healable else None)
+    return healed
+
+
+def healable_in(doc: dict, group: str, now: Optional[datetime] = None) -> bool:
+    """Whether `group` has a lost point that eating could heal right now."""
+    now = now or datetime.now(timezone.utc)
+    attr_max = doc.get("attr") or {}
+    lost, _ = settle(attr_max, doc.get("attrLost"), doc.get("healFrom"), now, doc.get("id", ""))
+    locked = frozenset(drained_groups(attr_max, lost)) | {g for g in ATTR_GROUPS if g != group}
+    return pick_attr_to_heal(lost, random.Random(0), locked) is not None
+
+
 async def _set_vital_status(db, address: str, character_id: str, new: list) -> None:
     """Set the vitalStatus list on the character, and as the leading tags of
     its summary entry (any older vital tags are replaced)."""

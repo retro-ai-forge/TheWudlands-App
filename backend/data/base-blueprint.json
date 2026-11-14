@@ -2196,78 +2196,6 @@
     "tier": 6
   },
   {
-    "id": "blueprint_hearty_stew_1",
-    "name": "Blueprint: Cheap Hearty Stew",
-    "familyId": "blueprint_hearty_stew",
-    "tier": 1
-  },
-  {
-    "id": "blueprint_hearty_stew_2",
-    "name": "Blueprint: Traveler's Hearty Stew",
-    "familyId": "blueprint_hearty_stew",
-    "tier": 2
-  },
-  {
-    "id": "blueprint_hearty_stew_3",
-    "name": "Blueprint: Innkeeper's Hearty Stew",
-    "familyId": "blueprint_hearty_stew",
-    "tier": 3
-  },
-  {
-    "id": "blueprint_hearty_stew_4",
-    "name": "Blueprint: Chieftain's Hearty Stew",
-    "familyId": "blueprint_hearty_stew",
-    "tier": 4
-  },
-  {
-    "id": "blueprint_hearty_stew_5",
-    "name": "Blueprint: Highland Hearty Stew",
-    "familyId": "blueprint_hearty_stew",
-    "tier": 5
-  },
-  {
-    "id": "blueprint_hearty_stew_6",
-    "name": "Blueprint: Harvestking's Hearty Stew",
-    "familyId": "blueprint_hearty_stew",
-    "tier": 6
-  },
-  {
-    "id": "blueprint_bangers_1",
-    "name": "Blueprint: Beginner's Bangers",
-    "familyId": "blueprint_bangers",
-    "tier": 1
-  },
-  {
-    "id": "blueprint_bangers_2",
-    "name": "Blueprint: Butcher's Bangers",
-    "familyId": "blueprint_bangers",
-    "tier": 2
-  },
-  {
-    "id": "blueprint_bangers_3",
-    "name": "Blueprint: Master Butcher's Bangers",
-    "familyId": "blueprint_bangers",
-    "tier": 3
-  },
-  {
-    "id": "blueprint_bangers_4",
-    "name": "Blueprint: Guildmaster's Bangers",
-    "familyId": "blueprint_bangers",
-    "tier": 4
-  },
-  {
-    "id": "blueprint_bangers_5",
-    "name": "Blueprint: Imperial Bangers",
-    "familyId": "blueprint_bangers",
-    "tier": 5
-  },
-  {
-    "id": "blueprint_bangers_6",
-    "name": "Blueprint: Peerless Bangers",
-    "familyId": "blueprint_bangers",
-    "tier": 6
-  },
-  {
     "id": "blueprint_iron_ration_1",
     "name": "Blueprint: Plain Iron Ration",
     "familyId": "blueprint_iron_ration",
@@ -2373,42 +2301,6 @@
     "id": "blueprint_axe_6",
     "name": "Blueprint: Ancient Grove Axe",
     "familyId": "blueprint_axe",
-    "tier": 6
-  },
-  {
-    "id": "blueprint_fish_chowder_1",
-    "name": "Blueprint: Dockside Fish Chowder",
-    "familyId": "blueprint_fish_chowder",
-    "tier": 1
-  },
-  {
-    "id": "blueprint_fish_chowder_2",
-    "name": "Blueprint: Fisherman's Fish Chowder",
-    "familyId": "blueprint_fish_chowder",
-    "tier": 2
-  },
-  {
-    "id": "blueprint_fish_chowder_3",
-    "name": "Blueprint: Harbormaster's Fish Chowder",
-    "familyId": "blueprint_fish_chowder",
-    "tier": 3
-  },
-  {
-    "id": "blueprint_fish_chowder_4",
-    "name": "Blueprint: Coastal Fish Chowder",
-    "familyId": "blueprint_fish_chowder",
-    "tier": 4
-  },
-  {
-    "id": "blueprint_fish_chowder_5",
-    "name": "Blueprint: Deepwater Fish Chowder",
-    "familyId": "blueprint_fish_chowder",
-    "tier": 5
-  },
-  {
-    "id": "blueprint_fish_chowder_6",
-    "name": "Blueprint: Leviathan's Fish Chowder",
-    "familyId": "blueprint_fish_chowder",
     "tier": 6
   },
   {
@@ -2661,6 +2553,1302 @@
     "id": "blueprint_barding_leather_6",
     "name": "Blueprint: Celestial Hide Barding",
     "familyId": "blueprint_barding_leather",
+    "tier": 6
+  },
+  {
+    "id": "blueprint_healing_potion_1",
+    "name": "Blueprint: Minor Healing Potion",
+    "familyId": "blueprint_healing_potion",
+    "tier": 1
+  },
+  {
+    "id": "blueprint_healing_potion_2",
+    "name": "Blueprint: Lesser Healing Potion",
+    "familyId": "blueprint_healing_potion",
+    "tier": 2
+  },
+  {
+    "id": "blueprint_healing_potion_3",
+    "name": "Blueprint: Common Healing Potion",
+    "familyId": "blueprint_healing_potion",
+    "tier": 3
+  },
+  {
+    "id": "blueprint_healing_potion_4",
+    "name": "Blueprint: Greater Healing Potion",
+    "familyId": "blueprint_healing_potion",
+    "tier": 4
+  },
+  {
+    "id": "blueprint_healing_potion_5",
+    "name": "Blueprint: Superior Healing Potion",
+    "familyId": "blueprint_healing_potion",
+    "tier": 5
+  },
+  {
+    "id": "blueprint_healing_potion_6",
+    "name": "Blueprint: Supreme Healing Potion",
+    "familyId": "blueprint_healing_potion",
+    "tier": 6
+  },
+  {
+    "id": "blueprint_mana_potion_1",
+    "name": "Blueprint: Minor Mana Potion",
+    "familyId": "blueprint_mana_potion",
+    "tier": 1
+  },
+  {
+    "id": "blueprint_mana_potion_2",
+    "name": "Blueprint: Lesser Mana Potion",
+    "familyId": "blueprint_mana_potion",
+    "tier": 2
+  },
+  {
+    "id": "blueprint_mana_potion_3",
+    "name": "Blueprint: Common Mana Potion",
+    "familyId": "blueprint_mana_potion",
+    "tier": 3
+  },
+  {
+    "id": "blueprint_mana_potion_4",
+    "name": "Blueprint: Greater Mana Potion",
+    "familyId": "blueprint_mana_potion",
+    "tier": 4
+  },
+  {
+    "id": "blueprint_mana_potion_5",
+    "name": "Blueprint: Superior Mana Potion",
+    "familyId": "blueprint_mana_potion",
+    "tier": 5
+  },
+  {
+    "id": "blueprint_mana_potion_6",
+    "name": "Blueprint: Supreme Mana Potion",
+    "familyId": "blueprint_mana_potion",
+    "tier": 6
+  },
+  {
+    "id": "blueprint_antidote_potion_1",
+    "name": "Blueprint: Simple Antidote",
+    "familyId": "blueprint_antidote_potion",
+    "tier": 1
+  },
+  {
+    "id": "blueprint_antidote_potion_2",
+    "name": "Blueprint: Common Antidote",
+    "familyId": "blueprint_antidote_potion",
+    "tier": 2
+  },
+  {
+    "id": "blueprint_antidote_potion_3",
+    "name": "Blueprint: Refined Antidote",
+    "familyId": "blueprint_antidote_potion",
+    "tier": 3
+  },
+  {
+    "id": "blueprint_antidote_potion_4",
+    "name": "Blueprint: Potent Antidote",
+    "familyId": "blueprint_antidote_potion",
+    "tier": 4
+  },
+  {
+    "id": "blueprint_antidote_potion_5",
+    "name": "Blueprint: Concentrated Antidote",
+    "familyId": "blueprint_antidote_potion",
+    "tier": 5
+  },
+  {
+    "id": "blueprint_antidote_potion_6",
+    "name": "Blueprint: Master's Antidote",
+    "familyId": "blueprint_antidote_potion",
+    "tier": 6
+  },
+  {
+    "id": "blueprint_venom_vial_1",
+    "name": "Blueprint: Weak Venom Vial",
+    "familyId": "blueprint_venom_vial",
+    "tier": 1
+  },
+  {
+    "id": "blueprint_venom_vial_2",
+    "name": "Blueprint: Mild Venom Vial",
+    "familyId": "blueprint_venom_vial",
+    "tier": 2
+  },
+  {
+    "id": "blueprint_venom_vial_3",
+    "name": "Blueprint: Sharp Venom Vial",
+    "familyId": "blueprint_venom_vial",
+    "tier": 3
+  },
+  {
+    "id": "blueprint_venom_vial_4",
+    "name": "Blueprint: Vicious Venom Vial",
+    "familyId": "blueprint_venom_vial",
+    "tier": 4
+  },
+  {
+    "id": "blueprint_venom_vial_5",
+    "name": "Blueprint: Deadly Venom Vial",
+    "familyId": "blueprint_venom_vial",
+    "tier": 5
+  },
+  {
+    "id": "blueprint_venom_vial_6",
+    "name": "Blueprint: Lethal Venom Vial",
+    "familyId": "blueprint_venom_vial",
+    "tier": 6
+  },
+  {
+    "id": "blueprint_starlight_catcher_1",
+    "name": "Blueprint: Starlight Catcher",
+    "familyId": "blueprint_starlight_catcher",
+    "tier": 1
+  },
+  {
+    "id": "blueprint_starlight_catcher_2",
+    "name": "Blueprint: Starlight Catcher",
+    "familyId": "blueprint_starlight_catcher",
+    "tier": 2
+  },
+  {
+    "id": "blueprint_starlight_catcher_3",
+    "name": "Blueprint: Starlight Catcher",
+    "familyId": "blueprint_starlight_catcher",
+    "tier": 3
+  },
+  {
+    "id": "blueprint_starlight_catcher_4",
+    "name": "Blueprint: Starlight Catcher",
+    "familyId": "blueprint_starlight_catcher",
+    "tier": 4
+  },
+  {
+    "id": "blueprint_starlight_catcher_5",
+    "name": "Blueprint: Starlight Catcher",
+    "familyId": "blueprint_starlight_catcher",
+    "tier": 5
+  },
+  {
+    "id": "blueprint_starlight_catcher_6",
+    "name": "Blueprint: Starlight Catcher",
+    "familyId": "blueprint_starlight_catcher",
+    "tier": 6
+  },
+  {
+    "id": "blueprint_holy_symbol_1",
+    "name": "Blueprint: Holy Symbol",
+    "familyId": "blueprint_holy_symbol",
+    "tier": 1
+  },
+  {
+    "id": "blueprint_holy_symbol_2",
+    "name": "Blueprint: Holy Symbol",
+    "familyId": "blueprint_holy_symbol",
+    "tier": 2
+  },
+  {
+    "id": "blueprint_holy_symbol_3",
+    "name": "Blueprint: Holy Symbol",
+    "familyId": "blueprint_holy_symbol",
+    "tier": 3
+  },
+  {
+    "id": "blueprint_holy_symbol_4",
+    "name": "Blueprint: Holy Symbol",
+    "familyId": "blueprint_holy_symbol",
+    "tier": 4
+  },
+  {
+    "id": "blueprint_holy_symbol_5",
+    "name": "Blueprint: Holy Symbol",
+    "familyId": "blueprint_holy_symbol",
+    "tier": 5
+  },
+  {
+    "id": "blueprint_holy_symbol_6",
+    "name": "Blueprint: Holy Symbol",
+    "familyId": "blueprint_holy_symbol",
+    "tier": 6
+  },
+  {
+    "id": "blueprint_written_scroll_1",
+    "name": "Blueprint: River Scroll",
+    "familyId": "blueprint_written_scroll",
+    "tier": 1
+  },
+  {
+    "id": "blueprint_written_scroll_2",
+    "name": "Blueprint: Marsh Scroll",
+    "familyId": "blueprint_written_scroll",
+    "tier": 2
+  },
+  {
+    "id": "blueprint_written_scroll_3",
+    "name": "Blueprint: Papyrus Scroll",
+    "familyId": "blueprint_written_scroll",
+    "tier": 3
+  },
+  {
+    "id": "blueprint_written_scroll_4",
+    "name": "Blueprint: Silverreed Scroll",
+    "familyId": "blueprint_written_scroll",
+    "tier": 4
+  },
+  {
+    "id": "blueprint_written_scroll_5",
+    "name": "Blueprint: Starreed Scroll",
+    "familyId": "blueprint_written_scroll",
+    "tier": 5
+  },
+  {
+    "id": "blueprint_written_scroll_6",
+    "name": "Blueprint: Worldreed Scroll",
+    "familyId": "blueprint_written_scroll",
+    "tier": 6
+  },
+  {
+    "id": "blueprint_spyglass_1",
+    "name": "Blueprint: Spyglass",
+    "familyId": "blueprint_spyglass",
+    "tier": 1
+  },
+  {
+    "id": "blueprint_spyglass_2",
+    "name": "Blueprint: Spyglass",
+    "familyId": "blueprint_spyglass",
+    "tier": 2
+  },
+  {
+    "id": "blueprint_spyglass_3",
+    "name": "Blueprint: Spyglass",
+    "familyId": "blueprint_spyglass",
+    "tier": 3
+  },
+  {
+    "id": "blueprint_spyglass_4",
+    "name": "Blueprint: Spyglass",
+    "familyId": "blueprint_spyglass",
+    "tier": 4
+  },
+  {
+    "id": "blueprint_spyglass_5",
+    "name": "Blueprint: Spyglass",
+    "familyId": "blueprint_spyglass",
+    "tier": 5
+  },
+  {
+    "id": "blueprint_spyglass_6",
+    "name": "Blueprint: Spyglass",
+    "familyId": "blueprint_spyglass",
+    "tier": 6
+  },
+  {
+    "id": "blueprint_hourglass_1",
+    "name": "Blueprint: Hourglass",
+    "familyId": "blueprint_hourglass",
+    "tier": 1
+  },
+  {
+    "id": "blueprint_hourglass_2",
+    "name": "Blueprint: Hourglass",
+    "familyId": "blueprint_hourglass",
+    "tier": 2
+  },
+  {
+    "id": "blueprint_hourglass_3",
+    "name": "Blueprint: Hourglass",
+    "familyId": "blueprint_hourglass",
+    "tier": 3
+  },
+  {
+    "id": "blueprint_hourglass_4",
+    "name": "Blueprint: Hourglass",
+    "familyId": "blueprint_hourglass",
+    "tier": 4
+  },
+  {
+    "id": "blueprint_hourglass_5",
+    "name": "Blueprint: Hourglass",
+    "familyId": "blueprint_hourglass",
+    "tier": 5
+  },
+  {
+    "id": "blueprint_hourglass_6",
+    "name": "Blueprint: Hourglass",
+    "familyId": "blueprint_hourglass",
+    "tier": 6
+  },
+  {
+    "id": "blueprint_mirror_1",
+    "name": "Blueprint: Mirror",
+    "familyId": "blueprint_mirror",
+    "tier": 1
+  },
+  {
+    "id": "blueprint_mirror_2",
+    "name": "Blueprint: Mirror",
+    "familyId": "blueprint_mirror",
+    "tier": 2
+  },
+  {
+    "id": "blueprint_mirror_3",
+    "name": "Blueprint: Mirror",
+    "familyId": "blueprint_mirror",
+    "tier": 3
+  },
+  {
+    "id": "blueprint_mirror_4",
+    "name": "Blueprint: Mirror",
+    "familyId": "blueprint_mirror",
+    "tier": 4
+  },
+  {
+    "id": "blueprint_mirror_5",
+    "name": "Blueprint: Mirror",
+    "familyId": "blueprint_mirror",
+    "tier": 5
+  },
+  {
+    "id": "blueprint_mirror_6",
+    "name": "Blueprint: Mirror",
+    "familyId": "blueprint_mirror",
+    "tier": 6
+  },
+  {
+    "id": "blueprint_glass_lantern_1",
+    "name": "Blueprint: Traveler's Glass Lantern",
+    "familyId": "blueprint_glass_lantern",
+    "tier": 1
+  },
+  {
+    "id": "blueprint_glass_lantern_2",
+    "name": "Blueprint: Miner's Glass Lantern",
+    "familyId": "blueprint_glass_lantern",
+    "tier": 2
+  },
+  {
+    "id": "blueprint_glass_lantern_3",
+    "name": "Blueprint: Watchman's Glass Lantern",
+    "familyId": "blueprint_glass_lantern",
+    "tier": 3
+  },
+  {
+    "id": "blueprint_glass_lantern_4",
+    "name": "Blueprint: Beacon Glass Lantern",
+    "familyId": "blueprint_glass_lantern",
+    "tier": 4
+  },
+  {
+    "id": "blueprint_glass_lantern_5",
+    "name": "Blueprint: Lighthouse Glass Lantern",
+    "familyId": "blueprint_glass_lantern",
+    "tier": 5
+  },
+  {
+    "id": "blueprint_glass_lantern_6",
+    "name": "Blueprint: Starlight Glass Lantern",
+    "familyId": "blueprint_glass_lantern",
+    "tier": 6
+  },
+  {
+    "id": "blueprint_lock_and_key_1",
+    "name": "Blueprint: Lock & Key",
+    "familyId": "blueprint_lock_and_key",
+    "tier": 1
+  },
+  {
+    "id": "blueprint_lock_and_key_2",
+    "name": "Blueprint: Lock & Key",
+    "familyId": "blueprint_lock_and_key",
+    "tier": 2
+  },
+  {
+    "id": "blueprint_lock_and_key_3",
+    "name": "Blueprint: Lock & Key",
+    "familyId": "blueprint_lock_and_key",
+    "tier": 3
+  },
+  {
+    "id": "blueprint_lock_and_key_4",
+    "name": "Blueprint: Lock & Key",
+    "familyId": "blueprint_lock_and_key",
+    "tier": 4
+  },
+  {
+    "id": "blueprint_lock_and_key_5",
+    "name": "Blueprint: Lock & Key",
+    "familyId": "blueprint_lock_and_key",
+    "tier": 5
+  },
+  {
+    "id": "blueprint_lock_and_key_6",
+    "name": "Blueprint: Lock & Key",
+    "familyId": "blueprint_lock_and_key",
+    "tier": 6
+  },
+  {
+    "id": "blueprint_manacles_1",
+    "name": "Blueprint: Manacles",
+    "familyId": "blueprint_manacles",
+    "tier": 1
+  },
+  {
+    "id": "blueprint_manacles_2",
+    "name": "Blueprint: Manacles",
+    "familyId": "blueprint_manacles",
+    "tier": 2
+  },
+  {
+    "id": "blueprint_manacles_3",
+    "name": "Blueprint: Manacles",
+    "familyId": "blueprint_manacles",
+    "tier": 3
+  },
+  {
+    "id": "blueprint_manacles_4",
+    "name": "Blueprint: Manacles",
+    "familyId": "blueprint_manacles",
+    "tier": 4
+  },
+  {
+    "id": "blueprint_manacles_5",
+    "name": "Blueprint: Manacles",
+    "familyId": "blueprint_manacles",
+    "tier": 5
+  },
+  {
+    "id": "blueprint_manacles_6",
+    "name": "Blueprint: Manacles",
+    "familyId": "blueprint_manacles",
+    "tier": 6
+  },
+  {
+    "id": "blueprint_chain_1",
+    "name": "Blueprint: Chain",
+    "familyId": "blueprint_chain",
+    "tier": 1
+  },
+  {
+    "id": "blueprint_chain_2",
+    "name": "Blueprint: Chain",
+    "familyId": "blueprint_chain",
+    "tier": 2
+  },
+  {
+    "id": "blueprint_chain_3",
+    "name": "Blueprint: Chain",
+    "familyId": "blueprint_chain",
+    "tier": 3
+  },
+  {
+    "id": "blueprint_chain_4",
+    "name": "Blueprint: Chain",
+    "familyId": "blueprint_chain",
+    "tier": 4
+  },
+  {
+    "id": "blueprint_chain_5",
+    "name": "Blueprint: Chain",
+    "familyId": "blueprint_chain",
+    "tier": 5
+  },
+  {
+    "id": "blueprint_chain_6",
+    "name": "Blueprint: Chain",
+    "familyId": "blueprint_chain",
+    "tier": 6
+  },
+  {
+    "id": "blueprint_crowbar_1",
+    "name": "Blueprint: Crowbar",
+    "familyId": "blueprint_crowbar",
+    "tier": 1
+  },
+  {
+    "id": "blueprint_crowbar_2",
+    "name": "Blueprint: Crowbar",
+    "familyId": "blueprint_crowbar",
+    "tier": 2
+  },
+  {
+    "id": "blueprint_crowbar_3",
+    "name": "Blueprint: Crowbar",
+    "familyId": "blueprint_crowbar",
+    "tier": 3
+  },
+  {
+    "id": "blueprint_crowbar_4",
+    "name": "Blueprint: Crowbar",
+    "familyId": "blueprint_crowbar",
+    "tier": 4
+  },
+  {
+    "id": "blueprint_crowbar_5",
+    "name": "Blueprint: Crowbar",
+    "familyId": "blueprint_crowbar",
+    "tier": 5
+  },
+  {
+    "id": "blueprint_crowbar_6",
+    "name": "Blueprint: Crowbar",
+    "familyId": "blueprint_crowbar",
+    "tier": 6
+  },
+  {
+    "id": "blueprint_grappling_hook_1",
+    "name": "Blueprint: Grappling Hook",
+    "familyId": "blueprint_grappling_hook",
+    "tier": 1
+  },
+  {
+    "id": "blueprint_grappling_hook_2",
+    "name": "Blueprint: Grappling Hook",
+    "familyId": "blueprint_grappling_hook",
+    "tier": 2
+  },
+  {
+    "id": "blueprint_grappling_hook_3",
+    "name": "Blueprint: Grappling Hook",
+    "familyId": "blueprint_grappling_hook",
+    "tier": 3
+  },
+  {
+    "id": "blueprint_grappling_hook_4",
+    "name": "Blueprint: Grappling Hook",
+    "familyId": "blueprint_grappling_hook",
+    "tier": 4
+  },
+  {
+    "id": "blueprint_grappling_hook_5",
+    "name": "Blueprint: Grappling Hook",
+    "familyId": "blueprint_grappling_hook",
+    "tier": 5
+  },
+  {
+    "id": "blueprint_grappling_hook_6",
+    "name": "Blueprint: Grappling Hook",
+    "familyId": "blueprint_grappling_hook",
+    "tier": 6
+  },
+  {
+    "id": "blueprint_signal_whistle_1",
+    "name": "Blueprint: Signal Whistle",
+    "familyId": "blueprint_signal_whistle",
+    "tier": 1
+  },
+  {
+    "id": "blueprint_signal_whistle_2",
+    "name": "Blueprint: Signal Whistle",
+    "familyId": "blueprint_signal_whistle",
+    "tier": 2
+  },
+  {
+    "id": "blueprint_signal_whistle_3",
+    "name": "Blueprint: Signal Whistle",
+    "familyId": "blueprint_signal_whistle",
+    "tier": 3
+  },
+  {
+    "id": "blueprint_signal_whistle_4",
+    "name": "Blueprint: Signal Whistle",
+    "familyId": "blueprint_signal_whistle",
+    "tier": 4
+  },
+  {
+    "id": "blueprint_signal_whistle_5",
+    "name": "Blueprint: Signal Whistle",
+    "familyId": "blueprint_signal_whistle",
+    "tier": 5
+  },
+  {
+    "id": "blueprint_signal_whistle_6",
+    "name": "Blueprint: Signal Whistle",
+    "familyId": "blueprint_signal_whistle",
+    "tier": 6
+  },
+  {
+    "id": "blueprint_whetstone_1",
+    "name": "Blueprint: Whetstone",
+    "familyId": "blueprint_whetstone",
+    "tier": 1
+  },
+  {
+    "id": "blueprint_whetstone_2",
+    "name": "Blueprint: Whetstone",
+    "familyId": "blueprint_whetstone",
+    "tier": 2
+  },
+  {
+    "id": "blueprint_whetstone_3",
+    "name": "Blueprint: Whetstone",
+    "familyId": "blueprint_whetstone",
+    "tier": 3
+  },
+  {
+    "id": "blueprint_whetstone_4",
+    "name": "Blueprint: Whetstone",
+    "familyId": "blueprint_whetstone",
+    "tier": 4
+  },
+  {
+    "id": "blueprint_whetstone_5",
+    "name": "Blueprint: Whetstone",
+    "familyId": "blueprint_whetstone",
+    "tier": 5
+  },
+  {
+    "id": "blueprint_whetstone_6",
+    "name": "Blueprint: Whetstone",
+    "familyId": "blueprint_whetstone",
+    "tier": 6
+  },
+  {
+    "id": "blueprint_pickaxe_1",
+    "name": "Blueprint: Miner's Pickaxe",
+    "familyId": "blueprint_pickaxe",
+    "tier": 1
+  },
+  {
+    "id": "blueprint_pickaxe_2",
+    "name": "Blueprint: Prospector's Pickaxe",
+    "familyId": "blueprint_pickaxe",
+    "tier": 2
+  },
+  {
+    "id": "blueprint_pickaxe_3",
+    "name": "Blueprint: Quarrier's Pickaxe",
+    "familyId": "blueprint_pickaxe",
+    "tier": 3
+  },
+  {
+    "id": "blueprint_pickaxe_4",
+    "name": "Blueprint: Deep Delver's Pickaxe",
+    "familyId": "blueprint_pickaxe",
+    "tier": 4
+  },
+  {
+    "id": "blueprint_pickaxe_5",
+    "name": "Blueprint: Stonebreaker's Pickaxe",
+    "familyId": "blueprint_pickaxe",
+    "tier": 5
+  },
+  {
+    "id": "blueprint_pickaxe_6",
+    "name": "Blueprint: Mountain King's Pickaxe",
+    "familyId": "blueprint_pickaxe",
+    "tier": 6
+  },
+  {
+    "id": "blueprint_shovel_1",
+    "name": "Blueprint: Shovel",
+    "familyId": "blueprint_shovel",
+    "tier": 1
+  },
+  {
+    "id": "blueprint_shovel_2",
+    "name": "Blueprint: Shovel",
+    "familyId": "blueprint_shovel",
+    "tier": 2
+  },
+  {
+    "id": "blueprint_shovel_3",
+    "name": "Blueprint: Shovel",
+    "familyId": "blueprint_shovel",
+    "tier": 3
+  },
+  {
+    "id": "blueprint_shovel_4",
+    "name": "Blueprint: Shovel",
+    "familyId": "blueprint_shovel",
+    "tier": 4
+  },
+  {
+    "id": "blueprint_shovel_5",
+    "name": "Blueprint: Shovel",
+    "familyId": "blueprint_shovel",
+    "tier": 5
+  },
+  {
+    "id": "blueprint_shovel_6",
+    "name": "Blueprint: Shovel",
+    "familyId": "blueprint_shovel",
+    "tier": 6
+  },
+  {
+    "id": "blueprint_fishing_pole_1",
+    "name": "Blueprint: Fishing Pole",
+    "familyId": "blueprint_fishing_pole",
+    "tier": 1
+  },
+  {
+    "id": "blueprint_fishing_pole_2",
+    "name": "Blueprint: Fishing Pole",
+    "familyId": "blueprint_fishing_pole",
+    "tier": 2
+  },
+  {
+    "id": "blueprint_fishing_pole_3",
+    "name": "Blueprint: Fishing Pole",
+    "familyId": "blueprint_fishing_pole",
+    "tier": 3
+  },
+  {
+    "id": "blueprint_fishing_pole_4",
+    "name": "Blueprint: Fishing Pole",
+    "familyId": "blueprint_fishing_pole",
+    "tier": 4
+  },
+  {
+    "id": "blueprint_fishing_pole_5",
+    "name": "Blueprint: Fishing Pole",
+    "familyId": "blueprint_fishing_pole",
+    "tier": 5
+  },
+  {
+    "id": "blueprint_fishing_pole_6",
+    "name": "Blueprint: Fishing Pole",
+    "familyId": "blueprint_fishing_pole",
+    "tier": 6
+  },
+  {
+    "id": "blueprint_net_1",
+    "name": "Blueprint: Net",
+    "familyId": "blueprint_net",
+    "tier": 1
+  },
+  {
+    "id": "blueprint_net_2",
+    "name": "Blueprint: Net",
+    "familyId": "blueprint_net",
+    "tier": 2
+  },
+  {
+    "id": "blueprint_net_3",
+    "name": "Blueprint: Net",
+    "familyId": "blueprint_net",
+    "tier": 3
+  },
+  {
+    "id": "blueprint_net_4",
+    "name": "Blueprint: Net",
+    "familyId": "blueprint_net",
+    "tier": 4
+  },
+  {
+    "id": "blueprint_net_5",
+    "name": "Blueprint: Net",
+    "familyId": "blueprint_net",
+    "tier": 5
+  },
+  {
+    "id": "blueprint_net_6",
+    "name": "Blueprint: Net",
+    "familyId": "blueprint_net",
+    "tier": 6
+  },
+  {
+    "id": "blueprint_monster_trap_1",
+    "name": "Blueprint: Monster Trap",
+    "familyId": "blueprint_monster_trap",
+    "tier": 1
+  },
+  {
+    "id": "blueprint_monster_trap_2",
+    "name": "Blueprint: Monster Trap",
+    "familyId": "blueprint_monster_trap",
+    "tier": 2
+  },
+  {
+    "id": "blueprint_monster_trap_3",
+    "name": "Blueprint: Monster Trap",
+    "familyId": "blueprint_monster_trap",
+    "tier": 3
+  },
+  {
+    "id": "blueprint_monster_trap_4",
+    "name": "Blueprint: Monster Trap",
+    "familyId": "blueprint_monster_trap",
+    "tier": 4
+  },
+  {
+    "id": "blueprint_monster_trap_5",
+    "name": "Blueprint: Monster Trap",
+    "familyId": "blueprint_monster_trap",
+    "tier": 5
+  },
+  {
+    "id": "blueprint_monster_trap_6",
+    "name": "Blueprint: Monster Trap",
+    "familyId": "blueprint_monster_trap",
+    "tier": 6
+  },
+  {
+    "id": "blueprint_hunters_charm_1",
+    "name": "Blueprint: Rat Ear Hunter's Charm",
+    "familyId": "blueprint_hunters_charm",
+    "tier": 1
+  },
+  {
+    "id": "blueprint_hunters_charm_2",
+    "name": "Blueprint: Troll Fat Hunter's Charm",
+    "familyId": "blueprint_hunters_charm",
+    "tier": 2
+  },
+  {
+    "id": "blueprint_hunters_charm_3",
+    "name": "Blueprint: Basilisk Eye Hunter's Charm",
+    "familyId": "blueprint_hunters_charm",
+    "tier": 3
+  },
+  {
+    "id": "blueprint_hunters_charm_4",
+    "name": "Blueprint: Wyvern Tail Hunter's Charm",
+    "familyId": "blueprint_hunters_charm",
+    "tier": 4
+  },
+  {
+    "id": "blueprint_hunters_charm_5",
+    "name": "Blueprint: Gorgon Scale Hunter's Charm",
+    "familyId": "blueprint_hunters_charm",
+    "tier": 5
+  },
+  {
+    "id": "blueprint_hunters_charm_6",
+    "name": "Blueprint: Umbral Heart Hunter's Charm",
+    "familyId": "blueprint_hunters_charm",
+    "tier": 6
+  },
+  {
+    "id": "blueprint_cart_1",
+    "name": "Blueprint: Pine Cart",
+    "familyId": "blueprint_cart",
+    "tier": 1
+  },
+  {
+    "id": "blueprint_cart_2",
+    "name": "Blueprint: Oak Cart",
+    "familyId": "blueprint_cart",
+    "tier": 2
+  },
+  {
+    "id": "blueprint_cart_3",
+    "name": "Blueprint: Ash Cart",
+    "familyId": "blueprint_cart",
+    "tier": 3
+  },
+  {
+    "id": "blueprint_cart_4",
+    "name": "Blueprint: Cedar Cart",
+    "familyId": "blueprint_cart",
+    "tier": 4
+  },
+  {
+    "id": "blueprint_cart_5",
+    "name": "Blueprint: Ebony Cart",
+    "familyId": "blueprint_cart",
+    "tier": 5
+  },
+  {
+    "id": "blueprint_cart_6",
+    "name": "Blueprint: Worldroot Cart",
+    "familyId": "blueprint_cart",
+    "tier": 6
+  },
+  {
+    "id": "blueprint_ladder_1",
+    "name": "Blueprint: Ladder",
+    "familyId": "blueprint_ladder",
+    "tier": 1
+  },
+  {
+    "id": "blueprint_ladder_2",
+    "name": "Blueprint: Ladder",
+    "familyId": "blueprint_ladder",
+    "tier": 2
+  },
+  {
+    "id": "blueprint_ladder_3",
+    "name": "Blueprint: Ladder",
+    "familyId": "blueprint_ladder",
+    "tier": 3
+  },
+  {
+    "id": "blueprint_ladder_4",
+    "name": "Blueprint: Ladder",
+    "familyId": "blueprint_ladder",
+    "tier": 4
+  },
+  {
+    "id": "blueprint_ladder_5",
+    "name": "Blueprint: Ladder",
+    "familyId": "blueprint_ladder",
+    "tier": 5
+  },
+  {
+    "id": "blueprint_ladder_6",
+    "name": "Blueprint: Ladder",
+    "familyId": "blueprint_ladder",
+    "tier": 6
+  },
+  {
+    "id": "blueprint_cloth_cloak_1",
+    "name": "Blueprint: Hemp Cloak",
+    "familyId": "blueprint_cloth_cloak",
+    "tier": 1
+  },
+  {
+    "id": "blueprint_cloth_cloak_2",
+    "name": "Blueprint: Cotton Cloak",
+    "familyId": "blueprint_cloth_cloak",
+    "tier": 2
+  },
+  {
+    "id": "blueprint_cloth_cloak_3",
+    "name": "Blueprint: Wool Cloak",
+    "familyId": "blueprint_cloth_cloak",
+    "tier": 3
+  },
+  {
+    "id": "blueprint_cloth_cloak_4",
+    "name": "Blueprint: Silk Cloak",
+    "familyId": "blueprint_cloth_cloak",
+    "tier": 4
+  },
+  {
+    "id": "blueprint_cloth_cloak_5",
+    "name": "Blueprint: Shadow Cloak",
+    "familyId": "blueprint_cloth_cloak",
+    "tier": 5
+  },
+  {
+    "id": "blueprint_cloth_cloak_6",
+    "name": "Blueprint: Moon Cloak",
+    "familyId": "blueprint_cloth_cloak",
+    "tier": 6
+  },
+  {
+    "id": "blueprint_quilted_cloak_1",
+    "name": "Blueprint: Sparrow Feather Cloak",
+    "familyId": "blueprint_quilted_cloak",
+    "tier": 1
+  },
+  {
+    "id": "blueprint_quilted_cloak_2",
+    "name": "Blueprint: Owl Feather Cloak",
+    "familyId": "blueprint_quilted_cloak",
+    "tier": 2
+  },
+  {
+    "id": "blueprint_quilted_cloak_3",
+    "name": "Blueprint: Hawk Feather Cloak",
+    "familyId": "blueprint_quilted_cloak",
+    "tier": 3
+  },
+  {
+    "id": "blueprint_quilted_cloak_4",
+    "name": "Blueprint: Phoenix Feather Cloak",
+    "familyId": "blueprint_quilted_cloak",
+    "tier": 4
+  },
+  {
+    "id": "blueprint_quilted_cloak_5",
+    "name": "Blueprint: Roc Feather Cloak",
+    "familyId": "blueprint_quilted_cloak",
+    "tier": 5
+  },
+  {
+    "id": "blueprint_quilted_cloak_6",
+    "name": "Blueprint: Celestial Feather Cloak",
+    "familyId": "blueprint_quilted_cloak",
+    "tier": 6
+  },
+  {
+    "id": "blueprint_fur_cloak_1",
+    "name": "Blueprint: Rabbit Fur Cloak",
+    "familyId": "blueprint_fur_cloak",
+    "tier": 1
+  },
+  {
+    "id": "blueprint_fur_cloak_2",
+    "name": "Blueprint: Fox Fur Cloak",
+    "familyId": "blueprint_fur_cloak",
+    "tier": 2
+  },
+  {
+    "id": "blueprint_fur_cloak_3",
+    "name": "Blueprint: Wolf Fur Cloak",
+    "familyId": "blueprint_fur_cloak",
+    "tier": 3
+  },
+  {
+    "id": "blueprint_fur_cloak_4",
+    "name": "Blueprint: Warg Fur Cloak",
+    "familyId": "blueprint_fur_cloak",
+    "tier": 4
+  },
+  {
+    "id": "blueprint_fur_cloak_5",
+    "name": "Blueprint: Fenrir Fur Cloak",
+    "familyId": "blueprint_fur_cloak",
+    "tier": 5
+  },
+  {
+    "id": "blueprint_fur_cloak_6",
+    "name": "Blueprint: Frostmane Fur Cloak",
+    "familyId": "blueprint_fur_cloak",
+    "tier": 6
+  },
+  {
+    "id": "blueprint_chalk_1",
+    "name": "Blueprint: Chalk",
+    "familyId": "blueprint_chalk",
+    "tier": 1
+  },
+  {
+    "id": "blueprint_chalk_2",
+    "name": "Blueprint: Chalk",
+    "familyId": "blueprint_chalk",
+    "tier": 2
+  },
+  {
+    "id": "blueprint_chalk_3",
+    "name": "Blueprint: Chalk",
+    "familyId": "blueprint_chalk",
+    "tier": 3
+  },
+  {
+    "id": "blueprint_chalk_4",
+    "name": "Blueprint: Chalk",
+    "familyId": "blueprint_chalk",
+    "tier": 4
+  },
+  {
+    "id": "blueprint_chalk_5",
+    "name": "Blueprint: Chalk",
+    "familyId": "blueprint_chalk",
+    "tier": 5
+  },
+  {
+    "id": "blueprint_chalk_6",
+    "name": "Blueprint: Chalk",
+    "familyId": "blueprint_chalk",
+    "tier": 6
+  },
+  {
+    "id": "blueprint_pickled_fish_1",
+    "name": "Blueprint: Jarred Pickled Fish",
+    "familyId": "blueprint_pickled_fish",
+    "tier": 1
+  },
+  {
+    "id": "blueprint_pickled_fish_2",
+    "name": "Blueprint: Brined Pickled Fish",
+    "familyId": "blueprint_pickled_fish",
+    "tier": 2
+  },
+  {
+    "id": "blueprint_pickled_fish_3",
+    "name": "Blueprint: Spiced Pickled Fish",
+    "familyId": "blueprint_pickled_fish",
+    "tier": 3
+  },
+  {
+    "id": "blueprint_pickled_fish_4",
+    "name": "Blueprint: Cask-Aged Pickled Fish",
+    "familyId": "blueprint_pickled_fish",
+    "tier": 4
+  },
+  {
+    "id": "blueprint_pickled_fish_5",
+    "name": "Blueprint: Deepbrine Pickled Fish",
+    "familyId": "blueprint_pickled_fish",
+    "tier": 5
+  },
+  {
+    "id": "blueprint_pickled_fish_6",
+    "name": "Blueprint: Ambrosial Pickled Fish",
+    "familyId": "blueprint_pickled_fish",
+    "tier": 6
+  },
+  {
+    "id": "blueprint_leather_cloak_1",
+    "name": "Blueprint: Oiled Hide Cloak",
+    "familyId": "blueprint_leather_cloak",
+    "tier": 1
+  },
+  {
+    "id": "blueprint_leather_cloak_2",
+    "name": "Blueprint: Waxed Deerskin Cloak",
+    "familyId": "blueprint_leather_cloak",
+    "tier": 2
+  },
+  {
+    "id": "blueprint_leather_cloak_3",
+    "name": "Blueprint: Elkhide Storm Cloak",
+    "familyId": "blueprint_leather_cloak",
+    "tier": 3
+  },
+  {
+    "id": "blueprint_leather_cloak_4",
+    "name": "Blueprint: Wyvernhide Cloak",
+    "familyId": "blueprint_leather_cloak",
+    "tier": 4
+  },
+  {
+    "id": "blueprint_leather_cloak_5",
+    "name": "Blueprint: Drakehide Cloak",
+    "familyId": "blueprint_leather_cloak",
+    "tier": 5
+  },
+  {
+    "id": "blueprint_leather_cloak_6",
+    "name": "Blueprint: Stormhide Cloak",
+    "familyId": "blueprint_leather_cloak",
+    "tier": 6
+  },
+  {
+    "id": "blueprint_jerky_1",
+    "name": "Blueprint: Cabin Boy's Jerky",
+    "familyId": "blueprint_jerky",
+    "tier": 1
+  },
+  {
+    "id": "blueprint_jerky_2",
+    "name": "Blueprint: Sailor's Jerky",
+    "familyId": "blueprint_jerky",
+    "tier": 2
+  },
+  {
+    "id": "blueprint_jerky_3",
+    "name": "Blueprint: Boatswain's Jerky",
+    "familyId": "blueprint_jerky",
+    "tier": 3
+  },
+  {
+    "id": "blueprint_jerky_4",
+    "name": "Blueprint: First Mate's Jerky",
+    "familyId": "blueprint_jerky",
+    "tier": 4
+  },
+  {
+    "id": "blueprint_jerky_5",
+    "name": "Blueprint: Captain's Jerky",
+    "familyId": "blueprint_jerky",
+    "tier": 5
+  },
+  {
+    "id": "blueprint_jerky_6",
+    "name": "Blueprint: Admiral's Jerky",
+    "familyId": "blueprint_jerky",
+    "tier": 6
+  },
+  {
+    "id": "blueprint_roasted_nuts_1",
+    "name": "Blueprint: Forager's Roasted Nuts",
+    "familyId": "blueprint_roasted_nuts",
+    "tier": 1
+  },
+  {
+    "id": "blueprint_roasted_nuts_2",
+    "name": "Blueprint: Scavenger's Roasted Nuts",
+    "familyId": "blueprint_roasted_nuts",
+    "tier": 2
+  },
+  {
+    "id": "blueprint_roasted_nuts_3",
+    "name": "Blueprint: Woodland Roasted Nuts",
+    "familyId": "blueprint_roasted_nuts",
+    "tier": 3
+  },
+  {
+    "id": "blueprint_roasted_nuts_4",
+    "name": "Blueprint: Autumn's Roasted Nuts",
+    "familyId": "blueprint_roasted_nuts",
+    "tier": 4
+  },
+  {
+    "id": "blueprint_roasted_nuts_5",
+    "name": "Blueprint: Bountiful Roasted Nuts",
+    "familyId": "blueprint_roasted_nuts",
+    "tier": 5
+  },
+  {
+    "id": "blueprint_roasted_nuts_6",
+    "name": "Blueprint: Ageless Roasted Nuts",
+    "familyId": "blueprint_roasted_nuts",
+    "tier": 6
+  },
+  {
+    "id": "blueprint_fig_cake_1",
+    "name": "Blueprint: Sunfaded Fig Cake",
+    "familyId": "blueprint_fig_cake",
+    "tier": 1
+  },
+  {
+    "id": "blueprint_fig_cake_2",
+    "name": "Blueprint: Windswept Fig Cake",
+    "familyId": "blueprint_fig_cake",
+    "tier": 2
+  },
+  {
+    "id": "blueprint_fig_cake_3",
+    "name": "Blueprint: Shriveled Fig Cake",
+    "familyId": "blueprint_fig_cake",
+    "tier": 3
+  },
+  {
+    "id": "blueprint_fig_cake_4",
+    "name": "Blueprint: Amber Fig Cake",
+    "familyId": "blueprint_fig_cake",
+    "tier": 4
+  },
+  {
+    "id": "blueprint_fig_cake_5",
+    "name": "Blueprint: Honey Fig Cake",
+    "familyId": "blueprint_fig_cake",
+    "tier": 5
+  },
+  {
+    "id": "blueprint_fig_cake_6",
+    "name": "Blueprint: Ancient Fig Cake",
+    "familyId": "blueprint_fig_cake",
+    "tier": 6
+  },
+  {
+    "id": "blueprint_smoked_fish_1",
+    "name": "Blueprint: Smoked Stream Minnow",
+    "familyId": "blueprint_smoked_fish",
+    "tier": 1
+  },
+  {
+    "id": "blueprint_smoked_fish_2",
+    "name": "Blueprint: Smoked River Trout",
+    "familyId": "blueprint_smoked_fish",
+    "tier": 2
+  },
+  {
+    "id": "blueprint_smoked_fish_3",
+    "name": "Blueprint: Smoked Sea Salmon",
+    "familyId": "blueprint_smoked_fish",
+    "tier": 3
+  },
+  {
+    "id": "blueprint_smoked_fish_4",
+    "name": "Blueprint: Smoked Runic Eel",
+    "familyId": "blueprint_smoked_fish",
+    "tier": 4
+  },
+  {
+    "id": "blueprint_smoked_fish_5",
+    "name": "Blueprint: Smoked Umbral Anglerfish",
+    "familyId": "blueprint_smoked_fish",
+    "tier": 5
+  },
+  {
+    "id": "blueprint_smoked_fish_6",
+    "name": "Blueprint: Smoked Abyssal Leviathan",
+    "familyId": "blueprint_smoked_fish",
     "tier": 6
   }
 ]

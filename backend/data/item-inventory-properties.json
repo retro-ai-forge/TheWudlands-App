@@ -1180,31 +1180,6 @@
     "backpackable": true
   },
   {
-    "familyId": "salt_horse",
-    "kind": [
-      "food"
-    ],
-    "sizeClass": "tiny",
-    "stackSize": 10,
-    "needsItemDefinition": false,
-    "note": "Consumed on use, not degraded - proposed as a simple stackable count.",
-    "equipSlots": [
-      [
-        "Left Hand"
-      ],
-      [
-        "Right Hand"
-      ],
-      [
-        "Girdle"
-      ],
-      [
-        "Side"
-      ]
-    ],
-    "backpackable": true
-  },
-  {
     "familyId": "smoked_fish",
     "kind": [
       "food"
@@ -1230,7 +1205,7 @@
     "backpackable": true
   },
   {
-    "familyId": "smoked_salt_horse",
+    "familyId": "jerky",
     "kind": [
       "food"
     ],
@@ -1255,7 +1230,7 @@
     "backpackable": true
   },
   {
-    "familyId": "smoked_squirrel_hoard",
+    "familyId": "roasted_nuts",
     "kind": [
       "food"
     ],
@@ -1280,57 +1255,7 @@
     "backpackable": true
   },
   {
-    "familyId": "smoked_wizened_figs",
-    "kind": [
-      "food"
-    ],
-    "sizeClass": "tiny",
-    "stackSize": 10,
-    "needsItemDefinition": false,
-    "note": "Consumed on use, not degraded - proposed as a simple stackable count.",
-    "equipSlots": [
-      [
-        "Left Hand"
-      ],
-      [
-        "Right Hand"
-      ],
-      [
-        "Girdle"
-      ],
-      [
-        "Side"
-      ]
-    ],
-    "backpackable": true
-  },
-  {
-    "familyId": "squirrel_hoard",
-    "kind": [
-      "food"
-    ],
-    "sizeClass": "tiny",
-    "stackSize": 10,
-    "needsItemDefinition": false,
-    "note": "Consumed on use, not degraded - proposed as a simple stackable count.",
-    "equipSlots": [
-      [
-        "Left Hand"
-      ],
-      [
-        "Right Hand"
-      ],
-      [
-        "Girdle"
-      ],
-      [
-        "Side"
-      ]
-    ],
-    "backpackable": true
-  },
-  {
-    "familyId": "wizened_figs",
+    "familyId": "fig_cake",
     "kind": [
       "food"
     ],
@@ -1597,6 +1522,23 @@
   },
   {
     "familyId": "fur_cloak",
+    "kind": [
+      "armor"
+    ],
+    "sizeClass": "light",
+    "stackSize": 1,
+    "needsItemDefinition": true,
+    "note": "Wears out with use.",
+    "equipSlots": [
+      [
+        "Cloak"
+      ]
+    ],
+    "backpackable": true,
+    "armorClass": 1
+  },
+  {
+    "familyId": "leather_cloak",
     "kind": [
       "armor"
     ],
@@ -3231,17 +3173,6 @@
     "backpackable": true
   },
   {
-    "familyId": "baked_harvest",
-    "kind": [
-      "processed"
-    ],
-    "sizeClass": "tiny",
-    "stackSize": 20,
-    "needsItemDefinition": false,
-    "equipSlots": [],
-    "backpackable": true
-  },
-  {
     "familyId": "beam",
     "kind": [
       "processed"
@@ -3309,17 +3240,6 @@
   },
   {
     "familyId": "coal",
-    "kind": [
-      "processed"
-    ],
-    "sizeClass": "tiny",
-    "stackSize": 20,
-    "needsItemDefinition": false,
-    "equipSlots": [],
-    "backpackable": true
-  },
-  {
-    "familyId": "cooked_meat",
     "kind": [
       "processed"
     ],
@@ -3419,17 +3339,6 @@
   },
   {
     "familyId": "ground_pigment",
-    "kind": [
-      "processed"
-    ],
-    "sizeClass": "tiny",
-    "stackSize": 20,
-    "needsItemDefinition": false,
-    "equipSlots": [],
-    "backpackable": true
-  },
-  {
-    "familyId": "ground_spice",
     "kind": [
       "processed"
     ],
