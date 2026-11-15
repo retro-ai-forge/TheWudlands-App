@@ -493,6 +493,11 @@ class TrappingsItemResponse(BaseModel):
         default_factory=list,
         description="Blueprints only: the station(s) its item is crafted at (any one of them) - empty when it needs none",
     )
+    partStations: List[List[str]] = Field(
+        default_factory=list,
+        description="Blueprints only: the stations its parts (the processed ingredients crafted along the way) need, "
+        "each entry one requirement as its alternatives - e.g. [['furnace'], ['axe_stone', 'axe']] for a sword",
+    )
 
 
 class TrappingsBlueprintPoolResponse(BaseModel):
@@ -909,13 +914,43 @@ async def get_my_characters(address: str = Depends(get_current_address)):
     return player.to_dict()
 
 
+def _recipe_tools(recipe: dict) -> List[str]:
+    tool = recipe.get("tool")
+    return [tool] if isinstance(tool, str) else list(tool or [])
+
+
 def _blueprint_station(blueprint_family_id: str) -> List[str]:
     """The station(s) the item a blueprint unlocks is crafted at - its recipe's
     tool (one, or a list of alternatives), [] when it needs none. Every
     blueprint_X gates exactly the recipe X (tests/test_craft_catalog.py)."""
-    recipe = _RECIPES_BY_FAMILY.get(blueprint_family_id.removeprefix("blueprint_")) or {}
-    tool = recipe.get("tool")
-    return [tool] if isinstance(tool, str) else list(tool or [])
+    return _recipe_tools(_RECIPES_BY_FAMILY.get(blueprint_family_id.removeprefix("blueprint_")) or {})
+
+
+def _blueprint_part_stations(blueprint_family_id: str) -> List[List[str]]:
+    """The stations the parts of a blueprint's item need - every "processed"
+    ingredient crafted along the way (the first option the crafter would
+    use), recursively - in chain order, without repeats or the item's own
+    station. An anvil is assembled by hand, but its metal bar needs a
+    furnace: [["furnace"]]."""
+    top = _blueprint_station(blueprint_family_id)
+    found: List[List[str]] = []
+
+    def walk(family_id: str, seen: frozenset) -> None:
+        recipe = _RECIPES_BY_FAMILY.get(family_id)
+        if recipe is None or family_id in seen:
+            return
+        for ingredient in recipe["ingredients"]:
+            option = next((o for o in ingredient.get("alternatives") or [ingredient] if o.get("consumed", True)), None)
+            if option is None or option["category"] != "processed":
+                continue
+            part = _RECIPES_BY_FAMILY.get(option["familyId"]) or {}
+            tools = _recipe_tools(part)
+            if tools and tools != top and tools not in found:
+                found.append(tools)
+            walk(option["familyId"], seen | {family_id})
+
+    walk(blueprint_family_id.removeprefix("blueprint_"), frozenset())
+    return found
 
 
 @player_router.get("/me/trappings-options", response_model=TrappingsOptionsResponse)
@@ -956,7 +991,8 @@ async def get_trappings_options(
                     TrappingsItemResponse(id=item.id, name=item.name, familyId=item.family_id, tier=item.tier,
                                           kind=blueprint_source(item.family_id) or "",
                                           own=item.family_id in pool.own_families,
-                                          station=_blueprint_station(item.family_id))
+                                          station=_blueprint_station(item.family_id),
+                                          partStations=_blueprint_part_stations(item.family_id))
                     for item in pool.items
                 ],
             )

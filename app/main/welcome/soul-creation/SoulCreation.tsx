@@ -69,6 +69,8 @@ type TrappingsItem = {
   own?: boolean;
   /** Blueprints only: the station(s) its item is crafted at (any one of them) - empty when it needs none. */
   station?: string[];
+  /** Blueprints only: the stations its parts need along the way, each one requirement as its alternatives. */
+  partStations?: string[][];
 };
 
 // One blueprintPoolsByProfessionCount rule (see resource-selection-rules.json),
@@ -1436,6 +1438,7 @@ export function SoulCreation({
                                 const info = itemCatalog[`${outputFamily}_${picked.tier}`];
                                 const name = info?.name ?? picked.name.replace("Blueprint: ", "");
                                 const station = picked.station ?? [];
+                                const partStations = picked.partStations ?? [];
                                 const raws = blueprintMaterials[picked.familyId] ?? [];
                                 return (
                                   <ItemInfoCard
@@ -1447,9 +1450,15 @@ export function SoulCreation({
                                       </p>
                                     }
                                     extraLines={[
-                                      station.length
-                                        ? `Crafted at: ${station.map(formatResourceLabel).join(" or ")}`
-                                        : "Crafted at: no station needed",
+                                      (() => {
+                                        // Every station of the chain: the item's own, then its parts'.
+                                        const needs = [...(station.length ? [station] : []), ...partStations];
+                                        return needs.length
+                                          ? `Crafting needs: ${needs
+                                              .map((options) => options.map(formatResourceLabel).join(" or "))
+                                              .join(", ")}`
+                                          : "Crafting needs: no tool";
+                                      })(),
                                       ...(raws.length ? [`Made from: ${raws.map(formatResourceLabel).join(", ")}`] : []),
                                     ]}
                                   />

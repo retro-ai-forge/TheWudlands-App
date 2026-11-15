@@ -135,3 +135,16 @@ def test_lore_lists_every_blueprint_a_profession_can_start_with():
             assert summary["families"][family]["items"][0]["tier"] == 1
     assert summary["families"]["fishermans_ration"]["name"] == "Fisherman's Ration"
     assert summary["families"]["lock_and_key"]["name"] == "Lock and Key"
+
+
+def test_the_creation_card_names_the_stations_of_the_parts():
+    """Soul Creation's preview card: the item's own station and the ones its
+    parts need along the way (an anvil is assembled by hand, its metal bar
+    needs a furnace)."""
+    from backend.auth_routes import _blueprint_part_stations, _blueprint_station
+
+    assert _blueprint_station("blueprint_anvil") == []
+    assert _blueprint_part_stations("blueprint_anvil") == [["furnace"]]
+    assert _blueprint_station("blueprint_sword") == ["anvil"]
+    assert _blueprint_part_stations("blueprint_sword") == [["furnace"], ["axe_stone", "axe"]]
+    assert _blueprint_part_stations("blueprint_iron_ration") == []   # its parts are other trades' goods
