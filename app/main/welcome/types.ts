@@ -358,7 +358,7 @@ export type ForagingState = {
     helpfulWeapons: string[];
     helpfulItems: string[];
     mission: ForageMission | null;
-    /** Dug in the dark (foraging-rules.json "darkness": ore, crystal) - light needed. */
+    /** Dug in the dark (foraging-rules.json "darkness": ore, crystal, clockwork) - light needed. */
     needsLight?: boolean;
   }[];
   dormantFamilies: string[];

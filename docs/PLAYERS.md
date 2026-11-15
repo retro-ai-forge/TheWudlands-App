@@ -314,7 +314,7 @@ In both tables, raw materials are counted down the whole creation chain, and an 
 
 ### Light Sources
 
-Mining ore and crystal needs 1 hour of light per unit the site gives. Every light costs 2 raw materials at tier 1 (crafting takes the first option you have enough of); the raw materials' tier follows the light's tier, and burn time doubles each tier. A burning light also counts like a weapon for the trip:
+Mining ore, crystal and clockwork needs 1 hour of light per unit the site gives - without it they are dug in the dark: half the find and a risk of accidents. Every light costs 2 raw materials at tier 1 (crafting takes the first option you have enough of); the raw materials' tier follows the light's tier, and burn time doubles each tier. A burning light also counts like a weapon for the trip:
 
 | Light Source | Raw Materials | Burns (T1 / T6) | Raw per Hour (T1) | Bonus (T1 / T6) |
 |---|---|---:|---:|---:|

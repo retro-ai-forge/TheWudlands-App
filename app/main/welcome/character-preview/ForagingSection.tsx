@@ -94,7 +94,7 @@ const LIT_TORCH_ICON: string | null = "/images/items/torch_lit_t1.png";
 const TORCH_ICON = "/images/items/torch_t1.png";
 
 /** The material's icon (its T1 raw), with a small lit torch in the lower
- * right for materials dug in the dark (ore, crystal - see backend darkness). */
+ * right for materials dug in the dark (ore, crystal, clockwork - see backend darkness). */
 function MaterialIcon({ familyId, needsLight, catalog }: {
   familyId: string;
   needsLight?: boolean;

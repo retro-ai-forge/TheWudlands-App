@@ -111,13 +111,10 @@ export function HomeView({
 
   // Which home-wide bulk action popup is open, if any - the lit campfire
   // opens "burn" (HoldActionPopup's own Burn All), the dropped-items icon
-  // opens "moveAll" (Move all to backpack), the chopping block opens
-  // "chop" (ChopBlockPopup's own bulk salvage). The fire/dropped icons
-  // aren't clickable at all unless hasHomeItems (see their own render
-  // guards below); the chopping block is always clickable (its own
-  // preview list is simply empty when there's nothing recyclable), so
-  // there's nothing to gate here beyond which of the three was clicked.
-  const [homeAction, setHomeAction] = useState<"burn" | "moveAll" | "chop" | null>(null);
+  // opens "moveAll" (Move all to backpack). Neither icon is clickable
+  // unless hasHomeItems (see their own render guards below). Salvaging only
+  // happens from the multi-select bar (showSalvagePopup).
+  const [homeAction, setHomeAction] = useState<"burn" | "moveAll" | null>(null);
 
   const [selectMode, setSelectMode] = useState(false);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
@@ -803,38 +800,6 @@ export function HomeView({
               }
             />
           )}
-          {/* Bound to the tent group itself (like .campfireStageFireIcon
-              above), not the screen edge - sits right of the tent, easing
-              only a little further out on wider screens instead of
-              tracking the actual viewport edge. Opens ChopBlockPopup's
-              own bulk-salvage popup - only clickable while hasHomeItems,
-              same gating as campfire_lit.png/campfire_unlit.png above
-              (nothing to salvage with an empty home, so it stays purely
-              decorative then, dimmed the same way the tent itself does
-              via .campfireStageIconEmpty). */}
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src="/images/character/salvage.png"
-            alt=""
-            role={canBulk ? "button" : undefined}
-            tabIndex={canBulk ? 0 : undefined}
-            title={canBulk ? "Salvage everything shown" : undefined}
-            aria-label={canBulk ? "Salvage everything shown" : undefined}
-            onClick={canBulk ? () => { exitSelectMode(); setHomeAction("chop"); } : undefined}
-            style={canBulk ? undefined : { cursor: "default" }}
-            onKeyDown={
-              canBulk
-                ? (e) => {
-                    if (e.key === "Enter" || e.key === " ") { exitSelectMode(); setHomeAction("chop"); }
-                  }
-                : undefined
-            }
-            className={
-              hasHomeItems
-                ? styles.homeChoppingBlockIcon
-                : `${styles.homeChoppingBlockIcon} ${styles.homeChoppingBlockIconEmpty}`
-            }
-          />
         </div>
         {hasHomeItems && (
           // eslint-disable-next-line @next/next/no-img-element
@@ -877,15 +842,6 @@ export function HomeView({
             onConfirm={async () => { setHomeActionBusy(true); const r = await postJson(`/api/auth/me/characters/${character.id}/${storageType}/move-all-to-bags`, homeVisible.shown); if (!r.ok) setHomeActionBusy(false); return r; }}
             onPlayerDataUpdated={(data) => { setHomeActionBusy(false); onPlayerDataUpdated?.(data); }}
             onClose={() => { setHomeActionBusy(false); setHomeAction(null); }}
-          />
-        )}
-        {homeAction === "chop" && (
-          <ChopBlockPopup
-            characterId={character.id}
-            onPlayerDataUpdated={onPlayerDataUpdated}
-            onClose={() => setHomeAction(null)}
-            preSelectedIds={new Set([...homeVisible.shown.instanceIds, ...Object.keys(homeVisible.shown.balances)])}
-            source={storageType}
           />
         )}
         <button

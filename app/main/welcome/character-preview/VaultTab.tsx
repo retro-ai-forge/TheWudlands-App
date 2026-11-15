@@ -1761,39 +1761,30 @@ export function ChopBlockPopup({
   characterId: string;
   onPlayerDataUpdated?: (data: RawPlayerData) => void;
   onClose: () => void;
-  preSelectedIds?: Set<string>;
-  /** Salvaging only happens at home or camp: the salvage icon, or the
-   * multi-select bar there (preSelectedIds). */
+  /** What the multi-select bar selected - the only way to salvage. */
+  preSelectedIds: Set<string>;
+  /** Salvaging only happens at home or camp, from the multi-select bar. */
   source?: "home" | "camp";
 }) {
   const [rows, setRows] = useState<ChopBlockRow[] | null>(null);
   const [selected, setSelected] = useState<Set<string>>(new Set());
 
   useEffect(() => {
-    // An empty pre-selection means nothing to salvage - not "everything",
+    // An empty selection means nothing to salvage - not "everything",
     // which is what the preview answers when no `selected` is sent.
-    if (preSelectedIds && preSelectedIds.size === 0) {
+    if (preSelectedIds.size === 0) {
       setRows([]);
       return;
     }
     let cancelled = false;
-    let url = `/api/auth/me/characters/${characterId}/${source}/salvage-preview`;
-    const params: string[] = [];
-    if (preSelectedIds && preSelectedIds.size > 0) {
-      params.push(`selected=${[...preSelectedIds].join(",")}`);
-    }
-    if (params.length > 0) url += `?${params.join("&")}`;
+    const url = `/api/auth/me/characters/${characterId}/${source}/salvage-preview?selected=${[...preSelectedIds].join(",")}`;
     fetch(url, { credentials: "include" })
       .then((res) => (res.ok ? res.json() : null))
       .then((data: { rows: ChopBlockRow[] } | null) => {
         if (cancelled) return;
         const loaded = data?.rows ?? [];
         setRows(loaded);
-        if (preSelectedIds) {
-          setSelected(new Set(loaded.map((row) => row.id)));
-        } else {
-          setSelected(new Set(loaded.filter((row) => row.preselected !== false).map((row) => row.id)));
-        }
+        setSelected(new Set(loaded.map((row) => row.id)));
       })
       .catch(() => {
         if (!cancelled) setRows([]);

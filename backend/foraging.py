@@ -59,8 +59,8 @@ lower of lantern and oil), then torches, then candles, each lowest tier
 first - with the hours per unit from light-source-burn-hours.json (a T1
 torch lasts 2h). The best light that burned counts like a weapon
 (lightBonusByTier, +25% at T1 .. +75% at T6) for the whole trip. Units the
-light can't cover are dug as without it: on ore and crystal (rules
-"darkness") with 50%
+light can't cover are dug as without it: on ore, crystal and clockwork
+(rules "darkness") with 50%
 less, only that leaving the site, plus one accident roll - minor (1-2),
 serious (3-5) or hardcore (6-10 temporary Body points, enough to kill;
 serious and hardcore also get the character lost), applied on collect. A
@@ -703,8 +703,8 @@ def plan_trip(base: int, count: int, remaining: int, weapon: Optional[dict], ite
     the site gives (LIGHT_HOURS_PER_UNIT hours each) - the gear's bonus
     comes on top without more light, so what burns doesn't depend on it. The
     units the light covers are dug with the best light burned as bonus, the
-    rest of the site's find as without a light (on ore and crystal: in the
-    dark). `items` without lights; `draw` rounds the gear bonus (see dig -
+    rest of the site's find as without a light (on ore, crystal and
+    clockwork: in the dark). `items` without lights; `draw` rounds the gear bonus (see dig -
     1.0 rounds down, 0.0 up). Returns {"amount" (brought home), "taken"
     (from the site), "litUnits", "darkUnits" (brought home lit / unlit),
     "inDark" (any of it dug in the dark on a dark material), "burned" {item
@@ -1183,7 +1183,7 @@ def _build_state(doc: dict, pool: Optional[dict]) -> dict:
             "helpfulItems": list(wanted["items"]) + [c for c, r in COMPANION_CHARMS.items()
                                                       if family_id in r["families"]],
             "mission": mission.to_dict() if mission else None,
-            # Dug in the dark (ore, crystal): the site card marks it with a lit torch.
+            # Dug in the dark (ore, crystal, clockwork): the site card marks it with a lit torch.
             "needsLight": family_id in DARK_FAMILIES,
         })
 

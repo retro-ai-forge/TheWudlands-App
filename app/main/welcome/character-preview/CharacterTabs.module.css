@@ -2139,17 +2139,15 @@
 }
 
 /* Broken equipped instances (condition level 1, mirroring ItemGrid's own
-   .itemGridCellDamaged) - .equipSlotIcon fills the slot
-   edge-to-edge with `cover` (unlike ItemGrid's `contain`), so a plain
-   background color behind it would never show. A translucent red
-   multiply-tint layered ON TOP of the icon instead. */
+   .itemGridCellDamaged) - a red glow from the edges inward, layered ON TOP
+   of the icon (.equipSlotIcon fills the slot edge-to-edge with `cover`, so
+   nothing behind it would show), leaving the middle of the icon free. */
 .equipSlotIconWrapDamaged::after {
   content: "";
   position: absolute;
   inset: 0;
   z-index: 2;
-  background: rgba(168, 29, 16, 0.4);
-  mix-blend-mode: multiply;
+  box-shadow: inset 0 0 10px 3px rgba(200, 40, 28, 0.85);
   pointer-events: none;
 }
 
@@ -2829,42 +2827,9 @@
   cursor: pointer;
 }
 
-/* Right of the tent (camp.png), mirroring .homeDroppedIcon's own
-   left-side placement but sitting higher off the ground (2.75rem vs its
-   1.25rem) rather than at the same level. Purely decorative for now - no
-   click handler, so no pointer-events override needed the way
-   .homeDroppedIcon's own click target requires. */
-.homeChoppingBlockIcon {
-  position: absolute;
-  /* Anchored against .homeTentGroup itself (this is now a child of it,
-     next to the fire/tent images) - same clamp() easing
-     .campfireStageFireIcon uses on the opposite side, so this only drifts
-     a little further from the tent on a wider screen instead of tracking
-     the actual viewport edge. */
-  right: calc(-1 * clamp(0px, (100vw - 400px) * 0.15, 40px));
-  bottom: 7rem;
-  transform: translateX(65%);
-  /* Behind the tent (.campfireStageIcon's own z-index:2), not in front
-     of it - the two sit close enough now that the tent's own silhouette
-     overlaps this a bit, rather than this floating fully in the clear
-     above/beside it. */
-  z-index: 1;
-  height: 6.5rem;
-  width: auto;
-  image-rendering: pixelated;
-  /* Clickable (opens ChopBlockPopup) - same pointer-events:auto
-     requirement as .homeDroppedIcon's own identical comment: .campfireStage
-     sets pointer-events:none on itself, which inherits down to every
-     descendant unless overridden right here. */
-  pointer-events: auto;
-  cursor: pointer;
-}
-
-/* Same dimming as the tent's own .campfireStageIconEmpty while home is
-   empty. */
-/* The workbench - the chopping block's counterpart on the tent's left:
-   same tent-relative anchoring and clamp() easing, behind the tent, above
-   the campfire. Always clickable (opens the crafting page). */
+/* The workbench, on the tent's left: tent-relative anchoring and clamp()
+   easing, behind the tent, above the campfire. Always clickable (opens the
+   crafting page). */
 .homeWorkbenchIcon {
   position: absolute;
   left: calc(-1 * clamp(0px, (100vw - 400px) * 0.15, 40px));
@@ -2993,16 +2958,6 @@
   margin-top: 1.25rem;
 }
 
-.homeChoppingBlockIconEmpty {
-  filter: brightness(0.55);
-  /* Not clickable while home is empty (see HomeView.tsx's own
-     hasCampItems gate) - overrides the base rule's pointer-events:auto/
-     cursor:pointer back to non-interactive, same as
-     .campfireStageFireIconUnlit staying non-interactive by simply never
-     opting into its own Lit sibling's pointer-events:auto. */
-  pointer-events: none;
-  cursor: default;
-}
 
 /* Same char-preview-close.png glyph as the page's own (now-hidden-while-in-home)
    .closeButton, repurposed here to back out of home specifically rather
@@ -3089,17 +3044,23 @@
   border-color: #c07a3a;
 }
 
-/* Broken instances (condition level 1 - see ItemGrid's isDamaged) get a
-   red-tinted tile, not just the red condition corner, so an item about to
-   be lost stands out at a glance in a full grid. Kept dark/desaturated rather than a bright red wash so the icon
-   itself (drawn over this) stays readable. */
+/* Broken instances (condition level 1 - see ItemGrid's isDamaged) get a red
+   glow from the tile's edges inward, not just the red condition corner, so
+   an item about to be lost stands out at a glance in a full grid - the
+   middle stays free, so the icon itself stays readable. */
 .itemGridCellDamaged {
-  background: #2a0d0d;
   border-color: #7a2a20;
+  box-shadow: inset 0 0 10px 3px rgba(200, 40, 28, 0.85);
 }
 
 .itemGridCellDamaged:hover {
   border-color: #aa4030;
+}
+
+/* Selected and broken: keep the red glow under the gold selection border. */
+.itemGridCellDamaged.itemGridCellSelected {
+  border-color: #c07a3a;
+  box-shadow: inset 0 0 10px 3px rgba(200, 40, 28, 0.85);
 }
 
 .itemGridCellSelected {
@@ -3239,7 +3200,7 @@
 /* Condition indicator in the tile's bottom-left corner (item instances
    only - see VaultTab's conditionOf) - green new, yellow used, red damaged
    and broken per conditionColor (set inline as background-color), a
-   fixed-size triangle; a broken item also gets the red tile tint. Left, not
+   fixed-size triangle; a broken item also gets the red edge glow. Left, not
    right, to stay clear of .itemGridCountBadge's own bottom-right corner. */
 .itemGridConditionCorner {
   position: absolute;

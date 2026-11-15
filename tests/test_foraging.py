@@ -622,12 +622,11 @@ def test_ore_past_the_light_is_dug_in_the_dark():
     # 2, and only those 2 leave the site.
     assert plan["litUnits"] == 7 and plan["darkUnits"] == 2 and plan["amount"] == 9
     assert plan["taken"] == 6 + 2 and plan["inDark"]
-    # Not on a material without darkness (clockwork): the rest is just dug
-    # without the light's bonus.
+    # Clockwork is dug in the dark the same way.
     clockwork = foraging.light_supply({"gear": {"items": [], "itemBalances": {"backpack": {
         "tinderbox_1": 1, "torch_1": 3}}}}, "clockwork")[0]
     plan = foraging.plan_trip(10, 0, 100, None, [], clockwork, None, "clockwork")
-    assert plan["litUnits"] == 7 and plan["amount"] == 7 + 4 and plan["taken"] == 10 and not plan["inDark"]
+    assert plan["litUnits"] == 7 and plan["darkUnits"] == 2 and plan["amount"] == 9 and plan["inDark"]
 
 
 def test_the_gear_bonus_comes_on_top_and_never_leaves_the_site():
@@ -886,12 +885,12 @@ async def test_a_night_may_wear_out_the_bedroll(db, monkeypatch):
 # ── Darkness (ore without a light) ─────────────────────────────────────
 
 
-def test_ore_and_crystal_are_dark():
+def test_ore_crystal_and_clockwork_are_dark():
     empty = {"gear": {"items": [], "itemBalances": {}}}
-    for family in ("ore", "crystal"):
+    for family in ("ore", "crystal", "clockwork"):
         gear = foraging.gathering_gear(empty, family)
         assert gear["dark"] is True and gear["percent"] == -50
-    for family in ("clockwork", "wood"):
+    for family in ("wood", "stone"):
         gear = foraging.gathering_gear(empty, family)
         assert gear["dark"] is False and gear["percent"] == 0
 
