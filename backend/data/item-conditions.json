@@ -8,8 +8,8 @@
     "stackLoss": 0.02
   },
   "nights": {
-    "_comment": "Each night out, each carried tent/bedroll may be used up (on top of the storm tent loss in foraging-rules.json).",
-    "shelterLoss": 0.02
+    "_comment": "Each night out, the carried tent and bedroll (the piece in use) may each drop one condition level (on top of the storm tent loss in foraging-rules.json). A leftover stacked tent/bedroll from before they were items loses the unit instead.",
+    "shelterWear": 0.05
   },
   "crafting": {
     "_comment": "A borrowed tool - a tool item (axe, dagger...) or a crafting station (anvil, furnace, loom...) - drops one level with toolPerUnit for each item crafted, added up over the batch into one roll at the end, at most toolMax. Every tool only crafts recipes at its own tier or below.",

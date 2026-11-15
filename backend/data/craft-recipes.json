@@ -2442,20 +2442,10 @@
     "familyId": "coal",
     "ingredients": [
       {
-        "alternatives": [
-          {
-            "category": "raw",
-            "familyId": "wood",
-            "qty": 3,
-            "consumed": true
-          },
-          {
-            "category": "raw",
-            "familyId": "monster_part",
-            "qty": 3,
-            "consumed": true
-          }
-        ]
+        "category": "raw",
+        "familyId": "wood",
+        "qty": 3,
+        "consumed": true
       }
     ],
     "tool": null,

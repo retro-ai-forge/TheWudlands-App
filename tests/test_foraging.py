@@ -12,7 +12,7 @@ from pathlib import Path
 
 import pytest
 
-from backend import condition, foraging, item_condition
+from backend import condition, foraging, item_condition, items_catalog
 from backend.character import Character, ProfStats
 from backend.db import get_database
 from backend.professions_catalog import PROFESSION_CATEGORIES
@@ -871,11 +871,62 @@ async def test_stacked_gathering_item_may_be_used_up(db, monkeypatch):
     assert len(result["broken"]) == 1
 
 
-async def test_a_night_may_wear_out_the_bedroll(db, monkeypatch):
+def _shelter_item(item_id: str, quality, instance_id: str = "shelter-1") -> dict:
+    return {"instanceId": instance_id, "itemId": item_id, "familyId": item_id.rsplit("_", 1)[0],
+            "quality": quality, "location": "backpack", "slotRef": []}
+
+
+def test_tent_and_bedroll_are_condition_tracked_items():
+    for family in ("tent", "bedroll"):
+        props = items_catalog.ITEM_FAMILIES_BY_ID[family]
+        assert props.needs_item_definition and props.stack_size == 1
+    assert item_condition.NIGHTS["shelterWear"] == 0.05
+
+
+async def test_a_night_may_wear_the_bedroll_a_level(db, monkeypatch):
+    cid = await _make(1, "blacksmith")
+    await db.characters.update_one({"address": ADDRESS, "id": cid}, {"$push": {
+        "gear.items": _shelter_item("bedroll_1", 4)}})
+    monkeypatch.setitem(item_condition.NIGHTS, "shelterWear", 1.0)
+    await foraging.start_forage(ADDRESS, cid, "craftweapon_01")
+    doc = await db.characters.find_one({"address": ADDRESS, "id": cid})
+    bedroll = next(i for i in doc["gear"]["items"] if i["instanceId"] == "shelter-1")
+    assert bedroll["quality"] == 3
+    result = doc["foraging"]["activeForage"]["result"]
+    assert result["night"]["shelter"] == ["bedroll"]
+    assert {"name": "Camp Bedroll", "kind": "shelter", "wear": 1, "destroyed": False, "condition": "used"}.items() \
+        <= next(g for g in result["gear"] if g["instanceId"] == "shelter-1").items()
+    assert "Camp Bedroll" not in result["broken"]
+
+
+async def test_a_night_may_finish_off_a_broken_bedroll(db, monkeypatch):
+    cid = await _make(1, "blacksmith")
+    await db.characters.update_one({"address": ADDRESS, "id": cid}, {"$push": {
+        "gear.items": _shelter_item("bedroll_1", 1)}})
+    monkeypatch.setitem(item_condition.NIGHTS, "shelterWear", 1.0)
+    await foraging.start_forage(ADDRESS, cid, "craftweapon_01")
+    doc = await db.characters.find_one({"address": ADDRESS, "id": cid})
+    assert not any(i["instanceId"] == "shelter-1" for i in doc["gear"]["items"])
+    result = doc["foraging"]["activeForage"]["result"]
+    assert result["night"]["shelter"] == ["bedroll"]   # it still sheltered that night
+    assert "Camp Bedroll" in result["broken"]
+
+
+async def test_a_night_wears_a_bedroll_without_a_level_as_new(db, monkeypatch):
+    cid = await _make(1, "blacksmith")
+    await db.characters.update_one({"address": ADDRESS, "id": cid}, {"$push": {
+        "gear.items": _shelter_item("bedroll_1", None)}})
+    monkeypatch.setitem(item_condition.NIGHTS, "shelterWear", 1.0)
+    await foraging.start_forage(ADDRESS, cid, "craftweapon_01")
+    doc = await db.characters.find_one({"address": ADDRESS, "id": cid})
+    assert next(i for i in doc["gear"]["items"] if i["instanceId"] == "shelter-1")["quality"] == 3
+
+
+async def test_a_night_may_use_up_a_leftover_stacked_bedroll(db, monkeypatch):
     cid = await _make(1, "blacksmith")
     await db.characters.update_one({"address": ADDRESS, "id": cid}, {"$set": {
         "gear.itemBalances.backpack": {"bedroll_1": 1}}})
-    monkeypatch.setitem(item_condition.NIGHTS, "shelterLoss", 1.0)
+    monkeypatch.setitem(item_condition.NIGHTS, "shelterWear", 1.0)
     await foraging.start_forage(ADDRESS, cid, "craftweapon_01")
     doc = await db.characters.find_one({"address": ADDRESS, "id": cid})
     assert "bedroll_1" not in (doc["gear"]["itemBalances"].get("backpack") or {})

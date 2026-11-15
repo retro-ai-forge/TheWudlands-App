@@ -441,6 +441,22 @@ Equip your mount with specialized gear to enhance its capabilities. Each piece i
 | Leather Barding | Leather Barding |
 | Iron Barding | Copper Barding |
 
+## Trade Market
+
+No trade covers everything it needs. Foraging finds plenty of some raw materials and too little of others, so you trade goods with other players. There is no money: every trade swaps goods for goods.
+
+**Posting an offer.** At home, select the goods you want to trade (press and hold an item to start selecting), then press the market button in the selection bar. Choose what you want back: one item or material, a tier and a count. For gear that wears (weapons, armor, tools, stations, tents...) you can also ask for a minimum condition. Your goods leave your home and are held by the market until the trade happens.
+
+**Accepting an offer.** In the market's list, press **Accept** on an offer to pay its ask from your character's home. You can pay with the asked tier or any higher one. Lower tiers are used first, so your best goods stay home. The goods arrive in your home right away.
+
+**Where goods go.** Everything you get from the market arrives in your character's home, even while that character is on an adventure. If the character no longer exists, the goods go to whoever now lives in the same soul slot. If the slot is empty, they go to your vault.
+
+**Rules**
+- The market is only open at home, never at a camp during an adventure.
+- An offer stays open for 7 days. If nobody accepts it, your goods come back home. You can cancel an open offer at any time.
+- You can have up to 10 open offers at a time.
+- You can't accept your own offers. Blueprints can't be traded.
+
 ## Crafting Recipe Viewer
 
 An interactive tool to explore all crafting recipes, search by item name or ingredient, and see detailed breakdowns of raw materials needed. Download to enlarge.

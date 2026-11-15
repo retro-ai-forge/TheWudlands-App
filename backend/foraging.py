@@ -982,8 +982,8 @@ def roll_trip_night(doc: dict, family_id: Optional[str] = None, rng: random.Rand
     severity = (NIGHTS["weather"].get(night["weather"]) or {}).get("severity", "none")
     # The tent still kept that night off - but rough weather may wreck it.
     tent_destroyed = "tent" in carried and rng.random() < TENT_DESTROYED_CHANCE.get(severity, 0)
-    # Any night may also simply wear a carried tent or bedroll out.
-    worn_out = [f for f in carried if item_condition.roll(float(item_condition.NIGHTS["shelterLoss"]), rng)]
+    # Any night may also wear a carried tent or bedroll one condition level.
+    worn_out = [f for f in carried if item_condition.roll(float(item_condition.NIGHTS["shelterWear"]), rng)]
     return {**night, "shelter": carried, "tentDestroyed": tent_destroyed, "shelterWornOut": worn_out,
             "message": night_message(night, missing, doc.get("firstName") or "Your character", rng)}
 
@@ -1455,6 +1455,41 @@ async def _wear_gear(db, address: str, character_id: str, gear: dict, weapon_wea
     return worn, broken_names + [_item_name(i.get("itemId", ""), i.get("familyId", "")) for i in broken_items]
 
 
+async def _remove_piece(db, address: str, character_id: str, piece: dict) -> bool:
+    """Take one carried piece (a _pick result) off the character for good -
+    the item itself, or one unit of a stack. True if it was there to take."""
+    if piece["instanceId"] is None:
+        used, _ = await _consume_ammo(db, address, character_id, piece["familyId"], [piece["tier"]])
+        return bool(used)
+    res = await db.characters.update_one(
+        {"address": address, "id": character_id},
+        {"$pull": {"gear.items": {"instanceId": piece["instanceId"]}}},
+    )
+    return res.modified_count > 0
+
+
+async def _wear_shelter(db, address: str, character_id: str, piece: dict) -> Optional[dict]:
+    """A night's wear on a carried tent/bedroll item (a _pick result): one
+    condition level off, gone below broken. An instance without a level yet
+    counts as new. Returns its `gear` entry for the trip result (same shape
+    as _wear_gear's), or None if it was no longer there."""
+    quality = (piece.get("quality") if piece.get("quality") is not None else item_condition.NEW) - 1
+    destroyed = quality <= 0
+    if destroyed:
+        if not await _remove_piece(db, address, character_id, piece):
+            return None
+    else:
+        res = await db.characters.update_one(
+            {"address": address, "id": character_id},
+            {"$set": {"gear.items.$[s].quality": quality}},
+            array_filters=[{"s.instanceId": piece["instanceId"]}],
+        )
+        if not res.modified_count:
+            return None
+    return {"instanceId": piece["instanceId"], "name": piece["name"], "kind": "shelter", "wear": 1,
+            "destroyed": destroyed, "condition": None if destroyed else item_condition.label(quality)}
+
+
 async def _roll_trip(db, address: str, character_id: str, doc: dict, active: dict, gear: dict) -> dict:
     """Roll a trip's outcome: the finds (taken from the slot's pool right
     away), the ammo shot and the gear's wear. Everything is settled here, so
@@ -1529,14 +1564,12 @@ async def _roll_trip(db, address: str, character_id: str, doc: dict, active: dic
                     broken = [*broken, piece["name"]]
 
     # The night: a severe one may wreck the pitched tent (the best one
-    # carried), and any night may wear out the tent or bedroll - gone from
-    # the pack right away, like burnt fuel.
+    # carried), and any night may wear the tent or bedroll one condition
+    # level - settled right away, like burnt fuel.
     night = roll_trip_night(doc, family_id)
     if night.pop("tentDestroyed", False):
         tent = _pick(doc, "tent")
-        used, _ = (await _consume_ammo(db, address, character_id, "tent", [tent["tier"]])
-                   if tent else ({}, []))
-        if used:
+        if tent and await _remove_piece(db, address, character_id, tent):
             night["tentLost"] = tent["name"]
             night["message"] = (f"{night['message']} "
                                 f"{tent_destroyed_message(tent['name'], doc.get('firstName') or 'Your character', weather=night.get('weather'))}")
@@ -1545,10 +1578,18 @@ async def _roll_trip(db, address: str, character_id: str, doc: dict, active: dic
         if shelter == "tent" and night.get("tentLost"):
             continue
         piece = _pick(doc, shelter)
-        used, _ = (await _consume_ammo(db, address, character_id, shelter, [piece["tier"]])
-                   if piece and piece["instanceId"] is None else ({}, []))
-        if used:
-            broken = [*broken, piece["name"]]
+        if piece is None:
+            continue
+        if piece["instanceId"] is None:
+            # A stacked one from before tent/bedroll were items: the unit goes.
+            if await _remove_piece(db, address, character_id, piece):
+                broken = [*broken, piece["name"]]
+            continue
+        shelter_wear = await _wear_shelter(db, address, character_id, piece)
+        if shelter_wear:
+            worn = [*worn, shelter_wear]
+            if shelter_wear["destroyed"]:
+                broken = [*broken, piece["name"]]
 
     # Mining in the dark: the find was already smaller, and it may go wrong.
     accident = roll_dark_accident(doc) if (plan or {}).get("inDark") else None

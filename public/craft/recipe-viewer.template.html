@@ -993,6 +993,9 @@ function showItemPopup(famId, tier) {
   }
   const burn = burnLine(famId, tier);
   if (burn) meta.appendChild(el("span", "", burn));
+  // Backpack / saddlepack / cart: this tier's maximum - same line as the
+  // app's item popup (VaultTab.tsx "Capacity: N slots").
+  if (t.capacitySlots) meta.appendChild(el("span", "", "Capacity: " + t.capacitySlots + " slots"));
   card.appendChild(meta);
 
   overlay.appendChild(card);

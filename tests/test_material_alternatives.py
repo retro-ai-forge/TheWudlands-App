@@ -34,10 +34,9 @@ def test_glass_pane_from_sand_or_crystal_at_the_kiln():
     assert _resolve("glass_pane", {"crystal_1": 6}) == {"crystal_1": 6}
 
 
-def test_coal_from_wood_or_monster_parts():
-    recipe = players._RECIPES_BY_FAMILY["coal"]
-    assert _resolve("coal", {"wood_1": 3, "monster_part_1": 3}) == {"wood_1": 3}      # wood first
-    assert _resolve("coal", {"monster_part_1": 3}) == {"monster_part_1": 3}
+def test_coal_from_wood_only():
+    assert _resolve("coal", {"wood_1": 3, "monster_part_1": 3}) == {"wood_1": 3}
+    assert _resolve("coal", {"monster_part_1": 3}) is None                           # monster parts don't burn to coal
 
 
 def test_arrow_shaft_from_bone_reed_or_wood_fletching_from_feather_or_hide():

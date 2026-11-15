@@ -29,9 +29,10 @@ from backend.active_players import (
 )
 from backend.character import AttributeStats, Character, PortraitArea, ProfStats
 from backend.db import get_database, run_in_transaction
-from backend import adventures, food, foraging
+from backend import adventures, food, foraging, market
 from backend.players import (
     _RECIPES_BY_FAMILY,
+    _is_tracked_item,
     get_character_home,
     get_character_camp,
     get_player_characters,
@@ -605,6 +606,7 @@ class ItemCatalogEntryResponse(BaseModel):
     capacitySlots: int = Field(0, description="Per-tier slot capacity of a backpack/saddlepack/cart, 0 otherwise")
     carryCapacity: int = Field(0, description="Per-tier mount/companion carry capacity (slot-weight limit), 0 otherwise")
     size: str = Field("", description="Per-tier creature size (Medium/Heavy/Huge/Colossal) for mounts, empty otherwise")
+    tracked: bool = Field(False, description="Condition-tracked (one instance per piece, has a condition) - never a stacked count")
 
 
 # Dependency: Extract and verify token from secure cookie
@@ -878,7 +880,9 @@ async def get_my_character_full(character_id: str, address: str = Depends(get_cu
 
 @player_router.get("/me/characters/{character_id}/home")
 async def get_my_character_home(character_id: str, address: str = Depends(get_current_address)):
-    """Lazy-load: this character's home items and itemBalances."""
+    """Lazy-load: this character's home items and itemBalances. First returns
+    the player's own overdue market offers, so their goods are back home."""
+    await market.sweep_expired(address)
     return await get_character_home(address, character_id)
 
 
@@ -1084,11 +1088,7 @@ async def get_item_catalog():
     Reference data: every concrete tiered id belonging to an
     item-inventory-properties.json family (all 118 - weapons, armor,
     tools, ammo, misc trinkets, food, potions, adventuring gear), with its
-    tier/kind/icon. Oil resolves its id/name/tier/icon from the
-    processed-resource catalog (that's simply where its tiered rows live)
-    but is credited into vault.itemBalances like any other crafted item,
-    not resources - see
-    items_catalog._load_item_catalog_entries.
+    tier/kind/icon - see items_catalog._load_item_catalog_entries.
     """
     return [
         ItemCatalogEntryResponse(
@@ -1097,6 +1097,7 @@ async def get_item_catalog():
             equipSlots=[list(group) for group in e.equip_slots], backpackable=e.backpackable,
             gatheringBonuses=list(e.gathering_bonuses), capacitySlots=e.capacity_slots, carryCapacity=e.carry_capacity,
             size=e.size, foodKind=food.kind_of(e.family_id) or "", feeds=food.feeds(e.family_id) or "",
+            tracked=_is_tracked_item(e.id),
         )
         for e in items_catalog.ITEM_CATALOG_ENTRIES
     ]
@@ -1940,6 +1941,88 @@ def _shown(payload: Optional[StorageShownSelection]) -> dict:
     if payload is None:
         return {}
     return {"instance_ids": payload.instanceIds, "balances": payload.balances}
+
+
+# ── Trade market (backend.market) ───────────────────────────────────────────
+
+class MarketAskRequest(BaseModel):
+    itemId: str
+    qty: int = Field(..., gt=0)
+    minCondition: Optional[int] = Field(None, description="Condition-tracked asks only: 4 new .. 1 broken")
+
+
+class MarketOfferRequest(BaseModel):
+    instanceIds: List[str] = Field(default_factory=list)
+    balances: Dict[str, int] = Field(default_factory=dict)
+    ask: MarketAskRequest
+
+
+_OFFER_GONE = "This offer is no longer available"
+
+
+@player_router.get("/market/offers")
+async def list_market_offers(
+    familyId: Optional[str] = None,
+    tiers: Optional[str] = None,
+    after: Optional[str] = None,
+    address: str = Depends(get_current_address),
+):
+    """Other players' open offers, newest first, a page at a time (`next`
+    is the cursor for the following page). `tiers` ("1,3") keeps offers
+    giving goods of those tiers."""
+    await market.sweep_expired()
+    tier_list = [int(t) for t in (tiers or "").split(",") if t.strip().isdigit() and 1 <= int(t) <= 6]
+    return await market.list_offers(address, family_id=familyId, after=after, tiers=tier_list or None)
+
+
+@player_router.get("/market/my-offers")
+async def list_my_market_offers(address: str = Depends(get_current_address)):
+    await market.sweep_expired(address)
+    return {"offers": await market.my_offers(address), "maxOpen": market.MAX_OPEN_OFFERS}
+
+
+@player_router.post("/me/characters/{character_id}/market/offers", response_model=PlayerDataResponse)
+async def create_market_offer(
+    character_id: str,
+    payload: MarketOfferRequest,
+    address: str = Depends(get_current_address),
+):
+    await market.sweep_expired(address)
+    try:
+        offer = await market.create_offer(
+            address, character_id, payload.instanceIds, payload.balances, payload.ask.model_dump()
+        )
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc))
+    if offer is None:
+        raise HTTPException(status_code=404, detail="No matching character")
+    return (await get_player(address)).to_dict()
+
+
+@player_router.post("/me/characters/{character_id}/market/offers/{offer_id}/accept", response_model=PlayerDataResponse)
+async def accept_market_offer(character_id: str, offer_id: str, address: str = Depends(get_current_address)):
+    try:
+        done = await market.accept_offer(address, character_id, offer_id)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc))
+    if not done:
+        raise HTTPException(status_code=409, detail=_OFFER_GONE)
+    return (await get_player(address)).to_dict()
+
+
+@player_router.post("/market/offers/{offer_id}/cancel", response_model=PlayerDataResponse)
+async def cancel_market_offer(offer_id: str, address: str = Depends(get_current_address)):
+    if not await market.cancel_offer(address, offer_id):
+        raise HTTPException(status_code=409, detail=_OFFER_GONE)
+    return (await get_player(address)).to_dict()
+
+
+@player_router.post("/market/offers/{offer_id}/delete")
+async def delete_closed_market_offer(offer_id: str, address: str = Depends(get_current_address)):
+    """Removes one of the caller's sold, cancelled or expired offers from "My offers"."""
+    if not await market.delete_closed_offer(address, offer_id):
+        raise HTTPException(status_code=409, detail=_OFFER_GONE)
+    return {"ok": True}
 
 
 @player_router.post("/me/characters/{character_id}/home/burn-all", response_model=PlayerDataResponse)

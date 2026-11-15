@@ -81,7 +81,7 @@ function GearLine({ gear, helpfulWeapons, helpfulItems }: {
   return (
     <>
       <p className={styles.gearHint}>
-        No gathering gear. Helps here: {helpers.map(label).join(", ")}
+        Gear: {helpers.map(label).join(", ")} – adds <strong>extra</strong>
       </p>
       {blocked}
     </>

@@ -774,6 +774,102 @@
     "icon": "/images/items/glass_lantern_t6.png"
   },
   {
+    "id": "oil_1",
+    "name": "Tallow Oil",
+    "familyId": "oil",
+    "tier": 1,
+    "description": "A murky, pale yellow liquid slowly collecting in a rough clay jar, thick drops still dripping from a greasy iron cauldron—animal scent lingers, vessel unsealed.",
+    "icon": "/images/items/oil_t1.png"
+  },
+  {
+    "id": "oil_2",
+    "name": "Pressed Oil",
+    "familyId": "oil",
+    "tier": 2,
+    "description": "Golden, cloudy liquid trickling into a squat wooden tub from a primitive screw press, flecks of seed and pulp floating on the surface, extraction unfinished.",
+    "icon": "/images/items/oil_t2.png"
+  },
+  {
+    "id": "oil_3",
+    "name": "Refined Lamp Oil",
+    "familyId": "oil",
+    "tier": 3,
+    "description": "Clear and pale, poured midway into a glass bottle, unstoppered, a funnel and stained rag aside, some haze still swirling—process incomplete.",
+    "icon": "/images/items/oil_t3.png"
+  },
+  {
+    "id": "oil_4",
+    "name": "Sacred Oil",
+    "familyId": "oil",
+    "tier": 4,
+    "description": "Faintly glowing, pooling inside an open silver chalice atop a stone altar, petals and herbs floating on the surface, ritual markings unfinished—anointing still to come.",
+    "icon": "/images/items/oil_t4.png"
+  },
+  {
+    "id": "oil_5",
+    "name": "Phoenix Oil",
+    "familyId": "oil",
+    "tier": 5,
+    "description": "Iridescent, fiery liquid seething in a charred bronze flask, smoky wisps hovering above, drops hissing where they touch bare stone—harvest incomplete, heat undimmed.",
+    "icon": "/images/items/oil_t5.png"
+  },
+  {
+    "id": "oil_6",
+    "name": "Starfire Oil",
+    "familyId": "oil",
+    "tier": 6,
+    "description": "Ethereal, silvery-blue and swirling with tiny starlit motes, decanting from a crystal ampoule into a rune-marked dish, celestial glow pulsing—bottling not yet done.",
+    "icon": "/images/items/oil_t6.png"
+  },
+  {
+    "id": "firewood_1",
+    "name": "Pine Firewood",
+    "familyId": "firewood",
+    "tier": 1,
+    "icon": "/images/items/firewood_tx.png",
+    "description": "Resinous and fragrant, freshly split with sap still dripping, stacked haphazardly beneath a timber eave."
+  },
+  {
+    "id": "firewood_2",
+    "name": "Oak Firewood",
+    "familyId": "firewood",
+    "tier": 2,
+    "icon": "/images/items/firewood_tx.png",
+    "description": "Heavy and dark, bark peeling, logs arranged neatly on a wagon, edges rough and not yet seasoned."
+  },
+  {
+    "id": "firewood_3",
+    "name": "Ash Firewood",
+    "familyId": "firewood",
+    "tier": 3,
+    "icon": "/images/items/firewood_tx.png",
+    "description": "Pale and splintered, small logs grouped atop a chopping block, dust swirling—wood still green."
+  },
+  {
+    "id": "firewood_4",
+    "name": "Cedar Firewood",
+    "familyId": "firewood",
+    "tier": 4,
+    "icon": "/images/items/firewood_tx.png",
+    "description": "Streaked red and gold, aromatic oils yet to be released, logs in tidy piles next to a stone hearth."
+  },
+  {
+    "id": "firewood_5",
+    "name": "Ebony Firewood",
+    "familyId": "firewood",
+    "tier": 5,
+    "icon": "/images/items/firewood_tx.png",
+    "description": "Jet-black and glossy, tough fibers resisting the axe, fanned out on an obsidian slab, magic latent within."
+  },
+  {
+    "id": "firewood_6",
+    "name": "Worldroot Firewood",
+    "familyId": "firewood",
+    "tier": 6,
+    "icon": "/images/items/firewood_tx.png",
+    "description": "Twisted and engraved with faint runes, bark throbbing with green light, stacked at the edge of an ancient living circle, unfinished and powerfully alive."
+  },
+  {
     "id": "hunters_charm_1",
     "name": "Rat Ear Hunter's Charm",
     "familyId": "hunters_charm",

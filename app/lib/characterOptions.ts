@@ -155,6 +155,15 @@ export const PROFESSION_RAW_FAMILIES: Record<string, string[]> = {
   actor: ["feather", "fiber", "bone"],
 };
 
+/** A profession's raw families as display text, e.g. "Hide, Skin, Monster Part" ("" if unknown). */
+export function professionRawFamiliesLabel(id: string): string {
+  const families = PROFESSION_RAW_FAMILIES[id];
+  if (!families) return "";
+  return families
+    .map((family) => family.split("_").map((w) => w.charAt(0).toUpperCase() + w.slice(1)).join(" "))
+    .join(", ");
+}
+
 // Body and Soul share one reserve of points at creation - strengthening one
 // yields the other. Descriptions match what each attribute governs in play.
 export const BODY_ATTRIBUTES = [

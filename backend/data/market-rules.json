@@ -1,0 +1,7 @@
+{
+  "offerDays": 7,
+  "maxOpenOffers": 10,
+  "maxAskQty": 999,
+  "pageSize": 30,
+  "sweepBatch": 20
+}

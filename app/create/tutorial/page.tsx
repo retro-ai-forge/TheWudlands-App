@@ -98,6 +98,18 @@ export default function Tutorial() {
           ))}
         </ol>
 
+        {/* ── World history ───────────────────────────────────── */}
+        <section id="world-history" className={styles.section}>
+          <h2 className={h.section}>The World Behind Your Story</h2>
+
+          <p className={styles.body}>
+            Every adventure takes place in a world with a long memory: the Chain-Lord, the drowned thrones,
+            the occupied woods, the broken sky and the old powers that still shape the land.
+            Read <Link href="/theworld/ancient" className={styles.inlineLink}>The Ancient Background of Wudlands</Link> before
+            you write, so your ruins, rumours and villains fit the history players already know.
+          </p>
+        </section>
+
         {/* ── Your Legend ─────────────────────────────────────── */}
         <section id="legend" className={styles.section}>
           <h2 className={h.section}>Your Legend in Adventures</h2>

@@ -84,6 +84,14 @@ const SECTIONS = [
     title: "18. The Buried Truth Under the Underweave",
     text: "Beneath the deepest earth dwells the Mourning Matron, a faceless guardian who tends the wound of the world. Mortal and goddess, she walks the hidden roads between injury and repair. Her children—creatures part woman, part wolf, part whisper—travel at night to mark, mend, and mourn. Where her tears fall, starflower meadows bloom even in wasteland. Farmers, outlaws, and dreamers still call on her stewards when law fails and oath cannot hold. Her truths are not spoken aloud but stitched into secret tattoos, bone-memory, and the hidden customs of those who survive between thrones and monsters.",
   },
+  {
+    title: "19. The Wood That Keeps What It Takes",
+    text: "The Wudlands were never only a forest. Beneath their roots the old dark of the world still breathes, and the trees drink from it. Long after the Hunger-Mother fell silent, the woodcutters of Ashmere felled a grove of ancient trees to raise a hall. By the third night the axemen no longer knew their wives; by the seventh they walked back into the trees, calling out names no one in the village had ever spoken. Only their axes were found, sunk to the haft in living wood that wept sap like tears. Since then it is said that every living tree holds a sliver of a soul—some its own, some stolen—and that whoever cuts green wood may pay for it with a piece of their mind. So the careful take only what has fallen and died on its own, and gather it before dusk. Those who must cut a living tree wear silver at the wrist, speak their own name aloud before each stroke, and leave bread and salt at the stump, so the forest takes the offering instead of the one who brought it.",
+  },
+  {
+    title: "20. The Red Bloom Beneath",
+    text: "Ore has always been scarce in the Wudlands, for as long as the dwarves remember. Every vein was fought over, and the miners followed the thin seams ever deeper, until the lowest shafts reached down toward the anchors of Za-Ruth’s world-chains. There the miners found a seam of rust that was warm to the touch. It was not rust. It was the Red Bloom, a slow and patient growth of the underworld that feeds on forged metal and on the strength of those who carry it. It crept upward along the ore veins, crumbling picks to red dust and gnawing at lamps and chain, and miners who slept beside it woke weaker every morning, as if something had fed on them in the night. So the miners walked away. Because iron only feeds the Bloom, the last of them sealed the entrances with stone, salt and oak, and never came back. Today most pitheads are forgotten, swallowed by bramble and birch, their names lost from every map. Yet the Bloom has a cunning of its own: where it hungers, it raises veins of ore so bright and pure that no honest seam compares. Hermit dwarves who never left the underground claim to know which mines the Bloom has abandoned, and sell that knowledge to travellers for a price. Whether such a map leads to a fortune or to a vein laid out as bait, no one can tell until they are already below. Those who go anyway rub their tools with salt each night, and never sleep where the stone feels warm.",
+  },
 ];
 
 export default function AncientBackground() {
@@ -100,8 +108,8 @@ export default function AncientBackground() {
           </div>
         ))}
 
-        <Link href="/theworld" className={styles.backLink}>
-          &larr; Back to The World
+        <Link href="/create/tutorial#world-history" className={styles.backLink}>
+          &larr; Back to the Tutorial
         </Link>
       </section>
       <PageVersionTag />

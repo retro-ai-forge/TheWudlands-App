@@ -244,6 +244,20 @@
   color: #d4c9a8;
 }
 
+/* A profession's 3 raw families (what it forages, earns crafting XP from,
+   salvages best and starts with) - under its description. */
+.professionRaws {
+  margin-top: 0.35rem;
+  font-size: 0.85rem;
+  line-height: 1.4;
+  color: #8fae7a;
+}
+
+.professionRawsLabel {
+  color: #a89968;
+  letter-spacing: 0.05em;
+}
+
 /* One blueprint of a trade: T1 icon and name. On narrow screens the name
    wraps within its own column instead of overflowing the row. */
 .blueprintItemLine {

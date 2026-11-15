@@ -240,54 +240,6 @@
     "description": "Ancient and rune-scorched, each piece pulsating with primal life, heaped on a bed of moss in the heart of a grove—half charcoal, half relic."
   },
   {
-    "id": "firewood_1",
-    "name": "Pine Firewood",
-    "familyId": "firewood",
-    "tier": 1,
-    "icon": "/images/items/firewood_tx.png",
-    "description": "Resinous and fragrant, freshly split with sap still dripping, stacked haphazardly beneath a timber eave."
-  },
-  {
-    "id": "firewood_2",
-    "name": "Oak Firewood",
-    "familyId": "firewood",
-    "tier": 2,
-    "icon": "/images/items/firewood_tx.png",
-    "description": "Heavy and dark, bark peeling, logs arranged neatly on a wagon, edges rough and not yet seasoned."
-  },
-  {
-    "id": "firewood_3",
-    "name": "Ash Firewood",
-    "familyId": "firewood",
-    "tier": 3,
-    "icon": "/images/items/firewood_tx.png",
-    "description": "Pale and splintered, small logs grouped atop a chopping block, dust swirling—wood still green."
-  },
-  {
-    "id": "firewood_4",
-    "name": "Cedar Firewood",
-    "familyId": "firewood",
-    "tier": 4,
-    "icon": "/images/items/firewood_tx.png",
-    "description": "Streaked red and gold, aromatic oils yet to be released, logs in tidy piles next to a stone hearth."
-  },
-  {
-    "id": "firewood_5",
-    "name": "Ebony Firewood",
-    "familyId": "firewood",
-    "tier": 5,
-    "icon": "/images/items/firewood_tx.png",
-    "description": "Jet-black and glossy, tough fibers resisting the axe, fanned out on an obsidian slab, magic latent within."
-  },
-  {
-    "id": "firewood_6",
-    "name": "Worldroot Firewood",
-    "familyId": "firewood",
-    "tier": 6,
-    "icon": "/images/items/firewood_tx.png",
-    "description": "Twisted and engraved with faint runes, bark throbbing with green light, stacked at the edge of an ancient living circle, unfinished and powerfully alive."
-  },
-  {
     "id": "plank_1",
     "name": "Pine Plank",
     "familyId": "plank",
@@ -1057,51 +1009,51 @@
   },
   {
     "id": "leather_1",
-    "name": "Deer Leather",
+    "name": "Rough Leather",
     "familyId": "leather",
     "tier": 1,
     "icon": "/images/items/leather_tx.png",
-    "description": "Supple and pale, stretched across a wooden frame, faint marks of hair and sinew yet to be scraped away."
+    "description": "Stiff and pale, stretched across a wooden frame, faint marks of hair and sinew yet to be scraped away."
   },
   {
     "id": "leather_2",
-    "name": "Goat Leather",
+    "name": "Tanned Leather",
     "familyId": "leather",
     "tier": 2,
     "icon": "/images/items/leather_tx.png",
-    "description": "Rough and bristled, pegged on a drying wall, edges curling, surface not yet fully scraped or tanned."
+    "description": "Soft and evenly brown, cured in oak-bark brine until it bends without cracking, smelling of smoke and tannin."
   },
   {
     "id": "leather_3",
-    "name": "Elk Leather",
+    "name": "Hardened Leather",
     "familyId": "leather",
     "tier": 3,
     "icon": "/images/items/leather_tx.png",
-    "description": "Thick and spotted, tanning under weighted stones, part of the hide unprocessed and tacky to the touch."
+    "description": "Boiled in wax and pressed under weighted stones until it sets hard as wood, yet still takes an awl and a stitch."
   },
   {
     "id": "leather_4",
-    "name": "Manticore Leather",
+    "name": "Runed Leather",
     "familyId": "leather",
     "tier": 4,
     "icon": "/images/items/leather_tx.png",
-    "description": "Tufted with spines, golden and dark-straked, hanging beside meat hooks, not yet stripped of its magical sheen."
+    "description": "Dark and dense, its grain worked with silver-traced runes that warm faintly under the hand."
   },
   {
     "id": "leather_5",
-    "name": "Wyvern Leather",
+    "name": "Spellbound Leather",
     "familyId": "leather",
     "tier": 5,
     "icon": "/images/items/leather_tx.png",
-    "description": "Glossy green with hard scales, suspended from iron nails, surface shimmering with latent venom, half-tanned and powerful."
+    "description": "Glossy and cool to the touch, an enchantment folded into every layer, its runes shifting slowly when no one is watching."
   },
   {
     "id": "leather_6",
-    "name": "Phoenix Leather",
+    "name": "Astral Leather",
     "familyId": "leather",
     "tier": 6,
     "icon": "/images/items/leather_tx.png",
-    "description": "Fire-bright and nearly weightless, still steaming where feathered tufts linger, stretched gently atop a rack of enchanted willow, in process and radiant."
+    "description": "Nearly weightless and faintly luminous, flecked with points of light like a night sky, as if tanned under the stars themselves."
   },
   {
     "id": "quilted_thread_1",
@@ -1918,53 +1870,5 @@
     "tier": 6,
     "icon": "/images/items/clean_fish_tx.png",
     "description": "A monstrous rib section cleaned but not butchered fully, its immense form curled in a boat-shaped trough, scales laced with eldritch sigils, preparation only begun."
-  },
-  {
-    "id": "oil_1",
-    "name": "Tallow Oil",
-    "familyId": "oil",
-    "tier": 1,
-    "description": "A murky, pale yellow liquid slowly collecting in a rough clay jar, thick drops still dripping from a greasy iron cauldron—animal scent lingers, vessel unsealed.",
-    "icon": "/images/items/oil_t1.png"
-  },
-  {
-    "id": "oil_2",
-    "name": "Pressed Oil",
-    "familyId": "oil",
-    "tier": 2,
-    "description": "Golden, cloudy liquid trickling into a squat wooden tub from a primitive screw press, flecks of seed and pulp floating on the surface, extraction unfinished.",
-    "icon": "/images/items/oil_t2.png"
-  },
-  {
-    "id": "oil_3",
-    "name": "Refined Lamp Oil",
-    "familyId": "oil",
-    "tier": 3,
-    "description": "Clear and pale, poured midway into a glass bottle, unstoppered, a funnel and stained rag aside, some haze still swirling—process incomplete.",
-    "icon": "/images/items/oil_t3.png"
-  },
-  {
-    "id": "oil_4",
-    "name": "Sacred Oil",
-    "familyId": "oil",
-    "tier": 4,
-    "description": "Faintly glowing, pooling inside an open silver chalice atop a stone altar, petals and herbs floating on the surface, ritual markings unfinished—anointing still to come.",
-    "icon": "/images/items/oil_t4.png"
-  },
-  {
-    "id": "oil_5",
-    "name": "Phoenix Oil",
-    "familyId": "oil",
-    "tier": 5,
-    "description": "Iridescent, fiery liquid seething in a charred bronze flask, smoky wisps hovering above, drops hissing where they touch bare stone—harvest incomplete, heat undimmed.",
-    "icon": "/images/items/oil_t5.png"
-  },
-  {
-    "id": "oil_6",
-    "name": "Starfire Oil",
-    "familyId": "oil",
-    "tier": 6,
-    "description": "Ethereal, silvery-blue and swirling with tiny starlit motes, decanting from a crystal ampoule into a rune-marked dish, celestial glow pulsing—bottling not yet done.",
-    "icon": "/images/items/oil_t6.png"
   }
 ]

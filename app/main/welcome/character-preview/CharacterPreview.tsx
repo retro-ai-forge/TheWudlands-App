@@ -13,6 +13,7 @@ import { StoriesTab, REST_LOCATIONS } from "./StoriesTab";
 import { VaultTab, type ItemInstance, type RawPlayerData } from "./VaultTab";
 import { HomeView } from "./HomeView";
 import { CraftingView, useCraftAutoFinish } from "./CraftingView";
+import { MarketView, type MarketSelection } from "./MarketView";
 import { TabErrorBoundary } from "./TabErrorBoundary";
 
 export type TabKey = "stats" | "body" | "home" | "vault" | "stories";
@@ -116,6 +117,13 @@ export function CharacterPreview({
   // shown instead of the home view while true, back to it on exit.
   // Opened straight away when the soul slot clicked was busy crafting.
   const [showCrafting, setShowCrafting] = useState(openCraftingSectionByDefault && !inAdventure);
+  // The trade market page, opened from the home's selection bar with the
+  // goods picked there (empty = just browsing). Home only, never on an
+  // adventure (backend.market refuses it too).
+  const [marketSelection, setMarketSelection] = useState<MarketSelection | null>(null);
+  const showMarket = marketSelection !== null && !inAdventure;
+  // A full page shown in place of the tabs' content (crafting, market).
+  const showPage = showCrafting || showMarket;
   const [resting, setResting] = useState(character.availability.resting ?? false);
   const [restLocation, setRestLocation] = useState<string>(character.availability.restLocation ?? REST_LOCATIONS[0]);
 
@@ -124,7 +132,7 @@ export function CharacterPreview({
   // every change (storageVersion) - see useStorageData.
   const [storageVersion, setStorageVersion] = useState(0);
   // The home view, and the crafting page when not on an adventure.
-  const needsHome = showHome || (activeTab === "home" && !resting) || (showCrafting && !inAdventure);
+  const needsHome = showHome || (activeTab === "home" && !resting) || (showCrafting && !inAdventure) || showMarket;
   // The camp while resting on an adventure (home tab or crafting page).
   const needsCamp = (activeTab === "home" && resting) || (showCrafting && inAdventure && resting);
   const [homeData] = useStorageData(`/api/auth/me/characters/${character.id}/home`, needsHome, storageVersion);
@@ -147,7 +155,10 @@ export function CharacterPreview({
       }
       setShowHome(false);
     }
-    if (inAdventure) setShowCrafting(false);
+    if (inAdventure) {
+      setShowCrafting(false);
+      setMarketSelection(null);
+    }
   }, [inAdventure, resting, dropCampData]);
 
   const handlePlayerDataUpdated = useCallback((data: RawPlayerData) => {
@@ -178,7 +189,7 @@ export function CharacterPreview({
   // page of this view (the crafting page shows what came out).
   const { lastCraftResult, clearLastCraftResult } = useCraftAutoFinish(character, handlePlayerDataUpdated);
   // Pages that fill the viewport themselves (no outer scroll, no padding).
-  const fillsViewport = !showCrafting && (showHome || activeTab === "home" || activeTab === "vault");
+  const fillsViewport = !showPage && (showHome || activeTab === "home" || activeTab === "vault");
 
   const [isDeleting, setIsDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
@@ -213,7 +224,7 @@ export function CharacterPreview({
   useLayoutEffect(() => {
     wizardScrollRef.current?.scrollTo(0, 0);
     window.scrollTo(0, 0);
-  }, [activeTab, showHome, showCrafting]);
+  }, [activeTab, showHome, showCrafting, showMarket]);
 
   // Standalone portrait editor, opened by clicking the face portrait on the
   // Stats tab. The draft lives in a ref rather than state - PortraitEditor's
@@ -356,6 +367,7 @@ export function CharacterPreview({
                     onClick={() => {
                       if (locked) return;
                       setShowCrafting(false);
+                      setMarketSelection(null);
                       setActiveTab(tab.key);
                     }}
                     aria-pressed={activeTab === tab.key}
@@ -394,7 +406,7 @@ export function CharacterPreview({
           more room for their selection icons and item matrix. */}
       <div
         className={
-          !showCrafting && (showHome || activeTab === "home" || activeTab === "vault")
+          !showPage && (showHome || activeTab === "home" || activeTab === "vault")
             ? `${tabStyles.sheet} ${tabStyles.sheetCompact}`
             : tabStyles.sheet
         }
@@ -403,15 +415,20 @@ export function CharacterPreview({
 
         {/* No headline on the storage views (vault, home, camp) - the space
             goes to their selection buttons and item matrix. */}
-        {(showCrafting || !(showHome || activeTab === "home" || activeTab === "vault")) && (
+        {(showPage || !(showHome || activeTab === "home" || activeTab === "vault")) && (
           <div className={tabStyles.nameRow}>
             <h1 className={tabStyles.name}>
-              {showCrafting ? `${character.firstName}'s Crafting` : `${character.firstName} ${character.lastName}`}
+              {showCrafting
+                ? `${character.firstName}'s Crafting`
+                : showMarket
+                  ? `${character.firstName}'s Market`
+                  : `${character.firstName} ${character.lastName}`}
             </h1>
           </div>
         )}
 
-        <div className={fillsViewport ? tabStyles.mainColumn : `${tabStyles.mainColumn} ${tabStyles.mainColumnPadded}`}>
+        {/* The market page runs nearly edge to edge - its boxes carry their own padding. */}
+        <div className={fillsViewport || showMarket ? tabStyles.mainColumn : `${tabStyles.mainColumn} ${tabStyles.mainColumnPadded}`}>
           {showCrafting ? (
             <CraftingView
               character={augmentedCharacter}
@@ -421,12 +438,21 @@ export function CharacterPreview({
               onCraftStarted={clearLastCraftResult}
               onExit={() => setShowCrafting(false)}
             />
+          ) : showMarket && marketSelection ? (
+            <MarketView
+              character={augmentedCharacter}
+              selection={marketSelection}
+              onSelectionUsed={() => setMarketSelection({ instanceIds: [], balances: {} })}
+              onPlayerDataUpdated={handlePlayerDataUpdated}
+              onExit={() => setMarketSelection(null)}
+            />
           ) : showHome ? (
             <HomeView
               character={augmentedCharacter}
               onPlayerDataUpdated={handlePlayerDataUpdated}
               onExitHome={() => setShowHome(false)}
               onOpenCrafting={() => setShowCrafting(true)}
+              onOpenMarket={setMarketSelection}
             />
           ) : (
             <>
@@ -473,6 +499,7 @@ export function CharacterPreview({
               onPlayerDataUpdated={handlePlayerDataUpdated}
               onExitHome={() => setActiveTab("body")}
               onOpenCrafting={() => setShowCrafting(true)}
+              onOpenMarket={setMarketSelection}
               footerVisible
             />
           )}

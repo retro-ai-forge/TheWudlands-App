@@ -8,8 +8,7 @@ the gear bonus comes on top of the site's find, mining light is burned per site 
 from interchangeable raws (see "Light"). Recipes or professions changing will shift the numbers.
 
 **Not yet in the percentages below** (recipes changed later on 2026-11-13; the item table further down already
-shows them): leather from 6 hide or skin, rope from leather or fiber, glass pane from sand or crystal, coal from
-wood or monster parts, and stone instead of most refined ore in six stations (grinding stone, lapidary bench,
+shows them): leather from 6 hide or skin, rope from leather or fiber, glass pane from sand or crystal, and stone instead of most refined ore in six stations (grinding stone, lapidary bench,
 furnace, mortar & pestle, kiln, alchemy stand - 135 ore less for all six); arrows and bolts from bone, reed, stone and
 other stand-ins (see "Ammo"). Expect less need for ore, skin, fiber
 and sand, and more for stone, hide, crystal and monster parts; the need calculation still has to be rebuilt from
@@ -245,7 +244,7 @@ Same for every tier: the output tier follows the ingredients, the amounts don't 
 | **Processed (for reference)** | | |
 | arrow, bolt | 2 | bone 1, feather 1 / bone 1, stone 1 (first options; see "Ammo") |
 | oil | 2 | fish 1, bone 1 (or monster part / meat; harvest) |
-| coal | 3 | wood 3, or monster_part 3 |
+| coal | 3 | wood 3 |
 | plank | 4 | wood 4 |
 | leather | 6 | hide 6 or skin 6 |
 | glass_bottle | 12 | sand 12 |

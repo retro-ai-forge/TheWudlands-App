@@ -6,8 +6,8 @@
     ],
     "sizeClass": "light",
     "stackSize": 1,
-    "needsItemDefinition": false,
-    "note": "Utility gear - does not wear out, no durability tracking needed.",
+    "needsItemDefinition": true,
+    "note": "Condition-tracked item, one instance per piece. Carried on a foraging trip it shelters the night and each night may wear it one condition level (item-conditions.json \"nights\").",
     "equipSlots": [
       [
         "Left Hand"
@@ -428,8 +428,8 @@
     ],
     "sizeClass": "medium",
     "stackSize": 1,
-    "needsItemDefinition": false,
-    "note": "Utility gear - does not wear out, no durability tracking needed.",
+    "needsItemDefinition": true,
+    "note": "Condition-tracked item, one instance per piece. Carried on a foraging trip it shelters the night and each night may wear it one condition level (item-conditions.json \"nights\"); a severe night may also wreck it outright (foraging-rules.json tentDestroyedChance).",
     "equipSlots": [
       [
         "Left Hand"
@@ -3307,10 +3307,10 @@
   {
     "familyId": "firewood",
     "kind": [
-      "processed"
+      "adventuring_gear"
     ],
     "sizeClass": "tiny",
-    "stackSize": 20,
+    "stackSize": 10,
     "needsItemDefinition": false,
     "equipSlots": [],
     "backpackable": true

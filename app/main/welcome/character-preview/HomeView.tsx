@@ -8,6 +8,7 @@ import {
   ItemGrid,
   SADDLEPACK_ACTION_ICON,
   VAULT_ACTION_ICON,
+  MARKET_ACTION_ICON,
   computeBackpackContents,
   computeSaddlepackContents,
   computeCartContents,
@@ -24,6 +25,7 @@ import {
 import { getItemCatalog, getResourceCatalog, getToolCatalog } from "./catalogCache";
 import type { SlotCharacterSummary } from "../types";
 import { useSound } from "../../SoundProvider";
+import type { MarketSelection } from "./MarketView";
 
 const HOME_ITEMS_SOUND = "/sounds/campfire_west_wolf.mp3";
 // Ambient loop while home is empty (hasHomeItems false) - swapped in for
@@ -80,6 +82,7 @@ export function HomeView({
   onPlayerDataUpdated,
   onExitHome,
   onOpenCrafting,
+  onOpenMarket,
   footerVisible = false,
   storageType = "home",
 }: {
@@ -92,6 +95,8 @@ export function HomeView({
   onExitHome: () => void;
   /** Opens the crafting page - the workbench right of the tent. */
   onOpenCrafting?: () => void;
+  /** Opens the trade market page with the selected goods (home only). */
+  onOpenMarket?: (selection: MarketSelection) => void;
   footerVisible?: boolean;
   storageType?: "home" | "camp";
 }) {
@@ -433,6 +438,31 @@ export function HomeView({
     [batchBusy, selectedIds, homeResourceBalances, homeInstanceLookupIds, homeCombined, mergedCatalogTierInfo, resourceTierInfo, character.id, onPlayerDataUpdated, exitSelectMode]
   );
 
+  // The selected tiles as goods to offer - same key handling as
+  // batchMoveHome (a marked stack tile means the whole stack).
+  const openMarket = useCallback(() => {
+    if (!onOpenMarket) return;
+    const instanceIds: string[] = [];
+    const balances: Record<string, number> = {};
+    for (const raw of selectedIds) {
+      if (raw.startsWith("res:")) {
+        const resId = stripStackSuffix(raw.slice(4));
+        const qty = homeResourceBalances[resId] ?? 0;
+        if (qty > 0 && resourceTierInfo[resId]) balances[resId] = qty;
+        continue;
+      }
+      const id = stripStackSuffix(raw);
+      if (homeInstanceLookupIds[id] !== undefined) {
+        if (!instanceIds.includes(id)) instanceIds.push(id);
+      } else {
+        const qty = homeCombined[id] ?? 0;
+        if (qty > 0) balances[id] = qty;
+      }
+    }
+    exitSelectMode();
+    onOpenMarket({ instanceIds, balances });
+  }, [onOpenMarket, selectedIds, homeResourceBalances, resourceTierInfo, homeInstanceLookupIds, homeCombined, exitSelectMode]);
+
   const batchDestroyHome = useCallback(async () => {
     if (batchBusy || selectedIds.size === 0) return;
     setBatchBusy(true);
@@ -523,6 +553,21 @@ export function HomeView({
                 onClick={() => batchMoveHome("vault")}
               >
                 <div className={styles.selectionBarIcon} style={{ backgroundImage: `url(${VAULT_ACTION_ICON})` }} />
+              </button>
+            )}
+            {/* Trade market - home only, never at an adventure camp (camp
+                loot is discarded at the adventure's end; the market must
+                not become a way to get it out). Opens the market page with
+                the selected goods to offer - or just to browse when none. */}
+            {onOpenMarket && !character.availability.inAdventure && storageType !== "camp" && (
+              <button
+                type="button"
+                className={styles.selectionBarBtn}
+                title="Trade on the market"
+                disabled={batchBusy}
+                onClick={openMarket}
+              >
+                <div className={styles.selectionBarIcon} style={{ backgroundImage: `url(${MARKET_ACTION_ICON})` }} />
               </button>
             )}
             <div className={styles.selectionBarGap} />

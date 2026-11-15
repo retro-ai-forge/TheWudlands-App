@@ -89,7 +89,7 @@ def build_families() -> dict:
                         "id": it["id"],
                         "description": it.get("description"),
                         "icon": it.get("icon"),
-                        # Backpack/saddlepack/cart tiers only - popup's "Filled: 0/N".
+                        # Backpack/saddlepack/cart tiers only - popup's "Capacity: N slots".
                         **({"capacitySlots": it["capacitySlots"]} if "capacitySlots" in it else {}),
                     }
                     for it in family_items

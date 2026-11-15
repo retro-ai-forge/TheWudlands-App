@@ -1,0 +1,611 @@
+/* Trade market page (MarketView.tsx) - opened from the home's selection
+   bar. Colors follow CharacterTabs.module.css: gold text #d0b878, orange
+   accents #c07a3a, dark boxes with #3a3020 borders. */
+
+.page {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  padding: 0 0.4rem 4rem;
+}
+
+.box {
+  background: rgba(26, 24, 16, 0.85);
+  border: 1px solid #3a3020;
+  border-radius: 6px;
+  padding: 0.6rem 0.4rem;
+}
+
+.heading {
+  margin: 0 0 0.6rem;
+  font-size: 0.95rem;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: #c07a3a;
+}
+
+.label {
+  margin: 0.4rem 0 0.3rem;
+  font-size: 0.75rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #8a7a52;
+}
+
+.hint {
+  margin: 0.4rem 0;
+  font-size: 0.8rem;
+  color: #8a7a52;
+}
+
+.error {
+  margin: 0;
+  padding: 0.5rem 0.7rem;
+  border: 1px solid #6a2a20;
+  border-radius: 4px;
+  background: rgba(60, 16, 10, 0.6);
+  color: #e08a7a;
+  font-size: 0.85rem;
+}
+
+.row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.row {
+  margin-top: 0.4rem;
+}
+
+.good {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.2rem 0.45rem 0.2rem 0.25rem;
+  border: 1px solid #3a3020;
+  border-radius: 4px;
+  background: #14120b;
+  color: #d4c9a8;
+  font-size: 0.85rem;
+}
+
+.goodIcon {
+  width: 1.8rem;
+  height: 1.8rem;
+  flex-shrink: 0;
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
+  image-rendering: pixelated;
+}
+
+.goodQty {
+  color: #c07a3a;
+  font-variant-numeric: tabular-nums;
+}
+
+.goodTier {
+  display: inline-flex;
+  align-items: center;
+  color: #b98cff;
+  font-size: 0.8rem;
+}
+
+.goodCondition {
+  color: #8a7a52;
+  font-size: 0.75rem;
+}
+
+.input {
+  font: inherit;
+  font-size: 0.85rem;
+  color: #d4c9a8;
+  background: #0f0d08;
+  border: 1px solid #3a3020;
+  border-radius: 4px;
+  padding: 0.35rem 0.5rem;
+  box-sizing: border-box;
+}
+
+.input {
+  width: 100%;
+}
+
+.search {
+  position: relative;
+  width: 100%;
+}
+
+.searchList {
+  list-style: none;
+  margin: 0.25rem 0 0;
+  padding: 0;
+  border: 1px solid #3a3020;
+  border-radius: 4px;
+  background: #14120b;
+}
+
+.searchItem {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  width: 100%;
+  padding: 0.3rem 0.5rem;
+  font: inherit;
+  font-size: 0.85rem;
+  text-align: left;
+  text-transform: capitalize;
+  color: #d4c9a8;
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+
+.searchItem:hover {
+  background: #222215;
+}
+
+.askEditor {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.chip {
+  font: inherit;
+  font-size: 0.8rem;
+  padding: 0.25rem 0.6rem;
+  border: 1px solid #3a3020;
+  border-radius: 4px;
+  background: #14120b;
+  color: #8a7a52;
+  cursor: pointer;
+}
+
+.chipActive {
+  border-color: #c07a3a;
+  color: #e6b85c;
+}
+
+.filter {
+  text-transform: capitalize;
+  color: #e6b85c;
+  font-size: 0.85rem;
+}
+
+.primary {
+  font: inherit;
+  font-size: 0.85rem;
+  padding: 0.4rem 1.1rem;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.primary {
+  margin-top: 0.6rem;
+  background: #1f3a1a;
+  border: 1px solid #3f7a30;
+  color: #9be6a8;
+}
+
+.primary:hover:not(:disabled) {
+  background: #28481f;
+  color: #c0f5c8;
+}
+
+.primary:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.linkButton {
+  font: inherit;
+  font-size: 0.8rem;
+  padding: 0.3rem 0;
+  background: none;
+  border: none;
+  color: #c07a3a;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.offerClosed {
+  opacity: 0.55;
+}
+
+/* "Offers" heading with the T1-T6 filter buttons to its right. */
+.headingRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin-bottom: 0.6rem;
+}
+
+.headingRow .heading {
+  margin: 0;
+}
+
+.tierFilter {
+  display: flex;
+  gap: 0.2rem;
+}
+
+/* Larger than the vault's filter buttons - easier to tap on a phone. */
+.tierFilter button {
+  width: 2rem;
+  height: 1.85rem;
+}
+
+.tierFilter button img {
+  width: 1.45rem;
+  height: 1.45rem;
+}
+
+.lineGoods {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-width: 0;
+  flex-wrap: nowrap;
+}
+
+.mini {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.15rem;
+  flex-shrink: 0;
+  white-space: nowrap;
+  font-size: 0.85rem;
+}
+
+/* Details popup */
+.popup {
+  max-width: 24rem;
+}
+
+.popupMeta {
+  display: block;
+  margin-top: 0.15rem;
+  font-size: 0.75rem;
+  color: #8a7a52;
+}
+
+.detailList {
+  list-style: none;
+  margin: 0 0 0.6rem;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.detailRow {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.detailIcon {
+  width: 2.4rem;
+  height: 2.4rem;
+  flex-shrink: 0;
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
+  image-rendering: pixelated;
+}
+
+.detailText {
+  display: flex;
+  flex-direction: column;
+  font-size: 0.9rem;
+  color: #d4c9a8;
+}
+
+.detailSub {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-size: 0.75rem;
+  color: #8a7a52;
+}
+
+/* "Cancel offer" - red, so it never reads as just closing the popup. */
+.danger {
+  padding: 0.4rem 1.2rem;
+  border-radius: 4px;
+  font: inherit;
+  font-size: 0.85rem;
+  cursor: pointer;
+  background: #3a1410;
+  border: 1px solid #8a2a20;
+  color: #f0a090;
+}
+
+.danger:hover:not(:disabled) {
+  background: #4a1a14;
+  color: #ffc0b0;
+}
+
+.danger:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+/* Offer lists: a table so the arrows line up in one column. Given and
+   asked columns size to their contents; each row opens the popup. */
+.table {
+  width: 100%;
+  margin-top: 0.4rem;
+  border-collapse: collapse;
+}
+
+.tableRow {
+  cursor: pointer;
+}
+
+.tableRow:hover {
+  background: #1f1c12;
+}
+
+.tableRow:focus-visible {
+  outline: 1px solid #c07a3a;
+  outline-offset: -1px;
+}
+
+.tableRow td {
+  padding: 0.3rem 0.2rem;
+  border-top: 1px solid #2a2418;
+  vertical-align: middle;
+}
+
+/* Every offer on one line - compact goods, never wrapping. */
+.cellGoods .lineGoods {
+  flex-wrap: nowrap;
+  gap: 0.35rem;
+}
+
+.cellGoods .mini {
+  gap: 0.1rem;
+  font-size: 0.8rem;
+}
+
+.cellGoods .goodIcon {
+  width: 1.5rem;
+  height: 1.5rem;
+}
+
+.cellGoods .mini img {
+  width: 1.1em;
+  height: 1.1em;
+}
+
+.tableScroll {
+  width: 100%;
+  overflow-x: auto;
+}
+
+/* Up to three goods side by side (RowGoods); a table column, so every
+   arrow sits in the same place. */
+.cellGive {
+  width: auto;
+}
+
+.cellArrow {
+  width: 1.5rem;
+  text-align: center;
+  color: #8a7a52;
+}
+
+/* Time left / sold - pushed to the far right. */
+.cellStatus {
+  width: 1%;
+  text-align: right;
+  font-size: 0.75rem;
+  color: #8a7a52;
+  white-space: nowrap;
+}
+
+/* New offer - "You give": tier | icon | name | amount (or condition). */
+.giveTable {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.giveTable td {
+  padding: 0.2rem 0.25rem;
+  border-top: 1px solid #2a2418;
+  vertical-align: middle;
+}
+
+.giveTable tr:first-child td {
+  border-top: none;
+}
+
+.giveTier {
+  width: 1.6rem;
+}
+
+.giveName {
+  width: 100%;
+  font-size: 0.85rem;
+  color: #d4c9a8;
+}
+
+.giveAmount {
+  white-space: nowrap;
+  text-align: right;
+  font-size: 0.8rem;
+  color: #8a7a52;
+}
+
+/* Same-length slider on every row (1 .. what's at home), then "n/max". */
+.giveSlider {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.slider {
+  width: 7.5rem;
+  margin: 0;
+  accent-color: #c07a3a;
+  touch-action: pan-y;
+}
+
+.slider:disabled {
+  opacity: 0.4;
+}
+
+.giveOf {
+  min-width: 3.6rem;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  color: #d4c9a8;
+}
+
+/* "2+": goods of this offer only listed in its popup. */
+.more {
+  flex-shrink: 0;
+  padding: 0.05rem 0.35rem;
+  border: 1px solid #3a3020;
+  border-radius: 3px;
+  font-size: 0.75rem;
+  color: #c07a3a;
+}
+
+/* A cancelled offer's popup: its one button (Delete) in the lower right. */
+.buttonsRight {
+  justify-content: flex-end;
+}
+
+/* "3/10" right of "My offers": open + cancelled offers / the most allowed. */
+.openCount {
+  font-size: 0.85rem;
+  font-variant-numeric: tabular-nums;
+  color: #8a7a52;
+}
+
+/* My offers: the posting character's face as the first column. */
+.cellFace {
+  width: 1%;
+}
+
+.face {
+  position: relative;
+  display: block;
+  width: 1.7rem;
+  height: 1.7rem;
+  overflow: hidden;
+  border-radius: 50%;
+  border: 1px solid #3a3020;
+  background: #14120b;
+}
+
+/* The character the market is open for. */
+.faceActive {
+  border: 2px solid #e6b85c;
+  box-shadow: 0 0 4px rgba(230, 184, 92, 0.5);
+}
+
+.faceInitial {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  font-size: 0.8rem;
+  color: #c07a3a;
+}
+
+/* New offer - "You want": how many, as buttons 1 / 2 / 5 / 10 / 20 / 50 / 100.
+   Seven equal columns that shrink with the screen, so they stay on one
+   line on any phone (about 40px each at 335px wide). */
+.amountRow {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 0.2rem;
+  width: 100%;
+  margin-bottom: 0.4rem;
+}
+
+.amountBtn {
+  min-width: 0;
+  padding: 0.3rem 0;
+  font-size: 0.8rem;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+
+/* New offer - "You want": the chosen good with "change" on its line; a long
+   name shortens with "…" rather than pushing "change" below. */
+.askLine {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  width: 100%;
+}
+
+.askLine .good {
+  min-width: 0;
+}
+
+.askLine .linkButton {
+  flex-shrink: 0;
+}
+
+.goodName {
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+/* New offer: the asked item's tier buttons and "Post offer" on one line -
+   the tier buttons share what "Post offer" leaves, so six of them still
+   fit at about 335px (each ~1.75rem there) without wrapping. */
+.askTierRow {
+  display: flex;
+  align-items: center;
+  flex-wrap: nowrap;
+  gap: 0.2rem;
+  width: 100%;
+  margin-top: 0.4rem;
+}
+
+.askTierRow .tierFilter {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.askTierRow .tierFilter button {
+  flex: 0 1 2rem;
+  min-width: 0;
+  width: auto;
+}
+
+.askTierRow .tierFilter button img {
+  width: min(1.45rem, 100%);
+  height: auto;
+}
+
+/* "Post offer" right after the asked item's tier buttons. */
+.postBtn {
+  flex: 0 0 auto;
+  margin-top: 0;
+  margin-left: 0.2rem;
+  padding: 0.35rem 0.7rem;
+  white-space: nowrap;
+}
+
+/* Trade, when this home can't pay the ask: greyed out, no hover glow. */
+.tradeBtn:disabled,
+.tradeBtn:disabled:hover {
+  background: #1a1810;
+  border-color: #3a3020;
+  color: #6a6048;
+  cursor: default;
+}

@@ -290,7 +290,8 @@ def test_every_harmful_weather_has_its_own_sentences():
 
 def test_only_severe_weather_can_wreck_a_carried_tent():
     assert foraging.TENT_DESTROYED_CHANCE == {"severe": 0.03}
-    with_tent = {"attr": MAX, "gear": {"itemBalances": {"backpack": {"tent_1": 1}}}}
+    with_tent = {"attr": MAX, "gear": {"items": [{"instanceId": "t", "itemId": "tent_1", "familyId": "tent",
+                                                "quality": 4, "location": "backpack"}]}}
     rng = random.Random(4)
     nights = [foraging.roll_trip_night(with_tent, "sand", rng) for _ in range(20000)]
     wrecked = [n for n in nights if n["tentDestroyed"]]
@@ -305,14 +306,15 @@ def test_only_severe_weather_can_wreck_a_carried_tent():
 async def test_wrecked_tent_leaves_the_pack(db, monkeypatch):
     cid = await _make()
     await foraging.ensure_slot_pool(ADDRESS, 1, ["blacksmith"])
-    await db.characters.update_one({"address": ADDRESS, "id": cid},
-                                   {"$set": {"gear.itemBalances.backpack": {"tent_1": 1}}})
+    await db.characters.update_one({"address": ADDRESS, "id": cid}, {"$push": {"gear.items": {
+        "instanceId": "tent-1", "itemId": "tent_1", "familyId": "tent", "quality": 4,
+        "location": "backpack", "slotRef": []}}})
     monkeypatch.setattr(foraging, "roll_trip_night", lambda doc, family_id=None, rng=None: {
         "weather": "storm", "points": {}, "kind": "sheltered", "shelter": ["tent"],
         "message": "Storm.", "tentDestroyed": True})
     await foraging.start_forage(ADDRESS, cid, "craftweapon_01")
     doc = await _doc(db, cid)
-    assert "tent_1" not in ((doc["gear"].get("itemBalances") or {}).get("backpack") or {})
+    assert not any(i.get("instanceId") == "tent-1" for i in doc["gear"].get("items", []))
     past = (datetime.now(timezone.utc) - timedelta(seconds=1)).isoformat()
     await db.characters.update_one({"address": ADDRESS, "id": cid},
                                    {"$set": {"foraging.activeForage.readyAt": past}})

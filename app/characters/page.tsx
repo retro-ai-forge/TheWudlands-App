@@ -4,7 +4,14 @@ import React, { useState, useEffect } from "react";
 import Image from "next/image";
 import styles from "./characters.module.css";
 import h from "@/app/styles/headings.module.css";
-import { GENDERS, racesByCategory, professionsByCategory, BODY_ATTRIBUTES, SOUL_ATTRIBUTES } from "@/app/lib/characterOptions";
+import {
+  GENDERS,
+  racesByCategory,
+  professionsByCategory,
+  professionRawFamiliesLabel,
+  BODY_ATTRIBUTES,
+  SOUL_ATTRIBUTES,
+} from "@/app/lib/characterOptions";
 
 // GET /api/auth/profession-blueprints - lore/reference data, not player-specific:
 // every blueprint each profession can start with, each family with its tiers 1-6.
@@ -263,6 +270,12 @@ export default function Characters() {
                         <div key={profession.id} className={styles.raceEntry}>
                           <p className={styles.raceName}>{profession.name}</p>
                           <p className={styles.raceDescription}>{profession.description}</p>
+                          {professionRawFamiliesLabel(profession.id) && (
+                            <p className={styles.professionRaws}>
+                              <span className={styles.professionRawsLabel}>Raw materials:</span>{" "}
+                              {professionRawFamiliesLabel(profession.id)}
+                            </p>
+                          )}
                         </div>
                       ))}
                     </div>

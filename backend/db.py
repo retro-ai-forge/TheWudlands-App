@@ -422,3 +422,13 @@ async def ensure_indexes() -> None:
     await db.story_plays.create_index(
         [("address", 1), ("storyAuthor", 1), ("storyId", 1)], unique=True
     )
+
+    # Trade market (backend.market): open offers listed newest first, the
+    # lazy expiry sweep by expiresAt, a seller's own offers. No TTL - closed
+    # offers stay until their seller deletes them.
+    await db.market_offers.create_index([("status", 1), ("createdAt", -1)])
+    await db.market_offers.create_index([("status", 1), ("expiresAt", 1)])
+    await db.market_offers.create_index([("sellerAddress", 1), ("status", 1)])
+    await db.market_offers.create_index("giveFamilies")
+    await db.market_offers.create_index("giveTiers")
+    await db.market_offers.create_index("askFamilies")

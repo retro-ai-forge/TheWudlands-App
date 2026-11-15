@@ -69,6 +69,8 @@ export type BlueprintTierInfo = Record<
     foodKind?: string;
     /** Food only (item-catalog): the group it heals, "body" | "soul" - empty for rations. */
     feeds?: string;
+    /** Item-catalog only: condition-tracked (one instance per piece, has a condition), never a stacked count. */
+    tracked?: boolean;
   }
 >;
 export type ResourceTierInfo = Record<
@@ -1442,6 +1444,7 @@ export const SADDLEPACK_ACTION_ICON = "/images/character/saddlebags.png";
 export const VAULT_ACTION_ICON = "/images/character/vault.png";
 const HOME_ACTION_ICON = "/images/character/camp.png";
 const CAMP_ACTION_ICON = "/images/character/camp-inadventure.png";
+export const MARKET_ACTION_ICON = "/images/character/market.png";
 export const CART_ACTION_ICON = "/images/items/cart_t1.png";
 
 
@@ -3328,24 +3331,24 @@ export function ItemDetailPopup({
                     const burn = burnLine(info?.familyId, info?.tier);
                     return burn ? <span>{burn}</span> : null;
                   })()}
-                  {info?.familyId === "backpack" && backpackSlotsUsed != null && backpackCapacity != null && (
+                  {/* Every container shows its own tier's maximum, wherever
+                      the popup opens (home, vault, body, crafting page). */}
+                  {(info?.familyId === "backpack" || info?.familyId === "saddlepack" || info?.familyId === "cart") && !!info.capacitySlots && (
+                    <span>Capacity: {info.capacitySlots} slots</span>
+                  )}
+                  {/* How full the character's own container is - only when
+                      one is in use (capacity 0 = none, "0/0" says nothing). */}
+                  {info?.familyId === "backpack" && backpackSlotsUsed != null && !!backpackCapacity && (
                     <span>Filled: {backpackSlotsUsed}/{backpackCapacity}</span>
                   )}
-                  {info?.familyId === "saddlepack" && saddlepackSlotsUsed != null && saddlepackCapacity != null && (
+                  {info?.familyId === "saddlepack" && saddlepackSlotsUsed != null && !!saddlepackCapacity && (
                     <span>Filled: {saddlepackSlotsUsed}/{saddlepackCapacity}</span>
                   )}
-                  {info?.familyId === "cart" && cartSlotsUsed != null && cartCapacity != null && (
+                  {info?.familyId === "cart" && cartSlotsUsed != null && !!cartCapacity && (
                     <span>Filled: {cartSlotsUsed}/{cartCapacity}</span>
                   )}
                   {source !== "vault" && info?.kind === "mount" && info?.carryCapacity != null && info.carryCapacity > 0 && mountCarryWeightUsed != null && (
                     <span>Carry: {mountCarryWeightUsed}/{info.carryCapacity}</span>
-                  )}
-                  {/* A container sitting in the shared vault holds nothing - its
-                      contents only ever live on the character who has it
-                      equipped (gear.itemBalances.<location>) - so
-                      it's always empty against its own tier capacity. */}
-                  {source === "vault" && (info?.familyId === "backpack" || info?.familyId === "saddlepack" || info?.familyId === "cart") && info.capacitySlots != null && (
-                    <span>Filled: 0/{info.capacitySlots}</span>
                   )}
                   {source === "vault" && info?.kind === "mount" && info?.carryCapacity != null && info.carryCapacity > 0 && (
                     <span>Carry: 0/{info.carryCapacity}</span>

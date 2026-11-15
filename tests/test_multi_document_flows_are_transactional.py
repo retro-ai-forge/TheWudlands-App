@@ -21,7 +21,7 @@ import re
 from pathlib import Path
 
 BACKEND = Path(__file__).parent.parent / "backend"
-CHECKED_MODULES = ("players.py", "foraging.py", "condition.py", "legend.py", "soul_slots.py")
+CHECKED_MODULES = ("players.py", "foraging.py", "condition.py", "legend.py", "soul_slots.py", "market.py")
 DECORATORS = {"_in_transaction", "transactional"}
 WRITE_METHODS = {"update_one", "update_many", "insert_one", "insert_many", "delete_one", "delete_many",
                  "replace_one", "bulk_write", "find_one_and_update_checked"}

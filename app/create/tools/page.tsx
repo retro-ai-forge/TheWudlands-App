@@ -608,6 +608,18 @@ export default function Storyteller() {
                   and nights outside bring weather, worn gear, and sometimes a surprise find.</span>
               </div>
             </div>
+            <div style={{ display: "flex", gap: "1rem", alignItems: "flex-start" }}>
+              <img src="/images/create/feature-active.png" alt="Progress" title="progress" style={{ height: "2rem", width: "auto", flexShrink: 0 }} />
+              <div>
+                <strong>Your Legend: Reputation</strong><br /><span style={{ fontSize: "0.9rem", color: "#a09080" }}>Every deed is carved into the eternal record — your deeds shape how the world remembers you, from whispered legend to feared name</span>
+              </div>
+            </div>
+            <div style={{ display: "flex", gap: "1rem", alignItems: "flex-start" }}>
+              <img src="/images/create/feature-active.png" alt="Idea" title="idea" style={{ height: "2rem", width: "auto", flexShrink: 0 }} />
+              <div>
+                <strong>Market Trading</strong><br /><span style={{ fontSize: "0.9rem", color: "#a09080" }}>Item selection and trading in markets, allowing adventurers to exchange goods</span>
+              </div>
+            </div>
             
 
             <hr style={{ border: "none", borderTop: "1px solid #3a3020", margin: "0" }} />
@@ -615,15 +627,28 @@ export default function Storyteller() {
             <div style={{ display: "flex", gap: "1rem", alignItems: "flex-start" }}>
               <img src="/images/create/feature-progress.png" alt="Progress" title="progress" style={{ height: "2rem", width: "auto", flexShrink: 0 }} />
               <div>
-                <strong>Your Legend: Reputation</strong><br /><span style={{ fontSize: "0.9rem", color: "#a09080" }}>Every deed is carved into the eternal record — your deeds shape how the world remembers you, from whispered legend to feared name</span>
-              </div>
-            </div>
-            <div style={{ display: "flex", gap: "1rem", alignItems: "flex-start" }}>
-              <img src="/images/create/feature-progress.png" alt="Progress" title="progress" style={{ height: "2rem", width: "auto", flexShrink: 0 }} />
-              <div>
                 <strong>Echoes of the past</strong><br /><span style={{ fontSize: "0.9rem", color: "#a09080" }}>Powerful figures bound to you by devotion and desire — lovers, rivals, sworn enemies in matters of passion</span>
               </div>
             </div>
+            <div style={{ display: "flex", gap: "1rem", alignItems: "flex-start" }}>
+              <img src="/images/create/feature-progress.png" alt="Idea" title="idea" style={{ height: "2rem", width: "auto", flexShrink: 0 }} />
+              <div>
+                <strong>Vital Status</strong><br /><span style={{ fontSize: "0.9rem", color: "#a09080" }}>Track special conditions of characters throughout their journey</span>
+              </div>
+            </div>
+            <div style={{ display: "flex", gap: "1rem", alignItems: "flex-start" }}>
+              <img src="/images/create/feature-progress.png" alt="Idea" title="idea" style={{ height: "2rem", width: "auto", flexShrink: 0 }} />
+              <div>
+                <strong>Availablility</strong><br /><span style={{ fontSize: "0.9rem", color: "#a09080" }}>Track character status with countdown timers in characer preview — free, ready, working, travelling, or imprisoned — showing when they are available again.</span>
+              </div>
+            </div>
+            <div style={{ display: "flex", gap: "1rem", alignItems: "flex-start" }}>
+              <img src="/images/create/feature-progress.png" alt="Idea" title="idea" style={{ height: "2rem", width: "auto", flexShrink: 0 }} />
+              <div>
+                <strong>Story Effects</strong><br /><span style={{ fontSize: "0.9rem", color: "#a09080" }}>Local in-adventure values that exist only within the context of the running adventure, be it hunger, thirst, cold</span>
+              </div>
+            </div>
+
             <hr style={{ border: "none", borderTop: "1px solid #3a3020", margin: "0" }} />
             
             <div style={{ display: "flex", gap: "1rem", alignItems: "flex-start" }}>
@@ -641,31 +666,7 @@ export default function Storyteller() {
             <div style={{ display: "flex", gap: "1rem", alignItems: "flex-start" }}>
               <img src="/images/create/feature-idea.png" alt="Idea" title="idea" style={{ height: "2rem", width: "auto", flexShrink: 0 }} />
               <div>
-                <strong>Vital Status</strong><br /><span style={{ fontSize: "0.9rem", color: "#a09080" }}>Track special conditions of characters throughout their journey</span>
-              </div>
-            </div>
-            <div style={{ display: "flex", gap: "1rem", alignItems: "flex-start" }}>
-              <img src="/images/create/feature-idea.png" alt="Idea" title="idea" style={{ height: "2rem", width: "auto", flexShrink: 0 }} />
-              <div>
-                <strong>Availablility</strong><br /><span style={{ fontSize: "0.9rem", color: "#a09080" }}>Track character status with countdown timers in characer preview — free, ready, working, travelling, or imprisoned — showing when they are available again.</span>
-              </div>
-            </div>
-            <div style={{ display: "flex", gap: "1rem", alignItems: "flex-start" }}>
-              <img src="/images/create/feature-idea.png" alt="Idea" title="idea" style={{ height: "2rem", width: "auto", flexShrink: 0 }} />
-              <div>
                 <strong>Forged together</strong><br /><span style={{ fontSize: "0.9rem", color: "#a09080" }}>Legendary works built through cooperation, trust, and shared purpose — bridges, sky vessels, and sailships created by fellowships working together</span>
-              </div>
-            </div>
-            <div style={{ display: "flex", gap: "1rem", alignItems: "flex-start" }}>
-              <img src="/images/create/feature-idea.png" alt="Idea" title="idea" style={{ height: "2rem", width: "auto", flexShrink: 0 }} />
-              <div>
-                <strong>Market Trading</strong><br /><span style={{ fontSize: "0.9rem", color: "#a09080" }}>Multiple choice buttons for item selection and trading in markets, allowing adventurers to buy, sell, and exchange goods</span>
-              </div>
-            </div>
-            <div style={{ display: "flex", gap: "1rem", alignItems: "flex-start" }}>
-              <img src="/images/create/feature-idea.png" alt="Idea" title="idea" style={{ height: "2rem", width: "auto", flexShrink: 0 }} />
-              <div>
-                <strong>Story Effects</strong><br /><span style={{ fontSize: "0.9rem", color: "#a09080" }}>Local in-adventure values that exist only within the context of the running adventure, be it hunger, thirst, cold</span>
               </div>
             </div>
             <div style={{ display: "flex", gap: "1rem", alignItems: "flex-start" }}>
@@ -720,7 +721,10 @@ export default function Storyteller() {
           <tbody>
             {STORY_STATS.map((row, index) => (
               <tr key={row.stat} data-pair={Math.floor(index / 2)} className={styles.statRow}>
-                <td className={styles.statName}>{row.stat}<br /><span className={styles.code}>{"$meta_" + row.stat.toLowerCase()}</span></td>
+                <td className={styles.statName} style={{ whiteSpace: "nowrap" }}>
+                  {row.stat}
+                  <span className={styles.code} style={{ marginLeft: "0.75rem" }}>{"$meta_" + row.stat.toLowerCase()}</span>
+                </td>
                 <td>{row.description}</td>
                 <td>{row.storyUse}</td>
               </tr>
