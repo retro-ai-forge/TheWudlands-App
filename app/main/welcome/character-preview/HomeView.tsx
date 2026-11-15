@@ -90,7 +90,7 @@ export function HomeView({
    * footer bar (tab row + its own char-preview-close.png close button) while this
    * view is open, so this is the only way out of it once opened. */
   onExitHome: () => void;
-  /** Opens the crafting page - the workbench left of the tent. */
+  /** Opens the crafting page - the workbench right of the tent. */
   onOpenCrafting?: () => void;
   footerVisible?: boolean;
   storageType?: "home" | "camp";
@@ -533,7 +533,7 @@ export function HomeView({
               disabled={batchBusy || selectedIds.size === 0}
               onClick={() => setShowSalvagePopup(true)}
             >
-              <div className={styles.selectionBarIcon} style={{ backgroundImage: `url(/images/character/salvage.png)` }} />
+              <div className={styles.selectionBarIcon} style={{ backgroundImage: `url(/images/character/chopping_block.png)` }} />
             </button>
           </div>
           <span className={styles.selectionBarWeight}>
@@ -777,9 +777,8 @@ export function HomeView({
                 : `${styles.campfireStageIcon} ${styles.campfireStageIconEmpty}`
             }
           />
-          {/* The workbench, left of the tent (the chopping block's
-              counterpart on the right) - opens the crafting page, which
-              works from this storage (home, or the camp while resting). */}
+          {/* The workbench, right of the tent - opens the crafting page,
+              which works from this storage (home, or the camp while resting). */}
           {onOpenCrafting && (
             // eslint-disable-next-line @next/next/no-img-element
             <img

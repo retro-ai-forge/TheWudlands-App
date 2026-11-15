@@ -1084,10 +1084,10 @@ async def get_item_catalog():
     Reference data: every concrete tiered id belonging to an
     item-inventory-properties.json family (all 118 - weapons, armor,
     tools, ammo, misc trinkets, food, potions, adventuring gear), with its
-    tier/kind/icon. A handful (arrow, bolt, oil) resolve their id/name/tier
-    /icon from the processed-resource catalog (that's simply where their
-    tiered rows live) but are credited into vault.itemBalances like any
-    other crafted item, not resources - see
+    tier/kind/icon. Oil resolves its id/name/tier/icon from the
+    processed-resource catalog (that's simply where its tiered rows live)
+    but is credited into vault.itemBalances like any other crafted item,
+    not resources - see
     items_catalog._load_item_catalog_entries.
     """
     return [

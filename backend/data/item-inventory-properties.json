@@ -1447,7 +1447,7 @@
     "sizeClass": "tiny",
     "stackSize": 10,
     "needsItemDefinition": false,
-    "note": "Never equipped - carried as a stackable backpack item, not an individually tracked instance.",
+    "note": "Stackable, not an individually tracked instance - carried in a bag or equipped in a hand, the girdle or the side slot; burns as a light on foraging trips.",
     "equipSlots": [
       [
         "Left Hand"
@@ -1661,7 +1661,7 @@
     "sizeClass": "tiny",
     "stackSize": 10,
     "needsItemDefinition": false,
-    "note": "Never equipped - carried as a stackable backpack item, not an individually tracked instance.",
+    "note": "Stackable, not an individually tracked instance - carried in a bag or equipped in a hand, the girdle or the side slot; burns as a light on foraging trips.",
     "equipSlots": [
       [
         "Left Hand"

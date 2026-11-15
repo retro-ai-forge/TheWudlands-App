@@ -63,7 +63,89 @@
     font-size: 13px;
   }
   select { min-width: 340px; max-width: 100%; }
-  /* All / Craftable / My blueprints - only on the crafting page
+  /* Recipe picker: an in-page fold replacing the native <select>'s
+     dropdown, whose Android picker is drawn by the OS at the phone's own
+     (often large) font size, outside this page's CSS. The <select> stays,
+     hidden, as the source of truth (select.value is read everywhere,
+     including by the embedding app via getCurrentSelection). */
+  .recipePickerButton {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    min-width: 340px;
+    max-width: 100%;
+    background: var(--panel2);
+    color: var(--text);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 8px 10px;
+    font-family: inherit;
+    font-size: 13px;
+    text-align: left;
+    cursor: pointer;
+  }
+  .recipePickerButton[aria-expanded="true"] { border-color: var(--accent); }
+  .recipePickerLabel { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  /* Tier icon of the selected tier button, before the bar's name and each
+     entry's - switching tiers redraws both (syncPicker). */
+  .recipePickerTier { display: inline-flex; flex-shrink: 0; }
+  .recipePickerButton .tierIcon, .recipePickerOption .tierIcon { width: 18px; height: 18px; }
+  .recipePickerArrow { color: var(--text-dim); transition: transform 0.15s ease; }
+  .recipePickerButton[aria-expanded="true"] .recipePickerArrow { transform: rotate(180deg); color: var(--accent); }
+  /* In the toolbar's flow, not floating: order + full basis put it on its
+     own line under the whole toolbar row on wide screens (directly under
+     the button once the toolbar stacks, see the 480px block). */
+  .recipePickerList {
+    order: 1;
+    flex-basis: 100%;
+    width: 100%;
+    position: relative;
+    max-height: 360px;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    background: var(--panel2);
+    border: 1px solid var(--accent);
+    border-radius: 4px;
+  }
+  .recipePickerList[hidden] { display: none; }
+  .recipePickerGroup {
+    position: sticky;
+    top: 0;
+    z-index: 1;
+    background: var(--panel);
+    color: var(--text-dim);
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    padding: 6px 10px;
+    border-bottom: 1px solid var(--border);
+  }
+  .recipePickerOption {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+    text-align: left;
+    background: none;
+    border: none;
+    border-left: 3px solid transparent;
+    color: var(--text);
+    font-family: inherit;
+    font-size: 13px;
+    line-height: 1.3;
+    padding: 8px 10px 8px 9px;
+    cursor: pointer;
+  }
+  .recipePickerOption:hover, .recipePickerOption:focus-visible { background: var(--panel); color: var(--accent); outline: none; }
+  .recipePickerOption[aria-selected="true"] { border-left-color: var(--accent); color: var(--accent); }
+  /* Processed materials: listed last and dimmed - mostly crafted on the
+     way to something else, rarely the thing you came to pick. */
+  .recipePickerGroup.processed { color: #5f6375; }
+  .recipePickerOption.processed { color: var(--text-dim); }
+  .recipePickerOption.processed[aria-selected="true"] { color: var(--accent); }
+  .recipePickerEmpty { color: var(--text-dim); font-style: italic; padding: 8px 10px; font-size: 13px; }
+  /* All / Free / Ready / Blueprints - only on the crafting page
      (?filters=1); character creation always lists everything. */
   .listFilters { display: flex; flex-wrap: wrap; gap: 6px 10px; margin-bottom: 10px; font-size: 13px; }
   .listFilters[hidden] { display: none; }
@@ -86,14 +168,13 @@
      stacked column here instead, and padding shrinks to leave more room for
      content. */
   @media (max-width: 480px) {
-    body { padding: 10px; padding-bottom: 64px; font-size: 13px; }
+    body { padding: 10px 8px; padding-bottom: 64px; font-size: 13px; }
     .backlink { bottom: 10px; right: 10px; padding: 6px 12px; }
     .toolbar { flex-direction: column; align-items: stretch; gap: 8px; }
-    select, input[type="text"] { min-width: 0; width: 100%; }
-    .panel { padding: 10px; }
-    .tierButtons { gap: 2px; flex-wrap: wrap; }
-    .tierButton { width: 32px; height: 32px; font-size: 12px; }
-    .tierButton .tierIcon { width: 22px; height: 22px; }
+    select, input[type="text"], .recipePickerButton { min-width: 0; width: 100%; }
+    .recipePickerList { order: 0; }
+    .panel { padding: 10px 6px; }
+    .tierButtons { gap: 3px; }
     .toggleLabel { font-size: 14px; }
   }
   .panel {
@@ -185,11 +266,17 @@
      category tag it's combined with. */
   .tag.missing { border-color: #c85555; color: #c85555; }
   .tierIcon { width: 1.4em; height: 1.4em; object-fit: contain; vertical-align: middle; image-rendering: auto; }
+  /* T1-T6 plus the legend button: 7 x 38px + 6 x 4px = 290px, which fits
+     the 320px a 340px-wide screen leaves after body padding. nowrap +
+     flex-shrink (with aspect-ratio keeping them square) shrinks the row
+     further instead of wrapping when the embedding frame is narrower. */
   .tierButtons {
     display: flex;
+    flex-wrap: nowrap;
     gap: 4px;
     align-items: center;
     margin-top: 0;
+    max-width: 100%;
   }
   .tierButton {
     background: var(--panel2);
@@ -202,14 +289,23 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 43px;
-    height: 43px;
+    flex: 0 1 38px;
+    width: 38px;
+    min-width: 24px;
+    height: auto;
+    aspect-ratio: 1;
     padding: 0;
     line-height: 1;
   }
   .tierButton .tierIcon {
-    width: 28px;
-    height: 28px;
+    width: 66%;
+    height: 66%;
+  }
+  /* 7th button in the tier row - opens the legend popup, never "active". */
+  .legendButton {
+    font-size: 18px;
+    font-weight: bold;
+    color: var(--accent);
   }
   .tierButton:hover {
     border-color: var(--accent);
@@ -281,12 +377,21 @@
   /* Nothing missing - the character already has all of this material. */
   td.n.have-enough { color: #9be6a8; }
   tr + tr td { border-top: 1px solid var(--border); }
-  .legendTable { width: 100%; border-collapse: separate; border-spacing: 0 12px; font-size: 12px; margin-bottom: 12px; border: none; }
-  .legendTable tr { height: 18px; line-height: 18px; }
-  .legendTable td { vertical-align: middle; padding: 0; border: none; }
-  .legendTable td:first-child { text-align: center; width: 76px; display: flex; align-items: center; justify-content: center; padding-left: 8px; padding-right: 0; }
-  .legendTable td:first-child span { display: block; }
-  .legendTable td:last-child { padding-left: 12px; padding-right: 0; text-align: left; }
+  /* Legend popup (the "?" button after T6) - same card as the item popup;
+     every rule carries the itemPopup prefix so ensurePopupStyles copies it
+     onto the embedding page, and colours are literal because this page's
+     CSS variables don't exist there. */
+  .itemPopupLegendTable { width: 100%; border-collapse: separate; border-spacing: 0 10px; font-size: 12px; border: none; color: #d4c9a8; }
+  .itemPopupLegendTable td { vertical-align: middle; padding: 0; border: none; line-height: 18px; }
+  .itemPopupLegendTable td:first-child { text-align: center; width: 84px; }
+  .itemPopupLegendTable td:last-child { padding-left: 10px; text-align: left; }
+  .itemPopupLegendTable .tierIcon { width: 22px; height: 22px; }
+  .itemPopupLegendTable .tag { font-size: 10px; padding: 1px 10px; border-radius: 10px; border: 1px solid; white-space: nowrap; }
+  .itemPopupLegendTable .tag.cat-final { border-color: #2f6f9e; color: #7ec8e3; }
+  .itemPopupLegendTable .tag.cat-blueprint { border-color: #6a3a8a; color: #e0b5f0; }
+  .itemPopupLegendTable .tag.cat-processed { border-color: #8a7325; color: #e0c565; }
+  .itemPopupLegendTable .tag.cat-raw { border-color: #3a6b3f; color: #7fd08a; }
+  .itemPopupLegendTable .tag.missing { border-color: #c85555; color: #c85555; }
   .toollist { display: flex; flex-wrap: wrap; gap: 6px; }
   /* A read-only preview of the item-detail popup the player sees in their
      own vault (character-preview/InventoryTab.tsx's ItemDetailPopup) -
@@ -444,32 +549,20 @@
 <body>
   <a class="backlink" id="backLink" href="/">&larr; Back to Character</a>
 
-  <details class="panel" style="margin-bottom:12px;">
-    <summary>Legend</summary>
-    <table class="legendTable">
-      <tr><td><span class="tag cat-final">final</span></td><td>a separate finished item (▸ has its own recipe)</td></tr>
-      <tr><td><span class="tag cat-blueprint">recipe</span></td><td>technique required, learned once and never consumed</td></tr>
-      <tr><td><span class="tag cat-processed">processed</span></td><td>crafted from raw</td></tr>
-      <tr><td><span class="tag cat-raw">raw</span></td><td>mined/gathered material</td></tr>
-      <tr><td><span class="tag missing">missing</span></td><td>missing tool / recipe</td></tr>
-      <tr><td><img src="/icons/t1.png" alt="T1" class="tierIcon"></td><td>Tier 1 (Mundane)</td></tr>
-      <tr><td><img src="/icons/t2.png" alt="T2" class="tierIcon"></td><td>Tier 2 (Mundane)</td></tr>
-      <tr><td><img src="/icons/t3.png" alt="T3" class="tierIcon"></td><td>Tier 3 (Mundane)</td></tr>
-      <tr><td><img src="/icons/t4.png" alt="T4" class="tierIcon"></td><td>Tier 4 (Enchantable)</td></tr>
-      <tr><td><img src="/icons/t5.png" alt="T5" class="tierIcon"></td><td>Tier 5 (Enchantable)</td></tr>
-      <tr><td><img src="/icons/t6.png" alt="T6" class="tierIcon"></td><td>Tier 6 (Enchantable)</td></tr>
-    </table>
-  </details>
-
   <div class="listFilters" id="listFilters" role="radiogroup" aria-label="Show recipes" hidden>
     <label><input type="radio" name="listFilter" value="all" checked> All</label>
-    <label><input type="radio" name="listFilter" value="craftable"> Craftable</label>
-    <label><input type="radio" name="listFilter" value="blueprints"> My blueprints</label>
+    <label><input type="radio" name="listFilter" value="free"> Free</label>
+    <label><input type="radio" name="listFilter" value="craftable"> Ready</label>
+    <label><input type="radio" name="listFilter" value="blueprints"> Blueprints</label>
   </div>
 
   <div class="toolbar">
     <input type="text" id="filterBox" placeholder="filter list...">
-    <select id="recipeSelect"></select>
+    <select id="recipeSelect" hidden aria-hidden="true" tabindex="-1"></select>
+    <button type="button" class="recipePickerButton" id="recipePickerButton" aria-haspopup="listbox" aria-expanded="false" aria-controls="recipePickerList">
+      <span class="recipePickerTier" id="recipePickerTier" aria-hidden="true"></span><span class="recipePickerLabel" id="recipePickerLabel"></span><span class="recipePickerArrow" aria-hidden="true">▾</span>
+    </button>
+    <div class="recipePickerList" id="recipePickerList" role="listbox" aria-label="Recipes" hidden></div>
     <div class="tierButtons">
       <button class="tierButton active" data-tier="1"><img src="/icons/t1.png" alt="T1" class="tierIcon"></button>
       <button class="tierButton" data-tier="2"><img src="/icons/t2.png" alt="T2" class="tierIcon"></button>
@@ -477,6 +570,7 @@
       <button class="tierButton" data-tier="4"><img src="/icons/t4.png" alt="T4" class="tierIcon"></button>
       <button class="tierButton" data-tier="5"><img src="/icons/t5.png" alt="T5" class="tierIcon"></button>
       <button class="tierButton" data-tier="6"><img src="/icons/t6.png" alt="T6" class="tierIcon"></button>
+      <button type="button" class="tierButton legendButton" id="legendButton" title="Legend" aria-label="Legend">?</button>
     </div>
     <select id="tierSelect" style="display: none;">
       <option value="1">T1</option>
@@ -906,12 +1000,145 @@ function showItemPopup(famId, tier) {
   if (host !== document) overlay.classList.add("itemPopupOverlayHosted");
   host.body.appendChild(overlay);
 }
+// What the old "Legend" fold showed, now opened by the "?" button after T6.
+const LEGEND_ROWS = [
+  ["tag cat-final", "final", "a separate finished item (▸ has its own recipe)"],
+  ["tag cat-blueprint", "recipe", "technique required, learned once and never consumed"],
+  ["tag cat-processed", "processed", "crafted from raw"],
+  ["tag cat-raw", "raw", "mined/gathered material"],
+  ["tag missing", "missing", "missing tool / recipe"],
+];
+const TIER_LEGEND = ["Mundane", "Mundane", "Mundane", "Enchantable", "Enchantable", "Enchantable"];
+
+function showLegendPopup() {
+  const overlay = el("div", "itemPopupOverlay");
+  overlay.addEventListener("click", () => overlay.remove());
+  const card = el("div", "itemPopupCard");
+  card.appendChild(el("h3", "itemPopupName", "Legend"));
+  const table = el("table", "itemPopupLegendTable");
+  for (const [cls, label, text] of LEGEND_ROWS) {
+    const tr = document.createElement("tr");
+    const tag = document.createElement("td");
+    tag.appendChild(el("span", cls, label));
+    tr.appendChild(tag);
+    tr.appendChild(el("td", "", text));
+    table.appendChild(tr);
+  }
+  TIER_LEGEND.forEach((kind, i) => {
+    const tr = document.createElement("tr");
+    const icon = document.createElement("td");
+    icon.appendChild(tierIconNode(i + 1));
+    tr.appendChild(icon);
+    tr.appendChild(el("td", "", `Tier ${i + 1} (${kind})`));
+    table.appendChild(tr);
+  });
+  card.appendChild(table);
+  overlay.appendChild(card);
+  const host = popupHostDocument();
+  if (host !== document) overlay.classList.add("itemPopupOverlayHosted");
+  host.body.appendChild(overlay);
+}
+document.getElementById("legendButton").addEventListener("click", showLegendPopup);
+
 function famCategory(famId) {
   const f = families[famId];
   return f ? f.category : "unknown";
 }
 
 const select = document.getElementById("recipeSelect");
+
+// --- Recipe picker (fold-open list mirroring the hidden <select>) ---
+// Built from the <select>'s optgroups/options every time it opens or the
+// options change (syncPicker runs at the top of every render(), which every
+// option/selection change ends with). Choosing an entry sets select.value,
+// fires its "change" event and folds the list shut.
+const pickerButton = document.getElementById("recipePickerButton");
+const pickerLabel = document.getElementById("recipePickerLabel");
+const pickerList = document.getElementById("recipePickerList");
+
+function pickerIsOpen() { return !pickerList.hidden; }
+
+function buildPickerList() {
+  pickerList.innerHTML = "";
+  const tier = currentTier();
+  const addOption = (opt, dim) => {
+    const item = el("button", "recipePickerOption" + (dim ? " processed" : ""));
+    item.appendChild(tierIconNode(tier));
+    item.appendChild(el("span", "", opt.textContent));
+    item.type = "button";
+    item.setAttribute("role", "option");
+    item.setAttribute("aria-selected", String(opt.value === select.value));
+    item.dataset.value = opt.value;
+    item.addEventListener("click", () => choosePickerValue(opt.value));
+    pickerList.appendChild(item);
+  };
+  // Processed groups (incl. "processed (uses ...)") go after everything else.
+  const children = [...select.children];
+  const isProcessed = (child) => child.tagName === "OPTGROUP" && child.dataset.cat === "processed";
+  for (const child of [...children.filter(c => !isProcessed(c)), ...children.filter(isProcessed)]) {
+    if (child.tagName === "OPTGROUP") {
+      const dim = isProcessed(child);
+      pickerList.appendChild(el("div", "recipePickerGroup" + (dim ? " processed" : ""), child.label));
+      for (const opt of child.children) addOption(opt, dim);
+    } else {
+      addOption(child, false);
+    }
+  }
+  if (!select.options.length) pickerList.appendChild(el("div", "recipePickerEmpty", "No recipes match."));
+}
+
+function openPicker() {
+  buildPickerList();
+  pickerList.hidden = false;
+  pickerButton.setAttribute("aria-expanded", "true");
+  // Not scrollIntoView - inside the embedding iframe that would scroll the
+  // app page too. The list is position: relative, so offsetTop is its own.
+  const current = pickerList.querySelector('[aria-selected="true"]');
+  pickerList.scrollTop = current ? Math.max(0, current.offsetTop - pickerList.clientHeight / 3) : 0;
+}
+
+function closePicker() {
+  pickerList.hidden = true;
+  pickerButton.setAttribute("aria-expanded", "false");
+}
+
+function choosePickerValue(value) {
+  closePicker();
+  pickerButton.focus({ preventScroll: true });
+  if (select.value === value) return;
+  select.value = value;
+  select.dispatchEvent(new Event("change"));
+}
+
+function syncPicker() {
+  const opt = select.options[select.selectedIndex];
+  pickerLabel.textContent = opt ? opt.textContent : "No recipes match";
+  const pickerTier = document.getElementById("recipePickerTier");
+  pickerTier.innerHTML = "";
+  if (opt) pickerTier.appendChild(tierIconNode(currentTier()));
+  if (pickerIsOpen()) buildPickerList();
+}
+
+pickerButton.addEventListener("click", () => (pickerIsOpen() ? closePicker() : openPicker()));
+pickerButton.addEventListener("keydown", (e) => {
+  if (e.key !== "ArrowDown") return;
+  e.preventDefault();
+  if (!pickerIsOpen()) openPicker();
+  (pickerList.querySelector('[aria-selected="true"]') || pickerList.querySelector(".recipePickerOption"))?.focus({ preventScroll: true });
+});
+pickerList.addEventListener("keydown", (e) => {
+  const items = [...pickerList.querySelectorAll(".recipePickerOption")];
+  const i = items.indexOf(document.activeElement);
+  if (e.key === "Escape") {
+    e.preventDefault();
+    closePicker();
+    pickerButton.focus({ preventScroll: true });
+  } else if (e.key === "ArrowDown" || e.key === "ArrowUp") {
+    e.preventDefault();
+    const next = items[Math.min(items.length - 1, Math.max(0, i + (e.key === "ArrowDown" ? 1 : -1)))];
+    next?.focus();
+  }
+});
 const filterBox = document.getElementById("filterBox");
 const tierSelect = document.getElementById("tierSelect");
 
@@ -1146,7 +1373,9 @@ function recipeUses(recipeId, famId) {
   return toolIds(recipe.tool).includes(famId);
 }
 
-// --- List filter (All / Craftable / My blueprints) ---
+// --- List filter (All / Free / Ready / Blueprints) ---
+// Free = no blueprint anywhere in the chain, Ready = craftable right now
+// (radio value "craftable"), Blueprints = uses a learned blueprint.
 // Only shown on the crafting page (?filters=1); elsewhere always "all".
 const showListFilters = !!new URLSearchParams(window.location.search).get("filters");
 if (showListFilters) document.getElementById("listFilters").hidden = false;
@@ -1157,25 +1386,78 @@ function listFilter() {
   return checked ? checked.value : "all";
 }
 
-// Recipes whose blueprint the character has learned (any tier), plus every
-// recipe that uses one of those items.
-function blueprintFamilies() {
-  const known = new Set();
-  if (!ownedBlueprints) return known;
-  for (const id of recipeFamIds) {
-    const bp = recipes[id] && recipes[id].blueprintFamilyId;
-    if (bp && ownsFamily(ownedBlueprints, bp, 1)) known.add(id);
-  }
-  const all = new Set(known);
-  for (const id of recipeFamIds) {
-    for (const k of known) {
-      if (recipeUses(id, k)) { all.add(id); break; }
+// "Blueprints" list at `tier`: recipes the character's learned blueprints
+// let them craft at that tier. A blueprint counts at its own tier and below
+// (a T2 one crafts T1 and T2, nothing at T3+), like the backend's
+// _owns_blueprint_at_or_above. A recipe is listed when every blueprint its
+// chain needs - its own and its consumed ingredients', crafted at the same
+// tier - is owned at `tier` or higher, and at least one such blueprint is in
+// the chain (chains that need none are the "Free" list). An "alternatives"
+// slot passes if any option does; borrowed (non-consumed) ingredients and
+// tools aren't crafted in the chain, so they don't count either way.
+function blueprintFamilies(tier) {
+  const listed = new Set();
+  if (!ownedBlueprints) return listed;
+  const memo = new Map();
+  // -> { ok: every needed blueprint owned, uses: an owned one is involved }
+  const status = (famId) => {
+    if (memo.has(famId)) return memo.get(famId);
+    const recipe = recipes[famId];
+    if (!recipe) return { ok: true, uses: false };
+    memo.set(famId, { ok: false, uses: false }); // cycle guard
+    let ok = true;
+    let uses = false;
+    if (recipe.blueprintFamilyId) {
+      if (ownsFamily(ownedBlueprints, recipe.blueprintFamilyId, tier)) uses = true;
+      else ok = false;
     }
+    for (const ing0 of recipe.ingredients || []) {
+      if (!ok) break;
+      let slotOk = false;
+      let slotUses = false;
+      for (const ing of ing0.alternatives || [ing0]) {
+        const st = ing.consumed ? status(ing.familyId) : { ok: true, uses: false };
+        if (st.ok) { slotOk = true; slotUses = slotUses || st.uses; }
+      }
+      if (!slotOk) ok = false;
+      uses = uses || slotUses;
+    }
+    const result = { ok, uses: ok && uses };
+    memo.set(famId, result);
+    return result;
+  };
+  for (const id of recipeFamIds) {
+    const st = status(id);
+    if (st.ok && st.uses) listed.add(id);
   }
-  return all;
+  return listed;
+}
+
+// True if crafting famId needs a blueprint at any step: its own recipe, or
+// a consumed ingredient's recipe further down. An "alternatives" slot only
+// needs one when every option does (crafting can take the free one).
+// Non-consumed ingredients and tools are borrowed, not crafted, so they
+// don't count. Recipes don't change at runtime, so the answer is cached.
+const needsBlueprintCache = new Map();
+function needsBlueprint(famId) {
+  if (needsBlueprintCache.has(famId)) return needsBlueprintCache.get(famId);
+  const recipe = recipes[famId];
+  if (!recipe) return false;
+  // Cycle guard: a recipe reached again while still being worked out counts
+  // as needing one, so a loop never makes a chain look free.
+  needsBlueprintCache.set(famId, true);
+  let needs = !!recipe.blueprintFamilyId;
+  if (!needs) {
+    needs = (recipe.ingredients || []).some(ing0 =>
+      (ing0.alternatives || [ing0]).every(ing => ing.consumed && needsBlueprint(ing.familyId))
+    );
+  }
+  needsBlueprintCache.set(famId, needs);
+  return needs;
 }
 
 function passesListFilter(famId, tier, mode, bpSet) {
+  if (mode === "free") return !!recipes[famId] && !needsBlueprint(famId);
   if (mode === "craftable") {
     if (!recipes[famId] || !inventory || !ownedTools || !ownedBlueprints) return false;
     return resolveChainPlan(famId, tier, 1, { ...inventory }, { ...(itemBalances || {}) }, true, true) !== null;
@@ -1189,7 +1471,7 @@ function populateSelect(filterText, tier) {
   populateSelectBase(filterText, tier);
   const mode = listFilter();
   if (mode === "all") return;
-  const bpSet = mode === "blueprints" ? blueprintFamilies() : null;
+  const bpSet = mode === "blueprints" ? blueprintFamilies(tier) : null;
   for (const opt of [...select.options]) {
     if (!passesListFilter(opt.value, tier, mode, bpSet)) opt.remove();
   }
@@ -1200,7 +1482,7 @@ function populateSelect(filterText, tier) {
 }
 
 function setTier(tier) {
-  document.querySelectorAll(".tierButton").forEach(b => {
+  document.querySelectorAll(".tierButton[data-tier]").forEach(b => {
     b.classList.toggle("active", parseInt(b.dataset.tier, 10) === tier);
   });
   tierSelect.value = String(tier);
@@ -1241,6 +1523,7 @@ function populateSelectBase(filterText, tier) {
       if (!nameMatchesByCat[cat]) continue;
       const og = document.createElement("optgroup");
       og.label = cat;
+      og.dataset.cat = cat;
       for (const famId of nameMatchesByCat[cat]) {
         const opt = document.createElement("option");
         opt.value = famId;
@@ -1274,6 +1557,7 @@ function populateSelectBase(filterText, tier) {
         if (!usedIn[cat]) continue;
         const og = document.createElement("optgroup");
         og.label = cat + " (uses " + ft + ")";
+        og.dataset.cat = cat;
         for (const famId of usedIn[cat].sort((a, b) => a.localeCompare(b))) {
           const opt = document.createElement("option");
           opt.value = famId;
@@ -1329,6 +1613,7 @@ function populateSelectBase(filterText, tier) {
       if (!ingredientMatches[cat]) continue;
       const og = document.createElement("optgroup");
       og.label = cat + " (uses " + ft + ")";
+      og.dataset.cat = cat;
       for (const famId of ingredientMatches[cat].sort((a, b) => a.localeCompare(b))) {
         const opt = document.createElement("option");
         opt.value = famId;
@@ -1347,13 +1632,15 @@ populateSelect("", currentTier());
 filterBox.addEventListener("input", () => {
   populateSelect(filterBox.value, currentTier());
   render(select.value, currentTier());
+  // Typing a search shows its matches right away to pick from.
+  if (filterBox.value && !pickerIsOpen()) openPicker();
 });
 select.addEventListener("change", () => render(select.value, currentTier()));
 
 // Tier button handlers
-document.querySelectorAll(".tierButton").forEach(btn => {
+document.querySelectorAll(".tierButton[data-tier]").forEach(btn => {
   btn.addEventListener("click", () => {
-    document.querySelectorAll(".tierButton").forEach(b => b.classList.remove("active"));
+    document.querySelectorAll(".tierButton[data-tier]").forEach(b => b.classList.remove("active"));
     btn.classList.add("active");
     tierSelect.value = btn.dataset.tier;
     populateSelect(filterBox.value, currentTier());
@@ -1843,6 +2130,7 @@ function renderTable(tableId, totals, tier, showMissing, checkBlueprint) {
 }
 
 function render(famId, tier) {
+  syncPicker();
   const tree = document.getElementById("tree");
   tree.innerHTML = "";
   if (!famId) {

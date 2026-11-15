@@ -340,10 +340,11 @@ def resolve_item_balance_stack(item_id: str) -> tuple[int, int]:
     concrete id (e.g. "rabbit_oil") - every itemBalances write path keys by
     this concrete per-tier id, never a bare family id (see
     backend.players._resolve_recipe_output), so resolving it needs
-    ITEM_CATALOG_ENTRIES_BY_ID (concrete id -> family, covers the
-    dual-cataloged ammo families - arrow/bolt/oil - whose ids live in the
-    processed-resource catalog rather than one of the "final" catalog
-    files FAMILY_ID_BY_FINAL_ITEM_ID was built from) rather than looking
+    ITEM_CATALOG_ENTRIES_BY_ID (concrete id -> family, covers oil, whose
+    ids live in the processed-resource catalog rather than one of the
+    "final" catalog files FAMILY_ID_BY_FINAL_ITEM_ID was built from;
+    arrow/bolt live in base-items-adventuring-gear.json like the torch)
+    rather than looking
     the id up directly in the family-keyed ITEM_FAMILIES_BY_ID, which
     always misses for a concrete id and silently falls back to stack_size
     1 - inflating slot cost by up to stackSize-fold.

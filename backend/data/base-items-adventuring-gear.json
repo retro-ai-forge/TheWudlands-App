@@ -630,6 +630,102 @@
     "icon": "/images/items/candle_t6.png"
   },
   {
+    "id": "arrow_1",
+    "name": "Pine Arrow",
+    "familyId": "arrow",
+    "tier": 1,
+    "description": "Pale, sap-scented shaft, rough-hewn and light, unfinished wooden arrowpoint, untied fletchings of mottled gray feather scattered on the workbench.",
+    "icon": "/images/items/arrow_t1.png"
+  },
+  {
+    "id": "arrow_2",
+    "name": "Oak Arrow",
+    "familyId": "arrow",
+    "tier": 2,
+    "description": "Heavy and dark-shafted, knotted wood, arrowhead only loosely fitted, tail end ringed with a single half-attached brown feather.",
+    "icon": "/images/items/arrow_t2.png"
+  },
+  {
+    "id": "arrow_3",
+    "name": "Ash Arrow",
+    "familyId": "arrow",
+    "tier": 3,
+    "description": "Slender, flexible shaft resting atop a leather pad, crude iron head beside it, feather vanes untrimmed, arrangement unfinished.",
+    "icon": "/images/items/arrow_t3.png"
+  },
+  {
+    "id": "arrow_4",
+    "name": "Cedar Arrow",
+    "familyId": "arrow",
+    "tier": 4,
+    "description": "Red-toned and aromatic, notched but lacking a tip, a scatter of red feather plumes and binding twine at its base.",
+    "icon": "/images/items/arrow_t4.png"
+  },
+  {
+    "id": "arrow_5",
+    "name": "Ebony Arrow",
+    "familyId": "arrow",
+    "tier": 5,
+    "description": "Jet-black, gleaming shaft, arrowhead half-inserted, stark white binding thread and dark glossy feathers lying nearby, all slightly askew.",
+    "icon": "/images/items/arrow_t5.png"
+  },
+  {
+    "id": "arrow_6",
+    "name": "Worldroot Arrow",
+    "familyId": "arrow",
+    "tier": 6,
+    "description": "Intricately veined ancient wood shaft, pulsing with faint green glow, featherless and headless, delicate runes swirling along unfinished sides.",
+    "icon": "/images/items/arrow_t6.png"
+  },
+  {
+    "id": "bolt_1",
+    "name": "Pine Bolt",
+    "familyId": "bolt",
+    "tier": 1,
+    "description": "Stubby and pale, freshly cut with a flat tip unfinished, bark remnants clinging near the nock, scattered alongside simple iron points.",
+    "icon": "/images/items/bolt_t1.png"
+  },
+  {
+    "id": "bolt_2",
+    "name": "Oak Bolt",
+    "familyId": "bolt",
+    "tier": 2,
+    "description": "Short and thick-shafted, coarse and weighty, tip unshod, fletching string still tangled, waiting for assembly.",
+    "icon": "/images/items/bolt_t2.png"
+  },
+  {
+    "id": "bolt_3",
+    "name": "Ash Bolt",
+    "familyId": "bolt",
+    "tier": 3,
+    "description": "Long and straight, resting next to chisel marks, ends blunt, tail feathers laid in a bunch, binding sinew trailing off its end.",
+    "icon": "/images/items/bolt_t3.png"
+  },
+  {
+    "id": "bolt_4",
+    "name": "Cedar Bolt",
+    "familyId": "bolt",
+    "tier": 4,
+    "description": "Rich and red-streaked, half-fletched, shaft glistening with resin, a small pile of feathers and glue nearby, incomplete.",
+    "icon": "/images/items/bolt_t4.png"
+  },
+  {
+    "id": "bolt_5",
+    "name": "Ebony Bolt",
+    "familyId": "bolt",
+    "tier": 5,
+    "description": "Dense and dark-shafted, one end carved to a stub, heavy head only partly attached, black and white flights curled loosely around the body.",
+    "icon": "/images/items/bolt_t5.png"
+  },
+  {
+    "id": "bolt_6",
+    "name": "Worldroot Bolt",
+    "familyId": "bolt",
+    "tier": 6,
+    "description": "Ancient and rune-etched, shaft entwined with faint green light, wood still alive, mechanism unexplained—head and fletching not present, radiating potential.",
+    "icon": "/images/items/bolt_t6.png"
+  },
+  {
     "id": "glass_lantern_1",
     "name": "Traveler's Glass Lantern",
     "familyId": "glass_lantern",
