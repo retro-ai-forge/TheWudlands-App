@@ -515,7 +515,7 @@ gcloud auth print-access-token | docker login -u oauth2accesstoken --password-st
 # to prevent error: close local uvicorn and npm run dev
 rav run gcp_full
 
-# or step by step
+# or step by step 
 # build stuff
 npm run build
 # docker
