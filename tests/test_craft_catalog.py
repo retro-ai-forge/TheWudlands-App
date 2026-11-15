@@ -113,12 +113,25 @@ def test_every_blueprint_unlocks_exactly_the_recipe_of_its_name():
         assert outputs == [family.removeprefix("blueprint_")], family
 
 
-def test_lore_lists_every_profession_with_its_own_trade():
+def test_lacquer_is_the_dyers_trade_alone():
+    """The one processed material behind a blueprint: ebony (cooper) and
+    chitin (tanner) need a dyer's lacquer - so neither may pick it."""
+    assert craft_catalog.blueprint_owners("blueprint_lacquer") == ["dyer"]
+    assert craft_catalog.blueprint_source("blueprint_lacquer") == "material"
+    for profession in ("cooper", "tanner"):
+        assert "blueprint_lacquer" not in PROFESSION_BLUEPRINTS[profession].offered
+    users = [r["familyId"] for r in json.loads((Path(craft_catalog._DATA_DIR) / "craft-recipes.json").read_text())
+             if any(i.get("familyId") == "lacquer" for i in r["ingredients"])]
+    assert {"ebony_chest_armor", "chitin_chest_armor", "ebony_shield", "chitin_shield"} <= set(users)
+
+
+def test_lore_lists_every_blueprint_a_profession_can_start_with():
     summary = craft_catalog.profession_blueprint_summary()
     assert {p["id"] for p in summary["professions"]} == set(PROFESSION_CATEGORIES)
     for profession in summary["professions"]:
-        assert profession["own"] == [f.removeprefix("blueprint_") for f in PROFESSION_BLUEPRINTS[profession["id"]].own]
-        for family in profession["own"]:
+        lists = PROFESSION_BLUEPRINTS[profession["id"]]
+        assert profession["blueprints"] == [f.removeprefix("blueprint_") for f in lists.own + lists.offered]
+        for family in profession["blueprints"]:
             assert summary["families"][family]["items"][0]["tier"] == 1
     assert summary["families"]["fishermans_ration"]["name"] == "Fisherman's Ration"
     assert summary["families"]["lock_and_key"]["name"] == "Lock and Key"

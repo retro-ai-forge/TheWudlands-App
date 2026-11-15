@@ -995,10 +995,10 @@ async def get_blueprint_categories():
 @player_router.get("/profession-blueprints")
 async def get_profession_blueprints():
     """
-    Lore/reference data: the blueprints of every profession's trade (its own
-    list in data/profession-blueprints.json), with each blueprint family's
-    name, kind and tier names. Powers the "Blueprints" section of the
-    /characters page. No auth needed.
+    Lore/reference data: every blueprint each profession can start with (its
+    own and offered lists in data/profession-blueprints.json), with each
+    blueprint family's name, kind and tier names. Powers the "Blueprints"
+    section of the /characters page. No auth needed.
     """
     return profession_blueprint_summary()
 

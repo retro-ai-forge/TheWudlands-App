@@ -57,7 +57,7 @@
     "offered": []
   },
   "dyer": {
-    "own": ["mortar_and_pestle"],
+    "own": ["mortar_and_pestle", "lacquer"],
     "offered": ["ebony_head_armor", "ebony_chest_armor", "ebony_leg_armor", "ebony_shield", "chitin_shield", "cloth_cloak", "quilted_cloak"]
   },
   "glassblower": {

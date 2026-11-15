@@ -244,28 +244,44 @@
   color: #d4c9a8;
 }
 
+/* One blueprint of a trade: T1 icon and name. On narrow screens the name
+   wraps within its own column instead of overflowing the row. */
 .blueprintItemLine {
-  margin: 0;
+  margin: 0.15rem 0;
   padding: 0;
-  height: 1.5em;
-  line-height: 1.5em;
   display: flex;
-  align-items: center;
-  gap: 0.5rem;
+  align-items: flex-start;
+  column-gap: 0.5rem;
+  line-height: 1.4;
+  font-size: 0.9rem;
+  color: #d4c9a8;
 }
 
-.blueprintKind {
-  display: inline-block;
-  font-size: 0.65rem;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: #a89968;
-  background: #1a1a10;
-  border: 1px solid #3a3020;
-  border-radius: 3px;
-  padding: 0.1rem 0.4rem;
-  vertical-align: middle;
+.blueprintItemLine .tierIcon {
+  flex-shrink: 0;
 }
+
+.blueprintItemName {
+  flex: 1 1 9rem;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+@media (max-width: 340px) {
+  .accordionBody {
+    padding: 0.6rem 0.4rem;
+  }
+
+  .raceEntry {
+    padding: 0.5rem 0.45rem;
+  }
+
+  .blueprintItemLine {
+    font-size: 0.8rem;
+    column-gap: 0.35rem;
+  }
+}
+
 
 .tierIcon {
   width: 1.4em;

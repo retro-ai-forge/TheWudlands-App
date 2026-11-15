@@ -91,7 +91,7 @@ Every armor piece has its own blueprint: an iron helmet, breastplate and greaves
 | Artists | storyteller | feather, fiber, bone | - | bridle, cloth_cloak, quilted_cloak, saddlepack, scriptorium, wand, written_scroll |
 | CraftArmor | armorer | ore, wood, sand | anvil, chainmail_chest_armor, chainmail_head_armor, chainmail_leg_armor, darksteel_chest_armor, darksteel_head_armor, darksteel_leg_armor, darksteel_shield, iron_chest_armor, iron_head_armor, iron_leg_armor, iron_shield | reinforced_wooden_shield |
 | CraftFurniture | carpenter | wood, fiber, bone | enchanters_table, ladder, loom, oven, scriptorium, spinning_wheel, tanning_rack, workbench | cart |
-| CraftGarment | dyer | pigment, herbs, fiber | mortar_and_pestle | chitin_shield, cloth_cloak, ebony_chest_armor, ebony_head_armor, ebony_leg_armor, ebony_shield, quilted_cloak |
+| CraftGarment | dyer | pigment, herbs, fiber | lacquer, mortar_and_pestle | chitin_shield, cloth_cloak, ebony_chest_armor, ebony_head_armor, ebony_leg_armor, ebony_shield, quilted_cloak |
 | CraftGarment | leatherworker | hide, skin, bone | bolt_girdle, leather_chest_armor, leather_cloak, leather_head_armor, leather_leg_armor, saddle, saddlepack, workbench | - |
 | CraftGarment | tanner | hide, skin, monster_part | barding_leather, chitin_chest_armor, chitin_head_armor, chitin_leg_armor, chitin_shield, fur_cloak, tanning_rack | - |
 | CraftGarment | weaver | fiber, feather, reed | bridle, cloth_chest_armor, cloth_cloak, cloth_head_armor, cloth_leg_armor, loom, quilted_cloak, spinning_wheel | - |
@@ -170,6 +170,7 @@ Crafting pays out two kinds of XP, which can land on different professions from 
 | Leather Chest Armor | Leather Chest Armor | 150 | Hide x120, Wood x18, Bone x12 | 15 | 30 | 45 | 60 | 75 | 90 | 165 |
 | Leather Head Armor | Leather Head Armor | 150 | Hide x120, Wood x18, Bone x12 | 15 | 30 | 45 | 60 | 75 | 90 | 165 |
 | Leather Leg Armor | Leather Leg Armor | 150 | Hide x120, Wood x18, Bone x12 | 15 | 30 | 45 | 60 | 75 | 90 | 165 |
+| Lacquer | Lacquer | 140 | Pigment x80, Herbs x48, Wood x12 | 14 | 28 | 42 | 56 | 70 | 84 | 154 |
 | Kiln | Kiln | 86 | Clay x60, Sand x20, Stone x6 | 9 | 17 | 26 | 34 | 43 | 52 | 95 |
 | Furnace | Furnace | 74 | Clay x36, Stone x16, Sand x12, Ore x10 | 7 | 15 | 22 | 30 | 37 | 44 | 81 |
 | Cloth Chest Armor | Cloth Chest Armor | 72 | Fiber x72 | 7 | 14 | 22 | 29 | 36 | 43 | 79 |
@@ -248,7 +249,6 @@ In both tables, raw materials are counted down the whole creation chain, and an 
 | Item | Raw XP | Raw Materials |
 |---|---:|---|
 | Metal Bar | 158 | Ore x125, Wood x33 |
-| Lacquer | 140 | Pigment x80, Herbs x48, Wood x12 |
 | Tent | 99 | Fiber x96, Wood x3 |
 | Writers Table | 34 | Wood x30, Bone x4 |
 | Metal Ingot | 31 | Ore x25, Wood x6 |

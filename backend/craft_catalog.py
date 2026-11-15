@@ -21,6 +21,7 @@ from backend.professions_catalog import PROFESSION_CATEGORIES
 
 _DATA_DIR = Path(__file__).resolve().parent / "data"
 _BLUEPRINT_PATH = _DATA_DIR / "base-blueprint.json"
+_RECIPES_PATH = _DATA_DIR / "craft-recipes.json"
 _SELECTION_RULES_PATH = _DATA_DIR / "resource-selection-rules.json"
 _PROFESSION_BLUEPRINTS_PATH = _DATA_DIR / "profession-blueprints.json"
 
@@ -36,6 +37,8 @@ _CATALOG_FILES = {
     "essentials": "base-items-essentials.json",
     "companion": "base-items-companion.json",
     "mount": "base-items-mount.json",
+    # Lacquer is the one processed material behind a blueprint (the dyer's).
+    "processed": "base-processed.json",
 }
 _FINAL_CATALOG_TYPES = {"armor", "shield", "weapon", "food", "potion", "adventuring_gear", "essentials", "companion", "mount"}
 
@@ -144,7 +147,18 @@ def _load_profession_blueprints(blueprint_families: set[str]) -> dict[str, Profe
     return result
 
 
+def _load_ingredient_families() -> frozenset[str]:
+    """Every family some recipe consumes or holds as an ingredient."""
+    return frozenset(
+        option["familyId"]
+        for recipe in json.loads(_RECIPES_PATH.read_text())
+        for ingredient in recipe["ingredients"]
+        for option in ingredient.get("alternatives") or [ingredient]
+    )
+
+
 BLUEPRINT_ITEMS: tuple[BlueprintItem, ...] = _load_blueprints()
+_INGREDIENT_FAMILIES: frozenset[str] = _load_ingredient_families()
 BLUEPRINT_ITEMS_BY_ID: dict[str, BlueprintItem] = {item.id: item for item in BLUEPRINT_ITEMS}
 _FAMILY_CATALOG_TYPES: dict[str, str] = _load_family_catalog_types()
 
@@ -172,12 +186,17 @@ def _blueprint_catalog_type(blueprint_family_id: str) -> str | None:
 
 
 def blueprint_source(blueprint_family_id: str) -> str | None:
-    """"tool" or "item" - what a blueprint family unlocks (None if neither)."""
+    """"tool", "item" or "material" (a processed material other recipes are
+    made from, e.g. lacquer) - what a blueprint family unlocks (None if
+    neither). A processed end product nothing is made from (the written
+    scroll) counts as an item."""
     catalog_type = _blueprint_catalog_type(blueprint_family_id)
     if catalog_type == "tool":
         return "tool"
     if catalog_type in _FINAL_CATALOG_TYPES:
         return "item"
+    if catalog_type == "processed":
+        return "material" if blueprint_family_id.removeprefix("blueprint_") in _INGREDIENT_FAMILIES else "item"
     return None
 
 
@@ -265,17 +284,20 @@ def family_display_name(blueprint_family_id: str) -> str:
 
 
 def profession_blueprint_summary() -> dict:
-    """The blueprints of every profession's trade (its `own` list) - lore data
-    for the /characters page. {"families": {familyId: {name, kind, items}},
-    "professions": [{id, category, own}]}, family ids without the blueprint_
-    prefix, each family's items its tiers 1-6."""
+    """Every blueprint each profession can start with (its own and offered
+    lists together, own first) - lore data for the /characters page.
+    {"families": {familyId: {name, kind, items}}, "professions": [{id,
+    category, blueprints}]}, family ids without the blueprint_ prefix, each
+    family's items its tiers 1-6."""
     items_by_family: dict[str, list[BlueprintItem]] = {}
     for item in BLUEPRINT_ITEMS:
         items_by_family.setdefault(item.family_id, []).append(item)
     families = {
         family.removeprefix("blueprint_"): {
             "name": family_display_name(family),
-            "kind": _blueprint_catalog_type(family) or "?",
+            # A processed end product (written scroll) shows as an item.
+            "kind": "item" if blueprint_source(family) == "item" and _blueprint_catalog_type(family) == "processed"
+            else (_blueprint_catalog_type(family) or "?"),
             "items": [{"id": i.id, "name": i.name, "tier": i.tier} for i in sorted(items, key=lambda i: i.tier)],
         }
         for family, items in items_by_family.items()
@@ -284,7 +306,7 @@ def profession_blueprint_summary() -> dict:
         {
             "id": profession_id,
             "category": PROFESSION_CATEGORIES[profession_id],
-            "own": [f.removeprefix("blueprint_") for f in lists.own],
+            "blueprints": [f.removeprefix("blueprint_") for f in lists.own + lists.offered],
         }
         for profession_id, lists in PROFESSION_BLUEPRINTS.items()
     ]

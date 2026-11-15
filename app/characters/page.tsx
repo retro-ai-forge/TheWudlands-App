@@ -7,12 +7,12 @@ import h from "@/app/styles/headings.module.css";
 import { GENDERS, racesByCategory, professionsByCategory, BODY_ATTRIBUTES, SOUL_ATTRIBUTES } from "@/app/lib/characterOptions";
 
 // GET /api/auth/profession-blueprints - lore/reference data, not player-specific:
-// the blueprints of every profession's trade, each family with its tiers 1-6.
+// every blueprint each profession can start with, each family with its tiers 1-6.
 type BlueprintItem = { id: string; name: string; tier: number };
 type BlueprintFamily = { name: string; kind: string; items: BlueprintItem[] };
 type ProfessionBlueprints = {
   families: Record<string, BlueprintFamily>;
-  professions: { id: string; category: string; own: string[] }[];
+  professions: { id: string; category: string; blueprints: string[] }[];
 };
 
 function getTierIndicator(tier: number): React.ReactNode {
@@ -32,7 +32,10 @@ function getKindIcon(kind: string): string {
     case "potion":
     case "mount":
     case "adventuring_gear":
+    case "item":
       return "📦";
+    case "processed":
+      return "🧪";
     default:
       return "";
   }
@@ -282,8 +285,9 @@ export default function Characters() {
           {openSection === "blueprints" && (
             <div className={styles.accordionBody}>
               <p className={styles.sectionIntro}>
-                Every trade has its blueprints — the plans for the tools and wares it makes. What one trade
-                makes, another needs: a sword wants a potter&apos;s kiln, a mason&apos;s furnace and a
+                Every trade has its blueprints — the plans for the tools and wares it works with. Each
+                profession lists every blueprint it can start with; a new character picks one of them. What
+                one trade makes, another needs: a sword wants a potter&apos;s kiln, a mason&apos;s furnace and a
                 smith&apos;s anvil before the blade is ever forged.
               </p>
               <p className={styles.sectionIntro}>
@@ -300,6 +304,10 @@ export default function Characters() {
                     <td>Item (weapon, armor, shield, food, potion, gear)</td>
                   </tr>
                   <tr>
+                    <td><strong>🧪</strong></td>
+                    <td>Material another trade needs (lacquer)</td>
+                  </tr>
+                  <tr>
                     <td>{getTierIndicator(1)}</td>
                     <td>Shown at tier 1 - every blueprint goes up to tier 6 (T1-T3 mundane, T4-T6 enchantable)</td>
                   </tr>
@@ -308,9 +316,10 @@ export default function Characters() {
               {Object.entries(professionsByCategory).map(([category, professions]) => {
                 const trades = professions.map((profession) => ({
                   profession,
-                  own: professionBlueprints?.professions.find((entry) => entry.id === profession.id)?.own ?? [],
+                  blueprints:
+                    professionBlueprints?.professions.find((entry) => entry.id === profession.id)?.blueprints ?? [],
                 }));
-                const familyCount = new Set(trades.flatMap((trade) => trade.own)).size;
+                const familyCount = new Set(trades.flatMap((trade) => trade.blueprints)).size;
                 return (
                   <div key={category} className={styles.subAccordionItem}>
                     <button
@@ -326,24 +335,21 @@ export default function Characters() {
                     </button>
                     {openBlueprintCategory === category && (
                       <div className={styles.subAccordionBody}>
-                        {trades.map(({ profession, own }) => (
+                        {trades.map(({ profession, blueprints }) => (
                           <div key={profession.id} className={styles.raceEntry}>
                             <p className={styles.raceName}>{profession.name}</p>
-                            {own.length === 0 ? (
-                              <p className={styles.raceDescription}>
-                                No blueprints of its own — this trade works with what others make.
-                              </p>
+                            {blueprints.length === 0 ? (
+                              <p className={styles.raceDescription}>No blueprints to start with.</p>
                             ) : (
-                              own.map((familyId) => {
+                              blueprints.map((familyId) => {
                                 const family = professionBlueprints?.families[familyId];
                                 if (!family) return null;
                                 return (
                                   <p key={familyId} className={styles.blueprintItemLine}>
                                     {getTierIndicator(1)}
-                                    <span>
+                                    <span className={styles.blueprintItemName}>
                                       {getKindIcon(family.kind)} {family.items[0]?.name.replace("Blueprint: ", "") ?? family.name}
                                     </span>
-                                    <span className={styles.blueprintKind}>{family.kind.replace("_", " ")}</span>
                                   </p>
                                 );
                               })

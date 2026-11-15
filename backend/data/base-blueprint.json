@@ -3850,5 +3850,41 @@
     "name": "Blueprint: Smoked Abyssal Leviathan",
     "familyId": "blueprint_smoked_fish",
     "tier": 6
+  },
+  {
+    "id": "blueprint_lacquer_1",
+    "name": "Blueprint: Common Lacquer",
+    "familyId": "blueprint_lacquer",
+    "tier": 1
+  },
+  {
+    "id": "blueprint_lacquer_2",
+    "name": "Blueprint: Plant Dye Lacquer",
+    "familyId": "blueprint_lacquer",
+    "tier": 2
+  },
+  {
+    "id": "blueprint_lacquer_3",
+    "name": "Blueprint: Mineral Lacquer",
+    "familyId": "blueprint_lacquer",
+    "tier": 3
+  },
+  {
+    "id": "blueprint_lacquer_4",
+    "name": "Blueprint: Rare Lacquer",
+    "familyId": "blueprint_lacquer",
+    "tier": 4
+  },
+  {
+    "id": "blueprint_lacquer_5",
+    "name": "Blueprint: Phoenix Ash Lacquer",
+    "familyId": "blueprint_lacquer",
+    "tier": 5
+  },
+  {
+    "id": "blueprint_lacquer_6",
+    "name": "Blueprint: Chromatic Lacquer",
+    "familyId": "blueprint_lacquer",
+    "tier": 6
   }
 ]
