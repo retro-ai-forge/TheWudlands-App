@@ -307,12 +307,21 @@ export default function Characters() {
                     <td><strong>🧪</strong></td>
                     <td>Material another trade needs (lacquer)</td>
                   </tr>
-                  <tr>
-                    <td>{getTierIndicator(1)}</td>
-                    <td>Shown at tier 1 - every blueprint goes up to tier 6 (T1-T3 mundane, T4-T6 enchantable)</td>
-                  </tr>
                 </tbody>
               </table>
+              <div className={styles.tierLegend}>
+                <p className={styles.tierLegendText}>Select your blueprint strength at soul creation</p>
+                <div className={styles.tierLegendOptions}>
+                  {(["one starting profession", "two starting professions", "three starting professions"] as const).map(
+                    (caption, index) => (
+                      <div key={caption} className={styles.tierLegendOption}>
+                        {getTierIndicator(index + 1)}
+                        <span>{caption}</span>
+                      </div>
+                    )
+                  )}
+                </div>
+              </div>
               {Object.entries(professionsByCategory).map(([category, professions]) => {
                 const trades = professions.map((profession) => ({
                   profession,
