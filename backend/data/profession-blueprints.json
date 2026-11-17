@@ -6,7 +6,7 @@
   },
   "herder": {
     "own": ["spinning_wheel", "tanning_rack", "bridle", "saddle", "signal_whistle"],
-    "offered": ["cart", "fur_cloak", "leather_cloak", "barding_leather"]
+    "offered": ["cart", "fur_cloak", "leather_cloak", "leather_barding"]
   },
   "hunter": {
     "own": ["tanning_rack", "smokehouse", "bow", "quiver", "spear", "monster_trap", "hunters_charm"],
@@ -29,7 +29,7 @@
     "offered": ["reinforced_wooden_shield"]
   },
   "tinsmith": {
-    "own": ["wrench", "merchants_scale", "crossbow", "barding_iron", "quiver", "lock_and_key", "manacles", "chain", "crowbar", "grappling_hook"],
+    "own": ["wrench", "merchants_scale", "crossbow", "metal_barding", "quiver", "lock_and_key", "manacles", "chain", "crowbar", "grappling_hook"],
     "offered": ["darksteel_head_armor", "darksteel_chest_armor", "darksteel_leg_armor", "darksteel_shield"]
   },
   "mason": {
@@ -49,7 +49,7 @@
     "offered": []
   },
   "tanner": {
-    "own": ["tanning_rack", "barding_leather", "chitin_head_armor", "chitin_chest_armor", "chitin_leg_armor", "chitin_shield", "fur_cloak"],
+    "own": ["tanning_rack", "leather_barding", "chitin_head_armor", "chitin_chest_armor", "chitin_leg_armor", "chitin_shield", "fur_cloak"],
     "offered": []
   },
   "weaver": {
@@ -66,7 +66,7 @@
   },
   "jeweler": {
     "own": ["lapidary_bench", "grinding_stone", "mirror", "wand", "magic_staff"],
-    "offered": ["meteoric_iron_head_armor", "meteoric_iron_chest_armor", "meteoric_iron_leg_armor", "meteoric_iron_shield", "holy_symbol"]
+    "offered": ["meteoric_head_armor", "meteoric_chest_armor", "meteoric_leg_armor", "meteoric_shield", "holy_symbol"]
   },
   "carpenter": {
     "own": ["workbench", "spinning_wheel", "loom", "tanning_rack", "oven", "scriptorium", "enchanters_table", "ladder"],
@@ -90,7 +90,7 @@
   },
   "merchant": {
     "own": ["cart"],
-    "offered": ["merchants_scale", "saddle", "saddlepack", "bridle", "barding_leather", "leather_cloak"]
+    "offered": ["merchants_scale", "saddle", "saddlepack", "bridle", "leather_barding", "leather_cloak"]
   },
   "trader": {
     "own": ["cart"],
@@ -114,7 +114,7 @@
   },
   "soldier": {
     "own": [],
-    "offered": ["sword", "short_sword", "spear", "cloth_head_armor", "cloth_chest_armor", "cloth_leg_armor", "iron_head_armor", "iron_chest_armor", "iron_leg_armor", "iron_shield", "iron_ration", "barding_iron", "spyglass", "grappling_hook", "signal_whistle"]
+    "offered": ["sword", "short_sword", "spear", "cloth_head_armor", "cloth_chest_armor", "cloth_leg_armor", "iron_head_armor", "iron_chest_armor", "iron_leg_armor", "iron_shield", "iron_ration", "metal_barding", "spyglass", "grappling_hook", "signal_whistle"]
   },
   "guard": {
     "own": [],
@@ -145,7 +145,7 @@
     "offered": ["cloth_head_armor", "cloth_chest_armor", "cloth_leg_armor", "cloth_cloak", "quilted_cloak", "dagger", "saddlepack", "mirror"]
   },
   "alchemist": {
-    "own": ["alchemy_stand", "mortar_and_pestle", "healing_potion", "mana_potion", "antidote_potion", "meteoric_iron_head_armor", "meteoric_iron_chest_armor", "meteoric_iron_leg_armor", "meteoric_iron_shield"],
+    "own": ["alchemy_stand", "mortar_and_pestle", "healing_potion", "mana_potion", "antidote_potion", "meteoric_head_armor", "meteoric_chest_armor", "meteoric_leg_armor", "meteoric_shield"],
     "offered": []
   },
   "poisoner": {
@@ -154,6 +154,6 @@
   },
   "enchanter": {
     "own": ["enchanters_table", "lapidary_bench", "wand", "magic_staff", "starlight_catcher"],
-    "offered": ["mana_potion", "holy_symbol", "meteoric_iron_head_armor", "meteoric_iron_chest_armor", "meteoric_iron_leg_armor", "meteoric_iron_shield"]
+    "offered": ["mana_potion", "holy_symbol", "meteoric_head_armor", "meteoric_chest_armor", "meteoric_leg_armor", "meteoric_shield"]
   }
 }

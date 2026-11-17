@@ -278,6 +278,32 @@ async def test_list_pages_newest_first_without_own_offers(warm_pool, chars):
     assert {o["id"] for o in mine} == set(posted) and all(o["mine"] for o in mine)
 
 
+async def test_page_links_lead_to_each_following_page(warm_pool, chars):
+    db = warm_pool
+    buyer = BUYERS[0]
+    await _stock(db, SELLER, chars[SELLER], {"reed_1": 6})
+    posted = []
+    for _ in range(6):
+        posted.append((await _post(chars, {"reed_1": 1}))["id"])
+        await asyncio.sleep(0.01)
+
+    first = await market.list_offers(buyer, family_id="reed", limit=1)
+    assert len(first["pages"]) == market.PAGES_AHEAD
+    assert first["next"] == first["pages"][0]
+
+    # Each link is what paging one by one would have reached.
+    after = first["next"]
+    for link in first["pages"]:
+        assert link == after
+        after = (await market.list_offers(buyer, family_id="reed", after=link, limit=1))["next"]
+
+    # Two pages of three: one link, and none from the last page.
+    top = await market.list_offers(buyer, family_id="reed", limit=3)
+    assert len(top["pages"]) >= 1
+    everything = await market.list_offers(buyer, family_id="reed", limit=market.PAGE_SIZE)
+    assert everything["pages"] == [] and everything["next"] is None
+
+
 async def test_tier_filter_keeps_offers_giving_that_tier(warm_pool, chars):
     db = warm_pool
     buyer = BUYERS[0]

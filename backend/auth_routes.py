@@ -29,7 +29,7 @@ from backend.active_players import (
 )
 from backend.character import AttributeStats, Character, PortraitArea, ProfStats
 from backend.db import get_database, run_in_transaction
-from backend import adventures, food, foraging, market
+from backend import adventures, character_names, food, foraging, market
 from backend.players import (
     _RECIPES_BY_FAMILY,
     _is_tracked_item,
@@ -497,7 +497,7 @@ class TrappingsItemResponse(BaseModel):
     partStations: List[List[str]] = Field(
         default_factory=list,
         description="Blueprints only: the stations its parts (the processed ingredients crafted along the way) need, "
-        "each entry one requirement as its alternatives - e.g. [['furnace'], ['axe_stone', 'axe']] for a sword",
+        "each entry one requirement as its alternatives - e.g. [['furnace'], ['stone_axe', 'axe']] for a sword",
     )
 
 
@@ -1965,14 +1965,21 @@ async def list_market_offers(
     familyId: Optional[str] = None,
     tiers: Optional[str] = None,
     after: Optional[str] = None,
+    limit: int = market.PAGE_SIZE,
     address: str = Depends(get_current_address),
 ):
-    """Other players' open offers, newest first, a page at a time (`next`
-    is the cursor for the following page). `tiers` ("1,3") keeps offers
-    giving goods of those tiers."""
+    """Other players' open offers, newest first, `limit` (at most the page
+    size) at a time; `pages` holds the cursors of the following pages.
+    `tiers` ("1,3") keeps offers giving goods of those tiers."""
     await market.sweep_expired()
     tier_list = [int(t) for t in (tiers or "").split(",") if t.strip().isdigit() and 1 <= int(t) <= 6]
-    return await market.list_offers(address, family_id=familyId, after=after, tiers=tier_list or None)
+    return await market.list_offers(
+        address,
+        family_id=familyId,
+        after=after,
+        limit=max(1, min(limit, market.PAGE_SIZE)),
+        tiers=tier_list or None,
+    )
 
 
 @player_router.get("/market/my-offers")
@@ -2543,6 +2550,14 @@ async def create_character(
     only place a character is ever persisted; the soul slot the player
     clicked to enter the wizard travels with it as slotNumber.
     """
+    # Names reach stories, messages and other players: letters only, see
+    # backend/character_names.py - each name, and both together as
+    # "first surname". Stored in their normalised form.
+    try:
+        first_name, last_name = character_names.clean_full_name(payload.firstName, payload.lastName)
+    except character_names.InvalidName as exc:
+        raise HTTPException(status_code=400, detail=str(exc))
+
     try:
         trappings = resolve_trapping_options([payload.profession1, payload.profession2, payload.profession3])
         blueprint_trappings = resolve_blueprint_trapping_options(
@@ -2610,8 +2625,8 @@ async def create_character(
 
     character = Character(
         slot_number=payload.slotNumber,
-        first_name=payload.firstName,
-        last_name=payload.lastName,
+        first_name=first_name,
+        last_name=last_name,
         age_month=payload.age_month,
         gender=payload.gender,
         race_group=payload.raceGroup,
@@ -3007,9 +3022,23 @@ from backend.twine_graph import (  # noqa: E402 - shared with backend.adventures
     _LINK_RE,
     _NOT_ENDING_MACRO,
     _RESERVED_PASSAGES,
+    TEST_CHARACTERS_PASSAGE,
     _extract_set_value,
     _link_target,
 )
+
+# A quoted scene name inside a macro (<<goto "X">>, <<button "Go" "X">>,
+# <<link "Go" "X">>, <<include "X">>) - checked for TestCharacters, which
+# nothing may lead to.
+_QUOTED_TEST_CHARACTERS_RE = _re.compile(
+    rf"<<[^>]*?[\"']{TEST_CHARACTERS_PASSAGE}[\"']", _re.DOTALL
+)
+
+
+def _without_test_characters(passages: list) -> list:
+    """The story's passages minus TestCharacters, the editor-only test party:
+    what a submitted story is stored (and later played) with."""
+    return [p for p in passages if p.get("name") != TEST_CHARACTERS_PASSAGE]
 
 # Story-metadata variables the author must initialise in StoryInit (names without
 # the leading $). These are author-provided, unlike the $char array / $lead which
@@ -3284,9 +3313,10 @@ def _count_playable_scenes(passages: list) -> int:
 
     Excludes template/engine passages that aren't playable content: StoryInit,
     LastResort, every reserved special passage (PassageHeader, StoryMenu, …),
-    and the Story Stylesheet / Story JavaScript nodes (tagged stylesheet/script).
+    and the Story Stylesheet / Story JavaScript nodes (tagged stylesheet/script),
+    and the editor-only TestCharacters.
     """
-    nonplayable_names = _RESERVED_PASSAGES | {"LastResort"}
+    nonplayable_names = _RESERVED_PASSAGES | {"LastResort", TEST_CHARACTERS_PASSAGE}
     count = 0
     for p in passages:
         if p.get("name", "") in nonplayable_names:
@@ -3453,6 +3483,18 @@ def _check_twine_syntax(doc: dict) -> dict:
         text = p.get("text", "")
         is_reserved = name in _RESERVED_PASSAGES
 
+        # TestCharacters is data for the editor's Test, not a scene: it has no
+        # links, needs no ending and is removed on submit. Nothing may lead to
+        # it (checked below, for links and for quoted names in macros).
+        if name == TEST_CHARACTERS_PASSAGE:
+            outgoing[name] = []
+            continue
+        if _QUOTED_TEST_CHARACTERS_RE.search(text):
+            errors.append(
+                f"Passage '{name}' leads to {TEST_CHARACTERS_PASSAGE} — it only holds the "
+                "test characters for the editor and is removed on submit, so no scene may lead to it"
+            )
+
         # Validate hotspot geometry; the [[links]] inside are checked below.
         _check_area_macros(name, text, errors, warnings)
 
@@ -3575,6 +3617,13 @@ def _check_twine_syntax(doc: dict) -> dict:
                 "fault; it is not a story destination"
             )
 
+    # TestCharacters is editor-only test data: no scene may link to it.
+    for src in sorted(incoming.get(TEST_CHARACTERS_PASSAGE, ())):
+        errors.append(
+            f"Passage '{src}' leads to {TEST_CHARACTERS_PASSAGE} — it only holds the "
+            "test characters for the editor and is removed on submit, so no scene may lead to it"
+        )
+
     # (A scene in one graph linking into the other is caught by the independence
     # check below, so links WITHIN a graph — including a scene looping back to
     # its own Start or Retreat root — are fine.)
@@ -3616,7 +3665,7 @@ def _check_twine_syntax(doc: dict) -> dict:
     for name in passage_names:
         if (
             name in _RESERVED_PASSAGES
-            or name in ("LastResort", "Retreat")
+            or name in ("LastResort", "Retreat", TEST_CHARACTERS_PASSAGE)
             or name in start_reachable
             or name in retreat_reachable
         ):
@@ -3694,8 +3743,12 @@ async def submit_twine_story_for_review(
             "warnings": warnings,
         }
 
+    # Everything from here on works on the story without its editor-only test
+    # party: TestCharacters is never stored, so it never reaches a played story.
+    story_passages = _without_test_characters(doc.get("passages", []))
+
     # One free story per author.
-    access = _extract_storyinit_metadata(doc.get("passages", []), ["meta_access"]).get(
+    access = _extract_storyinit_metadata(story_passages, ["meta_access"]).get(
         "meta_access"
     )
     if access == "free":
@@ -3709,7 +3762,7 @@ async def submit_twine_story_for_review(
 
     # Every [img[...]] must point at an image the author has actually uploaded
     # (the create stage, which the review copy is made from).
-    image_refs = _collect_image_refs(doc.get("passages", []))
+    image_refs = _collect_image_refs(story_passages)
     if image_refs:
         try:
             available = {
@@ -3765,7 +3818,7 @@ async def submit_twine_story_for_review(
     # Copy the text: build and store the frozen review snapshot. Displayed
     # metadata is public (shown on the review queue); private metadata holds PII
     # for the gated reviewer UI only and is never returned publicly.
-    passages_list = doc.get("passages", [])
+    passages_list = story_passages
     metadata = _extract_storyinit_metadata(passages_list, _METADATA_FIELDS)
     private_meta = _extract_storyinit_metadata(passages_list, _PRIVATE_META_FIELDS)
     scene_count = _count_playable_scenes(passages_list)

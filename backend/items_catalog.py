@@ -24,7 +24,7 @@ _MOUNT_ITEMS_PATH = _DATA_DIR / "base-items-mount.json"
 # Every "final" crafted-output catalog file, scanned to resolve a family+tier
 # to a concrete {id, name} - mirrors craft_catalog.py's _CATALOG_FILES, but
 # flattened into one lookup instead of picking a single file by kind, since
-# an item's kind (e.g. axe_stone: ["weapon", "tool"]) isn't a reliable
+# an item's kind (e.g. stone_axe: ["weapon", "tool"]) isn't a reliable
 # pointer to which base-*.json file its tiered rows actually live in.
 _FINAL_CATALOG_FILES = (
     "base-tools.json",

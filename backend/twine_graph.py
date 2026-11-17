@@ -48,6 +48,11 @@ _NOT_ENDING_MACRO = "<<set $isEnding to false>>"
 RETREAT_PASSAGE = "Retreat"
 LAST_RESORT_PASSAGE = "LastResort"
 
+# Test characters for the editor's Test (a JSON list, see docs/STORY-RULES.md):
+# not a scene - nothing may lead to it, it needs no ending, and it is removed
+# when the story is submitted, so it never reaches a played story.
+TEST_CHARACTERS_PASSAGE = "TestCharacters"
+
 # One link macro body, i.e. whatever sits between [[ and ]]. Non-greedy so each
 # [[...]] is captured separately; a trailing setter component ([[Text][$x to 1]])
 # is stripped in _link_target.
@@ -160,7 +165,7 @@ def build_story_graph(passages: list, story_data: dict) -> dict:
     links = {
         name: passage_links(p.get("text", ""))
         for name, p in by_name.items()
-        if name not in _RESERVED_PASSAGES
+        if name not in _RESERVED_PASSAGES and name != TEST_CHARACTERS_PASSAGE
     }
 
     def reachable_from(root: str) -> set:

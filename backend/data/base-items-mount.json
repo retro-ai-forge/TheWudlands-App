@@ -204,100 +204,100 @@
     "icon": "/images/items/saddle_t6.png"
   },
   {
-    "id": "barding_leather_1",
+    "id": "leather_barding_1",
     "name": "Leather Barding",
-    "familyId": "barding_leather",
+    "familyId": "leather_barding",
     "tier": 1,
     "description": "Practical leather barding of layered hides and sturdy straps, weatherproof and dependable for everyday travel.",
-    "icon": "/images/items/barding_leather_t1.png"
+    "icon": "/images/items/leather_barding_t1.png"
   },
   {
-    "id": "barding_leather_2",
+    "id": "leather_barding_2",
     "name": "Studded Barding",
-    "familyId": "barding_leather",
+    "familyId": "leather_barding",
     "tier": 2,
     "description": "Heavy studded barding of thick leather plates, iron bosses, and reinforced seams for added defense.",
-    "icon": "/images/items/barding_leather_t2.png"
+    "icon": "/images/items/leather_barding_t2.png"
   },
   {
-    "id": "barding_leather_3",
+    "id": "leather_barding_3",
     "name": "Hardened Barding",
-    "familyId": "barding_leather",
+    "familyId": "leather_barding",
     "tier": 3,
     "description": "Hardened barding of boiled leather and metal bracing, dark and formidable with a battle-ready silhouette.",
-    "icon": "/images/items/barding_leather_t3.png"
+    "icon": "/images/items/leather_barding_t3.png"
   },
   {
-    "id": "barding_leather_4",
+    "id": "leather_barding_4",
     "name": "Scale Barding",
-    "familyId": "barding_leather",
+    "familyId": "leather_barding",
     "tier": 4,
     "description": "A silver scale barding of overlapping metal plates, flexibly linked and catching the light like a fish's armor.",
-    "icon": "/images/items/barding_leather_t4.png"
+    "icon": "/images/items/leather_barding_t4.png"
   },
   {
-    "id": "barding_leather_5",
+    "id": "leather_barding_5",
     "name": "Dragonhide Barding",
-    "familyId": "barding_leather",
+    "familyId": "leather_barding",
     "tier": 5,
     "description": "A gilded dragonhide barding with ember-toned scales, embossed ridges, and draconic grandeur.",
-    "icon": "/images/items/barding_leather_t5.png"
+    "icon": "/images/items/leather_barding_t5.png"
   },
   {
-    "id": "barding_leather_6",
+    "id": "leather_barding_6",
     "name": "Celestial Hide Barding",
-    "familyId": "barding_leather",
+    "familyId": "leather_barding",
     "tier": 6,
     "description": "A star-metal celestial hide barding of pearlescent leather and glowing thread, softly radiant with heavenly sigils.",
-    "icon": "/images/items/barding_leather_t6.png"
+    "icon": "/images/items/leather_barding_t6.png"
   },
   {
-    "id": "barding_iron_1",
+    "id": "metal_barding_1",
     "name": "Copper Barding",
-    "familyId": "barding_iron",
+    "familyId": "metal_barding",
     "tier": 1,
     "description": "Copper barding with warm reddish sheen, hammered plates, and aged patina glowing like sunset metal.",
-    "icon": "/images/items/barding_iron_t1.png"
+    "icon": "/images/items/metal_barding_t1.png"
   },
   {
-    "id": "barding_iron_2",
+    "id": "metal_barding_2",
     "name": "Bronze Barding",
-    "familyId": "barding_iron",
+    "familyId": "metal_barding",
     "tier": 2,
     "description": "Bronze barding of noble antiquity, broad embossed plates and verdigris accents evoking ancient empires.",
-    "icon": "/images/items/barding_iron_t2.png"
+    "icon": "/images/items/metal_barding_t2.png"
   },
   {
-    "id": "barding_iron_3",
+    "id": "metal_barding_3",
     "name": "Iron Barding",
-    "familyId": "barding_iron",
+    "familyId": "metal_barding",
     "tier": 3,
     "description": "Iron barding of dark forged plates, blunt, practical, and rugged with a stoic battlefield presence.",
-    "icon": "/images/items/barding_iron_t3.png"
+    "icon": "/images/items/metal_barding_t3.png"
   },
   {
-    "id": "barding_iron_4",
+    "id": "metal_barding_4",
     "name": "Silver Barding",
-    "familyId": "barding_iron",
+    "familyId": "metal_barding",
     "tier": 4,
     "description": "Silver barding with mirror-bright segments, elegant edges, and a cool luminous finish worthy of nobility.",
-    "icon": "/images/items/barding_iron_t4.png"
+    "icon": "/images/items/metal_barding_t4.png"
   },
   {
-    "id": "barding_iron_5",
+    "id": "metal_barding_5",
     "name": "Gold Barding",
-    "familyId": "barding_iron",
+    "familyId": "metal_barding",
     "tier": 5,
     "description": "Gold barding richly gilded and opulent, engraved with lavish scrollwork and royal heraldic details.",
-    "icon": "/images/items/barding_iron_t5.png"
+    "icon": "/images/items/metal_barding_t5.png"
   },
   {
-    "id": "barding_iron_6",
+    "id": "metal_barding_6",
     "name": "Star Metal Barding",
-    "familyId": "barding_iron",
+    "familyId": "metal_barding",
     "tier": 6,
     "description": "Star metal barding of midnight alloy and twinkling inlays, as if forged from fallen constellations.",
-    "icon": "/images/items/barding_iron_t6.png"
+    "icon": "/images/items/metal_barding_t6.png"
   },
   {
     "id": "steed_mount_1",

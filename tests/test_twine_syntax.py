@@ -5,11 +5,14 @@ These are pure-function tests (no DB, no network): they exercise
 whether a story is accepted.
 """
 
+import pytest
+
 from backend.auth_routes import (
     _check_twine_syntax,
     _collect_story_tags,
     _count_playable_scenes,
     _link_target,
+    _without_test_characters,
 )
 
 
@@ -900,3 +903,51 @@ def test_story_with_passage_tag_only_passes_tag_rule():
         )
     )
     assert not any("no tags" in e.lower() for e in result["errors"])
+
+
+# --- TestCharacters: the editor-only test party -----------------------------
+
+
+_TEST_PARTY = '[{"firstName": "Grimjaw", "lastName": "Ironfoot"}]'
+
+
+def _with_test_party(start_text: str = "Welcome [[End]]"):
+    return [
+        _p("0", "StoryInit", VALID_INIT),
+        _p("1", "Start", start_text),
+        _p("2", "End", "The end. <<set $isEnding to true>>"),
+        _p("3", "LastResort", "The tunnel collapses. <<set $isEnding to false>>"),
+        _p("9", "TestCharacters", _TEST_PARTY),
+    ]
+
+
+def test_test_characters_needs_no_link_ending_or_visit():
+    # Not a scene: no outgoing links, no $isEnding, reached by nothing - and
+    # none of that is reported.
+    result = _check_twine_syntax(_story(_with_test_party()))
+    assert result["errors"] == []
+    assert result["warnings"] == []
+
+
+@pytest.mark.parametrize(
+    "lead",
+    [
+        "[[TestCharacters]]",
+        "[[Party|TestCharacters]]",
+        "[[Party->TestCharacters]]",
+        "[img[cover.webp][TestCharacters]]",
+        "<<area 0.1 0.1 0.2 0.2 [[TestCharacters]]>>",
+        '<<button "Party" "TestCharacters">><</button>>',
+        '<<link "Party">><<goto "TestCharacters">><</link>>',
+    ],
+)
+def test_no_scene_may_lead_to_test_characters(lead):
+    result = _check_twine_syntax(_story(_with_test_party(f"Welcome [[End]] {lead}")))
+    assert any(e.startswith("Passage 'Start' leads to TestCharacters") for e in result["errors"]), result["errors"]
+
+
+def test_a_submitted_story_keeps_no_test_characters():
+    passages = _with_test_party()
+    kept = _without_test_characters(passages)
+    assert [p["name"] for p in kept] == ["StoryInit", "Start", "End", "LastResort"]
+    assert _count_playable_scenes(passages) == _count_playable_scenes(kept) == 2

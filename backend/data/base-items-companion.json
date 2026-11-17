@@ -1,195 +1,195 @@
 [
   {
-    "id": "charm_flying_1",
-    "name": "Bright Feather",
-    "familyId": "charm_flying",
+    "id": "flying_charm_1",
+    "name": "Bright Feather Charm",
+    "familyId": "flying_charm",
     "tier": 1,
     "description": "A bright feather charm with iridescent plumage, a light breeze shimmer, and playful airborne elegance.",
-    "icon": "/images/items/charm_flying_t1.png"
+    "icon": "/images/items/flying_charm_t1.png"
   },
   {
-    "id": "charm_flying_2",
-    "name": "Jingle Bell",
-    "familyId": "charm_flying",
+    "id": "flying_charm_2",
+    "name": "Jingle Bell Charm",
+    "familyId": "flying_charm",
     "tier": 2,
     "description": "A tiny jingle bell charm of polished brass, cheerful and tinkling like a guardian of the skies.",
-    "icon": "/images/items/charm_flying_t2.png"
+    "icon": "/images/items/flying_charm_t2.png"
   },
   {
-    "id": "charm_flying_3",
-    "name": "Falconer's Lure",
-    "familyId": "charm_flying",
+    "id": "flying_charm_3",
+    "name": "Falconer's Lure Charm",
+    "familyId": "flying_charm",
     "tier": 3,
     "description": "A falconer's lure charm of braided leather and feather tassels, practical and swift for trained birds.",
-    "icon": "/images/items/charm_flying_t3.png"
+    "icon": "/images/items/flying_charm_t3.png"
   },
   {
-    "id": "charm_flying_4",
-    "name": "Crystal Prism",
-    "familyId": "charm_flying",
+    "id": "flying_charm_4",
+    "name": "Crystal Prism Charm",
+    "familyId": "flying_charm",
     "tier": 4,
     "description": "A silvered leaf pendant, delicately veined, capturing a breath of mountain air and dawn mist.",
-    "icon": "/images/items/charm_flying_t4.png"
+    "icon": "/images/items/flying_charm_t4.png"
   },
   {
-    "id": "charm_flying_5",
-    "name": "Phoenix Plume",
-    "familyId": "charm_flying",
+    "id": "flying_charm_5",
+    "name": "Phoenix Plume Charm",
+    "familyId": "flying_charm",
     "tier": 5,
     "description": "A phoenix plume charm of flame-gold feathers and ember glow, radiant with rebirth and fiery grace.",
-    "icon": "/images/items/charm_flying_t5.png"
+    "icon": "/images/items/flying_charm_t5.png"
   },
   {
-    "id": "charm_flying_6",
-    "name": "Starlight Windsock",
-    "familyId": "charm_flying",
+    "id": "flying_charm_6",
+    "name": "Starlight Windsock Charm",
+    "familyId": "flying_charm",
     "tier": 6,
     "description": "A starlight windsock charm of silver silk and constellations, fluttering with cosmic wind and gentle brilliance.",
-    "icon": "/images/items/charm_flying_t6.png"
+    "icon": "/images/items/flying_charm_t6.png"
   },
   {
-    "id": "charm_aquatic_1",
-    "name": "Shiny Pebble",
-    "familyId": "charm_aquatic",
+    "id": "aquatic_charm_1",
+    "name": "Shiny Pebble Charm",
+    "familyId": "aquatic_charm",
     "tier": 1,
     "description": "A shiny pebble charm, smooth and river-polished, with a wet gleam like treasure from the streambed.",
-    "icon": "/images/items/charm_aquatic_t1.png"
+    "icon": "/images/items/aquatic_charm_t1.png"
   },
   {
-    "id": "charm_aquatic_2",
-    "name": "Cork Bobber",
-    "familyId": "charm_aquatic",
+    "id": "aquatic_charm_2",
+    "name": "Cork Bobber Charm",
+    "familyId": "aquatic_charm",
     "tier": 2,
     "description": "A cork bobber charm of buoyant driftwood and red paint, simple and cheerful as a fishing day.",
-    "icon": "/images/items/charm_aquatic_t2.png"
+    "icon": "/images/items/aquatic_charm_t2.png"
   },
   {
-    "id": "charm_aquatic_3",
-    "name": "Spiral Shell",
-    "familyId": "charm_aquatic",
+    "id": "aquatic_charm_3",
+    "name": "Spiral Shell Charm",
+    "familyId": "aquatic_charm",
     "tier": 3,
     "description": "A spiral shell charm with pearly ridges and seafoam tint, echoing tides and hidden currents.",
-    "icon": "/images/items/charm_aquatic_t3.png"
+    "icon": "/images/items/aquatic_charm_t3.png"
   },
   {
-    "id": "charm_aquatic_4",
-    "name": "Glowing Coral",
-    "familyId": "charm_aquatic",
+    "id": "aquatic_charm_4",
+    "name": "Glowing Coral Charm",
+    "familyId": "aquatic_charm",
     "tier": 4,
     "description": "A glowing coral charm of silver-tinged bioluminescent branches, softly lit with reef-born magic.",
-    "icon": "/images/items/charm_aquatic_t4.png"
+    "icon": "/images/items/aquatic_charm_t4.png"
   },
   {
-    "id": "charm_aquatic_5",
-    "name": "Deep Pearl",
-    "familyId": "charm_aquatic",
+    "id": "aquatic_charm_5",
+    "name": "Deep Pearl Charm",
+    "familyId": "aquatic_charm",
     "tier": 5,
     "description": "A deep pearl charm, lustrous and mysterious, with gold-tinged abyssal sheen and ocean-deep elegance.",
-    "icon": "/images/items/charm_aquatic_t5.png"
+    "icon": "/images/items/aquatic_charm_t5.png"
   },
   {
-    "id": "charm_aquatic_6",
-    "name": "Abyssal Gem",
-    "familyId": "charm_aquatic",
+    "id": "aquatic_charm_6",
+    "name": "Abyssal Gem Charm",
+    "familyId": "aquatic_charm",
     "tier": 6,
     "description": "An abyssal gem charm of star-metal blue crystal, faintly luminous like moonlight beneath the waves.",
-    "icon": "/images/items/charm_aquatic_t6.png"
+    "icon": "/images/items/aquatic_charm_t6.png"
   },
   {
-    "id": "charm_ghost_1",
-    "name": "Tallow Candle",
-    "familyId": "charm_ghost",
+    "id": "ghost_charm_1",
+    "name": "Tallow Candle Charm",
+    "familyId": "ghost_charm",
     "tier": 1,
     "description": "A hand-dipped wax candle charm, its flame a wisp of spectral blue, flickering with memories.",
-    "icon": "/images/items/charm_ghost_t1.png"
+    "icon": "/images/items/ghost_charm_t1.png"
   },
   {
-    "id": "charm_ghost_2",
-    "name": "Carved Bone",
-    "familyId": "charm_ghost",
+    "id": "ghost_charm_2",
+    "name": "Carved Bone Charm",
+    "familyId": "ghost_charm",
     "tier": 2,
     "description": "A moon-pale mask charm, delicately etched with sigils, carrying an aura of mystery and faded laughter.",
-    "icon": "/images/items/charm_ghost_t2.png"
+    "icon": "/images/items/ghost_charm_t2.png"
   },
   {
-    "id": "charm_ghost_3",
-    "name": "Black Ribbon",
-    "familyId": "charm_ghost",
+    "id": "ghost_charm_3",
+    "name": "Black Ribbon Charm",
+    "familyId": "ghost_charm",
     "tier": 3,
     "description": "A black ribbon charm flowing like a silent wisp, eerie, delicate, and hauntingly graceful.",
-    "icon": "/images/items/charm_ghost_t3.png"
+    "icon": "/images/items/ghost_charm_t3.png"
   },
   {
-    "id": "charm_ghost_4",
-    "name": "Soul Lantern",
-    "familyId": "charm_ghost",
+    "id": "ghost_charm_4",
+    "name": "Soul Lantern Charm",
+    "familyId": "ghost_charm",
     "tier": 4,
     "description": "A soul lantern charm glowing with silver ectoplasm, ornate and spectral with a gentle wraithlight.",
-    "icon": "/images/items/charm_ghost_t4.png"
+    "icon": "/images/items/ghost_charm_t4.png"
   },
   {
-    "id": "charm_ghost_5",
-    "name": "Shadow Crystal",
-    "familyId": "charm_ghost",
+    "id": "ghost_charm_5",
+    "name": "Shadow Crystal Charm",
+    "familyId": "ghost_charm",
     "tier": 5,
     "description": "A tiny locket containing silvered dust, chained with links of iron and worn by those who commune with spirits.",
-    "icon": "/images/items/charm_ghost_t5.png"
+    "icon": "/images/items/ghost_charm_t5.png"
   },
   {
-    "id": "charm_ghost_6",
-    "name": "Void Shard",
-    "familyId": "charm_ghost",
+    "id": "ghost_charm_6",
+    "name": "Void Shard Charm",
+    "familyId": "ghost_charm",
     "tier": 6,
     "description": "A void shard charm of star-metal-black crystal and starless depth, cold and uncanny.",
-    "icon": "/images/items/charm_ghost_t6.png"
+    "icon": "/images/items/ghost_charm_t6.png"
   },
   {
-    "id": "charm_other_1",
-    "name": "Old Stick",
-    "familyId": "charm_other",
+    "id": "other_charm_1",
+    "name": "Old Stick Charm",
+    "familyId": "other_charm",
     "tier": 1,
     "description": "A weathered driftwood piece, carved with tide-marks and wrapped gently in sea-grass cord full of found magic.",
-    "icon": "/images/items/charm_other_t1.png"
+    "icon": "/images/items/other_charm_t1.png"
   },
   {
-    "id": "charm_other_2",
-    "name": "Knuckle Bone",
-    "familyId": "charm_other",
+    "id": "other_charm_2",
+    "name": "Knuckle Bone Charm",
+    "familyId": "other_charm",
     "tier": 2,
     "description": "A knuckle bone charm of polished bone and cord wrap, simple and talismanic with a folk-amulet feel.",
-    "icon": "/images/items/charm_other_t2.png"
+    "icon": "/images/items/other_charm_t2.png"
   },
   {
-    "id": "charm_other_3",
-    "name": "Rabbit's Foot",
-    "familyId": "charm_other",
+    "id": "other_charm_3",
+    "name": "Rabbit's Foot Charm",
+    "familyId": "other_charm",
     "tier": 3,
     "description": "A rabbit's foot charm of soft fur and stitched luck, a classic token of good fortune.",
-    "icon": "/images/items/charm_other_t3.png"
+    "icon": "/images/items/other_charm_t3.png"
   },
   {
-    "id": "charm_other_4",
-    "name": "Silver Bell",
-    "familyId": "charm_other",
+    "id": "other_charm_4",
+    "name": "Silver Bell Charm",
+    "familyId": "other_charm",
     "tier": 4,
     "description": "A sturdy acorn charm, capped in copper and painted with protective symbols, prized by wanderers and wayfarers.",
-    "icon": "/images/items/charm_other_t4.png"
+    "icon": "/images/items/other_charm_t4.png"
   },
   {
-    "id": "charm_other_5",
-    "name": "Enchanted Plushie",
-    "familyId": "charm_other",
+    "id": "other_charm_5",
+    "name": "Enchanted Plushie Charm",
+    "familyId": "other_charm",
     "tier": 5,
     "description": "An enchanted plushie charm of soft fabric and glowing seams, cuddly, whimsical, and spellbound.",
-    "icon": "/images/items/charm_other_t5.png"
+    "icon": "/images/items/other_charm_t5.png"
   },
   {
-    "id": "charm_other_6",
-    "name": "Cosmic Bauble",
-    "familyId": "charm_other",
+    "id": "other_charm_6",
+    "name": "Cosmic Bauble Charm",
+    "familyId": "other_charm",
     "tier": 6,
     "description": "A cosmic bauble charm of swirling nebula glass and star-metal sparkles, tiny and infinitely wondrous.",
-    "icon": "/images/items/charm_other_t6.png"
+    "icon": "/images/items/other_charm_t6.png"
   },
   {
     "id": "winged_companion_1",

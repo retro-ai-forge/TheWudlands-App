@@ -1,4 +1,5 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { flushSync } from "react-dom";
 import styles from "./CharacterTabs.module.css";
 import market from "./Market.module.css";
 import {
@@ -62,6 +63,31 @@ function SellerFace({ seller, active }: { seller: NonNullable<Offer["seller"]>; 
   );
 }
 
+// Offers list paging. A row's height is `.tableRow` in Market.module.css; only
+// the page numbers must stay above the footer bar (My offers may scroll under it).
+const OFFER_ROW_REM = 2.35;
+const BELOW_ROWS_REM = 2.7;
+const MIN_PAGE_ROWS = 3;
+const MAX_PAGE_ROWS = 20; // backend market-rules.json pageSize
+const PAGE_NUMBERS_SHOWN = 5;
+
+/** How many offer rows fit between the list's top and the fixed footer bar. */
+function rowsThatFit(list: HTMLElement | null): number {
+  if (!list) return MIN_PAGE_ROWS;
+  const rem = parseFloat(getComputedStyle(document.documentElement).fontSize) || 16;
+  const footer = document.querySelector('[data-role="character-preview-topbar"]');
+  const bottom = footer ? footer.getBoundingClientRect().top : window.innerHeight;
+  const room = bottom - list.getBoundingClientRect().top - BELOW_ROWS_REM * rem;
+  return Math.max(MIN_PAGE_ROWS, Math.min(MAX_PAGE_ROWS, Math.floor(room / (OFFER_ROW_REM * rem))));
+}
+
+/** The page numbers to show: up to five, around the current page. */
+function pageWindow(page: number, last: number): number[] {
+  const first = Math.max(1, Math.min(page - 2, last - PAGE_NUMBERS_SHOWN + 1));
+  const count = Math.min(PAGE_NUMBERS_SHOWN, last - first + 1);
+  return Array.from({ length: count }, (_, i) => first + i);
+}
+
 // The amounts an offer can ask for (buttons in New offer).
 const ASK_AMOUNTS = [1, 2, 5, 10, 20, 50, 100];
 
@@ -79,11 +105,15 @@ const STATUS_LABEL: Record<Offer["status"], string> = {
   expired: "expired",
 };
 
+// A closed offer in its row - as short as a time, so the last column stays
+// narrow on a phone. The popup spells them out.
+const ROW_STATUS: Partial<Record<Offer["status"], string>> = { taken: "sold", expired: "exp", cancelled: "--" };
+
 /** Time an offer has left, in its largest unit only: "6d", "17h", "43m". */
 function timeLeft(iso: string | null): string {
   if (!iso) return "";
   const ms = new Date(iso).getTime() - Date.now();
-  if (ms <= 0) return "ending";
+  if (ms <= 0) return "0m";
   const minutes = Math.floor(ms / 60_000);
   if (minutes >= 24 * 60) return `${Math.floor(minutes / (24 * 60))}d`;
   if (minutes >= 60) return `${Math.floor(minutes / 60)}h`;
@@ -243,6 +273,16 @@ function groupedGoods(goods: Goods): { itemId: string; qty: number; quality: num
   return [...rows.values()];
 }
 
+/** What a sold offer was paid, as one entry: the total under the best tier
+ * paid. It's all one family (the ask's); the popup lists the tiers. */
+function paidAsOne(catalog: BlueprintTierInfo, paid: Goods): { itemId: string; qty: number }[] {
+  const rows = groupedGoods(paid);
+  if (rows.length === 0) return [];
+  const tierOf = (itemId: string) => catalog[itemId]?.tier ?? 0;
+  const best = rows.reduce((top, r) => (tierOf(r.itemId) > tierOf(top.itemId) ? r : top));
+  return [{ itemId: best.itemId, qty: rows.reduce((sum, r) => sum + r.qty, 0) }];
+}
+
 // Goods shown per offer row; the rest only in the popup ("2+").
 const ROW_GOODS = 2;
 
@@ -267,12 +307,31 @@ function RowGoods({ catalog, rows: unsorted }: {
   );
 }
 
-/** Offers as a table - given | → | asked (| time left / status for your
- * own) - so the arrows line up in one column. A row opens the popup. */
-function OfferTable({ catalog, offers, showStatus, activeCharacterId, onOpen }: {
+/** A section heading that folds its section; `children` sit at its right. */
+function FoldHeading({ title, open, onToggle, children }: {
+  title: string;
+  open: boolean;
+  onToggle: () => void;
+  children?: ReactNode;
+}) {
+  return (
+    <div className={`${market.headingRow} ${open ? "" : market.headingRowFolded}`}>
+      <h2 className={`${market.heading} ${market.foldTitle}`}>
+        <button type="button" className={market.foldToggle} aria-expanded={open} onClick={onToggle}>
+          <span aria-hidden="true">{open ? "▾" : "▸"}</span>
+          {title}
+        </button>
+      </h2>
+      {children}
+    </div>
+  );
+}
+
+/** Offers as a table - given | → | asked | time left (or status once closed)
+ * - so the arrows line up in one column. A row opens the popup. */
+function OfferTable({ catalog, offers, activeCharacterId, onOpen }: {
   catalog: BlueprintTierInfo;
   offers: Offer[];
-  showStatus: boolean;
   /** My offers: the open character - its rows' faces get a gold ring. */
   activeCharacterId?: string;
   onOpen: (offer: Offer) => void;
@@ -306,21 +365,16 @@ function OfferTable({ catalog, offers, showStatus, activeCharacterId, onOpen }: 
                   <RowGoods catalog={catalog} rows={groupedGoods(offer.give)} />
                 </td>
                 <td className={market.cellArrow}>→</td>
-                <td className={market.cellGoods}>
+                <td className={`${market.cellGoods} ${market.cellAsk}`}>
                   {sold ? (
-                    <RowGoods catalog={catalog} rows={groupedGoods(offer.paid as Goods)} />
+                    <RowGoods catalog={catalog} rows={paidAsOne(catalog, offer.paid as Goods)} />
                   ) : (
                     <RowGoods catalog={catalog} rows={offer.ask} />
                   )}
                 </td>
-                {showStatus && (
-                  <td className={market.cellStatus}>
-                    {/* A cancelled row is only greyed out - its popup says so. */}
-                    {offer.status === "open"
-                      ? timeLeft(offer.expiresAt)
-                      : offer.status === "cancelled" ? null : STATUS_LABEL[offer.status]}
-                  </td>
-                )}
+                <td className={market.cellStatus}>
+                  {offer.status === "open" ? timeLeft(offer.expiresAt) : ROW_STATUS[offer.status]}
+                </td>
               </tr>
             );
           })}
@@ -486,6 +540,8 @@ export function MarketView({
   const [giveAmounts, setGiveAmounts] = useState<Record<string, number>>(selection.balances);
   useEffect(() => setGiveAmounts(selection.balances), [selection.balances]);
   const hasSelection = giveItems.length > 0 || Object.keys(selection.balances).length > 0;
+  // Starts open; folding it keeps what was entered.
+  const [newOfferOpen, setNewOfferOpen] = useState(true);
 
   const [askFamily, setAskFamily] = useState<string | null>(null);
   const [askTier, setAskTier] = useState(1);
@@ -512,7 +568,14 @@ export function MarketView({
 
   // ── Lists ──────────────────────────────────────────────────────────────
   const [offers, setOffers] = useState<Offer[]>([]);
-  const [next, setNext] = useState<string | null>(null);
+  const [offersPage, setOffersPage] = useState(1);
+  const [lastPage, setLastPage] = useState(1);
+  // Rows per page, measured each time the list is unfolded (null while folded).
+  const [pageRows, setPageRows] = useState<number | null>(null);
+  // Where each known page starts (index 0 = page 1).
+  const pageCursors = useRef<(string | null)[]>([null]);
+  const offersSection = useRef<HTMLElement>(null);
+  const offersList = useRef<HTMLDivElement>(null);
   const [filterFamily, setFilterFamily] = useState<string | null>(null);
   // Tiers of the offered goods to show (none = all), like the vault's T1-T6 buttons.
   const [filterTiers, setFilterTiers] = useState<number[]>([]);
@@ -522,17 +585,45 @@ export function MarketView({
   // Most open offers a player may have (backend market-rules.json maxOpenOffers).
   const [maxOpen, setMaxOpen] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
+  // Both lists start folded.
+  const [mineOpen, setMineOpen] = useState(false);
+  const [offersOpen, setOffersOpen] = useState(false);
 
-  const loadOffers = useCallback(async (after: string | null) => {
-    const params = new URLSearchParams();
-    if (filterFamily) params.set("familyId", filterFamily);
-    if (filterTiers.length) params.set("tiers", filterTiers.join(","));
-    if (after) params.set("after", after);
-    const data = await getJson<{ offers: Offer[]; next: string | null }>(`/api/auth/market/offers?${params}`);
-    if (!data) return;
-    setOffers((prev) => (after ? [...prev, ...data.offers] : data.offers));
-    setNext(data.next);
-  }, [filterFamily, filterTiers]);
+  const toggleOffers = () => {
+    if (offersOpen) {
+      setOffersOpen(false);
+      setPageRows(null);
+      return;
+    }
+    flushSync(() => setOffersOpen(true));
+    // A New offer box above would leave little room: bring the list up first.
+    if (hasSelection && newOfferOpen) offersSection.current?.scrollIntoView({ block: "start" });
+    setPageRows(rowsThatFit(offersList.current));
+  };
+
+  // Only the latest request may touch the list, so quick taps on the page
+  // numbers or a filter change during a load can't show the wrong rows.
+  const offersRequest = useRef(0);
+  const loadOffers = useCallback(async (page: number) => {
+    if (pageRows == null) return;
+    const request = ++offersRequest.current;
+    // A page emptied by trades falls back to the one before it.
+    for (let p = page; p >= 1; p--) {
+      const params = new URLSearchParams({ limit: String(pageRows) });
+      if (filterFamily) params.set("familyId", filterFamily);
+      if (filterTiers.length) params.set("tiers", filterTiers.join(","));
+      const after = pageCursors.current[p - 1];
+      if (after) params.set("after", after);
+      const data = await getJson<{ offers: Offer[]; pages: string[] }>(`/api/auth/market/offers?${params}`);
+      if (!data || request !== offersRequest.current) return;
+      if (data.offers.length === 0 && p > 1) continue;
+      pageCursors.current = [...pageCursors.current.slice(0, p), ...data.pages];
+      setOffers(data.offers);
+      setOffersPage(p);
+      setLastPage(pageCursors.current.length);
+      return;
+    }
+  }, [filterFamily, filterTiers, pageRows]);
 
   const loadMine = useCallback(async () => {
     const data = await getJson<{ offers: Offer[]; maxOpen?: number }>("/api/auth/market/my-offers");
@@ -543,9 +634,20 @@ export function MarketView({
   }, []);
 
   useEffect(() => {
+    void loadMine();
+  }, [loadMine]);
+
+  // Offers load only once unfolded, from page 1 (also after a filter change).
+  useEffect(() => {
+    if (!offersOpen || pageRows == null) return;
+    let current = true;
+    pageCursors.current = [null];
     setLoading(true);
-    Promise.all([loadOffers(null), loadMine()]).finally(() => setLoading(false));
-  }, [loadOffers, loadMine]);
+    loadOffers(1).finally(() => {
+      if (current) setLoading(false);
+    });
+    return () => { current = false; };
+  }, [offersOpen, pageRows, loadOffers]);
 
   const afterWrite = async (r: Awaited<ReturnType<typeof postJson>>) => {
     if (r.ok) {
@@ -554,7 +656,7 @@ export function MarketView({
     } else {
       setError(r.detail ?? "Something went wrong - please try again.");
     }
-    await Promise.all([loadOffers(null), loadMine()]);
+    await Promise.all([offersOpen ? loadOffers(offersPage) : undefined, loadMine()]);
     return r.ok;
   };
 
@@ -568,6 +670,8 @@ export function MarketView({
     });
     if (await afterWrite(r)) {
       setAskFamily(null);
+      // Unfold the list, so the new offer is seen to have landed.
+      setMineOpen(true);
       onSelectionUsed();
     }
     setBusy(false);
@@ -608,179 +712,204 @@ export function MarketView({
         {error && <p className={market.error}>{error}</p>}
 
         {hasSelection && (
-          <section className={market.box}>
-            <h2 className={market.heading}>New offer</h2>
-            <table className={market.giveTable}>
-              <tbody>
-                {giveItems.map((i) => {
-                  const entry = catalog[i.itemId];
-                  const condition = conditionOf(i.quality);
-                  return (
-                    <tr key={i.instanceId}>
-                      <td className={market.giveTier}>{entry && getTierIndicator(entry.tier)}</td>
-                      <td><ItemIcon icon={entry?.icon} alt="" className={market.goodIcon} /></td>
-                      <td className={market.giveName}>{entry?.name ?? i.itemId}</td>
-                      <td className={market.giveAmount}>{condition ? CONDITION_LABEL[condition] : "1"}</td>
-                    </tr>
-                  );
-                })}
-                {Object.entries(selection.balances).map(([id, max]) => {
-                  const entry = catalog[id];
-                  return (
-                    <tr key={id}>
-                      <td className={market.giveTier}>{entry && getTierIndicator(entry.tier)}</td>
-                      <td><ItemIcon icon={entry?.icon} alt="" className={market.goodIcon} /></td>
-                      <td className={market.giveName}>{entry?.name ?? id}</td>
-                      <td className={market.giveAmount}>
-                        <span className={market.giveSlider}>
-                          <input
-                            type="range"
-                            className={market.slider}
-                            min={1}
-                            max={max}
-                            step={1}
-                            value={Math.max(1, giveAmounts[id] ?? max)}
-                            disabled={max <= 1}
-                            aria-label={`Amount of ${entry?.name ?? id} to give`}
-                            onChange={(e) => {
-                              const v = Math.max(1, Math.min(max, Math.floor(Number(e.target.value) || 1)));
-                              setGiveAmounts((prev) => ({ ...prev, [id]: v }));
-                            }}
-                          />
-                          <span className={market.giveOf}>{Math.max(1, giveAmounts[id] ?? max)}/{max}</span>
-                        </span>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
+          <section className={`${market.box} ${market.foldBox}`}>
+            <FoldHeading title="New offer" open={newOfferOpen} onToggle={() => setNewOfferOpen((o) => !o)} />
+            {newOfferOpen && (
+              <>
+                <table className={market.giveTable}>
+                  <tbody>
+                    {giveItems.map((i) => {
+                      const entry = catalog[i.itemId];
+                      const condition = conditionOf(i.quality);
+                      return (
+                        <tr key={i.instanceId}>
+                          <td className={market.giveTier}>{entry && getTierIndicator(entry.tier)}</td>
+                          <td><ItemIcon icon={entry?.icon} alt="" className={market.goodIcon} /></td>
+                          <td className={market.giveName}>{entry?.name ?? i.itemId}</td>
+                          <td className={market.giveAmount}>{condition ? CONDITION_LABEL[condition] : "1"}</td>
+                        </tr>
+                      );
+                    })}
+                    {Object.entries(selection.balances).map(([id, max]) => {
+                      const entry = catalog[id];
+                      return (
+                        <tr key={id}>
+                          <td className={market.giveTier}>{entry && getTierIndicator(entry.tier)}</td>
+                          <td><ItemIcon icon={entry?.icon} alt="" className={market.goodIcon} /></td>
+                          <td className={market.giveName}>{entry?.name ?? id}</td>
+                          <td className={market.giveAmount}>
+                            <span className={market.giveSlider}>
+                              <input
+                                type="range"
+                                className={market.slider}
+                                min={1}
+                                max={max}
+                                step={1}
+                                value={Math.max(1, giveAmounts[id] ?? max)}
+                                disabled={max <= 1}
+                                aria-label={`Amount of ${entry?.name ?? id} to give`}
+                                onChange={(e) => {
+                                  const v = Math.max(1, Math.min(max, Math.floor(Number(e.target.value) || 1)));
+                                  setGiveAmounts((prev) => ({ ...prev, [id]: v }));
+                                }}
+                              />
+                              <span className={market.giveOf}>{Math.max(1, giveAmounts[id] ?? max)}/{max}</span>
+                            </span>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
 
-            <p className={market.label}>You want</p>
-            {askFamily && askItemId ? (
-              <div className={market.askEditor}>
-                <div className={market.amountRow} role="radiogroup" aria-label="How many you want">
-                  {ASK_AMOUNTS.map((n) => (
-                    <button
-                      key={n}
-                      type="button"
-                      role="radio"
-                      aria-checked={askQty === n}
-                      className={`${market.chip} ${market.amountBtn} ${askQty === n ? market.chipActive : ""}`}
-                      onClick={() => setAskQty(n)}
-                    >
-                      {n}
-                    </button>
-                  ))}
-                </div>
-                <div className={market.askLine}>
-                  <GoodChip catalog={catalog} itemId={askItemId} qty={askQty} minCondition={askTracked ? askMinCondition : null} />
-                  <button type="button" className={market.linkButton} onClick={() => setAskFamily(null)}>change</button>
-                </div>
-                <div className={market.askTierRow}>
-                  <div className={market.tierFilter}>
-                    {askTiers.map(([id, e]) => (
+                <p className={market.label}>You want</p>
+                {askFamily && askItemId ? (
+                  <div className={market.askEditor}>
+                    <div className={market.amountRow} role="radiogroup" aria-label="How many you want">
+                      {ASK_AMOUNTS.map((n) => (
+                        <button
+                          key={n}
+                          type="button"
+                          role="radio"
+                          aria-checked={askQty === n}
+                          className={`${market.chip} ${market.amountBtn} ${askQty === n ? market.chipActive : ""}`}
+                          onClick={() => setAskQty(n)}
+                        >
+                          {n}
+                        </button>
+                      ))}
+                    </div>
+                    <div className={market.askLine}>
+                      <GoodChip catalog={catalog} itemId={askItemId} qty={askQty} minCondition={askTracked ? askMinCondition : null} />
+                      <button type="button" className={market.linkButton} onClick={() => setAskFamily(null)}>change</button>
+                    </div>
+                    <div className={market.askTierRow}>
+                      <div className={market.tierFilter}>
+                        {askTiers.map(([id, e]) => (
+                          <button
+                            key={id}
+                            type="button"
+                            className={`${styles.vaultFilterBtn} ${e.tier === askTier ? styles.vaultFilterBtnActive : ""}`}
+                            title={`Tier ${e.tier}`}
+                            aria-pressed={e.tier === askTier}
+                            onClick={() => setAskTier(e.tier)}
+                          >
+                            {getTierIndicator(e.tier)}
+                          </button>
+                        ))}
+                      </div>
+                      {/* Posting needs an asked item, so it sits with its tiers. */}
                       <button
-                        key={id}
                         type="button"
-                        className={`${styles.vaultFilterBtn} ${e.tier === askTier ? styles.vaultFilterBtnActive : ""}`}
-                        title={`Tier ${e.tier}`}
-                        aria-pressed={e.tier === askTier}
-                        onClick={() => setAskTier(e.tier)}
+                        className={`${market.primary} ${market.postBtn}`}
+                        disabled={busy || !askItemId || (giveItems.length === 0 && !Object.values(giveAmounts).some((q) => q > 0))}
+                        onClick={postOffer}
                       >
-                        {getTierIndicator(e.tier)}
+                        Post offer
                       </button>
-                    ))}
+                    </div>
+                    {askTracked && (
+                      <div className={market.row}>
+                        <span className={market.label}>At least</span>
+                        {CONDITION_CHOICES.map((c) => (
+                          <button
+                            key={c.level}
+                            type="button"
+                            className={`${market.chip} ${askMinCondition === c.level ? market.chipActive : ""}`}
+                            onClick={() => setAskMinCondition(c.level)}
+                          >
+                            {c.label}
+                          </button>
+                        ))}
+                      </div>
+                    )}
                   </div>
-                  {/* Posting needs an asked item, so it sits with its tiers. */}
-                  <button
-                    type="button"
-                    className={`${market.primary} ${market.postBtn}`}
-                    disabled={busy || !askItemId || (giveItems.length === 0 && !Object.values(giveAmounts).some((q) => q > 0))}
-                    onClick={postOffer}
-                  >
-                    Post offer
-                  </button>
-                </div>
-                {askTracked && (
-                  <div className={market.row}>
-                    <span className={market.label}>At least</span>
-                    {CONDITION_CHOICES.map((c) => (
-                      <button
-                        key={c.level}
-                        type="button"
-                        className={`${market.chip} ${askMinCondition === c.level ? market.chipActive : ""}`}
-                        onClick={() => setAskMinCondition(c.level)}
-                      >
-                        {c.label}
-                      </button>
-                    ))}
-                  </div>
+                ) : (
+                  <FamilySearch catalog={catalog} placeholder="Search what you want…" onPick={pickAskFamily} />
                 )}
-              </div>
-            ) : (
-              <FamilySearch catalog={catalog} placeholder="Search what you want…" onPick={pickAskFamily} />
+              </>
             )}
           </section>
         )}
 
-        <section className={market.box}>
-          <div className={market.headingRow}>
-            <h2 className={market.heading}>Offers</h2>
-            <div className={market.tierFilter}>
-              {[1, 2, 3, 4, 5, 6].map((tier) => (
-                <button
-                  key={tier}
-                  type="button"
-                  className={`${styles.vaultFilterBtn} ${filterTiers.includes(tier) ? styles.vaultFilterBtnActive : ""}`}
-                  title={`Offers of tier ${tier}`}
-                  aria-pressed={filterTiers.includes(tier)}
-                  onClick={() => toggleTier(tier)}
-                >
-                  {getTierIndicator(tier)}
-                </button>
-              ))}
-            </div>
-          </div>
-          <div className={market.row}>
-            {filterFamily ? (
-              <>
-                <span className={market.filter}>{filterFamily.replace(/_/g, " ")}</span>
-                <button type="button" className={market.linkButton} onClick={() => setFilterFamily(null)}>show all</button>
-              </>
-            ) : (
-              <FamilySearch catalog={catalog} placeholder="Filter by item…" onPick={setFilterFamily} />
+        <section ref={offersSection} className={`${market.box} ${market.foldBox}`}>
+          <FoldHeading title="Offers" open={offersOpen} onToggle={toggleOffers}>
+            {offersOpen && (
+              <div className={market.tierFilter}>
+                {[1, 2, 3, 4, 5, 6].map((tier) => (
+                  <button
+                    key={tier}
+                    type="button"
+                    className={`${styles.vaultFilterBtn} ${filterTiers.includes(tier) ? styles.vaultFilterBtnActive : ""}`}
+                    title={`Offers of tier ${tier}`}
+                    aria-pressed={filterTiers.includes(tier)}
+                    onClick={() => toggleTier(tier)}
+                  >
+                    {getTierIndicator(tier)}
+                  </button>
+                ))}
+              </div>
             )}
-          </div>
-          {loading ? (
-            <p className={market.hint}>Loading…</p>
-          ) : offers.length === 0 ? (
-            <p className={market.hint}>No offers right now.</p>
-          ) : (
-            <OfferTable catalog={catalog} offers={offers} showStatus={false} onOpen={setOpened} />
-          )}
-          {next && (
-            <button type="button" className={market.linkButton} onClick={() => loadOffers(next)}>
-              Show more
-            </button>
+          </FoldHeading>
+          {offersOpen && (
+            <>
+              <div className={market.row}>
+                {filterFamily ? (
+                  <>
+                    <span className={market.filter}>{filterFamily.replace(/_/g, " ")}</span>
+                    <button type="button" className={market.linkButton} onClick={() => setFilterFamily(null)}>show all</button>
+                  </>
+                ) : (
+                  <FamilySearch catalog={catalog} placeholder="Filter by item…" onPick={setFilterFamily} />
+                )}
+              </div>
+              <div ref={offersList}>
+                {loading || pageRows == null ? (
+                  <p className={market.hint}>Loading…</p>
+                ) : offers.length === 0 ? (
+                  <p className={market.hint}>No offers right now.</p>
+                ) : (
+                  // Holds a full page's height, so the numbers stay put on a short last page.
+                  <div style={lastPage > 1 ? { minHeight: `${pageRows * OFFER_ROW_REM + 0.2}rem` } : undefined}>
+                    <OfferTable catalog={catalog} offers={offers} onOpen={setOpened} />
+                  </div>
+                )}
+                {!loading && lastPage > 1 && (
+                  <nav className={market.pager} aria-label="Offer pages">
+                    {pageWindow(offersPage, lastPage).map((n) => (
+                      <button
+                        key={n}
+                        type="button"
+                        className={`${market.chip} ${market.pagerBtn} ${n === offersPage ? market.chipActive : ""}`}
+                        aria-current={n === offersPage ? "page" : undefined}
+                        onClick={() => loadOffers(n)}
+                      >
+                        {n}
+                      </button>
+                    ))}
+                  </nav>
+                )}
+              </div>
+            </>
           )}
         </section>
 
-        <section className={market.box}>
-          <div className={market.headingRow}>
-            <h2 className={market.heading}>My offers</h2>
+        <section className={`${market.box} ${market.foldBox}`}>
+          <FoldHeading title="My offers" open={mineOpen} onToggle={() => setMineOpen((o) => !o)}>
             {maxOpen != null && (
               <span className={market.openCount} title="Your offers, open or closed / most you can have">
                 {mine.length}/{maxOpen}
               </span>
             )}
-          </div>
-          {mine.length === 0 ? (
-            <p className={market.hint}>
-              No offers. Select goods at home and press the market button to post one.
-            </p>
-          ) : (
-            <OfferTable catalog={catalog} offers={mine} showStatus activeCharacterId={character.id} onOpen={setOpened} />
+          </FoldHeading>
+          {mineOpen && (
+            mine.length === 0 ? (
+              <p className={market.hint}>
+                No offers. Select goods at home and press the market button to post one.
+              </p>
+            ) : (
+              <OfferTable catalog={catalog} offers={mine} activeCharacterId={character.id} onOpen={setOpened} />
+            )
           )}
         </section>
       </div>

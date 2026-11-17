@@ -5,11 +5,11 @@
   },
   "beast_mount": {
     "gatheringWeapons": [],
-    "gatheringItems": ["rope", "net", "monster_trap", "chain", "manacles", "hunters_charm", "saddle", "bridle", "saddlepack", "barding_leather", "shovel"]
+    "gatheringItems": ["rope", "net", "monster_trap", "chain", "manacles", "hunters_charm", "saddle", "bridle", "saddlepack", "leather_barding", "shovel"]
   },
   "exotic_mount": {
     "gatheringWeapons": [],
-    "gatheringItems": ["monster_trap", "chain", "manacles", "rope", "net", "hunters_charm", "saddle", "bridle", "barding_leather"]
+    "gatheringItems": ["monster_trap", "chain", "manacles", "rope", "net", "hunters_charm", "saddle", "bridle", "leather_barding"]
   },
   "aquatic_mount": {
     "gatheringWeapons": [],
@@ -17,11 +17,11 @@
   },
   "winged_companion": {
     "gatheringWeapons": ["bow", "crossbow"],
-    "gatheringItems": ["net", "spyglass", "hunters_charm", "charm_flying"]
+    "gatheringItems": ["net", "spyglass", "hunters_charm", "flying_charm"]
   },
   "critter_companion": {
     "gatheringWeapons": [],
-    "gatheringItems": ["net", "monster_trap", "rope", "hunters_charm", "charm_other"]
+    "gatheringItems": ["net", "monster_trap", "rope", "hunters_charm", "other_charm"]
   },
   "arcane_companion": {
     "gatheringWeapons": [],
@@ -29,18 +29,18 @@
   },
   "fey_companion": {
     "gatheringWeapons": [],
-    "gatheringItems": ["starlight_catcher", "hunters_charm", "charm_ghost"]
+    "gatheringItems": ["starlight_catcher", "hunters_charm", "ghost_charm"]
   },
   "aquatic_companion": {
     "gatheringWeapons": [],
-    "gatheringItems": ["net", "fishing_pole", "rope", "hunters_charm", "charm_aquatic"]
+    "gatheringItems": ["net", "fishing_pole", "rope", "hunters_charm", "aquatic_charm"]
   },
   "dark_companion": {
     "gatheringWeapons": [],
-    "gatheringItems": ["manacles", "chain", "monster_trap", "hunters_charm", "charm_other"]
+    "gatheringItems": ["manacles", "chain", "monster_trap", "hunters_charm", "other_charm"]
   },
   "spirit_companion": {
     "gatheringWeapons": [],
-    "gatheringItems": ["starlight_catcher", "manacles", "hunters_charm", "charm_ghost"]
+    "gatheringItems": ["starlight_catcher", "manacles", "hunters_charm", "ghost_charm"]
   }
 }

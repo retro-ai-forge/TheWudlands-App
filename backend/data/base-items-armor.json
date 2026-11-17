@@ -864,148 +864,148 @@
     "icon": "/images/items/chitin_leg_armor_t6.png"
   },
   {
-    "id": "meteoric_iron_head_armor_1",
+    "id": "meteoric_head_armor_1",
     "name": "Copper Meteoric Helmet",
-    "familyId": "meteoric_iron_head_armor",
+    "familyId": "meteoric_head_armor",
     "tier": 1,
     "description": "A rugged helmet with a reddish copper meteoric shell, streaked with dark veins and impact scars.",
-    "icon": "/images/items/meteoric_iron_head_armor_t1.png"
+    "icon": "/images/items/meteoric_head_armor_t1.png"
   },
   {
-    "id": "meteoric_iron_head_armor_2",
+    "id": "meteoric_head_armor_2",
     "name": "Bronze Meteoric Helmet",
-    "familyId": "meteoric_iron_head_armor",
+    "familyId": "meteoric_head_armor",
     "tier": 2,
     "description": "A domed bronze meteoric helmet marbled with metallic greens and dappled with impact pits.",
-    "icon": "/images/items/meteoric_iron_head_armor_t2.png"
+    "icon": "/images/items/meteoric_head_armor_t2.png"
   },
   {
-    "id": "meteoric_iron_head_armor_3",
+    "id": "meteoric_head_armor_3",
     "name": "Iron Meteoric Helmet",
-    "familyId": "meteoric_iron_head_armor",
+    "familyId": "meteoric_head_armor",
     "tier": 3,
     "description": "A heavy, craggy helmet of iron meteorite, charcoal gray with natural fractures and rough textures.",
-    "icon": "/images/items/meteoric_iron_head_armor_t3.png"
+    "icon": "/images/items/meteoric_head_armor_t3.png"
   },
   {
-    "id": "meteoric_iron_head_armor_4",
+    "id": "meteoric_head_armor_4",
     "name": "Silver Meteoric Helmet",
-    "familyId": "meteoric_iron_head_armor",
+    "familyId": "meteoric_head_armor",
     "tier": 4,
     "description": "A brilliant helmet of meteor-born silver, faceted with mirror-like craters and rimmed with glowing runes.",
-    "icon": "/images/items/meteoric_iron_head_armor_t4.png"
+    "icon": "/images/items/meteoric_head_armor_t4.png"
   },
   {
-    "id": "meteoric_iron_head_armor_5",
+    "id": "meteoric_head_armor_5",
     "name": "Gold Meteoric Helmet",
-    "familyId": "meteoric_iron_head_armor",
+    "familyId": "meteoric_head_armor",
     "tier": 5,
     "description": "An opulent helm of meteor-forged gold, etched with swirling nebulae and pulsing with sun-charged magic.",
-    "icon": "/images/items/meteoric_iron_head_armor_t5.png"
+    "icon": "/images/items/meteoric_head_armor_t5.png"
   },
   {
-    "id": "meteoric_iron_head_armor_6",
+    "id": "meteoric_head_armor_6",
     "name": "Star Metal Meteoric Helmet",
-    "familyId": "meteoric_iron_head_armor",
+    "familyId": "meteoric_head_armor",
     "tier": 6,
     "description": "A legendary helmet of deep blue star metal, its radiant fissures gleaming as if lit by the stars themselves.",
-    "icon": "/images/items/meteoric_iron_head_armor_t6.png"
+    "icon": "/images/items/meteoric_head_armor_t6.png"
   },
   {
-    "id": "meteoric_iron_chest_armor_1",
+    "id": "meteoric_chest_armor_1",
     "name": "Copper Meteoric Breastplate",
-    "familyId": "meteoric_iron_chest_armor",
+    "familyId": "meteoric_chest_armor",
     "tier": 1,
     "description": "A robust breastplate hammered from copper meteoric ore, streaked with black fusion lines.",
-    "icon": "/images/items/meteoric_iron_chest_armor_t1.png"
+    "icon": "/images/items/meteoric_chest_armor_t1.png"
   },
   {
-    "id": "meteoric_iron_chest_armor_2",
+    "id": "meteoric_chest_armor_2",
     "name": "Bronze Meteoric Breastplate",
-    "familyId": "meteoric_iron_chest_armor",
+    "familyId": "meteoric_chest_armor",
     "tier": 2,
     "description": "A warm bronze breastplate infused with meteoric particles and cross-hatched with greenish veins.",
-    "icon": "/images/items/meteoric_iron_chest_armor_t2.png"
+    "icon": "/images/items/meteoric_chest_armor_t2.png"
   },
   {
-    "id": "meteoric_iron_chest_armor_3",
+    "id": "meteoric_chest_armor_3",
     "name": "Iron Meteoric Breastplate",
-    "familyId": "meteoric_iron_chest_armor",
+    "familyId": "meteoric_chest_armor",
     "tier": 3,
     "description": "A dark breastplate molded from meteoric iron, marked by natural pockmarks and fiery lines.",
-    "icon": "/images/items/meteoric_iron_chest_armor_t3.png"
+    "icon": "/images/items/meteoric_chest_armor_t3.png"
   },
   {
-    "id": "meteoric_iron_chest_armor_4",
+    "id": "meteoric_chest_armor_4",
     "name": "Silver Meteoric Breastplate",
-    "familyId": "meteoric_iron_chest_armor",
+    "familyId": "meteoric_chest_armor",
     "tier": 4,
     "description": "A reflective silver breastplate with moon-crater pitting and shooting star engravings that glow with magic.",
-    "icon": "/images/items/meteoric_iron_chest_armor_t4.png"
+    "icon": "/images/items/meteoric_chest_armor_t4.png"
   },
   {
-    "id": "meteoric_iron_chest_armor_5",
+    "id": "meteoric_chest_armor_5",
     "name": "Gold Meteoric Breastplate",
-    "familyId": "meteoric_iron_chest_armor",
+    "familyId": "meteoric_chest_armor",
     "tier": 5,
     "description": "A gold meteoric breastplate etched with sunbursts and celestial runes, radiating golden light from within.",
-    "icon": "/images/items/meteoric_iron_chest_armor_t5.png"
+    "icon": "/images/items/meteoric_chest_armor_t5.png"
   },
   {
-    "id": "meteoric_iron_chest_armor_6",
+    "id": "meteoric_chest_armor_6",
     "name": "Star Metal Meteoric Breastplate",
-    "familyId": "meteoric_iron_chest_armor",
+    "familyId": "meteoric_chest_armor",
     "tier": 6,
     "description": "A night-blue star metal breastplate filled with living light, as if a thousand stars wander beneath its surface.",
-    "icon": "/images/items/meteoric_iron_chest_armor_t6.png"
+    "icon": "/images/items/meteoric_chest_armor_t6.png"
   },
   {
-    "id": "meteoric_iron_leg_armor_1",
+    "id": "meteoric_leg_armor_1",
     "name": "Copper Meteoric Greaves",
-    "familyId": "meteoric_iron_leg_armor",
+    "familyId": "meteoric_leg_armor",
     "tier": 1,
     "description": "Shin guards of weathered copper meteoric alloy, streaked black and pitted from their fall to earth.",
-    "icon": "/images/items/meteoric_iron_leg_armor_t1.png"
+    "icon": "/images/items/meteoric_leg_armor_t1.png"
   },
   {
-    "id": "meteoric_iron_leg_armor_2",
+    "id": "meteoric_leg_armor_2",
     "name": "Bronze Meteoric Greaves",
-    "familyId": "meteoric_iron_leg_armor",
+    "familyId": "meteoric_leg_armor",
     "tier": 2,
     "description": "Segmented bronze meteoric greaves, swirled green and gold with smoky inclusion veins.",
-    "icon": "/images/items/meteoric_iron_leg_armor_t2.png"
+    "icon": "/images/items/meteoric_leg_armor_t2.png"
   },
   {
-    "id": "meteoric_iron_leg_armor_3",
+    "id": "meteoric_leg_armor_3",
     "name": "Iron Meteoric Greaves",
-    "familyId": "meteoric_iron_leg_armor",
+    "familyId": "meteoric_leg_armor",
     "tier": 3,
     "description": "Iron meteorite greaves, deeply scarred and textured with streaks of magnetite.",
-    "icon": "/images/items/meteoric_iron_leg_armor_t3.png"
+    "icon": "/images/items/meteoric_leg_armor_t3.png"
   },
   {
-    "id": "meteoric_iron_leg_armor_4",
+    "id": "meteoric_leg_armor_4",
     "name": "Silver Meteoric Greaves",
-    "familyId": "meteoric_iron_leg_armor",
+    "familyId": "meteoric_leg_armor",
     "tier": 4,
     "description": "Polished silver greaves with meteor pockmarks and comet designs, glowing lightly with lunar magic.",
-    "icon": "/images/items/meteoric_iron_leg_armor_t4.png"
+    "icon": "/images/items/meteoric_leg_armor_t4.png"
   },
   {
-    "id": "meteoric_iron_leg_armor_5",
+    "id": "meteoric_leg_armor_5",
     "name": "Gold Meteoric Greaves",
-    "familyId": "meteoric_iron_leg_armor",
+    "familyId": "meteoric_leg_armor",
     "tier": 5,
     "description": "Opulent meteor gold greaves decorated with blazing runes and sun-spiral motifs.",
-    "icon": "/images/items/meteoric_iron_leg_armor_t5.png"
+    "icon": "/images/items/meteoric_leg_armor_t5.png"
   },
   {
-    "id": "meteoric_iron_leg_armor_6",
+    "id": "meteoric_leg_armor_6",
     "name": "Star Metal Meteoric Greaves",
-    "familyId": "meteoric_iron_leg_armor",
+    "familyId": "meteoric_leg_armor",
     "tier": 6,
     "description": "Radiant blue star metal greaves coursed with shimmering veins that glimmer like falling stars.",
-    "icon": "/images/items/meteoric_iron_leg_armor_t6.png"
+    "icon": "/images/items/meteoric_leg_armor_t6.png"
   },
   {
     "id": "darksteel_head_armor_1",

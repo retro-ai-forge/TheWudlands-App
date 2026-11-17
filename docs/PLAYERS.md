@@ -27,6 +27,12 @@ Token thresholds are cumulative — holding 5B WUD unlocks the 1B slot as well. 
 
 Results are stored per wallet so the checks do not run on every visit. A player with no stored record is always checked; after that, roughly one login in thirty-three re-verifies, which keeps the unlock state current without spending the API quota on data that rarely changes. A "Reload Balances & NFTs" button on the welcome page forces an immediate re-check outside that schedule, for a player who wants to confirm a fresh balance or NFT right away. If the NFT/token lookup cannot run at all — no API key configured, or Subscan is unreachable — those slots are reset to unearned and that reset is stored, the same as any other fresh result; the grid never keeps reporting a wallet unlocked from a check it can no longer confirm. The Grid Miner star slots are unaffected by a Subscan outage, since they resolve over RPC and IPFS instead.
 
+## Character Names
+
+Every character has a first name and a surname of up to 24 characters each. Use Latin letters (a to z), with accents and umlauts; ß, æ, ø, œ, ł, ð and þ work too. A single space, hyphen or apostrophe may sit between two letters, as in Mary Jane, Anne-Marie or O'Brien. The whole name, first name and surname together, may hold at most two accents, one hyphen and one apostrophe. Digits, brackets, quotes, slashes, other signs and other alphabets are not allowed, because names appear in stories and to other players.
+
+Some words can't be part of a name: the story engine's command words (such as set, run, goto, link or print) and words that would make a character look like the game or its staff (such as Wudlands, admin, moderator or support). This also counts when the word is split up, as in "R un".
+
 ## Class & Profession Level Progression
 
 Character classes and crafting professions level from 1 to 30, using a shared XP curve that starts cheap and escalates steadily rather than exploding: each level costs roughly 1.2× the previous one's XP, so early levels come fast while level 30 asks for real investment. The table below is the reference progression chart — `Total XP` is the cumulative XP needed to reach that level, `Diff` is how much more that level costs than the one before it.
@@ -77,8 +83,8 @@ Every armor piece has its own blueprint: an iron helmet, breastplate and greaves
 <!-- BEGIN generated: professions -->
 | Category | Profession | Raw Materials | Own Blueprints | Also Offered |
 |---|---|---|---|---|
-| Alchemy | alchemist | herbs, essence, crystal | alchemy_stand, antidote_potion, healing_potion, mana_potion, meteoric_iron_chest_armor, meteoric_iron_head_armor, meteoric_iron_leg_armor, meteoric_iron_shield, mortar_and_pestle | - |
-| Alchemy | enchanter | essence, crystal, wood | enchanters_table, lapidary_bench, magic_staff, starlight_catcher, wand | holy_symbol, mana_potion, meteoric_iron_chest_armor, meteoric_iron_head_armor, meteoric_iron_leg_armor, meteoric_iron_shield |
+| Alchemy | alchemist | herbs, essence, crystal | alchemy_stand, antidote_potion, healing_potion, mana_potion, meteoric_chest_armor, meteoric_head_armor, meteoric_leg_armor, meteoric_shield, mortar_and_pestle | - |
+| Alchemy | enchanter | essence, crystal, wood | enchanters_table, lapidary_bench, magic_staff, starlight_catcher, wand | holy_symbol, mana_potion, meteoric_chest_armor, meteoric_head_armor, meteoric_leg_armor, meteoric_shield |
 | Alchemy | poisoner | venom, herbs, monster_part | alchemy_stand, antidote_potion, mortar_and_pestle, venom_vial | chitin_chest_armor, chitin_head_armor, chitin_leg_armor, dagger |
 | Aristocratic | clerk | reed, skin, feather | holy_symbol | bridle, hourglass, lock_and_key, merchants_scale, scriptorium |
 | Aristocratic | scholar | crystal, reed, feather | spyglass | chalk, enchanters_table, holy_symbol, hourglass, magic_staff, scriptorium, starlight_catcher, wand, written_scroll |
@@ -93,14 +99,14 @@ Every armor piece has its own blueprint: an iron helmet, breastplate and greaves
 | CraftFurniture | carpenter | wood, fiber, bone | enchanters_table, ladder, loom, oven, scriptorium, spinning_wheel, tanning_rack, workbench | cart |
 | CraftGarment | dyer | pigment, herbs, fiber | lacquer, mortar_and_pestle | chitin_shield, cloth_cloak, ebony_chest_armor, ebony_head_armor, ebony_leg_armor, ebony_shield, quilted_cloak |
 | CraftGarment | leatherworker | hide, skin, bone | bolt_girdle, leather_chest_armor, leather_cloak, leather_head_armor, leather_leg_armor, saddle, saddlepack, workbench | - |
-| CraftGarment | tanner | hide, skin, monster_part | barding_leather, chitin_chest_armor, chitin_head_armor, chitin_leg_armor, chitin_shield, fur_cloak, tanning_rack | - |
+| CraftGarment | tanner | hide, skin, monster_part | chitin_chest_armor, chitin_head_armor, chitin_leg_armor, chitin_shield, fur_cloak, leather_barding, tanning_rack | - |
 | CraftGarment | weaver | fiber, feather, reed | bridle, cloth_chest_armor, cloth_cloak, cloth_head_armor, cloth_leg_armor, loom, quilted_cloak, spinning_wheel | - |
 | CraftGlass | glassblower | sand, crystal, ore | alchemy_stand, furnace, glass_lantern, hourglass, kiln, lapidary_bench, mirror | - |
-| CraftGlass | jeweler | crystal, ore, sand | grinding_stone, lapidary_bench, magic_staff, mirror, wand | holy_symbol, meteoric_iron_chest_armor, meteoric_iron_head_armor, meteoric_iron_leg_armor, meteoric_iron_shield |
+| CraftGlass | jeweler | crystal, ore, sand | grinding_stone, lapidary_bench, magic_staff, mirror, wand | holy_symbol, meteoric_chest_armor, meteoric_head_armor, meteoric_leg_armor, meteoric_shield |
 | CraftStone | mason | stone, clay, sand | furnace, grinding_stone, kiln, oven | pickaxe |
 | CraftStone | potter | clay, sand, stone | alchemy_stand, kiln, mortar_and_pestle | shovel |
 | CraftStone | stonemason | stone, crystal, clay | furnace, grinding_stone, lapidary_bench, mortar_and_pestle | pickaxe |
-| CraftTool | tinsmith | ore, clockwork, wood | barding_iron, chain, crossbow, crowbar, grappling_hook, lock_and_key, manacles, merchants_scale, quiver, wrench | darksteel_chest_armor, darksteel_head_armor, darksteel_leg_armor, darksteel_shield |
+| CraftTool | tinsmith | ore, clockwork, wood | chain, crossbow, crowbar, grappling_hook, lock_and_key, manacles, merchants_scale, metal_barding, quiver, wrench | darksteel_chest_armor, darksteel_head_armor, darksteel_leg_armor, darksteel_shield |
 | CraftWeapon | blacksmith | ore, wood, sand | anvil, axe, battle_axe, dagger, greatsword, mace, short_sword, sickle, spear, sword, warhammer, whetstone | - |
 | CraftWood | cooper | wood, bone, pigment | bolt_girdle, bow, crossbow, ebony_chest_armor, ebony_head_armor, ebony_leg_armor, ebony_shield, quiver, reinforced_wooden_shield, wooden_shield, workbench | - |
 | Food | baker | harvest, herbs, wood | fig_cake, fishermans_ration, iron_ration, oven | mortar_and_pestle |
@@ -108,13 +114,13 @@ Every armor piece has its own blueprint: an iron helmet, breastplate and greaves
 | Food | butcher | meat, bone, herbs | jerky, smokehouse | whetstone |
 | Food | cook | meat, fish, harvest | oven, roasted_nuts | fig_cake, iron_ration, pickled_fish, smoked_fish |
 | Military | guard | ore, hide, monster_part | - | chain, chainmail_chest_armor, chainmail_head_armor, chainmail_leg_armor, crossbow, lock_and_key, mace, manacles, reinforced_wooden_shield, signal_whistle, spear, wooden_shield |
-| Military | soldier | ore, fiber, monster_part | - | barding_iron, cloth_chest_armor, cloth_head_armor, cloth_leg_armor, grappling_hook, iron_chest_armor, iron_head_armor, iron_leg_armor, iron_ration, iron_shield, short_sword, signal_whistle, spear, spyglass, sword |
+| Military | soldier | ore, fiber, monster_part | - | cloth_chest_armor, cloth_head_armor, cloth_leg_armor, grappling_hook, iron_chest_armor, iron_head_armor, iron_leg_armor, iron_ration, iron_shield, metal_barding, short_sword, signal_whistle, spear, spyglass, sword |
 | Rural | farmer | harvest, fiber, herbs | oven, shovel, sickle, smokehouse, spinning_wheel | ladder, roasted_nuts |
 | Rural | fisher | fish, reed, fiber | fishermans_ration, fishing_pole, net, smoked_fish, smokehouse | pickled_fish, spear |
-| Rural | herder | hide, meat, fiber | bridle, saddle, signal_whistle, spinning_wheel, tanning_rack | barding_leather, cart, fur_cloak, leather_cloak |
+| Rural | herder | hide, meat, fiber | bridle, saddle, signal_whistle, spinning_wheel, tanning_rack | cart, fur_cloak, leather_barding, leather_cloak |
 | Rural | hunter | meat, hide, feather | bow, hunters_charm, monster_trap, quiver, smokehouse, spear, tanning_rack | fur_cloak, jerky, leather_chest_armor, leather_cloak, leather_head_armor, leather_leg_armor, net, spyglass, whetstone |
 | Rural | miner | ore, stone, crystal | furnace, grinding_stone, kiln, pickaxe | crowbar, glass_lantern, shovel, warhammer |
-| Trade | merchant | wood, harvest, monster_part | cart | barding_leather, bridle, leather_cloak, merchants_scale, saddle, saddlepack |
+| Trade | merchant | wood, harvest, monster_part | cart | bridle, leather_barding, leather_cloak, merchants_scale, saddle, saddlepack |
 | Trade | trader | harvest, stone, monster_part | cart | bridle, fig_cake, iron_ration, jerky, leather_cloak, merchants_scale, pickled_fish, roasted_nuts, saddlepack, smoked_fish, smokehouse |
 <!-- END generated: professions -->
 
@@ -138,9 +144,9 @@ Crafting pays out two kinds of XP, which can land on different professions from 
 | Darksteel Chest Armor | Darksteel Chest Armor | 361 | Ore x300, Wood x33, Clockwork x28 | 36 | 72 | 108 | 144 | 180 | 217 | 397 |
 | Darksteel Head Armor | Darksteel Head Armor | 361 | Ore x300, Wood x33, Clockwork x28 | 36 | 72 | 108 | 144 | 180 | 217 | 397 |
 | Darksteel Leg Armor | Darksteel Leg Armor | 361 | Ore x300, Wood x33, Clockwork x28 | 36 | 72 | 108 | 144 | 180 | 217 | 397 |
-| Meteoric Iron Chest Armor | Meteoric Iron Chest Armor | 350 | Crystal x140, Ore x120, Essence x90 | 35 | 70 | 105 | 140 | 175 | 210 | 385 |
-| Meteoric Iron Head Armor | Meteoric Iron Head Armor | 350 | Crystal x140, Ore x120, Essence x90 | 35 | 70 | 105 | 140 | 175 | 210 | 385 |
-| Meteoric Iron Leg Armor | Meteoric Iron Leg Armor | 350 | Crystal x140, Ore x120, Essence x90 | 35 | 70 | 105 | 140 | 175 | 210 | 385 |
+| Meteoric Chest Armor | Meteoric Chest Armor | 350 | Crystal x140, Ore x120, Essence x90 | 35 | 70 | 105 | 140 | 175 | 210 | 385 |
+| Meteoric Head Armor | Meteoric Head Armor | 350 | Crystal x140, Ore x120, Essence x90 | 35 | 70 | 105 | 140 | 175 | 210 | 385 |
+| Meteoric Leg Armor | Meteoric Leg Armor | 350 | Crystal x140, Ore x120, Essence x90 | 35 | 70 | 105 | 140 | 175 | 210 | 385 |
 | Ebony Chest Armor | Ebony Chest Armor | 340 | Wood x132, Bone x80, Pigment x80, Herbs x48 | 34 | 68 | 102 | 136 | 170 | 204 | 374 |
 | Ebony Head Armor | Ebony Head Armor | 340 | Wood x132, Bone x80, Pigment x80, Herbs x48 | 34 | 68 | 102 | 136 | 170 | 204 | 374 |
 | Ebony Leg Armor | Ebony Leg Armor | 340 | Wood x132, Bone x80, Pigment x80, Herbs x48 | 34 | 68 | 102 | 136 | 170 | 204 | 374 |
@@ -157,7 +163,7 @@ Crafting pays out two kinds of XP, which can land on different professions from 
 | Chainmail Leg Armor | Chainmail Leg Armor | 258 | Ore x225, Wood x33 | 26 | 52 | 77 | 103 | 129 | 155 | 284 |
 | Darksteel Shield | Darksteel Shield | 245 | Ore x200, Wood x33, Clockwork x12 | 24 | 49 | 74 | 98 | 122 | 147 | 269 |
 | Axe | Axe | 229 | Ore x180, Wood x49 | 23 | 46 | 69 | 92 | 115 | 137 | 252 |
-| Meteoric Iron Shield | Meteoric Iron Shield | 215 | Crystal x86, Ore x75, Essence x54 | 22 | 43 | 64 | 86 | 108 | 129 | 237 |
+| Meteoric Shield | Meteoric Shield | 215 | Crystal x86, Ore x75, Essence x54 | 22 | 43 | 64 | 86 | 108 | 129 | 237 |
 | Short Sword | Short Sword | 197 | Ore x150, Wood x47 | 20 | 39 | 59 | 79 | 99 | 118 | 217 |
 | Crossbow | Crossbow | 171 | Ore x75, Wood x60, Fiber x36 | 17 | 34 | 51 | 68 | 86 | 103 | 188 |
 | Reinforced Wooden Shield | Reinforced Wooden Shield | 170 | Ore x125, Wood x45 | 17 | 34 | 51 | 68 | 85 | 102 | 187 |
@@ -177,7 +183,7 @@ Crafting pays out two kinds of XP, which can land on different professions from 
 | Cloth Head Armor | Cloth Head Armor | 72 | Fiber x72 | 7 | 14 | 22 | 29 | 36 | 43 | 79 |
 | Cloth Leg Armor | Cloth Leg Armor | 72 | Fiber x72 | 7 | 14 | 22 | 29 | 36 | 43 | 79 |
 | Loom | Loom | 62 | Wood x46, Fiber x12, Bone x4 | 6 | 12 | 19 | 25 | 31 | 37 | 68 |
-| Barding Leather | Barding Leather | 58 | Hide x48, Monster Part x10 | 6 | 12 | 17 | 23 | 29 | 35 | 64 |
+| Leather Barding | Leather Barding | 58 | Hide x48, Monster Part x10 | 6 | 12 | 17 | 23 | 29 | 35 | 64 |
 | Lapidary Bench | Lapidary Bench | 54 | Clay x24, Stone x12, Ore x10, Sand x8 | 5 | 11 | 16 | 22 | 27 | 32 | 59 |
 | Grinding Stone | Grinding Stone | 51 | Clay x24, Stone x14, Sand x8, Ore x5 | 5 | 10 | 15 | 20 | 26 | 31 | 56 |
 | Antidote Potion | Antidote Potion | 44 | Herbs x26, Sand x12, Venom x6 | 4 | 9 | 13 | 18 | 22 | 26 | 48 |
@@ -188,7 +194,7 @@ Crafting pays out two kinds of XP, which can land on different professions from 
 | Scriptorium | Scriptorium | 39 | Wood x30, Fiber x5, Bone x4 | 4 | 8 | 12 | 16 | 20 | 23 | 43 |
 | Saddle | Saddle | 37 | Hide x32, Wood x3, Bone x2 | 4 | 7 | 11 | 15 | 18 | 22 | 41 |
 | Workbench | Workbench | 37 | Wood x30, Bone x4, Feather x1, Reed x1, Skin x1 | 4 | 7 | 11 | 15 | 18 | 22 | 41 |
-| Barding Iron | Barding Iron | 36 | Ore x20, Hide x12, Bone x2, Fish x2 | 4 | 7 | 11 | 14 | 18 | 22 | 40 |
+| Metal Barding | Metal Barding | 36 | Ore x20, Hide x12, Bone x2, Fish x2 | 4 | 7 | 11 | 14 | 18 | 22 | 40 |
 | Tanning Rack | Tanning Rack | 34 | Wood x24, Ore x10 | 3 | 7 | 10 | 14 | 17 | 20 | 37 |
 | Shovel | Shovel | 33 | Ore x25, Wood x8 | 3 | 7 | 10 | 13 | 16 | 20 | 36 |
 | Venom Vial | Venom Vial | 33 | Herbs x12, Sand x12, Venom x9 | 3 | 7 | 10 | 13 | 16 | 20 | 36 |
@@ -262,8 +268,8 @@ In both tables, raw materials are counted down the whole creation chain, and an 
 | Clockwork Mechanism | 14 | Ore x10, Clockwork x4 |
 | Beam | 12 | Wood x12 |
 | Glass Bottle | 12 | Sand x12 |
-| Axe Stone | 10 | Meat x3, Wood x3, Bone x2, Stone x2 |
 | Backpack | 10 | Hide x10 |
+| Stone Axe | 10 | Meat x3, Wood x3, Bone x2, Stone x2 |
 | Fish Chowder | 9 | Bone x4, Fish x2, Harvest x2, Herbs x1 |
 | Hearty Stew | 8 | Meat x3, Bone x2, Harvest x2, Herbs x1 |
 | Refined Clay | 8 | Clay x6, Sand x2 |

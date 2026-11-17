@@ -262,7 +262,7 @@ async def test_craft_chain_skips_already_owned_processed_material(mongodb_uri):
 @pytest.mark.asyncio
 async def test_craft_chain_fails_atomically_on_missing_intermediate_tool(mongodb_uri):
     # beam (tool: workbench) <- 3x plank (processed) <- raw wood, but plank
-    # itself needs an instance-tracked axe_stone/axe the player has none
+    # itself needs an instance-tracked stone_axe/axe the player has none
     # of - the whole chain must fail outright (start_craft raises CraftRefused),
     # with nothing staged, even though beam's own tool (workbench) IS
     # available.

@@ -107,7 +107,7 @@
     "blueprintFamilyId": "blueprint_chitin_shield"
   },
   {
-    "familyId": "meteoric_iron_shield",
+    "familyId": "meteoric_shield",
     "ingredients": [
       {
         "category": "raw",
@@ -129,7 +129,7 @@
       }
     ],
     "tool": "anvil",
-    "blueprintFamilyId": "blueprint_meteoric_iron_shield"
+    "blueprintFamilyId": "blueprint_meteoric_shield"
   },
   {
     "familyId": "darksteel_shield",
@@ -475,7 +475,7 @@
     "blueprintFamilyId": "blueprint_chitin_leg_armor"
   },
   {
-    "familyId": "meteoric_iron_head_armor",
+    "familyId": "meteoric_head_armor",
     "ingredients": [
       {
         "category": "raw",
@@ -497,10 +497,10 @@
       }
     ],
     "tool": "anvil",
-    "blueprintFamilyId": "blueprint_meteoric_iron_head_armor"
+    "blueprintFamilyId": "blueprint_meteoric_head_armor"
   },
   {
-    "familyId": "meteoric_iron_chest_armor",
+    "familyId": "meteoric_chest_armor",
     "ingredients": [
       {
         "category": "raw",
@@ -522,10 +522,10 @@
       }
     ],
     "tool": "anvil",
-    "blueprintFamilyId": "blueprint_meteoric_iron_chest_armor"
+    "blueprintFamilyId": "blueprint_meteoric_chest_armor"
   },
   {
-    "familyId": "meteoric_iron_leg_armor",
+    "familyId": "meteoric_leg_armor",
     "ingredients": [
       {
         "category": "raw",
@@ -547,7 +547,7 @@
       }
     ],
     "tool": "anvil",
-    "blueprintFamilyId": "blueprint_meteoric_iron_leg_armor"
+    "blueprintFamilyId": "blueprint_meteoric_leg_armor"
   },
   {
     "familyId": "darksteel_head_armor",
@@ -663,7 +663,7 @@
     "blueprintFamilyId": "blueprint_anvil"
   },
   {
-    "familyId": "axe_stone",
+    "familyId": "stone_axe",
     "ingredients": [
       {
         "category": "raw",
@@ -1018,7 +1018,7 @@
       }
     ],
     "tool": [
-      "axe_stone",
+      "stone_axe",
       "axe"
     ],
     "blueprintFamilyId": null
@@ -1671,7 +1671,7 @@
       }
     ],
     "tool": [
-      "axe_stone",
+      "stone_axe",
       "dagger",
       "axe"
     ],
@@ -2136,7 +2136,7 @@
       }
     ],
     "tool": [
-      "axe_stone",
+      "stone_axe",
       "axe"
     ],
     "blueprintFamilyId": "blueprint_ladder"
@@ -2747,7 +2747,7 @@
       }
     ],
     "tool": [
-      "axe_stone",
+      "stone_axe",
       "axe"
     ],
     "blueprintFamilyId": null
@@ -2980,7 +2980,7 @@
       }
     ],
     "tool": [
-      "axe_stone",
+      "stone_axe",
       "axe"
     ],
     "blueprintFamilyId": null
@@ -3482,7 +3482,7 @@
     "blueprintFamilyId": "blueprint_saddlepack"
   },
   {
-    "familyId": "barding_leather",
+    "familyId": "leather_barding",
     "ingredients": [
       {
         "category": "processed",
@@ -3504,10 +3504,10 @@
       }
     ],
     "tool": "tanning_rack",
-    "blueprintFamilyId": "blueprint_barding_leather"
+    "blueprintFamilyId": "blueprint_leather_barding"
   },
   {
-    "familyId": "barding_iron",
+    "familyId": "metal_barding",
     "ingredients": [
       {
         "category": "processed",
@@ -3529,6 +3529,6 @@
       }
     ],
     "tool": "anvil",
-    "blueprintFamilyId": "blueprint_barding_iron"
+    "blueprintFamilyId": "blueprint_metal_barding"
   }
 ]

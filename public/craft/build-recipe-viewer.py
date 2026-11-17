@@ -53,7 +53,7 @@ def _load_gathering_bonuses_by_item() -> dict[str, list[str]]:
 def build_families() -> dict:
     # familyId -> its full item-inventory-properties.json row - the same
     # equip/instance-tracking reference data backend.items_catalog loads.
-    # needsItemDefinition (true for e.g. axe_stone/axe/dagger doubling as a
+    # needsItemDefinition (true for e.g. stone_axe/axe/dagger doubling as a
     # tool) lets the viewer's own isCurrentSelectionCraftable apply the same
     # ">= recipe tier" minimum backend.players._resolve_tool_for_craft
     # enforces for these, while a flat-balance tool (an anvil, a furnace,

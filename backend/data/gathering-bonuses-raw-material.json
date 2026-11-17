@@ -4,7 +4,7 @@
     "gatheringItems": ["cart", "grappling_hook", "iron_spikes", "hunters_charm", "glass_lantern", "torch", "candle"]
   },
   "wood": {
-    "gatheringWeapons": ["axe", "axe_stone", "battle_axe"],
+    "gatheringWeapons": ["axe", "stone_axe", "battle_axe"],
     "gatheringItems": ["cart", "hunters_charm"]
   },
   "stone": {
@@ -12,7 +12,7 @@
     "gatheringItems": ["cart", "hunters_charm"]
   },
   "bone": {
-    "gatheringWeapons": ["dagger", "axe_stone", "axe", "battle_axe", "warhammer", "spear", "mace"],
+    "gatheringWeapons": ["dagger", "stone_axe", "axe", "battle_axe", "warhammer", "spear", "mace"],
     "gatheringItems": ["net", "monster_trap", "spyglass", "hunters_charm", "whetstone"]
   },
   "fiber": {

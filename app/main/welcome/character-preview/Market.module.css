@@ -6,14 +6,14 @@
   display: flex;
   flex-direction: column;
   gap: 0.6rem;
-  padding: 0 0.4rem 4rem;
+  padding: 0 0.2rem 4rem;
 }
 
 .box {
   background: rgba(26, 24, 16, 0.85);
   border: 1px solid #3a3020;
   border-radius: 6px;
-  padding: 0.6rem 0.4rem;
+  padding: 0.6rem 0.25rem;
 }
 
 .heading {
@@ -221,7 +221,13 @@
   align-items: center;
   justify-content: space-between;
   gap: 0.5rem;
-  margin-bottom: 0.6rem;
+  margin-bottom: 0.2rem;
+}
+
+/* Only that small gap under the heading bar. */
+.headingRow + .row,
+.headingRow + .tableScroll .table {
+  margin-top: 0;
 }
 
 .headingRow .heading {
@@ -339,11 +345,13 @@
    asked columns size to their contents; each row opens the popup. */
 .table {
   width: 100%;
-  margin-top: 0.4rem;
+  margin-top: 0.2rem;
   border-collapse: collapse;
 }
 
+/* Height: OFFER_ROW_REM in MarketView.tsx counts how many rows fit a page. */
 .tableRow {
+  height: 2.35rem;
   cursor: pointer;
 }
 
@@ -357,7 +365,7 @@
 }
 
 .tableRow td {
-  padding: 0.3rem 0.2rem;
+  padding: 0.3rem 0.1rem;
   border-top: 1px solid #2a2418;
   vertical-align: middle;
 }
@@ -365,11 +373,11 @@
 /* Every offer on one line - compact goods, never wrapping. */
 .cellGoods .lineGoods {
   flex-wrap: nowrap;
-  gap: 0.35rem;
+  gap: 0.2rem;
 }
 
 .cellGoods .mini {
-  gap: 0.1rem;
+  gap: 0;
   font-size: 0.8rem;
 }
 
@@ -381,6 +389,13 @@
 .cellGoods .mini img {
   width: 1.1em;
   height: 1.1em;
+}
+
+/* The tier symbol in front of a cell's goods - its size also sets the row
+   height, so both offer lists share it. */
+.cellGoods .lineGoods > img {
+  width: 1.2em;
+  height: 1.2em;
 }
 
 .tableScroll {
@@ -395,18 +410,34 @@
 }
 
 .cellArrow {
-  width: 1.5rem;
+  width: 1rem;
   text-align: center;
   color: #8a7a52;
 }
 
+.tableRow .cellStatus {
+  padding-left: 0;
+}
+
 /* Time left / sold - pushed to the far right. */
 .cellStatus {
-  width: 1%;
+  width: 2rem;
   text-align: right;
   font-size: 0.75rem;
   color: #8a7a52;
   white-space: nowrap;
+}
+
+/* Both offer lists share these widths, so arrow, asked goods and time line up
+   between them; the given goods' column takes what's left. They hold a row of
+   100-unit stacks on a 340px phone. */
+.cellAsk {
+  width: 4.8rem;
+}
+
+/* Amounts set closer together - that pays for the full-size item icons. */
+.cellGoods .goodQty {
+  letter-spacing: -0.08em;
 }
 
 /* New offer - "You give": tier | icon | name | amount (or condition). */
@@ -470,7 +501,7 @@
 /* "2+": goods of this offer only listed in its popup. */
 .more {
   flex-shrink: 0;
-  padding: 0.05rem 0.35rem;
+  padding: 0.05rem 0.2rem;
   border: 1px solid #3a3020;
   border-radius: 3px;
   font-size: 0.75rem;
@@ -497,8 +528,8 @@
 .face {
   position: relative;
   display: block;
-  width: 1.7rem;
-  height: 1.7rem;
+  width: 1.5rem;
+  height: 1.5rem;
   overflow: hidden;
   border-radius: 50%;
   border: 1px solid #3a3020;
@@ -599,6 +630,55 @@
   margin-left: 0.2rem;
   padding: 0.35rem 0.7rem;
   white-space: nowrap;
+}
+
+/* My offers / Offers: the heading folds its section. The toggle is as tall
+   as the tier buttons, so the row keeps its height when they appear. */
+.foldBox {
+  padding-top: 0.3rem;
+  padding-bottom: 0.3rem;
+}
+
+.headingRowFolded {
+  margin-bottom: 0;
+}
+
+.foldTitle {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.foldToggle {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  width: 100%;
+  min-height: 1.85rem;
+  padding: 0;
+  font: inherit;
+  letter-spacing: inherit;
+  text-transform: inherit;
+  text-align: left;
+  color: inherit;
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+
+/* Offers: the page numbers under the list. */
+.pager {
+  display: flex;
+  justify-content: center;
+  gap: 0.3rem;
+  margin-top: 0.2rem;
+}
+
+.pagerBtn {
+  min-width: 2.2rem;
+  height: 1.85rem;
+  padding: 0;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
 }
 
 /* Trade, when this home can't pay the ask: greyed out, no hover glow. */

@@ -722,28 +722,28 @@ def _worn(family: str, slot: str, tier: int = 1, quality: int = 4) -> dict:
 
 
 def test_charm_on_a_matching_companion_adds_its_bonus():
-    doc = {"gear": {"items": [_worn("winged_companion", "Companion"), _worn("charm_flying", "Charm", tier=2)]}}
+    doc = {"gear": {"items": [_worn("winged_companion", "Companion"), _worn("flying_charm", "Charm", tier=2)]}}
     gear = foraging.gathering_gear(doc, "feather")
-    assert any(i["familyId"] == "charm_flying" for i in gear["items"])
+    assert any(i["familyId"] == "flying_charm" for i in gear["items"])
     assert gear["percent"] == round(foraging.ITEM_BONUS_BY_TIER[2] * 100, 1)
     # Not a material that suits a winged companion: no bonus.
     assert foraging.gathering_gear(doc, "wood")["percent"] == 0
 
 
 def test_charm_on_the_wrong_companion_or_in_the_pack_does_not_count():
-    rat = {"gear": {"items": [_worn("critter_companion", "Companion"), _worn("charm_flying", "Charm")]}}
+    rat = {"gear": {"items": [_worn("critter_companion", "Companion"), _worn("flying_charm", "Charm")]}}
     gear = foraging.gathering_gear(rat, "feather")
     assert gear["percent"] == 0
     assert gear["blockedItems"][0]["missing"] == ["winged_companion"]
 
-    packed = {"gear": {"items": [_worn("winged_companion", "Companion"), _instance("charm_flying", 4)]}}
+    packed = {"gear": {"items": [_worn("winged_companion", "Companion"), _instance("flying_charm", 4)]}}
     assert foraging.gathering_gear(packed, "feather")["percent"] == 0
 
 
 async def test_charm_wears_like_any_item(db, monkeypatch):
     cid = await _make(1, "hunter")
     await db.characters.update_one({"address": ADDRESS, "id": cid}, {"$set": {
-        "gear.items": [_worn("winged_companion", "Companion"), _worn("charm_flying", "Charm", quality=4)],
+        "gear.items": [_worn("winged_companion", "Companion"), _worn("flying_charm", "Charm", quality=4)],
     }})
     monkeypatch.setattr(foraging.random, "randint", lambda a, b: 10)
     _always(monkeypatch, "item")
@@ -752,7 +752,7 @@ async def test_charm_wears_like_any_item(db, monkeypatch):
     result = (await foraging.finish_forage(ADDRESS, cid))["result"]
     assert result["gearPercent"] == 5 and result["broken"] == []
     doc = await db.characters.find_one({"address": ADDRESS, "id": cid})
-    charm = next(i for i in doc["gear"]["items"] if i["familyId"] == "charm_flying")
+    charm = next(i for i in doc["gear"]["items"] if i["familyId"] == "flying_charm")
     assert charm["quality"] == 3                                # T1 finds: a T1 charm drops a level
 
 

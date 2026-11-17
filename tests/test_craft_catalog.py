@@ -72,7 +72,7 @@ def test_several_professions_get_the_union():
 
 
 def test_the_trades_from_the_design():
-    assert "blueprint_meteoric_iron_chest_armor" in PROFESSION_BLUEPRINTS["alchemist"].own   # star metal
+    assert "blueprint_meteoric_chest_armor" in PROFESSION_BLUEPRINTS["alchemist"].own   # star metal
     assert "blueprint_ebony_shield" in PROFESSION_BLUEPRINTS["cooper"].own
     assert "blueprint_leather_chest_armor" in PROFESSION_BLUEPRINTS["leatherworker"].own
     assert "blueprint_anvil" in PROFESSION_BLUEPRINTS["blacksmith"].own
@@ -95,7 +95,7 @@ def test_lore_summary_lists_every_blueprint_under_its_owners_categories():
     listed = {f"blueprint_{f['familyId']}" for entry in summary for f in entry["families"]}
     assert listed == {b.family_id for b in BLUEPRINT_ITEMS}
     alchemy = next(e for e in summary if e["category"] == "Alchemy")
-    star = next(f for f in alchemy["families"] if f["familyId"] == "meteoric_iron_chest_armor")
+    star = next(f for f in alchemy["families"] if f["familyId"] == "meteoric_chest_armor")
     assert star["owners"] == ["alchemist"] and len(star["items"]) == 6
 
 
@@ -146,5 +146,5 @@ def test_the_creation_card_names_the_stations_of_the_parts():
     assert _blueprint_station("blueprint_anvil") == []
     assert _blueprint_part_stations("blueprint_anvil") == [["furnace"]]
     assert _blueprint_station("blueprint_sword") == ["anvil"]
-    assert _blueprint_part_stations("blueprint_sword") == [["furnace"], ["axe_stone", "axe"]]
+    assert _blueprint_part_stations("blueprint_sword") == [["furnace"], ["stone_axe", "axe"]]
     assert _blueprint_part_stations("blueprint_iron_ration") == []   # its parts are other trades' goods

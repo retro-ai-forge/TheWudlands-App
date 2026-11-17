@@ -665,6 +665,14 @@
   margin-right: -0.9rem;
 }
 
+/* Why a typed name isn't accepted (see app/lib/characterNames.ts). */
+.nameHint {
+  font-size: 0.8rem;
+  color: #c0463a;
+  text-align: center;
+  margin: 0.5rem 0 0;
+}
+
 .textInput {
   font-family: inherit;
   font-size: 0.85rem;

@@ -2,6 +2,7 @@
   "offerDays": 7,
   "maxOpenOffers": 10,
   "maxAskQty": 999,
-  "pageSize": 30,
+  "pageSize": 20,
+  "pagesAhead": 4,
   "sweepBatch": 20
 }

@@ -879,7 +879,7 @@
     "armorClass": 2
   },
   {
-    "familyId": "meteoric_iron_chest_armor",
+    "familyId": "meteoric_chest_armor",
     "kind": [
       "armor"
     ],
@@ -896,7 +896,7 @@
     "armorClass": 5
   },
   {
-    "familyId": "meteoric_iron_head_armor",
+    "familyId": "meteoric_head_armor",
     "kind": [
       "armor"
     ],
@@ -913,7 +913,7 @@
     "armorClass": 5
   },
   {
-    "familyId": "meteoric_iron_leg_armor",
+    "familyId": "meteoric_leg_armor",
     "kind": [
       "armor"
     ],
@@ -1344,7 +1344,7 @@
     "backpackable": true
   },
   {
-    "familyId": "barding_leather",
+    "familyId": "leather_barding",
     "kind": [
       "mount"
     ],
@@ -1360,7 +1360,7 @@
     "backpackable": true
   },
   {
-    "familyId": "barding_iron",
+    "familyId": "metal_barding",
     "kind": [
       "mount"
     ],
@@ -1376,7 +1376,7 @@
     "backpackable": true
   },
   {
-    "familyId": "charm_flying",
+    "familyId": "flying_charm",
     "kind": [
       "companion"
     ],
@@ -1392,7 +1392,7 @@
     "backpackable": true
   },
   {
-    "familyId": "charm_aquatic",
+    "familyId": "aquatic_charm",
     "kind": [
       "companion"
     ],
@@ -1408,7 +1408,7 @@
     "backpackable": true
   },
   {
-    "familyId": "charm_ghost",
+    "familyId": "ghost_charm",
     "kind": [
       "companion"
     ],
@@ -1424,7 +1424,7 @@
     "backpackable": true
   },
   {
-    "familyId": "charm_other",
+    "familyId": "other_charm",
     "kind": [
       "companion"
     ],
@@ -1859,7 +1859,7 @@
     "armorClass": 3
   },
   {
-    "familyId": "meteoric_iron_shield",
+    "familyId": "meteoric_shield",
     "kind": [
       "shield"
     ],
@@ -1959,7 +1959,7 @@
     "backpackable": true
   },
   {
-    "familyId": "axe_stone",
+    "familyId": "stone_axe",
     "kind": [
       "weapon"
     ],

@@ -213,7 +213,7 @@ blueprint without one).
 
 A few families in this diagram share a real-world name with something
 else on purpose, because they're genuinely different objects/roles:
-`axe_stone` (a weapon, the reclassified Stone Axe), the plain `axe` family
+`stone_axe` (a weapon, the reclassified Stone Axe), the plain `axe` family
 (a metal-and-wood Anvil-tier weapon), and `battle_axe` (its own heavier
 weapon line) are three distinct families that all happen to be "an axe."
 Don't assume a bare mention of "axe" in a request refers to any one of
@@ -308,7 +308,7 @@ separate, independently-satisfied requirements.
 (every edge is an AND). The established fix: relabel the single pulled-in
 tool-role node to `T1 id_a or id_b [or id_c]`, one node, one edge, styled
 like whatever category that item actually belongs to (a weapon-red
-`axe_stone`-based tag stays red even when used as a stand-in tool) - not a
+`stone_axe`-based tag stays red even when used as a stand-in tool) - not a
 new two-edges-plus-OR-label convention.
 
 **Rejected designs worth remembering**, from when this pattern was first

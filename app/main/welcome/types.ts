@@ -143,7 +143,7 @@ export interface SlotCharacterSummary {
       tier: number;
       count: number;
       readyAt: string;
-      /** Instance-tracked tools (e.g. axe_stone) currently borrowed for this craft - each moved to location:"crafting" for the duration and returned to `source` once it finishes. */
+      /** Instance-tracked tools (e.g. stone_axe) currently borrowed for this craft - each moved to location:"crafting" for the duration and returned to `source` once it finishes. */
       borrowedInstances?: { instanceId: string; source: string; slotRef: string[] }[];
     } | null;
   };

@@ -24,7 +24,7 @@
     "skin",
     "wood"
   ],
-  "blueprint_meteoric_iron_shield": [
+  "blueprint_meteoric_shield": [
     "crystal",
     "essence",
     "ore",
@@ -122,17 +122,17 @@
     "pigment",
     "wood"
   ],
-  "blueprint_meteoric_iron_head_armor": [
+  "blueprint_meteoric_head_armor": [
     "crystal",
     "essence",
     "ore"
   ],
-  "blueprint_meteoric_iron_chest_armor": [
+  "blueprint_meteoric_chest_armor": [
     "crystal",
     "essence",
     "ore"
   ],
-  "blueprint_meteoric_iron_leg_armor": [
+  "blueprint_meteoric_leg_armor": [
     "crystal",
     "essence",
     "ore"
@@ -329,13 +329,13 @@
     "hide",
     "skin"
   ],
-  "blueprint_barding_iron": [
+  "blueprint_metal_barding": [
     "fiber",
     "meat",
     "ore",
     "skin"
   ],
-  "blueprint_barding_leather": [
+  "blueprint_leather_barding": [
     "hide",
     "monster_part",
     "skin"

@@ -77,7 +77,7 @@
     ]
   },
   "companionCharms": {
-    "charm_flying": {
+    "flying_charm": {
       "companions": [
         "winged_companion"
       ],
@@ -87,7 +87,7 @@
         "hide"
       ]
     },
-    "charm_aquatic": {
+    "aquatic_charm": {
       "companions": [
         "aquatic_companion"
       ],
@@ -98,7 +98,7 @@
         "sand"
       ]
     },
-    "charm_ghost": {
+    "ghost_charm": {
       "companions": [
         "spirit_companion",
         "dark_companion"
@@ -109,7 +109,7 @@
         "bone"
       ]
     },
-    "charm_other": {
+    "other_charm": {
       "companions": [
         "critter_companion",
         "arcane_companion",

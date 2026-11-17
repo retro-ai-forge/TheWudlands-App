@@ -73,7 +73,7 @@
   },
   {
     "id": "blueprint_iron_shield_1",
-    "name": "Blueprint: Rusty Metal Shield",
+    "name": "Blueprint: Apprentice's Iron Shield",
     "familyId": "blueprint_iron_shield",
     "tier": 1
   },
@@ -180,39 +180,39 @@
     "tier": 6
   },
   {
-    "id": "blueprint_meteoric_iron_shield_1",
+    "id": "blueprint_meteoric_shield_1",
     "name": "Blueprint: Copper Meteoric Shield",
-    "familyId": "blueprint_meteoric_iron_shield",
+    "familyId": "blueprint_meteoric_shield",
     "tier": 1
   },
   {
-    "id": "blueprint_meteoric_iron_shield_2",
+    "id": "blueprint_meteoric_shield_2",
     "name": "Blueprint: Bronze Meteoric Shield",
-    "familyId": "blueprint_meteoric_iron_shield",
+    "familyId": "blueprint_meteoric_shield",
     "tier": 2
   },
   {
-    "id": "blueprint_meteoric_iron_shield_3",
+    "id": "blueprint_meteoric_shield_3",
     "name": "Blueprint: Iron Meteoric Shield",
-    "familyId": "blueprint_meteoric_iron_shield",
+    "familyId": "blueprint_meteoric_shield",
     "tier": 3
   },
   {
-    "id": "blueprint_meteoric_iron_shield_4",
+    "id": "blueprint_meteoric_shield_4",
     "name": "Blueprint: Silver Meteoric Shield",
-    "familyId": "blueprint_meteoric_iron_shield",
+    "familyId": "blueprint_meteoric_shield",
     "tier": 4
   },
   {
-    "id": "blueprint_meteoric_iron_shield_5",
+    "id": "blueprint_meteoric_shield_5",
     "name": "Blueprint: Gold Meteoric Shield",
-    "familyId": "blueprint_meteoric_iron_shield",
+    "familyId": "blueprint_meteoric_shield",
     "tier": 5
   },
   {
-    "id": "blueprint_meteoric_iron_shield_6",
+    "id": "blueprint_meteoric_shield_6",
     "name": "Blueprint: Star Metal Meteoric Shield",
-    "familyId": "blueprint_meteoric_iron_shield",
+    "familyId": "blueprint_meteoric_shield",
     "tier": 6
   },
   {
@@ -900,111 +900,111 @@
     "tier": 6
   },
   {
-    "id": "blueprint_meteoric_iron_head_armor_1",
+    "id": "blueprint_meteoric_head_armor_1",
     "name": "Blueprint: Copper Meteoric Helmet",
-    "familyId": "blueprint_meteoric_iron_head_armor",
+    "familyId": "blueprint_meteoric_head_armor",
     "tier": 1
   },
   {
-    "id": "blueprint_meteoric_iron_head_armor_2",
+    "id": "blueprint_meteoric_head_armor_2",
     "name": "Blueprint: Bronze Meteoric Helmet",
-    "familyId": "blueprint_meteoric_iron_head_armor",
+    "familyId": "blueprint_meteoric_head_armor",
     "tier": 2
   },
   {
-    "id": "blueprint_meteoric_iron_head_armor_3",
+    "id": "blueprint_meteoric_head_armor_3",
     "name": "Blueprint: Iron Meteoric Helmet",
-    "familyId": "blueprint_meteoric_iron_head_armor",
+    "familyId": "blueprint_meteoric_head_armor",
     "tier": 3
   },
   {
-    "id": "blueprint_meteoric_iron_head_armor_4",
+    "id": "blueprint_meteoric_head_armor_4",
     "name": "Blueprint: Silver Meteoric Helmet",
-    "familyId": "blueprint_meteoric_iron_head_armor",
+    "familyId": "blueprint_meteoric_head_armor",
     "tier": 4
   },
   {
-    "id": "blueprint_meteoric_iron_head_armor_5",
+    "id": "blueprint_meteoric_head_armor_5",
     "name": "Blueprint: Gold Meteoric Helmet",
-    "familyId": "blueprint_meteoric_iron_head_armor",
+    "familyId": "blueprint_meteoric_head_armor",
     "tier": 5
   },
   {
-    "id": "blueprint_meteoric_iron_head_armor_6",
+    "id": "blueprint_meteoric_head_armor_6",
     "name": "Blueprint: Star Metal Meteoric Helmet",
-    "familyId": "blueprint_meteoric_iron_head_armor",
+    "familyId": "blueprint_meteoric_head_armor",
     "tier": 6
   },
   {
-    "id": "blueprint_meteoric_iron_chest_armor_1",
+    "id": "blueprint_meteoric_chest_armor_1",
     "name": "Blueprint: Copper Meteoric Breastplate",
-    "familyId": "blueprint_meteoric_iron_chest_armor",
+    "familyId": "blueprint_meteoric_chest_armor",
     "tier": 1
   },
   {
-    "id": "blueprint_meteoric_iron_chest_armor_2",
+    "id": "blueprint_meteoric_chest_armor_2",
     "name": "Blueprint: Bronze Meteoric Breastplate",
-    "familyId": "blueprint_meteoric_iron_chest_armor",
+    "familyId": "blueprint_meteoric_chest_armor",
     "tier": 2
   },
   {
-    "id": "blueprint_meteoric_iron_chest_armor_3",
+    "id": "blueprint_meteoric_chest_armor_3",
     "name": "Blueprint: Iron Meteoric Breastplate",
-    "familyId": "blueprint_meteoric_iron_chest_armor",
+    "familyId": "blueprint_meteoric_chest_armor",
     "tier": 3
   },
   {
-    "id": "blueprint_meteoric_iron_chest_armor_4",
+    "id": "blueprint_meteoric_chest_armor_4",
     "name": "Blueprint: Silver Meteoric Breastplate",
-    "familyId": "blueprint_meteoric_iron_chest_armor",
+    "familyId": "blueprint_meteoric_chest_armor",
     "tier": 4
   },
   {
-    "id": "blueprint_meteoric_iron_chest_armor_5",
+    "id": "blueprint_meteoric_chest_armor_5",
     "name": "Blueprint: Gold Meteoric Breastplate",
-    "familyId": "blueprint_meteoric_iron_chest_armor",
+    "familyId": "blueprint_meteoric_chest_armor",
     "tier": 5
   },
   {
-    "id": "blueprint_meteoric_iron_chest_armor_6",
+    "id": "blueprint_meteoric_chest_armor_6",
     "name": "Blueprint: Star Metal Meteoric Breastplate",
-    "familyId": "blueprint_meteoric_iron_chest_armor",
+    "familyId": "blueprint_meteoric_chest_armor",
     "tier": 6
   },
   {
-    "id": "blueprint_meteoric_iron_leg_armor_1",
+    "id": "blueprint_meteoric_leg_armor_1",
     "name": "Blueprint: Copper Meteoric Greaves",
-    "familyId": "blueprint_meteoric_iron_leg_armor",
+    "familyId": "blueprint_meteoric_leg_armor",
     "tier": 1
   },
   {
-    "id": "blueprint_meteoric_iron_leg_armor_2",
+    "id": "blueprint_meteoric_leg_armor_2",
     "name": "Blueprint: Bronze Meteoric Greaves",
-    "familyId": "blueprint_meteoric_iron_leg_armor",
+    "familyId": "blueprint_meteoric_leg_armor",
     "tier": 2
   },
   {
-    "id": "blueprint_meteoric_iron_leg_armor_3",
+    "id": "blueprint_meteoric_leg_armor_3",
     "name": "Blueprint: Iron Meteoric Greaves",
-    "familyId": "blueprint_meteoric_iron_leg_armor",
+    "familyId": "blueprint_meteoric_leg_armor",
     "tier": 3
   },
   {
-    "id": "blueprint_meteoric_iron_leg_armor_4",
+    "id": "blueprint_meteoric_leg_armor_4",
     "name": "Blueprint: Silver Meteoric Greaves",
-    "familyId": "blueprint_meteoric_iron_leg_armor",
+    "familyId": "blueprint_meteoric_leg_armor",
     "tier": 4
   },
   {
-    "id": "blueprint_meteoric_iron_leg_armor_5",
+    "id": "blueprint_meteoric_leg_armor_5",
     "name": "Blueprint: Gold Meteoric Greaves",
-    "familyId": "blueprint_meteoric_iron_leg_armor",
+    "familyId": "blueprint_meteoric_leg_armor",
     "tier": 5
   },
   {
-    "id": "blueprint_meteoric_iron_leg_armor_6",
+    "id": "blueprint_meteoric_leg_armor_6",
     "name": "Blueprint: Star Metal Meteoric Greaves",
-    "familyId": "blueprint_meteoric_iron_leg_armor",
+    "familyId": "blueprint_meteoric_leg_armor",
     "tier": 6
   },
   {
@@ -2484,75 +2484,75 @@
     "tier": 6
   },
   {
-    "id": "blueprint_barding_iron_1",
+    "id": "blueprint_metal_barding_1",
     "name": "Blueprint: Copper Barding",
-    "familyId": "blueprint_barding_iron",
+    "familyId": "blueprint_metal_barding",
     "tier": 1
   },
   {
-    "id": "blueprint_barding_iron_2",
+    "id": "blueprint_metal_barding_2",
     "name": "Blueprint: Bronze Barding",
-    "familyId": "blueprint_barding_iron",
+    "familyId": "blueprint_metal_barding",
     "tier": 2
   },
   {
-    "id": "blueprint_barding_iron_3",
+    "id": "blueprint_metal_barding_3",
     "name": "Blueprint: Iron Barding",
-    "familyId": "blueprint_barding_iron",
+    "familyId": "blueprint_metal_barding",
     "tier": 3
   },
   {
-    "id": "blueprint_barding_iron_4",
+    "id": "blueprint_metal_barding_4",
     "name": "Blueprint: Silver Barding",
-    "familyId": "blueprint_barding_iron",
+    "familyId": "blueprint_metal_barding",
     "tier": 4
   },
   {
-    "id": "blueprint_barding_iron_5",
+    "id": "blueprint_metal_barding_5",
     "name": "Blueprint: Gold Barding",
-    "familyId": "blueprint_barding_iron",
+    "familyId": "blueprint_metal_barding",
     "tier": 5
   },
   {
-    "id": "blueprint_barding_iron_6",
+    "id": "blueprint_metal_barding_6",
     "name": "Blueprint: Star Metal Barding",
-    "familyId": "blueprint_barding_iron",
+    "familyId": "blueprint_metal_barding",
     "tier": 6
   },
   {
-    "id": "blueprint_barding_leather_1",
+    "id": "blueprint_leather_barding_1",
     "name": "Blueprint: Leather Barding",
-    "familyId": "blueprint_barding_leather",
+    "familyId": "blueprint_leather_barding",
     "tier": 1
   },
   {
-    "id": "blueprint_barding_leather_2",
+    "id": "blueprint_leather_barding_2",
     "name": "Blueprint: Studded Barding",
-    "familyId": "blueprint_barding_leather",
+    "familyId": "blueprint_leather_barding",
     "tier": 2
   },
   {
-    "id": "blueprint_barding_leather_3",
+    "id": "blueprint_leather_barding_3",
     "name": "Blueprint: Hardened Barding",
-    "familyId": "blueprint_barding_leather",
+    "familyId": "blueprint_leather_barding",
     "tier": 3
   },
   {
-    "id": "blueprint_barding_leather_4",
+    "id": "blueprint_leather_barding_4",
     "name": "Blueprint: Scale Barding",
-    "familyId": "blueprint_barding_leather",
+    "familyId": "blueprint_leather_barding",
     "tier": 4
   },
   {
-    "id": "blueprint_barding_leather_5",
+    "id": "blueprint_leather_barding_5",
     "name": "Blueprint: Dragonhide Barding",
-    "familyId": "blueprint_barding_leather",
+    "familyId": "blueprint_leather_barding",
     "tier": 5
   },
   {
-    "id": "blueprint_barding_leather_6",
+    "id": "blueprint_leather_barding_6",
     "name": "Blueprint: Celestial Hide Barding",
-    "familyId": "blueprint_barding_leather",
+    "familyId": "blueprint_leather_barding",
     "tier": 6
   },
   {

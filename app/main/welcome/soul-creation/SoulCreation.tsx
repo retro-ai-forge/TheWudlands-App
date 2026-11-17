@@ -21,6 +21,7 @@ import {
   LIFE_ENERGY_MIN_AGE_MONTHS,
   LIFE_ENERGY_MAX_AGE_MONTHS,
 } from "@/app/lib/ageScaling";
+import { NAME_MAX_LENGTH, fullNameProblem, nameProblem, normalizeName } from "@/app/lib/characterNames";
 import SoulBulb from "./SoulBulb";
 import { useHeaderVisibility } from "@/app/main/HeaderVisibilityProvider";
 import { PortraitEditor, type PortraitArea } from "../PortraitEditor";
@@ -861,8 +862,22 @@ export function SoulCreation({
   const isProfession1Missing = activeProfessionCount >= 1 && profession1 === "";
   const isProfession2Missing = activeProfessionCount >= 2 && profession2 === "";
   const isProfession3Missing = activeProfessionCount >= 3 && profession3 === "";
-  const isFirstNameMissing = firstName.trim() === "";
-  const isLastNameMissing = lastName.trim() === "";
+  // A name the rules refuse (app/lib/characterNames.ts: Latin letters with a
+  // single space, hyphen or apostrophe between them, at most two accents, one
+  // hyphen and one apostrophe in the whole name, no reserved word) counts as
+  // missing too; once something has been typed, the reason is shown under the
+  // name fields. A pair refused only together ("first surname") marks both.
+  const firstNameProblem = nameProblem(firstName, "First name");
+  const lastNameProblem = nameProblem(lastName, "Surname");
+  const pairProblem =
+    firstNameProblem === null && lastNameProblem === null ? fullNameProblem(firstName, lastName) : null;
+  const isFirstNameMissing = firstNameProblem !== null || pairProblem !== null;
+  const isLastNameMissing = lastNameProblem !== null || pairProblem !== null;
+  const nameHint =
+    (firstName.trim() !== "" && firstNameProblem) ||
+    (lastName.trim() !== "" && lastNameProblem) ||
+    pairProblem ||
+    null;
 
   // Only compares against slots that are currently active/unlocked — a
   // stale value left in a since-deactivated slot (e.g. age dragged back
@@ -940,8 +955,8 @@ export function SoulCreation({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           slotNumber,
-          firstName,
-          lastName,
+          firstName: normalizeName(firstName),
+          lastName: normalizeName(lastName),
           age_month: char_age,
           gender,
           raceGroup,
@@ -965,7 +980,16 @@ export function SoulCreation({
           selectedBlueprints: Object.values(blueprintSelections).filter(Boolean),
         }),
       });
-      if (!res.ok) throw new Error("Failed to save character");
+      if (!res.ok) {
+        // A refusal the backend explains (e.g. a name it doesn't accept) is
+        // shown as-is; anything else gets the generic message below.
+        const detail = res.status === 400 ? (await res.json().catch(() => null))?.detail : null;
+        if (typeof detail === "string") {
+          setSubmitError(detail);
+          return;
+        }
+        throw new Error("Failed to save character");
+      }
       onExit();
     } catch {
       setSubmitError("Could not save your character. Please try again.");
@@ -1158,6 +1182,7 @@ export function SoulCreation({
                   className={`${styles.textInput} ${missingFields.has("firstName") ? styles.fieldMissing : ""}`}
                   type="text"
                   placeholder="First name"
+                  maxLength={NAME_MAX_LENGTH}
                   value={firstName}
                   onChange={(e) => setFirstName(e.target.value)}
                 />
@@ -1165,10 +1190,12 @@ export function SoulCreation({
                   className={`${styles.textInput} ${missingFields.has("lastName") ? styles.fieldMissing : ""}`}
                   type="text"
                   placeholder="Surname"
+                  maxLength={NAME_MAX_LENGTH}
                   value={lastName}
                   onChange={(e) => setLastName(e.target.value)}
                 />
               </div>
+              {nameHint && <p className={styles.nameHint}>{nameHint}</p>}
             </>
           ) : page === 2 ? (
             <div className={styles.attrPage} onContextMenu={(e) => e.preventDefault()}>

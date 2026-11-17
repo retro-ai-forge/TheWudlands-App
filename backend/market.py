@@ -44,6 +44,7 @@ OFFER_DAYS: int = int(RULES["offerDays"])
 MAX_OPEN_OFFERS: int = int(RULES["maxOpenOffers"])
 MAX_ASK_QTY: int = int(RULES["maxAskQty"])
 PAGE_SIZE: int = int(RULES["pageSize"])
+PAGES_AHEAD: int = int(RULES["pagesAhead"])
 SWEEP_BATCH: int = int(RULES["sweepBatch"])
 
 OPEN, TAKEN, CANCELLED, EXPIRED = "open", "taken", "cancelled", "expired"
@@ -391,6 +392,16 @@ def _cursor(offer: dict) -> str:
     return f"{_aware(offer['createdAt']).isoformat()}|{offer['_id']}"
 
 
+def _after_clause(cursor: str) -> Optional[dict]:
+    """Matches the offers listed after `cursor`; None if it can't be read."""
+    stamp, _, last_id = cursor.partition("|")
+    try:
+        at = datetime.fromisoformat(stamp)
+    except ValueError:
+        return None
+    return {"$or": [{"createdAt": {"$lt": at}}, {"createdAt": at, "_id": {"$lt": last_id}}]}
+
+
 async def list_offers(
     address: str,
     family_id: Optional[str] = None,
@@ -400,8 +411,9 @@ async def list_offers(
 ) -> dict:
     """Other players' open offers, newest first, `limit` per page. `family_id`
     keeps offers giving or asking that family; `tiers` keeps offers giving
-    goods of one of those tiers; `after` is the `next` cursor of the page
-    before. Returns {offers, next}."""
+    goods of one of those tiers; `after` is a cursor from an earlier answer.
+    Returns {offers, next, pages}: `pages` holds the cursors of the following
+    pages that exist (at most PAGES_AHEAD), `next` is the first of them."""
     db = get_database()
     clauses: List[dict] = [
         {"status": OPEN},
@@ -412,20 +424,25 @@ async def list_offers(
         clauses.append({"$or": [{"giveFamilies": family_id}, {"askFamilies": family_id}]})
     if tiers:
         clauses.append({"giveTiers": {"$in": list(tiers)}})
-    if after:
-        stamp, _, last_id = after.partition("|")
-        try:
-            at = datetime.fromisoformat(stamp)
-        except ValueError:
-            at = None
-        if at is not None:
-            clauses.append({"$or": [{"createdAt": {"$lt": at}}, {"createdAt": at, "_id": {"$lt": last_id}}]})
-    cursor = db.market_offers.find({"$and": clauses}).sort([("createdAt", -1), ("_id", -1)]).limit(limit + 1)
-    docs = [doc async for doc in cursor]
-    page = docs[:limit]
+    order = [("createdAt", -1), ("_id", -1)]
+    start = _after_clause(after) if after else None
+    query = {"$and": clauses + ([start] if start else [])}
+    page = [doc async for doc in db.market_offers.find(query).sort(order).limit(limit)]
+
+    # Only the positions of the offers behind this page, to link the next pages.
+    pages: List[str] = []
+    if page and len(page) == limit:
+        behind_query = {"$and": clauses + [_after_clause(_cursor(page[-1]))]}
+        wanted = (PAGES_AHEAD - 1) * limit + 1
+        cursor = db.market_offers.find(behind_query, {"createdAt": 1}).sort(order).limit(wanted)
+        behind = [doc async for doc in cursor]
+        # A page starts after the last offer of the one before it.
+        ends = [page[-1]] + [behind[i * limit - 1] for i in range(1, PAGES_AHEAD) if i * limit <= len(behind)]
+        pages = [_cursor(end) for i, end in enumerate(ends) if len(behind) > i * limit]
     return {
         "offers": [public_offer(d, address) for d in page],
-        "next": _cursor(page[-1]) if len(docs) > limit and page else None,
+        "next": pages[0] if pages else None,
+        "pages": pages,
     }
 
 

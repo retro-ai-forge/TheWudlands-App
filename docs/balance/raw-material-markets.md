@@ -133,7 +133,7 @@ Same for every tier: the output tier follows the ingredients, the amounts don't 
 | club | 5 | wood 5 |
 | sharpened_stick | 6 | meat 3, bone 2, wood 1 |
 | wand | 7 | wood 4, crystal 3 |
-| axe_stone | 8 | wood 3, meat 3, stone 2 |
+| stone_axe | 8 | wood 3, meat 3, stone 2 |
 | wrench | 20 | ore 20 |
 | magic_staff | 22 | wood 16, crystal 6 |
 | quiver | 22 | wood 16, ore 5, skin 1 |
@@ -163,7 +163,7 @@ Same for every tier: the output tier follows the ingredients, the amounts don't 
 | wooden_shield | 28 | wood 16, skin 12 |
 | iron_shield | 162 | ore 125, wood 37 |
 | reinforced_wooden_shield | 170 | ore 125, wood 45 |
-| meteoric_iron_shield | 215 | crystal 86, ore 75, essence 54 |
+| meteoric_shield | 215 | crystal 86, ore 75, essence 54 |
 | darksteel_shield | 245 | ore 200, wood 33, clockwork 12 |
 | chitin_shield | 507 | pigment 240, herbs 144, skin 72, wood 36, monster_part 15 |
 | ebony_shield | 530 | pigment 240, herbs 144, wood 96, bone 50 |
@@ -219,9 +219,9 @@ Same for every tier: the output tier follows the ingredients, the amounts don't 
 | bridle | 23 | fiber 13, hide 8, meat 2 |
 | cart | 32 | wood 32 |
 | saddle | 37 | skin 24, hide 8, wood 3, bone 2 |
-| barding_iron | 38 | ore 20, skin 12, meat 4, fiber 2 |
+| metal_barding | 38 | ore 20, skin 12, meat 4, fiber 2 |
 | saddlepack | 44 | skin 18, fiber 18, hide 8 |
-| barding_leather | 58 | skin 36, hide 12, monster_part 10 |
+| leather_barding | 58 | skin 36, hide 12, monster_part 10 |
 | **Food** (fresh: free, eaten on collect; preserved and rations: blueprint - see backend/data/food-rules.json) | | |
 | cooked_fish | 2 | fish 2 |
 | grilled_fish_skewer | 3 | fish 2, wood 1 |

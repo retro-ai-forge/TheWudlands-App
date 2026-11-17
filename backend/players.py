@@ -1077,7 +1077,7 @@ def _resolve_tool_for_craft(
     For a recipe's tool alternatives, find one `character` can use.
 
     An instance-tracked tool-weapon (a needsItemDefinition:true family like
-    axe_stone that doubles as a tool) always gets physically MOVED onto
+    stone_axe that doubles as a tool) always gets physically MOVED onto
     Character.items with location:"crafting" for the duration - visibly
     listed in the character's own crafting section, and gone from wherever
     it was (never in the player vault, never sitting in the character's own
@@ -1127,7 +1127,7 @@ def _resolve_tool_for_craft(
 
     # Tried in the order `tool_families` lists them - craft-recipes.json's
     # own multi-option "tool" lists (e.g. fishing_pole's
-    # ["axe_stone", "dagger", "axe"]) are curated cheapest-full-raw-chain-
+    # ["stone_axe", "dagger", "axe"]) are curated cheapest-full-raw-chain-
     # cost-first, so a plain first-match walk already reaches for the
     # cheap Stone Axe before the moderately-priced Dagger before the
     # expensive Axe. Keep new multi-option "tool" lists in that same
@@ -2884,7 +2884,7 @@ async def _finish_craft(address: str, character_id: str) -> Optional[Player]:
     Stats page.
 
     Any instance-tracked tool/weapon borrowed for this craft (see
-    start_craft's borrowedInstances - axe_stone/axe/dagger doubling as a
+    start_craft's borrowedInstances - stone_axe/axe/dagger doubling as a
     recipe's "tool" or an ingredient's unconsumed "final" alternative) loses
     its recorded "wear" - 0 or 1 condition level (backend.item_condition),
     rolled when the craft started - when released back here. A borrowed

@@ -59,7 +59,7 @@ def _migration():
 def test_migration_keeps_the_chest_piece_of_an_old_set_blueprint():
     split = _migration().split_armor_blueprints
     assert split(["blueprint_iron_2", "blueprint_kiln_1", "blueprint_meteoric_iron_6"]) == [
-        "blueprint_iron_chest_armor_2", "blueprint_kiln_1", "blueprint_meteoric_iron_chest_armor_6"]
+        "blueprint_iron_chest_armor_2", "blueprint_kiln_1", "blueprint_meteoric_chest_armor_6"]
     # Shields and already split ids are left alone; running twice changes nothing.
     already = ["blueprint_iron_shield_1", "blueprint_iron_head_armor_1", "blueprint_iron_chest_armor_1"]
     assert split(already) == already

@@ -693,12 +693,12 @@ function readIdListFromQuery(param) {
 }
 let ownedTools = readIdListFromQuery("tools");
 let ownedBlueprints = readIdListFromQuery("blueprints");
-// Instance-tracked tools (e.g. axe_stone) sitting in the player's shared
+// Instance-tracked tools (e.g. stone_axe) sitting in the player's shared
 // vault - usable right where they sit: start_craft moves the specific
 // instance onto the character (location:"crafting") for the crafting
 // duration and back afterward, no backpack-capacity check. This applies
 // uniformly to a recipe's own "tool" field AND an ingredient's
-// "alternatives" slot (e.g. sharpened_stick's axe_stone-or-dagger choice,
+// "alternatives" slot (e.g. sharpened_stick's stone_axe-or-dagger choice,
 // carcass's bone_blade-or-dagger choice) - both go through
 // _resolve_tool_for_craft on the backend (the ingredient path via
 // _resolve_ingredient_option), so every tool-role ownership check on this
@@ -722,7 +722,7 @@ function ownsFamily(ownedSet, famId, requiredTier) {
 }
 
 // A recipe's "tool" field is either a single familyId or an array of
-// alternatives (any one satisfies the requirement, e.g. axe_stone OR
+// alternatives (any one satisfies the requirement, e.g. stone_axe OR
 // dagger) - this normalizes either shape to an array everywhere it's read.
 function toolIds(tool) {
   if (!tool) return [];
@@ -1368,7 +1368,7 @@ const catOrder = ["raw", "blueprint", "armor", "shield", "weapon", "food", "poti
 // True if `recipeId`'s recipe consumes/uses `famId` anywhere - as a plain
 // ingredient, as one option inside an ingredient's "alternatives" slot
 // (flattenIngredients covers both), or as its tool (including as one
-// option in a tool-alternatives list like axe_stone/dagger).
+// option in a tool-alternatives list like stone_axe/dagger).
 function recipeUses(recipeId, famId) {
   const recipe = recipes[recipeId];
   if (!recipe) return false;
@@ -1738,7 +1738,7 @@ function buildInteractiveNode(famId, qty, category, tier, isRoot, units = qty) {
     row.appendChild(toolTag);
   }
   // An ingredient slot where every option is unconsumed (e.g. sharpened_stick's
-  // axe_stone-or-dagger) means "own one of these", exactly the role a "tool"
+  // stone_axe-or-dagger) means "own one of these", exactly the role a "tool"
   // field plays - show it the same way, on this item's own row, instead of as
   // a separate ingredient node in the tree below.
   if (recipe && recipe.ingredients) {
@@ -1818,7 +1818,7 @@ function buildInteractiveNode(famId, qty, category, tier, isRoot, units = qty) {
           }
           const childCat = ing.category === "final_unresolved" ? "final" : ing.category;
           const child = buildInteractiveNode(ing.familyId, ing.qty, childCat, tier, false, ing.qty * units);
-          // A tool being referenced as an ingredient (e.g. the axe_stone a
+          // A tool being referenced as an ingredient (e.g. the stone_axe a
           // sharpened stick needs on hand) is understood to never be
           // consumed, same as blueprints - no need to say so explicitly.
           const ingFam = families[ing.familyId];
@@ -1905,7 +1905,7 @@ function computeDirectMaterials(famId, tier) {
       materials[ing.familyId] = (materials[ing.familyId] || 0) + ing.qty;
     }
     // "final"/"final_unresolved" (an unconsumed tool-role ingredient like
-    // axe_stone, or another crafted item) isn't a "material" in this
+    // stone_axe, or another crafted item) isn't a "material" in this
     // sense - already covered by Tools Used / Other Items Required.
   }
   return { materials, hasProcessed };
