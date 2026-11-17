@@ -516,7 +516,7 @@ gcloud auth print-access-token | docker login -u oauth2accesstoken --password-st
 rav run gcp_full
 
 # or step by step 
-# build stuff
+# build stuff 
 npm run build
 # docker
 rav run gcp_push
