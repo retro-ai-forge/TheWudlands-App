@@ -33,6 +33,12 @@ Every character has a first name and a surname of up to 24 characters each. Use 
 
 Some words can't be part of a name: the story engine's command words (such as set, run, goto, link or print) and words that would make a character look like the game or its staff (such as Wudlands, admin, moderator or support). This also counts when the word is split up, as in "R un".
 
+## Age, Body and Soul
+
+Where you place the marker on the creation page sets your character's age and how its points are split between **Body** (Might, Agility, Endurance, Precision) and **Soul** (Will, Insight, Lore, Presence). The age decides how many points Body and Soul share: 33 for the youngest characters, 104 at middle age and 90 for the oldest. Each group holds between 4 and 100 points, and every attribute gets at least 1.
+
+The age also decides how many professions a character has learned: one at first, a second from 51 years and a third from 61 (in human years; other races show their own age). Two professions can't come from the same group. The game checks all of this again when the character is saved.
+
 ## Class & Profession Level Progression
 
 Character classes and crafting professions level from 1 to 30, using a shared XP curve that starts cheap and escalates steadily rather than exploding: each level costs roughly 1.2× the previous one's XP, so early levels come fast while level 30 asks for real investment. The table below is the reference progression chart — `Total XP` is the cumulative XP needed to reach that level, `Diff` is how much more that level costs than the one before it.

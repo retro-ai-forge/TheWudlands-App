@@ -1,0 +1,56 @@
+{
+  "_comment": "What the Soul Creation wizard can hand out, checked again by backend/character_creation.py when a character is saved. The wizard reads the age, budget and profession numbers from here (app/main/welcome/soul-creation/SoulCreation.tsx, app/lib/ageScaling.ts); genders, races and birthsigns mirror app/lib/characterOptions.ts (compared by tests/test_character_creation.py). Ages are human-equivalent months (races only scale the displayed age).",
+  "ageMonths": {
+    "_comment": "23 to 63 human years",
+    "min": 276,
+    "max": 756
+  },
+  "attributeMin": 1,
+  "group": {
+    "_comment": "Body (Might, Agility, Endurance, Precision) and Soul (Will, Insight, Lore, Presence) each hold this many points; the wizard's split runs from min/max to max/min",
+    "min": 4,
+    "max": 100
+  },
+  "bodySoulSum": {
+    "_comment": "How many points Body and Soul share, by age: atOldest at the oldest age, peak at peakAt (0 = oldest, 1 = youngest), atYoungest at the youngest, linear in between",
+    "atOldest": 90,
+    "peak": 104,
+    "atYoungest": 33,
+    "peakAt": 0.5
+  },
+  "professions": {
+    "_comment": "One profession at first, a second from 51 human years, a third from 61; the slots fill in order and no two professions come from the same group",
+    "secondFromMonths": 612,
+    "thirdFromMonths": 732
+  },
+  "genders": ["m", "d", "f"],
+  "races": {
+    "_comment": "race -> its group (the raceGroup a character is saved with)",
+    "human": "Common",
+    "elf": "Common",
+    "dwarf": "Common",
+    "halfling": "Common",
+    "gnome": "Common",
+    "minotaur": "Common",
+    "tiefling": "Mystical",
+    "dragonborn": "Mystical",
+    "lizardfolk": "Mystical",
+    "beastfolk": "Mystical",
+    "halfelf": "Mixed",
+    "halforc": "Mixed",
+    "elder": "Mixed",
+    "ogre": "Giants",
+    "goliath": "Giants",
+    "giant": "Giants"
+  },
+  "birthsigns": [
+    "fatecoil_mark",
+    "grit_stitch_brand",
+    "hearthfinder_sigil",
+    "far_sight_rune",
+    "courtseers_eye",
+    "legend_crest",
+    "glassvein_birthmark",
+    "fortunes_thistle"
+  ]
+}

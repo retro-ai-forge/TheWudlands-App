@@ -9,6 +9,7 @@
 // Guide to Monsters, Mordenkainen's/Monsters of the Multiverse); races not
 // covered by official lifespan tables (Beastfolk, Elder, Ogre, Giant) use an
 // in-world estimate consistent with their lore description in RACES.
+import creationRules from "../../backend/data/character-creation-rules.json";
 
 const HUMAN_LIFESPAN_YEARS = 90;
 
@@ -51,8 +52,9 @@ export function getDisplayedAge(humanAgeMonths: number, raceId: string): number 
 // Linear between the two extremes; ages outside 23–58 clamp to the nearest end.
 const LIFE_ENERGY_MAX_FILL = 100; // at the youngest end, age 23 (276 months)
 const LIFE_ENERGY_MIN_FILL = 1; // at the oldest end, age 58 (696 months)
-export const LIFE_ENERGY_MIN_AGE_MONTHS = 23 * 12;
-export const LIFE_ENERGY_MAX_AGE_MONTHS = 63 * 12;
+// The creation age range, shared with the server's check (backend/character_budget.py).
+export const LIFE_ENERGY_MIN_AGE_MONTHS: number = creationRules.ageMonths.min;
+export const LIFE_ENERGY_MAX_AGE_MONTHS: number = creationRules.ageMonths.max;
 
 export function getLifeEnergyFill(humanAgeMonths: number): number {
   const t =

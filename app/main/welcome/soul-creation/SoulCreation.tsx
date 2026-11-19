@@ -22,6 +22,7 @@ import {
   LIFE_ENERGY_MAX_AGE_MONTHS,
 } from "@/app/lib/ageScaling";
 import { NAME_MAX_LENGTH, fullNameProblem, nameProblem, normalizeName } from "@/app/lib/characterNames";
+import creationRules from "@/backend/data/character-creation-rules.json";
 import SoulBulb from "./SoulBulb";
 import { useHeaderVisibility } from "@/app/main/HeaderVisibilityProvider";
 import { PortraitEditor, type PortraitArea } from "../PortraitEditor";
@@ -342,43 +343,6 @@ export function SoulCreation({
     );
   }, [selectedResources, playerResourceBalances, blueprintSelections, playerTools, recipeViewerLoaded]);
 
-  useEffect(() => {
-    if (page !== 6) return;
-    let cancelled = false;
-    setTrappingsLoaded(false);
-    const params = new URLSearchParams({
-      profession1: profession1 || "none",
-      profession2: profession2 || "none",
-      profession3: profession3 || "none",
-    });
-    fetch(`/api/auth/me/trappings-options?${params.toString()}`, { credentials: "include" })
-      .then((res) => (res.ok ? res.json() : EMPTY_TRAPPINGS_OPTIONS))
-      .then((data: TrappingsOptions) => {
-        if (!cancelled) {
-          const opts = data ?? EMPTY_TRAPPINGS_OPTIONS;
-          setTrappingsOptions(opts);
-          setSelectedResources({});
-          setBlueprintSelections({});
-          setStarterKit(null);
-          setShufflesRemaining(3);
-          setTrappingsLoaded(true);
-        }
-      })
-      .catch(() => {
-        if (!cancelled) {
-          setTrappingsOptions(EMPTY_TRAPPINGS_OPTIONS);
-          setSelectedResources({});
-          setBlueprintSelections({});
-          setStarterKit(null);
-          setShufflesRemaining(3);
-          setTrappingsLoaded(true);
-        }
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, [page, profession1, profession2, profession3]);
-
   // Page 4 (Birthsign) — a single required pick; null blocks Continue.
   const [birthsign, setBirthsign] = useState<BirthsignId | null>(null);
   // Which single tile is currently showing its text-revealing backside —
@@ -636,18 +600,20 @@ export function SoulCreation({
     return 0.5 - 0.5 * Math.max(0, Math.min(1, (-signed / mostLeftDist) * BODY_SOUL_AXIS_BOOST));
   }
 
-  const BODY_SOUL_RATIO_MAX = 100; // dominant attribute, at either end of the axis
-  const BODY_SOUL_RATIO_MIN = 4; // yielding attribute, at either end of the axis
+  // The budget numbers live in backend/data/character-creation-rules.json,
+  // which the server's check (backend/character_budget.py) reads too.
+  const BODY_SOUL_RATIO_MAX: number = creationRules.group.max; // dominant attribute, at either end of the axis
+  const BODY_SOUL_RATIO_MIN: number = creationRules.group.min; // yielding attribute, at either end of the axis
 
   // The total of Body + Soul isn't fixed — it peaks near mid-age (104, the
   // raw split's own natural maximum — the true highest the two can ever add
   // up to, reached near the Body/Soul axis itself), tapers to 90 at the
   // oldest end, and drops much further to 33 at the youngest end. Exposed as
   // its own value below (bodySoulSum) rather than buried in the split.
-  const BODY_SOUL_SUM_AT_OLDEST = 90;
-  const BODY_SOUL_SUM_PEAK = 104;
-  const BODY_SOUL_SUM_AT_YOUNGEST = 33;
-  const BODY_SOUL_SUM_PEAK_AGE_T = 0.5; // where along the age diagonal the peak sits
+  const BODY_SOUL_SUM_AT_OLDEST: number = creationRules.bodySoulSum.atOldest;
+  const BODY_SOUL_SUM_PEAK: number = creationRules.bodySoulSum.peak;
+  const BODY_SOUL_SUM_AT_YOUNGEST: number = creationRules.bodySoulSum.atYoungest;
+  const BODY_SOUL_SUM_PEAK_AGE_T: number = creationRules.bodySoulSum.peakAt; // where along the age diagonal the peak sits
 
   function ageTToBodySoulSum(ageT: number): number {
     // Clamped defensively — the interpolation below is bounded by construction,
@@ -757,11 +723,61 @@ export function SoulCreation({
   // Canonical age, always tracked in human-equivalent MONTHS (never years) so
   // race-based display scaling stays precise — driven by the joystick's
   // position on the age diagonal once activated. Drives how many profession
-  // slots are unlocked: under 30 the character has only had time to learn
-  // one trade, 30–42 two, 43+ three.
+  // slots are unlocked: one trade at first, a second and a third from the
+  // ages in backend/data/character-creation-rules.json (51 and 61 years).
   const char_age = getCharAgeMonths();
-  const activeProfessionCount = char_age >= 61 * 12 ? 3 : char_age >= 51 * 12 ? 2 : 1;
+  const activeProfessionCount =
+    char_age >= creationRules.professions.thirdFromMonths
+      ? 3
+      : char_age >= creationRules.professions.secondFromMonths
+        ? 2
+        : 1;
   const displayedAge = getDisplayedAge(char_age, race);
+
+  // A profession picked in a slot the age has since locked again (age dragged
+  // back down) stays in state, so it's back if the age goes up again - but
+  // only unlocked slots are ever sent: the server refuses more professions
+  // than the age allows (backend/character_creation.py).
+  const sentProfession1 = profession1 || "none";
+  const sentProfession2 = (activeProfessionCount >= 2 && profession2) || "none";
+  const sentProfession3 = (activeProfessionCount >= 3 && profession3) || "none";
+
+  useEffect(() => {
+    if (page !== 6) return;
+    let cancelled = false;
+    setTrappingsLoaded(false);
+    const params = new URLSearchParams({
+      profession1: sentProfession1,
+      profession2: sentProfession2,
+      profession3: sentProfession3,
+    });
+    fetch(`/api/auth/me/trappings-options?${params.toString()}`, { credentials: "include" })
+      .then((res) => (res.ok ? res.json() : EMPTY_TRAPPINGS_OPTIONS))
+      .then((data: TrappingsOptions) => {
+        if (!cancelled) {
+          const opts = data ?? EMPTY_TRAPPINGS_OPTIONS;
+          setTrappingsOptions(opts);
+          setSelectedResources({});
+          setBlueprintSelections({});
+          setStarterKit(null);
+          setShufflesRemaining(3);
+          setTrappingsLoaded(true);
+        }
+      })
+      .catch(() => {
+        if (!cancelled) {
+          setTrappingsOptions(EMPTY_TRAPPINGS_OPTIONS);
+          setSelectedResources({});
+          setBlueprintSelections({});
+          setStarterKit(null);
+          setShufflesRemaining(3);
+          setTrappingsLoaded(true);
+        }
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [page, sentProfession1, sentProfession2, sentProfession3]);
 
   // Body/Soul share one reserve (bodySoulSum) — driven by the joystick's
   // position, see getBodySoul above.
@@ -961,9 +977,9 @@ export function SoulCreation({
           gender,
           raceGroup,
           race,
-          profession1: profession1 || "none",
-          profession2: profession2 || "none",
-          profession3: profession3 || "none",
+          profession1: sentProfession1,
+          profession2: sentProfession2,
+          profession3: sentProfession3,
           // An untouched portrait step leaves this blank - stored as a
           // deliberately unloadable placeholder rather than "", so the soul
           // slot's existing broken-image handling renders it as a "?"

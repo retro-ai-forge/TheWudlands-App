@@ -19,6 +19,26 @@ Everything in "Accepted forms" below has been tested in SugarCube 2.37.3, the st
 
 Not allowed anywhere: JavaScript, commands that aren't listed here, text input from players, references to the story engine's internals (such as `Config`, `State`, `Engine`, `setup`, `window` or `document`), destinations built from variables, and links, images or styles that load anything from outside the story.
 
+## No nesting inside tags
+
+A command's `<< >>` and an HTML tag's `< >` never contain another command or HTML tag. The one exception is a `[[link]]` inside `<<button>>`, `<<link>>` and `<<area>>`: `[[ ]]` links draw the lines between scenes in the editor, so use them for every way out of a scene. Commands go between an opening and a closing tag instead.
+
+Accepted:
+
+```
+<<button [[Take the sword|Cave]]>><<set $hasSword to true>><</button>>
+<<area 0.1 0.2 0.3 0.4 [[Gate]]>>
+<<for _i, _c range $char>><<if _c.equipment.includes("rope_1")>><<set _hasRope to true>><</if>><</for>>
+```
+
+Not accepted:
+
+```
+<<print "<<goto 'Cave'>>">>        (a command inside a command)
+<span class="<<print $mood>>">     (a command inside an HTML tag)
+<<link "<b>Go</b>" "Cave">>        (an HTML tag inside a command)
+```
+
 ## Characters
 
 The server puts the playing characters into every scene. They are read only: a story never sets or changes them.
@@ -194,15 +214,16 @@ Every shown value appears as plain text, exactly as stored.
 ### Buttons
 
 ```
-<div class="row"><<button "Go to the cave" "Cave">><</button>><<button "Rest" "Camp">><</button>></div>
-
-<<button "Take the sword">><<set $hasSword to true>><<goto "Cave">><</button>>
-
-<<link "Rest" "Camp">><<set $water -= 1>><</link>>
+<<button [[Go to the cave|Cave]]>><</button>>
+<<button [[Take the sword|Cave]]>><<set $hasSword to true>><</button>>
+<<link [[Rest|Camp]]>><<set $water -= 1>><</link>>
+<div class="row"><<button [[Go to the cave|Cave]]>><</button>><<button [[Rest|Camp]]>><</button>></div>
 ```
 
-- Button and link texts are quoted text, written out.
-- Inside a button or link: `<<set>>`, `<<if>>` and `<<goto "Scene">>`. `<<goto>>` is only allowed there, so a scene never jumps on its own.
+- Write where a button or link leads as a `[[link]]` inside it, so the editor draws the line to that scene.
+- Button and link texts are written out, never built from variables.
+- Between the opening and the closing tag: `<<set>>` and `<<if>>`. They run when the player clicks, before the story moves on.
+- Also accepted for now: the destination as quoted text, `<<button "Go to the cave" "Cave">>`, and `<<goto "Scene">>` between a button's or link's tags. Neither draws a line in the editor. `<<goto>>` is only allowed there, so a scene never jumps on its own.
 
 ### Choices
 
@@ -268,6 +289,7 @@ Any normal CSS is fine. Not allowed: `url(...)`, `@import`, `@font-face`, `expre
 | `<<back>>`, `<<return>>` | The server controls the way back | A link |
 | `<<set $list to [...]>>` outside `StoryInit` | Lists are created in one place | Create it in `StoryInit` |
 | `"<<"`, `"[["` or `"$gold"` inside quoted text (other than a choice's variable name) | Could read as a command | Plain words |
+| `<<print "<<goto 'Cave'>>">>`, `<span class="<<print $mood>>">` | A command inside a tag | Commands between an opening and a closing tag |
 | `<a href="...">`, `<img src="https://...">`, `url(...)` in CSS | Loads from outside the story | `[[...]]`, `[img[...]]` |
 
 ## How the server enforces this

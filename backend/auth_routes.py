@@ -29,7 +29,7 @@ from backend.active_players import (
 )
 from backend.character import AttributeStats, Character, PortraitArea, ProfStats
 from backend.db import get_database, run_in_transaction
-from backend import adventures, character_names, food, foraging, market
+from backend import adventures, character_creation, character_names, food, foraging, market
 from backend.players import (
     _RECIPES_BY_FAMILY,
     _is_tracked_item,
@@ -95,10 +95,12 @@ from backend.soul_slots import (
     SOUL_SLOTS,
     STAR_SLOT_NUMBERS,
     TOKEN_SLOT_NUMBERS,
+    get_stored_slots,
     has_claimed_starter_kit,
     mark_starter_kit_claimed,
     resolve_fast_slots,
     resolve_star_slots,
+    unlocked_slot_numbers,
 )
 
 router = APIRouter(prefix="/api/auth", tags=["authentication"])
@@ -2558,6 +2560,18 @@ async def create_character(
     except character_names.InvalidName as exc:
         raise HTTPException(status_code=400, detail=str(exc))
 
+    # What the wizard can hand out, checked again - see backend/character_creation.py:
+    # the age range and how many points Body and Soul hold at that age, the
+    # gender, race and birthsign, and the professions (how many the age allows).
+    try:
+        character_creation.check_attributes(payload.age_month, payload.attr.model_dump())
+        character_creation.check_choices(
+            payload.age_month, payload.gender, payload.raceGroup, payload.race, payload.birthsign,
+            [payload.profession1, payload.profession2, payload.profession3],
+        )
+    except character_creation.InvalidCharacter as exc:
+        raise HTTPException(status_code=400, detail=str(exc))
+
     try:
         trappings = resolve_trapping_options([payload.profession1, payload.profession2, payload.profession3])
         blueprint_trappings = resolve_blueprint_trapping_options(
@@ -2675,6 +2689,18 @@ async def create_character(
         # blueprints, the starter kit and the slot's foraging pool are all
         # created, or none is - no half-made character, and two requests
         # can't both claim the slot's starter kit.
+        # The soul slot: one the wallet has unlocked, as the welcome grid shows
+        # it, and empty - read in here, so two requests can't both take it.
+        # Without this any slot number would mint a fresh starter kit and
+        # foraging pool.
+        pc = await get_database().player_characters.find_one({"address": address}, {"characters": 1})
+        problem = character_creation.slot_problem(
+            payload.slotNumber,
+            unlocked_slot_numbers(await get_stored_slots(address)),
+            [entry.get("slotNumber") for entry in (pc or {}).get("characters", [])],
+        )
+        if problem:
+            raise HTTPException(status_code=400, detail=problem)
         if await add_character(address, character) is None:
             return None
 

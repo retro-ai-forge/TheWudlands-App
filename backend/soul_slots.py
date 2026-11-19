@@ -138,6 +138,20 @@ TOKEN_SLOT_NUMBERS = tuple(s.number for s in SOUL_SLOTS if s.kind in (TOKEN, NFT
 ALL_SLOT_NUMBERS = tuple(s.number for s in SOUL_SLOTS)
 
 
+def unlocked_slot_numbers(stored: Optional[dict]) -> set[int]:
+    """
+    The slots a wallet may create a character in, as the welcome grid shows
+    them: the free slots plus the stored unlocks (the grid always reads
+    `unlocked` back from this record, see resolve_fast_slots). A record from
+    an older slot layout counts for nothing - its numbers mean other slots,
+    and the grid's next load resets it.
+    """
+    unlocked = set(FREE_SLOT_NUMBERS)
+    if stored and stored.get("layout_version") == SLOT_LAYOUT_VERSION:
+        unlocked |= set(stored.get("unlocked", [])) & set(ALL_SLOT_NUMBERS)
+    return unlocked
+
+
 def unlocked_from_holdings(holdings) -> list[int]:
     """
     Which non-star slots `holdings` unlocks.
