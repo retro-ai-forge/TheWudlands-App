@@ -26,8 +26,8 @@ const FLIRT_LINES = [
 ];
 
 // Your Legend: ten reputation axes, rows in pairs (the table frames each pair).
-// Every name is a story variable $meta_<name in lower case>, 0-100. Both names
-// of a pair can be used; except for Fame/Infamy the engine keeps a pair as one
+// Every character carries each name in lower case (in stories $lead.mercy),
+// 0-100. Both names of a pair can be used; except for Fame/Infamy the engine keeps a pair as one
 // scale, so only one side of it is ever above 0.
 const STORY_STATS = [
   { stat: "Fame",       description: "Known among the common folk as a hero: trusted, admired, celebrated", storyUse: "Strangers offer aid, villagers share food and secrets" },
@@ -322,7 +322,7 @@ export default function Storyteller() {
             </tr>
             <tr>
               <td>Adventure Dependencies</td>
-              <td>Addons may require other adventures to be completed first. Finishing one adventure can unlock one or more others, as declared by the creator.</td>
+              <td>Addons may require other adventures to be completed first. Finishing one adventure (reaching one of its own endings, not running away) can unlock one or more others, as declared by the creator.</td>
             </tr>
             <tr>
               <td>Default Entry</td>
@@ -723,7 +723,7 @@ export default function Storyteller() {
               <tr key={row.stat} data-pair={Math.floor(index / 2)} className={styles.statRow}>
                 <td className={styles.statName} style={{ whiteSpace: "nowrap" }}>
                   {row.stat}
-                  <span className={styles.code} style={{ marginLeft: "0.75rem" }}>{"$meta_" + row.stat.toLowerCase()}</span>
+                  <span className={styles.code} style={{ marginLeft: "0.75rem" }}>{row.stat.toLowerCase()}</span>
                 </td>
                 <td>{row.description}</td>
                 <td>{row.storyUse}</td>
@@ -740,14 +740,14 @@ export default function Storyteller() {
           <li><strong>Opposites share one scale.</strong> Mercy and Cruelty are two ends of the same scale, so a character is never both: raising Cruelty first wears Mercy down to 0. Every pair works this way, except Fame and Infamy.</li>
           <li><strong>Fame and Infamy pull against each other.</strong> They are two values from 0 to 100, so a hero to the villagers can still be a butcher to the bandits. Raising one lowers the other by half as much.</li>
           <li><strong>Some deeds echo.</strong> A quarter of a change carries over: Fame and Infamy raise Renown, Cruelty raises Infamy, Treachery brings Shame, Corruption brings Heresy, Courage brings Fame. An echo never echoes again.</li>
-          <li><strong>One adventure, one step.</strong> An adventure changes each value by at most 10; review checks this. Foraging only touches Wildkin, by 1 per trip, and never past 25.</li>
-          <li><strong>Out of sight, out of mind.</strong> Renown fades slowly, about one point every four weeks, unless new deeds feed it.</li>
+          <li><strong>Focus, and no farming.</strong> A story changes at most two pairs (echoes don&apos;t count), each by at most 10 points per character over all its runs together; once those points are spent, replaying it changes nothing. Foraging only touches Wildkin, by 1 per trip, and never past 25.</li>
+          <li><strong>Out of sight, out of mind.</strong> Renown fades slowly, about one point a week, unless new deeds feed it.</li>
           <li><strong>Bands, not numbers.</strong> 10 whispered, 30 known, 60 renowned, 90 legendary, on either side of a scale.</li>
-          <li><strong>Running away has a price.</strong> The Retreat story decides what fleeing costs, for example Courage. If it sets none, one may be added after review.</li>
+          <li><strong>Running away is free.</strong> Retreat costs no Legend by default. A story may set a small price there, for example 1 Cowardice; it counts like any other change.</li>
         </ul>
 
         <p className={styles.body}>
-          Scenes read and change the values with <span className={styles.code}>$meta_</span> variables
+          Scenes read and change each character&apos;s values, such as <span className={styles.code}>$lead.mercy</span>,
           and can branch or gate choices on the bands. The <Link href="/create/tutorial#legend" className={styles.inlineLink}>tutorial</Link> shows how.
 </p>
 

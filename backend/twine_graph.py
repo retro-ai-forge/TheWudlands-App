@@ -83,7 +83,8 @@ def _link_target(body: str) -> str:
 
 # The destination of an image-link macro [img[src][passage]] (the second
 # bracket group). The passage name is parsed out of it with _link_target.
-_IMG_LINK_RE = _re.compile(r"\[img\[[^\]]*\]\[([^\]]+?)\]")
+# Opened like SugarCube opens an image: any case, optional alignment ([<img[).
+_IMG_LINK_RE = _re.compile(r"\[[<>]?img\[[^\]]*\]\[([^\]]+?)\]", _re.IGNORECASE)
 
 
 def _extract_set_value(text: str, name: str):

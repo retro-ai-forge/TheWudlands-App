@@ -359,7 +359,7 @@ def test_story_init_only_one_cover():
 def test_story_init_cover_must_be_uploaded_not_a_url():
     init = VALID_INIT.replace("[img[cover.webp]]", "[img[https://example.com/c.png]]")
     result = _check_init(init)
-    assert any("uploaded images" in e for e in result["errors"])
+    assert any("plain file name" in e for e in result["errors"])
 
 
 def test_story_cover_is_the_story_init_image():
@@ -951,3 +951,150 @@ def test_a_submitted_story_keeps_no_test_characters():
     kept = _without_test_characters(passages)
     assert [p["name"] for p in kept] == ["StoryInit", "Start", "End", "LastResort"]
     assert _count_playable_scenes(passages) == _count_playable_scenes(kept) == 2
+
+
+# --- image file names --------------------------------------------------------
+
+
+def _scene_errors(text, tags=None):
+    passages = [
+        _p("0", "StoryInit", VALID_INIT),
+        _p("1", "Start", text + " [[End]]", tags),
+        _p("2", "End", "The end. <<set $isEnding to true>>"),
+        _p("3", "LastResort", "The tunnel collapses. <<set $isEnding to false>>"),
+    ]
+    return _check_twine_syntax(_story(passages))["errors"]
+
+
+@pytest.mark.parametrize(
+    "image",
+    [
+        "[img[gate.webp]]",
+        "[img[Gate_2-night.png]]",
+        "[img[old_map.jpg][End]]",
+        "[<img[gate.webp]]",
+        "<<if $x>>[img[gate.webp]]<<else>>[img[gate_open.webp]]<</if>>",
+    ],
+)
+def test_plain_uploaded_image_names_are_accepted(image):
+    assert not any("image" in e.lower() or "picture" in e for e in _scene_errors(image))
+
+
+@pytest.mark.parametrize(
+    "image",
+    [
+        "[img[https://example.com/a.png]]",
+        "[img[//example.com/a.png]]",
+        "[img[data:image/png;base64,AAAA]]",
+        "[img[images/gate.webp]]",
+        "[img[../gate.webp]]",
+        "[img[C:\\gate.webp]]",
+        "[img[$picture]]",
+        "[img[_picture]]",
+        "[img[gate]]",
+        "[img[gate.gif]]",
+        "[img[gate.webp.svg]]",
+        "[img[gate.webp?x=1]]",
+        "[img[alert(1)]]",
+        "[img[ gate .webp]]",
+        "[IMG[https://example.com/a.png]]",
+        "[>img[https://example.com/a.png]]",
+    ],
+)
+def test_image_must_be_a_plain_file_name(image):
+    assert any("plain file name" in e for e in _scene_errors(image))
+
+
+def test_image_tooltip_is_refused():
+    # SugarCube runs the tooltip text as JavaScript, like the source.
+    errors = _scene_errors("[img[A gate|gate.webp]]")
+    assert any("tooltip" in e and "[img[gate.webp]]" in e for e in errors)
+
+
+@pytest.mark.parametrize(
+    "markup",
+    [
+        '<img src="https://example.com/a.png">',
+        "<IMG SRC=x.png>",
+        '<svg><image href="https://example.com/a.png"/></svg>',
+        '<picture><source srcset="https://example.com/a.webp"></picture>',
+        '<div style="background-image: url(https://example.com/a.png)">x</div>',
+        "<video poster=a.png></video>",
+        '<link rel="stylesheet" href="https://example.com/x.css">',
+        "@import 'https://example.com/x.css';",
+    ],
+)
+def test_no_other_way_to_load_a_picture(markup):
+    assert any("outside the story" in e for e in _scene_errors(markup))
+
+
+def test_link_macro_is_not_mistaken_for_a_link_tag():
+    assert not any("outside the story" in e for e in _scene_errors('<<link "Go" "End">><</link>>'))
+
+
+def test_stylesheet_may_not_load_pictures():
+    passages = [
+        _p("0", "StoryInit", VALID_INIT),
+        _p("1", "Start", "Welcome [[End]]"),
+        _p("2", "End", "The end. <<set $isEnding to true>>"),
+        _p("3", "LastResort", "The tunnel collapses. <<set $isEnding to false>>"),
+        _p("4", "Story Stylesheet", "body { background: url('https://example.com/bg.png'); }", ["stylesheet"]),
+    ]
+    errors = _check_twine_syntax(_story(passages))["errors"]
+    assert any("Story Stylesheet" in e and "outside the story" in e for e in errors)
+
+
+def test_no_scene_may_stand_in_for_an_image():
+    errors = _scene_errors("Welcome", tags=["Twine.image"])
+    assert any("Twine.image" in e for e in errors)
+
+
+def test_test_characters_is_not_checked_for_images():
+    passages = _with_test_party()
+    passages[-1] = _p("9", "TestCharacters", '[{"firstName": "Grimjaw", "lastName": "Ironfoot", "note": "url(x)"}]')
+    assert _check_twine_syntax(_story(passages))["errors"] == []
+
+
+def test_upper_case_image_link_is_a_step():
+    from backend.twine_graph import passage_links
+    assert "End" in passage_links("[IMG[gate.webp][End]]")
+
+
+@pytest.mark.parametrize(
+    "uploaded, ext",
+    [("my.photo.png", ".png"), ("../../etc/gate.webp", ".webp"), ("Night Gate (2).JPG", ".jpg"),
+     ("...", ".png"), ("$x.webp", ".webp"), ("alert(1).png", ".png")],
+)
+def test_every_upload_gets_a_name_the_check_accepts(uploaded, ext):
+    # Mirrors upload_twine_story_image: the sanitized stem plus the content type's extension.
+    import os
+    from backend import twine_images
+    from backend.auth_routes import _IMAGE_FILENAME_RE
+    stem, _ = os.path.splitext(twine_images.sanitize_filename(uploaded))
+    assert _IMAGE_FILENAME_RE.fullmatch(stem + ext), stem + ext
+
+
+def _with_story_data(**story_data):
+    story = _story([
+        _p("0", "StoryInit", VALID_INIT),
+        _p("1", "Start", "Welcome [[End]]"),
+        _p("2", "End", "The end. <<set $isEnding to true>>"),
+        _p("3", "LastResort", "The tunnel collapses. <<set $isEnding to false>>"),
+    ])
+    story["storyData"].update(story_data)
+    return _check_twine_syntax(story)["errors"]
+
+
+def test_editor_stylesheet_may_not_load_pictures():
+    errors = _with_story_data(stylesheet=".passage { background: url(https://example.com/bg.png); }")
+    assert any("Story Stylesheet" in e and "outside the story" in e for e in errors)
+
+
+def test_editor_stylesheet_without_urls_is_fine():
+    assert _with_story_data(stylesheet=".stack { display: grid; }\n.stack > * { grid-area: 1 / 1; }") == []
+
+
+def test_story_javascript_must_be_empty():
+    errors = _with_story_data(script="Config.ui.stowBarInitially = true;")
+    assert any("Story JavaScript must be empty" in e for e in errors)
+    assert _with_story_data(script="  \n ") == []

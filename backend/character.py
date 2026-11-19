@@ -233,8 +233,8 @@ class Character:
     completed_stories: list = field(default_factory=list)
     adventure_finished: int = 0
     adventure_run_away: int = 0
-    # Your Legend reputation values, {name: 0-100} without the story's
-    # meta_ prefix (see backend.legend). Kept apart from `stats`.
+    # Your Legend reputation values, {name: 0-100} (see backend.legend).
+    # Kept apart from `stats`.
     legend: dict = field(default_factory=default_legend)
     # Last write of `legend`; Renown fades from here (backend.legend.decayed).
     legend_updated_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))

@@ -677,16 +677,170 @@ function MetaItem({
   );
 }
 
+type ReviewOutcome = "approved" | "rejected";
+
+const reviewerTools: React.CSSProperties = {
+  display: "flex",
+  flexDirection: "column",
+  gap: "0.5rem",
+  borderTop: `1px dashed ${gold}`,
+  paddingTop: "0.6rem",
+};
+const actionRow: React.CSSProperties = {
+  display: "flex",
+  flexWrap: "wrap",
+  alignItems: "center",
+  gap: "0.5rem",
+  fontFamily: mono,
+  fontSize: "0.8rem",
+  color: parchment,
+};
+const actionBtn = (accent: string): React.CSSProperties => ({
+  background: "none",
+  border: `1px solid ${accent}`,
+  padding: "0.3rem 0.7rem",
+  cursor: "pointer",
+  fontFamily: mono,
+  color: accent,
+  textTransform: "uppercase",
+  letterSpacing: "0.1em",
+  fontSize: "0.7rem",
+});
+const REJECT_COLOR = "#c55865";
+
+// A reviewer's decision on one story: approve (it goes live and can be played)
+// or reject with a reason. The backend only allows both once the author can no
+// longer change the story, i.e. after its 7 days.
+function ReviewActions({
+  entry,
+  reviewable,
+  onDone,
+}: {
+  entry: ReviewEntry;
+  reviewable: boolean;
+  onDone: (outcome: ReviewOutcome) => void;
+}) {
+  const [mode, setMode] = useState<"idle" | "approve" | "reject">("idle");
+  const [reason, setReason] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string>();
+
+  async function send(outcome: ReviewOutcome) {
+    setBusy(true);
+    setError(undefined);
+    const path = `/api/auth/twine-reviews/${encodeURIComponent(entry.address)}/${encodeURIComponent(entry.storyId)}`;
+    try {
+      const res = await fetch(`${path}/${outcome === "approved" ? "approve" : "reject"}`, {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: outcome === "rejected" ? JSON.stringify({ reason: reason.trim() }) : undefined,
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(typeof data.detail === "string" ? data.detail : `Failed (${res.status})`);
+      }
+      onDone(outcome);
+    } catch (e) {
+      setError((e as Error).message);
+      setBusy(false);
+    }
+  }
+
+  // Stories still in their days of grace get no buttons: their section says
+  // why, and the editor link above stays for support.
+  if (!reviewable) {
+    return null;
+  }
+
+  return (
+    <>
+      {mode === "idle" && (
+        <div style={actionRow}>
+          <button style={actionBtn(PENDING_COLOR)} onClick={() => setMode("approve")}>
+            Approve
+          </button>
+          <button style={actionBtn(REJECT_COLOR)} onClick={() => setMode("reject")}>
+            Reject
+          </button>
+        </div>
+      )}
+      {mode === "approve" && (
+        <div style={actionRow}>
+          <span>Make it live? Players can then play it, and its author can no longer change it.</span>
+          <button style={actionBtn(PENDING_COLOR)} disabled={busy} onClick={() => send("approved")}>
+            {busy ? "Approving…" : "Yes, approve"}
+          </button>
+          <button style={actionBtn(gold)} disabled={busy} onClick={() => setMode("idle")}>
+            Cancel
+          </button>
+        </div>
+      )}
+      {mode === "reject" && (
+        <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
+          <textarea
+            value={reason}
+            onChange={(e) => setReason(e.target.value)}
+            maxLength={2000}
+            rows={3}
+            placeholder="Why is it rejected? The reason is shown publicly in the list of returned stories."
+            style={{
+              fontFamily: mono,
+              fontSize: "0.85rem",
+              background: "#0a0a0a",
+              color: parchment,
+              border: `1px solid ${gold}`,
+              padding: "0.5rem",
+              resize: "vertical",
+            }}
+          />
+          <div style={actionRow}>
+            <button
+              style={actionBtn(REJECT_COLOR)}
+              disabled={busy || !reason.trim()}
+              onClick={() => send("rejected")}
+            >
+              {busy ? "Rejecting…" : "Reject story"}
+            </button>
+            <button style={actionBtn(gold)} disabled={busy} onClick={() => setMode("idle")}>
+              Cancel
+            </button>
+          </div>
+        </div>
+      )}
+      {error && <div style={{ ...actionRow, color: REJECT_COLOR }}>{error}</div>}
+    </>
+  );
+}
+
+// Reviewers open a submission in the story editor to test-play it: the editor
+// keeps it as a local review copy (twinejs-integrated src/routes/review-load).
+const editorLink: React.CSSProperties = {
+  alignSelf: "flex-start",
+  fontFamily: mono,
+  color: gold,
+  fontSize: "0.8rem",
+  letterSpacing: "0.08em",
+  textTransform: "uppercase",
+  textDecoration: "none",
+};
+
 function EntryCard({
   entry,
   color,
   label,
   wide,
+  reviewer,
+  reviewable,
+  onReviewed,
 }: {
   entry: ReviewEntry;
   color: string;
   label: string;
   wide: boolean;
+  reviewer: boolean;
+  reviewable: boolean;
+  onReviewed: (outcome: ReviewOutcome) => void;
 }) {
   const md = entry.metadata || {};
   const description = md.meta_description || "";
@@ -795,6 +949,20 @@ function EntryCard({
           )}
         </div>
       )}
+
+      {reviewer && (
+        <div style={reviewerTools}>
+          <a
+            href={`/twine/#/review/${encodeURIComponent(entry.address)}/${encodeURIComponent(entry.storyId)}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            style={editorLink}
+          >
+            Open in editor to test-play ↗
+          </a>
+          <ReviewActions entry={entry} reviewable={reviewable} onDone={onReviewed} />
+        </div>
+      )}
     </div>
   );
 }
@@ -805,6 +973,40 @@ export default function ReviewStatus() {
   const [error, setError] = useState<string>();
   const [now, setNow] = useState(() => Date.now());
   const [wide, setWide] = useState(false);
+  const [reviewer, setReviewer] = useState(false);
+  const [notice, setNotice] = useState<string>();
+  // Bumped after a rejection, so the returned list loads again.
+  const [rejectedVersion, setRejectedVersion] = useState(0);
+
+  // An approved or rejected story leaves the queue at once.
+  function handleReviewed(entry: ReviewEntry, outcome: ReviewOutcome) {
+    const title = entry.metadata?.meta_title || entry.name || "Untitled";
+    setEntries((prev) =>
+      prev ? prev.filter((e) => !(e.address === entry.address && e.storyId === entry.storyId)) : prev
+    );
+    setNotice(
+      outcome === "approved"
+        ? `"${title}" is approved and live: players can play it now.`
+        : `"${title}" was rejected and returned to its author.`
+    );
+    if (outcome === "rejected") setRejectedVersion((v) => v + 1);
+  }
+
+  // Reviewer tools only show for reviewers; the backend checks the role again.
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await fetch("/api/auth/me/roles", { credentials: "include" });
+        if (!cancelled && res.ok) setReviewer((await res.json()).reviewer === true);
+      } catch {
+        /* signed out or offline: no reviewer tools */
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   useEffect(() => {
     const id = setInterval(() => setNow(Date.now()), 1000);
@@ -850,7 +1052,7 @@ export default function ReviewStatus() {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [rejectedVersion]);
 
   return (
     <div style={{ minHeight: "100vh", padding: "2rem 1rem", background: "#0a0a0a" }}>
@@ -863,6 +1065,7 @@ export default function ReviewStatus() {
         </p>
 
         {error && <p style={{ fontFamily: mono, color: "#c55865" }}>{error}</p>}
+        {notice && <p style={{ fontFamily: mono, color: PENDING_COLOR, fontSize: "0.9rem" }}>{notice}</p>}
 
         {!error && entries === null && (
           <p style={{ fontFamily: mono, color: parchment }}>Loading…</p>
@@ -894,7 +1097,16 @@ export default function ReviewStatus() {
               : parchment;
             const label = started ? formatRemaining(remaining) : "—";
             return (
-              <EntryCard key={entry.storyId} entry={entry} color={color} label={label} wide={wide} />
+              <EntryCard
+                key={entry.storyId}
+                entry={entry}
+                color={color}
+                label={label}
+                wide={wide}
+                reviewer={reviewer}
+                reviewable={!!started && remaining <= 0}
+                onReviewed={(outcome) => handleReviewed(entry, outcome)}
+              />
             );
           };
           // Shortest timer first. Among pending stories that puts the one waiting

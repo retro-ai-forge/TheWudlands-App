@@ -15,6 +15,7 @@ from typing import Any, Dict, List, Literal, Optional
 import os
 import secrets
 import time
+from pymongo.errors import DuplicateKeyError
 from backend.auth import (
     validate_auth_message,
     create_session,
@@ -3259,8 +3260,70 @@ def _check_area_macros(name: str, text: str, errors: list, warnings: list):
 
 # An image macro, up to its first `]`, capturing the source segment. Handles
 # [img[src]], [img[src][link]] and [img[title|src]] — the source is the last
-# pipe-delimited part.
-_IMG_MACRO_RE = _re.compile(r"\[img\[([^\[\]]+?)\]")
+# pipe-delimited part. Opened the way SugarCube opens it: any letter case, with
+# an optional alignment ([<img[...]], [>IMG[...]]).
+_IMG_MACRO_RE = _re.compile(r"\[[<>]?img\[([^\[\]]+?)\]", _re.IGNORECASE)
+
+# Images come only from the story's own uploads: a plain file name and one of
+# the extensions an upload gets (twine_images._ALLOWED_CONTENT_TYPES) - no
+# folder, web address, data: URI or variable. Besides keeping everything in the
+# story's image list, this keeps the source harmless: SugarCube runs an image
+# source that isn't a scene name as JavaScript (Wikifier.helpers.evalText), and
+# a name like this can only read a value, never call anything.
+_IMAGE_FILENAME_RE = _re.compile(r"[A-Za-z0-9][A-Za-z0-9_-]*\.(?:webp|png|jpg)")
+# Other ways a scene or the stylesheet could show a picture from elsewhere:
+# HTML media tags (not <<link>> or a left-aligned [<img[...]]), src-like attributes, CSS url() and @import.
+_FOREIGN_IMAGE_RE = _re.compile(
+    r"(?<![<\[])<\s*(?:img|image|picture|source|svg|video|audio|iframe|object|embed|link)\b"
+    r"|\b(?:src|srcset|poster|background)\s*="
+    r"|\burl\s*\("
+    r"|@import\b",
+    _re.IGNORECASE,
+)
+
+
+def _image_rule_errors(passages) -> list:
+    """Every image must be one of the story's uploads, named plainly.
+
+    [img[...]] takes only a file name like gate.webp - no tooltip (SugarCube
+    runs it as JavaScript too), folder, address or variable; nothing else may
+    load a picture (HTML tags, CSS url()), and no scene may stand in for an
+    image (the Twine.image tag makes a scene's text the image source). That
+    each name was really uploaded is checked on submit
+    (submit_twine_story_for_review). TestCharacters is skipped: it is removed
+    on submit.
+    """
+    errors: list = []
+    for p in passages:
+        name = p.get("name", "")
+        if name == TEST_CHARACTERS_PASSAGE:
+            continue
+        text = p.get("text", "")
+        if any(str(t).lower() == "twine.image" for t in (p.get("tags") or [])):
+            errors.append(
+                f"Passage '{name}' is tagged Twine.image - images come only from the "
+                "story's Images list (upload them there)"
+            )
+        for m in _IMG_MACRO_RE.finditer(text):
+            inner = m.group(1).strip()
+            if "|" in inner:
+                errors.append(
+                    f"Passage '{name}': image '{inner}' has a tooltip (text|file) - "
+                    f"write only the file name, like [img[{inner.split('|')[-1].strip()}]]"
+                )
+                continue
+            if not _IMAGE_FILENAME_RE.fullmatch(inner):
+                errors.append(
+                    f"Passage '{name}': image '{inner}' must be a plain file name from the "
+                    "story's Images list, like [img[gate.webp]] - no folders, web "
+                    "addresses or variables, ending in .webp, .png or .jpg"
+                )
+        for m in _FOREIGN_IMAGE_RE.finditer(text):
+            errors.append(
+                f"Passage '{name}': '{m.group(0).strip()}' could load a picture from "
+                "outside the story - show images only as [img[file]] from the Images list"
+            )
+    return errors
 
 def _collect_image_refs(passages) -> set:
     """Bare image filenames referenced by [img[...]] across all passages.
@@ -3501,6 +3564,21 @@ def _check_twine_syntax(doc: dict) -> dict:
             "Story has no tags — add at least one tag so players can find it"
         )
 
+    # The editor keeps the Story Stylesheet and Story JavaScript in storyData,
+    # not as passages (an imported .twee may still carry them as tagged
+    # passages, which the passage checks cover).
+    story_data = doc.get("storyData") or {}
+    errors.extend(_image_rule_errors(
+        list(passages) + [{"name": "Story Stylesheet", "text": story_data.get("stylesheet") or ""}]
+    ))
+    # Stories never run their own code: the platform adds what it needs
+    # (<<area>>, the UI bar) itself (twinejs-integrated wudlands-runtime.ts).
+    if (story_data.get("script") or "").strip():
+        errors.append(
+            "The Story JavaScript must be empty - stories can't run their own code "
+            "(use the story's commands and the Story Stylesheet instead)"
+        )
+
     # Build the link graph while validating each passage.
     outgoing: dict = {}
 
@@ -3562,11 +3640,7 @@ def _check_twine_syntax(doc: dict) -> dict:
                     "StoryInit must contain exactly one image (the cover), found "
                     + ", ".join(f"'{c}'" for c in covers)
                 )
-            elif _story_cover([{"name": "StoryInit", "text": text}]) is None:
-                errors.append(
-                    f"The StoryInit cover image must be one of the story's uploaded images, "
-                    f"not a web address (got '{covers[0]}')"
-                )
+            # A web address or other bad name is reported by _image_rule_errors.
             continue
 
         # LastResort is the fault-recovery scene. Its own rule (carry the
@@ -3730,6 +3804,90 @@ def _review_window_closed(review_doc: Optional[dict], now: datetime) -> bool:
     return now >= started + _REVIEW_WINDOW
 
 
+# A story that passed review is live. Its author never resubmits it: changes go
+# out as a new story with a new id (the editor's Duplicate gives one), and only
+# the platform fixes bugs in a live story.
+_LIVE_STORY_LOCKED = (
+    "This story is live, so it can't be resubmitted. To publish changes, "
+    "duplicate it in the editor and submit the copy as a new story."
+)
+
+
+def _submit_refusal(review_doc: Optional[dict], now: datetime) -> Optional[str]:
+    """Why the author can't submit this story now, or None if they can.
+
+    Allowed: a story without a review entry (new, or rejected - a rejection
+    deletes the entry) and one still waiting for review inside its 7-day
+    window. Any other status - `approved`, i.e. live, or one a later review
+    step adds - is locked for the author.
+    """
+    if not review_doc:
+        return None
+    if review_doc.get("status") != "submitted":
+        return _LIVE_STORY_LOCKED
+    if _review_window_closed(review_doc, now):
+        return "Review window closed — this story is locked until it has been reviewed"
+    return None
+
+
+async def _store_review_entry(db, address: str, story_id: str, review_doc: dict) -> None:
+    """Write the frozen review entry, replacing only one still waiting for
+    review. If the story was approved after the submit check, the filter misses
+    it and the upsert's insert hits the unique (address, storyId) index instead
+    of overwriting the live story: 409."""
+    try:
+        await db.twine_review.update_one(
+            {"address": address, "storyId": story_id, "status": "submitted"},
+            {"$set": review_doc},
+            upsert=True,
+        )
+    except DuplicateKeyError:
+        raise HTTPException(status_code=409, detail=_LIVE_STORY_LOCKED)
+
+
+async def _story_store_problems(db, owner: str, story_id: str, passages: list, image_stage: str) -> list:
+    """What keeps a checked story's text from being stored as `owner`'s
+    submission: a second free story, or an image that isn't in `image_stage`
+    (the author's uploads on submit; the frozen review copy for a reviewer's
+    edit, which can't add images)."""
+    errors: list = []
+    # One free story per author.
+    access = _extract_storyinit_metadata(passages, ["meta_access"]).get("meta_access")
+    if access == "free":
+        other = await _other_free_story(db, owner, story_id)
+        if other:
+            title = (other.get("metadata") or {}).get("meta_title") or other.get("name") or other["storyId"]
+            errors.append(
+                f"You already have a free story ('{title}') — each author may submit "
+                "one free story. Set $meta_access to 'trial' or 'paid'."
+            )
+    # Every [img[...]] must point at an image that is really there.
+    image_refs = _collect_image_refs(passages)
+    if image_refs:
+        try:
+            available = {img["filename"] for img in twine_images.list_images(owner, image_stage, story_id)}
+        except Exception as exc:
+            raise HTTPException(status_code=502, detail=f"Could not list story images: {exc}")
+        for ref in sorted(image_refs):
+            if ref not in available:
+                errors.append(f"Image '{ref}' is referenced in the story but has not been uploaded")
+    return errors
+
+
+def _snapshot_fields(doc: dict, passages: list) -> dict:
+    """The fields of a review entry worked out from the story's text. Displayed
+    metadata is public (shown on the review queue); private metadata holds PII
+    for the gated reviewer UI only and is never returned publicly."""
+    return {
+        "metadata": _extract_storyinit_metadata(passages, _METADATA_FIELDS),
+        "privateMeta": _extract_storyinit_metadata(passages, _PRIVATE_META_FIELDS),
+        # Non-PII, public queue stats.
+        "sceneCount": _count_playable_scenes(passages),
+        "tags": _collect_story_tags(doc),
+        "coverImage": _story_cover(passages),
+    }
+
+
 @player_router.post("/me/twine-stories/{story_id}/submit")
 async def submit_twine_story_for_review(
     story_id: str, address: str = Depends(get_current_address)
@@ -3748,11 +3906,12 @@ async def submit_twine_story_for_review(
         {"address": address, "storyId": story_id},
         {"status": 1, "lastUpdate": 1, "submittedAt": 1},
     )
-    if _review_window_closed(existing_review, datetime.now(timezone.utc)):
-        raise HTTPException(
-            status_code=409,
-            detail="Review window closed — this story is locked until it has been reviewed",
-        )
+    refusal = _submit_refusal(existing_review, datetime.now(timezone.utc))
+    # A live story id is taken for good, whatever became of its review entry.
+    if not refusal and await db.twine_live.find_one({"_id": story_id}, {"_id": 1}):
+        refusal = _LIVE_STORY_LOCKED
+    if refusal:
+        raise HTTPException(status_code=409, detail=refusal)
 
     result = _check_twine_syntax(doc)
     errors = result["errors"]
@@ -3773,40 +3932,9 @@ async def submit_twine_story_for_review(
     # party: TestCharacters is never stored, so it never reaches a played story.
     story_passages = _without_test_characters(doc.get("passages", []))
 
-    # One free story per author.
-    access = _extract_storyinit_metadata(story_passages, ["meta_access"]).get(
-        "meta_access"
-    )
-    if access == "free":
-        other = await _other_free_story(db, address, story_id)
-        if other:
-            title = (other.get("metadata") or {}).get("meta_title") or other.get("name") or other["storyId"]
-            errors.append(
-                f"You already have a free story ('{title}') — each author may submit "
-                "one free story. Set $meta_access to 'trial' or 'paid'."
-            )
-
-    # Every [img[...]] must point at an image the author has actually uploaded
-    # (the create stage, which the review copy is made from).
-    image_refs = _collect_image_refs(story_passages)
-    if image_refs:
-        try:
-            available = {
-                img["filename"]
-                for img in twine_images.list_images(
-                    address, twine_images.STAGE_CREATE, story_id
-                )
-            }
-        except Exception as exc:
-            raise HTTPException(
-                status_code=502, detail=f"Could not list story images: {exc}"
-            )
-
-        for ref in sorted(image_refs):
-            if ref not in available:
-                errors.append(
-                    f"Image '{ref}' is referenced in the story but has not been uploaded"
-                )
+    errors.extend(await _story_store_problems(
+        db, address, story_id, story_passages, twine_images.STAGE_CREATE
+    ))
 
     if errors:
         return {
@@ -3841,14 +3969,8 @@ async def submit_twine_story_for_review(
             status_code=502, detail=f"Could not copy images for review: {exc}"
         )
 
-    # Copy the text: build and store the frozen review snapshot. Displayed
-    # metadata is public (shown on the review queue); private metadata holds PII
-    # for the gated reviewer UI only and is never returned publicly.
+    # Copy the text: build and store the frozen review snapshot.
     passages_list = story_passages
-    metadata = _extract_storyinit_metadata(passages_list, _METADATA_FIELDS)
-    private_meta = _extract_storyinit_metadata(passages_list, _PRIVATE_META_FIELDS)
-    scene_count = _count_playable_scenes(passages_list)
-    story_tags = _collect_story_tags(doc)
 
     review_doc = {
         "address": address,
@@ -3865,19 +3987,10 @@ async def submit_twine_story_for_review(
         "submittedAt": now,
         "status": "submitted",
         "warnings": warnings,
-        "metadata": metadata,
-        "privateMeta": private_meta,
-        # Non-PII, public queue stats.
-        "sceneCount": scene_count,
-        "tags": story_tags,
-        "coverImage": _story_cover(passages_list),
+        **_snapshot_fields(doc, passages_list),
     }
 
-    await db.twine_review.update_one(
-        {"address": address, "storyId": story_id},
-        {"$set": review_doc},
-        upsert=True,
-    )
+    await _store_review_entry(db, address, story_id, review_doc)
 
     return {
         "ok": True,
@@ -3896,8 +4009,10 @@ async def list_twine_reviews():
     preview; opening/reviewing a submission happens via a separate gated UI.
     """
     db = get_database()
+    # Only stories waiting for review; an approved entry is just a record (the
+    # story itself is in twine_live).
     cursor = db.twine_review.find(
-        {},
+        {"status": "submitted"},
         {
             "_id": 0,
             "address": 1,
@@ -3989,7 +4104,8 @@ async def reject_twine_review(
     tier, scene count, reason) for the public rejected list, then removes the submission
     from the queue exactly like delete_twine_review - which also unlocks the
     author to fix the story and submit it again. One doc per rejection, so a
-    story rejected twice shows up twice.
+    story rejected twice shows up twice. Like approval, only after the story's
+    7 days (delete_twine_review still removes a submission at any time).
     """
     if not await roles.is_reviewer(address):
         raise HTTPException(status_code=403, detail="Reviewer or admin only")
@@ -4000,16 +4116,28 @@ async def reject_twine_review(
 
     db = get_database()
 
+    waiting = await db.twine_review.find_one(
+        {"address": owner, "storyId": story_id}, {"status": 1, "lastUpdate": 1, "submittedAt": 1}
+    )
+    if not waiting:
+        raise HTTPException(status_code=404, detail="Review submission not found")
+    refusal = _review_refusal(waiting, datetime.now(timezone.utc))
+    if refusal:
+        raise HTTPException(status_code=409, detail=refusal)
+
     async def reject() -> Optional[bool]:
         # One transaction: the submission leaves the queue and its rejection
         # is recorded together - two reviewers rejecting at once record it
         # once (the second finds nothing left to reject).
         review = await db.twine_review.find_one(
             {"address": owner, "storyId": story_id},
-            {"name": 1, "metadata": 1, "sceneCount": 1, "passages": 1},
+            {"name": 1, "metadata": 1, "sceneCount": 1, "passages": 1,
+             "status": 1, "lastUpdate": 1, "submittedAt": 1},
         )
         if not review:
             return None
+        if _review_refusal(review, datetime.now(timezone.utc)):
+            return False  # changed since the check above
         if (await db.twine_review.delete_one({"address": owner, "storyId": story_id})).deleted_count != 1:
             return None
 
@@ -4031,8 +4159,11 @@ async def reject_twine_review(
         })
         return True
 
-    if await run_in_transaction(reject) is None:
+    outcome = await run_in_transaction(reject)
+    if outcome is None:
         raise HTTPException(status_code=404, detail="Review submission not found")
+    if outcome is False:
+        raise HTTPException(status_code=409, detail="The submission changed meanwhile - please try again")
 
     # Remove the submission's frozen review-stage images (images +
     # thumbnails under twine-images/{owner}/review/{storyId}/). The author's own
@@ -4045,6 +4176,231 @@ async def reject_twine_review(
         print(f"[reject] review images not deleted for {owner}/{story_id}: {type(exc).__name__}: {exc}")
 
     return {"ok": True, "owner": owner, "storyId": story_id}
+
+
+@player_router.get("/me/roles")
+async def get_my_roles(address: str = Depends(get_current_address)):
+    """The staff roles of the signed-in wallet, so pages can show reviewer
+    tools. Every reviewer route checks the role again itself."""
+    granted = await roles.get_roles(address)
+    return {
+        "reviewer": roles.ROLE_REVIEWER in granted or roles.ROLE_ADMIN in granted,
+        "admin": roles.ROLE_ADMIN in granted,
+    }
+
+
+@player_router.get("/twine-reviews/{owner}/{story_id}/story")
+async def get_twine_review_story(
+    owner: str, story_id: str, address: str = Depends(get_current_address)
+):
+    """A submission's frozen copy, for a reviewer to open in the story editor
+    and test-play it (reviewer or admin only). The editor keeps it as a local
+    review copy (twinejs-integrated src/util/review-copies.ts): never synced to
+    the reviewer's cloud, never submitted, images from the owner's review
+    stage. privateMeta isn't sent."""
+    if not await roles.is_reviewer(address):
+        raise HTTPException(status_code=403, detail="Reviewer or admin only")
+    db = get_database()
+    review = await db.twine_review.find_one(
+        {"address": owner, "storyId": story_id},
+        {"_id": 0, "storyId": 1, "name": 1, "ifid": 1, "storyData": 1,
+         "passages": 1, "lastUpdate": 1, "status": 1},
+    )
+    if not review:
+        raise HTTPException(status_code=404, detail="Review submission not found")
+    return {"owner": owner, **review}
+
+
+_LIVE_ID_TAKEN = "Another live story already uses this story id"
+
+
+def _review_refusal(review_doc: dict, now: datetime) -> Optional[str]:
+    """Why a submission can't be reviewed (approved or rejected) now, or None
+    if it can: only a story still waiting whose 7-day window has closed, so
+    its author can no longer update it. It then waits with no time limit."""
+    if review_doc.get("status") != "submitted":
+        return "This story has already been reviewed"
+    if not _review_window_closed(review_doc, now):
+        return "The author can still update this story - review it once its 7 days have passed"
+    return None
+
+
+def _live_story_doc(review: dict, reviewer: str, now: str) -> dict:
+    """The live copy of an approved submission. `_id` is the story id, so only
+    one story per id can be live: its images sit under served/{storyId}/,
+    which isn't per author. privateMeta stays with the review entry."""
+    return {
+        "_id": review["storyId"],
+        "address": review["address"],
+        "storyId": review["storyId"],
+        "name": review.get("name", ""),
+        "ifid": review.get("ifid", ""),
+        "storyData": review.get("storyData", {}),
+        "passages": review.get("passages", []),
+        "metadata": review.get("metadata", {}),
+        "sceneCount": review.get("sceneCount"),
+        "tags": review.get("tags", []),
+        "coverImage": review.get("coverImage"),
+        "submittedAt": review.get("submittedAt"),
+        "approvedAt": now,
+        "approvedBy": reviewer,
+    }
+
+
+@player_router.put("/twine-reviews/{owner}/{story_id}")
+async def save_twine_review(
+    owner: str,
+    story_id: str,
+    payload: TwineStoryPayload,
+    address: str = Depends(get_current_address),
+):
+    """Save a reviewer's edits to a submission (reviewer or admin only).
+
+    The reviewer edits the submission in the editor as a review copy and saves
+    it here (the editor's "Save review"); Approve then publishes this version.
+    Only while the story waits for review, like approving: after its 7 days, so
+    its author can't overwrite the edit. The edit passes the same checks as a
+    submit, and its images must be in the frozen review stage (a review copy
+    can't add any). The submission stays the author's - its id, name, IFID and
+    owner wallet are kept, and lastUpdate isn't touched, so the 7 days don't
+    start again. Each save is recorded in reviewEdits (who, when).
+
+    The story's code never makes this request: the editor runs stories in a
+    sealed frame without the reviewer's login (twinejs-integrated
+    src/util/replace-dom.ts).
+    """
+    import json
+
+    if not await roles.is_reviewer(address):
+        raise HTTPException(status_code=403, detail="Reviewer or admin only")
+    db = get_database()
+    key = {"address": owner, "storyId": story_id}
+    review = await db.twine_review.find_one(
+        key, {"status": 1, "lastUpdate": 1, "submittedAt": 1, "name": 1, "ifid": 1}
+    )
+    if not review:
+        raise HTTPException(status_code=404, detail="Review submission not found")
+    refusal = _review_refusal(review, datetime.now(timezone.utc))
+    if refusal:
+        raise HTTPException(status_code=409, detail=refusal)
+
+    # The reviewer's copy has local ids of its own; the submission keeps the author's.
+    doc = payload.model_dump()
+    story_data = dict(doc.get("storyData") or {})
+    story_data["wallet"] = owner
+    doc.update({
+        "address": owner, "storyId": story_id, "storyData": story_data,
+        "name": review.get("name", ""), "ifid": review.get("ifid", ""),
+    })
+
+    result = _check_twine_syntax(doc)
+    errors, warnings = result["errors"], result["warnings"]
+    passages = _without_test_characters(doc.get("passages", []))
+    if not errors:
+        errors.extend(await _story_store_problems(db, owner, story_id, passages, twine_images.STAGE_REVIEW))
+    if errors:
+        return {"ok": False, "owner": owner, "storyId": story_id, "status": "rejected",
+                "errors": errors, "warnings": warnings}
+
+    now = datetime.now(timezone.utc).isoformat()
+    stored = {**doc, "passages": passages}
+    edit = {
+        "storyData": story_data,
+        "passages": passages,
+        "sizeBytes": len(json.dumps(stored, default=str).encode()),
+        "warnings": warnings,
+        **_snapshot_fields(doc, passages),
+        "editedAt": now,
+        "editedBy": address,
+    }
+    # Only the entry as read: still waiting, not resubmitted or approved meanwhile.
+    current = {**key, "status": "submitted"}
+    if review.get("lastUpdate"):
+        current["lastUpdate"] = review["lastUpdate"]
+    saved = await db.twine_review.update_one(
+        current, {"$set": edit, "$push": {"reviewEdits": {"by": address, "at": now}}}
+    )
+    if saved.modified_count != 1:
+        raise HTTPException(status_code=409, detail="The submission changed meanwhile - please reload it")
+    return {"ok": True, "owner": owner, "storyId": story_id, "status": "submitted", "warnings": warnings}
+
+
+@player_router.post("/twine-reviews/{owner}/{story_id}/approve")
+async def approve_twine_review(
+    owner: str, story_id: str, address: str = Depends(get_current_address)
+):
+    """Approve a submission (reviewer or admin only): the story goes live.
+
+    Only after its 7-day window. The review-stage images are copied to the
+    served stage first; then one transaction stores the live copy in
+    twine_live (what adventures play) and turns the review entry into a
+    record (status approved, text removed), which keeps the story locked for
+    its author. The review-stage images are removed last.
+    """
+    if not await roles.is_reviewer(address):
+        raise HTTPException(status_code=403, detail="Reviewer or admin only")
+    db = get_database()
+    key = {"address": owner, "storyId": story_id}
+
+    review = await db.twine_review.find_one(key, {"status": 1, "lastUpdate": 1, "submittedAt": 1})
+    if not review:
+        raise HTTPException(status_code=404, detail="Review submission not found")
+    refusal = _review_refusal(review, datetime.now(timezone.utc))
+    if refusal:
+        raise HTTPException(status_code=409, detail=refusal)
+    if await db.twine_live.find_one({"_id": story_id}, {"_id": 1}):
+        raise HTTPException(status_code=409, detail=_LIVE_ID_TAKEN)
+
+    try:
+        twine_images.copy_stage(owner, story_id, twine_images.STAGE_REVIEW, twine_images.STAGE_SERVED)
+    except Exception as exc:
+        raise HTTPException(status_code=502, detail=f"Could not copy images for the live story: {exc}")
+
+    async def approve() -> Optional[str]:
+        # Read again inside the transaction, so everything decided here is current.
+        current = await db.twine_review.find_one(key)
+        if not current:
+            return "missing"
+        if _review_refusal(current, datetime.now(timezone.utc)):
+            return "changed"
+        if await db.twine_live.find_one({"_id": story_id}, {"_id": 1}):
+            return "taken"
+        now = datetime.now(timezone.utc).isoformat()
+        await db.twine_live.insert_one(_live_story_doc(current, address, now))
+        moved = await db.twine_review.update_one(
+            {**key, "status": "submitted"},
+            {"$set": {"status": "approved", "approvedAt": now, "approvedBy": address},
+             "$unset": {"passages": "", "storyData": ""}},
+        )
+        if moved.modified_count != 1:
+            return None  # changed meanwhile: rolls the live copy back
+        return "approved"
+
+    try:
+        outcome = await run_in_transaction(approve)
+    except DuplicateKeyError:
+        outcome = "taken"
+
+    if outcome != "approved":
+        if outcome != "taken":
+            # Nothing went live: drop the served copy again (best effort).
+            try:
+                twine_images.delete_stage(owner, twine_images.STAGE_SERVED, story_id)
+            except Exception as exc:
+                print(f"[approve] served images not removed for {owner}/{story_id}: {type(exc).__name__}: {exc}")
+        if outcome == "missing":
+            raise HTTPException(status_code=404, detail="Review submission not found")
+        if outcome == "taken":
+            raise HTTPException(status_code=409, detail=_LIVE_ID_TAKEN)
+        raise HTTPException(status_code=409, detail="The submission changed meanwhile - please try again")
+
+    try:
+        twine_images.delete_stage(owner, twine_images.STAGE_REVIEW, story_id)
+    except Exception as exc:
+        # Best effort: the story is live with its served images.
+        print(f"[approve] review images not deleted for {owner}/{story_id}: {type(exc).__name__}: {exc}")
+
+    return {"ok": True, "owner": owner, "storyId": story_id, "status": "approved"}
 
 
 @player_router.get("/twine-rejected")

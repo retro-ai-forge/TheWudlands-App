@@ -1,9 +1,9 @@
 """Your Legend: a character's reputation values (see "Your Legend" on
 app/create/tools and the tutorial section in app/create/tutorial).
 
-Stored on the character doc as `legend: {name: 0-100}` (floats), one entry per name,
-without the `meta_` prefix the story variables carry ($meta_mercy in a
-story = legend.mercy on the character). The names come in pairs; except for
+Stored on the character doc as `legend: {name: 0-100}` (floats), one entry per name;
+stories reach them per character ($lead.mercy in a story = legend.mercy on
+the lead). The names come in pairs; except for
 fame/infamy (two separate values that pull against each other) a pair is one
 scale, so only one side of it is ever above 0.
 
@@ -12,10 +12,11 @@ the one write path, through apply_change, the one calculation). Some
 values fade with time (Renown, "out of sight, out of mind"): the fade is
 worked out on read from legendUpdatedAt (decayed), like attribute healing,
 and folded in on the next write:
-a story's `<<set $meta_mercy += 3>>` goes straight into the character doc,
-with the rules from data/legend-rules.json applied (apply_change). There is
-no per-adventure tracking; story review makes sure no loop or oversized
-change exists.
+a story's `<<set $lead.mercy += 3>>` goes straight into the character doc,
+with the rules from data/legend-rules.json applied (apply_change). Stories
+can't farm it (planned, twinejs-integrated/APP_INTEGRATION_HEADLESS.md): a
+story changes at most 2 pairs (echoes don't count), and its changes per
+character come from points set aside at the first run, at most 10 per pair.
 """
 
 import json
@@ -96,7 +97,7 @@ def _apply_one(legend: dict, name: str, amount: float) -> None:
 
 
 def apply_change(legend, name: str, amount: float) -> dict:
-    """The legend after one change: `<<set $meta_<name> += amount>>`
+    """The legend after one change: `<<set $lead.<name> += amount>>`
     (a negative amount is `-=`). Every change - stories, foraging, anything
     later - goes through here, so the related values always move with it.
 

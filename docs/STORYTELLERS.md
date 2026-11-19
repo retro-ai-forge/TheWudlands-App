@@ -103,7 +103,7 @@ Adventures are submitted alongside their image assets. The engine validates ever
 - Validity of all choice targets (every `to` field must point to an existing scene)
 - Correct typing on `isEnding` flags
 
-Adventures that fail validation are not published. Everything you need to know about the addon format, image specifications, style presets, and submission requirements is documented in the Storyteller section of the app.
+Adventures that fail validation are not published. You can update a submitted story by submitting it again, but only within 7 days of your last submit (each submit starts the 7 days again). After that it is locked and waits for a reviewer, however long that takes: reviewers only look at stories you can no longer change. If it is rejected, you get the reason and can fix it and submit it again. If it passes, it goes live and players can play it. A live story is final: it can't be resubmitted. To publish changes, duplicate it in the editor and submit the copy as a new story. Only the platform fixes bugs in a live story. Everything you need to know about the addon format, image specifications, style presets, and submission requirements is documented in the Storyteller section of the app.
 
 ## Revenue Share
 
@@ -111,4 +111,4 @@ When a player pays the entry fee for your adventure, the revenue split is applie
 
 ## Play Count Model
 
-Play counts are tracked per player per adventure. When a player enters your adventure, the engine checks their remaining play count. If the count is zero, entry is refused until the player pays the entry fee again. Play count decrements when the player reaches an ending scene or uses the retreat. This mirrors the real-world model of paying for the seat, not the outcome.
+Play counts are tracked per player per adventure. When a player enters your adventure, the engine checks their remaining play count. If the count is zero, entry is refused until the player pays the entry fee again. Play count decrements when the player reaches an ending scene or uses the retreat. Only reaching an ending of the main story counts as completing it, which unlocks follow-up stories; a retreat doesn't. This mirrors the real-world model of paying for the seat, not the outcome.

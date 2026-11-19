@@ -116,19 +116,20 @@ async def _purge(db) -> None:
     for name in _PLAYER_COLLECTIONS:
         await db[name].delete_many({"address": ADDRESS})
     await db.twine_review.delete_many({"address": AUTHOR})
+    await db.twine_live.delete_many({"address": AUTHOR})
     await db.story_snapshots.delete_many({"storyAuthor": AUTHOR})
 
 
 @pytest.fixture
 async def world(mongodb_uri):
-    """A submitted test story and two fresh characters; cleaned up after."""
+    """A live (approved) test story and two fresh characters; cleaned up after."""
     db = get_database()
     await _purge(db)
-    await db.twine_review.insert_one({
+    await db.twine_live.insert_one({
+        "_id": STORY_ID,
         "address": AUTHOR,
         "storyId": STORY_ID,
         "name": "Test Crypt",
-        "status": "submitted",
         "storyData": STORY_DATA,
         "passages": PASSAGES,
         "metadata": {"meta_title": "Test Crypt", "meta_maxCharNum": 2, "meta_access": "free"},
@@ -402,8 +403,8 @@ async def test_toggle_and_delete_refuse_characters_in_a_session(world):
 # ── Run counter ─────────────────────────────────────────────────────────────
 
 async def _set_access(db, access):
-    await db.twine_review.update_one(
-        {"address": AUTHOR, "storyId": STORY_ID}, {"$set": {"metadata.meta_access": access}}
+    await db.twine_live.update_one(
+        {"_id": STORY_ID}, {"$set": {"metadata.meta_access": access}}
     )
 
 

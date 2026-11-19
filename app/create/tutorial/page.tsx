@@ -44,10 +44,10 @@ const LEGEND_BANDS = [
   { range: "90–100", name: "legendary", use: "Songs, statues, and bounties." },
 ];
 
-const READ_EXAMPLE = `<<if $meta_fame gte 30>>
+const READ_EXAMPLE = `<<if $lead.fame gte 30>>
   The guards recognise you and wave you through.
   [[Walk through the main gate->Market]]
-<<elseif $meta_obscurity gte 30>>
+<<elseif $lead.obscurity gte 30>>
   No one looks twice at you.
   [[Slip in through the smugglers' tunnel->Tunnel]]
   [[Pay the toll->Market]]
@@ -58,13 +58,16 @@ const READ_EXAMPLE = `<<if $meta_fame gte 30>>
 <</if>>`;
 
 const CHANGE_EXAMPLE = `You lower your blade and let the bandit run.
-<<set $meta_mercy += 3>>
+<<set $lead.mercy += 3>>
 
 [[Walk on->Road]]`;
 
+const PARTY_EXAMPLE = `The whole party holds the bridge until dawn.
+<<for _i, _c range $char>><<set _c.courage += 2>><</for>>`;
+
 const RETREAT_EXAMPLE = `:: Retreat
 You turn your back on the crypt and run.
-<<set $meta_cowardice += 2>>
+<<for _i, _c range $char>><<set _c.cowardice += 1>><</for>>
 <<set $isEnding to true>>`;
 
 export default function Tutorial() {
@@ -117,26 +120,26 @@ export default function Tutorial() {
           <p className={styles.body}>
             Over many adventures each character builds a legend: Fame, Mercy, Courage and the rest
             (see <Link href="/create/tools?section=storyimpact" className={styles.inlineLink}>Your Legend</Link>).
-            These values belong to the character, not to your story, and they outlive the adventure.
-            That is why they always carry the <span className={styles.code}>meta_</span> prefix,
-            like the story metadata in <span className={styles.code}>StoryInit</span>.
+            These values belong to each character, not to your story, and they outlive the adventure.
+            That is why you reach them through the characters: <span className={styles.code}>$lead.mercy</span> for
+            the party lead, <span className={styles.code}>$char[1].mercy</span> for the second in line.
           </p>
 
           <p className={styles.body}>
-            A good story picks <span className={styles.highlight}>two values</span> from the list as its main levers,
+            A story changes at most <span className={styles.highlight}>two pairs</span>, its main levers:
             for example Mercy and Courage for a siege, or Favour and Corruption for a vampire court.
-            Build the important decisions around those two, and touch the others only where a scene truly calls for it.
+            Build the important decisions around those two. Reading other values is always fine.
             A story that pulls on everything leaves no clear mark.
           </p>
 
           <h3 className={`${h.sub} ${h.muted}`}>The variables</h3>
           <p className={styles.body}>
-            Every name is its own variable, from 0 to 100. Use whichever side of a pair fits your scene:
+            Every character carries each name as its own value, from 0 to 100. Use whichever side of a pair fits your scene:
           </p>
           <ul className={styles.pairList}>
             {LEGEND_PAIRS.map(([a, b]) => (
               <li key={a}>
-                <span className={styles.code}>{"$meta_" + a}</span> / <span className={styles.code}>{"$meta_" + b}</span>
+                <span className={styles.code}>{a}</span> / <span className={styles.code}>{b}</span>
               </li>
             ))}
           </ul>
@@ -166,30 +169,35 @@ export default function Tutorial() {
 
           <h3 className={`${h.sub} ${h.muted}`}>Reading the legend</h3>
           <p className={styles.body}>
-            When the adventure starts, the engine fills the variables with the character&apos;s values.
-            Do not set them in <span className={styles.code}>StoryInit</span>. Check a level with
+            Before every scene the engine fills in each character&apos;s current values.
+            Never set them in <span className={styles.code}>StoryInit</span>. Check a level with
             the lower edge of its range, for example <span className={styles.code}>gte 30</span> for known:
           </p>
           <pre className={styles.codeBlock}>{READ_EXAMPLE}</pre>
 
           <h3 className={`${h.sub} ${h.muted}`}>Changing the legend</h3>
           <p className={styles.body}>
-            Only add with <span className={styles.code}>+=</span> (or take away with <span className={styles.code}>-=</span>),
-            never set a value with <span className={styles.code}>to</span>: each change is added to the character
+            Change one character at a time. Only add with <span className={styles.code}>+=</span> (or take away with <span className={styles.code}>-=</span>),
+            never set a value with <span className={styles.code}>to</span>: each change is added to that character
             the moment its scene plays. You don&apos;t need to lower the other side of a pair, the engine does that.
           </p>
           <pre className={styles.codeBlock}>{CHANGE_EXAMPLE}</pre>
+          <p className={styles.body}>
+            To mark the whole party, loop over <span className={styles.code}>$char</span>:
+          </p>
+          <pre className={styles.codeBlock}>{PARTY_EXAMPLE}</pre>
           <ul className={styles.ruleList}>
             <li>Mark only decisions that should leave a lasting mark. Small deeds 1–3, great deeds 5 or more.</li>
-            <li>Keep one adventure&apos;s changes to at most 10 per value. Review checks this, and that no loop lets a player repeat a change.</li>
+            <li>A story changes at most two pairs; the submit check refuses a third. Echoes don&apos;t count. It moves each pair at most as far as its changes to that pair add up to, and never more than 10 points per character.</li>
+            <li>Replays don&apos;t add up: the first time a character plays your story, those points are set aside for it, and every change uses them up. Once they are spent, your story no longer changes that character&apos;s Legend, however often it is played again.</li>
             <li>A change counts as soon as its scene plays and is never taken back, even if the adventure later ends in <span className={styles.code}>Retreat</span> or <span className={styles.code}>LastResort</span>. Like everything in the Wudlands, deeds are final.</li>
-            <li>Renown fades slowly over time, about one point every four weeks, unless new deeds feed it.</li>
+            <li>Renown fades slowly over time, about one point a week, unless new deeds feed it.</li>
             <li>With every change the engine applies the rules from Your Legend: opposites, Fame against Infamy, and echoes such as Cruelty raising Infamy.</li>
           </ul>
 
-          <h3 className={`${h.sub} ${h.muted}`}>The price of running away</h3>
+          <h3 className={`${h.sub} ${h.muted}`}>Running away</h3>
           <p className={styles.body}>
-            Your Retreat story decides what fleeing costs. If it sets no price, one may be added after review.
+            Running away costs no Legend. If fleeing your story should leave a mark, your Retreat story may set a small price, such as 1 Cowardice. It counts like any other change, also toward your two pairs.
           </p>
           <pre className={styles.codeBlock}>{RETREAT_EXAMPLE}</pre>
         </section>

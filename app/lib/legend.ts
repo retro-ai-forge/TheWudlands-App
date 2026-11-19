@@ -1,6 +1,6 @@
 // Your Legend: the character's reputation values (backend/legend.py), stored
-// on the character as legend: {name: 0-100}. In stories each name is the
-// variable $meta_<name>. Except for fame/infamy a pair is one scale, so only
+// on the character as legend: {name: 0-100}. Stories read and change them
+// per character ($lead.mercy). Except for fame/infamy a pair is one scale, so only
 // one side of it is ever above 0.
 
 /** [first, second] per pair, the same order as backend LEGEND_PAIRS. */

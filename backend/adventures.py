@@ -74,10 +74,6 @@ from backend.character import vital_status_list
 from backend.db import find_one_and_update_checked, get_database
 from backend.twine_graph import LAST_RESORT_PASSAGE, build_story_graph, step_allowed
 
-# Review statuses a story may be played from. Stories are only "submitted" today;
-# once an approval step exists, drop "submitted" here so only approved ones run.
-PLAYABLE_REVIEW_STATUSES = ("submitted", "approved")
-
 # Hard party-size cap, whatever a story declares in $meta_maxCharNum.
 MAX_PARTY_SIZE = 4
 
@@ -142,14 +138,20 @@ def _max_party(metadata: dict) -> int:
     return MAX_PARTY_SIZE
 
 
+async def _live_story(db, story_author: str, story_id: str, projection=None) -> Optional[dict]:
+    """A live story: one that passed review (twine_live, `_id` = story id).
+    Submitted stories are only reviewable, never playable."""
+    return await db.twine_live.find_one({"_id": story_id, "address": story_author}, projection)
+
+
 async def _snapshot_story(db, story_author: str, story_id: str) -> dict:
     """Pin the current version of a story and return its snapshot doc."""
-    review = await db.twine_review.find_one({"address": story_author, "storyId": story_id})
-    if not review or review.get("status") not in PLAYABLE_REVIEW_STATUSES:
+    live = await _live_story(db, story_author, story_id)
+    if not live:
         raise AdventureError("Story not found or not playable", 404)
 
-    passages = review.get("passages", [])
-    story_data = review.get("storyData", {})
+    passages = live.get("passages", [])
+    story_data = live.get("storyData", {})
     digest = hashlib.sha256(
         json.dumps({"p": passages, "s": story_data}, sort_keys=True, default=str).encode()
     ).hexdigest()[:16]
@@ -159,11 +161,11 @@ async def _snapshot_story(db, story_author: str, story_id: str) -> dict:
     if not graph["start"]:
         raise AdventureError("Story has no start passage", 422)
 
-    metadata = review.get("metadata", {})
+    metadata = live.get("metadata", {})
     snapshot = {
         "storyAuthor": story_author,
         "storyId": story_id,
-        "title": str(metadata.get("meta_title") or review.get("name") or story_id),
+        "title": str(metadata.get("meta_title") or live.get("name") or story_id),
         "maxCharNum": _max_party(metadata),
         "storyData": story_data,
         "passages": passages,
@@ -176,7 +178,7 @@ async def _snapshot_story(db, story_author: str, story_id: str) -> dict:
         {"_id": snapshot_id}, {"$setOnInsert": snapshot}, upsert=True
     )
     _cache_graph(snapshot_id, graph)
-    # Access is read from the live review doc each start (not stored in the
+    # Access is read from the live story doc each start (not stored in the
     # snapshot), so a change to $meta_access applies to the next run.
     return {"_id": snapshot_id, **snapshot, "graph": graph, "access": _story_access(metadata)}
 
@@ -263,12 +265,10 @@ async def story_runs(address: str, story_author: str, story_id: str) -> dict:
     `remaining` is None for free stories (no limit).
     """
     db = get_database()
-    review = await db.twine_review.find_one(
-        {"address": story_author, "storyId": story_id}, {"metadata": 1}
-    )
-    if review is None:
+    live = await _live_story(db, story_author, story_id, {"metadata": 1})
+    if live is None:
         raise AdventureError("Story not found", 404)
-    access = _story_access(review.get("metadata", {}))
+    access = _story_access(live.get("metadata", {}))
     if access == "free":
         return {"access": access, "remaining": None}
     plays = await db.story_plays.find_one(
@@ -285,12 +285,10 @@ async def grant_runs(
     if runs < 1:
         raise AdventureError("runs must be at least 1")
     db = get_database()
-    review = await db.twine_review.find_one(
-        {"address": story_author, "storyId": story_id}, {"metadata": 1}
-    )
-    if review is None:
+    live = await _live_story(db, story_author, story_id, {"metadata": 1})
+    if live is None:
         raise AdventureError("Story not found", 404)
-    access = _story_access(review.get("metadata", {}))
+    access = _story_access(live.get("metadata", {}))
     if access == "free":
         raise AdventureError("This story is free - there is nothing to buy")
     key = _plays_key(address, story_author, story_id)

@@ -73,7 +73,9 @@ def sanitize_filename(name: str) -> str:
 
     base = os.path.basename(name or "").strip()
     stem, ext = os.path.splitext(base)
-    stem = re.sub(r"[^A-Za-z0-9._-]+", "_", stem).strip("._-")
+    # No dots inside the name: a story writes it as [img[name.ext]], and the
+    # submit check takes exactly that (auth_routes._IMAGE_FILENAME_RE).
+    stem = re.sub(r"[^A-Za-z0-9_-]+", "_", stem).strip("_-")
     ext = re.sub(r"[^A-Za-z0-9]+", "", ext).lower()
     if not stem:
         stem = "image"
