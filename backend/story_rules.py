@@ -86,11 +86,14 @@ REFUSED_PASSAGES = frozenset({
     "StoryInterface", "StoryCaption", "StoryMenu", "StoryBanner",
     "StorySubtitle", "StoryAuthor", "StoryShare", "StoryDisplayTitle",
 })
-REFUSED_TAGS = frozenset({"widget", "init", "script"})
+# SugarCube 2 sets aside only `init` and `widget` passages (its codeTagNames);
+# for a Twine 2 story it plays a `script` or `stylesheet` passage as an
+# ordinary scene - the tags are Twine 1/Twee only - so the CSS goes in the
+# Story Stylesheet and these tags are refused outright, whatever the case.
+REFUSED_TAGS = frozenset({"widget", "init", "script", "stylesheet"})
 # Media passages (the scene's text is the file). Twine.image has its own
 # message in auth_routes._image_rule_errors.
 REFUSED_MEDIA_TAGS = frozenset({"twine.audio", "twine.video", "twine.vtt"})
-STYLESHEET_TAG = "stylesheet"
 
 # ── What a scene may hold ────────────────────────────────────────────────────
 
@@ -252,6 +255,33 @@ def plain_text_problem(text: str) -> Optional[str]:
         return "a link or button text can't contain -- (write a single dash)"
     if _TEXT_MEMBER_CALL_RE.search(text):
         return "a link or button text can't read like program code (new or delete before a name with a dot)"
+    return None
+
+
+STORY_NAME_MAX = 100
+
+
+def story_name_problem(name) -> Optional[str]:
+    """Why a story's name isn't accepted, or None if it is.
+
+    The editor writes the name HTML-escaped into the story page, but SugarCube
+    decodes it again and shows it in its UI bar as markup (UIBar
+    setDisplayTitle), so a name like </title><script>...</script> would run.
+    It is also put inside a JavaScript string there, where a backslash or a
+    line break stops SugarCube from starting. Hence plain words, like a link
+    text.
+    """
+    if not isinstance(name, str) or not name.strip():
+        return "The story needs a name (Story > Details)"
+    if len(name) > STORY_NAME_MAX:
+        return f"The story name is longer than {STORY_NAME_MAX} characters"
+    bad = sorted({ch for ch in name if not (ch.isalpha() or ch.isdigit() or ch in _TEXT_PUNCTUATION)})
+    if bad:
+        shown = " ".join("space" if ch.isspace() else ch for ch in bad)
+        return (
+            "The story name is plain words - letters, digits, spaces and . , ! ? ' : ; - "
+            f"(found {shown})"
+        )
     return None
 
 
@@ -1537,12 +1567,10 @@ def check_story(passages: list, story_data: dict) -> StoryCheck:
             continue
         refused_tags = sorted(t for t in tags if t.lower() in REFUSED_TAGS | REFUSED_MEDIA_TAGS)
         if refused_tags:
+            hint = " (styles go in the Story Stylesheet)" if "stylesheet" in lowered else ""
             result.errors.append(
-                f"Passage '{name}' is tagged {', '.join(refused_tags)} - scenes with this tag aren't accepted"
+                f"Passage '{name}' is tagged {', '.join(refused_tags)} - scenes with this tag aren't accepted{hint}"
             )
-            continue
-        if STYLESHEET_TAG in lowered:
-            result.errors.extend(stylesheet_errors(f"Passage '{name}'", text))
             continue
         scene = _Scene(name, text)
         scene.check()

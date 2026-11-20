@@ -310,11 +310,17 @@ Allowed tags: `p`, `br`, `div`, `span`, `b`, `strong`, `i`, `em`, `u`, `s`, `sma
 
 Any normal CSS is fine. Not allowed: `url(...)`, `image-set(...)`, `image(...)`, `cross-fade(...)`, `element(...)`, `@import`, `@font-face`, `@namespace`, `expression(...)`, `behavior`, `-moz-binding` and `javascript:`, because they load things from outside the story or run code; also backslash escapes (they can hide the words above) and `<`. The story is shown in its own frame, so its styles can't change the rest of the app.
 
+## Story name and tags
+
+- The story's name (Story > Details) is plain words, like a link text: letters, digits, spaces and `. , ! ? ' : ; -`, at most 100 characters. SugarCube shows the name in its sidebar as markup, so `<`, `[`, `$` and the like could run there; a backslash or a line break stops the story from starting.
+- Tags are single words without spaces (the editor turns a space into `-`). SugarCube splits a scene's tags at spaces, so one tag `x widget` would make it a widget scene.
+- The story's own settings have the kinds the editor gives them: text for the stylesheet and the Story JavaScript, a list of tags, colour names for tag colours.
+
 ## Special scenes
 
 - `StoryInit`, `Retreat` and `LastResort` are the only special scenes (see the submission rules for Retreat and LastResort), plus `TestCharacters`, the test party, which is stored apart from the scenes on submit (see "Test characters").
 - `StoryInit` only sets up values: `<<set>>`, `<<if>>` and `<<switch>>`, and the cover image.
-- Not allowed: `PassageReady`, `PassageDone`, `PassageHeader`, `PassageFooter`, `StoryInterface`, `StoryCaption`, `StoryMenu`, `StoryBanner`, `StorySubtitle`, `StoryAuthor`, `StoryShare`, `StoryDisplayTitle`, the scene tags `widget`, `init` and `script`, and media scenes (`Twine.image`, `Twine.audio`, `Twine.video`, `Twine.vtt`).
+- Not allowed: `PassageReady`, `PassageDone`, `PassageHeader`, `PassageFooter`, `StoryInterface`, `StoryCaption`, `StoryMenu`, `StoryBanner`, `StorySubtitle`, `StoryAuthor`, `StoryShare`, `StoryDisplayTitle`, the scene tags `widget`, `init`, `script` and `stylesheet` (SugarCube plays a `script` or `stylesheet` scene as an ordinary scene in a Twine 2 story; styles go in the Story Stylesheet), and media scenes (`Twine.image`, `Twine.audio`, `Twine.video`, `Twine.vtt`).
 - The Story JavaScript must be empty. The platform adds what it needs, such as `<<area>>`, itself.
 
 ## Not accepted

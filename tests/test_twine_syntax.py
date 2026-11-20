@@ -30,6 +30,7 @@ def _story(passages, start="1", fmt="SugarCube", with_retreat=True, tags=("adven
             _p("retreat", "Retreat", "You withdraw. <<set $isEnding to true>>")
         )
     return {
+        "name": "Probe story",
         "storyData": {
             "startPassage": start, "storyFormat": fmt, "storyFormatVersion": version, "tags": list(tags),
         },
@@ -1053,10 +1054,27 @@ def test_stylesheet_may_not_load_pictures():
         _p("1", "Start", "Welcome [[End]]"),
         _p("2", "End", "The end. <<set $isEnding to true>>"),
         _p("3", "LastResort", "The tunnel collapses. <<set $isEnding to false>>"),
-        _p("4", "Story Stylesheet", "body { background: url('https://example.com/bg.png'); }", ["stylesheet"]),
+    ]
+    doc = _story(passages)
+    doc["storyData"]["stylesheet"] = "body { background: url('https://example.com/bg.png'); }"
+    errors = _check_twine_syntax(doc)["errors"]
+    assert any("Story Stylesheet" in e and "outside the story" in e for e in errors)
+
+
+@pytest.mark.parametrize("tag", ["stylesheet", "Stylesheet"])
+@pytest.mark.parametrize("trap", ["[[alert(1)|End]]", "[[Go on|End][$x to alert(1)]]"])
+def test_code_in_a_stylesheet_scene_is_refused(tag, trap):
+    # SugarCube plays a stylesheet-tagged passage as an ordinary scene in a
+    # Twine 2 story, so a scene leading there must not slip code past the check.
+    passages = [
+        _p("0", "StoryInit", VALID_INIT),
+        _p("1", "Start", "A dark cave. [[Look closer|Trap]] [[End]]"),
+        _p("2", "End", "The end. <<set $isEnding to true>>"),
+        _p("3", "LastResort", "The tunnel collapses. <<set $isEnding to false>>"),
+        _p("4", "Trap", trap, [tag]),
     ]
     errors = _check_twine_syntax(_story(passages))["errors"]
-    assert any("Story Stylesheet" in e and "outside the story" in e for e in errors)
+    assert any(e.startswith(f"Passage 'Trap' is tagged {tag}") for e in errors), errors
 
 
 def test_no_scene_may_stand_in_for_an_image():
@@ -1115,3 +1133,73 @@ def test_story_javascript_must_be_empty():
     errors = _with_story_data(script="Config.ui.stowBarInitially = true;")
     assert any("Story JavaScript must be empty" in e for e in errors)
     assert _with_story_data(script="  \n ") == []
+
+
+# --- story name and story data shape -------------------------------------------
+
+
+def _minimal_passages(start_text="Welcome [[End]]", start_tags=None):
+    return [
+        _p("0", "StoryInit", VALID_INIT),
+        _p("1", "Start", start_text, start_tags),
+        _p("2", "End", "The end. <<set $isEnding to true>>"),
+        _p("3", "LastResort", "The tunnel collapses. <<set $isEnding to false>>"),
+    ]
+
+
+@pytest.mark.parametrize("name", ["The Cave", "Grimjaw's Last Stand: Part 2", "Élan, à la mode!"])
+def test_plain_story_names_are_accepted(name):
+    doc = {**_story(_minimal_passages()), "name": name}
+    assert _check_twine_syntax(doc)["errors"] == []
+
+
+@pytest.mark.parametrize(
+    "name, expected",
+    [
+        # SugarCube shows the decoded name in its UI bar as markup: this ran.
+        ("</title><script>alert(1)</script>", "plain words"),
+        ("[[alert(1)|End]]", "plain words"),
+        ("Probe\\", "plain words"),  # a backslash breaks SugarCube's start
+        ("Probe\nx", "plain words"),  # so does a line break
+        ("$x", "plain words"),
+        ("", "needs a name"),
+        ("   ", "needs a name"),
+        (None, "needs a name"),
+        ("x" * 101, "longer than 100"),
+    ],
+)
+def test_story_names_that_could_read_as_code_are_refused(name, expected):
+    doc = {**_story(_minimal_passages()), "name": name}
+    errors = _check_twine_syntax(doc)["errors"]
+    assert any(expected in e for e in errors), errors
+
+
+@pytest.mark.parametrize(
+    "story_data, expected",
+    [
+        ({"script": []}, "script must be text"),
+        ({"script": {}}, "script must be text"),
+        ({"stylesheet": {}}, "stylesheet must be text"),
+        ({"stylesheet": ["a"]}, "stylesheet must be text"),
+        ({"tags": "probe"}, "tags must be a list"),
+        ({"tags": [1]}, "tags must be a list"),
+        ({"tagColors": {"probe": ["red"]}}, "tag colours"),
+        ({"zoom": "1"}, "zoom must be a number"),
+        ({"zoom": True}, "zoom must be a number"),
+        ({"snapToGrid": "yes"}, "snapToGrid"),
+        ({"tags": ["dark forest"]}, "without spaces"),
+    ],
+)
+def test_story_data_of_the_wrong_kind_is_refused(story_data, expected):
+    doc = _story(_minimal_passages())
+    doc["storyData"].update(story_data)
+    errors = _check_twine_syntax(doc)["errors"]
+    assert any(expected in e for e in errors), errors
+
+
+@pytest.mark.parametrize("tag", ["x widget", "x init", "a\tTwine.image", "x stylesheet"])
+def test_passage_tags_with_spaces_are_refused(tag):
+    # One tag "x widget" reaches SugarCube as the tags x and widget.
+    doc = _story(_minimal_passages(start_tags=[tag]))
+    errors = _check_twine_syntax(doc)["errors"]
+    assert any("without spaces" in e for e in errors), errors

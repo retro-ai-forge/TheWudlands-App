@@ -453,8 +453,23 @@ def test_stylesheet_rules(css, expected):
 def test_a_normal_stylesheet_passes():
     css = ".row { display: flex; gap: 1em; }\n.passage > p:first-child { color: #c33; }"
     assert check_story([], {"stylesheet": css}).errors == []
-    tagged = _passages(("Story Stylesheet", "@font-face { src: x }", ["stylesheet"]))
-    assert any(e.startswith("Passage 'Story Stylesheet', line 1: @font-face") for e in check_story(tagged, {}).errors)
+
+
+@pytest.mark.parametrize("tag", ["stylesheet", "Stylesheet", "STYLESHEET", "script"])
+@pytest.mark.parametrize(
+    "text",
+    [
+        "body { color: red; }",
+        # Code that passes the stylesheet rules - SugarCube plays a stylesheet
+        # scene as an ordinary one in a Twine 2 story, link text and all.
+        "[[alert(1)|End]]",
+        "[[Go on|End][$x to alert(1)]]",
+    ],
+)
+def test_stylesheet_and_script_scenes_are_refused(tag, text):
+    tagged = _passages(("Story Stylesheet", text, [tag]))
+    errors = check_story(tagged, {}).errors
+    assert any(e.startswith(f"Passage 'Story Stylesheet' is tagged {tag}") for e in errors), errors
 
 
 # --- story format -------------------------------------------------------------------

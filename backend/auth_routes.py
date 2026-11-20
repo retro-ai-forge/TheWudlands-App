@@ -3468,14 +3468,66 @@ def _collect_story_tags(doc: dict) -> list:
     return sorted(tags)
 
 
+_STORY_DATA_TEXT = ("storyFormat", "storyFormatVersion", "startPassage", "stylesheet", "script")
+
+
+def _story_shape_problems(doc: dict) -> List[str]:
+    """What the editor never sends: a name that isn't plain words, and story
+    fields of the wrong kind. Checked before anything else, so the rest of the
+    check and the editor's publish code (which joins the tags and so on) only
+    see the right kinds - a list where text belongs passes `or ""` here but is
+    a truthy object in the editor."""
+    problems: List[str] = []
+    name_problem = story_rules.story_name_problem(doc.get("name"))
+    if name_problem:
+        problems.append(name_problem)
+    data = doc.get("storyData")
+    if not isinstance(data, dict):
+        return problems + ["The story data must be an object"]
+    for key in _STORY_DATA_TEXT:
+        if data.get(key) is not None and not isinstance(data[key], str):
+            problems.append(f"The story's {key} must be text")
+    tags = data.get("tags")
+    if tags is not None and not (isinstance(tags, list) and all(isinstance(t, str) for t in tags)):
+        problems.append("The story's tags must be a list of words")
+    colors = data.get("tagColors")
+    if colors is not None and not (
+        isinstance(colors, dict) and all(isinstance(v, str) for v in colors.values())
+    ):
+        problems.append("The story's tag colours must map tag names to colour names")
+    zoom = data.get("zoom")
+    if zoom is not None and (isinstance(zoom, bool) or not isinstance(zoom, (int, float))):
+        problems.append("The story's zoom must be a number")
+    if data.get("snapToGrid") is not None and not isinstance(data["snapToGrid"], bool):
+        problems.append("The story's snapToGrid must be true or false")
+    # The editor writes a passage's tags as one space-separated attribute and
+    # SugarCube splits it again, so one tag "x widget" would reach SugarCube
+    # as a widget passage that the check took for an ordinary tag.
+    spaced = sorted({
+        str(t) for t in [*(tags if isinstance(tags, list) else []),
+                         *(t for p in doc.get("passages") or [] for t in (p.get("tags") or []))]
+        if not isinstance(t, str) or any(ch.isspace() for ch in t)
+    })
+    if spaced:
+        problems.append(
+            "Tags are single words without spaces (found "
+            + ", ".join(f"'{t}'" for t in spaced) + ")"
+        )
+    return problems
+
+
 def _check_twine_syntax(doc: dict) -> dict:
     """Run syntax checks on a saved Twine story document.
 
     Returns {"errors": [...], "warnings": [...]}. Errors block submission;
-    warnings are advisory and still allow it.
+    warnings are advisory and still allow it. `doc` carries the story's name:
+    it is checked too (story_rules.story_name_problem).
     """
     errors: List[str] = []
     warnings: List[str] = []
+    shape = _story_shape_problems(doc)
+    if shape:
+        return {"errors": shape, "warnings": warnings}
     passages = doc.get("passages", [])
     story_data = doc.get("storyData", {})
     start_passage = story_data.get("startPassage", "")
@@ -4265,7 +4317,20 @@ async def get_twine_review_story(
     )
     if not review:
         raise HTTPException(status_code=404, detail="Review submission not found")
-    return {"owner": owner, **review}
+    # Stored as it was submitted, so possibly before a rule existed: the editor
+    # shows these and keeps Test and Play off for the copy until a Save review
+    # passes (twinejs-integrated src/util/review-copies.ts).
+    return {"owner": owner, **review, "checkProblems": _submission_problems(review)}
+
+
+def _submission_problems(review: dict) -> List[str]:
+    """Today's story check on a stored submission: its name, scenes and story
+    data. A submission made before a rule existed can fail it."""
+    return _check_twine_syntax({
+        "name": review.get("name"),
+        "passages": review.get("passages") or [],
+        "storyData": review.get("storyData") or {},
+    })["errors"]
 
 
 _LIVE_ID_TAKEN = "Another live story already uses this story id"
@@ -4415,16 +4480,15 @@ async def approve_twine_review(
         raise HTTPException(status_code=409, detail=_LIVE_ID_TAKEN)
     # What goes live passes today's story check, also a submission made before
     # it existed: the reviewer fixes it in the editor and uses Save review.
-    stored = await db.twine_review.find_one(key, {"passages": 1, "storyData": 1})
-    problems = _check_twine_syntax(
-        {"passages": (stored or {}).get("passages", []), "storyData": (stored or {}).get("storyData", {})}
-    )["errors"]
+    stored = await db.twine_review.find_one(key, {"name": 1, "passages": 1, "storyData": 1})
+    problems = _submission_problems(stored or {})
     if problems:
         more = f" (and {len(problems) - 1} more)" if len(problems) > 1 else ""
         raise HTTPException(
             status_code=409,
             detail=f"This submission fails the story check: {problems[0]}{more}. "
-            "Open it in the editor, fix it and use Save review.",
+            "Open it in the editor, fix it and use Save review - or reject it if only "
+            "its author can fix it (the story's name).",
         )
 
     try:

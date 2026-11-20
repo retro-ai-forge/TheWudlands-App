@@ -113,6 +113,18 @@ async def test_approve_refuses_a_submission_that_fails_the_story_check(db, stora
     assert storage == []
 
 
+async def test_approve_refuses_a_story_name_that_could_run(db, storage):
+    # SugarCube shows the story's name as markup; Approve checks it too.
+    await _submission(db, name="</title><script>alert(1)</script>")
+
+    with pytest.raises(HTTPException) as refused:
+        await approve_twine_review(AUTHOR, STORY, address=REVIEWER)
+
+    assert refused.value.status_code == 409
+    assert "story name is plain words" in refused.value.detail
+    assert await db.twine_live.find_one({"_id": STORY}) is None
+
+
 async def test_reviewer_approves_after_the_week(db, storage):
     await _submission(db)
 

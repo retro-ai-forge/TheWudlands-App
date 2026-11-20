@@ -68,3 +68,19 @@ async def test_roles_for_the_page(db):
     assert await get_my_roles(address=REVIEWER) == {"reviewer": True, "admin": False}
     assert await get_my_roles(address=ADMIN) == {"reviewer": True, "admin": True}
     assert await get_my_roles(address=PLAYER) == {"reviewer": False, "admin": False}
+
+
+async def test_the_copy_comes_with_todays_check(db):
+    # Stored as submitted - this one fails today's check (no StoryInit and so
+    # on), and the editor keeps Test and Play off while it does.
+    story = await get_twine_review_story(AUTHOR, "tale", address=REVIEWER)
+    assert story["checkProblems"], story
+    assert any("StoryInit" in p for p in story["checkProblems"])
+
+
+async def test_a_name_that_could_run_is_reported(db):
+    await db.twine_review.update_one(
+        {"address": AUTHOR, "storyId": "tale"}, {"$set": {"name": "</title><script>alert(1)</script>"}}
+    )
+    story = await get_twine_review_story(AUTHOR, "tale", address=REVIEWER)
+    assert any("story name is plain words" in p for p in story["checkProblems"]), story["checkProblems"]
