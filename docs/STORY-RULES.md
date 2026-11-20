@@ -1,10 +1,10 @@
 # Story Rules
 
-> **Draft.** These rules are not enforced yet. The automatic story check will refuse anything that is not described here, and tell you the scene, the line and an accepted form to use instead.
+> **Enforced.** The story check runs when you submit, when a reviewer saves edits, and again before a story goes live. It refuses anything that is not described here, and tells you the scene, the line and an accepted form to use instead.
 
 Stories run on the Wudlands server, not in the player's browser. The player only receives the finished scene: text, images and buttons. These rules keep it that way: a story can tell its tale, keep track of things, react to the characters and shape their Legend, but it can't run its own program code, reach outside the story or show players anything the platform didn't check.
 
-Everything in "Accepted forms" below has been tested in SugarCube 2.37.3, the story format the editor uses.
+Everything in "Accepted forms" below has been tested in SugarCube 2.37.3, the story format the editor uses. It is the only format a story can use: the editor offers no other, and a story naming any other format or version is refused.
 
 ## What a story may contain
 
@@ -127,7 +127,7 @@ Comparing character values with `<<if>>` only steers your story. It never costs 
 
 ### Test characters
 
-To try a story in the editor with characters, add a scene called `TestCharacters` with up to 4 characters as a plain list (JSON), leader first. The editor's Test puts them into `$char` and `$lead`. When you submit, this scene is removed and never stored: in a real adventure, the server brings in the players' characters instead.
+To try a story with characters, add a scene called `TestCharacters` with up to 4 characters as a plain list (JSON), leader first. The editor's Test puts them into `$char` and `$lead`. When you submit, the party is checked and stored with your submission as its test party, apart from the scenes, for test runs on the server; it never becomes a scene of the story. In a real adventure, the server brings in the players' characters instead.
 
 ```
 [
@@ -158,7 +158,7 @@ It holds data only, no commands, and is checked so a test party looks like a rea
 - **Attributes:** whole numbers of at least 1, with the same budgets as character creation: Body (`might`, `agility`, `endurance`, `precision`) adds up to 4-100, Soul (`will`, `insight`, `lore`, `presence`) to 4-100, and both together to 33-104 (33 for the youngest characters, 104 at the peak age). Grimjaw above has 54 + 32 = 86, Elara 38 + 61 = 99.
 - **Equipment:** existing item IDs with a tier, such as `"torch_2"`.
 
-The editor's Test refuses to start while the list has problems and says which. On submit, problems are reported and the scene is removed either way. No scene may link to `TestCharacters`, and no other scene or `StoryInit` may replace `$char` or `$lead`.
+The editor's Test refuses to start while the list has problems and says which. A party with problems refuses the submit, so the stored party is always one a test run can play with. A story without a `TestCharacters` scene has no test party. A reviewer who opens your submission gets the party back as a `TestCharacters` scene, and saving their edits stores it again. No scene may link to `TestCharacters`, and no other scene or `StoryInit` may replace `$char` or `$lead`.
 
 ## Accepted forms
 
@@ -187,7 +187,7 @@ The editor's Test refuses to start while the list has problems and says which. O
 ```
 
 - Story variables start with `$`, temporary ones (only for this scene) with `_`.
-- Values: whole or decimal numbers, `true`/`false`, and text in quotes. Quoted text can't contain `< > [ ] { } $ \` or backquotes - except the variable name a choice stores into, such as `"$path"` in `<<radiobutton "$path" "north">>`.
+- Values: whole or decimal numbers, `true`/`false`, and text in quotes. Quoted text can't contain `< > [ ] { } $ \`, backquotes or `@@` - except the variable name a choice stores into, such as `"$path"` in `<<radiobutton "$path" "north">>`.
 - Maths: `+ - * / %` and brackets; changes with `to`, `+=`, `-=`, `*=`, `/=`.
 - Functions: `random(min, max)`, `either(a, b, ...)`, `visited("Scene")`, a list's `.includes(value)` and `.length`. No others.
 
@@ -227,6 +227,7 @@ Every shown value appears as plain text, exactly as stored.
 ```
 
 - Destinations are always written out: a scene name, never a variable.
+- Link and button texts are plain words: letters, digits, spaces and `. , ! ? ' : ; -` (typographic quotes, dashes and `…` too, but no straight `"`). SugarCube runs a link's text as program code before showing it, so brackets, `=`, `+`, `$`, `_` and the like are refused there.
 - The part in the second brackets (`[$water to 3]`) runs when the player clicks.
 - Images are uploaded files from the story's Images list, written as the plain file name: a name of letters, digits, `_` and `-`, then `.webp`, `.png` or `.jpg`, like `[img[gate_open.webp]]`. No folders, web addresses, `data:` images, variables or tooltips (`[img[text|file]]`), and every image must be uploaded before you submit. An image may sit inside `<<if>>` to show it only sometimes; put its `<<area>>` lines in the same branch.
 - Nothing else may show a picture: no `<img>`, `<svg>`, `<picture>` or media tags, no `src=`, and no `url(...)` or `@import` in styles. Scenes tagged `Twine.image` aren't accepted.
@@ -244,7 +245,7 @@ Every shown value appears as plain text, exactly as stored.
 - Write where a button or link leads as a `[[link]]` inside it, so the editor draws the line to that scene.
 - Button and link texts are written out, never built from variables.
 - Between the opening and the closing tag: `<<set>>` and `<<if>>`. They run when the player clicks, before the story moves on.
-- Also accepted for now: the destination as quoted text, `<<button "Go to the cave" "Cave">>`, and `<<goto "Scene">>` between a button's or link's tags. Neither draws a line in the editor. `<<goto>>` is only allowed there, so a scene never jumps on its own.
+- Also accepted for now: the destination as quoted text, `<<button "Go to the cave" "Cave">>`, and `<<goto "Scene">>` between a button's or link's tags. Neither draws a line in the editor. `<<goto>>` is only allowed there, so a scene never jumps on its own. The scene must exist, and it is never `LastResort`.
 
 ### Choices
 
@@ -258,7 +259,7 @@ Every shown value appears as plain text, exactly as stored.
 [[Continue|Next]]
 ```
 
-Players only pick from the options you wrote; they never type anything.
+Players only pick from the options you wrote; they never type anything. A choice stores into your own story variable (never `$char`, `$lead`, `$isEnding` or a `$meta_` value). Also accepted: `checked` or `autocheck` after a radio button or checkbox, `autoselect` after the variable of a listbox or cycle, and `selected` after an option.
 
 ### Legend
 
@@ -295,7 +296,11 @@ Every character has 20 Legend values from 0 to 100, in 10 pairs: `fame`/`infamy`
 These lines
 are shown as one.
 <</nobr>>
+<!-- A note for yourself: players never see it. -->
+<<button [[Rest|Camp]]>><!-- also between a button's tags --><<set $water -= 1>><</button>>
 ```
+
+Comments (`<!-- ... -->`) go anywhere in a scene, on one line or several, but never inside a command's `<< >>`.
 
 ## HTML
 
@@ -303,12 +308,13 @@ Allowed tags: `p`, `br`, `div`, `span`, `b`, `strong`, `i`, `em`, `u`, `s`, `sma
 
 ## Stylesheet
 
-Any normal CSS is fine. Not allowed: `url(...)`, `@import`, `@font-face`, `expression(...)`, `behavior`, `-moz-binding` and `javascript:`, because they load things from outside the story or run code. The story is shown in its own frame, so its styles can't change the rest of the app.
+Any normal CSS is fine. Not allowed: `url(...)`, `image-set(...)`, `image(...)`, `cross-fade(...)`, `element(...)`, `@import`, `@font-face`, `@namespace`, `expression(...)`, `behavior`, `-moz-binding` and `javascript:`, because they load things from outside the story or run code; also backslash escapes (they can hide the words above) and `<`. The story is shown in its own frame, so its styles can't change the rest of the app.
 
 ## Special scenes
 
-- `StoryInit`, `Retreat` and `LastResort` are the only special scenes (see the submission rules for Retreat and LastResort), plus `TestCharacters`, which only exists in the editor and is removed on submit.
-- Not allowed: `PassageReady`, `PassageDone`, `PassageHeader`, `PassageFooter`, `StoryInterface`, `StoryCaption`, `StoryMenu`, `StoryBanner` and the scene tags `widget`, `init` and `script`.
+- `StoryInit`, `Retreat` and `LastResort` are the only special scenes (see the submission rules for Retreat and LastResort), plus `TestCharacters`, the test party, which is stored apart from the scenes on submit (see "Test characters").
+- `StoryInit` only sets up values: `<<set>>`, `<<if>>` and `<<switch>>`, and the cover image.
+- Not allowed: `PassageReady`, `PassageDone`, `PassageHeader`, `PassageFooter`, `StoryInterface`, `StoryCaption`, `StoryMenu`, `StoryBanner`, `StorySubtitle`, `StoryAuthor`, `StoryShare`, `StoryDisplayTitle`, the scene tags `widget`, `init` and `script`, and media scenes (`Twine.image`, `Twine.audio`, `Twine.video`, `Twine.vtt`).
 - The Story JavaScript must be empty. The platform adds what it needs, such as `<<area>>`, itself.
 
 ## Not accepted
@@ -327,12 +333,17 @@ Any normal CSS is fine. Not allowed: `url(...)`, `@import`, `@font-face`, `expre
 | `<<back>>`, `<<return>>` | The server controls the way back | A link |
 | `<<set $list to [...]>>` outside `StoryInit` | Lists are created in one place | Create it in `StoryInit` |
 | `<<set $meta_mercy += 3>>` | Legend belongs to each character | `<<set $lead.mercy += 3>>` |
+| `<<set $gold = 5>>` | Changes are written with `to` | `<<set $gold to 5>>` |
+| `<<set $a to 1; $b to 2>>`, `[[Go\|Cave][$a to 1; $b to 2]]` | Changes are separated with a comma | `<<set $a to 1, $b to 2>>` |
 | `<<set $lead.might -= 2>>` | Attributes only change through the platform's checks and fights | - |
 | `"<<"`, `"[["` or `"$gold"` inside quoted text (other than a choice's variable name) | Could read as a command | Plain words |
+| `[[alert(1)\|Cave]]`, `[[$name\|Cave]]` | SugarCube runs a link's text as code | Plain words, like `[[Go north\|North]]` |
+| `@@color:red;text@@`, `/* comment */` | Not part of the rules | A class and the stylesheet; `<!-- comment -->` |
+| `<<set $gold to 5 <!-- note -->>>` | A comment inside a command | `<<set $gold to 5>> <!-- note -->` |
 | `<<print "<<goto 'Cave'>>">>`, `<span class="<<print $mood>>">` | A command inside a tag | Commands between an opening and a closing tag |
 | `<a href="...">`, `<img src="https://...">`, `url(...)` in CSS | Loads from outside the story | `[[...]]`, `[img[...]]` |
 
 ## How the server enforces this
 
-1. **When a story is submitted**, the server reads every scene and checks each command, condition, link and HTML tag against these rules, without running anything. A refusal names the scene, the line and an accepted form. The server also counts the Legend pairs the story changes and adds up its points per pair.
+1. **When a story is submitted**, the server reads every scene and checks each command, condition, link and HTML tag against these rules, without running anything (`backend/story_rules.py`). A refusal names the scene, the line and an accepted form. The server also counts the Legend pairs the story changes and adds up its points per pair (stored as `legendPoints`), and checks and stores the test party (`backend/test_characters.py`). A reviewer's saved edits pass the same check, and Approve runs it once more, so a story submitted before a rule existed can't go live without it.
 2. **While a story is played**, every shown value appears as plain text, the characters are put in fresh before every scene, Legend changes go through the Legend rules and the story's points, players can only click what the scene shows, and each click has a time limit.

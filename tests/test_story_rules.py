@@ -1,0 +1,559 @@
+"""The story check (backend/story_rules.py): docs/STORY-RULES.md applied to a
+story's scenes without running anything.
+
+The rules document is the specification: every "Accepted" example in it must
+pass and every "Not accepted" line must be refused, so the two can't drift
+apart. The rest covers what SugarCube would run as code - including a link's
+text, which SugarCube 2.37.3 evaluates (Wikifier.helpers.evalText) - the
+characters' values, the Legend focus, the stylesheet and the special scenes.
+"""
+
+import json
+import re
+from pathlib import Path
+
+import pytest
+
+from backend import story_rules
+from backend.story_rules import check_scene, check_story, plain_text_problem
+from backend.test_characters import read_party
+
+RULES_DOC = (Path(__file__).resolve().parent.parent / "docs" / "STORY-RULES.md").read_text(encoding="utf-8")
+_BLOCK = re.compile(r"^(#{2,4} [^\n]*)$|^```[^\n]*\n(.*?)^```$", re.M | re.S)
+
+
+def _doc_blocks():
+    """(heading, line before the block, block) for every code block in the rules."""
+    heading = None
+    for m in _BLOCK.finditer(RULES_DOC):
+        if m.group(1):
+            heading = m.group(1)
+            continue
+        before = RULES_DOC[: m.start()].rstrip().splitlines()[-1]
+        yield heading, before, m.group(2)
+
+
+def _accepted_blocks():
+    for heading, before, block in _doc_blocks():
+        if before == "Not accepted:" or heading == "### Test characters":
+            continue
+        name = "StoryInit" if heading == "### StoryInit" else "Scene"
+        yield pytest.param(name, block, id=f"{heading} | {block.splitlines()[0][:40]}")
+
+
+def _refused_lines():
+    for heading, before, block in _doc_blocks():
+        if before != "Not accepted:":
+            continue
+        for line in block.splitlines():
+            code = re.split(r"\s{2,}\(", line)[0].strip()
+            if code:
+                yield pytest.param(code, id=code[:50])
+
+
+@pytest.mark.parametrize("name, block", list(_accepted_blocks()))
+def test_every_accepted_example_in_the_rules_passes(name, block):
+    assert check_scene(name, block) == []
+
+
+@pytest.mark.parametrize("line", list(_refused_lines()))
+def test_every_not_accepted_example_in_the_rules_is_refused(line):
+    assert check_scene("Scene", line), line
+
+
+def test_the_rules_example_test_party_is_valid():
+    block = next(b for h, _, b in _doc_blocks() if h == "### Test characters")
+    party, errors = read_party(block, 4)
+    assert errors == []
+    assert [c["name"] for c in party] == ["Grimjaw Ironfoot", "Elara Moonwhisper"]
+
+
+# --- program code -------------------------------------------------------------
+
+
+@pytest.mark.parametrize(
+    "text, expected",
+    [
+        ("<<script>>alert(1)<</script>>", "runs program code"),
+        ("<<run alert(1)>>", "runs program code"),
+        ("<script>alert(1)</script>", "runs program code"),
+        ('<span onclick="alert(1)">x</span>', "runs program code"),
+        ('<span @class="State.x">x</span>', "runs program code"),
+        ('<span sc-eval:class="x">x</span>', "runs program code"),
+        ('<span data-setter="$x to 1">x</span>', "data-setter"),
+        ('<span style="color: red">x</span>', "style attribute"),
+        ("<<set $x to `alert(1)`>>", "backquotes"),
+        ("<<link `alert(1)`>><</link>>", "backquotes"),
+        ("<<set $x to setup.x>>", "engine's internals"),
+        ("<<print window.name>>", "engine's internals"),
+        ("<<if Config.debug>>x<</if>>", "engine's internals"),
+        ("<<set $x to (function(){})()>>", "{ }"),
+        ("<<set $x to $x[0](1)>>", "can be called"),
+        ("<<print $x.constructor>>", "isn't available"),
+        ("<<set $x to --$y>>", "--"),
+        ("<<set $x to $y++>>", "++"),
+        ("<<set $x = 5>>", "use to"),
+        ("<<=$x>>", "use <<print>>"),
+        ("@@color:red;x@@", "@@"),
+        ("/* hidden */", "<!-- like this -->"),
+        ("[[Go|X][alert(1)]]", "engine's internals"),
+        ("[img[gate.webp][X][alert(1)]]", "engine's internals"),
+        ("<<widget \"x\">>y<</widget>>", "widgets"),
+        ("<<timed 2s>>x<</timed>>", "live browser"),
+        ("<<textbox \"$name\" \"\">>", "never type"),
+        ("<<goto \"Cave\">>", "never jumps on its own"),
+        ("<<include \"Cave\">>", "link to it"),
+    ],
+)
+def test_program_code_is_refused(text, expected):
+    errors = check_scene("Scene", text)
+    assert any(expected in e for e in errors), errors
+
+
+@pytest.mark.parametrize(
+    "link",
+    [
+        "[[alert(1)|Start]]",
+        "[[new Engine.restart|Start]]",
+        "[[delete State.variables.gold|Start]]",
+        "[[$gold|Start]]",
+        "[[_tmp|Start]]",
+        "[[x = 1|Start]]",
+        "[[gold--|Start]]",
+        '[[Say "hi"|Start]]',
+        "<<button [[alert(1)|Start]]>><</button>>",
+        "<<link [[alert(1)|Start]]>><</link>>",
+        "<<area 0.10 0.20 0.30 0.40 [[alert(1)->Start]]>>",
+        '<<button "alert(1)" "Start">><</button>>',
+    ],
+)
+def test_link_texts_are_plain_words_because_sugarcube_runs_them(link):
+    # SugarCube evaluates a link's text as JavaScript before showing it.
+    errors = check_scene("Scene", link)
+    assert any("plain words" in e or "program code" in e or "--" in e for e in errors), errors
+
+
+@pytest.mark.parametrize(
+    "text",
+    ["Go north", "Don't go!", "Wait… listen.", "Ask about the “red door”", "North-east", "Buy a new sword.", "Élan, ça va?"],
+)
+def test_ordinary_link_texts_pass(text):
+    assert plain_text_problem(text) is None
+    assert check_scene("Scene", f"[[{text}|Start]]") == []
+
+
+def test_a_link_never_leads_to_a_variable():
+    assert any("never a variable" in e for e in check_scene("Scene", "[[Go|$target]]"))
+
+
+@pytest.mark.parametrize(
+    "text",
+    [
+        "<<set $gold += 5>>",
+        "<<set $gold -= 2>>",
+        "<<set $gold += 1, $water -= 1>>",
+        "<<set _roll += 2>>",
+        "<<set $lead.mercy += 3>>",
+        "<<set $lead.mercy -= 2>>",
+        "<<for _i, _c range $char>><<set _c.courage -= 1>><</for>>",
+        "[[Drink|Well][$water += 1]]",
+        "[[Rest|Camp][$water -= 1, $gold += 2]]",
+        "<<button [[Rest|Camp]]>><<set $water -= 1>><</button>>",
+    ],
+)
+def test_changes_with_plus_and_minus_equals_pass(text):
+    assert check_scene("Scene", text) == []
+
+
+@pytest.mark.parametrize(
+    "text, expected",
+    [
+        ("<<set $x = 0>>", "use to to set a value"),
+        ("[[Go|X][$a = 1]]", "use to to set a value"),
+        ("<<set $a to 1; $b to 2>>", "separate changes with a comma"),
+        ("[[Go|X][$a to 1; $b to 2]]", "separate changes with a comma"),
+    ],
+)
+def test_changes_are_written_with_to_and_separated_by_commas(text, expected):
+    # One way to write it: to (not =), and a comma (not ;) between changes.
+    errors = check_scene("Scene", text)
+    assert any(expected in e for e in errors), errors
+
+
+# --- characters ---------------------------------------------------------------
+
+
+@pytest.mark.parametrize(
+    "text, expected",
+    [
+        ("<<set $x to $lead>>", "whole character"),
+        ("<<print $lead>>", "whole character"),
+        ("<<set $x to $lead.equipment>>", 'includes("item_tier")'),
+        ("<<if $lead.race>>x<</if>>", "compared with a quoted value"),
+        ('<<if $lead.race is "orcish">>x<</if>>', "isn't a race in the game"),
+        ('<<if $lead.equipment.includes("laser_9")>>x<</if>>', "isn't an item in the game"),
+        ('<<set $x to "a" + $lead.race>>', "printed or compared"),
+        ('<<set $x to $lead["constructor"]>>', "no value 'constructor'"),
+        ("<<set $x to $char[4].might>>", "$char[0] to $char[3]"),
+        ("<<set $lead.mercy += 1.5>>", "whole number"),
+        ("<<set $lead.mercy += $x>>", "whole number"),
+        ("<<set $lead.firstName to 1>>", "only the characters' Legend"),
+        ("<<set $char[0] to 1>>", "sets the party"),
+        ("<<set _c.mercy += 1>>", "isn't available"),
+        ("<<for _i, _c range $char>><<set _c to 1>><</for>>", "belongs to the <<for>> loop"),
+        ("<<for _i, _c range $inventory>>x<</for>>", "only loop"),
+        ('<<radiobutton "$lead" "x">>', "belongs to the platform"),
+        ('<<radiobutton "$isEnding" true>>', "belongs to the platform"),
+    ],
+)
+def test_character_values_are_used_only_as_the_rules_say(text, expected):
+    errors = check_scene("Scene", text)
+    assert any(expected in e for e in errors), errors
+
+
+@pytest.mark.parametrize(
+    "text",
+    [
+        '<<switch $lead.race>><<case "dwarf">>Stout.<<case "elf" "halfelf">>Tall.<</switch>>',
+        "<<if $char.length gte 2>>A party.<</if>>",
+        "<<for _i, _c range $char>><<if $char[_i].might gt 5>>Strong.<</if>><</for>>",
+        '<<if $lead["fame"] gte 30>>Known.<</if>>',
+        '<<if $lead.prof1 is "blacksmith" or $lead.prof2 isnot "none">>x<</if>>',
+    ],
+)
+def test_more_character_forms_pass(text):
+    assert check_scene("Scene", text) == []
+
+
+def test_story_init_never_holds_character_data():
+    assert any("character data" in e for e in check_scene("StoryInit", "<<set $x to $lead.might>>"))
+    assert any("character data" in e for e in check_scene("StoryInit", "<<set $lead.mercy += 1>>"))
+    assert any("only sets up" in e for e in check_scene("StoryInit", '<<button "Go" "Start">><</button>>'))
+
+
+def test_lists_are_created_only_in_story_init():
+    assert check_scene("StoryInit", '<<set $bag to ["rope", 2, true]>>') == []
+    assert any("only in StoryInit" in e for e in check_scene("Scene", '<<set $bag to ["rope"]>>'))
+    assert any("written-out values" in e for e in check_scene("StoryInit", "<<set $bag to [$x]>>"))
+
+
+def test_meta_values_are_set_in_story_init():
+    assert any("set in StoryInit" in e for e in check_scene("Scene", '<<set $meta_title to "x">>'))
+    assert check_scene("Scene", "<<set $meta_allowRunAway to false>>") == []
+    assert any("belongs to each character" in e for e in check_scene("StoryInit", "<<set $meta_mercy to 3>>"))
+
+
+# --- structure of commands ------------------------------------------------------
+
+
+@pytest.mark.parametrize(
+    "text, expected",
+    [
+        ("<<if true>>", "never closed"),
+        ("<</if>>", "closes nothing"),
+        ("<<if true>>a<<else>>b<<else>>c<</if>>", "one <<else>>"),
+        ("<<if true>>a<<else>>b<<elseif false>>c<</if>>", "before <<else>>"),
+        ("<<link [[Go|Cave]]>>text<</link>>", "only <<set>>, <<if>> and <<goto>>"),
+        ("<<link [[Go|Cave]]>><<print 1>><</link>>", "only <<set>>, <<if>> and <<goto>>"),
+        ('<<listbox "$w">>text<</listbox>>', "only <<option>>"),
+        ("<<switch $x>>text<<case 1>>a<</switch>>", "directly inside <<switch>>"),
+        ("<<option \"a\">>", "goes inside <<listbox>>"),
+        ("a <b c", "isn't complete"),
+        ("<<set $x to 1", "isn't closed"),
+        ("<em>x</em> <marquee>y</marquee>", "<marquee> isn't accepted"),
+        ('<div class="a;b">x</div>', "a class is"),
+    ],
+)
+def test_commands_and_tags_are_well_formed(text, expected):
+    errors = check_scene("Scene", text)
+    assert any(expected in e for e in errors), errors
+
+
+def test_a_refusal_names_the_scene_and_the_line():
+    errors = check_scene("Cave", "First line\nSecond <<run alert(1)>>")
+    assert errors == [
+        "Passage 'Cave', line 2: <<run>>: runs program code - use <<set>>, like <<set $gold to $gold + 5>>"
+    ]
+
+
+def test_a_refused_script_body_adds_no_follow_on_errors():
+    errors = check_scene("Scene", "<<script>>if (a < b) { $('x') }<</script>> [[Go|Start]]")
+    assert len(errors) == 1 and "<<script>>" in errors[0]
+
+
+def test_comments_and_entities_are_plain_text():
+    assert check_scene("Scene", "A <!-- <<run alert(1)>> --> B &lt;&lt;run&gt;&gt; costs $5") == []
+
+
+@pytest.mark.parametrize(
+    "text",
+    [
+        'Write """<<link>>""" or """<<run alert(1)>>""" to show a command.',
+        "<nowiki><<run alert(1)>></nowiki>",
+        "A\n<!-- note\nacross lines -->\nB",
+    ],
+)
+def test_verbatim_text_and_comments_are_never_read_as_markup(text):
+    # SugarCube shows verbatim text as written and drops comments.
+    assert check_scene("Scene", text) == []
+
+
+@pytest.mark.parametrize(
+    "text",
+    [
+        "You walk on. <!-- a note --> [[Go|Cave]]",
+        "<!-- a note -->\nYou walk on.",
+        "<<button [[Go|Cave]]>><!-- a note --><<set $x to 1>><</button>>",
+        '<<listbox "$w">><!-- a note --><<option "Sword" "sword">><</listbox>>',
+        "<<switch $x>><!-- a note --><<case 1>>a<</switch>>",
+        "<!-- a note -->\r\nWindows line ends after a one-line comment",
+    ],
+)
+def test_one_line_comments_go_anywhere_in_a_scene(text):
+    assert check_scene("Scene", text) == []
+    assert check_scene("StoryInit", "<!-- setup -->\n<<set $gold to 5>>") == []
+
+
+@pytest.mark.parametrize(
+    "text, expected",
+    [
+        ("<<set $x to 1 <!-- a note -->>>", "comments go outside a command"),
+        ('<<button "Go" <!-- a note --> "Cave">><</button>>', "comments go outside a command"),
+        ("<!-- never closed", "a comment is closed with -->"),
+        ("<!-- crosses\r\na Windows line break -->", "crosses a Windows line break"),
+    ],
+)
+def test_comment_problems_say_what_is_wrong(text, expected):
+    errors = check_scene("Scene", text)
+    assert any(expected in e for e in errors), errors
+
+
+@pytest.mark.parametrize(
+    "text",
+    [
+        '"""\r<<run alert(1)>>"""',
+        '"""\u2028<<run alert(1)>>"""',
+        "<!--\r<<run alert(1)>>-->",
+        "<nowiki>\u2029<<run alert(1)>></nowiki>",
+    ],
+)
+def test_a_line_separator_ends_verbatim_text_and_comments_like_in_sugarcube(text):
+    # SugarCube's patterns are JavaScript: (?:.|\n) never crosses \r, \u2028
+    # or \u2029, so this is no comment or verbatim text and <<run>> would run.
+    errors = check_scene("Scene", text)
+    assert any("<<run>>" in e for e in errors), errors
+
+
+@pytest.mark.parametrize(
+    "text",
+    [
+        "Read more at https://example.org/page",
+        "Click javascript:alert(1)",
+        "Write to mailto:someone",
+        '<<set $x to "see https://example.org">>',
+        '<<set $x to "javascript:alert(1)">>',
+    ],
+)
+def test_web_addresses_are_refused(text):
+    # SugarCube turns a bare address into a link, javascript: included.
+    errors = check_scene("Scene", text)
+    assert any("web address" in e for e in errors), errors
+
+
+def test_upper_case_javascript_is_no_link_for_sugarcube():
+    assert check_scene("Scene", "JavaScript: the language") == []
+
+
+def test_a_scene_reports_at_most_twenty_problems():
+    errors = check_scene("Scene", "<<run x>>\n" * 30)
+    assert len(errors) == 21 and errors[-1] == "Passage 'Scene': 10 more problems not shown"
+
+
+# --- the whole story ------------------------------------------------------------
+
+
+def _passages(*scenes):
+    return [{"id": str(i), "name": name, "text": text, "tags": tags} for i, (name, text, tags) in enumerate(scenes)]
+
+
+def test_legend_focus_is_at_most_two_pairs():
+    passages = _passages(
+        ("A", "<<set $lead.mercy += 3>><<set $lead.cruelty += 2>>", []),
+        ("B", "<<set $lead.fame += 1>>", []),
+    )
+    assert check_story(passages, {}).errors == []
+    passages.append({"id": "9", "name": "C", "text": "<<set $lead.honor += 1>>", "tags": []})
+    errors = check_story(passages, {}).errors
+    assert any("3 Legend pairs" in e and "at most 2" in e for e in errors), errors
+
+
+def test_legend_points_add_up_each_written_change_once_capped_at_ten():
+    passages = _passages(
+        ("A", "<<set $lead.mercy += 3>><<set $char[1].cruelty -= 2>>", []),
+        ("B", "<<for _i, _c range $char>><<set _c.fame += 4>><</for>>", []),
+        ("C", "[[Cheer|D][$lead.fame += 4, $lead.infamy += 4]]", []),
+    )
+    result = check_story(passages, {})
+    assert result.errors == []
+    assert result.legend_points == {"fame-infamy": 10, "mercy-cruelty": 5}
+
+
+@pytest.mark.parametrize("name", sorted(story_rules.REFUSED_PASSAGES))
+def test_sugarcube_special_scenes_are_refused(name):
+    errors = check_story(_passages((name, "Hello", [])), {}).errors
+    assert errors == [
+        f"Passage '{name}' isn't accepted - StoryInit, Retreat and LastResort are the only special scenes"
+    ]
+
+
+@pytest.mark.parametrize("tag", ["widget", "init", "script", "Twine.audio"])
+def test_special_tags_are_refused(tag):
+    errors = check_story(_passages(("Scene", "Hello", [tag])), {}).errors
+    assert errors and "aren't accepted" in errors[0]
+
+
+def test_quoted_destinations_must_exist_and_never_lead_to_last_resort():
+    passages = _passages(
+        ("Start", '<<button "Go" "Nowhere">><</button>> <<if visited("Gone")>>x<</if>>', []),
+        ("Mid", '<<link "Out">><<goto "LastResort">><</link>>', []),
+        ("LastResort", "Lost. <<set $isEnding to false>>", []),
+    )
+    errors = check_story(passages, {}).errors
+    assert "Passage 'Start' names the scene 'Nowhere', which does not exist" in errors
+    assert "Passage 'Start' names the scene 'Gone', which does not exist" in errors
+    assert any(e.startswith("Passage 'Mid' leads to LastResort") for e in errors)
+
+
+def test_test_characters_scene_is_not_read_as_a_scene():
+    passages = _passages(("TestCharacters", '[{"firstName": "<<run x>>"}]', []))
+    assert check_story(passages, {}).errors == []
+
+
+# --- stylesheet -------------------------------------------------------------------
+
+
+@pytest.mark.parametrize(
+    "css, expected",
+    [
+        ("@font-face { font-family: x; }", "@font-face"),
+        ("p { width: expression(alert(1)); }", "expression"),
+        ("p { behavior: url(x.htc); }", "behavior"),
+        ("p { -moz-binding: x; }", "-moz-binding"),
+        ("p { background: javascript:alert(1); }", "javascript:"),
+        ('p { background-image: image-set("https://example.org/a.png" 1x); }', "image-set()"),
+        ("p { background: \\75rl(https://example.org/a.png); }", "backslash"),
+        ("</style><script>alert(1)</script>", "< isn't accepted"),
+    ],
+)
+def test_stylesheet_rules(css, expected):
+    errors = check_story([], {"stylesheet": css}).errors
+    assert any(expected in e for e in errors), errors
+
+
+def test_a_normal_stylesheet_passes():
+    css = ".row { display: flex; gap: 1em; }\n.passage > p:first-child { color: #c33; }"
+    assert check_story([], {"stylesheet": css}).errors == []
+    tagged = _passages(("Story Stylesheet", "@font-face { src: x }", ["stylesheet"]))
+    assert any(e.startswith("Passage 'Story Stylesheet', line 1: @font-face") for e in check_story(tagged, {}).errors)
+
+
+# --- story format -------------------------------------------------------------------
+
+
+@pytest.mark.parametrize(
+    "story_data",
+    [
+        {"storyFormat": "SugarCube", "storyFormatVersion": "2.36.1"},
+        {"storyFormat": "SugarCube-evil", "storyFormatVersion": "2.37.3"},
+        {"storyFormat": "Harlowe", "storyFormatVersion": "3.3.9"},
+        {"storyFormat": "SugarCube"},
+        {},
+    ],
+)
+def test_only_the_platforms_sugarcube_is_accepted(story_data):
+    assert "only SugarCube 2.37.3 is accepted" in story_rules.format_error(story_data)
+
+
+def test_the_platforms_sugarcube_passes():
+    assert story_rules.format_error({"storyFormat": "SugarCube", "storyFormatVersion": "2.37.3"}) is None
+
+
+# --- TestCharacters ------------------------------------------------------------------
+
+
+def _party_member(**changes):
+    member = {
+        "firstName": "Grimjaw", "lastName": "Ironfoot", "race": "dwarf", "gender": "m",
+        "birthsign": "grit_stitch_brand",
+        "might": 18, "agility": 9, "endurance": 17, "precision": 10,
+        "will": 11, "insight": 8, "lore": 6, "presence": 7,
+        "class1": "none", "classLvl1": 0, "class2": "none", "classLvl2": 0,
+        "prof1": "blacksmith", "profLvl1": 3, "prof2": "miner", "profLvl2": 2, "prof3": "none", "profLvl3": 0,
+        "equipment": ["rope_1"],
+    }
+    member.update(changes)
+    return {k: v for k, v in member.items() if v is not ...}
+
+
+def test_a_party_is_normalised():
+    party, errors = read_party(json.dumps([_party_member(mercy=5, firstName="grimjaw")]), None)
+    assert errors == []
+    member = party[0]
+    assert member["name"] == f"{member['firstName']} Ironfoot"
+    assert member["mercy"] == 5 and member["cruelty"] == 0 and member["fame"] == 0
+    assert set(member) == set(story_rules.CHARACTER_FIELDS)
+
+
+@pytest.mark.parametrize(
+    "changes, expected",
+    [
+        ({"extra": 1}, "unknown values: extra"),
+        ({"might": ...}, "missing values: might"),
+        ({"firstName": "<<run x>>"}, "First name"),
+        ({"name": "Someone Else"}, "name is made from firstName and lastName"),
+        ({"gender": "x"}, "gender is one of"),
+        ({"race": "orc"}, "isn't a race"),
+        ({"birthsign": "moon"}, "isn't a birthsign"),
+        ({"class1": "warrior"}, "classes don't exist yet"),
+        ({"prof1": "none", "profLvl1": 0}, 'prof1 is a profession, never "none"'),
+        ({"prof2": "none", "profLvl2": 0, "prof3": "miner", "profLvl3": 1}, "in order"),
+        ({"prof3": "hunter", "profLvl3": 1}, "same group"),
+        ({"profLvl1": 31}, "from 1 to 30"),
+        ({"profLvl3": 2}, "profLvl3 is 0"),
+        ({"might": 0}, "might is a whole number of at least 1"),
+        ({"might": True}, "might is a whole number"),
+        ({"might": 90}, "Body"),
+        ({"will": 1, "insight": 1, "lore": 1, "presence": 1, "might": 9, "agility": 9, "endurance": 9, "precision": 1}, "together"),
+        ({"equipment": ["laser_9"]}, "not items in the game: laser_9"),
+        ({"equipment": "rope_1"}, "equipment is a list"),
+        ({"mercy": 3, "cruelty": 2}, "one scale"),
+        ({"mercy": 101}, "from 0 to 100"),
+    ],
+)
+def test_party_problems(changes, expected):
+    party, errors = read_party(json.dumps([_party_member(**changes)]), 4)
+    assert party is None
+    assert any(expected in e for e in errors), errors
+
+
+def test_fame_and_infamy_may_both_be_above_zero():
+    party, errors = read_party(json.dumps([_party_member(fame=10, infamy=4)]), 4)
+    assert errors == [] and party[0]["infamy"] == 4
+
+
+def test_party_size_follows_max_char_num():
+    two = json.dumps([_party_member(), _party_member(firstName="Elara")])
+    assert read_party(two, 4)[1] == []
+    assert read_party(two, 1)[1] == ["TestCharacters: at most 1 character (the story's $meta_maxCharNum, at most 4)"]
+    five = json.dumps([_party_member()] * 5)
+    assert any("at most 4" in e for e in read_party(five, None)[1])
+
+
+@pytest.mark.parametrize("text", ["", "{}", "[]", "not json", '{"firstName": "Grimjaw"}'])
+def test_a_party_is_a_json_list(text):
+    party, errors = read_party(text, 4)
+    assert party is None and errors and errors[0].startswith("TestCharacters:")
+
+
+def test_no_test_characters_scene_means_no_party():
+    assert read_party(None, 4) == (None, [])

@@ -21,7 +21,7 @@ from fastapi import HTTPException
 from backend import twine_images
 from backend.auth_routes import TwineStoryPayload, approve_twine_review, save_twine_review
 from backend.db import get_database
-from tests.test_twine_syntax import VALID_INIT, _p, _story
+from tests.test_twine_syntax import _TEST_PARTY, VALID_INIT, _p, _story
 
 AUTHOR = "5TestReviewEditAuthor"
 REVIEWER = "5TestReviewEditReviewer"
@@ -44,8 +44,13 @@ async def _submission(db, days_ago: float = 8, status: str = "submitted"):
     await db.twine_review.insert_one({
         "address": AUTHOR, "storyId": STORY, "name": "Edit Tale", "ifid": "IFID-AUTHOR",
         "status": status, "lastUpdate": stamp, "submittedAt": stamp,
-        "storyData": {"storyFormat": "SugarCube", "startPassage": "1", "wallet": AUTHOR},
-        "passages": [{"id": "1", "name": "Start", "text": "The author's text [[End]]"}],
+        "storyData": {**_story([])["storyData"], "wallet": AUTHOR},
+        "passages": _story([
+            _p("1", "Start", "The author's text [[End]]"),
+            _p("2", "End", "The end. <<set $isEnding to true>>"),
+            _p("0", "StoryInit", VALID_INIT),
+            _p("3", "LastResort", "The tunnel collapses. <<set $isEnding to false>>"),
+        ])["passages"],
         "metadata": {"meta_title": "Edit Tale"},
     })
     return stamp
@@ -59,12 +64,13 @@ def _edited(start_text: str = "The reviewer's fixed text [[End]]", extra=()):
         _p("1", "Start", start_text),
         _p("2", "End", "The end. <<set $isEnding to true>>"),
         _p("3", "LastResort", "The tunnel collapses. <<set $isEnding to false>>"),
-        _p("9", "TestCharacters", '[{"firstName": "Grimjaw", "lastName": "Ironfoot"}]'),
+        _p("9", "TestCharacters", _TEST_PARTY),
         *extra,
     ])
     return TwineStoryPayload(
         storyId="local-review-copy", name="Renamed locally", ifid="IFID-REVIEW-COPY",
-        storyData={**story["storyData"], "wallet": REVIEWER}, passages=story["passages"],
+        storyData={**story["storyData"], "wallet": REVIEWER, "formatUrl": "https://example.org/format.js"},
+        passages=story["passages"],
     )
 
 
@@ -102,8 +108,12 @@ async def test_reviewer_saves_an_edit_after_the_week(db, storage):
     entry = await db.twine_review.find_one({"address": AUTHOR, "storyId": STORY})
     start = next(p for p in entry["passages"] if p["name"] == "Start")
     assert start["text"] == "The reviewer's fixed text [[End]]"
-    # Never stored: the editor-only test party.
+    # The test party is never a scene: it is stored as a field of its own.
     assert all(p["name"] != "TestCharacters" for p in entry["passages"])
+    assert [c["name"] for c in entry["testCharacters"]] == ["Grimjaw Ironfoot"]
+    # storyData keeps only the fields the platform knows.
+    assert "formatUrl" not in entry["storyData"]
+    assert entry["storyData"]["storyFormatVersion"] == "2.37.3"
     # Still the author's submission, and the 7 days don't start again.
     assert (entry["name"], entry["ifid"], entry["storyData"]["wallet"]) == ("Edit Tale", "IFID-AUTHOR", AUTHOR)
     assert (entry["status"], entry["lastUpdate"], entry["submittedAt"]) == ("submitted", stamp, stamp)
@@ -129,8 +139,21 @@ async def test_approving_publishes_the_edited_version(db, storage):
     live = await db.twine_live.find_one({"_id": STORY})
     start = next(p for p in live["passages"] if p["name"] == "Start")
     assert start["text"] == "The reviewer's fixed text [[End]]"
+    # The test party goes live with the story; the approved record keeps no text.
+    assert [c["name"] for c in live["testCharacters"]] == ["Grimjaw Ironfoot"]
+    assert live["legendPoints"] == {}
     record = await db.twine_review.find_one({"address": AUTHOR, "storyId": STORY})
     assert record["status"] == "approved" and record["reviewEdits"][0]["by"] == REVIEWER
+    assert "testCharacters" not in record
+
+
+async def test_an_edit_with_program_code_is_refused(db, storage):
+    await _submission(db)
+
+    result = await save_twine_review(AUTHOR, STORY, _edited("Hi <<run alert(1)>> [[End]]"), address=REVIEWER)
+
+    assert result["ok"] is False
+    assert any("<<run>>" in e and "runs program code" in e for e in result["errors"])
 
 
 async def test_only_reviewers_save(db, storage):

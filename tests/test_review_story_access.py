@@ -28,7 +28,7 @@ async def db(mongodb_uri):
     await database.twine_review.insert_one({
         "address": AUTHOR, "storyId": "tale", "name": "A Tale", "ifid": "IFID-1",
         "status": "submitted", "lastUpdate": "2026-11-19T10:00:00+00:00",
-        "storyData": {"storyFormat": "SugarCube", "startPassage": "p1"},
+        "storyData": {"storyFormat": "SugarCube", "storyFormatVersion": "2.37.3", "startPassage": "p1"},
         "passages": [{"id": "p1", "name": "Start", "text": "Hello"}],
         "privateMeta": {"meta_email": "author@example.org"},
     })

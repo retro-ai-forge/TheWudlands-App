@@ -36,7 +36,7 @@ PASSAGES = [
     {"id": "6", "name": "Fled", "text": "Safe. <<set $isEnding to true>>"},
     {"id": "7", "name": "LastResort", "text": "Something broke. <<set $isEnding to false>>"},
 ]
-STORY_DATA = {"startPassage": "1", "storyFormat": "SugarCube"}
+STORY_DATA = {"startPassage": "1", "storyFormat": "SugarCube", "storyFormatVersion": "2.37.3"}
 
 
 # ── Step graph (pure) ───────────────────────────────────────────────────────

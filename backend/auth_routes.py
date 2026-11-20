@@ -3053,6 +3053,24 @@ from backend.twine_graph import (  # noqa: E402 - shared with backend.adventures
     _extract_set_value,
     _link_target,
 )
+from backend import story_rules, test_characters  # noqa: E402
+
+# The storyData fields a submission keeps (what the editor sends, see
+# twinejs-integrated cloud-api.ts storyToPayload) plus the owner's wallet.
+# Anything else a client puts there is dropped, so a submission carries no
+# data the platform doesn't know - no story format of its own, for one.
+_STORED_STORY_DATA = (
+    "storyFormat", "storyFormatVersion", "startPassage", "stylesheet", "script",
+    "tags", "tagColors", "snapToGrid", "zoom",
+)
+
+
+def _stored_story_data(story_data: dict, wallet: str) -> dict:
+    """A submission's storyData: the known fields, and the owner's wallet."""
+    kept = {key: story_data[key] for key in _STORED_STORY_DATA if key in (story_data or {})}
+    kept["wallet"] = wallet
+    return kept
+
 
 # A quoted scene name inside a macro (<<goto "X">>, <<button "Go" "X">>,
 # <<link "Go" "X">>, <<include "X">>) - checked for TestCharacters, which
@@ -3447,12 +3465,12 @@ def _check_twine_syntax(doc: dict) -> dict:
     passages = doc.get("passages", [])
     story_data = doc.get("storyData", {})
     start_passage = story_data.get("startPassage", "")
-    story_format = story_data.get("storyFormat", "")
 
-    if not story_format or "sugarcube" not in story_format.lower():
-        errors.append(
-            f"Story format is '{story_format or 'unknown'}' — only SugarCube stories are accepted"
-        )
+    # The platform's own SugarCube only: the editor and the engine run it, and
+    # a story can't ask for any other format.
+    format_problem = story_rules.format_error(story_data)
+    if format_problem:
+        errors.append(format_problem)
 
     if not passages:
         errors.append("Story has no passages")
@@ -3774,7 +3792,26 @@ def _check_twine_syntax(doc: dict) -> dict:
             f"Passage '{name}' is unreachable from the start passage or Retreat"
         )
 
-    return {"errors": errors, "warnings": warnings}
+    # What each scene may contain (docs/STORY-RULES.md): an allow-list read
+    # without running anything - SugarCube would run much of it as code.
+    rules = story_rules.check_story(passages, story_data)
+    errors.extend(rules.errors)
+
+    # The test party: checked like real characters, then stored with the
+    # submission (testCharacters) instead of as a scene.
+    test_scene = by_name.get(TEST_CHARACTERS_PASSAGE)
+    max_chars = _extract_set_value((story_init or {}).get("text", ""), "meta_maxCharNum")
+    party, party_errors = test_characters.read_party(
+        test_scene.get("text", "") if test_scene else None, max_chars
+    )
+    errors.extend(party_errors)
+
+    return {
+        "errors": errors,
+        "warnings": warnings,
+        "testCharacters": party,
+        "legendPoints": rules.legend_points,
+    }
 
 
 # How long a submission stays open for resubmission. Must match REVIEW_WINDOW_MS
@@ -3885,6 +3922,9 @@ def _snapshot_fields(doc: dict, passages: list) -> dict:
         "sceneCount": _count_playable_scenes(passages),
         "tags": _collect_story_tags(doc),
         "coverImage": _story_cover(passages),
+        # Most the story can move each Legend pair per character (the sum of
+        # its written changes, at most 10): set aside at a character's first run.
+        "legendPoints": story_rules.check_story(passages, doc.get("storyData") or {}).legend_points,
     }
 
 
@@ -3950,12 +3990,12 @@ async def submit_twine_story_for_review(
     # Stamp the submitter's wallet into the story metadata (overwriting any
     # existing value), so the review and serving pipelines know the owner and can
     # resolve images under twine-images/{wallet}/.../{storyId}.
-    story_data = dict(doc.get("storyData", {}))
-    story_data["wallet"] = address
     await db.twine_stories.update_one(
         {"address": address, "storyId": story_id},
-        {"$set": {"storyData": story_data}},
+        {"$set": {"storyData.wallet": address}},
     )
+    # The submission keeps only the storyData fields the platform knows.
+    story_data = _stored_story_data(doc.get("storyData") or {}, address)
 
     # Freeze a copy of the author's images into the review stage. Done before
     # writing the review doc so a storage failure doesn't leave a review without
@@ -3987,6 +4027,8 @@ async def submit_twine_story_for_review(
         "submittedAt": now,
         "status": "submitted",
         "warnings": warnings,
+        # The test party, checked above: a field of its own, never a scene.
+        "testCharacters": result.get("testCharacters"),
         **_snapshot_fields(doc, passages_list),
     }
 
@@ -4197,14 +4239,15 @@ async def get_twine_review_story(
     and test-play it (reviewer or admin only). The editor keeps it as a local
     review copy (twinejs-integrated src/util/review-copies.ts): never synced to
     the reviewer's cloud, never submitted, images from the owner's review
-    stage. privateMeta isn't sent."""
+    stage. privateMeta isn't sent. testCharacters is the submission's test
+    party, which the editor puts back as a TestCharacters scene."""
     if not await roles.is_reviewer(address):
         raise HTTPException(status_code=403, detail="Reviewer or admin only")
     db = get_database()
     review = await db.twine_review.find_one(
         {"address": owner, "storyId": story_id},
         {"_id": 0, "storyId": 1, "name": 1, "ifid": 1, "storyData": 1,
-         "passages": 1, "lastUpdate": 1, "status": 1},
+         "passages": 1, "testCharacters": 1, "lastUpdate": 1, "status": 1},
     )
     if not review:
         raise HTTPException(status_code=404, detail="Review submission not found")
@@ -4241,6 +4284,11 @@ def _live_story_doc(review: dict, reviewer: str, now: str) -> dict:
         "sceneCount": review.get("sceneCount"),
         "tags": review.get("tags", []),
         "coverImage": review.get("coverImage"),
+        # Worked out from the text that goes live (older entries lack it).
+        "legendPoints": story_rules.check_story(
+            review.get("passages", []), review.get("storyData", {})
+        ).legend_points,
+        "testCharacters": review.get("testCharacters"),
         "submittedAt": review.get("submittedAt"),
         "approvedAt": now,
         "approvedBy": reviewer,
@@ -4286,8 +4334,7 @@ async def save_twine_review(
 
     # The reviewer's copy has local ids of its own; the submission keeps the author's.
     doc = payload.model_dump()
-    story_data = dict(doc.get("storyData") or {})
-    story_data["wallet"] = owner
+    story_data = _stored_story_data(doc.get("storyData") or {}, owner)
     doc.update({
         "address": owner, "storyId": story_id, "storyData": story_data,
         "name": review.get("name", ""), "ifid": review.get("ifid", ""),
@@ -4309,6 +4356,8 @@ async def save_twine_review(
         "passages": passages,
         "sizeBytes": len(json.dumps(stored, default=str).encode()),
         "warnings": warnings,
+        # The saved copy is the whole submission, its test party included.
+        "testCharacters": result.get("testCharacters"),
         **_snapshot_fields(doc, passages),
         "editedAt": now,
         "editedBy": address,
@@ -4350,6 +4399,19 @@ async def approve_twine_review(
         raise HTTPException(status_code=409, detail=refusal)
     if await db.twine_live.find_one({"_id": story_id}, {"_id": 1}):
         raise HTTPException(status_code=409, detail=_LIVE_ID_TAKEN)
+    # What goes live passes today's story check, also a submission made before
+    # it existed: the reviewer fixes it in the editor and uses Save review.
+    stored = await db.twine_review.find_one(key, {"passages": 1, "storyData": 1})
+    problems = _check_twine_syntax(
+        {"passages": (stored or {}).get("passages", []), "storyData": (stored or {}).get("storyData", {})}
+    )["errors"]
+    if problems:
+        more = f" (and {len(problems) - 1} more)" if len(problems) > 1 else ""
+        raise HTTPException(
+            status_code=409,
+            detail=f"This submission fails the story check: {problems[0]}{more}. "
+            "Open it in the editor, fix it and use Save review.",
+        )
 
     try:
         twine_images.copy_stage(owner, story_id, twine_images.STAGE_REVIEW, twine_images.STAGE_SERVED)
@@ -4370,7 +4432,7 @@ async def approve_twine_review(
         moved = await db.twine_review.update_one(
             {**key, "status": "submitted"},
             {"$set": {"status": "approved", "approvedAt": now, "approvedBy": address},
-             "$unset": {"passages": "", "storyData": ""}},
+             "$unset": {"passages": "", "storyData": "", "testCharacters": ""}},
         )
         if moved.modified_count != 1:
             return None  # changed meanwhile: rolls the live copy back

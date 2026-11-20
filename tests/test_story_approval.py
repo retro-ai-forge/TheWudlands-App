@@ -32,12 +32,24 @@ from backend.auth_routes import (
     submit_twine_story_for_review,
 )
 from backend.db import get_database
+from tests.test_twine_syntax import VALID_INIT, _p, _story
 
 AUTHOR = "5TestApprovalAuthor"
 OTHER_AUTHOR = "5TestApprovalOther"
 REVIEWER = "5TestApprovalReviewer"
 PLAYER = "5TestApprovalPlayer"
 STORY = "test-approval-story"
+
+
+def _valid_story(start_text: str) -> dict:
+    """storyData and passages of a story that passes the submit check, Start first."""
+    story = _story([
+        _p("p1", "Start", start_text),
+        _p("p2", "End", "The end. <<set $isEnding to true>>"),
+        _p("p0", "StoryInit", VALID_INIT),
+        _p("p3", "LastResort", "The tunnel collapses. <<set $isEnding to false>>"),
+    ], start="p1")
+    return {"storyData": story["storyData"], "passages": story["passages"]}
 
 
 def _ago(days: float) -> str:
@@ -55,8 +67,7 @@ async def _submission(db, days_ago: float = 8, **extra):
     await db.twine_review.insert_one({
         "address": AUTHOR, "storyId": STORY, "name": "Approval Tale", "ifid": "IFID-A",
         "status": "submitted", "lastUpdate": stamp, "submittedAt": stamp,
-        "storyData": {"storyFormat": "SugarCube", "startPassage": "p1"},
-        "passages": [{"id": "p1", "name": "Start", "text": "Hello <<set $isEnding to true>>"}],
+        **_valid_story("Hello [[End]]"),
         "metadata": {"meta_title": "Approval Tale", "meta_access": "free"},
         "privateMeta": {"meta_email": "author@example.org"},
         **extra,
@@ -87,6 +98,19 @@ async def test_a_submitted_story_is_not_playable(db):
     with pytest.raises(adventures.AdventureError) as missing:
         await adventures.story_runs(PLAYER, AUTHOR, STORY)
     assert missing.value.status_code == 404
+
+
+async def test_approve_refuses_a_submission_that_fails_the_story_check(db, storage):
+    # Stored before the story check existed: it can't go live as it is.
+    await _submission(db, **_valid_story("Hello <<run alert(1)>> [[End]]"))
+
+    with pytest.raises(HTTPException) as refused:
+        await approve_twine_review(AUTHOR, STORY, address=REVIEWER)
+
+    assert refused.value.status_code == 409
+    assert "fails the story check" in refused.value.detail and "<<run>>" in refused.value.detail
+    assert await db.twine_live.find_one({"_id": STORY}) is None
+    assert storage == []
 
 
 async def test_reviewer_approves_after_the_week(db, storage):

@@ -5,6 +5,8 @@ These are pure-function tests (no DB, no network): they exercise
 whether a story is accepted.
 """
 
+import json
+
 import pytest
 
 from backend.auth_routes import (
@@ -16,7 +18,7 @@ from backend.auth_routes import (
 )
 
 
-def _story(passages, start="1", fmt="SugarCube", with_retreat=True, tags=("adventure",)):
+def _story(passages, start="1", fmt="SugarCube", with_retreat=True, tags=("adventure",), version="2.37.3"):
     # Retreat is a required scene (the always-available voluntary-exit ending),
     # injected by default so each test can focus on the rule it exercises. Pass
     # with_retreat=False to omit it (e.g. to test the missing-Retreat error, or
@@ -28,7 +30,9 @@ def _story(passages, start="1", fmt="SugarCube", with_retreat=True, tags=("adven
             _p("retreat", "Retreat", "You withdraw. <<set $isEnding to true>>")
         )
     return {
-        "storyData": {"startPassage": start, "storyFormat": fmt, "tags": list(tags)},
+        "storyData": {
+            "startPassage": start, "storyFormat": fmt, "storyFormatVersion": version, "tags": list(tags),
+        },
         "passages": passages,
     }
 
@@ -501,8 +505,9 @@ def test_collect_story_tags_includes_story_level_tags():
 # --- reserved passages are exempt --------------------------------------------
 
 
-def test_reserved_passages_exempt_from_structural_rules():
-    # PassageHeader has no links and no ending, but must not be flagged.
+def test_sugarcube_special_passages_are_refused_without_structural_noise():
+    # PassageHeader would run on every scene: refused by the story rules, and
+    # not also reported as a dead end or an unreachable scene.
     result = _check_twine_syntax(
         _story(
             [
@@ -514,7 +519,9 @@ def test_reserved_passages_exempt_from_structural_rules():
             ]
         )
     )
-    assert result["errors"] == []
+    assert result["errors"] == [
+        "Passage 'PassageHeader' isn't accepted - StoryInit, Retreat and LastResort are the only special scenes"
+    ]
     assert not any("PassageHeader" in w for w in result["warnings"])
 
 
@@ -908,7 +915,15 @@ def test_story_with_passage_tag_only_passes_tag_rule():
 # --- TestCharacters: the editor-only test party -----------------------------
 
 
-_TEST_PARTY = '[{"firstName": "Grimjaw", "lastName": "Ironfoot"}]'
+_TEST_PARTY = json.dumps([{
+    "firstName": "Grimjaw", "lastName": "Ironfoot", "race": "dwarf", "gender": "m",
+    "birthsign": "grit_stitch_brand",
+    "might": 18, "agility": 9, "endurance": 17, "precision": 10,
+    "will": 11, "insight": 8, "lore": 6, "presence": 7,
+    "class1": "none", "classLvl1": 0, "class2": "none", "classLvl2": 0,
+    "prof1": "blacksmith", "profLvl1": 3, "prof2": "miner", "profLvl2": 2, "prof3": "none", "profLvl3": 0,
+    "equipment": ["warhammer_1", "rope_1"],
+}])
 
 
 def _with_test_party(start_text: str = "Welcome [[End]]"):
@@ -1050,9 +1065,11 @@ def test_no_scene_may_stand_in_for_an_image():
 
 
 def test_test_characters_is_not_checked_for_images():
+    # Data, not a scene: the image rules don't read it (the party check does).
     passages = _with_test_party()
     passages[-1] = _p("9", "TestCharacters", '[{"firstName": "Grimjaw", "lastName": "Ironfoot", "note": "url(x)"}]')
-    assert _check_twine_syntax(_story(passages))["errors"] == []
+    errors = _check_twine_syntax(_story(passages))["errors"]
+    assert errors and all(e.startswith("TestCharacters") for e in errors)
 
 
 def test_upper_case_image_link_is_a_step():

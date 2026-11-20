@@ -81,6 +81,7 @@ The server only steps in where the story asks it to, with commands the author wr
 
 - **Where it lives:** in `serverless-wudlands`, served as static files at `/twine/` on the app's own address. It needs the backend with the viewer's login (cloud sync, image upload, submit, review copies). It never goes into an engine service.
 - **Editing never needs a login;** the editor keeps stories in the browser. The login is needed for cloud save, image upload, submit and loading review copies.
+- **Built-in story formats only** (2026-11-20): Paperthin for Proof and SugarCube 2.37.3 for stories. A story format's code runs on the app's address with the viewer's login (its editor extensions and `hydrate`), so the Add story format button is gone and formats added earlier are dropped when the editor loads. A story only names its format; the submit check accepts exactly SugarCube 2.37.3, and review copies always use the built-in one.
 - **The 7-day lock only stops submitting.** The author's working copy (`twine_stories`) can always be edited and saved. The submitted copy (`twine_review`) is frozen: replaceable by a new submit for 7 days, then locked until review. A live story is changed only as a new story (Duplicate).
 
 ### Sealed frame for every story run (built 2026-11-20)
@@ -154,7 +155,7 @@ To measure once a prototype runs: process start time, CPU per click on Cloud Run
 
 ## Order of work
 
-1. ~~Seal the editor's story runs~~ and ~~**Save review** for reviewers~~ (done 2026-11-20).
+1. ~~Seal the editor's story runs~~, ~~**Save review** for reviewers~~ and ~~the story check (`backend/story_rules.py`) with the stored test party~~ (done 2026-11-20).
 2. Engine image with the prototype's shims, both worker modes and the limits; deploy `engine-test` and `engine-live`; measure.
 3. Test runs from `twine_review` with `TestCharacters`, no effects, and the **Play on server** link in the submit status.
 4. Play screen for players on `engine-live`, replacing today's step API that trusts the browser.
