@@ -1,165 +1,122 @@
 """
-Registry of currently active (logged-in) players, backed by the Mongo
-`active_players` collection (see backend.db) so every Cloud Run instance
-sees the same state instead of each holding its own private copy.
+Who is online right now, backed by the `active_players` collection (see
+backend.db) so every Cloud Run instance sees the same state.
 
-A player is added when they log in (see auth_routes.verify_auth_signature)
-and evicted once idle for INACTIVITY_TIMEOUT - i.e. no login refresh and no
-in-game state change (touch_player) for 8 hours. Any activity resets the
-idle timer, so an active player is never evicted mid-session.
+A player counts as online while their `last_active_at` is less than
+ONLINE_WINDOW old. `mark_active` writes it: the signature login calls it, and
+so does `auth_routes.get_current_address`, so every authenticated request
+counts - including a session restored from the cookie, which never signs
+again. While the tab is visible the online badge (app/main/VersionBadge.tsx)
+asks for the count every few minutes, and that request counts too, so a
+player who is reading without clicking stays online.
 
-Eviction itself is handled by a TTL index on `last_active_at` (created in
-backend.db.ensure_indexes) rather than an application-side sweep - Mongo
-deletes the document once it's past its idle window on its own. Because of
-that TTL, this collection only ever tracks "is this player online right
-now" - permanent data (character rosters) lives in backend.players instead,
-which has no TTL and survives logout.
+Writes are throttled per instance: an address that this instance wrote less
+than TOUCH_INTERVAL ago is skipped without touching the database, so the
+registry costs about one write per online player every few minutes, not one
+per request. With the badge asking every 5 minutes, a present player's
+`last_active_at` is at most about 10 minutes old - inside the 15 minute
+window.
+
+Logout deletes the entry; another device still signed in adds it back with
+its next request (within TOUCH_INTERVAL).
+
+The count filters on ONLINE_WINDOW itself. The TTL index on `last_active_at`
+(backend.db.ensure_indexes, 8h) only clears out old docs and is deliberately
+left at 8h: changing expireAfterSeconds on an existing index makes
+create_index fail. Permanent data (character rosters) lives in
+backend.players instead.
 """
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+import time
 from datetime import datetime, timedelta, timezone
-from typing import List, Optional
 
-from pymongo import ReturnDocument
+from pymongo.errors import DuplicateKeyError
 
-from backend.db import find_one_and_update_checked, get_database
+from backend.db import get_database
 
-INACTIVITY_TIMEOUT = timedelta(hours=8)
+ONLINE_WINDOW = timedelta(minutes=15)
+TOUCH_INTERVAL = timedelta(minutes=5)
 
-
-@dataclass
-class ActivePlayer:
-    """An active player session, keyed by wallet address."""
-
-    address: str
-    logged_in_at: datetime
-    last_active_at: datetime
-
-    def to_dict(self) -> dict:
-        return {
-            "address": self.address,
-            "loggedInAt": self.logged_in_at.isoformat(),
-            "lastActiveAt": self.last_active_at.isoformat(),
-        }
+# address -> time.monotonic() of this instance's last write for it.
+_last_write: dict[str, float] = {}
+_MAX_CACHED = 10_000
 
 
-def _as_utc(value: datetime) -> datetime:
-    """Mongo returns naive UTC datetimes; normalize to timezone-aware."""
-    return value if value.tzinfo is not None else value.replace(tzinfo=timezone.utc)
+def _forget_old_writes(now: float) -> None:
+    """Keep the throttle cache bounded: drop entries past TOUCH_INTERVAL."""
+    if len(_last_write) < _MAX_CACHED:
+        return
+    limit = TOUCH_INTERVAL.total_seconds()
+    for address, at in list(_last_write.items()):
+        if now - at >= limit:
+            del _last_write[address]
+    if len(_last_write) >= _MAX_CACHED:
+        # Only possible with more than _MAX_CACHED players active within
+        # TOUCH_INTERVAL on one instance; the cost is a few extra writes.
+        _last_write.clear()
 
 
-def _last_active(doc: dict) -> Optional[datetime]:
-    """Normalised `last_active_at`, or None if the doc lacks a usable value.
+async def mark_active(address: str, force: bool = False) -> None:
+    """Record that `address` is online now.
 
-    A malformed/legacy doc without a datetime `last_active_at` is never swept by
-    the TTL index (TTL only deletes docs whose indexed field is a date), so the
-    read paths must tolerate it rather than KeyError on direct access.
+    Skipped when this instance already wrote it within TOUCH_INTERVAL, unless
+    `force` (the signature login, so a logout on another instance can't leave
+    a fresh login uncounted until the throttle runs out).
     """
-    value = doc.get("last_active_at")
-    return _as_utc(value) if isinstance(value, datetime) else None
+    now_mono = time.monotonic()
+    last = _last_write.get(address)
+    if not force and last is not None and now_mono - last < TOUCH_INTERVAL.total_seconds():
+        return
 
+    _forget_old_writes(now_mono)
+    # Claim the slot before awaiting so concurrent requests from the same
+    # player don't all write; released again if the write fails.
+    _last_write[address] = now_mono
 
-def _doc_to_player(doc: dict) -> ActivePlayer:
-    # last_active_at is validated by the caller; fall back for logged_in_at so a
-    # doc missing only that field still yields a usable player.
-    last_active = _last_active(doc) or datetime.now(timezone.utc)
-    logged_in = doc.get("logged_in_at")
-    logged_in = _as_utc(logged_in) if isinstance(logged_in, datetime) else last_active
-    return ActivePlayer(
-        address=doc["address"],
-        logged_in_at=logged_in,
-        last_active_at=last_active,
-    )
-
-
-async def add_active_player(address: str) -> ActivePlayer:
-    """
-    Register a login for `address`, or refresh its idle timer if already
-    active. Called from the /api/auth/verify flow once a signature checks out.
-    """
     db = get_database()
     now = datetime.now(timezone.utc)
-
-    doc = await db.active_players.find_one({"address": address})
-    if doc is None:
-        doc = {
-            "address": address,
-            "logged_in_at": now,
-            "last_active_at": now,
-        }
-        await db.active_players.insert_one(doc)
-    else:
-        await db.active_players.update_one(
-            {"address": address}, {"$set": {"last_active_at": now}}
-        )
-        doc["last_active_at"] = now
-
-    return _doc_to_player(doc)
-
-
-async def touch_player(address: str) -> Optional[ActivePlayer]:
-    """
-    Reset the idle timer for an already-active player, e.g. after a value
-    change. Returns None if the player isn't currently active.
-    """
-    db = get_database()
-    now = datetime.now(timezone.utc)
-
-    doc = await find_one_and_update_checked(
-        db.active_players,
-        {"address": address},
-        {"$set": {"last_active_at": now}},
-        return_document=ReturnDocument.AFTER,
-    )
-
-    if doc is None:
-        return None
-
-    return _doc_to_player(doc)
-
-
-async def get_active_player(address: str) -> Optional[ActivePlayer]:
-    db = get_database()
-    doc = await db.active_players.find_one({"address": address})
-
-    if doc is None:
-        return None
-
-    last_active = _last_active(doc)
-    if last_active is None or datetime.now(timezone.utc) - last_active > INACTIVITY_TIMEOUT:
-        # Idle past the timeout (or malformed, so never TTL-swept) - evict it.
-        await db.active_players.delete_one({"address": address})
-        return None
-
-    return _doc_to_player(doc)
+    try:
+        try:
+            await db.active_players.update_one(
+                {"address": address},
+                {"$set": {"last_active_at": now}},
+                upsert=True,
+            )
+        except DuplicateKeyError:
+            # Two upserts for a new address raced on the unique index; the
+            # other one created the doc, so this is a plain update now.
+            await db.active_players.update_one(
+                {"address": address}, {"$set": {"last_active_at": now}}
+            )
+    except BaseException:
+        _last_write.pop(address, None)
+        raise
 
 
 async def remove_active_player(address: str) -> None:
+    """Logout: the player is no longer online."""
+    _last_write.pop(address, None)
     db = get_database()
     await db.active_players.delete_one({"address": address})
 
 
-async def list_active_players() -> List[ActivePlayer]:
+async def is_online(address: str) -> bool:
     db = get_database()
-    now = datetime.now(timezone.utc)
-    players = []
+    doc = await db.active_players.find_one(
+        {"address": address, "last_active_at": {"$gte": _cutoff()}}
+    )
+    return doc is not None
 
-    stale = []  # _id values of malformed docs the TTL index can't sweep
-    async for doc in db.active_players.find({}):
-        last_active = _last_active(doc)
-        if last_active is None or not doc.get("address"):
-            # No usable timestamp or no address - can't represent it; drop it.
-            # Delete by _id so a missing address field can't break the cleanup.
-            if "_id" in doc:
-                stale.append(doc["_id"])
-            continue
-        if now - last_active > INACTIVITY_TIMEOUT:
-            continue
-        players.append(_doc_to_player(doc))
 
-    if stale:
-        await db.active_players.delete_many({"_id": {"$in": stale}})
+async def count_online() -> int:
+    """Number of players with an authenticated request within ONLINE_WINDOW."""
+    db = get_database()
+    return await db.active_players.count_documents(
+        {"last_active_at": {"$gte": _cutoff()}}
+    )
 
-    return players
+
+def _cutoff() -> datetime:
+    return datetime.now(timezone.utc) - ONLINE_WINDOW

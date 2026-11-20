@@ -10,7 +10,7 @@ from datetime import datetime, timedelta, timezone
 import pytest
 
 from backend import legend
-from backend.active_players import add_active_player, remove_active_player
+from backend.active_players import mark_active, remove_active_player
 from backend.character import Character
 from backend.db import get_database
 from backend.players import (
@@ -73,8 +73,8 @@ async def test_characters_persist_after_active_player_is_removed(mongodb_uri):
         # slotNumber), so compare by name.
         assert sorted(c["firstName"] for c in with_char.characters) == ["Second", "Test"]
 
-        # Simulate the active-session ending (logout, or 2h idle eviction).
-        await add_active_player(TEST_ADDRESS)
+        # Simulate the active-session ending (logout).
+        await mark_active(TEST_ADDRESS, force=True)
         await remove_active_player(TEST_ADDRESS)
 
         # The permanent record - and its characters - must still be there.

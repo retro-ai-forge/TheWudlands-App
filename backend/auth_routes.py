@@ -24,9 +24,9 @@ from backend.auth import (
     AuthenticationError,
 )
 from backend.active_players import (
-    add_active_player,
+    count_online,
+    mark_active,
     remove_active_player,
-    list_active_players,
 )
 from backend.character import AttributeStats, Character, PortraitArea, ProfStats
 from backend.db import get_database, run_in_transaction
@@ -165,9 +165,9 @@ class LogoutResponse(BaseModel):
 
 
 class ActivePlayerCountResponse(BaseModel):
-    """Count of currently active (logged-in, non-idle) players."""
+    """Count of players online (an authenticated request in the last 15 minutes)."""
 
-    count: int = Field(..., description="Number of active players")
+    count: int = Field(..., description="Number of players online")
 
 
 class AdventurePointerResponse(BaseModel):
@@ -635,7 +635,19 @@ async def get_current_address(request: Request) -> str:
     if not session:
         raise HTTPException(status_code=401, detail="Invalid or expired token")
 
+    # Every authenticated request keeps the player counted as online
+    # (throttled in mark_active, so this rarely touches the database).
+    await _mark_active_quietly(session.address)
+
     return session.address
+
+
+async def _mark_active_quietly(address: str, force: bool = False) -> None:
+    """The online count is best effort: never fail a request over it."""
+    try:
+        await mark_active(address, force=force)
+    except Exception as e:
+        print(f"[active-players] mark_active failed for {address}: {type(e).__name__}: {e}")
 
 
 # Routes
@@ -750,8 +762,8 @@ async def verify_auth_signature(
             session_duration_hours=72,
         )
 
-        # Register (or refresh) this address in the active-players registry
-        await add_active_player(session.address)
+        # Count the player as online right away, past this instance's throttle.
+        await _mark_active_quietly(session.address, force=True)
 
         # Log the wallet's DOT and WUD holdings, but only after the response
         # is sent - two Subscan round-trips shouldn't slow down the login.
@@ -849,7 +861,7 @@ async def logout(request: Request, response: Response):
 
     except Exception as e:
         print(f"Logout error: {e}")
-        raise HTTPException(status_code=500, detail="Logout get_active_playerfailed")
+        raise HTTPException(status_code=500, detail="Logout failed")
 
 
 @player_router.get("/me/characters/summaries")
@@ -2938,12 +2950,14 @@ async def get_my_star_slots(address: str = Depends(get_current_address)):
 
 
 @statistics_router.get("/active-players/count", response_model=ActivePlayerCountResponse)
-async def get_active_player_count():
+async def get_active_player_count(address: str = Depends(get_current_address)):
     """
-    Number of players currently logged in and active (i.e. not idle for
-    more than the 8-hour inactivity timeout).
+    Number of players online: an authenticated request within the last
+    15 minutes (backend.active_players.ONLINE_WINDOW). Logged in only - the
+    badge asks every few minutes while the tab is visible, and that request
+    itself keeps the asking player online.
     """
-    return ActivePlayerCountResponse(count=len(await list_active_players()))
+    return ActivePlayerCountResponse(count=await count_online())
 
 
 # ── Twine story cloud sync ──────────────────────────────────────────────
