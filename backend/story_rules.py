@@ -221,6 +221,8 @@ _HTML_TAG = re.compile(
     r"((?:\s+[^\s\"'>/=]+(?:\s*=\s*(?:\"[^\"]*\"|'[^']*'|[^\s\"'=<>`]+))?)*)"
     r"\s*(/?)>"
 )
+# What may stand inside a <label> besides its text (see _Scene.inside_label).
+_LABEL_CONTENT = re.compile(r"<<\s*(?:radiobutton|checkbox)\b|</label\s*>|<!--", re.IGNORECASE)
 _HTML_ATTRIBUTE = re.compile(r"([^\s\"'>/=]+)(?:\s*=\s*(\"[^\"]*\"|'[^']*'|[^\s\"'=<>`]+))?")
 
 
@@ -444,13 +446,6 @@ class _Expression:
             return value.field
         self.require_value(value, "in <<switch>>")
         return None
-
-    def story_list(self) -> None:
-        """<<optionsfrom $list>>: a story variable holding a list."""
-        value = self.expression()
-        self.done()
-        if not (value.target and value.target[0] == "story"):
-            raise _Refused("<<optionsfrom>> takes a list from StoryInit, like <<optionsfrom $inventory>>")
 
     # -- assignment --
 
@@ -985,6 +980,7 @@ class _Scene:
         self.legend: list = []
         self.destinations: list = []  # (scene, leads there)
         self.labels: set = set()  # visible choice texts so far, see choice_label
+        self.open_label: Optional[dict] = None  # the <label> being read, see open_label_tag
         self._seen: set = set()
 
     # -- reporting --
@@ -1031,7 +1027,7 @@ class _Scene:
             )
             return False
         if top and top["kind"] in _CHOICE_LISTS:
-            self.refuse(pos, f"only <<option>> and <<optionsfrom>> go inside <<{top['kind']}>>")
+            self.refuse(pos, f"only <<option>> goes inside <<{top['kind']}>>")
             return False
         if top and top["kind"] == "switch" and top["head"]:
             self.refuse(pos, "only <<case>> and <<default>> go directly inside <<switch>>")
@@ -1047,11 +1043,29 @@ class _Scene:
             start = m.start() if m else n
             if text[pos:start].strip():
                 self.content_allowed(pos + (len(text[pos:start]) - len(text[pos:start].lstrip())))
+            if self.open_label is not None:
+                self.open_label["text"].append(text[pos:start])
             if not m:
                 break
+            self.inside_label(start)
             pos = self.markup(start)
+        if self.open_label is not None:
+            self.refuse(self.open_label["pos"], "<label> is never closed with </label>")
         for frame in reversed(self.frames):
             self.refuse(frame["pos"], f"<<{frame['kind']}>> is never closed with <</{frame['kind']}>>")
+
+    def inside_label(self, i: int) -> None:
+        """Inside a <label> only its text and one radio button or checkbox:
+        the text is what the player's pick comes back as."""
+        label = self.open_label
+        if label is None or label["refused"] or _LABEL_CONTENT.match(self.text, i):
+            return
+        label["refused"] = True
+        self.refuse(
+            i,
+            "a <label> holds only its text and one radio button or checkbox, "
+            'like <label><<radiobutton "$path" "north">> North</label>',
+        )
 
     def markup(self, i: int) -> int:
         text = self.text
@@ -1168,7 +1182,43 @@ class _Scene:
             self.refuse(i, f"</{tag}> takes no attributes")
         for attr in _HTML_ATTRIBUTE.finditer(attributes):
             self.attribute(i, tag, attr.group(1), attr.group(2))
+        if tag == "label":
+            if closing:
+                self.close_label_tag(i)
+            else:
+                self.open_label_tag(i)
         return m.end()
+
+    def open_label_tag(self, i: int) -> None:
+        if self.open_label is not None:
+            self.refuse(i, "a <label> doesn't go inside another <label>")
+            return
+        self.open_label = {"pos": i, "text": [], "inputs": 0, "frame": self.top(), "refused": False}
+
+    def close_label_tag(self, i: int) -> None:
+        """A radio button's or checkbox's text is its <label>'s text: the
+        player's pick comes back as it, so it counts like a link's text."""
+        label, self.open_label = self.open_label, None
+        if label is None:
+            self.refuse(i, "</label> closes nothing - there is no open <label>")
+            return
+        if label["frame"] is not self.top():
+            self.refuse(label["pos"], "a <label> opens and closes in the same part of the scene, not across <<if>> or <<switch>>")
+            return
+        if label["inputs"] != 1 or label["refused"]:
+            return  # a plain label, or already refused
+        shown = " ".join("".join(label["text"]).split())
+        if not shown:
+            self.refuse(
+                label["pos"],
+                'a radio button or checkbox needs its own text in the <label>, like <label><<radiobutton "$path" "north">> North</label>',
+            )
+            return
+        problem = plain_text_problem(shown)
+        if problem:
+            self.refuse(label["pos"], f'{problem}, like <label><<radiobutton "$path" "north">> North</label>')
+            return
+        self.choice_label(label["pos"], shown)
 
     @staticmethod
     def tag_message(tag: str) -> str:
@@ -1266,7 +1316,7 @@ class _Scene:
                 "like <<button [[Rest|Camp]]>><<set $water -= 1>><</button>>"
             )
         if top and top["kind"] in _CHOICE_LISTS and name not in ("option", "optionsfrom"):
-            raise _Refused(f"only <<option>> and <<optionsfrom>> go inside <<{top['kind']}>>")
+            raise _Refused(f"only <<option>> goes inside <<{top['kind']}>>")
         if top and top["kind"] == "switch" and top["head"] and name not in ("case", "default"):
             raise _Refused("only <<case>> and <<default>> go directly inside <<switch>>")
         if self.is_init and name not in _INIT_MACROS:
@@ -1279,26 +1329,28 @@ class _Scene:
     # -- choice texts --
 
     def choice_label(self, pos: int, label: str) -> None:
-        """A link's or button's visible text. The player's click comes back as
-        this text (the engine never sends where a choice leads), so every
-        choice text appears once in a scene's source - also across the
-        branches of an <<if>> or <<switch>>, so a text always names one link
-        and the server knows where it leads without running the scene.
-        Inside <<for>> a choice would be shown once per character."""
+        """A text the player can pick: a link's or button's text, a radio
+        button's or checkbox's label, an option. The player's click or pick
+        comes back as this text (the engine never sends where a choice leads
+        or what it stores), so every such text appears once in a scene's
+        source - also across the branches of an <<if>> or <<switch>>, so a
+        text always names one choice and the server knows what it does
+        without running the scene. Inside <<for>> a choice would be shown
+        once per character."""
         if any(f["kind"] == "for" for f in self.frames):
             self.refuse(
                 pos,
-                "links and buttons don't go inside <<for>> - it shows them once per character, "
-                "so the scene would offer the same choice several times",
+                "choices (links, buttons, radio buttons, checkboxes, options) don't go inside <<for>> - "
+                "it shows them once per character, so the scene would offer the same choice several times",
             )
             return
         key = " ".join(label.split()).casefold()
         if key in self.labels:
             self.refuse(
                 pos,
-                f"the choice '{' '.join(label.split())}' is in this scene twice - give every link "
-                "and button its own text, also in different branches of an <<if>> (the player's "
-                "choice comes back as its text)",
+                f"the choice '{' '.join(label.split())}' is in this scene twice - every link, button, "
+                "radio button, checkbox and option needs its own text, also in different branches of "
+                "an <<if>> (the player's choice comes back as its text)",
             )
         self.labels.add(key)
 
@@ -1453,6 +1505,7 @@ class _Scene:
         example = '<<radiobutton "$path" "north">>'
         if not self.content_allowed(pos):
             return
+        self.input_in_label(pos, "radio button")
         args = _macro_arguments(raw)
         if len(args) < 2:
             raise _Refused(f"write the variable and the value, like {example}")
@@ -1460,10 +1513,24 @@ class _Scene:
         _literal_value(args[1], "the value")
         self.choice_keywords(args[2:], ("checked", "autocheck"), example)
 
+    def input_in_label(self, pos: int, kind: str) -> None:
+        label = self.open_label
+        if label is None:
+            self.refuse(
+                pos,
+                f"a {kind} sits inside a <label> with its own text (the player's pick comes back as it), "
+                'like <label><<radiobutton "$path" "north">> North</label>',
+            )
+            return
+        label["inputs"] += 1
+        if label["inputs"] == 2:
+            self.refuse(pos, "one radio button or checkbox per <label>")
+
     def cmd_checkbox(self, pos: int, raw: str) -> None:
         example = '<<checkbox "$careful" false true>>'
         if not self.content_allowed(pos):
             return
+        self.input_in_label(pos, "checkbox")
         args = _macro_arguments(raw)
         if len(args) < 3:
             raise _Refused(f"write the variable, the unchecked and the checked value, like {example}")
@@ -1495,11 +1562,7 @@ class _Scene:
         if not args or args[0][0] != "str":
             raise _Refused('write the option\'s text in quotes, like <<option "Sword" "sword">>')
         _check_quoted(args[0][1])
-        shown = " ".join(args[0][1].split())
-        seen = top.setdefault("options", set())
-        if shown.casefold() in seen:
-            raise _Refused(f"the option '{shown}' is in this list twice - the player's pick comes back as its text")
-        seen.add(shown.casefold())
+        self.choice_label(pos, args[0][1])
         rest = args[1:]
         if rest and not (rest[0][0] == "word" and rest[0][1] == "selected"):
             _literal_value(rest[0], "the option's value")
@@ -1507,10 +1570,13 @@ class _Scene:
         self.choice_keywords(rest, ("selected",), '<<option "Sword" "sword" selected>>')
 
     def cmd_optionsfrom(self, pos: int, raw: str) -> None:
-        top = self.top()
-        if not top or top["kind"] not in _CHOICE_LISTS:
-            raise _Refused("<<optionsfrom>> goes inside <<listbox>> or <<cycle>>")
-        _Expression(raw, self).story_list()
+        """Refused: its option texts come from a variable while the story is
+        played, so the check can't read them - not whether they're plain
+        words, nor whether one repeats another choice's text."""
+        raise _Refused(
+            '<<optionsfrom>> isn\'t accepted - write each option with <<option "Rope" "rope">>, so every '
+            "option's text is in the scene; for options that change during the story, put radio buttons inside <<if>>"
+        )
 
     def cmd_nobr(self, pos: int, raw: str) -> None:
         if raw.strip():

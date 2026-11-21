@@ -228,7 +228,7 @@ Every shown value appears as plain text, exactly as stored.
 ```
 
 - Destinations are always written out: a scene name, never a variable.
-- Every link and button in a scene has its own text (`[[Cave]]` counts as the text "Cave"; upper and lower case and extra spaces don't make a difference). The player's choice comes back to the server as its text, never as where it leads, so two choices with the same text would be ambiguous. That holds across the branches of an `<<if>>` or `<<switch>>` too, although only one branch is shown: a text always stands for one link, so the server knows where a click leads without running the scene. Write `[[Unlock the door|Hall]]` and `[[Try the door|Locked]]`, not "Open the door" twice. Links and buttons don't go inside `<<for>>`, which would show them once per character. Hotspots and image links have no text of their own and aren't counted.
+- Every link and button in a scene has its own text (`[[Cave]]` counts as the text "Cave"; upper and lower case and extra spaces don't make a difference). The player's choice comes back to the server as its text, never as where it leads, so two choices with the same text would be ambiguous. That holds across the branches of an `<<if>>` or `<<switch>>` too, although only one branch is shown: a text always stands for one link, so the server knows where a click leads without running the scene. Write `[[Unlock the door|Hall]]` and `[[Try the door|Locked]]`, not "Open the door" twice. Links and buttons don't go inside `<<for>>`, which would show them once per character. Hotspots and image links have no text of their own and aren't counted. Radio buttons, checkboxes and options count too (see Choices): no two choices in a scene share a text.
 
 Not accepted:
 
@@ -266,12 +266,26 @@ Not accepted:
 <label><<radiobutton "$path" "south">> South</label>
 <label><<checkbox "$careful" false true>> Move carefully</label>
 <<listbox "$weapon">><<option "Sword" "sword">><<option "Bow" "bow">><</listbox>>
-<<listbox "$item">><<optionsfrom $inventory>><</listbox>>
 <<cycle "$stance">><<option "Defensive" "defensive">><<option "Bold" "bold">><</cycle>>
 [[Continue|Next]]
 ```
 
-Players only pick from the options you wrote; they never type anything. The options in one drop-down or cycle each have their own text, because the player's pick comes back as its text. A choice stores into your own story variable (never `$char`, `$lead`, `$isEnding` or a `$meta_` value). Also accepted: `checked` or `autocheck` after a radio button or checkbox, `autoselect` after the variable of a listbox or cycle, and `selected` after an option.
+Players only pick from the options you wrote; they never type anything. Each radio button and checkbox sits inside its own `<label>`, with plain words as its text (like a link's text) and nothing else in it. Every text a player can pick appears once in a scene: link and button texts, radio button and checkbox labels, and the options of drop-downs and cycles, also across different lists and in different branches of an `<<if>>`, because the player's pick comes back as its text. A choice stores into your own story variable (never `$char`, `$lead`, `$isEnding` or a `$meta_` value). Also accepted: `checked` or `autocheck` after a radio button or checkbox, `autoselect` after the variable of a listbox or cycle, and `selected` after an option.
+
+Options are always written out with `<<option>>`. `<<optionsfrom>>` isn't accepted: its texts would come from a variable while the story is played, so the check couldn't read them. For options that change during the story, put radio buttons inside `<<if>>`, like `<<if $hasRope>><label><<radiobutton "$tool" "rope">> Rope</label><</if>>`.
+
+Not accepted:
+
+```
+<<radiobutton "$path" "north">> North
+<label><<radiobutton "$path" "north">></label>
+<label><<radiobutton "$path" "north">> $direction</label>
+<label><<radiobutton "$path" "north">><<radiobutton "$path" "south">> North or south</label>
+<label><<radiobutton "$a" true>> Yes</label> <label><<radiobutton "$b" true>> Yes</label>
+<<listbox "$weapon">><<option "Sword" "a">><</listbox>> <<cycle "$stance">><<option "Sword" "b">><</cycle>>
+<label><<checkbox "$rest" false true>> Rest</label> [[Rest|Camp]]
+<<listbox "$item">><<optionsfrom $inventory>><</listbox>>
+```
 
 ### Legend
 

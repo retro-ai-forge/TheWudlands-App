@@ -627,11 +627,66 @@ def test_no_choices_inside_a_loop_over_the_party():
     ) == []
 
 
-def test_options_in_one_list_have_their_own_text():
-    problems = check_scene("Scene", '<<listbox "$weapon">><<option "Sword" "a">><<option "sword" "b">><</listbox>>')
-    assert any("is in this list twice" in p for p in problems), problems
-    # The same text in two different lists is fine.
+@pytest.mark.parametrize(
+    "text",
+    [
+        '<<listbox "$weapon">><<option "Sword" "a">><<option "sword" "b">><</listbox>>',
+        # Scene-wide: also across lists, and against links and labels.
+        '<<listbox "$weapon">><<option "Sword" "a">><</listbox>><<cycle "$stance">><<option "Sword" "b">><</cycle>>',
+        '<<listbox "$where">><<option "Rest" "a">><</listbox>> [[Rest|Camp]]',
+        '<label><<radiobutton "$a" true>> Yes</label><label><<radiobutton "$b" true>> Yes</label>',
+        '<label><<radiobutton "$path" "north">> North</label> [[North]]',
+        '<label><<checkbox "$x" false true>> Rest</label> <<listbox "$w">><<option "rest" "a">><</listbox>>',
+    ],
+)
+def test_every_pickable_text_appears_once_in_a_scene(text):
+    problems = check_scene("Scene", text)
+    assert any("is in this scene twice" in p for p in problems), problems
+
+
+@pytest.mark.parametrize(
+    "text, expected",
+    [
+        ('<<radiobutton "$path" "north">> North', "sits inside a <label>"),
+        ('<<checkbox "$careful" false true>> Move carefully', "sits inside a <label>"),
+        ('<label><<radiobutton "$path" "north">></label>', "needs its own text"),
+        ('<label><<radiobutton "$path" "north">> $direction</label>', "holds only its text"),
+        ('<label><<radiobutton "$path" "north">> [[North]]</label>', "holds only its text"),
+        ('<label><<radiobutton "$path" "north">><<radiobutton "$path" "south">> Both</label>', "one radio button or checkbox per <label>"),
+        ('<label><<radiobutton "$path" "north">> North', "never closed"),
+        ("North</label>", "closes nothing"),
+        ('<label><label><<radiobutton "$path" "north">> North</label></label>', "inside another <label>"),
+        ('<<if $a>><label><</if>><<radiobutton "$path" "north">> North</label>', "same part of the scene"),
+        ('<label><<radiobutton "$path" "north">> North (left)</label>', "like <label>"),
+        ('<<for _i, _c range $char>><label><<checkbox "$x" false true>> Help</label><</for>>', "don't go inside <<for>>"),
+    ],
+)
+def test_radio_buttons_and_checkboxes_sit_in_a_label_with_their_own_text(text, expected):
+    problems = check_scene("Scene", text)
+    assert any(expected in p for p in problems), problems
+
+
+@pytest.mark.parametrize(
+    "text",
+    [
+        '<label><<radiobutton "$path" "north">> North</label> <label><<radiobutton "$path" "south">> South</label>',
+        '<label class="pick"><<checkbox "$careful" false true>> Move carefully</label>',
+        '<label>North <<radiobutton "$path" "north">></label>',
+        '<label><!-- the way --><<radiobutton "$path" "north">> North</label>',
+        "<label>A plain label without a choice</label>",
+        '<<if $a>><label><<radiobutton "$path" "north">> North</label><</if>>',
+    ],
+)
+def test_labelled_choices_pass(text):
+    assert check_scene("Scene", text) == []
+
+
+def test_options_are_written_out_never_taken_from_a_variable():
+    problems = check_scene("Scene", '<<listbox "$item">><<optionsfrom $inventory>><</listbox>>')
+    assert any("<<optionsfrom>> isn't accepted" in p for p in problems), problems
+    # Changing options: radio buttons inside <<if>>.
     assert check_scene(
         "Scene",
-        '<<listbox "$weapon">><<option "Sword" "a">><</listbox>><<cycle "$stance">><<option "Sword" "b">><</cycle>>',
+        '<<if $hasRope>><label><<radiobutton "$tool" "rope">> Rope</label><</if>>'
+        '<label><<radiobutton "$tool" "torch">> Torch</label>',
     ) == []
