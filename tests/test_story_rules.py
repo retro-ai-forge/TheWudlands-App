@@ -572,3 +572,66 @@ def test_a_party_is_a_json_list(text):
 
 def test_no_test_characters_scene_means_no_party():
     assert read_party(None, 4) == (None, [])
+
+
+# --- every choice in a scene has its own text -----------------------------------
+# The player's click comes back to the server as the choice's text, never as
+# where it leads, so two choices a scene can show together must differ.
+
+
+@pytest.mark.parametrize(
+    "text",
+    [
+        "[[Go on|Cave]] [[Go on|Camp]]",
+        "[[Go on|Cave]] [[go  ON|Camp]]",
+        "[[Cave]] [[Cave<-Enter]] [[Cave]]",
+        '[[Cave]] <<button "Cave" "Camp">><</button>>',
+        "[[Rest|Camp]] <<link [[Rest|Inn]]>><</link>>",
+        "<<button [[Rest|Camp]]>><</button>><<button [[Rest|Inn]]>><</button>>",
+        "<<if $a>>[[Rest|Camp]]<</if>> <<if $b>>[[Rest|Inn]]<</if>>",
+        "<<if $a>>[[Rest|Camp]]<<if $b>>[[Rest|Inn]]<</if>><</if>>",
+        "[[Rest|Camp]] <<if $a>>[[Rest|Inn]]<</if>>",
+        # Also in branches that exclude each other: a text names one link, so
+        # the server knows where a click leads without running the scene.
+        "<<if $hasKey>>[[Open the door|Hall]]<<else>>[[Open the door|Locked]]<</if>>",
+        "<<if $a>>[[Rest|Camp]]<<elseif $b>>[[Rest|Inn]]<</if>>",
+        '<<switch $guard>><<case "asleep">>[[Sneak past|Hall]]<<default>>[[Sneak past|Cell]]<</switch>>',
+        "<<if $a>>[[Go on|Cave]]<<else>>[[Go on|Cave]]<</if>>",
+    ],
+)
+def test_two_choices_with_the_same_text_are_refused(text):
+    problems = check_scene("Scene", text)
+    assert any("is in this scene twice" in p for p in problems), problems
+
+
+@pytest.mark.parametrize(
+    "text",
+    [
+        "<<if $hasKey>>[[Unlock the door|Hall]]<<else>>[[Try the door|Locked]]<</if>>",
+        '<<switch $guard>><<case "asleep">>[[Sneak past|Hall]]<<default>>[[Wait in the dark|Cell]]<</switch>>',
+        # Hotspots and image links have no text of their own.
+        "[img[gate.webp][Gate]] [img[gate.webp][Gate]] <<area 0.10 0.20 0.30 0.40 [[Gate]]>> <<area 0.50 0.20 0.30 0.40 [[Gate]]>>",
+        "[[Go north|North]] [[Walk north->North]] [[North<-Head north]]",
+    ],
+)
+def test_choices_with_their_own_text_pass(text):
+    assert check_scene("Scene", text) == []
+
+
+def test_no_choices_inside_a_loop_over_the_party():
+    problems = check_scene("Scene", "<<for _i, _c range $char>><<button [[Help|Camp]]>><</button>><</for>>")
+    assert any("don't go inside <<for>>" in p for p in problems), problems
+    # Commands without a choice still may.
+    assert check_scene(
+        "Scene", '<<for _i, _c range $char>><<if _c.equipment.includes("rope_1")>><<set _hasRope to true>><</if>><</for>>'
+    ) == []
+
+
+def test_options_in_one_list_have_their_own_text():
+    problems = check_scene("Scene", '<<listbox "$weapon">><<option "Sword" "a">><<option "sword" "b">><</listbox>>')
+    assert any("is in this list twice" in p for p in problems), problems
+    # The same text in two different lists is fine.
+    assert check_scene(
+        "Scene",
+        '<<listbox "$weapon">><<option "Sword" "a">><</listbox>><<cycle "$stance">><<option "Sword" "b">><</cycle>>',
+    ) == []

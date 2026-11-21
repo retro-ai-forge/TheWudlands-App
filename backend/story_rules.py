@@ -984,6 +984,7 @@ class _Scene:
         self.frames: list = []
         self.legend: list = []
         self.destinations: list = []  # (scene, leads there)
+        self.labels: set = set()  # visible choice texts so far, see choice_label
         self._seen: set = set()
 
     # -- reporting --
@@ -1130,6 +1131,7 @@ class _Scene:
             problem = plain_text_problem(link.text)
             if problem:
                 self.refuse(pos, f"{problem}, like [[Go north|North]]")
+        self.choice_label(pos, link.text if link.text is not None else link.target)
         if link.setter is not None:
             self.setter(pos, link.setter)
 
@@ -1274,6 +1276,32 @@ class _Scene:
     def open(self, pos: int, kind: str, **extra) -> None:
         self.frames.append({"kind": kind, "pos": pos, **extra})
 
+    # -- choice texts --
+
+    def choice_label(self, pos: int, label: str) -> None:
+        """A link's or button's visible text. The player's click comes back as
+        this text (the engine never sends where a choice leads), so every
+        choice text appears once in a scene's source - also across the
+        branches of an <<if>> or <<switch>>, so a text always names one link
+        and the server knows where it leads without running the scene.
+        Inside <<for>> a choice would be shown once per character."""
+        if any(f["kind"] == "for" for f in self.frames):
+            self.refuse(
+                pos,
+                "links and buttons don't go inside <<for>> - it shows them once per character, "
+                "so the scene would offer the same choice several times",
+            )
+            return
+        key = " ".join(label.split()).casefold()
+        if key in self.labels:
+            self.refuse(
+                pos,
+                f"the choice '{' '.join(label.split())}' is in this scene twice - give every link "
+                "and button its own text, also in different branches of an <<if>> (the player's "
+                "choice comes back as its text)",
+            )
+        self.labels.add(key)
+
     def cmd_set(self, pos: int, raw: str) -> None:
         _Expression(raw, self).assignments()
 
@@ -1365,11 +1393,13 @@ class _Scene:
                 problem = plain_text_problem(link.text)
                 if problem:
                     raise _Refused(f"{problem}, like {example}")
+            self.choice_label(pos, link.text if link.text is not None else link.target)
             return
         if 1 <= len(args) <= 2 and all(kind_ == "str" for kind_, _ in args):
             problem = plain_text_problem(args[0][1])
             if problem:
                 raise _Refused(f"{problem}, like {example}")
+            self.choice_label(pos, args[0][1])
             if len(args) == 2:
                 _check_quoted(args[1][1])
                 self.destinations.append((args[1][1], True))
@@ -1465,6 +1495,11 @@ class _Scene:
         if not args or args[0][0] != "str":
             raise _Refused('write the option\'s text in quotes, like <<option "Sword" "sword">>')
         _check_quoted(args[0][1])
+        shown = " ".join(args[0][1].split())
+        seen = top.setdefault("options", set())
+        if shown.casefold() in seen:
+            raise _Refused(f"the option '{shown}' is in this list twice - the player's pick comes back as its text")
+        seen.add(shown.casefold())
         rest = args[1:]
         if rest and not (rest[0][0] == "word" and rest[0][1] == "selected"):
             _literal_value(rest[0], "the option's value")

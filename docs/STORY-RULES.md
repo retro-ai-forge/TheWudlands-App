@@ -217,9 +217,10 @@ Every shown value appears as plain text, exactly as stored.
 ```
 [[Next]]
 [[Go north|North]]
-[[Go north->North]]
-[[North<-Go north]]
+[[Walk north->North]]
+[[North<-Head north]]
 [[Drink|Well][$water to 3]]
+<<if $hasKey>>[[Unlock the door|Hall]]<<else>>[[Try the door|Locked]]<</if>>
 [img[oasis.webp]]
 [img[gate.webp][Gate]]
 <<area 0.10 0.20 0.30 0.40 [[Gate]]>>
@@ -227,6 +228,17 @@ Every shown value appears as plain text, exactly as stored.
 ```
 
 - Destinations are always written out: a scene name, never a variable.
+- Every link and button in a scene has its own text (`[[Cave]]` counts as the text "Cave"; upper and lower case and extra spaces don't make a difference). The player's choice comes back to the server as its text, never as where it leads, so two choices with the same text would be ambiguous. That holds across the branches of an `<<if>>` or `<<switch>>` too, although only one branch is shown: a text always stands for one link, so the server knows where a click leads without running the scene. Write `[[Unlock the door|Hall]]` and `[[Try the door|Locked]]`, not "Open the door" twice. Links and buttons don't go inside `<<for>>`, which would show them once per character. Hotspots and image links have no text of their own and aren't counted.
+
+Not accepted:
+
+```
+[[Go on|Cave]] [[Go on|Camp]]
+[[Cave]] <<button "Cave" "Camp">><</button>>
+<<if $a>>[[Rest|Camp]]<</if>> <<if $b>>[[Rest|Inn]]<</if>>
+<<if $hasKey>>[[Open the door|Hall]]<<else>>[[Open the door|Locked]]<</if>>
+<<for _i, _c range $char>><<button [[Help|Camp]]>><</button>><</for>>
+```
 - Link and button texts are plain words: letters, digits, spaces and `. , ! ? ' : ; -` (typographic quotes, dashes and `…` too, but no straight `"`). SugarCube runs a link's text as program code before showing it, so brackets, `=`, `+`, `$`, `_` and the like are refused there.
 - The part in the second brackets (`[$water to 3]`) runs when the player clicks.
 - Images are uploaded files from the story's Images list, written as the plain file name: a name of letters, digits, `_` and `-`, then `.webp`, `.png` or `.jpg`, like `[img[gate_open.webp]]`. No folders, web addresses, `data:` images, variables or tooltips (`[img[text|file]]`), and every image must be uploaded before you submit. An image may sit inside `<<if>>` to show it only sometimes; put its `<<area>>` lines in the same branch.
@@ -239,7 +251,7 @@ Every shown value appears as plain text, exactly as stored.
 <<button [[Go to the cave|Cave]]>><</button>>
 <<button [[Take the sword|Cave]]>><<set $hasSword to true>><</button>>
 <<link [[Rest|Camp]]>><<set $water -= 1>><</link>>
-<div class="row"><<button [[Go to the cave|Cave]]>><</button>><<button [[Rest|Camp]]>><</button>></div>
+<div class="row"><<button [[Enter the cave|Cave]]>><</button>><<button [[Sit down|Camp]]>><</button>></div>
 ```
 
 - Write where a button or link leads as a `[[link]]` inside it, so the editor draws the line to that scene.
@@ -259,7 +271,7 @@ Every shown value appears as plain text, exactly as stored.
 [[Continue|Next]]
 ```
 
-Players only pick from the options you wrote; they never type anything. A choice stores into your own story variable (never `$char`, `$lead`, `$isEnding` or a `$meta_` value). Also accepted: `checked` or `autocheck` after a radio button or checkbox, `autoselect` after the variable of a listbox or cycle, and `selected` after an option.
+Players only pick from the options you wrote; they never type anything. The options in one drop-down or cycle each have their own text, because the player's pick comes back as its text. A choice stores into your own story variable (never `$char`, `$lead`, `$isEnding` or a `$meta_` value). Also accepted: `checked` or `autocheck` after a radio button or checkbox, `autoselect` after the variable of a listbox or cycle, and `selected` after an option.
 
 ### Legend
 
