@@ -81,7 +81,7 @@ The engines only calculate. `serverless-wudlands` decides everything else, and o
 6. **Decide:**
    - **Story continues:** save the state (conditional update on `seq`), send the scene to the browser.
    - **Skill check:** roll in Python (see "Skill checks"), then let the engine enter the success or the failure scene.
-   - **Consequence:** a scene can ask for one with a predefined tag, such as an injury; Python applies it (an injury through `condition.apply_loss`).
+   - **Consequence:** a scene can ask for one with a predefined tag, such as an injury; Python applies it (an injury through `condition.apply_loss`). If the lead can't act any more, the player picks a new lead first; if no member can, the adventure ends (see "When characters die").
    - **Fight or side story:** push it (see below).
    - **Ending:** pop the frame, or end the run if it was the bottom one.
 7. **Distrust the engine:** the next scene must be one the story's links allow, Legend changes must stay within the rules and the story's points, the HTML is cleaned and sizes are limited.
@@ -103,11 +103,27 @@ Skill checks such as jumping or climbing are rolled by the control layer, not by
 
 When a story lets the player choose which character acts, the control layer makes that choice, not story code:
 
-- **The story names the scene to go to,** for example (syntax still to design, like `<<check>>`) `<<pick_member [[Climb->CliffTop]]>>`. The server shows one button per party member, labelled with the character's name; clicking one picks that member and enters the scene.
+- **The story names the scene to go to,** for example `<<pick_member [[CliffTop]]>>` (as in the tutorial, which marks it as coming soon; may still change). The server shows one button per party member who can act (see "When characters die"), labelled with the character's name; clicking one picks that member and enters the scene.
 - **The server knows who was picked by character id.** Each of these buttons gets a neutral handle, like a hotspot, so two members with the same name are no problem, and the names never pass through SugarCube's link text, which it runs as code.
-- **The next scene gets the picked member** like `$lead` (the variable's name still to design), so a skill check right after it is taken by that character.
+- **The control layer keeps the pick** (the character id) in the story's frame. Every click the engine fills `$picked` with that character's current data, like `$lead`, so it never holds old values or old Legend.
+- **`$picked` stays until the next `<<pick_member>>`,** through any number of scenes, and a skill check right after a pick is taken by that character. Before the first pick it is the lead, so it is never empty and the check needn't prove that a pick comes first on every path. When the picked member can't act any more, the pick is cleared, so `$picked` is the lead again.
+- **Story code can't set it,** like `$char` and `$lead`: it reads `$picked` and changes its Legend with `+=`/`-=`, and only `<<pick_member>>` changes who it is.
+- **Each story frame has its own pick.** A side story starts with `$picked` as the lead; when it is popped, the story below has its own pick back.
 - **Authors don't build per-character choices themselves:** links and buttons inside `<<for>>` stay refused. A click would only say "Help", not whose row it came from, and the button would act on the last character of the loop.
 - **In the editor** a placeholder shows one button per member of the test party.
+
+### When characters die (decided 2026-11-21)
+
+Only Python changes characters (an injury from a failed skill check, a consequence tag, a fight), so the control layer sees the moment a character dies, and steps in where needed. Death itself is the character's `dead` status, written when it happens, like anywhere else in the game.
+
+- **The undead still act.** A dead character can be turned into a vampire or another kind of undead, in a story that allows it. These are life states of their own, never `dead`, the first entry of `vitalStatus` like `alive` and `dead`: `["vampire"]`, `["undead"]` (the kinds listed in a data file; `soulless` stays a condition after the life state). They last after the adventure, and everywhere else in the game they count as alive: foraging, crafting and starting adventures treat `alive`, `vampire` and `undead` alike (`is_alive` will read that list instead of only `alive`). Turning gives Body back: each Body attribute gets a share of its maximum, rounded up, 25% for an undead and 50% for a vampire (numbers in a data file; stored as a smaller `attrLost`); Soul stays as it is. Their values are then above 0, because only the dead have Body at 0, so skill checks, foraging and crafting use them like a living character's, and a vampire or undead whose Body reaches 0 is dead again (`condition` already turns a drained Body into `dead`). No special rules for the undead yet: healing, Soul and everything else work as for the living, so a turned character heals back towards its maximum over time (maybe special rules later). A member **can act** when it is alive or undead: it can lead, gets a `<<pick_member>>` button and keeps the adventure going. A member whose life state is `dead` has **fallen**.
+- **Fallen members stay in the party until the adventure ends.** They keep their place in `$char`, so `$char[1]` still means the same character, and a story can tell who is dead or undead from `vitalStatus`, which `$char` already carries (planned: the story check lets stories read it, such as `<<if $char[1].vitalStatus.includes("vampire")>>`). They get no `<<pick_member>>` button and never lead.
+- **When the lead falls, the player picks a new lead** before the next scene, from the members who can act, on the same one-button-per-member screen as `<<pick_member>>`, made by the platform, not the story. On the stack it is a small platform frame: pushed when the lead falls, popped with the new lead, then the remembered step goes on, so the next scene already gets the new `$lead`.
+- **The session moves the `lead` flag** in `members` and `serverVars.lead`; `$char` keeps the marching order.
+- **With one member left who can act,** it becomes the lead without asking. A lead who dies and is turned in the same step stays the lead.
+- **Story code never sets `$lead`** (`<<set $lead to …>>` stays refused): a death can happen in any scene, so the story can't plan for it, and only the platform's pick keeps the lead a member who can act.
+- **When every member has fallen, the adventure ends at once,** wherever it is (a party of vampires plays on): every frame is popped (side stories, fights) without being resumed, and the run ends as an ending (`$isEnding`). The run stays spent, everything in camp storage is lost, and the characters already carry the dead status. It is logged as `fallen`, not `finished`, so it doesn't add to `completedStories` or unlock follow-up stories.
+- **The story decides who may enter.** Settings in `StoryInit` like the other `$meta_` values (names still to design): either what may enter (such as only `vampire`) or what may not (such as no `undead`), and what must be there (such as one `alive` and one `dead`, for a story about carrying a fallen friend home). The values are the life states and `soulless`. Without settings, every member who can act may enter and the fallen may not, as today (`start_adventure` refuses the dead). The lead is always a member who can act. The submit check accepts only known values and never both lists; the start checks the party against them.
 
 ### The story stack
 
@@ -174,7 +190,7 @@ Rules still to decide (recommendations in brackets):
 
 ### Runs, endings and recovery
 
-- **Run counter** (`story_plays`): `$meta_access` decides the start (`free` = no counter, `trial` = 1, `paid` = 0; a purchase adds 3). Starting takes a run; a `finished` or `run_away` ending keeps it spent; `LastResort` (`aborted`) or a failed start gives it back.
+- **Run counter** (`story_plays`): `$meta_access` decides the start (`free` = no counter, `trial` = 1, `paid` = 0; a purchase adds 3). Starting takes a run; a `finished`, `run_away` or `fallen` (the whole party dead, see "When characters die") ending keeps it spent; `LastResort` (`aborted`) or a failed start gives it back.
 - **Ending a run:** `_finalize` writes the adventure log, settles the run counter, updates stats, uses up provisions and releases the characters. Only `finished` (an ending of the main story) adds to `completedStories`, which unlocks follow-up stories.
 - **Retreat:** with the engine, the play screen offers it while `$meta_allowRunAway` is true in the engine's state (today's step check reads each scene's own `<<set>>` or the `StoryInit` value instead), and the control layer moves the frame to `Retreat`. A run that ends there uses up the run but never counts as completed.
 - **LastResort:** with the engine, only the server sends a frame there, when the engine fails (an error or the time limit). Today a step can still ask for it (see "Today's adventure API").
@@ -267,7 +283,9 @@ A stack adds no engine cost: only the top frame runs, and a parked frame is abou
 | LastResort refunds | Refund a run that ends in `LastResort` only when it applied no effects (recommended), or always |
 | Party for test runs | Only `TestCharacters`, or also read-only copies of the author's real characters |
 | Where testing starts | From Submit (each submit restarts the 7 days and shows in the review queue), or a separate test copy from the editor that skips the queue |
-| Several wallets in one adventure | Needs invitations, access for every member, a rule for who pays, and polling; recommended: the lead chooses for the group |
+| The undead (`vampire`, `undead`) | How a character is turned: only Python, through a predefined consequence tag or a story setting such as "here the dying rise as vampires", never story code. Whether it can be undone. Special rules for the undead (healing, Soul, light), later |
+| Entry rules beyond the life state | Whether the may-enter and may-not-enter lists also take races, race groups, professions or birthsigns (such as a story only for dwarves) |
+| Several wallets in one adventure | Later: for now one wallet plays all characters of an adventure. Then it needs invitations, access for every member, a rule for who pays (and who picks a new lead when the lead falls), and polling; recommended: the lead chooses for the group |
 | Beta testers | None, or a list of wallets per story with effect-free test runs |
 
 ## Order of work

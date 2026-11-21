@@ -120,6 +120,24 @@
   padding-left: 1.25rem;
 }
 
+.soon {
+  font-family: "Courier New", Courier, monospace;
+  font-size: 0.9rem;
+  line-height: 1.7;
+  color: #d4c9a8;
+  background: #0d0d0a;
+  border: 1px dashed #7a6a3a;
+  padding: 0.75rem 1rem;
+  margin-bottom: 1.25rem;
+}
+
+.soonLabel {
+  color: #e6a55a;
+  font-weight: bold;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
 .inlineLink {
   color: #c07a3a;
   text-decoration: underline;

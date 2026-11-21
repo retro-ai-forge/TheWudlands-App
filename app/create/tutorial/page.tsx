@@ -70,6 +70,20 @@ You turn your back on the crypt and run.
 <<for _i, _c range $char>><<set _c.cowardice += 1>><</for>>
 <<set $isEnding to true>>`;
 
+const PICK_EXAMPLE = `:: Cliff
+The path ends at a sheer cliff. Someone has to climb up and lower a rope.
+Who climbs first?
+<<pick_member [[CliffTop]]>>
+[[Look for another way->Valley]]
+
+:: CliffTop
+$picked.name pulls up over the edge and ties the rope to a pine.
+[[Follow the rope up->Plateau]]`;
+
+const PICK_SEEN = `Who climbs first?
+[ Alrik ]  [ Brena ]  [ Corin ]
+[ Look for another way ]`;
+
 export default function Tutorial() {
   return (
     <div className={styles.page}>
@@ -200,6 +214,61 @@ export default function Tutorial() {
             Running away costs no Legend. If fleeing your story should leave a mark, your Retreat story may set a small price, such as 1 Cowardice. It counts like any other change, also toward your two pairs.
           </p>
           <pre className={styles.codeBlock}>{RETREAT_EXAMPLE}</pre>
+        </section>
+
+        {/* ── Picking a party member ──────────────────────────── */}
+        <section id="pick-member" className={styles.section}>
+          <h2 className={h.section}>Letting the Player Choose a Character</h2>
+
+          <p className={styles.soon}>
+            <span className={styles.soonLabel}>Coming soon:</span> <span className={styles.code}>&lt;&lt;pick_member&gt;&gt;</span> is
+            planned. The editor and the submit check don&apos;t accept it yet, and details may still change.
+          </p>
+
+          <p className={styles.body}>
+            Sometimes one character has to step forward: climb the cliff, speak to the queen, taste the potion.
+            Let the player decide who with <span className={styles.code}>&lt;&lt;pick_member&gt;&gt;</span>. The game
+            shows one button per party member who can still act, labelled with the character&apos;s name, and the click goes on to
+            the scene you name. From then on the chosen character is <span className={styles.code}>$picked</span>,
+            read the same way as <span className={styles.code}>$lead</span>.
+          </p>
+          <pre className={styles.codeBlock}>{PICK_EXAMPLE}</pre>
+          <p className={styles.body}>With a party of three, the player sees:</p>
+          <pre className={styles.codeBlock}>{PICK_SEEN}</pre>
+          <ul className={styles.ruleList}>
+            <li>
+              <span className={styles.code}>$picked</span> stays the chosen character through any number of scenes,
+              until the next <span className={styles.code}>&lt;&lt;pick_member&gt;&gt;</span>. Before the first pick
+              it is the lead, and if the chosen character falls, it is the lead again.
+            </li>
+            <li>
+              Read <span className={styles.code}>$picked</span> and change its Legend with <span className={styles.code}>+=</span> and <span className={styles.code}>-=</span>,
+              like <span className={styles.code}>$lead</span>, but never set it: only <span className={styles.code}>&lt;&lt;pick_member&gt;&gt;</span> changes who it is.
+            </li>
+            <li>
+              If the lead falls, the game steps in before your next scene and lets the player choose a new lead from
+              the characters who can still act. From then on <span className={styles.code}>$lead</span> is that character, so
+              don&apos;t count on <span className={styles.code}>$lead</span> being the same character from start to end.
+            </li>
+            <li>
+              A character can still act while alive, or as a vampire or other undead: it can lead,
+              be chosen, and keep the adventure going. A character who is dead and not undead has fallen: it stays
+              in the party until the adventure ends, but gets no button and never leads. When every character has
+              fallen, the adventure ends at once, and everything in camp is lost.
+            </li>
+            <li>
+              Your story will be able to say who may enter: only some (say, only vampires), everyone except some
+              (no undead), and who must be there (one living and one dead character). The names of these settings
+              are still to come.
+            </li>
+            <li>
+              Don&apos;t build these buttons yourself with a <span className={styles.code}>&lt;&lt;for&gt;&gt;</span> loop:
+              links and buttons inside a loop are refused. A click only tells the game the button&apos;s text, so three
+              &quot;Help&quot; buttons would look the same, and each would act on the last character of the loop.
+            </li>
+            <li>Two characters with the same name are no problem: the game knows which character each button stands for.</li>
+            <li>In the editor&apos;s Test, the buttons show the names of your test party.</li>
+          </ul>
         </section>
 
         <Link href="/create" className={styles.backLink}>
