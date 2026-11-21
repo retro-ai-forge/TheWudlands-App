@@ -18,6 +18,9 @@
 - [4. Run with Docker](#4-run-with-docker)
 - [Create new app version](#create-new-app-version)
 
+**Story engines**
+- [Story engines: private network and service account](#story-engines-private-network-and-service-account)
+
 ## 1. After setup below, run the App on linux two terminals
 
 Run all commands from the **project root** (`TheWudlands/`).
@@ -532,3 +535,84 @@ git tag -l | xargs git tag -d
 git fetch --tags
 ```
 
+
+## Story engines: private network and service account
+
+The story engines (`engine-test` and `engine-live`, see `ARCHITECTURE.md` "Engines") run story code with the real SugarCube. The story check keeps code out, but if anything ever slipped past it, the engine must have nothing to steal and no way to send anything out. Node's permission model can't block the network, so the network itself has none: the engines' outgoing traffic goes into a private network without an exit. Set this up once, before `engine-test` plays the first unreviewed story.
+
+**What a VPC is.** A VPC (Virtual Private Cloud) is a private network inside Google Cloud, made of address ranges (subnets), firewall rules and routes that decide where traffic may go. A Cloud Run service is normally in none: its outgoing traffic goes straight to the internet. With *Direct VPC egress* and `--vpc-egress all-traffic`, every outgoing connection of the engine goes into the subnet below instead, and from there nowhere:
+
+- **No Cloud NAT and no public addresses:** the network has no route to the internet. Never add a Cloud Router or Cloud NAT to `engine-net`.
+- **A firewall rule that denies all outgoing traffic:** a second lock, in case someone adds a NAT later.
+- **No Private Google Access:** the engines can't reach Google's APIs either; they need none.
+- **Calls into the engines still work:** the main service reaches them through their Cloud Run URL as before (`--vpc-egress` only concerns outgoing traffic), with a Google ID token.
+- **The metadata server stays reachable** (Cloud Run needs it) and hands out tokens for the engines' service account. That's why `engine-sa` has no roles at all: its token opens nothing.
+
+None of these resources cost anything on their own.
+
+**Steps 1 and 2 in one run:** `rav run gcp_engine_network` (or `bash scripts/setup_engine_network.sh`). The script creates what's missing, leaves what exists, switches the subnet's Private Google Access off every time, and stops with a warning if `engine-sa` has any project role or the network has a router (which could carry a NAT out). Safe to run again; `PROJECT` and `REGION` can be set in the environment. The commands it runs are listed below.
+
+**Step 1: Network, subnet and firewall rule** (once):
+```bash
+PROJECT=thewudlands
+REGION=europe-west1
+gcloud config set project $PROJECT
+
+# Networks and firewall rules belong to the Compute Engine API
+gcloud services enable compute.googleapis.com
+
+# A network of its own, without the default subnets
+gcloud compute networks create engine-net --subnet-mode=custom
+
+# One subnet in the engines' region, without Private Google Access
+# (/24 = 256 addresses; Cloud Run uses about two per instance, engine-live may grow to 20)
+gcloud compute networks subnets create engine-subnet \
+  --network=engine-net --region=$REGION --range=10.10.0.0/24 \
+  --no-enable-private-ip-google-access
+
+# Second lock: deny every outgoing connection from the engines
+gcloud compute firewall-rules create engine-deny-all-egress \
+  --network=engine-net --direction=EGRESS --action=DENY --rules=all \
+  --destination-ranges=0.0.0.0/0 --priority=100 --target-tags=engine
+```
+
+**Step 2: The engines' service account, without roles** (once):
+```bash
+gcloud iam service-accounts create engine-sa --display-name="Story engine (no permissions)"
+```
+
+**Step 3: Deploy the engines with the network** (on every engine deploy; the engine image is built from `twinejs-integrated/engine/`):
+```bash
+# Unreviewed stories: single-use workers, never more than one instance
+gcloud run deploy engine-test --image <engine image> --region $REGION \
+  --service-account engine-sa@$PROJECT.iam.gserviceaccount.com \
+  --no-allow-unauthenticated --min-instances 0 --max-instances 1 \
+  --cpu 1 --memory 1Gi --set-env-vars WORKER_MODE=single-use \
+  --network engine-net --subnet engine-subnet --network-tags engine \
+  --vpc-egress all-traffic
+
+# Live stories: shared workers, grows with players
+# (--min-instances 0 until players play on it, then 1, see ARCHITECTURE.md "Settings")
+gcloud run deploy engine-live --image <engine image> --region $REGION \
+  --service-account engine-sa@$PROJECT.iam.gserviceaccount.com \
+  --no-allow-unauthenticated --min-instances 0 --max-instances 20 \
+  --cpu 2 --memory 1Gi --set-env-vars WORKER_MODE=shared \
+  --network engine-net --subnet engine-subnet --network-tags engine \
+  --vpc-egress all-traffic
+```
+
+**Step 4: Only the main service may call the engines** (once per engine):
+```bash
+for svc in engine-test engine-live; do
+  gcloud run services add-iam-policy-binding $svc --region $REGION \
+    --member serviceAccount:cloud-run-firestore-sa@$PROJECT.iam.gserviceaccount.com \
+    --role roles/run.invoker
+done
+```
+
+**Step 5: Check that nothing gets out** (after the first deploy, and whenever the network changes). Play a test story on `engine-test` whose code tries to send a request out, like the one from the 2026-11-19 prototype test (`twinejs-integrated/APP_INTEGRATION_HEADLESS.md` "What story code could do in the engine"). The request must fail. Keep that story among the engine's tests, so a later change can't open the way out unnoticed. To look at the setup:
+```bash
+gcloud run services describe engine-test --region $REGION --format="yaml(spec.template.metadata.annotations)"
+gcloud compute firewall-rules list --filter="network:engine-net"
+gcloud compute routers list --filter="network:engine-net"   # must stay empty: no router, no NAT
+```

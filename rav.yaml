@@ -119,6 +119,9 @@ scripts:
     - rav run gcp_push
     - rav run gcp_deploy
 
+  # Story engines: private network without a way out, service account without roles (once; safe to repeat)
+  gcp_engine_network: bash scripts/setup_engine_network.sh
+
   gcp_setup_secrets: gcloud secrets add-iam-policy-binding py_env_file --member='serviceAccount:60927173241-compute@developer.gserviceaccount.com' --role='roles/secretmanager.secretAccessor' --project=thewudlands
 
   gcp_remove_secrets: gcloud secrets remove-iam-policy-binding py_env_file --member='serviceAccount:60927173241-compute@developer.gserviceaccount.com' --role='roles/secretmanager.secretAccessor' --project=thewudlands

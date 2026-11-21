@@ -299,13 +299,15 @@ Foraging can move from today's foraging page into adventures, without moving its
 gcloud run deploy engine-test --image <engine image> --region europe-west1 \
   --service-account engine-sa@thewudlands.iam.gserviceaccount.com \
   --no-allow-unauthenticated --min-instances 0 --max-instances 1 \
-  --cpu 1 --memory 1Gi --set-env-vars WORKER_MODE=single-use
+  --cpu 1 --memory 1Gi --set-env-vars WORKER_MODE=single-use \
+  --network engine-net --subnet engine-subnet --network-tags engine --vpc-egress all-traffic
 
 # Live stories: shared workers, grows with players
 gcloud run deploy engine-live --image <engine image> --region europe-west1 \
   --service-account engine-sa@thewudlands.iam.gserviceaccount.com \
   --no-allow-unauthenticated --min-instances 1 --max-instances 20 \
-  --cpu 2 --memory 1Gi --set-env-vars WORKER_MODE=shared
+  --cpu 2 --memory 1Gi --set-env-vars WORKER_MODE=shared \
+  --network engine-net --subnet engine-subnet --network-tags engine --vpc-egress all-traffic
 
 # Only the main service may call the engines
 for svc in engine-test engine-live; do
@@ -315,7 +317,7 @@ for svc in engine-test engine-live; do
 done
 ```
 
-Optional on top: `--ingress internal` on both engines, which needs `serverless-wudlands` to send its outgoing traffic through a VPC. The engines' missing internet access must be enforced by the platform (a VPC without a route out), because Node's permission model can't block the network.
+Optional on top: `--ingress internal` on both engines, which needs `serverless-wudlands` to send its outgoing traffic through a VPC. The engines' missing internet access is enforced by the platform, because Node's permission model can't block the network: all their outgoing traffic goes into the private network `engine-net`, which has no route out and a firewall rule denying everything. How to set it up, the service account without roles, and how to check it: `SETUP.md`, "Story engines: private network and service account".
 
 ## Capacity (estimates)
 
