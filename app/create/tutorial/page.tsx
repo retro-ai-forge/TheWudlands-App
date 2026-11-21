@@ -84,6 +84,19 @@ const PICK_SEEN = `Who climbs first?
 [ Alrik ]  [ Brena ]  [ Corin ]
 [ Look for another way ]`;
 
+const KEEP_EXAMPLE = `:: StoryInit
+<<set $keep_metHermit to false>>
+
+:: Hut
+<<if $keep_metHermit>>
+The hermit looks up from the fire. "You again. The forest must like you."
+[[Sit by the fire->Fire]]
+<<else>>
+An old man watches you from the door of a moss-covered hut.
+<<set $keep_metHermit to true>>
+[[Greet him->Fire]]
+<</if>>`;
+
 export default function Tutorial() {
   return (
     <div className={styles.page}>
@@ -246,8 +259,9 @@ export default function Tutorial() {
               like <span className={styles.code}>$lead</span>, but never set it: only <span className={styles.code}>&lt;&lt;pick_member&gt;&gt;</span> changes who it is.
             </li>
             <li>
-              If the lead falls, the game steps in before your next scene and lets the player choose a new lead from
-              the characters who can still act. From then on <span className={styles.code}>$lead</span> is that character, so
+              The player can choose another lead at any time with the settings button; the new lead counts from the
+              next scene on. If the lead falls, the game steps in before your next scene and lets the player choose a
+              new lead from the characters who can still act. From then on <span className={styles.code}>$lead</span> is that character, so
               don&apos;t count on <span className={styles.code}>$lead</span> being the same character from start to end.
             </li>
             <li>
@@ -268,6 +282,48 @@ export default function Tutorial() {
             </li>
             <li>Two characters with the same name are no problem: the game knows which character each button stands for.</li>
             <li>In the editor&apos;s Test, the buttons show the names of your test party.</li>
+          </ul>
+        </section>
+
+        {/* ── Story memory ────────────────────────────────────── */}
+        <section id="story-memory" className={styles.section}>
+          <h2 className={h.section}>Remembering Earlier Runs</h2>
+
+          <p className={styles.soon}>
+            <span className={styles.soonLabel}>Coming soon:</span> story memory is planned. Until then,
+            {" "}<span className={styles.code}>$keep_</span> variables work like any other variable and are forgotten
+            when the adventure ends.
+          </p>
+
+          <p className={styles.body}>
+            Characters remember your story. Start a variable&apos;s name with <span className={styles.code}>$keep_</span> and
+            its value is kept, saved the moment your story changes it. The next time those characters play your story,
+            the value is there again: a door already opened, a hermit who knows them, a debt still unpaid.
+          </p>
+          <pre className={styles.codeBlock}>{KEEP_EXAMPLE}</pre>
+          <ul className={styles.ruleList}>
+            <li>
+              Only variables starting with <span className={styles.code}>$keep_</span> are kept. Everything else
+              starts fresh with every run.
+            </li>
+            <li>
+              Give each one its first-time value in <span className={styles.code}>StoryInit</span>. On a replay the
+              remembered value replaces it.
+            </li>
+            <li>
+              Keep plain values only: numbers, <span className={styles.code}>true</span> or <span className={styles.code}>false</span>,
+              and quoted words. Keep only what matters; there will be a limit per story.
+            </li>
+            <li>
+              The memory belongs to the characters: every member of the party remembers what happened. When an
+              adventure starts, the values come from the lead&apos;s memory, and a lead who never played your story
+              starts with your <span className={styles.code}>StoryInit</span> values. Choosing another lead later
+              doesn&apos;t change them.
+            </li>
+            <li>Only your story reads its memory. Other stories never see it.</li>
+            <li>
+              A changed version of your story goes out under a new id and starts with no memories.
+            </li>
           </ul>
         </section>
 

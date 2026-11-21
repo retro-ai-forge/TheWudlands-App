@@ -125,6 +125,13 @@ Only Python changes characters (an injury from a failed skill check, a consequen
 - **When every member has fallen, the adventure ends at once,** wherever it is (a party of vampires plays on): every frame is popped (side stories, fights) without being resumed, and the run ends as an ending (`$isEnding`). The run stays spent, everything in camp storage is lost, and the characters already carry the dead status. It is logged as `fallen`, not `finished`, so it doesn't add to `completedStories` or unlock follow-up stories.
 - **The story decides who may enter.** Settings in `StoryInit` like the other `$meta_` values (names still to design): either what may enter (such as only `vampire`) or what may not (such as no `undead`), and what must be there (such as one `alive` and one `dead`, for a story about carrying a fallen friend home). The values are the life states and `soulless`. Without settings, every member who can act may enter and the fallen may not, as today (`start_adventure` refuses the dead). The lead is always a member who can act. The submit check accepts only known values and never both lists; the start checks the party against them.
 
+### Changing the lead (decided 2026-11-21)
+
+- **The player may change the lead at any scene** with the play screen's settings button, to any member who can act. It is a control-layer action, not a story choice: the scene isn't run again, and the session moves the `lead` flag as after a fallen lead.
+- **The new lead counts from the next scene on.** The current scene's choices, a skill check included, still act with the lead it was shown with, so the player can't switch to the best climber after seeing the check; for that the story offers `<<pick_member>>`.
+- **Before the first `<<pick_member>>`, `$picked` follows the lead.** Story memory isn't reloaded (see "Story memory").
+- Not during a fight (the fight rules decide).
+
 ### The story stack
 
 An adventure is a stack of frames. The top frame is the active one; everything below waits, unchanged.
@@ -181,6 +188,44 @@ Rules still to decide (recommendations in brackets):
 | Who pays | [Only the bottom story takes a run. A side story takes none and isn't counted in `completedStories`.] |
 | Legend from side stories | [Each side story has its own points per character, like any story, so a side story met again can't be farmed.] |
 | What a side story returns | [One outcome word chosen by its ending, written into the parked frame as `$sideResult`.] |
+
+### Scene timers (decided 2026-11-21)
+
+A scene can make the party wait, such as a forage trip of 20 hours or a night at the inn:
+
+- **The timer sits on the scene:** the frame on top gets a `waitUntil`, and the control layer refuses its choices until then (409, the server's rule, not just greyed-out buttons). The play screen shows the time left. It is a field of the frame, not a frame of its own; a frame is for another story (a side story, a fight).
+- **Who sets the time:** Python rules where they exist (a forage trip's hours come from the foraging rules), otherwise a story command with a platform limit (syntax and limits still to design). SugarCube's own `<<timed>>` stays refused: it runs in the browser and counts seconds.
+- **The real end can be later than shown,** like a forage trip whose character got lost: the hidden end stays on the server, as `activeForage.returnAt` does today.
+- **Pushes still happen only at a click,** so a side story never breaks into a timer: it can start at the first click after the wait.
+- The characters stay busy as in any adventure: no crafting or foraging elsewhere, healing paused.
+
+### The field camp and leaving an adventure (decided 2026-11-21)
+
+- **Finds go into the field camp,** the adventure's camp storage (`character_camp`): forage finds, later loot.
+- **Packing is done in the camp itself:** the camp already moves things between the camp and body, backpack, saddlepack and cart, so no extra screen is needed. What the characters carry comes home with them; what is still in the camp is left behind. Today `adventures._release_character` simply discards the camp.
+- **Leaving is the player's click:** reaching an ending no longer releases the characters at once. The ending screen shows **Leave the adventure**, and the camp stays open there, also when the ending isn't a rest place (the camp is otherwise only open at `restAllowed` scenes). If the camp still holds anything, Leave first asks in a popup: take everything with you, or what stays behind may be stolen. Only then is the run finished. The same after Retreat and after `LastResort`.
+- **Left behind, maybe still there:** the left-behind items are kept with the character's story memory (below). When the character plays that story again, each stack and item has a chance to still be there, drawn fresh at that start (numbers in a data file; recommended: lower the longer it lay). They can't be reached from anywhere else, and never go home or to the vault on their own.
+- **When the whole party falls,** the camp is lost (see "When characters die").
+
+### Story memory (decided 2026-11-21)
+
+- **Every run's data is kept** per character and story, so a replay can load values from the last time: a door already opened, a friend who remembers you, the camp left behind.
+- **Authors mark what is kept with a `$keep_` prefix** (in the tutorial, marked as coming soon): only those variables are kept, everything else starts fresh. `StoryInit` gives the first-time value; on a replay the remembered value replaces it.
+- **Saved on the fly:** when a step changes a `$keep_` value, it is written at once for every member of the party, after the step's conditional update on `seq` has succeeded. Values are set, never added, so writing one twice does no harm and needs no transaction. Nothing waits for the end, so an engine failure or a run never left keeps what happened.
+- **Read once, from the lead,** when the run starts; a lead without a memory of the story starts with the `StoryInit` values. A later lead change (see "Changing the lead") doesn't reload it, so values never jump in the middle of a run.
+- **Recommended limits:** only plain values (numbers, true/false, quoted words from the story), checked like `$meta_` values, a size limit per story, and never readable by another story. Keyed by the story's id: a changed story goes out under a new id and starts with a new, empty memory (decided; nothing is taken over from the old id).
+- Left-behind items are stored next to it, but by the platform: items are never story variables.
+
+### Foraging in adventures (planned)
+
+Foraging can move from today's foraging page into adventures, without moving its rules:
+
+- **The rules stay in Python:** pools per soul slot, digs, light, nights, accidents and gear wear stay in `backend/foraging.py`. A story calls them with a control-layer command (such as `<<forage>>`) at a timed scene, and the finds drop into the field camp.
+- **A travel adventure,** free (`$meta_access` `free`) and written by the platform, tells the trip: setting out, the nights, the way home. Until it exists, today's foraging page stays.
+- **Other stories may offer foraging** in scenes whose environment fits (the environments reviewers set), and the control layer may offer it as a random event, like a side story.
+- **The same pool:** foraging in any story draws from the character's soul-slot pool (`soul_slots.forage_pools`), so adventures don't open a second endless source of raw materials for crafting and the market.
+- **Foraging can lead deeper:** a forage scene is a scene like any other, so a companion side story or a deeper dungeon can be pushed on top of it at the click after the wait, and popped back.
+- Accidents follow the rules in "When characters die".
 
 ### Legend and story points
 
@@ -285,6 +330,12 @@ A stack adds no engine cost: only the top frame runs, and a parked frame is abou
 | Where testing starts | From Submit (each submit restarts the 7 days and shows in the review queue), or a separate test copy from the editor that skips the queue |
 | The undead (`vampire`, `undead`) | How a character is turned: only Python, through a predefined consequence tag or a story setting such as "here the dying rise as vampires", never story code. Whether it can be undone. Special rules for the undead (healing, Soul, light), later |
 | Entry rules beyond the life state | Whether the may-enter and may-not-enter lists also take races, race groups, professions or birthsigns (such as a story only for dwarves) |
+| Scene timers set by stories | Their syntax and limits (longest wait per scene and per story), or only Python-set waits at first |
+| The camp after `LastResort` | The engine failed, not the player: Leave with the camp open, as after any ending (recommended), or the whole camp kept for the next run |
+| A player who never clicks Leave | The characters stay at the ending, busy, until the player leaves (recommended at first), or the run is left automatically after some days, with the popup's rule for what stays behind |
+| Left-behind items | The chance per stack or item, how it drops with time, how long they are kept at most |
+| Story memory | The size limit per story |
+| Foraging in a story | Which raw materials a scene's environment offers (a table from environment to raw families), and whether a party forages together (each member from its own soul-slot pool) |
 | Several wallets in one adventure | Later: for now one wallet plays all characters of an adventure. Then it needs invitations, access for every member, a rule for who pays (and who picks a new lead when the lead falls), and polling; recommended: the lead chooses for the group |
 | Beta testers | None, or a list of wallets per story with effect-free test runs |
 
@@ -296,3 +347,4 @@ A stack adds no engine cost: only the top frame runs, and a parked frame is abou
 4. Play screen for players on `engine-live`, replacing today's step API; then lift the gate.
 5. Skill checks, `<<pick_member>>`, consequence tags (injuries) and fights in Python, with their story commands and editor placeholders; fights as stack frames.
 6. Side stories as stack frames.
+7. Scene timers, leaving an adventure with the field camp open and story memory; then foraging in adventures and the travel adventure.
