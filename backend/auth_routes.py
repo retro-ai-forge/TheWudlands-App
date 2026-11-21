@@ -4720,7 +4720,15 @@ def _adventure_http_error(exc: adventures.AdventureError) -> HTTPException:
 async def start_my_adventure(
     payload: StartAdventureRequest, address: str = Depends(get_current_address)
 ):
-    """Start an adventure. Returns the new session, ready to play from its start passage."""
+    """Start an adventure. Returns the new session, ready to play from its start passage.
+
+    Admins only until the engine replaces today's step API, which trusts the
+    browser (ARCHITECTURE.md "Today's adventure API"): with a live story
+    anyone could read every scene through GET .../story, step straight to an
+    ending, or get a paid run back by stepping to LastResort. No page calls
+    this yet; the gate keeps the API from opening with the first approval."""
+    if not await roles.is_admin(address):
+        raise HTTPException(status_code=403, detail="Adventures are not open yet")
     try:
         return await adventures.start_adventure(
             address, payload.storyAuthor, payload.storyId, payload.characterIds, payload.leadId
