@@ -14,7 +14,7 @@ worked out on read from legendUpdatedAt (decayed), like attribute healing,
 and folded in on the next write:
 a story's `<<set $lead.mercy += 3>>` goes straight into the character doc,
 with the rules from data/legend-rules.json applied (apply_change). Stories
-can't farm it (planned, twinejs-integrated/APP_INTEGRATION_HEADLESS.md): a
+can't farm it (planned, ARCHITECTURE.md "Legend and story points"): a
 story changes at most 2 pairs (echoes don't count), and its changes per
 character come from points set aside at the first run, at most 10 per pair.
 """
