@@ -3700,6 +3700,14 @@ def _check_twine_syntax(doc: dict) -> dict:
             if target:
                 targets.append(target)
 
+        # Ways on that commands write: a button's quoted destination, <<goto>>
+        # in a button or link, every scene of a random jump. A scene whose only
+        # exit is such a button isn't a dead end. (A missing scene is reported
+        # by the story check below.)
+        for target in story_rules.macro_exits(name, text):
+            if target in name_set and target not in targets:
+                targets.append(target)
+
         outgoing[name] = targets
 
         # StoryInit is startup code: it must not navigate or mark an ending.

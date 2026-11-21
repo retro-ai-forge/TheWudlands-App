@@ -113,9 +113,9 @@ def passage_links(text: str) -> list:
     """Every passage a scene's text links to, in order, without duplicates.
 
     Covers [[links]] (including those inside <<area>> hotspots) and image-links
-    [img[src][Target]]. Computed links (<<goto $var>>, <<link>> with an
-    expression) are not seen here, so a story that relies on them cannot be
-    stepped through - the step endpoint only accepts literal links.
+    [img[src][Target]]. The ways on that commands write (a button's quoted
+    destination, <<goto>>, random jumps) come from the story check's reading
+    of the scene instead (story_rules.macro_exits, added in build_story_graph).
     """
     targets: list = []
     for body in _LINK_RE.findall(text) + _IMG_LINK_RE.findall(text):
@@ -144,7 +144,9 @@ def build_story_graph(passages: list, story_data: dict) -> dict:
 
     Returns:
         start      - name of the start passage
-        links      - {passage: [targets]} for every playable passage
+        links      - {passage: [targets]} for every playable passage: its
+                     [[links]] and image links, plus the ways on its commands
+                     write (story_rules.macro_exits)
         endings    - {passage: "finished" | "run_away"} for every terminal scene
                      marked with $isEnding true. Endings reached from the start
                      passage finish the story; those in the Retreat graph mean
@@ -163,11 +165,22 @@ def build_story_graph(passages: list, story_data: dict) -> dict:
     start_id = (story_data or {}).get("startPassage", "")
     start = next((p.get("name", "") for p in passages if p.get("id") == start_id), "")
 
-    links = {
-        name: passage_links(p.get("text", ""))
-        for name, p in by_name.items()
-        if name not in _RESERVED_PASSAGES and name != TEST_CHARACTERS_PASSAGE
-    }
+    # The story check's reading of each scene adds the ways on that commands
+    # write (a button's quoted destination, <<goto>>, random jumps), so a step
+    # along one of them is allowed. Imported here: story_rules imports this
+    # module for the special scene names.
+    from backend.story_rules import macro_exits
+
+    links = {}
+    for name, p in by_name.items():
+        if name in _RESERVED_PASSAGES or name == TEST_CHARACTERS_PASSAGE:
+            continue
+        text = p.get("text", "")
+        targets = passage_links(text)
+        for target in macro_exits(name, text):
+            if target in by_name and target not in targets:
+                targets.append(target)
+        links[name] = targets
 
     def reachable_from(root: str) -> set:
         seen: set = set()

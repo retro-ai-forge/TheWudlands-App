@@ -354,7 +354,7 @@ A stack adds no engine cost: only the top frame runs, and a parked frame is abou
 ## Order of work
 
 1. ~~Seal the editor's story runs~~, ~~**Save review** for reviewers~~ and ~~the story check with the stored test party~~ (2026-11-20); ~~close the check's gaps found against the real SugarCube, re-check review copies, seal the frame from the network, gate the adventure API~~ (2026-11-21).
-2. Before the engine: ~~the story check's label rule for radio buttons and checkboxes~~ (2026-11-21), the step graph built from the story check, and ~~the engine API contract~~ (drafted 2026-11-22 in the engine document). Then the engine image with the prototype's shims, both worker modes and the limits; deploy `engine-test` and `engine-live`; measure.
+2. Before the engine: ~~the story check's label rule for radio buttons and checkboxes~~ (2026-11-21), ~~the step graph built from the story check~~ (2026-11-22, `story_rules.macro_exits`: every way on a scene's commands write; per label once the control layer checks clicks by label), and ~~the engine API contract~~ (drafted 2026-11-22 in the engine document). Then the engine image with the prototype's shims, both worker modes and the limits; deploy `engine-test` and `engine-live`; measure.
 3. Test runs from `twine_review` with `TestCharacters`, no effects, and the **Play on server** link in the submit status.
 4. Play screen for players on `engine-live`, replacing today's step API, a list of live stories with their `LastResort` count for reviewers, and the camp opened only by the control layer (`camp` scene tags); then lift the gate.
 5. Skill checks, `<<pick_member>>`, consequence tags (injuries) and fights in Python, with their story commands and editor placeholders; fights as stack frames.

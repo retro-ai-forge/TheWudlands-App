@@ -1203,3 +1203,55 @@ def test_passage_tags_with_spaces_are_refused(tag):
     doc = _story(_minimal_passages(start_tags=[tag]))
     errors = _check_twine_syntax(doc)["errors"]
     assert any("without spaces" in e for e in errors), errors
+
+
+# --- Ways on that commands write -------------------------------------------
+# A button's quoted destination, <<goto>> in a button or link, and every scene
+# of a random jump are exits like [[links]]: the scene isn't a dead end, the
+# scenes they reach aren't unreachable, and the step graph allows the step.
+
+_END = "<<set $isEnding to true>>The end."
+
+
+@pytest.mark.parametrize(
+    "start_text, reached",
+    [
+        ('<<button "Go to the cave" "Cave">><</button>>', ["Cave"]),
+        ('<<button "Go">><<goto "Cave">><</button>>', ["Cave"]),
+        ('<<link "Go">><<set $x to 1>><<goto "Cave">><</link>>', ["Cave"]),
+        ('<<button "Run for it">><<goto `either("Cave", "Mill")`>><</button>>', ["Cave", "Mill"]),
+        ('<<button "Turn the page">><<goto `"Page" + random(1, 3)`>><</button>>', ["Page1", "Page2", "Page3"]),
+    ],
+)
+def test_ways_on_written_by_commands_count_as_exits(start_text, reached):
+    from backend.twine_graph import build_story_graph, step_allowed
+
+    passages = [_p("1", "Start", start_text)] + [
+        _p(str(i + 2), name, _END) for i, name in enumerate(reached)
+    ]
+    story = _story(passages)
+    result = _check_twine_syntax(story)
+    structure = [
+        e for e in result["errors"]
+        if "no outgoing links" in e or "has no ending" in e or "does not exist" in e
+    ]
+    assert structure == [], structure
+    assert not [w for w in result["warnings"] if "unreachable" in w], result["warnings"]
+
+    graph = build_story_graph(story["passages"], story["storyData"])
+    assert graph["links"]["Start"] == reached
+    assert all(step_allowed(graph, "Start", name) for name in reached)
+    assert all(graph["endings"].get(name) == "finished" for name in reached)
+    assert not step_allowed(graph, "Start", "Nowhere")
+
+
+def test_visited_only_reads_and_is_no_exit():
+    from backend.twine_graph import build_story_graph
+
+    story = _story([
+        _p("1", "Start", '<<if visited("Cave")>>Back again.<</if>>[[Cave]]'),
+        _p("2", "Cave", _END),
+        _p("3", "Hidden", _END),
+    ])
+    graph = build_story_graph(story["passages"], story["storyData"])
+    assert graph["links"]["Start"] == ["Cave"]

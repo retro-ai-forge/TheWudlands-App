@@ -1690,6 +1690,23 @@ def format_error(story_data: dict) -> Optional[str]:
     )
 
 
+def macro_exits(name: str, text: str) -> list:
+    """The scenes a scene's commands can lead to besides its [[links]] and
+    image links: a button's quoted destination (<<button "Go" "Cave">>),
+    <<goto>> between a button's or link's tags, and every scene a random
+    jump can reach. Read the way check_scene reads the scene; a refused
+    command adds nothing, and visited("X") only reads. Used for the
+    structure rules on submit and for the step graph
+    (twine_graph.build_story_graph), so both know every way on."""
+    scene = _Scene(name, text)
+    scene.check()
+    exits: list = []
+    for destination, leads in scene.destinations:
+        if leads and destination not in exits:
+            exits.append(destination)
+    return exits
+
+
 def check_scene(name: str, text: str) -> list:
     """The refusals for one scene's text on its own (names of other scenes,
     the Legend focus and the structure rules aren't checked here)."""

@@ -257,7 +257,7 @@ Not accepted:
 - Write where a button or link leads as a `[[link]]` inside it, so the editor draws the line to that scene.
 - Button and link texts are written out, never built from variables.
 - Between the opening and the closing tag: `<<set>>` and `<<if>>`. They run when the player clicks, before the story moves on.
-- Also accepted: the destination as quoted text, `<<button "Go to the cave" "Cave">>`, and `<<goto "Scene">>` between a button's or link's tags. Neither draws a line in the editor. `<<goto>>` is only allowed there, so a scene never jumps on its own. The scene must exist, and it is never `LastResort`.
+- Also accepted: the destination as quoted text, `<<button "Go to the cave" "Cave">>`, and `<<goto "Scene">>` between a button's or link's tags. Neither draws a line in the editor, but both count as the scene's ways on (a scene whose only exit is such a button is no ending). `<<goto>>` is only allowed there, so a scene never jumps on its own. The scene must exist, and it is never `LastResort`.
 
 ### Random jumps
 
