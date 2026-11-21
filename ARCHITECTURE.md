@@ -84,7 +84,7 @@ The engines only calculate. `serverless-wudlands` decides everything else, and o
    - **Consequence:** a scene can ask for one with a predefined tag, such as an injury; Python applies it (an injury through `condition.apply_loss`). If the lead can't act any more, the player picks a new lead first; if no member can, the adventure ends (see "When characters die").
    - **Fight or side story:** push it (see below).
    - **Ending:** pop the frame, or end the run if it was the bottom one.
-7. **Distrust the engine:** the next scene must be one the story's links allow, Legend changes must stay within the rules and the story's points, the HTML is cleaned and sizes are limited.
+7. **Distrust the engine:** the next scene must be one the clicked choice can lead to (the step graph, built from the story check's own reading of each scene: links, both button forms and `<<goto>>` between a button's tags, per label; decided 2026-11-21), Legend changes must stay within the rules and the story's points, the HTML is cleaned and sizes are limited.
 
 The server steps in only where the story asks it to, with commands the author writes (such as a future `<<fight "goblins">>`) and result variables the author knows, or between scenes for side stories, which no story code can start or stop.
 
@@ -93,6 +93,7 @@ The server steps in only where the story asks it to, with commands the author wr
 Skill checks such as jumping or climbing are rolled by the control layer, not by story code:
 
 - **The story names the button's label, the check, the difficulty and the two scenes,** for example (syntax still to design) `<<check "Climb the cliff" "climb" "hard" [[Cliff top]] [[Cliff bottom]]>>`. The player sees only the label, "Climb the cliff"; the skill, the difficulty and both scenes stay on the server.
+- **`$picked` takes the check** (decided 2026-11-21): the lead at the start, then whoever the player picked with `<<pick_member>>` or in Settings (see "Settings during a story").
 - **Python rolls at the click,** with the characters' current values (`attrNow`, injuries included), their professions and their gear (a rope for climbing, like the gathering gear bonuses in foraging). Skills, difficulties and odds live in one data file, like the foraging rules, so every story uses the same rules.
 - **The engine then enters the success or the failure scene.** The player never sees a number, only where they end up. The roll is drawn fresh and nothing about it is kept.
 - **What a failure costs** (an injury through `condition.apply_loss`) is applied by Python, because story code never changes a character.
@@ -106,7 +107,7 @@ When a story lets the player choose which character acts, the control layer make
 - **The story names the scene to go to,** for example `<<pick_member [[CliffTop]]>>` (as in the tutorial, which marks it as coming soon; may still change). The server shows one button per party member who can act (see "When characters die"), labelled with the character's name; clicking one picks that member and enters the scene.
 - **The server knows who was picked by character id.** Each of these buttons gets a neutral handle, like a hotspot, so two members with the same name are no problem, and the names never pass through SugarCube's link text, which it runs as code.
 - **The control layer keeps the pick** (the character id) in the story's frame. Every click the engine fills `$picked` with that character's current data, like `$lead`, so it never holds old values or old Legend.
-- **`$picked` stays until the next `<<pick_member>>`,** through any number of scenes, and a skill check right after a pick is taken by that character. Before the first pick it is the lead, so it is never empty and the check needn't prove that a pick comes first on every path. When the picked member can't act any more, the pick is cleared, so `$picked` is the lead again.
+- **`$picked` stays until it is picked again,** with `<<pick_member>>` or in Settings, through any number of scenes, and every skill check is taken by that character. Before the first pick it is the lead, so it is never empty and the check needn't prove that a pick comes first on every path. When the picked member can't act any more, the pick is cleared, so `$picked` is the lead again.
 - **Story code can't set it,** like `$char` and `$lead`: it reads `$picked` and changes its Legend with `+=`/`-=`, and only `<<pick_member>>` changes who it is.
 - **Each story frame has its own pick.** A side story starts with `$picked` as the lead; when it is popped, the story below has its own pick back.
 - **Authors don't build per-character choices themselves:** links and buttons inside `<<for>>` stay refused. A click would only say "Help", not whose row it came from, and the button would act on the last character of the loop.
@@ -125,12 +126,21 @@ Only Python changes characters (an injury from a failed skill check, a consequen
 - **When every member has fallen, the adventure ends at once,** wherever it is (a party of vampires plays on): every frame is popped (side stories, fights) without being resumed, and the run ends as an ending (`$isEnding`). The run stays spent, everything in camp storage is lost, and the characters already carry the dead status. It is logged as `fallen`, not `finished`, so it doesn't add to `completedStories` or unlock follow-up stories.
 - **The story decides who may enter.** Settings in `StoryInit` like the other `$meta_` values (names still to design): either what may enter (such as only `vampire`) or what may not (such as no `undead`), and what must be there (such as one `alive` and one `dead`, for a story about carrying a fallen friend home). The values are the life states and `soulless`. Without settings, every member who can act may enter and the fallen may not, as today (`start_adventure` refuses the dead). The lead is always a member who can act. The submit check accepts only known values and never both lists; the start checks the party against them.
 
-### Changing the lead (decided 2026-11-21)
+### Settings during a story (decided 2026-11-21)
 
-- **The player may change the lead at any scene** with the play screen's settings button, to any member who can act. It is a control-layer action, not a story choice: the scene isn't run again, and the session moves the `lead` flag as after a fallen lead.
-- **The new lead counts from the next scene on.** The current scene's choices, a skill check included, still act with the lead it was shown with, so the player can't switch to the best climber after seeing the check; for that the story offers `<<pick_member>>`.
-- **Before the first `<<pick_member>>`, `$picked` follows the lead.** Story memory isn't reloaded (see "Story memory").
-- Not during a fight (the fight rules decide).
+The triangle in the play screen's lower-left corner (a tent at a `camp` scene) opens the settings panel. Besides the tab bar it holds two choices, nothing else yet:
+
+- **The lead,** any member who can act. The session moves the `lead` flag as after a fallen lead.
+- **Who takes the checks** (`$picked`), any member who can act. It is the lead at the start and follows the lead until someone is picked, here or with `<<pick_member>>`.
+- **Both count from the next scene on.** They are control-layer actions, not story choices: the scene isn't run again, and the current scene's choices, a skill check included, still act with the characters it was shown with, so the player can't switch to the best climber after seeing the check.
+- Story memory isn't reloaded (see "Story memory"). Not during a fight (the fight rules decide).
+- **Later: magic spells** the characters can speak, and more. A spell is a control-layer action like a skill check: Python decides what it does, only a character with a soul can speak one (`has_soul`: soulless characters can't), and a story learns about it only through result variables it knows.
+
+### Camp during a story (decided 2026-11-21)
+
+- **Authors mark rest places with a `camp` scene tag.** The control layer reads the tag from the pinned story, not from the engine: when the run enters a `camp` scene it opens the camp (`availability.resting`), when it leaves one it closes it. No extra button: at a `camp` scene the settings triangle turns into a tent, and its panel holds the character page's tab bar, which takes the player to Stats, Body or Home to check values, re-equip and repack, and back to the story (see "What the player receives"). The Home tab already shows the camp while `availability.resting` is on (`CharacterPreview.tsx`). The camp's transfer endpoints keep checking the flag.
+- **On the ending screen** the camp is open too, until the player leaves (see "The field camp and leaving an adventure").
+- **Today's `PATCH /me/characters/{id}/resting`** lets the browser open the camp at any time during an adventure, without looking at the scene. Harmless while adventures are for admins only; with the engine, only the control layer sets it.
 
 ### The story stack
 
@@ -212,9 +222,9 @@ A scene can make the party wait, such as a forage trip of 20 hours or a night at
 - **Every run's data is kept** per character and story, so a replay can load values from the last time: a door already opened, a friend who remembers you, the camp left behind.
 - **Authors mark what is kept with a `$keep_` prefix** (in the tutorial, marked as coming soon): only those variables are kept, everything else starts fresh. `StoryInit` gives the first-time value; on a replay the remembered value replaces it.
 - **Saved on the fly:** when a step changes a `$keep_` value, it is written at once for every member of the party, after the step's conditional update on `seq` has succeeded. Values are set, never added, so writing one twice does no harm and needs no transaction. Nothing waits for the end, so an engine failure or a run never left keeps what happened.
-- **Read once, from the lead,** when the run starts; a lead without a memory of the story starts with the `StoryInit` values. A later lead change (see "Changing the lead") doesn't reload it, so values never jump in the middle of a run.
+- **Read once, from the lead,** when the run starts; a lead without a memory of the story starts with the `StoryInit` values. A later lead change (see "Settings during a story") doesn't reload it, so values never jump in the middle of a run.
 - **Recommended limits:** only plain values (numbers, true/false, quoted words from the story), checked like `$meta_` values, a size limit per story, and never readable by another story. Keyed by the story's id: a changed story goes out under a new id and starts with a new, empty memory (decided; nothing is taken over from the old id).
-- Left-behind items are stored next to it, but by the platform: items are never story variables.
+- **Left-behind items are stored next to it,** but by the platform: story code never reads or changes them, and items are never story variables.
 
 ### Foraging in adventures (planned)
 
@@ -235,26 +245,30 @@ Foraging can move from today's foraging page into adventures, without moving its
 
 ### Runs, endings and recovery
 
-- **Run counter** (`story_plays`): `$meta_access` decides the start (`free` = no counter, `trial` = 1, `paid` = 0; a purchase adds 3). Starting takes a run; a `finished`, `run_away` or `fallen` (the whole party dead, see "When characters die") ending keeps it spent; `LastResort` (`aborted`) or a failed start gives it back.
+- **Run counter** (`story_plays`): `$meta_access` decides the start (`free` = no counter, `trial` = 1, `paid` = 0; a purchase adds 3). Starting takes a run; a `finished`, `run_away`, `fallen` (the whole party dead, see "When characters die") or `abandoned` (left alone for days, see "What the player receives") ending keeps it spent; `LastResort` (`aborted`) or a failed start gives it back (decided 2026-11-21: `LastResort` always, also when the run already had effects, since only an engine failure leads there). Reviewers see per live story how many runs ended there, counted from `adventure_log` (`outcome: "aborted"`, one entry per run, so nothing extra is stored), on a list of live stories on the review page; a story that keeps failing goes back to be fixed before it can be used to collect loot and get the run back.
 - **Ending a run:** `_finalize` writes the adventure log, settles the run counter, updates stats, uses up provisions and releases the characters. Only `finished` (an ending of the main story) adds to `completedStories`, which unlocks follow-up stories.
 - **Retreat:** with the engine, the play screen offers it while `$meta_allowRunAway` is true in the engine's state (today's step check reads each scene's own `<<set>>` or the `StoryInit` value instead), and the control layer moves the frame to `Retreat`. A run that ends there uses up the run but never counts as completed.
 - **LastResort:** with the engine, only the server sends a frame there, when the engine fails (an error or the time limit). Today a step can still ask for it (see "Today's adventure API").
 
-### Test runs
+### Test runs (decided 2026-11-21)
 
+- **Started from Submit:** there is no separate test copy. Testing plays the submitted copy; each resubmit restarts the 7 days, as today, and once the 7 days are over the story stays locked for the reviewers, with no time limit. A submission waiting there can still be test-played.
 - **Who:** only the story's author and reviewers. The server checks this on start, so a copied link grants nothing.
 - **What:** the submitted copy in `twine_review`, pinned like a live story; a resubmit doesn't change a running test. A side story is tested alone, as the bottom frame.
-- **Party:** the `TestCharacters` list, which submit checks and keeps with the review copy as a separate field (never in the story text).
+- **Party: only `TestCharacters`,** the list submit checks and keeps with the review copy as a separate field (never in the story text). Never the author's real characters, not even as read-only copies.
 - **No effects:** no Legend, injuries, items, XP, completed stories, plays used or stats. Real characters aren't locked.
 - **Link:** the editor's submit status shows **Play on server** while the story is submitted.
 
 ### What the player receives
 
 - **Scene HTML, cleaned:** the visible text and the visible labels, nothing behind them. No scripts, no event attributes, no `data-passage` or other link targets, no setters, no `title` or `aria-label` that names a scene, no check name or difficulty, no variable values the scene doesn't print. Clickable elements keep their classes, so the story stylesheet still applies. Image names are rewritten to the bucket URLs.
-- **Choices are sent back by their label:** the player's click names the button's or link's visible label, and choice inputs (radio buttons, checkboxes, drop-downs, cycles) name the option text they show, never the value the story stores (for radio buttons and checkboxes, which have no text of their own, still open, see "Open decisions"). The story check makes labels unique: it refuses two links or buttons with the same text in one scene, also in different branches of an `<<if>>`, so a label always names one link and the server knows where it leads from the scene text alone, links and buttons inside `<<for>>`, and two options with the same text in one list (`docs/STORY-RULES.md`). A hotspot has no visible label, and a `<<pick_member>>` button stands for a character, so the server gives these a neutral handle. When the label isn't in the scene any more (random text in the scene, see the engine document), the click is refused and the scene is shown as it is now, instead of running a different choice.
+- **Choices are sent back by their label:** the player's click names the button's or link's visible label, and choice inputs name the text they show, never the value the story stores: drop-downs and cycles their option's text, radio buttons and checkboxes the text of the `<label>` each sits in. The story check makes every text a player can pick unique in its scene (decided 2026-11-21): link and button texts, radio and checkbox labels and options, also across lists and in different branches of an `<<if>>`, so a text always names one choice and the server knows what it does from the scene text alone; it also refuses choices inside `<<for>>` (`docs/STORY-RULES.md`). So a click or pick needs nothing but its text. A hotspot has no visible label, and a `<<pick_member>>` button stands for a character, so the server gives these a neutral handle. When the label isn't in the scene any more (random text in the scene, see the engine document), the click is refused and the scene is shown as it is now, instead of running a different choice.
+- **Platform buttons are data, not story HTML:** Retreat, Leave, Settings (the lead and who takes checks), the `<<pick_member>>` buttons and a scene's timer are sent next to the scene and drawn by the play screen outside the sealed frame. The browser sends them back as platform actions (`retreat`, `leave`, `setLead`, `setPicked`, a member's handle), which the control layer handles itself; only Retreat moves the engine. Nothing is put into the story's page, where story code could reach it.
 - **The story stylesheet,** applied inside a sealed frame without scripts, so it can't style or reach the rest of the app.
 - **Never:** other scenes, variables the scene doesn't print, link destinations, the engine, parked frames or other players' state.
-- **Play screen** in the Stories tab: the scene in its frame, its choices, Retreat when allowed, the fight screen when a fight frame is on top, and toolbar buttons to the Stats, Body and Camp tabs. Gear changed on other tabs reaches the story at the next scene, because character data is sent fresh with every click.
+- **Play screen** in the Stories tab: the scene in its frame, its choices, Retreat when allowed, the fight screen when a fight frame is on top. **The tab bar is hidden while a story is shown** (decided 2026-11-21, for phones): the scene gets the whole screen, and a small triangle in the lower-left corner opens the settings panel (see "Settings during a story"). At a `camp` scene the triangle turns into a tent, so the player sees that camping and repacking are possible. The panel holds the settings and the tab bar, to switch to Stats, Body or Home (the camp at a `camp` scene); back on the Stories tab everything hides again. The handle looks small but is a full touch target (about 44 px), and the scene keeps room at the bottom so the handle never covers a choice. Recommended: the same on wide screens, one behaviour everywhere.
+- **Leaving the play screen isn't leaving the adventure** (decided 2026-11-21): the footer bar also leads back to the soul preview, to play another character. The session stays as it is, the characters stay busy, a scene's timer keeps running, and the soul preview (which groups characters by `availability.adventure.sessionId`) leads back into the story at the same scene. The top frame keeps the last scene as the player saw it (the cleaned HTML and its choices, size-limited), so coming back shows exactly that scene without calling the engine, and random text in it isn't drawn again.
+- **A story left alone ends by itself** (decided 2026-11-21): after a few days without a click and without a running timer (the days counted from the last click or from the end of the last timer; the number in a data file, recommended 7, like market offers), the run is left as with Leave without packing: what the characters carry comes home, what is still in the camp is left behind with its chance to be there next time, story memory is already saved. Logged as `abandoned`: the run stays spent and doesn't count as completed. Like the market's expired offers, this is swept lazily when the player's requests come in (`recover_adventures`), with no background job. Gear changed on other tabs reaches the story at the next scene, because character data is sent fresh with every click.
 
 ### Today's adventure API, and the gate
 
@@ -322,29 +336,24 @@ A stack adds no engine cost: only the top frame runs, and a parked frame is abou
 | Story stack rules | See the table under "The story stack" |
 | How a story is marked as a side story | A story setting (such as `$meta_kind`), with the environments it fits; its chance set by the platform at approval |
 | Skill check and fight commands | Their syntax; the skills, difficulties and odds (a data file like the foraging rules); what a failure costs; the predefined tags; the editor placeholders |
-| Who in a party takes a skill check | The member the player picked with `<<pick_member>>` just before; without a pick the lead, the best-suited character, or every member (each climbs, and some may fall) |
-| How radio buttons and checkboxes come back | They have no text of their own (the `<label>` around one is free scene text): require each inside a `<label>` with its own text, unique per variable, and send that text; or give them neutral handles |
 | Radio look for `<<pick_member>>` | Radio buttons with the names plus a go-on button, for a pick that sits next to other choices in the scene (such as "use the rope"); only buttons until then |
-| LastResort refunds | Refund a run that ends in `LastResort` only when it applied no effects (recommended), or always |
-| Party for test runs | Only `TestCharacters`, or also read-only copies of the author's real characters |
-| Where testing starts | From Submit (each submit restarts the 7 days and shows in the review queue), or a separate test copy from the editor that skips the queue |
 | The undead (`vampire`, `undead`) | How a character is turned: only Python, through a predefined consequence tag or a story setting such as "here the dying rise as vampires", never story code. Whether it can be undone. Special rules for the undead (healing, Soul, light), later |
 | Entry rules beyond the life state | Whether the may-enter and may-not-enter lists also take races, race groups, professions or birthsigns (such as a story only for dwarves) |
 | Scene timers set by stories | Their syntax and limits (longest wait per scene and per story), or only Python-set waits at first |
 | The camp after `LastResort` | The engine failed, not the player: Leave with the camp open, as after any ending (recommended), or the whole camp kept for the next run |
-| A player who never clicks Leave | The characters stay at the ending, busy, until the player leaves (recommended at first), or the run is left automatically after some days, with the popup's rule for what stays behind |
 | Left-behind items | The chance per stack or item, how it drops with time, how long they are kept at most |
 | Story memory | The size limit per story |
 | Foraging in a story | Which raw materials a scene's environment offers (a table from environment to raw families), and whether a party forages together (each member from its own soul-slot pool) |
+| Spells in the settings panel | Which spells, who may speak them (Soul attributes, professions), what they cost, when they count (from the next scene, like the other settings, or at once), and how a story can react to one |
 | Several wallets in one adventure | Later: for now one wallet plays all characters of an adventure. Then it needs invitations, access for every member, a rule for who pays (and who picks a new lead when the lead falls), and polling; recommended: the lead chooses for the group |
 | Beta testers | None, or a list of wallets per story with effect-free test runs |
 
 ## Order of work
 
 1. ~~Seal the editor's story runs~~, ~~**Save review** for reviewers~~ and ~~the story check with the stored test party~~ (2026-11-20); ~~close the check's gaps found against the real SugarCube, re-check review copies, seal the frame from the network, gate the adventure API~~ (2026-11-21).
-2. Engine image with the prototype's shims, both worker modes and the limits; deploy `engine-test` and `engine-live`; measure.
+2. Before the engine: ~~the story check's label rule for radio buttons and checkboxes~~ (2026-11-21), the step graph built from the story check, and the engine API contract in the engine document (drafted 2026-11-21). Then the engine image with the prototype's shims, both worker modes and the limits; deploy `engine-test` and `engine-live`; measure.
 3. Test runs from `twine_review` with `TestCharacters`, no effects, and the **Play on server** link in the submit status.
-4. Play screen for players on `engine-live`, replacing today's step API; then lift the gate.
+4. Play screen for players on `engine-live`, replacing today's step API, a list of live stories with their `LastResort` count for reviewers, and the camp opened only by the control layer (`camp` scene tags); then lift the gate.
 5. Skill checks, `<<pick_member>>`, consequence tags (injuries) and fights in Python, with their story commands and editor placeholders; fights as stack frames.
 6. Side stories as stack frames.
 7. Scene timers, leaving an adventure with the field camp open and story memory; then foraging in adventures and the travel adventure.

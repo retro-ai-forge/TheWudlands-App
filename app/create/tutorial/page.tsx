@@ -70,6 +70,28 @@ You turn your back on the crypt and run.
 <<for _i, _c range $char>><<set _c.cowardice += 1>><</for>>
 <<set $isEnding to true>>`;
 
+const CHOICES_EXAMPLE = `:: Armoury
+Which weapon do you draw?
+<<listbox "$weapon">><<option "Sword" "sword">><<option "Bow" "bow">><</listbox>>
+
+Which way do you go?
+<label><<radiobutton "$path" "north" checked>> North</label>
+<label><<radiobutton "$path" "south">> South</label>
+<label><<checkbox "$careful" false true>> Move carefully</label>
+
+[[Set out->Road]]
+
+:: Road
+<<if $path is "north">>The road climbs into the hills.<<else>>The road follows the river.<</if>>
+<<if $weapon is "bow">>You keep your bow strung.<</if>>
+<<if $careful>>You watch every step.<</if>>
+[[Walk on->Camp]]`;
+
+const CHANGING_CHOICES_EXAMPLE = `What do you light the way with?
+<<if $hasLantern>><label><<radiobutton "$light" "lantern">> Lantern</label><</if>>
+<label><<radiobutton "$light" "torch" checked>> Torch</label>
+[[Enter the cave->Cave]]`;
+
 const PICK_EXAMPLE = `:: Cliff
 The path ends at a sheer cliff. Someone has to climb up and lower a rope.
 Who climbs first?
@@ -229,6 +251,49 @@ export default function Tutorial() {
           <pre className={styles.codeBlock}>{RETREAT_EXAMPLE}</pre>
         </section>
 
+        {/* ── Choices the player picks ────────────────────────── */}
+        <section id="choices" className={styles.section}>
+          <h2 className={h.section}>Choices the Player Picks</h2>
+
+          <p className={styles.body}>
+            Besides links and buttons, a scene can ask the player to pick before going on: one entry from a
+            drop-down (<span className={styles.code}>&lt;&lt;listbox&gt;&gt;</span>), one of several radio buttons, or a
+            checkbox to tick. Each pick is stored in a variable of your own, and the next scene reads it.
+          </p>
+          <pre className={styles.codeBlock}>{CHOICES_EXAMPLE}</pre>
+          <ul className={styles.ruleList}>
+            <li>
+              A drop-down gets its entries from <span className={styles.code}>&lt;&lt;option &quot;Sword&quot; &quot;sword&quot;&gt;&gt;</span>:
+              the first text is what the player sees, the second what your variable stores. Write every entry out.
+              A <span className={styles.code}>&lt;&lt;cycle&gt;&gt;</span>, a word that changes to the next entry with each tap,
+              works the same way.
+            </li>
+            <li>
+              Each radio button and checkbox sits inside its own <span className={styles.code}>&lt;label&gt;</span>, with plain
+              words as its text and nothing else in it. Radio buttons with the same variable belong together: the
+              player picks one of them.
+            </li>
+            <li>
+              Every text a player can pick appears only once in a scene: link and button texts, labels and
+              options, also across different drop-downs and in different branches of an <span className={styles.code}>&lt;&lt;if&gt;&gt;</span>.
+              The player&apos;s pick comes back to the game as its text, so two equal texts couldn&apos;t be told apart.
+            </li>
+            <li>
+              Players only pick from what you wrote; they never type anything. Store a pick in your own
+              variable, never in <span className={styles.code}>$char</span>, <span className={styles.code}>$lead</span> or
+              a <span className={styles.code}>$meta_</span> value.
+            </li>
+          </ul>
+          <p className={styles.body}>
+            For choices that change during the story, put radio buttons inside <span className={styles.code}>&lt;&lt;if&gt;&gt;</span>:
+          </p>
+          <pre className={styles.codeBlock}>{CHANGING_CHOICES_EXAMPLE}</pre>
+          <p className={styles.body}>
+            <span className={styles.code}>&lt;&lt;optionsfrom&gt;&gt;</span>, which fills a drop-down from a variable, isn&apos;t
+            accepted: its entries would only exist while the story is played, so the submit check couldn&apos;t read them.
+          </p>
+        </section>
+
         {/* ── Picking a party member ──────────────────────────── */}
         <section id="pick-member" className={styles.section}>
           <h2 className={h.section}>Letting the Player Choose a Character</h2>
@@ -251,8 +316,9 @@ export default function Tutorial() {
           <ul className={styles.ruleList}>
             <li>
               <span className={styles.code}>$picked</span> stays the chosen character through any number of scenes,
-              until the next <span className={styles.code}>&lt;&lt;pick_member&gt;&gt;</span>. Before the first pick
-              it is the lead, and if the chosen character falls, it is the lead again.
+              until it is picked again: with the next <span className={styles.code}>&lt;&lt;pick_member&gt;&gt;</span>, or
+              by the player in the settings. Before the first pick it is the lead, and if the chosen character falls,
+              it is the lead again.
             </li>
             <li>
               Read <span className={styles.code}>$picked</span> and change its Legend with <span className={styles.code}>+=</span> and <span className={styles.code}>-=</span>,
