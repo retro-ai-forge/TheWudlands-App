@@ -257,7 +257,31 @@ Not accepted:
 - Write where a button or link leads as a `[[link]]` inside it, so the editor draws the line to that scene.
 - Button and link texts are written out, never built from variables.
 - Between the opening and the closing tag: `<<set>>` and `<<if>>`. They run when the player clicks, before the story moves on.
-- Also accepted for now: the destination as quoted text, `<<button "Go to the cave" "Cave">>`, and `<<goto "Scene">>` between a button's or link's tags. Neither draws a line in the editor. `<<goto>>` is only allowed there, so a scene never jumps on its own. The scene must exist, and it is never `LastResort`.
+- Also accepted: the destination as quoted text, `<<button "Go to the cave" "Cave">>`, and `<<goto "Scene">>` between a button's or link's tags. Neither draws a line in the editor. `<<goto>>` is only allowed there, so a scene never jumps on its own. The scene must exist, and it is never `LastResort`.
+
+### Random jumps
+
+```
+<<button "Run for it">><<goto `either("P1", "P7", "P8")`>><</button>>
+<<button "Turn the page">><<goto `"P" + random(1, 30)`>><</button>>
+<<button "Dive in">><<set $roll to random(1, 100)>><<if $roll lte 20>><<goto "Pearl">><<else>><<goto "Shore">><</if>><</button>>
+```
+
+- `` `either("P1", "P7", "P8")` `` goes to one of the listed scenes, each equally likely.
+- `` `"P" + random(1, 30)` `` goes to one of the scenes `P1` to `P30`, each equally likely; every one of them must exist. A range reaches at most 200 scenes, and the text in quotes may also be empty, for scenes named `1` to `30`.
+- The backquotes are needed: without them SugarCube reads the pick as a scene name and never jumps. These two shapes are the only backquotes accepted, with written-out scene names and whole numbers only.
+- For uneven odds, roll a number and pick the scene with `<<if>>`, as in the third line.
+- Like every `<<goto>>`, a random jump sits between a button's or link's tags.
+
+Not accepted:
+
+```
+<<button "Run for it">><<goto either("P1", "P7", "P8")>><</button>>
+<<button "Turn the page">><<goto "P" + random(1, 30)>><</button>>
+<<button "Go">><<goto `"P" + $page`>><</button>>
+<<button "Go">><<goto `"P" + random(1, 500)`>><</button>>
+<<button "Go">><<goto `either("P1", "P1")`>><</button>>
+```
 
 ### Choices
 
@@ -358,7 +382,7 @@ Any normal CSS is fine. Not allowed: `url(...)`, `image-set(...)`, `image(...)`,
 | `<<if Config.debug>>` | Reaches the engine's internals | - |
 | `onclick="..."` or another `on...` attribute | Runs program code | `<<button>>`, `<<link>>` |
 | `<<textbox>>`, `<<textarea>>`, `<<numberbox>>` | Players never type text | Choices |
-| `<<goto $target>>`, `[[Go|$target]]`, `<<include>>` | Destination built from a variable | Written-out scene names |
+| `<<goto $target>>`, `[[Go|$target]]`, `<<include>>` | Destination built from a variable | Written-out scene names, or a random jump (see Random jumps) |
 | `<<goto "Scene">>` outside a button or link | Scene jumps on its own | A link or button |
 | `<<timed>>`, `<<repeat>>`, `<<type>>`, audio | Needs a live browser | - |
 | `<<linkreplace>>`, `<<append>>`, `<<replace>>` and similar | Changes the page without a new scene | A link to a new scene |

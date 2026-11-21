@@ -964,6 +964,49 @@ def _literal_value(arg: tuple, what: str) -> None:
         raise _Refused(f'{what} is written out: quoted text, a number, true or false, like "north"')
 
 
+# ── Random jumps ─────────────────────────────────────────────────────────────
+
+# <<goto>> picks a scene at random only in these two shapes, in backquotes
+# (SugarCube reads a macro argument as an expression only between backquotes;
+# written plainly, `either("P1",` is taken as a scene name). Nothing but
+# literal scene names and whole numbers stands inside, so every scene the
+# jump can reach is known without running the story.
+_GOTO_EITHER = re.compile(r'either\(\s*("[^"]*"(?:\s*,\s*"[^"]*")+)\s*\)')
+_GOTO_RANGE = re.compile(r'"([^"]*)"\s*\+\s*random\(\s*(\d{1,4})\s*,\s*(\d{1,4})\s*\)')
+GOTO_RANGE_MAX = 200
+_GOTO_FORMS = (
+    '<<goto>> takes a scene name in quotes, like <<goto "Cave">>, or picks one at random in backquotes: '
+    '<<goto `either("P1", "P7", "P8")`>> or <<goto `"P" + random(1, 30)`>>'
+)
+
+
+def _random_goto_targets(argument: str) -> list:
+    """Every scene a backquoted random <<goto>> can reach, or _Refused."""
+    if len(argument) < 2 or not argument.endswith("`") or "`" in argument[1:-1]:
+        raise _Refused(_GOTO_FORMS)
+    inner = argument[1:-1].strip()
+    m = _GOTO_EITHER.fullmatch(inner)
+    if m:
+        names = re.findall(r'"([^"]*)"', m.group(1))
+        for name in names:
+            _check_quoted(name)
+            if not name.strip():
+                raise _Refused("either() lists scene names, never an empty one")
+        if len(set(names)) != len(names):
+            raise _Refused("either() lists each scene once - every scene listed is equally likely")
+        return names
+    m = _GOTO_RANGE.fullmatch(inner)
+    if m:
+        prefix, low, high = m.group(1), int(m.group(2)), int(m.group(3))
+        _check_quoted(prefix)
+        if low >= high:
+            raise _Refused('random(low, high) needs a lower number first, like <<goto `"P" + random(1, 30)`>>')
+        if high - low + 1 > GOTO_RANGE_MAX:
+            raise _Refused(f"a random jump reaches at most {GOTO_RANGE_MAX} scenes")
+        return [f"{prefix}{n}" for n in range(low, high + 1)]
+    raise _Refused(_GOTO_FORMS)
+
+
 # ── One scene ────────────────────────────────────────────────────────────────
 
 
@@ -1467,9 +1510,18 @@ class _Scene:
                 "a scene never jumps on its own - use a link, or <<goto>> between a button's tags, "
                 'like <<button "Go">><<goto "Cave">><</button>>'
             )
+        if raw.strip().startswith("`"):
+            for target in _random_goto_targets(raw.strip()):
+                self.destinations.append((target, True))
+            return
+        if re.search(r"\b(?:either|random)\s*\(", raw):
+            raise _Refused(
+                "without backquotes SugarCube reads a random pick as a scene name and never jumps - "
+                'write <<goto `either("P1", "P7", "P8")`>> or <<goto `"P" + random(1, 30)`>>'
+            )
         args = _macro_arguments(raw)
         if len(args) != 1 or args[0][0] != "str":
-            raise _Refused('<<goto>> takes a scene name in quotes, like <<goto "Cave">>')
+            raise _Refused(_GOTO_FORMS)
         _check_quoted(args[0][1])
         self.destinations.append((args[0][1], True))
 
@@ -1677,13 +1729,23 @@ def check_story(passages: list, story_data: dict) -> StoryCheck:
         scene.check()
         result.errors.extend(scene.messages())
         changes.extend(scene.legend)
+        missing = []
         for destination, leads in scene.destinations:
             if destination not in names:
-                result.errors.append(f"Passage '{name}' names the scene '{destination}', which does not exist")
+                if destination not in missing:
+                    missing.append(destination)
             elif leads and destination == LAST_RESORT_PASSAGE:
                 result.errors.append(
                     f"Passage '{name}' leads to LastResort - the engine routes there on a fault; it is not a story destination"
                 )
+        if len(missing) <= 3:
+            for destination in missing:
+                result.errors.append(f"Passage '{name}' names the scene '{destination}', which does not exist")
+        else:
+            shown = ", ".join(f"'{d}'" for d in missing[:3])
+            result.errors.append(
+                f"Passage '{name}' names the scenes {shown} and {len(missing) - 3} more, which do not exist"
+            )
 
     result.errors.extend(stylesheet_errors("Story Stylesheet", (story_data or {}).get("stylesheet") or ""))
 

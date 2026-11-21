@@ -681,6 +681,54 @@ def test_labelled_choices_pass(text):
     assert check_scene("Scene", text) == []
 
 
+@pytest.mark.parametrize(
+    "text",
+    [
+        '<<button "Run for it">><<goto `either("P1", "P7", "P8")`>><</button>>',
+        '<<button "Turn the page">><<goto `"P" + random(1, 30)`>><</button>>',
+        '<<link "Open the book">><<goto `"" + random(1, 12)`>><</link>>',
+        '<<button "Toss">><<goto `either( "Heads" , "Tails" )`>><</button>>',
+    ],
+)
+def test_random_jumps_in_backquotes_pass(text):
+    assert check_scene("Scene", text) == []
+
+
+@pytest.mark.parametrize(
+    "text, expected",
+    [
+        # Without backquotes SugarCube 2.37.3 takes the pick as a scene name.
+        ('<<button "Run">><<goto either("P1", "P7")>><</button>>', "without backquotes"),
+        ('<<button "Run">><<goto "P" + random(1, 30)>><</button>>', "without backquotes"),
+        ('<<button "Go">><<goto `alert(1)`>><</button>>', "picks one at random in backquotes"),
+        ('<<button "Go">><<goto `either($a, "P1")`>><</button>>', "picks one at random in backquotes"),
+        ('<<button "Go">><<goto `"P" + $page`>><</button>>', "picks one at random in backquotes"),
+        ('<<button "Go">><<goto `either("P1")`>><</button>>', "picks one at random in backquotes"),
+        ('<<button "Go">><<goto `"P" + random(1, 500)`>><</button>>', "at most 200 scenes"),
+        ('<<button "Go">><<goto `"P" + random(9, 3)`>><</button>>', "lower number first"),
+        ('<<button "Go">><<goto `either("P1", "P1")`>><</button>>', "each scene once"),
+        ('<<button "Go">><<goto `either("P1", "")`>><</button>>', "never an empty one"),
+        ('<<button "Go">><<goto `either("P<b>", "P2")`>><</button>>', "<"),
+        ('<<goto `either("P1", "P7")`>>', "never jumps on its own"),
+    ],
+)
+def test_random_jumps_take_only_the_two_shapes(text, expected):
+    problems = check_scene("Scene", text)
+    assert any(expected in p for p in problems), problems
+
+
+def test_every_scene_a_random_jump_can_reach_must_exist():
+    start = {"name": "Start", "text": '<<button "Turn the page">><<goto `"P" + random(1, 30)`>><</button>>'}
+    some = [{"name": f"P{i}", "text": "x"} for i in range(1, 25)]
+    errors = story_rules.check_story([start] + some, {}).errors
+    assert "Passage 'Start' names the scenes 'P25', 'P26', 'P27' and 3 more, which do not exist" in errors
+    every = [{"name": f"P{i}", "text": "x"} for i in range(1, 31)]
+    assert not [e for e in story_rules.check_story([start] + every, {}).errors if "exist" in e]
+    pick = {"name": "Start", "text": '<<button "Run">><<goto `either("P1", "Gone")`>><</button>>'}
+    errors = story_rules.check_story([pick, {"name": "P1", "text": "x"}], {}).errors
+    assert "Passage 'Start' names the scene 'Gone', which does not exist" in errors
+
+
 def test_options_are_written_out_never_taken_from_a_variable():
     problems = check_scene("Scene", '<<listbox "$item">><<optionsfrom $inventory>><</listbox>>')
     assert any("<<optionsfrom>> isn't accepted" in p for p in problems), problems

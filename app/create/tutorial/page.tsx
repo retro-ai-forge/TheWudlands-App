@@ -92,6 +92,17 @@ const CHANGING_CHOICES_EXAMPLE = `What do you light the way with?
 <label><<radiobutton "$light" "torch" checked>> Torch</label>
 [[Enter the cave->Cave]]`;
 
+const RANDOM_EITHER_EXAMPLE = `:: Forest
+Wolves howl somewhere close.
+<<button "Run for it">><<goto \`either("Ravine", "OldMill", "Riverbank")\`>><</button>>`;
+
+const RANDOM_RANGE_EXAMPLE = `:: Library
+The old book falls open on its own.
+<<button "Turn the page">><<goto \`"Page" + random(1, 30)\`>><</button>>`;
+
+const RANDOM_ODDS_EXAMPLE = `:: Cliff edge
+<<button "Dive in">><<set $roll to random(1, 100)>><<if $roll lte 20>><<goto "Pearl">><<else>><<goto "Shore">><</if>><</button>>`;
+
 const PICK_EXAMPLE = `:: Cliff
 The path ends at a sheer cliff. Someone has to climb up and lower a rope.
 Who climbs first?
@@ -292,6 +303,47 @@ export default function Tutorial() {
             <span className={styles.code}>&lt;&lt;optionsfrom&gt;&gt;</span>, which fills a drop-down from a variable, isn&apos;t
             accepted: its entries would only exist while the story is played, so the submit check couldn&apos;t read them.
           </p>
+        </section>
+
+        {/* ── Random jumps ────────────────────────────────────── */}
+        <section id="random-jumps" className={styles.section}>
+          <h2 className={h.section}>Random Jumps</h2>
+
+          <p className={styles.body}>
+            A button can send the player to a scene chosen at random. To one of a few scenes you list, each
+            equally likely:
+          </p>
+          <pre className={styles.codeBlock}>{RANDOM_EITHER_EXAMPLE}</pre>
+          <p className={styles.body}>
+            Or to one of a numbered row of scenes, here <span className={styles.code}>Page1</span> to <span className={styles.code}>Page30</span>,
+            each equally likely, like a gamebook&apos;s &quot;turn to 17&quot;:
+          </p>
+          <pre className={styles.codeBlock}>{RANDOM_RANGE_EXAMPLE}</pre>
+          <p className={styles.body}>
+            For uneven odds, roll a number and choose the scene with <span className={styles.code}>&lt;&lt;if&gt;&gt;</span>.
+            Here one dive in five finds the pearl:
+          </p>
+          <pre className={styles.codeBlock}>{RANDOM_ODDS_EXAMPLE}</pre>
+          <ul className={styles.ruleList}>
+            <li>
+              Keep the backquotes (<span className={styles.code}>`</span>) around <span className={styles.code}>either(...)</span> and
+              around <span className={styles.code}>&quot;Page&quot; + random(1, 30)</span>. Without them SugarCube reads the pick as a
+              scene name and never jumps; the submit check tells you so.
+            </li>
+            <li>
+              Write the scene names out. <span className={styles.code}>either</span> lists each scene once, and with
+              {" "}<span className={styles.code}>random</span> every scene of the row must exist, at most 200 of them. A variable
+              in the pick, like <span className={styles.code}>&quot;Page&quot; + $page</span>, isn&apos;t accepted.
+            </li>
+            <li>
+              A random jump sits between a button&apos;s or link&apos;s tags, like every
+              {" "}<span className={styles.code}>&lt;&lt;goto&gt;&gt;</span>, so the dice are rolled when the player clicks. A scene
+              never jumps on its own.
+            </li>
+            <li>
+              The player never sees the number, only the scene they end up in.
+            </li>
+          </ul>
         </section>
 
         {/* ── Picking a party member ──────────────────────────── */}
