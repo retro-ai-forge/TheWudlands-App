@@ -2,53 +2,56 @@
 
 Findings from a project review on 2026-07-10, covering what would help future
 contributors ramp up faster and catch regressions earlier. Ordered roughly by
-priority.
+priority. Status last checked on 2026-11-21.
 
 ## High priority
 
-### 1. No automated tests
-Neither the frontend (`app/`) nor the backend (`backend/`) has any test
-infrastructure — no test runner is installed, no `*.test.*`/`*.spec.*` files
-exist. This is the biggest gap: a duplicate React `key` bug in
-`STORY_STATS` (`app/create/page.tsx`) shipped to prod and only surfaced as a
-browser console error, something a basic render test would have caught
-before merge.
+### 1. Automated tests - partly done
+The backend has a pytest suite in `tests/`. It runs against the database that
+`MONGODB_URI` in `.env` points to and writes test records there, so point it at
+a database you don't mind tests writing to. The editor submodule
+(`twinejs-integrated`) has Twine's own Jest suite; 28 of its tests already fail.
+Still open: the Next.js app (`app/`) has no tests and no test runner.
 
-### 2. No CI
-There is no `.github/workflows` directory. Nothing runs `npm run type-check`,
-`npm run lint`, or `npm run build` automatically on a PR. Several bugs fixed
-this session (a dead/broken `useEffect`, an unused-expression lint warning)
-would have been flagged by CI without needing a manual review pass.
+### 2. No CI - open
+The main repo has no `.github/workflows`. Nothing runs `npm run type-check`,
+`npm run lint`, `npm run build` or the backend tests on a push or PR. Both
+`type-check` and `lint` pass today (lint with warnings only), so a first job
+for them would start green. The backend tests need a database of their own in
+CI. The editor submodule still carries Twine's original workflows; its Jest
+workflow runs on every push to `develop` and fails on the tests above.
 
-### 3. `.env-example` is incomplete
-`.env-example` only documents the SMTP feedback-email variables
-(`SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASSWORD`, `SMTP_FROM`,
-`SMTP_SECURE`). It does not mention `REDIS_HOST` / `REDIS_PORT`, which
-`backend/auth.py` requires for auth to work at all. A new developer setting
-up the project from `.env-example` alone would hit a confusing runtime
-failure with no indication Redis is even a dependency.
+### 3. `.env-example` - done
+Redis is no longer used: login sessions and sign-in nonces live in Firestore
+with TTL indexes. `.env-example` documents Firestore, the image bucket, Subscan
+and SMTP, and marks `FORAGING_DURATION_MINUTES` as dev-only (it shortens every
+player's foraging trips). Optional variables it doesn't list, all with
+defaults: `ASSETHUB_RPC`, `HYDRATION_RPC`, `IPFS_GATEWAY`, and the dev-only
+`HEALING_INTERVAL_MINUTES`.
 
 ## Lower priority / nice-to-have
 
-### 5. No pre-commit hooks
+### 5. No pre-commit hooks - open
 No husky (or equivalent) setup. A pre-commit hook running `type-check` +
-`lint` would catch issues before they even reach a PR, complementing (not
-replacing) CI.
+`lint` would catch issues before they reach a PR. It only complements CI: it
+runs on one machine, `git commit --no-verify` skips it, and the backend tests
+don't belong in it (they write to the database). Set up CI first.
 
-### 6. No custom error/not-found pages
-The Next.js app has no custom `error.tsx` or `not-found.tsx` in `app/` —
-currently relying on framework defaults.
+### 6. Custom error/not-found pages - done (2026-11-21)
+`app/not-found.tsx` (unknown addresses, status 404), `app/error.tsx` (a page
+that throws; shows only the error's reference code) and `app/global-error.tsx`
+(the root layout itself fails), sharing `app/styles/statusPage.module.css`.
 
-## Observation (not necessarily a problem)
+## Observation - done (2026-11-21)
 
-The repo root has several folders alongside the actual app that look like
-scratch/tooling rather than shipped code: `add-ons/`, `contracts/`,
-`chatgpt_role/`, `pdf-convert/`. Worth grouping under something like
-`tools/` or `scripts/` if they're meant to stay long-term, just so a new
-contributor can tell at a glance what's live application code versus
-side material.
+The scratch folders at the repo root were removed: `add-ons/` and
+`contracts/` (empty placeholders; stories live in Firestore, there are no smart
+contracts), `chatgpt_role/` (an early prompt describing a different game
+design) and `pdf-convert/` (an outdated PDF export script, with its
+`puppeteer` dev dependency). `docker-compose.yml` lost the `add-ons` mount and
+the unused `NEXT_PUBLIC_API_URL`.
 
-## Already fixed this session (for context, not action items)
+## Fixed in the 2026-07-10 session (for context, not action items)
 
 - `lib/wallet.ts` was never tracked by git — a stray `lib/`/`lib64/` rule in
   `.gitignore` (leftover from the Python project template) was silently
