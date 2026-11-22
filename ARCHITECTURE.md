@@ -289,7 +289,7 @@ Foraging can move from today's foraging page into adventures, without moving its
 - **One click per call:** restore the frame's saved state, set `$char`/`$lead`, apply the picks, click the chosen element, return the scene and the new state. How that works inside SugarCube and jsdom is in the engine document.
 - **Story pages cached per snapshot ID** in the parent process, which never runs story code.
 - **`engine-live`, shared workers:** a worker plays many clicks of reviewed stories and is restarted every few hundred clicks.
-- **`engine-test`, single-use workers:** every click gets a fresh, clean process, discarded afterwards, so an unreviewed story can only damage its own click. A few clean processes are kept started in advance.
+- **`engine-test`, single-use workers:** every click gets a fresh, clean worker, ended afterwards, so an unreviewed story can only damage its own click. A few clean workers are kept started in advance. Workers are worker threads, each its own JavaScript world; the permission model holds in them too (engine document, "What story code could do in the engine").
 - **Limits:** Node's permission model (no child processes, no files beyond its own), a time limit per click (2 seconds) and a memory limit.
 
 ## Settings
@@ -321,7 +321,7 @@ Optional on top: `--ingress internal` on both engines, which needs `serverless-w
 
 ## Capacity (estimates)
 
-Measured on a laptop on 2026-11-19; not yet on Cloud Run. An active player clicks about every 20 seconds. Node uses one core, so one worker per vCPU.
+Measured on a laptop on 2026-11-19 with the prototype, and again on 2026-11-22 with the engine (about 175 ms per call in one worker, 190 ms through shared workers, 520 ms through single-use workers); not yet on Cloud Run. An active player clicks about every 20 seconds. Node uses one core, so one worker per vCPU.
 
 | | `engine-live` (shared) | `engine-test` (single-use) |
 |---|---|---|
@@ -354,7 +354,7 @@ A stack adds no engine cost: only the top frame runs, and a parked frame is abou
 ## Order of work
 
 1. ~~Seal the editor's story runs~~, ~~**Save review** for reviewers~~ and ~~the story check with the stored test party~~ (2026-11-20); ~~close the check's gaps found against the real SugarCube, re-check review copies, seal the frame from the network, gate the adventure API~~ (2026-11-21).
-2. Before the engine: ~~the story check's label rule for radio buttons and checkboxes~~ (2026-11-21), ~~the step graph built from the story check~~ (2026-11-22, `story_rules.macro_exits`: every way on a scene's commands write; per label once the control layer checks clicks by label), and ~~the engine API contract~~ (drafted 2026-11-22 in the engine document). Then the engine image with the prototype's shims, both worker modes and the limits; deploy `engine-test` and `engine-live`; measure.
+2. Before the engine: ~~the story check's label rule for radio buttons and checkboxes~~ (2026-11-21), ~~the step graph built from the story check~~ (2026-11-22, `story_rules.macro_exits`: every way on a scene's commands write; per label once the control layer checks clicks by label), and ~~the engine API contract~~ (drafted 2026-11-22 in the engine document). Then ~~the engine with its shims, both worker modes, the limits and the image~~ (2026-11-22, `twinejs-integrated/engine/`, `npm test`); deploy `engine-test` and `engine-live` (`SETUP.md` "Story engines"); measure on Cloud Run.
 3. Test runs from `twine_review` with `TestCharacters`, no effects, and the **Play on server** link in the submit status.
 4. Play screen for players on `engine-live`, replacing today's step API, a list of live stories with their `LastResort` count for reviewers, and the camp opened only by the control layer (`camp` scene tags); then lift the gate.
 5. Skill checks, `<<pick_member>>`, consequence tags (injuries) and fights in Python, with their story commands and editor placeholders; fights as stack frames.

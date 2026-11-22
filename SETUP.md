@@ -581,10 +581,17 @@ gcloud compute firewall-rules create engine-deny-all-egress \
 gcloud iam service-accounts create engine-sa --display-name="Story engine (no permissions)"
 ```
 
-**Step 3: Deploy the engines with the network** (on every engine deploy; the engine image is built from `twinejs-integrated/engine/`):
+**Step 3: Build the image and deploy the engines with the network** (on every engine deploy):
 ```bash
+# Build from the twinejs-integrated folder (the engine needs the editor's publish code and SugarCube)
+cd twinejs-integrated
+IMAGE=europe-west1-docker.pkg.dev/$PROJECT/serverless-wudlands-repo/wudlands-engine:latest
+docker build --platform=linux/amd64 -f engine/Dockerfile -t $IMAGE .
+docker push $IMAGE
+cd ..
+
 # Unreviewed stories: single-use workers, never more than one instance
-gcloud run deploy engine-test --image <engine image> --region $REGION \
+gcloud run deploy engine-test --image $IMAGE --region $REGION \
   --service-account engine-sa@$PROJECT.iam.gserviceaccount.com \
   --no-allow-unauthenticated --min-instances 0 --max-instances 1 \
   --cpu 1 --memory 1Gi --set-env-vars WORKER_MODE=single-use \
@@ -593,7 +600,7 @@ gcloud run deploy engine-test --image <engine image> --region $REGION \
 
 # Live stories: shared workers, grows with players
 # (--min-instances 0 until players play on it, then 1, see ARCHITECTURE.md "Settings")
-gcloud run deploy engine-live --image <engine image> --region $REGION \
+gcloud run deploy engine-live --image $IMAGE --region $REGION \
   --service-account engine-sa@$PROJECT.iam.gserviceaccount.com \
   --no-allow-unauthenticated --min-instances 0 --max-instances 20 \
   --cpu 2 --memory 1Gi --set-env-vars WORKER_MODE=shared \
