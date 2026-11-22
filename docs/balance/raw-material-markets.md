@@ -161,7 +161,7 @@ Same for every tier: the output tier follows the ingredients, the amounts don't 
 | cloth_cloak / fur_cloak / quilted_cloak | 24–25 | fiber 25 / hide 24 / feather 24 |
 | **Shields** | | |
 | wooden_shield | 28 | wood 16, skin 12 |
-| iron_shield | 162 | ore 125, wood 37 |
+| metal_shield | 162 | ore 125, wood 37 |
 | reinforced_wooden_shield | 170 | ore 125, wood 45 |
 | meteoric_shield | 215 | crystal 86, ore 75, essence 54 |
 | darksteel_shield | 245 | ore 200, wood 33, clockwork 12 |
@@ -209,7 +209,7 @@ Same for every tier: the output tier follows the ingredients, the amounts don't 
 | holy_symbol | 9 | skin 6, crystal 3 |
 | crowbar, lock_and_key | 10 | ore 10 |
 | net | 14 | fiber 12, wood 2 |
-| iron_spikes, manacles | 15 | ore 15 |
+| metal_spikes, manacles | 15 | ore 15 |
 | mirror | 17 | sand 12, ore 5 |
 | chain | 20 | ore 20 |
 | grappling_hook | 21 | ore 15, fiber 6 |

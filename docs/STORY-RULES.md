@@ -136,7 +136,7 @@ To try a story with characters, add a scene called `TestCharacters` with up to 4
    "will": 11, "insight": 8, "lore": 6, "presence": 7,
    "class1": "none", "classLvl1": 0, "class2": "none", "classLvl2": 0,
    "prof1": "blacksmith", "profLvl1": 3, "prof2": "miner", "profLvl2": 2, "prof3": "none", "profLvl3": 0,
-   "equipment": ["warhammer_1", "iron_head_armor_1", "iron_chest_armor_1", "iron_shield_1",
+   "equipment": ["warhammer_1", "metal_head_armor_1", "metal_chest_armor_1", "metal_shield_1",
                  "pickaxe_2", "torch_2", "tinderbox_1", "rope_1"]},
   {"firstName": "Elara", "lastName": "Moonwhisper", "race": "elf", "gender": "f", "birthsign": "hearthfinder_sigil",
    "might": 6, "agility": 13, "endurance": 8, "precision": 11,

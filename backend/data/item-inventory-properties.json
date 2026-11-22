@@ -160,7 +160,7 @@
     "backpackable": true
   },
   {
-    "familyId": "iron_spikes",
+    "familyId": "metal_spikes",
     "kind": [
       "essentials"
     ],
@@ -777,7 +777,7 @@
     "armorClass": 4
   },
   {
-    "familyId": "iron_chest_armor",
+    "familyId": "metal_chest_armor",
     "kind": [
       "armor"
     ],
@@ -794,7 +794,7 @@
     "armorClass": 4
   },
   {
-    "familyId": "iron_head_armor",
+    "familyId": "metal_head_armor",
     "kind": [
       "armor"
     ],
@@ -811,7 +811,7 @@
     "armorClass": 4
   },
   {
-    "familyId": "iron_leg_armor",
+    "familyId": "metal_leg_armor",
     "kind": [
       "armor"
     ],
@@ -1839,7 +1839,7 @@
     "armorClass": 4
   },
   {
-    "familyId": "iron_shield",
+    "familyId": "metal_shield",
     "kind": [
       "shield"
     ],

@@ -316,7 +316,7 @@ def test_gear_bonus_one_weapon_plus_each_item_scaled_by_tier():
     doc = {"gear": {
         "items": [_instance("pickaxe", 4, tier=3), _instance("warhammer", 4, "body"),
                   _instance("cart", 4, "cart", tier=2),
-                  _instance("grappling_hook", 0), _instance("iron_spikes", 4, "home")],
+                  _instance("grappling_hook", 0), _instance("metal_spikes", 4, "home")],
         "itemBalances": {"backpack": {"hunters_charm_1": 1}},
     }}
     gear = foraging.gathering_gear(doc, "ore")
@@ -820,7 +820,7 @@ def test_old_gear_rolls_at_its_chance_as_broken_t1_gear_of_the_material():
     rng = random.Random(3)
     runs, hits = 20000, 0
     allowed = {fam for fam, _, _ in foraging.old_gear_options("ore")}
-    assert "pickaxe" in allowed and "torch" not in allowed and "iron_spikes" not in allowed  # stacks can't be damaged
+    assert "pickaxe" in allowed and "torch" not in allowed and "metal_spikes" not in allowed  # stacks can't be damaged
     for _ in range(runs):
         old = foraging.roll_old_gear("ore", rng)
         if old is None:
@@ -860,14 +860,14 @@ async def test_old_gear_goes_home_as_a_broken_instance(db, monkeypatch):
 async def test_stacked_gathering_item_may_be_used_up(db, monkeypatch):
     cid = await _make(1, "blacksmith")
     await db.characters.update_one({"address": ADDRESS, "id": cid}, {"$set": {
-        "gear.itemBalances.backpack": {"iron_spikes_1": 2}}})
+        "gear.itemBalances.backpack": {"metal_spikes_1": 2}}})
     _always(monkeypatch, "stackLoss")
     monkeypatch.setattr(foraging.random, "randint", lambda a, b: 10)
     await foraging.start_forage(ADDRESS, cid, "craftweapon_01")   # ore: iron spikes help
     await _fast_forward(db, cid)
     result = (await foraging.finish_forage(ADDRESS, cid))["result"]
     doc = await db.characters.find_one({"address": ADDRESS, "id": cid})
-    assert doc["gear"]["itemBalances"]["backpack"]["iron_spikes_1"] == 1
+    assert doc["gear"]["itemBalances"]["backpack"]["metal_spikes_1"] == 1
     assert len(result["broken"]) == 1
 
 
@@ -1202,7 +1202,7 @@ def test_light_is_per_site_unit_and_the_bonus_needs_none():
     pickaxe = {"instanceId": "p", "itemId": "pickaxe_6", "familyId": "pickaxe", "name": "Pickaxe",
                "quality": 4, "tier": 6}                     # +75%
     items = [{"instanceId": f, "itemId": f"{f}_6", "familyId": f, "name": f, "quality": 4, "tier": 6}
-             for f in ("cart", "grappling_hook", "hunters_charm", "iron_spikes")]  # 4 x +18%
+             for f in ("cart", "grappling_hook", "hunters_charm", "metal_spikes")]  # 4 x +18%
     # A 28-unit dig on cheap light: the site gives 10, so 10h - 5 T1 torches;
     # the T6 candle stays in the pack and the T1 light's +25% counts.
     supply = _supply([], {"tinderbox_1": 1, "torch_1": 12, "candle_6": 1})

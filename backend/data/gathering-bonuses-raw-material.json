@@ -1,7 +1,7 @@
 {
   "ore": {
     "gatheringWeapons": ["pickaxe", "warhammer"],
-    "gatheringItems": ["cart", "grappling_hook", "iron_spikes", "hunters_charm", "glass_lantern", "torch", "candle"]
+    "gatheringItems": ["cart", "grappling_hook", "metal_spikes", "hunters_charm", "glass_lantern", "torch", "candle"]
   },
   "wood": {
     "gatheringWeapons": ["axe", "stone_axe", "battle_axe"],
@@ -33,7 +33,7 @@
   },
   "crystal": {
     "gatheringWeapons": ["pickaxe"],
-    "gatheringItems": ["grappling_hook", "iron_spikes", "hunters_charm", "glass_lantern", "torch", "candle"]
+    "gatheringItems": ["grappling_hook", "metal_spikes", "hunters_charm", "glass_lantern", "torch", "candle"]
   },
   "hide": {
     "gatheringWeapons": ["dagger", "bow", "crossbow"],

@@ -35,8 +35,9 @@ from backend.db import get_database  # noqa: E402
 # The armor sets whose blueprint was split (see backend/data/base-blueprint.json).
 SPLIT_ARMORS = ("cloth", "leather", "chainmail", "iron", "ebony", "chitin", "meteoric_iron", "darksteel")
 _OLD_ID = re.compile(rf"^blueprint_({'|'.join(SPLIT_ARMORS)})_(\d)$")
-# Sets whose piece families were renamed since (scripts/migrate_rename_item_families.py).
-_PIECE_SET = {"meteoric_iron": "meteoric"}
+# Sets whose piece families were renamed since (scripts/migrate_rename_item_families.py,
+# scripts/migrate_rename_iron_to_metal.py).
+_PIECE_SET = {"meteoric_iron": "meteoric", "iron": "metal"}
 
 
 def split_armor_blueprints(ids: list[str]) -> list[str]:

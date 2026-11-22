@@ -2080,7 +2080,7 @@
         <mxCell id="9EP5XOlpcuypSh6oi0BX-663" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;fontStyle=1;" value="T1 Anvil" vertex="1">
           <mxGeometry height="44" width="130" x="1712.5" y="7410" as="geometry" />
         </mxCell>
-        <mxCell id="9EP5XOlpcuypSh6oi0BX-664" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=11;fontStyle=1;" value="T1 Iron Spikes" vertex="1">
+        <mxCell id="9EP5XOlpcuypSh6oi0BX-664" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=11;fontStyle=1;" value="T1 Copper Spikes" vertex="1">
           <mxGeometry height="44" width="130" x="1637.5" y="7540" as="geometry" />
         </mxCell>
         <mxCell id="9EP5XOlpcuypSh6oi0BX-665" edge="1" parent="1" source="9EP5XOlpcuypSh6oi0BX-662" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontSize=10;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" target="9EP5XOlpcuypSh6oi0BX-664" value="3">
@@ -2964,7 +2964,7 @@
         <mxCell id="9EP5XOlpcuypSh6oi0BX-933" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" value="T1 wood" vertex="1">
           <mxGeometry height="44" width="130" x="80" y="7734" as="geometry" />
         </mxCell>
-        <mxCell id="9EP5XOlpcuypSh6oi0BX-934" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=11;fontStyle=1" value="T1 iron_spikes" vertex="1">
+        <mxCell id="9EP5XOlpcuypSh6oi0BX-934" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=11;fontStyle=1" value="T1 metal_spikes" vertex="1">
           <mxGeometry height="44" width="130" x="170" y="7670" as="geometry" />
         </mxCell>
         <mxCell id="9EP5XOlpcuypSh6oi0BX-935" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=11;fontStyle=1;" value="Blueprint: monster_trap" vertex="1">

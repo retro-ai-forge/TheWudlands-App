@@ -7,7 +7,7 @@
     "ore",
     "wood"
   ],
-  "blueprint_iron_shield": [
+  "blueprint_metal_shield": [
     "ore",
     "wood"
   ],
@@ -71,15 +71,15 @@
     "ore",
     "wood"
   ],
-  "blueprint_iron_head_armor": [
+  "blueprint_metal_head_armor": [
     "ore",
     "wood"
   ],
-  "blueprint_iron_chest_armor": [
+  "blueprint_metal_chest_armor": [
     "ore",
     "wood"
   ],
-  "blueprint_iron_leg_armor": [
+  "blueprint_metal_leg_armor": [
     "ore",
     "wood"
   ],

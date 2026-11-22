@@ -432,52 +432,52 @@
     "icon": "/images/items/lock_and_key_t6.png"
   },
   {
-    "id": "iron_spikes_1",
-    "name": "Iron Spikes",
-    "familyId": "iron_spikes",
+    "id": "metal_spikes_1",
+    "name": "Copper Spikes",
+    "familyId": "metal_spikes",
     "tier": 1,
     "description": "A bundle of rugged, hand-forged copper-tipped spikes for climbing and anchoring gear.",
-    "icon": "/images/items/iron_spikes_t1.png"
+    "icon": "/images/items/metal_spikes_t1.png"
   },
   {
-    "id": "iron_spikes_2",
-    "name": "Iron Spikes",
-    "familyId": "iron_spikes",
+    "id": "metal_spikes_2",
+    "name": "Bronze Spikes",
+    "familyId": "metal_spikes",
     "tier": 2,
     "description": "A bundle of bronze-plated spikes with a greenish patina, sharp and reliable on stone.",
-    "icon": "/images/items/iron_spikes_t2.png"
+    "icon": "/images/items/metal_spikes_t2.png"
   },
   {
-    "id": "iron_spikes_3",
+    "id": "metal_spikes_3",
     "name": "Iron Spikes",
-    "familyId": "iron_spikes",
+    "familyId": "metal_spikes",
     "tier": 3,
-    "description": "A bundle of classic steel spikes, built for mountain climbs and dungeon delving.",
-    "icon": "/images/items/iron_spikes_t3.png"
+    "description": "A bundle of classic iron spikes, built for mountain climbs and dungeon delving.",
+    "icon": "/images/items/metal_spikes_t3.png"
   },
   {
-    "id": "iron_spikes_4",
-    "name": "Iron Spikes",
-    "familyId": "iron_spikes",
+    "id": "metal_spikes_4",
+    "name": "Silver Spikes",
+    "familyId": "metal_spikes",
     "tier": 4,
     "description": "A bundle of finely tapered silver spikes engraved with warding runes.",
-    "icon": "/images/items/iron_spikes_t4.png"
+    "icon": "/images/items/metal_spikes_t4.png"
   },
   {
-    "id": "iron_spikes_5",
-    "name": "Iron Spikes",
-    "familyId": "iron_spikes",
+    "id": "metal_spikes_5",
+    "name": "Gold Spikes",
+    "familyId": "metal_spikes",
     "tier": 5,
     "description": "A bundle of bright gold spikes, each head marked with a sunburst.",
-    "icon": "/images/items/iron_spikes_t5.png"
+    "icon": "/images/items/metal_spikes_t5.png"
   },
   {
-    "id": "iron_spikes_6",
-    "name": "Iron Spikes",
-    "familyId": "iron_spikes",
+    "id": "metal_spikes_6",
+    "name": "Star Metal Spikes",
+    "familyId": "metal_spikes",
     "tier": 6,
     "description": "A bundle of star metal spikes shimmering with celestial light, their tips glowing.",
-    "icon": "/images/items/iron_spikes_t6.png"
+    "icon": "/images/items/metal_spikes_t6.png"
   },
   {
     "id": "chain_1",

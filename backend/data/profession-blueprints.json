@@ -25,7 +25,7 @@
     "offered": []
   },
   "armorer": {
-    "own": ["anvil", "iron_head_armor", "iron_chest_armor", "iron_leg_armor", "chainmail_head_armor", "chainmail_chest_armor", "chainmail_leg_armor", "darksteel_head_armor", "darksteel_chest_armor", "darksteel_leg_armor", "iron_shield", "darksteel_shield"],
+    "own": ["anvil", "metal_head_armor", "metal_chest_armor", "metal_leg_armor", "chainmail_head_armor", "chainmail_chest_armor", "chainmail_leg_armor", "darksteel_head_armor", "darksteel_chest_armor", "darksteel_leg_armor", "metal_shield", "darksteel_shield"],
     "offered": ["reinforced_wooden_shield"]
   },
   "tinsmith": {
@@ -114,7 +114,7 @@
   },
   "soldier": {
     "own": [],
-    "offered": ["sword", "short_sword", "spear", "cloth_head_armor", "cloth_chest_armor", "cloth_leg_armor", "iron_head_armor", "iron_chest_armor", "iron_leg_armor", "iron_shield", "iron_ration", "metal_barding", "spyglass", "grappling_hook", "signal_whistle"]
+    "offered": ["sword", "short_sword", "spear", "cloth_head_armor", "cloth_chest_armor", "cloth_leg_armor", "metal_head_armor", "metal_chest_armor", "metal_leg_armor", "metal_shield", "iron_ration", "metal_barding", "spyglass", "grappling_hook", "signal_whistle"]
   },
   "guard": {
     "own": [],

@@ -101,7 +101,7 @@ Every armor piece has its own blueprint: an iron helmet, breastplate and greaves
 | Artists | firespitter | feather, fiber, bone | - | alchemy_stand, cloth_chest_armor, cloth_cloak, cloth_head_armor, cloth_leg_armor, quilted_cloak, wand |
 | Artists | painter | pigment, stone, feather | chalk | lapidary_bench, mortar_and_pestle, workbench |
 | Artists | storyteller | feather, fiber, bone | - | bridle, cloth_cloak, quilted_cloak, saddlepack, scriptorium, wand, written_scroll |
-| CraftArmor | armorer | ore, wood, sand | anvil, chainmail_chest_armor, chainmail_head_armor, chainmail_leg_armor, darksteel_chest_armor, darksteel_head_armor, darksteel_leg_armor, darksteel_shield, iron_chest_armor, iron_head_armor, iron_leg_armor, iron_shield | reinforced_wooden_shield |
+| CraftArmor | armorer | ore, wood, sand | anvil, chainmail_chest_armor, chainmail_head_armor, chainmail_leg_armor, darksteel_chest_armor, darksteel_head_armor, darksteel_leg_armor, darksteel_shield, metal_chest_armor, metal_head_armor, metal_leg_armor, metal_shield | reinforced_wooden_shield |
 | CraftFurniture | carpenter | wood, fiber, bone | enchanters_table, ladder, loom, oven, scriptorium, spinning_wheel, tanning_rack, workbench | cart |
 | CraftGarment | dyer | pigment, herbs, fiber | lacquer, mortar_and_pestle | chitin_shield, cloth_cloak, ebony_chest_armor, ebony_head_armor, ebony_leg_armor, ebony_shield, quilted_cloak |
 | CraftGarment | leatherworker | hide, skin, bone | bolt_girdle, leather_chest_armor, leather_cloak, leather_head_armor, leather_leg_armor, saddle, saddlepack, workbench | - |
@@ -120,7 +120,7 @@ Every armor piece has its own blueprint: an iron helmet, breastplate and greaves
 | Food | butcher | meat, bone, herbs | jerky, smokehouse | whetstone |
 | Food | cook | meat, fish, harvest | oven, roasted_nuts | fig_cake, iron_ration, pickled_fish, smoked_fish |
 | Military | guard | ore, hide, monster_part | - | chain, chainmail_chest_armor, chainmail_head_armor, chainmail_leg_armor, crossbow, lock_and_key, mace, manacles, reinforced_wooden_shield, signal_whistle, spear, wooden_shield |
-| Military | soldier | ore, fiber, monster_part | - | cloth_chest_armor, cloth_head_armor, cloth_leg_armor, grappling_hook, iron_chest_armor, iron_head_armor, iron_leg_armor, iron_ration, iron_shield, metal_barding, short_sword, signal_whistle, spear, spyglass, sword |
+| Military | soldier | ore, fiber, monster_part | - | cloth_chest_armor, cloth_head_armor, cloth_leg_armor, grappling_hook, iron_ration, metal_barding, metal_chest_armor, metal_head_armor, metal_leg_armor, metal_shield, short_sword, signal_whistle, spear, spyglass, sword |
 | Rural | farmer | harvest, fiber, herbs | oven, shovel, sickle, smokehouse, spinning_wheel | ladder, roasted_nuts |
 | Rural | fisher | fish, reed, fiber | fishermans_ration, fishing_pole, net, smoked_fish, smokehouse | pickled_fish, spear |
 | Rural | herder | hide, meat, fiber | bridle, saddle, signal_whistle, spinning_wheel, tanning_rack | cart, fur_cloak, leather_barding, leather_cloak |
@@ -158,9 +158,9 @@ Crafting pays out two kinds of XP, which can land on different professions from 
 | Ebony Leg Armor | Ebony Leg Armor | 340 | Wood x132, Bone x80, Pigment x80, Herbs x48 | 34 | 68 | 102 | 136 | 170 | 204 | 374 |
 | Mace | Mace | 320 | Ore x250, Wood x70 | 32 | 64 | 96 | 128 | 160 | 192 | 352 |
 | Sword | Sword | 320 | Ore x250, Wood x70 | 32 | 64 | 96 | 128 | 160 | 192 | 352 |
-| Iron Chest Armor | Iron Chest Armor | 316 | Ore x250, Wood x66 | 32 | 63 | 95 | 126 | 158 | 190 | 348 |
-| Iron Head Armor | Iron Head Armor | 316 | Ore x250, Wood x66 | 32 | 63 | 95 | 126 | 158 | 190 | 348 |
-| Iron Leg Armor | Iron Leg Armor | 316 | Ore x250, Wood x66 | 32 | 63 | 95 | 126 | 158 | 190 | 348 |
+| Metal Chest Armor | Metal Chest Armor | 316 | Ore x250, Wood x66 | 32 | 63 | 95 | 126 | 158 | 190 | 348 |
+| Metal Head Armor | Metal Head Armor | 316 | Ore x250, Wood x66 | 32 | 63 | 95 | 126 | 158 | 190 | 348 |
+| Metal Leg Armor | Metal Leg Armor | 316 | Ore x250, Wood x66 | 32 | 63 | 95 | 126 | 158 | 190 | 348 |
 | Chitin Chest Armor | Chitin Chest Armor | 314 | Hide x144, Pigment x80, Herbs x48, Monster Part x30, Wood x12 | 31 | 63 | 94 | 126 | 157 | 188 | 345 |
 | Chitin Head Armor | Chitin Head Armor | 314 | Hide x144, Pigment x80, Herbs x48, Monster Part x30, Wood x12 | 31 | 63 | 94 | 126 | 157 | 188 | 345 |
 | Chitin Leg Armor | Chitin Leg Armor | 314 | Hide x144, Pigment x80, Herbs x48, Monster Part x30, Wood x12 | 31 | 63 | 94 | 126 | 157 | 188 | 345 |
@@ -174,7 +174,7 @@ Crafting pays out two kinds of XP, which can land on different professions from 
 | Crossbow | Crossbow | 171 | Ore x75, Wood x60, Fiber x36 | 17 | 34 | 51 | 68 | 86 | 103 | 188 |
 | Reinforced Wooden Shield | Reinforced Wooden Shield | 170 | Ore x125, Wood x45 | 17 | 34 | 51 | 68 | 85 | 102 | 187 |
 | Spear | Spear | 166 | Ore x125, Wood x41 | 17 | 33 | 50 | 66 | 83 | 100 | 183 |
-| Iron Shield | Iron Shield | 162 | Ore x125, Wood x37 | 16 | 32 | 49 | 65 | 81 | 97 | 178 |
+| Metal Shield | Metal Shield | 162 | Ore x125, Wood x37 | 16 | 32 | 49 | 65 | 81 | 97 | 178 |
 | Sickle | Sickle | 162 | Ore x125, Wood x37 | 16 | 32 | 49 | 65 | 81 | 97 | 178 |
 | Pickaxe | Pickaxe | 160 | Ore x125, Wood x35 | 16 | 32 | 48 | 64 | 80 | 96 | 176 |
 | Dagger | Dagger | 158 | Ore x125, Wood x33 | 16 | 32 | 47 | 63 | 79 | 95 | 174 |
@@ -270,7 +270,7 @@ In both tables, raw materials are counted down the whole creation chain, and an 
 | Woven Cloth | 24 | Fiber x24 |
 | Ink | 18 | Herbs x6, Sand x6, Wood x6 |
 | Fired Brick | 16 | Clay x12, Sand x4 |
-| Iron Spikes | 15 | Ore x15 |
+| Metal Spikes | 15 | Ore x15 |
 | Clockwork Mechanism | 14 | Ore x10, Clockwork x4 |
 | Beam | 12 | Wood x12 |
 | Glass Bottle | 12 | Sand x12 |

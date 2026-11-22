@@ -72,39 +72,39 @@
     "tier": 6
   },
   {
-    "id": "blueprint_iron_shield_1",
-    "name": "Blueprint: Apprentice's Iron Shield",
-    "familyId": "blueprint_iron_shield",
+    "id": "blueprint_metal_shield_1",
+    "name": "Blueprint: Apprentice's Copper Shield",
+    "familyId": "blueprint_metal_shield",
     "tier": 1
   },
   {
-    "id": "blueprint_iron_shield_2",
-    "name": "Blueprint: Steelbound Shield",
-    "familyId": "blueprint_iron_shield",
+    "id": "blueprint_metal_shield_2",
+    "name": "Blueprint: Bronzebound Shield",
+    "familyId": "blueprint_metal_shield",
     "tier": 2
   },
   {
-    "id": "blueprint_iron_shield_3",
+    "id": "blueprint_metal_shield_3",
     "name": "Blueprint: Warforged Iron Shield",
-    "familyId": "blueprint_iron_shield",
+    "familyId": "blueprint_metal_shield",
     "tier": 3
   },
   {
-    "id": "blueprint_iron_shield_4",
-    "name": "Blueprint: Ironheart Shield",
-    "familyId": "blueprint_iron_shield",
+    "id": "blueprint_metal_shield_4",
+    "name": "Blueprint: Silverheart Shield",
+    "familyId": "blueprint_metal_shield",
     "tier": 4
   },
   {
-    "id": "blueprint_iron_shield_5",
-    "name": "Blueprint: Ironbound Shield",
-    "familyId": "blueprint_iron_shield",
+    "id": "blueprint_metal_shield_5",
+    "name": "Blueprint: Goldbound Shield",
+    "familyId": "blueprint_metal_shield",
     "tier": 5
   },
   {
-    "id": "blueprint_iron_shield_6",
-    "name": "Blueprint: Deathless Iron Shield",
-    "familyId": "blueprint_iron_shield",
+    "id": "blueprint_metal_shield_6",
+    "name": "Blueprint: Deathless Star Metal Shield",
+    "familyId": "blueprint_metal_shield",
     "tier": 6
   },
   {
@@ -576,111 +576,111 @@
     "tier": 6
   },
   {
-    "id": "blueprint_iron_head_armor_1",
-    "name": "Blueprint: Apprentice's Iron Helmet",
-    "familyId": "blueprint_iron_head_armor",
+    "id": "blueprint_metal_head_armor_1",
+    "name": "Blueprint: Apprentice's Copper Helmet",
+    "familyId": "blueprint_metal_head_armor",
     "tier": 1
   },
   {
-    "id": "blueprint_iron_head_armor_2",
-    "name": "Blueprint: Steelbound Helmet",
-    "familyId": "blueprint_iron_head_armor",
+    "id": "blueprint_metal_head_armor_2",
+    "name": "Blueprint: Bronzebound Helmet",
+    "familyId": "blueprint_metal_head_armor",
     "tier": 2
   },
   {
-    "id": "blueprint_iron_head_armor_3",
+    "id": "blueprint_metal_head_armor_3",
     "name": "Blueprint: Warforged Iron Helmet",
-    "familyId": "blueprint_iron_head_armor",
+    "familyId": "blueprint_metal_head_armor",
     "tier": 3
   },
   {
-    "id": "blueprint_iron_head_armor_4",
-    "name": "Blueprint: Ironheart Helmet",
-    "familyId": "blueprint_iron_head_armor",
+    "id": "blueprint_metal_head_armor_4",
+    "name": "Blueprint: Silverheart Helmet",
+    "familyId": "blueprint_metal_head_armor",
     "tier": 4
   },
   {
-    "id": "blueprint_iron_head_armor_5",
-    "name": "Blueprint: Ironbound Helmet",
-    "familyId": "blueprint_iron_head_armor",
+    "id": "blueprint_metal_head_armor_5",
+    "name": "Blueprint: Goldbound Helmet",
+    "familyId": "blueprint_metal_head_armor",
     "tier": 5
   },
   {
-    "id": "blueprint_iron_head_armor_6",
-    "name": "Blueprint: Deathless Iron Helmet",
-    "familyId": "blueprint_iron_head_armor",
+    "id": "blueprint_metal_head_armor_6",
+    "name": "Blueprint: Deathless Star Metal Helmet",
+    "familyId": "blueprint_metal_head_armor",
     "tier": 6
   },
   {
-    "id": "blueprint_iron_chest_armor_1",
-    "name": "Blueprint: Apprentice's Iron Breastplate",
-    "familyId": "blueprint_iron_chest_armor",
+    "id": "blueprint_metal_chest_armor_1",
+    "name": "Blueprint: Apprentice's Copper Breastplate",
+    "familyId": "blueprint_metal_chest_armor",
     "tier": 1
   },
   {
-    "id": "blueprint_iron_chest_armor_2",
-    "name": "Blueprint: Steelbound Breastplate",
-    "familyId": "blueprint_iron_chest_armor",
+    "id": "blueprint_metal_chest_armor_2",
+    "name": "Blueprint: Bronzebound Breastplate",
+    "familyId": "blueprint_metal_chest_armor",
     "tier": 2
   },
   {
-    "id": "blueprint_iron_chest_armor_3",
+    "id": "blueprint_metal_chest_armor_3",
     "name": "Blueprint: Warforged Iron Breastplate",
-    "familyId": "blueprint_iron_chest_armor",
+    "familyId": "blueprint_metal_chest_armor",
     "tier": 3
   },
   {
-    "id": "blueprint_iron_chest_armor_4",
-    "name": "Blueprint: Ironheart Breastplate",
-    "familyId": "blueprint_iron_chest_armor",
+    "id": "blueprint_metal_chest_armor_4",
+    "name": "Blueprint: Silverheart Breastplate",
+    "familyId": "blueprint_metal_chest_armor",
     "tier": 4
   },
   {
-    "id": "blueprint_iron_chest_armor_5",
-    "name": "Blueprint: Ironbound Breastplate",
-    "familyId": "blueprint_iron_chest_armor",
+    "id": "blueprint_metal_chest_armor_5",
+    "name": "Blueprint: Goldbound Breastplate",
+    "familyId": "blueprint_metal_chest_armor",
     "tier": 5
   },
   {
-    "id": "blueprint_iron_chest_armor_6",
-    "name": "Blueprint: Deathless Iron Breastplate",
-    "familyId": "blueprint_iron_chest_armor",
+    "id": "blueprint_metal_chest_armor_6",
+    "name": "Blueprint: Deathless Star Metal Breastplate",
+    "familyId": "blueprint_metal_chest_armor",
     "tier": 6
   },
   {
-    "id": "blueprint_iron_leg_armor_1",
-    "name": "Blueprint: Apprentice's Iron Greaves",
-    "familyId": "blueprint_iron_leg_armor",
+    "id": "blueprint_metal_leg_armor_1",
+    "name": "Blueprint: Apprentice's Copper Greaves",
+    "familyId": "blueprint_metal_leg_armor",
     "tier": 1
   },
   {
-    "id": "blueprint_iron_leg_armor_2",
-    "name": "Blueprint: Steelbound Greaves",
-    "familyId": "blueprint_iron_leg_armor",
+    "id": "blueprint_metal_leg_armor_2",
+    "name": "Blueprint: Bronzebound Greaves",
+    "familyId": "blueprint_metal_leg_armor",
     "tier": 2
   },
   {
-    "id": "blueprint_iron_leg_armor_3",
+    "id": "blueprint_metal_leg_armor_3",
     "name": "Blueprint: Warforged Iron Greaves",
-    "familyId": "blueprint_iron_leg_armor",
+    "familyId": "blueprint_metal_leg_armor",
     "tier": 3
   },
   {
-    "id": "blueprint_iron_leg_armor_4",
-    "name": "Blueprint: Ironheart Greaves",
-    "familyId": "blueprint_iron_leg_armor",
+    "id": "blueprint_metal_leg_armor_4",
+    "name": "Blueprint: Silverheart Greaves",
+    "familyId": "blueprint_metal_leg_armor",
     "tier": 4
   },
   {
-    "id": "blueprint_iron_leg_armor_5",
-    "name": "Blueprint: Ironbound Greaves",
-    "familyId": "blueprint_iron_leg_armor",
+    "id": "blueprint_metal_leg_armor_5",
+    "name": "Blueprint: Goldbound Greaves",
+    "familyId": "blueprint_metal_leg_armor",
     "tier": 5
   },
   {
-    "id": "blueprint_iron_leg_armor_6",
-    "name": "Blueprint: Deathless Iron Greaves",
-    "familyId": "blueprint_iron_leg_armor",
+    "id": "blueprint_metal_leg_armor_6",
+    "name": "Blueprint: Deathless Star Metal Greaves",
+    "familyId": "blueprint_metal_leg_armor",
     "tier": 6
   },
   {

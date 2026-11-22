@@ -176,7 +176,7 @@ PROFESSION_BLUEPRINTS: dict[str, ProfessionBlueprints] = _load_profession_bluepr
 def _blueprint_catalog_type(blueprint_family_id: str) -> str | None:
     """Whether a blueprint family unlocks a "tool" or a final item, via what its recipe(s) produce."""
     suffix = blueprint_family_id[len("blueprint_"):]
-    # Every armor piece has its own blueprint (blueprint_iron_head_armor);
+    # Every armor piece has its own blueprint (blueprint_metal_head_armor);
     # the piece suffixes are only a fallback for a family named without one.
     for candidate in (suffix, f"{suffix}_head_armor", f"{suffix}_chest_armor", f"{suffix}_leg_armor"):
         catalog_type = _FAMILY_CATALOG_TYPES.get(candidate)

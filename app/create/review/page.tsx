@@ -207,7 +207,7 @@ const TAG_META: Record<string, TagMeta> = {
   treasure: { color: "#38bcb0", img: ITEM("crystal"), desc: "Loot, hoards and glittering reward — greed and its consequences." },
   puzzle: { color: "#30a79e", img: ITEM("lock_and_key"), desc: "Riddles, locks, traps and clever problem-solving over brute force." },
   trickster: { color: "#2a8e86", icon: "🃏", desc: "Cunning and mischief — cons, disguises and clever deceit." },
-  armor: { color: "#26756e", img: ITEM("iron_chest_armor"), desc: "Armoured foes, sieges and holding the line — defence over daring." },
+  armor: { color: "#26756e", img: ITEM("metal_chest_armor"), desc: "Armoured foes, sieges and holding the line — defence over daring." },
   stealth: { color: "#215f59", img: ITEM("dagger"), desc: "Sneaking and infiltration — shadows, silent blades and not being seen." },
   // Journey & Setting — greens.
   island: { color: "#46b56e", icon: "🌴", desc: "Tropics, jungles and far shores — palm, sand and distant isles." },

@@ -432,148 +432,148 @@
     "icon": "/images/items/chainmail_leg_armor_t6.png"
   },
   {
-    "id": "iron_head_armor_1",
-    "name": "Apprentice's Iron Helmet",
-    "familyId": "iron_head_armor",
+    "id": "metal_head_armor_1",
+    "name": "Apprentice's Copper Helmet",
+    "familyId": "metal_head_armor",
     "tier": 1,
     "description": "A simple, rounded helm of dull copper with minimal ornamentation, the first helmet of many young smiths.",
-    "icon": "/images/items/iron_head_armor_t1.png"
+    "icon": "/images/items/metal_head_armor_t1.png"
   },
   {
-    "id": "iron_head_armor_2",
-    "name": "Steelbound Helmet",
-    "familyId": "iron_head_armor",
+    "id": "metal_head_armor_2",
+    "name": "Bronzebound Helmet",
+    "familyId": "metal_head_armor",
     "tier": 2,
     "description": "A sturdy, angular helmet bound in burnished bronze bands, solid and plainly made.",
-    "icon": "/images/items/iron_head_armor_t2.png"
+    "icon": "/images/items/metal_head_armor_t2.png"
   },
   {
-    "id": "iron_head_armor_3",
+    "id": "metal_head_armor_3",
     "name": "Warforged Iron Helmet",
-    "familyId": "iron_head_armor",
+    "familyId": "metal_head_armor",
     "tier": 3,
     "description": "A robust, militaristic helmet of polished iron, heavy with rivets and reinforced plates.",
-    "icon": "/images/items/iron_head_armor_t3.png"
+    "icon": "/images/items/metal_head_armor_t3.png"
   },
   {
-    "id": "iron_head_armor_4",
-    "name": "Ironheart Helmet",
-    "familyId": "iron_head_armor",
+    "id": "metal_head_armor_4",
+    "name": "Silverheart Helmet",
+    "familyId": "metal_head_armor",
     "tier": 4,
     "description": "A bold, crested helmet with a heart-shaped brow, bearing silver sigils that glow with steady magic.",
-    "icon": "/images/items/iron_head_armor_t4.png"
+    "icon": "/images/items/metal_head_armor_t4.png"
   },
   {
-    "id": "iron_head_armor_5",
-    "name": "Ironbound Helmet",
-    "familyId": "iron_head_armor",
+    "id": "metal_head_armor_5",
+    "name": "Goldbound Helmet",
+    "familyId": "metal_head_armor",
     "tier": 5,
     "description": "A thick, reinforced helm wrapped in heavy gold bands, etched with arcane patterns of old power.",
-    "icon": "/images/items/iron_head_armor_t5.png"
+    "icon": "/images/items/metal_head_armor_t5.png"
   },
   {
-    "id": "iron_head_armor_6",
-    "name": "Deathless Iron Helmet",
-    "familyId": "iron_head_armor",
+    "id": "metal_head_armor_6",
+    "name": "Deathless Star Metal Helmet",
+    "familyId": "metal_head_armor",
     "tier": 6,
     "description": "A formidable helm with skeletal motifs, veined with ghostly star metal that glows with unnatural energy.",
-    "icon": "/images/items/iron_head_armor_t6.png"
+    "icon": "/images/items/metal_head_armor_t6.png"
   },
   {
-    "id": "iron_chest_armor_1",
-    "name": "Apprentice's Iron Breastplate",
-    "familyId": "iron_chest_armor",
+    "id": "metal_chest_armor_1",
+    "name": "Apprentice's Copper Breastplate",
+    "familyId": "metal_chest_armor",
     "tier": 1,
     "description": "A plain chestplate of copper panels with simple leather straps, sturdy enough for a first campaign.",
-    "icon": "/images/items/iron_chest_armor_t1.png"
+    "icon": "/images/items/metal_chest_armor_t1.png"
   },
   {
-    "id": "iron_chest_armor_2",
-    "name": "Steelbound Breastplate",
-    "familyId": "iron_chest_armor",
+    "id": "metal_chest_armor_2",
+    "name": "Bronzebound Breastplate",
+    "familyId": "metal_chest_armor",
     "tier": 2,
     "description": "A reinforced breastplate of overlapping bronze segments, riveted firmly and built for hard use.",
-    "icon": "/images/items/iron_chest_armor_t2.png"
+    "icon": "/images/items/metal_chest_armor_t2.png"
   },
   {
-    "id": "iron_chest_armor_3",
+    "id": "metal_chest_armor_3",
     "name": "Warforged Iron Breastplate",
-    "familyId": "iron_chest_armor",
+    "familyId": "metal_chest_armor",
     "tier": 3,
     "description": "A massive, militarized breastplate of heavy iron, set with studs and dented by countless blows.",
-    "icon": "/images/items/iron_chest_armor_t3.png"
+    "icon": "/images/items/metal_chest_armor_t3.png"
   },
   {
-    "id": "iron_chest_armor_4",
-    "name": "Ironheart Breastplate",
-    "familyId": "iron_chest_armor",
+    "id": "metal_chest_armor_4",
+    "name": "Silverheart Breastplate",
+    "familyId": "metal_chest_armor",
     "tier": 4,
     "description": "A broad chestplate with a sculpted heart plate, inscribed with silver glyphs that shine with warding magic.",
-    "icon": "/images/items/iron_chest_armor_t4.png"
+    "icon": "/images/items/metal_chest_armor_t4.png"
   },
   {
-    "id": "iron_chest_armor_5",
-    "name": "Ironbound Breastplate",
-    "familyId": "iron_chest_armor",
+    "id": "metal_chest_armor_5",
+    "name": "Goldbound Breastplate",
+    "familyId": "metal_chest_armor",
     "tier": 5,
     "description": "A heavy, ribbed breastplate bound with raised gold edges and swirling wards of old enchantment.",
-    "icon": "/images/items/iron_chest_armor_t5.png"
+    "icon": "/images/items/metal_chest_armor_t5.png"
   },
   {
-    "id": "iron_chest_armor_6",
-    "name": "Deathless Iron Breastplate",
-    "familyId": "iron_chest_armor",
+    "id": "metal_chest_armor_6",
+    "name": "Deathless Star Metal Breastplate",
+    "familyId": "metal_chest_armor",
     "tier": 6,
     "description": "A battle-worn, ornate breastplate marked with symbols of immortality, shimmering with spectral star metal.",
-    "icon": "/images/items/iron_chest_armor_t6.png"
+    "icon": "/images/items/metal_chest_armor_t6.png"
   },
   {
-    "id": "iron_leg_armor_1",
-    "name": "Apprentice's Iron Greaves",
-    "familyId": "iron_leg_armor",
+    "id": "metal_leg_armor_1",
+    "name": "Apprentice's Copper Greaves",
+    "familyId": "metal_leg_armor",
     "tier": 1,
     "description": "Simple greaves of copper shells covering the shins, plain and practical.",
-    "icon": "/images/items/iron_leg_armor_t1.png"
+    "icon": "/images/items/metal_leg_armor_t1.png"
   },
   {
-    "id": "iron_leg_armor_2",
-    "name": "Steelbound Greaves",
-    "familyId": "iron_leg_armor",
+    "id": "metal_leg_armor_2",
+    "name": "Bronzebound Greaves",
+    "familyId": "metal_leg_armor",
     "tier": 2,
     "description": "Protective leg armor of layered bronze plates, strapped tight and built to endure.",
-    "icon": "/images/items/iron_leg_armor_t2.png"
+    "icon": "/images/items/metal_leg_armor_t2.png"
   },
   {
-    "id": "iron_leg_armor_3",
+    "id": "metal_leg_armor_3",
     "name": "Warforged Iron Greaves",
-    "familyId": "iron_leg_armor",
+    "familyId": "metal_leg_armor",
     "tier": 3,
     "description": "Sturdy, craftsman greaves of solid iron flex plates, fastened with heavy rivets.",
-    "icon": "/images/items/iron_leg_armor_t3.png"
+    "icon": "/images/items/metal_leg_armor_t3.png"
   },
   {
-    "id": "iron_leg_armor_4",
-    "name": "Ironheart Greaves",
-    "familyId": "iron_leg_armor",
+    "id": "metal_leg_armor_4",
+    "name": "Silverheart Greaves",
+    "familyId": "metal_leg_armor",
     "tier": 4,
     "description": "Sculpted greaves with a raised heart design, magic-forged in gleaming silver.",
-    "icon": "/images/items/iron_leg_armor_t4.png"
+    "icon": "/images/items/metal_leg_armor_t4.png"
   },
   {
-    "id": "iron_leg_armor_5",
-    "name": "Ironbound Greaves",
-    "familyId": "iron_leg_armor",
+    "id": "metal_leg_armor_5",
+    "name": "Goldbound Greaves",
+    "familyId": "metal_leg_armor",
     "tier": 5,
     "description": "Heavily reinforced greaves wrapped in golden bands and mystical scrollwork.",
-    "icon": "/images/items/iron_leg_armor_t5.png"
+    "icon": "/images/items/metal_leg_armor_t5.png"
   },
   {
-    "id": "iron_leg_armor_6",
-    "name": "Deathless Iron Greaves",
-    "familyId": "iron_leg_armor",
+    "id": "metal_leg_armor_6",
+    "name": "Deathless Star Metal Greaves",
+    "familyId": "metal_leg_armor",
     "tier": 6,
     "description": "Haunted greaves with skeletal engravings, glowing with phantasmal star metal brilliance.",
-    "icon": "/images/items/iron_leg_armor_t6.png"
+    "icon": "/images/items/metal_leg_armor_t6.png"
   },
   {
     "id": "ebony_head_armor_1",

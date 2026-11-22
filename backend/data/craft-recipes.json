@@ -38,7 +38,7 @@
     "blueprintFamilyId": "blueprint_reinforced_wooden_shield"
   },
   {
-    "familyId": "iron_shield",
+    "familyId": "metal_shield",
     "ingredients": [
       {
         "category": "processed",
@@ -54,7 +54,7 @@
       }
     ],
     "tool": "anvil",
-    "blueprintFamilyId": "blueprint_iron_shield"
+    "blueprintFamilyId": "blueprint_metal_shield"
   },
   {
     "familyId": "ebony_shield",
@@ -304,7 +304,7 @@
     "blueprintFamilyId": "blueprint_chainmail_leg_armor"
   },
   {
-    "familyId": "iron_head_armor",
+    "familyId": "metal_head_armor",
     "ingredients": [
       {
         "category": "processed",
@@ -314,10 +314,10 @@
       }
     ],
     "tool": "anvil",
-    "blueprintFamilyId": "blueprint_iron_head_armor"
+    "blueprintFamilyId": "blueprint_metal_head_armor"
   },
   {
-    "familyId": "iron_chest_armor",
+    "familyId": "metal_chest_armor",
     "ingredients": [
       {
         "category": "processed",
@@ -327,10 +327,10 @@
       }
     ],
     "tool": "anvil",
-    "blueprintFamilyId": "blueprint_iron_chest_armor"
+    "blueprintFamilyId": "blueprint_metal_chest_armor"
   },
   {
-    "familyId": "iron_leg_armor",
+    "familyId": "metal_leg_armor",
     "ingredients": [
       {
         "category": "processed",
@@ -340,7 +340,7 @@
       }
     ],
     "tool": "anvil",
-    "blueprintFamilyId": "blueprint_iron_leg_armor"
+    "blueprintFamilyId": "blueprint_metal_leg_armor"
   },
   {
     "familyId": "ebony_head_armor",
@@ -1913,7 +1913,7 @@
       },
       {
         "category": "final",
-        "familyId": "iron_spikes",
+        "familyId": "metal_spikes",
         "qty": 2,
         "consumed": true
       }
@@ -2107,7 +2107,7 @@
     "blueprintFamilyId": "blueprint_hourglass"
   },
   {
-    "familyId": "iron_spikes",
+    "familyId": "metal_spikes",
     "ingredients": [
       {
         "category": "processed",

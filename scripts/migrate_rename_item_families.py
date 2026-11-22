@@ -50,41 +50,53 @@ RENAMES = {
     "meteoric_iron_leg_armor": "meteoric_leg_armor",
     "meteoric_iron_shield": "meteoric_shield",
 }
-# A whole family id inside an id or path: "axe_stone", "axe_stone_3",
-# "blueprint_axe_stone_3", "/images/items/axe_stone_t3.png" - never part of a
-# longer word.
-_OLD = re.compile(
-    r"(?<![A-Za-z0-9])(" + "|".join(sorted(map(re.escape, RENAMES), key=len, reverse=True)) + r")(?![A-Za-z])"
-)
-
 # The authors' own texts are never rewritten.
 SKIP_COLLECTIONS = {"twine_stories", "twine_review", "twine_rejected", "story_snapshots"}
 
 
-def renamed(value):
-    """`value` with every old family id swapped, in strings and dict keys.
-    Returns (new value, number of swaps)."""
-    if isinstance(value, str):
-        return _OLD.subn(lambda m: RENAMES[m.group(1)], value)
-    if isinstance(value, dict):
-        out, count = {}, 0
-        for key, item in value.items():
-            new_key, n_key = renamed(key) if isinstance(key, str) else (key, 0)
-            new_item, n_item = renamed(item)
-            out[new_key] = new_item
-            count += n_key + n_item
-        return out, count
-    if isinstance(value, list):
-        out, count = [], 0
-        for item in value:
-            new_item, n = renamed(item)
-            out.append(new_item)
-            count += n
-        return out, count
-    return value, 0
+def make_renamer(renames: dict, not_after: tuple = ()):
+    """A function giving (value with every old family id swapped, number of
+    swaps), in strings and dict keys. A whole family id inside an id or path:
+    "axe_stone", "axe_stone_3", "blueprint_axe_stone_3",
+    "/images/items/axe_stone_t3.png" - never part of a longer word, and never
+    right after one of `not_after` (such as "meteoric_")."""
+    guards = "".join(f"(?<!{re.escape(prefix)})" for prefix in not_after)
+    pattern = re.compile(
+        r"(?<![A-Za-z0-9])" + guards + "("
+        + "|".join(sorted(map(re.escape, renames), key=len, reverse=True))
+        + r")(?![A-Za-z])"
+    )
+
+    def renamed(value):
+        if isinstance(value, str):
+            return pattern.subn(lambda m: renames[m.group(1)], value)
+        if isinstance(value, dict):
+            out, count = {}, 0
+            for key, item in value.items():
+                new_key, n_key = renamed(key) if isinstance(key, str) else (key, 0)
+                new_item, n_item = renamed(item)
+                out[new_key] = new_item
+                count += n_key + n_item
+            return out, count
+        if isinstance(value, list):
+            out, count = [], 0
+            for item in value:
+                new_item, n = renamed(item)
+                out.append(new_item)
+                count += n
+            return out, count
+        return value, 0
+
+    return renamed
 
 
-async def main(apply: bool) -> None:
+renamed = make_renamer(RENAMES)
+
+
+async def migrate(renamer, apply: bool) -> None:
+    """Rewrites every stored id `renamer` changes, in every collection except
+    the authors' story texts; each document only if what it changes still
+    holds what was read. Story texts that still use old ids are listed."""
     db = get_database()
     documents = written = skipped = 0
     for name in sorted(await db.list_collection_names()):
@@ -95,7 +107,7 @@ async def main(apply: bool) -> None:
             for field, value in doc.items():
                 if field == "_id":
                     continue
-                new_value, swaps = renamed(value)
+                new_value, swaps = renamer(value)
                 if swaps:
                     changes[field] = (value, new_value, swaps)
             if not changes:
@@ -113,11 +125,20 @@ async def main(apply: bool) -> None:
                 else:
                     skipped += 1
                     print("  changed meanwhile - skipped, run again")
+    for name in sorted(SKIP_COLLECTIONS):
+        async for doc in db[name].find({}, {"name": 1, "storyId": 1, "passages": 1}):
+            _, swaps = renamer(doc.get("passages", []))
+            if swaps:
+                print(f"  story text not rewritten, uses old ids {swaps}x: {name} {doc.get('storyId') or doc['_id']} ({doc.get('name', '')})")
     if apply:
         print(f"{documents} document(s) with old ids: {written} updated, {skipped} skipped")
     else:
         print(f"{documents} document(s) would be updated")
         print("Dry run - nothing written. Run with --apply to write.")
+
+
+async def main(apply: bool) -> None:
+    await migrate(renamed, apply)
 
 
 if __name__ == "__main__":

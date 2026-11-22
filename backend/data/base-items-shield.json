@@ -96,52 +96,52 @@
     "icon": "/images/items/reinforced_wooden_shield_t6.png"
   },
   {
-    "id": "iron_shield_1",
-    "name": "Apprentice's Iron Shield",
-    "familyId": "iron_shield",
+    "id": "metal_shield_1",
+    "name": "Apprentice's Copper Shield",
+    "familyId": "metal_shield",
     "tier": 1,
-    "description": "A round, battered shield of patchwork iron plates, dented and rusted from long neglect.",
-    "icon": "/images/items/iron_shield_t1.png"
+    "description": "A round, battered shield of patchwork copper plates, dented and rusted from long neglect.",
+    "icon": "/images/items/metal_shield_t1.png"
   },
   {
-    "id": "iron_shield_2",
-    "name": "Steelbound Shield",
-    "familyId": "iron_shield",
+    "id": "metal_shield_2",
+    "name": "Bronzebound Shield",
+    "familyId": "metal_shield",
     "tier": 2,
     "description": "A heavy, reinforced shield with a broad bronze face and a sturdy rim.",
-    "icon": "/images/items/iron_shield_t2.png"
+    "icon": "/images/items/metal_shield_t2.png"
   },
   {
-    "id": "iron_shield_3",
+    "id": "metal_shield_3",
     "name": "Warforged Iron Shield",
-    "familyId": "iron_shield",
+    "familyId": "metal_shield",
     "tier": 3,
     "description": "A militaristic, rectangular shield with a heavy iron core and studded face.",
-    "icon": "/images/items/iron_shield_t3.png"
+    "icon": "/images/items/metal_shield_t3.png"
   },
   {
-    "id": "iron_shield_4",
-    "name": "Ironheart Shield",
-    "familyId": "iron_shield",
+    "id": "metal_shield_4",
+    "name": "Silverheart Shield",
+    "familyId": "metal_shield",
     "tier": 4,
     "description": "A sturdy, heart-shaped shield etched with silver glyphs that glow with protective magic.",
-    "icon": "/images/items/iron_shield_t4.png"
+    "icon": "/images/items/metal_shield_t4.png"
   },
   {
-    "id": "iron_shield_5",
-    "name": "Ironbound Shield",
-    "familyId": "iron_shield",
+    "id": "metal_shield_5",
+    "name": "Goldbound Shield",
+    "familyId": "metal_shield",
     "tier": 5,
     "description": "A solid, banded shield inlaid with flowing gold and gilded decorations.",
-    "icon": "/images/items/iron_shield_t5.png"
+    "icon": "/images/items/metal_shield_t5.png"
   },
   {
-    "id": "iron_shield_6",
-    "name": "Deathless Iron Shield",
-    "familyId": "iron_shield",
+    "id": "metal_shield_6",
+    "name": "Deathless Star Metal Shield",
+    "familyId": "metal_shield",
     "tier": 6,
     "description": "A sinister shield with skeletal motifs, pulsing with the eerie power of star metal.",
-    "icon": "/images/items/iron_shield_t6.png"
+    "icon": "/images/items/metal_shield_t6.png"
   },
   {
     "id": "ebony_shield_1",

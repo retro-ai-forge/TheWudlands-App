@@ -1,5 +1,5 @@
 """
-Every armor piece has its own blueprint (blueprint_iron_head_armor, ...),
+Every armor piece has its own blueprint (blueprint_metal_head_armor, ...),
 no blueprint covers a whole set any more, and the migration turns an old set
 blueprint into the chest piece's of the same tier.
 """
@@ -45,7 +45,7 @@ def test_piece_blueprints_exist_for_every_tier_named_after_the_piece():
 def test_creation_offers_each_piece_separately():
     pools = craft_catalog.resolve_blueprint_trapping_options(["armorer"]).pools
     items = {i.id for p in pools for i in p.items}
-    assert {"blueprint_iron_head_armor_1", "blueprint_iron_chest_armor_1", "blueprint_iron_leg_armor_1"} <= items
+    assert {"blueprint_metal_head_armor_1", "blueprint_metal_chest_armor_1", "blueprint_metal_leg_armor_1"} <= items
 
 
 def _migration():
@@ -59,8 +59,8 @@ def _migration():
 def test_migration_keeps_the_chest_piece_of_an_old_set_blueprint():
     split = _migration().split_armor_blueprints
     assert split(["blueprint_iron_2", "blueprint_kiln_1", "blueprint_meteoric_iron_6"]) == [
-        "blueprint_iron_chest_armor_2", "blueprint_kiln_1", "blueprint_meteoric_chest_armor_6"]
+        "blueprint_metal_chest_armor_2", "blueprint_kiln_1", "blueprint_meteoric_chest_armor_6"]
     # Shields and already split ids are left alone; running twice changes nothing.
-    already = ["blueprint_iron_shield_1", "blueprint_iron_head_armor_1", "blueprint_iron_chest_armor_1"]
+    already = ["blueprint_metal_shield_1", "blueprint_metal_head_armor_1", "blueprint_metal_chest_armor_1"]
     assert split(already) == already
     assert split(["blueprint_cloth_1", "blueprint_cloth_chest_armor_1"]) == ["blueprint_cloth_chest_armor_1"]
