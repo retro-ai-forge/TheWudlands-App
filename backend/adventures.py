@@ -46,8 +46,8 @@ A story's `$meta_access` decides how players get runs of it:
     free   no counter - play as often as you like
     trial  every player starts with 1 run; buying adds RUNS_PER_PURCHASE
     paid   every player starts with 0 runs; buying adds RUNS_PER_PURCHASE
-Starting takes a run (refused at 0). Ending at `finished` or `run_away` keeps
-it spent; ending at LastResort (`aborted`, a platform fault) or a start that
+Starting takes a run (refused at 0). Ending at `finished` (any success or
+failure, also one of the Retreat story) keeps it spent; ending at LastResort (`aborted`, a platform fault) or a start that
 fails part-way gives it back. Taking and returning are conditional single-doc
 writes keyed on the session id in `open`, so retries never charge or refund
 twice. Charging at start (not at the end) also stops one remaining run from
@@ -72,7 +72,7 @@ from pymongo.errors import DuplicateKeyError
 from backend import condition, food, foraging
 from backend.character import vital_status_list
 from backend.db import find_one_and_update_checked, get_database
-from backend.twine_graph import LAST_RESORT_PASSAGE, build_story_graph, step_allowed
+from backend.twine_graph import LAST_RESORT_PASSAGE, RETREAT_PASSAGE, build_story_graph, step_allowed
 
 # Hard party-size cap, whatever a story declares in $meta_maxCharNum.
 MAX_PARTY_SIZE = 4
@@ -381,9 +381,34 @@ async def _claim_character(db, address: str, character_id: str, stub: dict) -> O
     return doc
 
 
+async def _count_run_away(db, session: dict) -> None:
+    """Count running away for every member, once: the moment the party clicks
+    Run away (the step from the main story onto Retreat marks the session
+    `ranAway`, record_step). Each member's write is conditional on its
+    adventure link not being marked yet, so calling this again - a retried
+    click, the run's end, recovery after a crash between the two writes -
+    never counts twice; a loop back to Retreat inside the Retreat story never
+    gets here."""
+    for member in session.get("members", []):
+        doc = await find_one_and_update_checked(
+            db.characters,
+            {
+                "address": member["address"],
+                "id": member["characterId"],
+                "availability.adventure.sessionId": session["_id"],
+                "availability.adventure.ranAway": {"$ne": True},
+            },
+            {"$set": {"availability.adventure.ranAway": True}, "$inc": {"stats.adventureRunAway": 1}},
+            return_document=ReturnDocument.AFTER,
+        )
+        if doc is not None:
+            await _sync_pc(db, member["address"], member["characterId"], doc)
+
+
 async def _release_character(
     db, address: str, character_id: str, session_id: str,
     outcome: Optional[str] = None, story_id: Optional[str] = None,
+    ran_away: bool = False,
 ) -> None:
     """Take a character out of a session and apply the run's outcome to it.
 
@@ -392,8 +417,14 @@ async def _release_character(
     camp (temporary adventure storage) is discarded once the character is
     out, as when an adventure is ended by hand.
 
-    Food (backend.food), only for a real ending (finished / run away - not a
-    failed start, a recovered orphan or a platform fault): every preserved
+    Counters: a run whose party chose Retreat (`ran_away`) was counted as
+    run away the moment they clicked it (_count_run_away) and never counts as
+    finished too - the stats tab's Stalwart/Craven bar adds the two up; any
+    other ending counts as finished. Every ending, the Retreat story's
+    failures too, adds the story to completedStories.
+
+    Food (backend.food), only for a real ending (finished - not a failed
+    start, a recovered orphan or a platform fault): every preserved
     stack in the bags goes in that same write; a ration is used up afterwards
     with its loss chance - both only on the release that actually happened.
     Each member's provisions (ration / preserved / none) are written to the
@@ -402,7 +433,7 @@ async def _release_character(
     food_unset: dict = {}
     ration_path: Optional[str] = None
     provisions: Optional[str] = None
-    if outcome in ("finished", "run_away"):
+    if outcome == "finished":
         before = await db.characters.find_one(
             {"address": address, "id": character_id, "availability.adventure.sessionId": session_id}
         )
@@ -413,12 +444,10 @@ async def _release_character(
         "availability.resting": False,
         "availability.restLocation": None,
     }}
-    if outcome == "finished":
+    if outcome == "finished" and not ran_away:
         update["$inc"] = {"stats.adventureFinished": 1}
-        if story_id:
-            update["$addToSet"] = {"completedStories": story_id}
-    elif outcome == "run_away":
-        update["$inc"] = {"stats.adventureRunAway": 1}
+    if outcome == "finished" and story_id:
+        update["$addToSet"] = {"completedStories": story_id}
     if food_unset:
         update["$unset"] = food_unset
 
@@ -556,10 +585,12 @@ async def _finalize(db, session: dict) -> dict:
         else:
             await _settle_run(db, session)
 
+        if session.get("ranAway"):
+            await _count_run_away(db, session)  # in case the click's count was cut off
         for member in session.get("members", []):
             await _release_character(
                 db, member["address"], member["characterId"], session_id,
-                session.get("outcome"), session.get("storyId"),
+                session.get("outcome"), session.get("storyId"), bool(session.get("ranAway")),
             )
 
         await db.adventure_sessions.update_one(
@@ -832,6 +863,8 @@ async def record_step(
     if status != "active":
         raise StepConflict(_session_view(session))
     if _is_replay(session, seq, from_passage, to_passage):
+        if session.get("ranAway"):
+            await _count_run_away(db, session)  # in case the first click's count was cut off
         return _session_view(session)
     if seq != session.get("seq") or from_passage != session.get("passage"):
         raise StepConflict(_session_view(session))
@@ -852,6 +885,12 @@ async def record_step(
         "trail": (session.get("trail", []) + [to_passage])[-TRAIL_LENGTH:],
         "updatedAt": now,
     }
+    # Clicking Run away (from the main story onto Retreat) is running away:
+    # marked in the same conditional write as the step, and counted for the
+    # members right after it (_count_run_away). A way back to Retreat inside
+    # the Retreat story comes from a Retreat scene, so it never counts again.
+    if to_passage == RETREAT_PASSAGE and from_passage in graph.get("mainScenes", []):
+        changes["ranAway"] = True
     if outcome:
         changes.update({
             "status": "ending",
@@ -881,6 +920,8 @@ async def record_step(
             return _session_view(current)
         raise StepConflict(_session_view(current) if current else None)
 
+    if changes.get("ranAway"):
+        await _count_run_away(db, updated)
     if outcome:
         return await _finalize(db, updated)
     return _session_view(updated)

@@ -6,6 +6,7 @@ import Image from "next/image";
 import { PageVersionTag } from "../main/PageVersionTag";
 import styles from "./page.module.css";
 import h from "@/app/styles/headings.module.css";
+import { SOCIAL_LINKS } from "@/app/lib/seo";
 
 export default function Create() {
   // Pick one of three fixed layouts by viewport width — bubbles keep a fixed
@@ -45,6 +46,33 @@ export default function Create() {
           plays them. We are starting with <strong>dark fantasy</strong> — it is
           a wide, open genre. Get creative.
         </p>
+
+        <div className={styles.telegramRow}>
+          <p className={styles.authorIntro}>
+            <strong>Join the storytellers on Telegram.</strong> Ask questions, get
+            help with the editor and meet other writers:{" "}
+            <a
+              href={SOCIAL_LINKS.telegram}
+              target="_blank"
+              rel="noopener noreferrer"
+              className={styles.inlineLink}
+            >
+              The Wudlands on Telegram
+            </a>
+            , or scan the code with your phone.
+          </p>
+          <a href={SOCIAL_LINKS.telegram} target="_blank" rel="noopener noreferrer">
+            {/* Made from SOCIAL_LINKS.telegram; served as is, so the code stays sharp. */}
+            <Image
+              src="/images/create/telegram-qr.png"
+              width={148}
+              height={148}
+              alt="QR code to join The Wudlands on Telegram"
+              className={styles.telegramQr}
+              unoptimized
+            />
+          </a>
+        </div>
 
         <div className={styles.imageFrame}>
           <Image

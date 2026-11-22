@@ -33,15 +33,14 @@ _RESERVED_PASSAGES = {
     "StoryDisplayTitle",
 }
 
-# $isEnding records how a run concluded. true = the story officially ended, so
-# the playthrough counts and the player is charged; a terminal (link-less) story
-# passage must carry it so the story is known to be completable.
-_ENDING_MACRO = "<<set $isEnding to true>>"
-
-# false = the run ended through a platform fault (a broken/missing scene routed
-# the player to LastResort), so the playthrough does NOT count and the player is
-# not charged. LastResort must carry this.
-_NOT_ENDING_MACRO = "<<set $isEnding to false>>"
+# How a run ends is the $isEnding value the ending scene sets (the story check
+# reads it, story_rules.ending_kind): "success" / "failure" (a name may follow,
+# "success:dragon_slain"); the Retreat story ends only in failures, and an
+# ending in the Retreat graph is what makes a run a run-away. "lastresort" is
+# LastResort's - the engine failed, the run is given back.
+# Every dead end of a story carries one; docs/STORY-RULES.md "Endings".
+ENDING_EXAMPLE = '<<set $isEnding to "success">>'
+LAST_RESORT_ENDING = '<<set $isEnding to "lastresort">>'
 
 # The always-available voluntary-exit scene and the fault-recovery scene. Both
 # are required by the submit validator.
@@ -147,10 +146,13 @@ def build_story_graph(passages: list, story_data: dict) -> dict:
         links      - {passage: [targets]} for every playable passage: its
                      [[links]] and image links, plus the ways on its commands
                      write (story_rules.macro_exits)
-        endings    - {passage: "finished" | "run_away"} for every terminal scene
-                     marked with $isEnding true. Endings reached from the start
-                     passage finish the story; those in the Retreat graph mean
-                     the party ran away.
+        endings    - {passage: "finished"} for every dead end that sets
+                     $isEnding, in the main story or the Retreat story (its
+                     endings are failures like any other; choosing Retreat is
+                     what counts as running away, adventures.record_step)
+        endingValues - {passage: [values]}: what each of those sets
+                     ("success:dragon_slain", "failure"; several when its
+                     <<if>> branches end differently)
         allowRunAway - whether Retreat may be entered from main-story scenes
                      ($meta_allowRunAway in StoryInit, the story default)
         noRetreat  - main-story scenes where Retreat can't be entered: a scene
@@ -169,18 +171,22 @@ def build_story_graph(passages: list, story_data: dict) -> dict:
     # write (a button's quoted destination, <<goto>>, random jumps), so a step
     # along one of them is allowed. Imported here: story_rules imports this
     # module for the special scene names.
-    from backend.story_rules import macro_exits
+    from backend.story_rules import scene_outline
 
     links = {}
+    values = {}
     for name, p in by_name.items():
         if name in _RESERVED_PASSAGES or name == TEST_CHARACTERS_PASSAGE:
             continue
         text = p.get("text", "")
         targets = passage_links(text)
-        for target in macro_exits(name, text):
+        exits, endings = scene_outline(name, text)
+        for target in exits:
             if target in by_name and target not in targets:
                 targets.append(target)
         links[name] = targets
+        if endings:
+            values[name] = endings
 
     def reachable_from(root: str) -> set:
         seen: set = set()
@@ -197,9 +203,11 @@ def build_story_graph(passages: list, story_data: dict) -> dict:
     retreat = reachable_from(RETREAT_PASSAGE)
 
     endings = {}
+    ending_values = {}
     for name in main | retreat:
-        if not links.get(name) and _ENDING_MACRO in by_name[name].get("text", ""):
-            endings[name] = "run_away" if name in retreat else "finished"
+        if not links.get(name) and name in values:
+            endings[name] = "finished"
+            ending_values[name] = values[name]
 
     story_init = by_name.get("StoryInit", {}).get("text", "")
     allow_run_away = _truthy(_extract_set_value(story_init, "meta_allowRunAway"))
@@ -208,6 +216,7 @@ def build_story_graph(passages: list, story_data: dict) -> dict:
         "start": start,
         "links": links,
         "endings": endings,
+        "endingValues": ending_values,
         "mainScenes": sorted(main),
         "allowRunAway": allow_run_away,
         "noRetreat": sorted(

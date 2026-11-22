@@ -609,6 +609,30 @@
   margin-bottom: 1.5rem;
 }
 
+/* Telegram invite: the text, and a QR code to scan with a phone beside it
+   (below it on narrow screens). */
+.telegramRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 1rem 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.telegramRow .authorIntro {
+  flex: 1 1 260px;
+  margin-bottom: 0;
+}
+
+/* Exactly half the image's 296 px, so every module stays a sharp 4 px square. */
+.telegramQr {
+  display: block;
+  width: 148px;
+  height: 148px;
+  image-rendering: pixelated;
+  border: 1px solid #7a6a3a;
+}
+
 .steps {
   list-style: none;
   margin: 0 0 2.5rem;

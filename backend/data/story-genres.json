@@ -1,0 +1,220 @@
+{
+  "_comment": "Story genres: the curated story tags. A submitted story needs at least one of them (backend/story_genres.py); authors may add any other words too, which the story list shows under 'other'. The review page draws them with these colours and the icons in public/icons/tag-<id>.png.",
+  "categories": [
+    {
+      "title": "Combat & Peril",
+      "genres": [
+        {
+          "id": "gore",
+          "color": "#b8392f",
+          "desc": "Graphic violence and viscera. Not for the squeamish."
+        },
+        {
+          "id": "combat",
+          "color": "#b8392f",
+          "desc": "Fights, duels and battles — blades drawn and blood spilled."
+        },
+        {
+          "id": "beast",
+          "color": "#b8392f",
+          "desc": "Monsters and wild creatures — the hunt, the lair, the maw."
+        },
+        {
+          "id": "lycan",
+          "color": "#b8392f",
+          "desc": "Werewolves and shapeshifters — the beast within, cursed by the moon."
+        },
+        {
+          "id": "evil",
+          "color": "#b8392f",
+          "desc": "Villainy and malice — dark powers, cruelty and the foe's own schemes."
+        },
+        {
+          "id": "undead",
+          "color": "#b8392f",
+          "desc": "Skeletons, ghosts and the risen dead; graves that don't stay shut."
+        }
+      ]
+    },
+    {
+      "title": "Magic & the Uncanny",
+      "genres": [
+        {
+          "id": "magic",
+          "color": "#a074e6",
+          "desc": "Spells, enchantment and the arcane; sorcerers, rituals and runes."
+        },
+        {
+          "id": "fate",
+          "color": "#9163d6",
+          "desc": "Chance and destiny — dice, fortune and the turning of the wheel."
+        },
+        {
+          "id": "oracle",
+          "color": "#8456c4",
+          "desc": "Visions and prophecy — seers, omens and glimpses of what comes."
+        },
+        {
+          "id": "horror",
+          "color": "#7d52b5",
+          "desc": "Dread and the supernatural — things that stalk the dark."
+        },
+        {
+          "id": "omen",
+          "color": "#6a47a0",
+          "desc": "Dark portents — curses foretold and signs of ill fortune."
+        },
+        {
+          "id": "mystery",
+          "color": "#5c3f8f",
+          "desc": "Secrets, clues and investigation; a whodunit to unravel."
+        }
+      ]
+    },
+    {
+      "title": "Guile, Wits & Reward",
+      "genres": [
+        {
+          "id": "treasure",
+          "color": "#38bcb0",
+          "desc": "Loot, hoards and glittering reward — greed and its consequences."
+        },
+        {
+          "id": "puzzle",
+          "color": "#30a79e",
+          "desc": "Riddles, locks, traps and clever problem-solving over brute force."
+        },
+        {
+          "id": "trickster",
+          "color": "#2a8e86",
+          "desc": "Cunning and mischief — cons, disguises and clever deceit."
+        },
+        {
+          "id": "armor",
+          "color": "#26756e",
+          "desc": "Armoured foes, sieges and holding the line — defence over daring."
+        },
+        {
+          "id": "stealth",
+          "color": "#215f59",
+          "desc": "Sneaking and infiltration — shadows, silent blades and not being seen."
+        }
+      ]
+    },
+    {
+      "title": "Journey & Setting",
+      "genres": [
+        {
+          "id": "adventure",
+          "color": "#4aa85c",
+          "desc": "Grand journeys of danger and discovery across the land."
+        },
+        {
+          "id": "travel",
+          "color": "#5f9a4c",
+          "desc": "Long roads and wilderness treks — the journey matters as much as the goal."
+        },
+        {
+          "id": "survival",
+          "color": "#74a046",
+          "desc": "Scarcity and the elements: shelter, hunger, cold and keeping alive."
+        },
+        {
+          "id": "dungeon",
+          "color": "#4f7e54",
+          "desc": "Torch-lit crawls through crypts, caverns and the dark below."
+        },
+        {
+          "id": "relic",
+          "color": "#5a8a5e",
+          "desc": "Ancient artefacts — lost relics of power and the ruins that hide them."
+        },
+        {
+          "id": "sea",
+          "color": "#3f9e7c",
+          "desc": "Oceans, rivers and voyages — waves, ships and what swims beneath."
+        },
+        {
+          "id": "mountain",
+          "color": "#6f8c6f",
+          "desc": "Peaks, cliffs and high passes — thin air and long, hard climbs."
+        },
+        {
+          "id": "cave",
+          "color": "#3c6346",
+          "desc": "Caverns and tunnels — tight, dark spaces beneath the world."
+        },
+        {
+          "id": "island",
+          "color": "#46b56e",
+          "desc": "Tropics, jungles and far shores — palm, sand and distant isles."
+        },
+        {
+          "id": "fire",
+          "color": "#869740",
+          "desc": "Flame and ash — burning, pyromancy, scorched-earth peril."
+        },
+        {
+          "id": "ice",
+          "color": "#74b89a",
+          "desc": "Cold, frost and snow; frozen wastes and chilling peril."
+        }
+      ]
+    },
+    {
+      "title": "Tone",
+      "genres": [
+        {
+          "id": "comedy",
+          "color": "#d8b23a",
+          "desc": "Humour, wit and absurdity — a tale told with a grin."
+        },
+        {
+          "id": "court",
+          "color": "#c6a23a",
+          "desc": "Courtly intrigue — nobles, politics, scheming and the throne."
+        },
+        {
+          "id": "bard",
+          "color": "#b89a48",
+          "desc": "Song and story — minstrels, legends and a tale well told."
+        },
+        {
+          "id": "tragedy",
+          "color": "#9c8a5e",
+          "desc": "Loss, doom and sorrow; endings that are meant to hurt."
+        },
+        {
+          "id": "romance",
+          "color": "#f179b2",
+          "desc": "Courtship and attraction; a budding romance, matters of the heart."
+        },
+        {
+          "id": "love",
+          "color": "#f179b2",
+          "desc": "Deep affection and devotion — love that drives the whole tale."
+        },
+        {
+          "id": "erotic",
+          "color": "#f179b2",
+          "desc": "Explicit intimacy and desire. Adult content — mature readers only."
+        },
+        {
+          "id": "vampire",
+          "color": "#b03a5e",
+          "desc": "Vampires and blood nobility — seduction, hunger and the long night."
+        }
+      ]
+    },
+    {
+      "title": "Free",
+      "genres": [
+        {
+          "id": "other",
+          "color": "#aab0ba",
+          "desc": "Any you wish — a catch-all for a theme no other tag captures."
+        }
+      ]
+    }
+  ]
+}

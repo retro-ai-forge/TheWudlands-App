@@ -5,6 +5,7 @@ import { PageVersionTag } from "../../main/PageVersionTag";
 import styles from "./page.module.css";
 import h from "@/app/styles/headings.module.css";
 import { LEGEND_PAIRS } from "@/app/lib/legend";
+import { storyItemGroups } from "./storyItems";
 
 export const metadata: Metadata = pageMetadata({
   title: "Story Editor Tutorial",
@@ -68,7 +69,19 @@ const PARTY_EXAMPLE = `The whole party holds the bridge until dawn.
 const RETREAT_EXAMPLE = `:: Retreat
 You turn your back on the crypt and run.
 <<for _i, _c range $char>><<set _c.cowardice += 1>><</for>>
-<<set $isEnding to true>>`;
+<<set $isEnding to "failure:fled">>`;
+
+const ITEM_GROUPS = storyItemGroups();
+const ITEM_COUNT = ITEM_GROUPS.reduce((sum, group) => sum + group.items.length, 0);
+
+const ITEM_EXAMPLE = `<<if $lead.equipment.includes("rope")>>You climb down on your rope.<</if>>
+<<if $lead.equipment.includes("pickaxe_3")>>Your pickaxe bites into the hard rock.<</if>>
+<<for _i, _c range $char>><<if _c.equipment.includes("torch")>><<set _hasLight to true>><</if>><</for>>`;
+
+/** An item id that may break after its underscores on a narrow screen. */
+function breakableId(id: string) {
+  return id.split("_").flatMap((part, i) => (i === 0 ? [part] : [<wbr key={i} />, `_${part}`]));
+}
 
 const CHOICES_EXAMPLE = `:: Armoury
 Which weapon do you draw?
@@ -102,6 +115,61 @@ The old book falls open on its own.
 
 const RANDOM_ODDS_EXAMPLE = `:: Cliff edge
 <<button "Dive in">><<set $roll to random(1, 100)>><<if $roll lte 20>><<goto "Pearl">><<else>><<goto "Shore">><</if>><</button>>`;
+
+const GUTTER_EXAMPLE = `:root { --scene-gutter: 0px; }`;
+
+const PICTURE_ROW_EXAMPLE = `<div class="row">[img[left.webp]][img[right.webp]]</div>`;
+
+const PICTURE_ROW_CSS = `.row { display: flex; gap: 8px; }
+.row img { width: 50%; margin: 0; }`;
+
+const ENDING_EXAMPLE = `:: Throne room
+The queen rises and takes your hand.
+<<set $isEnding to "success:met_queen">>
+
+:: Dungeon
+The door slams shut behind you.
+<<set $isEnding to "failure:captured">>`;
+
+const ENDING_TEASERS_EXAMPLE = `:: StoryInit
+<<set $meta_endings to {
+  "success:met_queen": "The queen remembers your name.",
+  "failure:captured": "The guards dragged you into the dungeon.",
+  "failure:fled": "You turned back at the castle gate."
+}>>`;
+
+const ENDING_BY_CONDITION_EXAMPLE = `:: Treasury
+<<if $gold gte 10>>
+You leave with a heavy purse.<<set $isEnding to "success:rich">>
+<<else>>
+You leave with empty pockets.<<set $isEnding to "failure:poor">>
+<</if>>`;
+
+const ENDING_RETREAT_EXAMPLE = `:: Retreat
+You turn your back on the castle and run.
+<<set $isEnding to "failure:fled">>`;
+
+const ENDING_LAST_RESORT_EXAMPLE = `:: LastResort
+The tunnel collapses behind you. You crawl out, empty-handed.
+<<set $isEnding to "lastresort">>`;
+
+const ENDING_VALUES = [
+  {
+    value: '"success"',
+    where: "An ending of your story. Every story needs at least one.",
+    run: "The run is used up and counts for the characters who played it.",
+  },
+  {
+    value: '"failure"',
+    where: "An ending of your story, and every ending of your Retreat story.",
+    run: "The run is used up and counts too - it just went badly.",
+  },
+  {
+    value: '"lastresort"',
+    where: "Only the LastResort scene, which must set it.",
+    run: "Something broke: the player gets the run back.",
+  },
+];
 
 const PICK_EXAMPLE = `:: Cliff
 The path ends at a sheer cliff. Someone has to climb up and lower a rope.
@@ -141,6 +209,46 @@ export default function Tutorial() {
           Wudlands story editor. Each section covers one layer of the process —
           from writing your first scene to submitting a finished story.
         </p>
+
+        <div className={styles.download}>
+          <h2 className={h.section}>Start with the Template</h2>
+          <p className={styles.downloadText}>
+            A complete little story to build on. It passes the submit check as it is, so you can test it at once and
+            then replace it scene by scene with your own.
+          </p>
+          <a href="/downloads/wudlands-starter.twee" download className={styles.downloadButton}>
+            Download wudlands-starter.twee
+          </a>
+
+          <h3 className={`${h.sub} ${h.muted}`}>What&apos;s inside</h3>
+          <ul className={styles.downloadList}>
+            <li>
+              <span className={styles.code}>StoryInit</span>: every required setting, each with a comment on what it does, and your
+              story&apos;s endings with their teasers.
+            </li>
+            <li><span className={styles.code}>Start</span>: the first scene, with two links.</li>
+            <li><span className={styles.code}>Arrival</span> and <span className={styles.code}>Lost</span>: a success and a failure ending.</li>
+            <li><span className={styles.code}>Retreat</span>: where the Run away button leads. It ends in a failure.</li>
+            <li><span className={styles.code}>LastResort</span>: where the platform sends a run when something breaks.</li>
+          </ul>
+
+          <h3 className={`${h.sub} ${h.muted}`}>How to start</h3>
+          <ol className={styles.downloadList}>
+            <li>In the story editor&apos;s library, choose Library &gt; Import and pick the downloaded file.</li>
+            <li>
+              Open the story and change <span className={styles.code}>$meta_title</span>, <span className={styles.code}>$meta_description</span> and
+              {" "}<span className={styles.code}>$meta_author</span> in <span className={styles.code}>StoryInit</span>.
+            </li>
+            <li>Write: replace the scenes with your own and add as many as your story needs.</li>
+            <li>
+              Before you submit, go to Twine&apos;s story page with all the story previews and select your story.
+              Under Story, click Tags, the button with the tag icon, and add a genre from the{" "}
+              <Link href="/create/review#story-tags" className={styles.inlineLink}>genre list</Link>, such as
+              {" "}<span className={styles.code}>adventure</span>: every story needs at least one, and the file can&apos;t carry it. Rename,
+              next to it, gives the story its real name.
+            </li>
+          </ol>
+        </div>
 
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
@@ -262,6 +370,63 @@ export default function Tutorial() {
           <pre className={styles.codeBlock}>{RETREAT_EXAMPLE}</pre>
         </section>
 
+        {/* ── Items ───────────────────────────────────────────── */}
+        <section id="items" className={styles.section}>
+          <details className={styles.fold}>
+            <summary className={styles.foldSummary}>
+              <h2 className={h.section}>Items the Characters Carry</h2>
+            </summary>
+            <div className={styles.foldBody}>
+              <p className={styles.body}>
+                A story can ask what the characters carry: <span className={styles.code}>equipment</span> with
+                {" "}<span className={styles.code}>.includes()</span> and an item&apos;s family id, for one character or the whole party.
+              </p>
+              <pre className={styles.codeBlock}>{ITEM_EXAMPLE}</pre>
+              <ul className={styles.ruleList}>
+                <li>
+                  The family id alone, like <span className={styles.code}>rope</span>, is the general check: the item
+                  in any tier. Add a tier for a better one: <span className={styles.code}>pickaxe_3</span> is a pickaxe
+                  of tier 3 or better. Every item comes in tiers 1 to 6.
+                </li>
+                <li>
+                  Write the id, never the name: <span className={styles.code}>&quot;Rope&quot;</span> is refused. The
+                  names below are those of tier 1; each higher tier has its own.
+                </li>
+                <li>
+                  The list is made from the game&apos;s item data, so it always holds what the game has: {ITEM_COUNT} items
+                  today.
+                </li>
+              </ul>
+              <p className={styles.itemJump}>
+                {ITEM_GROUPS.map((group, i) => (
+                  <span key={group.kind}>
+                    <a href={`#items-${group.kind}`} className={styles.inlineLink}>{group.heading}</a>
+                    {i < ITEM_GROUPS.length - 1 && " · "}
+                  </span>
+                ))}
+              </p>
+              {ITEM_GROUPS.map((group) => (
+                <div key={group.kind} id={`items-${group.kind}`} className={styles.itemGroup}>
+                  <h3 className={`${h.sub} ${h.muted}`}>{group.heading} ({group.items.length})</h3>
+                  <table className={`${styles.table} ${styles.itemTable}`}>
+                    <thead>
+                      <tr><th>Family id</th><th>Tier 1 name</th></tr>
+                    </thead>
+                    <tbody>
+                      {group.items.map((item) => (
+                        <tr key={item.familyId}>
+                          <td className={styles.itemId}>{breakableId(item.familyId)}</td>
+                          <td>{item.tierOneName}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              ))}
+            </div>
+          </details>
+        </section>
+
         {/* ── Choices the player picks ────────────────────────── */}
         <section id="choices" className={styles.section}>
           <h2 className={h.section}>Choices the Player Picks</h2>
@@ -343,6 +508,148 @@ export default function Tutorial() {
             <li>
               The player never sees the number, only the scene they end up in.
             </li>
+          </ul>
+        </section>
+
+        {/* ── Text and pictures ───────────────────────────────── */}
+        <section id="text-and-pictures" className={styles.section}>
+          <h2 className={h.section}>Text and Pictures</h2>
+
+          <p className={styles.body}>
+            The platform insets your text 20px from both edges of the scene. Pictures still span the whole width, and
+            the clickable areas on a picture always stay exactly on it, on a phone as on a wide screen.
+          </p>
+          <p className={styles.body}>
+            To change the inset, set <span className={styles.code}>--scene-gutter</span> in your Story Stylesheet (Story &gt; Stylesheet in
+            the editor). This puts the text flush with the edges:
+          </p>
+          <pre className={styles.codeBlock}>{GUTTER_EXAMPLE}</pre>
+          <ul className={styles.ruleList}>
+            <li>Anything from <span className={styles.code}>0px</span> to <span className={styles.code}>48px</span> works; a larger value counts as 48px.</li>
+            <li>
+              You need no <span className={styles.code}>.passage {"{"} padding {"}"}</span> or <span className={styles.code}>.passage img</span> rules for it.
+              Old ones do no harm, but the side padding always follows <span className={styles.code}>--scene-gutter</span>.
+            </li>
+            <li>
+              Clickable areas (<span className={styles.code}>&lt;&lt;area&gt;&gt;</span>) belong to the top-most picture of a scene, and
+              that picture always spans the full width.
+            </li>
+          </ul>
+          <p className={styles.body}>
+            Plain pictures you may lay out with your own classes, such as two side by side:
+          </p>
+          <pre className={styles.codeBlock}>{PICTURE_ROW_EXAMPLE}</pre>
+          <p className={styles.body}>and in the Story Stylesheet:</p>
+          <pre className={styles.codeBlock}>{PICTURE_ROW_CSS}</pre>
+        </section>
+
+        {/* ── Endings ──────────────────────────────────────────── */}
+        <section id="endings" className={styles.section}>
+          <h2 className={h.section}>How Your Story Ends</h2>
+
+          <p className={styles.body}>
+            Every scene without a way on ends the story. It says how the run ended by setting
+            {" "}<span className={styles.code}>$isEnding</span>, and the platform keeps that ending for every character who played it.
+          </p>
+          <pre className={styles.codeBlock}>{ENDING_EXAMPLE}</pre>
+
+          <h3 className={`${h.sub} ${h.muted}`}>The values</h3>
+          <table className={styles.table}>
+            <thead>
+              <tr><th>Value</th><th>Where</th><th>The run</th></tr>
+            </thead>
+            <tbody>
+              {ENDING_VALUES.map((row) => (
+                <tr key={row.value}>
+                  <td className={styles.highlight}>{row.value}</td>
+                  <td>{row.where}</td>
+                  <td>{row.run}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+          <ul className={styles.ruleList}>
+            <li>
+              Give an ending a name after a colon, like <span className={styles.code}>{`"success:met_queen"`}</span>, to tell your endings
+              apart. A letter first, then letters, digits, <span className={styles.code}>_</span> or <span className={styles.code}>-</span>, at most 40 characters.
+              The name is optional: <span className={styles.code}>{`"success"`}</span> on its own is fine too.
+            </li>
+            <li>
+              An ending scene has no links or buttons. A scene that sets <span className={styles.code}>$isEnding</span> and still leads on
+              is refused, and so is a scene without a way on that doesn&apos;t set it.
+            </li>
+            <li>
+              Set it in the ending scene&apos;s own text, so it counts the moment the scene is shown (an
+              {" "}<span className={styles.code}>&lt;&lt;if&gt;&gt;</span> is fine). Never by a click: not in a link&apos;s <span className={styles.code}>[ ]</span> part
+              and not between a link&apos;s or button&apos;s tags. Until the ending scene it isn&apos;t set at all, and
+              nothing may remove it.
+            </li>
+            <li>
+              <span className={styles.code}>true</span> and <span className={styles.code}>false</span> aren&apos;t used any more, and <span className={styles.code}>StoryInit</span> never
+              sets <span className={styles.code}>$isEnding</span>.
+            </li>
+          </ul>
+
+          <h3 className={`${h.sub} ${h.muted}`}>Teasers in StoryInit</h3>
+          <p className={styles.body}>
+            Declare every success and failure once in <span className={styles.code}>StoryInit</span>, each with a teaser: one or two
+            sentences for the characters who reach that ending.
+          </p>
+          <pre className={styles.codeBlock}>{ENDING_TEASERS_EXAMPLE}</pre>
+          <ul className={styles.ruleList}>
+            <li>
+              Every ending your scenes set must be declared here, or the submit check refuses it. The ending
+              scene sets only the name (<span className={styles.code}>{`<<set $isEnding to "success:met_queen">>`}</span>); the teaser
+              never goes there.
+            </li>
+            <li>A teaser is plain text, at most 300 characters. <span className={styles.code}>{`"lastresort"`}</span> needs none.</li>
+            <li>A declared ending that no scene sets is a note for the reviewer.</li>
+          </ul>
+          <p className={styles.soon}>
+            <span className={styles.soonLabel}>Coming soon:</span> the story list shows each character the endings
+            it reached, with their teasers, and follow-up stories can open on them. Only the characters who reached
+            an ending ever see its teaser.
+          </p>
+
+          <h3 className={`${h.sub} ${h.muted}`}>Ending by a condition</h3>
+          <p className={styles.body}>
+            One scene may end differently, depending on what happened before:
+          </p>
+          <pre className={styles.codeBlock}>{ENDING_BY_CONDITION_EXAMPLE}</pre>
+
+          <h3 className={`${h.sub} ${h.muted}`}>When the party runs away</h3>
+          <p className={styles.body}>
+            Running away is a failure like any other. The platform&apos;s Run away button opens your
+            {" "}<span className={styles.code}>Retreat</span> scene, and every ending of the Retreat story is a failure. If your Retreat is a
+            single scene, it sets the failure itself:
+          </p>
+          <pre className={styles.codeBlock}>{ENDING_RETREAT_EXAMPLE}</pre>
+          <ul className={styles.ruleList}>
+            <li>
+              Only the Run away button opens <span className={styles.code}>Retreat</span>: no scene of yours may lead there, not even one of
+              the Retreat story.
+            </li>
+            <li>
+              A success in the Retreat story is refused. Name its failures apart, like
+              {" "}<span className={styles.code}>{`"failure:fled"`}</span>, if a follow-up story should open only for those who fled.
+            </li>
+            <li>
+              Running away counts once in the character&apos;s run-away record, the moment the button is
+              clicked, even if something goes wrong afterwards.
+            </li>
+          </ul>
+
+          <h3 className={`${h.sub} ${h.muted}`}>When something breaks</h3>
+          <p className={styles.body}>
+            If a scene can&apos;t be shown, the platform sends the run to your <span className={styles.code}>LastResort</span> scene and
+            the player gets the run back. Give it a short, fitting end:
+          </p>
+          <pre className={styles.codeBlock}>{ENDING_LAST_RESORT_EXAMPLE}</pre>
+          <ul className={styles.ruleList}>
+            <li>
+              <span className={styles.code}>LastResort</span> must set <span className={styles.code}>{`"lastresort"`}</span>, and no other scene may.
+            </li>
+            <li>Nothing links to it, and it links nowhere.</li>
           </ul>
         </section>
 

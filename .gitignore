@@ -15,6 +15,8 @@ build/
 develop-eggs/
 dist/
 downloads/
+# ...but not the site's own downloads (the starter template for writers)
+!/public/downloads/
 eggs/
 .eggs/
 /lib/

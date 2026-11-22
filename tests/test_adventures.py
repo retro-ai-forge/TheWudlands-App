@@ -31,10 +31,10 @@ PASSAGES = [
     {"id": "1", "name": "Start", "text": "A door. [[Enter->Hall]]"},
     {"id": "2", "name": "Hall", "text": "[[Fight|Victory]] [[Back->Start]] [img[door.png][Vault]]"},
     {"id": "3", "name": "Vault", "text": "Gold. [[Search again->Vault]] [[Hall]]"},
-    {"id": "4", "name": "Victory", "text": "You win. <<set $isEnding to true>>"},
+    {"id": "4", "name": "Victory", "text": "You win. <<set $isEnding to 'success'>>"},
     {"id": "5", "name": "Retreat", "text": "You turn back. [[Flee->Fled]]"},
-    {"id": "6", "name": "Fled", "text": "Safe. <<set $isEnding to true>>"},
-    {"id": "7", "name": "LastResort", "text": "Something broke. <<set $isEnding to false>>"},
+    {"id": "6", "name": "Fled", "text": "Safe. <<set $isEnding to 'failure'>>"},
+    {"id": "7", "name": "LastResort", "text": "Something broke. <<set $isEnding to 'lastresort'>>"},
 ]
 STORY_DATA = {"startPassage": "1", "storyFormat": "SugarCube", "storyFormatVersion": "2.37.3"}
 
@@ -46,7 +46,7 @@ def test_graph_links_endings_and_outcomes():
     assert graph["start"] == "Start"
     assert graph["links"]["Hall"] == ["Victory", "Start", "Vault"]
     assert "StoryInit" not in graph["links"]
-    assert graph["endings"] == {"Victory": "finished", "Fled": "run_away"}
+    assert graph["endings"] == {"Victory": "finished", "Fled": "finished"}
     assert graph["allowRunAway"] is True
 
 
@@ -328,13 +328,57 @@ async def test_reaching_an_ending_logs_releases_and_counts(world):
 
 
 async def test_retreat_counts_as_run_away(world):
+    """Choosing Retreat is running away; the Retreat story's ending is a failure
+    like any other (it completes the story), but the run counts only as run
+    away, never also as finished (the Stalwart/Craven bar adds them up)."""
+    db, ids = world
+    sid = (await _start(ids))["sessionId"]
+
+    async def counts():
+        return [(await _char(db, cid))["stats"]["adventureRunAway"] for cid in ids]
+
+    # Counted the moment Run away is clicked, for every member.
+    await adventures.record_step(ADDRESS, sid, 0, "Start", "Retreat", {})
+    assert await counts() == [1, 1]
+    # A retried click changes nothing. (No scene may lead back to Retreat -
+    # the submit check refuses it - so the button is the only way in.)
+    await adventures.record_step(ADDRESS, sid, 0, "Start", "Retreat", {})
+    assert await counts() == [1, 1]
+
+    done = await adventures.record_step(ADDRESS, sid, 1, "Retreat", "Fled", {})
+    assert done["outcome"] == "finished"
+    assert await counts() == [1, 1]
+    for cid in ids:
+        doc = await _char(db, cid)
+        assert doc["stats"]["adventureFinished"] == 0
+        assert doc["completedStories"] == [STORY_ID]
+
+
+async def test_a_cut_off_run_away_count_is_made_up_at_the_end(world):
+    """If the request dies between the step onto Retreat and a member's count,
+    the run's end counts that member - once."""
+    db, ids = world
+    sid = (await _start(ids))["sessionId"]
+    await adventures.record_step(ADDRESS, sid, 0, "Start", "Retreat", {})
+    # As if the count for the second member never happened.
+    await db.characters.update_one(
+        {"address": ADDRESS, "id": ids[1]},
+        {"$unset": {"availability.adventure.ranAway": ""}, "$inc": {"stats.adventureRunAway": -1}},
+    )
+    await adventures.record_step(ADDRESS, sid, 1, "Retreat", "Fled", {})
+    for cid in ids:
+        assert (await _char(db, cid))["stats"]["adventureRunAway"] == 1
+
+
+async def test_run_away_counts_even_if_the_engine_fails_after(world):
     db, ids = world
     sid = (await _start([ids[0]]))["sessionId"]
     await adventures.record_step(ADDRESS, sid, 0, "Start", "Retreat", {})
-    done = await adventures.record_step(ADDRESS, sid, 1, "Retreat", "Fled", {})
-    assert done["outcome"] == "run_away"
+    done = await adventures.record_step(ADDRESS, sid, 1, "Retreat", "LastResort", {})
+    assert done["outcome"] == "aborted"
     doc = await _char(db, ids[0])
     assert doc["stats"]["adventureRunAway"] == 1
+    assert doc["stats"]["adventureFinished"] == 0
     assert doc.get("completedStories", []) == []
 
 
@@ -466,8 +510,25 @@ async def test_run_away_uses_a_run(world):
     sid = (await _start([ids[0]]))["sessionId"]
     await adventures.record_step(ADDRESS, sid, 0, "Start", "Retreat", {})
     done = await adventures.record_step(ADDRESS, sid, 1, "Retreat", "Fled", {})
-    assert done["outcome"] == "run_away"
+    assert done["outcome"] == "finished"
     assert await _runs() == 0
+
+
+async def test_run_away_then_last_resort_refunds_the_run_and_counts_once(world):
+    """Run away is counted at the click; an engine failure after it gives the
+    run back, and the run's end doesn't count the run-away a second time."""
+    db, ids = world
+    await _set_access(db, "trial")
+    sid = (await _start([ids[0]]))["sessionId"]
+    assert await _runs() == 0
+    await adventures.record_step(ADDRESS, sid, 0, "Start", "Retreat", {})
+    assert (await _char(db, ids[0]))["stats"]["adventureRunAway"] == 1
+    done = await adventures.record_step(ADDRESS, sid, 1, "Retreat", "LastResort", {})
+    assert done["outcome"] == "aborted"
+    assert await _runs() == 1
+    stats = (await _char(db, ids[0]))["stats"]
+    assert stats["adventureRunAway"] == 1
+    assert stats["adventureFinished"] == 0
 
 
 async def test_last_resort_gives_the_run_back(world):

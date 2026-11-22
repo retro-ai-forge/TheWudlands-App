@@ -47,9 +47,9 @@ async def _submission(db, days_ago: float = 8, status: str = "submitted"):
         "storyData": {**_story([])["storyData"], "wallet": AUTHOR},
         "passages": _story([
             _p("1", "Start", "The author's text [[End]]"),
-            _p("2", "End", "The end. <<set $isEnding to true>>"),
+            _p("2", "End", "The end. <<set $isEnding to 'success'>>"),
             _p("0", "StoryInit", VALID_INIT),
-            _p("3", "LastResort", "The tunnel collapses. <<set $isEnding to false>>"),
+            _p("3", "LastResort", "The tunnel collapses. <<set $isEnding to 'lastresort'>>"),
         ])["passages"],
         "metadata": {"meta_title": "Edit Tale"},
     })
@@ -62,8 +62,8 @@ def _edited(start_text: str = "The reviewer's fixed text [[End]]", extra=()):
     story = _story([
         _p("0", "StoryInit", VALID_INIT),
         _p("1", "Start", start_text),
-        _p("2", "End", "The end. <<set $isEnding to true>>"),
-        _p("3", "LastResort", "The tunnel collapses. <<set $isEnding to false>>"),
+        _p("2", "End", "The end. <<set $isEnding to 'success'>>"),
+        _p("3", "LastResort", "The tunnel collapses. <<set $isEnding to 'lastresort'>>"),
         _p("9", "TestCharacters", _TEST_PARTY),
         *extra,
     ])
@@ -153,7 +153,7 @@ async def test_an_edit_with_program_code_is_refused(db, storage):
     result = await save_twine_review(AUTHOR, STORY, _edited("Hi <<run alert(1)>> [[End]]"), address=REVIEWER)
 
     assert result["ok"] is False
-    assert any("<<run>>" in e and "runs program code" in e for e in result["errors"])
+    assert any("<<run>>" in e and "Story JavaScript" in e for e in result["errors"])
 
 
 async def test_only_reviewers_save(db, storage):
@@ -192,7 +192,7 @@ async def test_an_edit_that_fails_the_checks_is_not_saved(db, storage):
 
     assert result["ok"] is False
     assert any("Nowhere" in e for e in result["errors"])
-    assert any("plain file name" in e for e in result["errors"])
+    assert any("outside the story" in e for e in result["errors"])
     entry = await db.twine_review.find_one({"address": AUTHOR, "storyId": STORY})
     assert entry["passages"][0]["text"] == "The author's text [[End]]"
     assert "reviewEdits" not in entry
@@ -207,3 +207,65 @@ async def test_an_edit_cannot_add_images(db, storage):
 
     assert result["ok"] is False
     assert result["errors"] == ["Image 'new.webp' is referenced in the story but has not been uploaded"]
+
+
+# --- warnings: a story that waits ---------------------------------------------
+
+
+def _edited_with_script(script: str = "setup.roll = function (n) { return n * 2; };"):
+    payload = _edited()
+    payload.storyData["script"] = script
+    return payload
+
+
+async def test_an_edit_with_story_javascript_is_saved_and_waits(db, storage):
+    await _submission(db)
+
+    result = await save_twine_review(AUTHOR, STORY, _edited_with_script(), address=REVIEWER)
+
+    assert result["ok"] is True
+    assert result["held"] is True and result["hasCode"] is True
+    assert result["warnings"][0].startswith("This story waits")
+    entry = await db.twine_review.find_one({"address": AUTHOR, "storyId": STORY})
+    assert entry["held"] is True and entry["hasCode"] is True
+    assert [w["kind"] for w in entry["warnings"]] == ["code"]
+    assert entry["warnings"][0]["place"] == "Story JavaScript"
+
+
+async def test_a_story_that_waits_is_not_approved(db, storage):
+    await _submission(db)
+    await save_twine_review(AUTHOR, STORY, _edited_with_script(), address=REVIEWER)
+
+    with pytest.raises(HTTPException) as refused:
+        await approve_twine_review(AUTHOR, STORY, address=REVIEWER)
+
+    assert refused.value.status_code == 409
+    assert "waits" in refused.value.detail and "Story JavaScript" in refused.value.detail
+    assert await db.twine_live.find_one({"_id": STORY}) is None
+
+
+async def test_system_names_in_the_story_javascript_are_refused(db, storage):
+    await _submission(db)
+
+    result = await save_twine_review(
+        AUTHOR, STORY, _edited_with_script("Config.history.maxStates = 5;"), address=REVIEWER
+    )
+
+    assert result["ok"] is False
+    assert any("'Config' reaches into SugarCube" in e for e in result["errors"])
+
+
+async def test_reviewers_read_the_warnings_and_the_queue_only_counts_them(db, storage):
+    from backend.auth_routes import get_twine_review_story, list_twine_reviews
+
+    await _submission(db)
+    await save_twine_review(AUTHOR, STORY, _edited_with_script(), address=REVIEWER)
+
+    story = await get_twine_review_story(AUTHOR, STORY, address=REVIEWER)
+    assert story["checkProblems"] == []
+    assert story["held"] is True and story["hasCode"] is True
+    assert story["checkWarnings"][0]["kind"] == "code"
+
+    listed = next(d for d in await list_twine_reviews() if d["storyId"] == STORY)
+    assert (listed["warningCount"], listed["held"], listed["hasCode"]) == (1, True, True)
+    assert "warnings" not in listed

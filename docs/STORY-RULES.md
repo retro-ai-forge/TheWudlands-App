@@ -1,6 +1,6 @@
 # Story Rules
 
-> **Enforced.** The story check runs when you submit, when a reviewer saves edits, and again before a story goes live. It refuses anything that is not described here, and tells you the scene, the line and an accepted form to use instead.
+> **Enforced.** The story check runs when you submit, when a reviewer saves edits, and again before a story goes live. For anything not described here it tells you the scene, the line and an accepted form to use instead - and how much it weighs (see "How the check decides").
 
 Stories run on the Wudlands server, not in the player's browser. The player only receives the finished scene: text, images and buttons. These rules keep it that way: a story can tell its tale, keep track of things, react to the characters and shape their Legend, but it can't run its own program code, reach outside the story or show players anything the platform didn't check.
 
@@ -18,7 +18,19 @@ Everything in "Accepted forms" below has been tested in SugarCube 2.37.3, the st
 - Changes to each character's Legend.
 - Endings.
 
-Not allowed anywhere: JavaScript, commands that aren't listed here, text input from players, references to the story engine's internals (such as `Config`, `State`, `Engine`, `setup`, `window` or `document`), destinations built from variables, and links, images or styles that load anything from outside the story.
+Not allowed anywhere: links, images or styles that load anything from outside the story, and SugarCube's system names. Everything else outside this document - JavaScript in the Story JavaScript, commands that aren't listed here, text input from players, destinations built from variables - can be handed in, but makes the story wait (see below).
+
+## How the check decides
+
+Every finding has one of three weights. Your story is checked as a whole, and you see all findings at once.
+
+| Weight | What happens | What it covers |
+|---|---|---|
+| **Refused** | The submit is refused until you fix it. | Only the worst cases: JavaScript or CSS in the wrong place (`<<script>>`, `<<run>>`, `<script>`, `on...` attributes, `javascript:`, `<style>`, scenes tagged `script` or `stylesheet` - JavaScript goes in the Story JavaScript, CSS in the Story Stylesheet); anything that loads or leads outside the story (web addresses, `url(`, `@import`, `<a>`, `<iframe>`, `href`, images that aren't in the story's Images list); SugarCube's system names (`Config`, `Engine`, `Save`, `UI`, `Dialog`, `eval`, `Function`, `.constructor`, `fetch` and the like, also in the Story JavaScript); the platform's parts of the page (`.wud-...`, `#ui-...`, see "Stylesheet"); and the platform's and the game's rules (the story's name, the special scenes and `$meta_` values, links to real scenes, endings, a genre tag, what a story may change on a character, the Legend limits, the test party). |
+| **Waits** | Accepted, but the story can't go live until there are rules for it: expect a long review. | The Story JavaScript; anything the check can't read (forms and commands not in this document, code in a scene); and what the platform can't play yet (typing, timers, sound, changing a scene in place, `<<include>>`, widgets, a scene that jumps on its own, SugarCube's special scenes, the same choice text twice in a scene). |
+| **Note** | Accepted; the reviewer decides. | Harmless things outside the rules: a `style` attribute or `@@` style (style things in the Story Stylesheet instead), other HTML tags and attributes, comments written `/* */`, `<<unset>>`. |
+
+For a fast review, use only the forms in "Accepted forms": they need no rules beyond these. The reviewer sees every warning; the public review list shows only how many there are and whether the story waits.
 
 ## No nesting inside tags
 
@@ -29,7 +41,7 @@ Accepted:
 ```
 <<button [[Take the sword|Cave]]>><<set $hasSword to true>><</button>>
 <<area 0.10 0.20 0.30 0.40 [[Gate]]>>
-<<for _i, _c range $char>><<if _c.equipment.includes("rope_1")>><<set _hasRope to true>><</if>><</for>>
+<<for _i, _c range $char>><<if _c.equipment.includes("rope")>><<set _hasRope to true>><</if>><</for>>
 ```
 
 Not accepted:
@@ -57,7 +69,7 @@ Each character has these values:
 | **Names** (typed by players) | `firstName`, `lastName`, `name` (both together) |
 | **Fixed lists** | `race`, `gender`, `birthsign`, `class1`, `class2`, `prof1`, `prof2`, `prof3` (`"none"` when empty) |
 | **Numbers** | `might`, `agility`, `endurance`, `precision`, `will`, `insight`, `lore`, `presence`, `classLvl1`, `classLvl2`, `profLvl1`, `profLvl2`, `profLvl3` (attributes as they are now, injuries included) |
-| **Equipment** | `equipment`: the items the character carries, as item IDs with a tier, such as `"rope_1"` or `"pickaxe_2"` |
+| **Equipment** | `equipment`: the items the character carries, checked by item ID: `"rope"` for any rope, `"pickaxe_2"` for a pickaxe of tier 2 or better |
 | **Legend** | `fame`, `infamy`, `renown`, `obscurity`, `faith`, `heresy`, `honor`, `shame`, `loyalty`, `treachery`, `mercy`, `cruelty`, `courage`, `cowardice`, `favour`, `disgrace`, `purity`, `corruption`, `wildkin`, `despoiler`, each 0 to 100 |
 
 **How each kind may be used:**
@@ -65,7 +77,7 @@ Each character has these values:
 1. **Names only appear in scene text.** Print them on their own, never inside another command, condition, link, button or piece of text being put together.
 2. **Fixed-list values** may be printed and compared with a quoted value.
 3. **Numbers** may be printed, compared and used in maths.
-4. **Equipment** may be checked with `.includes("item_tier")`. The tier is the lowest one that counts: `"candle_1"` means a candle of tier 1 or better, `"pickaxe_2"` a pickaxe of tier 2 or better. The item ID must exist.
+4. **Equipment** may be checked with `.includes("item")`. An item's family ID means any tier: `"candle"` is a candle of any tier. With a tier added, that tier is the lowest one that counts: `"pickaxe_2"` means a pickaxe of tier 2 or better, so `"candle_1"` is the same as `"candle"`. The ID must exist; the tutorial lists every item (`/create/tutorial#items`).
 5. **Legend values** may also be changed, only with `+=` or `-=` and a whole number (see "Legend").
 6. **Nothing else** may be set, changed or removed, and `StoryInit` never contains character data.
 
@@ -112,8 +124,15 @@ Not accepted:
 **Equipment:**
 
 ```
-<<if $lead.equipment.includes("rope_1")>>You climb down on your rope.<</if>>
+<<if $lead.equipment.includes("rope")>>You climb down on your rope.<</if>>
 <<if $lead.equipment.includes("pickaxe_2")>>Your pickaxe bites into the hard rock.<</if>>
+```
+
+Not accepted:
+
+```
+<<if $lead.equipment.includes("rope_7")>>You climb down.<</if>>   (items have tiers 1 to 6)
+<<if $lead.equipment.includes("Rope")>>You climb down.<</if>>     (the ID, not the name)
 ```
 
 ### Checks and fights (planned)
@@ -156,7 +175,7 @@ It holds data only, no commands, and is checked so a test party looks like a rea
 - **Names:** follow the character name rules.
 - **Fixed lists:** `race`, `gender` (`m`, `f` or `d`) and `birthsign` come from the game's lists; professions are game professions or `"none"`, with levels 1 to 30 when set and 0 for `"none"`; `prof1` is never `"none"`, and no two professions come from the same group (as at character creation). Classes don't exist in the game yet, so `class1` and `class2` stay `"none"` with level 0.
 - **Attributes:** whole numbers of at least 1, with the same budgets as character creation: Body (`might`, `agility`, `endurance`, `precision`) adds up to 4-100, Soul (`will`, `insight`, `lore`, `presence`) to 4-100, and both together to 33-104 (33 for the youngest characters, 104 at the peak age). Grimjaw above has 54 + 32 = 86, Elara 38 + 61 = 99.
-- **Equipment:** existing item IDs with a tier, such as `"torch_2"`.
+- **Equipment:** existing item IDs with a tier, such as `"torch_2"`: a test character carries real items, so a family ID alone (`"torch"`) isn't one.
 
 The editor's Test refuses to start while the list has problems and says which. A party with problems refuses the submit, so the stored party is always one a test run can play with. A story without a `TestCharacters` scene has no test party. A reviewer who opens your submission gets the party back as a `TestCharacters` scene, and saving their edits stores it again. No scene may link to `TestCharacters`, and no other scene or `StoryInit` may replace `$char` or `$lead`.
 
@@ -172,7 +191,10 @@ The editor's Test refuses to start while the list has problems and says which. A
 <<set $cursed to false>>
 <<set $waterStatus to ["dying of thirst", "parched", "thirsty", "fine"]>>
 <<set $inventory to ["rope", "torch"]>>
+<<set $meta_endings to {"success": "You reached the coast.", "failure:lost": "The desert kept you.", "failure:fled": "You turned back."}>>
 ```
+
+`$meta_endings` declares your story's endings, each with a teaser (see "Endings").
 
 ### Variables and maths
 
@@ -241,7 +263,7 @@ Not accepted:
 ```
 - Link and button texts are plain words: letters, digits, spaces and `. , ! ? ' : ; -` (typographic quotes, dashes and `…` too, but no straight `"`). SugarCube runs a link's text as program code before showing it, so brackets, `=`, `+`, `$`, `_` and the like are refused there.
 - The part in the second brackets (`[$water to 3]`) runs when the player clicks.
-- Images are uploaded files from the story's Images list, written as the plain file name: a name of letters, digits, `_` and `-`, then `.webp`, `.png` or `.jpg`, like `[img[gate_open.webp]]`. No folders, web addresses, `data:` images, variables or tooltips (`[img[text|file]]`), and every image must be uploaded before you submit. An image may sit inside `<<if>>` to show it only sometimes; put its `<<area>>` lines in the same branch.
+- Images are uploaded files from the story's Images list, written as the plain file name: a name of letters, digits, `_` and `-`, then `.webp`, `.png` or `.jpg`, like `[img[gate_open.webp]]`. No folders, web addresses, `data:` images, variables or tooltips (`[img[text|file]]`), and every image must be uploaded before you submit. An image may sit inside `<<if>>` to show it only sometimes; put its `<<area>>` lines in the same branch. The clickable areas always belong to the top-most picture of the scene.
 - Nothing else may show a picture: no `<img>`, `<svg>`, `<picture>` or media tags, no `src=`, and no `url(...)` or `@import` in styles. Scenes tagged `Twine.image` aren't accepted.
 - `<<area>>` makes a clickable area on the scene's image (the first one, if there are several). The editor's hotspot tool writes these lines at the end of the scene: x, y, width and height as fractions of the image size with two decimals, then the link. A label that differs from the scene name is written as `[[Label->Scene]]`.
 
@@ -332,11 +354,41 @@ Every character has 20 Legend values from 0 to 100, in 10 pairs: `fame`/`infamy`
 ### Endings
 
 ```
-<<set $isEnding to true>>
+<<set $isEnding to "success">>
+<<set $isEnding to "failure:captured">>
+<<set $isEnding to "failure:fled_the_crypt">>
 ```
 
-- Every scene without links ends the story and needs `<<set $isEnding to true>>`; `LastResort` has `<<set $isEnding to false>>`.
-- Only a run that reaches an ending of the main story counts as completed and unlocks follow-up stories. An ending reached through `Retreat` uses up the play but never counts as completed; `LastResort` gives the play back.
+Every scene without links ends the story and sets `$isEnding` to how the run ends:
+
+| Value | Written by | Where | Run |
+|---|---|---|---|
+| `success` | author | endings of the main story | spent |
+| `failure` | author | endings of the main story, and every ending of the `Retreat` story | spent |
+| `lastresort` | author | the `LastResort` scene, which must set it, and nowhere else | given back |
+| `fallen` | platform | every member is dead | spent |
+| `abandoned` | platform | no click for days | spent |
+
+- A `success` or `failure` may carry the ending's name after a colon, such as `"success:dragon_slain"` or `"failure:fled_the_crypt"`: a letter first, then letters, digits, `_` or `-`, at most 40 characters. The name is optional.
+- The `Retreat` story ends only in failures: running away is a failure like any other, counted with the main story's. Only the platform's Run away button opens `Retreat`, so no scene may lead to it, not even one of the Retreat story; the click counts in the character's run-away stat (`adventureRunAway`), and the ending needs nothing more.
+- Every story needs at least one `success` ending.
+- Declare every `success` and `failure` ending once (the Retreat story's too) in `StoryInit`, each with a teaser for the players who reach it: plain text, at most 300 characters. `<<set $meta_endings to {"success:dragon_slain": "You killed the dragon and found a new home among the people.", "failure:captured": "The bandits dragged you into their camp.", "failure:fled": "You turned back at the crypt door."}>>`. An ending scene sets only the tag (`<<set $isEnding to "success:dragon_slain">>`), and every tag it sets must be declared there. `lastresort` needs no teaser. A declared ending no scene sets is a note for the reviewer.
+- An ending scene may end differently by a condition: `<<if $gold gte 10>><<set $isEnding to "success:rich">><<else>><<set $isEnding to "failure:poor">><</if>>`.
+- Only an ending scene sets `$isEnding`, in its own text when it is shown (an `<<if>>` is fine), never by a click: not in a link's `[ ]` part and not between a link's or button's tags. Nothing removes it (`<<unset>>`), nor any other of the platform's values. Before the ending scene it isn't set at all.
+- `StoryInit` never sets `$isEnding`, and `true` and `false` aren't used any more.
+- Every `success` or `failure` ends the run and uses up the play, also one in the Retreat story; `LastResort` gives the play back.
+
+**What endings open (decided 2026-11-24, not built yet).** Recording each character's endings, follow-up stories and the story list's symbols come next. Only `$follows` is checked already: a story never sets it.
+
+- A `success` or `failure` belongs to the character that played it; in a party, every member gets it. Deleting a character wipes its endings with the rest of its story history and its Legend.
+- The story list in the characters section shows, for the selected character, a symbol on each story it ended - one for success and one for failure, with how often - and when opened, the tags and their teasers. Nobody else sees them.
+- A Legend price for running away is up to you (see "Legend"). `lastresort` isn't recorded for the character and gets no symbol; it is kept only for the platform's error analysis.
+- A follow-up story names the endings it continues, in its own `StoryInit`: `<<set $meta_follows to ["<id of the earlier story>:success:dragon_slain", "<id of the earlier story>:success:dragon_tamed"]>>`. Any one of the entries opens it. In a party, the endings of the character selected to start it (the lead) count. Every submitted and live story shows its id with a copy button.
+- When the story starts, the platform stores the ending that opened it in `$follows`: the first entry the lead's endings fit, exactly as you wrote it, story id included, such as `"<id of the earlier story>:success:dragon_slain"`. So a follow-up to two different stories can tell which one opened it. Your scenes can use it: `<<if $follows is "<id of the earlier story>:success:dragon_slain">>The village still sings of the dragon you killed.<<elseif $follows is "<id of the earlier story>:success:dragon_tamed">>Your dragon circles above the village.<</if>>`. Your story only reads `$follows`, never sets it. Add an `<<else>>` with a general intro too, since a reviewer may add entries later. In test runs, the test party's lead can carry `"follows"` with one of your entries to try each branch.
+- `<id>:success` means any success of that story. A more specific entry (a named ending or a failure) must be one of the earlier story's endings; the check confirms it without naming the others. Anyone who runs away reaches your Retreat story's failures, so name one apart (`failure:fled_the_crypt`) when a follow-up should open only for those who fled. Nobody has to have played the earlier story to follow it, but the platform never hands out its tags: it shows a tag only to characters who reached it.
+- A reviewer may add entries that fit the story, with Save review.
+- A follow-up is approved only once the earlier story is live.
+- In the story list, a follow-up the selected character can't start yet is shown locked but still with its images, so the player gets a glimpse, and with a link to each earlier story so the player can play that one first. The hint names only the earlier stories, never a named ending: "Play The Salt Road first", or "Opens after another ending of The Salt Road" when the character already played it. The server refuses to start a locked follow-up too.
 
 ### Layout
 
@@ -354,52 +406,64 @@ Comments (`<!-- ... -->`) go anywhere in a scene, on one line or several, but ne
 
 ## HTML
 
-Allowed tags: `p`, `br`, `div`, `span`, `b`, `strong`, `i`, `em`, `u`, `s`, `small`, `h1` to `h3`, `ul`, `ol`, `li`, `blockquote`, `hr`, `label`. The only attribute is `class`; style things in the story stylesheet. Not allowed: links (`<a>`), images (`<img>`, use `[img[...]]`), forms and inputs, `<script>`, `<style>`, `<iframe>`, and any `on...` attribute. HTML comments (`<!-- -->`) are fine in scene text, but not inside a command.
+Allowed tags: `p`, `br`, `div`, `span`, `b`, `strong`, `i`, `em`, `u`, `s`, `small`, `h1` to `h3`, `ul`, `ol`, `li`, `blockquote`, `hr`, `label`. The only attribute is `class`; style things in the story stylesheet. The classes `passage` and `error-view`, classes starting with `wud-`, and the ids `passages`, `story` and `ui-...` are the platform's and refused: the engine finds the scene, its clickable image areas and its error box by them. Not allowed: links (`<a>`), images (`<img>`, use `[img[...]]`), forms and inputs, `<script>`, `<style>`, `<iframe>`, and any `on...` attribute. HTML comments (`<!-- -->`) are fine in scene text, but not inside a command.
 
 ## Stylesheet
 
 Any normal CSS is fine. Not allowed: `url(...)`, `image-set(...)`, `image(...)`, `cross-fade(...)`, `element(...)`, `@import`, `@font-face`, `@namespace`, `expression(...)`, `behavior`, `-moz-binding` and `javascript:`, because they load things from outside the story or run code; also backslash escapes (they can hide the words above) and `<`. The story is shown in its own frame, so its styles can't change the rest of the app.
 
+The platform insets the text 20px from both edges, and pictures span the full width. Change the inset, from 0 to 48px, with `:root { --scene-gutter: 0px; }` (0 puts the text flush with the edges); you need no `.passage` padding or `.passage img` rules for it. A picture with clickable areas always spans the full width and fills its frame exactly, so the areas stay on it; plain pictures you may lay out with your own classes, such as two side by side: `<div class="row">[img[a.webp]][img[b.webp]]</div>` with `.row { display: flex; gap: 8px; }` and `.row img { width: 50%; margin: 0; }`. You may style the scene itself with `.passage` (also `#passages` and `#story`), except its side padding, which follows `--scene-gutter`. The platform's buttons (Run away, Settings) are drawn outside the story's frame, so no style reaches them. Refused are the platform's parts inside the scene: the clickable image areas (`.wud-...`), the error box (`.error-view`), SugarCube's side bar (`#ui-...`), and selectors on `[data-passage]`, `[data-tags]`, `[class...]` or `[id...]`, which could reach them too.
+
 ## Story name and tags
 
-- The story's name (Story > Details) is plain words, like a link text: letters, digits, spaces and `. , ! ? ' : ; -`, at most 100 characters. SugarCube shows the name in its sidebar as markup, so `<`, `[`, `$` and the like could run there; a backslash or a line break stops the story from starting.
+- The story's name (Story > Rename) is plain words, like a link text: letters, digits, spaces and `. , ! ? ' : ; -`, at most 100 characters. SugarCube shows the name in its sidebar as markup, so `<`, `[`, `$` and the like could run there; a backslash or a line break stops the story from starting.
 - Tags are single words without spaces (the editor turns a space into `-`). SugarCube splits a scene's tags at spaces, so one tag `x widget` would make it a widget scene.
+- At least one tag is a genre from the list on the Submit Status page (`backend/data/story-genres.json`), such as `adventure`, `horror` or `other`. Any other words may come along; the story list shows them under "other".
 - The story's own settings have the kinds the editor gives them: text for the stylesheet and the Story JavaScript, a list of tags, colour names for tag colours.
 
 ## Special scenes
 
 - `StoryInit`, `Retreat` and `LastResort` are the only special scenes (see the submission rules for Retreat and LastResort), plus `TestCharacters`, the test party, which is stored apart from the scenes on submit (see "Test characters").
-- `StoryInit` only sets up values: `<<set>>`, `<<if>>` and `<<switch>>`, and the cover image.
-- Not allowed: `PassageReady`, `PassageDone`, `PassageHeader`, `PassageFooter`, `StoryInterface`, `StoryCaption`, `StoryMenu`, `StoryBanner`, `StorySubtitle`, `StoryAuthor`, `StoryShare`, `StoryDisplayTitle`, the scene tags `widget`, `init`, `script` and `stylesheet` (SugarCube plays a `script` or `stylesheet` scene as an ordinary scene in a Twine 2 story; styles go in the Story Stylesheet), and media scenes (`Twine.image`, `Twine.audio`, `Twine.video`, `Twine.vtt`).
-- The Story JavaScript must be empty. The platform adds what it needs, such as `<<area>>`, itself.
+- `StoryInit` only sets up values: `<<set>>`, `<<if>>` and `<<switch>>`, and at most one picture, the story's cover in the story list, like `[img[cover.webp]]`. The cover is optional; a story without one gets the platform's own.
+- Refused: scenes tagged `script` or `stylesheet`, in any letter case. SugarCube plays such a scene as an ordinary scene in a Twine 2 story, so whatever is hidden in it - code in a link's text that would pass as CSS - runs; JavaScript goes in the Story JavaScript, styles in the Story Stylesheet. Also media scenes (`Twine.image`, `Twine.audio`, `Twine.video`, `Twine.vtt`).
+- The story waits for: `PassageReady`, `PassageDone`, `PassageHeader`, `PassageFooter`, `StoryInterface`, `StoryCaption`, `StoryMenu`, `StoryBanner`, `StorySubtitle`, `StoryAuthor`, `StoryShare`, `StoryDisplayTitle`, and scenes tagged `widget` or `init`.
+- The Story JavaScript may hold JavaScript, but then the story waits until there are rules for JavaScript; SugarCube's system names are refused there too. The platform adds what it needs, such as `<<area>>`, itself.
 
 ## Not accepted
 
-| Example | Why | Use instead |
-|---|---|---|
-| Story JavaScript, `<<script>>`, `<script>` | Runs program code | The forms above |
-| `<<run ...>>` | Runs program code | `<<set>>` |
-| `<<if Config.debug>>` | Reaches the engine's internals | - |
-| `onclick="..."` or another `on...` attribute | Runs program code | `<<button>>`, `<<link>>` |
-| `<<textbox>>`, `<<textarea>>`, `<<numberbox>>` | Players never type text | Choices |
-| `<<goto $target>>`, `[[Go|$target]]`, `<<include>>` | Destination built from a variable | Written-out scene names, or a random jump (see Random jumps) |
-| `<<goto "Scene">>` outside a button or link | Scene jumps on its own | A link or button |
-| `<<timed>>`, `<<repeat>>`, `<<type>>`, audio | Needs a live browser | - |
-| `<<linkreplace>>`, `<<append>>`, `<<replace>>` and similar | Changes the page without a new scene | A link to a new scene |
-| `<<back>>`, `<<return>>` | The server controls the way back | A link |
-| `<<set $list to [...]>>` outside `StoryInit` | Lists are created in one place | Create it in `StoryInit` |
-| `<<set $meta_mercy += 3>>` | Legend belongs to each character | `<<set $lead.mercy += 3>>` |
-| `<<set $gold = 5>>` | Changes are written with `to` | `<<set $gold to 5>>` |
-| `<<set $a to 1; $b to 2>>`, `[[Go\|Cave][$a to 1; $b to 2]]` | Changes are separated with a comma | `<<set $a to 1, $b to 2>>` |
-| `<<set $lead.might -= 2>>` | Attributes only change through the platform's checks and fights | - |
-| `"<<"`, `"[["` or `"$gold"` inside quoted text (other than a choice's variable name) | Could read as a command | Plain words |
-| `[[alert(1)\|Cave]]`, `[[$name\|Cave]]` | SugarCube runs a link's text as code | Plain words, like `[[Go north\|North]]` |
-| `@@color:red;text@@`, `/* comment */` | Not part of the rules | A class and the stylesheet; `<!-- comment -->` |
-| `<<set $gold to 5 <!-- note -->>>` | A comment inside a command | `<<set $gold to 5>> <!-- note -->` |
-| `<<print "<<goto 'Cave'>>">>`, `<span class="<<print $mood>>">` | A command inside a tag | Commands between an opening and a closing tag |
-| `<a href="...">`, `<img src="https://...">`, `url(...)` in CSS | Loads from outside the story | `[[...]]`, `[img[...]]` |
+What each one weighs is explained in "How the check decides".
+
+| Example | Why | Weight | Use instead |
+|---|---|---|---|
+| `<<script>>`, `<script>` | JavaScript goes in the Story JavaScript | Refused | The forms above |
+| Code in the Story JavaScript | There are no rules for it yet | Waits | The forms above |
+| `<<run ...>>` | JavaScript goes in the Story JavaScript | Refused | `<<set>>` |
+| `<<if Config.debug>>` | Reaches into SugarCube's system | Refused | - |
+| `onclick="..."` or another `on...` attribute | JavaScript goes in the Story JavaScript | Refused | `<<button>>`, `<<link>>` |
+| `<<textbox>>`, `<<textarea>>`, `<<numberbox>>` | Players never type text | Waits | Choices |
+| `<<goto $target>>`, `[[Go|$target]]`, `<<include>>` | Destination built from a variable | Waits | Written-out scene names, or a random jump (see Random jumps) |
+| `<<goto "Scene">>` outside a button or link | Scene jumps on its own | Waits | A link or button |
+| `<<timed>>`, `<<repeat>>`, `<<type>>`, audio | Needs a live browser | Waits | - |
+| `<<linkreplace>>`, `<<append>>`, `<<replace>>` and similar | Changes the page without a new scene | Waits | A link to a new scene |
+| `<<back>>`, `<<return>>` | The server controls the way back | Waits | A link |
+| `<<set $list to [...]>>` outside `StoryInit` | Lists are created in one place | Waits | Create it in `StoryInit` |
+| `<<set $meta_mercy += 3>>` | Legend belongs to each character | Waits | `<<set $lead.mercy += 3>>` |
+| `<<set $isEnding to true>>`, `<<set $isEnding to false>>` | An ending says how the run ends | Refused | `<<set $isEnding to "success">>`, `"failure"`, `"lastresort"` in LastResort |
+| `<<set $isEnding to "retreat">>` | Running away is a failure | Refused | `<<set $isEnding to "failure">>` or a named one |
+| `<<link "Claim the crown">><<set $isEnding to "success">><</link>>`, `[[Win\|Throne][$isEnding to "success"]]` | An ending is set when its scene is shown, never by a click | Refused | `<<set $isEnding to "success">>` in the ending scene's text |
+| `<<unset $isEnding>>`, `<<unset $meta_title>>` | The platform's values are never removed | Refused | - |
+| `<<set $follows to "x">>` | The platform sets it when a follow-up story starts | Refused | Only read it |
+| `<<set $gold = 5>>` | Changes are written with `to` | Waits | `<<set $gold to 5>>` |
+| `<<set $a to 1; $b to 2>>`, `[[Go\|Cave][$a to 1; $b to 2]]` | Changes are separated with a comma | Waits | `<<set $a to 1, $b to 2>>` |
+| `<<set $lead.might -= 2>>` | Attributes only change through the platform's checks and fights | Refused | - |
+| `"<<"`, `"[["` or `"$gold"` inside quoted text (other than a choice's variable name) | Could read as a command | Waits | Plain words |
+| `[[alert(1)\|Cave]]`, `[[$name\|Cave]]` | SugarCube runs a link's text as code | Waits | Plain words, like `[[Go north\|North]]` |
+| `@@color:red;text@@`, `/* comment */` | Not part of the rules | Note | A class and the stylesheet; `<!-- comment -->` |
+| `<<set $gold to 5 <!-- note -->>>` | A comment inside a command | Waits | `<<set $gold to 5>> <!-- note -->` |
+| `<<print "<<goto 'Cave'>>">>`, `<span class="<<print $mood>>">` | A command inside a tag | Waits | Commands between an opening and a closing tag |
+| `<a href="...">`, `<img src="https://...">`, `url(...)` in CSS | Loads from outside the story | Refused | `[[...]]`, `[img[...]]` |
 
 ## How the server enforces this
 
-1. **When a story is submitted**, the server reads every scene and checks each command, condition, link and HTML tag against these rules, without running anything (`backend/story_rules.py`). A refusal names the scene, the line and an accepted form. The server also counts the Legend pairs the story changes and adds up its points per pair (stored as `legendPoints`), and checks and stores the test party (`backend/test_characters.py`). A reviewer's saved edits pass the same check, and Approve runs it once more, so a story submitted before a rule existed can't go live without it.
+1. **When a story is submitted**, the server reads every scene and checks each command, condition, link and HTML tag against these rules, without running anything (`backend/story_rules.py`). A refusal names the scene, the line and an accepted form. Warnings are stored with the submission; the reviewer reads them, and a story with a warning that makes it wait isn't approved. The server also counts the Legend pairs the story changes and adds up its points per pair (stored as `legendPoints`), and checks and stores the test party (`backend/test_characters.py`). A reviewer's saved edits pass the same check, and Approve runs it once more, so a story submitted before a rule existed can't go live without it.
 2. **While a story is played**, every shown value appears as plain text, the characters are put in fresh before every scene, Legend changes go through the Legend rules and the story's points, players can only click what the scene shows, and each click has a time limit.

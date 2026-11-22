@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { PageVersionTag } from "../../main/PageVersionTag";
 import h from "@/app/styles/headings.module.css";
+import storyGenres from "../../../backend/data/story-genres.json";
 
 // A story stays open for 7 days from its last submission. Resubmitting a story
 // refreshes submittedAt on the backend, which restarts this countdown. Once it
@@ -33,6 +34,21 @@ interface ReviewEntry {
   metadata?: ReviewMetadata;
   sceneCount?: number;
   tags?: string[];
+  /** How many warnings the story check gave; the warnings themselves are for
+   * the author and reviewers only (GET .../story, checkWarnings). */
+  warningCount?: number;
+  /** It waits: JavaScript or something the platform can't play yet. */
+  held?: boolean;
+  /** It has its own JavaScript, or something the check reads as code. */
+  hasCode?: boolean;
+}
+
+/** One warning of the story check (backend story_rules.finding). */
+interface CheckWarning {
+  place: string;
+  line: number | null;
+  kind: "code" | "unsupported" | "note";
+  message: string;
 }
 
 /** One line of the public rejected list (twine_rejected - minimal fields only). */
@@ -173,66 +189,22 @@ const tagChipBase: React.CSSProperties = {
   letterSpacing: "0.04em",
 };
 
-// Curated story-experience tags, each with a fixed colour and a small glyph
-// that fits the Wudlands' dark-fantasy gamebook tone. Equipment-flavoured tags
-// reuse the game's own item art (`img`); abstract genres use an emoji (`icon`);
-// magic uses the 符 ("talisman/rune") glyph since we have no rune asset. Authors
-// can tag a story with anything in Twine; tags outside this list still show, in
-// a dull neutral colour (DULL_TAG) — only recognised ones get a colour + glyph.
-const ITEM = (name: string) => `/images/items/${name}_t4.png`;
-const SILVER = "#aab0ba"; // shared colour for the themeless "Free" tags
-const PERIL = "#b8392f"; // shared red for all Combat & Peril tags
-const LOVE = "#f179b2"; // shared light pink for romance / love / erotic
-type TagMeta = { color: string; icon?: string; img?: string; desc: string; tint?: string };
+// Curated story-experience tags (the genres), each with a fixed colour and a
+// description, from backend/data/story-genres.json, which the submit check
+// reads too: a story needs at least one of them (backend/story_genres.py).
+// Each one has a generated icon at /icons/tag-<id>.png (see tagVisual).
+// Authors can add any other words in Twine; those still show, in a dull
+// neutral colour (DULL_TAG), and are listed under "other".
 // Colours are grouped by category (see TAG_CATEGORIES): each category is one
 // hue in varying strengths, so a story's tags read as a palette. Combat is red,
-// Magic violet, Guile teal, Journey green, Tone/Spoils gold — with romance an
+// Magic violet, Guile teal, Journey green, Tone gold — with romance an
 // intentional pink exception, since "love" should read pink, not gold.
-const TAG_META: Record<string, TagMeta> = {
-  // Combat & Peril — all one red.
-  gore: { color: PERIL, icon: "🩸", desc: "Graphic violence and viscera. Not for the squeamish." },
-  combat: { color: PERIL, img: ITEM("sword"), desc: "Fights, duels and battles — blades drawn and blood spilled." },
-  beast: { color: PERIL, img: ITEM("monster_part"), desc: "Monsters and wild creatures — the hunt, the lair, the maw." },
-  lycan: { color: PERIL, icon: "🐺", desc: "Werewolves and shapeshifters — the beast within, cursed by the moon." },
-  evil: { color: PERIL, icon: "😈", desc: "Villainy and malice — dark powers, cruelty and the foe's own schemes." },
-  undead: { color: PERIL, img: ITEM("bone"), desc: "Skeletons, ghosts and the risen dead; graves that don't stay shut." },
-  // Magic & the Uncanny — violets.
-  magic: { color: "#a074e6", icon: "符", desc: "Spells, enchantment and the arcane; sorcerers, rituals and runes." },
-  fate: { color: "#9163d6", icon: "🎲", desc: "Chance and destiny — dice, fortune and the turning of the wheel." },
-  oracle: { color: "#8456c4", icon: "🔮", desc: "Visions and prophecy — seers, omens and glimpses of what comes." },
-  horror: { color: "#7d52b5", icon: "💀", desc: "Dread and the supernatural — things that stalk the dark." },
-  omen: { color: "#6a47a0", icon: "🌑", desc: "Dark portents — curses foretold and signs of ill fortune." },
-  mystery: { color: "#5c3f8f", icon: "🔎", desc: "Secrets, clues and investigation; a whodunit to unravel." },
-  // Guile, Wits & Reward — teals.
-  treasure: { color: "#38bcb0", img: ITEM("crystal"), desc: "Loot, hoards and glittering reward — greed and its consequences." },
-  puzzle: { color: "#30a79e", img: ITEM("lock_and_key"), desc: "Riddles, locks, traps and clever problem-solving over brute force." },
-  trickster: { color: "#2a8e86", icon: "🃏", desc: "Cunning and mischief — cons, disguises and clever deceit." },
-  armor: { color: "#26756e", img: ITEM("metal_chest_armor"), desc: "Armoured foes, sieges and holding the line — defence over daring." },
-  stealth: { color: "#215f59", img: ITEM("dagger"), desc: "Sneaking and infiltration — shadows, silent blades and not being seen." },
-  // Journey & Setting — greens.
-  island: { color: "#46b56e", icon: "🌴", desc: "Tropics, jungles and far shores — palm, sand and distant isles." },
-  adventure: { color: "#4aa85c", icon: "🧭", desc: "Grand journeys of danger and discovery across the land." },
-  sea: { color: "#3f9e7c", icon: "🌊", desc: "Oceans, rivers and voyages — waves, ships and what swims beneath." },
-  travel: { color: "#5f9a4c", img: ITEM("backpack"), desc: "Long roads and wilderness treks — the journey matters as much as the goal." },
-  survival: { color: "#74a046", img: ITEM("tent"), desc: "Scarcity and the elements: shelter, hunger, cold and keeping alive." },
-  ice: { color: "#74b89a", icon: "❄", tint: "#5aa6e0", desc: "Cold, frost and snow; frozen wastes and chilling peril." },
-  mountain: { color: "#6f8c6f", icon: "⛰", desc: "Peaks, cliffs and high passes — thin air and long, hard climbs." },
-  dungeon: { color: "#4f7e54", img: ITEM("torch"), desc: "Torch-lit crawls through crypts, caverns and the dark below." },
-  relic: { color: "#5a8a5e", icon: "🏺", desc: "Ancient artefacts — lost relics of power and the ruins that hide them." },
-  fire: { color: "#869740", icon: "🔥", desc: "Flame and ash — burning, pyromancy, scorched-earth peril." },
-  cave: { color: "#3c6346", icon: "🕳", desc: "Caverns and tunnels — tight, dark spaces beneath the world." },
-  // Tone — golds, plus the pink romance/love/erotic trio.
-  comedy: { color: "#d8b23a", icon: "😄", desc: "Humour, wit and absurdity — a tale told with a grin." },
-  court: { color: "#c6a23a", icon: "👑", desc: "Courtly intrigue — nobles, politics, scheming and the throne." },
-  bard: { color: "#b89a48", icon: "🎵", desc: "Song and story — minstrels, legends and a tale well told." },
-  tragedy: { color: "#9c8a5e", icon: "🥀", desc: "Loss, doom and sorrow; endings that are meant to hurt." },
-  romance: { color: LOVE, icon: "❤", tint: "#ef5a93", desc: "Courtship and attraction; a budding romance, matters of the heart." },
-  love: { color: LOVE, icon: "❤❤", tint: "#ef5a93", desc: "Deep affection and devotion — love that drives the whole tale." },
-  erotic: { color: LOVE, icon: "❤❤❤", tint: "#ef5a93", desc: "Explicit intimacy and desire. Adult content — mature readers only." },
-  vampire: { color: "#b03a5e", icon: "🧛", desc: "Vampires and blood nobility — seduction, hunger and the long night." },
-  // Free — the lone catch-all, silver grey.
-  other: { color: SILVER, icon: "✶", desc: "Any you wish — a catch-all for a theme no other tag captures." },
-};
+type TagMeta = { color: string; icon?: string; img?: string; desc: string; tint?: string };
+const TAG_META: Record<string, TagMeta> = Object.fromEntries(
+  storyGenres.categories.flatMap((c) =>
+    c.genres.map((g): [string, TagMeta] => [g.id, { color: g.color, desc: g.desc }]),
+  ),
+);
 const DULL_TAG = "#817a66";
 
 function tagVisual(tag: string): { color: string; icon?: string; img?: string; tint?: string } {
@@ -376,17 +348,10 @@ function TagIcons({ tags }: { tags: string[] }) {
 
 // Legend grouping — organises the flat TAG_META into themed sections so the
 // guide reads in a sensible order rather than as one long list.
-const TAG_CATEGORIES: { title: string; tags: string[] }[] = [
-  { title: "Combat & Peril", tags: ["gore", "combat", "beast", "lycan", "evil", "undead"] },
-  { title: "Magic & the Uncanny", tags: ["magic", "fate", "oracle", "horror", "omen", "mystery"] },
-  { title: "Guile, Wits & Reward", tags: ["treasure", "puzzle", "trickster", "armor", "stealth"] },
-  {
-    title: "Journey & Setting",
-    tags: ["adventure", "travel", "survival", "dungeon", "relic", "sea", "mountain", "cave", "island", "fire", "ice"],
-  },
-  { title: "Tone", tags: ["comedy", "court", "bard", "tragedy", "romance", "love", "erotic", "vampire"] },
-  { title: "Free", tags: ["other"] },
-];
+const TAG_CATEGORIES: { title: string; tags: string[] }[] = storyGenres.categories.map((c) => ({
+  title: c.title,
+  tags: c.genres.map((g) => g.id),
+}));
 
 // "Free" tags — the catch-all `other` plus any custom tag not in TAG_META —
 // always sort to the end of a story's tag list, after the categorised ones.
@@ -460,9 +425,15 @@ function RejectedList({ entries }: { entries: RejectedEntry[] }) {
   );
 }
 
+// The genre list; the tutorial links here (/create/review#story-tags).
+const STORY_TAGS_ANCHOR = "story-tags";
+
 function TagLegend() {
   return (
-    <div style={{ marginTop: "3rem", borderTop: `1px solid ${gold}`, paddingTop: "1.75rem" }}>
+    <div
+      id={STORY_TAGS_ANCHOR}
+      style={{ marginTop: "3rem", borderTop: `1px solid ${gold}`, paddingTop: "1.75rem", scrollMarginTop: "1rem" }}
+    >
       <h2 className={h.section}>
         Story Tags
       </h2>
@@ -475,9 +446,10 @@ function TagLegend() {
           marginBottom: "1.4rem",
         }}
       >
-        Tag your passages in Twine to tell players what kind of tale awaits. The marks below carry
-        a fixed colour; use as many as fit. Any other tag still appears on the queue — just in a
-        plain, dull colour.
+        Tell players what kind of tale awaits: every story needs at least one of the genres below,
+        as a story tag: on Twine&apos;s story page with all the story previews, select the story,
+        then Story &gt; Tags (the button with the tag icon). Use as many as fit; each carries a fixed colour. Any other tag still appears
+        on the queue, just in a plain, dull colour.
       </p>
       <div style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}>
         {TAG_CATEGORIES.map((cat) => (
@@ -825,6 +797,135 @@ const editorLink: React.CSSProperties = {
   textDecoration: "none",
 };
 
+const waitColor = "#d08a3a";
+const noteColor = "#9a927a";
+const checkLine: React.CSSProperties = {
+  display: "flex",
+  flexWrap: "wrap",
+  gap: "0.35rem 0.9rem",
+  fontFamily: mono,
+  fontSize: "0.75rem",
+  letterSpacing: "0.04em",
+};
+const warningList: React.CSSProperties = {
+  margin: 0,
+  paddingLeft: "1.1rem",
+  fontFamily: mono,
+  fontSize: "0.75rem",
+  lineHeight: 1.5,
+  color: parchment,
+};
+
+// What the story check said, for everyone: whether the story waits and how
+// many warnings it got (the warnings themselves are in WarningsPanel).
+function CheckSummary({ entry }: { entry: ReviewEntry }) {
+  const count = entry.warningCount ?? 0;
+  if (!entry.held && count === 0) return null;
+  return (
+    <div style={checkLine}>
+      {entry.held && (
+        <span
+          style={{ color: waitColor }}
+          title="It uses JavaScript or something the platform can't play yet, so it can't be approved until there are rules for that."
+        >
+          ⏳ Waits for rules{entry.hasCode ? " · uses JavaScript" : ""}
+        </span>
+      )}
+      {count > 0 && (
+        <span style={{ color: noteColor }}>
+          {count} warning{count === 1 ? "" : "s"}
+        </span>
+      )}
+    </div>
+  );
+}
+
+function warningWhere(w: CheckWarning): string {
+  if (!w.place) return "";
+  return w.line ? `${w.place}, line ${w.line}: ` : `${w.place}: `;
+}
+
+// Reviewers only: today's story check on the submission - what keeps it from
+// going live, then the notes. Loaded when opened (it reads the whole story).
+function WarningsPanel({ entry }: { entry: ReviewEntry }) {
+  const [open, setOpen] = useState(false);
+  const [warnings, setWarnings] = useState<CheckWarning[] | null>(null);
+  const [problems, setProblems] = useState<string[]>([]);
+  const [error, setError] = useState<string>();
+
+  async function toggle() {
+    const next = !open;
+    setOpen(next);
+    if (!next || warnings) return;
+    setError(undefined);
+    try {
+      const res = await fetch(
+        `/api/auth/twine-reviews/${encodeURIComponent(entry.address)}/${encodeURIComponent(entry.storyId)}/story`,
+        { credentials: "include" }
+      );
+      if (!res.ok) throw new Error(`Failed (${res.status})`);
+      const data = await res.json();
+      setWarnings(Array.isArray(data.checkWarnings) ? data.checkWarnings : []);
+      setProblems(Array.isArray(data.checkProblems) ? data.checkProblems : []);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : String(e));
+    }
+  }
+
+  const count = entry.warningCount ?? 0;
+  if (count === 0 && !entry.held) return null;
+  const waiting = (warnings || []).filter((w) => w.kind !== "note");
+  const notes = (warnings || []).filter((w) => w.kind === "note");
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: "0.4rem" }}>
+      <button style={{ ...moreBtn, alignSelf: "flex-start" }} onClick={toggle}>
+        {open ? "Hide warnings ▲" : `Show warnings (${count}) ▾`}
+      </button>
+      {open && error && <span style={{ color: waitColor, fontFamily: mono, fontSize: "0.75rem" }}>{error}</span>}
+      {open && warnings && (
+        <>
+          {problems.length > 0 && (
+            <>
+              <span style={{ ...checkLine, color: "#b8392f" }}>Refused by today&apos;s check (fix with Save review)</span>
+              <ul style={warningList}>
+                {problems.map((p, i) => (
+                  <li key={`p${i}`}>{p}</li>
+                ))}
+              </ul>
+            </>
+          )}
+          {waiting.length > 0 && (
+            <>
+              <span style={{ ...checkLine, color: waitColor }}>Keeps it waiting</span>
+              <ul style={warningList}>
+                {waiting.map((w, i) => (
+                  <li key={`w${i}`}>
+                    {warningWhere(w)}
+                    {w.message}
+                  </li>
+                ))}
+              </ul>
+            </>
+          )}
+          {notes.length > 0 && (
+            <>
+              <span style={{ ...checkLine, color: noteColor }}>Notes for the reviewer</span>
+              <ul style={warningList}>
+                {notes.map((w, i) => (
+                  <li key={`n${i}`}>
+                    {warningWhere(w)}
+                    {w.message}
+                  </li>
+                ))}
+              </ul>
+            </>
+          )}
+        </>
+      )}
+    </div>
+  );
+}
+
 function EntryCard({
   entry,
   color,
@@ -876,6 +977,8 @@ function EntryCard({
         </div>
         <span style={{ ...cardTimer, color, flexShrink: 0 }}>{label}</span>
       </div>
+
+      <CheckSummary entry={entry} />
 
       {(() => {
         const author = <MetaItem label="Author" value={md.meta_author} />;
@@ -960,6 +1063,7 @@ function EntryCard({
           >
             Open in editor to test-play ↗
           </a>
+          <WarningsPanel entry={entry} />
           <ReviewActions entry={entry} reviewable={reviewable} onDone={onReviewed} />
         </div>
       )}
@@ -1012,6 +1116,15 @@ export default function ReviewStatus() {
     const id = setInterval(() => setNow(Date.now()), 1000);
     return () => clearInterval(id);
   }, []);
+
+  // The genre list appears once the queue has loaded, after the browser has
+  // already looked for a #story-tags target: scroll to it then.
+  const loaded = entries !== null;
+  useEffect(() => {
+    if (loaded && window.location.hash === `#${STORY_TAGS_ANCHOR}`) {
+      document.getElementById(STORY_TAGS_ANCHOR)?.scrollIntoView();
+    }
+  }, [loaded]);
 
   useEffect(() => {
     const mq = window.matchMedia("(min-width: 600px)");

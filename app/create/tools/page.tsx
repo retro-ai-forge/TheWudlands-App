@@ -280,7 +280,7 @@ export default function Storyteller() {
           If a scene cannot be found, the engine falls back to
           the <span className={styles.code}>LastResort</span> — a narrative dead end
           (collapsed tunnel, rockfall, ambush) that ends the story gracefully.
-          A playthrough only counts if a scene with <span className={styles.code}>isEnding: true</span> was reached.
+          A playthrough only counts if it reaches an ending of the main story: a scene that sets <span className={styles.code}>$isEnding</span> to <span className={styles.code}>{`"success"`}</span> or <span className={styles.code}>{`"failure"`}</span>.
           The <span className={styles.code}>LastResort</span> does not consume one of the three replays.
         </p>
 
@@ -330,7 +330,7 @@ export default function Storyteller() {
             </tr>
             <tr>
               <td>Retreat</td>
-              <td><span className={styles.code}>Retreat</span> is the primary voluntary exit. It can be a single scene marked <span className={styles.code}>$isEnding: true</span>, or a story of its own that branches into several scenes with several endings. It needs at least one ending and stays separate from the main story. Whether players can reach it is set by <span className={styles.code}>$meta_allowRunAway</span> (see Restricted).</td>
+              <td><span className={styles.code}>Retreat</span> is the primary voluntary exit. It can be a single scene marked <span className={styles.code}>{`<<set $isEnding to "failure">>`}</span>, or a story of its own that branches into several scenes with several endings, each of them a failure (<span className={styles.code}>{`"failure"`}</span> or a named one): running away is a failure like any other. It needs at least one ending and stays separate from the main story. Only the Run away button opens it: no scene may lead to it. Whether players can reach it is set by <span className={styles.code}>$meta_allowRunAway</span> (see Restricted).</td>
             </tr>
             <tr>
               <td>Combat Scenes</td>
@@ -343,7 +343,7 @@ export default function Storyteller() {
             <tr>
               <td>Missing Scene Fallback</td>
               <td>If a scene cannot be found, the engine redirects to the addon&apos;s <span className={styles.code}>LastResort</span> scene. 
-              It must be marked <span className={styles.code}>{`"isEnding": false`}</span>.</td>
+              It must be marked <span className={styles.code}>{`<<set $isEnding to "lastresort">>`}</span>, which gives the player the run back.</td>
             </tr>
             <tr>
               <td>Survival</td>
@@ -423,8 +423,10 @@ export default function Storyteller() {
           </p>
 
           <p className={styles.body}>
-            Rules: A <span className={styles.code}>Retreat</span> can be a short story in itself but finally leads to a node with <span className={styles.code}>{`<<set $isEnding to true>>`}</span>.
-            The <span className={styles.code}>LastResort</span> must be marked <span className={styles.code}>{`<<set $isEnding to false>>`}</span>. 
+            Rules: Every ending of the main story sets <span className={styles.code}>{`<<set $isEnding to "success">>`}</span> or <span className={styles.code}>{`"failure"`}</span>, optionally with a name (<span className={styles.code}>{`"success:dragon_slain"`}</span>), and at least one is a success.
+            Every ending except <span className={styles.code}>LastResort</span> is declared once in <span className={styles.code}>StoryInit</span> with a teaser for the players who reach it: <span className={styles.code}>{`<<set $meta_endings to {"success": "You reached the coast.", "failure:fled": "You turned back."}>>`}</span>.
+            A <span className={styles.code}>Retreat</span> can be a short story in itself but finally leads to a node with <span className={styles.code}>{`<<set $isEnding to "failure">>`}</span>; only the Run away button opens it, no scene may lead there.
+            The <span className={styles.code}>LastResort</span> must be marked <span className={styles.code}>{`<<set $isEnding to "lastresort">>`}</span>.
             Every other scene must contain <span className={styles.code}>[[jumpTo]]</span> decisions.
             A scene with <span className={styles.code}>{`<<set $meta_allowRunAway to false>>`}</span> has no retreat option.
           </p>

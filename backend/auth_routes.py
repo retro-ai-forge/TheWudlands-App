@@ -30,7 +30,7 @@ from backend.active_players import (
 )
 from backend.character import AttributeStats, Character, PortraitArea, ProfStats
 from backend.db import get_database, run_in_transaction
-from backend import adventures, character_creation, character_names, food, foraging, market
+from backend import adventures, character_creation, character_names, food, foraging, market, story_genres
 from backend.players import (
     _RECIPES_BY_FAMILY,
     _is_tracked_item,
@@ -3058,10 +3058,10 @@ async def delete_twine_story(story_id: str, address: str = Depends(get_current_a
 import re as _re
 
 from backend.twine_graph import (  # noqa: E402 - shared with backend.adventures
-    _ENDING_MACRO,
+    ENDING_EXAMPLE,
+    LAST_RESORT_ENDING,
     _IMG_LINK_RE,
     _LINK_RE,
-    _NOT_ENDING_MACRO,
     _RESERVED_PASSAGES,
     TEST_CHARACTERS_PASSAGE,
     _extract_set_value,
@@ -3130,6 +3130,8 @@ _REQUIRED_VARS: List[str] = _METADATA_FIELDS + _REQUIRED_GAME_VARS
 _NUMERIC_META_RANGES: dict = {
     "meta_maxCharNum": (1, 4),
     "meta_adventureTier": (1, 6),
+    # The review page draws it as a bar of 4 weeks (DurationTube).
+    "meta_durationWeeks": (1, 4),
 }
 
 # Metadata fields restricted to a fixed set of values.
@@ -3303,6 +3305,8 @@ _IMG_MACRO_RE = _re.compile(r"\[[<>]?img\[([^\[\]]+?)\]", _re.IGNORECASE)
 # source that isn't a scene name as JavaScript (Wikifier.helpers.evalText), and
 # a name like this can only read a value, never call anything.
 _IMAGE_FILENAME_RE = _re.compile(r"[A-Za-z0-9][A-Za-z0-9_-]*\.(?:webp|png|jpg)")
+# An image source that names a place outside the story (refused outright).
+_IMAGE_OUTSIDE_RE = _re.compile(r"^\s*(?://|[A-Za-z][A-Za-z0-9+.-]*:)")
 # Other ways a scene or the stylesheet could show a picture from elsewhere:
 # HTML media tags (not <<link>> or a left-aligned [<img[...]]), src-like attributes, CSS url() and @import.
 _FOREIGN_IMAGE_RE = _re.compile(
@@ -3314,7 +3318,7 @@ _FOREIGN_IMAGE_RE = _re.compile(
 )
 
 
-def _image_rule_errors(passages) -> list:
+def _image_rule_errors(passages, warnings: Optional[list] = None) -> list:
     """Every image must be one of the story's uploads, named plainly.
 
     [img[...]] takes only a file name like gate.webp - no tooltip (SugarCube
@@ -3324,8 +3328,19 @@ def _image_rule_errors(passages) -> list:
     each name was really uploaded is checked on submit
     (submit_twine_story_for_review). TestCharacters is skipped: it is removed
     on submit.
+
+    Returns the refusals (anything from outside the story). A tooltip or a
+    name SugarCube would work out as code goes to `warnings` instead, as a
+    CODE warning (the story waits), when a list is given.
     """
     errors: list = []
+
+    def code_warning(name: str, message: str) -> None:
+        if warnings is None:
+            errors.append(f"Passage '{name}': {message}")
+        else:
+            warnings.append(story_rules.finding(f"Passage '{name}'", None, story_rules.CODE, message))
+
     for p in passages:
         name = p.get("name", "")
         if name == TEST_CHARACTERS_PASSAGE:
@@ -3338,17 +3353,24 @@ def _image_rule_errors(passages) -> list:
             )
         for m in _IMG_MACRO_RE.finditer(text):
             inner = m.group(1).strip()
-            if "|" in inner:
+            if _IMAGE_OUTSIDE_RE.search(inner.split("|")[-1]):
                 errors.append(
-                    f"Passage '{name}': image '{inner}' has a tooltip (text|file) - "
-                    f"write only the file name, like [img[{inner.split('|')[-1].strip()}]]"
+                    f"Passage '{name}': image '{inner}' loads from outside the story - "
+                    "images come only from the story's Images list, like [img[gate.webp]]"
+                )
+                continue
+            if "|" in inner:
+                code_warning(
+                    name,
+                    f"image '{inner}' has a tooltip (text|file), which SugarCube runs as code - "
+                    f"write only the file name, like [img[{inner.split('|')[-1].strip()}]]",
                 )
                 continue
             if not _IMAGE_FILENAME_RE.fullmatch(inner):
-                errors.append(
-                    f"Passage '{name}': image '{inner}' must be a plain file name from the "
-                    "story's Images list, like [img[gate.webp]] - no folders, web "
-                    "addresses or variables, ending in .webp, .png or .jpg"
+                code_warning(
+                    name,
+                    f"image '{inner}' must be a plain file name from the story's Images list, "
+                    "like [img[gate.webp]] - no folders or variables, ending in .webp, .png or .jpg",
                 )
         for m in _FOREIGN_IMAGE_RE.finditer(text):
             errors.append(
@@ -3398,8 +3420,9 @@ def _story_cover(passages) -> Optional[str]:
     """The story's cover image: the filename of the [img[...]] in StoryInit.
 
     Shown with the title and description wherever the story is listed. None if
-    StoryInit has no image (or only an external one). The submit validator
-    requires exactly one uploaded image here, so a submitted story has a cover.
+    StoryInit has no image (or only an external one): the cover is optional
+    (the submit check allows at most one), and a story without one gets the
+    platform's own in the lists.
     """
     story_init = next((p for p in passages if p.get("name") == "StoryInit"), None)
     if not story_init:
@@ -3516,18 +3539,82 @@ def _story_shape_problems(doc: dict) -> List[str]:
     return problems
 
 
+def _ending_placement_errors(endings: dict, retreat: set, both: set) -> List[str]:
+    """Where each $isEnding value may be set: "lastresort" only in LastResort
+    (checked by the caller); the Retreat story ends only in failures (running
+    away is a failure, counted with the main story's). `endings` is
+    story_rules' scene -> values, `retreat` the Retreat story's scenes, `both`
+    the scenes in both stories (reported on their own)."""
+    errors: List[str] = []
+    for name, values in sorted(endings.items()):
+        if name == "LastResort":
+            continue
+        kinds = {story_rules.ending_kind(v) for v in values}
+        if story_rules.LASTRESORT in kinds:
+            errors.append(
+                f'Passage \'{name}\' sets $isEnding to "lastresort" — only LastResort does '
+                "(the engine sends a run there when it fails)"
+            )
+        if name in both:
+            continue
+        if name in retreat and story_rules.SUCCESS in kinds:
+            errors.append(
+                f"Passage '{name}' is an ending of the Retreat story — running away is a failure, so it sets "
+                '"failure" or a named one, like <<set $isEnding to "failure:fled_the_crypt">>'
+            )
+    return errors
+
+
+def _ending_teaser_problems(endings: dict, teasers) -> tuple:
+    """(errors, notes): every success and failure a scene sets is declared
+    in $meta_endings (story_rules' `teasers`, None when StoryInit has
+    none); a declared ending no scene sets is a note."""
+    ended = {
+        v for values in endings.values() for v in values
+        if story_rules.ending_kind(v) in story_rules.RECORDED_KINDS
+    }
+    if teasers is None:
+        if not ended:
+            return [], []
+        return [
+            "StoryInit must declare every success and failure ending in $meta_endings, each with a "
+            f"teaser for the players who reach it, like {story_rules.ENDINGS_EXAMPLE}"
+        ], []
+    errors: List[str] = []
+    for name, values in sorted(endings.items()):
+        for value in dict.fromkeys(values):
+            if value in ended and value not in teasers:
+                errors.append(
+                    f'Passage \'{name}\' ends with "{value}", which $meta_endings in StoryInit doesn\'t '
+                    "declare — add it there with a teaser"
+                )
+    notes = [
+        story_rules.finding(
+            "Passage 'StoryInit'", None, story_rules.NOTE,
+            f'$meta_endings declares "{tag}", but no scene ends with it',
+        )
+        for tag in teasers if tag not in ended
+    ]
+    return errors, notes
+
+
 def _check_twine_syntax(doc: dict) -> dict:
     """Run syntax checks on a saved Twine story document.
 
-    Returns {"errors": [...], "warnings": [...]}. Errors block submission;
-    warnings are advisory and still allow it. `doc` carries the story's name:
-    it is checked too (story_rules.story_name_problem).
+    Returns {"errors", "warnings", "findings", "hasCode", "held", ...}.
+    Errors refuse the submit. Warnings still allow it: `findings` holds them
+    as {place, line, kind, message} (story_rules.finding), `warnings` the same
+    as lines of text. `held` when one of them makes the story wait - it can't
+    be approved until there are rules for it - and `hasCode` when the story
+    has its own JavaScript or something the check reads as code
+    (docs/STORY-RULES.md "How the check decides"). `doc` carries the story's
+    name: it is checked too (story_rules.story_name_problem).
     """
     errors: List[str] = []
     warnings: List[str] = []
     shape = _story_shape_problems(doc)
     if shape:
-        return {"errors": shape, "warnings": warnings}
+        return _check_result(shape, [])
     passages = doc.get("passages", [])
     story_data = doc.get("storyData", {})
     start_passage = story_data.get("startPassage", "")
@@ -3540,7 +3627,7 @@ def _check_twine_syntax(doc: dict) -> dict:
 
     if not passages:
         errors.append("Story has no passages")
-        return {"errors": errors, "warnings": warnings}
+        return _check_result(errors, [])
 
     passage_names = [p.get("name", "") for p in passages]
     name_set = set(passage_names)
@@ -3568,14 +3655,6 @@ def _check_twine_syntax(doc: dict) -> dict:
     for required in ("StoryInit", "LastResort", "Retreat"):
         if required not in name_set:
             errors.append(f"Missing required '{required}' passage")
-
-    # LastResort concludes a run through a platform fault, which must not be
-    # charged to the player, so it must mark the run as not counted.
-    LastResort = by_name.get("LastResort")
-    if LastResort and _NOT_ENDING_MACRO not in LastResort.get("text", ""):
-        errors.append(
-            f"LastResort must contain {_NOT_ENDING_MACRO} — a fault must not count as a playthrough"
-        )
 
     # Required $variables must be initialised in StoryInit.
     story_init = by_name.get("StoryInit")
@@ -3641,27 +3720,37 @@ def _check_twine_syntax(doc: dict) -> dict:
         if not any(tag in (p.get("tags") or []) for p in passages):
             errors.append(f"No passage carries the required tag '{tag}'")
 
-    # A story must carry at least one author tag so players can find it. Engine
-    # tags (stylesheet/script) don't count — _collect_story_tags excludes them.
-    if not _collect_story_tags(doc):
+    # A story must carry at least one genre tag (backend/story_genres.py) so
+    # players can find it; any other words may come along and are listed under
+    # "other". Engine tags (stylesheet/script) don't count — _collect_story_tags
+    # excludes them.
+    if not any(story_genres.is_genre(t) for t in _collect_story_tags(doc)):
         errors.append(
-            "Story has no tags — add at least one tag so players can find it"
+            "Story has no genre tag — add at least one from the genre list on the "
+            "Submit Status page (such as adventure, horror or other); any other words "
+            "may come along and are listed under 'other'"
         )
+
+    # What each scene may contain (docs/STORY-RULES.md): an allow-list read
+    # without running anything - SugarCube would run much of it as code. Also
+    # the Story JavaScript: handed in, it makes the story wait. Run before the
+    # structure rules, which need to know the scenes the check can't fully read.
+    story_data = doc.get("storyData") or {}
+    rules = story_rules.check_story(passages, story_data)
+    findings: list = []  # warnings worked out here, besides rules.warnings
+    non_scenes = {
+        p.get("name", "") for p in passages
+        if p.get("name", "") in story_rules.REFUSED_PASSAGES
+        or any(str(t).lower() in story_rules.NON_SCENE_TAGS for t in (p.get("tags") or []))
+    }
 
     # The editor keeps the Story Stylesheet and Story JavaScript in storyData,
     # not as passages (an imported .twee may still carry them as tagged
     # passages, which the passage checks cover).
-    story_data = doc.get("storyData") or {}
     errors.extend(_image_rule_errors(
-        list(passages) + [{"name": "Story Stylesheet", "text": story_data.get("stylesheet") or ""}]
+        list(passages) + [{"name": "Story Stylesheet", "text": story_data.get("stylesheet") or ""}],
+        findings,
     ))
-    # Stories never run their own code: the platform adds what it needs
-    # (<<area>>, the UI bar) itself (twinejs-integrated wudlands-runtime.ts).
-    if (story_data.get("script") or "").strip():
-        errors.append(
-            "The Story JavaScript must be empty - stories can't run their own code "
-            "(use the story's commands and the Story Stylesheet instead)"
-        )
 
     # Build the link graph while validating each passage.
     outgoing: dict = {}
@@ -3675,6 +3764,12 @@ def _check_twine_syntax(doc: dict) -> dict:
         # links, needs no ending and is removed on submit. Nothing may lead to
         # it (checked below, for links and for quoted names in macros).
         if name == TEST_CHARACTERS_PASSAGE:
+            outgoing[name] = []
+            continue
+        # A refused or not-yet-played special scene or scene tag (widget,
+        # script, stylesheet, media, PassageHeader...) isn't a scene: the story
+        # rules report it once, without structural noise.
+        if name in non_scenes:
             outgoing[name] = []
             continue
         if _QUOTED_TEST_CHARACTERS_RE.search(text):
@@ -3710,34 +3805,30 @@ def _check_twine_syntax(doc: dict) -> dict:
 
         outgoing[name] = targets
 
-        # StoryInit is startup code: it must not navigate or mark an ending.
+        # StoryInit is startup code: it must not navigate (nor end the story,
+        # which the story check refuses).
         if name == "StoryInit":
             if targets:
                 errors.append("StoryInit must not have outgoing links")
-            if _ENDING_MACRO in text:
-                errors.append(f"StoryInit must not contain {_ENDING_MACRO}")
-            # The story's cover: exactly one uploaded image, shown with the title
-            # and description wherever the story is listed. (That it was really
-            # uploaded is checked on submit, with every other [img[...]].)
+            # The story's cover, optional (since 2026-11-25): at most one
+            # uploaded image, shown with the title and description wherever the
+            # story is listed; without one the platform shows its own. Players
+            # never see StoryInit, so a second image there is a mistake. (That it
+            # was really uploaded is checked on submit, with every other [img[...]].)
             covers = [
                 m.group(1).split("|")[-1].strip() for m in _IMG_MACRO_RE.finditer(text)
             ]
-            if not covers:
+            if len(covers) > 1:
                 errors.append(
-                    "StoryInit must contain the story's cover image as [img[filename]] "
-                    "(copy it from the Images list)"
-                )
-            elif len(covers) > 1:
-                errors.append(
-                    "StoryInit must contain exactly one image (the cover), found "
+                    "StoryInit holds at most one image, the story's cover, found "
                     + ", ".join(f"'{c}'" for c in covers)
                 )
             # A web address or other bad name is reported by _image_rule_errors.
             continue
 
-        # LastResort is the fault-recovery scene. Its own rule (carry the
-        # not-counted marker) is checked above; it is exempt from the normal
-        # ending/terminal rules so it isn't required to be a counted ending.
+        # LastResort is the fault-recovery scene. Its own rule (it sets
+        # "lastresort") is checked with the endings below; it is exempt from the
+        # normal ending/terminal rules so it isn't required to be a counted ending.
         if name == "LastResort":
             continue
 
@@ -3748,18 +3839,27 @@ def _check_twine_syntax(doc: dict) -> dict:
         if not text.strip():
             warnings.append(f"Passage '{name}' is empty")
 
-        # A terminal (link-less) node must declare itself an ending.
-        if not targets and _ENDING_MACRO not in text:
-            errors.append(
-                f"Passage '{name}' has no outgoing links and is missing "
-                f"{_ENDING_MACRO} — all final nodes must be marked as endings"
-            )
+        # A terminal (link-less) node must declare itself an ending. In a scene
+        # the check can't fully read, a way on may hide in what it can't read:
+        # then a warning (the scene waits anyway).
+        if not targets and name not in rules.ending_scenes:
+            if name in rules.waiting:
+                findings.append(story_rules.finding(
+                    f"Passage '{name}'", None, story_rules.UNSUPPORTED,
+                    "has no way on the check can read and doesn't set $isEnding - "
+                    "every scene leads on or ends the story",
+                ))
+            else:
+                errors.append(
+                    f"Passage '{name}' has no outgoing links and doesn't set $isEnding — "
+                    f"all final nodes must be marked as endings, like {ENDING_EXAMPLE}"
+                )
 
         # An ending is terminal: a node that still routes onward cannot be one.
-        if targets and _ENDING_MACRO in text:
+        if targets and name in rules.ending_scenes:
             errors.append(
                 f"Passage '{name}' is marked as an ending but has outgoing links — "
-                f"remove {_ENDING_MACRO} (an ending scene must be a dead end)"
+                "remove its <<set $isEnding>> (an ending scene must be a dead end)"
             )
 
     # --- Graph structure: Start story, Retreat story, isolated LastResort -----
@@ -3790,11 +3890,7 @@ def _check_twine_syntax(doc: dict) -> dict:
 
     def graph_has_ending(nodes: set) -> bool:
         """True if any scene in the set is a dead end marked as an ending."""
-        return any(
-            _ENDING_MACRO in by_name.get(n, {}).get("text", "")
-            and not outgoing.get(n)
-            for n in nodes
-        )
+        return any(n in rules.ending_scenes and not outgoing.get(n) for n in nodes)
 
     # LastResort is standalone: it links nowhere and nothing links to it.
     if "LastResort" in name_set:
@@ -3808,6 +3904,16 @@ def _check_twine_syntax(doc: dict) -> dict:
                 "Nothing may link to LastResort — the engine routes to it on a "
                 "fault; it is not a story destination"
             )
+
+    # Retreat is opened only by the platform's Run away button (in the in-game
+    # settings): no scene may lead to it, not even one of its own story, so
+    # running away is always that one click and counted once
+    # (adventures._count_run_away).
+    for src in sorted(incoming.get("Retreat", ())):
+        errors.append(
+            f"Passage '{src}' leads to Retreat — only the Run away button opens it, "
+            "so no scene may lead there"
+        )
 
     # TestCharacters is editor-only test data: no scene may link to it.
     for src in sorted(incoming.get(TEST_CHARACTERS_PASSAGE, ())):
@@ -3832,16 +3938,29 @@ def _check_twine_syntax(doc: dict) -> dict:
         reachable_from("Retreat") if "Retreat" in name_set else set()
     )
 
-    # Each story must reach at least one ending (a dead end with $isEnding true).
+    # Each story must reach at least one ending (a dead end that sets $isEnding).
+    # Past a scene the check can't fully read it can't follow the story: then
+    # a missing ending is a warning (the story waits anyway).
+    def no_ending(reachable: set, message: str) -> None:
+        if reachable & rules.waiting:
+            findings.append(story_rules.finding(
+                "Story", None, story_rules.UNSUPPORTED,
+                message + " (the check can't follow every way on, so it may be hidden there)",
+            ))
+        else:
+            errors.append(message)
+
     if start_name and not graph_has_ending(start_reachable):
-        errors.append(
+        no_ending(
+            start_reachable,
             "The main story has no ending — at least one scene reachable from the "
-            f"start passage must be a dead end with {_ENDING_MACRO}"
+            f"start passage must be a dead end that sets $isEnding, like {ENDING_EXAMPLE}",
         )
     if "Retreat" in name_set and not graph_has_ending(retreat_reachable):
-        errors.append(
+        no_ending(
+            retreat_reachable,
             "The Retreat story has no ending — at least one scene reachable from "
-            f"Retreat must be a dead end with {_ENDING_MACRO}"
+            'Retreat must be a dead end with <<set $isEnding to "failure">> (running away is a failure)',
         )
 
     # The two stories must be completely independent — no scene in both graphs.
@@ -3853,10 +3972,42 @@ def _check_twine_syntax(doc: dict) -> dict:
             + ", ".join(f"'{n}'" for n in overlap)
         )
 
-    # Any playable scene reached by neither root is detached (advisory).
+    # How each ending ends (docs/STORY-RULES.md "Endings"): LastResort, and
+    # only LastResort, sets "lastresort"; the Retreat story ends only in
+    # failures; the main story in "success" or "failure", at least one of them
+    # a success; and every success and failure is declared with a teaser in
+    # $meta_endings. Scenes in both graphs are reported above.
+    errors.extend(_ending_placement_errors(rules.endings, retreat_reachable, set(overlap)))
+    if "LastResort" in name_set:
+        last = rules.endings.get("LastResort", [])
+        if not last or any(v != story_rules.LASTRESORT for v in last):
+            errors.append(
+                f"LastResort must contain {LAST_RESORT_ENDING} — a fault must not count as a playthrough"
+            )
+    main_values = [
+        v for n in start_reachable - set(overlap)
+        if n in rules.endings and not outgoing.get(n)
+        for v in rules.endings[n]
+    ]
+    if main_values and not any(story_rules.ending_kind(v) == story_rules.SUCCESS for v in main_values):
+        no_ending(
+            start_reachable,
+            'The main story has no success ending — at least one of its endings sets $isEnding to '
+            '"success" (a name may follow, like "success:dragon_slain")',
+        )
+    teaser_errors, teaser_notes = _ending_teaser_problems(rules.endings, rules.teasers)
+    errors.extend(teaser_errors)
+    findings.extend(teaser_notes)
+
+    # Any playable scene reached by neither root is detached (advisory) - when
+    # the check can follow every way on. Past a scene it can't fully read it
+    # can't tell, and the story waits anyway.
+    followed = not ((start_reachable | retreat_reachable) & rules.waiting)
     for name in passage_names:
         if (
-            name in _RESERVED_PASSAGES
+            not followed
+            or name in _RESERVED_PASSAGES
+            or name in non_scenes
             or name in ("LastResort", "Retreat", TEST_CHARACTERS_PASSAGE)
             or name in start_reachable
             or name in retreat_reachable
@@ -3866,9 +4017,6 @@ def _check_twine_syntax(doc: dict) -> dict:
             f"Passage '{name}' is unreachable from the start passage or Retreat"
         )
 
-    # What each scene may contain (docs/STORY-RULES.md): an allow-list read
-    # without running anything - SugarCube would run much of it as code.
-    rules = story_rules.check_story(passages, story_data)
     errors.extend(rules.errors)
 
     # The test party: checked like real characters, then stored with the
@@ -3880,12 +4028,39 @@ def _check_twine_syntax(doc: dict) -> dict:
     )
     errors.extend(party_errors)
 
+    notes = [story_rules.finding("", None, story_rules.NOTE, w) for w in warnings]
+    return _check_result(
+        errors, rules.warnings + findings + notes, has_code=rules.has_code,
+        testCharacters=party, legendPoints=rules.legend_points,
+    )
+
+
+def _check_result(errors: list, findings: list, has_code: bool = False, **extra) -> dict:
+    """_check_twine_syntax's answer from its refusals and warnings."""
     return {
         "errors": errors,
-        "warnings": warnings,
-        "testCharacters": party,
-        "legendPoints": rules.legend_points,
+        "warnings": [story_rules.finding_text(w) for w in findings],
+        "findings": findings,
+        "hasCode": has_code or any(w["kind"] == story_rules.CODE for w in findings),
+        "held": any(w["kind"] in story_rules.HOLDING_KINDS for w in findings),
+        **extra,
     }
+
+
+_WAITS_SUMMARY = (
+    "This story waits: it uses JavaScript or something the platform can't play yet "
+    "(marked below), so it can't go live until there are rules for that - expect a long review."
+)
+
+
+def _warning_lines(result: dict) -> List[str]:
+    """The warnings as the editor shows them after a submit or a Save review:
+    what makes the story wait first, under a line that says so."""
+    findings = result.get("findings") or []
+    holding = [w for w in findings if w["kind"] in story_rules.HOLDING_KINDS]
+    others = [w for w in findings if w["kind"] not in story_rules.HOLDING_KINDS]
+    lines = [story_rules.finding_text(w) for w in holding + others]
+    return ([_WAITS_SUMMARY] if holding else []) + lines
 
 
 # How long a submission stays open for resubmission. Must match REVIEW_WINDOW_MS
@@ -4029,7 +4204,6 @@ async def submit_twine_story_for_review(
 
     result = _check_twine_syntax(doc)
     errors = result["errors"]
-    warnings = result["warnings"]
 
     # Text verification first. If the story text itself is invalid, reject now —
     # before touching images.
@@ -4039,7 +4213,7 @@ async def submit_twine_story_for_review(
             "storyId": story_id,
             "status": "rejected",
             "errors": errors,
-            "warnings": warnings,
+            "warnings": _warning_lines(result),
         }
 
     # Everything from here on works on the story without its editor-only test
@@ -4056,7 +4230,7 @@ async def submit_twine_story_for_review(
             "storyId": story_id,
             "status": "rejected",
             "errors": errors,
-            "warnings": warnings,
+            "warnings": _warning_lines(result),
         }
 
     now = datetime.now(timezone.utc).isoformat()
@@ -4100,7 +4274,7 @@ async def submit_twine_story_for_review(
         "sizeBytes": doc.get("sizeBytes", 0),
         "submittedAt": now,
         "status": "submitted",
-        "warnings": warnings,
+        **_warning_fields(result),
         # The test party, checked above: a field of its own, never a scene.
         "testCharacters": result.get("testCharacters"),
         **_snapshot_fields(doc, passages_list),
@@ -4112,8 +4286,18 @@ async def submit_twine_story_for_review(
         "ok": True,
         "storyId": story_id,
         "status": "submitted",
-        "warnings": warnings,
+        "warnings": _warning_lines(result),
+        "held": result["held"],
+        "hasCode": result["hasCode"],
     }
+
+
+def _warning_fields(result: dict) -> dict:
+    """What a review entry keeps of the check's warnings: each one
+    ({place, line, kind, message}), whether the story waits and whether it
+    has code. Shown to the author and reviewers only - the public queue gets
+    the count and the two flags (list_twine_reviews)."""
+    return {"warnings": result["findings"], "held": result["held"], "hasCode": result["hasCode"]}
 
 
 @player_router.get("/twine-reviews")
@@ -4143,6 +4327,11 @@ async def list_twine_reviews():
             "sceneCount": 1,
             "tags": 1,
             "coverImage": 1,
+            # Only counted below: a warning names scenes and code, which would
+            # give the story away.
+            "warnings": 1,
+            "held": 1,
+            "hasCode": 1,
             # Needed only to derive sceneCount/tags for older submissions that
             # predate those fields; stripped from the response below.
             "passages": 1,
@@ -4153,6 +4342,13 @@ async def list_twine_reviews():
     async for doc in cursor:
         passages = doc.pop("passages", [])
         story_data = doc.pop("storyData", {})
+        if "held" not in doc:
+            # Submitted before warnings had weights: worked out once here.
+            check = _check_twine_syntax({"name": doc.get("name"), "passages": passages, "storyData": story_data})
+            doc.update({"warnings": check["findings"], "held": check["held"], "hasCode": check["hasCode"]})
+        doc["warningCount"] = len(doc.pop("warnings", None) or [])
+        doc["held"] = bool(doc.get("held"))
+        doc["hasCode"] = bool(doc.get("hasCode"))
         # Back-fill on read for entries submitted before scenes/tags existed, so
         # every preview shows its stats and tag symbols without a resubmit.
         if doc.get("sceneCount") is None:
@@ -4326,19 +4522,32 @@ async def get_twine_review_story(
     if not review:
         raise HTTPException(status_code=404, detail="Review submission not found")
     # Stored as it was submitted, so possibly before a rule existed: the editor
-    # shows these and keeps Test and Play off for the copy until a Save review
-    # passes (twinejs-integrated src/util/review-copies.ts).
-    return {"owner": owner, **review, "checkProblems": _submission_problems(review)}
+    # shows the problems and keeps Test and Play off for the copy until a Save
+    # review passes (twinejs-integrated src/util/review-copies.ts). The
+    # warnings never stop that; they are what the reviewer reads.
+    check = _submission_check(review)
+    return {
+        "owner": owner, **review,
+        "checkProblems": check["errors"],
+        "checkWarnings": check["findings"],
+        "held": check["held"],
+        "hasCode": check["hasCode"],
+    }
 
 
-def _submission_problems(review: dict) -> List[str]:
+def _submission_check(review: dict) -> dict:
     """Today's story check on a stored submission: its name, scenes and story
     data. A submission made before a rule existed can fail it."""
     return _check_twine_syntax({
         "name": review.get("name"),
         "passages": review.get("passages") or [],
         "storyData": review.get("storyData") or {},
-    })["errors"]
+    })
+
+
+def _submission_problems(review: dict) -> List[str]:
+    """The refusals of today's story check on a stored submission."""
+    return _submission_check(review)["errors"]
 
 
 _LIVE_ID_TAKEN = "Another live story already uses this story id"
@@ -4428,13 +4637,13 @@ async def save_twine_review(
     })
 
     result = _check_twine_syntax(doc)
-    errors, warnings = result["errors"], result["warnings"]
+    errors = result["errors"]
     passages = _without_test_characters(doc.get("passages", []))
     if not errors:
         errors.extend(await _story_store_problems(db, owner, story_id, passages, twine_images.STAGE_REVIEW))
     if errors:
         return {"ok": False, "owner": owner, "storyId": story_id, "status": "rejected",
-                "errors": errors, "warnings": warnings}
+                "errors": errors, "warnings": _warning_lines(result)}
 
     now = datetime.now(timezone.utc).isoformat()
     stored = {**doc, "passages": passages}
@@ -4442,7 +4651,7 @@ async def save_twine_review(
         "storyData": story_data,
         "passages": passages,
         "sizeBytes": len(json.dumps(stored, default=str).encode()),
-        "warnings": warnings,
+        **_warning_fields(result),
         # The saved copy is the whole submission, its test party included.
         "testCharacters": result.get("testCharacters"),
         **_snapshot_fields(doc, passages),
@@ -4458,7 +4667,8 @@ async def save_twine_review(
     )
     if saved.modified_count != 1:
         raise HTTPException(status_code=409, detail="The submission changed meanwhile - please reload it")
-    return {"ok": True, "owner": owner, "storyId": story_id, "status": "submitted", "warnings": warnings}
+    return {"ok": True, "owner": owner, "storyId": story_id, "status": "submitted",
+            "warnings": _warning_lines(result), "held": result["held"], "hasCode": result["hasCode"]}
 
 
 @player_router.post("/twine-reviews/{owner}/{story_id}/approve")
@@ -4489,7 +4699,8 @@ async def approve_twine_review(
     # What goes live passes today's story check, also a submission made before
     # it existed: the reviewer fixes it in the editor and uses Save review.
     stored = await db.twine_review.find_one(key, {"name": 1, "passages": 1, "storyData": 1})
-    problems = _submission_problems(stored or {})
+    check = _submission_check(stored or {})
+    problems = check["errors"]
     if problems:
         more = f" (and {len(problems) - 1} more)" if len(problems) > 1 else ""
         raise HTTPException(
@@ -4497,6 +4708,16 @@ async def approve_twine_review(
             detail=f"This submission fails the story check: {problems[0]}{more}. "
             "Open it in the editor, fix it and use Save review - or reject it if only "
             "its author can fix it (the story's name).",
+        )
+    # A story with JavaScript, or something the platform can't play yet, runs
+    # on the shared engine workers once live: it waits until there are rules.
+    if check["held"]:
+        first = next(w for w in check["findings"] if w["kind"] in story_rules.HOLDING_KINDS)
+        raise HTTPException(
+            status_code=409,
+            detail="This story waits until there are rules for what it uses - JavaScript or "
+            f"something the platform can't play yet: {story_rules.finding_text(first)}. "
+            "Leave it waiting, or fix it in the editor and use Save review.",
         )
 
     try:

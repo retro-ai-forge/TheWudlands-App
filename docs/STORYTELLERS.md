@@ -12,7 +12,7 @@ Adventures are self-contained story add-ons: a scene graph of interconnected sce
 
 Adventures are authored using [Twine](https://snapcraft.io/twinejs), a free, open-source tool for creating interactive fiction. Twine gives you a visual map of your story's branching paths, making it easy to see how scenes connect, spot dead ends, and manage complex narratives.
 
-You can use the desktop app (available on Linux, macOS, and Windows via Snap) or the browser version. Either way, Twine lets you:
+You can use the integrated Wudlands twine browser editor. Twine lets you:
 
 - **Visually map** your entire scene graph — drag, connect, and rearrange passages
 - **Preview and playtest** your adventure before submitting
@@ -101,7 +101,7 @@ Adventures are submitted alongside their image assets. The engine validates ever
 - Presence of all required fields
 - Existence of `Start`, `LastResort`, and `Retreat` scenes
 - Validity of all choice targets (every `to` field must point to an existing scene)
-- Correct typing on `isEnding` flags
+- Every ending marked with `$isEnding`: `"success"` or `"failure"` (at least one success in the main story; the Retreat story ends in failures), each declared with a teaser in `$meta_endings`, and `"lastresort"` in `LastResort`; no scene leads to `Retreat` (the Run away button opens it)
 
 Adventures that fail validation are not published. You can update a submitted story by submitting it again, but only within 7 days of your last submit (each submit starts the 7 days again). After that it is locked and waits for a reviewer, however long that takes: reviewers only look at stories you can no longer change. If it is rejected, you get the reason and can fix it and submit it again. If it passes, it goes live and players can play it. A live story is final: it can't be resubmitted. To publish changes, duplicate it in the editor and submit the copy as a new story. Only the platform fixes bugs in a live story. Everything you need to know about the addon format, image specifications, style presets, and submission requirements is documented in the Storyteller section of the app.
 

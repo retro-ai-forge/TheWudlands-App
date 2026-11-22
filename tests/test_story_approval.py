@@ -45,9 +45,9 @@ def _valid_story(start_text: str) -> dict:
     """storyData and passages of a story that passes the submit check, Start first."""
     story = _story([
         _p("p1", "Start", start_text),
-        _p("p2", "End", "The end. <<set $isEnding to true>>"),
+        _p("p2", "End", "The end. <<set $isEnding to 'success'>>"),
         _p("p0", "StoryInit", VALID_INIT),
-        _p("p3", "LastResort", "The tunnel collapses. <<set $isEnding to false>>"),
+        _p("p3", "LastResort", "The tunnel collapses. <<set $isEnding to 'lastresort'>>"),
     ], start="p1")
     return {"storyData": story["storyData"], "passages": story["passages"]}
 

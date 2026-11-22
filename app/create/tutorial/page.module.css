@@ -31,6 +31,41 @@
   margin-bottom: 2rem;
 }
 
+.download {
+  font-family: "Courier New", Courier, monospace;
+  font-size: 0.9rem;
+  line-height: 1.7;
+  color: #d4c9a8;
+  background: #0d0d0a;
+  border: 1px solid #7a6a3a;
+  padding: 0.75rem 1rem;
+  margin-bottom: 2rem;
+}
+
+.downloadText {
+  margin: 0.5rem 0 0.9rem;
+}
+
+.downloadButton {
+  display: inline-block;
+  padding: 0.45rem 0.9rem;
+  color: #0d0d0a;
+  background: #c07a3a;
+  border: 1px solid #e6a55a;
+  font-weight: bold;
+  text-decoration: none;
+}
+
+.downloadButton:hover,
+.downloadButton:focus-visible {
+  background: #e6a55a;
+}
+
+.downloadList {
+  margin: 0;
+  padding-left: 1.4rem;
+}
+
 .stepList {
   list-style: none;
   margin: 0;
@@ -194,6 +229,92 @@
 
 .table td:first-child {
   white-space: nowrap;
+}
+
+/* ── Folded section (the item list) ── */
+.fold {
+  border: 1px solid #3a3020;
+  background: #0d0d0a;
+}
+
+.foldSummary {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.75rem 1rem;
+  cursor: pointer;
+  list-style: none;
+}
+
+.foldSummary::-webkit-details-marker {
+  display: none;
+}
+
+.foldSummary::after {
+  content: "▾";
+  font-size: 0.8rem;
+  color: #7a6a3a;
+}
+
+.fold[open] > .foldSummary::after {
+  content: "▴";
+}
+
+.foldSummary:hover {
+  background: #15150f;
+}
+
+.foldSummary:focus-visible {
+  outline: 1px solid #c07a3a;
+  outline-offset: -1px;
+}
+
+/* The heading is the summary's whole row. */
+.foldSummary > h2 {
+  margin: 0;
+}
+
+.foldBody {
+  padding: 1rem 1rem 0.25rem;
+  border-top: 1px solid #3a3020;
+}
+
+.itemJump {
+  font-family: "Courier New", Courier, monospace;
+  font-size: 0.85rem;
+  line-height: 1.9;
+  color: #7a6a3a;
+  margin-bottom: 0.5rem;
+}
+
+.itemGroup {
+  scroll-margin-top: 1rem;
+}
+
+.itemTable {
+  font-size: 0.85rem;
+}
+
+.itemTable td {
+  padding: 0.25rem 0.6rem;
+}
+
+.itemTable td:last-child {
+  color: #a09080;
+}
+
+/* Ids break only after an underscore (<wbr>), never inside a word. */
+.table td.itemId {
+  color: #c07a3a;
+  white-space: normal;
+  overflow-wrap: normal;
+}
+
+@media (max-width: 749px) {
+  .foldBody {
+    padding: 0.75rem 0.5rem 0.25rem;
+  }
 }
 
 @media (max-width: 749px) {

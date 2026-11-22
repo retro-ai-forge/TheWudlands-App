@@ -27,7 +27,7 @@ def _story(passages, start="1", fmt="SugarCube", with_retreat=True, tags=("adven
     passages = list(passages)
     if with_retreat and not any(p.get("name") == "Retreat" for p in passages):
         passages.append(
-            _p("retreat", "Retreat", "You withdraw. <<set $isEnding to true>>")
+            _p("retreat", "Retreat", "You withdraw. <<set $isEnding to 'failure'>>")
         )
     return {
         "name": "Probe story",
@@ -53,6 +53,7 @@ VALID_INIT = (
     "<<set $meta_durationWeeks to 1>>"
     "<<set $meta_access to 'paid'>>"
     "<<set $meta_allowRunAway to true>>"
+    "<<set $meta_endings to {'success': 'You made it.', 'failure': 'You turned back.'}>>"
     "[img[cover.webp]]"
 )
 
@@ -77,8 +78,8 @@ def test_valid_story_passes():
             [
                 _p("0", "StoryInit", VALID_INIT),
                 _p("1", "Start", "Welcome [[End]]"),
-                _p("2", "End", "The end. <<set $isEnding to true>>"),
-                _p("3", "LastResort", "The tunnel collapses. <<set $isEnding to false>>"),
+                _p("2", "End", "The end. <<set $isEnding to 'success'>>"),
+                _p("3", "LastResort", "The tunnel collapses. <<set $isEnding to 'lastresort'>>"),
             ]
         )
     )
@@ -93,10 +94,10 @@ def test_display_and_arrow_links_resolve():
             [
                 _p("0", "StoryInit", VALID_INIT),
                 _p("1", "Start", "[[Go east->East]] [[West<-Go west]] [[Label|North]]"),
-                _p("2", "East", "<<set $isEnding to true>>"),
-                _p("3", "West", "<<set $isEnding to true>>"),
-                _p("4", "North", "<<set $isEnding to true>>"),
-                _p("5", "LastResort", "You are lost. <<set $isEnding to false>>"),
+                _p("2", "East", "<<set $isEnding to 'success'>>"),
+                _p("3", "West", "<<set $isEnding to 'success'>>"),
+                _p("4", "North", "<<set $isEnding to 'success'>>"),
+                _p("5", "LastResort", "You are lost. <<set $isEnding to 'lastresort'>>"),
             ]
         )
     )
@@ -108,14 +109,14 @@ def test_display_and_arrow_links_resolve():
 
 def test_non_sugarcube_rejected():
     result = _check_twine_syntax(
-        _story([_p("1", "Start", "<<set $isEnding to true>>")], fmt="Harlowe")
+        _story([_p("1", "Start", "<<set $isEnding to 'success'>>")], fmt="Harlowe")
     )
     assert any("SugarCube" in e for e in result["errors"])
 
 
 def test_missing_story_init():
     result = _check_twine_syntax(
-        _story([_p("1", "Start", "<<set $isEnding to true>>")])
+        _story([_p("1", "Start", "<<set $isEnding to 'success'>>")])
     )
     assert any("StoryInit" in e for e in result["errors"])
 
@@ -126,7 +127,7 @@ def test_missing_LastResort():
             [
                 _p("0", "StoryInit", VALID_INIT),
                 _p("1", "Start", "[[End]]"),
-                _p("2", "End", "<<set $isEnding to true>>"),
+                _p("2", "End", "<<set $isEnding to 'success'>>"),
             ]
         )
     )
@@ -139,8 +140,8 @@ def test_missing_Retreat():
             [
                 _p("0", "StoryInit", VALID_INIT),
                 _p("1", "Start", "[[End]]"),
-                _p("2", "End", "<<set $isEnding to true>>"),
-                _p("3", "LastResort", "Lost. <<set $isEnding to false>>"),
+                _p("2", "End", "<<set $isEnding to 'success'>>"),
+                _p("3", "LastResort", "Lost. <<set $isEnding to 'lastresort'>>"),
             ],
             with_retreat=False,
         )
@@ -149,19 +150,19 @@ def test_missing_Retreat():
 
 
 def test_LastResort_must_mark_run_not_counted():
-    # A LastResort without <<set $isEnding to false>> would wrongly charge the
+    # A LastResort without <<set $isEnding to 'lastresort'>> would wrongly charge the
     # player for a platform fault.
     result = _check_twine_syntax(
         _story(
             [
                 _p("0", "StoryInit", VALID_INIT),
                 _p("1", "Start", "[[End]]"),
-                _p("2", "End", "<<set $isEnding to true>>"),
+                _p("2", "End", "<<set $isEnding to 'success'>>"),
                 _p("3", "LastResort", "The tunnel collapses."),
             ]
         )
     )
-    assert any("LastResort" in e and "false" in e for e in result["errors"])
+    assert any("LastResort" in e and "lastresort" in e for e in result["errors"])
 
 
 def test_LastResort_is_not_flagged_unreachable():
@@ -171,8 +172,8 @@ def test_LastResort_is_not_flagged_unreachable():
             [
                 _p("0", "StoryInit", VALID_INIT),
                 _p("1", "Start", "[[End]]"),
-                _p("2", "End", "<<set $isEnding to true>>"),
-                _p("3", "LastResort", "The tunnel collapses. <<set $isEnding to false>>"),
+                _p("2", "End", "<<set $isEnding to 'success'>>"),
+                _p("3", "LastResort", "The tunnel collapses. <<set $isEnding to 'lastresort'>>"),
             ]
         )
     )
@@ -185,7 +186,7 @@ def test_missing_start_passage():
         _story(
             [
                 _p("0", "StoryInit", VALID_INIT),
-                _p("1", "Start", "<<set $isEnding to true>>"),
+                _p("1", "Start", "<<set $isEnding to 'success'>>"),
             ],
             start="",
         )
@@ -199,7 +200,7 @@ def test_duplicate_names():
             [
                 _p("0", "StoryInit", VALID_INIT),
                 _p("1", "Start", "[[Dup]]"),
-                _p("2", "Dup", "<<set $isEnding to true>>"),
+                _p("2", "Dup", "<<set $isEnding to 'success'>>"),
                 _p("3", "Dup", "also"),
             ]
         )
@@ -215,8 +216,8 @@ def test_missing_required_metadata_field():
             [
                 _p("0", "StoryInit", partial_init),
                 _p("1", "Start", "[[End]]"),
-                _p("2", "End", "<<set $isEnding to true>>"),
-                _p("3", "LastResort", "Lost. <<set $isEnding to false>>"),
+                _p("2", "End", "<<set $isEnding to 'success'>>"),
+                _p("3", "LastResort", "Lost. <<set $isEnding to 'lastresort'>>"),
             ]
         )
     )
@@ -235,8 +236,8 @@ def _check_init(init_text: str) -> dict:
             [
                 _p("0", "StoryInit", init_text),
                 _p("1", "Start", "[[End]]"),
-                _p("2", "End", "<<set $isEnding to true>>"),
-                _p("3", "LastResort", "Lost. <<set $isEnding to false>>"),
+                _p("2", "End", "<<set $isEnding to 'success'>>"),
+                _p("3", "LastResort", "Lost. <<set $isEnding to 'lastresort'>>"),
             ]
         )
     )
@@ -305,6 +306,20 @@ def test_max_char_num_in_range_accepted():
         assert not any("maxCharNum" in e for e in result["errors"]), f"maxCharNum {ok} should be accepted"
 
 
+def test_duration_weeks_out_of_range_rejected():
+    for bad in ("0", "5"):
+        init = _init_with("<<set $meta_durationWeeks to 1>>", f"<<set $meta_durationWeeks to {bad}>>")
+        result = _check_init(init)
+        assert any("durationWeeks" in e for e in result["errors"]), f"durationWeeks {bad} should be rejected"
+
+
+def test_duration_weeks_in_range_accepted():
+    for ok in ("1", "4"):
+        init = _init_with("<<set $meta_durationWeeks to 1>>", f"<<set $meta_durationWeeks to {ok}>>")
+        result = _check_init(init)
+        assert not any("durationWeeks" in e for e in result["errors"]), f"durationWeeks {ok} should be accepted"
+
+
 def test_string_meta_blank_rejected():
     # Empty and whitespace-only values are invalid for a title.
     for bad in ("''", "'  '"):
@@ -345,10 +360,10 @@ def test_numeric_and_boolean_meta_stay_unquoted():
     assert not any("quoted" in e for e in result["errors"])
 
 
-def test_story_init_needs_a_cover_image():
+def test_the_cover_image_is_optional():
     init = VALID_INIT.replace("[img[cover.webp]]", "")
     result = _check_init(init)
-    assert any("cover image" in e for e in result["errors"])
+    assert not any("cover" in e or "image" in e for e in result["errors"]), result["errors"]
 
 
 def test_story_init_cover_accepted():
@@ -358,13 +373,13 @@ def test_story_init_cover_accepted():
 
 def test_story_init_only_one_cover():
     result = _check_init(VALID_INIT + "[img[second.webp]]")
-    assert any("exactly one image" in e for e in result["errors"])
+    assert any("at most one image, the story's cover" in e for e in result["errors"])
 
 
 def test_story_init_cover_must_be_uploaded_not_a_url():
     init = VALID_INIT.replace("[img[cover.webp]]", "[img[https://example.com/c.png]]")
     result = _check_init(init)
-    assert any("plain file name" in e for e in result["errors"])
+    assert any("outside the story" in e for e in result["errors"])
 
 
 def test_story_cover_is_the_story_init_image():
@@ -385,7 +400,7 @@ def test_story_init_may_not_link():
         _story(
             [
                 _p("0", "StoryInit", "[[Start]]"),
-                _p("1", "Start", "<<set $isEnding to true>>"),
+                _p("1", "Start", "<<set $isEnding to 'success'>>"),
             ]
         )
     )
@@ -396,13 +411,13 @@ def test_story_init_may_not_be_ending():
     result = _check_twine_syntax(
         _story(
             [
-                _p("0", "StoryInit", "<<set $isEnding to true>>"),
+                _p("0", "StoryInit", "<<set $isEnding to 'success'>>"),
                 _p("1", "Start", "[[End]]"),
-                _p("2", "End", "<<set $isEnding to true>>"),
+                _p("2", "End", "<<set $isEnding to 'success'>>"),
             ]
         )
     )
-    assert any("StoryInit must not contain" in e for e in result["errors"])
+    assert any("StoryInit never ends the story" in e for e in result["errors"])
 
 
 # --- endings & reachability --------------------------------------------------
@@ -443,9 +458,9 @@ def test_unreachable_node_warns_not_errors():
             [
                 _p("0", "StoryInit", VALID_INIT),
                 _p("1", "Start", "[[End]]"),
-                _p("2", "End", "<<set $isEnding to true>>"),
-                _p("3", "LastResort", "You slip away. <<set $isEnding to false>>"),
-                _p("9", "Orphan", "<<set $isEnding to true>>"),
+                _p("2", "End", "<<set $isEnding to 'success'>>"),
+                _p("3", "LastResort", "You slip away. <<set $isEnding to 'lastresort'>>"),
+                _p("9", "Orphan", "<<set $isEnding to 'success'>>"),
             ]
         )
     )
@@ -472,8 +487,8 @@ def test_count_playable_scenes_excludes_non_playable():
     passages = [
         _p("0", "StoryInit", VALID_INIT),
         _p("1", "Start", "[[End]]"),
-        _p("2", "End", "<<set $isEnding to true>>"),
-        _p("3", "LastResort", "Lost. <<set $isEnding to false>>"),
+        _p("2", "End", "<<set $isEnding to 'success'>>"),
+        _p("3", "LastResort", "Lost. <<set $isEnding to 'lastresort'>>"),
         _p("4", "PassageHeader", "<<if true>>hi<</if>>"),
         _p("5", "Story Stylesheet", "body { color: red; }", tags=["stylesheet"]),
         _p("6", "Story JavaScript", "console.log(1)", tags=["script"]),
@@ -486,7 +501,7 @@ def test_collect_story_tags_distinct_sorted_no_engine_tags():
     doc = {
         "passages": [
             _p("1", "Start", "[[End]]", tags=["forest", "combat"]),
-            _p("2", "End", "<<set $isEnding to true>>", tags=["combat"]),
+            _p("2", "End", "<<set $isEnding to 'success'>>", tags=["combat"]),
             _p("3", "Story Stylesheet", "", tags=["stylesheet"]),
         ]
     }
@@ -498,7 +513,7 @@ def test_collect_story_tags_includes_story_level_tags():
     # tags; engine tags are still excluded.
     doc = {
         "tags": ["romance", "magic", "script"],
-        "passages": [_p("1", "Start", "<<set $isEnding to true>>", tags=["combat"])],
+        "passages": [_p("1", "Start", "<<set $isEnding to 'success'>>", tags=["combat"])],
     }
     assert _collect_story_tags(doc) == ["combat", "magic", "romance"]
 
@@ -506,24 +521,27 @@ def test_collect_story_tags_includes_story_level_tags():
 # --- reserved passages are exempt --------------------------------------------
 
 
-def test_sugarcube_special_passages_are_refused_without_structural_noise():
-    # PassageHeader would run on every scene: refused by the story rules, and
-    # not also reported as a dead end or an unreachable scene.
+def test_sugarcube_special_passages_wait_without_structural_noise():
+    # PassageHeader would run on every scene: the story waits until the
+    # platform plays it, and it isn't also reported as a dead end or an
+    # unreachable scene.
     result = _check_twine_syntax(
         _story(
             [
                 _p("0", "StoryInit", VALID_INIT),
                 _p("1", "Start", "[[End]]"),
-                _p("2", "End", "<<set $isEnding to true>>"),
-                _p("3", "LastResort", "The path gives way. <<set $isEnding to false>>"),
+                _p("2", "End", "<<set $isEnding to 'success'>>"),
+                _p("3", "LastResort", "The path gives way. <<set $isEnding to 'lastresort'>>"),
                 _p("4", "PassageHeader", "<<if $hp lte 0>>You died.<</if>>"),
             ]
         )
     )
-    assert result["errors"] == [
-        "Passage 'PassageHeader' isn't accepted - StoryInit, Retreat and LastResort are the only special scenes"
+    assert result["errors"] == []
+    assert result["held"] and not result["hasCode"]
+    assert [w for w in result["warnings"] if "PassageHeader" in w] == [
+        "Passage 'PassageHeader': this special scene isn't played - StoryInit, Retreat and LastResort "
+        "are the only special scenes"
     ]
-    assert not any("PassageHeader" in w for w in result["warnings"])
 
 
 # --- image hotspots (<<area>> macros) ----------------------------------------
@@ -544,9 +562,9 @@ def test_area_hotspot_valid_and_counts_as_link():
                     "<<area 0.00 0.20 0.45 0.80 [[The left door->LeftDoor]]>>\n"
                     "<<area 0.55 0.20 0.45 0.80 [[Climb the wall->WallTop]]>>",
                 ),
-                _p("2", "LeftDoor", "<<set $isEnding to true>>"),
-                _p("3", "WallTop", "<<set $isEnding to true>>"),
-                _p("4", "LastResort", "You slip. <<set $isEnding to false>>"),
+                _p("2", "LeftDoor", "<<set $isEnding to 'success'>>"),
+                _p("3", "WallTop", "<<set $isEnding to 'success'>>"),
+                _p("4", "LastResort", "You slip. <<set $isEnding to 'lastresort'>>"),
             ]
         )
     )
@@ -560,8 +578,8 @@ def test_area_hotspot_missing_target_rejected():
             [
                 _p("0", "StoryInit", VALID_INIT),
                 _p("1", "Start", "[img[g.webp]]\n<<area 0 0 0.5 1 [[Go->Nowhere]]>>"),
-                _p("2", "End", "<<set $isEnding to true>>"),
-                _p("3", "LastResort", "Lost. <<set $isEnding to false>>"),
+                _p("2", "End", "<<set $isEnding to 'success'>>"),
+                _p("3", "LastResort", "Lost. <<set $isEnding to 'lastresort'>>"),
             ]
         )
     )
@@ -574,8 +592,8 @@ def test_area_hotspot_out_of_range_coords_rejected():
             [
                 _p("0", "StoryInit", VALID_INIT),
                 _p("1", "Start", "[img[g.webp]]\n<<area 0 0 1.5 1 [[Go->End]]>>"),
-                _p("2", "End", "<<set $isEnding to true>>"),
-                _p("3", "LastResort", "Lost. <<set $isEnding to false>>"),
+                _p("2", "End", "<<set $isEnding to 'success'>>"),
+                _p("3", "LastResort", "Lost. <<set $isEnding to 'lastresort'>>"),
             ]
         )
     )
@@ -588,8 +606,8 @@ def test_area_hotspot_wrong_coord_count_rejected():
             [
                 _p("0", "StoryInit", VALID_INIT),
                 _p("1", "Start", "[img[g.webp]]\n<<area 0 0 0.5 [[Go->End]]>>"),
-                _p("2", "End", "<<set $isEnding to true>>"),
-                _p("3", "LastResort", "Lost. <<set $isEnding to false>>"),
+                _p("2", "End", "<<set $isEnding to 'success'>>"),
+                _p("3", "LastResort", "Lost. <<set $isEnding to 'lastresort'>>"),
             ]
         )
     )
@@ -602,8 +620,8 @@ def test_area_hotspot_overflow_warns():
             [
                 _p("0", "StoryInit", VALID_INIT),
                 _p("1", "Start", "[img[g.webp]]\n<<area 0.6 0 0.6 1 [[Go->End]]>>"),
-                _p("2", "End", "<<set $isEnding to true>>"),
-                _p("3", "LastResort", "Lost. <<set $isEnding to false>>"),
+                _p("2", "End", "<<set $isEnding to 'success'>>"),
+                _p("3", "LastResort", "Lost. <<set $isEnding to 'lastresort'>>"),
             ]
         )
     )
@@ -619,8 +637,8 @@ def test_ending_node_with_outgoing_links_rejected():
             [
                 _p("0", "StoryInit", VALID_INIT),
                 _p("1", "Start", "[[End]]"),
-                _p("2", "End", "Done. <<set $isEnding to true>> [[Start]]"),
-                _p("3", "LastResort", "Lost. <<set $isEnding to false>>"),
+                _p("2", "End", "Done. <<set $isEnding to 'success'>> [[Start]]"),
+                _p("3", "LastResort", "Lost. <<set $isEnding to 'lastresort'>>"),
             ]
         )
     )
@@ -635,8 +653,8 @@ def test_ending_node_terminal_passes():
             [
                 _p("0", "StoryInit", VALID_INIT),
                 _p("1", "Start", "[[End]]"),
-                _p("2", "End", "Done. <<set $isEnding to true>>"),
-                _p("3", "LastResort", "Lost. <<set $isEnding to false>>"),
+                _p("2", "End", "Done. <<set $isEnding to 'success'>>"),
+                _p("3", "LastResort", "Lost. <<set $isEnding to 'lastresort'>>"),
             ]
         )
     )
@@ -650,8 +668,8 @@ def test_area_hotspot_without_image_rejected():
             [
                 _p("0", "StoryInit", VALID_INIT),
                 _p("1", "Start", "No picture here. <<area 0 0 0.5 1 [[End]]>>"),
-                _p("2", "End", "<<set $isEnding to true>>"),
-                _p("3", "LastResort", "Lost. <<set $isEnding to false>>"),
+                _p("2", "End", "<<set $isEnding to 'success'>>"),
+                _p("3", "LastResort", "Lost. <<set $isEnding to 'lastresort'>>"),
             ]
         )
     )
@@ -688,8 +706,8 @@ def test_image_link_counts_as_exit_and_needs_no_ending():
             [
                 _p("0", "StoryInit", VALID_INIT),
                 _p("1", "Start", "[img[gate.webp][End]]"),
-                _p("2", "End", "<<set $isEnding to true>>"),
-                _p("3", "LastResort", "Lost. <<set $isEnding to false>>"),
+                _p("2", "End", "<<set $isEnding to 'success'>>"),
+                _p("3", "LastResort", "Lost. <<set $isEnding to 'lastresort'>>"),
             ]
         )
     )
@@ -702,8 +720,8 @@ def test_image_link_missing_target_rejected():
             [
                 _p("0", "StoryInit", VALID_INIT),
                 _p("1", "Start", "[img[gate.webp][Nowhere]] [[End]]"),
-                _p("2", "End", "<<set $isEnding to true>>"),
-                _p("3", "LastResort", "Lost. <<set $isEnding to false>>"),
+                _p("2", "End", "<<set $isEnding to 'success'>>"),
+                _p("3", "LastResort", "Lost. <<set $isEnding to 'lastresort'>>"),
             ]
         )
     )
@@ -717,8 +735,8 @@ def test_external_link_rejected():
             [
                 _p("0", "StoryInit", VALID_INIT),
                 _p("1", "Start", "[[https://example.com]] [img[g.webp][http://x.io]] [[End]]"),
-                _p("2", "End", "<<set $isEnding to true>>"),
-                _p("3", "LastResort", "Lost. <<set $isEnding to false>>"),
+                _p("2", "End", "<<set $isEnding to 'success'>>"),
+                _p("3", "LastResort", "Lost. <<set $isEnding to 'lastresort'>>"),
             ]
         )
     )
@@ -737,8 +755,8 @@ def test_external_link_forms_without_scheme_colon_slashes_rejected():
                     "Start",
                     "[[//cdn.example.com]] [[mailto:a@b.com]] [[www.example.com]] [[End]]",
                 ),
-                _p("2", "End", "<<set $isEnding to true>>"),
-                _p("3", "LastResort", "Lost. <<set $isEnding to false>>"),
+                _p("2", "End", "<<set $isEnding to 'success'>>"),
+                _p("3", "LastResort", "Lost. <<set $isEnding to 'lastresort'>>"),
             ]
         )
     )
@@ -755,8 +773,8 @@ def test_lastresort_with_outgoing_link_rejected():
             [
                 _p("0", "StoryInit", VALID_INIT),
                 _p("1", "Start", "[[End]]"),
-                _p("2", "End", "<<set $isEnding to true>>"),
-                _p("3", "LastResort", "Lost. <<set $isEnding to false>> [[Start]]"),
+                _p("2", "End", "<<set $isEnding to 'success'>>"),
+                _p("3", "LastResort", "Lost. <<set $isEnding to 'lastresort'>> [[Start]]"),
             ]
         )
     )
@@ -771,8 +789,8 @@ def test_link_to_lastresort_rejected():
             [
                 _p("0", "StoryInit", VALID_INIT),
                 _p("1", "Start", "[[End]] [[LastResort]]"),
-                _p("2", "End", "<<set $isEnding to true>>"),
-                _p("3", "LastResort", "Lost. <<set $isEnding to false>>"),
+                _p("2", "End", "<<set $isEnding to 'success'>>"),
+                _p("3", "LastResort", "Lost. <<set $isEnding to 'lastresort'>>"),
             ]
         )
     )
@@ -786,9 +804,9 @@ def test_start_linking_into_retreat_breaks_independence():
             [
                 _p("0", "StoryInit", VALID_INIT),
                 _p("1", "Start", "[[End]] [[Retreat]]"),
-                _p("2", "End", "<<set $isEnding to true>>"),
-                _p("3", "LastResort", "Lost. <<set $isEnding to false>>"),
-                _p("4", "Retreat", "Withdraw. <<set $isEnding to true>>"),
+                _p("2", "End", "<<set $isEnding to 'success'>>"),
+                _p("3", "LastResort", "Lost. <<set $isEnding to 'lastresort'>>"),
+                _p("4", "Retreat", "Withdraw. <<set $isEnding to 'failure'>>"),
             ]
         )
     )
@@ -797,23 +815,39 @@ def test_start_linking_into_retreat_breaks_independence():
     )
 
 
-def test_retreat_may_loop_back_to_itself():
-    # A branch returning to the Retreat root is a link within the Retreat graph,
-    # which is allowed; the graph still reaches an ending elsewhere.
+def test_nothing_may_lead_to_retreat():
+    # Only the platform's Run away button opens Retreat, so running away is one
+    # click, counted once - not even a scene of the Retreat story leads back.
     result = _check_twine_syntax(
         _story(
             [
                 _p("0", "StoryInit", VALID_INIT),
                 _p("1", "Start", "[[End]]"),
-                _p("2", "End", "<<set $isEnding to true>>"),
-                _p("3", "LastResort", "Lost. <<set $isEnding to false>>"),
+                _p("2", "End", "<<set $isEnding to 'success'>>"),
+                _p("3", "LastResort", "Lost. <<set $isEnding to 'lastresort'>>"),
                 _p("4", "Retreat", "[[RA]]"),
                 _p("5", "RA", "Back out? [[Retreat]] or [[REnd]]"),
-                _p("6", "REnd", "You leave for good. <<set $isEnding to true>>"),
+                _p("6", "REnd", "You leave for good. <<set $isEnding to 'failure'>>"),
             ]
         )
     )
-    assert result["errors"] == []
+    assert result["errors"] == [
+        "Passage 'RA' leads to Retreat — only the Run away button opens it, so no scene may lead there"
+    ]
+
+
+def test_a_button_may_not_lead_to_retreat_either():
+    result = _check_twine_syntax(
+        _story(
+            [
+                _p("0", "StoryInit", VALID_INIT),
+                _p("1", "Start", '[[End]] <<button "Flee" "Retreat">><</button>>'),
+                _p("2", "End", "<<set $isEnding to 'success'>>"),
+                _p("3", "LastResort", "Lost. <<set $isEnding to 'lastresort'>>"),
+            ]
+        )
+    )
+    assert any("'Start' leads to Retreat — only the Run away button opens it" in e for e in result["errors"])
 
 
 def test_start_may_loop_back_to_itself():
@@ -822,8 +856,8 @@ def test_start_may_loop_back_to_itself():
             [
                 _p("0", "StoryInit", VALID_INIT),
                 _p("1", "Start", "[[Start]] [[End]]"),
-                _p("2", "End", "<<set $isEnding to true>>"),
-                _p("3", "LastResort", "Lost. <<set $isEnding to false>>"),
+                _p("2", "End", "<<set $isEnding to 'success'>>"),
+                _p("3", "LastResort", "Lost. <<set $isEnding to 'lastresort'>>"),
             ]
         )
     )
@@ -837,8 +871,8 @@ def test_retreat_graph_needs_its_own_ending():
             [
                 _p("0", "StoryInit", VALID_INIT),
                 _p("1", "Start", "[[End]]"),
-                _p("2", "End", "<<set $isEnding to true>>"),
-                _p("3", "LastResort", "Lost. <<set $isEnding to false>>"),
+                _p("2", "End", "<<set $isEnding to 'success'>>"),
+                _p("3", "LastResort", "Lost. <<set $isEnding to 'lastresort'>>"),
                 _p("4", "Retreat", "[[RA]]"),
                 _p("5", "RA", "[[RB]]"),
                 _p("6", "RB", "[[RA]]"),
@@ -854,10 +888,10 @@ def test_retreat_graph_with_ending_passes():
             [
                 _p("0", "StoryInit", VALID_INIT),
                 _p("1", "Start", "[[End]]"),
-                _p("2", "End", "<<set $isEnding to true>>"),
-                _p("3", "LastResort", "Lost. <<set $isEnding to false>>"),
+                _p("2", "End", "<<set $isEnding to 'success'>>"),
+                _p("3", "LastResort", "Lost. <<set $isEnding to 'lastresort'>>"),
                 _p("4", "Retreat", "[[RA]]"),
-                _p("5", "RA", "You give up. <<set $isEnding to true>>"),
+                _p("5", "RA", "You give up. <<set $isEnding to 'failure'>>"),
             ]
         )
     )
@@ -871,8 +905,8 @@ def test_start_and_retreat_must_be_independent():
             [
                 _p("0", "StoryInit", VALID_INIT),
                 _p("1", "Start", "[[Shared]]"),
-                _p("2", "Shared", "<<set $isEnding to true>>"),
-                _p("3", "LastResort", "Lost. <<set $isEnding to false>>"),
+                _p("2", "Shared", "<<set $isEnding to 'success'>>"),
+                _p("3", "LastResort", "Lost. <<set $isEnding to 'lastresort'>>"),
                 _p("4", "Retreat", "[[Shared]]"),
             ]
         )
@@ -888,29 +922,52 @@ def test_story_without_tags_rejected():
             [
                 _p("0", "StoryInit", VALID_INIT),
                 _p("1", "Start", "[[End]]"),
-                _p("2", "End", "<<set $isEnding to true>>"),
-                _p("3", "LastResort", "Lost. <<set $isEnding to false>>"),
+                _p("2", "End", "<<set $isEnding to 'success'>>"),
+                _p("3", "LastResort", "Lost. <<set $isEnding to 'lastresort'>>"),
             ],
             tags=(),
         )
     )
-    assert any("no tags" in e.lower() for e in result["errors"])
+    assert any("no genre tag" in e.lower() for e in result["errors"])
 
 
 def test_story_with_passage_tag_only_passes_tag_rule():
-    # A tag on any passage satisfies the rule, even with no story-level tags.
+    # A genre tag on any passage satisfies the rule, even with no story-level tags.
     result = _check_twine_syntax(
         _story(
             [
                 _p("0", "StoryInit", VALID_INIT),
                 _p("1", "Start", "[[End]]", tags=["combat"]),
-                _p("2", "End", "<<set $isEnding to true>>"),
-                _p("3", "LastResort", "Lost. <<set $isEnding to false>>"),
+                _p("2", "End", "<<set $isEnding to 'success'>>"),
+                _p("3", "LastResort", "Lost. <<set $isEnding to 'lastresort'>>"),
             ],
             tags=(),
         )
     )
-    assert not any("no tags" in e.lower() for e in result["errors"])
+    assert not any("no genre tag" in e.lower() for e in result["errors"])
+
+
+def _story_tagged(*tags):
+    return _story(
+        [
+            _p("0", "StoryInit", VALID_INIT),
+            _p("1", "Start", "[[End]]"),
+            _p("2", "End", "<<set $isEnding to 'success'>>"),
+            _p("3", "LastResort", "Lost. <<set $isEnding to 'lastresort'>>"),
+        ],
+        tags=tags,
+    )
+
+
+def test_story_with_only_free_words_needs_a_genre_tag():
+    result = _check_twine_syntax(_story_tagged("pirates", "salt"))
+    assert any("no genre tag" in e.lower() for e in result["errors"])
+
+
+def test_free_words_are_fine_next_to_a_genre_tag():
+    for tags in (("pirates", "Horror"), ("other",), ("sea", "pirates")):
+        result = _check_twine_syntax(_story_tagged(*tags))
+        assert not any("no genre tag" in e.lower() for e in result["errors"]), tags
 
 
 # --- TestCharacters: the editor-only test party -----------------------------
@@ -931,8 +988,8 @@ def _with_test_party(start_text: str = "Welcome [[End]]"):
     return [
         _p("0", "StoryInit", VALID_INIT),
         _p("1", "Start", start_text),
-        _p("2", "End", "The end. <<set $isEnding to true>>"),
-        _p("3", "LastResort", "The tunnel collapses. <<set $isEnding to false>>"),
+        _p("2", "End", "The end. <<set $isEnding to 'success'>>"),
+        _p("3", "LastResort", "The tunnel collapses. <<set $isEnding to 'lastresort'>>"),
         _p("9", "TestCharacters", _TEST_PARTY),
     ]
 
@@ -972,14 +1029,18 @@ def test_a_submitted_story_keeps_no_test_characters():
 # --- image file names --------------------------------------------------------
 
 
-def _scene_errors(text, tags=None):
+def _scene_check(text, tags=None):
     passages = [
         _p("0", "StoryInit", VALID_INIT),
         _p("1", "Start", text + " [[End]]", tags),
-        _p("2", "End", "The end. <<set $isEnding to true>>"),
-        _p("3", "LastResort", "The tunnel collapses. <<set $isEnding to false>>"),
+        _p("2", "End", "The end. <<set $isEnding to 'success'>>"),
+        _p("3", "LastResort", "The tunnel collapses. <<set $isEnding to 'lastresort'>>"),
     ]
-    return _check_twine_syntax(_story(passages))["errors"]
+    return _check_twine_syntax(_story(passages))
+
+
+def _scene_errors(text, tags=None):
+    return _scene_check(text, tags)["errors"]
 
 
 @pytest.mark.parametrize(
@@ -1002,9 +1063,20 @@ def test_plain_uploaded_image_names_are_accepted(image):
         "[img[https://example.com/a.png]]",
         "[img[//example.com/a.png]]",
         "[img[data:image/png;base64,AAAA]]",
+        "[img[C:\\gate.webp]]",
+        "[IMG[https://example.com/a.png]]",
+        "[>img[https://example.com/a.png]]",
+    ],
+)
+def test_image_from_outside_the_story_is_refused(image):
+    assert any("outside the story" in e for e in _scene_errors(image))
+
+
+@pytest.mark.parametrize(
+    "image",
+    [
         "[img[images/gate.webp]]",
         "[img[../gate.webp]]",
-        "[img[C:\\gate.webp]]",
         "[img[$picture]]",
         "[img[_picture]]",
         "[img[gate]]",
@@ -1013,18 +1085,21 @@ def test_plain_uploaded_image_names_are_accepted(image):
         "[img[gate.webp?x=1]]",
         "[img[alert(1)]]",
         "[img[ gate .webp]]",
-        "[IMG[https://example.com/a.png]]",
-        "[>img[https://example.com/a.png]]",
     ],
 )
-def test_image_must_be_a_plain_file_name(image):
-    assert any("plain file name" in e for e in _scene_errors(image))
+def test_image_that_isnt_a_plain_file_name_makes_the_story_wait(image):
+    # SugarCube works the source out as code: a warning, and the story waits.
+    result = _scene_check(image)
+    assert not any("image" in e.lower() for e in result["errors"]), result["errors"]
+    assert any("plain file name" in w for w in result["warnings"]), result["warnings"]
+    assert result["held"] and result["hasCode"]
 
 
-def test_image_tooltip_is_refused():
+def test_image_tooltip_makes_the_story_wait():
     # SugarCube runs the tooltip text as JavaScript, like the source.
-    errors = _scene_errors("[img[A gate|gate.webp]]")
-    assert any("tooltip" in e and "[img[gate.webp]]" in e for e in errors)
+    result = _scene_check("[img[A gate|gate.webp]]")
+    assert any("tooltip" in w and "[img[gate.webp]]" in w for w in result["warnings"])
+    assert result["held"] and result["hasCode"]
 
 
 @pytest.mark.parametrize(
@@ -1052,8 +1127,8 @@ def test_stylesheet_may_not_load_pictures():
     passages = [
         _p("0", "StoryInit", VALID_INIT),
         _p("1", "Start", "Welcome [[End]]"),
-        _p("2", "End", "The end. <<set $isEnding to true>>"),
-        _p("3", "LastResort", "The tunnel collapses. <<set $isEnding to false>>"),
+        _p("2", "End", "The end. <<set $isEnding to 'success'>>"),
+        _p("3", "LastResort", "The tunnel collapses. <<set $isEnding to 'lastresort'>>"),
     ]
     doc = _story(passages)
     doc["storyData"]["stylesheet"] = "body { background: url('https://example.com/bg.png'); }"
@@ -1069,8 +1144,8 @@ def test_code_in_a_stylesheet_scene_is_refused(tag, trap):
     passages = [
         _p("0", "StoryInit", VALID_INIT),
         _p("1", "Start", "A dark cave. [[Look closer|Trap]] [[End]]"),
-        _p("2", "End", "The end. <<set $isEnding to true>>"),
-        _p("3", "LastResort", "The tunnel collapses. <<set $isEnding to false>>"),
+        _p("2", "End", "The end. <<set $isEnding to 'success'>>"),
+        _p("3", "LastResort", "The tunnel collapses. <<set $isEnding to 'lastresort'>>"),
         _p("4", "Trap", trap, [tag]),
     ]
     errors = _check_twine_syntax(_story(passages))["errors"]
@@ -1109,15 +1184,19 @@ def test_every_upload_gets_a_name_the_check_accepts(uploaded, ext):
     assert _IMAGE_FILENAME_RE.fullmatch(stem + ext), stem + ext
 
 
-def _with_story_data(**story_data):
+def _with_story_data_check(**story_data):
     story = _story([
         _p("0", "StoryInit", VALID_INIT),
         _p("1", "Start", "Welcome [[End]]"),
-        _p("2", "End", "The end. <<set $isEnding to true>>"),
-        _p("3", "LastResort", "The tunnel collapses. <<set $isEnding to false>>"),
+        _p("2", "End", "The end. <<set $isEnding to 'success'>>"),
+        _p("3", "LastResort", "The tunnel collapses. <<set $isEnding to 'lastresort'>>"),
     ])
     story["storyData"].update(story_data)
-    return _check_twine_syntax(story)["errors"]
+    return _check_twine_syntax(story)
+
+
+def _with_story_data(**story_data):
+    return _with_story_data_check(**story_data)["errors"]
 
 
 def test_editor_stylesheet_may_not_load_pictures():
@@ -1129,10 +1208,20 @@ def test_editor_stylesheet_without_urls_is_fine():
     assert _with_story_data(stylesheet=".stack { display: grid; }\n.stack > * { grid-area: 1 / 1; }") == []
 
 
-def test_story_javascript_must_be_empty():
+def test_story_javascript_makes_the_story_wait():
+    # Handed in so the platform sees what writers use it for; never approved
+    # until there are rules for JavaScript.
+    result = _with_story_data_check(script="setup.roll = function (n) { return n * 2; };")
+    assert result["errors"] == []
+    assert result["held"] and result["hasCode"]
+    assert any(w.startswith("Story JavaScript: ") for w in result["warnings"])
+    empty = _with_story_data_check(script="  \n ")
+    assert empty["errors"] == [] and empty["warnings"] == [] and not empty["hasCode"]
+
+
+def test_story_javascript_may_not_reconfigure_sugarcube():
     errors = _with_story_data(script="Config.ui.stowBarInitially = true;")
-    assert any("Story JavaScript must be empty" in e for e in errors)
-    assert _with_story_data(script="  \n ") == []
+    assert errors == ["Story JavaScript, line 1: 'Config' reaches into SugarCube or the browser - stories don't use it"]
 
 
 # --- story name and story data shape -------------------------------------------
@@ -1142,8 +1231,8 @@ def _minimal_passages(start_text="Welcome [[End]]", start_tags=None):
     return [
         _p("0", "StoryInit", VALID_INIT),
         _p("1", "Start", start_text, start_tags),
-        _p("2", "End", "The end. <<set $isEnding to true>>"),
-        _p("3", "LastResort", "The tunnel collapses. <<set $isEnding to false>>"),
+        _p("2", "End", "The end. <<set $isEnding to 'success'>>"),
+        _p("3", "LastResort", "The tunnel collapses. <<set $isEnding to 'lastresort'>>"),
     ]
 
 
@@ -1210,7 +1299,7 @@ def test_passage_tags_with_spaces_are_refused(tag):
 # of a random jump are exits like [[links]]: the scene isn't a dead end, the
 # scenes they reach aren't unreachable, and the step graph allows the step.
 
-_END = "<<set $isEnding to true>>The end."
+_END = "<<set $isEnding to 'success'>>The end."
 
 
 @pytest.mark.parametrize(

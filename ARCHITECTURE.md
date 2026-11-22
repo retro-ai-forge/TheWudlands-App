@@ -1,6 +1,6 @@
 # Architecture: services, the control layer and the story stack
 
-Updated 2026-11-21. How TheWudlands is split into Cloud Run services, what each one may do, how a story gets from the editor to players, and how `serverless-wudlands` controls every adventure: the story stack (main story, side stories, fights), checks, Legend, endings.
+Updated 2026-11-23. How TheWudlands is split into Cloud Run services, what each one may do, how a story gets from the editor to players, and how `serverless-wudlands` controls every adventure: the story stack (main story, side stories, fights), checks, Legend, endings.
 
 How Twine and SugarCube behave inside (what SugarCube runs as code, the story check, the editor's sealed frame, the jsdom engine) is in `twinejs-integrated/APP_INTEGRATION_HEADLESS.md`. What a story may contain is in `docs/STORY-RULES.md` ("the story rules").
 
@@ -17,10 +17,10 @@ How Twine and SugarCube behave inside (what SugarCube runs as code, the story ch
 | Service | Runs | Status |
 |---|---|---|
 | `serverless-wudlands` | The whole game: website, Twine editor files, wallet login and the FastAPI backend. The control layer. | Exists |
-| `engine-live` | SugarCube for one click at a time, for **live** stories (`twine_live`) played by players | Planned |
-| `engine-test` | SugarCube for one click at a time, for **submitted** stories (`twine_review`) played by their author and by reviewers | Planned |
+| `engine-live` | SugarCube for one click at a time, for **live** stories (`twine_live`) played by players | Deployed 2026-11-22; not called by the backend yet |
+| `engine-test` | SugarCube for one click at a time, for **submitted** stories (`twine_review`) played by their author and by reviewers | Deployed 2026-11-22; not called by the backend yet |
 
-Both engines are the same image. Only their settings differ (`WORKER_MODE` and the instance limits, see "Settings").
+Both engines are the same image, tagged with the `twinejs-integrated` commit it was built from. Only their settings differ (`WORKER_MODE` and the instance limits, see "Settings"). They answer `/health` and pass the deploy checks, but no route in `serverless-wudlands` calls them yet: that is the control layer, steps 3 and 4 of "Order of work".
 
 ## Rights
 
@@ -30,10 +30,12 @@ Both engines are the same image. Only their settings differ (`WORKER_MODE` and t
 | Database (Firestore) | Read and write | **No** | **No** |
 | Image bucket | Read and write | **No** | **No** |
 | Secrets in the environment | Yes | **None** | **None** |
-| Outbound internet | Yes | **No** | **No** |
-| Who may call it | Everyone (website and API) | Only `serverless-wudlands` (`roles/run.invoker`) | Only `serverless-wudlands` (`roles/run.invoker`) |
+| Outbound internet | Yes | **No**, not even name lookups (checked after every deploy) | **No**, not even name lookups (checked after every deploy) |
+| Who may call it | Everyone (website and API) | Only `serverless-wudlands` (`roles/run.invoker`), plus project owners | Only `serverless-wudlands` (`roles/run.invoker`), plus project owners |
 | Runs story code | **Never** | Reviewed stories | Unreviewed stories |
 | Remembers anything between clicks | Everything (it holds the database) | Nothing but cached story pages | Nothing but cached story pages |
+
+Project owners can call the engines because their role includes every permission; the deploy script uses that for its `/health` check. Keep the list of project owners short. Without a token the engines answer 403.
 
 The engines need no database: `serverless-wudlands` loads the story and the saved state, sends them with the click, and saves what comes back. In the 2026-11-19 tests one `<<set>>` line escaped jsdom and ran its own commands (details in the engine document). An engine with credentials would hand them to such a story. Story code must never run inside `serverless-wudlands`: every process there can fetch the service account's token from the metadata server.
 
@@ -123,7 +125,7 @@ Only Python changes characters (an injury from a failed skill check, a consequen
 - **The session moves the `lead` flag** in `members` and `serverVars.lead`; `$char` keeps the marching order.
 - **With one member left who can act,** it becomes the lead without asking. A lead who dies and is turned in the same step stays the lead.
 - **Story code never sets `$lead`** (`<<set $lead to …>>` stays refused): a death can happen in any scene, so the story can't plan for it, and only the platform's pick keeps the lead a member who can act.
-- **When every member has fallen, the adventure ends at once,** wherever it is (a party of vampires plays on): every frame is popped (side stories, fights) without being resumed, and the run ends as an ending (`$isEnding`). The run stays spent, everything in camp storage is lost, and the characters already carry the dead status. It is logged as `fallen`, not `finished`, so it doesn't add to `completedStories` or unlock follow-up stories.
+- **When every member has fallen, the adventure ends at once,** wherever it is (a party of vampires plays on): every frame is popped (side stories, fights) without being resumed, and the run ends as a `fallen` ending (the platform's own `$isEnding` value, `docs/STORY-RULES.md` "Endings"). The run stays spent, everything in camp storage is lost, and the characters already carry the dead status. It is logged as `fallen`, not `finished`, so it doesn't add to `completedStories` or unlock follow-up stories.
 - **The story decides who may enter.** Settings in `StoryInit` like the other `$meta_` values (names still to design): either what may enter (such as only `vampire`) or what may not (such as no `undead`), and what must be there (such as one `alive` and one `dead`, for a story about carrying a fallen friend home). The values are the life states and `soulless`. Without settings, every member who can act may enter and the fallen may not, as today (`start_adventure` refuses the dead). The lead is always a member who can act. The submit check accepts only known values and never both lists; the start checks the party against them.
 
 ### Settings during a story (decided 2026-11-21)
@@ -185,7 +187,7 @@ Recommendations for the details:
 
 - **Retreat or an engine failure** (an error or the time limit) inside a side story pops just that side story: the character drops back into the parked story, and the remembered click is applied as after any other pop.
 - **The result word** says why, so the story below can react if it wants to: "fled" after Retreat, "failed" after an engine failure.
-- **Only the bottom story** ends the run this way: Retreat there is the run's `run_away`, an engine failure there sends it to `LastResort`.
+- **Only the bottom story** ends the run this way: Retreat there is running away (counted at the click), an engine failure there sends it to `LastResort`.
 - Retreat out of a fight belongs to the fight rules (see "Skill check and fight commands" under "Open decisions").
 
 Rules still to decide (recommendations in brackets):
@@ -245,10 +247,18 @@ Foraging can move from today's foraging page into adventures, without moving its
 
 ### Runs, endings and recovery
 
-- **Run counter** (`story_plays`): `$meta_access` decides the start (`free` = no counter, `trial` = 1, `paid` = 0; a purchase adds 3). Starting takes a run; a `finished`, `run_away`, `fallen` (the whole party dead, see "When characters die") or `abandoned` (left alone for days, see "What the player receives") ending keeps it spent; `LastResort` (`aborted`) or a failed start gives it back (decided 2026-11-21: `LastResort` always, also when the run already had effects, since only an engine failure leads there). Reviewers see per live story how many runs ended there, counted from `adventure_log` (`outcome: "aborted"`, one entry per run, so nothing extra is stored), on a list of live stories on the review page; a story that keeps failing goes back to be fixed before it can be used to collect loot and get the run back.
-- **Ending a run:** `_finalize` writes the adventure log, settles the run counter, updates stats, uses up provisions and releases the characters. Only `finished` (an ending of the main story) adds to `completedStories`, which unlocks follow-up stories.
-- **Retreat:** with the engine, the play screen offers it while `$meta_allowRunAway` is true in the engine's state (today's step check reads each scene's own `<<set>>` or the `StoryInit` value instead), and the control layer moves the frame to `Retreat`. A run that ends there uses up the run but never counts as completed.
+- **Run counter** (`story_plays`): `$meta_access` decides the start (`free` = no counter, `trial` = 1, `paid` = 0; a purchase adds 3). Starting takes a run; a `finished` (any success or failure, the Retreat story's too), `fallen` (the whole party dead, see "When characters die") or `abandoned` (left alone for days, see "What the player receives") ending keeps it spent; `LastResort` (`aborted`) or a failed start gives it back (decided 2026-11-21: `LastResort` always, also when the run already had effects, since only an engine failure leads there). Reviewers see per live story how many runs ended there, counted from `adventure_log` (`outcome: "aborted"`, one entry per run, so nothing extra is stored), on a list of live stories on the review page; a story that keeps failing goes back to be fixed before it can be used to collect loot and get the run back.
+- **Ending a run:** `_finalize` writes the adventure log, settles the run counter, updates stats, uses up provisions and releases the characters. A `finished` run (any success or failure, the Retreat story's too) adds to `completedStories`, which unlocks follow-up stories (to be replaced by each character's ending record, `docs/STORY-RULES.md` "Endings").
+- **Retreat:** with the engine, the play screen offers it while `$meta_allowRunAway` is true in the engine's state (today's step check reads each scene's own `<<set>>` or the `StoryInit` value instead), and the control layer moves the frame to `Retreat`. The Run away button (in the in-game settings, to come) is the only way into `Retreat`: the submit check refuses any scene that leads there. The click counts the run-away at once, for every member (`stats.adventureRunAway`, `adventures._count_run_away`: the step marks the session `ranAway`, each member's count is a write conditional on its adventure link not being marked, repeated at the run's end in case it was cut off), even if the run then ends at `LastResort`; such a run never also counts as finished, since the stats tab's Stalwart/Craven bar adds the two up. The Retreat story ends in failures like any other (decided 2026-11-24).
 - **LastResort:** with the engine, only the server sends a frame there, when the engine fails (an error or the time limit). Today a step can still ask for it (see "Today's adventure API").
+
+### Adventure weeks and age (decided 2026-11-24)
+
+- **52 adventure weeks per character year.** A character's year runs from its creation day (`createdAt`), so not every year starts on 1 January; when it ends, the character gets its full 52 weeks back, worked out on read (no background job). Each story costs its `$meta_durationWeeks` (1 to 4, checked on submit). The character keeps the weeks used in its current year, mirrored in `player_characters` so lists can show the weeks left.
+- **Soft limit:** with any weeks left, a character can start a story of any length; the story takes what is left, down to 0, never below. Only at 0 weeks left can it start no story until its next year, and the story list marks the stories as not playable for it.
+- **Taken at the start, from every member** (each needs more than 0 weeks left), like the run counter, and given back only by `lastresort` or a failed start: exactly what was taken, never above 52. Every other ending keeps them spent, an early one too.
+- **Characters age only on adventures, the hard way:** when a run starts, each member's `age_month` grows by the story's full weeks, also when it had fewer weeks left, and it never goes back, not even after `lastresort` (a start that fails changes nothing). `age_month` stays the age at creation (whole human-equivalent months, the same for every race); next to it the character counts the whole weeks lived on adventures, and its age is both together, a week being 12/52 of a month (stored in months, a 1-week adventure would round away). The race multiplier stays in the display (`app/lib/ageScaling.ts`, an elf about x8): an elf's shown age grows by the full weeks times its multiplier (a 4-week adventure: a human's shown age grows by 4 weeks, an elf's by about 33) and its lifespan is as many times longer, so nothing is multiplied when storing, and the displayed age is never stored.
+- **Shown in the character stats** as "Adventures: 17 weeks" (the weeks left), with a short popup: "Back to 52 weeks in 68 days. Each adventure uses its weeks; with any week left you can still start one of any length. Characters age only on adventures."
 
 ### Test runs (decided 2026-11-21)
 
@@ -264,7 +274,7 @@ Foraging can move from today's foraging page into adventures, without moving its
 - **Scene HTML, cleaned:** the visible text and the visible labels, nothing behind them. No scripts, no event attributes, no `data-passage` or other link targets, no setters, no `title` or `aria-label` that names a scene, no check name or difficulty, no variable values the scene doesn't print. Clickable elements keep their classes, so the story stylesheet still applies. Image names are rewritten to the bucket URLs by the control layer, for the story's stage (`review` in test runs, `served` for live stories).
 - **Choices are sent back by their label:** the player's click names the button's or link's visible label, and choice inputs name the text they show, never the value the story stores: drop-downs and cycles their option's text, radio buttons and checkboxes the text of the `<label>` each sits in. The story check makes every text a player can pick unique in its scene (decided 2026-11-21): link and button texts, radio and checkbox labels and options, also across lists and in different branches of an `<<if>>`, so a text always names one choice and the server knows what it does from the scene text alone; it also refuses choices inside `<<for>>` (`docs/STORY-RULES.md`). So a click or pick needs nothing but its text. A hotspot has no visible label, and a `<<pick_member>>` button stands for a character, so the server gives these a neutral handle. When the label isn't in the scene any more (random text in the scene, see the engine document), the click is refused and the scene is shown as it is now, instead of running a different choice.
 - **Platform buttons are data, not story HTML:** Retreat, Leave, Settings (the lead and who takes checks), the `<<pick_member>>` buttons and a scene's timer are sent next to the scene and drawn by the play screen outside the sealed frame. The browser sends them back as platform actions (`retreat`, `leave`, `setLead`, `setPicked`, a member's handle), which the control layer handles itself; only Retreat moves the engine. Nothing is put into the story's page, where story code could reach it.
-- **The story stylesheet,** applied inside a sealed frame without scripts, so it can't style or reach the rest of the app.
+- **The story stylesheet,** applied inside a sealed frame without scripts, so it can't style or reach the rest of the app - between the platform's two stylesheets, as the editor publishes it (`twinejs-integrated/src/util/wudlands-runtime.ts`: the defaults before it, the authoritative rules after it). Without the authoritative rules a picture's clickable areas slip off it: they're placed on the `.wud-hotspots` wrapper, and only those rules make the picture fill it exactly (measured in Chromium, 2026-11-25: up to 20px off with a story's own full-width picture rule). The text inset is the story's `--scene-gutter` (20px by default, held to 0-48px).
 - **Never:** other scenes, variables the scene doesn't print, link destinations, the engine, parked frames or other players' state.
 - **Play screen** in the Stories tab: the scene in its frame, its choices, Retreat when allowed, the fight screen when a fight frame is on top. **The tab bar is hidden while a story is shown** (decided 2026-11-21, for phones): the scene gets the whole screen, and a small triangle in the lower-left corner opens the settings panel (see "Settings during a story"). At a `camp` scene the triangle turns into a tent, so the player sees that camping and repacking are possible. The panel holds the settings and the tab bar, to switch to Stats, Body or Home (the camp at a `camp` scene); back on the Stories tab everything hides again. The handle looks small but is a full touch target (about 44 px), and the scene keeps room at the bottom so the handle never covers a choice. Recommended: the same on wide screens, one behaviour everywhere.
 - **Leaving the play screen isn't leaving the adventure** (decided 2026-11-21): the footer bar also leads back to the soul preview, to play another character. The session stays as it is, the characters stay busy, a scene's timer keeps running, and the soul preview (which groups characters by `availability.adventure.sessionId`) leads back into the story at the same scene. The top frame keeps the last scene as the player saw it (the cleaned HTML and its choices, size-limited), so coming back shows exactly that scene without calling the engine, and random text in it isn't drawn again.
@@ -288,11 +298,13 @@ Foraging can move from today's foraging page into adventures, without moving its
 - **Code and API:** the engine lives in `twinejs-integrated/engine/` (decided 2026-11-22), next to the editor code it reuses; its calls (`/start`, `/step`, `/move`), fields and answers are in the engine document, "The engine's API". Each frame keeps the engine version that saved its state.
 - **One click per call:** restore the frame's saved state, set `$char`/`$lead`, apply the picks, click the chosen element, return the scene and the new state. How that works inside SugarCube and jsdom is in the engine document.
 - **Story pages cached per snapshot ID** in the parent process, which never runs story code.
-- **`engine-live`, shared workers:** a worker plays many clicks of reviewed stories and is restarted every few hundred clicks.
-- **`engine-test`, single-use workers:** every click gets a fresh, clean worker, ended afterwards, so an unreviewed story can only damage its own click. A few clean workers are kept started in advance. Workers are worker threads, each its own JavaScript world; the permission model holds in them too (engine document, "What story code could do in the engine").
+- **`engine-live`, shared workers:** one worker per vCPU plays many clicks of reviewed stories and is replaced after 300 calls (`recycleAfter` in `engine/src/pool.js`).
+- **`engine-test`, single-use workers:** every click gets a fresh, clean worker, ended afterwards, so an unreviewed story can only damage its own click. One clean worker is kept started in advance (`spare`); the next one starts after each call, which is why `engine-test` runs with CPU always on. Workers are worker threads, each its own JavaScript world; the permission model holds in them too (engine document, "What story code could do in the engine").
 - **Limits:** Node's permission model (no child processes, no files beyond its own), a time limit per click (2 seconds) and a memory limit.
 
 ## Settings
+
+As deployed on 2026-11-23. `scripts/deploy_engines.sh` (`rav run gcp_engine_deploy`) does all of it: runs the engine tests, builds and pushes the image, deploys both engines, gives the main service the invoker role, and checks. The checks are both engines answering `/health` with a login and refusing without one, their service account and network settings, and the outbound check job `engine-egress-check`. `--check` runs only the checks. The private network and `engine-sa` are set up once with `scripts/setup_engine_network.sh` (`SETUP.md`, "Story engines: private network and service account").
 
 ```bash
 # Unreviewed stories: single-use workers, never more than one instance
@@ -300,13 +312,16 @@ gcloud run deploy engine-test --image <engine image> --region europe-west1 \
   --service-account engine-sa@thewudlands.iam.gserviceaccount.com \
   --no-allow-unauthenticated --min-instances 0 --max-instances 1 \
   --cpu 1 --memory 1Gi --set-env-vars WORKER_MODE=single-use --no-cpu-throttling \
+  --concurrency 4 --timeout 30 \
   --network engine-net --subnet engine-subnet --network-tags engine --vpc-egress all-traffic
 
 # Live stories: shared workers, grows with players
+# --min-instances 0 until players play on it; then 1, so nobody waits for a cold start
 gcloud run deploy engine-live --image <engine image> --region europe-west1 \
   --service-account engine-sa@thewudlands.iam.gserviceaccount.com \
-  --no-allow-unauthenticated --min-instances 1 --max-instances 20 \
+  --no-allow-unauthenticated --min-instances 0 --max-instances 20 \
   --cpu 2 --memory 1Gi --set-env-vars WORKER_MODE=shared \
+  --concurrency 4 --timeout 30 \
   --network engine-net --subnet engine-subnet --network-tags engine --vpc-egress all-traffic
 
 # Only the main service may call the engines
@@ -317,20 +332,22 @@ for svc in engine-test engine-live; do
 done
 ```
 
-Optional on top: `--ingress internal` on both engines, which needs `serverless-wudlands` to send its outgoing traffic through a VPC. The engines' missing internet access is enforced by the platform, because Node's permission model can't block the network: all their outgoing traffic goes into the private network `engine-net`, which has no route out and a firewall rule denying everything. How to set it up, the service account without roles, and how to check it: `SETUP.md`, "Story engines: private network and service account".
+**At most 4 requests per instance, 30 s per request** (2026-11-23). An instance runs one click per vCPU at a time and queues the rest; the 2-second limit only starts when a worker takes the click. With Cloud Run's defaults (40 requests, 300 s) a burst waited in one instance instead of Cloud Run starting more. Now `engine-live` spreads a burst over more instances. `engine-test`, with one instance at most, turns a crowd away quickly: Cloud Run answers 429 when its 4 places are taken, and the control layer shows the tester "the test engine is busy, try again in a moment" instead of waiting.
+
+Optional on top: `--ingress internal` on both engines, which needs `serverless-wudlands` to send its outgoing traffic through a VPC. The engines' missing internet access is enforced by the platform, because Node's permission model can't block the network: all their outgoing traffic goes into the private network `engine-net`, which has no route out (its default route to the internet is deleted, 2026-11-23), a firewall rule denying everything, and a DNS policy that answers no name lookups, so not even a lookup of `<data>.attacker.example` can carry data out (logged, so a story trying it shows up). How to set it up, the service account without roles, and how to check it: `SETUP.md`, "Story engines: private network and service account".
 
 ## Capacity (estimates)
 
-Measured on a laptop on 2026-11-19 with the prototype, and again on 2026-11-22 with the engine (about 175 ms per call in one worker, 190 ms through shared workers, 520 ms through single-use workers), and on Cloud Run after the first deploy (a step 0.55-0.63 s on `engine-live`; 1.3-1.9 s on `engine-test` before the next fresh worker was started between calls with CPU always on). Every call logs its duration (`engine`, `call`, `status`, `ms`) in Cloud Run's logs. An active player clicks about every 20 seconds. Node uses one core, so one worker per vCPU.
+Measured on a laptop on 2026-11-19 with the prototype, and again on 2026-11-22 with the engine: about 175 ms per call in one worker, 190 ms through shared workers, and 520 ms through single-use workers, so starting a fresh worker costs about 0.35 s. Measured on Cloud Run after the first deploy: a step took 0.55-0.63 s on `engine-live`, and 1.3-1.9 s on `engine-test` before the next fresh worker started between calls with CPU always on; not measured since that change. Every call logs its duration (`engine`, `call`, `status`, `ms`) in Cloud Run's logs. An active player clicks about every 20 seconds. Node uses one core, so one worker per vCPU.
 
 | | `engine-live` (shared) | `engine-test` (single-use) |
 |---|---|---|
-| Memory per worker | about 250 MB at worst, plus about 4 MB per cached story | about 88 MB, only during the click |
-| CPU per click | about 0.19 s | 0.19 s plus process start (not measured, about 0.3–0.5 s) |
-| One instance | 2 vCPU, 1 GiB: about 10 clicks/s, about 200 players at the same moment | 1 vCPU, 1 GiB: about 2 clicks/s, about 20 testers at the same moment |
+| Memory per worker | about 250 MB at worst (256 MB limit), plus about 4 MB per cached story | about 88 MB, only during the click |
+| Time per click | 0.19 s on a laptop; 0.55-0.63 s per step on Cloud Run | 0.52 s on a laptop, fresh worker included; on Cloud Run not measured since CPU is always on |
+| One instance | 2 vCPU, 1 GiB, 2 workers: at the laptop's 0.19 s about 10 clicks/s, about 200 players at the same moment; at Cloud Run's 0.6 s about 3 clicks/s, about 65 players | 1 vCPU, 1 GiB: about 2 clicks/s, about 20 testers at the same moment |
 | Scaling | Up to 20 instances (raise as needed) | Exactly one instance at most |
 
-A stack adds no engine cost: only the top frame runs, and a parked frame is about 2 KB of saved state in the session document. To measure once a prototype runs: process start time, CPU per click on Cloud Run, memory with large stories.
+The Cloud Run step times include the network from the laptop and may include building the story page for a first call, so the true engine time per click is somewhere between the two figures. Measure it under load before players come: many steps on a cached page, reading the `ms` field of the log lines. A stack adds no engine cost: only the top frame runs, and a parked frame is about 2 KB of saved state in the session document. Also still to measure: memory with large stories.
 
 ## Open decisions
 
@@ -354,7 +371,7 @@ A stack adds no engine cost: only the top frame runs, and a parked frame is abou
 ## Order of work
 
 1. ~~Seal the editor's story runs~~, ~~**Save review** for reviewers~~ and ~~the story check with the stored test party~~ (2026-11-20); ~~close the check's gaps found against the real SugarCube, re-check review copies, seal the frame from the network, gate the adventure API~~ (2026-11-21).
-2. Before the engine: ~~the story check's label rule for radio buttons and checkboxes~~ (2026-11-21), ~~the step graph built from the story check~~ (2026-11-22, `story_rules.macro_exits`: every way on a scene's commands write; per label once the control layer checks clicks by label), and ~~the engine API contract~~ (drafted 2026-11-22 in the engine document). Then ~~the engine with its shims, both worker modes, the limits and the image~~ (2026-11-22, `twinejs-integrated/engine/`, `npm test`); deploy `engine-test` and `engine-live` (`SETUP.md` "Story engines"); measure on Cloud Run.
+2. Before the engine: ~~the story check's label rule for radio buttons and checkboxes~~ (2026-11-21), ~~the step graph built from the story check~~ (2026-11-22, `story_rules.macro_exits`: every way on a scene's commands write; per label once the control layer checks clicks by label), and ~~the engine API contract~~ (drafted 2026-11-22 in the engine document). Then ~~the engine with its shims, both worker modes, the limits and the image~~ (2026-11-22, `twinejs-integrated/engine/`, `npm test`), ~~deploy `engine-test` and `engine-live` with the private network and the outbound check~~ (2026-11-22, `scripts/deploy_engines.sh`); measure the time per click on Cloud Run under load (see "Capacity").
 3. Test runs from `twine_review` with `TestCharacters`, no effects, and the **Play on server** link in the submit status.
 4. Play screen for players on `engine-live`, replacing today's step API, a list of live stories with their `LastResort` count for reviewers, and the camp opened only by the control layer (`camp` scene tags); then lift the gate.
 5. Skill checks, `<<pick_member>>`, consequence tags (injuries) and fights in Python, with their story commands and editor placeholders; fights as stack frames.

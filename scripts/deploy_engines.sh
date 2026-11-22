@@ -16,10 +16,21 @@ REPO="${REPO:-serverless-wudlands-repo}"
 MAIN_SA="${MAIN_SA:-cloud-run-firestore-sa@$PROJECT.iam.gserviceaccount.com}"
 ENGINE_SA="engine-sa@$PROJECT.iam.gserviceaccount.com"
 NETWORK_FLAGS=(--network engine-net --subnet engine-subnet --network-tags engine --vpc-egress all-traffic)
+# An instance runs one click per vCPU at a time (engine-test 1, engine-live 2)
+# and queues the rest without limit; the 2 s time limit only starts when a
+# worker takes a call. At most 4 requests per instance: engine-live then
+# spreads a burst over more instances instead of queueing it in one, and
+# engine-test (one instance at most) turns a crowd away quickly (429) instead
+# of keeping it waiting. 30 s instead of Cloud Run's 300 s ends a stuck request.
+LOAD_FLAGS=(--concurrency 4 --timeout 30)
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 ENGINE_DIR="$ROOT/twinejs-integrated"
 TAG="$(git -C "$ENGINE_DIR" rev-parse --short HEAD)"
+# Uncommitted engine changes get a tag of their own, so they never overwrite
+# the image of a clean commit.
+DIRTY="$(git -C "$ENGINE_DIR" status --porcelain -- engine src/util/publish.ts src/util/wudlands-runtime.ts public/story-formats)"
+[ -n "$DIRTY" ] && TAG="$TAG-dirty"
 IMAGE_BASE="$REGION-docker.pkg.dev/$PROJECT/$REPO/wudlands-engine"
 IMAGE="$IMAGE_BASE:$TAG"
 
@@ -32,8 +43,9 @@ check_only=false
 step "Project $PROJECT, region $REGION, account $(g config get-value account 2>/dev/null)"
 
 if ! $check_only; then
-  if [ -n "$(git -C "$ENGINE_DIR" status --porcelain -- engine src/util/publish.ts src/util/wudlands-runtime.ts public/story-formats)" ]; then
-    echo "WARNING: uncommitted engine changes in twinejs-integrated - the image tag $TAG won't match them"
+  if [ -n "$DIRTY" ]; then
+    echo "WARNING: uncommitted engine changes in twinejs-integrated - building them as $TAG;"
+    echo "         commit them and deploy again for an image tagged with the commit"
   fi
 
   step "Engine tests"
@@ -56,14 +68,14 @@ if ! $check_only; then
     --no-allow-unauthenticated --min-instances 0 --max-instances 1 \
     --cpu 1 --memory 1Gi --set-env-vars WORKER_MODE=single-use \
     --no-cpu-throttling \
-    "${NETWORK_FLAGS[@]}"
+    "${LOAD_FLAGS[@]}" "${NETWORK_FLAGS[@]}"
 
   step "Deploy engine-live (live stories: shared workers; min 0 until players play on it)"
   g run deploy engine-live --image "$IMAGE" --region "$REGION" \
     --service-account "$ENGINE_SA" \
     --no-allow-unauthenticated --min-instances 0 --max-instances 20 \
     --cpu 2 --memory 1Gi --set-env-vars WORKER_MODE=shared \
-    "${NETWORK_FLAGS[@]}"
+    "${LOAD_FLAGS[@]}" "${NETWORK_FLAGS[@]}"
 
   step "Only the main service ($MAIN_SA) may call the engines"
   for svc in engine-test engine-live; do
@@ -92,6 +104,13 @@ for svc in engine-test engine-live; do
   g run services describe "$svc" --region "$REGION" \
     --format="value(spec.template.spec.serviceAccountName,spec.template.metadata.annotations['run.googleapis.com/vpc-access-egress'],spec.template.metadata.annotations['run.googleapis.com/network-interfaces'])" \
     | sed "s/^/$svc: /"
+  load="$(g run services describe "$svc" --region "$REGION" \
+    --format='value(spec.template.spec.containerConcurrency,spec.template.spec.timeoutSeconds)')"
+  printf '%s: concurrency, timeout: %s\n' "$svc" "$load"
+  if [ "$load" != "$(printf '4\t30')" ]; then
+    echo "FAILED: $svc should take 4 requests at once and time out after 30 s - deploy again"
+    exit 1
+  fi
 done
 
 step "Check: nothing gets out of the engines' network (Cloud Run job engine-egress-check)"
@@ -104,8 +123,25 @@ g run jobs deploy engine-egress-check --image "$deployed_image" --region "$REGIO
 if g run jobs execute engine-egress-check --region "$REGION" --wait >/dev/null; then
   echo "OK: the job found no way out (its log: Cloud Run > Jobs > engine-egress-check)"
 else
-  echo "FAILED: the job got through to the internet or didn't run - read its log (Cloud Run > Jobs > engine-egress-check)"
+  echo "FAILED: the job got through to the internet (a connection or a name lookup) or didn't run -"
+  echo "        read its log (Cloud Run > Jobs > engine-egress-check)"
   exit 1
 fi
+
+step "Check: engine-net has no route to the internet and answers no name lookups"
+routes="$(g compute routes list --format='csv[no-heading](name,network.basename(),destRange)' \
+  | awk -F, '$2 == "engine-net" && $3 == "0.0.0.0/0" {print $1}')"
+if [ -n "$routes" ]; then
+  echo "FAILED: engine-net has a route to the internet ($routes) - run scripts/setup_engine_network.sh"
+  exit 1
+fi
+echo "no route to the internet"
+policy="$(g dns policies describe engine-no-dns \
+  --format='value(networks[].networkUrl.basename(),alternativeNameServerConfig.targetNameServers[].ipv4Address)' 2>/dev/null || true)"
+if [[ "$policy" != *engine-net*10.255.255.254* ]]; then
+  echo "FAILED: the DNS policy engine-no-dns is missing or changed ($policy) - run scripts/setup_engine_network.sh"
+  exit 1
+fi
+echo "DNS policy engine-no-dns: $policy"
 
 step "Done"

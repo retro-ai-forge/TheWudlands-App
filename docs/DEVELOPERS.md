@@ -37,7 +37,7 @@ Play counts are tracked per player per addon. When a player enters an adventure,
 
 ## Addon Loading & Validation
 
-Addons are loaded from storage on session initialisation and cached for the duration of active sessions using that addon. The engine validates every loaded addon against the platform schema before making it available to players. Validation checks include: presence of all required fields, existence of the `start`, `LastResort`, and `retreat` scenes within the scene map, validity of all `to` targets in choice arrays, and correct boolean typing on `isEnding` scene flags. Addons that fail validation are not published. Addons that were published and subsequently become invalid due to a platform schema update are flagged for review and removed from active rotation until corrected.
+Addons are loaded from storage on session initialisation and cached for the duration of active sessions using that addon. The engine validates every loaded addon against the platform schema before making it available to players. Validation checks include: presence of all required fields, existence of the `start`, `LastResort`, and `retreat` scenes within the scene map, validity of all `to` targets in choice arrays, and every ending's `$isEnding` value (`success`/`failure`, at least one success in the main story and only failures in the Retreat story, each declared in `$meta_endings`; `lastresort` in `LastResort`; `docs/STORY-RULES.md` "Endings"). Addons that fail validation are not published. Addons that were published and subsequently become invalid due to a platform schema update are flagged for review and removed from active rotation until corrected.
 
 ## Adventure Dependencies & Unlocks
 

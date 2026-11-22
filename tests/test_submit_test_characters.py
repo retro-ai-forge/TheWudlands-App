@@ -55,8 +55,8 @@ async def _working_copy(db, party_text: str = _TEST_PARTY, **story_data):
     story = _story([
         _p("0", "StoryInit", VALID_INIT),
         _p("1", "Start", "Welcome [[End]]"),
-        _p("2", "End", "The end. <<set $isEnding to true>>"),
-        _p("3", "LastResort", "The tunnel collapses. <<set $isEnding to false>>"),
+        _p("2", "End", "The end. <<set $isEnding to 'success'>>"),
+        _p("3", "LastResort", "The tunnel collapses. <<set $isEnding to 'lastresort'>>"),
         _p("9", "TestCharacters", party_text),
     ])
     await db.twine_stories.insert_one({

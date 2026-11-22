@@ -8,6 +8,16 @@ scene is read the way SugarCube reads it, without running anything, and only
 the forms the rules describe are accepted. A refusal names the scene, the
 line and an accepted form.
 
+Each finding has a weight (docs/STORY-RULES.md "How the check decides"):
+BLOCK refuses the submit - only the worst cases (code or CSS in the wrong
+place, anything that reaches outside the story, SugarCube's system names) and
+the platform's and game's rules. Everything else is a warning stored with the
+submission: CODE (program code, or something the check can't read - the story
+is marked hasCode) and UNSUPPORTED (something the platform can't play yet)
+make the story wait - it isn't approved until there are rules for it - and
+NOTE leaves it to the reviewer. When in doubt a finding is CODE, so nothing
+the check can't read reaches the shared engine workers.
+
 Used by auth_routes._check_twine_syntax, which runs on submit, on a
 reviewer's Save review and again on Approve. The structure rules (links lead to
 real scenes, endings, Retreat, LastResort, StoryInit's metadata and cover) and
@@ -47,6 +57,11 @@ CHARACTER_FIELDS = NAME_FIELDS + LIST_FIELDS + NUMBER_FIELDS + (EQUIPMENT_FIELD,
 PARTY_MAX = 4
 
 ITEM_IDS = frozenset(entry.id for entry in ITEM_CATALOG_ENTRIES)
+# A family id ("rope") in .includes() means any tier, an item id ("rope_2")
+# that tier or better: the engine lists each carried item with its family id
+# and every lower tier (APP_INTEGRATION_HEADLESS.md "Still to align").
+ITEM_FAMILY_IDS = frozenset(entry.family_id for entry in ITEM_CATALOG_ENTRIES)
+EQUIPMENT_IDS = ITEM_IDS | ITEM_FAMILY_IDS
 
 # Most a story can move one Legend pair for one character, and how many pairs
 # it may change at all (docs/STORY-RULES.md "Legend").
@@ -94,6 +109,9 @@ REFUSED_TAGS = frozenset({"widget", "init", "script", "stylesheet"})
 # Media passages (the scene's text is the file). Twine.image has its own
 # message in auth_routes._image_rule_errors.
 REFUSED_MEDIA_TAGS = frozenset({"twine.audio", "twine.video", "twine.vtt"})
+# Passages with these tags aren't scenes (Twine.image is reported by
+# auth_routes._image_rule_errors): no structure rules for them.
+NON_SCENE_TAGS = REFUSED_TAGS | REFUSED_MEDIA_TAGS | {"twine.image"}
 
 # ── What a scene may hold ────────────────────────────────────────────────────
 
@@ -107,6 +125,12 @@ _MEDIA_TAGS = frozenset({
     "img", "image", "picture", "source", "svg", "video", "audio", "iframe", "object", "embed", "link",
 })
 _MEDIA_ATTRIBUTES = frozenset({"src", "srcset", "poster", "background"})
+# Tags and attributes that load from or lead outside the story: refused (BLOCK).
+_OUTSIDE_TAGS = frozenset({"a", "frame", "frameset", "applet", "meta", "base", "form", "portal"})
+_OUTSIDE_ATTRIBUTES = frozenset({
+    "href", "xlink:href", "action", "formaction", "ping", "srcdoc", "data", "codebase",
+    "manifest", "cite", "longdesc", "usemap", "icon", "profile", "archive", "classid",
+})
 _CLASS_VALUE_RE = re.compile(r"[A-Za-z0-9_ -]*")
 
 # Characters quoted text can't hold: they could read as a command, a link, a
@@ -128,10 +152,56 @@ _FOR_RE = re.compile(
 )
 
 # Platform variables a story never sets: the party, and a choice can't store
-# into the platform's own values either.
+# into the platform's own values either. $follows is the ending that opened a
+# follow-up story: the platform sets it at the start, the story only reads it.
 _PARTY_VARIABLES = frozenset({"char", "lead"})
+_FOLLOWS_VARIABLE = "follows"
 _ENDING_VARIABLE = "isEnding"
 _SCENE_META_VARIABLE = "meta_allowRunAway"
+
+# How a run ends (docs/STORY-RULES.md "Endings"): $isEnding is set to one of
+# these. success and failure end the main story; the Retreat story ends only
+# in failures (running away is a failure, counted with the others - the
+# platform tells a run-away by the Retreat graph). Both may carry the ending's
+# name after a colon ("success:dragon_slain", "failure:fled_the_crypt"), are
+# recorded for the character and can be followed. lastresort is LastResort's
+# (the engine failed: the run is given back), never named or recorded.
+SUCCESS, FAILURE, LASTRESORT = "success", "failure", "lastresort"
+ENDING_NAME_MAX = 40
+_ENDING_RE = re.compile(
+    rf"(?P<kind>{SUCCESS}|{FAILURE})(?::(?P<name>[A-Za-z][A-Za-z0-9_-]{{0,{ENDING_NAME_MAX - 1}}}))?"
+    rf"|(?P<plain>{LASTRESORT})"
+)
+# Every success and failure ending is declared once in StoryInit with a teaser
+# the platform shows to the characters who reached it.
+RECORDED_KINDS = (SUCCESS, FAILURE)
+ENDINGS_VARIABLE = "meta_endings"
+ENDING_TEASER_MAX = 300
+_ENDING_EXAMPLE = '<<set $isEnding to "success">>'
+ENDINGS_EXAMPLE = (
+    '<<set $meta_endings to {"success": "You reached the coast.", "failure": "The desert kept you.", '
+    '"failure:fled": "You turned back."}>>'
+)
+_ENDING_VALUES = (
+    '$isEnding is set to "success" or "failure" - a name may follow after a colon, like "success:dragon_slain" '
+    '(the Retreat story ends only in failures) - or "lastresort" (only in LastResort), '
+    f"like {_ENDING_EXAMPLE}"
+)
+_NO_RETREAT_VALUE = (
+    '"retreat" isn\'t an ending value - running away is a failure, so an ending of the Retreat story sets '
+    '"failure" or a named one, like <<set $isEnding to "failure:fled_the_crypt">>'
+)
+
+
+def ending_kind(value) -> Optional[str]:
+    """success, failure or lastresort for a valid $isEnding value
+    ("success:dragon_slain" is a success), None for anything else."""
+    if not isinstance(value, str):
+        return None
+    m = _ENDING_RE.fullmatch(value)
+    if not m:
+        return None
+    return m.group("kind") or m.group("plain")
 
 # Names that reach the engine or the browser: a clearer message than
 # "unknown word" (any word outside the rules is refused either way).
@@ -148,34 +218,71 @@ _ENGINE_WORDS = frozenset({
 })
 
 _CODE = "runs program code"
+
+# ── How much a finding weighs ────────────────────────────────────────────────
+
+BLOCK, CODE, UNSUPPORTED, NOTE = "block", "code", "unsupported", "note"
+# Warnings that keep a story from being approved until there are rules for them.
+HOLDING_KINDS = frozenset({CODE, UNSUPPORTED})
+
+# The worst cases, refused outright. The same text wherever they are found,
+# so a place the scan and the reading both report shows once.
+_JS_PLACE = "JavaScript goes in the Story JavaScript, not in a scene"
+_CSS_PLACE = "CSS goes in the Story Stylesheet, not in a scene"
+_WEB_ADDRESS = "web addresses aren't accepted - SugarCube makes them links out of the story"
+_OUTSIDE = (
+    "this loads or leads outside the story - images come from the story's Images list "
+    "and ways on are links like [[Go north|North]]"
+)
+# Names that reconfigure SugarCube or reach the browser, Node or the network.
+# Refused by name in scenes and in the Story JavaScript - a guard rail against
+# mistakes and copied attacks only: JavaScript can reach anything in disguise,
+# which is why a story with any code waits (hasCode) until there are rules.
+SYSTEM_WORDS = frozenset({
+    "Config", "Engine", "Save", "UI", "UIBar", "Dialog", "SugarCube", "Scripting",
+    "eval", "Function", "globalThis", "require", "process", "module", "fetch",
+    "XMLHttpRequest", "WebSocket", "EventSource", "importScripts", "importStyles", "import",
+    "Worker", "SharedWorker", "localStorage", "sessionStorage", "indexedDB", "location",
+})
+# Members that lead from any value to the code behind it (x.constructor.constructor).
+SYSTEM_MEMBERS = frozenset({"constructor", "__proto__", "prototype"})
+
+
+def _system_word(word: str) -> str:
+    return f"'{word}' reaches into SugarCube or the browser - stories don't use it"
+
+
 _LIVE = "needs a live browser - a scene is sent to the player as finished text, images and buttons"
 _PAGE = "changes the page without a new scene - link to a new scene instead, like [[Open the door|Door]]"
 _TYPING = 'players never type anything - offer choices instead, like <<radiobutton "$path" "north">>'
 _REFUSED_MACROS = {
-    "script": f"{_CODE} - use <<set>> and <<if>>",
-    "run": f"{_CODE} - use <<set>>, like <<set $gold to $gold + 5>>",
-    "=": "use <<print>>, like <<print $gold>>",
-    "-": "use <<print>>, like <<print $gold>>",
-    "textbox": _TYPING, "textarea": _TYPING, "numberbox": _TYPING, "passwordbox": _TYPING,
-    "include": "a scene can't be pulled into another - link to it, like [[Cave]]",
-    "display": "a scene can't be pulled into another - link to it, like [[Cave]]",
-    "timed": _LIVE, "repeat": _LIVE, "stop": _LIVE, "next": _LIVE, "type": _LIVE,
-    "audio": _LIVE, "cacheaudio": _LIVE, "createaudiogroup": _LIVE, "createplaylist": _LIVE,
-    "masteraudio": _LIVE, "playlist": _LIVE, "removeaudiogroup": _LIVE, "removeplaylist": _LIVE,
-    "track": _LIVE, "waitforaudio": _LIVE,
-    "linkreplace": _PAGE, "linkappend": _PAGE, "linkprepend": _PAGE, "append": _PAGE,
-    "prepend": _PAGE, "replace": _PAGE, "remove": _PAGE, "addclass": _PAGE,
-    "removeclass": _PAGE, "toggleclass": _PAGE, "copy": _PAGE, "do": _PAGE, "redo": _PAGE,
-    "back": "the server controls the way back - use a link, like [[Go back|Camp]]",
-    "return": "the server controls the way back - use a link, like [[Go back|Camp]]",
-    "actions": "use links, like [[Go north|North]]",
-    "choice": "use links, like [[Go north|North]]",
-    "break": "<<for>> always goes through the whole party",
-    "continue": "<<for>> always goes through the whole party",
-    "unset": "story variables stay set - give them another value instead",
-    "widget": "widgets aren't accepted - write the commands out",
-    "capture": f"{_CODE}",
-    "silent": f"{_CODE}", "silently": f"{_CODE}", "done": f"{_CODE}",
+    "script": (_JS_PLACE, BLOCK),
+    "run": (_JS_PLACE, BLOCK),
+    "=": ("use <<print>>, like <<print $gold>>", CODE),
+    "-": ("use <<print>>, like <<print $gold>>", CODE),
+    "textbox": (_TYPING, UNSUPPORTED), "textarea": (_TYPING, UNSUPPORTED),
+    "numberbox": (_TYPING, UNSUPPORTED), "passwordbox": (_TYPING, UNSUPPORTED),
+    "include": ("a scene can't be pulled into another yet - link to it, like [[Cave]]", UNSUPPORTED),
+    "display": ("a scene can't be pulled into another yet - link to it, like [[Cave]]", UNSUPPORTED),
+    **{name: (_LIVE, UNSUPPORTED) for name in (
+        "timed", "repeat", "stop", "next", "type", "audio", "cacheaudio", "createaudiogroup",
+        "createplaylist", "masteraudio", "playlist", "removeaudiogroup", "removeplaylist",
+        "track", "waitforaudio",
+    )},
+    **{name: (_PAGE, UNSUPPORTED) for name in (
+        "linkreplace", "linkappend", "linkprepend", "append", "prepend", "replace", "remove",
+        "addclass", "removeclass", "toggleclass", "copy", "do", "redo",
+    )},
+    "back": ("the server controls the way back - use a link, like [[Go back|Camp]]", UNSUPPORTED),
+    "return": ("the server controls the way back - use a link, like [[Go back|Camp]]", UNSUPPORTED),
+    "actions": ("use links, like [[Go north|North]]", UNSUPPORTED),
+    "choice": ("use links, like [[Go north|North]]", UNSUPPORTED),
+    "break": ("<<for>> always goes through the whole party", NOTE),
+    "continue": ("<<for>> always goes through the whole party", NOTE),
+    "unset": ("story variables stay set - give them another value instead", NOTE),
+    "widget": ("widgets aren't accepted yet - write the commands out", UNSUPPORTED),
+    "capture": (_CODE, CODE),
+    "silent": (_CODE, CODE), "silently": (_CODE, CODE), "done": (_CODE, CODE),
 }
 # Refused commands that wrap a body: skipped up to their closing tag, so the
 # body (often raw JavaScript) doesn't add a page of follow-on errors.
@@ -225,18 +332,83 @@ _HTML_TAG = re.compile(
 _LABEL_CONTENT = re.compile(r"<<\s*(?:radiobutton|checkbox)\b|</label\s*>|<!--", re.IGNORECASE)
 _HTML_ATTRIBUTE = re.compile(r"([^\s\"'>/=]+)(?:\s*=\s*(\"[^\"]*\"|'[^']*'|[^\s\"'=<>`]+))?")
 
+# The worst cases in a part the reading skips (see _Scene.scan_unread).
+# An HTML tag's < never follows another < (<<link ...>> is a command, not <link>).
+_HARD_BLOCKS = (
+    (re.compile(r"<<\s*(?:script|run)\b", re.IGNORECASE), _JS_PLACE),
+    (re.compile(r"(?<!<)<\s*script\b", re.IGNORECASE), _JS_PLACE),
+    (re.compile(r"(?<!<)<[A-Za-z][^<>]*?\s(?:on[A-Za-z]+|@[\w.:-]+|sc-eval:[\w.:-]*)\s*=", re.IGNORECASE), _JS_PLACE),
+    (re.compile(r"javascript\s*:", re.IGNORECASE), _JS_PLACE),
+    (re.compile(r"(?<!<)<\s*style\b", re.IGNORECASE), _CSS_PLACE),
+    (_URL_RE, _WEB_ADDRESS),
+    (re.compile(r"\burl\s*\(|@import\b|\bimage-set\s*\(", re.IGNORECASE), _OUTSIDE),
+    (re.compile(
+        r"(?<!<)<\s*(?:a|iframe|frame|frameset|object|embed|applet|link|meta|base|form|portal)\b", re.IGNORECASE
+    ), _OUTSIDE),
+)
+# In CSS written in a scene (see _Scene.scan_css).
+_CSS_HARD_BLOCKS = (
+    (re.compile(r"\burl\s*\(|@import\b|\bimage-set\s*\(|\bimage\s*\(|\bcross-fade\s*\(|\belement\s*\(", re.IGNORECASE), _OUTSIDE),
+    (re.compile(r"\bexpression\s*\(|-moz-binding|\bbehavior\s*:|javascript\s*:", re.IGNORECASE), _JS_PLACE),
+    (re.compile(r"\\"), "backslash escapes aren't accepted in CSS - they can hide the words above"),
+)
+# A command's arguments; quoted text and [[links]] in them (blanked before the
+# system names are looked for: words there are text, not names).
+_MACRO_ARGUMENTS_RE = re.compile(r"<<\s*/?[A-Za-z][\w-]*((?:[^>]|>(?!>))*)>>")
+_QUOTED_OR_LINK_RE = re.compile(r"\"(?:\\.|[^\"\\])*\"|'(?:\\.|[^'\\])*'|\[\[(?:[^\]]|\](?!\]))*\]\]")
+_SYSTEM_WORD_RE = re.compile(r"(?<![$\w.])(" + "|".join(sorted(SYSTEM_WORDS)) + r")(?![\w$])")
+_SYSTEM_MEMBER_RE = re.compile(r"\.\s*(" + "|".join(sorted(SYSTEM_MEMBERS)) + r")(?![\w$])")
+
 
 class _Refused(Exception):
-    """One refusal; the message says what is wrong and what to write instead."""
+    """One refusal; the message says what is wrong and what to write instead,
+    the kind how much it weighs (BLOCK, CODE, UNSUPPORTED or NOTE)."""
+
+    def __init__(self, message: str, kind: str = CODE):
+        super().__init__(message)
+        self.kind = kind
 
 
 @dataclass
 class StoryCheck:
-    """What check_story found: refusals, and the Legend points per pair
-    (pair key -> points, at most LEGEND_POINTS_MAX)."""
+    """What check_story found: `errors` refuse the submit (BLOCK, as text);
+    `warnings` are stored with the submission ({place, line, kind, message});
+    `has_code` when the story has its own JavaScript or a CODE warning;
+    `waiting` the scenes with a holding warning (the check may not see all
+    their ways on); the Legend points per pair (pair key -> points, at most
+    LEGEND_POINTS_MAX); `endings` the $isEnding values each scene sets (scene
+    -> values in order, several when <<if>> branches end differently);
+    `ending_scenes` every scene that sets $isEnding at all, also to a refused
+    value (so it isn't called a dead end without one); and `teasers` the
+    $meta_endings StoryInit declares (tag -> teaser), None when it declares
+    none."""
 
     errors: list = field(default_factory=list)
+    warnings: list = field(default_factory=list)
+    has_code: bool = False
+    waiting: set = field(default_factory=set)
     legend_points: dict = field(default_factory=dict)
+    endings: dict = field(default_factory=dict)
+    ending_scenes: set = field(default_factory=set)
+    teasers: Optional[dict] = None
+
+    @property
+    def holds(self) -> bool:
+        """Whether a warning keeps the story from being approved."""
+        return any(w["kind"] in HOLDING_KINDS for w in self.warnings)
+
+
+def finding(place: str, line: Optional[int], kind: str, message: str) -> dict:
+    """One warning as stored with a submission."""
+    return {"place": place, "line": line, "kind": kind, "message": message}
+
+
+def finding_text(item: dict) -> str:
+    """A warning as one line of text, like the refusals."""
+    where = item.get("place") or ""
+    if item.get("line"):
+        where = f"{where}, line {item['line']}" if where else f"line {item['line']}"
+    return f"{where}: {item['message']}" if where else item["message"]
 
 
 # ── Plain text and quoted text ───────────────────────────────────────────────
@@ -274,7 +446,7 @@ def story_name_problem(name) -> Optional[str]:
     text.
     """
     if not isinstance(name, str) or not name.strip():
-        return "The story needs a name (Story > Details)"
+        return "The story needs a name (Story > Rename)"
     if len(name) > STORY_NAME_MAX:
         return f"The story name is longer than {STORY_NAME_MAX} characters"
     bad = sorted({ch for ch in name if not (ch.isalpha() or ch.isdigit() or ch in _TEXT_PUNCTUATION)})
@@ -298,13 +470,14 @@ def _check_quoted(content: str) -> None:
         raise _Refused("quoted text can't contain @@ - write plain words")
     if _URL_RE.search(content):
         # Printed, SugarCube would make it a link out of the story.
-        raise _Refused("quoted text can't contain a web address")
+        raise _Refused("quoted text can't contain a web address", BLOCK)
 
 
 # ── Expressions ──────────────────────────────────────────────────────────────
 
-NUM, STR, BOOL, ANY, LIST, CHAR, PARTY, NAME, ENUM, EQUIP = (
+NUM, STR, BOOL, ANY, LIST, CHAR, PARTY, NAME, ENUM, EQUIP, MAP = (
     "number", "text", "true/false", "value", "list", "character", "party", "name", "fixed list", "equipment",
+    "map",
 )
 
 _TOKEN = re.compile(
@@ -315,7 +488,8 @@ _TOKEN = re.compile(
     r"|(?P<var>\$[A-Za-z_][A-Za-z0-9_]*(?![\w$]))"
     r"|(?P<tmp>_[A-Za-z][A-Za-z0-9_]*(?![\w$]))"
     r"|(?P<word>[A-Za-z][A-Za-z0-9_]*(?![\w$]))"
-    r"|(?P<op>\+=|-=|\*=|/=|==|!=|>=|<=|[-+*/%<>()\[\],.])"
+    # { } and : only in <<set $meta_endings to {...}>> (_tokens, endings_literal).
+    r"|(?P<op>\+=|-=|\*=|/=|==|!=|>=|<=|[-+*/%<>()\[\],.{}:])"
 )
 _BAD_TOKENS = {
     "++": "++ isn't accepted - write $x += 1",
@@ -333,7 +507,8 @@ _BAD_CHARACTERS = {
     "}": "{ } aren't accepted",
     ";": "; isn't accepted - separate changes with a comma, like <<set $a to 1, $b to 2>>",
     "?": "? : isn't accepted - use <<if>>",
-    ":": "? : isn't accepted - use <<if>>",
+    ":": 'a colon isn\'t accepted here - inside quotes it\'s fine, like "success:met_queen"; '
+         "to choose between two values, use <<if>>",
     "\\": "\\ isn't accepted",
     "\"": "a quote isn't closed", "'": "a quote isn't closed",
     "@": "@ isn't accepted", "#": "# isn't accepted", "~": "~ isn't accepted", "^": "^ isn't accepted",
@@ -363,7 +538,19 @@ class _Val:
 _COMMENT_IN_COMMAND = "comments go outside a command, like <<set $gold to 5>> <!-- a note -->"
 
 
-def _tokens(source: str) -> list:
+# The one place { } and : are read: <<set $meta_endings to {...}>> (only in
+# StoryInit, endings_literal says so anywhere else).
+_ENDINGS_ASSIGNMENT = re.compile(rf"\s*\${ENDINGS_VARIABLE}\s+to\s*{{")
+_MAP_CHARACTERS = frozenset("{}:")
+# The platform's values a story never removes (<<unset>>).
+_PLATFORM_VALUE_RE = re.compile(r"\$(?:isEnding|follows|char|lead|meta_\w*)(?![\w$])")
+# <<set $isEnding to ...>>, and the teaser written right after the ending:
+# <<set $isEnding to "success:met_queen": "The queen remembers you.">>
+_ENDING_SET = re.compile(r"\s*\$isEnding\s+to\b")
+_TEASER_IN_SCENE = re.compile(r"""\s*\$isEnding\s+to\s*(["'])([^"'\n]*)\1\s*:\s*(["'])([^"'\n]*)\3\s*$""")
+
+
+def _tokens(source: str, allow_map: bool = False) -> list:
     if "<!--" in source:
         raise _Refused(_COMMENT_IN_COMMAND)
     out = []
@@ -376,6 +563,8 @@ def _tokens(source: str) -> list:
         kind = m.lastgroup
         if kind == "bad":
             raise _Refused(_BAD_TOKENS[m.group(0)])
+        if kind == "op" and m.group(0) in _MAP_CHARACTERS and not allow_map:
+            raise _Refused(_BAD_CHARACTERS[m.group(0)])
         if kind != "ws":
             out.append(_Tok(kind, m.group(0)))
         pos = m.end()
@@ -387,7 +576,24 @@ class _Expression:
     """One TwineScript expression, typed as it is parsed. Raises _Refused."""
 
     def __init__(self, source: str, scene: "_Scene"):
-        self.toks = _tokens(source)
+        try:
+            self.toks = _tokens(source, allow_map=bool(_ENDINGS_ASSIGNMENT.match(source)))
+        except _Refused as refused:
+            if not _ENDING_SET.match(source):
+                raise
+            # An ending the check can't read is still an ending scene (no
+            # "dead end without $isEnding" on top), and refused as an ending.
+            scene.ends = True
+            teaser = _TEASER_IN_SCENE.match(source)
+            if teaser:
+                tag, text = teaser.group(2), teaser.group(4)
+                raise _Refused(
+                    "the teaser goes in StoryInit, not in the ending scene - here only "
+                    f'<<set $isEnding to "{tag}">>, and in StoryInit '
+                    f'<<set $meta_endings to {{"{tag}": "{text}"}}>> (with your other endings)',
+                    BLOCK,
+                ) from None
+            raise _Refused(str(refused), BLOCK) from None
         self.i = 0
         self.scene = scene
 
@@ -463,6 +669,8 @@ class _Expression:
             )
         if op == "to" and self.at("op", "["):
             value = self.list_literal(target)
+        elif op == "to" and self.at("op", "{"):
+            value = self.endings_literal(target)
         else:
             value = self.expression()
             self.require_value(value, "in <<set>>")
@@ -485,39 +693,122 @@ class _Expression:
         self.expect("op", "]", "] to close the list")
         return _Val(LIST)
 
+    def endings_literal(self, target: _Val) -> _Val:
+        """$meta_endings in StoryInit: every success and failure ending
+        once (the Retreat story's too), each with its teaser - {"success:dragon_slain": "You
+        killed the dragon."}. The only place { } are read; it's platform data,
+        so every problem in it refuses the submit."""
+        if target.target != ("story", ENDINGS_VARIABLE):
+            raise _Refused(_BAD_CHARACTERS["{"])
+        if not self.scene.is_init:
+            raise _Refused(f"${ENDINGS_VARIABLE} is set in StoryInit", BLOCK)
+        self.take()  # {
+        teasers: dict = {}
+        while not self.at("op", "}"):
+            key = self.take()
+            if key.kind != "str":
+                raise _Refused(f"$meta_endings names each ending in quotes, like {ENDINGS_EXAMPLE}", BLOCK)
+            tag = key.value[1:-1]
+            if ending_kind(tag) not in RECORDED_KINDS:
+                raise _Refused(
+                    f'"{tag}" isn\'t a success or failure ending - $meta_endings declares them, '
+                    'like "success" or "failure:captured" (lastresort needs no teaser)',
+                    BLOCK,
+                )
+            if tag in teasers:
+                raise _Refused(f'"{tag}" is declared twice in $meta_endings', BLOCK)
+            self.expect("op", ":", f'a colon after "{tag}"')
+            teaser = self.take()
+            if teaser.kind != "str":
+                raise _Refused(f'the teaser for "{tag}" is text in quotes, like {ENDINGS_EXAMPLE}', BLOCK)
+            text = teaser.value[1:-1]
+            try:
+                _check_quoted(text)
+            except _Refused as refused:
+                raise _Refused(f'the teaser for "{tag}": {refused}', BLOCK) from None
+            if not text.strip():
+                raise _Refused(f'the teaser for "{tag}" is empty - one or two sentences for the player', BLOCK)
+            if len(text) > ENDING_TEASER_MAX:
+                raise _Refused(
+                    f'the teaser for "{tag}" has {len(text)} characters - at most {ENDING_TEASER_MAX}', BLOCK
+                )
+            teasers[tag] = text
+            if not self.at("op", ","):
+                break
+            self.take()
+        self.expect("op", "}", "} to close $meta_endings")
+        return _Val(MAP, literal=teasers)
+
     def check_target(self, target: _Val, op: str, value: _Val) -> None:
         kind, name = target.target if target.target else (None, None)
+        # What a story may change is a game rule: always refused (BLOCK).
         if kind == "party":
-            raise _Refused("the server sets the party - $char and $lead are never set")
+            raise _Refused("the server sets the party - $char and $lead are never set", BLOCK)
         if kind == "story":
             if name in _PARTY_VARIABLES:
-                raise _Refused(f"the server sets the party - ${name} is never set")
+                raise _Refused(f"the server sets the party - ${name} is never set", BLOCK)
+            if name == _FOLLOWS_VARIABLE:
+                raise _Refused(
+                    "the platform sets $follows to the ending that opened a follow-up story - "
+                    "a story only reads it",
+                    BLOCK,
+                )
             if name == _ENDING_VARIABLE:
-                if not (op == "to" and value.type == BOOL and value.literal is not None):
-                    raise _Refused("$isEnding is set only to true or false, like <<set $isEnding to true>>")
+                self.scene.ends = True
+                if self.scene.is_init:
+                    raise _Refused("StoryInit never ends the story - an ending scene sets $isEnding", BLOCK)
+                if self.scene.in_setter or self.scene.in_action():
+                    # Set by a click, the ending would depend on what the
+                    # player does in the scene, not on the scene reached.
+                    raise _Refused(
+                        "an ending is set when its scene is shown, never by a click - set it in the ending "
+                        f"scene's own text (an <<if>> is fine), like {_ENDING_EXAMPLE}",
+                        BLOCK,
+                    )
+                if not (op == "to" and value.type == STR and ending_kind(value.literal)):
+                    if value.type == STR and str(value.literal).split(":")[0] == "retreat":
+                        raise _Refused(_NO_RETREAT_VALUE, BLOCK)
+                    old = "true and false aren't used any more - " if value.type == BOOL else ""
+                    raise _Refused(old + _ENDING_VALUES, BLOCK)
+                self.scene.endings.append(value.literal)
             elif name.startswith("meta_") and name != _SCENE_META_VARIABLE and not self.scene.is_init:
-                raise _Refused(f"${name} is set in StoryInit")
+                raise _Refused(f"${name} is set in StoryInit", BLOCK)
+            elif name == ENDINGS_VARIABLE:
+                if not (op == "to" and value.type == MAP):
+                    raise _Refused(
+                        f"$meta_endings declares every success and failure ending with a teaser, "
+                        f"like {ENDINGS_EXAMPLE}",
+                        BLOCK,
+                    )
+                if self.scene.teasers is not None:
+                    raise _Refused("$meta_endings is set once in StoryInit", BLOCK)
+                self.scene.teasers = value.literal
         elif kind == "temp":
             pass
         elif kind == "legend":
             if op not in ("+=", "-="):
                 raise _Refused(
-                    f"Legend changes only with += or -= and a whole number, like <<set {target.who}.{name} += 3>>"
+                    f"Legend changes only with += or -= and a whole number, like <<set {target.who}.{name} += 3>>",
+                    BLOCK,
                 )
             amount = value.literal
             if not (value.type == NUM and isinstance(amount, int) and 0 < amount <= LEGEND_CHANGE_MAX):
                 raise _Refused(
                     f"a Legend change is a whole number from 1 to {LEGEND_CHANGE_MAX}, "
-                    f"like <<set {target.who}.{name} += 3>>"
+                    f"like <<set {target.who}.{name} += 3>>",
+                    BLOCK,
                 )
             self.scene.legend.append((name, amount))
         elif kind == "attribute":
             raise _Refused(
                 f"{target.who}.{name} only changes through the platform's checks and fights - "
-                "a story changes only the characters' Legend"
+                "a story changes only the characters' Legend",
+                BLOCK,
             )
         elif kind == "character":
-            raise _Refused(f"{target.who}.{name} can't be changed - a story changes only the characters' Legend")
+            raise _Refused(
+                f"{target.who}.{name} can't be changed - a story changes only the characters' Legend", BLOCK
+            )
         elif kind in ("loopchar", "loopindex"):
             raise _Refused(f"{name} belongs to the <<for>> loop and can't be set")
         else:
@@ -543,7 +834,7 @@ class _Expression:
             )
         if value.type == EQUIP:
             raise _Refused(
-                f'equipment is only checked with .includes("item_tier"), like {value.who}.equipment.includes("rope_1")'
+                f'equipment is only checked with .includes("item"), like {value.who}.equipment.includes("rope")'
             )
         if value.type == LIST:
             raise _Refused('lists are created only in StoryInit, like <<set $inventory to ["rope", "torch"]>>')
@@ -676,6 +967,8 @@ class _Expression:
                 return self.function(tok.value)
             if tok.value in _KEYWORDS:
                 raise _Refused(f"unexpected '{tok.value}'")
+            if tok.value in SYSTEM_WORDS:
+                raise _Refused(_system_word(tok.value), BLOCK)
             if tok.value in _ENGINE_WORDS:
                 raise _Refused(
                     f"'{tok.value}' reaches the story engine's internals - "
@@ -691,6 +984,8 @@ class _Expression:
             return _Val(inner.type, field=inner.field, who=inner.who)
         if tok.kind == "op" and tok.value == "[":
             raise _Refused('lists are created only in StoryInit, like <<set $inventory to ["rope", "torch"]>>')
+        if tok.kind == "op" and tok.value in _BAD_CHARACTERS:  # { } :
+            raise _Refused(_BAD_CHARACTERS[tok.value])
         raise _Refused(f"unexpected '{tok.value or 'end'}'")
 
     def story_variable(self, name: str) -> _Val:
@@ -750,6 +1045,8 @@ class _Expression:
                 return value
 
     def member(self, value: _Val, name: str) -> _Val:
+        if name in SYSTEM_MEMBERS:
+            raise _Refused(_system_word(f".{name}"), BLOCK)
         if value.type == PARTY:
             if name == "length":
                 return _Val(NUM)
@@ -759,10 +1056,11 @@ class _Expression:
         if value.type == EQUIP and name == "includes":
             arg = self.call_argument("includes")
             if arg.type != STR or arg.literal is None:
-                raise _Refused(f'equipment is checked with an item in quotes, like {value.who}.equipment.includes("rope_1")')
-            if arg.literal not in ITEM_IDS:
+                raise _Refused(f'equipment is checked with an item in quotes, like {value.who}.equipment.includes("rope")')
+            if arg.literal not in EQUIPMENT_IDS:
                 raise _Refused(
-                    f'"{arg.literal}" isn\'t an item in the game - write an item id with its tier, like "rope_1" or "pickaxe_2"'
+                    f'"{arg.literal}" isn\'t an item in the game - write an item\'s id, like "rope" (any rope) '
+                    'or "pickaxe_2" (a pickaxe of tier 2 or better)'
                 )
             return _Val(BOOL)
         if value.type == ANY and value.literal is None:
@@ -1021,6 +1319,10 @@ class _Scene:
         self.errors: list = []
         self.frames: list = []
         self.legend: list = []
+        self.endings: list = []  # the $isEnding values it sets, see check_target
+        self.in_setter = False  # reading a link's [ ] part, which runs on the click
+        self.ends = False  # sets $isEnding at all, also to a refused value
+        self.teasers: Optional[dict] = None  # $meta_endings, StoryInit only
         self.destinations: list = []  # (scene, leads there)
         self.labels: set = set()  # visible choice texts so far, see choice_label
         self.open_label: Optional[dict] = None  # the <label> being read, see open_label_tag
@@ -1031,18 +1333,60 @@ class _Scene:
     def line(self, pos: int) -> int:
         return self.text.count("\n", 0, pos) + 1
 
-    def refuse(self, pos: int, message: str) -> None:
+    def refuse(self, pos: int, message: str, kind: str = CODE) -> None:
         key = (self.line(pos), message)
         if key not in self._seen:
             self._seen.add(key)
-            self.errors.append(key)
+            self.errors.append((key[0], message, kind))
+
+    def findings(self) -> list:
+        """(line, message, kind) in scene order. Every BLOCK is kept; the
+        other findings up to _MAX_ERRORS_PER_SCENE, then a count of the rest."""
+        kept, hidden = [], []
+        others = 0
+        for line, message, kind in self.errors:
+            if kind != BLOCK:
+                others += 1
+                if others > _MAX_ERRORS_PER_SCENE:
+                    hidden.append(kind)
+                    continue
+            kept.append((line, message, kind))
+        if hidden:
+            # Weighs what it stands for: the heaviest of the findings not shown.
+            kind = next(k for k in (CODE, UNSUPPORTED, NOTE) if k in hidden)
+            kept.append((None, f"{len(hidden)} more problems not shown", kind))
+        return kept
 
     def messages(self) -> list:
-        shown = [f"Passage '{self.name}', line {line}: {message}" for line, message in self.errors]
-        if len(shown) > _MAX_ERRORS_PER_SCENE:
-            extra = len(shown) - _MAX_ERRORS_PER_SCENE
-            shown = shown[:_MAX_ERRORS_PER_SCENE] + [f"Passage '{self.name}': {extra} more problems not shown"]
-        return shown
+        """Every finding as text, blocks and warnings alike (check_scene)."""
+        return [
+            f"Passage '{self.name}', line {line}: {message}" if line else f"Passage '{self.name}': {message}"
+            for line, message, _ in self.findings()
+        ]
+
+    def scan_unread(self, start: int, end: int) -> None:
+        """Look for the worst cases in a part the reading skips or couldn't
+        finish (a refused command's arguments and body, a refused scene): it
+        may hold anything, and these are refused wherever they are."""
+        part = self.text[start:end]
+        for pattern, message in _HARD_BLOCKS:
+            for m in pattern.finditer(part):
+                self.refuse(start + m.start(), message, BLOCK)
+        for macro in _MACRO_ARGUMENTS_RE.finditer(part):
+            words = _QUOTED_OR_LINK_RE.sub(lambda q: " " * len(q.group(0)), macro.group(1))
+            offset = start + macro.start(1)
+            for m in _SYSTEM_WORD_RE.finditer(words):
+                self.refuse(offset + m.start(1), _system_word(m.group(1)), BLOCK)
+            for m in _SYSTEM_MEMBER_RE.finditer(words):
+                self.refuse(offset + m.start(), _system_word(f".{m.group(1)}"), BLOCK)
+
+    def scan_css(self, start: int, end: int) -> None:
+        """CSS in a scene (an @@ style, a style attribute) is a note, but
+        what loads from outside or runs code in it is refused."""
+        part = self.text[start:end]
+        for pattern, message in _CSS_HARD_BLOCKS:
+            for m in pattern.finditer(part):
+                self.refuse(start + m.start(), message, BLOCK)
 
     # -- context --
 
@@ -1067,13 +1411,14 @@ class _Scene:
                 pos,
                 "only <<set>>, <<if>> and <<goto>> go between a button's or link's tags, "
                 "like <<button [[Rest|Camp]]>><<set $water -= 1>><</button>>",
+                UNSUPPORTED,
             )
             return False
         if top and top["kind"] in _CHOICE_LISTS:
-            self.refuse(pos, f"only <<option>> goes inside <<{top['kind']}>>")
+            self.refuse(pos, f"only <<option>> goes inside <<{top['kind']}>>", UNSUPPORTED)
             return False
         if top and top["kind"] == "switch" and top["head"]:
-            self.refuse(pos, "only <<case>> and <<default>> go directly inside <<switch>>")
+            self.refuse(pos, "only <<case>> and <<default>> go directly inside <<switch>>", UNSUPPORTED)
             return False
         return True
 
@@ -1093,9 +1438,9 @@ class _Scene:
             self.inside_label(start)
             pos = self.markup(start)
         if self.open_label is not None:
-            self.refuse(self.open_label["pos"], "<label> is never closed with </label>")
+            self.refuse(self.open_label["pos"], "<label> is never closed with </label>", UNSUPPORTED)
         for frame in reversed(self.frames):
-            self.refuse(frame["pos"], f"<<{frame['kind']}>> is never closed with <</{frame['kind']}>>")
+            self.refuse(frame["pos"], f"<<{frame['kind']}>> is never closed with <</{frame['kind']}>>", UNSUPPORTED)
 
     def inside_label(self, i: int) -> None:
         """Inside a <label> only its text and one radio button or checkbox:
@@ -1108,6 +1453,7 @@ class _Scene:
             i,
             "a <label> holds only its text and one radio button or checkbox, "
             'like <label><<radiobutton "$path" "north">> North</label>',
+            UNSUPPORTED,
         )
 
     def markup(self, i: int) -> int:
@@ -1117,9 +1463,9 @@ class _Scene:
             if not m:
                 # No comment for SugarCube either: what follows is markup.
                 if "-->" in text[i + 4:]:
-                    self.refuse(i, "this comment crosses a Windows line break (\\r), so SugarCube doesn't read it as a comment - keep it on one line")
+                    self.refuse(i, "this comment crosses a Windows line break (\\r), so SugarCube doesn't read it as a comment - keep it on one line", NOTE)
                 else:
-                    self.refuse(i, "a comment is closed with -->, like <!-- a note -->")
+                    self.refuse(i, "a comment is closed with -->, like <!-- a note -->", NOTE)
                 return i + 4
             return m.end()
         if text.startswith("<<", i):
@@ -1136,18 +1482,20 @@ class _Scene:
         if text[i] in "$_":
             return self.naked_variable(i)
         if text.startswith("@@", i):
-            self.refuse(i, "@@ styles aren't accepted - give the text a class, like <span class=\"red\">, and style it in the story stylesheet")
+            self.refuse(i, "@@ styles aren't accepted - give the text a class, like <span class=\"red\">, and style it in the story stylesheet", NOTE)
+            close = text.find("@@", i + 2)
+            self.scan_css(i, close if close >= 0 else len(text))
             return i + 2
         if text.startswith("/*", i) or text.startswith("/%", i):
             m = _BLOCK_COMMENT.match(text, i)
             if not m:
                 return i + 2  # no comment for SugarCube: plain text
-            self.refuse(i, "comments are written <!-- like this -->")
+            self.refuse(i, "comments are written <!-- like this -->", NOTE)
             return m.end()
         url = _URL_RE.match(text, i)
         if url:
             if self.content_allowed(i):
-                self.refuse(i, "web addresses aren't accepted - SugarCube makes them links out of the story")
+                self.refuse(i, _WEB_ADDRESS, BLOCK)
             return url.end()
         return self.html_tag(i)
 
@@ -1168,14 +1516,14 @@ class _Scene:
             try:
                 _Expression(self.text[i:end], self).printable()
             except _Refused as ex:
-                self.refuse(i, str(ex))
+                self.refuse(i, str(ex), ex.kind)
         return end
 
     def link(self, i: int) -> int:
         try:
             link, end = _parse_link(self.text, i)
         except _Refused as ex:
-            self.refuse(i, str(ex))
+            self.refuse(i, str(ex), ex.kind)
             return i + 2
         if self.content_allowed(i):
             self.check_link(i, link)
@@ -1193,16 +1541,19 @@ class _Scene:
             self.setter(pos, link.setter)
 
     def setter(self, pos: int, source: str) -> None:
+        self.in_setter = True
         try:
             _Expression(source, self).assignments()
         except _Refused as ex:
-            self.refuse(pos, f"{ex} (in the link's [ ] part, like [[Drink|Well][$water to 3]])")
+            self.refuse(pos, f"{ex} (in the link's [ ] part, like [[Drink|Well][$water to 3]])", ex.kind)
+        finally:
+            self.in_setter = False
 
     def image(self, i: int) -> int:
         try:
             setter, end = _parse_image(self.text, i)
         except _Refused as ex:
-            self.refuse(i, str(ex))
+            self.refuse(i, str(ex), ex.kind)
             return i + 2
         if self.content_allowed(i) and setter is not None:
             self.setter(i, setter)
@@ -1212,17 +1563,19 @@ class _Scene:
         m = _HTML_TAG.match(self.text, i)
         if not m:
             if self.content_allowed(i):
-                self.refuse(i, "this < starts an HTML tag that isn't complete - write &lt; for a plain <")
+                self.refuse(i, "this < starts an HTML tag that isn't complete - write &lt; for a plain <", NOTE)
             return i + 1
         closing, name, attributes, _ = m.groups()
         tag = name.lower()
         if not self.content_allowed(i) or tag in _MEDIA_TAGS:
             return m.end()
         if tag not in ALLOWED_HTML_TAGS:
-            self.refuse(i, self.tag_message(tag))
+            self.refuse(i, *self.tag_message(tag))
+            for attr in _HTML_ATTRIBUTE.finditer(attributes):
+                self.attribute(i, tag, attr.group(1), attr.group(2), only_worst=True)
             return m.end()
         if closing and attributes.strip():
-            self.refuse(i, f"</{tag}> takes no attributes")
+            self.refuse(i, f"</{tag}> takes no attributes", NOTE)
         for attr in _HTML_ATTRIBUTE.finditer(attributes):
             self.attribute(i, tag, attr.group(1), attr.group(2))
         if tag == "label":
@@ -1234,7 +1587,7 @@ class _Scene:
 
     def open_label_tag(self, i: int) -> None:
         if self.open_label is not None:
-            self.refuse(i, "a <label> doesn't go inside another <label>")
+            self.refuse(i, "a <label> doesn't go inside another <label>", UNSUPPORTED)
             return
         self.open_label = {"pos": i, "text": [], "inputs": 0, "frame": self.top(), "refused": False}
 
@@ -1243,10 +1596,10 @@ class _Scene:
         player's pick comes back as it, so it counts like a link's text."""
         label, self.open_label = self.open_label, None
         if label is None:
-            self.refuse(i, "</label> closes nothing - there is no open <label>")
+            self.refuse(i, "</label> closes nothing - there is no open <label>", UNSUPPORTED)
             return
         if label["frame"] is not self.top():
-            self.refuse(label["pos"], "a <label> opens and closes in the same part of the scene, not across <<if>> or <<switch>>")
+            self.refuse(label["pos"], "a <label> opens and closes in the same part of the scene, not across <<if>> or <<switch>>", UNSUPPORTED)
             return
         if label["inputs"] != 1 or label["refused"]:
             return  # a plain label, or already refused
@@ -1255,6 +1608,7 @@ class _Scene:
             self.refuse(
                 label["pos"],
                 'a radio button or checkbox needs its own text in the <label>, like <label><<radiobutton "$path" "north">> North</label>',
+                UNSUPPORTED,
             )
             return
         problem = plain_text_problem(shown)
@@ -1264,39 +1618,74 @@ class _Scene:
         self.choice_label(label["pos"], shown)
 
     @staticmethod
-    def tag_message(tag: str) -> str:
-        if tag == "a":
-            return "<a> links aren't accepted - use [[Text|Scene]]"
+    def tag_message(tag: str) -> tuple:
+        """(message, kind) for an HTML tag outside ALLOWED_HTML_TAGS."""
         if tag == "script":
-            return f"<script> {_CODE} - use <<set>> and <<if>>"
+            return _JS_PLACE, BLOCK
         if tag == "style":
-            return "<style> isn't accepted - style things in the story stylesheet"
-        if tag in ("input", "textarea", "select", "form", "button", "option"):
-            return f"<{tag}> isn't accepted - use <<button>>, <<link>> or the choice commands"
+            return _CSS_PLACE, BLOCK
+        if tag in _OUTSIDE_TAGS:
+            return f"<{tag}> isn't accepted - {_OUTSIDE}", BLOCK
+        if tag in ("input", "textarea", "select", "button", "option"):
+            return f"<{tag}> isn't accepted - use <<button>>, <<link>> or the choice commands", UNSUPPORTED
         allowed = ", ".join(sorted(ALLOWED_HTML_TAGS))
-        return f"<{tag}> isn't accepted - the HTML tags are {allowed}"
+        return f"<{tag}> isn't accepted - the HTML tags are {allowed}", NOTE
 
-    def attribute(self, pos: int, tag: str, name: str, value: Optional[str]) -> None:
+    def attribute(self, pos: int, tag: str, name: str, value: Optional[str], only_worst: bool = False) -> None:
+        """One attribute: code in it or a way out of the story is refused
+        (BLOCK); a style attribute is a note unless its CSS reaches outside;
+        anything but class is a warning. `only_worst` for a tag already
+        refused: just the worst cases."""
         attr = name.lower()
         if attr in _MEDIA_ATTRIBUTES:
             return
+        if attr.startswith("on") or attr.startswith("@") or attr.startswith("sc-eval:"):
+            self.refuse(pos, f"the {name} attribute: {_JS_PLACE}", BLOCK)
+            return
+        if attr in _OUTSIDE_ATTRIBUTES:
+            self.refuse(pos, f"the {name} attribute isn't accepted - {_OUTSIDE}", BLOCK)
+            return
+        if value is not None and _URL_RE.search(value):
+            self.refuse(pos, _WEB_ADDRESS, BLOCK)
+            return
+        if value is not None and ("<<" in value or "[[" in value or ">>" in value):
+            # No nesting inside tags: the reading doesn't go into a value.
+            self.refuse(pos, "a command or link doesn't go inside an HTML tag - put it between the opening and the closing tag")
+            start = self.text.find(value, pos)
+            if start >= 0:
+                self.scan_unread(start, start + len(value))
+            return
+        if attr == "style":
+            if value is not None:
+                start = self.text.find(value, pos)
+                if start >= 0:
+                    self.scan_css(start, start + len(value))
+            if not only_worst:
+                self.refuse(pos, "the style attribute isn't accepted - give it a class and style that in the story stylesheet", NOTE)
+            return
+        if only_worst:
+            return
+        if attr in ("class", "id") and value is not None:
+            names = value[1:-1] if value[:1] in "\"'" else value
+            platform = PLATFORM_CLASS_RE if attr == "class" else PLATFORM_ID_RE
+            taken = [n for n in names.split() if platform.fullmatch(n)]
+            if taken:
+                self.refuse(pos, f"{attr}=\"{taken[0]}\" is the platform's - {PLATFORM_HTML}", BLOCK)
+                return
         if attr != "class":
-            if attr.startswith("on") or attr.startswith("@") or attr.startswith("sc-eval:"):
-                self.refuse(pos, f"the {name} attribute {_CODE} - use <<button>> or <<link>>")
-            elif attr == "style":
-                self.refuse(pos, "the style attribute isn't accepted - give it a class and style that in the story stylesheet")
-            elif attr.startswith("data-"):
+            if attr.startswith("data-"):
+                # data-passage and data-setter make SugarCube links and run code.
                 self.refuse(pos, f"the {name} attribute isn't accepted - use [[Text|Scene]] for a way out")
             else:
-                self.refuse(pos, f"the {name} attribute isn't accepted - <{tag}> takes only class")
+                self.refuse(pos, f"the {name} attribute isn't accepted - <{tag}> takes only class", NOTE)
             return
         if value is None:
-            self.refuse(pos, f'class needs a value, like <{tag} class="row">')
+            self.refuse(pos, f'class needs a value, like <{tag} class="row">', NOTE)
             return
         if value[:1] in "\"'":
             value = value[1:-1]
         if not _CLASS_VALUE_RE.fullmatch(value):
-            self.refuse(pos, "a class is letters, digits, - and _, like class=\"row\"")
+            self.refuse(pos, "a class is letters, digits, - and _, like class=\"row\"", NOTE)
 
     # -- commands --
 
@@ -1305,23 +1694,29 @@ class _Scene:
         m = _MACRO_NAME.match(text, i + 2)
         end = _macro_end(text, i + 2)
         if end < 0:
+            # The rest of the scene is one unfinished command: never read.
             self.refuse(i, "this << isn't closed with >>")
+            self.scan_unread(i, len(text))
             return len(text)
         if not m or m.end() > end:
-            self.refuse(i, "<< starts a command, like <<set $gold to 5>> - write &lt;&lt; for plain <<")
+            self.refuse(i, "<< starts a command, like <<set $gold to 5>> - write &lt;&lt; for plain <<", UNSUPPORTED)
+            self.scan_unread(i, end + 2)
             return end + 2
         closing, name = m.group(1) == "/", m.group(2)
         raw = text[m.end():end]
         if closing:
             if raw.strip():
-                self.refuse(i, f"<</{name}>> takes nothing else")
+                self.refuse(i, f"<</{name}>> takes nothing else", NOTE)
             self.close(i, name)
             return end + 2
         depth = len(self.frames)
         try:
             self.command(i, name, raw)
         except _Refused as ex:
-            self.refuse(i, f"<<{name}>>: {ex}")
+            self.refuse(i, f"<<{name}>>: {ex}", ex.kind)
+            if ex.kind != BLOCK:
+                # Its arguments weren't read to the end: they may hold anything.
+                self.scan_unread(i, end + 2)
             if name in _CONTAINERS and len(self.frames) == depth:
                 # Refused before it opened: still opened, so its closing tag
                 # matches and doesn't add a second error.
@@ -1329,6 +1724,9 @@ class _Scene:
         if name in _REFUSED_MACROS and name in _REFUSED_CONTAINERS:
             closing_tag = text.find(f"<</{name}>>", end + 2)
             if closing_tag >= 0:
+                # The body isn't read (it would add a page of follow-on
+                # findings), only looked through for the worst cases.
+                self.scan_unread(end + 2, closing_tag)
                 return closing_tag + len(f"<</{name}>>")
         return end + 2
 
@@ -1336,34 +1734,40 @@ class _Scene:
         top = self.top()
         if top and top["kind"] == name:
             if name == "switch" and not top["cases"]:
-                self.refuse(top["pos"], "<<switch>> needs at least one <<case>>")
+                self.refuse(top["pos"], "<<switch>> needs at least one <<case>>", NOTE)
             self.frames.pop()
             return
         if name in _REFUSED_MACROS:
             return  # the opening was refused already
         if any(frame["kind"] == name for frame in self.frames):
-            self.refuse(pos, f"<</{name}>> comes before <</{top['kind']}>> is closed")
+            self.refuse(pos, f"<</{name}>> comes before <</{top['kind']}>> is closed", UNSUPPORTED)
         else:
-            self.refuse(pos, f"<</{name}>> closes nothing - there is no open <<{name}>>")
+            self.refuse(pos, f"<</{name}>> closes nothing - there is no open <<{name}>>", UNSUPPORTED)
 
     def command(self, pos: int, name: str, raw: str) -> None:
+        if name == "unset" and _PLATFORM_VALUE_RE.search(raw):
+            raise _Refused(
+                "the platform's values ($isEnding, $follows, $meta_..., $char, $lead) are never removed", BLOCK
+            )
         if name in _REFUSED_MACROS:
-            raise _Refused(_REFUSED_MACROS[name])
+            raise _Refused(*_REFUSED_MACROS[name])
         known = name in _HANDLERS
         if not known:
+            # A widget, a macro from the Story JavaScript or a typo: unread.
             raise _Refused("isn't one of the story commands - see Accepted forms in the story rules")
         top = self.top()
         if self.in_action() and name not in ("set", "if", "elseif", "else", "goto"):
             raise _Refused(
                 "only <<set>>, <<if>> and <<goto>> go between a button's or link's tags, "
-                "like <<button [[Rest|Camp]]>><<set $water -= 1>><</button>>"
+                "like <<button [[Rest|Camp]]>><<set $water -= 1>><</button>>",
+                UNSUPPORTED,
             )
         if top and top["kind"] in _CHOICE_LISTS and name not in ("option", "optionsfrom"):
-            raise _Refused(f"only <<option>> goes inside <<{top['kind']}>>")
+            raise _Refused(f"only <<option>> goes inside <<{top['kind']}>>", UNSUPPORTED)
         if top and top["kind"] == "switch" and top["head"] and name not in ("case", "default"):
-            raise _Refused("only <<case>> and <<default>> go directly inside <<switch>>")
+            raise _Refused("only <<case>> and <<default>> go directly inside <<switch>>", UNSUPPORTED)
         if self.is_init and name not in _INIT_MACROS:
-            raise _Refused("StoryInit only sets up the story's values - use <<set>> (and <<if>>)")
+            raise _Refused("StoryInit only sets up the story's values - use <<set>> (and <<if>>)", UNSUPPORTED)
         _HANDLERS[name](self, pos, raw)
 
     def open(self, pos: int, kind: str, **extra) -> None:
@@ -1385,6 +1789,7 @@ class _Scene:
                 pos,
                 "choices (links, buttons, radio buttons, checkboxes, options) don't go inside <<for>> - "
                 "it shows them once per character, so the scene would offer the same choice several times",
+                UNSUPPORTED,
             )
             return
         key = " ".join(label.split()).casefold()
@@ -1394,6 +1799,7 @@ class _Scene:
                 f"the choice '{' '.join(label.split())}' is in this scene twice - every link, button, "
                 "radio button, checkbox and option needs its own text, also in different branches of "
                 "an <<if>> (the player's choice comes back as its text)",
+                UNSUPPORTED,
             )
         self.labels.add(key)
 
@@ -1407,19 +1813,19 @@ class _Scene:
     def cmd_elseif(self, pos: int, raw: str) -> None:
         top = self.top()
         if not top or top["kind"] != "if":
-            raise _Refused("<<elseif>> goes inside <<if>> ... <</if>>")
+            raise _Refused("<<elseif>> goes inside <<if>> ... <</if>>", UNSUPPORTED)
         if top["else_seen"]:
-            raise _Refused("<<elseif>> comes before <<else>>")
+            raise _Refused("<<elseif>> comes before <<else>>", UNSUPPORTED)
         _Expression(raw, self).condition()
 
     def cmd_else(self, pos: int, raw: str) -> None:
         top = self.top()
         if not top or top["kind"] != "if":
-            raise _Refused("<<else>> goes inside <<if>> ... <</if>>")
+            raise _Refused("<<else>> goes inside <<if>> ... <</if>>", UNSUPPORTED)
         if raw.strip():
             raise _Refused("write <<elseif condition>> for another condition")
         if top["else_seen"]:
-            raise _Refused("an <<if>> has one <<else>>")
+            raise _Refused("an <<if>> has one <<else>>", UNSUPPORTED)
         top["else_seen"] = True
 
     def cmd_switch(self, pos: int, raw: str) -> None:
@@ -1429,11 +1835,11 @@ class _Scene:
     def cmd_case(self, pos: int, raw: str) -> None:
         top = self.top()
         if not top or top["kind"] != "switch":
-            raise _Refused("<<case>> goes inside <<switch>> ... <</switch>>")
+            raise _Refused("<<case>> goes inside <<switch>> ... <</switch>>", UNSUPPORTED)
         top["head"] = False
         top["cases"] += 1
         if top["default"]:
-            raise _Refused("<<case>> comes before <<default>>")
+            raise _Refused("<<case>> comes before <<default>>", UNSUPPORTED)
         args = _macro_arguments(raw)
         if not args:
             raise _Refused('<<case>> takes the values to match, like <<case "asleep">>')
@@ -1449,11 +1855,11 @@ class _Scene:
     def cmd_default(self, pos: int, raw: str) -> None:
         top = self.top()
         if not top or top["kind"] != "switch":
-            raise _Refused("<<default>> goes inside <<switch>> ... <</switch>>")
+            raise _Refused("<<default>> goes inside <<switch>> ... <</switch>>", UNSUPPORTED)
         if raw.strip():
-            raise _Refused("<<default>> takes nothing else")
+            raise _Refused("<<default>> takes nothing else", NOTE)
         if top["default"]:
-            raise _Refused("a <<switch>> has one <<default>>")
+            raise _Refused("a <<switch>> has one <<default>>", UNSUPPORTED)
         top["head"] = False
         top["default"] = True
 
@@ -1471,7 +1877,7 @@ class _Scene:
 
     def cmd_print(self, pos: int, raw: str) -> None:
         if not raw.strip():
-            raise _Refused("<<print>> needs a value, like <<print $gold>>")
+            raise _Refused("<<print>> needs a value, like <<print $gold>>", NOTE)
         if not self.content_allowed(pos):
             return
         _Expression(raw, self).printable()
@@ -1508,7 +1914,8 @@ class _Scene:
         if not self.in_action():
             raise _Refused(
                 "a scene never jumps on its own - use a link, or <<goto>> between a button's tags, "
-                'like <<button "Go">><<goto "Cave">><</button>>'
+                'like <<button "Go">><<goto "Cave">><</button>>',
+                UNSUPPORTED,
             )
         if raw.strip().startswith("`"):
             for target in _random_goto_targets(raw.strip()):
@@ -1545,8 +1952,8 @@ class _Scene:
         if not m:
             raise _Refused(f'a choice stores into a story variable named in quotes, like {example}')
         name = m.group(1)
-        if name in _PARTY_VARIABLES or name == _ENDING_VARIABLE or name.startswith("meta_"):
-            raise _Refused(f"${name} belongs to the platform - store the choice in your own variable, like {example}")
+        if name in _PARTY_VARIABLES or name in (_ENDING_VARIABLE, _FOLLOWS_VARIABLE) or name.startswith("meta_"):
+            raise _Refused(f"${name} belongs to the platform - store the choice in your own variable, like {example}", BLOCK)
 
     def choice_keywords(self, args: list, allowed: tuple, example: str) -> None:
         for kind, value in args:
@@ -1560,7 +1967,7 @@ class _Scene:
         self.input_in_label(pos, "radio button")
         args = _macro_arguments(raw)
         if len(args) < 2:
-            raise _Refused(f"write the variable and the value, like {example}")
+            raise _Refused(f"write the variable and the value, like {example}", UNSUPPORTED)
         self.choice_variable(args[0], example)
         _literal_value(args[1], "the value")
         self.choice_keywords(args[2:], ("checked", "autocheck"), example)
@@ -1572,11 +1979,12 @@ class _Scene:
                 pos,
                 f"a {kind} sits inside a <label> with its own text (the player's pick comes back as it), "
                 'like <label><<radiobutton "$path" "north">> North</label>',
+                UNSUPPORTED,
             )
             return
         label["inputs"] += 1
         if label["inputs"] == 2:
-            self.refuse(pos, "one radio button or checkbox per <label>")
+            self.refuse(pos, "one radio button or checkbox per <label>", UNSUPPORTED)
 
     def cmd_checkbox(self, pos: int, raw: str) -> None:
         example = '<<checkbox "$careful" false true>>'
@@ -1585,7 +1993,7 @@ class _Scene:
         self.input_in_label(pos, "checkbox")
         args = _macro_arguments(raw)
         if len(args) < 3:
-            raise _Refused(f"write the variable, the unchecked and the checked value, like {example}")
+            raise _Refused(f"write the variable, the unchecked and the checked value, like {example}", UNSUPPORTED)
         self.choice_variable(args[0], example)
         _literal_value(args[1], "the unchecked value")
         _literal_value(args[2], "the checked value")
@@ -1599,7 +2007,7 @@ class _Scene:
             return
         args = _macro_arguments(raw)
         if not args:
-            raise _Refused(f"write the variable it stores into, like {example}")
+            raise _Refused(f"write the variable it stores into, like {example}", UNSUPPORTED)
         self.choice_variable(args[0], example)
         self.choice_keywords(args[1:], ("autoselect",), example)
 
@@ -1609,7 +2017,7 @@ class _Scene:
     def cmd_option(self, pos: int, raw: str) -> None:
         top = self.top()
         if not top or top["kind"] not in _CHOICE_LISTS:
-            raise _Refused("<<option>> goes inside <<listbox>> or <<cycle>>")
+            raise _Refused("<<option>> goes inside <<listbox>> or <<cycle>>", UNSUPPORTED)
         args = _macro_arguments(raw)
         if not args or args[0][0] != "str":
             raise _Refused('write the option\'s text in quotes, like <<option "Sword" "sword">>')
@@ -1632,7 +2040,7 @@ class _Scene:
 
     def cmd_nobr(self, pos: int, raw: str) -> None:
         if raw.strip():
-            raise _Refused("<<nobr>> takes nothing else")
+            raise _Refused("<<nobr>> takes nothing else", NOTE)
         self.open(pos, "nobr")
 
 
@@ -1649,6 +2057,26 @@ _HANDLERS = {
 
 # ── Stylesheet ───────────────────────────────────────────────────────────────
 
+# The parts of the page that are the platform's (docs/STORY-RULES.md
+# "Stylesheet"): never styled by a story. The scene itself (.passage,
+# #passages, #story) may be styled - a text inset, say: the platform's buttons
+# are drawn outside the sealed frame the scene is shown in, where story CSS
+# can't reach (ARCHITECTURE.md "What the player receives").
+PLATFORM_CSS = (
+    "this is the platform's part of the page (the clickable image areas .wud-..., the error box "
+    ".error-view, SugarCube's side bar #ui-..., or a selector by data-passage, data-tags, class or id) - "
+    "style your own classes, or .passage for the whole scene"
+)
+# In a scene's HTML: the engine finds the scene, its clickable image areas and
+# SugarCube's error box by these names (error-view: the engine drops what is
+# inside it from the player's scene and treats its text as a story error).
+PLATFORM_HTML = (
+    "the engine finds the scene, its clickable image areas and its error box by these names - "
+    "give your element your own, like <div class=\"scene\">"
+)
+PLATFORM_CLASS_RE = re.compile(r"passage|wud-[\w-]*|error-view", re.I)
+PLATFORM_ID_RE = re.compile(r"passages|story|ui-[\w-]*", re.I)
+
 # url(...) and @import are reported by auth_routes._image_rule_errors.
 _CSS_REFUSED = (
     (re.compile(r"@font-face", re.I), "@font-face loads fonts from outside the story"),
@@ -1661,6 +2089,14 @@ _CSS_REFUSED = (
      "image-set(), image(), cross-fade() and element() could load a picture from outside the story"),
     (re.compile(r"\\"), "backslash escapes aren't accepted - write the character itself"),
     (re.compile(r"<"), "< isn't accepted in a stylesheet"),
+    # The platform's parts of the page: a story can't hide or move the
+    # clickable image areas, the error box or SugarCube's side bar, nor reach
+    # them by attribute ([class*=wud]).
+    (re.compile(
+        r"#ui-[\w-]*|\.wud-[\w-]*|\.error-view(?![\w-])"
+        r"|\[\s*data-(?:passage|tags)\b|\[\s*(?:class|id)\b",
+        re.I,
+    ), PLATFORM_CSS),
 )
 
 
@@ -1698,13 +2134,20 @@ def macro_exits(name: str, text: str) -> list:
     command adds nothing, and visited("X") only reads. Used for the
     structure rules on submit and for the step graph
     (twine_graph.build_story_graph), so both know every way on."""
+    return scene_outline(name, text)[0]
+
+
+def scene_outline(name: str, text: str) -> tuple:
+    """(ways on, endings) of one scene as the check reads it: the scenes its
+    commands lead to (see macro_exits) and the $isEnding values it sets, in
+    order. One reading for the step graph (twine_graph.build_story_graph)."""
     scene = _Scene(name, text)
     scene.check()
     exits: list = []
     for destination, leads in scene.destinations:
         if leads and destination not in exits:
             exits.append(destination)
-    return exits
+    return exits, list(scene.endings)
 
 
 def check_scene(name: str, text: str) -> list:
@@ -1715,13 +2158,103 @@ def check_scene(name: str, text: str) -> list:
     return scene.messages()
 
 
+# What a refused scene tag weighs: code or CSS in the wrong place and media
+# scenes (their text is a file, maybe from outside) are refused; a widget scene
+# isn't played yet; an init scene runs as code when the story starts.
+_TAG_KINDS = {"script": BLOCK, "stylesheet": BLOCK, "init": CODE, "widget": UNSUPPORTED}
+
+
+def _tag_kind(tag: str) -> str:
+    return _TAG_KINDS.get(tag.lower(), BLOCK)
+
+
+_SCRIPT_URL_RE = re.compile(r"\b(?:https?|wss?|ftp|file):\/\/", re.IGNORECASE)
+
+
+def _blank_js(js: str, strings: bool) -> str:
+    """The Story JavaScript with its comments (and, with `strings`, its quoted
+    strings) blanked out, keeping every position and line break. Template
+    strings stay: they can hold code. A rough reading, enough for the names
+    script_blocks looks for."""
+    out = list(js)
+    i, n = 0, len(js)
+
+    def blank(a: int, b: int) -> None:
+        for k in range(a, b):
+            if out[k] != "\n":
+                out[k] = " "
+
+    while i < n:
+        if js.startswith("//", i):
+            j = js.find("\n", i)
+            j = n if j < 0 else j
+            blank(i, j)
+            i = j
+            continue
+        if js.startswith("/*", i):
+            j = js.find("*/", i + 2)
+            j = n if j < 0 else j + 2
+            blank(i, j)
+            i = j
+            continue
+        ch = js[i]
+        if ch in "'\"`":
+            j = i + 1
+            while j < n and js[j] != ch and (ch == "`" or js[j] != "\n"):
+                j += 2 if js[j] == "\\" else 1
+            j = min(j + 1, n)
+            if strings and ch != "`":
+                blank(i, j)
+            i = j
+            continue
+        i += 1
+    return "".join(out)
+
+
+def script_blocks(js: str) -> list:
+    """The worst cases in the Story JavaScript, as "line N: message": the
+    names that reconfigure SugarCube or reach the browser, Node or the
+    network, and web addresses. A guard rail only - the story waits anyway
+    while it has JavaScript."""
+    code = _blank_js(js, strings=True)
+    no_comments = _blank_js(js, strings=False)
+    found: list = []
+    for m in _SYSTEM_WORD_RE.finditer(code):
+        found.append((m.start(1), _system_word(m.group(1))))
+    for m in _SYSTEM_MEMBER_RE.finditer(code):
+        found.append((m.start(), _system_word(f".{m.group(1)}")))
+    for m in _SCRIPT_URL_RE.finditer(no_comments):
+        found.append((m.start(), _WEB_ADDRESS))
+    seen: set = set()
+    out = []
+    for pos, message in sorted(found):
+        key = (js.count("\n", 0, pos) + 1, message)
+        if key not in seen:
+            seen.add(key)
+            out.append(f"line {key[0]}: {message}")
+    return out
+
+
 def check_story(passages: list, story_data: dict) -> StoryCheck:
     """Apply the story rules to every scene, the special scenes and tags, the
-    stylesheet and the Legend focus. TestCharacters is checked on its own
-    (backend.test_characters)."""
+    Story JavaScript, the stylesheet and the Legend focus: BLOCK findings go
+    to `errors`, the others to `warnings`. TestCharacters is checked on its
+    own (backend.test_characters)."""
     result = StoryCheck()
     names = {p.get("name", "") for p in passages}
     changes: list = []
+
+    def add(name: str, findings: list) -> None:
+        place = f"Passage '{name}'"
+        for line, message, kind in findings:
+            if kind == BLOCK:
+                result.errors.append(f"{place}, line {line}: {message}" if line else f"{place}: {message}")
+                continue
+            result.warnings.append(finding(place, line, kind, message))
+            if kind in HOLDING_KINDS:
+                result.waiting.add(name)
+            if kind == CODE:
+                result.has_code = True
 
     for p in passages:
         name = p.get("name", "")
@@ -1730,22 +2263,40 @@ def check_story(passages: list, story_data: dict) -> StoryCheck:
         lowered = {t.lower() for t in tags}
         if name == TEST_CHARACTERS_PASSAGE:
             continue
-        if name in REFUSED_PASSAGES:
-            result.errors.append(
-                f"Passage '{name}' isn't accepted - StoryInit, Retreat and LastResort are the only special scenes"
-            )
-            continue
         refused_tags = sorted(t for t in tags if t.lower() in REFUSED_TAGS | REFUSED_MEDIA_TAGS)
-        if refused_tags:
-            hint = " (styles go in the Story Stylesheet)" if "stylesheet" in lowered else ""
-            result.errors.append(
-                f"Passage '{name}' is tagged {', '.join(refused_tags)} - scenes with this tag aren't accepted{hint}"
-            )
+        if name in REFUSED_PASSAGES or refused_tags:
+            # Not read as a scene: only looked through for the worst cases.
+            scene = _Scene(name, text)
+            scene.scan_unread(0, len(text))
+            add(name, scene.findings())
+            if name in REFUSED_PASSAGES:
+                add(name, [(None, "this special scene isn't played - StoryInit, Retreat and LastResort "
+                                  "are the only special scenes", UNSUPPORTED)])
+                continue
+            kinds = [_tag_kind(t) for t in refused_tags]
+            if BLOCK in kinds:
+                hint = ""
+                if "stylesheet" in lowered:
+                    hint = " (styles go in the Story Stylesheet)"
+                elif "script" in lowered:
+                    hint = " (JavaScript goes in the Story JavaScript)"
+                result.errors.append(
+                    f"Passage '{name}' is tagged {', '.join(refused_tags)} - scenes with this tag aren't accepted{hint}"
+                )
+            else:
+                kind = CODE if CODE in kinds else UNSUPPORTED
+                add(name, [(None, f"is tagged {', '.join(refused_tags)} - scenes with this tag aren't played yet", kind)])
             continue
         scene = _Scene(name, text)
         scene.check()
-        result.errors.extend(scene.messages())
+        add(name, scene.findings())
         changes.extend(scene.legend)
+        if scene.endings:
+            result.endings[name] = list(scene.endings)
+        if scene.ends:
+            result.ending_scenes.add(name)
+        if scene.is_init:
+            result.teasers = scene.teasers
         missing = []
         for destination, leads in scene.destinations:
             if destination not in names:
@@ -1763,6 +2314,18 @@ def check_story(passages: list, story_data: dict) -> StoryCheck:
             result.errors.append(
                 f"Passage '{name}' names the scenes {shown} and {len(missing) - 3} more, which do not exist"
             )
+
+    # The Story JavaScript: allowed to be handed in, but the story waits until
+    # there are rules for JavaScript (it would run on the shared engine workers).
+    script = (story_data or {}).get("script") or ""
+    if script.strip():
+        result.has_code = True
+        result.warnings.append(finding(
+            "Story JavaScript", None, CODE,
+            "the story has its own JavaScript - it waits until there are rules for JavaScript, "
+            "so expect a long review",
+        ))
+        result.errors.extend(f"Story JavaScript, {problem}" for problem in script_blocks(script))
 
     result.errors.extend(stylesheet_errors("Story Stylesheet", (story_data or {}).get("stylesheet") or ""))
 

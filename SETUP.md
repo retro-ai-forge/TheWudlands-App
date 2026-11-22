@@ -542,15 +542,17 @@ The story engines (`engine-test` and `engine-live`, see `ARCHITECTURE.md` "Engin
 
 **What a VPC is.** A VPC (Virtual Private Cloud) is a private network inside Google Cloud, made of address ranges (subnets), firewall rules and routes that decide where traffic may go. A Cloud Run service is normally in none: its outgoing traffic goes straight to the internet. With *Direct VPC egress* and `--vpc-egress all-traffic`, every outgoing connection of the engine goes into the subnet below instead, and from there nowhere:
 
-- **No Cloud NAT and no public addresses:** the network has no route to the internet. Never add a Cloud Router or Cloud NAT to `engine-net`.
-- **A firewall rule that denies all outgoing traffic:** a second lock, in case someone adds a NAT later.
+- **No Cloud NAT and no public addresses.** Never add a Cloud Router or Cloud NAT to `engine-net`.
+- **No route to the internet:** Google gives every new network a default route `0.0.0.0/0` to the internet gateway. It is deleted for `engine-net` (only for this network; `serverless-wudlands` uses none), so even a NAT added by mistake would lead nowhere.
+- **A firewall rule that denies all outgoing traffic:** a further lock, in case someone adds a route and a NAT later.
+- **No name lookups:** a lookup of `<data>.attacker.example` carries data to the attacker's name server even when no connection is possible. The DNS policy `engine-no-dns` sends every lookup from `engine-net` to `10.255.255.254`, an address that exists nowhere, so every lookup fails (SERVFAIL) and none reaches a name server outside. The policy is logged: the engines never look up a name, so any lookup in the log (Cloud Logging, `dns_query`) is a story trying to get out. Checked on 2026-11-23 that Cloud Run follows the network's DNS policy.
 - **No Private Google Access:** the engines can't reach Google's APIs either; they need none.
 - **Calls into the engines still work:** the main service reaches them through their Cloud Run URL as before (`--vpc-egress` only concerns outgoing traffic), with a Google ID token.
 - **The metadata server stays reachable** (Cloud Run needs it) and hands out tokens for the engines' service account. That's why `engine-sa` has no roles at all: its token opens nothing.
 
 None of these resources cost anything on their own.
 
-**Steps 1 and 2 in one run:** `rav run gcp_engine_network` (or `bash scripts/setup_engine_network.sh`). The script creates what's missing, leaves what exists, switches the subnet's Private Google Access off every time, and stops with a warning if `engine-sa` has any project role or the network has a router (which could carry a NAT out). Safe to run again; `PROJECT` and `REGION` can be set in the environment. The commands it runs are listed below.
+**Steps 1 and 2 in one run:** `rav run gcp_engine_network` (or `bash scripts/setup_engine_network.sh`). The script creates what's missing, leaves what exists, switches the subnet's Private Google Access off and deletes any route to the internet every time, and stops with a warning if `engine-sa` has any project role, the network has a router (which could carry a NAT out) or a route to the internet, or the DNS policy isn't in place. Safe to run again; `PROJECT` and `REGION` can be set in the environment. The commands it runs are listed below.
 
 **Step 1: Network, subnet and firewall rule** (once):
 ```bash
@@ -570,10 +572,19 @@ gcloud compute networks subnets create engine-subnet \
   --network=engine-net --region=$REGION --range=10.10.0.0/24 \
   --no-enable-private-ip-google-access
 
-# Second lock: deny every outgoing connection from the engines
+# Deny every outgoing connection from the engines
 gcloud compute firewall-rules create engine-deny-all-egress \
   --network=engine-net --direction=EGRESS --action=DENY --rules=all \
   --destination-ranges=0.0.0.0/0 --priority=100 --target-tags=engine
+
+# No route to the internet: delete engine-net's default route (the name differs per network)
+gcloud compute routes list --filter="network:engine-net AND destRange=0.0.0.0/0" --format="value(name)"
+gcloud compute routes delete <that route's name>
+
+# No name lookups: every lookup goes to an address that exists nowhere; logged
+gcloud services enable dns.googleapis.com
+gcloud dns policies create engine-no-dns --description="Story engines: no name lookups" \
+  --networks=engine-net --alternative-name-servers=10.255.255.254 --enable-logging
 ```
 
 **Step 2: The engines' service account, without roles** (once):
@@ -581,7 +592,7 @@ gcloud compute firewall-rules create engine-deny-all-egress \
 gcloud iam service-accounts create engine-sa --display-name="Story engine (no permissions)"
 ```
 
-**Steps 3 to 5 in one run:** `rav run gcp_engine_deploy` (or `bash scripts/deploy_engines.sh`): runs the engine tests, builds the image tagged with the submodule's commit, pushes it, deploys both engines with the network flags, gives the main service the invoker role, and checks. `rav run gcp_engine_check` only checks: both engines answer with your login and refuse without one (403), their service account and network settings, and the outbound check below. The commands it runs:
+**Steps 3 to 5 in one run:** `rav run gcp_engine_deploy` (or `bash scripts/deploy_engines.sh`): runs the engine tests, builds the image tagged with the submodule's commit (`<commit>-dirty` while engine files are uncommitted, so a clean commit's image is never overwritten), pushes it, deploys both engines with the network flags, gives the main service the invoker role, and checks. `rav run gcp_engine_check` only checks: both engines answer with your login and refuse without one (403), their service account and network settings, the outbound check below, and that `engine-net` has no route to the internet and its DNS policy. The commands it runs:
 
 **Step 3: Build the image and deploy the engines with the network** (on every engine deploy):
 ```bash
@@ -597,12 +608,15 @@ gcloud run deploy engine-test --image $IMAGE --region $REGION \
   --service-account engine-sa@$PROJECT.iam.gserviceaccount.com \
   --no-allow-unauthenticated --min-instances 0 --max-instances 1 \
   --cpu 1 --memory 1Gi --set-env-vars WORKER_MODE=single-use \
-  --no-cpu-throttling \
+  --no-cpu-throttling --concurrency 4 --timeout 30 \
   --network engine-net --subnet engine-subnet --network-tags engine \
   --vpc-egress all-traffic
 # --no-cpu-throttling: the next fresh worker starts between calls; without it a
 # step took 1.3-1.9 s (measured 2026-11-22), near the 2 s time limit. Billed while
 # the instance is up; it still scales to zero.
+# --concurrency 4 --timeout 30 (both engines): an instance runs one click per vCPU
+# and queues the rest, so at most 4 requests per instance; engine-live then starts
+# more instances, engine-test answers 429 (busy) instead of keeping testers waiting.
 
 # Live stories: shared workers, grows with players
 # (--min-instances 0 until players play on it, then 1, see ARCHITECTURE.md "Settings")
@@ -610,6 +624,7 @@ gcloud run deploy engine-live --image $IMAGE --region $REGION \
   --service-account engine-sa@$PROJECT.iam.gserviceaccount.com \
   --no-allow-unauthenticated --min-instances 0 --max-instances 20 \
   --cpu 2 --memory 1Gi --set-env-vars WORKER_MODE=shared \
+  --concurrency 4 --timeout 30 \
   --network engine-net --subnet engine-subnet --network-tags engine \
   --vpc-egress all-traffic
 ```
@@ -623,7 +638,7 @@ for svc in engine-test engine-live; do
 done
 ```
 
-**Step 5: Check that nothing gets out** (after every deploy, and whenever the network changes). The Cloud Run job `engine-egress-check` runs the engine image's `src/egress-check.js` with exactly the engines' service account and network settings: it tries to reach the internet (www.google.com, example.com, 1.1.1.1, 8.8.8.8, an HTTPS request) and succeeds only when nothing answers. It tests the network itself, the barrier Node can't provide, without any back door in the engine:
+**Step 5: Check that nothing gets out** (after every deploy, and whenever the network changes). The Cloud Run job `engine-egress-check` runs the engine image's `src/egress-check.js` with exactly the engines' service account and network settings: it tries to reach the internet (www.google.com, example.com, 1.1.1.1, 8.8.8.8, an HTTPS request) and to look up names (example.com and a name never used before), and succeeds only when nothing answers. Any answer to a lookup counts as getting out, "no such name" too, because the question reached a name server outside. It tests the network itself, the barrier Node can't provide, without any back door in the engine:
 ```bash
 gcloud run jobs deploy engine-egress-check --image $IMAGE --region $REGION \
   --service-account engine-sa@$PROJECT.iam.gserviceaccount.com \
@@ -636,4 +651,6 @@ To look at the setup:
 gcloud run services describe engine-test --region $REGION --format="yaml(spec.template.metadata.annotations)"
 gcloud compute firewall-rules list --filter="network:engine-net"
 gcloud compute routers list --filter="network:engine-net"   # must stay empty: no router, no NAT
+gcloud compute routes list --filter="network:engine-net"    # only the subnet's own route, no 0.0.0.0/0
+gcloud dns policies describe engine-no-dns                  # engine-net, 10.255.255.254, logging on
 ```

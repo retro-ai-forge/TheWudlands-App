@@ -74,22 +74,22 @@ def test_the_rules_example_test_party_is_valid():
 @pytest.mark.parametrize(
     "text, expected",
     [
-        ("<<script>>alert(1)<</script>>", "runs program code"),
-        ("<<run alert(1)>>", "runs program code"),
-        ("<script>alert(1)</script>", "runs program code"),
-        ('<span onclick="alert(1)">x</span>', "runs program code"),
-        ('<span @class="State.x">x</span>', "runs program code"),
-        ('<span sc-eval:class="x">x</span>', "runs program code"),
+        ("<<script>>alert(1)<</script>>", "Story JavaScript"),
+        ("<<run alert(1)>>", "Story JavaScript"),
+        ("<script>alert(1)</script>", "Story JavaScript"),
+        ('<span onclick="alert(1)">x</span>', "Story JavaScript"),
+        ('<span @class="State.x">x</span>', "Story JavaScript"),
+        ('<span sc-eval:class="x">x</span>', "Story JavaScript"),
         ('<span data-setter="$x to 1">x</span>', "data-setter"),
         ('<span style="color: red">x</span>', "style attribute"),
         ("<<set $x to `alert(1)`>>", "backquotes"),
         ("<<link `alert(1)`>><</link>>", "backquotes"),
         ("<<set $x to setup.x>>", "engine's internals"),
         ("<<print window.name>>", "engine's internals"),
-        ("<<if Config.debug>>x<</if>>", "engine's internals"),
+        ("<<if Config.debug>>x<</if>>", "reaches into SugarCube"),
         ("<<set $x to (function(){})()>>", "{ }"),
         ("<<set $x to $x[0](1)>>", "can be called"),
-        ("<<print $x.constructor>>", "isn't available"),
+        ("<<print $x.constructor>>", "reaches into SugarCube"),
         ("<<set $x to --$y>>", "--"),
         ("<<set $x to $y++>>", "++"),
         ("<<set $x = 5>>", "use to"),
@@ -188,10 +188,13 @@ def test_changes_are_written_with_to_and_separated_by_commas(text, expected):
     [
         ("<<set $x to $lead>>", "whole character"),
         ("<<print $lead>>", "whole character"),
-        ("<<set $x to $lead.equipment>>", 'includes("item_tier")'),
+        ("<<set $x to $lead.equipment>>", 'includes("item")'),
         ("<<if $lead.race>>x<</if>>", "compared with a quoted value"),
         ('<<if $lead.race is "orcish">>x<</if>>', "isn't a race in the game"),
         ('<<if $lead.equipment.includes("laser_9")>>x<</if>>', "isn't an item in the game"),
+        ('<<if $lead.equipment.includes("rope_7")>>x<</if>>', "isn't an item in the game"),
+        ('<<if $lead.equipment.includes("Rope")>>x<</if>>', "isn't an item in the game"),
+        ('<<if $lead.equipment.includes("rope_")>>x<</if>>', "isn't an item in the game"),
         ('<<set $x to "a" + $lead.race>>', "printed or compared"),
         ('<<set $x to $lead["constructor"]>>', "no value 'constructor'"),
         ("<<set $x to $char[4].might>>", "$char[0] to $char[3]"),
@@ -223,6 +226,21 @@ def test_character_values_are_used_only_as_the_rules_say(text, expected):
 )
 def test_more_character_forms_pass(text):
     assert check_scene("Scene", text) == []
+
+
+def test_equipment_is_checked_by_family_id_or_item_id():
+    """A family id ("rope", any tier) and an item id ("rope_2", that tier or
+    better) are both accepted for every item in the game; the engine lists
+    both for each carried item, which only works while a family id can't be
+    mistaken for an item id."""
+    from backend.items_catalog import ITEM_CATALOG_ENTRIES, ITEM_FAMILIES_BY_ID
+
+    for family_id in ITEM_FAMILIES_BY_ID:
+        assert not re.search(r"_\d+$", family_id), family_id
+        assert check_scene("Scene", f'<<if $lead.equipment.includes("{family_id}")>>x<</if>>') == [], family_id
+    for entry in ITEM_CATALOG_ENTRIES:
+        assert entry.id == f"{entry.family_id}_{entry.tier}", entry.id
+        assert check_scene("Scene", f'<<if $lead.equipment.includes("{entry.id}")>>x<</if>>') == [], entry.id
 
 
 def test_story_init_never_holds_character_data():
@@ -271,9 +289,7 @@ def test_commands_and_tags_are_well_formed(text, expected):
 
 def test_a_refusal_names_the_scene_and_the_line():
     errors = check_scene("Cave", "First line\nSecond <<run alert(1)>>")
-    assert errors == [
-        "Passage 'Cave', line 2: <<run>>: runs program code - use <<set>>, like <<set $gold to $gold + 5>>"
-    ]
+    assert errors == ["Passage 'Cave', line 2: <<run>>: JavaScript goes in the Story JavaScript, not in a scene"]
 
 
 def test_a_refused_script_body_adds_no_follow_on_errors():
@@ -365,8 +381,14 @@ def test_upper_case_javascript_is_no_link_for_sugarcube():
 
 
 def test_a_scene_reports_at_most_twenty_problems():
-    errors = check_scene("Scene", "<<run x>>\n" * 30)
+    errors = check_scene("Scene", "<<timed 1s>>x<</timed>>\n" * 30)
     assert len(errors) == 21 and errors[-1] == "Passage 'Scene': 10 more problems not shown"
+
+
+def test_a_scene_never_cuts_off_what_is_refused():
+    # Only warnings are cut off: every refusal is reported.
+    errors = check_scene("Scene", "<<timed 1s>>x<</timed>>\n" * 25 + "<<run x>>")
+    assert any("Story JavaScript" in e for e in errors), errors
 
 
 # --- the whole story ------------------------------------------------------------
@@ -399,24 +421,34 @@ def test_legend_points_add_up_each_written_change_once_capped_at_ten():
 
 
 @pytest.mark.parametrize("name", sorted(story_rules.REFUSED_PASSAGES))
-def test_sugarcube_special_scenes_are_refused(name):
-    errors = check_story(_passages((name, "Hello", [])), {}).errors
-    assert errors == [
-        f"Passage '{name}' isn't accepted - StoryInit, Retreat and LastResort are the only special scenes"
+def test_sugarcube_special_scenes_wait(name):
+    # Not refused: the story waits until the platform plays them.
+    result = check_story(_passages((name, "Hello", [])), {})
+    assert result.errors == []
+    assert result.holds and not result.has_code
+    assert [w["message"] for w in result.warnings] == [
+        "this special scene isn't played - StoryInit, Retreat and LastResort are the only special scenes"
     ]
 
 
-@pytest.mark.parametrize("tag", ["widget", "init", "script", "Twine.audio"])
-def test_special_tags_are_refused(tag):
+@pytest.mark.parametrize("tag", ["script", "stylesheet", "Twine.audio"])
+def test_code_style_and_media_tags_are_refused(tag):
     errors = check_story(_passages(("Scene", "Hello", [tag])), {}).errors
     assert errors and "aren't accepted" in errors[0]
+
+
+@pytest.mark.parametrize("tag, has_code", [("widget", False), ("init", True)])
+def test_widget_and_init_scenes_wait(tag, has_code):
+    result = check_story(_passages(("Scene", "Hello", [tag])), {})
+    assert result.errors == [] and result.holds and result.has_code is has_code
+    assert "aren't played yet" in result.warnings[0]["message"]
 
 
 def test_quoted_destinations_must_exist_and_never_lead_to_last_resort():
     passages = _passages(
         ("Start", '<<button "Go" "Nowhere">><</button>> <<if visited("Gone")>>x<</if>>', []),
         ("Mid", '<<link "Out">><<goto "LastResort">><</link>>', []),
-        ("LastResort", "Lost. <<set $isEnding to false>>", []),
+        ("LastResort", "Lost. <<set $isEnding to 'lastresort'>>", []),
     )
     errors = check_story(passages, {}).errors
     assert "Passage 'Start' names the scene 'Nowhere', which does not exist" in errors
@@ -451,8 +483,54 @@ def test_stylesheet_rules(css, expected):
 
 
 def test_a_normal_stylesheet_passes():
-    css = ".row { display: flex; gap: 1em; }\n.passage > p:first-child { color: #c33; }"
+    css = ".row { display: flex; gap: 1em; }\n.scene > p:first-child { color: #c33; }\n.passage-title { color: red; }"
     assert check_story([], {"stylesheet": css}).errors == []
+
+
+def test_the_scene_itself_may_be_styled():
+    # The platform's buttons are drawn outside the scene's sealed frame, so a
+    # text inset with full-width images only changes the story's own scene.
+    css = (
+        ".passage { padding: 0 20px; line-height: 1.7; }\n"
+        ".passage img { width: calc(100% + 40px); margin-left: -20px; margin-right: -20px; }\n"
+        "#passages p { color: #ddd; }\n#story { margin: 0; }"
+    )
+    assert check_story([], {"stylesheet": css}).errors == []
+
+
+@pytest.mark.parametrize(
+    "css",
+    [
+        "#ui-bar { display: none; }",
+        ".error-view { display: none; }",
+        ".wud-hotspots { display: none; }",
+        'body[data-passage="Cave"] p { color: red; }',
+        '[data-tags~="night"] { background: black; }',
+        'div[class~="passage"] { padding: 0; }',
+        '[id="passages"] { padding: 0; }',
+    ],
+)
+def test_the_platforms_parts_of_the_page_are_not_for_stories(css):
+    # A story can't hide or move the clickable image areas, the error box or
+    # SugarCube's side bar, nor reach them by attribute.
+    errors = check_story([], {"stylesheet": css}).errors
+    assert any("is the platform's part of the page" in e for e in errors), errors
+
+
+@pytest.mark.parametrize(
+    "html",
+    ['<div class="passage">x</div>', '<div class="row passage">x</div>', '<span class="wud-hotspots">x</span>',
+     '<span class="wud-hotspot">x</span>', '<div class="error-view">x</div>',
+     '<div id="passages">x</div>', '<div id="ui-bar">x</div>'],
+)
+def test_scenes_dont_use_the_platforms_classes_or_ids(html):
+    errors = check_story(_passages(("Scene", html, [])), {}).errors
+    assert any("is the platform's" in e for e in errors), errors
+
+
+def test_own_classes_that_start_like_the_platforms_are_fine():
+    result = check_story(_passages(("Scene", '<div class="passage-title">x</div>', [])), {})
+    assert result.errors == [] and result.warnings == []
 
 
 @pytest.mark.parametrize("tag", ["stylesheet", "Stylesheet", "STYLESHEET", "script"])
