@@ -121,6 +121,9 @@ scripts:
 
   # Story engines: private network without a way out, service account without roles (once; safe to repeat)
   gcp_engine_network: bash scripts/setup_engine_network.sh
+  # Story engines: build, push, deploy engine-test and engine-live, then check (SETUP.md steps 3-5)
+  gcp_engine_deploy: bash scripts/deploy_engines.sh
+  gcp_engine_check: bash scripts/deploy_engines.sh --check
 
   gcp_setup_secrets: gcloud secrets add-iam-policy-binding py_env_file --member='serviceAccount:60927173241-compute@developer.gserviceaccount.com' --role='roles/secretmanager.secretAccessor' --project=thewudlands
 

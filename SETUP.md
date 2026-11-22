@@ -581,6 +581,8 @@ gcloud compute firewall-rules create engine-deny-all-egress \
 gcloud iam service-accounts create engine-sa --display-name="Story engine (no permissions)"
 ```
 
+**Steps 3 to 5 in one run:** `rav run gcp_engine_deploy` (or `bash scripts/deploy_engines.sh`): runs the engine tests, builds the image tagged with the submodule's commit, pushes it, deploys both engines with the network flags, gives the main service the invoker role, and checks. `rav run gcp_engine_check` only checks: both engines answer with your login and refuse without one (403), their service account and network settings, and the outbound check below. The commands it runs:
+
 **Step 3: Build the image and deploy the engines with the network** (on every engine deploy):
 ```bash
 # Build from the twinejs-integrated folder (the engine needs the editor's publish code and SugarCube)
@@ -595,8 +597,12 @@ gcloud run deploy engine-test --image $IMAGE --region $REGION \
   --service-account engine-sa@$PROJECT.iam.gserviceaccount.com \
   --no-allow-unauthenticated --min-instances 0 --max-instances 1 \
   --cpu 1 --memory 1Gi --set-env-vars WORKER_MODE=single-use \
+  --no-cpu-throttling \
   --network engine-net --subnet engine-subnet --network-tags engine \
   --vpc-egress all-traffic
+# --no-cpu-throttling: the next fresh worker starts between calls; without it a
+# step took 1.3-1.9 s (measured 2026-11-22), near the 2 s time limit. Billed while
+# the instance is up; it still scales to zero.
 
 # Live stories: shared workers, grows with players
 # (--min-instances 0 until players play on it, then 1, see ARCHITECTURE.md "Settings")
@@ -617,7 +623,15 @@ for svc in engine-test engine-live; do
 done
 ```
 
-**Step 5: Check that nothing gets out** (after the first deploy, and whenever the network changes). Play a test story on `engine-test` whose code tries to send a request out, like the one from the 2026-11-19 prototype test (`twinejs-integrated/APP_INTEGRATION_HEADLESS.md` "What story code could do in the engine"). The request must fail. Keep that story among the engine's tests, so a later change can't open the way out unnoticed. To look at the setup:
+**Step 5: Check that nothing gets out** (after every deploy, and whenever the network changes). The Cloud Run job `engine-egress-check` runs the engine image's `src/egress-check.js` with exactly the engines' service account and network settings: it tries to reach the internet (www.google.com, example.com, 1.1.1.1, 8.8.8.8, an HTTPS request) and succeeds only when nothing answers. It tests the network itself, the barrier Node can't provide, without any back door in the engine:
+```bash
+gcloud run jobs deploy engine-egress-check --image $IMAGE --region $REGION \
+  --service-account engine-sa@$PROJECT.iam.gserviceaccount.com \
+  --command node --args src/egress-check.js --max-retries 0 --task-timeout 120s \
+  --network engine-net --subnet engine-subnet --network-tags engine --vpc-egress all-traffic
+gcloud run jobs execute engine-egress-check --region $REGION --wait   # must succeed
+```
+To look at the setup:
 ```bash
 gcloud run services describe engine-test --region $REGION --format="yaml(spec.template.metadata.annotations)"
 gcloud compute firewall-rules list --filter="network:engine-net"

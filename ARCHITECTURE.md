@@ -299,7 +299,7 @@ Foraging can move from today's foraging page into adventures, without moving its
 gcloud run deploy engine-test --image <engine image> --region europe-west1 \
   --service-account engine-sa@thewudlands.iam.gserviceaccount.com \
   --no-allow-unauthenticated --min-instances 0 --max-instances 1 \
-  --cpu 1 --memory 1Gi --set-env-vars WORKER_MODE=single-use \
+  --cpu 1 --memory 1Gi --set-env-vars WORKER_MODE=single-use --no-cpu-throttling \
   --network engine-net --subnet engine-subnet --network-tags engine --vpc-egress all-traffic
 
 # Live stories: shared workers, grows with players
@@ -321,7 +321,7 @@ Optional on top: `--ingress internal` on both engines, which needs `serverless-w
 
 ## Capacity (estimates)
 
-Measured on a laptop on 2026-11-19 with the prototype, and again on 2026-11-22 with the engine (about 175 ms per call in one worker, 190 ms through shared workers, 520 ms through single-use workers); not yet on Cloud Run. An active player clicks about every 20 seconds. Node uses one core, so one worker per vCPU.
+Measured on a laptop on 2026-11-19 with the prototype, and again on 2026-11-22 with the engine (about 175 ms per call in one worker, 190 ms through shared workers, 520 ms through single-use workers), and on Cloud Run after the first deploy (a step 0.55-0.63 s on `engine-live`; 1.3-1.9 s on `engine-test` before the next fresh worker was started between calls with CPU always on). Every call logs its duration (`engine`, `call`, `status`, `ms`) in Cloud Run's logs. An active player clicks about every 20 seconds. Node uses one core, so one worker per vCPU.
 
 | | `engine-live` (shared) | `engine-test` (single-use) |
 |---|---|---|
