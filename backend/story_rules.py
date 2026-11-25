@@ -162,30 +162,32 @@ _SCENE_META_VARIABLE = "meta_allowRunAway"
 # How a run ends (docs/STORY-RULES.md "Endings"): $isEnding is set to one of
 # these. success and failure end the main story; the Retreat story ends only
 # in failures (running away is a failure, counted with the others - the
-# platform tells a run-away by the Retreat graph). Both may carry the ending's
-# name after a colon ("success:dragon_slain", "failure:fled_the_crypt"), are
-# recorded for the character and can be followed. lastresort is LastResort's
-# (the engine failed: the run is given back), never named or recorded.
+# platform tells a run-away by the Retreat graph). Both may carry a group and
+# a name, or only a name, after colons ("success:title:won_baron_title",
+# "failure:ran_away"): words, no sentences. They are recorded for the
+# character and can be followed, a group as a whole too ("success:title").
+# lastresort is LastResort's (the engine failed: the run is given back),
+# never named or recorded.
 SUCCESS, FAILURE, LASTRESORT = "success", "failure", "lastresort"
-ENDING_NAME_MAX = 40
+ENDING_NAME_MAX = 40  # each part after the kind
+ENDING_PARTS_MAX = 2  # group and name
+_ENDING_PART = rf"[A-Za-z][A-Za-z0-9_-]{{0,{ENDING_NAME_MAX - 1}}}"
 _ENDING_RE = re.compile(
-    rf"(?P<kind>{SUCCESS}|{FAILURE})(?::(?P<name>[A-Za-z][A-Za-z0-9_-]{{0,{ENDING_NAME_MAX - 1}}}))?"
+    rf"(?P<kind>{SUCCESS}|{FAILURE})(?::{_ENDING_PART}){{0,{ENDING_PARTS_MAX}}}"
     rf"|(?P<plain>{LASTRESORT})"
 )
-# Every success and failure ending is declared once in StoryInit with a teaser
-# the platform shows to the characters who reached it.
+# Every success and failure ending is declared once in StoryInit, as a list.
 RECORDED_KINDS = (SUCCESS, FAILURE)
 ENDINGS_VARIABLE = "meta_endings"
-ENDING_TEASER_MAX = 300
 _ENDING_EXAMPLE = '<<set $isEnding to "success">>'
 ENDINGS_EXAMPLE = (
-    '<<set $meta_endings to {"success": "You reached the coast.", "failure": "The desert kept you.", '
-    '"failure:fled": "You turned back."}>>'
+    '<<set $meta_endings to ["success:title:won_baron_title", "failure:road:out_of_food", '
+    '"failure:ran_away"]>>'
 )
 _ENDING_VALUES = (
-    '$isEnding is set to "success" or "failure" - a name may follow after a colon, like "success:dragon_slain" '
-    '(the Retreat story ends only in failures) - or "lastresort" (only in LastResort), '
-    f"like {_ENDING_EXAMPLE}"
+    '$isEnding is set to "success" or "failure" - a group and a name, or only a name, may follow after colons, '
+    'like "success:title:won_baron_title" or "failure:ran_away" (the Retreat story ends only in failures) - '
+    f'or "lastresort" (only in LastResort), like {_ENDING_EXAMPLE}'
 )
 _NO_RETREAT_VALUE = (
     '"retreat" isn\'t an ending value - running away is a failure, so an ending of the Retreat story sets '
@@ -379,9 +381,8 @@ class StoryCheck:
     LEGEND_POINTS_MAX); `endings` the $isEnding values each scene sets (scene
     -> values in order, several when <<if>> branches end differently);
     `ending_scenes` every scene that sets $isEnding at all, also to a refused
-    value (so it isn't called a dead end without one); and `teasers` the
-    $meta_endings StoryInit declares (tag -> teaser), None when it declares
-    none."""
+    value (so it isn't called a dead end without one); and `declared_endings`
+    the $meta_endings list StoryInit declares, None when it declares none."""
 
     errors: list = field(default_factory=list)
     warnings: list = field(default_factory=list)
@@ -390,7 +391,7 @@ class StoryCheck:
     legend_points: dict = field(default_factory=dict)
     endings: dict = field(default_factory=dict)
     ending_scenes: set = field(default_factory=set)
-    teasers: Optional[dict] = None
+    declared_endings: Optional[list] = None
 
     @property
     def holds(self) -> bool:
@@ -488,7 +489,8 @@ _TOKEN = re.compile(
     r"|(?P<var>\$[A-Za-z_][A-Za-z0-9_]*(?![\w$]))"
     r"|(?P<tmp>_[A-Za-z][A-Za-z0-9_]*(?![\w$]))"
     r"|(?P<word>[A-Za-z][A-Za-z0-9_]*(?![\w$]))"
-    # { } and : only in <<set $meta_endings to {...}>> (_tokens, endings_literal).
+    # { } and : only in <<set $meta_endings to {...}>>, the old form, to say
+    # what replaced it (_tokens, endings_literal).
     r"|(?P<op>\+=|-=|\*=|/=|==|!=|>=|<=|[-+*/%<>()\[\],.{}:])"
 )
 _BAD_TOKENS = {
@@ -538,14 +540,14 @@ class _Val:
 _COMMENT_IN_COMMAND = "comments go outside a command, like <<set $gold to 5>> <!-- a note -->"
 
 
-# The one place { } and : are read: <<set $meta_endings to {...}>> (only in
-# StoryInit, endings_literal says so anywhere else).
+# The one place { } and : are read: <<set $meta_endings to {...}>>, the old
+# form with teasers, refused with the list that replaced it (endings_literal).
 _ENDINGS_ASSIGNMENT = re.compile(rf"\s*\${ENDINGS_VARIABLE}\s+to\s*{{")
 _MAP_CHARACTERS = frozenset("{}:")
 # The platform's values a story never removes (<<unset>>).
 _PLATFORM_VALUE_RE = re.compile(r"\$(?:isEnding|follows|char|lead|meta_\w*)(?![\w$])")
-# <<set $isEnding to ...>>, and the teaser written right after the ending:
-# <<set $isEnding to "success:met_queen": "The queen remembers you.">>
+# <<set $isEnding to ...>>, and a sentence written right after the ending
+# (the old teaser): <<set $isEnding to "success:met_queen": "The queen remembers you.">>
 _ENDING_SET = re.compile(r"\s*\$isEnding\s+to\b")
 _TEASER_IN_SCENE = re.compile(r"""\s*\$isEnding\s+to\s*(["'])([^"'\n]*)\1\s*:\s*(["'])([^"'\n]*)\3\s*$""")
 
@@ -586,11 +588,10 @@ class _Expression:
             scene.ends = True
             teaser = _TEASER_IN_SCENE.match(source)
             if teaser:
-                tag, text = teaser.group(2), teaser.group(4)
+                tag = teaser.group(2)
                 raise _Refused(
-                    "the teaser goes in StoryInit, not in the ending scene - here only "
-                    f'<<set $isEnding to "{tag}">>, and in StoryInit '
-                    f'<<set $meta_endings to {{"{tag}": "{text}"}}>> (with your other endings)',
+                    f'an ending is only its name - here <<set $isEnding to "{tag}">>, and in StoryInit '
+                    f'"{tag}" in the $meta_endings list, like {ENDINGS_EXAMPLE}',
                     BLOCK,
                 ) from None
             raise _Refused(str(refused), BLOCK) from None
@@ -667,7 +668,9 @@ class _Expression:
                 "set a value with to, += or -=, like <<set $gold to 5>> or <<set $gold += 1>> "
                 f"(found '{tok.value or 'the end'}')"
             )
-        if op == "to" and self.at("op", "["):
+        if op == "to" and self.at("op", "[") and target.target == ("story", ENDINGS_VARIABLE):
+            value = self.endings_list()
+        elif op == "to" and self.at("op", "["):
             value = self.list_literal(target)
         elif op == "to" and self.at("op", "{"):
             value = self.endings_literal(target)
@@ -694,50 +697,58 @@ class _Expression:
         return _Val(LIST)
 
     def endings_literal(self, target: _Val) -> _Val:
-        """$meta_endings in StoryInit: every success and failure ending
-        once (the Retreat story's too), each with its teaser - {"success:dragon_slain": "You
-        killed the dragon."}. The only place { } are read; it's platform data,
-        so every problem in it refuses the submit."""
+        """{ } is read only to answer the old $meta_endings form (ending ->
+        teaser) with the list that replaced it."""
         if target.target != ("story", ENDINGS_VARIABLE):
             raise _Refused(_BAD_CHARACTERS["{"])
+        raise _Refused(
+            f"$meta_endings is a list of your endings, without teasers, like {ENDINGS_EXAMPLE}", BLOCK
+        )
+
+    def endings_list(self) -> _Val:
+        """$meta_endings in StoryInit: every success and failure ending once
+        (the Retreat story's too), as words - ["success:title:won_baron_title",
+        "failure:ran_away"]. Platform data, so every problem refuses the
+        submit."""
         if not self.scene.is_init:
             raise _Refused(f"${ENDINGS_VARIABLE} is set in StoryInit", BLOCK)
-        self.take()  # {
-        teasers: dict = {}
-        while not self.at("op", "}"):
-            key = self.take()
-            if key.kind != "str":
-                raise _Refused(f"$meta_endings names each ending in quotes, like {ENDINGS_EXAMPLE}", BLOCK)
-            tag = key.value[1:-1]
+        self.take()  # [
+        declared: list = []
+        while not self.at("op", "]"):
+            tok = self.take()
+            if tok.kind != "str":
+                raise _Refused(f"$meta_endings lists each ending in quotes, like {ENDINGS_EXAMPLE}", BLOCK)
+            tag = tok.value[1:-1]
             if ending_kind(tag) not in RECORDED_KINDS:
                 raise _Refused(
-                    f'"{tag}" isn\'t a success or failure ending - $meta_endings declares them, '
-                    'like "success" or "failure:captured" (lastresort needs no teaser)',
+                    f'"{tag}" isn\'t a success or failure ending - each is "success" or "failure", then a '
+                    "group and a name, or only a name, after colons: letters, digits, _ or -, starting "
+                    f"with a letter, at most {ENDING_NAME_MAX} each, like {ENDINGS_EXAMPLE} "
+                    "(lastresort isn't listed)",
                     BLOCK,
                 )
-            if tag in teasers:
-                raise _Refused(f'"{tag}" is declared twice in $meta_endings', BLOCK)
-            self.expect("op", ":", f'a colon after "{tag}"')
-            teaser = self.take()
-            if teaser.kind != "str":
-                raise _Refused(f'the teaser for "{tag}" is text in quotes, like {ENDINGS_EXAMPLE}', BLOCK)
-            text = teaser.value[1:-1]
-            try:
-                _check_quoted(text)
-            except _Refused as refused:
-                raise _Refused(f'the teaser for "{tag}": {refused}', BLOCK) from None
-            if not text.strip():
-                raise _Refused(f'the teaser for "{tag}" is empty - one or two sentences for the player', BLOCK)
-            if len(text) > ENDING_TEASER_MAX:
-                raise _Refused(
-                    f'the teaser for "{tag}" has {len(text)} characters - at most {ENDING_TEASER_MAX}', BLOCK
-                )
-            teasers[tag] = text
+            if tag in declared:
+                raise _Refused(f'"{tag}" is listed twice in $meta_endings', BLOCK)
+            declared.append(tag)
             if not self.at("op", ","):
                 break
             self.take()
-        self.expect("op", "}", "} to close $meta_endings")
-        return _Val(MAP, literal=teasers)
+        self.expect("op", "]", "] to close $meta_endings")
+        # A follow-up may name a group, so a named ending is never also a
+        # group: "success:title" and "success:title:won_baron_title" can't both
+        # be. A plain "success" next to named ones is fine - "<id>:success" in
+        # a follow-up already means any success.
+        for tag in declared:
+            if ":" not in tag:
+                continue
+            inside = [other for other in declared if other.startswith(tag + ":")]
+            if inside:
+                raise _Refused(
+                    f'"{tag}" is both an ending and the group of "{inside[0]}" - give it its own name, '
+                    f'like "{tag}:other"',
+                    BLOCK,
+                )
+        return _Val(MAP, literal=declared)
 
     def check_target(self, target: _Val, op: str, value: _Val) -> None:
         kind, name = target.target if target.target else (None, None)
@@ -776,13 +787,12 @@ class _Expression:
             elif name == ENDINGS_VARIABLE:
                 if not (op == "to" and value.type == MAP):
                     raise _Refused(
-                        f"$meta_endings declares every success and failure ending with a teaser, "
-                        f"like {ENDINGS_EXAMPLE}",
+                        f"$meta_endings lists every success and failure ending, like {ENDINGS_EXAMPLE}",
                         BLOCK,
                     )
-                if self.scene.teasers is not None:
+                if self.scene.declared_endings is not None:
                     raise _Refused("$meta_endings is set once in StoryInit", BLOCK)
-                self.scene.teasers = value.literal
+                self.scene.declared_endings = value.literal
         elif kind == "temp":
             pass
         elif kind == "legend":
@@ -1322,7 +1332,7 @@ class _Scene:
         self.endings: list = []  # the $isEnding values it sets, see check_target
         self.in_setter = False  # reading a link's [ ] part, which runs on the click
         self.ends = False  # sets $isEnding at all, also to a refused value
-        self.teasers: Optional[dict] = None  # $meta_endings, StoryInit only
+        self.declared_endings: Optional[list] = None  # $meta_endings, StoryInit only
         self.destinations: list = []  # (scene, leads there)
         self.labels: set = set()  # visible choice texts so far, see choice_label
         self.open_label: Optional[dict] = None  # the <label> being read, see open_label_tag
@@ -2296,7 +2306,7 @@ def check_story(passages: list, story_data: dict) -> StoryCheck:
         if scene.ends:
             result.ending_scenes.add(name)
         if scene.is_init:
-            result.teasers = scene.teasers
+            result.declared_endings = scene.declared_endings
         missing = []
         for destination, leads in scene.destinations:
             if destination not in names:

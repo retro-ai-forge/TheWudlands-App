@@ -3117,8 +3117,9 @@ _METADATA_FIELDS: List[str] = [
 
 # Mandatory in-game variables the author must also set in StoryInit, but which are
 # gameplay config rather than queue metadata (so they are required, not displayed).
+_RUN_AWAY_VAR = "meta_allowRunAway"
 _REQUIRED_GAME_VARS: List[str] = [
-    "meta_allowRunAway",
+    _RUN_AWAY_VAR,  # and only to true (_check_twine_syntax)
 ]
 
 # Everything StoryInit must initialise = displayed metadata + game vars.
@@ -3565,35 +3566,35 @@ def _ending_placement_errors(endings: dict, retreat: set, both: set) -> List[str
     return errors
 
 
-def _ending_teaser_problems(endings: dict, teasers) -> tuple:
-    """(errors, notes): every success and failure a scene sets is declared
-    in $meta_endings (story_rules' `teasers`, None when StoryInit has
-    none); a declared ending no scene sets is a note."""
+def _ending_declaration_problems(endings: dict, declared) -> tuple:
+    """(errors, notes): every success and failure a scene sets is listed in
+    $meta_endings (story_rules' `declared_endings`, None when StoryInit has
+    none); a listed ending no scene sets is a note."""
     ended = {
         v for values in endings.values() for v in values
         if story_rules.ending_kind(v) in story_rules.RECORDED_KINDS
     }
-    if teasers is None:
+    if declared is None:
         if not ended:
             return [], []
         return [
-            "StoryInit must declare every success and failure ending in $meta_endings, each with a "
-            f"teaser for the players who reach it, like {story_rules.ENDINGS_EXAMPLE}"
+            "StoryInit must list every success and failure ending in $meta_endings, "
+            f"like {story_rules.ENDINGS_EXAMPLE}"
         ], []
     errors: List[str] = []
     for name, values in sorted(endings.items()):
         for value in dict.fromkeys(values):
-            if value in ended and value not in teasers:
+            if value in ended and value not in declared:
                 errors.append(
-                    f'Passage \'{name}\' ends with "{value}", which $meta_endings in StoryInit doesn\'t '
-                    "declare — add it there with a teaser"
+                    f'Passage \'{name}\' ends with "{value}", which the $meta_endings list in StoryInit '
+                    "doesn't hold — add it there"
                 )
     notes = [
         story_rules.finding(
             "Passage 'StoryInit'", None, story_rules.NOTE,
-            f'$meta_endings declares "{tag}", but no scene ends with it',
+            f'$meta_endings lists "{tag}", but no scene ends with it',
         )
-        for tag in teasers if tag not in ended
+        for tag in declared if tag not in ended
     ]
     return errors, notes
 
@@ -3702,6 +3703,19 @@ def _check_twine_syntax(doc: dict) -> dict:
             if value not in allowed:
                 choices = ", ".join(f'"{a}"' for a in allowed)
                 errors.append(f"${var} must be one of {choices} (got {value!r})")
+
+        # Every adventure starts with the Run away button offered (decided
+        # 2026-11-25): StoryInit sets $meta_allowRunAway to true, and only to
+        # true. A scene may still switch it off (an ambush) and on again.
+        for raw in _re.findall(
+            rf"<<set\s+\${_re.escape(_RUN_AWAY_VAR)}\b\s*(.*?)>>", init_text, _re.DOTALL
+        ):
+            if raw.strip() != "to true":
+                errors.append(
+                    f"StoryInit must set ${_RUN_AWAY_VAR} to true - every adventure starts with "
+                    f"the Run away button; a scene may switch it off later "
+                    f"(got <<set ${_RUN_AWAY_VAR} {raw.strip()}>>)"
+                )
 
         # Free-text fields must hold some content: at least one non-whitespace
         # character (a single letter or digit is fine; blank/space-only is not).
@@ -3975,8 +3989,7 @@ def _check_twine_syntax(doc: dict) -> dict:
     # How each ending ends (docs/STORY-RULES.md "Endings"): LastResort, and
     # only LastResort, sets "lastresort"; the Retreat story ends only in
     # failures; the main story in "success" or "failure", at least one of them
-    # a success; and every success and failure is declared with a teaser in
-    # $meta_endings. Scenes in both graphs are reported above.
+    # a success; and every success and failure is listed in $meta_endings. Scenes in both graphs are reported above.
     errors.extend(_ending_placement_errors(rules.endings, retreat_reachable, set(overlap)))
     if "LastResort" in name_set:
         last = rules.endings.get("LastResort", [])
@@ -3995,9 +4008,9 @@ def _check_twine_syntax(doc: dict) -> dict:
             'The main story has no success ending — at least one of its endings sets $isEnding to '
             '"success" (a name may follow, like "success:dragon_slain")',
         )
-    teaser_errors, teaser_notes = _ending_teaser_problems(rules.endings, rules.teasers)
-    errors.extend(teaser_errors)
-    findings.extend(teaser_notes)
+    declared_errors, declared_notes = _ending_declaration_problems(rules.endings, rules.declared_endings)
+    errors.extend(declared_errors)
+    findings.extend(declared_notes)
 
     # Any playable scene reached by neither root is detached (advisory) - when
     # the check can follow every way on. Past a scene it can't fully read it

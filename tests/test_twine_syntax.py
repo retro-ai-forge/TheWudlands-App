@@ -53,7 +53,7 @@ VALID_INIT = (
     "<<set $meta_durationWeeks to 1>>"
     "<<set $meta_access to 'paid'>>"
     "<<set $meta_allowRunAway to true>>"
-    "<<set $meta_endings to {'success': 'You made it.', 'failure': 'You turned back.'}>>"
+    "<<set $meta_endings to ['success', 'failure']>>"
     "[img[cover.webp]]"
 )
 
@@ -206,6 +206,23 @@ def test_duplicate_names():
         )
     )
     assert any("Duplicate" in e for e in result["errors"])
+
+
+def test_story_init_starts_with_run_away_allowed():
+    """Every adventure starts with the Run away button: StoryInit sets
+    $meta_allowRunAway to true and only to true; scenes may switch it."""
+    ok = _check_twine_syntax(_story([_p("1", "StoryInit", VALID_INIT)]))
+    assert not any("meta_allowRunAway" in e for e in ok["errors"])
+    for bad in (
+        "<<set $meta_allowRunAway to false>>",
+        "<<set $meta_allowRunAway to 1>>",
+        "<<set $meta_allowRunAway to 'true'>>",
+        "<<set $meta_allowRunAway = true>>",
+        "<<set $meta_allowRunAway to true>><<set $meta_allowRunAway to false>>",
+    ):
+        init = VALID_INIT.replace("<<set $meta_allowRunAway to true>>", bad)
+        result = _check_twine_syntax(_story([_p("1", "StoryInit", init)]))
+        assert any("must set $meta_allowRunAway to true" in e for e in result["errors"]), bad
 
 
 def test_missing_required_metadata_field():

@@ -125,18 +125,19 @@ const PICTURE_ROW_CSS = `.row { display: flex; gap: 8px; }
 
 const ENDING_EXAMPLE = `:: Throne room
 The queen rises and takes your hand.
-<<set $isEnding to "success:met_queen">>
+<<set $isEnding to "success:queen:met_queen">>
 
 :: Dungeon
 The door slams shut behind you.
 <<set $isEnding to "failure:captured">>`;
 
-const ENDING_TEASERS_EXAMPLE = `:: StoryInit
-<<set $meta_endings to {
-  "success:met_queen": "The queen remembers your name.",
-  "failure:captured": "The guards dragged you into the dungeon.",
-  "failure:fled": "You turned back at the castle gate."
-}>>`;
+const ENDINGS_LIST_EXAMPLE = `:: StoryInit
+<<set $meta_endings to [
+  "success:queen:met_queen",
+  "success:queen:married_queen",
+  "failure:captured",
+  "failure:fled"
+]>>`;
 
 const ENDING_BY_CONDITION_EXAMPLE = `:: Treasury
 <<if $gold gte 10>>
@@ -210,6 +211,13 @@ export default function Tutorial() {
           from writing your first scene to submitting a finished story.
         </p>
 
+       {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src="/images/tutorial/groupline.jpg"
+          alt="A party of adventurers setting out on the road"
+          className={styles.banner}
+        />
+
         <div className={styles.download}>
           <h2 className={h.section}>Start with the Template</h2>
           <p className={styles.downloadText}>
@@ -224,7 +232,7 @@ export default function Tutorial() {
           <ul className={styles.downloadList}>
             <li>
               <span className={styles.code}>StoryInit</span>: every required setting, each with a comment on what it does, and your
-              story&apos;s endings with their teasers.
+              story&apos;s endings.
             </li>
             <li><span className={styles.code}>Start</span>: the first scene, with two links.</li>
             <li><span className={styles.code}>Arrival</span> and <span className={styles.code}>Lost</span>: a success and a failure ending.</li>
@@ -235,27 +243,17 @@ export default function Tutorial() {
           <h3 className={`${h.sub} ${h.muted}`}>How to start</h3>
           <ol className={styles.downloadList}>
             <li>In the story editor&apos;s library, choose Library &gt; Import and pick the downloaded file.</li>
-            <li>
-              Open the story and change <span className={styles.code}>$meta_title</span>, <span className={styles.code}>$meta_description</span> and
-              {" "}<span className={styles.code}>$meta_author</span> in <span className={styles.code}>StoryInit</span>.
-            </li>
-            <li>Write: replace the scenes with your own and add as many as your story needs.</li>
-            <li>
-              Before you submit, go to Twine&apos;s story page with all the story previews and select your story.
-              Under Story, click Tags, the button with the tag icon, and add a genre from the{" "}
+             <li>Switch from Library to Story, click the imported story once so its highlighted. Then click Tags, the button with the tag icon, and add a genre from the{" "}
               <Link href="/create/review#story-tags" className={styles.inlineLink}>genre list</Link>, such as
               {" "}<span className={styles.code}>adventure</span>: every story needs at least one, and the file can&apos;t carry it. Rename,
               next to it, gives the story its real name.
             </li>
+            <li>
+              Double click the story to open it and change <span className={styles.code}>$meta_title</span>, <span className={styles.code}>$meta_description</span> and{" "}<span className={styles.code}>$meta_author</span> in <span className={styles.code}>StoryInit</span>.
+            </li>
+            <li>Write: replace the scenes with your own and add as many as your story needs.</li>
           </ol>
         </div>
-
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
-          src="/images/tutorial/groupline.jpg"
-          alt="A party of adventurers setting out on the road"
-          className={styles.banner}
-        />
 
         <ol className={styles.stepList}>
           {STEPS.map((step, i) => (
@@ -570,9 +568,10 @@ export default function Tutorial() {
           </table>
           <ul className={styles.ruleList}>
             <li>
-              Give an ending a name after a colon, like <span className={styles.code}>{`"success:met_queen"`}</span>, to tell your endings
-              apart. A letter first, then letters, digits, <span className={styles.code}>_</span> or <span className={styles.code}>-</span>, at most 40 characters.
-              The name is optional: <span className={styles.code}>{`"success"`}</span> on its own is fine too.
+              Give an ending a name after a colon, like <span className={styles.code}>{`"failure:captured"`}</span>, or a group and a
+              name, like <span className={styles.code}>{`"success:queen:met_queen"`}</span>, to tell your endings apart. Each part is a
+              word: a letter first, then letters, digits, <span className={styles.code}>_</span> or <span className={styles.code}>-</span>, at most 40 characters.
+              Both are optional: <span className={styles.code}>{`"success"`}</span> on its own is fine too.
             </li>
             <li>
               An ending scene has no links or buttons. A scene that sets <span className={styles.code}>$isEnding</span> and still leads on
@@ -590,25 +589,27 @@ export default function Tutorial() {
             </li>
           </ul>
 
-          <h3 className={`${h.sub} ${h.muted}`}>Teasers in StoryInit</h3>
+          <h3 className={`${h.sub} ${h.muted}`}>Your endings in StoryInit</h3>
           <p className={styles.body}>
-            Declare every success and failure once in <span className={styles.code}>StoryInit</span>, each with a teaser: one or two
-            sentences for the characters who reach that ending.
+            List every success and failure once in <span className={styles.code}>StoryInit</span>, as words, no sentences:
           </p>
-          <pre className={styles.codeBlock}>{ENDING_TEASERS_EXAMPLE}</pre>
+          <pre className={styles.codeBlock}>{ENDINGS_LIST_EXAMPLE}</pre>
           <ul className={styles.ruleList}>
             <li>
-              Every ending your scenes set must be declared here, or the submit check refuses it. The ending
-              scene sets only the name (<span className={styles.code}>{`<<set $isEnding to "success:met_queen">>`}</span>); the teaser
-              never goes there.
+              Every ending your scenes set must be in the list, or the submit check refuses it. The ending scene
+              sets exactly the same text: <span className={styles.code}>{`<<set $isEnding to "success:queen:met_queen">>`}</span>.
             </li>
-            <li>A teaser is plain text, at most 300 characters. <span className={styles.code}>{`"lastresort"`}</span> needs none.</li>
-            <li>A declared ending that no scene sets is a note for the reviewer.</li>
+            <li>
+              A group gathers endings that belong together: a follow-up story can open after any ending of the
+              group <span className={styles.code}>queen</span>. So a name is never also a group:
+              {" "}<span className={styles.code}>{`"success:queen"`}</span> and <span className={styles.code}>{`"success:queen:met_queen"`}</span> can&apos;t both be listed.
+            </li>
+            <li><span className={styles.code}>{`"lastresort"`}</span> isn&apos;t listed. An ending in the list that no scene sets is a note for the reviewer.</li>
           </ul>
           <p className={styles.soon}>
             <span className={styles.soonLabel}>Coming soon:</span> the story list shows each character the endings
-            it reached, with their teasers, and follow-up stories can open on them. Only the characters who reached
-            an ending ever see its teaser.
+            it reached, and follow-up stories can open on them. Only the characters who reached an ending ever
+            see it.
           </p>
 
           <h3 className={`${h.sub} ${h.muted}`}>Ending by a condition</h3>

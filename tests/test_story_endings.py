@@ -1,6 +1,6 @@
 """The ending rules (docs/STORY-RULES.md "Endings"): what $isEnding is set to,
-where each value may be set, at least one success, and $meta_endings with a
-teaser for every success and failure. Pure functions, no database."""
+where each value may be set, at least one success, and $meta_endings listing
+every success and failure. Pure functions, no database."""
 
 import pytest
 
@@ -8,8 +8,8 @@ from backend import story_rules
 from backend.auth_routes import _check_twine_syntax
 from backend.twine_graph import build_story_graph
 
-RETREAT = '"failure": "You turned back."'
-ENDINGS = '<<set $meta_endings to {"success": "You made it.", "failure:lost": "The desert kept you.", ' + RETREAT + '}>>'
+RETREAT = '"failure"'
+ENDINGS = '<<set $meta_endings to ["success", "failure:lost", ' + RETREAT + ']>>'
 INIT = (
     "<<set $meta_title to 'Title'>>"
     "<<set $meta_description to 'Desc'>>"
@@ -75,7 +75,11 @@ def test_the_default_story_passes():
     ("success:", None),
     ("success:1st", None),
     ("success:dragon slain", None),
-    ("success:a:b", None),
+    ("success:title:won_baron_title", "success"),
+    ("failure:road:out_of_food", "failure"),
+    ("success:a:b:c", None),
+    ("success:a::b", None),
+    ("success:title:", None),
     ("retreat:far", None),
     ("lastresort:x", None),
     ("success:" + "a" * story_rules.ENDING_NAME_MAX, "success"),
@@ -117,7 +121,7 @@ def test_story_init_never_ends_the_story():
 
 
 def test_a_scene_may_end_differently_by_a_condition():
-    endings = '<<set $meta_endings to {"success:rich": "Rich.", "failure:poor": "Poor.", ' + RETREAT + '}>>'
+    endings = '<<set $meta_endings to ["success:rich", "failure:poor", ' + RETREAT + ']>>'
     scenes = {
         "Start": "[[Count|Count]]",
         "Won": None,
@@ -152,8 +156,7 @@ def test_the_retreat_story_ends_in_failures():
 
 
 def test_retreat_story_with_several_endings_passes():
-    endings = ('<<set $meta_endings to {"success": "Won.", "failure:lost": "Lost.", '
-               '"failure": "You hid.", "failure:fled_the_crypt": "You fled the crypt, its curse still on you."}>>')
+    endings = '<<set $meta_endings to ["success", "failure:lost", "failure", "failure:fled_the_crypt"]>>'
     scenes = {
         "Retreat": "[[Hide|Hide]] [[Flee|Flee]]",
         "Hide": '<<set $isEnding to "failure">>',
@@ -165,7 +168,7 @@ def test_retreat_story_with_several_endings_passes():
 def test_a_failure_may_end_both_stories():
     """Running away is a failure like any other: one tag may end the main story
     and the Retreat story."""
-    endings = '<<set $meta_endings to {"success": "Won.", "failure:lost": "Lost."}>>'
+    endings = '<<set $meta_endings to ["success", "failure:lost"]>>'
     assert _errors({"Retreat": '<<set $isEnding to "failure:lost">>'}, endings=endings) == []
 
 
@@ -175,27 +178,41 @@ def test_retreat_is_not_a_value(value):
     assert any('"retreat" isn\'t an ending value - running away is a failure' in e for e in errors), errors
 
 
-def test_a_retreat_failure_needs_its_teaser():
+def test_a_retreat_failure_is_listed_too():
     errors = _errors({"Retreat": '<<set $isEnding to "failure:fled_the_crypt">>'})
     assert any(
-        "'Retreat' ends with \"failure:fled_the_crypt\", which $meta_endings in StoryInit doesn't declare" in e
+        "'Retreat' ends with \"failure:fled_the_crypt\", which the $meta_endings list in StoryInit doesn't hold" in e
         for e in errors
     )
 
 
 def test_the_main_story_needs_a_success():
-    endings = '<<set $meta_endings to {"failure:lost": "The desert kept you.", ' + RETREAT + '}>>'
+    endings = '<<set $meta_endings to ["failure:lost", ' + RETREAT + ']>>'
     errors = _errors({"Start": "[[Lose|Lost]]", "Won": None}, endings=endings)
     assert any("The main story has no success ending" in e for e in errors)
 
 
 def test_a_named_success_counts():
-    endings = '<<set $meta_endings to {"success:rich": "Rich.", "failure:lost": "The desert kept you.", ' + RETREAT + '}>>'
+    endings = '<<set $meta_endings to ["success:rich", "failure:lost", ' + RETREAT + ']>>'
     assert _errors({"Won": '<<set $isEnding to "success:rich">>'}, endings=endings) == []
 
 
+def test_endings_with_a_group():
+    endings = ('<<set $meta_endings to ["success:title:won_baron_title", "success:title:won_lord_title", '
+               '"failure:road:out_of_food", "failure:road:out_of_water", "failure:ran_away"]>>')
+    scenes = {
+        "Start": "[[Baron|Won]] [[Lord|Lord]] [[Food|Lost]] [[Water|Thirst]]",
+        "Won": '<<set $isEnding to "success:title:won_baron_title">>',
+        "Lord": '<<set $isEnding to "success:title:won_lord_title">>',
+        "Lost": '<<set $isEnding to "failure:road:out_of_food">>',
+        "Thirst": '<<set $isEnding to "failure:road:out_of_water">>',
+        "Retreat": 'You run. <<set $isEnding to "failure:ran_away">>',
+    }
+    assert _errors(scenes, endings=endings) == []
+
+
 def test_a_success_only_in_the_retreat_story_does_not_count():
-    endings = '<<set $meta_endings to {"failure:lost": "Lost."}>>'
+    endings = '<<set $meta_endings to ["failure:lost"]>>'
     scenes = {"Start": "[[Lose|Lost]]", "Won": None, "Retreat": '<<set $isEnding to "success">>'}
     errors = _errors(scenes, endings=endings)
     assert any("The main story has no success ending" in e for e in errors)
@@ -216,41 +233,42 @@ def test_a_dead_end_needs_an_ending():
 
 def test_meta_endings_is_required():
     errors = _errors({}, endings="")
-    assert any("StoryInit must declare every success and failure ending in $meta_endings" in e
+    assert any("StoryInit must list every success and failure ending in $meta_endings" in e
                for e in errors)
 
 
 def test_every_success_and_failure_is_declared():
     errors = _errors({"Won": '<<set $isEnding to "success:dragon_slain">>'})
     assert any(
-        "'Won' ends with \"success:dragon_slain\", which $meta_endings in StoryInit doesn't declare" in e
+        "'Won' ends with \"success:dragon_slain\", which the $meta_endings list in StoryInit doesn't hold" in e
         for e in errors
     )
 
 
 def test_a_declared_ending_no_scene_sets_is_a_note():
-    endings = ('<<set $meta_endings to {"success": "Won.", "failure:lost": "Lost.", "failure:eaten": "Eaten.", '
-               + RETREAT + '}>>')
+    endings = '<<set $meta_endings to ["success", "failure:lost", "failure:eaten", ' + RETREAT + ']>>'
     result = _check_twine_syntax(_story({}, endings=endings))
     assert result["errors"] == []
     notes = [w for w in result["findings"] if w["kind"] == story_rules.NOTE]
-    assert any('declares "failure:eaten", but no scene ends with it' in w["message"] for w in notes)
+    assert any('lists "failure:eaten", but no scene ends with it' in w["message"] for w in notes)
     assert not result["held"]
 
 
 @pytest.mark.parametrize("endings, message", [
-    ('<<set $meta_endings to {"lastresort": "Lost."}>>', "isn't a success or failure ending"),
-    ('<<set $meta_endings to {"retreat": "Ran."}>>', "isn't a success or failure ending"),
-    ('<<set $meta_endings to {"win": "Won."}>>', "isn't a success or failure ending"),
-    ('<<set $meta_endings to {"success": "A.", "success": "B."}>>', "declared twice"),
-    ('<<set $meta_endings to {"success": ""}>>', "is empty"),
-    ('<<set $meta_endings to {"success": "' + "a" * 301 + '"}>>', "at most 300"),
-    ('<<set $meta_endings to {"success": "You win $gold."}>>', 'the teaser for "success"'),
-    ('<<set $meta_endings to {"success": "See https://example.com"}>>', "web address"),
-    ('<<set $meta_endings to {"success": 5}>>', "text in quotes"),
-    ('<<set $meta_endings to {success: "Won."}>>', "names each ending in quotes"),
-    ('<<set $meta_endings to "success">>', "declares every success and failure ending with a teaser"),
-    ('<<set $meta_endings to {"success": "A."}>><<set $meta_endings to {"success": "B."}>>', "set once"),
+    ('<<set $meta_endings to ["lastresort"]>>', "isn't a success or failure ending"),
+    ('<<set $meta_endings to ["retreat"]>>', "isn't a success or failure ending"),
+    ('<<set $meta_endings to ["win"]>>', "isn't a success or failure ending"),
+    ('<<set $meta_endings to ["success:a:b:c"]>>', "isn't a success or failure ending"),
+    ('<<set $meta_endings to ["success:You won."]>>', "isn't a success or failure ending"),
+    ('<<set $meta_endings to ["success", "success"]>>', "listed twice"),
+    ('<<set $meta_endings to ["success:title", "success:title:won_baron_title"]>>',
+     '"success:title" is both an ending and the group of "success:title:won_baron_title"'),
+    ('<<set $meta_endings to [5]>>', "lists each ending in quotes"),
+    ('<<set $meta_endings to [success]>>', "lists each ending in quotes"),
+    ('<<set $meta_endings to "success">>', "$meta_endings lists every success and failure ending"),
+    ('<<set $meta_endings to ["success"]>><<set $meta_endings to ["failure"]>>', "set once"),
+    # the old form, ending -> teaser
+    ('<<set $meta_endings to {"success": "You made it."}>>', "$meta_endings is a list of your endings, without teasers"),
 ])
 def test_bad_meta_endings_are_refused(endings, message):
     errors = _errors({}, endings=endings)
@@ -258,7 +276,7 @@ def test_bad_meta_endings_are_refused(endings, message):
 
 
 def test_meta_endings_only_in_story_init():
-    errors = _errors({"Won": '<<set $meta_endings to {"success": "Won."}>><<set $isEnding to "success">>'})
+    errors = _errors({"Won": '<<set $meta_endings to ["success"]>><<set $isEnding to "success">>'})
     assert any("$meta_endings is set in StoryInit" in e for e in errors)
 
 
@@ -269,19 +287,17 @@ def test_braces_elsewhere_still_wait():
 
 
 def test_a_trailing_comma_is_fine():
-    endings = '<<set $meta_endings to {"success": "You made it.", "failure:lost": "Lost.", ' + RETREAT + ',}>>'
+    endings = '<<set $meta_endings to ["success", "failure:lost", ' + RETREAT + ',]>>'
     assert _errors({}, endings=endings) == []
 
 
-def test_check_story_hands_over_endings_and_teasers():
+def test_check_story_hands_over_the_endings():
     story = _story({})
     rules = story_rules.check_story(story["passages"], story["storyData"])
     assert rules.endings == {
         "Won": ["success"], "Lost": ["failure:lost"], "Retreat": ["failure"], "LastResort": ["lastresort"],
     }
-    assert rules.teasers == {
-        "success": "You made it.", "failure:lost": "The desert kept you.", "failure": "You turned back.",
-    }
+    assert rules.declared_endings == ["success", "failure:lost", "failure"]
 
 
 # --- $follows -----------------------------------------------------------------
@@ -317,12 +333,12 @@ def test_an_old_ending_gets_only_the_helpful_message():
     assert not any("doesn't set $isEnding" in e or "has no ending" in e for e in errors), errors
 
 
-def test_a_teaser_in_the_ending_scene_says_where_it_goes():
+def test_a_sentence_after_the_ending_says_what_goes_where():
     errors = _errors({"Won": '<<set $isEnding to "success:met_queen":"teaserqueen">>'})
     assert any(
-        "the teaser goes in StoryInit, not in the ending scene" in e
+        "an ending is only its name" in e
         and '<<set $isEnding to "success:met_queen">>' in e
-        and '<<set $meta_endings to {"success:met_queen": "teaserqueen"}>>' in e
+        and '"success:met_queen" in the $meta_endings list' in e
         for e in errors
     ), errors
     # It's still an ending scene: no "dead end without $isEnding" on top.
@@ -353,7 +369,7 @@ def test_a_one_scene_retreat_without_an_ending_is_refused():
 
 
 def test_every_dead_end_under_retreat_needs_a_failure():
-    endings = '<<set $meta_endings to {"success": "Won.", "failure:lost": "Lost.", "failure:hid": "Hid."}>>'
+    endings = '<<set $meta_endings to ["success", "failure:lost", "failure:hid"]>>'
     scenes = {
         "Retreat": "[[Hide|Hide]] [[Flee|Flee]] [[Swim|Swim]]",
         "Hide": '<<set $isEnding to "failure:hid">>',

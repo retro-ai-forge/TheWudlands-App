@@ -101,7 +101,7 @@ Adventures are submitted alongside their image assets. The engine validates ever
 - Presence of all required fields
 - Existence of `Start`, `LastResort`, and `Retreat` scenes
 - Validity of all choice targets (every `to` field must point to an existing scene)
-- Every ending marked with `$isEnding`: `"success"` or `"failure"` (at least one success in the main story; the Retreat story ends in failures), each declared with a teaser in `$meta_endings`, and `"lastresort"` in `LastResort`; no scene leads to `Retreat` (the Run away button opens it)
+- Every ending marked with `$isEnding`: `"success"` or `"failure"` (at least one success in the main story; the Retreat story ends in failures), each listed in `$meta_endings`, and `"lastresort"` in `LastResort`; no scene leads to `Retreat` (the Run away button opens it)
 
 Adventures that fail validation are not published. You can update a submitted story by submitting it again, but only within 7 days of your last submit (each submit starts the 7 days again). After that it is locked and waits for a reviewer, however long that takes: reviewers only look at stories you can no longer change. If it is rejected, you get the reason and can fix it and submit it again. If it passes, it goes live and players can play it. A live story is final: it can't be resubmitted. To publish changes, duplicate it in the editor and submit the copy as a new story. Only the platform fixes bugs in a live story. Everything you need to know about the addon format, image specifications, style presets, and submission requirements is documented in the Storyteller section of the app.
 

@@ -25,15 +25,15 @@ My Wudlands Story - add a genre tag
 <<set $meta_adventureTier to 1>> <!-- the level: 1 to 6 -->
 <<set $meta_durationWeeks to 1>> <!-- adventure weeks it costs: 1 to 4 -->
 <<set $meta_access to 'trial'>> <!-- free, trial or paid - one free story per author -->
-<<set $meta_allowRunAway to true>> <!-- whether the Run away button is offered -->
+<<set $meta_allowRunAway to true>> <!-- adventure starts with: true -->
 
-<!-- Every success and failure your scenes set, each with a teaser (at most 300 characters) -->
-<!-- that only the characters who reached that ending ever see. -->
-<<set $meta_endings to {
-  "success": "You made it through.",
-  "failure": "The road was too much for you.",
-  "failure:ran_away": "You turned back before the end."
-}>>
+<!-- Every success and failure your scenes set: "success" or "failure", then a group -->
+<!-- and a name, or only a name, after colons. Words, no sentences. -->
+<<set $meta_endings to [
+  "success",
+  "failure",
+  "failure:ran_away"
+]>>
 
 <!-- ********* Your own starting values ********* -->
 <<set $gold to 0>>

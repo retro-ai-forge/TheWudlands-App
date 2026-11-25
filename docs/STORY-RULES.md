@@ -187,14 +187,17 @@ The editor's Test refuses to start while the list has problems and says which. A
 
 ```
 <<set $meta_title to "The Salt Road">>
+<<set $meta_allowRunAway to true>>
 <<set $water to 2>>
 <<set $cursed to false>>
 <<set $waterStatus to ["dying of thirst", "parched", "thirsty", "fine"]>>
 <<set $inventory to ["rope", "torch"]>>
-<<set $meta_endings to {"success": "You reached the coast.", "failure:lost": "The desert kept you.", "failure:fled": "You turned back."}>>
+<<set $meta_endings to ["success:coast:reached_the_port", "failure:desert:out_of_water", "failure:ran_away"]>>
 ```
 
-`$meta_endings` declares your story's endings, each with a teaser (see "Endings").
+`$meta_endings` lists your story's endings (see "Endings").
+
+`$meta_allowRunAway` is always `true` in `StoryInit`: every adventure starts with the Run away button offered. A scene may switch it off with `<<set $meta_allowRunAway to false>>` (an ambush, a locked cell) and on again with `true`.
 
 ### Variables and maths
 
@@ -355,6 +358,7 @@ Every character has 20 Legend values from 0 to 100, in 10 pairs: `fame`/`infamy`
 
 ```
 <<set $isEnding to "success">>
+<<set $isEnding to "success:title:won_baron_title">>
 <<set $isEnding to "failure:captured">>
 <<set $isEnding to "failure:fled_the_crypt">>
 ```
@@ -369,10 +373,10 @@ Every scene without links ends the story and sets `$isEnding` to how the run end
 | `fallen` | platform | every member is dead | spent |
 | `abandoned` | platform | no click for days | spent |
 
-- A `success` or `failure` may carry the ending's name after a colon, such as `"success:dragon_slain"` or `"failure:fled_the_crypt"`: a letter first, then letters, digits, `_` or `-`, at most 40 characters. The name is optional.
+- A `success` or `failure` may carry a name after a colon, such as `"failure:fled_the_crypt"`, or a group and a name, such as `"success:title:won_baron_title"` and `"success:title:won_lord_title"`. Each part is a word: a letter first, then letters, digits, `_` or `-`, at most 40 characters. Both are optional; at most a group and a name.
 - The `Retreat` story ends only in failures: running away is a failure like any other, counted with the main story's. Only the platform's Run away button opens `Retreat`, so no scene may lead to it, not even one of the Retreat story; the click counts in the character's run-away stat (`adventureRunAway`), and the ending needs nothing more.
 - Every story needs at least one `success` ending.
-- Declare every `success` and `failure` ending once (the Retreat story's too) in `StoryInit`, each with a teaser for the players who reach it: plain text, at most 300 characters. `<<set $meta_endings to {"success:dragon_slain": "You killed the dragon and found a new home among the people.", "failure:captured": "The bandits dragged you into their camp.", "failure:fled": "You turned back at the crypt door."}>>`. An ending scene sets only the tag (`<<set $isEnding to "success:dragon_slain">>`), and every tag it sets must be declared there. `lastresort` needs no teaser. A declared ending no scene sets is a note for the reviewer.
+- List every `success` and `failure` ending once (the Retreat story's too) in `StoryInit`, as words, no sentences: `<<set $meta_endings to ["success:title:won_baron_title", "success:title:won_lord_title", "failure:road:out_of_food", "failure:road:out_of_water", "failure:ran_away"]>>`. Every ending a scene sets must be in the list. A name is never also a group: `"success:title"` and `"success:title:won_baron_title"` can't both be listed. `lastresort` isn't listed. A listed ending no scene sets is a note for the reviewer.
 - An ending scene may end differently by a condition: `<<if $gold gte 10>><<set $isEnding to "success:rich">><<else>><<set $isEnding to "failure:poor">><</if>>`.
 - Only an ending scene sets `$isEnding`, in its own text when it is shown (an `<<if>>` is fine), never by a click: not in a link's `[ ]` part and not between a link's or button's tags. Nothing removes it (`<<unset>>`), nor any other of the platform's values. Before the ending scene it isn't set at all.
 - `StoryInit` never sets `$isEnding`, and `true` and `false` aren't used any more.
@@ -381,11 +385,11 @@ Every scene without links ends the story and sets `$isEnding` to how the run end
 **What endings open (decided 2026-11-24, not built yet).** Recording each character's endings, follow-up stories and the story list's symbols come next. Only `$follows` is checked already: a story never sets it.
 
 - A `success` or `failure` belongs to the character that played it; in a party, every member gets it. Deleting a character wipes its endings with the rest of its story history and its Legend.
-- The story list in the characters section shows, for the selected character, a symbol on each story it ended - one for success and one for failure, with how often - and when opened, the tags and their teasers. Nobody else sees them.
+- The story list in the characters section shows, for the selected character, a symbol on each story it ended - one for success and one for failure, with how often - and when opened, the endings it reached. Nobody else sees them.
 - A Legend price for running away is up to you (see "Legend"). `lastresort` isn't recorded for the character and gets no symbol; it is kept only for the platform's error analysis.
 - A follow-up story names the endings it continues, in its own `StoryInit`: `<<set $meta_follows to ["<id of the earlier story>:success:dragon_slain", "<id of the earlier story>:success:dragon_tamed"]>>`. Any one of the entries opens it. In a party, the endings of the character selected to start it (the lead) count. Every submitted and live story shows its id with a copy button.
 - When the story starts, the platform stores the ending that opened it in `$follows`: the first entry the lead's endings fit, exactly as you wrote it, story id included, such as `"<id of the earlier story>:success:dragon_slain"`. So a follow-up to two different stories can tell which one opened it. Your scenes can use it: `<<if $follows is "<id of the earlier story>:success:dragon_slain">>The village still sings of the dragon you killed.<<elseif $follows is "<id of the earlier story>:success:dragon_tamed">>Your dragon circles above the village.<</if>>`. Your story only reads `$follows`, never sets it. Add an `<<else>>` with a general intro too, since a reviewer may add entries later. In test runs, the test party's lead can carry `"follows"` with one of your entries to try each branch.
-- `<id>:success` means any success of that story. A more specific entry (a named ending or a failure) must be one of the earlier story's endings; the check confirms it without naming the others. Anyone who runs away reaches your Retreat story's failures, so name one apart (`failure:fled_the_crypt`) when a follow-up should open only for those who fled. Nobody has to have played the earlier story to follow it, but the platform never hands out its tags: it shows a tag only to characters who reached it.
+- `<id>:success` means any success of that story, and `<id>:success:title` any ending of the group `title`. A more specific entry (a group, a named ending or a failure) must be one of the earlier story's endings or groups; the check confirms it without naming the others. Anyone who runs away reaches your Retreat story's failures, so name one apart (`failure:fled_the_crypt`) when a follow-up should open only for those who fled. Nobody has to have played the earlier story to follow it, but the platform never hands out its tags: it shows a tag only to characters who reached it.
 - A reviewer may add entries that fit the story, with Save review.
 - A follow-up is approved only once the earlier story is live.
 - In the story list, a follow-up the selected character can't start yet is shown locked but still with its images, so the player gets a glimpse, and with a link to each earlier story so the player can play that one first. The hint names only the earlier stories, never a named ending: "Play The Salt Road first", or "Opens after another ending of The Salt Road" when the character already played it. The server refuses to start a locked follow-up too.

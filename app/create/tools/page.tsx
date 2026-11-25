@@ -424,7 +424,7 @@ export default function Storyteller() {
 
           <p className={styles.body}>
             Rules: Every ending of the main story sets <span className={styles.code}>{`<<set $isEnding to "success">>`}</span> or <span className={styles.code}>{`"failure"`}</span>, optionally with a name (<span className={styles.code}>{`"success:dragon_slain"`}</span>), and at least one is a success.
-            Every ending except <span className={styles.code}>LastResort</span> is declared once in <span className={styles.code}>StoryInit</span> with a teaser for the players who reach it: <span className={styles.code}>{`<<set $meta_endings to {"success": "You reached the coast.", "failure:fled": "You turned back."}>>`}</span>.
+            Every ending except <span className={styles.code}>LastResort</span> is listed once in <span className={styles.code}>StoryInit</span>: <span className={styles.code}>{`<<set $meta_endings to ["success:title:won_baron_title", "failure:ran_away"]>>`}</span>.
             A <span className={styles.code}>Retreat</span> can be a short story in itself but finally leads to a node with <span className={styles.code}>{`<<set $isEnding to "failure">>`}</span>; only the Run away button opens it, no scene may lead there.
             The <span className={styles.code}>LastResort</span> must be marked <span className={styles.code}>{`<<set $isEnding to "lastresort">>`}</span>.
             Every other scene must contain <span className={styles.code}>[[jumpTo]]</span> decisions.
