@@ -516,7 +516,10 @@ gcloud auth print-access-token | docker login -u oauth2accesstoken --password-st
 
 # full build and deploy
 # to prevent error: close local uvicorn and npm run dev
+# wudlands website app
 rav run gcp_full
+# engines-test & engine-live
+rav run gcp_engine_deploy
 
 # or step by step 
 # build stuff 
