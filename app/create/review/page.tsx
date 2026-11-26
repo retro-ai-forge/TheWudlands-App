@@ -191,7 +191,7 @@ const tagChipBase: React.CSSProperties = {
 
 // Curated story-experience tags (the genres), each with a fixed colour and a
 // description, from backend/data/story-genres.json, which the submit check
-// reads too: a story needs at least one of them (backend/story_genres.py).
+// reads too: a story lists 1 to 5 of them in $meta_genres (backend/story_rules.py).
 // Each one has a generated icon at /icons/tag-<id>.png (see tagVisual).
 // Authors can add any other words in Twine; those still show, in a dull
 // neutral colour (DULL_TAG), and are listed under "other".
@@ -446,10 +446,9 @@ function TagLegend() {
           marginBottom: "1.4rem",
         }}
       >
-        Tell players what kind of tale awaits: every story needs at least one of the genres below,
-        as a story tag: on Twine&apos;s story page with all the story previews, select the story,
-        then Story &gt; Tags (the button with the tag icon). Use as many as fit; each carries a fixed colour. Any other tag still appears
-        on the queue, just in a plain, dull colour.
+        Tell players what kind of tale awaits: every story lists 1 to 5 of the genres below in its
+        StoryInit, like {`<<set $meta_genres to ["adventure", "mystery"]>>`}. Each carries a fixed
+        colour. Twine&apos;s own story and scene tags stay yours: they aren&apos;t shown here.
       </p>
       <div style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}>
         {TAG_CATEGORIES.map((cat) => (

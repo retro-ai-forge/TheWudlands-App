@@ -46,6 +46,18 @@
   margin: 0.5rem 0 0.9rem;
 }
 
+.downloadActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+}
+
+/* The buttons share the frame's width, on one line or wrapped. */
+.downloadActions > .downloadButton {
+  flex: 1 1 auto;
+  text-align: center;
+}
+
 .downloadButton {
   display: inline-block;
   padding: 0.45rem 0.9rem;

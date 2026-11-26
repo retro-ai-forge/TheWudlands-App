@@ -26,7 +26,7 @@ Every finding has one of three weights. Your story is checked as a whole, and yo
 
 | Weight | What happens | What it covers |
 |---|---|---|
-| **Refused** | The submit is refused until you fix it. | Only the worst cases: JavaScript or CSS in the wrong place (`<<script>>`, `<<run>>`, `<script>`, `on...` attributes, `javascript:`, `<style>`, scenes tagged `script` or `stylesheet` - JavaScript goes in the Story JavaScript, CSS in the Story Stylesheet); anything that loads or leads outside the story (web addresses, `url(`, `@import`, `<a>`, `<iframe>`, `href`, images that aren't in the story's Images list); SugarCube's system names (`Config`, `Engine`, `Save`, `UI`, `Dialog`, `eval`, `Function`, `.constructor`, `fetch` and the like, also in the Story JavaScript); the platform's parts of the page (`.wud-...`, `#ui-...`, see "Stylesheet"); and the platform's and the game's rules (the story's name, the special scenes and `$meta_` values, links to real scenes, endings, a genre tag, what a story may change on a character, the Legend limits, the test party). |
+| **Refused** | The submit is refused until you fix it. | Only the worst cases: JavaScript or CSS in the wrong place (`<<script>>`, `<<run>>`, `<script>`, `on...` attributes, `javascript:`, `<style>`, scenes tagged `script` or `stylesheet` - JavaScript goes in the Story JavaScript, CSS in the Story Stylesheet); anything that loads or leads outside the story (web addresses, `url(`, `@import`, `<a>`, `<iframe>`, `href`, images that aren't in the story's Images list); SugarCube's system names (`Config`, `Engine`, `Save`, `UI`, `Dialog`, `eval`, `Function`, `.constructor`, `fetch` and the like, also in the Story JavaScript); the platform's parts of the page (`.wud-...`, `#ui-...`, see "Stylesheet"); and the platform's and the game's rules (the story's name, the special scenes and `$meta_` values, links to real scenes, endings, the genres, what a story may change on a character, the Legend limits, the test party). |
 | **Waits** | Accepted, but the story can't go live until there are rules for it: expect a long review. | The Story JavaScript; anything the check can't read (forms and commands not in this document, code in a scene); and what the platform can't play yet (typing, timers, sound, changing a scene in place, `<<include>>`, widgets, a scene that jumps on its own, SugarCube's special scenes, the same choice text twice in a scene). |
 | **Note** | Accepted; the reviewer decides. | Harmless things outside the rules: a `style` attribute or `@@` style (style things in the Story Stylesheet instead), other HTML tags and attributes, comments written `/* */`, `<<unset>>`. |
 
@@ -193,9 +193,10 @@ The editor's Test refuses to start while the list has problems and says which. A
 <<set $waterStatus to ["dying of thirst", "parched", "thirsty", "fine"]>>
 <<set $inventory to ["rope", "torch"]>>
 <<set $meta_endings to ["success:coast:reached_the_port", "failure:desert:out_of_water", "failure:ran_away"]>>
+<<set $meta_genres to ["adventure", "survival"]>>
 ```
 
-`$meta_endings` lists your story's endings (see "Endings").
+`$meta_endings` lists your story's endings (see "Endings"). `$meta_genres` lists 1 to 5 genres from the list on the Submit Status page (`backend/data/story-genres.json`), such as `adventure`, `horror` or `other`, each once; players find your story by them.
 
 `$meta_allowRunAway` is always `true` in `StoryInit`: every adventure starts with the Run away button offered. A scene may switch it off with `<<set $meta_allowRunAway to false>>` (an ambush, a locked cell) and on again with `true`.
 
@@ -422,7 +423,7 @@ The platform insets the text 20px from both edges, and pictures span the full wi
 
 - The story's name (Story > Rename) is plain words, like a link text: letters, digits, spaces and `. , ! ? ' : ; -`, at most 100 characters. SugarCube shows the name in its sidebar as markup, so `<`, `[`, `$` and the like could run there; a backslash or a line break stops the story from starting.
 - Tags are single words without spaces (the editor turns a space into `-`). SugarCube splits a scene's tags at spaces, so one tag `x widget` would make it a widget scene.
-- At least one tag is a genre from the list on the Submit Status page (`backend/data/story-genres.json`), such as `adventure`, `horror` or `other`. Any other words may come along; the story list shows them under "other".
+- The genres are listed in `StoryInit` as `$meta_genres` (see "StoryInit"). Twine's own story tags and scene tags aren't read for them; they stay yours, for sorting your library.
 - The story's own settings have the kinds the editor gives them: text for the stylesheet and the Story JavaScript, a list of tags, colour names for tag colours.
 
 ## Special scenes

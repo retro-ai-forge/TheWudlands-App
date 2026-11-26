@@ -1,5 +1,5 @@
 :: StoryTitle
-My Wudlands Story - add a genre tag
+My Wudlands Story
 
 
 :: StoryData
@@ -11,69 +11,81 @@ My Wudlands Story - add a genre tag
 }
 
 
-:: StoryInit {"position":"100,100","size":"100,100"}
-<!-- StoryInit sets up the story. Players never see it. -->
-<!-- Before you submit: give the story a genre - on Twine's story page with all the story previews, -->
-<!-- select it, then Story > Tags, such as adventure. The submit check asks for one. -->
-<!-- Optional: one picture from your Images list here becomes the story's cover in the story list. -->
+:: StoryInit {"position":"25,25","size":"100,100"}
+<!-- StoryInit sets up the story. -->
+<!-- Players never see it. -->
+<!-- Optional: one picture from your Images list -->
+<!-- here becomes the story's cover. -->
 
 <!-- ********* Required ********* -->
+<!-- The title in the story list -->
 <<set $meta_title to 'My Wudlands Story'>>
-<<set $meta_description to 'One or two spoiler-free sentences for the story list.'>>
+<!-- One or two spoiler-free sentences -->
+<<set $meta_description to 'A short teaser for the story list.'>>
+<!-- Your pen name -->
 <<set $meta_author to 'Your pen name'>>
-<<set $meta_maxCharNum to 1>> <!-- the largest party: 1 to 4 -->
-<<set $meta_adventureTier to 1>> <!-- the level: 1 to 6 -->
-<<set $meta_durationWeeks to 1>> <!-- adventure weeks it costs: 1 to 4 -->
-<<set $meta_access to 'trial'>> <!-- free, trial or paid - one free story per author -->
-<<set $meta_allowRunAway to true>> <!-- adventure starts with: true -->
+<!-- 1 to 5 genres from the genre list -->
+<<set $meta_genres to ['adventure', 'island']>>
+<!-- The largest party: 1 to 4 -->
+<<set $meta_maxCharNum to 1>>
+<!-- The level: 1 to 6 -->
+<<set $meta_adventureTier to 1>>
+<!-- Adventure weeks it costs: 1 to 4 -->
+<<set $meta_durationWeeks to 1>>
+<!-- free, trial or paid - one free story per author -->
+<<set $meta_access to 'trial'>>
 
-<!-- Every success and failure your scenes set: "success" or "failure", then a group -->
-<!-- and a name, or only a name, after colons. Words, no sentences. -->
+<!-- Every success and failure your scenes set: -->
+<!-- "success" or "failure", then a group and a -->
+<!-- name, or only a name, after colons. -->
+<!-- Words, no sentences. -->
 <<set $meta_endings to [
   "success",
   "failure",
   "failure:ran_away"
 ]>>
+<!-- Fixed, leave it: Run away is allowed at the start -->
+<<set $meta_allowRunAway to true>>
 
-<!-- ********* Your own starting values ********* -->
+<!-- ***** Your own starting values ***** -->
 <<set $gold to 0>>
 
 
-:: Start {"position":"300,100","size":"100,100"}
-<!-- FIRST, after the import: give the story a genre. On Twine's story page with all the -->
-<!-- story previews, select this story, then Story > Tags (the button with the tag icon), -->
-<!-- and add one from the genre list -->
-<!-- on the tutorial page, such as adventure: the submit check asks for one, and this file -->
-<!-- can't carry it. Story > Rename, next to it, gives the story its real name. -->
-
-<!-- The first scene. Each link below leads to another scene. -->
+:: Start {"position":"250,100","size":"100,100"}
+<!-- The first scene. -->
+<!-- Each link below leads to another scene. -->
 Your story begins here.
 
 [[Go on|Arrival]]
 [[Give up|Lost]]
 
 
-:: Arrival {"position":"500,25","size":"100,100"}
-<!-- An ending: no links, and $isEnding says how the run ended. -->
-<!-- A name may follow after a colon, like "success:met_queen" - declare it in StoryInit too. -->
+:: Arrival {"position":"400,50","size":"100,100"}
+<!-- An ending: no links, and $isEnding says -->
+<!-- how the run ended. A name may follow after -->
+<!-- a colon, like "success:met_queen" - list it -->
+<!-- in StoryInit too. -->
 You arrive safely.
 <<set $isEnding to "success">>
 
 
-:: Lost {"position":"500,175","size":"100,100"}
+:: Lost {"position":"400,200","size":"100,100"}
 You lose your way.
 <<set $isEnding to "failure">>
 
 
-:: Retreat {"position":"300,325","size":"100,100"}
-<!-- Only the Run away button opens this scene: no scene may link here. -->
-<!-- It may lead on to more scenes; every ending of the Retreat story is a failure. -->
+:: Retreat {"position":"25,150","size":"100,100"}
+<!-- Only the Run away button opens this scene: -->
+<!-- no scene may link here. It may lead on to -->
+<!-- more scenes; every ending of the Retreat -->
+<!-- story is a failure. -->
 You turn back.
 <<set $isEnding to "failure:ran_away">>
 
 
-:: LastResort {"position":"500,325","size":"100,100"}
-<!-- The platform sends a run here when something breaks, and the player gets the run back. -->
+:: LastResort {"position":"25,275","size":"100,100"}
+<!-- The platform sends a run here when something -->
+<!-- breaks, and the player gets the run back. -->
 <!-- No links, and nothing links here. -->
 The path ahead collapses. You return home empty-handed.
 <<set $isEnding to "lastresort">>

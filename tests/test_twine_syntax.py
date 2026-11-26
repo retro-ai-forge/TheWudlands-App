@@ -11,7 +11,7 @@ import pytest
 
 from backend.auth_routes import (
     _check_twine_syntax,
-    _collect_story_tags,
+    _twine_tags,
     _count_playable_scenes,
     _link_target,
     _without_test_characters,
@@ -52,6 +52,7 @@ VALID_INIT = (
     "<<set $meta_adventureTier to 1>>"
     "<<set $meta_durationWeeks to 1>>"
     "<<set $meta_access to 'paid'>>"
+    "<<set $meta_genres to ['adventure']>>"
     "<<set $meta_allowRunAway to true>>"
     "<<set $meta_endings to ['success', 'failure']>>"
     "[img[cover.webp]]"
@@ -514,25 +515,17 @@ def test_count_playable_scenes_excludes_non_playable():
     assert _count_playable_scenes(passages) == 2
 
 
-def test_collect_story_tags_distinct_sorted_no_engine_tags():
+def test_twine_tags_distinct_sorted_no_engine_tags():
+    # Only to point a story that still tags its genre in Twine to $meta_genres.
     doc = {
+        "tags": ["romance", "magic", "script"],
         "passages": [
             _p("1", "Start", "[[End]]", tags=["forest", "combat"]),
             _p("2", "End", "<<set $isEnding to 'success'>>", tags=["combat"]),
             _p("3", "Story Stylesheet", "", tags=["stylesheet"]),
-        ]
+        ],
     }
-    assert _collect_story_tags(doc) == ["combat", "forest"]
-
-
-def test_collect_story_tags_includes_story_level_tags():
-    # Story-level tags (the Twine Story's own `tags`) are combined with passage
-    # tags; engine tags are still excluded.
-    doc = {
-        "tags": ["romance", "magic", "script"],
-        "passages": [_p("1", "Start", "<<set $isEnding to 'success'>>", tags=["combat"])],
-    }
-    assert _collect_story_tags(doc) == ["combat", "magic", "romance"]
+    assert _twine_tags(doc) == ["combat", "forest", "magic", "romance"]
 
 
 # --- reserved passages are exempt --------------------------------------------
@@ -933,58 +926,58 @@ def test_start_and_retreat_must_be_independent():
     )
 
 
-def test_story_without_tags_rejected():
-    result = _check_twine_syntax(
-        _story(
-            [
-                _p("0", "StoryInit", VALID_INIT),
-                _p("1", "Start", "[[End]]"),
-                _p("2", "End", "<<set $isEnding to 'success'>>"),
-                _p("3", "LastResort", "Lost. <<set $isEnding to 'lastresort'>>"),
-            ],
-            tags=(),
-        )
-    )
-    assert any("no genre tag" in e.lower() for e in result["errors"])
+NO_GENRES_INIT = VALID_INIT.replace("<<set $meta_genres to ['adventure']>>", "")
 
 
-def test_story_with_passage_tag_only_passes_tag_rule():
-    # A genre tag on any passage satisfies the rule, even with no story-level tags.
-    result = _check_twine_syntax(
-        _story(
-            [
-                _p("0", "StoryInit", VALID_INIT),
-                _p("1", "Start", "[[End]]", tags=["combat"]),
-                _p("2", "End", "<<set $isEnding to 'success'>>"),
-                _p("3", "LastResort", "Lost. <<set $isEnding to 'lastresort'>>"),
-            ],
-            tags=(),
-        )
-    )
-    assert not any("no genre tag" in e.lower() for e in result["errors"])
-
-
-def _story_tagged(*tags):
+def _story_with_init(init, story_tags=("adventure",), start_tags=None):
     return _story(
         [
-            _p("0", "StoryInit", VALID_INIT),
-            _p("1", "Start", "[[End]]"),
+            _p("0", "StoryInit", init),
+            _p("1", "Start", "[[End]]", tags=start_tags),
             _p("2", "End", "<<set $isEnding to 'success'>>"),
             _p("3", "LastResort", "Lost. <<set $isEnding to 'lastresort'>>"),
         ],
-        tags=tags,
+        tags=story_tags,
     )
 
 
-def test_story_with_only_free_words_needs_a_genre_tag():
-    result = _check_twine_syntax(_story_tagged("pirates", "salt"))
-    assert any("no genre tag" in e.lower() for e in result["errors"])
+def test_the_genres_are_listed_in_story_init():
+    result = _check_twine_syntax(_story_with_init(VALID_INIT, story_tags=()))
+    assert result["errors"] == []
 
 
-def test_free_words_are_fine_next_to_a_genre_tag():
-    for tags in (("pirates", "Horror"), ("other",), ("sea", "pirates")):
-        result = _check_twine_syntax(_story_tagged(*tags))
-        assert not any("no genre tag" in e.lower() for e in result["errors"]), tags
+def test_without_meta_genres_the_story_is_refused():
+    errors = _check_twine_syntax(_story_with_init(NO_GENRES_INIT, story_tags=()))["errors"]
+    assert errors == [
+        "StoryInit must list the story's genres, 1 to 5 from the genre list on the Submit Status page, "
+        """like <<set $meta_genres to ["adventure", "mystery"]>>"""
+    ]
+
+
+def test_twine_story_and_scene_tags_dont_count_any_more():
+    result = _check_twine_syntax(_story_with_init(NO_GENRES_INIT, story_tags=("adventure",), start_tags=["horror"]))
+    assert any(
+        "must list the story's genres" in e and "Twine's story tags, such as 'adventure', aren't read any more" in e
+        for e in result["errors"]
+    ), result["errors"]
+
+
+def test_the_singular_meta_genre_gets_a_hint():
+    init = NO_GENRES_INIT + "<<set $meta_genre to ['adventure', 'island']>>"
+    errors = _check_twine_syntax(_story_with_init(init, story_tags=()))["errors"]
+    assert any("$meta_genre needs an s: $meta_genres" in e for e in errors), errors
+
+
+def test_the_writers_own_twine_tags_are_fine_next_to_meta_genres():
+    result = _check_twine_syntax(_story_with_init(VALID_INIT, story_tags=("draft", "WIP-2")))
+    assert result["errors"] == []
+
+
+def test_a_refused_list_gets_only_its_own_message():
+    init = NO_GENRES_INIT + "<<set $meta_genres to ['pirates']>>"
+    errors = _check_twine_syntax(_story_with_init(init))["errors"]
+    assert any("\"pirates\" isn't on the genre list" in e for e in errors), errors
+    assert not any("must list the story's genres" in e for e in errors), errors
 
 
 # --- TestCharacters: the editor-only test party -----------------------------

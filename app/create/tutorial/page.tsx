@@ -6,6 +6,7 @@ import styles from "./page.module.css";
 import h from "@/app/styles/headings.module.css";
 import { LEGEND_PAIRS } from "@/app/lib/legend";
 import { storyItemGroups } from "./storyItems";
+import StarterDownload from "./StarterDownload";
 
 export const metadata: Metadata = pageMetadata({
   title: "Story Editor Tutorial",
@@ -224,15 +225,21 @@ export default function Tutorial() {
             A complete little story to build on. It passes the submit check as it is, so you can test it at once and
             then replace it scene by scene with your own.
           </p>
-          <a href="/downloads/wudlands-starter.twee" download className={styles.downloadButton}>
-            Download wudlands-starter.twee
-          </a>
+          <div className={styles.downloadActions}>
+            <StarterDownload className={styles.downloadButton} />
+            <a href="/twine/" target="_blank" rel="noopener noreferrer" className={styles.downloadButton}>
+              Open Editor on PC
+            </a>
+            <Link href="/create/review" className={styles.downloadButton}>
+              Submit Status
+            </Link>
+          </div>
 
           <h3 className={`${h.sub} ${h.muted}`}>What&apos;s inside</h3>
           <ul className={styles.downloadList}>
             <li>
-              <span className={styles.code}>StoryInit</span>: every required setting, each with a comment on what it does, and your
-              story&apos;s endings.
+              <span className={styles.code}>StoryInit</span>: every required setting, each with a comment on what it does, two genres
+              and your story&apos;s endings.
             </li>
             <li><span className={styles.code}>Start</span>: the first scene, with two links.</li>
             <li><span className={styles.code}>Arrival</span> and <span className={styles.code}>Lost</span>: a success and a failure ending.</li>
@@ -243,13 +250,15 @@ export default function Tutorial() {
           <h3 className={`${h.sub} ${h.muted}`}>How to start</h3>
           <ol className={styles.downloadList}>
             <li>In the story editor&apos;s library, choose Library &gt; Import and pick the downloaded file.</li>
-             <li>Switch from Library to Story, click the imported story once so its highlighted. Then click Tags, the button with the tag icon, and add a genre from the{" "}
-              <Link href="/create/review#story-tags" className={styles.inlineLink}>genre list</Link>, such as
-              {" "}<span className={styles.code}>adventure</span>: every story needs at least one, and the file can&apos;t carry it. Rename,
-              next to it, gives the story its real name.
+            <li>
+              All relevant data for Submit is set in the StoryInit scene. Renaming the story in preview mode does not matter!
             </li>
             <li>
-              Double click the story to open it and change <span className={styles.code}>$meta_title</span>, <span className={styles.code}>$meta_description</span> and{" "}<span className={styles.code}>$meta_author</span> in <span className={styles.code}>StoryInit</span>.
+              Double click the story to open it and change <span className={styles.code}>$meta_title</span>, <span className={styles.code}>$meta_description</span>
+              {" "}and <span className={styles.code}>$meta_author</span> in <span className={styles.code}>StoryInit</span>. In <span className={styles.code}>$meta_genres</span>, list 1 to 5
+              genres from the{" "}
+              <Link href="/create/review#story-tags" className={styles.inlineLink}>genre list</Link> that fit your
+              story, like <span className={styles.code}>{`['adventure', 'island']`}</span>.
             </li>
             <li>Write: replace the scenes with your own and add as many as your story needs.</li>
           </ol>

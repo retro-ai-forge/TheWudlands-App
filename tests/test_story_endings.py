@@ -18,6 +18,7 @@ INIT = (
     "<<set $meta_adventureTier to 1>>"
     "<<set $meta_durationWeeks to 1>>"
     "<<set $meta_access to 'paid'>>"
+    "<<set $meta_genres to ['adventure']>>"
     "<<set $meta_allowRunAway to true>>"
     "[img[cover.webp]]"
 )

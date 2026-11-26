@@ -3472,13 +3472,11 @@ def _count_playable_scenes(passages: list) -> int:
     return count
 
 
-def _collect_story_tags(doc: dict) -> list:
-    """Distinct author tags for a story, sorted.
-
-    Combines the Twine Story's own tags (story-level tags, applied to the whole
-    story in the editor — the cloud payload nests these under `storyData.tags`)
-    with any tags on individual passages. The engine's stylesheet/script tags are
-    excluded — they mark CSS/JS passages, not authorial categorisation.
+def _twine_tags(doc: dict) -> list:
+    """Twine's own story tags and scene tags, distinct and sorted - only to
+    point a story that still carries its genre there to $meta_genres, which
+    replaced them (since 2026-11-26). The engine's stylesheet/script tags are
+    left out.
     """
     tags: set = set()
     story_level = (doc.get("storyData") or {}).get("tags") or doc.get("tags") or []
@@ -3734,23 +3732,29 @@ def _check_twine_syntax(doc: dict) -> dict:
         if not any(tag in (p.get("tags") or []) for p in passages):
             errors.append(f"No passage carries the required tag '{tag}'")
 
-    # A story must carry at least one genre tag (backend/story_genres.py) so
-    # players can find it; any other words may come along and are listed under
-    # "other". Engine tags (stylesheet/script) don't count — _collect_story_tags
-    # excludes them.
-    if not any(story_genres.is_genre(t) for t in _collect_story_tags(doc)):
-        errors.append(
-            "Story has no genre tag — add at least one from the genre list on the "
-            "Submit Status page (such as adventure, horror or other); any other words "
-            "may come along and are listed under 'other'"
-        )
-
     # What each scene may contain (docs/STORY-RULES.md): an allow-list read
     # without running anything - SugarCube would run much of it as code. Also
     # the Story JavaScript: handed in, it makes the story wait. Run before the
     # structure rules, which need to know the scenes the check can't fully read.
     story_data = doc.get("storyData") or {}
     rules = story_rules.check_story(passages, story_data)
+
+    # The story's genres, so players can find it: $meta_genres in StoryInit,
+    # 1 to 5 from the genre list (backend/story_genres.py). Twine's story tags
+    # and scene tags are no longer read (since 2026-11-26); a list that is
+    # there but refused is reported by the story check itself.
+    if rules.genres is None and not rules.genres_seen:
+        old_tags = [t for t in _twine_tags(doc) if story_genres.is_genre(t)]
+        init_text = (by_name.get("StoryInit") or {}).get("text", "")
+        hint = ""
+        if _re.search(r"\$meta_genre\b", init_text):
+            hint = " ($meta_genre needs an s: $meta_genres)"
+        elif old_tags:
+            hint = f" (Twine's story tags, such as '{old_tags[0]}', aren't read any more)"
+        errors.append(
+            "StoryInit must list the story's genres, 1 to 5 from the genre list on the Submit Status "
+            f"page, like {story_rules.GENRES_EXAMPLE}" + hint
+        )
     findings: list = []  # warnings worked out here, besides rules.warnings
     non_scenes = {
         p.get("name", "") for p in passages
@@ -4176,17 +4180,19 @@ async def _story_store_problems(db, owner: str, story_id: str, passages: list, i
 def _snapshot_fields(doc: dict, passages: list) -> dict:
     """The fields of a review entry worked out from the story's text. Displayed
     metadata is public (shown on the review queue); private metadata holds PII
-    for the gated reviewer UI only and is never returned publicly."""
+    for the gated reviewer UI only and is never returned publicly. `tags` are
+    the story's genres ($meta_genres)."""
+    rules = story_rules.check_story(passages, doc.get("storyData") or {})
     return {
         "metadata": _extract_storyinit_metadata(passages, _METADATA_FIELDS),
         "privateMeta": _extract_storyinit_metadata(passages, _PRIVATE_META_FIELDS),
         # Non-PII, public queue stats.
         "sceneCount": _count_playable_scenes(passages),
-        "tags": _collect_story_tags(doc),
+        "tags": rules.genres or [],
         "coverImage": _story_cover(passages),
         # Most the story can move each Legend pair per character (the sum of
         # its written changes, at most 10): set aside at a character's first run.
-        "legendPoints": story_rules.check_story(passages, doc.get("storyData") or {}).legend_points,
+        "legendPoints": rules.legend_points,
     }
 
 
@@ -4367,7 +4373,7 @@ async def list_twine_reviews():
         if doc.get("sceneCount") is None:
             doc["sceneCount"] = _count_playable_scenes(passages)
         if not doc.get("tags"):
-            doc["tags"] = _collect_story_tags({"storyData": story_data, "passages": passages})
+            doc["tags"] = story_rules.check_story(passages, story_data).genres or []
         cover = doc.pop("coverImage", None) or _story_cover(passages)
         if cover:
             doc["imageUrl"] = twine_images.public_url(

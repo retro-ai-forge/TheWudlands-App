@@ -32,6 +32,7 @@ from dataclasses import dataclass, field
 from typing import Optional
 
 from backend import legend as _legend
+from backend import story_genres as _story_genres
 from backend.character_creation import BIRTHSIGNS, GENDERS, NO_PROFESSION, RACE_GROUPS
 from backend.items_catalog import ITEM_CATALOG_ENTRIES
 from backend.professions_catalog import PROFESSION_CATEGORIES
@@ -184,6 +185,13 @@ ENDINGS_EXAMPLE = (
     '<<set $meta_endings to ["success:title:won_baron_title", "failure:road:out_of_food", '
     '"failure:ran_away"]>>'
 )
+# The story's genres (since 2026-11-26), listed in StoryInit: 1 to 5 of the
+# curated genres (backend/data/story-genres.json, "other" among them). Twine's
+# own story tags and scene tags are no longer read: they stay the writer's.
+GENRES_VARIABLE = "meta_genres"
+GENRES_MIN, GENRES_MAX = 1, 5
+GENRES_EXAMPLE = '<<set $meta_genres to ["adventure", "mystery"]>>'
+
 _ENDING_VALUES = (
     '$isEnding is set to "success" or "failure" - a group and a name, or only a name, may follow after colons, '
     'like "success:title:won_baron_title" or "failure:ran_away" (the Retreat story ends only in failures) - '
@@ -381,8 +389,10 @@ class StoryCheck:
     LEGEND_POINTS_MAX); `endings` the $isEnding values each scene sets (scene
     -> values in order, several when <<if>> branches end differently);
     `ending_scenes` every scene that sets $isEnding at all, also to a refused
-    value (so it isn't called a dead end without one); and `declared_endings`
-    the $meta_endings list StoryInit declares, None when it declares none."""
+    value (so it isn't called a dead end without one); `declared_endings`
+    the $meta_endings list StoryInit declares, None when it declares none;
+    and `genres` the $meta_genres list (None without one; `genres_seen` when
+    StoryInit sets it at all, also to something refused)."""
 
     errors: list = field(default_factory=list)
     warnings: list = field(default_factory=list)
@@ -392,6 +402,8 @@ class StoryCheck:
     endings: dict = field(default_factory=dict)
     ending_scenes: set = field(default_factory=set)
     declared_endings: Optional[list] = None
+    genres: Optional[list] = None
+    genres_seen: bool = False
 
     @property
     def holds(self) -> bool:
@@ -668,8 +680,12 @@ class _Expression:
                 "set a value with to, += or -=, like <<set $gold to 5>> or <<set $gold += 1>> "
                 f"(found '{tok.value or 'the end'}')"
             )
+        if target.target == ("story", GENRES_VARIABLE):
+            self.scene.genres_seen = True  # even when refused: no "must list" on top
         if op == "to" and self.at("op", "[") and target.target == ("story", ENDINGS_VARIABLE):
             value = self.endings_list()
+        elif op == "to" and self.at("op", "[") and target.target == ("story", GENRES_VARIABLE):
+            value = self.genres_list()
         elif op == "to" and self.at("op", "["):
             value = self.list_literal(target)
         elif op == "to" and self.at("op", "{"):
@@ -750,6 +766,39 @@ class _Expression:
                 )
         return _Val(MAP, literal=declared)
 
+    def genres_list(self) -> _Val:
+        """$meta_genres in StoryInit: 1 to 5 genres from the genre list, each
+        once, like ["adventure", "mystery"]. Platform data shown to players,
+        so every problem refuses the submit."""
+        if not self.scene.is_init:
+            raise _Refused(f"${GENRES_VARIABLE} is set in StoryInit", BLOCK)
+        self.take()  # [
+        genres: list = []
+        while not self.at("op", "]"):
+            tok = self.take()
+            if tok.kind != "str":
+                raise _Refused(f"$meta_genres lists each genre in quotes, like {GENRES_EXAMPLE}", BLOCK)
+            genre = tok.value[1:-1].strip().lower()
+            if not _story_genres.is_genre(genre):
+                raise _Refused(
+                    f'"{tok.value[1:-1]}" isn\'t on the genre list (the Submit Status page) - pick from it, '
+                    f'or "other", like {GENRES_EXAMPLE}',
+                    BLOCK,
+                )
+            if genre in genres:
+                raise _Refused(f'"{genre}" is listed twice in $meta_genres', BLOCK)
+            genres.append(genre)
+            if not self.at("op", ","):
+                break
+            self.take()
+        self.expect("op", "]", "] to close $meta_genres")
+        if not GENRES_MIN <= len(genres) <= GENRES_MAX:
+            raise _Refused(
+                f"$meta_genres lists {GENRES_MIN} to {GENRES_MAX} genres (found {len(genres)}), like {GENRES_EXAMPLE}",
+                BLOCK,
+            )
+        return _Val(LIST, literal=genres)
+
     def check_target(self, target: _Val, op: str, value: _Val) -> None:
         kind, name = target.target if target.target else (None, None)
         # What a story may change is a game rule: always refused (BLOCK).
@@ -793,6 +842,12 @@ class _Expression:
                 if self.scene.declared_endings is not None:
                     raise _Refused("$meta_endings is set once in StoryInit", BLOCK)
                 self.scene.declared_endings = value.literal
+            elif name == GENRES_VARIABLE:
+                if not (op == "to" and value.type == LIST and isinstance(value.literal, list)):
+                    raise _Refused(f"$meta_genres is a list of genres, like {GENRES_EXAMPLE}", BLOCK)
+                if self.scene.genres is not None:
+                    raise _Refused("$meta_genres is set once in StoryInit", BLOCK)
+                self.scene.genres = value.literal
         elif kind == "temp":
             pass
         elif kind == "legend":
@@ -1333,6 +1388,8 @@ class _Scene:
         self.in_setter = False  # reading a link's [ ] part, which runs on the click
         self.ends = False  # sets $isEnding at all, also to a refused value
         self.declared_endings: Optional[list] = None  # $meta_endings, StoryInit only
+        self.genres: Optional[list] = None  # $meta_genres, StoryInit only
+        self.genres_seen = False  # $meta_genres is set at all, also refused
         self.destinations: list = []  # (scene, leads there)
         self.labels: set = set()  # visible choice texts so far, see choice_label
         self.open_label: Optional[dict] = None  # the <label> being read, see open_label_tag
@@ -2307,6 +2364,8 @@ def check_story(passages: list, story_data: dict) -> StoryCheck:
             result.ending_scenes.add(name)
         if scene.is_init:
             result.declared_endings = scene.declared_endings
+            result.genres = scene.genres
+            result.genres_seen = scene.genres_seen
         missing = []
         for destination, leads in scene.destinations:
             if destination not in names:
