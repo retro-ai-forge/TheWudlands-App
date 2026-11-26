@@ -222,8 +222,8 @@ export default function Tutorial() {
         <div className={styles.download}>
           <h2 className={h.section}>Start with the Template</h2>
           <p className={styles.downloadText}>
-            A complete little story to build on. It passes the submit check as it is, so you can test it at once and
-            then replace it scene by scene with your own.
+            A complete little story to build on. Give it its own <span className={styles.code}>$meta_title</span> and it
+            passes the submit check, so you can test it at once and then replace it scene by scene with your own.
           </p>
           <div className={styles.downloadActions}>
             <StarterDownload className={styles.downloadButton} />
@@ -261,6 +261,7 @@ export default function Tutorial() {
               story, like <span className={styles.code}>{`['adventure', 'island']`}</span>.
             </li>
             <li>Write: replace the scenes with your own and add as many as your story needs.</li>
+            <li>Submit: Will upload the story to the Days of Grace. You have 7 days to make changes and reset the timer. Once the timer expires, the story will be reviewed.</li>
           </ol>
         </div>
 

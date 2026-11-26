@@ -87,13 +87,13 @@ _IMG_LINK_RE = _re.compile(r"\[[<>]?img\[[^\]]*\]\[([^\]]+?)\]", _re.IGNORECASE)
 
 
 def _extract_set_value(text: str, name: str):
-    """Return the value of `<<set $name to VALUE>>` from a passage's text.
+    """Return the value of `<<set $name to VALUE>>` (or `= VALUE`) from a passage's text.
 
     Strings (single/double quoted) come back unquoted; integers and floats are
     coerced to numbers; anything else is returned as the raw expression. Returns
     None if the variable is not set.
     """
-    m = _re.search(rf"<<set\s+\${_re.escape(name)}\s+to\s+(.+?)>>", text, _re.DOTALL)
+    m = _re.search(rf"<<set\s+\${_re.escape(name)}(?:\s+to\s+|\s*=(?!=)\s*)(.+?)>>", text, _re.DOTALL)
     if not m:
         return None
     raw = m.group(1).strip()

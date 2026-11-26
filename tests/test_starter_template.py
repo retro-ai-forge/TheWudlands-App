@@ -9,6 +9,7 @@ import uuid
 from pathlib import Path
 
 from backend.auth_routes import _check_twine_syntax
+from backend.story_rules import TEMPLATE_TITLE
 
 TEMPLATE = Path(__file__).resolve().parent.parent / "public" / "downloads" / "wudlands-starter.twee"
 
@@ -56,12 +57,25 @@ def _story_from_twee(source: str) -> dict:
     return story
 
 
-def test_the_template_passes_the_submit_check_as_imported():
-    # Nothing to add in the editor first: the genres are in StoryInit.
-    result = _check_twine_syntax(_template())
+def test_the_template_passes_the_submit_check_once_it_has_a_title():
+    # Nothing to add in the editor first (the genres are in StoryInit) but the
+    # story's own title: the template's placeholder is refused on purpose.
+    story = _template()
+    result = _check_twine_syntax(story)
+    assert result["errors"] == [
+        f'$meta_title is still the template\'s "{TEMPLATE_TITLE}" - give your story its own title'
+    ]
+    init = next(p for p in story["passages"] if p["name"] == "StoryInit")
+    init["text"] = init["text"].replace(f"'{TEMPLATE_TITLE}'", "'The Salt Road'")
+    result = _check_twine_syntax(story)
     assert result["errors"] == []
     assert result["warnings"] == []
     assert not result["held"] and not result["hasCode"]
+
+
+def test_the_refused_placeholder_is_the_templates_title():
+    """story_rules.TEMPLATE_TITLE and the template's $meta_title stay the same."""
+    assert f"<<set $meta_title to '{TEMPLATE_TITLE}'>>" in TEMPLATE.read_text(encoding="utf-8")
 
 
 def test_the_template_has_every_required_scene_and_ending():

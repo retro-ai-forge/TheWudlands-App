@@ -65,9 +65,10 @@ async def test_missing_submission_is_404(db):
 
 
 async def test_roles_for_the_page(db):
-    assert await get_my_roles(address=REVIEWER) == {"reviewer": True, "admin": False}
-    assert await get_my_roles(address=ADMIN) == {"reviewer": True, "admin": True}
-    assert await get_my_roles(address=PLAYER) == {"reviewer": False, "admin": False}
+    # The signed-in wallet comes along, so the page knows its own submissions.
+    assert await get_my_roles(address=REVIEWER) == {"reviewer": True, "admin": False, "address": REVIEWER}
+    assert await get_my_roles(address=ADMIN) == {"reviewer": True, "admin": True, "address": ADMIN}
+    assert await get_my_roles(address=PLAYER) == {"reviewer": False, "admin": False, "address": PLAYER}
 
 
 async def test_the_copy_comes_with_todays_check(db):

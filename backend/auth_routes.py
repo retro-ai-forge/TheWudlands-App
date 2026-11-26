@@ -3040,11 +3040,10 @@ async def upsert_twine_story(
 
 @player_router.delete("/me/twine-stories/{story_id}")
 async def delete_twine_story(story_id: str, address: str = Depends(get_current_address)):
-    """Delete a Twine story.
-
-    This removes only the author's active working copy (twine_stories). A frozen
-    submission in twine_review is independent and is NOT touched here — it is
-    managed separately via the reviewer/admin review-delete endpoint.
+    """Delete a Twine story: the author's working copy (twine_stories) and its
+    working images (create stage). A submission (twine_review, review stage)
+    and a live story (twine_live, served stage) have copies of their own and
+    are NOT touched here - a submission is deleted on the review page.
     """
     db = get_database()
     result = await db.twine_stories.delete_one(
@@ -3052,6 +3051,12 @@ async def delete_twine_story(story_id: str, address: str = Depends(get_current_a
     )
     if result.deleted_count == 0:
         raise HTTPException(status_code=404, detail="Story not found")
+    # After the database delete, best effort: images left behind are found by
+    # scripts/cleanup_story_images.py once they are 30 days old.
+    try:
+        twine_images.delete_stage(address, twine_images.STAGE_CREATE, story_id)
+    except Exception as exc:
+        print(f"[delete story] working images not deleted for {address}/{story_id}: {type(exc).__name__}: {exc}")
     return {"ok": True, "storyId": story_id}
 
 
@@ -3682,7 +3687,7 @@ def _check_twine_syntax(doc: dict) -> dict:
         unquoted: set = set()
         for var in _QUOTED_META_FIELDS:
             m = _re.search(
-                rf"<<set\s+\${_re.escape(var)}\s+to\s+(.+?)>>", init_text, _re.DOTALL
+                rf"<<set\s+\${_re.escape(var)}(?:\s+to\s+|\s*=(?!=)\s*)(.+?)>>", init_text, _re.DOTALL
             )
             if not m:
                 continue  # missing is reported above
@@ -3708,7 +3713,7 @@ def _check_twine_syntax(doc: dict) -> dict:
         for raw in _re.findall(
             rf"<<set\s+\${_re.escape(_RUN_AWAY_VAR)}\b\s*(.*?)>>", init_text, _re.DOTALL
         ):
-            if raw.strip() != "to true":
+            if not _re.fullmatch(r"(?:to\s+|=\s*)true", raw.strip()):
                 errors.append(
                     f"StoryInit must set ${_RUN_AWAY_VAR} to true - every adventure starts with "
                     f"the Run away button; a scene may switch it off later "
@@ -3726,6 +3731,11 @@ def _check_twine_syntax(doc: dict) -> dict:
                 errors.append(
                     f"${var} must be non-empty text (not only spaces) (got {value!r})"
                 )
+            elif var == "meta_title":
+                # The title players see: letters, digits, spaces and - ? ! & ', at most 80 characters.
+                problem = story_rules.story_title_problem(value)
+                if problem:
+                    errors.append(problem)
 
     # Required tags must appear on at least one passage.
     for tag in _REQUIRED_TAGS:
@@ -4135,16 +4145,28 @@ def _submit_refusal(review_doc: Optional[dict], now: datetime) -> Optional[str]:
 
 async def _store_review_entry(db, address: str, story_id: str, review_doc: dict) -> None:
     """Write the frozen review entry, replacing only one still waiting for
-    review. If the story was approved after the submit check, the filter misses
-    it and the upsert's insert hits the unique (address, storyId) index instead
-    of overwriting the live story: 409."""
-    try:
+    review - in one transaction with a look at twine_live, so a story that went
+    live after the submit check (an approval at the very end of its 7 days)
+    never gets a waiting entry again: 409. An approval running at the same
+    moment conflicts on the entry, and the loser runs again and sees the other
+    side. A leftover `approved` record from before approvals moved the whole
+    story to twine_live still hits the unique (address, storyId) index: 409."""
+
+    async def store() -> Optional[str]:
+        if await db.twine_live.find_one({"_id": story_id}, {"_id": 1}):
+            return "live"
         await db.twine_review.update_one(
             {"address": address, "storyId": story_id, "status": "submitted"},
             {"$set": review_doc},
             upsert=True,
         )
+        return "stored"
+
+    try:
+        outcome = await run_in_transaction(store)
     except DuplicateKeyError:
+        outcome = "live"
+    if outcome != "stored":
         raise HTTPException(status_code=409, detail=_LIVE_STORY_LOCKED)
 
 
@@ -4391,21 +4413,42 @@ async def list_twine_reviews():
 async def delete_twine_review(
     owner: str, story_id: str, address: str = Depends(get_current_address)
 ):
-    """Remove a submission from the review queue (reviewer or admin only).
+    """Remove a waiting submission from the review queue (the Delete button on
+    the review page): its author during the 7 days of grace, an admin at any
+    time. Reviewers reject instead (reject_twine_review, which records why).
 
     Deletes the frozen twine_review doc and purges its review-stage images. The
-    author's active story (twine_stories) and their working create-stage images
-    are left untouched — this only clears the submitted copy.
+    author's story in the editor (twine_stories) and their working create-stage
+    images are left untouched - this only clears the submitted copy, and the
+    author may submit again.
     """
-    if not (await roles.is_reviewer(address) or await roles.is_admin(address)):
-        raise HTTPException(status_code=403, detail="Reviewer or admin only")
+    admin = await roles.is_admin(address)
+    if not admin and address != owner:
+        raise HTTPException(status_code=403, detail="Only the author or an admin may delete a submission")
 
     db = get_database()
+    entry = await db.twine_review.find_one(
+        {"address": owner, "storyId": story_id, "status": "submitted"},
+        {"lastUpdate": 1, "submittedAt": 1, "status": 1},
+    )
+    if entry is None:
+        raise HTTPException(status_code=404, detail="Review submission not found")
+    if not admin and _review_window_closed(entry, datetime.now(timezone.utc)):
+        raise HTTPException(
+            status_code=409,
+            detail="The 7 days of grace are over: the story waits for the reviewers, and only an admin may delete it now",
+        )
+    # Conditional on what was read: a resubmit in between (new lastUpdate)
+    # leaves the new version alone - the author decides again on it.
+    unchanged = {
+        field: entry[field] if field in entry else {"$exists": False}
+        for field in ("lastUpdate", "submittedAt")
+    }
     result = await db.twine_review.delete_one(
-        {"address": owner, "storyId": story_id}
+        {"address": owner, "storyId": story_id, "status": "submitted", **unchanged}
     )
     if result.deleted_count == 0:
-        raise HTTPException(status_code=404, detail="Review submission not found")
+        raise HTTPException(status_code=409, detail="The submission just changed - please try again")
 
     # Purge the frozen review-stage images (best-effort; the DB removal, which
     # takes the entry out of the queue, has already succeeded). The owner's
@@ -4436,7 +4479,7 @@ async def reject_twine_review(
     from the queue exactly like delete_twine_review - which also unlocks the
     author to fix the story and submit it again. One doc per rejection, so a
     story rejected twice shows up twice. Like approval, only after the story's
-    7 days (delete_twine_review still removes a submission at any time).
+    7 days (delete_twine_review: the author during the 7 days, an admin at any time).
     """
     if not await roles.is_reviewer(address):
         raise HTTPException(status_code=403, detail="Reviewer or admin only")
@@ -4517,6 +4560,8 @@ async def get_my_roles(address: str = Depends(get_current_address)):
     return {
         "reviewer": roles.ROLE_REVIEWER in granted or roles.ROLE_ADMIN in granted,
         "admin": roles.ROLE_ADMIN in granted,
+        # The page shows a submission's author their own Delete button.
+        "address": address,
     }
 
 
@@ -4586,7 +4631,9 @@ def _review_refusal(review_doc: dict, now: datetime) -> Optional[str]:
 def _live_story_doc(review: dict, reviewer: str, now: str) -> dict:
     """The live copy of an approved submission. `_id` is the story id, so only
     one story per id can be live: its images sit under served/{storyId}/,
-    which isn't per author. privateMeta stays with the review entry."""
+    which isn't per author. The review entry is deleted on approval, so
+    privateMeta (reviewer message, email, real name, fallback wallet) moves
+    here too - never sent to anyone, and never copied into a snapshot."""
     return {
         "_id": review["storyId"],
         "address": review["address"],
@@ -4604,6 +4651,9 @@ def _live_story_doc(review: dict, reviewer: str, now: str) -> dict:
             review.get("passages", []), review.get("storyData", {})
         ).legend_points,
         "testCharacters": review.get("testCharacters"),
+        "privateMeta": review.get("privateMeta") or {},
+        # Who changed the submission in review (Save review), kept with it.
+        "reviewEdits": review.get("reviewEdits", []),
         "submittedAt": review.get("submittedAt"),
         "approvedAt": now,
         "approvedBy": reviewer,
@@ -4698,9 +4748,10 @@ async def approve_twine_review(
 
     Only after its 7-day window. The review-stage images are copied to the
     served stage first; then one transaction stores the live copy in
-    twine_live (what adventures play) and turns the review entry into a
-    record (status approved, text removed), which keeps the story locked for
-    its author. The review-stage images are removed last.
+    twine_live (what adventures play, with who approved it and when) and
+    deletes the review entry: twine_review holds only stories waiting for
+    review, and twine_live keeps the story locked for its author. The
+    review-stage images are removed last.
     """
     if not await roles.is_reviewer(address):
         raise HTTPException(status_code=403, detail="Reviewer or admin only")
@@ -4755,12 +4806,11 @@ async def approve_twine_review(
             return "taken"
         now = datetime.now(timezone.utc).isoformat()
         await db.twine_live.insert_one(_live_story_doc(current, address, now))
-        moved = await db.twine_review.update_one(
-            {**key, "status": "submitted"},
-            {"$set": {"status": "approved", "approvedAt": now, "approvedBy": address},
-             "$unset": {"passages": "", "storyData": "", "testCharacters": ""}},
-        )
-        if moved.modified_count != 1:
+        # The whole story moves: twine_review holds only stories waiting for
+        # review. Who approved it and when is on the live copy; twine_live
+        # also keeps its author from submitting that story id again.
+        moved = await db.twine_review.delete_one({**key, "status": "submitted"})
+        if moved.deleted_count != 1:
             return None  # changed meanwhile: rolls the live copy back
         return "approved"
 
@@ -4838,6 +4888,25 @@ async def _authorize_story_owner(story_id: str, address: str) -> str:
         raise HTTPException(status_code=403, detail="Not authorized for this story")
 
     return owner
+
+
+@player_router.post("/me/twine-stories/{story_id}/images/copy-from/{source_id}")
+async def copy_twine_story_images(
+    story_id: str, source_id: str, address: str = Depends(get_current_address)
+):
+    """Copy a story's working images to another story: the editor's Duplicate
+    gives the copy a new id, whose image folder starts empty. Both stories must
+    be the caller's (or the caller an admin); a story not synced yet counts as
+    the caller's, like an upload."""
+    if story_id == source_id:
+        raise HTTPException(status_code=400, detail="A story can't copy its own images")
+    owner = await _authorize_story_owner(story_id, address)
+    source_owner = await _authorize_story_owner(source_id, address)
+    try:
+        copied = twine_images.copy_story(source_owner, source_id, owner, story_id)
+    except Exception as exc:
+        raise HTTPException(status_code=502, detail=f"Could not copy the images: {exc}")
+    return {"ok": True, "storyId": story_id, "copied": copied}
 
 
 @player_router.get("/me/twine-stories/{story_id}/images")

@@ -92,7 +92,12 @@ def test_the_rules_example_test_party_is_valid():
         ("<<print $x.constructor>>", "reaches into SugarCube"),
         ("<<set $x to --$y>>", "--"),
         ("<<set $x to $y++>>", "++"),
-        ("<<set $x = 5>>", "use to"),
+        ("<<if $x = 5>>x<</if>>", "to compare, use is"),
+        ("<<if ($x = 5)>>x<</if>>", "to compare, use is"),
+        ("<<print $x = 5>>", "to compare, use is"),
+        ("<<set $x to $y = 5>>", "to compare, use is"),
+        ("[[Go|Cave][$x = 1; $y = 2]]", "; isn't accepted"),
+        ("<<set $lead.mercy = 5>>", "only with += or -="),
         ("<<=$x>>", "use <<print>>"),
         ("@@color:red;x@@", "@@"),
         ("/* hidden */", "<!-- like this -->"),
@@ -168,14 +173,17 @@ def test_changes_with_plus_and_minus_equals_pass(text):
 @pytest.mark.parametrize(
     "text, expected",
     [
-        ("<<set $x = 0>>", "use to to set a value"),
-        ("[[Go|X][$a = 1]]", "use to to set a value"),
+        ("<<if $x = 0>>x<</if>>", "to compare, use is"),
         ("<<set $a to 1; $b to 2>>", "separate changes with a comma"),
         ("[[Go|X][$a to 1; $b to 2]]", "separate changes with a comma"),
+        ("[[Go|X][<<set $a to 1>>]]", "unexpected '<'"),
+        ("<<link [[Go|X]]>><<$a to 1, $b to 2>><</link>>",
+         "set is missing: <<set $a to 1, $b to 2>>"),
     ],
 )
-def test_changes_are_written_with_to_and_separated_by_commas(text, expected):
-    # One way to write it: to (not =), and a comma (not ;) between changes.
+def test_changes_are_separated_by_commas_and_equals_only_sets(text, expected):
+    # A comma (not ;) between changes, no <<set>> in a link's [ ] part, and =
+    # only to set a value (to and = are the same), never to compare.
     errors = check_scene("Scene", text)
     assert any(expected in e for e in errors), errors
 
@@ -212,6 +220,19 @@ def test_changes_are_written_with_to_and_separated_by_commas(text, expected):
 def test_character_values_are_used_only_as_the_rules_say(text, expected):
     errors = check_scene("Scene", text)
     assert any(expected in e for e in errors), errors
+
+
+def test_equals_sets_a_value_like_to():
+    """<<set $x = 5>> is the same as <<set $x to 5>>, in <<set>> and in a
+    link's [ ] part; it is refused everywhere else (see the refusals above)."""
+    for text in (
+        "<<set $gold = 5>>",
+        "<<set $a = 1, $b to 2>>",
+        "<<set $name = 'Cave'>>",
+        "[[Go|Cave][$gold = 5, $torch = 1]]",
+        '<<link [[Go|Cave]]>><<set $gold = 5>><</link>>',
+    ):
+        assert check_scene("Scene", text) == [], text
 
 
 @pytest.mark.parametrize(

@@ -6,9 +6,9 @@ in backend/auth_routes.py).
   with no time limit.
 - Approval copies the story to twine_live. Adventures only play stories from
   twine_live, so a story that is only submitted can't be played.
-- After approval the story's entry in twine_review stays, with status
-  "approved" and without the story text. It keeps the author from submitting
-  this story again.
+- Approval moves the whole story: its entry leaves twine_review, and the
+  live copy carries who approved it and when, and the private metadata.
+  twine_live keeps the author from submitting this story again.
 - Rejection removes the entry, so the author can fix the story and submit it
   again.
 
@@ -135,12 +135,11 @@ async def test_reviewer_approves_after_the_week(db, storage):
     assert (live["address"], live["approvedBy"]) == (AUTHOR, REVIEWER)
     assert live["passages"][0]["name"] == "Start"
     assert live["metadata"]["meta_title"] == "Approval Tale"
-    assert "privateMeta" not in live
+    assert live["privateMeta"]["meta_email"] == "author@example.org"
+    assert live["approvedAt"]
 
-    record = await db.twine_review.find_one({"address": AUTHOR, "storyId": STORY})
-    assert record["status"] == "approved"
-    assert "passages" not in record and "storyData" not in record
-    assert record["privateMeta"]["meta_email"] == "author@example.org"
+    # twine_review holds only stories waiting for review.
+    assert await db.twine_review.find_one({"address": AUTHOR, "storyId": STORY}) is None
 
     assert storage == [
         ("copy", AUTHOR, STORY, twine_images.STAGE_REVIEW, twine_images.STAGE_SERVED),

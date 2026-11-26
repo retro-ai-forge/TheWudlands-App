@@ -196,6 +196,22 @@ def delete_stage(wallet: str, stage: str, story_id: str) -> int:
     return count
 
 
+def copy_story(
+    src_wallet: str, src_story_id: str, dst_wallet: str, dst_story_id: str, stage: str = STAGE_CREATE
+) -> int:
+    """Copy all of one story's blobs (images + thumbnails) in `stage` to
+    another story id - the editor's Duplicate, whose copy gets a new id and so
+    a folder of its own. Files of the same name are replaced. Returns the count."""
+    bucket = _get_bucket()
+    src_prefix = _story_prefix(src_wallet, stage, src_story_id)
+    dst_prefix = _story_prefix(dst_wallet, stage, dst_story_id)
+    count = 0
+    for blob in bucket.list_blobs(prefix=src_prefix):
+        bucket.copy_blob(blob, bucket, f"{dst_prefix}{blob.name[len(src_prefix):]}")
+        count += 1
+    return count
+
+
 def copy_stage(wallet: str, story_id: str, src_stage: str, dst_stage: str) -> int:
     """Copy all of a story's blobs from one stage to another (replacing dst).
 

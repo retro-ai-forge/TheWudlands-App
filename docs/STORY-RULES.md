@@ -208,13 +208,14 @@ The editor's Test refuses to start while the list has problems and says which. A
 <<set $hasSword to true>>
 <<set $mood to "angry">>
 <<set $a to 1, $b to 2>>
+<<set $torch = 3>>
 <<set _roll to random(1, 6)>>
 <<set $guard to either("asleep", "awake")>>
 ```
 
 - Story variables start with `$`, temporary ones (only for this scene) with `_`.
 - Values: whole or decimal numbers, `true`/`false`, and text in quotes. Quoted text can't contain `< > [ ] { } $ \`, backquotes or `@@` - except the variable name a choice stores into, such as `"$path"` in `<<radiobutton "$path" "north">>`.
-- Maths: `+ - * / %` and brackets; changes with `to`, `+=`, `-=`, `*=`, `/=`.
+- Maths: `+ - * / %` and brackets; changes with `to` (or `=`, the same), `+=`, `-=`, `*=`, `/=`. Several changes in one `<<set>>` or one link's `[ ]` part are separated with a comma. `=` only sets a value: in a condition, compare with `is` (see "Conditions").
 - Functions: `random(min, max)`, `either(a, b, ...)`, `visited("Scene")`, a list's `.includes(value)` and `.length`. No others.
 
 ### Conditions
@@ -348,7 +349,7 @@ Every character has 20 Legend values from 0 to 100, in 10 pairs: `fame`/`infamy`
 <<for _i, _c range $char>><<set _c.cowardice += 2>><</for>>
 ```
 
-- Change a Legend value only with `+=` or `-=` and a whole number: on `$lead`, on `$char[1]` and so on, or on `_c` in a `range $char` loop. Never with `to`.
+- Change a Legend value only with `+=` or `-=` and a whole number: on `$lead`, on `$char[1]` and so on, or on `_c` in a `range $char` loop. Never with `to` or `=`.
 - The server applies every change with the Legend rules: a pair is one scale, so raising one side first wears the other down; fame and infamy pull against each other; and some changes echo into other values. A real run can therefore end with other numbers than the editor's Test, which just adds.
 - **Focus:** a story changes at most 2 pairs. The submit check refuses a third. Only the changes your story writes count: echoes that the Legend rules add (such as cruelty raising infamy) don't, and reading any value is always fine.
 - **Most a story can change:** for each pair, add up the sizes of all the changes your story writes for it, counting each written change once. That total, but never more than 10, is the most your story can ever move that pair for one character. The first time a character plays your story, the server sets these points aside, without showing them. Every change uses up its size, and a change bigger than what's left moves only what's left. Once a pair's points are spent, nothing in your story changes it for that character again, also not on a replay.
@@ -421,6 +422,7 @@ The platform insets the text 20px from both edges, and pictures span the full wi
 
 ## Story name and tags
 
+- `$meta_title` in `StoryInit` is the title players see, in the story list and on the review page. Letters, digits, spaces and `- ? ! & '` only, at most 80 characters, so it fits a story card. The starter template's "My Wudlands Story" is refused: give your story its own title. The story's name is your own label in the library.
 - The story's name (Story > Rename) is plain words, like a link text: letters, digits, spaces and `. , ! ? ' : ; -`, at most 100 characters. SugarCube shows the name in its sidebar as markup, so `<`, `[`, `$` and the like could run there; a backslash or a line break stops the story from starting.
 - Tags are single words without spaces (the editor turns a space into `-`). SugarCube splits a scene's tags at spaces, so one tag `x widget` would make it a widget scene.
 - The genres are listed in `StoryInit` as `$meta_genres` (see "StoryInit"). Twine's own story tags and scene tags aren't read for them; they stay yours, for sorting your library.
@@ -458,7 +460,7 @@ What each one weighs is explained in "How the check decides".
 | `<<link "Claim the crown">><<set $isEnding to "success">><</link>>`, `[[Win\|Throne][$isEnding to "success"]]` | An ending is set when its scene is shown, never by a click | Refused | `<<set $isEnding to "success">>` in the ending scene's text |
 | `<<unset $isEnding>>`, `<<unset $meta_title>>` | The platform's values are never removed | Refused | - |
 | `<<set $follows to "x">>` | The platform sets it when a follow-up story starts | Refused | Only read it |
-| `<<set $gold = 5>>` | Changes are written with `to` | Waits | `<<set $gold to 5>>` |
+| `<<if $gold = 5>>` | `=` sets the value instead of comparing it, so the condition is always true | Waits | `<<if $gold is 5>>` |
 | `<<set $a to 1; $b to 2>>`, `[[Go\|Cave][$a to 1; $b to 2]]` | Changes are separated with a comma | Waits | `<<set $a to 1, $b to 2>>` |
 | `<<set $lead.might -= 2>>` | Attributes only change through the platform's checks and fights | Refused | - |
 | `"<<"`, `"[["` or `"$gold"` inside quoted text (other than a choice's variable name) | Could read as a command | Waits | Plain words |

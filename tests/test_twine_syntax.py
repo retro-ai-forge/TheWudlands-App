@@ -209,16 +209,50 @@ def test_duplicate_names():
     assert any("Duplicate" in e for e in result["errors"])
 
 
+@pytest.mark.parametrize("title", [
+    "The Salt Road",
+    "Who Goes There? Part 2 - The Crypt!",
+    "Dörrwald 1847",
+    "The King's Road",
+    "Gold & Glory",
+    "The King\u2019s Road",
+    "a" * 80,
+])
+def test_meta_title_accepts_plain_words_up_to_80(title):
+    init = VALID_INIT.replace("<<set $meta_title to 'Title'>>", f'<<set $meta_title to "{title}">>')
+    result = _check_twine_syntax(_story([_p("1", "StoryInit", init)]))
+    assert not any("meta_title" in e for e in result["errors"]), result["errors"]
+
+
+@pytest.mark.parametrize("title, message", [
+    ("a" * 81, "at most 80"),
+    ("Gold + Glory", "- ? ! & ' only (found +)"),
+    ("My Wudlands Story", "still the template's"),
+    ("  my  wudlands STORY ", "still the template's"),
+    ("Part 2: The Crypt", "(found :)"),
+    ("Ashes, Bones and Blood", "(found ,)"),
+    ("The End.", "(found .)"),
+    ("Tale #2", "(found #)"),
+    ("Road (Part 1)", "(found ( ))"),
+])
+def test_meta_title_refuses_long_or_odd_titles(title, message):
+    init = VALID_INIT.replace("<<set $meta_title to 'Title'>>", f'<<set $meta_title to "{title}">>')
+    result = _check_twine_syntax(_story([_p("1", "StoryInit", init)]))
+    assert any("$meta_title" in e and message in e for e in result["errors"]), result["errors"]
+
+
 def test_story_init_starts_with_run_away_allowed():
     """Every adventure starts with the Run away button: StoryInit sets
     $meta_allowRunAway to true and only to true; scenes may switch it."""
-    ok = _check_twine_syntax(_story([_p("1", "StoryInit", VALID_INIT)]))
-    assert not any("meta_allowRunAway" in e for e in ok["errors"])
+    for good in ("<<set $meta_allowRunAway to true>>", "<<set $meta_allowRunAway = true>>"):
+        init = VALID_INIT.replace("<<set $meta_allowRunAway to true>>", good)
+        ok = _check_twine_syntax(_story([_p("1", "StoryInit", init)]))
+        assert not any("meta_allowRunAway" in e for e in ok["errors"]), good
     for bad in (
         "<<set $meta_allowRunAway to false>>",
         "<<set $meta_allowRunAway to 1>>",
         "<<set $meta_allowRunAway to 'true'>>",
-        "<<set $meta_allowRunAway = true>>",
+        "<<set $meta_allowRunAway = false>>",
         "<<set $meta_allowRunAway to true>><<set $meta_allowRunAway to false>>",
     ):
         init = VALID_INIT.replace("<<set $meta_allowRunAway to true>>", bad)

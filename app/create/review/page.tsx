@@ -677,21 +677,29 @@ const actionBtn = (accent: string): React.CSSProperties => ({
   letterSpacing: "0.1em",
   fontSize: "0.7rem",
 });
-const REJECT_COLOR = "#c55865";
+const REJECT_COLOR = "#d4a24a"; // yellow, like the last day of grace
+const DELETE_COLOR = "#c55865";
 
-// A reviewer's decision on one story: approve (it goes live and can be played)
-// or reject with a reason. The backend only allows both once the author can no
-// longer change the story, i.e. after its 7 days.
+// The buttons on one story, in this order: Approve (it goes live and can be
+// played) and Reject with a reason - a reviewer's decision, which the backend
+// only allows once the author can no longer change the story, i.e. after its 7
+// days - and Delete: its author during the days of grace, an admin at any time
+// (the backend checks both again). Delete removes only the submitted copy; the
+// story stays in its author's editor and can be submitted again.
 function ReviewActions({
   entry,
   reviewable,
+  deletable,
   onDone,
+  onDeleted,
 }: {
   entry: ReviewEntry;
   reviewable: boolean;
+  deletable: boolean;
   onDone: (outcome: ReviewOutcome) => void;
+  onDeleted: () => void;
 }) {
-  const [mode, setMode] = useState<"idle" | "approve" | "reject">("idle");
+  const [mode, setMode] = useState<"idle" | "approve" | "reject" | "delete">("idle");
   const [reason, setReason] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string>();
@@ -718,9 +726,28 @@ function ReviewActions({
     }
   }
 
-  // Stories still in their days of grace get no buttons: their section says
-  // why, and the editor link above stays for support.
-  if (!reviewable) {
+  async function remove() {
+    setBusy(true);
+    setError(undefined);
+    try {
+      const res = await fetch(
+        `/api/auth/twine-reviews/${encodeURIComponent(entry.address)}/${encodeURIComponent(entry.storyId)}`,
+        { method: "DELETE", credentials: "include" }
+      );
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(typeof data.detail === "string" ? data.detail : `Failed (${res.status})`);
+      }
+      onDeleted();
+    } catch (e) {
+      setError((e as Error).message);
+      setBusy(false);
+    }
+  }
+
+  // Reviewers get Approve and Reject only after the days of grace (their
+  // section says why); Delete only its author in the days of grace and admins.
+  if (!reviewable && !deletable) {
     return null;
   }
 
@@ -728,11 +755,31 @@ function ReviewActions({
     <>
       {mode === "idle" && (
         <div style={actionRow}>
-          <button style={actionBtn(PENDING_COLOR)} onClick={() => setMode("approve")}>
-            Approve
+          {reviewable && (
+            <button style={actionBtn(PENDING_COLOR)} onClick={() => setMode("approve")}>
+              Approve
+            </button>
+          )}
+          {reviewable && (
+            <button style={actionBtn(REJECT_COLOR)} onClick={() => setMode("reject")}>
+              Reject
+            </button>
+          )}
+          {deletable && (
+            <button style={actionBtn(DELETE_COLOR)} onClick={() => setMode("delete")}>
+              Delete
+            </button>
+          )}
+        </div>
+      )}
+      {mode === "delete" && (
+        <div style={actionRow}>
+          <span>Delete this submission? It leaves the list; the story stays in the editor and can be submitted again.</span>
+          <button style={actionBtn(DELETE_COLOR)} disabled={busy} onClick={remove}>
+            {busy ? "Deleting…" : "Yes, delete"}
           </button>
-          <button style={actionBtn(REJECT_COLOR)} onClick={() => setMode("reject")}>
-            Reject
+          <button style={actionBtn(gold)} disabled={busy} onClick={() => setMode("idle")}>
+            Cancel
           </button>
         </div>
       )}
@@ -779,7 +826,7 @@ function ReviewActions({
           </div>
         </div>
       )}
-      {error && <div style={{ ...actionRow, color: REJECT_COLOR }}>{error}</div>}
+      {error && <div style={{ ...actionRow, color: DELETE_COLOR }}>{error}</div>}
     </>
   );
 }
@@ -932,7 +979,9 @@ function EntryCard({
   wide,
   reviewer,
   reviewable,
+  deletable,
   onReviewed,
+  onDeleted,
 }: {
   entry: ReviewEntry;
   color: string;
@@ -940,7 +989,9 @@ function EntryCard({
   wide: boolean;
   reviewer: boolean;
   reviewable: boolean;
+  deletable: boolean;
   onReviewed: (outcome: ReviewOutcome) => void;
+  onDeleted: () => void;
 }) {
   const md = entry.metadata || {};
   const description = md.meta_description || "";
@@ -1063,9 +1114,16 @@ function EntryCard({
             Open in editor to test-play ↗
           </a>
           <WarningsPanel entry={entry} />
-          <ReviewActions entry={entry} reviewable={reviewable} onDone={onReviewed} />
         </div>
       )}
+
+      <ReviewActions
+        entry={entry}
+        reviewable={reviewer && reviewable}
+        deletable={deletable}
+        onDone={onReviewed}
+        onDeleted={onDeleted}
+      />
     </div>
   );
 }
@@ -1077,6 +1135,9 @@ export default function ReviewStatus() {
   const [now, setNow] = useState(() => Date.now());
   const [wide, setWide] = useState(false);
   const [reviewer, setReviewer] = useState(false);
+  const [admin, setAdmin] = useState(false);
+  // The signed-in wallet: its own submissions get a Delete button in their days of grace.
+  const [me, setMe] = useState<string>();
   const [notice, setNotice] = useState<string>();
   // Bumped after a rejection, so the returned list loads again.
   const [rejectedVersion, setRejectedVersion] = useState(0);
@@ -1095,13 +1156,26 @@ export default function ReviewStatus() {
     if (outcome === "rejected") setRejectedVersion((v) => v + 1);
   }
 
+  function handleDeleted(entry: ReviewEntry) {
+    const title = entry.metadata?.meta_title || entry.name || "Untitled";
+    setEntries((prev) =>
+      prev ? prev.filter((e) => !(e.address === entry.address && e.storyId === entry.storyId)) : prev
+    );
+    setNotice(`"${title}" was deleted from the list.`);
+  }
+
   // Reviewer tools only show for reviewers; the backend checks the role again.
   useEffect(() => {
     let cancelled = false;
     (async () => {
       try {
         const res = await fetch("/api/auth/me/roles", { credentials: "include" });
-        if (!cancelled && res.ok) setReviewer((await res.json()).reviewer === true);
+        if (!cancelled && res.ok) {
+          const granted = await res.json();
+          setReviewer(granted.reviewer === true);
+          setAdmin(granted.admin === true);
+          if (typeof granted.address === "string") setMe(granted.address);
+        }
       } catch {
         /* signed out or offline: no reviewer tools */
       }
@@ -1199,7 +1273,7 @@ export default function ReviewStatus() {
             const remaining = started ? started + REVIEW_WINDOW_MS - now : 0;
             return { entry: e, started, remaining, pending: !!started && remaining <= 0 };
           });
-          const renderRow = ({ entry, started, remaining }: (typeof rows)[number]) => {
+          const renderRow = ({ entry, started, remaining, pending }: (typeof rows)[number]) => {
             const color = !started
               ? parchment
               : remaining <= 0
@@ -1217,7 +1291,9 @@ export default function ReviewStatus() {
                 wide={wide}
                 reviewer={reviewer}
                 reviewable={!!started && remaining <= 0}
+                deletable={admin || (me !== undefined && me === entry.address && !pending)}
                 onReviewed={(outcome) => handleReviewed(entry, outcome)}
+                onDeleted={() => handleDeleted(entry)}
               />
             );
           };

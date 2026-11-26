@@ -472,6 +472,35 @@ def story_name_problem(name) -> Optional[str]:
     return None
 
 
+STORY_TITLE_MAX = 80  # $meta_title: at most two lines on a phone's story card
+_TITLE_PUNCTUATION = frozenset(" -?!&'\u2019")
+# The starter template's $meta_title (public/downloads/wudlands-starter.twee):
+# refused, so nobody submits a story under it by accident.
+TEMPLATE_TITLE = "My Wudlands Story"  # \u2019: a phone's curly apostrophe
+
+
+def story_title_problem(title) -> Optional[str]:
+    """Why $meta_title, the title players see, isn't accepted, or None.
+
+    Stricter than the story's name: letters, digits, spaces and - ? ! & ' only,
+    and short enough for a story card. The story's name (Story > Rename) is the
+    author's own label; $meta_title is the public one."""
+    if not isinstance(title, str) or not title.strip():
+        return "$meta_title must be non-empty text - the title players see"
+    if " ".join(title.split()).casefold() == TEMPLATE_TITLE.casefold():
+        return f"$meta_title is still the template's \"{TEMPLATE_TITLE}\" - give your story its own title"
+    if len(title) > STORY_TITLE_MAX:
+        return (
+            f"$meta_title has {len(title)} characters - at most {STORY_TITLE_MAX}, "
+            "so it fits a story card"
+        )
+    bad = sorted({ch for ch in title if not (ch.isalpha() or ch.isdigit() or ch in _TITLE_PUNCTUATION)})
+    if bad:
+        shown = " ".join("a tab or line break" if ch.isspace() else ch for ch in bad)
+        return f"$meta_title holds letters, digits, spaces and - ? ! & ' only (found {shown})"
+    return None
+
+
 def _check_quoted(content: str) -> None:
     bad = sorted(set(content) & _FORBIDDEN_IN_QUOTES)
     if bad:
@@ -503,7 +532,8 @@ _TOKEN = re.compile(
     r"|(?P<word>[A-Za-z][A-Za-z0-9_]*(?![\w$]))"
     # { } and : only in <<set $meta_endings to {...}>>, the old form, to say
     # what replaced it (_tokens, endings_literal).
-    r"|(?P<op>\+=|-=|\*=|/=|==|!=|>=|<=|[-+*/%<>()\[\],.{}:])"
+    # A single = sets a value, like to, but only in <<set>> and a link's [ ] part.
+    r"|(?P<op>\+=|-=|\*=|/=|==|!=|>=|<=|[-+*/%<>()\[\],.{}:=])"
 )
 _BAD_TOKENS = {
     "++": "++ isn't accepted - write $x += 1",
@@ -527,6 +557,9 @@ _BAD_CHARACTERS = {
     "\"": "a quote isn't closed", "'": "a quote isn't closed",
     "@": "@ isn't accepted", "#": "# isn't accepted", "~": "~ isn't accepted", "^": "^ isn't accepted",
 }
+_EQUALS_OUTSIDE_SET = (
+    "= only sets a value, in <<set>> or a link's [ ] part - to compare, use is, like <<if $gold is 5>>"
+)
 _COMPARE_WORDS = frozenset({"is", "isnot", "gt", "gte", "lt", "lte"})
 _COMPARE_OPS = frozenset({"==", "!=", ">", ">=", "<", "<="})
 _EQUALITY = frozenset({"is", "isnot", "==", "!="})
@@ -554,14 +587,15 @@ _COMMENT_IN_COMMAND = "comments go outside a command, like <<set $gold to 5>> <!
 
 # The one place { } and : are read: <<set $meta_endings to {...}>>, the old
 # form with teasers, refused with the list that replaced it (endings_literal).
-_ENDINGS_ASSIGNMENT = re.compile(rf"\s*\${ENDINGS_VARIABLE}\s+to\s*{{")
+_SET_TO = r"(?:\s+to\b|\s*=(?!=))"  # <<set $x to ...>> or <<set $x = ...>>
+_ENDINGS_ASSIGNMENT = re.compile(rf"\s*\${ENDINGS_VARIABLE}{_SET_TO}\s*{{")
 _MAP_CHARACTERS = frozenset("{}:")
 # The platform's values a story never removes (<<unset>>).
 _PLATFORM_VALUE_RE = re.compile(r"\$(?:isEnding|follows|char|lead|meta_\w*)(?![\w$])")
 # <<set $isEnding to ...>>, and a sentence written right after the ending
 # (the old teaser): <<set $isEnding to "success:met_queen": "The queen remembers you.">>
-_ENDING_SET = re.compile(r"\s*\$isEnding\s+to\b")
-_TEASER_IN_SCENE = re.compile(r"""\s*\$isEnding\s+to\s*(["'])([^"'\n]*)\1\s*:\s*(["'])([^"'\n]*)\3\s*$""")
+_ENDING_SET = re.compile(rf"\s*\$isEnding{_SET_TO}")
+_TEASER_IN_SCENE = re.compile(rf"""\s*\$isEnding{_SET_TO}\s*(["'])([^"'\n]*)\1\s*:\s*(["'])([^"'\n]*)\3\s*$""")
 
 
 def _tokens(source: str, allow_map: bool = False) -> list:
@@ -627,13 +661,22 @@ class _Expression:
 
     def expect(self, kind: str, value: str, what: str) -> None:
         if not self.at(kind, value):
+            self.stray_equals()
             found = self.peek().value or "the end"
             raise _Refused(f"expected {what} (found '{found}')")
         self.take()
 
     def done(self) -> None:
         if not self.at("end"):
+            self.stray_equals()
             raise _Refused(f"unexpected '{self.peek().value}'")
+
+    def stray_equals(self) -> None:
+        """= sets a value only in <<set>> and a link's [ ] part. In a
+        condition SugarCube would set the value instead of comparing it, and
+        the condition would always be true."""
+        if self.at("op", "="):
+            raise _Refused(_EQUALS_OUTSIDE_SET)
 
     # -- entry points --
 
@@ -671,13 +714,13 @@ class _Expression:
     def assignment(self) -> None:
         target = self.postfix(self.primary())
         tok = self.take()
-        if tok.kind == "word" and tok.value == "to":
-            op = "to"
+        if (tok.kind == "word" and tok.value == "to") or (tok.kind == "op" and tok.value == "="):
+            op = "to"  # <<set $gold = 5>> is the same as <<set $gold to 5>>
         elif tok.kind == "op" and tok.value in ("+=", "-=", "*=", "/="):
             op = tok.value
         else:
             raise _Refused(
-                "set a value with to, += or -=, like <<set $gold to 5>> or <<set $gold += 1>> "
+                "set a value with to (or =), += or -=, like <<set $gold to 5>> or <<set $gold += 1>> "
                 f"(found '{tok.value or 'the end'}')"
             )
         if target.target == ("story", GENRES_VARIABLE):
@@ -1766,7 +1809,16 @@ class _Scene:
             self.scan_unread(i, len(text))
             return len(text)
         if not m or m.end() > end:
-            self.refuse(i, "<< starts a command, like <<set $gold to 5>> - write &lt;&lt; for plain <<", UNSUPPORTED)
+            inside = text[i + 2:end].strip()
+            if inside[:1] in ("$", "_"):
+                # <<$gold to 5>>: SugarCube shows it as text and sets nothing.
+                self.refuse(
+                    i, f"a command starts with its name - here set is missing: <<set {inside}>>", UNSUPPORTED
+                )
+            else:
+                self.refuse(
+                    i, "<< starts a command, like <<set $gold to 5>> - write &lt;&lt; for plain <<", UNSUPPORTED
+                )
             self.scan_unread(i, end + 2)
             return end + 2
         closing, name = m.group(1) == "/", m.group(2)

@@ -139,12 +139,12 @@ async def test_approving_publishes_the_edited_version(db, storage):
     live = await db.twine_live.find_one({"_id": STORY})
     start = next(p for p in live["passages"] if p["name"] == "Start")
     assert start["text"] == "The reviewer's fixed text [[End]]"
-    # The test party goes live with the story; the approved record keeps no text.
+    # The test party and the edit history go live with the story, and the
+    # review entry is gone.
     assert [c["name"] for c in live["testCharacters"]] == ["Grimjaw Ironfoot"]
     assert live["legendPoints"] == {}
-    record = await db.twine_review.find_one({"address": AUTHOR, "storyId": STORY})
-    assert record["status"] == "approved" and record["reviewEdits"][0]["by"] == REVIEWER
-    assert "testCharacters" not in record
+    assert live["reviewEdits"][0]["by"] == REVIEWER
+    assert await db.twine_review.find_one({"address": AUTHOR, "storyId": STORY}) is None
 
 
 async def test_an_edit_with_program_code_is_refused(db, storage):
